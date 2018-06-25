@@ -1,0 +1,57 @@
+# RBC.barchart.marker.delete.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the marker delete
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker delete command works correctly when given a single
+	# existing marker name
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.delete.A.1.1 {
+	    Deletes a single marker
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+	} -body {
+	    .barchart1 marker delete marker1
+		.barchart1 marker exists marker1
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker delete command works correctly when given multiple
+	# existing marker name
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.delete.A.1.2 {
+	    Deletes multiple markers
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		.barchart1 marker create bitmap -name marker2
+	} -body {
+	    .barchart1 marker delete marker1 marker2
+		expr {[.barchart1 marker exists marker1] && [.barchart1 marker exists marker1]}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	cleanupTests
+}

@@ -1,0 +1,39 @@
+# RBC.stripchart.marker.create.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the marker create 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure creating a marker actually creates the marker on the stripchart
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.create.A.1.1 {
+	    Create Marker
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+	    .stripchart1 marker create text -name marker1
+		.stripchart1 marker exists marker1
+	} -cleanup {
+	    .stripchart1 marker delete marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	cleanupTests
+}

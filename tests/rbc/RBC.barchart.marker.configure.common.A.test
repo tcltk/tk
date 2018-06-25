@@ -1,0 +1,760 @@
+# RBC.barchart.marker.configure.common.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the common flags for
+# the marker configure function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring coords changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.1.1 {
+	    Configure Coords
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+	} -body {
+		.barchart1 marker configure marker1 -coords {0.8 2}
+		.barchart1 marker cget marker1 -coords
+	} -cleanup {
+	    .barchart1 marker delete marker1
+		destroy .barchart1
+	} -result {0.8 2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring element changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.2.1 {
+	    Configure Element
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name marker1
+	} -body {
+		.barchart1 marker configure marker1 -element elemName
+		.barchart1 marker cget marker1 -element
+	} -cleanup {
+	    .barchart1 marker delete marker1
+		destroy .barchart1
+	} -result {elemName}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.3.1 {
+		barchart marker configure: hide - 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -hide 1
+		.barchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.3.2 {
+		barchart marker configure: hide - 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -hide 0
+		.barchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.3.3 {
+		barchart marker configure: hide - true
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -hide true
+		.barchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.3.4 {
+		barchart marker configure: hide - false
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -hide false
+		.barchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.3.5 {
+		barchart marker configure: hide - yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -hide yes
+		.barchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.3.6 {
+		barchart marker configure: hide - no
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -hide no
+		.barchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.3.7 {
+		barchart marker configure: hide - invalid input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.4.1 {
+		barchart marker configure: under - 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -under 1
+		.barchart1 marker cget Marker1 -under
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.4.2 {
+		barchart marker configure: under - 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -under 0
+		.barchart1 marker cget Marker1 -under
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.4.3 {
+		barchart marker configure: under - true
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -under true
+		.barchart1 marker cget Marker1 -under
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.4.4 {
+		barchart marker configure: under - false
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -under false
+		.barchart1 marker cget Marker1 -under
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.4.5 {
+		barchart marker configure: under - yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -under yes
+		.barchart1 marker cget Marker1 -under
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.4.6 {
+		barchart marker configure: under - no
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -under no
+		.barchart1 marker cget Marker1 -under
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.4.7 {
+		barchart marker configure: under - invalid input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -under invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.5.1 {
+		barchart marker configure: xoffset - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xoffset 2
+		.barchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.5.2 {
+		barchart marker configure: xoffset - negative integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xoffset -1
+		.barchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {-1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.5.3 {
+		barchart marker configure: xoffset - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xoffset 3.5
+		.barchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.5.4 {
+		barchart marker configure: xoffset - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xoffset -3.5
+		.barchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {-4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.5.5 {
+		barchart marker configure: xoffset - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -xoffset a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.5.6 {
+		barchart marker configure: xoffset - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xoffset 0
+		.barchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.6.1 {
+		barchart marker configure: yoffset - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -yoffset 2
+		.barchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.6.2 {
+		barchart marker configure: yoffset - negative integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -yoffset -1
+		.barchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {-1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.6.3 {
+		barchart marker configure: yoffset - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -yoffset 3.5
+		.barchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.6.4 {
+		barchart marker configure: yoffset - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -yoffset -3.5
+		.barchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {-4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.6.5 {
+		barchart marker configure: yoffset - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -yoffset a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.6.6 {
+		barchart marker configure: yoffset - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -yoffset 0
+		.barchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring mapx changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.1 {
+	    Mapx
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+	} -body {
+		.barchart1 marker configure marker1 -mapx x2
+		.barchart1 marker cget marker1 -mapx
+	} -cleanup {
+	    .barchart1 marker delete marker1
+		destroy .barchart1
+	} -result {x2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapx command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.1 {
+		barchart marker configure: mapx - valid axis name
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create .axis1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -mapx .axis1
+		.barchart1 marker cget Marker1 -mapx
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		.barchart1 axis delete .axis1
+		destroy .barchart1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapx command works correctly when given a non-
+	# existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.2 {
+		barchart marker configure: mapx - non-existent axis name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -mapx .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapx command works correctly when not input is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.3 {
+		barchart marker configure: mapx - no input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -mapx
+		.barchart1 marker cget Marker1 -mapx
+	} -cleanup {
+		destroy .barchart1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapy command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.8.1 {
+		barchart marker configure: mapy - valid axis name
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create .axis1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -mapy .axis1
+		.barchart1 marker cget Marker1 -mapy
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		.barchart1 axis delete .axis1
+		destroy .barchart1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapy command works correctly when given a non-
+	# existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.8.2 {
+		barchart marker configure: mapy - non-existent axis name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -mapy .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapy command works correctly when no input is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.8.3 {
+		barchart marker configure: mapy - no input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -mapy
+		.barchart1 marker cget Marker1 -mapy
+	} -cleanup {
+		destroy .barchart1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -name command works correctly when given a 
+	# string name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.9.1 {
+		barchart marker configure: name - string name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 marker create text -name myMarker
+		.barchart1 marker names
+	} -cleanup {
+		destroy .barchart1
+	} -result {myMarker}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given
+	# 'normal' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.10.1 {
+		barchart marker configure: state - normal
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -state normal
+		.barchart1 marker cget Marker1 -state
+	} -cleanup {
+		destroy .barchart1
+	} -result {normal}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given
+	# 'active' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.10.2 {
+		barchart marker configure: state - active
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -state active
+		.barchart1 marker cget Marker1 -state
+	} -cleanup {
+		destroy .barchart1
+	} -result {active}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given
+	# 'disabled' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.10.3 {
+		barchart marker configure: state - disabled
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -state disabled
+		.barchart1 marker cget Marker1 -state
+	} -cleanup {
+		destroy .barchart1
+	} -result {disabled}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given 
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.10.4 {
+		barchart marker configure: state - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -state 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given 
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.10.5 {
+		barchart marker configure: state - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -state invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -bindtags command works correctly when given a 
+	# single tag name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.11.1 {
+		barchart marker configure: bindtags - single tag
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker bind Binding1 <Double-1> {puts foobar}
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -bindtags Binding1
+		.barchart1 marker cget Marker1 -bindtags
+	} -cleanup {
+		destroy Binding1
+		destroy .barchart1
+	} -result {Binding1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -bindtags command works correctly when given a 
+	# list of tag names.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.11.2 {
+		barchart marker configure: bindtags - tag list
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker bind Binding1 <Double-1> {puts foo}
+		.barchart1 marker bind Binding2 <Double-3> {puts bar}
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -bindtags {Binding1 Binding2}
+		.barchart1 marker cget Marker1 -bindtags
+	} -cleanup {
+		destroy Binding1 Binding2
+		destroy .barchart1
+	} -result {Binding1 Binding2}
+	
+	cleanupTests
+}

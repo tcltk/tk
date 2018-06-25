@@ -1,0 +1,62 @@
+# RBC.vector.merge.A.test --
+#
+###Abstract
+# This file tests the merge function of the vector rbc
+# component by merging different permutations of vectors
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.merge
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.merge {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a single vector merge will overite data
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.merge.A.1.1 {
+	    Test single vector merge
+	} -setup {
+		vector create Foobar
+		vector create Foo
+	    Foobar set {1 2 3 4 5}
+		Foo set {3 4}
+	} -body {
+		Foobar merge Foo
+		Foobar range [Foobar offset] end
+	} -cleanup {
+	    vector destroy Foobar
+		vector destroy Foo
+	} -result {3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a multiple vector merge merges index by index
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.merge.A.1.1 {
+	    Test multiple vector merge
+	} -setup {
+		vector create Foobar
+		vector create Foo
+		vector create Bar
+		Foo set {1 3 5 7 9}
+		Bar set {2 4 6 8 10}
+	} -body {
+		Foobar merge Foo Bar
+		Foobar range [Foobar offset] end
+	} -cleanup {
+	    vector destroy Foobar
+		vector destroy Foo
+		vector destroy Bar
+	} -result {1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}
+
+	cleanupTests
+}

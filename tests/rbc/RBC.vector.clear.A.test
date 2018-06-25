@@ -1,0 +1,41 @@
+# RBC.vector.clear.A.test --
+#
+###Abstract
+# This file tests the clear function of the vector rbc component.
+# Clear is an instance function of vector.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.clear
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+#namespace eval vector.clear {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector clear command works correctly.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.clear.A.1.1 {
+		vector clear: 
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+		expr $foo(0)
+		expr $foo(1)
+	} -body {
+		foo clear
+		array size foo
+	} -cleanup {
+		vector destroy foo
+	} -result {1}
+	
+	cleanupTests
+#}

@@ -1,0 +1,3030 @@
+# RBC.barchart.element.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element configure 
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -activepen command works correctly when given 
+	# a valid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.1.1 {
+		barchart element configure: activepen - valid pen name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 pen create Pen1 -foreground blue
+	} -body {
+		.barchart1 element configure Element1 -activepen Pen1
+		.barchart1 element cget Element1 -activepen
+	} -cleanup {
+		.barchart1 pen delete Pen1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Pen1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -activepen command works correctly when given 
+	# an invalid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.1.2 {
+		barchart element configure: activepen - invalid pen name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -activepen invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -bindtags command works correctly when given a 
+	# single tag name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.2.1 {
+		barchart element configure: bindtags - single tag
+	} -setup {
+		barchart .barchart1
+		.barchart1 element bind Binding1 <Double-1> {puts foobar}
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -bindtags Binding1
+		.barchart1 element cget Element1 -bindtags
+	} -cleanup {
+		destroy Binding1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Binding1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -bindtags command works correctly when given  
+	# a list of tag names.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.2.2 {
+		barchart element configure: bindtags - tag list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element bind Binding1 <Double-1> {puts foo}
+		.barchart1 element bind Binding2 <Double-3> {puts bar}
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -bindtags {Binding1 Binding2}
+		.barchart1 element cget Element1 -bindtags
+	} -cleanup {
+		destroy Binding1 Binding2
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Binding1 Binding2}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given a
+	# valid coordinate list as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.3.1 {
+		barchart element configure: data - valid coordinte list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -data {1 3 4 5}
+		.barchart1 element cget Element1 -data
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 3.0 4.0 5.0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given an
+	# invalid coordinate list as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.3.2 {
+		barchart element configure: data - invalid coordinte list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -data {1 a 4 b}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given input
+	# that is not in the proper form (x1 y1 x2 y2).
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.3.3 {
+		barchart element configure: data - not proper form
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -data {1,2 3,4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given input
+	# that does not have an even number of values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.3.4 {
+		barchart element configure: data - odd list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -data {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.4.1 {
+		barchart element configure: hide - 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -hide 1
+		.barchart1 element cget Element1 -hide
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.4.2 {
+		barchart element configure: hide - 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -hide 0
+		.barchart1 element cget Element1 -hide
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.4.3 {
+		barchart element configure: hide - true
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -hide true
+		.barchart1 element cget Element1 -hide
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given 
+	# false.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.4.4 {
+		barchart element configure: hide - false
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -hide false
+		.barchart1 element cget Element1 -hide
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.4.5 {
+		barchart element configure: hide - yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -hide yes
+		.barchart1 element cget Element1 -hide
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.4.6 {
+		barchart element configure: hide - no
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -hide no
+		.barchart1 element cget Element1 -hide
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.4.7 {
+		barchart element configure: hide - invalid input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -label command works correctly when given 
+	# valid text.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.5.1 {
+		barchart element configure: label - valid text
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -label MyElement
+		.barchart1 element cget Element1 -label
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {MyElement}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -label command works correctly when given the
+	# empty string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.5.2 {
+		barchart element configure: label - empty string
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -label ""
+		.barchart1 element cget Element1 -label
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -label command does not change the default 
+	# value when not given any input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.5.3 {
+		barchart element configure: label - default value
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -label
+		.barchart1 element cget Element1 -label
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Element1}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapx command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.6.1 {
+		barchart element configure: mapx - valid axis name
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create .axis1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -mapx .axis1
+		.barchart1 element cget Element1 -mapx
+	} -cleanup {
+		.barchart1 element delete Element1
+		.barchart1 axis delete .axis1
+		destroy .barchart1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapx command works correctly when given a
+	# non-existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.6.2 {
+		barchart element configure: mapx - non-existent axis name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -mapx .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapx command works correctly when not input  
+	# is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.6.3 {
+		barchart element configure: mapx - no input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -mapx
+		.barchart1 element cget Element1 -mapx
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {x}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapy command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.7.1 {
+		barchart element configure: mapy - valid axis name
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create .axis1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -mapy .axis1
+		.barchart1 element cget Element1 -mapy
+	} -cleanup {
+		.barchart1 element delete Element1
+		.barchart1 axis delete .axis1
+		destroy .barchart1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapy command works correctly when given a
+	# non-existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.7.2 {
+		barchart element configure: mapy - non-existent axis name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -mapy .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapy command works correctly when not input  
+	# is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.7.3 {
+		barchart element configure: mapy - no input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -mapy
+		.barchart1 element cget Element1 -mapy
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {y}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pen command works correctly when given 
+	# a valid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.8.1 {
+		barchart element configure: pen - valid pen name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 pen create Pen1 -background blue
+	} -body {
+		.barchart1 element configure Element1 -pen Pen1
+		.barchart1 element cget Element1 -pen
+	} -cleanup {
+		.barchart1 pen delete Pen1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Pen1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pen command works correctly when given 
+	# an invalid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.8.2 {
+		barchart element configure: pen - invalid pen name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -pen invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -styles command works correctly when given a
+	# valid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.9.1 {
+		barchart element configure: styles - valid pen name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 pen create Pen1
+	} -body {
+		.barchart1 element configure Element1 -styles {Pen1}
+		.barchart1 element cget Element1 -styles
+	} -cleanup {
+		destroy Pen1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {{Pen1 0.0 1.0}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -styles command works correctly when given an
+	# invalid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.9.2 {
+		barchart element configure: styles - invalid pen name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -styles {invalid}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -styles command works correctly when given a
+	# valid pen name and a minimum and maximum element weight range.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.9.3 {
+		barchart element configure: styles - pen and weights
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 pen create Pen1
+	} -body {
+		.barchart1 element configure Element1 -styles {{Pen1 2.0 3.0}}
+		.barchart1 element cget Element1 -styles
+	} -cleanup {
+		destroy Pen1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {{Pen1 2.0 3.0}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.10.1 {
+		barchart element configure: weights - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -weights Vector1
+		.barchart1 element cget Element1 -weights
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.10.2 {
+		barchart element configure: weights - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -weights invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.10.3 {
+		barchart element configure: weights - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -weights {1 2 3 4}
+		.barchart1 element cget Element1 -weights
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.10.4 {
+		barchart element configure: weights - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -weights {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.11.1 {
+		barchart element configure: xdata - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -xdata Vector1
+		.barchart1 element cget Element1 -xdata
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.11.2 {
+		barchart element configure: xdata - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -xdata invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.11.3 {
+		barchart element configure: xdata - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -xdata {1 2 3 4}
+		.barchart1 element cget Element1 -xdata
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.11.4 {
+		barchart element configure: xdata - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -xdata {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.12.1 {
+		barchart element configure: ydata - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -ydata Vector1
+		.barchart1 element cget Element1 -ydata
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.12.2 {
+		barchart element configure: ydata - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -ydata invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.12.3 {
+		barchart element configure: ydata - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -ydata {1 2 3 4}
+		.barchart1 element cget Element1 -ydata
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.12.4 {
+		barchart element configure: ydata - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -ydata {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.13.1 {
+		barchart element configure: x - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -x Vector1
+		.barchart1 element cget Element1 -x
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.13.2 {
+		barchart element configure: x - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -x invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given a valid
+	# list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.13.3 {
+		barchart element configure: x - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -x {1 2 3 4}
+		.barchart1 element cget Element1 -x
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.13.4 {
+		barchart element configure: x - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -x {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given a 
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.14.1 {
+		barchart element configure: xerror - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -xerror Vector1
+		.barchart1 element cget Element1 -xerror
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.14.2 {
+		barchart element configure: xerror - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -xerror invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.14.3 {
+		barchart element configure: xerror - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -xerror {1 2 3 4}
+		.barchart1 element cget Element1 -xerror
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.14.4 {
+		barchart element configure: xerror - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -xerror {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.15..1 {
+		barchart element configure: xhigh - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -xhigh Vector1
+		.barchart1 element cget Element1 -xhigh
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.15..2 {
+		barchart element configure: xhigh - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -xhigh invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.15..3 {
+		barchart element configure: xhigh - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -xhigh {1 2 3 4}
+		.barchart1 element cget Element1 -xhigh
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.15..4 {
+		barchart element configure: xhigh - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -xhigh {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.16.1 {
+		barchart element configure: xlow - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -xlow Vector1
+		.barchart1 element cget Element1 -xlow
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.16.2 {
+		barchart element configure: xlow - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -xlow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.16.3 {
+		barchart element configure: xlow - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -xlow {1 2 3 4}
+		.barchart1 element cget Element1 -xlow
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.16.4 {
+		barchart element configure: xlow - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -xlow {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.17.1 {
+		barchart element configure: y - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -y Vector1
+		.barchart1 element cget Element1 -y
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.17.2 {
+		barchart element configure: y - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -y invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.17.3 {
+		barchart element configure: y - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -y {1 2 3 4}
+		.barchart1 element cget Element1 -y
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.17.4 {
+		barchart element configure: y - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -y {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.18.1 {
+		barchart element configure: yerror - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -yerror Vector1
+		.barchart1 element cget Element1 -yerror
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yerror command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.18.2 {
+		barchart element configure: yerror - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -yerror invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yerror command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.18.3 {
+		barchart element configure: yerror - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -yerror {1 2 3 4}
+		.barchart1 element cget Element1 -yerror
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yerror command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.18.4 {
+		barchart element configure: yerror - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -yerror {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.19.1 {
+		barchart element configure: yhigh - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -yhigh Vector1
+		.barchart1 element cget Element1 -yhigh
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yhigh command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.19.2 {
+		barchart element configure: yhigh - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -yhigh invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yhigh command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.19.3 {
+		barchart element configure: yhigh - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -yhigh {1 2 3 4}
+		.barchart1 element cget Element1 -yhigh
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yhigh command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.19.4 {
+		barchart element configure: yhigh - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -yhigh {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.20.1 {
+		barchart element configure: ylow - valid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.barchart1 element configure Element1 -ylow Vector1
+		.barchart1 element cget Element1 -ylow
+	} -cleanup {
+		vector destroy Vector1
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {::barchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ylow command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.20.2 {
+		barchart element configure: ylow - invalid vector name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -ylow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ylow command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.20.3 {
+		barchart element configure: ylow - valid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -ylow {1 2 3 4}
+		.barchart1 element cget Element1 -ylow
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ylow command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.20.4 {
+		barchart element configure: ylow - invalid list
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -ylow {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcolor command works correctly when  
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.21.1 {
+		barchart element configure: errorbarcolor - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -errorbarcolor black
+		.barchart1 element cget Element1 -errorbarcolor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcolor command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.21.2 {
+		barchart element configure: errorbarcolor - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -errorbarcolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.22.1 {
+		barchart element configure: errorbarwidth - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -errorbarwidth 2
+		.barchart1 element cget Element1 -errorbarwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.22.2 {
+		barchart element configure: errorbarwidth - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -errorbarwidth 3.5
+		.barchart1 element cget Element1 -errorbarwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.22.3 {
+		barchart element configure: errorbarwidth - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -errorbarwidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.22.4 {
+		barchart element configure: errorbarwidth - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -errorbarwidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.23.1 {
+		barchart element configure: errorbarcap - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -errorbarcap 2
+		.barchart1 element cget Element1 -errorbarcap
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.23.2 {
+		barchart element configure: errorbarcap - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -errorbarcap 3.5
+		.barchart1 element cget Element1 -errorbarcap
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.23.3 {
+		barchart element configure: errorbarcap - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -errorbarcap -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.23.4 {
+		barchart element configure: errorbarcap - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -errorbarcap a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.1 {
+		barchart element configure: valueanchor - n
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueanchor n
+		.barchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.2 {
+		barchart element configure: valueanchor - ne
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueanchor ne
+		.barchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.3 {
+		barchart element configure: valueanchor - e
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueanchor e
+		.barchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.4 {
+		barchart element configure: valueanchor - se
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueanchor se
+		.barchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.5 {
+		barchart element configure: valueanchor - s
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueanchor s
+		.barchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.6 {
+		barchart element configure: valueanchor - sw
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueanchor sw
+		.barchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.7 {
+		barchart element configure: valueanchor - w
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueanchor w
+		.barchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.8 {
+		barchart element configure: valueanchor - nw
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueanchor nw
+		.barchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.9 {
+		barchart element configure: valueanchor - center
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueanchor center
+		.barchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.10 {
+		barchart element configure: valueanchor - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -valueanchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.24.11 {
+		barchart element configure: valueanchor - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -valueanchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuecolor command works correctly when given
+	# a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.25.1 {
+		barchart element configure: valuecolor - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valuecolor black
+		.barchart1 element cget Element1 -valuecolor
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuecolor command works correctly when given
+	# an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.25.2 {
+		barchart element configure: valuecolor - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -valuecolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when 
+	# given an integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.26.1 {
+		barchart element configure: valuerotate - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valuerotate 90
+		.barchart1 element cget Element1 -valuerotate
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when 
+	# given a decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.26.2 {
+		barchart element configure: valuerotate - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valuerotate 45.5
+		.barchart1 element cget Element1 -valuerotate
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when 
+	# given a negative integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.26.3 {
+		barchart element configure: valuerotate - negative integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valuerotate -90
+		.barchart1 element cget Element1 -valuerotate
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {-90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when
+	# given a negative decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.26.4 {
+		barchart element configure: valuerotate - negative decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valuerotate -45.5
+		.barchart1 element cget Element1 -valuerotate
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {-45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.26.5 {
+		barchart element configure: valuerotate - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -valuerotate invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when  
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.27.1 {
+		barchart element configure: valueshadow - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueshadow black
+		.barchart1 element cget Element1 -valueshadow
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {black 1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.27.2 {
+		barchart element configure: valueshadow - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -valueshadow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when  
+	# given a valid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.27.3 {
+		barchart element configure: valueshadow - valid color name, valid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueshadow {black 2}
+		.barchart1 element cget Element1 -valueshadow
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {black 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when 
+	# given an invalid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.27.4 {
+		barchart element configure: valueshadow - invalid color name, valid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -valueshadow {invalid 1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when 
+	# given a valid color name and invalid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.27.5 {
+		barchart element configure: valueshadow - valid color name, invalid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -valueshadow {black -1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueformat command works correctly when an 
+	# input value is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.28.1 {
+		barchart element configure: valueformat - input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valueformat formatstring
+		.barchart1 element cget Element1 -valueformat
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {formatstring}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.29.1 {
+		barchart element configure: valuefont - string
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valuefont Times
+		.barchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.29.2 {
+		barchart element configure: valuefont - list with string
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valuefont {Times}
+		.barchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string and positive integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.29.3 {
+		barchart element configure: valuefont - list with string and positive integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valuefont {Times 10}
+		.barchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Times 10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string and negative integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.29.4 {
+		barchart element configure: valuefont - list with string and negative integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -valuefont {Times -10}
+		.barchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Times -10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string and decimal as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.29.5 {
+		barchart element configure: valuefont - list with string and decimal
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -valuefont {Times 10.5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with 2 strings as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.29.6 {
+		barchart element configure: valuefont - list with 2 strings
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -valuefont {Times Ten}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given
+	# a valid font string.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.29.7 {
+	    barchart element configure: font - valid font string
+	} -setup {
+	    barchart .barchart1    
+		.barchart1 element create Element1
+	    pack .barchart1  
+	} -body {
+	    .barchart1 element configure Element1 -valuefont "*-Arial-Bold-R-Normal-*-12-120-*" 
+	    .barchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.barchart1 element delete Element1
+	    destroy .barchart1
+	} -result {*-Arial-Bold-R-Normal-*-12-120-*}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'flat' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.30.1 {
+		barchart element configure: labelrelief - flat
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -labelrelief flat
+		.barchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'groove' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.30.2 {
+		barchart element configure: labelrelief - groove
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -labelrelief groove
+		.barchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'raised' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.30.3 {
+		barchart element configure: labelrelief - raised
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -labelrelief raised
+		.barchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'ridge' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.30.4 {
+		barchart element configure: labelrelief - ridge
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -labelrelief ridge
+		.barchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'solid' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.30.5 {
+		barchart element configure: labelrelief - solid
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -labelrelief solid
+		.barchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'sunken' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.30.6 {
+		barchart element configure: labelrelief - sunken
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -labelrelief sunken
+		.barchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.30.7 {
+		barchart element configure: labelrelief - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -labelrelief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.30.8 {
+		barchart element configure: labelrelief - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -labelrelief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when given
+	# 'normal' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.31.1 {
+		barchart element configure: state - normal
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -state normal
+		.barchart1 element cget Element1 -state
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {normal}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when given
+	# 'active' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.31.2 {
+		barchart element configure: state - active
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -state active
+		.barchart1 element cget Element1 -state
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {active}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when given
+	# 'disabled' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.31.3 {
+		barchart element configure: state - disabled
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -state disabled
+		.barchart1 element cget Element1 -state
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {disabled}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when 
+	# given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.31.4 {
+		barchart element configure: state - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -state 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when 
+	# given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.31.5 {
+		barchart element configure: state - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -state invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'none' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.32.1 {
+		barchart element configure: showvalues - none
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -showvalues none
+		.barchart1 element cget Element1 -showvalues
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'x' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.32.2 {
+		barchart element configure: showvalues - x
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -showvalues x
+		.barchart1 element cget Element1 -showvalues
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'y' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.32.3 {
+		barchart element configure: showvalues - y
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -showvalues y
+		.barchart1 element cget Element1 -showvalues
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'both' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.32.4 {
+		barchart element configure: showvalues - both
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -showvalues both
+		.barchart1 element cget Element1 -showvalues
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {both}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.32.5 {
+		barchart element configure: showvalues - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -showvalues 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given 
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.32.6 {
+		barchart element configure: showvalues - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -showvalues invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'none' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.33.1 {
+		barchart element configure: showerrorbars - none
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -showerrorbars none
+		.barchart1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'x' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.33.2 {
+		barchart element configure: showerrorbars - x
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -showerrorbars x
+		.barchart1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'y' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.33.3 {
+		barchart element configure: showerrorbars - y
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -showerrorbars y
+		.barchart1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'both' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.33.4 {
+		barchart element configure: showerrorbars - both
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -showerrorbars both
+		.barchart1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {both}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.33.5 {
+		barchart element configure: showerrorbars - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -showerrorbars 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given 
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.33.6 {
+		barchart element configure: showerrorbars - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -showerrorbars invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -background command works correctly when given 
+	# a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.34.1 {
+		barchart element configure: background - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -background black
+		.barchart1 element cget Element1 -background
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -background command works correctly when given
+	# an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.34.2 {
+		barchart element configure: background - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -background invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -barwidth command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.35.1 {
+		barchart element configure: barwidth - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -barwidth 2
+		.barchart1 element cget Element1 -barwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -barwidth command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.35.2 {
+		barchart element configure: barwidth - invalid integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -barwidth -1
+		.barchart1 element cget Element1 -barwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {-1.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -barwidth command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.35.3 {
+		barchart element configure: barwidth - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -barwidth 3.5
+		.barchart1 element cget Element1 -barwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {3.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -barwidth command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.35.4 {
+		barchart element configure: barwidth - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -barwidth -1.5
+		.barchart1 element cget Element1 -barwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {-1.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -barwidth command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.35.5 {
+		barchart element configure: barwidth - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -barwidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -barwidth command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.35.6 {
+		barchart element configure: barwidth - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -barwidth 0
+		.barchart1 element cget Element1 -barwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -borderwidth command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.36.1 {
+		barchart element configure: borderwidth - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -borderwidth 2
+		.barchart1 element cget Element1 -borderwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -borderwidth command works correctly when 
+	# given an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.36.2 {
+		barchart element configure: borderwidth - invalid integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -borderwidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -borderwidth command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.36.3 {
+		barchart element configure: borderwidth - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -borderwidth 3.5
+		.barchart1 element cget Element1 -borderwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -borderwidth command works correctly when 
+	# given an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.36.4 {
+		barchart element configure: borderwidth - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -borderwidth -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -borderwidth command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.36.5 {
+		barchart element configure: borderwidth - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -borderwidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -borderwidth command works correctly when 
+	# given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.36.6 {
+		barchart element configure: borderwidth - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -borderwidth 0
+		.barchart1 element cget Element1 -borderwidth
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -foreground command works correctly when given 
+	# a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.37.1 {
+		barchart element configure: foreground - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -foreground black
+		.barchart1 element cget Element1 -foreground
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -foreground command works correctly when given
+	# an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.37.2 {
+		barchart element configure: foreground - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -foreground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -relief command works correctly when given
+	# 'flat' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.38.1 {
+		barchart element configure: relief - flat
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -relief flat
+		.barchart1 element cget Element1 -relief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -relief command works correctly when given
+	# 'groove' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.38.2 {
+		barchart element configure: relief - groove
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -relief groove
+		.barchart1 element cget Element1 -relief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -relief command works correctly when given
+	# 'raised' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.38.3 {
+		barchart element configure: relief - raised
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -relief raised
+		.barchart1 element cget Element1 -relief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -relief command works correctly when given
+	# 'ridge' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.38.4 {
+		barchart element configure: relief - ridge
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -relief ridge
+		.barchart1 element cget Element1 -relief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -relief command works correctly when given
+	# 'solid' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.38.5 {
+		barchart element configure: relief - solid
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -relief solid
+		.barchart1 element cget Element1 -relief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -relief command works correctly when given
+	# 'sunken' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.38.6 {
+		barchart element configure: relief - sunken
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 -relief sunken
+		.barchart1 element cget Element1 -relief
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -relief command works correctly when given
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.38.7 {
+		barchart element configure: relief - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -relief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -relief command works correctly when given
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.configure.A.38.8 {
+		barchart element configure: relief - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		if {[catch {.barchart1 element configure Element1 -relief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring stipple changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.polygon.A.39.1 {
+	    barchart element configure: stipple - valid bitmap name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+	} -body {
+		.barchart1 element configure Element1 \
+			-stipple @[file join [file dirname [info script]] greenback.xbm]
+		.barchart1 element cget Element1 -stipple
+	} -cleanup {
+	    .barchart1 element delete Element1
+		destroy .barchart1
+	} -match glob -result {@*greenback.xbm}
+	
+	cleanupTests
+}

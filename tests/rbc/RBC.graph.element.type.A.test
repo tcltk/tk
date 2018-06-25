@@ -1,0 +1,74 @@
+# RBC.graph.element.type.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element type 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element type command works correctly when given the name of a 
+	# valid line element.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.type.A.1.1 {
+		element type: valid line element name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element type Element1
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {LineElement}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element type command works correctly when given the name of a 
+	# valid bar element.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.2 {
+		element type: valid bar element name
+	} -setup {
+		graph .graph1
+		.graph1 bar create Element1
+	} -body {
+		.graph1 element type Element1
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {BarElement}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element type command works correctly when given an invalid  
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.3 {
+		element type: invalid element name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 element type invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	cleanupTests
+}

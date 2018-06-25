@@ -1,0 +1,67 @@
+# RBC.graph.legend.deactivate.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the legend deactivate 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.legend
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.legend {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that deactivating all legend elements works properly.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.legend.2.1 {
+	    Test legend deactivate
+	} -setup {
+	    graph .graph1    
+	    set X [list 1 2 3 4 5]
+	    set Y [list 2 4 6 8 10]
+	    .graph1 element create Line1 -x $X -y $Y
+	    .graph1 element create Line2 -x $Y -y $X    
+	    pack .graph1 -fill both    
+	    .graph1 legend activate *
+	} -body {
+	    .graph1 legend deactivate *
+	    # Displays all active elements    
+	    .graph1 legend activate ThisElementDoesNotExist
+	} -cleanup {
+	    destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that deactivating a subset of legend elements deactivates only that
+	# subset.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.legend.2.2 {
+	    Test legend deactivate
+	} -setup {
+	    graph .graph1
+	    set X [list 1 2 3 4 5]
+	    set Y [list 2 4 6 8 10]
+	    .graph1 element create Line1 -x $X -y $Y
+	    .graph1 element create Line2 -x $Y -y $X        
+	    pack .graph1 -fill both
+	    .graph1 legend activate *    
+	} -body {
+	    .graph1 legend deactivate Line1
+	    # Displays all active elements
+	    .graph1 legend activate ThisElementDoesNotExist
+	} -cleanup {
+	    destroy .graph1
+	} -result {Line2}  
+	
+	cleanupTests
+}

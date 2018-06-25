@@ -1,0 +1,470 @@
+# RBC.barchart.marker.configure.bitmap.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the bitmap marker configure
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -background command works correctly for bitmap 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.1.1 {
+		barchart marker configure bitmap: background - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -background black
+		.barchart1 marker cget Marker1 -background
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -background command works correctly for bitmap 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.1.2 {
+		barchart marker configure bitmap: background - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -background invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring bitmap changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.2.1 {
+	    Configure Bitmap
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name marker1
+	} -body {
+		.barchart1 marker configure marker1 \
+			-bitmap @[file join [file dirname [info script]] greenback.xbm]
+		.barchart1 marker cget marker1 -bitmap
+	} -cleanup {
+	    .barchart1 marker delete marker1
+		destroy .barchart1
+	} -match glob -result {@*greenback.xbm}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for bitmap 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.3.1 {
+		barchart marker configure bitmap: fill - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -fill black
+		.barchart1 marker cget Marker1 -fill
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for bitmap 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.3.2 {
+		barchart marker configure bitmap: fill - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -fill invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -foreground command works correctly for bitmap 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.4.1 {
+		barchart marker configure bitmap: foreground - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -foreground black
+		.barchart1 marker cget Marker1 -foreground
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -foreground command works correctly for bitmap 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.4.2 {
+		barchart marker configure bitmap: foreground - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -foreground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for bitmap 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.5.1 {
+		barchart marker configure bitmap: outline - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -outline black
+		.barchart1 marker cget Marker1 -outline
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for bitmap 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.5.2 {
+		barchart marker configure bitmap: outline - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -outline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given an
+	# integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.6.1 {
+		barchart marker configure bitmap: rotate - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -rotate 90
+		.barchart1 marker cget Marker1 -rotate
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given a
+	# decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.6.2 {
+		barchart marker configure bitmap: rotate - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -rotate 45.5
+		.barchart1 marker cget Marker1 -rotate
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given a
+	# negative integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.6.3 {
+		barchart marker configure bitmap: rotate - negative integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -rotate -90
+		.barchart1 marker cget Marker1 -rotate
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {-90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given a
+	# negative decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.6.4 {
+		barchart marker configure bitmap: rotate - negative decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -rotate -45.5
+		.barchart1 marker cget Marker1 -rotate
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {-45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.6.5 {
+		barchart marker configure bitmap: rotate - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -rotate invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap
+	# markers when given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.1 {
+		barchart marker configure bitmap: anchor - n
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor n
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.2 {
+		barchart marker configure bitmap: anchor - ne
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor ne
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.3 {
+		barchart marker configure bitmap: anchor - e
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor e
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap
+	# markers when given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.4 {
+		barchart marker configure bitmap: anchor - se
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor se
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 's' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.5 {
+		barchart marker configure bitmap: anchor - s
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor s
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.6 {
+		barchart marker configure bitmap: anchor - sw
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor sw
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.7 {
+		barchart marker configure bitmap: anchor - w
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor w
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.8 {
+		barchart marker configure bitmap: anchor - nw
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor nw
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.9 {
+		barchart marker configure bitmap: anchor - center
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor center
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.10 {
+		barchart marker configure bitmap: anchor - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -anchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.bitmap.A.7.11 {
+		barchart marker configure bitmap: anchor - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -anchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	cleanupTests
+}

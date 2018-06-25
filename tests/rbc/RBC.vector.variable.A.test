@@ -1,0 +1,56 @@
+# RBC.vector.variable.A.test --
+#
+###Abstract
+# This file tests the variable function of an instance of the vector
+# rbc component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.variable
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+# namespace eval vector.variable {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector variable command creates a new Tcl variable reference to
+    # the vector instance 
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.variable.A.1.1 {
+	    Test vector variable's variable creation
+	} -setup {
+	    vector create Vector1
+        Vector1 set {1 2 3 4 5}
+	} -body {
+	    Vector1 variable VarName 
+	    expr {$VarName(:)}
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {1.0 2.0 3.0 4.0 5.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector variable command removes any old Tcl variable reference 
+    # to the vector instance 
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.variable.A.1.2 {
+	    Test vector variable existing variable destruction
+	} -setup {
+	    vector create Vector1
+	    Vector1 set {1 2 3 4 5}
+	} -body {
+	    Vector1 variable VarName 
+	    info exists Vector1
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {0}
+	
+	cleanupTests
+# }

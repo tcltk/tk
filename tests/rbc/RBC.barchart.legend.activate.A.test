@@ -1,0 +1,103 @@
+# RBC.barchart.legend.activate.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the legend activate 
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.legend
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.legend {    
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensure that activating all legend elements returns all active legend
+    # elements.
+    # ------------------------------------------------------------------------------------ 
+    test RBC.barchart.legend.activate.A.1.1 {
+        Test legend activate
+    } -setup {
+        barchart .barchart1
+        set X [list 1 2 3 4 5]
+        set Y [list 2 4 6 8 10]
+        .barchart1 element create Element1 -x $X -y $Y
+        .barchart1 element create Element2 -x $Y -y $X
+        pack .barchart1 -fill both
+    } -body {
+        .barchart1 legend activate *
+    } -cleanup {
+		.barchart1 element delete Element2
+		.barchart1 element delete Element1
+        destroy .barchart1
+    } -result {Element2 Element1}
+    
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensure that activating a subset of legend elements returns only the
+    # activated elements.
+    # ------------------------------------------------------------------------------------ 
+	test RBC.barchart.legend.activate.A.1.2 {
+	    Test legend activate
+	} -setup {
+	    barchart .barchart1
+	    set X [list 1 2 3 4 5]
+	    set Y [list 2 4 6 8 10]
+	    .barchart1 element create Element1 -x $X -y $Y
+        .barchart1 element create Element2 -x $Y -y $X        
+	    pack .barchart1 -fill both
+	} -body {
+	    .barchart1 legend activate Element1
+	} -cleanup {
+		.barchart1 element delete Element2
+		.barchart1 element delete Element1
+	    destroy .barchart1
+	} -result {Element1}
+    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that activating a legend element returns all active legend elements
+	# not only the ones that were just activated.
+	# ------------------------------------------------------------------------------------     
+	test RBC.barchart.legend.activate.A.1.3 {
+	    Test legend activate
+	} -setup {
+	    barchart .barchart1
+	    set X [list 1 2 3 4 5]
+	    set Y [list 2 4 6 8 10]
+	    .barchart1 element create Element1 -x $X -y $Y
+	    .barchart1 element create Element2 -x $Y -y $X
+        .barchart1 legend activate Element2
+	    pack .barchart1 -fill both
+	} -body {
+	    .barchart1 legend activate Element1
+	} -cleanup {
+		.barchart1 element delete Element2
+		.barchart1 element delete Element1
+	    destroy .barchart1
+	} -result {Element2 Element1}  
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the barchart legend activate works when given a non-existent element
+	# name.
+	# ------------------------------------------------------------------------------------     
+	test RBC.barchart.legend.activate.A.1.4 {
+	    Test legend activate
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1 -fill both
+	} -body {
+	    .barchart1 legend activate Element1
+	} -cleanup {
+	    destroy .barchart1
+	} -result {}  
+    
+    cleanupTests
+}

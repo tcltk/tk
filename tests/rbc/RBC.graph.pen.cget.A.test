@@ -1,0 +1,73 @@
+# RBC.graph.pen.cget.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the pen cget 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.pen
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.pen {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with an explicitly set option
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.cget.A.1.1 {
+	    Test pen cget configure
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	    .graph1 pen create Pen1 -color blue
+	} -body {
+	    .graph1 pen cget Pen1 -color
+	} -cleanup {
+	    destroy .graph1
+	} -result {blue}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with a default value
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.cget.A.1.2 {
+	    Test pen cget default
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	    .graph1 pen create Pen1
+	} -body {
+	    .graph1 pen cget Pen1 -type
+	} -cleanup {
+	    destroy .graph1
+	} -result {line}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with an invalid value
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.cget.A.1.3 {
+	    Test pen cget invalid value
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	    .graph1 pen create Pen1
+	} -body {
+	    if {[catch {.graph1 pen cget Pen1 -invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	cleanupTests
+}

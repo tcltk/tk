@@ -1,0 +1,112 @@
+# RBC.barchart.marker.bind.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the marker bind
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be created for a marker
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.marker.bind.A.1.1 {
+		Test marker bind creation
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		pack .barchart1
+	} -body {
+		if {[catch {.barchart1 marker bind marker1 <Double-1> {puts test}}]} {
+        return 1
+    }
+    return 0
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be queried for a sequence and marker
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.marker.bind.A.1.2 {
+    	Test marker bind query
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		pack .barchart1
+		.barchart1 marker bind marker1 <Double-1> {puts test}
+	} -body {
+		.barchart1 marker bind marker1 <Double-1>
+	} -cleanup {
+		destroy .barchart1
+	} -result {puts test}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be appended for a sequence and marker
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.marker.bind.A.1.3 {
+	    Test marker bind append
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		pack .barchart1
+	    .barchart1 marker bind marker1 <Double-1> {puts test}    
+	} -body {
+	    .barchart1 marker bind marker1 <Double-1> {+puts test2}
+	    .barchart1 marker bind marker1 <Double-1>    
+	} -cleanup {
+	    destroy .barchart1
+	} -result "puts test\nputs test2"
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings are overwritten for a sequence and marker
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.marker.bind.A.1.4 {
+	    Test marker bind overwrite
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		pack .barchart1
+	    .barchart1 marker bind marker1 <Double-1> {puts test}    
+	} -body {
+	    .barchart1 marker bind marker1 <Double-1> {+puts test2}
+	    .barchart1 marker bind marker1 <Double-1>    
+	} -body {
+	    .barchart1 marker bind marker1 <Double-1> {puts test2}    
+	    .barchart1 marker bind marker1 <Double-1>    
+	} -cleanup {
+	    destroy .barchart1
+	} -result {puts test2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bound sequences can be queried for just a marker
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.marker.bind.A.1.5 {
+	    Test marker bind query
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		pack .barchart1
+		.barchart1 marker bind marker1 <Double-1> {puts test}
+		.barchart1 marker bind marker1 <Key> {puts test2}   
+	} -body {
+	    .barchart1 marker bind marker1
+	} -cleanup {
+	    destroy .barchart1
+	} -result {<Key> <Double-Button-1>}
+	
+	cleanupTests
+}

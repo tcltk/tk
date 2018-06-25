@@ -1,0 +1,67 @@
+# RBC.barchart.axis.names.A.test --
+#
+###Abstract
+# This file tests the axis names function of the barchart BLT component.
+# Axis names is an instance function of barchart.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis names command works correctly with system axis
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.names.A.1.1 {
+	    System Axis
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 axis names
+	} -cleanup {
+		destroy .barchart1
+	} -result {x y x2 y2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Purpose: Ensure the axis names command works correctly with system axis
+	# and a user created axis
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.names.A.1.2 {
+	    System and User Axis
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis names Axis1
+	} -cleanup {
+		destroy .barchart1
+	} -result {Axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Purpose: Ensure the axis names command works correctly after on of the 
+	# system axes has been deleted
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.names.A.1.3 {
+	    System and Multiple User Axis
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis delete x
+	} -body {
+		.barchart1 axis names
+	} -cleanup {
+		destroy .barchart1
+	} -result {y x2 y2}
+	
+	cleanupTests
+}

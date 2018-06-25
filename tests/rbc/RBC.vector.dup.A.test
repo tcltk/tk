@@ -1,0 +1,60 @@
+# RBC.vector.dup.A.test --
+#
+###Abstract
+# This file tests the dup function of an instance of the vector
+# rbc component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.dup
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+# namespace eval vector.dup {
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensure the vector dup command overwrites the contents of an existing 
+    # destName vector with the contents of the instance vector 
+    # ------------------------------------------------------------------------------------ 
+    test RBC.vector.dup.A.1.1 {
+        Test vector dup with overwriting
+    } -setup {
+        vector create Vector1
+        Vector1 set {1 2 3 4 5 6 7 8 9}       
+        vector create Vector2
+        Vector2 set {1 2}
+    } -body {
+        Vector1 dup Vector2
+        expr {$Vector2(:)}
+    } -cleanup {
+        vector destroy Vector1
+        vector destroy Vector2
+    } -result {1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0}
+    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector dup command creates a new vector with the contents of 
+    # the instance vector when destName does not exist. 
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.dup.A.1.2 {
+	    Test vector dup with vector creation
+	} -setup {
+	    vector create Vector1
+	    Vector1 set {1 2 3 4 5 6 7 8 9}       
+	} -body {
+	    Vector1 dup Vector2
+	    expr {$Vector2(:)}
+	} -cleanup {
+	    vector destroy Vector1
+	    vector destroy Vector2
+	} -result {1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0}
+
+    cleanupTests
+# }

@@ -1,0 +1,72 @@
+# RBC.vector.offset.A.test --
+#
+###Abstract
+# This file tests the offset function of 
+# the vector rbc component using no arguments.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.offset
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.offset {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector will return the correct offset
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.offset.A.1.1 {
+	    Test default vector offset
+	} -setup {
+		vector create TestVector(5:10)
+	} -body {
+	    TestVector offset
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {5}
+	
+		# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector will shift to correct offset
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.offset.A.2.1 {
+	    Test vector offset shift
+	} -setup {
+		vector create TestVector(5:10)
+	} -body {
+	    TestVector offset 4
+		TestVector offset
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector's data will shift to correct offset
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.offset.A.2.1 {
+	    Test vector offset shift
+	} -setup {
+		vector create TestVector(5:10)
+		TestVector set {4 5 6 7 8}
+	} -body {
+	    TestVector offset 4
+		
+		for {set i 4} {$i < 5} {incr i} {
+			if {$i != [TestVector index $i]} {
+				return 0
+			}
+		}
+		return 1
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {1}
+
+	cleanupTests
+}

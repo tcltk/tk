@@ -1,0 +1,835 @@
+# RBC.vector.expr.A.test --
+#
+###Abstract
+# This file tests the different operators of the expression feature
+# in the vector package.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.expr
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.expr {
+
+	# ------------------------------------------------------------------------------------
+	#  Test Constraints
+	#  Some machines treat floating point numbers differently, so we set some
+	#  constraints here for various vector related routines
+	# ------------------------------------------------------------------------------------
+	tcltest::testConstraint twoDigitExponent   [expr {[format %1.0e 1e-20] eq "1e-20"}]
+	tcltest::testConstraint threeDigitExponent [expr {[format %1.0e 1e-20] eq "1e-020"}]
+	set tcl_precision 12
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating unary minus
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.1 {
+		Test unary minus
+	} -setup {
+		vector create Vector1(5)
+		
+		Vector1 set {2 0 -1 2.4 -4.3}
+	} -body {
+		vector expr {-Vector1}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-2.0 0.0 1.0 -2.4 4.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating logical not
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.2 {
+		Test logical not
+	} -setup {
+		vector create Vector1(5)
+		
+		Vector1 set {2 0 -2 2.4 -4.4}
+	} -body {
+		vector expr {!Vector1}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.0 1.0 0.0 0.0 0.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating exponentation
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.3 {
+		Test exponentiation
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {0 1 12 4 2 -2 -2}
+		Vector2 set {5 5 0 0.5 3 3 4}
+	} -body {
+		vector expr {Vector1 ^ Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {0.0 1.0 1.0 2.0 8.0 -8.0 16.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating multiplication
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.4 {
+		Test multiplication
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {0 1 2 2.4 -4 -4}
+		Vector2 set {5 5 5 2 2 -4}
+	} -body {
+		vector expr {Vector1 * Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {0.0 5.0 10.0 4.8 -8.0 16.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating division
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.5 {
+		Test Division
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {0 1 5 -4 -8}
+		Vector2 set {5 5 1 2 -4}
+	} -body {
+		vector expr {Vector1 / Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {0.0 0.2 5.0 -2.0 2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating Modulo
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.6 {
+		Test Modulo
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {38 12 -3 5}
+		Vector2 set {12 24 5 -3}
+	} -body {
+		vector expr {Vector1 % Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {2.0 12.0 2.0 -1.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating Subtraction
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.7 {
+		Test Subtraction
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {0 5 4 2 -8 -8}
+		Vector2 set {5 0 2 4 4 -4}
+	} -body {
+		vector expr {Vector1 - Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {-5.0 5.0 2.0 -2.0 -12.0 -4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating addition
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.8 {
+		Test Addition
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {2 4 -1 2.4 4}
+		Vector2 set {5 -2 7 8 9.2}
+	} -body {
+		vector expr {Vector1 + Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {7.0 2.0 6.0 10.4 13.2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating vector shift left
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.9 {
+		Test shift left
+	} -setup {
+		vector create Vector1(5)
+		
+		Vector1 set {0 1 5 -4 -8}
+	} -body {
+		vector expr {Vector1 << 1}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {1.0 5.0 -4.0 -8.0 0.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating vector shift right
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.10 {
+		Test Shift Right
+	} -setup {
+		vector create Vector1(5)
+		
+		Vector1 set {0 1 5 -4 -8}
+	} -body {
+		vector expr {Vector1 >> 1}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-8.0 0.0 1.0 5.0 -4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating less than
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.11 {
+		Test less than
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {2 4 -2 4 4 5}
+		Vector2 set {5 2 5 -2 4.4 5}
+	} -body {
+		vector expr {Vector1 < Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {1.0 0.0 1.0 0.0 1.0 0.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating greater than
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.12 {
+		Test Greater Than
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {2 4 -2 4 4 5}
+		Vector2 set {5 2 5 -2 4.4 5}
+	} -body {
+		vector expr {Vector1 > Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {0.0 1.0 0.0 1.0 0.0 0.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating less than or equal
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.13 {
+		Test Less than or equal
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {2 4 -2 4 4 5}
+		Vector2 set {5 2 5 -2 4.4 5}
+	} -body {
+		vector expr {Vector1 <= Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {1.0 0.0 1.0 0.0 1.0 1.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating greater than or equal
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.14 {
+		Test Greater than or equal
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {2 4 -2 4 4 5}
+		Vector2 set {5 2 5 -2 4.4 5}
+	} -body {
+		vector expr {Vector1 >= Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {0.0 1.0 0.0 1.0 0.0 1.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating logical and
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.15 {
+		Test logical and
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {0 5 0 5.5}
+		Vector2 set {0 0 5.2 6.0}
+	} -body {
+		vector expr {Vector1 && Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {0.0 0.0 0.0 1.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating logical or
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.expr.A.1.16 {
+		Test logical or
+	} -setup {
+		vector create Vector1(5)
+		vector create Vector2(5)
+		
+		Vector1 set {0 5 0 5.5}
+		Vector2 set {0 0 5.2 6.0}
+	} -body {
+		vector expr {Vector1 || Vector2}
+	} -cleanup {
+		vector destroy Vector1
+		vector destroy Vector2
+	} -result {0.0 1.0 1.0 1.0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating acos (inverse cosine)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.17 {
+		Test acos
+	} -setup {
+		vector create Vector1
+		Vector1 set {1 0 0.5 -1}
+	} -body {
+		vector expr {acos(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.0 1.57079632679 1.0471975512 3.14159265359}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating asin (inverse sine)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.18 {
+		Test asin
+	} -setup {
+		vector create Vector1
+		Vector1 set {1 0 0.5 -1}
+	} -body {
+		vector expr {asin(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {1.57079632679 0.0 0.523598775598 -1.57079632679}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating atan (inverse tangent)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.19 {
+		Test atan
+	} -setup {
+		vector create Vector1
+		Vector1 set {1 0 0.5 -1}
+	} -body {
+		vector expr {atan(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.785398163397 0.0 0.463647609001 -0.785398163397}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating ceil (ceiling)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.20- {
+		Test ceil
+	} -setup {
+		vector create Vector1
+		Vector1 set {3.14159 4.5 8.4 .1 -0.1 -0.5 -2.1}
+	} -body {
+		vector expr {ceil(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {4.0 5.0 9.0 1.0 0.0 0.0 -2.0}
+
+	test RBC.vector.expr.A.1.20+ {
+		Test ceil
+	} -constraints threeDigitExponent -setup {
+		vector create Vector1
+		Vector1 set {3.14159 4.5 8.4 .1 -0.1 -0.5 -2.1}
+	} -body {
+		vector expr {ceil(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {4.0 5.0 9.0 1.0 0.0 0.0 -2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating cos
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.21 {
+		Test cosine
+	} -setup {
+		vector create Vector1
+		Vector1 set {0 3.14159 6.28318 -3.14159}
+	} -body {
+		vector expr {cos(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {1.0 -0.999999999996 0.999999999986 -0.999999999996}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating cosh
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.22 {
+		Test cosh
+	} -setup {
+		vector create Vector1
+		Vector1 set {0 3.14159 6.28318 -3.14159}
+	} -body {
+		vector expr {cosh(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {1.0 11.5919226299 267.745340517 11.5919226299}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating exp
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.23 {
+		Test exp
+	} -setup {
+		vector create Vector1
+		Vector1 set {2 -2 1.3 0}
+	} -body {
+		vector expr {exp(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {7.38905609893 0.135335283237 3.66929666762 1.0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating floor
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.24 {
+		Test floor
+	} -setup {
+		vector create Vector1
+		Vector1 set {2.1 3.9 -0.1 -1.5}
+	} -body {
+		vector expr {floor(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {2.0 3.0 -1.0 -2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating log
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.25 {
+		Test log
+	} -setup {
+		vector create Vector1
+		Vector1 set {12 2 3 5}
+	} -body {
+		vector expr {log(Vector1)}
+	} -cleanup {
+		vector destroy Vector1
+	} -result {2.48490664979 0.69314718056 1.09861228867 1.60943791243}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating log10
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.26 {
+		Test log10
+	} -setup {
+		vector create Vector1
+		Vector1 set {1 10 2.1 19} 
+	} -body {
+		vector expr {log10(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.0 1.0 0.322219294734 1.27875360095}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating abs
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.27 {
+		Test abs
+	} -setup {
+		vector create Vector1
+		Vector1 set {2 3 -3 5 4 -1.1 3.2}
+	} -body {
+		vector expr {abs(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {2.0 3.0 3.0 5.0 4.0 1.1 3.2}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating sin
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.28-00 {
+		Test sin
+	} -constraints twoDigitExponent -setup {
+		vector create Vector1
+		Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+	} -body {
+		vector expr {sin(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {2.65358979335e-06 0.999999999999 0.0 -2.65358979335e-06 -0.846220404175 0.841470984808 -0.841470984808}
+	test RBC.vector.expr.A.1.28-000 {
+		Test sin
+	} -constraints threeDigitExponent -setup {
+		vector create Vector1
+		Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+	} -body {
+		vector expr {sin(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {2.65358979335e-006 0.999999999999 0.0 -2.65358979335e-006 -0.846220404175 0.841470984808 -0.841470984808}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating sinh
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.29 {
+		Test sinh
+	} -setup {
+		vector create Vector1
+		Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+	} -body {
+		vector expr {sinh(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {11.548708597 2.30129557314 0.0 -11.548708597 4872401723.12 1.17520119364 -1.17520119364}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating sqrt
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.30 {
+		Test sqrt
+	} -setup {
+		vector create Vector1
+		Vector1 set {0 2 4 144 3.14159}
+	} -body {
+		vector expr {sqrt(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.0 1.41421356237 2.0 12.0 1.77245310234}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating tan
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.31-00 {
+		Test tan
+	} -constraints twoDigitExponent -setup {
+		vector create Vector1
+		Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+	} -body {
+		vector expr {tan(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-2.65358979336e-06 753695.995141 0.0 2.65358979336e-06 1.58815308339 1.55740772465 -1.55740772465}
+	test RBC.vector.expr.A.1.31-000 {
+		Test tan
+	} -constraints threeDigitExponent -setup {
+		vector create Vector1
+		Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+	} -body {
+		vector expr {tan(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-2.65358979336e-006 753695.995141 0.0 2.65358979336e-006 1.58815308339 1.55740772465 -1.55740772465}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating tanh
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.32 {
+		Test tanh
+	} -setup {
+		vector create Vector1
+		Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+	} -body {
+		vector expr {tanh(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.996272056473 0.91715212493 0.0 -0.996272056473 1.0 0.761594155956 -0.761594155956}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating round
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.33 {
+		Test round
+	} -setup {
+		vector create Vector1
+		Vector1 set {-3.11 -1.5 7.3 9.5 0}
+	} -body {
+		vector expr {round(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-3.0 -2.0 7.0 10.0 0.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating adev
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.34 {
+		Test adev
+	} -setup {
+		vector create Vector1
+		Vector1 set {-3.11 -1.5 7.3 9.5 0}
+	} -body {
+		vector expr {adev(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {4.7696}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating kurtosis (degree of peakedness)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.35 {
+		Test kurtosis
+	} -setup {
+		vector create Vector1
+		Vector1 set {-3.11 -1.5 7.3 9.5 0}
+	} -body {
+		vector expr {kurtosis(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-2.13595720694}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests length with a vector containing elements (see 1.52 for no elements)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.36 {
+		Test length with elements
+	} -setup {
+		vector create Vector1
+		Vector1 set {-3.11 -1.5 7.3 9.5 0}
+	} -body {
+		vector expr {length(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {5.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating max
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.37 {
+		Test max
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 0}
+	} -body {
+		vector expr {max(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {9.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating mean
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.38 {
+		Test mean
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 0}
+	} -body {
+		vector expr {mean(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.438}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating median
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.39 {
+		Test median
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {median(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.05}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating min
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.40 {
+		Test min
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {min(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-13.11}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating q1
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.41 {
+		Test q1
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {q1(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-1.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating q3
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.42 {
+		Test q3
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {q3(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {8.4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating prod
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.43 {
+		Test prod
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {prod(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-1800.17343}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating sdev (standard deviation)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.44 {
+		Test sdev
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {sdev(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {7.99297295546}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating skew (skewedness)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.45 {
+		Test skew
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {skew(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {1.16046217734}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating sum
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.46 {
+		Test sum
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {sum(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {2.29}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating var (variance)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.47 {
+		Test var
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {var(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {63.8876166667}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating norm
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.48 {
+		Test norm
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {norm(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.0 0.513489606369 0.902697921274 1.0 0.53118089341 0.632905793897}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating sort (ascending by default)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.49 {
+		Test sort
+	} -setup {
+		vector create Vector1
+		Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+	} -body {
+		vector expr {sort(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {-13.11 -1.5 -1.1 1.2 7.3 9.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests different conditions when evaluating random (produces vector)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.50 {
+		Test random
+	} -setup {
+		vector create Vector1(5)
+	} -body {
+		vector expr {random(Vector1)}
+		for {set i 0} {$i < [Vector1 length]} {incr i} {
+	        if {[Vector1 index $i] < 0 || [Vector1 index $i] > 1} {
+	            return 0
+	        }
+	    }
+	    return 1
+	} -cleanup {
+		vector destroy Vector1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests length when vector has no elements
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.expr.A.1.51 {
+		Test length no elements
+	} -setup {
+		vector create Vector1(0)
+	} -body {
+		vector expr {length(Vector1)} 
+	} -cleanup {
+		vector destroy Vector1
+	} -result {0.0}
+	
+	cleanupTests
+}

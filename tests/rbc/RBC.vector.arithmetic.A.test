@@ -1,0 +1,158 @@
+# RBC.vector.arithmetic.A.test --
+#
+###Abstract
+# This file tests the different arithmetic operators for 
+# the vector RBC component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.arithmetic
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.arithmetic {
+
+	# ------------------------------------------------------------------------------------
+	#  Test Constraints
+	#  Some machines treat floating point numbers differently, so we set some
+	#  constraints here for various vector related routines
+	# ------------------------------------------------------------------------------------
+	tcltest::testConstraint twoDigitExponent   [expr {[format %1.0e 1e-20] eq "1e-20"}]
+	tcltest::testConstraint threeDigitExponent [expr {[format %1.0e 1e-20] eq "1e-020"}]
+	set tcl_precision 12
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the correct functioning of vector addition
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.arithmetic.A.1.1 {
+	    Test vector addition
+	} -setup {
+		vector create VectorX
+		vector create VectorY
+		VectorX set {2 4 -1 2.4 4}
+		VectorY set {5 -2 7 8 9.2}
+	} -body {
+	    VectorX + VectorY
+	} -cleanup {
+		vector destroy VectorX
+	    vector destroy VectorY
+	} -result {7.0 2.0 6.0 10.4 13.2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the correct functioning of addition using a scalar
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.arithmetic.A.1.2 {
+	    Test scalar addition
+	} -setup {
+		vector create VectorX
+		VectorX set {2 4 -1 2.4 4}
+	} -body {
+	    VectorX + 3.1
+	} -cleanup {
+		vector destroy VectorX
+	} -result {5.1 7.1 2.1 5.5 7.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the correct functioning of vector subtraction
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.arithmetic.A.1.3 {
+	    Test vector subtraction
+	} -setup {
+		vector create VectorX
+		vector create VectorY
+		VectorX set {0 5 4 2 -8 -8}
+		VectorY set {5 0 2 4 4 -4}
+	} -body {
+	    VectorX - VectorY
+	} -cleanup {
+		vector destroy VectorX
+	    vector destroy VectorY
+	} -result {-5.0 5.0 2.0 -2.0 -12.0 -4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the correct functioning of subtraction using a scalar
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.arithmetic.A.1.4 {
+	    Test scalar subtraction
+	} -setup {
+		vector create VectorX
+		VectorX set {0 5 4 2 -8}
+	} -body {
+	    VectorX - 3.1
+	} -cleanup {
+		vector destroy VectorX
+	} -result {-3.1 1.9 0.9 -1.1 -11.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the correct functioning of vector multiplication
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.arithmetic.A.1.5 {
+	    Test vector multiplication
+	} -setup {
+		vector create VectorX
+		vector create VectorY
+		VectorX set {0 1 2 2.4 -4 -4}
+		VectorY set {5 5 5 2 2 -4}
+	} -body {
+	    VectorX * VectorY
+	} -cleanup {
+		vector destroy VectorX
+	    vector destroy VectorY
+	} -result {0.0 5.0 10.0 4.8 -8.0 16.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the correct functioning of multiplication using a scalar
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.arithmetic.A.1.7 {
+	    Test scalar multiplication
+	} -setup {
+		vector create VectorX
+		VectorX set {0 1 2 2.4 -4}
+	} -body {
+	    VectorX * 2
+	} -cleanup {
+		vector destroy VectorX
+	} -result {0.0 2.0 4.0 4.8 -8.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the correct functioning of vector division
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.arithmetic.A.1.8 {
+	    Test vector division
+	} -setup {
+		vector create VectorX
+		vector create VectorY
+		VectorX set {0 1 5 -4 -8}
+		VectorY set {5 5 1 2 -4}
+	} -body {
+	    VectorX / VectorY
+	} -cleanup {
+		vector destroy VectorX
+	    vector destroy VectorY
+	} -result {0.0 0.2 5.0 -2.0 2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the correct functioning of division using a scalar
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.arithmetic.A.1.6 {
+	    Test scalar division
+	} -setup {
+		vector create VectorX
+		VectorX set {0 1 5 -10 10}
+	} -body {
+	    VectorX / 5
+	} -cleanup {
+		vector destroy VectorX
+	} -result {0.0 0.2 1.0 -2.0 2.0}
+	
+	cleanupTests
+}

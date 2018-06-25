@@ -1,0 +1,255 @@
+# RBC.barchart.marker.configure.image.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the image marker configure
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image
+	# markers when given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.1 {
+		barchart marker configure image: anchor - n
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor n
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.2 {
+		barchart marker configure image: anchor - ne
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor ne
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.3 {
+		barchart marker configure image: anchor - e
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor e
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image
+	# markers when given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.4 {
+		barchart marker configure image: anchor - se
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor se
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 's' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.5 {
+		barchart marker configure image: anchor - s
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor s
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.6 {
+		barchart marker configure image: anchor - sw
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor sw
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.7 {
+		barchart marker configure image: anchor - w
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor w
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.8 {
+		barchart marker configure image: anchor - nw
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor nw
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.9 {
+		barchart marker configure image: anchor - center
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor center
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.10 {
+		barchart marker configure image: anchor - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -anchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.1.11 {
+		barchart marker configure image: anchor - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -anchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring image changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.image.A.2.1 {
+	    barchart marker configure image: image - valid image name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create image -name marker1
+		
+		# the following should set Image1 to 'image1'
+		set Image1 [image create photo image.a.2.1 -data {
+						R0lGODlhEAAQAIYAAPwCBHSi1Iyy5Hym3Hym1GSWxJS65Lza/OT2/Pz+/PT+
+						/KTK5DxmlJS67PT6/Pz6/Lzm/BRGhHSe1MTe/OTy/Oz2/Mzm/NTq/FSKtJS2
+						7PT2/MTi/LTa/AQyVOTu/Lze/LTS/JTC9MTq/Mzi/KzK/KTC/KS+/BQuRJzG
+						/KzO/LTO/KS6/Jy2/DRmpAQOHEx+rLTK/Jy+/Iym/Jyq/GSK/GSOrIyCBHSi
+						5HyW/DxuxFxqhPT+dPzqbHRCBAQmPBxenBxSjBxanARGfMRyDOymNOTCnPTG
+						fIRKDMyGNOzGlISu7GSOzIROBPTGjJSy9EyGvIxODNSORMSWTLxyFDx6tBxe
+						lKRiJGQ6BCQWBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAAAA
+						LAAAAAAQABAAAAesgACCAQIDBAWCiYoABgcICQoJCwyLgg0OCQkPmgoQEYsS
+						E5mYFBUWFxiLGZmbGhoWGxMcHYoDChoOFR4fByAcIbSJAyIXIxYgICQkJSbB
+						gicovCkqJSssKy0uiy8bIDAxLDIzNDU2lS031TI4OTo7PD2VPj9AQUIuQ0RF
+						RvGVi0dIkvATpGSJPwBMkDQxwkSCkyc3DkKJImUKlSdVhBxEaOUKACVVNgrC
+						AsBPIAAh/mhDcmVhdGVkIGJ5IEJNUFRvR0lGIFBybyB2ZXJzaW9uIDIuNQ0K
+						qSBEZXZlbENvciAxOTk3LDE5OTguIEFsbCByaWdodHMgcmVzZXJ2ZWQuDQpo
+						dHRwOi8vd3d3LmRldmVsY29yLmNvbQA7
+		    		}]
+	} -body {
+		.barchart1 marker configure marker1 -image $Image1
+		.barchart1 marker cget marker1 -image
+	} -cleanup {
+		image delete $Image1
+	    .barchart1 marker delete marker1
+		destroy .barchart1
+	} -result {image.a.2.1}
+	
+	cleanupTests
+}

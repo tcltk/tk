@@ -1,0 +1,483 @@
+# RBC.graph.marker.configure.window.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the window marker configure
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.marker {	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window
+	# markers when given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.1 {
+		graph marker configure window: anchor - n
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor n
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.2 {
+		graph marker configure window: anchor - ne
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor ne
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.3 {
+		graph marker configure window: anchor - e
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor e
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window
+	# markers when given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.4 {
+		graph marker configure window: anchor - se
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor se
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 's' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.5 {
+		graph marker configure window: anchor - s
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor s
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.6 {
+		graph marker configure window: anchor - sw
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor sw
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.7 {
+		graph marker configure window: anchor - w
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor w
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.8 {
+		graph marker configure window: anchor - nw
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor nw
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.9 {
+		graph marker configure window: anchor - center
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor center
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.10 {
+		graph marker configure window: anchor - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -anchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.1.11 {
+		graph marker configure window: anchor - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -anchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.2.1 {
+		graph marker configure: height - integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -height 2
+		.graph1 marker cget Marker1 -height
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.2.2 {
+		graph marker configure: height - invalid integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -height -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.2.3 {
+		graph marker configure: height - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -height 3.5
+		.graph1 marker cget Marker1 -height
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.2.4 {
+		graph marker configure: height - invalid decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -height -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.2.5 {
+		graph marker configure: height - character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -height a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.2.6 {
+		graph marker configure: height - zero
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -height 0}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.3.1 {
+		graph marker configure: width - integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -width 2
+		.graph1 marker cget Marker1 -width
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.3.2 {
+		graph marker configure: width - invalid integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -width -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.3.3 {
+		graph marker configure: width - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -width 3.5
+		.graph1 marker cget Marker1 -width
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.3.4 {
+		graph marker configure: width - invalid decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -width -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.3.5 {
+		graph marker configure: width - character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -width a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.3.6 {
+		graph marker configure: width - zero
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -width 0}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -window command works correctly when given a
+	# valid button name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.4.1 {
+	    graph marker configure: window - valid button name
+	} -setup {
+		graph .graph1
+		button .graph1.button1 -text "foo"
+		.graph1 marker create window -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -window .graph1.button1
+		.graph1 marker cget Marker1 -window
+	} -cleanup {
+	    .graph1 marker delete Marker1
+		destroy .graph1
+	} -result {.graph1.button1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -window command works correctly when given a
+	# non-existent button name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.window.A.4.2 {
+	    graph marker configure: window - non-existent button name
+	} -setup {
+		graph .graph1
+		.graph1 marker create window -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -window .graph1.button1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    .graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	cleanupTests
+}

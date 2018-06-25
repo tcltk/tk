@@ -1,0 +1,91 @@
+# RBC.barchart.marker.names.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the marker names
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker names command works correctly when no pattern is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.names.A.1.1 {
+	    Marker Names: No Pattern
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		.barchart1 marker create polygon -name marker2
+	} -body {
+		.barchart1 marker names
+	} -cleanup {
+	    .barchart1 marker delete marker1 marker2
+		destroy .barchart1
+	} -result {marker1 marker2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker names command works correctly when an exact pattern is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.names.A.1.2 {
+	    Marker Names: Exact Pattern
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		.barchart1 marker create polygon -name marker2
+	} -body {
+		.barchart1 marker names marker1
+	} -cleanup {
+	    .barchart1 marker delete marker1 marker2
+		destroy .barchart1
+	} -result {marker1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker names command works correctly when a wildcard pattern is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.names.A.1.3 {
+	    Marker Names: Wildcard Pattern
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		.barchart1 marker create polygon -name marker2
+	} -body {
+		.barchart1 marker names marker*
+	} -cleanup {
+	    .barchart1 marker delete marker1 marker2
+		destroy .barchart1
+	} -result {marker1 marker2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker names command works correctly when an incorrect pattern
+	# is given
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.names.A.1.4 {
+	    Marker Names: Incorrect Pattern
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+		.barchart1 marker create polygon -name marker2
+	} -body {
+		.barchart1 marker names marker
+	} -cleanup {
+	    .barchart1 marker delete marker1 marker2
+		destroy .barchart1
+	} -result {}
+	
+	cleanupTests
+}

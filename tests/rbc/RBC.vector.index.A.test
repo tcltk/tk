@@ -1,0 +1,113 @@
+# RBC.vector.index.A.test --
+#
+###Abstract
+# This file tests the index function of the vector rbc component when only 
+# an index is given.
+# Index is an instance function of vector.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.index
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+#namespace eval vector.index {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector index command works correctly when given a valid vector 
+	# index.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.index.A.1.1 {
+		vector index: valid index
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		foo index 2
+	} -cleanup {
+		vector destroy foo
+	} -result {3.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector index command works correctly when given an invalid 
+	# vector index.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.index.A.1.2 {
+		vector index: invalid index
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		if {[catch {foo index 4}]} {
+			expr {$foo(:)}
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector index command works correctly when given a valid vector 
+	# index and a valid value.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.index.A.2.1 {
+		vector index: valid index, valid value
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		foo index 2 5.0
+		expr {$foo(:)}
+	} -cleanup {
+		vector destroy foo
+	} -result {1.0 2.0 5.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector index command works correctly when given an invalid 
+	# vector index.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.index.A.2.2 {
+		vector index: invalid index, valid value
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		if {[catch {foo index 4 5.0}]} {
+			expr {$foo(:)}
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector index command works correctly when given a valid vector 
+	# index and an invalid value.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.index.A.2.3 {
+		vector index: valid index, invalid value
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		if {[catch {foo index 2 a}]} {
+			expr {$foo(:)}
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {1.0 2.0 3.0 4.0}
+	
+	cleanupTests
+#}

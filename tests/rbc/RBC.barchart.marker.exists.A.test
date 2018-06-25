@@ -1,0 +1,52 @@
+# RBC.barchart.marker.exists.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the marker exists
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a marker that doesn't exist is recognized by exists
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.exists.A.1.1 {
+	    Test exists on non-existant marker
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 marker exists marker1
+	} -cleanup {
+	    destroy .barchart1 
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a marker that an existing marker is recognized by exists
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.exists.A.1.2 {
+	    Test exists on existing marker
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name marker1
+	} -body {
+		.barchart1 marker exists marker1
+	} -cleanup {
+	    .barchart1 marker delete marker1
+		destroy .barchart1
+	} -result {1}
+	
+	cleanupTests
+}

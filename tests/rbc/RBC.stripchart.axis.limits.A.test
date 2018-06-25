@@ -1,0 +1,39 @@
+# RBC.stripchart.axis.limits.A.test --
+#
+###Abstract
+# This file tests the axis limits function of the stripchart BLT component.
+# Axis limits is an instance function of stripchart.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis limits command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.axis.limits.A.1.1 {
+		User Axis
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 axis create Axis1
+	} -body {
+		.stripchart1 axis limits Axis1
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0.0 1.0}
+	
+	cleanupTests
+	
+}

@@ -1,0 +1,1185 @@
+# RBC.barchart.axis.configure.A.test --
+#
+###Abstract
+# This file tests the axis configure function of the barchart BLT component.
+# Axis configure is an instance function of barchart.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -bindtags command works correctly when given a 
+	# single tag name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.1.1 {
+		Bindtags - single tag
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis bind Binding1 <Double-1> {puts foobar}
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -bindtags Binding1
+		.barchart1 axis cget Axis1 -bindtags
+	} -cleanup {
+		destroy Binding1
+		.barchart1 axis delete Axis1
+		destroy .barchart1
+	} -result {Binding1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -bindtags command works correctly when given  
+	# a list of tag names.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.1.2 {
+		Bindtags - tag list
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis bind Binding1 <Double-1> {puts foo}
+		.barchart1 axis bind Binding2 <Double-3> {puts bar}
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -bindtags {Binding1 Binding2}
+		.barchart1 axis cget Axis1 -bindtags
+	} -cleanup {
+		destroy Binding1 Binding2
+		.barchart1 axis delete Axis1
+		destroy .barchart1
+	} -result {Binding1 Binding2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -color command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.2.1 {
+		Color
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -color blue
+		.barchart1 axis cget Axis1 -color
+	} -cleanup {
+		destroy .barchart1
+	} -result {blue}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.4.1 {
+		Descending 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -descending 1
+		.barchart1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.4.2 {
+		Descending 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -descending 0
+		.barchart1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.4.3 {
+		Descending yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -descending yes
+		.barchart1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.4.4 {
+		Descending no
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -descending no
+		.barchart1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.4.5 {
+		Descending true
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -descending true
+		.barchart1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.4.6 {
+		Descending false
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -descending false
+		.barchart1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.5.1 {
+		Hide 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -hide 1
+		.barchart1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}	
+
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.5.2 {
+		Hide true
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -hide true
+		.barchart1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.5.3 {
+		Hide yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -hide yes
+		.barchart1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.5.4 {
+		Hide 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -hide 0
+		.barchart1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.5.5 {
+		Hide no
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -hide no
+		.barchart1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.5.6 {
+		Hide false
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -hide false
+		.barchart1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -justify command works correctly
+	# ------------------------------------------------------------------------------------	
+	test RBC.barchart.axis.configure.A.6.1 {
+		Justify Left
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -justify left
+		.barchart1 axis cget Axis1 -justify
+	} -cleanup {
+		destroy .barchart1
+	} -result {left}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -justify command works correctly
+	# ------------------------------------------------------------------------------------	
+	test RBC.barchart.axis.configure.A.6.2 {
+		Justify Right
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -justify right
+		.barchart1 axis cget Axis1 -justify
+	} -cleanup {
+		destroy .barchart1
+	} -result {right}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -justify command works correctly
+	# ------------------------------------------------------------------------------------	
+	test RBC.barchart.axis.configure.A.6.3 {
+		Justify Center
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -justify center
+		.barchart1 axis cget Axis1 -justify
+	} -cleanup {
+		destroy .barchart1
+	} -result {center}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitsformat command works correctly 
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.7.1 {
+		Limitsformat
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -limitsformat "Minimum Maximum"
+		.barchart1 axis cget Axis1 -limitsformat
+	} -cleanup {
+		destroy .barchart1
+	} -result {Minimum Maximum}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitsshadow command works correctly 
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.9.1 {
+		Limitsshadow
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -limitsshadow "blue"
+		.barchart1 axis cget Axis1 -limitsshadow
+	} -cleanup {
+		destroy .barchart1
+	} -result {blue 1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitscolor command works correctly 
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.10.1 {
+		Limitscolor
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -limitscolor "blue"
+		.barchart1 axis cget Axis1 -limitscolor
+	} -cleanup {
+		destroy .barchart1
+	} -result {blue}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitsfont command works correctly 
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.11.1 {
+		Limitsfont
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -limitsfont "*-Helvetica-Bold-R-Normal-*-14-140-*"
+		.barchart1 axis cget Axis1 -limitsfont
+	} -cleanup {
+		destroy .barchart1
+	} -result {*-Helvetica-Bold-R-Normal-*-14-140-*}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -linewidth command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.12.1 {
+		Linewidth
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -linewidth 2
+		.barchart1 axis cget Axis1 -linewidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.13.1 {
+		Logscale 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -logscale 1
+		.barchart1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.13.2 {
+		Logscale yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -logscale yes
+		.barchart1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.13.3 {
+		Logscale true
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -logscale true
+		.barchart1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.13.4 {
+		Logscale 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -logscale 0
+		.barchart1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.13.5 {
+		Logscale no
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -logscale no
+		.barchart1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.13.6 {
+		Logscale false
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -logscale false
+		.barchart1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.14.1 {
+		Loose 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -loose 1
+		.barchart1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.14.2 {
+		Loose yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -loose yes
+		.barchart1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.14.3 {
+		Loose true
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -loose true
+		.barchart1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.14.4 {
+		Loose 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -loose 0
+		.barchart1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.14.5 {
+		Loose no
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -loose no
+		.barchart1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.14.6 {
+		Loose false
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -loose false
+		.barchart1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}		
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -majorticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.15.1 {
+		Majorticks
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -majorticks "1 3 5 7 9 11"
+		.barchart1 axis cget Axis1 -majorticks
+	} -cleanup {
+		destroy .barchart1
+	} -result {1.0 3.0 5.0 7.0 9.0 11.0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -max command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.16.1 {
+		Max
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -max 23
+		.barchart1 axis cget Axis1 -max
+	} -cleanup {
+		destroy .barchart1
+	} -result {23.0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -min command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.17.1 {
+		Min
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -min -23
+		.barchart1 axis cget Axis1 -min
+	} -cleanup {
+		destroy .barchart1
+	} -result {-23.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -minorticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.18.1 {
+		Minorticks
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -minorticks "0.2 0.4 0.6 0.8"
+		.barchart1 axis cget Axis1 -minorticks
+	} -cleanup {
+		destroy .barchart1
+	} -result {0.2 0.4 0.6 0.8}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -rotate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.19.1 {
+		Rotate
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -rotate 90.0
+		.barchart1 axis cget Axis1 -rotate
+	} -cleanup {
+		destroy .barchart1
+	} -result {90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -rotate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.19.2 {
+		Rotate
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -rotate -90.0
+		.barchart1 axis cget Axis1 -rotate
+	} -cleanup {
+		destroy .barchart1
+	} -result {270.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollcommand command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.20.1 {
+		Scrollcommand
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -scrollcommand
+		.barchart1 axis cget Axis1 -scrollcommand
+	} -cleanup {
+		destroy .barchart1
+	} -result {}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollmax command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.21.1 {
+		Scrollmax
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -scrollmax 19
+		.barchart1 axis cget Axis1 -scrollmax
+	} -cleanup {
+		destroy .barchart1
+	} -result {19.0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollmin command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.22.1 {
+		Scrollmin
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -scrollmin -19
+		.barchart1 axis cget Axis1 -scrollmin
+	} -cleanup {
+		destroy .barchart1
+	} -result {-19.0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.23.1 {
+		Showticks 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -showticks 1
+		.barchart1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.23.2 {
+		Showticks yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -showticks yes
+		.barchart1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.23.3 {
+		Showticks true
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -showticks true
+		.barchart1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.23.4 {
+		Showticks 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -showticks 0
+		.barchart1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.23.5 {
+		Showticks no
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -showticks no
+		.barchart1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.23.6 {
+		Showticks false
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -showticks false
+		.barchart1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}		
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -stepsize command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.24.1 {
+		Stepsize
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -stepsize .01
+		.barchart1 axis cget Axis1 -stepsize
+	} -cleanup {
+		destroy .barchart1
+	} -result {0.01}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -subdivisions command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.25.1 {
+		Subdivisions
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -subdivisions 6
+		.barchart1 axis cget Axis1 -subdivisions 
+	} -cleanup {
+		destroy .barchart1
+	} -result {6}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -tickfont command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.26.1 {
+		Tickfont
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -tickfont "*-Helvetica-Bold-R-Normal-*-14-140-*"
+		.barchart1 axis cget Axis1 -tickfont
+	} -cleanup {
+		destroy .barchart1
+	} -result {*-Helvetica-Bold-R-Normal-*-14-140-*}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -ticklength command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.27.1 {
+		Ticklength
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -ticklength 20
+		.barchart1 axis cget Axis1 -ticklength
+	} -cleanup {
+		destroy .barchart1
+	} -result {20}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -title command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.28.1 {
+		Title
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -title "Test Title"
+		.barchart1 axis cget Axis1 -title
+	} -cleanup {
+		destroy .barchart1
+	} -result {Test Title}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.29.1 {
+		Titlealternate 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+		.barchart1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.barchart1 axis configure Axis1 -titlealternate 1
+		.barchart1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.29.2 {
+		Titlealternate yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+		.barchart1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.barchart1 axis configure Axis1 -titlealternate yes
+		.barchart1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.29.3 {
+		Titlealternate true
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+		.barchart1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.barchart1 axis configure Axis1 -titlealternate true
+		.barchart1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.29.4 {
+		Titlealternate 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+		.barchart1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.barchart1 axis configure Axis1 -titlealternate 0
+		.barchart1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.29.5 {
+		Titlealternate no
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+		.barchart1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.barchart1 axis configure Axis1 -titlealternate no
+		.barchart1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.29.6 {
+		Titlealternate false
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+		.barchart1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.barchart1 axis configure Axis1 -titlealternate false
+		.barchart1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlecolor command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.30.1 {
+		Titlecolor
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+		.barchart1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.barchart1 axis configure Axis1 -titlecolor blue
+		.barchart1 axis cget Axis1 -titlecolor
+	} -cleanup {
+		destroy .barchart1
+	} -result {blue}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlefont command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.31.1 {
+		Titlefont
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+		.barchart1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.barchart1 axis configure Axis1 -titlefont "*-Helvetica-Bold-R-Normal-*-14-140-*"
+		.barchart1 axis cget Axis1 -titlefont
+	} -cleanup {
+		destroy .barchart1
+	} -result {*-Helvetica-Bold-R-Normal-*-14-140-*}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -autorange command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.32.1 {
+		Autorange
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -autorange 13.0
+		.barchart1 axis cget Axis1 -autorange
+	} -cleanup {
+		destroy .barchart1
+	} -result {13.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -borderwidth command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.33.1 {
+		Borderwidth
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -borderwidth 13.0
+		.barchart1 axis cget Axis1 -borderwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {13}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -borderwidth command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.33.2 {
+		Borderwidth (bd)
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -bd 13.0
+		.barchart1 axis cget Axis1 -bd
+	} -cleanup {
+		destroy .barchart1
+	} -result {13}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -shiftby command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.34.1 {
+		Shiftby
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -shiftby 13.0
+		.barchart1 axis cget Axis1 -shiftby
+	} -cleanup {
+		destroy .barchart1
+	} -result {13.0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.35.1 {
+		Relief - flat
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -relief flat
+		.barchart1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.35.2 {
+		Relief - raised
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -relief groove
+		.barchart1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.35.3 {
+		Relief - raised
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -relief raised
+		.barchart1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.35.4 {
+		Relief - ridge
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -relief ridge
+		.barchart1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.35.5 {
+		Relief - solid
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -relief solid
+		.barchart1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {solid}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.35.6 {
+		Relief - sunken
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -relief sunken
+		.barchart1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollincrement command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.36.1 {
+		Scrollincrement
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -scrollincrement 15
+		.barchart1 axis cget Axis1 -scrollincrement
+	} -cleanup {
+		destroy .barchart1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -background command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.37.1 {
+		Background
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -background "red"
+		.barchart1 axis cget Axis1 -background
+	} -cleanup {
+		destroy .barchart1
+	} -result {red}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -tickdivider command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.configure.A.39.1 {
+		Tickdivider
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis configure Axis1 -tickdivider 13.0
+		.barchart1 axis cget Axis1 -tickdivider
+	} -cleanup {
+		destroy .barchart1
+	} -result {13.0}
+	
+
+	
+	cleanupTests
+}

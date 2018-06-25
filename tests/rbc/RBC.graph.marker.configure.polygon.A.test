@@ -1,0 +1,537 @@
+# RBC.graph.marker.configure.polygon.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the polygon marker configure
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.marker {	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given a
+	# valid dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.1.1 {
+		graph marker configure: dashes - valid dash list
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -dashes {2 3 2 4}
+		.graph1 marker cget Marker1 -dashes
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {2 3 2 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given an
+	# empty dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.1.2 {
+		graph marker configure: dashes - empty dash list
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -dashes ""
+		.graph1 marker cget Marker1 -dashes
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given a
+	# dash list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.1.3 {
+		graph marker configure: dashes - long dash list
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -dashes {2 3 2 4 2 3 2 4 2 3 2 4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given an
+	# invalid numerical dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.1.4 {
+		graph marker configure: dashes - invalid numerical dash list
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -dashes {2 3 2 -1 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given a
+	# dash list with characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.1.5 {
+		graph marker configure: dashes - dash list with characters
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -dashes {2 3 2 a 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for polygon 
+	# polygon when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.2.1 {
+		graph marker configure polygon: fill - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -fill black
+		.graph1 marker cget Marker1 -fill
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {black {}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for polygon 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.2.2 {
+		graph marker configure polygon: fill - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -fill invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.3.1 {
+		graph marker configure: linewidth - integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -linewidth 2
+		.graph1 marker cget Marker1 -linewidth
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.3.2 {
+		graph marker configure: linewidth - invalid integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -linewidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.3.3 {
+		graph marker configure: linewidth - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -linewidth 3.5
+		.graph1 marker cget Marker1 -linewidth
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.3.4 {
+		graph marker configure: linewidth - invalid decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -linewidth -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.3.5 {
+		graph marker configure: linewidth - character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -linewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.3.6 {
+		graph marker configure: linewidth - zero
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -linewidth 0
+		.graph1 marker cget Marker1 -linewidth
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for polygon 
+	# polygon when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.4.1 {
+		graph marker configure polygon: outline - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -outline black
+		.graph1 marker cget Marker1 -outline
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {black {}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for polygon 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.4.2 {
+		graph marker configure polygon: outline - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -outline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring stipple changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.5.1 {
+	    Configure Stipple
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 \
+			-stipple @[file join [file dirname [info script]] greenback.xbm]
+		.graph1 marker cget Marker1 -stipple
+	} -cleanup {
+	    .graph1 marker delete Marker1
+		destroy .graph1
+	} -match glob -result {@*greenback.xbm}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -cap command works correctly when given 'butt'.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.6.1 {
+		graph marker configure: cap - butt
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -cap butt
+		.graph1 marker cget Marker1 -cap
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {butt}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -cap command works correctly when given
+	# 'projecting'.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.6.2 {
+		graph marker configure: cap - projecting
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -cap projecting
+		.graph1 marker cget Marker1 -cap
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {projecting}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -cap command works correctly when given
+	# 'round'.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.6.3 {
+		graph marker configure: cap - round
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -cap round
+		.graph1 marker cget Marker1 -cap
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {round}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -join command works correctly when given 
+	# 'bevel'.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.7.1 {
+		graph marker configure: join - bevel
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -join bevel
+		.graph1 marker cget Marker1 -join
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {bevel}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -join command works correctly when given
+	# 'miter'.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.7.2 {
+		graph marker configure: join - miter
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -join miter
+		.graph1 marker cget Marker1 -join
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {miter}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -join command works correctly when given
+	# 'round'.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.7.3 {
+		graph marker configure: join - round
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -join round
+		.graph1 marker cget Marker1 -join
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {round}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.8.1 {
+		graph marker configure: xor - 1
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xor 1
+		.graph1 marker cget Marker1 -xor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.8.2 {
+		graph marker configure: xor - 0
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xor 0
+		.graph1 marker cget Marker1 -xor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.8.3 {
+		graph marker configure: xor - true
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xor true
+		.graph1 marker cget Marker1 -xor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.8.4 {
+		graph marker configure: xor - false
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xor false
+		.graph1 marker cget Marker1 -xor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.8.5 {
+		graph marker configure: xor - yes
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xor yes
+		.graph1 marker cget Marker1 -xor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.8.6 {
+		graph marker configure: xor - no
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xor no
+		.graph1 marker cget Marker1 -xor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.polygon.A.8.7 {
+		graph marker configure: xor - invalid input
+	} -setup {
+		graph .graph1
+		.graph1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -xor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	cleanupTests
+}

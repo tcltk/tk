@@ -1,0 +1,88 @@
+# RBC.vector.range.A.test --
+#
+###Abstract
+# This file tests the range function of the vector rbc component.
+# Range is an instance function of vector.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.range
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.range {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector range command works correctly when given two valid vector 
+	# indices where the last index is greater than the first index.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.range.A.1.1 {
+		vector range: valid indices
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		foo range 1 2
+	} -cleanup {
+		vector destroy foo
+	} -result {2.0 3.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector range command works correctly when given an invalid 
+	# vector index.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.range.A.1.2 {
+		vector range: invalid index
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		if {[catch {foo range 1 4}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector range command works correctly when given two valid vector 
+	# indices where the last index is less than the first index.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.range.A.1.3 {
+		vector range: valid indices, reversed
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		foo range 2 1
+	} -cleanup {
+		vector destroy foo
+	} -result {2.0 3.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector range command works correctly when given a valid vector 
+	# index and the end keyword.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.range.A.1.4 {
+		vector range: keyword
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		foo range 1 end
+	} -cleanup {
+		vector destroy foo
+	} -result {2.0 3.0 4.0}
+	
+	cleanupTests
+}

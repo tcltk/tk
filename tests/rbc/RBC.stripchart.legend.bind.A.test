@@ -1,0 +1,142 @@
+# RBC.stripchart.legend.bind.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the legend bind 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.legend
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.legend {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be created for a legend element.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.legend.bind.A.1.1 {
+	    Test legend bind creation
+	} -setup {
+	    stripchart .stripchart1
+	    set X [list 1 2 3 4 5]
+	    set Y [list 2 4 6 8 10]
+	    .stripchart1 element create Line1 -x $X -y $Y
+	    .stripchart1 element create Line2 -x $Y -y $X
+	    pack .stripchart1 -fill both
+	} -body {
+	    if {[catch {.stripchart1 legend bind Line1 <Double-1> {puts test}}]} {
+	        return 1
+	    } else {
+	    	return 0
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be queried for a sequence and legend element.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.legend.bind.A.1.2 {
+	    Test legend bind query
+	} -setup {
+	    stripchart .stripchart1
+	    set X [list 1 2 3 4 5]
+	    set Y [list 2 4 6 8 10]
+	    .stripchart1 element create Line1 -x $X -y $Y
+	    .stripchart1 element create Line2 -x $Y -y $X
+	    pack .stripchart1 -fill both
+	    .stripchart1 legend bind Line1 <Double-1> {puts test}    
+	} -body {
+	    .stripchart1 legend bind Line1 <Double-1>
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {puts test}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be appended for a sequence and legend element.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.legend.bind.A.1.3 {
+	    Test legend bind append
+	} -setup {
+	    stripchart .stripchart1
+	    set X [list 1 2 3 4 5]
+	    set Y [list 2 4 6 8 10]
+	    .stripchart1 element create Line1 -x $X -y $Y
+	    .stripchart1 element create Line2 -x $Y -y $X
+	    pack .stripchart1 -fill both
+	    .stripchart1 legend bind Line1 <Double-1> {puts test}    
+	} -body {
+	    .stripchart1 legend bind Line1 <Double-1> {+puts test2}
+	    .stripchart1 legend bind Line1 <Double-1>    
+	} -cleanup {
+	    destroy .stripchart1
+	} -result "puts test\nputs test2"
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings are overwritten for a sequence and legend element.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.legend.bind.A.1.4 {
+	    Test legend bind overwrite
+	} -setup {
+	    stripchart .stripchart1
+	    set X [list 1 2 3 4 5]
+	    set Y [list 2 4 6 8 10]
+	    .stripchart1 element create Line1 -x $X -y $Y
+	    .stripchart1 element create Line2 -x $Y -y $X
+	    pack .stripchart1 -fill both
+	    .stripchart1 legend bind Line1 <Double-1> {puts test}    
+	} -body {
+	    .stripchart1 legend bind Line1 <Double-1> {puts test2}    
+	    .stripchart1 legend bind Line1 <Double-1>    
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {puts test2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bound sequences can be queried for just a legend element.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.legend.bind.A.1.5 {
+	    Test legend bind query
+	} -setup {
+	    stripchart .stripchart1
+	    set X [list 1 2 3 4 5]
+	    set Y [list 2 4 6 8 10]
+	    .stripchart1 element create Line1 -x $X -y $Y
+	    .stripchart1 element create Line2 -x $Y -y $X
+	    pack .stripchart1 -fill both
+	    .stripchart1 legend bind Line1 <Double-1> {puts test}
+	    .stripchart1 legend bind Line1 <Key> {puts test2}    
+	} -body {
+	    .stripchart1 legend bind Line1
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {<Key> <Double-Button-1>}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be created for an arbitrary tag.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.legend.bind.A.1.6 {
+	    Test legend bind creation arbitrary
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    if {[catch {.stripchart1 legend bind TestBind <Double-1> {puts test}}]} {
+	        return 1
+	    }
+	    return 0
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	cleanupTests
+}

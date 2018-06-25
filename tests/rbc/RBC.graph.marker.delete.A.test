@@ -1,0 +1,57 @@
+# RBC.graph.marker.delete.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the marker delete
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker delete command works correctly when given a single
+	# existing marker name
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.delete.A.1.1 {
+	    Deletes a single marker
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name marker1
+	} -body {
+	    .graph1 marker delete marker1
+		.graph1 marker exists marker1
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker delete command works correctly when given multiple
+	# existing marker name
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.delete.A.1.2 {
+	    Deletes multiple markers
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name marker1
+		.graph1 marker create bitmap -name marker2
+	} -body {
+	    .graph1 marker delete marker1 marker2
+		expr {[.graph1 marker exists marker1] && [.graph1 marker exists marker1]}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	cleanupTests
+}

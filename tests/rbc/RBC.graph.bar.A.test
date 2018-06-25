@@ -1,0 +1,59 @@
+# RBC.graph.bar.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the bar 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.bar
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.bar {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a new barchart element can be created when given a unique name.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.bar.A.1.1 {
+	    graph bar: unique name
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	} -body {
+	    .graph1 bar create Element1
+		.graph1 bar names
+	} -cleanup {
+	    destroy .graph1
+	} -result {Element1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a new barchart element can be created when given the name of an
+	# existing bar element.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.bar.A.1.2 {
+	    graph bar: existing name
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+		.graph1 bar create Element1
+	} -body {
+	    if {[catch {.graph1 bar create Element1}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	cleanupTests
+}

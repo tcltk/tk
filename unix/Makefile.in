@@ -308,6 +308,7 @@ SRC_DIR			= @srcdir@
 TOP_DIR			= $(SRC_DIR)/..
 GENERIC_DIR		= $(TOP_DIR)/generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
+RBC_DIR			= $(GENERIC_DIR)/rbc
 UNIX_DIR		= $(TOP_DIR)/unix
 BMAP_DIR		= $(TOP_DIR)/bitmaps
 TOOL_DIR		= @TCL_SRC_DIR@/tools
@@ -381,6 +382,39 @@ TTK_OBJS = \
 	ttkTagSet.o ttkTheme.o ttkTrace.o ttkTrack.o ttkTreeview.o \
 	ttkWidget.o ttkStubInit.o
 
+RBC_OBJS = \
+	rbcAlloc.o \
+        rbcBind.o \
+        rbcChain.o \
+        rbcConfig.o \
+        rbcGraph.o \
+        rbcGrAxis.o \
+        rbcGrBar.o \
+        rbcGrElem.o \
+        rbcGrGrid.o \
+        rbcGrHairs.o \
+        rbcGrLegd.o \
+        rbcGrLine.o \
+        rbcGrMarker.o \
+        rbcGrMisc.o \
+        rbcGrPen.o \
+        rbcGrPs.o \
+        rbcImage.o \
+        rbcInt.o \
+        rbcList.o \
+        rbcParse.o \
+        rbcPs.o \
+        rbcSpline.o \
+        rbcSwitch.o \
+        rbcText.o \
+        rbcTile.o \
+        rbcUtil.o \
+        rbcVecMath.o \
+        rbcVecObjCmd.o \
+        rbcVector.o \
+        rbcWindow.o \
+        rbcUnixImage.o \
+
 STUB_OBJS = tkStubInit.o
 
 STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
@@ -407,7 +441,7 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
-	$(STUB_OBJS) $(TTK_OBJS) \
+	$(STUB_OBJS) $(TTK_OBJS) $(RBC_OBJS) \
 	$(@TK_WINDOWINGSYSTEM@_OBJS) @PLAT_OBJS@
 
 TK_DECLS = \
@@ -492,6 +526,40 @@ TTK_SRCS = \
 
 TTK_STUB_SRCS = \
 	$(TTK_DIR)/ttkStubInit.c $(TTK_DIR)/ttkStubLib.c
+
+RBC_SRCS = \
+        $(RBC_DIR)/rbcAlloc.c \
+        $(RBC_DIR)/rbcBind.c \
+        $(RBC_DIR)/rbcChain.c \
+        $(RBC_DIR)/rbcConfig.c \
+        $(RBC_DIR)/rbcGraph.c \
+        $(RBC_DIR)/rbcGrAxis.c \
+        $(RBC_DIR)/rbcGrBar.c \
+        $(RBC_DIR)/rbcGrElem.c \
+        $(RBC_DIR)/rbcGrGrid.c \
+        $(RBC_DIR)/rbcGrHairs.c \
+        $(RBC_DIR)/rbcGrLegd.c \
+        $(RBC_DIR)/rbcGrLine.c \
+        $(RBC_DIR)/rbcGrMarker.c \
+        $(RBC_DIR)/rbcGrMisc.c \
+        $(RBC_DIR)/rbcGrPen.c \
+        $(RBC_DIR)/rbcGrPs.c \
+        $(RBC_DIR)/rbcImage.c \
+        $(RBC_DIR)/rbcInt.c \
+        $(RBC_DIR)/rbcList.c \
+        $(RBC_DIR)/rbcParse.c \
+        $(RBC_DIR)/rbcPs.c \
+        $(RBC_DIR)/rbcSpline.c \
+        $(RBC_DIR)/rbcSwitch.c \
+        $(RBC_DIR)/rbcText.c \
+        $(RBC_DIR)/rbcTile.c \
+        $(RBC_DIR)/rbcUtil.c \
+        $(RBC_DIR)/rbcVecMath.c \
+        $(RBC_DIR)/rbcVecObjCmd.c \
+        $(RBC_DIR)/rbcVector.c \
+        $(RBC_DIR)/rbcWindow.c \
+        $(RBC_DIR)/rbcUnixImage.c \
+
 
 X11_SRCS = \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
@@ -648,13 +716,17 @@ tktest-real: ${TK_STUB_LIB_FILE}
 # args to tcltest, ie:
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
-test: test-classic test-ttk
+test: test-classic test-ttk test-rbc
 
 test-classic: $(TKTEST_EXE)
 	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 $(TESTFLAGS)
 
 test-ttk: $(TKTEST_EXE)
 	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/ttk/all.tcl -geometry +0+0 \
+	$(TESTFLAGS)
+
+test-rbc: $(TKTEST_EXE)
+	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/rbc/all.tcl -geometry +0+0 \
 	$(TESTFLAGS)
 
 # Tests with different languages
@@ -1450,6 +1522,100 @@ ttkWidget.o: $(TTK_DIR)/ttkWidget.c
 
 ttkMacOSXTheme.o: $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/ttkMacOSXTheme.c
+
+rbcAlloc.o: $(RBC_DIR)/rbcAlloc.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcAlloc.c
+
+rbcBind.o: $(RBC_DIR)/rbcBind.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcBind.c
+
+rbcChain.o: $(RBC_DIR)/rbcChain.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcChain.c
+
+rbcConfig.o: $(RBC_DIR)/rbcConfig.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcConfig.c
+
+rbcGraph.o: $(RBC_DIR)/rbcGraph.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGraph.c
+
+rbcGrAxis.o: $(RBC_DIR)/rbcGrAxis.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrAxis.c
+
+rbcGrBar.o: $(RBC_DIR)/rbcGrBar.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrBar.c
+
+rbcGrElem.o: $(RBC_DIR)/rbcGrElem.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrElem.c
+
+rbcGrGrid.o: $(RBC_DIR)/rbcGrGrid.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrGrid.c
+
+rbcGrHairs.o: $(RBC_DIR)/rbcGrHairs.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrHairs.c
+
+rbcGrLegd.o: $(RBC_DIR)/rbcGrLegd.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrLegd.c
+
+rbcGrLine.o: $(RBC_DIR)/rbcGrLine.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrLine.c
+
+rbcGrMarker.o: $(RBC_DIR)/rbcGrMarker.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrMarker.c
+
+rbcGrMisc.o: $(RBC_DIR)/rbcGrMisc.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrMisc.c
+
+rbcGrPen.o: $(RBC_DIR)/rbcGrPen.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrPen.c
+
+rbcGrPs.o: $(RBC_DIR)/rbcGrPs.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrPs.c
+
+rbcImage.o: $(RBC_DIR)/rbcImage.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcImage.c
+
+rbcInt.o: $(RBC_DIR)/rbcInt.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcInt.c
+
+rbcList.o: $(RBC_DIR)/rbcList.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcList.c
+
+rbcParse.o: $(RBC_DIR)/rbcParse.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcParse.c
+
+rbcPs.o: $(RBC_DIR)/rbcPs.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcPs.c
+
+rbcSpline.o: $(RBC_DIR)/rbcSpline.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcSpline.c
+
+rbcSwitch.o: $(RBC_DIR)/rbcSwitch.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcSwitch.c
+
+rbcText.o: $(RBC_DIR)/rbcText.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcText.c
+
+rbcTile.o: $(RBC_DIR)/rbcTile.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcTile.c
+
+rbcUtil.o: $(RBC_DIR)/rbcUtil.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcUtil.c
+
+rbcVecMath.o: $(RBC_DIR)/rbcVecMath.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcVecMath.c
+
+rbcVecObjCmd.o: $(RBC_DIR)/rbcVecObjCmd.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcVecObjCmd.c
+
+rbcVector.o: $(RBC_DIR)/rbcVector.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcVector.c
+
+rbcWindow.o: $(RBC_DIR)/rbcWindow.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcWindow.c
+
+rbcUnixImage.o: $(RBC_DIR)/rbcUnixImage.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcUnixImage.c
+
 
 .c.o:
 	$(CC) -c $(CC_SWITCHES) $<

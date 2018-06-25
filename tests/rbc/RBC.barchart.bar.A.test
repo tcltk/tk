@@ -1,0 +1,59 @@
+# RBC.barchart.bar.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the bar 
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.bar
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.bar {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a new barchart element can be created when given a unique name.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.bar.A.1.1 {
+	    barchart bar: unique name
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	} -body {
+	    .barchart1 bar create Element1
+		.barchart1 bar names
+	} -cleanup {
+	    destroy .barchart1
+	} -result {Element1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a new barchart element can be created when given the name of an
+	# existing bar element.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.bar.A.1.2 {
+	    barchart bar: existing name
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+		.barchart1 bar create Element1
+	} -body {
+	    if {[catch {.barchart1 bar create Element1}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .barchart1
+	} -result {0}
+	
+	cleanupTests
+}

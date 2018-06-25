@@ -1,0 +1,95 @@
+# RBC.vector.append.A.test --
+#
+###Abstract
+# This file tests the append function of the vector rbc component.
+# Append is an instance function of vector.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.append
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+#namespace eval vector.append {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector append command works correctly when given a list of 
+	# numbers.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.append.A.1.1 {
+		vector set: list of numbers
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0}
+	} -body {
+		foo append {3.0 4.0} 
+		expr {$foo(:)}
+	} -cleanup {
+		vector destroy foo
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector append command works correctly when given another vector.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.append.A.1.2 {
+		vector append: another vector
+	} -setup {
+		vector create foo
+		vector create goo
+		foo set {1.0 2.0}
+		goo set {3.0 4.0}
+	} -body {
+		foo append goo
+		expr {$foo(:)}
+	} -cleanup {
+		vector destroy foo
+		vector destroy goo
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector append command works correctly when given a list  
+	# containing characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.append.A.1.3 {
+		vector append: list with characters
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0}
+	} -body {
+		if {[catch {foo append {3.0 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector append command works correctly when given a non-existent 
+	# vector reference.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.append.A.1.4 {
+		vector append: non-existent vector
+	} -setup {
+		vector create foo
+	} -body {
+		if {[catch {foo append goo}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {0}
+	
+	cleanupTests
+#}

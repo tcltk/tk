@@ -114,6 +114,7 @@ WIN_DIR			= $(SRC_DIR)
 UNIX_DIR		= $(SRC_DIR)/../unix
 GENERIC_DIR		= $(SRC_DIR)/../generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
+RBC_DIR			= $(GENERIC_DIR)/rbc
 BITMAP_DIR		= $(ROOT_DIR)/bitmaps
 XLIB_DIR		= $(ROOT_DIR)/xlib
 RC_DIR			= $(WIN_DIR)/rc
@@ -152,7 +153,7 @@ MAN2TCL			= man2tcl$(EXEEXT)
 # makefile to look into these paths when resolving .c to .obj
 # dependencies.
 
-VPATH = $(GENERIC_DIR):$(TTK_DIR):$(WIN_DIR):$(UNIX_DIR):$(XLIB_DIR):$(RC_DIR)
+VPATH = $(GENERIC_DIR):$(TTK_DIR):$(RBC_DIR):$(WIN_DIR):$(UNIX_DIR):$(XLIB_DIR):$(RC_DIR)
 
 # warning flags
 CFLAGS_WARNING	= @CFLAGS_WARNING@
@@ -358,7 +359,8 @@ TK_OBJS = \
 	tkVisual.$(OBJEXT) \
 	tkStubInit.$(OBJEXT) \
 	tkWindow.$(OBJEXT) \
-	$(TTK_OBJS)
+	$(TTK_OBJS) \
+	$(RBC_OBJS)
 
 TTK_OBJS = \
 	ttkWinMonitor.$(OBJEXT) \
@@ -394,6 +396,41 @@ TTK_OBJS = \
 	ttkTreeview.$(OBJEXT) \
 	ttkWidget.$(OBJEXT) \
 	ttkStubInit.$(OBJEXT)
+
+RBC_OBJS = \
+	rbcAlloc.$(OBJEXT) \
+	rbcBind.$(OBJEXT) \
+	rbcChain.$(OBJEXT) \
+	rbcConfig.$(OBJEXT) \
+	rbcGraph.$(OBJEXT) \
+	rbcGrAxis.$(OBJEXT) \
+	rbcGrBar.$(OBJEXT) \
+	rbcGrElem.$(OBJEXT) \
+	rbcGrGrid.$(OBJEXT) \
+	rbcGrHairs.$(OBJEXT) \
+	rbcGrLegd.$(OBJEXT) \
+	rbcGrLine.$(OBJEXT) \
+	rbcGrMarker.$(OBJEXT) \
+	rbcGrMisc.$(OBJEXT) \
+	rbcGrPen.$(OBJEXT) \
+	rbcGrPs.$(OBJEXT) \
+	rbcImage.$(OBJEXT) \
+	rbcInt.$(OBJEXT) \
+	rbcList.$(OBJEXT) \
+	rbcParse.$(OBJEXT) \
+	rbcPs.$(OBJEXT) \
+	rbcSpline.$(OBJEXT) \
+	rbcSwitch.$(OBJEXT) \
+	rbcText.$(OBJEXT) \
+	rbcTile.$(OBJEXT) \
+	rbcUtil.$(OBJEXT) \
+	rbcVecMath.$(OBJEXT) \
+	rbcVecObjCmd.$(OBJEXT) \
+	rbcVector.$(OBJEXT) \
+	rbcWindow.$(OBJEXT) \
+	rbcWinDraw.$(OBJEXT) \
+	rbcWinImage.$(OBJEXT) \
+	rbcWinUtil.$(OBJEXT) \
 
 STUB_OBJS = \
 	tkStubLib.$(OBJEXT) \
@@ -437,7 +474,7 @@ $(MAN2TCL): $(TCL_SRC_DIR)/tools/man2tcl.c
 # args to tcltest, ie:
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
-test: test-classic test-ttk
+test: test-classic test-ttk test-rbc
 
 test-classic: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
@@ -445,6 +482,10 @@ test-classic: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 
 test-ttk: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/ttk/all.tcl" \
+	$(TESTFLAGS) | ./$(CAT32)
+
+test-rbc: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
+	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/rbc/all.tcl" \
 	$(TESTFLAGS) | ./$(CAT32)
 
 runtest: binaries $(TKTEST) $(TEST_DLL_FILE)

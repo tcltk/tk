@@ -1,0 +1,75 @@
+# RBC.stripchart.pen.delete.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the pen delete
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.pen
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.pen {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen deletion works when deleting a single pen
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.pen.delete.A.1.1 {
+	    Test single pen deletion
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	    .stripchart1 pen create Pen1    
+	} -body {
+	    .stripchart1 pen delete Pen1
+	    .stripchart1 pen names Pen1
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen deletion works when deleting multiple pens
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.pen.delete.A.1.2 {
+	    Test multiple pen deletion
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	    .stripchart1 pen create Pen1
+	    .stripchart1 pen create Pen2    
+	} -body {
+	    .stripchart1 pen delete Pen1 Pen2
+	    .stripchart1 pen names P*
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen deletion works when given a non-existent pen name
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.pen.delete.A.1.3 {
+	    Test multiple pen deletion
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1   
+	} -body {
+	    if {[catch {.stripchart1 pen delete Pen1}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	cleanupTests
+}

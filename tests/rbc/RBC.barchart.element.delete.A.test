@@ -1,0 +1,77 @@
+# RBC.barchart.element.delete.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element delete 
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element delete command works correctly when given a single
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.delete.A.1.1 {
+		barchart element: delete - single element name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 element create Element2
+	} -body {
+		.barchart1 element delete Element1
+		.barchart1 element names
+	} -cleanup {
+		destroy .barchart1
+	} -result {Element2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element delete command works correctly when given multiple
+	# element names.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.delete.A.1.2 {
+		barchart element: delete - multiple element names
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 element create Element2
+		.barchart1 element create Element3
+	} -body {
+		.barchart1 element delete Element1 Element2
+		.barchart1 element names
+	} -cleanup {
+		destroy .barchart1
+	} -result {Element3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element delete command works correctly when given an invalid
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.element.delete.A.1.3 {
+		barchart element: delete - invalid element name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 element delete invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	cleanupTests
+}

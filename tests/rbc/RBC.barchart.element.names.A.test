@@ -1,0 +1,95 @@
+# RBC.barchart.element.names.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element names 
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element names command works correctly when no pattern is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.1 {
+		element names: no pattern
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 element create Element2
+	} -body {
+		.barchart1 element names
+	} -cleanup {
+		.barchart1 element delete Element2
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Element2 Element1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element names command works correctly when an exact pattern is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.2 {
+		element names: exact pattern
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 element create Element2
+	} -body {
+		.barchart1 element names Element2
+	} -cleanup {
+		.barchart1 element delete Element2
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Element2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element names command works correctly when a wildcard pattern is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.3 {
+		element names: wildcard pattern
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 element create Element2
+	} -body {
+		.barchart1 element names *ment*
+	} -cleanup {
+		.barchart1 element delete Element2
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Element2 Element1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element names command works correctly when an incorrect pattern 
+	# is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.4 {
+		element names: incorrect pattern
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 element create Element2
+	} -body {
+		.barchart1 element names Element
+	} -cleanup {
+		.barchart1 element delete Element2
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {}
+	
+	cleanupTests
+}

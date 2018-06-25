@@ -1,0 +1,56 @@
+# RBC.graph.pen.names.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the pen names 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.pen
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.pen {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that names works with no given pattern
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.names.A.1.1 {
+	    Test pen names
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	    .graph1 pen create Pen1
+	} -body {
+	    .graph1 pen names
+	} -cleanup {
+	    destroy .graph1
+	    # TODO: The results of this test are valid, regardless of the order, but exact matching 
+	    # will cause this to fail if the results appear in any other order
+	} -result {Pen1 activeLine activeBar}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that names works with a pattern parameter
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.names.A.1.2 {
+	    Test pen names
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	    .graph1 pen create Pen1
+	} -body {
+	    .graph1 pen names P*
+	} -cleanup {
+	    destroy .graph1
+	} -result {Pen1}
+	
+	cleanupTests
+}

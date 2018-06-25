@@ -42,6 +42,10 @@ static int		InactiveCmd(ClientData dummy, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const *objv);
 static int		ScalingCmd(ClientData dummy, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const *objv);
+#ifndef MAC_OSX_TK
+static int		SnapCmd(ClientData dummy, Tcl_Interp *interp,
+			    int objc, Tcl_Obj *const *objv);
+#endif
 static int		UseinputmethodsCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const *objv);
@@ -68,6 +72,9 @@ static const TkEnsemble tkCmdMap[] = {
     {"useinputmethods",	UseinputmethodsCmd, NULL },
     {"windowingsystem",	WindowingsystemCmd, NULL },
     {"fontchooser",	NULL, tkFontchooserEnsemble},
+#ifndef MAC_OSX_TK
+    {"snap",		SnapCmd, NULL},
+#endif
     {NULL, NULL, NULL}
 };
 
@@ -973,6 +980,30 @@ InactiveCmd(
     }
     return TCL_OK;
 }
+
+#ifndef MAC_OSX_TK
+int
+SnapCmd(
+    ClientData clientData,	/* Main window associated with interpreter. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    Tk_Window tkwin = clientData;
+    int skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
+
+    if (skip < 0) {
+	return TCL_ERROR;
+    }
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "window photo");
+	return TCL_ERROR;
+    }
+
+    return Rbc_SnapWindow(interp, tkwin, Tcl_GetString(objv[1]),
+        Tcl_GetString(objv[2]), 0, 0);
+}
+#endif
 
 /*
  *----------------------------------------------------------------------

@@ -3313,6 +3313,16 @@ Initialize(
     }
 
     /*
+     * Initialize the rbc widget set
+     */
+#ifndef MAC_OSX_TK
+    code = Rbc_Init(interp);
+    if (code != TCL_OK) {
+	goto done;
+    }
+#endif
+
+    /*
      * Invoke platform-specific initialization. Unlock mutex before entering
      * TkpInit, as that may run through the Tk_Init routine again for the
      * console window interpreter.

@@ -1,0 +1,77 @@
+# RBC.stripchart.element.delete.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element delete 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element delete command works correctly when given a single
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.delete.A.1.1 {
+		stripchart element: delete - single element name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		.stripchart1 element create Element2
+	} -body {
+		.stripchart1 element delete Element1
+		.stripchart1 element names
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Element2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element delete command works correctly when given multiple
+	# element names.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.delete.A.1.2 {
+		stripchart element: delete - multiple element names
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		.stripchart1 element create Element2
+		.stripchart1 element create Element3
+	} -body {
+		.stripchart1 element delete Element1 Element2
+		.stripchart1 element names
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Element3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element delete command works correctly when given an invalid
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.delete.A.1.3 {
+		stripchart element: delete - invalid element name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 element delete invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	cleanupTests
+}

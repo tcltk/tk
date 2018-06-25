@@ -1,0 +1,71 @@
+# RBC.stripchart.grid.cget.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the grid cget 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.grid
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.grid {	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works for default values.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.grid.cget.A.1.1 {
+	    stripchart grid: cget - default
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    .stripchart1 grid cget -linewidth
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid cget command works correctly when given a valid 
+	# grid configuration option name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.grid.cget.A.1.2 {
+		stripchart grid: cget - valid option name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 grid configure -color black
+	} -body {
+		.stripchart1 grid cget -color
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid cget command works correctly when given an invalid 
+	# grid configuration option name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.grid.cget.A.1.3 {
+		stripchart grid: cget - invalid option name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 grid cget -invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	cleanupTests
+}

@@ -1,0 +1,760 @@
+# RBC.graph.marker.configure.common.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the common flags for
+# the marker configure function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring coords changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.1.1 {
+	    Configure Coords
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name marker1
+	} -body {
+		.graph1 marker configure marker1 -coords {0.8 2}
+		.graph1 marker cget marker1 -coords
+	} -cleanup {
+	    .graph1 marker delete marker1
+		destroy .graph1
+	} -result {0.8 2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring element changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.2.1 {
+	    Configure Element
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name marker1
+	} -body {
+		.graph1 marker configure marker1 -element elemName
+		.graph1 marker cget marker1 -element
+	} -cleanup {
+	    .graph1 marker delete marker1
+		destroy .graph1
+	} -result {elemName}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.3.1 {
+		graph marker configure: hide - 1
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -hide 1
+		.graph1 marker cget Marker1 -hide
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.3.2 {
+		graph marker configure: hide - 0
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -hide 0
+		.graph1 marker cget Marker1 -hide
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.3.3 {
+		graph marker configure: hide - true
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -hide true
+		.graph1 marker cget Marker1 -hide
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.3.4 {
+		graph marker configure: hide - false
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -hide false
+		.graph1 marker cget Marker1 -hide
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.3.5 {
+		graph marker configure: hide - yes
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -hide yes
+		.graph1 marker cget Marker1 -hide
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.3.6 {
+		graph marker configure: hide - no
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -hide no
+		.graph1 marker cget Marker1 -hide
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.3.7 {
+		graph marker configure: hide - invalid input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.4.1 {
+		graph marker configure: under - 1
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -under 1
+		.graph1 marker cget Marker1 -under
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.4.2 {
+		graph marker configure: under - 0
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -under 0
+		.graph1 marker cget Marker1 -under
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.4.3 {
+		graph marker configure: under - true
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -under true
+		.graph1 marker cget Marker1 -under
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.4.4 {
+		graph marker configure: under - false
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -under false
+		.graph1 marker cget Marker1 -under
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.4.5 {
+		graph marker configure: under - yes
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -under yes
+		.graph1 marker cget Marker1 -under
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.4.6 {
+		graph marker configure: under - no
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -under no
+		.graph1 marker cget Marker1 -under
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.4.7 {
+		graph marker configure: under - invalid input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -under invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.5.1 {
+		graph marker configure: xoffset - integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xoffset 2
+		.graph1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.5.2 {
+		graph marker configure: xoffset - negative integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xoffset -1
+		.graph1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {-1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.5.3 {
+		graph marker configure: xoffset - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xoffset 3.5
+		.graph1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.5.4 {
+		graph marker configure: xoffset - invalid decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xoffset -3.5
+		.graph1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {-4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.5.5 {
+		graph marker configure: xoffset - character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -xoffset a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.5.6 {
+		graph marker configure: xoffset - zero
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -xoffset 0
+		.graph1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.6.1 {
+		graph marker configure: yoffset - integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -yoffset 2
+		.graph1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.6.2 {
+		graph marker configure: yoffset - negative integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -yoffset -1
+		.graph1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {-1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.6.3 {
+		graph marker configure: yoffset - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -yoffset 3.5
+		.graph1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.6.4 {
+		graph marker configure: yoffset - invalid decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -yoffset -3.5
+		.graph1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {-4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.6.5 {
+		graph marker configure: yoffset - character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -yoffset a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.6.6 {
+		graph marker configure: yoffset - zero
+	} -setup {
+		graph .graph1
+		.graph1 marker create line -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -yoffset 0
+		.graph1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring mapx changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.7.1 {
+	    Mapx
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name marker1
+	} -body {
+		.graph1 marker configure marker1 -mapx x2
+		.graph1 marker cget marker1 -mapx
+	} -cleanup {
+	    .graph1 marker delete marker1
+		destroy .graph1
+	} -result {x2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapx command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.7.1 {
+		graph marker configure: mapx - valid axis name
+	} -setup {
+		graph .graph1
+		.graph1 axis create .axis1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -mapx .axis1
+		.graph1 marker cget Marker1 -mapx
+	} -cleanup {
+		.graph1 marker delete Marker1
+		.graph1 axis delete .axis1
+		destroy .graph1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapx command works correctly when given a non-
+	# existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.7.2 {
+		graph marker configure: mapx - non-existent axis name
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -mapx .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapx command works correctly when not input is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.7.3 {
+		graph marker configure: mapx - no input
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -mapx
+		.graph1 marker cget Marker1 -mapx
+	} -cleanup {
+		destroy .graph1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapy command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.8.1 {
+		graph marker configure: mapy - valid axis name
+	} -setup {
+		graph .graph1
+		.graph1 axis create .axis1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -mapy .axis1
+		.graph1 marker cget Marker1 -mapy
+	} -cleanup {
+		.graph1 marker delete Marker1
+		.graph1 axis delete .axis1
+		destroy .graph1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapy command works correctly when given a non-
+	# existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.8.2 {
+		graph marker configure: mapy - non-existent axis name
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -mapy .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapy command works correctly when no input is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.8.3 {
+		graph marker configure: mapy - no input
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -mapy
+		.graph1 marker cget Marker1 -mapy
+	} -cleanup {
+		destroy .graph1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -name command works correctly when given a 
+	# string name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.9.1 {
+		graph marker configure: name - string name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 marker create text -name myMarker
+		.graph1 marker names
+	} -cleanup {
+		destroy .graph1
+	} -result {myMarker}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given
+	# 'normal' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.10.1 {
+		graph marker configure: state - normal
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -state normal
+		.graph1 marker cget Marker1 -state
+	} -cleanup {
+		destroy .graph1
+	} -result {normal}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given
+	# 'active' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.10.2 {
+		graph marker configure: state - active
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -state active
+		.graph1 marker cget Marker1 -state
+	} -cleanup {
+		destroy .graph1
+	} -result {active}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given
+	# 'disabled' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.10.3 {
+		graph marker configure: state - disabled
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -state disabled
+		.graph1 marker cget Marker1 -state
+	} -cleanup {
+		destroy .graph1
+	} -result {disabled}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given 
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.10.4 {
+		graph marker configure: state - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -state 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given 
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.10.5 {
+		graph marker configure: state - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -state invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -bindtags command works correctly when given a 
+	# single tag name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.11.1 {
+		graph marker configure: bindtags - single tag
+	} -setup {
+		graph .graph1
+		.graph1 marker bind Binding1 <Double-1> {puts foobar}
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -bindtags Binding1
+		.graph1 marker cget Marker1 -bindtags
+	} -cleanup {
+		destroy Binding1
+		destroy .graph1
+	} -result {Binding1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -bindtags command works correctly when given a 
+	# list of tag names.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.common.A.11.2 {
+		graph marker configure: bindtags - tag list
+	} -setup {
+		graph .graph1
+		.graph1 marker bind Binding1 <Double-1> {puts foo}
+		.graph1 marker bind Binding2 <Double-3> {puts bar}
+		.graph1 marker create text -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -bindtags {Binding1 Binding2}
+		.graph1 marker cget Marker1 -bindtags
+	} -cleanup {
+		destroy Binding1 Binding2
+		destroy .graph1
+	} -result {Binding1 Binding2}
+	
+	cleanupTests
+}

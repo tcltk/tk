@@ -1,0 +1,760 @@
+# RBC.stripchart.marker.configure.common.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the common flags for
+# the marker configure function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring coords changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.1.1 {
+	    Configure Coords
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name marker1
+	} -body {
+		.stripchart1 marker configure marker1 -coords {0.8 2}
+		.stripchart1 marker cget marker1 -coords
+	} -cleanup {
+	    .stripchart1 marker delete marker1
+		destroy .stripchart1
+	} -result {0.8 2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring element changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.2.1 {
+	    Configure Element
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name marker1
+	} -body {
+		.stripchart1 marker configure marker1 -element elemName
+		.stripchart1 marker cget marker1 -element
+	} -cleanup {
+	    .stripchart1 marker delete marker1
+		destroy .stripchart1
+	} -result {elemName}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.3.1 {
+		stripchart marker configure: hide - 1
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -hide 1
+		.stripchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.3.2 {
+		stripchart marker configure: hide - 0
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -hide 0
+		.stripchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.3.3 {
+		stripchart marker configure: hide - true
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -hide true
+		.stripchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.3.4 {
+		stripchart marker configure: hide - false
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -hide false
+		.stripchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.3.5 {
+		stripchart marker configure: hide - yes
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -hide yes
+		.stripchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.3.6 {
+		stripchart marker configure: hide - no
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -hide no
+		.stripchart1 marker cget Marker1 -hide
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -hide command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.3.7 {
+		stripchart marker configure: hide - invalid input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.4.1 {
+		stripchart marker configure: under - 1
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -under 1
+		.stripchart1 marker cget Marker1 -under
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.4.2 {
+		stripchart marker configure: under - 0
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -under 0
+		.stripchart1 marker cget Marker1 -under
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.4.3 {
+		stripchart marker configure: under - true
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -under true
+		.stripchart1 marker cget Marker1 -under
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.4.4 {
+		stripchart marker configure: under - false
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -under false
+		.stripchart1 marker cget Marker1 -under
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.4.5 {
+		stripchart marker configure: under - yes
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -under yes
+		.stripchart1 marker cget Marker1 -under
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.4.6 {
+		stripchart marker configure: under - no
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -under no
+		.stripchart1 marker cget Marker1 -under
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -under command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.4.7 {
+		stripchart marker configure: under - invalid input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -under invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.5.1 {
+		stripchart marker configure: xoffset - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xoffset 2
+		.stripchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.5.2 {
+		stripchart marker configure: xoffset - negative integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xoffset -1
+		.stripchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {-1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.5.3 {
+		stripchart marker configure: xoffset - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xoffset 3.5
+		.stripchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.5.4 {
+		stripchart marker configure: xoffset - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xoffset -3.5
+		.stripchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {-4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.5.5 {
+		stripchart marker configure: xoffset - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -xoffset a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xoffset command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.5.6 {
+		stripchart marker configure: xoffset - zero
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xoffset 0
+		.stripchart1 marker cget Marker1 -xoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.6.1 {
+		stripchart marker configure: yoffset - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -yoffset 2
+		.stripchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.6.2 {
+		stripchart marker configure: yoffset - negative integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -yoffset -1
+		.stripchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {-1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.6.3 {
+		stripchart marker configure: yoffset - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -yoffset 3.5
+		.stripchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.6.4 {
+		stripchart marker configure: yoffset - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -yoffset -3.5
+		.stripchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {-4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.6.5 {
+		stripchart marker configure: yoffset - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -yoffset a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -yoffset command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.6.6 {
+		stripchart marker configure: yoffset - zero
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -yoffset 0
+		.stripchart1 marker cget Marker1 -yoffset
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring mapx changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.7.1 {
+	    Mapx
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name marker1
+	} -body {
+		.stripchart1 marker configure marker1 -mapx x2
+		.stripchart1 marker cget marker1 -mapx
+	} -cleanup {
+	    .stripchart1 marker delete marker1
+		destroy .stripchart1
+	} -result {x2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapx command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.7.1 {
+		stripchart marker configure: mapx - valid axis name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 axis create .axis1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -mapx .axis1
+		.stripchart1 marker cget Marker1 -mapx
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		.stripchart1 axis delete .axis1
+		destroy .stripchart1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapx command works correctly when given a non-
+	# existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.7.2 {
+		stripchart marker configure: mapx - non-existent axis name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -mapx .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapx command works correctly when not input is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.7.3 {
+		stripchart marker configure: mapx - no input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -mapx
+		.stripchart1 marker cget Marker1 -mapx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapy command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.8.1 {
+		stripchart marker configure: mapy - valid axis name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 axis create .axis1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -mapy .axis1
+		.stripchart1 marker cget Marker1 -mapy
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		.stripchart1 axis delete .axis1
+		destroy .stripchart1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapy command works correctly when given a non-
+	# existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.8.2 {
+		stripchart marker configure: mapy - non-existent axis name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -mapy .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -mapy command works correctly when no input is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.8.3 {
+		stripchart marker configure: mapy - no input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -mapy
+		.stripchart1 marker cget Marker1 -mapy
+	} -cleanup {
+		destroy .stripchart1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -name command works correctly when given a 
+	# string name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.9.1 {
+		stripchart marker configure: name - string name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 marker create text -name myMarker
+		.stripchart1 marker names
+	} -cleanup {
+		destroy .stripchart1
+	} -result {myMarker}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given
+	# 'normal' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.10.1 {
+		stripchart marker configure: state - normal
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -state normal
+		.stripchart1 marker cget Marker1 -state
+	} -cleanup {
+		destroy .stripchart1
+	} -result {normal}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given
+	# 'active' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.10.2 {
+		stripchart marker configure: state - active
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -state active
+		.stripchart1 marker cget Marker1 -state
+	} -cleanup {
+		destroy .stripchart1
+	} -result {active}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given
+	# 'disabled' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.10.3 {
+		stripchart marker configure: state - disabled
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -state disabled
+		.stripchart1 marker cget Marker1 -state
+	} -cleanup {
+		destroy .stripchart1
+	} -result {disabled}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given 
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.10.4 {
+		stripchart marker configure: state - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -state 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -state command works correctly when given 
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.10.5 {
+		stripchart marker configure: state - invalid character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -state invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -bindtags command works correctly when given a 
+	# single tag name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.11.1 {
+		stripchart marker configure: bindtags - single tag
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker bind Binding1 <Double-1> {puts foobar}
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -bindtags Binding1
+		.stripchart1 marker cget Marker1 -bindtags
+	} -cleanup {
+		destroy Binding1
+		destroy .stripchart1
+	} -result {Binding1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -bindtags command works correctly when given a 
+	# list of tag names.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.common.A.11.2 {
+		stripchart marker configure: bindtags - tag list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker bind Binding1 <Double-1> {puts foo}
+		.stripchart1 marker bind Binding2 <Double-3> {puts bar}
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -bindtags {Binding1 Binding2}
+		.stripchart1 marker cget Marker1 -bindtags
+	} -cleanup {
+		destroy Binding1 Binding2
+		destroy .stripchart1
+	} -result {Binding1 Binding2}
+	
+	cleanupTests
+}

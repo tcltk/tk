@@ -1,0 +1,39 @@
+# RBC.graph.axis.limits.A.test --
+#
+###Abstract
+# This file tests the axis limits function of the graph BLT component.
+# Axis limits is an instance function of graph.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis limits command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.limits.A.1.1 {
+		User Axis
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis limits Axis1
+	} -cleanup {
+		destroy .graph1
+	} -result {0.0 1.0}
+	
+	cleanupTests
+	
+}

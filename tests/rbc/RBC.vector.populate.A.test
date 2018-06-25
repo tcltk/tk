@@ -1,0 +1,62 @@
+# RBC.vector.populate.A.test --
+#
+###Abstract
+# This file tests the populate function of an instance of the vector
+# rbc component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.populate
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+# namespace eval vector.populate {
+	# ------------------------------------------------------------------------------------
+    # Purpose: Ensure the vector populate command overwrites the contents of an existing
+    # destName vector with the contents of the instance vector and density new components
+    # between each pre-existing component 
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.populate.A.1.1 {
+	    Test vector populate with overwriting
+	} -setup {
+	    vector create Vector1
+	    Vector1 set {1 2 3 4 5 6 7 8 9}       
+	    vector create Vector2
+        Vector2 set {1 2}
+	} -body {
+	    Vector1 populate Vector2 1
+	    expr {$Vector2(:)}
+	} -cleanup {
+	    vector destroy Vector1
+	    vector destroy Vector2
+	} -result {1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector populate command creates a new destName vector with the 
+    # contents of the instance vector and density number of new components between each 
+    # pre-existing component 
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.populate.A.1.2 {
+	    Test vector populate with creation
+	} -setup {
+	    vector create Vector1
+	    Vector1 set {1 2 3 4 5 6 7 8 9}
+	} -body {
+	    Vector1 populate Vector2 1
+	    expr {$Vector2(:)}
+	} -cleanup {
+	    vector destroy Vector1
+	    vector destroy Vector2
+	} -result {1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0}
+
+    cleanupTests
+# }

@@ -1,0 +1,3201 @@
+# RBC.stripchart.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the configure 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.configure
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.configure {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.1.1 {
+		stripchart configure: aspect - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -aspect 2
+		.stripchart1 cget -aspect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.1.2 {
+		stripchart configure: aspect - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -aspect 4.3
+		.stripchart1 cget -aspect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.1.3 {
+		stripchart configure: aspect - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -aspect -2
+		.stripchart1 cget -aspect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {-2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.1.4 {
+		stripchart configure: aspect - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -aspect -4.3
+		.stripchart1 cget -aspect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {-4.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.1.5 {
+		stripchart configure: aspect - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -aspect invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -background command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.2.1 {
+		stripchart configure: background - valid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -background black
+		.stripchart1 cget -background
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -background command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.2.2 {
+		stripchart configure: background - invalid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -background invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -background command works correctly when given
+	# 'SystemButtonFace' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.2.3 {
+		stripchart configure: background - SystemButtonFace
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -background SystemButtonFace
+		.stripchart1 cget -background
+	} -cleanup {
+		destroy .stripchart1
+	} -constraints {win} -result {SystemButtonFace}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'normal'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.3.1 {
+		stripchart configure: barmode - normal
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barmode normal
+		.stripchart1 cget -barmode
+	} -cleanup {
+		destroy .stripchart1
+	} -result {infront}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'infront'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.3.2 {
+		stripchart configure: barmode - infront
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barmode infront
+		.stripchart1 cget -barmode
+	} -cleanup {
+		destroy .stripchart1
+	} -result {infront}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'stacked'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.3.3 {
+		stripchart configure: barmode - stacked
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barmode stacked
+		.stripchart1 cget -barmode
+	} -cleanup {
+		destroy .stripchart1
+	} -result {stacked}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'overlap'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.3.4 {
+		stripchart configure: barmode - overlap
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barmode overlap
+		.stripchart1 cget -barmode
+	} -cleanup {
+		destroy .stripchart1
+	} -result {overlap}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'aligned'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.3.5 {
+		stripchart configure: barmode - aligned
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barmode aligned
+		.stripchart1 cget -barmode
+	} -cleanup {
+		destroy .stripchart1
+	} -result {aligned}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given invalid
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.3.6 {
+		stripchart configure: barmode - invalid input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -barmode invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.4.1 {
+		stripchart configure: barwidth - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barwidth 2
+		.stripchart1 cget -barwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.4.2 {
+		stripchart configure: barwidth - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barwidth -2
+		.stripchart1 cget -barwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a 
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.4.3 {
+		stripchart configure: barwidth - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barwidth 3.5
+		.stripchart1 cget -barwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {3.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.4.4 {
+		stripchart configure: barwidth - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barwidth -2.5
+		.stripchart1 cget -barwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.4.5 {
+		stripchart configure: barwidth - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -barwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.4.6 {
+		stripchart configure: barwidth - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -barwidth 0
+		.stripchart1 cget -barwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.5.1 {
+		stripchart configure: baseline - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -baseline 2
+		.stripchart1 cget -baseline
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.5.2 {
+		stripchart configure: baseline - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -baseline -2
+		.stripchart1 cget -baseline
+	} -cleanup {
+		destroy .stripchart1
+	} -result {-2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a 
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.5.3 {
+		stripchart configure: baseline - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -baseline 3.5
+		.stripchart1 cget -baseline
+	} -cleanup {
+		destroy .stripchart1
+	} -result {3.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.5.4 {
+		stripchart configure: baseline - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -baseline -2.5
+		.stripchart1 cget -baseline
+	} -cleanup {
+		destroy .stripchart1
+	} -result {-2.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.5.5 {
+		stripchart configure: baseline - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -baseline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.5.6 {
+		stripchart configure: baseline - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -baseline 0
+		.stripchart1 cget -baseline
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.6.1 {
+		stripchart configure: borderwidth - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -borderwidth 2
+		.stripchart1 cget -borderwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.6.2 {
+		stripchart configure: borderwidth - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -borderwidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.6.3 {
+		stripchart configure: borderwidth - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -borderwidth 3.5
+		.stripchart1 cget -borderwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.6.4 {
+		stripchart configure: borderwidth - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -borderwidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.6.5 {
+		stripchart configure: borderwidth - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -borderwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.6.6 {
+		stripchart configure: borderwidth - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -borderwidth 0
+		.stripchart1 cget -borderwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.7.1 {
+		stripchart configure: bottommargin - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bottommargin 2
+		.stripchart1 cget -bottommargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.7.2 {
+		stripchart configure: bottommargin - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -bottommargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.7.3 {
+		stripchart configure: bottommargin - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bottommargin 3.5
+		.stripchart1 cget -bottommargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.7.4 {
+		stripchart configure: bottommargin - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -bottommargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.7.5 {
+		stripchart configure: bottommargin - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -bottommargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.7.6 {
+		stripchart configure: bottommargin - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bottommargin 0
+		.stripchart1 cget -bottommargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottomvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.8.1 {
+		stripchart configure: bottomvariable - single variable name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bottomvariable var1
+		.stripchart1 cget -bottomvariable
+	} -cleanup {
+		destroy .stripchart1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottomvariable command works correctly when given a 
+	# list of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.8.2 {
+		stripchart configure: bottomvariable - list of variable names
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bottomvariable {var1 var2 var3}
+		.stripchart1 cget -bottomvariable
+	} -cleanup {
+		destroy .stripchart1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.9.1 {
+		stripchart configure: bufferelements - 1
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bufferelements 1
+		.stripchart1 cget -bufferelements
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.9.2 {
+		stripchart configure: bufferelements - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bufferelements 0
+		.stripchart1 cget -bufferelements
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 
+	# true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.9.3 {
+		stripchart configure: bufferelements - true
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bufferelements true
+		.stripchart1 cget -bufferelements
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 
+	# false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.9.4 {
+		stripchart configure: bufferelements - false
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bufferelements false
+		.stripchart1 cget -bufferelements
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 
+	# yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.9.5 {
+		stripchart configure: bufferelements - yes
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bufferelements yes
+		.stripchart1 cget -bufferelements
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.9.6 {
+		stripchart configure: bufferelements - no
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -bufferelements no
+		.stripchart1 cget -bufferelements
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.9.7 {
+		stripchart configure: bufferelements - invalid input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -bufferelements invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferstripchart command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.10.1 {
+		stripchart configure: buffergraph - 1
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -buffergraph 1
+		.stripchart1 cget -buffergraph
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.10.2 {
+		stripchart configure: buffergraph - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -buffergraph 0
+		.stripchart1 cget -buffergraph
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.10.3 {
+		stripchart configure: buffergraph - true
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -buffergraph true
+		.stripchart1 cget -buffergraph
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.10.4 {
+		stripchart configure: buffergraph - false
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -buffergraph false
+		.stripchart1 cget -buffergraph
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.10.5 {
+		stripchart configure: buffergraph - yes
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -buffergraph yes
+		.stripchart1 cget -buffergraph
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.10.6 {
+		stripchart configure: buffergraph - no
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -buffergraph no
+		.stripchart1 cget -buffergraph
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.10.7 {
+		stripchart configure: buffergraph - invalid input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -buffergraph invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'crosshair'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.11.1 {
+		stripchart configure: cursor - crosshair
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -cursor crosshair
+		.stripchart1 cget -cursor
+	} -cleanup {
+		destroy .stripchart1
+	} -result {crosshair}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'circle'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.11.2 {
+		stripchart configure: cursor - circle
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -cursor circle
+		.stripchart1 cget -cursor
+	} -cleanup {
+		destroy .stripchart1
+	} -result {circle}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'cross' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.11.3 {
+		stripchart configure: cursor - cross
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -cursor cross
+		.stripchart1 cget -cursor
+	} -cleanup {
+		destroy .stripchart1
+	} -result {cross}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'plus' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.11.4 {
+		stripchart configure: cursor - plus
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -cursor plus
+		.stripchart1 cget -cursor
+	} -cleanup {
+		destroy .stripchart1
+	} -result {plus}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given invalid
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.11.5 {
+		stripchart configure: cursor - invalid input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -cursor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a single
+	# numerical value as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.12.1 {
+		stripchart configure: data - single numerical value
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -data 1.3
+		.stripchart1 cget -data
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a list of
+	# numerical values as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.12.2 {
+		stripchart configure: data - list of numerical values
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -data {1.3 3 -4.5}
+		.stripchart1 cget -data
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1.3 3 -4.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a single
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.12.3 {
+		stripchart configure: data - single string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -data input
+		.stripchart1 cget -data
+	} -cleanup {
+		destroy .stripchart1
+	} -result {input}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a list of
+	# string inputs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.12.4 {
+		stripchart configure: data - list of string inputs
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -data {input1 input2 input3}
+		.stripchart1 cget -data
+	} -cleanup {
+		destroy .stripchart1
+	} -result {input1 input2 input3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a list of
+	# mixed string and numerical inputs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.12.5 {
+		stripchart configure: data - list of string and numerical inputs
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -data {input 1.2 -4 7}
+		.stripchart1 cget -data
+	} -cleanup {
+		destroy .stripchart1
+	} -result {input 1.2 -4 7}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -datacommand command works correctly when given a 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.13.1 {
+		stripchart configure: datacommand - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -datacommand {puts foo}
+		.stripchart1 cget -datacommand
+	} -cleanup {
+		destroy .stripchart1
+	} -result {puts foo}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -datacommand command works correctly when given a 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.13.2 {
+		stripchart configure: datacommand - numerical input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -datacommand {15}
+		.stripchart1 cget -datacommand
+	} -cleanup {
+		destroy .stripchart1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a string as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.14.1 {
+		stripchart configure: font - name string
+	} -setup {
+		stripchart .stripchart1 
+	} -body {
+		.stripchart1 configure -font Times
+		.stripchart1 cget -font
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a string as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.14.2 {
+		stripchart configure: font - font string
+	} -setup {
+		stripchart .stripchart1 
+	} -body {
+		.stripchart1 configure -font *-Helvetica-*-R-Normal-*-10-120-*
+		.stripchart1 cget -font
+	} -cleanup {
+		destroy .stripchart1
+	} -result {*-Helvetica-*-R-Normal-*-10-120-*}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.14.3 {
+		stripchart configure: font - list with string
+	} -setup {
+		stripchart .stripchart1 
+	} -body {
+		.stripchart1 configure -font {Times}
+		.stripchart1 cget -font
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string and positive integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.14.4 {
+		stripchart configure: font - list with string and positive integer
+	} -setup {
+		stripchart .stripchart1 
+	} -body {
+		.stripchart1 configure -font {Times 10}
+		.stripchart1 cget -font
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Times 10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string and negative integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.14.5 {
+		stripchart configure: font - list with string and negative integer
+	} -setup {
+		stripchart .stripchart1 
+	} -body {
+		.stripchart1 configure -font {Times -10}
+		.stripchart1 cget -font
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Times -10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string and decimal as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.14.6 {
+		stripchart configure: font - list with string and decimal
+	} -setup {
+		stripchart .stripchart1 
+	} -body {
+		if {[catch {.stripchart1 configure -font {Times 10.5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with 2 
+	# strings as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.14.7 {
+		stripchart configure: font - list with 2 strings
+	} -setup {
+		stripchart .stripchart1 
+	} -body {
+		if {[catch {.stripchart1 configure -font {Times Ten}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -foreground command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.15.1 {
+		stripchart configure: foreground - valid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -foreground black
+		.stripchart1 cget -foreground
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -foreground command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.15.2 {
+		stripchart configure: foreground - invalid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -foreground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -foreground command works correctly when given
+	# 'SystemButtonText' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.15.3 {
+		stripchart configure: foreground - SystemButtonText
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -foreground SystemButtonText
+		.stripchart1 cget -foreground
+	} -cleanup {
+		destroy .stripchart1
+	} -constraints {win} -result {SystemButtonText}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.16.1 {
+		stripchart configure: halo - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -halo 2
+		.stripchart1 cget -halo
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.16.2 {
+		stripchart configure: halo - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -halo -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.16.3 {
+		stripchart configure: halo - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -halo 3.5
+		.stripchart1 cget -halo
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.16.4 {
+		stripchart configure: halo - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -halo -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a positive
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.16.5 {
+		stripchart configure: halo - positive inch input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -halo 3i
+		expr {[.stripchart1 cget -halo] - [winfo pixels .stripchart1 3i]}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a negative
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.16.6 {
+		stripchart configure: halo - negative inch input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -halo -2i}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.16.7 {
+		stripchart configure: halo - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -halo invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.16.8 {
+		stripchart configure: halo - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -halo 0
+		.stripchart1 cget -halo
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.17.1 {
+		stripchart configure: height - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -height 2
+		.stripchart1 cget -height
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.17.2 {
+		stripchart configure: height - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -height -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.17.3 {
+		stripchart configure: height - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -height 3.5
+		.stripchart1 cget -height
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.17.4 {
+		stripchart configure: height - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -height -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a positive
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.17.5 {
+		stripchart configure: height - positive inch input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -height 3i
+		expr {[.stripchart1 cget -height] - [winfo pixels .stripchart1 3i]}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a negative
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.17.6 {
+		stripchart configure: height - negative inch input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -height -2i}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.17.7 {
+		stripchart configure: height - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -height invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.17.8 {
+		stripchart configure: height - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -height 0
+		.stripchart1 cget -height
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightbackground command works correctly when 
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.18.1 {
+		stripchart configure: highlightbackground - valid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -highlightbackground black
+		.stripchart1 cget -highlightbackground
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightbackground command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.18.2 {
+		stripchart configure: highlightbackground - invalid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -highlightbackground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightbackground command works correctly when 
+	# given 'SystemButtonFace' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.18.3 {
+		stripchart configure: highlightbackground - SystemButtonFace
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -highlightbackground SystemButtonFace
+		.stripchart1 cget -highlightbackground
+	} -cleanup {
+		destroy .stripchart1
+	} -constraints {win} -result {SystemButtonFace}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightcolor command works correctly when given a
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.19.1 {
+		stripchart configure: highlightcolor - valid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -highlightcolor black
+		.stripchart1 cget -highlightcolor
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightcolor command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.19.2 {
+		stripchart configure: highlightcolor - invalid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -highlightcolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.20.1 {
+		stripchart configure: highlightthickness - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -highlightthickness 2
+		.stripchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.20.2 {
+		stripchart configure: highlightthickness - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -highlightthickness -2
+		.stripchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .stripchart1
+	} -result {-2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.20.3 {
+		stripchart configure: highlightthickness - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -highlightthickness 3.5
+		.stripchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.20.4 {
+		stripchart configure: highlightthickness - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -highlightthickness -2.5
+		.stripchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .stripchart1
+	} -result {-3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.20.5 {
+		stripchart configure: highlightthickness - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -highlightthickness invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given 
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.20.6 {
+		stripchart configure: highlightthickness - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -highlightthickness 0
+		.stripchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.21.1 {
+		stripchart configure: invertxy - 1
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -invertxy 1
+		.stripchart1 cget -invertxy
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.21.2 {
+		stripchart configure: invertxy - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -invertxy 0
+		.stripchart1 cget -invertxy
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.21.3 {
+		stripchart configure: invertxy - true
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -invertxy true
+		.stripchart1 cget -invertxy
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.21.4 {
+		stripchart configure: invertxy - false
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -invertxy false
+		.stripchart1 cget -invertxy
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.21.5 {
+		stripchart configure: invertxy - yes
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -invertxy yes
+		.stripchart1 cget -invertxy
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.21.6 {
+		stripchart configure: invertxy - no
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -invertxy no
+		.stripchart1 cget -invertxy
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.21.7 {
+		stripchart configure: invertxy - invalid input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -invertxy invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -justify command works correctly when given 'left'.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.22.1 {
+		stripchart configure: justify - left
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -justify left
+		.stripchart1 cget -justify
+	} -cleanup {
+		destroy .stripchart1
+	} -result {left}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -justify command works correctly when given 'center'.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.22.2 {
+		stripchart configure: justify - center
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -justify center
+		.stripchart1 cget -justify
+	} -cleanup {
+		destroy .stripchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -justify command works correctly when given 'right'.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.22.3 {
+		stripchart configure: justify - right
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -justify right
+		.stripchart1 cget -justify
+	} -cleanup {
+		destroy .stripchart1
+	} -result {right}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.23.1 {
+		stripchart configure: leftmargin - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -leftmargin 2
+		.stripchart1 cget -leftmargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.23.2 {
+		stripchart configure: leftmargin - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -leftmargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.23.3 {
+		stripchart configure: leftmargin - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -leftmargin 3.5
+		.stripchart1 cget -leftmargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.23.4 {
+		stripchart configure: leftmargin - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -leftmargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.23.5 {
+		stripchart configure: leftmargin - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -leftmargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.23.6 {
+		stripchart configure: leftmargin - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -leftmargin 0
+		.stripchart1 cget -leftmargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.24.1 {
+		stripchart configure: leftvariable - single variable name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -leftvariable var1
+		.stripchart1 cget -leftvariable
+	} -cleanup {
+		destroy .stripchart1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftvariable command works correctly when given a 
+	# list of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.24.2 {
+		stripchart configure: leftvariable - list of variable names
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -leftvariable {var1 var2 var3}
+		.stripchart1 cget -leftvariable
+	} -cleanup {
+		destroy .stripchart1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotbackground command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.25.1 {
+		stripchart configure: plotbackground - valid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotbackground black
+		.stripchart1 cget -plotbackground
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotbackground command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.25.2 {
+		stripchart configure: plotbackground - invalid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotbackground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.26.1 {
+		stripchart configure: plotborderwidth - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotborderwidth 2
+		.stripchart1 cget -plotborderwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.26.2 {
+		stripchart configure: plotborderwidth - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotborderwidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a 
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.26.3 {
+		stripchart configure: plotborderwidth - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotborderwidth 3.5
+		.stripchart1 cget -plotborderwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.26.4 {
+		stripchart configure: plotborderwidth - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotborderwidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.26.5 {
+		stripchart configure: plotborderwidth - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotborderwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given 0 
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.26.6 {
+		stripchart configure: plotborderwidth - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotborderwidth 0
+		.stripchart1 cget -plotborderwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.27.1 {
+		stripchart configure: plotpadx - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 configure -plotpadx 2
+		.stripchart1 cget -plotpadx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.27.2 {
+		stripchart configure: plotpadx - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotpadx -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.27.3 {
+		stripchart configure: plotpadx - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 configure -plotpadx 3.5
+		.stripchart1 cget -plotpadx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.27.4 {
+		stripchart configure: plotpadx - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotpadx -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a valid
+	# list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.27.5 {
+	    stripchart legend: configure: plotpadx - valid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 configure -plotpadx {1 2.5}
+	    .stripchart1 cget -plotpadx
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a string
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.27.6 {
+		stripchart configure: plotpadx - string input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotpadx a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.27.7 {
+	    stripchart legend: configure: plotpadx - invalid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 configure -plotpadx {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a list of
+	# input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.27.8 {
+		stripchart configure: plotpadx - invalid list length
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotpadx {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.27.9 {
+	    stripchart configure: plotpadx - 0
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 configure -plotpadx 0
+	    .stripchart1 cget -plotpadx
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.28.1 {
+		stripchart configure: plotpady - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 configure -plotpady 2
+		.stripchart1 cget -plotpady
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.28.2 {
+		stripchart configure: plotpady - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotpady -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a decimal
+	# pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.28.3 {
+		stripchart configure: plotpady - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 configure -plotpady 3.5
+		.stripchart1 cget -plotpady
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.28.4 {
+		stripchart configure: plotpady - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotpady -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a valid
+	# list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.28.5 {
+	    stripchart legend: configure: plotpady - valid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 configure -plotpady {1 2.5}
+	    .stripchart1 cget -plotpady
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a string
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.28.6 {
+		stripchart configure: plotpady - string input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotpady a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.28.7 {
+	    stripchart legend: configure: plotpady - invalid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 configure -plotpady {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a list of
+	# input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.28.8 {
+		stripchart configure: plotpady - invalid list length
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotpady {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.28.9 {
+	    stripchart configure: plotpady - 0
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 configure -plotpady 0
+	    .stripchart1 cget -plotpady
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0 0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 'flat' 
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.29.1 {
+		stripchart configure: plotrelief - flat
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotrelief flat
+		.stripchart1 cget -plotrelief
+	} -cleanup { 
+		destroy .stripchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 
+	# 'groove' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.29.2 {
+		stripchart configure: plotrelief - groove
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotrelief groove
+		.stripchart1 cget -plotrelief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 
+	# 'raised' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.29.3 {
+		stripchart configure: plotrelief - raised
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotrelief raised
+		.stripchart1 cget -plotrelief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 'ridge'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.29.4 {
+		stripchart configure: plotrelief - ridge
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotrelief ridge
+		.stripchart1 cget -plotrelief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 'solid'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.29.5 {
+		stripchart configure: plotrelief - solid
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotrelief solid
+		.stripchart1 cget -plotrelief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 
+	# 'sunken' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.29.6 {
+		stripchart configure: plotrelief - sunken
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -plotrelief sunken
+		.stripchart1 cget -plotrelief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given invalid 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.29.7 {
+		stripchart configure: plotrelief - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotrelief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given invalid
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.29.8 {
+		stripchart configure: plotrelief - invalid string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -plotrelief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'flat' as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.30.1 {
+		stripchart configure: relief - flat
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -relief flat
+		.stripchart1 cget -relief
+	} -cleanup { 
+		destroy .stripchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'groove' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.30.2 {
+		stripchart configure: relief - groove
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -relief groove
+		.stripchart1 cget -relief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'raised' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.30.3 {
+		stripchart configure: relief - raised
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -relief raised
+		.stripchart1 cget -relief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'ridge' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.30.4 {
+		stripchart configure: relief - ridge
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -relief ridge
+		.stripchart1 cget -relief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'solid' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.30.5 {
+		stripchart configure: relief - solid
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -relief solid
+		.stripchart1 cget -relief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'sunken' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.30.6 {
+		stripchart configure: relief - sunken
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -relief sunken
+		.stripchart1 cget -relief
+	} -cleanup {
+		destroy .stripchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given invalid 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.30.7 {
+		stripchart configure: relief - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -relief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given invalid 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.30.8 {
+		stripchart configure: relief - invalid string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -relief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.31.1 {
+		stripchart configure: rightmargin - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -rightmargin 2
+		.stripchart1 cget -rightmargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.31.2 {
+		stripchart configure: rightmargin - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -rightmargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.31.3 {
+		stripchart configure: rightmargin - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -rightmargin 3.5
+		.stripchart1 cget -rightmargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.31.4 {
+		stripchart configure: rightmargin - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -rightmargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.31.5 {
+		stripchart configure: rightmargin - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -rightmargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.31.6 {
+		stripchart configure: rightmargin - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -rightmargin 0
+		.stripchart1 cget -rightmargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.32.1 {
+		stripchart configure: rightvariable - single variable name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -rightvariable var1
+		.stripchart1 cget -rightvariable
+	} -cleanup {
+		destroy .stripchart1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightvariable command works correctly when given a 
+	# list of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.32.2 {
+		stripchart configure: rightvariable - list of variable names
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -rightvariable {var1 var2 var3}
+		.stripchart1 cget -rightvariable
+	} -cleanup {
+		destroy .stripchart1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.33.1 {
+		stripchart configure: shadow - valid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -shadow black
+		.stripchart1 cget -shadow
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black 1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a valid
+	# color name and a positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.33.2 {
+		stripchart configure: shadow - valid color name and positive integer value
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -shadow {blue 5}
+		.stripchart1 cget -shadow
+	} -cleanup {
+		destroy .stripchart1
+	} -result {blue 5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a valid
+	# color name and a negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.33.3 {
+		stripchart configure: shadow - valid color name and negative integer value
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -shadow {blue -5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a positive
+	# color name and a decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.33.4 {
+		stripchart configure: shadow - valid color name and decimal value
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -shadow {blue 5}
+		.stripchart1 cget -shadow
+	} -cleanup {
+		destroy .stripchart1
+	} -result {blue 5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given an invalid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.33.5 {
+		stripchart configure: shadow - invalid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -shadow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -takefocus command works correctly when given a string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.34.1 {
+		stripchart configure: takefocus - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -takefocus {puts foo}
+		.stripchart1 cget -takefocus
+	} -cleanup {
+		destroy .stripchart1
+	} -result {puts foo}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -takefocus command works correctly when given a 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.34.2 {
+		stripchart configure: takefocus - numerical input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -takefocus {15}
+		.stripchart1 cget -takefocus
+	} -cleanup {
+		destroy .stripchart1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -tile command works correctly when given an existing
+	# image name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.35.1 {
+		stripchart configure: tile - existing image name
+	} -setup {
+		stripchart .stripchart1
+		
+		# the following should set Image1 to the designated name
+		set Image1 [image create photo image.a.35.1 -data {
+						R0lGODlhEAAQAIYAAPwCBHSi1Iyy5Hym3Hym1GSWxJS65Lza/OT2/Pz+/PT+
+						/KTK5DxmlJS67PT6/Pz6/Lzm/BRGhHSe1MTe/OTy/Oz2/Mzm/NTq/FSKtJS2
+						7PT2/MTi/LTa/AQyVOTu/Lze/LTS/JTC9MTq/Mzi/KzK/KTC/KS+/BQuRJzG
+						/KzO/LTO/KS6/Jy2/DRmpAQOHEx+rLTK/Jy+/Iym/Jyq/GSK/GSOrIyCBHSi
+						5HyW/DxuxFxqhPT+dPzqbHRCBAQmPBxenBxSjBxanARGfMRyDOymNOTCnPTG
+						fIRKDMyGNOzGlISu7GSOzIROBPTGjJSy9EyGvIxODNSORMSWTLxyFDx6tBxe
+						lKRiJGQ6BCQWBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAAAA
+						LAAAAAAQABAAAAesgACCAQIDBAWCiYoABgcICQoJCwyLgg0OCQkPmgoQEYsS
+						E5mYFBUWFxiLGZmbGhoWGxMcHYoDChoOFR4fByAcIbSJAyIXIxYgICQkJSbB
+						gicovCkqJSssKy0uiy8bIDAxLDIzNDU2lS031TI4OTo7PD2VPj9AQUIuQ0RF
+						RvGVi0dIkvATpGSJPwBMkDQxwkSCkyc3DkKJImUKlSdVhBxEaOUKACVVNgrC
+						AsBPIAAh/mhDcmVhdGVkIGJ5IEJNUFRvR0lGIFBybyB2ZXJzaW9uIDIuNQ0K
+						qSBEZXZlbENvciAxOTk3LDE5OTguIEFsbCByaWdodHMgcmVzZXJ2ZWQuDQpo
+						dHRwOi8vd3d3LmRldmVsY29yLmNvbQA7
+		    		}]
+	} -body {
+		.stripchart1 configure -tile $Image1
+		.stripchart1 cget -tile
+	} -cleanup {
+		image delete $Image1
+		destroy .stripchart1
+	} -result {image.a.35.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -tile command works correctly when given an invalid 
+	# image name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.35.2 {
+		stripchart configure: tile - invalid image name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -tile invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -title command works correctly when given a string 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.36.1 {
+		stripchart configure: title - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -title "A title string"
+		.stripchart1 cget -title
+	} -cleanup {
+		destroy .stripchart1
+	} -result {A title string}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -title command works correctly when given a numerical 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.36.2 {
+		stripchart configure: title - numerical input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -title 15
+		.stripchart1 cget -title
+	} -cleanup {
+		destroy .stripchart1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.37.1 {
+		stripchart configure: topmargin - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -topmargin 2
+		.stripchart1 cget -topmargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.37.2 {
+		stripchart configure: topmargin - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -topmargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.37.3 {
+		stripchart configure: topmargin - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -topmargin 3.5
+		.stripchart1 cget -topmargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.37.4 {
+		stripchart configure: topmargin - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -topmargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.37.5 {
+		stripchart configure: topmargin - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -topmargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.37.6 {
+		stripchart configure: topmargin - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -topmargin 0
+		.stripchart1 cget -topmargin
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.38.1 {
+		stripchart configure: topvariable - single variable name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -topvariable var1
+		.stripchart1 cget -topvariable
+	} -cleanup {
+		destroy .stripchart1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topvariable command works correctly when given a list
+	# of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.38.2 {
+		stripchart configure: topvariable - list of variable names
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -topvariable {var1 var2 var3}
+		.stripchart1 cget -topvariable
+	} -cleanup {
+		destroy .stripchart1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.39.1 {
+		stripchart configure: width - positive integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -width 2
+		.stripchart1 cget -width
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.39.2 {
+		stripchart configure: width - negative integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -width -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.39.3 {
+		stripchart configure: width - positive decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -width 3.5
+		.stripchart1 cget -width
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.39.4 {
+		stripchart configure: width - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -width -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a positive
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.39.5 {
+		stripchart configure: width - positive inch input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -width 3i
+		expr {[.stripchart1 cget -width] - [winfo pixels .stripchart1 3i]}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a negative
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.39.6 {
+		stripchart configure: width - negative inch  input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -width -2i}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given string 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.39.7 {
+		stripchart configure: width - string input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 configure -width invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.configure.A.39.8 {
+		stripchart configure: width - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 configure -width 0
+		.stripchart1 cget -width
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	
+	cleanupTests
+}

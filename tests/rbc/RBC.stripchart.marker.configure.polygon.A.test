@@ -1,0 +1,537 @@
+# RBC.stripchart.marker.configure.polygon.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the polygon marker configure
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.marker {	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given a
+	# valid dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.1.1 {
+		stripchart marker configure: dashes - valid dash list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -dashes {2 3 2 4}
+		.stripchart1 marker cget Marker1 -dashes
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {2 3 2 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given an
+	# empty dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.1.2 {
+		stripchart marker configure: dashes - empty dash list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -dashes ""
+		.stripchart1 marker cget Marker1 -dashes
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given a
+	# dash list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.1.3 {
+		stripchart marker configure: dashes - long dash list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -dashes {2 3 2 4 2 3 2 4 2 3 2 4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given an
+	# invalid numerical dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.1.4 {
+		stripchart marker configure: dashes - invalid numerical dash list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -dashes {2 3 2 -1 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given a
+	# dash list with characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.1.5 {
+		stripchart marker configure: dashes - dash list with characters
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -dashes {2 3 2 a 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for polygon 
+	# polygon when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.2.1 {
+		stripchart marker configure polygon: fill - valid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -fill black
+		.stripchart1 marker cget Marker1 -fill
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {black {}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for polygon 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.2.2 {
+		stripchart marker configure polygon: fill - invalid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -fill invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.3.1 {
+		stripchart marker configure: linewidth - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -linewidth 2
+		.stripchart1 marker cget Marker1 -linewidth
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.3.2 {
+		stripchart marker configure: linewidth - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -linewidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.3.3 {
+		stripchart marker configure: linewidth - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -linewidth 3.5
+		.stripchart1 marker cget Marker1 -linewidth
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.3.4 {
+		stripchart marker configure: linewidth - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -linewidth -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.3.5 {
+		stripchart marker configure: linewidth - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -linewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.3.6 {
+		stripchart marker configure: linewidth - zero
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -linewidth 0
+		.stripchart1 marker cget Marker1 -linewidth
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for polygon 
+	# polygon when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.4.1 {
+		stripchart marker configure polygon: outline - valid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -outline black
+		.stripchart1 marker cget Marker1 -outline
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {black {}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for polygon 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.4.2 {
+		stripchart marker configure polygon: outline - invalid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -outline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring stipple changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.5.1 {
+	    Configure Stipple
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 \
+			-stipple @[file join [file dirname [info script]] greenback.xbm]
+		.stripchart1 marker cget Marker1 -stipple
+	} -cleanup {
+	    .stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -match glob -result {@*greenback.xbm}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -cap command works correctly when given 'butt'.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.6.1 {
+		stripchart marker configure: cap - butt
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -cap butt
+		.stripchart1 marker cget Marker1 -cap
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {butt}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -cap command works correctly when given
+	# 'projecting'.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.6.2 {
+		stripchart marker configure: cap - projecting
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -cap projecting
+		.stripchart1 marker cget Marker1 -cap
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {projecting}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -cap command works correctly when given
+	# 'round'.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.6.3 {
+		stripchart marker configure: cap - round
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -cap round
+		.stripchart1 marker cget Marker1 -cap
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {round}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -join command works correctly when given 
+	# 'bevel'.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.7.1 {
+		stripchart marker configure: join - bevel
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -join bevel
+		.stripchart1 marker cget Marker1 -join
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {bevel}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -join command works correctly when given
+	# 'miter'.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.7.2 {
+		stripchart marker configure: join - miter
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -join miter
+		.stripchart1 marker cget Marker1 -join
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {miter}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -join command works correctly when given
+	# 'round'.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.7.3 {
+		stripchart marker configure: join - round
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -join round
+		.stripchart1 marker cget Marker1 -join
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {round}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.8.1 {
+		stripchart marker configure: xor - 1
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xor 1
+		.stripchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.8.2 {
+		stripchart marker configure: xor - 0
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xor 0
+		.stripchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.8.3 {
+		stripchart marker configure: xor - true
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xor true
+		.stripchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.8.4 {
+		stripchart marker configure: xor - false
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xor false
+		.stripchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.8.5 {
+		stripchart marker configure: xor - yes
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xor yes
+		.stripchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.8.6 {
+		stripchart marker configure: xor - no
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -xor no
+		.stripchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.polygon.A.8.7 {
+		stripchart marker configure: xor - invalid input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -xor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	cleanupTests
+}

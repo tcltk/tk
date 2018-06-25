@@ -1,0 +1,79 @@
+# RBC.stripchart.axis.cget.A.test --
+#
+###Abstract
+# This file tests the axis cget function of the stripchart BLT component.
+# Axis cget is an instance function of stripchart.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis cget command works correctly when given a valid 
+	# axis configuration option name and a single axis
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.axis.cget.A.1.1 {
+		Valid Option Name, One Axis
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 axis create Axis1
+		.stripchart1 axis configure Axis1 -color black
+	} -body {
+		.stripchart1 axis cget Axis1 -color
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis cget command works correctly when given an invalid 
+	# axis configuration option name and a single axis
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.axis.cget.A.1.2 {
+		Invalid Option Name, One Axis
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 axis create Axis1
+	} -body {
+		if {[catch {.stripchart1 axis cget Axis1 -invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis cget command works correctly when given a valid 
+	# axis configuration option name and two axis.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.axis.cget.A.1.3 {
+		Valid Option Name, Two Axis
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 axis create Axis1
+		.stripchart1 axis create Axis2
+		.stripchart1 axis configure Axis1 Axis2 -color black
+	} -body {
+		list [.stripchart1 axis cget Axis1 -color] [.stripchart1 axis cget Axis2 -color]
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black black}
+	
+	# Purpose: Should we test the axis cget command when given an invalid name and two axis
+	
+	
+	cleanupTests
+}

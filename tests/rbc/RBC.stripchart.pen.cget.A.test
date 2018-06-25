@@ -1,0 +1,73 @@
+# RBC.stripchart.pen.cget.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the pen cget 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.pen
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.pen {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with an explicitly set option
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.pen.cget.A.1.1 {
+	    Test pen cget configure
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	    .stripchart1 pen create Pen1 -color blue
+	} -body {
+	    .stripchart1 pen cget Pen1 -color
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {blue}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with a default value
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.pen.cget.A.1.2 {
+	    Test pen cget default
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	    .stripchart1 pen create Pen1
+	} -body {
+	    .stripchart1 pen cget Pen1 -type
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {line}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with an invalid value
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.pen.cget.A.1.3 {
+	    Test pen cget invalid value
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	    .stripchart1 pen create Pen1
+	} -body {
+	    if {[catch {.stripchart1 pen cget Pen1 -invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	cleanupTests
+}

@@ -1,0 +1,574 @@
+# RBC.graph.grid.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the grid configure 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.grid
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.grid {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -color command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.1.1 {
+		graph grid: configure - color - valid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -color black
+		.graph1 grid cget -color
+	} -cleanup {
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -color command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.1.2 {
+		graph grid: configure - color - invalid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -color invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -dashes command works correctly when given a
+	# valid dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.2.1 {
+		graph grid: configure - dashes - valid dash list
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -dashes {2 3 2 4}
+		.graph1 grid cget -dashes
+	} -cleanup {
+		destroy .graph1
+	} -result {2 3 2 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -dashes command works correctly when given an
+	# empty dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.2.2 {
+		graph grid: configure - dashes - empty dash list
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -dashes ""
+		.graph1 grid cget -dashes
+	} -cleanup {
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -dashes command works correctly when given a dash
+	# list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.2.3 {
+		graph grid: configure - dashes - long dash list
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -dashes {2 3 2 4 2 3 2 4 2 3 2 4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -dashes command works correctly when given an
+	# invalid numerical dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.2.4 {
+		graph grid: configure - dashes - invalid numerical dash list
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -dashes {2 3 2 -1 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -dashes command works correctly when given a dash
+	# list with characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.2.5 {
+		graph grid: configure - dashes - dash list with characters
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -dashes {2 3 2 a 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -hide command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.3.1 {
+		graph grid: configure - hide - 1
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -hide 1
+		.graph1 grid cget -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -hide command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.3.2 {
+		graph grid: configure - hide - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -hide 0
+		.graph1 grid cget -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -hide command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.3.3 {
+		graph grid: configure - hide - true
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -hide true
+		.graph1 grid cget -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -hide command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.3.4 {
+		graph grid: configure - hide - false
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -hide false
+		.graph1 grid cget -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -hide command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.3.5 {
+		graph grid: configure - hide - yes
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -hide yes
+		.graph1 grid cget -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -hide command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.3.6 {
+		graph grid: configure - hide - no
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -hide no
+		.graph1 grid cget -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -hide command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.3.7 {
+		graph grid: configure - hide - invalid input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -linewidth command works correctly when given an
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.4.1 {
+		graph grid: configure - linewidth - valid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -linewidth 2
+		.graph1 grid cget -linewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -linewidth command works correctly when given an
+	# invalid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.4.2 {
+		graph grid: configure - linewidth - invalid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -linewidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -linewidth command works correctly when given a
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.4.3 {
+		graph grid: configure - linewidth - valid decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -linewidth 3.5
+		.graph1 grid cget -linewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -linewidth command works correctly when given an
+	# invalid decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.4.4 {
+		graph grid: configure - linewidth - invalid decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -linewidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -linewidth command works correctly when given
+	# character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.4.5 {
+		graph grid: configure - linewidth - character input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -linewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -linewidth command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.4.6 {
+		graph grid: configure - linewidth - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -linewidth 0
+		.graph1 grid cget -linewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -mapx command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.5.1 {
+		graph grid: configure - mapx - valid axis name
+	} -setup {
+		graph .graph1
+		.graph1 axis create .axis1
+	} -body {
+		.graph1 grid configure -mapx .axis1
+		.graph1 grid cget -mapx
+	} -cleanup {
+		.graph1 axis delete .axis1
+		destroy .graph1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -mapx command works correctly when given a non-
+	# existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.5.2 {
+		graph grid: configure - mapx - non-existent axis name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -mapx .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -mapx command works correctly when given the 
+	# empty string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.5.3 {
+		graph grid: configure - mapx - empty string
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -mapx ""
+		.graph1 grid cget -mapx
+	} -cleanup {
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -mapx command works correctly when not input is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.5.4 {
+		graph grid: configure - mapx - no input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -mapx
+		.graph1 grid cget -mapx
+	} -cleanup {
+		destroy .graph1
+	} -result {x}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -mapy command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.6.1 {
+		graph grid: configure - mapy - valid axis name
+	} -setup {
+		graph .graph1
+		.graph1 axis create .axis1
+	} -body {
+		.graph1 grid configure -mapy .axis1
+		.graph1 grid cget -mapy
+	} -cleanup {
+		.graph1 axis delete .axis1
+		destroy .graph1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -mapy command works correctly when given a non-
+	# existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.6.2 {
+		graph grid: configure - mapy - non-existent axis name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -mapy .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -mapy command works correctly when given the 
+	# empty string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.6.3 {
+		graph grid: configure - mapy - empty string
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -mapy ""
+		.graph1 grid cget -mapy
+	} -cleanup {
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -mapy command works correctly when not input is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.6.4 {
+		graph grid: configure - mapy - no input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -mapy
+		.graph1 grid cget -mapy
+	} -cleanup {
+		destroy .graph1
+	} -result {y}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -minor command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.7.1 {
+		graph grid: configure - minor - 1
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -minor 1
+		.graph1 grid cget -minor
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -minor command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.7.2 {
+		graph grid: configure - minor - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -minor 0
+		.graph1 grid cget -minor
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -minor command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.7.3 {
+		graph grid: configure - minor - true
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -minor true
+		.graph1 grid cget -minor
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -minor command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.7.4 {
+		graph grid: configure - minor - false
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -minor false
+		.graph1 grid cget -minor
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -minor command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.7.5 {
+		graph grid: configure - minor - yes
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -minor yes
+		.graph1 grid cget -minor
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -minor command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.7.6 {
+		graph grid: configure - minor - no
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 grid configure -minor no
+		.graph1 grid cget -minor
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the grid configure -minor command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.grid.configure.A.7.7 {
+		graph grid: configure - minor - invalid input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 grid configure -minor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	cleanupTests
+}
