@@ -1,0 +1,99 @@
+# RBC.barchart.postscript.output.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the postscript output
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.postscript
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.postscript {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that output will print postscript to the console
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.postscript.output.A.1.1 {
+	    Test postscript output to console
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	} -body {
+	    set TestPs [.barchart1 postscript output]
+	    if {$TestPs != ""} {
+	        return 1
+	    }
+	    return 0
+	} -cleanup {
+	    destroy .barchart1
+	    unset TestPs
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that output will print postscript to a file
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.postscript.output.A.1.2 {
+	    Test postscript output to file
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	    set FileName RBC.barchart.legend.3.1.ps
+	} -body {
+	    .barchart1 postscript output $FileName
+	    file exists $FileName
+	} -cleanup {
+	    destroy .barchart1
+	    file delete -force $FileName
+	    unset FileName
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that output will print postscript to the console with option-value
+	# pairs
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.postscript.output.A.1.3 {
+	    Test postscript output to console with options
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	} -body {
+	    set TestPs [.barchart1 postscript output -center 0]
+	    if {$TestPs != ""} {
+	        return 1
+	    }
+	    return 0
+	} -cleanup {
+	    destroy .barchart1
+	    unset TestPs
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that output will print postscript to a file with option-value pairs
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.postscript.output.A.1.4 {
+	    Test postscript output to file with options
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	    set FileName RBC.barchart.legend.3.4.ps
+	} -body {
+	    .barchart1 postscript output $FileName -center 0
+	    file exists $FileName
+	} -cleanup {
+	    destroy .barchart1
+	    file delete -force $FileName
+	    unset FileName
+	} -result {1}
+	
+	cleanupTests
+}

@@ -1,0 +1,71 @@
+# RBC.barchart.crosshairs.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the crosshairs cget 
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.crosshairs
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.crosshairs {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works for default values.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.crosshairs.cget.A.1.1 {
+	    barchart crosshairs: cget - default
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	} -body {
+	    .barchart1 crosshairs cget -color
+	} -cleanup {
+	    destroy .barchart1
+	} -result {#000000}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs cget command works correctly when given a valid 
+	# crosshairs configuration option name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.crosshairs.cget.A.1.2 {
+		barchart crosshairs: cget - valid option name
+	} -setup {
+		barchart .barchart1
+		.barchart1 crosshairs configure -color black
+	} -body {
+		.barchart1 crosshairs cget -color
+	} -cleanup {
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs cget command works correctly when given an invalid 
+	# crosshairs configuration option name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.crosshairs.cget.A.1.3 {
+		barchart crosshairs: cget - invalid option name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 crosshairs cget -invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	cleanupTests
+}

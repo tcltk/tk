@@ -1,0 +1,1688 @@
+# RBC.graph.axis.configure.A.test --
+#
+###Abstract
+# This file tests the axis configure function of the graph BLT component.
+# Axis configure is an instance function of graph.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -bindtags command works correctly when given a 
+	# single tag name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.1.1 {
+		Bindtags - single tag
+	} -setup {
+		graph .graph1
+		.graph1 axis bind Binding1 <Double-1> {puts foobar}
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -bindtags Binding1
+		.graph1 axis cget Axis1 -bindtags
+	} -cleanup {
+		destroy Binding1
+		.graph1 axis delete Axis1
+		destroy .graph1
+	} -result {Binding1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -bindtags command works correctly when given  
+	# a list of tag names.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.1.2 {
+		Bindtags - tag list
+	} -setup {
+		graph .graph1
+		.graph1 axis bind Binding1 <Double-1> {puts foo}
+		.graph1 axis bind Binding2 <Double-3> {puts bar}
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -bindtags {Binding1 Binding2}
+		.graph1 axis cget Axis1 -bindtags
+	} -cleanup {
+		destroy Binding1 Binding2
+		.graph1 axis delete Axis1
+		destroy .graph1
+	} -result {Binding1 Binding2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -color command works correctly when given 
+	# a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.2.1 {
+		Valide Color
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -color blue
+		.graph1 axis cget Axis1 -color
+	} -cleanup {
+		destroy .graph1
+	} -result {blue}
+
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -color command works correctly when given 
+	# an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.2.2 {
+		Invalid Color
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -color invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -command command works correctly
+	# TODO: NOT COMPLETE
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.3.1 {
+		Command
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+
+	} -cleanup {
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.4.1 {
+		Descending 1
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -descending 1
+		.graph1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.4.2 {
+		Descending 0
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -descending 0
+		.graph1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.4.3 {
+		Descending yes
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -descending yes
+		.graph1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .graph1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.4.4 {
+		Descending no
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -descending no
+		.graph1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.4.5 {
+		Descending true
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -descending true
+		.graph1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .graph1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.4.6 {
+		Descending false
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -descending false
+		.graph1 axis cget Axis1 -descending
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -descending command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.4.7 {
+		Descending invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -descending invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.5.1 {
+		Hide 1
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -hide 1
+		.graph1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {1}	
+
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.5.2 {
+		Hide true
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -hide true
+		.graph1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.5.3 {
+		Hide yes
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -hide yes
+		.graph1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.5.4 {
+		Hide 0
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -hide 0
+		.graph1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.5.5 {
+		Hide no
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -hide no
+		.graph1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.5.6 {
+		Hide false
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -hide false
+		.graph1 axis cget Axis1 -hide
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -hide command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.5.7 {
+		Hide invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -justify command works correctly
+	# ------------------------------------------------------------------------------------	
+	test RBC.graph.axis.configure.A.6.1 {
+		Justify Left
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -justify left
+		.graph1 axis cget Axis1 -justify
+	} -cleanup {
+		destroy .graph1
+	} -result {left}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -justify command works correctly
+	# ------------------------------------------------------------------------------------	
+	test RBC.graph.axis.configure.A.6.2 {
+		Justify Right
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -justify right
+		.graph1 axis cget Axis1 -justify
+	} -cleanup {
+		destroy .graph1
+	} -result {right}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -justify command works correctly
+	# ------------------------------------------------------------------------------------	
+	test RBC.graph.axis.configure.A.6.3 {
+		Justify Center
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -justify center
+		.graph1 axis cget Axis1 -justify
+	} -cleanup {
+		destroy .graph1
+	} -result {center}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -justify command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.6.4 {
+		Justify invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -justify invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitsformat command works correctly 
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.7.1 {
+		Limitsformat
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -limitsformat "Minimum Maximum"
+		.graph1 axis cget Axis1 -limitsformat
+	} -cleanup {
+		destroy .graph1
+	} -result {Minimum Maximum}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitsshadow command works correctly 
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.9.1 {
+		Limitsshadow
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -limitsshadow blue
+		.graph1 axis cget Axis1 -limitsshadow
+	} -cleanup {
+		destroy .graph1
+	} -result {blue 1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitsshadow command works correctly when given 
+	# an invalid color.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.9.2 {
+		Limitsshadow invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -limitsshadow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitscolor command works correctly 
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.10.1 {
+		Limitscolor
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -limitscolor blue
+		.graph1 axis cget Axis1 -limitscolor
+	} -cleanup {
+		destroy .graph1
+	} -result {blue}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitscolor command works correctly when given 
+	# an invalid color.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.10.2 {
+		Limitscolor invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -limitscolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -limitsfont command works correctly 
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.11.1 {
+		Limitsfont
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -limitsfont "*-Helvetica-Bold-R-Normal-*-14-140-*"
+		.graph1 axis cget Axis1 -limitsfont
+	} -cleanup {
+		destroy .graph1
+	} -result {*-Helvetica-Bold-R-Normal-*-14-140-*}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -linewidth command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.12.1 {
+		Linewidth
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -linewidth 2
+		.graph1 axis cget Axis1 -linewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -linewidth command works correctly when given 0
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.12.2 {
+		Linewidth zero
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -linewidth 0
+		.graph1 axis cget Axis1 -linewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -linewidth command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.12.3 {
+		Linewidth invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -linewidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -linewidth command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.12.4 {
+		Linewidth invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -linewidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.13.1 {
+		Logscale 1
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -logscale 1
+		.graph1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .graph1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.13.2 {
+		Logscale yes
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -logscale yes
+		.graph1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.13.3 {
+		Logscale true
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -logscale true
+		.graph1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .graph1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.13.4 {
+		Logscale 0
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -logscale 0
+		.graph1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.13.5 {
+		Logscale no
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -logscale no
+		.graph1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.13.6 {
+		Logscale false
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -logscale false
+		.graph1 axis cget Axis1 -logscale
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -logscale command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.13.7 {
+		Logscale invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -logscale invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.14.1 {
+		Loose 1
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -loose 1
+		.graph1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.14.2 {
+		Loose yes
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -loose yes
+		.graph1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.14.3 {
+		Loose true
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -loose true
+		.graph1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .graph1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.14.4 {
+		Loose 0
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -loose 0
+		.graph1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.14.5 {
+		Loose no
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -loose no
+		.graph1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.14.6 {
+		Loose false
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -loose false
+		.graph1 axis cget Axis1 -loose
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -loose command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.14.7 {
+		Loose invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1	
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -loose invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}		
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -majorticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.15.1 {
+		Majorticks
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -majorticks "1 3 5 7 9 11"
+		.graph1 axis cget Axis1 -majorticks
+	} -cleanup {
+		destroy .graph1
+	} -result {1.0 3.0 5.0 7.0 9.0 11.0}
+		
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -majorticks command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.15.2 {
+		Majorticks invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -majorticks "1 invalid 3 4"}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -max command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.16.1 {
+		Max
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -max 23
+		.graph1 axis cget Axis1 -max
+	} -cleanup {
+		destroy .graph1
+	} -result {23.0}	
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -max command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.16.2 {
+		Max invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -max invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}		
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -min command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.17.1 {
+		Min
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -min -23
+		.graph1 axis cget Axis1 -min
+	} -cleanup {
+		destroy .graph1
+	} -result {-23.0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -min command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.17.2 {
+		Min invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -min invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}		
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -minorticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.18.1 {
+		Minorticks
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -minorticks "0.2 0.4 0.6 0.8"
+		.graph1 axis cget Axis1 -minorticks
+	} -cleanup {
+		destroy .graph1
+	} -result {0.2 0.4 0.6 0.8}	
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -minorticks command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.18.2 {
+		Minorticks invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -minorticks "1 invalid 3 4"}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}		
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -rotate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.19.1 {
+		Rotate 90
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -rotate 90.0
+		.graph1 axis cget Axis1 -rotate
+	} -cleanup {
+		destroy .graph1
+	} -result {90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -rotate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.19.2 {
+		Rotate -90
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -rotate -90.0
+		.graph1 axis cget Axis1 -rotate
+	} -cleanup {
+		destroy .graph1
+	} -result {270.0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -rotate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.19.3 {
+		Rotate 0 (zero)
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -rotate 0.0
+		.graph1 axis cget Axis1 -rotate
+	} -cleanup {
+		destroy .graph1
+	} -result {0.0}		
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -rotate command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.19.4 {
+		Rotate invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -rotate invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}		
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollcommand command works correctly
+	# TODO: NOT COMPLETE
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.20.1 {
+		Scrollcommand
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -scrollcommand
+		.graph1 axis cget Axis1 -scrollcommand
+	} -cleanup {
+		destroy .graph1
+	} -result {}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollmax command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.21.1 {
+		Scrollmax
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -scrollmax 19
+		.graph1 axis cget Axis1 -scrollmax
+	} -cleanup {
+		destroy .graph1
+	} -result {19.0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollmax command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.21.2 {
+		Scrollmax invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -scrollmax invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollmin command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.22.1 {
+		Scrollmin
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -scrollmin -19
+		.graph1 axis cget Axis1 -scrollmin
+	} -cleanup {
+		destroy .graph1
+	} -result {-19.0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollmin command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.22.2 {
+		Scrollmin
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -scrollmin 0
+		.graph1 axis cget Axis1 -scrollmin
+	} -cleanup {
+		destroy .graph1
+	} -result {0.0}	
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollmin command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.22.3 {
+		Scrollmin invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -scrollmin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.23.1 {
+		Showticks 1
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -showticks 1
+		.graph1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.23.2 {
+		Showticks yes
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -showticks yes
+		.graph1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.23.3 {
+		Showticks true
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -showticks true
+		.graph1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .graph1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.23.4 {
+		Showticks 0
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -showticks 0
+		.graph1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.23.5 {
+		Showticks no
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -showticks no
+		.graph1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.23.6 {
+		Showticks false
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -showticks false
+		.graph1 axis cget Axis1 -showticks
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -showticks command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.23.7 {
+		Showticks invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -showticks invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -stepsize command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.24.1 {
+		Stepsize
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -stepsize .01
+		.graph1 axis cget Axis1 -stepsize
+	} -cleanup {
+		destroy .graph1
+	} -result {0.01}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -stepsize command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.24.2 {
+		Stepsize
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -stepsize -1.0
+		.graph1 axis cget Axis1 -stepsize
+	} -cleanup {
+		destroy .graph1
+	} -result {-1.0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -stepsize command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.24.3 {
+		Stepsize
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -stepsize 0.0
+		.graph1 axis cget Axis1 -stepsize
+	} -cleanup {
+		destroy .graph1
+	} -result {0.0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -stepsize command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.24.4 {
+		Stepsize invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -stepsize invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -subdivisions command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.25.1 {
+		Subdivisions
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -subdivisions 6
+		.graph1 axis cget Axis1 -subdivisions 
+	} -cleanup {
+		destroy .graph1
+	} -result {6}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -subdivisions command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.25.2 {
+		Subdivisions
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -subdivisions 0
+		.graph1 axis cget Axis1 -subdivisions 
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -subdivisions command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.25.3 {
+		Subdivisions
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -subdivisions -1
+		.graph1 axis cget Axis1 -subdivisions 
+	} -cleanup {
+		destroy .graph1
+	} -result {-1}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -subdivisions command works correctly when given 
+	# an invalid option.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.25.4 {
+		Subdivisions invalid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		if {[catch {.graph1 axis configure Axis1 -subdivisions invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -tickfont command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.26.1 {
+		Tickfont
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -tickfont "*-Helvetica-Bold-R-Normal-*-14-140-*"
+		.graph1 axis cget Axis1 -tickfont
+	} -cleanup {
+		destroy .graph1
+	} -result {*-Helvetica-Bold-R-Normal-*-14-140-*}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -ticklength command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.27.1 {
+		Ticklength
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -ticklength 20
+		.graph1 axis cget Axis1 -ticklength
+	} -cleanup {
+		destroy .graph1
+	} -result {20}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -title command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.28.1 {
+		Title
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -title "Test Title"
+		.graph1 axis cget Axis1 -title
+	} -cleanup {
+		destroy .graph1
+	} -result {Test Title}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.29.1 {
+		Titlealternate 1
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		.graph1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.graph1 axis configure Axis1 -titlealternate 1
+		.graph1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.29.2 {
+		Titlealternate yes
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		.graph1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.graph1 axis configure Axis1 -titlealternate yes
+		.graph1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.29.3 {
+		Titlealternate true
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		.graph1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.graph1 axis configure Axis1 -titlealternate true
+		.graph1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .graph1
+	} -result {1}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.29.4 {
+		Titlealternate 0
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		.graph1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.graph1 axis configure Axis1 -titlealternate 0
+		.graph1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.29.5 {
+		Titlealternate no
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		.graph1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.graph1 axis configure Axis1 -titlealternate no
+		.graph1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .graph1
+	} -result {0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlealternate command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.29.6 {
+		Titlealternate false
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		.graph1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.graph1 axis configure Axis1 -titlealternate false
+		.graph1 axis cget Axis1 -titlealternate
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlecolor command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.30.1 {
+		Titlecolor
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		.graph1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.graph1 axis configure Axis1 -titlecolor blue
+		.graph1 axis cget Axis1 -titlecolor
+	} -cleanup {
+		destroy .graph1
+	} -result {blue}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -titlefont command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.31.1 {
+		Titlefont
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		.graph1 axis configure Axis1 -title "Test Title"
+	} -body {
+		.graph1 axis configure Axis1 -titlefont "*-Helvetica-Bold-R-Normal-*-14-140-*"
+		.graph1 axis cget Axis1 -titlefont
+	} -cleanup {
+		destroy .graph1
+	} -result {*-Helvetica-Bold-R-Normal-*-14-140-*}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -autorange command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.32.1 {
+		Autorange
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -autorange 13.0
+		.graph1 axis cget Axis1 -autorange
+	} -cleanup {
+		destroy .graph1
+	} -result {13.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -borderwidth command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.33.1 {
+		Borderwidth
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -borderwidth 13.0
+		.graph1 axis cget Axis1 -borderwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {13}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -borderwidth command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.33.2 {
+		Borderwidth (bd)
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -bd 13.0
+		.graph1 axis cget Axis1 -bd
+	} -cleanup {
+		destroy .graph1
+	} -result {13}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -shiftby command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.34.1 {
+		Shiftby
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -shiftby 13.0
+		.graph1 axis cget Axis1 -shiftby
+	} -cleanup {
+		destroy .graph1
+	} -result {13.0}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.35.1 {
+		Relief - flat
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -relief flat
+		.graph1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.35.2 {
+		Relief - raised
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -relief groove
+		.graph1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.35.3 {
+		Relief - raised
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -relief raised
+		.graph1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.35.4 {
+		Relief - ridge
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -relief ridge
+		.graph1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.35.5 {
+		Relief - solid
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -relief solid
+		.graph1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {solid}	
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -relief command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.35.6 {
+		Relief - sunken
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -relief sunken
+		.graph1 axis cget Axis1 -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -scrollincrement command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.36.1 {
+		Scrollincrement
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -scrollincrement 15
+		.graph1 axis cget Axis1 -scrollincrement
+	} -cleanup {
+		destroy .graph1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -background command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.37.1 {
+		Background
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -background "red"
+		.graph1 axis cget Axis1 -background
+	} -cleanup {
+		destroy .graph1
+	} -result {red}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis configure -tickdivider command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.configure.A.39.1 {
+		Tickdivider
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis configure Axis1 -tickdivider 13.0
+		.graph1 axis cget Axis1 -tickdivider
+	} -cleanup {
+		destroy .graph1
+	} -result {13.0}
+	
+	cleanupTests
+}

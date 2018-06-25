@@ -1,0 +1,3531 @@
+# RBC.stripchart.element.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element configure 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -activepen command works correctly when given 
+	# a valid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.1.1 {
+		stripchart element configure: activepen - valid pen name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		.stripchart1 pen create Pen1 -color blue
+	} -body {
+		.stripchart1 element configure Element1 -activepen Pen1
+		.stripchart1 element cget Element1 -activepen
+	} -cleanup {
+		.stripchart1 pen delete Pen1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Pen1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -activepen command works correctly when given 
+	# an invalid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.1.2 {
+		stripchart element configure: activepen - invalid pen name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -activepen invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -bindtags command works correctly when given a 
+	# single tag name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.2.1 {
+		stripchart element configure: bindtags - single tag
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element bind Binding1 <Double-1> {puts foobar}
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -bindtags Binding1
+		.stripchart1 element cget Element1 -bindtags
+	} -cleanup {
+		destroy Binding1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Binding1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -bindtags command works correctly when given  
+	# a list of tag names.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.2.2 {
+		stripchart element configure: bindtags - tag list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element bind Binding1 <Double-1> {puts foo}
+		.stripchart1 element bind Binding2 <Double-3> {puts bar}
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -bindtags {Binding1 Binding2}
+		.stripchart1 element cget Element1 -bindtags
+	} -cleanup {
+		destroy Binding1 Binding2
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Binding1 Binding2}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -color command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.3.1 {
+		stripchart element configure: color - valid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -color black
+		.stripchart1 element cget Element1 -color
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -color command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.3.2 {
+		stripchart element configure: color - invalid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -color invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given 
+	# a valid dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.4.1 {
+		stripchart element configure: dashes - valid dash list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -dashes {2 3 2 4}
+		.stripchart1 element cget Element1 -dashes
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {2 3 2 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given 
+	# an empty dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.4.2 {
+		stripchart element configure: dashes - empty dash list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -dashes ""
+		.stripchart1 element cget Element1 -dashes
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given
+	# a dash list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.4.3 {
+		stripchart element configure: dashes - long dash list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -dashes {2 3 2 4 2 3 2 4 2 3 2 4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given 
+	# an invalid numerical dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.4.4 {
+		stripchart element configure: dashes - invalid numerical dash list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -dashes {2 3 2 -1 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given 
+	# a dash list with characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.4.5 {
+		stripchart element configure: dashes - dash list with characters
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -dashes {2 3 2 a 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given a
+	# valid coordinate list as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.5.1 {
+		stripchart element configure: data - valid coordinte list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -data {1 3 4 5}
+		.stripchart1 element cget Element1 -data
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 3.0 4.0 5.0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given an
+	# invalid coordinate list as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.5.2 {
+		stripchart element configure: data - invalid coordinte list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -data {1 a 4 b}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given input
+	# that is not in the proper form (x1 y1 x2 y2).
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.5.3 {
+		stripchart element configure: data - not proper form
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -data {1,2 3,4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given input
+	# that does not have an even number of values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.5.4 {
+		stripchart element configure: data - odd list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -data {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -fill command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.6.1 {
+		stripchart element configure: fill - valid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -fill black
+		.stripchart1 element cget Element1 -fill
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -fill command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.6.2 {
+		stripchart element configure: fill - invalid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -fill invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -fill command works correctly when given 
+	# 'defcolor' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.6.3 {
+		stripchart element configure: fill - defcolor
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -fill defcolor
+		.stripchart1 element cget Element1 -fill
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {defcolor}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -fill command works correctly when given "" as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.6.4 {
+		stripchart element configure: fill - empty string
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -fill ""
+		.stripchart1 element cget Element1 -fill
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.7.1 {
+		stripchart element configure: hide - 1
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -hide 1
+		.stripchart1 element cget Element1 -hide
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.7.2 {
+		stripchart element configure: hide - 0
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -hide 0
+		.stripchart1 element cget Element1 -hide
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.7.3 {
+		stripchart element configure: hide - true
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -hide true
+		.stripchart1 element cget Element1 -hide
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given 
+	# false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.7.4 {
+		stripchart element configure: hide - false
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -hide false
+		.stripchart1 element cget Element1 -hide
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.7.5 {
+		stripchart element configure: hide - yes
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -hide yes
+		.stripchart1 element cget Element1 -hide
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.7.6 {
+		stripchart element configure: hide - no
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -hide no
+		.stripchart1 element cget Element1 -hide
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.7.7 {
+		stripchart element configure: hide - invalid input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -label command works correctly when given 
+	# valid text.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.8.1 {
+		stripchart element configure: label - valid text
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -label MyElement
+		.stripchart1 element cget Element1 -label
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {MyElement}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -label command works correctly when given the
+	# empty string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.8.2 {
+		stripchart element configure: label - empty string
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -label ""
+		.stripchart1 element cget Element1 -label
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -label command does not change the default 
+	# value when not given any input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.8.3 {
+		stripchart element configure: label - default value
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -label
+		.stripchart1 element cget Element1 -label
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Element1}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -linewidth command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.9.1 {
+		stripchart element configure: linewidth - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -linewidth 2
+		.stripchart1 element cget Element1 -linewidth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -linewidth command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.9.2 {
+		stripchart element configure: linewidth - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -linewidth 3.5
+		.stripchart1 element cget Element1 -linewidth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -linewidth command works correctly when given
+	# an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.9.3 {
+		stripchart element configure: linewidth - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -linewidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -linewidth command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.9.4 {
+		stripchart element configure: linewidth - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -linewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapx command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.10.1 {
+		stripchart element configure: mapx - valid axis name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 axis create .axis1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -mapx .axis1
+		.stripchart1 element cget Element1 -mapx
+	} -cleanup {
+		.stripchart1 element delete Element1
+		.stripchart1 axis delete .axis1
+		destroy .stripchart1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapx command works correctly when given a
+	# non-existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.10.2 {
+		stripchart element configure: mapx - non-existent axis name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -mapx .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapx command works correctly when not input  
+	# is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.10.3 {
+		stripchart element configure: mapx - no input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -mapx
+		.stripchart1 element cget Element1 -mapx
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {x}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapy command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.11.1 {
+		stripchart element configure: mapy - valid axis name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 axis create .axis1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -mapy .axis1
+		.stripchart1 element cget Element1 -mapy
+	} -cleanup {
+		.stripchart1 element delete Element1
+		.stripchart1 axis delete .axis1
+		destroy .stripchart1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapy command works correctly when given a
+	# non-existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.11.2 {
+		stripchart element configure: mapy - non-existent axis name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -mapy .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapy command works correctly when not input  
+	# is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.11.3 {
+		stripchart element configure: mapy - no input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -mapy
+		.stripchart1 element cget Element1 -mapy
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {y}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -offdash command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.12.1 {
+		stripchart element configure: offdash - valid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -offdash black
+		.stripchart1 element cget Element1 -offdash
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -offdash command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.12.2 {
+		stripchart element configure: offdash - invalid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -offdash invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -offdash command works correctly when given 
+	# 'defcolor' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.12.3 {
+		stripchart element configure: offdash - defcolor
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -offdash defcolor
+		.stripchart1 element cget Element1 -offdash
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {defcolor}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -offdash command works correctly when given "" 
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.12.4 {
+		stripchart element configure: offdash - empty string
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -offdash ""
+		.stripchart1 element cget Element1 -offdash
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outline command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.13.1 {
+		stripchart element configure: outline - valid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -outline black
+		.stripchart1 element cget Element1 -outline
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outline command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.13.2 {
+		stripchart element configure: outline - invalid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -outline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outline command works correctly when given 
+	# 'defcolor' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.13.3 {
+		stripchart element configure: outline - defcolor
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -outline defcolor
+		.stripchart1 element cget Element1 -outline
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {defcolor}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pen command works correctly when given 
+	# a valid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.14.1 {
+		stripchart element configure: pen - valid pen name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		.stripchart1 pen create Pen1 -color blue
+	} -body {
+		.stripchart1 element configure Element1 -pen Pen1
+		.stripchart1 element cget Element1 -pen
+	} -cleanup {
+		.stripchart1 pen delete Pen1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Pen1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pen command works correctly when given 
+	# an invalid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.14.2 {
+		stripchart element configure: pen - invalid pen name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -pen invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outlinewidth command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.15.1 {
+		stripchart element configure: outlinewidth - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -outlinewidth 2
+		.stripchart1 element cget Element1 -outlinewidth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outlinewidth command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.15.2 {
+		stripchart element configure: outlinewidth - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -outlinewidth 3.5
+		.stripchart1 element cget Element1 -outlinewidth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outlinewidth command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.15.3 {
+		stripchart element configure: outlinewidth - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -outlinewidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outlinewidth command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.15.4 {
+		stripchart element configure: outlinewidth - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -outlinewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.16.1 {
+		stripchart element configure: scalesymbols - 1
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -scalesymbols 1
+		.stripchart1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.16.2 {
+		stripchart element configure: scalesymbols - 0
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -scalesymbols 0
+		.stripchart1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.16.3 {
+		stripchart element configure: scalesymbols - true
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -scalesymbols true
+		.stripchart1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.16.4 {
+		stripchart element configure: scalesymbols - false
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -scalesymbols false
+		.stripchart1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.16.5 {
+		stripchart element configure: scalesymbols - yes
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -scalesymbols yes
+		.stripchart1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.16.6 {
+		stripchart element configure: scalesymbols - no
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -scalesymbols no
+		.stripchart1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given an invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.16.7 {
+		stripchart element configure: scalesymbols - invalid input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -scalesymbols invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'linear' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.17.1 {
+		stripchart element configure: smooth - linear
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -smooth linear
+		.stripchart1 element cget Element1 -smooth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {linear}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'step' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.17.2 {
+		stripchart element configure: smooth - step
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -smooth step
+		.stripchart1 element cget Element1 -smooth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {step}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'natural' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.17.3 {
+		stripchart element configure: smooth - natural
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -smooth natural
+		.stripchart1 element cget Element1 -smooth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {natural}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'quadratic' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.17.4 {
+		stripchart element configure: smooth - quadratic
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -smooth quadratic
+		.stripchart1 element cget Element1 -smooth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {cubic}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'cubic' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.17.5 {
+		stripchart element configure: smooth - cubic
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -smooth cubic
+		.stripchart1 element cget Element1 -smooth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {natural}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# invalid input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.17.6 {
+		stripchart element configure: smooth - invalid input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -smooth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -styles command works correctly when given a
+	# valid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.18.1 {
+		stripchart element configure: styles - valid pen name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		.stripchart1 pen create Pen1
+	} -body {
+		.stripchart1 element configure Element1 -styles {Pen1}
+		.stripchart1 element cget Element1 -styles
+	} -cleanup {
+		destroy Pen1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {{Pen1 0.0 1.0}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -styles command works correctly when given an
+	# invalid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.18.2 {
+		stripchart element configure: styles - invalid pen name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -styles {invalid}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -styles command works correctly when given a
+	# valid pen name and a minimum and maximum element weight range.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.18.3 {
+		stripchart element configure: styles - pen and weights
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		.stripchart1 pen create Pen1
+	} -body {
+		.stripchart1 element configure Element1 -styles {{Pen1 2.0 3.0}}
+		.stripchart1 element cget Element1 -styles
+	} -cleanup {
+		destroy Pen1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {{Pen1 2.0 3.0}}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'square' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.1 {
+		stripchart element configure: symbol - square
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol square
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {square}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'circle' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.2 {
+		stripchart element configure: symbol - circle
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol circle
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {circle}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'diamond' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.3 {
+		stripchart element configure: symbol - diamond
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol diamond
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {diamond}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'plus' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.4 {
+		stripchart element configure: symbol - plus
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol plus
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {plus}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'cross' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.5 {
+		stripchart element configure: symbol - cross
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol cross
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {cross}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'splus' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.6 {
+		stripchart element configure: symbol - splus
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol splus
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {splus}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'scross' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.7 {
+		stripchart element configure: symbol - scross
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol scross
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {scross}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'triangle' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.8 {
+		stripchart element configure: symbol - triangle
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol triangle
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {triangle}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# "" as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.9 {
+		stripchart element configure: symbol - ""
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol ""
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# a valid bitmap name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.10 {
+		stripchart element configure: symbol - bitmap
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -symbol warning
+		.stripchart1 element cget Element1 -symbol
+	} -cleanup {
+		destroy Bitmap1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {warning {}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given an
+	# invalid symbol name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.19.11 {
+		stripchart element configure: symbol - invalid symbol name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -symbol invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.20.1 {
+		stripchart element configure: weights - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -weights Vector1
+		.stripchart1 element cget Element1 -weights
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.20.2 {
+		stripchart element configure: weights - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -weights invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.20.3 {
+		stripchart element configure: weights - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -weights {1 2 3 4}
+		.stripchart1 element cget Element1 -weights
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.20.4 {
+		stripchart element configure: weights - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -weights {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.21.1 {
+		stripchart element configure: xdata - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -xdata Vector1
+		.stripchart1 element cget Element1 -xdata
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.21.2 {
+		stripchart element configure: xdata - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -xdata invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.21.3 {
+		stripchart element configure: xdata - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -xdata {1 2 3 4}
+		.stripchart1 element cget Element1 -xdata
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.21.4 {
+		stripchart element configure: xdata - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -xdata {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.22.1 {
+		stripchart element configure: ydata - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -ydata Vector1
+		.stripchart1 element cget Element1 -ydata
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.22.2 {
+		stripchart element configure: ydata - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -ydata invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.22.3 {
+		stripchart element configure: ydata - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -ydata {1 2 3 4}
+		.stripchart1 element cget Element1 -ydata
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.22.4 {
+		stripchart element configure: ydata - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -ydata {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.23.1 {
+		stripchart element configure: x - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -x Vector1
+		.stripchart1 element cget Element1 -x
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.23.2 {
+		stripchart element configure: x - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -x invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given a valid
+	# list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.23.3 {
+		stripchart element configure: x - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -x {1 2 3 4}
+		.stripchart1 element cget Element1 -x
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.23.4 {
+		stripchart element configure: x - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -x {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given a 
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.24.1 {
+		stripchart element configure: xerror - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -xerror Vector1
+		.stripchart1 element cget Element1 -xerror
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.24.2 {
+		stripchart element configure: xerror - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -xerror invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.24.3 {
+		stripchart element configure: xerror - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -xerror {1 2 3 4}
+		.stripchart1 element cget Element1 -xerror
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.24.4 {
+		stripchart element configure: xerror - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -xerror {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.25.1 {
+		stripchart element configure: xhigh - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -xhigh Vector1
+		.stripchart1 element cget Element1 -xhigh
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.25.2 {
+		stripchart element configure: xhigh - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -xhigh invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.25.3 {
+		stripchart element configure: xhigh - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -xhigh {1 2 3 4}
+		.stripchart1 element cget Element1 -xhigh
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.25.4 {
+		stripchart element configure: xhigh - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -xhigh {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.26.1 {
+		stripchart element configure: xlow - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -xlow Vector1
+		.stripchart1 element cget Element1 -xlow
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.26.2 {
+		stripchart element configure: xlow - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -xlow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.26.3 {
+		stripchart element configure: xlow - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -xlow {1 2 3 4}
+		.stripchart1 element cget Element1 -xlow
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.26.4 {
+		stripchart element configure: xlow - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -xlow {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.27.1 {
+		stripchart element configure: y - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -y Vector1
+		.stripchart1 element cget Element1 -y
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.27.2 {
+		stripchart element configure: y - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -y invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.27.3 {
+		stripchart element configure: y - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -y {1 2 3 4}
+		.stripchart1 element cget Element1 -y
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.27.4 {
+		stripchart element configure: y - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -y {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.28.1 {
+		stripchart element configure: yerror - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -yerror Vector1
+		.stripchart1 element cget Element1 -yerror
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yerror command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.28.2 {
+		stripchart element configure: yerror - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -yerror invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yerror command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.28.3 {
+		stripchart element configure: yerror - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -yerror {1 2 3 4}
+		.stripchart1 element cget Element1 -yerror
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yerror command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.28.4 {
+		stripchart element configure: yerror - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -yerror {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.29.1 {
+		stripchart element configure: yhigh - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -yhigh Vector1
+		.stripchart1 element cget Element1 -yhigh
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yhigh command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.29.2 {
+		stripchart element configure: yhigh - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -yhigh invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yhigh command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.29.3 {
+		stripchart element configure: yhigh - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -yhigh {1 2 3 4}
+		.stripchart1 element cget Element1 -yhigh
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yhigh command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.29.4 {
+		stripchart element configure: yhigh - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -yhigh {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.30.1 {
+		stripchart element configure: ylow - valid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		vector create Vector1
+	} -body {
+		.stripchart1 element configure Element1 -ylow Vector1
+		.stripchart1 element cget Element1 -ylow
+	} -cleanup {
+		vector destroy Vector1
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {::stripchart.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ylow command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.30.2 {
+		stripchart element configure: ylow - invalid vector name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -ylow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ylow command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.30.3 {
+		stripchart element configure: ylow - valid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -ylow {1 2 3 4}
+		.stripchart1 element cget Element1 -ylow
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ylow command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.30.4 {
+		stripchart element configure: ylow - invalid list
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -ylow {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcolor command works correctly when  
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.31.1 {
+		stripchart element configure: errorbarcolor - valid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -errorbarcolor black
+		.stripchart1 element cget Element1 -errorbarcolor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcolor command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.31.2 {
+		stripchart element configure: errorbarcolor - invalid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -errorbarcolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.32.1 {
+		stripchart element configure: errorbarwidth - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -errorbarwidth 2
+		.stripchart1 element cget Element1 -errorbarwidth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.32.2 {
+		stripchart element configure: errorbarwidth - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -errorbarwidth 3.5
+		.stripchart1 element cget Element1 -errorbarwidth
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.32.3 {
+		stripchart element configure: errorbarwidth - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -errorbarwidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.32.4 {
+		stripchart element configure: errorbarwidth - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -errorbarwidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.33.1 {
+		stripchart element configure: errorbarcap - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -errorbarcap 2
+		.stripchart1 element cget Element1 -errorbarcap
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.33.2 {
+		stripchart element configure: errorbarcap - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -errorbarcap 3.5
+		.stripchart1 element cget Element1 -errorbarcap
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.33.3 {
+		stripchart element configure: errorbarcap - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -errorbarcap -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.33.4 {
+		stripchart element configure: errorbarcap - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -errorbarcap a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -maxsymbols command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.34.1 {
+		stripchart element configure: maxsymbols - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -maxsymbols 2
+		.stripchart1 element cget Element1 -maxsymbols
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -maxsymbols command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.34.2 {
+		stripchart element configure: maxsymbols - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -maxsymbols 3.5
+		.stripchart1 element cget Element1 -maxsymbols
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -maxsymbols command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.34.3 {
+		stripchart element configure: maxsymbols - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -maxsymbols -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -maxsymbols command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.34.4 {
+		stripchart element configure: maxsymbols - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -maxsymbols a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.1 {
+		stripchart element configure: valueanchor - n
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueanchor n
+		.stripchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.2 {
+		stripchart element configure: valueanchor - ne
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueanchor ne
+		.stripchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.3 {
+		stripchart element configure: valueanchor - e
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueanchor e
+		.stripchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.4 {
+		stripchart element configure: valueanchor - se
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueanchor se
+		.stripchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.5 {
+		stripchart element configure: valueanchor - s
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueanchor s
+		.stripchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.6 {
+		stripchart element configure: valueanchor - sw
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueanchor sw
+		.stripchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.7 {
+		stripchart element configure: valueanchor - w
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueanchor w
+		.stripchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.8 {
+		stripchart element configure: valueanchor - nw
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueanchor nw
+		.stripchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.9 {
+		stripchart element configure: valueanchor - center
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueanchor center
+		.stripchart1 element cget Element1 -valueanchor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.10 {
+		stripchart element configure: valueanchor - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -valueanchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.35.11 {
+		stripchart element configure: valueanchor - invalid character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -valueanchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuecolor command works correctly when given
+	# a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.36.1 {
+		stripchart element configure: valuecolor - valid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valuecolor black
+		.stripchart1 element cget Element1 -valuecolor
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuecolor command works correctly when given
+	# an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.36.2 {
+		stripchart element configure: valuecolor - invalid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -valuecolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when 
+	# given an integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.37.1 {
+		stripchart element configure: valuerotate - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valuerotate 90
+		.stripchart1 element cget Element1 -valuerotate
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when 
+	# given a decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.37.2 {
+		stripchart element configure: valuerotate - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valuerotate 45.5
+		.stripchart1 element cget Element1 -valuerotate
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when 
+	# given a negative integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.37.3 {
+		stripchart element configure: valuerotate - negative integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valuerotate -90
+		.stripchart1 element cget Element1 -valuerotate
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {-90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when
+	# given a negative decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.37.4 {
+		stripchart element configure: valuerotate - negative decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valuerotate -45.5
+		.stripchart1 element cget Element1 -valuerotate
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {-45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.37.5 {
+		stripchart element configure: valuerotate - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -valuerotate invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when  
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.38.1 {
+		stripchart element configure: valueshadow - valid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueshadow black
+		.stripchart1 element cget Element1 -valueshadow
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {black 1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.38.2 {
+		stripchart element configure: valueshadow - invalid color name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -valueshadow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when  
+	# given a valid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.38.3 {
+		stripchart element configure: valueshadow - valid color name, valid integer
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueshadow {black 2}
+		.stripchart1 element cget Element1 -valueshadow
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {black 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when 
+	# given an invalid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.38.4 {
+		stripchart element configure: valueshadow - invalid color name, valid integer
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -valueshadow {invalid 1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when 
+	# given a valid color name and invalid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.38.5 {
+		stripchart element configure: valueshadow - valid color name, invalid integer
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -valueshadow {black -1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueformat command works correctly when an 
+	# input value is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.39.1 {
+		stripchart element configure: valueformat - input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valueformat formatstring
+		.stripchart1 element cget Element1 -valueformat
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {formatstring}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.40.1 {
+		stripchart element configure: valuefont - string
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valuefont Times
+		.stripchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.40.2 {
+		stripchart element configure: valuefont - list with string
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valuefont {Times}
+		.stripchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string and positive integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.40.3 {
+		stripchart element configure: valuefont - list with string and positive integer
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valuefont {Times 10}
+		.stripchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Times 10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string and negative integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.40.4 {
+		stripchart element configure: valuefont - list with string and negative integer
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -valuefont {Times -10}
+		.stripchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Times -10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string and decimal as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.40.5 {
+		stripchart element configure: valuefont - list with string and decimal
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -valuefont {Times 10.5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with 2 strings as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.40.6 {
+		stripchart element configure: valuefont - list with 2 strings
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -valuefont {Times Ten}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given
+	# a valid font string.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.40.7 {
+	    stripchart element configure: font - valid font string
+	} -setup {
+	    stripchart .stripchart1    
+		.stripchart1 element create Element1
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 element configure Element1 -valuefont "*-Arial-Bold-R-Normal-*-12-120-*" 
+	    .stripchart1 element cget Element1 -valuefont
+	} -cleanup {
+		.stripchart1 element delete Element1
+	    destroy .stripchart1
+	} -result {*-Arial-Bold-R-Normal-*-12-120-*}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'flat' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.41.1 {
+		stripchart element configure: labelrelief - flat
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -labelrelief flat
+		.stripchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'groove' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.41.2 {
+		stripchart element configure: labelrelief - groove
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -labelrelief groove
+		.stripchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'raised' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.41.3 {
+		stripchart element configure: labelrelief - raised
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -labelrelief raised
+		.stripchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'ridge' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.41.4 {
+		stripchart element configure: labelrelief - ridge
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -labelrelief ridge
+		.stripchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'solid' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.41.5 {
+		stripchart element configure: labelrelief - solid
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -labelrelief solid
+		.stripchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'sunken' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.41.6 {
+		stripchart element configure: labelrelief - sunken
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -labelrelief sunken
+		.stripchart1 element cget Element1 -labelrelief
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.41.7 {
+		stripchart element configure: labelrelief - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -labelrelief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.41.8 {
+		stripchart element configure: labelrelief - invalid character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -labelrelief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'none' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.42.1 {
+		stripchart element configure: showvalues - none
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -showvalues none
+		.stripchart1 element cget Element1 -showvalues
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'x' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.42.2 {
+		stripchart element configure: showvalues - x
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -showvalues x
+		.stripchart1 element cget Element1 -showvalues
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'y' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.42.3 {
+		stripchart element configure: showvalues - y
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -showvalues y
+		.stripchart1 element cget Element1 -showvalues
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'both' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.42.4 {
+		stripchart element configure: showvalues - both
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -showvalues both
+		.stripchart1 element cget Element1 -showvalues
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {both}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.42.5 {
+		stripchart element configure: showvalues - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -showvalues 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given 
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.42.6 {
+		stripchart element configure: showvalues - invalid character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -showvalues invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'none' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.43.1 {
+		stripchart element configure: showerrorbars - none
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -showerrorbars none
+		.stripchart1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'x' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.43.2 {
+		stripchart element configure: showerrorbars - x
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -showerrorbars x
+		.stripchart1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'y' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.43.3 {
+		stripchart element configure: showerrorbars - y
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -showerrorbars y
+		.stripchart1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'both' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.43.4 {
+		stripchart element configure: showerrorbars - both
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -showerrorbars both
+		.stripchart1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {both}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.43.5 {
+		stripchart element configure: showerrorbars - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -showerrorbars 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given 
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.43.6 {
+		stripchart element configure: showerrorbars - invalid character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -showerrorbars invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pixels command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.44.1 {
+		stripchart element configure: pixels - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -pixel 2
+		.stripchart1 element cget Element1 -pixel
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pixels command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.44.2 {
+		stripchart element configure: pixels - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element configure Element1 -pixels 3.5
+		.stripchart1 element cget Element1 -pixels
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pixels command works correctly when given an
+	# invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.44.3 {
+		stripchart element configure: pixels - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -pixels -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pixels command works correctly when given a 
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.configure.A.44.4 {
+		stripchart element configure: pixels - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element configure Element1 -pixels a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	cleanupTests
+}

@@ -1,0 +1,631 @@
+# RBC.barchart.marker.configure.line.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the line marker configure
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given a
+	# valid dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.1.1 {
+		barchart marker configure: dashes - valid dash list
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -dashes {2 3 2 4}
+		.barchart1 marker cget Marker1 -dashes
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {2 3 2 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given an
+	# empty dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.1.2 {
+		barchart marker configure: dashes - empty dash list
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -dashes ""
+		.barchart1 marker cget Marker1 -dashes
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given a
+	# dash list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.1.3 {
+		barchart marker configure: dashes - long dash list
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -dashes {2 3 2 4 2 3 2 4 2 3 2 4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given an
+	# invalid numerical dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.1.4 {
+		barchart marker configure: dashes - invalid numerical dash list
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -dashes {2 3 2 -1 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashes command works correctly when given a
+	# dash list with characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.1.5 {
+		barchart marker configure: dashes - dash list with characters
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -dashes {2 3 2 a 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for line markers 
+	# when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.2.1 {
+		barchart marker configure line: fill - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -fill black
+		.barchart1 marker cget Marker1 -fill
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for line markers 
+	# when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.2.2 {
+		barchart marker configure line: fill - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -fill invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.3.1 {
+		barchart marker configure: linewidth - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -linewidth 2
+		.barchart1 marker cget Marker1 -linewidth
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.3.2 {
+		barchart marker configure: linewidth - invalid integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -linewidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.3.3 {
+		barchart marker configure: linewidth - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -linewidth 3.5
+		.barchart1 marker cget Marker1 -linewidth
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.3.4 {
+		barchart marker configure: linewidth - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -linewidth -3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.3.5 {
+		barchart marker configure: linewidth - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -linewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -linewidth command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.3.6 {
+		barchart marker configure: linewidth - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -linewidth 0
+		.barchart1 marker cget Marker1 -linewidth
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for line 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.4.1 {
+		barchart marker configure line: outline - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -outline black
+		.barchart1 marker cget Marker1 -outline
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for line 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.4.2 {
+		barchart marker configure line: outline - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -outline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.5.1 {
+		barchart marker configure: xor - 1
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xor 1
+		.barchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.5.2 {
+		barchart marker configure: xor - 0
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xor 0
+		.barchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.5.3 {
+		barchart marker configure: xor - true
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xor true
+		.barchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.5.4 {
+		barchart marker configure: xor - false
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xor false
+		.barchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.5.5 {
+		barchart marker configure: xor - yes
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xor yes
+		.barchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.5.6 {
+		barchart marker configure: xor - no
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -xor no
+		.barchart1 marker cget Marker1 -xor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -xor command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.5.7 {
+		barchart marker configure: xor - invalid input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -xor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -cap command works correctly when given 'butt'.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.6.1 {
+		barchart marker configure: cap - butt
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -cap butt
+		.barchart1 marker cget Marker1 -cap
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {butt}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -cap command works correctly when given
+	# 'projecting'.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.6.2 {
+		barchart marker configure: cap - projecting
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -cap projecting
+		.barchart1 marker cget Marker1 -cap
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {projecting}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -cap command works correctly when given
+	# 'round'.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.6.3 {
+		barchart marker configure: cap - round
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -cap round
+		.barchart1 marker cget Marker1 -cap
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {round}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashoffset command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.1 {
+		barchart marker configure: dashoffset - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -dashoffset 2
+		.barchart1 marker cget Marker1 -dashoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashoffset command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.2 {
+		barchart marker configure: dashoffset - negative integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -dashoffset -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashoffset command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.3 {
+		barchart marker configure: dashoffset - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -dashoffset 3.5
+		.barchart1 marker cget Marker1 -dashoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashoffset command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.4 {
+		barchart marker configure: dashoffset - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -dashoffset -3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashoffset command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.5 {
+		barchart marker configure: dashoffset - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -dashoffset a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -dashoffset command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.common.A.7.6 {
+		barchart marker configure: dashoffset - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -dashoffset 0
+		.barchart1 marker cget Marker1 -dashoffset
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -join command works correctly when given 
+	# 'bevel'.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.8.1 {
+		barchart marker configure: join - bevel
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -join bevel
+		.barchart1 marker cget Marker1 -join
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {bevel}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -join command works correctly when given
+	# 'miter'.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.8.2 {
+		barchart marker configure: join - miter
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -join miter
+		.barchart1 marker cget Marker1 -join
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {miter}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -join command works correctly when given
+	# 'round'.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.line.A.8.3 {
+		barchart marker configure: join - round
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create line -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -join round
+		.barchart1 marker cget Marker1 -join
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {round}
+	
+	cleanupTests
+}

@@ -1,0 +1,3201 @@
+# RBC.graph.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the configure 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.configure
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.configure {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.1.1 {
+		graph configure: aspect - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -aspect 2
+		.graph1 cget -aspect
+	} -cleanup {
+		destroy .graph1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.1.2 {
+		graph configure: aspect - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -aspect 4.3
+		.graph1 cget -aspect
+	} -cleanup {
+		destroy .graph1
+	} -result {4.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.1.3 {
+		graph configure: aspect - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -aspect -2
+		.graph1 cget -aspect
+	} -cleanup {
+		destroy .graph1
+	} -result {-2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.1.4 {
+		graph configure: aspect - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -aspect -4.3
+		.graph1 cget -aspect
+	} -cleanup {
+		destroy .graph1
+	} -result {-4.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.1.5 {
+		graph configure: aspect - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -aspect invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -background command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.2.1 {
+		graph configure: background - valid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -background black
+		.graph1 cget -background
+	} -cleanup {
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -background command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.2.2 {
+		graph configure: background - invalid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -background invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -background command works correctly when given
+	# 'SystemButtonFace' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.2.3 {
+		graph configure: background - SystemButtonFace
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -background SystemButtonFace
+		.graph1 cget -background
+	} -cleanup {
+		destroy .graph1
+	} -constraints {win} -result {SystemButtonFace}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'normal'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.3.1 {
+		graph configure: barmode - normal
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barmode normal
+		.graph1 cget -barmode
+	} -cleanup {
+		destroy .graph1
+	} -result {infront}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'infront'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.3.2 {
+		graph configure: barmode - infront
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barmode infront
+		.graph1 cget -barmode
+	} -cleanup {
+		destroy .graph1
+	} -result {infront}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'stacked'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.3.3 {
+		graph configure: barmode - stacked
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barmode stacked
+		.graph1 cget -barmode
+	} -cleanup {
+		destroy .graph1
+	} -result {stacked}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'overlap'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.3.4 {
+		graph configure: barmode - overlap
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barmode overlap
+		.graph1 cget -barmode
+	} -cleanup {
+		destroy .graph1
+	} -result {overlap}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'aligned'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.3.5 {
+		graph configure: barmode - aligned
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barmode aligned
+		.graph1 cget -barmode
+	} -cleanup {
+		destroy .graph1
+	} -result {aligned}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given invalid
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.3.6 {
+		graph configure: barmode - invalid input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -barmode invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.4.1 {
+		graph configure: barwidth - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barwidth 2
+		.graph1 cget -barwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.4.2 {
+		graph configure: barwidth - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barwidth -2
+		.graph1 cget -barwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {0.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a 
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.4.3 {
+		graph configure: barwidth - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barwidth 3.5
+		.graph1 cget -barwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {3.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.4.4 {
+		graph configure: barwidth - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barwidth -2.5
+		.graph1 cget -barwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {0.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.4.5 {
+		graph configure: barwidth - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -barwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.4.6 {
+		graph configure: barwidth - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -barwidth 0
+		.graph1 cget -barwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {0.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.5.1 {
+		graph configure: baseline - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -baseline 2
+		.graph1 cget -baseline
+	} -cleanup {
+		destroy .graph1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.5.2 {
+		graph configure: baseline - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -baseline -2
+		.graph1 cget -baseline
+	} -cleanup {
+		destroy .graph1
+	} -result {-2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a 
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.5.3 {
+		graph configure: baseline - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -baseline 3.5
+		.graph1 cget -baseline
+	} -cleanup {
+		destroy .graph1
+	} -result {3.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.5.4 {
+		graph configure: baseline - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -baseline -2.5
+		.graph1 cget -baseline
+	} -cleanup {
+		destroy .graph1
+	} -result {-2.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.5.5 {
+		graph configure: baseline - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -baseline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.5.6 {
+		graph configure: baseline - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -baseline 0
+		.graph1 cget -baseline
+	} -cleanup {
+		destroy .graph1
+	} -result {0.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.6.1 {
+		graph configure: borderwidth - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -borderwidth 2
+		.graph1 cget -borderwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.6.2 {
+		graph configure: borderwidth - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -borderwidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.6.3 {
+		graph configure: borderwidth - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -borderwidth 3.5
+		.graph1 cget -borderwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.6.4 {
+		graph configure: borderwidth - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -borderwidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.6.5 {
+		graph configure: borderwidth - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -borderwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.6.6 {
+		graph configure: borderwidth - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -borderwidth 0
+		.graph1 cget -borderwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.7.1 {
+		graph configure: bottommargin - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bottommargin 2
+		.graph1 cget -bottommargin
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.7.2 {
+		graph configure: bottommargin - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -bottommargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.7.3 {
+		graph configure: bottommargin - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bottommargin 3.5
+		.graph1 cget -bottommargin
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.7.4 {
+		graph configure: bottommargin - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -bottommargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.7.5 {
+		graph configure: bottommargin - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -bottommargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.7.6 {
+		graph configure: bottommargin - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bottommargin 0
+		.graph1 cget -bottommargin
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottomvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.8.1 {
+		graph configure: bottomvariable - single variable name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bottomvariable var1
+		.graph1 cget -bottomvariable
+	} -cleanup {
+		destroy .graph1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottomvariable command works correctly when given a 
+	# list of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.8.2 {
+		graph configure: bottomvariable - list of variable names
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bottomvariable {var1 var2 var3}
+		.graph1 cget -bottomvariable
+	} -cleanup {
+		destroy .graph1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.9.1 {
+		graph configure: bufferelements - 1
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bufferelements 1
+		.graph1 cget -bufferelements
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.9.2 {
+		graph configure: bufferelements - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bufferelements 0
+		.graph1 cget -bufferelements
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 
+	# true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.9.3 {
+		graph configure: bufferelements - true
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bufferelements true
+		.graph1 cget -bufferelements
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 
+	# false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.9.4 {
+		graph configure: bufferelements - false
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bufferelements false
+		.graph1 cget -bufferelements
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 
+	# yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.9.5 {
+		graph configure: bufferelements - yes
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bufferelements yes
+		.graph1 cget -bufferelements
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.9.6 {
+		graph configure: bufferelements - no
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -bufferelements no
+		.graph1 cget -bufferelements
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.9.7 {
+		graph configure: bufferelements - invalid input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -bufferelements invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.10.1 {
+		graph configure: buffergraph - 1
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -buffergraph 1
+		.graph1 cget -buffergraph
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.10.2 {
+		graph configure: buffergraph - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -buffergraph 0
+		.graph1 cget -buffergraph
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.10.3 {
+		graph configure: buffergraph - true
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -buffergraph true
+		.graph1 cget -buffergraph
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.10.4 {
+		graph configure: buffergraph - false
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -buffergraph false
+		.graph1 cget -buffergraph
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.10.5 {
+		graph configure: buffergraph - yes
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -buffergraph yes
+		.graph1 cget -buffergraph
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.10.6 {
+		graph configure: buffergraph - no
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -buffergraph no
+		.graph1 cget -buffergraph
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.10.7 {
+		graph configure: buffergraph - invalid input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -buffergraph invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'crosshair'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.11.1 {
+		graph configure: cursor - crosshair
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -cursor crosshair
+		.graph1 cget -cursor
+	} -cleanup {
+		destroy .graph1
+	} -result {crosshair}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'circle'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.11.2 {
+		graph configure: cursor - circle
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -cursor circle
+		.graph1 cget -cursor
+	} -cleanup {
+		destroy .graph1
+	} -result {circle}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'cross' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.11.3 {
+		graph configure: cursor - cross
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -cursor cross
+		.graph1 cget -cursor
+	} -cleanup {
+		destroy .graph1
+	} -result {cross}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'plus' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.11.4 {
+		graph configure: cursor - plus
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -cursor plus
+		.graph1 cget -cursor
+	} -cleanup {
+		destroy .graph1
+	} -result {plus}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given invalid
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.11.5 {
+		graph configure: cursor - invalid input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -cursor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a single
+	# numerical value as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.12.1 {
+		graph configure: data - single numerical value
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -data 1.3
+		.graph1 cget -data
+	} -cleanup {
+		destroy .graph1
+	} -result {1.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a list of
+	# numerical values as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.12.2 {
+		graph configure: data - list of numerical values
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -data {1.3 3 -4.5}
+		.graph1 cget -data
+	} -cleanup {
+		destroy .graph1
+	} -result {1.3 3 -4.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a single
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.12.3 {
+		graph configure: data - single string input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -data input
+		.graph1 cget -data
+	} -cleanup {
+		destroy .graph1
+	} -result {input}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a list of
+	# string inputs.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.12.4 {
+		graph configure: data - list of string inputs
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -data {input1 input2 input3}
+		.graph1 cget -data
+	} -cleanup {
+		destroy .graph1
+	} -result {input1 input2 input3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a list of
+	# mixed string and numerical inputs.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.12.5 {
+		graph configure: data - list of string and numerical inputs
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -data {input 1.2 -4 7}
+		.graph1 cget -data
+	} -cleanup {
+		destroy .graph1
+	} -result {input 1.2 -4 7}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -datacommand command works correctly when given a 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.13.1 {
+		graph configure: datacommand - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -datacommand {puts foo}
+		.graph1 cget -datacommand
+	} -cleanup {
+		destroy .graph1
+	} -result {puts foo}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -datacommand command works correctly when given a 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.13.2 {
+		graph configure: datacommand - numerical input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -datacommand {15}
+		.graph1 cget -datacommand
+	} -cleanup {
+		destroy .graph1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a string as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.14.1 {
+		graph configure: font - name string
+	} -setup {
+		graph .graph1 
+	} -body {
+		.graph1 configure -font Times
+		.graph1 cget -font
+	} -cleanup {
+		destroy .graph1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a string as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.14.2 {
+		graph configure: font - font string
+	} -setup {
+		graph .graph1 
+	} -body {
+		.graph1 configure -font *-Helvetica-*-R-Normal-*-10-120-*
+		.graph1 cget -font
+	} -cleanup {
+		destroy .graph1
+	} -result {*-Helvetica-*-R-Normal-*-10-120-*}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.14.3 {
+		graph configure: font - list with string
+	} -setup {
+		graph .graph1 
+	} -body {
+		.graph1 configure -font {Times}
+		.graph1 cget -font
+	} -cleanup {
+		destroy .graph1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string and positive integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.14.4 {
+		graph configure: font - list with string and positive integer
+	} -setup {
+		graph .graph1 
+	} -body {
+		.graph1 configure -font {Times 10}
+		.graph1 cget -font
+	} -cleanup {
+		destroy .graph1
+	} -result {Times 10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string and negative integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.14.5 {
+		graph configure: font - list with string and negative integer
+	} -setup {
+		graph .graph1 
+	} -body {
+		.graph1 configure -font {Times -10}
+		.graph1 cget -font
+	} -cleanup {
+		destroy .graph1
+	} -result {Times -10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string and decimal as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.14.6 {
+		graph configure: font - list with string and decimal
+	} -setup {
+		graph .graph1 
+	} -body {
+		if {[catch {.graph1 configure -font {Times 10.5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with 2 
+	# strings as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.14.7 {
+		graph configure: font - list with 2 strings
+	} -setup {
+		graph .graph1 
+	} -body {
+		if {[catch {.graph1 configure -font {Times Ten}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -foreground command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.15.1 {
+		graph configure: foreground - valid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -foreground black
+		.graph1 cget -foreground
+	} -cleanup {
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -foreground command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.15.2 {
+		graph configure: foreground - invalid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -foreground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -foreground command works correctly when given
+	# 'SystemButtonText' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.15.3 {
+		graph configure: foreground - SystemButtonText
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -foreground SystemButtonText
+		.graph1 cget -foreground
+	} -cleanup {
+		destroy .graph1
+	} -constraints {win} -result {SystemButtonText}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.16.1 {
+		graph configure: halo - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -halo 2
+		.graph1 cget -halo
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.16.2 {
+		graph configure: halo - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -halo -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.16.3 {
+		graph configure: halo - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -halo 3.5
+		.graph1 cget -halo
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.16.4 {
+		graph configure: halo - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -halo -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a positive
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.16.5 {
+		graph configure: halo - positive inch input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -halo 3i
+		expr {[.graph1 cget -halo] - [winfo pixels .graph1 3i]}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a negative
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.16.6 {
+		graph configure: halo - negative inch input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -halo -2i}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.16.7 {
+		graph configure: halo - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -halo invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.16.8 {
+		graph configure: halo - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -halo 0
+		.graph1 cget -halo
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.17.1 {
+		graph configure: height - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -height 2
+		.graph1 cget -height
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.17.2 {
+		graph configure: height - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -height -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.17.3 {
+		graph configure: height - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -height 3.5
+		.graph1 cget -height
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.17.4 {
+		graph configure: height - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -height -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a positive
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.17.5 {
+		graph configure: height - positive inch input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -height 3i
+		expr {[.graph1 cget -height] - [winfo pixels .graph1 3i]}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a negative
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.17.6 {
+		graph configure: height - negative inch input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -height -2i}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.17.7 {
+		graph configure: height - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -height invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.17.8 {
+		graph configure: height - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -height 0
+		.graph1 cget -height
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightbackground command works correctly when 
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.18.1 {
+		graph configure: highlightbackground - valid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -highlightbackground black
+		.graph1 cget -highlightbackground
+	} -cleanup {
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightbackground command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.18.2 {
+		graph configure: highlightbackground - invalid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -highlightbackground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightbackground command works correctly when 
+	# given 'SystemButtonFace' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.18.3 {
+		graph configure: highlightbackground - SystemButtonFace
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -highlightbackground SystemButtonFace
+		.graph1 cget -highlightbackground
+	} -cleanup {
+		destroy .graph1
+	} -constraints {win} -result {SystemButtonFace}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightcolor command works correctly when given a
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.19.1 {
+		graph configure: highlightcolor - valid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -highlightcolor black
+		.graph1 cget -highlightcolor
+	} -cleanup {
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightcolor command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.19.2 {
+		graph configure: highlightcolor - invalid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -highlightcolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.20.1 {
+		graph configure: highlightthickness - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -highlightthickness 2
+		.graph1 cget -highlightthickness
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.20.2 {
+		graph configure: highlightthickness - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -highlightthickness -2
+		.graph1 cget -highlightthickness
+	} -cleanup {
+		destroy .graph1
+	} -result {-2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.20.3 {
+		graph configure: highlightthickness - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -highlightthickness 3.5
+		.graph1 cget -highlightthickness
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.20.4 {
+		graph configure: highlightthickness - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -highlightthickness -2.5
+		.graph1 cget -highlightthickness
+	} -cleanup {
+		destroy .graph1
+	} -result {-3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.20.5 {
+		graph configure: highlightthickness - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -highlightthickness invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given 
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.20.6 {
+		graph configure: highlightthickness - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -highlightthickness 0
+		.graph1 cget -highlightthickness
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.21.1 {
+		graph configure: invertxy - 1
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -invertxy 1
+		.graph1 cget -invertxy
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.21.2 {
+		graph configure: invertxy - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -invertxy 0
+		.graph1 cget -invertxy
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.21.3 {
+		graph configure: invertxy - true
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -invertxy true
+		.graph1 cget -invertxy
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.21.4 {
+		graph configure: invertxy - false
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -invertxy false
+		.graph1 cget -invertxy
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.21.5 {
+		graph configure: invertxy - yes
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -invertxy yes
+		.graph1 cget -invertxy
+	} -cleanup {
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.21.6 {
+		graph configure: invertxy - no
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -invertxy no
+		.graph1 cget -invertxy
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.21.7 {
+		graph configure: invertxy - invalid input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -invertxy invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -justify command works correctly when given 'left'.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.22.1 {
+		graph configure: justify - left
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -justify left
+		.graph1 cget -justify
+	} -cleanup {
+		destroy .graph1
+	} -result {left}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -justify command works correctly when given 'center'.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.22.2 {
+		graph configure: justify - center
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -justify center
+		.graph1 cget -justify
+	} -cleanup {
+		destroy .graph1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -justify command works correctly when given 'right'.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.22.3 {
+		graph configure: justify - right
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -justify right
+		.graph1 cget -justify
+	} -cleanup {
+		destroy .graph1
+	} -result {right}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.23.1 {
+		graph configure: leftmargin - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -leftmargin 2
+		.graph1 cget -leftmargin
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.23.2 {
+		graph configure: leftmargin - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -leftmargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.23.3 {
+		graph configure: leftmargin - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -leftmargin 3.5
+		.graph1 cget -leftmargin
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.23.4 {
+		graph configure: leftmargin - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -leftmargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.23.5 {
+		graph configure: leftmargin - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -leftmargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.23.6 {
+		graph configure: leftmargin - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -leftmargin 0
+		.graph1 cget -leftmargin
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.24.1 {
+		graph configure: leftvariable - single variable name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -leftvariable var1
+		.graph1 cget -leftvariable
+	} -cleanup {
+		destroy .graph1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftvariable command works correctly when given a 
+	# list of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.24.2 {
+		graph configure: leftvariable - list of variable names
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -leftvariable {var1 var2 var3}
+		.graph1 cget -leftvariable
+	} -cleanup {
+		destroy .graph1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotbackground command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.25.1 {
+		graph configure: plotbackground - valid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotbackground black
+		.graph1 cget -plotbackground
+	} -cleanup {
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotbackground command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.25.2 {
+		graph configure: plotbackground - invalid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotbackground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.26.1 {
+		graph configure: plotborderwidth - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotborderwidth 2
+		.graph1 cget -plotborderwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.26.2 {
+		graph configure: plotborderwidth - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotborderwidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a 
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.26.3 {
+		graph configure: plotborderwidth - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotborderwidth 3.5
+		.graph1 cget -plotborderwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.26.4 {
+		graph configure: plotborderwidth - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotborderwidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.26.5 {
+		graph configure: plotborderwidth - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotborderwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given 0 
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.26.6 {
+		graph configure: plotborderwidth - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotborderwidth 0
+		.graph1 cget -plotborderwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.27.1 {
+		graph configure: plotpadx - integer input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		.graph1 configure -plotpadx 2
+		.graph1 cget -plotpadx
+	} -cleanup {
+		destroy .graph1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.27.2 {
+		graph configure: plotpadx - invalid integer input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotpadx -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.27.3 {
+		graph configure: plotpadx - decimal input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		.graph1 configure -plotpadx 3.5
+		.graph1 cget -plotpadx
+	} -cleanup {
+		destroy .graph1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.27.4 {
+		graph configure: plotpadx - invalid decimal input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotpadx -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a valid
+	# list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.27.5 {
+	    graph legend: configure: plotpadx - valid list of values
+	} -setup {
+	    graph .graph1     
+	    pack .graph1  
+	} -body {
+	    .graph1 configure -plotpadx {1 2.5}
+	    .graph1 cget -plotpadx
+	} -cleanup {
+	    destroy .graph1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a string
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.27.6 {
+		graph configure: plotpadx - string input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotpadx a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.27.7 {
+	    graph legend: configure: plotpadx - invalid list of values
+	} -setup {
+	    graph .graph1     
+	    pack .graph1  
+	} -body {
+	    if {[catch {.graph1 configure -plotpadx {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a list of
+	# input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.27.8 {
+		graph configure: plotpadx - invalid list length
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotpadx {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.27.9 {
+	    graph configure: plotpadx - 0
+	} -setup {
+	    graph .graph1     
+	    pack .graph1  
+	} -body {
+	    .graph1 configure -plotpadx 0
+	    .graph1 cget -plotpadx
+	} -cleanup {
+	    destroy .graph1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.28.1 {
+		graph configure: plotpady - integer input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		.graph1 configure -plotpady 2
+		.graph1 cget -plotpady
+	} -cleanup {
+		destroy .graph1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.28.2 {
+		graph configure: plotpady - invalid integer input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotpady -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a decimal
+	# pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.28.3 {
+		graph configure: plotpady - decimal input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		.graph1 configure -plotpady 3.5
+		.graph1 cget -plotpady
+	} -cleanup {
+		destroy .graph1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.28.4 {
+		graph configure: plotpady - invalid decimal input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotpady -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a valid
+	# list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.28.5 {
+	    graph legend: configure: plotpady - valid list of values
+	} -setup {
+	    graph .graph1     
+	    pack .graph1  
+	} -body {
+	    .graph1 configure -plotpady {1 2.5}
+	    .graph1 cget -plotpady
+	} -cleanup {
+	    destroy .graph1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a string
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.28.6 {
+		graph configure: plotpady - string input
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotpady a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.28.7 {
+	    graph legend: configure: plotpady - invalid list of values
+	} -setup {
+	    graph .graph1     
+	    pack .graph1  
+	} -body {
+	    if {[catch {.graph1 configure -plotpady {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a list of
+	# input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.28.8 {
+		graph configure: plotpady - invalid list length
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotpady {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.28.9 {
+	    graph configure: plotpady - 0
+	} -setup {
+	    graph .graph1     
+	    pack .graph1  
+	} -body {
+	    .graph1 configure -plotpady 0
+	    .graph1 cget -plotpady
+	} -cleanup {
+	    destroy .graph1
+	} -result {0 0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 'flat' 
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.29.1 {
+		graph configure: plotrelief - flat
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotrelief flat
+		.graph1 cget -plotrelief
+	} -cleanup { 
+		destroy .graph1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 
+	# 'groove' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.29.2 {
+		graph configure: plotrelief - groove
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotrelief groove
+		.graph1 cget -plotrelief
+	} -cleanup {
+		destroy .graph1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 
+	# 'raised' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.29.3 {
+		graph configure: plotrelief - raised
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotrelief raised
+		.graph1 cget -plotrelief
+	} -cleanup {
+		destroy .graph1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 'ridge'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.29.4 {
+		graph configure: plotrelief - ridge
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotrelief ridge
+		.graph1 cget -plotrelief
+	} -cleanup {
+		destroy .graph1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 'solid'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.29.5 {
+		graph configure: plotrelief - solid
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotrelief solid
+		.graph1 cget -plotrelief
+	} -cleanup {
+		destroy .graph1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 
+	# 'sunken' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.29.6 {
+		graph configure: plotrelief - sunken
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -plotrelief sunken
+		.graph1 cget -plotrelief
+	} -cleanup {
+		destroy .graph1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given invalid 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.29.7 {
+		graph configure: plotrelief - invalid numerical input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotrelief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given invalid
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.29.8 {
+		graph configure: plotrelief - invalid string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -plotrelief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'flat' as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.30.1 {
+		graph configure: relief - flat
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -relief flat
+		.graph1 cget -relief
+	} -cleanup { 
+		destroy .graph1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'groove' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.30.2 {
+		graph configure: relief - groove
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -relief groove
+		.graph1 cget -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'raised' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.30.3 {
+		graph configure: relief - raised
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -relief raised
+		.graph1 cget -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'ridge' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.30.4 {
+		graph configure: relief - ridge
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -relief ridge
+		.graph1 cget -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'solid' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.30.5 {
+		graph configure: relief - solid
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -relief solid
+		.graph1 cget -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'sunken' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.30.6 {
+		graph configure: relief - sunken
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -relief sunken
+		.graph1 cget -relief
+	} -cleanup {
+		destroy .graph1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given invalid 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.30.7 {
+		graph configure: relief - invalid numerical input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -relief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given invalid 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.30.8 {
+		graph configure: relief - invalid string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -relief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.31.1 {
+		graph configure: rightmargin - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -rightmargin 2
+		.graph1 cget -rightmargin
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.31.2 {
+		graph configure: rightmargin - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -rightmargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.31.3 {
+		graph configure: rightmargin - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -rightmargin 3.5
+		.graph1 cget -rightmargin
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.31.4 {
+		graph configure: rightmargin - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -rightmargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.31.5 {
+		graph configure: rightmargin - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -rightmargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.31.6 {
+		graph configure: rightmargin - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -rightmargin 0
+		.graph1 cget -rightmargin
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.32.1 {
+		graph configure: rightvariable - single variable name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -rightvariable var1
+		.graph1 cget -rightvariable
+	} -cleanup {
+		destroy .graph1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightvariable command works correctly when given a 
+	# list of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.32.2 {
+		graph configure: rightvariable - list of variable names
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -rightvariable {var1 var2 var3}
+		.graph1 cget -rightvariable
+	} -cleanup {
+		destroy .graph1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.33.1 {
+		graph configure: shadow - valid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -shadow black
+		.graph1 cget -shadow
+	} -cleanup {
+		destroy .graph1
+	} -result {black 1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a valid
+	# color name and a positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.33.2 {
+		graph configure: shadow - valid color name and positive integer value
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -shadow {blue 5}
+		.graph1 cget -shadow
+	} -cleanup {
+		destroy .graph1
+	} -result {blue 5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a valid
+	# color name and a negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.33.3 {
+		graph configure: shadow - valid color name and negative integer value
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -shadow {blue -5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a positive
+	# color name and a decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.33.4 {
+		graph configure: shadow - valid color name and decimal value
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -shadow {blue 5}
+		.graph1 cget -shadow
+	} -cleanup {
+		destroy .graph1
+	} -result {blue 5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given an invalid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.33.5 {
+		graph configure: shadow - invalid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -shadow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -takefocus command works correctly when given a string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.34.1 {
+		graph configure: takefocus - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -takefocus {puts foo}
+		.graph1 cget -takefocus
+	} -cleanup {
+		destroy .graph1
+	} -result {puts foo}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -takefocus command works correctly when given a 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.34.2 {
+		graph configure: takefocus - numerical input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -takefocus {15}
+		.graph1 cget -takefocus
+	} -cleanup {
+		destroy .graph1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -tile command works correctly when given an existing
+	# image name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.35.1 {
+		graph configure: tile - existing image name
+	} -setup {
+		graph .graph1
+		
+		# the following should set Image1 to the specified name
+		set Image1 [image create photo image.a.35.1 -data {
+						R0lGODlhEAAQAIYAAPwCBHSi1Iyy5Hym3Hym1GSWxJS65Lza/OT2/Pz+/PT+
+						/KTK5DxmlJS67PT6/Pz6/Lzm/BRGhHSe1MTe/OTy/Oz2/Mzm/NTq/FSKtJS2
+						7PT2/MTi/LTa/AQyVOTu/Lze/LTS/JTC9MTq/Mzi/KzK/KTC/KS+/BQuRJzG
+						/KzO/LTO/KS6/Jy2/DRmpAQOHEx+rLTK/Jy+/Iym/Jyq/GSK/GSOrIyCBHSi
+						5HyW/DxuxFxqhPT+dPzqbHRCBAQmPBxenBxSjBxanARGfMRyDOymNOTCnPTG
+						fIRKDMyGNOzGlISu7GSOzIROBPTGjJSy9EyGvIxODNSORMSWTLxyFDx6tBxe
+						lKRiJGQ6BCQWBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAAAA
+						LAAAAAAQABAAAAesgACCAQIDBAWCiYoABgcICQoJCwyLgg0OCQkPmgoQEYsS
+						E5mYFBUWFxiLGZmbGhoWGxMcHYoDChoOFR4fByAcIbSJAyIXIxYgICQkJSbB
+						gicovCkqJSssKy0uiy8bIDAxLDIzNDU2lS031TI4OTo7PD2VPj9AQUIuQ0RF
+						RvGVi0dIkvATpGSJPwBMkDQxwkSCkyc3DkKJImUKlSdVhBxEaOUKACVVNgrC
+						AsBPIAAh/mhDcmVhdGVkIGJ5IEJNUFRvR0lGIFBybyB2ZXJzaW9uIDIuNQ0K
+						qSBEZXZlbENvciAxOTk3LDE5OTguIEFsbCByaWdodHMgcmVzZXJ2ZWQuDQpo
+						dHRwOi8vd3d3LmRldmVsY29yLmNvbQA7
+		    		}]
+	} -body {
+		.graph1 configure -tile $Image1
+		.graph1 cget -tile
+	} -cleanup {
+		image delete $Image1
+		destroy .graph1
+	} -result {image.a.35.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -tile command works correctly when given an invalid 
+	# image name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.35.2 {
+		graph configure: tile - invalid image name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -tile invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -title command works correctly when given a string 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.36.1 {
+		graph configure: title - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -title "A title string"
+		.graph1 cget -title
+	} -cleanup {
+		destroy .graph1
+	} -result {A title string}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -title command works correctly when given a numerical 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.36.2 {
+		graph configure: title - numerical input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -title 15
+		.graph1 cget -title
+	} -cleanup {
+		destroy .graph1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.37.1 {
+		graph configure: topmargin - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -topmargin 2
+		.graph1 cget -topmargin
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.37.2 {
+		graph configure: topmargin - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -topmargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.37.3 {
+		graph configure: topmargin - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -topmargin 3.5
+		.graph1 cget -topmargin
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.37.4 {
+		graph configure: topmargin - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -topmargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.37.5 {
+		graph configure: topmargin - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -topmargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.37.6 {
+		graph configure: topmargin - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -topmargin 0
+		.graph1 cget -topmargin
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.38.1 {
+		graph configure: topvariable - single variable name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -topvariable var1
+		.graph1 cget -topvariable
+	} -cleanup {
+		destroy .graph1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topvariable command works correctly when given a list
+	# of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.38.2 {
+		graph configure: topvariable - list of variable names
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -topvariable {var1 var2 var3}
+		.graph1 cget -topvariable
+	} -cleanup {
+		destroy .graph1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.39.1 {
+		graph configure: width - positive integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -width 2
+		.graph1 cget -width
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.39.2 {
+		graph configure: width - negative integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -width -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.39.3 {
+		graph configure: width - positive decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -width 3.5
+		.graph1 cget -width
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.39.4 {
+		graph configure: width - negative decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -width -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a positive
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.39.5 {
+		graph configure: width - positive inch input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -width 3i
+		expr {[.graph1 cget -width] - [winfo pixels .graph1 3i]}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a negative
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.39.6 {
+		graph configure: width - negative inch input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -width -2i}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given string 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.39.7 {
+		graph configure: width - string input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 configure -width invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.configure.A.39.8 {
+		graph configure: width - 0
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 configure -width 0
+		.graph1 cget -width
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	
+	cleanupTests
+}

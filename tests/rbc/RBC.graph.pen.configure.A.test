@@ -1,0 +1,1497 @@
+# RBC.graph.pen.configure.A.test --
+#
+###Abstract
+# This file tests the configuration of pen component of a BLT graph component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.pen
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.pen {    
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -color command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.1.1 {
+		graph pen: configure - color - valid color name
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -color black
+		.graph1 pen cget "activeLine" -color
+	} -cleanup {
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -color command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.1.2 {
+		graph pen: configure - color - invalid color name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -color invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -dashes command works correctly when given a
+	# valid dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.2.1 {
+		graph pen: configure - dashes - valid dash list
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -dashes {2 3 2 4}
+		.graph1 pen cget "activeLine" -dashes
+	} -cleanup {
+		destroy .graph1
+	} -result {2 3 2 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -dashes command works correctly when given an
+	# empty dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.2.2 {
+		graph pen: configure - dashes - empty dash list
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -dashes ""
+		.graph1 pen cget "activeLine" -dashes
+	} -cleanup {
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -dashes command works correctly when given a dash
+	# list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.2.3 {
+		graph pen: configure - dashes - long dash list
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -dashes {2 3 2 4 2 3 2 4 2 3 2 4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -dashes command works correctly when given an
+	# invalid numerical dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.2.4 {
+		graph pen: configure - dashes - invalid numerical dash list
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -dashes {2 3 2 -1 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -dashes command works correctly when given a dash
+	# list with characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.2.5 {
+		graph pen: configure - dashes - dash list with characters
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -dashes {2 3 2 a 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the fill configuration works for valid fill colors
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.3.1 {
+	    Test pen configure fill
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -fill black
+	    .graph1 pen cget "activeLine" -fill
+	} -cleanup {
+	    destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the fill configuration works for no fill
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.3.2 {
+	    Test pen configure no fill
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -fill ""
+	    .graph1 pen cget "activeLine" -fill
+	} -cleanup {
+	    destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the fill configuration works for no fill
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.3.3 {
+	    Test pen configure invalid color
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    if {[catch {.graph1 pen configure "activeLine" -fill invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -linewidth command works correctly when given a
+	# valid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.4.1 {
+		graph pen: configure - linewidth - valid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -linewidth 2
+		.graph1 pen cget "activeLine" -linewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -linewidth command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.4.2 {
+		graph pen: configure - linewidth - invalid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -linewidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -linewidth command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.4.3 {
+		graph pen: configure - linewidth - decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -linewidth 3.5
+		.graph1 pen cget "activeLine" -linewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -linewidth command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.4.4 {
+		graph pen: configure - linewidth - invalid decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -linewidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -linewidth command works correctly when given a
+	# character value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.4.5 {
+		graph pen: configure - linewidth - character input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -linewidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -linewidth command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.4.6 {
+		graph pen: configure - linewidth - zero
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -linewidth 0
+		.graph1 pen cget "activeLine" -linewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the offdash configuration works for valid offdash colors 
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.5.1 {
+	    Test pen configure offdash - valid color
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -offdash black
+	    .graph1 pen cget "activeLine" -offdash
+	} -cleanup {
+	    destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the offdash configuration works for invalid color names
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.5.2 {
+	    Test pen configure offdash - invalid color
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    if {[catch {.graph1 pen configure "activeLine" -offdash invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the outline configuration works for valid outline colors
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.6.1 {
+	    Test pen configure outline - valid color
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -outline black
+	    .graph1 pen cget "activeLine" -outline
+	} -cleanup {
+	    destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the outline configuration works for invalid color names
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.6.2 {
+	    Test pen configure outline - invalid color
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    if {[catch {.graph1 pen configure "activeLine" -outline invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the outline configuration works for defcolor (the same color
+	# as the color configuration option)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.6.3 {
+	    Test pen configure default outline
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -outline defcolor
+	    .graph1 pen cget "activeLine" -outline
+	} -cleanup {
+	    destroy .graph1
+	} -result {defcolor}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -outlinewidth command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.7.1 {
+		graph pen: configure - outlinewidth - valid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -outlinewidth 2
+		.graph1 pen cget "activeLine" -outlinewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -outlinewidth command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.7.2 {
+		graph pen: configure - outlinewidth - invalid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -outlinewidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -outlinewidth command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.7.3 {
+		graph pen: configure - outlinewidth - valid decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -outlinewidth 3.5
+		.graph1 pen cget "activeLine" -outlinewidth
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -outlinewidth command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.7.4 {
+		graph pen: configure - outlinewidth - invalid decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -outlinewidth -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -outlinewidth command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.7.5 {
+		graph pen: configure - outlinewidth - character input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -outlinewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -pixels command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.8.1 {
+		graph pen: configure - pixels - valid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -pixels 2
+		.graph1 pen cget "activeLine" -pixels
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -pixels command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.8.2 {
+		graph pen: configure - pixels - invalid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -pixels -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -pixels command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.8.3 {
+		graph pen: configure - pixels - valid decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -pixels 3.5
+		.graph1 pen cget "activeLine" -pixels
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -pixels command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.8.4 {
+		graph pen: configure - pixels - invalid decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -pixels -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -pixels command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.8.5 {
+		graph pen: configure - pixels - character input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -pixels a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the pixels configuration works for symbol size zero
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.8.6 {
+	    graph pen: configure - no pixels
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -pixels 0
+	    .graph1 pen cget "activeLine" -pixels
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for square
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.1 {
+	    Test pen configure symbol square
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol square
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {square}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for circle
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.2 {
+	    Test pen configure symbol circle
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol circle
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {circle}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for diamond
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.3 {
+	    Test pen configure symbol diamond
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol diamond
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {diamond}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for plus
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.4 {
+	    Test pen configure symbol plus
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol plus
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {plus}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for cross
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.5 {
+	    Test pen configure symbol cross
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol cross
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {cross}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for splus
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.6 {
+	    Test pen configure symbol splus
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol splus
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {splus}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for scross
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.7 {
+	    Test pen configure symbol scross
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol scross
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {scross}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for triangle
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.8 {
+	    Test pen configure symbol triangle
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol triangle
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {triangle}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for no symbol
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.9 {
+	    Test pen configure symbol none
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol none
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for bitmap symbols
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.10 {
+	    Test pen configure symbol bitmap
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -symbol warning
+	    .graph1 pen cget "activeLine" -symbol
+	} -cleanup {
+	    destroy .graph1
+	} -result {warning {}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the symbol configuration works for invalid input
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.9.11 {
+	    graph pen: configure - invalid input
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    if {[catch {.graph1 pen configure "activeLine" -symbol invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the default type of a pen is set
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.10.1 {
+	    Test pen configure default type
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen create Pen1
+	    .graph1 pen cget Pen1 -type
+	} -cleanup {
+	    destroy .graph1
+	} -result {line}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the type configuration works with valid input
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.10.2 {
+	    Test pen configure type
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen create Pen1 -type foobar
+	    .graph1 pen cget Pen1 -type
+	} -cleanup {
+	    destroy .graph1
+	} -result {foobar}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the errorbarcolor configuration works for valid errorbarcolor colors
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.11.1 {
+	    Test pen configure errorbarcolor
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -errorbarcolor black
+	    .graph1 pen cget "activeLine" -errorbarcolor
+	} -cleanup {
+	    destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the errorbarcolor configuration works for no errorbarcolor
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.11.2 {
+	    Test pen configure invalid color
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    if {[catch {.graph1 pen configure "activeLine" -errorbarcolor invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -errorbarwidth command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.12.1 {
+		graph pen: configure - errorbarwidth - valid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -errorbarwidth 2
+		.graph1 pen cget "activeLine" -errorbarwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -errorbarwidth command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.12.2 {
+		graph pen: configure - errorbarwidth - invalid integer input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -errorbarwidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -errorbarwidth command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.12.3 {
+		graph pen: configure - errorbarwidth - valid decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -errorbarwidth 3.5
+		.graph1 pen cget "activeLine" -errorbarwidth
+	} -cleanup {
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -errorbarwidth command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.12.4 {
+		graph pen: configure - errorbarwidth - invalid decimal input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -errorbarwidth -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -errorbarwidth command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.12.5 {
+		graph pen: configure - errorbarwidth - character input
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 pen configure "activeLine" -errorbarwidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the errorbarwidth configuration works for symbol size zero
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.configure.A.12.6 {
+	    graph pen: configure - no errorbarwidth
+	} -setup {
+	    graph .graph1
+	    pack .graph1    
+	} -body {
+	    .graph1 pen configure "activeLine" -errorbarwidth 0
+	    .graph1 pen cget "activeLine" -errorbarwidth
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -showvalues command works correctly when given 
+	# x.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.13.1 {
+		graph pen configure: showvalues - x
+	} -setup {
+		graph .graph1
+		pack .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -showvalues x
+		.graph1 pen cget "activeLine" -showvalues
+	} -cleanup {
+		destroy .graph1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -showvalues command works correctly when given 
+	# y.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.13.2 {
+		graph pen configure: showvalues - y
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -showvalues y
+		.graph1 pen cget "activeLine" -showvalues
+	} -cleanup {
+		destroy .graph1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -showvalues command works correctly when given 
+	# both.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.13.3 {
+		graph pen configure: showvalues - both
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -showvalues both
+		.graph1 pen cget "activeLine" -showvalues
+	} -cleanup {
+		destroy .graph1
+	} -result {both}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -showvalues command works correctly when given 
+	# none.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.13.4 {
+		graph pen configure: showvalues - none
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -showvalues none
+		.graph1 pen cget "activeLine" -showvalues
+	} -cleanup {
+		destroy .graph1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -showvalues command works correctly when given 
+	# no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.13.5 {
+		graph pen configure: showvalues - no
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 pen configure "activeLine" -showvalues no
+		.graph1 pen cget "activeLine" -showvalues
+	} -cleanup {
+		destroy .graph1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.1 {
+		graph pen configure: valueanchor - n
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueanchor n
+		.graph1 pen cget pen1 -valueanchor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.2 {
+		graph pen configure: valueanchor - ne
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueanchor ne
+		.graph1 pen cget pen1 -valueanchor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.3 {
+		graph pen configure: valueanchor - e
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueanchor e
+		.graph1 pen cget pen1 -valueanchor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.4 {
+		graph pen configure: valueanchor - se
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueanchor se
+		.graph1 pen cget pen1 -valueanchor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.5 {
+		graph pen configure: valueanchor - s
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueanchor s
+		.graph1 pen cget pen1 -valueanchor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.6 {
+		graph pen configure: valueanchor - sw
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueanchor sw
+		.graph1 pen cget pen1 -valueanchor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.7 {
+		graph pen configure: valueanchor - w
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueanchor w
+		.graph1 pen cget pen1 -valueanchor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.8 {
+		graph pen configure: valueanchor - nw
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueanchor nw
+		.graph1 pen cget pen1 -valueanchor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.9 {
+		graph pen configure: valueanchor - center
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueanchor center
+		.graph1 pen cget pen1 -valueanchor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.10 {
+		graph pen configure: valueanchor - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		if {[catch {.graph1 pen configure pen1 -valueanchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueanchor command works correctly when 
+	# given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.14.11 {
+		graph pen configure: valueanchor - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		if {[catch {.graph1 pen configure pen1 -valueanchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuecolor command works correctly when given
+	# a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.15.1 {
+		graph pen configure: valuecolor - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valuecolor black
+		.graph1 pen cget pen1 -valuecolor
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuecolor command works correctly when given
+	# an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.15.2 {
+		graph pen configure: valuecolor - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		if {[catch {.graph1 pen configure pen1 -valuecolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuerotate command works correctly when 
+	# given an integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.16.1 {
+		graph pen configure: valuerotate - integer input
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valuerotate 90
+		.graph1 pen cget pen1 -valuerotate
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuerotate command works correctly when 
+	# given a decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.16.2 {
+		graph pen configure: valuerotate - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valuerotate 45.5
+		.graph1 pen cget pen1 -valuerotate
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuerotate command works correctly when 
+	# given a negative integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.16.3 {
+		graph pen configure: valuerotate - negative integer input
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valuerotate -90
+		.graph1 pen cget pen1 -valuerotate
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {-90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuerotate command works correctly when
+	# given a negative decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.16.4 {
+		graph pen configure: valuerotate - negative decimal input
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valuerotate -45.5
+		.graph1 pen cget pen1 -valuerotate
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {-45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuerotate command works correctly when
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.16.5 {
+		graph pen configure: valuerotate - character input
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		if {[catch {.graph1 pen configure pen1 -valuerotate invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueshadow command works correctly when  
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.17.1 {
+		graph pen configure: valueshadow - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueshadow black
+		.graph1 pen cget pen1 -valueshadow
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {black 1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueshadow command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.17.2 {
+		graph pen configure: valueshadow - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		if {[catch {.graph1 pen configure pen1 -valueshadow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueshadow command works correctly when  
+	# given a valid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.17.3 {
+		graph pen configure: valueshadow - valid color name, valid integer
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueshadow {black 2}
+		.graph1 pen cget pen1 -valueshadow
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {black 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueshadow command works correctly when 
+	# given an invalid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.17.4 {
+		graph pen configure: valueshadow - invalid color name, valid integer
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		if {[catch {.graph1 pen configure pen1 -valueshadow {invalid 1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueshadow command works correctly when 
+	# given a valid color name and invalid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.17.5 {
+		graph pen configure: valueshadow - valid color name, invalid integer
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		if {[catch {.graph1 pen configure pen1 -valueshadow {black -1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valueformat command works correctly when an 
+	# input value is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.18.1 {
+		graph pen configure: valueformat - input
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valueformat formatstring
+		.graph1 pen cget pen1 -valueformat
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {formatstring}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuefont command works correctly when given  
+	# a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.19.1 {
+		graph pen configure: valuefont - string
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valuefont Times
+		.graph1 pen cget pen1 -valuefont
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuefont command works correctly when given  
+	# a list with a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.19.2 {
+		graph pen configure: valuefont - list with string
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valuefont {Times}
+		.graph1 pen cget pen1 -valuefont
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuefont command works correctly when given  
+	# a list with a string and positive integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.19.3 {
+		graph pen configure: valuefont - list with string and positive integer
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valuefont {Times 10}
+		.graph1 pen cget pen1 -valuefont
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {Times 10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuefont command works correctly when given  
+	# a list with a string and negative integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.19.4 {
+		graph pen configure: valuefont - list with string and negative integer
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		.graph1 pen configure pen1 -valuefont {Times -10}
+		.graph1 pen cget pen1 -valuefont
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {Times -10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuefont command works correctly when given  
+	# a list with a string and decimal as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.19.5 {
+		graph pen configure: valuefont - list with string and decimal
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		if {[catch {.graph1 pen configure pen1 -valuefont {Times 10.5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the pen configure -valuefont command works correctly when given  
+	# a list with 2 strings as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.pen.configure.A.19.6 {
+		graph pen configure: valuefont - list with 2 strings
+	} -setup {
+		graph .graph1
+		.graph1 pen create pen1
+	} -body {
+		if {[catch {.graph1 pen configure pen1 -valuefont {Times Ten}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 pen delete pen1
+		destroy .graph1
+	} -result {0}
+	
+	cleanupTests
+}

@@ -1,0 +1,67 @@
+# RBC.graph.axis.names.A.test --
+#
+###Abstract
+# This file tests the axis names function of the graph BLT component.
+# Axis names is an instance function of graph.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis names command works correctly with system axis
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.names.A.1.1 {
+	    System Axis
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 axis names
+	} -cleanup {
+		destroy .graph1
+	} -result {x y x2 y2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Purpose: Ensure the axis names command works correctly with system axis
+	# and a user created axis
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.names.A.1.2 {
+	    System and User Axis
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+		.graph1 axis names Axis1
+	} -cleanup {
+		destroy .graph1
+	} -result {Axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Purpose: Ensure the axis names command works correctly after one of the 
+	# system axes has been deleted
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.names.A.1.3 {
+	    System and Multiple User Axis
+	} -setup {
+		graph .graph1
+		.graph1 axis delete x
+	} -body {
+		.graph1 axis names
+	} -cleanup {
+		destroy .graph1
+	} -result {y x2 y2}
+	
+	cleanupTests
+}

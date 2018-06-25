@@ -1,0 +1,273 @@
+# RBC.vector.create.A.test --
+#
+###Abstract
+# This file tests the different constructs for the create function of 
+# the vector rbc component when no switches are used.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.create
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.create {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that creating a vector with no size parameter creates a new vector
+	# with zero elements (i.e. a length of zero)
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.1.1 {
+	    Test default vector length
+	} -body {
+	    vector create Vector1
+	    Vector1 length
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that creating a vector with a size parameter create a new vector
+	# with the size parameter number of elements
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.1.2 {
+	    Test vector size
+	} -body {
+	    vector create Vector1(5)
+	    Vector1 length
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that creating a vector with a size parameter of zero creates a new
+	# vector with zero elements
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.1.3 {
+	    Test vector size
+	} -body {
+	    vector create Vector1(0)
+	    Vector1 length
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensures that creating a vector with a size parameter greater than zero
+	# creates a new vector with size components all initialized to 0
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.1.4 {
+	    Test vector component initialization  
+	} -body {
+	    vector create Vector1(5)
+	    for {set i 0} {$i < [Vector1 length]} {incr i} {
+	        if {[Vector1 index $i]} {
+	            return 1
+	        }
+	    }
+	    return 0
+	} -cleanup {
+	    vector destroy Vector1
+	    unset i
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensures that creating a vector with identical range parameters creates a 
+	# new vector with 1 element
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.1.5 {
+	    Test vector indexing size
+	} -body {
+	    vector create Vector1(4:4)
+	    Vector1 length
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensures that creating a vector with firstIndex and lastIndex range 
+	# parameters creates a new vector with lastIndex-firstIndex+1 items
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.1.6 {
+	    Test vector indexing size
+	} -body {
+	    vector create Vector1(6:10)
+	    Vector1 length
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensures that creating a vector with firstIndex and lastIndex range 
+	# parameters creates a new vector whose index starts at firstIndex
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.1.7 {
+	    Test vector indexing 
+	} -body {
+	    vector create Vector1(6:10)
+	    Vector1 offset
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {6}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensures that creating a vector with firstIndex and lastIndex range 
+	# parameters creates a new vector with with lastIndex-firstIndex+1 components, all of
+	# which are initialized to 0
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.1.8 {
+	    Test vector indexing component initialization
+	} -body {
+	    vector create Vector1(6:10)
+	    for {set i [expr {[Vector1 offset]}]} {$i < [expr {[Vector1 offset] + [Vector1 length]}]} {incr i} {
+	        if {[Vector1 index $i]} {
+	            return 1
+	        }
+	    }
+	    return 0    
+	} -cleanup {
+	    vector destroy Vector1
+	    unset i
+	} -result {0}
+    
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensures that creating a vector also creates a command with the same name
+    # as the vector
+    # ------------------------------------------------------------------------------------
+    test RBC.vector.create.A.1.9 {
+        Test default command creation
+    } -body {
+        vector create Vector1
+        expr {[info commands Vector1] == "Vector1"}
+    } -cleanup {
+        vector destroy Vector1
+    } -result {1}
+    
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensures that creating a vector also creates a variable with the same name
+    # as the vector
+    # ------------------------------------------------------------------------------------
+    test RBC.vector.create.A.1.10 {
+        Test default variable creation
+    } -body {
+        vector create Vector1
+        expr {[info vars Vector1] == "Vector1"}
+    } -cleanup {
+        vector destroy Vector1
+    } -result {1}
+    
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensures that newly created vector shows up in the vector names command
+    # ------------------------------------------------------------------------------------
+    test RBC.vector.create.A.1.11 {
+        Test default vector creation
+    } -body {
+        vector create Vector1
+        expr {[vector names ::vector.create::Vector1] == [list ::vector.create::Vector1]}
+    } -cleanup {
+        vector destroy Vector1
+    } -result {1}
+    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensures that creating a vector with the variable switch creates a variable
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.2.1 {
+	    Test vector variable switch
+	} -body {
+	    vector create Vector1 -variable Foo
+	    info exists Foo
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensures that creating a vector with the variable switch causes the vector
+	# name to not also be a variable reference
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.create.A.2.2 {
+	    Test vector variable switch
+	} -body {
+	    vector create Vector1 -variable Foo
+	    info exists Vector1
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {0}
+    
+	# ------------------------------------------------------------------------------------
+    # Purpose: Ensures that creating a vector with the command switch does not remove
+    # the variable reference that exists with the vector name
+    # ------------------------------------------------------------------------------------ 
+    test RBC.vector.create.A.3.1 {
+        Test vector command switch
+    } -body {
+        vector create Vector1 -command Foo
+        info exists Vector1
+    } -cleanup {
+        vector destroy Vector1
+    } -result {1}
+    
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensures that creating a vector with the command switch does not create
+    # a variable reference
+    # ------------------------------------------------------------------------------------ 
+    test RBC.vector.create.A.3.2 {
+        Test vector command switch
+    } -body {
+        vector create Vector1 -command Foo
+        info exists Foo
+    } -cleanup {
+        vector destroy Vector1
+    } -result {0}
+    
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensures that creating a vector with the command switch creates a Tcl 
+    # command
+    # ------------------------------------------------------------------------------------ 
+    test RBC.vector.create.A.3.3 {
+        Test vector command switch 
+    } -body {
+        vector create Vector1 -command Foo
+        info commands Foo
+    } -cleanup {
+        vector destroy Vector1
+    } -result {Foo}
+    
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensures that creating a vector with the watchunset switch set to true
+    # causes the vector to be destoyed when the variable name (in this case the same as
+    # the vector name) is unset
+    # ------------------------------------------------------------------------------------ 
+    test RBC.vector.create.A.4.1 {
+        Test vector watchunset true switch  
+    } -body {
+        vector create Vector1 -watchunset true
+        unset Vector1
+        expr -1 != [lsearch -glob [vector names] *Vector1]
+    } -cleanup {
+        # vector destroy Vector1
+    } -result {0}
+    
+    # ------------------------------------------------------------------------------------
+    # Purpose: Ensures that creating a vector with the watchunset switch set to false
+    # does not destroy the vector when the variable name (in this case the same as the 
+    # vector name) is unset
+    # ------------------------------------------------------------------------------------ 
+    test RBC.vector.create.A.4.2 {
+        Test vector watchunset false switch
+    } -body {
+        vector create Vector1 -watchunset false
+        unset Vector1
+        expr -1 != [lsearch -glob [vector names] *Vector1]
+    } -cleanup {
+        vector destroy Vector1
+    } -result {1}
+	
+    cleanupTests
+}

@@ -1,0 +1,74 @@
+# RBC.stripchart.legend.cget.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the legend cget 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.legend
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.legend {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works for default values.
+	# ------------------------------------------------------------------------------------ 
+	#  The intention is to check for a null string default value, but some
+	#  systems have non-default values.  Not sure how to do this test, exactly.
+	# ------------------------------------------------------------------------------------ 
+	#test RBC.stripchart.legend.cget.A.1.1 {
+	#    Test legend cget default
+	#} -setup {
+	#    stripchart .stripchart1
+	#    pack .stripchart1
+	#} -body {
+	#    .stripchart1 legend cget -background
+	#} -cleanup {
+	#    destroy .stripchart1
+	#} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with an explicitly set option.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.legend.cget.A.1.2 {
+	    Test legend cget configured
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	    .stripchart1 legend configure -background blue  
+	} -body {
+	    .stripchart1 legend cget -background
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {blue}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with invalid input.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.legend.cget.A.1.3 {
+	    Test legend cget configured
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend cget -invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	cleanupTests
+}

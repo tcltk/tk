@@ -1,0 +1,108 @@
+# RBC.barchart.pen.create.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the pen create
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.pen
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.pen {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen creation works when passed only a pen name
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.pen.create.A.1.1 {
+	    Test pen creation with name only
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	} -body {
+	    .barchart1 pen create Pen1
+	    .barchart1 pen names Pen1
+	} -cleanup {
+		.barchart1 pen delete Pen1
+	    destroy .barchart1
+	} -result {Pen1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen creation will not overwrite an existing pen name
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.pen.create.A.1.2 {
+	    Test pen creation non-overwriting
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	    .barchart1 pen create Pen1    
+	} -body {
+	    if {[catch {.barchart1 pen create Pen1}]} {
+	        return 0
+	    }
+	    return 1
+	} -cleanup {
+		.barchart1 pen delete Pen1
+	    destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that two default pens are created automatically when a barchart is 
+	# created
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.pen.create.A.1.3 {
+	    Test default pen creation
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	} -body {
+		.barchart1 pen create Pen1
+	    .barchart1 pen names
+	} -cleanup {
+		.barchart1 pen delete Pen1
+	    destroy .barchart1
+	} -result {Pen1 activeLine activeBar}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen creation works when passed a single option-value pair
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.pen.create.A.1.4 {
+	    Test pen creation with single option-value pair
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	} -body {
+	    .barchart1 pen create Pen1 -background blue
+	    .barchart1 pen cget Pen1 -background
+	} -cleanup {
+		.barchart1 pen delete Pen1
+	    destroy .barchart1
+	} -result {blue}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen creation works when passed option-value pairs
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.pen.create.A.1.5 {
+	    Test pen creation with option-value pairs
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	} -body {
+	    .barchart1 pen create Pen1 -background blue -borderwidth 5
+	    list [.barchart1 pen cget Pen1 -background] [.barchart1 pen cget Pen1 -borderwidth]
+	} -cleanup {
+		.barchart1 pen delete Pen1
+	    destroy .barchart1
+	} -result {blue 5}
+	
+	cleanupTests
+}

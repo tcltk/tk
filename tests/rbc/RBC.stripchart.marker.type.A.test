@@ -1,0 +1,114 @@
+# RBC.stripchart.marker.type.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the marker type
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure a text marker is of the correct type (TextMarker).
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.type.A.1.1 {
+	    Type of a Text Marker
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name marker1
+	} -body {
+		.stripchart1 marker type marker1
+	} -cleanup {
+	    .stripchart1 marker delete
+		destroy .stripchart1
+	} -result {TextMarker}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure a line marker is of the correct type (LineMarker).
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.type.A.1.2 {
+	    Type of a line marker
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create line -name marker1
+	} -body {
+		.stripchart1 marker type marker1
+	} -cleanup {
+	    .stripchart1 marker delete
+		destroy .stripchart1
+	} -result {LineMarker}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure a bitmap marker is of the correct type (BitmapMarker).
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.type.A.1.3 {
+	    Type of a bitmap marker
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create bitmap -name marker1
+	} -body {
+		.stripchart1 marker type marker1
+	} -cleanup {
+	    .stripchart1 marker delete
+		destroy .stripchart1
+	} -result {BitmapMarker}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure a image marker is of the correct type (ImageMarker).
+	# ------------------------------------------------------------------------------------
+#	test RBC.stripchart.marker.type.A.1.4 {
+#	    Type of a image marker
+#	} -setup {
+#		stripchart .stripchart1
+#		.stripchart1 marker create image -name marker1
+#	} -body {
+#		.stripchart1 marker type marker1
+#	} -cleanup {
+#	    .stripchart1 marker delete
+#		destroy .stripchart1
+#	} -result {ImageMarker}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure a polygon marker is of the correct type (PolygonMarker).
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.type.A.1.5 {
+	    Type of a polygon marker
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create polygon -name marker1
+	} -body {
+		.stripchart1 marker type marker1
+	} -cleanup {
+	    .stripchart1 marker delete
+		destroy .stripchart1
+	} -result {PolygonMarker}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure a window marker is of the correct type (WindowMarker).
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.type.A.1.6 {
+	    Type of a window marker
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name marker1
+	} -body {
+		.stripchart1 marker type marker1
+	} -cleanup {
+	    .stripchart1 marker delete
+		destroy .stripchart1
+	} -result {WindowMarker}
+	
+	cleanupTests
+}

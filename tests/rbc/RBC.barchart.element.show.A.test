@@ -1,0 +1,77 @@
+# RBC.barchart.element.show.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element show 
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element show command works correctly when given a single element
+	# name.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.show.A.1.1 {
+		element show: single element name
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 element create Element2
+	} -body {
+		.barchart1 element show Element1
+		.barchart1 element show
+	} -cleanup {
+		.barchart1 element delete Element2
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Element1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element show command works correctly when given multiple element
+	# names.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.show.A.1.2 {
+		element show: multiple element names
+	} -setup {
+		barchart .barchart1
+		.barchart1 element create Element1
+		.barchart1 element create Element2
+	} -body {
+		.barchart1 element show {Element1 Element2}
+		.barchart1 element show
+	} -cleanup {
+		.barchart1 element delete Element2
+		.barchart1 element delete Element1
+		destroy .barchart1
+	} -result {Element1 Element2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element show command works correctly when given a non-existent 
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.show.A.1.3 {
+		element show: non-existent element name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 element show invalid
+		.barchart1 element show
+	} -cleanup {
+		destroy .barchart1
+	} -result {}
+	
+	cleanupTests
+}

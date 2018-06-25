@@ -1,0 +1,77 @@
+# RBC.stripchart.element.cget.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element cget 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element cget command works correctly when given a valid 
+	# element configuration option name, but no value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.cget.A.1.1 {
+		stripchart element: cget - default
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		.stripchart1 element cget Element1 -activepen
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {activeLine}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element cget command works correctly when given a valid 
+	# element configuration option name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.cget.A.1.2 {
+		stripchart element: cget - valid option name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+		.stripchart1 element configure Element1 -color black
+	} -body {
+		.stripchart1 element cget Element1 -color
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element cget command works correctly when given an invalid 
+	# element configuration option name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.cget.A.1.3 {
+		stripchart element: cget - invalid option name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element cget Element1 -invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+	
+	cleanupTests
+}

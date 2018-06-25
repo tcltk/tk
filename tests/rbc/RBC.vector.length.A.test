@@ -1,0 +1,152 @@
+# RBC.vector.length.A.test --
+#
+###Abstract
+# This file tests the different constructs for the length function of 
+# the vector rbc component using no arguments.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.length
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.length {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector will return the correct length
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.length.A.1.1 {
+	    Test default vector length
+	} -setup {
+		vector create TestVector(5)
+	} -body {
+	    TestVector length
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector will return the correct length when the vector
+	#	has been offset
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.length.A.1.2 {
+	    Test default vector length
+	} -setup {
+		vector create TestVector(2:5)
+	} -body {
+	    TestVector length
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {4}
+	
+		# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that length which resizes returns the correct value
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.length.A.2.1 {
+	    Test length resizing
+	} -setup {
+		vector create TestVector(5)
+	} -body {
+		TestVector length 10
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector will keep its offset after adjusted to the desired length
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.length.A.2.2 {
+	    Test length resizing keeps offset
+	} -setup {
+		vector create TestVector(2:5)
+	} -body {
+		TestVector length 10
+	    TestVector offset
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector will expand to the desired length
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.length.A.2.3 {
+	    Test length resizing
+	} -setup {
+		vector create TestVector(5)
+	} -body {
+		TestVector length 10
+	    TestVector length
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector will keep the data in the vector after resizing
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.length.A.2.4 {
+	    Test length resizing keeps data
+	} -setup {
+		vector create TestVector(5)
+		TestVector set {0 1 2 3 4}
+	} -body {
+		TestVector length 10
+	    for {set i 0} {$i < 5} {incr i} {
+			if {$i != [TestVector index $i]} {
+				return 0
+			}
+	    }
+		
+		for {set i 5} {$i < 10} {incr i} {
+			if {0 != [TestVector index $i]} {
+				return 0
+			}
+		}
+		return 1
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector will expand to the desired length
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.length.A.2.5 {
+	    Test length resizing
+	} -setup {
+		vector create TestVector(5)
+	} -body {
+		TestVector length 3
+	    TestVector length
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a vector will keep the data in the vector after resizing
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.length.A.2.6 {
+	    Test length resizing keeps data
+	} -setup {
+		vector create TestVector(5)
+		TestVector set {0 1 2 3 4}
+	} -body {
+		TestVector length 3
+	    for {set i 0} {$i < 3} {incr i} {
+			if {$i != [TestVector index $i]} {
+				return 0
+			}
+	    }
+		return 1
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {1}
+
+	cleanupTests
+}

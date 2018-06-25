@@ -1,0 +1,65 @@
+# RBC.vector.normalize.A.test --
+#
+###Abstract
+# This file tests the different constructs for the normalize function of 
+# the vector rbc component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.normalize
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.normalize {	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests normalize to verify a vector of whole numbers is normalized properly
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.normalize.A.1.1 {
+	    Test normalize ints
+	} -setup {
+		vector create Vector1
+	    Vector1 set {1 3 7 11 13 17 19 23 29}
+	} -body {
+	    Vector1 normalize
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {0.0 0.0714285714286 0.214285714286 0.357142857143 0.428571428571 0.571428571429 0.642857142857 0.785714285714 1.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests normalize to verify a vector of negative numbers is normalized properly
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.normalize.A.1.2 {
+	    Test normalize ints
+	} -setup {
+		vector create Vector1
+	    Vector1 set {-1 -3 -7 -11 -13 -17 -19 -23 -29}
+	} -body {
+	    Vector1 normalize
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {1.0 0.928571428571 0.785714285714 0.642857142857 0.571428571429 0.428571428571 0.357142857143 0.214285714286 0.0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests normalize to verify a vector of negative numbers is normalized properly
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.normalize.A.1.3 {
+	    Test normalize ints
+	} -setup {
+		vector create Vector1
+	} -body {
+	    Vector1 normalize
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {}	
+	
+	cleanupTests
+}

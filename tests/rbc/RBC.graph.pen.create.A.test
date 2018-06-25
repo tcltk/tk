@@ -1,0 +1,102 @@
+# RBC.graph.pen.create.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the pen create
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.pen
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.pen {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen creation works when passed only a pen name
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.create.A.1.1 {
+	    Test pen creation with name only
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	} -body {
+	    .graph1 pen create Pen1
+	    .graph1 pen names Pen1
+	} -cleanup {
+	    destroy .graph1
+	} -result {Pen1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen creation will not overwrite an existing pen name
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.create.A.1.2 {
+	    Test pen creation non-overwriting
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	    .graph1 pen create Pen1    
+	} -body {
+	    if {[catch {.graph1 pen create Pen1}]} {
+	        return 0
+	    }
+	    return 1
+	} -cleanup {
+	    destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that two default pens are created automatically when a graph is 
+	# created
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.create.A.1.3 {
+	    Test default pen creation
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	} -body {
+	    .graph1 pen names
+	} -cleanup {
+	    destroy .graph1
+	} -result {activeLine activeBar}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen creation works when passed a single option-value pair
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.create.A.1.4 {
+	    Test pen creation with single option-value pair
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	} -body {
+	    .graph1 pen create Pen1 -color blue
+	    .graph1 pen cget Pen1 -color
+	} -cleanup {
+	    destroy .graph1
+	} -result {blue}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that pen creation works when passed option-value pairs
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.pen.create.A.1.5 {
+	    Test pen creation with option-value pairs
+	} -setup {
+	    graph .graph1
+	    pack .graph1
+	} -body {
+	    .graph1 pen create Pen1 -color blue -type foo
+	    list [.graph1 pen cget Pen1 -color] [.graph1 pen cget Pen1 -type]
+	} -cleanup {
+	    destroy .graph1
+	} -result {blue foo}
+	
+	cleanupTests
+}

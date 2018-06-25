@@ -1,0 +1,1009 @@
+# RBC.barchart.marker.configure.text.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the text marker configure
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text
+	# markers when given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.1 {
+		barchart marker configure text: anchor - n
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor n
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text 
+	# markers when given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.2 {
+		barchart marker configure text: anchor - ne
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor ne
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text 
+	# markers when given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.3 {
+		barchart marker configure text: anchor - e
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor e
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text
+	# markers when given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.4 {
+		barchart marker configure text: anchor - se
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor se
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text 
+	# markers when given 's' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.5 {
+		barchart marker configure text: anchor - s
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor s
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text 
+	# markers when given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.6 {
+		barchart marker configure text: anchor - sw
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor sw
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text 
+	# markers when given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.7 {
+		barchart marker configure text: anchor - w
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor w
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text 
+	# markers when given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.8 {
+		barchart marker configure text: anchor - nw
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor nw
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text 
+	# markers when given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.9 {
+		barchart marker configure text: anchor - center
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor center
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text 
+	# markers when given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.10 {
+		barchart marker configure text: anchor - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -anchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for text 
+	# markers when given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.1.11 {
+		barchart marker configure text: anchor - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -anchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -background command works correctly for text 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.2.1 {
+		barchart marker configure text: background - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -background black
+		.barchart1 marker cget Marker1 -background
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -background command works correctly for text 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.2.2 {
+		barchart marker configure text: background - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -background invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -font command works correctly when given a
+	# string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.3.1 {
+		barchart marker configure Marker1: font - string
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -font Times
+		.barchart1 marker cget Marker1 -font
+	} -cleanup {
+		destroy .barchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure Marker1 -font command works correctly when given a list
+	# with a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.3.2 {
+		barchart marker configure Marker1: font - list with string
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -font {Times}
+		.barchart1 marker cget Marker1 -font
+	} -cleanup {
+		destroy .barchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure Marker1 -font command works correctly when given a list
+	# with a string and positive integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.3.3 {
+		barchart marker configure Marker1: font - list with string and positive integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -font {Times 10}
+		.barchart1 marker cget Marker1 -font
+	} -cleanup {
+		destroy .barchart1
+	} -result {Times 10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure Marker1 -font command works correctly when given a list
+	# with a string and negative integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.3.4 {
+		barchart marker configure Marker1: font - list with string and negative integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -font {Times -10}
+		.barchart1 marker cget Marker1 -font
+	} -cleanup {
+		destroy .barchart1
+	} -result {Times -10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure Marker1 -font command works correctly when given a list
+	# with a string and decimal as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.3.5 {
+		barchart marker configure Marker1: font - list with string and decimal
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -font {Times 10.5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure Marker1 -font command works correctly when given a list
+	# with 2 strings as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.3.6 {
+		barchart marker configure Marker1: font - list with 2 strings
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -font {Times Ten}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring font changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.3.7 {
+	    Configure Font
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -font "*-Helvetica-*-R-Normal-*-125-*"
+		.barchart1 marker cget Marker1 -font
+	} -cleanup {
+	    .barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {*-Helvetica-*-R-Normal-*-125-*}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for text markers
+	# when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.4.1 {
+		barchart marker configure text: fill - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -fill black
+		.barchart1 marker cget Marker1 -fill
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for text markers 
+	# when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.4.2 {
+		barchart marker configure text: fill - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -fill invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -foreground command works correctly for text 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.5.1 {
+		barchart marker configure text: foreground - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -foreground black
+		.barchart1 marker cget Marker1 -foreground
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -foreground command works correctly for text 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.5.2 {
+		barchart marker configure text: foreground - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -foreground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -justify command works correctly for text 
+	# markers when given 'left' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.6.1 {
+		barchart marker configure text: justify - left
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -justify left
+		.barchart1 marker cget Marker1 -justify
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {left}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -justify command works correctly for text 
+	# markers when given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.6.2 {
+		barchart marker configure text: justify - center
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -justify center
+		.barchart1 marker cget Marker1 -justify
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -justify command works correctly for text 
+	# markers when given 'right' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.6.3 {
+		barchart marker configure text: justify - right
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -justify right
+		.barchart1 marker cget Marker1 -justify
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {right}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -justify command works correctly for text 
+	# markers when given invalid input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.6.4 {
+		barchart marker configure text: justify - invalid input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -justify invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for text 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.7.1 {
+		barchart marker configure text: outline - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -outline black
+		.barchart1 marker cget Marker1 -outline
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for text 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.7.2 {
+		barchart marker configure text: outline - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -outline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -padx command works correctly for text 
+	# markers when given a single valid integer input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.8.1 {
+		barchart marker configure text: padx - single valid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -padx 6
+		.barchart1 marker cget Marker1 -padx
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {6 6}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -padx command works correctly for text 
+	# markers when given a single invalid integer input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.8.2 {
+		barchart marker configure text: padx - single invalid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -padx -6}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -padx command works correctly for text 
+	# markers when given a valid list of valid integers.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.8.3 {
+		barchart marker configure text: padx - list of valid integers
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -padx {6 2}
+		.barchart1 marker cget Marker1 -padx
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {6 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -padx command works correctly for text 
+	# markers when given an invalid list of integers.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.8.4 {
+		barchart marker configure text: padx - list of invalid integers
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -padx {6 -2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -padx command works correctly for text 
+	# markers when given a list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.8.5 {
+		barchart marker configure text: padx - long list
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -padx {6 3 1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -padx command works correctly for text 
+	# markers when given character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.8.6 {
+		barchart marker configure text: padx - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -padx invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -padx command works correctly for text 
+	# markers when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.8.7 {
+		barchart marker configure text: padx - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -padx 0
+		.barchart1 marker cget Marker1 -padx
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -pady command works correctly for text 
+	# markers when given a single valid integer input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.9.1 {
+		barchart marker configure text: pady - single valid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -pady 6
+		.barchart1 marker cget Marker1 -pady
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {6 6}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -pady command works correctly for text 
+	# markers when given a single invalid integer input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.9.2 {
+		barchart marker configure text: pady - single invalid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -pady -6}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -pady command works correctly for text 
+	# markers when given a valid list of valid integers.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.9.3 {
+		barchart marker configure text: pady - list of valid integers
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -pady {6 2}
+		.barchart1 marker cget Marker1 -pady
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {6 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -pady command works correctly for text 
+	# markers when given an invalid list of integers.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.9.4 {
+		barchart marker configure text: pady - list of invalid integers
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -pady {6 -2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -pady command works correctly for text 
+	# markers when given a list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.9.5 {
+		barchart marker configure text: pady - long list
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -pady {6 3 1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -pady command works correctly for text 
+	# markers when given character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.9.6 {
+		barchart marker configure text: pady - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -pady invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -pady command works correctly for text 
+	# markers when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.9.7 {
+		barchart marker configure text: pady - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -pady 0
+		.barchart1 marker cget Marker1 -pady
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given
+	# an integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.10.1 {
+		barchart marker configure: rotate - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -rotate 90
+		.barchart1 marker cget Marker1 -rotate
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given
+	# a decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.10.2 {
+		barchart marker configure: rotate - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -rotate 45.5
+		.barchart1 marker cget Marker1 -rotate
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given 
+	# a negative integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.10.3 {
+		barchart marker configure: rotate - negative integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -rotate -90
+		.barchart1 marker cget Marker1 -rotate
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {270.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given
+	# a negative decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.10.4 {
+		barchart marker configure: rotate - negative decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -rotate -45.5
+		.barchart1 marker cget Marker1 -rotate
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {314.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.10.5 {
+		barchart marker configure: rotate - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -rotate invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -text command works correctly.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.11.1 {
+		barchart marker configure: text
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -text "foobar"
+		.barchart1 marker cget Marker1 -text
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {foobar}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -shadow command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.12.1 {
+		barchart marker configure: shadow - valid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -shadow black
+		.barchart1 marker cget Marker1 -shadow
+	} -cleanup {
+		destroy .barchart1
+	} -result {black 1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -shadow command works correctly when given an 
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.12.2 {
+		barchart marker configure: shadow - invalid color name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -shadow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -shadow command works correctly when given a 
+	# valid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.12.3 {
+		barchart marker configure: shadow - valid color name, valid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -shadow {black 2}
+		.barchart1 marker cget Marker1 -shadow
+	} -cleanup {
+		destroy .barchart1
+	} -result {black 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -shadow command works correctly when given an 
+	# invalid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.12.4 {
+		barchart marker configure: shadow - invalid color name, valid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -shadow {invalid 1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -shadow command works correctly when given a 
+	# valid color name and invalid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.text.A.12.5 {
+		barchart marker configure: shadow - valid color name, invalid integer
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -shadow {black -1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	cleanupTests
+}

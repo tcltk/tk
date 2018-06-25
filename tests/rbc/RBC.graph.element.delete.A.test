@@ -1,0 +1,77 @@
+# RBC.graph.element.delete.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element delete 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element delete command works correctly when given a single
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.delete.A.1.1 {
+		graph element: delete - single element name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 element create Element2
+	} -body {
+		.graph1 element delete Element1
+		.graph1 element names
+	} -cleanup {
+		destroy .graph1
+	} -result {Element2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element delete command works correctly when given multiple
+	# element names.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.delete.A.1.2 {
+		graph element: delete - multiple element names
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 element create Element2
+		.graph1 element create Element3
+	} -body {
+		.graph1 element delete Element1 Element2
+		.graph1 element names
+	} -cleanup {
+		destroy .graph1
+	} -result {Element3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element delete command works correctly when given an invalid
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.delete.A.1.3 {
+		graph element: delete - invalid element name
+	} -setup {
+		graph .graph1
+	} -body {
+		if {[catch {.graph1 element delete invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	cleanupTests
+}

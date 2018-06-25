@@ -1,0 +1,95 @@
+# RBC.graph.element.names.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element names 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element names command works correctly when no pattern is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.1 {
+		element names: no pattern
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 element create Element2
+	} -body {
+		.graph1 element names
+	} -cleanup {
+		.graph1 element delete Element2
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Element2 Element1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element names command works correctly when an exact pattern is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.2 {
+		element names: exact pattern
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 element create Element2
+	} -body {
+		.graph1 element names Element2
+	} -cleanup {
+		.graph1 element delete Element2
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Element2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element names command works correctly when a wildcard pattern is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.3 {
+		element names: wildcard pattern
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 element create Element2
+	} -body {
+		.graph1 element names *ment*
+	} -cleanup {
+		.graph1 element delete Element2
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Element2 Element1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element names command works correctly when an incorrect pattern 
+	# is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.names.A.1.4 {
+		element names: incorrect pattern
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 element create Element2
+	} -body {
+		.graph1 element names Element
+	} -cleanup {
+		.graph1 element delete Element2
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {}
+	
+	cleanupTests
+}

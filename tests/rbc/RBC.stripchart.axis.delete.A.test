@@ -1,0 +1,70 @@
+# RBC.stripchart.axis.delete.A.test --
+#
+###Abstract
+# This file tests the axis delete function of the stripchart BLT component.
+# Axis delete is an instance function of stripchart.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis delete command works correctly when given a single existing
+	# user created axis name
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.axis.delete.A.1.1 {
+	    Single User Axis
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 axis create Axis1
+	} -body {
+	    .stripchart1 axis delete Axis1
+		.stripchart1 axis names Axis1
+	} -cleanup {
+		destroy .stripchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis delete command works correctly when given a single existing
+	# system axis name
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.axis.delete.A.1.2 {
+	    Single System Axis
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+	    .stripchart1 axis delete x
+		.stripchart1 axis names x
+	} -cleanup {
+		destroy .stripchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis delete command works correctly when given multiple existing
+	# axis names
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.axis.delete.A.1.3 {
+	    Multiple Axis
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+	    .stripchart1 axis delete x y
+		.stripchart1 axis names
+	} -cleanup {
+		destroy .stripchart1
+	} -result {x2 y2}
+	
+	cleanupTests
+}

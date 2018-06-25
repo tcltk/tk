@@ -1,0 +1,65 @@
+# RBC.vector.random.A.test --
+#
+###Abstract
+# This file tests the different constructs for the random function of 
+# the vector rbc component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.random
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.random {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests random to verify it creates a random vector given an empty vector 
+	# of set length
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.random.A.1.1 {
+	    Test random
+	} -setup {
+		vector create Vector1(5)
+	} -body {
+		Vector1 random
+		for {set i 0} {$i < [Vector1 length]} {incr i} {
+	        if {[Vector1 index $i] < 0 || [Vector1 index $i] > 1} {
+	            return 0
+	        }
+	    }
+	    return 1
+	} -cleanup {
+		vector destroy Vector1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests random to verify it creates a random vector given an already 
+	# initialized vector
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.random.A.1.2 {
+	    Test random
+	} -setup {
+		vector create Vector1(5)
+		Vector1 set {1 2 3 4 5}
+	} -body {
+		Vector1 random
+		for {set i 0} {$i < [Vector1 length]} {incr i} {
+	        if {[Vector1 index $i] < 0 || [Vector1 index $i] > 1} {
+	            return 0
+	        }
+	    }
+	    return 1
+	} -cleanup {
+		vector destroy Vector1
+	} -result {1}	
+	
+	cleanupTests
+}

@@ -1,0 +1,92 @@
+# RBC.vector.set.A.test --
+#
+###Abstract
+# This file tests the set function of the vector rbc component.
+# Set is an instance function of vector.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.set
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+#namespace eval vector.set {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector set command works correctly when given a list of 
+	# numbers.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.set.A.1.1 {
+		vector set: list of numbers
+	} -setup {
+		vector create foo
+	} -body {
+		foo set {1.0 2.0 3.0 4.0} 
+		expr {$foo(:)}
+	} -cleanup {
+		vector destroy foo
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector set command works correctly when given another vector.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.set.A.1.2 {
+		vector set: another vector
+	} -setup {
+		vector create foo
+		vector create goo
+	} -body {
+		goo set {1.0 2.0 3.0 4.0}
+		foo set goo
+		expr {$foo(:)}
+	} -cleanup {
+		vector destroy foo
+		vector destroy goo
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector set command works correctly when given a list containing 
+	# characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.set.A.1.3 {
+		vector set: list with characters
+	} -setup {
+		vector create foo
+	} -body {
+		if {[catch {foo set {1.0 2.0 3.0 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector set command works correctly when given a non-existent 
+	# vector reference.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.set.A.1.4 {
+		vector set: non-existent vector
+	} -setup {
+		vector create foo
+	} -body {
+		if {[catch {foo set goo}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {0}
+	
+	cleanupTests
+#}

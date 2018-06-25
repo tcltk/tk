@@ -1,0 +1,2029 @@
+# RBC.stripchart.legend.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the legend configure 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.legend
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.legend {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activebackground configuration works for valid colors.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.1.1 {
+	    stripchart legend: configure - activebackground - valid color
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activebackground black
+	    .stripchart1 legend cget -activebackground
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activebackground configuration works for invalid colors.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.1.2 {
+	    stripchart legend: configure - activebackground - invalid color
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -activebackground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activeborderwidth configuration works for valid integer
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.2.1 {
+	    stripchart legend: configure - activeborderwidth - valid integer input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activeborderwidth 20
+	    .stripchart1 legend cget -activeborderwidth
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {20}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activeborderwidth configuration works for invalid integer
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.2.2 {
+	    stripchart legend: configure - activeborderwidth - invalid integer input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -activeborderwidth -20}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activeborderwidth configuration works for valid decimal
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.2.3 {
+	    stripchart legend: configure - activeborderwidth - valid decimal input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activeborderwidth 20.5
+	    .stripchart1 legend cget -activeborderwidth
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {21}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activeborderwidth configuration works for invalid decimal
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.2.4 {
+	    stripchart legend: configure - activeborderwidth - invalid decimal input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -activeborderwidth -20.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activeborderwidth configuration works for character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.2.5 {
+	    stripchart legend: configure - activeborderwidth - character input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -activeborderwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activeborderwidth configuration works when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.2.6 {
+	    stripchart legend: configure - activeborderwidth - 0
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activeborderwidth 0
+	    .stripchart1 legend cget -activeborderwidth
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activeforeground configuration works for valid colors.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.3.1 {
+	    stripchart legend: configure - activeforeground - valid color
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activeforeground black
+	    .stripchart1 legend cget -activeforeground
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activeforeground configuration works for invalid input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.3.2 {
+	    stripchart legend: configure - activeforeground - invalid input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -activeforeground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activerelief configuration works for raised reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.4.1 {
+	    stripchart legend: configure - activerelief - raised
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activerelief raised
+	    .stripchart1 legend cget -activerelief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activerelief configuration works for flat reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.4.2 {
+	    stripchart legend: configure - activerelief - flat
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activerelief flat
+	    .stripchart1 legend cget -activerelief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activerelief configuration works for grooved reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.4.3 {
+	    stripchart legend: configure - activerelief - groove
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activerelief groove
+	    .stripchart1 legend cget -activerelief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activerelief configuration works for ridged reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.4.4 {
+	    stripchart legend: configure - activerelief - ridge
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activerelief ridge
+	    .stripchart1 legend cget -activerelief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activerelief configuration works for solid reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.4.5 {
+	    stripchart legend: configure - activerelief - solid
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activerelief solid
+	    .stripchart1 legend cget -activerelief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activerelief configuration works for sunken reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.4.6 {
+	    stripchart legend: configure - activerelief - sunken
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -activerelief sunken
+	    .stripchart1 legend cget -activerelief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the activerelief configuration works for invalid input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.4.7 {
+	    stripchart legend: configure - activerelief - invalid input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -activerelief invalid}]} {
+			return 0
+	    } else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for center anchor.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.1 {
+	    stripchart legend: configure - anchor - center
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -anchor center
+	    .stripchart1 legend cget -anchor
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for north anchor.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.2 {
+	    stripchart legend: configure - anchor - north
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -anchor n
+	    .stripchart1 legend cget -anchor
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for northeast anchor.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.3 {
+	    stripchart legend: configure - anchor - northeast
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -anchor ne
+	    .stripchart1 legend cget -anchor
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for northwest anchor.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.4 {
+	    stripchart legend: configure - anchor - northwest
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -anchor nw
+	    .stripchart1 legend cget -anchor
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for south anchor.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.5 {
+	    stripchart legend: configure - anchor - south
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -anchor s
+	    .stripchart1 legend cget -anchor
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for southeast anchor.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.6 {
+	    stripchart legend: configure - anchor - southeast
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -anchor se
+	    .stripchart1 legend cget -anchor
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for southwest anchor.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.7 {
+	    stripchart legend: configure - anchor - southwest
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -anchor sw
+	    .stripchart1 legend cget -anchor
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for east anchor.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.8 {
+	    stripchart legend: configure - anchor - east
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -anchor e
+	    .stripchart1 legend cget -anchor
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for west anchor.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.9 {
+	    stripchart legend: configure - anchor - west
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -anchor w
+	    .stripchart1 legend cget -anchor
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the anchor configuration works for invalid input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.5.10 {
+	    stripchart legend: configure - anchor - invalid input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -anchor invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the background configuration works for valid colors.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.6.1 {
+	    stripchart legend: configure - background - valid color
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -background black
+	    .stripchart1 legend cget -background
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the background configuration works for invalid input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.6.2 {
+	    stripchart legend: configure - background - invalid input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -background invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the background configuration works when given the empty string.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.6.3 {
+	    stripchart legend: configure - background - empty string
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -background ""
+	    .stripchart1 legend cget -background
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the borderwidth configuration works for valid integer input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.7.1 {
+	    stripchart legend: configure - borderwidth - valid integer input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -borderwidth 3
+	    .stripchart1 legend cget -borderwidth
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the borderwidth configuration works for invalid integer input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.7.2 {
+	    stripchart legend: configure - borderwidth - invalid integer input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -borderwidth -3}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the borderwidth configuration works for valid decimal input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.7.3 {
+	    stripchart legend: configure - borderwidth - valid decimal input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -borderwidth 2.5
+	    .stripchart1 legend cget -borderwidth
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the borderwidth configuration works for invalid decimal input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.7.4 {
+	    stripchart legend: configure - borderwidth - invalid decimal input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -borderwidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the borderwidth configuration works for character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.7.5 {
+	    stripchart legend: configure - borderwidth - character input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -borderwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the borderwidth configuration works when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.7.6 {
+	    stripchart legend: configure - borderwidth - 0
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -borderwidth 0
+	    .stripchart1 legend cget -borderwidth
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -font command works correctly when given a
+	# string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.8.1 {
+		stripchart legend configure: font - string
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 legend configure -font Times
+		.stripchart1 legend cget -font
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -font command works correctly when given a list
+	# with a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.8.2 {
+		stripchart legend configure: font - list with string
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 legend configure -font {Times}
+		.stripchart1 legend cget -font
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -font command works correctly when given a list
+	# with a string and positive integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.8.3 {
+		stripchart legend configure: font - list with string and positive integer
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 legend configure -font {Times 10}
+		.stripchart1 legend cget -font
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Times 10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -font command works correctly when given a list
+	# with a string and negative integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.8.4 {
+		stripchart legend configure: font - list with string and negative integer
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 legend configure -font {Times -10}
+		.stripchart1 legend cget -font
+	} -cleanup {
+		destroy .stripchart1
+	} -result {Times -10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -font command works correctly when given a list
+	# with a string and decimal as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.8.5 {
+		stripchart legend configure: font - list with string and decimal
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -font {Times 10.5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -font command works correctly when given a list
+	# with 2 strings as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.8.6 {
+		stripchart legend configure: font - list with 2 strings
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -font {Times Ten}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -font command works correctly when given a
+	# valid font string.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.8.7 {
+	    stripchart legend configure: font - valid font string
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -font "*-Arial-Bold-R-Normal-*-12-120-*" 
+	    .stripchart1 legend cget -font
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {*-Arial-Bold-R-Normal-*-12-120-*}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the foreground configuration works for valid colors.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.9.1 {
+	    stripchart legend: configure - foreground - valid color
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -foreground white
+	    .stripchart1 legend cget -foreground
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {white}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the foreground configuration works for invalid input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.9.2 {
+	    stripchart legend: configure - foreground - invalid input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -foreground invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -hide command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.10.1 {
+		stripchart legend: configure - hide - 1
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -hide 1
+		.stripchart1 legend cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -hide command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.10.2 {
+		stripchart legend: configure - hide - 0
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -hide 0
+		.stripchart1 legend cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -hide command works correctly when given 
+	# true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.10.3 {
+		stripchart legend: configure - hide - true
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -hide true
+		.stripchart1 legend cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -hide command works correctly when given 
+	# false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.10.4 {
+		stripchart legend: configure - hide - false
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -hide false
+		.stripchart1 legend cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -hide command works correctly when given 
+	# yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.10.5 {
+		stripchart legend: configure - hide - yes
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -hide yes
+		.stripchart1 legend cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -hide command works correctly when given 
+	# no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.10.6 {
+		stripchart legend: configure - hide - no
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -hide no
+		.stripchart1 legend cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -hide command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.10.7 {
+		stripchart legend: configure - hide - invalid input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipadx command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.11.1 {
+		stripchart legend configure: ipadx - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -ipadx 2
+		.stripchart1 legend cget -ipadx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipadx command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.11.2 {
+		stripchart legend configure: ipadx - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -ipadx -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipadx command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.11.3 {
+		stripchart legend configure: ipadx - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -ipadx 3.5
+		.stripchart1 legend cget -ipadx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipadx command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.11.4 {
+		stripchart legend configure: ipadx - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -ipadx -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipadx command works correctly when given a
+	# valid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.11.5 {
+	    stripchart legend: configure: ipadx - valid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -ipadx {1 2.5}
+	    .stripchart1 legend cget -ipadx
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipadx command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.11.6 {
+		stripchart legend configure: ipadx - character input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -ipadx a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipadx command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.11.7 {
+	    stripchart legend: configure: ipadx - invalid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -ipadx {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipadx command works correctly when given a
+	# list of input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.11.8 {
+		stripchart legend configure: ipadx - invalid list length
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -ipadx {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipadx command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.11.9 {
+	    stripchart legend: configure: ipadx - 0
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -ipadx 0
+	    .stripchart1 legend cget -ipadx
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipady command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.12.1 {
+		stripchart legend configure: ipady - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -ipady 2
+		.stripchart1 legend cget -ipady
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipady command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.12.2 {
+		stripchart legend configure: ipady - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -ipady -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipady command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.12.3 {
+		stripchart legend configure: ipady - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -ipady 3.5
+		.stripchart1 legend cget -ipady
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipady command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.12.4 {
+		stripchart legend configure: ipady - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -ipady -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipady command works correctly when given a
+	# valid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.12.5 {
+	    stripchart legend: configure: ipady - valid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -ipady {1 2.5}
+	    .stripchart1 legend cget -ipady
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipady command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.12.6 {
+		stripchart legend configure: ipady - character input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -ipady a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipady command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.12.7 {
+	    stripchart legend: configure: ipady - invalid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -ipady {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipady command works correctly when given a
+	# list of input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.12.8 {
+		stripchart legend configure: ipady - invalid list length
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -ipady {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -ipady command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.12.9 {
+	    stripchart legend: configure: ipady - 0
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -ipady 0
+	    .stripchart1 legend cget -ipady
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -padx command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.13.1 {
+		stripchart legend configure: padx - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -padx 2
+		.stripchart1 legend cget -padx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -padx command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.13.2 {
+		stripchart legend configure: padx - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -padx -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -padx command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.13.3 {
+		stripchart legend configure: padx - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -padx 3.5
+		.stripchart1 legend cget -padx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -padx command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.13.4 {
+		stripchart legend configure: padx - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -padx -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -padx command works correctly when given a
+	# valid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.13.5 {
+	    stripchart legend: configure: padx - valid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -padx {1 2.5}
+	    .stripchart1 legend cget -padx
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -padx command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.13.6 {
+		stripchart legend configure: padx - character input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -padx a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -padx command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.13.7 {
+	    stripchart legend: configure: padx - invalid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -padx {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -padx command works correctly when given a
+	# list of input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.13.8 {
+		stripchart legend configure: padx - invalid list length
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -padx {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -padx command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.13.9 {
+	    stripchart legend: configure: padx - 0
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -padx 0
+	    .stripchart1 legend cget -padx
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -pady command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.14.1 {
+		stripchart legend configure: pady - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -pady 2
+		.stripchart1 legend cget -pady
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -pady command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.14.2 {
+		stripchart legend configure: pady - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -pady -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -pady command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.14.3 {
+		stripchart legend configure: pady - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -pady 3.5
+		.stripchart1 legend cget -pady
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -pady command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.14.4 {
+		stripchart legend configure: pady - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -pady -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -pady command works correctly when given a
+	# valid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.14.5 {
+	    stripchart legend: configure: pady - valid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -pady {1 2.5}
+	    .stripchart1 legend cget -pady
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -pady command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.14.6 {
+		stripchart legend configure: pady - character input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -pady a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -pady command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.14.7 {
+	    stripchart legend: configure: pady - invalid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -pady {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -pady command works correctly when given a
+	# list of input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.14.8 {
+		stripchart legend configure: pady - invalid list length
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -pady {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -pady command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.14.9 {
+	    stripchart legend: configure: pady - 0
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -pady 0
+	    .stripchart1 legend cget -pady
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the position configuration works when given 'rightmargin' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.15.1 {
+	    stripchart legend: configure - position - rightmargin
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -position rightmargin
+	    .stripchart1 legend cget -position
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {rightmargin}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the position configuration works when given 'leftmargin' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.15.2 {
+	    stripchart legend: configure - position - leftmargin
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -position leftmargin
+	    .stripchart1 legend cget -position
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {leftmargin}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the position configuration works when given 'topmargin' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.15.3 {
+	    stripchart legend: configure - position - topmargin
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -position topmargin
+	    .stripchart1 legend cget -position
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {topmargin}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the position configuration works when given 'bottommargin' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.15.4 {
+	    stripchart legend: configure - position - bottommargin
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -position bottommargin
+	    .stripchart1 legend cget -position
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {bottommargin}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the position configuration works when given 'plotarea' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.15.5 {
+	    stripchart legend: configure - position - plotarea
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -position plotarea
+	    .stripchart1 legend cget -position
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {plotarea}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the position configuration works when given valid coordinates
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.15.6 {
+	    stripchart legend: configure - position - valid coordinates
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -position "@10, 10"
+	    .stripchart1 legend cget -position
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {@10,10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the position configuration works when given invalid coordinates
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.15.7 {
+	    stripchart legend: configure - position - invalid coordinates
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -position "10, 10"}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -raised command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.16.1 {
+		stripchart legend: configure - raised - 1
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -raised 1
+		.stripchart1 legend cget -raised
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -raised command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.16.2 {
+		stripchart legend: configure - raised - 0
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -raised 0
+		.stripchart1 legend cget -raised
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -raised command works correctly when given 
+	# true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.16.3 {
+		stripchart legend: configure - raised - true
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -raised true
+		.stripchart1 legend cget -raised
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -raised command works correctly when given 
+	# false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.16.4 {
+		stripchart legend: configure - raised - false
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -raised false
+		.stripchart1 legend cget -raised
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -raised command works correctly when given 
+	# yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.16.5 {
+		stripchart legend: configure - raised - yes
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -raised yes
+		.stripchart1 legend cget -raised
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -raised command works correctly when given 
+	# no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.16.6 {
+		stripchart legend: configure - raised - no
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 legend configure -raised no
+		.stripchart1 legend cget -raised
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the legend configure -raised command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.16.7 {
+		stripchart legend: configure - raised - invalid input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 legend configure -raised invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the relief configuration works for raised reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.17.1 {
+	    stripchart legend: configure - relief - raised
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -relief raised
+	    .stripchart1 legend cget -relief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the relief configuration works for flat reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.17.2 {
+	    stripchart legend: configure - relief - flat
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -relief flat
+	    .stripchart1 legend cget -relief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the relief configuration works for grooved reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.17.3 {
+	    stripchart legend: configure - relief - groove
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -relief groove
+	    .stripchart1 legend cget -relief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the relief configuration works for ridged reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.17.4 {
+	    stripchart legend: configure - relief - ridge
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -relief ridge
+	    .stripchart1 legend cget -relief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the relief configuration works for solid reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.17.5 {
+	    stripchart legend: configure - relief - solid
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -relief solid
+	    .stripchart1 legend cget -relief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the relief configuration works for sunken reliefs.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.17.6 {
+	    stripchart legend: configure - relief - sunken
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -relief sunken
+	    .stripchart1 legend cget -relief
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the relief configuration works for invalid input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.17.7 {
+	    stripchart legend: configure - relief - invalid input
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -relief invalid}]} {
+			return 0
+	    } else {
+			return 1
+		}
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for valid colors and no depth
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.1 {
+	    stripchart legend: configure - shadow - valid color, no depth
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -shadow salmon
+	    .stripchart1 legend cget -shadow
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {salmon 1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for invalid color input and no 
+	# depth input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.2 {
+	    stripchart legend: configure - shadow - invalid color, no depth
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -shadow invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for a valid color and a valid 
+	# integer depth input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.3 {
+	    stripchart legend: configure - shadow - valid color, valid integer depth
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -shadow {salmon 2}
+	    .stripchart1 legend cget -shadow
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {salmon 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for an invalid color and a valid 
+	# depth input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.4 {
+	    stripchart legend: configure - shadow - invalid color, valid integer depth
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -shadow {invalid 2}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for a valid color and a valid 
+	# decimal depth input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.5 {
+	    stripchart legend: configure - shadow - valid color, valid decimal depth
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -shadow {salmon 2.5}
+	    .stripchart1 legend cget -shadow
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {salmon 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for an invalid color and a valid 
+	# decimal depth input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.6 {
+	    stripchart legend: configure - shadow - invalid color, valid decimal depth
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -shadow {invalid 2.5}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for a valid color and an invalid 
+	# integer depth input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.7 {
+	    stripchart legend: configure - shadow - valid color, invalid integer depth
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -shadow {salmon -2}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for an invalid color and an 
+	# invalid depth input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.8 {
+	    stripchart legend: configure - shadow - invalid color, invalid integer depth
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -shadow {invalid -2}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for a valid color and an invalid 
+	# decimal depth input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.9 {
+	    stripchart legend: configure - shadow - valid color, invalid decimal depth
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -shadow {salmon -2.5}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works for an invalid color and an  
+	# invalid decimal depth input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.10 {
+	    stripchart legend: configure - shadow - invalid color, invalid decimal depth
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 legend configure -shadow {invalid -2.5}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the shadow configuration works when given the emtpy string as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.legend.configure.A.18.11 {
+	    stripchart legend: configure - shadow - empty string
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 legend configure -shadow ""
+	    .stripchart1 legend cget -shadow
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {}
+	
+	cleanupTests
+}

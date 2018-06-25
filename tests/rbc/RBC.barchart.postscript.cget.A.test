@@ -1,0 +1,72 @@
+# RBC.barchart.postscript.cget.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the postscript cget
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.postscript
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.postscript {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works for default values
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.postscript.cget.A.1.1 {
+	    Test postscript cget default
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	} -body {
+	    .barchart1 postscript cget -center
+	} -cleanup {
+	    destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with an explicitly set option
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.postscript.cget.A.1.2 {
+	    Test postscript cget configured
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	    .barchart1 postscript configure -center 0  
+	} -body {
+	    .barchart1 postscript cget -center
+	} -cleanup {
+	    destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with invalid input.
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.postscript.cget.A.1.3 {
+	    Test postscript cget configured
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1  
+	} -body {
+	    if {[catch {.barchart1 postscript cget -invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .barchart1
+	} -result {0}
+
+	
+	cleanupTests
+}

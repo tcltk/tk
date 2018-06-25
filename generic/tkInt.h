@@ -1006,6 +1006,16 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
 MODULE_SCOPE int	Ttk_Init(Tcl_Interp *interp);
 
 /*
+ * Used Rbc widget set functions:
+ */
+#ifndef MAC_OSX_TK
+MODULE_SCOPE int	Rbc_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	Rbc_SnapWindow(Tcl_Interp *interp,Tk_Window tkmain,
+			    const char*pathname, const char *photoimage,
+			    int destWidth, int destHeight);
+#endif
+
+/*
  * Internal functions shared among Tk modules but not exported to the outside
  * world:
  */

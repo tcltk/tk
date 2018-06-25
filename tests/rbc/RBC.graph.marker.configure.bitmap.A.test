@@ -1,0 +1,470 @@
+# RBC.graph.marker.configure.bitmap.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the bitmap marker configure
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -background command works correctly for bitmap 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.1.1 {
+		graph marker configure bitmap: background - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -background black
+		.graph1 marker cget Marker1 -background
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -background command works correctly for bitmap 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.1.2 {
+		graph marker configure bitmap: background - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -background invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring bitmap changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.2.1 {
+	    Configure Bitmap
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name marker1
+	} -body {
+		.graph1 marker configure marker1 \
+			-bitmap @[file join [file dirname [info script]] greenback.xbm]
+		.graph1 marker cget marker1 -bitmap
+	} -cleanup {
+	    .graph1 marker delete marker1
+		destroy .graph1
+	} -match glob -result {@*greenback.xbm}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for bitmap 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.3.1 {
+		graph marker configure bitmap: fill - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -fill black
+		.graph1 marker cget Marker1 -fill
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -fill command works correctly for bitmap 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.3.2 {
+		graph marker configure bitmap: fill - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -fill invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -foreground command works correctly for bitmap 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.4.1 {
+		graph marker configure bitmap: foreground - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -foreground black
+		.graph1 marker cget Marker1 -foreground
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -foreground command works correctly for bitmap 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.4.2 {
+		graph marker configure bitmap: foreground - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -foreground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for bitmap 
+	# markers when given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.5.1 {
+		graph marker configure bitmap: outline - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -outline black
+		.graph1 marker cget Marker1 -outline
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -outline command works correctly for bitmap 
+	# markers when given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.5.2 {
+		graph marker configure bitmap: outline - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -outline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given an
+	# integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.6.1 {
+		graph marker configure bitmap: rotate - integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -rotate 90
+		.graph1 marker cget Marker1 -rotate
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given a
+	# decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.6.2 {
+		graph marker configure bitmap: rotate - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -rotate 45.5
+		.graph1 marker cget Marker1 -rotate
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given a
+	# negative integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.6.3 {
+		graph marker configure bitmap: rotate - negative integer input
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -rotate -90
+		.graph1 marker cget Marker1 -rotate
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {-90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given a
+	# negative decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.6.4 {
+		graph marker configure bitmap: rotate - negative decimal input
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -rotate -45.5
+		.graph1 marker cget Marker1 -rotate
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {-45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -rotate command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.6.5 {
+		graph marker configure bitmap: rotate - character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -rotate invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap
+	# markers when given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.1 {
+		graph marker configure bitmap: anchor - n
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor n
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.2 {
+		graph marker configure bitmap: anchor - ne
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor ne
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.3 {
+		graph marker configure bitmap: anchor - e
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor e
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap
+	# markers when given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.4 {
+		graph marker configure bitmap: anchor - se
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor se
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 's' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.5 {
+		graph marker configure bitmap: anchor - s
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor s
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.6 {
+		graph marker configure bitmap: anchor - sw
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor sw
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.7 {
+		graph marker configure bitmap: anchor - w
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor w
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.8 {
+		graph marker configure bitmap: anchor - nw
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor nw
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.9 {
+		graph marker configure bitmap: anchor - center
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor center
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.10 {
+		graph marker configure bitmap: anchor - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -anchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for bitmap 
+	# markers when given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.bitmap.A.7.11 {
+		graph marker configure bitmap: anchor - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create bitmap -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -anchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	cleanupTests
+}

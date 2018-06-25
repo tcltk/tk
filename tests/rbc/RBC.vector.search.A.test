@@ -1,0 +1,111 @@
+# RBC.vector.search.A.test --
+#
+###Abstract
+# This file tests the different constructs for the search function of 
+# the vector rbc component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.search
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.search {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests search to verify it finds the locations of an element that occurs twice
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.search.A.1.1 {
+	    Test search multipe instances
+	} -setup {
+		vector create Vector1
+	    Vector1 set {3 1 2 -3 4 1}
+	} -body {
+	    Vector1 search 1 
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {1 5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests search to verify it finds the locations of an element that occurs once
+	# ------------------------------------------------------------------------------------ 	
+	test RBC.vector.search.A.1.2 {
+	    Test search single instance
+	} -setup {
+		vector create Vector1
+	    Vector1 set {3 1 2 -3 4 1}
+	} -body {
+	    Vector1 search 3
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {0}	
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests search to verify it returns nothing for an element that does not exist
+	# ------------------------------------------------------------------------------------ 	
+	test RBC.vector.search.A.1.3 {
+	    Test search zero instances
+	} -setup {
+		vector create Vector1
+	    Vector1 set {3 1 2 -3 4 1}
+	} -body {
+	    Vector1 search 7
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests search to verify it finds the locations of elements within a given
+	# range where the numbers with in the range are included in the elements
+	# ------------------------------------------------------------------------------------ 	
+	test RBC.vector.search.A.1.4 {
+	    Test search
+	} -setup {
+		vector create Vector1
+	    Vector1 set {1 2 3 4 5 6 5 4 3 2 1 0}
+	} -body {
+	    Vector1 search 2 5
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {1 2 3 4 6 7 8 9}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests search to verify it finds the locations of elements within a given
+	# range where the numbers provided are not included in the elements
+	# ------------------------------------------------------------------------------------ 	
+	test RBC.vector.search.A.1.5 {
+	    Test search
+	} -setup {
+		vector create Vector1
+	    Vector1 set {1 2 3 4 5 6 5 4 3 2 1 0}
+	} -body {
+	    Vector1 search -1 10
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {0 1 2 3 4 5 6 7 8 9 10 11}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests search to verify it returns nothing when given a range where no
+	# elements exist
+	# ------------------------------------------------------------------------------------ 	
+	test RBC.vector.search.A.1.6 {
+	    Test search
+	} -setup {
+		vector create Vector1
+	    Vector1 set {1 2 3 4 5 6 5 4 3 2 1 0}
+	} -body {
+	    Vector1 search 1.1 1.9
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {}	
+	
+	cleanupTests
+}

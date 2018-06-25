@@ -1,0 +1,112 @@
+# RBC.graph.axis.bind.A.test --
+#
+###Abstract
+# This file tests the axis bind function of the graph BLT component.
+# Axis bind is an instance function of graph.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be created for an axis element
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.axis.bind.A.1.1 {
+		Test axis bind creation
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		pack .graph1
+	} -body {
+		if {[catch {.graph1 axis bind Axis1 <Double-1> {puts test}}]} {
+        return 1
+    }
+    return 0
+	} -cleanup {
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be queried for a sequence and axis element
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.axis.bind.A.1.2 {
+    	Test axis bind query
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		pack .graph1
+		.graph1 axis bind Axis1 <Double-1> {puts test}
+	} -body {
+		.graph1 axis bind Axis1 <Double-1>
+	} -cleanup {
+		destroy .graph1
+	} -result {puts test}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings can be appended for a sequence and axis element
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.axis.bind.A.1.3 {
+	    Test axis bind append
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		pack .graph1
+	    .graph1 axis bind Axis1 <Double-1> {puts test}    
+	} -body {
+	    .graph1 axis bind Axis1 <Double-1> {+puts test2}
+	    .graph1 axis bind Axis1 <Double-1>    
+	} -cleanup {
+	    destroy .graph1
+	} -result "puts test\nputs test2"
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bindings are overwritten for a sequence and axis element
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.axis.bind.A.1.4 {
+	    Test axis bind overwrite
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		pack .graph1
+	    .graph1 axis bind Axis1 <Double-1> {puts test}    
+	} -body {
+	    .graph1 axis bind Axis1 <Double-1> {+puts test2}
+	    .graph1 axis bind Axis1 <Double-1>    
+	} -body {
+	    .graph1 axis bind Axis1 <Double-1> {puts test2}    
+	    .graph1 axis bind Axis1 <Double-1>    
+	} -cleanup {
+	    destroy .graph1
+	} -result {puts test2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that bound sequences can be queried for just a legend element
+	# ------------------------------------------------------------------------------------ 
+	test RBC.graph.axis.bind.A.1.5 {
+	    Test axis bind query
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+		pack .graph1
+		.graph1 axis bind Axis1 <Double-1> {puts test}
+		.graph1 axis bind Axis1 <Key> {puts test2}   
+	} -body {
+	    .graph1 axis bind Axis1
+	} -cleanup {
+	    destroy .graph1
+	} -result {<Key> <Double-Button-1>}
+	
+	cleanupTests
+}

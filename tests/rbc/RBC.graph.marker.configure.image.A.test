@@ -1,0 +1,254 @@
+# RBC.graph.marker.configure.image.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the image marker configure
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image
+	# markers when given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.1 {
+		graph marker configure image: anchor - n
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor n
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.2 {
+		graph marker configure image: anchor - ne
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor ne
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.3 {
+		graph marker configure image: anchor - e
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor e
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image
+	# markers when given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.4 {
+		graph marker configure image: anchor - se
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor se
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 's' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.5 {
+		graph marker configure image: anchor - s
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor s
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.6 {
+		graph marker configure image: anchor - sw
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor sw
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.7 {
+		graph marker configure image: anchor - w
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor w
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.8 {
+		graph marker configure image: anchor - nw
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor nw
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.9 {
+		graph marker configure image: anchor - center
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		.graph1 marker configure Marker1 -anchor center
+		.graph1 marker cget Marker1 -anchor
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.10 {
+		graph marker configure image: anchor - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -anchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for image 
+	# markers when given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.1.11 {
+		graph marker configure image: anchor - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name Marker1
+	} -body {
+		if {[catch {.graph1 marker configure Marker1 -anchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 marker delete Marker1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure configuring image changes the coresponding option value pair
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.configure.image.A.2.1 {
+	    graph marker configure image: image - valid image name
+	} -setup {
+		graph .graph1
+		.graph1 marker create image -name marker1
+		
+		# the following should set Image1 to the designated name
+		set Image1 [image create photo image.a.2.1 -data {
+						R0lGODlhEAAQAIYAAPwCBHSi1Iyy5Hym3Hym1GSWxJS65Lza/OT2/Pz+/PT+
+						/KTK5DxmlJS67PT6/Pz6/Lzm/BRGhHSe1MTe/OTy/Oz2/Mzm/NTq/FSKtJS2
+						7PT2/MTi/LTa/AQyVOTu/Lze/LTS/JTC9MTq/Mzi/KzK/KTC/KS+/BQuRJzG
+						/KzO/LTO/KS6/Jy2/DRmpAQOHEx+rLTK/Jy+/Iym/Jyq/GSK/GSOrIyCBHSi
+						5HyW/DxuxFxqhPT+dPzqbHRCBAQmPBxenBxSjBxanARGfMRyDOymNOTCnPTG
+						fIRKDMyGNOzGlISu7GSOzIROBPTGjJSy9EyGvIxODNSORMSWTLxyFDx6tBxe
+						lKRiJGQ6BCQWBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAAAA
+						LAAAAAAQABAAAAesgACCAQIDBAWCiYoABgcICQoJCwyLgg0OCQkPmgoQEYsS
+						E5mYFBUWFxiLGZmbGhoWGxMcHYoDChoOFR4fByAcIbSJAyIXIxYgICQkJSbB
+						gicovCkqJSssKy0uiy8bIDAxLDIzNDU2lS031TI4OTo7PD2VPj9AQUIuQ0RF
+						RvGVi0dIkvATpGSJPwBMkDQxwkSCkyc3DkKJImUKlSdVhBxEaOUKACVVNgrC
+						AsBPIAAh/mhDcmVhdGVkIGJ5IEJNUFRvR0lGIFBybyB2ZXJzaW9uIDIuNQ0K
+						qSBEZXZlbENvciAxOTk3LDE5OTguIEFsbCByaWdodHMgcmVzZXJ2ZWQuDQpo
+						dHRwOi8vd3d3LmRldmVsY29yLmNvbQA7
+		    		}]
+	} -body {
+		.graph1 marker configure marker1 -image $Image1
+		.graph1 marker cget marker1 -image
+	} -cleanup {
+		image delete $Image1
+	    .graph1 marker delete marker1
+		destroy .graph1
+	} -result {image.a.2.1}
+
+	cleanupTests
+}

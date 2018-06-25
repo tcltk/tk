@@ -1,0 +1,66 @@
+# RBC.vector.seq.A.test --
+#
+###Abstract
+# This file tests the different constructs for the sequence (seq) function of 
+# the vector rbc component using no arguments.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.seq
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.seq {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a sequence will be generated from start to finish
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.seq.A.1.1 {
+	    Test sequence generation without step
+	} -setup {
+		vector create TestVector
+	} -body {
+		TestVector seq 2 5
+		TestVector range 0 end
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {2.0 3.0 4.0 5.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a sequence will be generated from start to finish with a step
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.seq.A.1.2 {
+	    Test sequence generation with step
+	} -setup {
+		vector create TestVector
+	} -body {
+		TestVector seq 2 5 2
+		TestVector range 0 end
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {2.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a sequence will be generated when given a negative step
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.seq.A.1.3 {
+	    Test sequence generation with negative step
+	} -setup {
+		vector create TestVector
+	} -body {
+		TestVector seq 5 0 -1
+		TestVector range 0 end
+	} -cleanup {
+	    vector destroy TestVector
+	} -result {5.0 4.0 3.0 2.0 1.0 0.0}
+	
+	cleanupTests
+}

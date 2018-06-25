@@ -1,0 +1,39 @@
+# RBC.barchart.axis.limits.A.test --
+#
+###Abstract
+# This file tests the axis limits function of the barchart BLT component.
+# Axis limits is an instance function of barchart.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis limits command works correctly
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.axis.limits.A.1.1 {
+		User Axis
+	} -setup {
+		barchart .barchart1
+		.barchart1 axis create Axis1
+	} -body {
+		.barchart1 axis limits Axis1
+	} -cleanup {
+		destroy .barchart1
+	} -result {0.0 1.0}
+	
+	cleanupTests
+	
+}

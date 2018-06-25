@@ -1,0 +1,397 @@
+# RBC.stripchart.crosshairs.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the crosshairs configure 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.crosshairs
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.crosshairs {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -color command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.1.1 {
+		stripchart crosshairs: configure - color - valid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -color black
+		.stripchart1 crosshairs cget -color
+	} -cleanup {
+		destroy .stripchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -color command works correctly when given 
+	# an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.1.2 {
+		stripchart crosshairs: configure - color - invalid color name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -color invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -dashes command works correctly when given 
+	# a valid dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.2.1 {
+		stripchart crosshairs: configure - dashes - valid dash list
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -dashes {2 3 2 4}
+		.stripchart1 crosshairs cget -dashes
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2 3 2 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -dashes command works correctly when given 
+	# an empty dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.2.2 {
+		stripchart crosshairs: configure - dashes - empty dash list
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -dashes ""
+		.stripchart1 crosshairs cget -dashes
+	} -cleanup {
+		destroy .stripchart1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -dashes command works correctly when given
+	# a dash list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.2.3 {
+		stripchart crosshairs: configure - dashes - long dash list
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -dashes {2 3 2 4 2 3 2 4 2 3 2 4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -dashes command works correctly when given 
+	# an invalid numerical dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.2.4 {
+		stripchart crosshairs: configure - dashes - invalid numerical dash list
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -dashes {2 3 2 -1 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -dashes command works correctly when given 
+	# a dash list with characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.2.5 {
+		stripchart crosshairs: configure - dashes - dash list with characters
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -dashes {2 3 2 a 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -hide command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.3.1 {
+		stripchart crosshairs: configure - hide - 1
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -hide 1
+		.stripchart1 crosshairs cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -hide command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.3.2 {
+		stripchart crosshairs: configure - hide - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -hide 0
+		.stripchart1 crosshairs cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -hide command works correctly when given 
+	# true.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.3.3 {
+		stripchart crosshairs: configure - hide - true
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -hide true
+		.stripchart1 crosshairs cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -hide command works correctly when given 
+	# false.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.3.4 {
+		stripchart crosshairs: configure - hide - false
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -hide false
+		.stripchart1 crosshairs cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -hide command works correctly when given 
+	# yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.3.5 {
+		stripchart crosshairs: configure - hide - yes
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -hide yes
+		.stripchart1 crosshairs cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -hide command works correctly when given 
+	# no.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.3.6 {
+		stripchart crosshairs: configure - hide - no
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -hide no
+		.stripchart1 crosshairs cget -hide
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -hide command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.3.7 {
+		stripchart crosshairs: configure - hide - invalid input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -linewidth command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.4.1 {
+		stripchart crosshairs: configure - linewidth - valid integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -linewidth 2
+		.stripchart1 crosshairs cget -linewidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -linewidth command works correctly when 
+	# given an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.4.2 {
+		stripchart crosshairs: configure - linewidth - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -linewidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -linewidth command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.4.3 {
+		stripchart crosshairs: configure - linewidth - valid decimal input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -linewidth 3.5
+		.stripchart1 crosshairs cget -linewidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -linewidth command works correctly when 
+	# given an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.4.4 {
+		stripchart crosshairs: configure - linewidth - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -linewidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -linewidth command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.4.5 {
+		stripchart crosshairs: configure - linewidth - character input
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -linewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -linewidth command works correctly when 
+	# given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.4.6 {
+		stripchart crosshairs: configure - linewidth - 0
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -linewidth 0
+		.stripchart1 crosshairs cget -linewidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -position command works correctly when 
+	# given valid coordinates as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.5.1 {
+		stripchart crosshairs: configure - position - valid coordintes
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 crosshairs configure -position @1,3
+		.stripchart1 crosshairs cget -position
+	} -cleanup {
+		destroy .stripchart1
+	} -result {@1,3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -position command works correctly when 
+	# given invalid coordinates as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.5.2 {
+		stripchart crosshairs: configure - position - invalid coordintes
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -position @1,a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the crosshairs configure -position command works correctly when 
+	# given input that is not in coordinate form (@x,y).
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.crosshairs.configure.A.5.3 {
+		stripchart crosshairs: configure - position - not coordinate form
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		if {[catch {.stripchart1 crosshairs configure -position 1,2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+
+	cleanupTests
+}

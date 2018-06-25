@@ -1,0 +1,103 @@
+# RBC.vector.destroy.A.test --
+#
+###Abstract
+# This file tests the destroy function of the vector rbc component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.destroy
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.destroy {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector destroy command works correctly when given a single
+	# existing vector name and no command has been assigned during the vector create.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.destroy.A.1.1 {
+		vector destroy: single vector name, no command
+	} -setup {
+		vector create foo
+		foo set 3
+	} -body {
+		vector destroy foo
+		
+		if {[catch {$foo(0)}] && [catch {foo length}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector destroy command works correctly when given a multiple 
+	# existing vector names and no commands have been assigned during the vector create.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.destroy.A.1.2 {
+		vector destroy: multiple vector names, no command
+	} -setup {
+		vector create foo
+		foo set 3
+		vector create bar
+		bar set 5
+	} -body {
+		vector destroy foo bar
+		
+		if {[catch {$foo(0)}] && [catch {foo length}]&& [catch {$bar(0)}] && [catch {bar length}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector destroy command works correctly when given a single 
+	# existing vector name and a command has been assigned during the vector create.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.destroy.A.1.3 {
+		vector destroy: single vector name, with command
+	} -setup {
+		vector create foo -command bar
+		bar set 3
+	} -body {
+		vector destroy foo
+		
+		if {[catch {$foo(0)}] && [catch {bar length}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector destroy command works correctly when given a multiple 
+	# existing vector names and a commands have been assigned during the vector create.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.destroy.A.1.4 {
+		vector destroy: multiple vector names, with command
+	} -setup {
+		vector create foo -command bar
+		bar set 3
+		vector create moo -command nar
+		nar set 5
+	} -body {
+		vector destroy foo moo
+		
+		if {[catch {$foo(0)}] && [catch {bar length}] && [catch {$moo(0)}] && [catch {nar length}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -result {0}
+	
+	cleanupTests
+}

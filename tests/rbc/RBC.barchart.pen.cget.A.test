@@ -1,0 +1,73 @@
+# RBC.barchart.pen.cget.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the pen cget 
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.pen
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.pen {    
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with an explicitly set option
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.pen.cget.A.1.1 {
+	    Test pen cget configure
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	    .barchart1 pen create Pen1 -background blue
+	} -body {
+	    .barchart1 pen cget Pen1 -background
+	} -cleanup {
+	    destroy .barchart1
+	} -result {blue}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with a default value
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.pen.cget.A.1.2 {
+	    Test pen cget default
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	    .barchart1 pen create Pen1
+	} -body {
+	    .barchart1 pen cget Pen1 -type
+	} -cleanup {
+	    destroy .barchart1
+	} -result {bar}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that cget works with an invalid value
+	# ------------------------------------------------------------------------------------ 
+	test RBC.barchart.pen.cget.A.1.3 {
+	    Test pen cget invalid value
+	} -setup {
+	    barchart .barchart1
+	    pack .barchart1
+	    .barchart1 pen create Pen1
+	} -body {
+	    if {[catch {.barchart1 pen cget Pen1 -invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .barchart1
+	} -result {0}
+	
+	cleanupTests
+}

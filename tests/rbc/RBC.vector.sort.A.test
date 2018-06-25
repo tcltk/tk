@@ -1,0 +1,113 @@
+# RBC.vector.sort.A.test --
+#
+###Abstract
+# This file tests the different constructs for the sort function of 
+# the vector rbc component when one vector is given.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.sort
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.sort {	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests sort to verify a vector of numbers is sorted properly
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.sort.A.1.1 {
+	    Test sort basic
+	} -setup {
+		vector create Vector1
+	    Vector1 set {10 9 8 7 6 5 4 3 2 1}
+	} -body {
+	    Vector1 sort
+		for {set i 0} {$i < [Vector1 length] - 1} {incr i} {
+            if {[Vector1 index $i] > [Vector1 index $i+1]} {
+                return 0
+            }
+        }
+       return 1
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {1}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests sort to verify a vector of numbers is sorted properly in reverse
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.sort.A.1.2 {
+	    Test sort reverse
+	} -setup {
+		vector create Vector1
+	    Vector1 set {1 2 3 4 5 6 7 8 9 10}
+	} -body {
+	    Vector1 sort -reverse
+        for {set i 0} {$i < [Vector1 length] - 1} {incr i} {
+            if {[Vector1 index $i] < [Vector1 index $i+1]} {
+                return 0
+            }
+        }
+		return 1
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {1}
+
+		# ------------------------------------------------------------------------------------
+	# Purpose: Tests sort to verify a vector of numbers is sorted properly along with 
+	# the associated vector
+	# ------------------------------------------------------------------------------------ 
+	test RBC.vector.sort.A.2.1 {
+	    Test sort vector and an associated vector
+	} -setup {
+		vector create Vector1
+		vector create Vector2
+	    Vector1 set {5 4 3 2 1}
+		Vector2 set {10 9 8 7 6}
+	} -body {
+		Vector1 sort Vector2
+	    Vector1 append Vector2
+		for {set i 0} {$i < [Vector1 length] - 1} {incr i} {
+            if {[Vector1 index $i] > [Vector1 index $i+1]} {
+                return 0
+            }
+        }
+       return 1
+	} -cleanup {
+	    vector destroy Vector1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Tests sort to verify a vector of numbers is sorted properly along with 
+	# the associated vector using the reverse flag
+	# ------------------------------------------------------------------------------------ 	
+	test RBC.vector.sort.A.2.2 {
+	    Test sort vector and an associated vector -reverse
+	} -setup {
+		vector create Vector1
+		vector create Vector2
+	    Vector1 set {1 2 3 4 5}
+		Vector2 set {6 7 8 9 10}
+	} -body {
+		Vector1 sort -reverse Vector2
+	    Vector2 append Vector1
+		for {set i 0} {$i < [Vector2 length] - 1} {incr i} {
+            if {[Vector2 index $i] < [Vector2 index $i+1]} {
+                return 0
+            }
+        }
+		return 1
+	} -cleanup {
+	    vector destroy Vector1
+		vector destroy Vector2
+	} -result {1}
+	
+	cleanupTests
+}

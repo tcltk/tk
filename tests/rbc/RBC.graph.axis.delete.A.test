@@ -1,0 +1,70 @@
+# RBC.graph.axis.delete.A.test --
+#
+###Abstract
+# This file tests the axis delete function of the graph BLT component.
+# Axis delete is an instance function of graph.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.axis
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.axis {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis delete command works correctly when given a single existing
+	# user created axis name
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.delete.A.1.1 {
+	    Single User Axis
+	} -setup {
+		graph .graph1
+		.graph1 axis create Axis1
+	} -body {
+	    .graph1 axis delete Axis1
+		.graph1 axis names Axis1
+	} -cleanup {
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis delete command works correctly when given a single existing
+	# system axis name
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.delete.A.1.2 {
+	    Single System Axis
+	} -setup {
+		graph .graph1
+	} -body {
+	    .graph1 axis delete x
+		.graph1 axis names x
+	} -cleanup {
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the axis delete command works correctly when given multiple existing
+	# axis names
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.axis.delete.A.1.3 {
+	    Multiple Axis
+	} -setup {
+		graph .graph1
+	} -body {
+	    .graph1 axis delete x y
+		.graph1 axis names
+	} -cleanup {
+		destroy .graph1
+	} -result {x2 y2}
+	
+	cleanupTests
+}

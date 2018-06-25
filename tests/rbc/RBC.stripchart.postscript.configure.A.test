@@ -1,0 +1,1510 @@
+# RBC.stripchart.postscript.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the postscript configure
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.postscript
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.postscript {    	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -center command works correctly when given 
+	# 1 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.1.1 {
+		stripchart postscript configure: center - 1
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -center 1
+		.stripchart1 postscript cget -center
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -center command works correctly when given 
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.1.2 {
+		stripchart postscript configure: center - 0
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -center 0
+		.stripchart1 postscript cget -center
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -center command works correctly when given 
+	# 'true' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.1.3 {
+		stripchart postscript configure: center - true
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -center true
+		.stripchart1 postscript cget -center
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -center command works correctly when given 
+	# 'false' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.1.4 {
+		stripchart postscript configure: center - false
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -center false
+		.stripchart1 postscript cget -center
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -center command works correctly when given 
+	# 'yes' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.1.5 {
+		stripchart postscript configure: center - yes
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -center yes
+		.stripchart1 postscript cget -center
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -center command works correctly when given 
+	# 'no' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.1.6 {
+		stripchart postscript configure: center - no
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -center no
+		.stripchart1 postscript cget -center
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -center command works correctly when given  
+	# an invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.1.7 {
+		stripchart postscript configure: center - invalid input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -center invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the colormap configuration works for valid colormaps
+	# FIXME: I have no idea how to do this.
+	# ------------------------------------------------------------------------------------ 
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the colormode configuration works for color mode
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.postscript.configure.A.3.1 {
+		stripchart postscript configure: colormode - color
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    .stripchart1 postscript configure -colormode color
+	    .stripchart1 postscript cget -colormode
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {color}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the colormode configuration works for gray mode
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.postscript.configure.A.3.2 {
+	    stripchart postscript configure: colormode - gray
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    .stripchart1 postscript configure -colormode gray
+	    .stripchart1 postscript cget -colormode
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {greyscale}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the colormode configuration works for greyscale mode
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.postscript.configure.A.3.3 {
+	    stripchart postscript configure: colormode - greyscale
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    .stripchart1 postscript configure -colormode greyscale
+	    .stripchart1 postscript cget -colormode
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {greyscale}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the colormode configuration works for mono mode
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.postscript.configure.A.3.4 {
+	    stripchart postscript configure: colormode - mono
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    .stripchart1 postscript configure -colormode mono
+	    .stripchart1 postscript cget -colormode
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {monochrome}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the colormode configuration works for monochrome mode
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.postscript.configure.A.3.5 {
+	    stripchart postscript configure: colormode - monochrome
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    .stripchart1 postscript configure -colormode monochrome
+	    .stripchart1 postscript cget -colormode
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {monochrome}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the fontmap configuration works for valid fontmaps
+	# FIXME: I have no idea how to do this.
+	# ---------------------------------------------------s--------------------------------- 
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -decorations command works correctly when  
+	# given 1 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.5.1 {
+		stripchart postscript configure: decorations - 1
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -decorations 1
+		.stripchart1 postscript cget -decorations
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -decorations command works correctly when  
+	# given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.5.2 {
+		stripchart postscript configure: decorations - 0
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -decorations 0
+		.stripchart1 postscript cget -decorations
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -decorations command works correctly when  
+	# given 'true' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.5.3 {
+		stripchart postscript configure: decorations - true
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -decorations true
+		.stripchart1 postscript cget -decorations
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -decorations command works correctly when  
+	# given 'false' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.5.4 {
+		stripchart postscript configure: decorations - false
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -decorations false
+		.stripchart1 postscript cget -decorations
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -decorations command works correctly when  
+	# given 'yes' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.5.5 {
+		stripchart postscript configure: decorations - yes
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -decorations yes
+		.stripchart1 postscript cget -decorations
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -decorations command works correctly when  
+	# given 'no' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.5.6 {
+		stripchart postscript configure: decorations - no
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -decorations no
+		.stripchart1 postscript cget -decorations
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -decorations command works correctly when  
+	# given an invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.5.7 {
+		stripchart postscript configure: decorations - invalid input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -decorations invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the height configuration works for zero
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.postscript.configure.A.6.1 {
+	    postscript configure: height - zero
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    .stripchart1 postscript configure -height 0
+	    .stripchart1 postscript cget -height
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the height configuration works for valid values
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.postscript.configure.A.6.2 {
+	    postscript configure: height - valid input
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    .stripchart1 postscript configure -height 20
+	    .stripchart1 postscript cget -height
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {20}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the height configuration works for invalid numerical input
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.postscript.configure.A.6.3 {
+	    postscript configure: height - invalid numerical input
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    if {[catch {.stripchart1 postscript configure -height -20}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the height configuration works for invalid character input
+	# ------------------------------------------------------------------------------------ 
+	test RBC.stripchart.postscript.configure.A.6.4 {
+	    postscript configure: height - invalid character input
+	} -setup {
+	    stripchart .stripchart1
+	    pack .stripchart1
+	} -body {
+	    if {[catch {.stripchart1 postscript configure -height invalid}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -landscape command works correctly when  
+	# given 1 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.7.1 {
+		stripchart postscript configure: landscape - 1
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -landscape 1
+		.stripchart1 postscript cget -landscape
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -landscape command works correctly when  
+	# given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.7.2 {
+		stripchart postscript configure: landscape - 0
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -landscape 0
+		.stripchart1 postscript cget -landscape
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -landscape command works correctly when  
+	# given 'true' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.7.3 {
+		stripchart postscript configure: landscape - true
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -landscape true
+		.stripchart1 postscript cget -landscape
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -landscape command works correctly when  
+	# given 'false' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.7.4 {
+		stripchart postscript configure: landscape - false
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -landscape false
+		.stripchart1 postscript cget -landscape
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -landscape command works correctly when  
+	# given 'yes' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.7.5 {
+		stripchart postscript configure: landscape - yes
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -landscape yes
+		.stripchart1 postscript cget -landscape
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -landscape command works correctly when  
+	# given 'no' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.7.6 {
+		stripchart postscript configure: landscape - no
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -landscape no
+		.stripchart1 postscript cget -landscape
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -landscape command works correctly when  
+	# given an invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.7.7 {
+		stripchart postscript configure: landscape - invalid input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -landscape invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -maxpect command works correctly when given
+	# 1 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.8.1 {
+		stripchart postscript configure: maxpect - 1
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -maxpect 1
+		.stripchart1 postscript cget -maxpect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -maxpect command works correctly when given
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.8.2 {
+		stripchart postscript configure: maxpect - 0
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -maxpect 0
+		.stripchart1 postscript cget -maxpect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -maxpect command works correctly when given
+	# 'true' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.8.3 {
+		stripchart postscript configure: maxpect - true
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -maxpect true
+		.stripchart1 postscript cget -maxpect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -maxpect command works correctly when given
+	# 'false' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.8.4 {
+		stripchart postscript configure: maxpect - false
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -maxpect false
+		.stripchart1 postscript cget -maxpect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -maxpect command works correctly when given
+	# 'yes' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.8.5 {
+		stripchart postscript configure: maxpect - yes
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -maxpect yes
+		.stripchart1 postscript cget -maxpect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -maxpect command works correctly when given
+	# 'no' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.8.6 {
+		stripchart postscript configure: maxpect - no
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -maxpect no
+		.stripchart1 postscript cget -maxpect
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -maxpect command works correctly when given
+	# an invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.8.7 {
+		stripchart postscript configure: maxpect - invalid input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -maxpect invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -padx command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.9.1 {
+		stripchart postscript configure: padx - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -padx 2
+		.stripchart1 postscript cget -padx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -padx command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.9.2 {
+		stripchart postscript configure: padx - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -padx -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -padx command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.9.3 {
+		stripchart postscript configure: padx - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -padx 3.5
+		.stripchart1 postscript cget -padx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -padx command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.9.4 {
+		stripchart postscript configure: padx - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -padx -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -padx command works correctly when given a
+	# valid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.9.5 {
+	    stripchart postscript: configure: padx - valid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 postscript configure -padx {1 2}
+	    .stripchart1 postscript cget -padx
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {1 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -padx command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.9.6 {
+		stripchart postscript configure: padx - character input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -padx a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -padx command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.9.7 {
+	    stripchart postscript: configure: padx - invalid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 postscript configure -padx {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -padx command works correctly when given a
+	# list of input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.9.8 {
+		stripchart postscript configure: padx - invalid list length
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -padx {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -padx command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.9.9 {
+		stripchart postscript configure: padx - zero
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -padx 0
+		.stripchart1 postscript cget -padx
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -pady command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.10.1 {
+		stripchart postscript configure: pady - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -pady 2
+		.stripchart1 postscript cget -pady
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -pady command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.10.2 {
+		stripchart postscript configure: pady - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -pady -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -pady command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.10.3 {
+		stripchart postscript configure: pady - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -pady 3.5
+		.stripchart1 postscript cget -pady
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -pady command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.10.4 {
+		stripchart postscript configure: pady - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -pady -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -pady command works correctly when given a
+	# valid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.10.5 {
+	    stripchart postscript: configure: pady - valid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    .stripchart1 postscript configure -pady {1 2}
+	    .stripchart1 postscript cget -pady
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {1 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -pady command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.10.6 {
+		stripchart postscript configure: pady - character input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -pady a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -pady command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.10.7 {
+	    stripchart postscript: configure: pady - invalid list of values
+	} -setup {
+	    stripchart .stripchart1     
+	    pack .stripchart1  
+	} -body {
+	    if {[catch {.stripchart1 postscript configure -pady {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -pady command works correctly when given a
+	# list of input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.10.8 {
+		stripchart postscript configure: pady - invalid list length
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -pady {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -pady command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.10.9 {
+		stripchart postscript configure: pady - zero
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -pady 0
+		.stripchart1 postscript cget -pady
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0 0}
+	
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperheight command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.11.1 {
+		stripchart postscript configure: paperheight - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -paperheight 2
+		.stripchart1 postscript cget -paperheight
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperheight command works correctly when 
+	# given an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.11.2 {
+		stripchart postscript configure: paperheight - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -paperheight -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperheight command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.11.3 {
+		stripchart postscript configure: paperheight - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -paperheight 3.5
+		.stripchart1 postscript cget -paperheight
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperheight command works correctly when 
+	# given an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.11.4 {
+		stripchart postscript configure: paperheight - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -paperheight -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperheight command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.11.5 {
+		stripchart postscript configure: paperheight - character input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -paperheight a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperheight command works correctly when 
+	# given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.11.6 {
+		stripchart postscript configure: paperheight - zero
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -paperheight 0}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperwidth command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.12.1 {
+		stripchart postscript configure: paperwidth - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -paperwidth 2
+		.stripchart1 postscript cget -paperwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperwidth command works correctly when 
+	# given an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.12.2 {
+		stripchart postscript configure: paperwidth - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -paperwidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperwidth command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.12.3 {
+		stripchart postscript configure: paperwidth - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -paperwidth 3.5
+		.stripchart1 postscript cget -paperwidth
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperwidth command works correctly when 
+	# given an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.12.4 {
+		stripchart postscript configure: paperwidth - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -paperwidth -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperwidth command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.12.5 {
+		stripchart postscript configure: paperwidth - character input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -paperwidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -paperwidth command works correctly when 
+	# given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.12.6 {
+		stripchart postscript configure: paperwidth - zero
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -paperwidth 0}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -width command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.13.1 {
+		stripchart postscript configure: width - integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -width 2
+		.stripchart1 postscript cget -width
+	} -cleanup {
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -width command works correctly when 
+	# given an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.13.2 {
+		stripchart postscript configure: width - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -width -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -width command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.13.3 {
+		stripchart postscript configure: width - decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -width 3.5
+		.stripchart1 postscript cget -width
+	} -cleanup {
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -width command works correctly when 
+	# given an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.13.4 {
+		stripchart postscript configure: width - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -width -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -width command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.13.5 {
+		stripchart postscript configure: width - character input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -width a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -width command works correctly when 
+	# given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.13.6 {
+		stripchart postscript configure: width - zero
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -width 0
+		.stripchart1 postscript cget -width
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -footer command works correctly when given 
+	# 1 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.14.1 {
+		stripchart postscript configure: footer - 1
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -footer 1
+		.stripchart1 postscript cget -footer
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -footer command works correctly when given 
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.14.2 {
+		stripchart postscript configure: footer - 0
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -footer 0
+		.stripchart1 postscript cget -footer
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -footer command works correctly when given 
+	# 'true' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.14.3 {
+		stripchart postscript configure: footer - true
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -footer true
+		.stripchart1 postscript cget -footer
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -footer command works correctly when given 
+	# 'false' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.14.4 {
+		stripchart postscript configure: footer - false
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -footer false
+		.stripchart1 postscript cget -footer
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -footer command works correctly when given 
+	# 'yes' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.14.5 {
+		stripchart postscript configure: footer - yes
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -footer yes
+		.stripchart1 postscript cget -footer
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -footer command works correctly when given 
+	# 'no' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.14.6 {
+		stripchart postscript configure: footer - no
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -footer no
+		.stripchart1 postscript cget -footer
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -footer command works correctly when given  
+	# an invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.14.7 {
+		stripchart postscript configure: footer - invalid input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -footer invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -preview command works correctly when given 
+	# 1 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.15.1 {
+		stripchart postscript configure: preview - 1
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -preview 1
+		.stripchart1 postscript cget -preview
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -preview command works correctly when given 
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.15.2 {
+		stripchart postscript configure: preview - 0
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -preview 0
+		.stripchart1 postscript cget -preview
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -preview command works correctly when given 
+	# 'true' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.15.3 {
+		stripchart postscript configure: preview - true
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -preview true
+		.stripchart1 postscript cget -preview
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -preview command works correctly when given 
+	# 'false' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.15.4 {
+		stripchart postscript configure: preview - false
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -preview false
+		.stripchart1 postscript cget -preview
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -preview command works correctly when given 
+	# 'yes' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.15.5 {
+		stripchart postscript configure: preview - yes
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -preview yes
+		.stripchart1 postscript cget -preview
+	} -cleanup {
+		destroy .stripchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -preview command works correctly when given 
+	# 'no' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.15.6 {
+		stripchart postscript configure: preview - no
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		.stripchart1 postscript configure -preview no
+		.stripchart1 postscript cget -preview
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the postscript configure -preview command works correctly when given  
+	# an invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.postscript.configure.A.15.7 {
+		stripchart postscript configure: preview - invalid input
+	} -setup {
+		stripchart .stripchart1
+		pack .stripchart1
+	} -body {
+		if {[catch {.stripchart1 postscript configure -preview invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .stripchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that the preview format configuration works for valid formats
+	# FIXME: I have no idea how to do this.
+	# ------------------------------------------------------------------------------------
+	
+	cleanupTests
+}

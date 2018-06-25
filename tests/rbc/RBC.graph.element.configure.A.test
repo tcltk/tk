@@ -1,0 +1,3950 @@
+# RBC.graph.element.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element configure 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -activepen command works correctly when given 
+	# a valid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.1.1 {
+		graph element configure: activepen - valid pen name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 pen create Pen1 -color blue
+	} -body {
+		.graph1 element configure Element1 -activepen Pen1
+		.graph1 element cget Element1 -activepen
+	} -cleanup {
+		.graph1 pen delete Pen1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Pen1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -activepen command works correctly when given 
+	# an invalid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.1.2 {
+		graph element configure: activepen - invalid pen name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -activepen invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -bindtags command works correctly when given a 
+	# single tag name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.2.1 {
+		graph element configure: bindtags - single tag
+	} -setup {
+		graph .graph1
+		.graph1 element bind Binding1 <Double-1> {puts foobar}
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -bindtags Binding1
+		.graph1 element cget Element1 -bindtags
+	} -cleanup {
+		destroy Binding1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Binding1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -bindtags command works correctly when given  
+	# a list of tag names.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.2.2 {
+		graph element configure: bindtags - tag list
+	} -setup {
+		graph .graph1
+		.graph1 element bind Binding1 <Double-1> {puts foo}
+		.graph1 element bind Binding2 <Double-3> {puts bar}
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -bindtags {Binding1 Binding2}
+		.graph1 element cget Element1 -bindtags
+	} -cleanup {
+		destroy Binding1 Binding2
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Binding1 Binding2}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -color command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.3.1 {
+		graph element configure: color - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -color black
+		.graph1 element cget Element1 -color
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -color command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.3.2 {
+		graph element configure: color - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -color invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given 
+	# a valid dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.4.1 {
+		graph element configure: dashes - valid dash list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -dashes {2 3 2 4}
+		.graph1 element cget Element1 -dashes
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {2 3 2 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given 
+	# an empty dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.4.2 {
+		graph element configure: dashes - empty dash list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -dashes ""
+		.graph1 element cget Element1 -dashes
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given
+	# a dash list that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.4.3 {
+		graph element configure: dashes - long dash list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -dashes {2 3 2 4 2 3 2 4 2 3 2 4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given 
+	# an invalid numerical dash list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.4.4 {
+		graph element configure: dashes - invalid numerical dash list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -dashes {2 3 2 -1 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -dashes command works correctly when given 
+	# a dash list with characters.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.4.5 {
+		graph element configure: dashes - dash list with characters
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -dashes {2 3 2 a 2}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given a
+	# valid coordinate list as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.5.1 {
+		graph element configure: data - valid coordinte list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -data {1 3 4 5}
+		.graph1 element cget Element1 -data
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 3.0 4.0 5.0}
+		
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given an
+	# invalid coordinate list as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.5.2 {
+		graph element configure: data - invalid coordinte list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -data {1 a 4 b}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given input
+	# that is not in the proper form (x1 y1 x2 y2).
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.5.3 {
+		graph element configure: data - not proper form
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -data {1,2 3,4}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -data command works correctly when given input
+	# that does not have an even number of values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.5.4 {
+		graph element configure: data - odd list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -data {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -fill command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.6.1 {
+		graph element configure: fill - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -fill black
+		.graph1 element cget Element1 -fill
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -fill command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.6.2 {
+		graph element configure: fill - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -fill invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -fill command works correctly when given 
+	# 'defcolor' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.6.3 {
+		graph element configure: fill - defcolor
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -fill defcolor
+		.graph1 element cget Element1 -fill
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {defcolor}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -fill command works correctly when given "" as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.6.4 {
+		graph element configure: fill - empty string
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -fill ""
+		.graph1 element cget Element1 -fill
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.7.1 {
+		graph element configure: hide - 1
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -hide 1
+		.graph1 element cget Element1 -hide
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.7.2 {
+		graph element configure: hide - 0
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -hide 0
+		.graph1 element cget Element1 -hide
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.7.3 {
+		graph element configure: hide - true
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -hide true
+		.graph1 element cget Element1 -hide
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given 
+	# false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.7.4 {
+		graph element configure: hide - false
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -hide false
+		.graph1 element cget Element1 -hide
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.7.5 {
+		graph element configure: hide - yes
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -hide yes
+		.graph1 element cget Element1 -hide
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.7.6 {
+		graph element configure: hide - no
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -hide no
+		.graph1 element cget Element1 -hide
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -hide command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.7.7 {
+		graph element configure: hide - invalid input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -hide invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -label command works correctly when given 
+	# valid text.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.8.1 {
+		graph element configure: label - valid text
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -label MyElement
+		.graph1 element cget Element1 -label
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {MyElement}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -label command works correctly when given the
+	# empty string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.8.2 {
+		graph element configure: label - empty string
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -label ""
+		.graph1 element cget Element1 -label
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -label command does not change the default 
+	# value when not given any input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.8.3 {
+		graph element configure: label - default value
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -label
+		.graph1 element cget Element1 -label
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Element1}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -linewidth command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.9.1 {
+		graph element configure: linewidth - integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -linewidth 2
+		.graph1 element cget Element1 -linewidth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -linewidth command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.9.2 {
+		graph element configure: linewidth - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -linewidth 3.5
+		.graph1 element cget Element1 -linewidth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -linewidth command works correctly when given
+	# an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.9.3 {
+		graph element configure: linewidth - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -linewidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -linewidth command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.9.4 {
+		graph element configure: linewidth - character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -linewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapx command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.10.1 {
+		graph element configure: mapx - valid axis name
+	} -setup {
+		graph .graph1
+		.graph1 axis create .axis1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -mapx .axis1
+		.graph1 element cget Element1 -mapx
+	} -cleanup {
+		.graph1 element delete Element1
+		.graph1 axis delete .axis1
+		destroy .graph1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapx command works correctly when given a
+	# non-existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.10.2 {
+		graph element configure: mapx - non-existent axis name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -mapx .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapx command works correctly when not input  
+	# is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.10.3 {
+		graph element configure: mapx - no input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -mapx
+		.graph1 element cget Element1 -mapx
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {x}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapy command works correctly when given valid 
+	# axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.11.1 {
+		graph element configure: mapy - valid axis name
+	} -setup {
+		graph .graph1
+		.graph1 axis create .axis1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -mapy .axis1
+		.graph1 element cget Element1 -mapy
+	} -cleanup {
+		.graph1 element delete Element1
+		.graph1 axis delete .axis1
+		destroy .graph1
+	} -result {.axis1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapy command works correctly when given a
+	# non-existent axis name as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.11.2 {
+		graph element configure: mapy - non-existent axis name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -mapy .axis1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -mapy command works correctly when not input  
+	# is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.11.3 {
+		graph element configure: mapy - no input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -mapy
+		.graph1 element cget Element1 -mapy
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {y}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -offdash command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.12.1 {
+		graph element configure: offdash - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -offdash black
+		.graph1 element cget Element1 -offdash
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -offdash command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.12.2 {
+		graph element configure: offdash - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -offdash invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -offdash command works correctly when given 
+	# 'defcolor' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.12.3 {
+		graph element configure: offdash - defcolor
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -offdash defcolor
+		.graph1 element cget Element1 -offdash
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {defcolor}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -offdash command works correctly when given "" 
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.12.4 {
+		graph element configure: offdash - empty string
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -offdash ""
+		.graph1 element cget Element1 -offdash
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outline command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.13.1 {
+		graph element configure: outline - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -outline black
+		.graph1 element cget Element1 -outline
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outline command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.13.2 {
+		graph element configure: outline - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -outline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outline command works correctly when given 
+	# 'defcolor' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.13.3 {
+		graph element configure: outline - defcolor
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -outline defcolor
+		.graph1 element cget Element1 -outline
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {defcolor}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pen command works correctly when given 
+	# a valid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.14.1 {
+		graph element configure: pen - valid pen name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 pen create Pen1 -color blue
+	} -body {
+		.graph1 element configure Element1 -pen Pen1
+		.graph1 element cget Element1 -pen
+	} -cleanup {
+		.graph1 pen delete Pen1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Pen1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pen command works correctly when given 
+	# an invalid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.14.2 {
+		graph element configure: pen - invalid pen name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -pen invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outlinewidth command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.15.1 {
+		graph element configure: outlinewidth - integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -outlinewidth 2
+		.graph1 element cget Element1 -outlinewidth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outlinewidth command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.15.2 {
+		graph element configure: outlinewidth - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -outlinewidth 3.5
+		.graph1 element cget Element1 -outlinewidth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outlinewidth command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.15.3 {
+		graph element configure: outlinewidth - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -outlinewidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -outlinewidth command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.15.4 {
+		graph element configure: outlinewidth - character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -outlinewidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.16.1 {
+		graph element configure: scalesymbols - 1
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -scalesymbols 1
+		.graph1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.16.2 {
+		graph element configure: scalesymbols - 0
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -scalesymbols 0
+		.graph1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.16.3 {
+		graph element configure: scalesymbols - true
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -scalesymbols true
+		.graph1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.16.4 {
+		graph element configure: scalesymbols - false
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -scalesymbols false
+		.graph1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.16.5 {
+		graph element configure: scalesymbols - yes
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -scalesymbols yes
+		.graph1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.16.6 {
+		graph element configure: scalesymbols - no
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -scalesymbols no
+		.graph1 element cget Element1 -scalesymbols
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -scalesymbols command works correctly when 
+	# given an invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.16.7 {
+		graph element configure: scalesymbols - invalid input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -scalesymbols invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'linear' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.17.1 {
+		graph element configure: smooth - linear
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -smooth linear
+		.graph1 element cget Element1 -smooth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {linear}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'step' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.17.2 {
+		graph element configure: smooth - step
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -smooth step
+		.graph1 element cget Element1 -smooth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {step}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'natural' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.17.3 {
+		graph element configure: smooth - natural
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -smooth natural
+		.graph1 element cget Element1 -smooth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {natural}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'quadratic' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.17.4 {
+		graph element configure: smooth - quadratic
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -smooth quadratic
+		.graph1 element cget Element1 -smooth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {cubic}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# 'cubic' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.17.5 {
+		graph element configure: smooth - cubic
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -smooth cubic
+		.graph1 element cget Element1 -smooth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {natural}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -smooth command works correctly when given
+	# invalid input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.17.6 {
+		graph element configure: smooth - invalid input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -smooth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -styles command works correctly when given a
+	# valid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.18.1 {
+		graph element configure: styles - valid pen name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 pen create Pen1
+	} -body {
+		.graph1 element configure Element1 -styles {Pen1}
+		.graph1 element cget Element1 -styles
+	} -cleanup {
+		destroy Pen1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {{Pen1 0.0 1.0}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -styles command works correctly when given an
+	# invalid pen name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.18.2 {
+		graph element configure: styles - invalid pen name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -styles {invalid}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -styles command works correctly when given a
+	# valid pen name and a minimum and maximum element weight range.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.18.3 {
+		graph element configure: styles - pen and weights
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 pen create Pen1
+	} -body {
+		.graph1 element configure Element1 -styles {{Pen1 2.0 3.0}}
+		.graph1 element cget Element1 -styles
+	} -cleanup {
+		destroy Pen1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {{Pen1 2.0 3.0}}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'square' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.1 {
+		graph element configure: symbol - square
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol square
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {square}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'circle' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.2 {
+		graph element configure: symbol - circle
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol circle
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {circle}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'diamond' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.3 {
+		graph element configure: symbol - diamond
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol diamond
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {diamond}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'plus' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.4 {
+		graph element configure: symbol - plus
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol plus
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {plus}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'cross' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.5 {
+		graph element configure: symbol - cross
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol cross
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {cross}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'splus' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.6 {
+		graph element configure: symbol - splus
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol splus
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {splus}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'scross' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.7 {
+		graph element configure: symbol - scross
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol scross
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {scross}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# 'triangle' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.8 {
+		graph element configure: symbol - triangle
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol triangle
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {triangle}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# "" as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.9 {
+		graph element configure: symbol - ""
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol ""
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given 
+	# a valid bitmap name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.10 {
+		graph element configure: symbol - bitmap
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -symbol warning
+		.graph1 element cget Element1 -symbol
+	} -cleanup {
+		destroy Bitmap1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {warning {}}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -symbol command works correctly when given an
+	# invalid symbol name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.19.11 {
+		graph element configure: symbol - invalid symbol name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -symbol invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -trace command works correctly when given 
+	# 'increasing' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.20.1 {
+		graph element configure: trace - increasing
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -trace increasing
+		.graph1 element cget Element1 -trace
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {increasing}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -trace command works correctly when given
+	# 'decreasing' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.20.2 {
+		graph element configure: trace - decreasing
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -trace decreasing
+		.graph1 element cget Element1 -trace
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {decreasing}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -trace command works correctly when given 
+	# 'both' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.20.3 {
+		graph element configure: trace - both
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -trace both
+		.graph1 element cget Element1 -trace
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {both}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -trace command works correctly when given an
+	# invalid direction.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.20.4 {
+		graph element configure: trace - invalid direction
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -trace invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.21.1 {
+		graph element configure: weights - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -weights Vector1
+		.graph1 element cget Element1 -weights
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.21.2 {
+		graph element configure: weights - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -weights invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.21.3 {
+		graph element configure: weights - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -weights {1 2 3 4}
+		.graph1 element cget Element1 -weights
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -weights command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.21.4 {
+		graph element configure: weights - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -weights {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.22.1 {
+		graph element configure: xdata - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -xdata Vector1
+		.graph1 element cget Element1 -xdata
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.22.2 {
+		graph element configure: xdata - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -xdata invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.22.3 {
+		graph element configure: xdata - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -xdata {1 2 3 4}
+		.graph1 element cget Element1 -xdata
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xdata command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.22.4 {
+		graph element configure: xdata - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -xdata {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.23.1 {
+		graph element configure: ydata - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -ydata Vector1
+		.graph1 element cget Element1 -ydata
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.23.2 {
+		graph element configure: ydata - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -ydata invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.23.3 {
+		graph element configure: ydata - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -ydata {1 2 3 4}
+		.graph1 element cget Element1 -ydata
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ydata command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.23.4 {
+		graph element configure: ydata - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -ydata {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.24.1 {
+		graph element configure: x - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -x Vector1
+		.graph1 element cget Element1 -x
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.24.2 {
+		graph element configure: x - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -x invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given a valid
+	# list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.24.3 {
+		graph element configure: x - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -x {1 2 3 4}
+		.graph1 element cget Element1 -x
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -x command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.24.4 {
+		graph element configure: x - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -x {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given a 
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.25.1 {
+		graph element configure: xerror - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -xerror Vector1
+		.graph1 element cget Element1 -xerror
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.25.2 {
+		graph element configure: xerror - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -xerror invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.25.3 {
+		graph element configure: xerror - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -xerror {1 2 3 4}
+		.graph1 element cget Element1 -xerror
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xerror command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.25.4 {
+		graph element configure: xerror - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -xerror {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given a
+	# valid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.26.1 {
+		graph element configure: xhigh - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -xhigh Vector1
+		.graph1 element cget Element1 -xhigh
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.26.2 {
+		graph element configure: xhigh - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -xhigh invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.26.3 {
+		graph element configure: xhigh - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -xhigh {1 2 3 4}
+		.graph1 element cget Element1 -xhigh
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xhigh command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.26.4 {
+		graph element configure: xhigh - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -xhigh {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.27.1 {
+		graph element configure: xlow - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -xlow Vector1
+		.graph1 element cget Element1 -xlow
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.27.2 {
+		graph element configure: xlow - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -xlow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.27.3 {
+		graph element configure: xlow - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -xlow {1 2 3 4}
+		.graph1 element cget Element1 -xlow
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -xlow command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.27.4 {
+		graph element configure: xlow - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -xlow {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.28.1 {
+		graph element configure: y - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -y Vector1
+		.graph1 element cget Element1 -y
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.28.2 {
+		graph element configure: y - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -y invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.28.3 {
+		graph element configure: y - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -y {1 2 3 4}
+		.graph1 element cget Element1 -y
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.28.4 {
+		graph element configure: y - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -y {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.29.1 {
+		graph element configure: yerror - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -yerror Vector1
+		.graph1 element cget Element1 -yerror
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yerror command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.29.2 {
+		graph element configure: yerror - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -yerror invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yerror command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.29.3 {
+		graph element configure: yerror - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -yerror {1 2 3 4}
+		.graph1 element cget Element1 -yerror
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yerror command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.29.4 {
+		graph element configure: yerror - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -yerror {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.30.1 {
+		graph element configure: yhigh - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -yhigh Vector1
+		.graph1 element cget Element1 -yhigh
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yhigh command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.30.2 {
+		graph element configure: yhigh - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -yhigh invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yhigh command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.30.3 {
+		graph element configure: yhigh - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -yhigh {1 2 3 4}
+		.graph1 element cget Element1 -yhigh
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -yhigh command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.30.4 {
+		graph element configure: yhigh - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -yhigh {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -y command works correctly when given a valid
+	# vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.31.1 {
+		graph element configure: ylow - valid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		vector create Vector1
+	} -body {
+		.graph1 element configure Element1 -ylow Vector1
+		.graph1 element cget Element1 -ylow
+	} -cleanup {
+		vector destroy Vector1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {::graph.element::Vector1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ylow command works correctly when given an
+	# invalid vector name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.31.2 {
+		graph element configure: ylow - invalid vector name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -ylow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ylow command works correctly when given a
+	# valid list of numerical values.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.31.3 {
+		graph element configure: ylow - valid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -ylow {1 2 3 4}
+		.graph1 element cget Element1 -ylow
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -ylow command works correctly when given an
+	# invalid list.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.31.4 {
+		graph element configure: ylow - invalid list
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -ylow {1 2 a}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcolor command works correctly when  
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.32.1 {
+		graph element configure: errorbarcolor - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -errorbarcolor black
+		.graph1 element cget Element1 -errorbarcolor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcolor command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.32.2 {
+		graph element configure: errorbarcolor - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -errorbarcolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.33.1 {
+		graph element configure: errorbarwidth - integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -errorbarwidth 2
+		.graph1 element cget Element1 -errorbarwidth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.33.2 {
+		graph element configure: errorbarwidth - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -errorbarwidth 3.5
+		.graph1 element cget Element1 -errorbarwidth
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.33.3 {
+		graph element configure: errorbarwidth - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -errorbarwidth -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarwidth command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.33.4 {
+		graph element configure: errorbarwidth - character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -errorbarwidth a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.34.1 {
+		graph element configure: errorbarcap - integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -errorbarcap 2
+		.graph1 element cget Element1 -errorbarcap
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.34.2 {
+		graph element configure: errorbarcap - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -errorbarcap 3.5
+		.graph1 element cget Element1 -errorbarcap
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.34.3 {
+		graph element configure: errorbarcap - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -errorbarcap -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -errorbarcap command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.34.4 {
+		graph element configure: errorbarcap - character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -errorbarcap a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -maxsymbols command works correctly when 
+	# given an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.35.1 {
+		graph element configure: maxsymbols - integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -maxsymbols 2
+		.graph1 element cget Element1 -maxsymbols
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -maxsymbols command works correctly when 
+	# given a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.35.2 {
+		graph element configure: maxsymbols - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -maxsymbols 3.5
+		.graph1 element cget Element1 -maxsymbols
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -maxsymbols command works correctly when 
+	# given an invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.35.3 {
+		graph element configure: maxsymbols - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -maxsymbols -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -maxsymbols command works correctly when 
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.35.4 {
+		graph element configure: maxsymbols - character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -maxsymbols a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.1 {
+		graph element configure: valueanchor - n
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueanchor n
+		.graph1 element cget Element1 -valueanchor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.2 {
+		graph element configure: valueanchor - ne
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueanchor ne
+		.graph1 element cget Element1 -valueanchor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.3 {
+		graph element configure: valueanchor - e
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueanchor e
+		.graph1 element cget Element1 -valueanchor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.4 {
+		graph element configure: valueanchor - se
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueanchor se
+		.graph1 element cget Element1 -valueanchor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.5 {
+		graph element configure: valueanchor - s
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueanchor s
+		.graph1 element cget Element1 -valueanchor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.6 {
+		graph element configure: valueanchor - sw
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueanchor sw
+		.graph1 element cget Element1 -valueanchor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.7 {
+		graph element configure: valueanchor - w
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueanchor w
+		.graph1 element cget Element1 -valueanchor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.8 {
+		graph element configure: valueanchor - nw
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueanchor nw
+		.graph1 element cget Element1 -valueanchor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.9 {
+		graph element configure: valueanchor - center
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueanchor center
+		.graph1 element cget Element1 -valueanchor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.10 {
+		graph element configure: valueanchor - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -valueanchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueanchor command works correctly when 
+	# given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.36.11 {
+		graph element configure: valueanchor - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -valueanchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuecolor command works correctly when given
+	# a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.37.1 {
+		graph element configure: valuecolor - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valuecolor black
+		.graph1 element cget Element1 -valuecolor
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuecolor command works correctly when given
+	# an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.37.2 {
+		graph element configure: valuecolor - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -valuecolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when 
+	# given an integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.38.1 {
+		graph element configure: valuerotate - integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valuerotate 90
+		.graph1 element cget Element1 -valuerotate
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when 
+	# given a decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.38.2 {
+		graph element configure: valuerotate - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valuerotate 45.5
+		.graph1 element cget Element1 -valuerotate
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when 
+	# given a negative integer angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.38.3 {
+		graph element configure: valuerotate - negative integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valuerotate -90
+		.graph1 element cget Element1 -valuerotate
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {-90.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when
+	# given a negative decimal angle.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.38.4 {
+		graph element configure: valuerotate - negative decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valuerotate -45.5
+		.graph1 element cget Element1 -valuerotate
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {-45.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuerotate command works correctly when
+	# given a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.38.5 {
+		graph element configure: valuerotate - character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -valuerotate invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when  
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.39.1 {
+		graph element configure: valueshadow - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueshadow black
+		.graph1 element cget Element1 -valueshadow
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black 1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.39.2 {
+		graph element configure: valueshadow - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -valueshadow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when  
+	# given a valid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.39.3 {
+		graph element configure: valueshadow - valid color name, valid integer
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueshadow {black 2}
+		.graph1 element cget Element1 -valueshadow
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when 
+	# given an invalid color name and valid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.39.4 {
+		graph element configure: valueshadow - invalid color name, valid integer
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -valueshadow {invalid 1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueshadow command works correctly when 
+	# given a valid color name and invalid integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.39.5 {
+		graph element configure: valueshadow - valid color name, invalid integer
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -valueshadow {black -1}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valueformat command works correctly when an 
+	# input value is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.40.1 {
+		graph element configure: valueformat - input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valueformat formatstring
+		.graph1 element cget Element1 -valueformat
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {formatstring}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.41.1 {
+		graph element configure: valuefont - string
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valuefont Times
+		.graph1 element cget Element1 -valuefont
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.41.2 {
+		graph element configure: valuefont - list with string
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valuefont {Times}
+		.graph1 element cget Element1 -valuefont
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string and positive integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.41.3 {
+		graph element configure: valuefont - list with string and positive integer
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valuefont {Times 10}
+		.graph1 element cget Element1 -valuefont
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Times 10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string and negative integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.41.4 {
+		graph element configure: valuefont - list with string and negative integer
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -valuefont {Times -10}
+		.graph1 element cget Element1 -valuefont
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Times -10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with a string and decimal as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.41.5 {
+		graph element configure: valuefont - list with string and decimal
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -valuefont {Times 10.5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given  
+	# a list with 2 strings as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.41.6 {
+		graph element configure: valuefont - list with 2 strings
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -valuefont {Times Ten}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -valuefont command works correctly when given
+	# a valid font string.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.41.7 {
+	    graph element configure: font - valid font string
+	} -setup {
+	    graph .graph1    
+		.graph1 element create Element1
+	    pack .graph1  
+	} -body {
+	    .graph1 element configure Element1 -valuefont "*-Arial-Bold-R-Normal-*-12-120-*" 
+	    .graph1 element cget Element1 -valuefont
+	} -cleanup {
+		.graph1 element delete Element1
+	    destroy .graph1
+	} -result {*-Arial-Bold-R-Normal-*-12-120-*}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'flat' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.42.1 {
+		graph element configure: labelrelief - flat
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -labelrelief flat
+		.graph1 element cget Element1 -labelrelief
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'groove' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.42.2 {
+		graph element configure: labelrelief - groove
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -labelrelief groove
+		.graph1 element cget Element1 -labelrelief
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'raised' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.42.3 {
+		graph element configure: labelrelief - raised
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -labelrelief raised
+		.graph1 element cget Element1 -labelrelief
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'ridge' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.42.4 {
+		graph element configure: labelrelief - ridge
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -labelrelief ridge
+		.graph1 element cget Element1 -labelrelief
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'solid' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.42.5 {
+		graph element configure: labelrelief - solid
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -labelrelief solid
+		.graph1 element cget Element1 -labelrelief
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given 'sunken' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.42.6 {
+		graph element configure: labelrelief - sunken
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -labelrelief sunken
+		.graph1 element cget Element1 -labelrelief
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.42.7 {
+		graph element configure: labelrelief - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -labelrelief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -labelrelief command works correctly when 
+	# given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.42.8 {
+		graph element configure: labelrelief - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -labelrelief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -areaforeground command works correctly when  
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.43.1 {
+		graph element configure: areaforeground - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -areaforeground black
+		.graph1 element cget Element1 -areaforeground
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -areaforeground command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.43.2 {
+		graph element configure: areaforeground - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -areaforeground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -areabackground command works correctly when  
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.44.1 {
+		graph element configure: areabackground - valid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -areabackground black
+		.graph1 element cget Element1 -areabackground
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -areabackground command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.44.2 {
+		graph element configure: areabackground - invalid color name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -areabackground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when given
+	# 'normal' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.45.1 {
+		graph element configure: state - normal
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -state normal
+		.graph1 element cget Element1 -state
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {normal}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when given
+	# 'active' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.45.2 {
+		graph element configure: state - active
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -state active
+		.graph1 element cget Element1 -state
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {active}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when given
+	# 'disabled' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.45.3 {
+		graph element configure: state - disabled
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -state disabled
+		.graph1 element cget Element1 -state
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {disabled}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when 
+	# given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.45.4 {
+		graph element configure: state - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -state 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -state command works correctly when 
+	# given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.45.5 {
+		graph element configure: state - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -state invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'none' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.46.1 {
+		graph element configure: showvalues - none
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -showvalues none
+		.graph1 element cget Element1 -showvalues
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'x' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.46.2 {
+		graph element configure: showvalues - x
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -showvalues x
+		.graph1 element cget Element1 -showvalues
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'y' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.46.3 {
+		graph element configure: showvalues - y
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -showvalues y
+		.graph1 element cget Element1 -showvalues
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# 'both' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.46.4 {
+		graph element configure: showvalues - both
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -showvalues both
+		.graph1 element cget Element1 -showvalues
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {both}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.46.5 {
+		graph element configure: showvalues - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -showvalues 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showvalues command works correctly when given 
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.46.6 {
+		graph element configure: showvalues - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -showvalues invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'none' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.47.1 {
+		graph element configure: showerrorbars - none
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -showerrorbars none
+		.graph1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {none}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'x' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.47.2 {
+		graph element configure: showerrorbars - x
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -showerrorbars x
+		.graph1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {x}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'y' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.47.3 {
+		graph element configure: showerrorbars - y
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -showerrorbars y
+		.graph1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {y}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# 'both' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.47.4 {
+		graph element configure: showerrorbars - both
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -showerrorbars both
+		.graph1 element cget Element1 -showerrorbars
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {both}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given
+	# invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.47.5 {
+		graph element configure: showerrorbars - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -showerrorbars 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -showerrorbars command works correctly when given 
+	# invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.47.6 {
+		graph element configure: showerrorbars - invalid character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -showerrorbars invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -reduce command works correctly when given an
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.48.1 {
+		graph element configure: reduce - integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -reduce 3
+		.graph1 element cget Element1 -reduce
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {3.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -reduce command works correctly when given a
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.48.2 {
+		graph element configure: reduce - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -reduce 3.5
+		.graph1 element cget Element1 -reduce
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {3.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -reduce command works correctly when given a
+	# negative integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.48.3 {
+		graph element configure: reduce - integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -reduce -3
+		.graph1 element cget Element1 -reduce
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {-3.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -reduce command works correctly when given a
+	# negative decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.48.4 {
+		graph element configure: reduce - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -reduce -3.5
+		.graph1 element cget Element1 -reduce
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {-3.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -reduce command works correctly when given a
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.48.5 {
+		graph element configure: reduce - character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -reduce invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -areatile command works correctly when given
+	# an existing image name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.49.1 {
+		graph element configure: areatile - existing image name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		
+		# the following should set Image1 to the designated name
+		set Image1 [image create photo image.a.49.1 -data {
+						R0lGODlhEAAQAIYAAPwCBHSi1Iyy5Hym3Hym1GSWxJS65Lza/OT2/Pz+/PT+
+						/KTK5DxmlJS67PT6/Pz6/Lzm/BRGhHSe1MTe/OTy/Oz2/Mzm/NTq/FSKtJS2
+						7PT2/MTi/LTa/AQyVOTu/Lze/LTS/JTC9MTq/Mzi/KzK/KTC/KS+/BQuRJzG
+						/KzO/LTO/KS6/Jy2/DRmpAQOHEx+rLTK/Jy+/Iym/Jyq/GSK/GSOrIyCBHSi
+						5HyW/DxuxFxqhPT+dPzqbHRCBAQmPBxenBxSjBxanARGfMRyDOymNOTCnPTG
+						fIRKDMyGNOzGlISu7GSOzIROBPTGjJSy9EyGvIxODNSORMSWTLxyFDx6tBxe
+						lKRiJGQ6BCQWBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAAAA
+						LAAAAAAQABAAAAesgACCAQIDBAWCiYoABgcICQoJCwyLgg0OCQkPmgoQEYsS
+						E5mYFBUWFxiLGZmbGhoWGxMcHYoDChoOFR4fByAcIbSJAyIXIxYgICQkJSbB
+						gicovCkqJSssKy0uiy8bIDAxLDIzNDU2lS031TI4OTo7PD2VPj9AQUIuQ0RF
+						RvGVi0dIkvATpGSJPwBMkDQxwkSCkyc3DkKJImUKlSdVhBxEaOUKACVVNgrC
+						AsBPIAAh/mhDcmVhdGVkIGJ5IEJNUFRvR0lGIFBybyB2ZXJzaW9uIDIuNQ0K
+						qSBEZXZlbENvciAxOTk3LDE5OTguIEFsbCByaWdodHMgcmVzZXJ2ZWQuDQpo
+						dHRwOi8vd3d3LmRldmVsY29yLmNvbQA7
+		    		}]
+	} -body {
+		.graph1 element configure Element1 -areatile $Image1
+		.graph1 element cget Element1 -areatile
+	} -cleanup {
+		image delete $Image1
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {image.a.49.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -areatile command works correctly when given
+	# an invalid image name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.49.2 {
+		graph element configure: areatile - invalid image name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -areatile invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -areapattern command works correctly when 
+	# given an existing bitmap name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.50.1 {
+		graph element configure: areapattern - existing bitmap name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -areapattern warning
+		.graph1 element cget Element1 -areapattern
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {warning}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -areapattern command works correctly when 
+	# given an invalid bitmap name.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.50.2 {
+		graph element configure: areapattern - invalid bitmap name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -areapattern invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pixels command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.51.1 {
+		graph element configure: pixels - integer input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -pixel 2
+		.graph1 element cget Element1 -pixel
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pixels command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.51.2 {
+		graph element configure: pixels - decimal input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		.graph1 element configure Element1 -pixels 3.5
+		.graph1 element cget Element1 -pixels
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pixels command works correctly when given an
+	# invalid numerical pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.51.3 {
+		graph element configure: pixels - invalid numerical input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -pixels -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element configure -pixels command works correctly when given a 
+	# character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.element.configure.A.51.4 {
+		graph element configure: pixels - character input
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+	} -body {
+		if {[catch {.graph1 element configure Element1 -pixels a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {0}
+
+	cleanupTests
+}

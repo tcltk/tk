@@ -1,0 +1,483 @@
+# RBC.stripchart.marker.configure.window.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the window marker configure
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.marker {	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window
+	# markers when given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.1 {
+		stripchart marker configure window: anchor - n
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -anchor n
+		.stripchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.2 {
+		stripchart marker configure window: anchor - ne
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -anchor ne
+		.stripchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.3 {
+		stripchart marker configure window: anchor - e
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -anchor e
+		.stripchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window
+	# markers when given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.4 {
+		stripchart marker configure window: anchor - se
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -anchor se
+		.stripchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 's' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.5 {
+		stripchart marker configure window: anchor - s
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -anchor s
+		.stripchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.6 {
+		stripchart marker configure window: anchor - sw
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -anchor sw
+		.stripchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.7 {
+		stripchart marker configure window: anchor - w
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -anchor w
+		.stripchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.8 {
+		stripchart marker configure window: anchor - nw
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -anchor nw
+		.stripchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.9 {
+		stripchart marker configure window: anchor - center
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -anchor center
+		.stripchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.10 {
+		stripchart marker configure window: anchor - invalid numerical input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -anchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.1.11 {
+		stripchart marker configure window: anchor - invalid character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -anchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.2.1 {
+		stripchart marker configure: height - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -height 2
+		.stripchart1 marker cget Marker1 -height
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.2.2 {
+		stripchart marker configure: height - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -height -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.2.3 {
+		stripchart marker configure: height - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -height 3.5
+		.stripchart1 marker cget Marker1 -height
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.2.4 {
+		stripchart marker configure: height - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -height -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.2.5 {
+		stripchart marker configure: height - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -height a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.2.6 {
+		stripchart marker configure: height - zero
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -height 0}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.3.1 {
+		stripchart marker configure: width - integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -width 2
+		.stripchart1 marker cget Marker1 -width
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.3.2 {
+		stripchart marker configure: width - invalid integer input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -width -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.3.3 {
+		stripchart marker configure: width - decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -width 3.5
+		.stripchart1 marker cget Marker1 -width
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.3.4 {
+		stripchart marker configure: width - invalid decimal input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -width -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.3.5 {
+		stripchart marker configure: width - character input
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -width a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.3.6 {
+		stripchart marker configure: width - zero
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -width 0}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -window command works correctly when given a
+	# valid button name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.4.1 {
+	    stripchart marker configure: window - valid button name
+	} -setup {
+		stripchart .stripchart1
+		button .stripchart1.button1 -text "foo"
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		.stripchart1 marker configure Marker1 -window .stripchart1.button1
+		.stripchart1 marker cget Marker1 -window
+	} -cleanup {
+	    .stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {.stripchart1.button1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -window command works correctly when given a
+	# non-existent button name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.marker.configure.window.A.4.2 {
+	    stripchart marker configure: window - non-existent button name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.stripchart1 marker configure Marker1 -window .stripchart1.button1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    .stripchart1 marker delete Marker1
+		destroy .stripchart1
+	} -result {0}
+	
+	cleanupTests
+}

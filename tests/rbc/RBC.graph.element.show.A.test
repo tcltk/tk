@@ -1,0 +1,77 @@
+# RBC.graph.element.show.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element show 
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element show command works correctly when given a single element
+	# name.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.show.A.1.1 {
+		element show: single element name
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 element create Element2
+	} -body {
+		.graph1 element show Element1
+		.graph1 element show
+	} -cleanup {
+		.graph1 element delete Element2
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Element1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element show command works correctly when given multiple element
+	# names.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.show.A.1.2 {
+		element show: multiple element names
+	} -setup {
+		graph .graph1
+		.graph1 element create Element1
+		.graph1 element create Element2
+	} -body {
+		.graph1 element show {Element1 Element2}
+		.graph1 element show
+	} -cleanup {
+		.graph1 element delete Element2
+		.graph1 element delete Element1
+		destroy .graph1
+	} -result {Element1 Element2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element show command works correctly when given a non-existent 
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.element.show.A.1.3 {
+		element show: non-existent element name
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 element show invalid
+		.graph1 element show
+	} -cleanup {
+		destroy .graph1
+	} -result {}
+	
+	cleanupTests
+}

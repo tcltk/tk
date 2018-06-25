@@ -1,0 +1,483 @@
+# RBC.barchart.marker.configure.window.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the window marker configure
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.marker {	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window
+	# markers when given 'n' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.1 {
+		barchart marker configure window: anchor - n
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor n
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {n}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'ne' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.2 {
+		barchart marker configure window: anchor - ne
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor ne
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {ne}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'e' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.3 {
+		barchart marker configure window: anchor - e
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor e
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {e}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window
+	# markers when given 'se' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.4 {
+		barchart marker configure window: anchor - se
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor se
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {se}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 's' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.5 {
+		barchart marker configure window: anchor - s
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor s
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {s}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'sw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.6 {
+		barchart marker configure window: anchor - sw
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor sw
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {sw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'w' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.7 {
+		barchart marker configure window: anchor - w
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor w
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {w}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'nw' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.8 {
+		barchart marker configure window: anchor - nw
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor nw
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {nw}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given 'center' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.9 {
+		barchart marker configure window: anchor - center
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -anchor center
+		.barchart1 marker cget Marker1 -anchor
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given invalid numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.10 {
+		barchart marker configure window: anchor - invalid numerical input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -anchor 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -anchor command works correctly for window 
+	# markers when given invalid character input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.1.11 {
+		barchart marker configure window: anchor - invalid character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create text -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -anchor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.2.1 {
+		barchart marker configure: height - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -height 2
+		.barchart1 marker cget Marker1 -height
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.2.2 {
+		barchart marker configure: height - invalid integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -height -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.2.3 {
+		barchart marker configure: height - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -height 3.5
+		.barchart1 marker cget Marker1 -height
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.2.4 {
+		barchart marker configure: height - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -height -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.2.5 {
+		barchart marker configure: height - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -height a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -height command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.2.6 {
+		barchart marker configure: height - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -height 0}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# an integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.3.1 {
+		barchart marker configure: width - integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -width 2
+		.barchart1 marker cget Marker1 -width
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# an invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.3.2 {
+		barchart marker configure: width - invalid integer input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -width -1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# a decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.3.3 {
+		barchart marker configure: width - decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -width 3.5
+		.barchart1 marker cget Marker1 -width
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# an invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.3.4 {
+		barchart marker configure: width - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -width -1.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given
+	# a character as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.3.5 {
+		barchart marker configure: width - character input
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -width a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -width command works correctly when given 0
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.3.6 {
+		barchart marker configure: width - zero
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -width 0}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -window command works correctly when given a
+	# valid button name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.4.1 {
+	    barchart marker configure: window - valid button name
+	} -setup {
+		barchart .barchart1
+		button .barchart1.button1 -text "foo"
+		.barchart1 marker create window -name Marker1
+	} -body {
+		.barchart1 marker configure Marker1 -window .barchart1.button1
+		.barchart1 marker cget Marker1 -window
+	} -cleanup {
+	    .barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {.barchart1.button1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the marker configure -window command works correctly when given a
+	# non-existent button name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.marker.configure.window.A.4.2 {
+	    barchart marker configure: window - non-existent button name
+	} -setup {
+		barchart .barchart1
+		.barchart1 marker create window -name Marker1
+	} -body {
+		if {[catch {.barchart1 marker configure Marker1 -window .barchart1.button1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+	    .barchart1 marker delete Marker1
+		destroy .barchart1
+	} -result {0}
+	
+	cleanupTests
+}

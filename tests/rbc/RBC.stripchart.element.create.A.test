@@ -1,0 +1,60 @@
+# RBC.stripchart.element.create.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the element create 
+# function of the stripchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide stripchart.element
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval stripchart.element {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element create command works correctly when given a unique 
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.create.A.1.1 {
+		stripchart element: create - unique name
+	} -setup {
+		stripchart .stripchart1
+	} -body {
+		.stripchart1 element create Element1
+		.stripchart1 element names
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {Element1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the element create command works correctly when given an existing 
+	# element name.
+	# ------------------------------------------------------------------------------------
+	test RBC.stripchart.element.create.A.1.2 {
+		stripchart element: create - existing name
+	} -setup {
+		stripchart .stripchart1
+		.stripchart1 element create Element1
+	} -body {
+		if {[catch {.stripchart1 element create Element1}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		.stripchart1 element delete Element1
+		destroy .stripchart1
+	} -result {0}
+
+	cleanupTests
+}

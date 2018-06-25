@@ -1,0 +1,86 @@
+# RBC.vector.names.A.test --
+#
+###Abstract
+# This file tests the names function of the vector rbc component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.names
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval vector.names {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector names command works correctly when no pattern is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.names.A.1.1 {
+		vector names: no pattern
+	} -setup {
+		vector create foo
+		vector create goo
+	} -body {
+		vector names
+	} -cleanup {
+		vector destroy foo
+		vector destroy goo
+	} -result {::vector.names::foo ::vector.names::goo}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector names command works correctly when an exact pattern is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.names.A.1.2 {
+		vector names: exact pattern
+	} -setup {
+		vector create foo
+		vector create goo
+	} -body {
+		vector names ::vector.names::goo
+	} -cleanup {
+		vector destroy foo
+		vector destroy goo
+	} -result {::vector.names::goo}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector names command works correctly when a wildcard pattern is 
+	# given.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.names.A.1.3 {
+		vector names: wildcard pattern
+	} -setup {
+		vector create foo
+		vector create food
+	} -body {
+		vector names *f*
+	} -cleanup {
+		vector destroy foo
+		vector destroy food
+	} -result {::vector.names::food ::vector.names::foo}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector names command works correctly when an incorrect pattern 
+	# is given.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.names.A.1.4 {
+		vector names: incorrect pattern
+	} -setup {
+		vector create foo
+		vector create food
+	} -body {
+		vector names foo
+	} -cleanup {
+		vector destroy foo
+		vector destroy food
+	} -result {}
+	
+	cleanupTests
+}

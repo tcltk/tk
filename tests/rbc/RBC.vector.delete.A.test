@@ -1,0 +1,94 @@
+# RBC.vector.delete.A.test --
+#
+###Abstract
+# This file tests the delete function of the vector rbc component.
+# Delete is an instance function of vector.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide vector.delete
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+#namespace eval vector.delete {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector delete command works correctly when given a single vector 
+	# index.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.delete.A.1.1 {
+		vector delete: single index
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		foo delete 2
+		expr {$foo(:)}
+	} -cleanup {
+		vector destroy foo
+	} -result {1.0 2.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector delete command works correctly when given multiple vector 
+	# indices.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.delete.A.1.2 {
+		vector delete: multiple indices
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		foo delete 0 2
+		expr {$foo(:)}
+	} -cleanup {
+		vector destroy foo
+	} -result {2.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector delete command works correctly when given an invalid 
+	# vector index.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.delete.A.1.3 {
+		vector delete: invalid index
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		if {[catch {foo delete 4}] || [foo length] != 4} {
+			expr {$foo(:)}
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {1.0 2.0 3.0 4.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the vector delete command works correctly when given both a valid 
+	# and an invalid vector index.
+	# ------------------------------------------------------------------------------------
+	test RBC.vector.delete.A.1.4 {
+		vector delete: valid and invalid indices
+	} -setup {
+		vector create foo
+		foo set {1.0 2.0 3.0 4.0}
+	} -body {
+		if {[catch {foo delete 0 4}] || [foo length] != 4 || [lsearch $foo(:) 1.0] == -1} {
+			expr {$foo(:)}
+		} else {
+			return 1
+		}
+	} -cleanup {
+		vector destroy foo
+	} -result {1.0 2.0 3.0 4.0}
+	
+	cleanupTests
+#}

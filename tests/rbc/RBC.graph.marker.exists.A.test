@@ -1,0 +1,52 @@
+# RBC.graph.marker.exists.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the marker exists
+# function of the graph BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide graph.marker
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval graph.marker {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a marker that doesn't exist is recognized by exists
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.exists.A.1.1 {
+	    Test exists on non-existant marker
+	} -setup {
+		graph .graph1
+	} -body {
+		.graph1 marker exists marker1
+	} -cleanup {
+	    destroy .graph1 
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure that a marker that an existing marker is recognized by exists
+	# ------------------------------------------------------------------------------------
+	test RBC.graph.marker.exists.A.1.2 {
+	    Test exists on existing marker
+	} -setup {
+		graph .graph1
+		.graph1 marker create text -name marker1
+	} -body {
+		.graph1 marker exists marker1
+	} -cleanup {
+	    .graph1 marker delete marker1
+		destroy .graph1
+	} -result {1}
+	
+	cleanupTests
+}

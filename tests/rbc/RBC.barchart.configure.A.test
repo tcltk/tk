@@ -1,0 +1,3201 @@
+# RBC.barchart.configure.A.test --
+#
+###Abstract
+# This file contains the automatic tests that test the configure 
+# function of the barchart BLT component.
+#
+###Copyright
+# See the file "license.terms" for information on usage and
+# redistribution of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+#
+###Revision String
+# SVN: $Id$
+
+###Package Definition
+package provide barchart.configure
+
+package require rbc
+namespace import rbc::*
+
+package require tcltest
+namespace import tcltest::*
+namespace eval barchart.configure {
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.1.1 {
+		barchart configure: aspect - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -aspect 2
+		.barchart1 cget -aspect
+	} -cleanup {
+		destroy .barchart1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.1.2 {
+		barchart configure: aspect - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -aspect 4.3
+		.barchart1 cget -aspect
+	} -cleanup {
+		destroy .barchart1
+	} -result {4.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.1.3 {
+		barchart configure: aspect - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -aspect -2
+		.barchart1 cget -aspect
+	} -cleanup {
+		destroy .barchart1
+	} -result {-2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.1.4 {
+		barchart configure: aspect - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -aspect -4.3
+		.barchart1 cget -aspect
+	} -cleanup {
+		destroy .barchart1
+	} -result {-4.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -aspect command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.1.5 {
+		barchart configure: aspect - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -aspect invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -background command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.2.1 {
+		barchart configure: background - valid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -background black
+		.barchart1 cget -background
+	} -cleanup {
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -background command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.2.2 {
+		barchart configure: background - invalid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -background invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -background command works correctly when given
+	# 'SystemButtonFace' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.2.3 {
+		barchart configure: background - SystemButtonFace
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -background SystemButtonFace
+		.barchart1 cget -background
+	} -cleanup {
+		destroy .barchart1
+	} -constraints {win} -result {SystemButtonFace}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'normal'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.3.1 {
+		barchart configure: barmode - normal
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barmode normal
+		.barchart1 cget -barmode
+	} -cleanup {
+		destroy .barchart1
+	} -result {infront}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'infront'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.3.2 {
+		barchart configure: barmode - infront
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barmode infront
+		.barchart1 cget -barmode
+	} -cleanup {
+		destroy .barchart1
+	} -result {infront}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'stacked'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.3.3 {
+		barchart configure: barmode - stacked
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barmode stacked
+		.barchart1 cget -barmode
+	} -cleanup {
+		destroy .barchart1
+	} -result {stacked}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'overlap'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.3.4 {
+		barchart configure: barmode - overlap
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barmode overlap
+		.barchart1 cget -barmode
+	} -cleanup {
+		destroy .barchart1
+	} -result {overlap}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given 'aligned'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.3.5 {
+		barchart configure: barmode - aligned
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barmode aligned
+		.barchart1 cget -barmode
+	} -cleanup {
+		destroy .barchart1
+	} -result {aligned}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barmode command works correctly when given invalid
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.3.6 {
+		barchart configure: barmode - invalid input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -barmode invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.4.1 {
+		barchart configure: barwidth - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barwidth 2
+		.barchart1 cget -barwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.4.2 {
+		barchart configure: barwidth - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barwidth -2
+		.barchart1 cget -barwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {0.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a 
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.4.3 {
+		barchart configure: barwidth - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barwidth 3.5
+		.barchart1 cget -barwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {3.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given a
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.4.4 {
+		barchart configure: barwidth - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barwidth -2.5
+		.barchart1 cget -barwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {0.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.4.5 {
+		barchart configure: barwidth - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -barwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -barwidth command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.4.6 {
+		barchart configure: barwidth - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -barwidth 0
+		.barchart1 cget -barwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {0.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.5.1 {
+		barchart configure: baseline - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -baseline 2
+		.barchart1 cget -baseline
+	} -cleanup {
+		destroy .barchart1
+	} -result {2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.5.2 {
+		barchart configure: baseline - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -baseline -2
+		.barchart1 cget -baseline
+	} -cleanup {
+		destroy .barchart1
+	} -result {-2.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a 
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.5.3 {
+		barchart configure: baseline - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -baseline 3.5
+		.barchart1 cget -baseline
+	} -cleanup {
+		destroy .barchart1
+	} -result {3.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given a
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.5.4 {
+		barchart configure: baseline - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -baseline -2.5
+		.barchart1 cget -baseline
+	} -cleanup {
+		destroy .barchart1
+	} -result {-2.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.5.5 {
+		barchart configure: baseline - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -baseline invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -baseline command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.5.6 {
+		barchart configure: baseline - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -baseline 0
+		.barchart1 cget -baseline
+	} -cleanup {
+		destroy .barchart1
+	} -result {0.0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.6.1 {
+		barchart configure: borderwidth - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -borderwidth 2
+		.barchart1 cget -borderwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.6.2 {
+		barchart configure: borderwidth - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -borderwidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.6.3 {
+		barchart configure: borderwidth - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -borderwidth 3.5
+		.barchart1 cget -borderwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.6.4 {
+		barchart configure: borderwidth - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -borderwidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.6.5 {
+		barchart configure: borderwidth - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -borderwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -borderwidth command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.6.6 {
+		barchart configure: borderwidth - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -borderwidth 0
+		.barchart1 cget -borderwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.7.1 {
+		barchart configure: bottommargin - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bottommargin 2
+		.barchart1 cget -bottommargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.7.2 {
+		barchart configure: bottommargin - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -bottommargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.7.3 {
+		barchart configure: bottommargin - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bottommargin 3.5
+		.barchart1 cget -bottommargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.7.4 {
+		barchart configure: bottommargin - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -bottommargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.7.5 {
+		barchart configure: bottommargin - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -bottommargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.7.6 {
+		barchart configure: bottommargin - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bottommargin 0
+		.barchart1 cget -bottommargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottomvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.8.1 {
+		barchart configure: bottomvariable - single variable name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bottomvariable var1
+		.barchart1 cget -bottomvariable
+	} -cleanup {
+		destroy .barchart1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottomvariable command works correctly when given a 
+	# list of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.8.2 {
+		barchart configure: bottomvariable - list of variable names
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bottomvariable {var1 var2 var3}
+		.barchart1 cget -bottomvariable
+	} -cleanup {
+		destroy .barchart1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.9.1 {
+		barchart configure: bufferelements - 1
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bufferelements 1
+		.barchart1 cget -bufferelements
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.9.2 {
+		barchart configure: bufferelements - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bufferelements 0
+		.barchart1 cget -bufferelements
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 
+	# true.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.9.3 {
+		barchart configure: bufferelements - true
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bufferelements true
+		.barchart1 cget -bufferelements
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 
+	# false.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.9.4 {
+		barchart configure: bufferelements - false
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bufferelements false
+		.barchart1 cget -bufferelements
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given 
+	# yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.9.5 {
+		barchart configure: bufferelements - yes
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bufferelements yes
+		.barchart1 cget -bufferelements
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.9.6 {
+		barchart configure: bufferelements - no
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -bufferelements no
+		.barchart1 cget -bufferelements
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferelements command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.9.7 {
+		barchart configure: bufferelements - invalid input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -bufferelements invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bufferbarchart command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.10.1 {
+		barchart configure: buffergraph - 1
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -buffergraph 1
+		.barchart1 cget -buffergraph
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.10.2 {
+		barchart configure: buffergraph - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -buffergraph 0
+		.barchart1 cget -buffergraph
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.10.3 {
+		barchart configure: buffergraph - true
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -buffergraph true
+		.barchart1 cget -buffergraph
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.10.4 {
+		barchart configure: buffergraph - false
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -buffergraph false
+		.barchart1 cget -buffergraph
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.10.5 {
+		barchart configure: buffergraph - yes
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -buffergraph yes
+		.barchart1 cget -buffergraph
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.10.6 {
+		barchart configure: buffergraph - no
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -buffergraph no
+		.barchart1 cget -buffergraph
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -buffergraph command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.10.7 {
+		barchart configure: buffergraph - invalid input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -buffergraph invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'crosshair'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.11.1 {
+		barchart configure: cursor - crosshair
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -cursor crosshair
+		.barchart1 cget -cursor
+	} -cleanup {
+		destroy .barchart1
+	} -result {crosshair}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'circle'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.11.2 {
+		barchart configure: cursor - circle
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -cursor circle
+		.barchart1 cget -cursor
+	} -cleanup {
+		destroy .barchart1
+	} -result {circle}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'cross' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.11.3 {
+		barchart configure: cursor - cross
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -cursor cross
+		.barchart1 cget -cursor
+	} -cleanup {
+		destroy .barchart1
+	} -result {cross}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given 'plus' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.11.4 {
+		barchart configure: cursor - plus
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -cursor plus
+		.barchart1 cget -cursor
+	} -cleanup {
+		destroy .barchart1
+	} -result {plus}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -cursor command works correctly when given invalid
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.11.5 {
+		barchart configure: cursor - invalid input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -cursor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a single
+	# numerical value as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.12.1 {
+		barchart configure: data - single numerical value
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -data 1.3
+		.barchart1 cget -data
+	} -cleanup {
+		destroy .barchart1
+	} -result {1.3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a list of
+	# numerical values as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.12.2 {
+		barchart configure: data - list of numerical values
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -data {1.3 3 -4.5}
+		.barchart1 cget -data
+	} -cleanup {
+		destroy .barchart1
+	} -result {1.3 3 -4.5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a single
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.12.3 {
+		barchart configure: data - single string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -data input
+		.barchart1 cget -data
+	} -cleanup {
+		destroy .barchart1
+	} -result {input}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a list of
+	# string inputs.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.12.4 {
+		barchart configure: data - list of string inputs
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -data {input1 input2 input3}
+		.barchart1 cget -data
+	} -cleanup {
+		destroy .barchart1
+	} -result {input1 input2 input3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -data command works correctly when given a list of
+	# mixed string and numerical inputs.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.12.5 {
+		barchart configure: data - list of string and numerical inputs
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -data {input 1.2 -4 7}
+		.barchart1 cget -data
+	} -cleanup {
+		destroy .barchart1
+	} -result {input 1.2 -4 7}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -datacommand command works correctly when given a 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.13.1 {
+		barchart configure: datacommand - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -datacommand {puts foo}
+		.barchart1 cget -datacommand
+	} -cleanup {
+		destroy .barchart1
+	} -result {puts foo}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -datacommand command works correctly when given a 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.13.2 {
+		barchart configure: datacommand - numerical input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -datacommand {15}
+		.barchart1 cget -datacommand
+	} -cleanup {
+		destroy .barchart1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a string as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.14.1 {
+		barchart configure: font - name string
+	} -setup {
+		barchart .barchart1 
+	} -body {
+		.barchart1 configure -font Times
+		.barchart1 cget -font
+	} -cleanup {
+		destroy .barchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a string as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.14.2 {
+		barchart configure: font - font string
+	} -setup {
+		barchart .barchart1 
+	} -body {
+		.barchart1 configure -font *-Helvetica-*-R-Normal-*-10-120-*
+		.barchart1 cget -font
+	} -cleanup {
+		destroy .barchart1
+	} -result {*-Helvetica-*-R-Normal-*-10-120-*}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.14.3 {
+		barchart configure: font - list with string
+	} -setup {
+		barchart .barchart1 
+	} -body {
+		.barchart1 configure -font {Times}
+		.barchart1 cget -font
+	} -cleanup {
+		destroy .barchart1
+	} -result {Times}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string and positive integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.14.4 {
+		barchart configure: font - list with string and positive integer
+	} -setup {
+		barchart .barchart1 
+	} -body {
+		.barchart1 configure -font {Times 10}
+		.barchart1 cget -font
+	} -cleanup {
+		destroy .barchart1
+	} -result {Times 10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string and negative integer as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.14.5 {
+		barchart configure: font - list with string and negative integer
+	} -setup {
+		barchart .barchart1 
+	} -body {
+		.barchart1 configure -font {Times -10}
+		.barchart1 cget -font
+	} -cleanup {
+		destroy .barchart1
+	} -result {Times -10}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with a 
+	# string and decimal as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.14.6 {
+		barchart configure: font - list with string and decimal
+	} -setup {
+		barchart .barchart1 
+	} -body {
+		if {[catch {.barchart1 configure -font {Times 10.5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -font command works correctly when given a list with 2 
+	# strings as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.14.7 {
+		barchart configure: font - list with 2 strings
+	} -setup {
+		barchart .barchart1 
+	} -body {
+		if {[catch {.barchart1 configure -font {Times Ten}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -foreground command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.15.1 {
+		barchart configure: foreground - valid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -foreground black
+		.barchart1 cget -foreground
+	} -cleanup {
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -foreground command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.15.2 {
+		barchart configure: foreground - invalid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -foreground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -foreground command works correctly when given
+	# 'SystemButtonText' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.15.3 {
+		barchart configure: foreground - SystemButtonText
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -foreground SystemButtonText
+		.barchart1 cget -foreground
+	} -cleanup {
+		destroy .barchart1
+	} -constraints {win} -result {SystemButtonText}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.16.1 {
+		barchart configure: halo - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -halo 2
+		.barchart1 cget -halo
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.16.2 {
+		barchart configure: halo - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -halo -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.16.3 {
+		barchart configure: halo - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -halo 3.5
+		.barchart1 cget -halo
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.16.4 {
+		barchart configure: halo - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -halo -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a positive
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.16.5 {
+		barchart configure: halo - positive inch input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -halo 3i
+		expr {[.barchart1 cget -halo] - [winfo pixels .barchart1 3i]}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given a negative
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.16.6 {
+		barchart configure: halo - negative inch input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -halo -2i}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.16.7 {
+		barchart configure: halo - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -halo invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -halo command works correctly when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.16.8 {
+		barchart configure: halo - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -halo 0
+		.barchart1 cget -halo
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.17.1 {
+		barchart configure: height - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -height 2
+		.barchart1 cget -height
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.17.2 {
+		barchart configure: height - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -height -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.17.3 {
+		barchart configure: height - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -height 3.5
+		.barchart1 cget -height
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.17.4 {
+		barchart configure: height - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -height -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a positive
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.17.5 {
+		barchart configure: height - positive inch input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -height 3i
+		expr {[.barchart1 cget -height] - [winfo pixels .barchart1 3i]}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given a negative
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.17.6 {
+		barchart configure: height - negative inch input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -height -2i}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.17.7 {
+		barchart configure: height - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -height invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -height command works correctly when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.17.8 {
+		barchart configure: height - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -height 0
+		.barchart1 cget -height
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightbackground command works correctly when 
+	# given a valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.18.1 {
+		barchart configure: highlightbackground - valid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -highlightbackground black
+		.barchart1 cget -highlightbackground
+	} -cleanup {
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightbackground command works correctly when 
+	# given an invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.18.2 {
+		barchart configure: highlightbackground - invalid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -highlightbackground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightbackground command works correctly when 
+	# given 'SystemButtonFace' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.18.3 {
+		barchart configure: highlightbackground - SystemButtonFace
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -highlightbackground SystemButtonFace
+		.barchart1 cget -highlightbackground
+	} -cleanup {
+		destroy .barchart1
+	} -constraints {win} -result {SystemButtonFace}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightcolor command works correctly when given a
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.19.1 {
+		barchart configure: highlightcolor - valid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -highlightcolor black
+		.barchart1 cget -highlightcolor
+	} -cleanup {
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightcolor command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.19.2 {
+		barchart configure: highlightcolor - invalid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -highlightcolor invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.20.1 {
+		barchart configure: highlightthickness - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -highlightthickness 2
+		.barchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.20.2 {
+		barchart configure: highlightthickness - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -highlightthickness -2
+		.barchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .barchart1
+	} -result {-2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.20.3 {
+		barchart configure: highlightthickness - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -highlightthickness 3.5
+		.barchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given
+	# a negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.20.4 {
+		barchart configure: highlightthickness - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -highlightthickness -2.5
+		.barchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .barchart1
+	} -result {-3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.20.5 {
+		barchart configure: highlightthickness - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -highlightthickness invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -highlightthickness command works correctly when given 
+	# 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.20.6 {
+		barchart configure: highlightthickness - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -highlightthickness 0
+		.barchart1 cget -highlightthickness
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given 1.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.21.1 {
+		barchart configure: invertxy - 1
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -invertxy 1
+		.barchart1 cget -invertxy
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given 0.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.21.2 {
+		barchart configure: invertxy - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -invertxy 0
+		.barchart1 cget -invertxy
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given true.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.21.3 {
+		barchart configure: invertxy - true
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -invertxy true
+		.barchart1 cget -invertxy
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given false.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.21.4 {
+		barchart configure: invertxy - false
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -invertxy false
+		.barchart1 cget -invertxy
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given yes.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.21.5 {
+		barchart configure: invertxy - yes
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -invertxy yes
+		.barchart1 cget -invertxy
+	} -cleanup {
+		destroy .barchart1
+	} -result {1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given no.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.21.6 {
+		barchart configure: invertxy - no
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -invertxy no
+		.barchart1 cget -invertxy
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -invertxy command works correctly when given an 
+	# invalid input value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.21.7 {
+		barchart configure: invertxy - invalid input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -invertxy invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -justify command works correctly when given 'left'.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.22.1 {
+		barchart configure: justify - left
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -justify left
+		.barchart1 cget -justify
+	} -cleanup {
+		destroy .barchart1
+	} -result {left}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -justify command works correctly when given 'center'.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.22.2 {
+		barchart configure: justify - center
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -justify center
+		.barchart1 cget -justify
+	} -cleanup {
+		destroy .barchart1
+	} -result {center}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -justify command works correctly when given 'right'.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.22.3 {
+		barchart configure: justify - right
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -justify right
+		.barchart1 cget -justify
+	} -cleanup {
+		destroy .barchart1
+	} -result {right}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -bottommargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.23.1 {
+		barchart configure: leftmargin - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -leftmargin 2
+		.barchart1 cget -leftmargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.23.2 {
+		barchart configure: leftmargin - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -leftmargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.23.3 {
+		barchart configure: leftmargin - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -leftmargin 3.5
+		.barchart1 cget -leftmargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.23.4 {
+		barchart configure: leftmargin - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -leftmargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.23.5 {
+		barchart configure: leftmargin - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -leftmargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftmargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.23.6 {
+		barchart configure: leftmargin - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -leftmargin 0
+		.barchart1 cget -leftmargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.24.1 {
+		barchart configure: leftvariable - single variable name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -leftvariable var1
+		.barchart1 cget -leftvariable
+	} -cleanup {
+		destroy .barchart1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -leftvariable command works correctly when given a 
+	# list of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.24.2 {
+		barchart configure: leftvariable - list of variable names
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -leftvariable {var1 var2 var3}
+		.barchart1 cget -leftvariable
+	} -cleanup {
+		destroy .barchart1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotbackground command works correctly when given a 
+	# valid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.25.1 {
+		barchart configure: plotbackground - valid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotbackground black
+		.barchart1 cget -plotbackground
+	} -cleanup {
+		destroy .barchart1
+	} -result {black}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotbackground command works correctly when given an
+	# invalid color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.25.2 {
+		barchart configure: plotbackground - invalid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotbackground invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.26.1 {
+		barchart configure: plotborderwidth - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotborderwidth 2
+		.barchart1 cget -plotborderwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.26.2 {
+		barchart configure: plotborderwidth - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotborderwidth -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a 
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.26.3 {
+		barchart configure: plotborderwidth - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotborderwidth 3.5
+		.barchart1 cget -plotborderwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given a
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.26.4 {
+		barchart configure: plotborderwidth - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotborderwidth -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.26.5 {
+		barchart configure: plotborderwidth - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotborderwidth invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotborderwidth command works correctly when given 0 
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.26.6 {
+		barchart configure: plotborderwidth - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotborderwidth 0
+		.barchart1 cget -plotborderwidth
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.27.1 {
+		barchart configure: plotpadx - integer input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		.barchart1 configure -plotpadx 2
+		.barchart1 cget -plotpadx
+	} -cleanup {
+		destroy .barchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.27.2 {
+		barchart configure: plotpadx - invalid integer input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotpadx -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a
+	# decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.27.3 {
+		barchart configure: plotpadx - decimal input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		.barchart1 configure -plotpadx 3.5
+		.barchart1 cget -plotpadx
+	} -cleanup {
+		destroy .barchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.27.4 {
+		barchart configure: plotpadx - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotpadx -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a valid
+	# list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.27.5 {
+	    barchart legend: configure: plotpadx - valid list of values
+	} -setup {
+	    barchart .barchart1     
+	    pack .barchart1  
+	} -body {
+	    .barchart1 configure -plotpadx {1 2.5}
+	    .barchart1 cget -plotpadx
+	} -cleanup {
+	    destroy .barchart1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a string
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.27.6 {
+		barchart configure: plotpadx - string input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotpadx a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.27.7 {
+	    barchart legend: configure: plotpadx - invalid list of values
+	} -setup {
+	    barchart .barchart1     
+	    pack .barchart1  
+	} -body {
+	    if {[catch {.barchart1 configure -plotpadx {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given a list of
+	# input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.27.8 {
+		barchart configure: plotpadx - invalid list length
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotpadx {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpadx command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.27.9 {
+	    barchart configure: plotpadx - 0
+	} -setup {
+	    barchart .barchart1     
+	    pack .barchart1  
+	} -body {
+	    .barchart1 configure -plotpadx 0
+	    .barchart1 cget -plotpadx
+	} -cleanup {
+	    destroy .barchart1
+	} -result {0 0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.28.1 {
+		barchart configure: plotpady - integer input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		.barchart1 configure -plotpady 2
+		.barchart1 cget -plotpady
+	} -cleanup {
+		destroy .barchart1
+	} -result {2 2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# invalid integer pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.28.2 {
+		barchart configure: plotpady - invalid integer input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotpady -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a decimal
+	# pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.28.3 {
+		barchart configure: plotpady - decimal input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		.barchart1 configure -plotpady 3.5
+		.barchart1 cget -plotpady
+	} -cleanup {
+		destroy .barchart1
+	} -result {4 4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# invalid decimal pixel value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.28.4 {
+		barchart configure: plotpady - invalid decimal input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotpady -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a valid
+	# list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.28.5 {
+	    barchart legend: configure: plotpady - valid list of values
+	} -setup {
+	    barchart .barchart1     
+	    pack .barchart1  
+	} -body {
+	    .barchart1 configure -plotpady {1 2.5}
+	    .barchart1 cget -plotpady
+	} -cleanup {
+	    destroy .barchart1
+	} -result {1 3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a string
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.28.6 {
+		barchart configure: plotpady - string input
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotpady a}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given an
+	# invalid list of numerical pixel values.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.28.7 {
+	    barchart legend: configure: plotpady - invalid list of values
+	} -setup {
+	    barchart .barchart1     
+	    pack .barchart1  
+	} -body {
+	    if {[catch {.barchart1 configure -plotpady {1 a}}]} {
+			return 0
+	    } else {
+			return 1
+	    }
+	} -cleanup {
+	    destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given a list of
+	# input that is too long.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.28.8 {
+		barchart configure: plotpady - invalid list length
+	} -setup {
+		barchart .barchart1
+		pack .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotpady {1 2 3}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotpady command works correctly when given 0 as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.28.9 {
+	    barchart configure: plotpady - 0
+	} -setup {
+	    barchart .barchart1     
+	    pack .barchart1  
+	} -body {
+	    .barchart1 configure -plotpady 0
+	    .barchart1 cget -plotpady
+	} -cleanup {
+	    destroy .barchart1
+	} -result {0 0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 'flat' 
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.29.1 {
+		barchart configure: plotrelief - flat
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotrelief flat
+		.barchart1 cget -plotrelief
+	} -cleanup { 
+		destroy .barchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 
+	# 'groove' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.29.2 {
+		barchart configure: plotrelief - groove
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotrelief groove
+		.barchart1 cget -plotrelief
+	} -cleanup {
+		destroy .barchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 
+	# 'raised' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.29.3 {
+		barchart configure: plotrelief - raised
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotrelief raised
+		.barchart1 cget -plotrelief
+	} -cleanup {
+		destroy .barchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 'ridge'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.29.4 {
+		barchart configure: plotrelief - ridge
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotrelief ridge
+		.barchart1 cget -plotrelief
+	} -cleanup {
+		destroy .barchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 'solid'
+	# as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.29.5 {
+		barchart configure: plotrelief - solid
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotrelief solid
+		.barchart1 cget -plotrelief
+	} -cleanup {
+		destroy .barchart1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given 
+	# 'sunken' as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.29.6 {
+		barchart configure: plotrelief - sunken
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -plotrelief sunken
+		.barchart1 cget -plotrelief
+	} -cleanup {
+		destroy .barchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given invalid 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.29.7 {
+		barchart configure: plotrelief - invalid numerical input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotrelief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -plotrelief command works correctly when given invalid
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.29.8 {
+		barchart configure: plotrelief - invalid string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -plotrelief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'flat' as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.30.1 {
+		barchart configure: relief - flat
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -relief flat
+		.barchart1 cget -relief
+	} -cleanup { 
+		destroy .barchart1
+	} -result {flat}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'groove' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.30.2 {
+		barchart configure: relief - groove
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -relief groove
+		.barchart1 cget -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {groove}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'raised' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.30.3 {
+		barchart configure: relief - raised
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -relief raised
+		.barchart1 cget -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {raised}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'ridge' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.30.4 {
+		barchart configure: relief - ridge
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -relief ridge
+		.barchart1 cget -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {ridge}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'solid' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.30.5 {
+		barchart configure: relief - solid
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -relief solid
+		.barchart1 cget -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {solid}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given 'sunken' as
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.30.6 {
+		barchart configure: relief - sunken
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -relief sunken
+		.barchart1 cget -relief
+	} -cleanup {
+		destroy .barchart1
+	} -result {sunken}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given invalid 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.30.7 {
+		barchart configure: relief - invalid numerical input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -relief 3.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -relief command works correctly when given invalid 
+	# string input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.30.8 {
+		barchart configure: relief - invalid string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -relief invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.31.1 {
+		barchart configure: rightmargin - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -rightmargin 2
+		.barchart1 cget -rightmargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.31.2 {
+		barchart configure: rightmargin - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -rightmargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.31.3 {
+		barchart configure: rightmargin - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -rightmargin 3.5
+		.barchart1 cget -rightmargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.31.4 {
+		barchart configure: rightmargin - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -rightmargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.31.5 {
+		barchart configure: rightmargin - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -rightmargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightmargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.31.6 {
+		barchart configure: rightmargin - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -rightmargin 0
+		.barchart1 cget -rightmargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.32.1 {
+		barchart configure: rightvariable - single variable name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -rightvariable var1
+		.barchart1 cget -rightvariable
+	} -cleanup {
+		destroy .barchart1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -rightvariable command works correctly when given a 
+	# list of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.32.2 {
+		barchart configure: rightvariable - list of variable names
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -rightvariable {var1 var2 var3}
+		.barchart1 cget -rightvariable
+	} -cleanup {
+		destroy .barchart1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a valid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.33.1 {
+		barchart configure: shadow - valid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -shadow black
+		.barchart1 cget -shadow
+	} -cleanup {
+		destroy .barchart1
+	} -result {black 1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a valid
+	# color name and a positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.33.2 {
+		barchart configure: shadow - valid color name and positive integer value
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -shadow {blue 5}
+		.barchart1 cget -shadow
+	} -cleanup {
+		destroy .barchart1
+	} -result {blue 5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a valid
+	# color name and a negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.33.3 {
+		barchart configure: shadow - valid color name and negative integer value
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -shadow {blue -5}}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given a positive
+	# color name and a decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.33.4 {
+		barchart configure: shadow - valid color name and decimal value
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -shadow {blue 5}
+		.barchart1 cget -shadow
+	} -cleanup {
+		destroy .barchart1
+	} -result {blue 5}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -shadow command works correctly when given an invalid
+	# color name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.33.5 {
+		barchart configure: shadow - invalid color name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -shadow invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -takefocus command works correctly when given a string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.34.1 {
+		barchart configure: takefocus - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -takefocus {puts foo}
+		.barchart1 cget -takefocus
+	} -cleanup {
+		destroy .barchart1
+	} -result {puts foo}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -takefocus command works correctly when given a 
+	# numerical input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.34.2 {
+		barchart configure: takefocus - numerical input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -takefocus {15}
+		.barchart1 cget -takefocus
+	} -cleanup {
+		destroy .barchart1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -tile command works correctly when given an existing
+	# image name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.35.1 {
+		barchart configure: tile - existing image name
+	} -setup {
+		barchart .barchart1
+		
+		# the following should set Image1 to 'image1'
+		set Image1 [image create photo image.a.35.1 -data {
+						R0lGODlhEAAQAIYAAPwCBHSi1Iyy5Hym3Hym1GSWxJS65Lza/OT2/Pz+/PT+
+						/KTK5DxmlJS67PT6/Pz6/Lzm/BRGhHSe1MTe/OTy/Oz2/Mzm/NTq/FSKtJS2
+						7PT2/MTi/LTa/AQyVOTu/Lze/LTS/JTC9MTq/Mzi/KzK/KTC/KS+/BQuRJzG
+						/KzO/LTO/KS6/Jy2/DRmpAQOHEx+rLTK/Jy+/Iym/Jyq/GSK/GSOrIyCBHSi
+						5HyW/DxuxFxqhPT+dPzqbHRCBAQmPBxenBxSjBxanARGfMRyDOymNOTCnPTG
+						fIRKDMyGNOzGlISu7GSOzIROBPTGjJSy9EyGvIxODNSORMSWTLxyFDx6tBxe
+						lKRiJGQ6BCQWBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAAAA
+						LAAAAAAQABAAAAesgACCAQIDBAWCiYoABgcICQoJCwyLgg0OCQkPmgoQEYsS
+						E5mYFBUWFxiLGZmbGhoWGxMcHYoDChoOFR4fByAcIbSJAyIXIxYgICQkJSbB
+						gicovCkqJSssKy0uiy8bIDAxLDIzNDU2lS031TI4OTo7PD2VPj9AQUIuQ0RF
+						RvGVi0dIkvATpGSJPwBMkDQxwkSCkyc3DkKJImUKlSdVhBxEaOUKACVVNgrC
+						AsBPIAAh/mhDcmVhdGVkIGJ5IEJNUFRvR0lGIFBybyB2ZXJzaW9uIDIuNQ0K
+						qSBEZXZlbENvciAxOTk3LDE5OTguIEFsbCByaWdodHMgcmVzZXJ2ZWQuDQpo
+						dHRwOi8vd3d3LmRldmVsY29yLmNvbQA7
+		    		}]
+	} -body {
+		.barchart1 configure -tile $Image1
+		.barchart1 cget -tile
+	} -cleanup {
+		image delete $Image1
+		destroy .barchart1
+	} -result {image.a.35.1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -tile command works correctly when given an invalid 
+	# image name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.35.2 {
+		barchart configure: tile - invalid image name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -tile invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -title command works correctly when given a string 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.36.1 {
+		barchart configure: title - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -title "A title string"
+		.barchart1 cget -title
+	} -cleanup {
+		destroy .barchart1
+	} -result {A title string}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -title command works correctly when given a numerical 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.36.2 {
+		barchart configure: title - numerical input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -title 15
+		.barchart1 cget -title
+	} -cleanup {
+		destroy .barchart1
+	} -result {15}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a 
+	# positive integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.37.1 {
+		barchart configure: topmargin - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -topmargin 2
+		.barchart1 cget -topmargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a
+	# negative integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.37.2 {
+		barchart configure: topmargin - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -topmargin -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a
+	# positive decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.37.3 {
+		barchart configure: topmargin - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -topmargin 3.5
+		.barchart1 cget -topmargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given a 
+	# negative decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.37.4 {
+		barchart configure: topmargin - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -topmargin -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given string
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.37.5 {
+		barchart configure: topmargin - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -topmargin invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topmargin command works correctly when given 0 as 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.37.6 {
+		barchart configure: topmargin - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -topmargin 0
+		.barchart1 cget -topmargin
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topvariable command works correctly when given a 
+	# single variable name.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.38.1 {
+		barchart configure: topvariable - single variable name
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -topvariable var1
+		.barchart1 cget -topvariable
+	} -cleanup {
+		destroy .barchart1
+	} -result {var1}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -topvariable command works correctly when given a list
+	# of variable names.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.38.2 {
+		barchart configure: topvariable - list of variable names
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -topvariable {var1 var2 var3}
+		.barchart1 cget -topvariable
+	} -cleanup {
+		destroy .barchart1
+	} -result {var1 var2 var3}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a positive
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.39.1 {
+		barchart configure: width - positive integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -width 2
+		.barchart1 cget -width
+	} -cleanup {
+		destroy .barchart1
+	} -result {2}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a negative
+	# integer value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.39.2 {
+		barchart configure: width - negative integer input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -width -2}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a positive
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.39.3 {
+		barchart configure: width - positive decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -width 3.5
+		.barchart1 cget -width
+	} -cleanup {
+		destroy .barchart1
+	} -result {4}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a negative
+	# decimal value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.39.4 {
+		barchart configure: width - negative decimal input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -width -2.5}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a positive
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.39.5 {
+		barchart configure: width - positive inch input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -width 3i
+		expr {[.barchart1 cget -width] - [winfo pixels .barchart1 3i]}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given a negative
+	# inch value.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.39.6 {
+		barchart configure: width - negative inch input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -width -2i}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given string 
+	# input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.39.7 {
+		barchart configure: width - string input
+	} -setup {
+		barchart .barchart1
+	} -body {
+		if {[catch {.barchart1 configure -width invalid}]} {
+			return 0
+		} else {
+			return 1
+		}
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	# ------------------------------------------------------------------------------------
+	# Purpose: Ensure the configure -width command works correctly when given 0 as input.
+	# ------------------------------------------------------------------------------------
+	test RBC.barchart.configure.A.39.8 {
+		barchart configure: width - 0
+	} -setup {
+		barchart .barchart1
+	} -body {
+		.barchart1 configure -width 0
+		.barchart1 cget -width
+	} -cleanup {
+		destroy .barchart1
+	} -result {0}
+	
+	
+	cleanupTests
+}
