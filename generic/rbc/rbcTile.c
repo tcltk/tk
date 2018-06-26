@@ -1207,7 +1207,7 @@ PolygonMask(
     Display *display,
     XPoint *pointArr,
     int nPoints,
-    Region2D *regionPtr,
+    RbcRegion2D *regionPtr,
     Pixmap mask,
     int xOrigin,
     int yOrigin)
@@ -1273,7 +1273,7 @@ RbcTilePolygon(
     tilePtr = clientPtr->tilePtr;
     if (tilePtr->mask != None) {
         XPoint *pointPtr, *endPtr;
-        Region2D region;
+        RbcRegion2D region;
         Pixmap mask;
         /* Determine the bounding box of the polygon. */
         pointPtr = pointArr;
