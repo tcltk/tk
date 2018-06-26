@@ -3136,6 +3136,13 @@ MODULE_SCOPE Pixmap RbcScaleRotateBitmapRegion(
 #define PurifyPrintf  printf
 #endif /* _WIN32 */
 
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 #endif /* _RBCINT */
 
 /* vim: set ts=4 sw=4 sts=4 ff=unix et : */
