@@ -1726,7 +1726,7 @@ DrawBarSegments(
 
         for (rectPtr = rectangles, endPtr = rectangles + nRects;
             rectPtr < endPtr; rectPtr++) {
-            RbcDraw3DRectangle(graphPtr->tkwin, drawable, penPtr->border,
+            Tk_Draw3DRectangle(graphPtr->tkwin, drawable, penPtr->border,
                 rectPtr->x, rectPtr->y, rectPtr->width, rectPtr->height,
                 penPtr->borderWidth, penPtr->relief);
         }
@@ -2300,7 +2300,7 @@ static RbcElementProcs barProcs = {
 RbcElement     *
 RbcBarElement(
     RbcGraph * graphPtr,
-    char *name,
+    const char *name,
     RbcUid type)
 {
     register Bar   *barPtr;

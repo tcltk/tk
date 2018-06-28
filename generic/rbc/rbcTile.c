@@ -6,12 +6,13 @@
  * Copyright (c) 2001 BLT was created by George Howlett.
  * Copyright (c) 2009 RBC was created by Samuel Green, Nicholas Hudson, Stanton Sievers, Jarrod Stormo
  * Copyright (c) 2018 Rene Zaumseil
-
+ *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "rbcInt.h"
+
 #define TILE_THREAD_KEY	"Rbc Tile Data"
 #define TILE_MAGIC ((unsigned int) 0x46170277)
 typedef struct {
@@ -168,7 +169,7 @@ UpdateTile(
     RbcTileClient *clientPtr;
     RbcChainLink *linkPtr;
     tilePtr->flags &= ~TILE_NOTIFY_PENDING;
-    if (Tk_ImageIsDeleted(tilePtr->tkImage)) {
+    if (RbcImageIsDeleted(tilePtr->tkImage)) {
         if (tilePtr->pixmap != None) {
             Tk_FreePixmap(tilePtr->display, tilePtr->pixmap);
         }

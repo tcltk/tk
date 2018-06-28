@@ -40,7 +40,7 @@
 #include <assert.h>
 
 /*
- * Mathematical functions 
+ * Mathematical functions
  */
 #undef ABS
 #define ABS(x)		(((x)<0)?(-(x)):(x))
@@ -112,11 +112,6 @@
 
 #define RBC_OP_LINEAR_SEARCH	1
 #define RBC_OP_BINARY_SEARCH	0
-
-#ifdef notdef
-#define RbcFill3DRectangle	Tk_Fill3DRectangle
-#define RbcDraw3DRectangle	Tk_Draw3DRectangle
-#endif
 
 #define RBC_STATIC_STRING_SPACE 150
 
@@ -691,10 +686,7 @@ typedef struct {
  *
  * 	Generic function prototype of CmdOptions.
  */
-typedef int     (
-    *RbcOp)         (
-    );
- /*TODO*/
+typedef int     (*RbcOp)         ();
 
 /*
  * RbcOpSpec --
@@ -827,12 +819,6 @@ typedef struct {
     XColor         *fgColor, *bgColor;
 } RbcColorPair;
 
-Tk_OptionParseProc RbcStringToEnum;
-Tk_OptionPrintProc RbcEnumToString;
-
-Tcl_AppInitProc RbcGraphInit;
-Tcl_AppInitProc RbcVectorInit;
-Tcl_AppInitProc RbcSplineInit;
 typedef void    (
     RbcTileChangedProc) (
     ClientData clientData,
@@ -1013,7 +999,7 @@ typedef struct {
                                  * (including ticks).  If zero, then
                                  * no axis lines or ticks are
                                  * drawn. */
-    char          **limitsFormats;      /* One or two strings of sprintf-like
+    const char    **limitsFormats;      /* One or two strings of sprintf-like
                                          * formats describing how to display
                                          * virtual axis limits. If NULL,
                                          * display no limits. */
@@ -1304,11 +1290,6 @@ typedef struct RbcElement {
                                          * symbol. */
     int             state;
 } RbcElement;
-
-RbcElement     *RbcBarElement(
-    );
-RbcElement     *RbcLineElement(
-    );
 
 /*
  * RbcFreqInfo --
@@ -1615,16 +1596,10 @@ typedef struct RbcGraph {
     char           *dataCmd;    /* New data callback? */
 } RbcGraph;
 
-Tcl_CmdProc     RbcGraphInstCmdProc;
 typedef         ClientData(
     MakeTagProc)    (
     RbcGraph * graphPtr,
     const char *tagName);
-MakeTagProc     RbcMakeElementTag;
-MakeTagProc     RbcMakeMarkerTag;
-MakeTagProc     RbcMakeAxisTag;
-
-RbcBindTagProc  RbcGraphTags;
 
 typedef int     (
     RbcSwitchParseProc) (
@@ -1698,8 +1673,6 @@ typedef struct {
  */
 extern double   rbcNaN;
 extern RbcResampleFilter *rbcBoxFilterPtr;      /* The ubiquitous box filter */
-extern Tk_OptionParseProc RbcStringToStyles;
-extern Tk_OptionPrintProc RbcStylesToString;
 extern RbcUid   rbcBarElementUid;
 extern RbcUid   rbcLineElementUid;
 extern RbcUid   rbcStripElementUid;
@@ -1713,7 +1686,7 @@ extern RbcUid   rbcXAxisUid;
 extern RbcUid   rbcYAxisUid;
 
 /*
- * Function declarations:
+ * Inline function declarations:
  */
 
 /* int RbcNumberOfPoints(RbcAxis2D e); */
@@ -1725,174 +1698,56 @@ extern RbcUid   rbcYAxisUid;
 /* int RbcPadding(RbcPad w); */
 #define RbcPadding(x)	((x).side1 + (x).side2)
 
-MODULE_SCOPE double RbcFindElemVectorMinimum(
-    RbcElemVector * vecPtr,
-    double minLimit);
-MODULE_SCOPE void RbcFreePalette(
-    RbcGraph * graphPtr,
-    RbcChain * palette);
-RbcPenStyle   **RbcStyleMap(
-    RbcElement * elemPtr);
-MODULE_SCOPE void RbcMapErrorBars(
-    RbcGraph * graphPtr,
-    RbcElement * elemPtr,
-    RbcPenStyle ** dataToStyle);
-
-MODULE_SCOPE void RbcFreeColorPair(
-    RbcColorPair * pairPtr);
-MODULE_SCOPE RbcUid RbcGetUid(
-    const char *string);
-MODULE_SCOPE void RbcFreeUid(
-    RbcUid uid);
-MODULE_SCOPE RbcUid RbcFindUid(
-    char *string);
-MODULE_SCOPE RbcTextLayout *RbcGetTextLayout(
-    char *string,
-    RbcTextStyle * stylePtr);
-MODULE_SCOPE void RbcGetTextExtents(
-    RbcTextStyle * stylePtr,
-    char *text,
-    int *widthPtr,
-    int *heightPtr);
-MODULE_SCOPE void RbcInitTextStyle(
-    RbcTextStyle * stylePtr);
-MODULE_SCOPE void RbcResetTextStyle(
-    Tk_Window tkwin,
-    RbcTextStyle * stylePtr);
-MODULE_SCOPE void RbcFreeTextStyle(
-    Display * display,
-    RbcTextStyle * stylePtr);
-MODULE_SCOPE void RbcSetDrawTextStyle(
-    RbcTextStyle * stylePtr,
-    Tk_Font font,
-    GC gc,
-    XColor * normalColor,
-    XColor * activeColor,
-    XColor * shadowColor,
-    double theta,
-    Tk_Anchor anchor,
-    Tk_Justify justify,
-    int leader,
-    int shadowOffset);
-MODULE_SCOPE void RbcSetPrintTextStyle(
-    RbcTextStyle * stylePtr,
-    Tk_Font font,
-    XColor * fgColor,
-    XColor * bgColor,
-    XColor * shadowColor,
-    double theta,
-    Tk_Anchor anchor,
-    Tk_Justify justify,
-    int leader,
-    int shadowOffset);
-MODULE_SCOPE void RbcDrawText(
-    Tk_Window tkwin,
-    Drawable drawable,
-    char *string,
-    RbcTextStyle * stylePtr,
-    int x,
-    int y);
-MODULE_SCOPE void RbcDrawTextLayout(
-    Tk_Window tkwin,
-    Drawable drawable,
-    RbcTextLayout * textPtr,
-    RbcTextStyle * stylePtr,
-    int x,
-    int y);
-MODULE_SCOPE void RbcDrawText2(
-    Tk_Window tkwin,
-    Drawable drawable,
-    char *string,
-    RbcTextStyle * stylePtr,
-    int x,
-    int y,
-    RbcDim2D * dimPtr);
-MODULE_SCOPE Pixmap RbcCreateTextBitmap(
-    Tk_Window tkwin,
-    RbcTextLayout * textPtr,
-    RbcTextStyle * stylePtr,
-    int *widthPtr,
-    int *heightPtr);
-MODULE_SCOPE int RbcDrawRotatedText(
-    Display * display,
-    Drawable drawable,
-    int x,
-    int y,
-    double theta,
-    RbcTextStyle * stylePtr,
-    RbcTextLayout * textPtr);
-MODULE_SCOPE void RbcListInit(
-    RbcList * list,
-    int type);
-MODULE_SCOPE void RbcListReset(
-    RbcList * list);
-MODULE_SCOPE RbcList *RbcListCreate(
-    int type);
-MODULE_SCOPE void RbcListDestroy(
-    RbcList * list);
-MODULE_SCOPE RbcListNode *RbcListCreateNode(
-    RbcList * list,
-    const char *key);
-MODULE_SCOPE void RbcListDeleteNode(
-    RbcListNode * node);
-MODULE_SCOPE RbcListNode *RbcListAppend(
-    RbcList * list,
-    const char *key,
-    ClientData clientData);
-MODULE_SCOPE RbcListNode *RbcListPrepend(
-    RbcList * list,
-    const char *key,
-    ClientData clientData);
-MODULE_SCOPE void RbcListLinkAfter(
-    RbcList * list,
-    RbcListNode * node,
-    RbcListNode * afterNode);
-MODULE_SCOPE void RbcListLinkBefore(
-    RbcList * list,
-    RbcListNode * node,
-    RbcListNode * beforeNode);
-MODULE_SCOPE void RbcListUnlinkNode(
-    RbcListNode * node);
-MODULE_SCOPE RbcListNode *RbcListGetNode(
-    RbcList * list,
-    const char *key);
-MODULE_SCOPE void Rb_ListDeleteNodeByKey(
-    RbcList * list,
-    const char *key);
-MODULE_SCOPE RbcListNode *RbcListGetNthNode(
-    RbcList * list,
-    int position,
-    int direction);
-MODULE_SCOPE void RbcListSort(
-    RbcList * list,
-    RbcListCompareProc * proc);
+/* int RbcListGetLength(RbcList *list); */
 #define RbcListGetLength(list) \
 	(((list) == NULL) ? 0 : ((RbcList *)list)->nNodes)
+/* RbcListNode *RbcListFirstNode(RbcList *list); */
 #define RbcListFirstNode(list) \
 	(((list) == NULL) ? NULL : ((RbcList *)list)->headPtr)
+/* RbcListNode *RbcListLastNode(RbcList *list); */
 #define RbcListLastNode(list)	\
 	(((list) == NULL) ? NULL : ((RbcList *)list)->tailPtr)
+/* RbcListNode *RbcListPrevNode(RbcListNode *node); */
 #define RbcListPrevNode(node)	((node)->prevPtr)
+/* RbcListNode *RbcListNextNode(RbcListNode *node); */
 #define RbcListNextNode(node) 	((node)->nextPtr)
+/* char *RbcListGetKey(RbcListNode *node); */
 #define RbcListGetKey(node)	\
 	(((node)->listPtr->type == TCL_STRING_KEYS) \
 		 ? (node)->key.string : (node)->key.oneWordValue)
-#define RbcListGetValue(node)  	((node)->clientData)
-#define RbcListSetValue(node, value) \
-	((node)->clientData = (ClientData)(value))
-#define RbcListAppendNode(list, node) \
-	(RbcListLinkBefore((list), (node), (RbcListNode *)NULL))
-#define RbcListPrependNode(list, node) \
-	(RbcListLinkAfter((list), (node), (RbcListNode *)NULL))
+/* ClientData RbcGetCurrentItem(RbcBindTable *bindPtr); */
+#define RbcGetCurrentItem(bindPtr)  ((bindPtr)->currentItem)
+/* */
+/* ClientData RbcGetBindingData(RbcBindTable *bindPtr); */
+#define RbcGetBindingData(bindPtr)  ((bindPtr)->clientData)
+/* int RbcChainGetLength(RbcChain *c); */
+#define RbcChainGetLength(c)	(((c) == NULL) ? 0 : (c)->nLinks)
+/* RbcChainLink *RbcChainFirstLink(RbcChain *c); */
+#define RbcChainFirstLink(c)	(((c) == NULL) ? NULL : (c)->headPtr)
+/* */
+/* RbcChainLink *RbcChainLastLink(RbcChain *c); */
+#define RbcChainLastLink(c)	(((c) == NULL) ? NULL : (c)->tailPtr)
+/* RbcChainLink *RbcChainPrevLink(RbcChainLink *l); */
+#define RbcChainPrevLink(l)	((l)->prevPtr)
+/* RbcChainLink *RbcChainNextLink(RbcChainLink *l); */
+#define RbcChainNextLink(l) 	((l)->nextPtr)
+/* ClientData RbcChainGetValue(RbcChainLink *l); */
+#define RbcChainGetValue(l)  	((l)->clientData)
+/* void RbcChainSetValue(RbcChainLink *l, ClientData value); */
+#define RbcChainSetValue(l, value) ((l)->clientData = (ClientData)(value))
 
-MODULE_SCOPE void RbcDestroyBindingTable(
-    RbcBindTable * table);
-MODULE_SCOPE RbcBindTable *RbcCreateBindingTable(
-    Tcl_Interp * interp,
-    Tk_Window tkwin,
-    ClientData clientData,
-    RbcBindPickProc * pickProc,
-    RbcBindTagProc * tagProc);
+/*
+ * Function declarations:
+ */
+
+/* rbcAlloc.c */
+MODULE_SCOPE void *RbcCalloc(
+    unsigned int nElem,
+    size_t size);
+MODULE_SCOPE char *RbcStrdup(
+    const char *ptr);
+
+/* rbcBind.c */
 MODULE_SCOPE int RbcConfigureBindings(
     Tcl_Interp * interp,
     RbcBindTable * table,
@@ -1905,6 +1760,14 @@ MODULE_SCOPE int RbcConfigureBindingsFromObj(
     ClientData item,
     int objc,
     Tcl_Obj * const *objv);
+MODULE_SCOPE RbcBindTable *RbcCreateBindingTable(
+    Tcl_Interp * interp,
+    Tk_Window tkwin,
+    ClientData clientData,
+    RbcBindPickProc * pickProc,
+    RbcBindTagProc * tagProc);
+MODULE_SCOPE void RbcDestroyBindingTable(
+    RbcBindTable * table);
 MODULE_SCOPE void RbcPickCurrentItem(
     RbcBindTable * table);
 MODULE_SCOPE void RbcDeleteBindings(
@@ -1914,49 +1777,10 @@ MODULE_SCOPE void RbcMoveBindingTable(
     RbcBindTable * table,
     Tk_Window tkwin);
 
-#define RbcSetFocusItem(bindPtr, object, context) \
-    ((bindPtr)->focusItem = (ClientData)(object),\
-    (bindPtr)->focusContext = (ClientData)(context))
-
-#define RbcSetCurrentItem(bindPtr, object, context) \
-    ((bindPtr)->currentItem = (ClientData)(object),\
-    (bindPtr)->currentContext = (ClientData)(context))
-
-#define RbcGetCurrentItem(bindPtr)  ((bindPtr)->currentItem)
-#define RbcGetCurrentContext(bindPtr)  ((bindPtr)->currentContext)
-#define RbcGetLatestItem(bindPtr)  ((bindPtr)->newItem)
-
-#define RbcGetBindingData(bindPtr)  ((bindPtr)->clientData)
-
-#define RbcChainGetLength(c)	(((c) == NULL) ? 0 : (c)->nLinks)
-#define RbcChainFirstLink(c)	(((c) == NULL) ? NULL : (c)->headPtr)
-#define RbcChainLastLink(c)	(((c) == NULL) ? NULL : (c)->tailPtr)
-#define RbcChainPrevLink(l)	((l)->prevPtr)
-#define RbcChainNextLink(l) 	((l)->nextPtr)
-#define RbcChainGetValue(l)  	((l)->clientData)
-#define RbcChainSetValue(l, value) ((l)->clientData = (ClientData)(value))
-#define RbcChainAppendLink(c, l) \
-	(RbcChainLinkBefore((c), (l), (RbcChainLink *)NULL))
-#define RbcChainPrependLink(c, l) \
-	(RbcChainLinkAfter((c), (l), (RbcChainLink *)NULL))
-
-MODULE_SCOPE void RbcChainInit(
-    RbcChain * chainPtr);
+/* rbcChain,c */
 MODULE_SCOPE RbcChain *RbcChainCreate(
     );
-MODULE_SCOPE void RbcChainDestroy(
-    RbcChain * chainPtr);
-MODULE_SCOPE RbcChainLink *RbcChainNewLink(
-    void);
-MODULE_SCOPE RbcChainLink *RbcChainAllocLink(
-    unsigned int size);
-MODULE_SCOPE RbcChainLink *RbcChainAppend(
-    RbcChain * chainPtr,
-    ClientData clientData);
-MODULE_SCOPE RbcChainLink *RbcChainPrepend(
-    RbcChain * chainPtr,
-    ClientData clientData);
-MODULE_SCOPE void RbcChainReset(
+MODULE_SCOPE void RbcChainInit(
     RbcChain * chainPtr);
 MODULE_SCOPE void RbcChainLinkAfter(
     RbcChain * chainPtr,
@@ -1966,177 +1790,37 @@ MODULE_SCOPE void RbcChainLinkBefore(
     RbcChain * chainPtr,
     RbcChainLink * linkPtr,
     RbcChainLink * beforeLinkPtr);
+MODULE_SCOPE RbcChainLink *RbcChainNewLink(
+    void);
+MODULE_SCOPE void RbcChainReset(
+    RbcChain * chainPtr);
+MODULE_SCOPE void RbcChainDestroy(
+    RbcChain * chainPtr);
 MODULE_SCOPE void RbcChainUnlinkLink(
     RbcChain * chainPtr,
     RbcChainLink * linkPtr);
 MODULE_SCOPE void RbcChainDeleteLink(
     RbcChain * chainPtr,
     RbcChainLink * linkPtr);
-MODULE_SCOPE RbcChainLink *RbcChainGetNthLink(
+MODULE_SCOPE RbcChainLink *RbcChainAppend(
     RbcChain * chainPtr,
-    int n);
-MODULE_SCOPE void RbcChainSort(
+    ClientData clientData);
+MODULE_SCOPE RbcChainLink *RbcChainPrepend(
     RbcChain * chainPtr,
-    RbcChainCompareProc * proc);
+    ClientData clientData);
+MODULE_SCOPE RbcChainLink *RbcChainAllocLink(
+    unsigned int size);
 
-MODULE_SCOPE RbcOp RbcGetOp(
-    Tcl_Interp * interp,
-    int nSpecs,
-    RbcOpSpec * specArr,
-    int operPos,
-    int argc,
-    const char **argv,
-    int flags);
-MODULE_SCOPE RbcOp RbcGetOpFromObj(
-    Tcl_Interp * interp,
-    int nSpecs,
-    RbcOpSpec * specArr,
-    int operPos,
-    int objc,
-    Tcl_Obj * const *objv,
-    int flags);
-MODULE_SCOPE void RbcDraw3DRectangle(
-    Tk_Window tkwin,
-    Drawable drawable,
-    Tk_3DBorder border,
-    int x,
-    int y,
-    int width,
-    int height,
-    int borderWidth,
-    int relief);
-MODULE_SCOPE void RbcFill3DRectangle(
-    Tk_Window tkwin,
-    Drawable drawable,
-    Tk_3DBorder border,
-    int x,
-    int y,
-    int width,
-    int height,
-    int borderWidth,
-    int relief);
-
-MODULE_SCOPE void RbcSetDashes(
-    Display * display,
-    GC gc,
-    RbcDashes * dashesPtr);
-MODULE_SCOPE RbcDashes *RbcGetDashes(
-    GC gc);
-
-MODULE_SCOPE char *RbcItoa(
-    int value);
-MODULE_SCOPE char *RbcUtoa(
-    unsigned int value);
-MODULE_SCOPE char *RbcDtoa(
-    Tcl_Interp * interp,
-    double value);
-
-MODULE_SCOPE int RbcNaturalSpline(
-    RbcPoint2D * origPts,
-    int nOrigPts,
-    RbcPoint2D * intpPts,
-    int nIntpPts);
-MODULE_SCOPE int RbcQuadraticSpline(
-    RbcPoint2D * origPts,
-    int nOrigPts,
-    RbcPoint2D * intpPts,
-    int nIntpPts);
-MODULE_SCOPE int RbcSimplifyLine(
-    RbcPoint2D * origPts,
-    int low,
-    int high,
-    double tolerance,
-    int indices[]);
-MODULE_SCOPE int RbcNaturalParametricSpline(
-    RbcPoint2D * origPts,
-    int nOrigPts,
-    RbcExtents2D * extsPtr,
-    int isClosed,
-    RbcPoint2D * intpPts,
-    int nIntpPts);
-MODULE_SCOPE int RbcCatromParametricSpline(
-    RbcPoint2D * origPts,
-    int nOrigPts,
-    RbcPoint2D * intpPts,
-    int nIntpPts);
-MODULE_SCOPE void RbcInitHexTable(
-    char *table);
-MODULE_SCOPE GC RbcGetPrivateGC(
-    Tk_Window tkwin,
-    unsigned long gcMask,
-    XGCValues * valuePtr);
-MODULE_SCOPE GC RbcGetPrivateGCFromDrawable(
-    Display * display,
-    Drawable drawable,
-    unsigned long gcMask,
-    XGCValues * valuePtr);
-MODULE_SCOPE void RbcFreePrivateGC(
-    Display * display,
-    GC gc);
-MODULE_SCOPE Tk_Window RbcFindChild(
-    Tk_Window parent,
-    char *name);
-MODULE_SCOPE Tk_Window RbcFirstChild(
-    Tk_Window parent);
-MODULE_SCOPE Tk_Window RbcNextChild(
-    Tk_Window tkwin);
+/* rbcConfig.c */
 MODULE_SCOPE int RbcGetPixels(
     Tcl_Interp * interp,
     Tk_Window tkwin,
     const char *string,
     int check,
     int *valuePtr);
-MODULE_SCOPE int RbcGetPosition(
-    Tcl_Interp * interp,
-    char *string,
-    int *indexPtr);
-MODULE_SCOPE int RbcGetXY(
-    Tcl_Interp * interp,
-    Tk_Window tkwin,
-    const char *string,
-    int *x,
-    int *y);
-MODULE_SCOPE RbcPoint2D RbcGetProjection(
-    int x,
-    int y,
-    RbcPoint2D * p,
-    RbcPoint2D * q);
-
 MODULE_SCOPE int RbcConfigModified(
     Tk_ConfigSpec * specs,
     ...);
-MODULE_SCOPE void RbcDStringAppendElements(
-    Tcl_DString * dsPtr,
-    ...);
-MODULE_SCOPE void RbcMakeTransparentWindowExist(
-    Tk_Window tkwin,
-    Window parent,
-    int isBusy);
-MODULE_SCOPE Window RbcGetParent(
-    Display * display,
-    Window tkwin);
-MODULE_SCOPE void RbcGetBoundingBox(
-    int width,
-    int height,
-    double theta,
-    double *widthPtr,
-    double *heightPtr,
-    RbcPoint2D * points);
-MODULE_SCOPE void RbcInitEpsCanvasItem(
-    Tcl_Interp * interp);
-MODULE_SCOPE void RbcTranslateAnchor(
-    int x,
-    int y,
-    int width,
-    int height,
-    Tk_Anchor anchor,
-    int *transXPtr,
-    int *transYPtr);
-MODULE_SCOPE RbcPoint2D RbcTranslatePoint(
-    RbcPoint2D * pointPtr,
-    int width,
-    int height,
-    Tk_Anchor anchor);
 MODULE_SCOPE int RbcConfigureWidgetComponent(
     Tcl_Interp * interp,
     Tk_Window tkwin,
@@ -2147,50 +1831,326 @@ MODULE_SCOPE int RbcConfigureWidgetComponent(
     const char **argv,
     char *widgRec,
     int flags);
-MODULE_SCOPE int RbcMaxRequestSize(
-    Display * display,
-    unsigned int elemSize);
-MODULE_SCOPE Window RbcGetRealWindowId(
+
+/* rbcGraph.c */
+MODULE_SCOPE void RbcEventuallyRedrawGraph(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcGraphTags(
+    RbcBindTable * table,
+    ClientData object,
+    ClientData context,
+    RbcList * list);
+MODULE_SCOPE int RbcGraphInstCmdProc(
+    ClientData clientData,
+    Tcl_Interp * interp,
+    int argc,
+    const char *argv[]);
+MODULE_SCOPE void RbcLayoutGraph(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcDrawGraph(
+    RbcGraph * graphPtr,
+    Drawable drawable,
+    int backingStore);
+MODULE_SCOPE int RbcGraphInit(
+    Tcl_Interp * interp);
+MODULE_SCOPE RbcGraph *RbcGetGraphFromWindowData(
     Tk_Window tkwin);
-MODULE_SCOPE int RbcRootX(
-    Tk_Window tkwin);
-MODULE_SCOPE int RbcRootY(
-    Tk_Window tkwin);
-MODULE_SCOPE void RbcRootCoordinates(
-    Tk_Window tkwin,
-    int x,
-    int y,
-    int *rootXPtr,
-    int *rootYPtr);
-MODULE_SCOPE void RbcMapToplevel(
-    Tk_Window tkwin);
-MODULE_SCOPE void RbcUnmapToplevel(
-    Tk_Window tkwin);
-MODULE_SCOPE void RbcRaiseToplevel(
-    Tk_Window tkwin);
-MODULE_SCOPE void RbcLowerToplevel(
-    Tk_Window tkwin);
-MODULE_SCOPE void RbcResizeToplevel(
-    Tk_Window tkwin,
-    int width,
-    int height);
-MODULE_SCOPE void RbcMoveToplevel(
-    Tk_Window tkwin,
+MODULE_SCOPE int RbcGraphType(
+    RbcGraph * graphPtr);
+
+/* rbcGrAxis.c */
+MODULE_SCOPE double RbcInvHMap(
+    RbcGraph * graphPtr,
+    RbcAxis * axisPtr,
+    double x);
+MODULE_SCOPE double RbcInvVMap(
+    RbcGraph * graphPtr,
+    RbcAxis * axisPtr,
+    double x);
+MODULE_SCOPE double RbcHMap(
+    RbcGraph * graphPtr,
+    RbcAxis * axisPtr,
+    double x);
+MODULE_SCOPE double RbcVMap(
+    RbcGraph * graphPtr,
+    RbcAxis * axisPtr,
+    double y);
+MODULE_SCOPE RbcPoint2D RbcMap2D(
+    RbcGraph * graphPtr,
+    double x,
+    double y,
+    RbcAxis2D * pairPtr);
+MODULE_SCOPE RbcPoint2D RbcInvMap2D(
+    RbcGraph * graphPtr,
+    double x,
+    double y,
+    RbcAxis2D * pairPtr);
+MODULE_SCOPE void RbcResetAxes(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcGetAxisSegments(
+    RbcGraph * graphPtr,
+    RbcAxis * axisPtr,
+    RbcSegment2D ** segPtrPtr,
+    int *nSegmentsPtr);
+MODULE_SCOPE void RbcLayoutMargins(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcDestroyAxes(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcDefaultAxes(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcVirtualAxisOp(
+    RbcGraph * graphPtr,
+    Tcl_Interp * interp,
+    int argc,
+    const char **argv);
+MODULE_SCOPE int RbcAxisOp(
+    RbcGraph * graphPtr,
+    int margin,
+    int argc,
+    const char **argv);
+MODULE_SCOPE void RbcMapAxes(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcDrawAxes(
+    RbcGraph * graphPtr,
+    Drawable drawable);
+MODULE_SCOPE void RbcAxesToPostScript(
+    RbcGraph * graphPtr,
+    RbcPsToken * psToken);
+MODULE_SCOPE void RbcDrawAxisLimits(
+    RbcGraph * graphPtr,
+    Drawable drawable);
+MODULE_SCOPE void RbcAxisLimitsToPostScript(
+    RbcGraph * graphPtr,
+    RbcPsToken * psToken);
+MODULE_SCOPE RbcAxis *RbcGetFirstAxis(
+    RbcChain * chainPtr);
+MODULE_SCOPE RbcAxis *RbcNearestAxis(
+    RbcGraph * graphPtr,
     int x,
     int y);
-MODULE_SCOPE void RbcMoveResizeToplevel(
+MODULE_SCOPE ClientData RbcMakeAxisTag(
+    RbcGraph * graphPtr,
+    const char *tagName);
+
+/* rbcGrBar.c */
+MODULE_SCOPE RbcPen *RbcBarPen(
+    const char *penName);
+MODULE_SCOPE RbcElement *RbcBarElement(
+    RbcGraph * graphPtr,
+    const char *name,
+    RbcUid type);
+MODULE_SCOPE void RbcInitFreqTable(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcComputeStacks(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcResetStacks(
+    RbcGraph * graphPtr);
+
+/* rbcGrElem.c */
+MODULE_SCOPE double RbcFindElemVectorMinimum(
+    RbcElemVector * vecPtr,
+    double minLimit);
+MODULE_SCOPE void RbcFreePalette(
+    RbcGraph * graphPtr,
+    RbcChain * palette);
+MODULE_SCOPE int RbcStringToStyles(
+    ClientData clientData,
+    Tcl_Interp * interp,
     Tk_Window tkwin,
-    int x,
-    int y,
+    const char *string,
+    char *widgRec,
+    int offset);
+MODULE_SCOPE const char *RbcStylesToString(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *widgRec,
+    int offset,
+    Tcl_FreeProc ** freeProcPtr);
+MODULE_SCOPE RbcPenStyle **RbcStyleMap(
+    RbcElement * elemPtr);
+MODULE_SCOPE void RbcMapErrorBars(
+    RbcGraph * graphPtr,
+    RbcElement * elemPtr,
+    RbcPenStyle ** dataToStyle);
+MODULE_SCOPE void RbcDestroyElements(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcMapElements(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcDrawElements(
+    RbcGraph * graphPtr,
+    Drawable drawable);
+MODULE_SCOPE void RbcDrawActiveElements(
+    RbcGraph * graphPtr,
+    Drawable drawable);
+MODULE_SCOPE void RbcElementsToPostScript(
+    RbcGraph * graphPtr,
+    RbcPsToken * psToken);
+MODULE_SCOPE void RbcActiveElementsToPostScript(
+    RbcGraph * graphPtr,
+    RbcPsToken * psToken);
+MODULE_SCOPE int RbcGraphUpdateNeeded(
+    RbcGraph * graphPtr);
+MODULE_SCOPE ClientData RbcMakeElementTag(
+    RbcGraph * graphPtr,
+    const char *tagName);
+MODULE_SCOPE int RbcElementOp(
+    RbcGraph * graphPtr,
+    Tcl_Interp * interp,
+    int argc,
+    const char **argv,
+    RbcUid classUid);
+
+/* rbcGrGrid.c */
+MODULE_SCOPE void RbcMapGrid(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcDrawGrid(
+    RbcGraph * graphPtr,
+    Drawable drawable);
+MODULE_SCOPE void RbcGridToPostScript(
+    RbcGraph * graphPtr,
+    RbcPsToken * psToken);
+MODULE_SCOPE void RbcDestroyGrid(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcCreateGrid(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcGridOp(
+    RbcGraph * graphPtr,
+    Tcl_Interp * interp,
+    int argc,
+    const char **argv);
+
+/* rbcGrHairs.c */
+MODULE_SCOPE void RbcConfigureCrosshairs(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcEnableCrosshairs(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcDisableCrosshairs(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcUpdateCrosshairs(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcDestroyCrosshairs(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcCreateCrosshairs(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcCrosshairsOp(
+    RbcGraph * graphPtr,
+    Tcl_Interp * interp,
+    int argc,
+    const char **argv);
+
+/* rbcGrLegd.c */
+MODULE_SCOPE void RbcMapLegend(
+    RbcLegend * legendPtr,
     int width,
     int height);
-MODULE_SCOPE ClientData RbcGetWindowInstanceData(
-    Tk_Window tkwin);
-MODULE_SCOPE void RbcSetWindowInstanceData(
+MODULE_SCOPE void RbcDrawLegend(
+    RbcLegend * legendPtr,
+    Drawable drawable);
+MODULE_SCOPE void RbcLegendToPostScript(
+    RbcLegend * legendPtr,
+    RbcPsToken * psToken);
+MODULE_SCOPE void RbcDestroyLegend(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcCreateLegend(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcLegendOp(
+    RbcGraph * graphPtr,
+    Tcl_Interp * interp,
+    int argc,
+    const char **argv);
+MODULE_SCOPE int RbcLegendSite(
+    RbcLegend * legendPtr);
+MODULE_SCOPE int RbcLegendWidth(
+    RbcLegend * legendPtr);
+MODULE_SCOPE int RbcLegendHeight(
+    RbcLegend * legendPtr);
+MODULE_SCOPE int RbcLegendIsHidden(
+    RbcLegend * legendPtr);
+MODULE_SCOPE int RbcLegendIsRaised(
+    RbcLegend * legendPtr);
+MODULE_SCOPE int RbcLegendX(
+    RbcLegend * legendPtr);
+MODULE_SCOPE int RbcLegendY(
+    RbcLegend * legendPtr);
+MODULE_SCOPE void RbcLegendRemoveElement(
+    RbcLegend * legendPtr,
+    RbcElement * elemPtr);
+
+/* rbcGrLine.c */
+MODULE_SCOPE RbcPen *RbcLinePen(
+    const char *penName);
+MODULE_SCOPE RbcElement *RbcLineElement(
+    RbcGraph *graphPtr,
+    const char *name,
+    RbcUid classUid);
+
+/* rbcGrMarker.c */
+MODULE_SCOPE ClientData RbcMakeMarkerTag(
+    RbcGraph * graphPtr,
+    const char *tagName);
+MODULE_SCOPE int RbcMarkerOp(
+    RbcGraph * graphPtr,
+    Tcl_Interp * interp,
+    int argc,
+    const char **argv);
+MODULE_SCOPE void RbcMarkersToPostScript(
+    RbcGraph * graphPtr,
+    RbcPsToken * psToken,
+    int under);
+MODULE_SCOPE void RbcDrawMarkers(
+    RbcGraph * graphPtr,
+    Drawable drawable,
+    int under);
+MODULE_SCOPE void RbcMapMarkers(
+    RbcGraph * graphPtr);
+MODULE_SCOPE void RbcDestroyMarkers(
+    RbcGraph * graphPtr);
+MODULE_SCOPE RbcMarker *RbcNearestMarker(
+    RbcGraph * graphPtr,
+    int x,
+    int y,
+    int under);
+
+/* rbcGrMisc.c */
+MODULE_SCOPE int RbcGetXY(
+    Tcl_Interp * interp,
     Tk_Window tkwin,
-    ClientData instanceData);
-MODULE_SCOPE void RbcDeleteWindowInstanceData(
-    Tk_Window tkwin);
+    const char *string,
+    int *x,
+    int *y);
+MODULE_SCOPE void RbcFreeColorPair(
+    RbcColorPair * pairPtr);
+MODULE_SCOPE int RbcPointInSegments(
+    RbcPoint2D * samplePtr,
+    RbcSegment2D * segments,
+    int nSegments,
+    double halo);
+MODULE_SCOPE int RbcPointInPolygon(
+    RbcPoint2D * samplePtr,
+    RbcPoint2D * screenPts,
+    int nScreenPts);
+MODULE_SCOPE int RbcRegionInPolygon(
+    RbcExtents2D * extsPtr,
+    RbcPoint2D * points,
+    int nPoints,
+    int enclosed);
+MODULE_SCOPE void RbcGraphExtents(
+    RbcGraph * graphPtr,
+    RbcExtents2D * extsPtr);
+MODULE_SCOPE int RbcLineRectClip(
+    RbcExtents2D * extsPtr,
+    RbcPoint2D * p,
+    RbcPoint2D * q);
+MODULE_SCOPE int RbcPolyRectClip(
+    RbcExtents2D * extsPtr,
+    RbcPoint2D * inputPts,
+    int nInputPts,
+    RbcPoint2D * outputPts);
+MODULE_SCOPE RbcPoint2D RbcGetProjection(
+    int x,
+    int y,
+    RbcPoint2D * p,
+    RbcPoint2D * q);
 MODULE_SCOPE int RbcAdjustViewport(
     int offset,
     int worldSize,
@@ -2220,87 +2180,86 @@ MODULE_SCOPE void RbcUpdateScrollbar(
     char *scrollCmd,
     double firstFract,
     double lastFract);
-MODULE_SCOPE int RbcReparentWindow(
+MODULE_SCOPE GC RbcGetPrivateGCFromDrawable(
     Display * display,
-    Window window,
-    Window newParent,
-    int x,
-    int y);
+    Drawable drawable,
+    unsigned long gcMask,
+    XGCValues * valuePtr);
+MODULE_SCOPE GC RbcGetPrivateGC(
+    Tk_Window tkwin,
+    unsigned long gcMask,
+    XGCValues * valuePtr);
+MODULE_SCOPE void RbcFreePrivateGC(
+    Display * display,
+    GC gc);
+MODULE_SCOPE void RbcSetDashes(
+    Display * display,
+    GC gc,
+    RbcDashes * dashesPtr);
+MODULE_SCOPE int RbcSimplifyLine(
+    RbcPoint2D * origPts,
+    int low,
+    int high,
+    double tolerance,
+    int indices[]);
+MODULE_SCOPE void RbcDraw2DSegments(
+    Display * display,
+    Drawable drawable,
+    GC gc,
+    RbcSegment2D * segments,
+    int nSegments);
+MODULE_SCOPE int RbcMaxRequestSize(
+    Display * display,
+    unsigned int elemSize);
 
-MODULE_SCOPE char *RbcStrdup(
-    const char *ptr);
-MODULE_SCOPE void *RbcCalloc(
-    unsigned int nElem,
-    size_t size);
-MODULE_SCOPE int RbcGetTile(
+/* rbcPen.c */
+MODULE_SCOPE void RbcFreePen(
+    RbcGraph * graphPtr,
+    RbcPen * penPtr);
+MODULE_SCOPE RbcPen *RbcCreatePen(
+    RbcGraph * graphPtr,
+    const char *penName,
+    RbcUid classUid,
+    int nOpts,
+    const char **options);
+MODULE_SCOPE int RbcGetPen(
+    RbcGraph * graphPtr,
+    const char *name,
+    RbcUid classUid,
+    RbcPen ** penPtrPtr);
+MODULE_SCOPE void RbcDestroyPens(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcPenOp(
+    RbcGraph * graphPtr,
     Tcl_Interp * interp,
-    Tk_Window tkwin,
-    const char *imageName,
-    RbcTile * tilePtr);
-MODULE_SCOPE void RbcFreeTile(
-    RbcTile tile);
-MODULE_SCOPE const char *RbcNameOfTile(
-    RbcTile tile);
-MODULE_SCOPE void RbcSetTileChangedProc(
-    RbcTile tile,
-    RbcTileChangedProc * changeProc,
-    ClientData clientData);
-MODULE_SCOPE void RbcTileRectangle(
-    Tk_Window tkwin,
-    Drawable drawable,
-    RbcTile tile,
-    int x,
-    int y,
-    unsigned int width,
-    unsigned int height);
-MODULE_SCOPE void RbcTileRectangles(
-    Tk_Window tkwin,
-    Drawable drawable,
-    RbcTile tile,
-    XRectangle * rectArr,
-    int nRects);
-MODULE_SCOPE void RbcTilePolygon(
-    Tk_Window tkwin,
-    Drawable drawable,
-    RbcTile tile,
-    XPoint * pointArr,
-    int nPoints);
-Pixmap          RbcPixmapOfTile(
-    RbcTile tile);
-MODULE_SCOPE void RbcSizeOfTile(
-    RbcTile tile,
-    int *widthPtr,
-    int *heightPtr);
-MODULE_SCOPE void RbcSetTileOrigin(
-    Tk_Window tkwin,
-    RbcTile tile,
-    int x,
-    int y);
-MODULE_SCOPE void RbcSetTSOrigin(
-    Tk_Window tkwin,
-    RbcTile tile,
-    int x,
-    int y);
+    int argc,
+    const char **argv);
 
+/* rbcGrPs.c */
+MODULE_SCOPE void RbcDestroyPostScript(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcCreatePostScript(
+    RbcGraph * graphPtr);
+MODULE_SCOPE int RbcPostScriptOp(
+    RbcGraph * graphPtr,
+    Tcl_Interp * interp,
+    int argc,
+    const char *argv[]);
+
+/* rbcImage.c */
+MODULE_SCOPE RbcColorImage *RbcCreateColorImage(
+    int width,
+    int height);
+MODULE_SCOPE void RbcFreeColorImage(
+    RbcColorImage * image);
+MODULE_SCOPE void RbcGammaCorrectColorImage(
+    RbcColorImage * src,
+    double newGamma);
 MODULE_SCOPE void RbcColorImageToGreyscale(
     RbcColorImage * image);
 MODULE_SCOPE void RbcColorImageToPhoto(
     Tcl_Interp * interp,
     RbcColorImage * image,
-    Tk_PhotoHandle photo);
-MODULE_SCOPE RbcColorImage *RbcConvolveColorImage(
-    RbcColorImage * srcImage,
-    RbcFilter2D * filter);
-MODULE_SCOPE RbcColorImage *RbcCreateColorImage(
-    int width,
-    int height);
-MODULE_SCOPE int RbcGetResampleFilter(
-    Tcl_Interp * interp,
-    char *filterName,
-    RbcResampleFilter ** filterPtrPtr);
-MODULE_SCOPE void RbcFreeColorImage(
-    RbcColorImage * image);
-MODULE_SCOPE RbcColorImage *RbcPhotoToColorImage(
     Tk_PhotoHandle photo);
 MODULE_SCOPE RbcColorImage *RbcPhotoRegionToColorImage(
     Tk_PhotoHandle photo,
@@ -2308,10 +2267,12 @@ MODULE_SCOPE RbcColorImage *RbcPhotoRegionToColorImage(
     int y,
     int width,
     int height);
-MODULE_SCOPE int RbcQuantizeColorImage(
-    RbcColorImage * src,
-    RbcColorImage * dest,
-    int nColors);
+MODULE_SCOPE RbcColorImage *RbcPhotoToColorImage(
+    Tk_PhotoHandle photo);
+MODULE_SCOPE int RbcGetResampleFilter(
+    Tcl_Interp * interp,
+    char *filterName,
+    RbcResampleFilter ** filterPtrPtr);
 MODULE_SCOPE RbcColorImage *RbcResampleColorImage(
     RbcColorImage * image,
     int destWidth,
@@ -2328,6 +2289,14 @@ MODULE_SCOPE void RbcResamplePhoto(
     Tk_PhotoHandle destPhoto,
     RbcResampleFilter * horzFilterPtr,
     RbcResampleFilter * vertFilterPtr);
+MODULE_SCOPE void RbcResizePhoto(
+    Tcl_Interp * interp,
+    Tk_PhotoHandle srcPhoto,
+    int x,
+    int y,
+    int width,
+    int height,
+    Tk_PhotoHandle destPhoto);
 MODULE_SCOPE RbcColorImage *RbcResizeColorImage(
     RbcColorImage * src,
     int x,
@@ -2344,17 +2313,9 @@ MODULE_SCOPE RbcColorImage *RbcResizeColorSubimage(
     int height,
     int destWidth,
     int destHeight);
-MODULE_SCOPE RbcColorImage *RbcRotateColorImage(
-    RbcColorImage * image,
-    double theta);
-MODULE_SCOPE void RbcResizePhoto(
-    Tcl_Interp * interp,
-    Tk_PhotoHandle srcPhoto,
-    int x,
-    int y,
-    int width,
-    int height,
-    Tk_PhotoHandle destPhoto);
+MODULE_SCOPE RbcColorImage *RbcConvolveColorImage(
+    RbcColorImage * srcImage,
+    RbcFilter2D * filter);
 MODULE_SCOPE int RbcSnapPhoto(
     Tcl_Interp * interp,
     Tk_Window tkwin,
@@ -2367,28 +2328,19 @@ MODULE_SCOPE int RbcSnapPhoto(
     int destHeight,
     const char *photoName,
     double inputGamma);
+MODULE_SCOPE RbcColorImage *RbcRotateColorImage(
+    RbcColorImage * image,
+    double theta);
+MODULE_SCOPE int RbcQuantizeColorImage(
+    RbcColorImage * src,
+    RbcColorImage * dest,
+    int nColors);
 MODULE_SCOPE RbcRegion2D *RbcSetRegion(
     int x,
     int y,
     int width,
     int height,
     RbcRegion2D * regionPtr);
-
-/* Missing routines from the Tk photo C API */
-
-MODULE_SCOPE int Tk_ImageIsDeleted(
-    Tk_Image tkImage);
-MODULE_SCOPE Tk_ImageMaster Tk_ImageGetMaster(
-    Tk_Image tkImage);
-MODULE_SCOPE Tk_ImageType *Tk_ImageGetType(
-    Tk_Image tkImage);
-MODULE_SCOPE Pixmap Tk_ImageGetPhotoPixmap(
-    Tk_Image photoImage);
-MODULE_SCOPE GC Tk_ImageGetPhotoGC(
-    Tk_Image photoImage);
-
-MODULE_SCOPE const char *RbcNameOfImage(
-    Tk_Image tkImage);
 MODULE_SCOPE Tk_Image RbcCreateTemporaryImage(
     Tcl_Interp * interp,
     Tk_Window tkwin,
@@ -2396,407 +2348,58 @@ MODULE_SCOPE Tk_Image RbcCreateTemporaryImage(
 MODULE_SCOPE int RbcDestroyTemporaryImage(
     Tcl_Interp * interp,
     Tk_Image tkImage);
-MODULE_SCOPE GC RbcGetBitmapGC(
-    Tk_Window tkwin);
+MODULE_SCOPE const char *RbcNameOfImage(
+    Tk_Image tkImage);
 
-MODULE_SCOPE RbcPsToken *RbcGetPsToken(
-    Tcl_Interp * interp,
-    Tk_Window tkwin);
-MODULE_SCOPE void RbcReleasePsToken(
-    RbcPsToken * psToken);
-MODULE_SCOPE char *RbcPostScriptFromToken(
-    RbcPsToken * psToken);
-MODULE_SCOPE char *RbcScratchBufferFromToken(
-    RbcPsToken * psToken);
-MODULE_SCOPE void RbcAppendToPostScript(
-    RbcPsToken * psToken,
-    ...);
-MODULE_SCOPE void RbcFormatToPostScript(
-    RbcPsToken * psToken,
-    ...);
-MODULE_SCOPE void RbcDraw3DRectangleToPostScript(
-    RbcPsToken * psToken,
-    Tk_3DBorder border,
-    double x,
-    double y,
-    int width,
-    int height,
-    int borderWidth,
-    int relief);
-MODULE_SCOPE void RbcFill3DRectangleToPostScript(
-    RbcPsToken * psToken,
-    Tk_3DBorder border,
-    double x,
-    double y,
-    int width,
-    int height,
-    int borderWidth,
-    int relief);
-MODULE_SCOPE void RbcBackgroundToPostScript(
-    RbcPsToken * psToken,
-    XColor * colorPtr);
-MODULE_SCOPE void RbcBitmapDataToPostScript(
-    RbcPsToken * psToken,
-    Display * display,
-    Pixmap bitmap,
-    int width,
-    int height);
-MODULE_SCOPE void RbcClearBackgroundToPostScript(
-    RbcPsToken * psToken);
-MODULE_SCOPE int RbcColorImageToPsData(
-    RbcColorImage * image,
-    int nComponents,
-    Tcl_DString * resultPtr,
-    const char *prefix);
-MODULE_SCOPE void RbcColorImageToPostScript(
-    RbcPsToken * psToken,
-    RbcColorImage * image,
-    double x,
-    double y);
-MODULE_SCOPE void RbcForegroundToPostScript(
-    RbcPsToken * psToken,
-    XColor * colorPtr);
-MODULE_SCOPE void RbcFontToPostScript(
-    RbcPsToken * psToken,
-    Tk_Font font);
-MODULE_SCOPE void RbcWindowToPostScript(
-    RbcPsToken * psToken,
-    Tk_Window tkwin,
-    double x,
-    double y);
-MODULE_SCOPE void RbcLineDashesToPostScript(
-    RbcPsToken * psToken,
-    RbcDashes * dashesPtr);
-MODULE_SCOPE void RbcLineWidthToPostScript(
-    RbcPsToken * psToken,
-    int lineWidth);
-MODULE_SCOPE void RbcPathToPostScript(
-    RbcPsToken * psToken,
-    RbcPoint2D * screenPts,
-    int nScreenPts);
-MODULE_SCOPE void RbcPhotoToPostScript(
-    RbcPsToken * psToken,
-    Tk_PhotoHandle photoToken,
-    double x,
-    double y);
-MODULE_SCOPE void RbcPolygonToPostScript(
-    RbcPsToken * psToken,
-    RbcPoint2D * screenPts,
-    int nScreenPts);
-MODULE_SCOPE void RbcLineToPostScript(
-    RbcPsToken * psToken,
-    XPoint * pointArr,
-    int nPoints);
-MODULE_SCOPE void RbcTextToPostScript(
-    RbcPsToken * psToken,
-    char *string,
-    RbcTextStyle * attrPtr,
-    double x,
-    double y);
-MODULE_SCOPE void RbcRectangleToPostScript(
-    RbcPsToken * psToken,
-    double x,
-    double y,
-    int width,
-    int height);
-MODULE_SCOPE void RbcRegionToPostScript(
-    RbcPsToken * psToken,
-    double x,
-    double y,
-    int width,
-    int height);
-MODULE_SCOPE void RbcRectanglesToPostScript(
-    RbcPsToken * psToken,
-    XRectangle * rectArr,
-    int nRects);
-MODULE_SCOPE void RbcBitmapToPostScript(
-    RbcPsToken * psToken,
-    Display * display,
-    Pixmap bitmap,
-    double scaleX,
-    double scaleY);
-MODULE_SCOPE void RbcSegmentsToPostScript(
-    RbcPsToken * psToken,
-    XSegment * segArr,
-    int nSegs);
-MODULE_SCOPE void RbcStippleToPostScript(
-    RbcPsToken * psToken,
-    Display * display,
-    Pixmap bitmap);
-MODULE_SCOPE void RbcLineAttributesToPostScript(
-    RbcPsToken * psToken,
-    XColor * colorPtr,
-    int lineWidth,
-    RbcDashes * dashesPtr,
-    int capStyle,
-    int joinStyle);
-MODULE_SCOPE int RbcFileToPostScript(
-    RbcPsToken * psToken,
-    const char *fileName);
-MODULE_SCOPE void Rbc2DSegmentsToPostScript(
-    RbcPsToken * psToken,
-    RbcSegment2D * segments,
-    int nSegments);
-MODULE_SCOPE int RbcCreateLegend(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDestroyLegend(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDrawLegend(
-    RbcLegend * legendPtr,
-    Drawable drawable);
-MODULE_SCOPE void RbcMapLegend(
-    RbcLegend * legendPtr,
-    int width,
-    int height);
-MODULE_SCOPE int RbcLegendOp(
-    RbcGraph * graphPtr,
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv);
-MODULE_SCOPE int RbcLegendSite(
-    RbcLegend * legendPtr);
-MODULE_SCOPE int RbcLegendWidth(
-    RbcLegend * legendPtr);
-MODULE_SCOPE int RbcLegendHeight(
-    RbcLegend * legendPtr);
-MODULE_SCOPE int RbcLegendIsHidden(
-    RbcLegend * legendPtr);
-MODULE_SCOPE int RbcLegendIsRaised(
-    RbcLegend * legendPtr);
-MODULE_SCOPE int RbcLegendX(
-    RbcLegend * legendPtr);
-MODULE_SCOPE int RbcLegendY(
-    RbcLegend * legendPtr);
-MODULE_SCOPE void RbcLegendRemoveElement(
-    RbcLegend * legendPtr,
-    RbcElement * elemPtr);
+/* rbcList.c */
+MODULE_SCOPE RbcList *RbcListCreate(
+    int type);
+MODULE_SCOPE RbcListNode *RbcListCreateNode(
+    RbcList * list,
+    const char *key);
+MODULE_SCOPE void RbcListReset(
+    RbcList * list);
+MODULE_SCOPE void RbcListDestroy(
+    RbcList * list);
+MODULE_SCOPE void RbcListInit(
+    RbcList * list,
+    int type);
+MODULE_SCOPE void RbcListLinkAfter(
+    RbcList * list,
+    RbcListNode * node,
+    RbcListNode * afterNode);
+MODULE_SCOPE void RbcListLinkBefore(
+    RbcList * list,
+    RbcListNode * node,
+    RbcListNode * beforeNode);
+MODULE_SCOPE void RbcListUnlinkNode(
+    RbcListNode * node);
+MODULE_SCOPE RbcListNode *RbcListGetNode(
+    RbcList * list,
+    const char *key);
+MODULE_SCOPE void RbcListDeleteNode(
+    RbcListNode * node);
+MODULE_SCOPE void Rb_ListDeleteNodeByKey(
+    RbcList * list,
+    const char *key);
+MODULE_SCOPE RbcListNode *RbcListAppend(
+    RbcList * list,
+    const char *key,
+    ClientData clientData);
+MODULE_SCOPE RbcListNode *RbcListPrepend(
+    RbcList * list,
+    const char *key,
+    ClientData clientData);
+MODULE_SCOPE RbcListNode *RbcListGetNthNode(
+    RbcList * list,
+    int position,
+    int direction);
+MODULE_SCOPE void RbcListSort(
+    RbcList * list,
+    RbcListCompareProc * proc);
+MODULE_SCOPE int RbcImageIsDeleted(
+    Tk_Image tkImage);
 
-MODULE_SCOPE int RbcCreatePostScript(
-    RbcGraph * graphPtr);
-MODULE_SCOPE int RbcCreateCrosshairs(
-    RbcGraph * graphPtr);
-MODULE_SCOPE int RbcCreateGrid(
-    RbcGraph * graphPtr);
-MODULE_SCOPE double RbcInvHMap(
-    RbcGraph * graphPtr,
-    RbcAxis * axisPtr,
-    double x);
-MODULE_SCOPE double RbcInvVMap(
-    RbcGraph * graphPtr,
-    RbcAxis * axisPtr,
-    double x);
-MODULE_SCOPE double RbcHMap(
-    RbcGraph * graphPtr,
-    RbcAxis * axisPtr,
-    double x);
-MODULE_SCOPE double RbcVMap(
-    RbcGraph * graphPtr,
-    RbcAxis * axisPtr,
-    double y);
-MODULE_SCOPE RbcPoint2D RbcInvMap2D(
-    RbcGraph * graphPtr,
-    double x,
-    double y,
-    RbcAxis2D * pairPtr);
-MODULE_SCOPE RbcPoint2D RbcMap2D(
-    RbcGraph * graphPtr,
-    double x,
-    double y,
-    RbcAxis2D * pairPtr);
-MODULE_SCOPE RbcGraph *RbcGetGraphFromWindowData(
-    Tk_Window tkwin);
-MODULE_SCOPE int RbcLineRectClip(
-    RbcExtents2D * extsPtr,
-    RbcPoint2D * p,
-    RbcPoint2D * q);
-MODULE_SCOPE int RbcPolyRectClip(
-    RbcExtents2D * extsPtr,
-    RbcPoint2D * inputPts,
-    int nInputPts,
-    RbcPoint2D * outputPts);
-
-MODULE_SCOPE void RbcComputeStacks(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcConfigureCrosshairs(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDestroyAxes(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDestroyCrosshairs(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDestroyGrid(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDestroyElements(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDestroyMarkers(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDestroyPostScript(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDrawAxes(
-    RbcGraph * graphPtr,
-    Drawable drawable);
-MODULE_SCOPE void RbcDrawAxisLimits(
-    RbcGraph * graphPtr,
-    Drawable drawable);
-MODULE_SCOPE void RbcDrawElements(
-    RbcGraph * graphPtr,
-    Drawable drawable);
-MODULE_SCOPE void RbcDrawActiveElements(
-    RbcGraph * graphPtr,
-    Drawable drawable);
-MODULE_SCOPE void RbcDrawGraph(
-    RbcGraph * graphPtr,
-    Drawable drawable,
-    int backingStore);
-MODULE_SCOPE void RbcDrawGrid(
-    RbcGraph * graphPtr,
-    Drawable drawable);
-MODULE_SCOPE void RbcDrawMarkers(
-    RbcGraph * graphPtr,
-    Drawable drawable,
-    int under);
-MODULE_SCOPE void RbcDraw2DSegments(
-    Display * display,
-    Drawable drawable,
-    GC gc,
-    RbcSegment2D * segments,
-    int nSegments);
-MODULE_SCOPE void RbcInitFreqTable(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcLayoutGraph(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcLayoutMargins(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcEventuallyRedrawGraph(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcResetAxes(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcResetStacks(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcGraphExtents(
-    RbcGraph * graphPtr,
-    RbcExtents2D * extsPtr);
-MODULE_SCOPE void RbcDisableCrosshairs(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcEnableCrosshairs(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcMapAxes(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcMapElements(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcMapMarkers(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcMapGrid(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcUpdateCrosshairs(
-    RbcGraph * graphPtr);
-MODULE_SCOPE void RbcDestroyPens(
-    RbcGraph * graphPtr);
-MODULE_SCOPE int RbcGetPen(
-    RbcGraph * graphPtr,
-    const char *name,
-    RbcUid classUid,
-    RbcPen ** penPtrPtr);
-MODULE_SCOPE RbcPen *RbcBarPen(
-    const char *penName);
-MODULE_SCOPE RbcPen *RbcLinePen(
-    const char *penName);
-MODULE_SCOPE RbcPen *RbcCreatePen(
-    RbcGraph * graphPtr,
-    const char *penName,
-    RbcUid classUid,
-    int nOpts,
-    const char **options);
-MODULE_SCOPE void RbcFreePen(
-    RbcGraph * graphPtr,
-    RbcPen * penPtr);
-
-MODULE_SCOPE int RbcVirtualAxisOp(
-    RbcGraph * graphPtr,
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv);
-/* rbcGrAxis.c */
-MODULE_SCOPE int RbcAxisOp(
-    RbcGraph * graphPtr,
-    int margin,
-    int argc,
-    const char **argv);
-/* rbcGrElem.c */
-MODULE_SCOPE int RbcElementOp(
-    RbcGraph * graphPtr,
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv,
-    RbcUid classUid);
-/* rbcGrGrid.c */
-MODULE_SCOPE int RbcGridOp(
-    RbcGraph * graphPtr,
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv);
-/* rbcGrHairs.c */
-MODULE_SCOPE int RbcCrosshairsOp(
-    RbcGraph * graphPtr,
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv);
-/* rbcGrMarker.c */
-MODULE_SCOPE int RbcMarkerOp(
-    RbcGraph * graphPtr,
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv);
-/* rbcGrPen.c */
-MODULE_SCOPE int RbcPenOp(
-    RbcGraph * graphPtr,
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv);
-/* rbcGrMisc.c */
-MODULE_SCOPE int RbcPointInPolygon(
-    RbcPoint2D * samplePtr,
-    RbcPoint2D * screenPts,
-    int nScreenPts);
-MODULE_SCOPE int RbcRegionInPolygon(
-    RbcExtents2D * extsPtr,
-    RbcPoint2D * points,
-    int nPoints,
-    int enclosed);
-MODULE_SCOPE int RbcPointInSegments(
-    RbcPoint2D * samplePtr,
-    RbcSegment2D * segments,
-    int nSegments,
-    double halo);
-/* rbcGrPs.c */
-MODULE_SCOPE int RbcPostScriptOp(
-    RbcGraph * graphPtr,
-    Tcl_Interp * interp,
-    int argc,
-    const char *argv[]);
-/* rbcGrAxis.c */
-MODULE_SCOPE int RbcGraphUpdateNeeded(
-    RbcGraph * graphPtr);
-MODULE_SCOPE int RbcDefaultAxes(
-    RbcGraph * graphPtr);
-RbcAxis        *RbcGetFirstAxis(
-    RbcChain * chainPtr);
-MODULE_SCOPE void RbcGetAxisSegments(
-    RbcGraph * graphPtr,
-    RbcAxis * axisPtr,
-    RbcSegment2D ** segPtrPtr,
-    int *nSegmentsPtr);
-MODULE_SCOPE RbcMarker *RbcNearestMarker(
-    RbcGraph * graphPtr,
-    int x,
-    int y,
-    int under);
-MODULE_SCOPE RbcAxis *RbcNearestAxis(
-    RbcGraph * graphPtr,
-    int x,
-    int y);
-/* rbcGraph.c */
-MODULE_SCOPE int RbcGraphType(
-    RbcGraph * graphPtr);
 /* rbcParse.c */
 MODULE_SCOPE void RbcExpandParseValue(
     RbcParseValue * parsePtr,
@@ -2819,12 +2422,186 @@ MODULE_SCOPE int RbcParseQuotes(
     int flags,
     char **termPtr,
     RbcParseValue * parsePtr);
+
+/* rbcPs.c */
+MODULE_SCOPE RbcPsToken *RbcGetPsToken(
+    Tcl_Interp * interp,
+    Tk_Window tkwin);
+MODULE_SCOPE void RbcReleasePsToken(
+    RbcPsToken * psToken);
+MODULE_SCOPE char *RbcPostScriptFromToken(
+    RbcPsToken * psToken);
+MODULE_SCOPE char *RbcScratchBufferFromToken(
+    RbcPsToken * psToken);
+MODULE_SCOPE void RbcAppendToPostScript(
+    RbcPsToken * psToken,
+    ...);
+MODULE_SCOPE void RbcFormatToPostScript(
+    RbcPsToken * psToken,
+    ...);
+MODULE_SCOPE int RbcFileToPostScript(
+    RbcPsToken * psToken,
+    const char *fileName);
+MODULE_SCOPE void RbcBackgroundToPostScript(
+    RbcPsToken * psToken,
+    XColor * colorPtr);
+MODULE_SCOPE void RbcForegroundToPostScript(
+    RbcPsToken * psToken,
+    XColor * colorPtr);
+MODULE_SCOPE void RbcBitmapDataToPostScript(
+    RbcPsToken * psToken,
+    Display * display,
+    Pixmap bitmap,
+    int width,
+    int height);
+MODULE_SCOPE int RbcColorImageToPsData(
+    RbcColorImage * image,
+    int nComponents,
+    Tcl_DString * resultPtr,
+    const char *prefix);
+MODULE_SCOPE void RbcClearBackgroundToPostScript(
+    RbcPsToken * psToken);
+MODULE_SCOPE void RbcLineWidthToPostScript(
+    RbcPsToken * psToken,
+    int lineWidth);
+MODULE_SCOPE void RbcLineDashesToPostScript(
+    RbcPsToken * psToken,
+    RbcDashes * dashesPtr);
+MODULE_SCOPE void RbcLineAttributesToPostScript(
+    RbcPsToken * psToken,
+    XColor * colorPtr,
+    int lineWidth,
+    RbcDashes * dashesPtr,
+    int capStyle,
+    int joinStyle);
+MODULE_SCOPE void RbcRectangleToPostScript(
+    RbcPsToken * psToken,
+    double x,
+    double y,
+    int width,
+    int height);
+MODULE_SCOPE void RbcRegionToPostScript(
+    RbcPsToken * psToken,
+    double x,
+    double y,
+    int width,
+    int height);
+MODULE_SCOPE void RbcPathToPostScript(
+    RbcPsToken * psToken,
+    RbcPoint2D * screenPts,
+    int nScreenPts);
+MODULE_SCOPE void RbcPolygonToPostScript(
+    RbcPsToken * psToken,
+    RbcPoint2D * screenPts,
+    int nScreenPts);
+MODULE_SCOPE void RbcSegmentsToPostScript(
+    RbcPsToken * psToken,
+    XSegment * segArr,
+    int nSegs);
+MODULE_SCOPE void RbcRectanglesToPostScript(
+    RbcPsToken * psToken,
+    XRectangle * rectArr,
+    int nRects);
+MODULE_SCOPE void RbcDraw3DRectangleToPostScript(
+    RbcPsToken * psToken,
+    Tk_3DBorder border,
+    double x,
+    double y,
+    int width,
+    int height,
+    int borderWidth,
+    int relief);
+MODULE_SCOPE void RbcFill3DRectangleToPostScript(
+    RbcPsToken * psToken,
+    Tk_3DBorder border,
+    double x,
+    double y,
+    int width,
+    int height,
+    int borderWidth,
+    int relief);
+MODULE_SCOPE void RbcStippleToPostScript(
+    RbcPsToken * psToken,
+    Display * display,
+    Pixmap bitmap);
+MODULE_SCOPE void RbcColorImageToPostScript(
+    RbcPsToken * psToken,
+    RbcColorImage * image,
+    double x,
+    double y);
+MODULE_SCOPE void RbcWindowToPostScript(
+    RbcPsToken * psToken,
+    Tk_Window tkwin,
+    double x,
+    double y);
+MODULE_SCOPE void RbcPhotoToPostScript(
+    RbcPsToken * psToken,
+    Tk_PhotoHandle photoToken,
+    double x,
+    double y);
+MODULE_SCOPE void RbcFontToPostScript(
+    RbcPsToken * psToken,
+    Tk_Font font);
+MODULE_SCOPE void RbcTextToPostScript(
+    RbcPsToken * psToken,
+    char *string,
+    RbcTextStyle * attrPtr,
+    double x,
+    double y);
+MODULE_SCOPE void RbcLineToPostScript(
+    RbcPsToken * psToken,
+    XPoint * pointArr,
+    int nPoints);
+MODULE_SCOPE void RbcBitmapToPostScript(
+    RbcPsToken * psToken,
+    Display * display,
+    Pixmap bitmap,
+    double scaleX,
+    double scaleY);
+MODULE_SCOPE void Rbc2DSegmentsToPostScript(
+    RbcPsToken * psToken,
+    RbcSegment2D * segments,
+    int nSegments);
+
+/* rbcSpline.c */
+MODULE_SCOPE int RbcQuadraticSpline(
+    RbcPoint2D * origPts,
+    int nOrigPts,
+    RbcPoint2D * intpPts,
+    int nIntpPts);
+MODULE_SCOPE int RbcNaturalSpline(
+    RbcPoint2D * origPts,
+    int nOrigPts,
+    RbcPoint2D * intpPts,
+    int nIntpPts);
+MODULE_SCOPE int RbcSplineInit(
+    Tcl_Interp * interp);
+MODULE_SCOPE int RbcNaturalParametricSpline(
+    RbcPoint2D * origPts,
+    int nOrigPts,
+    RbcExtents2D * extsPtr,
+    int isClosed,
+    RbcPoint2D * intpPts,
+    int nIntpPts);
+MODULE_SCOPE int RbcCatromParametricSpline(
+    RbcPoint2D * origPts,
+    int nOrigPts,
+    RbcPoint2D * intpPts,
+    int nIntpPts);
+
 /* rbcSwitch.c */
 MODULE_SCOPE int RbcProcessSwitches(
     Tcl_Interp * interp,
     RbcSwitchSpec * specs,
     int argc,
     const char **argv,
+    char *record,
+    int flags);
+MODULE_SCOPE int RbcProcessObjSwitches(
+    Tcl_Interp * interp,
+    RbcSwitchSpec * specPtr,
+    int objc,
+    Tcl_Obj * const *objv,
     char *record,
     int flags);
 MODULE_SCOPE void RbcFreeSwitches(
@@ -2834,132 +2611,194 @@ MODULE_SCOPE void RbcFreeSwitches(
 MODULE_SCOPE int RbcSwitchChanged(
     RbcSwitchSpec * specs,
     ...);
-MODULE_SCOPE int RbcProcessObjSwitches(
+
+/* rbcText.c */
+MODULE_SCOPE RbcTextLayout *RbcGetTextLayout(
+    char *string,
+    RbcTextStyle * stylePtr);
+MODULE_SCOPE void RbcGetTextExtents(
+    RbcTextStyle * stylePtr,
+    char *text,
+    int *widthPtr,
+    int *heightPtr);
+MODULE_SCOPE void RbcGetBoundingBox(
+    int width,
+    int height,
+    double theta,
+    double *widthPtr,
+    double *heightPtr,
+    RbcPoint2D * points);
+MODULE_SCOPE void RbcTranslateAnchor(
+    int x,
+    int y,
+    int width,
+    int height,
+    Tk_Anchor anchor,
+    int *transXPtr,
+    int *transYPtr);
+MODULE_SCOPE RbcPoint2D RbcTranslatePoint(
+    RbcPoint2D * pointPtr,
+    int width,
+    int height,
+    Tk_Anchor anchor);
+MODULE_SCOPE Pixmap RbcCreateTextBitmap(
+    Tk_Window tkwin,
+    RbcTextLayout * textPtr,
+    RbcTextStyle * stylePtr,
+    int *widthPtr,
+    int *heightPtr);
+MODULE_SCOPE void RbcInitTextStyle(
+    RbcTextStyle * stylePtr);
+MODULE_SCOPE void RbcSetDrawTextStyle(
+    RbcTextStyle * stylePtr,
+    Tk_Font font,
+    GC gc,
+    XColor * normalColor,
+    XColor * activeColor,
+    XColor * shadowColor,
+    double theta,
+    Tk_Anchor anchor,
+    Tk_Justify justify,
+    int leader,
+    int shadowOffset);
+MODULE_SCOPE void RbcSetPrintTextStyle(
+    RbcTextStyle * stylePtr,
+    Tk_Font font,
+    XColor * fgColor,
+    XColor * bgColor,
+    XColor * shadowColor,
+    double theta,
+    Tk_Anchor anchor,
+    Tk_Justify justify,
+    int leader,
+    int shadowOffset);
+MODULE_SCOPE void RbcDrawTextLayout(
+    Tk_Window tkwin,
+    Drawable drawable,
+    RbcTextLayout * textPtr,
+    RbcTextStyle * stylePtr,
+    int x,
+    int y);
+MODULE_SCOPE void RbcDrawText2(
+    Tk_Window tkwin,
+    Drawable drawable,
+    char *string,
+    RbcTextStyle * stylePtr,
+    int x,
+    int y,
+    RbcDim2D * dimPtr);
+MODULE_SCOPE void RbcDrawText(
+    Tk_Window tkwin,
+    Drawable drawable,
+    char *string,
+    RbcTextStyle * stylePtr,
+    int x,
+    int y);
+MODULE_SCOPE GC RbcGetBitmapGC(
+    Tk_Window tkwin);
+MODULE_SCOPE void RbcResetTextStyle(
+    Tk_Window tkwin,
+    RbcTextStyle * stylePtr);
+MODULE_SCOPE void RbcFreeTextStyle(
+    Display * display,
+    RbcTextStyle * stylePtr);
+
+/* rbcTile.c */
+MODULE_SCOPE int RbcGetTile(
     Tcl_Interp * interp,
-    RbcSwitchSpec * specPtr,
+    Tk_Window tkwin,
+    const char *imageName,
+    RbcTile * tilePtr);
+MODULE_SCOPE void RbcFreeTile(
+    RbcTile tile);
+MODULE_SCOPE const char *RbcNameOfTile(
+    RbcTile tile);
+Pixmap          RbcPixmapOfTile(
+    RbcTile tile);
+MODULE_SCOPE void RbcSizeOfTile(
+    RbcTile tile,
+    int *widthPtr,
+    int *heightPtr);
+MODULE_SCOPE void RbcSetTileChangedProc(
+    RbcTile tile,
+    RbcTileChangedProc * changeProc,
+    ClientData clientData);
+MODULE_SCOPE void RbcSetTileOrigin(
+    Tk_Window tkwin,
+    RbcTile tile,
+    int x,
+    int y);
+MODULE_SCOPE void RbcSetTSOrigin(
+    Tk_Window tkwin,
+    RbcTile tile,
+    int x,
+    int y);
+MODULE_SCOPE void RbcTilePolygon(
+    Tk_Window tkwin,
+    Drawable drawable,
+    RbcTile tile,
+    XPoint * pointArr,
+    int nPoints);
+MODULE_SCOPE void RbcTileRectangle(
+    Tk_Window tkwin,
+    Drawable drawable,
+    RbcTile tile,
+    int x,
+    int y,
+    unsigned int width,
+    unsigned int height);
+MODULE_SCOPE void RbcTileRectangles(
+    Tk_Window tkwin,
+    Drawable drawable,
+    RbcTile tile,
+    XRectangle * rectArr,
+    int nRects);
+
+/* rbcUtil.c */
+MODULE_SCOPE char *RbcItoa(
+    int value);
+MODULE_SCOPE char *RbcUtoa(
+    unsigned int value);
+MODULE_SCOPE char *RbcDtoa(
+    Tcl_Interp * interp,
+    double value);
+MODULE_SCOPE RbcUid RbcGetUid(
+    const char *string);
+MODULE_SCOPE void RbcFreeUid(
+    RbcUid uid);
+MODULE_SCOPE RbcUid RbcFindUid(
+    char *string);
+MODULE_SCOPE RbcOp RbcGetOp(
+    Tcl_Interp * interp,
+    int nSpecs,
+    RbcOpSpec * specArr,
+    int operPos,
+    int argc,
+    const char **argv,
+    int flags);
+MODULE_SCOPE RbcOp RbcGetOpFromObj(
+    Tcl_Interp * interp,
+    int nSpecs,
+    RbcOpSpec * specArr,
+    int operPos,
     int objc,
     Tcl_Obj * const *objv,
-    char *record,
     int flags);
-MODULE_SCOPE double Rbcdrand48(
-    void);
-/* rbcVector.c */
-MODULE_SCOPE void RbcVectorFlushCache(
-    RbcVectorObject * vPtr);
-RbcVectorObject *RbcVectorParseElement(
-    Tcl_Interp * interp,
-    RbcVectorInterpData * dataPtr,
-    const char *start,
-    char **endPtr,
-    int flags);
-MODULE_SCOPE int RbcVectorChangeLength(
-    RbcVectorObject * vPtr,
-    int length);
-MODULE_SCOPE void RbcVectorUpdateClients(
-    RbcVectorObject * vPtr);
-MODULE_SCOPE int RbcVectorMapVariable(
-    Tcl_Interp * interp,
-    RbcVectorObject * vPtr,
-    const char *name);
-MODULE_SCOPE RbcVectorObject *RbcVectorCreate(
-    RbcVectorInterpData * dataPtr,
-    const char *vecName,
-    const char *cmdName,
-    const char *varName,
-    int *newPtr);
-MODULE_SCOPE int RbcVectorGetIndex(
-    Tcl_Interp * interp,
-    RbcVectorObject * vPtr,
-    const char *string,
-    int *indexPtr,
-    int flags,
-    RbcVectorIndexProc ** procPtrPtr);
-MODULE_SCOPE int RbcGetDouble(
-    Tcl_Interp * interp,
-    Tcl_Obj * objPtr,
-    double *valuePtr);
-MODULE_SCOPE void RbcVectorFree(
-    RbcVectorObject * vPtr);
-MODULE_SCOPE int RbcVectorGetIndexRange(
-    Tcl_Interp * interp,
-    RbcVectorObject * vPtr,
-    const char *string,
-    int flags,
-    RbcVectorIndexProc ** procPtrPtr);
-MODULE_SCOPE int RbcVectorDuplicate(
-    RbcVectorObject * destPtr,
-    RbcVectorObject * srcPtr);
-MODULE_SCOPE Tcl_Obj *RbcGetValues(
-    RbcVectorObject * vPtr,
-    int first,
-    int last);
-MODULE_SCOPE void RbcReplicateValue(
-    RbcVectorObject * vPtr,
-    int first,
-    int last,
-    double value);
-MODULE_SCOPE int RbcVectorLookupName(
-    RbcVectorInterpData * dataPtr,
-    const char *vecName,
-    RbcVectorObject ** vPtrPtr);
-MODULE_SCOPE int RbcVectorReset(
-    RbcVectorObject * vPtr,
-    double *valueArr,
-    int length,
-    int size,
-    Tcl_FreeProc * freeProc);
-MODULE_SCOPE void RbcVectorUpdateRange(
-    RbcVectorObject * vPtr);
-MODULE_SCOPE RbcVectorObject *RbcVectorNew(
-    RbcVectorInterpData * dataPtr);
-MODULE_SCOPE RbcVectorInterpData *RbcVectorGetInterpData(
-    Tcl_Interp * interp);
-MODULE_SCOPE int RbcVectorNotifyPending(
-    RbcVectorId clientId);
-MODULE_SCOPE void RbcFreeVectorId(
-    RbcVectorId clientId);
-MODULE_SCOPE int RbcGetVectorById(
-    Tcl_Interp * interp,
-    RbcVectorId clientId,
-    RbcVector ** vecPtrPtr);
-MODULE_SCOPE int RbcVectorExists2(
-    Tcl_Interp * interp,
-    const char *vecName);
-MODULE_SCOPE RbcVectorId RbcAllocVectorId(
-    Tcl_Interp * interp,
-    const char *vecName);
-MODULE_SCOPE void RbcSetVectorChangedProc(
-    RbcVectorId clientId,
-    RbcVectorChangedProc * proc,
-    ClientData clientData);
-MODULE_SCOPE char *RbcNameOfVectorId(
-    RbcVectorId clientId);
-MODULE_SCOPE int RbcGetVector(
-    Tcl_Interp * interp,
-    const char *vecName,
-    RbcVector ** vecPtrPtr);
-MODULE_SCOPE int RbcCreateVector(
-    Tcl_Interp * interp,
-    const char *vecName,
-    int size,
-    RbcVector ** vecPtrPtr);
-MODULE_SCOPE int RbcResizeVector(
-    RbcVector * vecPtr,
-    int nValues);
-MODULE_SCOPE char *RbcNameOfVector(
+
+/* rbcVecMath.c */
+MODULE_SCOPE void RbcVectorInstallMathFunctions(
+    Tcl_HashTable * tablePtr);
+MODULE_SCOPE void RbcVectorInstallSpecialIndices(
+    Tcl_HashTable * tablePtr);
+MODULE_SCOPE double RbcVecMin(
     RbcVector * vecPtr);
-MODULE_SCOPE int RbcResetVector(
-    RbcVector * vecPtr,
-    double *dataArr,
-    int nValues,
-    int arraySize,
-    Tcl_FreeProc * freeProc);
-MODULE_SCOPE int RbcVectorReset(
-    RbcVectorObject * vPtr,
-    double *dataArr,
-    int nValues,
-    int arraySize,
-    Tcl_FreeProc * freeProc);
+MODULE_SCOPE double RbcVecMax(
+    RbcVector * vecPtr);
+MODULE_SCOPE int RbcExprVector(
+    Tcl_Interp * interp,
+    char *string,
+    RbcVector * vecPtr);
+
 /* rbcVecObjCmd.c */
 MODULE_SCOPE int RbcAppendOp(
     RbcVectorObject * vPtr,
@@ -3021,12 +2860,12 @@ MODULE_SCOPE int RbcOffsetOp(
     Tcl_Interp * interp,
     int objc,
     Tcl_Obj * const objv[]);
-MODULE_SCOPE int RbcRandomOp(
+MODULE_SCOPE int RbcPopulateOp(
     RbcVectorObject * vPtr,
     Tcl_Interp * interp,
     int objc,
     Tcl_Obj * const objv[]);
-MODULE_SCOPE int RbcPopulateOp(
+MODULE_SCOPE int RbcRandomOp(
     RbcVectorObject * vPtr,
     Tcl_Interp * interp,
     int objc,
@@ -3066,24 +2905,144 @@ MODULE_SCOPE int RbcVariableOp(
     Tcl_Interp * interp,
     int objc,
     Tcl_Obj * const objv[]);
-/* rbcVecMath.c */
-MODULE_SCOPE double RbcVecMin(
-    RbcVector * vecPtr);
-MODULE_SCOPE double RbcVecMax(
-    RbcVector * vecPtr);
-MODULE_SCOPE int RbcExprVector(
-    Tcl_Interp * interp,
-    char *string,
-    RbcVector * vecPtr);
-MODULE_SCOPE void RbcVectorInstallMathFunctions(
-    Tcl_HashTable * tablePtr);
-MODULE_SCOPE void RbcVectorInstallSpecialIndices(
-    Tcl_HashTable * tablePtr);
 MODULE_SCOPE int *RbcVectorSortIndex(
     RbcVectorObject ** vPtrPtr,
     int nVectors);
 
+/* rbcVector.c */
+MODULE_SCOPE double Rbcdrand48(
+    void);
+MODULE_SCOPE int RbcVectorInit(
+    Tcl_Interp * interp);
+MODULE_SCOPE RbcVectorInterpData *RbcVectorGetInterpData(
+    Tcl_Interp * interp);
+MODULE_SCOPE RbcVectorObject *RbcVectorNew(
+    RbcVectorInterpData * dataPtr);
+MODULE_SCOPE RbcVectorObject *RbcVectorCreate(
+    RbcVectorInterpData * dataPtr,
+    const char *vecName,
+    const char *cmdName,
+    const char *varName,
+    int *newPtr);
+MODULE_SCOPE void RbcVectorFree(
+    RbcVectorObject * vPtr);
+MODULE_SCOPE int RbcVectorDuplicate(
+    RbcVectorObject * destPtr,
+    RbcVectorObject * srcPtr);
+MODULE_SCOPE void RbcVectorFlushCache(
+    RbcVectorObject * vPtr);
+MODULE_SCOPE int RbcVectorMapVariable(
+    Tcl_Interp * interp,
+    RbcVectorObject * vPtr,
+    const char *name);
+MODULE_SCOPE int RbcVectorReset(
+    RbcVectorObject * vPtr,
+    double *valueArr,
+    int length,
+    int size,
+    Tcl_FreeProc * freeProc);
+MODULE_SCOPE int RbcVectorNotifyPending(
+    RbcVectorId clientId);
+MODULE_SCOPE int RbcVectorChangeLength(
+    RbcVectorObject * vPtr,
+    int length);
+MODULE_SCOPE int RbcVectorLookupName(
+    RbcVectorInterpData * dataPtr,
+    const char *vecName,
+    RbcVectorObject ** vPtrPtr);
+MODULE_SCOPE void RbcVectorUpdateRange(
+    RbcVectorObject * vPtr);
+MODULE_SCOPE int RbcVectorGetIndex(
+    Tcl_Interp * interp,
+    RbcVectorObject * vPtr,
+    const char *string,
+    int *indexPtr,
+    int flags,
+    RbcVectorIndexProc ** procPtrPtr);
+MODULE_SCOPE int RbcVectorGetIndexRange(
+    Tcl_Interp * interp,
+    RbcVectorObject * vPtr,
+    const char *string,
+    int flags,
+    RbcVectorIndexProc ** procPtrPtr);
+RbcVectorObject *RbcVectorParseElement(
+    Tcl_Interp * interp,
+    RbcVectorInterpData * dataPtr,
+    const char *start,
+    char **endPtr,
+    int flags);
+MODULE_SCOPE void RbcVectorUpdateClients(
+    RbcVectorObject * vPtr);
+MODULE_SCOPE Tcl_Obj *RbcGetValues(
+    RbcVectorObject * vPtr,
+    int first,
+    int last);
+MODULE_SCOPE void RbcReplicateValue(
+    RbcVectorObject * vPtr,
+    int first,
+    int last,
+    double value);
+MODULE_SCOPE int RbcGetDouble(
+    Tcl_Interp * interp,
+    Tcl_Obj * objPtr,
+    double *valuePtr);
+MODULE_SCOPE void RbcFreeVectorId(
+    RbcVectorId clientId);
+MODULE_SCOPE int RbcGetVectorById(
+    Tcl_Interp * interp,
+    RbcVectorId clientId,
+    RbcVector ** vecPtrPtr);
+MODULE_SCOPE int RbcVectorExists2(
+    Tcl_Interp * interp,
+    const char *vecName);
+MODULE_SCOPE RbcVectorId RbcAllocVectorId(
+    Tcl_Interp * interp,
+    const char *vecName);
+MODULE_SCOPE void RbcSetVectorChangedProc(
+    RbcVectorId clientId,
+    RbcVectorChangedProc * proc,
+    ClientData clientData);
+MODULE_SCOPE char *RbcNameOfVectorId(
+    RbcVectorId clientId);
+MODULE_SCOPE int RbcGetVector(
+    Tcl_Interp * interp,
+    const char *vecName,
+    RbcVector ** vecPtrPtr);
+MODULE_SCOPE int RbcCreateVector2(
+    Tcl_Interp * interp,
+    const char *vecName,
+    const char *cmdName,
+    const char *varName,
+    int initialSize,
+    RbcVector ** vecPtrPtr);
+MODULE_SCOPE int RbcCreateVector(
+    Tcl_Interp * interp,
+    const char *vecName,
+    int size,
+    RbcVector ** vecPtrPtr);
+MODULE_SCOPE int RbcResizeVector(
+    RbcVector * vecPtr,
+    int nValues);
+MODULE_SCOPE char *RbcNameOfVector(
+    RbcVector * vecPtr);
+MODULE_SCOPE int RbcResetVector(
+    RbcVector * vecPtr,
+    double *dataArr,
+    int nValues,
+    int arraySize,
+    Tcl_FreeProc * freeProc);
 
+/* rbcWindow.c */
+MODULE_SCOPE Tk_Window RbcFindChild(
+    Tk_Window parent,
+    char *name);
+MODULE_SCOPE void RbcSetWindowInstanceData(
+    Tk_Window tkwin,
+    ClientData instanceData);
+MODULE_SCOPE ClientData RbcGetWindowInstanceData(
+    Tk_Window tkwin);
+MODULE_SCOPE void RbcDeleteWindowInstanceData(
+    Tk_Window tkwin);
 
 /* rbcWinImage.c rbcUnixImage.c */
 MODULE_SCOPE RbcColorImage *RbcDrawableToColorImage(
@@ -3124,8 +3083,6 @@ MODULE_SCOPE Pixmap RbcScaleRotateBitmapRegion(
     unsigned int virtWidth,
     unsigned int virtHeight,
     double theta);
-
-
 
 /* Windows */
 #ifdef _WIN32

@@ -216,7 +216,7 @@ RbcVectorInstallMathFunctions(
 /*
  *----------------------------------------------------------------------
  *
- * RbcVectorInstallMathFunctions --
+ * RbcVectorInstallSpecialIndices --
  *
  *      Creates a hash entry for every index
  *      and sets the value to the function.

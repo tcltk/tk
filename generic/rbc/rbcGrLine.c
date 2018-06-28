@@ -5150,7 +5150,7 @@ static RbcElementProcs lineProcs = {
 RbcElement *
 RbcLineElement(
     RbcGraph *graphPtr,
-    char *name,
+    const char *name,
     RbcUid classUid)
 {
     register Line *linePtr;

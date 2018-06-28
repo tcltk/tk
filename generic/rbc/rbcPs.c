@@ -880,7 +880,7 @@ RbcClearBackgroundToPostScript(
 /*
  *--------------------------------------------------------------
  *
- * RbcCapStyleToPostScript --
+ * CapStyleToPostScript --
  *
  *      TODO: Description
  *
@@ -893,7 +893,7 @@ RbcClearBackgroundToPostScript(
  *--------------------------------------------------------------
  */
 void
-RbcCapStyleToPostScript(
+CapStyleToPostScript(
     RbcPsToken * tokenPtr,
     int capStyle)
 {
@@ -910,7 +910,7 @@ RbcCapStyleToPostScript(
 /*
  *--------------------------------------------------------------
  *
- * RbcJoinStyleToPostScript --
+ * JoinStyleToPostScript --
  *
  *      TODO: Description
  *
@@ -923,7 +923,7 @@ RbcCapStyleToPostScript(
  *--------------------------------------------------------------
  */
 void
-RbcJoinStyleToPostScript(
+JoinStyleToPostScript(
     RbcPsToken * tokenPtr,
     int joinStyle)
 {
@@ -1015,8 +1015,8 @@ RbcLineAttributesToPostScript(
     int capStyle,
     int joinStyle)
 {
-    RbcJoinStyleToPostScript(tokenPtr, joinStyle);
-    RbcCapStyleToPostScript(tokenPtr, capStyle);
+    JoinStyleToPostScript(tokenPtr, joinStyle);
+    CapStyleToPostScript(tokenPtr, capStyle);
     RbcForegroundToPostScript(tokenPtr, colorPtr);
     RbcLineWidthToPostScript(tokenPtr, lineWidth);
     RbcLineDashesToPostScript(tokenPtr, dashesPtr);

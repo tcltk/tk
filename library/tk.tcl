@@ -688,6 +688,12 @@ if {[tk windowingsystem] eq "aqua"} {
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source $::ttk::library/ttk.tcl]
 }
+
+# load rbc related file
+if {$::tk_library ne ""} {
+    uplevel \#0 [list source $::tk_library/rbc/graph.tcl]
+}
+
 
 # Local Variables:
 # mode: tcl

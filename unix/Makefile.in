@@ -834,7 +834,8 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 
 install-libraries: libraries
 	@for i in "$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
-		"$(SCRIPT_INSTALL_DIR)/msgs" "$(SCRIPT_INSTALL_DIR)/ttk"; \
+		"$(SCRIPT_INSTALL_DIR)/msgs" "$(SCRIPT_INSTALL_DIR)/ttk" \
+		"$(SCRIPT_INSTALL_DIR)/rbc"; \
 	    do \
 	    if [ -n "$$i" -a ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
@@ -853,6 +854,13 @@ install-libraries: libraries
 	    do \
 	    if [ -f $$i ] ; then \
 		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk"; \
+	    fi; \
+	    done;
+	@echo "Installing Rbc library files to $(SCRIPT_INSTALL_DIR)/rbc/";
+	@for i in $(TOP_DIR)/library/rbc/*.tcl; \
+	    do \
+	    if [ -f $$i ] ; then \
+		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/rbc"; \
 	    fi; \
 	    done;
 	@echo "Installing library image files to $(SCRIPT_INSTALL_DIR)/images/";
