@@ -741,7 +741,7 @@ test wm-iconbitmap-1.4 {usage} -constraints notAqua -returnCodes error -body {
     wm iconbitmap .t bad-bitmap
 } -result {bitmap "bad-bitmap" not defined}
 
-test wm-iconbitmap-2.1 {setting and reading values} -setup {
+test wm-iconbitmap-2.1 {setting and reading values} -constraints notAqua -setup {
     set result {}
 } -body {
     lappend result [wm iconbitmap .t]
