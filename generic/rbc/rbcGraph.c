@@ -2160,7 +2160,7 @@ DrawMargins(
             (2 * graphPtr->plotBorderWidth);
         height = (graphPtr->bottom - graphPtr->top) +
             (2 * graphPtr->plotBorderWidth);
-        RbcDraw3DRectangle(graphPtr->tkwin, drawable, graphPtr->border, x, y,
+        Tk_Draw3DRectangle(graphPtr->tkwin, drawable, graphPtr->border, x, y,
             width, height, graphPtr->plotBorderWidth, graphPtr->plotRelief);
     }
     if (RbcLegendSite(graphPtr->legend) & RBC_LEGEND_IN_MARGIN) {
@@ -2327,7 +2327,7 @@ RbcDrawGraph(
     }
     /* Draw 3D border just inside of the focus highlight ring. */
     if ((graphPtr->borderWidth > 0) && (graphPtr->relief != TK_RELIEF_FLAT)) {
-        RbcDraw3DRectangle(graphPtr->tkwin, drawable, graphPtr->border,
+        Tk_Draw3DRectangle(graphPtr->tkwin, drawable, graphPtr->border,
             graphPtr->highlightWidth, graphPtr->highlightWidth,
             graphPtr->width - 2 * graphPtr->highlightWidth,
             graphPtr->height - 2 * graphPtr->highlightWidth,

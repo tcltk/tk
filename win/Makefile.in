@@ -430,7 +430,6 @@ RBC_OBJS = \
 	rbcWindow.$(OBJEXT) \
 	rbcWinDraw.$(OBJEXT) \
 	rbcWinImage.$(OBJEXT) \
-	rbcWinUtil.$(OBJEXT) \
 
 STUB_OBJS = \
 	tkStubLib.$(OBJEXT) \
@@ -549,7 +548,8 @@ install-libraries: libraries
 	@for i in $(INSTALL_ROOT)$(prefix)/lib \
 		$(INCLUDE_INSTALL_DIR) $(INCLUDE_INSTALL_DIR)/X11 \
 		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images \
-		$(SCRIPT_INSTALL_DIR)/msgs $(SCRIPT_INSTALL_DIR)/ttk; \
+		$(SCRIPT_INSTALL_DIR)/msgs $(SCRIPT_INSTALL_DIR)/ttk \
+		$(SCRIPT_INSTALL_DIR)/rbc; \
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
@@ -579,6 +579,13 @@ install-libraries: libraries
 	    do \
 	    if [ -f $$i ] ; then \
 		$(INSTALL_DATA) $$i $(SCRIPT_INSTALL_DIR)/ttk; \
+	    fi; \
+	    done;
+	@echo "Installing library rbc directory";
+	@for i in $(ROOT_DIR)/library/rbc/*.tcl; \
+	    do \
+	    if [ -f $$i ] ; then \
+		$(INSTALL_DATA) $$i $(SCRIPT_INSTALL_DIR)/rbc; \
 	    fi; \
 	    done;
 	@echo "Installing library images directory";

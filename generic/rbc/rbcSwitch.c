@@ -199,8 +199,8 @@ DoSwitch(
 
         case RBC_SWITCH_CUSTOM:
             if ((*specPtr->customPtr->parseProc)
-                (specPtr->customPtr->clientData, interp, specPtr->switchName,
-                    string, record, specPtr->offset) != TCL_OK) {
+                (specPtr->customPtr->clientData, interp, (char *)specPtr->switchName,
+                    (char *)string, record, specPtr->offset) != TCL_OK) {
                 return TCL_ERROR;
             }
             break;

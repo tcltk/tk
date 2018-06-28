@@ -890,7 +890,7 @@ RbcDrawLegend(
 
     if (legendPtr->border != NULL) {
         /* Background color and relief. */
-        RbcFill3DRectangle(legendPtr->tkwin, pixmap, legendPtr->border, 0, 0,
+        Tk_Fill3DRectangle(legendPtr->tkwin, pixmap, legendPtr->border, 0, 0,
             width, height, 0, TK_RELIEF_FLAT);
     } else if (legendPtr->site & RBC_LEGEND_IN_PLOT) {
         /*
@@ -935,14 +935,14 @@ RbcDrawLegend(
         }
         if (elemPtr->flags & RBC_LABEL_ACTIVE) {
             legendPtr->style.state |= RBC_STATE_ACTIVE;
-            RbcFill3DRectangle(legendPtr->tkwin, pixmap,
+            Tk_Fill3DRectangle(legendPtr->tkwin, pixmap,
                 legendPtr->activeBorder, x, y,
                 legendPtr->style.width, legendPtr->style.height,
                 legendPtr->entryBorderWidth, legendPtr->activeRelief);
         } else {
             legendPtr->style.state &= ~RBC_STATE_ACTIVE;
             if (elemPtr->labelRelief != TK_RELIEF_FLAT) {
-                RbcDraw3DRectangle(legendPtr->tkwin, pixmap, graphPtr->border,
+                Tk_Draw3DRectangle(legendPtr->tkwin, pixmap, graphPtr->border,
                     x, y, legendPtr->style.width, legendPtr->style.height,
                     legendPtr->entryBorderWidth, elemPtr->labelRelief);
             }
@@ -969,7 +969,7 @@ RbcDrawLegend(
     if (border == NULL) {
         border = graphPtr->border;
     }
-    RbcDraw3DRectangle(legendPtr->tkwin, pixmap, border, 0, 0, width, height,
+    Tk_Draw3DRectangle(legendPtr->tkwin, pixmap, border, 0, 0, width, height,
         legendPtr->borderWidth, legendPtr->relief);
 
     XCopyArea(graphPtr->display, pixmap, drawable, graphPtr->drawGC, 0, 0,

@@ -2727,7 +2727,7 @@ DrawAxis(
     RbcAxis * axisPtr)
 {
     if (axisPtr->border != NULL) {
-        RbcFill3DRectangle(graphPtr->tkwin, drawable, axisPtr->border,
+        Tk_Fill3DRectangle(graphPtr->tkwin, drawable, axisPtr->border,
             axisPtr->region.left + graphPtr->plotBorderWidth,
             axisPtr->region.top + graphPtr->plotBorderWidth,
             axisPtr->region.right - axisPtr->region.left,
@@ -4215,7 +4215,7 @@ UseOp(
         if (axisPtr->linkPtr != NULL) {
             /* Move the axis from the old margin's "use" list to the new. */
             RbcChainUnlinkLink(axisPtr->chainPtr, axisPtr->linkPtr);
-            RbcChainAppendLink(chainPtr, axisPtr->linkPtr);
+            RbcChainLinkBefore(chainPtr, axisPtr->linkPtr, (RbcChainLink *)NULL);/* append on end */
         } else {
             axisPtr->linkPtr = RbcChainAppend(chainPtr, axisPtr);
         }
@@ -4923,7 +4923,7 @@ RbcDrawAxisLimits(
     RbcDim2D        textDim;
     int             isHoriz;
     char           *minPtr, *maxPtr;
-    char           *minFormat, *maxFormat;
+    const char     *minFormat, *maxFormat;
     char            minString[200], maxString[200];
     int             vMin, hMin, vMax, hMax;
 
@@ -5016,7 +5016,7 @@ RbcAxisLimitsToPostScript(
     double          vMin, hMin, vMax, hMax;
     char            string[200];
     int             textWidth, textHeight;
-    char           *minFmt, *maxFmt;
+    const char     *minFmt, *maxFmt;
 
 #define SPACING 8
     vMin = vMax = graphPtr->left + graphPtr->padX.side1 + 2;

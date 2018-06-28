@@ -2481,7 +2481,8 @@ DrawImageMarker(
     ImageMarker    *imPtr = (ImageMarker *) markerPtr;
     int             width, height;
 
-    if ((imPtr->tkImage == NULL) || (Tk_ImageIsDeleted(imPtr->tkImage))) {
+    /* check if image still exists */
+    if ((imPtr->tkImage == NULL) || (RbcImageIsDeleted(imPtr->tkImage))) {
         return;
     }
     if (imPtr->pixmap == None) {
@@ -2490,7 +2491,6 @@ DrawImageMarker(
 
         tkImage = (imPtr->tmpImage != NULL) ? imPtr->tmpImage : imPtr->tkImage;
         Tk_SizeOfImage(tkImage, &width, &height);
-        /* pixmap = Tk_ImageGetPhotoPixmap(tkImage); */
         pixmap = None;
         if (pixmap == None) {   /* May not be a "photo" image. */
             Tk_RedrawImage(tkImage, 0, 0, width, height, drawable,
@@ -2531,7 +2531,7 @@ ImageMarkerToPostScript(
     const char     *imageName;
     Tk_PhotoHandle  photo;
 
-    if ((imPtr->tkImage == NULL) || (Tk_ImageIsDeleted(imPtr->tkImage))) {
+    if ((imPtr->tkImage == NULL) || (RbcImageIsDeleted(imPtr->tkImage))) {
         return;                 /* Image doesn't exist anymore */
     }
     imageName = (imPtr->tmpImage == NULL)

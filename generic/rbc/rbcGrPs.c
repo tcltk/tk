@@ -102,6 +102,7 @@ static Tk_ConfigSpec configSpecs[] = {
 };
 
 /* TODO: These do not belong here */
+/*
 extern void     RbcMarkersToPostScript(
     RbcGraph * graphPtr,
     RbcPsToken * psToken,
@@ -124,7 +125,7 @@ extern void     RbcAxesToPostScript(
 extern void     RbcAxisLimitsToPostScript(
     RbcGraph * graphPtr,
     RbcPsToken * psToken);
-
+*/
 static const char *NameOfColorMode(
     RbcPsColorMode colorMode);
 static int      CgetOp(

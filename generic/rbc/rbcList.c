@@ -13,6 +13,18 @@
 
 #include "rbcInt.h"
 
+/* ClientData RbcListGetValue((RbcListNode *node); */
+#define RbcListGetValue(node)  	((node)->clientData)
+/* void RbcListSetValue((RbcListNode *node, ClientData value); */
+#define RbcListSetValue(node, value) \
+	((node)->clientData = (ClientData)(value))
+
+#define RbcListAppendNode(list, node) \
+	(RbcListLinkBefore((list), (node), (RbcListNode *)NULL))
+
+#define RbcListPrependNode(list, node) \
+	(RbcListLinkAfter((list), (node), (RbcListNode *)NULL))
+
 static RbcListNode *FindString(
     RbcList * listPtr,
     const char *key);

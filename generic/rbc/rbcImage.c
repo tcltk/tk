@@ -3123,137 +3123,6 @@ typedef struct TkPhotoInstanceStruct {
 } TkPhotoInstance;
 
 /*
- * ----------------------------------------------------------------------
- *
- * Tk_ImageDeleted --
- *
- *      Is there any other way to determine if an image has been
- *      deleted?
- *
- * Results:
- *      Returns 1 if the image has been deleted, 0 otherwise.
- *
- * Side effects:
- *      TODO: Side Effects
- *
- * ----------------------------------------------------------------------
- */
-int
-Tk_ImageIsDeleted(
-    Tk_Image tkImage)
-{                               /* Token for image. */
-    TkImage        *imagePtr = (TkImage *) tkImage;
-
-    if (imagePtr->masterPtr == NULL) {
-        return TRUE;
-    }
-    return (imagePtr->masterPtr->typePtr == NULL);
-}
-
-/*
- *--------------------------------------------------------------
- *
- * Tk_ImageGetMaster --
- *
- *      TODO: Description
- *
- * Results:
- *      TODO: Results
- *
- * Side effects:
- *      TODO: Side Effects
- *
- *--------------------------------------------------------------
- */
-Tk_ImageMaster
-Tk_ImageGetMaster(
-    Tk_Image tkImage)
-{                               /* Token for image. */
-    TkImage        *imagePtr = (TkImage *) tkImage;
-
-    return (Tk_ImageMaster) imagePtr->masterPtr;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * Tk_ImageGetType --
- *
- *      TODO: Description
- *
- * Results:
- *      TODO: Results
- *
- * Side effects:
- *      TODO: Side Effects
- *
- *--------------------------------------------------------------
- */
-Tk_ImageType   *
-Tk_ImageGetType(
-    Tk_Image tkImage)
-{                               /* Token for image. */
-    TkImage        *imagePtr = (TkImage *) tkImage;
-
-    return imagePtr->masterPtr->typePtr;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * Tk_ImageGetPhotoPixmap --
- *
- *      TODO: Description
- *
- * Results:
- *      TODO: Results
- *
- * Side effects:
- *      TODO: Side Effects
- *
- *--------------------------------------------------------------
- */
-Pixmap
-Tk_ImageGetPhotoPixmap(
-    Tk_Image tkImage)
-{                               /* Token for image. */
-    TkImage        *imagePtr = (TkImage *) tkImage;
-
-    if (strcmp(imagePtr->masterPtr->typePtr->name, "photo") == 0) {
-        TkPhotoInstance *instPtr = (TkPhotoInstance *) imagePtr->instanceData;
-        return instPtr->pixels;
-    }
-    return None;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * Tk_ImageGetPhotoGC --
- *
- *      TODO: Description
- *
- * Results:
- *      TODO: Results
- *
- * Side effects:
- *      TODO: Side Effects
- *
- *--------------------------------------------------------------
- */
-GC
-Tk_ImageGetPhotoGC(
-    Tk_Image photoImage)
-{                               /* Token for image. */
-    TkImage        *imagePtr = (TkImage *) photoImage;
-    if (strcmp(imagePtr->masterPtr->typePtr->name, "photo") == 0) {
-        TkPhotoInstance *instPtr = (TkPhotoInstance *) imagePtr->instanceData;
-        return instPtr->gc;
-    }
-    return NULL;
-}
-
-/*
  *----------------------------------------------------------------------
  *
  * TempImageChangedProc
@@ -3367,11 +3236,36 @@ const char     *
 RbcNameOfImage(
     Tk_Image tkImage)
 {
-    Tk_ImageMaster  master;
-
-    master = Tk_ImageGetMaster(tkImage);
-    return Tk_NameOfImage(master);
+    TkImage *imagePtr = (TkImage *) tkImage;
+    return Tk_NameOfImage((Tk_ImageMaster) imagePtr->masterPtr);
 }
 
+/*
+ * ----------------------------------------------------------------------
+ *
+ * RbcImageDeleted --
+ *
+ *      Is there any other way to determine if an image has been
+ *      deleted?
+ *
+ * Results:
+ *      Returns 1 if the image has been deleted, 0 otherwise.
+ *
+ * Side effects:
+ *      TODO: Side Effects
+ *
+ * ----------------------------------------------------------------------
+ */
+int
+RbcImageIsDeleted(
+    Tk_Image tkImage)
+{                               /* Token for image. */
+    TkImage        *imagePtr = (TkImage *) tkImage;
+
+    if (imagePtr->masterPtr == NULL) {
+        return TRUE;
+    }
+    return (imagePtr->masterPtr->typePtr == NULL);
+}
 
 /* vim: set ts=4 sw=4 sts=4 ff=unix et : */
