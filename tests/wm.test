@@ -737,7 +737,7 @@ test wm-iconbitmap-1.2.2 {usage} -constraints win -returnCodes error -body {
 test wm-iconbitmap-1.3 {usage} -constraints win -returnCodes error -body {
     wm iconbitmap .t 12 13
 } -result {illegal option "12" must be "-default"}
-test wm-iconbitmap-1.4 {usage} -returnCodes error -body {
+test wm-iconbitmap-1.4 {usage} -constraints notAqua -returnCodes error -body {
     wm iconbitmap .t bad-bitmap
 } -result {bitmap "bad-bitmap" not defined}
 
