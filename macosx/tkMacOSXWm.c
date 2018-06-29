@@ -231,6 +231,19 @@ static int windowHashInit = false;
 }
 #endif
 
+- (NSSize)windowWillResize:(NSWindow *)sender 
+                    toSize:(NSSize)frameSize
+{
+    NSRect currentFrame = [sender frame];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
+    if (!(winPtr->wmInfoPtr->attributes & kWindowHorizontalZoomAttribute)) {
+	frameSize.width = currentFrame.size.width;
+    }
+    if (!(winPtr->wmInfoPtr->attributes & kWindowVerticalZoomAttribute)) {
+	frameSize.height = currentFrame.size.height;
+    }
+    return frameSize;
+}
 @end
 
 #pragma mark -
