@@ -236,10 +236,10 @@ static int windowHashInit = false;
 {
     NSRect currentFrame = [sender frame];
     TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
-    if (!(winPtr->wmInfoPtr->attributes & kWindowHorizontalZoomAttribute)) {
+    if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
 	frameSize.width = currentFrame.size.width;
     }
-    if (!(winPtr->wmInfoPtr->attributes & kWindowVerticalZoomAttribute)) {
+    if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
 	frameSize.height = currentFrame.size.height;
     }
     return frameSize;
@@ -6281,12 +6281,15 @@ ApplyWindowAttributeFlagChanges(
 	    [[macWindow standardWindowButton:NSWindowZoomButton]
 		    setEnabled:(newAttributes & kWindowResizableAttribute) &&
 		    (newAttributes & kWindowFullZoomAttribute)];
-	    if (newAttributes & kWindowResizableAttribute) {
-		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+	    if (newAttributes & kWindowHorizontalZoomAttribute) {
+		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE);
 	    } else {
-		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE);
+	    }
+	    if (newAttributes & kWindowVerticalZoomAttribute) {
+		wmPtr->flags &= ~(WM_HEIGHT_NOT_RESIZABLE);
+	    } else {
+		wmPtr->flags |= (WM_HEIGHT_NOT_RESIZABLE);
 	    }
 	    WmUpdateGeom(wmPtr, winPtr);
 	}
