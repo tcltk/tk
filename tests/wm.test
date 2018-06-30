@@ -1242,13 +1242,15 @@ test wm-resizable-1.5 {usage} -returnCodes error -body {
 } -result {expected boolean value but got "bad"}
 
 test wm-resizable-2.1 {setting and reading values} {
-    wm resizable .t 0 1
+    wm resizable .t 0 0
     set result [wm resizable .t]
+    wm resizable .t 0 1
+    lappend result [wm resizable .t]
     wm resizable .t 1 0
     lappend result [wm resizable .t]
     wm resizable .t 1 1
     lappend result [wm resizable .t]
-} {0 1 {1 0} {1 1}}
+} {0 0 {0 1} {1 0} {1 1}}
 
 
 ### wm sizefrom ###
