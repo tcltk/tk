@@ -2157,11 +2157,11 @@ insertion cursor without moving the insertion cursor.
 Meta-backspace and Meta-Delete delete the word to the left of the insertion
 cursor.
 .IP [30]
-Control-x deletes whatever is selected in the text widget after copying it to
-the clipboard.
-.IP [31]
 Control-t reverses the order of the two characters to the right of the
 insertion cursor.
+.IP [31]
+Control-x deletes whatever is selected in the text widget after copying it to
+the clipboard.
 .IP [32]
 Control-z undoes the last edit action if the \fB\-undo\fR option is true.
 Does nothing otherwise.
