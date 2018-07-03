@@ -129,6 +129,19 @@ typedef struct {
 				 * only used by the Entry widget. */
 
     /*
+     * Fields used in displaying help text if entry value is empty
+     */
+
+    Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
+    char *placeholderString;	/* String value of placeholder. */
+    int placeholderChars;	/* Number of chars in placeholder. */
+    XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
+    GC placeholderGC;		/* For drawing placeholder text. */
+    int placeholderX;		/* Origin for layout. */
+    int placeholderLeftIndex;	/* Character index of left-most character
+				 * visible in window. */
+
+    /*
      * Fields whose values are derived from the current values of the
      * configuration settings above.
      */
@@ -221,7 +234,7 @@ typedef struct {
 				 * value that the users requests. Malloc'ed */
     char *valueFormat;		/* Sprintf conversion specifier used for the
 				 * value. */
-    char digitFormat[10];	/* Sprintf conversion specifier computed from
+    char digitFormat[16];	/* Sprintf conversion specifier computed from
 				 * digits and other information; used for the
 				 * value. */
 

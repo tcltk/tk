@@ -351,7 +351,7 @@ test entry-1.31 {configuration option: "insertbackground" for entry} -setup {
 } -returnCodes {error} -result {unknown color name "non-existent"}
 
 test entry-1.32 {configuration option: "insertborderwidth" for entry} -setup {
-    entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
+    entry .e -borderwidth 2 -insertwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e
     update
 } -body {
@@ -627,6 +627,23 @@ test entry-1.58 {configuration option: "xscrollcommand" for entry} -setup {
     destroy .e
 } -result {Some command}
 
+test entry-1.59 {configuration option: "-placeholder"} -setup {
+    pack [entry .e]
+} -body {
+    .e configure -placeholder {Some text}
+    .e cget -placeholder
+} -cleanup {
+    destroy .e
+} -result {Some text}
+
+test entry-1.60 {configuration option: "-placeholderforeground"} -setup {
+    pack [entry .e]
+} -body {
+    .e configure -placeholder {Some text} -placeholderforeground red
+    .e cget -placeholderforeground
+} -cleanup {
+    destroy .e
+} -result {red}
 
 
 test entry-2.1 {Tk_EntryCmd procedure} -body {
@@ -808,7 +825,7 @@ test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     llength [.e configure]
 } -cleanup {
     destroy .e
-} -result {36}
+} -result {38}
 test entry-3.16 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     entry .e
 } -body {
@@ -2580,7 +2597,7 @@ test entry-13.9 {GetEntryIndex procedure} -setup {
 
 
 
-test entry-13.10 {GetEntryIndex procedure} -constraints unix -body {
+test entry-13.10 {GetEntryIndex procedure} -constraints x11 -body {
 # On unix, when selection is cleared, entry widget's internal
 # selection range is reset.
 # Previous settings:
@@ -2599,7 +2616,7 @@ test entry-13.10 {GetEntryIndex procedure} -constraints unix -body {
     destroy .e
 } -returnCodes error -result {selection isn't in widget .e}
 
-test entry-13.11 {GetEntryIndex procedure} -constraints win -body {
+test entry-13.11 {GetEntryIndex procedure} -constraints aquaOrWin32 -body {
 # On mac and pc, when selection is cleared, entry widget remembers
 # last selected range.  When selection ownership is restored to
 # entry, the old range will be rehighlighted.
@@ -2620,7 +2637,7 @@ test entry-13.11 {GetEntryIndex procedure} -constraints win -body {
     destroy .e
 } -result {1}
 
-test entry-13.12 {GetEntryIndex procedure} -constraints unix -body {
+test entry-13.12 {GetEntryIndex procedure} -constraints x11 -body {
 # Previous settings:
 	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
 	pack .e

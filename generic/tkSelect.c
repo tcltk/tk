@@ -1185,6 +1185,7 @@ TkSelInit(
     dispPtr->applicationAtom	= Tk_InternAtom(tkwin, "TK_APPLICATION");
     dispPtr->windowAtom		= Tk_InternAtom(tkwin, "TK_WINDOW");
     dispPtr->clipboardAtom	= Tk_InternAtom(tkwin, "CLIPBOARD");
+    dispPtr->atomPairAtom	= Tk_InternAtom(tkwin, "ATOM_PAIR");
 
     /*
      * Using UTF8_STRING instead of the XA_UTF8_STRING macro allows us to
