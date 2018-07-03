@@ -21,19 +21,16 @@
 #include "tkMacOSXFont.h"
 #include "tkMacOSXDebug.h"
 
-
 #define FIRST_DRAW	    2
 #define ACTIVE		    4
 
-
 /*
- * Default insets for controls
+ * Extra padding used for computing the content size that should
+ * be allowed when drawing the HITheme button.
  */
 
-#define DEF_INSET_LEFT 12
-#define DEF_INSET_RIGHT 12
-#define DEF_INSET_TOP 1
-#define DEF_INSET_BOTTOM 1
+#define HI_PADX 0
+#define HI_PADY 1
 
 /*
  * Some defines used to control what type of control is drawn.
@@ -318,9 +315,8 @@ TkpComputeButtonGeometry(
 		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
 		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
-	/*Remove extraneous padding around label widgets.*/
 	txtWidth = butPtr->textWidth;
-	txtHeight = butPtr->textHeight + DEF_INSET_BOTTOM + DEF_INSET_TOP;
+	txtHeight = butPtr->textHeight;
 	charWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
 	Tk_GetFontMetrics(butPtr->tkfont, &fm);
 	haveText = (txtWidth != 0 && txtHeight != 0);
@@ -364,7 +360,8 @@ TkpComputeButtonGeometry(
       height = butPtr->height > 0 ? butPtr->height : height;
 
     } else { /* Text only */
-        width = txtWidth + butPtr->indicatorSpace;
+      /*Add four pixels of padding to width for text-only buttons to improve appearance.*/
+        width = txtWidth + butPtr->indicatorSpace + 4;
 	height = txtHeight;
 	if (butPtr->width > 0) {
 	   width = butPtr->width * charWidth;
@@ -395,7 +392,7 @@ TkpComputeButtonGeometry(
         int paddingx = 0;
         int paddingy = 0;
 
-    	tmpRect = CGRectMake(0, 0, width, height);
+    	tmpRect = CGRectMake(0, 0, width + 2*HI_PADX, height + 2*HI_PADY);
 
         HIThemeGetButtonContentBounds(&tmpRect, &mbPtr->drawinfo, &contBounds);
         /* If the content region has a minimum height, match it. */
@@ -648,7 +645,7 @@ DrawButtonImageAndText(
 			  butPtr->textHeight, &x, &y);
 	x += butPtr->indicatorSpace;
 	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
-			  x, y - DEF_INSET_BOTTOM, 0, -1);
+			  x, y, 0, -1);
     }
 
     /*
@@ -785,19 +782,6 @@ TkMacOSXDrawButton(
 	    return;
 	}
 
-
-	if (mbPtr->btnkind == kThemePushButton) {
-	    /*
-	     * For some reason, pushbuttons get drawn a bit
-	     * too low, normally.  Correct for this.
-	     */
-	    if (cntrRect.size.height < 22) {
-		cntrRect.origin.y -= 1;
-	    } else if (cntrRect.size.height < 23) {
-		cntrRect.origin.y -= 2;
-	    }
-	}
-
         hiinfo.version = 0;
         hiinfo.state = mbPtr->drawinfo.state;
         hiinfo.kind  = mbPtr->btnkind;
@@ -909,7 +893,10 @@ ButtonContentDrawCB (
         return;
     }
 
-    /*Overlay Tk elements over button native region: drawing elements within button boundaries/native region causes unpredictable metrics.*/
+    /*
+     * Overlay Tk elements over button native region: drawing elements
+     * within button boundaries/native region causes unpredictable metrics.
+     */
     DrawButtonImageAndText( butPtr);
 }
 

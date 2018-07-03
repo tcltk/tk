@@ -73,6 +73,7 @@ static const char *const validateReasonStrings[] = {
 /* Style parameters:
  */
 typedef struct {
+    Tcl_Obj *placeholderForegroundObj;/* Foreground color for placeholder text */
     Tcl_Obj *foregroundObj;	/* Foreground color for normal text */
     Tcl_Obj *backgroundObj;	/* Entry widget background color */
     Tcl_Obj *selBorderObj;	/* Border and background for selection */
@@ -118,6 +119,8 @@ typedef struct {
 
     Tcl_Obj *stateObj;		/* Compatibility option -- see CheckStateObj */
 
+    Tcl_Obj *placeholderObj;	/* Text to display for placeholder text */
+
     /*
      * Derived resources:
      */
@@ -147,12 +150,13 @@ typedef struct {
 /*
  * Default option values:
  */
-#define DEF_SELECT_BG	"#000000"
-#define DEF_SELECT_FG	"#ffffff"
-#define DEF_INSERT_BG	"black"
-#define DEF_ENTRY_WIDTH	"20"
-#define DEF_ENTRY_FONT	"TkTextFont"
-#define DEF_LIST_HEIGHT	"10"
+#define DEF_SELECT_BG		"#000000"
+#define DEF_SELECT_FG		"#ffffff"
+#define DEF_PLACEHOLDER_FG	"#b3b3b3"
+#define DEF_INSERT_BG		"black"
+#define DEF_ENTRY_WIDTH		"20"
+#define DEF_ENTRY_FONT		"TkTextFont"
+#define DEF_LIST_HEIGHT		"10"
 
 static Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
@@ -167,6 +171,9 @@ static Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	"left", -1, Tk_Offset(Entry, entry.justify),
 	0, 0, GEOMETRY_CHANGED},
+    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
+	NULL, Tk_Offset(Entry, entry.placeholderObj), -1,
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-show", "show", "Show",
         NULL, -1, Tk_Offset(Entry, entry.showChar),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -191,11 +198,15 @@ static Tk_OptionSpec EntryOptionSpecs[] = {
 
     /* EntryStyleData options:
      */
+    {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
+	NULL, Tk_Offset(Entry, entry.styleData.backgroundObj), -1,
+	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
 	NULL, Tk_Offset(Entry, entry.styleData.foregroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
-    {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
-	NULL, Tk_Offset(Entry, entry.styleData.backgroundObj), -1,
+    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
+        "PlaceholderForeground", NULL,
+        Tk_Offset(Entry, entry.styleData.placeholderForegroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -216,6 +227,7 @@ static void EntryInitStyleDefaults(EntryStyleData *es)
 #define INIT(member, value) \
 	es->member = Tcl_NewStringObj(value, -1); \
 	Tcl_IncrRefCount(es->member);
+    INIT(placeholderForegroundObj, DEF_PLACEHOLDER_FG)
     INIT(foregroundObj, DEFAULT_FOREGROUND)
     INIT(selBorderObj, DEF_SELECT_BG)
     INIT(selForegroundObj, DEF_SELECT_FG)
@@ -227,6 +239,7 @@ static void EntryInitStyleDefaults(EntryStyleData *es)
 
 static void EntryFreeStyleDefaults(EntryStyleData *es)
 {
+    Tcl_DecrRefCount(es->placeholderForegroundObj);
     Tcl_DecrRefCount(es->foregroundObj);
     Tcl_DecrRefCount(es->selBorderObj);
     Tcl_DecrRefCount(es->selForegroundObj);
@@ -253,6 +266,7 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
 #   define INIT(member, name) \
     if ((tmp=Ttk_QueryOption(entryPtr->core.layout,name,state))) \
     	es->member=tmp;
+    INIT(placeholderForegroundObj, "-placeholderforeground");
     INIT(foregroundObj, "-foreground");
     INIT(selBorderObj, "-selectbackground")
     INIT(selBorderWidthObj, "-selectborderwidth")
@@ -263,6 +277,7 @@ static void EntryInitStyleData(Entry *entryPtr, EntryStyleData *es)
 
     /* Reacquire color & border resources from resource cache.
      */
+    es->placeholderForegroundObj = Ttk_UseColor(cache, tkwin, es->placeholderForegroundObj);
     es->foregroundObj = Ttk_UseColor(cache, tkwin, es->foregroundObj);
     es->selForegroundObj = Ttk_UseColor(cache, tkwin, es->selForegroundObj);
     es->insertColorObj = Ttk_UseColor(cache, tkwin, es->insertColorObj);
@@ -304,12 +319,23 @@ static char *EntryDisplayString(const char *showChar, int numChars)
  */
 static void EntryUpdateTextLayout(Entry *entryPtr)
 {
+    int length;
+    char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
-    entryPtr->entry.textLayout = Tk_ComputeTextLayout(
+    if ((entryPtr->entry.numChars != 0) || (entryPtr->entry.placeholderObj == NULL)) {
+        entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    entryPtr->entry.displayString, entryPtr->entry.numChars,
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
+    } else {
+        text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &length);
+        entryPtr->entry.textLayout = Tk_ComputeTextLayout(
+	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
+	    text, length,
+	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
+	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
+    }
 }
 
 /* EntryEditable --
@@ -337,7 +363,8 @@ EntryFetchSelection(
     const char *string;
     const char *selStart, *selEnd;
 
-    if (entryPtr->entry.selectFirst < 0 || !entryPtr->entry.exportSelection) {
+    if (entryPtr->entry.selectFirst < 0 || (!entryPtr->entry.exportSelection)
+	    || Tcl_IsSafe(entryPtr->core.interp)) {
 	return -1;
     }
     string = entryPtr->entry.displayString;
@@ -372,11 +399,12 @@ static void EntryLostSelection(ClientData clientData)
 
 /* EntryOwnSelection --
  * 	Assert ownership of the PRIMARY selection,
- * 	if -exportselection set and selection is present.
+ * 	if -exportselection set and selection is present and interp is unsafe.
  */
 static void EntryOwnSelection(Entry *entryPtr)
 {
     if (entryPtr->entry.exportSelection
+	&& (!Tcl_IsSafe(entryPtr->core.interp))
 	&& !(entryPtr->core.flags & GOT_SELECTION)) {
 	Tk_OwnSelection(entryPtr->core.tkwin, XA_PRIMARY, EntryLostSelection,
 		(ClientData) entryPtr);
@@ -999,7 +1027,8 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 
     /* Claim the selection, in case we've suddenly started exporting it.
      */
-    if (entryPtr->entry.exportSelection && entryPtr->entry.selectFirst != -1) {
+    if (entryPtr->entry.exportSelection && (entryPtr->entry.selectFirst != -1)
+	    && (!Tcl_IsSafe(entryPtr->core.interp))) {
 	EntryOwnSelection(entryPtr);
     }
 
@@ -1175,6 +1204,7 @@ static void EntryDisplay(void *clientData, Drawable d)
     Ttk_Box textarea;
     TkRegion clipRegion;
     XRectangle rect;
+    Tcl_Obj *foregroundObj;
 
     EntryInitStyleData(entryPtr, &es);
 
@@ -1263,7 +1293,21 @@ static void EntryDisplay(void *clientData, Drawable d)
 
     /* Draw the text:
      */
-    gc = EntryGetGC(entryPtr, es.foregroundObj, clipRegion);
+    if ((*(entryPtr->entry.displayString) == '\0')
+		&& (entryPtr->entry.placeholderObj != NULL)) {
+	/* No text displayed, but -placeholder is given */
+	if (Tcl_GetCharLength(es.placeholderForegroundObj) > 0) {
+	    foregroundObj = es.placeholderForegroundObj;
+	} else {
+            foregroundObj = es.foregroundObj;
+	}
+	/* Use placeholder text width */
+	leftIndex = 0;
+        Tcl_GetStringFromObj(entryPtr->entry.placeholderObj,&rightIndex);
+    } else {
+        foregroundObj = es.foregroundObj;
+    }
+    gc = EntryGetGC(entryPtr, foregroundObj, clipRegion);
     Tk_DrawTextLayout(
 	Tk_Display(tkwin), d, gc, entryPtr->entry.textLayout,
 	entryPtr->entry.layoutX, entryPtr->entry.layoutY,

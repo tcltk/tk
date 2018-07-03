@@ -191,6 +191,8 @@
 /* #define DEF_ENTRY_INSERT_WIDTH		"2" */
 #define DEF_ENTRY_INSERT_WIDTH		"1"
 #define DEF_ENTRY_JUSTIFY		"left"
+#define DEF_ENTRY_PLACEHOLDER		""
+#define DEF_ENTRY_PLACEHOLDERFG		"#b3b3b3"
 #define DEF_ENTRY_READONLY_BG_COLOR	NORMAL_BG
 #define DEF_ENTRY_READONLY_BG_MONO	WHITE
 #define DEF_ENTRY_RELIEF		"sunken"
@@ -325,11 +327,6 @@
 #define DEF_MENU_SELECT_COLOR		"systemMenuActive"
 #define DEF_MENU_SELECT_MONO		BLACK
 #define DEF_MENU_TAKE_FOCUS		"0"
-
-/*
- * FIXME: Turn the default back to 1 when we make tearoff menus work again.
- */
-
 #define DEF_MENU_TEAROFF		"0"
 #define DEF_MENU_TEAROFF_CMD		((char *) NULL)
 #define DEF_MENU_TITLE			""

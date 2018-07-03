@@ -118,15 +118,6 @@ fi
 
 SC_TCL_CFG_ENCODING
 
-#------------------------------------------------------------------------
-# Threads support - this auto-enables if Tcl was compiled threaded
-#------------------------------------------------------------------------
-
-SC_ENABLE_THREADS
-
-# Add the threads support libraries
-LIBS="$LIBS$THREADS_LIBS"
-
 SC_ENABLE_SHARED
 
 #--------------------------------------------------------------------

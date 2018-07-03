@@ -1738,6 +1738,11 @@ extern const TkStubs *tkStubsPtr;
 
 #undef Tk_FreeXId
 #define Tk_FreeXId(display,xid)
+#undef Tk_GetStyleFromObj
+#undef Tk_FreeStyleFromObj
+#define Tk_GetStyleFromObj(obj) Tk_AllocStyleFromObj(NULL, obj)
+#define Tk_FreeStyleFromObj(obj) /* no-op */
+
 
 #if defined(_WIN32) && defined(UNICODE)
 #   define Tk_MainEx Tk_MainExW

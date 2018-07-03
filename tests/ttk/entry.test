@@ -85,7 +85,7 @@ test entry-2.2 "Initial scroll position" -body {
 # Bounding box / scrolling tests.
 test entry-3.0 "Series 3 setup" -body {
     ttk::style theme use default
-    variable fixed fixed
+    variable fixed TkFixedFont
     variable cw [font measure $fixed a]
     variable ch [font metrics $fixed -linespace]
     variable bd 2	;# border + padding
@@ -279,5 +279,23 @@ test entry-9.1 "Index range invariants" -setup {
     unset V
     destroy .e
 }
+
+test entry-10.1 {configuration option: "-placeholder"} -setup {
+    pack [ttk::entry .e]
+} -body {
+    .e configure -placeholder {Some text}
+    .e cget -placeholder
+} -cleanup {
+    destroy .e
+} -result {Some text}
+
+test entry-10.2 {configuration option: "-placeholderforeground"} -setup {
+    pack [ttk::entry .e]
+} -body {
+    .e configure -placeholder {Some text} -placeholderforeground red
+    .e cget -placeholderforeground
+} -cleanup {
+    destroy .e
+} -result {red}
 
 tcltest::cleanupTests
