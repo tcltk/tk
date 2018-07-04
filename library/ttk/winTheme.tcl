@@ -10,6 +10,8 @@ namespace eval ttk::theme::winnative {
 	    -foreground SystemWindowText \
 	    -selectforeground SystemHighlightText \
 	    -selectbackground SystemHighlight \
+	    -fieldbackground SystemWindow \
+	    -insertcolor SystemWindowText \
 	    -troughcolor SystemScrollbar \
 	    -font TkDefaultFont \
 	    ;
