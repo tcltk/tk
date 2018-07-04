@@ -246,6 +246,11 @@ bind Entry <Control-t> {
 	tk::EntryTranspose %W
     }
 }
+bind Entry <Control-u> {
+    if {!$tk_strictMotif} {
+	%W delete 0 insert
+    }
+}
 bind Entry <Meta-b> {
     if {!$tk_strictMotif} {
 	tk::EntrySetCursor %W [tk::EntryPreviousWord %W insert]

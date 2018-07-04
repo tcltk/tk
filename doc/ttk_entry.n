@@ -440,6 +440,9 @@ Control-d deletes the character to the right of the insert cursor.
 .IP \0\(bu 4
 Control-k deletes all the characters to the right of the insertion
 cursor.
+.IP \0\(bu 4
+Control-u deletes all the characters to the left of the insertion
+cursor.
 .SH "WIDGET STATES"
 .PP
 In the \fBdisabled\fR state,

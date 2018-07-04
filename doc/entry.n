@@ -520,6 +520,9 @@ cursor.
 .IP [23]
 Control-t reverses the order of the two characters to the right of
 the insertion cursor.
+.IP [24]
+Control-u deletes all the characters to the left of the insertion
+cursor.
 .PP
 If the entry is disabled using the \fB\-state\fR option, then the entry's
 view can still be adjusted and text in the entry can still be selected,
