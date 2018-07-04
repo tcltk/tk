@@ -57,10 +57,11 @@ MODULE_SCOPE void RbcSetROP2(
 #include <winspool.h>
 #define Status int
 
+#endif /* __GNUC__ */
 /*
  * Add definitions missing from windgi.h, windowsx.h, and winspool.h
  */
-#endif /* __GNUC__ */
+#define XDrawSegments		RbcEmulateXDrawSegments
 
 /* rbcWinDraw.c */
 MODULE_SCOPE int RbcGetPlatformId(
@@ -94,6 +95,12 @@ MODULE_SCOPE int RbcDrawRotatedText(
     double theta,
     RbcTextStyle * stylePtr,
     RbcTextLayout * textPtr);
+MODULE_SCOPE void RbcEmulateXDrawSegments(
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    XSegment *segArr,
+    int nSegments);
 
 /* Already defined in rbcInt.h:
 void RbcSetDashes(Display *display,

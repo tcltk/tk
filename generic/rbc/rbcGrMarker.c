@@ -2481,7 +2481,7 @@ DrawImageMarker(
     ImageMarker    *imPtr = (ImageMarker *) markerPtr;
     int             width, height;
 
-    /* check if image still exists */
+    /* check is image still exists */
     if ((imPtr->tkImage == NULL) || (RbcImageIsDeleted(imPtr->tkImage))) {
         return;
     }

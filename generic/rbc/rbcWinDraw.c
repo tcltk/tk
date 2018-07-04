@@ -49,6 +49,13 @@ typedef struct {
     char dashValues[12];
 } XGCValuesEx;
 
+typedef struct {
+    HDC dc;
+    int count;
+    COLORREF color;
+    int offset, nBits;
+} DashInfo;
+
 static Tcl_Encoding systemEncoding = NULL;
 
 static HFONT CreateRotatedFont(
@@ -61,6 +68,14 @@ static BOOL DrawChars(
     int y,
     char *string,
     int length);
+static int GetDashInfo(
+    HDC dc,
+    GC gc,
+    DashInfo *infoPtr);
+static void CALLBACK DrawDot(
+    int x,
+    int y,
+    LPARAM clientData);
 
 /*
  *--------------------------------------------------------------
@@ -891,6 +906,148 @@ DrawChars(
         Tcl_DStringFree(&dString);
     }
     return result;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RbcEmulateXDrawSegments --
+ *
+ *      Draws multiple, unconnected lines. For each segment, draws a
+ *      line between (x1, y1) and (x2, y2).  It draws the lines in the
+ *      order listed in the array of XSegment structures and does not
+ *      perform joining at coincident endpoints.  For any given line,
+ *      does not draw a pixel more than once. If lines intersect, the
+ *      intersecting pixels are drawn multiple times.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Draws unconnected line segments on the specified drawable.
+ *
+ *----------------------------------------------------------------------
+ */
+void
+RbcEmulateXDrawSegments(
+    Display *display,
+    Drawable drawable,
+    GC gc,
+    XSegment *segArr,
+    int nSegments)
+{
+    HDC dc;
+    register XSegment *segPtr, *endPtr;
+    TkWinDCState state;
+
+    display->request++;
+    if (drawable == None) {
+        return;
+    }
+    dc = TkWinGetDrawableDC(display, drawable, &state);
+    RbcSetROP2(dc, gc->function);
+    if (gc->line_style != LineSolid) {
+        /* Handle dotted lines specially */
+        DashInfo info;
+
+        if (!GetDashInfo(dc, gc, &info)) {
+            goto solidLine;
+        }
+        endPtr = segArr + nSegments;
+        for (segPtr = segArr; segPtr < endPtr; segPtr++) {
+            info.count = 0; /* Reset dash counter after every segment. */
+            LineDDA(segPtr->x1, segPtr->y1, segPtr->x2, segPtr->y2, DrawDot,
+                    (LPARAM)&info);
+        }
+    } else {
+        HPEN pen, oldPen;
+
+solidLine:
+        pen = RbcGCToPen(dc, gc);
+        oldPen = SelectPen(dc, pen);
+        endPtr = segArr + nSegments;
+        for (segPtr = segArr; segPtr < endPtr; segPtr++) {
+            MoveToEx(dc, segPtr->x1, segPtr->y1, (LPPOINT)NULL);
+            LineTo(dc, segPtr->x2, segPtr->y2);
+        }
+        DeletePen(SelectPen(dc, oldPen));
+    }
+    TkWinReleaseDrawableDC(drawable, dc, &state);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * GetDashInfo --
+ *
+ *      TODO: Description
+ *
+ * Results:
+ *      TODO: Results
+ *
+ * Side effects:
+ *      TODO: Side Effects
+ *
+ *--------------------------------------------------------------
+ */
+static int
+GetDashInfo(
+    HDC dc,
+    GC gc,
+    DashInfo *infoPtr)
+{
+    int dashOffset, dashValue;
+
+    dashValue = 0;
+    dashOffset = gc->dash_offset;
+    if ((int)gc->dashes == -1) {
+        XGCValuesEx *gcPtr = (XGCValuesEx *)gc;
+
+        if (gcPtr->nDashValues == 1) {
+            dashValue = gcPtr->dashValues[0];
+        }
+    } else if (gc->dashes > 0) {
+        dashValue = (int)gc->dashes;
+    }
+    if (dashValue == 0) {
+        return FALSE;
+    }
+    infoPtr->dc = dc;
+    infoPtr->nBits = dashValue;
+    infoPtr->offset = dashOffset;
+    infoPtr->count = 0;
+    infoPtr->color = gc->foreground;
+    return TRUE;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawDot --
+ *
+ *      Draws a dot.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      Renders a dot.
+ *
+ *----------------------------------------------------------------------
+ */
+static void CALLBACK DrawDot(
+    int x, /* y-coordinates of point */
+    int y, /* y-coordinates of point */
+    LPARAM clientData)
+{				/* Line information */
+    DashInfo *infoPtr = (DashInfo *) clientData;
+    int count;
+
+    infoPtr->count++;
+    count = (infoPtr->count + infoPtr->offset) / infoPtr->nBits;
+    if (count & 0x1) {
+        SetPixelV(infoPtr->dc, x, y, infoPtr->color);
+    }
 }
 
 /* vim: set ts=4 sw=4 sts=4 ff=unix et : */
