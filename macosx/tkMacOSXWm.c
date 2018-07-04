@@ -3443,7 +3443,15 @@ WmTransientCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tk_MakeWindowExist(master);
+	TkWindow* masterPtr = (TkWindow*) master;
+	while (!Tk_TopWinHierarchy(masterPtr)) {
+            /*
+             * Ensure that the master window is actually a Tk toplevel.
+             */
+
+            masterPtr = masterPtr->parentPtr;
+        }
+	Tk_MakeWindowExist((Tk_Window)masterPtr);
 
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3453,8 +3461,7 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	wmPtr2 = ((TkWindow *) master)->wmInfoPtr;
-
+	wmPtr2 = masterPtr->wmInfoPtr;
 	/* Under some circumstances, wmPtr2 is NULL here */
 	if (wmPtr2 != NULL && wmPtr2->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3464,14 +3471,14 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	if ((TkWindow *) master == winPtr) {
+	if (masterPtr == winPtr) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't make \"%s\" its own master", Tk_PathName(winPtr)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
 	    return TCL_ERROR;
 	}
 
-	wmPtr->master = Tk_WindowId(master);
+	wmPtr->master = Tk_WindowId(masterPtr);
 	masterWindowName = Tcl_GetStringFromObj(objv[3], &length);
 	if (wmPtr->masterWindowName != NULL) {
 	    ckfree(wmPtr->masterWindowName);
