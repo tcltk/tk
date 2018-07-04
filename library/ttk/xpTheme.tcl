@@ -11,6 +11,7 @@ namespace eval ttk::theme::xpnative {
 	    -foreground SystemWindowText \
 	    -selectforeground SystemHighlightText \
 	    -selectbackground SystemHighlight \
+	    -insertcolor SystemWindowText \
 	    -font TkDefaultFont \
 	    ;
 
