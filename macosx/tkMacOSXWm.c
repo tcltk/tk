@@ -3479,7 +3479,8 @@ WmTransientCmd(
 	}
 
 	wmPtr->master = Tk_WindowId(masterPtr);
-	masterWindowName = Tcl_GetStringFromObj(objv[3], &length);
+	masterWindowName = masterPtr->pathName;
+	length = strlen(masterWindowName);
 	if (wmPtr->masterWindowName != NULL) {
 	    ckfree(wmPtr->masterWindowName);
 	}
