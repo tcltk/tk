@@ -287,27 +287,6 @@ EDIT_ACTION(redo, Redo)
  *----------------------------------------------------------------------
  */
 
-#if 0
-static Tcl_Obj *
-GetWidgetDemoPath(
-    Tcl_Interp *interp)
-{
-    Tcl_Obj *libpath, *result = NULL;
-
-    libpath = Tcl_GetVar2Ex(interp, "tk_library", NULL, TCL_GLOBAL_ONLY);
-    if (libpath) {
-	Tcl_Obj *demo[2] = {	Tcl_NewStringObj("demos", 5),
-				Tcl_NewStringObj("widget", 6) };
-
-	Tcl_IncrRefCount(libpath);
-	result = Tcl_FSJoinToPath(libpath, 2, demo);
-	Tcl_DecrRefCount(libpath);
-    } else {
-	Tcl_ResetResult(interp);
-    }
-    return result;
-}
-#else
 static Tcl_Obj *
 GetWidgetDemoPath(
     Tcl_Interp *interp)
@@ -326,7 +305,6 @@ GetWidgetDemoPath(
     Tcl_ResetResult(interp);
     return result;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
