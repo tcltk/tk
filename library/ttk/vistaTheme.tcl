@@ -21,6 +21,7 @@ namespace eval ttk::theme::vista {
 	    -foreground SystemWindowText \
 	    -selectforeground SystemHighlightText \
 	    -selectbackground SystemHighlight \
+	    -insertcolor SystemWindowText \
 	    -font TkDefaultFont \
 	    ;
 
@@ -54,7 +55,7 @@ namespace eval ttk::theme::vista {
 				selected SystemHighlightText]
 
         # Label and Toolbutton
-	ttk::style configure TLabelframe.Label -foreground "#0046d5"
+	ttk::style configure TLabelframe.Label -foreground SystemButtonText
 
 	ttk::style configure Toolbutton -padding {4 4}
 
