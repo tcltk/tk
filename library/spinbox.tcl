@@ -252,6 +252,11 @@ bind Spinbox <Control-t> {
 	::tk::EntryTranspose %W
     }
 }
+bind Spinbox <Control-u> {
+    if {!$tk_strictMotif} {
+	%W delete 0 insert
+    }
+}
 bind Spinbox <Meta-b> {
     if {!$tk_strictMotif} {
 	::tk::EntrySetCursor %W [::tk::EntryPreviousWord %W insert]

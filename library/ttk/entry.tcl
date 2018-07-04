@@ -144,6 +144,7 @@ bind TEntry <<NextLine>>		{# nothing}
 bind TEntry <Control-Key-d>		{ ttk::entry::Delete %W }
 bind TEntry <Control-Key-h>		{ ttk::entry::Backspace %W }
 bind TEntry <Control-Key-k>		{ %W delete insert end }
+bind TEntry <Control-Key-u>		{ %W delete 0 insert }
 
 ### Clipboard procedures.
 #

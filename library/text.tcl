@@ -334,6 +334,16 @@ bind Text <Control-t> {
 	tk::TextTranspose %W
     }
 }
+bind Text <Control-u> {
+    if {!$tk_strictMotif && [%W compare insert != 1.0]} {
+	if {[%W compare insert == {insert linestart}]} {
+	    %W delete insert-1c
+	    %W see insert
+	} else {
+	    %W delete {insert linestart} insert
+	}
+    }
+}
 
 bind Text <<Undo>> {
     # An Undo operation may remove the separator at the top of the Undo stack.
