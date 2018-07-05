@@ -2815,11 +2815,6 @@ DrawAxis(
                 (int) labelPtr->anchorPos.y);
         }
     }
-    {
-    FILE *f=fopen("rz","a");
-    fprintf(f,"ticks=%d %d %d\n",axisPtr->showTicks,axisPtr->nSegments,axisPtr->lineWidth);
-    fclose(f);
-    }
     if ((axisPtr->nSegments > 0) && (axisPtr->lineWidth > 0)) {
         /* Draw the tick marks and axis line. */
         RbcDraw2DSegments(graphPtr->display, drawable, axisPtr->tickGC,
