@@ -230,7 +230,7 @@ test clipboard-6.1 {Tk_ClipboardAppend procedure} -setup {
 } -cleanup {
     clipboard clear
 }  -returnCodes ok -result {first chunk second chunk}
-test clipboard-6.2 {Tk_ClipboardAppend procedure} -constraints unix -setup {
+test clipboard-6.2 {Tk_ClipboardAppend procedure} -constraints x11 -setup {
     clipboard clear
 } -body {
     setupbg
