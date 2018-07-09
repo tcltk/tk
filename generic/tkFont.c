@@ -563,9 +563,9 @@ Tk_FontObjCmd(
 
 	if (charPtr != NULL) {
 	    const char *string = Tcl_GetString(charPtr);
-	    int len = TkUtfToUniChar(string, &uniChar);
+	    size_t len = TkUtfToUniChar(string, &uniChar);
 
-	    if (len != charPtr->length) {
+	    if (len != (size_t)charPtr->length) {
 		resultPtr = Tcl_NewStringObj(
 			"expected a single character but got \"", -1);
 		Tcl_AppendLimitedToObj(resultPtr, string,
