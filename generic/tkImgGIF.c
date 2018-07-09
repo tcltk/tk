@@ -55,7 +55,7 @@ typedef struct mFile {
     unsigned char *data;	/* mmencoded source string */
     int c;			/* bits left over from previous character */
     int state;			/* decoder state (0-4 or GIF_DONE) */
-    int length;			/* Total amount of bytes in data */
+    size_t length;			/* Total amount of bytes in data */
 } MFile;
 
 /*
@@ -187,9 +187,9 @@ static int		ReadImage(GIFImageConfig *gifConfPtr,
  * these are for the BASE64 image reader code only
  */
 
-static int		Fread(GIFImageConfig *gifConfPtr, unsigned char *dst,
+static size_t		Fread(GIFImageConfig *gifConfPtr, unsigned char *dst,
 			    size_t size, size_t count, Tcl_Channel chan);
-static int		Mread(unsigned char *dst, size_t size, size_t count,
+static size_t		Mread(unsigned char *dst, size_t size, size_t count,
 			    MFile *handle);
 static int		Mgetc(MFile *handle);
 static int		char64(int c);
@@ -917,7 +917,7 @@ ReadColorMap(
     unsigned char rgb[3];
 
     for (i = 0; i < number; ++i) {
-	if (Fread(gifConfPtr, rgb, sizeof(rgb), 1, chan) <= 0) {
+	if (((size_t)Fread(gifConfPtr, rgb, sizeof(rgb), 1, chan) + 1) < 2) {
 	    return 0;
 	}
 
@@ -983,11 +983,11 @@ GetDataBlock(
 {
     unsigned char count;
 
-    if (Fread(gifConfPtr, &count, 1, 1, chan) <= 0) {
+    if (((size_t)Fread(gifConfPtr, &count, 1, 1, chan) + 1) < 2) {
 	return -1;
     }
 
-    if ((count != 0) && (Fread(gifConfPtr, buf, count, 1, chan) <= 0)) {
+    if ((count != 0) && (((size_t)Fread(gifConfPtr, buf, count, 1, chan) + 1) < 2)) {
 	return -1;
     }
 
@@ -1049,7 +1049,7 @@ ReadImage(
      * Initialize the decoder
      */
 
-    if (Fread(gifConfPtr, &initialCodeSize, 1, 1, chan) <= 0) {
+    if (((size_t)Fread(gifConfPtr, &initialCodeSize, 1, 1, chan) + 1) < 2) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading GIF image: %s", Tcl_PosixError(interp)));
 	return TCL_ERROR;
@@ -1403,15 +1403,15 @@ mInit(
  *----------------------------------------------------------------------
  */
 
-static int
+static size_t
 Mread(
     unsigned char *dst,		/* where to put the result */
     size_t chunkSize,		/* size of each transfer */
     size_t numChunks,		/* number of chunks */
     MFile *handle)		/* mmdecode "file" handle */
 {
-    register int i, c;
-    int count = chunkSize * numChunks;
+    int c;
+    size_t i, count = chunkSize * numChunks;
 
     for (i=0; i<count && (c=Mgetc(handle)) != GIF_DONE; i++) {
 	*dst++ = c;
@@ -1552,7 +1552,7 @@ char64(
  *----------------------------------------------------------------------
  */
 
-static int
+static size_t
 Fread(
     GIFImageConfig *gifConfPtr,
     unsigned char *dst,		/* where to put the result */
@@ -1566,20 +1566,20 @@ Fread(
     if (gifConfPtr->fromData == INLINE_DATA_BINARY) {
 	MFile *handle = (MFile *) chan;
 
-	if (handle->length <= 0 || (size_t) handle->length < hunk*count) {
-	    return -1;
+	if ((handle->length + 1 < 2) || (handle->length < hunk*count)) {
+	    return (size_t)-1;
 	}
-	memcpy(dst, handle->data, (size_t) (hunk * count));
+	memcpy(dst, handle->data, hunk * count);
 	handle->data += hunk * count;
 	handle->length -= hunk * count;
-	return (int)(hunk * count);
+	return hunk * count;
     }
 
     /*
      * Otherwise we've got a real file to read.
      */
 
-    return Tcl_Read(chan, (char *) dst, (int) (hunk * count));
+    return Tcl_Read(chan, (char *) dst, hunk * count);
 }
 
 /*
