@@ -13,6 +13,7 @@
  */
 
 #include "tkInt.h"
+#undef Tcl_ReadChars
 
 /*
  * The option database is stored as one tree for each main window. Each name
@@ -1081,7 +1082,8 @@ ReadOptionFile(
 {
     const char *realName;
     Tcl_Obj *buffer;
-    int result, bufferSize;
+    int result;
+    size_t bufferSize;
     Tcl_Channel chan;
     Tcl_DString newName;
 
@@ -1112,7 +1114,7 @@ ReadOptionFile(
     Tcl_IncrRefCount(buffer);
     Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
     bufferSize = Tcl_ReadChars(chan, buffer, -1, 0);
-    if (bufferSize < 0) {
+    if (bufferSize == (size_t)-1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading file \"%s\": %s",
 		fileName, Tcl_PosixError(interp)));
