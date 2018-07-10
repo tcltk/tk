@@ -21,8 +21,6 @@
 #else
 #include "tkUnixInt.h"
 #endif
-#undef Tcl_ScanElement
-#undef Tcl_ConvertElement
 
 /*
  * File structure:

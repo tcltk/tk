@@ -13,7 +13,6 @@
  */
 
 #include "tkInt.h"
-#undef Tcl_ReadChars
 
 /*
  * The option database is stored as one tree for each main window. Each name

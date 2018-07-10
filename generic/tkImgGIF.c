@@ -111,8 +111,8 @@ typedef struct {
  * serializing in the GIF format.
  */
 
-typedef int (WriteBytesFunc) (ClientData clientData, const char *bytes,
-			    int byteCount);
+typedef size_t (WriteBytesFunc) (ClientData clientData, const char *bytes,
+			    size_t byteCount);
 
 /*
  * The format record for the GIF file format:
@@ -194,7 +194,7 @@ static size_t		Mread(unsigned char *dst, size_t size, size_t count,
 static int		Mgetc(MFile *handle);
 static int		char64(int c);
 static void		mInit(unsigned char *string, MFile *handle,
-			    int length);
+			    size_t length);
 
 /*
  * Types, defines and variables needed to write and compress a GIF.
@@ -1377,7 +1377,7 @@ static void
 mInit(
     unsigned char *string,	/* string containing initial mmencoded data */
     MFile *handle,		/* mmdecode "file" handle */
-    int length)			/* Number of bytes in string */
+    size_t length)			/* Number of bytes in string */
 {
     handle->data = string;
     handle->state = 0;
@@ -1658,22 +1658,22 @@ StringWriteGIF(
     return result;
 }
 
-static int
+static size_t
 WriteToChannel(
     ClientData clientData,
     const char *bytes,
-    int byteCount)
+    size_t byteCount)
 {
     Tcl_Channel handle = clientData;
 
     return Tcl_Write(handle, bytes, byteCount);
 }
 
-static int
+static size_t
 WriteToByteArray(
     ClientData clientData,
     const char *bytes,
-    int byteCount)
+    size_t byteCount)
 {
     Tcl_Obj *objPtr = clientData;
     Tcl_Obj *tmpObj = Tcl_NewByteArrayObj((unsigned char *) bytes, byteCount);
