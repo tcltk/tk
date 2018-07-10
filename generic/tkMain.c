@@ -38,9 +38,6 @@
 #else
 #   include <stdlib.h>
 #endif
-#undef Tcl_Gets
-#undef Tcl_WriteObj
-#undef Tcl_WriteChars
 
 extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
