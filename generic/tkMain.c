@@ -420,14 +420,15 @@ StdinProc(
     int mask)			/* Not used. */
 {
     char *cmd;
-    int code, count;
+    int code;
+    size_t count;
     InteractiveState *isPtr = clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
 
     count = Tcl_Gets(chan, &isPtr->line);
 
-    if (count < 0 && !isPtr->gotPartial) {
+    if (count == (size_t)-1 && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
