@@ -4272,15 +4272,7 @@ Tk_GetRootCoords(
 	     */
 
 	    winPtr = otherPtr;
-
-	    /*
-	     * Remember to offset by the container window here, since at the
-	     * end of this if branch, we will pop out to the container's
-	     * parent...
-	     */
-
-	    x += winPtr->changes.x + winPtr->changes.border_width;
-	    y += winPtr->changes.y + winPtr->changes.border_width;
+            continue;
 	}
 	winPtr = winPtr->parentPtr;
     }
