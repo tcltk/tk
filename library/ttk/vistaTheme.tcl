@@ -61,6 +61,8 @@ namespace eval ttk::theme::vista {
 
         # Combobox
 	ttk::style configure TCombobox -padding 2
+        ttk::style element create Combobox.background vsapi \
+            EDIT 3 {disabled 3 {} 0}
         ttk::style element create Combobox.field vsapi \
             COMBOBOX 2 {{} 1}
         ttk::style element create Combobox.border vsapi \
@@ -70,11 +72,13 @@ namespace eval ttk::theme::vista {
             -syssize {SM_CXVSCROLL SM_CYVSCROLL}
         ttk::style layout TCombobox {
             Combobox.border -sticky nswe -border 0 -children {
-                Combobox.rightdownarrow -side right -sticky ns
-                Combobox.padding -expand 1 -sticky nswe -children {
-                    Combobox.focus -expand 1 -sticky nswe -children {
-                        Combobox.textarea -sticky nswe
+                Combobox.background -sticky nswe -children {
+                    Combobox.padding -expand 1 -sticky nswe -children {
+                        Combobox.focus -expand 1 -sticky nswe -children {
+                            Combobox.textarea -sticky nswe
+                        }
                     }
+                    Combobox.rightdownarrow -side right -sticky ns
                 }
             }
         }
