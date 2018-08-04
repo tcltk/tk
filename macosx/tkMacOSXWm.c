@@ -393,7 +393,7 @@ static void		RemapWindows(TkWindow *winPtr,
  */
 
 NSStatusItem *exitFullScreen;
-	
+
 - (void)toggleFullScreen:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
@@ -408,7 +408,7 @@ NSStatusItem *exitFullScreen;
 }
 
 -(void)restoreOldScreen:(id)sender {
-    
+
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     Tk_Window tkwin = (TkWindow*)winPtr;
     Tcl_Interp *interp = Tk_Interp(tkwin);
@@ -416,7 +416,7 @@ NSStatusItem *exitFullScreen;
     TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
     [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
 }
-    
+
 #endif
 @end
 
@@ -6538,7 +6538,7 @@ TkMacOSXMakeFullscreen(
 	prevMask = [window styleMask];
 	prevPres = [NSApp presentationOptions];
 	[window setStyleMask: NSFullScreenWindowMask];
-	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock  | NSApplicationPresentationAutoHideMenuBar];
+	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar];
 	
 	exitFullScreen = [[[NSStatusBar systemStatusBar] 
 				   statusItemWithLength:NSVariableStatusItemLength] retain];
@@ -6549,7 +6549,7 @@ TkMacOSXMakeFullscreen(
 	[exitFullScreen setTarget:window];
 	[exitFullScreen setAction:@selector(restoreOldScreen:)];
 
-	Tk_MapWindow((Tk_Window) winPtr);	
+	Tk_MapWindow((Tk_Window) winPtr);
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;
 	[NSApp setPresentationOptions: prevPres];
