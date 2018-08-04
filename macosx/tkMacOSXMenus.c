@@ -129,7 +129,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     [_defaultApplicationMenu setSpecial:tkApplicationMenu];
     [windowsMenu setSpecial:tkWindowsMenu];
     [helpMenu setSpecial:tkHelpMenu];
-    [self tkSetMainMenu:nil];
+    [self tkSetMainMenu:nil]; 
 }
 
 - (void) dealloc
