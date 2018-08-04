@@ -6540,6 +6540,8 @@ TkMacOSXMakeFullscreen(
 	[window setStyleMask: NSFullScreenWindowMask];
 	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar];
 	
+	/*Fullscreen implementation for 10.13 and later.*/
+	#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
 	exitFullScreen = [[[NSStatusBar systemStatusBar] 
 				   statusItemWithLength:NSVariableStatusItemLength] retain];
 	NSImage *exitIcon = [NSImage imageNamed:@"NSExitFullScreenTemplate"];
@@ -6548,7 +6550,8 @@ TkMacOSXMakeFullscreen(
 	[exitFullScreen setToolTip:@"Exit Full Screen"];
 	[exitFullScreen setTarget:window];
 	[exitFullScreen setAction:@selector(restoreOldScreen:)];
-
+	#endif
+	
 	Tk_MapWindow((Tk_Window) winPtr);
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;
