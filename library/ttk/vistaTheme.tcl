@@ -72,13 +72,13 @@ namespace eval ttk::theme::vista {
             -syssize {SM_CXVSCROLL SM_CYVSCROLL}
         ttk::style layout TCombobox {
             Combobox.border -sticky nswe -border 0 -children {
+                Combobox.rightdownarrow -side right -sticky ns
                 Combobox.background -sticky nswe -children {
                     Combobox.padding -expand 1 -sticky nswe -children {
                         Combobox.focus -expand 1 -sticky nswe -children {
                             Combobox.textarea -sticky nswe
                         }
                     }
-                    Combobox.rightdownarrow -side right -sticky ns
                 }
             }
         }
