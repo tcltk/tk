@@ -62,7 +62,7 @@ namespace eval ttk::theme::vista {
         # Combobox
 	ttk::style configure TCombobox -padding 2
         ttk::style element create Combobox.background vsapi \
-            EDIT 3 {disabled 3 {} 0}
+            EDIT 3 {disabled 3 {} 1}
         ttk::style element create Combobox.field vsapi \
             COMBOBOX 2 {{} 1}
         ttk::style element create Combobox.border vsapi \
