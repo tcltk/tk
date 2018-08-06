@@ -689,7 +689,7 @@ position in the text. Spaces on either side of \fIcount\fR are optional. Note
 that an index position is either a single character or a single embedded image
 or embedded window. If the \fBdisplay\fR submodifier is given, elided indices
 are skipped over without being counted. If \fBany\fR is given, then all
-indices are counted; this is also the default behaviour if no modifier is
+indices are counted; this is also the default behavior if no modifier is
 given.
 .TP
 \fB\- \fIcount\fR ?\fIsubmodifier\fR? \fBindices\fR
@@ -700,7 +700,7 @@ positions in the text before the current index, then set the index to the
 first index position (1.0) in the text. Spaces on either side of \fIcount\fR
 are optional. If the \fBdisplay\fR submodifier is given, elided indices are
 skipped over without being counted. If \fBany\fR is given, then all indices
-are counted; this is also the default behaviour if no modifier is given.
+are counted; this is also the default behavior if no modifier is given.
 .TP
 \fB+ \fIcount\fR ?\fIsubmodifier\fR? \fBlines\fR
 .
@@ -2073,7 +2073,7 @@ proc Action {w} {
 The latter method may improve the performance of text insertion
 significantly, because marks are very efficient, even if thousands
 of marks are in usage. Also the number of bindings will be reduced,
-so the overall consumption of resources is improved.
+so the overall consumption of resources is reduced.
 .PP
 .SH "WIDGET COMMAND"
 .PP
@@ -3276,7 +3276,7 @@ options \fB\-startindex\fR/\fB\-endindex\fR is specified.
 .
 Returns whether this widget does not contain any character, soft hyphen,
 embedded window, or embedded image, except a sole newline. If the
-\fB\-overall\fR option is specified, then this test will discard any restrictions
+\fB\-overall\fR option is specified, then this test will discard restrictions
 given with widget options \fB\-startindex\fR and \fB\-endindex\fR.
 .TP
 \fIpathName \fBlineno\fR \fIindex\fR
@@ -3609,9 +3609,9 @@ will just match once.
 .TP
 \fB\-overlap\fR
 .
-When performing \fB\-all\fR searches, the normal behaviour is that matches
+When performing \fB\-all\fR searches, the normal behavior is that matches
 which overlap an already-found match will not be returned. This switch changes
-that behaviour so that all matches which are not totally enclosed within
+that behavior so that all matches which are not totally enclosed within
 another match are returned. For example, applying an \fB\-overlap\fR search of
 the pattern
 .QW \ew+
@@ -3626,7 +3626,7 @@ will now match twice. An error will be thrown if this switch is used without
 .TP
 \fB\-strictlimits\fR
 .
-When performing any search, the normal behaviour is that the start and stop
+When performing any search, the normal behavior is that the start and stop
 limits are checked with respect to the start of the matching text. With the
 \fB\-strictlimits\fR flag, the entire matching range must lie inside the start
 and stop limits specified for the match to be valid.
@@ -4614,6 +4614,23 @@ although it should have the same precedence as the special index special
 \fBend\fR (see section \fBINDICES\fR). In a future release this will be
 corrected. The current behavior is a workaround, avoiding that existing
 applications will break with the introduction of \fBbegin\fR.
+.SS "ISSUES CONCERNING WIDGET STATE"
+.PP
+Older versions of text widgets are ignoring textual changes
+(insert/replace/delete) if the state of the widget is set to \fBdisabled\fR
+(see widget option \fB\-state\fR). But it allows to insert/delete
+embedded windows and images. Because of compatibility reasons this behavior
+has not been changed. But in future versions also inserting/deleting
+embedded windows and images should not be allowed. Furthermore in a future
+version an error message should be thrown when attempting to make textual
+changes (including embedded windows and images), because silently ignoring
+changes (current behavior) can be quite confusing.
+.SS "ISSUES CONCERNING DEAD PEERS"
+.PP
+See \fBisdead\fR about dead peers. Because of compatibility reasons
+textual changes within a dead peer are still allowed, although it has
+no effect, but in future versions of text widgets an error message
+should be thrown when attempting to make changes within a dead peer.
 .SS "PERFORMANCE ISSUES"
 .PP
 Text widgets should run efficiently under a variety of conditions. The text

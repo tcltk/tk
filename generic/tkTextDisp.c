@@ -940,7 +940,6 @@ unsigned tkTextCountNewBaseChars = 0;
 unsigned tkTextCountDestroyBaseChars = 0;
 #endif
 
-extern unsigned tkTextCountDestroySegment;
 extern unsigned tkRangeListCountNew;
 extern unsigned tkRangeListCountDestroy;
 
