@@ -200,7 +200,7 @@ void Tk_MapEmbeddedWindow(
  *	The TK_INFO messages are required in order to verify if the window to
  *	use is a valid container. Without an id verification, an invalid
  *	window attachment may cause unexpected crashes/panics (bug 1096074).
- *	Additional sub messages may be definded/used in future for other
+ *	Additional sub messages may be defined/used in future for other
  *	needs.
  *
  *	We do not enforce the above protocol for the reason of backward
@@ -303,10 +303,10 @@ TkpUseWindow(
 	 * order to avoid bug 1096074 in future.
 	 */
 
-	char msg[256];
+	TCHAR msg[256];
 
-	sprintf(msg, "Unable to get information of window \"%.80s\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
-	if (IDCANCEL == MessageBoxA(hwnd, msg, "Tk Warning",
+	wsprintf(msg, TEXT("Unable to get information of window \"%.40hs\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching."), string);
+	if (IDCANCEL == MessageBox(hwnd, msg, TEXT("Tk Warning"),
 		MB_OKCANCEL | MB_ICONWARNING)) {
     	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Operation has been canceled", -1));
