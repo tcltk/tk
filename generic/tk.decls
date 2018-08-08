@@ -1148,6 +1148,14 @@ export {
     const char *Tk_PkgInitStubsCheck(Tcl_Interp *interp, const char *version,
 	    int exact)
 }
+export {
+    void Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
+	    Tcl_Interp *interp)
+}
+export {
+    void Tk_MainExW(int argc, wchar_t **argv,
+	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
+}
 
 # Local Variables:
 # mode: tcl
