@@ -418,9 +418,9 @@ typedef enum {
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
-#if !defined(TK_NO_DEPRECATED) || defined(BUILD_tk)
+#ifndef TK_NO_DEPRECATED
 #  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
-#endif
+#endif /* !TK_NO_DEPRECATED */
 #define TK_CONFIG_USER_BIT		0x100
 #endif /* __NO_OLD_CONFIG */
 
@@ -1572,7 +1572,7 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
  * of what is actually there can be correct.
  */
 
-#if !defined(TK_NO_DEPRECATED) && !defined(BUILD_tk)
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #ifdef USE_COMPOSITELESS_PHOTO_PUT_BLOCK
 #   ifdef Tk_PhotoPutBlock
 #	undef Tk_PhotoPutBlock
@@ -1605,7 +1605,7 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 #   endif
 #   define Tk_PhotoSetSize		Tk_PhotoSetSize_Panic
 #endif /* USE_PANIC_ON_PHOTO_ALLOC_FAILURE */
-#endif /* !TK_NO_DEPRECATED && !BUILD_tk */
+#endif /* !TK_NO_DEPRECATED */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

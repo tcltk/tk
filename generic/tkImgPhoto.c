@@ -4042,7 +4042,7 @@ ImgPhotoPostscript(
  *
  *----------------------------------------------------------------------
  */
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 void
 Tk_PhotoPutBlock_NoComposite(
     Tk_PhotoHandle handle,
