@@ -380,20 +380,18 @@ ScrollbarWidgetObjCmd(
 	    goto error;
 	}
 #ifndef TK_NO_DEPRECATED
-	if (scrollPtr->flags & NEW_STYLE_COMMANDS) {
-#endif /* TK_NO_DEPRECATED */
-	    resObjs[0] = Tcl_NewDoubleObj(scrollPtr->firstFraction);
-	    resObjs[1] = Tcl_NewDoubleObj(scrollPtr->lastFraction);
-	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, resObjs));
-#ifndef TK_NO_DEPRECATED
-	} else {
+	if (scrollPtr->flags & OLD_STYLE_COMMANDS) {
 	    resObjs[0] = Tcl_NewIntObj(scrollPtr->totalUnits);
 	    resObjs[1] = Tcl_NewIntObj(scrollPtr->windowUnits);
 	    resObjs[2] = Tcl_NewIntObj(scrollPtr->firstUnit);
 	    resObjs[3] = Tcl_NewIntObj(scrollPtr->lastUnit);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, resObjs));
+	    break;
 	}
 #endif /* TK_NO_DEPRECATED */
+	resObjs[0] = Tcl_NewDoubleObj(scrollPtr->firstFraction);
+	resObjs[1] = Tcl_NewDoubleObj(scrollPtr->lastFraction);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, resObjs));
 	break;
     }
     case COMMAND_IDENTIFY: {
@@ -443,7 +441,7 @@ ScrollbarWidgetObjCmd(
 		scrollPtr->lastFraction = last;
 	    }
 #ifndef TK_NO_DEPRECATED
-	    scrollPtr->flags |= NEW_STYLE_COMMANDS;
+	    scrollPtr->flags &= ~OLD_STYLE_COMMANDS;
 	} else if (objc == 6) {
 	    int totalUnits, windowUnits, firstUnit, lastUnit;
 	    if (Tcl_GetIntFromObj(interp, objv[2], &totalUnits) != TCL_OK) {
@@ -482,7 +480,7 @@ ScrollbarWidgetObjCmd(
 		scrollPtr->firstFraction = ((double) firstUnit)/totalUnits;
 		scrollPtr->lastFraction = ((double) (lastUnit+1))/totalUnits;
 	    }
-	    scrollPtr->flags &= ~NEW_STYLE_COMMANDS;
+	    scrollPtr->flags |= OLD_STYLE_COMMANDS;
 #endif /* !TK_NO_DEPRECATED */
 	} else {
 		Tcl_WrongNumArgs(interp, 1, objv, "set firstFraction lastFraction");
