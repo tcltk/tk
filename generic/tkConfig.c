@@ -936,16 +936,13 @@ static int
 ObjectIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
-    int length;
-
     if (objPtr == NULL) {
 	return 1;
     }
     if (objPtr->bytes != NULL) {
-	return (objPtr->length == 0);
+	Tcl_GetString(objPtr);
     }
-    (void)Tcl_GetStringFromObj(objPtr, &length);
-    return (length == 0);
+    return (objPtr->length == 0);
 }
 
 /*
