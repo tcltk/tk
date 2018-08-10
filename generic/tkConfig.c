@@ -940,7 +940,7 @@ ObjectIsEmpty(
     if (objPtr == NULL) {
 	return 1;
     }
-    if (objPtr->bytes != NULL) {
+    if (objPtr->bytes == NULL) {
 	Tcl_GetString(objPtr);
     }
     return (objPtr->length == 0);
