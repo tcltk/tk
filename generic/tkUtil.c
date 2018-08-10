@@ -733,7 +733,7 @@ Tk_GetScrollInfoObj(
     size_t length = objv[2]->length;
 
 #define ArgPfxEq(str) \
-	((arg[0] == str[0]) && !strncmp(arg, str, (unsigned)length))
+	((arg[0] == str[0]) && !strncmp(arg, str, length))
 
     if (ArgPfxEq("moveto")) {
 	if (objc != 4) {
