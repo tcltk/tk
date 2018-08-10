@@ -134,7 +134,7 @@ UpdateStringOfTextIndex(
     Tcl_Obj *objPtr)
 {
     char buffer[TK_POS_CHARS];
-    register int len;
+    size_t len;
     const TkTextIndex *indexPtr = GET_TEXTINDEX(objPtr);
 
     len = TkTextPrintIndex(indexPtr->textPtr, indexPtr, buffer);
