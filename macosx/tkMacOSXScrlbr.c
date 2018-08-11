@@ -68,7 +68,7 @@ typedef struct ScrollbarMetrics {
 
 
 static ScrollbarMetrics metrics = {
-    {15, 54, 26, 14, 14, kControlSizeNormal}, /* kThemeScrollBarMedium */
+  {15, 54, 26, 14, 14, kControlSizeNormal}, /* kThemeScrollBarMedium */
 };
 
 HIThemeTrackDrawInfo info = {
@@ -226,7 +226,7 @@ TkpComputeScrollbarGeometry(
  * changed. */
 {
 
-    int variant, fieldLength;
+    int fieldLength;
 
     if (scrollPtr->highlightWidth < 0) {
     	scrollPtr->highlightWidth = 0;
@@ -448,7 +448,6 @@ UpdateControlValues(
     MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
     double dViewSize;
     HIRect  contrlRect;
-    int variant;
     short width, height;
 
     NSView *view = TkMacOSXDrawableView(macWin);
