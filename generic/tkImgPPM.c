@@ -764,10 +764,11 @@ ReadPPMStringHeader(
 {
 #define BUFFER_SIZE 1000
     char buffer[BUFFER_SIZE], c;
-    int i, numFields, dataSize, type = 0;
+    int i, numFields, type = 0;
+    size_t dataSize;
     unsigned char *dataBuffer;
 
-    dataBuffer = Tcl_GetByteArrayFromObj(dataPtr, &dataSize);
+    dataBuffer = TkGetByteArrayFromObj(dataPtr, &dataSize);
 
     /*
      * Read 4 space-separated fields from the string, ignoring comments (any

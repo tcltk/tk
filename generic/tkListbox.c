@@ -1102,7 +1102,8 @@ ListboxBboxSubCmd(
     if ((listPtr->topIndex <= index) && (index < lastVisibleIndex)) {
 	Tcl_Obj *el, *results[4];
 	const char *stringRep;
-	int pixelWidth, stringLen, x, y, result;
+	int pixelWidth, x, y, result;
+	size_t stringLen;
 	Tk_FontMetrics fm;
 
 	/*
@@ -1114,7 +1115,7 @@ ListboxBboxSubCmd(
 	    return result;
 	}
 
-	stringRep = Tcl_GetStringFromObj(el, &stringLen);
+	stringRep = TkGetStringFromObj(el, &stringLen);
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
@@ -1840,7 +1841,8 @@ DisplayListbox(
     register Listbox *listPtr = clientData;
     register Tk_Window tkwin = listPtr->tkwin;
     GC gc;
-    int i, limit, x, y, prevSelected, freeGC, stringLen;
+    int i, limit, x, y, prevSelected, freeGC;
+    size_t stringLen;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
@@ -2074,7 +2076,7 @@ DisplayListbox(
 	 */
 
         Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
-        stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+        stringRep = TkGetStringFromObj(curElement, &stringLen);
         textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
@@ -2236,7 +2238,8 @@ ListboxComputeGeometry(
 				 * Tk_UnsetGrid to update gridding for the
 				 * window. */
 {
-    int width, height, pixelWidth, pixelHeight, textLength, i, result;
+    int width, height, pixelWidth, pixelHeight, i, result;
+    size_t textLength;
     Tk_FontMetrics fm;
     Tcl_Obj *element;
     const char *text;
@@ -2257,7 +2260,7 @@ ListboxComputeGeometry(
 	    if (result != TCL_OK) {
 		continue;
 	    }
-	    text = Tcl_GetStringFromObj(element, &textLength);
+	    text = TkGetStringFromObj(element, &textLength);
 	    Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, text, textLength);
 	    if (pixelWidth > listPtr->maxWidth) {
@@ -2323,7 +2326,8 @@ ListboxInsertSubCmd(
     int objc,			/* Number of new elements to add. */
     Tcl_Obj *const objv[])	/* New elements (one per entry). */
 {
-    int i, oldMaxWidth, pixelWidth, result, length;
+    int i, oldMaxWidth, pixelWidth, result;
+    size_t length;
     Tcl_Obj *newListObj;
     const char *stringRep;
 
@@ -2334,7 +2338,7 @@ ListboxInsertSubCmd(
 	 * if so, update our notion of "widest."
 	 */
 
-	stringRep = Tcl_GetStringFromObj(objv[i], &length);
+	stringRep = TkGetStringFromObj(objv[i], &length);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	if (pixelWidth > listPtr->maxWidth) {
 	    listPtr->maxWidth = pixelWidth;
@@ -2437,7 +2441,8 @@ ListboxDeleteSubCmd(
     int first,			/* Index of first element to delete. */
     int last)			/* Index of last element to delete. */
 {
-    int count, i, widthChanged, length, result, pixelWidth;
+    int count, i, widthChanged, result, pixelWidth;
+    size_t length;
     Tcl_Obj *newListObj, *element;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -2492,7 +2497,7 @@ ListboxDeleteSubCmd(
 
 	if (widthChanged == 0) {
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &element);
-	    stringRep = Tcl_GetStringFromObj(element, &length);
+	    stringRep = TkGetStringFromObj(element, &length);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	    if (pixelWidth == listPtr->maxWidth) {
 		widthChanged = 1;
@@ -3122,7 +3127,8 @@ ListboxFetchSelection(
 {
     register Listbox *listPtr = clientData;
     Tcl_DString selection;
-    int length, count, needNewline, stringLen, i;
+    int count, needNewline, i;
+    size_t length, stringLen;
     Tcl_Obj *curElement;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -3145,7 +3151,7 @@ ListboxFetchSelection(
 	    }
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i,
 		    &curElement);
-	    stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+	    stringRep = TkGetStringFromObj(curElement, &stringLen);
 	    Tcl_DStringAppend(&selection, stringRep, stringLen);
 	    needNewline = 1;
 	}
