@@ -1242,12 +1242,20 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #endif
 
 #if TCL_UTF_MAX > 4
-#   define TkUtfToUniChar Tcl_UtfToUniChar
-#   define TkUniCharToUtf Tcl_UniCharToUtf
+#   define TkUtfToUniChar (size_t)Tcl_UtfToUniChar
+#   define TkUniCharToUtf (size_t)Tcl_UniCharToUtf
 #else
-    MODULE_SCOPE int TkUtfToUniChar(const char *, int *);
-    MODULE_SCOPE int TkUniCharToUtf(int, char *);
+    MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
+    MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
 #endif
+
+#define TkGetStringFromObj(objPtr, lenPtr) \
+    (((objPtr)->bytes \
+	    ? 0 : Tcl_GetString((objPtr)), \
+	    *(lenPtr) = (objPtr)->length, (objPtr)->bytes))
+
+MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
+	size_t *lengthPtr);
 
 /*
  * Unsupported commands.

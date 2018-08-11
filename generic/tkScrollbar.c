@@ -226,8 +226,8 @@ ScrollbarWidgetObjCmd(
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     register TkScrollbar *scrollPtr = clientData;
-    int result = TCL_OK;
-    int length, cmdIndex;
+    int result = TCL_OK, cmdIndex;
+    size_t length;
     static const char *const commandNames[] = {
         "activate", "cget", "configure", "delta", "fraction",
         "get", "identify", "set", NULL
@@ -271,7 +271,7 @@ ScrollbarWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 1, objv, "activate element");
 	    goto error;
 	}
-	c = Tcl_GetStringFromObj(objv[2], &length)[0];
+	c = TkGetStringFromObj(objv[2], &length)[0];
 	oldActiveField = scrollPtr->activeField;
 	if ((c == 'a') && (strcmp(Tcl_GetString(objv[2]), "arrow1") == 0)) {
 	    scrollPtr->activeField = TOP_ARROW;

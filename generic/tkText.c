@@ -866,10 +866,9 @@ TextWidgetObjCmd(
 	for (i = 2; i < objc-2; i++) {
 	    int value;
 	    size_t length;
-	    const char *option = Tcl_GetString(objv[i]);
+	    const char *option = TkGetStringFromObj(objv[i], &length);
 	    char c;
 
-	    length = objv[i]->length;
 	    if (length < 2 || option[0] != '-') {
 		goto badOption;
 	    }
@@ -1277,14 +1276,12 @@ TextWidgetObjCmd(
 
 	i = 2;
 	if (objc > 3) {
-	    name = Tcl_GetString(objv[i]);
-	    length = objv[i]->length;
+	    name = TkGetStringFromObj(objv[i], &length);
 	    if (length > 1 && name[0] == '-') {
 		if (strncmp("-displaychars", name, length) == 0) {
 		    i++;
 		    visible = 1;
-		    name = Tcl_GetString(objv[i]);
-		    length = objv[i]->length;
+		    name = TkGetStringFromObj(objv[i], &length);
 		}
 		if ((i < objc-1) && (length == 2) && !strcmp("--", name)) {
 		    i++;
@@ -2640,9 +2637,8 @@ InsertChars(
     int *lineAndByteIndex;
     int resetViewCount;
     int pixels[2*PIXEL_CLIENTS];
-    const char *string = Tcl_GetString(stringPtr);
+    const char *string = TkGetStringFromObj(stringPtr, &length);
 
-    length = stringPtr->length;
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
     }
@@ -4764,8 +4760,7 @@ TextDumpCmd(
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	str = Tcl_GetString(objv[arg]);
-	length = objv[arg]->length;
+	str = TkGetStringFromObj(objv[arg], &length);
 	if (strncmp(str, "end", length) == 0) {
 	    atEnd = 1;
 	}
@@ -5838,8 +5833,7 @@ SearchCore(
 	 * it has dual purpose.
 	 */
 
-	pattern = Tcl_GetString(patObj);
-	matchLength = patObj->length;
+	pattern = Tcl_GetStringFromObj(patObj, &matchLength);
 	nl = strchr(pattern, '\n');
 
 	/*
