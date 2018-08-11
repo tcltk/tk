@@ -66,9 +66,9 @@ typedef struct ScrollbarMetrics {
     NSControlSize controlSize;
 } ScrollbarMetrics;
 
-static ScrollbarMetrics metrics[2] = {
+
+static ScrollbarMetrics metrics = {
     {15, 54, 26, 14, 14, kControlSizeNormal}, /* kThemeScrollBarMedium */
-    {11, 40, 20, 10, 10, kControlSizeSmall},  /* kThemeScrollBarSmall  */
 };
 HIThemeTrackDrawInfo info = {
     .version = 0,
@@ -231,11 +231,8 @@ TkpComputeScrollbarGeometry(
     	scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    variant = ((scrollPtr->vertical ? Tk_Width(scrollPtr->tkwin) :
-		Tk_Height(scrollPtr->tkwin)) - 2 * scrollPtr->inset
-	       < metrics[0].width) ? 1 : 0;
-    scrollPtr->arrowLength = (metrics[variant].topArrowHeight +
-			      metrics[variant].bottomArrowHeight) / 2;
+    scrollPtr->arrowLength = (metrics.topArrowHeight +
+			      metrics.bottomArrowHeight) / 2;
     fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
 		   : Tk_Width(scrollPtr->tkwin))
 	- 2 * (scrollPtr->arrowLength + scrollPtr->inset);
@@ -258,9 +255,9 @@ TkpComputeScrollbarGeometry(
     	scrollPtr->sliderFirst = 0;
     }
     if (scrollPtr->sliderLast < (scrollPtr->sliderFirst +
-				 metrics[variant].minThumbHeight)) {
+				 metrics.minThumbHeight)) {
     	scrollPtr->sliderLast = scrollPtr->sliderFirst +
-	    metrics[variant].minThumbHeight;
+	    metrics.minThumbHeight;
     }
     if (scrollPtr->sliderLast > fieldLength) {
     	scrollPtr->sliderLast = fieldLength;
@@ -277,9 +274,9 @@ TkpComputeScrollbarGeometry(
      */
 
     if (scrollPtr->vertical) {
-    	Tk_GeometryRequest(scrollPtr->tkwin, scrollPtr->width + 2 * scrollPtr->inset, 2 * (scrollPtr->arrowLength + scrollPtr->borderWidth + scrollPtr->inset) +  metrics[variant].minThumbHeight);
+    	Tk_GeometryRequest(scrollPtr->tkwin, scrollPtr->width + 2 * scrollPtr->inset, 2 * (scrollPtr->arrowLength + scrollPtr->borderWidth + scrollPtr->inset) +  metrics.minThumbHeight);
     } else {
-    	Tk_GeometryRequest(scrollPtr->tkwin, 2 * (scrollPtr->arrowLength + scrollPtr->borderWidth + scrollPtr->inset) + metrics[variant].minThumbHeight, scrollPtr->width + 2 * scrollPtr->inset);
+    	Tk_GeometryRequest(scrollPtr->tkwin, 2 * (scrollPtr->arrowLength + scrollPtr->borderWidth + scrollPtr->inset) + metrics.minThumbHeight, scrollPtr->width + 2 * scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 
@@ -467,8 +464,6 @@ UpdateControlValues(
     width = contrlRect.size.width;
     height = contrlRect.size.height;
 
-   variant = contrlRect.size.width < metrics[0].width ? 1 : 0;
-
     /*
      * Ensure we set scrollbar control bounds only once all size adjustments
      * have been computed.
@@ -509,7 +504,7 @@ UpdateControlValues(
     }
 
     if((scrollPtr->firstFraction <= 0.0 && scrollPtr->lastFraction >= 1.0)
-       || height <= metrics[variant].minHeight) {
+       || height <= metrics.minHeight) {
     	info.enableState = kThemeTrackHideTrack;
     } else {
     	info.enableState = kThemeTrackActive;
