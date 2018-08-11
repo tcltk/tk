@@ -656,14 +656,14 @@ DoObjConfig(
     case TK_OPTION_STRING: {
 	char *newStr;
 	const char *value;
-	int length;
+	size_t length;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	}
 	if (internalPtr != NULL) {
 	    if (valuePtr != NULL) {
-		value = Tcl_GetStringFromObj(valuePtr, &length);
+		value = TkGetStringFromObj(valuePtr, &length);
 		newStr = ckalloc(length + 1);
 		strcpy(newStr, value);
 	    } else {

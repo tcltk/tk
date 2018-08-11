@@ -85,7 +85,11 @@ typedef struct TkScale {
     int repeatInterval;		/* Interval between autorepeats (in ms). */
     char *label;		/* Label to display above or to right of
 				 * scale; NULL means don't display a label. */
-    int labelLength;		/* Number of non-NULL chars. in label. */
+#if TK_MAJOR_VERSION > 8
+    size_t labelLength;		/* Number of non-NULL chars. in label. */
+#else
+    unsigned int labelLength;		/* Number of non-NULL chars. in label. */
+#endif
     enum state state;		/* Values are active, normal, or disabled.
 				 * Value of scale cannot be changed when
 				 * disabled. */

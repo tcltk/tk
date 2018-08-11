@@ -757,10 +757,10 @@ StringMatchGIF(
     Tcl_Interp *interp)		/* not used */
 {
     unsigned char *data, header[10];
-    int got, length;
+    size_t got, length;
     MFile handle;
 
-    data = Tcl_GetByteArrayFromObj(dataObj, &length);
+    data = TkGetByteArrayFromObj(dataObj, &length);
 
     /*
      * Header is a minimum of 10 bytes.
@@ -826,9 +826,9 @@ StringReadGIF(
     int srcX, int srcY)
 {
     MFile handle, *hdlPtr = &handle;
-    int length;
+    size_t length;
     const char *xferFormat;
-    unsigned char *data = Tcl_GetByteArrayFromObj(dataObj, &length);
+    unsigned char *data = TkGetByteArrayFromObj(dataObj, &length);
 
     mInit(data, hdlPtr, length);
 

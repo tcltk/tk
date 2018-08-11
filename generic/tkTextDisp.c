@@ -6089,7 +6089,7 @@ TkTextYviewCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace, type;
     int pixels, count;
-    int switchLength;
+    size_t switchLength;
     double fraction;
     TkTextIndex index;
 
@@ -6109,7 +6109,7 @@ TkTextYviewCmd(
     pickPlace = 0;
     if (Tcl_GetString(objv[2])[0] == '-') {
 	register const char *switchStr =
-		Tcl_GetStringFromObj(objv[2], &switchLength);
+		TkGetStringFromObj(objv[2], &switchLength);
 
 	if ((switchLength >= 2) && (strncmp(switchStr, "-pickplace",
 		(unsigned) switchLength) == 0)) {

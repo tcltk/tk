@@ -488,7 +488,8 @@ CreateFrame(
     Tk_Window newWin;
     const char *className, *screenName, *visualName, *colormapName;
     const char *arg, *useOption;
-    int i, length, depth;
+    int i, depth;
+    size_t length;
     unsigned int mask;
     Colormap colormap;
     Visual *visual;
@@ -515,24 +516,24 @@ CreateFrame(
     className = colormapName = screenName = visualName = useOption = NULL;
     colormap = None;
     for (i = 2; i < objc; i += 2) {
-	arg = Tcl_GetStringFromObj(objv[i], &length);
+	arg = TkGetStringFromObj(objv[i], &length);
 	if (length < 2) {
 	    continue;
 	}
 	if ((arg[1] == 'c') && (length >= 3)
-		&& (strncmp(arg, "-class", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-class", length) == 0)) {
 	    className = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 'c') && (length >= 3)
-		&& (strncmp(arg, "-colormap", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-colormap", length) == 0)) {
 	    colormapName = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 's') && (type == TYPE_TOPLEVEL)
-		&& (strncmp(arg, "-screen", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-screen", length) == 0)) {
 	    screenName = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 'u') && (type == TYPE_TOPLEVEL)
-		&& (strncmp(arg, "-use", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-use", length) == 0)) {
 	    useOption = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 'v')
-		&& (strncmp(arg, "-visual", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-visual", length) == 0)) {
 	    visualName = Tcl_GetString(objv[i+1]);
 	}
     }
@@ -743,7 +744,8 @@ FrameWidgetObjCmd(
     };
     register Frame *framePtr = clientData;
     int result = TCL_OK, index;
-    int c, i, length;
+    int c, i;
+    size_t length;
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
@@ -787,7 +789,7 @@ FrameWidgetObjCmd(
 	     */
 
 	    for (i = 2; i < objc; i++) {
-		const char *arg = Tcl_GetStringFromObj(objv[i], &length);
+		const char *arg = TkGetStringFromObj(objv[i], &length);
 
 		if (length < 2) {
 		    continue;

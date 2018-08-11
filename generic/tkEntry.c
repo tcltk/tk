@@ -4386,16 +4386,17 @@ SpinboxInvoke(
 		 * there. If not, move to the first element of the list.
 		 */
 
-		int i, listc, elemLen, length = entryPtr->numChars;
+		int i, listc;
+		size_t elemLen, length = entryPtr->numChars;
 		const char *bytes;
 		Tcl_Obj **listv;
 
 		Tcl_ListObjGetElements(interp, sbPtr->listObj, &listc, &listv);
 		for (i = 0; i < listc; i++) {
-		    bytes = Tcl_GetStringFromObj(listv[i], &elemLen);
+		    bytes = TkGetStringFromObj(listv[i], &elemLen);
 		    if ((length == elemLen) &&
 			    (memcmp(bytes, entryPtr->string,
-				    (size_t) length) == 0)) {
+				    length) == 0)) {
 			sbPtr->eIndex = i;
 			break;
 		    }

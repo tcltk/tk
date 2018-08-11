@@ -68,11 +68,15 @@ typedef struct TkMenuEntry {
     Tk_OptionTable optionTable;	/* Option table for this menu entry. */
     Tcl_Obj *labelPtr;		/* Main text label displayed in entry (NULL if
 				 * no label). */
-    int labelLength;		/* Number of non-NULL characters in label. */
+#if TK_MAJOR_VERSION > 8
+    size_t labelLength;		/* Number of non-NULL characters in label. */
+#else
+    unsigned int labelLength;		/* Number of non-NULL characters in label. */
+#endif
     int state;			/* State of button for display purposes:
 				 * normal, active, or disabled. */
     int underline;		/* Value of -underline option: specifies index
-				 * of character to underline (<0 means don't
+				 * of character to underline (-1 means don't
 				 * underline anything). */
     Tcl_Obj *underlinePtr;	/* Index of character to underline. */
     Tcl_Obj *bitmapPtr;		/* Bitmap to display in menu entry, or None.
@@ -89,8 +93,13 @@ typedef struct TkMenuEntry {
     Tcl_Obj *accelPtr;		/* Accelerator string displayed at right of
 				 * menu entry. NULL means no such accelerator.
 				 * Malloc'ed. */
-    int accelLength;		/* Number of non-NULL characters in
+#if TK_MAJOR_VERSION > 8
+    size_t accelLength;		/* Number of non-NULL characters in
 				 * accelerator. */
+#else
+    unsigned int accelLength;		/* Number of non-NULL characters in
+				 * accelerator. */
+#endif
     int indicatorOn;		/* True means draw indicator, false means
 				 * don't draw it. This field is ignored unless
 				 * the entry is a radio or check button. */
