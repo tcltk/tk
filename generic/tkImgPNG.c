@@ -3135,7 +3135,7 @@ WriteIDAT(
     int rowNum, flush = TCL_ZLIB_NO_FLUSH, result;
     Tcl_Obj *outputObj;
     unsigned char *outputBytes;
-    size_t outputSize;    
+    size_t outputSize;
 
     /*
      * Filter and compress each row one at a time.

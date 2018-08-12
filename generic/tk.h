@@ -21,12 +21,8 @@
 #	error Tk 8.7 must be compiled with tcl.h from Tcl 8.6 or better
 #endif
 
-#ifndef CONST84
-#   define CONST84 const
-#   define CONST84_RETURN const
-#endif
 #ifndef CONST86
-#   define CONST86 CONST84
+#   define CONST86 const
 #endif
 #ifndef EXTERN
 #   define EXTERN extern TCL_STORAGE_CLASS
@@ -339,7 +335,7 @@ typedef struct Tk_SavedOptions {
 #ifndef __NO_OLD_CONFIG
 
 typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
-	Tk_Window tkwin, CONST84 char *value, char *widgRec, int offset);
+	Tk_Window tkwin, const char *value, char *widgRec, int offset);
 typedef CONST86 char *(Tk_OptionPrintProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 
