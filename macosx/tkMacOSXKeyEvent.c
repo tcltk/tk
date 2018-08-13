@@ -41,6 +41,9 @@ static int caret_x = 0, caret_y = 0, caret_height = 0;
 static void setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state);
 static unsigned isFunctionKey(unsigned int code);
 
+unsigned short releaseCode;
+NSString *releaseChar;
+
 
 #pragma mark TKApplication(TKKeyEvent)
 
@@ -68,12 +71,16 @@ static unsigned isFunctionKey(unsigned int code);
 
     switch (type) {
     case NSKeyUp:
-      if (finishedCompose)
-        {
-          // if we were composing, swallow the last release since we already sent
-          finishedCompose = NO;
-          return theEvent;
-        }
+	
+	//fix for 1ba71a86bb: key release firing on key press
+	w = [theEvent window];       
+	XEvent xEvent;
+	setupXEvent(&xEvent, w, 0);
+	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+	Tk_Window tkwin = (Tk_Window) winPtr;
+	xEvent.xany.type = KeyRelease;
+	xEvent.xkey.keycode = releaseCode;
+	xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
     case NSKeyDown:
 	repeat = [theEvent isARepeat];
 	characters = [theEvent characters];
@@ -171,7 +178,7 @@ static unsigned isFunctionKey(unsigned int code);
               xEvent.xkey.keycode = (modifiers ^ savedModifiers);
             } else {
               if (type == NSKeyUp || repeat) {
-                xEvent.xany.type = KeyRelease;
+		  xEvent.xany.type = KeyRelease;
               } else {
                 xEvent.xany.type = KeyPress;
               }
@@ -262,13 +269,15 @@ static unsigned isFunctionKey(unsigned int code);
          maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
       xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
       xEvent.xany.type = KeyPress;
+        releaseCode =  (UInt16) [aString characterAtIndex: 0];
       Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 
-      xEvent.xany.type = KeyRelease;
-      xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-      Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-      xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+      // xEvent.xany.type = KeyRelease;
+      // xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+      // Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+      // xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
     }
+    releaseCode =  (UInt16) [aString characterAtIndex: 0];
 }
 
 
