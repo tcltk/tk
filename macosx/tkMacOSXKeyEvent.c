@@ -42,7 +42,6 @@ static void setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state);
 static unsigned isFunctionKey(unsigned int code);
 
 unsigned short releaseCode;
-NSString *releaseChar;
 
 
 #pragma mark TKApplication(TKKeyEvent)
@@ -72,7 +71,7 @@ NSString *releaseChar;
     switch (type) {
     case NSKeyUp:
 	
-	//fix for 1ba71a86bb: key release firing on key press
+	/*Fix for bug #1ba71a86bb: key release firing on key press.*/
 	w = [theEvent window];       
 	XEvent xEvent;
 	setupXEvent(&xEvent, w, 0);
@@ -262,22 +261,17 @@ NSString *releaseChar;
   xEvent.xany.type = KeyPress;
 
   for (i =0; i<len; i++)
-    {
-      xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
-      [[aString substringWithRange: NSMakeRange(i,1)]
-        getCString: xEvent.xkey.trans_chars
-         maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
-      xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
-      xEvent.xany.type = KeyPress;
-        releaseCode =  (UInt16) [aString characterAtIndex: 0];
-      Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-
-      // xEvent.xany.type = KeyRelease;
-      // xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-      // Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-      // xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-    }
-    releaseCode =  (UInt16) [aString characterAtIndex: 0];
+      {
+	  xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
+	  [[aString substringWithRange: NSMakeRange(i,1)]
+	      getCString: xEvent.xkey.trans_chars
+	       maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
+	  xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
+	  xEvent.xany.type = KeyPress;
+	  releaseCode =  (UInt16) [aString characterAtIndex: 0];
+	  Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+      }
+  releaseCode =  (UInt16) [aString characterAtIndex: 0];
 }
 
 
