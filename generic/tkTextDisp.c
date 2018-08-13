@@ -16,12 +16,6 @@
 #include "tkInt.h"
 #include "tkText.h"
 
-#ifdef _WIN32
-#include "tkWinInt.h"
-#elif defined(__CYGWIN__)
-#include "tkUnixInt.h"
-#endif
-
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #endif
