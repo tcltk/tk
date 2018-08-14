@@ -70,9 +70,9 @@ unsigned short releaseCode;
 
     switch (type) {
     case NSKeyUp:
-	
+
 	/*Fix for bug #1ba71a86bb: key release firing on key press.*/
-	w = [theEvent window];       
+	w = [theEvent window];
 	XEvent xEvent;
 	setupXEvent(&xEvent, w, 0);
 	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
