@@ -231,7 +231,7 @@ static int windowHashInit = false;
 }
 #endif
 
-- (NSSize)windowWillResize:(NSWindow *)sender 
+- (NSSize)windowWillResize:(NSWindow *)sender
                     toSize:(NSSize)frameSize
 {
     NSRect currentFrame = [sender frame];
@@ -388,7 +388,7 @@ static void		RemapWindows(TkWindow *winPtr,
 #if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
 /*
  * Override automatic fullscreen button on >10.12 because system fullscreen API
- * confuses Tk window geometry. Custom implementation setting fullscreen status using 
+ * confuses Tk window geometry. Custom implementation setting fullscreen status using
  * Tk API and NSStatusItem in menubar to exit fullscreen status.
  */
 
@@ -6539,10 +6539,10 @@ TkMacOSXMakeFullscreen(
 	prevPres = [NSApp presentationOptions];
 	[window setStyleMask: NSFullScreenWindowMask];
 	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar];
-	
+
 	/*Fullscreen implementation for 10.13 and later.*/
 	#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
-	exitFullScreen = [[[NSStatusBar systemStatusBar] 
+	exitFullScreen = [[[NSStatusBar systemStatusBar]
 				   statusItemWithLength:NSVariableStatusItemLength] retain];
 	NSImage *exitIcon = [NSImage imageNamed:@"NSExitFullScreenTemplate"];
 	[exitFullScreen setImage:exitIcon];
@@ -6551,7 +6551,7 @@ TkMacOSXMakeFullscreen(
 	[exitFullScreen setTarget:window];
 	[exitFullScreen setAction:@selector(restoreOldScreen:)];
 	#endif
-	
+
 	Tk_MapWindow((Tk_Window) winPtr);
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;
