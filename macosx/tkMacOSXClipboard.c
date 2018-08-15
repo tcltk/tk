@@ -67,13 +67,11 @@ static Tk_Window clipboardOwner = NULL;
 
 - (void) tkCheckPasteboard
 {
-    if (clipboardOwner && [[NSPasteboard generalPasteboard] changeCount] !=
-	    changeCount) {
+    if ([[NSPasteboard generalPasteboard] changeCount] != changeCount) {
 	TkDisplay *dispPtr = TkGetDisplayList();
 
-	if (dispPtr) {
+	if (dispPtr && clipboardOwner) {
 	    XEvent event;
-
 	    event.xany.type = SelectionClear;
 	    event.xany.serial = NextRequest(Tk_Display(clipboardOwner));
 	    event.xany.send_event = False;
@@ -125,8 +123,10 @@ TkSelGetSelection(
     int result = TCL_ERROR;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (dispPtr && selection == dispPtr->clipboardAtom && (target == XA_STRING
-	    || target == dispPtr->utf8Atom)) {
+    int haveExternalClip = ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
+    if (dispPtr && (haveExternalClip || dispPtr->clipboardActive)
+	        && selection == dispPtr->clipboardAtom
+	        && (target == XA_STRING || target == dispPtr->utf8Atom)) {
 	NSString *string = nil;
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
 	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
@@ -176,7 +176,6 @@ XSetSelectionOwner(
 	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
 	if (!dispPtr->clipboardActive) {
 	    NSPasteboard *pb = [NSPasteboard generalPasteboard];
-
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
