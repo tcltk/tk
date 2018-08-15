@@ -117,7 +117,7 @@ enum alertIconOptions {
     ICON_ERROR, ICON_INFO, ICON_QUESTION, ICON_WARNING
 };
 static const char *const alertButtonStrings[] = {
-    "abort", "retry", "ignore", "ok", "cancel", "no", "yes", NULL
+    "abort", "retry", "ignore", "ok", "cancel", "yes", "no", NULL
 };
 
 static const NSString *const alertButtonNames[][3] = {
