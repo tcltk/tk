@@ -67,10 +67,11 @@ static Tk_Window clipboardOwner = NULL;
 
 - (void) tkCheckPasteboard
 {
-    if ([[NSPasteboard generalPasteboard] changeCount] != changeCount) {
+    if (clipboardOwner && [[NSPasteboard generalPasteboard] changeCount] !=
+	    changeCount) {
 	TkDisplay *dispPtr = TkGetDisplayList();
 
-	if (dispPtr && clipboardOwner) {
+	if (dispPtr) {
 	    XEvent event;
 	    event.xany.type = SelectionClear;
 	    event.xany.serial = NextRequest(Tk_Display(clipboardOwner));
