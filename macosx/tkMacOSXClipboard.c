@@ -125,8 +125,8 @@ TkSelGetSelection(
     int result = TCL_ERROR;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (dispPtr && dispPtr->clipboardActive && selection == dispPtr->clipboardAtom
-	    && (target == XA_STRING || target == dispPtr->utf8Atom)) {
+    if (dispPtr && selection == dispPtr->clipboardAtom && (target == XA_STRING
+	    || target == dispPtr->utf8Atom)) {
 	NSString *string = nil;
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
 	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
