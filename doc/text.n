@@ -2543,10 +2543,17 @@ Returns a boolean true if undo is possible, i.e. when the undo stack is not
 empty. Otherwise returns false.
 .RE
 .TP
-\fIpathName \fBedit info\fR \fI?array\fR?
+\fIpathName \fBedit info\fR ??--? \fIarray\fR? | ?\fI-option\fR?
+.
+Returns information about edit states.
+.RS
+.TP
+\fIpathName \fBedit info\fR ?--? ?\fIarray\fR?
 .
 Stores an array of some edit information in given variable \fIarray\fR, if
-\fIarray\fR is not given then an unnamed variable will be used.
+\fIarray\fR is not given then an unnamed variable will be used. The name of
+the array must not start with a hyphen (\fB-\fR), unless it will be preceeded
+with \fB--\fR, otherwise it will be treated as an option (see chapter below).
 .RS
 .PP
 This command returns the array name \fIarray\fR, or an empty string (unnamed
@@ -2706,7 +2713,17 @@ In the future the information might be extended. Note that embedded windows
 and images will each be count with byte size one.
 .RE
 .TP
-\fIpathName \fBedit inspect\fR \fI?stack\fR?
+\fIpathName \fBedit info\fR -\fIoption\fR
+.
+This version will return only the specified value. \fIOption\fR is one of
+\fBbytesize\fR, \fBgeneratedmarks\fR, \fBimages\fR, \fBlines\fR, \fBlinespernode\fR, \fBmarks\fR,
+\fBredobytesize\fR, \fBredocommands\fR, \fBredodepth\fR, \fBredostacksize\fR, \fBtags\fR,
+\fBtotalbytesize\fR, \fBtotallines\fR, \fBundobytesize\fR, \fBundocommands\fR, \fBundodepth\fR,
+\fBundostacksize\fR, \fBusedtags\fR, \fBvisibleimages\fR, \fBvisiblewindows\fR, or \fBwindows\fR.
+See chapter above about the meaning.
+.RE
+.TP
+\fIpathName \fBedit inspect\fR ?\fIstack\fR?
 .
 Returns information about all undo, or redo, atoms. If \fIstack\fR is
 specified (must be either \fBundo\fR or \fBredo\fR), then only the
@@ -3672,7 +3689,7 @@ the view just enough to make \fIindex\fR visible at the edge of the window.
 If \fIindex\fR is far out of view, then the command centers \fIindex\fR in the
 window.
 .TP
-\fIpathName \fBsync\fR ?\fB\-command \fIcommand\fR?
+\fIpathName \fBsync\fR ?\fB\-command ?\fIcommand\fR??
 .
 Controls the synchronization of the view of the text widget.
 .RS

@@ -568,7 +568,7 @@ TkTextTagCmd(
 	TkTextSegment *segPtr;
 
 	if (objc != 4 && objc != 5) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "-discardselection? index");
+	    Tcl_WrongNumArgs(interp, 3, objv, "?-discardselection? index");
 	    return TCL_ERROR;
 	}
 	if (objc == 5) {
@@ -1405,8 +1405,8 @@ TkConfigureTag(
 
     if (redraw && !newTag && affectsDisplay) {
 	/*
-	 * This line is not necessary if this is a new tag, since it can't possibly have
-	 * been applied to anything yet.
+	 * This action is not necessary if this is a new tag, since it can't have been
+	 * applied to anything yet.
 	 *
 	 * If this is the 'sel' tag, then we don't need to call this for all peers, unless
 	 * we actually want to synchronize sel-style changes across the peers.
@@ -3170,7 +3170,6 @@ TkTextPickCurrent(
 	    int lastX = textPtr->lastX;
 	    bool movedToLeft;
 	    int sx, sy; /* translation to current scroll position */
-
 
 	    TkTextGetViewOffset(textPtr, &sx, &sy);
 	    movedToLeft = textPtr->pickEvent.xcrossing.x + sx <= lastX;

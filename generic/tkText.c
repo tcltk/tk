@@ -540,6 +540,7 @@ static void		GenerateEvent(TkSharedText *sharedTextPtr, const char *type);
 static void		RunAfterSyncCmd(ClientData clientData);
 static void		UpdateModifiedFlag(TkSharedText *sharedTextPtr, bool flag);
 static Tcl_Obj *	MakeEditInfo(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *arrayPtr);
+static Tcl_Obj *	GetEditInfo(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *option);
 static unsigned		TextSearchIndexInLine(const SearchSpec *searchSpecPtr, TkTextLine *linePtr,
 			    int byteIndex);
 static int		TextPeerCmd(TkText *textPtr, Tcl_Interp *interp,
@@ -9068,11 +9069,19 @@ TextEditCmd(
     }
 #endif /* SUPPORT_DEPRECATED_CANUNDO_REDO */
     case EDIT_INFO:
-	if (objc != 3 && objc != 4) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "?array?");
+	if (objc != 3 && objc != 4 && (objc != 5 || strcmp(Tcl_GetString(objv[3]), "--") != 0)) {
+	    /* NOTE: avoid trigraph */
+	    Tcl_WrongNumArgs(interp, 3, objv, "\?\?--\? array? | ?-option?");
 	    return TCL_ERROR;
+	} else if (objc == 4 && *Tcl_GetString(objv[3]) == '-') {
+	    Tcl_Obj* infoObj = GetEditInfo(interp, textPtr, objv[3]);
+	    if (!infoObj) {
+		return TCL_ERROR;
+	    }
+	    Tcl_SetObjResult(textPtr->interp, infoObj);
 	} else {
-	    Tcl_SetObjResult(textPtr->interp, MakeEditInfo(interp, textPtr, objc == 4 ? objv[3] : NULL));
+	    Tcl_Obj* arrObj = (objc == 5 ? objv[4] : (objc == 4 ? objv[3] : NULL));
+	    Tcl_SetObjResult(textPtr->interp, MakeEditInfo(interp, textPtr, arrObj));
 	}
     	break;
     case EDIT_INSPECT:
@@ -9185,21 +9194,27 @@ TextEditCmd(
 	    TkTextUndoSetMaxStackDepth(sharedTextPtr->undoStack, textPtr->maxUndoDepth, redoDepth);
 	}
     	break;
-    case EDIT_REDO:
+    case EDIT_REDO: {
+	int result;
+
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
+
+	if (TestIfDisabled(interp, textPtr, &result))
+	    return result;
+
 	if (sharedTextPtr->undoStack) {
 	    /*
 	     * It's possible that this command command will be invoked inside the "watch" callback,
 	     * but this is not allowed when performing undo/redo.
 	     */
 
-	    if (TkTextUndoIsPerformingUndoRedo(sharedTextPtr->undoStack)) {
-		ErrorNotAllowed(interp, "cannot redo inside undo/redo operation");
+	    if (TestIfPerformingUndoRedo(interp, sharedTextPtr, NULL))
 		return TCL_ERROR;
-	    }
+
+	    PushRetainedUndoTokens(sharedTextPtr);
 
 	    if (TkTextUndoGetCurrentRedoStackDepth(sharedTextPtr->undoStack) == 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to redo", -1));
@@ -9207,10 +9222,10 @@ TextEditCmd(
 		return TCL_ERROR;
 	    }
 
-	    PushRetainedUndoTokens(sharedTextPtr);
 	    TkTextUndoDoRedo(sharedTextPtr->undoStack);
 	}
 	break;
+    }
     case EDIT_RESET:
 	if (objc == 3) {
 	    if (sharedTextPtr->undoStack) {
@@ -9218,11 +9233,8 @@ TextEditCmd(
 		 * It's possible that this command command will be invoked inside the "watch" callback,
 		 * but this is not allowed when performing undo/redo.
 		 */
-
-		if (TkTextUndoIsPerformingUndoRedo(sharedTextPtr->undoStack)) {
-		    ErrorNotAllowed(interp, "cannot reset stack inside undo/redo operation");
+		if (TestIfPerformingUndoRedo(interp, sharedTextPtr, NULL))
 		    return TCL_ERROR;
-		}
 
 		TkTextUndoClearStack(sharedTextPtr->undoStack);
 		sharedTextPtr->undoLevel = 0;
@@ -9245,16 +9257,9 @@ TextEditCmd(
 		return TCL_ERROR;
 	    }
 	    if (sharedTextPtr->undoStack) {
-		if (TkTextUndoIsPerformingUndoRedo(sharedTextPtr->undoStack)) {
-		    /*
-		     * It's possible that this command command will be invoked inside
-		     * the "watch" callback, but this is not allowed when performing
-		     * undo/redo.
-		     */
-
-		    ErrorNotAllowed(interp, "cannot reset stack inside undo/redo operation");
+		if (TestIfPerformingUndoRedo(interp, sharedTextPtr, NULL))
 		    return TCL_ERROR;
-		}
+
 		if (stack[0] == 'u') {
 		    TkTextUndoClearUndoStack(sharedTextPtr->undoStack);
 		    sharedTextPtr->undoLevel = 0;
@@ -9294,21 +9299,25 @@ TextEditCmd(
 	}
 	break;
     }
-    case EDIT_UNDO:
+    case EDIT_UNDO: {
+	int result;
+
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 3, objv, NULL);
 	    return TCL_ERROR;
 	}
+
+	if (TestIfDisabled(interp, textPtr, &result))
+	    return result;
+
 	if (sharedTextPtr->undoStack) {
 	    /*
 	     * It's possible that this command command will be invoked inside the "watch" callback,
 	     * but this is not allowed when performing undo/redo.
 	     */
 
-	    if (TkTextUndoIsPerformingUndoRedo(sharedTextPtr->undoStack)) {
-		ErrorNotAllowed(interp, "cannot undo inside undo/redo operation");
-		return TCL_ERROR;
-	    }
+	    if (TestIfPerformingUndoRedo(interp, sharedTextPtr, &result))
+		return result;
 
 	    PushRetainedUndoTokens(sharedTextPtr);
 
@@ -9322,7 +9331,176 @@ TextEditCmd(
 	}
 	break;
     }
+    }
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetEditInfo --
+ *
+ *	Returns the value containing the "edit info -option" information.
+ *
+ * Results:
+ *	Tcl_Obj containing the required information.
+ *
+ * Side effects:
+ *	Some memory will be allocated.
+ *
+ *----------------------------------------------------------------------
+ */
+enum {
+    INFO_BYTESIZE, INFO_GENERATEDMARKS, INFO_IMAGES, INFO_LINES, INFO_LINESPERNODE, INFO_MARKS,
+    INFO_REDOBYTESIZE, INFO_REDOCOMMANDS, INFO_REDODEPTH, INFO_REDOSTACKSIZE, INFO_TAGS,
+    INFO_TOTALBYTESIZE, INFO_TOTALLINES, INFO_UNDOBYTESIZE, INFO_UNDOCOMMANDS, INFO_UNDODEPTH,
+    INFO_UNDOSTACKSIZE, INFO_USEDTAGS, INFO_VISIBLEIMAGES, INFO_VISIBLEWINDOWS, INFO_WINDOWS,
+    INFO_LAST /* must be last item */
+};
+static const char *const editInfoStrings[] = {
+    "-bytesize", "-generatedmarks", "-images", "-lines", "-linespernode", "-marks",
+    "-redobytesize", "-redocommands", "-redodepth", "-redostacksize", "-tags",
+    "-totalbytesize", "-totallines", "-undobytesize", "-undocommands", "-undodepth",
+    "-undostacksize", "-usedtags", "-visibleimages", "-visiblewindows", "-windows"
+};
+
+static void
+MakeStackInfoValue(
+    Tcl_Interp *interp,
+    TkSharedText *sharedTextPtr,
+    Tcl_Obj* resultPtr)
+{
+    TkTextUndoStack st = sharedTextPtr->undoStack;
+    const TkTextUndoAtom *atom;
+    int i;
+
+    for (i = sharedTextPtr->undoTagListCount - 1; i >= 0; --i) {
+	const TkTextTag *tagPtr = sharedTextPtr->undoTagList[i];
+
+	if (tagPtr->recentTagAddRemoveToken && !tagPtr->recentTagAddRemoveTokenIsNull) {
+	    Tcl_ListObjAppendElement(interp, resultPtr,
+		    GetCommand(sharedTextPtr, tagPtr->recentTagAddRemoveToken));
+	}
+	if (tagPtr->recentChangePriorityToken && tagPtr->savedPriority != tagPtr->priority) {
+	    Tcl_ListObjAppendElement(interp, resultPtr,
+		    GetCommand(sharedTextPtr, tagPtr->recentChangePriorityToken));
+	}
+    }
+
+    for (i = sharedTextPtr->undoMarkListCount - 1; i >= 0; --i) {
+	const TkTextMarkChange *changePtr = &sharedTextPtr->undoMarkList[i];
+
+	if (changePtr->setMark) {
+	    Tcl_ListObjAppendElement(interp, resultPtr,
+		    GetCommand(sharedTextPtr, changePtr->setMark));
+	}
+	if (changePtr->moveMark) {
+	    Tcl_ListObjAppendElement(interp, resultPtr,
+		    GetCommand(sharedTextPtr, changePtr->moveMark));
+	}
+	if (changePtr->toggleGravity) {
+	    Tcl_ListObjAppendElement(interp, resultPtr,
+		    GetCommand(sharedTextPtr, changePtr->toggleGravity));
+	}
+    }
+
+    atom = TkTextUndoIsPerformingUndo(st) ?
+	    TkTextUndoCurrentRedoAtom(st) : TkTextUndoCurrentUndoAtom(st);
+
+    if (atom) {
+	for (i = atom->arraySize - 1; i >= 0; --i) {
+	    const TkTextUndoSubAtom *subAtom = atom->array + i;
+	    TkTextUndoToken *token = subAtom->item;
+
+	    Tcl_ListObjAppendElement(interp, resultPtr, GetCommand(sharedTextPtr, token));
+	}
+    }
+}
+
+static Tcl_Obj *
+MakeEditInfoValue(
+    Tcl_Interp *interp,
+    TkText *textPtr,
+    int optionIndex)
+{
+    TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
+    TkTextUndoStack st = sharedTextPtr->undoStack;
+
+    assert(optionIndex >= 0);
+    assert(optionIndex < INFO_LAST);
+
+    switch (optionIndex) {
+    case INFO_UNDOSTACKSIZE:
+	return Tcl_NewIntObj(st ? TkTextUndoCountUndoItems(st) : 0);
+    case INFO_REDOSTACKSIZE:
+	return Tcl_NewIntObj(st ? TkTextUndoCountRedoItems(st) : 0);
+    case INFO_UNDODEPTH:
+	return Tcl_NewIntObj(st ? TkTextUndoGetCurrentUndoStackDepth(st) : 0);
+    case INFO_REDODEPTH:
+	return Tcl_NewIntObj(st ? TkTextUndoGetCurrentRedoStackDepth(st) : 0);
+    case INFO_UNDOBYTESIZE:
+	return Tcl_NewIntObj(st ? TkTextUndoGetCurrentUndoSize(st) : 0);
+    case INFO_REDOBYTESIZE:
+	return Tcl_NewIntObj(st ? TkTextUndoGetCurrentRedoSize(st) : 0);
+    case INFO_BYTESIZE:
+	return Tcl_NewIntObj(TkBTreeSize(sharedTextPtr->tree, textPtr));
+    case INFO_TOTALBYTESIZE:
+	return Tcl_NewIntObj(TkBTreeSize(sharedTextPtr->tree, NULL));
+    case INFO_LINES:
+	return Tcl_NewIntObj(TkBTreeNumLines(sharedTextPtr->tree, textPtr));
+    case INFO_TOTALLINES:
+	return Tcl_NewIntObj(TkBTreeNumLines(sharedTextPtr->tree, NULL));
+    case INFO_IMAGES:
+	return Tcl_NewIntObj(sharedTextPtr->numImages);
+    case INFO_WINDOWS:
+	return Tcl_NewIntObj(sharedTextPtr->numWindows);
+    case INFO_VISIBLEIMAGES:
+	return Tcl_NewIntObj(TkTextCountVisibleImages(textPtr));
+    case INFO_VISIBLEWINDOWS:
+	return Tcl_NewIntObj(TkTextCountVisibleWindows(textPtr));
+    case INFO_TAGS:
+	return Tcl_NewIntObj(sharedTextPtr->numTags);
+    case INFO_USEDTAGS:
+	return Tcl_NewIntObj(TkTextTagSetCount(TkBTreeRootTagInfo(sharedTextPtr->tree)));
+    case INFO_MARKS:
+	return Tcl_NewIntObj(sharedTextPtr->numMarks);
+    case INFO_GENERATEDMARKS:
+	return Tcl_NewIntObj(sharedTextPtr->numPrivateMarks);
+    case INFO_LINESPERNODE:
+	return Tcl_NewIntObj(TkBTreeLinesPerNode(sharedTextPtr->tree));
+    case INFO_UNDOCOMMANDS: {
+	Tcl_Obj* obj = Tcl_NewObj();
+	if (st && !TkTextUndoIsPerformingUndo(st)) {
+	    MakeStackInfoValue(interp, sharedTextPtr, obj);
+	}
+	return obj;
+    }
+    case INFO_REDOCOMMANDS: {
+	Tcl_Obj* obj = Tcl_NewObj();
+	if (st && TkTextUndoIsPerformingUndo(st)) {
+	    MakeStackInfoValue(interp, sharedTextPtr, obj);
+	}
+	return obj;
+    }
+    }
+
+    return NULL; /* never reached */
+}
+
+static Tcl_Obj *
+GetEditInfo(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    TkText *textPtr,		/* Information about text widget. */
+    Tcl_Obj *option)		/* Name of resource. */
+{
+    int optionIndex;
+
+    if (Tcl_GetIndexFromObjStruct(interp, option, editInfoStrings,
+	    sizeof(char *), "option", 0, &optionIndex) != TCL_OK) {
+	return NULL;
+    }
+
+    return MakeEditInfoValue(interp, textPtr, optionIndex);
 }
 
 /*
@@ -9336,7 +9514,7 @@ TextEditCmd(
  *	Tcl_Obj of list type containing the required information.
  *
  * Side effects:
- *	Some memory will be allocated:
+ *	Some memory will be allocated.
  *
  *----------------------------------------------------------------------
  */
@@ -9347,137 +9525,14 @@ MakeEditInfo(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Obj *arrayPtr)		/* Name of array, may be NULL. */
 {
-    enum {
-	INFO_UNDOSTACKSIZE, INFO_REDOSTACKSIZE, INFO_UNDODEPTH, INFO_REDODEPTH,
-	INFO_UNDOBYTESIZE, INFO_REDOBYTESIZE, INFO_UNDOCOMMANDS, INFO_REDOCOMMANDS,
-	INFO_BYTESIZE, INFO_TOTALBYTESIZE, INFO_LINES, INFO_TOTALLINES, INFO_IMAGES,
-	INFO_WINDOWS, INFO_DISPIMAGES, INFO_DISPWINDOWS, INFO_TAGS, INFO_USEDTAGS,
-	INFO_MARKS, INFO_GENERATEDMARKS, INFO_LINESPERNODE,
-	INFO_LAST /* must be last item */
-    };
-
-    TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
-    TkTextUndoStack st = sharedTextPtr->undoStack;
     Tcl_Obj *var = arrayPtr ? arrayPtr : Tcl_NewStringObj("", 0);
-    Tcl_Obj *name[INFO_LAST];
-    Tcl_Obj *value[INFO_LAST];
-    int usedTags, i;
-    unsigned k;
-
-    name[INFO_UNDOSTACKSIZE ] = Tcl_NewStringObj("undostacksize", -1);
-    name[INFO_REDOSTACKSIZE ] = Tcl_NewStringObj("redostacksize", -1);
-    name[INFO_UNDODEPTH     ] = Tcl_NewStringObj("undodepth", -1);
-    name[INFO_REDODEPTH     ] = Tcl_NewStringObj("redodepth", -1);
-    name[INFO_UNDOBYTESIZE  ] = Tcl_NewStringObj("undobytesize", -1);
-    name[INFO_REDOBYTESIZE  ] = Tcl_NewStringObj("redobytesize", -1);
-    name[INFO_UNDOCOMMANDS  ] = Tcl_NewStringObj("undocommands", -1);
-    name[INFO_REDOCOMMANDS  ] = Tcl_NewStringObj("redocommands", -1);
-    name[INFO_BYTESIZE      ] = Tcl_NewStringObj("bytesize", -1);
-    name[INFO_TOTALBYTESIZE ] = Tcl_NewStringObj("totalbytesize", -1);
-    name[INFO_LINES         ] = Tcl_NewStringObj("lines", -1);
-    name[INFO_TOTALLINES    ] = Tcl_NewStringObj("totallines", -1);
-    name[INFO_IMAGES        ] = Tcl_NewStringObj("images", -1);
-    name[INFO_WINDOWS       ] = Tcl_NewStringObj("windows", -1);
-    name[INFO_DISPIMAGES    ] = Tcl_NewStringObj("visibleimages", -1);
-    name[INFO_DISPWINDOWS   ] = Tcl_NewStringObj("visiblewindows", -1);
-    name[INFO_TAGS          ] = Tcl_NewStringObj("tags", -1);
-    name[INFO_USEDTAGS      ] = Tcl_NewStringObj("usedtags", -1);
-    name[INFO_MARKS         ] = Tcl_NewStringObj("marks", -1);
-    name[INFO_GENERATEDMARKS] = Tcl_NewStringObj("generatedmarks", -1);
-    name[INFO_LINESPERNODE  ] = Tcl_NewStringObj("linespernode", -1);
-
-    if (st) {
-	const TkTextUndoAtom *atom;
-	Tcl_Obj *listPtr;
-
-	value[INFO_UNDOSTACKSIZE] = Tcl_NewIntObj(TkTextUndoCountUndoItems(st));
-	value[INFO_REDOSTACKSIZE] = Tcl_NewIntObj(TkTextUndoCountRedoItems(st));
-	value[INFO_UNDODEPTH    ] = Tcl_NewIntObj(TkTextUndoGetCurrentUndoStackDepth(st));
-	value[INFO_REDODEPTH    ] = Tcl_NewIntObj(TkTextUndoGetCurrentRedoStackDepth(st));
-	value[INFO_UNDOBYTESIZE ] = Tcl_NewIntObj(TkTextUndoGetCurrentUndoSize(st));
-	value[INFO_REDOBYTESIZE ] = Tcl_NewIntObj(TkTextUndoGetCurrentRedoSize(st));
-	value[INFO_UNDOCOMMANDS ] = Tcl_NewObj();
-	value[INFO_REDOCOMMANDS ] = Tcl_NewObj();
-
-	listPtr = value[TkTextUndoIsPerformingUndo(st) ? INFO_REDOCOMMANDS : INFO_UNDOCOMMANDS];
-
-	for (i = sharedTextPtr->undoTagListCount - 1; i >= 0; --i) {
-	    const TkTextTag *tagPtr = sharedTextPtr->undoTagList[i];
-
-	    if (tagPtr->recentTagAddRemoveToken && !tagPtr->recentTagAddRemoveTokenIsNull) {
-		Tcl_ListObjAppendElement(interp, listPtr,
-			GetCommand(sharedTextPtr, tagPtr->recentTagAddRemoveToken));
-	    }
-	    if (tagPtr->recentChangePriorityToken && tagPtr->savedPriority != tagPtr->priority) {
-		Tcl_ListObjAppendElement(interp, listPtr,
-			GetCommand(sharedTextPtr, tagPtr->recentChangePriorityToken));
-	    }
-	}
-
-	for (i = sharedTextPtr->undoMarkListCount - 1; i >= 0; --i) {
-	    const TkTextMarkChange *changePtr = &sharedTextPtr->undoMarkList[i];
-
-	    if (changePtr->setMark) {
-		Tcl_ListObjAppendElement(interp, listPtr,
-			GetCommand(sharedTextPtr, changePtr->setMark));
-	    }
-	    if (changePtr->moveMark) {
-		Tcl_ListObjAppendElement(interp, listPtr,
-			GetCommand(sharedTextPtr, changePtr->moveMark));
-	    }
-	    if (changePtr->toggleGravity) {
-		Tcl_ListObjAppendElement(interp, listPtr,
-			GetCommand(sharedTextPtr, changePtr->toggleGravity));
-	    }
-	}
-
-	atom = TkTextUndoIsPerformingUndo(st) ?
-		TkTextUndoCurrentRedoAtom(st) : TkTextUndoCurrentUndoAtom(st);
-
-	if (atom) {
-	    for (i = atom->arraySize - 1; i >= 0; --i) {
-		const TkTextUndoSubAtom *subAtom = atom->array + i;
-		TkTextUndoToken *token = subAtom->item;
-
-		Tcl_ListObjAppendElement(interp, listPtr, GetCommand(sharedTextPtr, token));
-	    }
-	}
-    } else {
-	value[INFO_UNDOSTACKSIZE] =
-		value[INFO_REDOSTACKSIZE] =
-		value[INFO_UNDODEPTH] =
-		value[INFO_REDODEPTH] =
-		value[INFO_UNDOBYTESIZE] =
-		value[INFO_REDOBYTESIZE] = Tcl_NewIntObj(0);
-	value[INFO_UNDOCOMMANDS] = value[INFO_REDOCOMMANDS] = Tcl_NewObj();
-    }
-
-    usedTags = TkTextTagSetCount(TkBTreeRootTagInfo(sharedTextPtr->tree));
-
-    /* Related to this widget */
-
-    value[INFO_BYTESIZE      ] = Tcl_NewIntObj(TkBTreeSize(sharedTextPtr->tree, textPtr));
-    value[INFO_LINES         ] = Tcl_NewIntObj(TkBTreeNumLines(sharedTextPtr->tree, textPtr));
-    value[INFO_DISPIMAGES    ] = Tcl_NewIntObj(TkTextCountVisibleImages(textPtr));
-    value[INFO_DISPWINDOWS   ] = Tcl_NewIntObj(TkTextCountVisibleWindows(textPtr));
-
-    /* Related to shared resource */
-
-    value[INFO_TOTALBYTESIZE ] = Tcl_NewIntObj(TkBTreeSize(sharedTextPtr->tree, NULL));
-    value[INFO_TOTALLINES    ] = Tcl_NewIntObj(TkBTreeNumLines(sharedTextPtr->tree, NULL));
-    value[INFO_IMAGES        ] = Tcl_NewIntObj(sharedTextPtr->numImages);
-    value[INFO_WINDOWS       ] = Tcl_NewIntObj(sharedTextPtr->numWindows);
-    value[INFO_TAGS          ] = Tcl_NewIntObj(sharedTextPtr->numTags);
-    value[INFO_USEDTAGS      ] = Tcl_NewIntObj(usedTags);
-    value[INFO_MARKS         ] = Tcl_NewIntObj(sharedTextPtr->numMarks);
-    value[INFO_GENERATEDMARKS] = Tcl_NewIntObj(sharedTextPtr->numPrivateMarks);
-    value[INFO_LINESPERNODE  ] = Tcl_NewIntObj(TkBTreeLinesPerNode(sharedTextPtr->tree));
+    int i;
 
     Tcl_UnsetVar(interp, Tcl_GetString(var), 0);
-    for (k = 0; k < sizeof(name)/sizeof(name[0]); ++k) {
-	Tcl_ObjSetVar2(interp, var, name[k], value[k], 0);
+    for (i = 0; i < INFO_LAST; ++i) {
+	Tcl_ObjSetVar2(interp, var, Tcl_NewStringObj(editInfoStrings[i] + 1, -1),
+		MakeEditInfoValue(interp, textPtr, i), 0);
     }
-
     return var;
 }
 
