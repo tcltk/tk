@@ -6879,8 +6879,8 @@ test text-27.16a {undo configuration options with peers} -body {
     lappend res [.t  cget -maxundosize]
     lappend res [.tt cget -maxundosize]
     .t insert end "The undo stack is common between peers"
-    lappend res [llength [set [.t  edit info](undocommands)]]
-    lappend res [llength [set [.tt edit info](undocommands)]]
+    lappend res [llength [.t  edit info -undocommands]]
+    lappend res [llength [.tt edit info -undocommands]]
 } -cleanup {
     destroy .t .tt
 } -result {1 1 0 0 200 200 100 100 1000 1000 1 1}
@@ -6898,8 +6898,8 @@ test text-27.16b {undo configuration options with peers, defaults} -body {
     lappend res [.t  cget -maxundosize]
     lappend res [.tt cget -maxundosize]
     .t insert end "The undo stack is common between peers"
-    lappend res [llength [set [.t  edit info](undocommands)]]
-    lappend res [llength [set [.tt edit info](undocommands)]]
+    lappend res [llength [.t  edit info -undocommands]]
+    lappend res [llength [.tt edit info -undocommands]]
 } -cleanup {
     destroy .t .tt
 } -result {0 0 1 1 0 0 -1 -1 0 0 0 0}
@@ -7151,6 +7151,22 @@ test text-27.28 {Bug e32292c454704f7defd1cb335b5663f9c4f245d4 \
 } -cleanup {
     destroy .t
 } -result {2.5 2.6}
+test text-27.29 {"edit info" gives error when array name is starting with a minus sign} -body {
+    [text .t] edit info -array
+} -cleanup {
+    destroy .t
+} -returnCodes error -result {bad option "-array": must be -bytesize, -generatedmarks, -images, -lines, -linespernode, -marks, -redobytesize, -redocommands, -redodepth, -redostacksize, -tags, -totalbytesize, -totallines, -undobytesize, -undocommands, -undodepth, -undostacksize, -usedtags, -visibleimages, -visiblewindows, or -windows}
+test text-27.30 {"edit info" works when array name is preceded by "--"} -body {
+    [text .t] edit info -- -array
+    set -array(generatedmarks)
+} -cleanup {
+    destroy .t
+} -result {0}
+test text-27.31 {"edit info" works w/o arguments} -body {
+    set [[text .t] edit info](generatedmarks)
+} -cleanup {
+    destroy .t
+} -result {0}
 
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {

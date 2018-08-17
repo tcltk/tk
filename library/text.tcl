@@ -358,22 +358,19 @@ bind Text <Control-t> {
 
 bind Text <<Undo>> {
     if {[%W cget -state] eq "normal"} {
-	# An Undo operation may remove the separator at the top of the Undo stack.
-	# Then the item at the top of the stack gets merged with the subsequent changes.
-	# Place separators before and after Undo to prevent this.
-	if {[%W cget -autoseparators]} {
-	    %W edit separator
-	}
-	catch { %W edit undo }
-	if {[%W cget -autoseparators]} {
-	    %W edit separator
+	# NOTE: the undo operation is not merging with subsequent changes, so
+	# it is safe to do an undo without setting separators.
+	if {[%W edit info -undodepth] > 0} {
+	    %W edit undo
 	}
     }
 }
 
 bind Text <<Redo>> {
     if {[%W cget -state] eq "normal"} {
-	catch { %W edit redo }
+	if {[%W edit info -redodepth] > 0} {
+	    %W edit redo
+	}
     }
 }
 
