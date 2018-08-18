@@ -236,11 +236,13 @@ static int windowHashInit = false;
 {
     NSRect currentFrame = [sender frame];
     TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
-    if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
-	frameSize.width = currentFrame.size.width;
-    }
-    if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
-	frameSize.height = currentFrame.size.height;
+    if (winPtr) {
+	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
+	    frameSize.width = currentFrame.size.width;
+	}
+	if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
+	    frameSize.height = currentFrame.size.height;
+	}
     }
     return frameSize;
 }
