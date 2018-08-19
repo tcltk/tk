@@ -117,7 +117,7 @@ enum alertIconOptions {
     ICON_ERROR, ICON_INFO, ICON_QUESTION, ICON_WARNING
 };
 static const char *const alertButtonStrings[] = {
-    "abort", "retry", "ignore", "ok", "cancel", "yes", "no", NULL
+    "abort", "retry", "ignore", "ok", "cancel", "no", "yes", NULL
 };
 
 static const NSString *const alertButtonNames[][3] = {
@@ -147,8 +147,8 @@ static const short alertButtonIndexAndTypeToNativeButtonIndex[][7] = {
     [TYPE_OK] =			{0,    0,    0,    1,    0,    0,    0},
     [TYPE_OKCANCEL] =		{0,    0,    0,    1,    2,    0,    0},
     [TYPE_RETRYCANCEL] =	{0,    1,    0,    0,    2,    0,    0},
-    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    1,    2},
-    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    1,    2},
+    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    2,    1},
+    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    2,    1},
 };
 
 /*
@@ -161,8 +161,8 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_OK] =			{3, 0, 0},
     [TYPE_OKCANCEL] =		{3, 4, 0},
     [TYPE_RETRYCANCEL] =	{1, 4, 0},
-    [TYPE_YESNO] =		{5, 6, 0},
-    [TYPE_YESNOCANCEL] =	{5, 6, 4},
+    [TYPE_YESNO] =		{6, 5, 0},
+    [TYPE_YESNOCANCEL] =	{6, 5, 4},
 };
 
 /*
