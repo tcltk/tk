@@ -55,7 +55,7 @@ typedef struct mFile {
     unsigned char *data;	/* mmencoded source string */
     int c;			/* bits left over from previous character */
     int state;			/* decoder state (0-4 or GIF_DONE) */
-    int length;			/* Total amount of bytes in data */
+    size_t length;			/* Total amount of bytes in data */
 } MFile;
 
 /*
@@ -111,8 +111,8 @@ typedef struct {
  * serializing in the GIF format.
  */
 
-typedef int (WriteBytesFunc) (ClientData clientData, const char *bytes,
-			    int byteCount);
+typedef size_t (WriteBytesFunc) (ClientData clientData, const char *bytes,
+			    size_t byteCount);
 
 /*
  * The format record for the GIF file format:
@@ -187,14 +187,14 @@ static int		ReadImage(GIFImageConfig *gifConfPtr,
  * these are for the BASE64 image reader code only
  */
 
-static int		Fread(GIFImageConfig *gifConfPtr, unsigned char *dst,
+static size_t		Fread(GIFImageConfig *gifConfPtr, unsigned char *dst,
 			    size_t size, size_t count, Tcl_Channel chan);
-static int		Mread(unsigned char *dst, size_t size, size_t count,
+static size_t		Mread(unsigned char *dst, size_t size, size_t count,
 			    MFile *handle);
 static int		Mgetc(MFile *handle);
 static int		char64(int c);
 static void		mInit(unsigned char *string, MFile *handle,
-			    int length);
+			    size_t length);
 
 /*
  * Types, defines and variables needed to write and compress a GIF.
@@ -757,10 +757,10 @@ StringMatchGIF(
     Tcl_Interp *interp)		/* not used */
 {
     unsigned char *data, header[10];
-    int got, length;
+    size_t got, length;
     MFile handle;
 
-    data = Tcl_GetByteArrayFromObj(dataObj, &length);
+    data = TkGetByteArrayFromObj(dataObj, &length);
 
     /*
      * Header is a minimum of 10 bytes.
@@ -826,9 +826,9 @@ StringReadGIF(
     int srcX, int srcY)
 {
     MFile handle, *hdlPtr = &handle;
-    int length;
+    size_t length;
     const char *xferFormat;
-    unsigned char *data = Tcl_GetByteArrayFromObj(dataObj, &length);
+    unsigned char *data = TkGetByteArrayFromObj(dataObj, &length);
 
     mInit(data, hdlPtr, length);
 
@@ -917,7 +917,7 @@ ReadColorMap(
     unsigned char rgb[3];
 
     for (i = 0; i < number; ++i) {
-	if (Fread(gifConfPtr, rgb, sizeof(rgb), 1, chan) <= 0) {
+	if (((size_t)Fread(gifConfPtr, rgb, sizeof(rgb), 1, chan) + 1) < 2) {
 	    return 0;
 	}
 
@@ -983,11 +983,11 @@ GetDataBlock(
 {
     unsigned char count;
 
-    if (Fread(gifConfPtr, &count, 1, 1, chan) <= 0) {
+    if (((size_t)Fread(gifConfPtr, &count, 1, 1, chan) + 1) < 2) {
 	return -1;
     }
 
-    if ((count != 0) && (Fread(gifConfPtr, buf, count, 1, chan) <= 0)) {
+    if ((count != 0) && (((size_t)Fread(gifConfPtr, buf, count, 1, chan) + 1) < 2)) {
 	return -1;
     }
 
@@ -1049,7 +1049,7 @@ ReadImage(
      * Initialize the decoder
      */
 
-    if (Fread(gifConfPtr, &initialCodeSize, 1, 1, chan) <= 0) {
+    if (((size_t)Fread(gifConfPtr, &initialCodeSize, 1, 1, chan) + 1) < 2) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading GIF image: %s", Tcl_PosixError(interp)));
 	return TCL_ERROR;
@@ -1141,9 +1141,9 @@ ReadImage(
 		     * Last pass reset the decoder, so the first code we see
 		     * must be a singleton. Seed the stack with it, and set up
 		     * the old/first code pointers for insertion into the
-		     * string table. We can't just roll this into the
-		     * clearCode test above, because at that point we have not
-		     * yet read the next code.
+		     * codes table. We can't just roll this into the clearCode
+		     * test above, because at that point we have not yet read
+		     * the next code.
 		     */
 
 		    *top++ = append[code];
@@ -1154,11 +1154,11 @@ ReadImage(
 
 		inCode = code;
 
-		if (code == maxCode) {
+		if ((code == maxCode) && (maxCode < (1 << MAX_LWZ_BITS))) {
 		    /*
 		     * maxCode is always one bigger than our highest assigned
 		     * code. If the code we see is equal to maxCode, then we
-		     * are about to add a new string to the table. ???
+		     * are about to add a new entry to the codes table.
 		     */
 
 		    *top++ = firstCode;
@@ -1167,7 +1167,7 @@ ReadImage(
 
 		while (code > clearCode) {
 		    /*
-		     * Populate the stack by tracing the string in the string
+		     * Populate the stack by tracing the code in the codes
 		     * table from its tail to its head
 		     */
 
@@ -1176,28 +1176,24 @@ ReadImage(
 		}
 		firstCode = append[code];
 
-		/*
-		 * If there's no more room in our string table, quit.
-		 * Otherwise, add a new string to the table
-		 */
+	        /*
+	         * Push the head of the code onto the stack.
+	         */
 
-		if (maxCode >= (1 << MAX_LWZ_BITS)) {
-		    return TCL_OK;
-		}
+	        *top++ = firstCode;
 
-		/*
-		 * Push the head of the string onto the stack.
-		 */
+                if (maxCode < (1 << MAX_LWZ_BITS)) {
+		    /*
+		     * If there's still room in our codes table, add a new entry.
+		     * Otherwise don't, and keep using the current table.
+                     * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
+                     * specification.
+		     */
 
-		*top++ = firstCode;
-
-		/*
-		 * Add a new string to the string table
-		 */
-
-		prefix[maxCode] = oldCode;
-		append[maxCode] = firstCode;
-		maxCode++;
+		    prefix[maxCode] = oldCode;
+		    append[maxCode] = firstCode;
+		    maxCode++;
+                }
 
 		/*
 		 * maxCode tells us the maximum code value we can accept. If
@@ -1377,7 +1373,7 @@ static void
 mInit(
     unsigned char *string,	/* string containing initial mmencoded data */
     MFile *handle,		/* mmdecode "file" handle */
-    int length)			/* Number of bytes in string */
+    size_t length)			/* Number of bytes in string */
 {
     handle->data = string;
     handle->state = 0;
@@ -1403,15 +1399,15 @@ mInit(
  *----------------------------------------------------------------------
  */
 
-static int
+static size_t
 Mread(
     unsigned char *dst,		/* where to put the result */
     size_t chunkSize,		/* size of each transfer */
     size_t numChunks,		/* number of chunks */
     MFile *handle)		/* mmdecode "file" handle */
 {
-    register int i, c;
-    int count = chunkSize * numChunks;
+    int c;
+    size_t i, count = chunkSize * numChunks;
 
     for (i=0; i<count && (c=Mgetc(handle)) != GIF_DONE; i++) {
 	*dst++ = c;
@@ -1552,7 +1548,7 @@ char64(
  *----------------------------------------------------------------------
  */
 
-static int
+static size_t
 Fread(
     GIFImageConfig *gifConfPtr,
     unsigned char *dst,		/* where to put the result */
@@ -1566,20 +1562,20 @@ Fread(
     if (gifConfPtr->fromData == INLINE_DATA_BINARY) {
 	MFile *handle = (MFile *) chan;
 
-	if (handle->length <= 0 || (size_t) handle->length < hunk*count) {
-	    return -1;
+	if ((handle->length + 1 < 2) || (handle->length < hunk*count)) {
+	    return (size_t)-1;
 	}
-	memcpy(dst, handle->data, (size_t) (hunk * count));
+	memcpy(dst, handle->data, hunk * count);
 	handle->data += hunk * count;
 	handle->length -= hunk * count;
-	return (int)(hunk * count);
+	return hunk * count;
     }
 
     /*
      * Otherwise we've got a real file to read.
      */
 
-    return Tcl_Read(chan, (char *) dst, (int) (hunk * count));
+    return Tcl_Read(chan, (char *) dst, hunk * count);
 }
 
 /*
@@ -1658,22 +1654,22 @@ StringWriteGIF(
     return result;
 }
 
-static int
+static size_t
 WriteToChannel(
     ClientData clientData,
     const char *bytes,
-    int byteCount)
+    size_t byteCount)
 {
     Tcl_Channel handle = clientData;
 
     return Tcl_Write(handle, bytes, byteCount);
 }
 
-static int
+static size_t
 WriteToByteArray(
     ClientData clientData,
     const char *bytes,
-    int byteCount)
+    size_t byteCount)
 {
     Tcl_Obj *objPtr = clientData;
     Tcl_Obj *tmpObj = Tcl_NewByteArrayObj((unsigned char *) bytes, byteCount);

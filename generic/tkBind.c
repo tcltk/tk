@@ -1922,7 +1922,8 @@ ExpandPercents(
     Tcl_DString *dsPtr)		/* Dynamic string in which to append new
 				 * command. */
 {
-    int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
+    size_t spaceNeeded;
+    int cvtFlags;	/* Used to substitute string as proper Tcl
 				 * list element. */
     int number, flags, length;
 #define NUM_SIZE 40

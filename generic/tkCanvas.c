@@ -1252,8 +1252,7 @@ CanvasWidgetCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	arg = Tcl_GetString(objv[2]);
-	length = objv[2]->length;
+	arg = TkGetStringFromObj(objv[2], &length);
 	c = arg[0];
 
 	/*
@@ -2482,10 +2481,10 @@ DecomposeMaskToShiftAndBits(
     int *bits)              /* Where to put the bit count (width of the pixel mask) */
 {
     int i;
-    
+
     *shift = 0;
     *bits = 0;
-    
+
     /*
      * Find the lowest '1' bit in the mask.
      */
@@ -2496,18 +2495,18 @@ DecomposeMaskToShiftAndBits(
     }
     if (i < 32) {
         *shift = i;
-        
+
         /*
         * Now find the next '0' bit and the width of the mask.
         */
- 
+
         for ( ; i < 32; ++i) {
             if ((mask & 1 << i) == 0)
                 break;
             else
                 ++*bits;
         }
-        
+
         /*
         * Limit to the top 8 bits if the mask was wider than 8.
         */
@@ -2527,7 +2526,7 @@ DecomposeMaskToShiftAndBits(
  *      This function draws the contents of a canvas into the given Photo image.
  *      This function is called from the widget "image" subcommand.
  *      The canvas does not need to be mapped (one of it's ancestors must be)
- *      in order for this function to work. 
+ *      in order for this function to work.
  *
  * Results:
  *	None.
@@ -2623,7 +2622,7 @@ DrawCanvas(
     * determined by the FORCE_REDRAW flag.
     */
 
-    for (itemPtr = canvasPtr -> firstItemPtr; itemPtr != NULL; 
+    for (itemPtr = canvasPtr -> firstItemPtr; itemPtr != NULL;
             itemPtr = itemPtr -> nextPtr) {
         if (itemPtr -> redraw_flags & FORCE_REDRAW) {
             itemPtr -> redraw_flags &= ~FORCE_REDRAW;
@@ -2658,7 +2657,7 @@ DrawCanvas(
         canvasX2 = canvasX1 + cWidth - 1;
         canvasY2 = canvasY1 + cHeight - 1;
     }
-    
+
     /*
      * Allocate a pixmap to draw into. We add OVERDRAW_PIXELS in the same way
      * that DisplayCanvas() does to avoid problems on some systems when objects
@@ -2702,7 +2701,7 @@ DrawCanvas(
                 continue;
             }
         }
-        if (itemPtr->state == TK_STATE_HIDDEN || 
+        if (itemPtr->state == TK_STATE_HIDDEN ||
                 (itemPtr->state == TK_STATE_NULL && canvasPtr->canvas_state
                 == TK_STATE_HIDDEN)) {
             continue;
@@ -2710,7 +2709,7 @@ DrawCanvas(
         ItemDisplay(canvasPtr, itemPtr, pixmap, pixmapX1, pixmapY1, pmWidth,
                 pmHeight);
     }
-    
+
     /*
      * Copy the Pixmap into an ZPixmap format XImage so we can copy it across
      * to the photo image. This seems to be the only way to get Pixmap image
@@ -2724,7 +2723,7 @@ DrawCanvas(
         result = TCL_ERROR;
         goto done;
     }
-    
+
 #ifdef DEBUG_DRAWCANVAS
     Tcl_AppendResult(interp, "ximagePtr {", NULL);
     sprintf(buffer,"%d",ximagePtr->width);   Tcl_AppendResult(interp, " width ", buffer, NULL);
@@ -2764,13 +2763,13 @@ DrawCanvas(
     sprintf(buffer,"0x%8.8lx",ximagePtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
     sprintf(buffer,"0x%8.8lx",ximagePtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
     Tcl_AppendResult(interp, " }", NULL);
-    
+
     Tcl_AppendResult(interp, "\nvisualPtr {", NULL);
     sprintf(buffer,"0x%8.8lx",visualPtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
     sprintf(buffer,"0x%8.8lx",visualPtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
     sprintf(buffer,"0x%8.8lx",visualPtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
     Tcl_AppendResult(interp, " }", NULL);
-    
+
 #endif
 
     /*

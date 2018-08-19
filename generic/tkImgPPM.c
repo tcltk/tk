@@ -141,7 +141,8 @@ FileReadPPM(
 				 * image being read. */
 {
     int fileWidth, fileHeight, maxIntensity;
-    int nLines, nBytes, h, type, count, bytesPerChannel = 1;
+    int nLines, h, type, bytesPerChannel = 1;
+    size_t nBytes, count;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
 
@@ -285,7 +286,8 @@ FileWritePPM(
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan;
-    int w, h, greenOffset, blueOffset, nBytes;
+    int w, h, greenOffset, blueOffset;
+    size_t nBytes;
     unsigned char *pixelPtr, *pixLinePtr;
     char header[16 + TCL_INTEGER_SPACE * 2];
 
@@ -315,16 +317,16 @@ FileWritePPM(
     if ((greenOffset == 1) && (blueOffset == 2) && (blockPtr->pixelSize == 3)
 	    && (blockPtr->pitch == (blockPtr->width * 3))) {
 	nBytes = blockPtr->height * blockPtr->pitch;
-	if (Tcl_Write(chan, (char *) pixLinePtr, nBytes) != nBytes) {
+	if ((size_t)Tcl_Write(chan, (char *) pixLinePtr, nBytes) != nBytes) {
 	    goto writeerror;
 	}
     } else {
 	for (h = blockPtr->height; h > 0; h--) {
 	    pixelPtr = pixLinePtr;
 	    for (w = blockPtr->width; w > 0; w--) {
-		if (    Tcl_Write(chan,(char *)&pixelPtr[0], 1) == -1 ||
-			Tcl_Write(chan,(char *)&pixelPtr[greenOffset],1)==-1 ||
-			Tcl_Write(chan,(char *)&pixelPtr[blueOffset],1) ==-1) {
+		if ((size_t)Tcl_Write(chan,(char *)&pixelPtr[0], 1) == (size_t)-1 ||
+			(size_t)Tcl_Write(chan,(char *)&pixelPtr[greenOffset],1)==(size_t)-1 ||
+			(size_t)Tcl_Write(chan,(char *)&pixelPtr[blueOffset],1) ==(size_t)-1) {
 		    goto writeerror;
 		}
 		pixelPtr += blockPtr->pixelSize;
@@ -762,10 +764,11 @@ ReadPPMStringHeader(
 {
 #define BUFFER_SIZE 1000
     char buffer[BUFFER_SIZE], c;
-    int i, numFields, dataSize, type = 0;
+    int i, numFields, type = 0;
+    size_t dataSize;
     unsigned char *dataBuffer;
 
-    dataBuffer = Tcl_GetByteArrayFromObj(dataPtr, &dataSize);
+    dataBuffer = TkGetByteArrayFromObj(dataPtr, &dataSize);
 
     /*
      * Read 4 space-separated fields from the string, ignoring comments (any
