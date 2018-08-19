@@ -70,7 +70,6 @@ static Tk_Window clipboardOwner = NULL;
     if (clipboardOwner && [[NSPasteboard generalPasteboard] changeCount] !=
 	    changeCount) {
 	TkDisplay *dispPtr = TkGetDisplayList();
-
 	if (dispPtr) {
 	    XEvent event;
 	    event.xany.type = SelectionClear;
@@ -300,7 +299,7 @@ TkSelPropProc(
  *	None.
  *
  * Side effects:
- *	The local scrap is moved to the global scrap.
+ *	The value of changeCount is synchronized.
  *
  *----------------------------------------------------------------------
  */
