@@ -117,7 +117,7 @@ enum alertIconOptions {
     ICON_ERROR, ICON_INFO, ICON_QUESTION, ICON_WARNING
 };
 static const char *const alertButtonStrings[] = {
-    "abort", "retry", "ignore", "ok", "cancel", "no", "yes", NULL
+    "abort", "retry", "ignore", "ok", "cancel", "yes", "no", NULL
 };
 
 static const NSString *const alertButtonNames[][3] = {
@@ -746,7 +746,7 @@ Tk_GetOpenFileObjCmd(
 	/*
 	 * The -typevariable must be set to the selected file type, if the dialog was not cancelled
 	 */
-	NSInteger selectedFilterIndex = filterInfo.fileTypeIndex;
+	NSUInteger selectedFilterIndex = filterInfo.fileTypeIndex;
 	NSString *selectedFilter = NULL;
 	if (filterInfo.userHasSelectedFilter) {
 	    selectedFilterIndex = filterInfo.fileTypeIndex;
@@ -772,7 +772,7 @@ Tk_GetOpenFileObjCmd(
 		selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 	    } else {
 		// scan the list
-		int i;
+		NSUInteger i;
 		for (i = 0; i < [filterInfo.fileTypeNames count]; i++) {
 		    if (filterCompatible(extension, i)) {
 			selectedFilterIndex = i;

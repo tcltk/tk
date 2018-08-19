@@ -563,9 +563,9 @@ Tk_FontObjCmd(
 
 	if (charPtr != NULL) {
 	    const char *string = Tcl_GetString(charPtr);
-	    int len = TkUtfToUniChar(string, &uniChar);
+	    size_t len = TkUtfToUniChar(string, &uniChar);
 
-	    if (len != charPtr->length) {
+	    if (len != (size_t)charPtr->length) {
 		resultPtr = Tcl_NewStringObj(
 			"expected a single character but got \"", -1);
 		Tcl_AppendLimitedToObj(resultPtr, string,
@@ -712,7 +712,8 @@ Tk_FontObjCmd(
     case FONT_MEASURE: {
 	const char *string;
 	Tk_Font tkfont;
-	int length = 0, skip = 0;
+	size_t length = 0;
+	int skip = 0;
 
 	if (objc > 4) {
 	    skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
@@ -729,7 +730,7 @@ Tk_FontObjCmd(
 	if (tkfont == NULL) {
 	    return TCL_ERROR;
 	}
-	string = Tcl_GetStringFromObj(objv[3 + skip], &length);
+	string = TkGetStringFromObj(objv[3 + skip], &length);
 	Tcl_SetObjResult(interp, Tcl_NewIntObj(
 		Tk_TextWidth(tkfont, string, length)));
 	Tk_FreeFont(tkfont);
@@ -3245,7 +3246,8 @@ Tk_TextLayoutToPostscript(
     LayoutChunk *chunkPtr = layoutPtr->chunks;
     int baseline = chunkPtr->y;
     Tcl_Obj *psObj = Tcl_NewObj();
-    int i, j, len;
+    int i, j;
+    size_t len;
     const char *p, *glyphname;
     char uindex[5], c, *ps;
     int ch;
@@ -3303,7 +3305,7 @@ Tk_TextLayoutToPostscript(
 	    sprintf(uindex, "%04X", ch);		/* endianness? */
 	    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex, 0);
 	    if (glyphname) {
-		ps = Tcl_GetStringFromObj(psObj, &len);
+		ps = TkGetStringFromObj(psObj, &len);
 		if (ps[len-1] == '(') {
 		    /*
 		     * In-place edit. Ewww!

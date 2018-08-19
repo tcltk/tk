@@ -141,7 +141,7 @@ EXTERN int		Tk_ConfigureValue(Tcl_Interp *interp,
 /* 29 */
 EXTERN int		Tk_ConfigureWidget(Tcl_Interp *interp,
 				Tk_Window tkwin, const Tk_ConfigSpec *specs,
-				int argc, CONST84 char **argv, char *widgRec,
+				int argc, const char **argv, char *widgRec,
 				int flags);
 /* 30 */
 EXTERN void		Tk_ConfigureWindow(Tk_Window tkwin,
@@ -223,7 +223,7 @@ EXTERN void		Tk_DeleteSelHandler(Tk_Window tkwin, Atom selection,
 /* 54 */
 EXTERN void		Tk_DestroyWindow(Tk_Window tkwin);
 /* 55 */
-EXTERN CONST84_RETURN char * Tk_DisplayName(Tk_Window tkwin);
+EXTERN const char *	Tk_DisplayName(Tk_Window tkwin);
 /* 56 */
 EXTERN int		Tk_DistanceToTextLayout(Tk_TextLayout layout, int x,
 				int y);
@@ -307,9 +307,9 @@ EXTERN void		Tk_GetAllBindings(Tcl_Interp *interp,
 EXTERN int		Tk_GetAnchor(Tcl_Interp *interp, const char *str,
 				Tk_Anchor *anchorPtr);
 /* 83 */
-EXTERN CONST84_RETURN char * Tk_GetAtomName(Tk_Window tkwin, Atom atom);
+EXTERN const char *	Tk_GetAtomName(Tk_Window tkwin, Atom atom);
 /* 84 */
-EXTERN CONST84_RETURN char * Tk_GetBinding(Tcl_Interp *interp,
+EXTERN const char *	Tk_GetBinding(Tcl_Interp *interp,
 				Tk_BindingTable bindingTable,
 				ClientData object, const char *eventStr);
 /* 85 */
@@ -385,7 +385,7 @@ EXTERN void		Tk_GetRootCoords(Tk_Window tkwin, int *xPtr,
 				int *yPtr);
 /* 108 */
 EXTERN int		Tk_GetScrollInfo(Tcl_Interp *interp, int argc,
-				CONST84 char **argv, double *dblPtr,
+				const char **argv, double *dblPtr,
 				int *intPtr);
 /* 109 */
 EXTERN int		Tk_GetScreenMM(Tcl_Interp *interp, Tk_Window tkwin,
@@ -447,28 +447,27 @@ EXTERN void		Tk_MoveWindow(Tk_Window tkwin, int x, int y);
 /* 129 */
 EXTERN void		Tk_MoveToplevelWindow(Tk_Window tkwin, int x, int y);
 /* 130 */
-EXTERN CONST84_RETURN char * Tk_NameOf3DBorder(Tk_3DBorder border);
+EXTERN const char *	Tk_NameOf3DBorder(Tk_3DBorder border);
 /* 131 */
-EXTERN CONST84_RETURN char * Tk_NameOfAnchor(Tk_Anchor anchor);
+EXTERN const char *	Tk_NameOfAnchor(Tk_Anchor anchor);
 /* 132 */
-EXTERN CONST84_RETURN char * Tk_NameOfBitmap(Display *display, Pixmap bitmap);
+EXTERN const char *	Tk_NameOfBitmap(Display *display, Pixmap bitmap);
 /* 133 */
-EXTERN CONST84_RETURN char * Tk_NameOfCapStyle(int cap);
+EXTERN const char *	Tk_NameOfCapStyle(int cap);
 /* 134 */
-EXTERN CONST84_RETURN char * Tk_NameOfColor(XColor *colorPtr);
+EXTERN const char *	Tk_NameOfColor(XColor *colorPtr);
 /* 135 */
-EXTERN CONST84_RETURN char * Tk_NameOfCursor(Display *display,
-				Tk_Cursor cursor);
+EXTERN const char *	Tk_NameOfCursor(Display *display, Tk_Cursor cursor);
 /* 136 */
-EXTERN CONST84_RETURN char * Tk_NameOfFont(Tk_Font font);
+EXTERN const char *	Tk_NameOfFont(Tk_Font font);
 /* 137 */
-EXTERN CONST84_RETURN char * Tk_NameOfImage(Tk_ImageMaster imageMaster);
+EXTERN const char *	Tk_NameOfImage(Tk_ImageMaster imageMaster);
 /* 138 */
-EXTERN CONST84_RETURN char * Tk_NameOfJoinStyle(int join);
+EXTERN const char *	Tk_NameOfJoinStyle(int join);
 /* 139 */
-EXTERN CONST84_RETURN char * Tk_NameOfJustify(Tk_Justify justify);
+EXTERN const char *	Tk_NameOfJustify(Tk_Justify justify);
 /* 140 */
-EXTERN CONST84_RETURN char * Tk_NameOfRelief(int relief);
+EXTERN const char *	Tk_NameOfRelief(int relief);
 /* 141 */
 EXTERN Tk_Window	Tk_NameToWindow(Tcl_Interp *interp,
 				const char *pathName, Tk_Window tkwin);
@@ -477,7 +476,7 @@ EXTERN void		Tk_OwnSelection(Tk_Window tkwin, Atom selection,
 				Tk_LostSelProc *proc, ClientData clientData);
 /* 143 */
 EXTERN int		Tk_ParseArgv(Tcl_Interp *interp, Tk_Window tkwin,
-				int *argcPtr, CONST84 char **argv,
+				int *argcPtr, const char **argv,
 				const Tk_ArgvInfo *argTable, int flags);
 /* 144 */
 TK_DEPRECATED("function signature changed")
@@ -920,7 +919,7 @@ typedef struct TkStubs {
     int (*tk_ClipboardClear) (Tcl_Interp *interp, Tk_Window tkwin); /* 26 */
     int (*tk_ConfigureInfo) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, char *widgRec, const char *argvName, int flags); /* 27 */
     int (*tk_ConfigureValue) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, char *widgRec, const char *argvName, int flags); /* 28 */
-    int (*tk_ConfigureWidget) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, int argc, CONST84 char **argv, char *widgRec, int flags); /* 29 */
+    int (*tk_ConfigureWidget) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, int argc, const char **argv, char *widgRec, int flags); /* 29 */
     void (*tk_ConfigureWindow) (Tk_Window tkwin, unsigned int valueMask, XWindowChanges *valuePtr); /* 30 */
     Tk_TextLayout (*tk_ComputeTextLayout) (Tk_Font font, const char *str, int numChars, int wrapLength, Tk_Justify justify, int flags, int *widthPtr, int *heightPtr); /* 31 */
     Tk_Window (*tk_CoordsToWindow) (int rootX, int rootY, Tk_Window tkwin); /* 32 */
@@ -946,7 +945,7 @@ typedef struct TkStubs {
     void (*tk_DeleteImage) (Tcl_Interp *interp, const char *name); /* 52 */
     void (*tk_DeleteSelHandler) (Tk_Window tkwin, Atom selection, Atom target); /* 53 */
     void (*tk_DestroyWindow) (Tk_Window tkwin); /* 54 */
-    CONST84_RETURN char * (*tk_DisplayName) (Tk_Window tkwin); /* 55 */
+    const char * (*tk_DisplayName) (Tk_Window tkwin); /* 55 */
     int (*tk_DistanceToTextLayout) (Tk_TextLayout layout, int x, int y); /* 56 */
     void (*tk_Draw3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, int numPoints, int borderWidth, int leftRelief); /* 57 */
     void (*tk_Draw3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, int relief); /* 58 */
@@ -974,8 +973,8 @@ typedef struct TkStubs {
     Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid colorName); /* 80 */
     void (*tk_GetAllBindings) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object); /* 81 */
     int (*tk_GetAnchor) (Tcl_Interp *interp, const char *str, Tk_Anchor *anchorPtr); /* 82 */
-    CONST84_RETURN char * (*tk_GetAtomName) (Tk_Window tkwin, Atom atom); /* 83 */
-    CONST84_RETURN char * (*tk_GetBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr); /* 84 */
+    const char * (*tk_GetAtomName) (Tk_Window tkwin, Atom atom); /* 83 */
+    const char * (*tk_GetBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr); /* 84 */
     Pixmap (*tk_GetBitmap) (Tcl_Interp *interp, Tk_Window tkwin, const char *str); /* 85 */
     Pixmap (*tk_GetBitmapFromData) (Tcl_Interp *interp, Tk_Window tkwin, const void *source, int width, int height); /* 86 */
     int (*tk_GetCapStyle) (Tcl_Interp *interp, const char *str, int *capPtr); /* 87 */
@@ -999,7 +998,7 @@ typedef struct TkStubs {
     Pixmap (*tk_GetPixmap) (Display *display, Drawable d, int width, int height, int depth); /* 105 */
     int (*tk_GetRelief) (Tcl_Interp *interp, const char *name, int *reliefPtr); /* 106 */
     void (*tk_GetRootCoords) (Tk_Window tkwin, int *xPtr, int *yPtr); /* 107 */
-    int (*tk_GetScrollInfo) (Tcl_Interp *interp, int argc, CONST84 char **argv, double *dblPtr, int *intPtr); /* 108 */
+    int (*tk_GetScrollInfo) (Tcl_Interp *interp, int argc, const char **argv, double *dblPtr, int *intPtr); /* 108 */
     int (*tk_GetScreenMM) (Tcl_Interp *interp, Tk_Window tkwin, const char *str, double *doublePtr); /* 109 */
     int (*tk_GetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, ClientData clientData); /* 110 */
     Tk_Uid (*tk_GetUid) (const char *str); /* 111 */
@@ -1021,20 +1020,20 @@ typedef struct TkStubs {
     void (*tk_MoveResizeWindow) (Tk_Window tkwin, int x, int y, int width, int height); /* 127 */
     void (*tk_MoveWindow) (Tk_Window tkwin, int x, int y); /* 128 */
     void (*tk_MoveToplevelWindow) (Tk_Window tkwin, int x, int y); /* 129 */
-    CONST84_RETURN char * (*tk_NameOf3DBorder) (Tk_3DBorder border); /* 130 */
-    CONST84_RETURN char * (*tk_NameOfAnchor) (Tk_Anchor anchor); /* 131 */
-    CONST84_RETURN char * (*tk_NameOfBitmap) (Display *display, Pixmap bitmap); /* 132 */
-    CONST84_RETURN char * (*tk_NameOfCapStyle) (int cap); /* 133 */
-    CONST84_RETURN char * (*tk_NameOfColor) (XColor *colorPtr); /* 134 */
-    CONST84_RETURN char * (*tk_NameOfCursor) (Display *display, Tk_Cursor cursor); /* 135 */
-    CONST84_RETURN char * (*tk_NameOfFont) (Tk_Font font); /* 136 */
-    CONST84_RETURN char * (*tk_NameOfImage) (Tk_ImageMaster imageMaster); /* 137 */
-    CONST84_RETURN char * (*tk_NameOfJoinStyle) (int join); /* 138 */
-    CONST84_RETURN char * (*tk_NameOfJustify) (Tk_Justify justify); /* 139 */
-    CONST84_RETURN char * (*tk_NameOfRelief) (int relief); /* 140 */
+    const char * (*tk_NameOf3DBorder) (Tk_3DBorder border); /* 130 */
+    const char * (*tk_NameOfAnchor) (Tk_Anchor anchor); /* 131 */
+    const char * (*tk_NameOfBitmap) (Display *display, Pixmap bitmap); /* 132 */
+    const char * (*tk_NameOfCapStyle) (int cap); /* 133 */
+    const char * (*tk_NameOfColor) (XColor *colorPtr); /* 134 */
+    const char * (*tk_NameOfCursor) (Display *display, Tk_Cursor cursor); /* 135 */
+    const char * (*tk_NameOfFont) (Tk_Font font); /* 136 */
+    const char * (*tk_NameOfImage) (Tk_ImageMaster imageMaster); /* 137 */
+    const char * (*tk_NameOfJoinStyle) (int join); /* 138 */
+    const char * (*tk_NameOfJustify) (Tk_Justify justify); /* 139 */
+    const char * (*tk_NameOfRelief) (int relief); /* 140 */
     Tk_Window (*tk_NameToWindow) (Tcl_Interp *interp, const char *pathName, Tk_Window tkwin); /* 141 */
     void (*tk_OwnSelection) (Tk_Window tkwin, Atom selection, Tk_LostSelProc *proc, ClientData clientData); /* 142 */
-    int (*tk_ParseArgv) (Tcl_Interp *interp, Tk_Window tkwin, int *argcPtr, CONST84 char **argv, const Tk_ArgvInfo *argTable, int flags); /* 143 */
+    int (*tk_ParseArgv) (Tcl_Interp *interp, Tk_Window tkwin, int *argcPtr, const char **argv, const Tk_ArgvInfo *argTable, int flags); /* 143 */
     TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height); /* 144 */
     TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutZoomedBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY); /* 145 */
     int (*tk_PhotoGetImage) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr); /* 146 */
@@ -1751,7 +1750,7 @@ extern const TkStubs *tkStubsPtr;
 #endif
 
 
-#ifdef TK_NO_DEPRECATED
+#if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #undef Tk_PhotoPutBlock_NoComposite
 #undef Tk_PhotoPutZoomedBlock_NoComposite
 #undef Tk_PhotoExpand_Panic

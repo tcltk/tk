@@ -235,7 +235,11 @@ Tk_MainEx(
     is.gotPartial = 0;
     Tcl_Preserve(interp);
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#if defined(_WIN32)
+#if !defined(STATIC_BUILD)
+    /* If compiled for Win32 but running on Cygwin, don't use console */
+    if (!tclStubsPtr->reserved9)
+#endif
     Tk_InitConsoleChannels(interp);
 #endif
 
@@ -420,14 +424,15 @@ StdinProc(
     int mask)			/* Not used. */
 {
     char *cmd;
-    int code, count;
+    int code;
+    size_t count;
     InteractiveState *isPtr = clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
 
     count = Tcl_Gets(chan, &isPtr->line);
 
-    if (count < 0 && !isPtr->gotPartial) {
+    if (count == (size_t)-1 && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {

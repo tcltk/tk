@@ -2965,10 +2965,10 @@ ConfigureSlaves(
 
     firstChar = 0;
     for (numWindows=0, i=0; i < objc; i++) {
-	int length;
+	size_t length;
 	char prevChar = firstChar;
 
-	string = Tcl_GetStringFromObj(objv[i], &length);
+	string = TkGetStringFromObj(objv[i], &length);
     	firstChar = string[0];
 
 	if (firstChar == '.') {

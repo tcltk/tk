@@ -1181,8 +1181,8 @@ PackAfter(
 	packPtr->flags |= OLD_STYLE;
 	for (index = 0 ; index < optionCount; index++) {
 	    Tcl_Obj *curOptPtr = options[index];
-	    const char *curOpt = Tcl_GetString(curOptPtr);
-	    size_t length = curOptPtr->length;
+	    size_t length;
+	    const char *curOpt = TkGetStringFromObj(curOptPtr, &length);
 
 	    c = curOpt[0];
 
