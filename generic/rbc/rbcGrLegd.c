@@ -1258,7 +1258,7 @@ RbcCreateLegend(
     legendPtr->style.justify = TK_JUSTIFY_LEFT;
     legendPtr->style.anchor = TK_ANCHOR_NW;
     legendPtr->bindTable = RbcCreateBindingTable(graphPtr->interp,
-        graphPtr->tkwin, graphPtr, PickLegendEntry, RbcGraphTags);
+        graphPtr->tkwin, graphPtr, PickLegendEntry);
 
     if (RbcConfigureWidgetComponent(graphPtr->interp, graphPtr->tkwin,
             "legend", "Legend", configSpecs, 0, (const char **) NULL,

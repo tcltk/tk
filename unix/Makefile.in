@@ -1585,9 +1585,6 @@ rbcImage.o: $(RBC_DIR)/rbcImage.c
 rbcInt.o: $(RBC_DIR)/rbcInt.c
 	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcInt.c
 
-rbcList.o: $(RBC_DIR)/rbcList.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcList.c
-
 rbcParse.o: $(RBC_DIR)/rbcParse.c
 	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcParse.c
 
