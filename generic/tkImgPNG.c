@@ -127,7 +127,7 @@ typedef struct {
     Tcl_Channel channel;	/* Channel for from-file reads. */
     Tcl_Obj *objDataPtr;
     unsigned char *strDataBuf;	/* Raw source data for from-string reads. */
-    int strDataLen;		/* Length of source data. */
+    size_t strDataLen;		/* Length of source data. */
     unsigned char *base64Data;	/* base64 encoded string data. */
     unsigned char base64Bits;	/* Remaining bits from last base64 read. */
     unsigned char base64State;	/* Current state of base64 decoder. */
@@ -215,16 +215,16 @@ static inline unsigned char Paeth(int a, int b, int c);
 static int		ParseFormat(Tcl_Interp *interp, Tcl_Obj *fmtObj,
 			    PNGImage *pngPtr);
 static int		ReadBase64(Tcl_Interp *interp, PNGImage *pngPtr,
-			    unsigned char *destPtr, int destSz,
+			    unsigned char *destPtr, size_t destSz,
 			    unsigned long *crcPtr);
 static int		ReadByteArray(Tcl_Interp *interp, PNGImage *pngPtr,
-			    unsigned char *destPtr, int destSz,
+			    unsigned char *destPtr, size_t destSz,
 			    unsigned long *crcPtr);
 static int		ReadData(Tcl_Interp *interp, PNGImage *pngPtr,
-			    unsigned char *destPtr, int destSz,
+			    unsigned char *destPtr, size_t destSz,
 			    unsigned long *crcPtr);
 static int		ReadChunkHeader(Tcl_Interp *interp, PNGImage *pngPtr,
-			    int *sizePtr, unsigned long *typePtr,
+			    size_t *sizePtr, unsigned long *typePtr,
 			    unsigned long *crcPtr);
 static int		ReadIDAT(Tcl_Interp *interp, PNGImage *pngPtr,
 			    int chunkSz, unsigned long crc);
@@ -251,9 +251,9 @@ static inline int	WriteByte(Tcl_Interp *interp, PNGImage *pngPtr,
 			    unsigned char c, unsigned long *crcPtr);
 static inline int	WriteChunk(Tcl_Interp *interp, PNGImage *pngPtr,
 			    unsigned long chunkType,
-			    const unsigned char *dataPtr, int dataSize);
+			    const unsigned char *dataPtr, size_t dataSize);
 static int		WriteData(Tcl_Interp *interp, PNGImage *pngPtr,
-			    const unsigned char *srcPtr, int srcSz,
+			    const unsigned char *srcPtr, size_t srcSz,
 			    unsigned long *crcPtr);
 static int		WriteExtraChunks(Tcl_Interp *interp,
 			    PNGImage *pngPtr);
@@ -320,7 +320,7 @@ InitPNGImage(
 	Tcl_IncrRefCount(objPtr);
 	pngPtr->objDataPtr = objPtr;
 	pngPtr->strDataBuf =
-		Tcl_GetByteArrayFromObj(objPtr, &pngPtr->strDataLen);
+		TkGetByteArrayFromObj(objPtr, &pngPtr->strDataLen);
     }
 
     /*
@@ -431,7 +431,7 @@ ReadBase64(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     unsigned char *destPtr,
-    int destSz,
+    size_t destSz,
     unsigned long *crcPtr)
 {
     static const unsigned char from64[] = {
@@ -556,14 +556,14 @@ ReadByteArray(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     unsigned char *destPtr,
-    int destSz,
+    size_t destSz,
     unsigned long *crcPtr)
 {
     /*
      * Check to make sure the number of requested bytes are available.
      */
 
-    if (pngPtr->strDataLen < destSz) {
+    if ((size_t)pngPtr->strDataLen < destSz) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"unexpected end of image data", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EARLY_END", NULL);
@@ -571,7 +571,7 @@ ReadByteArray(
     }
 
     while (destSz) {
-	int blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
+	size_t blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
 	memcpy(destPtr, pngPtr->strDataBuf, blockSz);
 
@@ -614,7 +614,7 @@ ReadData(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     unsigned char *destPtr,
-    int destSz,
+    size_t destSz,
     unsigned long *crcPtr)
 {
     if (pngPtr->base64Data) {
@@ -624,10 +624,10 @@ ReadData(
     }
 
     while (destSz) {
-	int blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
+	size_t blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
-	blockSz = Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
-	if (blockSz < 0) {
+	blockSz = (size_t)Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
+	if (blockSz == (size_t)-1) {
 	    /* TODO: failure info... */
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "channel read failed: %s", Tcl_PosixError(interp)));
@@ -859,7 +859,7 @@ static int
 ReadChunkHeader(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
-    int *sizePtr,
+    size_t *sizePtr,
     unsigned long *typePtr,
     unsigned long *crcPtr)
 {
@@ -1240,7 +1240,7 @@ ReadIHDR(
 {
     unsigned char sigBuf[PNG_SIG_SZ];
     unsigned long chunkType;
-    int chunkSz;
+    size_t chunkSz;
     unsigned long crc;
     unsigned long width, height;
     int mismatch;
@@ -1264,7 +1264,7 @@ ReadIHDR(
      */
 
     if (mismatch && pngPtr->strDataBuf) {
-	pngPtr->strDataBuf = Tcl_GetByteArrayFromObj(pngPtr->objDataPtr,
+	pngPtr->strDataBuf = TkGetByteArrayFromObj(pngPtr->objDataPtr,
 		&pngPtr->strDataLen);
 	pngPtr->base64Data = pngPtr->strDataBuf;
 
@@ -2098,7 +2098,7 @@ ReadIDAT(
      */
 
     while (chunkSz && !Tcl_ZlibStreamEof(pngPtr->stream)) {
-	int len1, len2;
+	size_t len1, len2;
 
 	/*
 	 * Read another block of input into the zlib stream if data remains.
@@ -2147,14 +2147,14 @@ ReadIDAT(
 	 */
 
     getNextLine:
-	Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, &len1);
+	TkGetByteArrayFromObj(pngPtr->thisLineObj, &len1);
 	if (Tcl_ZlibStreamGet(pngPtr->stream, pngPtr->thisLineObj,
 		pngPtr->phaseSize - len1) == TCL_ERROR) {
 	    return TCL_ERROR;
 	}
-	Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, &len2);
+	TkGetByteArrayFromObj(pngPtr->thisLineObj, &len2);
 
-	if (len2 == pngPtr->phaseSize) {
+	if (len2 == (size_t)pngPtr->phaseSize) {
 	    if (pngPtr->phase > 7) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"extra data after final scan line of final phase",
@@ -2383,7 +2383,7 @@ DecodePNG(
     int destY)
 {
     unsigned long chunkType;
-    int chunkSz;
+    size_t chunkSz;
     unsigned long crc;
 
     /*
@@ -2768,7 +2768,7 @@ StringMatchPNG(
 
     InitPNGImage(NULL, &png, NULL, pObjData, TCL_ZLIB_STREAM_INFLATE);
 
-    png.strDataBuf = Tcl_GetByteArrayFromObj(pObjData, &png.strDataLen);
+    png.strDataBuf = TkGetByteArrayFromObj(pObjData, &png.strDataLen);
 
     if (ReadIHDR(interp, &png) == TCL_OK) {
 	*widthPtr = png.block.width;
@@ -2846,7 +2846,7 @@ WriteData(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     const unsigned char *srcPtr,
-    int srcSz,
+    size_t srcSz,
     unsigned long *crcPtr)
 {
     if (!srcPtr || !srcSz) {
@@ -2863,12 +2863,12 @@ WriteData(
      */
 
     if (pngPtr->objDataPtr) {
-	int objSz;
+	size_t objSz;
 	unsigned char *destPtr;
 
-	Tcl_GetByteArrayFromObj(pngPtr->objDataPtr, &objSz);
+	TkGetByteArrayFromObj(pngPtr->objDataPtr, &objSz);
 
-	if (objSz > INT_MAX - srcSz) {
+	if (objSz + srcSz > INT_MAX) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "image too large to store completely in byte array", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "TOO_LARGE", NULL);
@@ -2885,7 +2885,7 @@ WriteData(
 	}
 
 	memcpy(destPtr+objSz, srcPtr, srcSz);
-    } else if (Tcl_Write(pngPtr->channel, (const char *) srcPtr, srcSz) < 0) {
+    } else if ((size_t)Tcl_Write(pngPtr->channel, (const char *) srcPtr, srcSz) == (size_t)-1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"write to channel failed: %s", Tcl_PosixError(interp)));
 	return TCL_ERROR;
@@ -2961,7 +2961,7 @@ WriteChunk(
     PNGImage *pngPtr,
     unsigned long chunkType,
     const unsigned char *dataPtr,
-    int dataSize)
+    size_t dataSize)
 {
     unsigned long crc = Tcl_ZlibCRC32(0, NULL, 0);
     int result = TCL_OK;
@@ -3132,9 +3132,10 @@ WriteIDAT(
     PNGImage *pngPtr,
     Tk_PhotoImageBlock *blockPtr)
 {
-    int rowNum, flush = TCL_ZLIB_NO_FLUSH, outputSize, result;
+    int rowNum, flush = TCL_ZLIB_NO_FLUSH, result;
     Tcl_Obj *outputObj;
     unsigned char *outputBytes;
+    size_t outputSize;
 
     /*
      * Filter and compress each row one at a time.
@@ -3226,7 +3227,7 @@ WriteIDAT(
 
     outputObj = Tcl_NewObj();
     (void) Tcl_ZlibStreamGet(pngPtr->stream, outputObj, -1);
-    outputBytes = Tcl_GetByteArrayFromObj(outputObj, &outputSize);
+    outputBytes = TkGetByteArrayFromObj(outputObj, &outputSize);
     result = WriteChunk(interp, pngPtr, CHUNK_IDAT, outputBytes, outputSize);
     Tcl_DecrRefCount(outputObj);
     return result;

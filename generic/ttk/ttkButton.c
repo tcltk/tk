@@ -495,7 +495,7 @@ CheckbuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Checkbutton *checkPtr = recordPtr;
     Tcl_Obj *varName = checkPtr->checkbutton.variableObj;
     Ttk_TraceHandle *vt = NULL;
-        
+
     if (varName != NULL && *Tcl_GetString(varName) != '\0') {
         vt = Ttk_TraceVariable(interp, varName,
 	    CheckbuttonVariableChanged, checkPtr);

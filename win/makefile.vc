@@ -66,8 +66,8 @@
 #       c:\tcl_src\win\>nmake -f makefile.vc test
 # Install Tk in location specified by INSTALLDIR macro
 #       c:\tcl_src\win\>nmake -f makefile.vc install INSTALLDIR=c:\progra~1\tcl
-# Build release with PDF files 
-#       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=pdbs 
+# Build release with PDF files
+#       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=pdbs
 # Build debug version
 #       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=symbols
 #
@@ -335,7 +335,7 @@ CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
 		 -DTTK_SQUARE_WIDGET=1 \
 !endif
 !if $(TK_NO_DEPRECATED)
-		 -DTK_NO_DEPRECATED=1 
+		 -DTK_NO_DEPRECATED=1
 !endif
 
 PRJ_DEFINES	= -DBUILD_ttk $(CONFIG_DEFS) -Dinline=__inline -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
