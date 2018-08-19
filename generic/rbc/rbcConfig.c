@@ -438,8 +438,10 @@ DistanceToString(
 {                               /* Not used. */
     int             value = *(int *) (widgRec + offset);
     char           *result;
+    char            stringInt[200];
 
-    result = RbcStrdup(RbcItoa(value));
+    sprintf(stringInt, "%d", value);
+    result = RbcStrdup(stringInt);
     assert(result);
     *freeProcPtr = (Tcl_FreeProc *) Tcl_Free;
     return result;
@@ -549,8 +551,10 @@ CountToString(
 {                               /* Not used. */
     int             value = *(int *) (widgRec + offset);
     char           *result;
+    char            stringInt[200];
 
-    result = RbcStrdup(RbcItoa(value));
+    sprintf(stringInt, "%d", value);
+    result = RbcStrdup(stringInt);
     assert(result);
     *freeProcPtr = (Tcl_FreeProc *) Tcl_Free;
     return result;
@@ -923,13 +927,15 @@ DashesToString(
     Tcl_DString     dString;
     char           *p;
     char           *result;
+    char            stringInt[200];
 
     if (dashesPtr->values[0] == 0) {
         return "";
     }
     Tcl_DStringInit(&dString);
     for (p = dashesPtr->values; *p != 0; p++) {
-        Tcl_DStringAppendElement(&dString, RbcItoa(*p));
+        sprintf(stringInt, "%d", *p);
+        Tcl_DStringAppendElement(&dString, stringInt);
     }
     result = Tcl_DStringValue(&dString);
     if (result == dString.staticSpace) {

@@ -18,9 +18,8 @@
 #include <tcl.h>
 #include <tclInt.h>             /* only #define's and inline functions */
 
-#define USE_OLD_CANVAS          /* TODO remove */
 #include <tk.h>
-#include "tkInt.h"
+#include <tkInt.h>
 
 #ifndef _WIN32
 #include <X11/Xproto.h>
@@ -317,8 +316,6 @@
 typedef struct RbcGraph RbcGraph;
 typedef struct RbcElement RbcElement;
 typedef struct RbcLegend RbcLegend;
-typedef struct RbcList RbcList;
-typedef struct RbcListNode RbcListNode;
 typedef struct RbcBindTable RbcBindTable;
 typedef struct RbcChainLink RbcChainLink;
 typedef struct RbcTileClient *RbcTile;  /* Opaque type for tiles */
@@ -418,56 +415,14 @@ typedef struct {
 } RbcTextStyle;
 
 /*
- * RbcListNode --
  *
- * A RbcListNode is the container structure for the RbcList.
  */
-typedef struct RbcListNode {
-    RbcListNode    *prevPtr;    /* Link to the previous node */
-    RbcListNode    *nextPtr;    /* Link to the next node */
-    ClientData      clientData; /* Pointer to the data object */
-    RbcList        *listPtr;    /* List to eventually insert node */
-    union {                     /* Key has one of these forms: */
-        const char     *oneWordValue;   /* One-word value for key. */
-        int            *words[1];       /* Multiple integer words for key.
-                                         * The actual size will be as large
-                                         * as necessary for this table's
-                                         * keys. */
-        char            string[4];      /* String for key.  The actual size
-                                         * will be as large as needed to hold
-                                         * the key. */
-    } key;                      /* MUST BE LAST FIELD IN RECORD!! */
-} RbcListNode;
-
-typedef int     (RbcListCompareProc) (
-    RbcListNode ** node1Ptr,
-    RbcListNode ** node2Ptr);
-
-/*
- * RbcList --
- *
- * A RbcList is a doubly chained list structure.
- */
-typedef struct RbcList {
-    RbcListNode    *headPtr;    /* Pointer to first element in list */
-    RbcListNode    *tailPtr;    /* Pointer to last element in list */
-    int             nNodes;     /* Number of node currently in the list. */
-    int             type;       /* Type of keys in list. */
-} RbcList;
-
 typedef ClientData(
     RbcBindPickProc) (
     ClientData clientData,
     int x,
     int y,
     ClientData * contextPtr);
-
-typedef void    (
-    RbcBindTagProc) (
-    RbcBindTable * bindTable,
-    ClientData object,
-    ClientData context,
-    RbcList * list);
 
 /*
  * RbcBindTable --
@@ -509,7 +464,6 @@ typedef struct RbcBindTable {
     Tk_Window       tkwin;
     RbcBindPickProc *pickProc;  /* Routine to report the item the mouse is
                                  * currently over. */
-    RbcBindTagProc *tagProc;    /* Routine to report tags picked items. */
 } RbcBindTable;
 
 /*
@@ -1698,23 +1652,6 @@ extern RbcUid   rbcYAxisUid;
 /* int RbcPadding(RbcPad w); */
 #define RbcPadding(x)	((x).side1 + (x).side2)
 
-/* int RbcListGetLength(RbcList *list); */
-#define RbcListGetLength(list) \
-	(((list) == NULL) ? 0 : ((RbcList *)list)->nNodes)
-/* RbcListNode *RbcListFirstNode(RbcList *list); */
-#define RbcListFirstNode(list) \
-	(((list) == NULL) ? NULL : ((RbcList *)list)->headPtr)
-/* RbcListNode *RbcListLastNode(RbcList *list); */
-#define RbcListLastNode(list)	\
-	(((list) == NULL) ? NULL : ((RbcList *)list)->tailPtr)
-/* RbcListNode *RbcListPrevNode(RbcListNode *node); */
-#define RbcListPrevNode(node)	((node)->prevPtr)
-/* RbcListNode *RbcListNextNode(RbcListNode *node); */
-#define RbcListNextNode(node) 	((node)->nextPtr)
-/* char *RbcListGetKey(RbcListNode *node); */
-#define RbcListGetKey(node)	\
-	(((node)->listPtr->type == TCL_STRING_KEYS) \
-		 ? (node)->key.string : (node)->key.oneWordValue)
 /* ClientData RbcGetCurrentItem(RbcBindTable *bindPtr); */
 #define RbcGetCurrentItem(bindPtr)  ((bindPtr)->currentItem)
 /* */
@@ -1740,13 +1677,6 @@ extern RbcUid   rbcYAxisUid;
  * Function declarations:
  */
 
-/* rbcAlloc.c */
-MODULE_SCOPE void *RbcCalloc(
-    unsigned int nElem,
-    size_t size);
-MODULE_SCOPE char *RbcStrdup(
-    const char *ptr);
-
 /* rbcBind.c */
 MODULE_SCOPE int RbcConfigureBindings(
     Tcl_Interp * interp,
@@ -1764,8 +1694,7 @@ MODULE_SCOPE RbcBindTable *RbcCreateBindingTable(
     Tcl_Interp * interp,
     Tk_Window tkwin,
     ClientData clientData,
-    RbcBindPickProc * pickProc,
-    RbcBindTagProc * tagProc);
+    RbcBindPickProc * pickProc);
 MODULE_SCOPE void RbcDestroyBindingTable(
     RbcBindTable * table);
 MODULE_SCOPE void RbcPickCurrentItem(
@@ -1835,11 +1764,6 @@ MODULE_SCOPE int RbcConfigureWidgetComponent(
 /* rbcGraph.c */
 MODULE_SCOPE void RbcEventuallyRedrawGraph(
     RbcGraph * graphPtr);
-MODULE_SCOPE void RbcGraphTags(
-    RbcBindTable * table,
-    ClientData object,
-    ClientData context,
-    RbcList * list);
 MODULE_SCOPE int RbcGraphInstCmdProc(
     ClientData clientData,
     Tcl_Interp * interp,
@@ -2350,53 +2274,6 @@ MODULE_SCOPE int RbcDestroyTemporaryImage(
     Tk_Image tkImage);
 MODULE_SCOPE const char *RbcNameOfImage(
     Tk_Image tkImage);
-
-/* rbcList.c */
-MODULE_SCOPE RbcList *RbcListCreate(
-    int type);
-MODULE_SCOPE RbcListNode *RbcListCreateNode(
-    RbcList * list,
-    const char *key);
-MODULE_SCOPE void RbcListReset(
-    RbcList * list);
-MODULE_SCOPE void RbcListDestroy(
-    RbcList * list);
-MODULE_SCOPE void RbcListInit(
-    RbcList * list,
-    int type);
-MODULE_SCOPE void RbcListLinkAfter(
-    RbcList * list,
-    RbcListNode * node,
-    RbcListNode * afterNode);
-MODULE_SCOPE void RbcListLinkBefore(
-    RbcList * list,
-    RbcListNode * node,
-    RbcListNode * beforeNode);
-MODULE_SCOPE void RbcListUnlinkNode(
-    RbcListNode * node);
-MODULE_SCOPE RbcListNode *RbcListGetNode(
-    RbcList * list,
-    const char *key);
-MODULE_SCOPE void RbcListDeleteNode(
-    RbcListNode * node);
-MODULE_SCOPE void Rb_ListDeleteNodeByKey(
-    RbcList * list,
-    const char *key);
-MODULE_SCOPE RbcListNode *RbcListAppend(
-    RbcList * list,
-    const char *key,
-    ClientData clientData);
-MODULE_SCOPE RbcListNode *RbcListPrepend(
-    RbcList * list,
-    const char *key,
-    ClientData clientData);
-MODULE_SCOPE RbcListNode *RbcListGetNthNode(
-    RbcList * list,
-    int position,
-    int direction);
-MODULE_SCOPE void RbcListSort(
-    RbcList * list,
-    RbcListCompareProc * proc);
 MODULE_SCOPE int RbcImageIsDeleted(
     Tk_Image tkImage);
 
@@ -2641,12 +2518,6 @@ MODULE_SCOPE RbcPoint2D RbcTranslatePoint(
     int width,
     int height,
     Tk_Anchor anchor);
-MODULE_SCOPE Pixmap RbcCreateTextBitmap(
-    Tk_Window tkwin,
-    RbcTextLayout * textPtr,
-    RbcTextStyle * stylePtr,
-    int *widthPtr,
-    int *heightPtr);
 MODULE_SCOPE void RbcInitTextStyle(
     RbcTextStyle * stylePtr);
 MODULE_SCOPE void RbcSetDrawTextStyle(
@@ -2755,13 +2626,11 @@ MODULE_SCOPE void RbcTileRectangles(
     int nRects);
 
 /* rbcUtil.c */
-MODULE_SCOPE char *RbcItoa(
-    int value);
-MODULE_SCOPE char *RbcUtoa(
-    unsigned int value);
-MODULE_SCOPE char *RbcDtoa(
-    Tcl_Interp * interp,
-    double value);
+MODULE_SCOPE void *RbcCalloc(
+    unsigned int nElem,
+    size_t size);
+MODULE_SCOPE char *RbcStrdup(
+    const char *ptr);
 MODULE_SCOPE RbcUid RbcGetUid(
     const char *string);
 MODULE_SCOPE void RbcFreeUid(
@@ -3083,6 +2952,71 @@ MODULE_SCOPE Pixmap RbcScaleRotateBitmapRegion(
     unsigned int virtWidth,
     unsigned int virtHeight,
     double theta);
+
+/* rbcScrollbar.c */
+#include <tclOO.h>
+MODULE_SCOPE int RbcScrollbarInit(
+    Tcl_Interp *interp);
+MODULE_SCOPE int RbcScrollbarConstructor(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+MODULE_SCOPE int RbcScrollbarDestructor(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+MODULE_SCOPE int RbcScrollbarActivate(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+MODULE_SCOPE int RbcScrollbarCget(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+MODULE_SCOPE int RbcScrollbarConfigure(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+MODULE_SCOPE int RbcScrollbarDelta(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+MODULE_SCOPE int RbcScrollbarFraction(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+MODULE_SCOPE int RbcScrollbarGet(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+MODULE_SCOPE int RbcScrollbarIdentify(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+MODULE_SCOPE int RbcScrollbarSet(
+    ClientData clientData,
+	Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
 
 /* Windows */
 #ifdef _WIN32

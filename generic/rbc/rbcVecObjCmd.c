@@ -787,8 +787,8 @@ RbcMergeOp(
 
     valueArr = (double *) ckalloc(sizeof(double) * nElem);
     if (valueArr == NULL) {
-        Tcl_AppendResult(vPtr->interp, "not enough memory to allocate ",
-            RbcItoa(nElem), " vector elements", (char *) NULL);
+        Tcl_AppendPrintfToObj(Tcl_GetObjResult(vPtr->interp),
+            "not enough memory to allocate %d vector elements", nElem);
         return TCL_ERROR;
     }
     /* Merge the values from each of the vectors into the current vector */
@@ -1403,8 +1403,9 @@ RbcSplitOp(
 
     nVectors = objc - 2;
     if ((vPtr->length % nVectors) != 0) {
-        Tcl_AppendResult(interp, "can't split vector \"", vPtr->name,
-            "\" into ", RbcItoa(nVectors), " even parts.", (char *) NULL);
+        Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp),
+            "can't split vector \"%s\" into %d even parts.",
+            vPtr->name, nVectors);
         return TCL_ERROR;
     }
     if (nVectors > 0) {

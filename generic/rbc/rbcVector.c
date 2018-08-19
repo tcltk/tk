@@ -1487,9 +1487,9 @@ RbcVectorReset(
             /* Data is volatile. Make a copy of the value array.  */
             newArr = (double *) ckalloc(size * sizeof(double));
             if (newArr == NULL) {
-                Tcl_AppendResult(vPtr->interp, "can't allocate ",
-                    RbcItoa(size), " elements for vector \"", vPtr->name,
-                    "\"", (char *) NULL);
+                Tcl_AppendPrintfToObj(Tcl_GetObjResult(vPtr->interp),
+                    "can't allocate %d elements for vector \"%s\"",
+                    size, vPtr->name);
                 return TCL_ERROR;
             }
             memcpy((char *) newArr, (char *) valueArr, sizeof(double) * length);
@@ -1687,7 +1687,6 @@ RbcVectorChangeLength(
     int             newSize;    /* Size of array in elements */
     double         *newArr;
     Tcl_FreeProc   *freeProc;
-    Tcl_Obj        *resultPtr;
 
     newArr = NULL;
     newSize = 0;
@@ -1714,11 +1713,9 @@ RbcVectorChangeLength(
             /* Dynamically allocate memory for the new array. */
             newArr = (double *) ckalloc(newSize * sizeof(double));
             if (newArr == NULL) {
-                resultPtr = Tcl_NewStringObj("", -1);
-                Tcl_AppendStringsToObj(resultPtr, "can't allocate ",
-                    RbcItoa(newSize), " elements for vector \"", vPtr->name,
-                    "\"", NULL);
-                Tcl_SetObjResult(vPtr->interp, resultPtr);
+                Tcl_SetObjResult(vPtr->interp, Tcl_ObjPrintf(
+                    "can't allocate %d elements for vector \"%s\"",
+                    newSize, vPtr->name));
                 return TCL_ERROR;
             }
             if (used > wanted) {
@@ -2990,8 +2987,8 @@ RbcCreateVector2(
     char           *nameCopy;
 
     if (initialSize < 0) {
-        Tcl_AppendResult(interp, "bad vector size \"", RbcItoa(initialSize),
-            "\"", (char *) NULL);
+        Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp),
+                    "bad vector size \"%d\"",initialSize);
         return TCL_ERROR;
     }
     dataPtr = RbcVectorGetInterpData(interp);

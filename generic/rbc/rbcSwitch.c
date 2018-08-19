@@ -206,8 +206,8 @@ DoSwitch(
             break;
 
         default:
-            Tcl_AppendResult(interp, "bad switch table: unknown type \"",
-                RbcItoa(specPtr->type), "\"", (char *) NULL);
+            Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp),
+                "bad switch table: unknown type \"%d\"", specPtr->type);
             return TCL_ERROR;
         }
         specPtr++;

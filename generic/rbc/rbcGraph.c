@@ -1412,6 +1412,7 @@ InvtransformOp(
     double          x, y;
     RbcPoint2D      point;
     RbcAxis2D       axes;
+    char stringDouble[TCL_DOUBLE_SPACE];
 
     if (Tcl_ExprDouble(interp, argv[2], &x) != TCL_OK ||
         Tcl_ExprDouble(interp, argv[3], &y) != TCL_OK) {
@@ -1430,8 +1431,10 @@ InvtransformOp(
     axes.y = RbcGetFirstAxis(graphPtr->axisChain[1]);
     point = RbcInvMap2D(graphPtr, x, y, &axes);
 
-    Tcl_AppendElement(interp, RbcDtoa(interp, point.x));
-    Tcl_AppendElement(interp, RbcDtoa(interp, point.y));
+    Tcl_PrintDouble(NULL, point.x, stringDouble);
+    Tcl_AppendElement(interp, stringDouble);
+    Tcl_PrintDouble(NULL, point.y, stringDouble);
+    Tcl_AppendElement(interp, stringDouble);
     return TCL_OK;
 }
 
@@ -1481,8 +1484,8 @@ TransformOp(
     axes.y = RbcGetFirstAxis(graphPtr->axisChain[1]);
 
     point = RbcMap2D(graphPtr, x, y, &axes);
-    Tcl_AppendElement(interp, RbcItoa(ROUND(point.x)));
-    Tcl_AppendElement(interp, RbcItoa(ROUND(point.y)));
+    Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp),
+                    "%d %d",ROUND(point.x),ROUND(point.y));
     return TCL_OK;
 }
 
@@ -2292,8 +2295,8 @@ UpdateMarginTraces(
             } else {
                 size = marginPtr->height;
             }
-            Tcl_SetVar(graphPtr->interp, marginPtr->varName, RbcItoa(size),
-                TCL_GLOBAL_ONLY);
+            Tcl_SetVar2Ex(graphPtr->interp, marginPtr->varName, NULL,
+                Tcl_NewIntObj(size), TCL_GLOBAL_ONLY);
         }
     }
 }
