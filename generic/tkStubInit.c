@@ -43,7 +43,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef Tk_GetStyleFromObj
 #undef TkWinGetPlatformId
 
-#if defined(TK_NO_DEPRECATED) || TK_MAJOR_VERSION > 8
+#if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #define Tk_MainEx 0
 #define Tk_FreeXId 0
 #define Tk_FreeStyleFromObj 0
@@ -74,7 +74,7 @@ static int TkWinGetPlatformId(void) {
     return 2;
 }
 #endif /* defined(_WIN32) || defined(__CYGWIN__) */
-#endif /* defined(TK_NO_DEPRECATED) || TK_MAJOR_VERSION > 8 */
+#endif /* !TK_NO_DEPRECATED */
 
 #ifdef _WIN32
 

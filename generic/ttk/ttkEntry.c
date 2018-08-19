@@ -319,7 +319,7 @@ static char *EntryDisplayString(const char *showChar, int numChars)
  */
 static void EntryUpdateTextLayout(Entry *entryPtr)
 {
-    int length;
+    size_t length;
     char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
     if ((entryPtr->entry.numChars != 0) || (entryPtr->entry.placeholderObj == NULL)) {
@@ -329,7 +329,7 @@ static void EntryUpdateTextLayout(Entry *entryPtr)
 	    0/*wraplength*/, entryPtr->entry.justify, TK_IGNORE_NEWLINES,
 	    &entryPtr->entry.layoutWidth, &entryPtr->entry.layoutHeight);
     } else {
-        text = Tcl_GetStringFromObj(entryPtr->entry.placeholderObj, &length);
+        text = TkGetStringFromObj(entryPtr->entry.placeholderObj, &length);
         entryPtr->entry.textLayout = Tk_ComputeTextLayout(
 	    Tk_GetFontFromObj(entryPtr->core.tkwin, entryPtr->entry.fontObj),
 	    text, length,
@@ -1303,9 +1303,9 @@ static void EntryDisplay(void *clientData, Drawable d)
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;
-        Tcl_GetStringFromObj(entryPtr->entry.placeholderObj,&rightIndex);
+	Tcl_GetStringFromObj(entryPtr->entry.placeholderObj,&rightIndex);
     } else {
-        foregroundObj = es.foregroundObj;
+	foregroundObj = es.foregroundObj;
     }
     gc = EntryGetGC(entryPtr, foregroundObj, clipRegion);
     Tk_DrawTextLayout(
@@ -1359,8 +1359,8 @@ EntryIndex(
     int *indexPtr)		/* Return value */
 {
 #   define EntryWidth(e) (Tk_Width(entryPtr->core.tkwin)) /* Not Right */
-    const char *string = Tcl_GetString(indexObj);
-    size_t length = indexObj->length;
+    size_t length;
+    const char *string = TkGetStringFromObj(indexObj, &length);
 
     if (strncmp(string, "end", length) == 0) {
 	*indexPtr = entryPtr->entry.numChars;

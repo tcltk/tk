@@ -231,6 +231,21 @@ static int windowHashInit = false;
 }
 #endif
 
+- (NSSize)windowWillResize:(NSWindow *)sender
+                    toSize:(NSSize)frameSize
+{
+    NSRect currentFrame = [sender frame];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
+    if (winPtr) {
+	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
+	    frameSize.width = currentFrame.size.width;
+	}
+	if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
+	    frameSize.height = currentFrame.size.height;
+	}
+    }
+    return frameSize;
+}
 @end
 
 #pragma mark -
@@ -375,16 +390,35 @@ static void		RemapWindows(TkWindow *winPtr,
 #if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
 /*
  * Override automatic fullscreen button on >10.12 because system fullscreen API
- * confuses Tk window geometry.
+ * confuses Tk window geometry. Custom implementation setting fullscreen status using
+ * Tk API and NSStatusItem in menubar to exit fullscreen status.
  */
+
+NSStatusItem *exitFullScreen;
+
 - (void)toggleFullScreen:(id)sender
 {
-    if ([self isZoomed]) {
-	TkMacOSXZoomToplevel(self, inZoomIn);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    Tk_Window tkwin = (TkWindow*)winPtr;
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+
+    if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
+    	TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
     } else {
-	TkMacOSXZoomToplevel(self, inZoomOut);
+    	TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
     }
 }
+
+-(void)restoreOldScreen:(id)sender {
+
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    Tk_Window tkwin = (TkWindow*)winPtr;
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+
+    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+    [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
+}
+
 #endif
 @end
 
@@ -3427,7 +3461,15 @@ WmTransientCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tk_MakeWindowExist(master);
+	TkWindow* masterPtr = (TkWindow*) master;
+	while (!Tk_TopWinHierarchy(masterPtr)) {
+            /*
+             * Ensure that the master window is actually a Tk toplevel.
+             */
+
+            masterPtr = masterPtr->parentPtr;
+        }
+	Tk_MakeWindowExist((Tk_Window)masterPtr);
 
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3437,8 +3479,7 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	wmPtr2 = ((TkWindow *) master)->wmInfoPtr;
-
+	wmPtr2 = masterPtr->wmInfoPtr;
 	/* Under some circumstances, wmPtr2 is NULL here */
 	if (wmPtr2 != NULL && wmPtr2->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3448,15 +3489,16 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	if ((TkWindow *) master == winPtr) {
+	if (masterPtr == winPtr) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't make \"%s\" its own master", Tk_PathName(winPtr)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
 	    return TCL_ERROR;
 	}
 
-	wmPtr->master = Tk_WindowId(master);
-	masterWindowName = Tcl_GetStringFromObj(objv[3], &length);
+	wmPtr->master = Tk_WindowId(masterPtr);
+	masterWindowName = masterPtr->pathName;
+	length = strlen(masterWindowName);
 	if (wmPtr->masterWindowName != NULL) {
 	    ckfree(wmPtr->masterWindowName);
 	}
@@ -4248,15 +4290,7 @@ Tk_GetRootCoords(
 	     */
 
 	    winPtr = otherPtr;
-
-	    /*
-	     * Remember to offset by the container window here, since at the
-	     * end of this if branch, we will pop out to the container's
-	     * parent...
-	     */
-
-	    x += winPtr->changes.x + winPtr->changes.border_width;
-	    y += winPtr->changes.y + winPtr->changes.border_width;
+            continue;
 	}
 	winPtr = winPtr->parentPtr;
     }
@@ -6265,12 +6299,15 @@ ApplyWindowAttributeFlagChanges(
 	    [[macWindow standardWindowButton:NSWindowZoomButton]
 		    setEnabled:(newAttributes & kWindowResizableAttribute) &&
 		    (newAttributes & kWindowFullZoomAttribute)];
-	    if (newAttributes & kWindowResizableAttribute) {
-		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+	    if (newAttributes & kWindowHorizontalZoomAttribute) {
+		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE);
 	    } else {
-		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE);
+	    }
+	    if (newAttributes & kWindowVerticalZoomAttribute) {
+		wmPtr->flags &= ~(WM_HEIGHT_NOT_RESIZABLE);
+	    } else {
+		wmPtr->flags |= (WM_HEIGHT_NOT_RESIZABLE);
 	    }
 	    WmUpdateGeom(wmPtr, winPtr);
 	}
@@ -6457,6 +6494,7 @@ TkMacOSXMakeFullscreen(
     int result = TCL_OK, wasFullscreen = (wmPtr->flags & WM_FULLSCREEN);
     static unsigned long prevMask = 0, prevPres = 0;
 
+
     if (fullscreen) {
 	int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
 	int screenHeight = HeightOfScreen(Tk_Screen(winPtr));
@@ -6490,7 +6528,7 @@ TkMacOSXMakeFullscreen(
 			wmPtr->configAttributes, wmPtr->flags, 1, 0);
 		wmPtr->flags |= WM_SYNC_PENDING;
 		[window setFrame:[window frameRectForContentRect:
-			screenBounds] display:YES];
+					   screenBounds] display:YES];
 		wmPtr->flags &= ~WM_SYNC_PENDING;
 	    }
 	    wmPtr->flags |= WM_FULLSCREEN;
@@ -6498,9 +6536,21 @@ TkMacOSXMakeFullscreen(
 
 	prevMask = [window styleMask];
 	prevPres = [NSApp presentationOptions];
-	[window setStyleMask: NSBorderlessWindowMask];
-	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
-	                          | NSApplicationPresentationAutoHideMenuBar];
+	[window setStyleMask: NSFullScreenWindowMask];
+	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar];
+
+	/*Fullscreen implementation for 10.13 and later.*/
+	#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
+	exitFullScreen = [[[NSStatusBar systemStatusBar]
+				   statusItemWithLength:NSVariableStatusItemLength] retain];
+	NSImage *exitIcon = [NSImage imageNamed:@"NSExitFullScreenTemplate"];
+	[exitFullScreen setImage:exitIcon];
+	[exitFullScreen setHighlightMode:YES];
+	[exitFullScreen setToolTip:@"Exit Full Screen"];
+	[exitFullScreen setTarget:window];
+	[exitFullScreen setAction:@selector(restoreOldScreen:)];
+	#endif
+
 	Tk_MapWindow((Tk_Window) winPtr);
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;

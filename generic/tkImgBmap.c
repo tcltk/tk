@@ -1079,10 +1079,10 @@ GetByte(
     Tcl_Channel chan)	/* The channel we read from. */
 {
     char buffer;
-    int size;
+    size_t size;
 
     size = Tcl_Read(chan, &buffer, 1);
-    if (size <= 0) {
+    if ((size + 1) < 2) {
 	return EOF;
     } else {
 	return buffer;

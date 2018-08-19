@@ -25,6 +25,10 @@
 
 #define INIT		0x20
 
+#ifndef TK_CONFIG_OPTION_SPECIFIED
+#  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */

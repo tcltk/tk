@@ -887,13 +887,13 @@ typedef struct TkWindow {
  */
 
 typedef struct {
-    XKeyEvent keyEvent;		/* The real event from X11. */
-    char *charValuePtr;		/* A pointer to a string that holds the key's
+    XKeyEvent keyEvent;	/* The real event from X11. */
+    char *charValuePtr;	/* A pointer to a string that holds the key's
 				 * %A substitution text (before backslash
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
 				 * allocated with ckalloc(). */
-    int charValueLen;		/* Length of string in charValuePtr when that
+    size_t charValueLen;	/* Length of string in charValuePtr when that
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
@@ -1309,11 +1309,26 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #endif
 
 #if TCL_UTF_MAX > 4
-#   define TkUtfToUniChar Tcl_UtfToUniChar
-#   define TkUniCharToUtf Tcl_UniCharToUtf
+#   define TkUtfToUniChar (size_t)Tcl_UtfToUniChar
+#   define TkUniCharToUtf (size_t)Tcl_UniCharToUtf
 #else
-    MODULE_SCOPE int TkUtfToUniChar(const char *, int *);
-    MODULE_SCOPE int TkUniCharToUtf(int, char *);
+    MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
+    MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
+#endif
+
+#ifdef TCL_TYPE_I
+/* With TIP #481 available, we don't need to do anything special here */
+#define TkGetStringFromObj(objPtr, lenPtr) \
+	Tcl_GetStringFromObj(objPtr, lenPtr)
+#define TkGetByteArrayFromObj(objPtr, lenPtr) \
+	Tcl_GetByteArrayFromObj(objPtr, lenPtr)
+#else
+#define TkGetStringFromObj(objPtr, lenPtr) \
+	(((objPtr)->bytes ? 0 : Tcl_GetString(objPtr)), \
+	*(lenPtr) = (objPtr)->length, (objPtr)->bytes)
+
+MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
+	size_t *lengthPtr);
 #endif
 
 /*
