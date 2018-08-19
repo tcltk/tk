@@ -1159,14 +1159,14 @@ SplineCmd(
     }
     origPts = (RbcPoint2D *) ckalloc(sizeof(RbcPoint2D) * nOrigPts);
     if (origPts == NULL) {
-        Tcl_AppendResult(interp, "can't allocate \"", RbcItoa(nOrigPts),
-            "\" points", (char *) NULL);
+        Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp),
+            "can't allocate \"%d\" points", nOrigPts);
         return TCL_ERROR;
     }
     intpPts = (RbcPoint2D *) ckalloc(sizeof(RbcPoint2D) * nIntpPts);
     if (intpPts == NULL) {
-        Tcl_AppendResult(interp, "can't allocate \"", RbcItoa(nIntpPts),
-            "\" points", (char *) NULL);
+        Tcl_AppendPrintfToObj(Tcl_GetObjResult(interp),
+            "can't allocate \"%d\" points", nIntpPts);
         ckfree((char *) origPts);
         return TCL_ERROR;
     }

@@ -1028,6 +1028,8 @@ RbcExprVector(
     RbcVectorInterpData *dataPtr; /* Interpreter-specific data. */
     RbcVectorObject *vPtr = (RbcVectorObject *) vecPtr;
     RbcParseVector value;
+    char stringDouble[TCL_DOUBLE_SPACE];
+
     dataPtr = (vecPtr != NULL) ? vPtr->dataPtr : RbcVectorGetInterpData(interp);
     value.vPtr = RbcVectorNew(dataPtr);
     if (EvaluateExpression(interp, string, &value) != TCL_OK) {
@@ -1040,8 +1042,8 @@ RbcExprVector(
         register int i;
         /* No result vector.  Put values in Tcl_GetString(Tcl_GetObjResult(interp)).  */
         for (i = 0; i < value.vPtr->length; i++) {
-            string = RbcDtoa(interp, value.vPtr->valueArr[i]);
-            Tcl_AppendElement(interp, string);
+            Tcl_PrintDouble(NULL, value.vPtr->valueArr[i], stringDouble);
+            Tcl_AppendElement(interp, stringDouble);
         }
     }
     RbcVectorFree(value.vPtr);

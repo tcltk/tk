@@ -4028,6 +4028,7 @@ LimitsOp(
 {                               /* Not used. */
     Tcl_Interp     *interp = graphPtr->interp;
     double          min, max;
+    char stringDouble[TCL_DOUBLE_SPACE];
 
     if (graphPtr->flags & RBC_RESET_AXES) {
         RbcResetAxes(graphPtr);
@@ -4039,8 +4040,10 @@ LimitsOp(
         min = axisPtr->axisRange.min;
         max = axisPtr->axisRange.max;
     }
-    Tcl_AppendElement(interp, RbcDtoa(interp, min));
-    Tcl_AppendElement(interp, RbcDtoa(interp, max));
+    Tcl_PrintDouble(NULL, min, stringDouble);
+    Tcl_AppendElement(interp, stringDouble);
+    Tcl_PrintDouble(NULL, max, stringDouble);
+    Tcl_AppendElement(interp, stringDouble);
     return TCL_OK;
 }
 
@@ -4070,6 +4073,7 @@ InvTransformOp(
 {
     int             x;          /* Integer window coordinate */
     double          y;          /* Real graph coordinate */
+    char stringDouble[TCL_DOUBLE_SPACE];
 
     if (graphPtr->flags & RBC_RESET_AXES) {
         RbcResetAxes(graphPtr);
@@ -4089,7 +4093,8 @@ InvTransformOp(
     } else {
         y = RbcInvVMap(graphPtr, axisPtr, (double) x);
     }
-    Tcl_AppendElement(graphPtr->interp, RbcDtoa(graphPtr->interp, y));
+    Tcl_PrintDouble(NULL, y, stringDouble);
+    Tcl_AppendElement(graphPtr->interp, stringDouble);
     return TCL_OK;
 }
 
@@ -4608,6 +4613,7 @@ ViewOp(
     double          fract;
     double          viewMin, viewMax, worldMin, worldMax;
     double          viewWidth, worldWidth;
+    char stringDouble[TCL_DOUBLE_SPACE];
 
     if (NameToAxis(graphPtr, argv[3], &axisPtr) != TCL_OK) {
         return TCL_ERROR;
@@ -4654,9 +4660,11 @@ ViewOp(
         /* Note: Bound the fractions between 0.0 and 1.0 to support
          * "canvas"-style scrolling. */
         fract = axisOffset / worldWidth;
-        Tcl_AppendElement(interp, RbcDtoa(interp, CLAMP(fract, 0.0, 1.0)));
+        Tcl_PrintDouble(interp, CLAMP(fract, 0.0, 1.0), stringDouble);
+        Tcl_AppendElement(interp, stringDouble);
         fract = (axisOffset + viewWidth) / worldWidth;
-        Tcl_AppendElement(interp, RbcDtoa(interp, CLAMP(fract, 0.0, 1.0)));
+        Tcl_PrintDouble(interp, CLAMP(fract, 0.0, 1.0), stringDouble);
+        Tcl_AppendElement(interp, stringDouble);
         return TCL_OK;
     }
     fract = axisOffset / worldWidth;

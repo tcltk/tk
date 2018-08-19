@@ -383,7 +383,6 @@ TTK_OBJS = \
 	ttkWidget.o ttkStubInit.o
 
 RBC_OBJS = \
-	rbcAlloc.o \
         rbcBind.o \
         rbcChain.o \
         rbcConfig.o \
@@ -401,7 +400,6 @@ RBC_OBJS = \
         rbcGrPs.o \
         rbcImage.o \
         rbcInt.o \
-        rbcList.o \
         rbcParse.o \
         rbcPs.o \
         rbcSpline.o \
@@ -528,7 +526,6 @@ TTK_STUB_SRCS = \
 	$(TTK_DIR)/ttkStubInit.c $(TTK_DIR)/ttkStubLib.c
 
 RBC_SRCS = \
-        $(RBC_DIR)/rbcAlloc.c \
         $(RBC_DIR)/rbcBind.c \
         $(RBC_DIR)/rbcChain.c \
         $(RBC_DIR)/rbcConfig.c \
@@ -546,7 +543,6 @@ RBC_SRCS = \
         $(RBC_DIR)/rbcGrPs.c \
         $(RBC_DIR)/rbcImage.c \
         $(RBC_DIR)/rbcInt.c \
-        $(RBC_DIR)/rbcList.c \
         $(RBC_DIR)/rbcParse.c \
         $(RBC_DIR)/rbcPs.c \
         $(RBC_DIR)/rbcSpline.c \
@@ -1530,9 +1526,6 @@ ttkWidget.o: $(TTK_DIR)/ttkWidget.c
 
 ttkMacOSXTheme.o: $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/ttkMacOSXTheme.c
-
-rbcAlloc.o: $(RBC_DIR)/rbcAlloc.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcAlloc.c
 
 rbcBind.o: $(RBC_DIR)/rbcBind.c
 	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcBind.c

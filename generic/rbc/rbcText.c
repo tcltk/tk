@@ -26,6 +26,12 @@ static void     DrawTextLayout(
     register int x,
     register int y,
     RbcTextLayout * textPtr);
+static Pixmap CreateTextBitmap(
+    Tk_Window tkwin,
+    RbcTextLayout * textPtr,
+    RbcTextStyle * stylePtr,
+    int *widthPtr,
+    int *heightPtr);
 
 /*
  *--------------------------------------------------------------
@@ -506,7 +512,7 @@ RbcTranslatePoint(
 /*
  * -----------------------------------------------------------------
  *
- * RbcCreateTextBitmap --
+ * CreateTextBitmap --
  *
  *      Draw a bitmap, using the the given window coordinates
  *      as an anchor for the text bounding box.
@@ -520,8 +526,8 @@ RbcTranslatePoint(
  *
  * -----------------------------------------------------------------
  */
-Pixmap
-RbcCreateTextBitmap(
+static Pixmap
+CreateTextBitmap(
     Tk_Window tkwin,
     RbcTextLayout * textPtr,    /* Text string to draw */
     RbcTextStyle * tsPtr,       /* Text attributes: rotation, color, font,
@@ -814,7 +820,7 @@ RbcDrawTextLayout(
      * make sure we restore the GC because it may be shared.
      */
     tsPtr->theta = theta;
-    bitmap = RbcCreateTextBitmap(tkwin, textPtr, tsPtr, &width, &height);
+    bitmap = CreateTextBitmap(tkwin, textPtr, tsPtr, &width, &height);
     if (bitmap == None) {
         return;
     }

@@ -23,77 +23,65 @@ static int      LinearOpSearch(
     int nSpecs,
     const char *string);
 
-
-static char     stringRep[200];
-
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
- * RbcItoa --
+ * RbcCalloc --
  *
  *      TODO: Description
  *
  * Results:
  *      TODO: Results
  *
- * Side effects:
+ * Side Effects:
  *      TODO: Side Effects
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
-char           *
-RbcItoa(
-    int value)
+void           *
+RbcCalloc(
+    unsigned int nElems,
+    size_t sizeOfElem)
 {
-    sprintf(stringRep, "%d", value);
-    return stringRep;
+    char           *allocPtr;
+    size_t          size;
+
+    size = nElems * sizeOfElem;
+    allocPtr = ckalloc(size);
+    if (allocPtr != NULL) {
+        memset(allocPtr, 0, size);
+    }
+    return allocPtr;
 }
 
 /*
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  *
- * RbcUtoa --
+ * RbcStrdup --
  *
- *      TODO: Description
+ *      Create a copy of the string from heap storage.
  *
  * Results:
- *      TODO: Results
+ *      Returns a pointer to the need string copy.
  *
- * Side effects:
+ * Side Effects:
  *      TODO: Side Effects
  *
- *--------------------------------------------------------------
+ *----------------------------------------------------------------------
  */
 char           *
-RbcUtoa(
-    unsigned int value)
+RbcStrdup(
+    const char *string)
 {
-    sprintf(stringRep, "%u", value);
-    return stringRep;
-}
+    size_t          size;
+    char           *allocPtr;
 
-/*
- *--------------------------------------------------------------
- *
- * RbcDtoa --
- *
- *      TODO: Description
- *
- * Results:
- *      TODO: Results
- *
- * Side effects:
- *      TODO: Side Effects
- *
- *--------------------------------------------------------------
- */
-char           *
-RbcDtoa(
-    Tcl_Interp * interp,
-    double value)
-{
-    Tcl_PrintDouble(interp, value, stringRep);
-    return stringRep;
+    size = strlen(string) + 1;
+    allocPtr = ckalloc(size * sizeof(char));
+    if (allocPtr != NULL) {
+        strcpy(allocPtr, string);
+    }
+    return allocPtr;
 }
 
 /*

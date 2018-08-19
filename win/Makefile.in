@@ -398,7 +398,6 @@ TTK_OBJS = \
 	ttkStubInit.$(OBJEXT)
 
 RBC_OBJS = \
-	rbcAlloc.$(OBJEXT) \
 	rbcBind.$(OBJEXT) \
 	rbcChain.$(OBJEXT) \
 	rbcConfig.$(OBJEXT) \
