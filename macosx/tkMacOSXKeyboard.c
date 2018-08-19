@@ -690,7 +690,7 @@ TkpSetKeycodeAndState(
 	eventPtr->xkey.keycode = 0;
     } else if ( modKeyArray[0] <= keysym &&
 		keysym <= modKeyArray[NUM_MOD_KEYCODES - 1]) {
-	/* 
+	/*
 	 * Keysyms for pure modifiers only arise in generated events.
 	 * We should just copy them to the keycode.
 	 */

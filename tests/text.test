@@ -1599,6 +1599,15 @@ test text-8.27 {TextWidgetCmd procedure, "replace" option crash} -setup {
 } -cleanup {
     destroy .tt
 } -result {}
+test text-8.28 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    text .tt
+} -body {
+    .tt insert end "foo\n"
+    .tt tag add sel 1.0 end
+    .tt replace sel.first sel.last "bar"
+} -cleanup {
+    destroy .tt
+} -result {}
 
 
 test text-9.1 {TextWidgetCmd procedure, "get" option} -setup {

@@ -131,7 +131,7 @@ TkMacOSXFlushWindows(void)
 
     for (NSWindow *w in macWindows) {
 	if (TkMacOSXGetXWindow(w)) {
-	    [w flushWindow];
+	    [w displayIfNeeded];
 	}
     }
 }

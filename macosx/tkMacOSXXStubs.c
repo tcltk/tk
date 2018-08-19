@@ -869,13 +869,10 @@ TkGetDefaultScreenName(
     Tcl_Interp *interp,		/* Not used. */
     const char *screenName)		/* If NULL, use default string. */
 {
-#if 0
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = macScreenName;
     }
     return screenName;
-#endif
-    return macScreenName;
 }
 
 /*

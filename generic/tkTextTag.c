@@ -1108,10 +1108,10 @@ FindTag(
     Tcl_Obj *tagName)		/* Name of desired tag. */
 {
     Tcl_HashEntry *hPtr;
-    int len;
+    size_t len;
     const char *str;
 
-    str = Tcl_GetStringFromObj(tagName, &len);
+    str = TkGetStringFromObj(tagName, &len);
     if (len == 3 && !strcmp(str, "sel")) {
 	return textPtr->selTagPtr;
     }
