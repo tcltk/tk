@@ -6,7 +6,7 @@
  * Copyright (c) 2001 BLT was created by George Howlett.
  * Copyright (c) 2009 RBC was created by Samuel Green, Nicholas Hudson, Stanton Sievers, Jarrod Stormo
  * Copyright (c) 2018 Rene Zaumseil
-
+ *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
@@ -483,9 +483,6 @@ GraphInstCmdDeleteProc(
 
         tkwin = graphPtr->tkwin;
         graphPtr->tkwin = NULL;
-#ifdef ITCL_NAMESPACES
-        Itk_SetWidgetCommand(tkwin, (Tcl_Command) NULL);
-#endif /* ITCL_NAMESPACES */
         RbcDeleteWindowInstanceData(tkwin);
         Tk_DestroyWindow(tkwin);
     }
@@ -581,83 +578,6 @@ InitPens(
         return TCL_ERROR;
     }
     return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * RbcGraphTags --
- *
- *      Sets the binding tags for a graph object. This routine is
- *      called by Tk when an event occurs in the graph.  It fills
- *      an array of pointers with bind tag addresses.
- *
- *      The object addresses are strings hashed in one of two tag
- *      tables: one for elements and the another for markers.  Note
- *      that there's only one binding table for elements and markers.
- *      [We don't want to trigger both a marker and element bind
- *      command for the same event.]  But we don't want a marker and
- *      element with the same tag name to activate the others
- *      bindings. A tag "all" for markers should mean all markers, not
- *      all markers and elements.  As a result, element and marker
- *      tags are stored in separate hash tables, which means we can't
- *      generate the same tag address for both an elements and marker,
- *      even if they have the same name.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      This information will be used by the binding code in rbcUtil.c
- *      to determine what graph objects match the current event.  The
- *      tags are placed in tagArr and *nTagsPtr is set with the
- *      number of tags found.
- *
- *----------------------------------------------------------------------
- */
-void
-RbcGraphTags(
-    RbcBindTable * table,
-    ClientData object,
-    ClientData context,         /* Not used. */
-    RbcList * list)
-{
-    RbcElement     *elemPtr;
-    MakeTagProc    *tagProc;
-    RbcGraph       *graphPtr;
-
-    graphPtr = (RbcGraph *) RbcGetBindingData(table);
-    /*
-     * Trick:   Markers, elements, and axes have the same first few
-     *          fields in their structures, such as "type", "name", or
-     *          "tags".  This is so we can look at graph objects
-     *          interchangably.  It doesn't matter what we cast the
-     *          object to.
-     */
-    elemPtr = (RbcElement *) object;
-
-    if ((elemPtr->classUid == rbcLineElementUid)
-        || (elemPtr->classUid == rbcStripElementUid)
-        || (elemPtr->classUid == rbcBarElementUid)) {
-        tagProc = RbcMakeElementTag;
-    } else if ((elemPtr->classUid == rbcXAxisUid)
-        || (elemPtr->classUid == rbcYAxisUid)) {
-        tagProc = RbcMakeAxisTag;
-    } else {
-        tagProc = RbcMakeMarkerTag;
-    }
-    /*
-     * Always add the name of the object to the tag array.
-     */
-    RbcListAppend(list, (*tagProc) (graphPtr, elemPtr->name), 0);
-    RbcListAppend(list, (*tagProc) (graphPtr, elemPtr->classUid), 0);
-    if (elemPtr->tags != NULL) {
-        register char **p;
-
-        for (p = elemPtr->tags; *p != NULL; p++) {
-            RbcListAppend(list, (*tagProc) (graphPtr, *p), 0);
-        }
-    }
 }
 
 /*
@@ -1076,12 +996,9 @@ CreateGraph(
     graphPtr->cmdToken =
         Tcl_CreateCommand(interp, argv[1], RbcGraphInstCmdProc, graphPtr,
         GraphInstCmdDeleteProc);
-#ifdef ITCL_NAMESPACES
-    Itk_SetWidgetCommand(graphPtr->tkwin, graphPtr->cmdToken);
-#endif
     ConfigureGraph(graphPtr);
     graphPtr->bindTable =
-        RbcCreateBindingTable(interp, tkwin, graphPtr, PickEntry, RbcGraphTags);
+        RbcCreateBindingTable(interp, tkwin, graphPtr, PickEntry);
     return graphPtr;
 
   error:

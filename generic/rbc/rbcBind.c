@@ -73,6 +73,22 @@ static void     PickCurrentItem(
  *      for a new event that is associated with the current item
  *      for a legend.
  *
+ *      Sets the binding tags for a graph object. This routine is
+ *      called by Tk when an event occurs in the graph.  It fills
+ *      an array of pointers with bind tag addresses.
+ *
+ *      The object addresses are strings hashed in one of two tag
+ *      tables: one for elements and the another for markers.  Note
+ *      that there's only one binding table for elements and markers.
+ *      [We don't want to trigger both a marker and element bind
+ *      command for the same event.]  But we don't want a marker and
+ *      element with the same tag name to activate the others
+ *      bindings. A tag "all" for markers should mean all markers, not
+ *      all markers and elements.  As a result, element and marker
+ *      tags are stored in separate hash tables, which means we can't
+ *      generate the same tag address for both an elements and marker,
+ *      even if they have the same name.
+ *
  * Results:
  *      None.
  *
@@ -92,8 +108,13 @@ DoEvent(
     ClientData item,            /* Item picked. */
     ClientData context)
 {                               /* Context of item.  */
-    RbcList        *bindIds;
-    int             nIds;
+    RbcElement     *elemPtr;
+    MakeTagProc    *tagProc;
+    RbcGraph       *graphPtr;
+    ClientData     *idArray;
+    ClientData      tags[32];
+    int nIds = 2; /* Always add the name of the object to the tag array. */
+    register char **p;
 
     if ((bindPtr->tkwin == NULL) || (bindPtr->bindingTable == NULL)) {
         return;
@@ -109,35 +130,49 @@ DoEvent(
     /*
      * Invoke the binding system.
      */
-    bindIds = RbcListCreate(TCL_ONE_WORD_KEYS);
-    if (bindPtr->tagProc == NULL) {
-        RbcListAppend(bindIds, (char *) Tk_GetUid("all"), 0);
-        RbcListAppend(bindIds, (char *) item, 0);
-    } else {
-        (*bindPtr->tagProc) (bindPtr, item, context, bindIds);
-    }
-    nIds = RbcListGetLength(bindIds);
-    if (nIds > 0) {
-        ClientData     *idArray;
-        ClientData      tags[32];
-        register RbcListNode *node;
+    graphPtr = (RbcGraph *) RbcGetBindingData(bindPtr);
+    /*
+     * Trick:   Markers, elements, and axes have the same first few
+     *          fields in their structures, such as "type", "name", or
+     *          "tags".  This is so we can look at graph objects
+     *          interchangably.  It doesn't matter what we cast the
+     *          object to.
+     */
+    elemPtr = (RbcElement *) item;
 
-        idArray = tags;
-        if (nIds >= 32) {
-            idArray = (ClientData *) ckalloc(sizeof(ClientData) * nIds);
-        }
-        nIds = 0;
-        for (node = RbcListFirstNode(bindIds); node != NULL;
-            node = RbcListNextNode(node)) {
-            idArray[nIds++] = (ClientData) RbcListGetKey(node);
-        }
-        Tk_BindEvent(bindPtr->bindingTable, eventPtr, bindPtr->tkwin, nIds,
-            idArray);
-        if (nIds >= 32) {
-            ckfree((char *) idArray);
+    if ((elemPtr->classUid == rbcLineElementUid)
+        || (elemPtr->classUid == rbcStripElementUid)
+        || (elemPtr->classUid == rbcBarElementUid)) {
+        tagProc = RbcMakeElementTag;
+    } else if ((elemPtr->classUid == rbcXAxisUid)
+        || (elemPtr->classUid == rbcYAxisUid)) {
+        tagProc = RbcMakeAxisTag;
+    } else {
+        tagProc = RbcMakeMarkerTag;
+    }
+
+    if (elemPtr->tags != NULL) {
+        for (p = elemPtr->tags; *p != NULL; p++) {
+            nIds++;
         }
     }
-    RbcListDestroy(bindIds);
+    if (nIds > 32) {
+        idArray = (ClientData *) ckalloc(sizeof(ClientData) * nIds);
+    } else {
+        idArray = tags;
+    }
+    idArray[0] = (ClientData) (*tagProc) (graphPtr, elemPtr->name);
+    idArray[1] = (ClientData)  (*tagProc) (graphPtr, elemPtr->classUid);
+    if (nIds > 2) {
+        for (p = elemPtr->tags; *p != NULL; p++) {
+            idArray[nIds++] = (ClientData) (*tagProc) (graphPtr, *p);
+        }
+    }
+    Tk_BindEvent(bindPtr->bindingTable, eventPtr, bindPtr->tkwin, nIds,idArray);
+    if (nIds >= 32) {
+        ckfree((char *) idArray);
+    }
+
 }
 
 /*
@@ -622,8 +657,7 @@ RbcCreateBindingTable(
     Tcl_Interp * interp,
     Tk_Window tkwin,
     ClientData clientData,
-    RbcBindPickProc * pickProc,
-    RbcBindTagProc * tagProc)
+    RbcBindPickProc * pickProc)
 {
     unsigned int    mask;
     RbcBindTable   *bindPtr;
@@ -632,7 +666,6 @@ RbcCreateBindingTable(
     assert(bindPtr);
     bindPtr->clientData = clientData;
     bindPtr->pickProc = pickProc;
-    bindPtr->tagProc = tagProc;
     bindPtr->tkwin = tkwin;
     bindPtr->bindingTable = Tk_CreateBindingTable(interp);
     mask =
