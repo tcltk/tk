@@ -448,8 +448,7 @@ ImgPhotoCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    return TCL_ERROR;
 	}
-	arg = Tcl_GetString(objv[2]);
-	length = objv[2]->length;
+	arg = TkGetStringFromObj(objv[2], &length);
 	if (strncmp(arg,"-data", length) == 0) {
 	    if (masterPtr->dataString) {
 		Tcl_SetObjResult(interp, masterPtr->dataString);
@@ -498,9 +497,8 @@ ImgPhotoCmd(
 	    return TCL_OK;
 
 	} else if (objc == 3) {
-	    const char *arg = Tcl_GetString(objv[2]);
+	    const char *arg = TkGetStringFromObj(objv[2], &length);
 
-	    length = objv[2]->length;
 	    if (length > 1 && !strncmp(arg, "-data", length)) {
 		Tcl_AppendResult(interp, "-data {} {} {}", NULL);
 		if (masterPtr->dataString) {
@@ -1491,8 +1489,7 @@ ParseSubcommandOptions(
 	 * optPtr->name.
 	 */
 
-	expandedOption = option = Tcl_GetString(objv[index]);
-	length = objv[index]->length;
+	expandedOption = option = TkGetStringFromObj(objv[index], &length);
 	if (option[0] != '-') {
 	    if (optPtr->name == NULL) {
 		optPtr->name = objv[index];
@@ -1770,8 +1767,7 @@ ImgPhotoConfigureMaster(
 
     args = ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
-	args[j] = Tcl_GetString(objv[i]);
-	length = objv[i]->length;
+	args[j] = TkGetStringFromObj(objv[i], &length);
 	if ((length > 1) && (args[j][0] == '-')) {
 	    if ((args[j][1] == 'd') &&
 		    !strncmp(args[j], "-data", length)) {
@@ -1850,9 +1846,9 @@ ImgPhotoConfigureMaster(
 	 * Force into ByteArray format, which most (all) image handlers will
 	 * use anyway. Empty length means ignore the -data option.
 	 */
-	int bytesize;
+	size_t bytesize;
 
-	(void) Tcl_GetByteArrayFromObj(data, &bytesize);
+	(void) TkGetByteArrayFromObj(data, &bytesize);
 	if (bytesize) {
 	    Tcl_IncrRefCount(data);
 	} else {
@@ -4042,7 +4038,7 @@ ImgPhotoPostscript(
  *
  *----------------------------------------------------------------------
  */
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 void
 Tk_PhotoPutBlock_NoComposite(
     Tk_PhotoHandle handle,

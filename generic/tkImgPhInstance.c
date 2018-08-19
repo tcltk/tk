@@ -110,7 +110,7 @@ TkImgPhotoConfigureInstance(
 	 */
 
 	if (colorTablePtr != NULL) {
-	    colorTablePtr->liveRefCount -= 1;
+	    colorTablePtr->liveRefCount--;
 	    FreeColorTable(colorTablePtr, 0);
 	}
 	GetColorTable(instancePtr);
@@ -752,7 +752,7 @@ TkImgPhotoFree(
 
     colorPtr = instancePtr->colorTablePtr;
     if (colorPtr != NULL) {
-	colorPtr->liveRefCount -= 1;
+	colorPtr->liveRefCount--;
     }
 
     Tcl_DoWhenIdle(TkImgDisposeInstance, instancePtr);
@@ -1135,8 +1135,7 @@ FreeColorTable(
 				 * longer required by an instance. */
     int force)			/* Force free to happen immediately. */
 {
-    colorPtr->refCount--;
-    if (colorPtr->refCount > 0) {
+    if (colorPtr->refCount-- > 1) {
 	return;
     }
 

@@ -1006,12 +1006,13 @@ TextInsert(
     Tcl_Obj *obj)		/* New characters to be inserted. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteIndex, byteCount, charsAdded;
+    int byteIndex, charsAdded;
+    size_t byteCount;
     char *newStr, *text;
     const char *string;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
-    string = Tcl_GetStringFromObj(obj, &byteCount);
+    string = TkGetStringFromObj(obj, &byteCount);
 
     text = textPtr->text;
 
@@ -1343,11 +1344,11 @@ GetTextIndex(
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int length;
+    size_t length;
     int c;
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
-    const char *string = Tcl_GetStringFromObj(obj, &length);
+    const char *string = TkGetStringFromObj(obj, &length);
 
     c = string[0];
 

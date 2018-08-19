@@ -773,7 +773,7 @@ TkpPostMenu(
     int result;
 
     inPostMenu = 1;
-    
+
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
         inPostMenu = 0;

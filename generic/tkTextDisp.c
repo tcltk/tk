@@ -16,12 +16,6 @@
 #include "tkInt.h"
 #include "tkText.h"
 
-#ifdef _WIN32
-#include "tkWinInt.h"
-#elif defined(__CYGWIN__)
-#include "tkUnixInt.h"
-#endif
-
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #endif
@@ -6089,7 +6083,7 @@ TkTextYviewCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace, type;
     int pixels, count;
-    int switchLength;
+    size_t switchLength;
     double fraction;
     TkTextIndex index;
 
@@ -6109,7 +6103,7 @@ TkTextYviewCmd(
     pickPlace = 0;
     if (Tcl_GetString(objv[2])[0] == '-') {
 	register const char *switchStr =
-		Tcl_GetStringFromObj(objv[2], &switchLength);
+		TkGetStringFromObj(objv[2], &switchLength);
 
 	if ((switchLength >= 2) && (strncmp(switchStr, "-pickplace",
 		(unsigned) switchLength) == 0)) {

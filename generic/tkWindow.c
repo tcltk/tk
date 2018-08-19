@@ -3202,8 +3202,8 @@ Initialize(
      */
 
     {
-	int numBytes;
-	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
+	size_t numBytes;
+	const char *bytes = TkGetStringFromObj(nameObj, &numBytes);
 
 	classObj = Tcl_NewStringObj(bytes, numBytes);
 

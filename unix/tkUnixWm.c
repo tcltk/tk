@@ -36,7 +36,7 @@ typedef struct ProtocolHandler {
 } ProtocolHandler;
 
 #define HANDLER_SIZE(cmdLength) \
-    ((unsigned) ((Tk_Offset(ProtocolHandler, command) + 1) + cmdLength))
+    (((Tk_Offset(ProtocolHandler, command) + 1) + cmdLength))
 
 /*
  * Data for [wm attributes] command:
@@ -3005,7 +3005,7 @@ WmProtocolCmd(
     register ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
     const char *cmd;
-    int cmdLength;
+    size_t cmdLength;
 
     if ((objc < 3) || (objc > 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name? ?command?");
@@ -3071,7 +3071,7 @@ WmProtocolCmd(
 	    break;
 	}
     }
-    cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
+    cmd = TkGetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
 	protPtr = ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
@@ -5450,8 +5450,8 @@ SetNetWmType(
 
     for (n = 0; n < objc; ++n) {
 	Tcl_DString ds, dsName;
-	int len;
-	char *name = Tcl_GetStringFromObj(objv[n], &len);
+	size_t len;
+	char *name = TkGetStringFromObj(objv[n], &len);
 
 	Tcl_UtfToUpper(name);
 	Tcl_UtfToExternalDString(NULL, name, len, &dsName);
