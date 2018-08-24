@@ -62,7 +62,7 @@ namespace eval ttk::theme::vista {
         # Combobox
 	ttk::style configure TCombobox -padding 2
         ttk::style element create Combobox.field vsapi \
-            COMBOBOX 5 {disabled 4 pressed 3 active 2 {} 1}
+            COMBOBOX 5 {disabled 4 pressed 3 active 2 hover 2 {} 1}
         ttk::style element create Combobox.border vsapi \
             COMBOBOX 4 {disabled 4 focus 3 active 2 hover 2 {} 1}
         ttk::style element create Combobox.rightdownarrow vsapi \
