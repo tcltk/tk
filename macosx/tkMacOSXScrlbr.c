@@ -68,7 +68,7 @@ typedef struct ScrollbarMetrics {
 
 
 static ScrollbarMetrics metrics = {
-  15, 54, 26, 14, 14, kControlSizeNormal /* kThemeScrollBarMedium */
+  (15, 54, 26, 14, 14, kControlSizeNormal), /* kThemeScrollBarMedium */
 };
 
 HIThemeTrackDrawInfo info = {
@@ -213,7 +213,7 @@ TkpDisplayScrollbar(
  *	None.
  *
  * Side effects:
- *	The scrollbar will be displayed differently.
+ *	The scrollbar will be displayed differently. 
  *
  *----------------------------------------------------------------------
  */
