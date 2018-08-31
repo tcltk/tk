@@ -1257,9 +1257,16 @@ static void EntryDisplay(void *clientData, Drawable d)
 	/* @@@ should: maybe: SetCaretPos even when blinked off */
 	Tk_SetCaretPos(tkwin, cursorX, cursorY, cursorHeight);
 
+	cursorX -= cursorWidth/2;
+	if (cursorX < textarea.x) {
+	    cursorX = textarea.x;
+	} else if (cursorX + cursorWidth > textarea.x + textarea.width) {
+	    cursorX = textarea.x + textarea.width - cursorWidth;
+	}
+
 	gc = EntryGetGC(entryPtr, es.insertColorObj, clipRegion);
 	XFillRectangle(Tk_Display(tkwin), d, gc,
-	    cursorX-cursorWidth/2, cursorY, cursorWidth, cursorHeight);
+	    cursorX, cursorY, cursorWidth, cursorHeight);
 	XSetClipMask(Tk_Display(tkwin), gc, None);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }
