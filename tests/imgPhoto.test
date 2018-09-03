@@ -1201,6 +1201,16 @@ test imgPhoto-14.4 {GIF buffer overflow} -setup {
 } -cleanup {
     image delete $i
 } -returnCodes error -result {malformed image}
+test imgPhoto-14.5 {Bug [fbaed1f66b] - GIF decoder with deferred clear code} -setup {
+    set fileName [file join [file dirname [info script]] deferredClearCode.gif]
+} -body {
+    # This erroneously produced "malformed image" error.
+    # The animated GIF "deferredClearCode.gif" has two frames, and calling for -index 2
+    # simply is an easy way to trigger the problem of improper management of a deferred
+    # clear code. The effect was that the GIF decoder bailed out before the end of the
+    # image reading, and produced the inappropriate "malformed image error".
+    image create photo -file $fileName -format "gif -index 2"
+} -returnCodes error -result {no image data for this index}
 
 test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} -constraints {
     nonPortable

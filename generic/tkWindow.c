@@ -2921,6 +2921,18 @@ DeleteWindowsExitProc(
 	Tcl_Release(interp);
     }
 
+    /*
+     * Let error handlers catch up before actual close of displays.
+     * Must be done before tsdPtr->displayList is cleared, otherwise
+     * ErrorProc() in tkError.c cannot associate the pending X errors
+     * to the remaining error handlers.
+     */
+
+    for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
+           dispPtr = dispPtr->nextPtr) {
+       XSync(dispPtr->display, False);
+    }
+
 #if !defined(_WIN32) && !defined(MAC_OSX_TK) && !defined(PLATFORM_SDL)
     /*
      * Let error handlers catch up before actual close of displays.

@@ -1741,7 +1741,7 @@ ButtonTextVarProc(
 	}
  	return NULL;
      }
- 
+
     /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.

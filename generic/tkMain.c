@@ -245,6 +245,10 @@ Tk_MainEx(
     Tcl_Preserve(interp);
 
 #if defined(PLATFORM_SDL) || (defined(_WIN32) && !defined(__CYGWIN__))
+#if !defined(STATIC_BUILD)
+    /* If compiled for Win32 but running on Cygwin, don't use console */
+    if (!tclStubsPtr->reserved9)
+#endif
     Tk_InitConsoleChannels(interp);
 #endif
 

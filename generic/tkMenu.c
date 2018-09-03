@@ -1700,12 +1700,12 @@ PostProcessEntry(
     if (mePtr->labelPtr == NULL) {
 	mePtr->labelLength = 0;
     } else {
-	(void)Tcl_GetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
+	Tcl_GetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
     }
     if (mePtr->accelPtr == NULL) {
 	mePtr->accelLength = 0;
     } else {
-	(void)Tcl_GetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
+	Tcl_GetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
     }
 
     /*
