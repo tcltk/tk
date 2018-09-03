@@ -113,7 +113,7 @@ switch -- [tk windowingsystem] {
 proc ttk::combobox::Press {mode w x y} {
     variable State
 
-    $w instate disabled { return }
+    if { [$w instate disabled] } { return }
 
     set State(entryPress) [expr {
 	   [$w instate !readonly]
@@ -162,7 +162,7 @@ proc ttk::combobox::Motion {w x y} {
 #	For editable comboboxes, set the selection and insert cursor.
 #
 proc ttk::combobox::TraverseIn {w} {
-    $w instate {!readonly !disabled} {
+    if { [$w instate {!readonly !disabled}] } {
 	$w selection range 0 end
 	$w icursor end
     }
@@ -181,7 +181,7 @@ proc ttk::combobox::SelectEntry {cb index} {
 ## Scroll -- Mousewheel binding
 #
 proc ttk::combobox::Scroll {cb dir} {
-    $cb instate disabled { return }
+    if { [$cb instate disabled] } { return }
     set max [llength [$cb cget -values]]
     set current [$cb current]
     incr current $dir
@@ -389,7 +389,7 @@ proc ttk::combobox::PlacePopdown {cb popdown} {
 proc ttk::combobox::Post {cb} {
     # Don't do anything if disabled:
     #
-    $cb instate disabled { return }
+    if { [$cb instate disabled] } { return }
 
     # ASSERT: ![$cb instate pressed]
 
