@@ -921,7 +921,7 @@ test font-21.5 {Tk_PostscriptFontName procedure: spaces} -constraints {
     }
 } -result {LucidaBright}
 test font-21.6 {Tk_PostscriptFontName procedure: spaces} -constraints {
-	unix
+	x11 
 } -body {
     psfontname "{new century schoolbook} 10"
 } -result {NewCenturySchlbk-Roman}
@@ -2356,10 +2356,15 @@ test font-45.1 {TkFontGetAliasList: no match} -body {
 test font-45.2 {TkFontGetAliasList: match} -constraints win -body {
     font actual {times 10} -family
 } -result {Times New Roman}
-test font-45.3 {TkFontGetAliasList: match} -constraints {unix noExceed} -body {
-    # can fail on Unix systems that have a real "times new roman" font
-    font actual {{times new roman} 10} -family
-} -result [font actual {times 10} -family]
+test font-45.3 {TkFontGetAliasList: match} -constraints {noExceed} -body {
+    if {[font actual {{times new roman} 10} -family] eq "Times New Roman"} {
+        # avoid test failure on systems that have a real "times new roman" font
+        set res 1
+    } else {
+        set res [expr {[font actual {{times new roman} 10} -family] eq \
+                       [font actual {times 10} -family]} ]
+    }
+} -result {1}
 
 
 test font-46.1 {font actual, with character, no option, no --} -body {

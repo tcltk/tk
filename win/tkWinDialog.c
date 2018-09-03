@@ -3403,7 +3403,7 @@ FontchooserConfigureCmd(
 	    if (hdPtr->fontObj) {
 		Tcl_DecrRefCount(hdPtr->fontObj);
 	    }
-	    (void)Tcl_GetString(objv[i+1]);
+	    Tcl_GetString(objv[i+1]);
 	    if (objv[i+1]->length) {
 		hdPtr->fontObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->fontObj)) {
@@ -3418,7 +3418,7 @@ FontchooserConfigureCmd(
 	    if (hdPtr->cmdObj) {
 		Tcl_DecrRefCount(hdPtr->cmdObj);
 	    }
-	    (void)Tcl_GetString(objv[i+1]);
+	    Tcl_GetString(objv[i+1]);
 	    if (objv[i+1]->length) {
 		hdPtr->cmdObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->cmdObj)) {

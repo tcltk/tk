@@ -147,8 +147,8 @@ static const short alertButtonIndexAndTypeToNativeButtonIndex[][7] = {
     [TYPE_OK] =			{0,    0,    0,    1,    0,    0,    0},
     [TYPE_OKCANCEL] =		{0,    0,    0,    1,    2,    0,    0},
     [TYPE_RETRYCANCEL] =	{0,    1,    0,    0,    2,    0,    0},
-    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    1,    2},
-    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    1,    2},
+    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    2,    1},
+    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    2,    1},
 };
 
 /*
@@ -161,8 +161,8 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_OK] =			{3, 0, 0},
     [TYPE_OKCANCEL] =		{3, 4, 0},
     [TYPE_RETRYCANCEL] =	{1, 4, 0},
-    [TYPE_YESNO] =		{5, 6, 0},
-    [TYPE_YESNOCANCEL] =	{5, 6, 4},
+    [TYPE_YESNO] =		{6, 5, 0},
+    [TYPE_YESNOCANCEL] =	{6, 5, 4},
 };
 
 /*
@@ -752,7 +752,7 @@ Tk_GetOpenFileObjCmd(
 	/*
 	 * The -typevariable must be set to the selected file type, if the dialog was not cancelled
 	 */
-	NSInteger selectedFilterIndex = filterInfo.fileTypeIndex;
+	NSUInteger selectedFilterIndex = filterInfo.fileTypeIndex;
 	NSString *selectedFilter = NULL;
 	if (filterInfo.userHasSelectedFilter) {
 	    selectedFilterIndex = filterInfo.fileTypeIndex;
@@ -778,7 +778,7 @@ Tk_GetOpenFileObjCmd(
 		selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 	    } else {
 		// scan the list
-		int i;
+		NSUInteger i;
 		for (i = 0; i < [filterInfo.fileTypeNames count]; i++) {
 		    if (filterCompatible(extension, i)) {
 			selectedFilterIndex = i;

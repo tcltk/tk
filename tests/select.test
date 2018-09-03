@@ -333,7 +333,7 @@ test select-3.6 {Tk_OwnSelection procedure} -setup {
     selection clear .f1
     lappend result $lostSel
 } -result {owned lost2}
-test select-3.7 {Tk_OwnSelection procedure} -constraints unix -setup {
+test select-3.7 {Tk_OwnSelection procedure} -constraints x11 -setup {
     global lostSel
     setup
     setupbg
@@ -407,7 +407,7 @@ test select-4.3 {Tk_ClearSelection procedure} -setup {
 } -body {
     list [selection clear .f1] [selection clear .f1]
 } -result {{} {}}
-test select-4.4 {Tk_ClearSelection procedure} -constraints unix -setup {
+test select-4.4 {Tk_ClearSelection procedure} -constraints x11 -setup {
     global lostSel
     setup
     setupbg
@@ -439,7 +439,7 @@ test select-4.5 {Tk_ClearSelection procedure} -constraints {
     list $lostSel $lostSel2
 } -result {owned lost2}
 test select-4.6 {Tk_ClearSelection procedure} -constraints {
-    unix altDisplay
+    x11 altDisplay
 } -setup {
     setup .f1
     setup .f2 $env(TK_ALT_DISPLAY)
@@ -525,7 +525,7 @@ test select-5.8 {Tk_GetSelection procedure} -setup {
     }} STRING}
     list [selection get] $selInfo [catch {selection get} msg] $msg
 } -result "$longValue {STRING 0 4000 STRING 4000 4000 STRING 8000 4000 STRING 12000 4000 STRING 16000 4000} 1 {PRIMARY selection doesn't exist or form \"STRING\" not defined}"
-test select-5.9 {Tk_GetSelection procedure} -constraints unix -setup {
+test select-5.9 {Tk_GetSelection procedure} -constraints x11 -setup {
     setup
     setupbg
 } -body {
@@ -538,7 +538,7 @@ test select-5.9 {Tk_GetSelection procedure} -constraints unix -setup {
     cleanupbg
     lappend result $selInfo
 } -result {{Test value} {TEST 0 4000}}
-test select-5.10 {Tk_GetSelection procedure} -constraints unix -setup {
+test select-5.10 {Tk_GetSelection procedure} -constraints x11 -setup {
     setup
     setupbg
 } -body {
@@ -586,7 +586,7 @@ test select-5.12 {Tk_GetSelection procedure} -constraints {
 	    $selInfo
 } -result {0 {Test value} {TEST 0 4000} 1 {PRIMARY selection doesn't exist or form "TEST" not defined} {}}
 test select-5.13 {Tk_GetSelection procedure} -constraints {
-    unix altDisplay
+    x11 altDisplay
 } -setup {
     setup .f1
     setup .f2 $env(TK_ALT_DISPLAY)
@@ -607,7 +607,7 @@ test select-5.13 {Tk_GetSelection procedure} -constraints {
     lappend result $selInfo
 } -result {{Test value} {Test value2} {TEST2 0 4000 TEST 0 4000}}
 test select-5.14 {Tk_GetSelection procedure} -constraints {
-    unix altDisplay
+    x11 altDisplay
 } -setup {
     setup .f1
     setup .f2 $env(TK_ALT_DISPLAY)
@@ -864,13 +864,14 @@ test select-7.1 {TkSelDeadWindow procedure} -constraints nonPortable -setup {
 ##############################################################################
 
 # Check reentrancy on losing selection
-test select-8.1 {TkSelEventProc procedure} -constraints unix -setup {
+test select-8.1 {TkSelEventProc procedure} -constraints x11 -setup {
     setup
     setupbg
 } -body {
     selection own -selection CLIPBOARD -command {destroy .f1} .f1
     update
     dobg {selection own -selection CLIPBOARD .}
+    winfo children .
 } -cleanup {
     cleanupbg
 } -result {}
@@ -880,7 +881,7 @@ test select-8.1 {TkSelEventProc procedure} -constraints unix -setup {
 test select-9.1 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
     setupbg
-} -constraints unix -body {
+} -constraints x11 -body {
     set selValue "1024"
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
@@ -894,7 +895,7 @@ test select-9.1 {SelCvtToX and SelCvtFromX procedures} -setup {
 test select-9.2 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
     setupbg
-} -constraints unix -body {
+} -constraints x11 -body {
     set selValue "1024 0xffff  2048 -2  "
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
@@ -907,7 +908,7 @@ test select-9.2 {SelCvtToX and SelCvtFromX procedures} -setup {
 test select-9.3 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
     setupbg
-} -constraints unix -body {
+} -constraints x11 -body {
     set selValue "   "
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
@@ -920,7 +921,7 @@ test select-9.3 {SelCvtToX and SelCvtFromX procedures} -setup {
 test select-9.4 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
     setupbg
-} -constraints unix -body {
+} -constraints x11 -body {
     set selValue "16 foobar 32"
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
@@ -933,7 +934,7 @@ test select-9.4 {SelCvtToX and SelCvtFromX procedures} -setup {
 test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
     setup
     setupbg
-} -constraints unix -body {
+} -constraints x11 -body {
     # Ensure that lists of atoms are constructed correctly, even when the
     # atom names have spaces in. [Bug 1353414]
     set selValue "foo bar"
@@ -951,7 +952,7 @@ test select-9.5 {SelCvtToX and SelCvtFromX procedures} -setup {
 
 # most control paths have been exercised above
 test select-10.1 {ConvertSelection procedure, race with selection clear} -constraints {
-    unix
+    x11 
 } -setup {
     setup
 } -body {
@@ -981,7 +982,7 @@ test select-10.1 {ConvertSelection procedure, race with selection clear} -constr
     catch {close $fd}
     lappend x $selInfo
 } -result {{1:PRIMARY selection doesn't exist or form "STRING" not defined} {}}
-test select-10.2 {ConvertSelection procedure} -constraints unix -setup {
+test select-10.2 {ConvertSelection procedure} -constraints x11 -setup {
     setup
     setupbg
 } -body {
@@ -993,7 +994,7 @@ test select-10.2 {ConvertSelection procedure} -constraints unix -setup {
     cleanupbg
     lappend result $selInfo
 } -result [list [string range $longValue 0 3999] {STRING 0 4000 STRING 4000 4000 STRING 0 4000 STRING 4000 4000}]
-test select-10.3 {ConvertSelection procedure} -constraints unix -setup {
+test select-10.3 {ConvertSelection procedure} -constraints x11 -setup {
     setup
     setupbg
 } -body {
@@ -1005,7 +1006,7 @@ test select-10.3 {ConvertSelection procedure} -constraints unix -setup {
 # testing timers
 # This one hangs in Exceed
 test select-10.4 {ConvertSelection procedure} -constraints {
-    unix noExceed
+    x11 noExceed
 } -setup {
     setup
     setupbg
@@ -1020,7 +1021,7 @@ test select-10.4 {ConvertSelection procedure} -constraints {
     lappend result $selInfo
 } -result {{selection owner didn't respond} {STRING 0 4000 STRING 4000 4000 STRING 8000 4000 STRING 12000 4000 STRING 16000 4000 STRING 0 4000 STRING 4000 4000}}
 test select-10.5 {ConvertSelection procedure, reentrancy issues} -constraints {
-    unix
+    x11 
 } -setup {
     setup
     setupbg
@@ -1035,7 +1036,7 @@ test select-10.5 {ConvertSelection procedure, reentrancy issues} -constraints {
     lappend result $selInfo
 } -result {{PRIMARY selection doesn't exist or form "STRING" not defined} {.f1 STRING 0 4000}}
 test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
-    unix
+    x11 
 } -setup {
     setup
     setupbg
@@ -1058,7 +1059,7 @@ test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
 ##############################################################################
 
 # testing reentrancy
-test select-11.1 {TkSelPropProc procedure} -constraints unix -setup {
+test select-11.1 {TkSelPropProc procedure} -constraints x11 -setup {
     setup
     setupbg
 } -body {
@@ -1076,7 +1077,7 @@ test select-11.1 {TkSelPropProc procedure} -constraints unix -setup {
 ##############################################################################
 
 # Note, this assumes we are using CurrentTtime
-test select-12.1 {DefaultSelection procedure} -constraints unix -body {
+test select-12.1 {DefaultSelection procedure} -constraints x11 -body {
     setup
     set result [selection get -type TIMESTAMP]
     setupbg
@@ -1084,7 +1085,7 @@ test select-12.1 {DefaultSelection procedure} -constraints unix -body {
     cleanupbg
     set result
 } -result {0x0 {0x0 }}
-test select-12.2 {DefaultSelection procedure} -constraints unix -body {
+test select-12.2 {DefaultSelection procedure} -constraints x11 -body {
     setup
     set result [lsort [list [selection get -type TARGETS]]]
     setupbg
@@ -1092,7 +1093,7 @@ test select-12.2 {DefaultSelection procedure} -constraints unix -body {
     cleanupbg
     set result
 } -result {{MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
-test select-12.3 {DefaultSelection procedure} -constraints unix -body {
+test select-12.3 {DefaultSelection procedure} -constraints x11 -body {
     setup
     selection handle .f1 {handler TEST} TEST
     set result [list [lsort [selection get -type TARGETS]]]
@@ -1101,7 +1102,7 @@ test select-12.3 {DefaultSelection procedure} -constraints unix -body {
     cleanupbg
     set result
 } -result {{MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
-test select-12.4 {DefaultSelection procedure} -constraints unix -setup {
+test select-12.4 {DefaultSelection procedure} -constraints x11 -setup {
     setup
     set result ""
 } -body {
@@ -1111,7 +1112,7 @@ test select-12.4 {DefaultSelection procedure} -constraints unix -setup {
     cleanupbg
     set result
 } -result [list [winfo name .] [winfo name .]]
-test select-12.5 {DefaultSelection procedure} -constraints unix -body {
+test select-12.5 {DefaultSelection procedure} -constraints x11 -body {
     setup
     set result [selection get -type TK_WINDOW]
     setupbg
@@ -1130,7 +1131,7 @@ test select-12.6 {DefaultSelection procedure} -body {
 } -result {{Targets value} {TARGETS.f1 0 4000} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 
 test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
-    unix
+    x11 
 } -setup {
     setup
     setupbg
