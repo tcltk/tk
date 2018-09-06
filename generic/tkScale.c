@@ -17,9 +17,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkScale.h"
+#include "default.h"
 
 #if defined(_WIN32)
 #define snprintf _snprintf

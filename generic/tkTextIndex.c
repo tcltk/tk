@@ -11,9 +11,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
+#include "default.h"
 
 /*
  * Index to use to select last character in line (very large integer):

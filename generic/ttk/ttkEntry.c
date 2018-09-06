@@ -8,9 +8,7 @@
  * Copyright (c) 2004 Joe English
  */
 
-#include <string.h>
-#include <stdio.h>
-#include <tkInt.h>
+#include "tkInt.h"
 #include <X11/Xatom.h>
 
 #include "ttkTheme.h"

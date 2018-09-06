@@ -14,9 +14,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkUndo.h"
+#include "default.h"
 
 #if defined(MAC_OSX_TK)
 #define Style TkStyle

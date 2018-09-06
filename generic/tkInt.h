@@ -25,7 +25,6 @@
  * Darwin (where configure runs only once for multiple architectures).
  */
 
-#include <stdio.h>
 #ifdef HAVE_SYS_TYPES_H
 #    include <sys/types.h>
 #endif
