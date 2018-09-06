@@ -551,15 +551,24 @@ an additional alpha filtering for the overall image, which allows the
 background on which the image is displayed to show through.  This
 usually also has the effect of desaturating the image.  The
 \fIalphaValue\fR must be between 0.0 and 1.0.
-\fBsvgnano \-dpi\fI dpiValue\fR \-scale\fI scaleValue\fR \-unit\fI unitValue\fR \-x\fI xValue\fR \-y\fI yValue\fR
+.TP
+\fBsvgnano \-dpi\fI dpiValue\fB \-scale\fI scaleValue\fB \-unit\fI unitValue\fB \-x\fI xValue\fB \-y\fI yValue\fR
 .
-\fIdpiValue\fR is used in conversion between given coordinates and screen resolution. The value must be greater then 0.0. The default value is 96.
-\fIscaleValue\fR is used to scale the resulting image. The value must be greater then 0.0. The default value is 1.
-\fIunitValue\fR is the unit of all coordinates in the svg data. Available units are px (default, coordinates in pixel), mm , cm and in.
-\fxValue\fR is used to move the created image in x-direction. The default value is 0.
-\fyValue\fR is used to move the created image in y-direction. The default value is 0.
+\fIdpiValue\fR is used in conversion between given coordinates and
+screen resolution. The value must be greater than 0 and the default
+value is 96.
+\fIscaleValue\fR is used to scale the resulting image. The value must
+be greater than 0 and the default value is 1.
+\fIunitValue\fR is the unit of all coordinates in the SVG data.
+Available units are px (default, coordinates in pixel), mm , cm and
+in.
+\fIxValue\fR and \fIyValue\fR are used to move the created image
+respectively in x-direction and y-direction. The default value is 0
+for both.
 .
-The svgnano format supports a wide range of SVG features, but something may be missing for instance text.
+The svgnano format supports a wide range of SVG features, but the
+full SVG standard is not available, for instance the 'text' feature
+is missing.
 .VE 8.6
 .VS 8.7
 .SH "COLOR FORMATS"
