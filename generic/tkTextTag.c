@@ -12,9 +12,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
+#include "default.h"
 
 /*
  * The 'TkWrapMode' enum in tkText.h is used to define a type for the -wrap

@@ -4,8 +4,7 @@
  * Ttk package: initialization routine and miscellaneous utilities.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 

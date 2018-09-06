@@ -610,7 +610,7 @@ TkpCloseDisplay(
 	    ckfree(display->screens->root_visual);
 	}
 	if (display->screens->root != None) {
-	    ckfree(display->screens->root);
+	    ckfree((char *)display->screens->root);
 	}
 	if (display->screens->cmap != None) {
 	    XFreeColormap(display, display->screens->cmap);

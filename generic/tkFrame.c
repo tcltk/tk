@@ -12,8 +12,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * The following enum is used to define the type of the frame.

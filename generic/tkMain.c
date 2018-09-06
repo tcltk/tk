@@ -30,14 +30,6 @@
 #endif
 
 #include "tkInt.h"
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef NO_STDLIB_H
-#   include "../compat/stdlib.h"
-#else
-#   include <stdlib.h>
-#endif
 
 extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 

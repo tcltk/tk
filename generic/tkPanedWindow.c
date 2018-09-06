@@ -13,8 +13,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * Flag values for "sticky"ness. The 16 combinations subsume the packer's
