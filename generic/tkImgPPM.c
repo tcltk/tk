@@ -324,9 +324,9 @@ FileWritePPM(
 	for (h = blockPtr->height; h > 0; h--) {
 	    pixelPtr = pixLinePtr;
 	    for (w = blockPtr->width; w > 0; w--) {
-		if ((size_t)Tcl_Write(chan,(char *)&pixelPtr[0], 1) == (size_t)-1 ||
-			(size_t)Tcl_Write(chan,(char *)&pixelPtr[greenOffset],1)==(size_t)-1 ||
-			(size_t)Tcl_Write(chan,(char *)&pixelPtr[blueOffset],1) ==(size_t)-1) {
+		if (Tcl_Write(chan,(char *)&pixelPtr[0], 1) == TCL_IO_FAILURE ||
+			Tcl_Write(chan,(char *)&pixelPtr[greenOffset],1) == TCL_IO_FAILURE ||
+			Tcl_Write(chan,(char *)&pixelPtr[blueOffset],1) == TCL_IO_FAILURE) {
 		    goto writeerror;
 		}
 		pixelPtr += blockPtr->pixelSize;
