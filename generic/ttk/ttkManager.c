@@ -4,8 +4,7 @@
  * Support routines for geometry managers.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkManager.h"
 
 /*------------------------------------------------------------------------

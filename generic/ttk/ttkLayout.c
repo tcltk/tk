@@ -6,8 +6,7 @@
  * Copyright (c) 2003 Joe English.  Freely redistributable.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkThemeInt.h"
 
 #define MAX(a,b) (a > b ? a : b)

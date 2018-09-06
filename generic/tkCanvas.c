@@ -15,9 +15,9 @@
 
 /* #define USE_OLD_TAG_SEARCH 1 */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkCanvas.h"
+#include "default.h"
 #ifdef TK_NO_DOUBLE_BUFFERING
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"

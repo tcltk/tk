@@ -14,7 +14,7 @@
  * 	Add script-level access to configure application-wide blink rate.
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 

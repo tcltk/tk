@@ -4,8 +4,7 @@
  * label, button, checkbutton, radiobutton, and menubutton widgets.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 

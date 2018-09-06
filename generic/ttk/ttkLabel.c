@@ -6,8 +6,7 @@
  *
  */
 
-#include <tcl.h>
-#include <tkInt.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 
 /*----------------------------------------------------------------------

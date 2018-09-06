@@ -9,9 +9,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkUnixInt.h"
 #include "tkMenu.h"
+#include "default.h"
 
 /*
  * Constants used for menu drawing.
