@@ -1244,7 +1244,8 @@ static void EntryDisplay(void *clientData, Drawable d)
     /* Draw cursor:
      */
     if (showCursor) {
-	int cursorX = EntryCharPosition(entryPtr, entryPtr->entry.insertPos),
+        Ttk_Box field = Ttk_ClientRegion(entryPtr->core.layout, "field");
+        int cursorX = EntryCharPosition(entryPtr, entryPtr->entry.insertPos),
 	    cursorY = entryPtr->entry.layoutY,
 	    cursorHeight = entryPtr->entry.layoutHeight,
 	    cursorWidth = 1;
@@ -1258,13 +1259,13 @@ static void EntryDisplay(void *clientData, Drawable d)
 	Tk_SetCaretPos(tkwin, cursorX, cursorY, cursorHeight);
 
 	cursorX -= cursorWidth/2;
-	if (cursorX < textarea.x) {
-	    cursorX = textarea.x;
-	} else if (cursorX + cursorWidth > textarea.x + textarea.width) {
-	    cursorX = textarea.x + textarea.width - cursorWidth;
+	if (cursorX < field.x) {
+	    cursorX = field.x;
+	} else if (cursorX + cursorWidth > field.x + field.width) {
+	    cursorX = field.x + field.width - cursorWidth;
 	}
 
-	gc = EntryGetGC(entryPtr, es.insertColorObj, clipRegion);
+	gc = EntryGetGC(entryPtr, es.insertColorObj, None);
 	XFillRectangle(Tk_Display(tkwin), d, gc,
 	    cursorX, cursorY, cursorWidth, cursorHeight);
 	XSetClipMask(Tk_Display(tkwin), gc, None);
