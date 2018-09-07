@@ -1245,7 +1245,7 @@ static void EntryDisplay(void *clientData, Drawable d)
      */
     if (showCursor) {
         Ttk_Box field = Ttk_ClientRegion(entryPtr->core.layout, "field");
-        int cursorX = EntryCharPosition(entryPtr, entryPtr->entry.insertPos),
+	int cursorX = EntryCharPosition(entryPtr, entryPtr->entry.insertPos),
 	    cursorY = entryPtr->entry.layoutY,
 	    cursorHeight = entryPtr->entry.layoutHeight,
 	    cursorWidth = 1;
@@ -1268,7 +1268,6 @@ static void EntryDisplay(void *clientData, Drawable d)
 	gc = EntryGetGC(entryPtr, es.insertColorObj, None);
 	XFillRectangle(Tk_Display(tkwin), d, gc,
 	    cursorX, cursorY, cursorWidth, cursorHeight);
-	XSetClipMask(Tk_Display(tkwin), gc, None);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
     }
 
