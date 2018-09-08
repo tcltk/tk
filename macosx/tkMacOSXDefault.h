@@ -314,6 +314,7 @@
 #define DEF_MENU_ACTIVE_BORDER_WIDTH	"0"
 #define DEF_MENU_ACTIVE_FG_COLOR	"systemMenuActiveText"
 #define DEF_MENU_ACTIVE_FG_MONO		WHITE
+#define DEF_MENU_ACTIVE_RELIEF		"flat"
 #define DEF_MENU_BG_COLOR		"systemMenu"
 #define DEF_MENU_BG_MONO		WHITE
 #define DEF_MENU_BORDER_WIDTH		"0"
