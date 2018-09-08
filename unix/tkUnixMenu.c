@@ -443,9 +443,9 @@ DrawMenuEntryBackground(
 		|| (menuPtr->postedCascade != mePtr))) {
 	    relief = TK_RELIEF_FLAT;
 	} else {
-	    relief = TK_RELIEF_RAISED;
+	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
+printf("activerelief: %d\n",relief);
 	}
-
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height,
