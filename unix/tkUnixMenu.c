@@ -444,7 +444,6 @@ DrawMenuEntryBackground(
 	    relief = TK_RELIEF_FLAT;
 	} else {
 	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
-printf("activerelief: %d\n",relief);
 	}
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
