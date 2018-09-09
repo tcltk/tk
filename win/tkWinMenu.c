@@ -129,7 +129,8 @@ static void		DrawMenuEntryArrow(TkMenu *menuPtr, TkMenuEntry *mePtr,
 static void		DrawMenuEntryBackground(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d,
 			    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
-			    int x, int y, int width, int heigth);
+			    int x, int y, int width, int heigth,
+			    int strictMotif);
 static void		DrawMenuEntryIndicator(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d, GC gc,
 			    GC indicatorGC, Tk_Font tkfont,
@@ -2611,7 +2612,7 @@ TkpDrawMenuEntry(
      */
 
     DrawMenuEntryBackground(menuPtr, mePtr, d, activeBorder,
-	    bgBorder, adjustedX, adjustedY-padY, width, height);
+	    bgBorder, adjustedX, adjustedY-padY, width, height, strictMotif);
 
     if (mePtr->type == SEPARATOR_ENTRY) {
 	DrawMenuSeparator(menuPtr, mePtr, d, gc, tkfont,
@@ -2786,7 +2787,8 @@ DrawMenuEntryBackground(
     int x,			/* left edge */
     int y,			/* top edge */
     int width,			/* width of rectangle to draw */
-    int height)			/* height of rectangle to draw */
+    int height,			/* height of rectangle to draw */
+    int strictMotif)		/* Boolean flag (not used) */
 {
     if (mePtr->state == ENTRY_ACTIVE
 		|| (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)!=0 ) {
