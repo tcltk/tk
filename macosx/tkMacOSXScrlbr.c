@@ -282,11 +282,12 @@ TkpComputeScrollbarGeometry(
        Tk_GeometryRequest(scrollPtr->tkwin,
               scrollPtr->width + 2*scrollPtr->inset,
               2*(scrollPtr->arrowLength + scrollPtr->borderWidth
-              + scrollPtr->inset));
+              + scrollPtr->inset) + metrics.minThumbHeight);
     } else {
        Tk_GeometryRequest(scrollPtr->tkwin,
               2*(scrollPtr->arrowLength + scrollPtr->borderWidth
-              + scrollPtr->inset), scrollPtr->width + 2*scrollPtr->inset);
+              + scrollPtr->inset) + metrics.minThumbHeight,
+              scrollPtr->width + 2*scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 }
