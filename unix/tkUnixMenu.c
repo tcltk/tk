@@ -57,7 +57,8 @@ static void		DrawMenuEntryAccelerator(TkMenu *menuPtr,
 static void		DrawMenuEntryBackground(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d,
 			    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
-			    int x, int y, int width, int heigth);
+			    int x, int y, int width, int heigth,
+			    int strictMotif);
 static void		DrawMenuEntryIndicator(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d,
 			    Tk_3DBorder border, XColor *indicatorColor,
@@ -430,7 +431,8 @@ DrawMenuEntryBackground(
     int x,			/* Left coordinate of entry rect */
     int y,			/* Right coordinate of entry rect */
     int width,			/* Width of entry rect */
-    int height)			/* Height of entry rect */
+    int height,			/* Height of entry rect */
+    int strictMotif)		/* Boolean flag */
 {
     if (mePtr->state == ENTRY_ACTIVE) {
 	int relief;
@@ -443,7 +445,7 @@ DrawMenuEntryBackground(
 		|| (menuPtr->postedCascade != mePtr))) {
 	    relief = TK_RELIEF_FLAT;
 	} else {
-	    relief = TK_RELIEF_RAISED;
+	    relief = strictMotif ? TK_RELIEF_RAISED : TK_RELIEF_FLAT;
 	}
 
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
@@ -1423,7 +1425,7 @@ TkpDrawMenuEntry(
      */
 
     DrawMenuEntryBackground(menuPtr, mePtr, d, activeBorder,
-	    bgBorder, x, y, width, height);
+	    bgBorder, x, y, width, height, strictMotif);
 
     if (mePtr->type == SEPARATOR_ENTRY) {
 	DrawMenuSeparator(menuPtr, mePtr, d, gc, tkfont,
