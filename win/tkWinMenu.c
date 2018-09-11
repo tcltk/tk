@@ -2790,10 +2790,26 @@ DrawMenuEntryBackground(
 {
     if (mePtr->state == ENTRY_ACTIVE
 		|| (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)!=0 ) {
+	int relief;
+	int activeBorderWidth;
+
 	bgBorder = activeBorder;
+
+	if ((menuPtr->menuType == MENUBAR)
+		&& ((menuPtr->postedCascade == NULL)
+		|| (menuPtr->postedCascade != mePtr))) {
+	    relief = TK_RELIEF_FLAT;
+	} else {
+	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
+	}
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height,
+		activeBorderWidth, relief);
+    } else {
+        Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height, 0,
+                TK_RELIEF_FLAT);
     }
-    Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height, 0,
-	    TK_RELIEF_FLAT);
 }
 
 /*
