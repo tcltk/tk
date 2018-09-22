@@ -602,12 +602,12 @@ ArrangePacking(
      * If the master has no slaves anymore, then leave the master's size as-is.
      * Otherwise there is no way to "relinquish" control over the master
      * so another geometry manager can take over.
-     * Send event to "NoManagedChilds" to inform about no managed grid but
+     * Send event to "NoManagedChild" to inform about no managed grid but
      * not resized.
      */
 
     if (masterPtr->slavePtr == NULL) {
-        TkSendVirtualEvent(masterPtr->tkwin, "NoManagedChilds", NULL);
+        TkSendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
 	return;
     }
 
