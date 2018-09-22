@@ -590,8 +590,20 @@ UpdateButtonEventState(
 	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
 	dispPtr->mouseButtonWindow = eventPtr->xbutton.window;
 	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
-
-	dispPtr->mouseButtonState |= GetButtonMask(eventPtr->xbutton.button);
+	
+	if (eventPtr->xbutton.button == 4 || eventPtr->xbutton.button == 5) {
+	    /*
+	     * Turn the event into a mouse wheel event and queue it
+	     * Note: modelled after the code in tkWinX.c
+	     */
+	    eventPtr->type = MouseWheelEvent;
+	    eventPtr->xany.send_event = -1;
+	    eventPtr->xkey.nbytes = 0;
+	    eventPtr->xkey.keycode = eventPtr->xbutton.button == 4? -1 : 1;
+	    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_TAIL);
+	} else {
+	    dispPtr->mouseButtonState |= GetButtonMask(eventPtr->xbutton.button);
+	}
 	break;
 
     case ButtonRelease:
