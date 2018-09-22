@@ -560,8 +560,8 @@ value is 96.
 \fIscaleValue\fR is used to scale the resulting image. The value must
 be greater than 0 and the default value is 1.
 \fIunitValue\fR is the unit of all coordinates in the SVG data.
-Available units are px (default, coordinates in pixel), mm , cm and
-in.
+Available units are px (default, coordinates in pixel), pt (1/72 inch),
+pc (12 pt), mm , cm and in.
 \fIxValue\fR and \fIyValue\fR are used to move the created image
 respectively in x-direction and y-direction. The default value is 0
 for both.
@@ -569,6 +569,10 @@ for both.
 The svgnano format supports a wide range of SVG features, but the
 full SVG standard is not available, for instance the 'text' feature
 is missing.
+.
+Currently only SVG images reading and conversion into (pixel-based
+format) photos is supported: Tk does not (yet) support bundling photo
+images in SVG vector graphics.
 .VE 8.6
 .VS 8.7
 .SH "COLOR FORMATS"
