@@ -16,8 +16,8 @@
  */
 
 #include "tkInt.h"
-#include "default.h"
 #include "tkEntry.h"
+#include "default.h"
 
 /*
  * The following macro defines how many extra pixels to leave on each side of
@@ -118,6 +118,12 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	NULL, 0, -1, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
+    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
+	DEF_ENTRY_PLACEHOLDER, -1, Tk_Offset(Entry, placeholderString),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
+        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, -1,
+        Tk_Offset(Entry, placeholderColorPtr), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
 	"ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, -1,
 	Tk_Offset(Entry, readonlyBorder), TK_OPTION_NULL_OK,
@@ -258,6 +264,12 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	NULL, 0, -1, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_ENTRY_JUSTIFY, -1, Tk_Offset(Entry, justify), 0, 0, 0},
+    {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
+	DEF_ENTRY_PLACEHOLDER, -1, Tk_Offset(Entry, placeholderString),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
+        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, -1,
+        Tk_Offset(Entry, placeholderColorPtr), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_ENTRY_RELIEF, -1, Tk_Offset(Entry, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
@@ -536,6 +548,8 @@ Tk_EntryObjCmd(
     entryPtr->highlightGC	= None;
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
+
+    entryPtr->placeholderGC	= None;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the entry,
@@ -887,7 +901,8 @@ EntryWidgetObjCmd(
 		entryPtr->selectLast = index2;
 	    }
 	    if (!(entryPtr->flags & GOT_SELECTION)
-		    && (entryPtr->exportSelection)) {
+		    && (entryPtr->exportSelection)
+		    && (!Tcl_IsSafe(entryPtr->interp))) {
 		Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY,
 			EntryLostSelection, entryPtr);
 		entryPtr->flags |= GOT_SELECTION;
@@ -1122,7 +1137,7 @@ ConfigureEntry(
      * value.
      */
 
-    oldExport = entryPtr->exportSelection;
+    oldExport = (entryPtr->exportSelection) && (!Tcl_IsSafe(entryPtr->interp));
     if (entryPtr->type == TK_SPINBOX) {
 	oldValues = sbPtr->valueStr;
 	oldFormat = sbPtr->reqFormat;
@@ -1176,13 +1191,15 @@ ConfigureEntry(
 
 	if (entryPtr->type == TK_SPINBOX) {
 	    if (sbPtr->fromValue > sbPtr->toValue) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-to value must be greater than -from value",
-			-1));
-		Tcl_SetErrorCode(interp, "TK", "SPINBOX", "RANGE_SANITY",
-			NULL);
-		continue;
-	    }
+                /*
+                 * Swap -from and -to values.
+                 */
+
+                double tmpFromTo = sbPtr->fromValue;
+
+                sbPtr->fromValue = sbPtr->toValue;
+                sbPtr->toValue = tmpFromTo;
+            }
 
 	    if (sbPtr->reqFormat && (oldFormat != sbPtr->reqFormat)) {
 		/*
@@ -1276,6 +1293,7 @@ ConfigureEntry(
 	 */
 
 	if (entryPtr->exportSelection && (!oldExport)
+		&& (!Tcl_IsSafe(entryPtr->interp))
 		&& (entryPtr->selectFirst != -1)
 		&& !(entryPtr->flags & GOT_SELECTION)) {
 	    Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
@@ -1485,8 +1503,20 @@ EntryWorldChanged(
     }
     entryPtr->textGC = gc;
 
+    if (entryPtr->placeholderColorPtr != NULL) {
+	gcValues.foreground = entryPtr->placeholderColorPtr->pixel;
+    }
+    mask = GCForeground | GCFont | GCGraphicsExposures;
+    gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
+    if (entryPtr->placeholderGC != None) {
+	Tk_FreeGC(entryPtr->display, entryPtr->placeholderGC);
+    }
+    entryPtr->placeholderGC = gc;
+
     if (entryPtr->selFgColorPtr != NULL) {
 	gcValues.foreground = entryPtr->selFgColorPtr->pixel;
+    } else {
+        gcValues.foreground = colorPtr->pixel;
     }
     gcValues.font = Tk_FontId(entryPtr->tkfont);
     mask = GCForeground | GCFont;
@@ -1734,9 +1764,15 @@ DisplayEntry(
      * selected portion on top of it.
      */
 
-    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+    if ((entryPtr->numChars != 0) || (entryPtr->placeholderChars == 0)) {
+        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
 	    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 	    entryPtr->leftIndex, entryPtr->numChars);
+    } else {
+	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->placeholderGC,
+	    entryPtr->placeholderLayout, entryPtr->placeholderX, entryPtr->layoutY,
+	    entryPtr->placeholderLeftIndex, entryPtr->placeholderChars);
+    }
 
     if (showSelection && (entryPtr->state != STATE_DISABLED)
 	    && (entryPtr->selTextGC != entryPtr->textGC)
@@ -1924,8 +1960,8 @@ EntryComputeGeometry(
      */
 
     if (entryPtr->showChar != NULL) {
-	Tcl_UniChar ch;
-	char buf[TCL_UTF_MAX];
+	int ch;
+	char buf[6];
 	int size;
 
 	/*
@@ -1935,8 +1971,8 @@ EntryComputeGeometry(
 	 * resulting string.
 	 */
 
-	Tcl_UtfToUniChar(entryPtr->showChar, &ch);
-	size = Tcl_UniCharToUtf(ch, buf);
+	TkUtfToUniChar(entryPtr->showChar, &ch);
+	size = TkUniCharToUtf(ch, buf);
 
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
 	p = ckalloc(entryPtr->numDisplayBytes + 1);
@@ -1947,6 +1983,58 @@ EntryComputeGeometry(
 	    p += size;
 	}
 	*p = '\0';
+    }
+
+    /* Recompute layout of placeholder text.
+     * Only the placeholderX and placeholderLeftIndex value is needed.
+     * We use the same font so we can use the layoutY value from below.
+     */
+
+    Tk_FreeTextLayout(entryPtr->placeholderLayout);
+    if (entryPtr->placeholderString) {
+        entryPtr->placeholderChars = strlen(entryPtr->placeholderString);
+        entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
+	        entryPtr->placeholderString, entryPtr->placeholderChars, 0,
+	        entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, NULL);
+	overflow = totalLength -
+	        (Tk_Width(entryPtr->tkwin) - 2*entryPtr->inset - entryPtr->xWidth);
+	if (overflow <= 0) {
+	    entryPtr->placeholderLeftIndex = 0;
+	    if (entryPtr->justify == TK_JUSTIFY_LEFT) {
+		entryPtr->placeholderX = entryPtr->inset;
+	    } else if (entryPtr->justify == TK_JUSTIFY_RIGHT) {
+		entryPtr->placeholderX = Tk_Width(entryPtr->tkwin) - entryPtr->inset
+		        - entryPtr->xWidth - totalLength;
+	    } else {
+		entryPtr->placeholderX = (Tk_Width(entryPtr->tkwin)
+		        - entryPtr->xWidth - totalLength)/2;
+	    }
+    	} else {
+
+	    /*
+	     * The whole string can't fit in the window. Compute the maximum
+	     * number of characters that may be off-screen to the left without
+	     * leaving empty space on the right of the window, then don't let
+	     * placeholderLeftIndex be any greater than that.
+	     */
+
+	    maxOffScreen = Tk_PointToChar(entryPtr->placeholderLayout, overflow, 0);
+	    Tk_CharBbox(entryPtr->placeholderLayout, maxOffScreen,
+		&rightX, NULL, NULL, NULL);
+	    if (rightX < overflow) {
+		maxOffScreen++;
+	    }
+	    entryPtr->placeholderLeftIndex = maxOffScreen;
+	    Tk_CharBbox(entryPtr->placeholderLayout, entryPtr->placeholderLeftIndex, &rightX,
+		NULL, NULL, NULL);
+	    entryPtr->placeholderX = entryPtr->inset -rightX;
+        }
+    } else {
+        entryPtr->placeholderChars = 0;
+        entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
+	        entryPtr->placeholderString, 0, 0,
+	        entryPtr->justify, TK_IGNORE_NEWLINES, NULL, NULL);
+	entryPtr->placeholderX = entryPtr->inset;
     }
 
     Tk_FreeTextLayout(entryPtr->textLayout);
@@ -2745,7 +2833,8 @@ EntrySelectTo(
      * Grab the selection if we don't own it already.
      */
 
-    if (!(entryPtr->flags & GOT_SELECTION) && (entryPtr->exportSelection)) {
+    if (!(entryPtr->flags & GOT_SELECTION) && (entryPtr->exportSelection)
+	    && (!Tcl_IsSafe(entryPtr->interp))) {
 	Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY, EntryLostSelection,
 		entryPtr);
 	entryPtr->flags |= GOT_SELECTION;
@@ -2812,7 +2901,8 @@ EntryFetchSelection(
     const char *string;
     const char *selStart, *selEnd;
 
-    if ((entryPtr->selectFirst < 0) || !(entryPtr->exportSelection)) {
+    if ((entryPtr->selectFirst < 0) || (!entryPtr->exportSelection)
+	    || Tcl_IsSafe(entryPtr->interp)) {
 	return -1;
     }
     string = entryPtr->displayString;
@@ -2865,7 +2955,8 @@ EntryLostSelection(
      */
 
     if (TkpAlwaysShowSelection(entryPtr->tkwin)
-	    && (entryPtr->selectFirst >= 0) && entryPtr->exportSelection) {
+	    && (entryPtr->selectFirst >= 0) && entryPtr->exportSelection
+	    && (!Tcl_IsSafe(entryPtr->interp))) {
 	entryPtr->selectFirst = -1;
 	entryPtr->selectLast = -1;
 	EventuallyRedraw(entryPtr);
@@ -3130,8 +3221,8 @@ static char *
 EntryTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Not used. */
-    const char *name2,		/* Not used. */
+    const char *name1,		/* Name of variable. */
+    const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     Entry *entryPtr = clientData;
@@ -3143,6 +3234,19 @@ EntryTextVarProc(
 	 */
 	return NULL;
     }
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (entryPtr->textVarName == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    EntryTextVarProc, clientData);
+	}
+ 	return NULL;
+     }
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -3412,7 +3516,7 @@ ExpandPercents(
 				 * list element. */
     int number, length;
     register const char *string;
-    Tcl_UniChar ch;
+    int ch;
     char numStorage[2*TCL_INTEGER_SPACE];
 
     while (1) {
@@ -3445,7 +3549,7 @@ ExpandPercents(
 
 	before++; /* skip over % */
 	if (*before != '\0') {
-	    before += Tcl_UtfToUniChar(before, &ch);
+	    before += TkUtfToUniChar(before, &ch);
 	} else {
 	    ch = '%';
 	}
@@ -3465,7 +3569,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->tkwin);
 		break;
 	    default:
-		length = Tcl_UniCharToUtf(ch, numStorage);
+		length = TkUniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;
@@ -3525,7 +3629,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->tkwin);
 		break;
 	    default:
-		length = Tcl_UniCharToUtf(ch, numStorage);
+		length = TkUniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;
@@ -3639,6 +3743,8 @@ Tk_SpinboxObjCmd(
     sbPtr->formatBuf		= ckalloc(TCL_DOUBLE_SPACE);
     sbPtr->bdRelief		= TK_RELIEF_FLAT;
     sbPtr->buRelief		= TK_RELIEF_FLAT;
+
+    entryPtr->placeholderGC	= None;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the spinbox,
@@ -4034,7 +4140,8 @@ SpinboxWidgetObjCmd(
 		entryPtr->selectLast = index2;
 	    }
 	    if (!(entryPtr->flags & GOT_SELECTION)
-		    && entryPtr->exportSelection) {
+		    && entryPtr->exportSelection
+		    && (!Tcl_IsSafe(entryPtr->interp))) {
 		Tk_OwnSelection(entryPtr->tkwin, XA_PRIMARY,
 			EntryLostSelection, entryPtr);
 		entryPtr->flags |= GOT_SELECTION;
@@ -4279,16 +4386,17 @@ SpinboxInvoke(
 		 * there. If not, move to the first element of the list.
 		 */
 
-		int i, listc, elemLen, length = entryPtr->numChars;
+		int i, listc;
+		size_t elemLen, length = entryPtr->numChars;
 		const char *bytes;
 		Tcl_Obj **listv;
 
 		Tcl_ListObjGetElements(interp, sbPtr->listObj, &listc, &listv);
 		for (i = 0; i < listc; i++) {
-		    bytes = Tcl_GetStringFromObj(listv[i], &elemLen);
+		    bytes = TkGetStringFromObj(listv[i], &elemLen);
 		    if ((length == elemLen) &&
 			    (memcmp(bytes, entryPtr->string,
-				    (size_t) length) == 0)) {
+				    length) == 0)) {
 			sbPtr->eIndex = i;
 			break;
 		    }

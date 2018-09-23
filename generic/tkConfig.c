@@ -91,7 +91,7 @@ typedef struct TkOption {
  */
 
 typedef struct OptionTable {
-    int refCount;		/* Counts the number of uses of this table
+    size_t refCount;		/* Counts the number of uses of this table
 				 * (the number of times Tk_CreateOptionTable
 				 * has returned it). This can be greater than
 				 * 1 if it is shared along several option
@@ -103,7 +103,7 @@ typedef struct OptionTable {
 				 * templates, this points to the table
 				 * corresponding to the next template in the
 				 * chain. */
-    int numOptions;		/* The number of items in the options array
+    size_t numOptions;		/* The number of items in the options array
 				 * below. */
     Option options[1];		/* Information about the individual options in
 				 * the table. This must be the last field in
@@ -177,7 +177,7 @@ Tk_CreateOptionTable(
     OptionTable *tablePtr;
     const Tk_OptionSpec *specPtr, *specPtr2;
     Option *optionPtr;
-    int numOptions, i;
+    size_t numOptions, i;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -330,10 +330,9 @@ Tk_DeleteOptionTable(
 {
     OptionTable *tablePtr = (OptionTable *) optionTable;
     Option *optionPtr;
-    int count;
+    size_t count;
 
-    tablePtr->refCount--;
-    if (tablePtr->refCount > 0) {
+    if (tablePtr->refCount-- > 1) {
 	return;
     }
 
@@ -657,14 +656,14 @@ DoObjConfig(
     case TK_OPTION_STRING: {
 	char *newStr;
 	const char *value;
-	int length;
+	size_t length;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	}
 	if (internalPtr != NULL) {
 	    if (valuePtr != NULL) {
-		value = Tcl_GetStringFromObj(valuePtr, &length);
+		value = TkGetStringFromObj(valuePtr, &length);
 		newStr = ckalloc(length + 1);
 		strcpy(newStr, value);
 	    } else {
@@ -937,16 +936,13 @@ static int
 ObjectIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
-    int length;
-
     if (objPtr == NULL) {
 	return 1;
     }
-    if (objPtr->bytes != NULL) {
-	return (objPtr->length == 0);
+    if (objPtr->bytes == NULL) {
+	Tcl_GetString(objPtr);
     }
-    (void)Tcl_GetStringFromObj(objPtr, &length);
-    return (length == 0);
+    return (objPtr->length == 0);
 }
 
 /*
@@ -978,7 +974,7 @@ GetOption(
     Option *bestPtr, *optionPtr;
     OptionTable *tablePtr2;
     const char *p1, *p2;
-    int count;
+    size_t count;
 
     /*
      * Search through all of the option tables in the chain to find the best
@@ -1539,7 +1535,7 @@ Tk_FreeConfigOptions(
 {
     OptionTable *tablePtr;
     Option *optionPtr;
-    int count;
+    size_t count;
     Tcl_Obj **oldPtrPtr, *oldPtr;
     char *oldInternalPtr;
     const Tk_OptionSpec *specPtr;
@@ -1643,8 +1639,6 @@ FreeResources(
 	if (internalFormExists) {
 	    Tk_FreeStyle(*((Tk_Style *) internalPtr));
 	    *((Tk_Style *) internalPtr) = NULL;
-	} else if (objPtr != NULL) {
-	    Tk_FreeStyleFromObj(objPtr);
 	}
 	break;
     case TK_OPTION_BITMAP:
@@ -1733,7 +1727,7 @@ Tk_GetOptionInfo(
     Tcl_Obj *resultPtr;
     OptionTable *tablePtr = (OptionTable *) optionTable;
     Option *optionPtr;
-    int count;
+    size_t count;
 
     /*
      * If information is only wanted for a single configuration spec, then
@@ -2096,9 +2090,9 @@ TkDebugConfig(
 	if (tablePtr == (OptionTable *) Tcl_GetHashValue(hashEntryPtr)) {
 	    for ( ; tablePtr != NULL; tablePtr = tablePtr->nextPtr) {
 		Tcl_ListObjAppendElement(NULL, objPtr,
-			Tcl_NewIntObj(tablePtr->refCount));
+			Tcl_NewWideIntObj(tablePtr->refCount));
 		Tcl_ListObjAppendElement(NULL, objPtr,
-			Tcl_NewIntObj(tablePtr->numOptions));
+			Tcl_NewWideIntObj(tablePtr->numOptions));
 		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(
 			tablePtr->options[0].specPtr->optionName, -1));
 	    }

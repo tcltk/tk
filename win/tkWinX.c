@@ -13,16 +13,6 @@
 
 #include "tkWinInt.h"
 
-/*
- * The w32api 1.1 package (included in Mingw 1.1) does not define _WIN32_IE by
- * default. Define it here to gain access to the InitCommonControlsEx API in
- * commctrl.h.
- */
-
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0550 /* IE 5.5 */
-#endif
-
 #include <commctrl.h>
 #ifdef _MSC_VER
 #   pragma comment (lib, "comctl32.lib")
@@ -61,7 +51,6 @@ static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
 static WNDCLASS childClass;		/* Window class for child windows. */
-static int tkPlatformId = 0;		/* version of Windows platform */
 static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;
 					/* The current character encoding for
@@ -82,6 +71,8 @@ typedef struct ThreadSpecificData {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
+    DWORD wheelTickPrev;	/* For high resolution wheels. */
+    short wheelAcc;		/* For high resolution wheels. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -92,7 +83,7 @@ static Tcl_ThreadDataKey dataKey;
 static void		GenerateXEvent(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static unsigned int	GetState(UINT message, WPARAM wParam, LPARAM lParam);
-static void 		GetTranslatedKey(XKeyEvent *xkey);
+static void 		GetTranslatedKey(XKeyEvent *xkey, UINT type);
 static void		UpdateInputLanguage(int charset);
 static int		HandleIMEComposition(HWND hwnd, LPARAM lParam);
 
@@ -125,15 +116,12 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = LoadLibraryW(L"NTDLL");
+	HANDLE handle = GetModuleHandle(TEXT("NTDLL"));
 	int(__stdcall *getversion)(void *) =
 		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	if (!getversion || getversion(&os)) {
 	    GetVersionExW(&os);
-	}
-	if (handle) {
-	    FreeLibrary(handle);
 	}
 	/* Write the first character last, preventing multi-thread issues. */
 	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
@@ -318,33 +306,26 @@ TkWinXCleanup(
 /*
  *----------------------------------------------------------------------
  *
- * TkWinGetPlatformId --
+ * TkWinGetPlatformTheme --
  *
- *	Determines whether running under NT, 95, or Win32s, to allow runtime
- *	conditional code. Win32s is no longer supported.
+ *	Return the Windows drawing style we should be using.
  *
  * Results:
  *	The return value is one of:
- *		VER_PLATFORM_WIN32s	   Win32s on Windows 3.1 (not supported)
- *		VER_PLATFORM_WIN32_WINDOWS Win32 on Windows 95, 98, ME (not supported)
- *		VER_PLATFORM_WIN32_NT	Win32 on Windows XP, Vista, Windows 7, Windows 8
- *		VER_PLATFORM_WIN32_CE	Win32 on Windows CE
- *
- * Side effects:
- *	None.
+ *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
+ *	    TK_THEME_WIN_XP		XP not in classic mode
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkWinGetPlatformId(void)
+TkWinGetPlatformTheme(void)
 {
-    if (tkPlatformId == 0) {
+    if (tkWinTheme == 0) {
 	OSVERSIONINFOW os;
 
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	GetVersionExW(&os);
-	tkPlatformId = os.dwPlatformId;
 
 	/*
 	 * Set tkWinTheme to be TK_THEME_WIN_XP or TK_THEME_WIN_CLASSIC. The
@@ -352,8 +333,7 @@ TkWinGetPlatformId(void)
 	 * windows classic theme was selected.
 	 */
 
-	if ((os.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
-		(os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
+	if ((os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
 	    HKEY hKey;
 	    LPCTSTR szSubKey = TEXT("Control Panel\\Appearance");
 	    LPCTSTR szCurrent = TEXT("Current");
@@ -376,33 +356,6 @@ TkWinGetPlatformId(void)
 	} else {
 	    tkWinTheme = TK_THEME_WIN_CLASSIC;
 	}
-    }
-    return tkPlatformId;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWinGetPlatformTheme --
- *
- *	Return the Windows drawing style we should be using.
- *
- * Results:
- *	The return value is one of:
- *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
- *	    TK_THEME_WIN_XP		XP not in classic mode
- *
- * Side effects:
- *	Could invoke TkWinGetPlatformId.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkWinGetPlatformTheme(void)
-{
-    if (tkPlatformId == 0) {
-	TkWinGetPlatformId();
     }
     return tkWinTheme;
 }
@@ -611,6 +564,8 @@ TkpOpenDisplay(
     ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
+    tsdPtr->wheelTickPrev = GetTickCount();
+    tsdPtr->wheelAcc = 0;
 
     return tsdPtr->winDisplay;
 }
@@ -655,7 +610,7 @@ TkpCloseDisplay(
 	    ckfree(display->screens->root_visual);
 	}
 	if (display->screens->root != None) {
-	    ckfree(display->screens->root);
+	    ckfree((char *)display->screens->root);
 	}
 	if (display->screens->cmap != None) {
 	    XFreeColormap(display, display->screens->cmap);
@@ -689,19 +644,6 @@ TkClipCleanup(
     TkDisplay *dispPtr)		/* Display associated with clipboard. */
 {
     if (dispPtr->clipWindow != NULL) {
-	/*
-	 * Force the clipboard to be rendered if we are the clipboard owner.
-	 */
-
-	HWND hwnd = Tk_GetHWND(Tk_WindowId(dispPtr->clipWindow));
-
-	if (GetClipboardOwner() == hwnd) {
-	    OpenClipboard(hwnd);
-	    EmptyClipboard();
-	    TkWinClipboardRender(dispPtr, CF_TEXT);
-	    CloseClipboard();
-	}
-
 	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
 		dispPtr->applicationAtom);
 	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
@@ -876,6 +818,23 @@ Tk_TranslateWinEvent(
 	    TkWinClipboardRender(winPtr->dispPtr, wParam);
 	}
 	return 1;
+    }
+
+    case WM_RENDERALLFORMATS: {
+        TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+
+        if (winPtr && OpenClipboard(hwnd)) {
+            /*
+             * Make sure that nobody had taken ownership of the clipboard
+             * before we opened it.
+             */
+
+            if (GetClipboardOwner() == hwnd) {
+                TkWinClipboardRender(winPtr->dispPtr, CF_TEXT);
+            }
+            CloseClipboard();
+        }
+        return 1;
     }
 
     case WM_COMMAND:
@@ -1130,7 +1089,23 @@ GenerateXEvent(
 	 */
 
 	switch (message) {
-	case WM_MOUSEWHEEL:
+	case WM_MOUSEWHEEL: {
+	    /*
+	     * Support for high resolution wheels.
+	     */
+
+	    DWORD wheelTick = GetTickCount();
+
+	    if (wheelTick - tsdPtr->wheelTickPrev < 1500) {
+		tsdPtr->wheelAcc += (short) HIWORD(wParam);
+	    } else {
+		tsdPtr->wheelAcc = (short) HIWORD(wParam);
+	    }
+	    tsdPtr->wheelTickPrev = wheelTick;
+	    if (abs(tsdPtr->wheelAcc) < WHEEL_DELTA) {
+		return;
+	    }
+
 	    /*
 	     * We have invented a new X event type to handle this event. It
 	     * still uses the KeyPress struct. However, the keycode field has
@@ -1142,8 +1117,10 @@ GenerateXEvent(
 	    event.type = MouseWheelEvent;
 	    event.xany.send_event = -1;
 	    event.xkey.nbytes = 0;
-	    event.xkey.keycode = (short) HIWORD(wParam);
+	    event.xkey.keycode = tsdPtr->wheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    tsdPtr->wheelAcc = tsdPtr->wheelAcc % WHEEL_DELTA;
 	    break;
+	}
 	case WM_SYSKEYDOWN:
 	case WM_KEYDOWN:
 	    /*
@@ -1157,7 +1134,8 @@ GenerateXEvent(
 	    event.type = KeyPress;
 	    event.xany.send_event = -1;
 	    event.xkey.keycode = wParam;
-	    GetTranslatedKey(&event.xkey);
+	    GetTranslatedKey(&event.xkey, (message == WM_KEYDOWN) ? WM_CHAR :
+	            WM_SYSCHAR);
 	    break;
 
 	case WM_SYSKEYUP:
@@ -1229,9 +1207,10 @@ GenerateXEvent(
 		if (IsDBCSLeadByte((BYTE) wParam)) {
 		    MSG msg;
 
-		    if ((PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE) != 0)
+		    if ((PeekMessage(&msg, NULL, WM_CHAR, WM_CHAR,
+		            PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
-			GetMessage(&msg, NULL, 0, 0);
+			GetMessage(&msg, NULL, WM_CHAR, WM_CHAR);
 			event.xkey.nbytes = 2;
 			event.xkey.trans_chars[1] = (char) msg.wParam;
 		   }
@@ -1370,19 +1349,20 @@ GetState(
 
 static void
 GetTranslatedKey(
-    XKeyEvent *xkey)
+    XKeyEvent *xkey,
+    UINT type)
 {
     MSG msg;
 
     xkey->nbytes = 0;
 
     while ((xkey->nbytes < XMaxTransChars)
-	    && PeekMessageA(&msg, NULL, 0, 0, PM_NOREMOVE)) {
-	if ((msg.message != WM_CHAR) && (msg.message != WM_SYSCHAR)) {
+	    && (PeekMessageA(&msg, NULL, type, type, PM_NOREMOVE) != 0)) {
+	if (msg.message != type) {
 	    break;
 	}
 
-	GetMessageA(&msg, NULL, 0, 0);
+	GetMessageA(&msg, NULL, type, type);
 
 	/*
 	 * If this is a normal character message, we may need to strip off the
@@ -1523,7 +1503,7 @@ TkWinGetUnicodeEncoding(void)
  *
  * HandleIMEComposition --
  *
- *	This function works around a definciency in some versions of Windows
+ *	This function works around a deficiency in some versions of Windows
  *	2000 to make it possible to entry multi-lingual characters under all
  *	versions of Windows 2000.
  *
@@ -1553,6 +1533,7 @@ HandleIMEComposition(
 {
     HIMC hIMC;
     int n;
+    int high = 0;
 
     if ((lParam & GCS_RESULTSTR) == 0) {
 	/*
@@ -1570,18 +1551,18 @@ HandleIMEComposition(
     n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
-	char *buff = ckalloc(n);
+	WCHAR *buff = (WCHAR *) ckalloc(n);
 	TkWindow *winPtr;
 	XEvent event;
 	int i;
 
-	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n);
+	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n) / 2;
 
 	/*
 	 * Set up the fields pertinent to key event.
 	 *
-	 * We set send_event to the special value of -2, so that TkpGetString
-	 * in tkWinKey.c knows that trans_chars[] already contains a UNICODE
+	 * We set send_event to the special value of -3, so that TkpGetString
+	 * in tkWinKey.c knows that keycode already contains a UNICODE
 	 * char and there's no need to do encoding conversion.
 	 *
 	 * Note that the event *must* be zeroed out first; Tk plays cunning
@@ -1592,7 +1573,7 @@ HandleIMEComposition(
 
 	memset(&event, 0, sizeof(XEvent));
 	event.xkey.serial = winPtr->display->request++;
-	event.xkey.send_event = -2;
+	event.xkey.send_event = -3;
 	event.xkey.display = winPtr->display;
 	event.xkey.window = winPtr->window;
 	event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
@@ -1600,8 +1581,6 @@ HandleIMEComposition(
 	event.xkey.state = TkWinGetModifierState();
 	event.xkey.time = TkpGetMS();
 	event.xkey.same_screen = True;
-	event.xkey.keycode = 0;
-	event.xkey.nbytes = 2;
 
 	for (i=0; i<n; ) {
 	    /*
@@ -1609,9 +1588,16 @@ HandleIMEComposition(
 	     * UNICODE character in the composition.
 	     */
 
-	    event.xkey.trans_chars[0] = (char) buff[i++];
-	    event.xkey.trans_chars[1] = (char) buff[i++];
+	    event.xkey.keycode = buff[i++];
 
+	    if ((event.xkey.keycode & 0xfc00) == 0xd800) {
+		high = ((event.xkey.keycode & 0x3ff) << 10) + 0x10000;
+		break;
+	    } else if (high && (event.xkey.keycode & 0xfc00) == 0xdc00) {
+		event.xkey.keycode &= 0x3ff;
+		event.xkey.keycode += high;
+		high = 0;
+	    }
 	    event.type = KeyPress;
 	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
@@ -1623,30 +1609,6 @@ HandleIMEComposition(
     }
     ImmReleaseContext(hwnd, hIMC);
     return 1;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_FreeXId --
- *
- *	This interface is not needed under Windows.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_FreeXId(
-    Display *display,
-    XID xid)
-{
-    /* Do nothing */
 }
 
 /*

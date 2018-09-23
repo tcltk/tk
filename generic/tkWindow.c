@@ -239,6 +239,8 @@ TkCloseDisplay(
 {
     TkClipCleanup(dispPtr);
 
+    TkpCancelWarp(dispPtr);
+
     if (dispPtr->name != NULL) {
 	ckfree(dispPtr->name);
     }
@@ -334,6 +336,7 @@ CreateTopLevelWindow(
 	 * Create built-in photo image formats.
 	 */
 
+        Tk_CreatePhotoImageFormat(&tkImgFmtDefault);
 	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPNG);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
@@ -355,6 +358,9 @@ CreateTopLevelWindow(
      * Set the flags specified in the call.
      */
 
+#ifdef TK_USE_INPUT_METHODS
+    winPtr->ximGeneration = 0;
+#endif /*TK_USE_INPUT_METHODS*/
     winPtr->flags |= flags;
 
     /*
@@ -650,6 +656,7 @@ TkAllocWindow(
     winPtr->flags = 0;
     winPtr->handlerList = NULL;
 #ifdef TK_USE_INPUT_METHODS
+    winPtr->ximGeneration = 0;
     winPtr->inputContext = NULL;
 #endif /* TK_USE_INPUT_METHODS */
     winPtr->tagPtr = NULL;
@@ -943,7 +950,7 @@ TkCreateMainWindow(
     }
 
     /*
-     * Set variables for the intepreter.
+     * Set variables for the interpreter.
      */
 
     Tcl_SetVar2(interp, "tk_patchLevel", NULL, TK_PATCH_LEVEL, TCL_GLOBAL_ONLY);
@@ -1442,10 +1449,11 @@ Tk_DestroyWindow(
     UnlinkWindow(winPtr);
     TkEventDeadWindow(winPtr);
 #ifdef TK_USE_INPUT_METHODS
-    if (winPtr->inputContext != NULL) {
+    if (winPtr->inputContext != NULL &&
+	    winPtr->ximGeneration == winPtr->dispPtr->ximGeneration) {
 	XDestroyIC(winPtr->inputContext);
-	winPtr->inputContext = NULL;
     }
+    winPtr->inputContext = NULL;
 #endif /* TK_USE_INPUT_METHODS */
     if (winPtr->tagPtr != NULL) {
 	TkFreeBindingTags(winPtr);
@@ -1479,8 +1487,7 @@ Tk_DestroyWindow(
 
 	    winPtr->mainPtr->deletionEpoch++;
 	}
-	winPtr->mainPtr->refCount--;
-	if (winPtr->mainPtr->refCount == 0) {
+	if (winPtr->mainPtr->refCount-- <= 1) {
 	    register const TkCmd *cmdPtr;
 
 	    /*
@@ -2780,6 +2787,18 @@ DeleteWindowsExitProc(
     }
 
     /*
+     * Let error handlers catch up before actual close of displays.
+     * Must be done before tsdPtr->displayList is cleared, otherwise
+     * ErrorProc() in tkError.c cannot associate the pending X errors
+     * to the remaining error handlers.
+     */
+
+    for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
+           dispPtr = dispPtr->nextPtr) {
+       XSync(dispPtr->display, False);
+    }
+
+    /*
      * Iterate destroying the displays until no more displays remain. It is
      * possible for displays to get recreated during exit by any code that
      * calls GetScreen, so we must destroy these new displays as well as the
@@ -3041,7 +3060,7 @@ Initialize(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3101,7 +3120,7 @@ Initialize(
 	Tcl_ListObjAppendElement(NULL, cmd,
 		Tcl_NewStringObj("::safe::TkInit", -1));
 	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(master));
-	
+
 	/*
 	 * Step 2 : Eval in the master. The argument is the *reversed* interp
 	 * path of the slave.
@@ -3183,8 +3202,8 @@ Initialize(
      */
 
     {
-	int numBytes;
-	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
+	size_t numBytes;
+	const char *bytes = TkGetStringFromObj(nameObj, &numBytes);
 
 	classObj = Tcl_NewStringObj(bytes, numBytes);
 

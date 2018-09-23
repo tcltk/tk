@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH spinbox n 8.4 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -23,6 +23,7 @@ spinbox \- Create and manipulate 'spinbox' value spinner widgets
 \-foreground	\-justify	\-xscrollcommand
 \-highlightbackground	\-relief
 \-highlightcolor	\-repeatdelay
+\-placeholder	\-placeholderforeground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-buttonbackground buttonBackground Background
@@ -54,7 +55,8 @@ as it will format a floating-point number.
 A floating-point value corresponding to the lowest value for a spinbox, to
 be used in conjunction with \fB\-to\fR and \fB\-increment\fR.  When all
 are specified correctly, the spinbox will use these values to control its
-contents.  This value must be less than the \fB\-to\fR option.
+contents. If this value is greater than the \fB\-to\fR option, then
+\fB\-from\fR and \fB\-to\fR values are automatically swapped.
 If \fB\-values\fR is specified, it supersedes this option.
 .OP "\-invalidcommand or \-invcmd" invalidCommand InvalidCommand
 Specifies a script to eval when \fB\-validatecommand\fR returns 0.  Setting
@@ -83,7 +85,8 @@ be displayed in a different color, depending on the values of the
 A floating-point value corresponding to the highest value for the spinbox,
 to be used in conjunction with \fB\-from\fR and \fB\-increment\fR.  When
 all are specified correctly, the spinbox will use these values to control
-its contents.  This value must be greater than the \fB\-from\fR option.
+its contents. If this value is less than the \fB\-from\fR option, then
+\fB\-from\fR and \fB\-to\fR values are automatically swapped.
 If \fB\-values\fR is specified, it supersedes this option.
 .OP \-validate validate Validate
 Specifies the mode in which validation should operate: \fBnone\fR,
@@ -217,15 +220,19 @@ were editing the spinbox widget from).  It is also recommended to not set an
 associated \fB\-textvariable\fR during validation, as that can cause the
 spinbox widget to become out of sync with the \fB\-textvariable\fR.
 .PP
-Also, the \fBvalidate\fR option will set itself to \fBnone\fR when the
-spinbox value gets changed because of adjustment of \fBfrom\fR or \fBto\fR
-and the \fBvalidateCommand\fR returns false. For instance
+Also, the \fB-validate\fR option will set itself to \fBnone\fR when the
+spinbox value gets changed because of adjustment of \fB-from\fR or \fB-to\fR
+and the \fB-validatecommand\fR returns false. For instance
 .CS
      \fIspinbox pathName \-from 1 \-to 10 \-validate all \-vcmd {return 0}\fR
 .CE
-will in fact set the \fBvalidate\fR option to \fBnone\fR because the default
-value for the spinbox gets changed (due to the \fBfrom\fR and \fBto\fR
+will in fact set the \fB-validate\fR option to \fBnone\fR because the default
+value for the spinbox gets changed (due to the \fB-from\fR and \fB-to\fR
 options) to a value not accepted by the validation script.
+.PP
+Moreover, forced validation is performed when invoking any spinbutton of
+the spinbox. If the validation script returns false in this situation,
+then the \fB-validate\fR option will be automatically set to \fBnone\fR.
 .SH "WIDGET COMMAND"
 .PP
 The \fBspinbox\fR command creates a new Tcl command whose

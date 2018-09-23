@@ -3,7 +3,7 @@
 #
 
 # The Vista theme can only be defined on Windows Vista and above. The theme
-# is created in C due to the need to assign a theme-enabled function for 
+# is created in C due to the need to assign a theme-enabled function for
 # detecting when themeing is disabled. On systems that cannot support the
 # Vista theme, there will be no such theme created and we must not
 # evaluate this script.
@@ -21,6 +21,7 @@ namespace eval ttk::theme::vista {
 	    -foreground SystemWindowText \
 	    -selectforeground SystemHighlightText \
 	    -selectbackground SystemHighlight \
+	    -insertcolor SystemWindowText \
 	    -font TkDefaultFont \
 	    ;
 
@@ -46,20 +47,24 @@ namespace eval ttk::theme::vista {
 	ttk::style configure Heading -font TkHeadingFont
 	ttk::style configure Treeview -background SystemWindow
 	ttk::style map Treeview \
-	    -background [list selected SystemHighlight] \
-	    -foreground [list selected SystemHighlightText] ;
+	    -background [list   disabled SystemButtonFace \
+				{!disabled !selected} SystemWindow \
+				selected SystemHighlight] \
+	    -foreground [list   disabled SystemGrayText \
+				{!disabled !selected} SystemWindowText \
+				selected SystemHighlightText]
 
         # Label and Toolbutton
-	ttk::style configure TLabelframe.Label -foreground "#0046d5"
+	ttk::style configure TLabelframe.Label -foreground SystemButtonText
 
 	ttk::style configure Toolbutton -padding {4 4}
 
         # Combobox
 	ttk::style configure TCombobox -padding 2
-        ttk::style element create Combobox.field vsapi \
-            COMBOBOX 2 {{} 1}
         ttk::style element create Combobox.border vsapi \
             COMBOBOX 4 {disabled 4 focus 3 active 2 hover 2 {} 1}
+        ttk::style element create Combobox.background vsapi \
+            EDIT 3 {disabled 3 readonly 5 focus 4 hover 2 {} 1}
         ttk::style element create Combobox.rightdownarrow vsapi \
             COMBOBOX 6 {disabled 4 pressed 3 active 2 {} 1} \
             -syssize {SM_CXVSCROLL SM_CYVSCROLL}
@@ -67,8 +72,10 @@ namespace eval ttk::theme::vista {
             Combobox.border -sticky nswe -border 0 -children {
                 Combobox.rightdownarrow -side right -sticky ns
                 Combobox.padding -expand 1 -sticky nswe -children {
-                    Combobox.focus -expand 1 -sticky nswe -children {
-                        Combobox.textarea -sticky nswe
+                    Combobox.background -sticky nswe -children {
+                        Combobox.focus -expand 1 -sticky nswe -children {
+                            Combobox.textarea -sticky nswe
+                        }
                     }
                 }
             }
@@ -133,7 +140,7 @@ namespace eval ttk::theme::vista {
                 Spinbox.background -sticky news -children {
                     Spinbox.padding -sticky news -children {
                         Spinbox.innerbg -sticky news -children {
-                            Spinbox.textarea -expand 1 -sticky {}
+                            Spinbox.textarea -expand 1
                         }
                     }
                     Spinbox.uparrow -side top -sticky ens
@@ -146,7 +153,7 @@ namespace eval ttk::theme::vista {
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
 
-        
+
         # SCROLLBAR elements (Vista includes a state for 'hover')
         ttk::style element create Vertical.Scrollbar.uparrow vsapi \
             SCROLLBAR 1 {disabled 4 pressed 3 active 2 hover 17 {} 1} \
@@ -182,6 +189,7 @@ namespace eval ttk::theme::vista {
         ttk::style layout Horizontal.TProgressbar {
             Horizontal.Progressbar.trough -sticky nswe -children {
                 Horizontal.Progressbar.pbar -side left -sticky ns
+                Horizontal.Progressbar.text -sticky nesw
             }
         }
         ttk::style element create Vertical.Progressbar.pbar vsapi \
@@ -191,7 +199,7 @@ namespace eval ttk::theme::vista {
                 Vertical.Progressbar.pbar -side bottom -sticky we
             }
         }
-        
+
         # Scale
         ttk::style element create Horizontal.Scale.slider vsapi \
             TRACKBAR 3 {disabled 5 focus 4 pressed 3 active 2 {} 1} \
@@ -215,10 +223,10 @@ namespace eval ttk::theme::vista {
                 }
             }
         }
-        
+
         # Treeview
         ttk::style configure Item -padding {4 0 0 0}
-        
+
         package provide ttk::theme::vista 1.0
     }
 }
