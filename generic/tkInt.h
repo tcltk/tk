@@ -25,7 +25,6 @@
  * Darwin (where configure runs only once for multiple architectures).
  */
 
-#include <stdio.h>
 #ifdef HAVE_SYS_TYPES_H
 #    include <sys/types.h>
 #endif
@@ -423,6 +422,7 @@ typedef struct TkDisplay {
     Atom windowAtom;		/* Atom for TK_WINDOW. */
     Atom clipboardAtom;		/* Atom for CLIPBOARD. */
     Atom utf8Atom;		/* Atom for UTF8_STRING. */
+    Atom atomPairAtom;          /* Atom for ATOM_PAIR. */
 
     Tk_Window clipWindow;	/* Window used for clipboard ownership and to
 				 * retrieve selections between processes. NULL
@@ -478,7 +478,7 @@ typedef struct TkDisplay {
 #endif /* TK_USE_INPUT_METHODS */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
-    int refCount;		/* Reference count of how many Tk applications
+    size_t refCount;		/* Reference count of how many Tk applications
 				 * are using this display. Used to clean up
 				 * the display when we no longer have any Tk
 				 * applications using it. */
@@ -508,6 +508,9 @@ typedef struct TkDisplay {
 
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
+#ifdef TK_USE_INPUT_METHODS
+    int ximGeneration;          /* Used to invalidate XIC */
+#endif /* TK_USE_INPUT_METHODS */
 } TkDisplay;
 
 /*
@@ -579,7 +582,7 @@ typedef struct TkEventHandler {
  */
 
 typedef struct TkMainInfo {
-    int refCount;		/* Number of windows whose "mainPtr" fields
+    size_t refCount;		/* Number of windows whose "mainPtr" fields
 				 * point here. When this becomes zero, can
 				 * free up the structure (the reference count
 				 * is zero because windows can get deleted in
@@ -809,6 +812,9 @@ typedef struct TkWindow {
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
     char *geometryMaster;
+#ifdef TK_USE_INPUT_METHODS
+    int ximGeneration;          /* Used to invalidate XIC */
+#endif /* TK_USE_INPUT_METHODS */
 } TkWindow;
 
 /*
@@ -817,13 +823,13 @@ typedef struct TkWindow {
  */
 
 typedef struct {
-    XKeyEvent keyEvent;		/* The real event from X11. */
-    char *charValuePtr;		/* A pointer to a string that holds the key's
+    XKeyEvent keyEvent;	/* The real event from X11. */
+    char *charValuePtr;	/* A pointer to a string that holds the key's
 				 * %A substitution text (before backslash
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
 				 * allocated with ckalloc(). */
-    int charValueLen;		/* Length of string in charValuePtr when that
+    size_t charValueLen;	/* Length of string in charValuePtr when that
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
@@ -836,6 +842,11 @@ typedef struct {
 #define TK_MAKE_MENU_TEAROFF	0	/* Only non-transient case. */
 #define TK_MAKE_MENU_POPUP	1
 #define TK_MAKE_MENU_DROPDOWN	2
+
+/* See TIP #494 */
+#ifndef TCL_IO_FAILURE
+#   define TCL_IO_FAILURE (-1)
+#endif
 
 /*
  * The following structure is used with TkMakeEnsemble to create ensemble
@@ -939,6 +950,7 @@ MODULE_SCOPE const Tk_SmoothMethod tkBezierSmoothMethod;
 MODULE_SCOPE Tk_ImageType	tkBitmapImageType;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtGIF;
 MODULE_SCOPE void		(*tkHandleEventProc) (XEvent* eventPtr);
+MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtDefault;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPNG;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPPM;
 MODULE_SCOPE TkMainInfo		*tkMainWindowList;
@@ -1196,7 +1208,7 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    const char *string, int numBytes, int x, int y,
 			    int firstByte, int lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
-			    Tcl_UniChar c, struct TkFontAttributes *faPtr);
+			    int c, struct TkFontAttributes *faPtr);
 MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
@@ -1217,6 +1229,7 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
+MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
@@ -1230,6 +1243,29 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #endif
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
+#endif
+
+#if TCL_UTF_MAX > 4
+#   define TkUtfToUniChar (size_t)Tcl_UtfToUniChar
+#   define TkUniCharToUtf (size_t)Tcl_UniCharToUtf
+#else
+    MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
+    MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
+#endif
+
+#ifdef TCL_TYPE_I
+/* With TIP #481 available, we don't need to do anything special here */
+#define TkGetStringFromObj(objPtr, lenPtr) \
+	Tcl_GetStringFromObj(objPtr, lenPtr)
+#define TkGetByteArrayFromObj(objPtr, lenPtr) \
+	Tcl_GetByteArrayFromObj(objPtr, lenPtr)
+#else
+#define TkGetStringFromObj(objPtr, lenPtr) \
+	(((objPtr)->bytes ? 0 : Tcl_GetString(objPtr)), \
+	*(lenPtr) = (objPtr)->length, (objPtr)->bytes)
+
+MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
+	size_t *lengthPtr);
 #endif
 
 /*

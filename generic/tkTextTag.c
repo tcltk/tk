@@ -12,9 +12,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
+#include "default.h"
 
 /*
  * The 'TkWrapMode' enum in tkText.h is used to define a type for the -wrap
@@ -30,7 +30,7 @@ static const char *const wrapStrings[] = {
 /*
  * The 'TkTextTabStyle' enum in tkText.h is used to define a type for the
  * -tabstyle option of the Text widget. These values are used as indices into
- * the string table below. Tags are allowed an empty wrap value, but the
+ * the string table below. Tags are allowed an empty tabstyle value, but the
  * widget as a whole is not.
  */
 
@@ -243,6 +243,7 @@ TkTextTagCmd(
 		    TkTextSelectionEvent(textPtr);
 
 		    if (addTag && textPtr->exportSelection
+			    && (!Tcl_IsSafe(textPtr->interp))
 			    && !(textPtr->flags & GOT_SELECTION)) {
 			Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY,
 				TkTextLostSelection, textPtr);
@@ -1107,10 +1108,10 @@ FindTag(
     Tcl_Obj *tagName)		/* Name of desired tag. */
 {
     Tcl_HashEntry *hPtr;
-    int len;
+    size_t len;
     const char *str;
 
-    str = Tcl_GetStringFromObj(tagName, &len);
+    str = TkGetStringFromObj(tagName, &len);
     if (len == 3 && !strcmp(str, "sel")) {
 	return textPtr->selTagPtr;
     }
@@ -1258,8 +1259,7 @@ TkTextFreeTag(
 	if (textPtr != tagPtr->textPtr) {
 	    Tcl_Panic("Tag being deleted from wrong widget");
 	}
-	textPtr->refCount--;
-	if (textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	}
 	tagPtr->textPtr = NULL;
@@ -1522,7 +1522,7 @@ TkTextBindProc(
     }
 
   done:
-    if (--textPtr->refCount == 0) {
+    if (textPtr->refCount-- <= 1) {
 	ckfree(textPtr);
     }
 }

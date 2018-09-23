@@ -190,7 +190,7 @@ Tk_GrabObjCmd(
     TkDisplay *dispPtr;
     const char *arg;
     int index;
-    int len;
+    size_t len;
     static const char *const optionStrings[] = {
 	"current", "release", "set", "status", NULL
     };
@@ -227,7 +227,7 @@ Tk_GrabObjCmd(
      * First check for a window name or "-global" as the first argument.
      */
 
-    arg = Tcl_GetStringFromObj(objv[1], &len);
+    arg = TkGetStringFromObj(objv[1], &len);
     if (arg[0] == '.') {
 	/* [grab window] */
 	if (objc != 2) {

@@ -10,10 +10,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <tk.h>
-#include <tkInt.h>
+#include "tkInt.h"
 #include "ttkThemeInt.h"
 
 #define PKG_ASSOC_KEY "Ttk"
@@ -1377,7 +1374,7 @@ static int StyleThemeCreateCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = clientData;
-    static const char *optStrings[] =
+    static const char *const optStrings[] =
     	 { "-parent", "-settings", NULL };
     enum { OP_PARENT, OP_SETTINGS };
     Ttk_Theme parentTheme = pkgPtr->defaultTheme, newTheme;

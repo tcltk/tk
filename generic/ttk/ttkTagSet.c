@@ -4,10 +4,7 @@
  * Copyright (C) 2005, Joe English.  Freely redistributable.
  */
 
-#include <string.h>	/* for memset() */
-#include <tcl.h>
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -188,7 +185,7 @@ int Ttk_TagSetAdd(Ttk_TagSet tagset, Ttk_Tag tag)
 	    return 0;
 	}
     }
-    tagset->tags = ckrealloc(tagset->tags, 
+    tagset->tags = ckrealloc(tagset->tags,
 	    (tagset->nTags+1)*sizeof(tagset->tags[0]));
     tagset->tags[tagset->nTags++] = tag;
     return 1;

@@ -246,5 +246,35 @@ test packgrid-3.4 {stealing slave} -setup {
     destroy .g
 } -result {cannot use geometry manager grid inside . which already has slaves managed by pack}
 
+test packgrid-4.1 {slave stolen after master destruction - bug [aa7679685e]} -setup {
+    frame .f
+    button .b -text hello
+} -body {
+    pack .f
+    grid .b -in .f
+    destroy .f
+    set res [winfo manager .b]
+    # shall not crash
+    pack .b
+    set res
+} -cleanup {
+    destroy .b
+} -result {}
+
+test packgrid-4.2 {slave stolen after master destruction - bug [aa7679685e]} -setup {
+    frame .f
+    button .b -text hello
+} -body {
+    pack .f
+    pack .b -in .f
+    destroy .f
+    set res [winfo manager .b]
+    # shall not crash
+    grid .b
+    set res
+} -cleanup {
+    destroy .b
+} -result {}
+
 cleanupTests
 return

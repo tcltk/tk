@@ -1,4 +1,4 @@
-#include "tk.h"
+#include "tkInt.h"
 
 /*
  * Undocumented Xlib internal function

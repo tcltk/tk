@@ -259,7 +259,7 @@ InitFont(
     }
     fontPtr->nsFont = nsFont;
     // some don't like antialiasing on fixed-width even if bigger than limit
-//    dontAA = [nsFont isFixedPitch] && fontPtr->font.fa.size <= 10;
+    // dontAA = [nsFont isFixedPitch] && fontPtr->font.fa.size <= 10;
     if (antialiasedTextEnabled >= 0/* || dontAA*/) {
 	renderingMode = (antialiasedTextEnabled == 0/* || dontAA*/) ?
 		NSFontIntegerAdvancementsRenderingMode :
@@ -515,7 +515,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    int points = TkFontGetPoints(tkwin, faPtr->size);
+    int points = (int)(TkFontGetPoints(tkwin, faPtr->size) + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
@@ -672,14 +672,14 @@ void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    Tcl_UniChar c,		/* Character of interest */
+    int c,         		/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;
     NSFont *nsFont = fontPtr->nsFont;
     *faPtr = fontPtr->font.fa;
     if (nsFont && ![[nsFont coveredCharacterSet] characterIsMember:c]) {
-	UTF16Char ch = c;
+	UTF16Char ch = (UTF16Char) c;
 
 	nsFont = [nsFont bestMatchingFontForCharacters:&ch
 		length:1 attributes:nil actualCoveredLength:NULL];
@@ -819,15 +819,6 @@ TkpMeasureCharsInContext(
 	*lengthPtr = 0;
 	return 0;
     }
-#if 0
-    /* Back-compatibility with ATSUI renderer, appears not to be needed */
-    if (rangeStart == 0 && maxLength == 1 && (flags & TK_ISOLATE_END) &&
-	    !(flags & TK_AT_LEAST_ONE)) {
-	length = 0;
-	fit = 0;
-	goto done;
-    }
-#endif
     if (maxLength > 32767) {
 	maxLength = 32767;
     }
@@ -870,7 +861,7 @@ TkpMeasureCharsInContext(
 	if (index <= start && !(flags & TK_WHOLE_WORDS)) {
 	    index = CTTypesetterSuggestClusterBreak(typesetter, start, maxWidth);
 	}
-	cs = (index < len || (flags & TK_WHOLE_WORDS)) ?
+	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
 	while (index > start &&
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {
@@ -921,7 +912,6 @@ done:
 	    flags & TK_AT_LEAST_ONE ? "atLeastOne " : "",
 	    flags & TK_ISOLATE_END  ? "isolateEnd " : "",
 	    length, fit);
-//if (!(rangeLength==1 && rangeStart == 0)) fprintf(stderr, "   measure len=%d (max=%d, w=%.0f) from %d (nb=%d): source=\"%s\": index=%d return %d\n",rangeLength,maxLength,width,rangeStart,numBytes, source+rangeStart, index, fit);
 #endif
     *lengthPtr = length;
     return fit;

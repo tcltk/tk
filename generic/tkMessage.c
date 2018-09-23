@@ -13,8 +13,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * A data structure of the following type is kept for each message widget
@@ -837,6 +837,19 @@ MessageTextVarProc(
 {
     register Message *msgPtr = clientData;
     const char *value;
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (msgPtr->textVarName == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    MessageTextVarProc, clientData);
+	}
+	return NULL;
+    }
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
