@@ -654,7 +654,7 @@ test scrollbar-10.1.2 {<MouseWheel> event on scrollbar} -constraints {aqua} -set
     pack [scrollbar .s -command {.t yview}] -fill y -expand 1 -side left
     update
     focus -force .s
-    event generate .s <MouseWheel> -delta -1
+    event generate .s <MouseWheel> -delta -4
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
 } -cleanup {
@@ -683,7 +683,7 @@ test scrollbar-10.2.2 {<MouseWheel> event on scrollbar} -constraints {aqua} -set
     pack [scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
     update
     focus -force .s
-    event generate .s <Shift-MouseWheel> -delta -1
+    event generate .s <Shift-MouseWheel> -delta -4
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
 } -cleanup {
