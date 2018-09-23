@@ -59,27 +59,6 @@
 	if (0) {
 #define tk_else_mac_os_x_no(...) \
 	} else { __VA_ARGS__
-/* Private mapping macros defined according to Mac OS X version requirements */
-/* 10.5 Leopard */
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
-#define tk_if_mac_os_x_min_10_5		tk_if_mac_os_x_yes
-#define tk_else_mac_os_x_min_10_5	tk_else_mac_os_x_yes
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
-#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_yes
-#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_yes
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
-#else /* MAC_OS_X_VERSION_MIN_REQUIRED */
-#define tk_if_mac_os_x_min_10_5		tk_if_mac_os_x_chk
-#define tk_else_mac_os_x_min_10_5	tk_else_mac_os_x_chk
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
-#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_chk
-#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_chk
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
-#endif /* MAC_OS_X_VERSION_MIN_REQUIRED */
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
-#define tk_if_mac_os_x_10_5		tk_if_mac_os_x_no
-#define tk_else_mac_os_x_10_5		tk_else_mac_os_x_no
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED */
 
 /*
  * Macros for DEBUG_ASSERT_MESSAGE et al from Debugging.h.
@@ -209,8 +188,14 @@ MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
 MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
 MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
-MODULE_SCOPE NSBitmapImageRep* BitmapRepFromDrawableRect(Drawable drawable,
+MODULE_SCOPE NSBitmapImageRep* TkMacOSXBitmapRepFromDrawableRect(Drawable drawable,
 			    int x, int y, unsigned int width, unsigned int height);
+MODULE_SCOPE CGImageRef TkMacOSXCreateCGImageWithXImage(XImage *image,
+			    int use_ximage_alpha);
+MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
+			    CGImageRef image, unsigned long imageForeground,
+			    unsigned long imageBackground, CGRect imageBounds,
+			    CGRect srcBounds, CGRect dstBounds);
 MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
 			    int useCG, TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
@@ -228,6 +213,7 @@ MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
 			    HIShapeRef rgn);
+MODULE_SCOPE CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
 MODULE_SCOPE CGImageRef	TkMacOSXCreateCGImageWithDrawable(Drawable drawable);
 MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithTkImage(Display *display,
 			    Tk_Image image, int width, int height);
@@ -278,14 +264,17 @@ VISIBILITY_HIDDEN
     NSAutoreleasePool *_mainPool;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
-    BOOL _poolProtected;
+    int _poolLock;
 #endif
 }
-@property BOOL poolProtected;
+@property int poolLock;
+
 @end
 @interface TKApplication(TKInit)
 - (NSString *)tkFrameworkImagePath:(NSString*)image;
 - (void)_resetAutoreleasePool;
+- (void)_lockAutoreleasePool;
+- (void)_unlockAutoreleasePool;
 @end
 @interface TKApplication(TKEvent)
 - (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;
@@ -341,7 +330,6 @@ VISIBILITY_HIDDEN
 @interface TKContentView(TKWindowEvent)
 - (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIShapeRef) shape;
-- (void) generateExposeEvents: (HIShapeRef) shape childrenOnly: (int) childrenOnly;
 - (void) viewDidEndLiveResize;
 - (void) tkToolbarButton: (id) sender;
 - (BOOL) isOpaque;

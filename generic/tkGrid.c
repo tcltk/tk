@@ -2870,17 +2870,18 @@ GridStructureProc(
 	    }
 	}
     } else if (eventPtr->type == DestroyNotify) {
-	register Gridder *gridPtr2, *nextPtr;
+	register Gridder *slavePtr, *nextPtr;
 
 	if (gridPtr->masterPtr != NULL) {
 	    Unlink(gridPtr);
 	}
-	for (gridPtr2 = gridPtr->slavePtr; gridPtr2 != NULL;
-		gridPtr2 = nextPtr) {
-	    Tk_UnmapWindow(gridPtr2->tkwin);
-	    gridPtr2->masterPtr = NULL;
-	    nextPtr = gridPtr2->nextPtr;
-	    gridPtr2->nextPtr = NULL;
+	for (slavePtr = gridPtr->slavePtr; slavePtr != NULL;
+		slavePtr = nextPtr) {
+	    Tk_ManageGeometry(slavePtr->tkwin, NULL, NULL);
+	    Tk_UnmapWindow(slavePtr->tkwin);
+	    slavePtr->masterPtr = NULL;
+	    nextPtr = slavePtr->nextPtr;
+	    slavePtr->nextPtr = NULL;
 	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->gridHashTable,
 		(char *) gridPtr->tkwin));
@@ -2896,11 +2897,11 @@ GridStructureProc(
 	    Tcl_DoWhenIdle(ArrangeGrid, gridPtr);
 	}
     } else if (eventPtr->type == UnmapNotify) {
-	register Gridder *gridPtr2;
+	register Gridder *slavePtr;
 
-	for (gridPtr2 = gridPtr->slavePtr; gridPtr2 != NULL;
-		gridPtr2 = gridPtr2->nextPtr) {
-	    Tk_UnmapWindow(gridPtr2->tkwin);
+	for (slavePtr = gridPtr->slavePtr; slavePtr != NULL;
+		slavePtr = slavePtr->nextPtr) {
+	    Tk_UnmapWindow(slavePtr->tkwin);
 	}
     }
 }
@@ -2966,10 +2967,10 @@ ConfigureSlaves(
 
     firstChar = 0;
     for (numWindows=0, i=0; i < objc; i++) {
-	int length;
+	size_t length;
 	char prevChar = firstChar;
 
-	string = Tcl_GetStringFromObj(objv[i], &length);
+	string = TkGetStringFromObj(objv[i], &length);
     	firstChar = string[0];
 
 	if (firstChar == '.') {
@@ -3085,7 +3086,8 @@ ConfigureSlaves(
     }
 
     /*
-     * If no -row is given, use the first unoccupied row of the master.
+     * If no -row is given, use the next row after the highest occupied row
+     * of the master.
      */
 
     if (defaultRow < 0) {
@@ -3316,6 +3318,9 @@ ConfigureSlaves(
     	}
 
 	if (slavePtr->masterPtr != NULL && slavePtr->masterPtr != masterPtr) {
+            if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
+                Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+            }
 	    Unlink(slavePtr);
 	    slavePtr->masterPtr = NULL;
 	}

@@ -170,6 +170,7 @@ bind Menu <<NextLine>> {
 }
 bind Menu <KeyPress> {
     tk::TraverseWithinMenu %W %A
+    break
 }
 
 # The following bindings apply to all windows, and are used to
@@ -608,7 +609,9 @@ proc ::tk::MenuButtonDown menu {
         return
     }
     if {[$menu index active] eq "none"} {
-        set Priv(window) {}
+        if {[$menu cget -type] ne "menubar" } {
+            set Priv(window) {}
+        }
         return
     }
     $menu postcascade active

@@ -53,7 +53,6 @@
 #include <X11/Xatom.h>
 #include <X11/Xfuncproto.h>
 #include <X11/Xutil.h>
-#include "tkIntXlibDecls.h"
 
 /*
  * The following macro defines the type of the mask arguments to

@@ -535,27 +535,11 @@ extern Status XMatchVisualInfo(
 #endif
 );
 
-extern void XOffsetRegion(
+extern int XOffsetRegion(
 #if NeedFunctionPrototypes
     Region		/* r */,
     int			/* dx */,
     int			/* dy */
-#endif
-);
-
-extern Bool XPointInRegion(
-#if NeedFunctionPrototypes
-    Region		/* r */,
-    int			/* x */,
-    int			/* y */
-#endif
-);
-
-extern Region XPolygonRegion(
-#if NeedFunctionPrototypes
-    XPoint*		/* points */,
-    int			/* n */,
-    int			/* fill_rule */
 #endif
 );
 
@@ -814,7 +798,7 @@ extern void XUnionRectWithRegion(
 #endif
 );
 
-extern void XUnionRegion(
+extern int XUnionRegion(
 #if NeedFunctionPrototypes
     Region		/* sra */,
     Region		/* srb */,

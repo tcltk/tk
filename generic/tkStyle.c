@@ -155,7 +155,7 @@ static const Tcl_ObjType styleObjType = {
     FreeStyleObjProc,		/* freeIntRepProc */
     DupStyleObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetStyleFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -1405,59 +1405,12 @@ Tk_AllocStyleFromObj(
     Tcl_Obj *objPtr)		/* Object containing name of the style to
 				 * retrieve. */
 {
-    Style *stylePtr;
-
     if (objPtr->typePtr != &styleObjType) {
-	SetStyleFromAny(interp, objPtr);
+	if (SetStyleFromAny(interp, objPtr) != TCL_OK) {
+	    return NULL;
+	}
     }
-    stylePtr = objPtr->internalRep.twoPtrValue.ptr1;
-
-    return (Tk_Style) stylePtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_GetStyleFromObj --
- *
- *	Find the style that corresponds to a given object. The style must have
- *	already been created by Tk_CreateStyle.
- *
- * Results:
- *	The return value is a token for the style that matches objPtr, or NULL
- *	if none found.
- *
- * Side effects:
- *	If the object is not already a style ref, the conversion will free any
- *	old internal representation.
- *
- *----------------------------------------------------------------------
- */
-
-Tk_Style
-Tk_GetStyleFromObj(
-    Tcl_Obj *objPtr)		/* The object from which to get the style. */
-{
-    if (objPtr->typePtr != &styleObjType) {
-	SetStyleFromAny(NULL, objPtr);
-    }
-
     return objPtr->internalRep.twoPtrValue.ptr1;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * Tk_FreeStyleFromObj --
- *
- *	No-op. Present only for stubs compatibility.
- *
- *---------------------------------------------------------------------------
- */
-void
-Tk_FreeStyleFromObj(
-    Tcl_Obj *objPtr)
-{
 }
 
 /*
@@ -1469,8 +1422,8 @@ Tk_FreeStyleFromObj(
  *	internal form.
  *
  * Results:
- *	Always returns TCL_OK. If an error occurs is returned (e.g. the style
- *	doesn't exist), an error message will be left in interp's result.
+ *	If an error occurs is returned (e.g. the style doesn't exist), an
+ *	error message will be left in interp's result and TCL_ERROR is returned.
  *
  * Side effects:
  *	The object is left with its typePtr pointing to styleObjType.
@@ -1485,6 +1438,7 @@ SetStyleFromAny(
 {
     const Tcl_ObjType *typePtr;
     const char *name;
+    Tk_Style style;
 
     /*
      * Free the old internalRep before setting the new one.
@@ -1496,8 +1450,12 @@ SetStyleFromAny(
 	typePtr->freeIntRepProc(objPtr);
     }
 
+    style = Tk_GetStyle(interp, name);
+    if (style == NULL) {
+    	return TCL_ERROR;
+    }
     objPtr->typePtr = &styleObjType;
-    objPtr->internalRep.twoPtrValue.ptr1 = Tk_GetStyle(interp, name);
+    objPtr->internalRep.twoPtrValue.ptr1 = style;
 
     return TCL_OK;
 }

@@ -13,6 +13,7 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMenu.h"
+#include "tkMacOSXConstants.h"
 
 static void		GenerateEditEvent(const char *name);
 static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);

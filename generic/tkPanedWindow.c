@@ -13,8 +13,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * Flag values for "sticky"ness. The 16 combinations subsume the packer's
@@ -1484,10 +1484,10 @@ DisplayPanedWindow(
      */
 
     if (horizontal) {
-	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderWidth(tkwin));
+	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
 	sashWidth = pwPtr->sashWidth;
     } else {
-	sashWidth = Tk_Width(tkwin) - (2 * Tk_InternalBorderWidth(tkwin));
+	sashWidth = Tk_Width(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
 	sashHeight = pwPtr->sashWidth;
     }
 
@@ -1754,7 +1754,7 @@ ArrangePanes(
      */
 
     paneDynSize = paneDynMinSize = 0;
-    internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
+    internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
     pwHeight = Tk_Height(pwPtr->tkwin) - (2 * internalBW);
     pwWidth = Tk_Width(pwPtr->tkwin) - (2 * internalBW);
     x = y = internalBW;
@@ -1789,10 +1789,18 @@ ArrangePanes(
 	 */
 
 	if (horizontal) {
-	    paneSize = slavePtr->paneWidth;
+            if (slavePtr->width > 0) {
+                paneSize = slavePtr->width;
+            } else {
+                paneSize = slavePtr->paneWidth;
+            }
 	    stretchReserve -= paneSize + (2 * slavePtr->padx);
 	} else {
-	    paneSize = slavePtr->paneHeight;
+            if (slavePtr->height > 0) {
+                paneSize = slavePtr->height;
+            } else {
+                paneSize = slavePtr->paneHeight;
+            }
 	    stretchReserve -= paneSize + (2 * slavePtr->pady);
 	}
 	if (IsStretchable(slavePtr->stretch,i,first,last)
@@ -1842,10 +1850,18 @@ ArrangePanes(
 	 */
 
 	if (horizontal) {
-	    paneSize = slavePtr->paneWidth;
+            if (slavePtr->width > 0) {
+                paneSize = slavePtr->width;
+            } else {
+                paneSize = slavePtr->paneWidth;
+            }
 	    pwSize = pwWidth;
 	} else {
-	    paneSize = slavePtr->paneHeight;
+            if (slavePtr->height > 0) {
+                paneSize = slavePtr->height;
+            } else {
+                paneSize = slavePtr->paneHeight;
+            }
 	    pwSize = pwHeight;
 	}
 	if (IsStretchable(slavePtr->stretch, i, first, last)) {
@@ -2184,7 +2200,7 @@ ComputeGeometry(
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
-    x = y = internalBw = Tk_InternalBorderWidth(pwPtr->tkwin);
+    x = y = internalBw = Tk_InternalBorderLeft(pwPtr->tkwin);
     reqWidth = reqHeight = 0;
 
     /*
@@ -2890,7 +2906,7 @@ PanedWindowProxyCommand(
 	    return TCL_ERROR;
 	}
 
-        internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
+        internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	    if (x < 0) {
 		x = 0;
@@ -2899,10 +2915,10 @@ PanedWindowProxyCommand(
             if (x > pwWidth) {
                 x = pwWidth;
             }
-            y = Tk_InternalBorderWidth(pwPtr->tkwin);
+            y = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashWidth = pwPtr->sashWidth;
 	    sashHeight = Tk_Height(pwPtr->tkwin) -
-		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
+		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	} else {
 	    if (y < 0) {
 		y = 0;
@@ -2911,10 +2927,10 @@ PanedWindowProxyCommand(
             if (y > pwHeight) {
                 y = pwHeight;
             }
-	    x = Tk_InternalBorderWidth(pwPtr->tkwin);
+	    x = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashHeight = pwPtr->sashWidth;
 	    sashWidth = Tk_Width(pwPtr->tkwin) -
-		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
+		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	}
 
 	if (sashWidth < 1) {
@@ -2976,16 +2992,13 @@ static int
 ObjectIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
-    int length;
-
     if (objPtr == NULL) {
 	return 1;
     }
-    if (objPtr->bytes != NULL) {
-	return (objPtr->length == 0);
+    if (objPtr->bytes == NULL) {
+	Tcl_GetString(objPtr);
     }
-    (void)Tcl_GetStringFromObj(objPtr, &length);
-    return (length == 0);
+    return (objPtr->length == 0);
 }
 
 /*
@@ -3053,7 +3066,7 @@ PanedWindowIdentifyCoords(
 	} else {
 	    sashHeight = Tk_ReqHeight(pwPtr->tkwin);
 	}
-	sashHeight -= 2 * Tk_InternalBorderWidth(pwPtr->tkwin);
+	sashHeight -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->showHandle && pwPtr->handleSize > pwPtr->sashWidth) {
 	    sashWidth = pwPtr->handleSize;
 	    lpad = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
@@ -3081,7 +3094,7 @@ PanedWindowIdentifyCoords(
 	} else {
 	    sashWidth = Tk_ReqWidth(pwPtr->tkwin);
 	}
-	sashWidth -= 2 * Tk_InternalBorderWidth(pwPtr->tkwin);
+	sashWidth -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	lpad = rpad = 0;
     }
 

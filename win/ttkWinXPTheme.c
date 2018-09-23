@@ -15,13 +15,11 @@
  *  	shellcc/platform/commctls/userex/refentry.asp >
  */
 
+#include <tkWinInt.h>
 #ifndef HAVE_UXTHEME_H
 /* Stub for platforms that lack the XP theme API headers: */
-#include <tkWinInt.h>
 int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
-
-#define WINVER 0x0501	/* Requires Windows XP APIs */
 
 #include <windows.h>
 #include <uxtheme.h>
@@ -30,8 +28,6 @@ int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
 #   include <tmschema.h>
 #endif
-
-#include <tkWinInt.h>
 
 #include "ttk/ttkTheme.h"
 
@@ -208,6 +204,8 @@ static Ttk_StateTable checkbox_statemap[] =
  */
 static Ttk_StateTable radiobutton_statemap[] =
 {
+{RBS_UNCHECKEDDISABLED,	TTK_STATE_ALTERNATE|TTK_STATE_DISABLED, 0},
+{RBS_UNCHECKEDNORMAL,	TTK_STATE_ALTERNATE, 0},
 {RBS_CHECKEDDISABLED,	TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0},
 {RBS_CHECKEDPRESSED,	TTK_STATE_SELECTED|TTK_STATE_PRESSED, 0},
 {RBS_CHECKEDHOT,	TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0},
@@ -430,8 +428,8 @@ static void DestroyElementData(void *clientData)
     ElementData *elementData = clientData;
     if (elementData->info->flags & HEAP_ELEMENT) {
 	ckfree(elementData->info->statemap);
-	ckfree(elementData->info->className);
-	ckfree(elementData->info->elementName);
+	ckfree((char *)elementData->info->className);
+	ckfree((char *)elementData->info->elementName);
 	ckfree(elementData->info);
     }
     ckfree(clientData);
@@ -1110,7 +1108,7 @@ Ttk_CreateVsapiElement(
     LPWSTR wname;
     Ttk_ElementSpec *elementSpec = &GenericElementSpec;
 
-    static const char *optionStrings[] =
+    static const char *const optionStrings[] =
 	{ "-padding","-width","-height","-margins", "-syssize",
 	  "-halfheight", "-halfwidth", NULL };
     enum { O_PADDING, O_WIDTH, O_HEIGHT, O_MARGINS, O_SYSSIZE,

@@ -644,12 +644,7 @@ static void LoadShellProcs()
     if (shell32_handle != NULL)
         return; /* We have already been through here. */
 
-    /*
-     * XXX - Note we never call FreeLibrary. There is no point because
-     * shell32.dll is loaded at startup anyways and stays for the duration
-     * of the process so why bother with keeping track of when to unload
-     */
-    shell32_handle = LoadLibrary(TEXT("shell32.dll"));
+    shell32_handle = GetModuleHandle(TEXT("shell32.dll"));
     if (shell32_handle == NULL) /* Should never happen but check anyways. */
         return;
 
@@ -1379,17 +1374,27 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
         goto vamoose;
 
     if (optsPtr->extObj != NULL) {
-        wstr = Tcl_GetUnicode(optsPtr->extObj);
+        Tcl_DString ds;
+        const char *src;
+
+        src = Tcl_GetString(optsPtr->extObj);
+        wstr = (LPWSTR) Tcl_WinUtfToTChar(src, optsPtr->extObj->length, &ds);
         if (wstr[0] == L'.')
             ++wstr;
         hr = fdlgIf->lpVtbl->SetDefaultExtension(fdlgIf, wstr);
+        Tcl_DStringFree(&ds);
         if (FAILED(hr))
             goto vamoose;
     }
 
     if (optsPtr->titleObj != NULL) {
-        hr = fdlgIf->lpVtbl->SetTitle(fdlgIf,
-                                       Tcl_GetUnicode(optsPtr->titleObj));
+        Tcl_DString ds;
+        const char *src;
+
+        src = Tcl_GetString(optsPtr->titleObj);
+        wstr = (LPWSTR) Tcl_WinUtfToTChar(src, optsPtr->titleObj->length, &ds);
+        hr = fdlgIf->lpVtbl->SetTitle(fdlgIf, wstr);
+        Tcl_DStringFree(&ds);
         if (FAILED(hr))
             goto vamoose;
     }
@@ -1464,12 +1469,14 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                                         SIGDN_FILESYSPATH, &wstr);
                         if (SUCCEEDED(hr)) {
                             Tcl_DString fnds;
+
                             ConvertExternalFilename(wstr, &fnds);
                             CoTaskMemFree(wstr);
                             Tcl_ListObjAppendElement(
                                 interp, multiObj,
                                 Tcl_NewStringObj(Tcl_DStringValue(&fnds),
                                                  Tcl_DStringLength(&fnds)));
+                            Tcl_DStringFree(&fnds);
                         }
                         itemIf->lpVtbl->Release(itemIf);
                         if (FAILED(hr))
@@ -1490,10 +1497,12 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                                                       &wstr);
                 if (SUCCEEDED(hr)) {
                     Tcl_DString fnds;
+
                     ConvertExternalFilename(wstr, &fnds);
                     resultObj = Tcl_NewStringObj(Tcl_DStringValue(&fnds),
                                                  Tcl_DStringLength(&fnds));
                     CoTaskMemFree(wstr);
+                    Tcl_DStringFree(&fnds);
                 }
                 resultIf->lpVtbl->Release(resultIf);
             }
@@ -1501,13 +1510,20 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
         if (SUCCEEDED(hr)) {
             if (filterPtr && optsPtr->typeVariableObj) {
                 UINT ftix;
+
                 hr = fdlgIf->lpVtbl->GetFileTypeIndex(fdlgIf, &ftix);
                 if (SUCCEEDED(hr)) {
                     /* Note ftix is a 1-based index */
                     if (ftix > 0 && ftix <= nfilters) {
+                        Tcl_DString ftds;
+                        Tcl_Obj *ftobj;
+
+                        Tcl_WinTCharToUtf(filterPtr[ftix-1].pszName, -1, &ftds);
+                        ftobj = Tcl_NewStringObj(Tcl_DStringValue(&ftds),
+                                Tcl_DStringLength(&ftds));
                         Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
-                               Tcl_NewUnicodeObj(filterPtr[ftix-1].pszName, -1),
-                               TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
+                                ftobj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
+                        Tcl_DStringFree(&ftds);
                     }
                 }
             }
@@ -2211,9 +2227,9 @@ static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr)
         DWORD dw;
         for (dw = 0; dw < count; ++dw) {
             if (dlgFilterPtr[dw].pszName != NULL)
-                ckfree(dlgFilterPtr[dw].pszName);
+                ckfree((char *)dlgFilterPtr[dw].pszName);
             if (dlgFilterPtr[dw].pszSpec != NULL)
-                ckfree(dlgFilterPtr[dw].pszSpec);
+                ckfree((char *)dlgFilterPtr[dw].pszSpec);
         }
         ckfree(dlgFilterPtr);
     }
@@ -2786,6 +2802,9 @@ Tk_MessageBoxObjCmd(
     };
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tcl_DString titleBuf, tmpBuf;
+    const WCHAR *titlePtr, *tmpPtr;
+    const char *src;
 
     defaultBtn = -1;
     detailObj = NULL;
@@ -2896,7 +2915,9 @@ Tk_MessageBoxObjCmd(
 	    : Tcl_NewUnicodeObj(NULL, 0);
     Tcl_IncrRefCount(tmpObj);
     if (detailObj) {
-	Tcl_AppendUnicodeToObj(tmpObj, L"\n\n", 2);
+	const Tcl_UniChar twoNL[] = { '\n', '\n' };
+
+	Tcl_AppendUnicodeToObj(tmpObj, twoNL, 2);
 	Tcl_AppendObjToObj(tmpObj, detailObj);
     }
 
@@ -2915,8 +2936,18 @@ Tk_MessageBoxObjCmd(
     tsdPtr->hBigIcon   = TkWinGetIcon(parent, ICON_BIG);
     tsdPtr->hMsgBoxHook = SetWindowsHookEx(WH_CBT, MsgBoxCBTProc, NULL,
 	    GetCurrentThreadId());
-    winCode = MessageBox(hWnd, Tcl_GetUnicode(tmpObj),
-	    titleObj ? Tcl_GetUnicode(titleObj) : L"", flags);
+    src = Tcl_GetString(tmpObj);
+    tmpPtr = Tcl_WinUtfToTChar(src, tmpObj->length, &tmpBuf);
+    if (titleObj != NULL) {
+	src = Tcl_GetString(titleObj);
+	titlePtr = Tcl_WinUtfToTChar(src, titleObj->length, &titleBuf);
+    } else {
+	titlePtr = L"";
+	Tcl_DStringInit(&titleBuf);
+    }
+    winCode = MessageBox(hWnd, tmpPtr, titlePtr, flags);
+    Tcl_DStringFree(&titleBuf);
+    Tcl_DStringFree(&tmpBuf);
     UnhookWindowsHookEx(tsdPtr->hMsgBoxHook);
     (void) Tcl_SetServiceMode(oldMode);
 
@@ -3347,7 +3378,7 @@ FontchooserConfigureCmd(
 	    if (hdPtr->fontObj) {
 		Tcl_DecrRefCount(hdPtr->fontObj);
 	    }
-	    (void)Tcl_GetString(objv[i+1]);
+	    Tcl_GetString(objv[i+1]);
 	    if (objv[i+1]->length) {
 		hdPtr->fontObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->fontObj)) {
@@ -3362,7 +3393,7 @@ FontchooserConfigureCmd(
 	    if (hdPtr->cmdObj) {
 		Tcl_DecrRefCount(hdPtr->cmdObj);
 	    }
-	    (void)Tcl_GetString(objv[i+1]);
+	    Tcl_GetString(objv[i+1]);
 	    if (objv[i+1]->length) {
 		hdPtr->cmdObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->cmdObj)) {
@@ -3451,7 +3482,7 @@ FontchooserShowCmd(
 		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);
 	lf.lfFaceName[LF_FACESIZE-1] = 0;
-	lf.lfHeight = -MulDiv(TkFontGetPoints(tkwin, fontPtr->fa.size),
+	lf.lfHeight = -MulDiv((int)(TkFontGetPoints(tkwin, fontPtr->fa.size) + 0.5),
 	    GetDeviceCaps(hdc, LOGPIXELSY), 72);
 	if (fontPtr->fa.weight == TK_FW_BOLD) {
 	    lf.lfWeight = FW_BOLD;

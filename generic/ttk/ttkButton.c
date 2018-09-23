@@ -4,8 +4,7 @@
  * label, button, checkbutton, radiobutton, and menubutton widgets.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -23,6 +22,7 @@ typedef struct
      * Text element resources:
      */
     Tcl_Obj *textObj;
+    Tcl_Obj *justifyObj;
     Tcl_Obj *textVariableObj;
     Tcl_Obj *underlineObj;
     Tcl_Obj *widthObj;
@@ -56,6 +56,9 @@ typedef struct
 
 static Tk_OptionSpec BaseOptionSpecs[] =
 {
+    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
+        "left", Tk_Offset(Base,base.justifyObj), -1,
+        TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	Tk_Offset(Base,base.textObj), -1,
 	0,0,GEOMETRY_CHANGED },
@@ -136,6 +139,15 @@ BaseCleanup(void *recordPtr)
     	TtkFreeImageSpec(basePtr->base.imageSpec);
 }
 
+static void
+BaseImageChanged(
+	ClientData clientData, int x, int y, int width, int height,
+	int imageWidth, int imageHeight)
+{
+    Base *basePtr = (Base *)clientData;
+    TtkResizeWidget(&basePtr->core);
+}
+
 static int BaseConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
     Base *basePtr = recordPtr;
@@ -149,8 +161,8 @@ static int BaseConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     }
 
     if (basePtr->base.imageObj) {
-	imageSpec = TtkGetImageSpec(
-	    interp, basePtr->core.tkwin, basePtr->base.imageObj);
+	imageSpec = TtkGetImageSpecEx(
+	    interp, basePtr->core.tkwin, basePtr->base.imageObj, BaseImageChanged, basePtr);
 	if (!imageSpec) {
 	    goto error;
 	}
@@ -480,12 +492,15 @@ static int
 CheckbuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
     Checkbutton *checkPtr = recordPtr;
-    Ttk_TraceHandle *vt = Ttk_TraceVariable(
-	interp, checkPtr->checkbutton.variableObj,
-	CheckbuttonVariableChanged, checkPtr);
+    Tcl_Obj *varName = checkPtr->checkbutton.variableObj;
+    Ttk_TraceHandle *vt = NULL;
 
-    if (!vt) {
-	return TCL_ERROR;
+    if (varName != NULL && *Tcl_GetString(varName) != '\0') {
+        vt = Ttk_TraceVariable(interp, varName,
+	    CheckbuttonVariableChanged, checkPtr);
+        if (!vt) {
+	    return TCL_ERROR;
+        }
     }
 
     if (BaseConfigure(interp, recordPtr, mask) != TCL_OK){
@@ -493,7 +508,9 @@ CheckbuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	return TCL_ERROR;
     }
 
-    Ttk_UntraceVariable(checkPtr->checkbutton.variableTrace);
+    if (checkPtr->checkbutton.variableTrace) {
+        Ttk_UntraceVariable(checkPtr->checkbutton.variableTrace);
+    }
     checkPtr->checkbutton.variableTrace = vt;
 
     return TCL_OK;
@@ -539,10 +556,13 @@ CheckbuttonInvokeCommand(
     else
 	newValue = checkPtr->checkbutton.onValueObj;
 
-    if (Tcl_ObjSetVar2(interp,
-	    checkPtr->checkbutton.variableObj, NULL, newValue,
-	    TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
-	== NULL)
+    if (checkPtr->checkbutton.variableObj == NULL ||
+        *Tcl_GetString(checkPtr->checkbutton.variableObj) == '\0')
+        CheckbuttonVariableChanged(checkPtr, Tcl_GetString(newValue));
+    else if (Tcl_ObjSetVar2(interp,
+	        checkPtr->checkbutton.variableObj, NULL, newValue,
+	        TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
+	    == NULL)
 	return TCL_ERROR;
 
     if (WidgetDestroyed(corePtr))

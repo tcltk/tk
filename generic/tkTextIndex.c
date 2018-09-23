@@ -11,9 +11,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
+#include "default.h"
 
 /*
  * Index to use to select last character in line (very large integer):
@@ -40,9 +40,9 @@ static const char *	StartEnd(TkText *textPtr, const char *string,
 static int		GetIndex(Tcl_Interp *interp, TkSharedText *sharedPtr,
 			    TkText *textPtr, const char *string,
 			    TkTextIndex *indexPtr, int *canCachePtr);
-static int              IndexCountBytesOrdered(CONST TkText *textPtr,
-                            CONST TkTextIndex *indexPtr1,
-                            CONST TkTextIndex *indexPtr2);
+static int              IndexCountBytesOrdered(const TkText *textPtr,
+                            const TkTextIndex *indexPtr1,
+                            const TkTextIndex *indexPtr2);
 
 /*
  * The "textindex" Tcl_Obj definition:
@@ -87,7 +87,7 @@ FreeTextIndexInternalRep(
     TkTextIndex *indexPtr = GET_TEXTINDEX(indexObjPtr);
 
     if (indexPtr->textPtr != NULL) {
-	if (--indexPtr->textPtr->refCount == 0) {
+	if (indexPtr->textPtr->refCount-- <= 1) {
 	    /*
 	     * The text widget has been deleted and we need to free it now.
 	     */
@@ -134,7 +134,7 @@ UpdateStringOfTextIndex(
     Tcl_Obj *objPtr)
 {
     char buffer[TK_POS_CHARS];
-    register int len;
+    size_t len;
     const TkTextIndex *indexPtr = GET_TEXTINDEX(objPtr);
 
     len = TkTextPrintIndex(indexPtr->textPtr, indexPtr, buffer);
@@ -387,7 +387,7 @@ TkTextMakeByteIndex(
     TkTextSegment *segPtr;
     int index;
     const char *p, *start;
-    Tcl_UniChar ch;
+    int ch;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -437,7 +437,7 @@ TkTextMakeByteIndex(
 
 		start = segPtr->body.chars + (byteIndex - index);
 		p = Tcl_UtfPrev(start, segPtr->body.chars);
-		p += Tcl_UtfToUniChar(p, &ch);
+		p += TkUtfToUniChar(p, &ch);
 		indexPtr->byteIndex += p - start;
 	    }
 	    break;
@@ -480,7 +480,7 @@ TkTextMakeCharIndex(
     register TkTextSegment *segPtr;
     char *p, *start, *end;
     int index, offset;
-    Tcl_UniChar ch;
+    int ch;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -527,7 +527,7 @@ TkTextMakeCharIndex(
 		    return indexPtr;
 		}
 		charIndex--;
-		offset = Tcl_UtfToUniChar(p, &ch);
+		offset = TkUtfToUniChar(p, &ch);
 		index += offset;
 	    }
 	} else {
@@ -1475,7 +1475,7 @@ TkTextIndexForwChars(
     TkTextElideInfo *infoPtr = NULL;
     int byteOffset;
     char *start, *end, *p;
-    Tcl_UniChar ch;
+    int ch;
     int elide = 0;
     int checkElided = (type & COUNT_DISPLAY);
 
@@ -1574,7 +1574,7 @@ TkTextIndexForwChars(
 		if (segPtr->typePtr == &tkTextCharType) {
 		    start = segPtr->body.chars + byteOffset;
 		    end = segPtr->body.chars + segPtr->size;
-		    for (p = start; p < end; p += Tcl_UtfToUniChar(p, &ch)) {
+		    for (p = start; p < end; p += TkUtfToUniChar(p, &ch)) {
 			if (charCount == 0) {
 			    dstPtr->byteIndex += (p - start);
 			    goto forwardCharDone;
@@ -1636,9 +1636,9 @@ TkTextIndexForwChars(
 
 int
 TkTextIndexCountBytes(
-    CONST TkText *textPtr,
-    CONST TkTextIndex *indexPtr1, /* Index describing one location. */
-    CONST TkTextIndex *indexPtr2) /* Index describing second location. */
+    const TkText *textPtr,
+    const TkTextIndex *indexPtr1, /* Index describing one location. */
+    const TkTextIndex *indexPtr2) /* Index describing second location. */
 {
     int compare = TkTextIndexCmp(indexPtr1, indexPtr2);
 
@@ -1653,11 +1653,11 @@ TkTextIndexCountBytes(
 
 static int
 IndexCountBytesOrdered(
-    CONST TkText *textPtr,
-    CONST TkTextIndex *indexPtr1,
+    const TkText *textPtr,
+    const TkTextIndex *indexPtr1,
 				/* Index describing location of character from
 				 * which to count. */
-    CONST TkTextIndex *indexPtr2)
+    const TkTextIndex *indexPtr2)
 				/* Index describing location of last character
 				 * at which to stop the count. */
 {
@@ -2298,9 +2298,9 @@ StartEnd(
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
-		Tcl_UniChar ch;
+		int ch;
 
-		chSize = Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
+		chSize = TkUtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
@@ -2343,9 +2343,9 @@ StartEnd(
 	    int chSize = 1;
 
 	    if (segPtr->typePtr == &tkTextCharType) {
-		Tcl_UniChar ch;
 
-		Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
+		int ch;
+		TkUtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}

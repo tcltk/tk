@@ -157,6 +157,8 @@
 #define DEF_ENTRY_INSERT_ON_TIME	"600"
 #define DEF_ENTRY_INSERT_WIDTH		"2"
 #define DEF_ENTRY_JUSTIFY		"left"
+#define DEF_ENTRY_PLACEHOLDER		""
+#define DEF_ENTRY_PLACEHOLDERFG		"#b3b3b3"
 #define DEF_ENTRY_READONLY_BG_COLOR	"SystemButtonFace"
 #define DEF_ENTRY_READONLY_BG_MONO	WHITE
 #define DEF_ENTRY_RELIEF		"sunken"
@@ -290,7 +292,7 @@
 #define DEF_MENU_SELECT_COLOR		MENU_FG
 #define DEF_MENU_SELECT_MONO		BLACK
 #define DEF_MENU_TAKE_FOCUS		"0"
-#define DEF_MENU_TEAROFF		"1"
+#define DEF_MENU_TEAROFF		"0"
 #define DEF_MENU_TEAROFF_CMD		((char *) NULL)
 #define DEF_MENU_TITLE			""
 #define DEF_MENU_TYPE			"normal"

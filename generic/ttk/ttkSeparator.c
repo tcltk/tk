@@ -4,8 +4,7 @@
  * ttk::separator and ttk::sizegrip widgets.
  */
 
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
