@@ -19,7 +19,7 @@ menu, tk_menuSetFocus \- Create and manipulate 'menu' widgets and menubars
 \-activebackground	\-borderwidth	\-foreground
 \-activeborderwidth	\-cursor	\-relief
 \-activeforeground	\-disabledforeground	\-takefocus
-\-background	\-font
+\-background	\-font	\-activerelief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-postcommand postCommand Command

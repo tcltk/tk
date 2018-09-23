@@ -297,6 +297,7 @@ typedef struct TkMenu {
     Tcl_Obj *activeBorderWidthPtr;
 				/* Width of border around active element. */
     Tcl_Obj *reliefPtr;		/* 3-d effect: TK_RELIEF_RAISED, etc. */
+    Tcl_Obj *activeReliefPtr;	/* 3-d effect for active element. */
     Tcl_Obj *fontPtr;		/* Text font for menu entries. */
     Tcl_Obj *fgPtr;		/* Foreground color for entries. */
     Tcl_Obj *disabledFgPtr;	/* Foreground color when disabled. NULL means
