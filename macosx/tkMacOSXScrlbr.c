@@ -382,24 +382,19 @@ TkpScrollbarPosition(
    * has to do is re-draw itself.
    */
 
-    int length, fieldlength, width, tmp;
+    int length, width, tmp;
     register const int inset = scrollPtr->inset;
-    register const int arrowSize = scrollPtr->arrowLength + inset;
 
     if (scrollPtr->vertical) {
   	length = Tk_Height(scrollPtr->tkwin);
-  	fieldlength = length - 2 * arrowSize;
   	width = Tk_Width(scrollPtr->tkwin);
     } else {
   	tmp = x;
   	x = y;
   	y = tmp;
   	length = Tk_Width(scrollPtr->tkwin);
-  	fieldlength = length - 2 * arrowSize;
   	width = Tk_Height(scrollPtr->tkwin);
     }
-
-    fieldlength = fieldlength < 0 ? 0 : fieldlength;
 
     if (x<inset || x>=width-inset || y<inset || y>=length-inset) {
   	return OUTSIDE;
@@ -410,19 +405,19 @@ TkpScrollbarPosition(
      * TkpDisplayScrollbar. Be sure to keep the two consistent.
      */
 
+    if (y < inset + scrollPtr->arrowLength) {
+  	return TOP_ARROW;
+    }
     if (y < scrollPtr->sliderFirst) {
   	return TOP_GAP;
     }
-    if (y < scrollPtr->sliderLast) {
+    if (y < scrollPtr->sliderLast){
   	return SLIDER;
     }
-    if (y < fieldlength){
-  	return BOTTOM_GAP;
+    if (y >= length - (scrollPtr->arrowLength + inset)) {
+  	return BOTTOM_ARROW;
     }
-    if (y < fieldlength + arrowSize) {
-  	return TOP_ARROW;
-    }
-    return BOTTOM_ARROW;
+    return BOTTOM_GAP;
 
 }
 
