@@ -227,20 +227,24 @@ TkpComputeScrollbarGeometry(
                            * changed. */
 {
 
-   /*
-    * Using code from tkUnixScrlbr.c because Unix scroll bindings are
-    * driving the display at the script level. All the Mac scrollbar
-    * has to do is re-draw itself.
-    */
 
-    int width, fieldLength;
+  /* Restoring some metrics from earlier Cocoa implementation of scrollbar because it seems to render more accurately.*/
+  int width, fieldLength, height;
 
     if (scrollPtr->highlightWidth < 0) {
        scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    width = (scrollPtr->vertical) ? Tk_Width(scrollPtr->tkwin)
-           : Tk_Height(scrollPtr->tkwin);
+    if ((width > height) ^ !scrollPtr->vertical) {
+      if (scrollPtr->vertical) {
+	width = height;
+      } else if (width > 1) {
+	height = width - 1;
+      } else {
+	height = 1;
+	width = 2;
+      }
+    }
     scrollPtr->arrowLength = width - 2*scrollPtr->inset + 1;
     fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
            : Tk_Width(scrollPtr->tkwin))
@@ -282,11 +286,12 @@ TkpComputeScrollbarGeometry(
        Tk_GeometryRequest(scrollPtr->tkwin,
               scrollPtr->width + 2*scrollPtr->inset,
               2*(scrollPtr->arrowLength + scrollPtr->borderWidth
-              + scrollPtr->inset));
+		 + scrollPtr->inset) + metrics.minThumbHeight);
     } else {
        Tk_GeometryRequest(scrollPtr->tkwin,
               2*(scrollPtr->arrowLength + scrollPtr->borderWidth
-              + scrollPtr->inset), scrollPtr->width + 2*scrollPtr->inset);
+              + scrollPtr->inset) + metrics.minThumbHeight,
+              scrollPtr->width + 2*scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 }
