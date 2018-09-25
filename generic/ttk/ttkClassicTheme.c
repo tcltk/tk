@@ -15,19 +15,19 @@
 
 /*----------------------------------------------------------------------
  * +++ Highlight element implementation.
- * 	Draw a solid highlight border to indicate focus.
+ *      Draw a solid highlight border to indicate focus.
  */
 
 typedef struct {
-    Tcl_Obj	*highlightColorObj;
-    Tcl_Obj	*highlightThicknessObj;
+    Tcl_Obj     *highlightColorObj;
+    Tcl_Obj     *highlightThicknessObj;
 } HighlightElement;
 
 static Ttk_ElementOptionSpec HighlightElementOptions[] = {
     { "-highlightcolor",TK_OPTION_COLOR,
-	Tk_Offset(HighlightElement,highlightColorObj), DEFAULT_BACKGROUND },
+        Tk_Offset(HighlightElement,highlightColorObj), DEFAULT_BACKGROUND },
     { "-highlightthickness",TK_OPTION_PIXELS,
-	Tk_Offset(HighlightElement,highlightThicknessObj), "0" },
+        Tk_Offset(HighlightElement,highlightThicknessObj), "0" },
     { NULL, 0, 0, NULL }
 };
 
@@ -52,8 +52,8 @@ static void HighlightElementDraw(
 
     Tcl_GetIntFromObj(NULL,hl->highlightThicknessObj,&highlightThickness);
     if (highlightColor && highlightThickness > 0) {
-	GC gc = Tk_GCForColor(highlightColor, d);
-	Tk_DrawFocusHighlight(tkwin, gc, highlightThickness, d);
+        GC gc = Tk_GCForColor(highlightColor, d);
+        Tk_DrawFocusHighlight(tkwin, gc, highlightThickness, d);
     }
 }
 
@@ -77,22 +77,22 @@ static Ttk_ElementSpec HighlightElementSpec =
  */
 
 typedef struct {
-    Tcl_Obj	*borderObj;
-    Tcl_Obj	*borderWidthObj;
-    Tcl_Obj	*reliefObj;
-    Tcl_Obj	*defaultStateObj;
+    Tcl_Obj     *borderObj;
+    Tcl_Obj     *borderWidthObj;
+    Tcl_Obj     *reliefObj;
+    Tcl_Obj     *defaultStateObj;
 } ButtonBorderElement;
 
 static Ttk_ElementOptionSpec ButtonBorderElementOptions[] =
 {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(ButtonBorderElement,borderObj), DEFAULT_BACKGROUND },
+        Tk_Offset(ButtonBorderElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(ButtonBorderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+        Tk_Offset(ButtonBorderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF,
-	Tk_Offset(ButtonBorderElement,reliefObj), "flat" },
+        Tk_Offset(ButtonBorderElement,reliefObj), "flat" },
     { "-default", TK_OPTION_ANY,
-	Tk_Offset(ButtonBorderElement,defaultStateObj), "disabled" },
+        Tk_Offset(ButtonBorderElement,defaultStateObj), "disabled" },
     { NULL, 0, 0, NULL }
 };
 
@@ -108,7 +108,7 @@ static void ButtonBorderElementSize(
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
-	borderWidth += 5;
+        borderWidth += 5;
     }
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
@@ -141,34 +141,34 @@ static void ButtonBorderElementDraw(
      */
     switch (defaultState)
     {
-	case TTK_BUTTON_DEFAULT_DISABLED :
-	    break;
-	case TTK_BUTTON_DEFAULT_NORMAL :
-	    inset += 5;
-	    break;
-	case TTK_BUTTON_DEFAULT_ACTIVE :
+        case TTK_BUTTON_DEFAULT_DISABLED :
+            break;
+        case TTK_BUTTON_DEFAULT_NORMAL :
+            inset += 5;
+            break;
+        case TTK_BUTTON_DEFAULT_ACTIVE :
             Tk_Draw3DRectangle(tkwin, d, border,
-		b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
-		2, TK_RELIEF_FLAT);
+                b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
+                2, TK_RELIEF_FLAT);
             inset += 2;
             Tk_Draw3DRectangle(tkwin, d, border,
-		b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
-		1, TK_RELIEF_SUNKEN);
-	    ++inset;
+                b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
+                1, TK_RELIEF_SUNKEN);
+            ++inset;
             Tk_Draw3DRectangle(tkwin, d, border,
-		b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
-		2, TK_RELIEF_FLAT);
-	    inset += 2;
-	    break;
+                b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
+                2, TK_RELIEF_FLAT);
+            inset += 2;
+            break;
     }
 
     /*
      * 3-D border:
      */
     if (border && borderWidth > 0) {
-	Tk_Draw3DRectangle(tkwin, d, border,
-	    b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
-	    borderWidth,relief);
+        Tk_Draw3DRectangle(tkwin, d, border,
+            b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
+            borderWidth,relief);
     }
 }
 
@@ -200,11 +200,11 @@ typedef struct
 static Ttk_ElementOptionSpec ArrowElementOptions[] =
 {
     { "-arrowsize", TK_OPTION_PIXELS, Tk_Offset(ArrowElement,sizeObj),
-	DEFAULT_ARROW_SIZE },
+        DEFAULT_ARROW_SIZE },
     { "-background", TK_OPTION_BORDER, Tk_Offset(ArrowElement,borderObj),
-    	DEFAULT_BACKGROUND },
+        DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(ArrowElement,borderWidthObj),
-    	DEFAULT_BORDERWIDTH },
+        DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF, Tk_Offset(ArrowElement,reliefObj),"raised" },
     { NULL, 0, 0, NULL }
 };
@@ -243,26 +243,26 @@ static void ArrowElementDraw(
      */
     switch (direction)
     {
-	case ARROW_UP:
-	    points[2].x = b.x; 		points[2].y = b.y + size;
-	    points[1].x = b.x + size/2;	points[1].y = b.y;
-	    points[0].x = b.x + size;	points[0].y = b.y + size;
-	    break;
-	case ARROW_DOWN:
-	    points[0].x = b.x; 		points[0].y = b.y;
-	    points[1].x = b.x + size/2;	points[1].y = b.y + size;
-	    points[2].x = b.x + size;	points[2].y = b.y;
-	    break;
-	case ARROW_LEFT:
-	    points[0].x = b.x; 		points[0].y = b.y + size / 2;
-	    points[1].x = b.x + size;	points[1].y = b.y + size;
-	    points[2].x = b.x + size;	points[2].y = b.y;
-	    break;
-	case ARROW_RIGHT:
-	    points[0].x = b.x + size;	points[0].y = b.y + size / 2;
-	    points[1].x = b.x;		points[1].y = b.y;
-	    points[2].x = b.x;		points[2].y = b.y + size;
-	    break;
+        case ARROW_UP:
+            points[2].x = b.x;          points[2].y = b.y + size;
+            points[1].x = b.x + size/2; points[1].y = b.y;
+            points[0].x = b.x + size;   points[0].y = b.y + size;
+            break;
+        case ARROW_DOWN:
+            points[0].x = b.x;          points[0].y = b.y;
+            points[1].x = b.x + size/2; points[1].y = b.y + size;
+            points[2].x = b.x + size;   points[2].y = b.y;
+            break;
+        case ARROW_LEFT:
+            points[0].x = b.x;          points[0].y = b.y + size / 2;
+            points[1].x = b.x + size;   points[1].y = b.y + size;
+            points[2].x = b.x + size;   points[2].y = b.y;
+            break;
+        case ARROW_RIGHT:
+            points[0].x = b.x + size;   points[0].y = b.y + size / 2;
+            points[1].x = b.x;          points[1].y = b.y;
+            points[2].x = b.x;          points[2].y = b.y + size;
+            break;
     }
 
     Tk_Fill3DPolygon(tkwin, d, border, points, 3, borderWidth, relief);
@@ -297,27 +297,27 @@ static Ttk_Orient SashClientData[] = {
 };
 
 typedef struct {
-    Tcl_Obj *borderObj; 	/* background color */
-    Tcl_Obj *sashReliefObj;	/* sash relief */
-    Tcl_Obj *sashThicknessObj;	/* overall thickness of sash */
-    Tcl_Obj *sashPadObj;	/* padding on either side of handle */
-    Tcl_Obj *handleSizeObj;	/* handle width and height */
-    Tcl_Obj *handlePadObj;	/* handle's distance from edge */
+    Tcl_Obj *borderObj;         /* background color */
+    Tcl_Obj *sashReliefObj;     /* sash relief */
+    Tcl_Obj *sashThicknessObj;  /* overall thickness of sash */
+    Tcl_Obj *sashPadObj;        /* padding on either side of handle */
+    Tcl_Obj *handleSizeObj;     /* handle width and height */
+    Tcl_Obj *handlePadObj;      /* handle's distance from edge */
 } SashElement;
 
 static Ttk_ElementOptionSpec SashOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(SashElement,borderObj), DEFAULT_BACKGROUND },
+        Tk_Offset(SashElement,borderObj), DEFAULT_BACKGROUND },
     { "-sashrelief", TK_OPTION_RELIEF,
-	Tk_Offset(SashElement,sashReliefObj), "sunken" },
+        Tk_Offset(SashElement,sashReliefObj), "sunken" },
     { "-sashthickness", TK_OPTION_PIXELS,
-	Tk_Offset(SashElement,sashThicknessObj), "6" },
+        Tk_Offset(SashElement,sashThicknessObj), "6" },
     { "-sashpad", TK_OPTION_PIXELS,
-	Tk_Offset(SashElement,sashPadObj), "2" },
+        Tk_Offset(SashElement,sashPadObj), "2" },
     { "-handlesize", TK_OPTION_PIXELS,
-	Tk_Offset(SashElement,handleSizeObj), "8" },
+        Tk_Offset(SashElement,handleSizeObj), "8" },
     { "-handlepad", TK_OPTION_PIXELS,
-	Tk_Offset(SashElement,handlePadObj), "8" },
+        Tk_Offset(SashElement,handlePadObj), "8" },
     { NULL, 0, 0, NULL }
 };
 
@@ -334,12 +334,12 @@ static void SashElementSize(
     Tk_GetPixelsFromObj(NULL, tkwin, sash->sashPadObj, &sashPad);
 
     if (sashThickness < handleSize + 2*sashPad)
-	sashThickness = handleSize + 2*sashPad;
+        sashThickness = handleSize + 2*sashPad;
 
     if (horizontal)
-	*heightPtr = sashThickness;
+        *heightPtr = sashThickness;
     else
-	*widthPtr = sashThickness;
+        *widthPtr = sashThickness;
 }
 
 static void SashElementDraw(
@@ -359,47 +359,47 @@ static void SashElementDraw(
     Tk_GetReliefFromObj(NULL, sash->sashReliefObj, &relief);
 
     switch (relief) {
-	case TK_RELIEF_RAISED: case TK_RELIEF_RIDGE:
-	    gc1 = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
-	    gc2 = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
-	    break;
-	case TK_RELIEF_SUNKEN: case TK_RELIEF_GROOVE:
-	    gc1 = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
-	    gc2 = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
-	    break;
-	case TK_RELIEF_SOLID:
-	    gc1 = gc2 = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
-	    break;
-	case TK_RELIEF_FLAT:
-	default:
-	    gc1 = gc2 = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
-	    break;
+        case TK_RELIEF_RAISED: case TK_RELIEF_RIDGE:
+            gc1 = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
+            gc2 = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
+            break;
+        case TK_RELIEF_SUNKEN: case TK_RELIEF_GROOVE:
+            gc1 = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
+            gc2 = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
+            break;
+        case TK_RELIEF_SOLID:
+            gc1 = gc2 = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
+            break;
+        case TK_RELIEF_FLAT:
+        default:
+            gc1 = gc2 = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+            break;
     }
 
     /* Draw sash line:
      */
     if (horizontal) {
-	int y = b.y + b.height/2 - 1;
-	XDrawLine(Tk_Display(tkwin), d, gc1, b.x, y, b.x+b.width, y); ++y;
-	XDrawLine(Tk_Display(tkwin), d, gc2, b.x, y, b.x+b.width, y);
+        int y = b.y + b.height/2 - 1;
+        XDrawLine(Tk_Display(tkwin), d, gc1, b.x, y, b.x+b.width, y); ++y;
+        XDrawLine(Tk_Display(tkwin), d, gc2, b.x, y, b.x+b.width, y);
     } else {
-	int x = b.x + b.width/2 - 1;
-	XDrawLine(Tk_Display(tkwin), d, gc1, x, b.y, x, b.y+b.height); ++x;
-	XDrawLine(Tk_Display(tkwin), d, gc2, x, b.y, x, b.y+b.height);
+        int x = b.x + b.width/2 - 1;
+        XDrawLine(Tk_Display(tkwin), d, gc1, x, b.y, x, b.y+b.height); ++x;
+        XDrawLine(Tk_Display(tkwin), d, gc2, x, b.y, x, b.y+b.height);
     }
 
     /* Draw handle:
      */
     if (handleSize >= 0) {
-	if (horizontal) {
-	    hb = Ttk_StickBox(b, handleSize, handleSize, TTK_STICK_W);
-	    hb.x += handlePad;
-	} else {
-	    hb = Ttk_StickBox(b, handleSize, handleSize, TTK_STICK_N);
-	    hb.y += handlePad;
-	}
-	Tk_Fill3DRectangle(tkwin, d, border,
-	    hb.x, hb.y, hb.width, hb.height, 1, TK_RELIEF_RAISED);
+        if (horizontal) {
+            hb = Ttk_StickBox(b, handleSize, handleSize, TTK_STICK_W);
+            hb.x += handlePad;
+        } else {
+            hb = Ttk_StickBox(b, handleSize, handleSize, TTK_STICK_N);
+            hb.y += handlePad;
+        }
+        Tk_Fill3DRectangle(tkwin, d, border,
+            hb.x, hb.y, hb.width, hb.height, 1, TK_RELIEF_RAISED);
     }
 }
 
@@ -420,42 +420,42 @@ TTK_BEGIN_LAYOUT_TABLE(LayoutTable)
 TTK_LAYOUT("TButton",
     TTK_GROUP("Button.highlight", TTK_FILL_BOTH,
         TTK_GROUP("Button.border", TTK_FILL_BOTH|TTK_BORDER,
-	    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Button.label", TTK_FILL_BOTH)))))
+            TTK_GROUP("Button.padding", TTK_FILL_BOTH,
+                TTK_NODE("Button.label", TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TCheckbutton",
     TTK_GROUP("Checkbutton.highlight", TTK_FILL_BOTH,
         TTK_GROUP("Checkbutton.border", TTK_FILL_BOTH,
-	    TTK_GROUP("Checkbutton.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Checkbutton.indicator", TTK_PACK_LEFT)
-	        TTK_NODE("Checkbutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
+            TTK_GROUP("Checkbutton.padding", TTK_FILL_BOTH,
+                TTK_NODE("Checkbutton.indicator", TTK_PACK_LEFT)
+                TTK_NODE("Checkbutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TRadiobutton",
     TTK_GROUP("Radiobutton.highlight", TTK_FILL_BOTH,
         TTK_GROUP("Radiobutton.border", TTK_FILL_BOTH,
-	    TTK_GROUP("Radiobutton.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Radiobutton.indicator", TTK_PACK_LEFT)
-	        TTK_NODE("Radiobutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
+            TTK_GROUP("Radiobutton.padding", TTK_FILL_BOTH,
+                TTK_NODE("Radiobutton.indicator", TTK_PACK_LEFT)
+                TTK_NODE("Radiobutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TMenubutton",
     TTK_GROUP("Menubutton.highlight", TTK_FILL_BOTH,
         TTK_GROUP("Menubutton.border", TTK_FILL_BOTH,
-	    TTK_NODE("Menubutton.indicator", TTK_PACK_RIGHT)
-	    TTK_GROUP("Menubutton.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_X,
-	        TTK_NODE("Menubutton.label", 0)))))
+            TTK_NODE("Menubutton.indicator", TTK_PACK_RIGHT)
+            TTK_GROUP("Menubutton.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_X,
+                TTK_NODE("Menubutton.label", 0)))))
 
 /* "classic" entry, includes highlight border */
 TTK_LAYOUT("TEntry",
     TTK_GROUP("Entry.highlight", TTK_FILL_BOTH,
         TTK_GROUP("Entry.field", TTK_FILL_BOTH|TTK_BORDER,
-	    TTK_GROUP("Entry.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Entry.textarea", TTK_FILL_BOTH)))))
+            TTK_GROUP("Entry.padding", TTK_FILL_BOTH,
+                TTK_NODE("Entry.textarea", TTK_FILL_BOTH)))))
 
 /* Notebook tabs -- omit focus ring */
 TTK_LAYOUT("Tab",
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
-	TTK_GROUP("Notebook.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Notebook.label", TTK_FILL_BOTH))))
+        TTK_GROUP("Notebook.padding", TTK_FILL_BOTH,
+            TTK_NODE("Notebook.label", TTK_FILL_BOTH))))
 
 TTK_END_LAYOUT_TABLE
 
@@ -464,7 +464,7 @@ TTK_END_LAYOUT_TABLE
 
 /*------------------------------------------------------------------------
  * TtkClassicTheme_Init --
- * 	Install classic theme.
+ *      Install classic theme.
  */
 
 MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
@@ -472,33 +472,33 @@ MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "classic", NULL);
 
     if (!theme) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     /*
      * Register elements:
      */
     Ttk_RegisterElement(interp, theme, "highlight",
-	    &HighlightElementSpec, NULL);
+            &HighlightElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "Button.border",
-	    &ButtonBorderElementSpec, NULL);
+            &ButtonBorderElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+            &ArrowElementSpec, &ArrowElements[0]);
     Ttk_RegisterElement(interp, theme, "downarrow",
-	    &ArrowElementSpec, &ArrowElements[1]);
+            &ArrowElementSpec, &ArrowElements[1]);
     Ttk_RegisterElement(interp, theme, "leftarrow",
-	    &ArrowElementSpec, &ArrowElements[2]);
+            &ArrowElementSpec, &ArrowElements[2]);
     Ttk_RegisterElement(interp, theme, "rightarrow",
-	    &ArrowElementSpec, &ArrowElements[3]);
+            &ArrowElementSpec, &ArrowElements[3]);
     Ttk_RegisterElement(interp, theme, "arrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+            &ArrowElementSpec, &ArrowElements[0]);
 
     Ttk_RegisterElement(interp, theme, "hsash",
-	    &SashElementSpec, &SashClientData[0]);
+            &SashElementSpec, &SashClientData[0]);
     Ttk_RegisterElement(interp, theme, "vsash",
-	    &SashElementSpec, &SashClientData[1]);
+            &SashElementSpec, &SashClientData[1]);
 
     /*
      * Register layouts:

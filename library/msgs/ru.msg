@@ -7,7 +7,7 @@ namespace eval ::tk {
     ::msgcat::mcset ru "Cancel" "От&мена"
     ::msgcat::mcset ru "&Cancel" "От&мена"
     ::msgcat::mcset ru "Cannot change to the directory \"%1\$s\".\nPermission denied." \
-			"Не могу перейти в каталог \"%1\$s\".\nНедостаточно прав доступа"
+                        "Не могу перейти в каталог \"%1\$s\".\nНедостаточно прав доступа"
     ::msgcat::mcset ru "Choose Directory" "Выберите каталог"
     ::msgcat::mcset ru "Cl&ear" "Очистить"
     ::msgcat::mcset ru "Color" "Цвет"
@@ -21,7 +21,7 @@ namespace eval ::tk {
     ::msgcat::mcset ru "Error: %1\$s" "Ошибка: %1\$s"
     ::msgcat::mcset ru "E&xit" "Выход"
     ::msgcat::mcset ru "File \"%1\$s\" already exists.\nDo you want to overwrite it?" \
-			    "Файл \"%1\$s\" уже существует.\nЗаменить его?"
+                        "Файл \"%1\$s\" уже существует.\nЗаменить его?"
     ::msgcat::mcset ru "File \"%1\$s\" already exists.\n\n" "Файл \"%1\$s\" уже существует.\n\n"
     ::msgcat::mcset ru "File \"%1\$s\" does not exist." "Файл \"%1\$s\" не найден."
     ::msgcat::mcset ru "File &name:" "&Имя файла:"

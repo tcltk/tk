@@ -1,12 +1,12 @@
 # icons.tcl --
 #
-#	A set of stock icons for use in Tk dialogs. The icons used here
-#	were provided by the Tango Desktop project which provides a
-#	unified set of high quality icons licensed under the
-#	Creative Commons Attribution Share-Alike license
-#	(http://creativecommons.org/licenses/by-sa/3.0/)
+#       A set of stock icons for use in Tk dialogs. The icons used here
+#       were provided by the Tango Desktop project which provides a
+#       unified set of high quality icons licensed under the
+#       Creative Commons Attribution Share-Alike license
+#       (http://creativecommons.org/licenses/by-sa/3.0/)
 #
-#	See http://tango.freedesktop.org/Tango_Desktop_Project
+#       See http://tango.freedesktop.org/Tango_Desktop_Project
 #
 # Copyright (c) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
 

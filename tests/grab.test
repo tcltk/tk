@@ -98,7 +98,7 @@ test grab-1.20 {Tk_GrabObjCmd, "grab status window"} -body {
 test grab-2.1 {Tk_GrabObjCmd, grab status gives correct status} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
-	grab release $curr
+        grab release $curr
     }
     grab status .
 } -cleanup {
@@ -107,7 +107,7 @@ test grab-2.1 {Tk_GrabObjCmd, grab status gives correct status} -body {
 test grab-2.2 {Tk_GrabObjCmd, grab status gives correct status} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
-	grab release $curr
+        grab release $curr
     }
     grab .
     grab status .
@@ -117,7 +117,7 @@ test grab-2.2 {Tk_GrabObjCmd, grab status gives correct status} -body {
 test grab-2.3 {Tk_GrabObjCmd, grab status gives correct status} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
-	grab release $curr
+        grab release $curr
     }
     grab -global .
     grab status .
@@ -129,14 +129,14 @@ test grab-2.3 {Tk_GrabObjCmd, grab status gives correct status} -body {
 test grab-3.1 {Tk_GrabObjCmd, grab current gives correct information} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
-	grab release $curr
+        grab release $curr
     }
     return $curr
 } -result {}
 test grab-3.2 {Tk_GrabObjCmd, grab current gives correct information} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
-	grab release $curr
+        grab release $curr
     }
     grab .
     grab current
@@ -148,7 +148,7 @@ test grab-3.2 {Tk_GrabObjCmd, grab current gives correct information} -body {
 test grab-4.1 {Tk_GrabObjCmd, grab release releases grab} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
-	grab release $curr
+        grab release $curr
     }
     grab .
     set result [grab status .]
@@ -164,7 +164,7 @@ test grab-4.1 {Tk_GrabObjCmd, grab release releases grab} -body {
 test grab-5.1 {Tk_GrabObjCmd, grab set} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
-	grab release $curr
+        grab release $curr
     }
     grab set .
     list [grab current .] [grab status .]
@@ -174,7 +174,7 @@ test grab-5.1 {Tk_GrabObjCmd, grab set} -body {
 test grab-5.2 {Tk_GrabObjCmd, grab set} -body {
     set curr [grab current .]
     if { [string length $curr] > 0 } {
-	grab release $curr
+        grab release $curr
     }
     grab set -global .
     list [grab current .] [grab status .]

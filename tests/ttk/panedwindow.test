@@ -149,17 +149,17 @@ test panedwindow-4.2 "forget forgotten" -body {
 } -returnCodes 1 -result ".pw.l1 is not managed by .pw"
 
 # checkorder $winlist --
-#	Ensure that Y coordinates windows in $winlist are strictly increasing.
+#       Ensure that Y coordinates windows in $winlist are strictly increasing.
 #
 proc checkorder {winlist} {
     set pos -1
     set positions [list]
     foreach win $winlist {
-    	lappend positions [set nextpos [winfo y $win]]
-	if {$nextpos <= $pos} {
-	    error "window $win out of order ($positions)"
-	}
-	set pos $nextpos
+        lappend positions [set nextpos [winfo y $win]]
+        if {$nextpos <= $pos} {
+            error "window $win out of order ($positions)"
+        }
+        set pos $nextpos
     }
 }
 
@@ -202,7 +202,7 @@ proc sashpositions {pw} {
     set positions [list]
     set npanes [llength [winfo children $pw]]
     for {set i 0} {$i < $npanes - 1} {incr i} {
-    	lappend positions [$pw sashpos $i]
+        lappend positions [$pw sashpos $i]
     }
     return $positions
 }

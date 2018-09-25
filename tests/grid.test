@@ -17,20 +17,20 @@ namespace import -force tcltest::test
 proc grid_reset {{test ?} {top .}} {
     global GRID_VERBOSE
     if {[info exists GRID_VERBOSE]} {
-	if {$GRID_VERBOSE eq "" || $GRID_VERBOSE eq $test} {
-	    puts -nonewline "grid test $test: "
-	    flush stdout
-	    gets stdin
-	}
+        if {$GRID_VERBOSE eq "" || $GRID_VERBOSE eq $test} {
+            puts -nonewline "grid test $test: "
+            flush stdout
+            gets stdin
+        }
     }
     eval destroy [winfo children $top]
     update
     foreach {cols rows} [grid size .] {}
     for {set i 0} {$i <= $cols} {incr i} {
-	grid columnconfigure . $i -weight 0 -minsize 0 -pad 0 -uniform ""
+        grid columnconfigure . $i -weight 0 -minsize 0 -pad 0 -uniform ""
     }
     for {set i 0} {$i <= $rows} {incr i} {
-	grid rowconfigure . $i -weight 0 -minsize 0 -pad 0 -uniform ""
+        grid rowconfigure . $i -weight 0 -minsize 0 -pad 0 -uniform ""
     }
     grid propagate . 1
     grid anchor . nw
@@ -291,11 +291,11 @@ test grid-6.6 {location (x)} -body {
     set got ""
     set result ""
     for {set x -10} { $x < 220} { incr x} {
-	set a [grid location . $x 0]
-	if {$a != $got} {
-	    lappend result $x->$a
-	    set got $a
-	}
+        set a [grid location . $x 0]
+        if {$a != $got} {
+            lappend result $x->$a
+            set got $a
+        }
     }
     return $result
 } -cleanup {
@@ -308,11 +308,11 @@ test grid-6.7 {location (y)} -body {
     set got ""
     set result ""
     for {set y -10} { $y < 110} { incr y} {
-	set a [grid location . 0 $y]
-	if {$a != $got} {
-	    lappend result $y->$a
-	    set got $a
-	}
+        set a [grid location . 0 $y]
+        if {$a != $got} {
+            lappend result $y->$a
+            set got $a
+        }
     }
     return $result
 } -cleanup {
@@ -331,11 +331,11 @@ test grid-6.8 {location (weights)} -body {
     set got ""
     set result ""
     for {set y -10} { $y < 210} { incr y} {
-	set a [grid location . $y $y]
-	if {$a != $got} {
-	    lappend result $y->$a
-	    set got $a
-	}
+        set a [grid location . $y $y]
+        if {$a != $got} {
+            lappend result $y->$a
+            set got $a
+        }
     }
     return $result
 } -cleanup {
@@ -346,9 +346,9 @@ test grid-6.9 {location: check updates pending} -constraints {
 } -body {
     set a ""
     foreach i {0 1 2} {
-	frame .$i -width 120 -height 75 -bg red
-	lappend a [grid location . 150 90]
-	grid .$i -row $i -column $i
+        frame .$i -width 120 -height 75 -bg red
+        lappend a [grid location . 150 90]
+        grid .$i -row $i -column $i
     }
     return $a
 } -cleanup {
@@ -520,8 +520,8 @@ test grid-9.9 {slaves} -body {
 } -returnCodes ok -result {}
 test grid-9.10 {slaves} -body {
     foreach i {0 1 2} {
-	label .$i -text $i
-	grid .$i -row $i -column $i
+        label .$i -text $i
+        grid .$i -row $i -column $i
     }
     grid slaves .
 } -cleanup {
@@ -530,16 +530,16 @@ test grid-9.10 {slaves} -body {
 test grid-9.11 {slaves} -body {
     catch {unset a}
     foreach i {0 1 2} {
-	label .$i -text $i
-	label .$i-x -text $i-x
-	grid .$i -row $i -column $i
-	grid .$i-x -row $i -column [incr i]
+        label .$i -text $i
+        label .$i-x -text $i-x
+        grid .$i -row $i -column $i
+        grid .$i-x -row $i -column [incr i]
     }
     foreach row {0 1 2 3} {
-	lappend a $row{[grid slaves . -row $row]}
+        lappend a $row{[grid slaves . -row $row]}
     }
     foreach col {0 1 2 3} {
-	lappend a $col{[grid slaves . -column $col]}
+        lappend a $col{[grid slaves . -column $col]}
     }
     return $a
 } -cleanup {
@@ -650,11 +650,11 @@ test grid-10.18 {column/row configure} -body {
     frame .f
     grid columnconfigure .f {0 2} -minsize 10 -weight 1
     list [grid columnconfigure .f 0 -minsize] \
-	[grid columnconfigure .f 1 -minsize] \
-	[grid columnconfigure .f 2 -minsize] \
-	[grid columnconfigure .f 0 -weight] \
-	[grid columnconfigure .f 1 -weight] \
-	[grid columnconfigure .f 2 -weight]
+        [grid columnconfigure .f 1 -minsize] \
+        [grid columnconfigure .f 2 -minsize] \
+        [grid columnconfigure .f 0 -weight] \
+        [grid columnconfigure .f 1 -weight] \
+        [grid columnconfigure .f 2 -weight]
 } -cleanup {
     grid_reset 10.18
 } -result {10 0 10 1 0 1}
@@ -858,15 +858,15 @@ test grid-11.5 {default widget placement} -body {
 } -returnCodes error -result {must specify window before shortcut '-'}
 test grid-11.6 {default widget placement} -body {
     foreach i {1 2 3 4 5 6} {
-	frame .f$i -width 50 -height 50 -highlightthickness 0 -bg red
+        frame .f$i -width 50 -height 50 -highlightthickness 0 -bg red
     }
     grid .f1 .f2 .f3 .f4
     grid .f5   -  x  .f6 -sticky nsew
     update
     set a ""
     foreach i {5 6} {
-	lappend a "[winfo x .f$i],[winfo y .f$i] \
-		[winfo width .f$i],[winfo height .f$i]"
+        lappend a "[winfo x .f$i],[winfo y .f$i] \
+                [winfo width .f$i],[winfo height .f$i]"
     }
     return $a
 } -cleanup {
@@ -895,15 +895,15 @@ test grid-11.9 {default widget placement} -body {
 } -returnCodes error -result {can't find slave to extend with "^"}
 test grid-11.10 {default widget placement} -body {
     foreach i {1 2 3} {
-	frame .f$i -width 100 -height 50 -highlightthickness 0 -bg red
+        frame .f$i -width 100 -height 50 -highlightthickness 0 -bg red
     }
     grid .f1 .f2  -sticky nsew
     grid .f3   ^  -sticky nsew
     update
     set a ""
     foreach i {1 2 3} {
-	lappend a "[winfo x .f$i],[winfo y .f$i] \
-		[winfo width .f$i],[winfo height .f$i]"
+        lappend a "[winfo x .f$i],[winfo y .f$i] \
+                [winfo width .f$i],[winfo height .f$i]"
     }
     return $a
 } -cleanup {
@@ -911,7 +911,7 @@ test grid-11.10 {default widget placement} -body {
 } -result {{0,0  100,50} {100,0  100,100} {0,50  100,50}}
 test grid-11.11 {default widget placement} -body {
     foreach i {1 2 3 4 5 6 7 8 9 10 11 12} {
-	frame .f$i -width 50 -height 50 -highlightthickness 1 -highlightbackground black
+        frame .f$i -width 50 -height 50 -highlightthickness 1 -highlightbackground black
     }
     grid .f1  .f2  .f3 .f4  -sticky nsew
     grid .f5  .f6   -  .f7  -sticky nsew
@@ -921,8 +921,8 @@ test grid-11.11 {default widget placement} -body {
     update
     set a ""
     foreach i {5 6 7 8 9 10 11 12 } {
-	lappend a "[winfo x .f$i],[winfo y .f$i] \
-		[winfo width .f$i],[winfo height .f$i]"
+        lappend a "[winfo x .f$i],[winfo y .f$i] \
+                [winfo width .f$i],[winfo height .f$i]"
     }
     return $a
 } -cleanup {
@@ -930,21 +930,21 @@ test grid-11.11 {default widget placement} -body {
 } -result {{0,50  50,50} {50,50  100,150} {150,50  50,50} {0,100  50,50} {150,100  50,50} {0,150  50,50} {150,150  50,50} {0,200  200,50}}
 test grid-11.12 {default widget placement} -body {
     foreach i {1 2 3 4} {
-	frame .f$i -width 75 -height 50 -highlightthickness 1 -highlightbackground black
+        frame .f$i -width 75 -height 50 -highlightthickness 1 -highlightbackground black
     }
     grid .f1  .f2   .f3     -sticky nsew
     grid .f4    ^           -sticky nsew
     update
     set a ""
     foreach i {1 2 3 4} {
-	lappend a "[winfo x .f$i],[winfo y .f$i] \
-		[winfo width .f$i],[winfo height .f$i]"
+        lappend a "[winfo x .f$i],[winfo y .f$i] \
+                [winfo width .f$i],[winfo height .f$i]"
     }
     grid .f4    ^   -column 1
     update
     foreach i {1 2 3 4} {
-	lappend a "[winfo x .f$i],[winfo y .f$i] \
-		[winfo width .f$i],[winfo height .f$i]"
+        lappend a "[winfo x .f$i],[winfo y .f$i] \
+                [winfo width .f$i],[winfo height .f$i]"
     }
     return $a
 } -cleanup {
@@ -952,15 +952,15 @@ test grid-11.12 {default widget placement} -body {
 } -result {{0,0  75,50} {75,0  75,100} {150,0  75,50} {0,50  75,50} {0,0  75,50} {75,0  75,100} {150,0  75,100} {75,50  75,50}}
 test grid-11.13 {default widget placement} -body {
     foreach i {1 2 3 4 5 6 7} {
-	frame .f$i -width 40 -height 50 -highlightthickness 1 -highlightbackground black
+        frame .f$i -width 40 -height 50 -highlightthickness 1 -highlightbackground black
     }
     grid .f1  .f2  .f3 .f4 .f5 -sticky nsew
     grid .f6    -  .f7         -sticky nsew -columnspan 2
     update
     set a ""
     foreach i {6 7} {
-	lappend a "[winfo x .f$i],[winfo y .f$i] \
-		[winfo width .f$i],[winfo height .f$i]"
+        lappend a "[winfo x .f$i],[winfo y .f$i] \
+                [winfo width .f$i],[winfo height .f$i]"
     }
     return $a
 } -cleanup {
@@ -968,15 +968,15 @@ test grid-11.13 {default widget placement} -body {
 } -result {{0,50  120,50} {120,50  80,50}}
 test grid-11.14 {default widget placement} -body {
     foreach i {1 2 3} {
-	frame .f$i -width 60 -height 60 -highlightthickness 0 -bg red
+        frame .f$i -width 60 -height 60 -highlightthickness 0 -bg red
     }
     grid .f1 .f2
     grid  ^  .f3
     update
     set a ""
     foreach i {1 2 3} {
-	lappend a "[winfo x .f$i],[winfo y .f$i] \
-		[winfo width .f$i],[winfo height .f$i]"
+        lappend a "[winfo x .f$i],[winfo y .f$i] \
+                [winfo width .f$i],[winfo height .f$i]"
     }
     return $a
 } -cleanup {
@@ -984,15 +984,15 @@ test grid-11.14 {default widget placement} -body {
 } -result {{0,30  60,60} {60,0  60,60} {60,60  60,60}}
 test grid-11.15 {^ ^ test with multiple windows} -body {
     foreach i {1 2 3 4} {
-	frame .f$i -width 50 -height 50 -bd 1 -relief solid
+        frame .f$i -width 50 -height 50 -bd 1 -relief solid
     }
     grid .f1 .f2 .f3 -sticky ns
     grid .f4 ^ ^
     update
     set a ""
     foreach i {1 2 3 4} {
-	lappend a "[winfo x .f$i],[winfo y .f$i]\
-		[winfo width .f$i],[winfo height .f$i]"
+        lappend a "[winfo x .f$i],[winfo y .f$i]\
+                [winfo width .f$i],[winfo height .f$i]"
     }
     return $a
 } -cleanup {
@@ -1071,10 +1071,10 @@ test grid-12.1 {-sticky} -body {
     grid propagate . 0
     . configure -width 250 -height 150
     foreach i { {} n s e w ns ew nw ne se sw nse nsw sew new nsew} {
-	grid .f -sticky $i
-	update
-	array set data [grid info .f]
-	append a "($data(-sticky)) [winfo x .f] [winfo y .f] [winfo width .f] [winfo height .f]\n"
+        grid .f -sticky $i
+        update
+        array set data [grid info .f]
+        append a "($data(-sticky)) [winfo x .f] [winfo y .f] [winfo width .f] [winfo height .f]\n"
     }
     return $a
 } -cleanup {
@@ -1259,14 +1259,14 @@ test grid-13.19 {-ipad x and y} -body {
     grid rowconfigure . 0 -minsize 100
     set a ""
     foreach x {0 5} {
-	foreach y {0 5} {
-	    grid .f -ipadx $x -ipady $y
-	    update
-	    append a " $x,$y:"
-	    foreach prop {x y width height} {
-		append a ,[winfo $prop .f]
-	    }
-	}
+        foreach y {0 5} {
+            grid .f -ipadx $x -ipady $y
+            update
+            append a " $x,$y:"
+            foreach prop {x y width height} {
+                append a ,[winfo $prop .f]
+            }
+        }
     }
     return $a
 } -cleanup {
@@ -1330,8 +1330,8 @@ test grid-14.3 {map notify: bug 1648} -constraints {nonPortable} -body {
     bind . <Configure> {incr A(%W)}
     set A(.) 0
     foreach i {0 1 2} {
-	frame .$i -width 100 -height 75
-	set A(.$i) 0
+        frame .$i -width 100 -height 75
+        set A(.$i) 0
     }
     grid .0 .1 .2
     update
@@ -1371,8 +1371,8 @@ test grid-15.2 {lost slave} -body {
 
 test grid-16.1 {layout centering} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
+        frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
     }
     grid propagate . 0
     grid anchor . center
@@ -1384,17 +1384,17 @@ test grid-16.1 {layout centering} -body {
 } -result {37 50 225 150}
 test grid-16.2 {layout weights (expanding)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
-	grid rowconfigure . $i -weight [expr $i + 1]
-	grid columnconfigure . $i -weight [expr $i + 1]
+        frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
+        grid rowconfigure . $i -weight [expr $i + 1]
+        grid columnconfigure . $i -weight [expr $i + 1]
     }
     grid propagate . 0
     . configure -width 500 -height 300
     set a ""
     update
     foreach i {0 1 2} {
-	lappend a [winfo width .$i]-[winfo height .$i]
+        lappend a [winfo width .$i]-[winfo height .$i]
     }
     return $a
 } -cleanup {
@@ -1402,17 +1402,17 @@ test grid-16.2 {layout weights (expanding)} -body {
 } -result {120-75 167-100 213-125}
 test grid-16.3 {layout weights (shrinking)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray -width 100 -height 75 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
-	grid rowconfigure . $i -weight [expr $i + 1]
-	grid columnconfigure . $i -weight [expr $i + 1]
+        frame .$i -bg gray -width 100 -height 75 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
+        grid rowconfigure . $i -weight [expr $i + 1]
+        grid columnconfigure . $i -weight [expr $i + 1]
     }
     grid propagate . 0
     . configure -width 200 -height 150
     set a ""
     update
     foreach i {0 1 2} {
-	lappend a [winfo width .$i]-[winfo height .$i]
+        lappend a [winfo width .$i]-[winfo height .$i]
     }
     return $a
 } -cleanup {
@@ -1420,17 +1420,17 @@ test grid-16.3 {layout weights (shrinking)} -body {
 } -result {84-63 66-50 50-37}
 test grid-16.4 {layout weights (shrinking with minsize)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
-	grid rowconfigure . $i -weight [expr $i + 1] -minsize 45
-	grid columnconfigure . $i -weight [expr $i + 1] -minsize 65
+        frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
+        grid rowconfigure . $i -weight [expr $i + 1] -minsize 45
+        grid columnconfigure . $i -weight [expr $i + 1] -minsize 65
     }
     grid propagate . 0
     . configure -width 200 -height 150
     set a ""
     update
     foreach i {0 1 2} {
-	lappend a [winfo width .$i]-[winfo height .$i]
+        lappend a [winfo width .$i]-[winfo height .$i]
     }
     return $a
 } -cleanup {
@@ -1438,17 +1438,17 @@ test grid-16.4 {layout weights (shrinking with minsize)} -body {
 } -result {70-60 65-45 65-45}
 test grid-16.5 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
-	grid rowconfigure . $i -weight 0 -minsize 70
-	grid columnconfigure . $i -weight 0 -minsize 90
+        frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
+        grid rowconfigure . $i -weight 0 -minsize 70
+        grid columnconfigure . $i -weight 0 -minsize 90
     }
     grid propagate . 0
     . configure -width 100 -height 75
     set a ""
     update
     foreach i {0 1 2} {
-	lappend a [winfo width .$i]-[winfo height .$i]
+        lappend a [winfo width .$i]-[winfo height .$i]
     }
     return $a
 } -cleanup {
@@ -1456,17 +1456,17 @@ test grid-16.5 {layout weights (shrinking at minsize)} -body {
 } -result {100-75 100-75 100-75}
 test grid-16.6 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
-	grid rowconfigure . $i -weight [expr $i + 1] -minsize 52
-	grid columnconfigure . $i -weight [expr $i + 1] -minsize 69
+        frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
+        grid rowconfigure . $i -weight [expr $i + 1] -minsize 52
+        grid columnconfigure . $i -weight [expr $i + 1] -minsize 69
     }
     grid propagate . 0
     . configure -width 200 -height 150
     set a ""
     update
     foreach i {0 1 2} {
-	lappend a [winfo width .$i]-[winfo height .$i]
+        lappend a [winfo width .$i]-[winfo height .$i]
     }
     return $a
 } -cleanup {
@@ -1480,8 +1480,8 @@ test grid-16.6 {layout weights (shrinking at minsize)} -body {
 # That doesn't happen if previous tests run
 test grid-16.7 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
+        frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
     }
     grid propagate . 0
     grid columnconfigure . 1 -weight 1 -minsize 0
@@ -1490,7 +1490,7 @@ test grid-16.7 {layout weights (shrinking at minsize)} -body {
     set a ""
     update
     foreach i {0 1 2} {
-	lappend a [winfo width .$i]-[winfo height .$i]-[winfo ismapped .$i]
+        lappend a [winfo width .$i]-[winfo height .$i]-[winfo ismapped .$i]
     }
     return $a
 } -cleanup {
@@ -1498,8 +1498,8 @@ test grid-16.7 {layout weights (shrinking at minsize)} -body {
 } -result {100-75-1 1-1-0 100-75-1}
 test grid-16.8 {layout internal constraints} -body {
     foreach i {0 1 2 3 4} {
-	frame .$i -bg gray  -width 30 -height 25 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
+        frame .$i -bg gray  -width 30 -height 25 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
     }
     frame .f -bg red -width 250 -height 200
     frame .g -bg green -width 200 -height 180
@@ -1510,26 +1510,26 @@ test grid-16.8 {layout internal constraints} -body {
     update
     set a ""
     foreach i {0 1 2 3 4} {
-	append a "[winfo x .$i] "
+        append a "[winfo x .$i] "
     }
     append a ", "
     grid remove .f
     update
     foreach i {0 1 2 3 4} {
-	append a "[winfo x .$i] "
+        append a "[winfo x .$i] "
     }
     append a ", "
     grid remove .g
     grid .f
     update
     foreach i {0 1 2 3 4} {
-	append a "[winfo x .$i] "
+        append a "[winfo x .$i] "
     }
     append a ", "
     grid remove .f
     update
     foreach i {0 1 2 3 4} {
-	append a "[winfo x .$i] "
+        append a "[winfo x .$i] "
     }
     return $a
 } -cleanup {
@@ -1712,8 +1712,8 @@ test grid-16.16 {layout span} -body {
            [list 25 39 29 57 0] [list 30 34 22 64 0]]
 test grid-16.17 {layout weights (shrinking at minsize)} -body {
     foreach i {0 1 2 3} {
-	frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
+        frame .$i -bg gray  -width 100 -height 75 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
     }
     grid propagate . 0
     grid columnconfigure . {0 1} -weight 1 -minsize 0
@@ -1722,12 +1722,12 @@ test grid-16.17 {layout weights (shrinking at minsize)} -body {
     . configure -width 250 -height 200
     update
     foreach i {0 1 2 3} {
-	lappend a [winfo width .$i]-[winfo height .$i]-[winfo ismapped .$i]
+        lappend a [winfo width .$i]-[winfo height .$i]-[winfo ismapped .$i]
     }
     . configure -width 150 -height 100
     update
     foreach i {0 1 2 3} {
-	lappend a [winfo width .$i]-[winfo height .$i]-[winfo ismapped .$i]
+        lappend a [winfo width .$i]-[winfo height .$i]-[winfo ismapped .$i]
     }
     return $a
 } -cleanup {
@@ -1898,8 +1898,8 @@ test grid-21.5 {anchor} -body {
 } -returnCodes error -result {bad anchor "x": must be n, ne, e, se, s, sw, w, nw, or center}
 test grid-21.6 {anchor} -body {
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
-	grid .$i -row $i -column $i -sticky nswe
+        frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
+        grid .$i -row $i -column $i -sticky nswe
     }
     grid propagate . 0
     . configure -width 300 -height 250
@@ -1924,8 +1924,8 @@ test grid-21.7 {anchor} -body {
     .f configure -labelwidget .f.x
     pack .f -fill both -expand 1
     foreach i {0 1 2} {
-	frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
-	grid .$i -in .f -row $i -column $i -sticky nswe
+        frame .$i -bg gray  -width 75 -height 50 -bd 2 -relief ridge
+        grid .$i -in .f -row $i -column $i -sticky nswe
     }
     pack propagate . 0
     grid propagate .f 0

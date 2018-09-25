@@ -1,7 +1,7 @@
 /*
  * xutil.c --
  *
- *	This function contains generic X emulation routines.
+ *      This function contains generic X emulation routines.
  *
  * Copyright (c) 1995-1996 Sun Microsystems, Inc.
  *
@@ -19,15 +19,15 @@
  *
  * XInternAtom --
  *
- *	This procedure simulates the XInternAtom function by calling Tk_Uid to
- *	get a unique id for every atom. This is only a partial implementation,
- *	since it doesn't work across applications.
+ *      This procedure simulates the XInternAtom function by calling Tk_Uid to
+ *      get a unique id for every atom. This is only a partial implementation,
+ *      since it doesn't work across applications.
  *
  * Results:
- *	A new Atom.
+ *      A new Atom.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -49,13 +49,13 @@ XInternAtom(
  *
  * XGetVisualInfo --
  *
- *	Returns information about the specified visual.
+ *      Returns information about the specified visual.
  *
  * Results:
- *	Returns a newly allocated XVisualInfo structure.
+ *      Returns a newly allocated XVisualInfo structure.
  *
  * Side effects:
- *	Allocates storage.
+ *      Allocates storage.
  *
  *----------------------------------------------------------------------
  */
@@ -81,26 +81,26 @@ XGetVisualInfo(
     info->blue_mask = info->visual->blue_mask;
 
     if (((vinfo_mask & VisualIDMask)
-	    && (vinfo_template->visualid != info->visualid))
-	    || ((vinfo_mask & VisualScreenMask)
-		    && (vinfo_template->screen != info->screen))
-	    || ((vinfo_mask & VisualDepthMask)
-		    && (vinfo_template->depth != info->depth))
-	    || ((vinfo_mask & VisualClassMask)
-		    && (vinfo_template->class != info->class))
-	    || ((vinfo_mask & VisualColormapSizeMask)
-		    && (vinfo_template->colormap_size != info->colormap_size))
-	    || ((vinfo_mask & VisualBitsPerRGBMask)
-		    && (vinfo_template->bits_per_rgb != info->bits_per_rgb))
-	    || ((vinfo_mask & VisualRedMaskMask)
-		    && (vinfo_template->red_mask != info->red_mask))
-	    || ((vinfo_mask & VisualGreenMaskMask)
-		    && (vinfo_template->green_mask != info->green_mask))
-	    || ((vinfo_mask & VisualBlueMaskMask)
-		    && (vinfo_template->blue_mask != info->blue_mask))
-	) {
-	ckfree(info);
-	return NULL;
+            && (vinfo_template->visualid != info->visualid))
+            || ((vinfo_mask & VisualScreenMask)
+                    && (vinfo_template->screen != info->screen))
+            || ((vinfo_mask & VisualDepthMask)
+                    && (vinfo_template->depth != info->depth))
+            || ((vinfo_mask & VisualClassMask)
+                    && (vinfo_template->class != info->class))
+            || ((vinfo_mask & VisualColormapSizeMask)
+                    && (vinfo_template->colormap_size != info->colormap_size))
+            || ((vinfo_mask & VisualBitsPerRGBMask)
+                    && (vinfo_template->bits_per_rgb != info->bits_per_rgb))
+            || ((vinfo_mask & VisualRedMaskMask)
+                    && (vinfo_template->red_mask != info->red_mask))
+            || ((vinfo_mask & VisualGreenMaskMask)
+                    && (vinfo_template->green_mask != info->green_mask))
+            || ((vinfo_mask & VisualBlueMaskMask)
+                    && (vinfo_template->blue_mask != info->blue_mask))
+        ) {
+        ckfree(info);
+        return NULL;
     }
 
     *nitems_return = 1;

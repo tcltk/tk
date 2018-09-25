@@ -57,8 +57,8 @@ else
       arg=$1;
       case $arg in #(
       *"$as_nl"*)
-	expr "X$arg" : "X\\(.*\\)$as_nl";
-	arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
+        expr "X$arg" : "X\\(.*\\)$as_nl";
+        arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
       esac;
       expr "X$arg" : "X\\(.*\\)" | tr -d "$as_nl"
     '
@@ -84,7 +84,7 @@ fi
 # there to prevent editors from complaining about space-tab.
 # (If _AS_PATH_WALK were called with IFS unset, it would disable word
 # splitting by setting IFS to empty value.)
-IFS=" ""	$as_nl"
+IFS=" ""        $as_nl"
 
 # Find who we are.  Look in the path if we contain no directory separator.
 as_myself=
@@ -213,23 +213,23 @@ do
   test -z "$as_dir" && as_dir=.
   as_found=:
   case $as_dir in #(
-	 /*)
-	   for as_base in sh bash ksh sh5; do
-	     # Try only shells that exist, to save several forks.
-	     as_shell=$as_dir/$as_base
-	     if { test -f "$as_shell" || test -f "$as_shell.exe"; } &&
-		    { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$as_shell"; } 2>/dev/null; then :
+         /*)
+           for as_base in sh bash ksh sh5; do
+             # Try only shells that exist, to save several forks.
+             as_shell=$as_dir/$as_base
+             if { test -f "$as_shell" || test -f "$as_shell.exe"; } &&
+                    { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$as_shell"; } 2>/dev/null; then :
   CONFIG_SHELL=$as_shell as_have_required=yes
-		   if { $as_echo "$as_bourne_compatible""$as_suggested" | as_run=a "$as_shell"; } 2>/dev/null; then :
+                   if { $as_echo "$as_bourne_compatible""$as_suggested" | as_run=a "$as_shell"; } 2>/dev/null; then :
   break 2
 fi
 fi
-	   done;;
+           done;;
        esac
   as_found=false
 done
 $as_found || { if { test -f "$SHELL" || test -f "$SHELL.exe"; } &&
-	      { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$SHELL"; } 2>/dev/null; then :
+              { $as_echo "$as_bourne_compatible""$as_required" | as_run=a "$SHELL"; } 2>/dev/null; then :
   CONFIG_SHELL=$SHELL as_have_required=yes
 fi; }
 IFS=$as_save_IFS
@@ -328,27 +328,27 @@ as_fn_mkdir_p ()
       as_dirs="'$as_qdir' $as_dirs"
       as_dir=`$as_dirname -- "$as_dir" ||
 $as_expr X"$as_dir" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-	 X"$as_dir" : 'X\(//\)[^/]' \| \
-	 X"$as_dir" : 'X\(//\)$' \| \
-	 X"$as_dir" : 'X\(/\)' \| . 2>/dev/null ||
+         X"$as_dir" : 'X\(//\)[^/]' \| \
+         X"$as_dir" : 'X\(//\)$' \| \
+         X"$as_dir" : 'X\(/\)' \| . 2>/dev/null ||
 $as_echo X"$as_dir" |
     sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)[^/].*/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\).*/{
-	    s//\1/
-	    q
-	  }
-	  s/.*/./; q'`
+            s//\1/
+            q
+          }
+          /^X\(\/\/\)[^/].*/{
+            s//\1/
+            q
+          }
+          /^X\(\/\/\)$/{
+            s//\1/
+            q
+          }
+          /^X\(\/\).*/{
+            s//\1/
+            q
+          }
+          s/.*/./; q'`
       test -d "$as_dir" && break
     done
     test -z "$as_dirs" || eval "mkdir $as_dirs"
@@ -437,22 +437,22 @@ fi
 
 as_me=`$as_basename -- "$0" ||
 $as_expr X/"$0" : '.*/\([^/][^/]*\)/*$' \| \
-	 X"$0" : 'X\(//\)$' \| \
-	 X"$0" : 'X\(/\)' \| . 2>/dev/null ||
+         X"$0" : 'X\(//\)$' \| \
+         X"$0" : 'X\(/\)' \| . 2>/dev/null ||
 $as_echo X/"$0" |
     sed '/^.*\/\([^/][^/]*\)\/*$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\/\(\/\/\)$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\/\(\/\).*/{
-	    s//\1/
-	    q
-	  }
-	  s/.*/./; q'`
+            s//\1/
+            q
+          }
+          /^X\/\(\/\/\)$/{
+            s//\1/
+            q
+          }
+          /^X\/\(\/\).*/{
+            s//\1/
+            q
+          }
+          s/.*/./; q'`
 
 # Avoid depending upon Character Ranges.
 as_cr_letters='abcdefghijklmnopqrstuvwxyz'
@@ -501,10 +501,10 @@ ECHO_C= ECHO_N= ECHO_T=
 case `echo -n x` in #(((((
 -n*)
   case `echo 'xy\c'` in
-  *c*) ECHO_T='	';;	# ECHO_T is single tab character.
+  *c*) ECHO_T=' ';;     # ECHO_T is single tab character.
   xy)  ECHO_C='\c';;
   *)   echo `echo ksh88 bug on AIX 6.1` > /dev/null
-       ECHO_T='	';;
+       ECHO_T=' ';;
   esac;;
 *)
   ECHO_N='-n';;
@@ -891,7 +891,7 @@ do
 "enable_$ac_useropt"
 "*) ;;
       *) ac_unrecognized_opts="$ac_unrecognized_opts$ac_unrecognized_sep--disable-$ac_useropt_orig"
-	 ac_unrecognized_sep=', ';;
+         ac_unrecognized_sep=', ';;
     esac
     eval enable_$ac_useropt=no ;;
 
@@ -917,7 +917,7 @@ do
 "enable_$ac_useropt"
 "*) ;;
       *) ac_unrecognized_opts="$ac_unrecognized_opts$ac_unrecognized_sep--enable-$ac_useropt_orig"
-	 ac_unrecognized_sep=', ';;
+         ac_unrecognized_sep=', ';;
     esac
     eval enable_$ac_useropt=\$ac_optarg ;;
 
@@ -1121,7 +1121,7 @@ do
 "with_$ac_useropt"
 "*) ;;
       *) ac_unrecognized_opts="$ac_unrecognized_opts$ac_unrecognized_sep--with-$ac_useropt_orig"
-	 ac_unrecognized_sep=', ';;
+         ac_unrecognized_sep=', ';;
     esac
     eval with_$ac_useropt=\$ac_optarg ;;
 
@@ -1137,7 +1137,7 @@ do
 "with_$ac_useropt"
 "*) ;;
       *) ac_unrecognized_opts="$ac_unrecognized_opts$ac_unrecognized_sep--without-$ac_useropt_orig"
-	 ac_unrecognized_sep=', ';;
+         ac_unrecognized_sep=', ';;
     esac
     eval with_$ac_useropt=no ;;
 
@@ -1198,10 +1198,10 @@ if test -n "$ac_unrecognized_opts"; then
 fi
 
 # Check all directory arguments for consistency.
-for ac_var in	exec_prefix prefix bindir sbindir libexecdir datarootdir \
-		datadir sysconfdir sharedstatedir localstatedir includedir \
-		oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
-		libdir localedir mandir
+for ac_var in   exec_prefix prefix bindir sbindir libexecdir datarootdir \
+                datadir sysconfdir sharedstatedir localstatedir includedir \
+                oldincludedir docdir infodir htmldir dvidir pdfdir psdir \
+                libdir localedir mandir
 do
   eval ac_val=\$$ac_var
   # Remove trailing slashes.
@@ -1254,27 +1254,27 @@ if test -z "$srcdir"; then
   # Try the directory containing this script, then the parent directory.
   ac_confdir=`$as_dirname -- "$as_myself" ||
 $as_expr X"$as_myself" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-	 X"$as_myself" : 'X\(//\)[^/]' \| \
-	 X"$as_myself" : 'X\(//\)$' \| \
-	 X"$as_myself" : 'X\(/\)' \| . 2>/dev/null ||
+         X"$as_myself" : 'X\(//\)[^/]' \| \
+         X"$as_myself" : 'X\(//\)$' \| \
+         X"$as_myself" : 'X\(/\)' \| . 2>/dev/null ||
 $as_echo X"$as_myself" |
     sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)[^/].*/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\).*/{
-	    s//\1/
-	    q
-	  }
-	  s/.*/./; q'`
+            s//\1/
+            q
+          }
+          /^X\(\/\/\)[^/].*/{
+            s//\1/
+            q
+          }
+          /^X\(\/\/\)$/{
+            s//\1/
+            q
+          }
+          /^X\(\/\).*/{
+            s//\1/
+            q
+          }
+          s/.*/./; q'`
   srcdir=$ac_confdir
   if test ! -r "$srcdir/$ac_unique_file"; then
     srcdir=..
@@ -1288,8 +1288,8 @@ if test ! -r "$srcdir/$ac_unique_file"; then
 fi
 ac_msg="sources are in $srcdir, but \`cd $srcdir' does not work"
 ac_abs_confdir=`(
-	cd "$srcdir" && test -r "./$ac_unique_file" || as_fn_error $? "$ac_msg"
-	pwd)`
+        cd "$srcdir" && test -r "./$ac_unique_file" || as_fn_error $? "$ac_msg"
+        pwd)`
 # When building in place, set srcdir=.
 if test "$ac_abs_confdir" = "$ac_pwd"; then
   srcdir=.
@@ -1506,15 +1506,15 @@ $as_echo "$ac_try_echo"; } >&5
   fi
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
+         test -z "$ac_c_werror_flag" ||
+         test ! -s conftest.err
        } && test -s conftest.$ac_objext; then :
   ac_retval=0
 else
   $as_echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	ac_retval=1
+        ac_retval=1
 fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
   as_fn_set_status $ac_retval
@@ -1543,8 +1543,8 @@ $as_echo "$ac_try_echo"; } >&5
   fi
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; } > conftest.i && {
-	 test -z "$ac_c_preproc_warn_flag$ac_c_werror_flag" ||
-	 test ! -s conftest.err
+         test -z "$ac_c_preproc_warn_flag$ac_c_werror_flag" ||
+         test ! -s conftest.err
        }; then :
   ac_retval=0
 else
@@ -1640,7 +1640,7 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 eval ac_res=\$$3
-	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+               { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
 $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
@@ -1671,7 +1671,7 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 eval ac_res=\$$3
-	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+               { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
 $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
@@ -1692,7 +1692,7 @@ if eval \${$3+:} false; then :
   $as_echo_n "(cached) " >&6
 fi
 eval ac_res=\$$3
-	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+               { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
 $as_echo "$ac_res" >&6; }
 else
   # Is the header compilable?
@@ -1757,7 +1757,7 @@ else
   eval "$3=\$ac_header_compiler"
 fi
 eval ac_res=\$$3
-	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+               { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
 $as_echo "$ac_res" >&6; }
 fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
@@ -1846,19 +1846,19 @@ do
     2)
       as_fn_append ac_configure_args1 " '$ac_arg'"
       if test $ac_must_keep_next = true; then
-	ac_must_keep_next=false # Got value, back to normal.
+        ac_must_keep_next=false # Got value, back to normal.
       else
-	case $ac_arg in
-	  *=* | --config-cache | -C | -disable-* | --disable-* \
-	  | -enable-* | --enable-* | -gas | --g* | -nfp | --nf* \
-	  | -q | -quiet | --q* | -silent | --sil* | -v | -verb* \
-	  | -with-* | --with-* | -without-* | --without-* | --x)
-	    case "$ac_configure_args0 " in
-	      "$ac_configure_args1"*" '$ac_arg' "* ) continue ;;
-	    esac
-	    ;;
-	  -* ) ac_must_keep_next=true ;;
-	esac
+        case $ac_arg in
+          *=* | --config-cache | -C | -disable-* | --disable-* \
+          | -enable-* | --enable-* | -gas | --g* | -nfp | --nf* \
+          | -q | -quiet | --q* | -silent | --sil* | -v | -verb* \
+          | -with-* | --with-* | -without-* | --without-* | --x)
+            case "$ac_configure_args0 " in
+              "$ac_configure_args1"*" '$ac_arg' "* ) continue ;;
+            esac
+            ;;
+          -* ) ac_must_keep_next=true ;;
+        esac
       fi
       as_fn_append ac_configure_args " '$ac_arg'"
       ;;
@@ -1903,8 +1903,8 @@ $as_echo "$as_me: WARNING: cache variable $ac_var contains a newline" >&2;} ;;
     case $as_nl`(ac_space='\'' '\''; set) 2>&1` in #(
     *${as_nl}ac_space=\ *)
       sed -n \
-	"s/'\''/'\''\\\\'\'''\''/g;
-	  s/^\\([_$as_cr_alnum]*_cv_[_$as_cr_alnum]*\\)=\\(.*\\)/\\1='\''\\2'\''/p"
+        "s/'\''/'\''\\\\'\'''\''/g;
+          s/^\\([_$as_cr_alnum]*_cv_[_$as_cr_alnum]*\\)=\\(.*\\)/\\1='\''\\2'\''/p"
       ;; #(
     *)
       sed -n "/^[_$as_cr_alnum]*_cv_[_$as_cr_alnum]*=/p"
@@ -1935,11 +1935,11 @@ $as_echo "$as_me: WARNING: cache variable $ac_var contains a newline" >&2;} ;;
       echo
       for ac_var in $ac_subst_files
       do
-	eval ac_val=\$$ac_var
-	case $ac_val in
-	*\'\''*) ac_val=`$as_echo "$ac_val" | sed "s/'\''/'\''\\\\\\\\'\'''\''/g"`;;
-	esac
-	$as_echo "$ac_var='\''$ac_val'\''"
+        eval ac_val=\$$ac_var
+        case $ac_val in
+        *\'\''*) ac_val=`$as_echo "$ac_val" | sed "s/'\''/'\''\\\\\\\\'\'''\''/g"`;;
+        esac
+        $as_echo "$ac_var='\''$ac_val'\''"
       done | sort
       echo
     fi
@@ -2067,21 +2067,21 @@ $as_echo "$as_me: error: \`$ac_var' was not set in the previous run" >&2;}
     ,);;
     *)
       if test "x$ac_old_val" != "x$ac_new_val"; then
-	# differences in whitespace do not lead to failure.
-	ac_old_val_w=`echo x $ac_old_val`
-	ac_new_val_w=`echo x $ac_new_val`
-	if test "$ac_old_val_w" != "$ac_new_val_w"; then
-	  { $as_echo "$as_me:${as_lineno-$LINENO}: error: \`$ac_var' has changed since the previous run:" >&5
+        # differences in whitespace do not lead to failure.
+        ac_old_val_w=`echo x $ac_old_val`
+        ac_new_val_w=`echo x $ac_new_val`
+        if test "$ac_old_val_w" != "$ac_new_val_w"; then
+          { $as_echo "$as_me:${as_lineno-$LINENO}: error: \`$ac_var' has changed since the previous run:" >&5
 $as_echo "$as_me: error: \`$ac_var' has changed since the previous run:" >&2;}
-	  ac_cache_corrupted=:
-	else
-	  { $as_echo "$as_me:${as_lineno-$LINENO}: warning: ignoring whitespace changes in \`$ac_var' since the previous run:" >&5
+          ac_cache_corrupted=:
+        else
+          { $as_echo "$as_me:${as_lineno-$LINENO}: warning: ignoring whitespace changes in \`$ac_var' since the previous run:" >&5
 $as_echo "$as_me: warning: ignoring whitespace changes in \`$ac_var' since the previous run:" >&2;}
-	  eval $ac_var=\$ac_old_val
-	fi
-	{ $as_echo "$as_me:${as_lineno-$LINENO}:   former value:  \`$ac_old_val'" >&5
+          eval $ac_var=\$ac_old_val
+        fi
+        { $as_echo "$as_me:${as_lineno-$LINENO}:   former value:  \`$ac_old_val'" >&5
 $as_echo "$as_me:   former value:  \`$ac_old_val'" >&2;}
-	{ $as_echo "$as_me:${as_lineno-$LINENO}:   current value: \`$ac_new_val'" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}:   current value: \`$ac_new_val'" >&5
 $as_echo "$as_me:   current value: \`$ac_new_val'" >&2;}
       fi;;
   esac
@@ -2533,24 +2533,24 @@ do
   test -f "$ac_file" || continue
   case $ac_file in
     *.$ac_ext | *.xcoff | *.tds | *.d | *.pdb | *.xSYM | *.bb | *.bbg | *.map | *.inf | *.dSYM | *.o | *.obj )
-	;;
+        ;;
     [ab].out )
-	# We found the default executable, but exeext='' is most
-	# certainly right.
-	break;;
+        # We found the default executable, but exeext='' is most
+        # certainly right.
+        break;;
     *.* )
-	if test "${ac_cv_exeext+set}" = set && test "$ac_cv_exeext" != no;
-	then :; else
-	   ac_cv_exeext=`expr "$ac_file" : '[^.]*\(\..*\)'`
-	fi
-	# We set ac_cv_exeext here because the later test for it is not
-	# safe: cross compilers may not add the suffix if given an `-o'
-	# argument, so we may need to know it at that point already.
-	# Even if this section looks crufty: it has the advantage of
-	# actually working.
-	break;;
+        if test "${ac_cv_exeext+set}" = set && test "$ac_cv_exeext" != no;
+        then :; else
+           ac_cv_exeext=`expr "$ac_file" : '[^.]*\(\..*\)'`
+        fi
+        # We set ac_cv_exeext here because the later test for it is not
+        # safe: cross compilers may not add the suffix if given an `-o'
+        # argument, so we may need to know it at that point already.
+        # Even if this section looks crufty: it has the advantage of
+        # actually working.
+        break;;
     * )
-	break;;
+        break;;
   esac
 done
 test "$ac_cv_exeext" = no && ac_cv_exeext=
@@ -2602,7 +2602,7 @@ for ac_file in conftest.exe conftest conftest.*; do
   case $ac_file in
     *.$ac_ext | *.xcoff | *.tds | *.d | *.pdb | *.xSYM | *.bb | *.bbg | *.map | *.inf | *.dSYM | *.o | *.obj ) ;;
     *.* ) ac_cv_exeext=`expr "$ac_file" : '[^.]*\(\..*\)'`
-	  break;;
+          break;;
     * ) break;;
   esac
 done
@@ -2663,9 +2663,9 @@ $as_echo "$ac_try_echo"; } >&5
     cross_compiling=no
   else
     if test "$cross_compiling" = maybe; then
-	cross_compiling=yes
+        cross_compiling=yes
     else
-	{ { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
+        { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot run C compiled programs.
 If you meant to cross compile, use \`--host'.
@@ -2805,8 +2805,8 @@ if ac_fn_c_try_compile "$LINENO"; then :
 
 else
   ac_c_werror_flag=$ac_save_c_werror_flag
-	 CFLAGS="-g"
-	 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+         CFLAGS="-g"
+         cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 int
@@ -2904,7 +2904,7 @@ return f (e, argv, 0) != argv[0]  ||  f (e, argv, 1) != argv[1];
 }
 _ACEOF
 for ac_arg in '' -qlanglvl=extc89 -qlanglvl=ansi -std \
-	-Ae "-Aa -D_HPUX_SOURCE" "-Xc -D__EXTENSIONS__"
+        -Ae "-Aa -D_HPUX_SOURCE" "-Xc -D__EXTENSIONS__"
 do
   CC="$ac_save_CC $ac_arg"
   if ac_fn_c_try_compile "$LINENO"; then :
@@ -3017,7 +3017,7 @@ do
 #else
 # include <assert.h>
 #endif
-		     Syntax error
+                     Syntax error
 _ACEOF
 if ac_fn_c_try_cpp "$LINENO"; then :
 
@@ -3076,7 +3076,7 @@ do
 #else
 # include <assert.h>
 #endif
-		     Syntax error
+                     Syntax error
 _ACEOF
 if ac_fn_c_try_cpp "$LINENO"; then :
 
@@ -3326,9 +3326,9 @@ else
 # define TOUPPER(c) (ISLOWER(c) ? 'A' + ((c) - 'a') : (c))
 #else
 # define ISLOWER(c) \
-		   (('a' <= (c) && (c) <= 'i') \
-		     || ('j' <= (c) && (c) <= 'r') \
-		     || ('s' <= (c) && (c) <= 'z'))
+                   (('a' <= (c) && (c) <= 'i') \
+                     || ('j' <= (c) && (c) <= 'r') \
+                     || ('s' <= (c) && (c) <= 'z'))
 # define TOUPPER(c) (ISLOWER(c) ? ((c) | 0x40) : (c))
 #endif
 
@@ -3339,7 +3339,7 @@ main ()
   int i;
   for (i = 0; i < 256; i++)
     if (XOR (islower (i), ISLOWER (i))
-	|| toupper (i) != TOUPPER (i))
+        || toupper (i) != TOUPPER (i))
       return 2;
   return 0;
 }
@@ -3655,7 +3655,7 @@ else
   cat >conftest.make <<\_ACEOF
 SHELL = /bin/sh
 all:
-	@echo '@@@%%%=$(MAKE)=@@@%%%'
+        @echo '@@@%%%=$(MAKE)=@@@%%%'
 _ACEOF
 # GNU make sometimes prints "make[1]: Entering ...", which would confuse us.
 case `${MAKE-make} -f conftest.make 2>/dev/null` in
@@ -3701,20 +3701,20 @@ fi
 
 
     if test "${enable_shared+set}" = set; then
-	enableval="$enable_shared"
-	tcl_ok=$enableval
+        enableval="$enable_shared"
+        tcl_ok=$enableval
     else
-	tcl_ok=yes
+        tcl_ok=yes
     fi
 
     if test "$tcl_ok" = "yes" ; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: shared" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: shared" >&5
 $as_echo "shared" >&6; }
-	SHARED_BUILD=1
+        SHARED_BUILD=1
     else
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: static" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: static" >&5
 $as_echo "static" >&6; }
-	SHARED_BUILD=0
+        SHARED_BUILD=0
 
 $as_echo "#define STATIC_BUILD 1" >>confdefs.h
 
@@ -3733,105 +3733,105 @@ $as_echo "#define STATIC_BUILD 1" >>confdefs.h
     #
 
     if test x"${no_tcl}" = x ; then
-	# we reset no_tcl in case something fails here
-	no_tcl=true
+        # we reset no_tcl in case something fails here
+        no_tcl=true
 
 # Check whether --with-tcl was given.
 if test "${with_tcl+set}" = set; then :
   withval=$with_tcl; with_tclconfig="${withval}"
 fi
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Tcl configuration" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Tcl configuration" >&5
 $as_echo_n "checking for Tcl configuration... " >&6; }
-	if ${ac_cv_c_tclconfig+:} false; then :
+        if ${ac_cv_c_tclconfig+:} false; then :
   $as_echo_n "(cached) " >&6
 else
 
 
-	    # First check to see if --with-tcl was specified.
-	    if test x"${with_tclconfig}" != x ; then
-		case "${with_tclconfig}" in
-		    */tclConfig.sh )
-			if test -f "${with_tclconfig}"; then
-			    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: --with-tcl argument should refer to directory containing tclConfig.sh, not to tclConfig.sh itself" >&5
+            # First check to see if --with-tcl was specified.
+            if test x"${with_tclconfig}" != x ; then
+                case "${with_tclconfig}" in
+                    */tclConfig.sh )
+                        if test -f "${with_tclconfig}"; then
+                            { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: --with-tcl argument should refer to directory containing tclConfig.sh, not to tclConfig.sh itself" >&5
 $as_echo "$as_me: WARNING: --with-tcl argument should refer to directory containing tclConfig.sh, not to tclConfig.sh itself" >&2;}
-			    with_tclconfig="`echo "${with_tclconfig}" | sed 's!/tclConfig\.sh$!!'`"
-			fi ;;
-		esac
-		if test -f "${with_tclconfig}/tclConfig.sh" ; then
-		    ac_cv_c_tclconfig="`(cd "${with_tclconfig}"; pwd)`"
-		else
-		    as_fn_error $? "${with_tclconfig} directory doesn't contain tclConfig.sh" "$LINENO" 5
-		fi
-	    fi
+                            with_tclconfig="`echo "${with_tclconfig}" | sed 's!/tclConfig\.sh$!!'`"
+                        fi ;;
+                esac
+                if test -f "${with_tclconfig}/tclConfig.sh" ; then
+                    ac_cv_c_tclconfig="`(cd "${with_tclconfig}"; pwd)`"
+                else
+                    as_fn_error $? "${with_tclconfig} directory doesn't contain tclConfig.sh" "$LINENO" 5
+                fi
+            fi
 
-	    # then check for a private Tcl installation
-	    if test x"${ac_cv_c_tclconfig}" = x ; then
-		for i in \
-			../tcl \
-			`ls -dr ../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
-			`ls -dr ../tcl[8-9].[0-9] 2>/dev/null` \
-			`ls -dr ../tcl[8-9].[0-9]* 2>/dev/null` \
-			../../tcl \
-			`ls -dr ../../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
-			`ls -dr ../../tcl[8-9].[0-9] 2>/dev/null` \
-			`ls -dr ../../tcl[8-9].[0-9]* 2>/dev/null` \
-			../../../tcl \
-			`ls -dr ../../../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
-			`ls -dr ../../../tcl[8-9].[0-9] 2>/dev/null` \
-			`ls -dr ../../../tcl[8-9].[0-9]* 2>/dev/null` ; do
-		    if test -f "$i/win/tclConfig.sh" ; then
-			ac_cv_c_tclconfig="`(cd $i/win; pwd)`"
-			break
-		    fi
-		done
-	    fi
+            # then check for a private Tcl installation
+            if test x"${ac_cv_c_tclconfig}" = x ; then
+                for i in \
+                        ../tcl \
+                        `ls -dr ../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
+                        `ls -dr ../tcl[8-9].[0-9] 2>/dev/null` \
+                        `ls -dr ../tcl[8-9].[0-9]* 2>/dev/null` \
+                        ../../tcl \
+                        `ls -dr ../../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
+                        `ls -dr ../../tcl[8-9].[0-9] 2>/dev/null` \
+                        `ls -dr ../../tcl[8-9].[0-9]* 2>/dev/null` \
+                        ../../../tcl \
+                        `ls -dr ../../../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
+                        `ls -dr ../../../tcl[8-9].[0-9] 2>/dev/null` \
+                        `ls -dr ../../../tcl[8-9].[0-9]* 2>/dev/null` ; do
+                    if test -f "$i/win/tclConfig.sh" ; then
+                        ac_cv_c_tclconfig="`(cd $i/win; pwd)`"
+                        break
+                    fi
+                done
+            fi
 
-	    # check in a few common install locations
-	    if test x"${ac_cv_c_tclconfig}" = x ; then
-		for i in `ls -d ${libdir} 2>/dev/null` \
-			`ls -d ${exec_prefix}/lib 2>/dev/null` \
-			`ls -d ${prefix}/lib 2>/dev/null` \
-			`ls -d /cygdrive/c/Tcl/lib 2>/dev/null` \
-			`ls -d /cygdrive/c/Progra~1/Tcl/lib 2>/dev/null` \
-			`ls -d /c/Tcl/lib 2>/dev/null` \
-			`ls -d /c/Progra~1/Tcl/lib 2>/dev/null` \
-			`ls -d C:/Tcl/lib 2>/dev/null` \
-			`ls -d C:/Progra~1/Tcl/lib 2>/dev/null` \
-			; do
-		    if test -f "$i/tclConfig.sh" ; then
-			ac_cv_c_tclconfig="`(cd $i; pwd)`"
-			break
-		    fi
-		done
-	    fi
+            # check in a few common install locations
+            if test x"${ac_cv_c_tclconfig}" = x ; then
+                for i in `ls -d ${libdir} 2>/dev/null` \
+                        `ls -d ${exec_prefix}/lib 2>/dev/null` \
+                        `ls -d ${prefix}/lib 2>/dev/null` \
+                        `ls -d /cygdrive/c/Tcl/lib 2>/dev/null` \
+                        `ls -d /cygdrive/c/Progra~1/Tcl/lib 2>/dev/null` \
+                        `ls -d /c/Tcl/lib 2>/dev/null` \
+                        `ls -d /c/Progra~1/Tcl/lib 2>/dev/null` \
+                        `ls -d C:/Tcl/lib 2>/dev/null` \
+                        `ls -d C:/Progra~1/Tcl/lib 2>/dev/null` \
+                        ; do
+                    if test -f "$i/tclConfig.sh" ; then
+                        ac_cv_c_tclconfig="`(cd $i; pwd)`"
+                        break
+                    fi
+                done
+            fi
 
-	    # check in a few other private locations
-	    if test x"${ac_cv_c_tclconfig}" = x ; then
-		for i in \
-			${srcdir}/../tcl \
-			`ls -dr ${srcdir}/../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
-			`ls -dr ${srcdir}/../tcl[8-9].[0-9] 2>/dev/null` \
-			`ls -dr ${srcdir}/../tcl[8-9].[0-9]* 2>/dev/null` ; do
-		    if test -f "$i/win/tclConfig.sh" ; then
-		    ac_cv_c_tclconfig="`(cd $i/win; pwd)`"
-		    break
-		fi
-		done
-	    fi
+            # check in a few other private locations
+            if test x"${ac_cv_c_tclconfig}" = x ; then
+                for i in \
+                        ${srcdir}/../tcl \
+                        `ls -dr ${srcdir}/../tcl[8-9].[0-9].[0-9]* 2>/dev/null` \
+                        `ls -dr ${srcdir}/../tcl[8-9].[0-9] 2>/dev/null` \
+                        `ls -dr ${srcdir}/../tcl[8-9].[0-9]* 2>/dev/null` ; do
+                    if test -f "$i/win/tclConfig.sh" ; then
+                    ac_cv_c_tclconfig="`(cd $i/win; pwd)`"
+                    break
+                fi
+                done
+            fi
 
 fi
 
 
-	if test x"${ac_cv_c_tclconfig}" = x ; then
-	    TCL_BIN_DIR="# no Tcl configs found"
-	    as_fn_error $? "Can't find Tcl configuration definitions. Use --with-tcl to specify a directory containing tclConfig.sh" "$LINENO" 5
-	else
-	    no_tcl=
-	    TCL_BIN_DIR="${ac_cv_c_tclconfig}"
-	    { $as_echo "$as_me:${as_lineno-$LINENO}: result: found ${TCL_BIN_DIR}/tclConfig.sh" >&5
+        if test x"${ac_cv_c_tclconfig}" = x ; then
+            TCL_BIN_DIR="# no Tcl configs found"
+            as_fn_error $? "Can't find Tcl configuration definitions. Use --with-tcl to specify a directory containing tclConfig.sh" "$LINENO" 5
+        else
+            no_tcl=
+            TCL_BIN_DIR="${ac_cv_c_tclconfig}"
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: found ${TCL_BIN_DIR}/tclConfig.sh" >&5
 $as_echo "found ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
-	fi
+        fi
     fi
 
 
@@ -3841,7 +3841,7 @@ $as_echo_n "checking for existence of ${TCL_BIN_DIR}/tclConfig.sh... " >&6; }
     if test -f "${TCL_BIN_DIR}/tclConfig.sh" ; then
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: loading" >&5
 $as_echo "loading" >&6; }
-	. "${TCL_BIN_DIR}/tclConfig.sh"
+        . "${TCL_BIN_DIR}/tclConfig.sh"
     else
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: could not find ${TCL_BIN_DIR}/tclConfig.sh" >&5
 $as_echo "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
@@ -3910,7 +3910,7 @@ fi
 
 # On IRIX 5.3, sys/types and inttypes.h are conflicting.
 for ac_header in sys/types.h sys/stat.h stdlib.h string.h memory.h strings.h \
-		  inttypes.h stdint.h unistd.h
+                  inttypes.h stdint.h unistd.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_compile "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default
@@ -4002,9 +4002,9 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-	    #ifndef _WIN32
-		#error cross-compiler
-	    #endif
+            #ifndef _WIN32
+                #error cross-compiler
+            #endif
 
 int
 main ()
@@ -4026,22 +4026,22 @@ fi
 $as_echo "$ac_cv_cross" >&6; }
 
       if test "$ac_cv_cross" = "yes"; then
-	case "$do64bit" in
-	    amd64|x64|yes)
-		CC="x86_64-w64-mingw32-gcc"
-		LD="x86_64-w64-mingw32-ld"
-		AR="x86_64-w64-mingw32-ar"
-		RANLIB="x86_64-w64-mingw32-ranlib"
-		RC="x86_64-w64-mingw32-windres"
-	    ;;
-	    *)
-		CC="i686-w64-mingw32-gcc"
-		LD="i686-w64-mingw32-ld"
-		AR="i686-w64-mingw32-ar"
-		RANLIB="i686-w64-mingw32-ranlib"
-		RC="i686-w64-mingw32-windres"
-	    ;;
-	esac
+        case "$do64bit" in
+            amd64|x64|yes)
+                CC="x86_64-w64-mingw32-gcc"
+                LD="x86_64-w64-mingw32-ld"
+                AR="x86_64-w64-mingw32-ar"
+                RANLIB="x86_64-w64-mingw32-ranlib"
+                RC="x86_64-w64-mingw32-windres"
+            ;;
+            *)
+                CC="i686-w64-mingw32-gcc"
+                LD="i686-w64-mingw32-ld"
+                AR="i686-w64-mingw32-ar"
+                RANLIB="i686-w64-mingw32-ranlib"
+                RC="i686-w64-mingw32-windres"
+            ;;
+        esac
       fi
     fi
 
@@ -4053,29 +4053,29 @@ $as_echo "$ac_cv_cross" >&6; }
     # path when using the Cygwin toolchain.
 
     if test "$GCC" = "yes" && test "$CYGPATH" != "echo" ; then
-	conftest=/tmp/conftest.rc
-	echo "STRINGTABLE BEGIN" > $conftest
-	echo "101 \"name\"" >> $conftest
-	echo "END" >> $conftest
+        conftest=/tmp/conftest.rc
+        echo "STRINGTABLE BEGIN" > $conftest
+        echo "101 \"name\"" >> $conftest
+        echo "END" >> $conftest
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Windows native path bug in windres" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Windows native path bug in windres" >&5
 $as_echo_n "checking for Windows native path bug in windres... " >&6; }
-	cyg_conftest=`$CYGPATH $conftest`
-	if { ac_try='$RC -o conftest.res.o $cyg_conftest'
+        cyg_conftest=`$CYGPATH $conftest`
+        if { ac_try='$RC -o conftest.res.o $cyg_conftest'
   { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_try\""; } >&5
   (eval $ac_try) 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; } ; then
-	    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
-	else
-	    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+        else
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
-	    CYGPATH=echo
-	fi
-	conftest=
-	cyg_conftest=
+            CYGPATH=echo
+        fi
+        conftest=
+        cyg_conftest=
     fi
 
     if test "$CYGPATH" = "echo"; then
@@ -4087,9 +4087,9 @@ $as_echo "yes" >&6; }
     # set various compiler flags depending on whether we are using gcc or cl
 
     if test "${GCC}" = "yes" ; then
-	extra_cflags="-pipe"
-	extra_ldflags="-pipe -static-libgcc"
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for mingw32 version of gcc" >&5
+        extra_cflags="-pipe"
+        extra_ldflags="-pipe -static-libgcc"
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for mingw32 version of gcc" >&5
 $as_echo_n "checking for mingw32 version of gcc... " >&6; }
 if ${ac_cv_win32+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4097,9 +4097,9 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-		#ifdef _WIN32
-		    #error win32
-		#endif
+                #ifdef _WIN32
+                    #error win32
+                #endif
 
 int
 main ()
@@ -4119,12 +4119,12 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_win32" >&5
 $as_echo "$ac_cv_win32" >&6; }
-	if test "$ac_cv_win32" != "yes"; then
-	    as_fn_error $? "${CC} cannot produce win32 executables." "$LINENO" 5
-	fi
+        if test "$ac_cv_win32" != "yes"; then
+            as_fn_error $? "${CC} cannot produce win32 executables." "$LINENO" 5
+        fi
 
-	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -mwindows -municode -Dmain=xxmain"
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for working -municode linker flag" >&5
+        hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -mwindows -municode -Dmain=xxmain"
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for working -municode linker flag" >&5
 $as_echo_n "checking for working -municode linker flag... " >&6; }
 if ${ac_cv_municode+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4153,18 +4153,18 @@ $as_echo "$ac_try_echo"; } >&5
   fi
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
+         test -z "$ac_c_werror_flag" ||
+         test ! -s conftest.err
        } && test -s conftest$ac_exeext && {
-	 test "$cross_compiling" = yes ||
-	 test -x conftest$ac_exeext
+         test "$cross_compiling" = yes ||
+         test -x conftest$ac_exeext
        }; then :
   ac_retval=0
 else
   $as_echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	ac_retval=1
+        ac_retval=1
 fi
   # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
   # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
@@ -4178,8 +4178,8 @@ fi
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-	#include <windows.h>
-	int APIENTRY wWinMain(HINSTANCE a, HINSTANCE b, LPWSTR c, int d) {return 0;}
+        #include <windows.h>
+        int APIENTRY wWinMain(HINSTANCE a, HINSTANCE b, LPWSTR c, int d) {return 0;}
 
 int
 main ()
@@ -4200,118 +4200,118 @@ rm -f core conftest.err conftest.$ac_objext \
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_municode" >&5
 $as_echo "$ac_cv_municode" >&6; }
-	CFLAGS=$hold_cflags
-	if test "$ac_cv_municode" = "yes" ; then
-	    extra_ldflags="$extra_ldflags -municode"
-	else
-	    extra_cflags="$extra_cflags -DTCL_BROKEN_MAINARGS"
-	fi
+        CFLAGS=$hold_cflags
+        if test "$ac_cv_municode" = "yes" ; then
+            extra_ldflags="$extra_ldflags -municode"
+        else
+            extra_cflags="$extra_cflags -DTCL_BROKEN_MAINARGS"
+        fi
     fi
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking compiler flags" >&5
 $as_echo_n "checking compiler flags... " >&6; }
     if test "${GCC}" = "yes" ; then
-	SHLIB_LD=""
-	SHLIB_LD_LIBS='${LIBS}'
-	LIBS="-lnetapi32 -lkernel32 -luser32 -ladvapi32 -luserenv -lws2_32"
-	# mingw needs to link ole32 and oleaut32 for [send], but MSVC doesn't
-	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32"
-	STLIB_LD='${AR} cr'
-	RC_OUT=-o
-	RC_TYPE=
-	RC_INCLUDE=--include
-	RC_DEFINE=--define
-	RES=res.o
-	MAKE_LIB="\${STLIB_LD} \$@"
-	MAKE_STUB_LIB="\${STLIB_LD} \$@"
-	POST_MAKE_LIB="\${RANLIB} \$@"
-	MAKE_EXE="\${CC} -o \$@"
-	LIBPREFIX="lib"
+        SHLIB_LD=""
+        SHLIB_LD_LIBS='${LIBS}'
+        LIBS="-lnetapi32 -lkernel32 -luser32 -ladvapi32 -luserenv -lws2_32"
+        # mingw needs to link ole32 and oleaut32 for [send], but MSVC doesn't
+        LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32"
+        STLIB_LD='${AR} cr'
+        RC_OUT=-o
+        RC_TYPE=
+        RC_INCLUDE=--include
+        RC_DEFINE=--define
+        RES=res.o
+        MAKE_LIB="\${STLIB_LD} \$@"
+        MAKE_STUB_LIB="\${STLIB_LD} \$@"
+        POST_MAKE_LIB="\${RANLIB} \$@"
+        MAKE_EXE="\${CC} -o \$@"
+        LIBPREFIX="lib"
 
-	if test "${SHARED_BUILD}" = "0" ; then
-	    # static
+        if test "${SHARED_BUILD}" = "0" ; then
+            # static
             { $as_echo "$as_me:${as_lineno-$LINENO}: result: using static flags" >&5
 $as_echo "using static flags" >&6; }
-	    runtime=
-	    LIBRARIES="\${STATIC_LIBRARIES}"
-	    EXESUFFIX="s\${DBGX}.exe"
-	else
-	    # dynamic
+            runtime=
+            LIBRARIES="\${STATIC_LIBRARIES}"
+            EXESUFFIX="s\${DBGX}.exe"
+        else
+            # dynamic
             { $as_echo "$as_me:${as_lineno-$LINENO}: result: using shared flags" >&5
 $as_echo "using shared flags" >&6; }
 
-	    # ad-hoc check to see if CC supports -shared.
-	    if "${CC}" -shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
-		as_fn_error $? "${CC} does not support the -shared option.
+            # ad-hoc check to see if CC supports -shared.
+            if "${CC}" -shared 2>&1 | egrep ': -shared not supported' >/dev/null; then
+                as_fn_error $? "${CC} does not support the -shared option.
                 You will need to upgrade to a newer version of the toolchain." "$LINENO" 5
-	    fi
+            fi
 
-	    runtime=
-	    # Add SHLIB_LD_LIBS to the Make rule, not here.
+            runtime=
+            # Add SHLIB_LD_LIBS to the Make rule, not here.
 
-	    EXESUFFIX="\${DBGX}.exe"
-	    LIBRARIES="\${SHARED_LIBRARIES}"
-	fi
-	# Link with gcc since ld does not link to default libs like
-	# -luser32 and -lmsvcrt by default.
-	SHLIB_LD='${CC} -shared'
-	SHLIB_LD_LIBS='${LIBS}'
-	MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -o \$@ ${extra_ldflags} \
-	    -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\$@)"
-	# DLLSUFFIX is separate because it is the building block for
-	# users of tclConfig.sh that may build shared or static.
-	DLLSUFFIX="\${DBGX}.dll"
-	LIBSUFFIX="\${DBGX}.a"
-	LIBFLAGSUFFIX="\${DBGX}"
-	SHLIB_SUFFIX=.dll
+            EXESUFFIX="\${DBGX}.exe"
+            LIBRARIES="\${SHARED_LIBRARIES}"
+        fi
+        # Link with gcc since ld does not link to default libs like
+        # -luser32 and -lmsvcrt by default.
+        SHLIB_LD='${CC} -shared'
+        SHLIB_LD_LIBS='${LIBS}'
+        MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -o \$@ ${extra_ldflags} \
+            -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\$@)"
+        # DLLSUFFIX is separate because it is the building block for
+        # users of tclConfig.sh that may build shared or static.
+        DLLSUFFIX="\${DBGX}.dll"
+        LIBSUFFIX="\${DBGX}.a"
+        LIBFLAGSUFFIX="\${DBGX}"
+        SHLIB_SUFFIX=.dll
 
-	EXTRA_CFLAGS="${extra_cflags}"
+        EXTRA_CFLAGS="${extra_cflags}"
 
-	CFLAGS_DEBUG=-g
-	CFLAGS_OPTIMIZE="-O2 -fomit-frame-pointer"
-	CFLAGS_WARNING="-Wall -Wwrite-strings -Wsign-compare -Wdeclaration-after-statement"
-	LDFLAGS_DEBUG=
-	LDFLAGS_OPTIMIZE=
+        CFLAGS_DEBUG=-g
+        CFLAGS_OPTIMIZE="-O2 -fomit-frame-pointer"
+        CFLAGS_WARNING="-Wall -Wwrite-strings -Wsign-compare -Wdeclaration-after-statement"
+        LDFLAGS_DEBUG=
+        LDFLAGS_OPTIMIZE=
 
-	# Specify the CC output file names based on the target name
-	CC_OBJNAME="-o \$@"
-	CC_EXENAME="-o \$@"
+        # Specify the CC output file names based on the target name
+        CC_OBJNAME="-o \$@"
+        CC_EXENAME="-o \$@"
 
-	# Specify linker flags depending on the type of app being
-	# built -- Console vs. Window.
-	#
-	# ORIGINAL COMMENT:
-	# We need to pass -e _WinMain@16 so that ld will use
-	# WinMain() instead of main() as the entry point. We can't
-	# use autoconf to check for this case since it would need
-	# to run an executable and that does not work when
-	# cross compiling. Remove this -e workaround once we
-	# require a gcc that does not have this bug.
-	#
-	# MK NOTE: Tk should use a different mechanism. This causes
-	# interesting problems, such as wish dying at startup.
-	#LDFLAGS_WINDOW="-mwindows -e _WinMain@16 ${extra_ldflags}"
-	LDFLAGS_CONSOLE="-mconsole ${extra_ldflags}"
-	LDFLAGS_WINDOW="-mwindows ${extra_ldflags}"
+        # Specify linker flags depending on the type of app being
+        # built -- Console vs. Window.
+        #
+        # ORIGINAL COMMENT:
+        # We need to pass -e _WinMain@16 so that ld will use
+        # WinMain() instead of main() as the entry point. We can't
+        # use autoconf to check for this case since it would need
+        # to run an executable and that does not work when
+        # cross compiling. Remove this -e workaround once we
+        # require a gcc that does not have this bug.
+        #
+        # MK NOTE: Tk should use a different mechanism. This causes
+        # interesting problems, such as wish dying at startup.
+        #LDFLAGS_WINDOW="-mwindows -e _WinMain@16 ${extra_ldflags}"
+        LDFLAGS_CONSOLE="-mconsole ${extra_ldflags}"
+        LDFLAGS_WINDOW="-mwindows ${extra_ldflags}"
 
-	case "$do64bit" in
-	    amd64|x64|yes)
-		MACHINE="AMD64" ; # assume AMD64 as default 64-bit build
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result:    Using 64-bit $MACHINE mode" >&5
+        case "$do64bit" in
+            amd64|x64|yes)
+                MACHINE="AMD64" ; # assume AMD64 as default 64-bit build
+                { $as_echo "$as_me:${as_lineno-$LINENO}: result:    Using 64-bit $MACHINE mode" >&5
 $as_echo "   Using 64-bit $MACHINE mode" >&6; }
-		;;
-	    ia64)
-		MACHINE="IA64"
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: result:    Using 64-bit $MACHINE mode" >&5
+                ;;
+            ia64)
+                MACHINE="IA64"
+                { $as_echo "$as_me:${as_lineno-$LINENO}: result:    Using 64-bit $MACHINE mode" >&5
 $as_echo "   Using 64-bit $MACHINE mode" >&6; }
-		;;
-	    *)
-		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+                ;;
+            *)
+                cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-		    #ifndef _WIN64
-			#error 32-bit
-		    #endif
+                    #ifndef _WIN64
+                        #error 32-bit
+                    #endif
 
 int
 main ()
@@ -4328,164 +4328,164 @@ else
 
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-		if test "$tcl_win_64bit" = "yes" ; then
-			do64bit=amd64
-			MACHINE="AMD64"
-			{ $as_echo "$as_me:${as_lineno-$LINENO}: result:    Using 64-bit $MACHINE mode" >&5
+                if test "$tcl_win_64bit" = "yes" ; then
+                        do64bit=amd64
+                        MACHINE="AMD64"
+                        { $as_echo "$as_me:${as_lineno-$LINENO}: result:    Using 64-bit $MACHINE mode" >&5
 $as_echo "   Using 64-bit $MACHINE mode" >&6; }
-		fi
-		;;
-	esac
+                fi
+                ;;
+        esac
     else
-	if test "${SHARED_BUILD}" = "0" ; then
-	    # static
+        if test "${SHARED_BUILD}" = "0" ; then
+            # static
             { $as_echo "$as_me:${as_lineno-$LINENO}: result: using static flags" >&5
 $as_echo "using static flags" >&6; }
-	    runtime=-MT
-	    LIBRARIES="\${STATIC_LIBRARIES}"
-	    EXESUFFIX="s\${DBGX}.exe"
-	else
-	    # dynamic
+            runtime=-MT
+            LIBRARIES="\${STATIC_LIBRARIES}"
+            EXESUFFIX="s\${DBGX}.exe"
+        else
+            # dynamic
             { $as_echo "$as_me:${as_lineno-$LINENO}: result: using shared flags" >&5
 $as_echo "using shared flags" >&6; }
-	    runtime=-MD
-	    # Add SHLIB_LD_LIBS to the Make rule, not here.
-	    LIBRARIES="\${SHARED_LIBRARIES}"
-	    EXESUFFIX="\${DBGX}.exe"
-	    case "x`echo \${VisualStudioVersion}`" in
-		x1[4-9]*)
-		    lflags="${lflags} -nodefaultlib:libucrt.lib"
-		    ;;
-		*)
-		    ;;
-	    esac
-	fi
-	MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -out:\$@"
-	# DLLSUFFIX is separate because it is the building block for
-	# users of tclConfig.sh that may build shared or static.
-	DLLSUFFIX="\${DBGX}.dll"
-	LIBSUFFIX="\${DBGX}.lib"
-	LIBFLAGSUFFIX="\${DBGX}"
+            runtime=-MD
+            # Add SHLIB_LD_LIBS to the Make rule, not here.
+            LIBRARIES="\${SHARED_LIBRARIES}"
+            EXESUFFIX="\${DBGX}.exe"
+            case "x`echo \${VisualStudioVersion}`" in
+                x1[4-9]*)
+                    lflags="${lflags} -nodefaultlib:libucrt.lib"
+                    ;;
+                *)
+                    ;;
+            esac
+        fi
+        MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -out:\$@"
+        # DLLSUFFIX is separate because it is the building block for
+        # users of tclConfig.sh that may build shared or static.
+        DLLSUFFIX="\${DBGX}.dll"
+        LIBSUFFIX="\${DBGX}.lib"
+        LIBFLAGSUFFIX="\${DBGX}"
 
-	# This is a 2-stage check to make sure we have the 64-bit SDK
-	# We have to know where the SDK is installed.
-	# This magic is based on MS Platform SDK for Win2003 SP1 - hobbs
-	if test "$do64bit" != "no" ; then
-	    if test "x${MSSDK}x" = "xx" ; then
-		MSSDK="C:/Progra~1/Microsoft Platform SDK"
-	    fi
-	    MSSDK=`echo "$MSSDK" | sed -e 's!\\\!/!g'`
-	    PATH64=""
-	    case "$do64bit" in
-		amd64|x64|yes)
-		    MACHINE="AMD64" ; # assume AMD64 as default 64-bit build
-		    PATH64="${MSSDK}/Bin/Win64/x86/AMD64"
-		    ;;
-		ia64)
-		    MACHINE="IA64"
-		    PATH64="${MSSDK}/Bin/Win64"
-		    ;;
-	    esac
-	    if test ! -d "${PATH64}" ; then
-		{ $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Could not find 64-bit $MACHINE SDK" >&5
+        # This is a 2-stage check to make sure we have the 64-bit SDK
+        # We have to know where the SDK is installed.
+        # This magic is based on MS Platform SDK for Win2003 SP1 - hobbs
+        if test "$do64bit" != "no" ; then
+            if test "x${MSSDK}x" = "xx" ; then
+                MSSDK="C:/Progra~1/Microsoft Platform SDK"
+            fi
+            MSSDK=`echo "$MSSDK" | sed -e 's!\\\!/!g'`
+            PATH64=""
+            case "$do64bit" in
+                amd64|x64|yes)
+                    MACHINE="AMD64" ; # assume AMD64 as default 64-bit build
+                    PATH64="${MSSDK}/Bin/Win64/x86/AMD64"
+                    ;;
+                ia64)
+                    MACHINE="IA64"
+                    PATH64="${MSSDK}/Bin/Win64"
+                    ;;
+            esac
+            if test ! -d "${PATH64}" ; then
+                { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Could not find 64-bit $MACHINE SDK" >&5
 $as_echo "$as_me: WARNING: Could not find 64-bit $MACHINE SDK" >&2;}
-	    fi
-	    { $as_echo "$as_me:${as_lineno-$LINENO}: result:    Using 64-bit $MACHINE mode" >&5
+            fi
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result:    Using 64-bit $MACHINE mode" >&5
 $as_echo "   Using 64-bit $MACHINE mode" >&6; }
-	fi
+        fi
 
-	LIBS="netapi32.lib kernel32.lib user32.lib advapi32.lib userenv.lib ws2_32.lib"
+        LIBS="netapi32.lib kernel32.lib user32.lib advapi32.lib userenv.lib ws2_32.lib"
 
-	case "x`echo \${VisualStudioVersion}`" in
-		x1[4-9]*)
-		    LIBS="$LIBS ucrt.lib"
-		    ;;
-		*)
-		    ;;
-	esac
+        case "x`echo \${VisualStudioVersion}`" in
+                x1[4-9]*)
+                    LIBS="$LIBS ucrt.lib"
+                    ;;
+                *)
+                    ;;
+        esac
 
-	if test "$do64bit" != "no" ; then
-	    # The space-based-path will work for the Makefile, but will
-	    # not work if AC_TRY_COMPILE is called.  TEA has the
-	    # TEA_PATH_NOSPACE to avoid this issue.
-	    # Check if _WIN64 is already recognized, and if so we don't
-	    # need to modify CC.
-	    ac_fn_c_check_decl "$LINENO" "_WIN64" "ac_cv_have_decl__WIN64" "$ac_includes_default"
+        if test "$do64bit" != "no" ; then
+            # The space-based-path will work for the Makefile, but will
+            # not work if AC_TRY_COMPILE is called.  TEA has the
+            # TEA_PATH_NOSPACE to avoid this issue.
+            # Check if _WIN64 is already recognized, and if so we don't
+            # need to modify CC.
+            ac_fn_c_check_decl "$LINENO" "_WIN64" "ac_cv_have_decl__WIN64" "$ac_includes_default"
 if test "x$ac_cv_have_decl__WIN64" = xyes; then :
 
 else
   CC="\"${PATH64}/cl.exe\" -I\"${MSSDK}/Include\" \
-			 -I\"${MSSDK}/Include/crt\" \
-			 -I\"${MSSDK}/Include/crt/sys\""
+                         -I\"${MSSDK}/Include/crt\" \
+                         -I\"${MSSDK}/Include/crt/sys\""
 fi
 
-	    RC="\"${MSSDK}/bin/rc.exe\""
-	    CFLAGS_DEBUG="-nologo -Zi -Od ${runtime}d"
-	    # Do not use -O2 for Win64 - this has proved buggy in code gen.
-	    CFLAGS_OPTIMIZE="-nologo -O1 ${runtime}"
-	    lflags="${lflags} -nologo -MACHINE:${MACHINE} -LIBPATH:\"${MSSDK}/Lib/${MACHINE}\""
-	    LINKBIN="\"${PATH64}/link.exe\""
-	    # Avoid 'unresolved external symbol __security_cookie' errors.
-	    # c.f. http://support.microsoft.com/?id=894573
-	    LIBS="$LIBS bufferoverflowU.lib"
-	else
-	    RC="rc"
-	    # -Od - no optimization
-	    # -WX - warnings as errors
-	    CFLAGS_DEBUG="-nologo -Z7 -Od -WX ${runtime}d"
-	    # -O2 - create fast code (/Og /Oi /Ot /Oy /Ob2 /Gs /GF /Gy)
-	    CFLAGS_OPTIMIZE="-nologo -O2 ${runtime}"
-	    lflags="${lflags} -nologo"
-	    LINKBIN="link"
-	fi
+            RC="\"${MSSDK}/bin/rc.exe\""
+            CFLAGS_DEBUG="-nologo -Zi -Od ${runtime}d"
+            # Do not use -O2 for Win64 - this has proved buggy in code gen.
+            CFLAGS_OPTIMIZE="-nologo -O1 ${runtime}"
+            lflags="${lflags} -nologo -MACHINE:${MACHINE} -LIBPATH:\"${MSSDK}/Lib/${MACHINE}\""
+            LINKBIN="\"${PATH64}/link.exe\""
+            # Avoid 'unresolved external symbol __security_cookie' errors.
+            # c.f. http://support.microsoft.com/?id=894573
+            LIBS="$LIBS bufferoverflowU.lib"
+        else
+            RC="rc"
+            # -Od - no optimization
+            # -WX - warnings as errors
+            CFLAGS_DEBUG="-nologo -Z7 -Od -WX ${runtime}d"
+            # -O2 - create fast code (/Og /Oi /Ot /Oy /Ob2 /Gs /GF /Gy)
+            CFLAGS_OPTIMIZE="-nologo -O2 ${runtime}"
+            lflags="${lflags} -nologo"
+            LINKBIN="link"
+        fi
 
-	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib"
+        LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib"
 
-	SHLIB_LD="${LINKBIN} -dll -incremental:no ${lflags}"
-	SHLIB_LD_LIBS='${LIBS}'
-	# link -lib only works when -lib is the first arg
-	STLIB_LD="${LINKBIN} -lib ${lflags}"
-	RC_OUT=-fo
-	RC_TYPE=-r
-	RC_INCLUDE=-i
-	RC_DEFINE=-d
-	RES=res
-	MAKE_LIB="\${STLIB_LD} -out:\$@"
-	MAKE_STUB_LIB="\${STLIB_LD} -nodefaultlib -out:\$@"
-	POST_MAKE_LIB=
-	MAKE_EXE="\${CC} -Fe\$@"
-	LIBPREFIX=""
+        SHLIB_LD="${LINKBIN} -dll -incremental:no ${lflags}"
+        SHLIB_LD_LIBS='${LIBS}'
+        # link -lib only works when -lib is the first arg
+        STLIB_LD="${LINKBIN} -lib ${lflags}"
+        RC_OUT=-fo
+        RC_TYPE=-r
+        RC_INCLUDE=-i
+        RC_DEFINE=-d
+        RES=res
+        MAKE_LIB="\${STLIB_LD} -out:\$@"
+        MAKE_STUB_LIB="\${STLIB_LD} -nodefaultlib -out:\$@"
+        POST_MAKE_LIB=
+        MAKE_EXE="\${CC} -Fe\$@"
+        LIBPREFIX=""
 
-	CFLAGS_DEBUG="${CFLAGS_DEBUG} -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE"
-	CFLAGS_OPTIMIZE="${CFLAGS_OPTIMIZE} -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE"
+        CFLAGS_DEBUG="${CFLAGS_DEBUG} -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE"
+        CFLAGS_OPTIMIZE="${CFLAGS_OPTIMIZE} -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE"
 
-	EXTRA_CFLAGS=""
-	CFLAGS_WARNING="-W3"
-	LDFLAGS_DEBUG="-debug"
-	LDFLAGS_OPTIMIZE="-release"
+        EXTRA_CFLAGS=""
+        CFLAGS_WARNING="-W3"
+        LDFLAGS_DEBUG="-debug"
+        LDFLAGS_OPTIMIZE="-release"
 
-	# Specify the CC output file names based on the target name
-	CC_OBJNAME="-Fo\$@"
-	CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) '\$@')\""
+        # Specify the CC output file names based on the target name
+        CC_OBJNAME="-Fo\$@"
+        CC_EXENAME="-Fe\"\$(shell \$(CYGPATH) '\$@')\""
 
-	# Specify linker flags depending on the type of app being
-	# built -- Console vs. Window.
-	if test "${TARGETCPU}" != "X86"; then
-	    LDFLAGS_CONSOLE="-link ${lflags}"
-	    LDFLAGS_WINDOW=${LDFLAGS_CONSOLE}
-	else
-	    LDFLAGS_CONSOLE="-link -subsystem:console ${lflags}"
-	    LDFLAGS_WINDOW="-link -subsystem:windows ${lflags}"
-	fi
+        # Specify linker flags depending on the type of app being
+        # built -- Console vs. Window.
+        if test "${TARGETCPU}" != "X86"; then
+            LDFLAGS_CONSOLE="-link ${lflags}"
+            LDFLAGS_WINDOW=${LDFLAGS_CONSOLE}
+        else
+            LDFLAGS_CONSOLE="-link -subsystem:console ${lflags}"
+            LDFLAGS_WINDOW="-link -subsystem:windows ${lflags}"
+        fi
     fi
 
     if test "$do64bit" != "no" ; then
-	$as_echo "#define TCL_CFG_DO64BIT 1" >>confdefs.h
+        $as_echo "#define TCL_CFG_DO64BIT 1" >>confdefs.h
 
     fi
 
     if test "${GCC}" = "yes" ; then
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SEH support in compiler" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for SEH support in compiler" >&5
 $as_echo_n "checking for SEH support in compiler... " >&6; }
 if ${tcl_cv_seh+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4496,20 +4496,20 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-	    #define WIN32_LEAN_AND_MEAN
-	    #include <windows.h>
-	    #undef WIN32_LEAN_AND_MEAN
+            #define WIN32_LEAN_AND_MEAN
+            #include <windows.h>
+            #undef WIN32_LEAN_AND_MEAN
 
-	    int main(int argc, char** argv) {
-		int a, b = 0;
-		__try {
-		    a = 666 / b;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER) {
-		    return 0;
-		}
-		return 1;
-	    }
+            int main(int argc, char** argv) {
+                int a, b = 0;
+                __try {
+                    a = 666 / b;
+                }
+                __except (EXCEPTION_EXECUTE_HANDLER) {
+                    return 0;
+                }
+                return 1;
+            }
 
 _ACEOF
 if ac_fn_c_try_run "$LINENO"; then :
@@ -4525,19 +4525,19 @@ fi
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_seh" >&5
 $as_echo "$tcl_cv_seh" >&6; }
-	if test "$tcl_cv_seh" = "no" ; then
+        if test "$tcl_cv_seh" = "no" ; then
 
 $as_echo "#define HAVE_NO_SEH 1" >>confdefs.h
 
-	fi
+        fi
 
-	#
-	# Check to see if the excpt.h include file provided contains the
-	# definition for EXCEPTION_DISPOSITION; if not, which is the case
-	# with Cygwin's version as of 2002-04-10, define it to be int,
-	# sufficient for getting the current code to work.
-	#
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for EXCEPTION_DISPOSITION support in include files" >&5
+        #
+        # Check to see if the excpt.h include file provided contains the
+        # definition for EXCEPTION_DISPOSITION; if not, which is the case
+        # with Cygwin's version as of 2002-04-10, define it to be int,
+        # sufficient for getting the current code to work.
+        #
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for EXCEPTION_DISPOSITION support in include files" >&5
 $as_echo_n "checking for EXCEPTION_DISPOSITION support in include files... " >&6; }
 if ${tcl_cv_eh_disposition+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4545,15 +4545,15 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-#	    define WIN32_LEAN_AND_MEAN
-#	    include <windows.h>
-#	    undef WIN32_LEAN_AND_MEAN
+#           define WIN32_LEAN_AND_MEAN
+#           include <windows.h>
+#           undef WIN32_LEAN_AND_MEAN
 
 int
 main ()
 {
 
-		EXCEPTION_DISPOSITION x;
+                EXCEPTION_DISPOSITION x;
 
   ;
   return 0;
@@ -4569,17 +4569,17 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_eh_disposition" >&5
 $as_echo "$tcl_cv_eh_disposition" >&6; }
-	if test "$tcl_cv_eh_disposition" = "no" ; then
+        if test "$tcl_cv_eh_disposition" = "no" ; then
 
 $as_echo "#define EXCEPTION_DISPOSITION int" >>confdefs.h
 
-	fi
+        fi
 
-	# Check to see if winnt.h defines CHAR, SHORT, and LONG
-	# even if VOID has already been #defined. The win32api
-	# used by mingw and cygwin is known to do this.
+        # Check to see if winnt.h defines CHAR, SHORT, and LONG
+        # even if VOID has already been #defined. The win32api
+        # used by mingw and cygwin is known to do this.
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for winnt.h that ignores VOID define" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for winnt.h that ignores VOID define" >&5
 $as_echo_n "checking for winnt.h that ignores VOID define... " >&6; }
 if ${tcl_cv_winnt_ignore_void+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4587,18 +4587,18 @@ else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
-		#define VOID void
-		#define WIN32_LEAN_AND_MEAN
-		#include <windows.h>
-		#undef WIN32_LEAN_AND_MEAN
+                #define VOID void
+                #define WIN32_LEAN_AND_MEAN
+                #include <windows.h>
+                #undef WIN32_LEAN_AND_MEAN
 
 int
 main ()
 {
 
-		CHAR c;
-		SHORT s;
-		LONG l;
+                CHAR c;
+                SHORT s;
+                LONG l;
 
   ;
   return 0;
@@ -4614,17 +4614,17 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_winnt_ignore_void" >&5
 $as_echo "$tcl_cv_winnt_ignore_void" >&6; }
-	if test "$tcl_cv_winnt_ignore_void" = "yes" ; then
+        if test "$tcl_cv_winnt_ignore_void" = "yes" ; then
 
 $as_echo "#define HAVE_WINNT_IGNORE_VOID 1" >>confdefs.h
 
-	fi
+        fi
 
-	# See if the compiler supports casting to a union type.
-	# This is used to stop gcc from printing a compiler
-	# warning when initializing a union member.
+        # See if the compiler supports casting to a union type.
+        # This is used to stop gcc from printing a compiler
+        # warning when initializing a union member.
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for cast to union support" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: checking for cast to union support" >&5
 $as_echo_n "checking for cast to union support... " >&6; }
 if ${tcl_cv_cast_to_union+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -4636,8 +4636,8 @@ int
 main ()
 {
 
-		  union foo { int i; double d; };
-		  union foo f = (union foo) (int) 0;
+                  union foo { int i; double d; };
+                  union foo f = (union foo) (int) 0;
 
   ;
   return 0;
@@ -4653,11 +4653,11 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_cast_to_union" >&5
 $as_echo "$tcl_cv_cast_to_union" >&6; }
-	if test "$tcl_cv_cast_to_union" = "yes"; then
+        if test "$tcl_cv_cast_to_union" = "yes"; then
 
 $as_echo "#define HAVE_CAST_TO_UNION 1" >>confdefs.h
 
-	fi
+        fi
     fi
 
     # DL_LIBS is empty, but then we match the Unix version
@@ -4761,25 +4761,25 @@ fi
 
 # FIXME: Currently, LDFLAGS_DEFAULT is not used, it should work like CFLAGS_DEFAULT.
     if test "$tcl_ok" = "no"; then
-	CFLAGS_DEFAULT='$(CFLAGS_OPTIMIZE)'
-	LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
-	DBGX=""
+        CFLAGS_DEFAULT='$(CFLAGS_OPTIMIZE)'
+        LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
+        DBGX=""
 
 $as_echo "#define NDEBUG 1" >>confdefs.h
 
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
 
-	$as_echo "#define TCL_CFG_OPTIMIZED 1" >>confdefs.h
+        $as_echo "#define TCL_CFG_OPTIMIZED 1" >>confdefs.h
 
     else
-	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
-	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
-	DBGX=g
-	if test "$tcl_ok" = "yes"; then
-	    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (standard debugging)" >&5
+        CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
+        LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
+        DBGX=g
+        if test "$tcl_ok" = "yes"; then
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (standard debugging)" >&5
 $as_echo "yes (standard debugging)" >&6; }
-	fi
+        fi
     fi
 
 
@@ -4800,13 +4800,13 @@ $as_echo "#define TCL_COMPILE_STATS 1" >>confdefs.h
     fi
 
     if test "$tcl_ok" != "yes" -a "$tcl_ok" != "no"; then
-	if test "$tcl_ok" = "all"; then
-	    { $as_echo "$as_me:${as_lineno-$LINENO}: result: enabled symbols mem compile debugging" >&5
+        if test "$tcl_ok" = "all"; then
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: enabled symbols mem compile debugging" >&5
 $as_echo "enabled symbols mem compile debugging" >&6; }
-	else
-	    { $as_echo "$as_me:${as_lineno-$LINENO}: result: enabled $tcl_ok debugging" >&5
+        else
+            { $as_echo "$as_me:${as_lineno-$LINENO}: result: enabled $tcl_ok debugging" >&5
 $as_echo "enabled $tcl_ok debugging" >&6; }
-	fi
+        fi
     fi
 
 
@@ -4832,8 +4832,8 @@ fi
     result=no
     if test "$embed_ok" = "yes" -a "${SHARED_BUILD}" = "1" \
        -a "$GCC" != "yes" ; then
-	# Add the magic to embed the manifest into the dll/exe
-	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+        # Add the magic to embed the manifest into the dll/exe
+        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 #if defined(_MSC_VER) && _MSC_VER >= 1400
@@ -4844,18 +4844,18 @@ _ACEOF
 if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
   $EGREP "manifest needed" >/dev/null 2>&1; then :
 
-	# Could do a CHECK_PROG for mt, but should always be with MSVC8+
-	# Could add 'if test -f' check, but manifest should be created
-	# in this compiler case
-	# Add in a manifest argument that may be specified
-	# XXX Needs improvement so that the test for existence accounts
-	# XXX for a provided (known) manifest
-	VC_MANIFEST_EMBED_DLL="if test -f \$@.manifest ; then mt.exe -nologo -manifest \$@.manifest wish.exe.manifest -outputresource:\$@\;2 ; fi"
-	VC_MANIFEST_EMBED_EXE="if test -f \$@.manifest ; then mt.exe -nologo -manifest \$@.manifest wish.exe.manifest -outputresource:\$@\;1 ; fi"
-	result=yes
-	if test "xwish.exe.manifest" != x ; then
-	    result="yes (wish.exe.manifest)"
-	fi
+        # Could do a CHECK_PROG for mt, but should always be with MSVC8+
+        # Could add 'if test -f' check, but manifest should be created
+        # in this compiler case
+        # Add in a manifest argument that may be specified
+        # XXX Needs improvement so that the test for existence accounts
+        # XXX for a provided (known) manifest
+        VC_MANIFEST_EMBED_DLL="if test -f \$@.manifest ; then mt.exe -nologo -manifest \$@.manifest wish.exe.manifest -outputresource:\$@\;2 ; fi"
+        VC_MANIFEST_EMBED_EXE="if test -f \$@.manifest ; then mt.exe -nologo -manifest \$@.manifest wish.exe.manifest -outputresource:\$@\;1 ; fi"
+        result=yes
+        if test "xwish.exe.manifest" != x ; then
+            result="yes (wish.exe.manifest)"
+        fi
 
 fi
 rm -f conftest*
@@ -4883,30 +4883,30 @@ $as_echo_n "checking for tclsh... " >&6; }
   $as_echo_n "(cached) " >&6
 else
 
-	search_path=`echo ${PATH} | sed -e 's/:/ /g'`
-	for dir in $search_path ; do
-	    for j in `ls -r $dir/tclsh[8-9]*.exe 2> /dev/null` \
-		    `ls -r $dir/tclsh* 2> /dev/null` ; do
-		if test x"$ac_cv_path_tclsh" = x ; then
-		    if test -f "$j" ; then
-			ac_cv_path_tclsh=$j
-			break
-		    fi
-		fi
-	    done
-	done
+        search_path=`echo ${PATH} | sed -e 's/:/ /g'`
+        for dir in $search_path ; do
+            for j in `ls -r $dir/tclsh[8-9]*.exe 2> /dev/null` \
+                    `ls -r $dir/tclsh* 2> /dev/null` ; do
+                if test x"$ac_cv_path_tclsh" = x ; then
+                    if test -f "$j" ; then
+                        ac_cv_path_tclsh=$j
+                        break
+                    fi
+                fi
+            done
+        done
 
 fi
 
 
     if test -f "$ac_cv_path_tclsh" ; then
-	TCLSH_PROG="$ac_cv_path_tclsh"
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $TCLSH_PROG" >&5
+        TCLSH_PROG="$ac_cv_path_tclsh"
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: $TCLSH_PROG" >&5
 $as_echo "$TCLSH_PROG" >&6; }
     else
-	# It is not an error if an installed version of Tcl can't be located.
-	TCLSH_PROG=""
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: No tclsh found on PATH" >&5
+        # It is not an error if an installed version of Tcl can't be located.
+        TCLSH_PROG=""
+        { $as_echo "$as_me:${as_lineno-$LINENO}: result: No tclsh found on PATH" >&5
 $as_echo "No tclsh found on PATH" >&6; }
     fi
 
@@ -5116,8 +5116,8 @@ $as_echo "$as_me: WARNING: cache variable $ac_var contains a newline" >&2;} ;;
       # `set' does not quote correctly, so add quotes: double-quote
       # substitution turns \\\\ into \\, and sed turns \\ into \.
       sed -n \
-	"s/'/'\\\\''/g;
-	  s/^\\([_$as_cr_alnum]*_cv_[_$as_cr_alnum]*\\)=\\(.*\\)/\\1='\\2'/p"
+        "s/'/'\\\\''/g;
+          s/^\\([_$as_cr_alnum]*_cv_[_$as_cr_alnum]*\\)=\\(.*\\)/\\1='\\2'/p"
       ;; #(
     *)
       # `set' quotes correctly as required by POSIX, so do not add quotes.
@@ -5140,15 +5140,15 @@ if diff "$cache_file" confcache >/dev/null 2>&1; then :; else
       { $as_echo "$as_me:${as_lineno-$LINENO}: updating cache $cache_file" >&5
 $as_echo "$as_me: updating cache $cache_file" >&6;}
       if test ! -f "$cache_file" || test -h "$cache_file"; then
-	cat confcache >"$cache_file"
+        cat confcache >"$cache_file"
       else
         case $cache_file in #(
         */* | ?:*)
-	  mv -f confcache "$cache_file"$$ &&
-	  mv -f "$cache_file"$$ "$cache_file" ;; #(
+          mv -f confcache "$cache_file"$$ &&
+          mv -f "$cache_file"$$ "$cache_file" ;; #(
         *)
-	  mv -f confcache "$cache_file" ;;
-	esac
+          mv -f confcache "$cache_file" ;;
+        esac
       fi
     fi
   else
@@ -5178,23 +5178,23 @@ ac_script='
 }
 t clear
 :clear
-s/^[	 ]*#[	 ]*define[	 ][	 ]*\([^	 (][^	 (]*([^)]*)\)[	 ]*\(.*\)/-D\1=\2/g
+s/^[     ]*#[    ]*define[       ][      ]*\([^  (][^    (]*([^)]*)\)[   ]*\(.*\)/-D\1=\2/g
 t quote
-s/^[	 ]*#[	 ]*define[	 ][	 ]*\([^	 ][^	 ]*\)[	 ]*\(.*\)/-D\1=\2/g
+s/^[     ]*#[    ]*define[       ][      ]*\([^  ][^     ]*\)[   ]*\(.*\)/-D\1=\2/g
 t quote
 b any
 :quote
-s/[	 `~#$^&*(){}\\|;'\''"<>?]/\\&/g
+s/[      `~#$^&*(){}\\|;'\''"<>?]/\\&/g
 s/\[/\\&/g
 s/\]/\\&/g
 s/\$/$$/g
 H
 :any
 ${
-	g
-	s/^\n//
-	s/\n/ /g
-	p
+        g
+        s/^\n//
+        s/\n/ /g
+        p
 }
 '
 DEFS=`sed -n "$ac_script" confdefs.h`
@@ -5289,8 +5289,8 @@ else
       arg=$1;
       case $arg in #(
       *"$as_nl"*)
-	expr "X$arg" : "X\\(.*\\)$as_nl";
-	arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
+        expr "X$arg" : "X\\(.*\\)$as_nl";
+        arg=`expr "X$arg" : ".*$as_nl\\(.*\\)"`;;
       esac;
       expr "X$arg" : "X\\(.*\\)" | tr -d "$as_nl"
     '
@@ -5316,7 +5316,7 @@ fi
 # there to prevent editors from complaining about space-tab.
 # (If _AS_PATH_WALK were called with IFS unset, it would disable word
 # splitting by setting IFS to empty value.)
-IFS=" ""	$as_nl"
+IFS=" ""        $as_nl"
 
 # Find who we are.  Look in the path if we contain no directory separator.
 as_myself=
@@ -5465,22 +5465,22 @@ fi
 
 as_me=`$as_basename -- "$0" ||
 $as_expr X/"$0" : '.*/\([^/][^/]*\)/*$' \| \
-	 X"$0" : 'X\(//\)$' \| \
-	 X"$0" : 'X\(/\)' \| . 2>/dev/null ||
+         X"$0" : 'X\(//\)$' \| \
+         X"$0" : 'X\(/\)' \| . 2>/dev/null ||
 $as_echo X/"$0" |
     sed '/^.*\/\([^/][^/]*\)\/*$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\/\(\/\/\)$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\/\(\/\).*/{
-	    s//\1/
-	    q
-	  }
-	  s/.*/./; q'`
+            s//\1/
+            q
+          }
+          /^X\/\(\/\/\)$/{
+            s//\1/
+            q
+          }
+          /^X\/\(\/\).*/{
+            s//\1/
+            q
+          }
+          s/.*/./; q'`
 
 # Avoid depending upon Character Ranges.
 as_cr_letters='abcdefghijklmnopqrstuvwxyz'
@@ -5493,10 +5493,10 @@ ECHO_C= ECHO_N= ECHO_T=
 case `echo -n x` in #(((((
 -n*)
   case `echo 'xy\c'` in
-  *c*) ECHO_T='	';;	# ECHO_T is single tab character.
+  *c*) ECHO_T=' ';;     # ECHO_T is single tab character.
   xy)  ECHO_C='\c';;
   *)   echo `echo ksh88 bug on AIX 6.1` > /dev/null
-       ECHO_T='	';;
+       ECHO_T=' ';;
   esac;;
 *)
   ECHO_N='-n';;
@@ -5549,27 +5549,27 @@ as_fn_mkdir_p ()
       as_dirs="'$as_qdir' $as_dirs"
       as_dir=`$as_dirname -- "$as_dir" ||
 $as_expr X"$as_dir" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-	 X"$as_dir" : 'X\(//\)[^/]' \| \
-	 X"$as_dir" : 'X\(//\)$' \| \
-	 X"$as_dir" : 'X\(/\)' \| . 2>/dev/null ||
+         X"$as_dir" : 'X\(//\)[^/]' \| \
+         X"$as_dir" : 'X\(//\)$' \| \
+         X"$as_dir" : 'X\(/\)' \| . 2>/dev/null ||
 $as_echo X"$as_dir" |
     sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)[^/].*/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\).*/{
-	    s//\1/
-	    q
-	  }
-	  s/.*/./; q'`
+            s//\1/
+            q
+          }
+          /^X\(\/\/\)[^/].*/{
+            s//\1/
+            q
+          }
+          /^X\(\/\/\)$/{
+            s//\1/
+            q
+          }
+          /^X\(\/\).*/{
+            s//\1/
+            q
+          }
+          s/.*/./; q'`
       test -d "$as_dir" && break
     done
     test -z "$as_dirs" || eval "mkdir $as_dirs"
@@ -5958,21 +5958,21 @@ _ACEOF
 # trailing colons and then remove the whole line if VPATH becomes empty
 # (actually we leave an empty line to preserve line numbers).
 if test "x$srcdir" = x.; then
-  ac_vpsub='/^[	 ]*VPATH[	 ]*=[	 ]*/{
+  ac_vpsub='/^[  ]*VPATH[        ]*=[    ]*/{
 h
 s///
 s/^/:/
-s/[	 ]*$/:/
+s/[      ]*$/:/
 s/:\$(srcdir):/:/g
 s/:\${srcdir}:/:/g
 s/:@srcdir@:/:/g
 s/^:*//
 s/:*$//
 x
-s/\(=[	 ]*\).*/\1/
+s/\(=[   ]*\).*/\1/
 G
 s/\n//
-s/^[^=]*=[	 ]*$//
+s/^[^=]*=[       ]*$//
 }'
 fi
 
@@ -6010,14 +6010,14 @@ do
       case $ac_f in
       -) ac_f="$ac_tmp/stdin";;
       *) # Look for the file first in the build tree, then in the source tree
-	 # (if the path is not absolute).  The absolute path cannot be DOS-style,
-	 # because $ac_f cannot contain `:'.
-	 test -f "$ac_f" ||
-	   case $ac_f in
-	   [\\/$]*) false;;
-	   *) test -f "$srcdir/$ac_f" && ac_f="$srcdir/$ac_f";;
-	   esac ||
-	   as_fn_error 1 "cannot find input file: \`$ac_f'" "$LINENO" 5;;
+         # (if the path is not absolute).  The absolute path cannot be DOS-style,
+         # because $ac_f cannot contain `:'.
+         test -f "$ac_f" ||
+           case $ac_f in
+           [\\/$]*) false;;
+           *) test -f "$srcdir/$ac_f" && ac_f="$srcdir/$ac_f";;
+           esac ||
+           as_fn_error 1 "cannot find input file: \`$ac_f'" "$LINENO" 5;;
       esac
       case $ac_f in *\'*) ac_f=`$as_echo "$ac_f" | sed "s/'/'\\\\\\\\''/g"`;; esac
       as_fn_append ac_file_inputs " '$ac_f'"
@@ -6027,8 +6027,8 @@ do
     # use $as_me), people would be surprised to read:
     #    /* config.h.  Generated by config.status.  */
     configure_input='Generated from '`
-	  $as_echo "$*" | sed 's|^[^:]*/||;s|:[^:]*/|, |g'
-	`' by configure.'
+          $as_echo "$*" | sed 's|^[^:]*/||;s|:[^:]*/|, |g'
+        `' by configure.'
     if test x"$ac_file" != x-; then
       configure_input="$ac_file.  $configure_input"
       { $as_echo "$as_me:${as_lineno-$LINENO}: creating $ac_file" >&5
@@ -6051,27 +6051,27 @@ $as_echo "$as_me: creating $ac_file" >&6;}
 
   ac_dir=`$as_dirname -- "$ac_file" ||
 $as_expr X"$ac_file" : 'X\(.*[^/]\)//*[^/][^/]*/*$' \| \
-	 X"$ac_file" : 'X\(//\)[^/]' \| \
-	 X"$ac_file" : 'X\(//\)$' \| \
-	 X"$ac_file" : 'X\(/\)' \| . 2>/dev/null ||
+         X"$ac_file" : 'X\(//\)[^/]' \| \
+         X"$ac_file" : 'X\(//\)$' \| \
+         X"$ac_file" : 'X\(/\)' \| . 2>/dev/null ||
 $as_echo X"$ac_file" |
     sed '/^X\(.*[^/]\)\/\/*[^/][^/]*\/*$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)[^/].*/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\/\)$/{
-	    s//\1/
-	    q
-	  }
-	  /^X\(\/\).*/{
-	    s//\1/
-	    q
-	  }
-	  s/.*/./; q'`
+            s//\1/
+            q
+          }
+          /^X\(\/\/\)[^/].*/{
+            s//\1/
+            q
+          }
+          /^X\(\/\/\)$/{
+            s//\1/
+            q
+          }
+          /^X\(\/\).*/{
+            s//\1/
+            q
+          }
+          s/.*/./; q'`
   as_dir="$ac_dir"; as_fn_mkdir_p
   ac_builddir=.
 
@@ -6174,7 +6174,7 @@ eval sed \"\$ac_sed_extra\" "$ac_file_inputs" | $AWK -f "$ac_tmp/subs.awk" \
 
 test -z "$ac_datarootdir_hack$ac_datarootdir_seen" &&
   { ac_out=`sed -n '/\${datarootdir}/p' "$ac_tmp/out"`; test -n "$ac_out"; } &&
-  { ac_out=`sed -n '/^[	 ]*datarootdir[	 ]*:*=/p' \
+  { ac_out=`sed -n '/^[  ]*datarootdir[  ]*:*=/p' \
       "$ac_tmp/out"`; test -z "$ac_out"; } &&
   { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $ac_file contains a reference to the variable \`datarootdir'
 which seems to be undefined.  Please make sure it is defined" >&5

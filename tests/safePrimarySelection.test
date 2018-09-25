@@ -49,8 +49,8 @@ namespace eval ::_test_tmp {
 
 foreach pkg [info loaded] {
     if {[lindex $pkg 1] eq "Tk"} {
-	set ::_test_tmp::TkLoadCmd [list load {*}$pkg]
-	break
+        set ::_test_tmp::TkLoadCmd [list load {*}$pkg]
+        break
     }
 }
 

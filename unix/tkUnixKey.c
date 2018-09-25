@@ -1,8 +1,8 @@
 /*
  * tkUnixKey.c --
  *
- *	This file contains routines for dealing with international keyboard
- *	input.
+ *      This file contains routines for dealing with international keyboard
+ *      input.
  *
  * Copyright (c) 1997 by Sun Microsystems, Inc.
  *
@@ -22,9 +22,9 @@
 #else
 #  define XkbKeycodeToKeysym(D,K,G,L) XKeycodeToKeysym(D,K,L)
 #endif
-#define TkKeycodeToKeysym(D,K,G,L)		\
-    ((D)->flags & TK_DISPLAY_USE_XKB) ?		\
-      XkbKeycodeToKeysym((D)->display,K,G,L) :	\
+#define TkKeycodeToKeysym(D,K,G,L)              \
+    ((D)->flags & TK_DISPLAY_USE_XKB) ?         \
+      XkbKeycodeToKeysym((D)->display,K,G,L) :  \
       XKeycodeToKeysym((D)->display,K,L)
 
 /*
@@ -36,9 +36,9 @@
  *
  * Tk_SetCaretPos --
  *
- *	This enables correct placement of the XIM caret. This is called by
- *	widgets to indicate their cursor placement. This is currently only
- *	used for over-the-spot XIM.
+ *      This enables correct placement of the XIM caret. This is called by
+ *      widgets to indicate their cursor placement. This is currently only
+ *      used for over-the-spot XIM.
  *
  *----------------------------------------------------------------------
  */
@@ -54,10 +54,10 @@ Tk_SetCaretPos(
     TkDisplay *dispPtr = winPtr->dispPtr;
 
     if ((dispPtr->caret.winPtr == winPtr)
-	    && (dispPtr->caret.x == x)
-	    && (dispPtr->caret.y == y)
-	    && (dispPtr->caret.height == height)) {
-	return;
+            && (dispPtr->caret.x == x)
+            && (dispPtr->caret.y == y)
+            && (dispPtr->caret.height == height)) {
+        return;
     }
 
     dispPtr->caret.winPtr = winPtr;
@@ -71,17 +71,17 @@ Tk_SetCaretPos(
 
 #ifdef TK_USE_INPUT_METHODS
     if ((dispPtr->flags & TK_DISPLAY_USE_IM)
-	    && (dispPtr->inputStyle & XIMPreeditPosition)
-	    && (winPtr->inputContext != NULL)) {
-	XVaNestedList preedit_attr;
-	XPoint spot;
+            && (dispPtr->inputStyle & XIMPreeditPosition)
+            && (winPtr->inputContext != NULL)) {
+        XVaNestedList preedit_attr;
+        XPoint spot;
 
-	spot.x = dispPtr->caret.x;
-	spot.y = dispPtr->caret.y + dispPtr->caret.height;
-	preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
-	XSetICValues(winPtr->inputContext, XNPreeditAttributes, preedit_attr,
-		NULL);
-	XFree(preedit_attr);
+        spot.x = dispPtr->caret.x;
+        spot.y = dispPtr->caret.y + dispPtr->caret.height;
+        preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, NULL);
+        XSetICValues(winPtr->inputContext, XNPreeditAttributes, preedit_attr,
+                NULL);
+        XFree(preedit_attr);
     }
 #endif
 }
@@ -91,24 +91,24 @@ Tk_SetCaretPos(
  *
  * TkpGetString --
  *
- *	Retrieve the UTF string associated with a keyboard event.
+ *      Retrieve the UTF string associated with a keyboard event.
  *
  * Results:
- *	Returns the UTF string.
+ *      Returns the UTF string.
  *
  * Side effects:
- *	Stores the input string in the specified Tcl_DString. Modifies the
- *	internal input state. This routine can only be called once for a given
- *	event.
+ *      Stores the input string in the specified Tcl_DString. Modifies the
+ *      internal input state. This routine can only be called once for a given
+ *      event.
  *
  *----------------------------------------------------------------------
  */
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred */
-    XEvent *eventPtr,		/* X keyboard event. */
-    Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
+    TkWindow *winPtr,           /* Window where event occurred */
+    XEvent *eventPtr,           /* X keyboard event. */
+    Tcl_DString *dsPtr)         /* Initialized, empty string to hold result. */
 {
     size_t len;
     Tcl_DString buf;
@@ -119,10 +119,10 @@ TkpGetString(
      */
 
     if (kePtr->charValuePtr != NULL) {
-	Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
-	memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
-		kePtr->charValueLen+1);
-	return Tcl_DStringValue(dsPtr);
+        Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
+        memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
+                kePtr->charValueLen+1);
+        return Tcl_DStringValue(dsPtr);
     }
 
     /*
@@ -131,95 +131,95 @@ TkpGetString(
      */
 
     if (eventPtr->type != KeyPress) {
-	len = 0;
-	Tcl_DStringSetLength(dsPtr, len);
-	goto done;
+        len = 0;
+        Tcl_DStringSetLength(dsPtr, len);
+        goto done;
     }
 
 #ifdef TK_USE_INPUT_METHODS
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
-	    && (winPtr->inputContext != NULL)
-	    && (eventPtr->type == KeyPress)) {
-	Status status;
+            && (winPtr->inputContext != NULL)
+            && (eventPtr->type == KeyPress)) {
+        Status status;
 
 #if X_HAVE_UTF8_STRING
-	Tcl_DStringSetLength(dsPtr, TCL_DSTRING_STATIC_SIZE-1);
-	len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
-		Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
-		&kePtr->keysym, &status);
-
-	if (status == XBufferOverflow) {
-	    /*
-	     * Expand buffer and try again.
-	     */
-
-	    Tcl_DStringSetLength(dsPtr, len);
-	    len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
-		    Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
-		    &kePtr->keysym, &status);
-	}
-	if ((status != XLookupChars) && (status != XLookupBoth)) {
-	    len = 0;
-	}
-	Tcl_DStringSetLength(dsPtr, len);
-#else /* !X_HAVE_UTF8_STRING */
-	/*
-	 * Overallocate the dstring to the maximum stack amount.
-	 */
-
-	Tcl_DStringInit(&buf);
-	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
-	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
-		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf),
+        Tcl_DStringSetLength(dsPtr, TCL_DSTRING_STATIC_SIZE-1);
+        len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+                Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
                 &kePtr->keysym, &status);
 
-	/*
-	 * If the buffer wasn't big enough, grow the buffer and try again.
-	 */
+        if (status == XBufferOverflow) {
+            /*
+             * Expand buffer and try again.
+             */
 
-	if (status == XBufferOverflow) {
-	    Tcl_DStringSetLength(&buf, len);
-	    len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
-		    Tcl_DStringValue(&buf), len, &kePtr->keysym, &status);
-	}
-	if ((status != XLookupChars) && (status != XLookupBoth)) {
-	    len = 0;
-	}
-	Tcl_DStringSetLength(&buf, len);
-	Tcl_ExternalToUtfDString(NULL, Tcl_DStringValue(&buf), len, dsPtr);
-	Tcl_DStringFree(&buf);
+            Tcl_DStringSetLength(dsPtr, len);
+            len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+                    Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
+                    &kePtr->keysym, &status);
+        }
+        if ((status != XLookupChars) && (status != XLookupBoth)) {
+            len = 0;
+        }
+        Tcl_DStringSetLength(dsPtr, len);
+#else /* !X_HAVE_UTF8_STRING */
+        /*
+         * Overallocate the dstring to the maximum stack amount.
+         */
+
+        Tcl_DStringInit(&buf);
+        Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
+        len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
+                Tcl_DStringValue(&buf), Tcl_DStringLength(&buf),
+                &kePtr->keysym, &status);
+
+        /*
+         * If the buffer wasn't big enough, grow the buffer and try again.
+         */
+
+        if (status == XBufferOverflow) {
+            Tcl_DStringSetLength(&buf, len);
+            len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
+                    Tcl_DStringValue(&buf), len, &kePtr->keysym, &status);
+        }
+        if ((status != XLookupChars) && (status != XLookupBoth)) {
+            len = 0;
+        }
+        Tcl_DStringSetLength(&buf, len);
+        Tcl_ExternalToUtfDString(NULL, Tcl_DStringValue(&buf), len, dsPtr);
+        Tcl_DStringFree(&buf);
 #endif /* X_HAVE_UTF8_STRING */
     } else
 #endif /* TK_USE_INPUT_METHODS */
     {
-	/*
-	 * Fall back to convert a keyboard event to a UTF-8 string using
-	 * XLookupString. This is used when input methods are turned off and
-	 * for KeyRelease events.
-	 *
-	 * Note: XLookupString() normally returns a single ISO Latin 1 or
-	 * ASCII control character.
-	 */
+        /*
+         * Fall back to convert a keyboard event to a UTF-8 string using
+         * XLookupString. This is used when input methods are turned off and
+         * for KeyRelease events.
+         *
+         * Note: XLookupString() normally returns a single ISO Latin 1 or
+         * ASCII control character.
+         */
 
-	Tcl_DStringInit(&buf);
-	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
-	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
-		TCL_DSTRING_STATIC_SIZE, &kePtr->keysym, 0);
-	Tcl_DStringValue(&buf)[len] = '\0';
+        Tcl_DStringInit(&buf);
+        Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
+        len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
+                TCL_DSTRING_STATIC_SIZE, &kePtr->keysym, 0);
+        Tcl_DStringValue(&buf)[len] = '\0';
 
-	if (len == 1) {
-	    len = Tcl_UniCharToUtf((unsigned char) Tcl_DStringValue(&buf)[0],
-		    Tcl_DStringValue(dsPtr));
-	    Tcl_DStringSetLength(dsPtr, len);
-	} else {
-	    /*
-	     * len > 1 should only happen if someone has called XRebindKeysym.
-	     * Assume UTF-8.
-	     */
+        if (len == 1) {
+            len = Tcl_UniCharToUtf((unsigned char) Tcl_DStringValue(&buf)[0],
+                    Tcl_DStringValue(dsPtr));
+            Tcl_DStringSetLength(dsPtr, len);
+        } else {
+            /*
+             * len > 1 should only happen if someone has called XRebindKeysym.
+             * Assume UTF-8.
+             */
 
-	    Tcl_DStringSetLength(dsPtr, len);
-	    strncpy(Tcl_DStringValue(dsPtr), Tcl_DStringValue(&buf), len);
-	}
+            Tcl_DStringSetLength(dsPtr, len);
+            strncpy(Tcl_DStringValue(dsPtr), Tcl_DStringValue(&buf), len);
+        }
     }
 
     /*
@@ -252,23 +252,23 @@ TkpSetKeycodeAndState(
     KeyCode keycode;
 
     if (keySym == NoSymbol) {
-	keycode = 0;
+        keycode = 0;
     } else {
-	keycode = XKeysymToKeycode(dispPtr->display, keySym);
+        keycode = XKeysymToKeycode(dispPtr->display, keySym);
     }
     eventPtr->xkey.keycode = keycode;
     if (keycode != 0) {
-	for (state = 0; state < 4; state++) {
-	    if (XLookupKeysym(&eventPtr->xkey, state) == keySym) {
-		if (state & 1) {
-		    eventPtr->xkey.state |= ShiftMask;
-		}
-		if (state & 2) {
-		    eventPtr->xkey.state |= dispPtr->modeModMask;
-		}
-		break;
-	    }
-	}
+        for (state = 0; state < 4; state++) {
+            if (XLookupKeysym(&eventPtr->xkey, state) == keySym) {
+                if (state & 1) {
+                    eventPtr->xkey.state |= ShiftMask;
+                }
+                if (state & 2) {
+                    eventPtr->xkey.state |= dispPtr->modeModMask;
+                }
+                break;
+            }
+        }
     }
 
     /*
@@ -280,9 +280,9 @@ TkpSetKeycodeAndState(
     maxcode = -1;
     XDisplayKeycodes(dispPtr->display, &mincode, &maxcode);
     if (keycode < mincode) {
-	keycode = mincode;
+        keycode = mincode;
     } else if (keycode > maxcode) {
-	keycode = maxcode;
+        keycode = maxcode;
     }
 
     eventPtr->xkey.keycode = keycode;
@@ -293,24 +293,24 @@ TkpSetKeycodeAndState(
  *
  * TkpGetKeySym --
  *
- *	Given an X KeyPress or KeyRelease event, map the keycode in the event
- *	into a KeySym.
+ *      Given an X KeyPress or KeyRelease event, map the keycode in the event
+ *      into a KeySym.
  *
  * Results:
- *	The return value is the KeySym corresponding to eventPtr, or NoSymbol
- *	if no matching Keysym could be found.
+ *      The return value is the KeySym corresponding to eventPtr, or NoSymbol
+ *      if no matching Keysym could be found.
  *
  * Side effects:
- *	In the first call for a given display, keycode-to-KeySym maps get
- *	loaded.
+ *      In the first call for a given display, keycode-to-KeySym maps get
+ *      loaded.
  *
  *----------------------------------------------------------------------
  */
 
 KeySym
 TkpGetKeySym(
-    TkDisplay *dispPtr,		/* Display in which to map keycode. */
-    XEvent *eventPtr)		/* Description of X event. */
+    TkDisplay *dispPtr,         /* Display in which to map keycode. */
+    XEvent *eventPtr)           /* Description of X event. */
 {
     KeySym sym;
     int index;
@@ -322,7 +322,7 @@ TkpGetKeySym(
      */
 
     if (dispPtr->bindInfoStale) {
-	TkpInitKeymapInfo(dispPtr);
+        TkpInitKeymapInfo(dispPtr);
     }
 
 #ifdef TK_USE_INPUT_METHODS
@@ -332,19 +332,19 @@ TkpGetKeySym(
      */
 
     if (eventPtr->type == KeyPress && dispPtr
-	    && (dispPtr->flags & TK_DISPLAY_USE_IM)) {
-	if (kePtr->charValuePtr == NULL) {
-	    Tcl_DString ds;
-	    TkWindow *winPtr = (TkWindow *)
-		Tk_IdToWindow(eventPtr->xany.display, eventPtr->xany.window);
+            && (dispPtr->flags & TK_DISPLAY_USE_IM)) {
+        if (kePtr->charValuePtr == NULL) {
+            Tcl_DString ds;
+            TkWindow *winPtr = (TkWindow *)
+                Tk_IdToWindow(eventPtr->xany.display, eventPtr->xany.window);
 
-	    Tcl_DStringInit(&ds);
-	    (void) TkpGetString(winPtr, eventPtr, &ds);
-	    Tcl_DStringFree(&ds);
-	}
-	if (kePtr->charValuePtr != NULL) {
-	    return kePtr->keysym;
-	}
+            Tcl_DStringInit(&ds);
+            (void) TkpGetString(winPtr, eventPtr, &ds);
+            Tcl_DStringFree(&ds);
+        }
+        if (kePtr->charValuePtr != NULL) {
+            return kePtr->keysym;
+        }
     }
 #endif
 
@@ -356,15 +356,15 @@ TkpGetKeySym(
 
     index = 0;
     if (eventPtr->xkey.state & dispPtr->modeModMask) {
-	index = 2;
+        index = 2;
     }
     if ((eventPtr->xkey.state & ShiftMask)
-	    || ((dispPtr->lockUsage != LU_IGNORE)
-	    && (eventPtr->xkey.state & LockMask))) {
-	index += 1;
+            || ((dispPtr->lockUsage != LU_IGNORE)
+            && (eventPtr->xkey.state & LockMask))) {
+        index += 1;
     }
     sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode, 0,
-	    index);
+            index);
 
     /*
      * Special handling: if the key was shifted because of Lock, but lock is
@@ -373,14 +373,14 @@ TkpGetKeySym(
      */
 
     if ((index & 1) && !(eventPtr->xkey.state & ShiftMask)
-	    && (dispPtr->lockUsage == LU_CAPS)) {
-	if (!(((sym >= XK_A) && (sym <= XK_Z))
-		|| ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
-		|| ((sym >= XK_Ooblique) && (sym <= XK_Thorn)))) {
-	    index &= ~1;
-	    sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
-		    0, index);
-	}
+            && (dispPtr->lockUsage == LU_CAPS)) {
+        if (!(((sym >= XK_A) && (sym <= XK_Z))
+                || ((sym >= XK_Agrave) && (sym <= XK_Odiaeresis))
+                || ((sym >= XK_Ooblique) && (sym <= XK_Thorn)))) {
+            index &= ~1;
+            sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
+                    0, index);
+        }
     }
 
     /*
@@ -389,8 +389,8 @@ TkpGetKeySym(
      */
 
     if ((index & 1) && (sym == NoSymbol)) {
-	sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
-		0, index & ~1);
+        sym = TkKeycodeToKeysym(dispPtr, eventPtr->xkey.keycode,
+                0, index & ~1);
     }
     return sym;
 }
@@ -400,23 +400,23 @@ TkpGetKeySym(
  *
  * TkpInitKeymapInfo --
  *
- *	This function is invoked to scan keymap information to recompute stuff
- *	that's important for binding, such as the modifier key (if any) that
- *	corresponds to "mode switch".
+ *      This function is invoked to scan keymap information to recompute stuff
+ *      that's important for binding, such as the modifier key (if any) that
+ *      corresponds to "mode switch".
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Keymap-related information in dispPtr is updated.
+ *      Keymap-related information in dispPtr is updated.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkpInitKeymapInfo(
-    TkDisplay *dispPtr)		/* Display for which to recompute keymap
-				 * information. */
+    TkDisplay *dispPtr)         /* Display for which to recompute keymap
+                                 * information. */
 {
     XModifierKeymap *modMapPtr;
     KeyCode *codePtr;
@@ -436,18 +436,18 @@ TkpInitKeymapInfo(
     dispPtr->lockUsage = LU_IGNORE;
     codePtr = modMapPtr->modifiermap + modMapPtr->max_keypermod*LockMapIndex;
     for (count = modMapPtr->max_keypermod; count > 0; count--, codePtr++) {
-	if (*codePtr == 0) {
-	    continue;
-	}
-	keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
-	if (keysym == XK_Shift_Lock) {
-	    dispPtr->lockUsage = LU_SHIFT;
-	    break;
-	}
-	if (keysym == XK_Caps_Lock) {
-	    dispPtr->lockUsage = LU_CAPS;
-	    break;
-	}
+        if (*codePtr == 0) {
+            continue;
+        }
+        keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
+        if (keysym == XK_Shift_Lock) {
+            dispPtr->lockUsage = LU_SHIFT;
+            break;
+        }
+        if (keysym == XK_Caps_Lock) {
+            dispPtr->lockUsage = LU_CAPS;
+            break;
+        }
     }
 
     /*
@@ -462,19 +462,19 @@ TkpInitKeymapInfo(
     codePtr = modMapPtr->modifiermap;
     max = 8 * modMapPtr->max_keypermod;
     for (i = 0; i < max; i++, codePtr++) {
-	if (*codePtr == 0) {
-	    continue;
-	}
-	keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
-	if (keysym == XK_Mode_switch) {
-	    dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-	}
-	if ((keysym == XK_Meta_L) || (keysym == XK_Meta_R)) {
-	    dispPtr->metaModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-	}
-	if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R)) {
-	    dispPtr->altModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-	}
+        if (*codePtr == 0) {
+            continue;
+        }
+        keysym = TkKeycodeToKeysym(dispPtr, *codePtr, 0, 0);
+        if (keysym == XK_Mode_switch) {
+            dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
+        }
+        if ((keysym == XK_Meta_L) || (keysym == XK_Meta_R)) {
+            dispPtr->metaModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
+        }
+        if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R)) {
+            dispPtr->altModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
+        }
     }
 
     /*
@@ -482,47 +482,47 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree(dispPtr->modKeyCodes);
+        ckfree(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
     dispPtr->modKeyCodes = ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
-	if (*codePtr == 0) {
-	    continue;
-	}
+        if (*codePtr == 0) {
+            continue;
+        }
 
-	/*
-	 * Make sure that the keycode isn't already in the array.
-	 */
+        /*
+         * Make sure that the keycode isn't already in the array.
+         */
 
-	for (j = 0; j < dispPtr->numModKeyCodes; j++) {
-	    if (dispPtr->modKeyCodes[j] == *codePtr) {
-		/*
-		 * 'continue' the outer loop.
-		 */
+        for (j = 0; j < dispPtr->numModKeyCodes; j++) {
+            if (dispPtr->modKeyCodes[j] == *codePtr) {
+                /*
+                 * 'continue' the outer loop.
+                 */
 
-		goto nextModCode;
-	    }
-	}
-	if (dispPtr->numModKeyCodes >= arraySize) {
-	    KeyCode *newCodes;
+                goto nextModCode;
+            }
+        }
+        if (dispPtr->numModKeyCodes >= arraySize) {
+            KeyCode *newCodes;
 
-	    /*
-	     * Ran out of space in the array; grow it.
-	     */
+            /*
+             * Ran out of space in the array; grow it.
+             */
 
-	    arraySize *= 2;
-	    newCodes = ckalloc(arraySize * sizeof(KeyCode));
-	    memcpy(newCodes, dispPtr->modKeyCodes,
-		    dispPtr->numModKeyCodes * sizeof(KeyCode));
-	    ckfree(dispPtr->modKeyCodes);
-	    dispPtr->modKeyCodes = newCodes;
-	}
-	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
-	dispPtr->numModKeyCodes++;
+            arraySize *= 2;
+            newCodes = ckalloc(arraySize * sizeof(KeyCode));
+            memcpy(newCodes, dispPtr->modKeyCodes,
+                    dispPtr->numModKeyCodes * sizeof(KeyCode));
+            ckfree(dispPtr->modKeyCodes);
+            dispPtr->modKeyCodes = newCodes;
+        }
+        dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
+        dispPtr->numModKeyCodes++;
     nextModCode:
-	continue;
+        continue;
     }
     XFreeModifiermap(modMapPtr);
 }

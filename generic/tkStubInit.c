@@ -1,7 +1,7 @@
 /*
  * tkStubInit.c --
  *
- *	This file contains the initializers for the Tk stub vectors.
+ *      This file contains the initializers for the Tk stub vectors.
  *
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  *
@@ -66,7 +66,7 @@ doNothing(void)
 #define Tk_GetStyleFromObj getStyleFromObj
 static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 {
-	return Tk_AllocStyleFromObj(NULL, obj);
+        return Tk_AllocStyleFromObj(NULL, obj);
 }
 #if defined(_WIN32) || defined(__CYGWIN__)
 #define TkWinGetPlatformId winGetPlatformId
@@ -114,7 +114,7 @@ TkCreateXEventSource(void)
  * Make sure that extensions which call XParseColor through the stub
  * table, call TkParseColor instead. [Bug 3486474]
  */
-#   define XParseColor	TkParseColor
+#   define XParseColor  TkParseColor
 
 #   ifdef __CYGWIN__
 
@@ -123,7 +123,7 @@ TkCreateXEventSource(void)
  * case lacks this function anyway.
  */
 
-#define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
+#define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS  0x00000004
 int __stdcall GetModuleHandleExW(unsigned int, const char *, void *);
 
 void *Tk_GetHINSTANCE()
@@ -131,7 +131,7 @@ void *Tk_GetHINSTANCE()
     void *hInstance = NULL;
 
     GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-	    (const char *) &tkIntStubs, &hInstance);
+            (const char *) &tkIntStubs, &hInstance);
     return hInstance;
 }
 
@@ -144,26 +144,26 @@ TkSetPixmapColormap(
 
 void
 TkpPrintWindowId(
-    char *buf,			/* Pointer to string large enough to hold
-				 * the hex representation of a pointer. */
-    Window window)		/* Window to be printed into buffer. */
+    char *buf,                  /* Pointer to string large enough to hold
+                                 * the hex representation of a pointer. */
+    Window window)              /* Window to be printed into buffer. */
 {
     sprintf(buf, "%#08lx", (unsigned long) (window));
 }
 
 int
 TkPutImage(
-    unsigned long *colors,	/* Array of pixel values used by this image.
-				 * May be NULL. */
-    int ncolors,		/* Number of colors used, or 0. */
+    unsigned long *colors,      /* Array of pixel values used by this image.
+                                 * May be NULL. */
+    int ncolors,                /* Number of colors used, or 0. */
     Display *display,
-    Drawable d,			/* Destination drawable. */
+    Drawable d,                 /* Destination drawable. */
     GC gc,
-    XImage *image,		/* Source image. */
-    int src_x, int src_y,	/* Offset of subimage. */
-    int dest_x, int dest_y,	/* Position of subimage origin in drawable. */
+    XImage *image,              /* Source image. */
+    int src_x, int src_y,       /* Offset of subimage. */
+    int dest_x, int dest_y,     /* Position of subimage origin in drawable. */
     unsigned int width, unsigned int height)
-				/* Dimensions of subimage. */
+                                /* Dimensions of subimage. */
 {
     return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
@@ -208,63 +208,63 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
     XSubtractRegion((Region) a, (Region) b, (Region) c);
 }
 
-	/* TODO: To be implemented for Cygwin */
-#	define Tk_AttachHWND 0
-#	define Tk_GetHWND 0
-#	define Tk_HWNDToWindow 0
-#	define Tk_PointerEvent 0
-#	define Tk_TranslateWinEvent 0
-#	define TkAlignImageData 0
-#	define TkGenerateActivateEvents 0
-#	define TkpGetMS 0
-#	define TkPointerDeadWindow 0
-#	define TkpSetCapture 0
-#	define TkpSetCursor 0
-#	define TkWinCancelMouseTimer 0
-#	define TkWinClipboardRender 0
-#	define TkWinEmbeddedEventProc 0
-#	define TkWinFillRect 0
-#	define TkWinGetBorderPixels 0
-#	define TkWinGetDrawableDC 0
-#	define TkWinGetModifierState 0
-#	define TkWinGetSystemPalette 0
-#	define TkWinGetWrapperWindow 0
-#	define TkWinHandleMenuEvent 0
-#	define TkWinIndexOfColor 0
-#	define TkWinReleaseDrawableDC 0
-#	define TkWinResendEvent 0
-#	define TkWinSelectPalette 0
-#	define TkWinSetMenu 0
-#	define TkWinSetWindowPos 0
-#	define TkWinWmCleanup 0
-#	define TkWinXCleanup 0
-#	define TkWinXInit 0
-#	define TkWinSetForegroundWindow 0
-#	define TkWinDialogDebug 0
-#	define TkWinGetMenuSystemDefault 0
-#	define TkWinSetHINSTANCE 0
-#	define TkWinGetPlatformTheme 0
-#	define TkWinChildProc 0
+        /* TODO: To be implemented for Cygwin */
+#       define Tk_AttachHWND 0
+#       define Tk_GetHWND 0
+#       define Tk_HWNDToWindow 0
+#       define Tk_PointerEvent 0
+#       define Tk_TranslateWinEvent 0
+#       define TkAlignImageData 0
+#       define TkGenerateActivateEvents 0
+#       define TkpGetMS 0
+#       define TkPointerDeadWindow 0
+#       define TkpSetCapture 0
+#       define TkpSetCursor 0
+#       define TkWinCancelMouseTimer 0
+#       define TkWinClipboardRender 0
+#       define TkWinEmbeddedEventProc 0
+#       define TkWinFillRect 0
+#       define TkWinGetBorderPixels 0
+#       define TkWinGetDrawableDC 0
+#       define TkWinGetModifierState 0
+#       define TkWinGetSystemPalette 0
+#       define TkWinGetWrapperWindow 0
+#       define TkWinHandleMenuEvent 0
+#       define TkWinIndexOfColor 0
+#       define TkWinReleaseDrawableDC 0
+#       define TkWinResendEvent 0
+#       define TkWinSelectPalette 0
+#       define TkWinSetMenu 0
+#       define TkWinSetWindowPos 0
+#       define TkWinWmCleanup 0
+#       define TkWinXCleanup 0
+#       define TkWinXInit 0
+#       define TkWinSetForegroundWindow 0
+#       define TkWinDialogDebug 0
+#       define TkWinGetMenuSystemDefault 0
+#       define TkWinSetHINSTANCE 0
+#       define TkWinGetPlatformTheme 0
+#       define TkWinChildProc 0
 
 #   elif !defined(MAC_OSX_TK) /* UNIX */
 
-#	undef TkClipBox
-#	undef TkCreateRegion
-#	undef TkDestroyRegion
-#	undef TkIntersectRegion
-#	undef TkRectInRegion
-#	undef TkSetRegion
-#	undef TkUnionRectWithRegion
-#	undef TkSubtractRegion
+#       undef TkClipBox
+#       undef TkCreateRegion
+#       undef TkDestroyRegion
+#       undef TkIntersectRegion
+#       undef TkRectInRegion
+#       undef TkSetRegion
+#       undef TkUnionRectWithRegion
+#       undef TkSubtractRegion
 
-#	define TkClipBox (void (*) (TkRegion, XRectangle *)) XClipBox
-#	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
-#	define TkDestroyRegion (void (*) (TkRegion)) XDestroyRegion
-#	define TkIntersectRegion (void (*) (TkRegion, TkRegion, TkRegion)) XIntersectRegion
-#	define TkRectInRegion (int (*) (TkRegion, int, int, unsigned int, unsigned int)) XRectInRegion
-#	define TkSetRegion (void (*) (Display *, GC, TkRegion)) XSetRegion
-#	define TkUnionRectWithRegion (void (*) (XRectangle *, TkRegion, TkRegion)) XUnionRectWithRegion
-#	define TkSubtractRegion (void (*) (TkRegion, TkRegion, TkRegion)) XSubtractRegion
+#       define TkClipBox (void (*) (TkRegion, XRectangle *)) XClipBox
+#       define TkCreateRegion (TkRegion (*) ()) XCreateRegion
+#       define TkDestroyRegion (void (*) (TkRegion)) XDestroyRegion
+#       define TkIntersectRegion (void (*) (TkRegion, TkRegion, TkRegion)) XIntersectRegion
+#       define TkRectInRegion (int (*) (TkRegion, int, int, unsigned int, unsigned int)) XRectInRegion
+#       define TkSetRegion (void (*) (Display *, GC, TkRegion)) XSetRegion
+#       define TkUnionRectWithRegion (void (*) (XRectangle *, TkRegion, TkRegion)) XUnionRectWithRegion
+#       define TkSubtractRegion (void (*) (TkRegion, TkRegion, TkRegion)) XSubtractRegion
 #   endif
 #endif /* !_WIN32 */
 

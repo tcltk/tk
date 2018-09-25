@@ -41,7 +41,7 @@ test progressbar-1.6 "Unset -variable" -body {
 } -result 1
 
 test progressbar-2.0 "step command" -body {
-    .pb configure -variable {}		;# @@@
+    .pb configure -variable {}          ;# @@@
     .pb configure -value 5 -maximum 10 -mode determinate
     .pb step
     .pb cget -value
@@ -66,7 +66,7 @@ test progressbar-2.3 "step doesn't wrap in indeterminate mode" -body {
 } -result 11.0
 
 test progressbar-2.4 "step with linked variable" -body {
-    .pb configure -variable PB		;# @@@
+    .pb configure -variable PB          ;# @@@
     set PB 5
     .pb step
     set PB
@@ -75,7 +75,7 @@ test progressbar-2.4 "step with linked variable" -body {
 test progressbar-2.5 "error in write trace" -body {
     trace variable PB w { error "YIPES!" ;# }
     .pb step
-    set PB		;# NOTREACHED
+    set PB              ;# NOTREACHED
 } -cleanup { unset PB } -returnCodes 1 -match glob -result "*YIPES!"
 
 test progressbar-end "Cleanup" -body {

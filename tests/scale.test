@@ -376,7 +376,7 @@ test scale-3.10 {ScaleWidgetCmd procedure, coords option} -body {
     .s coords bad
 } -returnCodes error -result {expected floating-point number but got "bad"}
 test scale-3.11 {ScaleWidgetCmd procedure} -constraints {
-	fonts
+    fonts
 } -body {
     .s configure -from 100 -to 200
     update idletasks
@@ -384,7 +384,7 @@ test scale-3.11 {ScaleWidgetCmd procedure} -constraints {
     .s coords
 } -result {38 34}
 test scale-3.12 {ScaleWidgetCmd procedure, coords option} -constraints {
-	fonts
+    fonts
 } -body {
     .s configure -from 100 -to 200 -orient horizontal
     update idletasks
@@ -437,7 +437,7 @@ test scale-3.22 {ScaleWidgetCmd procedure, identify option} -body {
     .s identify 17 bad
 } -returnCodes error -result {expected integer but got "bad"}
 test scale-3.23 {ScaleWidgetCmd procedure, identify option} -constraints {
-	fonts
+    fonts
 } -body {
     .s configure -from 100 -to 200 -orient vertical -resolution 1
     update
@@ -482,7 +482,7 @@ test scale-3.32 {ScaleWidgetCmd procedure, Tk_Preserve} -setup {
     destroy .s
 } -body {
     proc kill args {
-	    destroy .s
+        destroy .s
     }
     scale .s -variable x -from 0 -to 100 -orient horizontal
     pack .s
@@ -610,7 +610,7 @@ test scale-6.5 {ComputeFormat procedure} -body {
     .s get
 } -result {500000}
 test scale-6.6 {ComputeFormat procedure} -constraints {
-	nonPortable
+    nonPortable
 } -body {
     # This test is non-portable because some platforms format the
     # result as 5e+06.

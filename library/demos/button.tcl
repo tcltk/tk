@@ -25,14 +25,14 @@ pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
 proc colorrefresh {w col} {
     $w configure -bg $col
     if {[tk windowingsystem] eq "aqua"} {
-	# set highlightbackground of all buttons in $w
-	set l [list $w]
-	while {[llength $l]} {
-	    set l [concat [lassign $l b] [winfo children $b]]
-	    if {[winfo class $b] eq "Button"} {
-		$b configure -highlightbackground $col
-	    }
-	}
+        # set highlightbackground of all buttons in $w
+        set l [list $w]
+        while {[llength $l]} {
+            set l [concat [lassign $l b] [winfo children $b]]
+            if {[winfo class $b] eq "Button"} {
+                $b configure -highlightbackground $col
+            }
+        }
     }
 }
 

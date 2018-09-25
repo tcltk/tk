@@ -1,8 +1,8 @@
 /*
  * tkMacOSXKeyEvent.c --
  *
- *	This file implements functions that decode & handle keyboard events on
- *	MacOS X.
+ *      This file implements functions that decode & handle keyboard events on
+ *      MacOS X.
  *
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
@@ -26,9 +26,9 @@
 
 
 static Tk_Window grabWinPtr = NULL;
-				/* Current grab window, NULL if no grab. */
+                                /* Current grab window, NULL if no grab. */
 static Tk_Window keyboardGrabWinPtr = NULL;
-				/* Current keyboard grab window. */
+                                /* Current keyboard grab window. */
 static NSWindow *keyboardGrabNSWindow = nil;
                                /* NSWindow for the current keyboard grab window. */
 static NSModalSession modalSession = nil;
@@ -53,12 +53,12 @@ unsigned short releaseCode;
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
-    NSWindow*	    w;
-    NSEventType	    type = [theEvent type];
-    NSUInteger	    modifiers, len = 0;
-    BOOL	    repeat = NO;
+    NSWindow*       w;
+    NSEventType     type = [theEvent type];
+    NSUInteger      modifiers, len = 0;
+    BOOL            repeat = NO;
     unsigned short  keyCode;
-    NSString	    *characters = nil, *charactersIgnoringModifiers = nil;
+    NSString        *characters = nil, *charactersIgnoringModifiers = nil;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray;
 
@@ -71,32 +71,32 @@ unsigned short releaseCode;
     switch (type) {
     case NSKeyUp:
 
-	/*Fix for bug #1ba71a86bb: key release firing on key press.*/
-	w = [theEvent window];
-	XEvent xEvent;
-	setupXEvent(&xEvent, w, 0);
-	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	Tk_Window tkwin = (Tk_Window) winPtr;
-	xEvent.xany.type = KeyRelease;
-	xEvent.xkey.keycode = releaseCode;
-	xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+        /*Fix for bug #1ba71a86bb: key release firing on key press.*/
+        w = [theEvent window];
+        XEvent xEvent;
+        setupXEvent(&xEvent, w, 0);
+        TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+        Tk_Window tkwin = (Tk_Window) winPtr;
+        xEvent.xany.type = KeyRelease;
+        xEvent.xkey.keycode = releaseCode;
+        xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
     case NSKeyDown:
-	repeat = [theEvent isARepeat];
-	characters = [theEvent characters];
-	charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
+        repeat = [theEvent isARepeat];
+        characters = [theEvent characters];
+        charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
         len = [charactersIgnoringModifiers length];
     case NSFlagsChanged:
-	modifiers = [theEvent modifierFlags];
-	keyCode = [theEvent keyCode];
-	//	w = [self windowWithWindowNumber:[theEvent windowNumber]];
-	w = [theEvent window];
+        modifiers = [theEvent modifierFlags];
+        keyCode = [theEvent keyCode];
+        //      w = [self windowWithWindowNumber:[theEvent windowNumber]];
+        w = [theEvent window];
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
-	NSLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d", [self class], self, _cmd, repeat, modifiers, characters, charactersIgnoringModifiers, keyCode,([charactersIgnoringModifiers length] == 0) ? 0 : [charactersIgnoringModifiers characterAtIndex: 0], w, type);
+        NSLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d", [self class], self, _cmd, repeat, modifiers, characters, charactersIgnoringModifiers, keyCode,([charactersIgnoringModifiers length] == 0) ? 0 : [charactersIgnoringModifiers characterAtIndex: 0], w, type);
 #endif
-	break;
+        break;
 
     default:
-	return theEvent; /* Unrecognized key event. */
+        return theEvent; /* Unrecognized key event. */
     }
 
     /* Create an Xevent to add to the Tk queue. */
@@ -113,10 +113,10 @@ unsigned short releaseCode;
           state |= ControlMask;
         }
         if (modifiers & NSCommandKeyMask) {
-          state |= Mod1Mask;		/* command key */
+          state |= Mod1Mask;            /* command key */
         }
         if (modifiers & NSAlternateKeyMask) {
-          state |= Mod2Mask;		/* option key */
+          state |= Mod2Mask;            /* option key */
         }
         if (modifiers & NSNumericPadKeyMask) {
           state |= Mod3Mask;
@@ -177,7 +177,7 @@ unsigned short releaseCode;
               xEvent.xkey.keycode = (modifiers ^ savedModifiers);
             } else {
               if (type == NSKeyUp || repeat) {
-		  xEvent.xany.type = KeyRelease;
+                  xEvent.xany.type = KeyRelease;
               } else {
                 xEvent.xany.type = KeyPress;
               }
@@ -260,14 +260,14 @@ unsigned short releaseCode;
 
   for (i =0; i<len; i++)
       {
-	  xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
-	  [[aString substringWithRange: NSMakeRange(i,1)]
-	      getCString: xEvent.xkey.trans_chars
-	       maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
-	  xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
-	  xEvent.xany.type = KeyPress;
-	  releaseCode =  (UInt16) [aString characterAtIndex: 0];
-	  Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+          xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
+          [[aString substringWithRange: NSMakeRange(i,1)]
+              getCString: xEvent.xkey.trans_chars
+               maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
+          xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
+          xEvent.xany.type = KeyPress;
+          releaseCode =  (UInt16) [aString characterAtIndex: 0];
+          Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
       }
   releaseCode =  (UInt16) [aString characterAtIndex: 0];
 }
@@ -280,8 +280,8 @@ unsigned short releaseCode;
     [aString string] : aString;
   if (NS_KEYLOG)
     NSLog (@"setMarkedText '%@' len =%lu range %lu from %lu", str,
-	   (unsigned long) [str length], (unsigned long) selRange.length,
-	   (unsigned long) selRange.location);
+           (unsigned long) [str length], (unsigned long) selRange.length,
+           (unsigned long) selRange.location);
 
   if (privateWorkingText != nil)
     [self deleteWorkingText];
@@ -412,7 +412,7 @@ unsigned short releaseCode;
     return;
   if (NS_KEYLOG)
     NSLog(@"deleteWorkingText len = %lu\n",
-	    (unsigned long)[privateWorkingText length]);
+            (unsigned long)[privateWorkingText length]);
   [privateWorkingText release];
   privateWorkingText = nil;
   processingCompose = NO;
@@ -454,13 +454,13 @@ setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state)
  *
  * XGrabKeyboard --
  *
- *	Simulates a keyboard grab by setting the focus.
+ *      Simulates a keyboard grab by setting the focus.
  *
  * Results:
- *	Always returns GrabSuccess.
+ *      Always returns GrabSuccess.
  *
  * Side effects:
- *	Sets the keyboard focus to the specified window.
+ *      Sets the keyboard focus to the specified window.
  *
  *----------------------------------------------------------------------
  */
@@ -476,17 +476,17 @@ XGrabKeyboard(
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
     if (keyboardGrabWinPtr && grabWinPtr) {
-	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
-	MacDrawable *macWin = (MacDrawable *) grab_window;
+        NSWindow *w = TkMacOSXDrawableWindow(grab_window);
+        MacDrawable *macWin = (MacDrawable *) grab_window;
 
-	if (w && macWin->toplevel->winPtr == (TkWindow*) grabWinPtr) {
-	    if (modalSession) {
-		Tcl_Panic("XGrabKeyboard: already grabbed");
-	    }
-	    keyboardGrabNSWindow = w;
-	    [w retain];
-	    modalSession = [NSApp beginModalSessionForWindow:w];
-	}
+        if (w && macWin->toplevel->winPtr == (TkWindow*) grabWinPtr) {
+            if (modalSession) {
+                Tcl_Panic("XGrabKeyboard: already grabbed");
+            }
+            keyboardGrabNSWindow = w;
+            [w retain];
+            modalSession = [NSApp beginModalSessionForWindow:w];
+        }
     }
     return GrabSuccess;
 }
@@ -496,13 +496,13 @@ XGrabKeyboard(
  *
  * XUngrabKeyboard --
  *
- *	Releases the simulated keyboard grab.
+ *      Releases the simulated keyboard grab.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Sets the keyboard focus back to the value before the grab.
+ *      Sets the keyboard focus back to the value before the grab.
  *
  *----------------------------------------------------------------------
  */
@@ -513,12 +513,12 @@ XUngrabKeyboard(
     Time time)
 {
     if (modalSession) {
-	[NSApp endModalSession:modalSession];
-	modalSession = nil;
+        [NSApp endModalSession:modalSession];
+        modalSession = nil;
     }
     if (keyboardGrabNSWindow) {
-	[keyboardGrabNSWindow release];
-	keyboardGrabNSWindow = nil;
+        [keyboardGrabNSWindow release];
+        keyboardGrabNSWindow = nil;
     }
     keyboardGrabWinPtr = NULL;
 }
@@ -529,10 +529,10 @@ XUngrabKeyboard(
  * TkMacOSXGetCapture --
  *
  * Results:
- *	Returns the current grab window
+ *      Returns the current grab window
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -549,10 +549,10 @@ TkMacOSXGetCapture(void)
  * TkMacOSXGetModalSession --
  *
  * Results:
- *	Returns the current modal session
+ *      Returns the current modal session
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -568,25 +568,25 @@ TkMacOSXGetModalSession(void)
  *
  * TkpSetCapture --
  *
- *	This function captures the mouse so that all future events will be
- *	reported to this window, even if the mouse is outside the window. If
- *	the specified window is NULL, then the mouse is released.
+ *      This function captures the mouse so that all future events will be
+ *      reported to this window, even if the mouse is outside the window. If
+ *      the specified window is NULL, then the mouse is released.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Sets the capture flag and captures the mouse.
+ *      Sets the capture flag and captures the mouse.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpSetCapture(
-    TkWindow *winPtr)		/* Capture window, or NULL. */
+    TkWindow *winPtr)           /* Capture window, or NULL. */
 {
     while (winPtr && !Tk_IsTopLevel(winPtr)) {
-	winPtr = winPtr->parentPtr;
+        winPtr = winPtr->parentPtr;
     }
     grabWinPtr = (Tk_Window) winPtr;
 }
@@ -596,15 +596,15 @@ TkpSetCapture(
  *
  * Tk_SetCaretPos --
  *
- *	This enables correct placement of the XIM caret. This is called by
- *	widgets to indicate their cursor placement, and the caret location is
- *	used by TkpGetString to place the XIM caret.
+ *      This enables correct placement of the XIM caret. This is called by
+ *      widgets to indicate their cursor placement, and the caret location is
+ *      used by TkpGetString to place the XIM caret.
  *
  * Results:
- *	None
+ *      None
  *
  * Side effects:
- *	None
+ *      None
  *
  *----------------------------------------------------------------------
  */
@@ -624,8 +624,8 @@ Tk_SetCaretPos(
      */
 
     if ((caretPtr->winPtr == ((TkWindow *) tkwin))
-	    && (caretPtr->x == x) && (caretPtr->y == y)) {
-	return;
+            && (caretPtr->x == x) && (caretPtr->y == y)) {
+        return;
     }
 
     caretPtr->winPtr = ((TkWindow *) tkwin);
@@ -638,12 +638,12 @@ Tk_SetCaretPos(
      */
 
     while (!Tk_IsTopLevel(tkwin)) {
-	x += Tk_X(tkwin);
-	y += Tk_Y(tkwin);
-	tkwin = Tk_Parent(tkwin);
-	if (tkwin == NULL) {
-	    return;
-	}
+        x += Tk_X(tkwin);
+        y += Tk_Y(tkwin);
+        tkwin = Tk_Parent(tkwin);
+        if (tkwin == NULL) {
+            return;
+        }
     }
 
     /* But adjust for fact that NS uses flipped view. */
@@ -706,13 +706,13 @@ static unsigned convert_ns_to_X_keysym[] =
   NSDeleteCharacter,            0xFF,  /* 127: Big 'delete' key upper right. */
   NSDeleteFunctionKey,          0x9F,  /* 63272: Del forw key off main array. */
 
-  NSTabCharacter,		0x09,
-  0x19,				0x09,  /* left tab->regular since pass shift */
-  NSCarriageReturnCharacter,	0x0D,
-  NSNewlineCharacter,		0x0D,
-  NSEnterCharacter,		0x8D,
+  NSTabCharacter,               0x09,
+  0x19,                         0x09,  /* left tab->regular since pass shift */
+  NSCarriageReturnCharacter,    0x0D,
+  NSNewlineCharacter,           0x0D,
+  NSEnterCharacter,             0x8D,
 
-  0x1B,				0x1B   /* escape */
+  0x1B,                         0x1B   /* escape */
 };
 
 

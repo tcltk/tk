@@ -1,8 +1,8 @@
 /*
  * tkMacOSXFont.h --
  *
- *	Contains the Macintosh implementation of the platform-independant
- *	font package interface.
+ *      Contains the Macintosh implementation of the platform-independant
+ *      font package interface.
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -27,6 +27,6 @@
  */
 
 MODULE_SCOPE Tcl_Obj * TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
-	NSFont *nsFont, NSDictionary *nsAttributes);
+        NSFont *nsFont, NSDictionary *nsAttributes);
 
 #endif /*TKMACOSXFONT_H*/

@@ -35,7 +35,7 @@ pack $w.left.sep -side top -fill x -expand no
 set msgboxIcon info
 foreach i {error info question warning} {
     radiobutton $w.left.b$i -text $i -variable msgboxIcon \
-	-relief flat -value $i -width 16 -anchor w
+        -relief flat -value $i -width 16 -anchor w
     pack $w.left.b$i  -side top -pady 2 -anchor w -fill x
 }
 
@@ -47,16 +47,16 @@ pack $w.right.sep -side top -fill x -expand no
 set msgboxType ok
 foreach t {abortretryignore ok okcancel retrycancel yesno yesnocancel} {
     radiobutton $w.right.$t -text $t -variable msgboxType \
-	-relief flat -value $t -width 16 -anchor w
+        -relief flat -value $t -width 16 -anchor w
     pack $w.right.$t -side top -pady 2 -anchor w -fill x
 }
 
 proc showMessageBox {w} {
     global msgboxIcon msgboxType
     set button [tk_messageBox -icon $msgboxIcon -type $msgboxType \
-	-title Message -parent $w\
-	-message "This is a \"$msgboxType\" type messagebox with the \"$msgboxIcon\" icon"]
+        -title Message -parent $w\
+        -message "This is a \"$msgboxType\" type messagebox with the \"$msgboxIcon\" icon"]
 
     tk_messageBox -icon info -message "You have selected \"$button\"" -type ok\
-	-parent $w
+        -parent $w
 }

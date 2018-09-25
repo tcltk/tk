@@ -29,9 +29,9 @@ powerful command languages for applications.
 %build
 cd unix
 CFLAGS="%optflags" ./configure \
-	--prefix=%{directory} \
-	--exec-prefix=%{directory} \
-	--libdir=%{directory}/%{_lib}
+        --prefix=%{directory} \
+        --exec-prefix=%{directory} \
+        --libdir=%{directory}/%{_lib}
 make
 
 %install

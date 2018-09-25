@@ -91,29 +91,29 @@ proc foreachPixel {img xVar yVar script} {
     set width [image width $img]
     set height [image height $img]
     for {set x 0} {$x<$width} {incr x} {
-	for {set y 0} {$y<$height} {incr y} {
-	    uplevel 1 $script
-	}
+        for {set y 0} {$y<$height} {incr y} {
+            uplevel 1 $script
+        }
     }
 }
 proc checkImgTrans {img} {
     set result {}
     foreachPixel $img x y {
-	if {[$img transparency get $x $y]} {
-	    lappend result $x,$y
-	}
+        if {[$img transparency get $x $y]} {
+            lappend result $x,$y
+        }
     }
     return $result
 }
 proc checkImgTransLoop {img script1 script2} {
     set result {}
     foreachPixel $img x y {
-	eval $script1
-	lappend result {*}[checkImgTrans $img]
-	append result :
-	eval $script2
-	lappend result {*}[checkImgTrans $img]
-	append result .
+        eval $script1
+        lappend result {*}[checkImgTrans $img]
+        append result :
+        eval $script2
+        lappend result {*}[checkImgTrans $img]
+        append result .
     }
     return $result
 }
@@ -141,13 +141,13 @@ testConstraint base64PackageNeeded [base64ok]
 test imgPhoto-1.1 {options for photo images} -body {
     image create photo photo1 -width 79 -height 83
     list [photo1 cget -width] [photo1 cget -height] \
-	[image width photo1] [image height photo1]
+        [image width photo1] [image height photo1]
 } -cleanup {
     image delete photo1
 } -result {79 83 79 83}
 test imgPhoto-1.2 {options for photo images} -body {
     list [catch {image create photo photo1 -file no.such.file} err] \
-	[string tolower $err]
+        [string tolower $err]
 } -result {1 {couldn't open "no.such.file": no such file or directory}}
 test imgPhoto-1.3 {options for photo images} -constraints hasTeapotPhoto -body {
     image create photo photo1 -file $teapotPhotoFile -format no.such.format
@@ -160,7 +160,7 @@ test imgPhoto-1.4 {options for photo images} -constraints hasTeapotPhoto -body {
 } -result {256 256}
 test imgPhoto-1.5 {options for photo images} -constraints hasTeapotPhoto -body {
     image create photo photo1 -file $teapotPhotoFile \
-	-format ppm -width 79 -height 83
+        -format ppm -width 79 -height 83
     list [image width photo1] [image height photo1] [photo1 cget -file] [photo1 cget -format]
 } -cleanup {
     image delete photo1
@@ -214,7 +214,7 @@ test imgPhoto-2.2 {ImgPhotoCreate procedure} -setup {
 } -body {
     image create photo image1
     list [info commands image1] [imageNames] \
-	[image width image1] [image height image1]
+        [image width image1] [image height image1]
 } -cleanup {
     image delete image1
 } -result {image1 image1 0 0}
@@ -239,7 +239,7 @@ test imgPhoto-3.2 {ImgPhotoConfigureMaster procedure} -constraints {
 } -body {
     image create photo photo1 -file $teapotPhotoFile
     list [catch {photo1 configure -file bogus} err] [string tolower $err] \
-	[image width photo1] [image height photo1]
+        [image width photo1] [image height photo1]
 } -cleanup {
     image delete photo1
 } -result {1 {couldn't open "bogus": no such file or directory} 256 256}
@@ -501,8 +501,8 @@ test imgPhoto-4.22 {ImgPhotoCmd procedure: get option} -constraints {
 } -body {
     photo1 read $transpTeapotPhotoFile
     list [photo1 get 100 100 -withalpha] \
-	[photo1 get 150 100 -withalpha] \
-	[photo1 get 100 150] [photo1 get 150 150]
+        [photo1 get 150 100 -withalpha] \
+        [photo1 get 100 150] [photo1 get 150 150]
 } -cleanup {
     image delete photo1
 } -result {{175 71 0 162} {179 73 0 168} {14 8 0} {0 0 0}}
@@ -857,10 +857,10 @@ test imgPhoto-4.67 {ImgPhotoCmd procedure: transparency set option} -setup {
 } -body {
     photo1 put white -to 0 0 3 3
     checkImgTransLoop photo1 {
-	photo1 put white -to 0 0 3 3
-	photo1 transparency set $x $y 1
+        photo1 put white -to 0 0 3 3
+        photo1 transparency set $x $y 1
     } {
-	photo1 transparency set $x $y 0
+        photo1 transparency set $x $y 0
     }
 } -cleanup {
     image delete photo1
@@ -870,10 +870,10 @@ test imgPhoto-4.68 {ImgPhotoCmd procedure: transparency set option} -setup {
 } -body {
     photo1 put white -to 0 0 3 3
     checkImgTransLoop photo1 {
-	photo1 blank
-	photo1 transparency set $x $y 0
+        photo1 blank
+        photo1 transparency set $x $y 0
     } {
-	photo1 transparency set $x $y 1
+        photo1 transparency set $x $y 1
     }
 } -cleanup {
     image delete photo1
@@ -1006,7 +1006,7 @@ test imgPhoto-4.79 {ImgPhotoCmd, transparency get: no option} -constraints {
 } -body {
     set pixelCoords {{156 239} {76 207} {153 213} {139 43} {75 112}}
     foreach coord $pixelCoords {
-	lappend result [photo1 transparency get {*}$coord]
+        lappend result [photo1 transparency get {*}$coord]
     }
     set result
 } -cleanup {
@@ -1021,7 +1021,7 @@ test imgPhoto-4.81 {ImgPhotoCmd, transparency get: -alpha} -constraints {
 } -body {
     set pixelCoords {{156 239} {76 207} {153 213} {139 43} {75 112}}
     foreach coord $pixelCoords {
-	lappend result [photo1 transparency get {*}$coord -alpha]
+        lappend result [photo1 transparency get {*}$coord -alpha]
     }
     set result
 } -cleanup {
@@ -1085,7 +1085,7 @@ test imgPhoto-4.89 {ImgPhotoCmd, transparency set: -alpha} -setup {
     photo1 transparency set 0 1 254 -alpha
     photo1 transparency set 1 1 255 -alpha
     list [photo1 transparency get 0 0] [photo1 transparency get 1 0] \
-	[photo1 transparency get 0 1] [photo1 transparency get 1 1]
+        [photo1 transparency get 0 1] [photo1 transparency get 1 1]
 } -cleanup {
     imageCleanup
 } -result {1 0 0 0}
@@ -1182,8 +1182,8 @@ test imgPhoto-4.98 {ImgPhotoCmd put: -to with 2 coords} -setup {
     image create photo photo1
 } -body {
     photo1 put {{"alice blue" "blanched almond"}
-		{"deep sky blue" "ghost white"}
-		{#AABBCC #AABBCCDD}} -to 5 6
+                {"deep sky blue" "ghost white"}
+                {#AABBCC #AABBCCDD}} -to 5 6
     list [image width photo1] [image height photo1]
 } -cleanup {
     imageCleanup
@@ -1195,9 +1195,9 @@ test imgPhoto-4.99 {ImgPhotoCmd put: -to with 4 coords} -setup {
     set result {}
     lappend result [photo1 get 19 20 -withalpha]
     lappend result [string equal \
-	[photo1 data -from 1 2 4 4] [photo1 data -from 4 2 7 4]]
+        [photo1 data -from 1 2 4 4] [photo1 data -from 4 2 7 4]]
     lappend result [string equal \
-	[photo1 data -from 10 12 13 14] [photo1 data -from 16 16 19 18]]
+        [photo1 data -from 10 12 13 14] [photo1 data -from 16 16 19 18]]
     set result
 } -cleanup {
     imageCleanup
@@ -1609,35 +1609,35 @@ test imgPhoto-12.4 {Tk_ImgPhotoPutZoomedBlock, empty image} -setup {
 test imgPhoto-13.1 {check separation of images in different interpreters} -setup {
     imageCleanup
     set data {
-	R0lGODlhQgBkAPUAANbWxs7Wxs7OxsbOxsbGxsbGvb3Gvca9vcDAwL21vbW1vbW1tbWtta2t
-	ta2ltaWltaWlraWctaWcrZycrZyUrZSUrZSMrZSMpYyMrYyMpYyEpYSEpYR7pYR7nHp7pYRz
-	pYRynHtzpXtznHtrnHNrnHNjnGtjnGtjlGtalGNalGNSlGNSjFpSlFpKlFpKjFJKjFJCjFI5
-	jEo5jEo5hEoxhEIxhDkphDkhhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAAQgBkAAAG
-	/kCEcEgsGo/IpHLJbDqf0Kh0Sq1ar9isdsvter/gsHhMLpvP6LR6zW673/C4fE6v2+/4vH7P
-	7/v/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmOBZxXnAQEnKIIBUQJCguoDKkIBgWhpUev
-	CA4TDwgEUpwKERUaHCIiJCQjIiEUQhwqKiwqLjDQMCwoIha3oUO5ESMuLSwtLSIMsU4Tzi4o
-	JBwWFA8ODQoMCkIMq6sNDQ4UFhwlzC4qSGhgkMvCsAoM6E0oAWMCOSUFGrgQcauAgAACSqGa
-	l6SAK1EaJXBA0SIDBw0KBiCg8EtEBgEWYCxoooAigFwIJGgQYQIF/goTAjk6sXhxAwwFnHRO
-	mEmAwoQAIUo8lCWhRgoOElJVkJBQFCwhCRqkYlUE1QMKHEywoBCrQaeIMCgQeOCi3AkYMmRI
-	S5EuxEkN7OApkGDhF4fDxoSVMAFUBAWkRxI0a+XghVAkBSqMsFCBwj4OI0igSKGCdLN0wYKd
-	zGDBwUYhn6YOKUCioQECGk7INpIArQgUKkr87TyhAYIDQxQgLkYsRIcQIDjcgi2Lw8RYKaAz
-	MXCgAs8UJrZGmOA5AkeQBlqRKsIpvYMQDx4S4NCCxIJSKJpFYMIgnPlSF2ygAQWuCUHAAp6x
-	E4EEE5BXQQUWYLABBySoAIMLHBSBWwso/jxwIAoyzMAWEw3AEEJCt6nUwAQagCDCYcCQwJcK
-	6QD3DDQxwNDCCSg9NIAGKpwwgQAOtDADDBbsdkQDIPhkwosDPgDPAg1EAME++1jTnhAKdAnb
-	VAR04EIJFAhwwQs0sBDfE7cZwEAE++yU2joOtDcKE7GUcoIKH6RSmwwnQCZFKAo8cE2es7my
-	HnuxKTDgAA6owEEBjoL3wqRUNDBCCnyRYMFMRSDoWYPvyBPPA738lt1KKTxgpjolrDDiFAWU
-	cAMKE+CipAMRZMDTCSSUQMIJPQHLwWOcrDKBCBpokAIJgmYqQgosxIAOCS8iJEQD7HR2QbMh
-	WCCEK7Ck90Cz/oAFu+YVigpTwTsLyJOcBJ6N6plxRihA3E4cOKTkFCU6FMoAA7wiygAZgURA
-	ekYsEJYFGTSATRccQEMjti8eZsEFFuA7z2WkEJAAl7iEQekEhQHGzgQR4INUKLB8pYAFJaQA
-	KhleKdwAByEkFswHIoxQQn4AcYBvGRosisDICCjQAIMJGnZYBsUd4JEZBIhQwgPzKFwAwggL
-	IHbOQzCtxZ1NL0BlKmmhIOwwHGTg2YMUEBdtKzBfbQWlhMHoHIXBnvABBGE9UMKNMKhgQgnG
-	nNQO0wVQoI4FEohFyr9GzDIYaaPxxWy0rCjKQJUMQvxBaMOgNMQChcU4DAkZ6PoV/hIUoP4i
-	Z7g/YHZHIPXeyWyONgsaCi4AOoLjXP8uhAAvPpCQ2Akr38UpXW60Ij8yPkMmwwj8KAI8QWtQ
-	+eXSixEb37WhcHQBERz2rdZ8leCBBcXNY3XevQ8VG/6+F5CACDYgATlmYYD27aRmLngBNADC
-	GGxxQEAWUJDzqpcctc2DARN4kNRgtJxhnKAFV0kIEhYAJ34IQwUhqkENYFCCE5BmGf9wwWmA
-	5UGgXAAVtfCFMIgRLMbFLQIPYFACcMI7TjQoH2eJQIs2poEMYMAp5XGAvFrBCYS9ImzQG1vT
-	arGTEQhIhE7QjLA+MKDOxClGwuoJtWi0uBIUIxjDSE2wQ4iHl7ywQDjGwZws/NcAlgBjaKQJ
-	JDVuoQBeUeACoFkMcFqgQL1IgxpRSsjsqHA/gy0tHvmAx2z2BxIupaJrnVxCEAAAOw==
+        R0lGODlhQgBkAPUAANbWxs7Wxs7OxsbOxsbGxsbGvb3Gvca9vcDAwL21vbW1vbW1tbWtta2t
+        ta2ltaWltaWlraWctaWcrZycrZyUrZSUrZSMrZSMpYyMrYyMpYyEpYSEpYR7pYR7nHp7pYRz
+        pYRynHtzpXtznHtrnHNrnHNjnGtjnGtjlGtalGNalGNSlGNSjFpSlFpKlFpKjFJKjFJCjFI5
+        jEo5jEo5hEoxhEIxhDkphDkhhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACwAAAAAQgBkAAAG
+        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
     }
     interp create x1
     interp create x2
@@ -1653,30 +1653,30 @@ test imgPhoto-13.1 {check separation of images in different interpreters} -setup
 
 test imgPhoto-14.1 {GIF writes work correctly} -setup {
     set data {
-	R0lGODlhYwA5APcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgAysnGy8hKzM
-	hASs3MTcjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDAwP8AAAD/
-	AP//AAAA//8A/wD//////ywAAAAAYwA5AAAI/wAZCBxIsKDBgwgTKlzIsKHD
-	hxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs6bN
-	mzhz6tzJs6fPn0CDCh1KtKhRiwoSKEXAtGlTpUqPGkyagOmCq1edNsWalWkC
-	BUSXIuDqFepBqFWtZv3KU+zYrkrBSqT6dgECtjOTbu16NwFHvV3lshRLti/J
-	qlgRCE6ZuO9ik4Dt+k0ZVyZiyVIvXr77ODPEy5g9T4zMWfTEzXdNz1VbWvXn
-	uqldP1TAOrbshqBb314Y2W7n3Qdpv7UNPCHpycUVbv6dnODy5sqzQldIe8H0
-	hciva9/Ovbv37+BzBgEEADs=
+        R0lGODlhYwA5APcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgAysnGy8hKzM
+        hASs3MTcjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDAwP8AAAD/
+        AP//AAAA//8A/wD//////ywAAAAAYwA5AAAI/wAZCBxIsKDBgwgTKlzIsKHD
+        hxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs6bN
+        mzhz6tzJs6fPn0CDCh1KtKhRiwoSKEXAtGlTpUqPGkyagOmCq1edNsWalWkC
+        BUSXIuDqFepBqFWtZv3KU+zYrkrBSqT6dgECtjOTbu16NwFHvV3lshRLti/J
+        qlgRCE6ZuO9ik4Dt+k0ZVyZiyVIvXr77ODPEy5g9T4zMWfTEzXdNz1VbWvXn
+        uqldP1TAOrbshqBb314Y2W7n3Qdpv7UNPCHpycUVbv6dnODy5sqzQldIe8H0
+        hciva9/Ovbv37+BzBgEEADs=
     }
     set tmpfilename [makeFile {} imgPhoto-14.1.gif]
     removeFile $tmpfilename
@@ -1691,10 +1691,10 @@ test imgPhoto-14.1 {GIF writes work correctly} -setup {
 } -result 1
 test imgPhoto-14.2 {GIF -index handler buffer sizing} -setup {
     set data {
-	R0lGODlhIAAgAKEAAPkOSQsi7////////yH/C05FVFNDQVBFMi4wAwEAAAAh
-	+QQJMgAAACwGAAYAFAAUAAACEYyPqcvtD6OctNqLs968+68VACH5BAkyAAEA
-	LAMAAwAaABoAAAI0jH+gq+gfmFzQzUsr3gBybn1gIm5kaUaoubbuC8fyTNel
-	Ohv1CSO533u8KrgbUfc5Ci/EAgA7
+        R0lGODlhIAAgAKEAAPkOSQsi7////////yH/C05FVFNDQVBFMi4wAwEAAAAh
+        +QQJMgAAACwGAAYAFAAUAAACEYyPqcvtD6OctNqLs968+68VACH5BAkyAAEA
+        LAMAAwAaABoAAAI0jH+gq+gfmFzQzUsr3gBybn1gIm5kaUaoubbuC8fyTNel
+        Ohv1CSO533u8KrgbUfc5Ci/EAgA7
     }
 } -body {
     # Bug 1458234 makes this crash when trying to access buffers of the wrong
@@ -1709,32 +1709,32 @@ test imgPhoto-14.3 {GIF -index interleaving and small frames} -body {
     # accessed.
     set i [image create photo]
     $i configure -format {GIF -index 1} -data {
-	R0lGODdhAQAFAPAAAP8AAAAAACwAAAAAAQAFAEACAoRdACwAAAAAAQAEAEACAoRRADs=
+        R0lGODdhAQAFAPAAAP8AAAAAACwAAAAAAQAFAEACAoRdACwAAAAAAQAEAEACAoRRADs=
     }
 } -cleanup {
     image delete $i
 }
 test imgPhoto-14.4 {GIF buffer overflow} -setup {
     set data {
-	R0lGODlhCgAKAPcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgMDAwP8AAAD/
-	AP//AAAA//8A/wD//////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-	AAAAMwAAZgAAmQAAzAAA/wAzAAAzMwAzZgAzmQAzzAAz/wBmAABmMwBmZgBm
-	mQBmzABm/wCZAACZMwCZZgCZmQCZzACZ/wDMAADMMwDMZgDMmQDMzADM/wD/
-	AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMzADMzMzMzZjMz
-	mTMzzDMz/zNmADNmMzNmZjNmmTNmzDNm/zOZADOZMzOZZjOZmTOZzDOZ/zPM
-	ADPMMzPMZjPMmTPMzDPM/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYA
-	mWYAzGYA/2YzAGYzM2YzZmYzmWYzzGYz/2ZmAGZmM2ZmZmZmmWZmzGZm/2aZ
-	AGaZM2aZZmaZmWaZzGaZ/2bMAGbMM2bMZmbMmWbMzGbM/2b/AGb/M2b/Zmb/
-	mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5kzAJkzM5kzZpkzmZkzzJkz/5lm
-	AJlmM5lmZplmmZlmzJlm/5mZAJmZM5mZZpmZmZmZzJmZ/5nMAJnMM5nMZpnM
-	mZnMzJnM/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wz
-	AMwzM8wzZswzmcwzzMwz/8xmAMxmM8xmZsxmmcxmzMxm/8yZAMyZM8yZZsyZ
-	mcyZzMyZ/8zMAMzMM8zMZszMmczMzMzM/8z/AMz/M8z/Zsz/mcz/zMz///8A
-	AP8AM/8AZv8Amf8AzP8A//8zAP8zM/8zZv8zmf8zzP8z//9mAP9mM/9mZv9m
-	mf9mzP9m//+ZAP+ZM/+ZZv+Zmf+ZzP+Z///MAP/MM//MZv/Mmf/MzP/M////
-	AP//M///Zv//mf//zP///yH5BAEAABAALAAAAAAKAAoAABUSAAD/HEiwoMGD
-	CBMqXMiwYcKAADs=
+        R0lGODlhCgAKAPcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgMDAwP8AAAD/
+        AP//AAAA//8A/wD//////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAMwAAZgAAmQAAzAAA/wAzAAAzMwAzZgAzmQAzzAAz/wBmAABmMwBmZgBm
+        mQBmzABm/wCZAACZMwCZZgCZmQCZzACZ/wDMAADMMwDMZgDMmQDMzADM/wD/
+        AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMzADMzMzMzZjMz
+        mTMzzDMz/zNmADNmMzNmZjNmmTNmzDNm/zOZADOZMzOZZjOZmTOZzDOZ/zPM
+        ADPMMzPMZjPMmTPMzDPM/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYA
+        mWYAzGYA/2YzAGYzM2YzZmYzmWYzzGYz/2ZmAGZmM2ZmZmZmmWZmzGZm/2aZ
+        AGaZM2aZZmaZmWaZzGaZ/2bMAGbMM2bMZmbMmWbMzGbM/2b/AGb/M2b/Zmb/
+        mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5kzAJkzM5kzZpkzmZkzzJkz/5lm
+        AJlmM5lmZplmmZlmzJlm/5mZAJmZM5mZZpmZmZmZzJmZ/5nMAJnMM5nMZpnM
+        mZnMzJnM/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wz
+        AMwzM8wzZswzmcwzzMwz/8xmAMxmM8xmZsxmmcxmzMxm/8yZAMyZM8yZZsyZ
+        mcyZzMyZ/8zMAMzMM8zMZszMmczMzMzM/8z/AMz/M8z/Zsz/mcz/zMz///8A
+        AP8AM/8AZv8Amf8AzP8A//8zAP8zM/8zZv8zmf8zzP8z//9mAP9mM/9mZv9m
+        mf9mzP9m//+ZAP+ZM/+ZZv+Zmf+ZzP+Z///MAP/MM//MZv/Mmf/MzP/M////
+        AP//M///Zv//mf//zP///yH5BAEAABAALAAAAAAKAAoAABUSAAD/HEiwoMGD
+        CBMqXMiwYcKAADs=
     }
 } -body {
     # This crashes Tk up to 8.4.17 and 8.5.0
@@ -1923,8 +1923,8 @@ test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -constraints {
 } -setup {
     package require base64
     set data [base64::decode {
-	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
-	5qpraXIvM1JlNyAgOw==
+        R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
+        5qpraXIvM1JlNyAgOw==
     }]
 } -body {
     image create photo gif1 -data $data
@@ -1933,8 +1933,8 @@ test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -constraints {
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
 test imgPhoto-18.2 {Reject corrupted GIF (base 64 string)} -setup {
     set data {
-	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
-	5qpraXIvM1JlNyAgOw==
+        R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
+        5qpraXIvM1JlNyAgOw==
     }
 } -body {
     image create photo gif1 -data $data
@@ -1953,7 +1953,7 @@ test imgPhoto-18.4 {Reject truncated GIF (binary string)} -constraints {
 } -setup {
     package require base64
     set data [base64::decode {
-	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
+        R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
     }]
 } -body {
     image create photo gif1 -data $data
@@ -1962,7 +1962,7 @@ test imgPhoto-18.4 {Reject truncated GIF (binary string)} -constraints {
 } -returnCodes error -result {error reading color map}
 test imgPhoto-18.5 {Reject truncated GIF (base 64 string)} -setup {
     set data {
-	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
+        R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
     }
 } -body {
     image create photo gif1 -data $data
@@ -1985,8 +1985,8 @@ test imgPhoto-18.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
     # Instead, some systems (e.g. FreeBSD 11.1) terminate the test interpreter.
     package require base64
     set data [base64::decode {
-	R0lGODlhwmYz//8zM/8z/zP/MzP/////M////yH5Ciwhe
-	LrcLTBCd6Tv2qW16tdK4jhV5qpraXIvM1JlNyAgOw==
+        R0lGODlhwmYz//8zM/8z/zP/MzP/////M////yH5Ciwhe
+        LrcLTBCd6Tv2qW16tdK4jhV5qpraXIvM1JlNyAgOw==
     }]
 } -body {
     image create photo gif1 -data $data
@@ -2001,8 +2001,8 @@ test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints 
     # {not enough free memory for image buffer} should be returned.
     # Instead, some systems (e.g. FreeBSD 11.1) terminate the test interpreter.
     set data {
-	R0lGODlhwmYz//8zM/8z/zP/MzP/////M////yH5Ciwhe
-	LrcLTBCd6Tv2qW16tdK4jhV5qpraXIvM1JlNyAgOw==
+        R0lGODlhwmYz//8zM/8z/zP/MzP/////M////yH5Ciwhe
+        LrcLTBCd6Tv2qW16tdK4jhV5qpraXIvM1JlNyAgOw==
     }
 } -body {
     image create photo gif1 -data $data
@@ -2030,8 +2030,8 @@ test imgPhoto-18.10 {Valid GIF (binary string)} -constraints {
     # Tests 18.11, 18.12, with matching data, are included for completeness.
     package require base64
     set data [base64::decode {
-	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
-	AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
+        R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
+        AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
     }]
 } -body {
     image create photo gif1 -data $data
@@ -2040,8 +2040,8 @@ test imgPhoto-18.10 {Valid GIF (binary string)} -constraints {
 } -result gif1
 test imgPhoto-18.11 {Valid GIF (base 64 string)} -setup {
     set data {
-	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
-	AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
+        R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
+        AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
     }
 } -body {
     image create photo gif1 -data $data

@@ -14,14 +14,14 @@ package require Tk
 # named in the demo's entry.
 #
 # Arguments:
-# w -			Name of the toplevel window of the demo.
+# w -                   Name of the toplevel window of the demo.
 
 proc loadDir w {
     global dirName
 
     $w.f.list delete 0 end
     foreach i [lsort [glob -type f -directory $dirName *]] {
-	$w.f.list insert end [file tail $i]
+        $w.f.list insert end [file tail $i]
     }
 }
 
@@ -31,14 +31,14 @@ proc loadDir w {
 # listbox from the directory named in the demo's entry.
 #
 # Arguments:
-# w -			Name of the toplevel window of the demo.
+# w -                   Name of the toplevel window of the demo.
 
 proc selectAndLoadDir w {
     global dirName
     set dir [tk_chooseDirectory -initialdir $dirName -parent $w -mustexist 1]
     if {$dir ne ""} {
-	set dirName $dir
-	loadDir $w
+        set dirName $dir
+        loadDir $w
     }
 }
 
@@ -48,18 +48,18 @@ proc selectAndLoadDir w {
 # that file into a photo image for display.
 #
 # Arguments:
-# w -			Name of the toplevel window of the demo.
-# x, y-			Mouse position within the listbox.
+# w -                   Name of the toplevel window of the demo.
+# x, y-                 Mouse position within the listbox.
 
 proc loadImage {w x y} {
     global dirName
 
     set file [file join $dirName [$w.f.list get @$x,$y]]
     if {[catch {
-	image2a configure -file $file
+        image2a configure -file $file
     }]} then {
-	# Mark the file as not loadable
-	$w.f.list itemconfigure @$x,$y -bg \#c00000 -selectbackground \#ff0000
+        # Mark the file as not loadable
+        $w.f.list itemconfigure @$x,$y -bg \#c00000 -selectbackground \#ff0000
     }
 }
 
@@ -85,7 +85,7 @@ labelframe $w.dir -text "Directory:"
 set dirName [file join $tk_demoDirectory images]
 entry $w.dir.e -width 30 -textvariable dirName
 button $w.dir.b -pady 0 -padx 2m -text "Select Dir." \
-	-command "selectAndLoadDir $w"
+        -command "selectAndLoadDir $w"
 bind $w.dir.e <Return> "loadDir $w"
 pack $w.dir.e -side left -fill both -padx 2m     -pady 2m -expand true
 pack $w.dir.b -side left -fill y    -padx {0 2m} -pady 2m

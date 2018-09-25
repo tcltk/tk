@@ -71,19 +71,19 @@ set home   160
 proc showPendulum {canvas {at {}} {x {}} {y {}}} {
     global Theta dTheta pi length home
     if {$at eq "at" && ($x!=$home || $y!=25)} {
-	set dTheta 0.0
-	set x2 [expr {$x - $home}]
-	set y2 [expr {$y - 25}]
-	set length [expr {hypot($x2, $y2)}]
-	set Theta  [expr {atan2($x2, $y2) * 180/$pi}]
+        set dTheta 0.0
+        set x2 [expr {$x - $home}]
+        set y2 [expr {$y - 25}]
+        set length [expr {hypot($x2, $y2)}]
+        set Theta  [expr {atan2($x2, $y2) * 180/$pi}]
     } else {
-	set angle [expr {$Theta * $pi/180}]
-	set x [expr {$home + $length*sin($angle)}]
-	set y [expr {25    + $length*cos($angle)}]
+        set angle [expr {$Theta * $pi/180}]
+        set x [expr {$home + $length*sin($angle)}]
+        set y [expr {25    + $length*cos($angle)}]
     }
     $canvas coords rod $home 25 $x $y
     $canvas coords bob \
-	    [expr {$x-15}] [expr {$y-15}] [expr {$x+15}] [expr {$y+15}]
+            [expr {$x-15}] [expr {$y-15}] [expr {$x+15}] [expr {$y+15}]
 }
 showPendulum $w.c
 
@@ -94,13 +94,13 @@ proc showPhase {canvas} {
     global Theta dTheta points psw psh
     lappend points [expr {$Theta+$psw}] [expr {-20*$dTheta+$psh}]
     if {[llength $points] > 100} {
-    	 set points [lrange $points end-99 end]
+         set points [lrange $points end-99 end]
     }
     for {set i 0} {$i<100} {incr i 10} {
-	set list [lrange $points end-[expr {$i-1}] end-[expr {$i-12}]]
-	if {[llength $list] >= 4} {
-	    $canvas coords graph$i $list
-	}
+        set list [lrange $points end-[expr {$i-1}] end-[expr {$i-12}]]
+        if {[llength $list] >= 4} {
+            $canvas coords graph$i $list
+        }
     }
 }
 

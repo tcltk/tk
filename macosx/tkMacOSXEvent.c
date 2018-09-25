@@ -1,7 +1,7 @@
 /*
  * tkMacOSXEvent.c --
  *
- *	This file contains the basic Mac OS X Event handling routines.
+ *      This file contains the basic Mac OS X Event handling routines.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -29,38 +29,38 @@ enum {
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
-    NSEvent	    *processedEvent = theEvent;
-    NSEventType	    type = [theEvent type];
-    NSInteger	    subtype;
+    NSEvent         *processedEvent = theEvent;
+    NSEventType     type = [theEvent type];
+    NSInteger       subtype;
 
     switch ((NSInteger)type) {
     case NSAppKitDefined:
         subtype = [theEvent subtype];
 
-	switch (subtype) {
-	    /* Ignored at the moment. */
-	case NSApplicationActivatedEventType:
-	    break;
-	case NSApplicationDeactivatedEventType:
-	    break;
-	case NSWindowExposedEventType:
-	    break;
-	case NSScreenChangedEventType:
-	    break;
-	case NSWindowMovedEventType:
-	    break;
+        switch (subtype) {
+            /* Ignored at the moment. */
+        case NSApplicationActivatedEventType:
+            break;
+        case NSApplicationDeactivatedEventType:
+            break;
+        case NSWindowExposedEventType:
+            break;
+        case NSScreenChangedEventType:
+            break;
+        case NSWindowMovedEventType:
+            break;
         case NSWindowWillMoveEventType:
             break;
 
         default:
             break;
-	}
-	break; /* AppkitEvent. Return theEvent */
+        }
+        break; /* AppkitEvent. Return theEvent */
     case NSKeyUp:
     case NSKeyDown:
     case NSFlagsChanged:
-	processedEvent = [self tkProcessKeyEvent:theEvent];
-	break; /* Key event.  Return the processed event. */
+        processedEvent = [self tkProcessKeyEvent:theEvent];
+        break; /* Key event.  Return the processed event. */
     case NSLeftMouseDown:
     case NSLeftMouseUp:
     case NSRightMouseDown:
@@ -76,17 +76,17 @@ enum {
     case NSOtherMouseDragged:
     case NSTabletPoint:
     case NSTabletProximity:
-	processedEvent = [self tkProcessMouseEvent:theEvent];
-	break; /* Mouse event.  Return the processed event. */
+        processedEvent = [self tkProcessMouseEvent:theEvent];
+        break; /* Mouse event.  Return the processed event. */
 #if 0
     case NSSystemDefined:
         subtype = [theEvent subtype];
-	break;
+        break;
     case NSApplicationDefined: {
-	id win;
-	win = [theEvent window];
-	break;
-	}
+        id win;
+        win = [theEvent window];
+        break;
+        }
     case NSCursorUpdate:
         break;
     case NSEventTypeGesture:
@@ -99,7 +99,7 @@ enum {
 #endif
 
     default:
-	break; /* return theEvent */
+        break; /* return theEvent */
     }
     return processedEvent;
 }
@@ -112,14 +112,14 @@ enum {
  *
  * TkMacOSXFlushWindows --
  *
- *	This routine flushes all the visible windows of the application. It is
- *	called by XSync().
+ *      This routine flushes all the visible windows of the application. It is
+ *      called by XSync().
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Flushes all visible Cocoa windows
+ *      Flushes all visible Cocoa windows
  *
  *----------------------------------------------------------------------
  */
@@ -130,9 +130,9 @@ TkMacOSXFlushWindows(void)
     NSArray *macWindows = [NSApp orderedWindows];
 
     for (NSWindow *w in macWindows) {
-	if (TkMacOSXGetXWindow(w)) {
-	    [w displayIfNeeded];
-	}
+        if (TkMacOSXGetXWindow(w)) {
+            [w displayIfNeeded];
+        }
     }
 }
 

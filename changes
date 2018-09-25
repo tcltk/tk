@@ -2696,29 +2696,29 @@ for double-click that deleted the listbox. (JO)
 11/3/95 (feature change) Moved most of the Tk event loop to Tcl.  Many
 Tk_ names have become Tcl names now:
 
-TK_READABLE =>		TCL_READABLE
-TK_WRITABLE =>		TCL_WRITABLE
-TK_EXCEPTION =>		TCL_EXCEPTION
-TK_DONT_WAIT =>		TCL_DONT_WAIT
-TK_WINDOW_EVENTS =>	TCL_WINDOW_EVENTS
-TK_FILE_EVENTS =>	TCL_FILE_EVENTS
-TK_TIMER_EVENTS =>	TCL_TIMER_EVENTS
-TK_IDLE_EVENTS =>	TCL_IDLE_EVENTS
-TK_ALL_EVENTS =>	TCL_ALL_EVENTS
-Tk_IdleProc =>		Tcl_IdleProc
-Tk_FileProc =>		Tcl_FileProc
-Tk_TimerProc =>		Tcl_TimerProc
-Tk_TimerToken =>	Tcl_TimerToken
-Tk_BackgroundError =>	Tcl_BackgroundError
-Tk_CancelIdleCall =>	Tcl_CancelIdleCall
-Tk_CreateFileHandler =>	Tcl_CreateFileHandler
+TK_READABLE =>          TCL_READABLE
+TK_WRITABLE =>          TCL_WRITABLE
+TK_EXCEPTION =>         TCL_EXCEPTION
+TK_DONT_WAIT =>         TCL_DONT_WAIT
+TK_WINDOW_EVENTS =>     TCL_WINDOW_EVENTS
+TK_FILE_EVENTS =>       TCL_FILE_EVENTS
+TK_TIMER_EVENTS =>      TCL_TIMER_EVENTS
+TK_IDLE_EVENTS =>       TCL_IDLE_EVENTS
+TK_ALL_EVENTS =>        TCL_ALL_EVENTS
+Tk_IdleProc =>          Tcl_IdleProc
+Tk_FileProc =>          Tcl_FileProc
+Tk_TimerProc =>         Tcl_TimerProc
+Tk_TimerToken =>        Tcl_TimerToken
+Tk_BackgroundError =>   Tcl_BackgroundError
+Tk_CancelIdleCall =>    Tcl_CancelIdleCall
+Tk_CreateFileHandler => Tcl_CreateFileHandler
 Tk_CreateTimerHandler =>Tcl_CreateTimerHandler
-Tk_DeleteFileHandler =>	Tcl_DeleteFileHandler
+Tk_DeleteFileHandler => Tcl_DeleteFileHandler
 Tk_DeleteTimerHandler =>Tk_DeleteTimerHandler
-Tk_DoOneEvent =>	Tcl_DoOneEvent
-Tk_DoWhenIdle =>	Tcl_DoWhenIdle
-Tk_Sleep =>		Tcl_Sleep
-tkerror =>		bgerror
+Tk_DoOneEvent =>        Tcl_DoOneEvent
+Tk_DoWhenIdle =>        Tcl_DoWhenIdle
+Tk_Sleep =>             Tcl_Sleep
+tkerror =>              bgerror
 
 Other than the name changes, the functions are the same.  In addition,
 there are #defines in tk.h so that the old Tk names will still work.
@@ -4298,7 +4298,7 @@ pending idle handlers, resulting in a crash in a few odd cases. (stanton)
 immediately instead of being delayed.  This ensures that color tables
 are properly disposed at process exit. (stanton)
 
-2/4/99 (bug fix) Changed postscript template to	include a European
+2/4/99 (bug fix) Changed postscript template to include a European
 character with an umlaut when determining font height. (stanton)
 
 2/4/99 (bug fix) If an image bitmap mask changed but ended up with the
@@ -4442,11 +4442,11 @@ Unicode characters under Windows. [Bug: 819] (stanton)
 code. [Bug: 620] (stanton)
 
 11/25/98 (bug fix) Various small bug fixes: (stanton)
-	- hidemargin option was not honored properly in menus [Bug: 859]
-	- disabled menu entries were getting reenabled whenever the
-	mouse passed over the entry [Bug: 860]
-	- fixed deletion order bug where a crash would result if a
-	binding deleted "."
+        - hidemargin option was not honored properly in menus [Bug: 859]
+        - disabled menu entries were getting reenabled whenever the
+        mouse passed over the entry [Bug: 860]
+        - fixed deletion order bug where a crash would result if a
+        binding deleted "."
 
 11/30/98 (bug fix) The error result was getting lost when restoring
 configuration options in buttons. [Bug: 619] (stanton)
@@ -4743,7 +4743,7 @@ to provide support for disabling/enabling the use of XIM on X.  This was
 previously all done at compile time, and always on.  Now it is turned off
 by default, even when available, and the user must turn it on to use XIM
 (per display).
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 user must add 'tk useinputmethods 1' to retain old style. (hobbs)
 
 1999-12-16 (feature enhancement) added proper support for -initialfile
@@ -4984,7 +4984,7 @@ bindtags, grab. place, selection commands (melski)
 
 2000-08-24 (new feature) More correct GNU configure support (no more
 --enable-gcc) (dejong)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2000-08-29 (bug fix) Corrected Windows menu indicator drawing (oberhumer)
 
@@ -5072,7 +5072,7 @@ entry and listbox widgets to use this, correcting potential crashes. (hobbs)
 
 2001-08-01 (interface rewrite)[TIP 44] moved all private tk[A-Z]* commands and
 variables into the ::tk:: namespace (porter)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
  * overhaul of configure scripts for cleaner standard support and support
    of mingw gcc on Windows. (mdejong)
@@ -5144,7 +5144,7 @@ thread-enabled Tcl (hobbs)
 
 2001-11-17 (visual change) default button size on Windows changed to
 conform to Windows style (hobbs)
-	**** POTENTIAL VISUAL INCOMPATABILITY ****
+        **** POTENTIAL VISUAL INCOMPATABILITY ****
 
 2001-12-03 (new feature)[TIP 74] [wm stackorder] (dejong, steffen)
 
@@ -5157,7 +5157,7 @@ minimum size, enabling native L&F (hobbs)
 
 2002-01 (bug fix) updates for CONST-ification in Tcl API, notably
 Tcl_ParseArgv.  Use -DUSE_NON_CONST to suppress source incompatibility
-	**** POTENTIAL INCOMPATABILITY ****
+        **** POTENTIAL INCOMPATABILITY ****
 
 2002-01-31 (bug fix)[508988] logic error in menu cloning (helfter)
 
@@ -5215,20 +5215,20 @@ SC_CONFIG_CFLAGS for usage for SHARED_BUILD (dejong)
 created by radiobutton (spjuth)
 
 2002-05-27 (feature change) [wm transient .t .t] now raises an error (dejong)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2002-06-10 (new feature)[566605] Utilities for -underline, ampersand magic
 (kovalenko)
 
 2002-06-12 (feature change) A transient toplevel now mirrors state changes
 in the master. (dejong)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2002-06-13 (bug fix) Fixed handling of cursor specs across platforms to
 be consistent. (fellows)
 
 2002-06-14 (new feature) [TIP 98] Enhanced photo compositing (fellows)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2002-06-14 (bug fix) Removed references to matherr (kupries)
 
@@ -5262,7 +5262,7 @@ multiple range pairs (hobbs)
 --- Released 8.4b1, July 5, 2002 --- See ChangeLog for details ---
 
 2002-07-11 (bug fix) some memory allocation failures now result in
-	error messages rather than panic (fellows)
+        error messages rather than panic (fellows)
 
 2002-07-15 (platform support) Borland makefile on Windows (gravereaux,giese)
 
@@ -5279,8 +5279,8 @@ multiple range pairs (hobbs)
 2002-07-25 (feature enhancement)[564521] Obj-ified [wm] (spjuth)
 
 2002-08-04 (new feature)[589853][TIP 27] Tk interfaces are now fully
-	CONST-ified.  Use the symbols USE_NON_CONST or USE_COMPAT_CONST
-	to select interfaces with fewer changes.
+        CONST-ified.  Use the symbols USE_NON_CONST or USE_COMPAT_CONST
+        to select interfaces with fewer changes.
         *** POTENTIAL INCOMPATIBILITY ***
 
 2002-08-07 (bug fix)[578654] bezier curves on canvas (hobbs)
@@ -5413,7 +5413,7 @@ deletion epochs. (english)
 
 2003-02-08 (bug fix) Make canvas item coordinate list handling consistent to
 stop segfaults.  Cannot now create items without coordinates. (hobbs)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2003-02-10 (bug fix) Better support for themed and animated cursors on OSX.
 (ingham)
@@ -5465,7 +5465,7 @@ positively when disabled.
 
 2003-02-24 (bug fix)[647497] Make Tk pick the first best matching font on
 the font path. (dal zotto)
-	*** POTENTIAL VISUAL INCOMPATIBILITY ***
+        *** POTENTIAL VISUAL INCOMPATIBILITY ***
 
 2003-02-25 (bug fix)[621672] Fixed conversion of apple event parameters
 to posix path names. (steffen,riefenstahl)
@@ -5475,7 +5475,7 @@ on Windows. (martin)
 
 2003-02-28 (bug fix)[612110] Make %-substitutions for events only read data out
 of the event structure when that field is valid for that event type. (fellows)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 --- Released 8.4.2, March 3, 2003 --- See ChangeLog for details ---
 
@@ -5649,7 +5649,7 @@ in this changeset (new minor version) rather than bug fixes:
    Full Tcl_Obj-ification of the text widget
  * [TIP #155] add 'count' and 'replace' subcommands and a '-blockcursor'
    option to text widgets and support smooth-scrolling of them
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
    Negative or decreasing tab-stops are explicitly disallowed
 
  * [TIP #116] more safety for large image creation through use of attempted
@@ -5657,7 +5657,7 @@ in this changeset (new minor version) rather than bug fixes:
 
  * [TIP #137/151] add -encoding option to 'wish' executable (through
    Tk_MainEX())
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
    For Tk embedders that build on Tk_MainEx() and make use of Tk_MainEx's
    former ability to pass a leading "-encoding" option to interactive shell
    operations, this will now be consumed by Tk.
@@ -5798,7 +5798,7 @@ radio/checkbuttons when colors are exhausted (griffin)
 
 2004-03-18 (platform removal)[918139] Removed support for Mac OS Classic
 platform (steffen)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2004-03-26 (new feature)[FRQ 540375] support for
 [image create photo -format PPM -data] (fellows)
@@ -6385,7 +6385,7 @@ project for Xcode 3.0 (steffen)
 2007-10-11 (bug fix)[1810818] Aqua: [wm resizeable] (steffen)
 
 2007-10-12 (platform support) Aqua: replace RgnHandles by HIShapeRefs (steffen)
-	*** POTENTIAL INCOMPATIBILITY for C code acessing MacDrawable Rgns ***
+        *** POTENTIAL INCOMPATIBILITY for C code acessing MacDrawable Rgns ***
 
 2007-10-15 (platform support) Mac OS X: 64-bit X11 support (steffen)
 
@@ -6412,7 +6412,7 @@ Improvements to demo suite to make more use of Tk 8.5 features (fellows,steffen)
 --- Released 8.5b2, October 26, 2007 --- See ChangeLog for details ---
 
 2007-10-29 (appearance change) Default look and fonts on X11 (hobbs)
-	*** POTENTIAL INCOMPATIBILITY; [::tk::classic::restore] to undo ***
+        *** POTENTIAL INCOMPATIBILITY; [::tk::classic::restore] to undo ***
 
 2007-10-30 (bug fix)[1803723] Win: Arabic and Hebrew rendering (fellows)
 
@@ -6501,7 +6501,7 @@ Several documentation and release notes improvements
 --- Released 8.5.2, March 28, 2008 --- See ChangeLog for details ---
 
 2008-04-01 (interface)[1819422] tkStubsPtr no longer in libtk (porter)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2008-04-02 (interface)[1819422] libtkstub symbols MODULE_SCOPE (steffen)
 
@@ -6629,7 +6629,7 @@ in screen distances, reducing precision loss (ferrieux)
 2008-12-28 (new feature)[TIP 244] PNG photo format support (fellows)
 
 2008-12-28 (new feature)[TIP 171] <MouseWheel> event handling (fellows)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2008-12-31 (bug fix)[2003310] radio|check button indicator color (english)
 
@@ -6713,7 +6713,7 @@ in screen distances, reducing precision loss (ferrieux)
 use --enable-aqua=carbon option to unix/configure to enable (steffen)
 
 2009-06-29 (new feature) source in `macosx` now built on Cocoa (steffen)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2009-06-30 (platform support) clang static analyzer macros (steffen)
 
@@ -6724,7 +6724,7 @@ use --enable-aqua=carbon option to unix/configure to enable (steffen)
 2009-07-22 (bug fix)[2496114] focus in dead window crash (griffin,fellows)
 
 2009-07-23 (bug fix)[2441988] report errors in selection handlers (fellows)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2009-08-01 (bug fix)[2830420] X iconphoto for big endian (misch,fellows)
 
@@ -6788,7 +6788,7 @@ deletion (walzer,steffen)
 2009-12-11 (bug fix)[2912473] accept :: in DISPLAY name (fellows)
 
 2009-12-15 (bug fix)[2492179] Tcl_ObjType "option" no longer registered (porter)
-	*** POTENTIAL INCOMPATIBILITY for Tcl_GetObjType("option") ***
+        *** POTENTIAL INCOMPATIBILITY for Tcl_GetObjType("option") ***
 
 2009-12-20 (bug fix)[2917663] [send] accept SI:* on auth list (fellows)
 
@@ -6994,13 +6994,13 @@ and -to (porter)
 2012-08-11 (bug fix)[3554273] text elide and tags (vogel)
 
 2012-08-15 (enhancement)[3555324] Win:Ctrl-A now means Select-All (nijtmans)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2012-08-22 (new feature)[TIP 403] Use Web color definitions (nijtmans)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2012-08-23 (enhancement)[3555644] better use of virtual events (nijtmans)
-	*** POTENTIAL INCOMPATIBILITY ***
+        *** POTENTIAL INCOMPATIBILITY ***
 
 2012-08-24 (bug fix)[3558535] file dialog filtering (fellows)
 

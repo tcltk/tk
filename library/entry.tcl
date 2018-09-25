@@ -13,18 +13,18 @@
 #-------------------------------------------------------------------------
 # Elements of tk::Priv that are used in this file:
 #
-# afterId -		If non-null, it means that auto-scanning is underway
-#			and it gives the "after" id for the next auto-scan
-#			command to be executed.
-# mouseMoved -		Non-zero means the mouse has moved a significant
-#			amount since the button went down (so, for example,
-#			start dragging out a selection).
-# pressX -		X-coordinate at which the mouse button was pressed.
-# selectMode -		The style of selection currently underway:
-#			char, word, or line.
-# x, y -		Last known mouse coordinates for scanning
-#			and auto-scanning.
-# data -		Used for Cut and Copy
+# afterId -             If non-null, it means that auto-scanning is underway
+#                       and it gives the "after" id for the next auto-scan
+#                       command to be executed.
+# mouseMoved -          Non-zero means the mouse has moved a significant
+#                       amount since the button went down (so, for example,
+#                       start dragging out a selection).
+# pressX -              X-coordinate at which the mouse button was pressed.
+# selectMode -          The style of selection currently underway:
+#                       char, word, or line.
+# x, y -                Last known mouse coordinates for scanning
+#                       and auto-scanning.
+# data -                Used for Cut and Copy
 #-------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------
@@ -32,28 +32,28 @@
 #-------------------------------------------------------------------------
 bind Entry <<Cut>> {
     if {![catch {tk::EntryGetSelection %W} tk::Priv(data)]} {
-	clipboard clear -displayof %W
-	clipboard append -displayof %W $tk::Priv(data)
-	%W delete sel.first sel.last
-	unset tk::Priv(data)
+        clipboard clear -displayof %W
+        clipboard append -displayof %W $tk::Priv(data)
+        %W delete sel.first sel.last
+        unset tk::Priv(data)
     }
 }
 bind Entry <<Copy>> {
     if {![catch {tk::EntryGetSelection %W} tk::Priv(data)]} {
-	clipboard clear -displayof %W
-	clipboard append -displayof %W $tk::Priv(data)
-	unset tk::Priv(data)
+        clipboard clear -displayof %W
+        clipboard append -displayof %W $tk::Priv(data)
+        unset tk::Priv(data)
     }
 }
 bind Entry <<Paste>> {
     catch {
-	if {[tk windowingsystem] ne "x11"} {
-	    catch {
-		%W delete sel.first sel.last
-	    }
-	}
-	%W insert insert [::tk::GetSelection %W CLIPBOARD]
-	tk::EntrySeeInsert %W
+        if {[tk windowingsystem] ne "x11"} {
+            catch {
+                %W delete sel.first sel.last
+            }
+        }
+        %W insert insert [::tk::GetSelection %W CLIPBOARD]
+        tk::EntrySeeInsert %W
     }
 }
 bind Entry <<Clear>> {
@@ -62,8 +62,8 @@ bind Entry <<Clear>> {
 }
 bind Entry <<PasteSelection>> {
     if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
-	|| !$tk::Priv(mouseMoved)} {
-	tk::EntryPaste %W %x
+        || !$tk::Priv(mouseMoved)} {
+        tk::EntryPaste %W %x
     }
 }
 
@@ -96,11 +96,11 @@ bind Entry <Shift-1> {
     set tk::Priv(selectMode) char
     %W selection adjust @%x
 }
-bind Entry <Double-Shift-1>	{
+bind Entry <Double-Shift-1>     {
     set tk::Priv(selectMode) word
     tk::EntryMouseSelect %W %x
 }
-bind Entry <Triple-Shift-1>	{
+bind Entry <Triple-Shift-1>     {
     set tk::Priv(selectMode) line
     tk::EntryMouseSelect %W %x
 }
@@ -163,9 +163,9 @@ bind Entry <<SelectLineEnd>> {
 
 bind Entry <Delete> {
     if {[%W selection present]} {
-	%W delete sel.first sel.last
+        %W delete sel.first sel.last
     } else {
-	%W delete insert
+        %W delete insert
     }
 }
 bind Entry <BackSpace> {
@@ -220,7 +220,7 @@ bind Entry <<PrevLine>> {# nothing}
 # generates the <<Paste>> event, so we don't need to do anything here.
 if {[tk windowingsystem] ne "win32"} {
     bind Entry <Insert> {
-	catch {tk::EntryInsert %W [::tk::GetSelection %W PRIMARY]}
+        catch {tk::EntryInsert %W [::tk::GetSelection %W PRIMARY]}
     }
 }
 
@@ -228,47 +228,47 @@ if {[tk windowingsystem] ne "win32"} {
 
 bind Entry <Control-d> {
     if {!$tk_strictMotif} {
-	%W delete insert
+        %W delete insert
     }
 }
 bind Entry <Control-h> {
     if {!$tk_strictMotif} {
-	tk::EntryBackspace %W
+        tk::EntryBackspace %W
     }
 }
 bind Entry <Control-k> {
     if {!$tk_strictMotif} {
-	%W delete insert end
+        %W delete insert end
     }
 }
 bind Entry <Control-t> {
     if {!$tk_strictMotif} {
-	tk::EntryTranspose %W
+        tk::EntryTranspose %W
     }
 }
 bind Entry <Meta-b> {
     if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W [tk::EntryPreviousWord %W insert]
+        tk::EntrySetCursor %W [tk::EntryPreviousWord %W insert]
     }
 }
 bind Entry <Meta-d> {
     if {!$tk_strictMotif} {
-	%W delete insert [tk::EntryNextWord %W insert]
+        %W delete insert [tk::EntryNextWord %W insert]
     }
 }
 bind Entry <Meta-f> {
     if {!$tk_strictMotif} {
-	tk::EntrySetCursor %W [tk::EntryNextWord %W insert]
+        tk::EntrySetCursor %W [tk::EntryNextWord %W insert]
     }
 }
 bind Entry <Meta-BackSpace> {
     if {!$tk_strictMotif} {
-	%W delete [tk::EntryPreviousWord %W insert] insert
+        %W delete [tk::EntryPreviousWord %W insert] insert
     }
 }
 bind Entry <Meta-Delete> {
     if {!$tk_strictMotif} {
-	%W delete [tk::EntryPreviousWord %W insert] insert
+        %W delete [tk::EntryPreviousWord %W insert] insert
     }
 }
 
@@ -276,12 +276,12 @@ bind Entry <Meta-Delete> {
 
 bind Entry <2> {
     if {!$tk_strictMotif} {
-	::tk::EntryScanMark %W %x
+        ::tk::EntryScanMark %W %x
     }
 }
 bind Entry <B2-Motion> {
     if {!$tk_strictMotif} {
-	::tk::EntryScanDrag %W %x
+        ::tk::EntryScanDrag %W %x
     }
 }
 
@@ -291,14 +291,14 @@ bind Entry <B2-Motion> {
 # of the character just after the boundary.
 #
 # Arguments:
-# w -		The entry window.
-# x -		X-coordinate within the window.
+# w -           The entry window.
+# x -           X-coordinate within the window.
 
 proc ::tk::EntryClosestGap {w x} {
     set pos [$w index @$x]
     set bbox [$w bbox $pos]
     if {($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {
-	return $pos
+        return $pos
     }
     incr pos
 }
@@ -309,8 +309,8 @@ proc ::tk::EntryClosestGap {w x} {
 # and claims the input focus.
 #
 # Arguments:
-# w -		The entry window in which the button was pressed.
-# x -		The x-coordinate of the button press.
+# w -           The entry window in which the button was pressed.
+# x -           The x-coordinate of the button press.
 
 proc ::tk::EntryButton1 {w x} {
     variable ::tk::Priv
@@ -321,7 +321,7 @@ proc ::tk::EntryButton1 {w x} {
     $w icursor [EntryClosestGap $w $x]
     $w selection from insert
     if {"disabled" ne [$w cget -state]} {
-	focus $w
+        focus $w
     }
 }
 
@@ -333,8 +333,8 @@ proc ::tk::EntryButton1 {w x} {
 # one character to another or until there have been multiple clicks.
 #
 # Arguments:
-# w -		The entry window in which the button was pressed.
-# x -		The x-coordinate of the mouse.
+# w -           The entry window in which the button was pressed.
+# x -           The x-coordinate of the mouse.
 
 proc ::tk::EntryMouseSelect {w x} {
     variable ::tk::Priv
@@ -342,45 +342,45 @@ proc ::tk::EntryMouseSelect {w x} {
     set cur [EntryClosestGap $w $x]
     set anchor [$w index anchor]
     if {($cur != $anchor) || (abs($Priv(pressX) - $x) >= 3)} {
-	set Priv(mouseMoved) 1
+        set Priv(mouseMoved) 1
     }
     switch $Priv(selectMode) {
-	char {
-	    if {$Priv(mouseMoved)} {
-		if {$cur < $anchor} {
-		    $w selection range $cur $anchor
-		} elseif {$cur > $anchor} {
-		    $w selection range $anchor $cur
-		} else {
-		    $w selection clear
-		}
-	    }
-	}
-	word {
-	    if {$cur < $anchor} {
-		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
-	    } elseif {$cur > $anchor} {
-		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
-	    } else {
-		if {[$w index @$Priv(pressX)] < $anchor} {
-		      incr anchor -1
-		}
-		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] $anchor]
-	    }
-	    if {$before < 0} {
-		set before 0
-	    }
-	    if {$after < 0} {
-		set after end
-	    }
-	    $w selection range $before $after
-	}
-	line {
-	    $w selection range 0 end
-	}
+        char {
+            if {$Priv(mouseMoved)} {
+                if {$cur < $anchor} {
+                    $w selection range $cur $anchor
+                } elseif {$cur > $anchor} {
+                    $w selection range $anchor $cur
+                } else {
+                    $w selection clear
+                }
+            }
+        }
+        word {
+            if {$cur < $anchor} {
+                set before [tcl_wordBreakBefore [$w get] $cur]
+                set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
+            } elseif {$cur > $anchor} {
+                set before [tcl_wordBreakBefore [$w get] $anchor]
+                set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
+            } else {
+                if {[$w index @$Priv(pressX)] < $anchor} {
+                      incr anchor -1
+                }
+                set before [tcl_wordBreakBefore [$w get] $anchor]
+                set after [tcl_wordBreakAfter [$w get] $anchor]
+            }
+            if {$before < 0} {
+                set before 0
+            }
+            if {$after < 0} {
+                set after end
+            }
+            $w selection range $before $after
+        }
+        line {
+            $w selection range 0 end
+        }
     }
     if {$Priv(mouseMoved)} {
         $w icursor $cur
@@ -393,14 +393,14 @@ proc ::tk::EntryMouseSelect {w x} {
 # pastes the selection there, and sets the focus to the window.
 #
 # Arguments:
-# w -		The entry window.
-# x -		X position of the mouse.
+# w -           The entry window.
+# x -           X position of the mouse.
 
 proc ::tk::EntryPaste {w x} {
     $w icursor [EntryClosestGap $w $x]
     catch {$w insert insert [::tk::GetSelection $w PRIMARY]}
     if {"disabled" ne [$w cget -state]} {
-	focus $w
+        focus $w
     }
 }
 
@@ -412,20 +412,20 @@ proc ::tk::EntryPaste {w x} {
 # mouse moves back into the window or the mouse button is released.
 #
 # Arguments:
-# w -		The entry window.
+# w -           The entry window.
 
 proc ::tk::EntryAutoScan {w} {
     variable ::tk::Priv
     set x $Priv(x)
     if {![winfo exists $w]} {
-	return
+        return
     }
     if {$x >= [winfo width $w]} {
-	$w xview scroll 2 units
-	EntryMouseSelect $w $x
+        $w xview scroll 2 units
+        EntryMouseSelect $w $x
     } elseif {$x < 0} {
-	$w xview scroll -2 units
-	EntryMouseSelect $w $x
+        $w xview scroll -2 units
+        EntryMouseSelect $w $x
     }
     set Priv(afterId) [after 50 [list tk::EntryAutoScan $w]]
 }
@@ -436,16 +436,16 @@ proc ::tk::EntryAutoScan {w} {
 # the selection to that position.
 #
 # Arguments:
-# w -		The entry window.
-# new -		A new position for the insertion cursor (the cursor hasn't
-#		actually been moved to this position yet).
+# w -           The entry window.
+# new -         A new position for the insertion cursor (the cursor hasn't
+#               actually been moved to this position yet).
 
 proc ::tk::EntryKeySelect {w new} {
     if {![$w selection present]} {
-	$w selection from insert
-	$w selection to $new
+        $w selection from insert
+        $w selection to $new
     } else {
-	$w selection adjust $new
+        $w selection adjust $new
     }
     $w icursor $new
 }
@@ -456,19 +456,19 @@ proc ::tk::EntryKeySelect {w new} {
 # insertion cursor, then delete the selection before inserting.
 #
 # Arguments:
-# w -		The entry window in which to insert the string
-# s -		The string to insert (usually just a single character)
+# w -           The entry window in which to insert the string
+# s -           The string to insert (usually just a single character)
 
 proc ::tk::EntryInsert {w s} {
     if {$s eq ""} {
-	return
+        return
     }
     catch {
-	set insert [$w index insert]
-	if {([$w index sel.first] <= $insert)
-		&& ([$w index sel.last] >= $insert)} {
-	    $w delete sel.first sel.last
-	}
+        set insert [$w index insert]
+        if {([$w index sel.first] <= $insert)
+                && ([$w index sel.last] >= $insert)} {
+            $w delete sel.first sel.last
+        }
     }
     $w insert insert $s
     EntrySeeInsert $w
@@ -480,22 +480,22 @@ proc ::tk::EntryInsert {w s} {
 # window, reposition the cursor at about the middle of the window.
 #
 # Arguments:
-# w -		The entry window in which to backspace.
+# w -           The entry window in which to backspace.
 
 proc ::tk::EntryBackspace w {
     if {[$w selection present]} {
-	$w delete sel.first sel.last
+        $w delete sel.first sel.last
     } else {
-	set x [expr {[$w index insert] - 1}]
-	if {$x >= 0} {
-	    $w delete $x
-	}
-	if {[$w index @0] >= [$w index insert]} {
-	    set range [$w xview]
-	    set left [lindex $range 0]
-	    set right [lindex $range 1]
-	    $w xview moveto [expr {$left - ($right - $left)/2.0}]
-	}
+        set x [expr {[$w index insert] - 1}]
+        if {$x >= 0} {
+            $w delete $x
+        }
+        if {[$w index @0] >= [$w index insert]} {
+            set range [$w xview]
+            set left [lindex $range 0]
+            set right [lindex $range 1]
+            $w xview moveto [expr {$left - ($right - $left)/2.0}]
+        }
     }
 }
 
@@ -504,12 +504,12 @@ proc ::tk::EntryBackspace w {
 # If not, adjust the view so that it is.
 #
 # Arguments:
-# w -		The entry window.
+# w -           The entry window.
 
 proc ::tk::EntrySeeInsert w {
     set c [$w index insert]
     if {($c < [$w index @0]) || ($c > [$w index @[winfo width $w]])} {
-	$w xview $c
+        $w xview $c
     }
 }
 
@@ -519,8 +519,8 @@ proc ::tk::EntrySeeInsert w {
 # that the insertion cursor is visible.
 #
 # Arguments:
-# w -		The entry window.
-# pos -		The desired new position for the cursor in the window.
+# w -           The entry window.
+# pos -         The desired new position for the cursor in the window.
 
 proc ::tk::EntrySetCursor {w pos} {
     $w icursor $pos
@@ -536,16 +536,16 @@ proc ::tk::EntrySetCursor {w pos} {
 # case, the cursor ends up to the right of the transposed characters.
 #
 # Arguments:
-# w -		The entry window.
+# w -           The entry window.
 
 proc ::tk::EntryTranspose w {
     set i [$w index insert]
     if {$i < [$w index end]} {
-	incr i
+        incr i
     }
     set first [expr {$i-2}]
     if {$first < 0} {
-	return
+        return
     }
     set data [$w get]
     set new [string index $data [expr {$i-1}]][string index $data $first]
@@ -561,27 +561,27 @@ proc ::tk::EntryTranspose w {
 # end-of-word position.
 #
 # Arguments:
-# w -		The entry window in which the cursor is to move.
-# start -	Position at which to start search.
+# w -           The entry window in which the cursor is to move.
+# start -       Position at which to start search.
 
 if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::EntryNextWord {w start} {
-	set pos [tcl_endOfWord [$w get] [$w index $start]]
-	if {$pos >= 0} {
-	    set pos [tcl_startOfNextWord [$w get] $pos]
-	}
-	if {$pos < 0} {
-	    return end
-	}
-	return $pos
+        set pos [tcl_endOfWord [$w get] [$w index $start]]
+        if {$pos >= 0} {
+            set pos [tcl_startOfNextWord [$w get] $pos]
+        }
+        if {$pos < 0} {
+            return end
+        }
+        return $pos
     }
 } else {
     proc ::tk::EntryNextWord {w start} {
-	set pos [tcl_endOfWord [$w get] [$w index $start]]
-	if {$pos < 0} {
-	    return end
-	}
-	return $pos
+        set pos [tcl_endOfWord [$w get] [$w index $start]]
+        if {$pos < 0} {
+            return end
+        }
+        return $pos
     }
 }
 
@@ -591,13 +591,13 @@ if {[tk windowingsystem] eq "win32"}  {
 # position in the entry.
 #
 # Arguments:
-# w -		The entry window in which the cursor is to move.
-# start -	Position at which to start search.
+# w -           The entry window in which the cursor is to move.
+# start -       Position at which to start search.
 
 proc ::tk::EntryPreviousWord {w start} {
     set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
     if {$pos < 0} {
-	return 0
+        return 0
     }
     return $pos
 }
@@ -607,8 +607,8 @@ proc ::tk::EntryPreviousWord {w start} {
 # Marks the start of a possible scan drag operation
 #
 # Arguments:
-# w -	The entry window from which the text to get
-# x -	x location on screen
+# w -   The entry window from which the text to get
+# x -   x location on screen
 
 proc ::tk::EntryScanMark {w x} {
     $w scan mark $x
@@ -622,8 +622,8 @@ proc ::tk::EntryScanMark {w x} {
 # Marks the start of a possible scan drag operation
 #
 # Arguments:
-# w -	The entry window from which the text to get
-# x -	x location on screen
+# w -   The entry window from which the text to get
+# x -   x location on screen
 
 proc ::tk::EntryScanDrag {w x} {
     # Make sure these exist, as some weird situations can trigger the
@@ -631,7 +631,7 @@ proc ::tk::EntryScanDrag {w x} {
     if {![info exists ::tk::Priv(x)]} { set ::tk::Priv(x) $x }
     # allow for a delta
     if {abs($x-$::tk::Priv(x)) > 2} {
-	set ::tk::Priv(mouseMoved) 1
+        set ::tk::Priv(mouseMoved) 1
     }
     $w scan dragto $x
 }
@@ -645,10 +645,10 @@ proc ::tk::EntryScanDrag {w x} {
 
 proc ::tk::EntryGetSelection {w} {
     set entryString [string range [$w get] [$w index sel.first] \
-	    [expr {[$w index sel.last] - 1}]]
+            [expr {[$w index sel.last] - 1}]]
     if {[$w cget -show] ne ""} {
-	return [string repeat [string index [$w cget -show] 0] \
-		[string length $entryString]]
+        return [string repeat [string index [$w cget -show] 0] \
+                [string length $entryString]]
     }
     return $entryString
 }

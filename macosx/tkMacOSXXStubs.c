@@ -1,10 +1,10 @@
 /*
  * tkMacOSXXStubs.c --
  *
- *	This file contains most of the X calls called by Tk. Many of these
- *	calls are just stubs and either don't make sense on the Macintosh or
- *	their implamentation just doesn't do anything. Other calls will
- *	eventually be moved into other files.
+ *      This file contains most of the X calls called by Tk. Many of these
+ *      calls are just stubs and either don't make sense on the Macintosh or
+ *      their implamentation just doesn't do anything. Other calls will
+ *      eventually be moved into other files.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -52,9 +52,9 @@ static Time lastInactivityReset = 0;
  * Forward declarations of procedures used in this file.
  */
 
-static XID		MacXIdAlloc(Display *display);
-static int		DefaultErrorHandler(Display *display,
-			    XErrorEvent *err_evt);
+static XID              MacXIdAlloc(Display *display);
+static int              DefaultErrorHandler(Display *display,
+                            XErrorEvent *err_evt);
 
 
 /*
@@ -62,14 +62,14 @@ static int		DefaultErrorHandler(Display *display,
  *
  * TkMacOSXDisplayChanged --
  *
- *	Called to set up initial screen info or when an event indicated
- *	display (screen) change.
+ *      Called to set up initial screen info or when an event indicated
+ *      display (screen) change.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	May change info regarding the screen.
+ *      May change info regarding the screen.
  *
  *----------------------------------------------------------------------
  */
@@ -83,30 +83,30 @@ TkMacOSXDisplayChanged(
 
 
     if (display == NULL || display->screens == NULL) {
-	return;
+        return;
     }
     screen = display->screens;
 
     nsScreens = [NSScreen screens];
     if (nsScreens && [nsScreens count]) {
-	NSScreen *s = [nsScreens objectAtIndex:0];
-	NSRect bounds = [s frame], visible = [s visibleFrame];
-	NSRect maxBounds = NSZeroRect;
+        NSScreen *s = [nsScreens objectAtIndex:0];
+        NSRect bounds = [s frame], visible = [s visibleFrame];
+        NSRect maxBounds = NSZeroRect;
 
-	tkMacOSXZeroScreenHeight = bounds.size.height;
-	tkMacOSXZeroScreenTop = tkMacOSXZeroScreenHeight -
-		(visible.origin.y + visible.size.height);
+        tkMacOSXZeroScreenHeight = bounds.size.height;
+        tkMacOSXZeroScreenTop = tkMacOSXZeroScreenHeight -
+                (visible.origin.y + visible.size.height);
 
-	screen->root_depth = NSBitsPerPixelFromDepth([s depth]);
-	screen->width = bounds.size.width;
-	screen->height = bounds.size.height;
-	screen->mwidth = (bounds.size.width * 254 + 360) / 720;
-	screen->mheight = (bounds.size.height * 254 + 360) / 720;
+        screen->root_depth = NSBitsPerPixelFromDepth([s depth]);
+        screen->width = bounds.size.width;
+        screen->height = bounds.size.height;
+        screen->mwidth = (bounds.size.width * 254 + 360) / 720;
+        screen->mheight = (bounds.size.height * 254 + 360) / 720;
 
-	for (s in nsScreens) {
-	    maxBounds = NSUnionRect(maxBounds, [s visibleFrame]);
-	}
-	*((NSRect *)screen->ext_data) = maxBounds;
+        for (s in nsScreens) {
+            maxBounds = NSUnionRect(maxBounds, [s visibleFrame]);
+        }
+        *((NSRect *)screen->ext_data) = maxBounds;
     }
 }
 
@@ -115,14 +115,14 @@ TkMacOSXDisplayChanged(
  *
  * TkpOpenDisplay --
  *
- *	Create the Display structure and fill it with device specific
- *	information.
+ *      Create the Display structure and fill it with device specific
+ *      information.
  *
  * Results:
- *	Returns a Display structure on success or NULL on failure.
+ *      Returns a Display structure on success or NULL on failure.
  *
  * Side effects:
- *	Allocates a new Display structure.
+ *      Allocates a new Display structure.
  *
  *----------------------------------------------------------------------
  */
@@ -140,11 +140,11 @@ TkpOpenDisplay(
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     if (gMacDisplay != NULL) {
-	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
-	    return gMacDisplay;
-	} else {
-	    return NULL;
-	}
+        if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
+            return gMacDisplay;
+        } else {
+            return NULL;
+        }
     }
 
     display = ckalloc(sizeof(Display));
@@ -153,56 +153,56 @@ TkpOpenDisplay(
     bzero(screen, sizeof(Screen));
 
     display->resource_alloc = MacXIdAlloc;
-    display->request	    = 0;
-    display->qlen	    = 0;
-    display->fd		    = fd;
-    display->screens	    = screen;
-    display->nscreens	    = 1;
+    display->request        = 0;
+    display->qlen           = 0;
+    display->fd             = fd;
+    display->screens        = screen;
+    display->nscreens       = 1;
     display->default_screen = 0;
     display->display_name   = (char *) macScreenName;
 
     cgVers = [[[NSBundle bundleWithIdentifier:@"com.apple.CoreGraphics"]
-	    objectForInfoDictionaryKey:@"CFBundleShortVersionString"]
-	    componentsSeparatedByString:@"."];
+            objectForInfoDictionaryKey:@"CFBundleShortVersionString"]
+            componentsSeparatedByString:@"."];
     if ([cgVers count] >= 2) {
-	display->proto_major_version = [[cgVers objectAtIndex:1] integerValue];
+        display->proto_major_version = [[cgVers objectAtIndex:1] integerValue];
     }
     if ([cgVers count] >= 3) {
-	display->proto_minor_version = [[cgVers objectAtIndex:2] integerValue];
+        display->proto_minor_version = [[cgVers objectAtIndex:2] integerValue];
     }
     if (!vendor[0]) {
-	snprintf(vendor, sizeof(vendor), "Apple AppKit %g",
-		NSAppKitVersionNumber);
+        snprintf(vendor, sizeof(vendor), "Apple AppKit %g",
+                NSAppKitVersionNumber);
     }
     display->vendor = vendor;
     {
-	int major, minor, patch;
+        int major, minor, patch;
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
-	Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
-	Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
-	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
+        Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
+        Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
+        Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
 #else
-	NSOperatingSystemVersion systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
-	major = systemVersion.majorVersion;
-	minor = systemVersion.minorVersion;
-	patch = systemVersion.patchVersion;
+        NSOperatingSystemVersion systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
+        major = systemVersion.majorVersion;
+        minor = systemVersion.minorVersion;
+        patch = systemVersion.patchVersion;
 #endif
-	display->release = major << 16 | minor << 8 | patch;
+        display->release = major << 16 | minor << 8 | patch;
     }
 
     /*
      * These screen bits never change
      */
-    screen->root	= ROOT_ID;
-    screen->display	= display;
+    screen->root        = ROOT_ID;
+    screen->display     = display;
     screen->black_pixel = 0x00000000 | PIXEL_MAGIC << 24;
     screen->white_pixel = 0x00FFFFFF | PIXEL_MAGIC << 24;
-    screen->ext_data	= (XExtData *) &maxBounds;
+    screen->ext_data    = (XExtData *) &maxBounds;
 
     screen->root_visual = ckalloc(sizeof(Visual));
     screen->root_visual->visualid     = 0;
-    screen->root_visual->class	      = TrueColor;
+    screen->root_visual->class        = TrueColor;
     screen->root_visual->alpha_mask   = 0xFF000000;
     screen->root_visual->red_mask     = 0x00FF0000;
     screen->root_visual->green_mask   = 0x0000FF00;
@@ -234,13 +234,13 @@ TkpOpenDisplay(
  *
  * TkpCloseDisplay --
  *
- *	Deallocates a display structure created by TkpOpenDisplay.
+ *      Deallocates a display structure created by TkpOpenDisplay.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Frees memory.
+ *      Frees memory.
  *
  *----------------------------------------------------------------------
  */
@@ -252,15 +252,15 @@ TkpCloseDisplay(
     Display *display = displayPtr->display;
 
     if (gMacDisplay != displayPtr) {
-	Tcl_Panic("TkpCloseDisplay: tried to call TkpCloseDisplay on bad display");
+        Tcl_Panic("TkpCloseDisplay: tried to call TkpCloseDisplay on bad display");
     }
 
     gMacDisplay = NULL;
     if (display->screens != NULL) {
-	if (display->screens->root_visual != NULL) {
-	    ckfree(display->screens->root_visual);
-	}
-	ckfree(display->screens);
+        if (display->screens->root_visual != NULL) {
+            ckfree(display->screens->root_visual);
+        }
+        ckfree(display->screens);
     }
     ckfree(display);
 }
@@ -270,23 +270,23 @@ TkpCloseDisplay(
  *
  * TkClipCleanup --
  *
- *	This procedure is called to cleanup resources associated with claiming
- *	clipboard ownership and for receiving selection get results. This
- *	function is called in tkWindow.c. This has to be called by the display
- *	cleanup function because we still need the access display elements.
+ *      This procedure is called to cleanup resources associated with claiming
+ *      clipboard ownership and for receiving selection get results. This
+ *      function is called in tkWindow.c. This has to be called by the display
+ *      cleanup function because we still need the access display elements.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Resources are freed - the clipboard may no longer be used.
+ *      Resources are freed - the clipboard may no longer be used.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkClipCleanup(
-    TkDisplay *dispPtr)		/* display associated with clipboard */
+    TkDisplay *dispPtr)         /* display associated with clipboard */
 {
     /*
      * Make sure that the local scrap is transfered to the global scrap if
@@ -296,14 +296,14 @@ TkClipCleanup(
     [NSApp tkProvidePasteboard:dispPtr];
 
     if (dispPtr->clipWindow != NULL) {
-	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
-		dispPtr->applicationAtom);
-	Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
-		dispPtr->windowAtom);
+        Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
+                dispPtr->applicationAtom);
+        Tk_DeleteSelHandler(dispPtr->clipWindow, dispPtr->clipboardAtom,
+                dispPtr->windowAtom);
 
-	Tk_DestroyWindow(dispPtr->clipWindow);
-	Tcl_Release(dispPtr->clipWindow);
-	dispPtr->clipWindow = NULL;
+        Tk_DestroyWindow(dispPtr->clipWindow);
+        Tcl_Release(dispPtr->clipWindow);
+        dispPtr->clipWindow = NULL;
     }
 }
 
@@ -312,23 +312,23 @@ TkClipCleanup(
  *
  * MacXIdAlloc --
  *
- *	This procedure is invoked by Xlib as the resource allocator for a
- *	display.
+ *      This procedure is invoked by Xlib as the resource allocator for a
+ *      display.
  *
  * Results:
- *	The return value is an X resource identifier that isn't currently in
- *	use.
+ *      The return value is an X resource identifier that isn't currently in
+ *      use.
  *
  * Side effects:
- *	The identifier is removed from the stack of free identifiers, if it
- *	was previously on the stack.
+ *      The identifier is removed from the stack of free identifiers, if it
+ *      was previously on the stack.
  *
  *----------------------------------------------------------------------
  */
 
 static XID
 MacXIdAlloc(
-    Display *display)		/* Display for which to allocate. */
+    Display *display)           /* Display for which to allocate. */
 {
     static long int cur_id = 100;
     /*
@@ -344,14 +344,14 @@ MacXIdAlloc(
  *
  * DefaultErrorHandler --
  *
- *	This procedure is the default X error handler. Tk uses it's own error
- *	handler so this call should never be called.
+ *      This procedure is the default X error handler. Tk uses it's own error
+ *      handler so this call should never be called.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	This function will call panic and exit.
+ *      This function will call panic and exit.
  *
  *----------------------------------------------------------------------
  */
@@ -412,20 +412,20 @@ XGetGeometry(
     display->request++;
     *root_return = ROOT_ID;
     if (winPtr) {
-	*x_return = Tk_X(winPtr);
-	*y_return = Tk_Y(winPtr);
-	*width_return = Tk_Width(winPtr);
-	*height_return = Tk_Height(winPtr);
-	*border_width_return = winPtr->changes.border_width;
-	*depth_return = Tk_Depth(winPtr);
+        *x_return = Tk_X(winPtr);
+        *y_return = Tk_Y(winPtr);
+        *width_return = Tk_Width(winPtr);
+        *height_return = Tk_Height(winPtr);
+        *border_width_return = winPtr->changes.border_width;
+        *depth_return = Tk_Depth(winPtr);
     } else {
-	CGSize size = ((MacDrawable *) d)->size;
-	*x_return = 0;
-	*y_return =  0;
-	*width_return = size.width;
-	*height_return = size.height;
-	*border_width_return = 0;
-	*depth_return = 32;
+        CGSize size = ((MacDrawable *) d)->size;
+        *x_return = 0;
+        *y_return =  0;
+        *width_return = size.width;
+        *height_return = size.height;
+        *border_width_return = 0;
+        *depth_return = 32;
     }
     return 1;
 }
@@ -564,15 +564,15 @@ XQueryColor(
     unsigned char r, g, b;
     XColor *d = def_in_out;
 
-    p		= d->pixel;
-    r		= (p & 0x00FF0000) >> 16;
-    g		= (p & 0x0000FF00) >> 8;
-    b		= (p & 0x000000FF);
-    d->red	= (r << 8) | r;
-    d->green	= (g << 8) | g;
-    d->blue	= (b << 8) | b;
-    d->flags	= DoRed|DoGreen|DoBlue;
-    d->pad	= 0;
+    p           = d->pixel;
+    r           = (p & 0x00FF0000) >> 16;
+    g           = (p & 0x0000FF00) >> 8;
+    b           = (p & 0x000000FF);
+    d->red      = (r << 8) | r;
+    d->green    = (g << 8) | g;
+    d->blue     = (b << 8) | b;
+    d->flags    = DoRed|DoGreen|DoBlue;
+    d->pad      = 0;
 }
 
 void
@@ -588,21 +588,21 @@ XQueryColors(
     XColor *d = defs_in_out;
 
     for (i = 0; i < ncolors; i++, d++) {
-	p		= d->pixel;
-	r		= (p & 0x00FF0000) >> 16;
-	g		= (p & 0x0000FF00) >> 8;
-	b		= (p & 0x000000FF);
-	d->red		= (r << 8) | r;
-	d->green	= (g << 8) | g;
-	d->blue		= (b << 8) | b;
-	d->flags	= DoRed|DoGreen|DoBlue;
-	d->pad		= 0;
+        p               = d->pixel;
+        r               = (p & 0x00FF0000) >> 16;
+        g               = (p & 0x0000FF00) >> 8;
+        b               = (p & 0x000000FF);
+        d->red          = (r << 8) | r;
+        d->green        = (g << 8) | g;
+        d->blue         = (b << 8) | b;
+        d->flags        = DoRed|DoGreen|DoBlue;
+        d->pad          = 0;
     }
 }
 
 int
 XQueryTree(display, w, root_return, parent_return, children_return,
-	nchildren_return)
+        nchildren_return)
     Display* display;
     Window w;
     Window* root_return;
@@ -694,12 +694,12 @@ XSetClipRectangles(
     TkRegion clipRgn = TkCreateRegion();
 
     while (n--) {
-	XRectangle rect = *rectangles;
+        XRectangle rect = *rectangles;
 
-	rect.x += clip_x_origin;
-	rect.y += clip_y_origin;
-	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
-	rectangles++;
+        rect.x += clip_x_origin;
+        rect.y += clip_y_origin;
+        TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
+        rectangles++;
     }
     TkSetRegion(d, gc, clipRgn);
     TkDestroyRegion(clipRgn);
@@ -712,36 +712,36 @@ XSetClipRectangles(
  *
  * TkGetServerInfo --
  *
- *	Given a window, this procedure returns information about the window
- *	server for that window. This procedure provides the guts of the "winfo
- *	server" command.
+ *      Given a window, this procedure returns information about the window
+ *      server for that window. This procedure provides the guts of the "winfo
+ *      server" command.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkGetServerInfo(
-    Tcl_Interp *interp,		/* The server information is returned in this
-				 * interpreter's result. */
-    Tk_Window tkwin)		/* Token for window; this selects a particular
-				 * display and server. */
+    Tcl_Interp *interp,         /* The server information is returned in this
+                                 * interpreter's result. */
+    Tk_Window tkwin)            /* Token for window; this selects a particular
+                                 * display and server. */
 {
     char buffer[5 + TCL_INTEGER_SPACE * 2];
     char buffer2[11 + TCL_INTEGER_SPACE];
 
     snprintf(buffer, sizeof(buffer), "CG%d.%d ",
-	    ProtocolVersion(Tk_Display(tkwin)),
-	    ProtocolRevision(Tk_Display(tkwin)));
+            ProtocolVersion(Tk_Display(tkwin)),
+            ProtocolRevision(Tk_Display(tkwin)));
     snprintf(buffer2, sizeof(buffer2), " Mac OS X %x",
-	    VendorRelease(Tk_Display(tkwin)));
+            VendorRelease(Tk_Display(tkwin)));
     Tcl_AppendResult(interp, buffer, ServerVendor(Tk_Display(tkwin)),
-	    buffer2, NULL);
+            buffer2, NULL);
 }
 
 /*
@@ -751,14 +751,14 @@ TkGetServerInfo(
  * XSetWindowBackgroundPixmap, XSetWindowBorder, XSetWindowBorderPixmap,
  * XSetWindowBorderWidth, XSetWindowColormap
  *
- *	These functions are all no-ops. They all have equivalent Tk calls that
- *	should always be used instead.
+ *      These functions are all no-ops. They all have equivalent Tk calls that
+ *      should always be used instead.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -852,25 +852,25 @@ XCreateIC(void)
  *
  * TkGetDefaultScreenName --
  *
- *	Returns the name of the screen that Tk should use during
- *	initialization.
+ *      Returns the name of the screen that Tk should use during
+ *      initialization.
  *
  * Results:
- *	Returns a statically allocated string.
+ *      Returns a statically allocated string.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 const char *
 TkGetDefaultScreenName(
-    Tcl_Interp *interp,		/* Not used. */
-    const char *screenName)		/* If NULL, use default string. */
+    Tcl_Interp *interp,         /* Not used. */
+    const char *screenName)             /* If NULL, use default string. */
 {
     if ((screenName == NULL) || (screenName[0] == '\0')) {
-	screenName = macScreenName;
+        screenName = macScreenName;
     }
     return screenName;
 }
@@ -880,14 +880,14 @@ TkGetDefaultScreenName(
  *
  * Tk_GetUserInactiveTime --
  *
- *	Return the number of milliseconds the user was inactive.
+ *      Return the number of milliseconds the user was inactive.
  *
  * Results:
- *	The number of milliseconds the user has been inactive, or -1 if
- *	querying the inactive time is not supported.
+ *      The number of milliseconds the user has been inactive, or -1 if
+ *      querying the inactive time is not supported.
  *
  * Side effects:
- *	None.
+ *      None.
  *----------------------------------------------------------------------
  */
 
@@ -903,27 +903,27 @@ Tk_GetUserInactiveTime(
     IOReturn result;
 
     regEntry = IOServiceGetMatchingService(kIOMasterPortDefault,
-	    IOServiceMatching("IOHIDSystem"));
+            IOServiceMatching("IOHIDSystem"));
 
     if (regEntry == 0) {
-	return -1l;
+        return -1l;
     }
 
     result = IORegistryEntryCreateCFProperties(regEntry, &props,
-	    kCFAllocatorDefault, 0);
+            kCFAllocatorDefault, 0);
     IOObjectRelease(regEntry);
 
     if (result != KERN_SUCCESS || props == NULL) {
-	return -1l;
+        return -1l;
     }
 
     timeObj = CFDictionaryGetValue(props, CFSTR("HIDIdleTime"));
 
     if (timeObj) {
-	    CFNumberGetValue((CFNumberRef)timeObj,
-		    kCFNumberSInt64Type, &time);
-	    /* Convert nanoseconds to milliseconds. */
-	    ret = (long) (time/kMillisecondScale);
+            CFNumberGetValue((CFNumberRef)timeObj,
+                    kCFNumberSInt64Type, &time);
+            /* Convert nanoseconds to milliseconds. */
+            ret = (long) (time/kMillisecondScale);
     }
     /* Cleanup */
     CFRelease(props);
@@ -934,7 +934,7 @@ Tk_GetUserInactiveTime(
      */
     long elapsed = (long)(TkpGetMS() - lastInactivityReset);
     if (ret > elapsed) {
-    	ret = elapsed;
+        ret = elapsed;
     }
 
     return ret;
@@ -945,14 +945,14 @@ Tk_GetUserInactiveTime(
  *
  * Tk_ResetUserInactiveTime --
  *
- *	Reset the user inactivity timer
+ *      Reset the user inactivity timer
  *
  * Results:
- *	none
+ *      none
  *
  * Side effects:
- *	The user inactivity timer of the underlaying windowing system is reset
- *	to zero.
+ *      The user inactivity timer of the underlaying windowing system is reset
+ *      to zero.
  *
  *----------------------------------------------------------------------
  */

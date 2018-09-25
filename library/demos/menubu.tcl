@@ -82,7 +82,7 @@ for {set i 0} {$i <= [$m index last]} {incr i} {
 }
 $m configure -tearoff 1
 foreach i {Black gray75 gray50 White} {
-	$m entryconfigure $i -columnbreak 1
+        $m entryconfigure $i -columnbreak 1
 }
 
 pack $body.buttons.colors -side left -padx 25 -pady 25

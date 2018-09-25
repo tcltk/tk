@@ -434,9 +434,9 @@ int
 XFree(
     void *data)
 {
-	if ((data) != NULL) {
-		ckfree(data);
-	}
+    if ((data) != NULL) {
+        ckfree(data);
+    }
     return 0;
 }
 
@@ -444,7 +444,7 @@ int
 XNoOp(
     Display *display)
 {
-	display->request++;
+    display->request++;
     return 0;
 }
 
@@ -453,7 +453,7 @@ XSynchronize(
     Display *display,
     Bool bool)
 {
-	display->request++;
+    display->request++;
     return NULL;
 }
 
@@ -462,7 +462,7 @@ XSync(
     Display *display,
     Bool bool)
 {
-	display->request++;
+    display->request++;
     return 0;
 }
 

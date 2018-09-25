@@ -29,7 +29,7 @@ canvas $w.frame.canvas -width 50 -height 50 -bd 0 -highlightthickness 0
 $w.frame.canvas create polygon 0 0 1 1 2 2 -fill DeepSkyBlue3 -tags poly
 $w.frame.canvas create line 0 0 1 1 2 2 0 0 -fill black -tags line
 scale $w.frame.scale -orient horizontal -length 284 -from 0 -to 250 \
-	-command "setWidth $w.frame.canvas" -tickinterval 50
+        -command "setWidth $w.frame.canvas" -tickinterval 50
 pack $w.frame.canvas -side top -expand yes -anchor s -fill x  -padx 15
 pack $w.frame.scale -side bottom -expand yes -anchor n
 $w.frame.scale set 75
@@ -38,7 +38,7 @@ proc setWidth {w width} {
     incr width 21
     set x2 [expr {$width - 30}]
     if {$x2 < 21} {
-	set x2 21
+        set x2 21
     }
     $w coords poly 20 15 20 35 $x2 35 $x2 45 $width 25 $x2 5 $x2 15 20 15
     $w coords line 20 15 20 35 $x2 35 $x2 45 $width 25 $x2 5 $x2 15 20 15

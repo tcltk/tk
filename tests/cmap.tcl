@@ -16,14 +16,14 @@ proc colors {w redInc greenInc blueInc} {
     set green 0
     set blue 0
     for {set y 0} {$y < 8} {incr y} {
-	for {set x 0} {$x < 8} {incr x} {
-	    frame $w.f$x,$y -width 40 -height 40 -bd 2 -relief raised \
-		    -bg [format #%02x%02x%02x $red $green $blue]
-	    place $w.f$x,$y -x [expr 40*$x] -y [expr 40*$y]
-	    incr red $redInc
-	    incr green $greenInc
-	    incr blue $blueInc
-	}
+        for {set x 0} {$x < 8} {incr x} {
+            frame $w.f$x,$y -width 40 -height 40 -bd 2 -relief raised \
+                    -bg [format #%02x%02x%02x $red $green $blue]
+            place $w.f$x,$y -x [expr 40*$x] -y [expr 40*$y]
+            incr red $redInc
+            incr green $greenInc
+            incr blue $blueInc
+        }
     }
 }
 

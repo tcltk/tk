@@ -901,7 +901,7 @@ test text-2.5 {Tk_TextCmd procedure} -body {
 } -returnCodes ok -result {.t}
 test text-2.6 {Tk_TextCmd procedure} -body {
     text .t -bd 2 -fg red
-	list [lindex [.t config -bd] 4] [lindex [.t config -fg] 4]
+    list [lindex [.t config -bd] 4] [lindex [.t config -fg] 4]
 } -cleanup {
     destroy .t
 } -result {2 red}
@@ -3271,7 +3271,7 @@ test text-13.9 {TextWidgetCmd procedure, "insert" option} -setup {
 } -body {
     .t insert 1.0 "First" bold " " {} second "x y z" " third"
     list [.t get 1.0 1.end] [.t tag ranges bold] [.t tag ranges x] \
-	    [.t tag ranges y] [.t tag ranges z]
+        [.t tag ranges y] [.t tag ranges z]
 } -cleanup {
     destroy .t
 } -result {{First second third} {1.0 1.5} {1.6 1.12} {1.6 1.12} {1.6 1.12}}
@@ -3356,10 +3356,10 @@ test text-14.9 {ConfigureText procedure} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
     .t configure -selectborderwidth 17 -selectforeground #332211 \
-	    -selectbackground #abc
+        -selectbackground #abc
     list [lindex [.t tag config sel -borderwidth] 4] \
-	   [lindex [.t tag config sel -foreground] 4] \
-	   [lindex [.t tag config sel -background] 4]
+       [lindex [.t tag config sel -foreground] 4] \
+       [lindex [.t tag config sel -background] 4]
 } -cleanup {
     destroy .t
 } -result {17 #332211 #abc}
@@ -4417,7 +4417,7 @@ test text-22.52 {TextSearchCmd procedure, checking stopIndex} -body {
     text .t
     .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
     list [.t search bar 2.1 2.13] [.t search bar 2.1 2.14] \
-	    [.t search bar 2.12 2.14] [.t search bar 2.14 2.14]
+        [.t search bar 2.12 2.14] [.t search bar 2.14 2.14]
 } -cleanup {
     destroy .t
 } -result {{} 2.13 2.13 {}}
@@ -4944,7 +4944,7 @@ test text-22.119 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {    Tcl_Obj *objPtr));
 static Tcl_Obj*         FSNormalizeAbsolutePath
-			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
+                _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
     append markExpr "\[ \n\t\r\]*\\()"
@@ -4958,10 +4958,10 @@ test text-22.120 {TextSearchCmd, multiline regexp matching} -body {
 # a bug in Tcl's handling of string objects.
 # (Tcl bug 635200)
     pack [text .t]
-    .t insert 1.0 {static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tcl_Obj *objPtr));
+    .t insert 1.0 {static int       SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
+                Tcl_Obj *objPtr));
 static Tcl_Obj*         FSNormalizeAbsolutePath
-			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
+                _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
     append markExpr "\[ \n\t\r\]*\\()"
@@ -4972,10 +4972,10 @@ static Tcl_Obj*         FSNormalizeAbsolutePath
 test text-22.121 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {
-static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
-			    Tcl_Obj *objPtr));
+static int      SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
+                Tcl_Obj *objPtr));
 static Tcl_Obj*         FSNormalizeAbsolutePath
-			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
+                _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
     append markExpr "\[ \n\t\r\]*\\()"
@@ -5059,10 +5059,10 @@ test text-22.132 {TextSearchCmd, multiline regexp matching} -body {
 
 void
 Tcl_SetObjLength(objPtr, length)
-    register Tcl_Obj *objPtr;	/* Pointer to object.  This object must
+    register Tcl_Obj *objPtr;   /* Pointer to object.  This object must
                                 * not currently be shared. */
-    register int length;	/* Number of bytes desired for string
-				 * representation of object, not including
+    register int length;    /* Number of bytes desired for string
+                 * representation of object, not including
                             * terminating null byte. */
 \{
     char *new;
@@ -5924,9 +5924,9 @@ test text-23.4 {TkTextGetTabs procedure} -setup {
     .t configure -tabs {100 right 200 left 300 center 400 numeric}
     update idletasks
     list [expr [lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]] \
-	    [lindex [.t bbox 1.4] 0] \
-	    [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
-	    [lindex [.t bbox 1.10] 0]
+        [lindex [.t bbox 1.4] 0] \
+        [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
+        [lindex [.t bbox 1.10] 0]
 } -cleanup {
     destroy .t
 } -result {100 200 300 400}
@@ -5938,9 +5938,9 @@ test text-23.5 {TkTextGetTabs procedure} -setup {
     .t configure -tabs {105 r 205 l 305 c 405 n}
     update idletasks
     list [expr [lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]] \
-	    [lindex [.t bbox 1.4] 0] \
-	    [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
-	    [lindex [.t bbox 1.10] 0]
+        [lindex [.t bbox 1.4] 0] \
+        [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
+        [lindex [.t bbox 1.10] 0]
 } -cleanup {
     destroy .t
 } -result {105 205 305 405}
@@ -6945,7 +6945,7 @@ test text-31.4 {peer widgets} -body {
     toplevel .top
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     pack [.t peer create .top.t -start 5 -end 11]
     update
@@ -6955,7 +6955,7 @@ test text-31.5 {peer widgets} -body {
     toplevel .top
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     pack [.t peer create .top.t -start 5 -end 11]
     pack [.top.t peer create .top.t2]
@@ -6969,7 +6969,7 @@ test text-31.6 {peer widgets} -body {
     toplevel .top
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     pack [.t peer create .top.t -start 5 -end 11]
     pack [.top.t peer create .top.t2 -start {} -end {}]
@@ -6983,7 +6983,7 @@ test text-31.7 {peer widgets} -body {
     toplevel .top
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     pack [.t peer create .top.t -start 5 -end 11]
     update ; update
@@ -6997,7 +6997,7 @@ test text-31.8 {peer widgets} -body {
     toplevel .top
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     pack [.t peer create .top.t -start 5 -end 11]
     update ; update
@@ -7010,7 +7010,7 @@ test text-31.9 {peer widgets} -body {
     toplevel .top
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     pack [.t peer create .top.t -start 5 -end 11]
     update ; update
@@ -7052,7 +7052,7 @@ test text-31.12 {peer widgets} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 100} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     .t tag add sel 1.0 end-1c
     lappend res [.t tag ranges sel]
@@ -7067,7 +7067,7 @@ test text-31.13 {peer widgets} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 100} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     .t tag add sel 1.0 end-1c
     lappend res [.t tag ranges sel]
@@ -7083,7 +7083,7 @@ test text-31.14 {peer widgets} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     lappend res [.t tag prevrange sel 1.0]
@@ -7104,7 +7104,7 @@ test text-31.15 {peer widgets} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
@@ -7124,7 +7124,7 @@ test text-31.16 {peer widgets} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 20} {incr i} {
-	.t insert end "Line $i\n"
+    .t insert end "Line $i\n"
     }
     .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
@@ -7144,7 +7144,7 @@ test text-31.17 {peer widgets} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     .t tag add sel 1.0 11.0
     lappend res [.t tag ranges sel]
@@ -7163,7 +7163,7 @@ test text-31.18 {peer widgets} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     .t tag add sel 1.0 11.0
     lappend res [.t index sel.first]
@@ -7175,7 +7175,7 @@ test text-31.18 {peer widgets} -setup {
 test text-31.19 {peer widgets} -body {
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     .t tag delete sel
     .t index sel.first
@@ -7194,8 +7194,8 @@ test text-32.1 {line heights on creation} -setup {
         frame $w.f -highlightthickness 2 -borderwidth 2 -relief sunken
         set t $w.f.text
         text $t -yscrollcommand "$w.scroll set" -setgrid true -font $font \
-	    -width 70 -height 35 -wrap word -highlightthickness 0 \
-	    -borderwidth 0
+        -width 70 -height 35 -wrap word -highlightthickness 0 \
+        -borderwidth 0
         pack $t -expand  yes -fill both
         scrollbar $w.scroll -command "$t yview"
         pack $w.scroll -side right -fill y
@@ -7279,7 +7279,7 @@ test text-33.7 {peer widget -start, -end} -body {
 test text-33.8 {peer widget -start, -end} -body {
     text .t
     for {set i 1} {$i < 100} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     .t configure -start 10 -end 5
 } -cleanup {
@@ -7288,7 +7288,7 @@ test text-33.8 {peer widget -start, -end} -body {
 test text-33.9 {peer widget -start, -end} -body {
     text .t
     for {set i 1} {$i < 100} {incr i} {
-	.t insert end "Line $i\n"
+    .t insert end "Line $i\n"
     }
     .t configure -start 5 -end 10
 } -cleanup {
@@ -7297,7 +7297,7 @@ test text-33.9 {peer widget -start, -end} -body {
 test text-33.10 {peer widget -start, -end} -body {
     text .t
     for {set i 1} {$i < 100} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     set res [.t index end]
     lappend res [catch {.t configure -start 5 -end 10 -tab foo}]
@@ -7313,7 +7313,7 @@ test text-33.10 {peer widget -start, -end} -body {
 test text-33.11 {peer widget -start, -end} -body {
     text .t
     for {set i 1} {$i < 100} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     set res [.t index end]
     lappend res [catch {.t configure -start 5 -end 15}]
@@ -7332,7 +7332,7 @@ test text-34.1 {peer widget -start, -end and selection} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 100} {incr i} {
-	   .t insert end "Line $i\n"
+       .t insert end "Line $i\n"
     }
     .t tag add sel 10.0 20.0
     lappend res [.t tag ranges sel]

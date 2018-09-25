@@ -63,7 +63,7 @@ if {[tk windowingsystem] eq "aqua"} {
 }
 foreach i {A B C D E F} {
     $m add command -label "Print letter \"$i\"" -underline 14 \
-	    -accelerator Meta+$i -command "puts $i" -accelerator $modifier+$i
+            -accelerator Meta+$i -command "puts $i" -accelerator $modifier+$i
     bind $w <$modifier-[string tolower $i]> "puts $i"
 }
 
@@ -71,15 +71,15 @@ set m $w.menu.cascade
 $w.menu add cascade -label "Cascades" -menu $m -underline 0
 menu $m -tearoff 0
 $m add command -label "Print hello" \
-	-command {puts stdout "Hello"} -accelerator $modifier+H -underline 6
+        -command {puts stdout "Hello"} -accelerator $modifier+H -underline 6
 bind $w <$modifier-h> {puts stdout "Hello"}
 $m add command -label "Print goodbye" -command {\
     puts stdout "Goodbye"} -accelerator $modifier+G -underline 6
 bind $w <$modifier-g> {puts stdout "Goodbye"}
 $m add cascade -label "Check buttons" \
-	-menu $w.menu.cascade.check -underline 0
+        -menu $w.menu.cascade.check -underline 0
 $m add cascade -label "Radio buttons" \
-	-menu $w.menu.cascade.radio -underline 0
+        -menu $w.menu.cascade.radio -underline 0
 
 set m $w.menu.cascade.check
 menu $m -tearoff 0
@@ -106,7 +106,7 @@ $m add radio -label "Bold" -variable style -value bold
 $m add radio -label "Italic" -variable style -value italic
 $m add sep
 $m add command -label "Show current values" \
-	-command "showVars $w.menu.cascade.dialog pointSize style"
+        -command "showVars $w.menu.cascade.dialog pointSize style"
 $m invoke 1
 $m invoke 7
 
@@ -118,13 +118,13 @@ image create photo lilearth -file [file join $tk_demoDirectory \
 images earthmenu.png]
 $m add command -image lilearth \
     -hidemargin 1 -command [list \
-	tk_dialog $w.pattern {Bitmap Menu Entry} \
-		"The menu entry you invoked displays a photoimage rather than\
-		a text string.  Other than this, it is just like any other\
-		menu entry." {} 0 OK ]
+        tk_dialog $w.pattern {Bitmap Menu Entry} \
+                "The menu entry you invoked displays a photoimage rather than\
+                a text string.  Other than this, it is just like any other\
+                menu entry." {} 0 OK ]
 foreach i {info questhead error} {
     $m add command -bitmap $i -hidemargin 1 -command [list \
-	    puts "You invoked the $i bitmap" ]
+            puts "You invoked the $i bitmap" ]
 }
 $m entryconfigure 2 -columnbreak 1
 
@@ -135,25 +135,25 @@ foreach i {{An entry} {Another entry} {Does nothing} {Does almost nothing} {Does
     $m add command -label $i -command [list puts "You invoked \"$i\""]
 }
 $m entryconfigure "Does almost nothing" -bitmap questhead -compound left \
-	-command [list \
-	tk_dialog $w.compound {Compound Menu Entry} \
-		"The menu entry you invoked displays both a bitmap and a\
-		text string.  Other than this, it is just like any other\
-		menu entry." {} 0 OK ]
+        -command [list \
+        tk_dialog $w.compound {Compound Menu Entry} \
+                "The menu entry you invoked displays both a bitmap and a\
+                text string.  Other than this, it is just like any other\
+                menu entry." {} 0 OK ]
 
 $m entryconfigure "Does almost nothing also" -image lilearth -compound left \
-	-command [list \
-	tk_dialog $w.compound {Compound Menu Entry} \
-		"The menu entry you invoked displays both a image and a\
-		text string.  Other than this, it is just like any other\
-		menu entry." {} 0 OK ]
+        -command [list \
+        tk_dialog $w.compound {Compound Menu Entry} \
+                "The menu entry you invoked displays both a image and a\
+                text string.  Other than this, it is just like any other\
+                menu entry." {} 0 OK ]
 
 set m $w.menu.colors
 $w.menu add cascade -label "Colors" -menu $m -underline 1
 menu $m -tearoff 1
 foreach i {red orange yellow green blue} {
     $m add command -label $i -background $i -command [list \
-	    puts "You invoked \"$i\"" ]
+            puts "You invoked \"$i\"" ]
 }
 
 $w configure -menu $w.menu
@@ -161,7 +161,7 @@ $w configure -menu $w.menu
 bind Menu <<MenuSelect>> {
     global $menustatus
     if {[catch {%W entrycget active -label} label]} {
-	set label "    "
+        set label "    "
     }
     set menustatus $label
     update idletasks

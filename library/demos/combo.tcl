@@ -16,15 +16,15 @@ wm iconname $w "combo"
 positionWindow $w
 
 ttk::label $w.msg -font $font -wraplength 5i -justify left -text "Three different\
-	combo-boxes are displayed below. You can add characters to the first\
-	one by pointing, clicking and typing, just as with an entry; pressing\
-	Return will cause the current value to be added to the list that is\
-	selectable from the drop-down list, and you can choose other values\
-	by pressing the Down key, using the arrow keys to pick another one,\
-	and pressing Return again. The second combo-box is fixed to a\
-	particular value, and cannot be modified at all. The third one only\
-	allows you to select values from its drop-down list of Australian\
-	cities."
+        combo-boxes are displayed below. You can add characters to the first\
+        one by pointing, clicking and typing, just as with an entry; pressing\
+        Return will cause the current value to be added to the list that is\
+        selectable from the drop-down list, and you can choose other values\
+        by pressing the Down key, using the arrow keys to pick another one,\
+        and pressing Return again. The second combo-box is fixed to a\
+        particular value, and cannot be modified at all. The third one only\
+        allows you to select values from its drop-down list of Australian\
+        cities."
 pack $w.msg -side top -fill x
 
 ## See Code / Dismiss buttons
@@ -49,10 +49,10 @@ ttk::labelframe $w.c2 -text Disabled
 ttk::combobox $w.c2.c -textvariable secondValue -state disabled
 ttk::labelframe $w.c3 -text "Defined List Only"
 ttk::combobox $w.c3.c -textvariable ozCity -state readonly \
-	-values $australianCities
+        -values $australianCities
 bind $w.c1.c <Return> {
     if {[%W get] ni [%W cget -values]} {
-	%W configure -values [concat [%W cget -values] [list [%W get]]]
+        %W configure -values [concat [%W cget -values] [list [%W get]]]
     }
 }
 

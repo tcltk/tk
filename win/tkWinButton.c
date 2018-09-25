@@ -1,8 +1,8 @@
 /*
  * tkWinButton.c --
  *
- *	This file implements the Windows specific portion of the button
- *	widgets.
+ *      This file implements the Windows specific portion of the button
+ *      widgets.
  *
  * Copyright (c) 1996-1998 by Sun Microsystems, Inc.
  *
@@ -28,11 +28,11 @@
  */
 
 typedef struct WinButton {
-    TkButton info;		/* Generic button info. */
-    WNDPROC oldProc;		/* Old window procedure. */
-    HWND hwnd;			/* Current window handle. */
-    Pixmap pixmap;		/* Bitmap for rendering the button. */
-    DWORD style;		/* Window style flags. */
+    TkButton info;              /* Generic button info. */
+    WNDPROC oldProc;            /* Old window procedure. */
+    HWND hwnd;                  /* Current window handle. */
+    Pixmap pixmap;              /* Bitmap for rendering the button. */
+    DWORD style;                /* Window style flags. */
 } WinButton;
 
 /*
@@ -64,11 +64,11 @@ enum {
  */
 
 typedef struct ThreadSpecificData {
-    BITMAPINFOHEADER *boxesPtr;	/* Information about the bitmap. */
-    DWORD *boxesPalette;	/* Pointer to color palette. */
-    LPSTR boxesBits;		/* Pointer to bitmap data. */
-    DWORD boxHeight;		/* Height of each sub-image. */
-    DWORD boxWidth;		/* Width of each sub-image. */
+    BITMAPINFOHEADER *boxesPtr; /* Information about the bitmap. */
+    DWORD *boxesPalette;        /* Pointer to color palette. */
+    LPSTR boxesBits;            /* Pointer to bitmap data. */
+    DWORD boxHeight;            /* Height of each sub-image. */
+    DWORD boxWidth;             /* Width of each sub-image. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -76,21 +76,21 @@ static Tcl_ThreadDataKey dataKey;
  * Declarations for functions defined in this file.
  */
 
-static LRESULT CALLBACK	ButtonProc(HWND hwnd, UINT message,
-			    WPARAM wParam, LPARAM lParam);
-static Window		CreateProc(Tk_Window tkwin, Window parent,
-			    ClientData instanceData);
-static void		InitBoxes(void);
+static LRESULT CALLBACK ButtonProc(HWND hwnd, UINT message,
+                            WPARAM wParam, LPARAM lParam);
+static Window           CreateProc(Tk_Window tkwin, Window parent,
+                            ClientData instanceData);
+static void             InitBoxes(void);
 
 /*
  * The class procedure table for the button widgets.
  */
 
 const Tk_ClassProcs tkpButtonProcs = {
-    sizeof(Tk_ClassProcs),	/* size */
-    TkButtonWorldChanged,	/* worldChangedProc */
-    CreateProc,			/* createProc */
-    NULL					/* modalProc */
+    sizeof(Tk_ClassProcs),      /* size */
+    TkButtonWorldChanged,       /* worldChangedProc */
+    CreateProc,                 /* createProc */
+    NULL                                        /* modalProc */
 };
 
 
@@ -99,19 +99,19 @@ const Tk_ClassProcs tkpButtonProcs = {
  *
  * InitBoxes --
  *
- *	This function load the Tk 3d button bitmap. "buttons" is a 16 color
- *	bitmap that is laid out such that the top row contains the 4 checkbox
- *	images, and the bottom row contains the radio button images. Note that
- *	the bitmap is stored in bottom-up format. Also, the first seven
- *	palette entries are used to identify the different parts of the
- *	bitmaps so we can do the appropriate color mappings based on the
- *	current button colors.
+ *      This function load the Tk 3d button bitmap. "buttons" is a 16 color
+ *      bitmap that is laid out such that the top row contains the 4 checkbox
+ *      images, and the bottom row contains the radio button images. Note that
+ *      the bitmap is stored in bottom-up format. Also, the first seven
+ *      palette entries are used to identify the different parts of the
+ *      bitmaps so we can do the appropriate color mappings based on the
+ *      current button colors.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Loads the "buttons" resource.
+ *      Loads the "buttons" resource.
  *
  *----------------------------------------------------------------------
  */
@@ -129,15 +129,15 @@ InitBoxes(void)
     LPBITMAPINFOHEADER newBitmap;
     DWORD size;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hrsrc = FindResource(module, TEXT("buttons"), RT_BITMAP);
     if (hrsrc == NULL) {
-	Tcl_Panic("FindResource() failed for buttons bitmap resource, "
+        Tcl_Panic("FindResource() failed for buttons bitmap resource, "
             "resources in tk_base.rc must be linked into Tk dll or static executable");
     } else {
-	hblk = LoadResource(module, hrsrc);
-	tsdPtr->boxesPtr = (LPBITMAPINFOHEADER)LockResource(hblk);
+        hblk = LoadResource(module, hrsrc);
+        tsdPtr->boxesPtr = (LPBITMAPINFOHEADER)LockResource(hblk);
     }
 
     /*
@@ -145,20 +145,20 @@ InitBoxes(void)
      */
 
     if (tsdPtr->boxesPtr != NULL && !(tsdPtr->boxesPtr->biWidth % 4)
-	    && !(tsdPtr->boxesPtr->biHeight % 2)) {
-	size = tsdPtr->boxesPtr->biSize + (1 << tsdPtr->boxesPtr->biBitCount)
-		* sizeof(RGBQUAD) + tsdPtr->boxesPtr->biSizeImage;
-	newBitmap = ckalloc(size);
-	memcpy(newBitmap, tsdPtr->boxesPtr, size);
-	tsdPtr->boxesPtr = newBitmap;
-	tsdPtr->boxWidth = tsdPtr->boxesPtr->biWidth / 4;
-	tsdPtr->boxHeight = tsdPtr->boxesPtr->biHeight / 2;
-	tsdPtr->boxesPalette = (DWORD*) (((LPSTR) tsdPtr->boxesPtr)
-		+ tsdPtr->boxesPtr->biSize);
-	tsdPtr->boxesBits = ((LPSTR) tsdPtr->boxesPalette)
-	    + ((1 << tsdPtr->boxesPtr->biBitCount) * sizeof(RGBQUAD));
+            && !(tsdPtr->boxesPtr->biHeight % 2)) {
+        size = tsdPtr->boxesPtr->biSize + (1 << tsdPtr->boxesPtr->biBitCount)
+                * sizeof(RGBQUAD) + tsdPtr->boxesPtr->biSizeImage;
+        newBitmap = ckalloc(size);
+        memcpy(newBitmap, tsdPtr->boxesPtr, size);
+        tsdPtr->boxesPtr = newBitmap;
+        tsdPtr->boxWidth = tsdPtr->boxesPtr->biWidth / 4;
+        tsdPtr->boxHeight = tsdPtr->boxesPtr->biHeight / 2;
+        tsdPtr->boxesPalette = (DWORD*) (((LPSTR) tsdPtr->boxesPtr)
+                + tsdPtr->boxesPtr->biSize);
+        tsdPtr->boxesBits = ((LPSTR) tsdPtr->boxesPalette)
+            + ((1 << tsdPtr->boxesPtr->biBitCount) * sizeof(RGBQUAD));
     } else {
-	tsdPtr->boxesPtr = NULL;
+        tsdPtr->boxesPtr = NULL;
     }
 }
 
@@ -167,15 +167,15 @@ InitBoxes(void)
  *
  * TkpButtonSetDefaults --
  *
- *	This procedure is invoked before option tables are created for
- *	buttons. It modifies some of the default values to match the current
- *	values defined for this platform.
+ *      This procedure is invoked before option tables are created for
+ *      buttons. It modifies some of the default values to match the current
+ *      values defined for this platform.
  *
  * Results:
- *	Some of the default values in *specPtr are modified.
+ *      Some of the default values in *specPtr are modified.
  *
  * Side effects:
- *	Updates some of.
+ *      Updates some of.
  *
  *----------------------------------------------------------------------
  */
@@ -184,9 +184,9 @@ void
 TkpButtonSetDefaults()
 {
     int width = GetSystemMetrics(SM_CXEDGE);
-	if (width > 0) {
-	    sprintf(tkDefButtonBorderWidth, "%d", width);
-	}
+        if (width > 0) {
+            sprintf(tkDefButtonBorderWidth, "%d", width);
+        }
 }
 
 /*
@@ -194,13 +194,13 @@ TkpButtonSetDefaults()
  *
  * TkpCreateButton --
  *
- *	Allocate a new TkButton structure.
+ *      Allocate a new TkButton structure.
  *
  * Results:
- *	Returns a newly allocated TkButton structure.
+ *      Returns a newly allocated TkButton structure.
  *
  * Side effects:
- *	Registers an event handler for the widget.
+ *      Registers an event handler for the widget.
  *
  *----------------------------------------------------------------------
  */
@@ -221,23 +221,23 @@ TkpCreateButton(
  *
  * CreateProc --
  *
- *	This function creates a new Button control, subclasses the instance,
- *	and generates a new Window object.
+ *      This function creates a new Button control, subclasses the instance,
+ *      and generates a new Window object.
  *
  * Results:
- *	Returns the newly allocated Window object, or None on failure.
+ *      Returns the newly allocated Window object, or None on failure.
  *
  * Side effects:
- *	Causes a new Button control to come into existence.
+ *      Causes a new Button control to come into existence.
  *
  *----------------------------------------------------------------------
  */
 
 static Window
 CreateProc(
-    Tk_Window tkwin,		/* Token for window. */
-    Window parentWin,		/* Parent of new window. */
-    ClientData instanceData)	/* Button instance data. */
+    Tk_Window tkwin,            /* Token for window. */
+    Window parentWin,           /* Parent of new window. */
+    ClientData instanceData)    /* Button instance data. */
 {
     Window window;
     HWND parent;
@@ -246,19 +246,19 @@ CreateProc(
 
     parent = Tk_GetHWND(parentWin);
     if (butPtr->info.type == TYPE_LABEL) {
-	class = TEXT("STATIC");
-	butPtr->style = SS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
+        class = TEXT("STATIC");
+        butPtr->style = SS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     } else {
-	class = TEXT("BUTTON");
-	butPtr->style = BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
+        class = TEXT("BUTTON");
+        butPtr->style = BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     }
     butPtr->hwnd = CreateWindow(class, NULL, butPtr->style,
-	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
-	    parent, NULL, Tk_GetHINSTANCE(), NULL);
+            Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
+            parent, NULL, Tk_GetHINSTANCE(), NULL);
     SetWindowPos(butPtr->hwnd, HWND_TOP, 0, 0, 0, 0,
-		    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+                    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     butPtr->oldProc = (WNDPROC)SetWindowLongPtr(butPtr->hwnd, GWLP_WNDPROC,
-	    (LONG_PTR) ButtonProc);
+            (LONG_PTR) ButtonProc);
 
     window = Tk_AttachHWND(tkwin, butPtr->hwnd);
     return window;
@@ -269,13 +269,13 @@ CreateProc(
  *
  * TkpDestroyButton --
  *
- *	Free data structures associated with the button control.
+ *      Free data structures associated with the button control.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Restores the default control state.
+ *      Restores the default control state.
  *
  *----------------------------------------------------------------------
  */
@@ -288,7 +288,7 @@ TkpDestroyButton(
     HWND hwnd = winButPtr->hwnd;
 
     if (hwnd) {
-	SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR) winButPtr->oldProc);
+        SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR) winButPtr->oldProc);
     }
 }
 
@@ -297,21 +297,21 @@ TkpDestroyButton(
  *
  * TkpDisplayButton --
  *
- *	This procedure is invoked to display a button widget. It is normally
- *	invoked as an idle handler.
+ *      This procedure is invoked to display a button widget. It is normally
+ *      invoked as an idle handler.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Information appears on the screen. The REDRAW_PENDING flag is cleared.
+ *      Information appears on the screen. The REDRAW_PENDING flag is cleared.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpDisplayButton(
-    ClientData clientData)	/* Information about widget. */
+    ClientData clientData)      /* Information about widget. */
 {
     TkWinDCState state;
     HDC dc;
@@ -319,48 +319,48 @@ TkpDisplayButton(
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
-    int x = 0;			/* Initialization only needed to stop compiler
-				 * warning. */
+    int x = 0;                  /* Initialization only needed to stop compiler
+                                 * warning. */
     int y, relief;
     register Tk_Window tkwin = butPtr->tkwin;
     int width = 0, height = 0, haveImage = 0, haveText = 0, drawRing = 0;
     RECT rect;
-    int defaultWidth;		/* Width of default ring. */
-    int offset;			/* 0 means this is a label widget. 1 means it
-				 * is a flavor of button, so we offset the
-				 * text to make the button appear to move up
-				 * and down as the relief changes. */
+    int defaultWidth;           /* Width of default ring. */
+    int offset;                 /* 0 means this is a label widget. 1 means it
+                                 * is a flavor of button, so we offset the
+                                 * text to make the button appear to move up
+                                 * and down as the relief changes. */
     int textXOffset = 0, textYOffset = 0;
-				/* Text offsets for use with compound buttons
-				 * and focus ring. */
+                                /* Text offsets for use with compound buttons
+                                 * and focus ring. */
     int imageWidth, imageHeight;
     int imageXOffset = 0, imageYOffset = 0;
-				/* Image information that will be used to
-				 * restrict disabled pixmap as well. */
+                                /* Image information that will be used to
+                                 * restrict disabled pixmap as well. */
     DWORD *boxesPalette;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     boxesPalette= tsdPtr->boxesPalette;
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
-	return;
+        return;
     }
 
     border = butPtr->normalBorder;
     if ((butPtr->state == STATE_DISABLED) && (butPtr->disabledFg != NULL)) {
-	gc = butPtr->disabledGC;
+        gc = butPtr->disabledGC;
     } else if ((butPtr->state == STATE_ACTIVE)
-	    && !Tk_StrictMotif(butPtr->tkwin)) {
-	gc = butPtr->activeTextGC;
-	border = butPtr->activeBorder;
+            && !Tk_StrictMotif(butPtr->tkwin)) {
+        gc = butPtr->activeTextGC;
+        border = butPtr->activeBorder;
     } else {
-	gc = butPtr->normalTextGC;
+        gc = butPtr->normalTextGC;
     }
     if ((butPtr->flags & SELECTED) && (butPtr->state != STATE_ACTIVE)
-	    && (butPtr->selectBorder != NULL) && !butPtr->indicatorOn) {
-	border = butPtr->selectBorder;
+            && (butPtr->selectBorder != NULL) && !butPtr->indicatorOn) {
+        border = butPtr->selectBorder;
     }
 
     /*
@@ -393,11 +393,11 @@ TkpDisplayButton(
 
     relief = butPtr->relief;
     if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) {
-	if (butPtr->flags & SELECTED) {
-	    relief = TK_RELIEF_SUNKEN;
-	} else if (butPtr->overRelief != relief) {
-	    relief = butPtr->offRelief;
-	}
+        if (butPtr->flags & SELECTED) {
+            relief = TK_RELIEF_SUNKEN;
+        } else if (butPtr->overRelief != relief) {
+            relief = butPtr->offRelief;
+        }
     }
 
     /*
@@ -405,16 +405,16 @@ TkpDisplayButton(
      */
 
     if (butPtr->type == TYPE_BUTTON) {
-	defaultWidth = ((butPtr->defaultState == DEFAULT_ACTIVE)
-		? butPtr->highlightWidth : 0);
-	offset = 1;
+        defaultWidth = ((butPtr->defaultState == DEFAULT_ACTIVE)
+                ? butPtr->highlightWidth : 0);
+        offset = 1;
     } else {
-	defaultWidth = 0;
-	if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) {
-	    offset = 1;
-	} else {
-	    offset = 0;
-	}
+        defaultWidth = 0;
+        if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) {
+            offset = 1;
+        } else {
+            offset = 0;
+        }
     }
 
     /*
@@ -425,20 +425,20 @@ TkpDisplayButton(
      */
 
     pixmap = Tk_GetPixmap(butPtr->display, Tk_WindowId(tkwin),
-	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+            Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
     Tk_Fill3DRectangle(tkwin, pixmap, border, 0, 0, Tk_Width(tkwin),
-	    Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
+            Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 
     /*
      * Display image or bitmap or text for button.
      */
 
     if (butPtr->image != None) {
-	Tk_SizeOfImage(butPtr->image, &width, &height);
-	haveImage = 1;
+        Tk_SizeOfImage(butPtr->image, &width, &height);
+        haveImage = 1;
     } else if (butPtr->bitmap != None) {
-	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
-	haveImage = 1;
+        Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
+        haveImage = 1;
     }
     imageWidth = width;
     imageHeight = height;
@@ -446,178 +446,178 @@ TkpDisplayButton(
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
 
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
-	int fullWidth = 0, fullHeight = 0;
+        int fullWidth = 0, fullHeight = 0;
 
-	switch ((enum compound) butPtr->compound) {
-	case COMPOUND_TOP:
-	case COMPOUND_BOTTOM:
-	    /*
-	     * Image is above or below text.
-	     */
+        switch ((enum compound) butPtr->compound) {
+        case COMPOUND_TOP:
+        case COMPOUND_BOTTOM:
+            /*
+             * Image is above or below text.
+             */
 
-	    if (butPtr->compound == COMPOUND_TOP) {
-		textYOffset = height + butPtr->padY;
-	    } else {
-		imageYOffset = butPtr->textHeight + butPtr->padY;
-	    }
-	    fullHeight = height + butPtr->textHeight + butPtr->padY;
-	    fullWidth = (width > butPtr->textWidth ? width :
-		    butPtr->textWidth);
-	    textXOffset = (fullWidth - butPtr->textWidth)/2;
-	    imageXOffset = (fullWidth - width)/2;
-	    break;
+            if (butPtr->compound == COMPOUND_TOP) {
+                textYOffset = height + butPtr->padY;
+            } else {
+                imageYOffset = butPtr->textHeight + butPtr->padY;
+            }
+            fullHeight = height + butPtr->textHeight + butPtr->padY;
+            fullWidth = (width > butPtr->textWidth ? width :
+                    butPtr->textWidth);
+            textXOffset = (fullWidth - butPtr->textWidth)/2;
+            imageXOffset = (fullWidth - width)/2;
+            break;
 
-	case COMPOUND_LEFT:
-	case COMPOUND_RIGHT:
-	    /*
-	     * Image is left or right of text.
-	     */
+        case COMPOUND_LEFT:
+        case COMPOUND_RIGHT:
+            /*
+             * Image is left or right of text.
+             */
 
-	    if (butPtr->compound == COMPOUND_LEFT) {
-		textXOffset = width + butPtr->padX;
-	    } else {
-		imageXOffset = butPtr->textWidth + butPtr->padX;
-	    }
-	    fullWidth = butPtr->textWidth + butPtr->padX + width;
-	    fullHeight = (height > butPtr->textHeight ? height :
-		    butPtr->textHeight);
-	    textYOffset = (fullHeight - butPtr->textHeight)/2;
-	    imageYOffset = (fullHeight - height)/2;
-	    break;
+            if (butPtr->compound == COMPOUND_LEFT) {
+                textXOffset = width + butPtr->padX;
+            } else {
+                imageXOffset = butPtr->textWidth + butPtr->padX;
+            }
+            fullWidth = butPtr->textWidth + butPtr->padX + width;
+            fullHeight = (height > butPtr->textHeight ? height :
+                    butPtr->textHeight);
+            textYOffset = (fullHeight - butPtr->textHeight)/2;
+            imageYOffset = (fullHeight - height)/2;
+            break;
 
-	case COMPOUND_CENTER:
-	    /*
-	     * Image and text are superimposed.
-	     */
+        case COMPOUND_CENTER:
+            /*
+             * Image and text are superimposed.
+             */
 
-	    fullWidth = (width > butPtr->textWidth ? width :
-		    butPtr->textWidth);
-	    fullHeight = (height > butPtr->textHeight ? height :
-		    butPtr->textHeight);
-	    textXOffset = (fullWidth - butPtr->textWidth)/2;
-	    imageXOffset = (fullWidth - width)/2;
-	    textYOffset = (fullHeight - butPtr->textHeight)/2;
-	    imageYOffset = (fullHeight - height)/2;
-	    break;
-	case COMPOUND_NONE:
-	    break;
-	}
-	TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
-		butPtr->indicatorSpace + fullWidth, fullHeight, &x, &y);
-	x += butPtr->indicatorSpace;
+            fullWidth = (width > butPtr->textWidth ? width :
+                    butPtr->textWidth);
+            fullHeight = (height > butPtr->textHeight ? height :
+                    butPtr->textHeight);
+            textXOffset = (fullWidth - butPtr->textWidth)/2;
+            imageXOffset = (fullWidth - width)/2;
+            textYOffset = (fullHeight - butPtr->textHeight)/2;
+            imageYOffset = (fullHeight - height)/2;
+            break;
+        case COMPOUND_NONE:
+            break;
+        }
+        TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+                butPtr->indicatorSpace + fullWidth, fullHeight, &x, &y);
+        x += butPtr->indicatorSpace;
 
-	if (relief == TK_RELIEF_SUNKEN) {
-	    x += offset;
-	    y += offset;
-	}
-	imageXOffset += x;
-	imageYOffset += y;
-	if (butPtr->image != NULL) {
-	    if ((butPtr->selectImage != NULL) && (butPtr->flags & SELECTED)) {
-		Tk_RedrawImage(butPtr->selectImage, 0, 0,
-			width, height, pixmap, imageXOffset, imageYOffset);
-	    } else if ((butPtr->tristateImage != NULL)
-		    && (butPtr->flags & TRISTATED)) {
-		Tk_RedrawImage(butPtr->tristateImage, 0, 0,
-			width, height, pixmap, imageXOffset, imageYOffset);
-	    } else {
-		Tk_RedrawImage(butPtr->image, 0, 0, width, height, pixmap,
-			imageXOffset, imageYOffset);
-	    }
-	} else {
-	    XSetClipOrigin(butPtr->display, gc, imageXOffset, imageYOffset);
-	    XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, gc,
-		    0, 0, (unsigned int) width, (unsigned int) height,
-		    imageXOffset, imageYOffset, 1);
-	    XSetClipOrigin(butPtr->display, gc, 0, 0);
-	}
-	if ((butPtr->state == STATE_DISABLED) &&
-	       	(butPtr->disabledFg != NULL)) {
-	    COLORREF oldFgColor = gc->foreground;
+        if (relief == TK_RELIEF_SUNKEN) {
+            x += offset;
+            y += offset;
+        }
+        imageXOffset += x;
+        imageYOffset += y;
+        if (butPtr->image != NULL) {
+            if ((butPtr->selectImage != NULL) && (butPtr->flags & SELECTED)) {
+                Tk_RedrawImage(butPtr->selectImage, 0, 0,
+                        width, height, pixmap, imageXOffset, imageYOffset);
+            } else if ((butPtr->tristateImage != NULL)
+                    && (butPtr->flags & TRISTATED)) {
+                Tk_RedrawImage(butPtr->tristateImage, 0, 0,
+                        width, height, pixmap, imageXOffset, imageYOffset);
+            } else {
+                Tk_RedrawImage(butPtr->image, 0, 0, width, height, pixmap,
+                        imageXOffset, imageYOffset);
+            }
+        } else {
+            XSetClipOrigin(butPtr->display, gc, imageXOffset, imageYOffset);
+            XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, gc,
+                    0, 0, (unsigned int) width, (unsigned int) height,
+                    imageXOffset, imageYOffset, 1);
+            XSetClipOrigin(butPtr->display, gc, 0, 0);
+        }
+        if ((butPtr->state == STATE_DISABLED) &&
+                (butPtr->disabledFg != NULL)) {
+            COLORREF oldFgColor = gc->foreground;
 
-	    if (gc->background == GetSysColor(COLOR_BTNFACE)) {
-		gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-		Tk_DrawTextLayout(butPtr->display, pixmap, gc,
-		    butPtr->textLayout, x + textXOffset + 1,
-		    y + textYOffset + 1, 0, -1);
-		Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-		    butPtr->textLayout, x + textXOffset + 1,
-		    y + textYOffset + 1,
-		    butPtr->underline);
-		gc->foreground = oldFgColor;
-	    }
-	}
+            if (gc->background == GetSysColor(COLOR_BTNFACE)) {
+                gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+                Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+                    butPtr->textLayout, x + textXOffset + 1,
+                    y + textYOffset + 1, 0, -1);
+                Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+                    butPtr->textLayout, x + textXOffset + 1,
+                    y + textYOffset + 1,
+                    butPtr->underline);
+                gc->foreground = oldFgColor;
+            }
+        }
 
-	Tk_DrawTextLayout(butPtr->display, pixmap, gc,
-		butPtr->textLayout, x + textXOffset, y + textYOffset, 0, -1);
-	Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-		butPtr->textLayout, x + textXOffset, y + textYOffset,
-		butPtr->underline);
-	height = fullHeight;
-	drawRing = 1;
+        Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+                butPtr->textLayout, x + textXOffset, y + textYOffset, 0, -1);
+        Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+                butPtr->textLayout, x + textXOffset, y + textYOffset,
+                butPtr->underline);
+        height = fullHeight;
+        drawRing = 1;
     } else {
-	if (haveImage) {
-	    TkComputeAnchor(butPtr->anchor, tkwin, 0, 0,
-		    butPtr->indicatorSpace + width, height, &x, &y);
-	    x += butPtr->indicatorSpace;
+        if (haveImage) {
+            TkComputeAnchor(butPtr->anchor, tkwin, 0, 0,
+                    butPtr->indicatorSpace + width, height, &x, &y);
+            x += butPtr->indicatorSpace;
 
-	    if (relief == TK_RELIEF_SUNKEN) {
-		x += offset;
-		y += offset;
-	    }
-	    imageXOffset += x;
-	    imageYOffset += y;
-	    if (butPtr->image != NULL) {
-		if ((butPtr->selectImage != NULL) &&
-			(butPtr->flags & SELECTED)) {
-		    Tk_RedrawImage(butPtr->selectImage, 0, 0, width, height,
-			    pixmap, imageXOffset, imageYOffset);
-		} else if ((butPtr->tristateImage != NULL) &&
-			(butPtr->flags & TRISTATED)) {
-		    Tk_RedrawImage(butPtr->tristateImage, 0, 0, width, height,
-			    pixmap, imageXOffset, imageYOffset);
-		} else {
-		    Tk_RedrawImage(butPtr->image, 0, 0, width, height, pixmap,
-			    imageXOffset, imageYOffset);
-		}
-	    } else {
-		XSetClipOrigin(butPtr->display, gc, x, y);
-		XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, gc, 0, 0,
-			(unsigned int) width, (unsigned int) height, x, y, 1);
-		XSetClipOrigin(butPtr->display, gc, 0, 0);
-	    }
-	} else {
-	    TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
-		    butPtr->indicatorSpace + butPtr->textWidth,
-		    butPtr->textHeight,	&x, &y);
+            if (relief == TK_RELIEF_SUNKEN) {
+                x += offset;
+                y += offset;
+            }
+            imageXOffset += x;
+            imageYOffset += y;
+            if (butPtr->image != NULL) {
+                if ((butPtr->selectImage != NULL) &&
+                        (butPtr->flags & SELECTED)) {
+                    Tk_RedrawImage(butPtr->selectImage, 0, 0, width, height,
+                            pixmap, imageXOffset, imageYOffset);
+                } else if ((butPtr->tristateImage != NULL) &&
+                        (butPtr->flags & TRISTATED)) {
+                    Tk_RedrawImage(butPtr->tristateImage, 0, 0, width, height,
+                            pixmap, imageXOffset, imageYOffset);
+                } else {
+                    Tk_RedrawImage(butPtr->image, 0, 0, width, height, pixmap,
+                            imageXOffset, imageYOffset);
+                }
+            } else {
+                XSetClipOrigin(butPtr->display, gc, x, y);
+                XCopyPlane(butPtr->display, butPtr->bitmap, pixmap, gc, 0, 0,
+                        (unsigned int) width, (unsigned int) height, x, y, 1);
+                XSetClipOrigin(butPtr->display, gc, 0, 0);
+            }
+        } else {
+            TkComputeAnchor(butPtr->anchor, tkwin, butPtr->padX, butPtr->padY,
+                    butPtr->indicatorSpace + butPtr->textWidth,
+                    butPtr->textHeight, &x, &y);
 
-	    x += butPtr->indicatorSpace;
+            x += butPtr->indicatorSpace;
 
-	    if (relief == TK_RELIEF_SUNKEN) {
-		x += offset;
-		y += offset;
-	    }
-	    if ((butPtr->state == STATE_DISABLED) &&
-		    (butPtr->disabledFg != NULL)) {
-		COLORREF oldFgColor = gc->foreground;
-		if (gc->background == GetSysColor(COLOR_BTNFACE)) {
-		    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
-		    Tk_DrawTextLayout(butPtr->display, pixmap, gc,
-		       	butPtr->textLayout,
-			x + 1, y + 1, 0, -1);
-		    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-			butPtr->textLayout, x + 1, y + 1, butPtr->underline);
-		    gc->foreground = oldFgColor;
-		}
-	    }
-	    Tk_DrawTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
-		    x, y, 0, -1);
-	    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
-		    butPtr->textLayout, x, y, butPtr->underline);
+            if (relief == TK_RELIEF_SUNKEN) {
+                x += offset;
+                y += offset;
+            }
+            if ((butPtr->state == STATE_DISABLED) &&
+                    (butPtr->disabledFg != NULL)) {
+                COLORREF oldFgColor = gc->foreground;
+                if (gc->background == GetSysColor(COLOR_BTNFACE)) {
+                    gc->foreground = GetSysColor(COLOR_3DHILIGHT);
+                    Tk_DrawTextLayout(butPtr->display, pixmap, gc,
+                        butPtr->textLayout,
+                        x + 1, y + 1, 0, -1);
+                    Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+                        butPtr->textLayout, x + 1, y + 1, butPtr->underline);
+                    gc->foreground = oldFgColor;
+                }
+            }
+            Tk_DrawTextLayout(butPtr->display, pixmap, gc, butPtr->textLayout,
+                    x, y, 0, -1);
+            Tk_UnderlineTextLayout(butPtr->display, pixmap, gc,
+                    butPtr->textLayout, x, y, butPtr->underline);
 
-	    height = butPtr->textHeight;
-	    drawRing = 1;
-	}
+            height = butPtr->textHeight;
+            drawRing = 1;
+        }
     }
 
     /*
@@ -628,22 +628,22 @@ TkpDisplayButton(
      */
 
     if (drawRing && butPtr->flags & GOT_FOCUS && butPtr->type != TYPE_LABEL) {
-	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-	if (butPtr->type == TYPE_BUTTON || !butPtr->indicatorOn) {
-	    rect.top = butPtr->borderWidth + 1 + defaultWidth;
-	    rect.left = rect.top;
-	    rect.right = Tk_Width(tkwin) - rect.left;
-	    rect.bottom = Tk_Height(tkwin) - rect.top;
-	} else {
-	    rect.top = y-1 + textYOffset;
-	    rect.left = x-1 + textXOffset;
-	    rect.right = x+butPtr->textWidth + 1 + textXOffset;
-	    rect.bottom = y+butPtr->textHeight + 2 + textYOffset;
-	}
-	SetTextColor(dc, gc->foreground);
-	SetBkColor(dc, gc->background);
-	DrawFocusRect(dc, &rect);
-	TkWinReleaseDrawableDC(pixmap, dc, &state);
+        dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
+        if (butPtr->type == TYPE_BUTTON || !butPtr->indicatorOn) {
+            rect.top = butPtr->borderWidth + 1 + defaultWidth;
+            rect.left = rect.top;
+            rect.right = Tk_Width(tkwin) - rect.left;
+            rect.bottom = Tk_Height(tkwin) - rect.top;
+        } else {
+            rect.top = y-1 + textYOffset;
+            rect.left = x-1 + textXOffset;
+            rect.right = x+butPtr->textWidth + 1 + textXOffset;
+            rect.bottom = y+butPtr->textHeight + 2 + textYOffset;
+        }
+        SetTextColor(dc, gc->foreground);
+        SetBkColor(dc, gc->background);
+        DrawFocusRect(dc, &rect);
+        TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
     y += height/2;
@@ -654,60 +654,60 @@ TkpDisplayButton(
      */
 
     if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn
-	    && tsdPtr->boxesPtr) {
-	int xSrc, ySrc;
+            && tsdPtr->boxesPtr) {
+        int xSrc, ySrc;
 
-	x -= butPtr->indicatorSpace;
-	y -= butPtr->indicatorDiameter / 2;
+        x -= butPtr->indicatorSpace;
+        y -= butPtr->indicatorDiameter / 2;
 
-	xSrc = (butPtr->flags & (SELECTED|TRISTATED)) ? tsdPtr->boxWidth : 0;
-	if (butPtr->state == STATE_ACTIVE) {
-	    xSrc += tsdPtr->boxWidth*2;
-	}
-	ySrc = (butPtr->type == TYPE_RADIO_BUTTON) ? 0 : tsdPtr->boxHeight;
+        xSrc = (butPtr->flags & (SELECTED|TRISTATED)) ? tsdPtr->boxWidth : 0;
+        if (butPtr->state == STATE_ACTIVE) {
+            xSrc += tsdPtr->boxWidth*2;
+        }
+        ySrc = (butPtr->type == TYPE_RADIO_BUTTON) ? 0 : tsdPtr->boxHeight;
 
-	/*
-	 * Update the palette in the boxes bitmap to reflect the current
-	 * button colors. Note that this code relies on the layout of the
-	 * bitmap's palette. Also, all of the colors used to draw the bitmap
-	 * must be in the palette that is selected into the DC of the
-	 * offscreen pixmap. This requires that the static colors be placed
-	 * into the palette.
-	 */
+        /*
+         * Update the palette in the boxes bitmap to reflect the current
+         * button colors. Note that this code relies on the layout of the
+         * bitmap's palette. Also, all of the colors used to draw the bitmap
+         * must be in the palette that is selected into the DC of the
+         * offscreen pixmap. This requires that the static colors be placed
+         * into the palette.
+         */
 
-	if ((butPtr->state == STATE_DISABLED)
-		&& (butPtr->disabledFg == NULL)) {
-	    boxesPalette[PAL_CHECK] = FlipColor(TkWinGetBorderPixels(tkwin,
-		    border, TK_3D_DARK_GC));
-	} else {
-	    boxesPalette[PAL_CHECK] = FlipColor(gc->foreground);
-	}
-	boxesPalette[PAL_TOP_OUTER] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_DARK_GC));
-	boxesPalette[PAL_TOP_INNER] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_DARK2));
-	boxesPalette[PAL_BOTTOM_INNER] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_LIGHT2));
-	boxesPalette[PAL_BOTTOM_OUTER] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_LIGHT_GC));
-	if ((butPtr->state == STATE_DISABLED) || (butPtr->flags & TRISTATED)) {
-	    boxesPalette[PAL_INTERIOR] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_LIGHT2));
-	} else if (butPtr->selectBorder != NULL) {
-	    boxesPalette[PAL_INTERIOR] = FlipColor(TkWinGetBorderPixels(tkwin,
-		    butPtr->selectBorder, TK_3D_FLAT_GC));
-	} else {
-	    boxesPalette[PAL_INTERIOR] = FlipColor(GetSysColor(COLOR_WINDOW));
-	}
-	boxesPalette[PAL_BACKGROUND] = FlipColor(TkWinGetBorderPixels(tkwin,
-		border, TK_3D_FLAT_GC));
+        if ((butPtr->state == STATE_DISABLED)
+                && (butPtr->disabledFg == NULL)) {
+            boxesPalette[PAL_CHECK] = FlipColor(TkWinGetBorderPixels(tkwin,
+                    border, TK_3D_DARK_GC));
+        } else {
+            boxesPalette[PAL_CHECK] = FlipColor(gc->foreground);
+        }
+        boxesPalette[PAL_TOP_OUTER] = FlipColor(TkWinGetBorderPixels(tkwin,
+                border, TK_3D_DARK_GC));
+        boxesPalette[PAL_TOP_INNER] = FlipColor(TkWinGetBorderPixels(tkwin,
+                border, TK_3D_DARK2));
+        boxesPalette[PAL_BOTTOM_INNER] = FlipColor(TkWinGetBorderPixels(tkwin,
+                border, TK_3D_LIGHT2));
+        boxesPalette[PAL_BOTTOM_OUTER] = FlipColor(TkWinGetBorderPixels(tkwin,
+                border, TK_3D_LIGHT_GC));
+        if ((butPtr->state == STATE_DISABLED) || (butPtr->flags & TRISTATED)) {
+            boxesPalette[PAL_INTERIOR] = FlipColor(TkWinGetBorderPixels(tkwin,
+                border, TK_3D_LIGHT2));
+        } else if (butPtr->selectBorder != NULL) {
+            boxesPalette[PAL_INTERIOR] = FlipColor(TkWinGetBorderPixels(tkwin,
+                    butPtr->selectBorder, TK_3D_FLAT_GC));
+        } else {
+            boxesPalette[PAL_INTERIOR] = FlipColor(GetSysColor(COLOR_WINDOW));
+        }
+        boxesPalette[PAL_BACKGROUND] = FlipColor(TkWinGetBorderPixels(tkwin,
+                border, TK_3D_FLAT_GC));
 
-	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-	StretchDIBits(dc, x, y, (int)tsdPtr->boxWidth, (int)tsdPtr->boxHeight,
-		xSrc, ySrc, (int)tsdPtr->boxWidth, (int)tsdPtr->boxHeight,
-		tsdPtr->boxesBits, (LPBITMAPINFO) tsdPtr->boxesPtr,
-		DIB_RGB_COLORS, SRCCOPY);
-	TkWinReleaseDrawableDC(pixmap, dc, &state);
+        dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
+        StretchDIBits(dc, x, y, (int)tsdPtr->boxWidth, (int)tsdPtr->boxHeight,
+                xSrc, ySrc, (int)tsdPtr->boxWidth, (int)tsdPtr->boxHeight,
+                tsdPtr->boxesBits, (LPBITMAPINFO) tsdPtr->boxesPtr,
+                DIB_RGB_COLORS, SRCCOPY);
+        TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
     /*
@@ -718,31 +718,31 @@ TkpDisplayButton(
      */
 
     if ((butPtr->state == STATE_DISABLED)
-	    && ((butPtr->disabledFg == NULL) || (butPtr->image != NULL))) {
-	if ((butPtr->flags & SELECTED) && !butPtr->indicatorOn
-		&& (butPtr->selectBorder != NULL)) {
-	    XSetForeground(butPtr->display, butPtr->stippleGC,
-		    Tk_3DBorderColor(butPtr->selectBorder)->pixel);
-	}
+            && ((butPtr->disabledFg == NULL) || (butPtr->image != NULL))) {
+        if ((butPtr->flags & SELECTED) && !butPtr->indicatorOn
+                && (butPtr->selectBorder != NULL)) {
+            XSetForeground(butPtr->display, butPtr->stippleGC,
+                    Tk_3DBorderColor(butPtr->selectBorder)->pixel);
+        }
 
-	/*
-	 * Stipple the whole button if no disabledFg was specified, otherwise
-	 * restrict stippling only to displayed image
-	 */
+        /*
+         * Stipple the whole button if no disabledFg was specified, otherwise
+         * restrict stippling only to displayed image
+         */
 
-	if (butPtr->disabledFg == NULL) {
-	    XFillRectangle(butPtr->display, pixmap, butPtr->stippleGC, 0, 0,
-		    (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin));
-	} else {
-	    XFillRectangle(butPtr->display, pixmap, butPtr->stippleGC,
-		    imageXOffset, imageYOffset,
-		    (unsigned) imageWidth, (unsigned) imageHeight);
-	}
-	if ((butPtr->flags & SELECTED) && !butPtr->indicatorOn
-		&& (butPtr->selectBorder != NULL)) {
-	    XSetForeground(butPtr->display, butPtr->stippleGC,
-		    Tk_3DBorderColor(butPtr->normalBorder)->pixel);
-	}
+        if (butPtr->disabledFg == NULL) {
+            XFillRectangle(butPtr->display, pixmap, butPtr->stippleGC, 0, 0,
+                    (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin));
+        } else {
+            XFillRectangle(butPtr->display, pixmap, butPtr->stippleGC,
+                    imageXOffset, imageYOffset,
+                    (unsigned) imageWidth, (unsigned) imageHeight);
+        }
+        if ((butPtr->flags & SELECTED) && !butPtr->indicatorOn
+                && (butPtr->selectBorder != NULL)) {
+            XSetForeground(butPtr->display, butPtr->stippleGC,
+                    Tk_3DBorderColor(butPtr->normalBorder)->pixel);
+        }
     }
 
     /*
@@ -751,29 +751,29 @@ TkpDisplayButton(
      */
 
     if (relief != TK_RELIEF_FLAT) {
-	Tk_Draw3DRectangle(tkwin, pixmap, border,
-		defaultWidth, defaultWidth,
-		Tk_Width(tkwin) - 2*defaultWidth,
-		Tk_Height(tkwin) - 2*defaultWidth,
-		butPtr->borderWidth, relief);
+        Tk_Draw3DRectangle(tkwin, pixmap, border,
+                defaultWidth, defaultWidth,
+                Tk_Width(tkwin) - 2*defaultWidth,
+                Tk_Height(tkwin) - 2*defaultWidth,
+                butPtr->borderWidth, relief);
     }
     if (defaultWidth != 0) {
-	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-	TkWinFillRect(dc, 0, 0, Tk_Width(tkwin), defaultWidth,
-		(int) butPtr->highlightColorPtr->pixel);
-	TkWinFillRect(dc, 0, 0, defaultWidth, Tk_Height(tkwin),
-		(int) butPtr->highlightColorPtr->pixel);
-	TkWinFillRect(dc, 0, Tk_Height(tkwin) - defaultWidth,
-		Tk_Width(tkwin), defaultWidth,
-		(int) butPtr->highlightColorPtr->pixel);
-	TkWinFillRect(dc, Tk_Width(tkwin) - defaultWidth, 0,
-		defaultWidth, Tk_Height(tkwin),
-		(int) butPtr->highlightColorPtr->pixel);
-	TkWinReleaseDrawableDC(pixmap, dc, &state);
+        dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
+        TkWinFillRect(dc, 0, 0, Tk_Width(tkwin), defaultWidth,
+                (int) butPtr->highlightColorPtr->pixel);
+        TkWinFillRect(dc, 0, 0, defaultWidth, Tk_Height(tkwin),
+                (int) butPtr->highlightColorPtr->pixel);
+        TkWinFillRect(dc, 0, Tk_Height(tkwin) - defaultWidth,
+                Tk_Width(tkwin), defaultWidth,
+                (int) butPtr->highlightColorPtr->pixel);
+        TkWinFillRect(dc, Tk_Width(tkwin) - defaultWidth, 0,
+                defaultWidth, Tk_Height(tkwin),
+                (int) butPtr->highlightColorPtr->pixel);
+        TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
     if (butPtr->flags & GOT_FOCUS) {
-	Tk_SetCaretPos(tkwin, x, y, 0 /* not used */);
+        Tk_SetCaretPos(tkwin, x, y, 0 /* not used */);
     }
 
     /*
@@ -782,8 +782,8 @@ TkpDisplayButton(
      */
 
     XCopyArea(butPtr->display, pixmap, Tk_WindowId(tkwin),
-	    butPtr->copyGC, 0, 0, (unsigned) Tk_Width(tkwin),
-	    (unsigned) Tk_Height(tkwin), 0, 0);
+            butPtr->copyGC, 0, 0, (unsigned) Tk_Width(tkwin),
+            (unsigned) Tk_Height(tkwin), 0, 0);
     Tk_FreePixmap(butPtr->display, pixmap);
 }
 
@@ -792,26 +792,26 @@ TkpDisplayButton(
  *
  * TkpComputeButtonGeometry --
  *
- *	After changes in a button's text or bitmap, this procedure recomputes
- *	the button's geometry and passes this information along to the
- *	geometry manager for the window.
+ *      After changes in a button's text or bitmap, this procedure recomputes
+ *      the button's geometry and passes this information along to the
+ *      geometry manager for the window.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The button's window may change size.
+ *      The button's window may change size.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpComputeButtonGeometry(
-    register TkButton *butPtr)	/* Button whose geometry may have changed. */
+    register TkButton *butPtr)  /* Button whose geometry may have changed. */
 {
-    int txtWidth, txtHeight;	/* Width and height of text */
-    int imgWidth, imgHeight;	/* Width and height of image */
-    int width = 0, height = 0;	/* Width and height of button */
+    int txtWidth, txtHeight;    /* Width and height of text */
+    int imgWidth, imgHeight;    /* Width and height of image */
+    int width = 0, height = 0;  /* Width and height of button */
     int haveImage, haveText;
     int avgWidth;
     int minWidth;
@@ -820,16 +820,16 @@ TkpComputeButtonGeometry(
     Tk_FontMetrics fm;
 
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (butPtr->highlightWidth < 0) {
-	butPtr->highlightWidth = 0;
+        butPtr->highlightWidth = 0;
     }
     butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
     butPtr->indicatorSpace = 0;
 
     if (!tsdPtr->boxesPtr) {
-	InitBoxes();
+        InitBoxes();
     }
 
     /*
@@ -837,16 +837,16 @@ TkpComputeButtonGeometry(
      */
 
     if (butPtr->image != NULL) {
-	Tk_SizeOfImage(butPtr->image, &imgWidth, &imgHeight);
-	haveImage = 1;
+        Tk_SizeOfImage(butPtr->image, &imgWidth, &imgHeight);
+        haveImage = 1;
     } else if (butPtr->bitmap != None) {
-	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap,
-		&imgWidth, &imgHeight);
-	haveImage = 1;
+        Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap,
+                &imgWidth, &imgHeight);
+        haveImage = 1;
     } else {
-	imgWidth = 0;
-	imgHeight = 0;
-	haveImage = 0;
+        imgWidth = 0;
+        imgHeight = 0;
+        haveImage = 0;
     }
 
     /*
@@ -856,15 +856,15 @@ TkpComputeButtonGeometry(
 
     Tk_FreeTextLayout(butPtr->textLayout);
     butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-	    Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
-	    butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+            Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+            butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
     txtWidth = butPtr->textWidth;
     txtHeight = butPtr->textHeight;
     haveText = (*(Tcl_GetString(butPtr->textPtr)) != '\0');
     avgWidth = (Tk_TextWidth(butPtr->tkfont,
-	    "abcdefghijklmnopqurstuvwzyABCDEFGHIJKLMNOPQURSTUVWZY",
-	    52) + 26) / 52;
+            "abcdefghijklmnopqurstuvwzyABCDEFGHIJKLMNOPQURSTUVWZY",
+            52) + 26) / 52;
     Tk_GetFontMetrics(butPtr->tkfont, &fm);
 
     /*
@@ -893,114 +893,114 @@ TkpComputeButtonGeometry(
 
     switch (butPtr->type) {
     case TYPE_BUTTON:
-	/*
-	 * First compute the minimum width of the button in characters. MWUE
-	 * says that the button should be 50 DLUs. We allow 6 DLUs padding
-	 * left and right. (There is no rule but this is consistent with the
-	 * fact that button text is 8 DLUs high and buttons are 14 DLUs high.)
-	 *
-	 * The width is specified in characters. A character is, by
-	 * definition, 4 DLUs wide. 11 char * 4 DLU is 44 DLU + 6 DLU padding
-	 * = 50 DLU. Therefore, width = -11 -> MWUE compliant buttons.
-	 */
+        /*
+         * First compute the minimum width of the button in characters. MWUE
+         * says that the button should be 50 DLUs. We allow 6 DLUs padding
+         * left and right. (There is no rule but this is consistent with the
+         * fact that button text is 8 DLUs high and buttons are 14 DLUs high.)
+         *
+         * The width is specified in characters. A character is, by
+         * definition, 4 DLUs wide. 11 char * 4 DLU is 44 DLU + 6 DLU padding
+         * = 50 DLU. Therefore, width = -11 -> MWUE compliant buttons.
+         */
 
-	if (butPtr->width < 0) {
-	    minWidth = -(butPtr->width);	    /* Min width in chars */
-	    width = avgWidth * minWidth;	    /* Allow for characters */
-	    width += (int)(0.5 + (6 * hDLU));	    /* Add for padding */
-	}
+        if (butPtr->width < 0) {
+            minWidth = -(butPtr->width);            /* Min width in chars */
+            width = avgWidth * minWidth;            /* Allow for characters */
+            width += (int)(0.5 + (6 * hDLU));       /* Add for padding */
+        }
 
-	/*
-	 * If shrink-wrapping was requested (width = 0) or if the text is
-	 * wider than the default button width, adjust the button width up to
-	 * suit.
-	 */
+        /*
+         * If shrink-wrapping was requested (width = 0) or if the text is
+         * wider than the default button width, adjust the button width up to
+         * suit.
+         */
 
-	if (butPtr->width == 0
-		|| (txtWidth + (int)(0.5 + (6 * hDLU)) > width)) {
-	    width = txtWidth + (int)(0.5 + (6 * hDLU));
-	}
+        if (butPtr->width == 0
+                || (txtWidth + (int)(0.5 + (6 * hDLU)) > width)) {
+            width = txtWidth + (int)(0.5 + (6 * hDLU));
+        }
 
-	/*
-	 * The User Experience says 14 DLUs. Since text is, by definition, 8
-	 * DLU/line, this allows for multi-line text while working perfectly
-	 * for single-line text.
-	 */
+        /*
+         * The User Experience says 14 DLUs. Since text is, by definition, 8
+         * DLU/line, this allows for multi-line text while working perfectly
+         * for single-line text.
+         */
 
-	height = txtHeight + (int)(0.5 + (6 * vDLU));
+        height = txtHeight + (int)(0.5 + (6 * vDLU));
 
-	/*
-	 * The above includes 6 DLUs of padding which should include defaults
-	 * of 1 pixel of highlightwidth, 2 pixels of borderwidth, 1 pixel of
-	 * padding and 1 pixel of extra inset on each side. Those will be
-	 * added later so reduce width and height now to compensate.
-	 */
+        /*
+         * The above includes 6 DLUs of padding which should include defaults
+         * of 1 pixel of highlightwidth, 2 pixels of borderwidth, 1 pixel of
+         * padding and 1 pixel of extra inset on each side. Those will be
+         * added later so reduce width and height now to compensate.
+         */
 
-	width -= 10;
-	height -= 10;
+        width -= 10;
+        height -= 10;
 
-	if (!haveImage) {
-	    /*
-	     * Extra inset for the focus ring.
-	     */
+        if (!haveImage) {
+            /*
+             * Extra inset for the focus ring.
+             */
 
-	    butPtr->inset += 1;
-	}
-	break;
+            butPtr->inset += 1;
+        }
+        break;
 
     case TYPE_LABEL:
-	/*
-	 * The User Experience says, "as wide as needed".
-	 */
+        /*
+         * The User Experience says, "as wide as needed".
+         */
 
-	width = txtWidth;
+        width = txtWidth;
 
-	/*
-	 * The User Experience says, "8 (DLUs) per line of text". Since text
-	 * is, by definition, 8 DLU/line, this allows for multi-line text
-	 * while working perfectly for single-line text.
-	 */
+        /*
+         * The User Experience says, "8 (DLUs) per line of text". Since text
+         * is, by definition, 8 DLU/line, this allows for multi-line text
+         * while working perfectly for single-line text.
+         */
 
-	if (txtHeight) {
-	    height = txtHeight;
-	} else {
-	    /*
-	     * If there's no text, we want the height to be one linespace.
-	     */
-	    height = fm.linespace;
-	}
-	break;
+        if (txtHeight) {
+            height = txtHeight;
+        } else {
+            /*
+             * If there's no text, we want the height to be one linespace.
+             */
+            height = fm.linespace;
+        }
+        break;
 
     case TYPE_RADIO_BUTTON:
     case TYPE_CHECK_BUTTON: {
-	/*
-	 * See note for TYPE_LABEL.
-	 */
+        /*
+         * See note for TYPE_LABEL.
+         */
 
-	width = txtWidth;
+        width = txtWidth;
 
-	/*
-	 * The User Experience says 10 DLUs. (Is that one DLU above and below
-	 * for the focus ring?) See note above about multi-line text and 8
-	 * DLU/line.
-	 */
+        /*
+         * The User Experience says 10 DLUs. (Is that one DLU above and below
+         * for the focus ring?) See note above about multi-line text and 8
+         * DLU/line.
+         */
 
-	height = txtHeight + (int)(0.5 + (2.0 * vDLU));
+        height = txtHeight + (int)(0.5 + (2.0 * vDLU));
 
-	/*
-	 * The above includes 2 DLUs of padding which should include defaults
-	 * of 1 pixel of highlightwidth, 0 pixels of borderwidth, and 1 pixel
-	 * of padding on each side. Those will be added later so reduce height
-	 * now to compensate.
-	 */
+        /*
+         * The above includes 2 DLUs of padding which should include defaults
+         * of 1 pixel of highlightwidth, 0 pixels of borderwidth, and 1 pixel
+         * of padding on each side. Those will be added later so reduce height
+         * now to compensate.
+         */
 
-	height -= 4;
+        height -= 4;
 
-	/*
-	 * Extra inset for the focus ring.
-	 */
-	butPtr->inset += 1;
-	break;
+        /*
+         * Extra inset for the focus ring.
+         */
+        butPtr->inset += 1;
+        break;
     }
     }/* switch */
 
@@ -1018,130 +1018,130 @@ TkpComputeButtonGeometry(
      */
 
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
-	switch ((enum compound) butPtr->compound) {
-	case COMPOUND_TOP:
-	case COMPOUND_BOTTOM:
-	    /*
-	     * Image is above or below text.
-	     */
+        switch ((enum compound) butPtr->compound) {
+        case COMPOUND_TOP:
+        case COMPOUND_BOTTOM:
+            /*
+             * Image is above or below text.
+             */
 
-	    if (imgWidth > width) {
-		width = imgWidth;
-	    }
-	    height += imgHeight + butPtr->padY;
-	    break;
+            if (imgWidth > width) {
+                width = imgWidth;
+            }
+            height += imgHeight + butPtr->padY;
+            break;
 
-	case COMPOUND_LEFT:
-	case COMPOUND_RIGHT:
+        case COMPOUND_LEFT:
+        case COMPOUND_RIGHT:
 
-	    /*
-	     * Image is left or right of text.
-	     *
-	     * Only increase width of button if image doesn't fit in slack
-	     * space of default button width
-	     */
+            /*
+             * Image is left or right of text.
+             *
+             * Only increase width of button if image doesn't fit in slack
+             * space of default button width
+             */
 
-	    if ((imgWidth + txtWidth + butPtr->padX) > width) {
-		width = imgWidth + txtWidth + butPtr->padX;
-	    }
+            if ((imgWidth + txtWidth + butPtr->padX) > width) {
+                width = imgWidth + txtWidth + butPtr->padX;
+            }
 
-	    if (imgHeight > height) {
-		height = imgHeight;
-	    }
-	    break;
+            if (imgHeight > height) {
+                height = imgHeight;
+            }
+            break;
 
-	case COMPOUND_CENTER:
-	    /*
-	     * Image and text are superimposed.
-	     */
+        case COMPOUND_CENTER:
+            /*
+             * Image and text are superimposed.
+             */
 
-	    if (imgWidth > width) {
-		width = imgWidth;
-	    }
-	    if (imgHeight > height) {
-		height = imgHeight;
-	    }
-	    break;
-	case COMPOUND_NONE:
-	    break;
-	} /* switch */
+            if (imgWidth > width) {
+                width = imgWidth;
+            }
+            if (imgHeight > height) {
+                height = imgHeight;
+            }
+            break;
+        case COMPOUND_NONE:
+            break;
+        } /* switch */
 
-	/*
-	 * Fix up for minimum width.
-	 */
+        /*
+         * Fix up for minimum width.
+         */
 
-	if (butPtr->width < 0) {
-	    /*
-	     * minWidth in pixels (because there's an image.
-	     */
+        if (butPtr->width < 0) {
+            /*
+             * minWidth in pixels (because there's an image.
+             */
 
-	    minWidth = -(butPtr->width);
-	    if (width < minWidth) {
-		width = minWidth;
-	    }
-	} else if (butPtr->width > 0) {
-	    width = butPtr->width;
-	}
+            minWidth = -(butPtr->width);
+            if (width < minWidth) {
+                width = minWidth;
+            }
+        } else if (butPtr->width > 0) {
+            width = butPtr->width;
+        }
 
-	if (butPtr->height > 0) {
-	    height = butPtr->height;
-	}
+        if (butPtr->height > 0) {
+            height = butPtr->height;
+        }
 
-	width += 2*butPtr->padX;
-	height += 2*butPtr->padY;
+        width += 2*butPtr->padX;
+        height += 2*butPtr->padY;
     } else if (haveImage) {
-	if (butPtr->width > 0) {
-	    width = butPtr->width;
-	} else {
-	    width = imgWidth;
-	}
-	if (butPtr->height > 0) {
-	    height = butPtr->height;
-	} else {
-	    height = imgHeight;
-	}
+        if (butPtr->width > 0) {
+            width = butPtr->width;
+        } else {
+            width = imgWidth;
+        }
+        if (butPtr->height > 0) {
+            height = butPtr->height;
+        } else {
+            height = imgHeight;
+        }
     } else {
-	/*
-	 * No image. May or may not be text. May or may not be compound.
-	 */
+        /*
+         * No image. May or may not be text. May or may not be compound.
+         */
 
-	/*
-	 * butPtr->width is in characters. We need to allow for that many
-	 * characters on the face, not in the over-all button width
-	 */
+        /*
+         * butPtr->width is in characters. We need to allow for that many
+         * characters on the face, not in the over-all button width
+         */
 
-	if (butPtr->width > 0) {
-	    width = butPtr->width * avgWidth;
-	}
+        if (butPtr->width > 0) {
+            width = butPtr->width * avgWidth;
+        }
 
-	/*
-	 * butPtr->height is in lines of text. We need to allow for that many
-	 * lines on the face, not in the over-all button height.
-	 */
+        /*
+         * butPtr->height is in lines of text. We need to allow for that many
+         * lines on the face, not in the over-all button height.
+         */
 
-	if (butPtr->height > 0) {
-	    height = butPtr->height * fm.linespace;
+        if (butPtr->height > 0) {
+            height = butPtr->height * fm.linespace;
 
-	    /*
-	     * Make the same adjustments as above to get same height for e.g.
-	     * a one line text with -height 0 or 1. [Bug #565485]
-	     */
+            /*
+             * Make the same adjustments as above to get same height for e.g.
+             * a one line text with -height 0 or 1. [Bug #565485]
+             */
 
-	    switch (butPtr->type) {
-	    case TYPE_BUTTON: {
-		height += (int)(0.5 + (6 * vDLU)) - 10;
-		break;
-	    }
-	    case TYPE_RADIO_BUTTON:
-	    case TYPE_CHECK_BUTTON: {
-		height += (int)(0.5 + (2.0 * vDLU)) - 4;
-		break;
-	    }
-	    }
-	}
+            switch (butPtr->type) {
+            case TYPE_BUTTON: {
+                height += (int)(0.5 + (6 * vDLU)) - 10;
+                break;
+            }
+            case TYPE_RADIO_BUTTON:
+            case TYPE_CHECK_BUTTON: {
+                height += (int)(0.5 + (2.0 * vDLU)) - 4;
+                break;
+            }
+            }
+        }
 
-	width += 2 * butPtr->padX;
-	height += 2 * butPtr->padY;
+        width += 2 * butPtr->padX;
+        height += 2 * butPtr->padY;
     }
 
     /*
@@ -1149,30 +1149,30 @@ TkpComputeButtonGeometry(
      */
 
     if (butPtr->type == TYPE_RADIO_BUTTON
-	    || butPtr->type == TYPE_CHECK_BUTTON) {
-	if (butPtr->indicatorOn) {
-	    butPtr->indicatorDiameter = tsdPtr->boxHeight;
+            || butPtr->type == TYPE_CHECK_BUTTON) {
+        if (butPtr->indicatorOn) {
+            butPtr->indicatorDiameter = tsdPtr->boxHeight;
 
-	    /*
-	     * Make sure we can see the whole indicator, even if the text or
-	     * image is very small.
-	     */
+            /*
+             * Make sure we can see the whole indicator, even if the text or
+             * image is very small.
+             */
 
-	    if (height < butPtr->indicatorDiameter) {
-		height = butPtr->indicatorDiameter;
-	    }
+            if (height < butPtr->indicatorDiameter) {
+                height = butPtr->indicatorDiameter;
+            }
 
-	    /*
-	     * There is no rule for space between the indicator and the text
-	     * (the two are atomic on 'Windows) but the User Experience page
-	     * 451 says leave 3 hDLUs between "text labels and their
-	     * associated controls".
-	     */
+            /*
+             * There is no rule for space between the indicator and the text
+             * (the two are atomic on 'Windows) but the User Experience page
+             * 451 says leave 3 hDLUs between "text labels and their
+             * associated controls".
+             */
 
-	    butPtr->indicatorSpace = butPtr->indicatorDiameter +
-		    (int)(0.5 + (3.0 * hDLU));
-	    width += butPtr->indicatorSpace;
-	}
+            butPtr->indicatorSpace = butPtr->indicatorDiameter +
+                    (int)(0.5 + (3.0 * hDLU));
+            width += butPtr->indicatorSpace;
+        }
     }
 
     /*
@@ -1191,14 +1191,14 @@ TkpComputeButtonGeometry(
  *
  * ButtonProc --
  *
- *	This function is call by Windows whenever an event occurs on a button
- *	control created by Tk.
+ *      This function is call by Windows whenever an event occurs on a button
+ *      control created by Tk.
  *
  * Results:
- *	Standard Windows return value.
+ *      Standard Windows return value.
  *
  * Side effects:
- *	May generate events.
+ *      May generate events.
  *
  *----------------------------------------------------------------------
  */
@@ -1215,85 +1215,85 @@ ButtonProc(
     Tk_Window tkwin = Tk_HWNDToWindow(hwnd);
 
     if (tkwin == NULL) {
-	Tcl_Panic("ButtonProc called on an invalid HWND");
+        Tcl_Panic("ButtonProc called on an invalid HWND");
     }
     butPtr = (WinButton *)((TkWindow*)tkwin)->instanceData;
 
     switch(message) {
     case WM_ERASEBKGND:
-	return 0;
+        return 0;
 
     case BM_GETCHECK:
-	if (((butPtr->info.type == TYPE_CHECK_BUTTON)
-		|| (butPtr->info.type == TYPE_RADIO_BUTTON))
-		&& butPtr->info.indicatorOn) {
-	    return (butPtr->info.flags & SELECTED)
-		    ? BST_CHECKED : BST_UNCHECKED;
-	}
-	return 0;
+        if (((butPtr->info.type == TYPE_CHECK_BUTTON)
+                || (butPtr->info.type == TYPE_RADIO_BUTTON))
+                && butPtr->info.indicatorOn) {
+            return (butPtr->info.flags & SELECTED)
+                    ? BST_CHECKED : BST_UNCHECKED;
+        }
+        return 0;
 
     case BM_GETSTATE: {
-	DWORD state = 0;
+        DWORD state = 0;
 
-	if (((butPtr->info.type == TYPE_CHECK_BUTTON)
-		|| (butPtr->info.type == TYPE_RADIO_BUTTON))
-		&& butPtr->info.indicatorOn) {
-	    state = (butPtr->info.flags & SELECTED)
-		    ? BST_CHECKED : BST_UNCHECKED;
-	}
-	if (butPtr->info.flags & GOT_FOCUS) {
-	    state |= BST_FOCUS;
-	}
-	return state;
+        if (((butPtr->info.type == TYPE_CHECK_BUTTON)
+                || (butPtr->info.type == TYPE_RADIO_BUTTON))
+                && butPtr->info.indicatorOn) {
+            state = (butPtr->info.flags & SELECTED)
+                    ? BST_CHECKED : BST_UNCHECKED;
+        }
+        if (butPtr->info.flags & GOT_FOCUS) {
+            state |= BST_FOCUS;
+        }
+        return state;
     }
     case WM_ENABLE:
-	break;
+        break;
 
     case WM_PAINT: {
-	PAINTSTRUCT ps;
-	BeginPaint(hwnd, &ps);
-	EndPaint(hwnd, &ps);
-	TkpDisplayButton((ClientData)butPtr);
+        PAINTSTRUCT ps;
+        BeginPaint(hwnd, &ps);
+        EndPaint(hwnd, &ps);
+        TkpDisplayButton((ClientData)butPtr);
 
-	/*
-	 * Special note: must cancel any existing idle handler for
-	 * TkpDisplayButton; it's no longer needed, and TkpDisplayButton
-	 * cleared the REDRAW_PENDING flag.
-	 */
+        /*
+         * Special note: must cancel any existing idle handler for
+         * TkpDisplayButton; it's no longer needed, and TkpDisplayButton
+         * cleared the REDRAW_PENDING flag.
+         */
 
-	Tcl_CancelIdleCall(TkpDisplayButton, (ClientData)butPtr);
-	return 0;
+        Tcl_CancelIdleCall(TkpDisplayButton, (ClientData)butPtr);
+        return 0;
     }
     case BN_CLICKED: {
-	/*
-	 * OOPS: chromium fires WM_NULL regularly to ping if plugin is still
-	 * alive. When using an external window (i.e. via the tcl plugin), this
-	 * causes all buttons to fire once a second, so we need to make sure
-	 * that we are not dealing with the chromium life check.
-	*/
+        /*
+         * OOPS: chromium fires WM_NULL regularly to ping if plugin is still
+         * alive. When using an external window (i.e. via the tcl plugin), this
+         * causes all buttons to fire once a second, so we need to make sure
+         * that we are not dealing with the chromium life check.
+        */
         if (wParam != 0 || lParam != 0) {
-	    int code;
-	    Tcl_Interp *interp = butPtr->info.interp;
+            int code;
+            Tcl_Interp *interp = butPtr->info.interp;
 
-	    if (butPtr->info.state != STATE_DISABLED) {
-		Tcl_Preserve((ClientData)interp);
-		code = TkInvokeButton((TkButton*)butPtr);
-		if (code != TCL_OK && code != TCL_CONTINUE
-			&& code != TCL_BREAK) {
-		    Tcl_AddErrorInfo(interp, "\n    (button invoke)");
-		    Tcl_BackgroundException(interp, code);
-		}
-		Tcl_Release((ClientData)interp);
-	    }
-	    Tcl_ServiceAll();
-	    return 0;
-	}
+            if (butPtr->info.state != STATE_DISABLED) {
+                Tcl_Preserve((ClientData)interp);
+                code = TkInvokeButton((TkButton*)butPtr);
+                if (code != TCL_OK && code != TCL_CONTINUE
+                        && code != TCL_BREAK) {
+                    Tcl_AddErrorInfo(interp, "\n    (button invoke)");
+                    Tcl_BackgroundException(interp, code);
+                }
+                Tcl_Release((ClientData)interp);
+            }
+            Tcl_ServiceAll();
+            return 0;
+        }
     }
 
     default:
-	if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
-	    return result;
-	}
+        if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+            return result;
+        }
     }
     return DefWindowProc(hwnd, message, wParam, lParam);
 }

@@ -1,7 +1,7 @@
-library 	ttk
-interface 	ttk
-epoch  		0
-scspec		TTKAPI
+library         ttk
+interface       ttk
+epoch           0
+scspec          TTKAPI
 
 declare 0 {
     Ttk_Theme Ttk_GetTheme(Tcl_Interp *interp, const char *name)
@@ -14,41 +14,41 @@ declare 2 {
 }
 declare 3 {
     Ttk_Theme Ttk_CreateTheme(
-	Tcl_Interp *interp, const char *name, Ttk_Theme parent)
+        Tcl_Interp *interp, const char *name, Ttk_Theme parent)
 }
 declare 4 {
     void Ttk_RegisterCleanup(
-	Tcl_Interp *interp, void *deleteData, Ttk_CleanupProc *cleanupProc)
+        Tcl_Interp *interp, void *deleteData, Ttk_CleanupProc *cleanupProc)
 }
 
 declare 5 {
     int Ttk_RegisterElementSpec(
-	Ttk_Theme theme,
-	const char *elementName,
-	Ttk_ElementSpec *elementSpec,
-	void *clientData)
+        Ttk_Theme theme,
+        const char *elementName,
+        Ttk_ElementSpec *elementSpec,
+        void *clientData)
 }
 
 declare 6 {
     Ttk_ElementClass *Ttk_RegisterElement(
-	Tcl_Interp *interp,
-	Ttk_Theme theme,
-	const char *elementName,
-	Ttk_ElementSpec *elementSpec,
-	void *clientData)
+        Tcl_Interp *interp,
+        Ttk_Theme theme,
+        const char *elementName,
+        Ttk_ElementSpec *elementSpec,
+        void *clientData)
 }
 
 declare 7 {
     int Ttk_RegisterElementFactory(
-	Tcl_Interp *interp,
-	const char *name,
-	Ttk_ElementFactory factoryProc,
-	void *clientData)
+        Tcl_Interp *interp,
+        const char *name,
+        Ttk_ElementFactory factoryProc,
+        void *clientData)
 }
 
 declare 8 {
     void Ttk_RegisterLayout(
-	Ttk_Theme theme, const char *className, Ttk_LayoutSpec layoutSpec)
+        Ttk_Theme theme, const char *className, Ttk_LayoutSpec layoutSpec)
 }
 
 #
@@ -56,23 +56,23 @@ declare 8 {
 #
 declare 10 {
     int Ttk_GetStateSpecFromObj(
-    	Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_StateSpec *spec_rtn)
+        Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_StateSpec *spec_rtn)
 }
 declare 11 {
     Tcl_Obj *Ttk_NewStateSpecObj(
-    	unsigned int onbits, unsigned int offbits)
+        unsigned int onbits, unsigned int offbits)
 }
 declare 12 {
     Ttk_StateMap Ttk_GetStateMapFromObj(
-    	Tcl_Interp *interp, Tcl_Obj *objPtr)
+        Tcl_Interp *interp, Tcl_Obj *objPtr)
 }
 declare 13 {
     Tcl_Obj *Ttk_StateMapLookup(
-	Tcl_Interp *interp, Ttk_StateMap map, Ttk_State state)
+        Tcl_Interp *interp, Ttk_StateMap map, Ttk_State state)
 }
 declare 14 {
     int Ttk_StateTableLookup(
-    	Ttk_StateTable map[], Ttk_State state)
+        Ttk_StateTable map[], Ttk_State state)
 }
 
 
@@ -81,35 +81,35 @@ declare 14 {
 #
 declare 20 {
     int Ttk_GetPaddingFromObj(
-    	Tcl_Interp *interp,
-	Tk_Window tkwin,
-	Tcl_Obj *objPtr,
-	Ttk_Padding *pad_rtn)
+        Tcl_Interp *interp,
+        Tk_Window tkwin,
+        Tcl_Obj *objPtr,
+        Ttk_Padding *pad_rtn)
 }
 declare 21 {
     int Ttk_GetBorderFromObj(
-    	Tcl_Interp *interp,
-	Tcl_Obj *objPtr,
-	Ttk_Padding *pad_rtn)
+        Tcl_Interp *interp,
+        Tcl_Obj *objPtr,
+        Ttk_Padding *pad_rtn)
 }
 declare 22 {
     int Ttk_GetStickyFromObj(
-    	Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Sticky *sticky_rtn)
+        Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Sticky *sticky_rtn)
 }
 declare 23 {
     Ttk_Padding Ttk_MakePadding(
-    	short l, short t, short r, short b)
+        short l, short t, short r, short b)
 }
 declare 24 {
     Ttk_Padding Ttk_UniformPadding(
-    	short borderWidth)
+        short borderWidth)
 }
 declare 25 {
     Ttk_Padding Ttk_AddPadding(Ttk_Padding pad1, Ttk_Padding pad2)
 }
 declare 26 {
     Ttk_Padding Ttk_RelievePadding(
-    	Ttk_Padding padding, int relief, int n)
+        Ttk_Padding padding, int relief, int n)
 }
 declare 27 {
     Ttk_Box Ttk_MakeBox(int x, int y, int width, int height)
@@ -134,7 +134,7 @@ declare 33 {
 }
 declare 34 {
     Ttk_Box Ttk_PlaceBox(
-	Ttk_Box *cavity, int w, int h, Ttk_Side side, Ttk_Sticky sticky)
+        Ttk_Box *cavity, int w, int h, Ttk_Side side, Ttk_Sticky sticky)
 }
 declare 35 {
     Tcl_Obj *Ttk_NewBoxObj(Ttk_Box box)

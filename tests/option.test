@@ -381,11 +381,11 @@ test option-15.5 {database files} -body {
 } -result brown
 test option-15.6 {database files} -body {
     option read $option1
-	option get . x6 color
+    option get . x6 color
 } -result {}
 test option-15.7 {database files} -body {
     option read $option1
-	option get . x9 color
+    option get . x9 color
 } -result " \t\\A\n"
 test option-15.8 {database files} -body {
     option read $option1 widget foo

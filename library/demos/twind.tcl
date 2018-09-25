@@ -23,7 +23,7 @@ pack $btns -side bottom -fill x
 frame $w.f -highlightthickness 1 -borderwidth 1 -relief sunken
 set t $w.f.text
 text $t -yscrollcommand "$w.scroll set" -setgrid true -font $font -width 70 \
-	-height 35 -wrap word -highlightthickness 0 -borderwidth 0
+        -height 35 -wrap word -highlightthickness 0 -borderwidth 0
 pack $t -expand  yes -fill both
 ttk::scrollbar $w.scroll -command "$t yview"
 pack $w.scroll -side right -fill y
@@ -35,12 +35,12 @@ raise $w.f
 
 $t tag configure center -justify center -spacing1 5m -spacing3 5m
 $t tag configure buttons -lmargin1 1c -lmargin2 1c -rmargin 1c \
-	-spacing1 3m -spacing2 0 -spacing3 0
+        -spacing1 3m -spacing2 0 -spacing3 0
 
 button $t.on -text "Turn On" -command "textWindOn $w" \
-	-cursor top_left_arrow
+        -cursor top_left_arrow
 button $t.off -text "Turn Off" -command "textWindOff $w" \
-	-cursor top_left_arrow
+        -cursor top_left_arrow
 
 $t insert end "A text widget can contain many different kinds of items, "
 $t insert end "both active and passive.  It can lay these out in various "
@@ -63,7 +63,7 @@ $t insert end " horizontal scrolling and turn back on word wrapping.\n\n"
 $t insert end "Or, here is another example.  If you "
 $t window create end -create {
     button %W.click -text "Click Here" -command "textWindPlot %W" \
-	    -cursor top_left_arrow}
+            -cursor top_left_arrow}
 
 $t insert end " a canvas displaying an x-y plot will appear right here."
 $t mark set plot insert
@@ -72,7 +72,7 @@ $t insert end "  You can drag the data points around with the mouse, "
 $t insert end "or you can click here to "
 $t window create end -create {
     button %W.delete -text "Delete" -command "textWindDel %W" \
-	    -cursor top_left_arrow
+            -cursor top_left_arrow
 }
 $t insert end " the plot again.\n\n"
 
@@ -114,21 +114,21 @@ $t insert end "to restore the short string.\n"
 
 $t insert end "\nNOTE: these buttons will not appear in peers!\n" "peer_warning"
 button $t.default -text Default -command "embDefBg $t" \
-	-cursor top_left_arrow
+        -cursor top_left_arrow
 $t window create end -window $t.default -padx 3
 global embToggle
 set embToggle Short
 checkbutton $t.toggle -textvariable embToggle -indicatoron 0 \
-	-variable embToggle -onvalue "A much longer string" \
-	-offvalue "Short" -cursor top_left_arrow -pady 5 -padx 2
+        -variable embToggle -onvalue "A much longer string" \
+        -offvalue "Short" -cursor top_left_arrow -pady 5 -padx 2
 $t window create end -window $t.toggle -padx 3 -pady 2
 set i 1
 foreach color {AntiqueWhite3 Bisque1 Bisque2 Bisque3 Bisque4
-	SlateBlue3 RoyalBlue1 SteelBlue2 DeepSkyBlue3 LightBlue1
-	DarkSlateGray1 Aquamarine2 DarkSeaGreen2 SeaGreen1
-	Yellow1 IndianRed1 IndianRed2 Tan1 Tan4} {
+        SlateBlue3 RoyalBlue1 SteelBlue2 DeepSkyBlue3 LightBlue1
+        DarkSlateGray1 Aquamarine2 DarkSeaGreen2 SeaGreen1
+        Yellow1 IndianRed1 IndianRed2 Tan1 Tan4} {
     button $t.color$i -text $color -cursor top_left_arrow -command \
-	    "$t configure -bg $color"
+            "$t configure -bg $color"
     $t window create end -window $t.color$i -padx 3 -pady 2
     incr i
 }
@@ -207,11 +207,11 @@ proc textWindOff w {
 proc textWindPlot t {
     set c $t.c
     if {[winfo exists $c]} {
-	return
+        return
     }
 
     while {[string first [$t get plot] " \t\n"] >= 0} {
-	$t delete plot
+        $t delete plot
     }
     $t insert plot "\n"
 
@@ -232,25 +232,25 @@ proc createPlot {t} {
     $c create text 225 20 -text "A Simple Plot" -font $font -fill brown
 
     for {set i 0} {$i <= 10} {incr i} {
-	set x [expr {100 + ($i*30)}]
-	$c create line $x 250 $x 245 -width 2
-	$c create text $x 254 -text [expr {10*$i}] -anchor n -font $font
+        set x [expr {100 + ($i*30)}]
+        $c create line $x 250 $x 245 -width 2
+        $c create text $x 254 -text [expr {10*$i}] -anchor n -font $font
     }
     for {set i 0} {$i <= 5} {incr i} {
-	set y [expr {250 - ($i*40)}]
-	$c create line 100 $y 105 $y -width 2
-	$c create text 96 $y -text [expr {$i*50}].0 -anchor e -font $font
+        set y [expr {250 - ($i*40)}]
+        $c create line 100 $y 105 $y -width 2
+        $c create text 96 $y -text [expr {$i*50}].0 -anchor e -font $font
     }
 
     foreach point {
-	{12 56} {20 94} {33 98} {32 120} {61 180} {75 160} {98 223}
+        {12 56} {20 94} {33 98} {32 120} {61 180} {75 160} {98 223}
     } {
-	set x [expr {100 + (3*[lindex $point 0])}]
-	set y [expr {250 - (4*[lindex $point 1])/5}]
-	set item [$c create oval [expr {$x-6}] [expr {$y-6}] \
-		[expr {$x+6}] [expr {$y+6}] -width 1 -outline black \
-		-fill SkyBlue2]
-	$c addtag point withtag $item
+        set x [expr {100 + (3*[lindex $point 0])}]
+        set y [expr {250 - (4*[lindex $point 1])/5}]
+        set item [$c create oval [expr {$x-6}] [expr {$y-6}] \
+                [expr {$x+6}] [expr {$y+6}] -width 1 -outline black \
+                -fill SkyBlue2]
+        $c addtag point withtag $item
     }
 
     $c bind point <Any-Enter> "$c itemconfig current -fill red"
@@ -282,11 +282,11 @@ proc embPlotMove {w x y} {
 
 proc textWindDel t {
     if {[winfo exists $t.c]} {
-	$t delete $t.c
-	while {[string first [$t get plot] " \t\n"] >= 0} {
-	    $t delete plot
-	}
-	$t insert plot "  "
+        $t delete $t.c
+        while {[string first [$t get plot] " \t\n"] >= 0} {
+            $t delete plot
+        }
+        $t insert plot "  "
     }
 }
 
@@ -301,7 +301,7 @@ proc textMakePeer {parent} {
     wm title $w "Text Peer #$n"
     frame $w.f -highlightthickness 1 -borderwidth 1 -relief sunken
     set t [$parent peer create $w.f.text -yscrollcommand "$w.scroll set" \
-	       -borderwidth 0 -highlightthickness 0]
+               -borderwidth 0 -highlightthickness 0]
     $t tag configure peer_warning -font boldFont
     pack $t -expand  yes -fill both
     ttk::scrollbar $w.scroll -command "$t yview"
@@ -311,16 +311,16 @@ proc textMakePeer {parent} {
 
 proc textSplitWindow {textW} {
     if {$textW eq ".twind.f.text"} {
-	if {[winfo exists .twind.peer]} {
-	    destroy .twind.peer
-	} else {
-	    set parent [winfo parent $textW]
-	    set w [winfo parent $parent]
-	    set t [$textW peer create $w.peer \
-	      -yscrollcommand "$w.scroll set"]
-	    $t tag configure peer_warning -font boldFont
-	    $w.pane add $t
-	}
+        if {[winfo exists .twind.peer]} {
+            destroy .twind.peer
+        } else {
+            set parent [winfo parent $textW]
+            set w [winfo parent $parent]
+            set t [$textW peer create $w.peer \
+              -yscrollcommand "$w.scroll set"]
+            $t tag configure peer_warning -font boldFont
+            $w.pane add $t
+        }
     } else {
         return
     }

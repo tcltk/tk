@@ -1,7 +1,7 @@
 /*
  * xdraw.c --
  *
- *	This file contains generic procedures related to X drawing primitives.
+ *      This file contains generic procedures related to X drawing primitives.
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  *
@@ -16,13 +16,13 @@
  *
  * XDrawLine --
  *
- *	Draw a single line between two points in a given drawable.
+ *      Draw a single line between two points in a given drawable.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Draws a single line segment.
+ *      Draws a single line segment.
  *
  *----------------------------------------------------------------------
  */
@@ -33,7 +33,7 @@ XDrawLine(
     Drawable d,
     GC gc,
     int x1, int y1,
-    int x2, int y2)		/* Coordinates of line segment. */
+    int x2, int y2)             /* Coordinates of line segment. */
 {
     XPoint points[2];
 
@@ -49,14 +49,14 @@ XDrawLine(
  *
  * XFillRectangle --
  *
- *	Fills a rectangular area in the given drawable. This procedure is
- *	implemented as a call to XFillRectangles.
+ *      Fills a rectangular area in the given drawable. This procedure is
+ *      implemented as a call to XFillRectangles.
  *
  * Results:
- *	None
+ *      None
  *
  * Side effects:
- *	Fills the specified rectangle.
+ *      Fills the specified rectangle.
  *
  *----------------------------------------------------------------------
  */

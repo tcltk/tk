@@ -1,7 +1,7 @@
 # clrpick.tcl --
 #
-#	Color selection dialog for platforms that do not support a
-#	standard color selection dialog.
+#       Color selection dialog for platforms that do not support a
+#       standard color selection dialog.
 #
 # Copyright (c) 1996 Sun Microsystems, Inc.
 #
@@ -10,9 +10,9 @@
 #
 # ToDo:
 #
-#	(1): Find out how many free colors are left in the colormap and
-#	     don't allocate too many colors.
-#	(2): Implement HSV color selection.
+#       (1): Find out how many free colors are left in the colormap and
+#            don't allocate too many colors.
+#       (2): Implement HSV color selection.
 #
 
 # Make sure namespaces exist
@@ -24,9 +24,9 @@ namespace eval ::tk::dialog::color {
 
 # ::tk::dialog::color:: --
 #
-#	Create a color dialog and let the user choose a color. This function
-#	should not be called directly. It is called by the tk_chooseColor
-#	function when a native color selector widget does not exist
+#       Create a color dialog and let the user choose a color. This function
+#       should not be called directly. It is called by the tk_chooseColor
+#       function when a native color selector widget does not exist
 #
 proc ::tk::dialog::color:: {args} {
     variable ::tk::Priv
@@ -68,12 +68,12 @@ proc ::tk::dialog::color:: {args} {
     set sc [winfo screen $data(-parent)]
     set winExists [winfo exists $w]
     if {!$winExists || $sc ne [winfo screen $w]} {
-	if {$winExists} {
-	    destroy $w
-	}
-	toplevel $w -class TkColorDialog -screen $sc
-	if {[tk windowingsystem] eq "x11"} {wm attributes $w -type dialog}
-	BuildDialog $w
+        if {$winExists} {
+            destroy $w
+        }
+        toplevel $w -class TkColorDialog -screen $sc
+        if {[tk windowingsystem] eq "x11"} {wm attributes $w -type dialog}
+        BuildDialog $w
     }
 
     # Dialog boxes should be transient with respect to their parent,
@@ -84,7 +84,7 @@ proc ::tk::dialog::color:: {args} {
     # the dialog transient if the parent is viewable.
 
     if {[winfo viewable [winfo toplevel $data(-parent)]] } {
-	wm transient $w $data(-parent)
+        wm transient $w $data(-parent)
     }
 
     # 5. Withdraw the window, then update all the geometry information
@@ -114,7 +114,7 @@ proc ::tk::dialog::color:: {args} {
 
 # ::tk::dialog::color::InitValues --
 #
-#	Get called during initialization or when user resets NUM_COLORBARS
+#       Get called during initialization or when user resets NUM_COLORBARS
 #
 proc ::tk::dialog::color::InitValues {dataName} {
     upvar ::tk::dialog::color::$dataName data
@@ -162,7 +162,7 @@ proc ::tk::dialog::color::InitValues {dataName} {
 
 # ::tk::dialog::color::Config  --
 #
-#	Parses the command line arguments to tk_chooseColor
+#       Parses the command line arguments to tk_chooseColor
 #
 proc ::tk::dialog::color::Config {dataName argList} {
     variable ::tk::Priv
@@ -171,38 +171,38 @@ proc ::tk::dialog::color::Config {dataName argList} {
     # 1: the configuration specs
     #
     if {[info exists Priv(selectColor)] && $Priv(selectColor) ne ""} {
-	set defaultColor $Priv(selectColor)
+        set defaultColor $Priv(selectColor)
     } else {
-	set defaultColor [. cget -background]
+        set defaultColor [. cget -background]
     }
 
     set specs [list \
-	    [list -initialcolor "" "" $defaultColor] \
-	    [list -parent "" "" "."] \
-	    [list -title "" "" [mc "Color"]] \
-	    ]
+            [list -initialcolor "" "" $defaultColor] \
+            [list -parent "" "" "."] \
+            [list -title "" "" [mc "Color"]] \
+            ]
 
     # 2: parse the arguments
     #
     tclParseConfigSpec ::tk::dialog::color::$dataName $specs "" $argList
 
     if {$data(-title) eq ""} {
-	set data(-title) " "
+        set data(-title) " "
     }
     if {[catch {winfo rgb . $data(-initialcolor)} err]} {
-	return -code error -errorcode [list TK LOOKUP COLOR $data(-initialcolor)] \
-	    $err
+        return -code error -errorcode [list TK LOOKUP COLOR $data(-initialcolor)] \
+            $err
     }
 
     if {![winfo exists $data(-parent)]} {
-	return -code error -errorcode [list TK LOOKUP WINDOW $data(-parent)] \
-	    "bad window path name \"$data(-parent)\""
+        return -code error -errorcode [list TK LOOKUP WINDOW $data(-parent)] \
+            "bad window path name \"$data(-parent)\""
     }
 }
 
 # ::tk::dialog::color::BuildDialog --
 #
-#	Build the dialog.
+#       Build the dialog.
 #
 proc ::tk::dialog::color::BuildDialog {w} {
     upvar ::tk::dialog::color::[winfo name $w] data
@@ -217,59 +217,59 @@ proc ::tk::dialog::color::BuildDialog {w} {
     set maxWidth [::tk::mcmaxamp &Red &Green &Blue]
     set maxWidth [expr {$maxWidth<6 ? 6 : $maxWidth}]
     set colorList {
-	red   "&Red"
-	green "&Green"
-	blue  "&Blue"
+        red   "&Red"
+        green "&Green"
+        blue  "&Blue"
     }
     foreach {color l} $colorList {
-	# each f frame contains an [R|G|B] entry and the equiv. color strip.
-	set f [frame $stripsFrame.$color]
+        # each f frame contains an [R|G|B] entry and the equiv. color strip.
+        set f [frame $stripsFrame.$color]
 
-	# The box frame contains the label and entry widget for an [R|G|B]
-	set box [frame $f.box]
+        # The box frame contains the label and entry widget for an [R|G|B]
+        set box [frame $f.box]
 
-	::tk::AmpWidget label $box.label -text "[mc $l]:" \
-		-width $maxWidth -anchor ne
-	bind $box.label <<AltUnderlined>> [list focus $box.entry]
+        ::tk::AmpWidget label $box.label -text "[mc $l]:" \
+                -width $maxWidth -anchor ne
+        bind $box.label <<AltUnderlined>> [list focus $box.entry]
 
-	entry $box.entry -textvariable \
-		::tk::dialog::color::[winfo name $w]($color,intensity) \
-		-width 4
-	pack $box.label -side left -fill y -padx 2 -pady 3
-	pack $box.entry -side left -anchor n -pady 0
-	pack $box -side left -fill both
+        entry $box.entry -textvariable \
+                ::tk::dialog::color::[winfo name $w]($color,intensity) \
+                -width 4
+        pack $box.label -side left -fill y -padx 2 -pady 3
+        pack $box.entry -side left -anchor n -pady 0
+        pack $box -side left -fill both
 
-	set height [expr {
-	    [winfo reqheight $box.entry] -
-	    2*([$box.entry cget -highlightthickness] + [$box.entry cget -bd])
-	}]
+        set height [expr {
+            [winfo reqheight $box.entry] -
+            2*([$box.entry cget -highlightthickness] + [$box.entry cget -bd])
+        }]
 
-	canvas $f.color -height $height \
-		-width $data(BARS_WIDTH) -relief sunken -bd 2
-	canvas $f.sel -height $data(PLGN_HEIGHT) \
-		-width $data(canvasWidth) -highlightthickness 0
-	pack $f.color -expand yes -fill both
-	pack $f.sel -expand yes -fill both
+        canvas $f.color -height $height \
+                -width $data(BARS_WIDTH) -relief sunken -bd 2
+        canvas $f.sel -height $data(PLGN_HEIGHT) \
+                -width $data(canvasWidth) -highlightthickness 0
+        pack $f.color -expand yes -fill both
+        pack $f.sel -expand yes -fill both
 
-	pack $f -side top -fill x -padx 0 -pady 2
+        pack $f -side top -fill x -padx 0 -pady 2
 
-	set data($color,entry) $box.entry
-	set data($color,col) $f.color
-	set data($color,sel) $f.sel
+        set data($color,entry) $box.entry
+        set data($color,col) $f.color
+        set data($color,sel) $f.sel
 
-	bind $data($color,col) <Configure> \
-		[list tk::dialog::color::DrawColorScale $w $color 1]
-	bind $data($color,col) <Enter> \
-		[list tk::dialog::color::EnterColorBar $w $color]
-	bind $data($color,col) <Leave> \
-		[list tk::dialog::color::LeaveColorBar $w $color]
+        bind $data($color,col) <Configure> \
+                [list tk::dialog::color::DrawColorScale $w $color 1]
+        bind $data($color,col) <Enter> \
+                [list tk::dialog::color::EnterColorBar $w $color]
+        bind $data($color,col) <Leave> \
+                [list tk::dialog::color::LeaveColorBar $w $color]
 
-	bind $data($color,sel) <Enter> \
-		[list tk::dialog::color::EnterColorBar $w $color]
-	bind $data($color,sel) <Leave> \
-		[list tk::dialog::color::LeaveColorBar $w $color]
+        bind $data($color,sel) <Enter> \
+                [list tk::dialog::color::EnterColorBar $w $color]
+        bind $data($color,sel) <Leave> \
+                [list tk::dialog::color::LeaveColorBar $w $color]
 
-	bind $box.entry <Return> [list tk::dialog::color::HandleRGBEntry $w]
+        bind $box.entry <Return> [list tk::dialog::color::HandleRGBEntry $w]
     }
 
     pack $stripsFrame -side left -fill both -padx 4 -pady 10
@@ -279,10 +279,10 @@ proc ::tk::dialog::color::BuildDialog {w} {
     #
     set selFrame [frame $topFrame.sel]
     set lab [::tk::AmpWidget label $selFrame.lab \
-	    -text [mc "&Selection:"] -anchor sw]
+            -text [mc "&Selection:"] -anchor sw]
     set ent [entry $selFrame.ent \
-	    -textvariable ::tk::dialog::color::[winfo name $w](selection) \
-	    -width 16]
+            -textvariable ::tk::dialog::color::[winfo name $w](selection) \
+            -width 16]
     set f1  [frame $selFrame.f1 -relief sunken -bd 2]
     set data(finalCanvas) [frame $f1.demo -bd 0 -width 100 -height 70]
 
@@ -299,10 +299,10 @@ proc ::tk::dialog::color::BuildDialog {w} {
     #
     set botFrame [frame $w.bot -relief raised -bd 1]
 
-    ::tk::AmpWidget button $botFrame.ok     -text [mc "&OK"]		\
-	    -command [list tk::dialog::color::OkCmd $w]
-    ::tk::AmpWidget button $botFrame.cancel -text [mc "&Cancel"]	\
-	    -command [list tk::dialog::color::CancelCmd $w]
+    ::tk::AmpWidget button $botFrame.ok     -text [mc "&OK"]            \
+            -command [list tk::dialog::color::OkCmd $w]
+    ::tk::AmpWidget button $botFrame.cancel -text [mc "&Cancel"]        \
+            -command [list tk::dialog::color::CancelCmd $w]
 
     set data(okBtn)      $botFrame.ok
     set data(cancelBtn)  $botFrame.cancel
@@ -325,7 +325,7 @@ proc ::tk::dialog::color::BuildDialog {w} {
 
 # ::tk::dialog::color::SetRGBValue --
 #
-#	Sets the current selection of the dialog box
+#       Sets the current selection of the dialog box
 #
 proc ::tk::dialog::color::SetRGBValue {w color} {
     upvar ::tk::dialog::color::[winfo name $w] data
@@ -338,28 +338,28 @@ proc ::tk::dialog::color::SetRGBValue {w color} {
 
     # Now compute the new x value of each colorbars pointer polygon
     foreach color {red green blue} {
-	set x [RgbToX $w $data($color,intensity)]
-	MoveSelector $w $data($color,sel) $color $x 0
+        set x [RgbToX $w $data($color,intensity)]
+        MoveSelector $w $data($color,sel) $color $x 0
     }
 }
 
 # ::tk::dialog::color::XToRgb --
 #
-#	Converts a screen coordinate to intensity
+#       Converts a screen coordinate to intensity
 #
 proc ::tk::dialog::color::XToRgb {w x} {
     upvar ::tk::dialog::color::[winfo name $w] data
 
     set x [expr {($x * $data(intensityIncr))/ $data(colorbarWidth)}]
     if {$x > 255} {
-	set x 255
+        set x 255
     }
     return $x
 }
 
 # ::tk::dialog::color::RgbToX
 #
-#	Converts an intensity to screen coordinate.
+#       Converts an intensity to screen coordinate.
 #
 proc ::tk::dialog::color::RgbToX {w color} {
     upvar ::tk::dialog::color::[winfo name $w] data
@@ -369,8 +369,8 @@ proc ::tk::dialog::color::RgbToX {w color} {
 
 # ::tk::dialog::color::DrawColorScale --
 #
-#	Draw color scale is called whenever the size of one of the color
-#	scale canvases is changed.
+#       Draw color scale is called whenever the size of one of the color
+#       scale canvases is changed.
 #
 proc ::tk::dialog::color::DrawColorScale {w c {create 0}} {
     upvar ::tk::dialog::color::[winfo name $w] data
@@ -382,82 +382,82 @@ proc ::tk::dialog::color::DrawColorScale {w c {create 0}} {
 
     # First handle the case that we are creating everything for the first time.
     if {$create} {
-	# First remove all the lines that already exist.
-	if { $data(lines,$c,last) > $data(lines,$c,start)} {
-	    for {set i $data(lines,$c,start)} \
-		    {$i <= $data(lines,$c,last)} {incr i} {
-		$sel delete $i
-	    }
-	}
-	# Delete the selector if it exists
-	if {[info exists data($c,index)]} {
-	    $sel delete $data($c,index)
-	}
+        # First remove all the lines that already exist.
+        if { $data(lines,$c,last) > $data(lines,$c,start)} {
+            for {set i $data(lines,$c,start)} \
+                    {$i <= $data(lines,$c,last)} {incr i} {
+                $sel delete $i
+            }
+        }
+        # Delete the selector if it exists
+        if {[info exists data($c,index)]} {
+            $sel delete $data($c,index)
+        }
 
-	# Draw the selection polygons
-	CreateSelector $w $sel $c
-	$sel bind $data($c,index) <ButtonPress-1> \
-		[list tk::dialog::color::StartMove $w $sel $c %x $data(selPad) 1]
-	$sel bind $data($c,index) <B1-Motion> \
-		[list tk::dialog::color::MoveSelector $w $sel $c %x $data(selPad)]
-	$sel bind $data($c,index) <ButtonRelease-1> \
-		[list tk::dialog::color::ReleaseMouse $w $sel $c %x $data(selPad)]
+        # Draw the selection polygons
+        CreateSelector $w $sel $c
+        $sel bind $data($c,index) <ButtonPress-1> \
+                [list tk::dialog::color::StartMove $w $sel $c %x $data(selPad) 1]
+        $sel bind $data($c,index) <B1-Motion> \
+                [list tk::dialog::color::MoveSelector $w $sel $c %x $data(selPad)]
+        $sel bind $data($c,index) <ButtonRelease-1> \
+                [list tk::dialog::color::ReleaseMouse $w $sel $c %x $data(selPad)]
 
-	set height [winfo height $col]
-	# Create an invisible region under the colorstrip to catch mouse clicks
-	# that aren't on the selector.
-	set data($c,clickRegion) [$sel create rectangle 0 0 \
-		$data(canvasWidth) $height -fill {} -outline {}]
+        set height [winfo height $col]
+        # Create an invisible region under the colorstrip to catch mouse clicks
+        # that aren't on the selector.
+        set data($c,clickRegion) [$sel create rectangle 0 0 \
+                $data(canvasWidth) $height -fill {} -outline {}]
 
-	bind $col <ButtonPress-1> \
-		[list tk::dialog::color::StartMove $w $sel $c %x $data(colorPad)]
-	bind $col <B1-Motion> \
-		[list tk::dialog::color::MoveSelector $w $sel $c %x $data(colorPad)]
-	bind $col <ButtonRelease-1> \
-		[list tk::dialog::color::ReleaseMouse $w $sel $c %x $data(colorPad)]
+        bind $col <ButtonPress-1> \
+                [list tk::dialog::color::StartMove $w $sel $c %x $data(colorPad)]
+        bind $col <B1-Motion> \
+                [list tk::dialog::color::MoveSelector $w $sel $c %x $data(colorPad)]
+        bind $col <ButtonRelease-1> \
+                [list tk::dialog::color::ReleaseMouse $w $sel $c %x $data(colorPad)]
 
-	$sel bind $data($c,clickRegion) <ButtonPress-1> \
-		[list tk::dialog::color::StartMove $w $sel $c %x $data(selPad)]
-	$sel bind $data($c,clickRegion) <B1-Motion> \
-		[list tk::dialog::color::MoveSelector $w $sel $c %x $data(selPad)]
-	$sel bind $data($c,clickRegion) <ButtonRelease-1> \
-		[list tk::dialog::color::ReleaseMouse $w $sel $c %x $data(selPad)]
+        $sel bind $data($c,clickRegion) <ButtonPress-1> \
+                [list tk::dialog::color::StartMove $w $sel $c %x $data(selPad)]
+        $sel bind $data($c,clickRegion) <B1-Motion> \
+                [list tk::dialog::color::MoveSelector $w $sel $c %x $data(selPad)]
+        $sel bind $data($c,clickRegion) <ButtonRelease-1> \
+                [list tk::dialog::color::ReleaseMouse $w $sel $c %x $data(selPad)]
     } else {
-	# l is the canvas index of the first colorbar.
-	set l $data(lines,$c,start)
+        # l is the canvas index of the first colorbar.
+        set l $data(lines,$c,start)
     }
 
     # Draw the color bars.
     set highlightW [expr {[$col cget -highlightthickness] + [$col cget -bd]}]
     for {set i 0} { $i < $data(NUM_COLORBARS)} { incr i} {
-	set intensity [expr {$i * $data(intensityIncr)}]
-	set startx [expr {$i * $data(colorbarWidth) + $highlightW}]
-	if {$c eq "red"} {
-	    set color [format "#%02x%02x%02x" \
-		    $intensity $data(green,intensity) $data(blue,intensity)]
-	} elseif {$c eq "green"} {
-	    set color [format "#%02x%02x%02x" \
-		    $data(red,intensity) $intensity $data(blue,intensity)]
-	} else {
-	    set color [format "#%02x%02x%02x" \
-		    $data(red,intensity) $data(green,intensity) $intensity]
-	}
+        set intensity [expr {$i * $data(intensityIncr)}]
+        set startx [expr {$i * $data(colorbarWidth) + $highlightW}]
+        if {$c eq "red"} {
+            set color [format "#%02x%02x%02x" \
+                    $intensity $data(green,intensity) $data(blue,intensity)]
+        } elseif {$c eq "green"} {
+            set color [format "#%02x%02x%02x" \
+                    $data(red,intensity) $intensity $data(blue,intensity)]
+        } else {
+            set color [format "#%02x%02x%02x" \
+                    $data(red,intensity) $data(green,intensity) $intensity]
+        }
 
-	if {$create} {
-	    set index [$col create rect $startx $highlightW \
-		    [expr {$startx +$data(colorbarWidth)}] \
-		    [expr {[winfo height $col] + $highlightW}] \
-		    -fill $color -outline $color]
-	} else {
-	    $col itemconfigure $l -fill $color -outline $color
-	    incr l
-	}
+        if {$create} {
+            set index [$col create rect $startx $highlightW \
+                    [expr {$startx +$data(colorbarWidth)}] \
+                    [expr {[winfo height $col] + $highlightW}] \
+                    -fill $color -outline $color]
+        } else {
+            $col itemconfigure $l -fill $color -outline $color
+            incr l
+        }
     }
     $sel raise $data($c,index)
 
     if {$create} {
-	set data(lines,$c,last) $index
-	set data(lines,$c,start) [expr {$index - $data(NUM_COLORBARS) + 1}]
+        set data(lines,$c,last) $index
+        set data(lines,$c,start) [expr {$index - $data(NUM_COLORBARS) + 1}]
     }
 
     RedrawFinalColor $w
@@ -465,36 +465,36 @@ proc ::tk::dialog::color::DrawColorScale {w c {create 0}} {
 
 # ::tk::dialog::color::CreateSelector --
 #
-#	Creates and draws the selector polygon at the position
-#	$data($c,intensity).
+#       Creates and draws the selector polygon at the position
+#       $data($c,intensity).
 #
 proc ::tk::dialog::color::CreateSelector {w sel c } {
     upvar ::tk::dialog::color::[winfo name $w] data
     set data($c,index) [$sel create polygon \
-	    0 $data(PLGN_HEIGHT) \
-	    $data(PLGN_WIDTH) $data(PLGN_HEIGHT) \
-	    $data(indent) 0]
+            0 $data(PLGN_HEIGHT) \
+            $data(PLGN_WIDTH) $data(PLGN_HEIGHT) \
+            $data(indent) 0]
     set data($c,x) [RgbToX $w $data($c,intensity)]
     $sel move $data($c,index) $data($c,x) 0
 }
 
 # ::tk::dialog::color::RedrawFinalColor
 #
-#	Combines the intensities of the three colors into the final color
+#       Combines the intensities of the three colors into the final color
 #
 proc ::tk::dialog::color::RedrawFinalColor {w} {
     upvar ::tk::dialog::color::[winfo name $w] data
 
     set color [format "#%02x%02x%02x" $data(red,intensity) \
-	    $data(green,intensity) $data(blue,intensity)]
+            $data(green,intensity) $data(blue,intensity)]
 
     $data(finalCanvas) configure -bg $color
     set data(finalColor) $color
     set data(selection) $color
     set data(finalRGB) [list \
-	    $data(red,intensity) \
-	    $data(green,intensity) \
-	    $data(blue,intensity)]
+            $data(red,intensity) \
+            $data(green,intensity) \
+            $data(blue,intensity)]
 }
 
 # ::tk::dialog::color::RedrawColorBars --
@@ -507,36 +507,36 @@ proc ::tk::dialog::color::RedrawColorBars {w colorChanged} {
     upvar ::tk::dialog::color::[winfo name $w] data
 
     switch $colorChanged {
-	red {
-	    DrawColorScale $w green
-	    DrawColorScale $w blue
-	}
-	green {
-	    DrawColorScale $w red
-	    DrawColorScale $w blue
-	}
-	blue {
-	    DrawColorScale $w red
-	    DrawColorScale $w green
-	}
-	default {
-	    DrawColorScale $w red
-	    DrawColorScale $w green
-	    DrawColorScale $w blue
-	}
+        red {
+            DrawColorScale $w green
+            DrawColorScale $w blue
+        }
+        green {
+            DrawColorScale $w red
+            DrawColorScale $w blue
+        }
+        blue {
+            DrawColorScale $w red
+            DrawColorScale $w green
+        }
+        default {
+            DrawColorScale $w red
+            DrawColorScale $w green
+            DrawColorScale $w blue
+        }
     }
     RedrawFinalColor $w
 }
 
 #----------------------------------------------------------------------
-#			Event handlers
+#                       Event handlers
 #----------------------------------------------------------------------
 
 # ::tk::dialog::color::StartMove --
 #
-#	Handles a mousedown button event over the selector polygon.
-#	Adds the bindings for moving the mouse while the button is
-#	pressed.  Sets the binding for the button-release event.
+#       Handles a mousedown button event over the selector polygon.
+#       Adds the bindings for moving the mouse while the button is
+#       pressed.  Sets the binding for the button-release event.
 #
 # Params: sel is the selector canvas window, color is the color of the strip.
 #
@@ -544,7 +544,7 @@ proc ::tk::dialog::color::StartMove {w sel color x delta {dontMove 0}} {
     upvar ::tk::dialog::color::[winfo name $w] data
 
     if {!$dontMove} {
-	MoveSelector $w $sel $color $x $delta
+        MoveSelector $w $sel $color $x $delta
     }
 }
 
@@ -563,9 +563,9 @@ proc ::tk::dialog::color::MoveSelector {w sel color x delta} {
     incr x -$delta
 
     if { $x < 0 } {
-	set x 0
+        set x 0
     } elseif { $x > $data(BARS_WIDTH)} {
-	set x $data(BARS_WIDTH)
+        set x $data(BARS_WIDTH)
     }
     set diff [expr {$x - $data($color,x)}]
     $sel move $data($color,index) $diff 0
@@ -595,28 +595,28 @@ proc ::tk::dialog::color::ReleaseMouse {w sel color x delta} {
 
 # ::tk::dialog::color::ResizeColorbars --
 #
-#	Completely redraws the colorbars, including resizing the
-#	colorstrips
+#       Completely redraws the colorbars, including resizing the
+#       colorstrips
 #
 proc ::tk::dialog::color::ResizeColorBars {w} {
     upvar ::tk::dialog::color::[winfo name $w] data
 
     if {
-	($data(BARS_WIDTH) < $data(NUM_COLORBARS)) ||
-	(($data(BARS_WIDTH) % $data(NUM_COLORBARS)) != 0)
+        ($data(BARS_WIDTH) < $data(NUM_COLORBARS)) ||
+        (($data(BARS_WIDTH) % $data(NUM_COLORBARS)) != 0)
     } then {
-	set data(BARS_WIDTH) $data(NUM_COLORBARS)
+        set data(BARS_WIDTH) $data(NUM_COLORBARS)
     }
     InitValues [winfo name $w]
     foreach color {red green blue} {
-	$data($color,col) configure -width $data(canvasWidth)
-	DrawColorScale $w $color 1
+        $data($color,col) configure -width $data(canvasWidth)
+        DrawColorScale $w $color 1
     }
 }
 
 # ::tk::dialog::color::HandleSelEntry --
 #
-#	Handles the return keypress event in the "Selection:" entry
+#       Handles the return keypress event in the "Selection:" entry
 #
 proc ::tk::dialog::color::HandleSelEntry {w} {
     upvar ::tk::dialog::color::[winfo name $w] data
@@ -624,8 +624,8 @@ proc ::tk::dialog::color::HandleSelEntry {w} {
     set text [string trim $data(selection)]
     # Check to make sure that the color is valid
     if {[catch {set color [winfo rgb . $text]} ]} {
-	set data(selection) $data(finalColor)
-	return
+        set data(selection) $data(finalColor)
+        return
     }
 
     set R [expr {[lindex $color 0]/0x100}]
@@ -638,28 +638,28 @@ proc ::tk::dialog::color::HandleSelEntry {w} {
 
 # ::tk::dialog::color::HandleRGBEntry --
 #
-#	Handles the return keypress event in the R, G or B entry
+#       Handles the return keypress event in the R, G or B entry
 #
 proc ::tk::dialog::color::HandleRGBEntry {w} {
     upvar ::tk::dialog::color::[winfo name $w] data
 
     foreach c {red green blue} {
-	if {[catch {
-	    set data($c,intensity) [expr {int($data($c,intensity))}]
-	}]} {
-	    set data($c,intensity) 0
-	}
+        if {[catch {
+            set data($c,intensity) [expr {int($data($c,intensity))}]
+        }]} {
+            set data($c,intensity) 0
+        }
 
-	if {$data($c,intensity) < 0} {
-	    set data($c,intensity) 0
-	}
-	if {$data($c,intensity) > 255} {
-	    set data($c,intensity) 255
-	}
+        if {$data($c,intensity) < 0} {
+            set data($c,intensity) 0
+        }
+        if {$data($c,intensity) > 255} {
+            set data($c,intensity) 255
+        }
     }
 
     SetRGBValue $w "$data(red,intensity) \
-	$data(green,intensity) $data(blue,intensity)"
+        $data(green,intensity) $data(blue,intensity)"
 }
 
 # mouse cursor enters a color bar

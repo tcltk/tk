@@ -53,12 +53,12 @@ TtkNullElementDraw(
  */
 
 typedef struct {
-    Tcl_Obj	*backgroundObj;
+    Tcl_Obj     *backgroundObj;
 } BackgroundElement;
 
 static Ttk_ElementOptionSpec BackgroundElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	    Tk_Offset(BackgroundElement,backgroundObj), DEFAULT_BACKGROUND },
+            Tk_Offset(BackgroundElement,backgroundObj), DEFAULT_BACKGROUND },
     { NULL, 0, 0, NULL }
 };
 
@@ -70,8 +70,8 @@ static void FillElementDraw(
     Tk_3DBorder backgroundPtr = Tk_Get3DBorderFromObj(tkwin,bg->backgroundObj);
 
     XFillRectangle(Tk_Display(tkwin), d,
-	Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
-	b.x, b.y, b.width, b.height);
+        Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
+        b.x, b.y, b.width, b.height);
 }
 
 static void BackgroundElementDraw(
@@ -79,8 +79,8 @@ static void BackgroundElementDraw(
     Drawable d, Ttk_Box b, unsigned int state)
 {
     FillElementDraw(
-	clientData, elementRecord, tkwin,
-	d, Ttk_WinBox(tkwin), state);
+        clientData, elementRecord, tkwin,
+        d, Ttk_WinBox(tkwin), state);
 }
 
 static Ttk_ElementSpec FillElementSpec = {
@@ -104,18 +104,18 @@ static Ttk_ElementSpec BackgroundElementSpec = {
  */
 
 typedef struct {
-    Tcl_Obj	*borderObj;
-    Tcl_Obj	*borderWidthObj;
-    Tcl_Obj	*reliefObj;
+    Tcl_Obj     *borderObj;
+    Tcl_Obj     *borderWidthObj;
+    Tcl_Obj     *reliefObj;
 } BorderElement;
 
 static Ttk_ElementOptionSpec BorderElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(BorderElement,borderObj), DEFAULT_BACKGROUND },
+        Tk_Offset(BorderElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(BorderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+        Tk_Offset(BorderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF,
-	Tk_Offset(BorderElement,reliefObj), "flat" },
+        Tk_Offset(BorderElement,reliefObj), "flat" },
     { NULL, 0, 0, NULL }
 };
 
@@ -142,8 +142,8 @@ static void BorderElementDraw(
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
 
     if (border && borderWidth > 0 && relief != TK_RELIEF_FLAT) {
-	Tk_Draw3DRectangle(tkwin, d, border,
-	    b.x, b.y, b.width, b.height, borderWidth,relief);
+        Tk_Draw3DRectangle(tkwin, d, border,
+            b.x, b.y, b.width, b.height, borderWidth,relief);
     }
 }
 
@@ -157,18 +157,18 @@ static Ttk_ElementSpec BorderElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Field element.
- * 	Used for editable fields.
+ *      Used for editable fields.
  */
 typedef struct {
-    Tcl_Obj	*borderObj;
-    Tcl_Obj	*borderWidthObj;
+    Tcl_Obj     *borderObj;
+    Tcl_Obj     *borderWidthObj;
 } FieldElement;
 
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     { "-fieldbackground", TK_OPTION_BORDER,
-	Tk_Offset(FieldElement,borderObj), "white" },
+        Tk_Offset(FieldElement,borderObj), "white" },
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(FieldElement,borderWidthObj), "2" },
+        Tk_Offset(FieldElement,borderWidthObj), "2" },
     { NULL, 0, 0, NULL }
 };
 
@@ -192,7 +192,7 @@ static void FieldElementDraw(
 
     Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj, &borderWidth);
     Tk_Fill3DRectangle(tkwin, d, border,
-	    b.x, b.y, b.width, b.height, borderWidth, TK_RELIEF_SUNKEN);
+            b.x, b.y, b.width, b.height, borderWidth, TK_RELIEF_SUNKEN);
 }
 
 static Ttk_ElementSpec FieldElementSpec = {
@@ -215,18 +215,18 @@ static Ttk_ElementSpec FieldElementSpec = {
  */
 
 typedef struct {
-    Tcl_Obj	*paddingObj;
-    Tcl_Obj	*reliefObj;
-    Tcl_Obj	*shiftreliefObj;
+    Tcl_Obj     *paddingObj;
+    Tcl_Obj     *reliefObj;
+    Tcl_Obj     *shiftreliefObj;
 } PaddingElement;
 
 static Ttk_ElementOptionSpec PaddingElementOptions[] = {
     { "-padding", TK_OPTION_STRING,
-	Tk_Offset(PaddingElement,paddingObj), "0" },
+        Tk_Offset(PaddingElement,paddingObj), "0" },
     { "-relief", TK_OPTION_RELIEF,
-	Tk_Offset(PaddingElement,reliefObj), "flat" },
+        Tk_Offset(PaddingElement,reliefObj), "flat" },
     { "-shiftrelief", TK_OPTION_INT,
-	Tk_Offset(PaddingElement,shiftreliefObj), "0" },
+        Tk_Offset(PaddingElement,shiftreliefObj), "0" },
     { NULL, 0, 0, NULL }
 };
 
@@ -255,16 +255,16 @@ static Ttk_ElementSpec PaddingElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Focus ring element.
- * 	Draws a dashed focus ring, if the widget has keyboard focus.
+ *      Draws a dashed focus ring, if the widget has keyboard focus.
  */
 typedef struct {
-    Tcl_Obj	*focusColorObj;
-    Tcl_Obj	*focusThicknessObj;
+    Tcl_Obj     *focusColorObj;
+    Tcl_Obj     *focusThicknessObj;
 } FocusElement;
 
 /*
  * DrawFocusRing --
- * 	Draw a dotted rectangle to indicate focus.
+ *      Draw a dotted rectangle to indicate focus.
  */
 static void DrawFocusRing(
     Tk_Window tkwin, Drawable d, Tcl_Obj *colorObj, Ttk_Box b)
@@ -288,9 +288,9 @@ static void DrawFocusRing(
 
 static Ttk_ElementOptionSpec FocusElementOptions[] = {
     { "-focuscolor",TK_OPTION_COLOR,
-	Tk_Offset(FocusElement,focusColorObj), "black" },
+        Tk_Offset(FocusElement,focusColorObj), "black" },
     { "-focusthickness",TK_OPTION_PIXELS,
-	Tk_Offset(FocusElement,focusThicknessObj), "1" },
+        Tk_Offset(FocusElement,focusThicknessObj), "1" },
     { NULL, 0, 0, NULL }
 };
 
@@ -313,8 +313,8 @@ static void FocusElementDraw(
     int focusThickness = 0;
 
     if (state & TTK_STATE_FOCUS) {
-	Tcl_GetIntFromObj(NULL,focus->focusThicknessObj,&focusThickness);
-	DrawFocusRing(tkwin, d, focus->focusColorObj, b);
+        Tcl_GetIntFromObj(NULL,focus->focusThicknessObj,&focusThickness);
+        DrawFocusRing(tkwin, d, focus->focusColorObj, b);
     }
 }
 
@@ -328,21 +328,21 @@ static Ttk_ElementSpec FocusElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Separator element.
- * 	Just draws a horizontal or vertical bar.
- * 	Three elements are defined: horizontal, vertical, and general;
- *	the general separator checks the "-orient" option.
+ *      Just draws a horizontal or vertical bar.
+ *      Three elements are defined: horizontal, vertical, and general;
+ *      the general separator checks the "-orient" option.
  */
 
 typedef struct {
-    Tcl_Obj	*orientObj;
-    Tcl_Obj	*borderObj;
+    Tcl_Obj     *orientObj;
+    Tcl_Obj     *borderObj;
 } SeparatorElement;
 
 static Ttk_ElementOptionSpec SeparatorElementOptions[] = {
     { "-orient", TK_OPTION_ANY,
-	Tk_Offset(SeparatorElement, orientObj), "horizontal" },
+        Tk_Offset(SeparatorElement, orientObj), "horizontal" },
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(SeparatorElement,borderObj), DEFAULT_BACKGROUND },
+        Tk_Offset(SeparatorElement,borderObj), DEFAULT_BACKGROUND },
     { NULL, 0, 0, NULL }
 };
 
@@ -387,14 +387,14 @@ static void GeneralSeparatorElementDraw(
     int orient;
     Ttk_GetOrientFromObj(NULL, separator->orientObj, &orient);
     switch (orient) {
-	case TTK_ORIENT_HORIZONTAL:
-	    HorizontalSeparatorElementDraw(
-		clientData, elementRecord, tkwin, d, b, state);
-	    break;
-	case TTK_ORIENT_VERTICAL:
-	    VerticalSeparatorElementDraw(
-		clientData, elementRecord, tkwin, d, b, state);
-	    break;
+        case TTK_ORIENT_HORIZONTAL:
+            HorizontalSeparatorElementDraw(
+                clientData, elementRecord, tkwin, d, b, state);
+            break;
+        case TTK_ORIENT_VERTICAL:
+            VerticalSeparatorElementDraw(
+                clientData, elementRecord, tkwin, d, b, state);
+            break;
     }
 }
 
@@ -427,12 +427,12 @@ static Ttk_ElementSpec SeparatorElementSpec = {
  */
 
 typedef struct {
-    Tcl_Obj	*backgroundObj;
+    Tcl_Obj     *backgroundObj;
 } SizegripElement;
 
 static Ttk_ElementOptionSpec SizegripOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
+        Tk_Offset(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
     {0,0,0,0}
 };
 
@@ -456,10 +456,10 @@ static void SizegripDraw(
     int x1 = b.x + b.width-1, y1 = b.y + b.height-1, x2 = x1, y2 = y1;
 
     while (gripCount--) {
-	x1 -= gripSpace; y2 -= gripSpace;
-	XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
-	XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
-	XDrawLine(Tk_Display(tkwin), d, lightGC, x1,y1, x2,y2); --x1; --y2;
+        x1 -= gripSpace; y2 -= gripSpace;
+        XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
+        XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
+        XDrawLine(Tk_Display(tkwin), d, lightGC, x1,y1, x2,y2); --x1; --y2;
     }
 }
 
@@ -493,17 +493,17 @@ typedef struct {
 
 static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
+        Tk_Offset(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-indicatorcolor", TK_OPTION_BORDER,
-	Tk_Offset(IndicatorElement,colorObj), DEFAULT_BACKGROUND },
+        Tk_Offset(IndicatorElement,colorObj), DEFAULT_BACKGROUND },
     { "-indicatorrelief", TK_OPTION_RELIEF,
-	Tk_Offset(IndicatorElement,reliefObj), "raised" },
+        Tk_Offset(IndicatorElement,reliefObj), "raised" },
     { "-indicatordiameter", TK_OPTION_PIXELS,
-	Tk_Offset(IndicatorElement,diameterObj), "12" },
+        Tk_Offset(IndicatorElement,diameterObj), "12" },
     { "-indicatormargin", TK_OPTION_STRING,
-	Tk_Offset(IndicatorElement,marginObj), "0 2 4 2" },
+        Tk_Offset(IndicatorElement,marginObj), "0 2 4 2" },
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(IndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+        Tk_Offset(IndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { NULL, 0, 0, NULL }
 };
 
@@ -544,9 +544,9 @@ static void SquareIndicatorElementDraw(
 
     diameter = b.width < b.height ? b.width : b.height;
     Tk_Fill3DRectangle(tkwin, d, interior, b.x, b.y,
-	    diameter, diameter,borderWidth, TK_RELIEF_FLAT);
+            diameter, diameter,borderWidth, TK_RELIEF_FLAT);
     Tk_Draw3DRectangle(tkwin, d, border, b.x, b.y,
-	    diameter, diameter, borderWidth, relief);
+            diameter, diameter, borderWidth, relief);
 }
 
 /*
@@ -639,17 +639,17 @@ typedef struct {
 
 static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(MenuIndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
+        Tk_Offset(MenuIndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-indicatorwidth", TK_OPTION_PIXELS,
-	Tk_Offset(MenuIndicatorElement,widthObj), "4.0m" },
+        Tk_Offset(MenuIndicatorElement,widthObj), "4.0m" },
     { "-indicatorheight", TK_OPTION_PIXELS,
-	Tk_Offset(MenuIndicatorElement,heightObj), "1.7m" },
+        Tk_Offset(MenuIndicatorElement,heightObj), "1.7m" },
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(MenuIndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+        Tk_Offset(MenuIndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-indicatorrelief", TK_OPTION_RELIEF,
-	Tk_Offset(MenuIndicatorElement,reliefObj),"raised" },
+        Tk_Offset(MenuIndicatorElement,reliefObj),"raised" },
     { "-indicatormargin", TK_OPTION_STRING,
-	    Tk_Offset(MenuIndicatorElement,marginObj), "5 0" },
+            Tk_Offset(MenuIndicatorElement,marginObj), "5 0" },
     { NULL, 0, 0, NULL }
 };
 
@@ -679,7 +679,7 @@ static void MenuIndicatorElementDraw(
     b = Ttk_PadBox(b, margins);
     Tk_GetPixelsFromObj(NULL, tkwin, mi->borderWidthObj, &borderWidth);
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
-	    borderWidth, TK_RELIEF_RAISED);
+            borderWidth, TK_RELIEF_RAISED);
 }
 
 static Ttk_ElementSpec MenuIndicatorElementSpec = {
@@ -693,8 +693,8 @@ static Ttk_ElementSpec MenuIndicatorElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Arrow elements.
  *
- * 	Draws a solid triangle inside a box.
- * 	clientData is an enum ArrowDirection pointer.
+ *      Draws a solid triangle inside a box.
+ *      clientData is an enum ArrowDirection pointer.
  */
 
 static int ArrowElements[] = { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT };
@@ -708,15 +708,15 @@ typedef struct {
 
 static Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(ArrowElement,borderObj), DEFAULT_BACKGROUND },
+        Tk_Offset(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-relief",TK_OPTION_RELIEF,
-	Tk_Offset(ArrowElement,reliefObj),"raised"},
+        Tk_Offset(ArrowElement,reliefObj),"raised"},
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(ArrowElement,borderWidthObj), "1" },
+        Tk_Offset(ArrowElement,borderWidthObj), "1" },
     { "-arrowcolor",TK_OPTION_COLOR,
-	Tk_Offset(ArrowElement,colorObj),"black"},
+        Tk_Offset(ArrowElement,colorObj),"black"},
     { "-arrowsize", TK_OPTION_PIXELS,
-	Tk_Offset(ArrowElement,sizeObj), "14" },
+        Tk_Offset(ArrowElement,sizeObj), "14" },
     { NULL, 0, 0, NULL }
 };
 
@@ -751,10 +751,10 @@ static void ArrowElementDraw(
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
 
     Tk_Fill3DRectangle(
-	tkwin, d, border, b.x, b.y, b.width, b.height, borderWidth, relief);
+        tkwin, d, border, b.x, b.y, b.width, b.height, borderWidth, relief);
 
     TtkFillArrow(Tk_Display(tkwin), d, Tk_GCForColor(arrowColor, d),
-	Ttk_PadBox(b, ArrowMargins), direction);
+        Ttk_PadBox(b, ArrowMargins), direction);
 }
 
 static Ttk_ElementSpec ArrowElementSpec = {
@@ -779,11 +779,11 @@ typedef struct {
 
 static Ttk_ElementOptionSpec TroughElementOptions[] = {
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(TroughElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+        Tk_Offset(TroughElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-troughcolor", TK_OPTION_BORDER,
-	Tk_Offset(TroughElement,colorObj), DEFAULT_BACKGROUND },
+        Tk_Offset(TroughElement,colorObj), DEFAULT_BACKGROUND },
     { "-troughrelief",TK_OPTION_RELIEF,
-	Tk_Offset(TroughElement,reliefObj), "sunken" },
+        Tk_Offset(TroughElement,reliefObj), "sunken" },
     { NULL, 0, 0, NULL }
 };
 
@@ -811,7 +811,7 @@ static void TroughElementDraw(
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->borderWidthObj, &borderWidth);
 
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
-	    borderWidth, relief);
+            borderWidth, relief);
 }
 
 static Ttk_ElementSpec TroughElementSpec = {
@@ -839,15 +839,15 @@ typedef struct {
 
 static Ttk_ElementOptionSpec ThumbElementOptions[] = {
     { "-orient", TK_OPTION_ANY,
-	Tk_Offset(ThumbElement, orientObj), "horizontal" },
+        Tk_Offset(ThumbElement, orientObj), "horizontal" },
     { "-width", TK_OPTION_PIXELS,
-	Tk_Offset(ThumbElement,thicknessObj), DEFAULT_ARROW_SIZE },
+        Tk_Offset(ThumbElement,thicknessObj), DEFAULT_ARROW_SIZE },
     { "-relief", TK_OPTION_RELIEF,
-	Tk_Offset(ThumbElement,reliefObj), "raised" },
+        Tk_Offset(ThumbElement,reliefObj), "raised" },
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(ThumbElement,borderObj), DEFAULT_BACKGROUND },
+        Tk_Offset(ThumbElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(ThumbElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+        Tk_Offset(ThumbElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { NULL, 0, 0, NULL }
 };
 
@@ -862,11 +862,11 @@ static void ThumbElementSize(
     Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
 
     if (orient == TTK_ORIENT_VERTICAL) {
-	*widthPtr = thickness;
-	*heightPtr = MIN_THUMB_SIZE;
+        *widthPtr = thickness;
+        *heightPtr = MIN_THUMB_SIZE;
     } else {
-	*widthPtr = MIN_THUMB_SIZE;
-	*heightPtr = thickness;
+        *widthPtr = MIN_THUMB_SIZE;
+        *heightPtr = thickness;
     }
 }
 
@@ -881,7 +881,7 @@ static void ThumbElementDraw(
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, thumb->reliefObj, &relief);
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
-	    borderWidth, relief);
+            borderWidth, relief);
 }
 
 static Ttk_ElementSpec ThumbElementSpec = {
@@ -900,7 +900,7 @@ static Ttk_ElementSpec ThumbElementSpec = {
  */
 
 typedef struct {
-    Tcl_Obj *orientObj;	     /* orientation of overall slider */
+    Tcl_Obj *orientObj;      /* orientation of overall slider */
     Tcl_Obj *lengthObj;      /* slider length */
     Tcl_Obj *thicknessObj;   /* slider thickness */
     Tcl_Obj *reliefObj;      /* the relief for this object */
@@ -910,17 +910,17 @@ typedef struct {
 
 static Ttk_ElementOptionSpec SliderElementOptions[] = {
     { "-sliderlength", TK_OPTION_PIXELS, Tk_Offset(SliderElement,lengthObj),
-	"30" },
+        "30" },
     { "-sliderthickness",TK_OPTION_PIXELS,Tk_Offset(SliderElement,thicknessObj),
-	"15" },
+        "15" },
     { "-sliderrelief", TK_OPTION_RELIEF, Tk_Offset(SliderElement,reliefObj),
-	"raised" },
+        "raised" },
     { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SliderElement,borderWidthObj),
-	DEFAULT_BORDERWIDTH },
+        DEFAULT_BORDERWIDTH },
     { "-background", TK_OPTION_BORDER, Tk_Offset(SliderElement,borderObj),
-	DEFAULT_BACKGROUND },
+        DEFAULT_BACKGROUND },
     { "-orient", TK_OPTION_ANY, Tk_Offset(SliderElement,orientObj),
-	"horizontal" },
+        "horizontal" },
     { NULL, 0, 0, NULL }
 };
 
@@ -936,15 +936,15 @@ static void SliderElementSize(
     Tk_GetPixelsFromObj(NULL, tkwin, slider->thicknessObj, &thickness);
 
     switch (orient) {
-	case TTK_ORIENT_VERTICAL:
-	    *widthPtr = thickness;
-	    *heightPtr = length;
-	    break;
+        case TTK_ORIENT_VERTICAL:
+            *widthPtr = thickness;
+            *heightPtr = length;
+            break;
 
-	case TTK_ORIENT_HORIZONTAL:
-	    *widthPtr = length;
-	    *heightPtr = thickness;
-	    break;
+        case TTK_ORIENT_HORIZONTAL:
+            *widthPtr = length;
+            *heightPtr = thickness;
+            break;
     }
 }
 
@@ -962,31 +962,31 @@ static void SliderElementDraw(
     Tk_GetReliefFromObj(NULL, slider->reliefObj, &relief);
 
     Tk_Fill3DRectangle(tkwin, d, border,
-	b.x, b.y, b.width, b.height,
-	borderWidth, relief);
+        b.x, b.y, b.width, b.height,
+        borderWidth, relief);
 
     if (relief != TK_RELIEF_FLAT) {
-	if (orient == TTK_ORIENT_HORIZONTAL) {
-	    if (b.width > 4) {
-		b.x += b.width/2;
-		XDrawLine(Tk_Display(tkwin), d,
-		    Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
-		    b.x-1, b.y+borderWidth, b.x-1, b.y+b.height-borderWidth);
-		XDrawLine(Tk_Display(tkwin), d,
-		    Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
-		    b.x, b.y+borderWidth, b.x, b.y+b.height-borderWidth);
-	    }
-	} else {
-	    if (b.height > 4) {
-		b.y += b.height/2;
-		XDrawLine(Tk_Display(tkwin), d,
-		    Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
-		    b.x+borderWidth, b.y-1, b.x+b.width-borderWidth, b.y-1);
-		XDrawLine(Tk_Display(tkwin), d,
-		    Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
-		    b.x+borderWidth, b.y, b.x+b.width-borderWidth, b.y);
-	    }
-	}
+        if (orient == TTK_ORIENT_HORIZONTAL) {
+            if (b.width > 4) {
+                b.x += b.width/2;
+                XDrawLine(Tk_Display(tkwin), d,
+                    Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
+                    b.x-1, b.y+borderWidth, b.x-1, b.y+b.height-borderWidth);
+                XDrawLine(Tk_Display(tkwin), d,
+                    Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
+                    b.x, b.y+borderWidth, b.x, b.y+b.height-borderWidth);
+            }
+        } else {
+            if (b.height > 4) {
+                b.y += b.height/2;
+                XDrawLine(Tk_Display(tkwin), d,
+                    Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
+                    b.x+borderWidth, b.y-1, b.x+b.width-borderWidth, b.y-1);
+                XDrawLine(Tk_Display(tkwin), d,
+                    Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
+                    b.x+borderWidth, b.y, b.x+b.width-borderWidth, b.y);
+            }
+        }
     }
 }
 
@@ -1000,38 +1000,38 @@ static Ttk_ElementSpec SliderElementSpec = {
 
 /*------------------------------------------------------------------------
  * +++ Progress bar element:
- *	Draws the moving part of the progress bar.
+ *      Draws the moving part of the progress bar.
  *
- *	-thickness specifies the size along the short axis of the bar.
- *	-length specifies the default size along the long axis;
- *	the bar will be this long in indeterminate mode.
+ *      -thickness specifies the size along the short axis of the bar.
+ *      -length specifies the default size along the long axis;
+ *      the bar will be this long in indeterminate mode.
  */
 
 #define DEFAULT_PBAR_THICKNESS "15"
 #define DEFAULT_PBAR_LENGTH "30"
 
 typedef struct {
-    Tcl_Obj *orientObj; 	/* widget orientation */
-    Tcl_Obj *thicknessObj;	/* the height/width of the bar */
-    Tcl_Obj *lengthObj;		/* default width/height of the bar */
-    Tcl_Obj *reliefObj; 	/* border relief for this object */
-    Tcl_Obj *borderObj; 	/* background color */
-    Tcl_Obj *borderWidthObj; 	/* thickness of the border */
+    Tcl_Obj *orientObj;         /* widget orientation */
+    Tcl_Obj *thicknessObj;      /* the height/width of the bar */
+    Tcl_Obj *lengthObj;         /* default width/height of the bar */
+    Tcl_Obj *reliefObj;         /* border relief for this object */
+    Tcl_Obj *borderObj;         /* background color */
+    Tcl_Obj *borderWidthObj;    /* thickness of the border */
 } PbarElement;
 
 static Ttk_ElementOptionSpec PbarElementOptions[] = {
     { "-orient", TK_OPTION_ANY, Tk_Offset(PbarElement,orientObj),
-	"horizontal" },
+        "horizontal" },
     { "-thickness", TK_OPTION_PIXELS, Tk_Offset(PbarElement,thicknessObj),
-	DEFAULT_PBAR_THICKNESS },
+        DEFAULT_PBAR_THICKNESS },
     { "-barsize", TK_OPTION_PIXELS, Tk_Offset(PbarElement,lengthObj),
-	DEFAULT_PBAR_LENGTH },
+        DEFAULT_PBAR_LENGTH },
     { "-pbarrelief", TK_OPTION_RELIEF, Tk_Offset(PbarElement,reliefObj),
-	"raised" },
+        "raised" },
     { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(PbarElement,borderWidthObj),
-	DEFAULT_BORDERWIDTH },
+        DEFAULT_BORDERWIDTH },
     { "-background", TK_OPTION_BORDER, Tk_Offset(PbarElement,borderObj),
-	DEFAULT_BACKGROUND },
+        DEFAULT_BACKGROUND },
     { NULL, 0, 0, NULL }
 };
 
@@ -1048,14 +1048,14 @@ static void PbarElementSize(
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->borderWidthObj, &borderWidth);
 
     switch (orient) {
-	case TTK_ORIENT_HORIZONTAL:
-	    *widthPtr	= length + 2 * borderWidth;
-	    *heightPtr	= thickness + 2 * borderWidth;
-	    break;
-	case TTK_ORIENT_VERTICAL:
-	    *widthPtr	= thickness + 2 * borderWidth;
-	    *heightPtr	= length + 2 * borderWidth;
-	    break;
+        case TTK_ORIENT_HORIZONTAL:
+            *widthPtr   = length + 2 * borderWidth;
+            *heightPtr  = thickness + 2 * borderWidth;
+            break;
+        case TTK_ORIENT_VERTICAL:
+            *widthPtr   = thickness + 2 * borderWidth;
+            *heightPtr  = length + 2 * borderWidth;
+            break;
     }
 }
 
@@ -1071,8 +1071,8 @@ static void PbarElementDraw(
     Tk_GetReliefFromObj(NULL, pbar->reliefObj, &relief);
 
     Tk_Fill3DRectangle(tkwin, d, border,
-	b.x, b.y, b.width, b.height,
-	borderWidth, relief);
+        b.x, b.y, b.width, b.height,
+        borderWidth, relief);
 }
 
 static Ttk_ElementSpec PbarElementSpec = {
@@ -1094,9 +1094,9 @@ typedef struct {
 
 static Ttk_ElementOptionSpec TabElementOptions[] = {
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(TabElement,borderWidthObj),"1" },
+        Tk_Offset(TabElement,borderWidthObj),"1" },
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(TabElement,backgroundObj), DEFAULT_BACKGROUND },
+        Tk_Offset(TabElement,backgroundObj), DEFAULT_BACKGROUND },
     {0,0,0,0}
 };
 
@@ -1125,23 +1125,23 @@ static void TabElementDraw(
     Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
 
     if (state & TTK_STATE_SELECTED) {
-	/*
-	 * Draw slightly outside of the allocated parcel,
-	 * to overwrite the client area border.
-	 */
-	b.height += borderWidth;
+        /*
+         * Draw slightly outside of the allocated parcel,
+         * to overwrite the client area border.
+         */
+        b.height += borderWidth;
     }
 
-    pts[n].x = b.x; 			pts[n].y = b.y + b.height - 1; ++n;
-    pts[n].x = b.x;			pts[n].y = b.y + cut; ++n;
-    pts[n].x = b.x + cut;  		pts[n].y = b.y; ++n;
-    pts[n].x = b.x + b.width-1-cut;	pts[n].y = b.y; ++n;
-    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + cut; ++n;
-    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + b.height; ++n;
+    pts[n].x = b.x;                     pts[n].y = b.y + b.height - 1; ++n;
+    pts[n].x = b.x;                     pts[n].y = b.y + cut; ++n;
+    pts[n].x = b.x + cut;               pts[n].y = b.y; ++n;
+    pts[n].x = b.x + b.width-1-cut;     pts[n].y = b.y; ++n;
+    pts[n].x = b.x + b.width-1;         pts[n].y = b.y + cut; ++n;
+    pts[n].x = b.x + b.width-1;         pts[n].y = b.y + b.height; ++n;
 
     XFillPolygon(Tk_Display(tkwin), d,
-	Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
-	pts, 6, Convex, CoordModeOrigin);
+        Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
+        pts, 6, Convex, CoordModeOrigin);
 
 #ifndef _WIN32
     /*
@@ -1151,14 +1151,14 @@ static void TabElementDraw(
 #endif
 
     while (borderWidth--) {
-	XDrawLines(Tk_Display(tkwin), d,
-		Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
-		pts, 4, CoordModeOrigin);
-	XDrawLines(Tk_Display(tkwin), d,
-		Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
-		pts+3, 3, CoordModeOrigin);
-	++pts[0].x; ++pts[1].x; ++pts[2].x;             --pts[4].x; --pts[5].x;
-	                        ++pts[2].y; ++pts[3].y;
+        XDrawLines(Tk_Display(tkwin), d,
+                Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
+                pts, 4, CoordModeOrigin);
+        XDrawLines(Tk_Display(tkwin), d,
+                Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
+                pts+3, 3, CoordModeOrigin);
+        ++pts[0].x; ++pts[1].x; ++pts[2].x;             --pts[4].x; --pts[5].x;
+                                ++pts[2].y; ++pts[3].y;
     }
 
 }
@@ -1189,7 +1189,7 @@ static void ClientElementDraw(
     Tcl_GetIntFromObj(NULL, ce->borderWidthObj, &borderWidth);
 
     Tk_Fill3DRectangle(tkwin, d, border,
-	b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_RAISED);
+        b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_RAISED);
 }
 
 static void ClientElementSize(
@@ -1212,7 +1212,7 @@ static Ttk_ElementSpec ClientElementSpec = {
 
 /*----------------------------------------------------------------------
  * TtkElements_Init --
- *	Register default element implementations.
+ *      Register default element implementations.
  */
 
 MODULE_SCOPE
@@ -1224,7 +1224,7 @@ void TtkElements_Init(Tcl_Interp *interp)
      * Elements:
      */
     Ttk_RegisterElement(interp, theme, "background",
-	    &BackgroundElementSpec,NULL);
+            &BackgroundElementSpec,NULL);
 
     Ttk_RegisterElement(interp, theme, "fill", &FillElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "border", &BorderElementSpec, NULL);
@@ -1234,24 +1234,24 @@ void TtkElements_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "padding", &PaddingElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
-	    &CheckbuttonIndicatorElementSpec, NULL);
+            &CheckbuttonIndicatorElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
-	    &RadiobuttonIndicatorElementSpec, NULL);
+            &RadiobuttonIndicatorElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
-	    &MenuIndicatorElementSpec, NULL);
+            &MenuIndicatorElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "indicator", &ttkNullElementSpec,NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+            &ArrowElementSpec, &ArrowElements[0]);
     Ttk_RegisterElement(interp, theme, "downarrow",
-	    &ArrowElementSpec, &ArrowElements[1]);
+            &ArrowElementSpec, &ArrowElements[1]);
     Ttk_RegisterElement(interp, theme, "leftarrow",
-	    &ArrowElementSpec, &ArrowElements[2]);
+            &ArrowElementSpec, &ArrowElements[2]);
     Ttk_RegisterElement(interp, theme, "rightarrow",
-	    &ArrowElementSpec, &ArrowElements[3]);
+            &ArrowElementSpec, &ArrowElements[3]);
     Ttk_RegisterElement(interp, theme, "arrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+            &ArrowElementSpec, &ArrowElements[0]);
 
     Ttk_RegisterElement(interp, theme, "trough", &TroughElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "thumb", &ThumbElementSpec, NULL);
@@ -1259,11 +1259,11 @@ void TtkElements_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "pbar", &PbarElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "separator",
-	    &SeparatorElementSpec, NULL);
+            &SeparatorElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "hseparator",
-	    &HorizontalSeparatorElementSpec, NULL);
+            &HorizontalSeparatorElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "vseparator",
-	    &VerticalSeparatorElementSpec, NULL);
+            &VerticalSeparatorElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "sizegrip", &SizegripElementSpec, NULL);
 

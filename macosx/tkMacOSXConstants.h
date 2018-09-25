@@ -1,7 +1,7 @@
 /*
  * tkMacOSXConstants.h --
  *
- *	Macros which map the names of NS constants used in the Tk code to
+ *      Macros which map the names of NS constants used in the Tk code to
  *      the new name that Apple came up with for subsequent versions of the
  *      operating system.  (Each new OS release seems to come with a new
  *      naming convention for the same old constants.)

@@ -1,8 +1,8 @@
 /*
  * xgc.c --
  *
- *	This file contains generic routines for manipulating X graphics
- *	contexts.
+ *      This file contains generic routines for manipulating X graphics
+ *      contexts.
  *
  * Copyright (c) 1995-1996 Sun Microsystems, Inc.
  * Copyright (c) 2002-2009 Daniel A. Steffen <das@users.sourceforge.net>
@@ -36,13 +36,13 @@
  *
  * AllocClipMask --
  *
- *	Static helper proc to allocate new or clear existing TkpClipMask.
+ *      Static helper proc to allocate new or clear existing TkpClipMask.
  *
  * Results:
- *	Returns ptr to the new/cleared TkpClipMask.
+ *      Returns ptr to the new/cleared TkpClipMask.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -51,11 +51,11 @@ static TkpClipMask *AllocClipMask(GC gc) {
     TkpClipMask *clip_mask = (TkpClipMask*) gc->clip_mask;
 
     if (clip_mask == None) {
-	clip_mask = ckalloc(sizeof(TkpClipMask));
-	gc->clip_mask = (Pixmap) clip_mask;
+        clip_mask = ckalloc(sizeof(TkpClipMask));
+        gc->clip_mask = (Pixmap) clip_mask;
 #ifdef MAC_OSX_TK
     } else if (clip_mask->type == TKP_CLIP_REGION) {
-	TkpReleaseRegion(clip_mask->value.region);
+        TkpReleaseRegion(clip_mask->value.region);
 #endif
     }
     return clip_mask;
@@ -66,13 +66,13 @@ static TkpClipMask *AllocClipMask(GC gc) {
  *
  * FreeClipMask --
  *
- *	Static helper proc to free TkpClipMask.
+ *      Static helper proc to free TkpClipMask.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -80,12 +80,12 @@ static TkpClipMask *AllocClipMask(GC gc) {
 static void FreeClipMask(GC gc) {
     if (gc->clip_mask != None) {
 #ifdef MAC_OSX_TK
-	if (((TkpClipMask*) gc->clip_mask)->type == TKP_CLIP_REGION) {
-	    TkpReleaseRegion(((TkpClipMask*) gc->clip_mask)->value.region);
-	}
+        if (((TkpClipMask*) gc->clip_mask)->type == TKP_CLIP_REGION) {
+            TkpReleaseRegion(((TkpClipMask*) gc->clip_mask)->value.region);
+        }
 #endif
-	ckfree((char *) gc->clip_mask);
-	gc->clip_mask = None;
+        ckfree((char *) gc->clip_mask);
+        gc->clip_mask = None;
     }
 }
 
@@ -94,13 +94,13 @@ static void FreeClipMask(GC gc) {
  *
  * XCreateGC --
  *
- *	Allocate a new GC, and initialize the specified fields.
+ *      Allocate a new GC, and initialize the specified fields.
  *
  * Results:
- *	Returns a newly allocated GC.
+ *      Returns a newly allocated GC.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -125,44 +125,44 @@ XCreateGC(
 
     gp = ckalloc(sizeof(XGCValues) + MAX_DASH_LIST_SIZE + gcCacheSize);
     if (!gp) {
-	return None;
+        return None;
     }
 
 #define InitField(name,maskbit,default) \
-	(gp->name = (mask & (maskbit)) ? values->name : (default))
+        (gp->name = (mask & (maskbit)) ? values->name : (default))
 
-    InitField(function,		  GCFunction,		GXcopy);
-    InitField(plane_mask,	  GCPlaneMask,		(unsigned long)(~0));
-    InitField(foreground,	  GCForeground,
-	    BlackPixelOfScreen(DefaultScreenOfDisplay(display)));
-    InitField(background,	  GCBackground,
-	    WhitePixelOfScreen(DefaultScreenOfDisplay(display)));
-    InitField(line_width,	  GCLineWidth,		1);
-    InitField(line_style,	  GCLineStyle,		LineSolid);
-    InitField(cap_style,	  GCCapStyle,		0);
-    InitField(join_style,	  GCJoinStyle,		0);
-    InitField(fill_style,	  GCFillStyle,		FillSolid);
-    InitField(fill_rule,	  GCFillRule,		WindingRule);
-    InitField(arc_mode,		  GCArcMode,		ArcPieSlice);
-    InitField(tile,		  GCTile,		None);
-    InitField(stipple,		  GCStipple,		None);
-    InitField(ts_x_origin,	  GCTileStipXOrigin,	0);
-    InitField(ts_y_origin,	  GCTileStipYOrigin,	0);
-    InitField(font,		  GCFont,		None);
-    InitField(subwindow_mode,	  GCSubwindowMode,	ClipByChildren);
-    InitField(graphics_exposures, GCGraphicsExposures,	True);
-    InitField(clip_x_origin,	  GCClipXOrigin,	0);
-    InitField(clip_y_origin,	  GCClipYOrigin,	0);
-    InitField(dash_offset,	  GCDashOffset,		0);
-    InitField(dashes,		  GCDashList,		4);
+    InitField(function,           GCFunction,           GXcopy);
+    InitField(plane_mask,         GCPlaneMask,          (unsigned long)(~0));
+    InitField(foreground,         GCForeground,
+            BlackPixelOfScreen(DefaultScreenOfDisplay(display)));
+    InitField(background,         GCBackground,
+            WhitePixelOfScreen(DefaultScreenOfDisplay(display)));
+    InitField(line_width,         GCLineWidth,          1);
+    InitField(line_style,         GCLineStyle,          LineSolid);
+    InitField(cap_style,          GCCapStyle,           0);
+    InitField(join_style,         GCJoinStyle,          0);
+    InitField(fill_style,         GCFillStyle,          FillSolid);
+    InitField(fill_rule,          GCFillRule,           WindingRule);
+    InitField(arc_mode,           GCArcMode,            ArcPieSlice);
+    InitField(tile,               GCTile,               None);
+    InitField(stipple,            GCStipple,            None);
+    InitField(ts_x_origin,        GCTileStipXOrigin,    0);
+    InitField(ts_y_origin,        GCTileStipYOrigin,    0);
+    InitField(font,               GCFont,               None);
+    InitField(subwindow_mode,     GCSubwindowMode,      ClipByChildren);
+    InitField(graphics_exposures, GCGraphicsExposures,  True);
+    InitField(clip_x_origin,      GCClipXOrigin,        0);
+    InitField(clip_y_origin,      GCClipYOrigin,        0);
+    InitField(dash_offset,        GCDashOffset,         0);
+    InitField(dashes,             GCDashList,           4);
     (&(gp->dashes))[1] = 0;
 
     gp->clip_mask = None;
     if (mask & GCClipMask) {
-	TkpClipMask *clip_mask = AllocClipMask(gp);
+        TkpClipMask *clip_mask = AllocClipMask(gp);
 
-	clip_mask->type = TKP_CLIP_PIXMAP;
-	clip_mask->value.pixmap = values->clip_mask;
+        clip_mask->type = TKP_CLIP_PIXMAP;
+        clip_mask->value.pixmap = values->clip_mask;
     }
     TkpInitGCCache(gp);
 
@@ -176,10 +176,10 @@ XCreateGC(
  * TkpGetGCCache --
  *
  * Results:
- *	Pointer to the TkpGCCache at the end of the GC.
+ *      Pointer to the TkpGCCache at the end of the GC.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -187,7 +187,7 @@ XCreateGC(
 TkpGCCache*
 TkpGetGCCache(GC gc) {
     return (gc ? (TkpGCCache*)(((char*) gc) + sizeof(XGCValues) +
-	    MAX_DASH_LIST_SIZE) : NULL);
+            MAX_DASH_LIST_SIZE) : NULL);
 }
 #endif
 
@@ -196,13 +196,13 @@ TkpGetGCCache(GC gc) {
  *
  * XChangeGC --
  *
- *	Changes the GC components specified by valuemask for the specified GC.
+ *      Changes the GC components specified by valuemask for the specified GC.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Updates the specified GC.
+ *      Updates the specified GC.
  *
  *----------------------------------------------------------------------
  */
@@ -215,7 +215,7 @@ XChangeGC(
     XGCValues *values)
 {
 #define ModifyField(name,maskbit) \
-	if (mask & (maskbit)) { gc->name = values->name; }
+        if (mask & (maskbit)) { gc->name = values->name; }
 
     ModifyField(function, GCFunction);
     ModifyField(plane_mask, GCPlaneMask);
@@ -239,11 +239,11 @@ XChangeGC(
     ModifyField(clip_y_origin, GCClipYOrigin);
     ModifyField(dash_offset, GCDashOffset);
     if (mask & GCClipMask) {
-	XSetClipMask(d, gc, values->clip_mask);
+        XSetClipMask(d, gc, values->clip_mask);
     }
     if (mask & GCDashList) {
-	gc->dashes = values->dashes;
-	(&(gc->dashes))[1] = 0;
+        gc->dashes = values->dashes;
+        (&(gc->dashes))[1] = 0;
     }
     return Success;
 }
@@ -253,13 +253,13 @@ XChangeGC(
  *
  * XFreeGC --
  *
- *	Deallocates the specified graphics context.
+ *      Deallocates the specified graphics context.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -269,9 +269,9 @@ int XFreeGC(
     GC gc)
 {
     if (gc != None) {
-	FreeClipMask(gc);
-	TkpFreeGCCache(gc);
-	ckfree(gc);
+        FreeClipMask(gc);
+        TkpFreeGCCache(gc);
+        ckfree(gc);
     }
     return Success;
 }
@@ -281,14 +281,14 @@ int XFreeGC(
  *
  * XSetForeground, etc. --
  *
- *	The following functions are simply accessor functions for the GC
- *	slots.
+ *      The following functions are simply accessor functions for the GC
+ *      slots.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Each function sets some slot in the GC.
+ *      Each function sets some slot in the GC.
  *
  *----------------------------------------------------------------------
  */
@@ -332,7 +332,7 @@ XSetDashes(
     gc->dash_offset = dash_offset;
     if (n > MAX_DASH_LIST_SIZE) n = MAX_DASH_LIST_SIZE;
     while (n-- > 0) {
-	*p++ = *dash_list++;
+        *p++ = *dash_list++;
     }
     *p = 0;
     return Success;
@@ -442,18 +442,18 @@ XSetClipOrigin(
  *
  * TkSetRegion, XSetClipMask --
  *
- *	Sets the clipping region/pixmap for a GC.
+ *      Sets the clipping region/pixmap for a GC.
  *
- *	Note that unlike the Xlib equivalent, it is not safe to delete the
- *	region after setting it into the GC (except on Mac OS X). The only
- *	uses of TkSetRegion are currently in DisplayFrame and in
- *	ImgPhotoDisplay, which use the GC immediately.
+ *      Note that unlike the Xlib equivalent, it is not safe to delete the
+ *      region after setting it into the GC (except on Mac OS X). The only
+ *      uses of TkSetRegion are currently in DisplayFrame and in
+ *      ImgPhotoDisplay, which use the GC immediately.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Allocates or dealloates a TkpClipMask.
+ *      Allocates or dealloates a TkpClipMask.
  *
  *----------------------------------------------------------------------
  */
@@ -465,14 +465,14 @@ TkSetRegion(
     TkRegion r)
 {
     if (r == None) {
-	Tcl_Panic("must not pass None to TkSetRegion for compatibility with X11; use XSetClipMask instead");
+        Tcl_Panic("must not pass None to TkSetRegion for compatibility with X11; use XSetClipMask instead");
     } else {
-	TkpClipMask *clip_mask = AllocClipMask(gc);
+        TkpClipMask *clip_mask = AllocClipMask(gc);
 
-	clip_mask->type = TKP_CLIP_REGION;
-	clip_mask->value.region = r;
+        clip_mask->type = TKP_CLIP_REGION;
+        clip_mask->value.region = r;
 #ifdef MAC_OSX_TK
-	TkpRetainRegion(r);
+        TkpRetainRegion(r);
 #endif
     }
 }
@@ -484,12 +484,12 @@ XSetClipMask(
     Pixmap pixmap)
 {
     if (pixmap == None) {
-	FreeClipMask(gc);
+        FreeClipMask(gc);
     } else {
-	TkpClipMask *clip_mask = AllocClipMask(gc);
+        TkpClipMask *clip_mask = AllocClipMask(gc);
 
-	clip_mask->type = TKP_CLIP_PIXMAP;
-	clip_mask->value.pixmap = pixmap;
+        clip_mask->type = TKP_CLIP_PIXMAP;
+        clip_mask->value.pixmap = pixmap;
     }
     return Success;
 }
@@ -543,10 +543,10 @@ XDrawPoints(
     int res = Success;
 
     while (npoints-- > 0) {
-	res = XDrawLine(display, d, gc,
-		points[0].x, points[0].y, points[0].x, points[0].y);
-	if (res != Success) break;
-	++points;
+        res = XDrawLine(display, d, gc,
+                points[0].x, points[0].y, points[0].x, points[0].y);
+        if (res != Success) break;
+        ++points;
     }
     return res;
 }

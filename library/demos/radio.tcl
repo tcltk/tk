@@ -37,16 +37,16 @@ grid $w.tristate -column 2 -row 2 -pady .5c -padx .5c
 
 foreach i {10 12 14 18 24} {
     radiobutton $w.left.b$i -text "Point Size $i" -variable size \
-	    -relief flat -value $i -tristatevalue "multi"
+            -relief flat -value $i -tristatevalue "multi"
     pack $w.left.b$i  -side top -pady 2 -anchor w -fill x
 }
 
 foreach c {Red Green Blue Yellow Orange Purple} {
     set lower [string tolower $c]
     radiobutton $w.mid.$lower -text $c -variable color \
-	    -relief flat -value $lower -anchor w \
-	    -command "$w.mid configure -fg \$color" \
-	-tristatevalue "multi"
+            -relief flat -value $lower -anchor w \
+            -command "$w.mid configure -fg \$color" \
+        -tristatevalue "multi"
     pack $w.mid.$lower -side top -pady 2 -fill x
 }
 
@@ -57,8 +57,8 @@ $w.right.l configure -height [winfo reqheight $w.right.l]
 foreach a {Top Left Right Bottom} {
     set lower [string tolower $a]
     radiobutton $w.right.$lower -text $a -variable align \
-	    -relief flat -value $lower -indicatoron 0 -width 7 \
-	    -command "$w.right.l configure -compound \$align"
+            -relief flat -value $lower -indicatoron 0 -width 7 \
+            -command "$w.right.l configure -compound \$align"
 }
 
 grid x $w.right.top

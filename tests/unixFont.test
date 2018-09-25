@@ -20,23 +20,23 @@ if {[tk windowingsystem] eq "x11"} {
     set xlsf [auto_execok xlsfonts]
 }
 foreach {constraint font} {
-    hasArial	arial
-    hasCourierNew	"courier new"
-    hasTimesNew	"times new roman"
+    hasArial    arial
+    hasCourierNew       "courier new"
+    hasTimesNew "times new roman"
 } {
     if {[tk windowingsystem] eq "x11"} {
-	testConstraint $constraint 1
-	if {[llength $xlsf]} {
-	    if {![catch {eval exec $xlsf [list *-$font-*]} res]
-		    && ![string match *unmatched* $res]} {
-		# Newer Unix systems have more default fonts installed,
-		# so we can't rely on fallbacks for fonts to need to
-		# fall back on anything.
-		testConstraint $constraint 0
-	    }
-	}
+        testConstraint $constraint 1
+        if {[llength $xlsf]} {
+            if {![catch {eval exec $xlsf [list *-$font-*]} res]
+                    && ![string match *unmatched* $res]} {
+                # Newer Unix systems have more default fonts installed,
+                # so we can't rely on fallbacks for fonts to need to
+                # fall back on anything.
+                testConstraint $constraint 0
+            }
+        }
     } else {
-	testConstraint $constraint 0
+        testConstraint $constraint 0
     }
 }
 
@@ -78,21 +78,21 @@ test unixfont-2.1 {TkpGetFontFromAttributes procedure: no family} x11 {
     set x {}
 } {}
 test unixfont-2.2 {TkpGetFontFromAttributes procedure: Times relatives} \
-	{x11 noExceed hasTimesNew} {
+        {x11 noExceed hasTimesNew} {
     set x {}
     lappend x [lindex [font actual {-family "Times New Roman"}] 1]
     lappend x [lindex [font actual {-family "New York"}] 1]
     lappend x [lindex [font actual {-family "Times"}] 1]
 } {times times times}
 test unixfont-2.3 {TkpGetFontFromAttributes procedure: Courier relatives} \
-	{x11 noExceed hasCourierNew} {
+        {x11 noExceed hasCourierNew} {
     set x {}
     lappend x [lindex [font actual {-family "Courier New"}] 1]
     lappend x [lindex [font actual {-family "Monaco"}] 1]
     lappend x [lindex [font actual {-family "Courier"}] 1]
 } {courier courier courier}
 test unixfont-2.4 {TkpGetFontFromAttributes procedure: Helvetica relatives} \
-	{x11 noExceed hasArial} {
+        {x11 noExceed hasArial} {
     set x {}
     lappend x [lindex [font actual {-family "Arial"}] 1]
     lappend x [lindex [font actual {-family "Geneva"}] 1]

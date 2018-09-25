@@ -41,7 +41,7 @@
 #ifdef NARROWPROTO
 #define NeedWidePrototypes 0
 #else
-#define NeedWidePrototypes 1		/* default to make interropt. easier */
+#define NeedWidePrototypes 1            /* default to make interropt. easier */
 #endif
 #endif /* NeedWidePrototypes */
 

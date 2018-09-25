@@ -18,8 +18,8 @@
 
 bind Scale <Enter> {
     if {$tk_strictMotif} {
-	set tk::Priv(activeBg) [%W cget -activebackground]
-	%W configure -activebackground [%W cget -background]
+        set tk::Priv(activeBg) [%W cget -activebackground]
+        %W configure -activebackground [%W cget -background]
     }
     tk::ScaleActivate %W %x %y
 }
@@ -28,10 +28,10 @@ bind Scale <Motion> {
 }
 bind Scale <Leave> {
     if {$tk_strictMotif} {
-	%W configure -activebackground $tk::Priv(activeBg)
+        %W configure -activebackground $tk::Priv(activeBg)
     }
     if {[%W cget -state] eq "active"} {
-	%W configure -state normal
+        %W configure -state normal
     }
 }
 bind Scale <1> {
@@ -62,10 +62,10 @@ bind Scale <ButtonRelease-2> {
 }
 if {[tk windowingsystem] eq "win32"} {
     # On Windows do the same with button 3, as that is the right mouse button
-    bind Scale <3>		[bind Scale <2>]
-    bind Scale <B3-Motion>	[bind Scale <B2-Motion>]
-    bind Scale <B3-Leave>	[bind Scale <B2-Leave>]
-    bind Scale <B3-Enter>	[bind Scale <B2-Enter>]
+    bind Scale <3>              [bind Scale <2>]
+    bind Scale <B3-Motion>      [bind Scale <B2-Motion>]
+    bind Scale <B3-Leave>       [bind Scale <B2-Leave>]
+    bind Scale <B3-Enter>       [bind Scale <B2-Enter>]
     bind Scale <ButtonRelease-3> [bind Scale <ButtonRelease-2>]
 }
 bind Scale <Control-1> {
@@ -108,20 +108,20 @@ bind Scale <<LineEnd>> {
 # the slider.
 #
 # Arguments:
-# w -		The scale widget.
-# x, y -	Mouse coordinates.
+# w -           The scale widget.
+# x, y -        Mouse coordinates.
 
 proc ::tk::ScaleActivate {w x y} {
     if {[$w cget -state] eq "disabled"} {
-	return
+        return
     }
     if {[$w identify $x $y] eq "slider"} {
-	set state active
+        set state active
     } else {
-	set state normal
+        set state normal
     }
     if {[$w cget -state] ne $state} {
-	$w configure -state $state
+        $w configure -state $state
     }
 }
 
@@ -130,8 +130,8 @@ proc ::tk::ScaleActivate {w x y} {
 # takes different actions depending on where the button was pressed.
 #
 # Arguments:
-# w -		The scale widget.
-# x, y -	Mouse coordinates of button press.
+# w -           The scale widget.
+# x, y -        Mouse coordinates of button press.
 
 proc ::tk::ScaleButtonDown {w x y} {
     variable ::tk::Priv
@@ -142,15 +142,15 @@ proc ::tk::ScaleButtonDown {w x y} {
     set Priv($w,relief) [$w cget -sliderrelief]
 
     if {$el eq "trough1"} {
-	ScaleIncrement $w up little initial
+        ScaleIncrement $w up little initial
     } elseif {$el eq "trough2"} {
-	ScaleIncrement $w down little initial
+        ScaleIncrement $w down little initial
     } elseif {$el eq "slider"} {
-	set Priv(dragging) 1
-	set Priv(initValue) [$w get]
-	set coords [$w coords]
-	set Priv(deltaX) [expr {$x - [lindex $coords 0]}]
-	set Priv(deltaY) [expr {$y - [lindex $coords 1]}]
+        set Priv(dragging) 1
+        set Priv(initValue) [$w get]
+        set coords [$w coords]
+        set Priv(deltaX) [expr {$x - [lindex $coords 0]}]
+        set Priv(deltaY) [expr {$y - [lindex $coords 1]}]
         switch -exact -- $Priv($w,relief) {
             "raised" { $w configure -sliderrelief sunken }
             "ridge"  { $w configure -sliderrelief groove }
@@ -165,13 +165,13 @@ proc ::tk::ScaleButtonDown {w x y} {
 # to reflect the mouse's position.
 #
 # Arguments:
-# w -		The scale widget.
-# x, y -	Mouse coordinates.
+# w -           The scale widget.
+# x, y -        Mouse coordinates.
 
 proc ::tk::ScaleDrag {w x y} {
     variable ::tk::Priv
     if {!$Priv(dragging)} {
-	return
+        return
     }
     $w set [$w get [expr {$x-$Priv(deltaX)}] [expr {$y-$Priv(deltaY)}]]
 }
@@ -181,7 +181,7 @@ proc ::tk::ScaleDrag {w x y} {
 # slider.  It just marks the drag as over.
 #
 # Arguments:
-# w -		The scale widget.
+# w -           The scale widget.
 
 proc ::tk::ScaleEndDrag {w} {
     variable ::tk::Priv
@@ -199,28 +199,28 @@ proc ::tk::ScaleEndDrag {w} {
 # arguments.
 #
 # Arguments:
-# w -		The scale widget.
-# dir -		"up" means move value towards -from, "down" means
-#		move towards -to.
-# big -		Size of increments: "big" or "little".
-# repeat -	Whether and how to auto-repeat the action:  "noRepeat"
-#		means don't auto-repeat, "initial" means this is the
-#		first action in an auto-repeat sequence, and "again"
-#		means this is the second repetition or later.
+# w -           The scale widget.
+# dir -         "up" means move value towards -from, "down" means
+#               move towards -to.
+# big -         Size of increments: "big" or "little".
+# repeat -      Whether and how to auto-repeat the action:  "noRepeat"
+#               means don't auto-repeat, "initial" means this is the
+#               first action in an auto-repeat sequence, and "again"
+#               means this is the second repetition or later.
 
 proc ::tk::ScaleIncrement {w dir big repeat} {
     variable ::tk::Priv
     if {![winfo exists $w]} return
     if {$big eq "big"} {
-	set inc [$w cget -bigincrement]
-	if {$inc == 0} {
-	    set inc [expr {abs([$w cget -to] - [$w cget -from])/10.0}]
-	}
-	if {$inc < [$w cget -resolution]} {
-	    set inc [$w cget -resolution]
-	}
+        set inc [$w cget -bigincrement]
+        if {$inc == 0} {
+            set inc [expr {abs([$w cget -to] - [$w cget -from])/10.0}]
+        }
+        if {$inc < [$w cget -resolution]} {
+            set inc [$w cget -resolution]
+        }
     } else {
-	set inc [$w cget -resolution]
+        set inc [$w cget -resolution]
     }
     if {([$w cget -from] > [$w cget -to]) ^ ($dir eq "up")} {
         if {$inc > 0} {
@@ -234,14 +234,14 @@ proc ::tk::ScaleIncrement {w dir big repeat} {
     $w set [expr {[$w get] + $inc}]
 
     if {$repeat eq "again"} {
-	set Priv(afterId) [after [$w cget -repeatinterval] \
-		[list tk::ScaleIncrement $w $dir $big again]]
+        set Priv(afterId) [after [$w cget -repeatinterval] \
+                [list tk::ScaleIncrement $w $dir $big again]]
     } elseif {$repeat eq "initial"} {
-	set delay [$w cget -repeatdelay]
-	if {$delay > 0} {
-	    set Priv(afterId) [after $delay \
-		    [list tk::ScaleIncrement $w $dir $big again]]
-	}
+        set delay [$w cget -repeatdelay]
+        if {$delay > 0} {
+            set Priv(afterId) [after $delay \
+                    [list tk::ScaleIncrement $w $dir $big again]]
+        }
     }
 }
 
@@ -251,15 +251,15 @@ proc ::tk::ScaleIncrement {w dir big repeat} {
 # value to one end of the range or the other.
 #
 # Arguments:
-# w -		The scale widget.
-# x, y -	Mouse coordinates where the button was pressed.
+# w -           The scale widget.
+# x, y -        Mouse coordinates where the button was pressed.
 
 proc ::tk::ScaleControlPress {w x y} {
     set el [$w identify $x $y]
     if {$el eq "trough1"} {
-	$w set [$w cget -from]
+        $w set [$w cget -from]
     } elseif {$el eq "trough2"} {
-	$w set [$w cget -to]
+        $w set [$w cget -to]
     }
 }
 
@@ -269,14 +269,14 @@ proc ::tk::ScaleControlPress {w x y} {
 # a slider drag.
 #
 # Arguments:
-# w -		The scrollbar widget.
-# x, y -	Mouse coordinates within the widget.
+# w -           The scrollbar widget.
+# x, y -        Mouse coordinates within the widget.
 
 proc ::tk::ScaleButton2Down {w x y} {
     variable ::tk::Priv
 
     if {[$w cget -state] eq "disabled"} {
-	return
+        return
     }
 
     $w configure -state active

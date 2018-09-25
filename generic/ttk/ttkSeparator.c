@@ -12,8 +12,8 @@
  */
 typedef struct
 {
-    Tcl_Obj	*orientObj;
-    int 	orient;
+    Tcl_Obj     *orientObj;
+    int         orient;
 } SeparatorPart;
 
 typedef struct
@@ -24,9 +24,9 @@ typedef struct
 
 static Tk_OptionSpec SeparatorOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
-	Tk_Offset(Separator,separator.orientObj),
-	Tk_Offset(Separator,separator.orient),
-	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
+        Tk_Offset(Separator,separator.orientObj),
+        Tk_Offset(Separator,separator.orient),
+        0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -34,25 +34,25 @@ static Tk_OptionSpec SeparatorOptionSpecs[] = {
 
 /*
  * GetLayout hook --
- * 	Choose layout based on -orient option.
+ *      Choose layout based on -orient option.
  */
 static Ttk_Layout SeparatorGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
     Separator *sep = recordPtr;
     return TtkWidgetGetOrientedLayout(
-	interp, theme, recordPtr, sep->separator.orientObj);
+        interp, theme, recordPtr, sep->separator.orientObj);
 }
 
 /*
  * Widget commands:
  */
 static const Ttk_Ensemble SeparatorCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
-    { "cget",		TtkWidgetCgetCommand,0 },
-    { "identify",	TtkWidgetIdentifyCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",      TtkWidgetConfigureCommand,0 },
+    { "cget",           TtkWidgetCgetCommand,0 },
+    { "identify",       TtkWidgetIdentifyCommand,0 },
+    { "instate",        TtkWidgetInstateCommand,0 },
+    { "state",          TtkWidgetStateCommand,0 },
     { 0,0,0 }
 };
 
@@ -61,18 +61,18 @@ static const Ttk_Ensemble SeparatorCommands[] = {
  */
 static WidgetSpec SeparatorWidgetSpec =
 {
-    "TSeparator",		/* className */
-    sizeof(Separator),		/* recordSize */
-    SeparatorOptionSpecs,	/* optionSpecs */
-    SeparatorCommands,		/* subcommands */
-    TtkNullInitialize,		/* initializeProc */
-    TtkNullCleanup,		/* cleanupProc */
-    TtkCoreConfigure,		/* configureProc */
-    TtkNullPostConfigure,	/* postConfigureProc */
-    SeparatorGetLayout,		/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
-    TtkWidgetDoLayout,		/* layoutProc */
-    TtkWidgetDisplay		/* displayProc */
+    "TSeparator",               /* className */
+    sizeof(Separator),          /* recordSize */
+    SeparatorOptionSpecs,       /* optionSpecs */
+    SeparatorCommands,          /* subcommands */
+    TtkNullInitialize,          /* initializeProc */
+    TtkNullCleanup,             /* cleanupProc */
+    TtkCoreConfigure,           /* configureProc */
+    TtkNullPostConfigure,       /* postConfigureProc */
+    SeparatorGetLayout,         /* getLayoutProc */
+    TtkWidgetSize,              /* sizeProc */
+    TtkWidgetDoLayout,          /* layoutProc */
+    TtkWidgetDisplay            /* displayProc */
 };
 
 TTK_BEGIN_LAYOUT(SeparatorLayout)
@@ -80,7 +80,7 @@ TTK_BEGIN_LAYOUT(SeparatorLayout)
 TTK_END_LAYOUT
 
 /* +++ Sizegrip widget:
- * 	Has no options or methods other than the standard ones.
+ *      Has no options or methods other than the standard ones.
  */
 
 static Tk_OptionSpec SizegripOptionSpecs[] = {
@@ -89,28 +89,28 @@ static Tk_OptionSpec SizegripOptionSpecs[] = {
 };
 
 static const Ttk_Ensemble SizegripCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
-    { "cget",		TtkWidgetCgetCommand,0 },
-    { "identify",	TtkWidgetIdentifyCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",      TtkWidgetConfigureCommand,0 },
+    { "cget",           TtkWidgetCgetCommand,0 },
+    { "identify",       TtkWidgetIdentifyCommand,0 },
+    { "instate",        TtkWidgetInstateCommand,0 },
+    { "state",          TtkWidgetStateCommand,0 },
     { 0,0,0 }
 };
 
 static WidgetSpec SizegripWidgetSpec =
 {
-    "TSizegrip",		/* className */
-    sizeof(WidgetCore),		/* recordSize */
-    SizegripOptionSpecs, 	/* optionSpecs */
-    SizegripCommands,		/* subcommands */
-    TtkNullInitialize,		/* initializeProc */
-    TtkNullCleanup,		/* cleanupProc */
-    TtkCoreConfigure,		/* configureProc */
-    TtkNullPostConfigure,	/* postConfigureProc */
-    TtkWidgetGetLayout, 	/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
-    TtkWidgetDoLayout,		/* layoutProc */
-    TtkWidgetDisplay		/* displayProc */
+    "TSizegrip",                /* className */
+    sizeof(WidgetCore),         /* recordSize */
+    SizegripOptionSpecs,        /* optionSpecs */
+    SizegripCommands,           /* subcommands */
+    TtkNullInitialize,          /* initializeProc */
+    TtkNullCleanup,             /* cleanupProc */
+    TtkCoreConfigure,           /* configureProc */
+    TtkNullPostConfigure,       /* postConfigureProc */
+    TtkWidgetGetLayout,         /* getLayoutProc */
+    TtkWidgetSize,              /* sizeProc */
+    TtkWidgetDoLayout,          /* layoutProc */
+    TtkWidgetDisplay            /* displayProc */
 };
 
 TTK_BEGIN_LAYOUT(SizegripLayout)

@@ -54,7 +54,7 @@ foreach v [winfo visualsavailable .] {
     # visual of the same type...
     if {![winfo exists .t.$v]} {
         radiobutton .t.$v -text $v -variable visual -value $v \
-		-command BuildTestImage
+                -command BuildTestImage
         pack .t.$v -in .t.top.l -anchor w
     }
 }
@@ -68,10 +68,10 @@ foreach l { monochrome gray color } {
 }
 
 set BitmapImage [image create bitmap \
-	-file [file join [file dirname [info script]] face.xbm] \
-	-background white -foreground black]
+        -file [file join [file dirname [info script]] face.xbm] \
+        -background white -foreground black]
 set PhotoImage [image create photo \
-	-file [file join [file dirname [info script]] teapot.ppm]]
+        -file [file join [file dirname [info script]] teapot.ppm]]
 
 BuildTestImage
 

@@ -35,20 +35,20 @@ proc setColor {w button name options} {
     grab $w
     set initialColor [$button cget -$name]
     set color [tk_chooseColor -title "Choose a $name color" -parent $w \
-	-initialcolor $initialColor]
+        -initialcolor $initialColor]
     if {[string compare $color ""]} {
-	setColor_helper $w $options $color
+        setColor_helper $w $options $color
     }
     grab release $w
 }
 
 proc setColor_helper {w options color} {
     foreach option $options {
-	catch {
-	    $w config $option $color
-	}
+        catch {
+            $w config $option $color
+        }
     }
     foreach child [winfo children $w] {
-	setColor_helper $child $options $color
+        setColor_helper $child $options $color
     }
 }

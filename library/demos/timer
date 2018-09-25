@@ -10,11 +10,11 @@ package require Tk
 label .counter -text 0.00 -relief raised -width 10 -padx 2m -pady 1m
 button .start -text Start -command {
     if {$stopped} {
-	set stopped 0
-	set startMoment [clock clicks -milliseconds]
-	tick
-	.stop configure -state normal
-	.start configure -state disabled
+        set stopped 0
+        set startMoment [clock clicks -milliseconds]
+        tick
+        .stop configure -state normal
+        .start configure -state disabled
     }
 }
 button .stop -text Stop -state disabled -command {

@@ -1,10 +1,10 @@
 # bgerror.tcl --
 #
-#	Implementation of the bgerror procedure.  It posts a dialog box with
-#	the error message and gives the user a chance to see a more detailed
-#	stack trace, and possible do something more interesting with that
-#	trace (like save it to a log).  This is adapted from work done by
-#	Donal K. Fellows.
+#       Implementation of the bgerror procedure.  It posts a dialog box with
+#       the error message and gives the user a chance to see a more detailed
+#       stack trace, and possible do something more interesting with that
+#       trace (like save it to a log).  This is adapted from work done by
+#       Donal K. Fellows.
 #
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # Copyright (c) 2007 by ActiveState Software Inc.
@@ -15,15 +15,15 @@ namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
     namespace export bgerror
     option add *ErrorDialog.function.text [mc "Save To Log"] \
-	widgetDefault
+        widgetDefault
     option add *ErrorDialog.function.command [namespace code SaveToLog]
     option add *ErrorDialog*Label.font TkCaptionFont widgetDefault
     if {[tk windowingsystem] eq "aqua"} {
-	option add *ErrorDialog*background systemAlertBackgroundActive \
-		widgetDefault
-	option add *ErrorDialog*info.text.background white widgetDefault
-	option add *ErrorDialog*Button.highlightBackground \
-		systemAlertBackgroundActive widgetDefault
+        option add *ErrorDialog*background systemAlertBackgroundActive \
+                widgetDefault
+        option add *ErrorDialog*info.text.background white widgetDefault
+        option add *ErrorDialog*Button.highlightBackground \
+                systemAlertBackgroundActive widgetDefault
     }
 }
 
@@ -41,7 +41,7 @@ proc ::tk::dialog::error::Details {} {
     set caption [option get $w.function text {}]
     set command [option get $w.function command {}]
     if { ($caption eq "") || ($command eq "") } {
-	grid forget $w.function
+        grid forget $w.function
     }
     lappend command [$w.top.info.text get 1.0 end-1c]
     $w.function configure -text $caption -command $command
@@ -50,17 +50,17 @@ proc ::tk::dialog::error::Details {} {
 
 proc ::tk::dialog::error::SaveToLog {text} {
     if { $::tcl_platform(platform) eq "windows" } {
-	set allFiles *.*
+        set allFiles *.*
     } else {
-	set allFiles *
+        set allFiles *
     }
     set types [list \
-	    [list [mc "Log Files"] .log]      \
-	    [list [mc "Text Files"] .txt]     \
-	    [list [mc "All Files"] $allFiles] \
-	    ]
+            [list [mc "Log Files"] .log]      \
+            [list [mc "Text Files"] .txt]     \
+            [list [mc "All Files"] $allFiles] \
+            ]
     set filename [tk_getSaveFile -title [mc "Select Log File"] \
-	    -filetypes $types -defaultextension .log -parent .bgerrorDialog]
+            -filetypes $types -defaultextension .log -parent .bgerrorDialog]
     if {$filename ne {}} {
         set f [open $filename w]
         puts -nonewline $f $text
@@ -71,8 +71,8 @@ proc ::tk::dialog::error::SaveToLog {text} {
 
 proc ::tk::dialog::error::Destroy {w} {
     if {$w eq ".bgerrorDialog"} {
-	variable button
-	set button -1
+        variable button
+        set button -1
     }
 }
 
@@ -89,13 +89,13 @@ proc ::tk::dialog::error::ReturnInDetails w {
 
 # ::tk::dialog::error::bgerror --
 #
-#	This is the default version of bgerror.
-#	It tries to execute tkerror, if that fails it posts a dialog box
-#	containing the error message and gives the user a chance to ask
-#	to see a stack trace.
+#       This is the default version of bgerror.
+#       It tries to execute tkerror, if that fails it posts a dialog box
+#       containing the error message and gives the user a chance to ask
+#       to see a stack trace.
 #
 # Arguments:
-#	err - The error message.
+#       err - The error message.
 #
 proc ::tk::dialog::error::bgerror err {
     global errorInfo
@@ -110,9 +110,9 @@ proc ::tk::dialog::error::bgerror err {
     # we use the default dialog then :
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
-	set ok [mc Ok]
+        set ok [mc Ok]
     } else {
-	set ok [mc OK]
+        set ok [mc OK]
     }
 
     # Truncate the message if it is too wide (>maxLine characters) or
@@ -122,23 +122,23 @@ proc ::tk::dialog::error::bgerror err {
     set lines 0
     set maxLine 45
     foreach line [split $err \n] {
-	if { [string length $line] > $maxLine } {
-	    append displayedErr "[string range $line 0 [expr {$maxLine-3}]]..."
-	    break
-	}
-	if { $lines > 4 } {
-	    append displayedErr "..."
-	    break
-	} else {
-	    append displayedErr "${line}\n"
-	}
-	incr lines
+        if { [string length $line] > $maxLine } {
+            append displayedErr "[string range $line 0 [expr {$maxLine-3}]]..."
+            break
+        }
+        if { $lines > 4 } {
+            append displayedErr "..."
+            break
+        } else {
+            append displayedErr "${line}\n"
+        }
+        incr lines
     }
 
     set title [mc "Application Error"]
     set text [mc "Error: %1\$s" $displayedErr]
     set buttons [list ok $ok dismiss [mc "Skip Messages"] \
-		     function [mc "Details >>"]]
+                     function [mc "Details >>"]]
 
     # 1. Create the top-level window and divide it into top
     # and bottom parts.
@@ -153,9 +153,9 @@ proc ::tk::dialog::error::bgerror err {
     wm protocol $dlg WM_DELETE_WINDOW [namespace code DeleteByProtocol]
 
     if {$windowingsystem eq "aqua"} {
-	::tk::unsupported::MacWindowStyle style $dlg moveableAlert {}
+        ::tk::unsupported::MacWindowStyle style $dlg moveableAlert {}
     } elseif {$windowingsystem eq "x11"} {
-	wm attributes $dlg -type dialog
+        wm attributes $dlg -type dialog
     }
 
     ttk::frame $dlg.bot
@@ -165,9 +165,9 @@ proc ::tk::dialog::error::bgerror err {
 
     set W [ttk::frame $dlg.top.info]
     text $W.text -setgrid true -height 10 -wrap char \
-	-yscrollcommand [list $W.scroll set]
+        -yscrollcommand [list $W.scroll set]
     if {$windowingsystem ne "aqua"} {
-	$W.text configure -width 40
+        $W.text configure -width 40
     }
 
     ttk::scrollbar $W.scroll -command [list $W.text yview]
@@ -190,34 +190,34 @@ proc ::tk::dialog::error::bgerror err {
 
     grid $dlg.bitmap $dlg.msg -in $dlg.top -row 0 -padx 3m -pady 3m
     grid configure       $dlg.bitmap -sticky ne
-    grid configure	 $dlg.msg -sticky nsw -padx {0 3m}
-    grid rowconfigure	 $dlg.top 1 -weight 1
+    grid configure       $dlg.msg -sticky nsw -padx {0 3m}
+    grid rowconfigure    $dlg.top 1 -weight 1
     grid columnconfigure $dlg.top 1 -weight 1
 
     # 3. Create a row of buttons at the bottom of the dialog.
 
     set i 0
     foreach {name caption} $buttons {
-	ttk::button $dlg.$name -text $caption -default normal \
-	    -command [namespace code [list set button $i]]
-	grid $dlg.$name -in $dlg.bot -column $i -row 0 -sticky ew -padx 10
-	grid columnconfigure $dlg.bot $i -weight 1
-	# We boost the size of some Mac buttons for l&f
-	if {$windowingsystem eq "aqua"} {
-	    if {($name eq "ok") || ($name eq "dismiss")} {
-		grid columnconfigure $dlg.bot $i -minsize 90
-	    }
-	    grid configure $dlg.$name -pady 7
-	}
-	incr i
+        ttk::button $dlg.$name -text $caption -default normal \
+            -command [namespace code [list set button $i]]
+        grid $dlg.$name -in $dlg.bot -column $i -row 0 -sticky ew -padx 10
+        grid columnconfigure $dlg.bot $i -weight 1
+        # We boost the size of some Mac buttons for l&f
+        if {$windowingsystem eq "aqua"} {
+            if {($name eq "ok") || ($name eq "dismiss")} {
+                grid columnconfigure $dlg.bot $i -minsize 90
+            }
+            grid configure $dlg.$name -pady 7
+        }
+        incr i
     }
     # The "OK" button is the default for this dialog.
     $dlg.ok configure -default active
 
-    bind $dlg <Return>	[namespace code {Return ok 0}]
-    bind $dlg <Escape>	[namespace code {Return dismiss 1}]
-    bind $dlg <Destroy>	[namespace code {Destroy %W}]
-    bind $dlg.function <Return>	[namespace code {ReturnInDetails %W}]
+    bind $dlg <Return>  [namespace code {Return ok 0}]
+    bind $dlg <Escape>  [namespace code {Return dismiss 1}]
+    bind $dlg <Destroy> [namespace code {Destroy %W}]
+    bind $dlg.function <Return> [namespace code {ReturnInDetails %W}]
     $dlg.function configure -command [namespace code Details]
 
     # 6. Withdraw the window, then update all the geometry information
@@ -234,10 +234,10 @@ proc ::tk::dialog::error::bgerror err {
 
     raise $dlg
     if {[tk windowingsystem] eq "win32"} {
-	# Place it topmost if we aren't at the top of the stacking
-	# order to ensure that it's seen
-	if {[lindex [wm stackorder .] end] ne "$dlg"} {
-	    wm attributes $dlg -topmost 1
+        # Place it topmost if we aren't at the top of the stacking
+        # order to ensure that it's seen
+        if {[lindex [wm stackorder .] end] ne "$dlg"} {
+            wm attributes $dlg -topmost 1
         }
     }
 
@@ -253,7 +253,7 @@ proc ::tk::dialog::error::bgerror err {
     ::tk::RestoreFocusGrab $dlg $dlg.ok destroy
 
     if {$copy == 1} {
-	return -code break
+        return -code break
     }
 }
 

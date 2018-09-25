@@ -272,11 +272,11 @@ test winDialog-5.7 {GetFileName: extension begins with .} -constraints {
     start {set x [tk_getSaveFile -defaultextension .foo -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
-	    Click cancel
-	} else {
-	    Click ok
-	}
+        if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+            Click cancel
+        } else {
+            Click ok
+        }
     }
     set x "[file tail $x]$msg"
 } -cleanup {
@@ -289,11 +289,11 @@ test winDialog-5.7.1 {GetFileName: extension {} } -constraints {
     start {set x [tk_getSaveFile -defaultextension {} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
-	    Click cancel
-	} else {
-	    Click ok
-	}
+        if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+            Click cancel
+        } else {
+            Click ok
+        }
     }
     set x "[file tail $x]$msg"
 } -cleanup {
@@ -306,11 +306,11 @@ test winDialog-5.7.2 {GetFileName: extension {} Bug 47af31bd3ac6fbbb33cde1a5bab1
     start {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
-	    Click cancel
-	} else {
-	    Click ok
-	}
+        if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+            Click cancel
+        } else {
+            Click ok
+        }
     }
     set x "[file tail $x]$msg"
 } -cleanup {
@@ -323,11 +323,11 @@ test winDialog-5.7.3 {GetFileName: extension {} Bug 47af31bd3ac6fbbb33cde1a5bab1
     start {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar.c} msg]} {
-	    Click cancel
-	} else {
-	    Click ok
-	}
+        if {[catch {SetText [vista? 0x47C 0x3e9] bar.c} msg]} {
+            Click cancel
+        } else {
+            Click ok
+        }
     }
     set x "[file tail $x]$msg"
 } -cleanup {
@@ -342,11 +342,11 @@ test winDialog-5.7.4 {GetFileName: extension {} } -constraints {
     start {set x [tk_getSaveFile -filetypes {{C .c} {Tcl .tcl}} -defaultextension {foo} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
-	    Click cancel
-	} else {
-	    Click ok
-	}
+        if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+            Click cancel
+        } else {
+            Click ok
+        }
     }
     set x "[file tail $x]$msg"
 } -cleanup {
@@ -361,11 +361,11 @@ test winDialog-5.7.5 {GetFileName: extension {} } -constraints {
     start {set x [tk_getSaveFile -filetypes {{C .c} {Tcl .tcl}} -defaultextension {} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
-	    Click cancel
-	} else {
-	    Click ok
-	}
+        if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+            Click cancel
+        } else {
+            Click ok
+        }
     }
     set x "[file tail $x]$msg"
 } -cleanup {
@@ -380,11 +380,11 @@ test winDialog-5.7.6 {GetFileName: All/extension } -constraints {
     start {set x [tk_getSaveFile -filetypes {{All *}} -defaultextension {ext} -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
-	    Click cancel
-	} else {
-	    Click ok
-	}
+        if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+            Click cancel
+        } else {
+            Click ok
+        }
     }
     set x "[file tail $x]$msg"
 } -cleanup {
@@ -427,11 +427,11 @@ test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
     start {set x [tk_getSaveFile -defaultextension foo -title Save]}
     set msg {}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
-	    Click cancel
-	} else {
-	    Click ok
-	}
+        if {[catch {SetText [vista? 0x47C 0x3e9] bar} msg]} {
+            Click cancel
+        } else {
+            Click ok
+        }
     }
     set x "[file tail $x]$msg"
 } -cleanup {
@@ -820,12 +820,12 @@ test winDialog-5.23 {GetFileName: convert \ to /} -constraints {
     set msg {}
     start {set x [tk_getSaveFile -title Back]}
     then {
-	if {[catch {SetText [vista? 0x47C 0x3e9] [file nativename \
-		[file join [initialdir] "12x 457"]]} msg]} {
-	    Click cancel
-	} else {
-	    Click ok
-	}
+        if {[catch {SetText [vista? 0x47C 0x3e9] [file nativename \
+                [file join [initialdir] "12x 457"]]} msg]} {
+            Click cancel
+        } else {
+            Click ok
+        }
     }
     return $x$msg
 } -cleanup {
@@ -937,7 +937,7 @@ test winDialog-10.1 {Tk_FontchooserObjCmd: no arguments} -constraints {
 } -body {
     start {tk fontchooser show}
     list [then {
-	Click cancel
+        Click cancel
     }] $::testfont
 } -result {0 {}}
 test winDialog-10.2 {Tk_FontchooserObjCmd: -initialfont} -constraints {
@@ -948,7 +948,7 @@ test winDialog-10.2 {Tk_FontchooserObjCmd: -initialfont} -constraints {
         tk fontchooser show
     }
     list [then {
-	Click cancel
+        Click cancel
     }] $::testfont
 } -result {0 {}}
 test winDialog-10.3 {Tk_FontchooserObjCmd: -initialfont} -constraints {
@@ -959,7 +959,7 @@ test winDialog-10.3 {Tk_FontchooserObjCmd: -initialfont} -constraints {
         tk fontchooser show
     }
     list [then {
-	Click 1
+        Click 1
     }] [expr {[llength $::testfont] ne {}}]
 } -result {0 1}
 test winDialog-10.4 {Tk_FontchooserObjCmd: -title} -constraints {
@@ -970,7 +970,7 @@ test winDialog-10.4 {Tk_FontchooserObjCmd: -title} -constraints {
         tk fontchooser show
     }
     list [then {
-	Click cancel
+        Click cancel
     }] $::testfont
 } -result {0 {}}
 test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
@@ -984,7 +984,7 @@ test winDialog-10.5 {Tk_FontchooserObjCmd: -parent} -constraints {
     }
     then {
         array set a [testgetwindowinfo $::tk_dialog]
-	Click cancel
+        Click cancel
     }
     list [expr {$a(parent) == [wm frame .]}] $::testfont
 } -result {1 {}}
@@ -996,7 +996,7 @@ test winDialog-10.6 {Tk_FontchooserObjCmd: -apply} -constraints {
         tk fontchooser show
     }
     then {
-	Click cancel
+        Click cancel
     }
 } -result 0
 test winDialog-10.7 {Tk_FontchooserObjCmd: -apply} -constraints {
@@ -1007,7 +1007,7 @@ test winDialog-10.7 {Tk_FontchooserObjCmd: -apply} -constraints {
         tk fontchooser show
     }
     list [then {
-	Click [expr {0x0402}] ;# value from XP
+        Click [expr {0x0402}] ;# value from XP
         Click cancel
     }] [expr {[llength $::testfont] > 0}]
 } -result {0 1}

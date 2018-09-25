@@ -52,10 +52,10 @@ test ttk-6.4 "Destroy widget in configure" -setup {
 
 test ttk-6.5 "Clean up -textvariable traces" -body {
     foreach class {ttk::button ttk::checkbutton ttk::radiobutton} {
-	$class .b1 -textvariable V
-	set V "asdf"
-	destroy .b1
-	set V ""
+        $class .b1 -textvariable V
+        set V "asdf"
+        destroy .b1
+        set V ""
     }
 }
 
@@ -71,9 +71,9 @@ test ttk-6.6 "Bad color spec in styles" -body {
 
 test ttk-6.7 "Basic destruction test" -body {
     foreach widget $widgetClasses {
-	ttk::$widget .w
-	pack .w
-	destroy .w
+        ttk::$widget .w
+        pack .w
+        destroy .w
     }
 }
 
@@ -86,7 +86,7 @@ test ttk-6.8 "Button command removes itself" -body {
 
 test ttk-6.9 "Bad font spec in styles" -setup {
     ttk::style theme create badfont -settings {
-    	ttk::style configure . -font {Helvetica 12 Bogus}
+        ttk::style configure . -font {Helvetica 12 Bogus}
     }
     ttk::style theme use badfont
 } -cleanup {
@@ -116,11 +116,11 @@ test ttk-construction-failure-2 "Destroy widget in constructor" -setup {
     unset OUCH
 } -body {
     list \
-	[catch { ttk::checkbutton .b -variable OUCH } msg] \
-	$msg \
-    	[winfo exists .b] \
-	[info commands .b] \
-	;
+        [catch { ttk::checkbutton .b -variable OUCH } msg] \
+        $msg \
+        [winfo exists .b] \
+        [info commands .b] \
+        ;
 } -result [list 1 "widget has been destroyed" 0 {}]
 
 test ttk-selfdestruct-ok-1 "Intentional self-destruction" -body {
@@ -153,14 +153,14 @@ test ttk-1.4 "Original style preserved" -body {
 
 proc checkstate {w} {
     foreach statespec {
-	{!active !disabled}
-	{!active disabled}
-	{active !disabled}
-	{active disabled}
-    	active
-	disabled
+        {!active !disabled}
+        {!active disabled}
+        {active !disabled}
+        {active disabled}
+        active
+        disabled
     } {
-    	lappend result [$w instate $statespec]
+        lappend result [$w instate $statespec]
     }
     set result
 }
@@ -221,12 +221,12 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
 
 foreach wc $widgetClasses {
     test ttk-coreoptions-$wc "$wc has all core options" -body {
-	ttk::$wc .w
-	foreach option {-class -style -cursor -takefocus} {
-	    .w cget $option
-	}
+        ttk::$wc .w
+        foreach option {-class -style -cursor -takefocus} {
+            .w cget $option
+        }
     } -cleanup {
-	catch {destroy .w}
+        catch {destroy .w}
     }
 }
 
@@ -286,16 +286,16 @@ test ttk-4.3 "Restore font" -constraints fontOption -body {
 
 test ttk-4.4 "Bad resource specifications" -body {
     ttk::style theme settings alt {
-	ttk::style configure TButton -font {Bad font}
-	# @@@ it would be best to raise an error at this point,
-	# @@@ but that's not really feasible in the current framework.
+        ttk::style configure TButton -font {Bad font}
+        # @@@ it would be best to raise an error at this point,
+        # @@@ but that's not really feasible in the current framework.
     }
     pack [ttk::button .tb1 -text "Ouch"]
     ttk::style theme use alt
     update;
     # As long as we haven't crashed, everything's OK
     ttk::style theme settings alt {
-    	ttk::style configure TButton -font TkDefaultFont
+        ttk::style configure TButton -font TkDefaultFont
     }
     ttk::style theme use default
     destroy .tb1
@@ -320,8 +320,8 @@ if {0} {
     proc now {} { set ::now [clock clicks -milliseconds] }
     proc tick {} { puts -nonewline stderr "+" ; flush stderr }
     proc tock {} {
-	set then $::now; set ::now [clock clicks -milliseconds]
-	puts stderr " [expr {$::now - $then}] ms"
+        set then $::now; set ::now [clock clicks -milliseconds]
+        puts stderr " [expr {$::now - $then}] ms"
     }
 } else {
     proc now {} {} ; proc tick {} {} ; proc tock {} {}
@@ -341,11 +341,11 @@ test ttk-8.1 "Test -compound options" -body {
     # Main goal is to make sure no code paths crash.
     foreach image {icon ""} {
         foreach text {"Hi!" ""} {
-	    foreach compound $::compoundStrings {
-		.ctb configure -image $image -text $text -compound $compound
-		update; tick
-	    }
-	}
+            foreach compound $::compoundStrings {
+                .ctb configure -image $image -text $text -compound $compound
+                update; tick
+            }
+        }
     }
 }
 tock
@@ -356,11 +356,11 @@ test ttk-8.2 "Test -compound options with regular button" -body {
 
     foreach image {"" icon} {
         foreach text {"Hi!" ""} {
-	    foreach compound [lrange $::compoundStrings 2 end] {
-		.rtb configure -image $image -text $text -compound $compound
-		update; tick
-	    }
-	}
+            foreach compound [lrange $::compoundStrings 2 end] {
+                .rtb configure -image $image -text $text -compound $compound
+                update; tick
+            }
+        }
     }
 }
 tock
@@ -368,11 +368,11 @@ tock
 test ttk-8.3 "Rerun test 8.1" -body {
     foreach image {icon ""} {
         foreach text {"Hi!" ""} {
-	    foreach compound $::compoundStrings {
-		.ctb configure -image $image -text $text -compound $compound
-		update; tick
-	    }
-	}
+            foreach compound $::compoundStrings {
+                .ctb configure -image $image -text $text -compound $compound
+                update; tick
+            }
+        }
     }
 }
 tock
@@ -513,14 +513,14 @@ test ttk-12.3 "-borderwidth frame option" -body {
     pack [set t [ttk::frame .t.f]] -expand true -fill x ;
     pack [ttk::label $t.l -text "ASDF QWERTY"] -expand true -fill both
     foreach theme {default alt} {
-	ttk::style theme use $theme
-	foreach relief {flat raised sunken ridge groove solid} {
-	    $t configure -relief $relief
-	    for {set i 5} {$i >= 0} {incr i -1} {
-		$t configure -borderwidth $i
-		update
-	    }
-	}
+        ttk::style theme use $theme
+        foreach relief {flat raised sunken ridge groove solid} {
+            $t configure -relief $relief
+            for {set i 5} {$i >= 0} {incr i -1} {
+                $t configure -borderwidth $i
+                update
+            }
+        }
     }
 }
 
@@ -544,7 +544,7 @@ test ttk-13.4 "Custom styles -- bad -style option" -body {
 
 test ttk-13.5 "Custom layouts -- missing element definition" -body {
     ttk::style layout badstyle {
-    	NoSuchElement
+        NoSuchElement
     }
     ttk::button .tb1 -style badstyle
 } -cleanup {
@@ -584,9 +584,9 @@ test ttk-15.1 {Bug 3062331} -setup {
 
 test ttk-15.2 {Bug 3341056} -setup {
     proc foo {} {
-	destroy .lf
-	ttk::labelframe .lf
-	ttk::checkbutton .lf.cb -text xxx
+        destroy .lf
+        ttk::labelframe .lf
+        ttk::checkbutton .lf.cb -text xxx
     }
 } -body {
     ttk::button .b -text xxx -command foo

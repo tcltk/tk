@@ -5,7 +5,7 @@
 namespace eval ttk::scale {
     variable State
     array set State  {
-	dragging 0
+        dragging 0
     }
 }
 
@@ -40,7 +40,7 @@ proc ttk::scale::Press {w x y} {
     set State(dragging) 0
 
     switch -glob -- [$w identify $x $y] {
-	*track -
+        *track -
         *trough {
             set inc [expr {([$w get $x $y] <= [$w get]) ^ ([$w cget -from] > [$w cget -to]) ? -1 : 1}]
             ttk::Repeatedly Increment $w $inc
@@ -53,14 +53,14 @@ proc ttk::scale::Press {w x y} {
 }
 
 # scale::Jump -- ButtonPress-2/3 binding for scale acts like
-#	Press except that clicking in the trough jumps to the
-#	clicked position.
+#       Press except that clicking in the trough jumps to the
+#       clicked position.
 proc ttk::scale::Jump {w x y} {
     variable State
     set State(dragging) 0
 
     switch -glob -- [$w identify $x $y] {
-	*track -
+        *track -
         *trough {
             $w set [$w get $x $y]
             set State(dragging) 1
@@ -75,7 +75,7 @@ proc ttk::scale::Jump {w x y} {
 proc ttk::scale::Drag {w x y} {
     variable State
     if {$State(dragging)} {
-	$w set [$w get $x $y]
+        $w set [$w get $x $y]
     }
 }
 
@@ -88,7 +88,7 @@ proc ttk::scale::Release {w x y} {
 proc ttk::scale::Increment {w delta} {
     if {![winfo exists $w]} return
     if {([$w cget -from] > [$w cget -to])} {
-	set delta [expr {-$delta}]
+        set delta [expr {-$delta}]
     }
     $w set [expr {[$w get] + $delta}]
 }

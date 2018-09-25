@@ -1,7 +1,7 @@
 /*
  * tkMacOSXInt.h --
  *
- *	Declarations of Macintosh specific shared variables and procedures.
+ *      Declarations of Macintosh specific shared variables and procedures.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -34,44 +34,44 @@
 
 #ifndef _TKMACPRIV
 #   ifndef CGGEOMETRY_H_
-#	ifndef CGFLOAT_DEFINED
-#	    if __LP64__
-#		define CGFloat double
-#	    else
-#		define CGFloat float
-#	    endif
-#	endif
-#	define CGSize struct {CGFloat width; CGFloat height;}
+#       ifndef CGFLOAT_DEFINED
+#           if __LP64__
+#               define CGFloat double
+#           else
+#               define CGFloat float
+#           endif
+#       endif
+#       define CGSize struct {CGFloat width; CGFloat height;}
 #   endif
 #   ifndef CGCONTEXT_H_
-#	define CGContextRef void *
+#       define CGContextRef void *
 #   endif
 #   ifndef CGCOLOR_H_
-#	define CGColorRef void *
+#       define CGColorRef void *
 #   endif
 #   ifndef __HISHAPE__
-#	define HIShapeRef void *
+#       define HIShapeRef void *
 #   endif
 #   ifndef _APPKITDEFINES_H
-#	define NSView void *
+#       define NSView void *
 #   endif
 #endif
 
 struct TkWindowPrivate {
-    TkWindow *winPtr;		/* Ptr to tk window or NULL if Pixmap */
+    TkWindow *winPtr;           /* Ptr to tk window or NULL if Pixmap */
     NSView *view;
     CGContextRef context;
-    int xOff;			/* X offset from toplevel window */
-    int yOff;			/* Y offset from toplevel window */
+    int xOff;                   /* X offset from toplevel window */
+    int yOff;                   /* Y offset from toplevel window */
     CGSize size;
-    HIShapeRef visRgn;		/* Visible region of window */
-    HIShapeRef aboveVisRgn;	/* Visible region of window & its children */
-    HIShapeRef drawRgn;		/* Clipped drawing region */
-    int referenceCount;		/* Don't delete toplevel until children are
-				 * gone. */
+    HIShapeRef visRgn;          /* Visible region of window */
+    HIShapeRef aboveVisRgn;     /* Visible region of window & its children */
+    HIShapeRef drawRgn;         /* Clipped drawing region */
+    int referenceCount;         /* Don't delete toplevel until children are
+                                 * gone. */
     struct TkWindowPrivate *toplevel;
-				/* Pointer to the toplevel datastruct. */
-    int flags;			/* Various state see defines below. */
+                                /* Pointer to the toplevel datastruct. */
+    int flags;                  /* Various state see defines below. */
 };
 typedef struct TkWindowPrivate MacDrawable;
 
@@ -79,13 +79,13 @@ typedef struct TkWindowPrivate MacDrawable;
  * Defines use for the flags field of the MacDrawable data structure.
  */
 
-#define TK_SCROLLBAR_GROW	0x01
-#define TK_CLIP_INVALID		0x02
-#define TK_HOST_EXISTS		0x04
-#define TK_DRAWN_UNDER_MENU	0x08
-#define TK_FOCUSED_VIEW		0x10
-#define TK_IS_PIXMAP		0x20
-#define TK_IS_BW_PIXMAP		0x40
+#define TK_SCROLLBAR_GROW       0x01
+#define TK_CLIP_INVALID         0x02
+#define TK_HOST_EXISTS          0x04
+#define TK_DRAWN_UNDER_MENU     0x08
+#define TK_FOCUSED_VIEW         0x10
+#define TK_IS_PIXMAP            0x20
+#define TK_IS_BW_PIXMAP         0x40
 #define TK_DO_NOT_DRAW          0x80
 #define TK_USE_XIMAGE_ALPHA     0x100
 /*
@@ -136,22 +136,22 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
 
 #ifndef _TKMACPRIV
 #   ifndef CGGEOMETRY_H_
-#	ifndef CGFLOAT_DEFINED
-#	    undef CGFloat
-#	endif
-#	undef CGSize
+#       ifndef CGFLOAT_DEFINED
+#           undef CGFloat
+#       endif
+#       undef CGSize
 #   endif
 #   ifndef CGCONTEXT_H_
-#	undef CGContextRef
+#       undef CGContextRef
 #   endif
 #   ifndef CGCOLOR_H_
-#	undef CGColorRef
+#       undef CGColorRef
 #   endif
 #   ifndef __HISHAPE__
-#	undef HIShapeRef
+#       undef HIShapeRef
 #   endif
 #   ifndef _APPKITDEFINES_H
-#	undef NSView
+#       undef NSView
 #   endif
 #endif
 
@@ -173,17 +173,17 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
  * Defines used for the flags argument to TkGenWMConfigureEvent.
  */
 
-#define TK_LOCATION_CHANGED	1
-#define TK_SIZE_CHANGED		2
-#define TK_BOTH_CHANGED		3
+#define TK_LOCATION_CHANGED     1
+#define TK_SIZE_CHANGED         2
+#define TK_BOTH_CHANGED         3
 #define TK_MACOSX_HANDLE_EVENT_IMMEDIATELY 1024
 
 /*
  * Defines for tkTextDisp.c
  */
 
-#define TK_LAYOUT_WITH_BASE_CHUNKS	1
-#define TK_DRAW_IN_CONTEXT		1
+#define TK_LAYOUT_WITH_BASE_CHUNKS      1
+#define TK_DRAW_IN_CONTEXT              1
 
 /*
  * Prototypes of internal procs not in the stubs table.
@@ -192,10 +192,10 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
 #if 0
 MODULE_SCOPE int XSetClipRectangles(Display *d, GC gc, int clip_x_origin,
-	int clip_y_origin, XRectangle* rectangles, int n, int ordering);
+        int clip_y_origin, XRectangle* rectangles, int n, int ordering);
 #endif
 MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
-	int y, int width, int height);
+        int y, int width, int height);
 MODULE_SCOPE void TkpRetainRegion(TkRegion r);
 MODULE_SCOPE void TkpReleaseRegion(TkRegion r);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);

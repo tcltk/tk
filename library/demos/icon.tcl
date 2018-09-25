@@ -25,27 +25,27 @@ pack $btns -side bottom -fill x
 
 # Main widget program sets variable tk_demoDirectory
 image create bitmap flagup \
-	-file [file join $tk_demoDirectory images flagup.xbm] \
-	-maskfile [file join $tk_demoDirectory images flagup.xbm]
+        -file [file join $tk_demoDirectory images flagup.xbm] \
+        -maskfile [file join $tk_demoDirectory images flagup.xbm]
 image create bitmap flagdown \
-	-file [file join $tk_demoDirectory images flagdown.xbm] \
-	-maskfile [file join $tk_demoDirectory images flagdown.xbm]
+        -file [file join $tk_demoDirectory images flagdown.xbm] \
+        -maskfile [file join $tk_demoDirectory images flagdown.xbm]
 frame $w.frame -borderwidth 10
 pack $w.frame -side top
 
 checkbutton $w.frame.b1 -image flagdown -selectimage flagup \
-	-indicatoron 0
+        -indicatoron 0
 $w.frame.b1 configure -selectcolor [$w.frame.b1 cget -background]
 checkbutton $w.frame.b2 \
-	-bitmap @[file join $tk_demoDirectory images letters.xbm] \
-	-indicatoron 0 -selectcolor SeaGreen1
+        -bitmap @[file join $tk_demoDirectory images letters.xbm] \
+        -indicatoron 0 -selectcolor SeaGreen1
 frame $w.frame.left
 pack $w.frame.left $w.frame.b1 $w.frame.b2 -side left -expand yes -padx 5m
 
 radiobutton $w.frame.left.b3 \
-	-bitmap @[file join $tk_demoDirectory images letters.xbm] \
-	-variable letters -value full
+        -bitmap @[file join $tk_demoDirectory images letters.xbm] \
+        -variable letters -value full
 radiobutton $w.frame.left.b4 \
-	-bitmap @[file join $tk_demoDirectory images noletter.xbm] \
-	-variable letters -value empty
+        -bitmap @[file join $tk_demoDirectory images noletter.xbm] \
+        -variable letters -value empty
 pack $w.frame.left.b3 $w.frame.left.b4 -side top -expand yes

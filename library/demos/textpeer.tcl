@@ -35,12 +35,12 @@ $first insert end "button."
 proc makeClone {w parent} {
     global count
     set t [$parent peer create $w.text[incr count] -yscroll "$w.sb$count set"\
-		  -height 10 -wrap word]
+                  -height 10 -wrap word]
     set sb [ttk::scrollbar $w.sb$count -command "$t yview" -orient vertical]
     set b1 [button $w.clone$count -command "makeClone $w $t" \
-		    -text "Make Peer"]
+                    -text "Make Peer"]
     set b2 [button $w.kill$count -command "killClone $w $count" \
-		    -text "Delete Peer"]
+                    -text "Delete Peer"]
     set row [expr {$count * 2}]
     grid $t $sb $b1 -sticky nsew -row $row
     grid ^  ^   $b2 -row [incr row]

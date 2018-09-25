@@ -1,7 +1,7 @@
 /*
  * tkMacOSX.h --
  *
- *	Declarations of Macintosh specific exported variables and procedures.
+ *      Declarations of Macintosh specific exported variables and procedures.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.

@@ -1,8 +1,8 @@
 /*
  * tkWinWindow.c --
  *
- *	Xlib emulation routines for Windows related to creating, displaying
- *	and destroying windows.
+ *      Xlib emulation routines for Windows related to creating, displaying
+ *      and destroying windows.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  *
@@ -14,9 +14,9 @@
 #include "tkBusy.h"
 
 typedef struct ThreadSpecificData {
-    int initialized;		/* 0 means table below needs initializing. */
+    int initialized;            /* 0 means table below needs initializing. */
     Tcl_HashTable windowTable;  /* The windowTable maps from HWND to Tk_Window
-				 * handles. */
+                                 * handles. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -24,22 +24,22 @@ static Tcl_ThreadDataKey dataKey;
  * Forward declarations for functions defined in this file:
  */
 
-static void		NotifyVisibility(XEvent *eventPtr, TkWindow *winPtr);
+static void             NotifyVisibility(XEvent *eventPtr, TkWindow *winPtr);
 
 /*
  *----------------------------------------------------------------------
  *
  * Tk_AttachHWND --
  *
- *	This function binds an HWND and a reflection function to the specified
- *	Tk_Window.
+ *      This function binds an HWND and a reflection function to the specified
+ *      Tk_Window.
  *
  * Results:
- *	Returns an X Window that encapsulates the HWND.
+ *      Returns an X Window that encapsulates the HWND.
  *
  * Side effects:
- *	May allocate a new X Window. Also enters the HWND into the global
- *	window table.
+ *      May allocate a new X Window. Also enters the HWND into the global
+ *      window table.
  *
  *----------------------------------------------------------------------
  */
@@ -53,11 +53,11 @@ Tk_AttachHWND(
     Tcl_HashEntry *entryPtr;
     TkWinDrawable *twdPtr = (TkWinDrawable *) Tk_WindowId(tkwin);
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
-	tsdPtr->initialized = 1;
+        Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
+        tsdPtr->initialized = 1;
     }
 
     /*
@@ -66,13 +66,13 @@ Tk_AttachHWND(
      */
 
     if (twdPtr == NULL) {
-	twdPtr = ckalloc(sizeof(TkWinDrawable));
-	twdPtr->type = TWD_WINDOW;
-	twdPtr->window.winPtr = (TkWindow *) tkwin;
+        twdPtr = ckalloc(sizeof(TkWinDrawable));
+        twdPtr->type = TWD_WINDOW;
+        twdPtr->window.winPtr = (TkWindow *) tkwin;
     } else if (twdPtr->window.handle != NULL) {
-	entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable,
-		(char *)twdPtr->window.handle);
-	Tcl_DeleteHashEntry(entryPtr);
+        entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable,
+                (char *)twdPtr->window.handle);
+        Tcl_DeleteHashEntry(entryPtr);
     }
 
     /*
@@ -91,14 +91,14 @@ Tk_AttachHWND(
  *
  * Tk_HWNDToWindow --
  *
- *	This function retrieves a Tk_Window from the window table given an
- *	HWND.
+ *      This function retrieves a Tk_Window from the window table given an
+ *      HWND.
  *
  * Results:
- *	Returns the matching Tk_Window.
+ *      Returns the matching Tk_Window.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -109,15 +109,15 @@ Tk_HWNDToWindow(
 {
     Tcl_HashEntry *entryPtr;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
-	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
-	tsdPtr->initialized = 1;
+        Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
+        tsdPtr->initialized = 1;
     }
     entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char *) hwnd);
     if (entryPtr != NULL) {
-	return (Tk_Window) Tcl_GetHashValue(entryPtr);
+        return (Tk_Window) Tcl_GetHashValue(entryPtr);
     }
     return NULL;
 }
@@ -127,13 +127,13 @@ Tk_HWNDToWindow(
  *
  * Tk_GetHWND --
  *
- *	This function extracts the HWND from an X Window.
+ *      This function extracts the HWND from an X Window.
  *
  * Results:
- *	Returns the HWND associated with the Window.
+ *      Returns the HWND associated with the Window.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -150,23 +150,23 @@ Tk_GetHWND(
  *
  * TkpPrintWindowId --
  *
- *	This routine stores the string representation of the platform
- *	dependent window handle for an X Window in the given buffer.
+ *      This routine stores the string representation of the platform
+ *      dependent window handle for an X Window in the given buffer.
  *
  * Results:
- *	Returns the result in the specified buffer.
+ *      Returns the result in the specified buffer.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpPrintWindowId(
-    char *buf,			/* Pointer to string large enough to hold the
-				 * hex representation of a pointer. */
-    Window window)		/* Window to be printed into buffer. */
+    char *buf,                  /* Pointer to string large enough to hold the
+                                 * hex representation of a pointer. */
+    Window window)              /* Window to be printed into buffer. */
 {
     HWND hwnd = (window) ? Tk_GetHWND(window) : 0;
 
@@ -178,7 +178,7 @@ TkpPrintWindowId(
 
     sprintf(buf, "0x%p", hwnd);
     if (buf[2] == '0' && buf[3] == 'x') {
-	sprintf(buf, "%p", hwnd);
+        sprintf(buf, "%p", hwnd);
     }
 }
 
@@ -187,33 +187,33 @@ TkpPrintWindowId(
  *
  * TkpScanWindowId --
  *
- *	Given a string which represents the platform dependent window handle,
- *	produce the X Window id for the window.
+ *      Given a string which represents the platform dependent window handle,
+ *      produce the X Window id for the window.
  *
  * Results:
- *	The return value is normally TCL_OK; in this case *idPtr will be set
- *	to the X Window id equivalent to string. If string is improperly
- *	formed then TCL_ERROR is returned and an error message will be left in
- *	the interp's result. If the number does not correspond to a Tk Window,
- *	then *idPtr will be set to None.
+ *      The return value is normally TCL_OK; in this case *idPtr will be set
+ *      to the X Window id equivalent to string. If string is improperly
+ *      formed then TCL_ERROR is returned and an error message will be left in
+ *      the interp's result. If the number does not correspond to a Tk Window,
+ *      then *idPtr will be set to None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkpScanWindowId(
-    Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    const char *string,		/* String containing a (possibly signed)
-				 * integer in a form acceptable to strtol. */
-    Window *idPtr)		/* Place to store converted result. */
+    Tcl_Interp *interp,         /* Interpreter to use for error reporting. */
+    const char *string,         /* String containing a (possibly signed)
+                                 * integer in a form acceptable to strtol. */
+    Window *idPtr)              /* Place to store converted result. */
 {
     Tk_Window tkwin;
     union {
-	HWND hwnd;
-	int number;
+        HWND hwnd;
+        int number;
     } win;
 
     /*
@@ -223,17 +223,17 @@ TkpScanWindowId(
 
     if (
 #ifdef _WIN64
-	    (sscanf(string, "0x%p", &win.hwnd) != 1) &&
+            (sscanf(string, "0x%p", &win.hwnd) != 1) &&
 #endif
-	    Tcl_GetInt(interp, string, &win.number) != TCL_OK) {
-	return TCL_ERROR;
+            Tcl_GetInt(interp, string, &win.number) != TCL_OK) {
+        return TCL_ERROR;
     }
 
     tkwin = Tk_HWNDToWindow(win.hwnd);
     if (tkwin) {
-	*idPtr = Tk_WindowId(tkwin);
+        *idPtr = Tk_WindowId(tkwin);
     } else {
-	*idPtr = None;
+        *idPtr = None;
     }
     return TCL_OK;
 }
@@ -243,14 +243,14 @@ TkpScanWindowId(
  *
  * TkpMakeWindow --
  *
- *	Creates a Windows window object based on the current attributes of the
- *	specified TkWindow.
+ *      Creates a Windows window object based on the current attributes of the
+ *      specified TkWindow.
  *
  * Results:
- *	Returns a pointer to a new TkWinDrawable cast to a Window.
+ *      Returns a pointer to a new TkWinDrawable cast to a Window.
  *
  * Side effects:
- *	Creates a new window.
+ *      Creates a new window.
  *
  *----------------------------------------------------------------------
  */
@@ -265,11 +265,11 @@ TkpMakeWindow(
     HWND hwnd;
 
     if (parent != None) {
-	parentWin = Tk_GetHWND(parent);
-	style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+        parentWin = Tk_GetHWND(parent);
+        style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     } else {
-	parentWin = NULL;
-	style = WS_POPUP | WS_CLIPCHILDREN;
+        parentWin = NULL;
+        style = WS_POPUP | WS_CLIPCHILDREN;
     }
 
     /*
@@ -278,10 +278,10 @@ TkpMakeWindow(
      */
 
     hwnd = CreateWindowEx(WS_EX_NOPARENTNOTIFY, TK_WIN_CHILD_CLASS_NAME, NULL,
-	    (DWORD) style, Tk_X(winPtr), Tk_Y(winPtr), Tk_Width(winPtr),
-	    Tk_Height(winPtr), parentWin, NULL, Tk_GetHINSTANCE(), NULL);
+            (DWORD) style, Tk_X(winPtr), Tk_Y(winPtr), Tk_Width(winPtr),
+            Tk_Height(winPtr), parentWin, NULL, Tk_GetHINSTANCE(), NULL);
     SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0,
-	    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+            SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     return Tk_AttachHWND((Tk_Window)winPtr, hwnd);
 }
 
@@ -290,14 +290,14 @@ TkpMakeWindow(
  *
  * XDestroyWindow --
  *
- *	Destroys the given window.
+ *      Destroys the given window.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Sends the WM_DESTROY message to the window and then destroys it the
- *	Win32 resources associated with the window.
+ *      Sends the WM_DESTROY message to the window and then destroys it the
+ *      Win32 resources associated with the window.
  *
  *----------------------------------------------------------------------
  */
@@ -312,7 +312,7 @@ XDestroyWindow(
     TkWindow *winPtr = TkWinGetWinPtr(w);
     HWND hwnd = Tk_GetHWND(w);
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     display->request++;
 
@@ -325,7 +325,7 @@ XDestroyWindow(
 
     entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char*)hwnd);
     if (entryPtr != NULL) {
-	Tcl_DeleteHashEntry(entryPtr);
+        Tcl_DeleteHashEntry(entryPtr);
     }
 
     ckfree(twdPtr);
@@ -336,7 +336,7 @@ XDestroyWindow(
      */
 
     if (hwnd != NULL && !(winPtr->flags & TK_DONT_DESTROY_WINDOW)) {
-	DestroyWindow(hwnd);
+        DestroyWindow(hwnd);
     }
     return Success;
 }
@@ -346,13 +346,13 @@ XDestroyWindow(
  *
  * XMapWindow --
  *
- *	Cause the given window to become visible.
+ *      Cause the given window to become visible.
  *
  * Results:
- *	None
+ *      None
  *
  * Side effects:
- *	Causes the window state to change, and generates a MapNotify event.
+ *      Causes the window state to change, and generates a MapNotify event.
  *
  *----------------------------------------------------------------------
  */
@@ -378,24 +378,24 @@ XMapWindow(
      */
 
     if (!(winPtr->flags & TK_TOP_HIERARCHY)) {
-	for (parentPtr = winPtr->parentPtr; ;
-		parentPtr = parentPtr->parentPtr) {
-	    if ((parentPtr == NULL) || !(parentPtr->flags & TK_MAPPED)) {
-		return Success;
-	    }
-	    if (parentPtr->flags & TK_TOP_HIERARCHY) {
-		break;
-	    }
-	}
+        for (parentPtr = winPtr->parentPtr; ;
+                parentPtr = parentPtr->parentPtr) {
+            if ((parentPtr == NULL) || !(parentPtr->flags & TK_MAPPED)) {
+                return Success;
+            }
+            if (parentPtr->flags & TK_TOP_HIERARCHY) {
+                break;
+            }
+        }
     } else {
-	event.type = MapNotify;
-	event.xmap.serial = display->request;
-	event.xmap.send_event = False;
-	event.xmap.display = display;
-	event.xmap.event = winPtr->window;
-	event.xmap.window = winPtr->window;
-	event.xmap.override_redirect = winPtr->atts.override_redirect;
-	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+        event.type = MapNotify;
+        event.xmap.serial = display->request;
+        event.xmap.send_event = False;
+        event.xmap.display = display;
+        event.xmap.event = winPtr->window;
+        event.xmap.window = winPtr->window;
+        event.xmap.override_redirect = winPtr->atts.override_redirect;
+        Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     }
 
     /*
@@ -418,35 +418,35 @@ XMapWindow(
  *
  * NotifyVisibility --
  *
- *	This function recursively notifies the mapped children of the
- *	specified window of a change in visibility. Note that we don't
- *	properly report the visibility state, since Windows does not provide
- *	that info. The eventPtr argument must point to an event that has been
- *	completely initialized except for the window slot.
+ *      This function recursively notifies the mapped children of the
+ *      specified window of a change in visibility. Note that we don't
+ *      properly report the visibility state, since Windows does not provide
+ *      that info. The eventPtr argument must point to an event that has been
+ *      completely initialized except for the window slot.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Generates lots of events.
+ *      Generates lots of events.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 NotifyVisibility(
-    XEvent *eventPtr,		/* Initialized VisibilityNotify event. */
-    TkWindow *winPtr)		/* Window to notify. */
+    XEvent *eventPtr,           /* Initialized VisibilityNotify event. */
+    TkWindow *winPtr)           /* Window to notify. */
 {
     if (winPtr->atts.event_mask & VisibilityChangeMask) {
-	eventPtr->xvisibility.window = winPtr->window;
-	Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_TAIL);
+        eventPtr->xvisibility.window = winPtr->window;
+        Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_TAIL);
     }
     for (winPtr = winPtr->childList; winPtr != NULL;
-	    winPtr = winPtr->nextPtr) {
-	if (winPtr->flags & TK_MAPPED) {
-	    NotifyVisibility(eventPtr, winPtr);
-	}
+            winPtr = winPtr->nextPtr) {
+        if (winPtr->flags & TK_MAPPED) {
+            NotifyVisibility(eventPtr, winPtr);
+        }
     }
 }
 
@@ -455,13 +455,13 @@ NotifyVisibility(
  *
  * XUnmapWindow --
  *
- *	Cause the given window to become invisible.
+ *      Cause the given window to become invisible.
  *
  * Results:
- *	None
+ *      None
  *
  * Side effects:
- *	Causes the window state to change, and generates an UnmapNotify event.
+ *      Causes the window state to change, and generates an UnmapNotify event.
  *
  *----------------------------------------------------------------------
  */
@@ -485,14 +485,14 @@ XUnmapWindow(
     winPtr->flags &= ~TK_MAPPED;
 
     if (winPtr->flags & TK_WIN_MANAGED) {
-	event.type = UnmapNotify;
-	event.xunmap.serial = display->request;
-	event.xunmap.send_event = False;
-	event.xunmap.display = display;
-	event.xunmap.event = winPtr->window;
-	event.xunmap.window = winPtr->window;
-	event.xunmap.from_configure = False;
-	Tk_HandleEvent(&event);
+        event.type = UnmapNotify;
+        event.xunmap.serial = display->request;
+        event.xunmap.send_event = False;
+        event.xunmap.display = display;
+        event.xunmap.event = winPtr->window;
+        event.xunmap.window = winPtr->window;
+        event.xunmap.from_configure = False;
+        Tk_HandleEvent(&event);
     }
     return Success;
 }
@@ -502,13 +502,13 @@ XUnmapWindow(
  *
  * XMoveResizeWindow --
  *
- *	Move and resize a window relative to its parent.
+ *      Move and resize a window relative to its parent.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Repositions and resizes the specified window.
+ *      Repositions and resizes the specified window.
  *
  *----------------------------------------------------------------------
  */
@@ -517,7 +517,7 @@ int
 XMoveResizeWindow(
     Display *display,
     Window w,
-    int x, int y,		/* Position relative to parent. */
+    int x, int y,               /* Position relative to parent. */
     unsigned int width, unsigned int height)
 {
     display->request++;
@@ -530,13 +530,13 @@ XMoveResizeWindow(
  *
  * XMoveWindow --
  *
- *	Move a window relative to its parent.
+ *      Move a window relative to its parent.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Repositions the specified window.
+ *      Repositions the specified window.
  *
  *----------------------------------------------------------------------
  */
@@ -545,14 +545,14 @@ int
 XMoveWindow(
     Display *display,
     Window w,
-    int x, int y)		/* Position relative to parent */
+    int x, int y)               /* Position relative to parent */
 {
     TkWindow *winPtr = TkWinGetWinPtr(w);
 
     display->request++;
 
     MoveWindow(Tk_GetHWND(w), x, y, winPtr->changes.width,
-	    winPtr->changes.height, TRUE);
+            winPtr->changes.height, TRUE);
     return Success;
 }
 
@@ -561,13 +561,13 @@ XMoveWindow(
  *
  * XResizeWindow --
  *
- *	Resize a window.
+ *      Resize a window.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Resizes the specified window.
+ *      Resizes the specified window.
  *
  *----------------------------------------------------------------------
  */
@@ -583,7 +583,7 @@ XResizeWindow(
     display->request++;
 
     MoveWindow(Tk_GetHWND(w), winPtr->changes.x, winPtr->changes.y, (int)width,
-	    (int)height, TRUE);
+            (int)height, TRUE);
     return Success;
 }
 
@@ -592,13 +592,13 @@ XResizeWindow(
  *
  * XRaiseWindow, XLowerWindow --
  *
- *	Change the stacking order of a window.
+ *      Change the stacking order of a window.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Changes the stacking order of the specified window.
+ *      Changes the stacking order of the specified window.
  *
  *----------------------------------------------------------------------
  */
@@ -632,16 +632,16 @@ XLowerWindow(
  *
  * XConfigureWindow --
  *
- *	Change the size, position, stacking, or border of the specified
- *	window.
+ *      Change the size, position, stacking, or border of the specified
+ *      window.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Changes the attributes of the specified window. Note that we ignore
- *	the passed in values and use the values stored in the TkWindow data
- *	structure.
+ *      Changes the attributes of the specified window. Note that we ignore
+ *      the passed in values and use the values stored in the TkWindow data
+ *      structure.
  *
  *----------------------------------------------------------------------
  */
@@ -663,8 +663,8 @@ XConfigureWindow(
      */
 
     if (valueMask & (CWX|CWY|CWWidth|CWHeight)) {
-	MoveWindow(hwnd, winPtr->changes.x, winPtr->changes.y,
-		winPtr->changes.width, winPtr->changes.height, TRUE);
+        MoveWindow(hwnd, winPtr->changes.x, winPtr->changes.y,
+                winPtr->changes.width, winPtr->changes.height, TRUE);
     }
 
     /*
@@ -672,14 +672,14 @@ XConfigureWindow(
      */
 
     if (valueMask & CWStackMode) {
-	HWND sibling;
+        HWND sibling;
 
-	if ((valueMask & CWSibling) && (values->sibling != None)) {
-	    sibling = Tk_GetHWND(values->sibling);
-	} else {
-	    sibling = NULL;
-	}
-	TkWinSetWindowPos(hwnd, sibling, values->stack_mode);
+        if ((valueMask & CWSibling) && (values->sibling != None)) {
+            sibling = Tk_GetHWND(values->sibling);
+        } else {
+            sibling = NULL;
+        }
+        TkWinSetWindowPos(hwnd, sibling, values->stack_mode);
     }
     return Success;
 }
@@ -689,13 +689,13 @@ XConfigureWindow(
  *
  * XClearWindow --
  *
- *	Clears the entire window to the current background color.
+ *      Clears the entire window to the current background color.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Erases the current contents of the window.
+ *      Erases the current contents of the window.
  *
  *----------------------------------------------------------------------
  */
@@ -736,15 +736,15 @@ XClearWindow(
  *
  * XChangeWindowAttributes --
  *
- *	This function is called when the attributes on a window are updated.
- *	Since Tk maintains all of the window state, the only relevant value is
- *	the cursor.
+ *      This function is called when the attributes on a window are updated.
+ *      Since Tk maintains all of the window state, the only relevant value is
+ *      the cursor.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	May cause the mouse position to be updated.
+ *      May cause the mouse position to be updated.
  *
  *----------------------------------------------------------------------
  */
@@ -757,7 +757,7 @@ XChangeWindowAttributes(
     XSetWindowAttributes* attributes)
 {
     if (valueMask & CWCursor) {
-	XDefineCursor(display, w, attributes->cursor);
+        XDefineCursor(display, w, attributes->cursor);
     }
     return Success;
 }
@@ -767,13 +767,13 @@ XChangeWindowAttributes(
  *
  * XReparentWindow --
  *
- *	TODO: currently placeholder to satisfy Xlib stubs.
+ *      TODO: currently placeholder to satisfy Xlib stubs.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	TODO.
+ *      TODO.
  *
  *----------------------------------------------------------------------
  */
@@ -794,23 +794,23 @@ XReparentWindow(
  *
  * TkWinSetWindowPos --
  *
- *	Adjust the stacking order of a window relative to a second window (or
- *	NULL).
+ *      Adjust the stacking order of a window relative to a second window (or
+ *      NULL).
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Moves the specified window in the stacking order.
+ *      Moves the specified window in the stacking order.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkWinSetWindowPos(
-    HWND hwnd,			/* Window to restack. */
-    HWND siblingHwnd,		/* Sibling window. */
-    int pos)			/* One of Above or Below. */
+    HWND hwnd,                  /* Window to restack. */
+    HWND siblingHwnd,           /* Sibling window. */
+    int pos)                    /* One of Above or Below. */
 {
     HWND temp;
 
@@ -820,19 +820,19 @@ TkWinSetWindowPos(
      */
 
     if (siblingHwnd) {
-	if (pos == Above) {
-	    SetWindowPos(hwnd, siblingHwnd, 0, 0, 0, 0,
-		    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-	    temp = hwnd;
-	    hwnd = siblingHwnd;
-	    siblingHwnd = temp;
-	}
+        if (pos == Above) {
+            SetWindowPos(hwnd, siblingHwnd, 0, 0, 0, 0,
+                    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+            temp = hwnd;
+            hwnd = siblingHwnd;
+            siblingHwnd = temp;
+        }
     } else {
-	siblingHwnd = (pos == Above) ? HWND_TOP : HWND_BOTTOM;
+        siblingHwnd = (pos == Above) ? HWND_TOP : HWND_BOTTOM;
     }
 
     SetWindowPos(hwnd, siblingHwnd, 0, 0, 0, 0,
-	    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+            SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 }
 
 /*
@@ -840,14 +840,14 @@ TkWinSetWindowPos(
  *
  * TkpShowBusyWindow --
  *
- *	Makes a busy window "appear".
+ *      Makes a busy window "appear".
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Arranges for the busy window to start intercepting events and the
- *	cursor to change to the configured "hey, I'm busy!" setting.
+ *      Arranges for the busy window to start intercepting events and the
+ *      cursor to change to the configured "hey, I'm busy!" setting.
  *
  *----------------------------------------------------------------------
  */
@@ -863,12 +863,12 @@ TkpShowBusyWindow(
     Window window;
 
     if (busyPtr->tkBusy != NULL) {
-	Tk_MapWindow(busyPtr->tkBusy);
-	window = Tk_WindowId(busyPtr->tkBusy);
-	display = Tk_Display(busyPtr->tkBusy);
-	hWnd = Tk_GetHWND(window);
-	display->request++;
-	SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+        Tk_MapWindow(busyPtr->tkBusy);
+        window = Tk_WindowId(busyPtr->tkBusy);
+        display = Tk_Display(busyPtr->tkBusy);
+        hWnd = Tk_GetHWND(window);
+        display->request++;
+        SetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     }
 
     /*
@@ -890,14 +890,14 @@ TkpShowBusyWindow(
  *
  * TkpHideBusyWindow --
  *
- *	Makes a busy window "disappear".
+ *      Makes a busy window "disappear".
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Arranges for the busy window to stop intercepting events, and the
- *	cursor to change back to its normal setting.
+ *      Arranges for the busy window to stop intercepting events, and the
+ *      cursor to change back to its normal setting.
  *
  *----------------------------------------------------------------------
  */
@@ -910,7 +910,7 @@ TkpHideBusyWindow(
     POINT point;
 
     if (busyPtr->tkBusy != NULL) {
-	Tk_UnmapWindow(busyPtr->tkBusy);
+        Tk_UnmapWindow(busyPtr->tkBusy);
     }
 
     /*
@@ -932,21 +932,21 @@ TkpHideBusyWindow(
  *
  * TkpMakeTransparentWindowExist --
  *
- *	Construct the platform-specific resources for a transparent window.
+ *      Construct the platform-specific resources for a transparent window.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Moves the specified window in the stacking order.
+ *      Moves the specified window in the stacking order.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpMakeTransparentWindowExist(
-    Tk_Window tkwin,		/* Token for window. */
-    Window parent)		/* Parent window. */
+    Tk_Window tkwin,            /* Token for window. */
+    Window parent)              /* Parent window. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     HWND hParent = (HWND) parent, hWnd;
@@ -954,8 +954,8 @@ TkpMakeTransparentWindowExist(
     DWORD exStyle = WS_EX_TRANSPARENT | WS_EX_TOPMOST;
 
     hWnd = CreateWindowEx(exStyle, TK_WIN_CHILD_CLASS_NAME, NULL, style,
-	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
-	    hParent, NULL, Tk_GetHINSTANCE(), NULL);
+            Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
+            hParent, NULL, Tk_GetHINSTANCE(), NULL);
     winPtr->window = Tk_AttachHWND(tkwin, hWnd);
 }
 
@@ -964,14 +964,14 @@ TkpMakeTransparentWindowExist(
  *
  * TkpCreateBusy --
  *
- *	Construct the platform-specific parts of a busy window. Note that this
- *	postpones the actual creation of the window resource until later.
+ *      Construct the platform-specific parts of a busy window. Note that this
+ *      postpones the actual creation of the window resource until later.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Sets up part of the busy window structure.
+ *      Sets up part of the busy window structure.
  *
  *----------------------------------------------------------------------
  */
@@ -987,24 +987,24 @@ TkpCreateBusy(
     Busy *busyPtr = (Busy *) busy;
 
     if (winPtr->flags & TK_REPARENTED) {
-	/*
-	 * This works around a bug in the implementation of menubars for
-	 * non-Macintosh window systems (Win32 and X11). Tk doesn't reset the
-	 * pointers to the parent window when the menu is reparented
-	 * (winPtr->parentPtr points to the wrong window). We get around this
-	 * by determining the parent via the native API calls.
-	 */
+        /*
+         * This works around a bug in the implementation of menubars for
+         * non-Macintosh window systems (Win32 and X11). Tk doesn't reset the
+         * pointers to the parent window when the menu is reparented
+         * (winPtr->parentPtr points to the wrong window). We get around this
+         * by determining the parent via the native API calls.
+         */
 
-	HWND hWnd = GetParent(Tk_GetHWND(Tk_WindowId(tkRef)));
-	RECT rect;
+        HWND hWnd = GetParent(Tk_GetHWND(Tk_WindowId(tkRef)));
+        RECT rect;
 
-	if (GetWindowRect(hWnd, &rect)) {
-	    busyPtr->width = rect.right - rect.left;
-	    busyPtr->height = rect.bottom - rect.top;
-	}
+        if (GetWindowRect(hWnd, &rect)) {
+            busyPtr->width = rect.right - rect.left;
+            busyPtr->height = rect.bottom - rect.top;
+        }
     } else {
-	*parentPtr = Tk_WindowId(tkParent);
-	*parentPtr = (Window) Tk_GetHWND(*parentPtr);
+        *parentPtr = Tk_WindowId(tkParent);
+        *parentPtr = (Window) Tk_GetHWND(*parentPtr);
     }
 }
 

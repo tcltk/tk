@@ -28,27 +28,27 @@ if {[winfo depth .t] > 1} {
 set outline black
 
 .t.c create arc 20 20 220 120 -start 30 -extent 270 -outline $fill1 -width 14 \
-	-style arc
+        -style arc
 .t.c create arc 260 20 460 120 -start 30 -extent 270 -fill $fill2 -width 14 \
-	-style chord -outline $outline
+        -style chord -outline $outline
 .t.c create arc 500 20 620 160 -start 30 -extent 270 -fill {} -width 14 \
-	-style chord -outline $outline -outlinestipple gray50
+        -style chord -outline $outline -outlinestipple gray50
 .t.c create arc 20 260 140 460 -start 45 -extent 90 -fill $fill2 -width 14 \
-	-style pieslice -outline $outline
+        -style pieslice -outline $outline
 .t.c create arc 180 260 300 460 -start 45 -extent 90 -fill {} -width 14 \
-	-style pieslice -outline $outline
+        -style pieslice -outline $outline
 .t.c create arc 340 260 460 460 -start 30 -extent 150 -fill $fill2 -width 14 \
-	-style chord -outline $outline -stipple gray50 -outlinestipple gray25
+        -style chord -outline $outline -stipple gray50 -outlinestipple gray25
 .t.c create arc 500 260 620 460 -start 30 -extent 150 -fill {} -width 14 \
-	-style chord -outline $outline
+        -style chord -outline $outline
 .t.c create arc 20 450 140 570 -start 135 -extent 270 -fill $fill1 -width 14 \
-	-style pieslice -outline {}
+        -style pieslice -outline {}
 .t.c create arc 180 450 300 570 -start 30 -extent -90 -fill $fill1 -width 14 \
-	-style pieslice -outline {}
+        -style pieslice -outline {}
 .t.c create arc 340 450 460 570 -start 320 -extent 270 -fill $fill1 -width 14 \
-	-style chord -outline {}
+        -style chord -outline {}
 .t.c create arc 500 450 620 570 -start 350 -extent -110 -fill $fill1 -width 14 \
-	-style chord -outline {}
+        -style chord -outline {}
 .t.c addtag arc withtag all
 .t.c addtag circle withtag [.t.c create oval 320 200 340 220 -fill MistyRose3]
 
@@ -56,10 +56,10 @@ set outline black
     set prevFill [lindex [.t.c itemconf current -fill] 4]
     set prevOutline [lindex [.t.c itemconf current -outline] 4]
     if {($prevFill != "") || ($prevOutline == "")} {
-	.t.c itemconf current -fill $fill3
+        .t.c itemconf current -fill $fill3
     }
     if {$prevOutline != ""} {
-	.t.c itemconf current -outline $outline2
+        .t.c itemconf current -outline $outline2
     }
 }
 .t.c bind arc <Any-Leave> {.t.c itemconf current -fill $prevFill -outline $prevOutline}
@@ -76,11 +76,11 @@ proc markarea {x y} {
 proc strokearea {x y} {
     global areaX1 areaY1 areaX2 areaY2
     if {($areaX1 != $x) && ($areaY1 != $y)} {
-	.t.c delete area
-	.t.c addtag area withtag [.t.c create rect $areaX1 $areaY1 $x $y \
-		-outline black]
-	set areaX2 $x
-	set areaY2 $y
+        .t.c delete area
+        .t.c addtag area withtag [.t.c create rect $areaX1 $areaY1 $x $y \
+                -outline black]
+        set areaX2 $x
+        set areaY2 $y
     }
 }
 
@@ -119,17 +119,17 @@ bind .t.c a {
     set go 1
     set i 1
     while {$go} {
-	if {$i >= 50} {
-	    set delta -5
-	}
-	if {$i <= 5} {
-	    set delta 5
-	}
-	incr i $delta
-	c -start $i
-	c -extent [expr 360-2*$i]
-	after 20
-	update
+        if {$i >= 50} {
+            set delta -5
+        }
+        if {$i <= 5} {
+            set delta 5
+        }
+        incr i $delta
+        c -start $i
+        c -extent [expr 360-2*$i]
+        after 20
+        update
     }
 }
 

@@ -46,7 +46,7 @@ proc mkPartial {{w .partial}} {
     listbox $w.l -width 30 -height 5
     pack $w.l -expand 1 -fill both
     $w.l insert end one two three four five six seven eight nine ten \
-	    eleven twelve thirteen fourteen fifteen
+            eleven twelve thirteen fourteen fifteen
     update
     scan [wm geometry $w] "%dx%d" width height
     wm geometry $w ${width}x[expr $height-3]
@@ -355,7 +355,7 @@ destroy .l
 listbox .l -width 20 -height 5 -bd 4 -highlightthickness 1 -selectborderwidth 2
 pack .l
 .l insert 0 el0 el1 el2 el3 el4 el5 el6 el7 el8 el9 el10 el11 el12 el13 el14 \
-	el15 el16 el17
+        el15 el16 el17
 update
 test listbox-3.1 {ListboxWidgetCmd procedure} -body {
     .l
@@ -415,28 +415,28 @@ test listbox-3.13 {ListboxWidgetCmd procedure, "bbox" option} -cleanup {
     destroy .l2
 } -result {}
 test listbox-3.14 {ListboxWidgetCmd procedure, "bbox" option} -constraints {
-	fonts
+        fonts
 } -body {
     .l yview 3
     update
     list [.l bbox 3] [.l bbox 4]
 } -result {{7 7 17 14} {7 26 17 14}}
 test listbox-3.15 {ListboxWidgetCmd procedure, "bbox" option} -constraints {
-	fonts
+        fonts
 } -body {
     .l yview 0
     update
     list [.l bbox -1] [.l bbox 0]
 } -result {{} {7 7 17 14}}
 test listbox-3.16 {ListboxWidgetCmd procedure, "bbox" option} -constraints {
-	fonts
+        fonts
 } -body {
     .l yview end
     update
     list [.l bbox 17] [.l bbox end] [.l bbox 18]
 } -result {{7 83 24 14} {7 83 24 14} {}}
 test listbox-3.17 {ListboxWidgetCmd procedure, "bbox" option} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .t
 } -body {
@@ -452,13 +452,13 @@ test listbox-3.17 {ListboxWidgetCmd procedure, "bbox" option} -constraints {
     destroy .t
 } -result {-72 39 393 14}
 test listbox-3.18 {ListboxWidgetCmd procedure, "bbox" option, partial last line} -constraints {
-	fonts
+        fonts
 } -body {
     mkPartial
     list [.partial.l bbox 3] [.partial.l bbox 4]
 } -result {{5 56 24 14} {5 73 23 14}}
 test listbox-3.18a {ListboxWidgetCmd procedure, "bbox" option, justified} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .top.l .top
     unset -nocomplain res
@@ -797,7 +797,7 @@ test listbox-3.77 {ListboxWidgetCmd procedure, "scan" option} -body {
     .l scan foo 2 2.3
 } -returnCodes error -result {expected integer but got "2.3"}
 test listbox-3.78 {ListboxWidgetCmd procedure, "scan" option} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .t
 } -body {
@@ -893,7 +893,7 @@ test listbox-3.97 {ListboxWidgetCmd procedure, "selection" option} -body {
 } -returnCodes error -result {wrong # args: should be ".l selection anchor index"}
 test listbox-3.98 {ListboxWidgetCmd procedure, "selection" option} -body {
     list [.l selection anchor 5; .l index anchor] \
-	    [.l selection anchor 0; .l index anchor]
+            [.l selection anchor 0; .l index anchor]
 } -result {5 0}
 test listbox-3.99 {ListboxWidgetCmd procedure, "selection" option} -body {
     .l selection anchor -1
@@ -921,7 +921,7 @@ test listbox-3.104 {ListboxWidgetCmd procedure, "selection" option} -body {
     .l selection set 2 8
     .l selection clear 4
     list [.l selection includes 3] [.l selection includes 4] \
-	    [.l selection includes 5]
+            [.l selection includes 5]
 } -result {1 0 1}
 test listbox-3.105 {ListboxWidgetCmd procedure, "selection" option} -body {
     .l selection set 0 end
@@ -988,7 +988,7 @@ test listbox-3.115 {ListboxWidgetCmd procedure, "xview" option} -setup {
 } -result {0 1}
 
 test listbox-3.116 {ListboxWidgetCmd procedure, "xview" option} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l2
     listbox .l2 -width 10 -height 5 -font $fixed
@@ -1009,7 +1009,7 @@ test listbox-3.118 {ListboxWidgetCmd procedure, "xview" option} -body {
     .l xview zoom a b
 } -returnCodes error -result {unknown option "zoom": must be moveto or scroll}
 test listbox-3.119 {ListboxWidgetCmd procedure, "xview" option} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l2
     listbox .l2 -width 10 -height 5 -font $fixed
@@ -1026,7 +1026,7 @@ test listbox-3.119 {ListboxWidgetCmd procedure, "xview" option} -constraints {
     destroy .l2
 } -result {0.4 0.6}
 test listbox-3.120 {ListboxWidgetCmd procedure, "xview" option} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l2
     listbox .l2 -width 10 -height 5 -font $fixed
@@ -1043,7 +1043,7 @@ test listbox-3.120 {ListboxWidgetCmd procedure, "xview" option} -constraints {
     destroy .l2
 } -result {0.04 0.24}
 test listbox-3.121 {ListboxWidgetCmd procedure, "xview" option} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l2
     listbox .l2 -width 10 -height 5 -font $fixed
@@ -1060,7 +1060,7 @@ test listbox-3.121 {ListboxWidgetCmd procedure, "xview" option} -constraints {
     destroy .l2
 } -result {0.44 0.64}
 test listbox-3.122 {ListboxWidgetCmd procedure, "xview" option} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l2
     listbox .l2 -width 10 -height 5 -font $fixed
@@ -1131,7 +1131,7 @@ destroy .l
 listbox .l -width 20 -height 5 -bd 4 -highlightthickness 1 -selectborderwidth 2
 pack .l
 .l insert 0 el0 el1 el2 el3 el4 el5 el6 el7 el8 el9 el10 el11 el12 el13 el14 \
-	el15 el16 el17
+        el15 el16 el17
 update
 test listbox-3.127 {ListboxWidgetCmd procedure, "xview" option} -body {
     .l yview foo
@@ -1214,7 +1214,7 @@ test listbox-3.137 {ListboxWidgetCmd procedure, "xview" option} -body {
 
 
 test listbox-4.1 {ConfigureListbox procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     deleteWindows
     destroy .l
@@ -1308,7 +1308,7 @@ test listbox-4.5 {-exportselection option} -setup {
 el2
 el3} {1 2 3}}
 test listbox-4.6 {ConfigureListbox procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     deleteWindows
 } -body {
@@ -1358,7 +1358,7 @@ test listbox-4.8 {ConfigureListbox procedure} -setup {
     destroy .l2
 } -body {
     listbox .l2 -width 15 -height 20 -xscrollcommand "record x" \
-	    -yscrollcommand "record y"
+            -yscrollcommand "record y"
     pack .l2
     update
     .l2 configure -fg black
@@ -1474,7 +1474,7 @@ test listbox-4.18 {ConfigureListbox, no listvar -> bad listvar} -setup {
 } -cleanup {
     destroy .l2
 } -result [list [list a b c d] {} \
-	"unmatched open quote in list: invalid -listvariable value"]
+        "unmatched open quote in list: invalid -listvariable value"]
 test listbox-4.19 {ConfigureListbox, no listvar -> bad non-existent listvar} -setup {
     destroy .l2
 } -body {
@@ -1486,13 +1486,13 @@ test listbox-4.19 {ConfigureListbox, no listvar -> bad non-existent listvar} -se
 } -cleanup {
     destroy .l2
 } -result [list [list a b c d] foo [list a b c d] \
-	{can't set "::zoo::bar::foo": parent namespace doesn't exist}]
+        {can't set "::zoo::bar::foo": parent namespace doesn't exist}]
 
 
 # No tests for DisplayListbox:  I don't know how to test this procedure.
 
 test listbox-5.1 {ListboxComputeGeometry procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l
 } -body {
@@ -1501,7 +1501,7 @@ test listbox-5.1 {ListboxComputeGeometry procedure} -constraints {
     list [winfo reqwidth .l] [winfo reqheight .l]
 } -result {115 328}
 test listbox-5.2 {ListboxComputeGeometry procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l
 } -body {
@@ -1511,7 +1511,7 @@ test listbox-5.2 {ListboxComputeGeometry procedure} -constraints {
     list [winfo reqwidth .l] [winfo reqheight .l]
 } -result {17 168}
 test listbox-5.3 {ListboxComputeGeometry procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l
 } -body {
@@ -1522,7 +1522,7 @@ test listbox-5.3 {ListboxComputeGeometry procedure} -constraints {
     list [winfo reqwidth .l] [winfo reqheight .l]
 } -result {138 170}
 test listbox-5.4 {ListboxComputeGeometry procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l
 } -body {
@@ -1532,7 +1532,7 @@ test listbox-5.4 {ListboxComputeGeometry procedure} -constraints {
     list [winfo reqwidth .l] [winfo reqheight .l]
 } -result {80 24}
 test listbox-5.5 {ListboxComputeGeometry procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l
 } -body {
@@ -1640,7 +1640,7 @@ test listbox-6.11 {InsertEls procedure} -body {
     set log
 } -result {{y 0 0.166667} {x 0 1}}
 test listbox-6.12 {InsertEls procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l2
 } -body {
@@ -1688,7 +1688,7 @@ test listbox-6.15 {InsertEls procedure, lost namespaced listvar} -body {
 } -cleanup {
     destroy .l2
 } -result [list [list a b c e f] ::test::foo \
-	{can't read "::test::foo": no such variable}]
+        {can't read "::test::foo": no such variable}]
 
 
 test listbox-7.1 {DeleteEls procedure} -body {
@@ -1836,7 +1836,7 @@ test listbox-7.19 {DeleteEls procedure} -body {
     set log
 } -result {{y 0 0.2} {x 0 1}}
 test listbox-7.20 {DeleteEls procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l2
 } -body {
@@ -1859,7 +1859,7 @@ test listbox-7.21 {DeleteEls procedure, check -listvar update} -setup {
 
 
 test listbox-8.1 {ListboxEventProc procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l
 } -body {
@@ -1874,7 +1874,7 @@ test listbox-8.1 {ListboxEventProc procedure} -constraints {
 } -result {20x10 150x178 0 {}}
 resetGridInfo
 test listbox-8.2 {ListboxEventProc procedure} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .l
 } -body {
@@ -1913,7 +1913,7 @@ test listbox-9.1 {ListboxCmdDeletedProc procedure} -setup {
     deleteWindows
 } -result {{} {}}
 test listbox-9.2 {ListboxCmdDeletedProc procedure, disabling -setgrid} -constraints {
-	fonts
+        fonts
 } -setup {
     destroy .top
 } -body {
@@ -2235,7 +2235,7 @@ listbox .l -font $fixed -xscrollcommand "record x" -width 10
 pack .l
 update
 test listbox-12.1 {ChangeListboxOffset procedure} -constraints {
-	fonts
+        fonts
 } -body {
     set log {}
     .l xview 99
@@ -2243,7 +2243,7 @@ test listbox-12.1 {ChangeListboxOffset procedure} -constraints {
     list [format {%.6g %.6g} {*}[.l xview]] $log
 } -result {{0.9 1} {{x 0.9 1}}}
 test listbox-12.2 {ChangeListboxOffset procedure} -constraints {
-	fonts
+        fonts
 } -body {
     set log {}
     .l xview 99
@@ -2252,7 +2252,7 @@ test listbox-12.2 {ChangeListboxOffset procedure} -constraints {
     list [format {%.6g %.6g} {*}[.l xview]] $log
 } -result {{0 0.1} {{x 0 0.1}}}
 test listbox-12.3 {ChangeListboxOffset procedure} -constraints {
-	fonts
+        fonts
 } -body {
     .l xview 10
     update
@@ -2273,7 +2273,7 @@ update
 set width [expr [lindex [.l bbox 2] 2] - [lindex [.l bbox 1] 2]]
 set height [expr [lindex [.l bbox 2] 1] - [lindex [.l bbox 1] 1]]
 test listbox-13.1 {ListboxScanTo procedure} -constraints {
-	fonts
+        fonts
 } -body {
     .l yview 0
     .l xview 0
@@ -2283,7 +2283,7 @@ test listbox-13.1 {ListboxScanTo procedure} -constraints {
     list [format {%.6g %.6g} {*}[.l xview]] [format {%.6g %.6g} {*}[.l yview]]
 } -result {{0.2 0.4} {0.5 0.75}}
 test listbox-13.2 {ListboxScanTo procedure} -constraints {
-	fonts
+        fonts
 } -body {
     .l yview 5
     .l xview 10
@@ -2296,7 +2296,7 @@ test listbox-13.2 {ListboxScanTo procedure} -constraints {
     lappend x [format {%.6g %.6g} {*}[.l xview]] [format {%.6g %.6g} {*}[.l yview]]
 } -result {{0 0.2} {0 0.25} {0.2 0.4} {0.5 0.75}}
 test listbox-13.3 {ListboxScanTo procedure} -constraints {
-	fonts
+        fonts
 } -body {
     .l yview moveto 1.0
     .l xview moveto 1.0
@@ -2322,17 +2322,17 @@ listbox .l -font $fixed -width 20 -height 10
 pack .l
 update
 test listbox-14.2 {NearestListboxElement procedure} -constraints {
-	fonts
+        fonts
 } -body {
     .l index @50,0
 } -result {4}
 test listbox-14.3 {NearestListboxElement procedure} -constraints {
-	fonts
+        fonts
 } -body {
     list [.l index @50,35] [.l index @50,36]
 } -result {5 6}
 test listbox-14.4 {NearestListboxElement procedure} -constraints {
-	fonts
+        fonts
 } -body {
     .l index @50,200
 } -result {13}
@@ -2510,8 +2510,8 @@ test listbox-18.2 {ListboxUpdateVScrollbar procedure, partial last line} -body {
 } -result {{y 0.2 0.466667}}
 test listbox-18.3 {ListboxUpdateVScrollbar procedure} -body {
     proc bgerror args {
-	    global x errorInfo
-	    set x [list $args $errorInfo]
+            global x errorInfo
+            set x [list $args $errorInfo]
     }
     .l configure -yscrollcommand gorp
     .l insert 0 foo
@@ -2531,7 +2531,7 @@ listbox .l -font $fixed -width 10 -height 5
 pack .l
 update
 test listbox-19.1 {ListboxUpdateVScrollbar procedure} -constraints {
-	fonts
+        fonts
 } -body {
     .l configure -xscrollcommand "record x"
     set log {}
@@ -2545,8 +2545,8 @@ test listbox-19.1 {ListboxUpdateVScrollbar procedure} -constraints {
 } -result {{x 0 1} {x 0 0.322581} {x 0 1}}
 test listbox-19.2 {ListboxUpdateVScrollbar procedure} -body {
     proc bgerror args {
-	    global x errorInfo
-	    set x [list $args $errorInfo]
+            global x errorInfo
+            set x [list $args $errorInfo]
     }
     .l configure -xscrollcommand bogus
     .l insert 0 foo
@@ -2825,11 +2825,11 @@ test listbox-23.2 {ConfigureListboxItem} -setup {
 } -cleanup {
     destroy .l
 } -result [list {-background background Background {} {}} \
-	{-bg -background} \
-	{-fg -foreground} \
-	{-foreground foreground Foreground {} {}} \
-	{-selectbackground selectBackground Foreground {} {}} \
-	{-selectforeground selectForeground Background {} {}}]
+        {-bg -background} \
+        {-fg -foreground} \
+        {-foreground foreground Foreground {} {}} \
+        {-selectbackground selectBackground Foreground {} {}} \
+        {-selectforeground selectForeground Background {} {}}]
 test listbox-23.3 {ConfigureListboxItem, itemco shortcut} -setup {
     destroy .l
 } -body {
@@ -2855,15 +2855,15 @@ test listbox-23.5 {ConfigureListboxItem, multiple calls} -setup {
     listbox .l
     set i 0
     foreach color {red orange yellow green blue white violet} {
-	.l insert end $color
-	.l itemconfigure $i -bg $color
-	incr i
+        .l insert end $color
+        .l itemconfigure $i -bg $color
+        incr i
     }
     pack .l
     update
     list [.l itemcget 0 -bg] [.l itemcget 1 -bg] [.l itemcget 2 -bg] \
-	    [.l itemcget 3 -bg] [.l itemcget 4 -bg] [.l itemcget 5 -bg] \
-	    [.l itemcget 6 -bg]
+            [.l itemcget 3 -bg] [.l itemcget 4 -bg] [.l itemcget 5 -bg] \
+            [.l itemcget 6 -bg]
 } -cleanup {
     destroy .l
 } -result {red orange yellow green blue white violet}
@@ -3081,7 +3081,7 @@ test listbox-28.1 {listbox -activestyle} -setup {
     destroy .l
 } -result none
 test listbox-28.2 {listbox -activestyle} -constraints {
-	nonwin
+        nonwin
 } -setup {
     destroy .l
 } -body {
@@ -3091,7 +3091,7 @@ test listbox-28.2 {listbox -activestyle} -constraints {
     destroy .l
 } -result dotbox
 test listbox-28.3 {listbox -activestyle} -constraints {
-	win
+        win
 } -setup {
     destroy .l
 } -body {

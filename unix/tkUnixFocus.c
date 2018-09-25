@@ -1,8 +1,8 @@
 /*
  * tkUnixFocus.c --
  *
- *	This file contains platform specific functions that manage focus for
- *	Tk.
+ *      This file contains platform specific functions that manage focus for
+ *      Tk.
  *
  * Copyright (c) 1997 Sun Microsystems, Inc.
  *
@@ -18,28 +18,28 @@
  *
  * TkpChangeFocus --
  *
- *	This function is invoked to move the official X focus from one window
- *	to another.
+ *      This function is invoked to move the official X focus from one window
+ *      to another.
  *
  * Results:
- *	The return value is the serial number of the command that changed the
- *	focus. It may be needed by the caller to filter out focus change
- *	events that were queued before the command. If the function doesn't
- *	actually change the focus then it returns 0.
+ *      The return value is the serial number of the command that changed the
+ *      focus. It may be needed by the caller to filter out focus change
+ *      events that were queued before the command. If the function doesn't
+ *      actually change the focus then it returns 0.
  *
  * Side effects:
- *	The official X focus window changes; the application's focus window
- *	isn't changed by this function.
+ *      The official X focus window changes; the application's focus window
+ *      isn't changed by this function.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkpChangeFocus(
-    TkWindow *winPtr,		/* Window that is to receive the X focus. */
-    int force)			/* Non-zero means claim the focus even if it
-				 * didn't originally belong to topLevelPtr's
-				 * application. */
+    TkWindow *winPtr,           /* Window that is to receive the X focus. */
+    int force)                  /* Non-zero means claim the focus even if it
+                                 * didn't originally belong to topLevelPtr's
+                                 * application. */
 {
     TkDisplay *dispPtr = winPtr->dispPtr;
     Tk_ErrorHandler errHandler;
@@ -60,7 +60,7 @@ TkpChangeFocus(
 
     serial = 0;
     if (winPtr->atts.override_redirect) {
-	return serial;
+        return serial;
     }
 
     /*
@@ -72,32 +72,32 @@ TkpChangeFocus(
 
     XGrabServer(dispPtr->display);
     if (!force) {
-	/*
-	 * Find the focus window, then see if it or one of its ancestors is a
-	 * window in our application (it's possible that the focus window is
-	 * in an embedded application, which may or may not be in the same
-	 * process.
-	 */
+        /*
+         * Find the focus window, then see if it or one of its ancestors is a
+         * window in our application (it's possible that the focus window is
+         * in an embedded application, which may or may not be in the same
+         * process.
+         */
 
-	XGetInputFocus(dispPtr->display, &window, &dummy);
-	while (1) {
-	    winPtr2 = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
-	    if ((winPtr2 != NULL) && (winPtr2->mainPtr == winPtr->mainPtr)) {
-		break;
-	    }
-	    if ((window == PointerRoot) || (window == None)) {
-		goto done;
-	    }
-	    XQueryTree(dispPtr->display, window, &root, &parent, &children,
-		    &numChildren);
-	    if (children != NULL) {
-		XFree((void *) children);
-	    }
-	    if (parent == root) {
-		goto done;
-	    }
-	    window = parent;
-	}
+        XGetInputFocus(dispPtr->display, &window, &dummy);
+        while (1) {
+            winPtr2 = (TkWindow *) Tk_IdToWindow(dispPtr->display, window);
+            if ((winPtr2 != NULL) && (winPtr2->mainPtr == winPtr->mainPtr)) {
+                break;
+            }
+            if ((window == PointerRoot) || (window == None)) {
+                goto done;
+            }
+            XQueryTree(dispPtr->display, window, &root, &parent, &children,
+                    &numChildren);
+            if (children != NULL) {
+                XFree((void *) children);
+            }
+            if (parent == root) {
+                goto done;
+            }
+            window = parent;
+        }
     }
 
     /*
@@ -108,10 +108,10 @@ TkpChangeFocus(
 
     errHandler = Tk_CreateErrorHandler(dispPtr->display, -1,-1,-1, NULL,NULL);
     if (winPtr->window == None) {
-	Tcl_Panic("ChangeXFocus got null X window");
+        Tcl_Panic("ChangeXFocus got null X window");
     }
     XSetInputFocus(dispPtr->display, winPtr->window, RevertToParent,
-	    CurrentTime);
+            CurrentTime);
     Tk_DeleteErrorHandler(errHandler);
 
     /*

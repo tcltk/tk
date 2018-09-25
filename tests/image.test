@@ -69,7 +69,7 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     imageCleanup
 } -result {{myimage free} {myimage free} {myimage delete} {myimage get} {myimage get} {myimage display 0 0 30 15} {myimage display 0 0 30 15}}
 test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
-	testImageType
+        testImageType
 } -setup {
     .c delete all
     imageCleanup
@@ -88,7 +88,7 @@ test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
     imageCleanup
 } -result {{myimage get} {myimage get} {myimage display 0 0 30 15} {myimage display 0 0 30 15}}
 test image-1.9 {Tk_ImageCmd procedure, "create" option} -constraints {
-	testImageType
+        testImageType
 } -body {
     image create test -badName foo
 } -returnCodes error -result {bad option name "-badName"}
@@ -101,9 +101,9 @@ test image-1.10 {Tk_ImageCmd procedure, "create" option} -constraints {
 test image-1.11 {Tk_ImageCmd procedure, "create" option with same name as main window} -body {
     set code [loadTkCommand]
     append code {
-	    update
-	    puts [list [catch {image create photo .} msg] $msg]
-	    exit
+            update
+            puts [list [catch {image create photo .} msg] $msg]
+            exit
     }
     set script [makeFile $code script]
     exec [interpreter] <$script
@@ -113,9 +113,9 @@ test image-1.11 {Tk_ImageCmd procedure, "create" option with same name as main w
 test image-1.12 {Tk_ImageCmd procedure, "create" option with same name as main window after renaming} -body {
     set code [loadTkCommand]
     append code {
-	    update
-	    puts [list [catch {rename . foo;image create photo foo} msg] $msg]
-	    exit
+            update
+            puts [list [catch {rename . foo;image create photo foo} msg] $msg]
+            exit
     }
     set script [makeFile $code script]
     exec [interpreter] <$script

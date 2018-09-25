@@ -18,15 +18,15 @@ const TtkStubs *ttkStubsPtr = NULL;
  *----------------------------------------------------------------------
  *
  * TtkInitializeStubs --
- *	Load the Ttk package, initialize stub table pointer.
- *	Do not call this function directly, use Ttk_InitStubs() macro instead.
+ *      Load the Ttk package, initialize stub table pointer.
+ *      Do not call this function directly, use Ttk_InitStubs() macro instead.
  *
  * Results:
- *	The actual version of the package that satisfies the request, or
- *	NULL to indicate that an error occurred.
+ *      The actual version of the package that satisfies the request, or
+ *      NULL to indicate that an error occurred.
  *
  * Side effects:
- *	Sets the stub table pointer.
+ *      Sets the stub table pointer.
  *
  */
 MODULE_SCOPE const char *
@@ -38,24 +38,24 @@ TtkInitializeStubs(
     const char *errMsg = NULL;
     ClientData pkgClientData = NULL;
     const char *actualVersion = Tcl_PkgRequireEx(
-	interp, packageName, version, exact, &pkgClientData);
+        interp, packageName, version, exact, &pkgClientData);
     const TtkStubs *stubsPtr = pkgClientData;
 
     if (!actualVersion) {
-	return NULL;
+        return NULL;
     }
 
     if (!stubsPtr) {
-	errMsg = "missing stub table pointer";
-	goto error;
+        errMsg = "missing stub table pointer";
+        goto error;
     }
     if (stubsPtr->epoch != epoch) {
-	errMsg = "epoch number mismatch";
-	goto error;
+        errMsg = "epoch number mismatch";
+        goto error;
     }
     if (stubsPtr->revision < revision) {
-	errMsg = "require later revision";
-	goto error;
+        errMsg = "require later revision";
+        goto error;
     }
 
     ttkStubsPtr = stubsPtr;
@@ -64,11 +64,11 @@ TtkInitializeStubs(
 error:
     Tcl_ResetResult(interp);
     Tcl_AppendResult(interp,
-	"Error loading ", packageName, " package",
-	" (requested version '", version,
-	"', loaded version '", actualVersion, "'): ",
-	errMsg,
-	NULL);
+        "Error loading ", packageName, " package",
+        " (requested version '", version,
+        "', loaded version '", actualVersion, "'): ",
+        errMsg,
+        NULL);
     return NULL;
 }
 

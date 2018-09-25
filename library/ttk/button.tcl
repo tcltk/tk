@@ -18,10 +18,10 @@
 
 namespace eval ttk::button {}
 
-bind TButton <Enter> 		{ %W instate !disabled {%W state active} }
-bind TButton <Leave>		{ %W state !active }
-bind TButton <Key-space>	{ ttk::button::activate %W }
-bind TButton <<Invoke>> 	{ ttk::button::activate %W }
+bind TButton <Enter>            { %W instate !disabled {%W state active} }
+bind TButton <Leave>            { %W state !active }
+bind TButton <Key-space>        { ttk::button::activate %W }
+bind TButton <<Invoke>>         { ttk::button::activate %W }
 
 bind TButton <ButtonPress-1> \
     { %W instate !disabled { ttk::clickToFocus %W; %W state pressed } }
@@ -39,43 +39,43 @@ ttk::copyBindings TButton TRadiobutton
 
 # ...plus a few more:
 
-bind TRadiobutton <KeyPress-Up> 	{ ttk::button::RadioTraverse %W -1 }
-bind TRadiobutton <KeyPress-Down> 	{ ttk::button::RadioTraverse %W +1 }
+bind TRadiobutton <KeyPress-Up>         { ttk::button::RadioTraverse %W -1 }
+bind TRadiobutton <KeyPress-Down>       { ttk::button::RadioTraverse %W +1 }
 
 # bind TCheckbutton <KeyPress-plus> { %W select }
 # bind TCheckbutton <KeyPress-minus> { %W deselect }
 
 # activate --
-#	Simulate a button press: temporarily set the state to 'pressed',
-#	then invoke the button.
+#       Simulate a button press: temporarily set the state to 'pressed',
+#       then invoke the button.
 #
 proc ttk::button::activate {w} {
     $w instate disabled { return }
     set oldState [$w state pressed]
-    update idletasks; after 100	;# block event loop to avoid reentrancy
+    update idletasks; after 100 ;# block event loop to avoid reentrancy
     $w state $oldState
     $w invoke
 }
 
 # RadioTraverse -- up/down keyboard traversal for radiobutton groups.
-# 	Set focus to previous/next radiobutton in a group.
-#	A radiobutton group consists of all the radiobuttons with
-#	the same parent and -variable; this is a pretty good heuristic
-#	that works most of the time.
+#       Set focus to previous/next radiobutton in a group.
+#       A radiobutton group consists of all the radiobuttons with
+#       the same parent and -variable; this is a pretty good heuristic
+#       that works most of the time.
 #
 proc ttk::button::RadioTraverse {w dir} {
     set group [list]
     foreach sibling [winfo children [winfo parent $w]] {
-    	if {   [winfo class $sibling] eq "TRadiobutton"
-	    && [$sibling cget -variable] eq [$w cget -variable]
-	    && ![$sibling instate disabled]
-	} {
-	   lappend group $sibling
-	}
+        if {   [winfo class $sibling] eq "TRadiobutton"
+            && [$sibling cget -variable] eq [$w cget -variable]
+            && ![$sibling instate disabled]
+        } {
+           lappend group $sibling
+        }
     }
 
-    if {![llength $group]} {	 # Shouldn't happen, but can.
-    	return
+    if {![llength $group]} {     # Shouldn't happen, but can.
+        return
     }
 
     set pos [expr {([lsearch -exact $group $w] + $dir) % [llength $group]}]

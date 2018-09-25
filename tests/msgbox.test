@@ -81,14 +81,14 @@ set isNative [expr {[info commands tk::MessageBox] == ""}]
 proc ChooseMsg {parent btn} {
     global isNative
     if {!$isNative} {
-	after 100 SendEventToMsg $parent $btn mouse
+        after 100 SendEventToMsg $parent $btn mouse
     }
 }
 
 proc ChooseMsgByKey {parent btn} {
     global isNative
     if {!$isNative} {
-	after 100 SendEventToMsg $parent $btn key
+        after 100 SendEventToMsg $parent $btn key
     }
 }
 
@@ -100,20 +100,20 @@ proc PressButton {btn} {
 
 proc SendEventToMsg {parent btn type} {
     if {$parent != "."} {
-	set w $parent.__tk__messagebox
+        set w $parent.__tk__messagebox
     } else {
-	set w .__tk__messagebox
+        set w .__tk__messagebox
     }
     if ![winfo ismapped $w.$btn] {
-	update
+        update
     }
     if {$type == "mouse"} {
-	PressButton $w.$btn
+        PressButton $w.$btn
     } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $w.$btn <Enter>
-	event generate $w <KeyPress> -keysym Return
+        event generate $w <Enter>
+        focus $w
+        event generate $w.$btn <Enter>
+        event generate $w <KeyPress> -keysym Return
     }
 }
 #
@@ -419,23 +419,23 @@ test msgbox-2.43 {tk_messageBox command} -constraints {
 
 # These tests will hang your test suite if they fail.
 test msgbox-3.1 {tk_messageBox handles withdrawn parent} -constraints {
-	nonUnixUserInteraction
+        nonUnixUserInteraction
 } -body {
     wm withdraw .
     ChooseMsg . "ok"
     tk_messageBox -title Hi -message "Please press ok" \
-	    -type ok -default ok
+            -type ok -default ok
 } -cleanup {
     wm deiconify .
 } -result {ok}
 
 test msgbox-3.2 {tk_messageBox handles iconified parent} -constraints {
-	nonUnixUserInteraction
+        nonUnixUserInteraction
 } -body {
     wm iconify .
     ChooseMsg . "ok"
     tk_messageBox -title Hi -message "Please press ok" \
-	    -type ok -default ok
+            -type ok -default ok
 } -cleanup {
     wm deiconify .
 } -result {ok}

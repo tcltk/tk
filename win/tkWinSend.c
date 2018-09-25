@@ -1,8 +1,8 @@
 /*
  * tkWinSend.c --
  *
- *	This file provides functions that implement the "send" command,
- *	allowing commands to be passed from interpreter to interpreter.
+ *      This file provides functions that implement the "send" command,
+ *      allowing commands to be passed from interpreter to interpreter.
  *
  * Copyright (c) 1997 by Sun Microsystems, Inc.
  * Copyright (c) 2003 Pat Thoyts <patthoyts@users.sourceforge.net>
@@ -21,14 +21,14 @@
 #ifndef _ROTFLAGS_DEFINED
 #define _ROTFLAGS_DEFINED
 #define ROTFLAGS_REGISTRATIONKEEPSALIVE 0x01
-#define ROTFLAGS_ALLOWANYCLIENT		0x02
+#define ROTFLAGS_ALLOWANYCLIENT         0x02
 #endif /* ! _ROTFLAGS_DEFINED */
 
-#define TKWINSEND_CLASS_NAME		"TclEval"
-#define TKWINSEND_REGISTRATION_BASE	L"TclEval"
+#define TKWINSEND_CLASS_NAME            "TclEval"
+#define TKWINSEND_REGISTRATION_BASE     L"TclEval"
 
 #define MK_E_MONIKERALREADYREGISTERED \
-	MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x02A1)
+        MAKE_HRESULT(SEVERITY_ERROR, FACILITY_ITF, 0x02A1)
 
 /*
  * Package information structure. This is used to keep interpreter specific
@@ -37,11 +37,11 @@
  */
 
 typedef struct {
-    char *name;			/* The registered application name */
-    DWORD cookie;		/* ROT cookie returned on registration */
-    LPUNKNOWN obj;		/* Interface for the registration object */
+    char *name;                 /* The registered application name */
+    DWORD cookie;               /* ROT cookie returned on registration */
+    LPUNKNOWN obj;              /* Interface for the registration object */
     Tcl_Interp *interp;
-    Tcl_Command token;		/* Winsend command token */
+    Tcl_Command token;          /* Winsend command token */
 } RegisteredInterp;
 
 typedef struct SendEvent {
@@ -62,23 +62,23 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
-static void		CmdDeleteProc(ClientData clientData);
-static void		InterpDeleteProc(ClientData clientData,
-			    Tcl_Interp *interp);
-static void		RevokeObjectRegistration(RegisteredInterp *riPtr);
+static void             CmdDeleteProc(ClientData clientData);
+static void             InterpDeleteProc(ClientData clientData,
+                            Tcl_Interp *interp);
+static void             RevokeObjectRegistration(RegisteredInterp *riPtr);
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
-static HRESULT		BuildMoniker(const char *name, LPMONIKER *pmk);
+static HRESULT          BuildMoniker(const char *name, LPMONIKER *pmk);
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
-static HRESULT		RegisterInterp(const char *name,
-			    RegisteredInterp *riPtr);
+static HRESULT          RegisterInterp(const char *name,
+                            RegisteredInterp *riPtr);
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
-static int		FindInterpreterObject(Tcl_Interp *interp,
-			    const char *name, LPDISPATCH *ppdisp);
-static int		Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
-			    int async, ClientData clientData, int objc,
-			    Tcl_Obj *const objv[]);
-static void		SendTrace(const char *format, ...);
-static Tcl_EventProc	SendEventProc;
+static int              FindInterpreterObject(Tcl_Interp *interp,
+                            const char *name, LPDISPATCH *ppdisp);
+static int              Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
+                            int async, ClientData clientData, int objc,
+                            Tcl_Obj *const objv[]);
+static void             SendTrace(const char *format, ...);
+static Tcl_EventProc    SendEventProc;
 
 #if defined(DEBUG) || defined(_DEBUG)
 #define TRACE SendTrace
@@ -91,34 +91,34 @@ static Tcl_EventProc	SendEventProc;
  *
  * Tk_SetAppName --
  *
- *	This function is called to associate an ASCII name with a Tk
- *	application. If the application has already been named, the name
- *	replaces the old one.
+ *      This function is called to associate an ASCII name with a Tk
+ *      application. If the application has already been named, the name
+ *      replaces the old one.
  *
  * Results:
- *	The return value is the name actually given to the application. This
- *	will normally be the same as name, but if name was already in use for
- *	an application then a name of the form "name #2" will be chosen, with
- *	a high enough number to make the name unique.
+ *      The return value is the name actually given to the application. This
+ *      will normally be the same as name, but if name was already in use for
+ *      an application then a name of the form "name #2" will be chosen, with
+ *      a high enough number to make the name unique.
  *
  * Side effects:
- *	Registration info is saved, thereby allowing the "send" command to be
- *	used later to invoke commands in the application. In addition, the
- *	"send" command is created in the application's interpreter. The
- *	registration will be removed automatically if the interpreter is
- *	deleted or the "send" command is removed.
+ *      Registration info is saved, thereby allowing the "send" command to be
+ *      used later to invoke commands in the application. In addition, the
+ *      "send" command is created in the application's interpreter. The
+ *      registration will be removed automatically if the interpreter is
+ *      deleted or the "send" command is removed.
  *
  *--------------------------------------------------------------
  */
 
 const char *
 Tk_SetAppName(
-    Tk_Window tkwin,		/* Token for any window in the application to
-				 * be named: it is just used to identify the
-				 * application and the display.  */
-    const char *name)		/* The name that will be used to refer to the
-				 * interpreter in later "send" commands. Must
-				 * be globally unique. */
+    Tk_Window tkwin,            /* Token for any window in the application to
+                                 * be named: it is just used to identify the
+                                 * application and the display.  */
+    const char *name)           /* The name that will be used to refer to the
+                                 * interpreter in later "send" commands. Must
+                                 * be globally unique. */
 {
 #ifndef TK_SEND_ENABLED_ON_WINDOWS
     /*
@@ -142,15 +142,15 @@ Tk_SetAppName(
      */
 
     if (tsdPtr->initialized == 0) {
-	hr = CoInitialize(0);
-	if (FAILED(hr)) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "failed to initialize the COM library", -1));
-	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
-	    return "";
-	}
-	tsdPtr->initialized = 1;
-	TRACE("Initialized COM library for interp 0x%08X\n", (long)interp);
+        hr = CoInitialize(0);
+        if (FAILED(hr)) {
+            Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                    "failed to initialize the COM library", -1));
+            Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
+            return "";
+        }
+        tsdPtr->initialized = 1;
+        TRACE("Initialized COM library for interp 0x%08X\n", (long)interp);
     }
 
     /*
@@ -161,24 +161,24 @@ Tk_SetAppName(
 
     riPtr = Tcl_GetAssocData(interp, "tkWinSend::ri", NULL);
     if (riPtr == NULL) {
-	LPUNKNOWN *objPtr;
+        LPUNKNOWN *objPtr;
 
-	riPtr = ckalloc(sizeof(RegisteredInterp));
-	memset(riPtr, 0, sizeof(RegisteredInterp));
-	riPtr->interp = interp;
+        riPtr = ckalloc(sizeof(RegisteredInterp));
+        memset(riPtr, 0, sizeof(RegisteredInterp));
+        riPtr->interp = interp;
 
-	objPtr = &riPtr->obj;
-	hr = TkWinSendCom_CreateInstance(interp, &IID_IUnknown,
-		(void **) objPtr);
+        objPtr = &riPtr->obj;
+        hr = TkWinSendCom_CreateInstance(interp, &IID_IUnknown,
+                (void **) objPtr);
 
-	Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, riPtr,
-		CmdDeleteProc);
-	if (Tcl_IsSafe(interp)) {
-	    Tcl_HideCommand(interp, "send", "send");
-	}
-	Tcl_SetAssocData(interp, "tkWinSend::ri", NULL, riPtr);
+        Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, riPtr,
+                CmdDeleteProc);
+        if (Tcl_IsSafe(interp)) {
+            Tcl_HideCommand(interp, "send", "send");
+        }
+        Tcl_SetAssocData(interp, "tkWinSend::ri", NULL, riPtr);
     } else {
-	RevokeObjectRegistration(riPtr);
+        RevokeObjectRegistration(riPtr);
     }
 
     RegisterInterp(name, riPtr);
@@ -191,26 +191,26 @@ Tk_SetAppName(
  *
  * TkGetInterpNames --
  *
- *	This function is invoked to fetch a list of all the interpreter names
- *	currently registered for the display of a particular window.
+ *      This function is invoked to fetch a list of all the interpreter names
+ *      currently registered for the display of a particular window.
  *
  * Results:
- *	A standard Tcl return value. Interp->result will be set to hold a list
- *	of all the interpreter names defined for tkwin's display. If an error
- *	occurs, then TCL_ERROR is returned and interp->result will hold an
- *	error message.
+ *      A standard Tcl return value. Interp->result will be set to hold a list
+ *      of all the interpreter names defined for tkwin's display. If an error
+ *      occurs, then TCL_ERROR is returned and interp->result will hold an
+ *      error message.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkGetInterpNames(
-    Tcl_Interp *interp,		/* Interpreter for returning a result. */
-    Tk_Window tkwin)		/* Window whose display is to be used for the
-				 * lookup. */
+    Tcl_Interp *interp,         /* Interpreter for returning a result. */
+    Tk_Window tkwin)            /* Window whose display is to be used for the
+                                 * lookup. */
 {
 #ifndef TK_SEND_ENABLED_ON_WINDOWS
     /*
@@ -228,70 +228,70 @@ TkGetInterpNames(
 
     hr = GetRunningObjectTable(0, &pROT);
     if (SUCCEEDED(hr)) {
-	IBindCtx* pBindCtx = NULL;
-	objList = Tcl_NewListObj(0, NULL);
-	hr = CreateBindCtx(0, &pBindCtx);
+        IBindCtx* pBindCtx = NULL;
+        objList = Tcl_NewListObj(0, NULL);
+        hr = CreateBindCtx(0, &pBindCtx);
 
-	if (SUCCEEDED(hr)) {
-	    IEnumMoniker* pEnum;
+        if (SUCCEEDED(hr)) {
+            IEnumMoniker* pEnum;
 
-	    hr = pROT->lpVtbl->EnumRunning(pROT, &pEnum);
-	    if (SUCCEEDED(hr)) {
-		IMoniker* pmk = NULL;
+            hr = pROT->lpVtbl->EnumRunning(pROT, &pEnum);
+            if (SUCCEEDED(hr)) {
+                IMoniker* pmk = NULL;
 
-		while (pEnum->lpVtbl->Next(pEnum, 1, &pmk, NULL) == S_OK) {
-		    LPOLESTR olestr;
+                while (pEnum->lpVtbl->Next(pEnum, 1, &pmk, NULL) == S_OK) {
+                    LPOLESTR olestr;
 
-		    hr = pmk->lpVtbl->GetDisplayName(pmk, pBindCtx, NULL,
-			    &olestr);
-		    if (SUCCEEDED(hr)) {
-			IMalloc *pMalloc = NULL;
+                    hr = pmk->lpVtbl->GetDisplayName(pmk, pBindCtx, NULL,
+                            &olestr);
+                    if (SUCCEEDED(hr)) {
+                        IMalloc *pMalloc = NULL;
 
-			if (wcsncmp(olestr, oleszStub,
-				wcslen(oleszStub)) == 0) {
-			    LPOLESTR p = olestr + wcslen(oleszStub);
+                        if (wcsncmp(olestr, oleszStub,
+                                wcslen(oleszStub)) == 0) {
+                            LPOLESTR p = olestr + wcslen(oleszStub);
 
-			    if (*p) {
-				Tcl_DString ds;
+                            if (*p) {
+                                Tcl_DString ds;
 
-				Tcl_WinTCharToUtf(p + 1, -1, &ds);
-				result = Tcl_ListObjAppendElement(interp,
-					objList,
-					Tcl_NewStringObj(Tcl_DStringValue(&ds),
-						Tcl_DStringLength(&ds)));
-				Tcl_DStringFree(&ds);
-			    }
-			}
+                                Tcl_WinTCharToUtf(p + 1, -1, &ds);
+                                result = Tcl_ListObjAppendElement(interp,
+                                        objList,
+                                        Tcl_NewStringObj(Tcl_DStringValue(&ds),
+                                                Tcl_DStringLength(&ds)));
+                                Tcl_DStringFree(&ds);
+                            }
+                        }
 
-			hr = CoGetMalloc(1, &pMalloc);
-			if (SUCCEEDED(hr)) {
-			    pMalloc->lpVtbl->Free(pMalloc, (void*)olestr);
-			    pMalloc->lpVtbl->Release(pMalloc);
-			}
-		    }
-		    pmk->lpVtbl->Release(pmk);
-		}
-		pEnum->lpVtbl->Release(pEnum);
-	    }
-	    pBindCtx->lpVtbl->Release(pBindCtx);
-	}
-	pROT->lpVtbl->Release(pROT);
+                        hr = CoGetMalloc(1, &pMalloc);
+                        if (SUCCEEDED(hr)) {
+                            pMalloc->lpVtbl->Free(pMalloc, (void*)olestr);
+                            pMalloc->lpVtbl->Release(pMalloc);
+                        }
+                    }
+                    pmk->lpVtbl->Release(pmk);
+                }
+                pEnum->lpVtbl->Release(pEnum);
+            }
+            pBindCtx->lpVtbl->Release(pBindCtx);
+        }
+        pROT->lpVtbl->Release(pROT);
     }
 
     if (FAILED(hr)) {
-	/*
-	 * Expire the list if set.
-	 */
+        /*
+         * Expire the list if set.
+         */
 
-	if (objList != NULL) {
-	    Tcl_DecrRefCount(objList);
-	}
-	Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
-	result = TCL_ERROR;
+        if (objList != NULL) {
+            Tcl_DecrRefCount(objList);
+        }
+        Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
+        result = TCL_ERROR;
     }
 
     if (result == TCL_OK) {
-	Tcl_SetObjResult(interp, objList);
+        Tcl_SetObjResult(interp, objList);
     }
 
     return result;
@@ -303,31 +303,31 @@ TkGetInterpNames(
  *
  * Tk_SendCmd --
  *
- *	This function is invoked to process the "send" Tcl command. See the
- *	user documentation for details on what it does.
+ *      This function is invoked to process the "send" Tcl command. See the
+ *      user documentation for details on what it does.
  *
  * Results:
- *	A standard Tcl result.
+ *      A standard Tcl result.
  *
  * Side effects:
- *	See the user documentation.
+ *      See the user documentation.
  *
  *--------------------------------------------------------------
  */
 
 int
 Tk_SendObjCmd(
-    ClientData clientData,	/* Information about sender (only dispPtr
-				 * field is used). */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])	/* Argument strings. */
+    ClientData clientData,      /* Information about sender (only dispPtr
+                                 * field is used). */
+    Tcl_Interp *interp,         /* Current interpreter. */
+    int objc,                   /* Number of arguments. */
+    Tcl_Obj *const objv[])      /* Argument strings. */
 {
     enum {
-	SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST
+        SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST
     };
     static const char *const sendOptions[] = {
-	"-async",   "-displayof",   "--",  NULL
+        "-async",   "-displayof",   "--",  NULL
     };
     int result = TCL_OK;
     int i, optind, async = 0;
@@ -338,18 +338,18 @@ Tk_SendObjCmd(
      */
 
     for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
-		sizeof(char *), "option", 0, &optind) != TCL_OK) {
-	    break;
-	}
-	if (optind == SEND_ASYNC) {
-	    ++async;
-	} else if (optind == SEND_DISPLAYOF) {
-	    displayPtr = objv[++i];
-	} else if (optind == SEND_LAST) {
-	    i++;
-	    break;
-	}
+        if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+                sizeof(char *), "option", 0, &optind) != TCL_OK) {
+            break;
+        }
+        if (optind == SEND_ASYNC) {
+            ++async;
+        } else if (optind == SEND_DISPLAYOF) {
+            displayPtr = objv[++i];
+        } else if (optind == SEND_LAST) {
+            i++;
+            break;
+        }
     }
 
     /*
@@ -357,9 +357,9 @@ Tk_SendObjCmd(
      */
 
     if ((objc - i) < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv,
-		"?-async? ?-displayof? ?--? interpName arg ?arg ...?");
-	result = TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 1, objv,
+                "?-async? ?-displayof? ?--? interpName arg ?arg ...?");
+        result = TCL_ERROR;
     }
 
     /*
@@ -367,11 +367,11 @@ Tk_SendObjCmd(
      */
 
     if (displayPtr) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"option not implemented: \"displayof\" is not available"
-		" for this platform.", -1));
-	Tcl_SetErrorCode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
-	result = TCL_ERROR;
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                "option not implemented: \"displayof\" is not available"
+                " for this platform.", -1));
+        Tcl_SetErrorCode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
+        result = TCL_ERROR;
     }
 
     /*
@@ -379,14 +379,14 @@ Tk_SendObjCmd(
      */
     /* FIX ME: we need to check for local interp */
     if (result == TCL_OK) {
-	LPDISPATCH pdisp;
+        LPDISPATCH pdisp;
 
-	result = FindInterpreterObject(interp, Tcl_GetString(objv[i]), &pdisp);
-	if (result == TCL_OK) {
-	    i++;
-	    result = Send(pdisp, interp, async, clientData, objc-i, objv+i);
-	    pdisp->lpVtbl->Release(pdisp);
-	}
+        result = FindInterpreterObject(interp, Tcl_GetString(objv[i]), &pdisp);
+        if (result == TCL_OK) {
+            i++;
+            result = Send(pdisp, interp, async, clientData, objc-i, objv+i);
+            pdisp->lpVtbl->Release(pdisp);
+        }
     }
 
     return result;
@@ -397,17 +397,17 @@ Tk_SendObjCmd(
  *
  * FindInterpreterObject --
  *
- *	Search the set of objects currently registered with the Running Object
- *	Table for one which matches the registered name. Tk objects are named
- *	using BuildMoniker by always prefixing with TclEval.
+ *      Search the set of objects currently registered with the Running Object
+ *      Table for one which matches the registered name. Tk objects are named
+ *      using BuildMoniker by always prefixing with TclEval.
  *
  * Results:
- *	If a matching object registration is found, then the registered
- *	IDispatch interface pointer is returned. If not, then an error message
- *	is placed in the interpreter and TCL_ERROR is returned.
+ *      If a matching object registration is found, then the registered
+ *      IDispatch interface pointer is returned. If not, then an error message
+ *      is placed in the interpreter and TCL_ERROR is returned.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
@@ -423,41 +423,41 @@ FindInterpreterObject(
     HRESULT hr = GetRunningObjectTable(0, &pROT);
 
     if (SUCCEEDED(hr)) {
-	IBindCtx* pBindCtx = NULL;
+        IBindCtx* pBindCtx = NULL;
 
-	hr = CreateBindCtx(0, &pBindCtx);
-	if (SUCCEEDED(hr)) {
-	    LPMONIKER pmk = NULL;
+        hr = CreateBindCtx(0, &pBindCtx);
+        if (SUCCEEDED(hr)) {
+            LPMONIKER pmk = NULL;
 
-	    hr = BuildMoniker(name, &pmk);
-	    if (SUCCEEDED(hr)) {
-		IUnknown *pUnkInterp = NULL, **ppUnkInterp = &pUnkInterp;
+            hr = BuildMoniker(name, &pmk);
+            if (SUCCEEDED(hr)) {
+                IUnknown *pUnkInterp = NULL, **ppUnkInterp = &pUnkInterp;
 
-		hr = pROT->lpVtbl->IsRunning(pROT, pmk);
-		hr = pmk->lpVtbl->BindToObject(pmk, pBindCtx, NULL,
-			&IID_IUnknown, (void **) ppUnkInterp);
-		if (SUCCEEDED(hr)) {
-		    hr = pUnkInterp->lpVtbl->QueryInterface(pUnkInterp,
-			    &IID_IDispatch, (void **) ppdisp);
-		    pUnkInterp->lpVtbl->Release(pUnkInterp);
+                hr = pROT->lpVtbl->IsRunning(pROT, pmk);
+                hr = pmk->lpVtbl->BindToObject(pmk, pBindCtx, NULL,
+                        &IID_IUnknown, (void **) ppUnkInterp);
+                if (SUCCEEDED(hr)) {
+                    hr = pUnkInterp->lpVtbl->QueryInterface(pUnkInterp,
+                            &IID_IDispatch, (void **) ppdisp);
+                    pUnkInterp->lpVtbl->Release(pUnkInterp);
 
-		} else {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "no application named \"%s\"", name));
-		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION",
-			    NULL);
-		    result = TCL_ERROR;
-		}
+                } else {
+                    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "no application named \"%s\"", name));
+                    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "APPLICATION",
+                            NULL);
+                    result = TCL_ERROR;
+                }
 
-		pmk->lpVtbl->Release(pmk);
-	    }
-	    pBindCtx->lpVtbl->Release(pBindCtx);
-	}
-	pROT->lpVtbl->Release(pROT);
+                pmk->lpVtbl->Release(pmk);
+            }
+            pBindCtx->lpVtbl->Release(pBindCtx);
+        }
+        pROT->lpVtbl->Release(pROT);
     }
     if (FAILED(hr) && result == TCL_OK) {
-	Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
-	result = TCL_ERROR;
+        Tcl_SetObjResult(interp, TkWin32ErrorObj(hr));
+        result = TCL_ERROR;
     }
     return result;
 }
@@ -467,15 +467,15 @@ FindInterpreterObject(
  *
  * CmdDeleteProc --
  *
- *	This function is invoked by Tcl when the "send" command is deleted in
- *	an interpreter. It unregisters the interpreter.
+ *      This function is invoked by Tcl when the "send" command is deleted in
+ *      an interpreter. It unregisters the interpreter.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The interpreter given by riPtr is unregistered, the registration
- *	structure is free'd and the COM object unregistered and released.
+ *      The interpreter given by riPtr is unregistered, the registration
+ *      structure is free'd and the COM object unregistered and released.
  *
  *--------------------------------------------------------------
  */
@@ -522,15 +522,15 @@ CmdDeleteProc(
  *
  * RevokeObjectRegistration --
  *
- *	Releases the interpreters registration object from the Running Object
- *	Table.
+ *      Releases the interpreters registration object from the Running Object
+ *      Table.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The stored cookie value is zeroed and the name is free'd and the
- *	pointer set to NULL.
+ *      The stored cookie value is zeroed and the name is free'd and the
+ *      pointer set to NULL.
  *
  *--------------------------------------------------------------
  */
@@ -543,12 +543,12 @@ RevokeObjectRegistration(
     HRESULT hr = S_OK;
 
     if (riPtr->cookie != 0) {
-	hr = GetRunningObjectTable(0, &pROT);
-	if (SUCCEEDED(hr)) {
-	    hr = pROT->lpVtbl->Revoke(pROT, riPtr->cookie);
-	    pROT->lpVtbl->Release(pROT);
-	    riPtr->cookie = 0;
-	}
+        hr = GetRunningObjectTable(0, &pROT);
+        if (SUCCEEDED(hr)) {
+            hr = pROT->lpVtbl->Revoke(pROT, riPtr->cookie);
+            pROT->lpVtbl->Release(pROT);
+            riPtr->cookie = 0;
+        }
     }
 
     /*
@@ -556,8 +556,8 @@ RevokeObjectRegistration(
      */
 
     if (riPtr->name != NULL) {
-	free(riPtr->name);
-	riPtr->name = NULL;
+        free(riPtr->name);
+        riPtr->name = NULL;
     }
 }
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
@@ -567,14 +567,14 @@ RevokeObjectRegistration(
  *
  * InterpDeleteProc --
  *
- *	This is called when the interpreter is deleted and used to unregister
- *	the COM libraries.
+ *      This is called when the interpreter is deleted and used to unregister
+ *      the COM libraries.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  * ----------------------------------------------------------------------
  */
@@ -594,15 +594,15 @@ InterpDeleteProc(
  *
  * BuildMoniker --
  *
- *	Construct a moniker from the given name. This ensures that all our
- *	monikers have the same prefix.
+ *      Construct a moniker from the given name. This ensures that all our
+ *      monikers have the same prefix.
  *
  * Results:
- *	S_OK. If the name cannot be turned into a moniker then a COM error
- *	code is returned.
+ *      S_OK. If the name cannot be turned into a moniker then a COM error
+ *      code is returned.
  *
  * Side effects:
- *	The moniker created is stored at the address given by ppmk.
+ *      The moniker created is stored at the address given by ppmk.
  *
  * ----------------------------------------------------------------------
  */
@@ -616,17 +616,17 @@ BuildMoniker(
     HRESULT hr = CreateFileMoniker(TKWINSEND_REGISTRATION_BASE, &pmkClass);
 
     if (SUCCEEDED(hr)) {
-	LPMONIKER pmkItem = NULL;
-	Tcl_DString dString;
+        LPMONIKER pmkItem = NULL;
+        Tcl_DString dString;
 
-	Tcl_WinUtfToTChar(name, -1, &dString);
-	hr = CreateFileMoniker((LPOLESTR)Tcl_DStringValue(&dString), &pmkItem);
-	Tcl_DStringFree(&dString);
-	if (SUCCEEDED(hr)) {
-	    hr = pmkClass->lpVtbl->ComposeWith(pmkClass, pmkItem, FALSE, ppmk);
-	    pmkItem->lpVtbl->Release(pmkItem);
-	}
-	pmkClass->lpVtbl->Release(pmkClass);
+        Tcl_WinUtfToTChar(name, -1, &dString);
+        hr = CreateFileMoniker((LPOLESTR)Tcl_DStringValue(&dString), &pmkItem);
+        Tcl_DStringFree(&dString);
+        if (SUCCEEDED(hr)) {
+            hr = pmkClass->lpVtbl->ComposeWith(pmkClass, pmkItem, FALSE, ppmk);
+            pmkItem->lpVtbl->Release(pmkItem);
+        }
+        pmkClass->lpVtbl->Release(pmkClass);
     }
     return hr;
 }
@@ -636,16 +636,16 @@ BuildMoniker(
  *
  * RegisterInterp --
  *
- *	Attempts to register the provided name for this interpreter. If the
- *	given name is already in use, then a numeric suffix is appended as
- *	" #n" until we identify a unique name.
+ *      Attempts to register the provided name for this interpreter. If the
+ *      given name is already in use, then a numeric suffix is appended as
+ *      " #n" until we identify a unique name.
  *
  * Results:
- *	Returns S_OK if successful, else a COM error code.
+ *      Returns S_OK if successful, else a COM error code.
  *
  * Side effects:
- *	Registration returns a cookie value which is stored. We also store a
- *	copy of the name.
+ *      Registration returns a cookie value which is stored. We also store a
+ *      copy of the name.
  *
  * ----------------------------------------------------------------------
  */
@@ -666,42 +666,42 @@ RegisterInterp(
 
     hr = GetRunningObjectTable(0, &pROT);
     if (SUCCEEDED(hr)) {
-	offset = 0;
-	for (i = 1; SUCCEEDED(hr); i++) {
-	    if (i > 1) {
-		if (i == 2) {
-		    Tcl_DStringInit(&dString);
-		    Tcl_DStringAppend(&dString, name, -1);
-		    Tcl_DStringAppend(&dString, " #", 2);
-		    offset = Tcl_DStringLength(&dString);
-		    Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
-		    actualName = Tcl_DStringValue(&dString);
-		}
-		sprintf(Tcl_DStringValue(&dString) + offset, "%d", i);
-	    }
+        offset = 0;
+        for (i = 1; SUCCEEDED(hr); i++) {
+            if (i > 1) {
+                if (i == 2) {
+                    Tcl_DStringInit(&dString);
+                    Tcl_DStringAppend(&dString, name, -1);
+                    Tcl_DStringAppend(&dString, " #", 2);
+                    offset = Tcl_DStringLength(&dString);
+                    Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
+                    actualName = Tcl_DStringValue(&dString);
+                }
+                sprintf(Tcl_DStringValue(&dString) + offset, "%d", i);
+            }
 
-	    hr = BuildMoniker(actualName, &pmk);
-	    if (SUCCEEDED(hr)) {
+            hr = BuildMoniker(actualName, &pmk);
+            if (SUCCEEDED(hr)) {
 
-		hr = pROT->lpVtbl->Register(pROT,
-		    ROTFLAGS_REGISTRATIONKEEPSALIVE,
-		    riPtr->obj, pmk, &riPtr->cookie);
+                hr = pROT->lpVtbl->Register(pROT,
+                    ROTFLAGS_REGISTRATIONKEEPSALIVE,
+                    riPtr->obj, pmk, &riPtr->cookie);
 
-		pmk->lpVtbl->Release(pmk);
-	    }
+                pmk->lpVtbl->Release(pmk);
+            }
 
-	    if (hr == MK_S_MONIKERALREADYREGISTERED) {
-		pROT->lpVtbl->Revoke(pROT, riPtr->cookie);
-	    } else if (hr == S_OK) {
-		break;
-	    }
-	}
+            if (hr == MK_S_MONIKERALREADYREGISTERED) {
+                pROT->lpVtbl->Revoke(pROT, riPtr->cookie);
+            } else if (hr == S_OK) {
+                break;
+            }
+        }
 
-	pROT->lpVtbl->Release(pROT);
+        pROT->lpVtbl->Release(pROT);
     }
 
     if (SUCCEEDED(hr)) {
-	riPtr->name = strdup(actualName);
+        riPtr->name = strdup(actualName);
     }
 
     Tcl_DStringFree(&dString);
@@ -714,29 +714,29 @@ RegisterInterp(
  *
  * Send --
  *
- *	Perform an interface call to the server object. We convert the Tcl
- *	arguments into a BSTR using 'concat'. The result should be a BSTR that
- *	we can set as the interp's result string.
+ *      Perform an interface call to the server object. We convert the Tcl
+ *      arguments into a BSTR using 'concat'. The result should be a BSTR that
+ *      we can set as the interp's result string.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  * ----------------------------------------------------------------------
  */
 
 static int
 Send(
-    LPDISPATCH pdispInterp,	/* Pointer to the remote interp's COM
-				 * object. */
-    Tcl_Interp *interp,		/* The local interpreter. */
-    int async,			/* Flag for the calling style. */
-    ClientData clientData,	/* The RegisteredInterp structure for this
-				 * interp. */
-    int objc,			/* Number of arguments to be sent. */
-    Tcl_Obj *const objv[])	/* The arguments to be sent. */
+    LPDISPATCH pdispInterp,     /* Pointer to the remote interp's COM
+                                 * object. */
+    Tcl_Interp *interp,         /* The local interpreter. */
+    int async,                  /* Flag for the calling style. */
+    ClientData clientData,      /* The RegisteredInterp structure for this
+                                 * interp. */
+    int objc,                   /* Number of arguments to be sent. */
+    Tcl_Obj *const objv[])      /* The arguments to be sent. */
 {
     VARIANT vCmd, vResult;
     DISPPARAMS dp;
@@ -775,8 +775,8 @@ Send(
     dispid = async ? TKWINSENDCOM_DISPID_ASYNC : TKWINSENDCOM_DISPID_SEND;
 
     hr = pdispInterp->lpVtbl->Invoke(pdispInterp, dispid,
-	    &IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD,
-	    &dp, &vResult, &ei, &uiErr);
+            &IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_METHOD,
+            &dp, &vResult, &ei, &uiErr);
 
     /*
      * Convert the result into a string and place in the interps result.
@@ -784,9 +784,9 @@ Send(
 
     ehr = VariantChangeType(&vResult, &vResult, 0, VT_BSTR);
     if (SUCCEEDED(ehr)) {
-	Tcl_WinTCharToUtf(vResult.bstrVal, (int) SysStringLen(vResult.bstrVal) *
-		sizeof (WCHAR), &ds);
-	Tcl_DStringResult(interp, &ds);
+        Tcl_WinTCharToUtf(vResult.bstrVal, (int) SysStringLen(vResult.bstrVal) *
+                sizeof (WCHAR), &ds);
+        Tcl_DStringResult(interp, &ds);
     }
 
     /*
@@ -796,16 +796,16 @@ Send(
      */
 
     if (hr == DISP_E_EXCEPTION && ei.bstrSource != NULL) {
-	Tcl_Obj *opError, *opErrorCode, *opErrorInfo;
-	Tcl_WinTCharToUtf(ei.bstrSource, (int) SysStringLen(ei.bstrSource) *
-		sizeof (WCHAR), &ds);
-	opError = Tcl_NewStringObj(Tcl_DStringValue(&ds),
-		Tcl_DStringLength(&ds));
-	Tcl_DStringFree(&ds);
-	Tcl_ListObjIndex(interp, opError, 0, &opErrorCode);
-	Tcl_SetObjErrorCode(interp, opErrorCode);
-	Tcl_ListObjIndex(interp, opError, 1, &opErrorInfo);
-	Tcl_AppendObjToErrorInfo(interp, opErrorInfo);
+        Tcl_Obj *opError, *opErrorCode, *opErrorInfo;
+        Tcl_WinTCharToUtf(ei.bstrSource, (int) SysStringLen(ei.bstrSource) *
+                sizeof (WCHAR), &ds);
+        opError = Tcl_NewStringObj(Tcl_DStringValue(&ds),
+                Tcl_DStringLength(&ds));
+        Tcl_DStringFree(&ds);
+        Tcl_ListObjIndex(interp, opError, 0, &opErrorCode);
+        Tcl_SetObjErrorCode(interp, opErrorCode);
+        Tcl_ListObjIndex(interp, opError, 1, &opErrorInfo);
+        Tcl_AppendObjToErrorInfo(interp, opErrorInfo);
     }
 
     /*
@@ -825,16 +825,16 @@ Send(
  *
  * TkWinSend_SetExcepInfo --
  *
- *	Convert the error information from a Tcl interpreter into a COM
- *	exception structure. This information is then registered with the COM
- *	thread exception object so that it can be used for rich error
- *	reporting by COM clients.
+ *      Convert the error information from a Tcl interpreter into a COM
+ *      exception structure. This information is then registered with the COM
+ *      thread exception object so that it can be used for rich error
+ *      reporting by COM clients.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The current COM thread has its error object modified.
+ *      The current COM thread has its error object modified.
  *
  * ----------------------------------------------------------------------
  */
@@ -852,7 +852,7 @@ TkWinSend_SetExcepInfo(
     const char *src;
 
     if (!pExcepInfo) {
-	return;
+        return;
     }
 
     opError = Tcl_GetObjResult(interp);
@@ -871,19 +871,19 @@ TkWinSend_SetExcepInfo(
     src = Tcl_GetString(opError);
     Tcl_WinUtfToTChar(src, opError->length, &ds);
     pExcepInfo->bstrDescription =
-	    SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
+            SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
     src = Tcl_GetString(opErrorCode);
     Tcl_WinUtfToTChar(src, opErrorCode->length, &ds);
     pExcepInfo->bstrSource =
-	    SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
+            SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
     Tcl_DecrRefCount(opErrorCode);
     pExcepInfo->scode = E_FAIL;
 
     hr = CreateErrorInfo(&pCEI);
     if (!SUCCEEDED(hr)) {
-	return;
+        return;
     }
 
     hr = pCEI->lpVtbl->SetGUID(pCEI, &IID_IDispatch);
@@ -891,8 +891,8 @@ TkWinSend_SetExcepInfo(
     hr = pCEI->lpVtbl->SetSource(pCEI, pExcepInfo->bstrSource);
     hr = pCEI->lpVtbl->QueryInterface(pCEI, &IID_IErrorInfo, (void **) ppEI);
     if (SUCCEEDED(hr)) {
-	SetErrorInfo(0, pEI);
-	pEI->lpVtbl->Release(pEI);
+        SetErrorInfo(0, pEI);
+        pEI->lpVtbl->Release(pEI);
     }
     pCEI->lpVtbl->Release(pCEI);
 }
@@ -902,14 +902,14 @@ TkWinSend_SetExcepInfo(
  *
  * TkWinSend_QueueCommand --
  *
- *	Queue a script for asynchronous evaluation. This is called from the
- *	COM objects Async method.
+ *      Queue a script for asynchronous evaluation. This is called from the
+ *      COM objects Async method.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  * ----------------------------------------------------------------------
  */
@@ -930,10 +930,10 @@ TkWinSend_QueueCommand(
     Tcl_Preserve(evPtr->interp);
 
     if (Tcl_IsShared(cmdPtr)) {
-	evPtr->cmdPtr = Tcl_DuplicateObj(cmdPtr);
+        evPtr->cmdPtr = Tcl_DuplicateObj(cmdPtr);
     } else {
-	evPtr->cmdPtr = cmdPtr;
-	Tcl_IncrRefCount(evPtr->cmdPtr);
+        evPtr->cmdPtr = cmdPtr;
+        Tcl_IncrRefCount(evPtr->cmdPtr);
     }
 
     Tcl_QueueEvent((Tcl_Event *)evPtr, TCL_QUEUE_TAIL);
@@ -946,15 +946,15 @@ TkWinSend_QueueCommand(
  *
  * SendEventProc --
  *
- *	Handle a request for an asynchronous send. Nothing is returned to the
- *	caller so the result is discarded.
+ *      Handle a request for an asynchronous send. Nothing is returned to the
+ *      caller so the result is discarded.
  *
  * Results:
- *	Returns 1 if the event was handled or 0 to indicate it has been
- *	deferred.
+ *      Returns 1 if the event was handled or 0 to indicate it has been
+ *      deferred.
  *
  * Side effects:
- *	The target interpreter's result will be modified.
+ *      The target interpreter's result will be modified.
  *
  * ----------------------------------------------------------------------
  */
@@ -969,7 +969,7 @@ SendEventProc(
     TRACE("SendEventProc\n");
 
     Tcl_EvalObjEx(evPtr->interp, evPtr->cmdPtr,
-	    TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
+            TCL_EVAL_DIRECT | TCL_EVAL_GLOBAL);
 
     Tcl_DecrRefCount(evPtr->cmdPtr);
     Tcl_Release(evPtr->interp);
@@ -982,15 +982,15 @@ SendEventProc(
  *
  * SendTrace --
  *
- *	Provide trace information to the Windows debug stream. To use this -
- *	use the TRACE macro, which compiles to nothing when DEBUG is not
- *	defined.
+ *      Provide trace information to the Windows debug stream. To use this -
+ *      use the TRACE macro, which compiles to nothing when DEBUG is not
+ *      defined.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  * ----------------------------------------------------------------------
  */

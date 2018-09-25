@@ -33,42 +33,42 @@ proc PressButton {btn} {
 proc EnterDirsByKey {parent dirs} {
     global tk_strictMotif
     if {$parent == "."} {
-	set w .__tk_choosedir
+        set w .__tk_choosedir
     } else {
-	set w $parent.__tk_choosedir
+        set w $parent.__tk_choosedir
     }
     upvar ::tk::dialog::file::__tk_choosedir data
 
     foreach dir $dirs {
-	$data(ent) delete 0 end
-	$data(ent) insert 0 $dir
-	update
-	SendButtonPress $parent ok mouse
-	after 50
+        $data(ent) delete 0 end
+        $data(ent) insert 0 $dir
+        update
+        SendButtonPress $parent ok mouse
+        after 50
     }
 }
 
 proc SendButtonPress {parent btn type} {
     global tk_strictMotif
     if {$parent == "."} {
-	set w .__tk_choosedir
+        set w .__tk_choosedir
     } else {
-	set w $parent.__tk_choosedir
+        set w $parent.__tk_choosedir
     }
     upvar ::tk::dialog::file::__tk_choosedir data
 
     set button $data($btn\Btn)
     if ![winfo ismapped $button] {
-	update
+        update
     }
 
     if {$type == "mouse"} {
-	PressButton $button
+        PressButton $button
     } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $button <Enter>
-	event generate $w <KeyPress> -keysym Return
+        event generate $w <Enter>
+        focus $w
+        event generate $button <Enter>
+        event generate $w <KeyPress> -keysym Return
     }
 }
 
@@ -109,7 +109,7 @@ test choosedir-1.6 {tk_chooseDirectory command} -body {
 
 
 test choosedir-2.1 {tk_chooseDirectory command, cancel gives null} -constraints {
-	unix notAqua
+        unix notAqua
 } -body {
     ToPressButton $parent cancel
     tk_chooseDirectory -title "Press Cancel" -parent $parent
@@ -117,55 +117,55 @@ test choosedir-2.1 {tk_chooseDirectory command, cancel gives null} -constraints 
 
 
 test choosedir-3.1 {tk_chooseDirectory -mustexist 1} -constraints {
-	unix notAqua
+        unix notAqua
 } -body {
     # first enter a bogus dirname, then enter a real one.
     ToEnterDirsByKey $parent [list $fake $real $real]
     set result [tk_chooseDirectory \
-	    -title "Enter \"$fake\", press OK, enter \"$real\", press OK" \
-	    -parent $parent -mustexist 1]
+            -title "Enter \"$fake\", press OK, enter \"$real\", press OK" \
+            -parent $parent -mustexist 1]
     set result
 } -result $real
 test choosedir-3.2 {tk_chooseDirectory -mustexist 0} -constraints {
-	unix notAqua
+        unix notAqua
 } -body {
     ToEnterDirsByKey $parent [list $fake $fake]
     tk_chooseDirectory -title "Enter \"$fake\", press OK" \
-	    -parent $parent -mustexist 0
+            -parent $parent -mustexist 0
 } -result $fake
 
 
 test choosedir-4.1 {tk_chooseDirectory command, initialdir} -constraints {
-	unix notAqua
+        unix notAqua
 } -body {
     ToPressButton $parent ok
     tk_chooseDirectory -title "Press Ok" -parent $parent -initialdir $real
 } -result $real
 test choosedir-4.2 {tk_chooseDirectory command, initialdir} -constraints {
-	unix notAqua
+        unix notAqua
 } -body {
     ToEnterDirsByKey $parent [list $fake $fake]
     tk_chooseDirectory \
-	    -title "Enter \"$fake\" and press Ok" \
-	    -parent $parent -initialdir $real
+            -title "Enter \"$fake\" and press Ok" \
+            -parent $parent -initialdir $real
 } -result $fake
 test choosedir-4.3 {tk_chooseDirectory command, {} initialdir} -constraints {
-	unix notAqua
+        unix notAqua
 } -body {
     catch {unset ::tk::dialog::file::__tk_choosedir}
     ToPressButton $parent ok
     tk_chooseDirectory \
-	    -title "Press OK" \
-	    -parent $parent -initialdir ""
+            -title "Press OK" \
+            -parent $parent -initialdir ""
 } -result [pwd]
 
 
 test choosedir-5.1 {tk_chooseDirectory, handles {} entry text} -constraints {
-	unix notAqua
+        unix notAqua
 } -body {
     ToEnterDirsByKey $parent [list "" $real $real]
     tk_chooseDirectory -title "Clear entry, Press OK; Enter $real, press OK" \
-	    -parent $parent
+            -parent $parent
 } -result $real
 
 # cleanup

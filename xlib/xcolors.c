@@ -1,8 +1,8 @@
 /*
  * xcolors.c --
  *
- *	This file contains the routines used to map from X color names to RGB
- *	and pixel values.
+ *      This file contains the routines used to map from X color names to RGB
+ *      and pixel values.
  *
  * Copyright (c) 1996 by Sun Microsystems, Inc.
  * Copyright (c) 2012 by Jan Nijtmans
@@ -105,12 +105,12 @@ static const elem xColors[] = {
     "old\0            \213\165\000\315\255\000\356\311\000\377\327\000\377\327\000\4",
     "oldenrod\0       \213\151\024\315\233\035\356\264\042\377\301\045\332\245\040\4",
     "ray\0\024\024\024\022\022\022\017\017\017\015\015\015\012\012\012"
-	    "\010\010\010\005\005\005\003\003\003\200\200\200\10",
+            "\010\010\010\005\005\005\003\003\003\200\200\200\10",
     "ray0\0                       \000\000\000",
     "reen\0           \000\213\000\000\315\000\000\356\000\000\377\000\000\200\000\4",
     "reenYellow\0                 \255\377\057",
     "rey\0\024\024\024\022\022\022\017\017\017\015\015\015\012\012\012"
-	    "\010\010\010\005\005\005\003\003\003\200\200\200\10",
+            "\010\010\010\005\005\005\003\003\003\200\200\200\10",
     "rey0\0                       \000\000\000",
     /* Colors starting with 'h' */
     "oneydew\0        \203\213\203\301\315\301\340\356\340\360\377\360\360\377\360\4",
@@ -235,13 +235,13 @@ static const elem xColors[] = {
  *
  * XParseColor --
  *
- *	Partial implementation of X color name parsing interface.
+ *      Partial implementation of X color name parsing interface.
  *
  * Results:
- *	Returns non-zero on success.
+ *      Returns non-zero on success.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  *
@@ -257,17 +257,17 @@ parseHex64bit(
     Tcl_WideInt result = 0;
     char c;
     while ((c = *spec)) {
-	if ((c >= '0') && (c <= '9')) {
-	    c -= '0';
-	} else if ((c >= 'A') && (c <= 'F')) {
-	    c += (10 - 'A');
-	} else if ((c >= 'a') && (c <= 'f')) {
-	    c += (10 - 'a');
-	} else {
-	    break;
-	}
-	result = (result << 4) + c;
-	++spec;
+        if ((c >= '0') && (c <= '9')) {
+            c -= '0';
+        } else if ((c >= 'A') && (c <= 'F')) {
+            c += (10 - 'A');
+        } else if ((c >= 'a') && (c <= 'f')) {
+            c += (10 - 'a');
+        } else {
+            break;
+        }
+        result = (result << 4) + c;
+        ++spec;
     }
     *p = (char *) spec;
     return result;
@@ -285,54 +285,54 @@ colorcmp(
     int num = 0;
 
     do {
-	d = *pname++;
-	c = (*spec == ' ');
-	if (c) {
-	    spec++;
-	}
-	if ((unsigned)(d - 'A') <= (unsigned)('Z' - 'A')) {
-	    d += 'a' - 'A';
-	} else if (c) {
-	    /*
-	     * A space doesn't match a lowercase, but we don't know yet
-	     * whether we should return a negative or positive number. That
-	     * depends on what follows.
-	     */
+        d = *pname++;
+        c = (*spec == ' ');
+        if (c) {
+            spec++;
+        }
+        if ((unsigned)(d - 'A') <= (unsigned)('Z' - 'A')) {
+            d += 'a' - 'A';
+        } else if (c) {
+            /*
+             * A space doesn't match a lowercase, but we don't know yet
+             * whether we should return a negative or positive number. That
+             * depends on what follows.
+             */
 
-	    notequal = 1;
-	}
-	c = *spec++;
-	if ((unsigned)(c - 'A') <= (unsigned)('Z' - 'A')) {
-	    c += 'a' - 'A';
-	} else if (((unsigned)(c - '1') <= (unsigned)('9' - '1'))) {
-	    if (d == '0') {
-	    	d += 10;
-	    } else if (!d) {
-		num = c - '0';
-		while ((unsigned)((c = *spec++) - '0') <= (unsigned)('9' - '0')) {
-		    num = num * 10 + c - '0';
-		}
-	    }
-	}
-	r = c - d;
+            notequal = 1;
+        }
+        c = *spec++;
+        if ((unsigned)(c - 'A') <= (unsigned)('Z' - 'A')) {
+            c += 'a' - 'A';
+        } else if (((unsigned)(c - '1') <= (unsigned)('9' - '1'))) {
+            if (d == '0') {
+                d += 10;
+            } else if (!d) {
+                num = c - '0';
+                while ((unsigned)((c = *spec++) - '0') <= (unsigned)('9' - '0')) {
+                    num = num * 10 + c - '0';
+                }
+            }
+        }
+        r = c - d;
     } while (!r && d);
 
     if (!r && notequal) {
-	/*
-	 * Strings are equal, but difference in spacings only. We should still
-	 * report not-equal, so "burly wood" is not a valid color.
-	 */
+        /*
+         * Strings are equal, but difference in spacings only. We should still
+         * report not-equal, so "burly wood" is not a valid color.
+         */
 
-	r = 1;
+        r = 1;
     }
     *special = num;
     return r;
 }
 
-#define RED(p)		((unsigned char) (p)[0])
-#define GREEN(p)	((unsigned char) (p)[1])
-#define BLUE(p)		((unsigned char) (p)[2])
-#define US(expr)	((unsigned short) (expr))
+#define RED(p)          ((unsigned char) (p)[0])
+#define GREEN(p)        ((unsigned char) (p)[1])
+#define BLUE(p)         ((unsigned char) (p)[2])
+#define US(expr)        ((unsigned short) (expr))
 
 Status
 XParseColor(
@@ -342,96 +342,96 @@ XParseColor(
     XColor *colorPtr)
 {
     if (spec[0] == '#') {
-	char *p;
-	Tcl_WideInt value = parseHex64bit(++spec, &p);
+        char *p;
+        Tcl_WideInt value = parseHex64bit(++spec, &p);
 
-	/*
-	 * If *p does not point to the end of the string, there were invalid
-	 * digits in the spec. Ergo, it is not a valid color string.
-	 * (Bug f0188aca9e)
-	 */
+        /*
+         * If *p does not point to the end of the string, there were invalid
+         * digits in the spec. Ergo, it is not a valid color string.
+         * (Bug f0188aca9e)
+         */
 
-	if (*p != '\0') {
-	    return 0;
-	}
+        if (*p != '\0') {
+            return 0;
+        }
 
-	switch ((int)(p-spec)) {
-	case 3:
-	    colorPtr->red = US(((value >> 8) & 0xf) * 0x1111);
-	    colorPtr->green = US(((value >> 4) & 0xf) * 0x1111);
-	    colorPtr->blue = US((value & 0xf) * 0x1111);
-	    break;
-	case 6:
-	    colorPtr->red = US(((value >> 16) & 0xff) | ((value >> 8) & 0xff00));
-	    colorPtr->green = US(((value >> 8) & 0xff) | (value & 0xff00));
-	    colorPtr->blue = US((value & 0xff) | (value << 8));
-	    break;
-	case 9:
-	    colorPtr->red = US(((value >> 32) & 0xf) | ((value >> 20) & 0xfff0));
-	    colorPtr->green = US(((value >> 20) & 0xf) | ((value >> 8) & 0xfff0));
-	    colorPtr->blue = US(((value >> 8) & 0xf) | (value << 4));
-	    break;
-	case 12:
-	    colorPtr->red = US(value >> 32);
-	    colorPtr->green = US(value >> 16);
-	    colorPtr->blue = US(value);
-	    break;
-	default:
-	    return 0;
-	}
+        switch ((int)(p-spec)) {
+        case 3:
+            colorPtr->red = US(((value >> 8) & 0xf) * 0x1111);
+            colorPtr->green = US(((value >> 4) & 0xf) * 0x1111);
+            colorPtr->blue = US((value & 0xf) * 0x1111);
+            break;
+        case 6:
+            colorPtr->red = US(((value >> 16) & 0xff) | ((value >> 8) & 0xff00));
+            colorPtr->green = US(((value >> 8) & 0xff) | (value & 0xff00));
+            colorPtr->blue = US((value & 0xff) | (value << 8));
+            break;
+        case 9:
+            colorPtr->red = US(((value >> 32) & 0xf) | ((value >> 20) & 0xfff0));
+            colorPtr->green = US(((value >> 20) & 0xf) | ((value >> 8) & 0xfff0));
+            colorPtr->blue = US(((value >> 8) & 0xf) | (value << 4));
+            break;
+        case 12:
+            colorPtr->red = US(value >> 32);
+            colorPtr->green = US(value >> 16);
+            colorPtr->blue = US(value);
+            break;
+        default:
+            return 0;
+        }
     } else {
-	/*
-	 * Perform a binary search on the sorted array of colors.
-	 * size = current size of search range
-	 * p    = pointer to current element being considered.
-	 */
+        /*
+         * Perform a binary search on the sorted array of colors.
+         * size = current size of search range
+         * p    = pointer to current element being considered.
+         */
 
-	int size, num;
-	const elem *p;
-	const char *q;
-	int r = (spec[0] - 'A') & 0xdf;
+        int size, num;
+        const elem *p;
+        const char *q;
+        int r = (spec[0] - 'A') & 0xdf;
 
-	if (r >= (int) sizeof(az) - 1) {
-	    return 0;
-	}
-	size = az[r + 1] - az[r];
-	p = &xColors[(az[r + 1] + az[r]) >> 1];
-	r = colorcmp(spec + 1, *p, &num);
+        if (r >= (int) sizeof(az) - 1) {
+            return 0;
+        }
+        size = az[r + 1] - az[r];
+        p = &xColors[(az[r + 1] + az[r]) >> 1];
+        r = colorcmp(spec + 1, *p, &num);
 
-	while (r != 0) {
-	    if (r < 0) {
-		size = (size >> 1);
-		p -= ((size + 1) >> 1);
-	    } else {
-		--size;
-		size = (size >> 1);
-		p += ((size + 2) >> 1);
-	    }
-	    if (!size) {
-		return 0;
-	    }
-	    r = colorcmp(spec + 1, *p, &num);
-	}
-	if (num > (*p)[31]) {
-	    if (((*p)[31] != 8) || num > 100) {
-	    	return 0;
-	    }
-	    num = (num * 255 + 50) / 100;
-	    if ((num == 230) || (num == 128)) {
-	    	/*
-		 * Those two entries have a deviation i.r.t the table.
-		 */
+        while (r != 0) {
+            if (r < 0) {
+                size = (size >> 1);
+                p -= ((size + 1) >> 1);
+            } else {
+                --size;
+                size = (size >> 1);
+                p += ((size + 2) >> 1);
+            }
+            if (!size) {
+                return 0;
+            }
+            r = colorcmp(spec + 1, *p, &num);
+        }
+        if (num > (*p)[31]) {
+            if (((*p)[31] != 8) || num > 100) {
+                return 0;
+            }
+            num = (num * 255 + 50) / 100;
+            if ((num == 230) || (num == 128)) {
+                /*
+                 * Those two entries have a deviation i.r.t the table.
+                 */
 
-		num--;
-	    }
-	    num |= (num << 8);
-	    colorPtr->red = colorPtr->green = colorPtr->blue = num;
-	} else {
-	    q = *p + 28 - num * 3;
-	    colorPtr->red = ((RED(q) << 8) | RED(q));
-	    colorPtr->green = ((GREEN(q) << 8) | GREEN(q));
-	    colorPtr->blue = ((BLUE(q) << 8) | BLUE(q));
-	}
+                num--;
+            }
+            num |= (num << 8);
+            colorPtr->red = colorPtr->green = colorPtr->blue = num;
+        } else {
+            q = *p + 28 - num * 3;
+            colorPtr->red = ((RED(q) << 8) | RED(q));
+            colorPtr->green = ((GREEN(q) << 8) | GREEN(q));
+            colorPtr->blue = ((BLUE(q) << 8) | BLUE(q));
+        }
     }
     colorPtr->pixel = TkpGetPixel(colorPtr);
     colorPtr->flags = DoRed|DoGreen|DoBlue;

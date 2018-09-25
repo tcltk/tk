@@ -25,14 +25,14 @@ test validate-0.1 "More setup" -body {
     catch {unset ::e}
     catch {unset ::vVals}
     entry .e -validate all \
-	    -validatecommand [list doval %W %d %i %P %s %S %v %V] \
-	    -invalidcommand bell \
-	    -textvariable ::e \
-	    ;
+            -validatecommand [list doval %W %d %i %P %s %S %v %V] \
+            -invalidcommand bell \
+            -textvariable ::e \
+            ;
     pack .e
     proc doval {W d i P s S v V} {
-	set ::vVals [list $W $d $i $P $s $S $v $V]
-	return 1
+        set ::vVals [list $W $d $i $P $s $S $v $V]
+        return 1
     }
 }
 
@@ -215,8 +215,8 @@ catch {unset ::e ::vVals}
 
 test validate-2.2 "configure in -validatecommand" -body {
     proc validate-2.2 {win str} {
-	$win configure -foreground black
-	return 1
+        $win configure -foreground black
+        return 1
     }
     ttk::entry .e -textvariable var -validatecommand {validate-2.2 %W %P}
     .e validate
@@ -229,10 +229,10 @@ test validate-2.2 "configure in -validatecommand" -body {
 test validate-3.0 "Setup" -body {
     set ::E "123"
     ttk::entry .e \
-    	-validatecommand {string is integer -strict %P} \
-	-validate all \
-	-textvariable ::E \
-	;
+        -validatecommand {string is integer -strict %P} \
+        -validate all \
+        -textvariable ::E \
+        ;
     return [list [.e get] [.e state]]
 } -result [list 123 {}]
 

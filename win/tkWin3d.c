@@ -1,8 +1,8 @@
 /*
  * tkWin3d.c --
  *
- *	This file contains the platform specific routines for drawing 3D
- *	borders in the Windows 95 style.
+ *      This file contains the platform specific routines for drawing 3D
+ *      borders in the Windows 95 style.
  *
  * Copyright (c) 1996 by Sun Microsystems, Inc.
  *
@@ -20,8 +20,8 @@
 
 typedef struct {
     TkBorder info;
-    XColor *light2ColorPtr;	/* System3dLight */
-    XColor *dark2ColorPtr;	/* System3dDarkShadow */
+    XColor *light2ColorPtr;     /* System3dLight */
+    XColor *dark2ColorPtr;      /* System3dDarkShadow */
 } WinBorder;
 
 /*
@@ -29,13 +29,13 @@ typedef struct {
  *
  * TkpGetBorder --
  *
- *	This function allocates a new TkBorder structure.
+ *      This function allocates a new TkBorder structure.
  *
  * Results:
- *	Returns a newly allocated TkBorder.
+ *      Returns a newly allocated TkBorder.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -55,14 +55,14 @@ TkpGetBorder(void)
  *
  * TkpFreeBorder --
  *
- *	This function frees any colors allocated by the platform specific part
- *	of this module.
+ *      This function frees any colors allocated by the platform specific part
+ *      of this module.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	May deallocate some colors.
+ *      May deallocate some colors.
  *
  *----------------------------------------------------------------------
  */
@@ -73,10 +73,10 @@ TkpFreeBorder(
 {
     WinBorder *winBorderPtr = (WinBorder *) borderPtr;
     if (winBorderPtr->light2ColorPtr) {
-	Tk_FreeColor(winBorderPtr->light2ColorPtr);
+        Tk_FreeColor(winBorderPtr->light2ColorPtr);
     }
     if (winBorderPtr->dark2ColorPtr) {
-	Tk_FreeColor(winBorderPtr->dark2ColorPtr);
+        Tk_FreeColor(winBorderPtr->dark2ColorPtr);
     }
 }
 
@@ -85,40 +85,40 @@ TkpFreeBorder(
  *
  * Tk_3DVerticalBevel --
  *
- *	This procedure draws a vertical bevel along one side of an object. The
- *	bevel is always rectangular in shape:
- *			|||
- *			|||
- *			|||
- *			|||
- *			|||
- *			|||
- *	An appropriate shadow color is chosen for the bevel based on the
- *	leftBevel and relief arguments. Normally this procedure is called
- *	first, then Tk_3DHorizontalBevel is called next to draw neat corners.
+ *      This procedure draws a vertical bevel along one side of an object. The
+ *      bevel is always rectangular in shape:
+ *                      |||
+ *                      |||
+ *                      |||
+ *                      |||
+ *                      |||
+ *                      |||
+ *      An appropriate shadow color is chosen for the bevel based on the
+ *      leftBevel and relief arguments. Normally this procedure is called
+ *      first, then Tk_3DHorizontalBevel is called next to draw neat corners.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Graphics are drawn in drawable.
+ *      Graphics are drawn in drawable.
  *
  *--------------------------------------------------------------
  */
 
 void
 Tk_3DVerticalBevel(
-    Tk_Window tkwin,		/* Window for which border was allocated. */
-    Drawable drawable,		/* X window or pixmap in which to draw. */
-    Tk_3DBorder border,		/* Token for border to draw. */
+    Tk_Window tkwin,            /* Window for which border was allocated. */
+    Drawable drawable,          /* X window or pixmap in which to draw. */
+    Tk_3DBorder border,         /* Token for border to draw. */
     int x, int y, int width, int height,
-				/* Area of vertical bevel. */
-    int leftBevel,		/* Non-zero means this bevel forms the left
-				 * side of the object; 0 means it forms the
-				 * right side. */
-    int relief)			/* Kind of bevel to draw. For example,
-				 * TK_RELIEF_RAISED means interior of object
-				 * should appear higher than exterior. */
+                                /* Area of vertical bevel. */
+    int leftBevel,              /* Non-zero means this bevel forms the left
+                                 * side of the object; 0 means it forms the
+                                 * right side. */
+    int relief)                 /* Kind of bevel to draw. For example,
+                                 * TK_RELIEF_RAISED means interior of object
+                                 * should appear higher than exterior. */
 {
     TkBorder *borderPtr = (TkBorder *) border;
     int left, right;
@@ -128,45 +128,45 @@ Tk_3DVerticalBevel(
     int half;
 
     if ((borderPtr->lightGC == None) && (relief != TK_RELIEF_FLAT)) {
-	TkpGetShadows(borderPtr, tkwin);
+        TkpGetShadows(borderPtr, tkwin);
     }
 
     switch (relief) {
     case TK_RELIEF_RAISED:
-	left = (leftBevel)
-		? borderPtr->lightGC->foreground
-		: borderPtr->darkGC->foreground;
-	right = (leftBevel)
-		? ((WinBorder *)borderPtr)->light2ColorPtr->pixel
-		: ((WinBorder *)borderPtr)->dark2ColorPtr->pixel;
-	break;
+        left = (leftBevel)
+                ? borderPtr->lightGC->foreground
+                : borderPtr->darkGC->foreground;
+        right = (leftBevel)
+                ? ((WinBorder *)borderPtr)->light2ColorPtr->pixel
+                : ((WinBorder *)borderPtr)->dark2ColorPtr->pixel;
+        break;
     case TK_RELIEF_SUNKEN:
-	left = (leftBevel)
-		? borderPtr->darkGC->foreground
-		: ((WinBorder *)borderPtr)->light2ColorPtr->pixel;
-	right = (leftBevel)
-		? ((WinBorder *)borderPtr)->dark2ColorPtr->pixel
-		: borderPtr->lightGC->foreground;
-	break;
+        left = (leftBevel)
+                ? borderPtr->darkGC->foreground
+                : ((WinBorder *)borderPtr)->light2ColorPtr->pixel;
+        right = (leftBevel)
+                ? ((WinBorder *)borderPtr)->dark2ColorPtr->pixel
+                : borderPtr->lightGC->foreground;
+        break;
     case TK_RELIEF_RIDGE:
-	left = borderPtr->lightGC->foreground;
-	right = borderPtr->darkGC->foreground;
-	break;
+        left = borderPtr->lightGC->foreground;
+        right = borderPtr->darkGC->foreground;
+        break;
     case TK_RELIEF_GROOVE:
-	left = borderPtr->darkGC->foreground;
-	right = borderPtr->lightGC->foreground;
-	break;
+        left = borderPtr->darkGC->foreground;
+        right = borderPtr->lightGC->foreground;
+        break;
     case TK_RELIEF_FLAT:
-	left = right = borderPtr->bgGC->foreground;
-	break;
+        left = right = borderPtr->bgGC->foreground;
+        break;
     case TK_RELIEF_SOLID:
     default:
-	left = right = RGB(0,0,0);
-	break;
+        left = right = RGB(0,0,0);
+        break;
     }
     half = width/2;
     if (leftBevel && (width & 1)) {
-	half++;
+        half++;
     }
     TkWinFillRect(dc, x, y, half, height, left);
     TkWinFillRect(dc, x+half, y, width-half, height, right);
@@ -178,42 +178,42 @@ Tk_3DVerticalBevel(
  *
  * Tk_3DHorizontalBevel --
  *
- *	This procedure draws a horizontal bevel along one side of an object.
- *	The bevel has mitered corners (depending on leftIn and rightIn
- *	arguments).
+ *      This procedure draws a horizontal bevel along one side of an object.
+ *      The bevel has mitered corners (depending on leftIn and rightIn
+ *      arguments).
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 void
 Tk_3DHorizontalBevel(
-    Tk_Window tkwin,		/* Window for which border was allocated. */
-    Drawable drawable,		/* X window or pixmap in which to draw. */
-    Tk_3DBorder border,		/* Token for border to draw. */
+    Tk_Window tkwin,            /* Window for which border was allocated. */
+    Drawable drawable,          /* X window or pixmap in which to draw. */
+    Tk_3DBorder border,         /* Token for border to draw. */
     int x, int y, int width, int height,
-				/* Bounding box of area of bevel. Height gives
-				 * width of border. */
-    int leftIn, int rightIn,	/* Describes whether the left and right edges
-				 * of the bevel angle in or out as they go
-				 * down. For example, if "leftIn" is true, the
-				 * left side of the bevel looks like this:
-				 *	___________
-				 *	 __________
-				 *	  _________
-				 *	   ________
-				 */
-    int topBevel,		/* Non-zero means this bevel forms the top
-				 * side of the object; 0 means it forms the
-				 * bottom side. */
-    int relief)			/* Kind of bevel to draw. For example,
-				 * TK_RELIEF_RAISED means interior of object
-				 * should appear higher than exterior. */
+                                /* Bounding box of area of bevel. Height gives
+                                 * width of border. */
+    int leftIn, int rightIn,    /* Describes whether the left and right edges
+                                 * of the bevel angle in or out as they go
+                                 * down. For example, if "leftIn" is true, the
+                                 * left side of the bevel looks like this:
+                                 *      ___________
+                                 *       __________
+                                 *        _________
+                                 *         ________
+                                 */
+    int topBevel,               /* Non-zero means this bevel forms the top
+                                 * side of the object; 0 means it forms the
+                                 * bottom side. */
+    int relief)                 /* Kind of bevel to draw. For example,
+                                 * TK_RELIEF_RAISED means interior of object
+                                 * should appear higher than exterior. */
 {
     TkBorder *borderPtr = (TkBorder *) border;
     Display *display = Tk_Display(tkwin);
@@ -223,7 +223,7 @@ Tk_3DHorizontalBevel(
     int topColor, bottomColor;
 
     if ((borderPtr->lightGC == None) && (relief != TK_RELIEF_FLAT)) {
-	TkpGetShadows(borderPtr, tkwin);
+        TkpGetShadows(borderPtr, tkwin);
     }
 
     /*
@@ -233,35 +233,35 @@ Tk_3DHorizontalBevel(
 
     switch (relief) {
     case TK_RELIEF_RAISED:
-	topColor = (topBevel)
-		? borderPtr->lightGC->foreground
-		: borderPtr->darkGC->foreground;
-	bottomColor = (topBevel)
-		? ((WinBorder *)borderPtr)->light2ColorPtr->pixel
-		: ((WinBorder *)borderPtr)->dark2ColorPtr->pixel;
-	break;
+        topColor = (topBevel)
+                ? borderPtr->lightGC->foreground
+                : borderPtr->darkGC->foreground;
+        bottomColor = (topBevel)
+                ? ((WinBorder *)borderPtr)->light2ColorPtr->pixel
+                : ((WinBorder *)borderPtr)->dark2ColorPtr->pixel;
+        break;
     case TK_RELIEF_SUNKEN:
-	topColor = (topBevel)
-		? borderPtr->darkGC->foreground
-		: ((WinBorder *)borderPtr)->light2ColorPtr->pixel;
-	bottomColor = (topBevel)
-		? ((WinBorder *)borderPtr)->dark2ColorPtr->pixel
-		: borderPtr->lightGC->foreground;
-	break;
+        topColor = (topBevel)
+                ? borderPtr->darkGC->foreground
+                : ((WinBorder *)borderPtr)->light2ColorPtr->pixel;
+        bottomColor = (topBevel)
+                ? ((WinBorder *)borderPtr)->dark2ColorPtr->pixel
+                : borderPtr->lightGC->foreground;
+        break;
     case TK_RELIEF_RIDGE:
-	topColor = borderPtr->lightGC->foreground;
-	bottomColor = borderPtr->darkGC->foreground;
-	break;
+        topColor = borderPtr->lightGC->foreground;
+        bottomColor = borderPtr->darkGC->foreground;
+        break;
     case TK_RELIEF_GROOVE:
-	topColor = borderPtr->darkGC->foreground;
-	bottomColor = borderPtr->lightGC->foreground;
-	break;
+        topColor = borderPtr->darkGC->foreground;
+        bottomColor = borderPtr->lightGC->foreground;
+        break;
     case TK_RELIEF_FLAT:
-	topColor = bottomColor = borderPtr->bgGC->foreground;
-	break;
+        topColor = bottomColor = borderPtr->bgGC->foreground;
+        break;
     case TK_RELIEF_SOLID:
     default:
-	topColor = bottomColor = RGB(0,0,0);
+        topColor = bottomColor = RGB(0,0,0);
     }
 
     /*
@@ -269,21 +269,21 @@ Tk_3DHorizontalBevel(
      */
 
     if (leftIn) {
-	x1 = x+1;
+        x1 = x+1;
     } else {
-	x1 = x+height-1;
+        x1 = x+height-1;
     }
     x2 = x+width;
     if (rightIn) {
-	x2--;
+        x2--;
     } else {
-	x2 -= height;
+        x2 -= height;
     }
     x1Delta = (leftIn) ? 1 : -1;
     x2Delta = (rightIn) ? -1 : 1;
     halfway = y + height/2;
     if (topBevel && (height & 1)) {
-	halfway++;
+        halfway++;
     }
     bottom = y + height;
 
@@ -292,17 +292,17 @@ Tk_3DHorizontalBevel(
      */
 
     for ( ; y < bottom; y++) {
-	/*
-	 * In some weird cases (such as large border widths for skinny
-	 * rectangles) x1 can be >= x2. Don't draw the lines in these cases.
-	 */
+        /*
+         * In some weird cases (such as large border widths for skinny
+         * rectangles) x1 can be >= x2. Don't draw the lines in these cases.
+         */
 
-	if (x1 < x2) {
-	    TkWinFillRect(dc, x1, y, x2-x1, 1,
-		(y < halfway) ? topColor : bottomColor);
-	}
-	x1 += x1Delta;
-	x2 += x2Delta;
+        if (x1 < x2) {
+            TkWinFillRect(dc, x1, y, x2-x1, 1,
+                (y < halfway) ? topColor : bottomColor);
+        }
+        x1 += x1Delta;
+        x2 += x2Delta;
     }
     TkWinReleaseDrawableDC(drawable, dc, &state);
 }
@@ -312,27 +312,27 @@ Tk_3DHorizontalBevel(
  *
  * TkpGetShadows --
  *
- *	This procedure computes the shadow colors for a 3-D border and fills
- *	in the corresponding fields of the Border structure. It's called
- *	lazily, so that the colors aren't allocated until something is
- *	actually drawn with them. That way, if a border is only used for flat
- *	backgrounds the shadow colors will never be allocated.
+ *      This procedure computes the shadow colors for a 3-D border and fills
+ *      in the corresponding fields of the Border structure. It's called
+ *      lazily, so that the colors aren't allocated until something is
+ *      actually drawn with them. That way, if a border is only used for flat
+ *      backgrounds the shadow colors will never be allocated.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The lightGC and darkGC fields in borderPtr get filled in, if they
- *	weren't already.
+ *      The lightGC and darkGC fields in borderPtr get filled in, if they
+ *      weren't already.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpGetShadows(
-    TkBorder *borderPtr,	/* Information about border. */
-    Tk_Window tkwin)		/* Window where border will be used for
-				 * drawing. */
+    TkBorder *borderPtr,        /* Information about border. */
+    Tk_Window tkwin)            /* Window where border will be used for
+                                 * drawing. */
 {
     XColor lightColor, darkColor;
     int tmp1, tmp2;
@@ -340,7 +340,7 @@ TkpGetShadows(
     XGCValues gcValues;
 
     if (borderPtr->lightGC != None) {
-	return;
+        return;
     }
 
     /*
@@ -348,29 +348,29 @@ TkpGetShadows(
      */
 
     if ((TkWinIndexOfColor(borderPtr->bgColorPtr) == COLOR_3DFACE)
-	    || (TkWinIndexOfColor(borderPtr->bgColorPtr) == COLOR_WINDOW)) {
-	borderPtr->darkColorPtr = Tk_GetColor(NULL, tkwin,
-		Tk_GetUid("SystemButtonShadow"));
-	gcValues.foreground = borderPtr->darkColorPtr->pixel;
-	borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
-	borderPtr->lightColorPtr = Tk_GetColor(NULL, tkwin,
-		Tk_GetUid("SystemButtonHighlight"));
-	gcValues.foreground = borderPtr->lightColorPtr->pixel;
-	borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
-	((WinBorder*)borderPtr)->dark2ColorPtr = Tk_GetColor(NULL, tkwin,
-		Tk_GetUid("System3dDarkShadow"));
-	((WinBorder*)borderPtr)->light2ColorPtr = Tk_GetColor(NULL, tkwin,
-		Tk_GetUid("System3dLight"));
-	return;
+            || (TkWinIndexOfColor(borderPtr->bgColorPtr) == COLOR_WINDOW)) {
+        borderPtr->darkColorPtr = Tk_GetColor(NULL, tkwin,
+                Tk_GetUid("SystemButtonShadow"));
+        gcValues.foreground = borderPtr->darkColorPtr->pixel;
+        borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
+        borderPtr->lightColorPtr = Tk_GetColor(NULL, tkwin,
+                Tk_GetUid("SystemButtonHighlight"));
+        gcValues.foreground = borderPtr->lightColorPtr->pixel;
+        borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
+        ((WinBorder*)borderPtr)->dark2ColorPtr = Tk_GetColor(NULL, tkwin,
+                Tk_GetUid("System3dDarkShadow"));
+        ((WinBorder*)borderPtr)->light2ColorPtr = Tk_GetColor(NULL, tkwin,
+                Tk_GetUid("System3dLight"));
+        return;
     }
     darkColor.red = 0;
     darkColor.green = 0;
     darkColor.blue = 0;
     ((WinBorder*)borderPtr)->dark2ColorPtr = Tk_GetColorByValue(tkwin,
-	    &darkColor);
+            &darkColor);
     lightColor = *(borderPtr->bgColorPtr);
     ((WinBorder*)borderPtr)->light2ColorPtr = Tk_GetColorByValue(tkwin,
-	    &lightColor);
+            &lightColor);
 
     /*
      * First, handle the case of a color display with lots of colors. The
@@ -383,114 +383,114 @@ TkpGetShadows(
      */
 
     if (Tk_Depth(tkwin) >= 6) {
-	/*
-	 * This is a color display with lots of colors. For the dark shadow,
-	 * cut 40% from each of the background color components. But if the
-	 * background is already very dark, make the dark color a little
-	 * lighter than the background by increasing each color component
-	 * 1/4th of the way to MAX_INTENSITY.
-	 *
-	 * For the light shadow, boost each component by 40% or half-way to
-	 * white, whichever is greater (the first approach works better for
-	 * unsaturated colors, the second for saturated ones). But if the
-	 * background is already very bright, instead choose a slightly darker
-	 * color for the light shadow by reducing each color component by 10%.
-	 *
-	 * Compute the colors using integers, not using lightColor.red etc.:
-	 * these are shorts and may have problems with integer overflow.
-	 */
+        /*
+         * This is a color display with lots of colors. For the dark shadow,
+         * cut 40% from each of the background color components. But if the
+         * background is already very dark, make the dark color a little
+         * lighter than the background by increasing each color component
+         * 1/4th of the way to MAX_INTENSITY.
+         *
+         * For the light shadow, boost each component by 40% or half-way to
+         * white, whichever is greater (the first approach works better for
+         * unsaturated colors, the second for saturated ones). But if the
+         * background is already very bright, instead choose a slightly darker
+         * color for the light shadow by reducing each color component by 10%.
+         *
+         * Compute the colors using integers, not using lightColor.red etc.:
+         * these are shorts and may have problems with integer overflow.
+         */
 
-	/*
-	 * Compute the dark shadow color
-	 */
+        /*
+         * Compute the dark shadow color
+         */
 
-	r = (int) borderPtr->bgColorPtr->red;
-	g = (int) borderPtr->bgColorPtr->green;
-	b = (int) borderPtr->bgColorPtr->blue;
+        r = (int) borderPtr->bgColorPtr->red;
+        g = (int) borderPtr->bgColorPtr->green;
+        b = (int) borderPtr->bgColorPtr->blue;
 
-	if (r*0.5*r + g*1.0*g + b*0.28*b < MAX_INTENSITY*0.05*MAX_INTENSITY) {
-	    darkColor.red = (MAX_INTENSITY + 3*r)/4;
-	    darkColor.green = (MAX_INTENSITY + 3*g)/4;
-	    darkColor.blue = (MAX_INTENSITY + 3*b)/4;
-	} else {
-	    darkColor.red = (60 * r)/100;
-	    darkColor.green = (60 * g)/100;
-	    darkColor.blue = (60 * b)/100;
-	}
+        if (r*0.5*r + g*1.0*g + b*0.28*b < MAX_INTENSITY*0.05*MAX_INTENSITY) {
+            darkColor.red = (MAX_INTENSITY + 3*r)/4;
+            darkColor.green = (MAX_INTENSITY + 3*g)/4;
+            darkColor.blue = (MAX_INTENSITY + 3*b)/4;
+        } else {
+            darkColor.red = (60 * r)/100;
+            darkColor.green = (60 * g)/100;
+            darkColor.blue = (60 * b)/100;
+        }
 
-	/*
-	 * Allocate the dark shadow color and its GC
-	 */
+        /*
+         * Allocate the dark shadow color and its GC
+         */
 
-	borderPtr->darkColorPtr = Tk_GetColorByValue(tkwin, &darkColor);
-	gcValues.foreground = borderPtr->darkColorPtr->pixel;
-	borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
+        borderPtr->darkColorPtr = Tk_GetColorByValue(tkwin, &darkColor);
+        gcValues.foreground = borderPtr->darkColorPtr->pixel;
+        borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
 
-	/*
-	 * Compute the light shadow color
-	 */
+        /*
+         * Compute the light shadow color
+         */
 
-	if (g > MAX_INTENSITY*0.95) {
-	    lightColor.red = (90 * r)/100;
-	    lightColor.green = (90 * g)/100;
-	    lightColor.blue = (90 * b)/100;
-	} else {
-	    tmp1 = (14 * r)/10;
-	    if (tmp1 > MAX_INTENSITY) {
-		tmp1 = MAX_INTENSITY;
-	    }
-	    tmp2 = (MAX_INTENSITY + r)/2;
-	    lightColor.red = (tmp1 > tmp2) ? tmp1 : tmp2;
-	    tmp1 = (14 * g)/10;
-	    if (tmp1 > MAX_INTENSITY) {
-		tmp1 = MAX_INTENSITY;
-	    }
-	    tmp2 = (MAX_INTENSITY + g)/2;
-	    lightColor.green = (tmp1 > tmp2) ? tmp1 : tmp2;
-	    tmp1 = (14 * b)/10;
-	    if (tmp1 > MAX_INTENSITY) {
-		tmp1 = MAX_INTENSITY;
-	    }
-	    tmp2 = (MAX_INTENSITY + b)/2;
-	    lightColor.blue = (tmp1 > tmp2) ? tmp1 : tmp2;
-	}
+        if (g > MAX_INTENSITY*0.95) {
+            lightColor.red = (90 * r)/100;
+            lightColor.green = (90 * g)/100;
+            lightColor.blue = (90 * b)/100;
+        } else {
+            tmp1 = (14 * r)/10;
+            if (tmp1 > MAX_INTENSITY) {
+                tmp1 = MAX_INTENSITY;
+            }
+            tmp2 = (MAX_INTENSITY + r)/2;
+            lightColor.red = (tmp1 > tmp2) ? tmp1 : tmp2;
+            tmp1 = (14 * g)/10;
+            if (tmp1 > MAX_INTENSITY) {
+                tmp1 = MAX_INTENSITY;
+            }
+            tmp2 = (MAX_INTENSITY + g)/2;
+            lightColor.green = (tmp1 > tmp2) ? tmp1 : tmp2;
+            tmp1 = (14 * b)/10;
+            if (tmp1 > MAX_INTENSITY) {
+                tmp1 = MAX_INTENSITY;
+            }
+            tmp2 = (MAX_INTENSITY + b)/2;
+            lightColor.blue = (tmp1 > tmp2) ? tmp1 : tmp2;
+        }
 
-	/*
-	 * Allocate the light shadow color and its GC
-	 */
+        /*
+         * Allocate the light shadow color and its GC
+         */
 
-	borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
-	gcValues.foreground = borderPtr->lightColorPtr->pixel;
-	borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
-	return;
+        borderPtr->lightColorPtr = Tk_GetColorByValue(tkwin, &lightColor);
+        gcValues.foreground = borderPtr->lightColorPtr->pixel;
+        borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
+        return;
     }
 
     if (borderPtr->shadow == None) {
-	borderPtr->shadow = Tk_GetBitmap((Tcl_Interp *) NULL, tkwin,
-		Tk_GetUid("gray50"));
-	if (borderPtr->shadow == None) {
-	    Tcl_Panic("TkpGetShadows couldn't allocate bitmap for border");
-	}
+        borderPtr->shadow = Tk_GetBitmap((Tcl_Interp *) NULL, tkwin,
+                Tk_GetUid("gray50"));
+        if (borderPtr->shadow == None) {
+            Tcl_Panic("TkpGetShadows couldn't allocate bitmap for border");
+        }
     }
     if (borderPtr->visual->map_entries > 2) {
-	/*
-	 * This isn't a monochrome display, but the colormap either ran out of
-	 * entries or didn't have very many to begin with. Generate the light
-	 * shadows with a white stipple and the dark shadows with a black
-	 * stipple.
-	 */
+        /*
+         * This isn't a monochrome display, but the colormap either ran out of
+         * entries or didn't have very many to begin with. Generate the light
+         * shadows with a white stipple and the dark shadows with a black
+         * stipple.
+         */
 
-	gcValues.foreground = borderPtr->bgColorPtr->pixel;
-	gcValues.background = BlackPixelOfScreen(borderPtr->screen);
-	gcValues.stipple = borderPtr->shadow;
-	gcValues.fill_style = FillOpaqueStippled;
-	borderPtr->darkGC = Tk_GetGC(tkwin,
-		GCForeground|GCBackground|GCStipple|GCFillStyle, &gcValues);
-	gcValues.foreground = WhitePixelOfScreen(borderPtr->screen);
-	gcValues.background = borderPtr->bgColorPtr->pixel;
-	borderPtr->lightGC = Tk_GetGC(tkwin,
-		GCForeground|GCBackground|GCStipple|GCFillStyle, &gcValues);
-	return;
+        gcValues.foreground = borderPtr->bgColorPtr->pixel;
+        gcValues.background = BlackPixelOfScreen(borderPtr->screen);
+        gcValues.stipple = borderPtr->shadow;
+        gcValues.fill_style = FillOpaqueStippled;
+        borderPtr->darkGC = Tk_GetGC(tkwin,
+                GCForeground|GCBackground|GCStipple|GCFillStyle, &gcValues);
+        gcValues.foreground = WhitePixelOfScreen(borderPtr->screen);
+        gcValues.background = borderPtr->bgColorPtr->pixel;
+        borderPtr->lightGC = Tk_GetGC(tkwin,
+                GCForeground|GCBackground|GCStipple|GCFillStyle, &gcValues);
+        return;
     }
 
     /*
@@ -504,14 +504,14 @@ TkpGetShadows(
     gcValues.stipple = borderPtr->shadow;
     gcValues.fill_style = FillOpaqueStippled;
     borderPtr->lightGC = Tk_GetGC(tkwin,
-	    GCForeground|GCBackground|GCStipple|GCFillStyle, &gcValues);
+            GCForeground|GCBackground|GCStipple|GCFillStyle, &gcValues);
     if (borderPtr->bgColorPtr->pixel
-	    == WhitePixelOfScreen(borderPtr->screen)) {
-	gcValues.foreground = BlackPixelOfScreen(borderPtr->screen);
-	borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
+            == WhitePixelOfScreen(borderPtr->screen)) {
+        gcValues.foreground = BlackPixelOfScreen(borderPtr->screen);
+        borderPtr->darkGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
     } else {
-	borderPtr->darkGC = borderPtr->lightGC;
-	borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
+        borderPtr->darkGC = borderPtr->lightGC;
+        borderPtr->lightGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
     }
 }
 
@@ -520,13 +520,13 @@ TkpGetShadows(
  *
  * TkWinGetBorderPixels --
  *
- *	This routine returns the 5 COLORREFs used to draw a given 3d border.
+ *      This routine returns the 5 COLORREFs used to draw a given 3d border.
  *
  * Results:
- *	Returns the colors in the specified array.
+ *      Returns the colors in the specified array.
  *
  * Side effects:
- *	May cause the remaining colors to be allocated.
+ *      May cause the remaining colors to be allocated.
  *
  *----------------------------------------------------------------------
  */
@@ -535,31 +535,31 @@ COLORREF
 TkWinGetBorderPixels(
     Tk_Window tkwin,
     Tk_3DBorder border,
-    int which)			/* One of TK_3D_FLAT_GC, TK_3D_LIGHT_GC,
-				 * TK_3D_DARK_GC, TK_3D_LIGHT2, TK_3D_DARK2 */
+    int which)                  /* One of TK_3D_FLAT_GC, TK_3D_LIGHT_GC,
+                                 * TK_3D_DARK_GC, TK_3D_LIGHT2, TK_3D_DARK2 */
 {
     WinBorder *borderPtr = (WinBorder *) border;
 
     if (borderPtr->info.lightGC == None) {
-	TkpGetShadows(&borderPtr->info, tkwin);
+        TkpGetShadows(&borderPtr->info, tkwin);
     }
     switch (which) {
     case TK_3D_FLAT_GC:
-	return borderPtr->info.bgColorPtr->pixel;
+        return borderPtr->info.bgColorPtr->pixel;
     case TK_3D_LIGHT_GC:
-	if (borderPtr->info.lightColorPtr == NULL) {
-	    return WhitePixelOfScreen(borderPtr->info.screen);
-	}
-	return borderPtr->info.lightColorPtr->pixel;
+        if (borderPtr->info.lightColorPtr == NULL) {
+            return WhitePixelOfScreen(borderPtr->info.screen);
+        }
+        return borderPtr->info.lightColorPtr->pixel;
     case TK_3D_DARK_GC:
-	if (borderPtr->info.darkColorPtr == NULL) {
-	    return BlackPixelOfScreen(borderPtr->info.screen);
-	}
-	return borderPtr->info.darkColorPtr->pixel;
+        if (borderPtr->info.darkColorPtr == NULL) {
+            return BlackPixelOfScreen(borderPtr->info.screen);
+        }
+        return borderPtr->info.darkColorPtr->pixel;
     case TK_3D_LIGHT2:
-	return borderPtr->light2ColorPtr->pixel;
+        return borderPtr->light2ColorPtr->pixel;
     case TK_3D_DARK2:
-	return borderPtr->dark2ColorPtr->pixel;
+        return borderPtr->dark2ColorPtr->pixel;
     }
     return 0;
 }

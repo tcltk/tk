@@ -5,10 +5,10 @@
 ::msgcat::mcset nl "&About..." "&Info..."
 ::msgcat::mcset nl "<F1>"      "<F1>"
 ::msgcat::mcset nl "&Quit"     "&Einde"
-::msgcat::mcset nl "Meta+Q"    "Meta+E"		;# Displayed hotkey
-::msgcat::mcset nl "Meta-q"    "Meta-e"		;# Actual binding sequence
-::msgcat::mcset nl "Ctrl+Q"    "Ctrl+E"		;# Displayed hotkey
-::msgcat::mcset nl "Control-q" "Control-e"	;# Actual binding sequence
+::msgcat::mcset nl "Meta+Q"    "Meta+E"         ;# Displayed hotkey
+::msgcat::mcset nl "Meta-q"    "Meta-e"         ;# Actual binding sequence
+::msgcat::mcset nl "Ctrl+Q"    "Ctrl+E"         ;# Displayed hotkey
+::msgcat::mcset nl "Control-q" "Control-e"      ;# Actual binding sequence
 ::msgcat::mcset nl "Dismiss"   "Sluiten"
 ::msgcat::mcset nl "See Variables"    "Bekijk Variabelen"
 ::msgcat::mcset nl "Variable Values"  "Waarden Variabelen"
@@ -31,12 +31,12 @@
     "demonstratie starten door op de regel te klikken."
 ::msgcat::mcset nl "appears, you can click the" \
     "Zodra het nieuwe venster verschijnt, kun je op de knop"
-::msgcat::mcset nl "See Code"  "Bekijk Code"	;# This is also button text!
+::msgcat::mcset nl "See Code"  "Bekijk Code"    ;# This is also button text!
 ::msgcat::mcset nl "button to see the Tcl/Tk code that created the demonstration.  If" \
     "drukken om de achterliggende Tcl/Tk code te zien.  Als je dat wilt,"
 ::msgcat::mcset nl "you wish, you can edit the code and click the" \
     "kun je de code wijzigen en op de knop"
-::msgcat::mcset nl "Rerun Demo" "Herstart Demo"	;# This is also button text!
+::msgcat::mcset nl "Rerun Demo" "Herstart Demo" ;# This is also button text!
 ::msgcat::mcset nl "button in the code window to reinvoke the demonstration with the" \
     "drukken in het codevenster om de demonstratie uit te voeren met de"
 ::msgcat::mcset nl "modified code." \

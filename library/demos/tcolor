@@ -12,24 +12,24 @@ wm title . "Color Editor"
 
 # Global variables that control the program:
 #
-# colorSpace -			Color space currently being used for
-#				editing.  Must be "rgb", "cmy", or "hsb".
-# label1, label2, label3 -	Labels for the scales.
-# red, green, blue -		Current color intensities in decimal
-#				on a scale of 0-65535.
-# color -			A string giving the current color value
-#				in the proper form for x:
-#				#RRRRGGGGBBBB
-# updating -			Non-zero means that we're in the middle of
-#				updating the scales to load a new color,so
-#				information shouldn't be propagating back
-#				from the scales to other elements of the
-#				program:  this would make an infinite loop.
-# command -			Holds the command that has been typed
-#				into the "Command" entry.
-# autoUpdate -			1 means execute the update command
-#				automatically whenever the color changes.
-# name -			Name for new color, typed into entry.
+# colorSpace -                  Color space currently being used for
+#                               editing.  Must be "rgb", "cmy", or "hsb".
+# label1, label2, label3 -      Labels for the scales.
+# red, green, blue -            Current color intensities in decimal
+#                               on a scale of 0-65535.
+# color -                       A string giving the current color value
+#                               in the proper form for x:
+#                               #RRRRGGGGBBBB
+# updating -                    Non-zero means that we're in the middle of
+#                               updating the scales to load a new color,so
+#                               information shouldn't be propagating back
+#                               from the scales to other elements of the
+#                               program:  this would make an infinite loop.
+# command -                     Holds the command that has been typed
+#                               into the "Command" entry.
+# autoUpdate -                  1 means execute the update command
+#                               automatically whenever the color changes.
+# name -                        Name for new color, typed into entry.
 
 set colorSpace hsb
 set red 65535
@@ -46,16 +46,16 @@ set name ""
 menu .menu.file
 .menu add cascade  -menu .menu.file  -label File  -underline 0
 .menu.file add radio -label "RGB color space" -variable colorSpace \
-	-value rgb -underline 0 -command {changeColorSpace rgb}
+        -value rgb -underline 0 -command {changeColorSpace rgb}
 .menu.file add radio -label "CMY color space" -variable colorSpace \
-	-value cmy -underline 0 -command {changeColorSpace cmy}
+        -value cmy -underline 0 -command {changeColorSpace cmy}
 .menu.file add radio -label "HSB color space" -variable colorSpace \
-	-value hsb -underline 0 -command {changeColorSpace hsb}
+        -value hsb -underline 0 -command {changeColorSpace hsb}
 .menu.file add separator
 .menu.file add radio -label "Automatic updates" -variable autoUpdate \
-	-value 1 -underline 0
+        -value 1 -underline 0
 .menu.file add radio -label "Manual updates" -variable autoUpdate \
-	-value 0 -underline 0
+        -value 0 -underline 0
 .menu.file add separator
 .menu.file add command -label "Exit program" -underline 0 -command {exit}
 
@@ -82,23 +82,23 @@ foreach i {
     /usr/openwin/lib/X11/rgb.txt
 } {
     if {![file readable $i]} {
-	continue;
+        continue;
     }
     set f [open $i]
     labelframe .names -text "Select:" -padx .1c -pady .1c
     grid .names -row 0 -column 0 -sticky nsew -padx .15c -pady .15c -rowspan 2
     grid columnconfigure . 0 -weight 1
     listbox .names.lb -width 20 -height 12 -yscrollcommand ".names.s set" \
-	-exportselection false
+        -exportselection false
     bind .names.lb <Double-1> {
-	    tc_loadNamedColor [.names.lb get [.names.lb curselection]]
+            tc_loadNamedColor [.names.lb get [.names.lb curselection]]
     }
     scrollbar .names.s -orient vertical -command ".names.lb yview"
     pack .names.lb .names.s -side left -fill y -expand 1
     while {[gets $f line] >= 0} {
-	if {[regexp {^\s*\d+\s+\d+\s+\d+\s+(\S+)$} $line -> col]} {
-	    .names.lb insert end $col
-	}
+        if {[regexp {^\s*\d+\s+\d+\s+\d+\s+(\S+)$} $line -> col]} {
+            .names.lb insert end $col
+        }
     }
     close $f
     break
@@ -112,7 +112,7 @@ foreach i {1 2 3} {
     label .adjust.l$i -textvariable label$i -pady 0
     labelframe .adjust.$i -labelwidget .adjust.l$i -padx 1m -pady 1m
     scale .scale$i -from 0 -to 1000 -length 6c -orient horizontal \
-	    -command tc_scaleChanged
+            -command tc_scaleChanged
     pack .scale$i -in .adjust.$i
     pack .adjust.$i
 }
@@ -141,27 +141,27 @@ grid .sample -row 0 -column 2 -sticky nsew -padx .15c -pady .15c -rowspan 2
 proc tc_scaleChanged args {
     global red green blue colorSpace color updating autoUpdate
     if {$updating} {
-	return
+        return
     }
     switch $colorSpace {
-	rgb {
-	    set red   [format %.0f [expr {[.scale1 get]*65.535}]]
-	    set green [format %.0f [expr {[.scale2 get]*65.535}]]
-	    set blue  [format %.0f [expr {[.scale3 get]*65.535}]]
-	}
-	cmy {
-	    set red   [format %.0f [expr {65535 - [.scale1 get]*65.535}]]
-	    set green [format %.0f [expr {65535 - [.scale2 get]*65.535}]]
-	    set blue  [format %.0f [expr {65535 - [.scale3 get]*65.535}]]
-	}
-	hsb {
-	    set list [hsbToRgb [expr {[.scale1 get]/1000.0}] \
-		    [expr {[.scale2 get]/1000.0}] \
-		    [expr {[.scale3 get]/1000.0}]]
-	    set red [lindex $list 0]
-	    set green [lindex $list 1]
-	    set blue [lindex $list 2]
-	}
+        rgb {
+            set red   [format %.0f [expr {[.scale1 get]*65.535}]]
+            set green [format %.0f [expr {[.scale2 get]*65.535}]]
+            set blue  [format %.0f [expr {[.scale3 get]*65.535}]]
+        }
+        cmy {
+            set red   [format %.0f [expr {65535 - [.scale1 get]*65.535}]]
+            set green [format %.0f [expr {65535 - [.scale2 get]*65.535}]]
+            set blue  [format %.0f [expr {65535 - [.scale3 get]*65.535}]]
+        }
+        hsb {
+            set list [hsbToRgb [expr {[.scale1 get]/1000.0}] \
+                    [expr {[.scale2 get]/1000.0}] \
+                    [expr {[.scale3 get]/1000.0}]]
+            set red [lindex $list 0]
+            set green [lindex $list 1]
+            set blue [lindex $list 2]
+        }
     }
     set color [format "#%04x%04x%04x" $red $green $blue]
     .sample.swatch config -bg $color
@@ -178,22 +178,22 @@ proc tc_setScales {} {
     global red green blue colorSpace updating
     set updating 1
     switch $colorSpace {
-	rgb {
-	    .scale1 set [format %.0f [expr {$red/65.535}]]
-	    .scale2 set [format %.0f [expr {$green/65.535}]]
-	    .scale3 set [format %.0f [expr {$blue/65.535}]]
-	}
-	cmy {
-	    .scale1 set [format %.0f [expr {(65535-$red)/65.535}]]
-	    .scale2 set [format %.0f [expr {(65535-$green)/65.535}]]
-	    .scale3 set [format %.0f [expr {(65535-$blue)/65.535}]]
-	}
-	hsb {
-	    set list [rgbToHsv $red $green $blue]
-	    .scale1 set [format %.0f [expr {[lindex $list 0] * 1000.0}]]
-	    .scale2 set [format %.0f [expr {[lindex $list 1] * 1000.0}]]
-	    .scale3 set [format %.0f [expr {[lindex $list 2] * 1000.0}]]
-	}
+        rgb {
+            .scale1 set [format %.0f [expr {$red/65.535}]]
+            .scale2 set [format %.0f [expr {$green/65.535}]]
+            .scale3 set [format %.0f [expr {$blue/65.535}]]
+        }
+        cmy {
+            .scale1 set [format %.0f [expr {(65535-$red)/65.535}]]
+            .scale2 set [format %.0f [expr {(65535-$green)/65.535}]]
+            .scale3 set [format %.0f [expr {(65535-$blue)/65.535}]]
+        }
+        hsb {
+            set list [rgbToHsv $red $green $blue]
+            .scale1 set [format %.0f [expr {[lindex $list 0] * 1000.0}]]
+            .scale2 set [format %.0f [expr {[lindex $list 1] * 1000.0}]]
+            .scale3 set [format %.0f [expr {[lindex $list 2] * 1000.0}]]
+        }
     }
     set updating 0
 }
@@ -206,24 +206,24 @@ proc tc_loadNamedColor name {
     global red green blue color autoUpdate
 
     if {[string index $name 0] != "#"} {
-	set list [winfo rgb .sample.swatch $name]
-	set red [lindex $list 0]
-	set green [lindex $list 1]
-	set blue [lindex $list 2]
+        set list [winfo rgb .sample.swatch $name]
+        set red [lindex $list 0]
+        set green [lindex $list 1]
+        set blue [lindex $list 2]
     } else {
-	switch [string length $name] {
-	    4  {set format "#%1x%1x%1x"; set shift 12}
-	    7  {set format "#%2x%2x%2x"; set shift 8}
-	    10 {set format "#%3x%3x%3x"; set shift 4}
-	    13 {set format "#%4x%4x%4x"; set shift 0}
-	    default {error "syntax error in color name \"$name\""}
-	}
-	if {[scan $name $format red green blue] != 3} {
-	    error "syntax error in color name \"$name\""
-	}
-	set red   [expr {$red<<$shift}]
-	set green [expr {$green<<$shift}]
-	set blue  [expr {$blue<<$shift}]
+        switch [string length $name] {
+            4  {set format "#%1x%1x%1x"; set shift 12}
+            7  {set format "#%2x%2x%2x"; set shift 8}
+            10 {set format "#%3x%3x%3x"; set shift 4}
+            13 {set format "#%4x%4x%4x"; set shift 0}
+            default {error "syntax error in color name \"$name\""}
+        }
+        if {[scan $name $format red green blue] != 3} {
+            error "syntax error in color name \"$name\""
+        }
+        set red   [expr {$red<<$shift}]
+        set green [expr {$green<<$shift}]
+        set blue  [expr {$blue<<$shift}]
     }
     tc_setScales
     set color [format "#%04x%04x%04x" $red $green $blue]
@@ -238,27 +238,27 @@ proc tc_loadNamedColor name {
 proc changeColorSpace space {
     global label1 label2 label3
     switch $space {
-	rgb {
-	    set label1 "Adjust Red:"
-	    set label2 "Adjust Green:"
-	    set label3 "Adjust Blue:"
-	    tc_setScales
-	    return
-	}
-	cmy {
-	    set label1 "Adjust Cyan:"
-	    set label2 "Adjust Magenta:"
-	    set label3 "Adjust Yellow:"
-	    tc_setScales
-	    return
-	}
-	hsb {
-	    set label1 "Adjust Hue:"
-	    set label2 "Adjust Saturation:"
-	    set label3 "Adjust Brightness:"
-	    tc_setScales
-	    return
-	}
+        rgb {
+            set label1 "Adjust Red:"
+            set label2 "Adjust Green:"
+            set label3 "Adjust Blue:"
+            tc_setScales
+            return
+        }
+        cmy {
+            set label1 "Adjust Cyan:"
+            set label2 "Adjust Magenta:"
+            set label3 "Adjust Yellow:"
+            tc_setScales
+            return
+        }
+        hsb {
+            set label1 "Adjust Hue:"
+            set label2 "Adjust Saturation:"
+            set label3 "Adjust Brightness:"
+            tc_setScales
+            return
+        }
     }
 }
 
@@ -270,39 +270,39 @@ proc changeColorSpace space {
 
 proc rgbToHsv {red green blue} {
     if {$red > $green} {
-	set max [expr {double($red)}]
-	set min [expr {double($green)}]
+        set max [expr {double($red)}]
+        set min [expr {double($green)}]
     } else {
-	set max [expr {double($green)}]
-	set min [expr {double($red)}]
+        set max [expr {double($green)}]
+        set min [expr {double($red)}]
     }
     if {$blue > $max} {
-	set max [expr {double($blue)}]
+        set max [expr {double($blue)}]
     } elseif {$blue < $min} {
-	set min [expr {double($blue)}]
+        set min [expr {double($blue)}]
     }
     set range [expr {$max-$min}]
     if {$max == 0} {
-	set sat 0
+        set sat 0
     } else {
-	set sat [expr {($max-$min)/$max}]
+        set sat [expr {($max-$min)/$max}]
     }
     if {$sat == 0} {
-	set hue 0
+        set hue 0
     } else {
-	set rc [expr {($max - $red)/$range}]
-	set gc [expr {($max - $green)/$range}]
-	set bc [expr {($max - $blue)/$range}]
-	if {$red == $max} {
-	    set hue [expr {($bc - $gc)/6.0}]
-	} elseif {$green == $max} {
-	    set hue [expr {(2 + $rc - $bc)/6.0}]
-	} else {
-	    set hue [expr {(4 + $gc - $rc)/6.0}]
-	}
-	if {$hue < 0.0} {
-	    set hue [expr {$hue + 1.0}]
-	}
+        set rc [expr {($max - $red)/$range}]
+        set gc [expr {($max - $green)/$range}]
+        set bc [expr {($max - $blue)/$range}]
+        if {$red == $max} {
+            set hue [expr {($bc - $gc)/6.0}]
+        } elseif {$green == $max} {
+            set hue [expr {(2 + $rc - $bc)/6.0}]
+        } else {
+            set hue [expr {(4 + $gc - $rc)/6.0}]
+        }
+        if {$hue < 0.0} {
+            set hue [expr {$hue + 1.0}]
+        }
     }
     return [list $hue $sat [expr {$max/65535}]]
 }
@@ -316,26 +316,26 @@ proc rgbToHsv {red green blue} {
 proc hsbToRgb {hue sat value} {
     set v [format %.0f [expr {65535.0*$value}]]
     if {$sat == 0} {
-	return "$v $v $v"
+        return "$v $v $v"
     } else {
-	set hue [expr {$hue*6.0}]
-	if {$hue >= 6.0} {
-	    set hue 0.0
-	}
-	scan $hue. %d i
-	set f [expr {$hue-$i}]
-	set p [format %.0f [expr {65535.0*$value*(1 - $sat)}]]
-	set q [format %.0f [expr {65535.0*$value*(1 - ($sat*$f))}]]
-	set t [format %.0f [expr {65535.0*$value*(1 - ($sat*(1 - $f)))}]]
-	switch $i {
-	    0 {return "$v $t $p"}
-	    1 {return "$q $v $p"}
-	    2 {return "$p $v $t"}
-	    3 {return "$p $q $v"}
-	    4 {return "$t $p $v"}
-	    5 {return "$v $p $q"}
-	    default {error "i value $i is out of range"}
-	}
+        set hue [expr {$hue*6.0}]
+        if {$hue >= 6.0} {
+            set hue 0.0
+        }
+        scan $hue. %d i
+        set f [expr {$hue-$i}]
+        set p [format %.0f [expr {65535.0*$value*(1 - $sat)}]]
+        set q [format %.0f [expr {65535.0*$value*(1 - ($sat*$f))}]]
+        set t [format %.0f [expr {65535.0*$value*(1 - ($sat*(1 - $f)))}]]
+        switch $i {
+            0 {return "$v $t $p"}
+            1 {return "$q $v $p"}
+            2 {return "$p $v $t"}
+            3 {return "$p $q $v"}
+            4 {return "$t $p $v"}
+            5 {return "$v $p $q"}
+            default {error "i value $i is out of range"}
+        }
     }
 }
 

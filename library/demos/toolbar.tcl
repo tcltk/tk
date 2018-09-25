@@ -16,17 +16,17 @@ wm iconname $w "toolbar"
 positionWindow $w
 
 ttk::label $w.msg -wraplength 4i -text "This is a demonstration of how to do\
-	a toolbar that is styled correctly and which can be torn off. The\
-	buttons are configured to be \u201Ctoolbar style\u201D buttons by\
-	telling them that they are to use the Toolbutton style. At the left\
-	end of the toolbar is a simple marker that the cursor changes to a\
-	movement icon over; drag that away from the toolbar to tear off the\
-	whole toolbar into a separate toplevel widget. When the dragged-off\
-	toolbar is no longer needed, just close it like any normal toplevel\
-	and it will reattach to the window it was torn off from."
+        a toolbar that is styled correctly and which can be torn off. The\
+        buttons are configured to be \u201Ctoolbar style\u201D buttons by\
+        telling them that they are to use the Toolbutton style. At the left\
+        end of the toolbar is a simple marker that the cursor changes to a\
+        movement icon over; drag that away from the toolbar to tear off the\
+        whole toolbar into a separate toplevel widget. When the dragged-off\
+        toolbar is no longer needed, just close it like any normal toplevel\
+        and it will reattach to the window it was torn off from."
 
 ## Set up the toolbar hull
-set t [frame $w.toolbar]		;# Must be a frame!
+set t [frame $w.toolbar]                ;# Must be a frame!
 ttk::separator $w.sep
 ttk::frame $t.tearoff -cursor fleur
 ttk::separator $t.tearoff.to -orient vertical
@@ -44,7 +44,7 @@ bind $t.tearoff.to  <B1-Motion> [list tearoff $t %X %Y]
 bind $t.tearoff.to2 <B1-Motion> [list tearoff $t %X %Y]
 proc tearoff {w x y} {
     if {[string match $w* [winfo containing $x $y]]} {
-	return
+        return
     }
     grid remove $w
     grid remove $w.tearoff
@@ -59,16 +59,16 @@ proc untearoff {w} {
 
 ## Toolbar contents
 ttk::button $t.button -text "Button" -style Toolbutton -command [list \
-	$w.txt insert end "Button Pressed\n"]
+        $w.txt insert end "Button Pressed\n"]
 ttk::checkbutton $t.check -text "Check" -variable check -style Toolbutton \
-	-command [concat [list $w.txt insert end] {"check is $check\n"}]
+        -command [concat [list $w.txt insert end] {"check is $check\n"}]
 ttk::menubutton $t.menu -text "Menu" -menu $t.menu.m
 ttk::combobox $t.combo -value [lsort [font families]] -state readonly
 menu $t.menu.m
 $t.menu.m add command -label "Just" -command [list $w.txt insert end Just\n]
 $t.menu.m add command -label "An" -command [list $w.txt insert end An\n]
 $t.menu.m add command -label "Example" \
-	-command [list $w.txt insert end Example\n]
+        -command [list $w.txt insert end Example\n]
 bind $t.combo <<ComboboxSelected>> [list changeFont $w.txt $t.combo]
 proc changeFont {txt combo} {
     $txt configure -font [list [$combo get] 10]
@@ -76,7 +76,7 @@ proc changeFont {txt combo} {
 
 ## Some content for the rest of the toplevel
 text $w.txt -width 40 -height 10
-interp alias {} doInsert {} $w.txt insert end	;# Make bindings easy to write
+interp alias {} doInsert {} $w.txt insert end   ;# Make bindings easy to write
 
 ## Arrange contents
 grid $t.button $t.check $t.menu $t.combo -in $t.contents -padx 2 -sticky ns

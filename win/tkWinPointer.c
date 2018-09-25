@@ -1,7 +1,7 @@
 /*
  * tkWinPointer.c --
  *
- *	Windows specific mouse tracking code.
+ *      Windows specific mouse tracking code.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright (c) 1998-1999 by Scriptics Corporation.
@@ -22,29 +22,29 @@
  * Declarations of static variables used in this file.
  */
 
-static int captured = 0;		/* 1 if mouse is currently captured. */
+static int captured = 0;                /* 1 if mouse is currently captured. */
 static TkWindow *keyboardWinPtr = NULL; /* Current keyboard grab window. */
-static Tcl_TimerToken mouseTimer;	/* Handle to the latest mouse timer. */
-static int mouseTimerSet = 0;		/* 1 if the mouse timer is active. */
+static Tcl_TimerToken mouseTimer;       /* Handle to the latest mouse timer. */
+static int mouseTimerSet = 0;           /* 1 if the mouse timer is active. */
 
 /*
  * Forward declarations of procedures used in this file.
  */
 
-static void		MouseTimerProc(ClientData clientData);
+static void             MouseTimerProc(ClientData clientData);
 
 /*
  *----------------------------------------------------------------------
  *
  * TkWinGetModifierState --
  *
- *	Return the modifier state as of the last message.
+ *      Return the modifier state as of the last message.
  *
  * Results:
- *	Returns the X modifier mask.
+ *      Returns the X modifier mask.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -55,31 +55,31 @@ TkWinGetModifierState(void)
     int state = 0;
 
     if (GetKeyState(VK_SHIFT) & 0x8000) {
-	state |= ShiftMask;
+        state |= ShiftMask;
     }
     if (GetKeyState(VK_CONTROL) & 0x8000) {
-	state |= ControlMask;
+        state |= ControlMask;
     }
     if (GetKeyState(VK_MENU) & 0x8000) {
-	state |= ALT_MASK;
+        state |= ALT_MASK;
     }
     if (GetKeyState(VK_CAPITAL) & 0x0001) {
-	state |= LockMask;
+        state |= LockMask;
     }
     if (GetKeyState(VK_NUMLOCK) & 0x0001) {
-	state |= Mod1Mask;
+        state |= Mod1Mask;
     }
     if (GetKeyState(VK_SCROLL) & 0x0001) {
-	state |= Mod3Mask;
+        state |= Mod3Mask;
     }
     if (GetKeyState(VK_LBUTTON) & 0x8000) {
-	state |= Button1Mask;
+        state |= Button1Mask;
     }
     if (GetKeyState(VK_MBUTTON) & 0x8000) {
-	state |= Button2Mask;
+        state |= Button2Mask;
     }
     if (GetKeyState(VK_RBUTTON) & 0x8000) {
-	state |= Button3Mask;
+        state |= Button3Mask;
     }
     return state;
 }
@@ -89,25 +89,25 @@ TkWinGetModifierState(void)
  *
  * Tk_PointerEvent --
  *
- *	This procedure is called for each pointer-related event. It converts
- *	the position to root coords and updates the global pointer state
- *	machine. It also ensures that the mouse timer is scheduled.
+ *      This procedure is called for each pointer-related event. It converts
+ *      the position to root coords and updates the global pointer state
+ *      machine. It also ensures that the mouse timer is scheduled.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	May queue events and change the grab state.
+ *      May queue events and change the grab state.
  *
  *----------------------------------------------------------------------
  */
 
 void
 Tk_PointerEvent(
-    HWND hwnd,			/* Window for coords, or NULL for the root
-				 * window. */
-    int x, int y)		/* Coords relative to hwnd, or screen if hwnd
-				 * is NULL. */
+    HWND hwnd,                  /* Window for coords, or NULL for the root
+                                 * window. */
+    int x, int y)               /* Coords relative to hwnd, or screen if hwnd
+                                 * is NULL. */
 {
     POINT pos;
     int state;
@@ -121,7 +121,7 @@ Tk_PointerEvent(
      */
 
     if (hwnd) {
-	ClientToScreen(hwnd, &pos);
+        ClientToScreen(hwnd, &pos);
     }
 
     /*
@@ -133,7 +133,7 @@ Tk_PointerEvent(
      */
 
     if (captured || hwnd == NULL) {
-	hwnd = WindowFromPoint(pos);
+        hwnd = WindowFromPoint(pos);
     }
     tkwin = Tk_HWNDToWindow(hwnd);
 
@@ -142,9 +142,9 @@ Tk_PointerEvent(
     Tk_UpdatePointer(tkwin, pos.x, pos.y, state);
 
     if ((captured || tkwin) && !mouseTimerSet) {
-	mouseTimerSet = 1;
-	mouseTimer = Tcl_CreateTimerHandler(MOUSE_TIMER_INTERVAL,
-		MouseTimerProc, NULL);
+        mouseTimerSet = 1;
+        mouseTimer = Tcl_CreateTimerHandler(MOUSE_TIMER_INTERVAL,
+                MouseTimerProc, NULL);
     }
 }
 
@@ -153,13 +153,13 @@ Tk_PointerEvent(
  *
  * XGrabKeyboard --
  *
- *	Simulates a keyboard grab by setting the focus.
+ *      Simulates a keyboard grab by setting the focus.
  *
  * Results:
- *	Always returns GrabSuccess.
+ *      Always returns GrabSuccess.
  *
  * Side effects:
- *	Sets the keyboard focus to the specified window.
+ *      Sets the keyboard focus to the specified window.
  *
  *----------------------------------------------------------------------
  */
@@ -182,13 +182,13 @@ XGrabKeyboard(
  *
  * XUngrabKeyboard --
  *
- *	Releases the simulated keyboard grab.
+ *      Releases the simulated keyboard grab.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Sets the keyboard focus back to the value before the grab.
+ *      Sets the keyboard focus back to the value before the grab.
  *
  *----------------------------------------------------------------------
  */
@@ -207,13 +207,13 @@ XUngrabKeyboard(
  *
  * MouseTimerProc --
  *
- *	Check the current mouse position and look for enter/leave events.
+ *      Check the current mouse position and look for enter/leave events.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	May schedule a new timer and/or generate enter/leave events.
+ *      May schedule a new timer and/or generate enter/leave events.
  *
  *----------------------------------------------------------------------
  */
@@ -255,8 +255,8 @@ void
 TkWinCancelMouseTimer(void)
 {
     if (mouseTimerSet) {
-	Tcl_DeleteTimerHandler(mouseTimer);
-	mouseTimerSet = 0;
+        Tcl_DeleteTimerHandler(mouseTimer);
+        mouseTimerSet = 0;
     }
 }
 
@@ -265,23 +265,23 @@ TkWinCancelMouseTimer(void)
  *
  * TkGetPointerCoords --
  *
- *	Fetch the position of the mouse pointer.
+ *      Fetch the position of the mouse pointer.
  *
  * Results:
- *	*xPtr and *yPtr are filled in with the root coordinates of the mouse
- *	pointer for the display.
+ *      *xPtr and *yPtr are filled in with the root coordinates of the mouse
+ *      pointer for the display.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkGetPointerCoords(
-    Tk_Window tkwin,		/* Window that identifies screen on which
-				 * lookup is to be done. */
-    int *xPtr, int *yPtr)	/* Store pointer coordinates here. */
+    Tk_Window tkwin,            /* Window that identifies screen on which
+                                 * lookup is to be done. */
+    int *xPtr, int *yPtr)       /* Store pointer coordinates here. */
 {
     POINT point;
 
@@ -295,16 +295,16 @@ TkGetPointerCoords(
  *
  * XQueryPointer --
  *
- *	Check the current state of the mouse. This is not a complete
- *	implementation of this function. It only computes the root coordinates
- *	and the current mask.
+ *      Check the current state of the mouse. This is not a complete
+ *      implementation of this function. It only computes the root coordinates
+ *      and the current mask.
  *
  * Results:
- *	Sets root_x_return, root_y_return, and mask_return. Returns true on
- *	success.
+ *      Sets root_x_return, root_y_return, and mask_return. Returns true on
+ *      success.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -332,14 +332,14 @@ XQueryPointer(
  *
  * XWarpPointer --
  *
- *	Move pointer to new location. This is not a complete implementation of
- *	this function.
+ *      Move pointer to new location. This is not a complete implementation of
+ *      this function.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Mouse pointer changes position on screen.
+ *      Mouse pointer changes position on screen.
  *
  *----------------------------------------------------------------------
  */
@@ -368,12 +368,12 @@ TkpWarpPointer(
     TkDisplay *dispPtr)
 {
     if (dispPtr->warpWindow) {
-	RECT r;
+        RECT r;
 
-	GetWindowRect(Tk_GetHWND(Tk_WindowId(dispPtr->warpWindow)), &r);
-	SetCursorPos(r.left + dispPtr->warpX, r.top + dispPtr->warpY);
+        GetWindowRect(Tk_GetHWND(Tk_WindowId(dispPtr->warpWindow)), &r);
+        SetCursorPos(r.left + dispPtr->warpX, r.top + dispPtr->warpY);
     } else {
-	SetCursorPos(dispPtr->warpX, dispPtr->warpY);
+        SetCursorPos(dispPtr->warpX, dispPtr->warpY);
     }
 }
 
@@ -382,13 +382,13 @@ TkpWarpPointer(
  *
  * XGetInputFocus --
  *
- *	Retrieves the current keyboard focus window.
+ *      Retrieves the current keyboard focus window.
  *
  * Results:
- *	Returns the current focus window.
+ *      Returns the current focus window.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -412,14 +412,14 @@ XGetInputFocus(
  *
  * XSetInputFocus --
  *
- *	Set the current focus window.
+ *      Set the current focus window.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Changes the keyboard focus and causes the selected window to
- *	be activated.
+ *      Changes the keyboard focus and causes the selected window to
+ *      be activated.
  *
  *----------------------------------------------------------------------
  */
@@ -433,7 +433,7 @@ XSetInputFocus(
 {
     display->request++;
     if (focus != None) {
-	SetFocus(Tk_GetHWND(focus));
+        SetFocus(Tk_GetHWND(focus));
     }
     return Success;
 }
@@ -443,28 +443,28 @@ XSetInputFocus(
  *
  * TkpChangeFocus --
  *
- *	This procedure is invoked to move the system focus from one window to
- *	another.
+ *      This procedure is invoked to move the system focus from one window to
+ *      another.
  *
  * Results:
- *	The return value is the serial number of the command that changed the
- *	focus. It may be needed by the caller to filter out focus change
- *	events that were queued before the command. If the procedure doesn't
- *	actually change the focus then it returns 0.
+ *      The return value is the serial number of the command that changed the
+ *      focus. It may be needed by the caller to filter out focus change
+ *      events that were queued before the command. If the procedure doesn't
+ *      actually change the focus then it returns 0.
  *
  * Side effects:
- *	The official Windows focus window changes; the application's focus
- *	window isn't changed by this procedure.
+ *      The official Windows focus window changes; the application's focus
+ *      window isn't changed by this procedure.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkpChangeFocus(
-    TkWindow *winPtr,		/* Window that is to receive the X focus. */
-    int force)			/* Non-zero means claim the focus even if it
-				 * didn't originally belong to topLevelPtr's
-				 * application. */
+    TkWindow *winPtr,           /* Window that is to receive the X focus. */
+    int force)                  /* Non-zero means claim the focus even if it
+                                 * didn't originally belong to topLevelPtr's
+                                 * application. */
 {
     TkDisplay *dispPtr = winPtr->dispPtr;
     Window focusWindow;
@@ -472,15 +472,15 @@ TkpChangeFocus(
     TkWindow *winPtr2;
 
     if (!force) {
-	XGetInputFocus(dispPtr->display, &focusWindow, &dummy);
-	winPtr2 = (TkWindow *) Tk_IdToWindow(dispPtr->display, focusWindow);
-	if ((winPtr2 == NULL) || (winPtr2->mainPtr != winPtr->mainPtr)) {
-	    return 0;
-	}
+        XGetInputFocus(dispPtr->display, &focusWindow, &dummy);
+        winPtr2 = (TkWindow *) Tk_IdToWindow(dispPtr->display, focusWindow);
+        if ((winPtr2 == NULL) || (winPtr2->mainPtr != winPtr->mainPtr)) {
+            return 0;
+        }
     }
 
     if (winPtr->window == None) {
-	Tcl_Panic("ChangeXFocus got null X window");
+        Tcl_Panic("ChangeXFocus got null X window");
     }
 
     /*
@@ -489,10 +489,10 @@ TkpChangeFocus(
      */
 
     if (force) {
-	TkWinSetForegroundWindow(winPtr);
+        TkWinSetForegroundWindow(winPtr);
     }
     XSetInputFocus(dispPtr->display, winPtr->window, RevertToParent,
-	    CurrentTime);
+            CurrentTime);
 
     /*
      * Remember the current serial number for the X server and issue a dummy
@@ -511,29 +511,29 @@ TkpChangeFocus(
  *
  * TkpSetCapture --
  *
- *	This function captures the mouse so that all future events will be
- *	reported to this window, even if the mouse is outside the window. If
- *	the specified window is NULL, then the mouse is released.
+ *      This function captures the mouse so that all future events will be
+ *      reported to this window, even if the mouse is outside the window. If
+ *      the specified window is NULL, then the mouse is released.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Sets the capture flag and captures the mouse.
+ *      Sets the capture flag and captures the mouse.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpSetCapture(
-    TkWindow *winPtr)		/* Capture window, or NULL. */
+    TkWindow *winPtr)           /* Capture window, or NULL. */
 {
     if (winPtr) {
-	SetCapture(Tk_GetHWND(Tk_WindowId(winPtr)));
-	captured = 1;
+        SetCapture(Tk_GetHWND(Tk_WindowId(winPtr)));
+        captured = 1;
     } else {
-	captured = 0;
-	ReleaseCapture();
+        captured = 0;
+        ReleaseCapture();
     }
 }
 

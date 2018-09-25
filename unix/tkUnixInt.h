@@ -1,8 +1,8 @@
 /*
  * tkUnixInt.h --
  *
- *	This file contains declarations that are shared among the
- *	UNIX-specific parts of Tk but aren't used by the rest of Tk.
+ *      This file contains declarations that are shared among the
+ *      UNIX-specific parts of Tk but aren't used by the rest of Tk.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  *

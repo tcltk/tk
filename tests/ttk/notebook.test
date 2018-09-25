@@ -169,7 +169,7 @@ test notebook-6.2 "Forget selected tab" -setup {
     update
     after 100
     .n forget .n.l
-    update		;# Yowch!
+    update              ;# Yowch!
 } -cleanup {
     destroy .n
 } -result {}
@@ -333,7 +333,7 @@ unset nb
 test notebook-7.0 "insert - setup" -body {
     pack [ttk::notebook .nb]
     for {set i 0} {$i < 5} {incr i} {
-	.nb add [ttk::frame .nb.f$i] -text "$i"
+        .nb add [ttk::frame .nb.f$i] -text "$i"
     }
     .nb select .nb.f1
     list [.nb index current] [.nb tabs]
@@ -396,43 +396,43 @@ test notebook-7.7d "insert - current tab undisturbed" -body {
 test notebook-7.8a "move tabs - current tab undisturbed - exhaustive" -body {
     .nb select .nb.f0
     foreach i {0 1 2 3 4} {
-    	.nb insert $i .nb.f$i
+        .nb insert $i .nb.f$i
     }
 
     foreach i {0 1 2 3 4} {
-	.nb select .nb.f$i
-	foreach j {0 1 2 3 4} {
-	    foreach k {0 1 2 3 4} {
-		.nb insert $j $k
-		set current [lindex [.nb tabs] [.nb index current]]
-		if {$current != ".nb.f$i"} {
-		    error "($i,$j,$k) current = $current"
-		}
-		.nb insert $k $j
-		if {[.nb tabs] ne [list .nb.f0 .nb.f1 .nb.f2 .nb.f3 .nb.f4]} {
-		    error "swap $j $k; swap $k $j => [.nb tabs]"
-		}
-	    }
-	}
+        .nb select .nb.f$i
+        foreach j {0 1 2 3 4} {
+            foreach k {0 1 2 3 4} {
+                .nb insert $j $k
+                set current [lindex [.nb tabs] [.nb index current]]
+                if {$current != ".nb.f$i"} {
+                    error "($i,$j,$k) current = $current"
+                }
+                .nb insert $k $j
+                if {[.nb tabs] ne [list .nb.f0 .nb.f1 .nb.f2 .nb.f3 .nb.f4]} {
+                    error "swap $j $k; swap $k $j => [.nb tabs]"
+                }
+            }
+        }
     }
     .nb tabs
 } -result [list .nb.f0 .nb.f1 .nb.f2 .nb.f3 .nb.f4]
 
 test notebook-7.8b "insert new - current tab undisturbed - exhaustive" -body {
     foreach i {0 1 2 3 4} {
-	.nb select .nb.f$i
-	foreach j {0 1 2 3 4} {
+        .nb select .nb.f$i
+        foreach j {0 1 2 3 4} {
 .nb select .nb.f$i
-	    .nb insert $j [frame .nb.newf]
-	    set current [lindex [.nb tabs] [.nb index current]]
-	    if {$current != ".nb.f$i"} {
-		puts stderr "new tab at $j, current = $current, expect .nb.f$i"
-	    }
-	    destroy .nb.newf
-	    if {[.nb tabs] ne [list .nb.f0 .nb.f1 .nb.f2 .nb.f3 .nb.f4]} {
-		error "tabs disturbed"
-	    }
-	}
+            .nb insert $j [frame .nb.newf]
+            set current [lindex [.nb tabs] [.nb index current]]
+            if {$current != ".nb.f$i"} {
+                puts stderr "new tab at $j, current = $current, expect .nb.f$i"
+            }
+            destroy .nb.newf
+            if {[.nb tabs] ne [list .nb.f0 .nb.f1 .nb.f2 .nb.f3 .nb.f4]} {
+                error "tabs disturbed"
+            }
+        }
     }
 }
 
@@ -443,9 +443,9 @@ test notebook-7.end "insert - cleanup" -body {
 test notebook-1817596-1 "insert should autoselect first tab" -body {
     pack [ttk::notebook .nb]
     list \
-	[.nb insert end [ttk::label .nb.l1 -text One] -text One] \
-	[.nb select] \
-	;
+        [.nb insert end [ttk::label .nb.l1 -text One] -text One] \
+        [.nb select] \
+        ;
 } -result [list "" .nb.l1] -cleanup { destroy .nb }
 
 test notebook-1817596-2 "error in insert should have no effect" -body {
@@ -453,8 +453,8 @@ test notebook-1817596-2 "error in insert should have no effect" -body {
     .nb insert end [ttk::label .nb.l1]
     .nb insert end [ttk::label .nb.l2]
     list \
-    	[catch { .nb insert .l2 0 -badoption badvalue } err] \
-	[.nb tabs] \
+        [catch { .nb insert .l2 0 -badoption badvalue } err] \
+        [.nb tabs] \
 } -result [list 1 [list .nb.l1 .nb.l2]] -cleanup { destroy .nb }
 
 test notebook-1817596-3 "insert/configure" -body {

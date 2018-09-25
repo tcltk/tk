@@ -45,64 +45,64 @@
  */
 typedef struct
 {
-    Tk_Window 		slaveWindow;
-    Ttk_Manager 	*manager;
-    void 		*slaveData;
-    unsigned		flags;
+    Tk_Window           slaveWindow;
+    Ttk_Manager         *manager;
+    void                *slaveData;
+    unsigned            flags;
 } Ttk_Slave;
 
 /* slave->flags bits:
  */
-#define SLAVE_MAPPED 		0x1	/* slave to be mapped when master is */
+#define SLAVE_MAPPED            0x1     /* slave to be mapped when master is */
 
 struct TtkManager_
 {
-    Ttk_ManagerSpec	*managerSpec;
-    void 		*managerData;
-    Tk_Window   	masterWindow;
-    unsigned		flags;
-    int 	 	nSlaves;
-    Ttk_Slave 		**slaves;
+    Ttk_ManagerSpec     *managerSpec;
+    void                *managerData;
+    Tk_Window           masterWindow;
+    unsigned            flags;
+    int                 nSlaves;
+    Ttk_Slave           **slaves;
 };
 
 /* manager->flags bits:
  */
-#define MGR_UPDATE_PENDING	0x1
-#define MGR_RESIZE_REQUIRED	0x2
-#define MGR_RELAYOUT_REQUIRED	0x4
+#define MGR_UPDATE_PENDING      0x1
+#define MGR_RESIZE_REQUIRED     0x2
+#define MGR_RELAYOUT_REQUIRED   0x4
 
-static void ManagerIdleProc(void *);	/* forward */
+static void ManagerIdleProc(void *);    /* forward */
 
 /* ++ ScheduleUpdate --
- * 	Schedule a call to recompute the size and/or layout,
- *	depending on flags.
+ *      Schedule a call to recompute the size and/or layout,
+ *      depending on flags.
  */
 static void ScheduleUpdate(Ttk_Manager *mgr, unsigned flags)
 {
     if (!(mgr->flags & MGR_UPDATE_PENDING)) {
-	Tcl_DoWhenIdle(ManagerIdleProc, mgr);
-	mgr->flags |= MGR_UPDATE_PENDING;
+        Tcl_DoWhenIdle(ManagerIdleProc, mgr);
+        mgr->flags |= MGR_UPDATE_PENDING;
     }
     mgr->flags |= flags;
 }
 
 /* ++ RecomputeSize --
- * 	Recomputes the required size of the master window,
- * 	makes geometry request.
+ *      Recomputes the required size of the master window,
+ *      makes geometry request.
  */
 static void RecomputeSize(Ttk_Manager *mgr)
 {
     int width = 1, height = 1;
 
     if (mgr->managerSpec->RequestedSize(mgr->managerData, &width, &height)) {
-	Tk_GeometryRequest(mgr->masterWindow, width, height);
-	ScheduleUpdate(mgr, MGR_RELAYOUT_REQUIRED);
+        Tk_GeometryRequest(mgr->masterWindow, width, height);
+        ScheduleUpdate(mgr, MGR_RELAYOUT_REQUIRED);
     }
     mgr->flags &= ~MGR_RESIZE_REQUIRED;
 }
 
 /* ++ RecomputeLayout --
- * 	Recompute geometry of all slaves.
+ *      Recompute geometry of all slaves.
  */
 static void RecomputeLayout(Ttk_Manager *mgr)
 {
@@ -111,7 +111,7 @@ static void RecomputeLayout(Ttk_Manager *mgr)
 }
 
 /* ++ ManagerIdleProc --
- * 	DoWhenIdle procedure for deferred updates.
+ *      DoWhenIdle procedure for deferred updates.
  */
 static void ManagerIdleProc(ClientData clientData)
 {
@@ -119,14 +119,14 @@ static void ManagerIdleProc(ClientData clientData)
     mgr->flags &= ~MGR_UPDATE_PENDING;
 
     if (mgr->flags & MGR_RESIZE_REQUIRED) {
-	RecomputeSize(mgr);
+        RecomputeSize(mgr);
     }
     if (mgr->flags & MGR_RELAYOUT_REQUIRED) {
-	if (mgr->flags & MGR_UPDATE_PENDING) {
-	    /* RecomputeSize has scheduled another update; relayout later */
-	    return;
-	}
-	RecomputeLayout(mgr);
+        if (mgr->flags & MGR_UPDATE_PENDING) {
+            /* RecomputeSize has scheduled another update; relayout later */
+            return;
+        }
+        RecomputeLayout(mgr);
     }
 }
 
@@ -135,8 +135,8 @@ static void ManagerIdleProc(ClientData clientData)
  */
 
 /* ++ ManagerEventHandler --
- * 	Recompute slave layout when master widget is resized.
- * 	Keep the slave's map state in sync with the master's.
+ *      Recompute slave layout when master widget is resized.
+ *      Keep the slave's map state in sync with the master's.
  */
 static const int ManagerEventMask = StructureNotifyMask;
 static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
@@ -146,37 +146,37 @@ static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
 
     switch (eventPtr->type)
     {
-	case ConfigureNotify:
-	    RecomputeLayout(mgr);
-	    break;
-	case MapNotify:
-	    for (i = 0; i < mgr->nSlaves; ++i) {
-		Ttk_Slave *slave = mgr->slaves[i];
-		if (slave->flags & SLAVE_MAPPED) {
-		    Tk_MapWindow(slave->slaveWindow);
-		}
-	    }
-	    break;
-	case UnmapNotify:
-	    for (i = 0; i < mgr->nSlaves; ++i) {
-		Ttk_Slave *slave = mgr->slaves[i];
-		Tk_UnmapWindow(slave->slaveWindow);
-	    }
-	    break;
+        case ConfigureNotify:
+            RecomputeLayout(mgr);
+            break;
+        case MapNotify:
+            for (i = 0; i < mgr->nSlaves; ++i) {
+                Ttk_Slave *slave = mgr->slaves[i];
+                if (slave->flags & SLAVE_MAPPED) {
+                    Tk_MapWindow(slave->slaveWindow);
+                }
+            }
+            break;
+        case UnmapNotify:
+            for (i = 0; i < mgr->nSlaves; ++i) {
+                Ttk_Slave *slave = mgr->slaves[i];
+                Tk_UnmapWindow(slave->slaveWindow);
+            }
+            break;
     }
 }
 
 /* ++ SlaveEventHandler --
- * 	Notifies manager when a slave is destroyed
- * 	(see <<NOTE-LOSTSLAVE>>).
+ *      Notifies manager when a slave is destroyed
+ *      (see <<NOTE-LOSTSLAVE>>).
  */
 static const unsigned SlaveEventMask = StructureNotifyMask;
 static void SlaveEventHandler(ClientData clientData, XEvent *eventPtr)
 {
     Ttk_Slave *slave = clientData;
     if (eventPtr->type == DestroyNotify) {
-	slave->manager->managerSpec->tkGeomMgr.lostSlaveProc(
-	    slave->manager, slave->slaveWindow);
+        slave->manager->managerSpec->tkGeomMgr.lostSlaveProc(
+            slave->manager, slave->slaveWindow);
     }
 }
 
@@ -211,15 +211,15 @@ Ttk_Manager *Ttk_CreateManager(
 {
     Ttk_Manager *mgr = ckalloc(sizeof(*mgr));
 
-    mgr->managerSpec 	= managerSpec;
-    mgr->managerData	= managerData;
-    mgr->masterWindow	= masterWindow;
-    mgr->nSlaves 	= 0;
-    mgr->slaves 	= NULL;
-    mgr->flags  	= 0;
+    mgr->managerSpec    = managerSpec;
+    mgr->managerData    = managerData;
+    mgr->masterWindow   = masterWindow;
+    mgr->nSlaves        = 0;
+    mgr->slaves         = NULL;
+    mgr->flags          = 0;
 
     Tk_CreateEventHandler(
-	mgr->masterWindow, ManagerEventMask, ManagerEventHandler, mgr);
+        mgr->masterWindow, ManagerEventMask, ManagerEventHandler, mgr);
 
     return mgr;
 }
@@ -227,13 +227,13 @@ Ttk_Manager *Ttk_CreateManager(
 void Ttk_DeleteManager(Ttk_Manager *mgr)
 {
     Tk_DeleteEventHandler(
-	mgr->masterWindow, ManagerEventMask, ManagerEventHandler, mgr);
+        mgr->masterWindow, ManagerEventMask, ManagerEventHandler, mgr);
 
     while (mgr->nSlaves > 0) {
-	Ttk_ForgetSlave(mgr, mgr->nSlaves - 1);
+        Ttk_ForgetSlave(mgr, mgr->nSlaves - 1);
     }
     if (mgr->slaves) {
-	ckfree(mgr->slaves);
+        ckfree(mgr->slaves);
     }
 
     Tcl_CancelIdleCall(ManagerIdleProc, mgr);
@@ -246,7 +246,7 @@ void Ttk_DeleteManager(Ttk_Manager *mgr)
  */
 
 /* ++ InsertSlave --
- * 	Adds slave to the list of managed windows.
+ *      Adds slave to the list of managed windows.
  */
 static void InsertSlave(Ttk_Manager *mgr, Ttk_Slave *slave, int index)
 {
@@ -254,23 +254,23 @@ static void InsertSlave(Ttk_Manager *mgr, Ttk_Slave *slave, int index)
     mgr->slaves = ckrealloc(mgr->slaves, mgr->nSlaves * sizeof(Ttk_Slave *));
 
     while (endIndex > index) {
-	mgr->slaves[endIndex] = mgr->slaves[endIndex - 1];
-	--endIndex;
+        mgr->slaves[endIndex] = mgr->slaves[endIndex - 1];
+        --endIndex;
     }
 
     mgr->slaves[index] = slave;
 
     Tk_ManageGeometry(slave->slaveWindow,
-	&mgr->managerSpec->tkGeomMgr, (ClientData)mgr);
+        &mgr->managerSpec->tkGeomMgr, (ClientData)mgr);
 
     Tk_CreateEventHandler(slave->slaveWindow,
-	SlaveEventMask, SlaveEventHandler, (ClientData)slave);
+        SlaveEventMask, SlaveEventHandler, (ClientData)slave);
 
     ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
 }
 
 /* RemoveSlave --
- * 	Unmanage and delete the slave.
+ *      Unmanage and delete the slave.
  *
  * NOTES/ASSUMPTIONS:
  *
@@ -290,13 +290,13 @@ static void RemoveSlave(Ttk_Manager *mgr, int index)
      */
     --mgr->nSlaves;
     for (i = index ; i < mgr->nSlaves; ++i) {
-	mgr->slaves[i] = mgr->slaves[i+1];
+        mgr->slaves[i] = mgr->slaves[i+1];
     }
 
     /* Clean up:
      */
     Tk_DeleteEventHandler(
-	slave->slaveWindow, SlaveEventMask, SlaveEventHandler, slave);
+        slave->slaveWindow, SlaveEventMask, SlaveEventHandler, slave);
 
     /* Note [1] */
     Tk_UnmaintainGeometry(slave->slaveWindow, mgr->masterWindow);
@@ -319,9 +319,9 @@ void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window slaveWindow)
     int reqHeight= Tk_ReqHeight(slaveWindow);
 
     if (mgr->managerSpec->SlaveRequest(
-		mgr->managerData, slaveIndex, reqWidth, reqHeight))
+                mgr->managerData, slaveIndex, reqWidth, reqHeight))
     {
-	ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
+        ScheduleUpdate(mgr, MGR_RESIZE_REQUIRED);
     }
 }
 
@@ -339,7 +339,7 @@ void Ttk_LostSlaveProc(ClientData clientData, Tk_Window slaveWindow)
  */
 
 /* ++ Ttk_InsertSlave --
- * 	Add a new slave window at the specified index.
+ *      Add a new slave window at the specified index.
  */
 void Ttk_InsertSlave(
     Ttk_Manager *mgr, int index, Tk_Window tkwin, void *slaveData)
@@ -349,7 +349,7 @@ void Ttk_InsertSlave(
 }
 
 /* ++ Ttk_ForgetSlave --
- * 	Unmanage the specified slave.
+ *      Unmanage the specified slave.
  */
 void Ttk_ForgetSlave(Ttk_Manager *mgr, int slaveIndex)
 {
@@ -359,11 +359,11 @@ void Ttk_ForgetSlave(Ttk_Manager *mgr, int slaveIndex)
 }
 
 /* ++ Ttk_PlaceSlave --
- * 	Set the position and size of the specified slave window.
+ *      Set the position and size of the specified slave window.
  *
  * NOTES:
- * 	Contrary to documentation, Tk_MaintainGeometry doesn't always
- * 	map the slave.
+ *      Contrary to documentation, Tk_MaintainGeometry doesn't always
+ *      map the slave.
  */
 void Ttk_PlaceSlave(
     Ttk_Manager *mgr, int slaveIndex, int x, int y, int width, int height)
@@ -372,12 +372,12 @@ void Ttk_PlaceSlave(
     Tk_MaintainGeometry(slave->slaveWindow,mgr->masterWindow,x,y,width,height);
     slave->flags |= SLAVE_MAPPED;
     if (Tk_IsMapped(mgr->masterWindow)) {
-	Tk_MapWindow(slave->slaveWindow);
+        Tk_MapWindow(slave->slaveWindow);
     }
 }
 
 /* ++ Ttk_UnmapSlave --
- * 	Unmap the specified slave, but leave it managed.
+ *      Unmap the specified slave, but leave it managed.
  */
 void Ttk_UnmapSlave(Ttk_Manager *mgr, int slaveIndex)
 {
@@ -391,7 +391,7 @@ void Ttk_UnmapSlave(Ttk_Manager *mgr, int slaveIndex)
 }
 
 /* LayoutChanged, SizeChanged --
- * 	Schedule a relayout, resp. resize request.
+ *      Schedule a relayout, resp. resize request.
  */
 void Ttk_ManagerLayoutChanged(Ttk_Manager *mgr)
 {
@@ -423,24 +423,24 @@ Tk_Window Ttk_SlaveWindow(Ttk_Manager *mgr, int slaveIndex)
  */
 
 /* ++ Ttk_SlaveIndex --
- * 	Returns the index of specified slave window, -1 if not found.
+ *      Returns the index of specified slave window, -1 if not found.
  */
 int Ttk_SlaveIndex(Ttk_Manager *mgr, Tk_Window slaveWindow)
 {
     int index;
     for (index = 0; index < mgr->nSlaves; ++index)
-	if (mgr->slaves[index]->slaveWindow == slaveWindow)
-	    return index;
+        if (mgr->slaves[index]->slaveWindow == slaveWindow)
+            return index;
     return -1;
 }
 
 /* ++ Ttk_GetSlaveIndexFromObj(interp, mgr, objPtr, indexPtr) --
- * 	Return the index of the slave specified by objPtr.
- * 	Slaves may be specified as an integer index or
- * 	as the name of the managed window.
+ *      Return the index of the slave specified by objPtr.
+ *      Slaves may be specified as an integer index or
+ *      as the name of the managed window.
  *
  * Returns:
- * 	Standard Tcl completion code.  Leaves an error message in case of error.
+ *      Standard Tcl completion code.  Leaves an error message in case of error.
  */
 
 int Ttk_GetSlaveIndexFromObj(
@@ -453,40 +453,40 @@ int Ttk_GetSlaveIndexFromObj(
     /* Try interpreting as an integer first:
      */
     if (Tcl_GetIntFromObj(NULL, objPtr, &slaveIndex) == TCL_OK) {
-	if (slaveIndex < 0 || slaveIndex >= mgr->nSlaves) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"Slave index %d out of bounds", slaveIndex));
-	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
-	    return TCL_ERROR;
-	}
-	*indexPtr = slaveIndex;
-	return TCL_OK;
+        if (slaveIndex < 0 || slaveIndex >= mgr->nSlaves) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "Slave index %d out of bounds", slaveIndex));
+            Tcl_SetErrorCode(interp, "TTK", "SLAVE", "INDEX", NULL);
+            return TCL_ERROR;
+        }
+        *indexPtr = slaveIndex;
+        return TCL_OK;
     }
 
     /* Try interpreting as a slave window name;
      */
     if ((*string == '.') &&
-	    (tkwin = Tk_NameToWindow(interp, string, mgr->masterWindow))) {
-	slaveIndex = Ttk_SlaveIndex(mgr, tkwin);
-	if (slaveIndex < 0) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "%s is not managed by %s", string,
-		    Tk_PathName(mgr->masterWindow)));
-	    Tcl_SetErrorCode(interp, "TTK", "SLAVE", "MANAGER", NULL);
-	    return TCL_ERROR;
-	}
-	*indexPtr = slaveIndex;
-	return TCL_OK;
+            (tkwin = Tk_NameToWindow(interp, string, mgr->masterWindow))) {
+        slaveIndex = Ttk_SlaveIndex(mgr, tkwin);
+        if (slaveIndex < 0) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                    "%s is not managed by %s", string,
+                    Tk_PathName(mgr->masterWindow)));
+            Tcl_SetErrorCode(interp, "TTK", "SLAVE", "MANAGER", NULL);
+            return TCL_ERROR;
+        }
+        *indexPtr = slaveIndex;
+        return TCL_OK;
     }
 
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "Invalid slave specification %s", string));
+            "Invalid slave specification %s", string));
     Tcl_SetErrorCode(interp, "TTK", "SLAVE", "SPEC", NULL);
     return TCL_ERROR;
 }
 
 /* ++ Ttk_ReorderSlave(mgr, fromIndex, toIndex) --
- * 	Change slave order.
+ *      Change slave order.
  */
 void Ttk_ReorderSlave(Ttk_Manager *mgr, int fromIndex, int toIndex)
 {
@@ -494,13 +494,13 @@ void Ttk_ReorderSlave(Ttk_Manager *mgr, int fromIndex, int toIndex)
 
     /* Shuffle down: */
     while (fromIndex > toIndex) {
-	mgr->slaves[fromIndex] = mgr->slaves[fromIndex - 1];
-	--fromIndex;
+        mgr->slaves[fromIndex] = mgr->slaves[fromIndex - 1];
+        --fromIndex;
     }
     /* Or, shuffle up: */
     while (fromIndex < toIndex) {
-	mgr->slaves[fromIndex] = mgr->slaves[fromIndex + 1];
-	++fromIndex;
+        mgr->slaves[fromIndex] = mgr->slaves[fromIndex + 1];
+        ++fromIndex;
     }
     /* ASSERT: fromIndex == toIndex */
     mgr->slaves[fromIndex] = moved;
@@ -512,13 +512,13 @@ void Ttk_ReorderSlave(Ttk_Manager *mgr, int fromIndex, int toIndex)
 }
 
 /* ++ Ttk_Maintainable(interp, slave, master) --
- * 	Utility routine.  Verifies that 'master' may be used to maintain
- *	the geometry of 'slave' via Tk_MaintainGeometry:
+ *      Utility routine.  Verifies that 'master' may be used to maintain
+ *      the geometry of 'slave' via Tk_MaintainGeometry:
  *
- * 	+ 'master' is either 'slave's parent -OR-
- * 	+ 'master is a descendant of 'slave's parent.
- * 	+ 'slave' is not a toplevel window
- * 	+ 'slave' belongs to the same toplevel as 'master'
+ *      + 'master' is either 'slave's parent -OR-
+ *      + 'master is a descendant of 'slave's parent.
+ *      + 'slave' is not a toplevel window
+ *      + 'slave' belongs to the same toplevel as 'master'
  *
  * Returns: 1 if OK; otherwise 0, leaving an error message in 'interp'.
  */
@@ -527,21 +527,21 @@ int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window slave, Tk_Window master)
     Tk_Window ancestor = master, parent = Tk_Parent(slave);
 
     if (Tk_IsTopLevel(slave) || slave == master) {
-	goto badWindow;
+        goto badWindow;
     }
 
     while (ancestor != parent) {
-	if (Tk_IsTopLevel(ancestor)) {
-	    goto badWindow;
-	}
-	ancestor = Tk_Parent(ancestor);
+        if (Tk_IsTopLevel(ancestor)) {
+            goto badWindow;
+        }
+        ancestor = Tk_Parent(ancestor);
     }
 
     return 1;
 
 badWindow:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("can't add %s as slave of %s",
-	    Tk_PathName(slave), Tk_PathName(master)));
+            Tk_PathName(slave), Tk_PathName(master)));
     Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", NULL);
     return 0;
 }

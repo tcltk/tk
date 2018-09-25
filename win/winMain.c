@@ -1,8 +1,8 @@
 /*
  * winMain.c --
  *
- *	Provides a default version of the main program and Tcl_AppInit
- *	procedure for wish and other Tk-based applications.
+ *      Provides a default version of the main program and Tcl_AppInit
+ *      procedure for wish and other Tk-based applications.
  *
  * Copyright (c) 1993 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -77,13 +77,13 @@ MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
  *
  * _tWinMain --
  *
- *	Main entry point from Windows.
+ *      Main entry point from Windows.
  *
  * Results:
- *	Returns false if initialization fails, otherwise it never returns.
+ *      Returns false if initialization fails, otherwise it never returns.
  *
  * Side effects:
- *	Just about anything, since from here we call arbitrary Tcl code.
+ *      Just about anything, since from here we call arbitrary Tcl code.
  *
  *----------------------------------------------------------------------
  */
@@ -138,9 +138,9 @@ _tWinMain(
      */
 
     for (p = argv[0]; *p != '\0'; p++) {
-	if (*p == '\\') {
-	    *p = '/';
-	}
+        if (*p == '\\') {
+            *p = '/';
+        }
     }
 
 #ifdef TK_LOCAL_MAIN_HOOK
@@ -148,7 +148,7 @@ _tWinMain(
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
-    return 0;			/* Needed only to prevent compiler warning. */
+    return 0;                   /* Needed only to prevent compiler warning. */
 }
 
 /*
@@ -156,29 +156,29 @@ _tWinMain(
  *
  * Tcl_AppInit --
  *
- *	This procedure performs application-specific initialization. Most
- *	applications, especially those that incorporate additional packages,
- *	will have their own version of this procedure.
+ *      This procedure performs application-specific initialization. Most
+ *      applications, especially those that incorporate additional packages,
+ *      will have their own version of this procedure.
  *
  * Results:
- *	Returns a standard Tcl completion code, and leaves an error message in
- *	the interp's result if an error occurs.
+ *      Returns a standard Tcl completion code, and leaves an error message in
+ *      the interp's result if an error occurs.
  *
  * Side effects:
- *	Depends on the startup script.
+ *      Depends on the startup script.
  *
  *----------------------------------------------------------------------
  */
 
 int
 Tcl_AppInit(
-    Tcl_Interp *interp)		/* Interpreter for application. */
+    Tcl_Interp *interp)         /* Interpreter for application. */
 {
     if ((Tcl_Init)(interp) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     if (Tk_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 
@@ -188,25 +188,25 @@ Tcl_AppInit(
      */
 
     if (consoleRequired) {
-	if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
-	    return TCL_ERROR;
-	}
+        if (Tk_CreateConsoleWindow(interp) == TCL_ERROR) {
+            return TCL_ERROR;
+        }
     }
 #if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
     if (Registry_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "registry", Registry_Init, 0);
 
     if (Dde_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "dde", Dde_Init, Dde_SafeInit);
 #endif
 
 #ifdef TK_TEST
     if (Tktest_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tktest", Tktest_Init, 0);
 #endif /* TK_TEST */
@@ -236,7 +236,7 @@ Tcl_AppInit(
      */
 
     Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
-	    Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
+            Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
     return TCL_OK;
 }
 
@@ -246,14 +246,14 @@ Tcl_AppInit(
  *
  * _tmain --
  *
- *	Main entry point from the console.
+ *      Main entry point from the console.
  *
  * Results:
- *	None: Tk_Main never returns here, so this procedure never returns
- *	either.
+ *      None: Tk_Main never returns here, so this procedure never returns
+ *      either.
  *
  * Side effects:
- *	Whatever the applications does.
+ *      Whatever the applications does.
  *
  *----------------------------------------------------------------------
  */
@@ -308,24 +308,24 @@ _tmain(
  *
  * setargv --
  *
- *	Parse the Windows command line string into argc/argv. Done here
- *	because we don't trust the builtin argument parser in crt0. Windows
- *	applications are responsible for breaking their command line into
- *	arguments.
+ *      Parse the Windows command line string into argc/argv. Done here
+ *      because we don't trust the builtin argument parser in crt0. Windows
+ *      applications are responsible for breaking their command line into
+ *      arguments.
  *
- *	2N backslashes + quote -> N backslashes + begin quoted string
- *	2N + 1 backslashes + quote -> literal
- *	N backslashes + non-quote -> literal
- *	quote + quote in a quoted string -> single quote
- *	quote + quote not in quoted string -> empty string
- *	quote -> begin quoted string
+ *      2N backslashes + quote -> N backslashes + begin quoted string
+ *      2N + 1 backslashes + quote -> literal
+ *      N backslashes + non-quote -> literal
+ *      quote + quote in a quoted string -> single quote
+ *      quote + quote not in quoted string -> empty string
+ *      quote -> begin quoted string
  *
  * Results:
- *	Fills argcPtr with the number of arguments and argvPtr with the array
- *	of arguments.
+ *      Fills argcPtr with the number of arguments and argvPtr with the array
+ *      of arguments.
  *
  * Side effects:
- *	Memory allocated.
+ *      Memory allocated.
  *
  *--------------------------------------------------------------------------
  */
@@ -333,8 +333,8 @@ _tmain(
 #ifdef TCL_BROKEN_MAINARGS
 static void
 setargv(
-    int *argcPtr,		/* Filled with number of argument strings. */
-    TCHAR ***argvPtr)		/* Filled with argument strings (malloc'd). */
+    int *argcPtr,               /* Filled with number of argument strings. */
+    TCHAR ***argvPtr)           /* Filled with argument strings (malloc'd). */
 {
     TCHAR *cmdLine, *p, *arg, *argSpace;
     TCHAR **argv;
@@ -349,15 +349,15 @@ setargv(
 
     size = 2;
     for (p = cmdLine; *p != '\0'; p++) {
-	if ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
-	    size++;
-	    while ((*p == ' ') || (*p == '\t')) { /* INTL: ISO space. */
-		p++;
-	    }
-	    if (*p == '\0') {
-		break;
-	    }
-	}
+        if ((*p == ' ') || (*p == '\t')) {      /* INTL: ISO space. */
+            size++;
+            while ((*p == ' ') || (*p == '\t')) { /* INTL: ISO space. */
+                p++;
+            }
+            if (*p == '\0') {
+                break;
+            }
+        }
     }
 
     /* Make sure we don't call ckalloc through the (not yet initialized) stub table */
@@ -365,60 +365,60 @@ setargv(
     #undef Tcl_DbCkalloc
 
     argSpace = ckalloc(size * sizeof(char *)
-	    + (_tcslen(cmdLine) * sizeof(TCHAR)) + sizeof(TCHAR));
+            + (_tcslen(cmdLine) * sizeof(TCHAR)) + sizeof(TCHAR));
     argv = (TCHAR **) argSpace;
     argSpace += size * (sizeof(char *)/sizeof(TCHAR));
     size--;
 
     p = cmdLine;
     for (argc = 0; argc < size; argc++) {
-	argv[argc] = arg = argSpace;
-	while ((*p == ' ') || (*p == '\t')) {	/* INTL: ISO space. */
-	    p++;
-	}
-	if (*p == '\0') {
-	    break;
-	}
+        argv[argc] = arg = argSpace;
+        while ((*p == ' ') || (*p == '\t')) {   /* INTL: ISO space. */
+            p++;
+        }
+        if (*p == '\0') {
+            break;
+        }
 
-	inquote = 0;
-	slashes = 0;
-	while (1) {
-	    copy = 1;
-	    while (*p == '\\') {
-		slashes++;
-		p++;
-	    }
-	    if (*p == '"') {
-		if ((slashes & 1) == 0) {
-		    copy = 0;
-		    if ((inquote) && (p[1] == '"')) {
-			p++;
-			copy = 1;
-		    } else {
-			inquote = !inquote;
-		    }
-		}
-		slashes >>= 1;
-	    }
+        inquote = 0;
+        slashes = 0;
+        while (1) {
+            copy = 1;
+            while (*p == '\\') {
+                slashes++;
+                p++;
+            }
+            if (*p == '"') {
+                if ((slashes & 1) == 0) {
+                    copy = 0;
+                    if ((inquote) && (p[1] == '"')) {
+                        p++;
+                        copy = 1;
+                    } else {
+                        inquote = !inquote;
+                    }
+                }
+                slashes >>= 1;
+            }
 
-	    while (slashes) {
-		*arg = '\\';
-		arg++;
-		slashes--;
-	    }
+            while (slashes) {
+                *arg = '\\';
+                arg++;
+                slashes--;
+            }
 
-	    if ((*p == '\0') || (!inquote &&
-		    ((*p == ' ') || (*p == '\t')))) {	/* INTL: ISO space. */
-		break;
-	    }
-	    if (copy != 0) {
-		*arg = *p;
-		arg++;
-	    }
-	    p++;
-	}
-	*arg = '\0';
-	argSpace = arg + 1;
+            if ((*p == '\0') || (!inquote &&
+                    ((*p == ' ') || (*p == '\t')))) {   /* INTL: ISO space. */
+                break;
+            }
+            if (copy != 0) {
+                *arg = *p;
+                arg++;
+            }
+            p++;
+        }
+        *arg = '\0';
+        argSpace = arg + 1;
     }
     argv[argc] = NULL;
 

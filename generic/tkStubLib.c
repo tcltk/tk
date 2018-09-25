@@ -1,8 +1,8 @@
 /*
  * tkStubLib.c --
  *
- *	Stub object that will be statically linked into extensions that want
- *	to access Tk.
+ *      Stub object that will be statically linked into extensions that want
+ *      to access Tk.
  *
  * Copyright (c) 1998-1999 by Scriptics Corporation.
  * Copyright (c) 1998 Paul Duffin.
@@ -56,15 +56,15 @@ isDigit(const int c)
  *
  * Tk_InitStubs --
  *
- *	Checks that the correct version of Tk is loaded and that it supports
- *	stubs. It then initialises the stub table pointers.
+ *      Checks that the correct version of Tk is loaded and that it supports
+ *      stubs. It then initialises the stub table pointers.
  *
  * Results:
- *	The actual version of Tk that satisfies the request, or NULL to
- *	indicate that an error occurred.
+ *      The actual version of Tk that satisfies the request, or NULL to
+ *      indicate that an error occurred.
  *
  * Side effects:
- *	Sets the stub table pointers.
+ *      Sets the stub table pointers.
  *
  *----------------------------------------------------------------------
  */
@@ -79,61 +79,61 @@ Tk_InitStubs(
     const char *errMsg = NULL;
     ClientData clientData = NULL;
     const char *actualVersion = tclStubsPtr->tcl_PkgRequireEx(interp,
-	    packageName, version, 0, &clientData);
+            packageName, version, 0, &clientData);
     const TkStubs *stubsPtr = clientData;
 
     if (actualVersion == NULL) {
-	return NULL;
+        return NULL;
     }
 
     if (exact) {
-	const char *p = version;
-	int count = 0;
+        const char *p = version;
+        int count = 0;
 
-	while (*p) {
-	    count += !isDigit(*p++);
-	}
-	if (count == 1) {
-	    const char *q = actualVersion;
+        while (*p) {
+            count += !isDigit(*p++);
+        }
+        if (count == 1) {
+            const char *q = actualVersion;
 
-	    p = version;
-	    while (*p && (*p == *q)) {
-		p++; q++;
-	    }
-	    if (*p || isDigit(*q)) {
-		/* Construct error message */
-		tclStubsPtr->tcl_PkgRequireEx(interp, packageName, version, 1, NULL);
-		return NULL;
-	    }
-	} else {
-	    actualVersion = tclStubsPtr->tcl_PkgRequireEx(interp, packageName,
-		    version, 1, NULL);
-	    if (actualVersion == NULL) {
-		return NULL;
-	    }
-	}
+            p = version;
+            while (*p && (*p == *q)) {
+                p++; q++;
+            }
+            if (*p || isDigit(*q)) {
+                /* Construct error message */
+                tclStubsPtr->tcl_PkgRequireEx(interp, packageName, version, 1, NULL);
+                return NULL;
+            }
+        } else {
+            actualVersion = tclStubsPtr->tcl_PkgRequireEx(interp, packageName,
+                    version, 1, NULL);
+            if (actualVersion == NULL) {
+                return NULL;
+            }
+        }
     }
     if (stubsPtr == NULL) {
-	errMsg = "missing stub table pointer";
+        errMsg = "missing stub table pointer";
     } else {
-	tkStubsPtr = stubsPtr;
-	if (stubsPtr->hooks) {
-	    tkPlatStubsPtr = stubsPtr->hooks->tkPlatStubs;
-	    tkIntStubsPtr = stubsPtr->hooks->tkIntStubs;
-	    tkIntPlatStubsPtr = stubsPtr->hooks->tkIntPlatStubs;
-	    tkIntXlibStubsPtr = stubsPtr->hooks->tkIntXlibStubs;
-	} else {
-	    tkPlatStubsPtr = NULL;
-	    tkIntStubsPtr = NULL;
-	    tkIntPlatStubsPtr = NULL;
-	    tkIntXlibStubsPtr = NULL;
-	}
-	return actualVersion;
+        tkStubsPtr = stubsPtr;
+        if (stubsPtr->hooks) {
+            tkPlatStubsPtr = stubsPtr->hooks->tkPlatStubs;
+            tkIntStubsPtr = stubsPtr->hooks->tkIntStubs;
+            tkIntPlatStubsPtr = stubsPtr->hooks->tkIntPlatStubs;
+            tkIntXlibStubsPtr = stubsPtr->hooks->tkIntXlibStubs;
+        } else {
+            tkPlatStubsPtr = NULL;
+            tkIntStubsPtr = NULL;
+            tkIntPlatStubsPtr = NULL;
+            tkIntXlibStubsPtr = NULL;
+        }
+        return actualVersion;
     }
     tclStubsPtr->tcl_ResetResult(interp);
     tclStubsPtr->tcl_AppendResult(interp, "Error loading ", packageName,
-	    " (requested version ", version, ", actual version ",
-	    actualVersion, "): ", errMsg, NULL);
+            " (requested version ", version, ", actual version ",
+            actualVersion, "): ", errMsg, NULL);
     return NULL;
 }
 

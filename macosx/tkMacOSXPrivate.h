@@ -1,7 +1,7 @@
 /*
  * tkMacOSXPrivate.h --
  *
- *	Macros and declarations that are purely internal & private to TkAqua.
+ *      Macros and declarations that are purely internal & private to TkAqua.
  *
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright 2008-2009, Apple Inc.
@@ -37,28 +37,28 @@
 
 /* Macros for Mac OS X API availability checking */
 #define TK_IF_MAC_OS_X_API(vers, symbol, ...) \
-	tk_if_mac_os_x_10_##vers(symbol != NULL, 1, __VA_ARGS__)
+        tk_if_mac_os_x_10_##vers(symbol != NULL, 1, __VA_ARGS__)
 #define TK_ELSE_MAC_OS_X(vers, ...) \
-	tk_else_mac_os_x_10_##vers(__VA_ARGS__)
+        tk_else_mac_os_x_10_##vers(__VA_ARGS__)
 #define TK_IF_MAC_OS_X_API_COND(vers, symbol, cond, ...) \
-	tk_if_mac_os_x_10_##vers(symbol != NULL, cond, __VA_ARGS__)
+        tk_if_mac_os_x_10_##vers(symbol != NULL, cond, __VA_ARGS__)
 #define TK_ELSE(...) \
-	} else { __VA_ARGS__
+        } else { __VA_ARGS__
 #define TK_ENDIF \
-	}
+        }
 /* Private macros that implement the checking macros above */
 #define tk_if_mac_os_x_yes(chk, cond, ...) \
-	if (cond) { __VA_ARGS__
+        if (cond) { __VA_ARGS__
 #define tk_else_mac_os_x_yes(...) \
-	} else {
+        } else {
 #define tk_if_mac_os_x_chk(chk, cond, ...) \
-	if ((chk) && (cond)) { __VA_ARGS__
+        if ((chk) && (cond)) { __VA_ARGS__
 #define tk_else_mac_os_x_chk(...) \
-	} else { __VA_ARGS__
+        } else { __VA_ARGS__
 #define tk_if_mac_os_x_no(chk, cond, ...) \
-	if (0) {
+        if (0) {
 #define tk_else_mac_os_x_no(...) \
-	} else { __VA_ARGS__
+        } else { __VA_ARGS__
 
 /*
  * Macros for DEBUG_ASSERT_MESSAGE et al from Debugging.h.
@@ -81,8 +81,8 @@
  */
 #define TkMacOSXDbgMsg(m, ...) \
     do { \
-	TKLog(@"%s:%d: %s(): " m, strrchr(__FILE__, '/')+1, \
-		__LINE__, __func__, ##__VA_ARGS__); \
+        TKLog(@"%s:%d: %s(): " m, strrchr(__FILE__, '/')+1, \
+                __LINE__, __func__, ##__VA_ARGS__); \
     } while (0)
 
 /*
@@ -90,7 +90,7 @@
  */
 #define TkMacOSXDbgOSErr(f, err) \
     do { \
-	TkMacOSXDbgMsg("%s failed: %d", #f, (int)(err)); \
+        TkMacOSXDbgMsg("%s failed: %d", #f, (int)(err)); \
     } while (0)
 
 /*
@@ -98,11 +98,11 @@
  * debug message in case of failure.
  */
 #define ChkErr(f, ...) ({ \
-	OSStatus err = f(__VA_ARGS__); \
-	if (err != noErr) { \
-	    TkMacOSXDbgOSErr(f, err); \
-	} \
-	err;})
+        OSStatus err = f(__VA_ARGS__); \
+        if (err != noErr) { \
+            TkMacOSXDbgOSErr(f, err); \
+        } \
+        err;})
 
 #else /* TK_MAC_DEBUG */
 #define TKLog(f, ...)
@@ -118,8 +118,8 @@
 #define TkMacOSXInitNamedSymbol(module, ret, symbol, ...) \
     static ret (* symbol)(__VA_ARGS__) = (void*)(-1L); \
     if (symbol == (void*)(-1L)) { \
-	symbol = TkMacOSXGetNamedSymbol(STRINGIFY(module), \
-		STRINGIFY(symbol)); \
+        symbol = TkMacOSXGetNamedSymbol(STRINGIFY(module), \
+                STRINGIFY(symbol)); \
     }
 
 /*
@@ -147,94 +147,94 @@ MODULE_SCOPE long tkMacOSXMacOSXVersion;
  */
 
 #if 0
-MODULE_SCOPE void	TkMacOSXEmtpyRegion(TkRegion r);
-MODULE_SCOPE int	TkMacOSXIsEmptyRegion(TkRegion r);
+MODULE_SCOPE void       TkMacOSXEmtpyRegion(TkRegion r);
+MODULE_SCOPE int        TkMacOSXIsEmptyRegion(TkRegion r);
 #endif
-MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(TkRegion r);
-MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(TkRegion r,
-			    HIShapeRef rgn);
-MODULE_SCOPE void	TkMacOSXOffsetRegion(TkRegion r, short dx, short dy);
-MODULE_SCOPE HIShapeRef	TkMacOSXHIShapeCreateEmpty(void);
+MODULE_SCOPE HIShapeRef TkMacOSXGetNativeRegion(TkRegion r);
+MODULE_SCOPE void       TkMacOSXSetWithNativeRegion(TkRegion r,
+                            HIShapeRef rgn);
+MODULE_SCOPE void       TkMacOSXOffsetRegion(TkRegion r, short dx, short dy);
+MODULE_SCOPE HIShapeRef TkMacOSXHIShapeCreateEmpty(void);
 MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
-			    const CGRect *inRect);
-MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithShape(
-			    HIMutableShapeRef inDestShape,
-			    HIShapeRef inSrcShape);
+                            const CGRect *inRect);
+MODULE_SCOPE OSStatus   TkMacOSXHIShapeSetWithShape(
+                            HIMutableShapeRef inDestShape,
+                            HIShapeRef inSrcShape);
 #if 0
-MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithRect(HIMutableShapeRef inShape,
-			    const CGRect *inRect);
+MODULE_SCOPE OSStatus   TkMacOSXHIShapeSetWithRect(HIMutableShapeRef inShape,
+                            const CGRect *inRect);
 #endif
-MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
-			    HIMutableShapeRef inShape, const CGRect *inRect);
-MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
-			    const CGRect *inRect);
-MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
-			    HIShapeRef inShape2, HIMutableShapeRef outResult);
+MODULE_SCOPE OSStatus   TkMacOSHIShapeDifferenceWithRect(
+                            HIMutableShapeRef inShape, const CGRect *inRect);
+MODULE_SCOPE OSStatus   TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
+                            const CGRect *inRect);
+MODULE_SCOPE OSStatus   TkMacOSHIShapeUnion(HIShapeRef inShape1,
+                            HIShapeRef inShape2, HIMutableShapeRef outResult);
 
 /*
  * Prototypes of TkAqua internal procs.
  */
 
-MODULE_SCOPE void *	TkMacOSXGetNamedSymbol(const char *module,
-			    const char *symbol);
-MODULE_SCOPE void	TkMacOSXDisplayChanged(Display *display);
-MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
-			    int enable);
-MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
-			    int antiAlias);
-MODULE_SCOPE int	TkMacOSXGenerateFocusEvent(TkWindow *winPtr,
-			    int activeFlag);
+MODULE_SCOPE void *     TkMacOSXGetNamedSymbol(const char *module,
+                            const char *symbol);
+MODULE_SCOPE void       TkMacOSXDisplayChanged(Display *display);
+MODULE_SCOPE int        TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
+                            int enable);
+MODULE_SCOPE int        TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
+                            int antiAlias);
+MODULE_SCOPE int        TkMacOSXGenerateFocusEvent(TkWindow *winPtr,
+                            int activeFlag);
 MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
-MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
-MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
+MODULE_SCOPE int        TkMacOSXIsWindowZoomed(TkWindow *winPtr);
+MODULE_SCOPE int        TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
 MODULE_SCOPE NSBitmapImageRep* TkMacOSXBitmapRepFromDrawableRect(Drawable drawable,
-			    int x, int y, unsigned int width, unsigned int height);
+                            int x, int y, unsigned int width, unsigned int height);
 MODULE_SCOPE CGImageRef TkMacOSXCreateCGImageWithXImage(XImage *image,
-			    int use_ximage_alpha);
+                            int use_ximage_alpha);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
-			    CGImageRef image, unsigned long imageForeground,
-			    unsigned long imageBackground, CGRect imageBounds,
-			    CGRect srcBounds, CGRect dstBounds);
-MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
-			    int useCG, TkMacOSXDrawingContext *dcPtr);
-MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
-			    TkMacOSXDrawingContext *dcPtr);
-MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
-			    CGContextRef context);
-MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
-			    NSWindow *window, int fullscreen,
-			    Tcl_Interp *interp);
-MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
-			    int active);
-MODULE_SCOPE NSWindow*	TkMacOSXDrawableWindow(Drawable drawable);
-MODULE_SCOPE NSView*	TkMacOSXDrawableView(MacDrawable *macWin);
-MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
-MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
-MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
-			    HIShapeRef rgn);
+                            CGImageRef image, unsigned long imageForeground,
+                            unsigned long imageBackground, CGRect imageBounds,
+                            CGRect srcBounds, CGRect dstBounds);
+MODULE_SCOPE int        TkMacOSXSetupDrawingContext(Drawable d, GC gc,
+                            int useCG, TkMacOSXDrawingContext *dcPtr);
+MODULE_SCOPE void       TkMacOSXRestoreDrawingContext(
+                            TkMacOSXDrawingContext *dcPtr);
+MODULE_SCOPE void       TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
+                            CGContextRef context);
+MODULE_SCOPE int        TkMacOSXMakeFullscreen(TkWindow *winPtr,
+                            NSWindow *window, int fullscreen,
+                            Tcl_Interp *interp);
+MODULE_SCOPE void       TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
+                            int active);
+MODULE_SCOPE NSWindow*  TkMacOSXDrawableWindow(Drawable drawable);
+MODULE_SCOPE NSView*    TkMacOSXDrawableView(MacDrawable *macWin);
+MODULE_SCOPE void       TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
+MODULE_SCOPE HIShapeRef TkMacOSXGetClipRgn(Drawable drawable);
+MODULE_SCOPE void       TkMacOSXInvalidateViewRegion(NSView *view,
+                            HIShapeRef rgn);
 MODULE_SCOPE CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
-MODULE_SCOPE CGImageRef	TkMacOSXCreateCGImageWithDrawable(Drawable drawable);
-MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithTkImage(Display *display,
-			    Tk_Image image, int width, int height);
-MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithBitmap(Display *display,
-			    Pixmap bitmap, GC gc, int width, int height);
-MODULE_SCOPE CGColorRef	TkMacOSXCreateCGColor(GC gc, unsigned long pixel);
-MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
-MODULE_SCOPE Tcl_Obj *	TkMacOSXGetStringObjFromCFString(CFStringRef str);
-MODULE_SCOPE TkWindow*	TkMacOSXGetTkWindow(NSWindow *w);
-MODULE_SCOPE NSFont*	TkMacOSXNSFontForFont(Tk_Font tkfont);
+MODULE_SCOPE CGImageRef TkMacOSXCreateCGImageWithDrawable(Drawable drawable);
+MODULE_SCOPE NSImage*   TkMacOSXGetNSImageWithTkImage(Display *display,
+                            Tk_Image image, int width, int height);
+MODULE_SCOPE NSImage*   TkMacOSXGetNSImageWithBitmap(Display *display,
+                            Pixmap bitmap, GC gc, int width, int height);
+MODULE_SCOPE CGColorRef TkMacOSXCreateCGColor(GC gc, unsigned long pixel);
+MODULE_SCOPE NSColor*   TkMacOSXGetNSColor(GC gc, unsigned long pixel);
+MODULE_SCOPE Tcl_Obj *  TkMacOSXGetStringObjFromCFString(CFStringRef str);
+MODULE_SCOPE TkWindow*  TkMacOSXGetTkWindow(NSWindow *w);
+MODULE_SCOPE NSFont*    TkMacOSXNSFontForFont(Tk_Font tkfont);
 MODULE_SCOPE NSDictionary* TkMacOSXNSFontAttributesForFont(Tk_Font tkfont);
 MODULE_SCOPE NSModalSession TkMacOSXGetModalSession(void);
-MODULE_SCOPE void	TkMacOSXSelDeadWindow(TkWindow *winPtr);
-MODULE_SCOPE void	TkMacOSXApplyWindowAttributes(TkWindow *winPtr,
-			    NSWindow *macWindow);
-MODULE_SCOPE int	TkMacOSXStandardAboutPanelObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	TkMacOSXIconBitmapObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+MODULE_SCOPE void       TkMacOSXSelDeadWindow(TkWindow *winPtr);
+MODULE_SCOPE void       TkMacOSXApplyWindowAttributes(TkWindow *winPtr,
+                            NSWindow *macWindow);
+MODULE_SCOPE int        TkMacOSXStandardAboutPanelObjCmd(ClientData clientData,
+                            Tcl_Interp *interp, int objc,
+                            Tcl_Obj *const objv[]);
+MODULE_SCOPE int        TkMacOSXIconBitmapObjCmd(ClientData clientData,
+                            Tcl_Interp *interp, int objc,
+                            Tcl_Obj *const objv[]);
 
 #pragma mark Private Objective-C Classes
 
@@ -296,19 +296,19 @@ VISIBILITY_HIDDEN
 - (void) terminate: (id) sender;
 - (void) preferences: (id) sender;
 - (void) handleQuitApplicationEvent:   (NSAppleEventDescriptor *)event
-		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
+                     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
 - (void) handleOpenApplicationEvent:   (NSAppleEventDescriptor *)event
-		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
+                     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
 - (void) handleReopenApplicationEvent: (NSAppleEventDescriptor *)event
-		       withReplyEvent: (NSAppleEventDescriptor *)replyEvent;
+                       withReplyEvent: (NSAppleEventDescriptor *)replyEvent;
 - (void) handleShowPreferencesEvent:   (NSAppleEventDescriptor *)event
-		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
+                     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
 - (void) handleOpenDocumentsEvent:     (NSAppleEventDescriptor *)event
-		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+                   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 - (void) handlePrintDocumentsEvent:    (NSAppleEventDescriptor *)event
-		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+                   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 - (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
-		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+                   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 @end
 
 VISIBILITY_HIDDEN
@@ -362,17 +362,17 @@ VISIBILITY_HIDDEN
 + (id)itemWithTitle:(NSString *)title submenu:(NSMenu *)submenu;
 + (id)itemWithTitle:(NSString *)title action:(SEL)action;
 + (id)itemWithTitle:(NSString *)title action:(SEL)action
-	target:(id)target;
+        target:(id)target;
 + (id)itemWithTitle:(NSString *)title action:(SEL)action
-	keyEquivalent:(NSString *)keyEquivalent;
+        keyEquivalent:(NSString *)keyEquivalent;
 + (id)itemWithTitle:(NSString *)title action:(SEL)action
-	target:(id)target keyEquivalent:(NSString *)keyEquivalent;
+        target:(id)target keyEquivalent:(NSString *)keyEquivalent;
 + (id)itemWithTitle:(NSString *)title action:(SEL)action
-	keyEquivalent:(NSString *)keyEquivalent
-	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
+        keyEquivalent:(NSString *)keyEquivalent
+        keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
 + (id)itemWithTitle:(NSString *)title action:(SEL)action
-	target:(id)target keyEquivalent:(NSString *)keyEquivalent
-	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
+        target:(id)target keyEquivalent:(NSString *)keyEquivalent
+        keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
 @end
 
 #endif /* _TKMACPRIV */

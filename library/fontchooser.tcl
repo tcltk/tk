@@ -1,6 +1,6 @@
 # fontchooser.tcl -
 #
-#	A themeable Tk font selection dialog. See TIP #324.
+#       A themeable Tk font selection dialog. See TIP #324.
 #
 # Copyright (C) 2008 Keith Vetter
 # Copyright (C) 2008 Pat Thoyts <patthoyts@users.sourceforge.net>
@@ -105,7 +105,7 @@ proc ::tk::fontchooser::Configure {args} {
             return $S($option)
         }
         return -code error -errorcode [list TK LOOKUP OPTION $option] \
-	    "bad option \"$option\": must be\
+            "bad option \"$option\": must be\
             -command, -font, -parent, -title or -visible"
     }
 
@@ -113,7 +113,7 @@ proc ::tk::fontchooser::Configure {args} {
                    -font $S(-font) -command $S(-command)]
     set r [tclParseConfigSpec [namespace which -variable S] $specs "" $args]
     if {![winfo exists $S(-parent)]} {
-	set code [list TK LOOKUP WINDOW $S(-parent)]
+        set code [list TK LOOKUP WINDOW $S(-parent)]
         set err "bad window path name \"$S(-parent)\""
         array set S $cache
         return -code error -errorcode $code $err
@@ -122,8 +122,8 @@ proc ::tk::fontchooser::Configure {args} {
         set S(-title) [::msgcat::mc "Font"]
     }
     if {[winfo exists $S(W)] && [lsearch $args -font] != -1} {
-	Init $S(-font)
-	event generate $S(-parent) <<TkFontchooserFontChanged>>
+        Init $S(-font)
+        event generate $S(-parent) <<TkFontchooserFontChanged>>
     }
     return $r
 }
@@ -294,8 +294,8 @@ proc ::tk::::fontchooser::Done {ok} {
 
 # ::tk::fontchooser::Apply --
 #
-#	Call the -command procedure appending the current font
-#	Errors are reported via the background error mechanism
+#       Call the -command procedure appending the current font
+#       Errors are reported via the background error mechanism
 #
 proc ::tk::fontchooser::Apply {} {
     variable S
@@ -419,7 +419,7 @@ proc ::tk::fontchooser::Update {} {
 
 # ::tk::fontchooser::Visibility --
 #
-#	Notify the parent when the dialog visibility changes
+#       Notify the parent when the dialog visibility changes
 #
 proc ::tk::fontchooser::Visibility {w visible} {
     variable S
@@ -430,8 +430,8 @@ proc ::tk::fontchooser::Visibility {w visible} {
 
 # ::tk::fontchooser::ttk_listbox --
 #
-#	Create a properly themed scrolled listbox.
-#	This is exactly right on XP but may need adjusting on other platforms.
+#       Create a properly themed scrolled listbox.
+#       This is exactly right on XP but may need adjusting on other platforms.
 #
 proc ::tk::fontchooser::ttk_slistbox {w args} {
     set f [ttk::frame $w -style FontchooserFrame -padding 2]

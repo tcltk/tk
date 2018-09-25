@@ -1,7 +1,7 @@
 /*
  * tkMacOSXClipboard.c --
  *
- *	This file manages the clipboard for the Tk toolkit.
+ *      This file manages the clipboard for the Tk toolkit.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -21,29 +21,29 @@ static Tk_Window clipboardOwner = NULL;
 
 @implementation TKApplication(TKClipboard)
 - (void) tkProvidePasteboard: (TkDisplay *) dispPtr
-	pasteboard: (NSPasteboard *) sender
-	provideDataForType: (NSString *) type
+        pasteboard: (NSPasteboard *) sender
+        provideDataForType: (NSString *) type
 {
     NSMutableString *string = [NSMutableString new];
 
     if (dispPtr && dispPtr->clipboardActive &&
-	    [type isEqualToString:NSStringPboardType]) {
-	for (TkClipboardTarget *targetPtr = dispPtr->clipTargetPtr; targetPtr;
-		targetPtr = targetPtr->nextPtr) {
-	    if (targetPtr->type == XA_STRING ||
-		    targetPtr->type == dispPtr->utf8Atom) {
-		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
-			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = [[NSString alloc] initWithBytesNoCopy:
-			    cbPtr->buffer length:cbPtr->length
-			    encoding:NSUTF8StringEncoding freeWhenDone:NO];
+            [type isEqualToString:NSStringPboardType]) {
+        for (TkClipboardTarget *targetPtr = dispPtr->clipTargetPtr; targetPtr;
+                targetPtr = targetPtr->nextPtr) {
+            if (targetPtr->type == XA_STRING ||
+                    targetPtr->type == dispPtr->utf8Atom) {
+                for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
+                        cbPtr; cbPtr = cbPtr->nextPtr) {
+                    NSString *s = [[NSString alloc] initWithBytesNoCopy:
+                            cbPtr->buffer length:cbPtr->length
+                            encoding:NSUTF8StringEncoding freeWhenDone:NO];
 
-		    [string appendString:s];
-		    [s release];
-		}
-		break;
-	    }
-	}
+                    [string appendString:s];
+                    [s release];
+                }
+                break;
+            }
+        }
     }
     [sender setString:string forType:type];
     [string release];
@@ -52,37 +52,37 @@ static Tk_Window clipboardOwner = NULL;
 - (void) tkProvidePasteboard: (TkDisplay *) dispPtr
 {
     if (dispPtr && dispPtr->clipboardActive) {
-	[self tkProvidePasteboard:dispPtr
-		pasteboard:[NSPasteboard generalPasteboard]
-		provideDataForType:NSStringPboardType];
+        [self tkProvidePasteboard:dispPtr
+                pasteboard:[NSPasteboard generalPasteboard]
+                provideDataForType:NSStringPboardType];
     }
 }
 
 - (void) pasteboard: (NSPasteboard *) sender
-	provideDataForType: (NSString *) type
+        provideDataForType: (NSString *) type
 {
     [self tkProvidePasteboard:TkGetDisplayList() pasteboard:sender
-	    provideDataForType:type];
+            provideDataForType:type];
 }
 
 - (void) tkCheckPasteboard
 {
     if (clipboardOwner && [[NSPasteboard generalPasteboard] changeCount] !=
-	    changeCount) {
-	TkDisplay *dispPtr = TkGetDisplayList();
+            changeCount) {
+        TkDisplay *dispPtr = TkGetDisplayList();
 
-	if (dispPtr) {
-	    XEvent event;
+        if (dispPtr) {
+            XEvent event;
 
-	    event.xany.type = SelectionClear;
-	    event.xany.serial = NextRequest(Tk_Display(clipboardOwner));
-	    event.xany.send_event = False;
-	    event.xany.window = Tk_WindowId(clipboardOwner);
-	    event.xany.display = Tk_Display(clipboardOwner);
-	    event.xselectionclear.selection = dispPtr->clipboardAtom;
-	    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-	}
-	clipboardOwner = NULL;
+            event.xany.type = SelectionClear;
+            event.xany.serial = NextRequest(Tk_Display(clipboardOwner));
+            event.xany.send_event = False;
+            event.xany.window = Tk_WindowId(clipboardOwner);
+            event.xany.display = Tk_Display(clipboardOwner);
+            event.xselectionclear.selection = dispPtr->clipboardAtom;
+            Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+        }
+        clipboardOwner = NULL;
     }
 }
 @end
@@ -94,54 +94,54 @@ static Tk_Window clipboardOwner = NULL;
  *
  * TkSelGetSelection --
  *
- *	Retrieve the specified selection from another process. For now, only
- *	fetching XA_STRING from CLIPBOARD is supported. Eventually other types
- *	should be allowed.
+ *      Retrieve the specified selection from another process. For now, only
+ *      fetching XA_STRING from CLIPBOARD is supported. Eventually other types
+ *      should be allowed.
  *
  * Results:
- *	The return value is a standard Tcl return value. If an error occurs
- *	(such as no selection exists) then an error message is left in the
- *	interp's result.
+ *      The return value is a standard Tcl return value. If an error occurs
+ *      (such as no selection exists) then an error message is left in the
+ *      interp's result.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkSelGetSelection(
-    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
-    Tk_Window tkwin,		/* Window on whose behalf to retrieve the
-				 * selection (determines display from which to
-				 * retrieve). */
-    Atom selection,		/* Selection to retrieve. */
-    Atom target,		/* Desired form in which selection is to be
-				 * returned. */
-    Tk_GetSelProc *proc,	/* Procedure to call to process the selection,
-				 * once it has been retrieved. */
-    ClientData clientData)	/* Arbitrary value to pass to proc. */
+    Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
+    Tk_Window tkwin,            /* Window on whose behalf to retrieve the
+                                 * selection (determines display from which to
+                                 * retrieve). */
+    Atom selection,             /* Selection to retrieve. */
+    Atom target,                /* Desired form in which selection is to be
+                                 * returned. */
+    Tk_GetSelProc *proc,        /* Procedure to call to process the selection,
+                                 * once it has been retrieved. */
+    ClientData clientData)      /* Arbitrary value to pass to proc. */
 {
     int result = TCL_ERROR;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     if (dispPtr && selection == dispPtr->clipboardAtom && (target == XA_STRING
-	    || target == dispPtr->utf8Atom)) {
-	NSString *string = nil;
-	NSPasteboard *pb = [NSPasteboard generalPasteboard];
-	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
-		NSStringPboardType]];
+            || target == dispPtr->utf8Atom)) {
+        NSString *string = nil;
+        NSPasteboard *pb = [NSPasteboard generalPasteboard];
+        NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
+                NSStringPboardType]];
 
-	if (type) {
-	    string = [pb stringForType:type];
-	}
-	result = proc(clientData, interp, string ? [string UTF8String] : "");
+        if (type) {
+            string = [pb stringForType:type];
+        }
+        result = proc(clientData, interp, string ? [string UTF8String] : "");
     } else {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"%s selection doesn't exist or form \"%s\" not defined",
-		Tk_GetAtomName(tkwin, selection),
-		Tk_GetAtomName(tkwin, target)));
-	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "%s selection doesn't exist or form \"%s\" not defined",
+                Tk_GetAtomName(tkwin, selection),
+                Tk_GetAtomName(tkwin, target)));
+        Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
     }
     return result;
 }
@@ -151,34 +151,34 @@ TkSelGetSelection(
  *
  * XSetSelectionOwner --
  *
- *	This function claims ownership of the specified selection. If the
- *	selection is CLIPBOARD, then we empty the system clipboard.
+ *      This function claims ownership of the specified selection. If the
+ *      selection is CLIPBOARD, then we empty the system clipboard.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 int
 XSetSelectionOwner(
-    Display *display,		/* X Display. */
-    Atom selection,		/* What selection to own. */
-    Window owner,		/* Window to be the owner. */
-    Time time)			/* The current time? */
+    Display *display,           /* X Display. */
+    Atom selection,             /* What selection to own. */
+    Window owner,               /* Window to be the owner. */
+    Time time)                  /* The current time? */
 {
     TkDisplay *dispPtr = TkGetDisplayList();
 
     if (dispPtr && selection == dispPtr->clipboardAtom) {
-	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
-	if (!dispPtr->clipboardActive) {
-	    NSPasteboard *pb = [NSPasteboard generalPasteboard];
+        clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
+        if (!dispPtr->clipboardActive) {
+            NSPasteboard *pb = [NSPasteboard generalPasteboard];
 
-	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
-	}
+            changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
+        }
     }
     return Success;
 }
@@ -188,14 +188,14 @@ XSetSelectionOwner(
  *
  * TkMacOSXSelDeadWindow --
  *
- *	This function is invoked just before a TkWindow is deleted. It
- *	performs selection-related cleanup.
+ *      This function is invoked just before a TkWindow is deleted. It
+ *      performs selection-related cleanup.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	clipboardOwner is cleared.
+ *      clipboardOwner is cleared.
  *
  *----------------------------------------------------------------------
  */
@@ -205,7 +205,7 @@ TkMacOSXSelDeadWindow(
     TkWindow *winPtr)
 {
     if (winPtr && winPtr == (TkWindow *)clipboardOwner) {
-	clipboardOwner = NULL;
+        clipboardOwner = NULL;
     }
 }
 
@@ -214,28 +214,28 @@ TkMacOSXSelDeadWindow(
  *
  * TkSelUpdateClipboard --
  *
- *	This function is called to force the clipboard to be updated after new
- *	data is added.
+ *      This function is called to force the clipboard to be updated after new
+ *      data is added.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkSelUpdateClipboard(
-    TkWindow *winPtr,		/* Window associated with clipboard. */
+    TkWindow *winPtr,           /* Window associated with clipboard. */
     TkClipboardTarget *targetPtr)
-				/* Info about the content. */
+                                /* Info about the content. */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
 
     changeCount = [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
-	    owner:NSApp];
+            owner:NSApp];
 }
 
 /*
@@ -243,26 +243,26 @@ TkSelUpdateClipboard(
  *
  * TkSelEventProc --
  *
- *	This procedure is invoked whenever a selection-related event occurs.
+ *      This procedure is invoked whenever a selection-related event occurs.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Lots: depends on the type of event.
+ *      Lots: depends on the type of event.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkSelEventProc(
-    Tk_Window tkwin,		/* Window for which event was targeted. */
-    register XEvent *eventPtr)	/* X event: either SelectionClear,
-				 * SelectionRequest, or SelectionNotify. */
+    Tk_Window tkwin,            /* Window for which event was targeted. */
+    register XEvent *eventPtr)  /* X event: either SelectionClear,
+                                 * SelectionRequest, or SelectionNotify. */
 {
     if (eventPtr->type == SelectionClear) {
-	clipboardOwner = NULL;
-	TkSelClearSelection(tkwin, eventPtr);
+        clipboardOwner = NULL;
+        TkSelClearSelection(tkwin, eventPtr);
     }
 }
 
@@ -271,21 +271,21 @@ TkSelEventProc(
  *
  * TkSelPropProc --
  *
- *	This procedure is invoked when property-change events occur on windows
- *	not known to the toolkit. This is a stub function under Windows.
+ *      This procedure is invoked when property-change events occur on windows
+ *      not known to the toolkit. This is a stub function under Windows.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkSelPropProc(
-    register XEvent *eventPtr)	/* X PropertyChange event. */
+    register XEvent *eventPtr)  /* X PropertyChange event. */
 {
 }
 
@@ -294,13 +294,13 @@ TkSelPropProc(
  *
  * TkSuspendClipboard --
  *
- *	Handle clipboard conversion as required by the suppend event.
+ *      Handle clipboard conversion as required by the suppend event.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The local scrap is moved to the global scrap.
+ *      The local scrap is moved to the global scrap.
  *
  *----------------------------------------------------------------------
  */

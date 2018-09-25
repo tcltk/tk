@@ -57,13 +57,13 @@ proc basicMotion {} {
     global waveCoords direction
     set oc $waveCoords
     for {set i 1} {$i<[llength $oc]} {incr i 2} {
-	if {$direction eq "left"} {
-	    lset waveCoords $i [lindex $oc \
-		    [expr {$i+2>[llength $oc] ? 1 : $i+2}]]
-	} else {
-	    lset waveCoords $i \
-		    [lindex $oc [expr {$i-2<0 ? "end" : $i-2}]]
-	}
+        if {$direction eq "left"} {
+            lset waveCoords $i [lindex $oc \
+                    [expr {$i+2>[llength $oc] ? 1 : $i+2}]]
+        } else {
+            lset waveCoords $i \
+                    [lindex $oc [expr {$i-2<0 ? "end" : $i-2}]]
+        }
     }
 }
 
@@ -73,9 +73,9 @@ proc basicMotion {} {
 proc reverser {} {
     global waveCoords direction
     if {[lindex $waveCoords 1] < 10} {
-	set direction "right"
+        set direction "right"
     } elseif {[lindex $waveCoords end] < 10} {
-	set direction "left"
+        set direction "left"
     }
 }
 

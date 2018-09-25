@@ -3348,7 +3348,7 @@ test button-5.15 {ConfigureButton - variable handling} -setup {
 } -body {
     trace variable x w bogusTrace
     catch {radiobutton .r -text foo -textvariable x}
-	return $x
+        return $x
 } -cleanup {
     trace vdelete x w bogusTrace
     destroy .r
@@ -3491,8 +3491,8 @@ test button-5.25 {ConfigureButton - computing geometry} -setup {
 
 test button-6.1 {ButtonEventProc procedure} -body {
     button .b -text "Test Button" -command {
-	   destroy .b
-	   set x [list [winfo exists .b] [info commands .b]]
+           destroy .b
+           set x [list [winfo exists .b] [info commands .b]]
 }
     .b invoke
     return $x
@@ -3788,16 +3788,16 @@ test button-13.1 {size behavior: label} -setup {
     label .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     set result {}
 } -body {
-	.a configure -text Hej
-	.b configure -text Hej -width 10 -height 1
-	.c configure -text "" -width 10 -height 1
+        .a configure -text Hej
+        .b configure -text Hej -width 10 -height 1
+        .c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
-	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
+        lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
 # With -height, height should not be affected by text change
-	lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
+        lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
 # A one line text should be as high as -height 1
-	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
+        lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
 } -result {1 1 1}
@@ -3807,16 +3807,16 @@ test button-13.2 {size behavior: label} -setup {
     label .c -borderwidth 2 -highlightthickness 2 -font {Arial 20}
     set result {}
 } -body {
-	.a configure -text Hej
-	.b configure -text Hej -width 10 -height 1
-	.c configure -text "" -width 10 -height 1
+        .a configure -text Hej
+        .b configure -text Hej -width 10 -height 1
+        .c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
-	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
+        lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
 # With -height, height should not be affected by text change
-	lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
+        lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
 # A one line text should be as high as -height 1
-	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
+        lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
 } -result {1 1 1}
@@ -3827,16 +3827,16 @@ test button-13.3 {size behavior: button} -setup {
     button .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     set result {}
 } -body {
-	.a configure -text Hej
-	.b configure -text Hej -width 10 -height 1
-	.c configure -text "" -width 10 -height 1
+        .a configure -text Hej
+        .b configure -text Hej -width 10 -height 1
+        .c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
-	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
+        lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
 # With -height, height should not be affected by text change
-	lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
+        lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
 # A one line text should be as high as -height 1
-	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
+        lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
 } -result {1 1 1}
@@ -3846,16 +3846,16 @@ test button-13.4 {size behavior: button} -setup {
     button .c -borderwidth 2 -highlightthickness 2 -font {Arial 20}
     set result {}
 } -body {
-	.a configure -text Hej
-	.b configure -text Hej -width 10 -height 1
-	.c configure -text "" -width 10 -height 1
+        .a configure -text Hej
+        .b configure -text Hej -width 10 -height 1
+        .c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
-	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
+        lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
 # With -height, height should not be affected by text change
-	lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
+        lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
 # A one line text should be as high as -height 1
-	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
+        lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
 } -result {1 1 1}
@@ -3866,16 +3866,16 @@ test button-13.5 {size behavior: radiobutton} -setup {
     radiobutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     set result {}
 } -body {
-	.a configure -text Hej
-	.b configure -text Hej -width 10 -height 1
-	.c configure -text "" -width 10 -height 1
+        .a configure -text Hej
+        .b configure -text Hej -width 10 -height 1
+        .c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
-	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
+        lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
 # With -height, height should not be affected by text change
-	lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
+        lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
 # A one line text should be as high as -height 1
-	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
+        lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
 } -result {1 1 1}
@@ -3886,16 +3886,16 @@ test button-13.6 {size behavior: radiobutton} -setup {
     radiobutton .c -borderwidth 2 -highlightthickness 2 -font {Arial 20}
     set result {}
 } -body {
-	.a configure -text Hej
-	.b configure -text Hej -width 10 -height 1
-	.c configure -text "" -width 10 -height 1
+        .a configure -text Hej
+        .b configure -text Hej -width 10 -height 1
+        .c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
-	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
+        lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
 # With -height, height should not be affected by text change
-	lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
+        lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
 # A one line text should be as high as -height 1
-	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
+        lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
 } -result {1 1 1}
@@ -3906,16 +3906,16 @@ test button-13.7 {size behavior: checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     set result {}
 } -body {
-	.a configure -text Hej
-	.b configure -text Hej -width 10 -height 1
-	.c configure -text "" -width 10 -height 1
+        .a configure -text Hej
+        .b configure -text Hej -width 10 -height 1
+        .c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
-	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
+        lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
 # With -height, height should not be affected by text change
-	lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
+        lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
 # A one line text should be as high as -height 1
-	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
+        lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
 } -result {1 1 1}
@@ -3926,16 +3926,16 @@ test button-13.8 {size behavior: checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Arial 20}
     set result {}
 } -body {
-	.a configure -text Hej
-	.b configure -text Hej -width 10 -height 1
-	.c configure -text "" -width 10 -height 1
+        .a configure -text Hej
+        .b configure -text Hej -width 10 -height 1
+        .c configure -text "" -width 10 -height 1
 
 # With -width, width should not be affected by text change
-	lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
+        lappend result [expr {[winfo reqwidth .b] == [winfo reqwidth .c]}]
 # With -height, height should not be affected by text change
-	lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
+        lappend result [expr {[winfo reqheight .b] == [winfo reqheight .c]}]
 # A one line text should be as high as -height 1
-	lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
+        lappend result [expr {[winfo reqheight .a] == [winfo reqheight .b]}]
 } -cleanup {
     destroy .a .b .c
 } -result {1 1 1}

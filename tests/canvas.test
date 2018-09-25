@@ -191,7 +191,7 @@ catch {destroy .c}
 
 # Canvas used in 2.* test cases
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 150} -bd 0 \
-	-highlightthickness 0
+        -highlightthickness 0
 pack .c
 update
 
@@ -231,7 +231,7 @@ catch {destroy .c}
 
 # Canvas used in 3.* test cases
 canvas .c -width 60 -height 40 -scrollregion {0 0 200 80} \
-	-borderwidth 0 -highlightthickness 0
+        -borderwidth 0 -highlightthickness 0
 pack .c
 update
 
@@ -277,7 +277,7 @@ test canvas-5.1 {ButtonCmdDeletedProc procedure} -body {
 
 # Canvas used in 6.* test cases
 canvas .c -width 100 -height 50 -scrollregion {-200 -100 305 102} \
-	-borderwidth 2 -highlightthickness 3
+        -borderwidth 2 -highlightthickness 3
 pack .c
 update
 
@@ -292,9 +292,9 @@ test canvas-6.2 {CanvasSetOrigin procedure} -body {
     .c configure -xscrollincrement 20 -yscrollincrement 10
     set x ""
     foreach i {.08 .10 .48 .50} {
-	.c xview moveto $i
-	update
-	lappend x [.c canvasx 0]
+        .c xview moveto $i
+        update
+        lappend x [.c canvasx 0]
     }
     return $x
 } -result {-165.0 -145.0 35.0 55.0}
@@ -302,9 +302,9 @@ test canvas-6.3 {CanvasSetOrigin procedure} -body {
     .c configure -xscrollincrement 20 -yscrollincrement 10
     set x ""
     foreach i {.06 .08 .70 .72} {
-	.c yview moveto $i
-	update
-	lappend x [.c canvasy 0]
+        .c yview moveto $i
+        update
+        lappend x [.c canvasy 0]
     }
     return $x
 } -result {-95.0 -85.0 35.0 45.0}
@@ -352,24 +352,24 @@ test canvas-9.1 {canvas id creation and deletion} -setup {
     # size.
     set size 15
     for {set i 0} {$i < $size} {incr i} {
-	set x [expr {-10 + 3*$i}]
-	for {set j 0; set y -10} {$j < 10} {incr j; incr y 3} {
-	    .c create rect ${x}c ${y}c [expr $x+2]c [expr $y+2]c \
-		    -outline black -fill blue -tags rect
-	    .c create text [expr $x+1]c [expr $y+1]c -text "$i,$j" \
-		    -anchor center -tags text
-	}
+        set x [expr {-10 + 3*$i}]
+        for {set j 0; set y -10} {$j < 10} {incr j; incr y 3} {
+            .c create rect ${x}c ${y}c [expr $x+2]c [expr $y+2]c \
+                    -outline black -fill blue -tags rect
+            .c create text [expr $x+1]c [expr $y+1]c -text "$i,$j" \
+                    -anchor center -tags text
+        }
     }
     # The actual bench mark - this code also exercises all the hash table
     # changes.
     set time [lindex [time {
-	foreach id [.c find withtag all] {
-	    .c lower $id
-	    .c raise $id
-	    .c find withtag $id
-	    .c bind <Return> $id {}
-	    .c delete $id
-	}
+        foreach id [.c find withtag all] {
+            .c lower $id
+            .c raise $id
+            .c find withtag $id
+            .c bind <Return> $id {}
+            .c delete $id
+        }
     }] 0]
     set x ""
 } -result {}
@@ -475,7 +475,7 @@ test canvas-10.11 {backward compatility - strange tags that are not expressions}
     catch {destroy .c}
     canvas .c
     .c create oval 20 20 40 40 -fill red \
-	-tag [list { strange tag(xxx&yyy|zzz) " && \" || ! ^ " }]
+        -tag [list { strange tag(xxx&yyy|zzz) " && \" || ! ^ " }]
 } -body {
     .c find withtag { strange tag(xxx&yyy|zzz) " && \" || ! ^ " }
 } -result 1
@@ -502,7 +502,7 @@ test canvas-11.1 {canvas poly fill check, bug 5783} -setup {
 } -body {
     # This would crash in 8.3.0 and 8.3.1
     .c create polygon 0 0 100 100 200 50 \
-	    -fill {} -stipple gray50 -outline black
+            -fill {} -stipple gray50 -outline black
 } -result 1
 test canvas-11.2 {canvas poly overlap fill check, bug 226357} -setup {
     destroy .c
@@ -510,19 +510,19 @@ test canvas-11.2 {canvas poly overlap fill check, bug 226357} -setup {
     set result {}
 } -body {
     .c create poly 30 30 90 90 30 90 90 30
-    lappend result [.c find over 40 40 45 45];	# rect region inc. edge
-    lappend result [.c find over 60 40 60 40];	# top-center point
-    lappend result [.c find over 0 0 0 0];	# not on poly
-    lappend result [.c find over 60 60 60 60];	# center-point
-    lappend result [.c find over 45 50 45 50];	# outside poly
+    lappend result [.c find over 40 40 45 45];  # rect region inc. edge
+    lappend result [.c find over 60 40 60 40];  # top-center point
+    lappend result [.c find over 0 0 0 0];      # not on poly
+    lappend result [.c find over 60 60 60 60];  # center-point
+    lappend result [.c find over 45 50 45 50];  # outside poly
     .c itemconfig 1 -fill "" -outline black
-    lappend result [.c find over 40 40 45 45];	# rect region inc. edge
-    lappend result [.c find over 60 40 60 40];	# top-center point
-    lappend result [.c find over 0 0 0 0];	# not on poly
-    lappend result [.c find over 60 60 60 60];	# center-point
-    lappend result [.c find over 45 50 45 50];	# outside poly
+    lappend result [.c find over 40 40 45 45];  # rect region inc. edge
+    lappend result [.c find over 60 40 60 40];  # top-center point
+    lappend result [.c find over 0 0 0 0];      # not on poly
+    lappend result [.c find over 60 60 60 60];  # center-point
+    lappend result [.c find over 45 50 45 50];  # outside poly
     .c itemconfig 1 -width 8
-    lappend result [.c find over 45 50 45 50];	# outside poly
+    lappend result [.c find over 45 50 45 50];  # outside poly
 } -result {1 1 {} 1 {} 1 1 {} 1 {} 1}
 test canvas-11.3 {canvas poly dchars, bug 3291543} {
     # This would crash
@@ -563,8 +563,8 @@ proc kill_canvas {w} {
     $w create rectangle 80 80 120 120 -fill blue -tags blue
     # bind a button press to re-build the canvas
     $w bind blue <ButtonRelease-1> [subst {
-	[lindex [info level 0] 0] $w
-	append ::x ok
+        [lindex [info level 0] 0] $w
+        append ::x ok
     }]
 }
 test canvas-13.1 {canvas delete during event, SF bug-228024} -body {
@@ -572,8 +572,8 @@ test canvas-13.1 {canvas delete during event, SF bug-228024} -body {
     set ::x {}
     # do this many times to improve chances of triggering the crash
     for {set i 0} {$i < 30} {incr i} {
-	event generate .c <1> -x 100 -y 100
-	event generate .c <ButtonRelease-1> -x 100 -y 100
+        event generate .c <1> -x 100 -y 100
+        event generate .c <ButtonRelease-1> -x 100 -y 100
     }
     return $::x
 } -result {okokokokokokokokokokokokokokokokokokokokokokokokokokokokokok}
@@ -747,8 +747,8 @@ test canvas-17.1 {default smooth method handling} -setup {
     set id [.c create line {0 0 1 1 2 2 3 3 4 4 5 5 6 6}]
     set result [.c itemcget $id -smooth]
     foreach smoother {yes 1 bezier raw r b} {
-	.c itemconfigure $id -smooth $smoother
-	lappend result [.c itemcget $id -smooth]
+        .c itemconfigure $id -smooth $smoother
+        lappend result [.c itemcget $id -smooth]
     }
     return $result
 } -cleanup {

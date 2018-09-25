@@ -20,24 +20,24 @@
 # options on the menu or otherwise manipulate it.
 #
 # Arguments:
-# w -			The name to use for the menubutton.
-# varName -		Global variable to hold the currently selected value.
-# firstValue -		First of legal values for option (must be >= 1).
-# args -		Any number of additional values.
+# w -                   The name to use for the menubutton.
+# varName -             Global variable to hold the currently selected value.
+# firstValue -          First of legal values for option (must be >= 1).
+# args -                Any number of additional values.
 
 proc ::tk_optionMenu {w varName firstValue args} {
     upvar #0 $varName var
 
     if {![info exists var]} {
-	set var $firstValue
+        set var $firstValue
     }
     menubutton $w -textvariable $varName -indicatoron 1 -menu $w.menu \
-	    -relief raised -highlightthickness 1 -anchor c \
-	    -direction flush
+            -relief raised -highlightthickness 1 -anchor c \
+            -direction flush
     menu $w.menu -tearoff 0
     $w.menu add radiobutton -label $firstValue -variable $varName
     foreach i $args {
-    	$w.menu add radiobutton -label $i -variable $varName
+        $w.menu add radiobutton -label $i -variable $varName
     }
     return $w.menu
 }

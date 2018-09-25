@@ -33,14 +33,14 @@ $w.outer.inRight add [ttk::labelframe $w.outer.inRight.top -text Progress]
 $w.outer.inRight add [ttk::labelframe $w.outer.inRight.bot -text Text]
 if {[tk windowingsystem] eq "aqua"} {
     foreach i [list inLeft.top inLeft.bot inRight.top inRight.bot] {
-	$w.outer.$i configure -padding 3
+        $w.outer.$i configure -padding 3
     }
 }
 
 # Fill the button pane
 ttk::button $w.outer.inLeft.top.b -text "Press Me" -command {
     tk_messageBox -type ok -icon info -message "Ouch!" -detail "That hurt..." \
-	    -parent .ttkpane -title "Button Pressed"
+            -parent .ttkpane -title "Button Pressed"
 }
 pack $w.outer.inLeft.top.b -padx 2 -pady 5
 
@@ -74,7 +74,7 @@ if {[llength $zones] < 2} { lappend zones -0200 :GMT :UTC +0200 }
 foreach zone $zones {
     set city [string map {_ " "} [regexp -inline {[^/]+$} $zone]]
     if {$i} {
-	pack [ttk::separator $w.outer.inLeft.bot.s$i] -fill x
+        pack [ttk::separator $w.outer.inLeft.bot.s$i] -fill x
     }
     ttk::label $w.outer.inLeft.bot.l$i -text $city -anchor w
     ttk::label $w.outer.inLeft.bot.t$i -textvariable time($zone) -anchor w
@@ -95,9 +95,9 @@ if {[tk windowingsystem] ne "aqua"} {
     # by styling the frame like an entry, turning off the border in the text
     # widget, and putting the text widget in the frame with enough space to allow
     # the surrounding border to show through (2 pixels seems to be enough).
-    ttk::frame $w.outer.inRight.bot.f				-style TEntry
-    text $w.txt -wrap word -yscroll "$w.sb set" -width 30	-borderwidth 0
-    pack $w.txt -fill both -expand 1 -in $w.outer.inRight.bot.f	-pady 2 -padx 2
+    ttk::frame $w.outer.inRight.bot.f                           -style TEntry
+    text $w.txt -wrap word -yscroll "$w.sb set" -width 30       -borderwidth 0
+    pack $w.txt -fill both -expand 1 -in $w.outer.inRight.bot.f -pady 2 -padx 2
     ttk::scrollbar $w.sb -orient vertical -command "$w.txt yview"
     pack $w.sb -side right -fill y -in $w.outer.inRight.bot
     pack $w.outer.inRight.bot.f -fill both -expand 1

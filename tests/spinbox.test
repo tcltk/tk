@@ -1066,7 +1066,7 @@ test spinbox-3.5 {SpinboxWidgetCmd procedure, "bbox" widget command} -setup {
 # and metrics. It was changed to less verbose solution - the result is the one
 # that passes fonts constraint (this concerns tests 3.6, 3.7, 3.8, 3.10)
 test spinbox-3.6 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+    fonts
 } -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1079,7 +1079,7 @@ test spinbox-3.6 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraint
     destroy .e
 } -result {{19 5 7 13} {19 5 7 13}}
 test spinbox-3.7 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+    fonts
 } -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1092,7 +1092,7 @@ test spinbox-3.7 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraint
     destroy .e
 } -result {19 5 12 13}
 test spinbox-3.8 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+    fonts
 } -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1115,7 +1115,7 @@ test spinbox-3.9 {SpinboxWidgetCmd procedure, "bbox" widget command} -setup {
     destroy .e
 } -result "5 5 0 $cy"
 test spinbox-3.10 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+    fonts
 } -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -2110,7 +2110,7 @@ test spinbox-6.2 {SpinboxComputeGeometry procedure} -constraints {
     pack .e
 } -body {
     .e configure -font {Courier -12} -bd 2 -relief raised -width 20 -justify center \
-	    -highlightthickness 3
+        -highlightthickness 3
     .e insert end 012\t45
     update
     list [.e index @96] [.e index @97]
@@ -2124,7 +2124,7 @@ test spinbox-6.3 {SpinboxComputeGeometry procedure} -constraints {
     pack .e
 } -body {
     .e configure -font {Courier -12} -bd 2 -relief raised -width 20 -justify right \
-	    -highlightthickness 3
+        -highlightthickness 3
     .e insert end 012\t45
     update
     list [.e index @131] [.e index @132]
@@ -2885,11 +2885,11 @@ test spinbox-13.10 {GetSpinboxIndex procedure} -constraints x11 -body {
 # On unix, when selection is cleared, spinbox widget's internal
 # selection range is reset.
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2905,11 +2905,11 @@ test spinbox-13.11 {GetSpinboxIndex procedure} -constraints aquaOrWin32 -body {
 # last selected range.  When selection ownership is restored to
 # spinbox, the old range will be rehighlighted.
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2923,11 +2923,11 @@ test spinbox-13.11 {GetSpinboxIndex procedure} -constraints aquaOrWin32 -body {
 
 test spinbox-13.12 {GetSpinboxIndex procedure} -constraints x11 -body {
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2940,11 +2940,11 @@ test spinbox-13.12 {GetSpinboxIndex procedure} -constraints x11 -body {
 
 test spinbox-13.12.1 {GetSpinboxIndex procedure} -constraints unix -body {
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2957,11 +2957,11 @@ test spinbox-13.12.1 {GetSpinboxIndex procedure} -constraints unix -body {
 
 test spinbox-13.13 {GetSpinboxIndex procedure} -constraints win -body {
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2977,11 +2977,11 @@ test spinbox-13.14 {GetSpinboxIndex procedure} -constraints win -body {
 # last selected range.  When selection ownership is restored to
 # spinbox, the old range will be rehighlighted.
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2997,11 +2997,11 @@ test spinbox-13.14.1 {GetSpinboxIndex procedure} -constraints win -body {
 # last selected range.  When selection ownership is restored to
 # spinbox, the old range will be rehighlighted.
 # Previous settings:
-	spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    spinbox .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -3220,8 +3220,8 @@ test spinbox-17.3 {SpinboxUpdateScrollbar procedure} -body {
 } -result {0.315789 0.842105}
 test spinbox-17.4 {SpinboxUpdateScrollbar procedure} -setup {
     proc bgerror msg {
-	global x
-	set x $msg
+    global x
+    set x $msg
 }
 } -body {
     spinbox .e -width 5 -xscrollcommand thisisnotacommand

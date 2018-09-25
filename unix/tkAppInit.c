@@ -1,8 +1,8 @@
 /*
  * tkAppInit.c --
  *
- *	Provides a default version of the main program and Tcl_AppInit
- *	procedure for wish and other Tk-based applications.
+ *      Provides a default version of the main program and Tcl_AppInit
+ *      procedure for wish and other Tk-based applications.
  *
  * Copyright (c) 1993 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -54,29 +54,29 @@ MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, char ***argv);
  *
  * main --
  *
- *	This is the main program for the application.
+ *      This is the main program for the application.
  *
  * Results:
- *	None: Tk_Main never returns here, so this procedure never returns
- *	either.
+ *      None: Tk_Main never returns here, so this procedure never returns
+ *      either.
  *
  * Side effects:
- *	Just about anything, since from here we call arbitrary Tcl code.
+ *      Just about anything, since from here we call arbitrary Tcl code.
  *
  *----------------------------------------------------------------------
  */
 
 int
 main(
-    int argc,			/* Number of command-line arguments. */
-    char **argv)		/* Values of command-line arguments. */
+    int argc,                   /* Number of command-line arguments. */
+    char **argv)                /* Values of command-line arguments. */
 {
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);
-    return 0;			/* Needed only to prevent compiler warning. */
+    return 0;                   /* Needed only to prevent compiler warning. */
 }
 
 /*
@@ -84,36 +84,36 @@ main(
  *
  * Tcl_AppInit --
  *
- *	This procedure performs application-specific initialization. Most
- *	applications, especially those that incorporate additional packages,
- *	will have their own version of this procedure.
+ *      This procedure performs application-specific initialization. Most
+ *      applications, especially those that incorporate additional packages,
+ *      will have their own version of this procedure.
  *
  * Results:
- *	Returns a standard Tcl completion code, and leaves an error message in
- *	the interp's result if an error occurs.
+ *      Returns a standard Tcl completion code, and leaves an error message in
+ *      the interp's result if an error occurs.
  *
  * Side effects:
- *	Depends on the startup script.
+ *      Depends on the startup script.
  *
  *----------------------------------------------------------------------
  */
 
 int
 Tcl_AppInit(
-    Tcl_Interp *interp)		/* Interpreter for application. */
+    Tcl_Interp *interp)         /* Interpreter for application. */
 {
     if ((Tcl_Init)(interp) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     if (Tk_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
 
 #ifdef TK_TEST
     if (Tktest_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     Tcl_StaticPackage(interp, "Tktest", Tktest_Init, 0);
 #endif /* TK_TEST */
@@ -143,7 +143,7 @@ Tcl_AppInit(
      */
 
     Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
-	    Tcl_NewStringObj("~/.wishrc", -1), TCL_GLOBAL_ONLY);
+            Tcl_NewStringObj("~/.wishrc", -1), TCL_GLOBAL_ONLY);
     return TCL_OK;
 }
 

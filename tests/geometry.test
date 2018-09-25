@@ -31,7 +31,7 @@ button .b3 -text .b3
 button .f.f.b4 -text .b4
 
 test geometry-1.1 {Tk_ManageGeometry procedure} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -40,7 +40,7 @@ test geometry-1.1 {Tk_ManageGeometry procedure} -setup {
     list [winfo x .b1] [winfo y .b1]
 } -result {120 80}
 test geometry-1.2 {Tk_ManageGeometry procedure} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -55,7 +55,7 @@ test geometry-1.2 {Tk_ManageGeometry procedure} -setup {
 
 
 test geometry-2.1 {Tk_GeometryRequest procedure} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
     destroy .f2
@@ -78,7 +78,7 @@ test geometry-2.1 {Tk_GeometryRequest procedure} -setup {
 
 
 test geometry-3.1 {Tk_SetInternalBorder procedure} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -95,7 +95,7 @@ test geometry-3.1 {Tk_SetInternalBorder procedure} -setup {
 
 
 test geometry-4.1 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -107,7 +107,7 @@ test geometry-4.1 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
     list [winfo x .b1] [winfo y .b1]
 } -result {91 46}
 test geometry-4.2 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -124,7 +124,7 @@ test geometry-4.2 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
         [winfo x .b3] [winfo y .b3]
 } -result {101 41 61 61 101 61}
 test geometry-4.3 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -143,7 +143,7 @@ test geometry-4.3 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
         [winfo x .b3] [winfo y .b3]
 } -result {0 0 46 86 86 86}
 test geometry-4.4 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -162,7 +162,7 @@ test geometry-4.4 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
         [winfo x .b3] [winfo y .b3]
 } -result {93 49 0 0 93 69}
 test geometry-4.5 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -181,7 +181,7 @@ test geometry-4.5 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
         [winfo x .b3] [winfo y .b3]
 } -result {93 49 53 69 0 0}
 test geometry-4.6 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -199,7 +199,7 @@ test geometry-4.6 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
     list [winfo x .f.f.b4] [winfo y .f.f.b4] [winfo x .b2] [winfo y .b2]
 } -result {54 9 56 71}
 test geometry-4.7 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -222,7 +222,7 @@ test geometry-4.7 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
     bind .b1 <Configure> {}
 } -result {init configure |}
 test geometry-4.8 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -243,7 +243,7 @@ test geometry-4.8 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
         [winfo x .b3] [winfo y .b3] [winfo ismapped .b3]
 } -result {91 46 0 51 66 0 91 66 0}
 test geometry-4.9 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
 } -body {
@@ -261,7 +261,7 @@ test geometry-4.9 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
     lappend result [winfo ismapped .b1]
 } -result {1 0 1}
 test geometry-4.10 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
-	foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
+    foreach w {.f .f.f .f.f.f .b1 .b2 .b3} {
         place forget $w
     }
     destroy .t

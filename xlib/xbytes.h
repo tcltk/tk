@@ -1,7 +1,7 @@
 /*
  * xbytes.h --
  *
- *	Declaration of table to reverse bit order of bytes.
+ *      Declaration of table to reverse bit order of bytes.
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  *

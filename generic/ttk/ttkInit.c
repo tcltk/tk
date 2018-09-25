@@ -21,7 +21,7 @@ int Ttk_GetButtonDefaultStateFromObj(
 {
     *statePtr = TTK_BUTTON_DEFAULT_DISABLED;
     return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
-	    sizeof(char *), "default state", 0, statePtr);
+            sizeof(char *), "default state", 0, statePtr);
 }
 
 /*
@@ -38,7 +38,7 @@ int Ttk_GetCompoundFromObj(
 {
     *statePtr = TTK_COMPOUND_NONE;
     return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
-	    sizeof(char *), "compound layout", 0, statePtr);
+            sizeof(char *), "compound layout", 0, statePtr);
 }
 
 /*
@@ -54,7 +54,7 @@ int Ttk_GetOrientFromObj(
 {
     *resultPtr = TTK_ORIENT_HORIZONTAL;
     return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
-	    sizeof(char *), "orientation", 0, resultPtr);
+            sizeof(char *), "orientation", 0, resultPtr);
 }
 
 /*
@@ -72,12 +72,12 @@ enum {
 };
 
 /* TtkCheckStateOption --
- * 	Handle -state compatibility option.
+ *      Handle -state compatibility option.
  *
- *	NOTE: setting -state disabled / -state enabled affects the
- *	widget state, but the internal widget state does *not* affect
- *	the value of the -state option.
- *	This option is present for compatibility only.
+ *      NOTE: setting -state disabled / -state enabled affects the
+ *      widget state, but the internal widget state does *not* affect
+ *      the value of the -state option.
+ *      This option is present for compatibility only.
  */
 void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
 {
@@ -86,31 +86,31 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
 #   define SETFLAGS(f) TtkWidgetChangeState(corePtr, f, all^f)
 
     (void)Tcl_GetIndexFromObjStruct(NULL, objPtr, ttkStateStrings,
-	    sizeof(char *), "", 0, &stateOption);
+            sizeof(char *), "", 0, &stateOption);
     switch (stateOption) {
-	case TTK_COMPAT_STATE_NORMAL:
-	default:
-	    SETFLAGS(0);
-	    break;
-	case TTK_COMPAT_STATE_READONLY:
-	    SETFLAGS(TTK_STATE_READONLY);
-	    break;
-	case TTK_COMPAT_STATE_DISABLED:
-	    SETFLAGS(TTK_STATE_DISABLED);
-	    break;
-	case TTK_COMPAT_STATE_ACTIVE:
-	    SETFLAGS(TTK_STATE_ACTIVE);
-	    break;
+        case TTK_COMPAT_STATE_NORMAL:
+        default:
+            SETFLAGS(0);
+            break;
+        case TTK_COMPAT_STATE_READONLY:
+            SETFLAGS(TTK_STATE_READONLY);
+            break;
+        case TTK_COMPAT_STATE_DISABLED:
+            SETFLAGS(TTK_STATE_DISABLED);
+            break;
+        case TTK_COMPAT_STATE_ACTIVE:
+            SETFLAGS(TTK_STATE_ACTIVE);
+            break;
     }
 #   undef SETFLAGS
 }
 
 /* TtkSendVirtualEvent --
- * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to "event generate $tgtWindow <<$eventName>>"
+ *      Send a virtual event notification to the specified target window.
+ *      Equivalent to "event generate $tgtWindow <<$eventName>>"
  *
- * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent,
- * 	so this routine does not reenter the interpreter.
+ *      Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent,
+ *      so this routine does not reenter the interpreter.
  */
 void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
 {
@@ -128,7 +128,7 @@ void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
 }
 
 /* TtkEnumerateOptions, TtkGetOptionValue --
- *	Common factors for data accessor commands.
+ *      Common factors for data accessor commands.
  */
 int TtkEnumerateOptions(
     Tcl_Interp *interp, void *recordPtr, const Tk_OptionSpec *specPtr,
@@ -137,19 +137,19 @@ int TtkEnumerateOptions(
     Tcl_Obj *result = Tcl_NewListObj(0,0);
     while (specPtr->type != TK_OPTION_END)
     {
-	Tcl_Obj *optionName = Tcl_NewStringObj(specPtr->optionName, -1);
-	Tcl_Obj *optionValue =
-	    Tk_GetOptionValue(interp,recordPtr,optionTable,optionName,tkwin);
-	if (optionValue) {
-	    Tcl_ListObjAppendElement(interp, result, optionName);
-	    Tcl_ListObjAppendElement(interp, result, optionValue);
-	}
-	++specPtr;
+        Tcl_Obj *optionName = Tcl_NewStringObj(specPtr->optionName, -1);
+        Tcl_Obj *optionValue =
+            Tk_GetOptionValue(interp,recordPtr,optionTable,optionName,tkwin);
+        if (optionValue) {
+            Tcl_ListObjAppendElement(interp, result, optionName);
+            Tcl_ListObjAppendElement(interp, result, optionValue);
+        }
+        ++specPtr;
 
-	if (specPtr->type == TK_OPTION_END && specPtr->clientData != NULL) {
-	    /* Chain to next option spec array: */
-	    specPtr = specPtr->clientData;
-	}
+        if (specPtr->type == TK_OPTION_END && specPtr->clientData != NULL) {
+            /* Chain to next option spec array: */
+            specPtr = specPtr->clientData;
+        }
     }
     Tcl_SetObjResult(interp, result);
     return TCL_OK;
@@ -160,10 +160,10 @@ int TtkGetOptionValue(
     Tk_OptionTable optionTable, Tk_Window tkwin)
 {
     Tcl_Obj *result =
-	Tk_GetOptionValue(interp,recordPtr,optionTable,optionName,tkwin);
+        Tk_GetOptionValue(interp,recordPtr,optionTable,optionName,tkwin);
     if (result) {
-	Tcl_SetObjResult(interp, result);
-	return TCL_OK;
+        Tcl_SetObjResult(interp, result);
+        return TCL_OK;
     }
     return TCL_ERROR;
 }
@@ -178,11 +178,11 @@ int TtkGetOptionValue(
 Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
-	Tk_Offset(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
+        Tk_Offset(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-style", "style", "Style", "",
-	Tk_Offset(WidgetCore,styleObj), -1, 0,0,STYLE_CHANGED},
+        Tk_Offset(WidgetCore,styleObj), -1, 0,0,STYLE_CHANGED},
     {TK_OPTION_STRING, "-class", "", "", NULL,
-	Tk_Offset(WidgetCore,classObj), -1, 0,0,READONLY_OPTION},
+        Tk_Offset(WidgetCore,classObj), -1, 0,0,READONLY_OPTION},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 

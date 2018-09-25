@@ -15,7 +15,7 @@ package require Tk
 scrollbar .scroll -command ".list yview"
 pack .scroll -side right -fill y
 listbox .list -yscroll ".scroll set" -relief sunken -width 20 -height 20 \
-	-setgrid yes
+        -setgrid yes
 pack .list -side left -fill both -expand yes
 wm minsize . 1 1
 
@@ -29,19 +29,19 @@ proc browse {dir file} {
     global env browseScript
     if {[string compare $dir "."] != 0} {set file $dir/$file}
     switch [file type $file] {
-	directory {
-	    exec [info nameofexecutable] $browseScript $file &
-	}
-	file {
-	    if {[info exists env(EDITOR)]} {
-		eval exec $env(EDITOR) $file &
-	    } else {
-		exec xedit $file &
-	    }
-	}
-	default {
-	    puts stdout "\"$file\" isn't a directory or regular file"
-	}
+        directory {
+            exec [info nameofexecutable] $browseScript $file &
+        }
+        file {
+            if {[info exists env(EDITOR)]} {
+                eval exec $env(EDITOR) $file &
+            } else {
+                exec xedit $file &
+            }
+        }
+        default {
+            puts stdout "\"$file\" isn't a directory or regular file"
+        }
     }
 }
 
@@ -50,8 +50,8 @@ proc browse {dir file} {
 if {$argc>0} {set dir [lindex $argv 0]} else {set dir "."}
 foreach i [lsort [glob * .* *.*]] {
     if {[file type $i] eq "directory"} {
-	# Safe to do since it is still a directory.
-	append i /
+        # Safe to do since it is still a directory.
+        append i /
     }
     .list insert end $i
 }

@@ -44,40 +44,40 @@ image create photo noArrow -height 14 -width 14
 
 ## The data we're going to insert
 set data {
-    Argentina		{Buenos Aires}		ARS
-    Australia		Canberra		AUD
-    Brazil		Brazilia		BRL
-    Canada		Ottawa			CAD
-    China		Beijing			CNY
-    France		Paris			EUR
-    Germany		Berlin			EUR
-    India		{New Delhi}		INR
-    Italy		Rome			EUR
-    Japan		Tokyo			JPY
-    Mexico		{Mexico City}		MXN
-    Russia		Moscow			RUB
-    {South Africa}	Pretoria		ZAR
-    {United Kingdom}	London			GBP
-    {United States}	{Washington, D.C.}	USD
+    Argentina           {Buenos Aires}          ARS
+    Australia           Canberra                AUD
+    Brazil              Brazilia                BRL
+    Canada              Ottawa                  CAD
+    China               Beijing                 CNY
+    France              Paris                   EUR
+    Germany             Berlin                  EUR
+    India               {New Delhi}             INR
+    Italy               Rome                    EUR
+    Japan               Tokyo                   JPY
+    Mexico              {Mexico City}           MXN
+    Russia              Moscow                  RUB
+    {South Africa}      Pretoria                ZAR
+    {United Kingdom}    London                  GBP
+    {United States}     {Washington, D.C.}      USD
 }
 
 ## Code to insert the data nicely
 set font [ttk::style lookup Heading -font]
 foreach col {country capital currency} name {Country Capital Currency} {
     $w.tree heading $col -text $name -image noArrow -anchor w \
-	-command [list SortBy $w.tree $col 0]
+        -command [list SortBy $w.tree $col 0]
     $w.tree column $col -width [expr {
-	[font measure $font $name] + [image width noArrow] + 5
+        [font measure $font $name] + [image width noArrow] + 5
     }]
 }
 set font [ttk::style lookup Treeview -font]
 foreach {country capital currency} $data {
     $w.tree insert {} end -values [list $country $capital $currency]
     foreach col {country capital currency} {
-	set len [font measure $font "[set $col]  "]
-	if {[$w.tree column $col -width] < $len} {
-	    $w.tree column $col -width $len
-	}
+        set len [font measure $font "[set $col]  "]
+        if {[$w.tree column $col -width] < $len} {
+            $w.tree column $col -width $len
+        }
     }
 }
 
@@ -85,18 +85,18 @@ foreach {country capital currency} $data {
 proc SortBy {tree col direction} {
     # Determine currently sorted column and its sort direction
     foreach c {country capital currency} {
-	set s [$tree heading $c state]
-	if {("selected" in $s || "alternate" in $s) && $col ne $c} {
-	    # Sorted column has changed
-	    $tree heading $c -image noArrow state {!selected !alternate !user1}
-	    set direction [expr {"alternate" in $s}]
-	}
+        set s [$tree heading $c state]
+        if {("selected" in $s || "alternate" in $s) && $col ne $c} {
+            # Sorted column has changed
+            $tree heading $c -image noArrow state {!selected !alternate !user1}
+            set direction [expr {"alternate" in $s}]
+        }
     }
 
     # Build something we can sort
     set data {}
     foreach row [$tree children {}] {
-	lappend data [list [$tree set $row $col] $row]
+        lappend data [list [$tree set $row $col] $row]
     }
 
     set dir [expr {$direction ? "-decreasing" : "-increasing"}]
@@ -104,16 +104,16 @@ proc SortBy {tree col direction} {
 
     # Now reshuffle the rows into the sorted order
     foreach info [lsort -dictionary -index 0 $dir $data] {
-	$tree move [lindex $info 1] {} [incr r]
+        $tree move [lindex $info 1] {} [incr r]
     }
 
     # Switch the heading so that it will sort in the opposite direction
     $tree heading $col -command [list SortBy $tree $col [expr {!$direction}]] \
-	state [expr {$direction?"!selected alternate":"selected !alternate"}]
+        state [expr {$direction?"!selected alternate":"selected !alternate"}]
     if {[ttk::style theme use] eq "aqua"} {
-	# Aqua theme displays native sort arrows when user1 state is set
-	$tree heading $col state "user1"
+        # Aqua theme displays native sort arrows when user1 state is set
+        $tree heading $col state "user1"
     } else {
-	$tree heading $col -image [expr {$direction?"upArrow":"downArrow"}]
+        $tree heading $col -image [expr {$direction?"upArrow":"downArrow"}]
     }
 }

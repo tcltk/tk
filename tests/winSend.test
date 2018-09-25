@@ -15,8 +15,8 @@ tcltest::loadTestedCommands
 
 foreach pkg [info loaded] {
     if {[lindex $pkg 1] == "Tk"} {
-	set loadTk "load $pkg"
-	break
+        set loadTk "load $pkg"
+        break
     }
 }
 
@@ -25,9 +25,9 @@ foreach pkg [info loaded] {
 proc newApp {name {safe {}}} {
     global loadTk
     if {[string compare $safe "-safe"] == 0} {
-	interp create -safe $name
+        interp create -safe $name
     } else {
-	interp create $name
+        interp create $name
     }
     $name eval [list set argv [list -name $name]]
     catch {eval $loadTk $name}
@@ -45,18 +45,18 @@ if {
     # Now find an interp to send to
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch -exact $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch -exact $currentInterps $interp] < 0} {
+            break
+        }
     }
 
     # Now we have found our interpreter we are going to send to.
     # Make sure that it works first.
     testConstraint winSend [expr {![catch {
-	send $interp {
-	    console hide
-	    update
-	}
+        send $interp {
+            console hide
+            update
+        }
     }]}]
 } else {
     testConstraint winSend 0
@@ -123,27 +123,27 @@ test winSend-2.4 {Tk_SendObjCmd - sending to ourselves in a different interp wit
 test winSend-2.5 {Tk_SendObjCmd - sending to another app async} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [catch {send -async $interp {set foo a}} msg] $msg
 } {0 {}}
 test winSend-2.6 {Tk_SendObjCmd - sending to another app sync - no error} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [catch {send $interp {set foo a}} msg] $msg
 } {0 a}
 test winSend-2.7 {Tk_SendObjCmd - sending to another app - error} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [catch {send $interp {expr 2 / 0}} msg] $msg $errorCode $errorInfo
 } "1 {divide by zero} {ARITH DIVZERO {divide by zero}} {divide by zero\n    while executing\n\"expr 2 / 0\"\n    invoked from within\n\"send \$interp {expr 2 / 0}\"}"
@@ -166,18 +166,18 @@ test winSend-4.2 {DeleteProc - normal} winSend {
 test winSend-5.1 {ExecuteRemoteObject - no error} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [send $interp {send [tk appname] {expr 2 / 1}}]
 } {2}
 test winSend-5.2 {ExecuteRemoteObject - error} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [catch {send $interp {send [tk appname] {expr 2 / 0}}} msg] $msg
 } {1 {divide by zero}}
@@ -186,9 +186,9 @@ test winSend-6.1 {SendDDEServer - XTYP_CONNECT} winSend {
     set foo "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     set command "dde request Tk [tk appname] foo"
     list [catch "send \{$interp\} \{$command\}" msg] $msg
@@ -197,9 +197,9 @@ test winSend-6.2 {SendDDEServer - XTYP_CONNECT_CONFIRM} winSend {
     set foo "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     set command "dde request Tk [tk appname] foo"
     list [catch "send \{$interp\} \{$command\}" msg] $msg
@@ -208,9 +208,9 @@ test winSend-6.3 {SendDDEServer - XTYP_DISCONNECT} winSend {
     set foo "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     set command "dde request Tk [tk appname] foo"
     list [catch "send \{$interp\} \{$command\}" msg] $msg
@@ -219,9 +219,9 @@ test winSend-6.4 {SendDDEServer - XTYP_REQUEST variable} winSend {
     set foo "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     set command "dde request Tk [tk appname] foo"
     list [catch "send \{$interp\} \{$command\}" msg] $msg
@@ -231,9 +231,9 @@ test winSend-6.5 {SendDDEServer - XTYP_REQUEST array} winSend {
     set foo(test) "Hello, World"
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     set command "dde request Tk [tk appname] foo(test)"
     list [catch "send \{$interp\} \{$command\}" msg] $msg [catch {unset foo}]
@@ -242,9 +242,9 @@ test winSend-6.6 {SendDDEServer - XTYP_REQUEST return results} winSend {
     set foo 3
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     set command "send [tk appname] {expr $foo + 1}"
     list [catch "send \{$interp\} \{$command\}" msg] $msg
@@ -252,9 +252,9 @@ test winSend-6.6 {SendDDEServer - XTYP_REQUEST return results} winSend {
 test winSend-6.7 {SendDDEServer - XTYP_EXECUTE} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     set command "send [tk appname] {expr 4 / 2}"
     list [catch "send \{$interp\} \{$command\}" msg] $msg
@@ -262,9 +262,9 @@ test winSend-6.7 {SendDDEServer - XTYP_EXECUTE} winSend {
 test winSend-6.8 {SendDDEServer - XTYP_WILDCONNECT} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     set command "dde services Tk {}"
     list [catch "send \{$interp\} \{$command\}"]
@@ -278,9 +278,9 @@ test winSend-7.1 {DDEExitProc} winSend {
 test winSend-8.1 {SendDdeConnect} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [send $interp {set tk foo}]
 } {foo}
@@ -319,9 +319,9 @@ test winSend-10.9 {Tk_DDEObjCmd - null topic name} winSend {
 test winSend-10.10 {Tk_DDEObjCmd - execute - nothing to execute} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [catch {dde execute Tk $interp {}} msg] $msg
 } {1 {cannot execute null data}}
@@ -331,45 +331,45 @@ test winSend-10.11 {Tk_DDEObjCmd - execute - no such conversation} winSend {
 test winSend-10.12 {Tk_DDEObjCmd - execute - async} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [catch {dde execute -async Tk $interp {set foo hello}} msg] $msg
 } {0 {}}
 test winSend-10.13 {Tk_DDEObjCmd - execute} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [catch {dde execute Tk $interp {set foo goodbye}} msg] $msg
 } {0 {}}
 test winSend-10.14 {Tk_DDEObjCmd - request - nothing to request} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [catch {dde request Tk $interp {}} msg] $msg
 } {1 {cannot request value of null data}}
 test winSend-10.15 {Tk_DDEObjCmd - request - invalid interp} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     list [catch {dde request Tk foo foo} msg] $msg
 } {1 {dde command failed}}
 test winSend-10.16 {Tk_DDEObjCmd - invalid variable} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     send $interp {unset foo}
     list [catch {dde request Tk $interp foo} msg] $msg
@@ -377,9 +377,9 @@ test winSend-10.16 {Tk_DDEObjCmd - invalid variable} winSend {
 test winSend-10.17 {Tk_DDEObjCmd - valid variable} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
-	if {[lsearch $currentInterps $interp] < 0} {
-	    break
-	}
+        if {[lsearch $currentInterps $interp] < 0} {
+            break
+        }
     }
     send $interp {set foo winSend-10.17}
     list [catch {dde request Tk $interp foo} msg] $msg
@@ -394,11 +394,11 @@ test winSend-10.18 {Tk_DDEObjCmd - services} winSend {
 set newInterps [winfo interps]
 while {[llength $newInterps] != [llength $currentInterps]} {
     foreach interp $newInterps {
-	if {[lsearch -exact $currentInterps $interp] < 0} {
-	    catch {send $interp exit}
-	    set newInterps [winfo interps]
-	    break
-	}
+        if {[lsearch -exact $currentInterps $interp] < 0} {
+            catch {send $interp exit}
+            set newInterps [winfo interps]
+            break
+        }
     }
 }
 

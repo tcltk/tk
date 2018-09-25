@@ -50,8 +50,8 @@ foreach point {
     set x [expr {100 + (3*[lindex $point 0])}]
     set y [expr {250 - (4*[lindex $point 1])/5}]
     set item [$c create oval [expr {$x-6}] [expr {$y-6}] \
-	    [expr {$x+6}] [expr {$y+6}] -width 1 -outline black \
-	    -fill SkyBlue2]
+            [expr {$x+6}] [expr {$y+6}] -width 1 -outline black \
+            -fill SkyBlue2]
     $c addtag point withtag $item
 }
 
@@ -69,8 +69,8 @@ set plot(lastY) 0
 # data points.  It sets up state to allow the point to be dragged.
 #
 # Arguments:
-# w -		The canvas window.
-# x, y -	The coordinates of the mouse press.
+# w -           The canvas window.
+# x, y -        The coordinates of the mouse press.
 
 proc plotDown {w x y} {
     global plot
@@ -86,8 +86,8 @@ proc plotDown {w x y} {
 # current item.
 #
 # Arguments:
-# w -		The canvas window.
-# x, y -	The coordinates of the mouse.
+# w -           The canvas window.
+# x, y -        The coordinates of the mouse.
 
 proc plotMove {w x y} {
     global plot

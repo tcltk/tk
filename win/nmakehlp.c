@@ -2,7 +2,7 @@
  * ----------------------------------------------------------------------------
  * nmakehlp.c --
  *
- *	This is used to fix limitations within nmake and the environment.
+ *      This is used to fix limitations within nmake and the environment.
  *
  * Copyright (c) 2002 by David Gravereaux.
  * Copyright (c) 2006 by Pat Thoyts
@@ -35,7 +35,7 @@
 
 /* ISO hack for dumb VC++ */
 #ifdef _MSC_VER
-#define   snprintf	_snprintf
+#define   snprintf      _snprintf
 #endif
 
 
@@ -52,7 +52,7 @@ static DWORD WINAPI ReadFromPipe(LPVOID args);
 
 /* globals */
 
-#define CHUNK	25
+#define CHUNK   25
 #define STATICBUFFERSIZE    1000
 typedef struct {
     HANDLE pipe;
@@ -90,107 +90,107 @@ main(
     SetEnvironmentVariable("LINK", "");
 
     if (argc > 1 && *argv[1] == '-') {
-	switch (*(argv[1]+1)) {
-	case 'c':
-	    if (argc != 3) {
-		chars = snprintf(msg, sizeof(msg) - 1,
-		        "usage: %s -c <compiler option>\n"
-			"Tests for whether cl.exe supports an option\n"
-			"exitcodes: 0 == no, 1 == yes, 2 == error\n", argv[0]);
-		WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
-			&dwWritten, NULL);
-		return 2;
-	    }
-	    return CheckForCompilerFeature(argv[2]);
-	case 'l':
-	    if (argc < 3) {
-		chars = snprintf(msg, sizeof(msg) - 1,
-	       		"usage: %s -l <linker option> ?<mandatory option> ...?\n"
-			"Tests for whether link.exe supports an option\n"
-			"exitcodes: 0 == no, 1 == yes, 2 == error\n", argv[0]);
-		WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
-			&dwWritten, NULL);
-		return 2;
-	    }
-	    return CheckForLinkerFeature(&argv[2], argc-2);
-	case 'f':
-	    if (argc == 2) {
-		chars = snprintf(msg, sizeof(msg) - 1,
-			"usage: %s -f <string> <substring>\n"
-			"Find a substring within another\n"
-			"exitcodes: 0 == no, 1 == yes, 2 == error\n", argv[0]);
-		WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
-			&dwWritten, NULL);
-		return 2;
-	    } else if (argc == 3) {
-		/*
-		 * If the string is blank, there is no match.
-		 */
+        switch (*(argv[1]+1)) {
+        case 'c':
+            if (argc != 3) {
+                chars = snprintf(msg, sizeof(msg) - 1,
+                        "usage: %s -c <compiler option>\n"
+                        "Tests for whether cl.exe supports an option\n"
+                        "exitcodes: 0 == no, 1 == yes, 2 == error\n", argv[0]);
+                WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
+                        &dwWritten, NULL);
+                return 2;
+            }
+            return CheckForCompilerFeature(argv[2]);
+        case 'l':
+            if (argc < 3) {
+                chars = snprintf(msg, sizeof(msg) - 1,
+                        "usage: %s -l <linker option> ?<mandatory option> ...?\n"
+                        "Tests for whether link.exe supports an option\n"
+                        "exitcodes: 0 == no, 1 == yes, 2 == error\n", argv[0]);
+                WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
+                        &dwWritten, NULL);
+                return 2;
+            }
+            return CheckForLinkerFeature(&argv[2], argc-2);
+        case 'f':
+            if (argc == 2) {
+                chars = snprintf(msg, sizeof(msg) - 1,
+                        "usage: %s -f <string> <substring>\n"
+                        "Find a substring within another\n"
+                        "exitcodes: 0 == no, 1 == yes, 2 == error\n", argv[0]);
+                WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
+                        &dwWritten, NULL);
+                return 2;
+            } else if (argc == 3) {
+                /*
+                 * If the string is blank, there is no match.
+                 */
 
-		return 0;
-	    } else {
-		return IsIn(argv[2], argv[3]);
-	    }
-	case 's':
-	    if (argc == 2) {
-		chars = snprintf(msg, sizeof(msg) - 1,
-			"usage: %s -s <substitutions file> <file>\n"
-			"Perform a set of string map type substutitions on a file\n"
-			"exitcodes: 0\n",
-			argv[0]);
-		WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
-			&dwWritten, NULL);
-		return 2;
-	    }
-	    return SubstituteFile(argv[2], argv[3]);
-	case 'V':
-	    if (argc != 4) {
-		chars = snprintf(msg, sizeof(msg) - 1,
-		    "usage: %s -V filename matchstring\n"
-		    "Extract a version from a file:\n"
-		    "eg: pkgIndex.tcl \"package ifneeded http\"",
-		    argv[0]);
-		WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
-		    &dwWritten, NULL);
-		return 0;
-	    }
-	    s = GetVersionFromFile(argv[2], argv[3], *(argv[1]+2) - '0');
-	    if (s && *s) {
-		printf("%s\n", s);
-		return 0;
-	    } else
-		return 1; /* Version not found. Return non-0 exit code */
+                return 0;
+            } else {
+                return IsIn(argv[2], argv[3]);
+            }
+        case 's':
+            if (argc == 2) {
+                chars = snprintf(msg, sizeof(msg) - 1,
+                        "usage: %s -s <substitutions file> <file>\n"
+                        "Perform a set of string map type substutitions on a file\n"
+                        "exitcodes: 0\n",
+                        argv[0]);
+                WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
+                        &dwWritten, NULL);
+                return 2;
+            }
+            return SubstituteFile(argv[2], argv[3]);
+        case 'V':
+            if (argc != 4) {
+                chars = snprintf(msg, sizeof(msg) - 1,
+                    "usage: %s -V filename matchstring\n"
+                    "Extract a version from a file:\n"
+                    "eg: pkgIndex.tcl \"package ifneeded http\"",
+                    argv[0]);
+                WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
+                    &dwWritten, NULL);
+                return 0;
+            }
+            s = GetVersionFromFile(argv[2], argv[3], *(argv[1]+2) - '0');
+            if (s && *s) {
+                printf("%s\n", s);
+                return 0;
+            } else
+                return 1; /* Version not found. Return non-0 exit code */
 
-	case 'Q':
-	    if (argc != 3) {
-		chars = snprintf(msg, sizeof(msg) - 1,
-		    "usage: %s -Q path\n"
-		    "Emit the fully qualified path\n"
-		    "exitcodes: 0 == no, 1 == yes, 2 == error\n", argv[0]);
-		WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
-		    &dwWritten, NULL);
-		return 2;
-	    }
-	    return QualifyPath(argv[2]);
+        case 'Q':
+            if (argc != 3) {
+                chars = snprintf(msg, sizeof(msg) - 1,
+                    "usage: %s -Q path\n"
+                    "Emit the fully qualified path\n"
+                    "exitcodes: 0 == no, 1 == yes, 2 == error\n", argv[0]);
+                WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
+                    &dwWritten, NULL);
+                return 2;
+            }
+            return QualifyPath(argv[2]);
 
-	case 'L':
-	    if (argc != 3) {
-		chars = snprintf(msg, sizeof(msg) - 1,
-		    "usage: %s -L keypath\n"
-		    "Emit the fully qualified path of directory containing keypath\n"
-		    "exitcodes: 0 == success, 1 == not found, 2 == error\n", argv[0]);
-		WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
-		    &dwWritten, NULL);
-		return 2;
-	    }
-	    return LocateDependency(argv[2]);
-	}
+        case 'L':
+            if (argc != 3) {
+                chars = snprintf(msg, sizeof(msg) - 1,
+                    "usage: %s -L keypath\n"
+                    "Emit the fully qualified path of directory containing keypath\n"
+                    "exitcodes: 0 == success, 1 == not found, 2 == error\n", argv[0]);
+                WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
+                    &dwWritten, NULL);
+                return 2;
+            }
+            return LocateDependency(argv[2]);
+        }
     }
     chars = snprintf(msg, sizeof(msg) - 1,
-	    "usage: %s -c|-f|-l|-Q|-s|-V ...\n"
-	    "This is a little helper app to equalize shell differences between WinNT and\n"
-	    "Win9x and get nmake.exe to accomplish its job.\n",
-	    argv[0]);
+            "usage: %s -c|-f|-l|-Q|-s|-V ...\n"
+            "This is a little helper app to equalize shell differences between WinNT and\n"
+            "Win9x and get nmake.exe to accomplish its job.\n",
+            argv[0]);
     WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars, &dwWritten, NULL);
     return 2;
 }
@@ -232,7 +232,7 @@ CheckForCompilerFeature(
      */
 
     DuplicateHandle(hProcess, h, hProcess, &si.hStdOutput, 0, TRUE,
-	    DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+            DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
 
     /*
      * Same as above, but for the error side.
@@ -240,7 +240,7 @@ CheckForCompilerFeature(
 
     CreatePipe(&Err.pipe, &h, &sa, 0);
     DuplicateHandle(hProcess, h, hProcess, &si.hStdError, 0, TRUE,
-	    DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+            DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
 
     /*
      * Base command line.
@@ -261,27 +261,27 @@ CheckForCompilerFeature(
     lstrcat(cmdline, " .\\nul");
 
     ok = CreateProcess(
-	    NULL,	    /* Module name. */
-	    cmdline,	    /* Command line. */
-	    NULL,	    /* Process handle not inheritable. */
-	    NULL,	    /* Thread handle not inheritable. */
-	    TRUE,	    /* yes, inherit handles. */
-	    DETACHED_PROCESS, /* No console for you. */
-	    NULL,	    /* Use parent's environment block. */
-	    NULL,	    /* Use parent's starting directory. */
-	    &si,	    /* Pointer to STARTUPINFO structure. */
-	    &pi);	    /* Pointer to PROCESS_INFORMATION structure. */
+            NULL,           /* Module name. */
+            cmdline,        /* Command line. */
+            NULL,           /* Process handle not inheritable. */
+            NULL,           /* Thread handle not inheritable. */
+            TRUE,           /* yes, inherit handles. */
+            DETACHED_PROCESS, /* No console for you. */
+            NULL,           /* Use parent's environment block. */
+            NULL,           /* Use parent's starting directory. */
+            &si,            /* Pointer to STARTUPINFO structure. */
+            &pi);           /* Pointer to PROCESS_INFORMATION structure. */
 
     if (!ok) {
-	DWORD err = GetLastError();
-	int chars = snprintf(msg, sizeof(msg) - 1,
-		"Tried to launch: \"%s\", but got error [%u]: ", cmdline, err);
+        DWORD err = GetLastError();
+        int chars = snprintf(msg, sizeof(msg) - 1,
+                "Tried to launch: \"%s\", but got error [%u]: ", cmdline, err);
 
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS|
-		FORMAT_MESSAGE_MAX_WIDTH_MASK, 0L, err, 0, (LPVOID)&msg[chars],
-		(300-chars), 0);
-	WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, lstrlen(msg), &err,NULL);
-	return 2;
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS|
+                FORMAT_MESSAGE_MAX_WIDTH_MASK, 0L, err, 0, (LPVOID)&msg[chars],
+                (300-chars), 0);
+        WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, lstrlen(msg), &err,NULL);
+        return 2;
     }
 
     /*
@@ -368,7 +368,7 @@ CheckForLinkerFeature(
      */
 
     DuplicateHandle(hProcess, h, hProcess, &si.hStdOutput, 0, TRUE,
-	    DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+            DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
 
     /*
      * Same as above, but for the error side.
@@ -376,7 +376,7 @@ CheckForLinkerFeature(
 
     CreatePipe(&Err.pipe, &h, &sa, 0);
     DuplicateHandle(hProcess, h, hProcess, &si.hStdError, 0, TRUE,
-	    DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
+            DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE);
 
     /*
      * Base command line.
@@ -389,33 +389,33 @@ CheckForLinkerFeature(
      */
 
     for (i = 0; i < count; i++) {
-	lstrcat(cmdline, " \"");
-	lstrcat(cmdline, options[i]);
-	lstrcat(cmdline, "\"");
+        lstrcat(cmdline, " \"");
+        lstrcat(cmdline, options[i]);
+        lstrcat(cmdline, "\"");
     }
 
     ok = CreateProcess(
-	    NULL,	    /* Module name. */
-	    cmdline,	    /* Command line. */
-	    NULL,	    /* Process handle not inheritable. */
-	    NULL,	    /* Thread handle not inheritable. */
-	    TRUE,	    /* yes, inherit handles. */
-	    DETACHED_PROCESS, /* No console for you. */
-	    NULL,	    /* Use parent's environment block. */
-	    NULL,	    /* Use parent's starting directory. */
-	    &si,	    /* Pointer to STARTUPINFO structure. */
-	    &pi);	    /* Pointer to PROCESS_INFORMATION structure. */
+            NULL,           /* Module name. */
+            cmdline,        /* Command line. */
+            NULL,           /* Process handle not inheritable. */
+            NULL,           /* Thread handle not inheritable. */
+            TRUE,           /* yes, inherit handles. */
+            DETACHED_PROCESS, /* No console for you. */
+            NULL,           /* Use parent's environment block. */
+            NULL,           /* Use parent's starting directory. */
+            &si,            /* Pointer to STARTUPINFO structure. */
+            &pi);           /* Pointer to PROCESS_INFORMATION structure. */
 
     if (!ok) {
-	DWORD err = GetLastError();
-	int chars = snprintf(msg, sizeof(msg) - 1,
-		"Tried to launch: \"%s\", but got error [%u]: ", cmdline, err);
+        DWORD err = GetLastError();
+        int chars = snprintf(msg, sizeof(msg) - 1,
+                "Tried to launch: \"%s\", but got error [%u]: ", cmdline, err);
 
-	FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS|
-		FORMAT_MESSAGE_MAX_WIDTH_MASK, 0L, err, 0, (LPVOID)&msg[chars],
-		(300-chars), 0);
-	WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, lstrlen(msg), &err,NULL);
-	return 2;
+        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS|
+                FORMAT_MESSAGE_MAX_WIDTH_MASK, 0L, err, 0, (LPVOID)&msg[chars],
+                (300-chars), 0);
+        WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, lstrlen(msg), &err,NULL);
+        return 2;
     }
 
     /*
@@ -455,11 +455,11 @@ CheckForLinkerFeature(
      */
 
     return !(strstr(Out.buffer, "LNK1117") != NULL ||
-	    strstr(Err.buffer, "LNK1117") != NULL ||
-	    strstr(Out.buffer, "LNK4044") != NULL ||
-	    strstr(Err.buffer, "LNK4044") != NULL ||
-	    strstr(Out.buffer, "LNK4224") != NULL ||
-	    strstr(Err.buffer, "LNK4224") != NULL);
+            strstr(Err.buffer, "LNK1117") != NULL ||
+            strstr(Out.buffer, "LNK4044") != NULL ||
+            strstr(Err.buffer, "LNK4044") != NULL ||
+            strstr(Out.buffer, "LNK4224") != NULL ||
+            strstr(Err.buffer, "LNK4224") != NULL);
 }
 
 static DWORD WINAPI
@@ -473,13 +473,13 @@ ReadFromPipe(
 
   again:
     if (lastBuf - pi->buffer + CHUNK > STATICBUFFERSIZE) {
-	CloseHandle(pi->pipe);
-	return (DWORD)-1;
+        CloseHandle(pi->pipe);
+        return (DWORD)-1;
     }
     ok = ReadFile(pi->pipe, lastBuf, CHUNK, &dwRead, 0L);
     if (!ok || dwRead == 0) {
-	CloseHandle(pi->pipe);
-	return 0;
+        CloseHandle(pi->pipe);
+        return 0;
     }
     lastBuf += dwRead;
     goto again;
@@ -497,9 +497,9 @@ IsIn(
 
 /*
  * GetVersionFromFile --
- * 	Looks for a match string in a file and then returns the version
- * 	following the match where a version is anything acceptable to
- * 	package provide or package ifneeded.
+ *      Looks for a match string in a file and then returns the version
+ *      following the match where a version is anything acceptable to
+ *      package provide or package ifneeded.
  */
 
 static const char *
@@ -514,41 +514,41 @@ GetVersionFromFile(
     FILE *fp = fopen(filename, "rt");
 
     if (fp != NULL) {
-	/*
-	 * Read data until we see our match string.
-	 */
+        /*
+         * Read data until we see our match string.
+         */
 
-	while (fgets(szBuffer, cbBuffer, fp) != NULL) {
-	    LPSTR p, q;
+        while (fgets(szBuffer, cbBuffer, fp) != NULL) {
+            LPSTR p, q;
 
-	    p = strstr(szBuffer, match);
-	    if (p != NULL) {
-		/*
-		 * Skip to first digit after the match.
-		 */
+            p = strstr(szBuffer, match);
+            if (p != NULL) {
+                /*
+                 * Skip to first digit after the match.
+                 */
 
-		p += strlen(match);
-		while (*p && !isdigit(*p)) {
-		    ++p;
-		}
+                p += strlen(match);
+                while (*p && !isdigit(*p)) {
+                    ++p;
+                }
 
-		/*
-		 * Find ending whitespace.
-		 */
+                /*
+                 * Find ending whitespace.
+                 */
 
-		q = p;
-		while (*q && (strchr("0123456789.ab", *q)) && ((!strchr(".ab", *q)
-			    && (!strchr("ab", q[-1])) || --numdots))) {
-		    ++q;
-		}
+                q = p;
+                while (*q && (strchr("0123456789.ab", *q)) && ((!strchr(".ab", *q)
+                            && (!strchr("ab", q[-1])) || --numdots))) {
+                    ++q;
+                }
 
-		memcpy(szBuffer, p, q - p);
-		szBuffer[q-p] = 0;
-		szResult = szBuffer;
-		break;
-	    }
-	}
-	fclose(fp);
+                memcpy(szBuffer, p, q - p);
+                szBuffer[q-p] = 0;
+                szResult = szBuffer;
+                break;
+            }
+        }
+        fclose(fp);
     }
     return szResult;
 }
@@ -569,14 +569,14 @@ list_insert(list_item_t **listPtrPtr, const char *key, const char *value)
 {
     list_item_t *itemPtr = malloc(sizeof(list_item_t));
     if (itemPtr) {
-	itemPtr->key = strdup(key);
-	itemPtr->value = strdup(value);
-	itemPtr->nextPtr = NULL;
+        itemPtr->key = strdup(key);
+        itemPtr->value = strdup(value);
+        itemPtr->nextPtr = NULL;
 
-	while(*listPtrPtr) {
-	    listPtrPtr = &(*listPtrPtr)->nextPtr;
-	}
-	*listPtrPtr = itemPtr;
+        while(*listPtrPtr) {
+            listPtrPtr = &(*listPtrPtr)->nextPtr;
+        }
+        *listPtrPtr = itemPtr;
     }
     return itemPtr;
 }
@@ -586,26 +586,26 @@ list_free(list_item_t **listPtrPtr)
 {
     list_item_t *tmpPtr, *listPtr = *listPtrPtr;
     while (listPtr) {
-	tmpPtr = listPtr;
-	listPtr = listPtr->nextPtr;
-	free(tmpPtr->key);
-	free(tmpPtr->value);
-	free(tmpPtr);
+        tmpPtr = listPtr;
+        listPtr = listPtr->nextPtr;
+        free(tmpPtr->key);
+        free(tmpPtr->value);
+        free(tmpPtr);
     }
 }
 
 /*
  * SubstituteFile --
- *	As windows doesn't provide anything useful like sed and it's unreliable
- *	to use the tclsh you are building against (consider x-platform builds -
- *	eg compiling AMD64 target from IX86) we provide a simple substitution
- *	option here to handle autoconf style substitutions.
- *	The substitution file is whitespace and line delimited. The file should
- *	consist of lines matching the regular expression:
- *	  \s*\S+\s+\S*$
+ *      As windows doesn't provide anything useful like sed and it's unreliable
+ *      to use the tclsh you are building against (consider x-platform builds -
+ *      eg compiling AMD64 target from IX86) we provide a simple substitution
+ *      option here to handle autoconf style substitutions.
+ *      The substitution file is whitespace and line delimited. The file should
+ *      consist of lines matching the regular expression:
+ *        \s*\S+\s+\S*$
  *
- *	Usage is something like:
- *	  nmakehlp -S << $** > $@
+ *      Usage is something like:
+ *        nmakehlp -S << $** > $@
  *        @PACKAGE_NAME@ $(PACKAGE_NAME)
  *        @PACKAGE_VERSION@ $(PACKAGE_VERSION)
  *        <<
@@ -625,64 +625,64 @@ SubstituteFile(
     fp = fopen(filename, "rt");
     if (fp != NULL) {
 
-	/*
-	 * Build a list of substutitions from the first filename
-	 */
+        /*
+         * Build a list of substutitions from the first filename
+         */
 
-	sp = fopen(substitutions, "rt");
-	if (sp != NULL) {
-	    while (fgets(szBuffer, cbBuffer, sp) != NULL) {
-		unsigned char *ks, *ke, *vs, *ve;
-		ks = (unsigned char*)szBuffer;
-		while (ks && *ks && isspace(*ks)) ++ks;
-		ke = ks;
-		while (ke && *ke && !isspace(*ke)) ++ke;
-		vs = ke;
-		while (vs && *vs && isspace(*vs)) ++vs;
-		ve = vs;
-		while (ve && *ve && !(*ve == '\r' || *ve == '\n')) ++ve;
-		*ke = 0, *ve = 0;
-		list_insert(&substPtr, (char*)ks, (char*)vs);
-	    }
-	    fclose(sp);
-	}
+        sp = fopen(substitutions, "rt");
+        if (sp != NULL) {
+            while (fgets(szBuffer, cbBuffer, sp) != NULL) {
+                unsigned char *ks, *ke, *vs, *ve;
+                ks = (unsigned char*)szBuffer;
+                while (ks && *ks && isspace(*ks)) ++ks;
+                ke = ks;
+                while (ke && *ke && !isspace(*ke)) ++ke;
+                vs = ke;
+                while (vs && *vs && isspace(*vs)) ++vs;
+                ve = vs;
+                while (ve && *ve && !(*ve == '\r' || *ve == '\n')) ++ve;
+                *ke = 0, *ve = 0;
+                list_insert(&substPtr, (char*)ks, (char*)vs);
+            }
+            fclose(sp);
+        }
 
-	/* debug: dump the list */
+        /* debug: dump the list */
 #ifdef _DEBUG
-	{
-	    int n = 0;
-	    list_item_t *p = NULL;
-	    for (p = substPtr; p != NULL; p = p->nextPtr, ++n) {
-		fprintf(stderr, "% 3d '%s' => '%s'\n", n, p->key, p->value);
-	    }
-	}
+        {
+            int n = 0;
+            list_item_t *p = NULL;
+            for (p = substPtr; p != NULL; p = p->nextPtr, ++n) {
+                fprintf(stderr, "% 3d '%s' => '%s'\n", n, p->key, p->value);
+            }
+        }
 #endif
 
-	/*
-	 * Run the substitutions over each line of the input
-	 */
+        /*
+         * Run the substitutions over each line of the input
+         */
 
-	while (fgets(szBuffer, cbBuffer, fp) != NULL) {
-	    list_item_t *p = NULL;
-	    for (p = substPtr; p != NULL; p = p->nextPtr) {
-		char *m = strstr(szBuffer, p->key);
-		if (m) {
-		    char *cp, *op, *sp;
-		    cp = szCopy;
-		    op = szBuffer;
-		    while (op != m) *cp++ = *op++;
-		    sp = p->value;
-		    while (sp && *sp) *cp++ = *sp++;
-		    op += strlen(p->key);
-		    while (*op) *cp++ = *op++;
-		    *cp = 0;
-		    memcpy(szBuffer, szCopy, sizeof(szCopy));
-		}
-	    }
-	    printf(szBuffer);
-	}
+        while (fgets(szBuffer, cbBuffer, fp) != NULL) {
+            list_item_t *p = NULL;
+            for (p = substPtr; p != NULL; p = p->nextPtr) {
+                char *m = strstr(szBuffer, p->key);
+                if (m) {
+                    char *cp, *op, *sp;
+                    cp = szCopy;
+                    op = szBuffer;
+                    while (op != m) *cp++ = *op++;
+                    sp = p->value;
+                    while (sp && *sp) *cp++ = *sp++;
+                    op += strlen(p->key);
+                    while (*op) *cp++ = *op++;
+                    *cp = 0;
+                    memcpy(szBuffer, szCopy, sizeof(szCopy));
+                }
+            }
+            printf(szBuffer);
+        }
 
-	list_free(&substPtr);
+        list_free(&substPtr);
     }
     fclose(fp);
     return 0;
@@ -691,9 +691,9 @@ SubstituteFile(
 /*
  * QualifyPath --
  *
- *	This composes the current working directory with a provided path
- *	and returns the fully qualified and normalized path.
- *	Mostly needed to setup paths for testing.
+ *      This composes the current working directory with a provided path
+ *      and returns the fully qualified and normalized path.
+ *      Mostly needed to setup paths for testing.
  */
 
 static int
@@ -705,7 +705,7 @@ QualifyPath(
     char *p;
     GetCurrentDirectory(MAX_PATH, szCwd);
     while ((p = strchr(szPath, '/')) && *p)
-	*p = '\\';
+        *p = '\\';
     PathCombine(szTmp, szCwd, szPath);
     PathCanonicalize(szCwd, szTmp);
     printf("%s\n", szCwd);
@@ -728,12 +728,12 @@ static int LocateDependencyHelper(const char *dir, const char *keypath)
     WIN32_FIND_DATA finfo;
 
     if (dir == NULL || keypath == NULL)
-	return 2; /* Have no real error reporting mechanism into nmake */
+        return 2; /* Have no real error reporting mechanism into nmake */
     dirlen = strlen(dir);
     if ((dirlen + 3) > sizeof(path))
-	return 2;
+        return 2;
     strncpy(path, dir, dirlen);
-    strncpy(path+dirlen, "\\*", 3);	/* Including terminating \0 */
+    strncpy(path+dirlen, "\\*", 3);     /* Including terminating \0 */
     keylen = strlen(keypath);
 
 #if 0 /* This function is not available in Visual C++ 6 */
@@ -747,31 +747,31 @@ static int LocateDependencyHelper(const char *dir, const char *keypath)
     hSearch = FindFirstFile(path, &finfo);
 #endif
     if (hSearch == INVALID_HANDLE_VALUE)
-	return 1; /* Not found */
+        return 1; /* Not found */
 
     /* Loop through all subdirs checking if the keypath is under there */
     ret = 1; /* Assume not found */
     do {
-	int sublen;
-	/*
-	 * We need to check it is a directory despite the
-	 * FindExSearchLimitToDirectories in the above call. See SDK docs
-	 */
-	if ((finfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
-	    continue;
-	sublen = strlen(finfo.cFileName);
-	if ((dirlen+1+sublen+1+keylen+1) > sizeof(path))
-	    continue;		/* Path does not fit, assume not matched */
-	strncpy(path+dirlen+1, finfo.cFileName, sublen);
-	path[dirlen+1+sublen] = '\\';
-	strncpy(path+dirlen+1+sublen+1, keypath, keylen+1);
-	if (PathFileExists(path)) {
-	    /* Found a match, print to stdout */
-	    path[dirlen+1+sublen] = '\0';
-	    QualifyPath(path);
-	    ret = 0;
-	    break;
-	}
+        int sublen;
+        /*
+         * We need to check it is a directory despite the
+         * FindExSearchLimitToDirectories in the above call. See SDK docs
+         */
+        if ((finfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
+            continue;
+        sublen = strlen(finfo.cFileName);
+        if ((dirlen+1+sublen+1+keylen+1) > sizeof(path))
+            continue;           /* Path does not fit, assume not matched */
+        strncpy(path+dirlen+1, finfo.cFileName, sublen);
+        path[dirlen+1+sublen] = '\\';
+        strncpy(path+dirlen+1+sublen+1, keypath, keylen+1);
+        if (PathFileExists(path)) {
+            /* Found a match, print to stdout */
+            path[dirlen+1+sublen] = '\0';
+            QualifyPath(path);
+            ret = 0;
+            break;
+        }
     } while (FindNextFile(hSearch, &finfo));
     FindClose(hSearch);
     return ret;
@@ -780,10 +780,10 @@ static int LocateDependencyHelper(const char *dir, const char *keypath)
 /*
  * LocateDependency --
  *
- *	Locates a dependency for a package.
+ *      Locates a dependency for a package.
  *        keypath - a relative path within the package directory
  *          that is used to confirm it is the correct directory.
- *	The search path for the package directory is currently only
+ *      The search path for the package directory is currently only
  *      the parent and grandparent of the current working directory.
  *      If found, the command prints
  *         name_DIRPATH=<full path of located directory>
@@ -795,9 +795,9 @@ static int LocateDependency(const char *keypath)
     static char *paths[] = {"..", "..\\..", "..\\..\\.."};
 
     for (i = 0; i < (sizeof(paths)/sizeof(paths[0])); ++i) {
-	ret = LocateDependencyHelper(paths[i], keypath);
-	if (ret == 0)
-	    return ret;
+        ret = LocateDependencyHelper(paths[i], keypath);
+        if (ret == 0)
+            return ret;
     }
     return ret;
 }

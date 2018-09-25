@@ -18,11 +18,11 @@ positionWindow $w
 
 ## See Code / Dismiss buttons
 set btns [addSeeDismiss $w.buttons $w {} \
-	{ttk::button $w.buttons.fontchooser -command fontchooserToggle}]
+        {ttk::button $w.buttons.fontchooser -command fontchooserToggle}]
 pack $btns -side bottom -fill x
 
 text $w.text -yscrollcommand [list $w.scroll set] -setgrid 1 \
-	-height 30 -undo 1 -autosep 1
+        -height 30 -undo 1 -autosep 1
 ttk::scrollbar $w.scroll -command [list $w.text yview]
 pack $w.scroll -side right -fill y
 pack $w.text -expand yes -fill both
@@ -38,7 +38,7 @@ proc fontchooserVisibility {w} {
 }
 proc fontchooserFocus {w} {
     tk fontchooser configure -font [$w cget -font] \
-	    -command [list fontchooserFontSel $w]
+            -command [list fontchooserFontSel $w]
 }
 proc fontchooserFontSel {w font args} {
     $w configure -font [font actual $font]
@@ -47,7 +47,7 @@ tk fontchooser configure -parent $w
 bind $w.text <FocusIn> [list fontchooserFocus $w.text]
 fontchooserVisibility $w.buttons.fontchooser
 bind $w <<TkFontchooserVisibility>> [list \
-	fontchooserVisibility $w.buttons.fontchooser]
+        fontchooserVisibility $w.buttons.fontchooser]
 focus $w.text
 
 $w.text insert 0.0 \
@@ -94,10 +94,10 @@ and }
 
 switch [tk windowingsystem] {
     "aqua" - "x11" {
-	$w.text insert end "Control-Shift-z"
+        $w.text insert end "Control-Shift-z"
     }
     "win32" {
-	$w.text insert end "Control-y"
+        $w.text insert end "Control-y"
     }
 }
 

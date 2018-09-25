@@ -1,7 +1,7 @@
 /*
  * tkWinRegion.c --
  *
- *	Tk Region emulation code.
+ *      Tk Region emulation code.
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  *
@@ -24,13 +24,13 @@
  *
  * TkCreateRegion --
  *
- *	Construct an empty region.
+ *      Construct an empty region.
  *
  * Results:
- *	Returns a new region handle.
+ *      Returns a new region handle.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -48,13 +48,13 @@ TkCreateRegion(void)
  *
  * TkDestroyRegion --
  *
- *	Destroy the specified region.
+ *      Destroy the specified region.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Frees the storage associated with the specified region.
+ *      Frees the storage associated with the specified region.
  *
  *----------------------------------------------------------------------
  */
@@ -71,13 +71,13 @@ TkDestroyRegion(
  *
  * TkClipBox --
  *
- *	Computes the bounding box of a region.
+ *      Computes the bounding box of a region.
  *
  * Results:
- *	Sets rect_return to the bounding box of the region.
+ *      Sets rect_return to the bounding box of the region.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -101,13 +101,13 @@ TkClipBox(
  *
  * TkIntersectRegion --
  *
- *	Compute the intersection of two regions.
+ *      Compute the intersection of two regions.
  *
  * Results:
- *	Returns the result in the dr_return region.
+ *      Returns the result in the dr_return region.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -126,13 +126,13 @@ TkIntersectRegion(
  *
  * TkUnionRectWithRegion --
  *
- *	Create the union of a source region and a rectangle.
+ *      Create the union of a source region and a rectangle.
  *
  * Results:
- *	Returns the result in the dr_return region.
+ *      Returns the result in the dr_return region.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -144,10 +144,10 @@ TkUnionRectWithRegion(
     TkRegion dest_region_return)
 {
     HRGN rectRgn = CreateRectRgn(rectangle->x, rectangle->y,
-	    rectangle->x + rectangle->width, rectangle->y + rectangle->height);
+            rectangle->x + rectangle->width, rectangle->y + rectangle->height);
 
     CombineRgn((HRGN) dest_region_return, (HRGN) src_region,
-	    (HRGN) rectRgn, RGN_OR);
+            (HRGN) rectRgn, RGN_OR);
     DeleteObject(rectRgn);
 }
 
@@ -156,14 +156,14 @@ TkUnionRectWithRegion(
  *
  * TkpBuildRegionFromAlphaData --
  *
- *	Set up a rectangle of the given region based on the supplied alpha
- *	data.
+ *      Set up a rectangle of the given region based on the supplied alpha
+ *      data.
  *
  * Results:
- *	None
+ *      None
  *
  * Side effects:
- *	The region is updated, with extra pixels added to it.
+ *      The region is updated, with extra pixels added to it.
  *
  *----------------------------------------------------------------------
  */
@@ -172,51 +172,51 @@ void
 TkpBuildRegionFromAlphaData(
     TkRegion region,
     unsigned int x, unsigned int y,
-				/* Where in region to update. */
+                                /* Where in region to update. */
     unsigned int width, unsigned int height,
-				/* Size of rectangle to update. */
-    unsigned char *dataPtr,	/* Data to read from. */
-    unsigned int pixelStride,	/* Num bytes from one piece of alpha data to
-				 * the next in the line. */
-    unsigned int lineStride)	/* Num bytes from one line of alpha data to
-				 * the next line. */
+                                /* Size of rectangle to update. */
+    unsigned char *dataPtr,     /* Data to read from. */
+    unsigned int pixelStride,   /* Num bytes from one piece of alpha data to
+                                 * the next in the line. */
+    unsigned int lineStride)    /* Num bytes from one line of alpha data to
+                                 * the next line. */
 {
     unsigned char *lineDataPtr;
     unsigned int x1, y1, end;
     HRGN rectRgn = CreateRectRgn(0,0,1,1); /* Workspace region. */
 
     for (y1 = 0; y1 < height; y1++) {
-	lineDataPtr = dataPtr;
-	for (x1 = 0; x1 < width; x1 = end) {
-	    /*
-	     * Search for first non-transparent pixel.
-	     */
+        lineDataPtr = dataPtr;
+        for (x1 = 0; x1 < width; x1 = end) {
+            /*
+             * Search for first non-transparent pixel.
+             */
 
-	    while ((x1 < width) && !*lineDataPtr) {
-		x1++;
-		lineDataPtr += pixelStride;
-	    }
-	    end = x1;
+            while ((x1 < width) && !*lineDataPtr) {
+                x1++;
+                lineDataPtr += pixelStride;
+            }
+            end = x1;
 
-	    /*
-	     * Search for first transparent pixel.
-	     */
+            /*
+             * Search for first transparent pixel.
+             */
 
-	    while ((end < width) && *lineDataPtr) {
-		end++;
-		lineDataPtr += pixelStride;
-	    }
-	    if (end > x1) {
-		/*
-		 * Manipulate Win32 regions directly; it's more efficient.
-		 */
+            while ((end < width) && *lineDataPtr) {
+                end++;
+                lineDataPtr += pixelStride;
+            }
+            if (end > x1) {
+                /*
+                 * Manipulate Win32 regions directly; it's more efficient.
+                 */
 
-		SetRectRgn(rectRgn, (int) (x+x1), (int) (y+y1),
-			(int) (x+end), (int) (y+y1+1));
-		CombineRgn((HRGN) region, (HRGN) region, rectRgn, RGN_OR);
-	    }
-	}
-	dataPtr += lineStride;
+                SetRectRgn(rectRgn, (int) (x+x1), (int) (y+y1),
+                        (int) (x+end), (int) (y+y1+1));
+                CombineRgn((HRGN) region, (HRGN) region, rectRgn, RGN_OR);
+            }
+        }
+        dataPtr += lineStride;
     }
 
     DeleteObject(rectRgn);
@@ -227,24 +227,24 @@ TkpBuildRegionFromAlphaData(
  *
  * TkRectInRegion --
  *
- *	Test whether a given rectangle overlaps with a region.
+ *      Test whether a given rectangle overlaps with a region.
  *
  * Results:
- *	Returns RectanglePart or RectangleOut. Note that this is not a
- *	complete implementation since it doesn't test for RectangleIn.
+ *      Returns RectanglePart or RectangleOut. Note that this is not a
+ *      complete implementation since it doesn't test for RectangleIn.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkRectInRegion(
-    TkRegion r,			/* Region to inspect */
-    int x, int y,		/* Top-left of rectangle */
-    unsigned int width,		/* Width of rectangle */
-    unsigned int height)	/* Height of rectangle */
+    TkRegion r,                 /* Region to inspect */
+    int x, int y,               /* Top-left of rectangle */
+    unsigned int width,         /* Width of rectangle */
+    unsigned int height)        /* Height of rectangle */
 {
     RECT rect;
     rect.top = y;
@@ -259,13 +259,13 @@ TkRectInRegion(
  *
  * TkSubtractRegion --
  *
- *	Compute the set-difference of two regions.
+ *      Compute the set-difference of two regions.
  *
  * Results:
- *	Returns the result in the dr_return region.
+ *      Returns the result in the dr_return region.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */

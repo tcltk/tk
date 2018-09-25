@@ -69,9 +69,9 @@ test entry-1.done "Cleanup" -body { destroy .e }
 
 test entry-2.1 "Create entry before scrollbar" -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
-	-expand true -fill both
+        -expand true -fill both
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
-    	-expand false -fill x
+        -expand false -fill x
 }  -cleanup {destroy .te .tsb}
 
 test entry-2.2 "Initial scroll position" -body {
@@ -88,7 +88,7 @@ test entry-3.0 "Series 3 setup" -body {
     variable fixed TkFixedFont
     variable cw [font measure $fixed a]
     variable ch [font metrics $fixed -linespace]
-    variable bd 2	;# border + padding
+    variable bd 2       ;# border + padding
     variable ux [font measure $fixed \u4e4e]
 
     pack [ttk::entry .e -font $fixed -width 20]
@@ -187,8 +187,8 @@ test entry-5.1 {widget deletion while active} -body {
 
 test entry-6.1 {Update linked variable in write trace} -body {
     proc override args {
-	global x
-	set x "Overridden!"
+        global x
+        set x "Overridden!"
     }
     catch {destroy .e}
     set x ""
@@ -219,13 +219,13 @@ test entry-6.2 {-textvariable tests} -body {
 
 test entry-7.1 {Bad style options} -body {
     ttk::style theme create entry-7.1 -settings {
-	ttk::style configure TEntry -foreground BadColor
-	ttk::style map TEntry -foreground {readonly AnotherBadColor}
-	ttk::style map TEntry -font {readonly ABadFont}
-	ttk::style map TEntry \
-	    -selectbackground {{} BadColor} \
-	    -selectforeground {{} BadColor} \
-	    -insertcolor {{} BadColor}
+        ttk::style configure TEntry -foreground BadColor
+        ttk::style map TEntry -foreground {readonly AnotherBadColor}
+        ttk::style map TEntry -font {readonly ABadFont}
+        ttk::style map TEntry \
+            -selectbackground {{} BadColor} \
+            -selectforeground {{} BadColor} \
+            -insertcolor {{} BadColor}
     }
     pack [ttk::entry .e -text "Don't crash"]
     ttk::style theme use entry-7.1
@@ -248,7 +248,7 @@ test entry-8.2 "Unset linked variable by deleting namespace" -body {
     namespace eval ::test  { variable foo "bar" }
     pack [ttk::entry .e -textvariable ::test::foo]
     namespace delete ::test
-    .e insert end "baz"		;# <== error here
+    .e insert end "baz"         ;# <== error here
     list [.e cget -textvariable] [.e get] [set foo]
 } -returnCodes error -result "*parent namespace doesn't exist*" -match glob
 # '-result [list ::test::foo "baz" "baz"]' would also be sensible,
@@ -262,7 +262,7 @@ test entry-8.2a "Followup to test 8.2" -body {
 test entry-9.1 "Index range invariants" -setup {
     # See bug#1721532 for discussion
     proc entry-9.1-trace {n1 n2 op} {
-    	set ::V NO!
+        set ::V NO!
     }
     variable V
     trace add variable V write entry-9.1-trace

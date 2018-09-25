@@ -13,22 +13,22 @@ package require Tk
 # Create a row of bitmap items in a window.
 #
 # Arguments:
-# w -		The window that is to contain the row.
-# args -	The names of one or more bitmaps, which will be displayed
-#		in a new row across the bottom of w along with their
-#		names.
+# w -           The window that is to contain the row.
+# args -        The names of one or more bitmaps, which will be displayed
+#               in a new row across the bottom of w along with their
+#               names.
 
 proc bitmapRow {w args} {
     frame $w
     pack $w -side top -fill both
     set i 0
     foreach bitmap $args {
-	frame $w.$i
-	pack $w.$i -side left -fill both -pady .25c -padx .25c
-	label $w.$i.bitmap -bitmap $bitmap
-	label $w.$i.label -text $bitmap -width 9
-	pack $w.$i.label $w.$i.bitmap -side bottom
-	incr i
+        frame $w.$i
+        pack $w.$i -side left -fill both -pady .25c -padx .25c
+        label $w.$i.bitmap -bitmap $bitmap
+        label $w.$i.label -text $bitmap -width 9
+        pack $w.$i.label $w.$i.bitmap -side bottom
+        incr i
     }
 }
 

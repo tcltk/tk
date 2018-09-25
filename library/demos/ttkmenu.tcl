@@ -26,7 +26,7 @@ ttk::menubutton $w.m1 -menu $w.m1.menu -text "Select a theme" -direction above
 ttk::menubutton $w.m2 -menu $w.m1.menu -text "Select a theme" -direction left
 ttk::menubutton $w.m3 -menu $w.m1.menu -text "Select a theme" -direction right
 ttk::menubutton $w.m4 -menu $w.m1.menu -text "Select a theme" \
-	-direction flush -style TMenubutton.Toolbutton
+        -direction flush -style TMenubutton.Toolbutton
 ttk::menubutton $w.m5 -menu $w.m1.menu -text "Select a theme" -direction below
 
 menu $w.m1.menu -tearoff 0

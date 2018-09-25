@@ -1,9 +1,9 @@
 /*
  * tkUnixPort.h --
  *
- *	This file is included by all of the Tk C files.  It contains
- *	information that may be configuration-dependent, such as
- *	#includes for system include files and a few other things.
+ *      This file is included by all of the Tk C files.  It contains
+ *      information that may be configuration-dependent, such as
+ *      #includes for system include files and a few other things.
  *
  * Copyright (c) 1991-1993 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -73,12 +73,12 @@
 #   define SELECT_MASK fd_set
 #else
 #   ifndef _AIX
-	typedef long fd_mask;
+        typedef long fd_mask;
 #   endif
 #   if defined(_IBMR2)
-#	define SELECT_MASK void
+#       define SELECT_MASK void
 #   else
-#	define SELECT_MASK int
+#       define SELECT_MASK int
 #   endif
 #endif
 
@@ -88,9 +88,9 @@
 
 #ifndef FD_SETSIZE
 #   ifdef OPEN_MAX
-#	define FD_SETSIZE OPEN_MAX
+#       define FD_SETSIZE OPEN_MAX
 #   else
-#	define FD_SETSIZE 256
+#       define FD_SETSIZE 256
 #   endif
 #endif
 #if !defined(howmany)
@@ -131,8 +131,8 @@
      */
 
 #   define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
-		XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
-		desty, width, height);
+                XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
+                desty, width, height);
 
 #endif /* !__CYGWIN__ */
 
@@ -186,7 +186,7 @@
 
 #ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "%#08lx", (unsigned long) (w))
+        sprintf((buf), "%#08lx", (unsigned long) (w))
 #endif
 
 #endif /* _UNIXPORT */

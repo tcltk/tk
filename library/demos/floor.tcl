@@ -15,14 +15,14 @@ package require Tk
 # visible.
 #
 # Arguments:
-# w -		Name of the canvas window.
-# active -	Number of active floor (1, 2, or 3).
+# w -           Name of the canvas window.
+# active -      Number of active floor (1, 2, or 3).
 
 proc floorDisplay {w active} {
     global floorLabels floorItems colors activeFloor
 
     if {$activeFloor == $active} {
-	return
+        return
     }
 
     $w delete all
@@ -71,14 +71,14 @@ proc floorDisplay {w active} {
 # highlighted.
 #
 # Arguments:
-# w  -		The name of the canvas window.
+# w  -          The name of the canvas window.
 
 proc newRoom w {
     global currentRoom floorLabels
 
     set id [$w find withtag current]
     if {$id != ""} {
-	set currentRoom $floorLabels($id)
+        set currentRoom $floorLabels($id)
     }
     update idletasks
 }
@@ -88,18 +88,18 @@ proc newRoom w {
 # It highlights the current room and unhighlights any previous room.
 #
 # Arguments:
-# w -		The canvas window displaying the floorplan.
-# args -	Not used.
+# w -           The canvas window displaying the floorplan.
+# args -        Not used.
 
 proc roomChanged {w args} {
     global currentRoom floorItems colors
     $w delete highlight
     if {[catch {set item $floorItems($currentRoom)}]} {
-	return
+        return
     }
     set new [eval \
-	"$w create polygon [$w coords $item] -fill $colors(active) \
-	-tags highlight"]
+        "$w create polygon [$w coords $item] -fill $colors(active) \
+        -tags highlight"]
     $w raise $new marker
 }
 
@@ -109,25 +109,25 @@ proc roomChanged {w args} {
 # floor.
 #
 # Arguments:
-# w -		The canvas window.
-# fill -	Fill color to use for the floor's background.
-# outline -	Color to use for the floor's outline.
+# w -           The canvas window.
+# fill -        Fill color to use for the floor's background.
+# outline -     Color to use for the floor's outline.
 
 proc bg1 {w fill outline} {
     $w create poly 347 80 349 82 351 84 353 85 363 92 375 99 386 104 \
-	386 129 398 129 398 162 484 162 484 129 559 129 559 133 725 \
-	133 725 129 802 129 802 389 644 389 644 391 559 391 559 327 \
-	508 327 508 311 484 311 484 278 395 278 395 288 400 288 404 \
-	288 409 290 413 292 418 297 421 302 422 309 421 318 417 325 \
-	411 330 405 332 397 333 344 333 340 334 336 336 335 338 332 \
-	342 331 347 332 351 334 354 336 357 341 359 340 360 335 363 \
-	331 365 326 366 304 366 304 355 258 355 258 387 60 387 60 391 \
-	0 391 0 337 3 337 3 114 8 114 8 25 30 25 30 5 93 5 98 5 104 7 \
-	110 10 116 16 119 20 122 28 123 32 123 68 220 68 220 34 221 \
-	22 223 17 227 13 231 8 236 4 242 2 246 0 260 0 283 1 300 5 \
-	321 14 335 22 348 25 365 29 363 39 358 48 352 56 337 70 \
-	344 76 347 80 \
-	-tags {floor1 bg} -fill $fill
+        386 129 398 129 398 162 484 162 484 129 559 129 559 133 725 \
+        133 725 129 802 129 802 389 644 389 644 391 559 391 559 327 \
+        508 327 508 311 484 311 484 278 395 278 395 288 400 288 404 \
+        288 409 290 413 292 418 297 421 302 422 309 421 318 417 325 \
+        411 330 405 332 397 333 344 333 340 334 336 336 335 338 332 \
+        342 331 347 332 351 334 354 336 357 341 359 340 360 335 363 \
+        331 365 326 366 304 366 304 355 258 355 258 387 60 387 60 391 \
+        0 391 0 337 3 337 3 114 8 114 8 25 30 25 30 5 93 5 98 5 104 7 \
+        110 10 116 16 119 20 122 28 123 32 123 68 220 68 220 34 221 \
+        22 223 17 227 13 231 8 236 4 242 2 246 0 260 0 283 1 300 5 \
+        321 14 335 22 348 25 365 29 363 39 358 48 352 56 337 70 \
+        344 76 347 80 \
+        -tags {floor1 bg} -fill $fill
     $w create line 386 129 398 129 -fill $outline -tags {floor1 bg}
     $w create line 258 355 258 387 -fill $outline -tags {floor1 bg}
     $w create line 60 387 60 391 -fill $outline -tags {floor1 bg}
@@ -234,17 +234,17 @@ proc bg1 {w fill outline} {
 # floor.
 #
 # Arguments:
-# w -		The canvas window.
-# fill -	Fill color to use for the floor's background.
-# outline -	Color to use for the floor's outline.
+# w -           The canvas window.
+# fill -        Fill color to use for the floor's background.
+# outline -     Color to use for the floor's outline.
 
 proc bg2 {w fill outline} {
     $w create poly 559 129 484 129 484 162 398 162 398 129 315 129 \
-	315 133 176 133 176 129 96 129 96 133 3 133 3 339 0 339 0 391 \
-	60 391 60 387 258 387 258 329 350 329 350 311 395 311 395 280 \
-	484 280 484 311 508 311 508 327 558 327 558 391 644 391 644 \
-	367 802 367 802 129 725 129 725 133 559 133 559 129 \
-	-tags {floor2 bg} -fill $fill
+        315 133 176 133 176 129 96 129 96 133 3 133 3 339 0 339 0 391 \
+        60 391 60 387 258 387 258 329 350 329 350 311 395 311 395 280 \
+        484 280 484 311 508 311 508 327 558 327 558 391 644 391 644 \
+        367 802 367 802 129 725 129 725 133 559 133 559 129 \
+        -tags {floor2 bg} -fill $fill
     $w create line 350 311 350 329 -fill $outline -tags {floor2 bg}
     $w create line 398 129 398 162 -fill $outline -tags {floor2 bg}
     $w create line 802 367 802 129 -fill $outline -tags {floor2 bg}
@@ -289,17 +289,17 @@ proc bg2 {w fill outline} {
 # floor.
 #
 # Arguments:
-# w -		The canvas window.
-# fill -	Fill color to use for the floor's background.
-# outline -	Color to use for the floor's outline.
+# w -           The canvas window.
+# fill -        Fill color to use for the floor's background.
+# outline -     Color to use for the floor's outline.
 
 proc bg3 {w fill outline} {
     $w create poly 159 300 107 300 107 248 159 248 159 129 96 129 96 \
-	133 21 133 21 331 0 331 0 391 60 391 60 370 159 370 159 300 \
-	-tags {floor3 bg} -fill $fill
+        133 21 133 21 331 0 331 0 391 60 391 60 370 159 370 159 300 \
+        -tags {floor3 bg} -fill $fill
     $w create poly 258 370 258 329 350 329 350 311 399 311 399 129 \
-	315 129 315 133 176 133 176 129 159 129 159 370 258 370 \
-	-tags {floor3 bg} -fill $fill
+        315 129 315 133 176 133 176 129 159 129 159 370 258 370 \
+        -tags {floor3 bg} -fill $fill
     $w create line 96 133 96 129 -fill $outline -tags {floor3 bg}
     $w create line 176 129 96 129 -fill $outline -tags {floor3 bg}
     $w create line 176 129 176 133 -fill $outline -tags {floor3 bg}
@@ -319,7 +319,7 @@ proc bg3 {w fill outline} {
     $w create line 21 331 21 133 -fill $outline -tags {floor3 bg}
     $w create line 96 133 21 133 -fill $outline -tags {floor3 bg}
     $w create line 107 300 159 300 159 248 107 248 107 300 \
-	    -fill $outline -tags {floor3 bg}
+            -fill $outline -tags {floor3 bg}
 }
 
 # fg1 --
@@ -328,8 +328,8 @@ proc bg3 {w fill outline} {
 # floor (office outlines and numbers).
 #
 # Arguments:
-# w -		The canvas window.
-# color -	Color to use for drawing foreground information.
+# w -           The canvas window.
+# color -       Color to use for drawing foreground information.
 
 proc fg1 {w color} {
     global floorLabels floorItems
@@ -691,8 +691,8 @@ proc fg1 {w color} {
 # floor (office outlines and numbers).
 #
 # Arguments:
-# w -		The canvas window.
-# color -	Color to use for drawing foreground information.
+# w -           The canvas window.
+# color -       Color to use for drawing foreground information.
 
 proc fg2 {w color} {
     global floorLabels floorItems
@@ -1061,8 +1061,8 @@ proc fg2 {w color} {
 # floor (office outlines and numbers).
 #
 # Arguments:
-# w -		The canvas window.
-# color -	Color to use for drawing foreground information.
+# w -           The canvas window.
+# color -       Color to use for drawing foreground information.
 
 proc fg3 {w color} {
     global floorLabels floorItems
@@ -1311,8 +1311,8 @@ set h [ttk::scrollbar $f.hscroll -orient horizontal]
 set v [ttk::scrollbar $f.vscroll -orient vertical]
 set f1 [frame $f.f1 -borderwidth 2 -relief sunken]
 set c [canvas $f1.c -width 900 -height 500 -highlightthickness 0 \
-	   -xscrollcommand [list $h set] \
-	   -yscrollcommand [list $v set]]
+           -xscrollcommand [list $h set] \
+           -yscrollcommand [list $v set]]
 pack $c -expand yes -fill both
 grid $f1 -padx 1 -pady 1 -row 0 -column 0 -rowspan 1 -columnspan 1 -sticky news
 grid $v -padx 1 -pady 1 -row 0 -column 1 -rowspan 1 -columnspan 1 -sticky news

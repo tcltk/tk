@@ -14,13 +14,13 @@ package require Tk
 # represent a tab stop.
 #
 # Arguments:
-# c -		The canvas window.
-# x, y -	Coordinates at which to create the tab stop.
+# c -           The canvas window.
+# x, y -        Coordinates at which to create the tab stop.
 
 proc rulerMkTab {c x y} {
     upvar #0 demo_rulerInfo v
     $c create polygon $x $y [expr {$x+$v(size)}] [expr {$y+$v(size)}] \
-	    [expr {$x-$v(size)}] [expr {$y+$v(size)}]
+            [expr {$x-$v(size)}] [expr {$y+$v(size)}]
 }
 
 set w .ruler
@@ -52,11 +52,11 @@ set demo_rulerInfo(normalStyle) "-fill black"
 if {[winfo depth $c] > 1} {
     set demo_rulerInfo(activeStyle) "-fill red -stipple {}"
     set demo_rulerInfo(deleteStyle) [list -fill red \
-	    -stipple @[file join $tk_demoDirectory images gray25.xbm]]
+            -stipple @[file join $tk_demoDirectory images gray25.xbm]]
 } else {
     set demo_rulerInfo(activeStyle) "-fill black -stipple {}"
     set demo_rulerInfo(deleteStyle) [list -fill black \
-	    -stipple @[file join $tk_demoDirectory images gray25.xbm]]
+            -stipple @[file join $tk_demoDirectory images gray25.xbm]]
 }
 
 $c create line 1c 0.5c 1c 1c 13c 1c 13c 0.5c -width 1
@@ -69,9 +69,9 @@ for {set i 0} {$i < 12} {incr i} {
     $c create text $x.15c .75c -text $i -anchor sw
 }
 $c addtag well withtag [$c create rect 13.2c 1c 13.8c 0.5c \
-	-outline black -fill [lindex [$c config -bg] 4]]
+        -outline black -fill [lindex [$c config -bg] 4]]
 $c addtag well withtag [rulerMkTab $c [winfo pixels $c 13.5c] \
-	[winfo pixels $c .65c]]
+        [winfo pixels $c .65c]]
 
 $c bind well <1> "rulerNewTab $c %x %y"
 $c bind tab <1> "rulerSelectTab $c %x %y"
@@ -83,8 +83,8 @@ bind $c <Any-ButtonRelease-1> "rulerReleaseTab $c"
 # triangle object and adding tags to it to give it tab behavior.
 #
 # Arguments:
-# c -		The canvas window.
-# x, y -	The coordinates of the tab stop.
+# c -           The canvas window.
+# x, y -        The coordinates of the tab stop.
 
 proc rulerNewTab {c x y} {
     upvar #0 demo_rulerInfo v
@@ -101,9 +101,9 @@ proc rulerNewTab {c x y} {
 # be dragged interactively.
 #
 # Arguments:
-# c -		The canvas widget.
-# x, y -	The coordinates of the mouse (identifies the point by
-#		which the tab was picked up for dragging).
+# c -           The canvas widget.
+# x, y -        The coordinates of the mouse (identifies the point by
+#               which the tab was picked up for dragging).
 
 proc rulerSelectTab {c x y} {
     upvar #0 demo_rulerInfo v
@@ -120,28 +120,28 @@ proc rulerSelectTab {c x y} {
 # it is about to be dragged out of the ruler.
 #
 # Arguments:
-# c -		The canvas widget.
-# x, y -	The coordinates of the mouse.
+# c -           The canvas widget.
+# x, y -        The coordinates of the mouse.
 
 proc rulerMoveTab {c x y} {
     upvar #0 demo_rulerInfo v
     if {[$c find withtag active] == ""} {
-	return
+        return
     }
     set cx [$c canvasx $x $v(grid)]
     set cy [$c canvasy $y]
     if {$cx < $v(left)} {
-	set cx $v(left)
+        set cx $v(left)
     }
     if {$cx > $v(right)} {
-	set cx $v(right)
+        set cx $v(right)
     }
     if {($cy >= $v(top)) && ($cy <= $v(bottom))} {
-	set cy [expr {$v(top)+2}]
-	eval "$c itemconf active $v(activeStyle)"
+        set cy [expr {$v(top)+2}]
+        eval "$c itemconf active $v(activeStyle)"
     } else {
-	set cy [expr {$cy-$v(size)-2}]
-	eval "$c itemconf active $v(deleteStyle)"
+        set cy [expr {$cy-$v(size)-2}]
+        eval "$c itemconf active $v(deleteStyle)"
     }
     $c move active [expr {$cx-$v(x)}] [expr {$cy-$v(y)}]
     set v(x) $cx
@@ -154,18 +154,18 @@ proc rulerMoveTab {c x y} {
 # it was dragged out of the ruler.
 #
 # Arguments:
-# c -		The canvas widget.
-# x, y -	The coordinates of the mouse.
+# c -           The canvas widget.
+# x, y -        The coordinates of the mouse.
 
 proc rulerReleaseTab c {
     upvar #0 demo_rulerInfo v
     if {[$c find withtag active] == {}} {
-	return
+        return
     }
     if {$v(y) != $v(top)+2} {
-	$c delete active
+        $c delete active
     } else {
-	eval "$c itemconf active $v(normalStyle)"
-	$c dtag active
+        eval "$c itemconf active $v(normalStyle)"
+        $c dtag active
     }
 }

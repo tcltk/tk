@@ -1,25 +1,25 @@
 # Copyright (C) 2008 Pat Thoyts <patthoyts@users.sourceforge.net>
 #
-#	Calculate a Knight's tour of a chessboard.
+#       Calculate a Knight's tour of a chessboard.
 #
-#	This uses Warnsdorff's rule to calculate the next square each
-#	time. This specifies that the next square should be the one that
-#	has the least number of available moves.
+#       This uses Warnsdorff's rule to calculate the next square each
+#       time. This specifies that the next square should be the one that
+#       has the least number of available moves.
 #
-#	Using this rule it is possible to get to a position where
-#	there are no squares available to move into. In this implementation
-#	this occurs when the starting square is d6.
+#       Using this rule it is possible to get to a position where
+#       there are no squares available to move into. In this implementation
+#       this occurs when the starting square is d6.
 #
-#	To solve this fault an enhancement to the rule is that if we
-#	have a choice of squares with an equal score, we should choose
-#	the one nearest the edge of the board.
+#       To solve this fault an enhancement to the rule is that if we
+#       have a choice of squares with an equal score, we should choose
+#       the one nearest the edge of the board.
 #
-#	If the call to the Edgemost function is commented out you can see
-#	this occur.
+#       If the call to the Edgemost function is commented out you can see
+#       this occur.
 #
-#	You can drag the knight to a specific square to start if you wish.
-#	If you let it repeat then it will choose random start positions
-#	for each new tour.
+#       You can drag the knight to a specific square to start if you wish.
+#       If you let it repeat then it will choose random start positions
+#       for each new tour.
 
 package require Tk 8.5
 
@@ -229,16 +229,16 @@ proc CreateGUI {} {
     grid $f - - - - - -sticky news
     set things [list $dlg.tf.ls $dlg.tf.sc $dlg.tf.cc $dlg.tf.b1]
     if {![info exists ::widgetDemo]} {
-	lappend things $dlg.tf.b2
-	if {[tk windowingsystem] ne "aqua"} {
-	    set things [linsert $things 0 [ttk::sizegrip $dlg.tf.sg]]
-	}
+        lappend things $dlg.tf.b2
+        if {[tk windowingsystem] ne "aqua"} {
+            set things [linsert $things 0 [ttk::sizegrip $dlg.tf.sg]]
+        }
     }
     pack {*}$things -side right
     if {[tk windowingsystem] eq "aqua"} {
-	pack configure {*}$things -padx {4 4} -pady {12 12}
-	pack configure [lindex $things 0] -padx {4 24}
-	pack configure [lindex $things end] -padx {16 4}
+        pack configure {*}$things -padx {4 4} -pady {12 12}
+        pack configure [lindex $things 0] -padx {4 24}
+        pack configure [lindex $things end] -padx {16 4}
     }
     grid $dlg.tf  - - - - - -sticky ew
     if {[info exists ::widgetDemo]} {
@@ -262,7 +262,7 @@ if {![winfo exists .knightstour]} {
     if {![info exists widgetDemo]} { wm withdraw . }
     set r [catch [linsert $argv 0 CreateGUI] err]
     if {$r} {
-	tk_messageBox -icon error -title "Error" -message $err
+        tk_messageBox -icon error -title "Error" -message $err
     }
     if {![info exists widgetDemo]} { exit $r }
 }

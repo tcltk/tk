@@ -17,9 +17,9 @@
 # The window is created at the point specified by x and y
 #
 # Arguments:
-# w -			The menu to be torn-off (duplicated).
-# x -			x coordinate where window is created
-# y -			y coordinate where window is created
+# w -                   The menu to be torn-off (duplicated).
+# x -                   x coordinate where window is created
+# y -                   y coordinate where window is created
 
 proc ::tk::TearOffMenu {w {x 0} {y 0}} {
     # Find a unique name to use for the torn-off menu.  Find the first
@@ -31,31 +31,31 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
     # away when the toplevel goes away.
 
     if {$x == 0} {
-    	set x [winfo rootx $w]
+        set x [winfo rootx $w]
     }
     if {$y == 0} {
-    	set y [winfo rooty $w]
-	if {[tk windowingsystem] eq "aqua"} {
-	    # Shift by height of tearoff entry minus height of window titlebar
-	    catch {incr y [expr {[$w yposition 1] - 16}]}
-	    # Avoid the native menu bar which sits on top of everything.
-	    if {$y < 22} { set y 22 }
-	}
+        set y [winfo rooty $w]
+        if {[tk windowingsystem] eq "aqua"} {
+            # Shift by height of tearoff entry minus height of window titlebar
+            catch {incr y [expr {[$w yposition 1] - 16}]}
+            # Avoid the native menu bar which sits on top of everything.
+            if {$y < 22} { set y 22 }
+        }
     }
 
     set parent [winfo parent $w]
     while {[winfo toplevel $parent] ne $parent \
-	    || [winfo class $parent] eq "Menu"} {
-	set parent [winfo parent $parent]
+            || [winfo class $parent] eq "Menu"} {
+        set parent [winfo parent $parent]
     }
     if {$parent eq "."} {
-	set parent ""
+        set parent ""
     }
     for {set i 1} 1 {incr i} {
-	set menu $parent.tearoff$i
-	if {![winfo exists $menu]} {
-	    break
-	}
+        set menu $parent.tearoff$i
+        if {![winfo exists $menu]} {
+            break
+        }
     }
 
     $w clone $menu tearoff
@@ -66,16 +66,16 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
 
     set parent [winfo parent $w]
     if {[$menu cget -title] ne ""} {
-    	wm title $menu [$menu cget -title]
+        wm title $menu [$menu cget -title]
     } else {
-    	switch -- [winfo class $parent] {
-	    Menubutton {
-	    	wm title $menu [$parent cget -text]
-	    }
-	    Menu {
-	    	wm title $menu [$parent entrycget active -label]
-	    }
-	}
+        switch -- [winfo class $parent] {
+            Menubutton {
+                wm title $menu [$parent cget -text]
+            }
+            Menu {
+                wm title $menu [$parent entrycget active -label]
+            }
+        }
     }
 
     if {[tk windowingsystem] eq "win32"} {
@@ -84,14 +84,14 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
         while {[winfo class $parent] eq "Menu"} {
             set parent [winfo toplevel [winfo parent $parent]]
         }
-	wm transient $menu [winfo toplevel $parent]
-	wm attributes $menu -toolwindow 1
+        wm transient $menu [winfo toplevel $parent]
+        wm attributes $menu -toolwindow 1
     }
 
     $menu post $x $y
 
     if {[winfo exists $menu] == 0} {
-	return ""
+        return ""
     }
 
     # Set tk::Priv(focus) on entry:  otherwise the focus will get lost
@@ -99,7 +99,7 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
     # submenu).
 
     bind $menu <Enter> {
-	set tk::Priv(focus) %W
+        set tk::Priv(focus) %W
     }
 
     # If there is a -tearoffcommand option for the menu, invoke it
@@ -107,7 +107,7 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
 
     set cmd [$w cget -tearoffcommand]
     if {$cmd ne ""} {
-	uplevel #0 $cmd [list $w $menu]
+        uplevel #0 $cmd [list $w $menu]
     }
     return $menu
 }
@@ -117,33 +117,33 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
 # in a given window.
 #
 # Arguments:
-# src -			Source window.  Must be a menu.  It and its
-#			menu descendants will be duplicated at dst.
-# dst -			Name to use for topmost menu in duplicate
-#			hierarchy.
+# src -                 Source window.  Must be a menu.  It and its
+#                       menu descendants will be duplicated at dst.
+# dst -                 Name to use for topmost menu in duplicate
+#                       hierarchy.
 
 proc ::tk::MenuDup {src dst type} {
     set cmd [list menu $dst -type $type]
     foreach option [$src configure] {
-	if {[llength $option] == 2} {
-	    continue
-	}
-	if {[lindex $option 0] eq "-type"} {
-	    continue
-	}
-	lappend cmd [lindex $option 0] [lindex $option 4]
+        if {[llength $option] == 2} {
+            continue
+        }
+        if {[lindex $option 0] eq "-type"} {
+            continue
+        }
+        lappend cmd [lindex $option 0] [lindex $option 4]
     }
     eval $cmd
     set last [$src index last]
     if {$last eq "none"} {
-	return
+        return
     }
     for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
-	set cmd [list $dst add [$src type $i]]
-	foreach option [$src entryconfigure $i]  {
-	    lappend cmd [lindex $option 0] [lindex $option 4]
-	}
-	eval $cmd
+        set cmd [list $dst add [$src type $i]]
+        foreach option [$src entryconfigure $i]  {
+            lappend cmd [lindex $option 0] [lindex $option 4]
+        }
+        eval $cmd
     }
 
     # Duplicate the binding tags and bindings from the source menu.
@@ -154,27 +154,27 @@ proc ::tk::MenuDup {src dst type} {
     # Copy tags to x, replacing each substring of src with dst.
 
     while {[set index [string first $src $tags]] != -1} {
-	append x [string range $tags 0 [expr {$index - 1}]]$dst
-	set tags [string range $tags [expr {$index + $srcLen}] end]
+        append x [string range $tags 0 [expr {$index - 1}]]$dst
+        set tags [string range $tags [expr {$index + $srcLen}] end]
     }
     append x $tags
 
     bindtags $dst $x
 
     foreach event [bind $src] {
-	unset x
-	set script [bind $src $event]
-	set eventLen [string length $event]
+        unset x
+        set script [bind $src $event]
+        set eventLen [string length $event]
 
-	# Copy script to x, replacing each substring of event with dst.
+        # Copy script to x, replacing each substring of event with dst.
 
-	while {[set index [string first $event $script]] != -1} {
-	    append x [string range $script 0 [expr {$index - 1}]]
-	    append x $dst
-	    set script [string range $script [expr {$index + $eventLen}] end]
-	}
-	append x $script
+        while {[set index [string first $event $script]] != -1} {
+            append x [string range $script 0 [expr {$index - 1}]]
+            append x $dst
+            set script [string range $script [expr {$index + $eventLen}] end]
+        }
+        append x $script
 
-	bind $dst $event $x
+        bind $dst $event $x
     }
 }

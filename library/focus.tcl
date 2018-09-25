@@ -18,46 +18,46 @@
 # on windows determine whether or not they should be skipped.
 #
 # Arguments:
-# w -		Name of a window.
+# w -           Name of a window.
 
 proc ::tk_focusNext w {
     set cur $w
     while {1} {
 
-	# Descend to just before the first child of the current widget.
+        # Descend to just before the first child of the current widget.
 
-	set parent $cur
-	set children [winfo children $cur]
-	set i -1
+        set parent $cur
+        set children [winfo children $cur]
+        set i -1
 
-	# Look for the next sibling that isn't a top-level.
+        # Look for the next sibling that isn't a top-level.
 
-	while {1} {
-	    incr i
-	    if {$i < [llength $children]} {
-		set cur [lindex $children $i]
-		if {[winfo toplevel $cur] eq $cur} {
-		    continue
-		} else {
-		    break
-		}
-	    }
+        while {1} {
+            incr i
+            if {$i < [llength $children]} {
+                set cur [lindex $children $i]
+                if {[winfo toplevel $cur] eq $cur} {
+                    continue
+                } else {
+                    break
+                }
+            }
 
-	    # No more siblings, so go to the current widget's parent.
-	    # If it's a top-level, break out of the loop, otherwise
-	    # look for its next sibling.
+            # No more siblings, so go to the current widget's parent.
+            # If it's a top-level, break out of the loop, otherwise
+            # look for its next sibling.
 
-	    set cur $parent
-	    if {[winfo toplevel $cur] eq $cur} {
-		break
-	    }
-	    set parent [winfo parent $parent]
-	    set children [winfo children $parent]
-	    set i [lsearch -exact $children $cur]
-	}
-	if {$w eq $cur || [tk::FocusOK $cur]} {
-	    return $cur
-	}
+            set cur $parent
+            if {[winfo toplevel $cur] eq $cur} {
+                break
+            }
+            set parent [winfo parent $parent]
+            set children [winfo children $parent]
+            set i [lsearch -exact $children $cur]
+        }
+        if {$w eq $cur || [tk::FocusOK $cur]} {
+            return $cur
+        }
     }
 }
 
@@ -70,45 +70,45 @@ proc ::tk_focusNext w {
 # on windows determine whether or not they should be skipped.
 #
 # Arguments:
-# w -		Name of a window.
+# w -           Name of a window.
 
 proc ::tk_focusPrev w {
     set cur $w
     while {1} {
 
-	# Collect information about the current window's position
-	# among its siblings.  Also, if the window is a top-level,
-	# then reposition to just after the last child of the window.
+        # Collect information about the current window's position
+        # among its siblings.  Also, if the window is a top-level,
+        # then reposition to just after the last child of the window.
 
-	if {[winfo toplevel $cur] eq $cur}  {
-	    set parent $cur
-	    set children [winfo children $cur]
-	    set i [llength $children]
-	} else {
-	    set parent [winfo parent $cur]
-	    set children [winfo children $parent]
-	    set i [lsearch -exact $children $cur]
-	}
+        if {[winfo toplevel $cur] eq $cur}  {
+            set parent $cur
+            set children [winfo children $cur]
+            set i [llength $children]
+        } else {
+            set parent [winfo parent $cur]
+            set children [winfo children $parent]
+            set i [lsearch -exact $children $cur]
+        }
 
-	# Go to the previous sibling, then descend to its last descendant
-	# (highest in stacking order.  While doing this, ignore top-levels
-	# and their descendants.  When we run out of descendants, go up
-	# one level to the parent.
+        # Go to the previous sibling, then descend to its last descendant
+        # (highest in stacking order.  While doing this, ignore top-levels
+        # and their descendants.  When we run out of descendants, go up
+        # one level to the parent.
 
-	while {$i > 0} {
-	    incr i -1
-	    set cur [lindex $children $i]
-	    if {[winfo toplevel $cur] eq $cur} {
-		continue
-	    }
-	    set parent $cur
-	    set children [winfo children $parent]
-	    set i [llength $children]
-	}
-	set cur $parent
-	if {$w eq $cur || [tk::FocusOK $cur]} {
-	    return $cur
-	}
+        while {$i > 0} {
+            incr i -1
+            set cur [lindex $children $i]
+            if {[winfo toplevel $cur] eq $cur} {
+                continue
+            }
+            set parent $cur
+            set children [winfo children $parent]
+            set i [llength $children]
+        }
+        set cur $parent
+        if {$w eq $cur || [tk::FocusOK $cur]} {
+            return $cur
+        }
     }
 }
 
@@ -124,28 +124,28 @@ proc ::tk_focusPrev w {
 # bindings.  If all of these are true, then 1 is returned.
 #
 # Arguments:
-# w -		Name of a window.
+# w -           Name of a window.
 
 proc ::tk::FocusOK w {
     set code [catch {$w cget -takefocus} value]
     if {($code == 0) && ($value ne "")} {
-	if {$value == 0} {
-	    return 0
-	} elseif {$value == 1} {
-	    return [winfo viewable $w]
-	} else {
-	    set value [uplevel #0 $value [list $w]]
-	    if {$value ne ""} {
-		return $value
-	    }
-	}
+        if {$value == 0} {
+            return 0
+        } elseif {$value == 1} {
+            return [winfo viewable $w]
+        } else {
+            set value [uplevel #0 $value [list $w]]
+            if {$value ne ""} {
+                return $value
+            }
+        }
     }
     if {![winfo viewable $w]} {
-	return 0
+        return 0
     }
     set code [catch {$w cget -state} value]
     if {($code == 0) && $value eq "disabled"} {
-	return 0
+        return 0
     }
     regexp Key|Focus "[bind $w] [bind [winfo class $w]]"
 }
@@ -163,16 +163,16 @@ proc ::tk::FocusOK w {
 proc ::tk_focusFollowsMouse {} {
     set old [bind all <Enter>]
     set script {
-	if {"%d" eq "NotifyAncestor" || "%d" eq "NotifyNonlinear" \
-		|| "%d" eq "NotifyInferior"} {
-	    if {[tk::FocusOK %W]} {
-		focus %W
-	    }
-	}
+        if {"%d" eq "NotifyAncestor" || "%d" eq "NotifyNonlinear" \
+                || "%d" eq "NotifyInferior"} {
+            if {[tk::FocusOK %W]} {
+                focus %W
+            }
+        }
     }
     if {$old ne ""} {
-	bind all <Enter> "$old; $script"
+        bind all <Enter> "$old; $script"
     } else {
-	bind all <Enter> $script
+        bind all <Enter> $script
     }
 }

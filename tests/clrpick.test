@@ -20,24 +20,24 @@ if {[testConstraint defaultPseudocolor8]} {
     canvas .c
     pack .c -expand 1 -fill both
     while {$i<$numcolors} {
-	set color \#[format "%02x%02x%02x" $i [expr $i+1] [expr $i+3]]
-	.c create rectangle [expr 10+$i] [expr 10+$i] [expr 50+$i] [expr 50+$i] -fill $color -outline $color
-	incr i
+        set color \#[format "%02x%02x%02x" $i [expr $i+1] [expr $i+3]]
+        .c create rectangle [expr 10+$i] [expr 10+$i] [expr 50+$i] [expr 50+$i] -fill $color -outline $color
+        incr i
     }
     set i 0
     while {$i<$numcolors} {
-	set color [.c itemcget $i -fill]
-	if {$color != ""} {
-	    foreach {r g b} [winfo rgb . $color] {}
-	    set r [expr $r/256]
-	    set g [expr $g/256]
-	    set b [expr $b/256]
-	    if {"$color" != "#[format %02x%02x%02x $r $g $b]"} {
-		testConstraint colorsLeftover 0
-	    }
-	}
-	.c delete $i
-	incr i
+        set color [.c itemcget $i -fill]
+        if {$color != ""} {
+            foreach {r g b} [winfo rgb . $color] {}
+            set r [expr $r/256]
+            set g [expr $g/256]
+            set b [expr $b/256]
+            if {"$color" != "#[format %02x%02x%02x $r $g $b]"} {
+                testConstraint colorsLeftover 0
+            }
+        }
+        .c delete $i
+        incr i
     }
     destroy .c
 } else {
@@ -84,14 +84,14 @@ set isNative [expr {[info commands tk::dialog::color::] eq ""}]
 proc ToPressButton {parent btn} {
     global isNative
     if {!$isNative} {
-	after 200 "SendButtonPress . $btn mouse"
+        after 200 "SendButtonPress . $btn mouse"
     }
 }
 
 proc ToChooseColorByKey {parent r g b} {
     global isNative
     if {!$isNative} {
-	after 200 ChooseColorByKey . $r $g $b
+        after 200 ChooseColorByKey . $r $g $b
     }
 }
 
@@ -128,16 +128,16 @@ proc SendButtonPress {parent btn type} {
 
     set button $data($btn\Btn)
     if ![winfo ismapped $button] {
-	update
+        update
     }
 
     if {$type == "mouse"} {
-	PressButton $button
+        PressButton $button
     } else {
-	event generate $w <Enter>
-	focus $w
-	event generate $button <Enter>
-	event generate $w <KeyPress> -keysym Return
+        event generate $w <Enter>
+        focus $w
+        event generate $button <Enter>
+        event generate $w <KeyPress> -keysym Return
     }
 }
 
@@ -186,14 +186,14 @@ test clrpick-2.4 {tk_chooseColor command} -constraints {
 
 
 test clrpick-3.1 {tk_chooseColor: background events} -constraints {
-	nonUnixUserInteraction
+        nonUnixUserInteraction
 } -body {
     after 1 {set x 53}
     ToPressButton . ok
     tk_chooseColor -parent . -title "Press OK" -initialcolor #000000
 } -result {#000000}
 test clrpick-3.2 {tk_chooseColor: background events} -constraints {
-	nonUnixUserInteraction
+        nonUnixUserInteraction
 } -body {
     after 1 {set x 53}
     ToPressButton . cancel
@@ -202,7 +202,7 @@ test clrpick-3.2 {tk_chooseColor: background events} -constraints {
 
 
 test clrpick-4.1 {tk_chooseColor: screen is inherited from parent} -constraints {
-	unix notAqua
+        unix notAqua
 } -body {
     after 50 {set ::scr [winfo screen .__tk__color]}
     ToPressButton . cancel

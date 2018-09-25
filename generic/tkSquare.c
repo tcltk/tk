@@ -1,11 +1,11 @@
 /*
  * tkSquare.c --
  *
- *	This module implements "square" widgets that are object based. A
- *	"square" is a widget that displays a single square that can be moved
- *	around and resized. This file is intended as an example of how to
- *	build a widget; it isn't included in the normal wish, but it is
- *	included in "tktest".
+ *      This module implements "square" widgets that are object based. A
+ *      "square" is a widget that displays a single square that can be moved
+ *      around and resized. This file is intended as an example of how to
+ *      build a widget; it isn't included in the normal wish, but it is
+ *      included in "tktest".
  *
  * Copyright (c) 1997 Sun Microsystems, Inc.
  *
@@ -30,34 +30,34 @@
  */
 
 typedef struct {
-    Tk_Window tkwin;		/* Window that embodies the square. NULL means
-				 * window has been deleted but widget record
-				 * hasn't been cleaned up yet. */
-    Display *display;		/* X's token for the window's display. */
-    Tcl_Interp *interp;		/* Interpreter associated with widget. */
-    Tcl_Command widgetCmd;	/* Token for square's widget command. */
-    Tk_OptionTable optionTable;	/* Token representing the configuration
-				 * specifications. */
-    Tcl_Obj *xPtr, *yPtr;	/* Position of square's upper-left corner
-				 * within widget. */
+    Tk_Window tkwin;            /* Window that embodies the square. NULL means
+                                 * window has been deleted but widget record
+                                 * hasn't been cleaned up yet. */
+    Display *display;           /* X's token for the window's display. */
+    Tcl_Interp *interp;         /* Interpreter associated with widget. */
+    Tcl_Command widgetCmd;      /* Token for square's widget command. */
+    Tk_OptionTable optionTable; /* Token representing the configuration
+                                 * specifications. */
+    Tcl_Obj *xPtr, *yPtr;       /* Position of square's upper-left corner
+                                 * within widget. */
     int x, y;
-    Tcl_Obj *sizeObjPtr;	/* Width and height of square. */
+    Tcl_Obj *sizeObjPtr;        /* Width and height of square. */
 
     /*
      * Information used when displaying widget:
      */
 
-    Tcl_Obj *borderWidthPtr;	/* Width of 3-D border around whole widget. */
+    Tcl_Obj *borderWidthPtr;    /* Width of 3-D border around whole widget. */
     Tcl_Obj *bgBorderPtr;
     Tcl_Obj *fgBorderPtr;
     Tcl_Obj *reliefPtr;
-    GC gc;			/* Graphics context for copying from
-				 * off-screen pixmap onto screen. */
-    Tcl_Obj *doubleBufferPtr;	/* Non-zero means double-buffer redisplay with
-				 * pixmap; zero means draw straight onto the
-				 * display. */
-    int updatePending;		/* Non-zero means a call to SquareDisplay has
-				 * already been scheduled. */
+    GC gc;                      /* Graphics context for copying from
+                                 * off-screen pixmap onto screen. */
+    Tcl_Obj *doubleBufferPtr;   /* Non-zero means double-buffer redisplay with
+                                 * pixmap; zero means draw straight onto the
+                                 * display. */
+    int updatePending;          /* Non-zero means a call to SquareDisplay has
+                                 * already been scheduled. */
 } Square;
 
 /*
@@ -66,29 +66,29 @@ typedef struct {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	    "#d9d9d9", Tk_Offset(Square, bgBorderPtr), -1, 0,
-	    "white", 0},
+            "#d9d9d9", Tk_Offset(Square, bgBorderPtr), -1, 0,
+            "white", 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, -1, 0,
-	    "-borderwidth", 0},
+            "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, -1, 0,
-	    "-background", 0},
+            "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	    "2", Tk_Offset(Square, borderWidthPtr), -1, 0, NULL, 0},
+            "2", Tk_Offset(Square, borderWidthPtr), -1, 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-dbl", "doubleBuffer", "DoubleBuffer",
-	    "1", Tk_Offset(Square, doubleBufferPtr), -1, 0 , NULL, 0},
+            "1", Tk_Offset(Square, doubleBufferPtr), -1, 0 , NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL, 0, -1, 0,
-	    "-foreground", 0},
+            "-foreground", 0},
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
-	    "#b03060", Tk_Offset(Square, fgBorderPtr), -1, 0,
-	    "black", 0},
+            "#b03060", Tk_Offset(Square, fgBorderPtr), -1, 0,
+            "black", 0},
     {TK_OPTION_PIXELS, "-posx", "posx", "PosX", "0",
-	    Tk_Offset(Square, xPtr), -1, 0, NULL, 0},
+            Tk_Offset(Square, xPtr), -1, 0, NULL, 0},
     {TK_OPTION_PIXELS, "-posy", "posy", "PosY", "0",
-	    Tk_Offset(Square, yPtr), -1, 0, NULL, 0},
+            Tk_Offset(Square, yPtr), -1, 0, NULL, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	    "raised", Tk_Offset(Square, reliefPtr), -1, 0, NULL, 0},
+            "raised", Tk_Offset(Square, reliefPtr), -1, 0, NULL, 0},
     {TK_OPTION_PIXELS, "-size", "size", "Size", "20",
-	    Tk_Offset(Square, sizeObjPtr), -1, 0, NULL, 0},
+            Tk_Offset(Square, sizeObjPtr), -1, 0, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 };
 
@@ -96,53 +96,53 @@ static const Tk_OptionSpec optionSpecs[] = {
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		SquareDeletedProc(ClientData clientData);
-static int		SquareConfigure(Tcl_Interp *interp, Square *squarePtr);
-static void		SquareDestroy(void *memPtr);
-static void		SquareDisplay(ClientData clientData);
-static void		KeepInWindow(Square *squarePtr);
-static void		SquareObjEventProc(ClientData clientData,
-			    XEvent *eventPtr);
-static int		SquareWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj * const objv[]);
+static void             SquareDeletedProc(ClientData clientData);
+static int              SquareConfigure(Tcl_Interp *interp, Square *squarePtr);
+static void             SquareDestroy(void *memPtr);
+static void             SquareDisplay(ClientData clientData);
+static void             KeepInWindow(Square *squarePtr);
+static void             SquareObjEventProc(ClientData clientData,
+                            XEvent *eventPtr);
+static int              SquareWidgetObjCmd(ClientData clientData,
+                            Tcl_Interp *, int objc, Tcl_Obj * const objv[]);
 
 /*
  *--------------------------------------------------------------
  *
  * SquareCmd --
  *
- *	This procedure is invoked to process the "square" Tcl command. It
- *	creates a new "square" widget.
+ *      This procedure is invoked to process the "square" Tcl command. It
+ *      creates a new "square" widget.
  *
  * Results:
- *	A standard Tcl result.
+ *      A standard Tcl result.
  *
  * Side effects:
- *	A new widget is created and configured.
+ *      A new widget is created and configured.
  *
  *--------------------------------------------------------------
  */
 
 int
 SquareObjCmd(
-    ClientData clientData,	/* NULL. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])	/* Argument objects. */
+    ClientData clientData,      /* NULL. */
+    Tcl_Interp *interp,         /* Current interpreter. */
+    int objc,                   /* Number of arguments. */
+    Tcl_Obj *const objv[])      /* Argument objects. */
 {
     Square *squarePtr;
     Tk_Window tkwin;
     Tk_OptionTable optionTable;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
+        return TCL_ERROR;
     }
 
     tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
-	    Tcl_GetString(objv[1]), NULL);
+            Tcl_GetString(objv[1]), NULL);
     if (tkwin == NULL) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     Tk_SetClass(tkwin, "Square");
 
@@ -167,30 +167,30 @@ SquareObjCmd(
     squarePtr->display = Tk_Display(tkwin);
     squarePtr->interp = interp;
     squarePtr->widgetCmd = Tcl_CreateObjCommand(interp,
-	    Tk_PathName(squarePtr->tkwin), SquareWidgetObjCmd, squarePtr,
-	    SquareDeletedProc);
+            Tk_PathName(squarePtr->tkwin), SquareWidgetObjCmd, squarePtr,
+            SquareDeletedProc);
     squarePtr->gc = None;
     squarePtr->optionTable = optionTable;
 
     if (Tk_InitOptions(interp, (char *) squarePtr, optionTable, tkwin)
-	    != TCL_OK) {
-	Tk_DestroyWindow(squarePtr->tkwin);
-	ckfree(squarePtr);
-	return TCL_ERROR;
+            != TCL_OK) {
+        Tk_DestroyWindow(squarePtr->tkwin);
+        ckfree(squarePtr);
+        return TCL_ERROR;
     }
 
     Tk_CreateEventHandler(squarePtr->tkwin, ExposureMask|StructureNotifyMask,
-	    SquareObjEventProc, squarePtr);
+            SquareObjEventProc, squarePtr);
     if (Tk_SetOptions(interp, (char *) squarePtr, optionTable, objc - 2,
-	    objv + 2, tkwin, NULL, NULL) != TCL_OK) {
-	goto error;
+            objv + 2, tkwin, NULL, NULL) != TCL_OK) {
+        goto error;
     }
     if (SquareConfigure(interp, squarePtr) != TCL_OK) {
-	goto error;
+        goto error;
     }
 
     Tcl_SetObjResult(interp,
-	    Tcl_NewStringObj(Tk_PathName(squarePtr->tkwin), -1));
+            Tcl_NewStringObj(Tk_PathName(squarePtr->tkwin), -1));
     return TCL_OK;
 
   error:
@@ -203,90 +203,90 @@ SquareObjCmd(
  *
  * SquareWidgetObjCmd --
  *
- *	This procedure is invoked to process the Tcl command that corresponds
- *	to a widget managed by this module. See the user documentation for
- *	details on what it does.
+ *      This procedure is invoked to process the Tcl command that corresponds
+ *      to a widget managed by this module. See the user documentation for
+ *      details on what it does.
  *
  * Results:
- *	A standard Tcl result.
+ *      A standard Tcl result.
  *
  * Side effects:
- *	See the user documentation.
+ *      See the user documentation.
  *
  *--------------------------------------------------------------
  */
 
 static int
 SquareWidgetObjCmd(
-    ClientData clientData,	/* Information about square widget. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj * const objv[])	/* Argument objects. */
+    ClientData clientData,      /* Information about square widget. */
+    Tcl_Interp *interp,         /* Current interpreter. */
+    int objc,                   /* Number of arguments. */
+    Tcl_Obj * const objv[])     /* Argument objects. */
 {
     Square *squarePtr = clientData;
     int result = TCL_OK;
     static const char *const squareOptions[] = {"cget", "configure", NULL};
     enum {
-	SQUARE_CGET, SQUARE_CONFIGURE
+        SQUARE_CGET, SQUARE_CONFIGURE
     };
     Tcl_Obj *resultObjPtr;
     int index;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg...?");
-	return TCL_ERROR;
+        Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg...?");
+        return TCL_ERROR;
     }
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], squareOptions,
-	    sizeof(char *), "command", 0, &index) != TCL_OK) {
-	return TCL_ERROR;
+            sizeof(char *), "command", 0, &index) != TCL_OK) {
+        return TCL_ERROR;
     }
 
     Tcl_Preserve(squarePtr);
 
     switch (index) {
     case SQUARE_CGET:
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "option");
-	    goto error;
-	}
-	resultObjPtr = Tk_GetOptionValue(interp, (char *) squarePtr,
-		squarePtr->optionTable, objv[2], squarePtr->tkwin);
-	if (resultObjPtr == NULL) {
-	    result = TCL_ERROR;
-	} else {
-	    Tcl_SetObjResult(interp, resultObjPtr);
-	}
-	break;
+        if (objc != 3) {
+            Tcl_WrongNumArgs(interp, 2, objv, "option");
+            goto error;
+        }
+        resultObjPtr = Tk_GetOptionValue(interp, (char *) squarePtr,
+                squarePtr->optionTable, objv[2], squarePtr->tkwin);
+        if (resultObjPtr == NULL) {
+            result = TCL_ERROR;
+        } else {
+            Tcl_SetObjResult(interp, resultObjPtr);
+        }
+        break;
     case SQUARE_CONFIGURE:
-	resultObjPtr = NULL;
-	if (objc == 2) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
-		    squarePtr->optionTable, NULL, squarePtr->tkwin);
-	    if (resultObjPtr == NULL) {
-		result = TCL_ERROR;
-	    }
-	} else if (objc == 3) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
-		    squarePtr->optionTable, objv[2], squarePtr->tkwin);
-	    if (resultObjPtr == NULL) {
-		result = TCL_ERROR;
-	    }
-	} else {
-	    result = Tk_SetOptions(interp, (char *) squarePtr,
-		    squarePtr->optionTable, objc - 2, objv + 2,
-		    squarePtr->tkwin, NULL, NULL);
-	    if (result == TCL_OK) {
-		result = SquareConfigure(interp, squarePtr);
-	    }
-	    if (!squarePtr->updatePending) {
-		Tcl_DoWhenIdle(SquareDisplay, squarePtr);
-		squarePtr->updatePending = 1;
-	    }
-	}
-	if (resultObjPtr != NULL) {
-	    Tcl_SetObjResult(interp, resultObjPtr);
-	}
+        resultObjPtr = NULL;
+        if (objc == 2) {
+            resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
+                    squarePtr->optionTable, NULL, squarePtr->tkwin);
+            if (resultObjPtr == NULL) {
+                result = TCL_ERROR;
+            }
+        } else if (objc == 3) {
+            resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
+                    squarePtr->optionTable, objv[2], squarePtr->tkwin);
+            if (resultObjPtr == NULL) {
+                result = TCL_ERROR;
+            }
+        } else {
+            result = Tk_SetOptions(interp, (char *) squarePtr,
+                    squarePtr->optionTable, objc - 2, objv + 2,
+                    squarePtr->tkwin, NULL, NULL);
+            if (result == TCL_OK) {
+                result = SquareConfigure(interp, squarePtr);
+            }
+            if (!squarePtr->updatePending) {
+                Tcl_DoWhenIdle(SquareDisplay, squarePtr);
+                squarePtr->updatePending = 1;
+            }
+        }
+        if (resultObjPtr != NULL) {
+            Tcl_SetObjResult(interp, resultObjPtr);
+        }
     }
     Tcl_Release(squarePtr);
     return result;
@@ -301,25 +301,25 @@ SquareWidgetObjCmd(
  *
  * SquareConfigure --
  *
- *	This procedure is called to process an argv/argc list in conjunction
- *	with the Tk option database to configure (or reconfigure) a square
- *	widget.
+ *      This procedure is called to process an argv/argc list in conjunction
+ *      with the Tk option database to configure (or reconfigure) a square
+ *      widget.
  *
  * Results:
- *	The return value is a standard Tcl result. If TCL_ERROR is returned,
- *	then the interp's result contains an error message.
+ *      The return value is a standard Tcl result. If TCL_ERROR is returned,
+ *      then the interp's result contains an error message.
  *
  * Side effects:
- *	Configuration information, such as colors, border width, etc. get set
- *	for squarePtr; old resources get freed, if there were any.
+ *      Configuration information, such as colors, border width, etc. get set
+ *      for squarePtr; old resources get freed, if there were any.
  *
  *----------------------------------------------------------------------
  */
 
 static int
 SquareConfigure(
-    Tcl_Interp *interp,		/* Used for error reporting. */
-    Square *squarePtr)		/* Information about widget. */
+    Tcl_Interp *interp,         /* Used for error reporting. */
+    Square *squarePtr)          /* Information about widget. */
 {
     int borderWidth;
     Tk_3DBorder bgBorder;
@@ -331,16 +331,16 @@ SquareConfigure(
      */
 
     bgBorder = Tk_Get3DBorderFromObj(squarePtr->tkwin,
-	    squarePtr->bgBorderPtr);
+            squarePtr->bgBorderPtr);
     Tk_SetWindowBackground(squarePtr->tkwin,
-	    Tk_3DBorderColor(bgBorder)->pixel);
+            Tk_3DBorderColor(bgBorder)->pixel);
     Tcl_GetBooleanFromObj(NULL, squarePtr->doubleBufferPtr, &doubleBuffer);
     if ((squarePtr->gc == None) && (doubleBuffer)) {
-	XGCValues gcValues;
-	gcValues.function = GXcopy;
-	gcValues.graphics_exposures = False;
-	squarePtr->gc = Tk_GetGC(squarePtr->tkwin,
-		GCFunction|GCGraphicsExposures, &gcValues);
+        XGCValues gcValues;
+        gcValues.function = GXcopy;
+        gcValues.graphics_exposures = False;
+        squarePtr->gc = Tk_GetGC(squarePtr->tkwin,
+                GCFunction|GCGraphicsExposures, &gcValues);
     }
 
     /*
@@ -350,11 +350,11 @@ SquareConfigure(
 
     Tk_GeometryRequest(squarePtr->tkwin, 200, 150);
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
-	    &borderWidth);
+            &borderWidth);
     Tk_SetInternalBorder(squarePtr->tkwin, borderWidth);
     if (!squarePtr->updatePending) {
-	Tcl_DoWhenIdle(SquareDisplay, squarePtr);
-	squarePtr->updatePending = 1;
+        Tcl_DoWhenIdle(SquareDisplay, squarePtr);
+        squarePtr->updatePending = 1;
     }
     KeepInWindow(squarePtr);
     return TCL_OK;
@@ -365,52 +365,52 @@ SquareConfigure(
  *
  * SquareObjEventProc --
  *
- *	This procedure is invoked by the Tk dispatcher for various events on
- *	squares.
+ *      This procedure is invoked by the Tk dispatcher for various events on
+ *      squares.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	When the window gets deleted, internal structures get cleaned up. When
- *	it gets exposed, it is redisplayed.
+ *      When the window gets deleted, internal structures get cleaned up. When
+ *      it gets exposed, it is redisplayed.
  *
  *--------------------------------------------------------------
  */
 
 static void
 SquareObjEventProc(
-    ClientData clientData,	/* Information about window. */
-    XEvent *eventPtr)		/* Information about event. */
+    ClientData clientData,      /* Information about window. */
+    XEvent *eventPtr)           /* Information about event. */
 {
     Square *squarePtr = clientData;
 
     if (eventPtr->type == Expose) {
-	if (!squarePtr->updatePending) {
-	    Tcl_DoWhenIdle(SquareDisplay, squarePtr);
-	    squarePtr->updatePending = 1;
-	}
+        if (!squarePtr->updatePending) {
+            Tcl_DoWhenIdle(SquareDisplay, squarePtr);
+            squarePtr->updatePending = 1;
+        }
     } else if (eventPtr->type == ConfigureNotify) {
-	KeepInWindow(squarePtr);
-	if (!squarePtr->updatePending) {
-	    Tcl_DoWhenIdle(SquareDisplay, squarePtr);
-	    squarePtr->updatePending = 1;
-	}
+        KeepInWindow(squarePtr);
+        if (!squarePtr->updatePending) {
+            Tcl_DoWhenIdle(SquareDisplay, squarePtr);
+            squarePtr->updatePending = 1;
+        }
     } else if (eventPtr->type == DestroyNotify) {
-	if (squarePtr->tkwin != NULL) {
-	    Tk_FreeConfigOptions((char *) squarePtr, squarePtr->optionTable,
-		    squarePtr->tkwin);
-	    if (squarePtr->gc != None) {
-		Tk_FreeGC(squarePtr->display, squarePtr->gc);
-	    }
-	    squarePtr->tkwin = NULL;
-	    Tcl_DeleteCommandFromToken(squarePtr->interp,
-		    squarePtr->widgetCmd);
-	}
-	if (squarePtr->updatePending) {
-	    Tcl_CancelIdleCall(SquareDisplay, squarePtr);
-	}
-	Tcl_EventuallyFree(squarePtr, (Tcl_FreeProc *) SquareDestroy);
+        if (squarePtr->tkwin != NULL) {
+            Tk_FreeConfigOptions((char *) squarePtr, squarePtr->optionTable,
+                    squarePtr->tkwin);
+            if (squarePtr->gc != None) {
+                Tk_FreeGC(squarePtr->display, squarePtr->gc);
+            }
+            squarePtr->tkwin = NULL;
+            Tcl_DeleteCommandFromToken(squarePtr->interp,
+                    squarePtr->widgetCmd);
+        }
+        if (squarePtr->updatePending) {
+            Tcl_CancelIdleCall(SquareDisplay, squarePtr);
+        }
+        Tcl_EventuallyFree(squarePtr, (Tcl_FreeProc *) SquareDestroy);
     }
 }
 
@@ -419,22 +419,22 @@ SquareObjEventProc(
  *
  * SquareDeletedProc --
  *
- *	This procedure is invoked when a widget command is deleted. If the
- *	widget isn't already in the process of being destroyed, this command
- *	destroys it.
+ *      This procedure is invoked when a widget command is deleted. If the
+ *      widget isn't already in the process of being destroyed, this command
+ *      destroys it.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The widget is destroyed.
+ *      The widget is destroyed.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 SquareDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    ClientData clientData)      /* Pointer to widget record for widget. */
 {
     Square *squarePtr = clientData;
     Tk_Window tkwin = squarePtr->tkwin;
@@ -447,7 +447,7 @@ SquareDeletedProc(
      */
 
     if (tkwin != NULL) {
-	Tk_DestroyWindow(tkwin);
+        Tk_DestroyWindow(tkwin);
     }
 }
 
@@ -456,22 +456,22 @@ SquareDeletedProc(
  *
  * SquareDisplay --
  *
- *	This procedure redraws the contents of a square window. It is invoked
- *	as a do-when-idle handler, so it only runs when there's nothing else
- *	for the application to do.
+ *      This procedure redraws the contents of a square window. It is invoked
+ *      as a do-when-idle handler, so it only runs when there's nothing else
+ *      for the application to do.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Information appears on the screen.
+ *      Information appears on the screen.
  *
  *--------------------------------------------------------------
  */
 
 static void
 SquareDisplay(
-    ClientData clientData)	/* Information about window. */
+    ClientData clientData)      /* Information about window. */
 {
     Square *squarePtr = clientData;
     Tk_Window tkwin = squarePtr->tkwin;
@@ -483,7 +483,7 @@ SquareDisplay(
 
     squarePtr->updatePending = 0;
     if (!Tk_IsMapped(tkwin)) {
-	return;
+        return;
     }
 
     /*
@@ -492,12 +492,12 @@ SquareDisplay(
 
     Tcl_GetBooleanFromObj(NULL, squarePtr->doubleBufferPtr, &doubleBuffer);
     if (doubleBuffer) {
-	pm = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
-		Tk_Width(tkwin), Tk_Height(tkwin),
-		DefaultDepthOfScreen(Tk_Screen(tkwin)));
-	d = pm;
+        pm = Tk_GetPixmap(Tk_Display(tkwin), Tk_WindowId(tkwin),
+                Tk_Width(tkwin), Tk_Height(tkwin),
+                DefaultDepthOfScreen(Tk_Screen(tkwin)));
+        d = pm;
     } else {
-	d = Tk_WindowId(tkwin);
+        d = Tk_WindowId(tkwin);
     }
 
     /*
@@ -505,12 +505,12 @@ SquareDisplay(
      */
 
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
-	    &borderWidth);
+            &borderWidth);
     bgBorder = Tk_Get3DBorderFromObj(squarePtr->tkwin,
-	    squarePtr->bgBorderPtr);
+            squarePtr->bgBorderPtr);
     Tk_GetReliefFromObj(NULL, squarePtr->reliefPtr, &relief);
     Tk_Fill3DRectangle(tkwin, d, bgBorder, 0, 0, Tk_Width(tkwin),
-	    Tk_Height(tkwin), borderWidth, relief);
+            Tk_Height(tkwin), borderWidth, relief);
 
     /*
      * Display the square.
@@ -518,19 +518,19 @@ SquareDisplay(
 
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->sizeObjPtr, &size);
     fgBorder = Tk_Get3DBorderFromObj(squarePtr->tkwin,
-	    squarePtr->fgBorderPtr);
+            squarePtr->fgBorderPtr);
     Tk_Fill3DRectangle(tkwin, d, fgBorder, squarePtr->x, squarePtr->y, size,
-	    size, borderWidth, TK_RELIEF_RAISED);
+            size, borderWidth, TK_RELIEF_RAISED);
 
     /*
      * If double-buffered, copy to the screen and release the pixmap.
      */
 
     if (doubleBuffer) {
-	XCopyArea(Tk_Display(tkwin), pm, Tk_WindowId(tkwin), squarePtr->gc,
-		0, 0, (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin),
-		0, 0);
-	Tk_FreePixmap(Tk_Display(tkwin), pm);
+        XCopyArea(Tk_Display(tkwin), pm, Tk_WindowId(tkwin), squarePtr->gc,
+                0, 0, (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin),
+                0, 0);
+        Tk_FreePixmap(Tk_Display(tkwin), pm);
     }
 }
 
@@ -539,22 +539,22 @@ SquareDisplay(
  *
  * SquareDestroy --
  *
- *	This procedure is invoked by Tcl_EventuallyFree or Tcl_Release to
- *	clean up the internal structure of a square at a safe time (when
- *	no-one is using it anymore).
+ *      This procedure is invoked by Tcl_EventuallyFree or Tcl_Release to
+ *      clean up the internal structure of a square at a safe time (when
+ *      no-one is using it anymore).
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Everything associated with the square is freed up.
+ *      Everything associated with the square is freed up.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 SquareDestroy(
-    void *memPtr)		/* Info about square widget. */
+    void *memPtr)               /* Info about square widget. */
 {
     Square *squarePtr = memPtr;
 
@@ -566,51 +566,51 @@ SquareDestroy(
  *
  * KeepInWindow --
  *
- *	Adjust the position of the square if necessary to keep it in the
- *	widget's window.
+ *      Adjust the position of the square if necessary to keep it in the
+ *      widget's window.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The x and y position of the square are adjusted if necessary to keep
- *	the square in the window.
+ *      The x and y position of the square are adjusted if necessary to keep
+ *      the square in the window.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 KeepInWindow(
-    register Square *squarePtr)	/* Pointer to widget record. */
+    register Square *squarePtr) /* Pointer to widget record. */
 {
     int i, bd, relief;
     int borderWidth, size;
 
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
-	    &borderWidth);
+            &borderWidth);
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->xPtr,
-	    &squarePtr->x);
+            &squarePtr->x);
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->yPtr,
-	    &squarePtr->y);
+            &squarePtr->y);
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->sizeObjPtr, &size);
     Tk_GetReliefFromObj(NULL, squarePtr->reliefPtr, &relief);
     bd = 0;
     if (relief != TK_RELIEF_FLAT) {
-	bd = borderWidth;
+        bd = borderWidth;
     }
     i = (Tk_Width(squarePtr->tkwin) - bd) - (squarePtr->x + size);
     if (i < 0) {
-	squarePtr->x += i;
+        squarePtr->x += i;
     }
     i = (Tk_Height(squarePtr->tkwin) - bd) - (squarePtr->y + size);
     if (i < 0) {
-	squarePtr->y += i;
+        squarePtr->y += i;
     }
     if (squarePtr->x < bd) {
-	squarePtr->x = bd;
+        squarePtr->x = bd;
     }
     if (squarePtr->y < bd) {
-	squarePtr->y = bd;
+        squarePtr->y = bd;
     }
 }
 

@@ -1,8 +1,8 @@
 # tkInt.decls --
 #
-#	This file contains the declarations for all unsupported functions that
-#	are exported by the Tk library. This file is used to generate the
-#	tkIntDecls.h, tkIntPlatDecls.h, tkIntStub.c, and tkPlatStub.c files.
+#       This file contains the declarations for all unsupported functions that
+#       are exported by the Tk library. This file is used to generate the
+#       tkIntDecls.h, tkIntPlatDecls.h, tkIntStub.c, and tkPlatStub.c files.
 #
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
@@ -26,14 +26,14 @@ scspec EXTERN
 
 declare 0 {
     TkWindow *TkAllocWindow(TkDisplay *dispPtr, int screenNum,
-	    TkWindow *parentPtr)
+            TkWindow *parentPtr)
 }
 declare 1 {
     void TkBezierPoints(double control[], int numSteps, double *coordPtr)
 }
 declare 2 {
     void TkBezierScreenPoints(Tk_Canvas canvas, double control[],
-	    int numSteps, XPoint *xPointPtr)
+            int numSteps, XPoint *xPointPtr)
 }
 #
 # Slot 3 unused (WAS: TkBindDeadWindow)
@@ -55,7 +55,7 @@ declare 8 {
 }
 declare 9 {
     void TkComputeAnchor(Tk_Anchor anchor, Tk_Window tkwin, int padX, int padY,
-	    int innerWidth, int innerHeight, int *xPtr, int *yPtr)
+            int innerWidth, int innerHeight, int *xPtr, int *yPtr)
 }
 #
 # Slot 10 unused (WAS: TkCopyAndGlobalEval)
@@ -63,16 +63,16 @@ declare 9 {
 #
 declare 12 {
     TkCursor *TkCreateCursorFromData(Tk_Window tkwin,
-	    const char *source, const char *mask, int width, int height,
-	    int xHot, int yHot, XColor fg, XColor bg)
+            const char *source, const char *mask, int width, int height,
+            int xHot, int yHot, XColor fg, XColor bg)
 }
 declare 13 {
     int TkCreateFrame(ClientData clientData, Tcl_Interp *interp,
-	    int argc, const char *const *argv, int toplevel, const char *appName)
+            int argc, const char *const *argv, int toplevel, const char *appName)
 }
 declare 14 {
     Tk_Window TkCreateMainWindow(Tcl_Interp *interp,
-	    const char *screenName, const char *baseName)
+            const char *screenName, const char *baseName)
 }
 declare 15 {
     Time TkCurrentTime(TkDisplay *dispPtr)
@@ -85,18 +85,18 @@ declare 17 {
 }
 declare 18 {
     void TkDrawInsetFocusHighlight(Tk_Window tkwin, GC gc, int width,
-	    Drawable drawable, int padding)
+            Drawable drawable, int padding)
 }
 declare 19 {
     void TkEventDeadWindow(TkWindow *winPtr)
 }
 declare 20 {
     void TkFillPolygon(Tk_Canvas canvas, double *coordPtr, int numPoints,
-	    Display *display, Drawable drawable, GC gc, GC outlineGC)
+            Display *display, Drawable drawable, GC gc, GC outlineGC)
 }
 declare 21 {
     int TkFindStateNum(Tcl_Interp *interp, const char *option,
-	    const TkStateMap *mapPtr, const char *strKey)
+            const TkStateMap *mapPtr, const char *strKey)
 }
 declare 22 {
     CONST86 char *TkFindStateString(const TkStateMap *mapPtr, int numKey)
@@ -126,27 +126,27 @@ declare 29 {
 }
 declare 30 {
     char *TkGetBitmapData(Tcl_Interp *interp, const char *string,
-	    const char *fileName, int *widthPtr, int *heightPtr,
-	    int *hotXPtr, int *hotYPtr)
+            const char *fileName, int *widthPtr, int *heightPtr,
+            int *hotXPtr, int *hotYPtr)
 }
 declare 31 {
     void TkGetButtPoints(double p1[], double p2[],
-	    double width, int project, double m1[], double m2[])
+            double width, int project, double m1[], double m2[])
 }
 declare 32 {
     TkCursor *TkGetCursorByName(Tcl_Interp *interp,
-	    Tk_Window tkwin, Tk_Uid string)
+            Tk_Window tkwin, Tk_Uid string)
 }
 declare 33 {
     const char *TkGetDefaultScreenName(Tcl_Interp *interp,
-	    const char *screenName)
+            const char *screenName)
 }
 declare 34 {
     TkDisplay *TkGetDisplay(Display *display)
 }
 declare 35 {
     int TkGetDisplayOf(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
-	    Tk_Window *tkwinPtr)
+            Tk_Window *tkwinPtr)
 }
 declare 36 {
     TkWindow *TkGetFocusWin(TkWindow *winPtr)
@@ -156,7 +156,7 @@ declare 37 {
 }
 declare 38 {
     int TkGetMiterPoints(double p1[], double p2[], double p3[],
-	    double width, double m1[], double m2[])
+            double width, double m1[], double m2[])
 }
 declare 39 {
     void TkGetPointerCoords(Tk_Window tkwin, int *xPtr, int *yPtr)
@@ -175,8 +175,8 @@ declare 43 {
 }
 declare 44 {
     void TkInOutEvents(XEvent *eventPtr, TkWindow *sourcePtr,
-	    TkWindow *destPtr, int leaveType, int enterType,
-	    Tcl_QueuePosition position)
+            TkWindow *destPtr, int leaveType, int enterType,
+            Tcl_QueuePosition position)
 }
 declare 45 {
     void TkInstallFrameMenu(Tk_Window tkwin)
@@ -192,11 +192,11 @@ declare 48 {
 }
 declare 49 {
     int TkMakeBezierCurve(Tk_Canvas canvas, double *pointPtr, int numPoints,
-	    int numSteps, XPoint xPoints[], double dblPoints[])
+            int numSteps, XPoint xPoints[], double dblPoints[])
 }
 declare 50 {
     void TkMakeBezierPostscript(Tcl_Interp *interp,
-	    Tk_Canvas canvas, double *pointPtr, int numPoints)
+            Tk_Canvas canvas, double *pointPtr, int numPoints)
 }
 declare 51 {
     void TkOptionClassChanged(TkWindow *winPtr)
@@ -209,7 +209,7 @@ declare 53 {
 }
 declare 54 {
     double TkOvalToPoint(double ovalPtr[],
-	    double width, int filled, double pointPtr[])
+            double width, int filled, double pointPtr[])
 }
 declare 55 {
     int TkpChangeFocus(TkWindow *winPtr, int force)
@@ -237,7 +237,7 @@ declare 62 {
 }
 declare 63 {
     void TkpInitializeMenuBindings(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable)
+            Tk_BindingTable bindingTable)
 }
 declare 64 {
     void TkpMakeContainer(Tk_Window tkwin)
@@ -283,12 +283,12 @@ declare 77 {
 }
 declare 78 {
     int TkReadBitmapFile(Display *display, Drawable d, const char *filename,
-	    unsigned int *width_return, unsigned int *height_return,
-	    Pixmap *bitmap_return, int *x_hot_return, int *y_hot_return)
+            unsigned int *width_return, unsigned int *height_return,
+            Pixmap *bitmap_return, int *x_hot_return, int *y_hot_return)
 }
 declare 79 {
     int TkScrollWindow(Tk_Window tkwin, GC gc, int x, int y,
-	    int width, int height, int dx, int dy, TkRegion damageRgn)
+            int width, int height, int dx, int dy, TkRegion damageRgn)
 }
 declare 80 {
     void TkSelDeadWindow(TkWindow *winPtr)
@@ -306,18 +306,18 @@ declare 83 {
 # Exported publically as Tk_SetClassProcs in 8.4a2
 #declare 84 {
 #    void TkSetClassProcs(Tk_Window tkwin,
-#	    TkClassProcs *procs, ClientData instanceData)
+#           TkClassProcs *procs, ClientData instanceData)
 #}
 declare 85 {
     void TkSetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
-	    const char *oldMenuName, const char *menuName)
+            const char *oldMenuName, const char *menuName)
 }
 declare 86 {
     KeySym TkStringToKeysym(const char *name)
 }
 declare 87 {
     int TkThickPolyLineToArea(double *coordPtr, int numPoints,
-	    double width, int capStyle, int joinStyle, double *rectPtr)
+            double width, int capStyle, int joinStyle, double *rectPtr)
 }
 declare 88 {
     void TkWmAddToColormapWindows(TkWindow *winPtr)
@@ -342,7 +342,7 @@ declare 94 {
 }
 declare 95 {
     void TkWmRestackToplevel(TkWindow *winPtr, int aboveBelow,
-	    TkWindow *otherPtr)
+            TkWindow *otherPtr)
 }
 declare 96 {
     void TkWmSetClass(TkWindow *winPtr)
@@ -373,7 +373,7 @@ declare 103 {
 }
 declare 104 {
     int TkFindStateNumObj(Tcl_Interp *interp, Tcl_Obj *optionPtr,
-	    const TkStateMap *mapPtr, Tcl_Obj *keyPtr)
+            const TkStateMap *mapPtr, Tcl_Obj *keyPtr)
 }
 declare 105 {
     Tcl_HashTable *TkGetBitmapPredefTable(void)
@@ -386,7 +386,7 @@ declare 107 {
 }
 declare 108 {
     int TkGetWindowFromObj(Tcl_Interp *interp, Tk_Window tkwin,
-	    Tcl_Obj *objPtr, Tk_Window *windowPtr)
+            Tcl_Obj *objPtr, Tk_Window *windowPtr)
 }
 declare 109 {
     CONST86 char *TkpGetString(TkWindow *winPtr, XEvent *eventPtr, Tcl_DString *dsPtr)
@@ -396,7 +396,7 @@ declare 110 {
 }
 declare 111 {
     Tcl_Obj *TkpGetSystemDefault(Tk_Window tkwin,
-	    const char *dbName, const char *className)
+            const char *dbName, const char *className)
 }
 declare 112 {
     void TkpMenuThreadInit(void)
@@ -415,14 +415,14 @@ declare 116 {
 }
 declare 117 {
     int TkRectInRegion(TkRegion rgn, int x, int y, unsigned int width,
-	    unsigned int height)
+            unsigned int height)
 }
 declare 118 {
     void TkSetRegion(Display *display, GC gc, TkRegion rgn)
 }
 declare 119 {
     void TkUnionRectWithRegion(XRectangle *rect,
-	    TkRegion src, TkRegion dr_return)
+            TkRegion src, TkRegion dr_return)
 }
 declare 121 aqua {
     Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
@@ -432,7 +432,7 @@ declare 122 aqua {
 }
 declare 124 aqua {
     Pixmap TkpGetNativeAppBitmap(Display *display,
-	    const char *name, int *width, int *height)
+            const char *name, int *width, int *height)
 }
 declare 135 {
     void TkpDrawHighlightBorder(Tk_Window tkwin, GC fgGC, GC bgGC,
@@ -477,25 +477,25 @@ declare 147 {
 }
 declare 148 {
     Tk_Window TkToplevelWindowForCommand(Tcl_Interp *interp,
-	    const char *cmdName)
+            const char *cmdName)
 }
 declare 149 {
     const Tk_OptionSpec *TkGetOptionSpec(const char *name,
-	    Tk_OptionTable optionTable)
+            Tk_OptionTable optionTable)
 }
 
 # TIP#168
 declare 150 {
     int TkMakeRawCurve(Tk_Canvas canvas, double *pointPtr, int numPoints,
-	    int numSteps, XPoint xPoints[], double dblPoints[])
+            int numSteps, XPoint xPoints[], double dblPoints[])
 }
 declare 151 {
     void TkMakeRawCurvePostscript(Tcl_Interp *interp,
-	    Tk_Canvas canvas, double *pointPtr, int numPoints)
+            Tk_Canvas canvas, double *pointPtr, int numPoints)
 }
 declare 152 {
     void TkpDrawFrame(Tk_Window tkwin, Tk_3DBorder border,
-	    int highlightWidth, int borderWidth, int relief)
+            int highlightWidth, int borderWidth, int relief)
 }
 declare 153 {
     void TkCreateThreadExitHandler(Tcl_ExitProc *proc, ClientData clientData)
@@ -507,132 +507,132 @@ declare 154 {
 # entries needed only by tktest:
 declare 156 {
     int TkpTestembedCmd(ClientData clientData, Tcl_Interp *interp, int objc,
-	    Tcl_Obj *const objv[])
+            Tcl_Obj *const objv[])
 }
 declare 157 {
     int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int objc,
-	    Tcl_Obj *const objv[])
+            Tcl_Obj *const objv[])
 }
 declare 158 {
     int TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
-	    Atom selection, Atom target, Tk_GetSelProc *proc,
-	    ClientData clientData)
+            Atom selection, Atom target, Tk_GetSelProc *proc,
+            ClientData clientData)
 }
 declare 159 {
     int TkTextGetIndex(Tcl_Interp *interp, struct TkText *textPtr,
-	    const char *string, struct TkTextIndex *indexPtr)
+            const char *string, struct TkTextIndex *indexPtr)
 }
 declare 160 {
     int TkTextIndexBackBytes(const struct TkText *textPtr,
-	    const struct TkTextIndex *srcPtr, int count,
-	    struct TkTextIndex *dstPtr)
+            const struct TkTextIndex *srcPtr, int count,
+            struct TkTextIndex *dstPtr)
 }
 declare 161 {
     int TkTextIndexForwBytes(const struct TkText *textPtr,
-	    const struct TkTextIndex *srcPtr, int count,
-	    struct TkTextIndex *dstPtr)
+            const struct TkTextIndex *srcPtr, int count,
+            struct TkTextIndex *dstPtr)
 }
 declare 162 {
     struct TkTextIndex *TkTextMakeByteIndex(TkTextBTree tree,
-	    const struct TkText *textPtr, int lineIndex,
-	    int byteIndex, struct TkTextIndex *indexPtr)
+            const struct TkText *textPtr, int lineIndex,
+            int byteIndex, struct TkTextIndex *indexPtr)
 }
 declare 163 {
     int TkTextPrintIndex(const struct TkText *textPtr,
-	    const struct TkTextIndex *indexPtr, char *string)
+            const struct TkTextIndex *indexPtr, char *string)
 }
 declare 164 {
     struct TkTextSegment *TkTextSetMark(struct TkText *textPtr,
-	    const char *name, struct TkTextIndex *indexPtr)
+            const char *name, struct TkTextIndex *indexPtr)
 }
 declare 165 {
     int TkTextXviewCmd(struct TkText *textPtr, Tcl_Interp *interp,
-	    int objc, Tcl_Obj *const objv[])
+            int objc, Tcl_Obj *const objv[])
 }
 declare 166 {
     void TkTextChanged(struct TkSharedText *sharedTextPtr,
-	    struct TkText *textPtr, const struct TkTextIndex *index1Ptr,
-	    const struct TkTextIndex *index2Ptr)
+            struct TkText *textPtr, const struct TkTextIndex *index1Ptr,
+            const struct TkTextIndex *index2Ptr)
 }
 declare 167 {
-    int	TkBTreeNumLines(TkTextBTree tree,
-	    const struct TkText *textPtr)
+    int TkBTreeNumLines(TkTextBTree tree,
+            const struct TkText *textPtr)
 }
 declare 168 {
     void TkTextInsertDisplayProc(struct TkText *textPtr,
-	    struct TkTextDispChunk *chunkPtr, int x, int y,
-	    int height, int baseline, Display *display,
-	    Drawable dst, int screenY)
+            struct TkTextDispChunk *chunkPtr, int x, int y,
+            int height, int baseline, Display *display,
+            Drawable dst, int screenY)
 }
 # Next group of functions exposed due to [Bug 2768945].
 declare 169 {
     int TkStateParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+            Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 170 {
     CONST86 char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+            char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 171 {
     int TkCanvasDashParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+            Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 172 {
     CONST86 char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+            char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 173 {
     int TkOffsetParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+            Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 174 {
     CONST86 char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+            char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 175 {
     int TkPixelParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+            Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 176 {
     CONST86 char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+            char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 177 {
     int TkOrientParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+            Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 178 {
     CONST86 char *TkOrientPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+            char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 179 {
     int TkSmoothParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+            Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 180 {
     CONST86 char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+            char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 
 # Angled text API, exposed for Emiliano Gavilán's RBC work.
 declare 181 {
     void TkDrawAngledTextLayout(Display *display, Drawable drawable, GC gc,
-	    Tk_TextLayout layout, int x, int y, double angle, int firstChar,
-	    int lastChar)
+            Tk_TextLayout layout, int x, int y, double angle, int firstChar,
+            int lastChar)
 }
 declare 182 {
     void TkUnderlineAngledTextLayout(Display *display, Drawable drawable,
-	    GC gc, Tk_TextLayout layout, int x, int y, double angle,
-	    int underline)
+            GC gc, Tk_TextLayout layout, int x, int y, double angle,
+            int underline)
 }
 declare 183 {
     int TkIntersectAngledTextLayout(Tk_TextLayout layout, int x, int y,
-	    int width, int height, double angle)
+            int width, int height, double angle)
 }
 declare 184 {
     void TkDrawAngledChars(Display *display,Drawable drawable, GC gc,
-	    Tk_Font tkfont, const char *source, int numBytes, double x,
-	    double y, double angle)
+            Tk_Font tkfont, const char *source, int numBytes, double x,
+            double y, double angle)
 }
 
 # Debugging / testing functions for photo images
@@ -692,7 +692,7 @@ declare 12 x11 {
 # only needed by tktest:
 declare 13 x11 {
     int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
-	    Tcl_Obj *const objv[])
+            Tcl_Obj *const objv[])
 }
 
 ################################
@@ -736,14 +736,14 @@ declare 12 win {
 }
 declare 13 win {
     LRESULT TkWinEmbeddedEventProc(HWND hwnd, UINT message,
-	    WPARAM wParam, LPARAM lParam)
+            WPARAM wParam, LPARAM lParam)
 }
 declare 14 win {
     void TkWinFillRect(HDC dc, int x, int y, int width, int height, int pixel)
 }
 declare 15 win {
     COLORREF TkWinGetBorderPixels(Tk_Window tkwin, Tk_3DBorder border,
-	    int which)
+            int which)
 }
 declare 16 win {
     HDC TkWinGetDrawableDC(Display *display, Drawable d, TkWinDCState *state)
@@ -759,7 +759,7 @@ declare 19 win {
 }
 declare 20 win {
     int TkWinHandleMenuEvent(HWND *phwnd, UINT *pMessage, WPARAM *pwParam,
-	    LPARAM *plParam, LRESULT *plResult)
+            LPARAM *plParam, LRESULT *plResult)
 }
 declare 21 win {
     int TkWinIndexOfColor(XColor *colorPtr)
@@ -799,7 +799,7 @@ declare 31 win {
 }
 declare 32 win {
     Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window tkwin,
-	    const char *dbName, const char *className)
+            const char *dbName, const char *className)
 }
 declare 33 win {
     int TkWinGetPlatformId(void)
@@ -818,7 +818,7 @@ declare 35 win {
 
 declare 36 win {
     LRESULT __stdcall TkWinChildProc(HWND hwnd,
-	    UINT message, WPARAM wParam, LPARAM lParam)
+            UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 # new for 8.4.20+/8.5.12+, Cygwin only
@@ -849,7 +849,7 @@ declare 44 win {
 # only needed by tktest:
 declare 45 win {
     int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
-	    Tcl_Obj *const objv[])
+            Tcl_Obj *const objv[])
 }
 
 ################################
@@ -921,7 +921,7 @@ declare 17 aqua {
 }
 declare 18 aqua {
     void TkMacOSXHandleMenuSelect(short theMenu, unsigned short theItem,
-	    int optionKeyPressed)
+            int optionKeyPressed)
 }
 
 # removed duplicates from tkPlat table(tk.decls)
@@ -998,7 +998,7 @@ declare 41 aqua {
 }
 declare 42 aqua {
     Tk_Window Tk_TopCoordsToWindow(Tk_Window tkwin, int rootX, int rootY,
-	    int *newX, int *newY)
+            int *newX, int *newY)
 }
 declare 43 aqua {
     MacDrawable *TkMacOSXContainerId(TkWindow *winPtr)
@@ -1031,7 +1031,7 @@ declare 52 aqua {
 # removed duplicate from tkPlat table (tk.decls)
 #declare 52 aqua {
 #    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y,
-# 	    int width, int height, int flags)
+#           int width, int height, int flags)
 #}
 
 declare 53 aqua {
@@ -1058,19 +1058,19 @@ interface tkIntXlib
 
 declare 0 win {
     int XSetDashes(Display *display, GC gc, int dash_offset,
-	    _Xconst char *dash_list, int n)
+            _Xconst char *dash_list, int n)
 }
 declare 1 win {
     XModifierKeymap *XGetModifierMapping(Display *d)
 }
 declare 2 win {
     XImage *XCreateImage(Display *d, Visual *v, unsigned int ui1, int i1,
-	    int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3,
-	    int i4)
+            int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3,
+            int i4)
 }
 declare 3 win {
     XImage *XGetImage(Display *d, Drawable dr, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)
+            unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)
 }
 declare 4 win {
     char *XGetAtomName(Display *d, Atom a)
@@ -1083,12 +1083,12 @@ declare 6 win {
 }
 declare 7 win {
     Cursor XCreatePixmapCursor(Display *d, Pixmap p1, Pixmap p2,
-	    XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2)
+            XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2)
 }
 declare 8 win {
     Cursor XCreateGlyphCursor(Display *d, Font f1, Font f2,
-	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
-	    XColor _Xconst *x2)
+            unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
+            XColor _Xconst *x2)
 }
 declare 9 win {
     GContext XGContextFromGC(GC g)
@@ -1126,31 +1126,31 @@ declare 19 win {
 }
 declare 20 win {
     int XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
-	    int i2, _Xconst unsigned char *c, int i3)
+            int i2, _Xconst unsigned char *c, int i3)
 }
 declare 21 win {
     int XChangeWindowAttributes(Display *d, Window w, unsigned long ul,
-	    XSetWindowAttributes *x)
+            XSetWindowAttributes *x)
 }
 declare 22 win {
     int XClearWindow(Display *d, Window w)
 }
 declare 23 win {
     int XConfigureWindow(Display *d, Window w, unsigned int i,
-	    XWindowChanges *x)
+            XWindowChanges *x)
 }
 declare 24 win {
     int XCopyArea(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
-	    int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)
+            int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 25 win {
     int XCopyPlane(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
-	    int i2, unsigned int ui1, unsigned int ui2,
-	    int i3, int i4, unsigned long ul)
+            int i2, unsigned int ui1, unsigned int ui2,
+            int i3, int i4, unsigned long ul)
 }
 declare 26 win {
     Pixmap XCreateBitmapFromData(Display *display, Drawable d,
-	    _Xconst char *data, unsigned int width, unsigned int height)
+            _Xconst char *data, unsigned int width, unsigned int height)
 }
 declare 27 win {
     int XDefineCursor(Display *d, Window w, Cursor c)
@@ -1163,22 +1163,22 @@ declare 29 win {
 }
 declare 30 win {
     int XDrawArc(Display *d, Drawable dr, GC g, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2, int i3, int i4)
+            unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 31 win {
     int XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
 }
 declare 32 win {
     int XDrawRectangle(Display *d, Drawable dr, GC g, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2)
+            unsigned int ui1, unsigned int ui2)
 }
 declare 33 win {
     int XFillArc(Display *d, Drawable dr, GC g, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2, int i3, int i4)
+            unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 34 win {
     int XFillPolygon(Display *d, Drawable dr, GC g, XPoint *x,
-	    int i1, int i2, int i3)
+            int i1, int i2, int i3)
 }
 declare 35 win {
     int XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
@@ -1191,7 +1191,7 @@ declare 37 win {
 }
 declare 38 win {
     int XFreeColors(Display *d, Colormap c,
-	    unsigned long *ulp, int i, unsigned long ul)
+            unsigned long *ulp, int i, unsigned long ul)
 }
 declare 39 win {
     int XFreeCursor(Display *d, Cursor c)
@@ -1201,16 +1201,16 @@ declare 40 win {
 }
 declare 41 win {
     Status XGetGeometry(Display *d, Drawable dr, Window *w, int *i1,
-	    int *i2, unsigned int *ui1, unsigned int *ui2, unsigned int *ui3,
-	    unsigned int *ui4)
+            int *i2, unsigned int *ui1, unsigned int *ui2, unsigned int *ui3,
+            unsigned int *ui4)
 }
 declare 42 win {
     int XGetInputFocus(Display *d, Window *w, int *i)
 }
 declare 43 win {
     int XGetWindowProperty(Display *d, Window w, Atom a1, long l1, long l2,
-	    Bool b, Atom a2, Atom *ap, int *ip, unsigned long *ulp1,
-	    unsigned long *ulp2, unsigned char **cpp)
+            Bool b, Atom a2, Atom *ap, int *ip, unsigned long *ulp1,
+            unsigned long *ulp2, unsigned char **cpp)
 }
 declare 44 win {
     Status XGetWindowAttributes(Display *d, Window w, XWindowAttributes *x)
@@ -1220,21 +1220,21 @@ declare 45 win {
 }
 declare 46 win {
     int XGrabPointer(Display *d, Window w1, Bool b, unsigned int ui,
-	    int i1, int i2, Window w2, Cursor c, Time t)
+            int i1, int i2, Window w2, Cursor c, Time t)
 }
 declare 47 win {
     KeyCode XKeysymToKeycode(Display *d, KeySym k)
 }
 declare 48 win {
     Status XLookupColor(Display *d, Colormap c1, _Xconst char *c2,
-	    XColor *x1, XColor *x2)
+            XColor *x1, XColor *x2)
 }
 declare 49 win {
     int XMapWindow(Display *d, Window w)
 }
 declare 50 win {
     int XMoveResizeWindow(Display *d, Window w, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2)
+            unsigned int ui1, unsigned int ui2)
 }
 declare 51 win {
     int XMoveWindow(Display *d, Window w, int i1, int i2)
@@ -1250,11 +1250,11 @@ declare 54 win {
 }
 declare 55 win {
     Bool XQueryPointer(Display *d, Window w1, Window *w2, Window *w3,
-	    int *i1, int *i2, int *i3, int *i4, unsigned int *ui)
+            int *i1, int *i2, int *i3, int *i4, unsigned int *ui)
 }
 declare 56 win {
     Status XQueryTree(Display *d, Window w1, Window *w2, Window *w3,
-	    Window **w4, unsigned int *ui)
+            Window **w4, unsigned int *ui)
 }
 declare 57 win {
     int XRaiseWindow(Display *d, Window w)
@@ -1264,7 +1264,7 @@ declare 58 win {
 }
 declare 59 win {
     int XResizeWindow(Display *d, Window w, unsigned int ui1,
-	    unsigned int ui2)
+            unsigned int ui2)
 }
 declare 60 win {
     int XSelectInput(Display *d, Window w, long l)
@@ -1304,7 +1304,7 @@ declare 71 win {
 }
 declare 72 win {
     Bool XTranslateCoordinates(Display *d, Window w1, Window w2, int i1,
-	    int i2, int *i3, int *i4, Window *w3)
+            int i2, int *i3, int *i4, Window *w3)
 }
 declare 73 win {
     int XUngrabKeyboard(Display *d, Time t)
@@ -1326,17 +1326,17 @@ declare 78 win {
 }
 declare 79 win {
     int XmbLookupString(XIC xi, XKeyPressedEvent *xk, char *c, int i,
-	    KeySym *k, Status *s)
+            KeySym *k, Status *s)
 }
 declare 80 win {
     int TkPutImage(unsigned long *colors, int ncolors, Display *display,
-	    Drawable d, GC gc, XImage *image, int src_x, int src_y,
-	    int dest_x, int dest_y, unsigned int width, unsigned int height)
+            Drawable d, GC gc, XImage *image, int src_x, int src_y,
+            int dest_x, int dest_y, unsigned int width, unsigned int height)
 }
 # This slot is reserved for use by the clipping rectangle patch:
 #  declare 81 win {
 #      XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
-#  	    int clip_y_origin, XRectangle rectangles[], int n, int ordering)
+#           int clip_y_origin, XRectangle rectangles[], int n, int ordering)
 #  }
 
 declare 82 win {
@@ -1345,14 +1345,14 @@ declare 82 win {
 }
 declare 83 win {
     GC XCreateGC(Display *display, Drawable d,
-	    unsigned long valuemask, XGCValues *values)
+            unsigned long valuemask, XGCValues *values)
 }
 declare 84 win {
     int XFreeGC(Display *display, GC gc)
 }
 declare 85 win {
     Atom XInternAtom(Display *display, _Xconst char *atom_name,
-	    Bool only_if_exists)
+            Bool only_if_exists)
 }
 declare 86 win {
     int XSetBackground(Display *display, GC gc, unsigned long foreground)
@@ -1365,11 +1365,11 @@ declare 88 win {
 }
 declare 89 win {
     int XSetClipOrigin(Display *display, GC gc,
-	    int clip_x_origin, int clip_y_origin)
+            int clip_x_origin, int clip_y_origin)
 }
 declare 90 win {
     int XSetTSOrigin(Display *display, GC gc,
-	    int ts_x_origin, int ts_y_origin)
+            int ts_x_origin, int ts_y_origin)
 }
 declare 91 win {
     int XChangeGC(Display *d, GC gc, unsigned long mask, XGCValues *values)
@@ -1394,7 +1394,7 @@ declare 97 win {
 }
 declare 98 win {
     int XSetLineAttributes(Display *display, GC gc, unsigned int line_width,
-	    int line_style, int cap_style, int join_style)
+            int line_style, int cap_style, int join_style)
 }
 declare 99 win {
     int _XInitImageFuncPtrs(XImage *image)
@@ -1404,27 +1404,27 @@ declare 100 win {
 }
 declare 101 win {
     XVisualInfo *XGetVisualInfo(Display *display, long vinfo_mask,
-	    XVisualInfo *vinfo_template, int *nitems_return)
+            XVisualInfo *vinfo_template, int *nitems_return)
 }
 declare 102 win {
     void XSetWMClientMachine(Display *display, Window w,
-	    XTextProperty *text_prop)
+            XTextProperty *text_prop)
 }
 declare 103 win {
     Status XStringListToTextProperty(char **list, int count,
-	    XTextProperty *text_prop_return)
+            XTextProperty *text_prop_return)
 }
 declare 104 win {
     int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
-	    int x2, int y2)
+            int x2, int y2)
 }
 declare 105 win {
     int XWarpPointer(Display *d, Window s, Window dw, int sx, int sy,
-	    unsigned int sw, unsigned int sh, int dx, int dy)
+            unsigned int sw, unsigned int sh, int dx, int dy)
 }
 declare 106 win {
     int XFillRectangle(Display *display, Drawable d, GC gc,
-	    int x, int y, unsigned int width, unsigned int height)
+            int x, int y, unsigned int width, unsigned int height)
 }
 
 # New in Tk 8.6
@@ -1464,10 +1464,10 @@ declare 121 win {
 # For 3dcanvas
 declare 122 win {
     Window XCreateWindow(Display *display, Window parent, int x, int y,
-	    unsigned int width, unsigned int height,
-	    unsigned int border_width, int depth, unsigned int clazz,
-	    Visual *visual, unsigned long value_mask,
-	    XSetWindowAttributes *attributes)
+            unsigned int width, unsigned int height,
+            unsigned int border_width, int depth, unsigned int clazz,
+            Visual *visual, unsigned long value_mask,
+            XSetWindowAttributes *attributes)
 }
 
 # Various, e.g. for stub-enabled BLT
@@ -1497,8 +1497,8 @@ declare 136 win {
 }
 declare 137 win {
     int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
-	    int sx, int sy, int dx, int dy,
-	    unsigned int w, unsigned int h)
+            int sx, int sy, int dx, int dy,
+            unsigned int w, unsigned int h)
 }
 declare 138 win {
     Region XPolygonRegion(XPoint *pts, int n, int rule)
@@ -1512,19 +1512,19 @@ declare 139 win {
 
 declare 0 aqua {
     int XSetDashes(Display *display, GC gc, int dash_offset,
-	    _Xconst char *dash_list, int n)
+            _Xconst char *dash_list, int n)
 }
 declare 1 aqua {
     XModifierKeymap *XGetModifierMapping(Display *d)
 }
 declare 2 aqua {
     XImage *XCreateImage(Display *d, Visual *v, unsigned int ui1, int i1,
-	    int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3,
-	    int i4)
+            int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3,
+            int i4)
 }
 declare 3 aqua {
     XImage *XGetImage(Display *d, Drawable dr, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)
+            unsigned int ui1, unsigned int ui2, unsigned long ul, int i3)
 }
 declare 4 aqua {
     char *XGetAtomName(Display *d, Atom a)
@@ -1558,28 +1558,28 @@ declare 13 aqua {
 }
 declare 14 aqua {
     void XChangeProperty(Display *d, Window w, Atom a1, Atom a2, int i1,
-	    int i2, _Xconst unsigned char *c, int i3)
+            int i2, _Xconst unsigned char *c, int i3)
 }
 declare 15 aqua {
     void XChangeWindowAttributes(Display *d, Window w, unsigned long ul,
-	    XSetWindowAttributes *x)
+            XSetWindowAttributes *x)
 }
 declare 16 aqua {
     void XConfigureWindow(Display *d, Window w, unsigned int i,
-	    XWindowChanges *x)
+            XWindowChanges *x)
 }
 declare 17 aqua {
     void XCopyArea(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
-	    int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)
+            int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 18 aqua {
     void XCopyPlane(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
-	    int i2, unsigned int ui1,
-	    unsigned int ui2, int i3, int i4, unsigned long ul)
+            int i2, unsigned int ui1,
+            unsigned int ui2, int i3, int i4, unsigned long ul)
 }
 declare 19 aqua {
     Pixmap XCreateBitmapFromData(Display *display, Drawable d,
-	    _Xconst char *data, unsigned int width, unsigned int height)
+            _Xconst char *data, unsigned int width, unsigned int height)
 }
 declare 20 aqua {
     int XDefineCursor(Display *d, Window w, Cursor c)
@@ -1589,22 +1589,22 @@ declare 21 aqua {
 }
 declare 22 aqua {
     void XDrawArc(Display *d, Drawable dr, GC g, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2, int i3, int i4)
+            unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 23 aqua {
     int XDrawLines(Display *d, Drawable dr, GC g, XPoint *x, int i1, int i2)
 }
 declare 24 aqua {
     void XDrawRectangle(Display *d, Drawable dr, GC g, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2)
+            unsigned int ui1, unsigned int ui2)
 }
 declare 25 aqua {
     void XFillArc(Display *d, Drawable dr, GC g, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2, int i3, int i4)
+            unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 26 aqua {
     void XFillPolygon(Display *d, Drawable dr, GC g, XPoint *x,
-	    int i1, int i2, int i3)
+            int i1, int i2, int i3)
 }
 declare 27 aqua {
     int XFillRectangles(Display *d, Drawable dr, GC g, XRectangle *x, int i)
@@ -1614,27 +1614,27 @@ declare 28 aqua {
 }
 declare 29 aqua {
     int XFreeColors(Display *d, Colormap c,
-	    unsigned long *ulp, int i, unsigned long ul)
+            unsigned long *ulp, int i, unsigned long ul)
 }
 declare 30 aqua {
     int XFreeModifiermap(XModifierKeymap *x)
 }
 declare 31 aqua {
     Status XGetGeometry(Display *d, Drawable dr, Window *w, int *i1,
-	    int *i2, unsigned int *ui1, unsigned int *ui2, unsigned int *ui3,
-	    unsigned int *ui4)
+            int *i2, unsigned int *ui1, unsigned int *ui2, unsigned int *ui3,
+            unsigned int *ui4)
 }
 declare 32 aqua {
     int XGetWindowProperty(Display *d, Window w, Atom a1, long l1, long l2,
-	    Bool b, Atom a2, Atom *ap, int *ip, unsigned long *ulp1,
-	    unsigned long *ulp2, unsigned char **cpp)
+            Bool b, Atom a2, Atom *ap, int *ip, unsigned long *ulp1,
+            unsigned long *ulp2, unsigned char **cpp)
 }
 declare 33 aqua {
     int XGrabKeyboard(Display *d, Window w, Bool b, int i1, int i2, Time t)
 }
 declare 34 aqua {
     int XGrabPointer(Display *d, Window w1, Bool b, unsigned int ui,
-	    int i1, int i2, Window w2, Cursor c, Time t)
+            int i1, int i2, Window w2, Cursor c, Time t)
 }
 declare 35 aqua {
     KeyCode XKeysymToKeycode(Display *d, KeySym k)
@@ -1644,14 +1644,14 @@ declare 36 aqua {
 }
 declare 37 aqua {
     void XMoveResizeWindow(Display *d, Window w, int i1, int i2,
-	    unsigned int ui1, unsigned int ui2)
+            unsigned int ui1, unsigned int ui2)
 }
 declare 38 aqua {
     void XMoveWindow(Display *d, Window w, int i1, int i2)
 }
 declare 39 aqua {
     Bool XQueryPointer(Display *d, Window w1, Window *w2, Window *w3,
-	    int *i1, int *i2, int *i3, int *i4, unsigned int *ui)
+            int *i1, int *i2, int *i3, int *i4, unsigned int *ui)
 }
 declare 40 aqua {
     void XRaiseWindow(Display *d, Window w)
@@ -1661,7 +1661,7 @@ declare 41 aqua {
 }
 declare 42 aqua {
     void XResizeWindow(Display *d, Window w, unsigned int ui1,
-	    unsigned int ui2)
+            unsigned int ui2)
 }
 declare 43 aqua {
     void XSelectInput(Display *d, Window w, long l)
@@ -1707,8 +1707,8 @@ declare 56 aqua {
 }
 declare 57 aqua {
     int TkPutImage(unsigned long *colors, int ncolors, Display *display,
-	    Drawable d, GC gc, XImage *image, int src_x, int src_y,
-	    int dest_x, int dest_y, unsigned int width, unsigned int height)
+            Drawable d, GC gc, XImage *image, int src_x, int src_y,
+            int dest_x, int dest_y, unsigned int width, unsigned int height)
 }
 declare 58 aqua {
     Status XParseColor(Display *display, Colormap map,
@@ -1716,14 +1716,14 @@ declare 58 aqua {
 }
 declare 59 aqua {
     GC XCreateGC(Display *display, Drawable d,
-	    unsigned long valuemask, XGCValues *values)
+            unsigned long valuemask, XGCValues *values)
 }
 declare 60 aqua {
     int XFreeGC(Display *display, GC gc)
 }
 declare 61 aqua {
     Atom XInternAtom(Display *display, _Xconst char *atom_name,
-	    Bool only_if_exists)
+            Bool only_if_exists)
 }
 declare 62 aqua {
     int XSetBackground(Display *display, GC gc, unsigned long foreground)
@@ -1736,11 +1736,11 @@ declare 64 aqua {
 }
 declare 65 aqua {
     int XSetClipOrigin(Display *display, GC gc,
-	    int clip_x_origin, int clip_y_origin)
+            int clip_x_origin, int clip_y_origin)
 }
 declare 66 aqua {
     int XSetTSOrigin(Display *display, GC gc,
-	    int ts_x_origin, int ts_y_origin)
+            int ts_x_origin, int ts_y_origin)
 }
 declare 67 aqua {
     int XChangeGC(Display *d, GC gc, unsigned long mask, XGCValues *values)
@@ -1765,7 +1765,7 @@ declare 73 aqua {
 }
 declare 74 aqua {
     int XSetLineAttributes(Display *display, GC gc, unsigned int line_width,
-	    int line_style, int cap_style, int join_style)
+            int line_style, int cap_style, int join_style)
 }
 declare 75 aqua {
     int _XInitImageFuncPtrs(XImage *image)
@@ -1775,30 +1775,30 @@ declare 76 aqua {
 }
 declare 77 aqua {
     XVisualInfo *XGetVisualInfo(Display *display, long vinfo_mask,
-	    XVisualInfo *vinfo_template, int *nitems_return)
+            XVisualInfo *vinfo_template, int *nitems_return)
 }
 declare 78 aqua {
     void XSetWMClientMachine(Display *display, Window w,
-	    XTextProperty *text_prop)
+            XTextProperty *text_prop)
 }
 declare 79 aqua {
     Status XStringListToTextProperty(char **list, int count,
-	    XTextProperty *text_prop_return)
+            XTextProperty *text_prop_return)
 }
 declare 80 aqua {
     int XDrawSegments(Display *display, Drawable d, GC gc,
-	    XSegment *segments, int nsegments)
+            XSegment *segments, int nsegments)
 }
 declare 81 aqua {
     void XForceScreenSaver(Display *display, int mode)
 }
 declare 82 aqua {
     int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
-	    int x2, int y2)
+            int x2, int y2)
 }
 declare 83 aqua {
     int XFillRectangle(Display *display, Drawable d, GC gc,
-	    int x, int y, unsigned int width, unsigned int height)
+            int x, int y, unsigned int width, unsigned int height)
 }
 declare 84 aqua {
     void XClearWindow(Display *d, Window w)
@@ -1808,23 +1808,23 @@ declare 85 aqua {
 }
 declare 86 aqua {
     int XDrawPoints(Display *display, Drawable d, GC gc, XPoint *points,
-	    int npoints, int mode)
+            int npoints, int mode)
 }
 declare 87 aqua {
     int XWarpPointer(Display *display, Window src_w, Window dest_w,
-	    int src_x, int src_y, unsigned int src_width,
-	    unsigned int src_height, int dest_x, int dest_y)
+            int src_x, int src_y, unsigned int src_width,
+            unsigned int src_height, int dest_x, int dest_y)
 }
 declare 88 aqua {
     void XQueryColor(Display *display, Colormap colormap, XColor *def_in_out)
 }
 declare 89 aqua {
     void XQueryColors(Display *display, Colormap colormap,
-	    XColor *defs_in_out, int ncolors)
+            XColor *defs_in_out, int ncolors)
 }
 declare 90 aqua {
     Status XQueryTree(Display *d, Window w1, Window *w2, Window *w3,
-	    Window **w4, unsigned int *ui)
+            Window **w4, unsigned int *ui)
 }
 declare 91 aqua {
     int XSync(Display *display, Bool flag)

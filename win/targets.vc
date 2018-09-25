@@ -11,17 +11,17 @@ $(PROJECT): setup pkgindex $(PRJLIB)
 !ifdef PRJ_STUBOBJS
 $(PROJECT): $(PRJSTUBLIB)
 $(PRJSTUBLIB): $(PRJ_STUBOBJS)
-	$(LIBCMD) $**
+        $(LIBCMD) $**
 
 $(PRJ_STUBOBJS):
-	$(CCSTUBSCMD) %s
+        $(CCSTUBSCMD) %s
 !endif # PRJ_STUBOBJS
 
 !ifdef PRJ_MANIFEST
 $(PROJECT): $(PRJLIB).manifest
 $(PRJLIB).manifest: $(PRJ_MANIFEST)
-	@nmakehlp -s << $** >$@
-@MACHINE@	  $(MACHINE:IX86=X86)
+        @nmakehlp -s << $** >$@
+@MACHINE@         $(MACHINE:IX86=X86)
 <<
 !endif
 
@@ -52,8 +52,8 @@ default-install: default-install-stubs
 !if "$(PRJ_HEADERS_PUBLIC)" != ""
 default-install: default-install-headers
 default-install-headers:
-	@echo Installing headers to '$(INCLUDE_INSTALL_DIR)'
-	@for %f in ($(PRJ_HEADERS_PUBLIC)) do @$(COPY) %f "$(INCLUDE_INSTALL_DIR)"
+        @echo Installing headers to '$(INCLUDE_INSTALL_DIR)'
+        @for %f in ($(PRJ_HEADERS_PUBLIC)) do @$(COPY) %f "$(INCLUDE_INSTALL_DIR)"
 !endif
 
 !if "$(DISABLE_STANDARD_TARGETS)" == ""

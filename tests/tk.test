@@ -110,7 +110,7 @@ test tk-4.6 {tk command: useinputmethods: set new} -body {
     # given, because we may be on a Unix system that doesn't have the XIM
     # stuff
     if {[tk useinputmethods 1] == 0} {
-	puts "this wish doesn't have XIM (X Input Methods) support"
+        puts "this wish doesn't have XIM (X Input Methods) support"
     }
     return $useim
 } -result $useim

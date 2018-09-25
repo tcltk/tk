@@ -109,16 +109,16 @@ SquareDoLayout(void *clientData)
      */
 
     if (squareNode) {
-	Square *squarePtr = clientData;
-	Tk_Anchor anchor = TK_ANCHOR_CENTER;
-	Ttk_Box b;
+        Square *squarePtr = clientData;
+        Tk_Anchor anchor = TK_ANCHOR_CENTER;
+        Ttk_Box b;
 
-	b = Ttk_ElementParcel(squareNode);
-	if (squarePtr->square.anchorObj != NULL)
-	    Tk_GetAnchorFromObj(NULL, squarePtr->square.anchorObj, &anchor);
-	b = Ttk_AnchorBox(winBox, b.width, b.height, anchor);
+        b = Ttk_ElementParcel(squareNode);
+        if (squarePtr->square.anchorObj != NULL)
+            Tk_GetAnchorFromObj(NULL, squarePtr->square.anchorObj, &anchor);
+        b = Ttk_AnchorBox(winBox, b.width, b.height, anchor);
 
-	Ttk_PlaceElement(corePtr->layout, squareNode, b);
+        Ttk_PlaceElement(corePtr->layout, squareNode, b);
     }
 }
 
@@ -129,11 +129,11 @@ SquareDoLayout(void *clientData)
  */
 
 static const Ttk_Ensemble SquareCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
-    { "cget",		TtkWidgetCgetCommand,0 },
-    { "identify",	TtkWidgetIdentifyCommand,0 },
-    { "instate",	TtkWidgetInstateCommand,0 },
-    { "state",  	TtkWidgetStateCommand,0 },
+    { "configure",      TtkWidgetConfigureCommand,0 },
+    { "cget",           TtkWidgetCgetCommand,0 },
+    { "identify",       TtkWidgetIdentifyCommand,0 },
+    { "instate",        TtkWidgetInstateCommand,0 },
+    { "state",          TtkWidgetStateCommand,0 },
     { 0,0,0 }
 };
 
@@ -145,18 +145,18 @@ static const Ttk_Ensemble SquareCommands[] = {
 
 static WidgetSpec SquareWidgetSpec =
 {
-    "TSquare",			/* className */
-    sizeof(Square),		/* recordSize */
-    SquareOptionSpecs,		/* optionSpecs */
-    SquareCommands,		/* subcommands */
-    TtkNullInitialize,		/* initializeProc */
-    TtkNullCleanup,		/* cleanupProc */
-    TtkCoreConfigure,		/* configureProc */
-    TtkNullPostConfigure,		/* postConfigureProc */
-    TtkWidgetGetLayout,		/* getLayoutProc */
-    TtkWidgetSize, 		/* sizeProc */
-    SquareDoLayout,		/* layoutProc */
-    TtkWidgetDisplay		/* displayProc */
+    "TSquare",                  /* className */
+    sizeof(Square),             /* recordSize */
+    SquareOptionSpecs,          /* optionSpecs */
+    SquareCommands,             /* subcommands */
+    TtkNullInitialize,          /* initializeProc */
+    TtkNullCleanup,             /* cleanupProc */
+    TtkCoreConfigure,           /* configureProc */
+    TtkNullPostConfigure,               /* postConfigureProc */
+    TtkWidgetGetLayout,         /* getLayoutProc */
+    TtkWidgetSize,              /* sizeProc */
+    SquareDoLayout,             /* layoutProc */
+    TtkWidgetDisplay            /* displayProc */
 };
 
 /* ----------------------------------------------------------------------
@@ -179,13 +179,13 @@ typedef struct
 static Ttk_ElementOptionSpec SquareElementOptions[] =
 {
     { "-background", TK_OPTION_BORDER, Tk_Offset(SquareElement,borderObj),
-    	DEFAULT_BACKGROUND },
+        DEFAULT_BACKGROUND },
     { "-foreground", TK_OPTION_BORDER, Tk_Offset(SquareElement,foregroundObj),
-    	DEFAULT_BACKGROUND },
+        DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SquareElement,borderWidthObj),
-    	DEFAULT_BORDERWIDTH },
+        DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF, Tk_Offset(SquareElement,reliefObj),
-    	"raised" },
+        "raised" },
     { "-width",  TK_OPTION_PIXELS, Tk_Offset(SquareElement,widthObj), "20"},
     { "-height", TK_OPTION_PIXELS, Tk_Offset(SquareElement,heightObj), "20"},
     { NULL, 0, 0, NULL }
@@ -227,7 +227,7 @@ static void SquareElementDraw(
     Tk_GetReliefFromObj(NULL, square->reliefObj, &relief);
 
     Tk_Fill3DRectangle(tkwin, d, foreground,
-	b.x, b.y, b.width, b.height, borderWidth, relief);
+        b.x, b.y, b.width, b.height, borderWidth, relief);
 }
 
 static Ttk_ElementSpec SquareElementSpec =
@@ -254,7 +254,7 @@ static Ttk_ElementSpec SquareElementSpec =
 TTK_BEGIN_LAYOUT(SquareLayout)
      TTK_NODE("Square.background", TTK_FILL_BOTH)
      TTK_GROUP("Square.padding", TTK_FILL_BOTH,
-	 TTK_NODE("Square.square", 0))
+         TTK_NODE("Square.square", 0))
 TTK_END_LAYOUT
 
 /* ----------------------------------------------------------------------

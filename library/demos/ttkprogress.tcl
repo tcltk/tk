@@ -28,15 +28,15 @@ set w $w.f
 
 proc doBars {op args} {
     foreach w $args {
-	$w $op
+        $w $op
     }
 }
 ttk::progressbar $w.p1 -mode determinate
 ttk::progressbar $w.p2 -mode indeterminate
 ttk::button $w.start -text "Start Progress" -command [list \
-	doBars start $w.p1 $w.p2]
+        doBars start $w.p1 $w.p2]
 ttk::button $w.stop -text "Stop Progress" -command [list \
-	doBars stop $w.p1 $w.p2]
+        doBars stop $w.p1 $w.p2]
 
 grid $w.p1 - -pady 5 -padx 10
 grid $w.p2 - -pady 5 -padx 10

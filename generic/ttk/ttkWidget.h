@@ -9,42 +9,42 @@
 /*
  * State flags for 'flags' field.
  */
-#define WIDGET_DESTROYED	0x0001
-#define REDISPLAY_PENDING 	0x0002	/* scheduled call to RedisplayWidget */
-#define CURSOR_ON 		0x0020	/* See TtkBlinkCursor() */
+#define WIDGET_DESTROYED        0x0001
+#define REDISPLAY_PENDING       0x0002  /* scheduled call to RedisplayWidget */
+#define CURSOR_ON               0x0020  /* See TtkBlinkCursor() */
 #define WIDGET_USER_FLAG        0x0100  /* 0x0100 - 0x8000 for user flags */
 
 /*
  * Bit fields for OptionSpec 'mask' field:
  */
-#define READONLY_OPTION 	0x1
-#define STYLE_CHANGED   	0x2
-#define GEOMETRY_CHANGED	0x4
+#define READONLY_OPTION         0x1
+#define STYLE_CHANGED           0x2
+#define GEOMETRY_CHANGED        0x4
 
 /*
  * Core widget elements
  */
-typedef struct WidgetSpec_ WidgetSpec;	/* Forward */
+typedef struct WidgetSpec_ WidgetSpec;  /* Forward */
 
 typedef struct
 {
-    Tk_Window tkwin;		/* Window associated with widget */
-    Tcl_Interp *interp;		/* Interpreter associated with widget. */
-    WidgetSpec *widgetSpec;	/* Widget class hooks */
-    Tcl_Command widgetCmd;	/* Token for widget command. */
-    Tk_OptionTable optionTable;	/* Option table */
-    Ttk_Layout layout;  	/* Widget layout */
+    Tk_Window tkwin;            /* Window associated with widget */
+    Tcl_Interp *interp;         /* Interpreter associated with widget. */
+    WidgetSpec *widgetSpec;     /* Widget class hooks */
+    Tcl_Command widgetCmd;      /* Token for widget command. */
+    Tk_OptionTable optionTable; /* Option table */
+    Ttk_Layout layout;          /* Widget layout */
 
     /*
      * Storage for resources:
      */
-    Tcl_Obj *takeFocusPtr;	/* Storage for -takefocus option */
-    Tcl_Obj *cursorObj;		/* Storage for -cursor option */
-    Tcl_Obj *styleObj;		/* Name of currently-applied style */
-    Tcl_Obj *classObj;		/* Class name (readonly option) */
+    Tcl_Obj *takeFocusPtr;      /* Storage for -takefocus option */
+    Tcl_Obj *cursorObj;         /* Storage for -cursor option */
+    Tcl_Obj *styleObj;          /* Name of currently-applied style */
+    Tcl_Obj *classObj;          /* Class name (readonly option) */
 
-    Ttk_State state;		/* Current widget state */
-    unsigned int flags;		/* internal flags, see above */
+    Ttk_State state;            /* Current widget state */
+    unsigned int flags;         /* internal flags, see above */
 
 } WidgetCore;
 
@@ -53,22 +53,22 @@ typedef struct
  */
 struct WidgetSpec_
 {
-    const char 		*className;	/* Widget class name */
-    size_t 		recordSize;	/* #bytes in widget record */
-    const Tk_OptionSpec	*optionSpecs;	/* Option specifications */
-    const Ttk_Ensemble	*commands;	/* Widget instance subcommands */
+    const char          *className;     /* Widget class name */
+    size_t              recordSize;     /* #bytes in widget record */
+    const Tk_OptionSpec *optionSpecs;   /* Option specifications */
+    const Ttk_Ensemble  *commands;      /* Widget instance subcommands */
 
     /*
      * Hooks:
      */
-    void  	(*initializeProc)(Tcl_Interp *, void *recordPtr);
-    void	(*cleanupProc)(void *recordPtr);
-    int 	(*configureProc)(Tcl_Interp *, void *recordPtr, int flags);
-    int 	(*postConfigureProc)(Tcl_Interp *, void *recordPtr, int flags);
-    Ttk_Layout	(*getLayoutProc)(Tcl_Interp *,Ttk_Theme, void *recordPtr);
-    int 	(*sizeProc)(void *recordPtr, int *widthPtr, int *heightPtr);
-    void	(*layoutProc)(void *recordPtr);
-    void	(*displayProc)(void *recordPtr, Drawable d);
+    void        (*initializeProc)(Tcl_Interp *, void *recordPtr);
+    void        (*cleanupProc)(void *recordPtr);
+    int         (*configureProc)(Tcl_Interp *, void *recordPtr, int flags);
+    int         (*postConfigureProc)(Tcl_Interp *, void *recordPtr, int flags);
+    Ttk_Layout  (*getLayoutProc)(Tcl_Interp *,Ttk_Theme, void *recordPtr);
+    int         (*sizeProc)(void *recordPtr, int *widthPtr, int *heightPtr);
+    void        (*layoutProc)(void *recordPtr);
+    void        (*displayProc)(void *recordPtr, Drawable d);
 };
 
 /*
@@ -78,9 +78,9 @@ MODULE_SCOPE void TtkNullInitialize(Tcl_Interp *, void *);
 MODULE_SCOPE int  TtkNullPostConfigure(Tcl_Interp *, void *, int);
 MODULE_SCOPE void TtkNullCleanup(void *recordPtr);
 MODULE_SCOPE Ttk_Layout TtkWidgetGetLayout(
-	Tcl_Interp *, Ttk_Theme, void *recordPtr);
+        Tcl_Interp *, Ttk_Theme, void *recordPtr);
 MODULE_SCOPE Ttk_Layout TtkWidgetGetOrientedLayout(
-	Tcl_Interp *, Ttk_Theme, void *recordPtr, Tcl_Obj *orientObj);
+        Tcl_Interp *, Ttk_Theme, void *recordPtr, Tcl_Obj *orientObj);
 MODULE_SCOPE int  TtkWidgetSize(void *recordPtr, int *w, int *h);
 MODULE_SCOPE void TtkWidgetDoLayout(void *recordPtr);
 MODULE_SCOPE void TtkWidgetDisplay(void *recordPtr, Drawable);
@@ -90,37 +90,37 @@ MODULE_SCOPE int TtkCoreConfigure(Tcl_Interp*, void *, int mask);
 /* Common widget commands:
  */
 MODULE_SCOPE int TtkWidgetConfigureCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+        void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetCgetCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+        void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetInstateCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+        void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetStateCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+        void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetIdentifyCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+        void *,Tcl_Interp *, int, Tcl_Obj*const[]);
 
 /* Widget constructor:
  */
 MODULE_SCOPE int TtkWidgetConstructorObjCmd(
-	ClientData, Tcl_Interp*, int, Tcl_Obj*const[]);
+        ClientData, Tcl_Interp*, int, Tcl_Obj*const[]);
 
 #define RegisterWidget(interp, name, specPtr) \
     Tcl_CreateObjCommand(interp, name, \
-	TtkWidgetConstructorObjCmd, (ClientData)specPtr,NULL)
+        TtkWidgetConstructorObjCmd, (ClientData)specPtr,NULL)
 
 /* WIDGET_TAKEFOCUS_TRUE --
  * WIDGET_TAKEFOCUS_FALSE --
- *	Add one or the other of these to each OptionSpecs table
- *	to indicate whether the widget should take focus
- *	during keyboard traversal.
+ *      Add one or the other of these to each OptionSpecs table
+ *      to indicate whether the widget should take focus
+ *      during keyboard traversal.
  */
 #define WIDGET_TAKEFOCUS_TRUE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"ttk::takefocus", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 }
+        "ttk::takefocus", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 }
 #define WIDGET_TAKEFOCUS_FALSE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 }
+        "", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 }
 
 /* WIDGET_INHERIT_OPTIONS(baseOptionSpecs) --
  * Add this at the end of an OptionSpecs table to inherit
@@ -140,7 +140,7 @@ MODULE_SCOPE Tk_OptionSpec ttkCoreOptionSpecs[];
 #define WidgetDestroyed(corePtr) ((corePtr)->flags & WIDGET_DESTROYED)
 
 MODULE_SCOPE void TtkWidgetChangeState(WidgetCore *,
-	unsigned int setBits, unsigned int clearBits);
+        unsigned int setBits, unsigned int clearBits);
 
 MODULE_SCOPE void TtkRedisplayWidget(WidgetCore *);
 MODULE_SCOPE void TtkResizeWidget(WidgetCore *);
@@ -181,10 +181,10 @@ MODULE_SCOPE int TtkGetOptionValue(
  * Helper routines for scrolling widgets (see scroll.c).
  */
 typedef struct {
-    int 	first;		/* First visible item */
-    int 	last;		/* Last visible item */
-    int 	total;		/* Total #items */
-    char 	*scrollCmd;	/* Widget option */
+    int         first;          /* First visible item */
+    int         last;           /* Last visible item */
+    int         total;          /* Total #items */
+    char        *scrollCmd;     /* Widget option */
 } Scrollable;
 
 typedef struct ScrollHandleRec *ScrollHandle;
@@ -205,13 +205,13 @@ MODULE_SCOPE void TtkScrollbarUpdateRequired(ScrollHandle);
 
 typedef struct TtkTag *Ttk_Tag;
 typedef struct TtkTagTable *Ttk_TagTable;
-typedef struct TtkTagSet {	/* TODO: make opaque */
-    Ttk_Tag	*tags;
-    int 	nTags;
+typedef struct TtkTagSet {      /* TODO: make opaque */
+    Ttk_Tag     *tags;
+    int         nTags;
 } *Ttk_TagSet;
 
 MODULE_SCOPE Ttk_TagTable Ttk_CreateTagTable(
-	Tcl_Interp *, Tk_Window tkwin, Tk_OptionSpec[], int recordSize);
+        Tcl_Interp *, Tk_Window tkwin, Tk_OptionSpec[], int recordSize);
 MODULE_SCOPE void Ttk_DeleteTagTable(Ttk_TagTable);
 
 MODULE_SCOPE Ttk_Tag Ttk_GetTag(Ttk_TagTable, const char *tagName);
@@ -254,7 +254,7 @@ MODULE_SCOPE const char *ttkDefaultStrings[];
  * ... other option types...
  */
 MODULE_SCOPE int TtkGetLabelAnchorFromObj(
-	Tcl_Interp*, Tcl_Obj*, Ttk_PositionSpec *);
+        Tcl_Interp*, Tcl_Obj*, Ttk_PositionSpec *);
 
 /*
  * Platform-specific initialization.

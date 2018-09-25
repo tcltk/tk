@@ -15,18 +15,18 @@ MODULE_SCOPE Ttk_ElementClass *Ttk_GetElement(Ttk_Theme, const char *name);
 MODULE_SCOPE const char *Ttk_ElementClassName(Ttk_ElementClass *);
 
 MODULE_SCOPE void Ttk_ElementSize(
-	Ttk_ElementClass *, Ttk_Style, char *recordPtr, Tk_OptionTable,
-	Tk_Window tkwin, Ttk_State state,
-	int *widthPtr, int *heightPtr, Ttk_Padding*);
+        Ttk_ElementClass *, Ttk_Style, char *recordPtr, Tk_OptionTable,
+        Tk_Window tkwin, Ttk_State state,
+        int *widthPtr, int *heightPtr, Ttk_Padding*);
 MODULE_SCOPE void Ttk_DrawElement(
-	Ttk_ElementClass *, Ttk_Style, char *recordPtr, Tk_OptionTable,
-	Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
+        Ttk_ElementClass *, Ttk_Style, char *recordPtr, Tk_OptionTable,
+        Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
 
 MODULE_SCOPE Tcl_Obj *Ttk_QueryStyle(
     Ttk_Style, void *, Tk_OptionTable, const char *, Ttk_State state);
 
 MODULE_SCOPE Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(
-	Tcl_Interp *, Tcl_Obj *);
+        Tcl_Interp *, Tcl_Obj *);
 MODULE_SCOPE Tcl_Obj *Ttk_UnparseLayoutTemplate(Ttk_LayoutTemplate);
 MODULE_SCOPE Ttk_LayoutTemplate Ttk_BuildLayoutTemplate(Ttk_LayoutSpec);
 MODULE_SCOPE void Ttk_FreeLayoutTemplate(Ttk_LayoutTemplate);

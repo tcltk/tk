@@ -13,9 +13,9 @@ while true; do
     case $1 in
         -s | --symlinks  ) SymOrLoc="-s "      ;;
         -z | --compress  )     Gzip=$2;  shift ;;
-	-e | --extension )       Gz=$2;  shift ;;
-	-x | --suffix    )   Suffix=$2;  shift ;;
-	-*) cat <<EOF
+        -e | --extension )       Gz=$2;  shift ;;
+        -x | --suffix    )   Suffix=$2;  shift ;;
+        -*) cat <<EOF
 Unknown option "$1". Supported options:
     -s         Use symbolic links for manpages with multiple names.
     -z PROG    Use PROG to compress manual pages.
@@ -23,8 +23,8 @@ Unknown option "$1". Supported options:
     -x SUFF    Defines an extra extension suffix to use.
 Option names may not be combined getopt-style.
 EOF
-	    exit 1 ;;
-	*)  break ;;
+            exit 1 ;;
+        *)  break ;;
     esac
     shift
 done
@@ -62,18 +62,18 @@ Names=`sed -n '
 #                               Look for a line that starts with .SH NAME
     /^\.SH NAME/{
 #                               Read next line
-	n
+        n
 #                               Remove all commas ...
-	s/,//g
+        s/,//g
 #                               ... and backslash-escaped spaces.
-	s/\\\ //g
+        s/\\\ //g
 #                               Delete from \- to the end of line
-	s/ \\\-.*//
+        s/ \\\-.*//
 #                               Convert all non-space non-alphanum sequences
 #                               to single underscores.
-	s/[^ A-Za-z0-9][^ A-Za-z0-9]*/_/g
+        s/[^ A-Za-z0-9][^ A-Za-z0-9]*/_/g
 #                               print the result and exit
-	p;q
+        p;q
     }' $ManPage`
 
 if test -z "$Names" ; then
@@ -88,8 +88,8 @@ case $ManPage in
     *.1) Section=1 ;;
     *.3) Section=3 ;;
     *.n) Section=n ;;
-    *)	echo "unknown section for $ManPage"
-	exit 2 ;;
+    *)  echo "unknown section for $ManPage"
+        exit 2 ;;
 esac
 
 SrcDir=`dirname $ManPage`
@@ -103,13 +103,13 @@ for Target in $Names; do
     Target=$Target.$Section$Suffix
     rm -f $Dir/$Target $Dir/$Target.*
     if test -z "$First" ; then
-	First=$Target
-	sed -e "/man\.macros/r $SrcDir/man.macros" -e "/man\.macros/d" \
-	    $ManPage > $Dir/$First
-	chmod 444 $Dir/$First
-	$Gzip $Dir/$First
+        First=$Target
+        sed -e "/man\.macros/r $SrcDir/man.macros" -e "/man\.macros/d" \
+            $ManPage > $Dir/$First
+        chmod 444 $Dir/$First
+        $Gzip $Dir/$First
     else
-	ln $SymOrLoc$First$Gz $Dir/$Target$Gz
+        ln $SymOrLoc$First$Gz $Dir/$Target$Gz
     fi
 done
 

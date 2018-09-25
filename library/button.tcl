@@ -19,85 +19,85 @@
 if {[tk windowingsystem] eq "aqua"} {
 
     bind Radiobutton <Enter> {
-	tk::ButtonEnter %W
+        tk::ButtonEnter %W
     }
     bind Radiobutton <1> {
-	tk::ButtonDown %W
+        tk::ButtonDown %W
     }
     bind Radiobutton <ButtonRelease-1> {
-	tk::ButtonUp %W
+        tk::ButtonUp %W
     }
     bind Checkbutton <Enter> {
-	tk::ButtonEnter %W
+        tk::ButtonEnter %W
     }
     bind Checkbutton <1> {
-	tk::ButtonDown %W
+        tk::ButtonDown %W
     }
     bind Checkbutton <ButtonRelease-1> {
-	tk::ButtonUp %W
+        tk::ButtonUp %W
     }
     bind Checkbutton <Leave> {
-	tk::ButtonLeave %W
+        tk::ButtonLeave %W
     }
 }
 if {"win32" eq [tk windowingsystem]} {
     bind Checkbutton <equal> {
-	tk::CheckRadioInvoke %W select
+        tk::CheckRadioInvoke %W select
     }
     bind Checkbutton <plus> {
-	tk::CheckRadioInvoke %W select
+        tk::CheckRadioInvoke %W select
     }
     bind Checkbutton <minus> {
-	tk::CheckRadioInvoke %W deselect
+        tk::CheckRadioInvoke %W deselect
     }
     bind Checkbutton <1> {
-	tk::CheckRadioDown %W
+        tk::CheckRadioDown %W
     }
     bind Checkbutton <ButtonRelease-1> {
-	tk::ButtonUp %W
+        tk::ButtonUp %W
     }
     bind Checkbutton <Enter> {
-	tk::CheckRadioEnter %W
+        tk::CheckRadioEnter %W
     }
     bind Checkbutton <Leave> {
-	tk::ButtonLeave %W
+        tk::ButtonLeave %W
     }
 
     bind Radiobutton <1> {
-	tk::CheckRadioDown %W
+        tk::CheckRadioDown %W
     }
     bind Radiobutton <ButtonRelease-1> {
-	tk::ButtonUp %W
+        tk::ButtonUp %W
     }
     bind Radiobutton <Enter> {
-	tk::CheckRadioEnter %W
+        tk::CheckRadioEnter %W
     }
 }
 if {"x11" eq [tk windowingsystem]} {
     bind Checkbutton <Return> {
-	if {!$tk_strictMotif} {
-	    tk::CheckInvoke %W
-	}
+        if {!$tk_strictMotif} {
+            tk::CheckInvoke %W
+        }
     }
     bind Radiobutton <Return> {
-	if {!$tk_strictMotif} {
-	    tk::CheckRadioInvoke %W
-	}
+        if {!$tk_strictMotif} {
+            tk::CheckRadioInvoke %W
+        }
     }
     bind Checkbutton <1> {
-	tk::CheckInvoke %W
+        tk::CheckInvoke %W
     }
     bind Radiobutton <1> {
-	tk::CheckRadioInvoke %W
+        tk::CheckRadioInvoke %W
     }
     bind Checkbutton <Enter> {
-	tk::CheckEnter %W
+        tk::CheckEnter %W
     }
     bind Radiobutton <Enter> {
-	tk::ButtonEnter %W
+        tk::ButtonEnter %W
     }
     bind Checkbutton <Leave> {
-	tk::CheckLeave %W
+        tk::CheckLeave %W
     }
 }
 
@@ -153,23 +153,23 @@ if {"win32" eq [tk windowingsystem]} {
 # state of the button to active unless the button is disabled.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonEnter w {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
 
-	# If the mouse button is down, set the relief to sunken on entry.
-	# Overwise, if there's an -overrelief value, set the relief to that.
+        # If the mouse button is down, set the relief to sunken on entry.
+        # Overwise, if there's an -overrelief value, set the relief to that.
 
-	set Priv($w,relief) [$w cget -relief]
-	if {$Priv(buttonWindow) eq $w} {
-	    $w configure -relief sunken -state active
-	    set Priv($w,prelief) sunken
-	} elseif {[set over [$w cget -overrelief]] ne ""} {
-	    $w configure -relief $over
-	    set Priv($w,prelief) $over
-	}
+        set Priv($w,relief) [$w cget -relief]
+        if {$Priv(buttonWindow) eq $w} {
+            $w configure -relief sunken -state active
+            set Priv($w,prelief) sunken
+        } elseif {[set over [$w cget -overrelief]] ne ""} {
+            $w configure -relief $over
+            set Priv($w,prelief) $over
+        }
     }
     set Priv(window) $w
 }
@@ -180,23 +180,23 @@ proc ::tk::ButtonEnter w {
 # Restore any modified relief too.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonLeave w {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
-	$w configure -state normal
+        $w configure -state normal
     }
 
     # Restore the original button relief if it was changed by Tk.
     # That is signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	if {[info exists Priv($w,prelief)] && \
-		$Priv($w,prelief) eq [$w cget -relief]} {
-	    $w configure -relief $Priv($w,relief)
-	}
-	unset -nocomplain Priv($w,relief) Priv($w,prelief)
+        if {[info exists Priv($w,prelief)] && \
+                $Priv($w,prelief) eq [$w cget -relief]} {
+            $w configure -relief $Priv($w,relief)
+        }
+        unset -nocomplain Priv($w,relief) Priv($w,prelief)
     }
 
     set Priv(window) ""
@@ -209,7 +209,7 @@ proc ::tk::ButtonLeave w {
 # the relief to sunken.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonDown w {
     variable ::tk::Priv
@@ -219,21 +219,21 @@ proc ::tk::ButtonDown w {
     # and the current value of the -relief option will be incorrect.
 
     if {![info exists Priv($w,relief)]} {
-	set Priv($w,relief) [$w cget -relief]
+        set Priv($w,relief) [$w cget -relief]
     }
 
     if {[$w cget -state] ne "disabled"} {
-	set Priv(buttonWindow) $w
-	$w configure -relief sunken -state active
-	set Priv($w,prelief) sunken
+        set Priv(buttonWindow) $w
+        $w configure -relief sunken -state active
+        set Priv($w,prelief) sunken
 
-	# If this button has a repeatdelay set up, get it going with an after
-	after cancel $Priv(afterId)
-	set delay [$w cget -repeatdelay]
-	set Priv(repeated) 0
-	if {$delay > 0} {
-	    set Priv(afterId) [after $delay [list tk::ButtonAutoInvoke $w]]
-	}
+        # If this button has a repeatdelay set up, get it going with an after
+        after cancel $Priv(afterId)
+        set delay [$w cget -repeatdelay]
+        set Priv(repeated) 0
+        if {$delay > 0} {
+            set Priv(afterId) [after $delay [list tk::ButtonAutoInvoke $w]]
+        }
     }
 }
 
@@ -243,35 +243,35 @@ proc ::tk::ButtonDown w {
 # the command as long as the mouse hasn't left the button.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonUp w {
     variable ::tk::Priv
     if {$Priv(buttonWindow) eq $w} {
-	set Priv(buttonWindow) ""
+        set Priv(buttonWindow) ""
 
-	# Restore the button's relief if it was cached.
+        # Restore the button's relief if it was cached.
 
-	if {[info exists Priv($w,relief)]} {
-	    if {[info exists Priv($w,prelief)] && \
-		    $Priv($w,prelief) eq [$w cget -relief]} {
-		$w configure -relief $Priv($w,relief)
-	    }
-	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
-	}
+        if {[info exists Priv($w,relief)]} {
+            if {[info exists Priv($w,prelief)] && \
+                    $Priv($w,prelief) eq [$w cget -relief]} {
+                $w configure -relief $Priv($w,relief)
+            }
+            unset -nocomplain Priv($w,relief) Priv($w,prelief)
+        }
 
-	# Clean up the after event from the auto-repeater
-	after cancel $Priv(afterId)
+        # Clean up the after event from the auto-repeater
+        after cancel $Priv(afterId)
 
-	if {$Priv(window) eq $w && [$w cget -state] ne "disabled"} {
-	    $w configure -state normal
+        if {$Priv(window) eq $w && [$w cget -state] ne "disabled"} {
+            $w configure -state normal
 
-	    # Only invoke the command if it wasn't already invoked by the
-	    # auto-repeater functionality
-	    if { $Priv(repeated) == 0 } {
-		uplevel #0 [list $w invoke]
-	    }
-	}
+            # Only invoke the command if it wasn't already invoked by the
+            # auto-repeater functionality
+            if { $Priv(repeated) == 0 } {
+                uplevel #0 [list $w invoke]
+            }
+        }
     }
 }
 
@@ -282,19 +282,19 @@ proc ::tk::ButtonUp w {
 # disabled.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::CheckRadioEnter w {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
-	if {$Priv(buttonWindow) eq $w} {
-	    $w configure -state active
-	}
-	if {[set over [$w cget -overrelief]] ne ""} {
-	    set Priv($w,relief)  [$w cget -relief]
-	    set Priv($w,prelief) $over
-	    $w configure -relief $over
-	}
+        if {$Priv(buttonWindow) eq $w} {
+            $w configure -state active
+        }
+        if {[set over [$w cget -overrelief]] ne ""} {
+            set Priv($w,relief)  [$w cget -relief]
+            set Priv($w,prelief) $over
+            $w configure -relief $over
+        }
     }
     set Priv(window) $w
 }
@@ -306,17 +306,17 @@ proc ::tk::CheckRadioEnter w {
 # the relief to sunken.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::CheckRadioDown w {
     variable ::tk::Priv
     if {![info exists Priv($w,relief)]} {
-	set Priv($w,relief) [$w cget -relief]
+        set Priv($w,relief) [$w cget -relief]
     }
     if {[$w cget -state] ne "disabled"} {
-	set Priv(buttonWindow) $w
-	set Priv(repeated) 0
-	$w configure -state active
+        set Priv(buttonWindow) $w
+        set Priv(repeated) 0
+        $w configure -state active
     }
 }
 
@@ -334,25 +334,25 @@ if {"x11" eq [tk windowingsystem]} {
 # state of the button to active unless the button is disabled.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonEnter {w} {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
-	# On unix the state is active just with mouse-over
-	$w configure -state active
+        # On unix the state is active just with mouse-over
+        $w configure -state active
 
-	# If the mouse button is down, set the relief to sunken on entry.
-	# Overwise, if there's an -overrelief value, set the relief to that.
+        # If the mouse button is down, set the relief to sunken on entry.
+        # Overwise, if there's an -overrelief value, set the relief to that.
 
-	set Priv($w,relief) [$w cget -relief]
-	if {$Priv(buttonWindow) eq $w} {
-	    $w configure -relief sunken
-	    set Priv($w,prelief) sunken
-	} elseif {[set over [$w cget -overrelief]] ne ""} {
-	    $w configure -relief $over
-	    set Priv($w,prelief) $over
-	}
+        set Priv($w,relief) [$w cget -relief]
+        if {$Priv(buttonWindow) eq $w} {
+            $w configure -relief sunken
+            set Priv($w,prelief) sunken
+        } elseif {[set over [$w cget -overrelief]] ne ""} {
+            $w configure -relief $over
+            set Priv($w,prelief) $over
+        }
     }
     set Priv(window) $w
 }
@@ -363,23 +363,23 @@ proc ::tk::ButtonEnter {w} {
 # Restore any modified relief too.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonLeave w {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
-	$w configure -state normal
+        $w configure -state normal
     }
 
     # Restore the original button relief if it was changed by Tk.
     # That is signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	if {[info exists Priv($w,prelief)] && \
-		$Priv($w,prelief) eq [$w cget -relief]} {
-	    $w configure -relief $Priv($w,relief)
-	}
-	unset -nocomplain Priv($w,relief) Priv($w,prelief)
+        if {[info exists Priv($w,prelief)] && \
+                $Priv($w,prelief) eq [$w cget -relief]} {
+            $w configure -relief $Priv($w,relief)
+        }
+        unset -nocomplain Priv($w,relief) Priv($w,prelief)
     }
 
     set Priv(window) ""
@@ -392,7 +392,7 @@ proc ::tk::ButtonLeave w {
 # the relief to sunken.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonDown w {
     variable ::tk::Priv
@@ -402,21 +402,21 @@ proc ::tk::ButtonDown w {
     # and the current value of the -relief option will be incorrect.
 
     if {![info exists Priv($w,relief)]} {
-	set Priv($w,relief) [$w cget -relief]
+        set Priv($w,relief) [$w cget -relief]
     }
 
     if {[$w cget -state] ne "disabled"} {
-	set Priv(buttonWindow) $w
-	$w configure -relief sunken
-	set Priv($w,prelief) sunken
+        set Priv(buttonWindow) $w
+        $w configure -relief sunken
+        set Priv($w,prelief) sunken
 
-	# If this button has a repeatdelay set up, get it going with an after
-	after cancel $Priv(afterId)
-	set delay [$w cget -repeatdelay]
-	set Priv(repeated) 0
-	if {$delay > 0} {
-	    set Priv(afterId) [after $delay [list tk::ButtonAutoInvoke $w]]
-	}
+        # If this button has a repeatdelay set up, get it going with an after
+        after cancel $Priv(afterId)
+        set delay [$w cget -repeatdelay]
+        set Priv(repeated) 0
+        if {$delay > 0} {
+            set Priv(afterId) [after $delay [list tk::ButtonAutoInvoke $w]]
+        }
     }
 }
 
@@ -426,33 +426,33 @@ proc ::tk::ButtonDown w {
 # the command as long as the mouse hasn't left the button.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonUp w {
     variable ::tk::Priv
     if {$w eq $Priv(buttonWindow)} {
-	set Priv(buttonWindow) ""
+        set Priv(buttonWindow) ""
 
-	# Restore the button's relief if it was cached.
+        # Restore the button's relief if it was cached.
 
-	if {[info exists Priv($w,relief)]} {
-	    if {[info exists Priv($w,prelief)] && \
-		    $Priv($w,prelief) eq [$w cget -relief]} {
-		$w configure -relief $Priv($w,relief)
-	    }
-	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
-	}
+        if {[info exists Priv($w,relief)]} {
+            if {[info exists Priv($w,prelief)] && \
+                    $Priv($w,prelief) eq [$w cget -relief]} {
+                $w configure -relief $Priv($w,relief)
+            }
+            unset -nocomplain Priv($w,relief) Priv($w,prelief)
+        }
 
-	# Clean up the after event from the auto-repeater
-	after cancel $Priv(afterId)
+        # Clean up the after event from the auto-repeater
+        after cancel $Priv(afterId)
 
-	if {$Priv(window) eq $w && [$w cget -state] ne "disabled"} {
-	    # Only invoke the command if it wasn't already invoked by the
-	    # auto-repeater functionality
-	    if { $Priv(repeated) == 0 } {
-		uplevel #0 [list $w invoke]
-	    }
-	}
+        if {$Priv(window) eq $w && [$w cget -state] ne "disabled"} {
+            # Only invoke the command if it wasn't already invoked by the
+            # auto-repeater functionality
+            if { $Priv(repeated) == 0 } {
+                uplevel #0 [list $w invoke]
+            }
+        }
     }
 }
 
@@ -470,21 +470,21 @@ if {[tk windowingsystem] eq "aqua"} {
 # state of the button to active unless the button is disabled.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonEnter {w} {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
 
-	# If there's an -overrelief value, set the relief to that.
+        # If there's an -overrelief value, set the relief to that.
 
-	if {$Priv(buttonWindow) eq $w} {
-	    $w configure -state active
-	} elseif {[set over [$w cget -overrelief]] ne ""} {
-	    set Priv($w,relief)  [$w cget -relief]
-	    set Priv($w,prelief) $over
-	    $w configure -relief $over
-	}
+        if {$Priv(buttonWindow) eq $w} {
+            $w configure -state active
+        } elseif {[set over [$w cget -overrelief]] ne ""} {
+            set Priv($w,relief)  [$w cget -relief]
+            set Priv($w,prelief) $over
+            $w configure -relief $over
+        }
     }
     set Priv(window) $w
 }
@@ -497,23 +497,23 @@ proc ::tk::ButtonEnter {w} {
 # button too.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonLeave w {
     variable ::tk::Priv
     if {$w eq $Priv(buttonWindow)} {
-	$w configure -state normal
+        $w configure -state normal
     }
 
     # Restore the original button relief if it was changed by Tk.
     # That is signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	if {[info exists Priv($w,prelief)] && \
-		$Priv($w,prelief) eq [$w cget -relief]} {
-	    $w configure -relief $Priv($w,relief)
-	}
-	unset -nocomplain Priv($w,relief) Priv($w,prelief)
+        if {[info exists Priv($w,prelief)] && \
+                $Priv($w,prelief) eq [$w cget -relief]} {
+            $w configure -relief $Priv($w,relief)
+        }
+        unset -nocomplain Priv($w,relief) Priv($w,prelief)
     }
 
     set Priv(window) ""
@@ -526,23 +526,23 @@ proc ::tk::ButtonLeave w {
 # the relief to sunken.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonDown w {
     variable ::tk::Priv
 
     if {[$w cget -state] ne "disabled"} {
-	set Priv(buttonWindow) $w
-	$w configure -state active
+        set Priv(buttonWindow) $w
+        $w configure -state active
 
-	# If this button has a repeatdelay set up, get it going with an after
-	after cancel $Priv(afterId)
-	set Priv(repeated) 0
-	if { ![catch {$w cget -repeatdelay} delay] } {
-	    if {$delay > 0} {
-		set Priv(afterId) [after $delay [list tk::ButtonAutoInvoke $w]]
-	    }
-	}
+        # If this button has a repeatdelay set up, get it going with an after
+        after cancel $Priv(afterId)
+        set Priv(repeated) 0
+        if { ![catch {$w cget -repeatdelay} delay] } {
+            if {$delay > 0} {
+                set Priv(afterId) [after $delay [list tk::ButtonAutoInvoke $w]]
+            }
+        }
     }
 }
 
@@ -552,34 +552,34 @@ proc ::tk::ButtonDown w {
 # the command as long as the mouse hasn't left the button.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonUp w {
     variable ::tk::Priv
     if {$Priv(buttonWindow) eq $w} {
-	set Priv(buttonWindow) ""
-	$w configure -state normal
+        set Priv(buttonWindow) ""
+        $w configure -state normal
 
-	# Restore the button's relief if it was cached.
+        # Restore the button's relief if it was cached.
 
-	if {[info exists Priv($w,relief)]} {
-	    if {[info exists Priv($w,prelief)] && \
-		    $Priv($w,prelief) eq [$w cget -relief]} {
-		$w configure -relief $Priv($w,relief)
-	    }
-	    unset -nocomplain Priv($w,relief) Priv($w,prelief)
-	}
+        if {[info exists Priv($w,relief)]} {
+            if {[info exists Priv($w,prelief)] && \
+                    $Priv($w,prelief) eq [$w cget -relief]} {
+                $w configure -relief $Priv($w,relief)
+            }
+            unset -nocomplain Priv($w,relief) Priv($w,prelief)
+        }
 
-	# Clean up the after event from the auto-repeater
-	after cancel $Priv(afterId)
+        # Clean up the after event from the auto-repeater
+        after cancel $Priv(afterId)
 
-	if {$Priv(window) eq $w && [$w cget -state] ne "disabled"} {
-	    # Only invoke the command if it wasn't already invoked by the
-	    # auto-repeater functionality
-	    if { $Priv(repeated) == 0 } {
-		uplevel #0 [list $w invoke]
-	    }
-	}
+        if {$Priv(window) eq $w && [$w cget -state] ne "disabled"} {
+            # Only invoke the command if it wasn't already invoked by the
+            # auto-repeater functionality
+            if { $Priv(repeated) == 0 } {
+                uplevel #0 [list $w invoke]
+            }
+        }
     }
 }
 
@@ -594,14 +594,14 @@ proc ::tk::ButtonUp w {
 # the keyboard.  It simulate a press of the button via the mouse.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::ButtonInvoke w {
     if {[winfo exists $w] && [$w cget -state] ne "disabled"} {
-	set oldRelief [$w cget -relief]
-	set oldState [$w cget -state]
-	$w configure -state active -relief sunken
-	after 100 [list ::tk::ButtonInvokeEnd $w $oldState $oldRelief]
+        set oldRelief [$w cget -relief]
+        set oldState [$w cget -state]
+        $w configure -state active -relief sunken
+        after 100 [list ::tk::ButtonInvokeEnd $w $oldState $oldRelief]
     }
 }
 
@@ -616,34 +616,34 @@ proc ::tk::ButtonInvoke w {
 
 proc ::tk::ButtonInvokeEnd {w oldState oldRelief} {
     if {[winfo exists $w]} {
-	$w configure -state $oldState -relief $oldRelief
-	uplevel #0 [list $w invoke]
+        $w configure -state $oldState -relief $oldRelief
+        uplevel #0 [list $w invoke]
     }
 }
 
 # ::tk::ButtonAutoInvoke --
 #
-#	Invoke an auto-repeating button, and set it up to continue to repeat.
+#       Invoke an auto-repeating button, and set it up to continue to repeat.
 #
 # Arguments:
-#	w	button to invoke.
+#       w       button to invoke.
 #
 # Results:
-#	None.
+#       None.
 #
 # Side effects:
-#	May create an after event to call ::tk::ButtonAutoInvoke.
+#       May create an after event to call ::tk::ButtonAutoInvoke.
 
 proc ::tk::ButtonAutoInvoke {w} {
     variable ::tk::Priv
     after cancel $Priv(afterId)
     set delay [$w cget -repeatinterval]
     if {$Priv(window) eq $w} {
-	incr Priv(repeated)
-	uplevel #0 [list $w invoke]
+        incr Priv(repeated)
+        uplevel #0 [list $w invoke]
     }
     if {$delay > 0} {
-	set Priv(afterId) [after $delay [list tk::ButtonAutoInvoke $w]]
+        set Priv(afterId) [after $delay [list tk::ButtonAutoInvoke $w]]
     }
 }
 
@@ -654,12 +654,12 @@ proc ::tk::ButtonAutoInvoke {w} {
 # isn't disabled.
 #
 # Arguments:
-# w -		The name of the widget.
-# cmd -		The subcommand to invoke (one of invoke, select, or deselect).
+# w -           The name of the widget.
+# cmd -         The subcommand to invoke (one of invoke, select, or deselect).
 
 proc ::tk::CheckRadioInvoke {w {cmd invoke}} {
     if {[$w cget -state] ne "disabled"} {
-	uplevel #0 [list $w $cmd]
+        uplevel #0 [list $w $cmd]
     }
 }
 
@@ -672,22 +672,22 @@ proc ::tk::CheckRadioInvoke {w {cmd invoke}} {
 # what to do when the checkbutton indicator is missing. Only used on Unix.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::CheckInvoke {w} {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
-	# Additional logic to switch the "selected" colors around if necessary
-	# (when we're indicator-less).
+        # Additional logic to switch the "selected" colors around if necessary
+        # (when we're indicator-less).
 
-	if {![$w cget -indicatoron] && [info exist Priv($w,selectcolor)]} {
-	    if {[$w cget -selectcolor] eq $Priv($w,aselectcolor)} {
-		$w configure -selectcolor $Priv($w,selectcolor)
-	    } else {
-		$w configure -selectcolor $Priv($w,aselectcolor)
-	    }
-	}
-	uplevel #0 [list $w invoke]
+        if {![$w cget -indicatoron] && [info exist Priv($w,selectcolor)]} {
+            if {[$w cget -selectcolor] eq $Priv($w,aselectcolor)} {
+                $w configure -selectcolor $Priv($w,selectcolor)
+            } else {
+                $w configure -selectcolor $Priv($w,aselectcolor)
+            }
+        }
+        uplevel #0 [list $w invoke]
     }
 }
 
@@ -696,41 +696,41 @@ proc ::tk::CheckInvoke {w} {
 # what to do when the checkbutton indicator is missing. Only used on Unix.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::CheckEnter {w} {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
-	# On unix the state is active just with mouse-over
-	$w configure -state active
+        # On unix the state is active just with mouse-over
+        $w configure -state active
 
-	# If the mouse button is down, set the relief to sunken on entry.
-	# Overwise, if there's an -overrelief value, set the relief to that.
+        # If the mouse button is down, set the relief to sunken on entry.
+        # Overwise, if there's an -overrelief value, set the relief to that.
 
-	set Priv($w,relief) [$w cget -relief]
-	if {$Priv(buttonWindow) eq $w} {
-	    $w configure -relief sunken
-	    set Priv($w,prelief) sunken
-	} elseif {[set over [$w cget -overrelief]] ne ""} {
-	    $w configure -relief $over
-	    set Priv($w,prelief) $over
-	}
+        set Priv($w,relief) [$w cget -relief]
+        if {$Priv(buttonWindow) eq $w} {
+            $w configure -relief sunken
+            set Priv($w,prelief) sunken
+        } elseif {[set over [$w cget -overrelief]] ne ""} {
+            $w configure -relief $over
+            set Priv($w,prelief) $over
+        }
 
-	# Compute what the "selected and active" color should be.
+        # Compute what the "selected and active" color should be.
 
-	if {![$w cget -indicatoron] && [$w cget -selectcolor] ne ""} {
-	    set Priv($w,selectcolor) [$w cget -selectcolor]
-	    lassign [winfo rgb $w [$w cget -selectcolor]]      r1 g1 b1
-	    lassign [winfo rgb $w [$w cget -activebackground]] r2 g2 b2
-	    set Priv($w,aselectcolor) \
-		[format "#%04x%04x%04x" [expr {($r1+$r2)/2}] \
-		     [expr {($g1+$g2)/2}] [expr {($b1+$b2)/2}]]
-	    # use uplevel to work with other var resolvers
-	    if {[uplevel #0 [list set [$w cget -variable]]]
-		 eq [$w cget -onvalue]} {
-		$w configure -selectcolor $Priv($w,aselectcolor)
-	    }
-	}
+        if {![$w cget -indicatoron] && [$w cget -selectcolor] ne ""} {
+            set Priv($w,selectcolor) [$w cget -selectcolor]
+            lassign [winfo rgb $w [$w cget -selectcolor]]      r1 g1 b1
+            lassign [winfo rgb $w [$w cget -activebackground]] r2 g2 b2
+            set Priv($w,aselectcolor) \
+                [format "#%04x%04x%04x" [expr {($r1+$r2)/2}] \
+                     [expr {($g1+$g2)/2}] [expr {($b1+$b2)/2}]]
+            # use uplevel to work with other var resolvers
+            if {[uplevel #0 [list set [$w cget -variable]]]
+                 eq [$w cget -onvalue]} {
+                $w configure -selectcolor $Priv($w,aselectcolor)
+            }
+        }
     }
     set Priv(window) $w
 }
@@ -740,19 +740,19 @@ proc ::tk::CheckEnter {w} {
 # what to do when the checkbutton indicator is missing. Only used on Unix.
 #
 # Arguments:
-# w -		The name of the widget.
+# w -           The name of the widget.
 
 proc ::tk::CheckLeave {w} {
     variable ::tk::Priv
     if {[$w cget -state] ne "disabled"} {
-	$w configure -state normal
+        $w configure -state normal
     }
 
     # Restore the original button "selected" color; assume that the user
     # wasn't monkeying around with things too much.
 
     if {![$w cget -indicatoron] && [info exist Priv($w,selectcolor)]} {
-	$w configure -selectcolor $Priv($w,selectcolor)
+        $w configure -selectcolor $Priv($w,selectcolor)
     }
     unset -nocomplain Priv($w,selectcolor) Priv($w,aselectcolor)
 
@@ -760,11 +760,11 @@ proc ::tk::CheckLeave {w} {
     # signaled by the existence of Priv($w,prelief).
 
     if {[info exists Priv($w,relief)]} {
-	if {[info exists Priv($w,prelief)] && \
-		$Priv($w,prelief) eq [$w cget -relief]} {
-	    $w configure -relief $Priv($w,relief)
-	}
-	unset -nocomplain Priv($w,relief) Priv($w,prelief)
+        if {[info exists Priv($w,prelief)] && \
+                $Priv($w,prelief) eq [$w cget -relief]} {
+            $w configure -relief $Priv($w,relief)
+        }
+        unset -nocomplain Priv($w,relief) Priv($w,prelief)
     }
 
     set Priv(window) ""

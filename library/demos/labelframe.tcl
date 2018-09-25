@@ -19,8 +19,8 @@ positionWindow $w
 # Some information
 
 label $w.msg -font $font -wraplength 4i -justify left -text "Labelframes are\
-	used to group related widgets together.  The label may be either \
-	plain text or another widget."
+        used to group related widgets together.  The label may be either \
+        plain text or another widget."
 pack $w.msg -side top
 
 ## See Code / Dismiss buttons

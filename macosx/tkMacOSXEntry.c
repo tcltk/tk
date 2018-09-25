@@ -1,7 +1,7 @@
 /*
  * tkMacOSXEntry.c --
  *
- *	This file implements the native aqua entry widget.
+ *      This file implements the native aqua entry widget.
  *
  * Copyright 2001, Apple Computer, Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
@@ -14,7 +14,7 @@
 #include "tkMacOSXPrivate.h"
 #include "tkEntry.h"
 
-static ThemeButtonKind	ComputeIncDecParameters(int height, int *width);
+static ThemeButtonKind  ComputeIncDecParameters(int height, int *width);
 
 #define HIOrientation kHIThemeOrientationNormal
 
@@ -23,14 +23,14 @@ static ThemeButtonKind	ComputeIncDecParameters(int height, int *width);
  *
  * ComputeIncDecParameters --
  *
- *	This procedure figures out which of the kThemeIncDec buttons to use.
- *	It also sets width to the width of the IncDec button.
+ *      This procedure figures out which of the kThemeIncDec buttons to use.
+ *      It also sets width to the width of the IncDec button.
  *
  * Results:
- *	The ThemeButtonKind of the button we should use.
+ *      The ThemeButtonKind of the button we should use.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *      May draw the entry border into pixmap.
  *
  *--------------------------------------------------------------
  */
@@ -43,19 +43,19 @@ ComputeIncDecParameters(
     ThemeButtonKind kind;
 
     if (height < 11 || height > 28) {
-	*width = 0;
-	kind = (ThemeButtonKind) 0;
+        *width = 0;
+        kind = (ThemeButtonKind) 0;
     } else {
-	if (height >= 21) {
-	    *width = 13;
-	    kind = kThemeIncDecButton;
-	} else if (height >= 18) {
-	    *width = 12;
-	    kind = kThemeIncDecButtonSmall;
-	} else {
-	    *width = 11;
-	    kind = kThemeIncDecButtonMini;
-	}
+        if (height >= 21) {
+            *width = 13;
+            kind = kThemeIncDecButton;
+        } else if (height >= 18) {
+            *width = 12;
+            kind = kThemeIncDecButtonSmall;
+        } else {
+            *width = 11;
+            kind = kThemeIncDecButtonMini;
+        }
     }
 
     return kind;
@@ -66,17 +66,17 @@ ComputeIncDecParameters(
  *
  * TkpDrawEntryBorderAndFocus --
  *
- *	This procedure redraws the border of an entry window. It overrides the
- *	generic border drawing code if the entry widget parameters are such
- *	that the native widget drawing is a good fit. This version just
- *	returns 1, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *      This procedure redraws the border of an entry window. It overrides the
+ *      generic border drawing code if the entry widget parameters are such
+ *      that the native widget drawing is a good fit. This version just
+ *      returns 1, so platforms that don't do special native drawing don't
+ *      have to implement it.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *      1 if it has drawn the border, 0 if not.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *      May draw the entry border into pixmap.
  *
  *--------------------------------------------------------------
  */
@@ -94,11 +94,11 @@ TkpDrawEntryBorderAndFocus(
     int oldWidth = 0;
     MacDrawable *macDraw = (MacDrawable *) d;
     const HIThemeFrameDrawInfo info = {
-	.version = 0,
-	.kind = kHIThemeFrameTextFieldSquare,
-	.state = (entryPtr->state == STATE_DISABLED ? kThemeStateInactive :
-		kThemeStateActive),
-	.isFocused = (entryPtr->flags & GOT_FOCUS ? 1 : 0),
+        .version = 0,
+        .kind = kHIThemeFrameTextFieldSquare,
+        .state = (entryPtr->state == STATE_DISABLED ? kThemeStateInactive :
+                kThemeStateActive),
+        .isFocused = (entryPtr->flags & GOT_FOCUS ? 1 : 0),
     };
 
     /*
@@ -108,9 +108,9 @@ TkpDrawEntryBorderAndFocus(
      */
 
     if (entryPtr->borderWidth != MAC_OSX_ENTRY_BORDER
-	    || entryPtr->highlightWidth != MAC_OSX_FOCUS_WIDTH
-	    || entryPtr->relief != MAC_OSX_ENTRY_RELIEF) {
-	return 0;
+            || entryPtr->highlightWidth != MAC_OSX_FOCUS_WIDTH
+            || entryPtr->relief != MAC_OSX_ENTRY_RELIEF) {
+        return 0;
     }
 
     /*
@@ -121,13 +121,13 @@ TkpDrawEntryBorderAndFocus(
      */
 
     if (isSpinbox) {
-	int incDecWidth;
+        int incDecWidth;
 
-	oldWidth = Tk_Width(tkwin);
+        oldWidth = Tk_Width(tkwin);
 
-	ComputeIncDecParameters(Tk_Height(tkwin) - 2 * MAC_OSX_FOCUS_WIDTH,
-		&incDecWidth);
-	Tk_Width(tkwin) -= incDecWidth + 1;
+        ComputeIncDecParameters(Tk_Height(tkwin) - 2 * MAC_OSX_FOCUS_WIDTH,
+                &incDecWidth);
+        Tk_Width(tkwin) -= incDecWidth + 1;
     }
 
    /*
@@ -149,12 +149,12 @@ TkpDrawEntryBorderAndFocus(
     bounds.size.width = Tk_Width(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
     bounds.size.height = Tk_Height(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
     if (!TkMacOSXSetupDrawingContext(d, NULL, 1, &dc)) {
-	return 0;
+        return 0;
     }
     ChkErr(HIThemeDrawFrame, &bounds, &info, dc.context, HIOrientation);
     TkMacOSXRestoreDrawingContext(&dc);
     if (isSpinbox) {
-	Tk_Width(tkwin) = oldWidth;
+        Tk_Width(tkwin) = oldWidth;
     }
     return 1;
 }
@@ -164,17 +164,17 @@ TkpDrawEntryBorderAndFocus(
  *
  * TkpDrawSpinboxButtons --
  *
- *	This procedure redraws the buttons of an spinbox widget. It overrides
- *	the generic button drawing code if the spinbox widget parameters are
- *	such that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *      This procedure redraws the buttons of an spinbox widget. It overrides
+ *      the generic button drawing code if the spinbox widget parameters are
+ *      such that the native widget drawing is a good fit. This version just
+ *      returns 0, so platforms that don't do special native drawing don't
+ *      have to implement it.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *      1 if it has drawn the border, 0 if not.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *      May draw the entry border into pixmap.
  *
  *--------------------------------------------------------------
  */
@@ -194,8 +194,8 @@ TkpDrawSpinboxButtons(
     GC bgGC;
     MacDrawable *macDraw = (MacDrawable *) d;
     HIThemeButtonDrawInfo info = {
-	.version = 0,
-	.adornment = kThemeAdornmentNone,
+        .version = 0,
+        .adornment = kThemeAdornmentNone,
     };
 
     /*
@@ -203,7 +203,7 @@ TkpDrawSpinboxButtons(
      */
 
     if (sbPtr->buRelief != TK_RELIEF_FLAT) {
-	return 0;
+        return 0;
     }
 
     /*
@@ -214,21 +214,21 @@ TkpDrawSpinboxButtons(
 
     info.kind = ComputeIncDecParameters(buttonHeight, &incDecWidth);
     if (info.kind == (ThemeButtonKind) 0) {
-	return 0;
+        return 0;
     }
 
     if (sbPtr->entry.state == STATE_DISABLED) {
-	info.state = kThemeStateInactive;
-	info.value = kThemeButtonOff;
+        info.state = kThemeStateInactive;
+        info.value = kThemeButtonOff;
     } else if (sbPtr->selElement == SEL_BUTTONUP) {
-	info.state = kThemeStatePressedUp;
-	info.value = kThemeButtonOn;
+        info.state = kThemeStatePressedUp;
+        info.value = kThemeButtonOn;
     } else if (sbPtr->selElement == SEL_BUTTONDOWN) {
-	info.state = kThemeStatePressedDown;
-	info.value = kThemeButtonOn;
+        info.state = kThemeStatePressedDown;
+        info.value = kThemeButtonOn;
     } else {
-	info.state = kThemeStateActive;
-	info.value = kThemeButtonOff;
+        info.state = kThemeStateActive;
+        info.value = kThemeButtonOff;
     }
 
     bounds.origin.x = macDraw->xOff + Tk_Width(tkwin) - incDecWidth - 1;
@@ -250,7 +250,7 @@ TkpDrawSpinboxButtons(
     XFillRectangles(Tk_Display(tkwin), d, bgGC, rects, 1);
 
     if (!TkMacOSXSetupDrawingContext(d, NULL, 1, &dc)) {
-	return 0;
+        return 0;
     }
     ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     TkMacOSXRestoreDrawingContext(&dc);

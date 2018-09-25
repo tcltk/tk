@@ -37,7 +37,7 @@ menu .menu.file
 menu .menu.file.apps  -postcommand fillAppsMenu
 .menu add cascade  -label "File"  -underline 0  -menu .menu.file
 .menu.file add cascade  -label "Select Application"  -underline 0 \
-	-menu .menu.file.apps
+        -menu .menu.file.apps
 .menu.file add command  -label "Quit"  -command "destroy ."  -underline 0
 
 # Create text window and scrollbar.
@@ -63,62 +63,62 @@ bind .t <Return> {
 bind .t <Delete> {
     catch {.t tag remove sel sel.first promptEnd}
     if {[.t tag nextrange sel 1.0 end] eq ""} {
-	if {[.t compare insert < promptEnd]} {
-	    break
-	}
+        if {[.t compare insert < promptEnd]} {
+            break
+        }
     }
 }
 bind .t <BackSpace> {
     catch {.t tag remove sel sel.first promptEnd}
     if {[.t tag nextrange sel 1.0 end] eq ""} {
-	if {[.t compare insert <= promptEnd]} {
-	    break
-	}
+        if {[.t compare insert <= promptEnd]} {
+            break
+        }
     }
 }
 bind .t <Control-d> {
     if {[.t compare insert < promptEnd]} {
-	break
+        break
     }
 }
 bind .t <Control-k> {
     if {[.t compare insert < promptEnd]} {
-	.t mark set insert promptEnd
+        .t mark set insert promptEnd
     }
 }
 bind .t <Control-t> {
     if {[.t compare insert < promptEnd]} {
-	break
+        break
     }
 }
 bind .t <Meta-d> {
     if {[.t compare insert < promptEnd]} {
-	break
+        break
     }
 }
 bind .t <Meta-BackSpace> {
     if {[.t compare insert <= promptEnd]} {
-	break
+        break
     }
 }
 bind .t <Control-h> {
     if {[.t compare insert <= promptEnd]} {
-	break
+        break
     }
 }
 ### This next bit *isn't* nice - DKF ###
 auto_load tk::TextInsert
 proc tk::TextInsert {w s} {
     if {$s eq ""} {
-	return
+        return
     }
     catch {
-	if {
-	    [$w compare sel.first <= insert] && [$w compare sel.last >= insert]
-	} then {
-	    $w tag remove sel sel.first promptEnd
-	    $w delete sel.first sel.last
-	}
+        if {
+            [$w compare sel.first <= insert] && [$w compare sel.last >= insert]
+        } then {
+            $w tag remove sel sel.first promptEnd
+            $w delete sel.first sel.last
+        }
     }
     $w insert insert $s
     $w see insert
@@ -148,23 +148,23 @@ proc invoke {} {
     set cmd [.t get promptEnd insert]
     incr executing 1
     if {[info complete $cmd]} {
-	if {$cmd eq "!!\n"} {
-	    set cmd $lastCommand
-	} else {
-	    set lastCommand $cmd
-	}
-	if {$app eq "local"} {
-	    set result [catch [list uplevel #0 $cmd] msg]
-	} else {
-	    set result [catch [list send $app $cmd] msg]
-	}
-	if {$result != 0} {
-	    .t insert insert "Error: $msg\n"
-	} elseif {$msg ne ""} {
-	    .t insert insert $msg\n
-	}
-	prompt
-	.t mark set promptEnd insert
+        if {$cmd eq "!!\n"} {
+            set cmd $lastCommand
+        } else {
+            set lastCommand $cmd
+        }
+        if {$app eq "local"} {
+            set result [catch [list uplevel #0 $cmd] msg]
+        } else {
+            set result [catch [list send $app $cmd] msg]
+        }
+        if {$result != 0} {
+            .t insert insert "Error: $msg\n"
+        } elseif {$msg ne ""} {
+            .t insert insert $msg\n
+        }
+        prompt
+        .t mark set promptEnd insert
     }
     incr executing -1
     .t yview -pickplace insert
@@ -180,11 +180,11 @@ proc newApp appName {
     global app executing
     set app $appName
     if {!$executing} {
-	.t mark gravity promptEnd right
-	.t delete "promptEnd linestart" promptEnd
-	.t insert promptEnd "$appName: "
-	.t tag add bold "promptEnd linestart" promptEnd
-	.t mark gravity promptEnd left
+        .t mark gravity promptEnd right
+        .t delete "promptEnd linestart" promptEnd
+        .t insert promptEnd "$appName: "
+        .t tag add bold "promptEnd linestart" promptEnd
+        .t mark gravity promptEnd left
     }
     return
 }
@@ -196,7 +196,7 @@ proc fillAppsMenu {} {
     set m .menu.file.apps
     catch {$m delete 0 last}
     foreach i [lsort [winfo interps]] {
-	$m add command -label $i -command [list newApp $i]
+        $m add command -label $i -command [list newApp $i]
     }
     $m add command -label local -command {newApp local}
 }

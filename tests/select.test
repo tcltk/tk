@@ -34,7 +34,7 @@ proc handler {type offset count} {
     lappend selInfo $type $offset $count
     set numBytes [expr {[string length $selValue] - $offset}]
     if {$numBytes <= 0} {
-	return ""
+        return ""
     }
     string range $selValue $offset [expr $numBytes+$offset]
 }
@@ -42,18 +42,18 @@ proc handler {type offset count} {
 proc errIncrHandler {type offset count} {
     global selValue selInfo pass
     if {$offset == 4000} {
-	if {$pass == 0} {
-	    # Just sizing the selection;  don't do anything here.
-	    set pass 1
-	} else {
-	    # Fetching the selection;  wait long enough to cause a timeout.
-	    after 6000
-	}
+        if {$pass == 0} {
+            # Just sizing the selection;  don't do anything here.
+            set pass 1
+        } else {
+            # Fetching the selection;  wait long enough to cause a timeout.
+            after 6000
+        }
     }
     lappend selInfo $type $offset $count
     set numBytes [expr {[string length $selValue] - $offset}]
     if {$numBytes <= 0} {
-	return ""
+        return ""
     }
     string range $selValue $offset [expr $numBytes+$offset]
 }
@@ -68,23 +68,23 @@ proc badHandler {path type offset count} {
     lappend selInfo $path $type $offset $count
     set numBytes [expr {[string length $selValue] - $offset}]
     if {$numBytes <= 0} {
-	return ""
+        return ""
     }
     string range $selValue $offset [expr $numBytes+$offset]
 }
 proc reallyBadHandler {path type offset count} {
     global selValue selInfo pass
     if {$offset == 4000} {
-	if {$pass == 0} {
-	    set pass 1
-	} else {
-	    selection handle -type $type $path {}
-	}
+        if {$pass == 0} {
+            set pass 1
+        } else {
+            selection handle -type $type $path {}
+        }
     }
     lappend selInfo $path $type $offset $count
     set numBytes [expr {[string length $selValue] - $offset}]
     if {$numBytes <= 0} {
-	return ""
+        return ""
     }
     string range $selValue $offset [expr $numBytes+$offset]
 }
@@ -100,10 +100,10 @@ after 1500
 proc setup {{path .f1} {display {}}} {
     catch {destroy $path}
     if {$display == {}} {
-	frame $path
+        frame $path
     } else {
-	toplevel $path -screen $display
-	wm geom $path +0+0
+        toplevel $path -screen $display
+        wm geom $path +0+0
     }
     selection own $path
 }
@@ -196,7 +196,7 @@ test select-1.7.1 {Tk_CreateSelHandler procedure} -constraints unix -setup {
     selection handle -selection CLIPBOARD .f1 {handler TEST} TEST
     selection handle -selection PRIMARY .f1 {handler TEST2} STRING
     list [lsort [selection get -selection PRIMARY TARGETS]] \
-	[lsort [selection get -selection CLIPBOARD TARGETS]]
+        [lsort [selection get -selection CLIPBOARD TARGETS]]
 } -result {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test select-1.7.2 {Tk_CreateSelHandler procedure} -constraints win -setup {
     setup
@@ -205,7 +205,7 @@ test select-1.7.2 {Tk_CreateSelHandler procedure} -constraints win -setup {
     selection handle -selection CLIPBOARD .f1 {handler TEST} TEST
     selection handle -selection PRIMARY .f1 {handler TEST2} STRING
     list [lsort [selection get -selection PRIMARY TARGETS]] \
-	[lsort [selection get -selection CLIPBOARD TARGETS]]
+        [lsort [selection get -selection CLIPBOARD TARGETS]]
 } -result {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TEST TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test select-1.8 {Tk_CreateSelHandler procedure} -setup {
     setup
@@ -244,7 +244,7 @@ test select-2.3 {Tk_DeleteSelHandler procedure} -constraints unix -setup {
     selection handle -selection CLIPBOARD .f1 {handler STRING}
     selection handle -selection CLIPBOARD .f1 {}
     list [lsort [selection get TARGETS]] \
-	[lsort [selection get -selection CLIPBOARD TARGETS]]
+        [lsort [selection get -selection CLIPBOARD TARGETS]]
 } -result {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW UTF8_STRING} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test select-2.4 {Tk_DeleteSelHandler procedure} -constraints win -setup {
     setup
@@ -274,7 +274,7 @@ test select-2.6 {Tk_DeleteSelHandler procedure} -constraints win -setup {
     selection handle -selection CLIPBOARD .f1 {handler STRING}
     selection handle -selection CLIPBOARD .f1 {}
     list [lsort [selection get TARGETS]] \
-	[lsort [selection get -selection CLIPBOARD TARGETS]]
+        [lsort [selection get -selection CLIPBOARD TARGETS]]
 } -result {{MULTIPLE STRING TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW} {MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW}}
 test select-2.7 {Tk_DeleteSelHandler procedure} -setup {
     setup
@@ -381,7 +381,7 @@ test select-3.11 {Tk_OwnSelection procedure} -constraints {
 } -body {
     lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
     lappend result [selection own -displayof .f1] \
-	    [selection own -displayof .f2]
+            [selection own -displayof .f2]
 } -cleanup {
     cleanupbg
 } -result {{} .f1 {}}
@@ -453,7 +453,7 @@ test select-4.6 {Tk_ClearSelection procedure} -constraints {
     set result ""
     lappend result [dobg "toplevel .t -screen $env(TK_ALT_DISPLAY); wm geom .t +0+0; selection own .t; update"]
     lappend result [selection own -displayof .f1] \
-	    [selection own -displayof .f2] $lostSel $lostSel2
+            [selection own -displayof .f2] $lostSel $lostSel2
     cleanupbg
     set result
 } -result {{} .f1 {} owned lost2}
@@ -498,8 +498,8 @@ test select-5.6 {Tk_GetSelection procedure} -setup {
     set selValue $longValue
     set selInfo ""
     selection handle .f1 {apply {{type offset count} {
-	selection handle .f1 {}
-	handler $type $offset $count
+        selection handle .f1 {}
+        handler $type $offset $count
     }} STRING}
     selection get
 } -result {PRIMARY selection doesn't exist or form "STRING" not defined}
@@ -509,8 +509,8 @@ test select-5.7 {Tk_GetSelection procedure} -setup {
     set selValue "Test Value"
     set selInfo ""
     selection handle .f1 {apply {{type offset count} {
-	destroy .f1
-	handler $type $offset $count
+        destroy .f1
+        handler $type $offset $count
     }} STRING}
     selection get
 } -result {PRIMARY selection doesn't exist or form "STRING" not defined}
@@ -520,8 +520,8 @@ test select-5.8 {Tk_GetSelection procedure} -setup {
     set selValue $longValue
     set selInfo ""
     selection handle .f1 {apply {{type offset count} {
-	selection clear
-	handler $type $offset $count
+        selection clear
+        handler $type $offset $count
     }} STRING}
     list [selection get] $selInfo [catch {selection get} msg] $msg
 } -result "$longValue {STRING 0 4000 STRING 4000 4000 STRING 8000 4000 STRING 12000 4000 STRING 16000 4000} 1 {PRIMARY selection doesn't exist or form \"STRING\" not defined}"
@@ -583,7 +583,7 @@ test select-5.12 {Tk_GetSelection procedure} -constraints {
     set selValue "Test value2"
     set selInfo ""
     lappend result [catch {selection get -displayof .f2 TEST} msg] $msg \
-	    $selInfo
+            $selInfo
 } -result {0 {Test value} {TEST 0 4000} 1 {PRIMARY selection doesn't exist or form "TEST" not defined} {}}
 test select-5.13 {Tk_GetSelection procedure} -constraints {
     x11 altDisplay
@@ -630,7 +630,7 @@ test select-5.14 {Tk_GetSelection procedure} -constraints {
 test select-5.15 {Tk_GetSelection procedure} -setup {
     setup
     if {[llength [info command ::bgerror]]} {
-	rename ::bgerror ::TMPbgerror
+        rename ::bgerror ::TMPbgerror
     }
     set ::bgerrors {}
 } -body {
@@ -640,7 +640,7 @@ test select-5.15 {Tk_GetSelection procedure} -setup {
 } -cleanup {
     rename ::bgerror {}
     if {[llength [info command ::TMPbgerror]]} {
-	rename ::TMPbgerror ::bgerror
+        rename ::TMPbgerror ::bgerror
     }
 } -result {1 {PRIMARY selection doesn't exist or form "ERROR" not defined} {} {selection handler aborted}}
 
@@ -899,7 +899,7 @@ test select-9.2 {SelCvtToX and SelCvtFromX procedures} -setup {
     set selValue "1024 0xffff  2048 -2  "
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
-	.f1 {handler TEST}
+        .f1 {handler TEST}
     set result ""
     lappend result [dobg {selection get TEST}]
     cleanupbg
@@ -912,7 +912,7 @@ test select-9.3 {SelCvtToX and SelCvtFromX procedures} -setup {
     set selValue "   "
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
-	.f1 {handler TEST}
+        .f1 {handler TEST}
     set result ""
     lappend result [dobg {selection get TEST}]
     cleanupbg
@@ -925,7 +925,7 @@ test select-9.4 {SelCvtToX and SelCvtFromX procedures} -setup {
     set selValue "16 foobar 32"
     set selInfo ""
     selection handle -selection PRIMARY -format INTEGER -type TEST \
-	.f1 {handler TEST}
+        .f1 {handler TEST}
     set result ""
     lappend result [dobg {selection get TEST}]
     cleanupbg
@@ -957,8 +957,8 @@ test select-10.1 {ConvertSelection procedure, race with selection clear} -constr
     setup
 } -body {
     proc Ready {fd} {
-	variable x
-	lappend x [gets $fd]
+        variable x
+        lappend x [gets $fd]
     }
     set fd [open "|[list [interpreter] -geometry +0+0 -name tktest]" r+]
     puts $fd "puts foo; [loadTkCommand]; flush stdout"
@@ -1042,8 +1042,8 @@ test select-10.6 {ConvertSelection procedure, reentrancy issues} -constraints {
     setupbg
 } -body {
     proc weirdHandler {type offset count} {
-	destroy .f1
-	handler $type $offset $count
+        destroy .f1
+        handler $type $offset $count
     }
     set selValue $longValue
     set selInfo ""
@@ -1137,17 +1137,17 @@ test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
     setupbg
 } -body {
     proc badHandler {path type offset count} {
-	global selValue selInfo abortCount
-	incr abortCount -1
-	if {$abortCount == 0} {
-	    selection handle -type $type $path {}
-	}
-	lappend selInfo $path $type $offset $count
-	set numBytes [expr {[string length $selValue] - $offset}]
-	if {$numBytes <= 0} {
-	    return ""
-	}
-	string range $selValue $offset [expr $numBytes+$offset]
+        global selValue selInfo abortCount
+        incr abortCount -1
+        if {$abortCount == 0} {
+            selection handle -type $type $path {}
+        }
+        lappend selInfo $path $type $offset $count
+        set numBytes [expr {[string length $selValue] - $offset}]
+        if {$numBytes <= 0} {
+            return ""
+        }
+        string range $selValue $offset [expr $numBytes+$offset]
     }
     set selValue $longValue
     set selInfo ""

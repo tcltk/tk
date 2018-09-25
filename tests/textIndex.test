@@ -116,7 +116,7 @@ test textIndex-1.16 {TkTextMakeByteIndex: UTF-8 characters} {testtext} {
     testtext .t byteindex 5 100
 } {5.18 20}
 test textIndex-1.17 {TkTextMakeByteIndex: prevent splitting UTF-8 character} \
-	{testtext} {
+        {testtext} {
     # ((byteIndex > index) && (segPtr->typePtr == &tkTextCharType))
     # Wrong answer would be \xb9 (the 2nd byte of UTF rep of 0x4e4f).
 
@@ -124,7 +124,7 @@ test textIndex-1.17 {TkTextMakeByteIndex: prevent splitting UTF-8 character} \
     list $x [.t get insert]
 } {{5.2 4} y}
 test textIndex-1.18 {TkTextMakeByteIndex: prevent splitting UTF-8 character} \
-	{testtext} {
+        {testtext} {
     # ((byteIndex > index) && (segPtr->typePtr == &tkTextCharType))
     testtext .t byteindex 5 1
     .t get insert
@@ -323,7 +323,7 @@ test textIndex-8.1 {TkTextGetIndex, modifiers} {
     list [catch {.t index 2.1+1char} msg] $msg
 } {0 2.2}
 test textIndex-8.2 {TkTextGetIndex, modifiers} {
-    list [catch {.t index "2.1  	+1char"} msg] $msg
+    list [catch {.t index "2.1          +1char"} msg] $msg
 } {0 2.2}
 test textIndex-8.3 {TkTextGetIndex, modifiers} {
     list [catch {.t index 2.1-1char} msg] $msg
@@ -685,7 +685,7 @@ test textIndex-17.1 {Object indices} {
     set res {}
     set t [text .t2 -height 20]
     for {set i 0} {$i < 100} {incr i} {
-	$t insert end $i\n
+        $t insert end $i\n
     }
     pack $t
     update
@@ -816,10 +816,10 @@ test textIndex-19.13 {Display lines} {
     .txt tag config NICK-tick -elide 0
     .txt insert end "+++++ Loading History ++++++++++++++++\n"
     .txt mark set HISTORY {2.0 - 1 line}
-    .txt insert HISTORY {	} STAMP
-    .txt insert HISTORY {tick	} {NICK NICK-tick}
+    .txt insert HISTORY {       } STAMP
+    .txt insert HISTORY {tick   } {NICK NICK-tick}
     .txt insert HISTORY "\n" {NICK NICK-tick}
-    .txt insert HISTORY {[23:51]	} STAMP
+    .txt insert HISTORY {[23:51]        } STAMP
     .txt insert HISTORY "\n" {NICK NICK-tick}
     # Must not crash
     .txt index "2.0 - 2 display lines"
@@ -831,12 +831,12 @@ proc text_test_word {startend chars start} {
     text .t
     .t insert end $chars
     if {[regexp {end} $start]} {
-	set start [.t index "${start}chars -2c"]
+        set start [.t index "${start}chars -2c"]
     } else {
-	set start [.t index "1.0 + ${start}chars"]
+        set start [.t index "1.0 + ${start}chars"]
     }
     if {[.t compare $start >= "end-1c"]} {
-	set start "end-2c"
+        set start "end-2c"
     }
     set res [.t index "$start $startend"]
     .t count 1.0 $res
@@ -926,7 +926,7 @@ test textIndex-23.1 {text paragraph start} {
     .t2 insert end " Text"
     set res 2.0
     for {set i 0} {$i < 2} {incr i} {
-	lappend res [::tk::TextPrevPara .t2 [lindex $res end]]
+        lappend res [::tk::TextPrevPara .t2 [lindex $res end]]
     }
     destroy .t2
     set res

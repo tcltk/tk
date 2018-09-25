@@ -16,7 +16,7 @@ package require Tk
 # interactively.
 #
 # Arguments:
-# c -		Name of the canvas widget.
+# c -           Name of the canvas widget.
 
 proc arrowSetup c {
     upvar #0 demo_arrowInfo v
@@ -25,83 +25,83 @@ proc arrowSetup c {
 
     set tags [$c gettags current]
     if {$tags != ""} {
-	set cur [lindex $tags [lsearch -glob $tags box?]]
+        set cur [lindex $tags [lsearch -glob $tags box?]]
     } else {
-	set cur ""
+        set cur ""
     }
 
     # Create the arrow and outline.
 
     $c delete all
     eval {$c create line $v(x1) $v(y) $v(x2) $v(y)  -arrow last \
-	    -width [expr {10*$v(width)}] -arrowshape [list \
-	    [expr {10*$v(a)}] [expr {10*$v(b)}] [expr {10*$v(c)}]]} \
-	    $v(bigLineStyle)
+            -width [expr {10*$v(width)}] -arrowshape [list \
+            [expr {10*$v(a)}] [expr {10*$v(b)}] [expr {10*$v(c)}]]} \
+            $v(bigLineStyle)
     set xtip [expr {$v(x2)-10*$v(b)}]
     set deltaY [expr {10*$v(c)+5*$v(width)}]
     $c create line $v(x2) $v(y) $xtip [expr {$v(y)+$deltaY}] \
-	    [expr {$v(x2)-10*$v(a)}] $v(y) $xtip [expr {$v(y)-$deltaY}] \
-	    $v(x2) $v(y) -width 2 -capstyle round -joinstyle round
+            [expr {$v(x2)-10*$v(a)}] $v(y) $xtip [expr {$v(y)-$deltaY}] \
+            $v(x2) $v(y) -width 2 -capstyle round -joinstyle round
 
     # Create the boxes for reshaping the line and arrowhead.
 
     eval {$c create rect [expr {$v(x2)-10*$v(a)-5}] [expr {$v(y)-5}] \
-	    [expr {$v(x2)-10*$v(a)+5}] [expr {$v(y)+5}] \
-	    -tags {box1 box}} $v(boxStyle)
+            [expr {$v(x2)-10*$v(a)+5}] [expr {$v(y)+5}] \
+            -tags {box1 box}} $v(boxStyle)
     eval {$c create rect [expr {$xtip-5}] [expr {$v(y)-$deltaY-5}] \
-	    [expr {$xtip+5}] [expr {$v(y)-$deltaY+5}] \
-	    -tags {box2 box}} $v(boxStyle)
+            [expr {$xtip+5}] [expr {$v(y)-$deltaY+5}] \
+            -tags {box2 box}} $v(boxStyle)
     eval {$c create rect [expr {$v(x1)-5}] [expr {$v(y)-5*$v(width)-5}] \
-	    [expr {$v(x1)+5}] [expr {$v(y)-5*$v(width)+5}] \
-	    -tags {box3 box}} $v(boxStyle)
+            [expr {$v(x1)+5}] [expr {$v(y)-5*$v(width)+5}] \
+            -tags {box3 box}} $v(boxStyle)
     if {$cur != ""} {
-	eval $c itemconfigure $cur $v(activeStyle)
+        eval $c itemconfigure $cur $v(activeStyle)
     }
 
     # Create three arrows in actual size with the same parameters
 
     $c create line [expr {$v(x2)+50}] 0 [expr {$v(x2)+50}] 1000 \
-	    -width 2
+            -width 2
     set tmp [expr {$v(x2)+100}]
     $c create line $tmp [expr {$v(y)-125}] $tmp [expr {$v(y)-75}] \
-	    -width $v(width) \
-	    -arrow both -arrowshape "$v(a) $v(b) $v(c)"
+            -width $v(width) \
+            -arrow both -arrowshape "$v(a) $v(b) $v(c)"
     $c create line [expr {$tmp-25}] $v(y) [expr {$tmp+25}] $v(y) \
-	    -width $v(width) \
-	    -arrow both -arrowshape "$v(a) $v(b) $v(c)"
+            -width $v(width) \
+            -arrow both -arrowshape "$v(a) $v(b) $v(c)"
     $c create line [expr {$tmp-25}] [expr {$v(y)+75}] [expr {$tmp+25}] \
-	    [expr {$v(y)+125}] -width $v(width) \
-	    -arrow both -arrowshape "$v(a) $v(b) $v(c)"
+            [expr {$v(y)+125}] -width $v(width) \
+            -arrow both -arrowshape "$v(a) $v(b) $v(c)"
 
     # Create a bunch of other arrows and text items showing the
     # current dimensions.
 
     set tmp [expr {$v(x2)+10}]
     $c create line $tmp [expr {$v(y)-5*$v(width)}] \
-	    $tmp [expr {$v(y)-$deltaY}] \
-	    -arrow both -arrowshape $v(smallTips)
+            $tmp [expr {$v(y)-$deltaY}] \
+            -arrow both -arrowshape $v(smallTips)
     $c create text [expr {$v(x2)+15}] [expr {$v(y)-$deltaY+5*$v(c)}] \
-	    -text $v(c) -anchor w
+            -text $v(c) -anchor w
     set tmp [expr {$v(x1)-10}]
     $c create line $tmp [expr {$v(y)-5*$v(width)}] \
-	    $tmp [expr {$v(y)+5*$v(width)}] \
-	    -arrow both -arrowshape $v(smallTips)
+            $tmp [expr {$v(y)+5*$v(width)}] \
+            -arrow both -arrowshape $v(smallTips)
     $c create text [expr {$v(x1)-15}] $v(y) -text $v(width) -anchor e
     set tmp [expr {$v(y)+5*$v(width)+10*$v(c)+10}]
     $c create line [expr {$v(x2)-10*$v(a)}] $tmp $v(x2) $tmp \
-	    -arrow both -arrowshape $v(smallTips)
+            -arrow both -arrowshape $v(smallTips)
     $c create text [expr {$v(x2)-5*$v(a)}] [expr {$tmp+5}] \
-	    -text $v(a) -anchor n
+            -text $v(a) -anchor n
     set tmp [expr {$tmp+25}]
     $c create line [expr {$v(x2)-10*$v(b)}] $tmp $v(x2) $tmp \
-	    -arrow both -arrowshape $v(smallTips)
+            -arrow both -arrowshape $v(smallTips)
     $c create text [expr {$v(x2)-5*$v(b)}] [expr {$tmp+5}] \
-	    -text $v(b) -anchor n
+            -text $v(b) -anchor n
 
     $c create text $v(x1) 310 -text "-width  $v(width)" \
-	    -anchor w -font {Helvetica 18}
+            -anchor w -font {Helvetica 18}
     $c create text $v(x1) 330 -text "-arrowshape  {$v(a)  $v(b)  $v(c)}" \
-	    -anchor w -font {Helvetica 18}
+            -anchor w -font {Helvetica 18}
 
     incr v(count)
 }
@@ -141,7 +141,7 @@ if {[winfo depth $c] > 1} {
 } else {
     # Main widget program sets variable tk_demoDirectory
     set demo_arrowInfo(bigLineStyle) "-fill black \
-	-stipple @[file join $tk_demoDirectory images grey.25]"
+        -stipple @[file join $tk_demoDirectory images grey.25]"
     set demo_arrowInfo(boxStyle) "-fill {} -outline black -width 1"
     set demo_arrowInfo(activeStyle) "-fill black -outline black -width 1"
 }
@@ -162,21 +162,21 @@ bind $c <Any-ButtonRelease-1> "arrowSetup $c"
 # for the line and arrowhead.
 #
 # Arguments:
-# c -		The name of the canvas window.
-# x, y -	The coordinates of the mouse.
+# c -           The name of the canvas window.
+# x, y -        The coordinates of the mouse.
 
 proc arrowMove1 {c x y} {
     upvar #0 demo_arrowInfo v
     set newA [expr {($v(x2)+5-round([$c canvasx $x]))/10}]
     if {$newA < 0} {
-	set newA 0
+        set newA 0
     }
     if {$newA > 25} {
-	set newA 25
+        set newA 25
     }
     if {$newA != $v(a)} {
-	$c move box1 [expr {10*($v(a)-$newA)}] 0
-	set v(a) $newA
+        $c move box1 [expr {10*($v(a)-$newA)}] 0
+        set v(a) $newA
     }
 }
 
@@ -186,29 +186,29 @@ proc arrowMove1 {c x y} {
 # parameters for the line and arrowhead.
 #
 # Arguments:
-# c -		The name of the canvas window.
-# x, y -	The coordinates of the mouse.
+# c -           The name of the canvas window.
+# x, y -        The coordinates of the mouse.
 
 proc arrowMove2 {c x y} {
     upvar #0 demo_arrowInfo v
     set newB [expr {($v(x2)+5-round([$c canvasx $x]))/10}]
     if {$newB < 0} {
-	set newB 0
+        set newB 0
     }
     if {$newB > 25} {
-	set newB 25
+        set newB 25
     }
     set newC [expr {($v(y)+5-round([$c canvasy $y])-5*$v(width))/10}]
     if {$newC < 0} {
-	set newC 0
+        set newC 0
     }
     if {$newC > 20} {
-	set newC 20
+        set newC 20
     }
     if {($newB != $v(b)) || ($newC != $v(c))} {
-	$c move box2 [expr {10*($v(b)-$newB)}] [expr {10*($v(c)-$newC)}]
-	set v(b) $newB
-	set v(c) $newC
+        $c move box2 [expr {10*($v(b)-$newB)}] [expr {10*($v(c)-$newC)}]
+        set v(b) $newB
+        set v(c) $newC
     }
 }
 
@@ -218,20 +218,20 @@ proc arrowMove2 {c x y} {
 # controlling parameters for the line and arrowhead.
 #
 # Arguments:
-# c -		The name of the canvas window.
-# x, y -	The coordinates of the mouse.
+# c -           The name of the canvas window.
+# x, y -        The coordinates of the mouse.
 
 proc arrowMove3 {c x y} {
     upvar #0 demo_arrowInfo v
     set newWidth [expr {($v(y)+2-round([$c canvasy $y]))/5}]
     if {$newWidth < 0} {
-	set newWidth 0
+        set newWidth 0
     }
     if {$newWidth > 20} {
-	set newWidth 20
+        set newWidth 20
     }
     if {$newWidth != $v(width)} {
-	$c move box3 0 [expr {5*($v(width)-$newWidth)}]
-	set v(width) $newWidth
+        $c move box3 0 [expr {5*($v(width)-$newWidth)}]
+        set v(width) $newWidth
     }
 }

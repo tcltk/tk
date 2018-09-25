@@ -1,7 +1,7 @@
 #! /bin/bash -norc
-dnl	This file is an input file used by the GNU "autoconf" program to
-dnl	generate the file "configure", which is run during Tk installation
-dnl	to configure the system for the local environment.
+dnl     This file is an input file used by the GNU "autoconf" program to
+dnl     generate the file "configure", which is run during Tk installation
+dnl     to configure the system for the local environment.
 
 AC_INIT([tk],[8.7])
 AC_PREREQ(2.69)
@@ -103,12 +103,12 @@ fi
 
 if test -z "$no_pipe" && test -n "$GCC"; then
     AC_CACHE_CHECK([if the compiler understands -pipe],
-	tcl_cv_cc_pipe, [
-	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -pipe"
-	AC_TRY_COMPILE(,, tcl_cv_cc_pipe=yes, tcl_cv_cc_pipe=no)
-	CFLAGS=$hold_cflags])
+        tcl_cv_cc_pipe, [
+        hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -pipe"
+        AC_TRY_COMPILE(,, tcl_cv_cc_pipe=yes, tcl_cv_cc_pipe=no)
+        CFLAGS=$hold_cflags])
     if test $tcl_cv_cc_pipe = yes; then
-	CFLAGS="$CFLAGS -pipe"
+        CFLAGS="$CFLAGS -pipe"
     fi
 fi
 
@@ -125,7 +125,7 @@ SC_CONFIG_CFLAGS
 SC_ENABLE_SYMBOLS
 
 #--------------------------------------------------------------------
-#	Detect what compiler flags to set for 64-bit support.
+#       Detect what compiler flags to set for 64-bit support.
 #--------------------------------------------------------------------
 
 SC_TCL_EARLY_FLAGS
@@ -133,7 +133,7 @@ SC_TCL_EARLY_FLAGS
 SC_TCL_64BIT_FLAGS
 
 #--------------------------------------------------------------------
-#	Check endianness because we can optimize some operations
+#       Check endianness because we can optimize some operations
 #--------------------------------------------------------------------
 
 AC_C_BIGENDIAN
@@ -156,26 +156,26 @@ if test "$TCL_PREFIX" != "$prefix"; then
 fi
 
 #--------------------------------------------------------------------
-#	Include sys/select.h if it exists and if it supplies things
-#	that appear to be useful and aren't already in sys/types.h.
-#	This appears to be true only on the RS/6000 under AIX.  Some
-#	systems like OSF/1 have a sys/select.h that's of no use, and
-#	other systems like SCO UNIX have a sys/select.h that's
-#	pernicious.  If "fd_set" isn't defined anywhere then set a
-#	special flag.
+#       Include sys/select.h if it exists and if it supplies things
+#       that appear to be useful and aren't already in sys/types.h.
+#       This appears to be true only on the RS/6000 under AIX.  Some
+#       systems like OSF/1 have a sys/select.h that's of no use, and
+#       other systems like SCO UNIX have a sys/select.h that's
+#       pernicious.  If "fd_set" isn't defined anywhere then set a
+#       special flag.
 #--------------------------------------------------------------------
 
 AC_CACHE_CHECK([for fd_set in sys/types], tcl_cv_type_fd_set, [
     AC_TRY_COMPILE([#include <sys/types.h>],[fd_set readMask, writeMask;],
-	tcl_cv_type_fd_set=yes, tcl_cv_type_fd_set=no)])
+        tcl_cv_type_fd_set=yes, tcl_cv_type_fd_set=no)])
 tk_ok=$tcl_cv_type_fd_set
 if test $tk_ok = no; then
     AC_CACHE_CHECK([for fd_mask in sys/select], tcl_cv_grep_fd_mask, [
-	AC_EGREP_HEADER(fd_mask, sys/select.h,
-	     tcl_cv_grep_fd_mask=present, tcl_cv_grep_fd_mask=missing)])
+        AC_EGREP_HEADER(fd_mask, sys/select.h,
+             tcl_cv_grep_fd_mask=present, tcl_cv_grep_fd_mask=missing)])
     if test $tcl_cv_grep_fd_mask = present; then
-	AC_DEFINE(HAVE_SYS_SELECT_H, 1, [Should we include <sys/select.h>?])
-	tk_ok=yes
+        AC_DEFINE(HAVE_SYS_SELECT_H, 1, [Should we include <sys/select.h>?])
+        tk_ok=yes
     fi
 fi
 if test $tk_ok = no; then
@@ -190,17 +190,17 @@ AC_CHECK_HEADERS(sys/time.h)
 AC_HEADER_TIME
 
 #--------------------------------------------------------------------
-#	Under Solaris 2.4, strtod returns the wrong value for the
-#	terminating character under some conditions.  Check for this
-#	and if the problem exists use a substitute procedure
-#	"fixstrtod" (provided by Tcl) that corrects the error.
+#       Under Solaris 2.4, strtod returns the wrong value for the
+#       terminating character under some conditions.  Check for this
+#       and if the problem exists use a substitute procedure
+#       "fixstrtod" (provided by Tcl) that corrects the error.
 #--------------------------------------------------------------------
 
 SC_BUGGY_STRTOD
 
 #--------------------------------------------------------------------
-#	Check for various typedefs and provide substitutes if
-#	they don't exist.
+#       Check for various typedefs and provide substitutes if
+#       they don't exist.
 #--------------------------------------------------------------------
 
 AC_TYPE_MODE_T
@@ -212,31 +212,31 @@ AC_CHECK_TYPE([intptr_t], [
     AC_DEFINE([HAVE_INTPTR_T], 1, [Do we have the intptr_t type?])], [
     AC_CACHE_CHECK([for pointer-size signed integer type], tcl_cv_intptr_t, [
     for tcl_cv_intptr_t in "int" "long" "long long" none; do
-	if test "$tcl_cv_intptr_t" != none; then
-	    AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
-		    [[sizeof (void *) <= sizeof ($tcl_cv_intptr_t)]])],
-		[tcl_ok=yes], [tcl_ok=no])
-	    test "$tcl_ok" = yes && break; fi
+        if test "$tcl_cv_intptr_t" != none; then
+            AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
+                    [[sizeof (void *) <= sizeof ($tcl_cv_intptr_t)]])],
+                [tcl_ok=yes], [tcl_ok=no])
+            test "$tcl_ok" = yes && break; fi
     done])
     if test "$tcl_cv_intptr_t" != none; then
-	AC_DEFINE_UNQUOTED([intptr_t], [$tcl_cv_intptr_t], [Signed integer
-	   type wide enough to hold a pointer.])
+        AC_DEFINE_UNQUOTED([intptr_t], [$tcl_cv_intptr_t], [Signed integer
+           type wide enough to hold a pointer.])
     fi
 ])
 AC_CHECK_TYPE([uintptr_t], [
     AC_DEFINE([HAVE_UINTPTR_T], 1, [Do we have the uintptr_t type?])], [
     AC_CACHE_CHECK([for pointer-size unsigned integer type], tcl_cv_uintptr_t, [
     for tcl_cv_uintptr_t in "unsigned int" "unsigned long" "unsigned long long" \
-	    none; do
-	if test "$tcl_cv_uintptr_t" != none; then
-	    AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
-		    [[sizeof (void *) <= sizeof ($tcl_cv_uintptr_t)]])],
-		[tcl_ok=yes], [tcl_ok=no])
-	    test "$tcl_ok" = yes && break; fi
+            none; do
+        if test "$tcl_cv_uintptr_t" != none; then
+            AC_COMPILE_IFELSE([AC_LANG_BOOL_COMPILE_TRY([AC_INCLUDES_DEFAULT],
+                    [[sizeof (void *) <= sizeof ($tcl_cv_uintptr_t)]])],
+                [tcl_ok=yes], [tcl_ok=no])
+            test "$tcl_ok" = yes && break; fi
     done])
     if test "$tcl_cv_uintptr_t" != none; then
-	AC_DEFINE_UNQUOTED([uintptr_t], [$tcl_cv_uintptr_t], [Unsigned integer
-	   type wide enough to hold a pointer.])
+        AC_DEFINE_UNQUOTED([uintptr_t], [$tcl_cv_uintptr_t], [Unsigned integer
+           type wide enough to hold a pointer.])
     fi
 ])
 
@@ -246,108 +246,108 @@ AC_CHECK_TYPE([uintptr_t], [
 
 AC_CACHE_CHECK([pw_gecos in struct pwd], tcl_cv_pwd_pw_gecos, [
     AC_TRY_COMPILE([#include <pwd.h>],
-	    [struct passwd pwd; pwd.pw_gecos;],
-	    tcl_cv_pwd_pw_gecos=yes, tcl_cv_pwd_pw_gecos=no)])
+            [struct passwd pwd; pwd.pw_gecos;],
+            tcl_cv_pwd_pw_gecos=yes, tcl_cv_pwd_pw_gecos=no)])
 if test $tcl_cv_pwd_pw_gecos = yes; then
     AC_DEFINE(HAVE_PW_GECOS, 1, [Does struct password have a pw_gecos field?])
 fi
 
 #--------------------------------------------------------------------
-#	On Mac OS X, we can build either with X11 or with Aqua
+#       On Mac OS X, we can build either with X11 or with Aqua
 #--------------------------------------------------------------------
 
 if test "`uname -s`" = "Darwin" ; then
     AC_MSG_CHECKING([whether to use Aqua])
     AC_ARG_ENABLE(aqua,
-	AC_HELP_STRING([--enable-aqua=yes|no],
-	    [use Aqua windowingsystem on Mac OS X (default: no)]),
-	[tk_aqua=$enableval], [tk_aqua=no])
+        AC_HELP_STRING([--enable-aqua=yes|no],
+            [use Aqua windowingsystem on Mac OS X (default: no)]),
+        [tk_aqua=$enableval], [tk_aqua=no])
     if test $tk_aqua = yes -o $tk_aqua = cocoa; then
-	tk_aqua=yes
-	if test $tcl_corefoundation = no; then
-	    AC_MSG_WARN([Aqua can only be used when CoreFoundation is available])
-	    tk_aqua=no
-	fi
-	if test ! -d /System/Library/Frameworks/Cocoa.framework; then
-	    AC_MSG_WARN([Aqua can only be used when Cocoa is available])
-	    tk_aqua=no
-	fi
-	if test "`uname -r | awk -F. '{print [$]1}'`" -lt 9; then
-	    AC_MSG_WARN([Aqua requires Mac OS X 10.5 or later])
-	    tk_aqua=no
-	fi
+        tk_aqua=yes
+        if test $tcl_corefoundation = no; then
+            AC_MSG_WARN([Aqua can only be used when CoreFoundation is available])
+            tk_aqua=no
+        fi
+        if test ! -d /System/Library/Frameworks/Cocoa.framework; then
+            AC_MSG_WARN([Aqua can only be used when Cocoa is available])
+            tk_aqua=no
+        fi
+        if test "`uname -r | awk -F. '{print [$]1}'`" -lt 9; then
+            AC_MSG_WARN([Aqua requires Mac OS X 10.5 or later])
+            tk_aqua=no
+        fi
     fi
     AC_MSG_RESULT([$tk_aqua])
     if test "$fat_32_64" = yes; then
-	if test $tk_aqua = no; then
-	    AC_CACHE_CHECK([for 64-bit X11], tcl_cv_lib_x11_64, [
-		for v in CFLAGS CPPFLAGS LDFLAGS; do
-		    eval 'hold_'$v'="$'$v'";'$v'="`echo "$'$v' "|sed -e "s/-arch ppc / /g" -e "s/-arch i386 / /g"`"'
-		done
-		CPPFLAGS="$CPPFLAGS -I/usr/X11R6/include"
-		LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -lX11"
-		AC_TRY_LINK([#include <X11/Xlib.h>], [XrmInitialize();],
-		    tcl_cv_lib_x11_64=yes, tcl_cv_lib_x11_64=no)
-		for v in CFLAGS CPPFLAGS LDFLAGS; do
-		    eval $v'="$hold_'$v'"'
-		done])
-	fi
-	# remove 64-bit arch flags from CFLAGS et al. for combined 32 & 64 bit
-	# fat builds if configuration does not support 64-bit.
-	if test "$tcl_cv_lib_x11_64" = no; then
-	    AC_MSG_NOTICE([Removing 64-bit architectures from compiler & linker flags])
-	    for v in CFLAGS CPPFLAGS LDFLAGS; do
-		eval $v'="`echo "$'$v' "|sed -e "s/-arch ppc64 / /g" -e "s/-arch x86_64 / /g"`"'
-	    done
-	fi
+        if test $tk_aqua = no; then
+            AC_CACHE_CHECK([for 64-bit X11], tcl_cv_lib_x11_64, [
+                for v in CFLAGS CPPFLAGS LDFLAGS; do
+                    eval 'hold_'$v'="$'$v'";'$v'="`echo "$'$v' "|sed -e "s/-arch ppc / /g" -e "s/-arch i386 / /g"`"'
+                done
+                CPPFLAGS="$CPPFLAGS -I/usr/X11R6/include"
+                LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -lX11"
+                AC_TRY_LINK([#include <X11/Xlib.h>], [XrmInitialize();],
+                    tcl_cv_lib_x11_64=yes, tcl_cv_lib_x11_64=no)
+                for v in CFLAGS CPPFLAGS LDFLAGS; do
+                    eval $v'="$hold_'$v'"'
+                done])
+        fi
+        # remove 64-bit arch flags from CFLAGS et al. for combined 32 & 64 bit
+        # fat builds if configuration does not support 64-bit.
+        if test "$tcl_cv_lib_x11_64" = no; then
+            AC_MSG_NOTICE([Removing 64-bit architectures from compiler & linker flags])
+            for v in CFLAGS CPPFLAGS LDFLAGS; do
+                eval $v'="`echo "$'$v' "|sed -e "s/-arch ppc64 / /g" -e "s/-arch x86_64 / /g"`"'
+            done
+        fi
     fi
     if test $tk_aqua = no; then
-	# check if weak linking whole libraries is possible.
-	AC_CACHE_CHECK([if ld accepts -weak-l flag], tcl_cv_ld_weak_l, [
-	    hold_ldflags=$LDFLAGS
-	    LDFLAGS="$LDFLAGS -Wl,-weak-lm"
-	    AC_TRY_LINK([#include <math.h>], [double f = sin(1.0);],
-		tcl_cv_ld_weak_l=yes, tcl_cv_ld_weak_l=no)
-	    LDFLAGS=$hold_ldflags])
+        # check if weak linking whole libraries is possible.
+        AC_CACHE_CHECK([if ld accepts -weak-l flag], tcl_cv_ld_weak_l, [
+            hold_ldflags=$LDFLAGS
+            LDFLAGS="$LDFLAGS -Wl,-weak-lm"
+            AC_TRY_LINK([#include <math.h>], [double f = sin(1.0);],
+                tcl_cv_ld_weak_l=yes, tcl_cv_ld_weak_l=no)
+            LDFLAGS=$hold_ldflags])
     fi
     AC_CHECK_HEADERS(AvailabilityMacros.h)
     if test "$ac_cv_header_AvailabilityMacros_h" = yes; then
-	AC_CACHE_CHECK([if weak import is available], tcl_cv_cc_weak_import, [
-	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
-	    AC_TRY_LINK([
-		    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
-		    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
-		    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
-		    #endif
-		    #elif MAC_OS_X_VERSION_MIN_REQUIRED < 1020
-		    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1020
-		    #endif
-		    int rand(void) __attribute__((weak_import));
-		], [rand();],
-		tcl_cv_cc_weak_import=yes, tcl_cv_cc_weak_import=no)
-	    CFLAGS=$hold_cflags])
-	if test $tcl_cv_cc_weak_import = yes; then
-	    AC_DEFINE(HAVE_WEAK_IMPORT, 1, [Is weak import available?])
-	fi
-	AC_CACHE_CHECK([if Darwin SUSv3 extensions are available],
-	    tcl_cv_cc_darwin_c_source, [
-	    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
-	    AC_TRY_COMPILE([
-		    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
-		    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
-		    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
-		    #endif
-		    #elif MAC_OS_X_VERSION_MIN_REQUIRED < 1050
-		    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1050
-		    #endif
-		    #define _DARWIN_C_SOURCE 1
-		    #include <sys/cdefs.h>
-		],,tcl_cv_cc_darwin_c_source=yes, tcl_cv_cc_darwin_c_source=no)
-	    CFLAGS=$hold_cflags])
-	if test $tcl_cv_cc_darwin_c_source = yes; then
-	    AC_DEFINE(_DARWIN_C_SOURCE, 1,
-		    [Are Darwin SUSv3 extensions available?])
-	fi
+        AC_CACHE_CHECK([if weak import is available], tcl_cv_cc_weak_import, [
+            hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
+            AC_TRY_LINK([
+                    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
+                    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
+                    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1020
+                    #endif
+                    #elif MAC_OS_X_VERSION_MIN_REQUIRED < 1020
+                    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1020
+                    #endif
+                    int rand(void) __attribute__((weak_import));
+                ], [rand();],
+                tcl_cv_cc_weak_import=yes, tcl_cv_cc_weak_import=no)
+            CFLAGS=$hold_cflags])
+        if test $tcl_cv_cc_weak_import = yes; then
+            AC_DEFINE(HAVE_WEAK_IMPORT, 1, [Is weak import available?])
+        fi
+        AC_CACHE_CHECK([if Darwin SUSv3 extensions are available],
+            tcl_cv_cc_darwin_c_source, [
+            hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -Werror"
+            AC_TRY_COMPILE([
+                    #ifdef __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
+                    #if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+                    #error __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ < 1050
+                    #endif
+                    #elif MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+                    #error MAC_OS_X_VERSION_MIN_REQUIRED < 1050
+                    #endif
+                    #define _DARWIN_C_SOURCE 1
+                    #include <sys/cdefs.h>
+                ],,tcl_cv_cc_darwin_c_source=yes, tcl_cv_cc_darwin_c_source=no)
+            CFLAGS=$hold_cflags])
+        if test $tcl_cv_cc_darwin_c_source = yes; then
+            AC_DEFINE(_DARWIN_C_SOURCE, 1,
+                    [Are Darwin SUSv3 extensions available?])
+        fi
     fi
 else
     tk_aqua=no
@@ -363,12 +363,12 @@ if test $tk_aqua = yes; then
     fi
 else
     #--------------------------------------------------------------------
-    #	Locate the X11 header files and the X11 library archive.  Try
-    #	the ac_path_x macro first, but if it doesn't find the X stuff
-    #	(e.g. because there's no xmkmf program) then check through
-    #	a list of possible directories.  Under some conditions the
-    #	autoconf macro will return an include directory that contains
-    #	no include files, so double-check its result just to be safe.
+    #   Locate the X11 header files and the X11 library archive.  Try
+    #   the ac_path_x macro first, but if it doesn't find the X stuff
+    #   (e.g. because there's no xmkmf program) then check through
+    #   a list of possible directories.  Under some conditions the
+    #   autoconf macro will return an include directory that contains
+    #   no include files, so double-check its result just to be safe.
     #--------------------------------------------------------------------
 
     SC_PATH_X
@@ -376,17 +376,17 @@ else
 fi
 
 #--------------------------------------------------------------------
-#	Various manipulations on the search path used at runtime to
-#	find shared libraries:
-#	1. If the X library binaries are in a non-standard directory,
-#	   add the X library location into that search path.
-#	2. On systems such as AIX and Ultrix that use "-L" as the
-#	   search path option, colons cannot be used to separate
-#	   directories from each other. Change colons to " -L".
-#	3. Create two sets of search flags, one for use in cc lines
-#	   and the other for when the linker is invoked directly.  In
-#	   the second case, '-Wl,' must be stripped off and commas must
-#	   be replaced by spaces.
+#       Various manipulations on the search path used at runtime to
+#       find shared libraries:
+#       1. If the X library binaries are in a non-standard directory,
+#          add the X library location into that search path.
+#       2. On systems such as AIX and Ultrix that use "-L" as the
+#          search path option, colons cannot be used to separate
+#          directories from each other. Change colons to " -L".
+#       3. Create two sets of search flags, one for use in cc lines
+#          and the other for when the linker is invoked directly.  In
+#          the second case, '-Wl,' must be stripped off and commas must
+#          be replaced by spaces.
 #--------------------------------------------------------------------
 
 if test "x${x_libraries}" != "x"; then
@@ -399,21 +399,21 @@ if test "${TCL_LD_SEARCH_FLAGS}" = '-L${LIB_RUNTIME_DIR}'; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for the existence of various libraries.  The order here
-#	is important, so that then end up in the right order in the
-#	command line generated by make.  The -lsocket and -lnsl libraries
-#	require a couple of special tricks:
-#	1. Use "connect" and "accept" to check for -lsocket, and
-#	   "gethostbyname" to check for -lnsl.
-#	2. Use each function name only once:  can't redo a check because
-#	   autoconf caches the results of the last check and won't redo it.
-#	3. Use -lnsl and -lsocket only if they supply procedures that
-#	   aren't already present in the normal libraries.  This is because
-#	   IRIX 5.2 has libraries, but they aren't needed and they're
-#	   bogus:  they goof up name resolution if used.
-#	4. On some SVR4 systems, can't use -lsocket without -lnsl too.
-#	   To get around this problem, check for both libraries together
-#	   if -lsocket doesn't work by itself.
+#       Check for the existence of various libraries.  The order here
+#       is important, so that then end up in the right order in the
+#       command line generated by make.  The -lsocket and -lnsl libraries
+#       require a couple of special tricks:
+#       1. Use "connect" and "accept" to check for -lsocket, and
+#          "gethostbyname" to check for -lnsl.
+#       2. Use each function name only once:  can't redo a check because
+#          autoconf caches the results of the last check and won't redo it.
+#       3. Use -lnsl and -lsocket only if they supply procedures that
+#          aren't already present in the normal libraries.  This is because
+#          IRIX 5.2 has libraries, but they aren't needed and they're
+#          bogus:  they goof up name resolution if used.
+#       4. On some SVR4 systems, can't use -lsocket without -lnsl too.
+#          To get around this problem, check for both libraries together
+#          if -lsocket doesn't work by itself.
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no; then
@@ -438,97 +438,97 @@ if test -d /usr/include/mit -a $tk_aqua = no; then
     tk_oldLibs=$LIBS
     LIBS="$LIBS -lX11-mit"
     AC_TRY_LINK([
-	#include <X11/Xlib.h>
+        #include <X11/Xlib.h>
     ], [
-	XOpenDisplay(0);
+        XOpenDisplay(0);
     ], [
-	AC_MSG_RESULT([yes])
-	XLIBSW="-lX11-mit"
-	XINCLUDES="-I/usr/include/mit"
+        AC_MSG_RESULT([yes])
+        XLIBSW="-lX11-mit"
+        XINCLUDES="-I/usr/include/mit"
     ], AC_MSG_RESULT([no]))
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
 fi
 
 #--------------------------------------------------------------------
-#	Check for freetype / fontconfig / Xft support.
+#       Check for freetype / fontconfig / Xft support.
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no; then
     AC_MSG_CHECKING([whether to use xft])
     AC_ARG_ENABLE(xft,
-	AC_HELP_STRING([--enable-xft],
-	    [use freetype/fontconfig/xft (default: on)]),
-	[enable_xft=$enableval], [enable_xft="default"])
+        AC_HELP_STRING([--enable-xft],
+            [use freetype/fontconfig/xft (default: on)]),
+        [enable_xft=$enableval], [enable_xft="default"])
     XFT_CFLAGS=""
     XFT_LIBS=""
     if test "$enable_xft" = "no" ; then
-	AC_MSG_RESULT([$enable_xft])
+        AC_MSG_RESULT([$enable_xft])
     else
-	found_xft="yes"
-	dnl make sure package configurator (xft-config or pkg-config
-	dnl says that xft is present.
-	XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
-	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
-	if test "$found_xft" = "no" ; then
-	    found_xft=yes
-	    XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || found_xft="no"
-	    XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || found_xft="no"
-	fi
-	AC_MSG_RESULT([$found_xft])
-	dnl make sure that compiling against Xft header file doesn't bomb
-	if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
-	    AC_CHECK_HEADER(X11/Xft/Xft.h, [], [
-		found_xft=no
-	    ],[#include <X11/Xlib.h>])
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-	dnl make sure that linking against Xft libraries finds freetype
-	if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
-	    AC_CHECK_LIB(Xft, XftFontOpen, [], [
-		found_xft=no
-	    ])
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-	dnl make sure that linking against fontconfig libraries finds Fc* symbols
-	if test "$found_xft" = "yes" ; then
-	    tk_oldCFlags=$CFLAGS
-	    CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
-	    tk_oldLibs=$LIBS
-	    LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW -lfontconfig"
-	    AC_CHECK_LIB(fontconfig, FcFontSort, [
-		XFT_LIBS="$XFT_LIBS -lfontconfig"
-	    ], [])
-	    CFLAGS=$tk_oldCFlags
-	    LIBS=$tk_oldLibs
-	fi
-	dnl print a warning if xft is unusable and was specifically requested
-	if test "$found_xft" = "no" ; then
-	    if test "$enable_xft" = "yes" ; then
-		AC_MSG_WARN([Can't find xft configuration, or xft is unusable])
-	    fi
-	    enable_xft=no
-	    XFT_CFLAGS=""
-	    XFT_LIBS=""
-	else
+        found_xft="yes"
+        dnl make sure package configurator (xft-config or pkg-config
+        dnl says that xft is present.
+        XFT_CFLAGS=`xft-config --cflags 2>/dev/null` || found_xft="no"
+        XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
+        if test "$found_xft" = "no" ; then
+            found_xft=yes
+            XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || found_xft="no"
+            XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || found_xft="no"
+        fi
+        AC_MSG_RESULT([$found_xft])
+        dnl make sure that compiling against Xft header file doesn't bomb
+        if test "$found_xft" = "yes" ; then
+            tk_oldCFlags=$CFLAGS
+            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
+            tk_oldLibs=$LIBS
+            LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+            AC_CHECK_HEADER(X11/Xft/Xft.h, [], [
+                found_xft=no
+            ],[#include <X11/Xlib.h>])
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+        fi
+        dnl make sure that linking against Xft libraries finds freetype
+        if test "$found_xft" = "yes" ; then
+            tk_oldCFlags=$CFLAGS
+            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
+            tk_oldLibs=$LIBS
+            LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW"
+            AC_CHECK_LIB(Xft, XftFontOpen, [], [
+                found_xft=no
+            ])
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+        fi
+        dnl make sure that linking against fontconfig libraries finds Fc* symbols
+        if test "$found_xft" = "yes" ; then
+            tk_oldCFlags=$CFLAGS
+            CFLAGS="$CFLAGS $XINCLUDES $XFT_CFLAGS"
+            tk_oldLibs=$LIBS
+            LIBS="$tk_oldLIBS $XFT_LIBS $XLIBSW -lfontconfig"
+            AC_CHECK_LIB(fontconfig, FcFontSort, [
+                XFT_LIBS="$XFT_LIBS -lfontconfig"
+            ], [])
+            CFLAGS=$tk_oldCFlags
+            LIBS=$tk_oldLibs
+        fi
+        dnl print a warning if xft is unusable and was specifically requested
+        if test "$found_xft" = "no" ; then
+            if test "$enable_xft" = "yes" ; then
+                AC_MSG_WARN([Can't find xft configuration, or xft is unusable])
+            fi
+            enable_xft=no
+            XFT_CFLAGS=""
+            XFT_LIBS=""
+        else
             enable_xft=yes
-	fi
+        fi
     fi
     if test $enable_xft = "yes" ; then
-	UNIX_FONT_OBJS=tkUnixRFont.o
-	AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
+        UNIX_FONT_OBJS=tkUnixRFont.o
+        AC_DEFINE(HAVE_XFT, 1, [Have we turned on XFT (antialiased fonts)?])
     else
-	UNIX_FONT_OBJS=tkUnixFont.o
+        UNIX_FONT_OBJS=tkUnixFont.o
     fi
     AC_SUBST(XFT_CFLAGS)
     AC_SUBST(XFT_LIBS)
@@ -536,7 +536,7 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
-#	Check for XkbKeycodeToKeysym.
+#       Check for XkbKeycodeToKeysym.
 #--------------------------------------------------------------------
 
 if test $tk_aqua = no; then
@@ -545,21 +545,21 @@ if test $tk_aqua = no; then
     CFLAGS="$CFLAGS $XINCLUDES"
     LIBS="$LIBS $XLIBSW"
     AC_CHECK_HEADER(X11/XKBlib.h, [
-	xkblib_header_found=yes
+        xkblib_header_found=yes
     ], [
-	xkblib_header_found=no
+        xkblib_header_found=no
     ], [#include <X11/Xlib.h>])
     if test $xkblib_header_found = "yes" ; then
-	AC_CHECK_LIB(X11, XkbKeycodeToKeysym, [
-	    xkbkeycodetokeysym_found=yes
-	], [
-	    xkbkeycodetokeysym_found=no
-	])
+        AC_CHECK_LIB(X11, XkbKeycodeToKeysym, [
+            xkbkeycodetokeysym_found=yes
+        ], [
+            xkbkeycodetokeysym_found=no
+        ])
     else
-	xkbkeycodetokeysym_found=no
+        xkbkeycodetokeysym_found=no
     fi
     if test $xkbkeycodetokeysym_found = "yes" ; then
-	AC_DEFINE(HAVE_XKBKEYCODETOKEYSYM, 1, [Do we have XkbKeycodeToKeysym?])
+        AC_DEFINE(HAVE_XKBKEYCODETOKEYSYM, 1, [Do we have XkbKeycodeToKeysym?])
     fi
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
@@ -574,15 +574,15 @@ if test $tk_aqua = no && test "$GCC" = yes; then
     tk_oldCFlags=$CFLAGS
     CFLAGS="$CFLAGS -Werror"
     AC_TRY_LINK([
-	#include <X11/Xlib.h>
+        #include <X11/Xlib.h>
     ], [
-	XKeycodeToKeysym(0,0,0);
+        XKeycodeToKeysym(0,0,0);
     ], [
-	AC_MSG_RESULT([no])
+        AC_MSG_RESULT([no])
     ], [
     AC_MSG_RESULT([yes])
-	AC_DEFINE(XKEYCODETOKEYSYM_IS_DEPRECATED, 1, [Is XKeycodeToKeysym deprecated?])
-	])
+        AC_DEFINE(XKEYCODETOKEYSYM_IS_DEPRECATED, 1, [Is XKeycodeToKeysym deprecated?])
+        ])
     CFLAGS=$tk_oldCFlags
 fi
 
@@ -604,51 +604,51 @@ if test $tk_aqua = no; then
     xss_lib_found=no
     AC_MSG_CHECKING([whether to try to use XScreenSaver])
     AC_ARG_ENABLE(xss,
-	AC_HELP_STRING([--enable-xss],
-	    [use XScreenSaver for activity timer (default: on)]),
-	[enable_xss=$enableval], [enable_xss=yes])
+        AC_HELP_STRING([--enable-xss],
+            [use XScreenSaver for activity timer (default: on)]),
+        [enable_xss=$enableval], [enable_xss=yes])
     if test "$enable_xss" = "no" ; then
-	AC_MSG_RESULT([$enable_xss])
+        AC_MSG_RESULT([$enable_xss])
     else
-	AC_MSG_RESULT([$enable_xss])
-	AC_CHECK_HEADER(X11/extensions/scrnsaver.h, [
-	    xss_header_found=yes
-	],,[#include <X11/Xlib.h>])
-	AC_CHECK_FUNC(XScreenSaverQueryInfo,,[
-	    AC_CHECK_LIB(Xext, XScreenSaverQueryInfo, [
-		XLIBSW="$XLIBSW -lXext"
-		xss_lib_found=yes
-	    ], [
-		AC_CHECK_LIB(Xss, XScreenSaverQueryInfo, [
-		    if test "$tcl_cv_ld_weak_l" = yes; then
-			# On Darwin, weak link libXss if possible,
-			# as it is only available on Tiger or later.
-			XLIBSW="$XLIBSW -Wl,-weak-lXss -lXext"
-		    else
-			XLIBSW="$XLIBSW -lXss -lXext"
-		    fi
-		    xss_lib_found=yes
-		],, -lXext)
-	    ])
-	])
+        AC_MSG_RESULT([$enable_xss])
+        AC_CHECK_HEADER(X11/extensions/scrnsaver.h, [
+            xss_header_found=yes
+        ],,[#include <X11/Xlib.h>])
+        AC_CHECK_FUNC(XScreenSaverQueryInfo,,[
+            AC_CHECK_LIB(Xext, XScreenSaverQueryInfo, [
+                XLIBSW="$XLIBSW -lXext"
+                xss_lib_found=yes
+            ], [
+                AC_CHECK_LIB(Xss, XScreenSaverQueryInfo, [
+                    if test "$tcl_cv_ld_weak_l" = yes; then
+                        # On Darwin, weak link libXss if possible,
+                        # as it is only available on Tiger or later.
+                        XLIBSW="$XLIBSW -Wl,-weak-lXss -lXext"
+                    else
+                        XLIBSW="$XLIBSW -lXss -lXext"
+                    fi
+                    xss_lib_found=yes
+                ],, -lXext)
+            ])
+        ])
     fi
     if test $enable_xss = yes -a $xss_lib_found = yes -a $xss_header_found = yes; then
-	AC_DEFINE(HAVE_XSS, 1, [Is XScreenSaver available?])
+        AC_DEFINE(HAVE_XSS, 1, [Is XScreenSaver available?])
     fi
     CFLAGS=$tk_oldCFlags
     LIBS=$tk_oldLibs
 fi
 
 #--------------------------------------------------------------------
-#	Figure out whether "char" is unsigned.  If so, set a
-#	#define for __CHAR_UNSIGNED__.
+#       Figure out whether "char" is unsigned.  If so, set a
+#       #define for __CHAR_UNSIGNED__.
 #--------------------------------------------------------------------
 
 AC_C_CHAR_UNSIGNED
 
 #--------------------------------------------------------------------
-#	The statements below define a collection of symbols related to
-#	building libtk as a shared library instead of a static library.
+#       The statements below define a collection of symbols related to
+#       building libtk as a shared library instead of a static library.
 #--------------------------------------------------------------------
 
 eval eval "TK_UNSHARED_LIB_SUFFIX=${UNSHARED_LIB_SUFFIX}"
@@ -724,13 +724,13 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     EXTRA_INSTALL_BINARIES='@echo "Installing Info.plist to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && $(INSTALL_DATA) Tk-Info.plist "$(LIB_INSTALL_DIR)/Resources/Info.plist"'
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing license.terms to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA) "$(TOP_DIR)/license.terms" "$(LIB_INSTALL_DIR)/Resources"'
     if test $tk_aqua = yes; then
-	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Images to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)/Resources"; done'
-	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing wish$(VERSION) script to $(INSTALL_ROOT)/'"${bindir}"'/" && $(INSTALL_DATA_DIR) "$(INSTALL_ROOT)/'"${bindir}"'" && printf > "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)" "#!/bin/sh\n\"\$$(dirname \$$0)'"`eval d="${bindir}"; echo "$d" | sed -e 's#/[^/][^/]*#/..#g'`"'$(bindir)/Wish\" \"\$$@\"" && chmod +x "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)"'
-	bindir="${libdir}/Resources/Wish.app/Contents/MacOS"
-	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Info.plist to $(BIN_INSTALL_DIR)/.." && $(INSTALL_DATA) Wish-Info.plist "$(BIN_INSTALL_DIR)/../Info.plist" && mv -f "$(BIN_INSTALL_DIR)/wish$(VERSION)" "$(BIN_INSTALL_DIR)/Wish"'
-	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.icns to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA_DIR) "$(BIN_INSTALL_DIR)/../Resources"'
-	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Tk.icns" "$(BIN_INSTALL_DIR)/../Resources/Wish.icns"'
-	EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.sdef to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.sdef" "$(BIN_INSTALL_DIR)/../Resources"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Images to $(LIB_INSTALL_DIR)/Resources/" && $(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/Resources" && for i in Tk.tiff Tk.icns; do $(INSTALL_DATA) "$(MAC_OSX_DIR)/$$i" "$(LIB_INSTALL_DIR)/Resources"; done'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing wish$(VERSION) script to $(INSTALL_ROOT)/'"${bindir}"'/" && $(INSTALL_DATA_DIR) "$(INSTALL_ROOT)/'"${bindir}"'" && printf > "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)" "#!/bin/sh\n\"\$$(dirname \$$0)'"`eval d="${bindir}"; echo "$d" | sed -e 's#/[^/][^/]*#/..#g'`"'$(bindir)/Wish\" \"\$$@\"" && chmod +x "$(INSTALL_ROOT)/'"${bindir}"'/wish$(VERSION)"'
+        bindir="${libdir}/Resources/Wish.app/Contents/MacOS"
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Info.plist to $(BIN_INSTALL_DIR)/.." && $(INSTALL_DATA) Wish-Info.plist "$(BIN_INSTALL_DIR)/../Info.plist" && mv -f "$(BIN_INSTALL_DIR)/wish$(VERSION)" "$(BIN_INSTALL_DIR)/Wish"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.icns to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA_DIR) "$(BIN_INSTALL_DIR)/../Resources"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Tk.icns" "$(BIN_INSTALL_DIR)/../Resources/Wish.icns"'
+        EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Installing Wish.sdef to $(BIN_INSTALL_DIR)/../Resources" && $(INSTALL_DATA) "$(MAC_OSX_DIR)/Wish.sdef" "$(BIN_INSTALL_DIR)/../Resources"'
     fi
     EXTRA_INSTALL_BINARIES="$EXTRA_INSTALL_BINARIES"' && echo "Finalizing Tk.framework" && rm -f "$(LIB_INSTALL_DIR)/../Current" && ln -s "$(VERSION)" "$(LIB_INSTALL_DIR)/../Current" && for f in "$(LIB_FILE)" tkConfig.sh Resources Headers PrivateHeaders; do rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/Current/$$f" "$(LIB_INSTALL_DIR)/../.."; done && f="$(STUB_LIB_FILE)" && rm -f "$(LIB_INSTALL_DIR)/../../$$f" && ln -s "Versions/$(VERSION)/$$f" "$(LIB_INSTALL_DIR)/../.."'
     # Don't use AC_DEFINE for the following as the framework version define
@@ -745,15 +745,15 @@ else
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
     if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
-	TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
-	TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
+        TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
+        TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
     else
-	if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-	    TK_LIB_FLAG="-ltk${TK_VERSION}"
-	else
-	    TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
-	fi
-	TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
+        if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
+            TK_LIB_FLAG="-ltk${TK_VERSION}"
+        else
+            TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
+        fi
+        TK_BUILD_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_LIB_FLAG}"
     fi
     TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 fi

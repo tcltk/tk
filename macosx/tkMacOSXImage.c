@@ -1,7 +1,7 @@
 /*
  * tkMacOSXImage.c --
  *
- *	The code in this file provides an interface for XImages,
+ *      The code in this file provides an interface for XImages,
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -29,13 +29,13 @@ _XInitImageFuncPtrs(
  *
  * TkMacOSXCreateCGImageWithXImage --
  *
- *	Create CGImage from XImage, copying the image data.
+ *      Create CGImage from XImage, copying the image data.
  *
  * Results:
- *	CGImage, release after use.
+ *      CGImage, release after use.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -59,65 +59,65 @@ TkMacOSXCreateCGImageWithXImage(
     CGDataProviderReleaseDataCallback releaseData = ReleaseData;
 
     if (image->bits_per_pixel == 1) {
-	/*
-	 * BW image
-	 */
+        /*
+         * BW image
+         */
 
-	/* Reverses the sense of the bits */
-	static const CGFloat decodeWB[2] = {1, 0};
-	decode = decodeWB;
+        /* Reverses the sense of the bits */
+        static const CGFloat decodeWB[2] = {1, 0};
+        decode = decodeWB;
 
-	bitsPerComponent = 1;
-	bitsPerPixel = 1;
-	if (image->bitmap_bit_order != MSBFirst) {
-	    char *srcPtr = image->data + image->xoffset;
-	    char *endPtr = srcPtr + len;
-	    char *destPtr = (data = ckalloc(len));
+        bitsPerComponent = 1;
+        bitsPerPixel = 1;
+        if (image->bitmap_bit_order != MSBFirst) {
+            char *srcPtr = image->data + image->xoffset;
+            char *endPtr = srcPtr + len;
+            char *destPtr = (data = ckalloc(len));
 
-	    while (srcPtr < endPtr) {
-		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
-	    }
-	} else {
-	    data = memcpy(ckalloc(len), image->data + image->xoffset, len);
-	}
-	if (data) {
-	    provider = CGDataProviderCreateWithData(data, data, len, releaseData);
-	}
-	if (provider) {
-	    img = CGImageMaskCreate(image->width, image->height, bitsPerComponent,
-				    bitsPerPixel, image->bytes_per_line, provider, decode, 0);
-	}
+            while (srcPtr < endPtr) {
+                *destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
+            }
+        } else {
+            data = memcpy(ckalloc(len), image->data + image->xoffset, len);
+        }
+        if (data) {
+            provider = CGDataProviderCreateWithData(data, data, len, releaseData);
+        }
+        if (provider) {
+            img = CGImageMaskCreate(image->width, image->height, bitsPerComponent,
+                                    bitsPerPixel, image->bytes_per_line, provider, decode, 0);
+        }
     } else if (image->format == ZPixmap && image->bits_per_pixel == 32) {
-	/*
-	 * Color image
-	 */
+        /*
+         * Color image
+         */
 
-	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
+        CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 
-	bitsPerComponent = 8;
-	bitsPerPixel = 32;
-	bitmapInfo = (image->byte_order == MSBFirst ?
-		      kCGBitmapByteOrder32Big : kCGBitmapByteOrder32Little);
-	if (use_ximage_alpha) {
-	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
-	} else {
-	    bitmapInfo |= kCGImageAlphaNoneSkipFirst;
-	}
-	data = memcpy(ckalloc(len), image->data + image->xoffset, len);
-	if (data) {
-	    provider = CGDataProviderCreateWithData(data, data, len, releaseData);
-	}
-	if (provider) {
-	    img = CGImageCreate(image->width, image->height, bitsPerComponent,
-		    bitsPerPixel, image->bytes_per_line, colorspace, bitmapInfo,
-		    provider, decode, 0, kCGRenderingIntentDefault);
-	    CFRelease(provider);
-	}
-	if (colorspace) {
-	    CFRelease(colorspace);
-	}
+        bitsPerComponent = 8;
+        bitsPerPixel = 32;
+        bitmapInfo = (image->byte_order == MSBFirst ?
+                      kCGBitmapByteOrder32Big : kCGBitmapByteOrder32Little);
+        if (use_ximage_alpha) {
+            bitmapInfo |= kCGImageAlphaPremultipliedFirst;
+        } else {
+            bitmapInfo |= kCGImageAlphaNoneSkipFirst;
+        }
+        data = memcpy(ckalloc(len), image->data + image->xoffset, len);
+        if (data) {
+            provider = CGDataProviderCreateWithData(data, data, len, releaseData);
+        }
+        if (provider) {
+            img = CGImageCreate(image->width, image->height, bitsPerComponent,
+                    bitsPerPixel, image->bytes_per_line, colorspace, bitmapInfo,
+                    provider, decode, 0, kCGRenderingIntentDefault);
+            CFRelease(provider);
+        }
+        if (colorspace) {
+            CFRelease(colorspace);
+        }
     } else {
-	TkMacOSXDbgMsg("Unsupported image type");
+        TkMacOSXDbgMsg("Unsupported image type");
     }
     return img;
 }
@@ -128,16 +128,16 @@ TkMacOSXCreateCGImageWithXImage(
  *
  * XGetImage --
  *
- *	This function copies data from a pixmap or window into an XImage.
+ *      This function copies data from a pixmap or window into an XImage.
  *
  * Results:
- *	Returns a newly allocated XImage containing the data from the given
- *	rectangle of the given drawable, or NULL if the XImage could not be
- *	constructed.  NOTE: If we are copying from a window on a Retina
- *	display, the dimensions of the XImage will be 2*width x 2*height.
+ *      Returns a newly allocated XImage containing the data from the given
+ *      rectangle of the given drawable, or NULL if the XImage could not be
+ *      constructed.  NOTE: If we are copying from a window on a Retina
+ *      display, the dimensions of the XImage will be 2*width x 2*height.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -170,99 +170,99 @@ XGetImage(
 
     if (win && has_retina == unknown) {
 #ifdef __clang__
-	has_retina = [win respondsToSelector:@selector(backingScaleFactor)]?
-	    yes : no;
+        has_retina = [win respondsToSelector:@selector(backingScaleFactor)]?
+            yes : no;
 #else
-	has_retina = no;
+        has_retina = no;
 #endif
     }
 
     if (has_retina == yes) {
-	/*
-	 * We only allow scale factors 1 or 2, as Apple currently does.
-	 */
+        /*
+         * We only allow scale factors 1 or 2, as Apple currently does.
+         */
 #ifdef __clang__
-	scalefactor = [win backingScaleFactor] == 2.0 ? 2 : 1;
+        scalefactor = [win backingScaleFactor] == 2.0 ? 2 : 1;
 #endif
-	scaled_height *= scalefactor;
-	scaled_width *= scalefactor;
+        scaled_height *= scalefactor;
+        scaled_width *= scalefactor;
     }
 
     if (format == ZPixmap) {
-	if (width == 0 || height == 0) {
-	    return NULL;
-	}
-	bitmap_rep = TkMacOSXBitmapRepFromDrawableRect(drawable,
-		         x, y, width, height);
-	if (!bitmap_rep) {
-	    TkMacOSXDbgMsg("XGetImage: Failed to construct NSBitmapRep");
-	    return NULL;
-	}
-	bitmap_fmt = [bitmap_rep bitmapFormat];
-	size = [bitmap_rep bytesPerPlane];
-	bytes_per_row = [bitmap_rep bytesPerRow];
-	bitmap = ckalloc(size);
-	if (!bitmap                              ||
-	    (bitmap_fmt != 0 && bitmap_fmt != 1) ||
-	    [bitmap_rep samplesPerPixel] != 4    ||
-	    [bitmap_rep isPlanar] != 0           ||
-	    bytes_per_row != 4 * scaled_width    ||
-	    size != bytes_per_row*scaled_height  ) {
-	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
-	    CFRelease(bitmap_rep);
-	    return NULL;
-	}
+        if (width == 0 || height == 0) {
+            return NULL;
+        }
+        bitmap_rep = TkMacOSXBitmapRepFromDrawableRect(drawable,
+                         x, y, width, height);
+        if (!bitmap_rep) {
+            TkMacOSXDbgMsg("XGetImage: Failed to construct NSBitmapRep");
+            return NULL;
+        }
+        bitmap_fmt = [bitmap_rep bitmapFormat];
+        size = [bitmap_rep bytesPerPlane];
+        bytes_per_row = [bitmap_rep bytesPerRow];
+        bitmap = ckalloc(size);
+        if (!bitmap                              ||
+            (bitmap_fmt != 0 && bitmap_fmt != 1) ||
+            [bitmap_rep samplesPerPixel] != 4    ||
+            [bitmap_rep isPlanar] != 0           ||
+            bytes_per_row != 4 * scaled_width    ||
+            size != bytes_per_row*scaled_height  ) {
+            TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
+            CFRelease(bitmap_rep);
+            return NULL;
+        }
 
-	if (macDraw->flags & TK_USE_XIMAGE_ALPHA) {
-	    /*
-	     * When called by TkImgPhotoDisplay we are being asked to return a
-	     * background image to be blended with the photoimage using its
-	     * alpha channel, if it has one.  Returning a black pixmap here
-	     * makes TkImgPhotoDisplay create an XImage with a premultiplied
-	     * alpha channel, as favored by Apple.  When TkImgPhotoDisplay
-	     * passes this XImage to TkPutImage, targeting a pixmap, it creates
-	     * an image with correct transparency.  This is used, for example,
-	     * when creating an iconphoto or a menu image from a PNG
-	     * photoimage.
-	     */
-	    bzero(bitmap, size);
-	} else {
-	    memcpy(bitmap, (char *)[bitmap_rep bitmapData], size);
-	}
-	CFRelease(bitmap_rep);
+        if (macDraw->flags & TK_USE_XIMAGE_ALPHA) {
+            /*
+             * When called by TkImgPhotoDisplay we are being asked to return a
+             * background image to be blended with the photoimage using its
+             * alpha channel, if it has one.  Returning a black pixmap here
+             * makes TkImgPhotoDisplay create an XImage with a premultiplied
+             * alpha channel, as favored by Apple.  When TkImgPhotoDisplay
+             * passes this XImage to TkPutImage, targeting a pixmap, it creates
+             * an image with correct transparency.  This is used, for example,
+             * when creating an iconphoto or a menu image from a PNG
+             * photoimage.
+             */
+            bzero(bitmap, size);
+        } else {
+            memcpy(bitmap, (char *)[bitmap_rep bitmapData], size);
+        }
+        CFRelease(bitmap_rep);
 
-	/*
-	 * When Apple extracts a bitmap from an NSView, it may be in
-	 * either BGRA or ABGR format.  For an XImage we need RGBA.
-	 */
-	struct pixel_fmt pixel = bitmap_fmt == 0 ? bgra : abgr;
+        /*
+         * When Apple extracts a bitmap from an NSView, it may be in
+         * either BGRA or ABGR format.  For an XImage we need RGBA.
+         */
+        struct pixel_fmt pixel = bitmap_fmt == 0 ? bgra : abgr;
 
-	for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
-	    for (m=n; m<n+bytes_per_row; m+=4) {
-		R = *(bitmap + m + pixel.r);
-		G = *(bitmap + m + pixel.g);
-		B = *(bitmap + m + pixel.b);
-		A = *(bitmap + m + pixel.a);
+        for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
+            for (m=n; m<n+bytes_per_row; m+=4) {
+                R = *(bitmap + m + pixel.r);
+                G = *(bitmap + m + pixel.g);
+                B = *(bitmap + m + pixel.b);
+                A = *(bitmap + m + pixel.a);
 
-		*(bitmap + m)     = R;
-		*(bitmap + m + 1) = G;
-		*(bitmap + m + 2) = B;
-		*(bitmap + m + 3) = A;
-	    }
-	}
-	imagePtr = XCreateImage(display, NULL, depth, format, offset,
-				(char*)bitmap, scaled_width, scaled_height,
-				bitmap_pad, bytes_per_row);
-	if (scalefactor == 2) {
-	    imagePtr->pixelpower = 1;
-	}
+                *(bitmap + m)     = R;
+                *(bitmap + m + 1) = G;
+                *(bitmap + m + 2) = B;
+                *(bitmap + m + 3) = A;
+            }
+        }
+        imagePtr = XCreateImage(display, NULL, depth, format, offset,
+                                (char*)bitmap, scaled_width, scaled_height,
+                                bitmap_pad, bytes_per_row);
+        if (scalefactor == 2) {
+            imagePtr->pixelpower = 1;
+        }
     } else {
-	/*
-	 * There are some calls to XGetImage in the generic Tk
-	 * code which pass an XYPixmap rather than a ZPixmap.
-	 * XYPixmaps should be handled here.
-	 */
-	TkMacOSXDbgMsg("XGetImage does not handle XYPixmaps at the moment.");
+        /*
+         * There are some calls to XGetImage in the generic Tk
+         * code which pass an XYPixmap rather than a ZPixmap.
+         * XYPixmaps should be handled here.
+         */
+        TkMacOSXDbgMsg("XGetImage does not handle XYPixmaps at the moment.");
     }
     return imagePtr;
 }
@@ -272,13 +272,13 @@ XGetImage(
  *
  * DestroyImage --
  *
- *	Destroys storage associated with an image.
+ *      Destroys storage associated with an image.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Deallocates the image.
+ *      Deallocates the image.
  *
  *----------------------------------------------------------------------
  */
@@ -288,10 +288,10 @@ DestroyImage(
     XImage *image)
 {
     if (image) {
-	if (image->data) {
-	    ckfree(image->data);
-	}
-	ckfree(image);
+        if (image->data) {
+            ckfree(image->data);
+        }
+        ckfree(image);
     }
     return 0;
 }
@@ -301,13 +301,13 @@ DestroyImage(
  *
  * ImageGetPixel --
  *
- *	Get a single pixel from an image.
+ *      Get a single pixel from an image.
  *
  * Results:
- *	Returns the 32 bit pixel value.
+ *      Returns the 32 bit pixel value.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -321,46 +321,46 @@ ImageGetPixel(
     unsigned char r = 0, g = 0, b = 0;
 
     if (image && image->data) {
-	unsigned char *srcPtr = ((unsigned char*) image->data)
-		+ (y * image->bytes_per_line)
-		+ (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
+        unsigned char *srcPtr = ((unsigned char*) image->data)
+                + (y * image->bytes_per_line)
+                + (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
 
-	switch (image->bits_per_pixel) {
-	    case 32: {
-		r = (*((unsigned int*) srcPtr) >> 16) & 0xff;
-		g = (*((unsigned int*) srcPtr) >>  8) & 0xff;
-		b = (*((unsigned int*) srcPtr)      ) & 0xff;
-		/*if (image->byte_order == LSBFirst) {
-		    r = srcPtr[2]; g = srcPtr[1]; b = srcPtr[0];
-		} else {
-		    r = srcPtr[1]; g = srcPtr[2]; b = srcPtr[3];
-		}*/
-		break;
-	    }
-	    case 16:
-		r = (*((unsigned short*) srcPtr) >> 7) & 0xf8;
-		g = (*((unsigned short*) srcPtr) >> 2) & 0xf8;
-		b = (*((unsigned short*) srcPtr) << 3) & 0xf8;
-		break;
-	    case 8:
-		r = (*srcPtr << 2) & 0xc0;
-		g = (*srcPtr << 4) & 0xc0;
-		b = (*srcPtr << 6) & 0xc0;
-		r |= r >> 2 | r >> 4 | r >> 6;
-		g |= g >> 2 | g >> 4 | g >> 6;
-		b |= b >> 2 | b >> 4 | b >> 6;
-		break;
-	    case 4: {
-		unsigned char c = (x % 2) ? *srcPtr : (*srcPtr >> 4);
-		r = (c & 0x04) ? 0xff : 0;
-		g = (c & 0x02) ? 0xff : 0;
-		b = (c & 0x01) ? 0xff : 0;
-		break;
-		}
-	    case 1:
-		r = g = b = ((*srcPtr) & (0x80 >> (x % 8))) ? 0xff : 0;
-		break;
-	}
+        switch (image->bits_per_pixel) {
+            case 32: {
+                r = (*((unsigned int*) srcPtr) >> 16) & 0xff;
+                g = (*((unsigned int*) srcPtr) >>  8) & 0xff;
+                b = (*((unsigned int*) srcPtr)      ) & 0xff;
+                /*if (image->byte_order == LSBFirst) {
+                    r = srcPtr[2]; g = srcPtr[1]; b = srcPtr[0];
+                } else {
+                    r = srcPtr[1]; g = srcPtr[2]; b = srcPtr[3];
+                }*/
+                break;
+            }
+            case 16:
+                r = (*((unsigned short*) srcPtr) >> 7) & 0xf8;
+                g = (*((unsigned short*) srcPtr) >> 2) & 0xf8;
+                b = (*((unsigned short*) srcPtr) << 3) & 0xf8;
+                break;
+            case 8:
+                r = (*srcPtr << 2) & 0xc0;
+                g = (*srcPtr << 4) & 0xc0;
+                b = (*srcPtr << 6) & 0xc0;
+                r |= r >> 2 | r >> 4 | r >> 6;
+                g |= g >> 2 | g >> 4 | g >> 6;
+                b |= b >> 2 | b >> 4 | b >> 6;
+                break;
+            case 4: {
+                unsigned char c = (x % 2) ? *srcPtr : (*srcPtr >> 4);
+                r = (c & 0x04) ? 0xff : 0;
+                g = (c & 0x02) ? 0xff : 0;
+                b = (c & 0x01) ? 0xff : 0;
+                break;
+                }
+            case 1:
+                r = g = b = ((*srcPtr) & (0x80 >> (x % 8))) ? 0xff : 0;
+                break;
+        }
     }
     return (PIXEL_MAGIC << 24) | (r << 16) | (g << 8) | b;
 }
@@ -370,13 +370,13 @@ ImageGetPixel(
  *
  * ImagePutPixel --
  *
- *	Set a single pixel in an image.
+ *      Set a single pixel in an image.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -389,37 +389,37 @@ ImagePutPixel(
     unsigned long pixel)
 {
     if (image && image->data) {
-	unsigned char *dstPtr = ((unsigned char*) image->data)
-		+ (y * image->bytes_per_line)
-		+ (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
-	if (image->bits_per_pixel == 32) {
-	    *((unsigned int*) dstPtr) = pixel;
-	} else {
-	    unsigned char r = ((pixel & image->red_mask)   >> 16) & 0xff;
-	    unsigned char g = ((pixel & image->green_mask) >>  8) & 0xff;
-	    unsigned char b = ((pixel & image->blue_mask)       ) & 0xff;
-	    switch (image->bits_per_pixel) {
-	    case 16:
-		*((unsigned short*) dstPtr) = ((r & 0xf8) << 7) |
-			((g & 0xf8) << 2) | ((b & 0xf8) >> 3);
-		break;
-	    case 8:
-		*dstPtr = ((r & 0xc0) >> 2) | ((g & 0xc0) >> 4) |
-			((b & 0xc0) >> 6);
-		break;
-	    case 4: {
-		unsigned char c = ((r & 0x80) >> 5) | ((g & 0x80) >> 6) |
-			((b & 0x80) >> 7);
-		*dstPtr = (x % 2) ? ((*dstPtr & 0xf0) | (c & 0x0f)) :
-			((*dstPtr & 0x0f) | ((c << 4) & 0xf0));
-		break;
-		}
-	    case 1:
-		*dstPtr = ((r|g|b) & 0x80) ? (*dstPtr | (0x80 >> (x % 8))) :
-			(*dstPtr & ~(0x80 >> (x % 8)));
-		break;
-	    }
-	}
+        unsigned char *dstPtr = ((unsigned char*) image->data)
+                + (y * image->bytes_per_line)
+                + (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
+        if (image->bits_per_pixel == 32) {
+            *((unsigned int*) dstPtr) = pixel;
+        } else {
+            unsigned char r = ((pixel & image->red_mask)   >> 16) & 0xff;
+            unsigned char g = ((pixel & image->green_mask) >>  8) & 0xff;
+            unsigned char b = ((pixel & image->blue_mask)       ) & 0xff;
+            switch (image->bits_per_pixel) {
+            case 16:
+                *((unsigned short*) dstPtr) = ((r & 0xf8) << 7) |
+                        ((g & 0xf8) << 2) | ((b & 0xf8) >> 3);
+                break;
+            case 8:
+                *dstPtr = ((r & 0xc0) >> 2) | ((g & 0xc0) >> 4) |
+                        ((b & 0xc0) >> 6);
+                break;
+            case 4: {
+                unsigned char c = ((r & 0x80) >> 5) | ((g & 0x80) >> 6) |
+                        ((b & 0x80) >> 7);
+                *dstPtr = (x % 2) ? ((*dstPtr & 0xf0) | (c & 0x0f)) :
+                        ((*dstPtr & 0x0f) | ((c << 4) & 0xf0));
+                break;
+                }
+            case 1:
+                *dstPtr = ((r|g|b) & 0x80) ? (*dstPtr | (0x80 >> (x % 8))) :
+                        (*dstPtr & ~(0x80 >> (x % 8)));
+                break;
+            }
+        }
     }
     return 0;
 }
@@ -429,13 +429,13 @@ ImagePutPixel(
  *
  * XCreateImage --
  *
- *	Allocates storage for a new XImage.
+ *      Allocates storage for a new XImage.
  *
  * Results:
- *	Returns a newly allocated XImage.
+ *      Returns a newly allocated XImage.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -470,24 +470,24 @@ XCreateImage(
     ximage->pixelpower = 0;
 
     if (format == ZPixmap) {
-	ximage->bits_per_pixel = 32;
-	ximage->bitmap_unit = 32;
+        ximage->bits_per_pixel = 32;
+        ximage->bitmap_unit = 32;
     } else {
-	ximage->bits_per_pixel = 1;
-	ximage->bitmap_unit = 8;
+        ximage->bits_per_pixel = 1;
+        ximage->bitmap_unit = 8;
     }
     if (bitmap_pad) {
-	ximage->bitmap_pad = bitmap_pad;
+        ximage->bitmap_pad = bitmap_pad;
     } else {
-	/* Use 16 byte alignment for best Quartz perfomance */
-	ximage->bitmap_pad = 128;
+        /* Use 16 byte alignment for best Quartz perfomance */
+        ximage->bitmap_pad = 128;
     }
     if (bytes_per_line) {
-	ximage->bytes_per_line = bytes_per_line;
+        ximage->bytes_per_line = bytes_per_line;
     } else {
-	ximage->bytes_per_line = ((width * ximage->bits_per_pixel +
-		(ximage->bitmap_pad - 1)) >> 3) &
-		~((ximage->bitmap_pad >> 3) - 1);
+        ximage->bytes_per_line = ((width * ximage->bits_per_pixel +
+                (ximage->bitmap_pad - 1)) >> 3) &
+                ~((ximage->bitmap_pad >> 3) - 1);
     }
 #ifdef WORDS_BIGENDIAN
     ximage->byte_order = MSBFirst;
@@ -514,57 +514,57 @@ XCreateImage(
  *
  * TkPutImage --
  *
- *	Copies a subimage from an in-memory image to a rectangle of
- *	of the specified drawable.
+ *      Copies a subimage from an in-memory image to a rectangle of
+ *      of the specified drawable.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Draws the image on the specified drawable.
+ *      Draws the image on the specified drawable.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkPutImage(
-    unsigned long *colors,	/* Unused on Macintosh. */
-    int ncolors,		/* Unused on Macintosh. */
-    Display* display,		/* Display. */
-    Drawable drawable,		/* Drawable to place image on. */
-    GC gc,			/* GC to use. */
-    XImage* image,		/* Image to place. */
-    int src_x,			/* Source X & Y. */
+    unsigned long *colors,      /* Unused on Macintosh. */
+    int ncolors,                /* Unused on Macintosh. */
+    Display* display,           /* Display. */
+    Drawable drawable,          /* Drawable to place image on. */
+    GC gc,                      /* GC to use. */
+    XImage* image,              /* Image to place. */
+    int src_x,                  /* Source X & Y. */
     int src_y,
-    int dest_x,			/* Destination X & Y. */
+    int dest_x,                 /* Destination X & Y. */
     int dest_y,
-    unsigned int width,	        /* Same width & height for both */
-    unsigned int height)	/* distination and source. */
+    unsigned int width,         /* Same width & height for both */
+    unsigned int height)        /* distination and source. */
 {
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = ((MacDrawable*)drawable);
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
-	return BadDrawable;
+        return BadDrawable;
     }
     if (dc.context) {
-	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image,
-			     macDraw->flags & TK_USE_XIMAGE_ALPHA);
-	if (img) {
-	    /* If the XImage has big pixels, rescale the source dimensions.*/
-	    int pp = image->pixelpower;
-	    TkMacOSXDrawCGImage(drawable, gc, dc.context,
-		    img, gc->foreground, gc->background,
-		    CGRectMake(0, 0, image->width<<pp, image->height<<pp),
-		    CGRectMake(src_x<<pp, src_y<<pp, width<<pp, height<<pp),
-		    CGRectMake(dest_x, dest_y, width, height));
-	    CFRelease(img);
-	} else {
-	    TkMacOSXDbgMsg("Invalid source drawable");
-	}
+        CGImageRef img = TkMacOSXCreateCGImageWithXImage(image,
+                             macDraw->flags & TK_USE_XIMAGE_ALPHA);
+        if (img) {
+            /* If the XImage has big pixels, rescale the source dimensions.*/
+            int pp = image->pixelpower;
+            TkMacOSXDrawCGImage(drawable, gc, dc.context,
+                    img, gc->foreground, gc->background,
+                    CGRectMake(0, 0, image->width<<pp, image->height<<pp),
+                    CGRectMake(src_x<<pp, src_y<<pp, width<<pp, height<<pp),
+                    CGRectMake(dest_x, dest_y, width, height));
+            CFRelease(img);
+        } else {
+            TkMacOSXDbgMsg("Invalid source drawable");
+        }
     } else {
-	TkMacOSXDbgMsg("Invalid destination drawable");
+        TkMacOSXDbgMsg("Invalid destination drawable");
     }
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;

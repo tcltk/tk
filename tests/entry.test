@@ -728,7 +728,7 @@ test entry-3.5 {EntryWidgetCmd procedure, "bbox" widget command} -setup {
 # and metrics. It was changed to less verbose solution - the result is the one
 # that passes fonts constraint (this concerns tests 3.6, 3.7, 3.8, 3.10)
 test entry-3.6 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+    fonts
 } -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -741,7 +741,7 @@ test entry-3.6 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     destroy .e
 } -result {{19 5 7 13} {19 5 7 13}}
 test entry-3.7 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+    fonts
 } -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -754,7 +754,7 @@ test entry-3.7 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     destroy .e
 } -result {19 5 12 13}
 test entry-3.8 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+    fonts
 } -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -777,7 +777,7 @@ test entry-3.9 {EntryWidgetCmd procedure, "bbox" widget command} -setup {
     destroy .e
 } -result "5 5 0 $cy"
 test entry-3.10 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+    fonts
 } -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1896,15 +1896,15 @@ test entry-6.11 {EntryComputeGeometry procedure} -constraints {
     .e insert 0 12345
     update
     set x1 [winfo reqwidth .e]
-	set x2 [expr {8+5*[font measure {helvetica 12} .]}]
-	set x [expr {$x1 eq $x2}]
+    set x2 [expr {8+5*[font measure {helvetica 12} .]}]
+    set x [expr {$x1 eq $x2}]
     .e configure -show X
-	set x1 [winfo reqwidth .e]
-	set x2 [expr {8+5*[font measure {helvetica 12} X]}]
+    set x1 [winfo reqwidth .e]
+    set x2 [expr {8+5*[font measure {helvetica 12} X]}]
     lappend x [expr {$x1 eq $x2}]
     .e configure -show ""
-	set x1 [winfo reqwidth .e]
-	set x2 [expr {8+[font measure {helvetica 12} 12345]}]
+    set x1 [winfo reqwidth .e]
+    set x2 [expr {8+[font measure {helvetica 12} 12345]}]
     lappend x [expr {$x1 eq $x2}]
 } -cleanup {
     destroy .e
@@ -2601,11 +2601,11 @@ test entry-13.10 {GetEntryIndex procedure} -constraints x11 -body {
 # On unix, when selection is cleared, entry widget's internal
 # selection range is reset.
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2621,11 +2621,11 @@ test entry-13.11 {GetEntryIndex procedure} -constraints aquaOrWin32 -body {
 # last selected range.  When selection ownership is restored to
 # entry, the old range will be rehighlighted.
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2639,11 +2639,11 @@ test entry-13.11 {GetEntryIndex procedure} -constraints aquaOrWin32 -body {
 
 test entry-13.12 {GetEntryIndex procedure} -constraints x11 -body {
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2658,11 +2658,11 @@ test entry-13.12 {GetEntryIndex procedure} -constraints x11 -body {
 # it behaves differently?
 test entry-13.12.1 {GetEntryIndex procedure} -constraints unix -body {
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2675,11 +2675,11 @@ test entry-13.12.1 {GetEntryIndex procedure} -constraints unix -body {
 
 test entry-13.13 {GetEntryIndex procedure} -constraints win -body {
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2695,11 +2695,11 @@ test entry-13.14 {GetEntryIndex procedure} -constraints win -body {
 # last selected range.  When selection ownership is restored to
 # entry, the old range will be rehighlighted.
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2715,11 +2715,11 @@ test entry-13.14.1 {GetEntryIndex procedure} -constraints win -body {
 # last selected range.  When selection ownership is restored to
 # entry, the old range will be rehighlighted.
 # Previous settings:
-	entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
-	pack .e
-	.e insert 0 012345678901234567890
-	.e xview 4
-	update
+    entry .e -font {Courier -12} -width 5 -bd 2 -relief sunken
+    pack .e
+    .e insert 0 012345678901234567890
+    .e xview 4
+    update
     .e select from 1
     .e select to 6
     list [.e index sel.first] [.e index sel.last]
@@ -2934,7 +2934,7 @@ test entry-16.3 {EntryVisibleRange procedure} -constraints {
     win
 } -body {
     entry .e -show . -width 10  -font {Helvetica -12}
-	pack .e
+    pack .e
     update
     .e insert 0 XXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     format {%.6f %.6f} {*}[.e xview]
@@ -2981,8 +2981,8 @@ test entry-17.3 {EntryUpdateScrollbar procedure} -body {
 } -result {0.315789 0.842105}
 test entry-17.4 {EntryUpdateScrollbar procedure} -setup {
     proc bgerror msg {
-	global x
-	set x $msg
+    global x
+    set x $msg
 }
 } -body {
     entry .e -width 5 -xscrollcommand thisisnotacommand
@@ -3399,8 +3399,8 @@ test entry-19.20 {entry widget validation} -setup {
 
 test entry-20.1 {widget deletion while active} -body {
     entry .e -validate all \
-	    -validatecommand { destroy %W ; return 1 } \
-	    -invalidcommand bell
+        -validatecommand { destroy %W ; return 1 } \
+        -invalidcommand bell
     update
     .e insert 0 abc
     winfo exists .e
@@ -3410,8 +3410,8 @@ test entry-20.1 {widget deletion while active} -body {
 
 test entry-20.2 {widget deletion while active} -body {
     entry .e -validate all \
-	    -validatecommand { return 0 } \
-	    -invalidcommand { destroy %W }
+        -validatecommand { return 0 } \
+        -invalidcommand { destroy %W }
     .e insert 0 abc
     winfo exists .e
 } -cleanup {
@@ -3420,7 +3420,7 @@ test entry-20.2 {widget deletion while active} -body {
 
 test entry-20.3 {widget deletion while active} -body {
     entry .e -validate all \
-	    -validatecommand { rename .e {} ; return 1 }
+        -validatecommand { rename .e {} ; return 1 }
     .e insert 0 abc
     winfo exists .e
 } -cleanup {
@@ -3429,8 +3429,8 @@ test entry-20.3 {widget deletion while active} -body {
 
 test entry-20.4 {widget deletion while active} -body {
     entry .e -validate all \
-	    -validatecommand { return 0 } \
-	    -invalidcommand { rename .e {} }
+        -validatecommand { return 0 } \
+        -invalidcommand { rename .e {} }
     .e insert 0 abc
     winfo exists .e
 } -cleanup {
@@ -3459,7 +3459,7 @@ test entry-20.7 {widget deletion with textvariable active} -body {
 # SF bugs 607390 and 617446
     set FOO init
     entry .e -textvariable FOO -validate all \
-	    -vcmd {%W configure -bg white; format 1}
+        -vcmd {%W configure -bg white; format 1}
     bind .e <Destroy> { set FOO hello }
     destroy .e
     winfo exists .e
@@ -3502,9 +3502,9 @@ test entry-22.2 {lost namespaced textvar} -body {
 } -cleanup {
     destroy .e
 } -result [list "a bmo" ::test::foo \
-	{can't set "::test::foo": parent namespace doesn't exist} \
-	{can't set "::test::foo": parent namespace doesn't exist} \
-	{can't read "::test::foo": no such variable}]
+    {can't set "::test::foo": parent namespace doesn't exist} \
+    {can't set "::test::foo": parent namespace doesn't exist} \
+    {can't read "::test::foo": no such variable}]
 
 test entry-23.1 {error in trace proc attached to the textvariable} -setup {
     destroy .e

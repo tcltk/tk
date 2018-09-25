@@ -1,7 +1,7 @@
 /*
  * tkMacOSXRegion.c --
  *
- *	Implements X window calls for manipulating regions
+ *      Implements X window calls for manipulating regions
  *
  * Copyright (c) 1995-1996 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -19,14 +19,14 @@
  *
  * TkCreateRegion --
  *
- *	Implements the equivelent of the X window function XCreateRegion. See
- *	Xwindow documentation for more details.
+ *      Implements the equivelent of the X window function XCreateRegion. See
+ *      Xwindow documentation for more details.
  *
  * Results:
- *	Returns an allocated region handle.
+ *      Returns an allocated region handle.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -42,14 +42,14 @@ TkCreateRegion(void)
  *
  * TkDestroyRegion --
  *
- *	Implements the equivelent of the X window function XDestroyRegion. See
- *	Xwindow documentation for more details.
+ *      Implements the equivelent of the X window function XDestroyRegion. See
+ *      Xwindow documentation for more details.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Memory is freed.
+ *      Memory is freed.
  *
  *----------------------------------------------------------------------
  */
@@ -59,7 +59,7 @@ TkDestroyRegion(
     TkRegion r)
 {
     if (r) {
-	CFRelease(r);
+        CFRelease(r);
     }
 }
 
@@ -68,14 +68,14 @@ TkDestroyRegion(
  *
  * TkIntersectRegion --
  *
- *	Implements the equivalent of the X window function XIntersectRegion.
- *	See Xwindow documentation for more details.
+ *      Implements the equivalent of the X window function XIntersectRegion.
+ *      See Xwindow documentation for more details.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -87,7 +87,7 @@ TkIntersectRegion(
     TkRegion dr_return)
 {
     ChkErr(HIShapeIntersect, (HIShapeRef) sra, (HIShapeRef) srb,
-	   (HIMutableShapeRef) dr_return);
+           (HIMutableShapeRef) dr_return);
 }
 
 /*
@@ -95,14 +95,14 @@ TkIntersectRegion(
  *
  * TkSubtractRegion --
  *
- *	Implements the equivalent of the X window function XSubtractRegion.
- *	See X window documentation for more details.
+ *      Implements the equivalent of the X window function XSubtractRegion.
+ *      See X window documentation for more details.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -114,7 +114,7 @@ TkSubtractRegion(
     TkRegion dr_return)
 {
     ChkErr(HIShapeDifference, (HIShapeRef) sra, (HIShapeRef) srb,
-	   (HIMutableShapeRef) dr_return);
+           (HIMutableShapeRef) dr_return);
 }
 
 /*
@@ -122,14 +122,14 @@ TkSubtractRegion(
  *
  * TkUnionRectWithRegion --
  *
- *	Implements the equivelent of the X window function
- *	XUnionRectWithRegion. See Xwindow documentation for more details.
+ *      Implements the equivelent of the X window function
+ *      XUnionRectWithRegion. See Xwindow documentation for more details.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -141,17 +141,17 @@ TkUnionRectWithRegion(
     TkRegion dest_region_return)
 {
     const CGRect r = CGRectMake(rectangle->x, rectangle->y,
-	    rectangle->width, rectangle->height);
+            rectangle->width, rectangle->height);
 
     if (src_region == dest_region_return) {
-	ChkErr(TkMacOSHIShapeUnionWithRect,
-		(HIMutableShapeRef) dest_region_return, &r);
+        ChkErr(TkMacOSHIShapeUnionWithRect,
+                (HIMutableShapeRef) dest_region_return, &r);
     } else {
-	HIShapeRef rectRgn = HIShapeCreateWithRect(&r);
+        HIShapeRef rectRgn = HIShapeCreateWithRect(&r);
 
-	ChkErr(TkMacOSHIShapeUnion, rectRgn, (HIShapeRef) src_region,
-		(HIMutableShapeRef) dest_region_return);
-	CFRelease(rectRgn);
+        ChkErr(TkMacOSHIShapeUnion, rectRgn, (HIShapeRef) src_region,
+                (HIMutableShapeRef) dest_region_return);
+        CFRelease(rectRgn);
     }
 }
 
@@ -160,13 +160,13 @@ TkUnionRectWithRegion(
  *
  * TkMacOSXIsEmptyRegion --
  *
- *	Return native region for given tk region.
+ *      Return native region for given tk region.
  *
  * Results:
- *	1 if empty, 0 otherwise.
+ *      1 if empty, 0 otherwise.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -183,15 +183,15 @@ TkMacOSXIsEmptyRegion(
  *
  * TkRectInRegion --
  *
- *	Implements the equivelent of the X window function XRectInRegion. See
- *	Xwindow documentation for more details.
+ *      Implements the equivelent of the X window function XRectInRegion. See
+ *      Xwindow documentation for more details.
  *
  * Results:
- *	Returns RectanglePart or RectangleOut. Note that this is not a
- *	complete implementation since it doesn't test for RectangleIn.
+ *      Returns RectanglePart or RectangleOut. Note that this is not a
+ *      complete implementation since it doesn't test for RectangleIn.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -205,12 +205,12 @@ TkRectInRegion(
     unsigned int height)
 {
     if ( TkMacOSXIsEmptyRegion(region) ) {
-	    return RectangleOut;
-	}
+            return RectangleOut;
+        }
     else {
-	const CGRect r = CGRectMake(x, y, width, height);
-	return HIShapeIntersectsRect((HIShapeRef) region, &r) ?
-	    RectanglePart : RectangleOut;
+        const CGRect r = CGRectMake(x, y, width, height);
+        return HIShapeIntersectsRect((HIShapeRef) region, &r) ?
+            RectanglePart : RectangleOut;
     }
 }
 
@@ -219,14 +219,14 @@ TkRectInRegion(
  *
  * TkClipBox --
  *
- *	Implements the equivelent of the X window function XClipBox. See
- *	Xwindow documentation for more details.
+ *      Implements the equivelent of the X window function XClipBox. See
+ *      Xwindow documentation for more details.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -250,65 +250,65 @@ TkClipBox(
  *
  * TkpBuildRegionFromAlphaData --
  *
- *	Set up a rectangle of the given region based on the supplied alpha
- *	data.
+ *      Set up a rectangle of the given region based on the supplied alpha
+ *      data.
  *
  * Results:
- *	None
+ *      None
  *
  * Side effects:
- *	The region is updated, with extra pixels added to it.
+ *      The region is updated, with extra pixels added to it.
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkpBuildRegionFromAlphaData(
-    TkRegion region,			/* Region to update. */
-    unsigned int x,			/* Where in region to update. */
-    unsigned int y,			/* Where in region to update. */
-    unsigned int width,			/* Size of rectangle to update. */
-    unsigned int height,		/* Size of rectangle to update. */
-    unsigned char *dataPtr,		/* Data to read from. */
-    unsigned int pixelStride,		/* num bytes from one piece of alpha
-					 * data to the next in the line. */
-    unsigned int lineStride)		/* num bytes from one line of alpha
-					 * data to the next line. */
+    TkRegion region,                    /* Region to update. */
+    unsigned int x,                     /* Where in region to update. */
+    unsigned int y,                     /* Where in region to update. */
+    unsigned int width,                 /* Size of rectangle to update. */
+    unsigned int height,                /* Size of rectangle to update. */
+    unsigned char *dataPtr,             /* Data to read from. */
+    unsigned int pixelStride,           /* num bytes from one piece of alpha
+                                         * data to the next in the line. */
+    unsigned int lineStride)            /* num bytes from one line of alpha
+                                         * data to the next line. */
 {
     unsigned char *lineDataPtr;
     unsigned int x1, y1, end;
     XRectangle rect;
 
     for (y1 = 0; y1 < height; y1++) {
-	lineDataPtr = dataPtr;
-	for (x1 = 0; x1 < width; x1 = end) {
-	    /*
-	     * Search for first non-transparent pixel.
-	     */
+        lineDataPtr = dataPtr;
+        for (x1 = 0; x1 < width; x1 = end) {
+            /*
+             * Search for first non-transparent pixel.
+             */
 
-	    while ((x1 < width) && !*lineDataPtr) {
-		x1++;
-		lineDataPtr += pixelStride;
-	    }
-	    end = x1;
+            while ((x1 < width) && !*lineDataPtr) {
+                x1++;
+                lineDataPtr += pixelStride;
+            }
+            end = x1;
 
-	    /*
-	     * Search for first transparent pixel.
-	     */
+            /*
+             * Search for first transparent pixel.
+             */
 
-	    while ((end < width) && *lineDataPtr) {
-		end++;
-		lineDataPtr += pixelStride;
-	    }
-	    if (end > x1) {
-		rect.x = x + x1;
-		rect.y = y + y1;
-		rect.width = end - x1;
-		rect.height = 1;
-		TkUnionRectWithRegion(&rect, region, region);
-	    }
-	}
-	dataPtr += lineStride;
+            while ((end < width) && *lineDataPtr) {
+                end++;
+                lineDataPtr += pixelStride;
+            }
+            if (end > x1) {
+                rect.x = x + x1;
+                rect.y = y + y1;
+                rect.width = end - x1;
+                rect.height = 1;
+                TkUnionRectWithRegion(&rect, region, region);
+            }
+        }
+        dataPtr += lineStride;
     }
 }
 
@@ -317,13 +317,13 @@ TkpBuildRegionFromAlphaData(
  *
  * TkpRetainRegion --
  *
- *	Increases reference count of region.
+ *      Increases reference count of region.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -340,13 +340,13 @@ TkpRetainRegion(
  *
  * TkpReleaseRegion --
  *
- *	Decreases reference count of region.
+ *      Decreases reference count of region.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	May free memory.
+ *      May free memory.
  *
  *----------------------------------------------------------------------
  */
@@ -363,13 +363,13 @@ TkpReleaseRegion(
  *
  * TkMacOSXSetEmptyRegion --
  *
- *	Set region to emtpy.
+ *      Set region to emtpy.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -386,13 +386,13 @@ TkMacOSXSetEmptyRegion(
  *
  * TkMacOSXGetNativeRegion --
  *
- *	Return native region for given tk region.
+ *      Return native region for given tk region.
  *
  * Results:
- *	Native region, CFRelease when done.
+ *      Native region, CFRelease when done.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -409,13 +409,13 @@ TkMacOSXGetNativeRegion(
  *
  * TkMacOSXSetWithNativeRegion --
  *
- *	Set region to the native region.
+ *      Set region to the native region.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -433,13 +433,13 @@ TkMacOSXSetWithNativeRegion(
  *
  * TkMacOSXOffsetRegion --
  *
- *	Offsets region by given distances.
+ *      Offsets region by given distances.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -461,7 +461,7 @@ TkMacOSXOffsetRegion(
  * TkMacOSHIShapeDifferenceWithRect, TkMacOSHIShapeUnionWithRect,
  * TkMacOSHIShapeUnion --
  *
- *	Wrapper functions for missing/buggy HIShape API
+ *      Wrapper functions for missing/buggy HIShape API
  *
  *----------------------------------------------------------------------
  */

@@ -1,7 +1,7 @@
 /*
  * tkUndo.h --
  *
- *	Declarations shared among the files that implement an undo stack.
+ *      Declarations shared among the files that implement an undo stack.
  *
  * Copyright (c) 2002 Ludwig Callewaert.
  *
@@ -21,8 +21,8 @@
  */
 
 typedef enum {
-    TK_UNDO_SEPARATOR,		/* Marker */
-    TK_UNDO_ACTION		/* Command */
+    TK_UNDO_SEPARATOR,          /* Marker */
+    TK_UNDO_ACTION              /* Command */
 } TkUndoAtomType;
 
 /*
@@ -31,7 +31,7 @@ typedef enum {
  */
 
 typedef int (TkUndoProc)(Tcl_Interp *interp, ClientData clientData,
-			Tcl_Obj *objPtr);
+                        Tcl_Obj *objPtr);
 
 /*
  * Struct defining a single action, one or more of which may be defined (and
@@ -40,18 +40,18 @@ typedef int (TkUndoProc)(Tcl_Interp *interp, ClientData clientData,
  */
 
 typedef struct TkUndoSubAtom {
-    Tcl_Command command;	/* Tcl token used to get the current Tcl
-				 * command name which will be used to execute
-				 * apply/revert scripts. If NULL then it is
-				 * assumed the apply/revert scripts already
-				 * contain everything. */
-    TkUndoProc *funcPtr;	/* Function pointer for callback to perform
-				 * undo/redo actions. */
-    ClientData clientData;	/* Data for 'funcPtr'. */
-    Tcl_Obj *action;		/* Command to apply the action that was
-				 * taken. */
-    struct TkUndoSubAtom *next;	/* Pointer to the next element in the linked
-				 * list. */
+    Tcl_Command command;        /* Tcl token used to get the current Tcl
+                                 * command name which will be used to execute
+                                 * apply/revert scripts. If NULL then it is
+                                 * assumed the apply/revert scripts already
+                                 * contain everything. */
+    TkUndoProc *funcPtr;        /* Function pointer for callback to perform
+                                 * undo/redo actions. */
+    ClientData clientData;      /* Data for 'funcPtr'. */
+    Tcl_Obj *action;            /* Command to apply the action that was
+                                 * taken. */
+    struct TkUndoSubAtom *next; /* Pointer to the next element in the linked
+                                 * list. */
 } TkUndoSubAtom;
 
 /*
@@ -59,14 +59,14 @@ typedef struct TkUndoSubAtom {
  */
 
 typedef struct TkUndoAtom {
-    TkUndoAtomType type;	/* The type that will trigger the required
-				 * action. */
-    TkUndoSubAtom *apply;	/* Linked list of 'apply' actions to perform
-				 * for this operation. */
-    TkUndoSubAtom *revert;	/* Linked list of 'revert' actions to perform
-				 * for this operation. */
-    struct TkUndoAtom *next;	/* Pointer to the next element in the
-				 * stack. */
+    TkUndoAtomType type;        /* The type that will trigger the required
+                                 * action. */
+    TkUndoSubAtom *apply;       /* Linked list of 'apply' actions to perform
+                                 * for this operation. */
+    TkUndoSubAtom *revert;      /* Linked list of 'revert' actions to perform
+                                 * for this operation. */
+    struct TkUndoAtom *next;    /* Pointer to the next element in the
+                                 * stack. */
 } TkUndoAtom;
 
 /*
@@ -74,10 +74,10 @@ typedef struct TkUndoAtom {
  */
 
 typedef struct TkUndoRedoStack {
-    TkUndoAtom *undoStack;	/* The undo stack. */
-    TkUndoAtom *redoStack;	/* The redo stack. */
-    Tcl_Interp *interp;		/* The interpreter in which to execute the
-				 * revert and apply scripts. */
+    TkUndoAtom *undoStack;      /* The undo stack. */
+    TkUndoAtom *redoStack;      /* The redo stack. */
+    Tcl_Interp *interp;         /* The interpreter in which to execute the
+                                 * revert and apply scripts. */
     int maxdepth;
     int depth;
 } TkUndoRedoStack;
@@ -86,30 +86,30 @@ typedef struct TkUndoRedoStack {
  * Basic functions.
  */
 
-MODULE_SCOPE void	TkUndoPushStack(TkUndoAtom **stack, TkUndoAtom *elem);
+MODULE_SCOPE void       TkUndoPushStack(TkUndoAtom **stack, TkUndoAtom *elem);
 MODULE_SCOPE TkUndoAtom *TkUndoPopStack(TkUndoAtom **stack);
-MODULE_SCOPE int	TkUndoInsertSeparator(TkUndoAtom **stack);
-MODULE_SCOPE void	TkUndoClearStack(TkUndoAtom **stack);
+MODULE_SCOPE int        TkUndoInsertSeparator(TkUndoAtom **stack);
+MODULE_SCOPE void       TkUndoClearStack(TkUndoAtom **stack);
 
 /*
  * Functions for working on an undo/redo stack.
  */
 
 MODULE_SCOPE TkUndoRedoStack *TkUndoInitStack(Tcl_Interp *interp, int maxdepth);
-MODULE_SCOPE void	TkUndoSetMaxDepth(TkUndoRedoStack *stack, int maxdepth);
-MODULE_SCOPE void	TkUndoClearStacks(TkUndoRedoStack *stack);
-MODULE_SCOPE void	TkUndoFreeStack(TkUndoRedoStack *stack);
-MODULE_SCOPE int	TkUndoCanRedo(TkUndoRedoStack *stack);
-MODULE_SCOPE int	TkUndoCanUndo(TkUndoRedoStack *stack);
-MODULE_SCOPE void	TkUndoInsertUndoSeparator(TkUndoRedoStack *stack);
+MODULE_SCOPE void       TkUndoSetMaxDepth(TkUndoRedoStack *stack, int maxdepth);
+MODULE_SCOPE void       TkUndoClearStacks(TkUndoRedoStack *stack);
+MODULE_SCOPE void       TkUndoFreeStack(TkUndoRedoStack *stack);
+MODULE_SCOPE int        TkUndoCanRedo(TkUndoRedoStack *stack);
+MODULE_SCOPE int        TkUndoCanUndo(TkUndoRedoStack *stack);
+MODULE_SCOPE void       TkUndoInsertUndoSeparator(TkUndoRedoStack *stack);
 MODULE_SCOPE TkUndoSubAtom *TkUndoMakeCmdSubAtom(Tcl_Command command,
-			    Tcl_Obj *actionScript, TkUndoSubAtom *subAtomList);
+                            Tcl_Obj *actionScript, TkUndoSubAtom *subAtomList);
 MODULE_SCOPE TkUndoSubAtom *TkUndoMakeSubAtom(TkUndoProc *funcPtr,
-			    ClientData clientData, Tcl_Obj *actionScript,
-			    TkUndoSubAtom *subAtomList);
-MODULE_SCOPE void	TkUndoPushAction(TkUndoRedoStack *stack,
-			    TkUndoSubAtom *apply, TkUndoSubAtom *revert);
-MODULE_SCOPE int	TkUndoRevert(TkUndoRedoStack *stack);
-MODULE_SCOPE int	TkUndoApply(TkUndoRedoStack *stack);
+                            ClientData clientData, Tcl_Obj *actionScript,
+                            TkUndoSubAtom *subAtomList);
+MODULE_SCOPE void       TkUndoPushAction(TkUndoRedoStack *stack,
+                            TkUndoSubAtom *apply, TkUndoSubAtom *revert);
+MODULE_SCOPE int        TkUndoRevert(TkUndoRedoStack *stack);
+MODULE_SCOPE int        TkUndoApply(TkUndoRedoStack *stack);
 
 #endif /* _TKUNDO */

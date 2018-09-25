@@ -1,9 +1,9 @@
 /*
  * tkTrig.c --
  *
- *	This file contains a collection of trigonometry utility routines that
- *	are used by Tk and in particular by the canvas code. It also has
- *	miscellaneous geometry functions used by canvases.
+ *      This file contains a collection of trigonometry utility routines that
+ *      are used by Tk and in particular by the canvas code. It also has
+ *      miscellaneous geometry functions used by canvases.
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -25,23 +25,23 @@
  *
  * TkLineToPoint --
  *
- *	Compute the distance from a point to a finite line segment.
+ *      Compute the distance from a point to a finite line segment.
  *
  * Results:
- *	The return value is the distance from the line segment whose
- *	end-points are *end1Ptr and *end2Ptr to the point given by *pointPtr.
+ *      The return value is the distance from the line segment whose
+ *      end-points are *end1Ptr and *end2Ptr to the point given by *pointPtr.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 double
 TkLineToPoint(
-    double end1Ptr[2],		/* Coordinates of first end-point of line. */
-    double end2Ptr[2],		/* Coordinates of second end-point of line. */
-    double pointPtr[2])		/* Points to coords for point. */
+    double end1Ptr[2],          /* Coordinates of first end-point of line. */
+    double end2Ptr[2],          /* Coordinates of second end-point of line. */
+    double pointPtr[2])         /* Points to coords for point. */
 {
     double x, y;
 
@@ -53,65 +53,65 @@ TkLineToPoint(
 
     if (end1Ptr[0] == end2Ptr[0]) {
 
-	/*
-	 * Vertical edge.
-	 */
+        /*
+         * Vertical edge.
+         */
 
-	x = end1Ptr[0];
-	if (end1Ptr[1] >= end2Ptr[1]) {
-	    y = MIN(end1Ptr[1], pointPtr[1]);
-	    y = MAX(y, end2Ptr[1]);
-	} else {
-	    y = MIN(end2Ptr[1], pointPtr[1]);
-	    y = MAX(y, end1Ptr[1]);
-	}
+        x = end1Ptr[0];
+        if (end1Ptr[1] >= end2Ptr[1]) {
+            y = MIN(end1Ptr[1], pointPtr[1]);
+            y = MAX(y, end2Ptr[1]);
+        } else {
+            y = MIN(end2Ptr[1], pointPtr[1]);
+            y = MAX(y, end1Ptr[1]);
+        }
     } else if (end1Ptr[1] == end2Ptr[1]) {
 
-	/*
-	 * Horizontal edge.
-	 */
+        /*
+         * Horizontal edge.
+         */
 
-	y = end1Ptr[1];
-	if (end1Ptr[0] >= end2Ptr[0]) {
-	    x = MIN(end1Ptr[0], pointPtr[0]);
-	    x = MAX(x, end2Ptr[0]);
-	} else {
-	    x = MIN(end2Ptr[0], pointPtr[0]);
-	    x = MAX(x, end1Ptr[0]);
-	}
+        y = end1Ptr[1];
+        if (end1Ptr[0] >= end2Ptr[0]) {
+            x = MIN(end1Ptr[0], pointPtr[0]);
+            x = MAX(x, end2Ptr[0]);
+        } else {
+            x = MIN(end2Ptr[0], pointPtr[0]);
+            x = MAX(x, end1Ptr[0]);
+        }
     } else {
-	double m1, b1, m2, b2;
+        double m1, b1, m2, b2;
 
-	/*
-	 * The edge is neither horizontal nor vertical. Convert the edge to a
-	 * line equation of the form y = m1*x + b1. Then compute a line
-	 * perpendicular to this edge but passing through the point, also in
-	 * the form y = m2*x + b2.
-	 */
+        /*
+         * The edge is neither horizontal nor vertical. Convert the edge to a
+         * line equation of the form y = m1*x + b1. Then compute a line
+         * perpendicular to this edge but passing through the point, also in
+         * the form y = m2*x + b2.
+         */
 
-	m1 = (end2Ptr[1] - end1Ptr[1])/(end2Ptr[0] - end1Ptr[0]);
-	b1 = end1Ptr[1] - m1*end1Ptr[0];
-	m2 = -1.0/m1;
-	b2 = pointPtr[1] - m2*pointPtr[0];
-	x = (b2 - b1)/(m1 - m2);
-	y = m1*x + b1;
-	if (end1Ptr[0] > end2Ptr[0]) {
-	    if (x > end1Ptr[0]) {
-		x = end1Ptr[0];
-		y = end1Ptr[1];
-	    } else if (x < end2Ptr[0]) {
-		x = end2Ptr[0];
-		y = end2Ptr[1];
-	    }
-	} else {
-	    if (x > end2Ptr[0]) {
-		x = end2Ptr[0];
-		y = end2Ptr[1];
-	    } else if (x < end1Ptr[0]) {
-		x = end1Ptr[0];
-		y = end1Ptr[1];
-	    }
-	}
+        m1 = (end2Ptr[1] - end1Ptr[1])/(end2Ptr[0] - end1Ptr[0]);
+        b1 = end1Ptr[1] - m1*end1Ptr[0];
+        m2 = -1.0/m1;
+        b2 = pointPtr[1] - m2*pointPtr[0];
+        x = (b2 - b1)/(m1 - m2);
+        y = m1*x + b1;
+        if (end1Ptr[0] > end2Ptr[0]) {
+            if (x > end1Ptr[0]) {
+                x = end1Ptr[0];
+                y = end1Ptr[1];
+            } else if (x < end2Ptr[0]) {
+                x = end2Ptr[0];
+                y = end2Ptr[1];
+            }
+        } else {
+            if (x > end2Ptr[0]) {
+                x = end2Ptr[0];
+                y = end2Ptr[1];
+            } else if (x < end1Ptr[0]) {
+                x = end1Ptr[0];
+                y = end1Ptr[1];
+            }
+        }
     }
 
     /*
@@ -126,30 +126,30 @@ TkLineToPoint(
  *
  * TkLineToArea --
  *
- *	Determine whether a line lies entirely inside, entirely outside, or
- *	overlapping a given rectangular area.
+ *      Determine whether a line lies entirely inside, entirely outside, or
+ *      overlapping a given rectangular area.
  *
  * Results:
- *	-1 is returned if the line given by end1Ptr and end2Ptr is entirely
- *	outside the rectangle given by rectPtr. 0 is returned if the polygon
- *	overlaps the rectangle, and 1 is returned if the polygon is entirely
- *	inside the rectangle.
+ *      -1 is returned if the line given by end1Ptr and end2Ptr is entirely
+ *      outside the rectangle given by rectPtr. 0 is returned if the polygon
+ *      overlaps the rectangle, and 1 is returned if the polygon is entirely
+ *      inside the rectangle.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 int
 TkLineToArea(
-    double end1Ptr[2],		/* X and y coordinates for one endpoint of
-				 * line. */
-    double end2Ptr[2],		/* X and y coordinates for other endpoint of
-				 * line. */
-    double rectPtr[4])		/* Points to coords for rectangle, in the
-				 * order x1, y1, x2, y2. X1 must be no larger
-				 * than x2, and y1 no larger than y2. */
+    double end1Ptr[2],          /* X and y coordinates for one endpoint of
+                                 * line. */
+    double end2Ptr[2],          /* X and y coordinates for other endpoint of
+                                 * line. */
+    double rectPtr[4])          /* Points to coords for rectangle, in the
+                                 * order x1, y1, x2, y2. X1 must be no larger
+                                 * than x2, and y1 no larger than y2. */
 {
     int inside1, inside2;
 
@@ -159,14 +159,14 @@ TkLineToArea(
      */
 
     inside1 = (end1Ptr[0] >= rectPtr[0]) && (end1Ptr[0] <= rectPtr[2])
-	    && (end1Ptr[1] >= rectPtr[1]) && (end1Ptr[1] <= rectPtr[3]);
+            && (end1Ptr[1] >= rectPtr[1]) && (end1Ptr[1] <= rectPtr[3]);
     inside2 = (end2Ptr[0] >= rectPtr[0]) && (end2Ptr[0] <= rectPtr[2])
-	    && (end2Ptr[1] >= rectPtr[1]) && (end2Ptr[1] <= rectPtr[3]);
+            && (end2Ptr[1] >= rectPtr[1]) && (end2Ptr[1] <= rectPtr[3]);
     if (inside1 != inside2) {
-	return 0;
+        return 0;
     }
     if (inside1 & inside2) {
-	return 1;
+        return 1;
     }
 
     /*
@@ -176,89 +176,89 @@ TkLineToArea(
      */
 
     if (end1Ptr[0] == end2Ptr[0]) {
-	/*
-	 * Vertical line.
-	 */
+        /*
+         * Vertical line.
+         */
 
-	if (((end1Ptr[1] >= rectPtr[1]) ^ (end2Ptr[1] >= rectPtr[1]))
-		&& (end1Ptr[0] >= rectPtr[0])
-		&& (end1Ptr[0] <= rectPtr[2])) {
-	    return 0;
-	}
+        if (((end1Ptr[1] >= rectPtr[1]) ^ (end2Ptr[1] >= rectPtr[1]))
+                && (end1Ptr[0] >= rectPtr[0])
+                && (end1Ptr[0] <= rectPtr[2])) {
+            return 0;
+        }
     } else if (end1Ptr[1] == end2Ptr[1]) {
-	/*
-	 * Horizontal line.
-	 */
+        /*
+         * Horizontal line.
+         */
 
-	if (((end1Ptr[0] >= rectPtr[0]) ^ (end2Ptr[0] >= rectPtr[0]))
-		&& (end1Ptr[1] >= rectPtr[1])
-		&& (end1Ptr[1] <= rectPtr[3])) {
-	    return 0;
-	}
+        if (((end1Ptr[0] >= rectPtr[0]) ^ (end2Ptr[0] >= rectPtr[0]))
+                && (end1Ptr[1] >= rectPtr[1])
+                && (end1Ptr[1] <= rectPtr[3])) {
+            return 0;
+        }
     } else {
-	double m, x, y, low, high;
+        double m, x, y, low, high;
 
-	/*
-	 * Diagonal line. Compute slope of line and use for intersection
-	 * checks against each of the sides of the rectangle: left, right,
-	 * bottom, top.
-	 */
+        /*
+         * Diagonal line. Compute slope of line and use for intersection
+         * checks against each of the sides of the rectangle: left, right,
+         * bottom, top.
+         */
 
-	m = (end2Ptr[1] - end1Ptr[1])/(end2Ptr[0] - end1Ptr[0]);
-	if (end1Ptr[0] < end2Ptr[0]) {
-	    low = end1Ptr[0];
-	    high = end2Ptr[0];
-	} else {
-	    low = end2Ptr[0];
-	    high = end1Ptr[0];
-	}
+        m = (end2Ptr[1] - end1Ptr[1])/(end2Ptr[0] - end1Ptr[0]);
+        if (end1Ptr[0] < end2Ptr[0]) {
+            low = end1Ptr[0];
+            high = end2Ptr[0];
+        } else {
+            low = end2Ptr[0];
+            high = end1Ptr[0];
+        }
 
-	/*
-	 * Left edge.
-	 */
+        /*
+         * Left edge.
+         */
 
-	y = end1Ptr[1] + (rectPtr[0] - end1Ptr[0])*m;
-	if ((rectPtr[0] >= low) && (rectPtr[0] <= high)
-		&& (y >= rectPtr[1]) && (y <= rectPtr[3])) {
-	    return 0;
-	}
+        y = end1Ptr[1] + (rectPtr[0] - end1Ptr[0])*m;
+        if ((rectPtr[0] >= low) && (rectPtr[0] <= high)
+                && (y >= rectPtr[1]) && (y <= rectPtr[3])) {
+            return 0;
+        }
 
-	/*
-	 * Right edge.
-	 */
+        /*
+         * Right edge.
+         */
 
-	y += (rectPtr[2] - rectPtr[0])*m;
-	if ((y >= rectPtr[1]) && (y <= rectPtr[3])
-		&& (rectPtr[2] >= low) && (rectPtr[2] <= high)) {
-	    return 0;
-	}
+        y += (rectPtr[2] - rectPtr[0])*m;
+        if ((y >= rectPtr[1]) && (y <= rectPtr[3])
+                && (rectPtr[2] >= low) && (rectPtr[2] <= high)) {
+            return 0;
+        }
 
-	/*
-	 * Bottom edge.
-	 */
+        /*
+         * Bottom edge.
+         */
 
-	if (end1Ptr[1] < end2Ptr[1]) {
-	    low = end1Ptr[1];
-	    high = end2Ptr[1];
-	} else {
-	    low = end2Ptr[1];
-	    high = end1Ptr[1];
-	}
-	x = end1Ptr[0] + (rectPtr[1] - end1Ptr[1])/m;
-	if ((x >= rectPtr[0]) && (x <= rectPtr[2])
-		&& (rectPtr[1] >= low) && (rectPtr[1] <= high)) {
-	    return 0;
-	}
+        if (end1Ptr[1] < end2Ptr[1]) {
+            low = end1Ptr[1];
+            high = end2Ptr[1];
+        } else {
+            low = end2Ptr[1];
+            high = end1Ptr[1];
+        }
+        x = end1Ptr[0] + (rectPtr[1] - end1Ptr[1])/m;
+        if ((x >= rectPtr[0]) && (x <= rectPtr[2])
+                && (rectPtr[1] >= low) && (rectPtr[1] <= high)) {
+            return 0;
+        }
 
-	/*
-	 * Top edge.
-	 */
+        /*
+         * Top edge.
+         */
 
-	x += (rectPtr[3] - rectPtr[1])/m;
-	if ((x >= rectPtr[0]) && (x <= rectPtr[2])
-		&& (rectPtr[3] >= low) && (rectPtr[3] <= high)) {
-	    return 0;
-	}
+        x += (rectPtr[3] - rectPtr[1])/m;
+        if ((x >= rectPtr[0]) && (x <= rectPtr[2])
+                && (rectPtr[3] >= low) && (rectPtr[3] <= high)) {
+            return 0;
+        }
     }
     return -1;
 }
@@ -268,50 +268,50 @@ TkLineToArea(
  *
  * TkThickPolyLineToArea --
  *
- *	This function is called to determine whether a connected series of
- *	line segments lies entirely inside, entirely outside, or overlapping a
- *	given rectangular area.
+ *      This function is called to determine whether a connected series of
+ *      line segments lies entirely inside, entirely outside, or overlapping a
+ *      given rectangular area.
  *
  * Results:
- *	-1 is returned if the lines are entirely outside the area, 0 if they
- *	overlap, and 1 if they are entirely inside the given area.
+ *      -1 is returned if the lines are entirely outside the area, 0 if they
+ *      overlap, and 1 if they are entirely inside the given area.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
+        /* ARGSUSED */
 int
 TkThickPolyLineToArea(
-    double *coordPtr,		/* Points to an array of coordinates for the
-				 * polyline: x0, y0, x1, y1, ... */
-    int numPoints,		/* Total number of points at *coordPtr. */
-    double width,		/* Width of each line segment. */
-    int capStyle,		/* How are end-points of polyline drawn?
-				 * CapRound, CapButt, or CapProjecting. */
-    int joinStyle,		/* How are joints in polyline drawn?
-				 * JoinMiter, JoinRound, or JoinBevel. */
-    double *rectPtr)		/* Rectangular area to check against. */
+    double *coordPtr,           /* Points to an array of coordinates for the
+                                 * polyline: x0, y0, x1, y1, ... */
+    int numPoints,              /* Total number of points at *coordPtr. */
+    double width,               /* Width of each line segment. */
+    int capStyle,               /* How are end-points of polyline drawn?
+                                 * CapRound, CapButt, or CapProjecting. */
+    int joinStyle,              /* How are joints in polyline drawn?
+                                 * JoinMiter, JoinRound, or JoinBevel. */
+    double *rectPtr)            /* Rectangular area to check against. */
 {
     double radius, poly[10];
     int count;
-    int changedMiterToBevel;	/* Non-zero means that a mitered corner had to
-				 * be treated as beveled after all because the
-				 * angle was < 11 degrees. */
-    int inside;			/* Tentative guess about what to return, based
-				 * on all points seen so far: one means
-				 * everything seen so far was inside the area;
-				 * -1 means everything was outside the area.
-				 * 0 means overlap has been found. */
+    int changedMiterToBevel;    /* Non-zero means that a mitered corner had to
+                                 * be treated as beveled after all because the
+                                 * angle was < 11 degrees. */
+    int inside;                 /* Tentative guess about what to return, based
+                                 * on all points seen so far: one means
+                                 * everything seen so far was inside the area;
+                                 * -1 means everything was outside the area.
+                                 * 0 means overlap has been found. */
 
     radius = width/2.0;
     inside = -1;
 
     if ((coordPtr[0] >= rectPtr[0]) && (coordPtr[0] <= rectPtr[2])
-	    && (coordPtr[1] >= rectPtr[1]) && (coordPtr[1] <= rectPtr[3])) {
-	inside = 1;
+            && (coordPtr[1] >= rectPtr[1]) && (coordPtr[1] <= rectPtr[3])) {
+        inside = 1;
     }
 
     /*
@@ -322,73 +322,73 @@ TkThickPolyLineToArea(
 
     changedMiterToBevel = 0;
     for (count = numPoints; count >= 2; count--, coordPtr += 2) {
-	/*
-	 * If rounding is done around the first point of the edge then test a
-	 * circular region around the point with the area.
-	 */
+        /*
+         * If rounding is done around the first point of the edge then test a
+         * circular region around the point with the area.
+         */
 
-	if (((capStyle == CapRound) && (count == numPoints))
-		|| ((joinStyle == JoinRound) && (count != numPoints))) {
-	    poly[0] = coordPtr[0] - radius;
-	    poly[1] = coordPtr[1] - radius;
-	    poly[2] = coordPtr[0] + radius;
-	    poly[3] = coordPtr[1] + radius;
-	    if (TkOvalToArea(poly, rectPtr) != inside) {
-		return 0;
-	    }
-	}
+        if (((capStyle == CapRound) && (count == numPoints))
+                || ((joinStyle == JoinRound) && (count != numPoints))) {
+            poly[0] = coordPtr[0] - radius;
+            poly[1] = coordPtr[1] - radius;
+            poly[2] = coordPtr[0] + radius;
+            poly[3] = coordPtr[1] + radius;
+            if (TkOvalToArea(poly, rectPtr) != inside) {
+                return 0;
+            }
+        }
 
-	/*
-	 * Compute the polygonal shape corresponding to this edge, consisting
-	 * of two points for the first point of the edge and two points for
-	 * the last point of the edge.
-	 */
+        /*
+         * Compute the polygonal shape corresponding to this edge, consisting
+         * of two points for the first point of the edge and two points for
+         * the last point of the edge.
+         */
 
-	if (count == numPoints) {
-	    TkGetButtPoints(coordPtr+2, coordPtr, width,
-		    capStyle == CapProjecting, poly, poly+2);
-	} else if ((joinStyle == JoinMiter) && !changedMiterToBevel) {
-	    poly[0] = poly[6];
-	    poly[1] = poly[7];
-	    poly[2] = poly[4];
-	    poly[3] = poly[5];
-	} else {
-	    TkGetButtPoints(coordPtr+2, coordPtr, width, 0, poly, poly+2);
+        if (count == numPoints) {
+            TkGetButtPoints(coordPtr+2, coordPtr, width,
+                    capStyle == CapProjecting, poly, poly+2);
+        } else if ((joinStyle == JoinMiter) && !changedMiterToBevel) {
+            poly[0] = poly[6];
+            poly[1] = poly[7];
+            poly[2] = poly[4];
+            poly[3] = poly[5];
+        } else {
+            TkGetButtPoints(coordPtr+2, coordPtr, width, 0, poly, poly+2);
 
-	    /*
-	     * If the last joint was beveled, then also check a polygon
-	     * comprising the last two points of the previous polygon and the
-	     * first two from this polygon; this checks the wedges that fill
-	     * the beveled joint.
-	     */
+            /*
+             * If the last joint was beveled, then also check a polygon
+             * comprising the last two points of the previous polygon and the
+             * first two from this polygon; this checks the wedges that fill
+             * the beveled joint.
+             */
 
-	    if ((joinStyle == JoinBevel) || changedMiterToBevel) {
-		poly[8] = poly[0];
-		poly[9] = poly[1];
-		if (TkPolygonToArea(poly, 5, rectPtr) != inside) {
-		    return 0;
-		}
-		changedMiterToBevel = 0;
-	    }
-	}
-	if (count == 2) {
-	    TkGetButtPoints(coordPtr, coordPtr+2, width,
-		    capStyle == CapProjecting, poly+4, poly+6);
-	} else if (joinStyle == JoinMiter) {
-	    if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
-		    (double) width, poly+4, poly+6) == 0) {
-		changedMiterToBevel = 1;
-		TkGetButtPoints(coordPtr, coordPtr+2, width, 0, poly+4,
-			poly+6);
-	    }
-	} else {
-	    TkGetButtPoints(coordPtr, coordPtr+2, width, 0, poly+4, poly+6);
-	}
-	poly[8] = poly[0];
-	poly[9] = poly[1];
-	if (TkPolygonToArea(poly, 5, rectPtr) != inside) {
-	    return 0;
-	}
+            if ((joinStyle == JoinBevel) || changedMiterToBevel) {
+                poly[8] = poly[0];
+                poly[9] = poly[1];
+                if (TkPolygonToArea(poly, 5, rectPtr) != inside) {
+                    return 0;
+                }
+                changedMiterToBevel = 0;
+            }
+        }
+        if (count == 2) {
+            TkGetButtPoints(coordPtr, coordPtr+2, width,
+                    capStyle == CapProjecting, poly+4, poly+6);
+        } else if (joinStyle == JoinMiter) {
+            if (TkGetMiterPoints(coordPtr, coordPtr+2, coordPtr+4,
+                    (double) width, poly+4, poly+6) == 0) {
+                changedMiterToBevel = 1;
+                TkGetButtPoints(coordPtr, coordPtr+2, width, 0, poly+4,
+                        poly+6);
+            }
+        } else {
+            TkGetButtPoints(coordPtr, coordPtr+2, width, 0, poly+4, poly+6);
+        }
+        poly[8] = poly[0];
+        poly[9] = poly[1];
+        if (TkPolygonToArea(poly, 5, rectPtr) != inside) {
+            return 0;
+        }
     }
 
     /*
@@ -396,13 +396,13 @@ TkThickPolyLineToArea(
      */
 
     if (capStyle == CapRound) {
-	poly[0] = coordPtr[0] - radius;
-	poly[1] = coordPtr[1] - radius;
-	poly[2] = coordPtr[0] + radius;
-	poly[3] = coordPtr[1] + radius;
-	if (TkOvalToArea(poly, rectPtr) != inside) {
-	    return 0;
-	}
+        poly[0] = coordPtr[0] - radius;
+        poly[1] = coordPtr[1] - radius;
+        poly[2] = coordPtr[0] + radius;
+        poly[3] = coordPtr[1] + radius;
+        if (TkOvalToArea(poly, rectPtr) != inside) {
+            return 0;
+        }
     }
 
     return inside;
@@ -413,32 +413,32 @@ TkThickPolyLineToArea(
  *
  * TkPolygonToPoint --
  *
- *	Compute the distance from a point to a polygon.
+ *      Compute the distance from a point to a polygon.
  *
  * Results:
- *	The return value is 0.0 if the point referred to by pointPtr is within
- *	the polygon referred to by polyPtr and numPoints. Otherwise the return
- *	value is the distance of the point from the polygon.
+ *      The return value is 0.0 if the point referred to by pointPtr is within
+ *      the polygon referred to by polyPtr and numPoints. Otherwise the return
+ *      value is the distance of the point from the polygon.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 double
 TkPolygonToPoint(
-    double *polyPtr,		/* Points to an array coordinates for closed
-				 * polygon: x0, y0, x1, y1, ... The polygon
-				 * may be self-intersecting. */
-    int numPoints,		/* Total number of points at *polyPtr. */
-    double *pointPtr)		/* Points to coords for point. */
+    double *polyPtr,            /* Points to an array coordinates for closed
+                                 * polygon: x0, y0, x1, y1, ... The polygon
+                                 * may be self-intersecting. */
+    int numPoints,              /* Total number of points at *polyPtr. */
+    double *pointPtr)           /* Points to coords for point. */
 {
-    double bestDist;		/* Closest distance between point and any edge
-				 * in polygon. */
-    int intersections;		/* Number of edges in the polygon that
-				 * intersect a ray extending vertically
-				 * upwards from the point to infinity. */
+    double bestDist;            /* Closest distance between point and any edge
+                                 * in polygon. */
+    int intersections;          /* Number of edges in the polygon that
+                                 * intersect a ray extending vertically
+                                 * upwards from the point to infinity. */
     int count;
     register double *pPtr;
 
@@ -455,100 +455,100 @@ TkPolygonToPoint(
     intersections = 0;
 
     for (count = numPoints, pPtr = polyPtr; count > 1; count--, pPtr += 2) {
-	double x, y, dist;
+        double x, y, dist;
 
-	/*
-	 * Compute the point on the current edge closest to the point and
-	 * update the intersection count. This must be done separately for
-	 * vertical edges, horizontal edges, and other edges.
-	 */
+        /*
+         * Compute the point on the current edge closest to the point and
+         * update the intersection count. This must be done separately for
+         * vertical edges, horizontal edges, and other edges.
+         */
 
-	if (pPtr[2] == pPtr[0]) {
+        if (pPtr[2] == pPtr[0]) {
 
-	    /*
-	     * Vertical edge.
-	     */
+            /*
+             * Vertical edge.
+             */
 
-	    x = pPtr[0];
-	    if (pPtr[1] >= pPtr[3]) {
-		y = MIN(pPtr[1], pointPtr[1]);
-		y = MAX(y, pPtr[3]);
-	    } else {
-		y = MIN(pPtr[3], pointPtr[1]);
-		y = MAX(y, pPtr[1]);
-	    }
-	} else if (pPtr[3] == pPtr[1]) {
+            x = pPtr[0];
+            if (pPtr[1] >= pPtr[3]) {
+                y = MIN(pPtr[1], pointPtr[1]);
+                y = MAX(y, pPtr[3]);
+            } else {
+                y = MIN(pPtr[3], pointPtr[1]);
+                y = MAX(y, pPtr[1]);
+            }
+        } else if (pPtr[3] == pPtr[1]) {
 
-	    /*
-	     * Horizontal edge.
-	     */
+            /*
+             * Horizontal edge.
+             */
 
-	    y = pPtr[1];
-	    if (pPtr[0] >= pPtr[2]) {
-		x = MIN(pPtr[0], pointPtr[0]);
-		x = MAX(x, pPtr[2]);
-		if ((pointPtr[1] < y) && (pointPtr[0] < pPtr[0])
-			&& (pointPtr[0] >= pPtr[2])) {
-		    intersections++;
-		}
-	    } else {
-		x = MIN(pPtr[2], pointPtr[0]);
-		x = MAX(x, pPtr[0]);
-		if ((pointPtr[1] < y) && (pointPtr[0] < pPtr[2])
-			&& (pointPtr[0] >= pPtr[0])) {
-		    intersections++;
-		}
-	    }
-	} else {
-	    double m1, b1, m2, b2;
-	    int lower;		/* Non-zero means point below line. */
+            y = pPtr[1];
+            if (pPtr[0] >= pPtr[2]) {
+                x = MIN(pPtr[0], pointPtr[0]);
+                x = MAX(x, pPtr[2]);
+                if ((pointPtr[1] < y) && (pointPtr[0] < pPtr[0])
+                        && (pointPtr[0] >= pPtr[2])) {
+                    intersections++;
+                }
+            } else {
+                x = MIN(pPtr[2], pointPtr[0]);
+                x = MAX(x, pPtr[0]);
+                if ((pointPtr[1] < y) && (pointPtr[0] < pPtr[2])
+                        && (pointPtr[0] >= pPtr[0])) {
+                    intersections++;
+                }
+            }
+        } else {
+            double m1, b1, m2, b2;
+            int lower;          /* Non-zero means point below line. */
 
-	    /*
-	     * The edge is neither horizontal nor vertical. Convert the edge
-	     * to a line equation of the form y = m1*x + b1. Then compute a
-	     * line perpendicular to this edge but passing through the point,
-	     * also in the form y = m2*x + b2.
-	     */
+            /*
+             * The edge is neither horizontal nor vertical. Convert the edge
+             * to a line equation of the form y = m1*x + b1. Then compute a
+             * line perpendicular to this edge but passing through the point,
+             * also in the form y = m2*x + b2.
+             */
 
-	    m1 = (pPtr[3] - pPtr[1])/(pPtr[2] - pPtr[0]);
-	    b1 = pPtr[1] - m1*pPtr[0];
-	    m2 = -1.0/m1;
-	    b2 = pointPtr[1] - m2*pointPtr[0];
-	    x = (b2 - b1)/(m1 - m2);
-	    y = m1*x + b1;
-	    if (pPtr[0] > pPtr[2]) {
-		if (x > pPtr[0]) {
-		    x = pPtr[0];
-		    y = pPtr[1];
-		} else if (x < pPtr[2]) {
-		    x = pPtr[2];
-		    y = pPtr[3];
-		}
-	    } else {
-		if (x > pPtr[2]) {
-		    x = pPtr[2];
-		    y = pPtr[3];
-		} else if (x < pPtr[0]) {
-		    x = pPtr[0];
-		    y = pPtr[1];
-		}
-	    }
-	    lower = (m1*pointPtr[0] + b1) > pointPtr[1];
-	    if (lower && (pointPtr[0] >= MIN(pPtr[0], pPtr[2]))
-		    && (pointPtr[0] < MAX(pPtr[0], pPtr[2]))) {
-		intersections++;
-	    }
-	}
+            m1 = (pPtr[3] - pPtr[1])/(pPtr[2] - pPtr[0]);
+            b1 = pPtr[1] - m1*pPtr[0];
+            m2 = -1.0/m1;
+            b2 = pointPtr[1] - m2*pointPtr[0];
+            x = (b2 - b1)/(m1 - m2);
+            y = m1*x + b1;
+            if (pPtr[0] > pPtr[2]) {
+                if (x > pPtr[0]) {
+                    x = pPtr[0];
+                    y = pPtr[1];
+                } else if (x < pPtr[2]) {
+                    x = pPtr[2];
+                    y = pPtr[3];
+                }
+            } else {
+                if (x > pPtr[2]) {
+                    x = pPtr[2];
+                    y = pPtr[3];
+                } else if (x < pPtr[0]) {
+                    x = pPtr[0];
+                    y = pPtr[1];
+                }
+            }
+            lower = (m1*pointPtr[0] + b1) > pointPtr[1];
+            if (lower && (pointPtr[0] >= MIN(pPtr[0], pPtr[2]))
+                    && (pointPtr[0] < MAX(pPtr[0], pPtr[2]))) {
+                intersections++;
+            }
+        }
 
-	/*
-	 * Compute the distance to the closest point, and see if that is the
-	 * best distance seen so far.
-	 */
+        /*
+         * Compute the distance to the closest point, and see if that is the
+         * best distance seen so far.
+         */
 
-	dist = hypot(pointPtr[0] - x, pointPtr[1] - y);
-	if (dist < bestDist) {
-	    bestDist = dist;
-	}
+        dist = hypot(pointPtr[0] - x, pointPtr[1] - y);
+        if (dist < bestDist) {
+            bestDist = dist;
+        }
     }
 
     /*
@@ -557,7 +557,7 @@ TkPolygonToPoint(
      */
 
     if (intersections & 0x1) {
-	return 0.0;
+        return 0.0;
     }
     return bestDist;
 }
@@ -567,34 +567,34 @@ TkPolygonToPoint(
  *
  * TkPolygonToArea --
  *
- *	Determine whether a polygon lies entirely inside, entirely outside, or
- *	overlapping a given rectangular area.
+ *      Determine whether a polygon lies entirely inside, entirely outside, or
+ *      overlapping a given rectangular area.
  *
  * Results:
- *	-1 is returned if the polygon given by polyPtr and numPoints is
- *	entirely outside the rectangle given by rectPtr. 0 is returned if the
- *	polygon overlaps the rectangle, and 1 is returned if the polygon is
- *	entirely inside the rectangle.
+ *      -1 is returned if the polygon given by polyPtr and numPoints is
+ *      entirely outside the rectangle given by rectPtr. 0 is returned if the
+ *      polygon overlaps the rectangle, and 1 is returned if the polygon is
+ *      entirely inside the rectangle.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 int
 TkPolygonToArea(
-    double *polyPtr,		/* Points to an array coordinates for closed
-				 * polygon: x0, y0, x1, y1, ... The polygon
-				 * may be self-intersecting. */
-    int numPoints,		/* Total number of points at *polyPtr. */
-    register double *rectPtr)	/* Points to coords for rectangle, in the
-				 * order x1, y1, x2, y2. X1 and y1 must be
-				 * lower-left corner. */
+    double *polyPtr,            /* Points to an array coordinates for closed
+                                 * polygon: x0, y0, x1, y1, ... The polygon
+                                 * may be self-intersecting. */
+    int numPoints,              /* Total number of points at *polyPtr. */
+    register double *rectPtr)   /* Points to coords for rectangle, in the
+                                 * order x1, y1, x2, y2. X1 and y1 must be
+                                 * lower-left corner. */
 {
-    int state;			/* State of all edges seen so far (-1 means
-				 * outside, 1 means inside, won't ever be
-				 * 0). */
+    int state;                  /* State of all edges seen so far (-1 means
+                                 * outside, 1 means inside, won't ever be
+                                 * 0). */
     int count;
     register double *pPtr;
 
@@ -605,13 +605,13 @@ TkPolygonToArea(
 
     state = TkLineToArea(polyPtr, polyPtr+2, rectPtr);
     if (state == 0) {
-	return 0;
+        return 0;
     }
     for (pPtr = polyPtr+2, count = numPoints-1; count >= 2;
-	    pPtr += 2, count--) {
-	if (TkLineToArea(pPtr, pPtr+2, rectPtr) != state) {
-	    return 0;
-	}
+            pPtr += 2, count--) {
+        if (TkLineToArea(pPtr, pPtr+2, rectPtr) != state) {
+            return 0;
+        }
     }
 
     /*
@@ -622,10 +622,10 @@ TkPolygonToArea(
      */
 
     if (state == 1) {
-	return 1;
+        return 1;
     }
     if (TkPolygonToPoint(polyPtr, numPoints, rectPtr) == 0.0) {
-	return 0;
+        return 0;
     }
     return -1;
 }
@@ -635,34 +635,34 @@ TkPolygonToArea(
  *
  * TkOvalToPoint --
  *
- *	Computes the distance from a given point to a given oval, in canvas
- *	units.
+ *      Computes the distance from a given point to a given oval, in canvas
+ *      units.
  *
  * Results:
- *	The return value is 0 if the point given by *pointPtr is inside the
- *	oval. If the point isn't inside the oval then the return value is
- *	approximately the distance from the point to the oval. If the oval is
- *	filled, then anywhere in the interior is considered "inside"; if the
- *	oval isn't filled, then "inside" means only the area occupied by the
- *	outline.
+ *      The return value is 0 if the point given by *pointPtr is inside the
+ *      oval. If the point isn't inside the oval then the return value is
+ *      approximately the distance from the point to the oval. If the oval is
+ *      filled, then anywhere in the interior is considered "inside"; if the
+ *      oval isn't filled, then "inside" means only the area occupied by the
+ *      outline.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
+        /* ARGSUSED */
 double
 TkOvalToPoint(
-    double ovalPtr[4],		/* Pointer to array of four coordinates (x1,
-				 * y1, x2, y2) defining oval's bounding
-				 * box. */
-    double width,		/* Width of outline for oval. */
-    int filled,			/* Non-zero means oval should be treated as
-				 * filled; zero means only consider
-				 * outline. */
-    double pointPtr[2])		/* Coordinates of point. */
+    double ovalPtr[4],          /* Pointer to array of four coordinates (x1,
+                                 * y1, x2, y2) defining oval's bounding
+                                 * box. */
+    double width,               /* Width of outline for oval. */
+    int filled,                 /* Non-zero means oval should be treated as
+                                 * filled; zero means only consider
+                                 * outline. */
+    double pointPtr[2])         /* Coordinates of point. */
 {
     double xDelta, yDelta, scaledDistance, distToOutline, distToCenter;
     double xDiam, yDiam;
@@ -677,7 +677,7 @@ TkOvalToPoint(
     yDelta = (pointPtr[1] - (ovalPtr[1] + ovalPtr[3])/2.0);
     distToCenter = hypot(xDelta, yDelta);
     scaledDistance = hypot(xDelta / ((ovalPtr[2] + width - ovalPtr[0])/2.0),
-	    yDelta / ((ovalPtr[3] + width - ovalPtr[1])/2.0));
+            yDelta / ((ovalPtr[3] + width - ovalPtr[1])/2.0));
 
     /*
      * If the scaled distance is greater than 1 then it means no hit. Compute
@@ -690,7 +690,7 @@ TkOvalToPoint(
      */
 
     if (scaledDistance > 1.0) {
-	return (distToCenter/scaledDistance) * (scaledDistance - 1.0);
+        return (distToCenter/scaledDistance) * (scaledDistance - 1.0);
     }
 
     /*
@@ -702,29 +702,29 @@ TkOvalToPoint(
      */
 
     if (filled) {
-	return 0.0;
+        return 0.0;
     }
     if (scaledDistance > 1E-10) {
-	distToOutline = (distToCenter/scaledDistance) * (1.0 - scaledDistance)
-		- width;
+        distToOutline = (distToCenter/scaledDistance) * (1.0 - scaledDistance)
+                - width;
     } else {
-	/*
-	 * Avoid dividing by a very small number (it could cause an arithmetic
-	 * overflow). This problem occurs if the point is very close to the
-	 * center of the oval.
-	 */
+        /*
+         * Avoid dividing by a very small number (it could cause an arithmetic
+         * overflow). This problem occurs if the point is very close to the
+         * center of the oval.
+         */
 
-	xDiam = ovalPtr[2] - ovalPtr[0];
-	yDiam = ovalPtr[3] - ovalPtr[1];
-	if (xDiam < yDiam) {
-	    distToOutline = (xDiam - width)/2;
-	} else {
-	    distToOutline = (yDiam - width)/2;
-	}
+        xDiam = ovalPtr[2] - ovalPtr[0];
+        yDiam = ovalPtr[3] - ovalPtr[1];
+        if (xDiam < yDiam) {
+            distToOutline = (xDiam - width)/2;
+        } else {
+            distToOutline = (yDiam - width)/2;
+        }
     }
 
     if (distToOutline < 0.0) {
-	return 0.0;
+        return 0.0;
     }
     return distToOutline;
 }
@@ -734,30 +734,30 @@ TkOvalToPoint(
  *
  * TkOvalToArea --
  *
- *	Determine whether an oval lies entirely inside, entirely outside, or
- *	overlapping a given rectangular area.
+ *      Determine whether an oval lies entirely inside, entirely outside, or
+ *      overlapping a given rectangular area.
  *
  * Results:
- *	-1 is returned if the oval described by ovalPtr is entirely outside
- *	the rectangle given by rectPtr. 0 is returned if the oval overlaps the
- *	rectangle, and 1 is returned if the oval is entirely inside the
- *	rectangle.
+ *      -1 is returned if the oval described by ovalPtr is entirely outside
+ *      the rectangle given by rectPtr. 0 is returned if the oval overlaps the
+ *      rectangle, and 1 is returned if the oval is entirely inside the
+ *      rectangle.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 int
 TkOvalToArea(
-    register double *ovalPtr,	/* Points to coordinates defining the
-				 * bounding rectangle for the oval: x1, y1,
-				 * x2, y2. X1 must be less than x2 and y1 less
-				 * than y2. */
-    register double *rectPtr)	/* Points to coords for rectangle, in the
-				 * order x1, y1, x2, y2. X1 and y1 must be
-				 * lower-left corner. */
+    register double *ovalPtr,   /* Points to coordinates defining the
+                                 * bounding rectangle for the oval: x1, y1,
+                                 * x2, y2. X1 must be less than x2 and y1 less
+                                 * than y2. */
+    register double *rectPtr)   /* Points to coords for rectangle, in the
+                                 * order x1, y1, x2, y2. X1 and y1 must be
+                                 * lower-left corner. */
 {
     double centerX, centerY, radX, radY, deltaX, deltaY;
 
@@ -767,12 +767,12 @@ TkOvalToArea(
      */
 
     if ((rectPtr[0] <= ovalPtr[0]) && (rectPtr[2] >= ovalPtr[2])
-	    && (rectPtr[1] <= ovalPtr[1]) && (rectPtr[3] >= ovalPtr[3])) {
-	return 1;
+            && (rectPtr[1] <= ovalPtr[1]) && (rectPtr[3] >= ovalPtr[3])) {
+        return 1;
     }
     if ((rectPtr[2] < ovalPtr[0]) || (rectPtr[0] > ovalPtr[2])
-	    || (rectPtr[3] < ovalPtr[1]) || (rectPtr[1] > ovalPtr[3])) {
-	return -1;
+            || (rectPtr[3] < ovalPtr[1]) || (rectPtr[1] > ovalPtr[3])) {
+        return -1;
     }
 
     /*
@@ -789,10 +789,10 @@ TkOvalToArea(
 
     deltaY = rectPtr[1] - centerY;
     if (deltaY < 0.0) {
-	deltaY = centerY - rectPtr[3];
-	if (deltaY < 0.0) {
-	    deltaY = 0;
-	}
+        deltaY = centerY - rectPtr[3];
+        if (deltaY < 0.0) {
+            deltaY = 0;
+        }
     }
     deltaY /= radY;
     deltaY *= deltaY;
@@ -804,7 +804,7 @@ TkOvalToArea(
     deltaX = (rectPtr[0] - centerX)/radX;
     deltaX *= deltaX;
     if ((deltaX + deltaY) <= 1.0) {
-	return 0;
+        return 0;
     }
 
     /*
@@ -814,15 +814,15 @@ TkOvalToArea(
     deltaX = (rectPtr[2] - centerX)/radX;
     deltaX *= deltaX;
     if ((deltaX + deltaY) <= 1.0) {
-	return 0;
+        return 0;
     }
 
     deltaX = rectPtr[0] - centerX;
     if (deltaX < 0.0) {
-	deltaX = centerX - rectPtr[2];
-	if (deltaX < 0.0) {
-	    deltaX = 0;
-	}
+        deltaX = centerX - rectPtr[2];
+        if (deltaX < 0.0) {
+            deltaX = 0;
+        }
     }
     deltaX /= radX;
     deltaX *= deltaX;
@@ -834,7 +834,7 @@ TkOvalToArea(
     deltaY = (rectPtr[1] - centerY)/radY;
     deltaY *= deltaY;
     if ((deltaX + deltaY) < 1.0) {
-	return 0;
+        return 0;
     }
 
     /*
@@ -844,7 +844,7 @@ TkOvalToArea(
     deltaY = (rectPtr[3] - centerY)/radY;
     deltaY *= deltaY;
     if ((deltaX + deltaY) < 1.0) {
-	return 0;
+        return 0;
     }
 
     return -1;
@@ -855,41 +855,41 @@ TkOvalToArea(
  *
  * TkIncludePoint --
  *
- *	Given a point and a generic canvas item header, expand the item's
- *	bounding box if needed to include the point.
+ *      Given a point and a generic canvas item header, expand the item's
+ *      bounding box if needed to include the point.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	The boudn.
+ *      The boudn.
  *
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
+        /* ARGSUSED */
 void
 TkIncludePoint(
-    register Tk_Item *itemPtr,	/* Item whose bounding box is being
-				 * calculated. */
-    double *pointPtr)		/* Address of two doubles giving x and y
-				 * coordinates of point. */
+    register Tk_Item *itemPtr,  /* Item whose bounding box is being
+                                 * calculated. */
+    double *pointPtr)           /* Address of two doubles giving x and y
+                                 * coordinates of point. */
 {
     int tmp;
 
     tmp = (int) (pointPtr[0] + 0.5);
     if (tmp < itemPtr->x1) {
-	itemPtr->x1 = tmp;
+        itemPtr->x1 = tmp;
     }
     if (tmp > itemPtr->x2) {
-	itemPtr->x2 = tmp;
+        itemPtr->x2 = tmp;
     }
     tmp = (int) (pointPtr[1] + 0.5);
     if (tmp < itemPtr->y1) {
-	itemPtr->y1 = tmp;
+        itemPtr->y1 = tmp;
     }
     if (tmp > itemPtr->y2) {
-	itemPtr->y2 = tmp;
+        itemPtr->y2 = tmp;
     }
 }
 
@@ -898,45 +898,45 @@ TkIncludePoint(
  *
  * TkBezierScreenPoints --
  *
- *	Given four control points, create a larger set of XPoints for a Bezier
- *	curve based on the points.
+ *      Given four control points, create a larger set of XPoints for a Bezier
+ *      curve based on the points.
  *
  * Results:
- *	The array at *xPointPtr gets filled in with numSteps XPoints
- *	corresponding to the Bezier spline defined by the four control points.
- *	Note: no output point is generated for the first input point, but an
- *	output point *is* generated for the last input point.
+ *      The array at *xPointPtr gets filled in with numSteps XPoints
+ *      corresponding to the Bezier spline defined by the four control points.
+ *      Note: no output point is generated for the first input point, but an
+ *      output point *is* generated for the last input point.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkBezierScreenPoints(
-    Tk_Canvas canvas,		/* Canvas in which curve is to be drawn. */
-    double control[],		/* Array of coordinates for four control
-				 * points: x0, y0, x1, y1, ... x3 y3. */
-    int numSteps,		/* Number of curve points to generate. */
-    register XPoint *xPointPtr)	/* Where to put new points. */
+    Tk_Canvas canvas,           /* Canvas in which curve is to be drawn. */
+    double control[],           /* Array of coordinates for four control
+                                 * points: x0, y0, x1, y1, ... x3 y3. */
+    int numSteps,               /* Number of curve points to generate. */
+    register XPoint *xPointPtr) /* Where to put new points. */
 {
     int i;
     double u, u2, u3, t, t2, t3;
 
     for (i = 1; i <= numSteps; i++, xPointPtr++) {
-	t = ((double) i)/((double) numSteps);
-	t2 = t*t;
-	t3 = t2*t;
-	u = 1.0 - t;
-	u2 = u*u;
-	u3 = u2*u;
-	Tk_CanvasDrawableCoords(canvas,
-		(control[0]*u3 + 3.0 * (control[2]*t*u2 + control[4]*t2*u)
-		    + control[6]*t3),
-		(control[1]*u3 + 3.0 * (control[3]*t*u2 + control[5]*t2*u)
-		    + control[7]*t3),
-		&xPointPtr->x, &xPointPtr->y);
+        t = ((double) i)/((double) numSteps);
+        t2 = t*t;
+        t3 = t2*t;
+        u = 1.0 - t;
+        u2 = u*u;
+        u3 = u2*u;
+        Tk_CanvasDrawableCoords(canvas,
+                (control[0]*u3 + 3.0 * (control[2]*t*u2 + control[4]*t2*u)
+                    + control[6]*t3),
+                (control[1]*u3 + 3.0 * (control[3]*t*u2 + control[5]*t2*u)
+                    + control[7]*t3),
+                &xPointPtr->x, &xPointPtr->y);
     }
 }
 
@@ -945,42 +945,42 @@ TkBezierScreenPoints(
  *
  * TkBezierPoints --
  *
- *	Given four control points, create a larger set of points for a Bezier
- *	curve based on the points.
+ *      Given four control points, create a larger set of points for a Bezier
+ *      curve based on the points.
  *
  * Results:
- *	The array at *coordPtr gets filled in with 2*numSteps coordinates,
- *	which correspond to the Bezier spline defined by the four control
- *	points. Note: no output point is generated for the first input point,
- *	but an output point *is* generated for the last input point.
+ *      The array at *coordPtr gets filled in with 2*numSteps coordinates,
+ *      which correspond to the Bezier spline defined by the four control
+ *      points. Note: no output point is generated for the first input point,
+ *      but an output point *is* generated for the last input point.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkBezierPoints(
-    double control[],		/* Array of coordinates for four control
-				 * points: x0, y0, x1, y1, ... x3 y3. */
-    int numSteps,		/* Number of curve points to generate. */
-    register double *coordPtr)	/* Where to put new points. */
+    double control[],           /* Array of coordinates for four control
+                                 * points: x0, y0, x1, y1, ... x3 y3. */
+    int numSteps,               /* Number of curve points to generate. */
+    register double *coordPtr)  /* Where to put new points. */
 {
     int i;
     double u, u2, u3, t, t2, t3;
 
     for (i = 1; i <= numSteps; i++, coordPtr += 2) {
-	t = ((double) i)/((double) numSteps);
-	t2 = t*t;
-	t3 = t2*t;
-	u = 1.0 - t;
-	u2 = u*u;
-	u3 = u2*u;
-	coordPtr[0] = control[0]*u3
-		+ 3.0 * (control[2]*t*u2 + control[4]*t2*u) + control[6]*t3;
-	coordPtr[1] = control[1]*u3
-		+ 3.0 * (control[3]*t*u2 + control[5]*t2*u) + control[7]*t3;
+        t = ((double) i)/((double) numSteps);
+        t2 = t*t;
+        t3 = t2*t;
+        u = 1.0 - t;
+        u2 = u*u;
+        u3 = u2*u;
+        coordPtr[0] = control[0]*u3
+                + 3.0 * (control[2]*t*u2 + control[4]*t2*u) + control[6]*t3;
+        coordPtr[1] = control[1]*u3
+                + 3.0 * (control[3]*t*u2 + control[5]*t2*u) + control[7]*t3;
     }
 }
 
@@ -989,45 +989,45 @@ TkBezierPoints(
  *
  * TkMakeBezierCurve --
  *
- *	Given a set of points, create a new set of points that fit parabolic
- *	splines to the line segments connecting the original points. Produces
- *	output points in either of two forms.
+ *      Given a set of points, create a new set of points that fit parabolic
+ *      splines to the line segments connecting the original points. Produces
+ *      output points in either of two forms.
  *
- *	Note: the name of this function should *not* be taken to mean that it
- *	interprets the input points as directly defining Bezier curves.
- *	Rather, it internally computes a Bezier curve representation of each
- *	parabolic spline segment. (These Bezier curves are then flattened to
- *	produce the points filled into the output arrays.)
+ *      Note: the name of this function should *not* be taken to mean that it
+ *      interprets the input points as directly defining Bezier curves.
+ *      Rather, it internally computes a Bezier curve representation of each
+ *      parabolic spline segment. (These Bezier curves are then flattened to
+ *      produce the points filled into the output arrays.)
  *
  * Results:
- *	Either or both of the xPoints or dblPoints arrays are filled in. The
- *	return value is the number of points placed in the arrays. Note: if
- *	the first and last points are the same, then a closed curve is
- *	generated.
+ *      Either or both of the xPoints or dblPoints arrays are filled in. The
+ *      return value is the number of points placed in the arrays. Note: if
+ *      the first and last points are the same, then a closed curve is
+ *      generated.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 int
 TkMakeBezierCurve(
-    Tk_Canvas canvas,		/* Canvas in which curve is to be drawn. */
-    double *pointPtr,		/* Array of input coordinates: x0, y0, x1, y1,
-				 * etc.. */
-    int numPoints,		/* Number of points at pointPtr. */
-    int numSteps,		/* Number of steps to use for each spline
-				 * segments (determines smoothness of
-				 * curve). */
-    XPoint xPoints[],		/* Array of XPoints to fill in (e.g. for
-				 * display). NULL means don't fill in any
-				 * XPoints. */
-    double dblPoints[])		/* Array of points to fill in as doubles, in
-				 * the form x0, y0, x1, y1, .... NULL means
-				 * don't fill in anything in this form. Caller
-				 * must make sure that this array has enough
-				 * space. */
+    Tk_Canvas canvas,           /* Canvas in which curve is to be drawn. */
+    double *pointPtr,           /* Array of input coordinates: x0, y0, x1, y1,
+                                 * etc.. */
+    int numPoints,              /* Number of points at pointPtr. */
+    int numSteps,               /* Number of steps to use for each spline
+                                 * segments (determines smoothness of
+                                 * curve). */
+    XPoint xPoints[],           /* Array of XPoints to fill in (e.g. for
+                                 * display). NULL means don't fill in any
+                                 * XPoints. */
+    double dblPoints[])         /* Array of points to fill in as doubles, in
+                                 * the form x0, y0, x1, y1, .... NULL means
+                                 * don't fill in anything in this form. Caller
+                                 * must make sure that this array has enough
+                                 * space. */
 {
     int closed, outputPoints, i;
     int numCoords = numPoints*2;
@@ -1040,127 +1040,127 @@ TkMakeBezierCurve(
      */
 
     if (!pointPtr) {
-	/*
-	 * Of pointPtr == NULL, this function returns an upper limit of the
-	 * array size to store the coordinates. This can be used to allocate
-	 * storage, before the actual coordinates are calculated.
-	 */
+        /*
+         * Of pointPtr == NULL, this function returns an upper limit of the
+         * array size to store the coordinates. This can be used to allocate
+         * storage, before the actual coordinates are calculated.
+         */
 
-	return 1 + numPoints * numSteps;
+        return 1 + numPoints * numSteps;
     }
 
     outputPoints = 0;
     if ((pointPtr[0] == pointPtr[numCoords-2])
-	    && (pointPtr[1] == pointPtr[numCoords-1])) {
-	closed = 1;
-	control[0] = 0.5*pointPtr[numCoords-4] + 0.5*pointPtr[0];
-	control[1] = 0.5*pointPtr[numCoords-3] + 0.5*pointPtr[1];
-	control[2] = 0.167*pointPtr[numCoords-4] + 0.833*pointPtr[0];
-	control[3] = 0.167*pointPtr[numCoords-3] + 0.833*pointPtr[1];
-	control[4] = 0.833*pointPtr[0] + 0.167*pointPtr[2];
-	control[5] = 0.833*pointPtr[1] + 0.167*pointPtr[3];
-	control[6] = 0.5*pointPtr[0] + 0.5*pointPtr[2];
-	control[7] = 0.5*pointPtr[1] + 0.5*pointPtr[3];
-	if (xPoints != NULL) {
-	    Tk_CanvasDrawableCoords(canvas, control[0], control[1],
-		    &xPoints->x, &xPoints->y);
-	    TkBezierScreenPoints(canvas, control, numSteps, xPoints+1);
-	    xPoints += numSteps+1;
-	}
-	if (dblPoints != NULL) {
-	    dblPoints[0] = control[0];
-	    dblPoints[1] = control[1];
-	    TkBezierPoints(control, numSteps, dblPoints+2);
-	    dblPoints += 2*(numSteps+1);
-	}
-	outputPoints += numSteps+1;
+            && (pointPtr[1] == pointPtr[numCoords-1])) {
+        closed = 1;
+        control[0] = 0.5*pointPtr[numCoords-4] + 0.5*pointPtr[0];
+        control[1] = 0.5*pointPtr[numCoords-3] + 0.5*pointPtr[1];
+        control[2] = 0.167*pointPtr[numCoords-4] + 0.833*pointPtr[0];
+        control[3] = 0.167*pointPtr[numCoords-3] + 0.833*pointPtr[1];
+        control[4] = 0.833*pointPtr[0] + 0.167*pointPtr[2];
+        control[5] = 0.833*pointPtr[1] + 0.167*pointPtr[3];
+        control[6] = 0.5*pointPtr[0] + 0.5*pointPtr[2];
+        control[7] = 0.5*pointPtr[1] + 0.5*pointPtr[3];
+        if (xPoints != NULL) {
+            Tk_CanvasDrawableCoords(canvas, control[0], control[1],
+                    &xPoints->x, &xPoints->y);
+            TkBezierScreenPoints(canvas, control, numSteps, xPoints+1);
+            xPoints += numSteps+1;
+        }
+        if (dblPoints != NULL) {
+            dblPoints[0] = control[0];
+            dblPoints[1] = control[1];
+            TkBezierPoints(control, numSteps, dblPoints+2);
+            dblPoints += 2*(numSteps+1);
+        }
+        outputPoints += numSteps+1;
     } else {
-	closed = 0;
-	if (xPoints != NULL) {
-	    Tk_CanvasDrawableCoords(canvas, pointPtr[0], pointPtr[1],
-		    &xPoints->x, &xPoints->y);
-	    xPoints += 1;
-	}
-	if (dblPoints != NULL) {
-	    dblPoints[0] = pointPtr[0];
-	    dblPoints[1] = pointPtr[1];
-	    dblPoints += 2;
-	}
-	outputPoints += 1;
+        closed = 0;
+        if (xPoints != NULL) {
+            Tk_CanvasDrawableCoords(canvas, pointPtr[0], pointPtr[1],
+                    &xPoints->x, &xPoints->y);
+            xPoints += 1;
+        }
+        if (dblPoints != NULL) {
+            dblPoints[0] = pointPtr[0];
+            dblPoints[1] = pointPtr[1];
+            dblPoints += 2;
+        }
+        outputPoints += 1;
     }
 
     for (i = 2; i < numPoints; i++, pointPtr += 2) {
-	/*
-	 * Set up the first two control points. This is done differently for
-	 * the first spline of an open curve than for other cases.
-	 */
+        /*
+         * Set up the first two control points. This is done differently for
+         * the first spline of an open curve than for other cases.
+         */
 
-	if ((i == 2) && !closed) {
-	    control[0] = pointPtr[0];
-	    control[1] = pointPtr[1];
-	    control[2] = 0.333*pointPtr[0] + 0.667*pointPtr[2];
-	    control[3] = 0.333*pointPtr[1] + 0.667*pointPtr[3];
-	} else {
-	    control[0] = 0.5*pointPtr[0] + 0.5*pointPtr[2];
-	    control[1] = 0.5*pointPtr[1] + 0.5*pointPtr[3];
-	    control[2] = 0.167*pointPtr[0] + 0.833*pointPtr[2];
-	    control[3] = 0.167*pointPtr[1] + 0.833*pointPtr[3];
-	}
+        if ((i == 2) && !closed) {
+            control[0] = pointPtr[0];
+            control[1] = pointPtr[1];
+            control[2] = 0.333*pointPtr[0] + 0.667*pointPtr[2];
+            control[3] = 0.333*pointPtr[1] + 0.667*pointPtr[3];
+        } else {
+            control[0] = 0.5*pointPtr[0] + 0.5*pointPtr[2];
+            control[1] = 0.5*pointPtr[1] + 0.5*pointPtr[3];
+            control[2] = 0.167*pointPtr[0] + 0.833*pointPtr[2];
+            control[3] = 0.167*pointPtr[1] + 0.833*pointPtr[3];
+        }
 
-	/*
-	 * Set up the last two control points. This is done differently for
-	 * the last spline of an open curve than for other cases.
-	 */
+        /*
+         * Set up the last two control points. This is done differently for
+         * the last spline of an open curve than for other cases.
+         */
 
-	if ((i == (numPoints-1)) && !closed) {
-	    control[4] = .667*pointPtr[2] + .333*pointPtr[4];
-	    control[5] = .667*pointPtr[3] + .333*pointPtr[5];
-	    control[6] = pointPtr[4];
-	    control[7] = pointPtr[5];
-	} else {
-	    control[4] = .833*pointPtr[2] + .167*pointPtr[4];
-	    control[5] = .833*pointPtr[3] + .167*pointPtr[5];
-	    control[6] = 0.5*pointPtr[2] + 0.5*pointPtr[4];
-	    control[7] = 0.5*pointPtr[3] + 0.5*pointPtr[5];
-	}
+        if ((i == (numPoints-1)) && !closed) {
+            control[4] = .667*pointPtr[2] + .333*pointPtr[4];
+            control[5] = .667*pointPtr[3] + .333*pointPtr[5];
+            control[6] = pointPtr[4];
+            control[7] = pointPtr[5];
+        } else {
+            control[4] = .833*pointPtr[2] + .167*pointPtr[4];
+            control[5] = .833*pointPtr[3] + .167*pointPtr[5];
+            control[6] = 0.5*pointPtr[2] + 0.5*pointPtr[4];
+            control[7] = 0.5*pointPtr[3] + 0.5*pointPtr[5];
+        }
 
-	/*
-	 * If the first two points coincide, or if the last two points
-	 * coincide, then generate a single straight-line segment by
-	 * outputting the last control point.
-	 */
+        /*
+         * If the first two points coincide, or if the last two points
+         * coincide, then generate a single straight-line segment by
+         * outputting the last control point.
+         */
 
-	if (((pointPtr[0] == pointPtr[2]) && (pointPtr[1] == pointPtr[3]))
-		|| ((pointPtr[2] == pointPtr[4])
-		&& (pointPtr[3] == pointPtr[5]))) {
-	    if (xPoints != NULL) {
-		Tk_CanvasDrawableCoords(canvas, control[6], control[7],
-			&xPoints[0].x, &xPoints[0].y);
-		xPoints++;
-	    }
-	    if (dblPoints != NULL) {
-		dblPoints[0] = control[6];
-		dblPoints[1] = control[7];
-		dblPoints += 2;
-	    }
-	    outputPoints += 1;
-	    continue;
-	}
+        if (((pointPtr[0] == pointPtr[2]) && (pointPtr[1] == pointPtr[3]))
+                || ((pointPtr[2] == pointPtr[4])
+                && (pointPtr[3] == pointPtr[5]))) {
+            if (xPoints != NULL) {
+                Tk_CanvasDrawableCoords(canvas, control[6], control[7],
+                        &xPoints[0].x, &xPoints[0].y);
+                xPoints++;
+            }
+            if (dblPoints != NULL) {
+                dblPoints[0] = control[6];
+                dblPoints[1] = control[7];
+                dblPoints += 2;
+            }
+            outputPoints += 1;
+            continue;
+        }
 
-	/*
-	 * Generate a Bezier spline using the control points.
-	 */
+        /*
+         * Generate a Bezier spline using the control points.
+         */
 
 
-	if (xPoints != NULL) {
-	    TkBezierScreenPoints(canvas, control, numSteps, xPoints);
-	    xPoints += numSteps;
-	}
-	if (dblPoints != NULL) {
-	    TkBezierPoints(control, numSteps, dblPoints);
-	    dblPoints += 2*numSteps;
-	}
-	outputPoints += numSteps;
+        if (xPoints != NULL) {
+            TkBezierScreenPoints(canvas, control, numSteps, xPoints);
+            xPoints += numSteps;
+        }
+        if (dblPoints != NULL) {
+            TkBezierPoints(control, numSteps, dblPoints);
+            dblPoints += 2*numSteps;
+        }
+        outputPoints += numSteps;
     }
     return outputPoints;
 }
@@ -1170,38 +1170,38 @@ TkMakeBezierCurve(
  *
  * TkMakeRawCurve --
  *
- *	Interpret the given set of points as the raw knots and control points
- *	defining a sequence of cubic Bezier curves. Create a new set of points
- *	that fit these Bezier curves. Output points are produced in either of
- *	two forms.
+ *      Interpret the given set of points as the raw knots and control points
+ *      defining a sequence of cubic Bezier curves. Create a new set of points
+ *      that fit these Bezier curves. Output points are produced in either of
+ *      two forms.
  *
  * Results:
- *	Either or both of the xPoints or dblPoints arrays are filled in. The
- *	return value is the number of points placed in the arrays.
+ *      Either or both of the xPoints or dblPoints arrays are filled in. The
+ *      return value is the number of points placed in the arrays.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 int
 TkMakeRawCurve(
-    Tk_Canvas canvas,		/* Canvas in which curve is to be drawn. */
-    double *pointPtr,		/* Array of input coordinates: x0, y0, x1, y1,
-				 * etc.. */
-    int numPoints,		/* Number of points at pointPtr. */
-    int numSteps,		/* Number of steps to use for each curve
-				 * segment (determines smoothness of
-				 * curve). */
-    XPoint xPoints[],		/* Array of XPoints to fill in (e.g. for
-				 * display). NULL means don't fill in any
-				 * XPoints. */
-    double dblPoints[])		/* Array of points to fill in as doubles, in
-				 * the form x0, y0, x1, y1, .... NULL means
-				 * don't fill in anything in this form.
-				 * Caller must make sure that this array has
-				 * enough space. */
+    Tk_Canvas canvas,           /* Canvas in which curve is to be drawn. */
+    double *pointPtr,           /* Array of input coordinates: x0, y0, x1, y1,
+                                 * etc.. */
+    int numPoints,              /* Number of points at pointPtr. */
+    int numSteps,               /* Number of steps to use for each curve
+                                 * segment (determines smoothness of
+                                 * curve). */
+    XPoint xPoints[],           /* Array of XPoints to fill in (e.g. for
+                                 * display). NULL means don't fill in any
+                                 * XPoints. */
+    double dblPoints[])         /* Array of points to fill in as doubles, in
+                                 * the form x0, y0, x1, y1, .... NULL means
+                                 * don't fill in anything in this form.
+                                 * Caller must make sure that this array has
+                                 * enough space. */
 {
     int outputPoints, i;
     int numSegments = (numPoints+1)/3;
@@ -1216,25 +1216,25 @@ TkMakeRawCurve(
      */
 
     if (!pointPtr) {
-	/*
-	 * If pointPtr == NULL, this function returns an upper limit of the
-	 * array size to store the coordinates. This can be used to allocate
-	 * storage, before the actual coordinates are calculated.
-	 */
+        /*
+         * If pointPtr == NULL, this function returns an upper limit of the
+         * array size to store the coordinates. This can be used to allocate
+         * storage, before the actual coordinates are calculated.
+         */
 
-	return 1 + numSegments * numSteps;
+        return 1 + numSegments * numSteps;
     }
 
     outputPoints = 0;
     if (xPoints != NULL) {
-	Tk_CanvasDrawableCoords(canvas, pointPtr[0], pointPtr[1],
-		&xPoints->x, &xPoints->y);
-	xPoints += 1;
+        Tk_CanvasDrawableCoords(canvas, pointPtr[0], pointPtr[1],
+                &xPoints->x, &xPoints->y);
+        xPoints += 1;
     }
     if (dblPoints != NULL) {
-	dblPoints[0] = pointPtr[0];
-	dblPoints[1] = pointPtr[1];
-	dblPoints += 2;
+        dblPoints[0] = pointPtr[0];
+        dblPoints[1] = pointPtr[1];
+        dblPoints += 2;
     }
     outputPoints += 1;
 
@@ -1244,40 +1244,40 @@ TkMakeRawCurve(
      */
 
     for (i=numPoints,segPtr=pointPtr ; i>=4 ; i-=3,segPtr+=6) {
-	if (segPtr[0]==segPtr[2] && segPtr[1]==segPtr[3] &&
-		segPtr[4]==segPtr[6] && segPtr[5]==segPtr[7]) {
-	    /*
-	     * The control points on this segment are equal to their
-	     * neighbouring knots, so this segment is just a straight line. A
-	     * single point is sufficient.
-	     */
+        if (segPtr[0]==segPtr[2] && segPtr[1]==segPtr[3] &&
+                segPtr[4]==segPtr[6] && segPtr[5]==segPtr[7]) {
+            /*
+             * The control points on this segment are equal to their
+             * neighbouring knots, so this segment is just a straight line. A
+             * single point is sufficient.
+             */
 
-	    if (xPoints != NULL) {
-		Tk_CanvasDrawableCoords(canvas, segPtr[6], segPtr[7],
-			&xPoints->x, &xPoints->y);
-		xPoints += 1;
-	    }
-	    if (dblPoints != NULL) {
-		dblPoints[0] = segPtr[6];
-		dblPoints[1] = segPtr[7];
-		dblPoints += 2;
-	    }
-	    outputPoints += 1;
-	} else {
-	    /*
-	     * This is a generic Bezier curve segment.
-	     */
+            if (xPoints != NULL) {
+                Tk_CanvasDrawableCoords(canvas, segPtr[6], segPtr[7],
+                        &xPoints->x, &xPoints->y);
+                xPoints += 1;
+            }
+            if (dblPoints != NULL) {
+                dblPoints[0] = segPtr[6];
+                dblPoints[1] = segPtr[7];
+                dblPoints += 2;
+            }
+            outputPoints += 1;
+        } else {
+            /*
+             * This is a generic Bezier curve segment.
+             */
 
-	    if (xPoints != NULL) {
-		TkBezierScreenPoints(canvas, segPtr, numSteps, xPoints);
-		xPoints += numSteps;
-	    }
-	    if (dblPoints != NULL) {
-		TkBezierPoints(segPtr, numSteps, dblPoints);
-		dblPoints += 2*numSteps;
-	    }
-	    outputPoints += numSteps;
-	}
+            if (xPoints != NULL) {
+                TkBezierScreenPoints(canvas, segPtr, numSteps, xPoints);
+                xPoints += numSteps;
+            }
+            if (dblPoints != NULL) {
+                TkBezierPoints(segPtr, numSteps, dblPoints);
+                dblPoints += 2*numSteps;
+            }
+            outputPoints += numSteps;
+        }
     }
 
     /*
@@ -1286,59 +1286,59 @@ TkMakeRawCurve(
      */
 
     if (i > 1) {
-	int j;
-	double control[8];
+        int j;
+        double control[8];
 
-	/*
-	 * Copy the relevant coordinates to control[], so that it can be
-	 * passed as a unit to e.g. TkBezierPoints.
-	 */
+        /*
+         * Copy the relevant coordinates to control[], so that it can be
+         * passed as a unit to e.g. TkBezierPoints.
+         */
 
-	for (j=0; j<2*i; j++) {
-	    control[j] = segPtr[j];
-	}
-	for (; j<8; j++) {
-	    control[j] = pointPtr[j-2*i];
-	}
+        for (j=0; j<2*i; j++) {
+            control[j] = segPtr[j];
+        }
+        for (; j<8; j++) {
+            control[j] = pointPtr[j-2*i];
+        }
 
-	/*
-	 * Then we just do the same things as above.
-	 */
+        /*
+         * Then we just do the same things as above.
+         */
 
-	if (control[0]==control[2] && control[1]==control[3] &&
-		control[4]==control[6] && control[5]==control[7]) {
-	    /*
-	     * The control points on this segment are equal to their
-	     * neighbouring knots, so this segment is just a straight line. A
-	     * single point is sufficient.
-	     */
+        if (control[0]==control[2] && control[1]==control[3] &&
+                control[4]==control[6] && control[5]==control[7]) {
+            /*
+             * The control points on this segment are equal to their
+             * neighbouring knots, so this segment is just a straight line. A
+             * single point is sufficient.
+             */
 
-	    if (xPoints != NULL) {
-		Tk_CanvasDrawableCoords(canvas, control[6], control[7],
-			&xPoints->x, &xPoints->y);
-		xPoints += 1;
-	    }
-	    if (dblPoints != NULL) {
-		dblPoints[0] = control[6];
-		dblPoints[1] = control[7];
-		dblPoints += 2;
-	    }
-	    outputPoints += 1;
-	} else {
-	    /*
-	     * This is a generic Bezier curve segment.
-	     */
+            if (xPoints != NULL) {
+                Tk_CanvasDrawableCoords(canvas, control[6], control[7],
+                        &xPoints->x, &xPoints->y);
+                xPoints += 1;
+            }
+            if (dblPoints != NULL) {
+                dblPoints[0] = control[6];
+                dblPoints[1] = control[7];
+                dblPoints += 2;
+            }
+            outputPoints += 1;
+        } else {
+            /*
+             * This is a generic Bezier curve segment.
+             */
 
-	    if (xPoints != NULL) {
-		TkBezierScreenPoints(canvas, control, numSteps, xPoints);
-		xPoints += numSteps;
-	    }
-	    if (dblPoints != NULL) {
-		TkBezierPoints(control, numSteps, dblPoints);
-		dblPoints += 2*numSteps;
-	    }
-	    outputPoints += numSteps;
-	}
+            if (xPoints != NULL) {
+                TkBezierScreenPoints(canvas, control, numSteps, xPoints);
+                xPoints += numSteps;
+            }
+            if (dblPoints != NULL) {
+                TkBezierPoints(control, numSteps, dblPoints);
+                dblPoints += 2*numSteps;
+            }
+            outputPoints += numSteps;
+        }
     }
 
     return outputPoints;
@@ -1349,28 +1349,28 @@ TkMakeRawCurve(
  *
  * TkMakeBezierPostscript --
  *
- *	This function generates Postscript commands that create a path
- *	corresponding to a given Bezier curve.
+ *      This function generates Postscript commands that create a path
+ *      corresponding to a given Bezier curve.
  *
  * Results:
- *	None. Postscript commands to generate the path are appended to the
- *	interp's result.
+ *      None. Postscript commands to generate the path are appended to the
+ *      interp's result.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkMakeBezierPostscript(
-    Tcl_Interp *interp,		/* Interpreter in whose result the Postscript
-				 * is to be stored. */
-    Tk_Canvas canvas,		/* Canvas widget for which the Postscript is
-				 * being generated. */
-    double *pointPtr,		/* Array of input coordinates: x0, y0, x1, y1,
-				 * etc.. */
-    int numPoints)		/* Number of points at pointPtr. */
+    Tcl_Interp *interp,         /* Interpreter in whose result the Postscript
+                                 * is to be stored. */
+    Tk_Canvas canvas,           /* Canvas widget for which the Postscript is
+                                 * being generated. */
+    double *pointPtr,           /* Array of input coordinates: x0, y0, x1, y1,
+                                 * etc.. */
+    int numPoints)              /* Number of points at pointPtr. */
 {
     int closed, i;
     int numCoords = numPoints*2;
@@ -1384,29 +1384,29 @@ TkMakeBezierPostscript(
      */
 
     if ((pointPtr[0] == pointPtr[numCoords-2])
-	    && (pointPtr[1] == pointPtr[numCoords-1])) {
-	closed = 1;
-	control[0] = 0.5*pointPtr[numCoords-4] + 0.5*pointPtr[0];
-	control[1] = 0.5*pointPtr[numCoords-3] + 0.5*pointPtr[1];
-	control[2] = 0.167*pointPtr[numCoords-4] + 0.833*pointPtr[0];
-	control[3] = 0.167*pointPtr[numCoords-3] + 0.833*pointPtr[1];
-	control[4] = 0.833*pointPtr[0] + 0.167*pointPtr[2];
-	control[5] = 0.833*pointPtr[1] + 0.167*pointPtr[3];
-	control[6] = 0.5*pointPtr[0] + 0.5*pointPtr[2];
-	control[7] = 0.5*pointPtr[1] + 0.5*pointPtr[3];
-	psObj = Tcl_ObjPrintf(
-		"%.15g %.15g moveto\n"
-		"%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
-		control[0], Tk_CanvasPsY(canvas, control[1]),
-		control[2], Tk_CanvasPsY(canvas, control[3]),
-		control[4], Tk_CanvasPsY(canvas, control[5]),
-		control[6], Tk_CanvasPsY(canvas, control[7]));
+            && (pointPtr[1] == pointPtr[numCoords-1])) {
+        closed = 1;
+        control[0] = 0.5*pointPtr[numCoords-4] + 0.5*pointPtr[0];
+        control[1] = 0.5*pointPtr[numCoords-3] + 0.5*pointPtr[1];
+        control[2] = 0.167*pointPtr[numCoords-4] + 0.833*pointPtr[0];
+        control[3] = 0.167*pointPtr[numCoords-3] + 0.833*pointPtr[1];
+        control[4] = 0.833*pointPtr[0] + 0.167*pointPtr[2];
+        control[5] = 0.833*pointPtr[1] + 0.167*pointPtr[3];
+        control[6] = 0.5*pointPtr[0] + 0.5*pointPtr[2];
+        control[7] = 0.5*pointPtr[1] + 0.5*pointPtr[3];
+        psObj = Tcl_ObjPrintf(
+                "%.15g %.15g moveto\n"
+                "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+                control[0], Tk_CanvasPsY(canvas, control[1]),
+                control[2], Tk_CanvasPsY(canvas, control[3]),
+                control[4], Tk_CanvasPsY(canvas, control[5]),
+                control[6], Tk_CanvasPsY(canvas, control[7]));
     } else {
-	closed = 0;
-	control[6] = pointPtr[0];
-	control[7] = pointPtr[1];
-	psObj = Tcl_ObjPrintf("%.15g %.15g moveto\n",
-		control[6], Tk_CanvasPsY(canvas, control[7]));
+        closed = 0;
+        control[6] = pointPtr[0];
+        control[7] = pointPtr[1];
+        psObj = Tcl_ObjPrintf("%.15g %.15g moveto\n",
+                control[6], Tk_CanvasPsY(canvas, control[7]));
     }
 
     /*
@@ -1415,29 +1415,29 @@ TkMakeBezierPostscript(
      */
 
     for (i = numPoints-2, pointPtr += 2; i > 0; i--, pointPtr += 2) {
-	control[2] = 0.333*control[6] + 0.667*pointPtr[0];
-	control[3] = 0.333*control[7] + 0.667*pointPtr[1];
+        control[2] = 0.333*control[6] + 0.667*pointPtr[0];
+        control[3] = 0.333*control[7] + 0.667*pointPtr[1];
 
-	/*
-	 * Set up the last two control points. This is done differently for
-	 * the last spline of an open curve than for other cases.
-	 */
+        /*
+         * Set up the last two control points. This is done differently for
+         * the last spline of an open curve than for other cases.
+         */
 
-	if ((i == 1) && !closed) {
-	    control[6] = pointPtr[2];
-	    control[7] = pointPtr[3];
-	} else {
-	    control[6] = 0.5*pointPtr[0] + 0.5*pointPtr[2];
-	    control[7] = 0.5*pointPtr[1] + 0.5*pointPtr[3];
-	}
-	control[4] = 0.333*control[6] + 0.667*pointPtr[0];
-	control[5] = 0.333*control[7] + 0.667*pointPtr[1];
+        if ((i == 1) && !closed) {
+            control[6] = pointPtr[2];
+            control[7] = pointPtr[3];
+        } else {
+            control[6] = 0.5*pointPtr[0] + 0.5*pointPtr[2];
+            control[7] = 0.5*pointPtr[1] + 0.5*pointPtr[3];
+        }
+        control[4] = 0.333*control[6] + 0.667*pointPtr[0];
+        control[5] = 0.333*control[7] + 0.667*pointPtr[1];
 
-	Tcl_AppendPrintfToObj(psObj,
-		"%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
-		control[2], Tk_CanvasPsY(canvas, control[3]),
-		control[4], Tk_CanvasPsY(canvas, control[5]),
-		control[6], Tk_CanvasPsY(canvas, control[7]));
+        Tcl_AppendPrintfToObj(psObj,
+                "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+                control[2], Tk_CanvasPsY(canvas, control[3]),
+                control[4], Tk_CanvasPsY(canvas, control[5]),
+                control[6], Tk_CanvasPsY(canvas, control[7]));
     }
 
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
@@ -1449,30 +1449,30 @@ TkMakeBezierPostscript(
  *
  * TkMakeRawCurvePostscript --
  *
- *	This function interprets the input points as the raw knot and control
- *	points for a curve composed of Bezier curve segments, just like
- *	TkMakeRawCurve. It generates Postscript commands that create a path
- *	corresponding to this given curve.
+ *      This function interprets the input points as the raw knot and control
+ *      points for a curve composed of Bezier curve segments, just like
+ *      TkMakeRawCurve. It generates Postscript commands that create a path
+ *      corresponding to this given curve.
  *
  * Results:
- *	None. Postscript commands to generate the path are appended to the
- *	interp's result.
+ *      None. Postscript commands to generate the path are appended to the
+ *      interp's result.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkMakeRawCurvePostscript(
-    Tcl_Interp *interp,		/* Interpreter in whose result the Postscript
-				 * is to be stored. */
-    Tk_Canvas canvas,		/* Canvas widget for which the Postscript is
-				 * being generated. */
-    double *pointPtr,		/* Array of input coordinates: x0, y0, x1, y1,
-				 * etc.. */
-    int numPoints)		/* Number of points at pointPtr. */
+    Tcl_Interp *interp,         /* Interpreter in whose result the Postscript
+                                 * is to be stored. */
+    Tk_Canvas canvas,           /* Canvas widget for which the Postscript is
+                                 * being generated. */
+    double *pointPtr,           /* Array of input coordinates: x0, y0, x1, y1,
+                                 * etc.. */
+    int numPoints)              /* Number of points at pointPtr. */
 {
     int i;
     double *segPtr;
@@ -1483,7 +1483,7 @@ TkMakeRawCurvePostscript(
      */
 
     psObj = Tcl_ObjPrintf("%.15g %.15g moveto\n",
-	    pointPtr[0], Tk_CanvasPsY(canvas, pointPtr[1]));
+            pointPtr[0], Tk_CanvasPsY(canvas, pointPtr[1]));
 
     /*
      * Loop through all the remaining points in the curve, generating a
@@ -1491,26 +1491,26 @@ TkMakeRawCurvePostscript(
      */
 
     for (i=numPoints-1,segPtr=pointPtr ; i>=3 ; i-=3,segPtr+=6) {
-	if (segPtr[0]==segPtr[2] && segPtr[1]==segPtr[3] &&
-		segPtr[4]==segPtr[6] && segPtr[5]==segPtr[7]) {
-	    /*
-	     * The control points on this segment are equal to their
-	     * neighbouring knots, so this segment is just a straight line.
-	     */
+        if (segPtr[0]==segPtr[2] && segPtr[1]==segPtr[3] &&
+                segPtr[4]==segPtr[6] && segPtr[5]==segPtr[7]) {
+            /*
+             * The control points on this segment are equal to their
+             * neighbouring knots, so this segment is just a straight line.
+             */
 
-	    Tcl_AppendPrintfToObj(psObj, "%.15g %.15g lineto\n",
-		    segPtr[6], Tk_CanvasPsY(canvas, segPtr[7]));
-	} else {
-	    /*
-	     * This is a generic Bezier curve segment.
-	     */
+            Tcl_AppendPrintfToObj(psObj, "%.15g %.15g lineto\n",
+                    segPtr[6], Tk_CanvasPsY(canvas, segPtr[7]));
+        } else {
+            /*
+             * This is a generic Bezier curve segment.
+             */
 
-	    Tcl_AppendPrintfToObj(psObj,
-		    "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
-		    segPtr[2], Tk_CanvasPsY(canvas, segPtr[3]),
-		    segPtr[4], Tk_CanvasPsY(canvas, segPtr[5]),
-		    segPtr[6], Tk_CanvasPsY(canvas, segPtr[7]));
-	}
+            Tcl_AppendPrintfToObj(psObj,
+                    "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+                    segPtr[2], Tk_CanvasPsY(canvas, segPtr[3]),
+                    segPtr[4], Tk_CanvasPsY(canvas, segPtr[5]),
+                    segPtr[6], Tk_CanvasPsY(canvas, segPtr[7]));
+        }
     }
 
     /*
@@ -1519,35 +1519,35 @@ TkMakeRawCurvePostscript(
      */
 
     if (i > 0) {
-	int j;
-	double control[8];
+        int j;
+        double control[8];
 
-	for (j=0; j<2*i+2; j++) {
-	    control[j] = segPtr[j];
-	}
-	for (; j<8; j++) {
-	    control[j] = pointPtr[j-2*i-2];
-	}
+        for (j=0; j<2*i+2; j++) {
+            control[j] = segPtr[j];
+        }
+        for (; j<8; j++) {
+            control[j] = pointPtr[j-2*i-2];
+        }
 
-	if (control[0]==control[2] && control[1]==control[3] &&
-		control[4]==control[6] && control[5]==control[7]) {
-	    /*
-	     * Straight line.
-	     */
+        if (control[0]==control[2] && control[1]==control[3] &&
+                control[4]==control[6] && control[5]==control[7]) {
+            /*
+             * Straight line.
+             */
 
-	    Tcl_AppendPrintfToObj(psObj, "%.15g %.15g lineto\n",
-		    control[6], Tk_CanvasPsY(canvas, control[7]));
-	} else {
-	    /*
-	     * Bezier curve segment.
-	     */
+            Tcl_AppendPrintfToObj(psObj, "%.15g %.15g lineto\n",
+                    control[6], Tk_CanvasPsY(canvas, control[7]));
+        } else {
+            /*
+             * Bezier curve segment.
+             */
 
-	    Tcl_AppendPrintfToObj(psObj,
-		    "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
-		    control[2], Tk_CanvasPsY(canvas, control[3]),
-		    control[4], Tk_CanvasPsY(canvas, control[5]),
-		    control[6], Tk_CanvasPsY(canvas, control[7]));
-	}
+            Tcl_AppendPrintfToObj(psObj,
+                    "%.15g %.15g %.15g %.15g %.15g %.15g curveto\n",
+                    control[2], Tk_CanvasPsY(canvas, control[3]),
+                    control[4], Tk_CanvasPsY(canvas, control[5]),
+                    control[6], Tk_CanvasPsY(canvas, control[7]));
+        }
     }
 
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
@@ -1559,45 +1559,45 @@ TkMakeRawCurvePostscript(
  *
  * TkGetMiterPoints --
  *
- *	Given three points forming an angle, compute the coordinates of the
- *	inside and outside points of the mitered corner formed by a line of a
- *	given width at that angle.
+ *      Given three points forming an angle, compute the coordinates of the
+ *      inside and outside points of the mitered corner formed by a line of a
+ *      given width at that angle.
  *
  * Results:
- *	If the angle formed by the three points is less than 11 degrees then 0
- *	is returned and m1 and m2 aren't modified. Otherwise 1 is returned and
- *	the points at m1 and m2 are filled in with the positions of the points
- *	of the mitered corner.
+ *      If the angle formed by the three points is less than 11 degrees then 0
+ *      is returned and m1 and m2 aren't modified. Otherwise 1 is returned and
+ *      the points at m1 and m2 are filled in with the positions of the points
+ *      of the mitered corner.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 int
 TkGetMiterPoints(
-    double p1[],		/* Points to x- and y-coordinates of point
-				 * before vertex. */
-    double p2[],		/* Points to x- and y-coordinates of vertex
-				 * for mitered joint. */
-    double p3[],		/* Points to x- and y-coordinates of point
-				 * after vertex. */
-    double width,		/* Width of line. */
-    double m1[],		/* Points to place to put "left" vertex point
-				 * (see as you face from p1 to p2). */
-    double m2[])		/* Points to place to put "right" vertex
-				 * point. */
+    double p1[],                /* Points to x- and y-coordinates of point
+                                 * before vertex. */
+    double p2[],                /* Points to x- and y-coordinates of vertex
+                                 * for mitered joint. */
+    double p3[],                /* Points to x- and y-coordinates of point
+                                 * after vertex. */
+    double width,               /* Width of line. */
+    double m1[],                /* Points to place to put "left" vertex point
+                                 * (see as you face from p1 to p2). */
+    double m2[])                /* Points to place to put "right" vertex
+                                 * point. */
 {
-    double theta1;		/* Angle of segment p2-p1. */
-    double theta2;		/* Angle of segment p2-p3. */
-    double theta;		/* Angle between line segments (angle of
-				 * joint). */
-    double theta3;		/* Angle that bisects theta1 and theta2 and
-				 * points to m1. */
-    double dist;		/* Distance of miter points from p2. */
-    double deltaX, deltaY;	/* X and y offsets cooresponding to dist
-				 * (fudge factors for bounding box). */
+    double theta1;              /* Angle of segment p2-p1. */
+    double theta2;              /* Angle of segment p2-p3. */
+    double theta;               /* Angle between line segments (angle of
+                                 * joint). */
+    double theta3;              /* Angle that bisects theta1 and theta2 and
+                                 * points to m1. */
+    double dist;                /* Distance of miter points from p2. */
+    double deltaX, deltaY;      /* X and y offsets cooresponding to dist
+                                 * (fudge factors for bounding box). */
     double p1x, p1y, p2x, p2y, p3x, p3y;
 #ifndef _MSC_VER
     static const double elevenDegrees = (11.0*2.0*PI)/360.0;
@@ -1619,35 +1619,35 @@ TkGetMiterPoints(
     p3y = floor(p3[1]+0.5);
 
     if (p2y == p1y) {
-	theta1 = (p2x < p1x) ? 0 : PI;
+        theta1 = (p2x < p1x) ? 0 : PI;
     } else if (p2x == p1x) {
-	theta1 = (p2y < p1y) ? PI/2.0 : -PI/2.0;
+        theta1 = (p2y < p1y) ? PI/2.0 : -PI/2.0;
     } else {
-	theta1 = atan2(p1y - p2y, p1x - p2x);
+        theta1 = atan2(p1y - p2y, p1x - p2x);
     }
 
     if (p3y == p2y) {
-	theta2 = (p3x > p2x) ? 0 : PI;
+        theta2 = (p3x > p2x) ? 0 : PI;
     } else if (p3x == p2x) {
-	theta2 = (p3y > p2y) ? PI/2.0 : -PI/2.0;
+        theta2 = (p3y > p2y) ? PI/2.0 : -PI/2.0;
     } else {
-	theta2 = atan2(p3y - p2y, p3x - p2x);
+        theta2 = atan2(p3y - p2y, p3x - p2x);
     }
 
     theta = theta1 - theta2;
     if (theta > PI) {
-	theta -= 2*PI;
+        theta -= 2*PI;
     } else if (theta < -PI) {
-	theta += 2*PI;
+        theta += 2*PI;
     }
 
     if ((theta < elevenDegrees) && (theta > -elevenDegrees)) {
-	return 0;
+        return 0;
     }
 
     dist = 0.5*width/sin(0.5*theta);
     if (dist < 0.0) {
-	dist = -dist;
+        dist = -dist;
     }
 
     /*
@@ -1657,7 +1657,7 @@ TkGetMiterPoints(
 
     theta3 = (theta1 + theta2)/2.0;
     if (sin(theta3 - (theta1 + PI)) < 0.0) {
-	theta3 += PI;
+        theta3 += PI;
     }
     deltaX = dist*cos(theta3);
     m1[0] = p2x + deltaX;
@@ -1674,73 +1674,73 @@ TkGetMiterPoints(
  *
  * TkGetButtPoints --
  *
- *	Given two points forming a line segment, compute the coordinates of
- *	two endpoints of a rectangle formed by bloating the line segment until
- *	it is width units wide.
+ *      Given two points forming a line segment, compute the coordinates of
+ *      two endpoints of a rectangle formed by bloating the line segment until
+ *      it is width units wide.
  *
  * Results:
- *	There is no return value. M1 and m2 are filled in to correspond to m1
- *	and m2 in the diagram below:
+ *      There is no return value. M1 and m2 are filled in to correspond to m1
+ *      and m2 in the diagram below:
  *
- *		   ----------------* m1
- *				   |
- *		p1 *---------------* p2
- *				   |
- *		   ----------------* m2
+ *                 ----------------* m1
+ *                                 |
+ *              p1 *---------------* p2
+ *                                 |
+ *                 ----------------* m2
  *
- *	M1 and m2 will be W units apart, with p2 centered between them and
- *	m1-m2 perpendicular to p1-p2. However, if "project" is true then m1
- *	and m2 will be as follows:
+ *      M1 and m2 will be W units apart, with p2 centered between them and
+ *      m1-m2 perpendicular to p1-p2. However, if "project" is true then m1
+ *      and m2 will be as follows:
  *
- *		   -------------------* m1
- *				  p2  |
- *		p1 *---------------*  |
- *				      |
- *		   -------------------* m2
+ *                 -------------------* m1
+ *                                p2  |
+ *              p1 *---------------*  |
+ *                                    |
+ *                 -------------------* m2
  *
- *	In this case p2 will be width/2 units from the segment m1-m2.
+ *      In this case p2 will be width/2 units from the segment m1-m2.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkGetButtPoints(
-    double p1[],		/* Points to x- and y-coordinates of point
-				 * before vertex. */
-    double p2[],		/* Points to x- and y-coordinates of vertex
-				 * for mitered joint. */
-    double width,		/* Width of line. */
-    int project,		/* Non-zero means project p2 by an additional
-				 * width/2 before computing m1 and m2. */
-    double m1[],		/* Points to place to put "left" result point,
-				 * as you face from p1 to p2. */
-    double m2[])		/* Points to place to put "right" result
-				 * point. */
+    double p1[],                /* Points to x- and y-coordinates of point
+                                 * before vertex. */
+    double p2[],                /* Points to x- and y-coordinates of vertex
+                                 * for mitered joint. */
+    double width,               /* Width of line. */
+    int project,                /* Non-zero means project p2 by an additional
+                                 * width/2 before computing m1 and m2. */
+    double m1[],                /* Points to place to put "left" result point,
+                                 * as you face from p1 to p2. */
+    double m2[])                /* Points to place to put "right" result
+                                 * point. */
 {
-    double length;		/* Length of p1-p2 segment. */
-    double deltaX, deltaY;	/* Increments in coords. */
+    double length;              /* Length of p1-p2 segment. */
+    double deltaX, deltaY;      /* Increments in coords. */
 
     width *= 0.5;
     length = hypot(p2[0] - p1[0], p2[1] - p1[1]);
     if (length == 0.0) {
-	m1[0] = m2[0] = p2[0];
-	m1[1] = m2[1] = p2[1];
+        m1[0] = m2[0] = p2[0];
+        m1[1] = m2[1] = p2[1];
     } else {
-	deltaX = -width * (p2[1] - p1[1]) / length;
-	deltaY = width * (p2[0] - p1[0]) / length;
-	m1[0] = p2[0] + deltaX;
-	m2[0] = p2[0] - deltaX;
-	m1[1] = p2[1] + deltaY;
-	m2[1] = p2[1] - deltaY;
-	if (project) {
-	    m1[0] += deltaY;
-	    m2[0] += deltaY;
-	    m1[1] -= deltaX;
-	    m2[1] -= deltaX;
-	}
+        deltaX = -width * (p2[1] - p1[1]) / length;
+        deltaY = width * (p2[0] - p1[0]) / length;
+        m1[0] = p2[0] + deltaX;
+        m2[0] = p2[0] - deltaX;
+        m1[1] = p2[1] + deltaY;
+        m2[1] = p2[1] - deltaY;
+        if (project) {
+            m1[0] += deltaY;
+            m2[0] += deltaY;
+            m1[1] -= deltaX;
+            m2[1] -= deltaX;
+        }
     }
 }
 

@@ -147,7 +147,7 @@ test canvText-3.4 {TextCoords procedure} -setup {
     .c coords test 10 10
     set result {}
     foreach element [.c coords test] {
-	lappend result [format %.1f $element]
+        lappend result [format %.1f $element]
     }
     return $result
 } -cleanup {
@@ -249,13 +249,13 @@ test canvText-4.6 {ConfigureText procedure: adjust cursor} -setup {
     .c dchars test 4 end
     .c index test insert
 } -cleanup {
-	.c delete test
+        .c delete test
 } -result {4}
 
 
 test canvText-5.1 {ConfigureText procedure: adjust cursor} -body {
     .c create text 10 10 -tag x -fill blue -font "times 40" -stipple gray50 \
-	-text "xyz"
+        -text "xyz"
     .c delete x
 } -result {}
 
@@ -269,7 +269,7 @@ test canvText-6.1 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor n; .c bbox test] \
-	      eq "[expr -$ax/2-1] 0 [expr $ax/2+1] $ay"}
+              eq "[expr -$ax/2-1] 0 [expr $ax/2+1] $ay"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -282,7 +282,7 @@ test canvText-6.2 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor nw; .c bbox test] \
-	      eq "-1 0 [expr $ax+1] $ay"}
+              eq "-1 0 [expr $ax+1] $ay"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -295,7 +295,7 @@ test canvText-6.3 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor w; .c bbox test] \
-	      eq "-1 [expr -$ay/2] [expr $ax+1] [expr $ay/2]"}
+              eq "-1 [expr -$ay/2] [expr $ax+1] [expr $ay/2]"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -308,7 +308,7 @@ test canvText-6.4 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor sw; .c bbox test] \
-	      eq "-1 -$ay [expr $ax+1] 0"}
+              eq "-1 -$ay [expr $ax+1] 0"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -321,7 +321,7 @@ test canvText-6.5 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor s; .c bbox test] \
-	      eq "[expr -$ax/2-1] -$ay [expr $ax/2+1] 0"}
+              eq "[expr -$ax/2-1] -$ay [expr $ax/2+1] 0"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -334,7 +334,7 @@ test canvText-6.6 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor se; .c bbox test] \
-	      eq "[expr -$ax-1] -$ay 1 0"}
+              eq "[expr -$ax-1] -$ay 1 0"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -347,7 +347,7 @@ test canvText-6.7 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor e; .c bbox test]\
-	      eq "[expr -$ax-1] [expr -$ay/2] 1 [expr $ay/2]"}
+              eq "[expr -$ax-1] [expr -$ay/2] 1 [expr $ay/2]"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -360,7 +360,7 @@ test canvText-6.8 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor ne; .c bbox test] \
-	      eq "[expr -$ax-1] 0 1 $ay"}
+              eq "[expr -$ax-1] 0 1 $ay"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -373,7 +373,7 @@ test canvText-6.9 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor center; .c bbox test] \
-	      eq "[expr -$ax/2-1] [expr -$ay/2] [expr $ax/2+1] [expr $ay/2]"}
+              eq "[expr -$ax/2-1] [expr -$ay/2] [expr $ax/2+1] [expr $ay/2]"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -694,7 +694,7 @@ test canvText-10.1 {TextToPoint procedure} -body {
     .c itemconfig test -text 0 -anchor center
     .c index test @0,0
 } -cleanup {
-	.c delete test
+        .c delete test
 } -result {0}
 
 
@@ -718,7 +718,7 @@ test canvText-11.2 {TextToArea procedure} -setup {
     .c itemconfig test -text 0 -anchor center
     .c find overlapping 1000 1000 1001 1001
 } -cleanup {
-	.c delete test
+        .c delete test
 } -result {}
 
 
@@ -727,16 +727,16 @@ test canvText-12.1 {ScaleText procedure} -body {
     .c scale all 50 50 2 2
     format {%.6g %.6g} {*}[.c coords test]
 } -cleanup {
-	.c delete test
+        .c delete test
 } -result {150 150}
 
 
 test canvText-13.1 {TranslateText procedure} -body {
-	.c create text 100 100 -tag test
+        .c create text 100 100 -tag test
     .c move all 10 10
     format {%.6g %.6g} {*}[.c coords test]
 } -cleanup {
-	.c delete test
+        .c delete test
 } -result {110 110}
 
 
@@ -751,9 +751,9 @@ test canvText-14.1 {GetTextIndex procedure} -setup {
     .c icursor test 12
     .c coords test 0 0
     list [.c index test end] [.c index test insert] \
-	[.c index test sel.first] [.c index test sel.last] \
-	[.c index test @0,0] \
-	[.c index test -1] [.c index test 10] [.c index test 100]
+        [.c index test sel.first] [.c index test sel.last] \
+        [.c index test @0,0] \
+        [.c index test -1] [.c index test 10] [.c index test 100]
 } -cleanup {
     .c delete test
 } -result {15 12 5 8 0 0 10 15}
@@ -925,8 +925,8 @@ test canvText-20.1 {angled text bounding box} -setup {
     destroy .c
     canvas .c
     proc transpose {bbox} {
-	lassign $bbox a b c d
-	list $b $a $d $c
+        lassign $bbox a b c d
+        list $b $a $d $c
     }
 } -body {
     .c create text 2 2 -tag t -anchor center -text 0 -font {Helvetica 24}
@@ -938,8 +938,8 @@ test canvText-20.1 {angled text bounding box} -setup {
     .c itemconf t -angle 270
     set bb3 [.c bbox t]
     list [expr {$bb0 eq $bb2 ? "ok" : "$bb0,$bb2"}] \
-	[expr {$bb1 eq $bb3 ? "ok" : "$bb1,$bb3"}] \
-	[expr {$bb0 eq [transpose $bb1] ? "ok" : "$bb0,$bb1"}] \
+        [expr {$bb1 eq $bb3 ? "ok" : "$bb1,$bb3"}] \
+        [expr {$bb0 eq [transpose $bb1] ? "ok" : "$bb0,$bb1"}] \
 } -cleanup {
     destroy .c
     rename transpose {}

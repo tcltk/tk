@@ -1,8 +1,8 @@
 /*
  * tkWinKey.c --
  *
- *	This file contains X emulation routines for keyboard related
- *	functions.
+ *      This file contains X emulation routines for keyboard related
+ *      functions.
  *
  * Copyright (c) 1995 Sun Microsystems, Inc.
  *
@@ -67,32 +67,32 @@ static const KeySym keymap[] = {
  * Prototypes for local functions defined in this file:
  */
 
-static KeySym		KeycodeToKeysym(unsigned int keycode,
-			    int state, int noascii);
+static KeySym           KeycodeToKeysym(unsigned int keycode,
+                            int state, int noascii);
 
 /*
  *----------------------------------------------------------------------
  *
  * TkpGetString --
  *
- *	Retrieve the UTF string equivalent for the given keyboard event.
+ *      Retrieve the UTF string equivalent for the given keyboard event.
  *
  * Results:
- *	Returns the UTF string.
+ *      Returns the UTF string.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred: needed to get
-				 * input context. */
-    XEvent *eventPtr,		/* X keyboard event. */
-    Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
-				 * result. */
+    TkWindow *winPtr,           /* Window where event occurred: needed to get
+                                 * input context. */
+    XEvent *eventPtr,           /* X keyboard event. */
+    Tcl_DString *dsPtr)         /* Uninitialized or empty string to hold
+                                 * result. */
 {
     XKeyEvent *keyEv = &eventPtr->xkey;
     char buf[6];
@@ -100,31 +100,31 @@ TkpGetString(
 
     Tcl_DStringInit(dsPtr);
     if (keyEv->send_event == -1) {
-	if (keyEv->nbytes > 0) {
-	    Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
-		    keyEv->trans_chars, keyEv->nbytes, dsPtr);
-	}
+        if (keyEv->nbytes > 0) {
+            Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
+                    keyEv->trans_chars, keyEv->nbytes, dsPtr);
+        }
     } else if (keyEv->send_event == -3) {
 
-	/*
-	 * Special case for WM_UNICHAR and win2000 multi-lingal IME input
-	 */
+        /*
+         * Special case for WM_UNICHAR and win2000 multi-lingal IME input
+         */
 
-	len = TkUniCharToUtf(keyEv->keycode, buf);
-	Tcl_DStringAppend(dsPtr, buf, len);
+        len = TkUniCharToUtf(keyEv->keycode, buf);
+        Tcl_DStringAppend(dsPtr, buf, len);
     } else {
-	/*
-	 * This is an event generated from generic code. It has no nchars or
-	 * trans_chars members.
-	 */
+        /*
+         * This is an event generated from generic code. It has no nchars or
+         * trans_chars members.
+         */
 
-	KeySym keysym = KeycodeToKeysym(keyEv->keycode, keyEv->state, 0);
+        KeySym keysym = KeycodeToKeysym(keyEv->keycode, keyEv->state, 0);
 
-	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
-		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    len = Tcl_UniCharToUtf((Tcl_UniChar) (keysym & 255), buf);
-	    Tcl_DStringAppend(dsPtr, buf, len);
-	}
+        if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
+                || (keysym == XK_Return) || (keysym == XK_Tab)) {
+            len = Tcl_UniCharToUtf((Tcl_UniChar) (keysym & 255), buf);
+            Tcl_DStringAppend(dsPtr, buf, len);
+        }
     }
     return Tcl_DStringValue(dsPtr);
 }
@@ -134,14 +134,14 @@ TkpGetString(
  *
  * XKeycodeToKeysym --
  *
- *	Translate from a system-dependent keycode to a system-independent
- *	keysym.
+ *      Translate from a system-dependent keycode to a system-independent
+ *      keysym.
  *
  * Results:
- *	Returns the translated keysym, or NoSymbol on failure.
+ *      Returns the translated keysym, or NoSymbol on failure.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -155,7 +155,7 @@ XKeycodeToKeysym(
     int state = 0;
 
     if (index & 0x01) {
-	state |= ShiftMask;
+        state |= ShiftMask;
     }
     return KeycodeToKeysym(keycode, state, 0);
 }
@@ -165,15 +165,15 @@ XKeycodeToKeysym(
  *
  * KeycodeToKeysym --
  *
- *	Translate from a system-dependent keycode to a system-independent
- *	keysym.
+ *      Translate from a system-dependent keycode to a system-independent
+ *      keysym.
  *
  * Results:
- *	Returns the translated keysym, or NoSymbol on failure.
+ *      Returns the translated keysym, or NoSymbol on failure.
  *
  * Side effects:
- *	It may affect the internal state of the keyboard, such as remembered
- *	dead key or lock indicator lamps.
+ *      It may affect the internal state of the keyboard, such as remembered
+ *      dead key or lock indicator lamps.
  *
  *----------------------------------------------------------------------
  */
@@ -196,8 +196,8 @@ KeycodeToKeysym(
      */
 
     if (noascii || keycode == VK_CAPITAL || keycode == VK_SCROLL ||
-	    keycode == VK_NUMLOCK) {
-	goto skipToUnicode;
+            keycode == VK_NUMLOCK) {
+        goto skipToUnicode;
     }
 
     /*
@@ -205,7 +205,7 @@ KeycodeToKeysym(
      */
 
     if (MapVirtualKey(keycode, 2) > 0x7fffUL) {
-	return XK_Multi_key;
+        return XK_Multi_key;
     }
 
     /*
@@ -214,13 +214,13 @@ KeycodeToKeysym(
 
     memset(keys, 0, 256);
     if (state & ShiftMask) {
-	keys[VK_SHIFT] = 0x80;
+        keys[VK_SHIFT] = 0x80;
     }
     if (state & ControlMask) {
-	keys[VK_CONTROL] = 0x80;
+        keys[VK_CONTROL] = 0x80;
     }
     if (state & Mod2Mask) {
-	keys[VK_MENU] = 0x80;
+        keys[VK_MENU] = 0x80;
     }
 
     /*
@@ -229,59 +229,59 @@ KeycodeToKeysym(
      */
 
     if (state & LockMask) {
-	keys[VK_CAPITAL] = 1;
+        keys[VK_CAPITAL] = 1;
     }
     if (state & Mod3Mask) {
-	keys[VK_SCROLL] = 1;
+        keys[VK_SCROLL] = 1;
     }
     if (state & Mod1Mask) {
-	keys[VK_NUMLOCK] = 1;
+        keys[VK_NUMLOCK] = 1;
     }
 
     result = ToUnicode(keycode, scancode, keys, buf, 4, 0);
 
     if (result < 0) {
-	/*
-	 * Win95/98: This was a dead char, which is now remembered by the
-	 * keyboard. Call ToUnicode() again to forget it.
-	 * WinNT: This was a dead char, overwriting any previously remembered
-	 * key. Calling ToUnicode() again does not affect anything.
-	 */
+        /*
+         * Win95/98: This was a dead char, which is now remembered by the
+         * keyboard. Call ToUnicode() again to forget it.
+         * WinNT: This was a dead char, overwriting any previously remembered
+         * key. Calling ToUnicode() again does not affect anything.
+         */
 
-	ToUnicode(keycode, scancode, keys, buf, 4, 0);
-	return XK_Multi_key;
+        ToUnicode(keycode, scancode, keys, buf, 4, 0);
+        return XK_Multi_key;
     }
 
     if (result == 2) {
-	/*
-	 * This was a dead char, and there were one previously remembered by
-	 * the keyboard. Call ToUnicode() again with proper parameters to
-	 * restore it.
-	 *
-	 * Get information about the old char
-	 */
+        /*
+         * This was a dead char, and there were one previously remembered by
+         * the keyboard. Call ToUnicode() again with proper parameters to
+         * restore it.
+         *
+         * Get information about the old char
+         */
 
-	deadkey = VkKeyScan(buf[0]);
-	shift = deadkey >> 8;
-	deadkey &= 255;
-	scancode = MapVirtualKey(deadkey, 0);
+        deadkey = VkKeyScan(buf[0]);
+        shift = deadkey >> 8;
+        deadkey &= 255;
+        scancode = MapVirtualKey(deadkey, 0);
 
-	/*
-	 * Set up a keyboard with proper modifier keys
-	 */
+        /*
+         * Set up a keyboard with proper modifier keys
+         */
 
-	memset(keys, 0, 256);
-	if (shift & 1) {
-	    keys[VK_SHIFT] = 0x80;
-	}
-	if (shift & 2) {
-	    keys[VK_CONTROL] = 0x80;
-	}
-	if (shift & 4) {
-	    keys[VK_MENU] = 0x80;
-	}
-	ToUnicode(deadkey, scancode, keys, buf, 4, 0);
-	return XK_Multi_key;
+        memset(keys, 0, 256);
+        if (shift & 1) {
+            keys[VK_SHIFT] = 0x80;
+        }
+        if (shift & 2) {
+            keys[VK_CONTROL] = 0x80;
+        }
+        if (shift & 4) {
+            keys[VK_MENU] = 0x80;
+        }
+        ToUnicode(deadkey, scancode, keys, buf, 4, 0);
+        return XK_Multi_key;
     }
 
     /*
@@ -310,7 +310,7 @@ KeycodeToKeysym(
      */
 
     if (result == 1 && buf[0] >= 0x20 && buf[0] != 0x7F) {
-	return (KeySym) buf[0];
+        return (KeySym) buf[0];
     }
 
     /*
@@ -319,41 +319,41 @@ KeycodeToKeysym(
 
   skipToUnicode:
     if (keycode > MAX_KEYCODE) {
-	return NoSymbol;
+        return NoSymbol;
     }
     switch (keycode) {
-	/*
-	 * Windows only gives us an undifferentiated VK_CONTROL code (for
-	 * example) when either Control key is pressed. To distinguish between
-	 * left and right, we use the Extended flag. Indeed, the right Control
-	 * and Alt (aka Menu) keys are such extended keys (which their left
-	 * counterparts are not).
-	 * Regarding the shift case, Windows does not set the Extended flag for
-	 * the neither the left nor the right shift key. As a consequence another
-	 * way to distinguish between the two keys is to query the state of one
-	 * of the two to determine which was actually pressed. So if the keycode
-	 * indicates Shift, do this extra test. If the right-side key was
-	 * pressed, return the appropriate keycode. Otherwise, we fall through
-	 * and rely on the keymap table to hold the correct keysym value.
-	 * Note: this little trick only works for KeyPress, not for KeyRelease,
-	 * for reasons stated in bug [2945130]
-	 */
+        /*
+         * Windows only gives us an undifferentiated VK_CONTROL code (for
+         * example) when either Control key is pressed. To distinguish between
+         * left and right, we use the Extended flag. Indeed, the right Control
+         * and Alt (aka Menu) keys are such extended keys (which their left
+         * counterparts are not).
+         * Regarding the shift case, Windows does not set the Extended flag for
+         * the neither the left nor the right shift key. As a consequence another
+         * way to distinguish between the two keys is to query the state of one
+         * of the two to determine which was actually pressed. So if the keycode
+         * indicates Shift, do this extra test. If the right-side key was
+         * pressed, return the appropriate keycode. Otherwise, we fall through
+         * and rely on the keymap table to hold the correct keysym value.
+         * Note: this little trick only works for KeyPress, not for KeyRelease,
+         * for reasons stated in bug [2945130]
+         */
 
     case VK_CONTROL:
         if (state & EXTENDED_MASK) {
             return XK_Control_R;
         }
-	break;
+        break;
     case VK_SHIFT:
-	if (GetKeyState(VK_RSHIFT) & 0x80) {
-	    return XK_Shift_R;
-	}
-	break;
+        if (GetKeyState(VK_RSHIFT) & 0x80) {
+            return XK_Shift_R;
+        }
+        break;
     case VK_MENU:
         if (state & EXTENDED_MASK) {
             return XK_Alt_R;
         }
-	break;
+        break;
     }
     return keymap[keycode];
 }
@@ -363,24 +363,24 @@ KeycodeToKeysym(
  *
  * TkpGetKeySym --
  *
- *	Given an X KeyPress or KeyRelease event, map the keycode in the event
- *	into a KeySym.
+ *      Given an X KeyPress or KeyRelease event, map the keycode in the event
+ *      into a KeySym.
  *
  * Results:
- *	The return value is the KeySym corresponding to eventPtr, or NoSymbol
- *	if no matching Keysym could be found.
+ *      The return value is the KeySym corresponding to eventPtr, or NoSymbol
+ *      if no matching Keysym could be found.
  *
  * Side effects:
- *	In the first call for a given display, keycode-to-KeySym maps get
- *	loaded.
+ *      In the first call for a given display, keycode-to-KeySym maps get
+ *      loaded.
  *
  *----------------------------------------------------------------------
  */
 
 KeySym
 TkpGetKeySym(
-    TkDisplay *dispPtr,		/* Display in which to map keycode. */
-    XEvent *eventPtr)		/* Description of X event. */
+    TkDisplay *dispPtr,         /* Display in which to map keycode. */
+    XEvent *eventPtr)           /* Description of X event. */
 {
     KeySym sym;
     int state = eventPtr->xkey.state;
@@ -390,7 +390,7 @@ TkpGetKeySym(
      */
 
     if (dispPtr->bindInfoStale) {
-	TkpInitKeymapInfo(dispPtr);
+        TkpInitKeymapInfo(dispPtr);
     }
 
     sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
@@ -401,12 +401,12 @@ TkpGetKeySym(
      */
 
     if ((sym == NoSymbol) && ((state & ControlMask) || (state & Mod2Mask))) {
-	state &= ~(ControlMask | Mod2Mask);
-	sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
+        state &= ~(ControlMask | Mod2Mask);
+        sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
     }
     if ((sym == NoSymbol) && (state & ShiftMask)) {
-	state &= ~ShiftMask;
-	sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
+        state &= ~ShiftMask;
+        sym = KeycodeToKeysym(eventPtr->xkey.keycode, state, 0);
     }
     return sym;
 }
@@ -416,23 +416,23 @@ TkpGetKeySym(
  *
  * TkpInitKeymapInfo --
  *
- *	This function is invoked to scan keymap information to recompute stuff
- *	that's important for binding, such as the modifier key (if any) that
- *	corresponds to "mode switch".
+ *      This function is invoked to scan keymap information to recompute stuff
+ *      that's important for binding, such as the modifier key (if any) that
+ *      corresponds to "mode switch".
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Keymap-related information in dispPtr is updated.
+ *      Keymap-related information in dispPtr is updated.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkpInitKeymapInfo(
-    TkDisplay *dispPtr)		/* Display for which to recompute keymap
-				 * information. */
+    TkDisplay *dispPtr)         /* Display for which to recompute keymap
+                                 * information. */
 {
     XModifierKeymap *modMapPtr;
     KeyCode *codePtr;
@@ -452,18 +452,18 @@ TkpInitKeymapInfo(
     dispPtr->lockUsage = LU_IGNORE;
     codePtr = modMapPtr->modifiermap + modMapPtr->max_keypermod*LockMapIndex;
     for (count = modMapPtr->max_keypermod; count > 0; count--, codePtr++) {
-	if (*codePtr == 0) {
-	    continue;
-	}
-	keysym = KeycodeToKeysym(*codePtr, 0, 1);
-	if (keysym == XK_Shift_Lock) {
-	    dispPtr->lockUsage = LU_SHIFT;
-	    break;
-	}
-	if (keysym == XK_Caps_Lock) {
-	    dispPtr->lockUsage = LU_CAPS;
-	    break;
-	}
+        if (*codePtr == 0) {
+            continue;
+        }
+        keysym = KeycodeToKeysym(*codePtr, 0, 1);
+        if (keysym == XK_Shift_Lock) {
+            dispPtr->lockUsage = LU_SHIFT;
+            break;
+        }
+        if (keysym == XK_Caps_Lock) {
+            dispPtr->lockUsage = LU_CAPS;
+            break;
+        }
     }
 
     /*
@@ -478,19 +478,19 @@ TkpInitKeymapInfo(
     codePtr = modMapPtr->modifiermap;
     max = 8*modMapPtr->max_keypermod;
     for (i = 0; i < max; i++, codePtr++) {
-	if (*codePtr == 0) {
-	    continue;
-	}
-	keysym = KeycodeToKeysym(*codePtr, 0, 1);
-	if (keysym == XK_Mode_switch) {
-	    dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-	}
-	if ((keysym == XK_Meta_L) || (keysym == XK_Meta_R)) {
-	    dispPtr->metaModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-	}
-	if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R)) {
-	    dispPtr->altModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
-	}
+        if (*codePtr == 0) {
+            continue;
+        }
+        keysym = KeycodeToKeysym(*codePtr, 0, 1);
+        if (keysym == XK_Mode_switch) {
+            dispPtr->modeModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
+        }
+        if ((keysym == XK_Meta_L) || (keysym == XK_Meta_R)) {
+            dispPtr->metaModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
+        }
+        if ((keysym == XK_Alt_L) || (keysym == XK_Alt_R)) {
+            dispPtr->altModMask |= ShiftMask << (i/modMapPtr->max_keypermod);
+        }
     }
 
     /*
@@ -498,42 +498,42 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree(dispPtr->modKeyCodes);
+        ckfree(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
     dispPtr->modKeyCodes = ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
-	if (*codePtr == 0) {
-	    continue;
-	}
+        if (*codePtr == 0) {
+            continue;
+        }
 
-	/*
-	 * Make sure that the keycode isn't already in the array.
-	 */
+        /*
+         * Make sure that the keycode isn't already in the array.
+         */
 
-	for (j = 0; j < dispPtr->numModKeyCodes; j++) {
-	    if (dispPtr->modKeyCodes[j] == *codePtr) {
-		goto nextModCode;
-	    }
-	}
-	if (dispPtr->numModKeyCodes >= arraySize) {
-	    KeyCode *new;
+        for (j = 0; j < dispPtr->numModKeyCodes; j++) {
+            if (dispPtr->modKeyCodes[j] == *codePtr) {
+                goto nextModCode;
+            }
+        }
+        if (dispPtr->numModKeyCodes >= arraySize) {
+            KeyCode *new;
 
-	    /*
-	     * Ran out of space in the array; grow it.
-	     */
+            /*
+             * Ran out of space in the array; grow it.
+             */
 
-	    arraySize *= 2;
-	    new = ckalloc(arraySize * sizeof(KeyCode));
-	    memcpy(new, dispPtr->modKeyCodes,
-		    dispPtr->numModKeyCodes * sizeof(KeyCode));
-	    ckfree(dispPtr->modKeyCodes);
-	    dispPtr->modKeyCodes = new;
-	}
-	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
-	dispPtr->numModKeyCodes++;
-	nextModCode: continue;
+            arraySize *= 2;
+            new = ckalloc(arraySize * sizeof(KeyCode));
+            memcpy(new, dispPtr->modKeyCodes,
+                    dispPtr->numModKeyCodes * sizeof(KeyCode));
+            ckfree(dispPtr->modKeyCodes);
+            dispPtr->modKeyCodes = new;
+        }
+        dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
+        dispPtr->numModKeyCodes++;
+        nextModCode: continue;
     }
     XFreeModifiermap(modMapPtr);
 }
@@ -556,7 +556,7 @@ TkpSetKeycodeAndState(
 
     eventPtr->xkey.keycode = 0;
     if (keySym == NoSymbol) {
-	return;
+        return;
     }
 
     /*
@@ -566,23 +566,23 @@ TkpSetKeycodeAndState(
      */
 
     for (i = 0; i <= MAX_KEYCODE; i++) {
-	if (keymap[i] == keySym) {
-	    eventPtr->xkey.keycode = i;
-	    return;
-	}
+        if (keymap[i] == keySym) {
+            eventPtr->xkey.keycode = i;
+            return;
+        }
     }
     if (keySym >= 0x20) {
-	result = VkKeyScan((TCHAR) keySym);
-	if (result != -1) {
-	    shift = result >> 8;
-	    if (shift & 1)
-		eventPtr->xkey.state |= ShiftMask;
-	    if (shift & 2)
-		eventPtr->xkey.state |= ControlMask;
-	    if (shift & 4)
-		eventPtr->xkey.state |= Mod2Mask;
-	    eventPtr->xkey.keycode = (KeyCode) (result & 0xff);
-	}
+        result = VkKeyScan((TCHAR) keySym);
+        if (result != -1) {
+            shift = result >> 8;
+            if (shift & 1)
+                eventPtr->xkey.state |= ShiftMask;
+            if (shift & 2)
+                eventPtr->xkey.state |= ControlMask;
+            if (shift & 4)
+                eventPtr->xkey.state |= Mod2Mask;
+            eventPtr->xkey.keycode = (KeyCode) (result & 0xff);
+        }
     }
 }
 
@@ -591,13 +591,13 @@ TkpSetKeycodeAndState(
  *
  * XKeysymToKeycode --
  *
- *	Translate a keysym back into a keycode.
+ *      Translate a keysym back into a keycode.
  *
  * Results:
- *	Returns the keycode that would generate the specified keysym.
+ *      Returns the keycode that would generate the specified keysym.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -617,18 +617,18 @@ XKeysymToKeycode(
      */
 
     if (keysym == NoSymbol) {
-	return 0;
+        return 0;
     }
     for (i = 0; i <= MAX_KEYCODE; i++) {
-	if (keymap[i] == keysym) {
-	    return ((KeyCode) i);
-	}
+        if (keymap[i] == keysym) {
+            return ((KeyCode) i);
+        }
     }
     if (keysym >= 0x20) {
-	result = VkKeyScan((TCHAR) keysym);
-	if (result != -1) {
-	    return (KeyCode) (result & 0xff);
-	}
+        result = VkKeyScan((TCHAR) keysym);
+        if (result != -1) {
+            return (KeyCode) (result & 0xff);
+        }
     }
 
     return 0;
@@ -639,18 +639,18 @@ XKeysymToKeycode(
  *
  * XGetModifierMapping --
  *
- *	Fetch the current keycodes used as modifiers.
+ *      Fetch the current keycodes used as modifiers.
  *
  * Results:
- *	Returns a new modifier map.
+ *      Returns a new modifier map.
  *
  * Side effects:
- *	Allocates a new modifier map data structure.
+ *      Allocates a new modifier map data structure.
  *
  *----------------------------------------------------------------------
  */
 
-XModifierKeymap	*
+XModifierKeymap *
 XGetModifierMapping(
     Display *display)
 {
@@ -674,13 +674,13 @@ XGetModifierMapping(
  *
  * XFreeModifiermap --
  *
- *	Deallocate a modifier map that was created by XGetModifierMapping.
+ *      Deallocate a modifier map that was created by XGetModifierMapping.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Frees the datastructure referenced by modmap.
+ *      Frees the datastructure referenced by modmap.
  *
  *----------------------------------------------------------------------
  */
@@ -699,14 +699,14 @@ XFreeModifiermap(
  *
  * XStringToKeysym --
  *
- *	Translate a keysym name to the matching keysym.
+ *      Translate a keysym name to the matching keysym.
  *
  * Results:
- *	Returns the keysym. Since this is already handled by Tk's
- *	StringToKeysym function, we just return NoSymbol.
+ *      Returns the keysym. Since this is already handled by Tk's
+ *      StringToKeysym function, we just return NoSymbol.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -723,13 +723,13 @@ XStringToKeysym(
  *
  * XKeysymToString --
  *
- *	Convert a keysym to character form.
+ *      Convert a keysym to character form.
  *
  * Results:
- *	Returns NULL, since Tk will have handled this already.
+ *      Returns NULL, since Tk will have handled this already.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */

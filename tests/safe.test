@@ -36,15 +36,15 @@ namespace import -force tcltest::test
 set hidden_cmds {bell cd clipboard encoding exec exit fconfigure glob grab load menu open pwd selection socket source tcl:encoding:dirs toplevel unload wm}
 lappend hidden_cmds {*}[apply {{} {
     foreach cmd {
-	atime attributes copy delete dirname executable exists extension
-	isdirectory isfile link lstat mkdir mtime nativename normalize owned
-	readable readlink rename rootname size stat tail tempfile type
-	volumes writable
+        atime attributes copy delete dirname executable exists extension
+        isdirectory isfile link lstat mkdir mtime nativename normalize owned
+        readable readlink rename rootname size stat tail tempfile type
+        volumes writable
     } {lappend result tcl:file:$cmd}; return $result
 }}]
 if {[tk windowingsystem] ne "x11"} {
     lappend hidden_cmds tk_chooseColor tk_chooseDirectory tk_getOpenFile \
-	tk_getSaveFile tk_messageBox
+        tk_getSaveFile tk_messageBox
 }
 if {[llength [info commands send]]} {
     lappend hidden_cmds send
@@ -88,7 +88,7 @@ test safe-2.1 {Unsafe commands not available} -setup {
     safe::loadTk a
     set status broken
     if {[catch {interp eval a {toplevel .t}} msg]} {
-	set status ok
+        set status ok
     }
     return $status
 } -cleanup {
@@ -101,7 +101,7 @@ test safe-2.2 {Unsafe commands not available} -setup {
     safe::loadTk a
     set status broken
     if {[catch {interp eval a {menu .m}} msg]} {
-	set status ok
+        set status ok
     }
     return $status
 } -cleanup {
@@ -114,7 +114,7 @@ test safe-2.3 {Unsafe subcommands not available} -setup {
     safe::loadTk a
     set status broken
     if {[catch {interp eval a {tk appname}} msg]} {
-	set status ok
+        set status ok
     }
     list $status $msg
 } -cleanup {
@@ -127,7 +127,7 @@ test safe-2.4 {Unsafe subcommands not available} -setup {
     safe::loadTk a
     set status broken
     if {[catch {interp eval a {tk scaling}} msg]} {
-	set status ok
+        set status ok
     }
     list $status $msg
 } -cleanup {
@@ -141,7 +141,7 @@ test safe-3.1 {Unsafe commands are available hidden} -setup {
     safe::loadTk a
     set status ok
     if {[catch {interp invokehidden a toplevel .t} msg]} {
-	set status broken
+        set status broken
     }
     return $status
 } -cleanup {
@@ -154,7 +154,7 @@ test safe-3.2 {Unsafe commands are available hidden} -setup {
     safe::loadTk a
     set status ok
     if {[catch {interp invokehidden a menu .m} msg]} {
-	set status broken
+        set status broken
     }
     return $status
 } -cleanup {
@@ -195,9 +195,9 @@ test safe-5.2 {multi-level Tk loading with clearance} -setup {
     set i [safe::interpCreate [list $safeParent x]]
     safe::loadTk $i
     interp eval $i {
-	button .b -text Ok -command {destroy .}
-	pack .b
-#	tkwait window . ; # for interactive testing/debugging
+        button .b -text Ok -command {destroy .}
+        pack .b
+#       tkwait window . ; # for interactive testing/debugging
     }
 } -cleanup {
     catch {safe::interpDelete $i}

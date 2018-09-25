@@ -1,8 +1,8 @@
 /*
  * tkMacOSXNotify.c --
  *
- *	This file contains the implementation of a tcl event source
- *	for the AppKit event loop.
+ *      This file contains the implementation of a tcl event source
+ *      for the AppKit event loop.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -26,7 +26,7 @@ typedef struct ThreadSpecificData {
 static Tcl_ThreadDataKey dataKey;
 
 #define TSD_INIT() ThreadSpecificData *tsdPtr = \
-	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
+        Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
 static void TkMacOSXNotifyExitHandler(ClientData clientData);
 static void TkMacOSXEventsSetupProc(ClientData clientData, int flags);
@@ -43,7 +43,7 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 - (id) tkDisplayIfNeeded
 {
     if (![self isAutodisplay]) {
-	[self displayIfNeeded];
+        [self displayIfNeeded];
     }
     return nil;
 }
@@ -52,13 +52,13 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 @implementation TKApplication(TKNotify)
 /* Display all windows each time an event is removed from the queue.*/
 - (NSEvent *) nextEventMatchingMask: (NSUInteger) mask
-	untilDate: (NSDate *) expiration inMode: (NSString *) mode
-	dequeue: (BOOL) deqFlag
+        untilDate: (NSDate *) expiration inMode: (NSString *) mode
+        dequeue: (BOOL) deqFlag
 {
     NSEvent *event = [super nextEventMatchingMask:mask
-					untilDate:expiration
-					   inMode:mode
-					  dequeue:deqFlag];
+                                        untilDate:expiration
+                                           inMode:mode
+                                          dequeue:deqFlag];
     /* Retain this event for later use. Must be released.*/
     [event retain];
     [NSApp makeWindowsPerform:@selector(tkDisplayIfNeeded) inOrder:NO];
@@ -83,10 +83,10 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
  * GetRunLoopMode --
  *
  * Results:
- *	RunLoop mode that should be passed to -nextEventMatchingMask:
+ *      RunLoop mode that should be passed to -nextEventMatchingMask:
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -97,15 +97,15 @@ GetRunLoopMode(NSModalSession modalSession)
     NSString *runLoopMode = nil;
 
     if (modalSession) {
-	runLoopMode = NSModalPanelRunLoopMode;
+        runLoopMode = NSModalPanelRunLoopMode;
     } else if (TkMacOSXGetCapture()) {
-	runLoopMode = NSEventTrackingRunLoopMode;
+        runLoopMode = NSEventTrackingRunLoopMode;
     }
     if (!runLoopMode) {
-	runLoopMode = [[NSRunLoop currentRunLoop] currentMode];
+        runLoopMode = [[NSRunLoop currentRunLoop] currentMode];
     }
     if (!runLoopMode) {
-	runLoopMode = NSDefaultRunLoopMode;
+        runLoopMode = NSDefaultRunLoopMode;
     }
     return runLoopMode;
 }
@@ -115,14 +115,14 @@ GetRunLoopMode(NSModalSession modalSession)
  *
  * Tk_MacOSXSetupTkNotifier --
  *
- *	This procedure is called during Tk initialization to create
- *	the event source for TkAqua events.
+ *      This procedure is called during Tk initialization to create
+ *      the event source for TkAqua events.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	A new event source is created.
+ *      A new event source is created.
  *
  *----------------------------------------------------------------------
  */
@@ -133,29 +133,29 @@ Tk_MacOSXSetupTkNotifier(void)
     TSD_INIT();
 
     if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
+        tsdPtr->initialized = 1;
 
-	/*
-	 * Install TkAqua event source in main event loop thread.
-	 */
+        /*
+         * Install TkAqua event source in main event loop thread.
+         */
 
-	if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
-	    if (![NSThread isMainThread]) {
-		/*
-		 * Panic if main runloop is not on the main application thread.
-		 */
+        if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
+            if (![NSThread isMainThread]) {
+                /*
+                 * Panic if main runloop is not on the main application thread.
+                 */
 
-		Tcl_Panic("Tk_MacOSXSetupTkNotifier: %s",
-		    "first [load] of TkAqua has to occur in the main thread!");
-	    }
-	    Tcl_CreateEventSource(TkMacOSXEventsSetupProc,
-				  TkMacOSXEventsCheckProc,
-				  NULL);
-	    TkCreateExitHandler(TkMacOSXNotifyExitHandler, NULL);
-	    Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	    TclMacOSXNotifierAddRunLoopMode(NSEventTrackingRunLoopMode);
-	    TclMacOSXNotifierAddRunLoopMode(NSModalPanelRunLoopMode);
-	}
+                Tcl_Panic("Tk_MacOSXSetupTkNotifier: %s",
+                    "first [load] of TkAqua has to occur in the main thread!");
+            }
+            Tcl_CreateEventSource(TkMacOSXEventsSetupProc,
+                                  TkMacOSXEventsCheckProc,
+                                  NULL);
+            TkCreateExitHandler(TkMacOSXNotifyExitHandler, NULL);
+            Tcl_SetServiceMode(TCL_SERVICE_ALL);
+            TclMacOSXNotifierAddRunLoopMode(NSEventTrackingRunLoopMode);
+            TclMacOSXNotifierAddRunLoopMode(NSModalPanelRunLoopMode);
+        }
     }
 }
 
@@ -164,27 +164,27 @@ Tk_MacOSXSetupTkNotifier(void)
  *
  * TkMacOSXNotifyExitHandler --
  *
- *	This function is called during finalization to clean up the
- *	TkMacOSXNotify module.
+ *      This function is called during finalization to clean up the
+ *      TkMacOSXNotify module.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 TkMacOSXNotifyExitHandler(
-    ClientData clientData)	/* Not used. */
+    ClientData clientData)      /* Not used. */
 {
     TSD_INIT();
 
     Tcl_DeleteEventSource(TkMacOSXEventsSetupProc,
-			  TkMacOSXEventsCheckProc,
-			  NULL);
+                          TkMacOSXEventsCheckProc,
+                          NULL);
     tsdPtr->initialized = 0;
 }
 
@@ -193,19 +193,19 @@ TkMacOSXNotifyExitHandler(
  *
  * TkMacOSXEventsSetupProc --
  *
- *	This procedure implements the setup part of the MacOSX event
- *	source. It is invoked by Tcl_DoOneEvent before calling
+ *      This procedure implements the setup part of the MacOSX event
+ *      source. It is invoked by Tcl_DoOneEvent before calling
  *      TkMacOSXEventsProc to process all queued NSEvents.  In our
  *      case, all we need to do is to set the Tcl MaxBlockTime to
  *      0 before starting the loop to process all queued NSEvents.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
  *
- *	If NSEvents are queued, then the maximum block time will be set
- *	to 0 to ensure that control returns immediately to Tcl.
+ *      If NSEvents are queued, then the maximum block time will be set
+ *      to 0 to ensure that control returns immediately to Tcl.
  *
  *----------------------------------------------------------------------
  */
@@ -218,19 +218,19 @@ TkMacOSXEventsSetupProc(
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
     /* runloopMode will be nil if we are in a Tcl event loop. */
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
-	static const Tcl_Time zeroBlockTime = { 0, 0 };
-	[NSApp _resetAutoreleasePool];
-	/* Call this with dequeue=NO -- just checking if the queue is empty. */
-	NSEvent *currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-				       untilDate:[NSDate distantPast]
-				       inMode:GetRunLoopMode(TkMacOSXGetModalSession())
-				       dequeue:NO];
-	if (currentEvent) {
-	    if (currentEvent.type > 0) {
-		Tcl_SetMaxBlockTime(&zeroBlockTime);
-	    }
-	    [currentEvent release];
-	}
+        static const Tcl_Time zeroBlockTime = { 0, 0 };
+        [NSApp _resetAutoreleasePool];
+        /* Call this with dequeue=NO -- just checking if the queue is empty. */
+        NSEvent *currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                       untilDate:[NSDate distantPast]
+                                       inMode:GetRunLoopMode(TkMacOSXGetModalSession())
+                                       dequeue:NO];
+        if (currentEvent) {
+            if (currentEvent.type > 0) {
+                Tcl_SetMaxBlockTime(&zeroBlockTime);
+            }
+            [currentEvent release];
+        }
     }
 }
 
@@ -239,14 +239,14 @@ TkMacOSXEventsSetupProc(
  *
  * TkMacOSXEventsCheckProc --
  *
- *	This procedure loops through all NSEvents waiting in the
+ *      This procedure loops through all NSEvents waiting in the
  *      TKApplication event queue, generating X events from them.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	NSevents are used to generate X events, which are added to the
+ *      NSevents are used to generate X events, which are added to the
  *      Tcl event queue.
  *
  *----------------------------------------------------------------------
@@ -259,52 +259,52 @@ TkMacOSXEventsCheckProc(
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
     /* runloopMode will be nil if we are in a Tcl event loop. */
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
-	NSEvent *currentEvent = nil;
-	NSEvent *testEvent = nil;
-	NSModalSession modalSession;
-	/* It is possible for the SetupProc to be called before this function
-	 * returns.  This happens, for example, when we process an event which
-	 * opens a modal window.  To prevent premature release of our
-	 * application-wide autorelease pool by a nested call to the SetupProc,
-	 * we must lock it here.
-	 */
-	[NSApp _lockAutoreleasePool];
-	do {
-	    modalSession = TkMacOSXGetModalSession();
-	    	    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-					      untilDate:[NSDate distantPast]
-						 inMode:GetRunLoopMode(modalSession)
-						dequeue:NO];
-	    /* We must not steal any events during LiveResize. */
-	    if (testEvent && [[testEvent window] inLiveResize]) {
-		break;
-	    }
-	    currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-					      untilDate:[NSDate distantPast]
-						 inMode:GetRunLoopMode(modalSession)
-						dequeue:YES];
-	    if (currentEvent) {
-		/* Generate Xevents. */
-		int oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-		NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
-		Tcl_SetServiceMode(oldServiceMode);
-		if (processedEvent) { /* Should always be non-NULL. */
+        NSEvent *currentEvent = nil;
+        NSEvent *testEvent = nil;
+        NSModalSession modalSession;
+        /* It is possible for the SetupProc to be called before this function
+         * returns.  This happens, for example, when we process an event which
+         * opens a modal window.  To prevent premature release of our
+         * application-wide autorelease pool by a nested call to the SetupProc,
+         * we must lock it here.
+         */
+        [NSApp _lockAutoreleasePool];
+        do {
+            modalSession = TkMacOSXGetModalSession();
+                    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                              untilDate:[NSDate distantPast]
+                                                 inMode:GetRunLoopMode(modalSession)
+                                                dequeue:NO];
+            /* We must not steal any events during LiveResize. */
+            if (testEvent && [[testEvent window] inLiveResize]) {
+                break;
+            }
+            currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                              untilDate:[NSDate distantPast]
+                                                 inMode:GetRunLoopMode(modalSession)
+                                                dequeue:YES];
+            if (currentEvent) {
+                /* Generate Xevents. */
+                int oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
+                NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
+                Tcl_SetServiceMode(oldServiceMode);
+                if (processedEvent) { /* Should always be non-NULL. */
 #ifdef TK_MAC_DEBUG_EVENTS
-		    TKLog(@"   event: %@", currentEvent);
+                    TKLog(@"   event: %@", currentEvent);
 #endif
-		    if (modalSession) {
-			[NSApp _modalSession:modalSession sendEvent:currentEvent];
-		    } else {
-			[NSApp sendEvent:currentEvent];
-		    }
-		}
-		[currentEvent release];
-	    } else {
-		break;
-	    }
-	} while (1);
-	/* Now we can unlock the pool. */
-	[NSApp _unlockAutoreleasePool];
+                    if (modalSession) {
+                        [NSApp _modalSession:modalSession sendEvent:currentEvent];
+                    } else {
+                        [NSApp sendEvent:currentEvent];
+                    }
+                }
+                [currentEvent release];
+            } else {
+                break;
+            }
+        } while (1);
+        /* Now we can unlock the pool. */
+        [NSApp _unlockAutoreleasePool];
     }
 }
 

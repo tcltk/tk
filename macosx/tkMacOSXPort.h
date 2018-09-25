@@ -1,9 +1,9 @@
 /*
  * tkMacOSXPort.h --
  *
- *	This file is included by all of the Tk C files. It contains
- *	information that may be configuration-dependent, such as
- *	#includes for system include files and a few other things.
+ *      This file is included by all of the Tk C files. It contains
+ *      information that may be configuration-dependent, such as
+ *      #includes for system include files and a few other things.
  *
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -38,9 +38,9 @@
 #   include <time.h>
 #else
 #   if HAVE_SYS_TIME_H
-#	include <sys/time.h>
+#       include <sys/time.h>
 #   else
-#	include <time.h>
+#       include <time.h>
 #   endif
 #endif
 #if HAVE_INTTYPES_H
@@ -63,12 +63,12 @@
 #   define SELECT_MASK fd_set
 #else
 #   ifndef _AIX
-	typedef long fd_mask;
+        typedef long fd_mask;
 #   endif
 #   if defined(_IBMR2)
-#	define SELECT_MASK void
+#       define SELECT_MASK void
 #   else
-#	define SELECT_MASK int
+#       define SELECT_MASK int
 #   endif
 #endif
 
@@ -78,9 +78,9 @@
 
 #ifndef FD_SETSIZE
 #   ifdef OPEN_MAX
-#	define FD_SETSIZE OPEN_MAX
+#       define FD_SETSIZE OPEN_MAX
 #   else
-#	define FD_SETSIZE 256
+#       define FD_SETSIZE 256
 #   endif
 #endif
 #if !defined(howmany)
@@ -134,16 +134,16 @@
 
 #define PIXEL_MAGIC ((unsigned char) 0x69)
 #define TkpGetPixel(p) ((((((PIXEL_MAGIC << 8) \
-	| (((p)->red >> 8) & 0xff)) << 8) \
-	| (((p)->green >> 8) & 0xff)) << 8) \
-	| (((p)->blue >> 8) & 0xff))
+        | (((p)->red >> 8) & 0xff)) << 8) \
+        | (((p)->green >> 8) & 0xff)) << 8) \
+        | (((p)->blue >> 8) & 0xff))
 
 /*
  * This macro stores a representation of the window handle in a string.
  */
 
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "0x%lx", (unsigned long) (w))
+        sprintf((buf), "0x%lx", (unsigned long) (w))
 
 /*
  * Turn off Tk double-buffering as Aqua windows are already double-buffered.
@@ -155,23 +155,23 @@
  * Magic pixel code values for system colors.
  *
  * NOTE: values must be kept in sync with indices into the
- *	 systemColorMap array in tkMacOSXColor.c !
+ *       systemColorMap array in tkMacOSXColor.c !
  */
 
-#define TRANSPARENT_PIXEL		30
-#define HIGHLIGHT_PIXEL			31
-#define HIGHLIGHT_SECONDARY_PIXEL	32
-#define HIGHLIGHT_TEXT_PIXEL		33
-#define HIGHLIGHT_ALTERNATE_PIXEL	34
-#define CONTROL_TEXT_PIXEL		35
-#define CONTROL_BODY_PIXEL		37
-#define CONTROL_FRAME_PIXEL		39
-#define WINDOW_BODY_PIXEL		41
-#define MENU_ACTIVE_PIXEL		43
-#define MENU_ACTIVE_TEXT_PIXEL		45
-#define MENU_BACKGROUND_PIXEL		47
-#define MENU_DISABLED_PIXEL		49
-#define MENU_TEXT_PIXEL			51
-#define APPEARANCE_PIXEL		52
+#define TRANSPARENT_PIXEL               30
+#define HIGHLIGHT_PIXEL                 31
+#define HIGHLIGHT_SECONDARY_PIXEL       32
+#define HIGHLIGHT_TEXT_PIXEL            33
+#define HIGHLIGHT_ALTERNATE_PIXEL       34
+#define CONTROL_TEXT_PIXEL              35
+#define CONTROL_BODY_PIXEL              37
+#define CONTROL_FRAME_PIXEL             39
+#define WINDOW_BODY_PIXEL               41
+#define MENU_ACTIVE_PIXEL               43
+#define MENU_ACTIVE_TEXT_PIXEL          45
+#define MENU_BACKGROUND_PIXEL           47
+#define MENU_DISABLED_PIXEL             49
+#define MENU_TEXT_PIXEL                 51
+#define APPEARANCE_PIXEL                52
 
 #endif /* _TKMACPORT */

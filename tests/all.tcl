@@ -14,6 +14,6 @@ package require tcltest 2.2
 tcltest::configure {*}$argv
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
 tcltest::configure -loadfile \
-	[file join [tcltest::testsDirectory] constraints.tcl]
+        [file join [tcltest::testsDirectory] constraints.tcl]
 tcltest::configure -singleproc 1
 tcltest::runAllTests

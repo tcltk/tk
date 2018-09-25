@@ -9,8 +9,8 @@ wm iconname .t "Text Borders"
 wm geom .t +0+0
 
 text .t.t -width 60 -height 30 -setgrid true -xscrollcommand {.t.h set} \
-	-font {Courier 12} \
-	-yscrollcommand {.t.v set} -wrap none -relief raised -bd 2
+        -font {Courier 12} \
+        -yscrollcommand {.t.v set} -wrap none -relief raised -bd 2
 scrollbar .t.v -orient vertical -command ".t.t yview"
 scrollbar .t.h -orient horizontal -command ".t.t xview"
 button .t.quit -text Quit -command {destroy .t}
@@ -23,12 +23,12 @@ wm minsize .t 1 1
 if {[winfo depth .t] > 1} {
     .t.t tag configure r1 -relief raised -borderwidth 2 -background #b2dfee
     .t.t tag configure r2 -relief raised -borderwidth 2 -background #b2dfee \
-	    -offset 2
+            -offset 2
     .t.t tag configure s1 -relief sunken -borderwidth 2 -background #b2dfee
 } else {
     .t.t tag configure r1 -relief raised -borderwidth 2 -background white
     .t.t tag configure r2 -relief raised -borderwidth 2 -background white \
-	    -offset 2
+            -offset 2
     .t.t tag configure s1 -relief sunken -borderwidth 2 -background white
 }
 .t.t tag configure indent1 -lmargin1 100

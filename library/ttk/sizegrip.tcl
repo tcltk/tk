@@ -9,32 +9,32 @@
 switch -- [tk windowingsystem] {
     x11 -
     win32 {
-	option add *TSizegrip.cursor [ttk::cursor seresize] widgetDefault
+        option add *TSizegrip.cursor [ttk::cursor seresize] widgetDefault
     }
     aqua {
-    	# Aqua sizegrips use default Arrow cursor.
+        # Aqua sizegrips use default Arrow cursor.
     }
 }
 
 namespace eval ttk::sizegrip {
     variable State
     array set State {
-	pressed 	0
-	pressX 		0
-	pressY 		0
-	width 		0
-	height 		0
-	widthInc	1
-	heightInc	1
+        pressed         0
+        pressX          0
+        pressY          0
+        width           0
+        height          0
+        widthInc        1
+        heightInc       1
         resizeX         1
         resizeY         1
-	toplevel 	{}
+        toplevel        {}
     }
 }
 
-bind TSizegrip <ButtonPress-1> 		{ ttk::sizegrip::Press	%W %X %Y }
-bind TSizegrip <B1-Motion> 		{ ttk::sizegrip::Drag 	%W %X %Y }
-bind TSizegrip <ButtonRelease-1> 	{ ttk::sizegrip::Release %W %X %Y }
+bind TSizegrip <ButtonPress-1>          { ttk::sizegrip::Press  %W %X %Y }
+bind TSizegrip <B1-Motion>              { ttk::sizegrip::Drag   %W %X %Y }
+bind TSizegrip <ButtonRelease-1>        { ttk::sizegrip::Release %W %X %Y }
 
 proc ttk::sizegrip::Press {W X Y} {
     variable State
@@ -50,21 +50,21 @@ proc ttk::sizegrip::Press {W X Y} {
     }
 
     # Sanity-checks:
-    #	If a negative X or Y position was specified for [wm geometry],
+    #   If a negative X or Y position was specified for [wm geometry],
     #   just bail out -- there's no way to handle this cleanly.
     #
     if {[scan [wm geometry $top] "%dx%d+%d+%d" width height x y] != 4} {
-	return;
+        return;
     }
 
     # Account for gridded geometry:
     #
     set grid [wm grid $top]
     if {[llength $grid]} {
-	set State(widthInc) [lindex $grid 2]
-	set State(heightInc) [lindex $grid 3]
+        set State(widthInc) [lindex $grid 2]
+        set State(heightInc) [lindex $grid 3]
     } else {
-	set State(widthInc) [set State(heightInc) 1]
+        set State(widthInc) [set State(heightInc) 1]
     }
 
     set State(toplevel) $top

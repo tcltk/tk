@@ -1,9 +1,9 @@
 /*
  * tkWinSendCom.h --
  *
- *	This file provides procedures that implement the Windows "send"
- *	command, allowing commands to be passed from interpreter to
- *	interpreter.
+ *      This file provides procedures that implement the Windows "send"
+ *      command, allowing commands to be passed from interpreter to
+ *      interpreter.
  *
  * Copyright (C) 2002 Pat Thoyts <patthoyts@users.sourceforge.net>
  *

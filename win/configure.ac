@@ -109,8 +109,8 @@ AC_SUBST(MAN2TCLFLAGS)
 
 AC_CACHE_CHECK([availability of _strtoi64], tcl_cv_strtoi64, [
     AC_TRY_LINK([#include <stdlib.h>],
-	    [_strtoi64(0,0,0)],
-	    tcl_cv_strtoi64=yes, tcl_cv_strtoi64=no)])
+        [_strtoi64(0,0,0)],
+        tcl_cv_strtoi64=yes, tcl_cv_strtoi64=no)])
 if test $tcl_cv_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
 fi
@@ -120,10 +120,10 @@ fi
 #--------------------------------------------------------------------
 
 AC_CHECK_HEADER([uxtheme.h], [AC_DEFINE(HAVE_UXTHEME_H)],
-	[AC_MSG_NOTICE([xpnative theme will be unavailable])],
-	[#include <windows.h>])
+    [AC_MSG_NOTICE([xpnative theme will be unavailable])],
+    [#include <windows.h>])
 AC_CHECK_HEADER([vssym32.h], [AC_DEFINE(HAVE_VSSYM32_H)], [],
-	[#include <windows.h>
+    [#include <windows.h>
 #include <uxtheme.h>])
 
 #--------------------------------------------------------------------

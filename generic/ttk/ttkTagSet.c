@@ -12,18 +12,18 @@
  * +++ Internal data structures.
  */
 struct TtkTag {
-    int 	priority;		/* 1=>highest */
-    const char	*tagName;		/* Back-pointer to hash table entry */
-    void	*tagRecord;		/* User data */
+    int         priority;               /* 1=>highest */
+    const char  *tagName;               /* Back-pointer to hash table entry */
+    void        *tagRecord;             /* User data */
 };
 
 struct TtkTagTable {
-    Tk_Window		tkwin;		/* owner window */
-    Tk_OptionSpec	*optionSpecs;	/* ... */
-    Tk_OptionTable	optionTable;	/* ... */
-    int         	recordSize;	/* size of tag record */
-    int 		nTags;		/* #tags defined so far */
-    Tcl_HashTable	tags;		/* defined tags */
+    Tk_Window           tkwin;          /* owner window */
+    Tk_OptionSpec       *optionSpecs;   /* ... */
+    Tk_OptionTable      optionTable;    /* ... */
+    int                 recordSize;     /* size of tag record */
+    int                 nTags;          /* #tags defined so far */
+    Tcl_HashTable       tags;           /* defined tags */
 };
 
 /*------------------------------------------------------------------------
@@ -72,8 +72,8 @@ void Ttk_DeleteTagTable(Ttk_TagTable tagTable)
 
     entryPtr = Tcl_FirstHashEntry(&tagTable->tags, &search);
     while (entryPtr != NULL) {
-	DeleteTag(tagTable, Tcl_GetHashValue(entryPtr));
-	entryPtr = Tcl_NextHashEntry(&search);
+        DeleteTag(tagTable, Tcl_GetHashValue(entryPtr));
+        entryPtr = Tcl_NextHashEntry(&search);
     }
 
     Tcl_DeleteHashTable(&tagTable->tags);
@@ -84,11 +84,11 @@ Ttk_Tag Ttk_GetTag(Ttk_TagTable tagTable, const char *tagName)
 {
     int isNew = 0;
     Tcl_HashEntry *entryPtr = Tcl_CreateHashEntry(
-	&tagTable->tags, tagName, &isNew);
+        &tagTable->tags, tagName, &isNew);
 
     if (isNew) {
-	tagName = Tcl_GetHashKey(&tagTable->tags, entryPtr);
-	Tcl_SetHashValue(entryPtr, NewTag(tagTable,tagName));
+        tagName = Tcl_GetHashKey(&tagTable->tags, entryPtr);
+        Tcl_SetHashValue(entryPtr, NewTag(tagTable,tagName));
     }
     return Tcl_GetHashValue(entryPtr);
 }
@@ -103,8 +103,8 @@ Ttk_Tag Ttk_GetTagFromObj(Ttk_TagTable tagTable, Tcl_Obj *objPtr)
  */
 
 /* Ttk_GetTagSetFromObj --
- * 	Extract an array of pointers to Ttk_Tags from a Tcl_Obj.
- * 	objPtr may be NULL, in which case a new empty tag set is returned.
+ *      Extract an array of pointers to Ttk_Tags from a Tcl_Obj.
+ *      objPtr may be NULL, in which case a new empty tag set is returned.
  *
  * Returns NULL and leaves an error message in interp->result on error.
  *
@@ -118,19 +118,19 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
     int i, objc;
 
     if (objPtr == NULL) {
-	tagset->tags = NULL;
-	tagset->nTags = 0;
-	return tagset;
+        tagset->tags = NULL;
+        tagset->nTags = 0;
+        return tagset;
     }
 
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK) {
-	ckfree(tagset);
-    	return NULL;
+        ckfree(tagset);
+        return NULL;
     }
 
     tagset->tags = ckalloc((objc+1) * sizeof(Ttk_Tag));
     for (i=0; i<objc; ++i) {
-	tagset->tags[i] = Ttk_GetTagFromObj(tagTable, objv[i]);
+        tagset->tags[i] = Ttk_GetTagFromObj(tagTable, objv[i]);
     }
     tagset->tags[i] = NULL;
     tagset->nTags = objc;
@@ -139,7 +139,7 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
 }
 
 /* Ttk_NewTagSetObj --
- * 	Construct a fresh Tcl_Obj * from a tag set.
+ *      Construct a fresh Tcl_Obj * from a tag set.
  */
 Tcl_Obj *Ttk_NewTagSetObj(Ttk_TagSet tagset)
 {
@@ -147,8 +147,8 @@ Tcl_Obj *Ttk_NewTagSetObj(Ttk_TagSet tagset)
     int i;
 
     for (i = 0; i < tagset->nTags; ++i) {
-	Tcl_ListObjAppendElement(
-	    NULL, result, Tcl_NewStringObj(tagset->tags[i]->tagName, -1));
+        Tcl_ListObjAppendElement(
+            NULL, result, Tcl_NewStringObj(tagset->tags[i]->tagName, -1));
     }
     return result;
 }
@@ -165,9 +165,9 @@ int Ttk_TagSetContains(Ttk_TagSet tagset, Ttk_Tag tag)
 {
     int i;
     for (i = 0; i < tagset->nTags; ++i) {
-	if (tagset->tags[i] == tag) {
-	    return 1;
-	}
+        if (tagset->tags[i] == tag) {
+            return 1;
+        }
     }
     return 0;
 }
@@ -181,12 +181,12 @@ int Ttk_TagSetAdd(Ttk_TagSet tagset, Ttk_Tag tag)
 {
     int i;
     for (i = 0; i < tagset->nTags; ++i) {
-	if (tagset->tags[i] == tag) {
-	    return 0;
-	}
+        if (tagset->tags[i] == tag) {
+            return 0;
+        }
     }
     tagset->tags = ckrealloc(tagset->tags,
-	    (tagset->nTags+1)*sizeof(tagset->tags[0]));
+            (tagset->nTags+1)*sizeof(tagset->tags[0]));
     tagset->tags[tagset->nTags++] = tag;
     return 1;
 }
@@ -200,10 +200,10 @@ int Ttk_TagSetRemove(Ttk_TagSet tagset, Ttk_Tag tag)
 {
     int i = 0, j = 0;
     while (i < tagset->nTags) {
-	if ((tagset->tags[j] = tagset->tags[i]) != tag) {
-	    ++j;
-	}
-	++i;
+        if ((tagset->tags[j] = tagset->tags[i]) != tag) {
+            ++j;
+        }
+        ++i;
     }
     tagset->nTags = j;
     return j != i;
@@ -227,7 +227,7 @@ int Ttk_EnumerateTagOptions(
     Tcl_Interp *interp, Ttk_TagTable tagTable, Ttk_Tag tag)
 {
     return TtkEnumerateOptions(interp, tag->tagRecord,
-	tagTable->optionSpecs, tagTable->optionTable, tagTable->tkwin);
+        tagTable->optionSpecs, tagTable->optionTable, tagTable->tkwin);
 }
 
 /* Ttk_TagOptionValue -- implements [$w tag configure $tag -option]
@@ -239,7 +239,7 @@ Tcl_Obj *Ttk_TagOptionValue(
     Tcl_Obj *optionName)
 {
     return Tk_GetOptionValue(interp,
-	tag->tagRecord, tagTable->optionTable, optionName, tagTable->tkwin);
+        tag->tagRecord, tagTable->optionTable, optionName, tagTable->tkwin);
 }
 
 /* Ttk_ConfigureTag -- implements [$w tag configure $tag -option value...]
@@ -251,8 +251,8 @@ int Ttk_ConfigureTag(
     int objc, Tcl_Obj *const objv[])
 {
     return Tk_SetOptions(
-	interp, tag->tagRecord, tagTable->optionTable,
-	objc, objv, tagTable->tkwin, NULL/*savedOptions*/, NULL/*mask*/);
+        interp, tag->tagRecord, tagTable->optionTable,
+        objc, objv, tagTable->tkwin, NULL/*savedOptions*/, NULL/*mask*/);
 }
 
 /*------------------------------------------------------------------------
@@ -269,17 +269,17 @@ void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
     memset(record, 0, tagTable->recordSize);
 
     for (i = 0; tagTable->optionSpecs[i].type != TK_OPTION_END; ++i) {
-	Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
-	int offset = optionSpec->objOffset;
-	int prio = LOWEST_PRIORITY;
+        Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
+        int offset = optionSpec->objOffset;
+        int prio = LOWEST_PRIORITY;
 
-	for (j = 0; j < tagSet->nTags; ++j) {
-	    Ttk_Tag tag = tagSet->tags[j];
-	    if (OBJ_AT(tag->tagRecord, offset) != 0 && tag->priority < prio) {
-		OBJ_AT(record, offset) = OBJ_AT(tag->tagRecord, offset);
-		prio = tag->priority;
-	    }
-	}
+        for (j = 0; j < tagSet->nTags; ++j) {
+            Ttk_Tag tag = tagSet->tags[j];
+            if (OBJ_AT(tag->tagRecord, offset) != 0 && tag->priority < prio) {
+                OBJ_AT(record, offset) = OBJ_AT(tag->tagRecord, offset);
+                prio = tag->priority;
+            }
+        }
     }
 }
 
@@ -289,15 +289,15 @@ void Ttk_TagSetApplyStyle(
     Tk_OptionSpec *optionSpec = tagTable->optionSpecs;
 
     while (optionSpec->type != TK_OPTION_END) {
-	int offset = optionSpec->objOffset;
-	const char *optionName = optionSpec->optionName;
-	Tcl_Obj *val = Ttk_StyleMap(style, optionName, state);
-	if (val) {
-	    OBJ_AT(record, offset) = val;
-	} else if (OBJ_AT(record, offset) == 0) {
-	    OBJ_AT(record, offset) = Ttk_StyleDefault(style, optionName);
-	}
-	++optionSpec;
+        int offset = optionSpec->objOffset;
+        const char *optionName = optionSpec->optionName;
+        Tcl_Obj *val = Ttk_StyleMap(style, optionName, state);
+        if (val) {
+            OBJ_AT(record, offset) = val;
+        } else if (OBJ_AT(record, offset) == 0) {
+            OBJ_AT(record, offset) = Ttk_StyleDefault(style, optionName);
+        }
+        ++optionSpec;
     }
 }
 

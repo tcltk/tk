@@ -36,37 +36,37 @@
 
 namespace eval ttk {
     namespace eval menubutton {
-	variable State
-	array set State {
-	    pulldown	0
-	    oldcursor	{}
-	}
+        variable State
+        array set State {
+            pulldown    0
+            oldcursor   {}
+        }
     }
 }
 
-bind TMenubutton <Enter>	{ %W instate !disabled {%W state active } }
-bind TMenubutton <Leave>	{ %W state !active }
-bind TMenubutton <Key-space> 	{ ttk::menubutton::Popdown %W }
-bind TMenubutton <<Invoke>> 	{ ttk::menubutton::Popdown %W }
+bind TMenubutton <Enter>        { %W instate !disabled {%W state active } }
+bind TMenubutton <Leave>        { %W state !active }
+bind TMenubutton <Key-space>    { ttk::menubutton::Popdown %W }
+bind TMenubutton <<Invoke>>     { ttk::menubutton::Popdown %W }
 
 if {[tk windowingsystem] eq "x11"} {
-    bind TMenubutton <ButtonPress-1>  	{ ttk::menubutton::Pulldown %W }
-    bind TMenubutton <ButtonRelease-1>	{ ttk::menubutton::TransferGrab %W }
-    bind TMenubutton <B1-Leave> 	{ ttk::menubutton::TransferGrab %W }
+    bind TMenubutton <ButtonPress-1>    { ttk::menubutton::Pulldown %W }
+    bind TMenubutton <ButtonRelease-1>  { ttk::menubutton::TransferGrab %W }
+    bind TMenubutton <B1-Leave>         { ttk::menubutton::TransferGrab %W }
 } else {
     bind TMenubutton <ButtonPress-1>  \
-	{ %W state pressed ; ttk::menubutton::Popdown %W }
+        { %W state pressed ; ttk::menubutton::Popdown %W }
     bind TMenubutton <ButtonRelease-1>  \
-	{ if {[winfo exists %W]} { %W state !pressed } }
+        { if {[winfo exists %W]} { %W state !pressed } }
 }
 
 # PostPosition --
-#	Returns the x and y coordinates where the menu
-#	should be posted, based on the menubutton and menu size
-#	and -direction option.
+#       Returns the x and y coordinates where the menu
+#       should be posted, based on the menubutton and menu size
+#       and -direction option.
 #
 # TODO: adjust menu width to be at least as wide as the button
-#	for -direction above, below.
+#       for -direction above, below.
 #
 proc ttk::menubutton::PostPosition {mb menu} {
     set x [winfo rootx $mb]
@@ -81,45 +81,45 @@ proc ttk::menubutton::PostPosition {mb menu} {
     set sh [expr {[winfo screenheight $menu] - $bh - $mh}]
 
     switch -- $dir {
-	above { if {$y >= $mh} { incr y -$mh } { incr y  $bh } }
-	below { if {$y <= $sh} { incr y  $bh } { incr y -$mh } }
-	left  { if {$x >= $mw} { incr x -$mw } { incr x  $bw } }
-	right { if {$x <= $sw} { incr x  $bw } { incr x -$mw } }
-	flush {
-	    # post menu atop menubutton.
-	    # If there's a menu entry whose label matches the
-	    # menubutton -text, assume this is an optionmenu
-	    # and place that entry over the menubutton.
-	    set index [FindMenuEntry $menu [$mb cget -text]]
-	    if {$index ne ""} {
-		incr y -[$menu yposition $index]
-	    }
-	}
+        above { if {$y >= $mh} { incr y -$mh } { incr y  $bh } }
+        below { if {$y <= $sh} { incr y  $bh } { incr y -$mh } }
+        left  { if {$x >= $mw} { incr x -$mw } { incr x  $bw } }
+        right { if {$x <= $sw} { incr x  $bw } { incr x -$mw } }
+        flush {
+            # post menu atop menubutton.
+            # If there's a menu entry whose label matches the
+            # menubutton -text, assume this is an optionmenu
+            # and place that entry over the menubutton.
+            set index [FindMenuEntry $menu [$mb cget -text]]
+            if {$index ne ""} {
+                incr y -[$menu yposition $index]
+            }
+        }
     }
 
     return [list $x $y]
 }
 
 # Popdown --
-#	Post the menu and set a grab on the menu.
+#       Post the menu and set a grab on the menu.
 #
 proc ttk::menubutton::Popdown {mb} {
     if {[$mb instate disabled] || [set menu [$mb cget -menu]] eq ""} {
-	return
+        return
     }
     foreach {x y} [PostPosition $mb $menu] { break }
     tk_popup $menu $x $y
 }
 
 # Pulldown (X11 only) --
-#	Called when Button1 is pressed on a menubutton.
-#	Posts the menu; a subsequent ButtonRelease
-#	or Leave event will set a grab on the menu.
+#       Called when Button1 is pressed on a menubutton.
+#       Posts the menu; a subsequent ButtonRelease
+#       or Leave event will set a grab on the menu.
 #
 proc ttk::menubutton::Pulldown {mb} {
     variable State
     if {[$mb instate disabled] || [set menu [$mb cget -menu]] eq ""} {
-	return
+        return
     }
     foreach {x y} [PostPosition $mb $menu] { break }
     set State(pulldown) 1
@@ -132,36 +132,36 @@ proc ttk::menubutton::Pulldown {mb} {
 }
 
 # TransferGrab (X11 only) --
-#	Switch from pulldown mode (menubutton has an implicit grab)
-#	to popdown mode (menu has an explicit grab).
+#       Switch from pulldown mode (menubutton has an implicit grab)
+#       to popdown mode (menu has an explicit grab).
 #
 proc ttk::menubutton::TransferGrab {mb} {
     variable State
     if {$State(pulldown)} {
-	$mb configure -cursor $State(oldcursor)
-	$mb state {!pressed !active}
-	set State(pulldown) 0
+        $mb configure -cursor $State(oldcursor)
+        $mb state {!pressed !active}
+        set State(pulldown) 0
 
-	set menu [$mb cget -menu]
-    	tk_popup $menu [winfo rootx $menu] [winfo rooty $menu]
+        set menu [$mb cget -menu]
+        tk_popup $menu [winfo rootx $menu] [winfo rooty $menu]
     }
 }
 
 # FindMenuEntry --
-#	Hack to support tk_optionMenus.
-#	Returns the index of the menu entry with a matching -label,
-#	-1 if not found.
+#       Hack to support tk_optionMenus.
+#       Returns the index of the menu entry with a matching -label,
+#       -1 if not found.
 #
 proc ttk::menubutton::FindMenuEntry {menu s} {
     set last [$menu index last]
     if {$last eq "none"} {
-	return ""
+        return ""
     }
     for {set i 0} {$i <= $last} {incr i} {
-	if {![catch {$menu entrycget $i -label} label]
-	    && ($label eq $s)} {
-	    return $i
-	}
+        if {![catch {$menu entrycget $i -label} label]
+            && ($label eq $s)} {
+            return $i
+        }
     }
     return ""
 }

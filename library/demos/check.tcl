@@ -40,27 +40,27 @@ set in_check 0
 proc tristate_check {n1 n2 op} {
     global safety wipers brakes sober in_check
     if {$in_check} {
-	return
+        return
     }
     set in_check 1
     if {$n1 eq "safety"} {
-	if {$safety eq "none"} {
-	    set wipers 0
-	    set brakes 0
-	    set sober 0
-	} elseif {$safety eq "all"} {
-	    set wipers 1
-	    set brakes 1
-	    set sober 1
-	}
+        if {$safety eq "none"} {
+            set wipers 0
+            set brakes 0
+            set sober 0
+        } elseif {$safety eq "all"} {
+            set wipers 1
+            set brakes 1
+            set sober 1
+        }
     } else {
-	if {$wipers == 1 && $brakes == 1 && $sober == 1} {
-	    set safety all
-	} elseif {$wipers == 1 || $brakes == 1 || $sober == 1} {
-	    set safety partial
-	} else {
-	    set safety none
-	}
+        if {$wipers == 1 && $brakes == 1 && $sober == 1} {
+            set safety all
+        } elseif {$wipers == 1 || $brakes == 1 || $sober == 1} {
+            set safety partial
+        } else {
+            set safety none
+        }
     }
     set in_check 0
 }

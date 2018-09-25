@@ -1,9 +1,9 @@
 # xmfbox.test --
 #
-#	This file is a Tcl script to test the file dialog that's used
-#	when the tk_strictMotif flag is set. Because the file dialog
-#	runs in a modal loop, the only way to test it sufficiently is
-#	to call the internal Tcl procedures in xmfbox.tcl directly.
+#   This file is a Tcl script to test the file dialog that's used
+#   when the tk_strictMotif flag is set. Because the file dialog
+#   runs in a modal loop, the only way to test it sufficiently is
+#   to call the internal Tcl procedures in xmfbox.tcl directly.
 #
 # Copyright (c) 1997 Sun Microsystems, Inc.
 # Copyright (c) 1998-1999 by Scriptics Corporation.
@@ -22,35 +22,35 @@ proc cleanup {} {
     global testPWD
 
     set err0 [catch {
-	    cd $testPWD
+        cd $testPWD
     } msg0]
 
     set err1 [catch {
-	    if [file exists ./~nosuchuser1] {
-	        file delete ./~nosuchuser1
-	    }
+        if [file exists ./~nosuchuser1] {
+            file delete ./~nosuchuser1
+        }
     } msg1]
 
     set err2 [catch {
-	    if [file exists ./~nosuchuser2] {
-	        file delete ./~nosuchuser2
-	    }
+        if [file exists ./~nosuchuser2] {
+            file delete ./~nosuchuser2
+        }
     } msg2]
 
     set err3 [catch {
-	    if [file exists ./~nosuchuser3] {
-	        file delete ./~nosuchuser3
-	    }
+        if [file exists ./~nosuchuser3] {
+            file delete ./~nosuchuser3
+        }
     } msg3]
 
     set err4 [catch {
-	    if [file exists ./~nosuchuser4] {
-	        file delete ./~nosuchuser4
-	    }
+        if [file exists ./~nosuchuser4] {
+            file delete ./~nosuchuser4
+        }
     } msg4]
 
     if {$err0 || $err1 || $err2 || $err3 || $err4} {
-	    error [list $msg0 $msg1 $msg2 $msg3 $msg4]
+        error [list $msg0 $msg1 $msg2 $msg3 $msg4]
     }
     catch {unset foo}
     destroy .foo
@@ -153,7 +153,7 @@ test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} -constraints {
     tk::MotifFDialog_BrowseFList $x
     tk::MotifFDialog_ActivateFList $x
     list $::tk::dialog::file::foo(selectPath) \
-	    $::tk::dialog::file::foo(selectFile) $tk::Priv(selectFilePath)
+        $::tk::dialog::file::foo(selectFile) $tk::Priv(selectFilePath)
 } -result "$testPWD ~nosuchuser1 $testPWD/~nosuchuser1"
 
 # cleanup

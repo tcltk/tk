@@ -58,8 +58,8 @@ proc animateLabelText {w text interval} {
     # when the animated label is destroyed.  Note that at this point we
     # cannot manipulate the widget itself, as that has already died.
     bind $w <Destroy> {
-	after cancel $animationCallbacks(%W)
-	unset animationCallbacks(%W)
+        after cancel $animationCallbacks(%W)
+        unset animationCallbacks(%W)
     }
 }
 
@@ -68,17 +68,17 @@ proc animateLabelText {w text interval} {
 proc SelectNextImageFrame {w interval} {
     global animationCallbacks
     set animationCallbacks($w) \
-	    [after $interval SelectNextImageFrame $w $interval]
+            [after $interval SelectNextImageFrame $w $interval]
     set image [$w cget -image]
 
     # The easy way to animate a GIF!
     set idx -1
     scan [$image cget -format] "GIF -index %d" idx
     if {[catch {
-	# Note that we get an error if the index is out of range
-	$image configure -format "GIF -index [incr idx]"
+        # Note that we get an error if the index is out of range
+        $image configure -format "GIF -index [incr idx]"
     }]} then {
-	$image configure -format "GIF -index 0"
+        $image configure -format "GIF -index 0"
     }
 }
 proc animateLabelImage {w imageData interval} {
@@ -92,7 +92,7 @@ proc animateLabelImage {w imageData interval} {
 
     # Schedule the start of the animation loop
     set animationCallbacks($w) \
-	    [after $interval SelectNextImageFrame $w $interval]
+            [after $interval SelectNextImageFrame $w $interval]
 
     # Make sure that the animation stops and is cleaned up after itself
     # when the animated label is destroyed.  Note that at this point we
@@ -100,9 +100,9 @@ proc animateLabelImage {w imageData interval} {
     # Also note that this script is in double-quotes; this is always OK
     # because image names are chosen automatically to be simple words.
     bind $w <Destroy> "
-	after cancel \$animationCallbacks(%W)
-	unset animationCallbacks(%W)
-	rename $image {}
+        after cancel \$animationCallbacks(%W)
+        unset animationCallbacks(%W)
+        rename $image {}
     "
 }
 

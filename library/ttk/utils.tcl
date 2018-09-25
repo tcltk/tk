@@ -8,13 +8,13 @@
 #
 
 ## ttk::takefocus --
-#	This is the default value of the "-takefocus" option
-#	for ttk::* widgets that participate in keyboard navigation.
+#       This is the default value of the "-takefocus" option
+#       for ttk::* widgets that participate in keyboard navigation.
 #
 # NOTES:
-#	tk::FocusOK (called by tk_focusNext) tests [winfo viewable]
-#	if -takefocus is 1, empty, or missing; but not if it's a
-#	script prefix, so we have to check that here as well.
+#       tk::FocusOK (called by tk_focusNext) tests [winfo viewable]
+#       if -takefocus is 1, empty, or missing; but not if it's a
+#       script prefix, so we have to check that here as well.
 #
 #
 proc ttk::takefocus {w} {
@@ -22,22 +22,22 @@ proc ttk::takefocus {w} {
 }
 
 ## ttk::GuessTakeFocus --
-#	This routine is called as a fallback for widgets
-#	with a missing or empty -takefocus option.
+#       This routine is called as a fallback for widgets
+#       with a missing or empty -takefocus option.
 #
-#	It implements the same heuristics as tk::FocusOK.
+#       It implements the same heuristics as tk::FocusOK.
 #
 proc ttk::GuessTakeFocus {w} {
     # Don't traverse to widgets with '-state disabled':
     #
     if {![catch {$w cget -state} state] && $state eq "disabled"} {
-	return 0
+        return 0
     }
 
     # Allow traversal to widgets with explicit key or focus bindings:
     #
     if {[regexp {Key|Focus} [concat [bind $w] [bind [winfo class $w]]]]} {
-	return 1;
+        return 1;
     }
 
     # Default is nontraversable:
@@ -46,63 +46,63 @@ proc ttk::GuessTakeFocus {w} {
 }
 
 ## ttk::traverseTo $w --
-# 	Set the keyboard focus to the specified window.
+#       Set the keyboard focus to the specified window.
 #
 proc ttk::traverseTo {w} {
     set focus [focus]
     if {$focus ne ""} {
-	event generate $focus <<TraverseOut>>
+        event generate $focus <<TraverseOut>>
     }
     focus $w
     event generate $w <<TraverseIn>>
 }
 
 ## ttk::clickToFocus $w --
-#	Utility routine, used in <ButtonPress-1> bindings --
-#	Assign keyboard focus to the specified widget if -takefocus is enabled.
+#       Utility routine, used in <ButtonPress-1> bindings --
+#       Assign keyboard focus to the specified widget if -takefocus is enabled.
 #
 proc ttk::clickToFocus {w} {
     if {[ttk::takesFocus $w]} { focus $w }
 }
 
 ## ttk::takesFocus w --
-#	Test if the widget can take keyboard focus.
+#       Test if the widget can take keyboard focus.
 #
-#	See the description of the -takefocus option in options(n)
-#	for details.
+#       See the description of the -takefocus option in options(n)
+#       for details.
 #
 proc ttk::takesFocus {w} {
     if {![winfo viewable $w]} {
-    	return 0
+        return 0
     } elseif {[catch {$w cget -takefocus} takefocus]} {
-	return [GuessTakeFocus $w]
+        return [GuessTakeFocus $w]
     } else {
-	switch -- $takefocus {
-	    "" { return [GuessTakeFocus $w] }
-	    0  { return 0 }
-	    1  { return 1 }
-	    default {
-		return [expr {[uplevel #0 $takefocus [list $w]] == 1}]
-	    }
-	}
+        switch -- $takefocus {
+            "" { return [GuessTakeFocus $w] }
+            0  { return 0 }
+            1  { return 1 }
+            default {
+                return [expr {[uplevel #0 $takefocus [list $w]] == 1}]
+            }
+        }
     }
 }
 
 ## ttk::focusFirst $w --
-#	Return the first descendant of $w, in preorder traversal order,
-#	that can take keyboard focus, "" if none do.
+#       Return the first descendant of $w, in preorder traversal order,
+#       that can take keyboard focus, "" if none do.
 #
 # See also: tk_focusNext
 #
 
 proc ttk::focusFirst {w} {
     if {[ttk::takesFocus $w]} {
-	return $w
+        return $w
     }
     foreach child [winfo children $w] {
-	if {[set c [ttk::focusFirst $child]] ne ""} {
-	    return $c
-	}
+        if {[set c [ttk::focusFirst $child]] ne ""} {
+            return $c
+        }
     }
     return ""
 }
@@ -110,80 +110,80 @@ proc ttk::focusFirst {w} {
 ### Grabs.
 #
 # Rules:
-#	Each call to [grabWindow $w] or [globalGrab $w] must be
-#	matched with a call to [releaseGrab $w] in LIFO order.
+#       Each call to [grabWindow $w] or [globalGrab $w] must be
+#       matched with a call to [releaseGrab $w] in LIFO order.
 #
-#	Do not call [grabWindow $w] for a window that currently
-#	appears on the grab stack.
+#       Do not call [grabWindow $w] for a window that currently
+#       appears on the grab stack.
 #
-#	See #1239190 and #1411983 for more discussion.
+#       See #1239190 and #1411983 for more discussion.
 #
 namespace eval ttk {
-    variable Grab 		;# map: window name -> grab token
+    variable Grab               ;# map: window name -> grab token
 
     # grab token details:
-    #	Two-element list containing:
-    #	1) a script to evaluate to restore the previous grab (if any);
-    #	2) a script to evaluate to restore the focus (if any)
+    #   Two-element list containing:
+    #   1) a script to evaluate to restore the previous grab (if any);
+    #   2) a script to evaluate to restore the focus (if any)
 }
 
 ## SaveGrab --
-#	Record current grab and focus windows.
+#       Record current grab and focus windows.
 #
 proc ttk::SaveGrab {w} {
     variable Grab
 
     if {[info exists Grab($w)]} {
-	# $w is already on the grab stack.
-	# This should not happen, but bail out in case it does anyway:
-	#
-	return
+        # $w is already on the grab stack.
+        # This should not happen, but bail out in case it does anyway:
+        #
+        return
     }
 
     set restoreGrab [set restoreFocus ""]
 
     set grabbed [grab current $w]
     if {[winfo exists $grabbed]} {
-    	switch [grab status $grabbed] {
-	    global { set restoreGrab [list grab -global $grabbed] }
-	    local  { set restoreGrab [list grab $grabbed] }
-	    none   { ;# grab window is really in a different interp }
-	}
+        switch [grab status $grabbed] {
+            global { set restoreGrab [list grab -global $grabbed] }
+            local  { set restoreGrab [list grab $grabbed] }
+            none   { ;# grab window is really in a different interp }
+        }
     }
 
     set focus [focus]
     if {$focus ne ""} {
-    	set restoreFocus [list focus -force $focus]
+        set restoreFocus [list focus -force $focus]
     }
 
     set Grab($w) [list $restoreGrab $restoreFocus]
 }
 
 ## RestoreGrab --
-#	Restore previous grab and focus windows.
-#	If called more than once without an intervening [SaveGrab $w],
-#	does nothing.
+#       Restore previous grab and focus windows.
+#       If called more than once without an intervening [SaveGrab $w],
+#       does nothing.
 #
 proc ttk::RestoreGrab {w} {
     variable Grab
 
-    if {![info exists Grab($w)]} {	# Ignore
-	return;
+    if {![info exists Grab($w)]} {      # Ignore
+        return;
     }
 
     # The previous grab/focus window may have been destroyed,
     # unmapped, or some other abnormal condition; ignore any errors.
     #
     foreach script $Grab($w) {
-	catch $script
+        catch $script
     }
 
     unset Grab($w)
 }
 
 ## ttk::grabWindow $w --
-#	Records the current focus and grab windows, sets an application-modal
-#	grab on window $w.
+#       Records the current focus and grab windows, sets an application-modal
+#       grab on window $w.
 #
 proc ttk::grabWindow {w} {
     SaveGrab $w
@@ -191,7 +191,7 @@ proc ttk::grabWindow {w} {
 }
 
 ## ttk::globalGrab $w --
-#	Same as grabWindow, but sets a global grab on $w.
+#       Same as grabWindow, but sets a global grab on $w.
 #
 proc ttk::globalGrab {w} {
     SaveGrab $w
@@ -199,8 +199,8 @@ proc ttk::globalGrab {w} {
 }
 
 ## ttk::releaseGrab --
-#	Release the grab previously set by [ttk::grabWindow]
-#	or [ttk::globalGrab].
+#       Release the grab previously set by [ttk::grabWindow]
+#       or [ttk::globalGrab].
 #
 proc ttk::releaseGrab {w} {
     grab release $w
@@ -221,15 +221,15 @@ proc ttk::releaseGrab {w} {
 namespace eval ttk {
     variable Repeat
     array set Repeat {
-	delay		300
-	interval	100
-	timer		{}
-	script		{}
+        delay           300
+        interval        100
+        timer           {}
+        script          {}
     }
 }
 
 ## ttk::Repeatedly --
-#	Begin auto-repeat.
+#       Begin auto-repeat.
 #
 proc ttk::Repeatedly {args} {
     variable Repeat
@@ -241,7 +241,7 @@ proc ttk::Repeatedly {args} {
 }
 
 ## Repeat --
-#	Continue auto-repeat
+#       Continue auto-repeat
 #
 proc ttk::Repeat {} {
     variable Repeat
@@ -250,7 +250,7 @@ proc ttk::Repeat {} {
 }
 
 ## ttk::CancelRepeat --
-#	Halt auto-repeat.
+#       Halt auto-repeat.
 #
 proc ttk::CancelRepeat {} {
     variable Repeat
@@ -261,11 +261,11 @@ proc ttk::CancelRepeat {} {
 #
 
 ## ttk::copyBindings $from $to --
-#	Utility routine; copies bindings from one bindtag onto another.
+#       Utility routine; copies bindings from one bindtag onto another.
 #
 proc ttk::copyBindings {from to} {
     foreach event [bind $from] {
-	bind $to $event [bind $from $event]
+        bind $to $event [bind $from $event]
     }
 }
 
@@ -294,23 +294,23 @@ proc ttk::copyBindings {from to} {
 #
 
 ## ttk::bindMouseWheel $bindtag $command...
-#	Adds basic mousewheel support to $bindtag.
-#	$command will be passed one additional argument
-#	specifying the mousewheel direction (-1: up, +1: down).
+#       Adds basic mousewheel support to $bindtag.
+#       $command will be passed one additional argument
+#       specifying the mousewheel direction (-1: up, +1: down).
 #
 
 proc ttk::bindMouseWheel {bindtag callback} {
     switch -- [tk windowingsystem] {
-	x11 {
-	    bind $bindtag <ButtonPress-4> "$callback -1"
-	    bind $bindtag <ButtonPress-5> "$callback +1"
-	}
-	win32 {
-	    bind $bindtag <MouseWheel> [append callback { [expr {-(%D/120)}]}]
-	}
-	aqua {
-	    bind $bindtag <MouseWheel> [append callback { [expr {-(%D)}]} ]
-	}
+        x11 {
+            bind $bindtag <ButtonPress-4> "$callback -1"
+            bind $bindtag <ButtonPress-5> "$callback +1"
+        }
+        win32 {
+            bind $bindtag <MouseWheel> [append callback { [expr {-(%D/120)}]}]
+        }
+        aqua {
+            bind $bindtag <MouseWheel> [append callback { [expr {-(%D)}]} ]
+        }
     }
 }
 
@@ -324,26 +324,26 @@ proc ttk::bindMouseWheel {bindtag callback} {
 
 switch -- [tk windowingsystem] {
     x11 {
-	bind TtkScrollable <ButtonPress-4>       { %W yview scroll -5 units }
-	bind TtkScrollable <ButtonPress-5>       { %W yview scroll  5 units }
-	bind TtkScrollable <Shift-ButtonPress-4> { %W xview scroll -5 units }
-	bind TtkScrollable <Shift-ButtonPress-5> { %W xview scroll  5 units }
+        bind TtkScrollable <ButtonPress-4>       { %W yview scroll -5 units }
+        bind TtkScrollable <ButtonPress-5>       { %W yview scroll  5 units }
+        bind TtkScrollable <Shift-ButtonPress-4> { %W xview scroll -5 units }
+        bind TtkScrollable <Shift-ButtonPress-5> { %W xview scroll  5 units }
     }
     win32 {
-	bind TtkScrollable <MouseWheel> \
-	    { %W yview scroll [expr {-(%D/120)}] units }
-	bind TtkScrollable <Shift-MouseWheel> \
-	    { %W xview scroll [expr {-(%D/120)}] units }
+        bind TtkScrollable <MouseWheel> \
+            { %W yview scroll [expr {-(%D/120)}] units }
+        bind TtkScrollable <Shift-MouseWheel> \
+            { %W xview scroll [expr {-(%D/120)}] units }
     }
     aqua {
-	bind TtkScrollable <MouseWheel> \
-	    { %W yview scroll [expr {-(%D)}] units }
-	bind TtkScrollable <Shift-MouseWheel> \
-	    { %W xview scroll [expr {-(%D)}] units }
-	bind TtkScrollable <Option-MouseWheel> \
-	    { %W yview scroll  [expr {-10*(%D)}] units }
-	bind TtkScrollable <Shift-Option-MouseWheel> \
-	    { %W xview scroll [expr {-10*(%D)}] units }
+        bind TtkScrollable <MouseWheel> \
+            { %W yview scroll [expr {-(%D)}] units }
+        bind TtkScrollable <Shift-MouseWheel> \
+            { %W xview scroll [expr {-(%D)}] units }
+        bind TtkScrollable <Option-MouseWheel> \
+            { %W yview scroll  [expr {-10*(%D)}] units }
+        bind TtkScrollable <Shift-Option-MouseWheel> \
+            { %W xview scroll [expr {-10*(%D)}] units }
     }
 }
 

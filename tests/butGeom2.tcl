@@ -48,16 +48,16 @@ foreach opt {activebackground activeforeground background disabledforeground for
 set default disabled
 label .t.default -text Default:
 radiobutton .t.default-normal -text "Default normal" -relief flat \
-	-command "config-but -default normal" -variable default \
-	-value normal
+        -command "config-but -default normal" -variable default \
+        -value normal
 radiobutton .t.default-active -text "Default active" -relief flat \
-	-command "config-but -default active" -variable default \
-	-value active
+        -command "config-but -default active" -variable default \
+        -value active
 radiobutton .t.default-disabled -text "Default disabled" -relief flat \
-	-command "config-but -default disabled" -variable default \
-	-value disabled
+        -command "config-but -default disabled" -variable default \
+        -value disabled
 pack .t.default .t.default-normal .t.default-active .t.default-disabled \
-	-in .t.control.right -anchor w
+        -in .t.control.right -anchor w
 
 sep
 frame .t.f1
@@ -77,36 +77,36 @@ label .t.l1 -text Label -bd 2 -relief sunken
 label .t.l2 -text "Explicit\nnewlines\n\nin the text" -bd 2 -relief sunken
 label .t.l3 -text "This text is quite long, so it must be wrapped automatically by Tk" -wraplength 2i -bd 2 -relief sunken -underline 50
 pack .t.l1 .t.l2 .t.l3 -in .t.f1 -side left -padx 5m -pady 3m \
-	-expand y -fill both
+        -expand y -fill both
 
 button .t.b1 -text Button
 button .t.b2 -text "Explicit\nnewlines\n\nin the text"
 button .t.b3 -text "This text is quite long, so it must be wrapped automatically by Tk" -wraplength 2i -underline 50
 pack .t.b1 .t.b2 .t.b3 -in .t.f2 -side left -padx 5m -pady 3m \
-	-expand y -fill both
+        -expand y -fill both
 
 checkbutton .t.c1 -text Checkbutton -variable a
 checkbutton .t.c2 -text "Explicit\nnewlines\n\nin the text" -variable b
 checkbutton .t.c3 -text "This text is quite long, so it must be wrapped automatically by Tk" -wraplength 2i -variable c -underline 50
 pack .t.c1 .t.c2 .t.c3 -in .t.f3 -side left -padx 5m -pady 3m \
-	-expand y -fill both
+        -expand y -fill both
 
 radiobutton .t.r1 -text Radiobutton -value a
 radiobutton .t.r2 -text "Explicit\nnewlines\n\nin the text" -value b
 radiobutton .t.r3 -text "This text is quite long, so it must be wrapped automatically by Tk" -wraplength 2i -value c -underline 50
 pack .t.r1 .t.r2 .t.r3 -in .t.f4 -side left -padx 5m -pady 3m \
-	-expand y -fill both
+        -expand y -fill both
 
 proc config {option value} {
     foreach w {.t.l1 .t.l2 .t.l3 .t.b1 .t.b2 .t.b3 .t.c1 .t.c2 .t.c3
-	    .t.r1 .t.r2 .t.r3} {
-	catch {$w configure $option $value}
+            .t.r1 .t.r2 .t.r3} {
+        catch {$w configure $option $value}
     }
 }
 
 proc config-but {option value} {
     foreach w {.t.b1 .t.b2 .t.b3} {
-	$w configure $option $value
+        $w configure $option $value
     }
 }
 

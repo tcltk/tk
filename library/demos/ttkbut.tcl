@@ -22,31 +22,31 @@ pack $w.msg -side top -fill x
 
 ## See Code / Dismiss
 pack [addSeeDismiss $w.seeDismiss $w {enabled cheese tomato basil oregano happyness}]\
-	-side bottom -fill x
+        -side bottom -fill x
 
 ## Add buttons for setting the theme
 ttk::labelframe $w.buttons -text "Buttons"
 foreach theme [ttk::themes] {
     ttk::button $w.buttons.$theme -text $theme \
-	    -command [list ttk::setTheme $theme]
+            -command [list ttk::setTheme $theme]
     pack $w.buttons.$theme -pady 2
 }
 
 ## Helper procedure for the top checkbutton
 proc setState {rootWidget exceptThese value} {
     if {$rootWidget in $exceptThese} {
-	return
+        return
     }
     ## Non-Ttk widgets (e.g. the toplevel) will fail, so make it silent
     catch {
-	$rootWidget state $value
+        $rootWidget state $value
     }
     ## Recursively invoke on all children of this root that are in the same
     ## toplevel widget
     foreach w [winfo children $rootWidget] {
-	if {[winfo toplevel $w] eq [winfo toplevel $rootWidget]} {
-	    setState $w $exceptThese $value
-	}
+        if {[winfo toplevel $w] eq [winfo toplevel $rootWidget]} {
+            setState $w $exceptThese $value
+        }
     }
 }
 
@@ -54,7 +54,7 @@ proc setState {rootWidget exceptThese value} {
 ttk::labelframe $w.checks -text "Checkbuttons"
 ttk::checkbutton $w.checks.e  -text Enabled -variable enabled -command {
     setState .ttkbut .ttkbut.checks.e \
-	    [expr {$enabled ? "!disabled" : "disabled"}]
+            [expr {$enabled ? "!disabled" : "disabled"}]
 }
 set enabled 1
 ## See ttk_widget(n) for other possible state flags
@@ -65,7 +65,7 @@ ttk::separator   $w.checks.sep2
 ttk::checkbutton $w.checks.c3 -text Basil   -variable basil
 ttk::checkbutton $w.checks.c4 -text Oregano -variable oregano
 pack $w.checks.e $w.checks.sep1 $w.checks.c1 $w.checks.c2 $w.checks.sep2 \
-	$w.checks.c3 $w.checks.c4   -fill x -pady 2
+        $w.checks.c3 $w.checks.c4   -fill x -pady 2
 
 ## Set up the radiobutton group
 ttk::labelframe $w.radios -text "Radiobuttons"
@@ -75,7 +75,7 @@ ttk::radiobutton $w.radios.r3 -text "OK" -variable happyness -value ok
 ttk::radiobutton $w.radios.r4 -text "Poor" -variable happyness -value poor
 ttk::radiobutton $w.radios.r5 -text "Awful" -variable happyness -value awful
 pack $w.radios.r1 $w.radios.r2 $w.radios.r3 $w.radios.r4 $w.radios.r5 \
-	-fill x -padx 3 -pady 2
+        -fill x -padx 3 -pady 2
 
 ## Arrange things neatly
 pack [ttk::frame $w.f] -fill both -expand 1

@@ -17,20 +17,20 @@ package require Tk
 proc puzzleSwitch {w num} {
     global xpos ypos
     if {(($ypos($num) >= ($ypos(space) - .01))
-	    && ($ypos($num) <= ($ypos(space) + .01))
-	    && ($xpos($num) >= ($xpos(space) - .26))
-	    && ($xpos($num) <= ($xpos(space) + .26)))
-	    || (($xpos($num) >= ($xpos(space) - .01))
-	    && ($xpos($num) <= ($xpos(space) + .01))
-	    && ($ypos($num) >= ($ypos(space) - .26))
-	    && ($ypos($num) <= ($ypos(space) + .26)))} {
-	set tmp $xpos(space)
-	set xpos(space) $xpos($num)
-	set xpos($num) $tmp
-	set tmp $ypos(space)
-	set ypos(space) $ypos($num)
-	set ypos($num) $tmp
-	place $w.frame.$num -relx $xpos($num) -rely $ypos($num)
+            && ($ypos($num) <= ($ypos(space) + .01))
+            && ($xpos($num) >= ($xpos(space) - .26))
+            && ($xpos($num) <= ($xpos(space) + .26)))
+            || (($xpos($num) >= ($xpos(space) - .01))
+            && ($xpos($num) <= ($xpos(space) + .01))
+            && ($ypos($num) >= ($ypos(space) - .26))
+            && ($ypos($num) <= ($ypos(space) + .26)))} {
+        set tmp $xpos(space)
+        set xpos(space) $xpos($num)
+        set xpos($num) $tmp
+        set tmp $ypos(space)
+        set ypos(space) $ypos($num)
+        set ypos($num) $tmp
+        place $w.frame.$num -relx $xpos($num) -rely $ypos($num)
     }
 }
 
@@ -64,7 +64,7 @@ if {[tk windowingsystem] eq "aqua"} {
 }
 
 frame $w.frame -width $frameSize -height $frameSize -borderwidth 2\
-	-relief sunken -bg [$w.s cget -troughcolor]
+        -relief sunken -bg [$w.s cget -troughcolor]
 pack $w.frame -side top -pady 1c -padx 1c
 destroy $w.s
 
@@ -74,9 +74,9 @@ for {set i 0} {$i < 15} {set i [expr {$i+1}]} {
     set xpos($num) [expr {($i%4)*.25}]
     set ypos($num) [expr {($i/4)*.25}]
     button $w.frame.$num -relief raised -text $num -highlightthickness 0 \
-	    -command "puzzleSwitch $w $num"
+            -command "puzzleSwitch $w $num"
     place $w.frame.$num -relx $xpos($num) -rely $ypos($num) \
-	-relwidth .25 -relheight .25
+        -relwidth .25 -relheight .25
 }
 set xpos(space) .75
 set ypos(space) .75

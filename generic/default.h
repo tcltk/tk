@@ -1,8 +1,8 @@
 /*
  * default.h --
  *
- *	This file defines the defaults for all options for all of
- *	the Tk widgets.
+ *      This file defines the defaults for all options for all of
+ *      the Tk widgets.
  *
  * Copyright (c) 1991-1994 The Regents of the University of California.
  * Copyright (c) 1994 Sun Microsystems, Inc.
@@ -18,9 +18,9 @@
 #   include "tkWinDefault.h"
 #else
 #   if defined(MAC_OSX_TK)
-#	include "tkMacOSXDefault.h"
+#       include "tkMacOSXDefault.h"
 #   else
-#	include "tkUnixDefault.h"
+#       include "tkUnixDefault.h"
 #   endif
 #endif
 

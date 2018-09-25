@@ -38,7 +38,7 @@ test canvPs-1.2 {test writing to a file, idempotency} -constraints {
     .c postscript -file $bar
     set status ok
     if {[file size $bar] != [file size $foo]} {
-	set status broken
+        set status broken
     }
     set status
 } -cleanup {
@@ -79,7 +79,7 @@ test canvPs-2.2 {test writing to channel, idempotency} -constraints {
     close $c2
     set status ok
     if {[file size $bar] != [file size $foo]} {
-	    set status broken
+            set status broken
     }
     set status
 } -cleanup {
@@ -101,7 +101,7 @@ test canvPs-2.3 {test writing to channel and file, same output} -constraints {
     .c postscript -file $bar
     set status ok
     if {[file size $foo] != [file size $bar]} {
-	    set status broken
+            set status broken
     }
     set status
 } -cleanup {
@@ -123,7 +123,7 @@ test canvPs-2.4 {test writing to channel and file, same output} -constraints {
     .c postscript -file $bar
     set status ok
     if {[file size $foo] != [file size $bar]} {
-	    set status broken
+            set status broken
     }
     set status
 } -cleanup {
@@ -142,10 +142,10 @@ test canvPs-3.1 {test ps generation with an embedded window} -constraints {
     pack [canvas .c -width 200 -height 200 -background white]
     .c create rect 20 20 150 150 -tags rect0 -dash . -width 2
     .c create arc 0 50 200 200 -tags arc0 \
-	    -dash {4 4} -stipple question -outline red -fill green
+            -dash {4 4} -stipple question -outline red -fill green
 
     image create photo logo \
-	-file [file join [file dirname [info script]] pwrdLogo150.gif]
+        -file [file join [file dirname [info script]] pwrdLogo150.gif]
     .c create image 200 50 -image logo -anchor nw
 
     entry .c.e -background pink -foreground blue -width 14

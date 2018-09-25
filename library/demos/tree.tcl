@@ -26,43 +26,43 @@ pack [addSeeDismiss $w.seeDismiss $w] -side bottom -fill x
 ## Code to populate the roots of the tree (can be more than one on Windows)
 proc populateRoots {tree} {
     foreach dir [lsort -dictionary [file volumes]] {
-	populateTree $tree [$tree insert {} end -text $dir \
-		-values [list $dir directory]]
+        populateTree $tree [$tree insert {} end -text $dir \
+                -values [list $dir directory]]
     }
 }
 
 ## Code to populate a node of the tree
 proc populateTree {tree node} {
     if {[$tree set $node type] ne "directory"} {
-	return
+        return
     }
     set path [$tree set $node fullpath]
     $tree delete [$tree children $node]
     foreach f [lsort -dictionary [glob -nocomplain -dir $path *]] {
-	set f [file normalize $f]
-	set type [file type $f]
-	set id [$tree insert $node end -text [file tail $f] \
-		-values [list $f $type]]
+        set f [file normalize $f]
+        set type [file type $f]
+        set id [$tree insert $node end -text [file tail $f] \
+                -values [list $f $type]]
 
-	if {$type eq "directory"} {
-	    ## Make it so that this node is openable
-	    $tree insert $id 0 -text dummy ;# a dummy
-	    $tree item $id -text [file tail $f]/
+        if {$type eq "directory"} {
+            ## Make it so that this node is openable
+            $tree insert $id 0 -text dummy ;# a dummy
+            $tree item $id -text [file tail $f]/
 
-	} elseif {$type eq "file"} {
-	    set size [file size $f]
-	    ## Format the file size nicely
-	    if {$size >= 1024*1024*1024} {
-		set size [format %.1f\ GB [expr {$size/1024/1024/1024.}]]
-	    } elseif {$size >= 1024*1024} {
-		set size [format %.1f\ MB [expr {$size/1024/1024.}]]
-	    } elseif {$size >= 1024} {
-		set size [format %.1f\ kB [expr {$size/1024.}]]
-	    } else {
-		append size " bytes"
-	    }
-	    $tree set $id size $size
-	}
+        } elseif {$type eq "file"} {
+            set size [file size $f]
+            ## Format the file size nicely
+            if {$size >= 1024*1024*1024} {
+                set size [format %.1f\ GB [expr {$size/1024/1024/1024.}]]
+            } elseif {$size >= 1024*1024} {
+                set size [format %.1f\ MB [expr {$size/1024/1024.}]]
+            } elseif {$size >= 1024} {
+                set size [format %.1f\ kB [expr {$size/1024.}]]
+            } else {
+                append size " bytes"
+            }
+            $tree set $id size $size
+        }
     }
 
     # Stop this code from rerunning on the current node
@@ -71,7 +71,7 @@ proc populateTree {tree node} {
 
 ## Create the tree and set it up
 ttk::treeview $w.tree -columns {fullpath type size} -displaycolumns {size} \
-	-yscroll "$w.vsb set" -xscroll "$w.hsb set"
+        -yscroll "$w.vsb set" -xscroll "$w.hsb set"
 ttk::scrollbar $w.vsb -orient vertical -command "$w.tree yview"
 ttk::scrollbar $w.hsb -orient horizontal -command "$w.tree xview"
 $w.tree heading \#0 -text "Directory Structure"

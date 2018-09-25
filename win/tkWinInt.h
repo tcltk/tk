@@ -1,8 +1,8 @@
 /*
  * tkWinInt.h --
  *
- *	This file contains declarations that are shared among the
- *	Windows-specific parts of Tk, but aren't used by the rest of Tk.
+ *      This file contains declarations that are shared among the
+ *      Windows-specific parts of Tk, but aren't used by the rest of Tk.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright (c) 1998-2000 by Scriptics Corporation.
@@ -31,7 +31,7 @@
  */
 
 #ifndef WS_EX_TOOLWINDOW
-#define WS_EX_TOOLWINDOW	0x00000080L
+#define WS_EX_TOOLWINDOW        0x00000080L
 #endif
 #ifndef SPI_SETKEYBOARDCUES
 #define SPI_SETKEYBOARDCUES 0x100B
@@ -53,9 +53,9 @@ typedef struct TkWinDCState {
  * types.
  */
 
-#define TWD_BITMAP	1
-#define TWD_WINDOW	2
-#define TWD_WINDC	3
+#define TWD_BITMAP      1
+#define TWD_WINDOW      2
+#define TWD_WINDC       3
 
 typedef struct {
     int type;
@@ -86,25 +86,25 @@ typedef union {
  * The following macros are used to retrieve internal values from a Drawable.
  */
 
-#define TkWinGetHWND(w)		(((TkWinDrawable *) w)->window.handle)
-#define TkWinGetWinPtr(w)	(((TkWinDrawable *) w)->window.winPtr)
-#define TkWinGetHBITMAP(w)	(((TkWinDrawable *) w)->bitmap.handle)
-#define TkWinGetColormap(w)	(((TkWinDrawable *) w)->bitmap.colormap)
-#define TkWinGetHDC(w)		(((TkWinDrawable *) w)->winDC.hdc)
+#define TkWinGetHWND(w)         (((TkWinDrawable *) w)->window.handle)
+#define TkWinGetWinPtr(w)       (((TkWinDrawable *) w)->window.winPtr)
+#define TkWinGetHBITMAP(w)      (((TkWinDrawable *) w)->bitmap.handle)
+#define TkWinGetColormap(w)     (((TkWinDrawable *) w)->bitmap.colormap)
+#define TkWinGetHDC(w)          (((TkWinDrawable *) w)->winDC.hdc)
 
 /*
  * The following structure is used to encapsulate palette information.
  */
 
 typedef struct {
-    HPALETTE palette;		/* Palette handle used when drawing. */
-    UINT size;			/* Number of entries in the palette. */
-    int stale;			/* 1 if palette needs to be realized,
-				 * otherwise 0. If the palette is stale, then
-				 * an idle handler is scheduled to realize the
-				 * palette. */
-    Tcl_HashTable refCounts;	/* Hash table of palette entry reference
-				 * counts indexed by pixel value. */
+    HPALETTE palette;           /* Palette handle used when drawing. */
+    UINT size;                  /* Number of entries in the palette. */
+    int stale;                  /* 1 if palette needs to be realized,
+                                 * otherwise 0. If the palette is stale, then
+                                 * an idle handler is scheduled to realize the
+                                 * palette. */
+    Tcl_HashTable refCounts;    /* Hash table of palette entry reference
+                                 * counts indexed by pixel value. */
 } TkWinColormap;
 
 /*
@@ -175,9 +175,9 @@ MODULE_SCOPE HWND Tk_GetEmbeddedMenuHWND(Tk_Window tkwin);
  */
 
 
-MODULE_SCOPE Tcl_Encoding	TkWinGetKeyInputEncoding(void);
-MODULE_SCOPE Tcl_Encoding	TkWinGetUnicodeEncoding(void);
-MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
+MODULE_SCOPE Tcl_Encoding       TkWinGetKeyInputEncoding(void);
+MODULE_SCOPE Tcl_Encoding       TkWinGetUnicodeEncoding(void);
+MODULE_SCOPE void               TkWinSetupSystemFonts(TkMainInfo *mainPtr);
 
 /*
  * Values returned by TkWinGetPlatformTheme.
@@ -190,20 +190,20 @@ MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
  * The following is implemented in tkWinWm and used by tkWinEmbed.c
  */
 
-MODULE_SCOPE void		TkpWinToplevelWithDraw(TkWindow *winPtr);
-MODULE_SCOPE void		TkpWinToplevelIconify(TkWindow *winPtr);
-MODULE_SCOPE void		TkpWinToplevelDeiconify(TkWindow *winPtr);
-MODULE_SCOPE long		TkpWinToplevelIsControlledByWm(TkWindow *winPtr);
-MODULE_SCOPE long		TkpWinToplevelMove(TkWindow *winPtr, int x, int y);
-MODULE_SCOPE long		TkpWinToplevelOverrideRedirect(TkWindow *winPtr,
-			    int reqValue);
-MODULE_SCOPE void		TkpWinToplevelDetachWindow(TkWindow *winPtr);
-MODULE_SCOPE int		TkpWmGetState(TkWindow *winPtr);
+MODULE_SCOPE void               TkpWinToplevelWithDraw(TkWindow *winPtr);
+MODULE_SCOPE void               TkpWinToplevelIconify(TkWindow *winPtr);
+MODULE_SCOPE void               TkpWinToplevelDeiconify(TkWindow *winPtr);
+MODULE_SCOPE long               TkpWinToplevelIsControlledByWm(TkWindow *winPtr);
+MODULE_SCOPE long               TkpWinToplevelMove(TkWindow *winPtr, int x, int y);
+MODULE_SCOPE long               TkpWinToplevelOverrideRedirect(TkWindow *winPtr,
+                            int reqValue);
+MODULE_SCOPE void               TkpWinToplevelDetachWindow(TkWindow *winPtr);
+MODULE_SCOPE int                TkpWmGetState(TkWindow *winPtr);
 
 /*
  * Common routines used in Windows implementation
  */
-MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
+MODULE_SCOPE Tcl_Obj *          TkWin32ErrorObj(HRESULT hrError);
 
 
 /*
@@ -213,44 +213,44 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
  */
 
 #ifndef GetClassLongPtr
-#   define GetClassLongPtrA	GetClassLongA
-#   define GetClassLongPtrW	GetClassLongW
-#   define SetClassLongPtrA	SetClassLongA
-#   define SetClassLongPtrW	SetClassLongW
+#   define GetClassLongPtrA     GetClassLongA
+#   define GetClassLongPtrW     GetClassLongW
+#   define SetClassLongPtrA     SetClassLongA
+#   define SetClassLongPtrW     SetClassLongW
 #   ifdef UNICODE
-#	define GetClassLongPtr	GetClassLongPtrW
-#	define SetClassLongPtr	SetClassLongPtrW
+#       define GetClassLongPtr  GetClassLongPtrW
+#       define SetClassLongPtr  SetClassLongPtrW
 #   else
-#	define GetClassLongPtr	GetClassLongPtrA
-#	define SetClassLongPtr	SetClassLongPtrA
+#       define GetClassLongPtr  GetClassLongPtrA
+#       define SetClassLongPtr  SetClassLongPtrA
 #   endif /* !UNICODE */
 #endif /* !GetClassLongPtr */
 #ifndef GCLP_HICON
-#   define GCLP_HICON		GCL_HICON
+#   define GCLP_HICON           GCL_HICON
 #endif /* !GCLP_HICON */
 #ifndef GCLP_HICONSM
-#   define GCLP_HICONSM		(-34)
+#   define GCLP_HICONSM         (-34)
 #endif /* !GCLP_HICONSM */
 
 #ifndef GetWindowLongPtr
-#   define GetWindowLongPtrA	GetWindowLongA
-#   define GetWindowLongPtrW	GetWindowLongW
-#   define SetWindowLongPtrA	SetWindowLongA
-#   define SetWindowLongPtrW	SetWindowLongW
+#   define GetWindowLongPtrA    GetWindowLongA
+#   define GetWindowLongPtrW    GetWindowLongW
+#   define SetWindowLongPtrA    SetWindowLongA
+#   define SetWindowLongPtrW    SetWindowLongW
 #   ifdef UNICODE
-#	define GetWindowLongPtr	GetWindowLongPtrW
-#	define SetWindowLongPtr	SetWindowLongPtrW
+#       define GetWindowLongPtr GetWindowLongPtrW
+#       define SetWindowLongPtr SetWindowLongPtrW
 #   else
-#	define GetWindowLongPtr	GetWindowLongPtrW
-#	define SetWindowLongPtr	SetWindowLongPtrW
+#       define GetWindowLongPtr GetWindowLongPtrW
+#       define SetWindowLongPtr SetWindowLongPtrW
 #   endif /* !UNICODE */
 #endif /* !GetWindowLongPtr */
 #ifndef GWLP_WNDPROC
-#define GWLP_WNDPROC		GWL_WNDPROC
-#define GWLP_HINSTANCE		GWL_HINSTANCE
-#define GWLP_HWNDPARENT		GWL_HWNDPARENT
-#define GWLP_USERDATA		GWL_USERDATA
-#define GWLP_ID			GWL_ID
+#define GWLP_WNDPROC            GWL_WNDPROC
+#define GWLP_HINSTANCE          GWL_HINSTANCE
+#define GWLP_HWNDPARENT         GWL_HWNDPARENT
+#define GWLP_USERDATA           GWL_USERDATA
+#define GWLP_ID                 GWL_ID
 #endif /* !GWLP_WNDPROC */
 
 #endif /* _TKWININT */

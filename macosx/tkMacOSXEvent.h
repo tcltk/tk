@@ -1,8 +1,8 @@
 /*
  * tkMacOSXEvent.h --
  *
- *	Declarations of Macintosh specific functions for implementing the
- *	Mac OS X Notifier.
+ *      Declarations of Macintosh specific functions for implementing the
+ *      Mac OS X Notifier.
  *
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>

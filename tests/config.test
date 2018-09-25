@@ -17,10 +17,10 @@ proc killTables {} {
     # delete of chain2 will crash.
     deleteWindows
     foreach t {alltypes chain3 chain2 chain1 configerror internal
-	    new notenoughparams twowindows} {
-	    while {[testobjconfig info $t] != ""} {
-	        testobjconfig delete $t
-	    }
+            new notenoughparams twowindows} {
+            while {[testobjconfig info $t] != ""} {
+                testobjconfig delete $t
+            }
     }
 }
 
@@ -32,7 +32,7 @@ if {[testConstraint testobjconfig]} {
 }
 
 test config-1.1 {Tk_CreateOptionTable - reference counts} -constraints {
-	testobjconfig
+        testobjconfig
 } -body {
     set x {}
     testobjconfig alltypes .a
@@ -1048,11 +1048,11 @@ test config-4.109 {DoObjConfig - releasing old values} -constraints {
     # such as Purify or Tcl's built-in checker.
 
     testobjconfig alltypes .foo -string {Test string} -color yellow \
-	    -font {Courier 18} -bitmap questhead -border green -cursor cross \
-	    -custom foobar
+            -font {Courier 18} -bitmap questhead -border green -cursor cross \
+            -custom foobar
     .foo configure -string {new string} -color brown \
-	    -font {Times 8} -bitmap gray75 -border pink -cursor watch \
-	    -custom barbaz
+            -font {Times 8} -bitmap gray75 -border pink -cursor watch \
+            -custom barbaz
     concat {}
 } -cleanup {
     killTables
@@ -1067,11 +1067,11 @@ test config-4.110 {DoObjConfig - releasing old values} -constraints {
     # such as Purify or Tcl's built-in checker.
 
     testobjconfig internal .foo -string {Test string} -color yellow \
-	    -font {Courier 18} -bitmap questhead -border green -cursor cross \
-	    -custom foobar
+            -font {Courier 18} -bitmap questhead -border green -cursor cross \
+            -custom foobar
     .foo configure -string {new string} -color brown \
-	    -font {Times 8} -bitmap gray75 -border pink -cursor watch \
-	    -custom barbaz
+            -font {Times 8} -bitmap gray75 -border pink -cursor watch \
+            -custom barbaz
     concat {}
 } -cleanup {
     killTables
@@ -1292,8 +1292,8 @@ test config-8.2 {Tk_RestoreSavedOptions - restore in proper order} -constraints 
 } -body {
     testobjconfig alltypes .a
     catch {.a csave -color green -color black -color blue \
-	    -color #ffff00 -color #ff00ff -color bogus}
-	.a cget -color
+            -color #ffff00 -color #ff00ff -color bogus}
+        .a cget -color
 } -cleanup {
     killTables
 } -result {red}
@@ -1353,7 +1353,7 @@ test config-8.9 {Tk_RestoreSavedOptions - string internal form} -constraints {
 } -body {
     testobjconfig internal .a
     catch {.a csave -string "A long string" -color bogus}
-	.a cget -string
+        .a cget -string
 } -cleanup {
     killTables
 } -result {foo}
@@ -1362,7 +1362,7 @@ test config-8.10 {Tk_RestoreSavedOptions - string table internal form} -constrai
 } -body {
     testobjconfig internal .a
     catch {.a csave -stringtable three -color bogus}
-	.a cget -stringtable
+        .a cget -stringtable
 } -cleanup {
     killTables
 } -result {one}
@@ -1693,10 +1693,10 @@ test config-12.17 {GetObjectForOption - null values} -constraints {
     testobjconfig
 } -body {
     .a configure -string {} -color {} -font {} -bitmap {} -border {} \
-	    -cursor {} -window {} -custom {}
+            -cursor {} -window {} -custom {}
     list [.a cget -string] [.a cget -color] [.a cget -font] \
-	    [.a cget -bitmap] [.a cget -border] [.a cget -cursor] \
-	    [.a cget -window] [.a cget -custom]
+            [.a cget -bitmap] [.a cget -border] [.a cget -cursor] \
+            [.a cget -window] [.a cget -custom]
 } -result {{} {} {} {} {} {} {} {}}
 if {[testConstraint testobjconfig]} {
     killTables

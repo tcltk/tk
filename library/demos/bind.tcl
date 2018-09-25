@@ -21,7 +21,7 @@ set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
 text $w.text -yscrollcommand "$w.scroll set" -setgrid true \
-	-width 60 -height 24 -font $font -wrap word
+        -width 60 -height 24 -font $font -wrap word
 ttk::scrollbar $w.scroll -command "$w.text yview"
 pack $w.scroll -side right -fill y
 pack $w.text -expand yes -fill both

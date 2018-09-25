@@ -26,7 +26,7 @@ frame $w.frame -borderwidth 10
 pack $w.frame
 
 scale $w.frame.scale -orient vertical -length 284 -from 0 -to 250 \
-	-command "setHeight $w.frame.canvas" -tickinterval 50
+        -command "setHeight $w.frame.canvas" -tickinterval 50
 canvas $w.frame.canvas -width 50 -height 50 -bd 0 -highlightthickness 0
 $w.frame.canvas create polygon 0 0 1 1 2 2 -fill SeaGreen3 -tags poly
 $w.frame.canvas create line 0 0 1 1 2 2 0 0 -fill black -tags line
@@ -39,7 +39,7 @@ proc setHeight {w height} {
     incr height 21
     set y2 [expr {$height - 30}]
     if {$y2 < 21} {
-	set y2 21
+        set y2 21
     }
     $w coords poly 15 20 35 20 35 $y2 45 $y2 25 $height 5 $y2 15 $y2 15 20
     $w coords line 15 20 35 20 35 $y2 45 $y2 25 $height 5 $y2 15 $y2 15 20

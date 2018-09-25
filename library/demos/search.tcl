@@ -16,15 +16,15 @@ package require Tk
 # not affected, however.
 #
 # Arguments:
-# w -		The window into which to load the file.  Must be a
-#		text widget.
-# file -	The name of the file to load.  Must be readable.
+# w -           The window into which to load the file.  Must be a
+#               text widget.
+# file -        The name of the file to load.  Must be readable.
 
 proc textLoadFile {w file} {
     set f [open $file]
     $w delete 1.0 end
     while {![eof $f]} {
-	$w insert end [read $f 10000]
+        $w insert end [read $f 10000]
     }
     close $f
 }
@@ -34,24 +34,24 @@ proc textLoadFile {w file} {
 # apply a given tag to each instance found.
 #
 # Arguments:
-# w -		The window in which to search.  Must be a text widget.
-# string -	The string to search for.  The search is done using
-#		exact matching only;  no special characters.
-# tag -		Tag to apply to each instance of a matching string.
+# w -           The window in which to search.  Must be a text widget.
+# string -      The string to search for.  The search is done using
+#               exact matching only;  no special characters.
+# tag -         Tag to apply to each instance of a matching string.
 
 proc textSearch {w string tag} {
     $w tag remove search 0.0 end
     if {$string == ""} {
-	return
+        return
     }
     set cur 1.0
     while 1 {
-	set cur [$w search -count length $string $cur end]
-	if {$cur == ""} {
-	    break
-	}
-	$w tag add $tag $cur "$cur + $length char"
-	set cur [$w index "$cur + $length char"]
+        set cur [$w search -count length $string $cur end]
+        if {$cur == ""} {
+            break
+        }
+        $w tag add $tag $cur "$cur + $length char"
+        set cur [$w index "$cur + $length char"]
     }
 }
 
@@ -62,16 +62,16 @@ proc textSearch {w string tag} {
 # deleted) then it doesn't reschedule itself.
 #
 # Arguments:
-# cmd1 -	Command to execute when procedure is called.
-# sleep1 -	Ms to sleep after executing cmd1 before executing cmd2.
-# cmd2 -	Command to execute in the *next* invocation of this
-#		procedure.
-# sleep2 -	Ms to sleep after executing cmd2 before executing cmd1 again.
+# cmd1 -        Command to execute when procedure is called.
+# sleep1 -      Ms to sleep after executing cmd1 before executing cmd2.
+# cmd2 -        Command to execute in the *next* invocation of this
+#               procedure.
+# sleep2 -      Ms to sleep after executing cmd2 before executing cmd1 again.
 
 proc textToggle {cmd1 sleep1 cmd2 sleep2} {
     catch {
-	eval $cmd1
-	after $sleep1 [list textToggle $cmd2 $sleep2 $cmd1 $sleep1]
+        eval $cmd1
+        after $sleep1 [list textToggle $cmd2 $sleep2 $cmd1 $sleep1]
     }
 }
 
@@ -90,7 +90,7 @@ frame $w.file
 label $w.file.label -text "File name:" -width 13 -anchor w
 entry $w.file.entry -width 40 -textvariable fileName
 button $w.file.button -text "Load File" \
-	-command "textLoadFile $w.text \$fileName"
+        -command "textLoadFile $w.text \$fileName"
 pack $w.file.label $w.file.entry -side left
 pack $w.file.button -side left -pady 5 -padx 10
 bind $w.file.entry <Return> "
@@ -103,7 +103,7 @@ frame $w.string
 label $w.string.label -text "Search string:" -width 13 -anchor w
 entry $w.string.entry -width 40 -textvariable searchString
 button $w.string.button -text "Highlight" \
-	-command "textSearch $w.text \$searchString search"
+        -command "textSearch $w.text \$searchString search"
 pack $w.string.label $w.string.entry -side left
 pack $w.string.button -side left -pady 5 -padx 10
 bind $w.string.entry <Return> "textSearch $w.text \$searchString search"
@@ -118,12 +118,12 @@ pack $w.text -expand yes -fill both
 
 if {[winfo depth $w] > 1} {
     textToggle "$w.text tag configure search -background \
-	    #ce5555 -foreground white" 800 "$w.text tag configure \
-	    search -background {} -foreground {}" 200
+            #ce5555 -foreground white" 800 "$w.text tag configure \
+            search -background {} -foreground {}" 200
 } else {
     textToggle "$w.text tag configure search -background \
-	    black -foreground white" 800 "$w.text tag configure \
-	    search -background {} -foreground {}" 200
+            black -foreground white" 800 "$w.text tag configure \
+            search -background {} -foreground {}" 200
 }
 $w.text insert 1.0 \
 {This window demonstrates how to use the tagging facilities in text

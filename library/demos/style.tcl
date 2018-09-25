@@ -25,7 +25,7 @@ pack $btns -side bottom -fill x
 set family Courier
 
 text $w.text -yscrollcommand "$w.scroll set" -setgrid true \
-	-width 70 -height 32 -wrap word -font "$family 12"
+        -width 70 -height 32 -wrap word -font "$family 12"
 ttk::scrollbar $w.scroll -command "$w.text yview"
 pack $w.scroll -side right -fill y
 pack $w.text -expand yes -fill both
@@ -45,12 +45,12 @@ if {[winfo depth $w] > 1} {
     $w.text tag configure color1 -background black -foreground white
     $w.text tag configure color2 -background black -foreground white
     $w.text tag configure raised -background white -relief raised \
-	    -borderwidth 1
+            -borderwidth 1
     $w.text tag configure sunken -background white -relief sunken \
-	    -borderwidth 1
+            -borderwidth 1
 }
 $w.text tag configure bgstipple -background black -borderwidth 0 \
-	-bgstipple gray12
+        -bgstipple gray12
 $w.text tag configure fgstipple -fgstipple gray50
 $w.text tag configure underline -underline on
 $w.text tag configure overstrike -overstrike on
@@ -60,7 +60,7 @@ $w.text tag configure super -offset 4p -font "$family 10"
 $w.text tag configure sub -offset -2p -font "$family 10"
 $w.text tag configure margins -lmargin1 12m -lmargin2 6m -rmargin 10m
 $w.text tag configure spacing -spacing1 10p -spacing2 2p \
-	-lmargin1 12m -lmargin2 6m -rmargin 10m
+        -lmargin1 12m -lmargin2 6m -rmargin 10m
 
 $w.text insert end {Text widgets like this one allow you to display information in a
 variety of styles.  Display styles are controlled using a mechanism

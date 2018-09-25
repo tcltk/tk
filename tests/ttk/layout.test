@@ -8,9 +8,9 @@ test layout-1.1 "Size computations for mixed-orientation layouts" -body {
     set block [image create photo -width 10 -height 10]
     ttk::style element create block image $block
     ttk::style layout Blocks {
-	border -children { block } -side left
-	border -children { block } -side top
-	border -children { block } -side bottom
+        border -children { block } -side left
+        border -children { block } -side top
+        border -children { block } -side bottom
     }
     ttk::style configure Blocks -borderwidth 1 -relief raised
     ttk::button .b -style Blocks

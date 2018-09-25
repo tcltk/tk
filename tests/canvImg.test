@@ -32,13 +32,13 @@ test canvImg-1.2 {options for image items} -body {
 } -returnCodes {error} -result {bad anchor position "gorp": must be n, ne, e, se, s, sw, w, nw, or center}
 test canvImg-1.3 {options for image items} -constraints testImageType -setup {
     image create test foo
-	.c delete all
+        .c delete all
 } -body {
     .c create image 50 50 -image foo -tags i1
     .c itemconfigure i1 -image
 } -cleanup {
     .c delete all
-	image delete foo
+        image delete foo
 } -result {-image {} {} {} foo}
 test canvImg-1.4 {options for image items} -body {
     .c create image 50 50 -image unknown -tags i1
@@ -47,13 +47,13 @@ test canvImg-1.4 {options for image items} -body {
 } -returnCodes {error} -result {image "unknown" doesn't exist}
 test canvImg-1.5 {options for image items} -constraints testImageType -setup {
     image create test foo
-	.c delete all
+        .c delete all
 } -body {
     .c create image 50 50 -image foo -tags {i1 foo}
     .c itemconfigure i1 -tags
 } -cleanup {
     .c delete all
-	image delete foo
+        image delete foo
 } -result {-tags {} {} {} {i1 foo}}
 
 test canvImg-2.1 {CreateImage procedure} -body {
@@ -70,8 +70,8 @@ test canvImg-2.3 {CreateImage procedure} -body {
     .c delete all
     set i [.c create image 50 50]
     list [lindex [.c itemconf $i -anchor] 4] \
-	    [lindex [.c itemconf $i -image] 4] \
-	    [lindex [.c itemconf $i -tags] 4]
+            [lindex [.c itemconf $i -image] 4] \
+            [lindex [.c itemconf $i -tags] 4]
 } -cleanup {
     .c delete all
 } -result {center {} {}}
@@ -93,59 +93,59 @@ test canvImg-2.6 {CreateImage procedure} -constraints testImageType -body {
 
 
 test canvImg-3.1 {ImageCoords procedure} -constraints testImageType -setup {
-	image create test foo
+        image create test foo
 } -body {
     .c create image 50 100 -image foo -tags i1
     format {%.6g %.6g} {*}[.c coords i1]
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -result {50 100}
 test canvImg-3.2 {ImageCoords procedure} -constraints testImageType -setup {
-	image create test foo
+        image create test foo
 } -body {
     .c create image 50 100 -image foo -tags i1
     .c coords i1 dumb 100
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -returnCodes {error} -result {bad screen distance "dumb"}
 test canvImg-3.3 {ImageCoords procedure} -constraints testImageType -setup {
-	image create test foo
+        image create test foo
 } -body {
     .c delete all
     .c create image 50 100 -image foo -tags i1
     .c coords i1 250 dumb0
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -returnCodes {error} -result {bad screen distance "dumb0"}
 test canvImg-3.4 {ImageCoords procedure} -constraints testImageType -setup {
-	image create test foo
+        image create test foo
 } -body {
     .c delete all
     .c create image 50 100 -image foo -tags i1
     .c coords i1 250
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -returnCodes {error} -result {wrong # coordinates: expected 2, got 1}
 test canvImg-3.5 {ImageCoords procedure} -constraints testImageType -setup {
-	image create test foo
+        image create test foo
 } -body {
     .c delete all
     .c create image 50 100 -image foo -tags i1
     .c coords i1 250 300 400
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -returnCodes {error} -result {wrong # coordinates: expected 0 or 2, got 3}
 
 
 test canvImg-4.1 {ConfiugreImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
-	image create test foo -variable x
+        image create test foo -variable x
     .c create image 50 100 -image foo -tags i1
     update
     set x {}
@@ -153,13 +153,13 @@ test canvImg-4.1 {ConfiugreImage procedure} -constraints testImageType -setup {
     update
     list $x [.c bbox i1]
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -result {{{foo free}} {}}
 test canvImg-4.2 {ConfiugreImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
-	image create test foo -variable x
+        image create test foo -variable x
     image create test foo2 -variable y
     foo2 changed 0 0 0 0 80 60
     .c create image 50 100 -image foo -tags i1 -anchor nw
@@ -170,14 +170,14 @@ test canvImg-4.2 {ConfiugreImage procedure} -constraints testImageType -setup {
     update
     list $x $y [.c bbox i1]
 } -cleanup {
-	.c delete all
-	image delete foo
-	image delete foo2
+        .c delete all
+        image delete foo
+        image delete foo2
 } -result {{{foo free}} {{foo2 get} {foo2 display 0 0 80 60}} {50 100 130 160}}
 test canvImg-4.3 {ConfiugreImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
-	image create test foo -variable x
+        image create test foo -variable x
     image create test foo2 -variable y
     foo2 changed 0 0 0 0 80 60
     .c create image 50 100 -image foo -tags i1 -anchor nw
@@ -186,8 +186,8 @@ test canvImg-4.3 {ConfiugreImage procedure} -constraints testImageType -setup {
     set y {}
     .c itemconfigure i1 -image lousy
 } -cleanup {
-	.c delete all
-	image delete foo foo2
+        .c delete all
+        image delete foo foo2
 } -returnCodes {error} -result {image "lousy" doesn't exist}
 
 
@@ -341,7 +341,7 @@ test canvImg-6.11 {ComputeImageBbox procedure} -constraints {
     image delete foo
 } -result {20 23 50 38}
 test canvImg-6.12 {ComputeImageBbox procedure} -constraints {
-	testImageType
+        testImageType
 } -setup {
     image create test foo
     .c delete all
@@ -358,7 +358,7 @@ test canvImg-6.12 {ComputeImageBbox procedure} -constraints {
 # coordinate rounding on some machines (does 0.5 round  up?).
 
 test canvImg-7.1 {DisplayImage procedure} -constraints {
-	nonPortable testImageType
+        nonPortable testImageType
 } -setup {
     .c delete all
 } -body {
@@ -384,166 +384,166 @@ if {[testConstraint testImageType]} {
     image create test foo
 }
 test canvImg-8.1 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect 50 70 80 81
-	.c gettags [.c find closest 70 90]
+        .c coords rect 50 70 80 81
+        .c gettags [.c find closest 70 90]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {rect}
 test canvImg-8.2 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{50 70 80 79}
-	.c gettags [.c find closest {*}{70 90}]
+        .c coords rect {*}{50 70 80 79}
+        .c gettags [.c find closest {*}{70 90}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.3 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{99 70 110 81}
-	.c gettags [.c find closest {*}{90 90}]
+        .c coords rect {*}{99 70 110 81}
+        .c gettags [.c find closest {*}{90 90}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {rect}
 test canvImg-8.4 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{101 70 110 79}
-	.c gettags [.c find closest {*}{90 90}]
+        .c coords rect {*}{101 70 110 79}
+        .c gettags [.c find closest {*}{90 90}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.5 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{99 100 110 115}
-	.c gettags [.c find closest {*}{90 110}]
+        .c coords rect {*}{99 100 110 115}
+        .c gettags [.c find closest {*}{90 110}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {rect}
 test canvImg-8.6 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{101 100 110 115}
-	.c gettags [.c find closest {*}{90 110}]
+        .c coords rect {*}{101 100 110 115}
+        .c gettags [.c find closest {*}{90 110}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.7 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{99 134 110 145}
-	.c gettags [.c find closest {*}{90 125}]
+        .c coords rect {*}{99 134 110 145}
+        .c gettags [.c find closest {*}{90 125}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {rect}
 test canvImg-8.8 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{101 136 110 145}
-	.c gettags [.c find closest {*}{90 125}]
+        .c coords rect {*}{101 136 110 145}
+        .c gettags [.c find closest {*}{90 125}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.9 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{50 134 80 145}
-	.c gettags [.c find closest {*}{70 125}]
+        .c coords rect {*}{50 134 80 145}
+        .c gettags [.c find closest {*}{70 125}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {rect}
 test canvImg-8.10 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{50 136 80 145}
-	.c gettags [.c find closest {*}{70 125}]
+        .c coords rect {*}{50 136 80 145}
+        .c gettags [.c find closest {*}{70 125}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.11 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{20 134 31 145}
-	.c gettags [.c find closest {*}{40 125}]
+        .c coords rect {*}{20 134 31 145}
+        .c gettags [.c find closest {*}{40 125}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {rect}
 test canvImg-8.12 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{20 136 29 145}
-	.c gettags [.c find closest {*}{40 125}]
+        .c coords rect {*}{20 136 29 145}
+        .c gettags [.c find closest {*}{40 125}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.13 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{20 100 31 115}
-	.c gettags [.c find closest {*}{40 110}]
+        .c coords rect {*}{20 100 31 115}
+        .c gettags [.c find closest {*}{40 110}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {rect}
 test canvImg-8.14 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{20 100 29 115}
-	.c gettags [.c find closest {*}{40 110}]
+        .c coords rect {*}{20 100 29 115}
+        .c gettags [.c find closest {*}{40 110}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.15 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{20 70 31 80}
-	.c gettags [.c find closest {*}{40 90}]
+        .c coords rect {*}{20 70 31 80}
+        .c gettags [.c find closest {*}{40 90}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {rect}
 test canvImg-8.16 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{20 70 29 79}
-	.c gettags [.c find closest {*}{40 90}]
+        .c coords rect {*}{20 70 29 79}
+        .c gettags [.c find closest {*}{40 90}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.17 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{60 70 69 109}
-	.c gettags [.c find closest {*}{70 110}]
+        .c coords rect {*}{60 70 69 109}
+        .c gettags [.c find closest {*}{70 110}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.18 {ImageToArea procedure} -constraints testImageType -setup {
-	.c create image 50 100 -image foo -tags image -anchor nw
-	.c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
+        .c create image 50 100 -image foo -tags image -anchor nw
+        .c create rect 10 10 20 20 -tags rect -fill black -width 0 -outline {}
 } -body {
-	.c coords rect {*}{60 70 71 111}
-	.c gettags [.c find closest {*}{70 110}]
+        .c coords rect {*}{60 70 71 111}
+        .c gettags [.c find closest {*}{70 110}]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {rect}
 .c delete all
 
@@ -551,179 +551,179 @@ test canvImg-8.19 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 60 0 70 99]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.20 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 60 0 70 99.999]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.21 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 60 0 70 101]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.22 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 81 105 120 115]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.23 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 80.001 105 120 115]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.24 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 79 105 120 115]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.25 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 60 116 70 150]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.26 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 60 115.001 70 150]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.27 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 60 114 70 150]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.28 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 0 105 49 115]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.29 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 0 105 50 114.999]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.30 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 0 105 51 115]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.31 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 0 0 49.999 99.999]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.32 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 0 0 51 101]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.33 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 80 0 150 100]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.34 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 79 0 150 101]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.35 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 80.001 115.001 150 180]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.36 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 79 114 150 180]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.37 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 0 115 50 180]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.38 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find overlapping 0 114 51 180]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.39 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find enclosed 0 0 200 200]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.40 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find enclosed 49.999 99.999 80.001 115.001]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {image}
 test canvImg-8.41 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find enclosed 51 100 80 115]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.42 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find enclosed 50 101 80 115]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.43 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find enclosed 50 100 79 115]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 test canvImg-8.44 {ImageToArea procedure} -constraints testImageType -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c gettags [.c find enclosed 50 100 80 114]
 } -cleanup {
-	.c delete all
+        .c delete all
 } -result {}
 if {[testConstraint testImageType]} {
-	image delete foo
+        image delete foo
 }
 
 
 test canvImg-9.1 {DisplayImage procedure} -constraints testImageType -setup {
     .c delete all
-	image create test foo
+        image create test foo
 } -body {
     .c create image 50 100 -image foo -tags image -anchor nw
     .c scale image 25 0 2.0 1.5
     .c bbox image
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -result {75 150 105 165}
 
 test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
-	image create test foo -variable x
+        image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
@@ -731,14 +731,14 @@ test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     update
     return $x
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -result {{foo display 2 4 6 8}}
 
 test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
-	image create test foo -variable x
+        image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
@@ -746,11 +746,11 @@ test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     update
     return $x
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -result {{foo display 0 0 40 50}}
 test canvImg-11.2 {ImageChangedProc procedure} -constraints {
-	testImageType
+        testImageType
 } -setup {
     .c delete all
 } -body {
@@ -761,16 +761,16 @@ test canvImg-11.2 {ImageChangedProc procedure} -constraints {
     foo changed 0 0 0 0 40 50
     .c bbox image
 } -cleanup {
-	.c delete all
-	image delete foo
+        .c delete all
+        image delete foo
 } -result {30 75 70 125}
 test canvImg-11.3 {ImageChangedProc procedure} -constraints {
-	testImageType
+        testImageType
 } -setup {
     .c delete all
 } -body {
     image create test foo -variable x
-	image create test foo2 -variable y
+        image create test foo2 -variable y
     foo changed 0 0 0 0 40 50
     foo2 changed 0 0 0 0 80 60
 
@@ -782,8 +782,8 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
     update
     return $y
 } -cleanup {
-	.c delete all
-	image delete foo foo2
+        .c delete all
+        image delete foo foo2
 } -result {{foo2 display 0 0 20 40}}
 
 # cleanup

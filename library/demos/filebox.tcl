@@ -38,7 +38,7 @@ foreach i {open save} {
 
 if {[tk windowingsystem] eq "x11"} {
     ttk::checkbutton $w.strict -text "Use Motif Style Dialog" \
-	-variable tk_strictMotif -onvalue 1 -offvalue 0
+        -variable tk_strictMotif -onvalue 1 -offvalue 0
     pack $w.strict -anchor c
 
     # This binding ensures that we don't run the rest of the demos
@@ -47,35 +47,35 @@ if {[tk windowingsystem] eq "x11"} {
 }
 
 proc fileDialog {w ent operation} {
-    #   Type names		Extension(s)	Mac File Type(s)
+    #   Type names              Extension(s)    Mac File Type(s)
     #
     #---------------------------------------------------------
     set types {
-	{"Text files"		{.txt .doc}	}
-	{"Text files"		{}		TEXT}
-	{"Tcl Scripts"		{.tcl}		TEXT}
-	{"C Source Files"	{.c .h}		}
-	{"All Source Files"	{.tcl .c .h}	}
-	{"Image Files"		{.gif}		}
-	{"Image Files"		{.jpeg .jpg}	}
-	{"Image Files"		""		{GIFF JPEG}}
-	{"All files"		*}
+        {"Text files"           {.txt .doc}     }
+        {"Text files"           {}              TEXT}
+        {"Tcl Scripts"          {.tcl}          TEXT}
+        {"C Source Files"       {.c .h}         }
+        {"All Source Files"     {.tcl .c .h}    }
+        {"Image Files"          {.gif}          }
+        {"Image Files"          {.jpeg .jpg}    }
+        {"Image Files"          ""              {GIFF JPEG}}
+        {"All files"            *}
     }
     if {$operation == "open"} {
-	global selected_type
-	if {![info exists selected_type]} {
-	    set selected_type "Tcl Scripts"
-	}
-	set file [tk_getOpenFile -filetypes $types -parent $w \
-		-typevariable selected_type]
-	puts "You selected filetype \"$selected_type\""
+        global selected_type
+        if {![info exists selected_type]} {
+            set selected_type "Tcl Scripts"
+        }
+        set file [tk_getOpenFile -filetypes $types -parent $w \
+                -typevariable selected_type]
+        puts "You selected filetype \"$selected_type\""
     } else {
-	set file [tk_getSaveFile -filetypes $types -parent $w \
-		-initialfile Untitled -defaultextension .txt]
+        set file [tk_getSaveFile -filetypes $types -parent $w \
+                -initialfile Untitled -defaultextension .txt]
     }
     if {[string compare $file ""]} {
-	$ent delete 0 end
-	$ent insert 0 $file
-	$ent xview end
+        $ent delete 0 end
+        $ent insert 0 $file
+        $ent xview end
     }
 }

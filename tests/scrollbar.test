@@ -18,23 +18,23 @@ proc scroll args {
 
 proc getTroughSize {w} {
     if {[testConstraint testmetrics]} {
-	if [string match v* [$w cget -orient]] {
-	    return [expr [winfo height $w] - 2*[testmetrics cyvscroll $w]]
-	} else {
-	    return [expr [winfo width $w] - 2*[testmetrics cxhscroll $w]]
-	}
+        if [string match v* [$w cget -orient]] {
+            return [expr [winfo height $w] - 2*[testmetrics cyvscroll $w]]
+        } else {
+            return [expr [winfo width $w] - 2*[testmetrics cxhscroll $w]]
+        }
     } else {
-	if [string match v* [$w cget -orient]] {
-	    return [expr [winfo height $w] \
-		    - ([winfo width $w] \
-			- [$w cget -highlightthickness] \
-			- [$w cget -bd] + 1)*2]
-	} else {
-	    return [expr [winfo width $w] \
-		    - ([winfo height $w] \
-			- [$w cget -highlightthickness] \
-			- [$w cget -bd] + 1)*2]
-	}
+        if [string match v* [$w cget -orient]] {
+            return [expr [winfo height $w] \
+                    - ([winfo width $w] \
+                        - [$w cget -highlightthickness] \
+                        - [$w cget -bd] + 1)*2]
+        } else {
+            return [expr [winfo width $w] \
+                    - ([winfo height $w] \
+                        - [$w cget -highlightthickness] \
+                        - [$w cget -bd] + 1)*2]
+        }
     }
 }
 
@@ -55,14 +55,14 @@ update
 set i 1
 foreach test {
     {-activebackground #ff0000 #ff0000 non-existent
-	    {unknown color name "non-existent"}}
+            {unknown color name "non-existent"}}
     {-activerelief sunken sunken non-existent
-	    {bad relief "non-existent": must be flat, groove, raised, ridge, solid, or sunken}}
+            {bad relief "non-existent": must be flat, groove, raised, ridge, solid, or sunken}}
     {-background #ff0000 #ff0000 non-existent
-	    {unknown color name "non-existent"}}
+            {unknown color name "non-existent"}}
     {-bd 4 4 badValue {bad screen distance "badValue"}}
     {-bg #ff0000 #ff0000 non-existent
-	    {unknown color name "non-existent"}}
+            {unknown color name "non-existent"}}
     {-borderwidth 1.3 1 badValue {bad screen distance "badValue"}}
     {-command "set x" {set x} {} {}}
     {-elementborderwidth 4 4 badValue {bad screen distance "badValue"}}
@@ -73,7 +73,7 @@ foreach test {
     {-highlightthickness -2 0 {} {}}
     {-jump true 1 silly {expected boolean value but got "silly"}}
     {-orient horizontal horizontal badValue
-	    {bad orientation "badValue": must be vertical or horizontal}}
+            {bad orientation "badValue": must be vertical or horizontal}}
     {-orient horizontal horizontal bogus {bad orientation "bogus": must be vertical or horizontal}}
     {-relief ridge ridge badValue {bad relief "badValue": must be flat, groove, raised, ridge, solid, or sunken}}
     {-repeatdelay 140 140 129.3 {expected integer but got "129.3"}}
@@ -85,13 +85,13 @@ foreach test {
     lassign $test name value okResult badValue badResult
     # Assume $name is plain; true of all our in-use options!
     test scrollbar-1.$i {configuration options} \
-	".s configure $name [list $value]; .s cget $name" $okResult
+        ".s configure $name [list $value]; .s cget $name" $okResult
     incr i
     if {$badValue ne ""} {
-	test scrollbar-1.$i {configuration options} \
-	    -body [list .s configure $name $badValue] \
-	    -returnCodes error -result $badResult
-	incr i
+        test scrollbar-1.$i {configuration options} \
+            -body [list .s configure $name $badValue] \
+            -returnCodes error -result $badResult
+        incr i
     }
     .s configure $name [lindex [.s configure $name] 3]
 }
@@ -112,7 +112,7 @@ test scrollbar-2.3 {Tk_ScrollbarCmd procedure} -setup {
 } -result {Scrollbar .s}
 test scrollbar-2.4 {Tk_ScrollbarCmd procedure} {
     list [catch {scrollbar .s -gorp blah} msg] $msg [winfo exists .s] \
-	    [info command .s]
+            [info command .s]
 } {1 {unknown option "-gorp"} 0 {}}
 test scrollbar-2.5 {Tk_ScrollbarCmd procedure} -setup {
     catch {destroy .s}
@@ -229,7 +229,7 @@ test scrollbar-3.28 {ScrollbarWidgetCmd procedure, "delta" option} {
     place .t.s -width 201
     update
     set result [list [format {%.6g} [.t.s delta 0 20]] \
-	    [format {%.6g} [.t.s delta [expr [getTroughSize .t.s] - 1] 0]]]
+            [format {%.6g} [.t.s delta [expr [getTroughSize .t.s] - 1] 0]]]
     destroy .t
     set result
 } {0 1}
@@ -267,8 +267,8 @@ test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} unix {
 test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics win} {
     expr \
     [format {%.6g} [.s fraction 4 [expr 200 - [testmetrics cyvscroll .s] - 2]]] \
-	== [format %g [expr (200.0 - [testmetrics cyvscroll .s]*2 - 2) \
-			   / ($height - 1 - [testmetrics cyvscroll .s]*2)]]
+        == [format %g [expr (200.0 - [testmetrics cyvscroll .s]*2 - 2) \
+                           / ($height - 1 - [testmetrics cyvscroll .s]*2)]]
 } 1
 
 toplevel .t -width 250 -height 100
@@ -301,7 +301,7 @@ test scrollbar-3.45 {ScrollbarWidgetCmd procedure, "get" option} {
     .s set 0.6 0.8
     set result {}
     foreach element [.s get] {
-	lappend result [format %.1f $element]
+        lappend result [format %.1f $element]
     }
     set result
 } {0.6 0.8}
@@ -346,7 +346,7 @@ test scrollbar-3.59 {ScrollbarWidgetCmd procedure, "set" option} {
     .s set -.2 .3
     set result {}
     foreach element [.s get] {
-	lappend result [format %.1f $element]
+        lappend result [format %.1f $element]
     }
     set result
 } {0.0 0.3}
@@ -366,7 +366,7 @@ test scrollbar-3.63 {ScrollbarWidgetCmd procedure, "set" option} {
     .s set .4 .3
     set result {}
     foreach element [.s get] {
-	lappend result [format %.1f $element]
+        lappend result [format %.1f $element]
     }
     set result
 } {0.4 0.4}
@@ -480,7 +480,7 @@ test scrollbar-6.18 {ScrollbarPosition procedure} {testmetrics win} {
 } {trough1}
 test scrollbar-6.19 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr [winfo width .s] / 2] [expr int(.2 / [.s delta 0 1]) \
-						+ [testmetrics cyvscroll .s] - 1]
+                                                + [testmetrics cyvscroll .s] - 1]
 } {trough1}
 test scrollbar-6.20 {ScrollbarPosition procedure} unix {
     .s identify 8 52
@@ -492,11 +492,11 @@ test scrollbar-6.21 {ScrollbarPosition procedure} {unix nonPortable} {
 } {slider}
 test scrollbar-6.22 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr [winfo width .s] / 2] \
-	[expr int(.2 / [.s delta 0 1] + 0.5) + [testmetrics cyvscroll .s]]
+        [expr int(.2 / [.s delta 0 1] + 0.5) + [testmetrics cyvscroll .s]]
 } {slider}
 test scrollbar-6.23 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \
-						 + [testmetrics cyvscroll .s] - 1]
+                                                 + [testmetrics cyvscroll .s] - 1]
 } {slider}
 test scrollbar-6.24 {ScrollbarPosition procedure} unix {
     .s identify 8 84
@@ -510,11 +510,11 @@ test scrollbar-6.27 {ScrollbarPosition procedure} {testmetrics win knownBug} {
     # that is larger than the thumb displayed, skewing the ability to
     # calculate the trough2 area correctly (Win2k).  -- hobbs
     .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \
-						 + [testmetrics cyvscroll .s]]
+                                                 + [testmetrics cyvscroll .s]]
 } {trough2}
 test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr [winfo width .s] / 2] [expr [winfo height .s] \
-						 - [testmetrics cyvscroll .s] - 1]
+                                                 - [testmetrics cyvscroll .s] - 1]
 } {trough2}
 test scrollbar-6.29 {ScrollbarPosition procedure} unix {
     .s identify 8 180
@@ -524,7 +524,7 @@ test scrollbar-6.30 {ScrollbarPosition procedure} unix {
 } {arrow2}
 test scrollbar-6.32 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr [winfo width .s] / 2]  [expr [winfo height .s] \
-						  - [testmetrics cyvscroll .s]]
+                                                  - [testmetrics cyvscroll .s]]
 } {arrow2}
 test scrollbar-6.33 {ScrollbarPosition procedure} win {
     .s identify [expr [winfo width .s] / 2] [expr [winfo height .s] - 1]
@@ -561,7 +561,7 @@ test scrollbar-6.41 {ScrollbarPosition procedure} unix {
 } {slider}
 test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics win} {
     .t.s identify [expr int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll .t.s] \
-		       - 1] [expr [winfo height .t.s] / 2]
+                       - 1] [expr [winfo height .t.s] / 2]
 } {slider}
 test scrollbar-6.44 {ScrollbarPosition procedure} unix {
     .t.s identify 100 18

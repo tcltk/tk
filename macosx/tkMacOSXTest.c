@@ -1,8 +1,8 @@
 /*
  * tkMacOSXTest.c --
  *
- *	Contains commands for platform specific tests for
- *	the Macintosh platform.
+ *      Contains commands for platform specific tests for
+ *      the Macintosh platform.
  *
  * Copyright (c) 1996 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -18,36 +18,36 @@
  * Forward declarations of procedures defined later in this file:
  */
 
-static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+static int              DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
+                            int objc, Tcl_Obj *const objv[]);
 
 /*
  *----------------------------------------------------------------------
  *
  * TkplatformtestInit --
  *
- *	Defines commands that test platform specific functionality for
- *	Unix platforms.
+ *      Defines commands that test platform specific functionality for
+ *      Unix platforms.
  *
  * Results:
- *	A standard Tcl result.
+ *      A standard Tcl result.
  *
  * Side effects:
- *	Defines new commands.
+ *      Defines new commands.
  *
  *----------------------------------------------------------------------
  */
 
 int
 TkplatformtestInit(
-    Tcl_Interp *interp)		/* Interpreter to add commands to. */
+    Tcl_Interp *interp)         /* Interpreter to add commands to. */
 {
     /*
      * Add commands for platform specific tests on MacOS here.
      */
 
     Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd,
-	    (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+            (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
 
     return TCL_OK;
 }
@@ -57,23 +57,23 @@ TkplatformtestInit(
  *
  * DebuggerObjCmd --
  *
- *	This procedure simply calls the low level debugger.
+ *      This procedure simply calls the low level debugger.
  *
  * Results:
- *	A standard Tcl result.
+ *      A standard Tcl result.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 static int
 DebuggerObjCmd(
-    ClientData clientData,		/* Not used. */
-    Tcl_Interp *interp,			/* Not used. */
-    int objc,				/* Not used. */
-    Tcl_Obj *const objv[])			/* Not used. */
+    ClientData clientData,              /* Not used. */
+    Tcl_Interp *interp,                 /* Not used. */
+    int objc,                           /* Not used. */
+    Tcl_Obj *const objv[])                      /* Not used. */
 {
     Debugger();
     return TCL_OK;

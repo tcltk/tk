@@ -1,7 +1,7 @@
 /*
  * tkMacOSXKeyboard.c --
  *
- *	Routines to support keyboard events on the Macintosh.
+ *      Routines to support keyboard events on the Macintosh.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
@@ -21,11 +21,11 @@
  * tkMacOSXMouseEvent.c.
  */
 
-#define LATIN1_MAX	 255
-#define MAC_KEYCODE_MAX	 0x7F
+#define LATIN1_MAX       255
+#define MAC_KEYCODE_MAX  0x7F
 #define MAC_KEYCODE_MASK 0x7F
-#define COMMAND_MASK	 Mod1Mask
-#define OPTION_MASK	 Mod2Mask
+#define COMMAND_MASK     Mod1Mask
+#define OPTION_MASK      Mod2Mask
 
 
 /*
@@ -35,8 +35,8 @@
  */
 
 typedef struct {
-    int keycode;		/* Macintosh keycode. */
-    KeySym keysym;		/* X windows keysym. */
+    int keycode;                /* Macintosh keycode. */
+    KeySym keysym;              /* X windows keysym. */
 } KeyInfo;
 
 /*
@@ -53,47 +53,47 @@ typedef struct {
  */
 
 static KeyInfo keyArray[] = {
-    {0x24,	XK_Return},
-    {0x30,	XK_Tab},
-    {0x33,	XK_BackSpace},
-    {0x34,	XK_Return},
-    {0x35,	XK_Escape},
+    {0x24,      XK_Return},
+    {0x30,      XK_Tab},
+    {0x33,      XK_BackSpace},
+    {0x34,      XK_Return},
+    {0x35,      XK_Escape},
 
-    {0x47,	XK_Clear},
-    {0x4C,	XK_KP_Enter},
+    {0x47,      XK_Clear},
+    {0x4C,      XK_KP_Enter},
 
-    {0x72,	XK_Help},
-    {0x73,	XK_Home},
-    {0x74,	XK_Page_Up},
-    {0x75,	XK_Delete},
-    {0x77,	XK_End},
-    {0x79,	XK_Page_Down},
+    {0x72,      XK_Help},
+    {0x73,      XK_Home},
+    {0x74,      XK_Page_Up},
+    {0x75,      XK_Delete},
+    {0x77,      XK_End},
+    {0x79,      XK_Page_Down},
 
-    {0x7B,	XK_Left},
-    {0x7C,	XK_Right},
-    {0x7D,	XK_Down},
-    {0x7E,	XK_Up},
+    {0x7B,      XK_Left},
+    {0x7C,      XK_Right},
+    {0x7D,      XK_Down},
+    {0x7E,      XK_Up},
 
-    {0,		0}
+    {0,         0}
 };
 
 static KeyInfo virtualkeyArray[] = {
-    {122,	XK_F1},
-    {120,	XK_F2},
-    {99,	XK_F3},
-    {118,	XK_F4},
-    {96,	XK_F5},
-    {97,	XK_F6},
-    {98,	XK_F7},
-    {100,	XK_F8},
-    {101,	XK_F9},
-    {109,	XK_F10},
-    {103,	XK_F11},
-    {111,	XK_F12},
-    {105,	XK_F13},
-    {107,	XK_F14},
-    {113,	XK_F15},
-    {0,		0}
+    {122,       XK_F1},
+    {120,       XK_F2},
+    {99,        XK_F3},
+    {118,       XK_F4},
+    {96,        XK_F5},
+    {97,        XK_F6},
+    {98,        XK_F7},
+    {100,       XK_F8},
+    {101,       XK_F9},
+    {109,       XK_F10},
+    {103,       XK_F11},
+    {111,       XK_F12},
+    {105,       XK_F13},
+    {107,       XK_F14},
+    {113,       XK_F15},
+    {0,         0}
 };
 
 #define NUM_MOD_KEYCODES 14
@@ -115,12 +115,12 @@ static KeyCode modKeyArray[NUM_MOD_KEYCODES] = {
 };
 
 static int initialized = 0;
-static Tcl_HashTable keycodeTable;	/* keyArray hashed by keycode value. */
-static Tcl_HashTable vkeyTable;		/* virtualkeyArray hashed by virtual
-					 * keycode value. */
+static Tcl_HashTable keycodeTable;      /* keyArray hashed by keycode value. */
+static Tcl_HashTable vkeyTable;         /* virtualkeyArray hashed by virtual
+                                         * keycode value. */
 
-static int latin1Table[LATIN1_MAX+1];	/* Reverse mapping table for
-					 * controls, ASCII and Latin-1. */
+static int latin1Table[LATIN1_MAX+1];   /* Reverse mapping table for
+                                         * controls, ASCII and Latin-1. */
 
 static int keyboardChanged = 1;
 
@@ -128,12 +128,12 @@ static int keyboardChanged = 1;
  * Prototypes for static functions used in this file.
  */
 
-static void	InitKeyMaps (void);
-static void	InitLatin1Table(Display *display);
-static int	XKeysymToMacKeycode(Display *display, KeySym keysym);
-static int	KeycodeToUnicode(UniChar * uniChars, int maxChars,
-			UInt16 keyaction, UInt32 keycode, UInt32 modifiers,
-			UInt32 * deadKeyStatePtr);
+static void     InitKeyMaps (void);
+static void     InitLatin1Table(Display *display);
+static int      XKeysymToMacKeycode(Display *display, KeySym keysym);
+static int      KeycodeToUnicode(UniChar * uniChars, int maxChars,
+                        UInt16 keyaction, UInt32 keycode, UInt32 modifiers,
+                        UInt32 * deadKeyStatePtr);
 
 #pragma mark TKApplication(TKKeyboard)
 
@@ -154,17 +154,17 @@ static int	KeycodeToUnicode(UniChar * uniChars, int maxChars,
  *
  * InitKeyMaps --
  *
- *	Creates hash tables used by some of the functions in this file.
+ *      Creates hash tables used by some of the functions in this file.
  *
- *	FIXME: As keycodes are defined to be in the limited range 0-127, it
- *	would be easier and more efficient to use directly initialized plain
- *	arrays and drop this function.
+ *      FIXME: As keycodes are defined to be in the limited range 0-127, it
+ *      would be easier and more efficient to use directly initialized plain
+ *      arrays and drop this function.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Allocates memory & creates some hash tables.
+ *      Allocates memory & creates some hash tables.
  *
  *----------------------------------------------------------------------
  */
@@ -178,15 +178,15 @@ InitKeyMaps(void)
 
     Tcl_InitHashTable(&keycodeTable, TCL_ONE_WORD_KEYS);
     for (kPtr = keyArray; kPtr->keycode != 0; kPtr++) {
-	hPtr = Tcl_CreateHashEntry(&keycodeTable, INT2PTR(kPtr->keycode),
-		&dummy);
-	Tcl_SetHashValue(hPtr, kPtr->keysym);
+        hPtr = Tcl_CreateHashEntry(&keycodeTable, INT2PTR(kPtr->keycode),
+                &dummy);
+        Tcl_SetHashValue(hPtr, kPtr->keysym);
     }
     Tcl_InitHashTable(&vkeyTable, TCL_ONE_WORD_KEYS);
     for (kPtr = virtualkeyArray; kPtr->keycode != 0; kPtr++) {
-	hPtr = Tcl_CreateHashEntry(&vkeyTable, INT2PTR(kPtr->keycode),
-		&dummy);
-	Tcl_SetHashValue(hPtr, kPtr->keysym);
+        hPtr = Tcl_CreateHashEntry(&vkeyTable, INT2PTR(kPtr->keycode),
+                &dummy);
+        Tcl_SetHashValue(hPtr, kPtr->keysym);
     }
     initialized = 1;
 }
@@ -196,16 +196,16 @@ InitKeyMaps(void)
  *
  * InitLatin1Table --
  *
- *	Creates a simple table to be used for mapping from keysyms to keycodes.
- *	Always needs to be called before using latin1Table, because the
- *	keyboard layout may have changed, and than the table must be
- *	re-computed.
+ *      Creates a simple table to be used for mapping from keysyms to keycodes.
+ *      Always needs to be called before using latin1Table, because the
+ *      keyboard layout may have changed, and than the table must be
+ *      re-computed.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Sets the global latin1Table.
+ *      Sets the global latin1Table.
  *
  *----------------------------------------------------------------------
  */
@@ -235,20 +235,20 @@ InitLatin1Table(
      */
 
     for (state = 3; state >= 0; state--) {
-	modifiers = 0;
-	if (state & 1) {
-	    modifiers |= shiftKey;
-	}
-	if (state & 2) {
-	    modifiers |= optionKey;
-	}
+        modifiers = 0;
+        if (state & 1) {
+            modifiers |= shiftKey;
+        }
+        if (state & 2) {
+            modifiers |= optionKey;
+        }
 
-	for (keycode = 0; keycode <= MAC_KEYCODE_MAX; keycode++) {
-	    keysym = XKeycodeToKeysym(display,keycode<<16,state);
-	    if (keysym <= LATIN1_MAX) {
-		latin1Table[keysym] = keycode | modifiers;
-	    }
-	}
+        for (keycode = 0; keycode <= MAC_KEYCODE_MAX; keycode++) {
+            keysym = XKeycodeToKeysym(display,keycode<<16,state);
+            if (keysym <= LATIN1_MAX) {
+                latin1Table[keysym] = keycode | modifiers;
+            }
+        }
     }
 }
 
@@ -257,21 +257,21 @@ InitLatin1Table(
  *
  * KeycodeToUnicode --
  *
- *	Given MacOS key event data this function generates the Unicode
- *	characters. It does this using OS resources and APIs.
+ *      Given MacOS key event data this function generates the Unicode
+ *      characters. It does this using OS resources and APIs.
  *
- *	The parameter deadKeyStatePtr can be NULL, if no deadkey handling is
- *	needed.
+ *      The parameter deadKeyStatePtr can be NULL, if no deadkey handling is
+ *      needed.
  *
- *	This function is called from XKeycodeToKeysym() in tkMacOSKeyboard.c.
+ *      This function is called from XKeycodeToKeysym() in tkMacOSKeyboard.c.
  *
  * Results:
- *	The number of characters generated if any, 0 if we are waiting for
- *	another byte of a dead-key sequence. Fills in the uniChars array with a
- *	Unicode string.
+ *      The number of characters generated if any, 0 if we are waiting for
+ *      another byte of a dead-key sequence. Fills in the uniChars array with a
+ *      Unicode string.
  *
  * Side Effects:
- *	None
+ *      None
  *
  *----------------------------------------------------------------------
  */
@@ -290,50 +290,50 @@ KeycodeToUnicode(
     UniCharCount actuallength = 0;
 
     if (keyboardChanged) {
-	TISInputSourceRef currentKeyboardLayout =
-		TISCopyCurrentKeyboardLayoutInputSource();
+        TISInputSourceRef currentKeyboardLayout =
+                TISCopyCurrentKeyboardLayoutInputSource();
 
-	if (currentKeyboardLayout) {
-	    CFDataRef keyLayoutData = (CFDataRef) TISGetInputSourceProperty(
-		    currentKeyboardLayout, kTISPropertyUnicodeKeyLayoutData);
+        if (currentKeyboardLayout) {
+            CFDataRef keyLayoutData = (CFDataRef) TISGetInputSourceProperty(
+                    currentKeyboardLayout, kTISPropertyUnicodeKeyLayoutData);
 
-	    if (keyLayoutData) {
-		uchr = CFDataGetBytePtr(keyLayoutData);
-		keyboardType = LMGetKbdType();
-	    }
-	    CFRelease(currentKeyboardLayout);
-	}
-	keyboardChanged = 0;
+            if (keyLayoutData) {
+                uchr = CFDataGetBytePtr(keyLayoutData);
+                keyboardType = LMGetKbdType();
+            }
+            CFRelease(currentKeyboardLayout);
+        }
+        keyboardChanged = 0;
     }
     if (uchr) {
-	OptionBits options = 0;
-	UInt32 dummyState;
-	OSStatus err;
+        OptionBits options = 0;
+        UInt32 dummyState;
+        OSStatus err;
 
-	keycode &= 0xFF;
-	modifiers = (modifiers >> 8) & 0xFF;
+        keycode &= 0xFF;
+        modifiers = (modifiers >> 8) & 0xFF;
 
-	if (!deadKeyStatePtr) {
-	    options = kUCKeyTranslateNoDeadKeysMask;
-	    dummyState = 0;
-	    deadKeyStatePtr = &dummyState;
-	}
+        if (!deadKeyStatePtr) {
+            options = kUCKeyTranslateNoDeadKeysMask;
+            dummyState = 0;
+            deadKeyStatePtr = &dummyState;
+        }
 
-	err = ChkErr(UCKeyTranslate, uchr, keycode, keyaction, modifiers,
-		keyboardType, options, deadKeyStatePtr, maxChars,
-		&actuallength, uniChars);
+        err = ChkErr(UCKeyTranslate, uchr, keycode, keyaction, modifiers,
+                keyboardType, options, deadKeyStatePtr, maxChars,
+                &actuallength, uniChars);
 
-	if (!actuallength && *deadKeyStatePtr) {
-	    /*
-	     * More data later
-	     */
+        if (!actuallength && *deadKeyStatePtr) {
+            /*
+             * More data later
+             */
 
-	    return 0;
-	}
-	*deadKeyStatePtr = 0;
-	if (err != noErr) {
-	    actuallength = 0;
-	}
+            return 0;
+        }
+        *deadKeyStatePtr = 0;
+        if (err != noErr) {
+            actuallength = 0;
+        }
     }
     return actuallength;
 }
@@ -343,14 +343,14 @@ KeycodeToUnicode(
  *
  * XKeycodeToKeysym --
  *
- *	Translate from a system-dependent keycode to a system-independent
- *	keysym.
+ *      Translate from a system-dependent keycode to a system-independent
+ *      keysym.
  *
  * Results:
- *	Returns the translated keysym, or NoSymbol on failure.
+ *      Returns the translated keysym, or NoSymbol on failure.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -368,7 +368,7 @@ XKeycodeToKeysym(
     (void) display; /*unused*/
 
     if (!initialized) {
-	InitKeyMaps();
+        InitKeyMaps();
     }
 
     /*
@@ -381,14 +381,14 @@ XKeycodeToKeysym(
     newKeycode = keycode >> 16;
 
     if ((keycode & 0xFFFF) >= 0xF700) { /* NSEvent.h function key unicodes */
-	hPtr = Tcl_FindHashEntry(&vkeyTable, INT2PTR(newKeycode));
-	if (hPtr != NULL) {
-	    return (KeySym) Tcl_GetHashValue(hPtr);
-	}
+        hPtr = Tcl_FindHashEntry(&vkeyTable, INT2PTR(newKeycode));
+        if (hPtr != NULL) {
+            return (KeySym) Tcl_GetHashValue(hPtr);
+        }
     }
     hPtr = Tcl_FindHashEntry(&keycodeTable, INT2PTR(newKeycode));
     if (hPtr != NULL) {
-	return (KeySym) Tcl_GetHashValue(hPtr);
+        return (KeySym) Tcl_GetHashValue(hPtr);
     }
 
     /*
@@ -396,15 +396,15 @@ XKeycodeToKeysym(
      */
 
     if (index & 1) {
-	newKeycode |= shiftKey;
+        newKeycode |= shiftKey;
     }
     if (index & 2) {
-	newKeycode |= optionKey;
+        newKeycode |= optionKey;
     }
 
     newChar = 0;
     KeycodeToUnicode(&newChar, 1, kUCKeyActionDown, newKeycode & 0x00FF,
-	    newKeycode & 0xFF00, NULL);
+            newKeycode & 0xFF00, NULL);
 
     /*
      * X11 keysyms are identical to Unicode for ASCII and Latin-1. Give up for
@@ -412,7 +412,7 @@ XKeycodeToKeysym(
      */
 
     if ((newChar >= XK_space) && (newChar <= LATIN1_MAX)) {
-	return newChar;
+        return newChar;
     }
 
     return NoSymbol;
@@ -423,24 +423,24 @@ XKeycodeToKeysym(
  *
  * TkpGetString --
  *
- *	Retrieve the string equivalent for the given keyboard event.
+ *      Retrieve the string equivalent for the given keyboard event.
  *
  * Results:
- *	Returns the UTF string.
+ *      Returns the UTF string.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred: Needed to get
-				 * input context. */
-    XEvent *eventPtr,		/* X keyboard event. */
-    Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
-				 * result. */
+    TkWindow *winPtr,           /* Window where event occurred: Needed to get
+                                 * input context. */
+    XEvent *eventPtr,           /* X keyboard event. */
+    Tcl_DString *dsPtr)         /* Uninitialized or empty string to hold
+                                 * result. */
 {
     (void) winPtr; /*unused*/
     Tcl_DStringInit(dsPtr);
@@ -452,13 +452,13 @@ TkpGetString(
  *
  * XGetModifierMapping --
  *
- *	Fetch the current keycodes used as modifiers.
+ *      Fetch the current keycodes used as modifiers.
  *
  * Results:
- *	Returns a new modifier map.
+ *      Returns a new modifier map.
  *
  * Side effects:
- *	Allocates a new modifier map data structure.
+ *      Allocates a new modifier map data structure.
  *
  *----------------------------------------------------------------------
  */
@@ -486,13 +486,13 @@ XGetModifierMapping(
  *
  * XFreeModifiermap --
  *
- *	Deallocate a modifier map that was created by XGetModifierMapping.
+ *      Deallocate a modifier map that was created by XGetModifierMapping.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Frees the datastructure referenced by modmap.
+ *      Frees the datastructure referenced by modmap.
  *
  *----------------------------------------------------------------------
  */
@@ -502,7 +502,7 @@ XFreeModifiermap(
     XModifierKeymap *modmap)
 {
     if (modmap->modifiermap != NULL) {
-	ckfree(modmap->modifiermap);
+        ckfree(modmap->modifiermap);
     }
     ckfree(modmap);
     return Success;
@@ -513,16 +513,16 @@ XFreeModifiermap(
  *
  * XKeysymToString, XStringToKeysym --
  *
- *	These X window functions map keysyms to strings & strings to keysyms.
- *	However, Tk already does this for the most common keysyms. Therefore,
- *	these functions only need to support keysyms that will be specific to
- *	the Macintosh. Currently, there are none.
+ *      These X window functions map keysyms to strings & strings to keysyms.
+ *      However, Tk already does this for the most common keysyms. Therefore,
+ *      these functions only need to support keysyms that will be specific to
+ *      the Macintosh. Currently, there are none.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -546,15 +546,15 @@ XStringToKeysym(
  *
  * XKeysymToMacKeycode --
  *
- *	An internal function like XKeysymToKeycode but only generating the Mac
- *	specific keycode plus the modifiers Shift and Option.
+ *      An internal function like XKeysymToKeycode but only generating the Mac
+ *      specific keycode plus the modifiers Shift and Option.
  *
  * Results:
- *	A Mac keycode with the actual keycode in the low byte and Mac-style
- *	modifier bits in the high byte.
+ *      A Mac keycode with the actual keycode in the low byte and Mac-style
+ *      modifier bits in the high byte.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -566,16 +566,16 @@ XKeysymToMacKeycode(
 {
     KeyInfo *kPtr;
     if (keysym <= LATIN1_MAX) {
-	/*
-	 * Handle keysyms in the Latin-1 range where keysym and Unicode
-	 * character code point are the same.
-	 */
+        /*
+         * Handle keysyms in the Latin-1 range where keysym and Unicode
+         * character code point are the same.
+         */
 
-	if (keyboardChanged) {
-	    InitLatin1Table(display);
-	    keyboardChanged = 0;
-	}
-	return latin1Table[keysym];
+        if (keyboardChanged) {
+            InitLatin1Table(display);
+            keyboardChanged = 0;
+        }
+        return latin1Table[keysym];
     }
 
     /*
@@ -585,14 +585,14 @@ XKeysymToMacKeycode(
      */
 
     for (kPtr = keyArray; kPtr->keycode != 0; kPtr++) {
-	if (kPtr->keysym == keysym) {
-	    return kPtr->keycode;
-	}
+        if (kPtr->keysym == keysym) {
+            return kPtr->keycode;
+        }
     }
     for (kPtr = virtualkeyArray; kPtr->keycode != 0; kPtr++) {
-	if (kPtr->keysym == keysym) {
-	    return kPtr->keycode;
-	}
+        if (kPtr->keysym == keysym) {
+            return kPtr->keycode;
+        }
     }
 
     /*
@@ -601,9 +601,9 @@ XKeysymToMacKeycode(
      */
 
     for (int i=0; i < NUM_MOD_KEYCODES; i++) {
-	if (keysym == modKeyArray[i]) {
-	    return keysym;
-	}
+        if (keysym == modKeyArray[i]) {
+            return keysym;
+        }
     }
 
     /*
@@ -619,17 +619,17 @@ XKeysymToMacKeycode(
  *
  * XKeysymToKeycode --
  *
- *	The function XKeysymToKeycode takes an X11 keysym and converts it into
- *	a Mac keycode. It is in the stubs table for compatibility but not used
- *	anywhere in the core.
+ *      The function XKeysymToKeycode takes an X11 keysym and converts it into
+ *      a Mac keycode. It is in the stubs table for compatibility but not used
+ *      anywhere in the core.
  *
  * Results:
- *	A 32 bit keycode with the the mac keycode (without modifiers) in the
- *	higher 16 bits of the keycode and the ASCII or Latin-1 code in the
- *	lower 8 bits of the keycode.
+ *      A 32 bit keycode with the the mac keycode (without modifiers) in the
+ *      higher 16 bits of the keycode and the ASCII or Latin-1 code in the
+ *      lower 8 bits of the keycode.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -649,9 +649,9 @@ XKeysymToKeycode(
      */
 
     if ((keysym >= XK_F1) && (keysym <= XK_F35)) {
-	result = 0x0010;
+        result = 0x0010;
     } else {
-	result = 0x00FF & keysym;
+        result = 0x00FF & keysym;
     }
     result |= (macKeycode & MAC_KEYCODE_MASK) << 16;
 
@@ -663,19 +663,19 @@ XKeysymToKeycode(
  *
  * TkpSetKeycodeAndState --
  *
- *	The function TkpSetKeycodeAndState takes a keysym and fills in the
- *	appropriate members of an XEvent. It is similar to XKeysymToKeycode,
- *	but it also sets the modifier mask in the XEvent. It is used by [event
- *	generate] and it is in the stubs table.
+ *      The function TkpSetKeycodeAndState takes a keysym and fills in the
+ *      appropriate members of an XEvent. It is similar to XKeysymToKeycode,
+ *      but it also sets the modifier mask in the XEvent. It is used by [event
+ *      generate] and it is in the stubs table.
  *
  * Results:
- *	Fills an XEvent, sets the member xkey.keycode with a keycode
- *	formatted the same as XKeysymToKeycode and the member xkey.state with
- *	the modifiers implied by the keysym. Also fills in xkey.trans_chars,
- *	so that the actual characters can be retrieved later.
+ *      Fills an XEvent, sets the member xkey.keycode with a keycode
+ *      formatted the same as XKeysymToKeycode and the member xkey.state with
+ *      the modifiers implied by the keysym. Also fills in xkey.trans_chars,
+ *      so that the actual characters can be retrieved later.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
@@ -687,42 +687,42 @@ TkpSetKeycodeAndState(
     XEvent *eventPtr)
 {
     if (keysym == NoSymbol) {
-	eventPtr->xkey.keycode = 0;
+        eventPtr->xkey.keycode = 0;
     } else if ( modKeyArray[0] <= keysym &&
-		keysym <= modKeyArray[NUM_MOD_KEYCODES - 1]) {
-	/*
-	 * Keysyms for pure modifiers only arise in generated events.
-	 * We should just copy them to the keycode.
-	 */
-	eventPtr->xkey.keycode = keysym;
+                keysym <= modKeyArray[NUM_MOD_KEYCODES - 1]) {
+        /*
+         * Keysyms for pure modifiers only arise in generated events.
+         * We should just copy them to the keycode.
+         */
+        eventPtr->xkey.keycode = keysym;
     } else {
-	Display *display = Tk_Display(tkwin);
-	int macKeycode = XKeysymToMacKeycode(display, keysym);
+        Display *display = Tk_Display(tkwin);
+        int macKeycode = XKeysymToMacKeycode(display, keysym);
 
-	/*
-	 * See also XKeysymToKeycode.
-	 */
-	if ((keysym >= XK_F1) && (keysym <= XK_F35)) {
-	    eventPtr->xkey.keycode = 0x0010;
-	} else {
-	    eventPtr->xkey.keycode = 0x00FF & keysym;
-	}
-	eventPtr->xkey.keycode |= (macKeycode & MAC_KEYCODE_MASK) << 16;
+        /*
+         * See also XKeysymToKeycode.
+         */
+        if ((keysym >= XK_F1) && (keysym <= XK_F35)) {
+            eventPtr->xkey.keycode = 0x0010;
+        } else {
+            eventPtr->xkey.keycode = 0x00FF & keysym;
+        }
+        eventPtr->xkey.keycode |= (macKeycode & MAC_KEYCODE_MASK) << 16;
 
-	if (shiftKey & macKeycode) {
-	    eventPtr->xkey.state |= ShiftMask;
-	}
-	if (optionKey & macKeycode) {
-	    eventPtr->xkey.state |= OPTION_MASK;
-	}
+        if (shiftKey & macKeycode) {
+            eventPtr->xkey.state |= ShiftMask;
+        }
+        if (optionKey & macKeycode) {
+            eventPtr->xkey.state |= OPTION_MASK;
+        }
 
-	if (keysym <= LATIN1_MAX) {
-	    int done = Tcl_UniCharToUtf(keysym, eventPtr->xkey.trans_chars);
+        if (keysym <= LATIN1_MAX) {
+            int done = Tcl_UniCharToUtf(keysym, eventPtr->xkey.trans_chars);
 
-	    eventPtr->xkey.trans_chars[done] = 0;
-	} else {
-	    eventPtr->xkey.trans_chars[0] = 0;
-	}
+            eventPtr->xkey.trans_chars[done] = 0;
+        } else {
+            eventPtr->xkey.trans_chars[0] = 0;
+        }
     }
 }
 
@@ -731,24 +731,24 @@ TkpSetKeycodeAndState(
  *
  * TkpGetKeySym --
  *
- *	Given an X KeyPress or KeyRelease event, map the keycode in the event
- *	into a keysym.
+ *      Given an X KeyPress or KeyRelease event, map the keycode in the event
+ *      into a keysym.
  *
  * Results:
- *	The return value is the keysym corresponding to eventPtr, or NoSymbol
- *	if no matching keysym could be found.
+ *      The return value is the keysym corresponding to eventPtr, or NoSymbol
+ *      if no matching keysym could be found.
  *
  * Side effects:
- *	In the first call for a given display, keycode-to-keysym maps get
- *	loaded.
+ *      In the first call for a given display, keycode-to-keysym maps get
+ *      loaded.
  *
  *----------------------------------------------------------------------
  */
 
 KeySym
 TkpGetKeySym(
-    TkDisplay *dispPtr,		/* Display in which to map keycode. */
-    XEvent *eventPtr)		/* Description of X event. */
+    TkDisplay *dispPtr,         /* Display in which to map keycode. */
+    XEvent *eventPtr)           /* Description of X event. */
 {
     KeySym sym;
     int index;
@@ -758,7 +758,7 @@ TkpGetKeySym(
      */
 
     if (dispPtr->bindInfoStale) {
-	TkpInitKeymapInfo(dispPtr);
+        TkpInitKeymapInfo(dispPtr);
     }
 
     /*
@@ -767,37 +767,37 @@ TkpGetKeySym(
      */
 
     if (eventPtr->xany.send_event == -1) {
-	int modifier = eventPtr->xkey.keycode & NSDeviceIndependentModifierFlagsMask;
+        int modifier = eventPtr->xkey.keycode & NSDeviceIndependentModifierFlagsMask;
 
-	if (modifier == NSCommandKeyMask) {
-	    return XK_Meta_L;
-	} else if (modifier == NSShiftKeyMask) {
-	    return XK_Shift_L;
-	} else if (modifier == NSAlphaShiftKeyMask) {
-	    return XK_Caps_Lock;
-	} else if (modifier == NSAlternateKeyMask) {
-	    return XK_Alt_L;
-	} else if (modifier == NSControlKeyMask) {
-	    return XK_Control_L;
-	} else if (modifier == NSNumericPadKeyMask) {
-	    return XK_Num_Lock;
-	} else if (modifier == NSFunctionKeyMask) {
-	    return XK_Super_L;
+        if (modifier == NSCommandKeyMask) {
+            return XK_Meta_L;
+        } else if (modifier == NSShiftKeyMask) {
+            return XK_Shift_L;
+        } else if (modifier == NSAlphaShiftKeyMask) {
+            return XK_Caps_Lock;
+        } else if (modifier == NSAlternateKeyMask) {
+            return XK_Alt_L;
+        } else if (modifier == NSControlKeyMask) {
+            return XK_Control_L;
+        } else if (modifier == NSNumericPadKeyMask) {
+            return XK_Num_Lock;
+        } else if (modifier == NSFunctionKeyMask) {
+            return XK_Super_L;
 /*
-	} else if (modifier == rightShiftKey) {
-	    return XK_Shift_R;
-	} else if (modifier == rightOptionKey) {
-	    return XK_Alt_R;
-	} else if (modifier == rightControlKey) {
-	    return XK_Control_R;
+        } else if (modifier == rightShiftKey) {
+            return XK_Shift_R;
+        } else if (modifier == rightOptionKey) {
+            return XK_Alt_R;
+        } else if (modifier == rightControlKey) {
+            return XK_Control_R;
 */
-	} else {
-	    /*
-	     * If we get here, we probably need to implement something new.
-	     */
+        } else {
+            /*
+             * If we get here, we probably need to implement something new.
+             */
 
-	    return NoSymbol;
-	}
+            return NoSymbol;
+        }
     }
 
     /* If nbytes has been set, it's not a function key, but a regular key that
@@ -822,14 +822,14 @@ TkpGetKeySym(
 
 #if 0
     if (eventPtr->xkey.state & OPTION_MASK) {
-	index |= 2;
+        index |= 2;
     }
 #endif
 
     if ((eventPtr->xkey.state & ShiftMask)
-	    || (/* (dispPtr->lockUsage != LU_IGNORE)
-	    && */ (eventPtr->xkey.state & LockMask))) {
-	index |= 1;
+            || (/* (dispPtr->lockUsage != LU_IGNORE)
+            && */ (eventPtr->xkey.state & LockMask))) {
+        index |= 1;
     }
 
     /*
@@ -845,19 +845,19 @@ TkpGetKeySym(
      */
 
     if ((index & 1) && !(eventPtr->xkey.state & ShiftMask)
-	    /*&& (dispPtr->lockUsage == LU_CAPS)*/ ) {
-	/*
-	 * FIXME: Keysyms are only identical to Unicode for ASCII and Latin-1,
-	 * so we can't use Tcl_UniCharIsUpper() for keysyms outside that range.
-	 * This may be a serious problem here.
-	 */
+            /*&& (dispPtr->lockUsage == LU_CAPS)*/ ) {
+        /*
+         * FIXME: Keysyms are only identical to Unicode for ASCII and Latin-1,
+         * so we can't use Tcl_UniCharIsUpper() for keysyms outside that range.
+         * This may be a serious problem here.
+         */
 
-	if ((sym == NoSymbol) || (sym > LATIN1_MAX)
-		|| !Tcl_UniCharIsUpper(sym)) {
-	    index &= ~1;
-	    sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
-		    index);
-	}
+        if ((sym == NoSymbol) || (sym > LATIN1_MAX)
+                || !Tcl_UniCharIsUpper(sym)) {
+            index &= ~1;
+            sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
+                    index);
+        }
     }
 
     /*
@@ -866,8 +866,8 @@ TkpGetKeySym(
      */
 
     if ((index & 1) && (sym == NoSymbol)) {
-	sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
-		index & ~1);
+        sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
+                index & ~1);
     }
     return sym;
 }
@@ -877,23 +877,23 @@ TkpGetKeySym(
  *
  * TkpInitKeymapInfo --
  *
- *	This procedure is invoked to scan keymap information to recompute stuff
- *	that's important for binding, such as the modifier key (if any) that
- *	corresponds to the "Mode_switch" keysym.
+ *      This procedure is invoked to scan keymap information to recompute stuff
+ *      that's important for binding, such as the modifier key (if any) that
+ *      corresponds to the "Mode_switch" keysym.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	Keymap-related information in dispPtr is updated.
+ *      Keymap-related information in dispPtr is updated.
  *
  *--------------------------------------------------------------
  */
 
 void
 TkpInitKeymapInfo(
-    TkDisplay *dispPtr)		/* Display for which to recompute keymap
-				 * information. */
+    TkDisplay *dispPtr)         /* Display for which to recompute keymap
+                                 * information. */
 {
     dispPtr->bindInfoStale = 0;
 
@@ -930,12 +930,12 @@ TkpInitKeymapInfo(
      */
 
     if (dispPtr->modKeyCodes != NULL) {
-	ckfree(dispPtr->modKeyCodes);
+        ckfree(dispPtr->modKeyCodes);
     }
     dispPtr->numModKeyCodes = NUM_MOD_KEYCODES;
     dispPtr->modKeyCodes = (KeyCode *)ckalloc(NUM_MOD_KEYCODES * sizeof(KeyCode));
     for (int i = 0; i < NUM_MOD_KEYCODES; i++) {
-	dispPtr->modKeyCodes[i] = modKeyArray[i];
+        dispPtr->modKeyCodes[i] = modKeyArray[i];
     }
 }
 

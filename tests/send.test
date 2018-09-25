@@ -20,8 +20,8 @@ testConstraint xhost [llength [auto_execok xhost]]
 
 foreach pkg [info loaded] {
     if {[lindex $pkg 1] == "Tk"} {
-	set loadTk "load $pkg"
-	break
+        set loadTk "load $pkg"
+        break
     }
 }
 
@@ -157,7 +157,7 @@ if {[testConstraint nonPortable] && [testConstraint xhost]} {
     setupbg
     set x [split [exec xhost] \n]
     foreach i [lrange $x 1 end]  {
-	exec xhost - $i
+        exec xhost - $i
     }
 }
 
@@ -247,7 +247,7 @@ test send-8.8 {Tk_SendCmd procedure, local execution} {secureserver} {
 test send-8.9 {Tk_SendCmd procedure, local execution} {secureserver} {
     set a initial
     string tolower [list [catch {send [tk appname] open bad_file} msg] \
-	    $msg $errorInfo $errorCode]
+            $msg $errorInfo $errorCode]
 } {1 {couldn't open "bad_file": no such file or directory} {couldn't open "bad_file": no such file or directory
     while executing
 "open bad_file"
@@ -311,7 +311,7 @@ test send-8.17 {Tk_SendCmd procedure, deferring events} {secureserver nonPortabl
 
     setupbg
     set app [dobg {tk appname}]
-    raise .		; # Don't want new app obscuring .f
+    raise .             ; # Don't want new app obscuring .f
     catch {destroy .f}
     frame .f
     place .f -x 0 -y 0
@@ -328,7 +328,7 @@ test send-8.18 {Tk_SendCmd procedure, error in remote app} {secureserver} {
     setupbg
     set app [dobg {tk appname}]
     set result [string tolower [list [catch {send $app open bad_name} msg] \
-	    $msg $errorInfo $errorCode]]
+            $msg $errorInfo $errorCode]]
     cleanupbg
     set result
 } {1 {couldn't open "bad_name": no such file or directory} {couldn't open "bad_name": no such file or directory
@@ -356,13 +356,13 @@ set id [string range [winfo id .f] 2 end]
 
 test send-9.1 {Tk_GetInterpNames procedure} {secureserver testsend} {
     testsend prop root InterpRegistry \
-	    "$commId tktest\nfoo bar\n$commId tktest\n$id frame .f\n\n\n"
+            "$commId tktest\nfoo bar\n$commId tktest\n$id frame .f\n\n\n"
     list [winfo interps] [testsend prop root InterpRegistry]
 } "{tktest tktest {frame .f}} {$commId tktest\n$commId tktest\n$id frame .f
 }"
 test send-9.2 {Tk_GetInterpNames procedure} {secureserver testsend} {
     testsend prop root InterpRegistry \
-	    "$commId tktest\nfoobar\n$commId gorp\n"
+            "$commId tktest\nfoobar\n$commId gorp\n"
     list [winfo interps] [testsend prop root InterpRegistry]
 } "tktest {$commId tktest\n}"
 test send-9.3 {Tk_GetInterpNames procedure} {secureserver testsend} {
@@ -379,7 +379,7 @@ test send-10.1 {SendEventProc procedure, bogus comm property} {secureserver test
 } {}
 test send-10.2 {SendEventProc procedure, simultaneous messages} {secureserver testsend} {
     testsend prop comm Comm \
-	    "c\n-n tktest\n-s set a 44\nc\n-n tktest\n-s set b 45\n"
+            "c\n-n tktest\n-s set a 44\nc\n-n tktest\n-s set b 45\n"
     set a null
     set b xyzzy
     update
@@ -387,7 +387,7 @@ test send-10.2 {SendEventProc procedure, simultaneous messages} {secureserver te
 } {44 45}
 test send-10.3 {SendEventProc procedure, simultaneous messages} {secureserver testsend} {
     testsend prop comm Comm \
-	    "c\n-n tktest\n-s set a newA\nr\n-s [testsend serial]\n-r 12345\nc\n-n tktest\n-s set b newB\n"
+            "c\n-n tktest\n-s set a newA\nr\n-s [testsend serial]\n-r 12345\nc\n-n tktest\n-s set b newB\n"
     set a null
     set b xyzzy
     set x [send dummy bogus]
@@ -395,14 +395,14 @@ test send-10.3 {SendEventProc procedure, simultaneous messages} {secureserver te
 } {12345 newA newB}
 test send-10.4 {SendEventProc procedure, leading nulls, bogus commands} {secureserver testsend} {
     testsend prop comm Comm \
-	    "\n\nx\n-bogus\n\nc\n-n tktest\n-s set a 44\n"
+            "\n\nx\n-bogus\n\nc\n-n tktest\n-s set a 44\n"
     set a null
     update
     set a
 } {44}
 test send-10.5 {SendEventProc procedure, extraneous command options} {secureserver testsend} {
     testsend prop comm Comm \
-	    "c\n-n tktest\n-x miscellanous\n-y who knows?\n-s set a new\n"
+            "c\n-n tktest\n-x miscellanous\n-y who knows?\n-s set a new\n"
     set a null
     update
     set a
@@ -410,7 +410,7 @@ test send-10.5 {SendEventProc procedure, extraneous command options} {secureserv
 test send-10.6 {SendEventProc procedure, unknown interpreter} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
-	    "c\n-n unknown\n-r $id 44\n-s set a new\n"
+            "c\n-n unknown\n-r $id 44\n-s set a new\n"
     set a null
     update
     list [testsend prop [winfo id .f] Comm] $a
@@ -418,7 +418,7 @@ test send-10.6 {SendEventProc procedure, unknown interpreter} {secureserver test
 test send-10.7 {SendEventProc procedure, error in script} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
-	    "c\n-n tktest\n-r $id 62\n-s foreach i {1 2 3} {error {test error} {Initial errorInfo} {test code}}\n"
+            "c\n-n tktest\n-r $id 62\n-s foreach i {1 2 3} {error {test error} {Initial errorInfo} {test code}}\n"
     update
     testsend prop [winfo id .f] Comm
 } {
@@ -435,7 +435,7 @@ r
 test send-10.8 {SendEventProc procedure, exceptional return} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
-	    "c\n-n tktest\n-r $id 62\n-s break\n"
+            "c\n-n tktest\n-r $id 62\n-s break\n"
     update
     testsend prop [winfo id .f] Comm
 } {
@@ -447,7 +447,7 @@ r
 test send-10.9 {SendEventProc procedure, empty return} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
-	    "c\n-n tktest\n-r $id 62\n-s concat\n"
+            "c\n-n tktest\n-r $id 62\n-s concat\n"
     update
     testsend prop [winfo id .f] Comm
 } {
@@ -458,49 +458,49 @@ r
 test send-10.10 {SendEventProc procedure, asynchronous calls} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
-	    "c\n-n tktest\n-s foreach i {1 2 3} {error {test error} {Initial errorInfo} {test code}}\n"
+            "c\n-n tktest\n-s foreach i {1 2 3} {error {test error} {Initial errorInfo} {test code}}\n"
     update
     testsend prop [winfo id .f] Comm
 } {}
 test send-10.11 {SendEventProc procedure, exceptional return} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
-	    "c\n-n tktest\n-s break\n"
+            "c\n-n tktest\n-s break\n"
     update
     testsend prop [winfo id .f] Comm
 } {}
 test send-10.12 {SendEventProc procedure, empty return} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
-	    "c\n-n tktest\n-s concat\n"
+            "c\n-n tktest\n-s concat\n"
     update
     testsend prop [winfo id .f] Comm
 } {}
 test send-10.13 {SendEventProc procedure, return processing} {secureserver testsend} {
     testsend prop comm Comm \
-	    "r\n-c 1\n-e test1\n-i test2\n-r test3\n-s [testsend serial]\n"
+            "r\n-c 1\n-e test1\n-i test2\n-r test3\n-s [testsend serial]\n"
     list [catch {send dummy foo} msg] $msg $errorInfo $errorCode
 } {1 test3 {test2
     invoked from within
 "send dummy foo"} test1}
 test send-10.14 {SendEventProc procedure, extraneous return options} {secureserver testsend} {
     testsend prop comm Comm \
-	    "r\n-x test1\n-y test2\n-r result\n-s [testsend serial]\n"
+            "r\n-x test1\n-y test2\n-r result\n-s [testsend serial]\n"
     list [catch {send dummy foo} msg] $msg
 } {0 result}
 test send-10.15 {SendEventProc procedure, serial number} {secureserver testsend} {
     testsend prop comm Comm \
-	    "r\n-r response\n"
+            "r\n-r response\n"
     list [catch {send dummy foo} msg] $msg
 } {1 {target application died or uses a Tk version before 4.0}}
 test send-10.16 {SendEventProc procedure, serial number} {secureserver testsend} {
     testsend prop comm Comm \
-	    "r\n-r response\n\n-s 0"
+            "r\n-r response\n\n-s 0"
     list [catch {send dummy foo} msg] $msg
 } {1 {target application died or uses a Tk version before 4.0}}
 test send-10.17 {SendEventProc procedure, errorCode and errorInfo} {secureserver testsend} {
     testsend prop comm Comm \
-	    "r\n-i test1\n-e test2\n-c 4\n-s [testsend serial]\n"
+            "r\n-i test1\n-e test2\n-c 4\n-s [testsend serial]\n"
     set errorCode oldErrorCode
     set errorInfo oldErrorInfo
     list [catch {send dummy foo} msg] $msg $errorInfo $errorCode
@@ -548,8 +548,8 @@ test send-12.2 {TimeoutProc procedure} {secureserver} {
     update
     setupbg
     set app [dobg {
-	after 10 {after 10 {after 5000; exit}}
-	tk appname
+        after 10 {after 10 {after 5000; exit}}
+        tk appname
     }]
     after 200
     set result [list [catch {send $app foo} msg] $msg]

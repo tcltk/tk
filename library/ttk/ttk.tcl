@@ -8,7 +8,7 @@
 namespace eval ::ttk {
     variable library
     if {![info exists library]} {
-	set library [file dirname [info script]]
+        set library [file dirname [info script]]
     }
 }
 
@@ -17,15 +17,15 @@ source [file join $::ttk::library cursors.tcl]
 source [file join $::ttk::library utils.tcl]
 
 ## ttk::deprecated $old $new --
-#	Define $old command as a deprecated alias for $new command
-#	$old and $new must be fully namespace-qualified.
+#       Define $old command as a deprecated alias for $new command
+#       $old and $new must be fully namespace-qualified.
 #
 proc ttk::deprecated {old new} {
     interp alias {} $old {} ttk::do'deprecate $old $new
 }
 ## do'deprecate --
-#	Implementation procedure for deprecated commands --
-#	issue a warning (once), then re-alias old to new.
+#       Implementation procedure for deprecated commands --
+#       issue a warning (once), then re-alias old to new.
 #
 proc ttk::do'deprecate {old new args} {
     deprecated'warning $old $new
@@ -34,7 +34,7 @@ proc ttk::do'deprecate {old new args} {
 }
 
 ## deprecated'warning --
-#	Gripe about use of deprecated commands.
+#       Gripe about use of deprecated commands.
 #
 proc ttk::deprecated'warning {old new} {
     puts stderr "$old deprecated -- use $new instead"
@@ -53,20 +53,20 @@ package ifneeded tile 0.8.6 { package provide tile 0.8.6 }
 ::ttk::deprecated ::ttk::paned ::ttk::panedwindow
 
 ### ::ttk::ThemeChanged --
-#	Called from [::ttk::style theme use].
-#	Sends a <<ThemeChanged>> virtual event to all widgets.
+#       Called from [::ttk::style theme use].
+#       Sends a <<ThemeChanged>> virtual event to all widgets.
 #
 proc ::ttk::ThemeChanged {} {
     set Q .
     while {[llength $Q]} {
-	set QN [list]
-	foreach w $Q {
-	    event generate $w <<ThemeChanged>>
-	    foreach child [winfo children $w] {
-		lappend QN $child
-	    }
-	}
-	set Q $QN
+        set QN [list]
+        foreach w $Q {
+            event generate $w <<ThemeChanged>>
+            foreach child [winfo children $w] {
+                lappend QN $child
+            }
+        }
+        set Q $QN
     }
 }
 
@@ -77,19 +77,19 @@ proc ::ttk::themes {{ptn *}} {
     set themes [list]
 
     foreach pkg [lsearch -inline -all -glob [package names] ttk::theme::$ptn] {
-	lappend themes [namespace tail $pkg]
+        lappend themes [namespace tail $pkg]
     }
 
     return $themes
 }
 
 ## ttk::setTheme $theme --
-#	Set the current theme to $theme, loading it if necessary.
+#       Set the current theme to $theme, loading it if necessary.
 #
 proc ::ttk::setTheme {theme} {
     variable currentTheme ;# @@@ Temp -- [::ttk::style theme use] doesn't work
     if {$theme ni [::ttk::style theme names]} {
-	package require ttk::theme::$theme
+        package require ttk::theme::$theme
     }
     ::ttk::style theme use $theme
     set currentTheme $theme
@@ -105,7 +105,7 @@ source [file join $::ttk::library progress.tcl]
 source [file join $::ttk::library notebook.tcl]
 source [file join $::ttk::library panedwindow.tcl]
 source [file join $::ttk::library entry.tcl]
-source [file join $::ttk::library combobox.tcl]	;# dependency: entry.tcl
+source [file join $::ttk::library combobox.tcl] ;# dependency: entry.tcl
 source [file join $::ttk::library spinbox.tcl]  ;# dependency: entry.tcl
 source [file join $::ttk::library treeview.tcl]
 source [file join $::ttk::library sizegrip.tcl]
@@ -113,8 +113,8 @@ source [file join $::ttk::library sizegrip.tcl]
 ## Label and Labelframe bindings:
 #  (not enough to justify their own file...)
 #
-bind TLabelframe <<Invoke>>	{ tk::TabToWindow [tk_focusNext %W] }
-bind TLabel <<Invoke>>		{ tk::TabToWindow [tk_focusNext %W] }
+bind TLabelframe <<Invoke>>     { tk::TabToWindow [tk_focusNext %W] }
+bind TLabel <<Invoke>>          { tk::TabToWindow [tk_focusNext %W] }
 
 ### Load settings for built-in themes:
 #
@@ -126,18 +126,18 @@ proc ttk::LoadThemes {} {
 
     set builtinThemes [style theme names]
     foreach {theme scripts} {
-	classic 	classicTheme.tcl
-	alt 		altTheme.tcl
-	clam 		clamTheme.tcl
-	winnative	winTheme.tcl
-	xpnative	{xpTheme.tcl vistaTheme.tcl}
-	aqua 		aquaTheme.tcl
+        classic         classicTheme.tcl
+        alt             altTheme.tcl
+        clam            clamTheme.tcl
+        winnative       winTheme.tcl
+        xpnative        {xpTheme.tcl vistaTheme.tcl}
+        aqua            aquaTheme.tcl
     } {
-	if {[lsearch -exact $builtinThemes $theme] >= 0} {
+        if {[lsearch -exact $builtinThemes $theme] >= 0} {
             foreach script $scripts {
                 uplevel #0 [list source [file join $library $script]]
             }
-	}
+        }
     }
 }
 
@@ -146,11 +146,11 @@ ttk::LoadThemes; rename ::ttk::LoadThemes {}
 ### Select platform-specific default theme:
 #
 # Notes:
-#	+ On OSX, aqua theme is the default
-#	+ On Windows, xpnative takes precedence over winnative if available.
-#	+ On X11, users can use the X resource database to
-#	  specify a preferred theme (*TkTheme: themeName);
-#	  otherwise "default" is used.
+#       + On OSX, aqua theme is the default
+#       + On Windows, xpnative takes precedence over winnative if available.
+#       + On X11, users can use the X resource database to
+#         specify a preferred theme (*TkTheme: themeName);
+#         otherwise "default" is used.
 #
 
 proc ttk::DefaultTheme {} {
@@ -158,15 +158,15 @@ proc ttk::DefaultTheme {} {
 
     set userTheme [option get . tkTheme TkTheme]
     if {$userTheme ne {} && ![catch {
-	uplevel #0 [list package require ttk::theme::$userTheme]
+        uplevel #0 [list package require ttk::theme::$userTheme]
     }]} {
-	return $userTheme
+        return $userTheme
     }
 
     foreach theme $preferred {
-	if {[package provide ttk::theme::$theme] ne ""} {
-	    return $theme
-	}
+        if {[package provide ttk::theme::$theme] ne ""} {
+            return $theme
+        }
     }
     return "default"
 }

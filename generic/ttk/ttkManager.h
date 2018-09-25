@@ -26,8 +26,8 @@ typedef struct TtkManager_ Ttk_Manager;
  * SlaveRequest() is called when a slave requests a size change.
  * It should return 1 if the request should propagate, 0 otherwise.
  */
-typedef struct {			/* Manager hooks */
-    Tk_GeomMgr tkGeomMgr;		/* "real" Tk Geometry Manager */
+typedef struct {                        /* Manager hooks */
+    Tk_GeomMgr tkGeomMgr;               /* "real" Tk Geometry Manager */
 
     int  (*RequestedSize)(void *managerData, int *widthPtr, int *heightPtr);
     void (*PlaceSlaves)(void *managerData);
@@ -45,7 +45,7 @@ MODULE_SCOPE void Ttk_LostSlaveProc(ClientData, Tk_Window slave);
  * Public API:
  */
 MODULE_SCOPE Ttk_Manager *Ttk_CreateManager(
-	Ttk_ManagerSpec *, void *managerData, Tk_Window masterWindow);
+        Ttk_ManagerSpec *, void *managerData, Tk_Window masterWindow);
 MODULE_SCOPE void Ttk_DeleteManager(Ttk_Manager *);
 
 MODULE_SCOPE void Ttk_InsertSlave(

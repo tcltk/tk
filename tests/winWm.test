@@ -550,14 +550,14 @@ test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -setup 
             lappend aid [after 100 {
                 pack .t.f
                 lappend aid [after 100 {
-		    set ::winwm92 [expr {
-			    [winfo rooty .t.f.x] == 0 ? "failed" : "ok"}]}]
+                    set ::winwm92 [expr {
+                            [winfo rooty .t.f.x] == 0 ? "failed" : "ok"}]}]
             }]
         }]
     }]
     vwait ::winwm92
     foreach id $aid {
-	after cancel $id
+        after cancel $id
     }
     set winwm92
 } -cleanup {
