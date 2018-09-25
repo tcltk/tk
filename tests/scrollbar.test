@@ -283,7 +283,7 @@ test scrollbar-3.41 {ScrollbarWidgetCmd procedure, "fraction" option} {
 if {[testConstraint testmetrics]} {
     place configure .t.s -width [expr 2*[testmetrics cxhscroll .t.s]+1]
 } else {
-    place configure .t.s -width [expr [winfo reqwidth .t.s] - 4]
+    place configure .t.s -width [expr [winfo height .t.s] - 2*([.t.s cget -highlightthickness] + [.t.s cget -bd] + 1)]
 }
 update
 test scrollbar-3.42 {ScrollbarWidgetCmd procedure, "fraction" option} {
