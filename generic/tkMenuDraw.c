@@ -673,7 +673,7 @@ DisplayMenu(
 	} else {
 	    if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
 		width = Tk_Width(menuPtr->tkwin) - mePtr->x
-			- activeBorderWidth;
+			- borderWidth;
 	    } else {
 		width = mePtr->width + borderWidth;
 	    }
