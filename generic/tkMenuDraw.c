@@ -624,7 +624,6 @@ DisplayMenu(
     int width;
     int borderWidth;
     Tk_3DBorder border;
-    int activeBorderWidth;
     int relief;
 
 
@@ -636,8 +635,6 @@ DisplayMenu(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
 	    &borderWidth);
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
-	    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 
     if (menuPtr->menuType == MENUBAR) {
 	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, borderWidth,
@@ -687,9 +684,8 @@ DisplayMenu(
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
 		mePtr->x, mePtr->y + mePtr->height,
 		mePtr->width,
-		Tk_Height(tkwin) - mePtr->y - mePtr->height -
-		activeBorderWidth, 0,
-		TK_RELIEF_FLAT);
+		Tk_Height(tkwin) - mePtr->y - mePtr->height - borderWidth,
+		0, TK_RELIEF_FLAT);
 	}
     }
 
@@ -698,19 +694,18 @@ DisplayMenu(
 
 	if (menuPtr->numEntries == 0) {
 	    x = y = borderWidth;
-	    width = Tk_Width(tkwin) - 2 * activeBorderWidth;
-	    height = Tk_Height(tkwin) - 2 * activeBorderWidth;
+	    width = Tk_Width(tkwin) - 2 * borderWidth;
+	    height = Tk_Height(tkwin) - 2 * borderWidth;
 	} else {
 	    mePtr = menuPtr->entries[menuPtr->numEntries - 1];
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
 		border, mePtr->x, mePtr->y + mePtr->height, mePtr->width,
-		Tk_Height(tkwin) - mePtr->y - mePtr->height
-		- activeBorderWidth, 0,
-		TK_RELIEF_FLAT);
+		Tk_Height(tkwin) - mePtr->y - mePtr->height - borderWidth,
+		0, TK_RELIEF_FLAT);
 	    x = mePtr->x + mePtr->width;
 	    y = mePtr->y + mePtr->height;
-	    width = Tk_Width(tkwin) - x - activeBorderWidth;
-	    height = Tk_Height(tkwin) - y - activeBorderWidth;
+	    width = Tk_Width(tkwin) - x - borderWidth;
+	    height = Tk_Height(tkwin) - y - borderWidth;
 	}
 	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, x, y,
 		width, height, 0, TK_RELIEF_FLAT);
