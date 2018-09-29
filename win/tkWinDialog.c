@@ -644,12 +644,7 @@ static void LoadShellProcs()
     if (shell32_handle != NULL)
         return; /* We have already been through here. */
 
-    /*
-     * XXX - Note we never call FreeLibrary. There is no point because
-     * shell32.dll is loaded at startup anyways and stays for the duration
-     * of the process so why bother with keeping track of when to unload
-     */
-    shell32_handle = LoadLibrary(TEXT("shell32.dll"));
+    shell32_handle = GetModuleHandle(TEXT("shell32.dll"));
     if (shell32_handle == NULL) /* Should never happen but check anyways. */
         return;
 
@@ -2232,9 +2227,9 @@ static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr)
         DWORD dw;
         for (dw = 0; dw < count; ++dw) {
             if (dlgFilterPtr[dw].pszName != NULL)
-                ckfree(dlgFilterPtr[dw].pszName);
+                ckfree((char *)dlgFilterPtr[dw].pszName);
             if (dlgFilterPtr[dw].pszSpec != NULL)
-                ckfree(dlgFilterPtr[dw].pszSpec);
+                ckfree((char *)dlgFilterPtr[dw].pszSpec);
         }
         ckfree(dlgFilterPtr);
     }
@@ -3383,7 +3378,7 @@ FontchooserConfigureCmd(
 	    if (hdPtr->fontObj) {
 		Tcl_DecrRefCount(hdPtr->fontObj);
 	    }
-	    (void)Tcl_GetString(objv[i+1]);
+	    Tcl_GetString(objv[i+1]);
 	    if (objv[i+1]->length) {
 		hdPtr->fontObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->fontObj)) {
@@ -3398,7 +3393,7 @@ FontchooserConfigureCmd(
 	    if (hdPtr->cmdObj) {
 		Tcl_DecrRefCount(hdPtr->cmdObj);
 	    }
-	    (void)Tcl_GetString(objv[i+1]);
+	    Tcl_GetString(objv[i+1]);
 	    if (objv[i+1]->length) {
 		hdPtr->cmdObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->cmdObj)) {

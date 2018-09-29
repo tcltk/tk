@@ -1738,9 +1738,10 @@ MatchPatterns(
 	    }
 	    if (psPtr->flags & PAT_NEARBY) {
 		XEvent *firstPtr = &bindPtr->eventRing[bindPtr->curEvent];
-		int timeDiff;
+		long timeDiff;
 
-		timeDiff = (Time) firstPtr->xkey.time - eventPtr->xkey.time;
+		timeDiff = ((long)firstPtr->xkey.time -
+			    (long)eventPtr->xkey.time);
 		if ((firstPtr->xkey.x_root
 			    < (eventPtr->xkey.x_root - NEARBY_PIXELS))
 			|| (firstPtr->xkey.x_root
@@ -1921,7 +1922,8 @@ ExpandPercents(
     Tcl_DString *dsPtr)		/* Dynamic string in which to append new
 				 * command. */
 {
-    int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
+    size_t spaceNeeded;
+    int cvtFlags;	/* Used to substitute string as proper Tcl
 				 * list element. */
     int number, flags, length;
 #define NUM_SIZE 40
@@ -3333,9 +3335,9 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
-		event.general.xkey.time = (Time) number;
+		event.general.xkey.time = number;
 	    } else if (flags & PROP) {
-		event.general.xproperty.time = (Time) number;
+		event.general.xproperty.time = number;
 	    } else {
 		goto badopt;
 	    }
@@ -3466,7 +3468,7 @@ HandleEventGenerate(
     if ((warp != 0) && Tk_IsMapped(tkwin)) {
 	TkDisplay *dispPtr = TkGetDisplay(event.general.xmotion.display);
 
-Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display,
+	Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display,
 		event.general.xmotion.window);
 
 	if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {

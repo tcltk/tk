@@ -55,9 +55,6 @@
 	| tkCanJoinAllSpacesAttribute	    | tkMoveToActiveSpaceAttribute \
 	| tkNonactivatingPanelAttribute	    | tkHUDWindowAttribute)
 
-/*Objects for use in setting background color and opacity of window.*/
-NSColor *colorName = NULL;
-BOOL opaqueTag = FALSE;
 
 static const struct {
     const UInt64 validAttrs, defaultAttrs, forceOnAttrs, forceOffAttrs;
@@ -189,7 +186,7 @@ static const Tk_GeomMgr wmMgrType = {
  * The following keeps state for Aqua dock icon bounce notification.
  */
 
-static int tkMacOSXWmAttrNotifyVal = 0; 
+static int tkMacOSXWmAttrNotifyVal = 0;
 
 /*
  * Hash table for Mac Window -> TkWindow mapping.
@@ -234,6 +231,21 @@ static int windowHashInit = false;
 }
 #endif
 
+- (NSSize)windowWillResize:(NSWindow *)sender
+                    toSize:(NSSize)frameSize
+{
+    NSRect currentFrame = [sender frame];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
+    if (winPtr) {
+	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
+	    frameSize.width = currentFrame.size.width;
+	}
+	if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
+	    frameSize.height = currentFrame.size.height;
+	}
+    }
+    return frameSize;
+}
 @end
 
 #pragma mark -
@@ -365,17 +377,7 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-#define TK_GOT_AT_LEAST_SNOW_LEOPARD 1
-#endif
-
 #pragma mark TKWindow(TKWm)
-
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-@interface NSWindow(TkWm)
-- (void) setCanCycle: (BOOL) canCycleFlag;
-@end
-#endif
 
 @interface NSDrawerWindow : NSWindow
 {
@@ -388,16 +390,35 @@ static void		RemapWindows(TkWindow *winPtr,
 #if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
 /*
  * Override automatic fullscreen button on >10.12 because system fullscreen API
- * confuses Tk window geometry.
+ * confuses Tk window geometry. Custom implementation setting fullscreen status using
+ * Tk API and NSStatusItem in menubar to exit fullscreen status.
  */
+
+NSStatusItem *exitFullScreen;
+
 - (void)toggleFullScreen:(id)sender
 {
-    if ([self isZoomed]) {
-	TkMacOSXZoomToplevel(self, inZoomIn);
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    Tk_Window tkwin = (TkWindow*)winPtr;
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+
+    if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
+    	TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
     } else {
-	TkMacOSXZoomToplevel(self, inZoomOut);
+    	TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
     }
 }
+
+-(void)restoreOldScreen:(id)sender {
+
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    Tk_Window tkwin = (TkWindow*)winPtr;
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+
+    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+    [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
+}
+
 #endif
 @end
 
@@ -786,7 +807,7 @@ TkWmMapWindow(
 
     /*Add window to Window menu.*/
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win setExcludedFromWindowsMenu:NO]; 
+    [win setExcludedFromWindowsMenu:NO];
 
 }
 
@@ -923,7 +944,7 @@ TkWmDeadWindow(
 		WmInfo *wmPtr = winPtr2->wmInfoPtr;
 		BOOL minimized = (wmPtr->hints.initial_state == IconicState ||
 				  wmPtr->hints.initial_state == WithdrawnState);
-		/* 
+		/*
 		 * If no windows are left on the screen and the next
 		 * window is iconified or withdrawn, we don't want to
 		 * make it be the KeyWindow because that would cause
@@ -2355,7 +2376,7 @@ WmIconnameCmd(
  * WmIconphotoCmd --
  *
  *	This procedure is invoked to process the "wm iconphoto" Tcl command.
- *	See the user documentation for details on what it does. 
+ *	See the user documentation for details on what it does.
  *
  * Results:
  *	A standard Tcl result.
@@ -2396,7 +2417,7 @@ WmIconphotoCmd(
 
      /*Get icon name. We only use the first icon name because macOS does not
      support multiple images in Tk photos.*/
-    char *icon; 
+    char *icon;
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	icon = Tcl_GetString(objv[4]);
     }	else {
@@ -2412,7 +2433,7 @@ WmIconphotoCmd(
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
 	return TCL_ERROR;
     }
-	
+
     NSImage *newIcon;
     Tk_SizeOfImage(tk_icon, &width, &height);
     newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon, width, height);
@@ -3443,7 +3464,15 @@ WmTransientCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tk_MakeWindowExist(master);
+	TkWindow* masterPtr = (TkWindow*) master;
+	while (!Tk_TopWinHierarchy(masterPtr)) {
+            /*
+             * Ensure that the master window is actually a Tk toplevel.
+             */
+
+            masterPtr = masterPtr->parentPtr;
+        }
+	Tk_MakeWindowExist((Tk_Window)masterPtr);
 
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3453,8 +3482,7 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	wmPtr2 = ((TkWindow *) master)->wmInfoPtr;
-
+	wmPtr2 = masterPtr->wmInfoPtr;
 	/* Under some circumstances, wmPtr2 is NULL here */
 	if (wmPtr2 != NULL && wmPtr2->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3464,15 +3492,16 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	if ((TkWindow *) master == winPtr) {
+	if (masterPtr == winPtr) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't make \"%s\" its own master", Tk_PathName(winPtr)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
 	    return TCL_ERROR;
 	}
 
-	wmPtr->master = Tk_WindowId(master);
-	masterWindowName = Tcl_GetStringFromObj(objv[3], &length);
+	wmPtr->master = Tk_WindowId(masterPtr);
+	masterWindowName = masterPtr->pathName;
+	length = strlen(masterWindowName);
 	if (wmPtr->masterWindowName != NULL) {
 	    ckfree(wmPtr->masterWindowName);
 	}
@@ -3525,8 +3554,8 @@ WmWithdrawCmd(
     TkpWmSetState(winPtr, WithdrawnState);
     /*Remove window from Window menu.*/
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win setExcludedFromWindowsMenu:YES]; 
-    
+    [win setExcludedFromWindowsMenu:YES];
+
     return TCL_OK;
 }
 
@@ -4264,15 +4293,7 @@ Tk_GetRootCoords(
 	     */
 
 	    winPtr = otherPtr;
-
-	    /*
-	     * Remember to offset by the container window here, since at the
-	     * end of this if branch, we will pop out to the container's
-	     * parent...
-	     */
-
-	    x += winPtr->changes.x + winPtr->changes.border_width;
-	    y += winPtr->changes.y + winPtr->changes.border_width;
+            continue;
 	}
 	winPtr = winPtr->parentPtr;
     }
@@ -4687,44 +4708,50 @@ TkWmRestackToplevel(
 				 * below *all* siblings. */
 {
     NSWindow *macWindow;
-    NSInteger otherMacWindowNumber;
+    NSWindow *otherMacWindow;
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    int macAboveBelow = (aboveBelow == Above ? NSWindowAbove : NSWindowBelow);
+    int otherNumber = 0; /* 0 will be used when otherPtr is NULL. */
 
     /*
-     * Get the mac window. Make sure it exists & is mapped.
+     * If the Tk windows has no drawable, or is withdrawn do nothing.
      */
-
-    if (winPtr->window == None) {
-	Tk_MakeWindowExist((Tk_Window) winPtr);
-    }
-    if (winPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
-	/*
-	 * Can't set stacking order properly until the window is on the screen
-	 * (mapping it may give it a reparent window), so make sure it's on
-	 * the screen.
-	 */
-
-	TkWmMapWindow(winPtr);
+    if (winPtr->window == None ||
+	wmPtr == NULL          ||
+	wmPtr->hints.initial_state == WithdrawnState) {
+	return;
     }
     macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    if (macWindow == nil) {
+	return;
+    }
+    if (otherPtr) {
+	/*
+	 * When otherPtr is non-NULL, if the other window has no
+	 * drawable or is withdrawn, do nothing.
+	 */
+	WmInfo *otherWmPtr = otherPtr->wmInfoPtr;
+	if (winPtr->window == None ||
+	    otherWmPtr == NULL     ||
+	    otherWmPtr->hints.initial_state == WithdrawnState) {
+	return;
+	}
+	otherMacWindow = TkMacOSXDrawableWindow(otherPtr->window);
+	if (otherMacWindow == nil) {
+	    return;
+	} else {
+	    /*
+	     * If the other window is OK, get its number.
+	     */
+	    otherNumber = [otherMacWindow windowNumber];
+	}
+    }
 
     /*
-     * Get the window in which a raise or lower is in relation to.
+     * Just let the Mac window manager deal with all the subtleties
+     * of keeping track of off-screen windows, etc.
      */
-
-    if (otherPtr != NULL) {
-	if (otherPtr->window == None) {
-	    Tk_MakeWindowExist((Tk_Window) otherPtr);
-	}
-	if (otherPtr->wmInfoPtr->flags & WM_NEVER_MAPPED) {
-	    TkWmMapWindow(otherPtr);
-	}
-	otherMacWindowNumber = [TkMacOSXDrawableWindow(otherPtr->window)
-		windowNumber];
-    } else {
-	otherMacWindowNumber = 0;
-    }
-    [macWindow orderWindow:(aboveBelow == Above ? NSWindowAbove : NSWindowBelow)
-	    relativeTo:otherMacWindowNumber];
+    [macWindow orderWindow:macAboveBelow relativeTo:otherNumber];
 }
 
 /*
@@ -5250,54 +5277,13 @@ TkUnsupported1ObjCmd(
     };
     Tk_Window tkwin = clientData;
     TkWindow *winPtr;
-    int index, i;
+    int index;
 
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option window ?arg ...?");
 	return TCL_ERROR;
     }
 
-    /*
-     * Iterate through objc/objv to set correct background color and toggle
-     * opacity of window.
-     */
-
-    for (i= 0; i < objc; i++) {
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*black*")) {
-    	    colorName = [NSColor blackColor];	// use #000000 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*dark*")) {
-    	    colorName = [NSColor darkGrayColor]; //use #545454 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*light*")) {
-    	    colorName = [NSColor lightGrayColor]; //use #ababab in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*white*")) {
-    	    colorName = [NSColor whiteColor];	//use #ffffff in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "gray*")) {
-    	    colorName = [NSColor grayColor];	//use #7f7f7f in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*red*")) {
-    	    colorName = [NSColor redColor];	//use #ff0000 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*green*")) {
-    	    colorName = [NSColor greenColor];	//use #00ff00 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*blue*")) {
-    	    colorName = [NSColor blueColor];	//use #0000ff in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*cyan*")) {
-    	    colorName = [NSColor cyanColor];	//use #00ffff in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*yellow*")) {
-    	    colorName = [NSColor yellowColor];	//use #ffff00 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*magenta*")) {
-    	    colorName = [NSColor magentaColor];	//use #ff00ff in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*orange*")) {
-    	    colorName = [NSColor orangeColor];	//use #ff8000 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*purple*")) {
-    	    colorName = [NSColor purpleColor];	//use #800080 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*brown*")){
-    	    colorName = [NSColor brownColor];	//use #996633 in Tk scripts to match
-    	} else if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*clear*")) {
-    	    colorName = [NSColor clearColor];	//use systemTransparent in Tk scripts to match
-    	}
-    	if (Tcl_StringMatch(Tcl_GetString(objv[i]), "*opacity*")) {
-    	    opaqueTag = YES;
-    	}
-    }
 
     winPtr = (TkWindow *)
 	    Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
@@ -5677,20 +5663,6 @@ TkMacOSXMakeRealWindowExist(
 	 *                               from opaque content.
 	 */
 	[window setMovableByWindowBackground:NO];
-    }
-
-
-    /* Set background color and opacity of window if those flags are set.  */
-    if (colorName != NULL) {
-    	[window setBackgroundColor: colorName];
-    }
-
-    if (opaqueTag) {
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
-    	[window setOpaque: opaqueTag];
-#else
-	[window setOpaque: YES];
-#endif
     }
 
     [window setDocumentEdited:NO];
@@ -6330,12 +6302,15 @@ ApplyWindowAttributeFlagChanges(
 	    [[macWindow standardWindowButton:NSWindowZoomButton]
 		    setEnabled:(newAttributes & kWindowResizableAttribute) &&
 		    (newAttributes & kWindowFullZoomAttribute)];
-	    if (newAttributes & kWindowResizableAttribute) {
-		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+	    if (newAttributes & kWindowHorizontalZoomAttribute) {
+		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE);
 	    } else {
-		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE);
+	    }
+	    if (newAttributes & kWindowVerticalZoomAttribute) {
+		wmPtr->flags &= ~(WM_HEIGHT_NOT_RESIZABLE);
+	    } else {
+		wmPtr->flags |= (WM_HEIGHT_NOT_RESIZABLE);
 	    }
 	    WmUpdateGeom(wmPtr, winPtr);
 	}
@@ -6383,24 +6358,12 @@ ApplyWindowAttributeFlagChanges(
 	    } else if (newAttributes & tkMoveToActiveSpaceAttribute) {
 		b |= NSWindowCollectionBehaviorMoveToActiveSpace;
 	    }
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 	    if (newAttributes & kWindowDoesNotCycleAttribute) {
 		b |= NSWindowCollectionBehaviorIgnoresCycle;
 	    } else {
 		b |= NSWindowCollectionBehaviorParticipatesInCycle;
 	    }
-#endif
 	    [macWindow setCollectionBehavior:b];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	    if (((changedAttributes & kWindowDoesNotCycleAttribute) || initial)
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
-		    && tkMacOSXMacOSXVersion < 1060
-#endif
-	    ) {
-		[macWindow setCanCycle:
-			!(newAttributes & kWindowDoesNotCycleAttribute)];
-	    }
-#endif
 	}
 	if ((wmPtr->flags & WM_TOPMOST) != (oldFlags & WM_TOPMOST)) {
 	    [macWindow setLevel:(wmPtr->flags & WM_TOPMOST) ?
@@ -6532,9 +6495,8 @@ TkMacOSXMakeFullscreen(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int result = TCL_OK, wasFullscreen = (wmPtr->flags & WM_FULLSCREEN);
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
     static unsigned long prevMask = 0, prevPres = 0;
-#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
+
 
     if (fullscreen) {
 	int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
@@ -6569,34 +6531,34 @@ TkMacOSXMakeFullscreen(
 			wmPtr->configAttributes, wmPtr->flags, 1, 0);
 		wmPtr->flags |= WM_SYNC_PENDING;
 		[window setFrame:[window frameRectForContentRect:
-			screenBounds] display:YES];
+					   screenBounds] display:YES];
 		wmPtr->flags &= ~WM_SYNC_PENDING;
 	    }
 	    wmPtr->flags |= WM_FULLSCREEN;
 	}
 
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
-	/*
-	 * We can't set these features on Leopard or earlier, as they don't
-	 * exist (neither options nor API that uses them). This formally means
-	 * that there's a bug with full-screen windows with Tk on old OSX, but
-	 * it isn't worth blocking a build just for this.
-	 */
-
 	prevMask = [window styleMask];
 	prevPres = [NSApp presentationOptions];
-	[window setStyleMask: NSBorderlessWindowMask];
-	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
-	                          | NSApplicationPresentationAutoHideMenuBar];
+	[window setStyleMask: NSFullScreenWindowMask];
+	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar];
+
+	/*Fullscreen implementation for 10.13 and later.*/
+	#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
+	exitFullScreen = [[[NSStatusBar systemStatusBar]
+				   statusItemWithLength:NSVariableStatusItemLength] retain];
+	NSImage *exitIcon = [NSImage imageNamed:@"NSExitFullScreenTemplate"];
+	[exitFullScreen setImage:exitIcon];
+	[exitFullScreen setHighlightMode:YES];
+	[exitFullScreen setToolTip:@"Exit Full Screen"];
+	[exitFullScreen setTarget:window];
+	[exitFullScreen setAction:@selector(restoreOldScreen:)];
+	#endif
+
 	Tk_MapWindow((Tk_Window) winPtr);
-#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     } else {
 	wmPtr->flags &= ~WM_FULLSCREEN;
-
-#ifdef TK_GOT_AT_LEAST_SNOW_LEOPARD
 	[NSApp setPresentationOptions: prevPres];
 	[window setStyleMask: prevMask];
-#endif /*TK_GOT_AT_LEAST_SNOW_LEOPARD*/
     }
 
     if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {

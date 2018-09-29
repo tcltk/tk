@@ -17,16 +17,14 @@
 #include "default.h"
 
 /*
- * Things about the busy system that may be configured. Note that currently on
- * OSX/Aqua, that's nothing at all.
+ * Things about the busy system that may be configured. Note that on some
+ * platforms this may or may not have an effect.
  */
 
 static const Tk_OptionSpec busyOptionSpecs[] = {
-#ifndef MAC_OSX_TK
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUSY_CURSOR, -1, Tk_Offset(Busy, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
-#endif
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -763,6 +761,9 @@ HoldBusy(
     } else {
 	TkpHideBusyWindow(busyPtr);
     }
+    if (result == TCL_OK) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), -1));
+    }
     return result;
 }
 
@@ -796,11 +797,12 @@ Tk_BusyObjCmd(
     Tcl_Obj *objPtr;
     int index, result = TCL_OK;
     static const char *const optionStrings[] = {
-	"cget", "configure", "current", "forget", "hold", "status", NULL
+	"busywindow", "cget", "configure", "current", "forget", "hold",
+        "status", NULL
     };
     enum options {
-	BUSY_CGET, BUSY_CONFIGURE, BUSY_CURRENT, BUSY_FORGET, BUSY_HOLD,
-	BUSY_STATUS
+	BUSY_BUSYWINDOW, BUSY_CGET, BUSY_CONFIGURE, BUSY_CURRENT, BUSY_FORGET,
+	BUSY_HOLD, BUSY_STATUS
     };
 
     if (objc < 2) {
@@ -825,6 +827,19 @@ Tk_BusyObjCmd(
 	return TCL_ERROR;
     }
     switch ((enum options) index) {
+    case BUSY_BUSYWINDOW:
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window");
+	    return TCL_ERROR;
+	}
+	busyPtr = GetBusy(interp, busyTablePtr, objv[2]);
+	if (busyPtr == NULL) {
+	    Tcl_ResetResult(interp);
+            return TCL_OK;
+	}
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), -1));
+        return TCL_OK;
+
     case BUSY_CGET:
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "window option");

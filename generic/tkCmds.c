@@ -101,6 +101,7 @@ Tk_BellObjCmd(
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = clientData;
     int i, index, nice = 0;
+    Tk_ErrorHandler handler;
 
     if (objc > 4) {
     wrongArgs:
@@ -128,11 +129,13 @@ Tk_BellObjCmd(
 	    break;
 	}
     }
+    handler = Tk_CreateErrorHandler(Tk_Display(tkwin), -1, -1, -1, NULL, NULL);
     XBell(Tk_Display(tkwin), 0);
     if (!nice) {
 	XForceScreenSaver(Tk_Display(tkwin), ScreenSaverReset);
     }
     XFlush(Tk_Display(tkwin));
+    Tk_DeleteErrorHandler(handler);
     return TCL_OK;
 }
 
@@ -2068,13 +2071,14 @@ TkGetDisplayOf(
 				 * present. */
 {
     const char *string;
+    size_t length;
 
     if (objc < 1) {
 	return 0;
     }
-    string = Tcl_GetString(objv[0]);
-    if ((objv[0]->length >= 2) &&
-	    (strncmp(string, "-displayof", objv[0]->length) == 0)) {
+    string = TkGetStringFromObj(objv[0], &length);
+    if ((length >= 2) &&
+	    (strncmp(string, "-displayof", length) == 0)) {
         if (objc < 2) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "value for \"-displayof\" missing", -1));

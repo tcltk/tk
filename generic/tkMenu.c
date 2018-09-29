@@ -259,6 +259,9 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	"Background", DEF_MENU_ACTIVE_FG_COLOR,
 	Tk_Offset(TkMenu, activeFgPtr), -1, 0,
 	(ClientData) DEF_MENU_ACTIVE_FG_MONO, 0},
+    {TK_OPTION_RELIEF, "-activerelief", "activeRelief", "Relief",
+	DEF_MENU_ACTIVE_RELIEF, Tk_Offset(TkMenu, activeReliefPtr),
+	-1, 0, NULL, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENU_BG_COLOR, Tk_Offset(TkMenu, borderPtr), -1, 0,
 	(ClientData) DEF_MENU_BG_MONO, 0},
@@ -1700,12 +1703,12 @@ PostProcessEntry(
     if (mePtr->labelPtr == NULL) {
 	mePtr->labelLength = 0;
     } else {
-	(void)Tcl_GetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
+	(void)TkGetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
     }
     if (mePtr->accelPtr == NULL) {
 	mePtr->accelLength = 0;
     } else {
-	(void)Tcl_GetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
+	(void)TkGetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
     }
 
     /*
@@ -2495,6 +2498,22 @@ MenuVarProc(
     }
 
     menuPtr = mePtr->menuPtr;
+
+    if (menuPtr->menuFlags & MENU_DELETION_PENDING) {
+    	return NULL;
+    }
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (mePtr->namePtr == NULL) {
+	Tcl_UntraceVar2(interp, name1, name2,
+		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		MenuVarProc, clientData);
+	return NULL;
+     }
+
     name = Tcl_GetString(mePtr->namePtr);
 
     /*

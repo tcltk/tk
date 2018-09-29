@@ -12,8 +12,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -1102,7 +1102,8 @@ ListboxBboxSubCmd(
     if ((listPtr->topIndex <= index) && (index < lastVisibleIndex)) {
 	Tcl_Obj *el, *results[4];
 	const char *stringRep;
-	int pixelWidth, stringLen, x, y, result;
+	int pixelWidth, x, y, result;
+	size_t stringLen;
 	Tk_FontMetrics fm;
 
 	/*
@@ -1114,7 +1115,7 @@ ListboxBboxSubCmd(
 	    return result;
 	}
 
-	stringRep = Tcl_GetStringFromObj(el, &stringLen);
+	stringRep = TkGetStringFromObj(el, &stringLen);
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
@@ -1565,7 +1566,7 @@ ConfigureListbox(
     Tcl_Obj *errorResult = NULL;
     int oldExport, error;
 
-    oldExport = listPtr->exportSelection;
+    oldExport = (listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp));
     if (listPtr->listVarName != NULL) {
 	Tcl_UntraceVar2(interp, listPtr->listVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1607,10 +1608,11 @@ ConfigureListbox(
 
 	/*
 	 * Claim the selection if we've suddenly started exporting it and
-	 * there is a selection to export.
+	 * there is a selection to export and this interp is unsafe.
 	 */
 
-	if (listPtr->exportSelection && !oldExport
+	if (listPtr->exportSelection && (!oldExport)
+		&& (!Tcl_IsSafe(listPtr->interp))
 		&& (listPtr->numSelected != 0)) {
 	    Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY,
 		    ListboxLostSelection, listPtr);
@@ -1839,7 +1841,8 @@ DisplayListbox(
     register Listbox *listPtr = clientData;
     register Tk_Window tkwin = listPtr->tkwin;
     GC gc;
-    int i, limit, x, y, prevSelected, freeGC, stringLen;
+    int i, limit, x, y, prevSelected, freeGC;
+    size_t stringLen;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
@@ -2073,7 +2076,7 @@ DisplayListbox(
 	 */
 
         Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
-        stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+        stringRep = TkGetStringFromObj(curElement, &stringLen);
         textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
@@ -2235,7 +2238,8 @@ ListboxComputeGeometry(
 				 * Tk_UnsetGrid to update gridding for the
 				 * window. */
 {
-    int width, height, pixelWidth, pixelHeight, textLength, i, result;
+    int width, height, pixelWidth, pixelHeight, i, result;
+    size_t textLength;
     Tk_FontMetrics fm;
     Tcl_Obj *element;
     const char *text;
@@ -2256,7 +2260,7 @@ ListboxComputeGeometry(
 	    if (result != TCL_OK) {
 		continue;
 	    }
-	    text = Tcl_GetStringFromObj(element, &textLength);
+	    text = TkGetStringFromObj(element, &textLength);
 	    Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, text, textLength);
 	    if (pixelWidth > listPtr->maxWidth) {
@@ -2322,7 +2326,8 @@ ListboxInsertSubCmd(
     int objc,			/* Number of new elements to add. */
     Tcl_Obj *const objv[])	/* New elements (one per entry). */
 {
-    int i, oldMaxWidth, pixelWidth, result, length;
+    int i, oldMaxWidth, pixelWidth, result;
+    size_t length;
     Tcl_Obj *newListObj;
     const char *stringRep;
 
@@ -2333,7 +2338,7 @@ ListboxInsertSubCmd(
 	 * if so, update our notion of "widest."
 	 */
 
-	stringRep = Tcl_GetStringFromObj(objv[i], &length);
+	stringRep = TkGetStringFromObj(objv[i], &length);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	if (pixelWidth > listPtr->maxWidth) {
 	    listPtr->maxWidth = pixelWidth;
@@ -2436,7 +2441,8 @@ ListboxDeleteSubCmd(
     int first,			/* Index of first element to delete. */
     int last)			/* Index of last element to delete. */
 {
-    int count, i, widthChanged, length, result, pixelWidth;
+    int count, i, widthChanged, result, pixelWidth;
+    size_t length;
     Tcl_Obj *newListObj, *element;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -2491,7 +2497,7 @@ ListboxDeleteSubCmd(
 
 	if (widthChanged == 0) {
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &element);
-	    stringRep = Tcl_GetStringFromObj(element, &length);
+	    stringRep = TkGetStringFromObj(element, &length);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	    if (pixelWidth == listPtr->maxWidth) {
 		widthChanged = 1;
@@ -3079,7 +3085,8 @@ ListboxSelect(
 	EventuallyRedrawRange(listPtr, first, last);
     }
     if ((oldCount == 0) && (listPtr->numSelected > 0)
-	    && listPtr->exportSelection) {
+	    && (listPtr->exportSelection)
+	    && (!Tcl_IsSafe(listPtr->interp))) {
 	Tk_OwnSelection(listPtr->tkwin, XA_PRIMARY,
 		ListboxLostSelection, listPtr);
     }
@@ -3120,12 +3127,13 @@ ListboxFetchSelection(
 {
     register Listbox *listPtr = clientData;
     Tcl_DString selection;
-    int length, count, needNewline, stringLen, i;
+    int count, needNewline, i;
+    size_t length, stringLen;
     Tcl_Obj *curElement;
     const char *stringRep;
     Tcl_HashEntry *entry;
 
-    if (!listPtr->exportSelection) {
+    if ((!listPtr->exportSelection) || Tcl_IsSafe(listPtr->interp)) {
 	return -1;
     }
 
@@ -3143,7 +3151,7 @@ ListboxFetchSelection(
 	    }
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i,
 		    &curElement);
-	    stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+	    stringRep = TkGetStringFromObj(curElement, &stringLen);
 	    Tcl_DStringAppend(&selection, stringRep, stringLen);
 	    needNewline = 1;
 	}
@@ -3196,7 +3204,8 @@ ListboxLostSelection(
 {
     register Listbox *listPtr = clientData;
 
-    if ((listPtr->exportSelection) && (listPtr->nElements > 0)) {
+    if ((listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp))
+	    && (listPtr->nElements > 0)) {
 	ListboxSelect(listPtr, 0, listPtr->nElements-1, 0);
         GenerateListboxSelectEvent(listPtr);
     }
@@ -3428,14 +3437,27 @@ static char *
 ListboxListVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Not used. */
-    const char *name2,		/* Not used. */
+    const char *name1,		/* Name of variable. */
+    const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     Listbox *listPtr = clientData;
     Tcl_Obj *oldListObj, *varListObj;
     int oldLength, i;
     Tcl_HashEntry *entry;
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (listPtr->listVarName == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    ListboxListVarProc, clientData);
+	}
+	return NULL;
+    }
 
     /*
      * Bwah hahahaha! Puny mortal, you can't unset a -listvar'd variable!

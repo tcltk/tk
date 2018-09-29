@@ -4,8 +4,7 @@
  * ttk::frame and ttk::labelframe widgets.
  */
 
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"

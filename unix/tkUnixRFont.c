@@ -853,6 +853,7 @@ Tk_DrawChars(
 				 * string when drawing. */
 {
     const int maxCoord = 0x7FFF;/* Xft coordinates are 16 bit values */
+    const int minCoord = -maxCoord-1;
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     XGCValues values;
     XftColor *xftcolor;
@@ -861,10 +862,6 @@ Tk_DrawChars(
     XGlyphInfo metrics;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-   if (maxCoord <= y) {
-      return; /* nothing to draw */
-   }
 
     if (fontPtr->ftDraw == 0) {
 #if DEBUG_FONTSEL
@@ -903,26 +900,28 @@ Tk_DrawChars(
 
 	ftFont = GetFont(fontPtr, c, 0.0);
 	if (ftFont) {
-            int cx = x;
-            int cy = y;
-
 	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
 	    XftGlyphExtents(fontPtr->display, ftFont, &specs[nspec].glyph, 1,
 		    &metrics);
-            if ((x += metrics.xOff) >= maxCoord
-                  || (y += metrics.yOff) >= maxCoord) {
-               break;
-            }
-            if (metrics.xOff > 0 && cx >= 0 && cy >= 0) {
-               specs[nspec].font = ftFont;
-               specs[nspec].x = cx;
-               specs[nspec].y = cy;
-               if (++nspec == NUM_SPEC) {
-                   XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
-                           specs, nspec);
-                   nspec = 0;
-               }
+
+	    /*
+	     * Draw glyph only when it fits entirely into 16 bit coords.
+	     */
+
+	    if (x >= minCoord && y >= minCoord &&
+		x <= maxCoord - metrics.width &&
+		y <= maxCoord - metrics.height) {
+		specs[nspec].font = ftFont;
+		specs[nspec].x = x;
+		specs[nspec].y = y;
+		if (++nspec == NUM_SPEC) {
+		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
+			    specs, nspec);
+		    nspec = 0;
+		}
 	    }
+	    x += metrics.xOff;
+	    y += metrics.yOff;
 	}
     }
     if (nspec) {
@@ -985,7 +984,7 @@ TkDrawAngledChars(
     double angle)		/* What angle to put text at, in degrees. */
 {
     const int maxCoord = 0x7FFF;/* Xft coordinates are 16 bit values */
-    const int minCoord = -1000;	/* Should be good enough... */
+    const int minCoord = -maxCoord-1;
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     XGCValues values;
     XftColor *xftcolor;
@@ -1024,7 +1023,7 @@ TkDrawAngledChars(
     currentFtFont = NULL;
     originX = originY = 0;		/* lint */
 
-    while (numBytes > 0 && x >= minCoord && y >= minCoord) {
+    while (numBytes > 0) {
 	XftFont *ftFont;
 	FcChar32 c;
 
@@ -1053,34 +1052,54 @@ TkDrawAngledChars(
 		 * this information... but we'll be ready when it does!
 		 */
 
-		XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
-			originX, originY, glyphs, nglyph);
+		XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
+			nglyph, &metrics);
+		/*
+		 * Draw glyph only when it fits entirely into 16 bit coords.
+		 */
+
+		if (x >= minCoord && y >= minCoord &&
+		    x <= maxCoord - metrics.width &&
+		    y <= maxCoord - metrics.height) {
+
+		    /*
+		     * NOTE:
+		     * The whole algorithm has a design problem, the choice of
+		     * NUM_SPEC is arbitrary, and so the inter-glyph spacing could
+		     * look arbitrary. This algorithm has to draw the whole string
+		     * at once (or whole blocks with same font), this requires a
+		     * dynamic 'glyphs' array. In case of overflow the array has to
+		     * be divided until the maximal string will fit. (GC)
+                     * Given the resolution of current displays though, this should
+                     * not be a huge issue since NUM_SPEC is 1024 and thus able to
+                     * cover about 6000 pixels for a 6 pixel wide font (which is
+                     * a very small barely readable font)
+		     */
+
+		    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
+			    originX, originY, glyphs, nglyph);
+		}
 	    }
 	    originX = ROUND16(x);
 	    originY = ROUND16(y);
-	    if (nglyph) {
-		XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
-			nglyph, &metrics);
-		nglyph = 0;
-                /*
-                 * Breaking at this place is sub-optimal, but the whole algorithm
-                 * has a design problem, the choice of NUM_SPEC is arbitrary, and so
-                 * the inter-glyph spacing will look arbitrary. This algorithm
-                 * has to draw the whole string at once (or whole blocks with same
-                 * font), this requires a dynamic 'glyphs' array. In case of overflow
-                 * the array has to be divided until the maximal string will fit. (GC)
-                 */
-                if ((x += metrics.xOff) >= maxCoord || (y += metrics.yOff) >= maxCoord) {
-                   break;
-                }
-	    }
 	    currentFtFont = ftFont;
 	}
 	glyphs[nglyph++] = XftCharIndex(fontPtr->display, ftFont, c);
     }
     if (nglyph) {
-	XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
-		originX, originY, glyphs, nglyph);
+	XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
+		nglyph, &metrics);
+
+	/*
+	 * Draw glyph only when it fits entirely into 16 bit coords.
+	 */
+
+	if (x >= minCoord && y >= minCoord &&
+	    x <= maxCoord - metrics.width &&
+	    y <= maxCoord - metrics.height) {
+	    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
+		    originX, originY, glyphs, nglyph);
+	}
     }
 #else /* !XFT_HAS_FIXED_ROTATED_PLACEMENT */
     int clen, nspec;
@@ -1108,7 +1127,7 @@ TkDrawAngledChars(
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
     nspec = 0;
-    while (numBytes > 0 && x >= minCoord && y >= minCoord) {
+    while (numBytes > 0) {
 	XftFont *ftFont, *ft0Font;
 	FcChar32 c;
 
@@ -1126,21 +1145,28 @@ TkDrawAngledChars(
 	ftFont = GetFont(fontPtr, c, angle);
 	ft0Font = GetFont(fontPtr, c, 0.0);
 	if (ftFont && ft0Font) {
-	    specs[nspec].font = ftFont;
 	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
-	    specs[nspec].x = ROUND16(x);
-	    specs[nspec].y = ROUND16(y);
 	    XftGlyphExtents(fontPtr->display, ft0Font, &specs[nspec].glyph, 1,
 		    &metrics);
-            if ((x += metrics.xOff*cosA + metrics.yOff*sinA) > maxCoord
-                                 || (y += metrics.yOff*cosA - metrics.xOff*sinA) > maxCoord) {
-               break;
-            }
-            if (++nspec == NUM_SPEC) {
-		XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
-			specs, nspec);
-		nspec = 0;
+
+	    /*
+	     * Draw glyph only when it fits entirely into 16 bit coords.
+	     */
+
+	    if (x >= minCoord && y >= minCoord &&
+		x <= maxCoord - metrics.width &&
+		y <= maxCoord - metrics.height) {
+		specs[nspec].font = ftFont;
+		specs[nspec].x = ROUND16(x);
+		specs[nspec].y = ROUND16(y);
+		if (++nspec == NUM_SPEC) {
+		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
+			    specs, nspec);
+		    nspec = 0;
+		}
 	    }
+	    x += metrics.xOff*cosA + metrics.yOff*sinA;
+	    y += metrics.yOff*cosA - metrics.xOff*sinA;
 	}
     }
     if (nspec) {

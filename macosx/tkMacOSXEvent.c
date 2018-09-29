@@ -89,7 +89,6 @@ enum {
 	}
     case NSCursorUpdate:
         break;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
     case NSEventTypeGesture:
     case NSEventTypeMagnify:
     case NSEventTypeRotate:
@@ -97,7 +96,6 @@ enum {
     case NSEventTypeBeginGesture:
     case NSEventTypeEndGesture:
         break;
-#endif
 #endif
 
     default:
@@ -133,7 +131,7 @@ TkMacOSXFlushWindows(void)
 
     for (NSWindow *w in macWindows) {
 	if (TkMacOSXGetXWindow(w)) {
-	    [w flushWindow];
+	    [w displayIfNeeded];
 	}
     }
 }

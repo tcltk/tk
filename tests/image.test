@@ -67,7 +67,7 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     return $x
 } -cleanup {
     imageCleanup
-} -result {{myimage free} {myimage free} {myimage delete} {myimage get} {myimage get} {myimage display 0 0 30 15 30 30} {myimage display 0 0 30 15 30 130}}
+} -result {{myimage free} {myimage free} {myimage delete} {myimage get} {myimage get} {myimage display 0 0 30 15} {myimage display 0 0 30 15}}
 test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
 	testImageType
 } -setup {
@@ -86,7 +86,7 @@ test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
 } -cleanup {
     .c delete all
     imageCleanup
-} -result {{myimage get} {myimage get} {myimage display 0 0 30 15 30 30} {myimage display 0 0 30 15 30 130}}
+} -result {{myimage get} {myimage get} {myimage display 0 0 30 15} {myimage display 0 0 30 15}}
 test image-1.9 {Tk_ImageCmd procedure, "create" option} -constraints {
 	testImageType
 } -body {
@@ -360,7 +360,7 @@ test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
 } -cleanup {
     .c delete all
     imageCleanup
-} -result {{foo display 5 6 7 8 30 30}}
+} -result {{foo display 5 6 7 8}}
 test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c delete all
     imageCleanup
@@ -376,7 +376,7 @@ test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
 } -cleanup {
     .c delete all
     imageCleanup
-} -result {{foo display 5 6 25 9 30 30} {foo display 0 0 12 14 65 74}}
+} -result {{foo display 5 6 25 9} {foo display 0 0 12 14}}
 
 
 test image-10.1 {Tk_GetImage procedure} -setup {
@@ -417,7 +417,7 @@ test image-11.1 {Tk_FreeImage procedure} -constraints testImageType -setup {
 } -cleanup {
     .c delete all
     imageCleanup
-} -result {foo {{foo free} {foo display 0 0 30 15 103 121}}}
+} -result {foo {{foo free} {foo display 0 0 30 15}}}
 test image-11.2 {Tk_FreeImage procedure} -constraints testImageType -setup {
     .c delete all
     imageCleanup

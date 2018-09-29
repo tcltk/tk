@@ -658,6 +658,20 @@ command, above), but the cursor position may
 be set even when the item does not have the focus.
 This command returns an empty string.
 .TP
+\fIpathName \fBimage \fIimagename\fR ?\fIsubsample\fR? ?\fIzoom\fR?
+.
+Draw the canvas into the Tk photo image named \fIimagename\fR. If a \fB-scrollregion\fR
+has been defined then this will be the boundaries of the canvas region drawn and the
+final size of the photo image. Otherwise the widget width and height with an origin
+of 0,0 will be the size of the canvas region drawn and the final size of the photo
+image. Optionally an integer \fIsubsample\fR factor may be given and the photo image
+will be reduced in size. In addition to the \fIsubsample\fR an integer \fIzoom\fR
+factor can also be given and the photo image will be enlarged. The image background
+will be filled with the canvas background colour. The canvas widget does not need to
+be mapped for this widget command to work, but at least one of it's ancestors must be
+mapped.
+This command returns an empty string.
+.TP
 \fIpathName \fBimove \fItagOrId index x y\fR
 .VS 8.6
 This command causes the \fIindex\fR'th coordinate of each of the items

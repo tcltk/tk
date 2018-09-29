@@ -156,7 +156,7 @@ XMapWindow(
 	     * before applicationDidFinishLaunching returns. Forcing
 	     * the app to activate too early can make the menu bar
 	     * unresponsive.
-	     */ 
+	     */
 	    [NSApp activateIgnoringOtherApps:NO];
 	    if ( [win canBecomeKeyWindow] ) {
 		[win makeKeyAndOrderFront:NSApp];

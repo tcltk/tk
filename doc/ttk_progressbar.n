@@ -94,6 +94,35 @@ Increments the \fB\-value\fR by \fIamount\fR.
 \fIpathName \fBstop\fR
 Stop autoincrement mode:
 cancels any recurring timer event initiated by \fIpathName \fBstart\fR.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::progressbar\fP is \fBTProgressbar\fP.
+.PP
+\fBTProgressbar\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-darkcolor\fP \fIcolor\fP
+.br
+\fB\-lightcolor\fP \fIcolor\fP
+.br
+\fB\-maxphase\fP
+.RS
+For the aqua theme.
+.RE
+\fB\-period\fP
+.RS
+For the aqua theme.
+.RE
+\fB\-troughcolor\fP \fIcolor\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n)
 '\" Local Variables:

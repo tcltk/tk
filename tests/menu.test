@@ -175,6 +175,14 @@ test menu-2.6 {configuration options -activeforeground non-existent} -body {
     .m1 configure -activeforeground non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
+test menu-2.6a {configuration options -activerelief sunken} -body {
+    .m1 configure -activerelief sunken
+    .m1 cget -activerelief
+} -result {sunken}
+test menu-2.6b {configuration options -activerelief badValue} -body {
+    .m1 configure -activerelief badValue
+} -returnCodes error -result {bad relief "badValue": must be flat, groove, raised, ridge, solid, or sunken}
+
 test menu-2.7 {configuration options -background #ff0000} -body {
     .m1 configure -background #ff0000
     .m1 cget -background
@@ -1359,7 +1367,7 @@ test menu-3.18 {MenuWidgetCmd procedure, "configure" option} -setup {
     llength [.m1 configure]
 } -cleanup {
 	destroy .m1
-} -result {20}
+} -result {21}
 test menu-3.19 {MenuWidgetCmd procedure, "configure" option} -setup {
 	destroy .m1
 } -body {

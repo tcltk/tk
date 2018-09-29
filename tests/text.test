@@ -1599,6 +1599,15 @@ test text-8.27 {TextWidgetCmd procedure, "replace" option crash} -setup {
 } -cleanup {
     destroy .tt
 } -result {}
+test text-8.28 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    text .tt
+} -body {
+    .tt insert end "foo\n"
+    .tt tag add sel 1.0 end
+    .tt replace sel.first sel.last "bar"
+} -cleanup {
+    destroy .tt
+} -result {}
 
 
 test text-9.1 {TextWidgetCmd procedure, "get" option} -setup {
@@ -6408,9 +6417,9 @@ test text-27.14a {<<Modified>> virtual event - propagation to peers} -body {
 } -cleanup {
     destroy .t .tt
 } -result {4}
-test text-27.15 {<<Selection>> virtual event} -body {
+test text-27.15 {<<Selection>> virtual event on sel tagging} -body {
     set ::retval no_selection
-    pack [text .t -undo 1]
+    pack [text .t]
     bind .t <<Selection>> "set ::retval selection_changed"
     update idletasks
     .t insert end "nothing special\n"
@@ -6420,6 +6429,110 @@ test text-27.15 {<<Selection>> virtual event} -body {
 } -cleanup {
     destroy .t
 } -result {selection_changed}
+test text-27.15a {<<Selection>> virtual event on sel removal} -body {
+    set ::retval no_selection
+    pack [text .t]
+    .t insert end "nothing special\n"
+    .t tag add sel 1.0 1.1
+    bind .t <<Selection>> "set ::retval selection_changed"
+    update idletasks
+    .t tag remove 1.0 end
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {selection_changed}
+test text-27.15b {<<Selection>> virtual event on <<PasteSelection>> inside widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <<PasteSelection>> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<PasteSelection>> -x 15 -y 3
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {<<Selection>>_fired}
+test text-27.15c {No <<Selection>> virtual event on <<PasteSelection>> outside widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "but it will not be impacted by the <<PasteSelection>> event received."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<PasteSelection>> -x 15 -y 80
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {no_<<Selection>>_event_fired}
+test text-27.15d {<<Selection>> virtual event on <Delete> with cursor inside selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <Delete> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    .t mark set insert 1.15
+    focus .t
+    event generate .t <Delete>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {<<Selection>>_fired}
+test text-27.15e {No <<Selection>> virtual event on <Delete> with cursor outside selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "but it will not be impacted by the <Delete> event received."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    .t mark set insert 2.15
+    focus .t
+    event generate .t <Delete>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {no_<<Selection>>_event_fired}
+test text-27.15f {<<Selection>> virtual event on <<Cut>> with a widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <<Cut>> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<Cut>>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {<<Selection>>_fired}
+test text-27.15g {No <<Selection>> virtual event on <<Cut>> without widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <<Cut>> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<Cut>>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {no_<<Selection>>_event_fired}
 test text-27.16 {-maxundo configuration option} -body {
     text .t -undo 1  -autoseparators 1 -maxundo 2
     pack .t

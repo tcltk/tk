@@ -772,13 +772,13 @@ ParseColor(
     unsigned char *alphaPtr)
 {
     const char *specString;
-    int charCount;
+    size_t charCount;
 
     /*
      * Find out which color format we have
      */
 
-    specString = Tcl_GetStringFromObj(specObj, &charCount);
+    specString = TkGetStringFromObj(specObj, &charCount);
 
     if (charCount == 0) {
         /* Empty string */

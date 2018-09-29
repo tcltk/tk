@@ -22,5 +22,6 @@ doc/man.macros
 win/Debug*
 win/Release*
 win/nmhlp-out.txt
+win/nmakehlp.out
 unix/tk.pc
 html/*

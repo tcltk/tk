@@ -17,9 +17,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkScale.h"
+#include "default.h"
 
 #if defined(_WIN32)
 #define snprintf _snprintf
@@ -638,7 +638,7 @@ ConfigureScale(
 
 	ComputeFormat(scalePtr);
 
-	scalePtr->labelLength = scalePtr->label ? (int)strlen(scalePtr->label) : 0;
+	scalePtr->labelLength = scalePtr->label ? strlen(scalePtr->label) : 0;
 
 	Tk_SetBackgroundFromBorder(scalePtr->tkwin, scalePtr->bgBorder);
 
@@ -1191,6 +1191,19 @@ ScaleVarProc(
     double value;
     Tcl_Obj *valuePtr;
     int result;
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (scalePtr->varNamePtr == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    ScaleVarProc, clientData);
+	}
+	return NULL;
+    }
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole

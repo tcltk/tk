@@ -104,7 +104,7 @@ static const Tcl_ObjType pixelObjType = {
     FreePixelInternalRep,	/* freeIntRepProc */
     DupPixelInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetPixelFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -118,7 +118,7 @@ static const Tcl_ObjType mmObjType = {
     FreeMMInternalRep,		/* freeIntRepProc */
     DupMMInternalRep,		/* dupIntRepProc */
     UpdateStringOfMM,		/* updateStringProc */
-    SetMMFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -131,7 +131,7 @@ static const Tcl_ObjType windowObjType = {
     FreeWindowInternalRep,	/* freeIntRepProc */
     DupWindowInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetWindowFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -668,7 +668,7 @@ UpdateStringOfMM(
 {
     MMRep *mmPtr;
     char buffer[TCL_DOUBLE_SPACE];
-    register int len;
+    size_t len;
 
     mmPtr = objPtr->internalRep.twoPtrValue.ptr1;
     /* assert( mmPtr->units == -1 && objPtr->bytes == NULL ); */
@@ -677,7 +677,7 @@ UpdateStringOfMM(
     }
 
     Tcl_PrintDouble(NULL, mmPtr->value, buffer);
-    len = (int)strlen(buffer);
+    len = strlen(buffer);
 
     objPtr->bytes = ckalloc(len + 1);
     strcpy(objPtr->bytes, buffer);
@@ -892,7 +892,7 @@ SetWindowFromAny(
      * Free the old internalRep before setting the new one.
      */
 
-    (void)Tcl_GetString(objPtr);
+    Tcl_GetString(objPtr);
     typePtr = objPtr->typePtr;
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
@@ -1123,7 +1123,7 @@ TkParsePadAmount(
  *	None
  *
  * Side effects:
- *	All instances of Tcl_ObjType structues used in Tk are registered with
+ *	All instances of Tcl_ObjType structures used in Tk are registered with
  *	Tcl.
  *
  *----------------------------------------------------------------------
