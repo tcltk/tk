@@ -1482,6 +1482,15 @@ GetMenuIndicatorGeometry(
 	Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
 		menuPtr->borderWidthPtr, &borderWidth);
 	*widthPtr = indicatorDimensions[1] - borderWidth;
+
+        /*
+         * Quite dubious about the above (why would borderWidth play a role?)
+         * and about how indicatorDimensions[1] is obtained in SetDefaults().
+         * At least don't let the result be negative!
+         */
+        if (*widthPtr < 0) {
+            *widthPtr = 0;
+        }
     }
 }
 
@@ -3281,6 +3290,7 @@ SetDefaults(
      *
      * The code below was given to me by Microsoft over the phone. It is the
      * only way to ensure menu items line up, and is not documented.
+     * How strange the calculation of indicatorDimensions[1] is...!
      */
 
     indicatorDimensions[0] = GetSystemMetrics(SM_CYMENUCHECK);
