@@ -1193,7 +1193,7 @@ DrawTearoffEntry(
     points[0].y = y + height/2;
     points[1].y = points[0].y;
     segmentWidth = 6;
-    maxX = width - 1;
+    maxX = x + width - 1;
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
 
     while (points[0].x < maxX) {
