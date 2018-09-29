@@ -1718,7 +1718,7 @@ TkpComputeStandardMenuGeometry(
 	menuPtr->entries[j]->entryFlags |= ENTRY_LAST_COLUMN;
     }
     windowWidth = x + indicatorSpace + labelWidth + accelWidth
-	    + 2 * activeBorderWidth + 2 * borderWidth;
+	    + 2 * activeBorderWidth + borderWidth;
 
     windowHeight += borderWidth;
 
