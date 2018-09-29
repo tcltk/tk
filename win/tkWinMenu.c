@@ -2874,7 +2874,7 @@ TkpComputeStandardMenuGeometry(
 		menuPtr->entries[j]->entryFlags &= ~ENTRY_LAST_COLUMN;
 	    }
 	    x += indicatorSpace + labelWidth + accelWidth
-		    + 2 * borderWidth;
+		    + 2 * activeBorderWidth;
 	    indicatorSpace = labelWidth = accelWidth = 0;
 	    lastColumnBreak = i;
 	    y = borderWidth;
@@ -2944,8 +2944,8 @@ TkpComputeStandardMenuGeometry(
 	menuPtr->entries[j]->x = x;
 	menuPtr->entries[j]->entryFlags |= ENTRY_LAST_COLUMN;
     }
-    windowWidth = x + indicatorSpace + labelWidth + accelWidth + accelSpace
-	    + 2 * activeBorderWidth + 2 * borderWidth;
+    windowWidth = x + indicatorSpace + labelWidth + accelWidth
+	    + 2 * activeBorderWidth + borderWidth;
 
 
     windowHeight += borderWidth;

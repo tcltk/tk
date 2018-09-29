@@ -1139,7 +1139,7 @@ TkpComputeStandardMenuGeometry(
 		columnEntryPtr->x = x;
 		columnEntryPtr->entryFlags &= ~ENTRY_LAST_COLUMN;
 	    }
-	    x += maxIndicatorSpace + maxWidth + 2 * borderWidth;
+	    x += maxIndicatorSpace + maxWidth + 2 * activeBorderWidth;
 	    maxWidth = maxIndicatorSpace = 0;
 	    lastColumnBreak = i;
 	    y = borderWidth;
