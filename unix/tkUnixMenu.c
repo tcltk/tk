@@ -638,7 +638,7 @@ DrawMenuSeparator(
 
     points[0].x = x;
     points[0].y = y + height/2;
-    points[1].x = width - 1;
+    points[1].x = x + width - 1;
     points[1].y = points[0].y;
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
     Tk_Draw3DPolygon(menuPtr->tkwin, d, border, points, 2, 1,
