@@ -33,22 +33,11 @@ long tkMacOSXMacOSXVersion = 0;
 
 #pragma mark TKApplication(TKInit)
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-#define NSTextInputContextKeyboardSelectionDidChangeNotification @"NSTextInputContextKeyboardSelectionDidChangeNotification"
-static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFStringRef name, const void *object, CFDictionaryRef userInfo) {
-    [[NSNotificationCenter defaultCenter] postNotificationName:NSTextInputContextKeyboardSelectionDidChangeNotification object:nil userInfo:nil];
-}
-#endif
-
 @interface TKApplication(TKKeyboard)
 - (void) keyboardChanged: (NSNotification *) notification;
 @end
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
 #define TKApplication_NSApplicationDelegate <NSApplicationDelegate>
-#else
-#define TKApplication_NSApplicationDelegate
-#endif
 @interface TKApplication(TKWindowEvent) TKApplication_NSApplicationDelegate
 - (void) _setupWindowNotifications;
 @end
@@ -106,9 +95,6 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
     observe(NSApplicationDidChangeScreenParametersNotification, displayChanged:);
     observe(NSTextInputContextKeyboardSelectionDidChangeNotification, keyboardChanged:);
 #undef observe
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-    CFNotificationCenterAddObserver(CFNotificationCenterGetDistributedCenter(), NULL, &keyboardChanged, kTISNotifySelectedKeyboardInputSourceChanged, NULL, CFNotificationSuspensionBehaviorCoalesce);
-#endif
 }
 
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
@@ -129,19 +115,6 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
      */
     _defaultMainMenu = nil;
     [self _setupMenus];
-    
-    /*
-     * Set the application icon.  This is unnecessary when running Wish.app
-     * but it is easier than testing for that situation to just do it.
-     */
-    NSString *path = [NSApp tkFrameworkImagePath:@"Tk.icns"];
-    if (path) {
-	NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
-	if (image) {
-	    [NSApp setApplicationIconImage:image];
-	    [image release];
-	}
-    }
 
     /*
      * Initialize event processing.
@@ -167,7 +140,7 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
 
 - (void) _setup: (Tcl_Interp *) interp
 {
-    /* 
+    /*
      * Remember our interpreter.
      */
     _eventInterp = interp;
@@ -187,6 +160,23 @@ static void keyboardChanged(CFNotificationCenterRef center, void *observer, CFSt
      * Make sure we are allowed to open windows.
      */
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+    /*
+     * If no icon has been set from an Info.plist file, use the Wish icon from
+     * the Tk framework.
+     */
+    NSString *iconFile = [[NSBundle mainBundle] objectForInfoDictionaryKey:
+						    @"CFBundleIconFile"];
+    if (!iconFile) {
+	NSString *path = [NSApp tkFrameworkImagePath:@"Tk.icns"];
+	if (path) {
+	    NSImage *image = [[NSImage alloc] initWithContentsOfFile:path];
+	    if (image) {
+		[NSApp setApplicationIconImage:image];
+		[image release];
+	    }
+	}
+    }
 }
 
 - (NSString *) tkFrameworkImagePath: (NSString *) image
@@ -273,8 +263,8 @@ TkpInit(
 	 * Initialize/check OS version variable for runtime checks.
 	 */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1050
-#   error Mac OS X 10.5 required
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#   error Mac OS X 10.6 required
 #endif
 
 	if (!uname(&name)) {
@@ -301,10 +291,12 @@ TkpInit(
 	if (Tcl_MacOSXOpenVersionedBundleResources(interp,
 		"com.tcltk.tklibrary", TK_FRAMEWORK_VERSION, 0, PATH_MAX,
 		tkLibPath) != TCL_OK) {
+            # if 0 /* This is not really an error.  Wish still runs fine. */
 	    TkMacOSXDbgMsg("Tcl_MacOSXOpenVersionedBundleResources failed");
+	    # endif
 	}
 #endif
-	
+
 	/*
 	 * FIXME: Close stdin & stdout for remote debugging otherwise we will
 	 * fight with gdb for stdin & stdout
@@ -319,7 +311,7 @@ TkpInit(
 	 * Instantiate our NSApplication object. This needs to be
 	 * done before we check whether to open a console window.
 	 */
-	
+
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
 	[[NSUserDefaults standardUserDefaults] registerDefaults:
 		[NSDictionary dictionaryWithObjectsAndKeys:

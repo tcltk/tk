@@ -9,9 +9,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkUnixInt.h"
 #include "tkMenu.h"
+#include "default.h"
 
 /*
  * Constants used for menu drawing.
@@ -443,9 +443,8 @@ DrawMenuEntryBackground(
 		|| (menuPtr->postedCascade != mePtr))) {
 	    relief = TK_RELIEF_FLAT;
 	} else {
-	    relief = TK_RELIEF_RAISED;
+	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
 	}
-
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height,

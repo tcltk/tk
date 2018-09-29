@@ -117,7 +117,7 @@ enum alertIconOptions {
     ICON_ERROR, ICON_INFO, ICON_QUESTION, ICON_WARNING
 };
 static const char *const alertButtonStrings[] = {
-    "abort", "retry", "ignore", "ok", "cancel", "yes", "no", NULL
+    "abort", "retry", "ignore", "ok", "cancel", "no", "yes", NULL
 };
 
 static const NSString *const alertButtonNames[][3] = {
@@ -147,8 +147,8 @@ static const short alertButtonIndexAndTypeToNativeButtonIndex[][7] = {
     [TYPE_OK] =			{0,    0,    0,    1,    0,    0,    0},
     [TYPE_OKCANCEL] =		{0,    0,    0,    1,    2,    0,    0},
     [TYPE_RETRYCANCEL] =	{0,    1,    0,    0,    2,    0,    0},
-    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    1,    2},
-    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    1,    2},
+    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    2,    1},
+    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    2,    1},
 };
 
 /*
@@ -161,15 +161,14 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_OK] =			{3, 0, 0},
     [TYPE_OKCANCEL] =		{3, 4, 0},
     [TYPE_RETRYCANCEL] =	{1, 4, 0},
-    [TYPE_YESNO] =		{5, 6, 0},
-    [TYPE_YESNOCANCEL] =	{5, 6, 4},
+    [TYPE_YESNO] =		{6, 5, 0},
+    [TYPE_YESNOCANCEL] =	{6, 5, 4},
 };
 
 /*
  * Construct a file URL from directory and filename.  Either may
  * be nil.  If both are nil, returns nil.
  */
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 1050
 static NSURL *getFileURL(NSString *directory, NSString *filename) {
     NSURL *url = nil;
     if (directory) {
@@ -180,7 +179,6 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
     }
     return url;
 }
-#endif
 
 #pragma mark TKApplication(TKDialog)
 
@@ -716,17 +714,7 @@ Tk_GetOpenFileObjCmd(
     callbackInfo->multiple = multiple;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-	    parentIsKey = [parent isKeyWindow];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	[openpanel beginSheetForDirectory:directory
-	       file:filename
-	       types:openFileTypes
-	       modalForWindow:parent
-	       modalDelegate:NSApp
-	       didEndSelector:
-		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
-	       contextInfo:callbackInfo];
-#else
+	parentIsKey = [parent isKeyWindow];
 	if (directory || filename ) {
 	    NSURL * fileURL = getFileURL(directory, filename);
 	    [openpanel setDirectoryURL:fileURL];
@@ -737,20 +725,14 @@ Tk_GetOpenFileObjCmd(
 	       { [NSApp tkFilePanelDidEnd:openpanel
 		       returnCode:returnCode
 		       contextInfo:callbackInfo ]; } ];
-#endif
 	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:openpanel];
     } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	modalReturnCode = [openpanel runModalForDirectory:directory
-				 file:filename];
-#else
 	if (directory || filename ) {
 	    NSURL * fileURL = getFileURL(directory, filename);
 	    [openpanel setDirectoryURL:fileURL];
 	}
 
 	modalReturnCode = [openpanel runModal];
-#endif
 	[NSApp tkFilePanelDidEnd:openpanel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
@@ -764,7 +746,7 @@ Tk_GetOpenFileObjCmd(
 	/*
 	 * The -typevariable must be set to the selected file type, if the dialog was not cancelled
 	 */
-	NSInteger selectedFilterIndex = filterInfo.fileTypeIndex;
+	NSUInteger selectedFilterIndex = filterInfo.fileTypeIndex;
 	NSString *selectedFilter = NULL;
 	if (filterInfo.userHasSelectedFilter) {
 	    selectedFilterIndex = filterInfo.fileTypeIndex;
@@ -790,7 +772,7 @@ Tk_GetOpenFileObjCmd(
 		selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 	    } else {
 		// scan the list
-		int i;
+		NSUInteger i;
 		for (i = 0; i < [filterInfo.fileTypeNames count]; i++) {
 		    if (filterCompatible(extension, i)) {
 			selectedFilterIndex = i;
@@ -1001,16 +983,7 @@ Tk_GetSaveFileObjCmd(
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
        parentIsKey = [parent isKeyWindow];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	[savepanel beginSheetForDirectory:directory
-	       file:filename
-	       modalForWindow:parent
-	       modalDelegate:NSApp
-	       didEndSelector:
-		   @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
-	       contextInfo:callbackInfo];
-#else
-	if (directory) {
+       if (directory) {
 	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
 	   /*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
@@ -1024,12 +997,8 @@ Tk_GetSaveFileObjCmd(
 	       { [NSApp tkFilePanelDidEnd:savepanel
 		       returnCode:returnCode
 		       contextInfo:callbackInfo ]; } ];
-#endif
 	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:savepanel];
     } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	modalReturnCode = [savepanel runModalForDirectory:directory file:filename];
-#else
 	if (directory) {
 	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	}
@@ -1040,7 +1009,6 @@ Tk_GetSaveFileObjCmd(
 	    [savepanel setNameFieldStringValue:@""];
 	}
 	modalReturnCode = [savepanel runModal];
-#endif
 	[NSApp tkFilePanelDidEnd:savepanel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
@@ -1172,30 +1140,17 @@ Tk_ChooseDirectoryObjCmd(
     }
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
-      parentIsKey = [parent isKeyWindow];
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	[panel beginSheetForDirectory:directory
-		file:nil
-		modalForWindow:parent
-		modalDelegate:NSApp
-		didEndSelector: @selector(tkFilePanelDidEnd:returnCode:contextInfo:)
-		contextInfo:callbackInfo];
-#else
+	parentIsKey = [parent isKeyWindow];
 	[panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	[panel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode)
 	       { [NSApp tkFilePanelDidEnd:panel
 		       returnCode:returnCode
 		       contextInfo:callbackInfo ]; } ];
-#endif
 	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:panel];
     } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-	modalReturnCode = [panel runModalForDirectory:directory file:nil];
-#else
 	[panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	modalReturnCode = [panel runModal];
-#endif
 	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
 		contextInfo:callbackInfo];
     }
@@ -1375,7 +1330,7 @@ Tk_MessageBoxObjCmd(
 
 	case ALERT_ICON:
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertIconStrings,
-		    sizeof(char *), "value", TCL_EXACT, &iconIndex) != TCL_OK) {
+		    sizeof(char *), "-icon value", TCL_EXACT, &iconIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1405,7 +1360,7 @@ Tk_MessageBoxObjCmd(
 
 	case ALERT_TYPE:
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertTypeStrings,
-		    sizeof(char *), "value", TCL_EXACT, &typeIndex) != TCL_OK) {
+		    sizeof(char *), "-type value", TCL_EXACT, &typeIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1421,7 +1376,7 @@ Tk_MessageBoxObjCmd(
 	 */
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[indexDefaultOption + 1],
-		alertButtonStrings, sizeof(char *), "value", TCL_EXACT, &index) != TCL_OK) {
+		alertButtonStrings, sizeof(char *), "-default value", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 

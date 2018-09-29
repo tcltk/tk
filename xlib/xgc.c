@@ -84,7 +84,7 @@ static void FreeClipMask(GC gc) {
 	    TkpReleaseRegion(((TkpClipMask*) gc->clip_mask)->value.region);
 	}
 #endif
-	ckfree(gc->clip_mask);
+	ckfree((char *) gc->clip_mask);
 	gc->clip_mask = None;
     }
 }

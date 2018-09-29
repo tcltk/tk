@@ -12,9 +12,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
+#include "default.h"
 
 /*
  * The 'TkWrapMode' enum in tkText.h is used to define a type for the -wrap
@@ -243,6 +243,7 @@ TkTextTagCmd(
 		    TkTextSelectionEvent(textPtr);
 
 		    if (addTag && textPtr->exportSelection
+			    && (!Tcl_IsSafe(textPtr->interp))
 			    && !(textPtr->flags & GOT_SELECTION)) {
 			Tk_OwnSelection(textPtr->tkwin, XA_PRIMARY,
 				TkTextLostSelection, textPtr);
@@ -1107,10 +1108,10 @@ FindTag(
     Tcl_Obj *tagName)		/* Name of desired tag. */
 {
     Tcl_HashEntry *hPtr;
-    int len;
+    size_t len;
     const char *str;
 
-    str = Tcl_GetStringFromObj(tagName, &len);
+    str = TkGetStringFromObj(tagName, &len);
     if (len == 3 && !strcmp(str, "sel")) {
 	return textPtr->selTagPtr;
     }

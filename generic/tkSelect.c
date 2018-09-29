@@ -831,7 +831,7 @@ Tk_SelectionObjCmd(
 	const char *targetName = NULL;
 	const char *formatName = NULL;
 	register CommandInfo *cmdInfoPtr;
-	int cmdLength;
+	size_t cmdLength;
 	static const char *const handleOptionStrings[] = {
 	    "-format", "-selection", "-type", NULL
 	};
@@ -900,7 +900,7 @@ Tk_SelectionObjCmd(
 	} else {
 	    format = XA_STRING;
 	}
-	string = Tcl_GetStringFromObj(objs[1], &cmdLength);
+	string = TkGetStringFromObj(objs[1], &cmdLength);
 	if (cmdLength == 0) {
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {

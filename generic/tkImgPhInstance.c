@@ -110,7 +110,7 @@ TkImgPhotoConfigureInstance(
 	 */
 
 	if (colorTablePtr != NULL) {
-	    colorTablePtr->liveRefCount -= 1;
+	    colorTablePtr->liveRefCount--;
 	    FreeColorTable(colorTablePtr, 0);
 	}
 	GetColorTable(instancePtr);
@@ -599,7 +599,7 @@ BlendComplexAlpha(
 		    g = ALPHA_BLEND(ga, g, alpha, unalpha);
 		    b = ALPHA_BLEND(ba, b, alpha, unalpha);
 		}
-#ifndef MAC_OSX_TK    
+#ifndef MAC_OSX_TK
 		XPutPixel(bgImg, x, y, RGB(r, g, b));
 #else
 		XPutPixel(bgImg, x, y, RGBA(r, g, b, alpha));
@@ -752,7 +752,7 @@ TkImgPhotoFree(
 
     colorPtr = instancePtr->colorTablePtr;
     if (colorPtr != NULL) {
-	colorPtr->liveRefCount -= 1;
+	colorPtr->liveRefCount--;
     }
 
     Tcl_DoWhenIdle(TkImgDisposeInstance, instancePtr);
@@ -1135,8 +1135,7 @@ FreeColorTable(
 				 * longer required by an instance. */
     int force)			/* Force free to happen immediately. */
 {
-    colorPtr->refCount--;
-    if (colorPtr->refCount > 0) {
+    if (colorPtr->refCount-- > 1) {
 	return;
     }
 

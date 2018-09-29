@@ -1,3 +1,2 @@
-win/buildall.vc.bat
-win/makefile.vc
-win/rules.vc
+win/*.bat
+win/*.vc
