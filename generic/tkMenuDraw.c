@@ -665,25 +665,14 @@ DisplayMenu(
 	}
 	mePtr->entryFlags &= ~ENTRY_NEEDS_REDISPLAY;
 
-	if (menuPtr->menuType == MENUBAR) {
-	    width = mePtr->width;
-	} else {
-	    if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
-		width = Tk_Width(menuPtr->tkwin) - mePtr->x
-			- borderWidth;
-	    } else {
-		width = mePtr->width + borderWidth;
-	    }
-	}
 	TkpDrawMenuEntry(mePtr, Tk_WindowId(menuPtr->tkwin), tkfont,
-		&menuMetrics, mePtr->x, mePtr->y, width,
+		&menuMetrics, mePtr->x, mePtr->y, mePtr->width,
 		mePtr->height, strictMotif, 1);
 	if ((index > 0) && (menuPtr->menuType != MENUBAR)
 		&& mePtr->columnBreak) {
 	    mePtr = menuPtr->entries[index - 1];
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
-		mePtr->x, mePtr->y + mePtr->height,
-		mePtr->width,
+		mePtr->x, mePtr->y + mePtr->height, mePtr->width,
 		Tk_Height(tkwin) - mePtr->y - mePtr->height - borderWidth,
 		0, TK_RELIEF_FLAT);
 	}
