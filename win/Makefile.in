@@ -414,22 +414,23 @@ SHELL_ENV = \
 ###
 # Tip 430 - ZipFS Modifications
 ###
-TK_ZIP_FILE		= libtk_${MAJOR_VERSION}_${MINOR_VERSION}_${PATCH_LEVEL}.zip
+TK_ZIP_FILE		= libtk_@TK_MAJOR_VERSION@_@TK_MINOR_VERSION@_@TK_PATCH_LEVEL@.zip
+TCL_ZIP_FILE		=  @TCL_ZIP_FILE@
 TK_VFS_PATH		= libtk.vfs/tk_library
 TK_VFS_ROOT		= libtk.vfs
 TCL_ZIPFS_SUPPORT       = @TCL_ZIPFS_SUPPORT@
 TCL_ZIPFS_FLAG          = @TCL_ZIPFS_FLAG@
 TCL_ZIPFS_OBJS          =
-ZIP_PROG        = @ZIP_PROG@
-ZIP_PROG_OPTIONS		= @ZIP_PROG_OPTIONS@
-ZIP_PROG_VFSSEARCH  = @ZIP_PROG_VFSSEARCH@
+ZIP_PROG		= @ZIP_PROG@
+ZIP_PROG_OPTIONS	= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH	= @ZIP_PROG_VFSSEARCH@
 SHARED_BUILD		= @SHARED_BUILD@
 
 ifeq (${TCL_ZIPFS_SUPPORT},1)
 	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
 endif
 ifeq (${TCL_ZIPFS_SUPPORT},2)
-	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
+	TCL_ZIPFS_OBJS=${TK_ZIP_FILE} ${TCL_ZIP_FILE}
 endif
 
 # Main targets.  The default target -- all -- builds the binaries,
@@ -437,7 +438,7 @@ endif
 
 all: binaries libraries doc
 
-binaries: @LIBRARIES@ $(WISH)
+binaries: @LIBRARIES@ $(TCL_ZIPFS_OBJS) $(WISH)
 
 libraries:
 
@@ -452,6 +453,8 @@ ${TK_ZIP_FILE}:
 	$(COPY) -a $(ROOT_DIR)/library/* ${TK_VFS_PATH}
 	cd  ${TK_VFS_ROOT} ; ${ZIP_PROG} ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}
 
+${TCL_ZIP_FILE}:
+	cp "$(shell $(CYGPATH) '@TCL_BIN_DIR@/@TCL_ZIP_FILE@')" @TCL_ZIP_FILE@
 
 winhelp: $(TCL_SRC_DIR)/tools/man2help.tcl $(MAN2TCL)
 	$(TCL_EXE) "$(TCL_SRC_DIR_NATIVE)/tools/man2help.tcl" tcl "$(VER)" $(CORE_DOCS)
