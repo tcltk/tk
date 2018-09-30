@@ -1840,7 +1840,7 @@ DrawMenuEntryArrow(
     int width,			/* Width of menu entry */
     int height,			/* Height of menu entry */
     int drawArrow)		/* For cascade menus, whether of not to draw
-				 * the arraw. I cannot figure out Windows'
+				 * the arrow. I cannot figure out Windows'
 				 * algorithm for where to draw this. */
 {
     COLORREF oldFgColor;
@@ -2500,7 +2500,7 @@ TkpDrawMenuEntry(
     int strictMotif,		/* Boolean flag */
     int drawingParameters)	/* Whether or not to draw the cascade arrow
 				 * for cascade items and accelerator
-				 * cues. Only applies to Windows. */
+				 * cues. */
 {
     GC gc, indicatorGC;
     TkMenu *menuPtr = mePtr->menuPtr;
