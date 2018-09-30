@@ -52,8 +52,8 @@ static void		SetHelpMenu(TkMenu *menuPtr);
 static void		DrawMenuEntryAccelerator(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d, GC gc,
 			    Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
-			    Tk_3DBorder activeBorder, int x, int y,
-			    int width, int height, int drawArrow);
+			    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
+			    int x, int y, int width, int height, int drawArrow);
 static void		DrawMenuEntryBackground(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d,
 			    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
@@ -480,6 +480,7 @@ DrawMenuEntryAccelerator(
     Tk_Font tkfont,		/* The precalculated font */
     const Tk_FontMetrics *fmPtr,/* The precalculated metrics */
     Tk_3DBorder activeBorder,	/* The border for an active item */
+    Tk_3DBorder bgBorder,	/* The background border */
     int x,			/* Left coordinate of entry rect */
     int y,			/* Top coordinate of entry rect */
     int width,			/* Width of entry */
@@ -509,8 +510,9 @@ DrawMenuEntryAccelerator(
     	points[1].y = points[0].y + CASCADE_ARROW_HEIGHT;
     	points[2].x = points[0].x + CASCADE_ARROW_WIDTH;
     	points[2].y = points[0].y + CASCADE_ARROW_HEIGHT/2;
-    	Tk_Fill3DPolygon(menuPtr->tkwin, d, activeBorder, points, 3,
-		DECORATION_BORDER_WIDTH,
+    	Tk_Fill3DPolygon(menuPtr->tkwin, d,
+		(mePtr->state == ENTRY_ACTIVE) ? activeBorder : bgBorder,
+		points, 3, DECORATION_BORDER_WIDTH,
 	    	(menuPtr->postedCascade == mePtr)
 	    	? TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
     } else if (mePtr->accelPtr != NULL) {
@@ -1325,8 +1327,7 @@ TkpDrawMenuEntry(
     int height,			/* Height of the current rectangle */
     int strictMotif,		/* Boolean flag */
     int drawArrow)		/* Whether or not to draw the cascade arrow
-				 * for cascade items. Only applies to
-				 * Windows. */
+				 * for cascade items. */
 {
     GC gc, indicatorGC;
     XColor *indicatorColor, *disableColor = NULL;
@@ -1434,7 +1435,8 @@ TkpDrawMenuEntry(
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
-		activeBorder, x, adjustedY, width, adjustedHeight, drawArrow);
+		activeBorder, bgBorder, x, adjustedY, width, adjustedHeight,
+		drawArrow);
 	if (!mePtr->hideMargin) {
 	    if (mePtr->state == ENTRY_ACTIVE) {
 		bgBorder = activeBorder;
