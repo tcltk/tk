@@ -1625,8 +1625,7 @@ TkpDrawMenuEntry(
     int height,			/* Height of the current rectangle */
     int strictMotif,		/* Boolean flag */
     int drawArrow)		/* Whether or not to draw the cascade arrow
-				 * for cascade items. Only applies to
-				 * Windows. */
+				 * for cascade items. */
 {
 }
 
