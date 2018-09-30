@@ -849,7 +849,7 @@ ConfigureRestrictProc(
 	 * Try to prevent flickers and flashes.
 	 */
 	NSDisableScreenUpdates();
-
+	
 	/* Disable Tk drawing until the window has been completely configured.*/
 	TkMacOSXSetDrawingEnabled(winPtr, 0);
 
@@ -871,7 +871,7 @@ ConfigureRestrictProc(
 	[self generateExposeEvents: shape];
 	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
 	[w displayIfNeeded];
-	NSEnableScreenUpdates();
+       	NSEnableScreenUpdates();
 	[NSApp _unlockAutoreleasePool];
     }
 }
@@ -955,11 +955,16 @@ ConfigureRestrictProc(
 - (BOOL) isOpaque
 {
     NSWindow *w = [self window];
+    return NO;
 
-      return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
-    	    ![w isOpaque]) ? NO : YES);
 }
 
+ /*Support for Dark Mode for 10.14 and later.*/
+ #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+- (BOOL)allowsVibrancy {
+    return NO;
+}
+ #endif
 - (BOOL) wantsDefaultClipping
 {
     return NO;

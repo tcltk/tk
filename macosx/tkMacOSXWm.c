@@ -5402,21 +5402,6 @@ WmWinStyle(
 	{ "moveToActiveSpace",	tkMoveToActiveSpaceAttribute		     },
 	{ "nonActivating",	tkNonactivatingPanelAttribute		     },
 	{ "hud",		tkHUDWindowAttribute			     },
-	{ "black",		0			                     },
-	{ "dark",		0			                     },
-	{ "light",		0			                     },
-	{ "gray",		0			                     },
-	{ "red",		0 			                     },
-	{ "green",		0                			     },
-	{ "blue",		0           			             },
-	{ "cyan",		0			                     },
-	{ "yellow",		0			                     },
-	{ "magenta",		0  			                     },
-	{ "orange",		0 			                     },
-	{ "purple",		0			                     },
-	{ "brown",		0			                     },
-	{ "clear",		0			                     },
-	{ "opacity",		0			                     },
 	{ NULL }
     };
 
@@ -5666,6 +5651,21 @@ TkMacOSXMakeRealWindowExist(
     }
 
     [window setDocumentEdited:NO];
+    /*Support for Dark Mode for 10.14 and later.*/
+      #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+    NSAppearance *appearance = [NSAppearance currentAppearance];
+    NSAppearanceName appearanceName = [appearance name];
+      
+    NSLog(appearanceName);
+     
+    if ([appearanceName isEqualToString:NSAppearanceNameAqua]) {
+		[window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantLight]];
+	[window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameAqua]];
+    }
+     if ([appearanceName isEqualToString:NSAppearanceNameDarkAqua]) {
+	 [window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantDark]];
+    }
+    #endif
     wmPtr->window = window;
     macWin->view = window.contentView;
     TkMacOSXApplyWindowAttributes(winPtr, window);
