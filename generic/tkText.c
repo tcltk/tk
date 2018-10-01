@@ -9361,7 +9361,7 @@ static const char *const editInfoStrings[] = {
     "-bytesize", "-generatedmarks", "-images", "-lines", "-linespernode", "-marks",
     "-redobytesize", "-redocommands", "-redodepth", "-redostacksize", "-tags",
     "-totalbytesize", "-totallines", "-undobytesize", "-undocommands", "-undodepth",
-    "-undostacksize", "-usedtags", "-visibleimages", "-visiblewindows", "-windows"
+    "-undostacksize", "-usedtags", "-visibleimages", "-visiblewindows", "-windows", NULL
 };
 
 static void
