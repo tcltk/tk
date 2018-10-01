@@ -5629,6 +5629,7 @@ TkMacOSXMakeRealWindowExist(
     if (!window) {
     	Tcl_Panic("couldn't allocate new Mac window");
     }
+ 
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
     [window setColorSpace:[NSColorSpace deviceRGBColorSpace]];
@@ -5651,21 +5652,22 @@ TkMacOSXMakeRealWindowExist(
     }
 
     [window setDocumentEdited:NO];
+
     /*Support for Dark Mode for 10.14 and later.*/
-      #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+    #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
     NSAppearance *appearance = [NSAppearance currentAppearance];
     NSAppearanceName appearanceName = [appearance name];
-      
+   
     NSLog(appearanceName);
-     
+  
     if ([appearanceName isEqualToString:NSAppearanceNameAqua]) {
-		[window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantLight]];
-	[window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameAqua]];
+	[window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantLight]];
     }
      if ([appearanceName isEqualToString:NSAppearanceNameDarkAqua]) {
-	 [window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantDark]];
+    	 [window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantDark]];
     }
     #endif
+  
     wmPtr->window = window;
     macWin->view = window.contentView;
     TkMacOSXApplyWindowAttributes(winPtr, window);

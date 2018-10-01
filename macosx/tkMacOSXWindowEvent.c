@@ -791,6 +791,7 @@ ConfigureRestrictProc(
 
 @implementation TKContentView(TKWindowEvent)
 
+
 - (void) drawRect: (NSRect) rect
 {
     const NSRect *rectsBeingDrawn;
@@ -882,8 +883,7 @@ ConfigureRestrictProc(
  * operation.
  */
 
-- (void)viewDidEndLiveResize
-{
+- (void)viewDidEndLiveResize {
     HIRect bounds = NSRectToCGRect([self bounds]);
     HIShapeRef shape = HIShapeCreateWithRect(&bounds);
     [super viewDidEndLiveResize];
@@ -906,6 +906,7 @@ ConfigureRestrictProc(
 		return;
     }
 
+  
     /* Generate Tk Expose events. */
     HIShapeGetBounds(shape, &updateBounds);
     /* All of these events will share the same serial number. */
@@ -954,14 +955,15 @@ ConfigureRestrictProc(
 
 - (BOOL) isOpaque
 {
-    NSWindow *w = [self window];
-    return NO;
+    return YES;
 
 }
 
  /*Support for Dark Mode for 10.14 and later.*/
  #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
-- (BOOL)allowsVibrancy {
+- (BOOL)allowsVibrancy
+{
+
     return NO;
 }
  #endif
