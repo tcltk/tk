@@ -6,8 +6,7 @@
  * TODO: track active/pressed sash.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkManager.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"

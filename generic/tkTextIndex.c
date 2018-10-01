@@ -11,11 +11,11 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
 #include "tkTextTagSet.h"
 #include "tkAlloc.h"
+#include "default.h"
 #include <stdlib.h>
 #include <assert.h>
 

@@ -68,7 +68,7 @@ typedef struct ScrollbarMetrics {
 
 
 static ScrollbarMetrics metrics = {
-  15, 54, 26, 14, 14, kControlSizeNormal /* kThemeScrollBarMedium */
+  (15, 54, 26, 14, 14, kControlSizeNormal), /* kThemeScrollBarMedium */
 };
 
 HIThemeTrackDrawInfo info = {
@@ -219,72 +219,77 @@ TkpDisplayScrollbar(
  */
 
 
- extern void
+
+extern void
 TkpComputeScrollbarGeometry(
-			    register TkScrollbar *scrollPtr)
-/* Scrollbar whose geometry may have
- * changed. */
+    register TkScrollbar *scrollPtr)
+                           /* Scrollbar whose geometry may have
+                           * changed. */
 {
 
-    int fieldLength;
+   /*
+    * Using code from tkUnixScrlbr.c because Unix scroll bindings are
+    * driving the display at the script level. All the Mac scrollbar
+    * has to do is re-draw itself.
+    */
+
+    int width, fieldLength;
 
     if (scrollPtr->highlightWidth < 0) {
-    	scrollPtr->highlightWidth = 0;
+       scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    scrollPtr->arrowLength = (metrics.topArrowHeight +
-			      metrics.bottomArrowHeight) / 2;
+    width = (scrollPtr->vertical) ? Tk_Width(scrollPtr->tkwin)
+           : Tk_Height(scrollPtr->tkwin);
+    scrollPtr->arrowLength = width - 2*scrollPtr->inset + 1;
     fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
-		   : Tk_Width(scrollPtr->tkwin))
-	- 2 * (scrollPtr->arrowLength + scrollPtr->inset);
+           : Tk_Width(scrollPtr->tkwin))
+           - 2*(scrollPtr->arrowLength + scrollPtr->inset);
     if (fieldLength < 0) {
-    	fieldLength = 0;
+       fieldLength = 0;
     }
-    scrollPtr->sliderFirst = fieldLength * scrollPtr->firstFraction;
-    scrollPtr->sliderLast = fieldLength * scrollPtr->lastFraction;
+    scrollPtr->sliderFirst = fieldLength*scrollPtr->firstFraction;
+    scrollPtr->sliderLast = fieldLength*scrollPtr->lastFraction;
 
     /*
-     * Adjust the slider so that some piece of it is always
-     * displayed in the scrollbar and so that it has at least
-     * a minimal width (so it can be grabbed with the mouse).
+     * Adjust the slider so that some piece of it is always displayed in the
+     * scrollbar and so that it has at least a minimal width (so it can be
+     * grabbed with the mouse).
      */
 
-    if (scrollPtr->sliderFirst > (fieldLength - 2*scrollPtr->borderWidth)) {
-    	scrollPtr->sliderFirst = fieldLength - 2*scrollPtr->borderWidth;
+    if (scrollPtr->sliderFirst > fieldLength - MIN_SLIDER_LENGTH) {
+       scrollPtr->sliderFirst = fieldLength - MIN_SLIDER_LENGTH;
     }
     if (scrollPtr->sliderFirst < 0) {
-    	scrollPtr->sliderFirst = 0;
+       scrollPtr->sliderFirst = 0;
     }
-    if (scrollPtr->sliderLast < (scrollPtr->sliderFirst +
-				 metrics.minThumbHeight)) {
-    	scrollPtr->sliderLast = scrollPtr->sliderFirst +
-	    metrics.minThumbHeight;
+    if (scrollPtr->sliderLast < scrollPtr->sliderFirst + MIN_SLIDER_LENGTH) {
+       scrollPtr->sliderLast = scrollPtr->sliderFirst + MIN_SLIDER_LENGTH;
     }
     if (scrollPtr->sliderLast > fieldLength) {
-    	scrollPtr->sliderLast = fieldLength;
+       scrollPtr->sliderLast = fieldLength;
     }
-
     scrollPtr->sliderFirst += scrollPtr->arrowLength + scrollPtr->inset;
     scrollPtr->sliderLast += scrollPtr->arrowLength + scrollPtr->inset;
 
-
-    /* Register the desired geometry for the window (leave enough space
-     * for the two arrows plus a minimum-size slider, plus border around
-     * the whole window, if any). Then arrange for the window to be
-     * redisplayed.
+    /*
+     * Register the desired geometry for the window (leave enough space for
+     * the two arrows plus a minimum-size slider, plus border around the whole
+     * window, if any). Then arrange for the window to be redisplayed.
      */
 
     if (scrollPtr->vertical) {
-    	Tk_GeometryRequest(scrollPtr->tkwin, scrollPtr->width + 2 * scrollPtr->inset, 2 * (scrollPtr->arrowLength + scrollPtr->borderWidth + scrollPtr->inset) +  metrics.minThumbHeight);
+       Tk_GeometryRequest(scrollPtr->tkwin,
+              scrollPtr->width + 2*scrollPtr->inset,
+              2*(scrollPtr->arrowLength + scrollPtr->borderWidth
+              + scrollPtr->inset));
     } else {
-    	Tk_GeometryRequest(scrollPtr->tkwin, 2 * (scrollPtr->arrowLength + scrollPtr->borderWidth + scrollPtr->inset) + metrics.minThumbHeight, scrollPtr->width + 2 * scrollPtr->inset);
+       Tk_GeometryRequest(scrollPtr->tkwin,
+              2*(scrollPtr->arrowLength + scrollPtr->borderWidth
+              + scrollPtr->inset), scrollPtr->width + 2*scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
-
 }
-
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -427,7 +432,7 @@ TkpScrollbarPosition(
  *
  *	This procedure updates the Macintosh scrollbar control to
  *	display the values defined by the Tk scrollbar. This is the
- *	key interface to the Mac-native * scrollbar; the Unix bindings
+ *	key interface to the Mac-native  scrollbar; the Unix bindings
  *	drive scrolling in the Tk window and all the Mac scrollbar has
  *	to do is redraw itself.
  *

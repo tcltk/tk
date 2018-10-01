@@ -2,11 +2,7 @@
  * Copyright (c) 2004, Joe English
  */
 
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"

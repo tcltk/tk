@@ -25,7 +25,6 @@
  * Darwin (where configure runs only once for multiple architectures).
  */
 
-#include <stdio.h>
 #ifdef HAVE_SYS_TYPES_H
 #    include <sys/types.h>
 #endif
@@ -906,6 +905,11 @@ typedef struct {
 #define TK_MAKE_MENU_TEAROFF	0	/* Only non-transient case. */
 #define TK_MAKE_MENU_POPUP	1
 #define TK_MAKE_MENU_DROPDOWN	2
+
+/* See TIP #494 */
+#ifndef TCL_IO_FAILURE
+#   define TCL_IO_FAILURE (-1)
+#endif
 
 /*
  * The following structure is used with TkMakeEnsemble to create ensemble

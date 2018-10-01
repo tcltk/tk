@@ -2885,7 +2885,7 @@ WriteData(
 	}
 
 	memcpy(destPtr+objSz, srcPtr, srcSz);
-    } else if ((size_t)Tcl_Write(pngPtr->channel, (const char *) srcPtr, srcSz) == (size_t)-1) {
+    } else if (Tcl_Write(pngPtr->channel, (const char *) srcPtr, srcSz) == TCL_IO_FAILURE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"write to channel failed: %s", Tcl_PosixError(interp)));
 	return TCL_ERROR;

@@ -16,8 +16,8 @@
  */
 
 #include "tkInt.h"
-#include "default.h"
 #include "tkEntry.h"
+#include "default.h"
 
 /*
  * The following macro defines how many extra pixels to leave on each side of
