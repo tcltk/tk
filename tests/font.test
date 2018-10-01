@@ -921,7 +921,7 @@ test font-21.5 {Tk_PostscriptFontName procedure: spaces} -constraints {
     }
 } -result {LucidaBright}
 test font-21.6 {Tk_PostscriptFontName procedure: spaces} -constraints {
-	unix
+	x11
 } -body {
     psfontname "{new century schoolbook} 10"
 } -result {NewCenturySchlbk-Roman}

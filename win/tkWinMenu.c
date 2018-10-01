@@ -1840,7 +1840,7 @@ DrawMenuEntryArrow(
     int width,			/* Width of menu entry */
     int height,			/* Height of menu entry */
     int drawArrow)		/* For cascade menus, whether of not to draw
-				 * the arraw. I cannot figure out Windows'
+				 * the arrow. I cannot figure out Windows'
 				 * algorithm for where to draw this. */
 {
     COLORREF oldFgColor;
@@ -2500,7 +2500,7 @@ TkpDrawMenuEntry(
     int strictMotif,		/* Boolean flag */
     int drawingParameters)	/* Whether or not to draw the cascade arrow
 				 * for cascade items and accelerator
-				 * cues. Only applies to Windows. */
+				 * cues. */
 {
     GC gc, indicatorGC;
     TkMenu *menuPtr = mePtr->menuPtr;
@@ -2790,10 +2790,26 @@ DrawMenuEntryBackground(
 {
     if (mePtr->state == ENTRY_ACTIVE
 		|| (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)!=0 ) {
+	int relief;
+	int activeBorderWidth;
+
 	bgBorder = activeBorder;
+
+	if ((menuPtr->menuType == MENUBAR)
+		&& ((menuPtr->postedCascade == NULL)
+		|| (menuPtr->postedCascade != mePtr))) {
+	    relief = TK_RELIEF_FLAT;
+	} else {
+	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
+	}
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height,
+		activeBorderWidth, relief);
+    } else {
+        Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height, 0,
+                TK_RELIEF_FLAT);
     }
-    Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height, 0,
-	    TK_RELIEF_FLAT);
 }
 
 /*

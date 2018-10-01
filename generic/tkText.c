@@ -15,7 +15,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
 #include "tkTextUndo.h"
@@ -27,6 +26,7 @@
 #include "tkAlloc.h"
 #include <stdlib.h>
 #include <assert.h>
+#include "default.h"
 
 /* needed for strncasecmp */
 #if defined(_WIN32) && !defined(__GNUC__)

@@ -13,13 +13,13 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
 #include "tkTextUndo.h"
 #include "tkTextTagSet.h"
 #include "tkBitField.h"
 #include "tkAlloc.h"
+#include "default.h"
 #include <assert.h>
 #include <stdlib.h>
 

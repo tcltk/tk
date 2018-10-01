@@ -244,8 +244,6 @@ unsigned short releaseCode;
 {
   int i, len = [(NSString *)aString length];
   XEvent xEvent;
-  TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-  Tk_Window tkwin = (Tk_Window) winPtr;
 
   if (NS_KEYLOG)
     NSLog (@"insertText '%@'\tlen = %d", aString, len);
