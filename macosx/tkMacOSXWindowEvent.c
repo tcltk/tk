@@ -955,18 +955,11 @@ ConfigureRestrictProc(
 
 - (BOOL) isOpaque
 {
-    return YES;
+  
+   return YES;
 
 }
 
- /*Support for Dark Mode for 10.14 and later.*/
- #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
-- (BOOL)allowsVibrancy
-{
-
-    return NO;
-}
- #endif
 - (BOOL) wantsDefaultClipping
 {
     return NO;
