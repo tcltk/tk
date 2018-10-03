@@ -246,6 +246,8 @@ static int windowHashInit = false;
     }
     return frameSize;
 }
+
+
 @end
 
 #pragma mark -
@@ -420,6 +422,7 @@ NSStatusItem *exitFullScreen;
 }
 
 #endif
+
 @end
 
 @implementation TKWindow(TKWm)
@@ -5632,7 +5635,10 @@ TkMacOSXMakeRealWindowExist(
  
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
+    /*Remove hard-coded colorspace on 10.14 and later for Dark Mode.*/
+    #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_14
     [window setColorSpace:[NSColorSpace deviceRGBColorSpace]];
+    #endif
     [window setContentView:contentView];
     [contentView release];
     [window setDelegate:NSApp];
@@ -5653,21 +5659,6 @@ TkMacOSXMakeRealWindowExist(
 
     [window setDocumentEdited:NO];
 
-    /*Support for Dark Mode for 10.14 and later.*/
-    #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
-    NSAppearance *appearance = [NSAppearance currentAppearance];
-    NSAppearanceName appearanceName = [appearance name];
-   
-    NSLog(appearanceName);
-  
-    if ([appearanceName isEqualToString:NSAppearanceNameAqua]) {
-	[window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantLight]];
-    }
-     if ([appearanceName isEqualToString:NSAppearanceNameDarkAqua]) {
-    	 [window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantDark]];
-    }
-    #endif
-  
     wmPtr->window = window;
     macWin->view = window.contentView;
     TkMacOSXApplyWindowAttributes(winPtr, window);
