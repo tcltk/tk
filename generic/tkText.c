@@ -1155,14 +1155,14 @@ TextWidgetObjCmd(
 		    objc++;
 		}
 		useIdx = ckalloc(objc);
-		memset(useIdx, 0, (size_t) objc);
+		memset(useIdx, 0, objc);
 
 		/*
 		 * Do a decreasing order sort so that we delete the end ranges
 		 * first to maintain index consistency.
 		 */
 
-		qsort(indices, (size_t) objc / 2,
+		qsort(indices, objc / 2,
 			2 * sizeof(TkTextIndex), TextIndexSortProc);
 		lastStart = NULL;
 
