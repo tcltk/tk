@@ -1563,7 +1563,8 @@ TkTextPickCurrent(
     TkTextTag **copyArrayPtr = NULL;
 				/* Initialization needed to prevent compiler
 				 * warning. */
-    int numOldTags, numNewTags, i, j, size, nearby;
+    int numOldTags, numNewTags, i, j, nearby;
+    size_t size;
     XEvent event;
 
     /*
@@ -1656,7 +1657,7 @@ TkTextPickCurrent(
     if (numNewTags > 0) {
 	size = numNewTags * sizeof(TkTextTag *);
 	copyArrayPtr = ckalloc(size);
-	memcpy(copyArrayPtr, newArrayPtr, (size_t) size);
+	memcpy(copyArrayPtr, newArrayPtr, size);
 	for (i = 0; i < textPtr->numCurTags; i++) {
 	    for (j = 0; j < numNewTags; j++) {
 		if (textPtr->curTagArrayPtr[i] == copyArrayPtr[j]) {
