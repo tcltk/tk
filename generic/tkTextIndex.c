@@ -923,7 +923,7 @@ GetIndex(
     }
     if ((string[0] == 'e')
 	    && (strncmp(string, "end",
-	    (size_t) (endOfBase-Tcl_DStringValue(&copy))) == 0)) {
+	    endOfBase-Tcl_DStringValue(&copy)) == 0)) {
 	/*
 	 * Base position is end of text.
 	 */

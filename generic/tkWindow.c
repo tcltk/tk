@@ -1136,7 +1136,7 @@ Tk_CreateWindowFromPath(
     char fixedSpace[FIXED_SPACE+1];
     char *p;
     Tk_Window parent;
-    int numChars;
+    size_t numChars;
 
     /*
      * Strip the parent's name out of pathName (it's everything up to the last
@@ -1153,7 +1153,7 @@ Tk_CreateWindowFromPath(
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
 	return NULL;
     }
-    numChars = (int) (p-pathName);
+    numChars = p-pathName;
     if (numChars > FIXED_SPACE) {
 	p = ckalloc(numChars + 1);
     } else {
@@ -1163,7 +1163,7 @@ Tk_CreateWindowFromPath(
 	*p = '.';
 	p[1] = '\0';
     } else {
-	strncpy(p, pathName, (size_t) numChars);
+	strncpy(p, pathName, numChars);
 	p[numChars] = '\0';
     }
 

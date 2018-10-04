@@ -242,7 +242,7 @@ Tk_MessageObjCmd(
     optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
     msgPtr = ckalloc(sizeof(Message));
-    memset(msgPtr, 0, (size_t) sizeof(Message));
+    memset(msgPtr, 0, sizeof(Message));
 
     /*
      * Set values for those fields that don't take a 0 or NULL value.
