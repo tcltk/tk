@@ -3166,14 +3166,14 @@ ListboxFetchSelection(
      * Copy the requested portion of the selection to the buffer.
      */
 
-    count = length - offset;
-    if (count <= 0) {
+    if (length <= (size_t)offset) {
 	count = 0;
     } else {
+	count = length - offset;
 	if (count > maxBytes) {
 	    count = maxBytes;
 	}
-	memcpy(buffer, Tcl_DStringValue(&selection) + offset, (size_t) count);
+	memcpy(buffer, Tcl_DStringValue(&selection) + offset, count);
     }
     buffer[count] = '\0';
     Tcl_DStringFree(&selection);

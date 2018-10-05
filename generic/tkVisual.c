@@ -21,9 +21,9 @@
 
 typedef struct VisualDictionary {
     const char *name;		/* Textual name of class. */
-    int minLength;		/* Minimum # characters that must be specified
+    unsigned short minLength;		/* Minimum # characters that must be specified
 				 * for an unambiguous match. */
-    int class;			/* X symbol for class. */
+    short class;			/* X symbol for class. */
 } VisualDictionary;
 static const VisualDictionary visualNames[] = {
     {"best",		1,	0},
@@ -99,7 +99,7 @@ Tk_GetVisual(
     XVisualInfo template, *visInfoList, *bestPtr;
     long mask;
     Visual *visual;
-    ptrdiff_t length;
+    size_t length;
     int c, numVisuals, prio, bestPrio, i;
     const char *p;
     const VisualDictionary *dictPtr;
@@ -195,8 +195,7 @@ Tk_GetVisual(
 	template.class = -1;
 	for (dictPtr = visualNames; dictPtr->name != NULL; dictPtr++) {
 	    if ((dictPtr->name[0] == c) && (length >= dictPtr->minLength)
-		    && (strncmp(string, dictPtr->name,
-		    (size_t) length) == 0)) {
+		    && (strncmp(string, dictPtr->name, length) == 0)) {
 		template.class = dictPtr->class;
 		break;
 	    }
