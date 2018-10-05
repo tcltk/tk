@@ -45,13 +45,6 @@
 #endif
 #endif
 
-#ifndef X_WCHAR
-#include <stddef.h>
-#else
-/* replace this with #include or typedef appropriate for your system */
-typedef unsigned long wchar_t;
-#endif
-
 typedef char *XPointer;
 
 #define Bool int
@@ -1053,13 +1046,6 @@ typedef struct {
     XFontSet        font_set;
 } XmbTextItem;
 
-typedef struct {
-    wchar_t        *chars;
-    int             nchars;
-    int             delta;
-    XFontSet        font_set;
-} XwcTextItem;
-
 typedef void (*XIMProc)();
 
 typedef struct _XIM *XIM;
@@ -1143,7 +1129,6 @@ typedef struct _XIMText {
     Bool encoding_is_wchar;
     union {
 	char *multi_byte;
-	wchar_t *wide_char;
     } string;
 } XIMText;
 

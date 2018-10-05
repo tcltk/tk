@@ -133,9 +133,6 @@
 /* Is this a static build? */
 #undef STATIC_BUILD
 
-/* Define to 1 if you have the ANSI C header files. */
-#undef STDC_HEADERS
-
 /* Is this a 64-bit build? */
 #undef TCL_CFG_DO64BIT
 
@@ -153,9 +150,6 @@
 
 /* What is the default extension for shared libraries? */
 #undef TCL_SHLIB_EXT
-
-/* Are we building with threads enabled? */
-#undef TCL_THREADS
 
 /* Are wide integers to be implemented with C 'long's? */
 #undef TCL_WIDE_INT_IS_LONG
