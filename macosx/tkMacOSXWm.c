@@ -421,6 +421,10 @@ NSStatusItem *exitFullScreen;
     [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
 }
 
+-(BOOL) isOpaque {
+    return YES;
+}
+
 #endif
 
 @end
@@ -5658,7 +5662,6 @@ TkMacOSXMakeRealWindowExist(
     }
 
     [window setDocumentEdited:NO];
-
     wmPtr->window = window;
     macWin->view = window.contentView;
     TkMacOSXApplyWindowAttributes(winPtr, window);
