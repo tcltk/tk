@@ -748,22 +748,6 @@ extern int XmbTextListToTextProperty(
 #endif
 );
 
-extern int XwcTextListToTextProperty(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    wchar_t**		/* list */,
-    int			/* count */,
-    XICCEncodingStyle	/* style */,
-    XTextProperty*	/* text_prop_return */
-#endif
-);
-
-extern void XwcFreeStringList(
-#if NeedFunctionPrototypes
-    wchar_t**		/* list */
-#endif
-);
-
 extern Status XTextPropertyToStringList(
 #if NeedFunctionPrototypes
     XTextProperty*	/* text_prop */,
@@ -777,15 +761,6 @@ extern int XmbTextPropertyToTextList(
     Display*		/* display */,
     XTextProperty*	/* text_prop */,
     char***		/* list_return */,
-    int*		/* count_return */
-#endif
-);
-
-extern int XwcTextPropertyToTextList(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    XTextProperty*	/* text_prop */,
-    wchar_t***		/* list_return */,
     int*		/* count_return */
 #endif
 );
