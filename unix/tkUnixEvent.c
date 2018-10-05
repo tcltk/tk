@@ -131,7 +131,7 @@ TkpOpenDisplay(
     int reason = 0;
     unsigned int use_xkb = 0;
     /* Disabled, until we have a better test. See [Bug 3613668] */
-#if 0 && defined(XKEYCODETOKEYSYM_IS_DEPRECATED) && defined(TCL_THREADS)
+#if 0 && defined(XKEYCODETOKEYSYM_IS_DEPRECATED)
     static int xinited = 0;
     static Tcl_Mutex xinitMutex = NULL;
 
