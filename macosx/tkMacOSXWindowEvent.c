@@ -791,7 +791,6 @@ ConfigureRestrictProc(
 
 @implementation TKContentView(TKWindowEvent)
 
-
 - (void) drawRect: (NSRect) rect
 {
     const NSRect *rectsBeingDrawn;
@@ -815,14 +814,14 @@ ConfigureRestrictProc(
 	HIShapeUnionWithRect(drawShape, &r);
     }
     if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
-	[self generateExposeEvents:(HIShapeRef)drawShape];
+    		[self generateExposeEvents:(HIShapeRef)drawShape];
     } else {
-	[self performSelectorOnMainThread:@selector(generateExposeEvents:)
-		withObject:(id)drawShape waitUntilDone:NO
-		modes:[NSArray arrayWithObjects:NSRunLoopCommonModes,
+    	[self performSelectorOnMainThread:@selector(generateExposeEvents:)
+    		withObject:(id)drawShape waitUntilDone:NO
+    		modes:[NSArray arrayWithObjects:NSRunLoopCommonModes,
 
-			NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
-			nil]];
+    			NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
+    			nil]];
     }
 
     CFRelease(drawShape);
@@ -845,11 +844,6 @@ ConfigureRestrictProc(
 	 * don't clobber the AutoreleasePool set up by the caller.
 	 */
 	[NSApp _lockAutoreleasePool];
-
-	/*
-	 * Try to prevent flickers and flashes.
-	 */
-	NSDisableScreenUpdates();
 	
 	/* Disable Tk drawing until the window has been completely configured.*/
 	TkMacOSXSetDrawingEnabled(winPtr, 0);
@@ -872,7 +866,6 @@ ConfigureRestrictProc(
 	[self generateExposeEvents: shape];
 	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
 	[w displayIfNeeded];
-       	NSEnableScreenUpdates();
 	[NSApp _unlockAutoreleasePool];
     }
 }
@@ -913,14 +906,15 @@ ConfigureRestrictProc(
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     updatesNeeded = GenerateUpdates(shape, &updateBounds, winPtr);
 
-    /* Process the Expose events if the service mode is TCL_SERVICE_ALL */
+    /*Process the Expose events if the service mode is TCL_SERVICE_ALL*/
     if (updatesNeeded && Tcl_GetServiceMode() == TCL_SERVICE_ALL) {
-	ClientData oldArg;
+    	ClientData oldArg;
     	Tk_RestrictProc *oldProc = Tk_RestrictEvents(ExposeRestrictProc,
-						     UINT2PTR(serial), &oldArg);
+    						     UINT2PTR(serial), &oldArg);
     	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
-    }
+     }
+
 }
 
 /*
@@ -955,9 +949,10 @@ ConfigureRestrictProc(
 
 - (BOOL) isOpaque
 {
-  
-   return YES;
+    NSWindow *w = [self window];
 
+      return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
+       ![w isOpaque]) ? NO : YES);
 }
 
 - (BOOL) wantsDefaultClipping
