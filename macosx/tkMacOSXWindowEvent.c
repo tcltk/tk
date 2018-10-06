@@ -808,8 +808,6 @@ ConfigureRestrictProc(
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
 
-    NSLog(@"drawing rects");
-
     while (rectsBeingDrawnCount--) {
 	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
 	r.origin.y = height - (r.origin.y + r.size.height);
@@ -830,61 +828,6 @@ ConfigureRestrictProc(
     CFRelease(drawShape);
 }
 
--(void) setFrameSize: (NSSize)newsize
-{
-    [super setFrameSize: newsize];
-    if ([self inLiveResize]) {
-	NSWindow *w = [self window];
-	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	Tk_Window tkwin = (Tk_Window) winPtr;
-	unsigned int width = (unsigned int)newsize.width;
-	unsigned int height=(unsigned int)newsize.height;
-	ClientData oldArg;
-    	Tk_RestrictProc *oldProc;
-
-	/* This can be called from outside the Tk event loop.
-	 * Since it calls Tcl_DoOneEvent, we need to make sure we
-	 * don't clobber the AutoreleasePool set up by the caller.
-	 */
-	[NSApp _lockAutoreleasePool];
-	
-	/* Disable Tk drawing until the window has been completely configured.*/
-	TkMacOSXSetDrawingEnabled(winPtr, 0);
-
-	 /* Generate and handle a ConfigureNotify event for the new size.*/
-	TkGenWMConfigureEvent(tkwin, Tk_X(tkwin), Tk_Y(tkwin), width, height,
-			      TK_SIZE_CHANGED | TK_MACOSX_HANDLE_EVENT_IMMEDIATELY);
-    	oldProc = Tk_RestrictEvents(ConfigureRestrictProc, NULL, &oldArg);
-	while (Tk_DoOneEvent(TK_X_EVENTS|TK_DONT_WAIT)) {}
-    	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
-
-	/* Now that Tk has configured all subwindows we can create the clip regions. */
-	TkMacOSXSetDrawingEnabled(winPtr, 1);
-	TkMacOSXInvalClipRgns(tkwin);
-	TkMacOSXUpdateClipRgn(winPtr);
-
-	 /* Finally, generate and process expose events to redraw the window. */
-	HIRect bounds = NSRectToCGRect([self bounds]);
-	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
-	[self generateExposeEvents: shape];
-	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
-	[w displayIfNeeded];
-	[NSApp _unlockAutoreleasePool];
-    }
-}
-
-/*
- * As insurance against bugs that might cause layout glitches during a live
- * resize, we redraw the window one more time at the end of the resize
- * operation.
- */
-
-- (void)viewDidEndLiveResize {
-    HIRect bounds = NSRectToCGRect([self bounds]);
-    HIShapeRef shape = HIShapeCreateWithRect(&bounds);
-    [super viewDidEndLiveResize];
-    [self generateExposeEvents: shape];
-}
 
 /* Core method of this class: generates expose events for redrawing.  If the
  * Tcl_ServiceMode is set to TCL_SERVICE_ALL then the expose events will be
@@ -902,7 +845,6 @@ ConfigureRestrictProc(
 		return;
     }
 
-  
     /* Generate Tk Expose events. */
     HIShapeGetBounds(shape, &updateBounds);
     /* All of these events will share the same serial number. */
@@ -953,14 +895,12 @@ ConfigureRestrictProc(
 
 - (BOOL) isOpaque
 {
-    // NSWindow *w = [self window];
+    NSWindow *w = [self window];
 
-    //   return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
-    //    ![w isOpaque]) ? NO : YES);
-    return YES;
+      return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
+       ![w isOpaque]) ? NO : YES);
 }
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
 
 - (BOOL) wantsLayer
 {
@@ -972,17 +912,20 @@ ConfigureRestrictProc(
 {
     return YES;
 }
-- (BOOL) canDrawsubViewsIntoLayer
+
+- (void) updateLayer
 {
-    NSLog(@"can draw into layer");
-    return YES;
+    HIRect bounds = NSRectToCGRect([self bounds]);
+    HIShapeRef shape = HIShapeCreateWithRect(&bounds);
+    [self drawRect: bounds];
+
 }
 
 - (id) layerContentsRedrawPolicy
 {
     return NSViewLayerContentsRedrawOnSetNeedsDisplay;
 }
-#endif
+
 
 - (BOOL) wantsDefaultClipping
 {
