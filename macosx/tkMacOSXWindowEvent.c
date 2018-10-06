@@ -768,6 +768,10 @@ Tk_MacOSXIsAppInFront(void)
  * normal Tk widgets which draw themselves as native widgets by using the
  * HITheme API.
  *
+ * We are using layer-backed views, which are more efficient than legacy NSViews
+ *  because Core Animation handles much more of the work in drawing. The core 
+ *  drawRect method is routed through the updateLayer call. 
+ *  
  */
 
 /*Restrict event processing to Expose events.*/
