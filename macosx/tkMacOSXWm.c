@@ -5646,7 +5646,6 @@ TkMacOSXMakeRealWindowExist(
   
     [window setContentView:contentView];
     [contentView release];
-    //  [window setBackgroundColor: [NSColor redColor]];
     [window setDelegate:NSApp];
     [window setAcceptsMouseMovedEvents:YES];
     [window setReleasedWhenClosed:NO];
