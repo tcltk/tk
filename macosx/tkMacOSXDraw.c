@@ -1392,7 +1392,7 @@ TkScrollWindow(
 	    }
 
  	    /* Scroll the rectangle. */
- 	    [view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
+	    [view scrollRect:scrollSrc by:NSMakeSize(dx, -dy)];
   	}
     } else {
 	dmgRgn = HIShapeCreateEmpty();

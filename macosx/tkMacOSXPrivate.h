@@ -336,6 +336,10 @@ VISIBILITY_HIDDEN
 - (BOOL) wantsDefaultClipping;
 - (BOOL) acceptsFirstResponder;
 - (void) keyDown: (NSEvent *) theEvent;
+- (BOOL) wantsLayer;
+- (BOOL) wantsUpdateLayer;
+- (BOOL) canDrawsubViewsIntoLayer;
+- (id) layerContentsRedrawPolicy;
 @end
 
 VISIBILITY_HIDDEN

@@ -5637,14 +5637,16 @@ TkMacOSXMakeRealWindowExist(
     	Tcl_Panic("couldn't allocate new Mac window");
     }
  
-    TKContentView *contentView = [[TKContentView alloc]
-				     initWithFrame:NSZeroRect];
+     TKContentView *contentView = [[TKContentView alloc]
+        initWithFrame:NSZeroRect];
     /*Remove hard-coded colorspace on 10.14 and later for Dark Mode.*/
     #if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_14
     [window setColorSpace:[NSColorSpace deviceRGBColorSpace]];
     #endif
+  
     [window setContentView:contentView];
     [contentView release];
+    //  [window setBackgroundColor: [NSColor redColor]];
     [window setDelegate:NSApp];
     [window setAcceptsMouseMovedEvents:YES];
     [window setReleasedWhenClosed:NO];
