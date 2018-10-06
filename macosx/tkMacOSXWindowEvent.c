@@ -808,13 +808,16 @@ ConfigureRestrictProc(
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
 
+    NSLog(@"drawing rects");
+
     while (rectsBeingDrawnCount--) {
 	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
 	r.origin.y = height - (r.origin.y + r.size.height);
 	HIShapeUnionWithRect(drawShape, &r);
     }
+
     if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
-    		[self generateExposeEvents:(HIShapeRef)drawShape];
+    	[self generateExposeEvents:(HIShapeRef)drawShape];
     } else {
     	[self performSelectorOnMainThread:@selector(generateExposeEvents:)
     		withObject:(id)drawShape waitUntilDone:NO
@@ -915,6 +918,7 @@ ConfigureRestrictProc(
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
      }
 
+
 }
 
 /*
@@ -949,11 +953,36 @@ ConfigureRestrictProc(
 
 - (BOOL) isOpaque
 {
-    NSWindow *w = [self window];
+    // NSWindow *w = [self window];
 
-      return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
-       ![w isOpaque]) ? NO : YES);
+    //   return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
+    //    ![w isOpaque]) ? NO : YES);
+    return YES;
 }
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+
+- (BOOL) wantsLayer
+{
+    return YES;
+
+}
+
+- (BOOL) wantsUpdateLayer
+{
+    return YES;
+}
+- (BOOL) canDrawsubViewsIntoLayer
+{
+    NSLog(@"can draw into layer");
+    return YES;
+}
+
+- (id) layerContentsRedrawPolicy
+{
+    return NSViewLayerContentsRedrawOnSetNeedsDisplay;
+}
+#endif
 
 - (BOOL) wantsDefaultClipping
 {
