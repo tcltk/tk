@@ -1482,6 +1482,15 @@ GetMenuIndicatorGeometry(
 	Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
 		menuPtr->borderWidthPtr, &borderWidth);
 	*widthPtr = indicatorDimensions[1] - borderWidth;
+
+        /*
+         * Quite dubious about the above (why would borderWidth play a role?)
+         * and about how indicatorDimensions[1] is obtained in SetDefaults().
+         * At least don't let the result be negative!
+         */
+        if (*widthPtr < 0) {
+            *widthPtr = 0;
+        }
     }
 }
 
@@ -2428,7 +2437,7 @@ DrawTearoffEntry(
     points[0].y = y + height/2;
     points[1].y = points[0].y;
     segmentWidth = 6;
-    maxX = width - 1;
+    maxX = x + width - 1;
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
 
     while (points[0].x < maxX) {
@@ -2890,7 +2899,7 @@ TkpComputeStandardMenuGeometry(
 		menuPtr->entries[j]->entryFlags &= ~ENTRY_LAST_COLUMN;
 	    }
 	    x += indicatorSpace + labelWidth + accelWidth
-		    + 2 * borderWidth;
+		    + 2 * activeBorderWidth;
 	    indicatorSpace = labelWidth = accelWidth = 0;
 	    lastColumnBreak = i;
 	    y = borderWidth;
@@ -2960,8 +2969,8 @@ TkpComputeStandardMenuGeometry(
 	menuPtr->entries[j]->x = x;
 	menuPtr->entries[j]->entryFlags |= ENTRY_LAST_COLUMN;
     }
-    windowWidth = x + indicatorSpace + labelWidth + accelWidth + accelSpace
-	    + 2 * activeBorderWidth + 2 * borderWidth;
+    windowWidth = x + indicatorSpace + labelWidth + accelWidth
+	    + 2 * activeBorderWidth + borderWidth;
 
 
     windowHeight += borderWidth;
@@ -3292,6 +3301,7 @@ SetDefaults(
      *
      * The code below was given to me by Microsoft over the phone. It is the
      * only way to ensure menu items line up, and is not documented.
+     * How strange the calculation of indicatorDimensions[1] is...!
      */
 
     indicatorDimensions[0] = GetSystemMetrics(SM_CYMENUCHECK);
