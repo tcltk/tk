@@ -11,27 +11,21 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
-# Create entries in the option database to be sure that geometry options
-# like border width have predictable values.
-
-option add *Text.borderWidth 2
-option add *Text.highlightThickness 2
-option add *Text.font {"Courier New" -12}
-
-
 deleteWindows
-# Widget used in tests 1.* - 16.*
-set tWidth 30
-set tHeight 6
-text .t -width $tWidth -height $tHeight -bd 2 -highlightthickness 2
-pack .t -expand 1 -fill both
-update
-.t debug on
 
 set fixedFont {"Courier New" -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
+
+# Widget used in almost all tests
+set tWidth 30
+set tHeight 6
+text .t -width $tWidth -height $tHeight -bd 2 -highlightthickness 2 \
+        -font $fixedFont
+pack .t -expand 1 -fill both
+update
+.t debug on
 
 set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
 
