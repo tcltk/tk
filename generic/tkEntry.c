@@ -2132,9 +2132,7 @@ InsertChars(
     const char *value)		/* New characters to add (NULL-terminated
 				 * string). */
 {
-    ptrdiff_t byteIndex;
-    size_t byteCount, newByteCount;
-    int oldChars, charsAdded;
+    size_t byteIndex, byteCount, newByteCount, oldChars, charsAdded;
     const char *string;
     char *newStr;
 

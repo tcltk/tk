@@ -732,9 +732,19 @@ Tk_MeasureChars(
 		    (flags & TK_AT_LEAST_ONE && curByte == 0)) {
 		curX = newX;
 		curByte = newByte;
-	    } else if (flags & TK_WHOLE_WORDS && termX != 0) {
-		curX = termX;
-		curByte = termByte;
+	    } else if (flags & TK_WHOLE_WORDS) {
+		if ((flags & TK_AT_LEAST_ONE) && (termX == 0)) {
+		    /*
+		     * No space was seen before reaching the right
+		     * of the allotted maxLength space, i.e. no word
+		     * boundary. Return the string that fills the
+		     * allotted space, without overfill.
+		     * curX and curByte are already the right ones:
+		     */
+		} else {
+		    curX = termX;
+		    curByte = termByte;
+		}
 	    }
 	    break;
 	}
