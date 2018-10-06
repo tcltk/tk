@@ -1139,7 +1139,7 @@ TkpComputeStandardMenuGeometry(
 		columnEntryPtr->x = x;
 		columnEntryPtr->entryFlags &= ~ENTRY_LAST_COLUMN;
 	    }
-	    x += maxIndicatorSpace + maxWidth + 2 * borderWidth;
+	    x += maxIndicatorSpace + maxWidth + 2 * activeBorderWidth;
 	    maxWidth = maxIndicatorSpace = 0;
 	    lastColumnBreak = i;
 	    y = borderWidth;
@@ -1625,8 +1625,7 @@ TkpDrawMenuEntry(
     int height,			/* Height of the current rectangle */
     int strictMotif,		/* Boolean flag */
     int drawArrow)		/* Whether or not to draw the cascade arrow
-				 * for cascade items. Only applies to
-				 * Windows. */
+				 * for cascade items. */
 {
 }
 
