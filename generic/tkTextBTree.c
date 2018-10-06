@@ -140,10 +140,10 @@ int tkBTreeDebug = 0;
  * Macros that determine how much space to allocate for new segments:
  */
 
-#define CSEG_SIZE(chars) ((unsigned) (Tk_Offset(TkTextSegment, body) \
-	+ 1 + (chars)))
-#define TSEG_SIZE ((unsigned) (Tk_Offset(TkTextSegment, body) \
-	+ sizeof(TkTextToggle)))
+#define CSEG_SIZE(chars) (offsetof(TkTextSegment, body) \
+	+ 1 + (chars))
+#define TSEG_SIZE (offsetof(TkTextSegment, body) \
+	+ sizeof(TkTextToggle))
 
 /*
  * Forward declarations for functions defined in this file:

@@ -243,15 +243,15 @@ typedef struct {
 } BorderElement;
 
 static Ttk_ElementOptionSpec BorderElementOptions[] = {
-    { "-background", TK_OPTION_BORDER, Tk_Offset(BorderElement,borderObj),
+    { "-background", TK_OPTION_BORDER, offsetof(BorderElement,borderObj),
     	DEFAULT_BACKGROUND },
     { "-bordercolor",TK_OPTION_COLOR,
-	Tk_Offset(BorderElement,borderColorObj), "black" },
-    { "-default", TK_OPTION_ANY, Tk_Offset(BorderElement,defaultStateObj),
+	offsetof(BorderElement,borderColorObj), "black" },
+    { "-default", TK_OPTION_ANY, offsetof(BorderElement,defaultStateObj),
     	"disabled" },
-    { "-borderwidth",TK_OPTION_PIXELS,Tk_Offset(BorderElement,borderWidthObj),
+    { "-borderwidth",TK_OPTION_PIXELS,offsetof(BorderElement,borderWidthObj),
     	STRINGIFY(BORDERWIDTH) },
-    { "-relief", TK_OPTION_RELIEF, Tk_Offset(BorderElement,reliefObj),
+    { "-relief", TK_OPTION_RELIEF, offsetof(BorderElement,reliefObj),
     	"flat" },
         { NULL, 0, 0, NULL }
 };
@@ -323,9 +323,9 @@ typedef struct {
 } FieldElement;
 
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
-    { "-fieldbackground", TK_OPTION_BORDER, Tk_Offset(FieldElement,borderObj),
+    { "-fieldbackground", TK_OPTION_BORDER, offsetof(FieldElement,borderObj),
     	"white" },
-    { "-bordercolor",TK_OPTION_COLOR, Tk_Offset(FieldElement,borderColorObj),
+    { "-bordercolor",TK_OPTION_COLOR, offsetof(FieldElement,borderColorObj),
 	"black" },
     { NULL, 0, 0, NULL }
 };
@@ -465,19 +465,19 @@ typedef struct {
 
 static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-background", TK_OPTION_COLOR,
-	    Tk_Offset(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
+	    offsetof(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-foreground", TK_OPTION_COLOR,
-	    Tk_Offset(IndicatorElement,foregroundObj), DEFAULT_FOREGROUND },
+	    offsetof(IndicatorElement,foregroundObj), DEFAULT_FOREGROUND },
     { "-indicatorcolor", TK_OPTION_COLOR,
-	    Tk_Offset(IndicatorElement,colorObj), "#FFFFFF" },
+	    offsetof(IndicatorElement,colorObj), "#FFFFFF" },
     { "-lightcolor", TK_OPTION_COLOR,
-	    Tk_Offset(IndicatorElement,lightColorObj), "#DDDDDD" },
+	    offsetof(IndicatorElement,lightColorObj), "#DDDDDD" },
     { "-shadecolor", TK_OPTION_COLOR,
-	    Tk_Offset(IndicatorElement,shadeColorObj), "#888888" },
+	    offsetof(IndicatorElement,shadeColorObj), "#888888" },
     { "-bordercolor", TK_OPTION_COLOR,
-	    Tk_Offset(IndicatorElement,borderColorObj), "black" },
+	    offsetof(IndicatorElement,borderColorObj), "black" },
     { "-indicatormargin", TK_OPTION_STRING,
-	    Tk_Offset(IndicatorElement,marginObj), "0 2 4 2" },
+	    offsetof(IndicatorElement,marginObj), "0 2 4 2" },
 	    { NULL, 0, 0, NULL }
 };
 
@@ -606,15 +606,15 @@ typedef struct {
 
 static Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
-	Tk_Offset(ArrowElement,sizeObj), STRINGIFY(SCROLLBAR_WIDTH) },
+	offsetof(ArrowElement,sizeObj), STRINGIFY(SCROLLBAR_WIDTH) },
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(ArrowElement,borderObj), DEFAULT_BACKGROUND },
+	offsetof(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR,
-	Tk_Offset(ArrowElement,borderColorObj), "black" },
+	offsetof(ArrowElement,borderColorObj), "black" },
     { "-relief", TK_OPTION_RELIEF,
-	Tk_Offset(ArrowElement,reliefObj),"raised"},
+	offsetof(ArrowElement,reliefObj),"raised"},
     { "-arrowcolor", TK_OPTION_COLOR,
-	Tk_Offset(ArrowElement,colorObj),"black"},
+	offsetof(ArrowElement,colorObj),"black"},
     { NULL, 0, 0, NULL }
 };
 
@@ -690,11 +690,11 @@ enum { POST_ABOVE, POST_BELOW, POST_LEFT, POST_RIGHT, POST_FLUSH };
 
 static Ttk_ElementOptionSpec MenubuttonArrowElementOptions[] = {
     { "-direction", TK_OPTION_STRING,
-	Tk_Offset(MenubuttonArrowElement,directionObj), "below" },
+	offsetof(MenubuttonArrowElement,directionObj), "below" },
     { "-arrowsize", TK_OPTION_PIXELS,
-	Tk_Offset(MenubuttonArrowElement,sizeObj), STRINGIFY(MENUBUTTON_ARROW_SIZE)},
+	offsetof(MenubuttonArrowElement,sizeObj), STRINGIFY(MENUBUTTON_ARROW_SIZE)},
     { "-arrowcolor",TK_OPTION_COLOR,
-	Tk_Offset(MenubuttonArrowElement,colorObj), "black"},
+	offsetof(MenubuttonArrowElement,colorObj), "black"},
     { NULL, 0, 0, NULL }
 };
 
@@ -774,15 +774,15 @@ typedef struct {
 
 static Ttk_ElementOptionSpec TroughElementOptions[] = {
     { "-orient", TK_OPTION_ANY,
-	Tk_Offset(TroughElement, orientObj), "horizontal" },
+	offsetof(TroughElement, orientObj), "horizontal" },
     { "-troughborderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(TroughElement,borderWidthObj), "1" },
+	offsetof(TroughElement,borderWidthObj), "1" },
     { "-troughcolor", TK_OPTION_BORDER,
-	Tk_Offset(TroughElement,colorObj), DEFAULT_BACKGROUND },
+	offsetof(TroughElement,colorObj), DEFAULT_BACKGROUND },
     { "-troughrelief",TK_OPTION_RELIEF,
-	Tk_Offset(TroughElement,reliefObj), "sunken" },
+	offsetof(TroughElement,reliefObj), "sunken" },
     { "-groovewidth", TK_OPTION_PIXELS,
-	Tk_Offset(TroughElement,grooveWidthObj), "-1" },
+	offsetof(TroughElement,grooveWidthObj), "-1" },
     { NULL, 0, 0, NULL }
 };
 
@@ -853,14 +853,14 @@ typedef struct {
 } ThumbElement;
 
 static Ttk_ElementOptionSpec ThumbElementOptions[] = {
-    { "-width", TK_OPTION_PIXELS, Tk_Offset(ThumbElement,sizeObj),
+    { "-width", TK_OPTION_PIXELS, offsetof(ThumbElement,sizeObj),
         STRINGIFY(SCROLLBAR_WIDTH) },
-    { "-background", TK_OPTION_BORDER, Tk_Offset(ThumbElement,borderObj),
+    { "-background", TK_OPTION_BORDER, offsetof(ThumbElement,borderObj),
 	DEFAULT_BACKGROUND },
-    { "-bordercolor", TK_OPTION_COLOR, Tk_Offset(ThumbElement,borderColorObj),
+    { "-bordercolor", TK_OPTION_COLOR, offsetof(ThumbElement,borderColorObj),
 	"black" },
-    { "-relief", TK_OPTION_RELIEF,Tk_Offset(ThumbElement,reliefObj),"raised" },
-    { "-orient", TK_OPTION_ANY,Tk_Offset(ThumbElement,orientObj),"horizontal"},
+    { "-relief", TK_OPTION_RELIEF,offsetof(ThumbElement,reliefObj),"raised" },
+    { "-orient", TK_OPTION_ANY,offsetof(ThumbElement,orientObj),"horizontal"},
     { NULL, 0, 0, NULL }
 };
 
@@ -936,19 +936,19 @@ typedef struct {
 } SliderElement;
 
 static Ttk_ElementOptionSpec SliderElementOptions[] = {
-    { "-sliderlength", TK_OPTION_PIXELS, Tk_Offset(SliderElement,lengthObj),
+    { "-sliderlength", TK_OPTION_PIXELS, offsetof(SliderElement,lengthObj),
 	"15" },
-    { "-sliderthickness",TK_OPTION_PIXELS,Tk_Offset(SliderElement,thicknessObj),
+    { "-sliderthickness",TK_OPTION_PIXELS,offsetof(SliderElement,thicknessObj),
 	"15" },
-    { "-sliderrelief", TK_OPTION_RELIEF, Tk_Offset(SliderElement,reliefObj),
+    { "-sliderrelief", TK_OPTION_RELIEF, offsetof(SliderElement,reliefObj),
 	"raised" },
-    { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SliderElement,borderWidthObj),
+    { "-borderwidth", TK_OPTION_PIXELS, offsetof(SliderElement,borderWidthObj),
 	STRINGIFY(BORDERWIDTH) },
-    { "-background", TK_OPTION_BORDER, Tk_Offset(SliderElement,borderObj),
+    { "-background", TK_OPTION_BORDER, offsetof(SliderElement,borderObj),
 	DEFAULT_BACKGROUND },
-    { "-bordercolor", TK_OPTION_COLOR, Tk_Offset(ThumbElement,borderColorObj),
+    { "-bordercolor", TK_OPTION_COLOR, offsetof(ThumbElement,borderColorObj),
 	"black" },
-    { "-orient", TK_OPTION_ANY, Tk_Offset(SliderElement,orientObj),
+    { "-orient", TK_OPTION_ANY, offsetof(SliderElement,orientObj),
 	"horizontal" },
     { NULL, 0, 0, NULL }
 };
@@ -1019,11 +1019,11 @@ typedef struct {
 
 static Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
-	Tk_Offset(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
+	offsetof(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-diameter", TK_OPTION_PIXELS,
-	Tk_Offset(TreeitemIndicator,diameterObj), "9" },
+	offsetof(TreeitemIndicator,diameterObj), "9" },
     { "-indicatormargins", TK_OPTION_STRING,
-	Tk_Offset(TreeitemIndicator,marginObj), "2 2 4 2" },
+	offsetof(TreeitemIndicator,marginObj), "2 2 4 2" },
     { NULL, 0, 0, NULL }
 };
 

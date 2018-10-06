@@ -188,7 +188,7 @@ typedef struct {
 } BorderElement;
 
 static Ttk_ElementOptionSpec BorderElementOptions[] = {
-    { "-relief",TK_OPTION_RELIEF,Tk_Offset(BorderElement,reliefObj), "flat" },
+    { "-relief",TK_OPTION_RELIEF,offsetof(BorderElement,reliefObj), "flat" },
     {NULL, 0, 0, NULL}
 };
 
@@ -239,7 +239,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     { "-fieldbackground", TK_OPTION_BORDER,
-    	Tk_Offset(FieldElement,backgroundObj), "white" },
+    	offsetof(FieldElement,backgroundObj), "white" },
     { NULL, 0, 0, NULL }
 };
 
@@ -290,11 +290,11 @@ typedef struct {
 
 static Ttk_ElementOptionSpec ButtonBorderElementOptions[] = {
     { "-relief",TK_OPTION_RELIEF,
-	Tk_Offset(ButtonBorderElement,reliefObj), "flat" },
+	offsetof(ButtonBorderElement,reliefObj), "flat" },
     { "-highlightcolor",TK_OPTION_COLOR,
-	Tk_Offset(ButtonBorderElement,highlightColorObj), "black" },
+	offsetof(ButtonBorderElement,highlightColorObj), "black" },
     { "-default", TK_OPTION_ANY,
-	Tk_Offset(ButtonBorderElement,defaultStateObj), "disabled" },
+	offsetof(ButtonBorderElement,defaultStateObj), "disabled" },
     {NULL, 0, 0, NULL}
 };
 
@@ -418,7 +418,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec FillFocusElementOptions[] = {
     { "-focusfill", TK_OPTION_COLOR,
-	Tk_Offset(FillFocusElement,fillColorObj), "white" },
+	offsetof(FillFocusElement,fillColorObj), "white" },
     {NULL, 0, 0, NULL}
 };
 
@@ -542,7 +542,7 @@ typedef struct {
 } ThumbElement;
 
 static Ttk_ElementOptionSpec ThumbElementOptions[] = {
-    { "-orient", TK_OPTION_ANY,Tk_Offset(ThumbElement,orientObj),"horizontal"},
+    { "-orient", TK_OPTION_ANY,offsetof(ThumbElement,orientObj),"horizontal"},
     { NULL, 0, 0, NULL }
 };
 
@@ -598,7 +598,7 @@ typedef struct {
 } SliderElement;
 
 static Ttk_ElementOptionSpec SliderElementOptions[] = {
-    { "-orient", TK_OPTION_ANY, Tk_Offset(SliderElement,orientObj),
+    { "-orient", TK_OPTION_ANY, offsetof(SliderElement,orientObj),
       "horizontal" },
       { NULL, 0, 0, NULL }
 };

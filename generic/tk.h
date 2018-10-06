@@ -193,14 +193,14 @@ typedef struct Tk_OptionSpec {
     int objOffset;		/* Where in record to store a Tcl_Obj * that
 				 * holds the value of this option, specified
 				 * as an offset in bytes from the start of the
-				 * record. Use the Tk_Offset macro to generate
+				 * record. Use the offsetof macro to generate
 				 * values for this. -1 means don't store the
 				 * Tcl_Obj in the record. */
     int internalOffset;		/* Where in record to store the internal
 				 * representation of the value of this option,
 				 * such as an int or XColor *. This field is
 				 * specified as an offset in bytes from the
-				 * start of the record. Use the Tk_Offset
+				 * start of the record. Use the offsetof
 				 * macro to generate values for it. -1 means
 				 * don't store the internal representation in
 				 * the record. */
@@ -266,10 +266,8 @@ typedef struct Tk_ObjCustomOption {
  * Computes number of bytes from beginning of structure to a given field.
  */
 
-#ifdef offsetof
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 #define Tk_Offset(type, field) ((int) offsetof(type, field))
-#else
-#define Tk_Offset(type, field) ((int) ((char *) &((type *) 0)->field))
 #endif
 
 /*
@@ -369,7 +367,7 @@ typedef struct Tk_ConfigSpec {
     Tk_Uid defValue;		/* Default value for option if not specified
 				 * in command line or database. */
     int offset;			/* Where in widget record to store value; use
-				 * Tk_Offset macro to generate values for
+				 * offsetof macro to generate values for
 				 * this. */
     int specFlags;		/* Any combination of the values defined
 				 * below; other bits are used internally by
@@ -602,12 +600,12 @@ typedef struct Tk_ClassProcs {
  *
  *	#define Tk_GetField(name, who, which) \
  *	    (((who) == NULL) ? NULL :
- *	    (((who)->size <= Tk_Offset(name, which)) ? NULL :(name)->which))
+ *	    (((who)->size <= offsetof(name, which)) ? NULL :(name)->which))
  */
 
 #define Tk_GetClassProc(procs, which) \
     (((procs) == NULL) ? NULL : \
-    (((procs)->size <= Tk_Offset(Tk_ClassProcs, which)) ? NULL:(procs)->which))
+    (((procs)->size <= offsetof(Tk_ClassProcs, which)) ? NULL:(procs)->which))
 
 /*
  * Each geometry manager (the packer, the placer, etc.) is represented by a
@@ -1177,7 +1175,7 @@ typedef struct Tk_TSOffset {
 } Tk_TSOffset;
 
 /*
- * Bit fields in Tk_Offset->flags:
+ * Bit fields in Tk_TSOffset->flags:
  */
 
 #define TK_OFFSET_INDEX		1
