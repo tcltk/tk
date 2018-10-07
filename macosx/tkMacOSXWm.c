@@ -2384,6 +2384,7 @@ WmIconnameCmd(
  * Side effects:
  *	See the user documentation.
  *
+ *
  *----------------------------------------------------------------------
  */
 
@@ -2395,14 +2396,16 @@ WmIconphotoCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_PhotoHandle photo;
+    Tk_Image tk_icon;
     int width, height, isDefault = 0;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
-		"window ?-default? image1 ?image2 ...?");
+			"window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
     }
+
+     /*Parse args.*/
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
