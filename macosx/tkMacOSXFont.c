@@ -863,14 +863,14 @@ TkpMeasureCharsInContext(
 	}
 	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
-        while ((index > start) && (index < len) && (flags & TK_WHOLE_WORDS)
-                && ![cs characterIsMember:[string characterAtIndex:index]]) {
-            index--;
-        }
 	while (index > start &&
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {
 	    index--;
 	}
+        if ((index >= start) && (index < len) && (flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE)
+                && ![cs characterIsMember:[string characterAtIndex:index]]) {
+            index = start;
+        }
 	if (index <= start && (flags & TK_AT_LEAST_ONE)) {
 	    index = start + 1;
 	}
