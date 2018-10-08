@@ -769,8 +769,8 @@ Tk_MacOSXIsAppInFront(void)
  * HITheme API.
  *
  * We are using layer-backed views, which are more efficient than legacy NSViews
- *  because Core Animation handles much more of the work in drawing. The core 
- *  drawRect method is routed through the updateLayer call. 
+ * because Core Animation handles much more of the work in drawing. The core 
+ * drawRect method is routed through the updateLayer call. 
  *  
  */
 
@@ -781,7 +781,7 @@ ExposeRestrictProc(
     XEvent *eventPtr)
 {
     return (eventPtr->type==Expose && eventPtr->xany.serial==PTR2UINT(arg)
-	    ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
+    	    ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
 }
 
 /*Restrict event processing to ConfigureNotify events.*/
@@ -854,9 +854,8 @@ ConfigureRestrictProc(
     /* All of these events will share the same serial number. */
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     updatesNeeded = GenerateUpdates(shape, &updateBounds, winPtr);
-
     /*Process the Expose events if the service mode is TCL_SERVICE_ALL*/
-    if (updatesNeeded && Tcl_GetServiceMode() == TCL_SERVICE_ALL) {
+    if ((updatesNeeded) && Tcl_GetServiceMode() == TCL_SERVICE_ALL) {
     	ClientData oldArg;
     	Tk_RestrictProc *oldProc = Tk_RestrictEvents(ExposeRestrictProc,
     						     UINT2PTR(serial), &oldArg);
