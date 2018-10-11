@@ -7495,3 +7495,38 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2017-12-18 (bug)[b77626] Make [tk busy -cursor] silent no-op on macOS (vogel)
 
 --- Released 8.6.8, December 22, 2017 --- http://core.tcl.tk/tk/ for details
+
+2017-12-31 (bug)[aa7679] crash using window after master destroyed (vogel)
+
+2017-12-31 (bug)[6525e1] encoding leak in tkMacOSXProcessFiles (werner)
+
+2018-01-07 (bug)[925262] New option -state for ttk::scale (vogel)
+
+2018-01-07 (bug)[fa8de7] Crash [ttk::checkbutton .x -variable {}] (werner)
+
+2018-01-16 (bug)[382712] Crash in [event generate . <KeyPress>] (werner)
+
+2018-01-19 (bug)[657c38] Crash in menu destroy with checkbutton entry (werner)
+
+2018-01-25 (bug)[de156e] Deny PRIMARY selection access in safe interps (nash)
+
+2018-01-28 (bug)[b68710] Fixes in [text] bindings (nash)
+
+2018-01-28 (bug)[e20d5c] Stop failures of textTag-18.1 (vogel)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- Released 8.6.9, October 17, 2018 - http://core.tcl-lang.org/tk/ for details -
