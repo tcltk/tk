@@ -258,8 +258,8 @@ typedef struct {
     const char *\fIdbName\fR;
     const char *\fIdbClass\fR;
     const char *\fIdefValue\fR;
-    int \fIobjOffset\fR;
-    int \fIinternalOffset\fR;
+    size_t \fIobjOffset\fR;
+    size_t \fIinternalOffset\fR;
     int \fIflags\fR;
     const void *\fIclientData\fR;
     int \fItypeMask\fR;
@@ -619,9 +619,9 @@ The \fIgetProc\fR procedure is invoked by \fBTk_GetOptionValue\fR and
 internal representation of an option.  The \fIclientData\fR argument
 is a copy of the \fIclientData\fR field in the Tk_ObjCustomOption
 structure.  \fITkwin\fR is a copy of the \fItkwin\fR argument to
-\fBTk_GetOptionValue\fR or \fBTk_GetOptionInfo\fR.  \fIRecordPtr\fR
+\fBTk_GetOptionValue\fR or \fBTk_GetOptionInfo\fR.  \fIrecordPtr\fR
 is a pointer to the beginning of the widget record to query.
-\fIInternalOffset\fR is the offset in bytes from the beginning of the
+\fIinternalOffset\fR is the offset in bytes from the beginning of the
 widget record to the location where the internal representation of the
 option value is stored.  \fIGetProc\fR must return a pointer to a
 Tcl_Obj representing the value of the option.
