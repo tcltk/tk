@@ -35,14 +35,14 @@
 
 static int		DoConfig(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_ConfigSpec *specPtr, Tk_Uid value,
-			    int valueIsUid, char *widgRec);
+			    int valueIsUid, void *widgRec);
 static Tk_ConfigSpec *	FindConfigSpec(Tcl_Interp *interp,
 			    Tk_ConfigSpec *specs, const char *argvName,
 			    int needFlags, int hateFlags);
 static char *		FormatConfigInfo(Tcl_Interp *interp, Tk_Window tkwin,
-			    const Tk_ConfigSpec *specPtr, char *widgRec);
+			    const Tk_ConfigSpec *specPtr, void *widgRec);
 static const char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
-			    const Tk_ConfigSpec *specPtr, char *widgRec,
+			    const Tk_ConfigSpec *specPtr, void *widgRec,
 			    char *buffer, Tcl_FreeProc **freeProcPtr);
 static Tk_ConfigSpec *	GetCachedSpecs(Tcl_Interp *interp,
 			    const Tk_ConfigSpec *staticSpecs);
@@ -344,10 +344,10 @@ DoConfig(
     Tk_Uid value,		/* Value to use to fill in widgRec. */
     int valueIsUid,		/* Non-zero means value is a Tk_Uid; zero
 				 * means it's an ordinary string. */
-    char *widgRec)		/* Record whose fields are to be modified.
+    void *widgRec)		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
 {
-    char *ptr;
+    void *ptr;
     Tk_Uid uid;
     int nullValue;
 
@@ -357,7 +357,7 @@ DoConfig(
     }
 
     do {
-	ptr = widgRec + specPtr->offset;
+	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_BOOLEAN:
 	    if (Tcl_GetBoolean(interp, value, (int *) ptr) != TCL_OK) {
@@ -693,7 +693,7 @@ FormatConfigInfo(
     register const Tk_ConfigSpec *specPtr,
 				/* Pointer to information describing
 				 * option. */
-    char *widgRec)		/* Pointer to record holding current values of
+    void *widgRec)		/* Pointer to record holding current values of
 				 * info for widget. */
 {
     const char *argv[6];
@@ -759,7 +759,7 @@ FormatConfigValue(
     Tk_Window tkwin,		/* Window corresponding to widget. */
     const Tk_ConfigSpec *specPtr, /* Pointer to information describing option.
 				 * Must not point to a synonym option. */
-    char *widgRec,		/* Pointer to record holding current values of
+    void *widgRec,		/* Pointer to record holding current values of
 				 * info for widget. */
     char *buffer,		/* Static buffer to use for small values.
 				 * Must have at least 200 bytes of storage. */
@@ -767,10 +767,11 @@ FormatConfigValue(
 				 * function to free the result, or NULL if
 				 * result is static. */
 {
-    const char *ptr, *result;
+    void *ptr;
+    const char *result;
 
     *freeProcPtr = NULL;
-    ptr = widgRec + specPtr->offset;
+    ptr = (char *)widgRec + specPtr->offset;
     result = "";
     switch (specPtr->type) {
     case TK_CONFIG_BOOLEAN:
