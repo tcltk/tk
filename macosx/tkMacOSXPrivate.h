@@ -339,7 +339,6 @@ VISIBILITY_HIDDEN
 - (BOOL) wantsLayer;
 - (BOOL) wantsUpdateLayer;
 - (BOOL) canDrawsubViewsIntoLayer;
--(BOOL) updateLayer;
 - (id) layerContentsRedrawPolicy;
 @end
 

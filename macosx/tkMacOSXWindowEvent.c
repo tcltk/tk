@@ -332,7 +332,7 @@ GenerateUpdates(
     }
 
     /*
-     * Compute the bounding box of the area that the damage occured in.
+     * Compute the bounding box of the area that the damage occurred in.
      */
 
     boundsRgn = HIShapeCreateWithRect(&bounds);
@@ -359,10 +359,10 @@ GenerateUpdates(
     event.xexpose.count = 0;
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
-#ifdef TK_MAC_DEBUG_DRAWING
+    #ifdef TK_MAC_DEBUG_DRAWING
     NSLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
 	event.xexpose.y, event.xexpose.width, event.xexpose.height);
-#endif
+    #endif
 
     /*
      * Generate updates for the children of this window
@@ -391,6 +391,7 @@ GenerateUpdates(
 	 */
     }
 
+    Tcl_SetServiceMode(TCL_SERVICE_ALL);
     return 1;
 }
 
@@ -769,8 +770,7 @@ Tk_MacOSXIsAppInFront(void)
  * HITheme API.
  *
  * We are using layer-backed views, which are more efficient than legacy NSViews
- * because Core Animation handles much more of the work in drawing. The core 
- * drawRect method is routed through the updateLayer call. 
+ * because Core Animation handles much more of the work in drawing. The layer    * is updated through the drawRect method. 
  *  
  */
 
@@ -802,12 +802,12 @@ ConfigureRestrictProc(
 
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
 
-#ifdef TK_MAC_DEBUG_DRAWING
+    #ifdef TK_MAC_DEBUG_DRAWING
     TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd, NSStringFromRect(rect));
     [[NSColor colorWithDeviceRed:0.0 green:1.0 blue:0.0 alpha:.1] setFill];
     NSRectFillListUsingOperation(rectsBeingDrawn, rectsBeingDrawnCount,
 	    NSCompositeSourceOver);
-#endif
+    #endif
 
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
@@ -851,19 +851,19 @@ ConfigureRestrictProc(
 
     /* Generate Tk Expose events. */
     HIShapeGetBounds(shape, &updateBounds);
+    
     /* All of these events will share the same serial number. */
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     updatesNeeded = GenerateUpdates(shape, &updateBounds, winPtr);
+
     /*Process the Expose events if the service mode is TCL_SERVICE_ALL*/
-    if ((updatesNeeded) && Tcl_GetServiceMode() == TCL_SERVICE_ALL) {
+    if ((updatesNeeded) && (Tcl_GetServiceMode() == TCL_SERVICE_ALL)) {
     	ClientData oldArg;
     	Tk_RestrictProc *oldProc = Tk_RestrictEvents(ExposeRestrictProc,
     						     UINT2PTR(serial), &oldArg);
-    	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
+        while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
      }
-
-
 }
 
 /*
@@ -916,19 +916,16 @@ ConfigureRestrictProc(
     return YES;
 }
 
-- (void) updateLayer
-{
-    HIRect bounds = NSRectToCGRect([self bounds]);
-    HIShapeRef shape = HIShapeCreateWithRect(&bounds);
-    [self drawRect: bounds];
-
-}
 
 - (id) layerContentsRedrawPolicy
 {
     return NSViewLayerContentsRedrawOnSetNeedsDisplay;
 }
 
+- (BOOL) canDrawSubviewsIntoLayer
+{
+    return YES;
+}
 
 - (BOOL) wantsDefaultClipping
 {
