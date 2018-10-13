@@ -695,6 +695,7 @@ TCL_LIBS
 LIBOBJS
 AR
 RANLIB
+SHARED_BUILD
 EGREP
 GREP
 CPP
@@ -755,7 +756,8 @@ PACKAGE_VERSION
 PACKAGE_TARNAME
 PACKAGE_NAME
 PATH_SEPARATOR
-SHELL'
+SHELL
+OBJEXT_FOR_BUILD'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
@@ -3979,6 +3981,7 @@ $as_echo "static" >&6; }
 $as_echo "#define STATIC_BUILD 1" >>confdefs.h
 
     fi
+
 
 
 #--------------------------------------------------------------------
