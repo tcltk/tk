@@ -277,7 +277,7 @@ TkMacOSXEventsCheckProc(
 						dequeue:NO];
 	    /* We must not steal any events during LiveResize. */
 	    if (testEvent && [[testEvent window] inLiveResize]) {
-		break;
+	    	break;
 	    }
 	    currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
 					      untilDate:[NSDate distantPast]
@@ -289,9 +289,9 @@ TkMacOSXEventsCheckProc(
 		NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
 		Tcl_SetServiceMode(oldServiceMode);
 		if (processedEvent) { /* Should always be non-NULL. */
-#ifdef TK_MAC_DEBUG_EVENTS
+		    //#ifdef TK_MAC_DEBUG_EVENTS
 		    TKLog(@"   event: %@", currentEvent);
-#endif
+		    //#endif
 		    if (modalSession) {
 			[NSApp _modalSession:modalSession sendEvent:currentEvent];
 		    } else {
