@@ -5636,6 +5636,8 @@ TkMacOSXMakeRealWindowExist(
     if (!window) {
     	Tcl_Panic("couldn't allocate new Mac window");
     }
+
+    NSLog(@"setting up new window");
  
      TKContentView *contentView = [[TKContentView alloc]
         initWithFrame:NSZeroRect];
@@ -5675,6 +5677,8 @@ TkMacOSXMakeRealWindowExist(
     [window setFrame:geometry display:NO];
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
     macWin->flags |= TK_HOST_EXISTS;
+    /*Make sure service mode is set to process events.*/
+    Tcl_SetServiceMode(TCL_SERVICE_ALL);
 }
 
 /*

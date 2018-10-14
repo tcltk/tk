@@ -800,6 +800,14 @@ ConfigureRestrictProc(
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
 
+   TkWindow *win = TkMacOSXGetTkWindow([self window]);
+   MacDrawable *macwin = (MacDrawable *) win;
+   CGContextRef *context = macwin->context;
+
+    if (context!=NULL) {
+        CGContextSaveGState(&context);
+	NSLog(@"saving graphics contexts");
+
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
 
     #ifdef TK_MAC_DEBUG_DRAWING
@@ -824,12 +832,13 @@ ConfigureRestrictProc(
     	[self performSelectorOnMainThread:@selector(generateExposeEvents:)
     		withObject:(id)drawShape waitUntilDone:NO
     		modes:[NSArray arrayWithObjects:NSRunLoopCommonModes,
-
     			NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
     			nil]];
     }
 
     CFRelease(drawShape);
+    CGContextRestoreGState(&context);
+    }
 }
 
 
@@ -926,6 +935,7 @@ ConfigureRestrictProc(
 {
     return YES;
 }
+
 
 - (BOOL) wantsDefaultClipping
 {
