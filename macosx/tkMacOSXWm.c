@@ -5636,8 +5636,6 @@ TkMacOSXMakeRealWindowExist(
     if (!window) {
     	Tcl_Panic("couldn't allocate new Mac window");
     }
-
-    NSLog(@"setting up new window");
  
      TKContentView *contentView = [[TKContentView alloc]
         initWithFrame:NSZeroRect];

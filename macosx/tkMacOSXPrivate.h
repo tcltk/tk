@@ -331,16 +331,10 @@ VISIBILITY_HIDDEN
 - (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIShapeRef) shape;
 - (void) viewDidEndLiveResize;
-- (void) tkToolbarButton: (id) sender;
 - (BOOL) isOpaque;
 - (BOOL) wantsDefaultClipping;
 - (BOOL) acceptsFirstResponder;
 - (void) keyDown: (NSEvent *) theEvent;
-- (id) setLayer;
-- (BOOL) wantsLayer;
-- (BOOL) wantsUpdateLayer;
-- (BOOL) canDrawsubViewsIntoLayer;
-- (id) layerContentsRedrawPolicy;
 @end
 
 VISIBILITY_HIDDEN

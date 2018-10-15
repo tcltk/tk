@@ -357,7 +357,8 @@ GenerateUpdates(
     event.xexpose.width = damageBounds.size.width;
     event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    // Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    Tk_HandleEvent(&event);
 
     #ifdef TK_MAC_DEBUG_DRAWING
     NSLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
@@ -800,44 +801,46 @@ ConfigureRestrictProc(
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
 
-   TkWindow *win = TkMacOSXGetTkWindow([self window]);
-   MacDrawable *macwin = (MacDrawable *) win;
-   CGContextRef *context = macwin->context;
+    TkWindow *win = TkMacOSXGetTkWindow([self window]);
+    MacDrawable *macwin = (MacDrawable *) win;
+    CGContextRef context, cg_context =NULL;
+    context =  [[NSGraphicsContext currentContext] graphicsPort];
+    cg_context = TkMacOSXGetCGContextForDrawable(macwin);
+    if (context != cg_context) { NSLog (@"contexts not the same"); return;}
 
-    if (context!=NULL) {
-        CGContextSaveGState(&context);
-	NSLog(@"saving graphics contexts");
+    if (context) {
+	NSLog(@"context");
+	CGContextSaveGState(context);
+	[self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
 
-    [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
+#ifdef TK_MAC_DEBUG_DRAWING
+	TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd, NSStringFromRect(rect));
+	[[NSColor colorWithDeviceRed:0.0 green:1.0 blue:0.0 alpha:.1] setFill];
+	NSRectFillListUsingOperation(rectsBeingDrawn, rectsBeingDrawnCount,
+				     NSCompositeSourceOver);
+#endif
 
-    #ifdef TK_MAC_DEBUG_DRAWING
-    TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd, NSStringFromRect(rect));
-    [[NSColor colorWithDeviceRed:0.0 green:1.0 blue:0.0 alpha:.1] setFill];
-    NSRectFillListUsingOperation(rectsBeingDrawn, rectsBeingDrawnCount,
-	    NSCompositeSourceOver);
-    #endif
+	CGFloat height = [self bounds].size.height;
+	HIMutableShapeRef drawShape = HIShapeCreateMutable();
 
-    CGFloat height = [self bounds].size.height;
-    HIMutableShapeRef drawShape = HIShapeCreateMutable();
+	while (rectsBeingDrawnCount--) {
+	    CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
+	    r.origin.y = height - (r.origin.y + r.size.height);
+	    HIShapeUnionWithRect(drawShape, &r);
+	}
 
-    while (rectsBeingDrawnCount--) {
-	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
-	r.origin.y = height - (r.origin.y + r.size.height);
-	HIShapeUnionWithRect(drawShape, &r);
-    }
+	if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
+	    [self generateExposeEvents:(HIShapeRef)drawShape];
+	} else {
+	    [self performSelectorOnMainThread:@selector(generateExposeEvents:)
+				   withObject:(id)drawShape waitUntilDone:NO
+					modes:[NSArray arrayWithObjects:NSRunLoopCommonModes,
+						       NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
+						       nil]];
+	}
 
-    if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
-    	[self generateExposeEvents:(HIShapeRef)drawShape];
-    } else {
-    	[self performSelectorOnMainThread:@selector(generateExposeEvents:)
-    		withObject:(id)drawShape waitUntilDone:NO
-    		modes:[NSArray arrayWithObjects:NSRunLoopCommonModes,
-    			NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
-    			nil]];
-    }
-
-    CFRelease(drawShape);
-    CGContextRestoreGState(&context);
+	CFRelease(drawShape);
+	CGContextRestoreGState(context);
     }
 }
 
@@ -875,35 +878,6 @@ ConfigureRestrictProc(
      }
 }
 
-/*
- * This is no-op on 10.7 and up because Apple has removed this widget,
- * but we are leaving it here for backwards compatibility.
- */
-- (void) tkToolbarButton: (id) sender
-{
-#ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd);
-#endif
-    XVirtualEvent event;
-    int x, y;
-    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window tkwin = (Tk_Window) winPtr;
-    bzero(&event, sizeof(XVirtualEvent));
-    event.type = VirtualEvent;
-    event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-    event.send_event = false;
-    event.display = Tk_Display(tkwin);
-    event.event = Tk_WindowId(tkwin);
-    event.root = XRootWindow(Tk_Display(tkwin), 0);
-    event.subwindow = None;
-    event.time = TkpGetMS();
-    XQueryPointer(NULL, winPtr->window, NULL, NULL,
-	    &event.x_root, &event.y_root, &x, &y, &event.state);
-    Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
-    event.same_screen = true;
-    event.name = Tk_GetUid("ToolbarButton");
-    Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
-}
 
 - (BOOL) isOpaque
 {
@@ -913,7 +887,7 @@ ConfigureRestrictProc(
        ![w isOpaque]) ? NO : YES);
 }
 
-
+#if 0
 - (BOOL) wantsLayer
 {
     return YES;
@@ -935,7 +909,7 @@ ConfigureRestrictProc(
 {
     return YES;
 }
-
+#endif
 
 - (BOOL) wantsDefaultClipping
 {
