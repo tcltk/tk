@@ -1064,7 +1064,7 @@ void
 Ttk_ElementSize(
     Ttk_ElementClass *eclass,		/* Element to query */
     Ttk_Style style,			/* Style settings */
-    char *recordPtr,			/* The widget record. */
+    void *recordPtr,			/* The widget record. */
     Tk_OptionTable optionTable,		/* Description of widget record */
     Tk_Window tkwin,			/* The widget window. */
     Ttk_State state,			/* Current widget state */
@@ -1094,7 +1094,7 @@ void
 Ttk_DrawElement(
     Ttk_ElementClass *eclass,		/* Element instance */
     Ttk_Style style,			/* Style settings */
-    char *recordPtr,			/* The widget record. */
+    void *recordPtr,			/* The widget record. */
     Tk_OptionTable optionTable,		/* Description of option table */
     Tk_Window tkwin,			/* The widget window. */
     Drawable d,				/* Where to draw element. */

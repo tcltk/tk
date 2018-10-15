@@ -592,7 +592,11 @@ typedef void (Tk_ClassWorldChangedProc) (ClientData instanceData);
 typedef void (Tk_ClassModalProc) (Tk_Window tkwin, XEvent *eventPtr);
 
 typedef struct Tk_ClassProcs {
+#if TCL_MAJOR_VERSION > 8
+    size_t size;
+#else
     unsigned int size;
+#endif
     Tk_ClassWorldChangedProc *worldChangedProc;
 				/* Procedure to invoke when the widget needs
 				 * to respond in some way to a change in the
