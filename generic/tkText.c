@@ -6090,7 +6090,8 @@ SearchCore(
 			    alreadySearchOffset -= matchLength;
 			}
 		    } else {
-			firstOffset = p - startOfLine + matchLength;
+                        firstOffset = (matchLength == 0) ? p - startOfLine + 1
+                                                         : p - startOfLine + matchLength;
 			if (firstOffset >= lastOffset) {
 			    /*
 			     * Now, we have to be careful not to find
