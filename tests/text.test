@@ -5901,7 +5901,7 @@ test text-22.228 {TextSearchCmd, exact search all empty strings} -body {
 test text-22.229 {TextSearchCmd, exact search all empty strings} -body {
     text .t
     .t insert end "Searching for the\nempty string!"
-     -all "" 2.5 2.8]
+    set res [.t search -count C -all "" 2.5 2.8]
     lappend res $C
 } -cleanup {
     destroy .t
