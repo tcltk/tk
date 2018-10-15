@@ -99,7 +99,7 @@ declare 21 {
 	    const TkStateMap *mapPtr, const char *strKey)
 }
 declare 22 {
-    const char *TkFindStateString(const TkStateMap *mapPtr, int numKey)
+    CONST86 char *TkFindStateString(const TkStateMap *mapPtr, int numKey)
 }
 declare 23 {
     void TkFocusDeadWindow(TkWindow *winPtr)
@@ -182,7 +182,7 @@ declare 45 {
     void TkInstallFrameMenu(Tk_Window tkwin)
 }
 declare 46 {
-    const char *TkKeysymToString(KeySym keysym)
+    CONST86 char *TkKeysymToString(KeySym keysym)
 }
 declare 47 {
     int TkLineToArea(double end1Ptr[], double end2Ptr[], double rectPtr[])
@@ -389,7 +389,7 @@ declare 108 {
 	    Tcl_Obj *objPtr, Tk_Window *windowPtr)
 }
 declare 109 {
-    const char *TkpGetString(TkWindow *winPtr, XEvent *eventPtr, Tcl_DString *dsPtr)
+    CONST86 char *TkpGetString(TkWindow *winPtr, XEvent *eventPtr, Tcl_DString *dsPtr)
 }
 declare 110 {
     void TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
@@ -570,7 +570,7 @@ declare 169 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 170 {
-    const char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
+    CONST86 char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 171 {
@@ -578,7 +578,7 @@ declare 171 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 172 {
-    const char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
+    CONST86 char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 173 {
@@ -586,7 +586,7 @@ declare 173 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 174 {
-    const char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
+    CONST86 char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 175 {
@@ -594,7 +594,7 @@ declare 175 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 176 {
-    const char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
+    CONST86 char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 177 {
@@ -602,7 +602,7 @@ declare 177 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 178 {
-    const char *TkOrientPrintProc(ClientData clientData, Tk_Window tkwin,
+    CONST86 char *TkOrientPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 179 {
@@ -610,7 +610,7 @@ declare 179 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 180 {
-    const char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
+    CONST86 char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 
