@@ -5873,33 +5873,84 @@ test text-22.225 {TextSearchCmd, strict limits} -body {
 } -cleanup {
     destroy .t
 } -result {}
-test text-22.226 {TextSearchCmd, search for the empty string} -body {
+test text-22.226 {TextSearchCmd, exact search for the empty string} -body {
     pack [text .t]
     .t search "" 1.0
 } -cleanup {
     destroy .t
 } -result {1.0}
-test text-22.227 {TextSearchCmd, search for the empty string} -body {
+test text-22.227 {TextSearchCmd, exact search for the empty string} -body {
     pack [text .t]
     .t insert end "Searching for the\nempty string!"
     .t search "" 2.5
 } -cleanup {
     destroy .t
 } -result {2.5}
-test text-22.228 {TextSearchCmd, search all empty strings} -body {
+test text-22.228 {TextSearchCmd, exact search all empty strings} -body {
     pack [text .t]
     .t search -all "" 1.0
 } -cleanup {
     destroy .t
 } -result {1.0}
-test text-22.228 {TextSearchCmd, search all empty strings} -body {
+test text-22.229 {TextSearchCmd, exact search all empty strings} -body {
     pack [text .t]
     .t insert end "Searching for the\nempty string!"
-    .t search -all "" 2.5
+    .t search -all "" 2.5 2.8
+} -cleanup {
+    destroy .t
+} -result {2.5 2.6 2.7}
+test text-22.230 {TextSearchCmd, exact search all empty strings, with overlap} -body {
+    pack [text .t]
+    .t search -all -overlap "" 1.0
+} -cleanup {
+    destroy .t
+} -result {1.0}
+test text-22.231 {TextSearchCmd, exact search all empty strings, with overlap} -body {
+    pack [text .t]
+    .t insert end "Searching for the\nempty string!"
+    .t search -all -overlap "" 2.5 2.8
+} -cleanup {
+    destroy .t
+} -result {2.5 2.6 2.7}
+test text-22.232 {TextSearchCmd, regexp search for the empty string} -body {
+    pack [text .t]
+    .t search -regexp "" 1.0
+} -cleanup {
+    destroy .t
+} -result {1.0}
+test text-22.233 {TextSearchCmd, regexp search for the empty string} -body {
+    pack [text .t]
+    .t insert end "Searching for the\nempty string!"
+    .t search -regexp "" 2.5
 } -cleanup {
     destroy .t
 } -result {2.5}
-
+test text-22.234 {TextSearchCmd, regexp search all empty strings} -body {
+    pack [text .t]
+    .t search -all -regexp "" 1.0
+} -cleanup {
+    destroy .t
+} -result {1.0}
+test text-22.235 {TextSearchCmd, regexp search all empty strings} -body {
+    pack [text .t]
+    .t insert end "Searching for the\nempty string!"
+    .t search -all -regexp "" 2.5 2.8
+} -cleanup {
+    destroy .t
+} -result {2.5 2.6 2.7}
+test text-22.236 {TextSearchCmd, regexp search all empty strings, with overlap} -body {
+    pack [text .t]
+    .t search -all -regexp -overlap "" 1.0
+} -cleanup {
+    destroy .t
+} -result {1.0}
+test text-22.237 {TextSearchCmd, regexp search all empty strings, with overlap} -body {
+    pack [text .t]
+    .t insert end "Searching for the\nempty string!"
+    .t search -all -regexp -overlap "" 2.5 2.8
+} -cleanup {
+    destroy .t
+} -result {2.5 2.6 2.7}
 
 test text-23.1 {TkTextGetTabs procedure} -setup {
     text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
