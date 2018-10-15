@@ -5756,9 +5756,6 @@ SearchCore(
 
 	pattern = Tcl_GetString(patObj);
 	matchLength = patObj->length;
-        if (matchLength == 0) {
-            matchLength = 1;
-        }
 	nl = strchr(pattern, '\n');
 
 	/*
