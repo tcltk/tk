@@ -18,7 +18,7 @@
  */
 
 #define EI_SEG_SIZE \
-	((unsigned) (Tk_Offset(TkTextSegment, body) + sizeof(TkTextEmbImage)))
+	(Tk_Offset(TkTextSegment, body) + sizeof(TkTextEmbImage))
 
 /*
  * Prototypes for functions defined in this file:

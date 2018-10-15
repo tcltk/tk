@@ -2053,7 +2053,7 @@ CustomOptionSet(
 
     objEmpty = 0;
 
-    if (internalOffset >= 0) {
+    if (internalOffset != -1) {
 	internalPtr = recordPtr + internalOffset;
     } else {
 	internalPtr = NULL;
