@@ -35,8 +35,8 @@ static const Tk_GeomMgr textGeomType = {
  * Macro that determines the size of an embedded window segment:
  */
 
-#define EW_SEG_SIZE ((unsigned) (Tk_Offset(TkTextSegment, body) \
-	+ sizeof(TkTextEmbWindow)))
+#define EW_SEG_SIZE (Tk_Offset(TkTextSegment, body) \
+	+ sizeof(TkTextEmbWindow))
 
 /*
  * Prototypes for functions defined in this file:
