@@ -5749,9 +5749,7 @@ SearchCore(
 	/*
 	 * We only need to set the matchLength once for exact searches, and we
 	 * do it here. It is also used below as the actual pattern length, so
-	 * it has dual purpose. Warning: to properly advance between matches
-         * the matchLength can't be zero (which would happen when searching
-         * for an empty string).
+	 * it has dual purpose.
 	 */
 
 	pattern = Tcl_GetString(patObj);
