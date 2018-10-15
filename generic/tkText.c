@@ -6070,8 +6070,8 @@ SearchCore(
 		matchOffset = p - startOfLine;
 
 		if (searchSpecPtr->all &&
-			(!searchSpecPtr->foundMatchProc(lineNum, searchSpecPtr,
-			lineInfo, theLine, matchOffset, matchLength) || (matchLength == 0)) ) {
+			!searchSpecPtr->foundMatchProc(lineNum, searchSpecPtr,
+			lineInfo, theLine, matchOffset, matchLength)) {
 		    /*
 		     * We reached the end of the search.
 		     */
