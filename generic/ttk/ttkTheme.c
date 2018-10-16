@@ -142,7 +142,7 @@ static const Tk_OptionSpec *TTKGetOptionSpec(
 
     /* Make sure widget option has a Tcl_Obj* entry:
      */
-    if (optionSpec->objOffset < 0) {
+    if (optionSpec->objOffset == TCL_AUTO_LENGTH) {
 	return 0;
     }
 

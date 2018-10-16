@@ -80,7 +80,7 @@ test winfont-2.8 {TkpGetFontFromAttributes procedure: Courier fonts} -constraint
     lappend x [font actual {-family "Courier"} -family]
     lappend x [font actual {-family "Monaco"} -family]
     lappend x [font actual {-family "Courier New"} -family]
-} -result {Courier Courier {Courier New}}
+} -match regexp -result {Courier (Courier|Monaco) {Courier New}}
 test winfont-2.9 {TkpGetFontFromAttributes procedure: Helvetica fonts} -constraints {
     win
 } -setup {
@@ -89,7 +89,7 @@ test winfont-2.9 {TkpGetFontFromAttributes procedure: Helvetica fonts} -constrai
     lappend x [font actual {-family "Helvetica"} -family]
     lappend x [font actual {-family "Geneva"} -family]
     lappend x [font actual {-family "Arial"} -family]
-} -result {Helvetica Helvetica Arial}
+} -match regexp -result {Helvetica (Helvetica|Geneva) Arial}
 test winfont-2.10 {TkpGetFontFromAttributes procedure: fallback} -constraints {
     win
 } -body {
