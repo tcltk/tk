@@ -6077,6 +6077,15 @@ test text-22.249 {TextSearchCmd, regexp backwards search all empty strings, with
     destroy .t
     unset -nocomplain res C
 } -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.250 {TextSearchCmd, backwards search all matching at start of line} -body {
+    text .t
+    .t insert end "abc"
+    set res [.t search -backwards -all b end]      ; # works
+    lappend res [.t search -backwards a end]       ; # works
+    lappend res [.t search -backwards -all a end]  ; # used to hang
+} -cleanup {
+    destroy .t
+} -result {1.1 1.0}
 
 test text-23.1 {TkTextGetTabs procedure} -setup {
     text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
