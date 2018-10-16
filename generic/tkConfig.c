@@ -381,7 +381,7 @@ int
 Tk_InitOptions(
     Tcl_Interp *interp,		/* Interpreter for error reporting. NULL means
 				 * don't leave an error message. */
-    char *recordPtr,		/* Pointer to the record to configure. Note:
+    void *recordPtr,		/* Pointer to the record to configure. Note:
 				 * the caller should have properly initialized
 				 * the record with NULL pointers for each
 				 * option value. */
@@ -1222,7 +1222,7 @@ int
 Tk_SetOptions(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
 				 * then no error message is returned.*/
-    char *recordPtr,	    	/* The record to configure. */
+    void *recordPtr,	    	/* The record to configure. */
     Tk_OptionTable optionTable,	/* Describes valid options. */
     int objc,			/* The number of elements in objv. */
     Tcl_Obj *const objv[],	/* Contains one or more name-value pairs. */
@@ -1527,7 +1527,7 @@ Tk_FreeSavedOptions(
 	/* ARGSUSED */
 void
 Tk_FreeConfigOptions(
-    char *recordPtr,		/* Record whose fields contain current values
+    void *recordPtr,		/* Record whose fields contain current values
 				 * for options. */
     Tk_OptionTable optionTable,	/* Describes legal options. */
     Tk_Window tkwin)		/* Window associated with recordPtr; needed
@@ -1713,7 +1713,7 @@ Tcl_Obj *
 Tk_GetOptionInfo(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
 				 * then no error message is created. */
-    char *recordPtr,		/* Record whose fields contain current values
+    void *recordPtr,		/* Record whose fields contain current values
 				 * for options. */
     Tk_OptionTable optionTable,	/* Describes all the legal options. */
     Tcl_Obj *namePtr,		/* If non-NULL, the string value selects a
@@ -2001,7 +2001,7 @@ Tk_GetOptionValue(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL
 				 * then no messages are provided for
 				 * errors. */
-    char *recordPtr,		/* Record whose fields contain current values
+    void *recordPtr,		/* Record whose fields contain current values
 				 * for options. */
     Tk_OptionTable optionTable,	/* Describes legal options. */
     Tcl_Obj *namePtr,		/* Gives the command-line name for the option

@@ -1076,7 +1076,7 @@ Tk_GetElementSize(
     Tk_Style style,		/* The widget style. */
     Tk_StyledElement element,	/* The styled element, previously returned by
 				 * Tk_GetStyledElement. */
-    char *recordPtr,		/* The widget record. */
+    void *recordPtr,		/* The widget record. */
     Tk_Window tkwin,		/* The widget window. */
     int width, int height,	/* Requested size. */
     int inner,			/* If TRUE, compute the outer size according
@@ -1117,7 +1117,7 @@ Tk_GetElementBox(
     Tk_Style style,		/* The widget style. */
     Tk_StyledElement element,	/* The styled element, previously returned by
 				 * Tk_GetStyledElement. */
-    char *recordPtr,		/* The widget record. */
+    void *recordPtr,		/* The widget record. */
     Tk_Window tkwin,		/* The widget window. */
     int x, int y,		/* Top left corner of available area. */
     int width, int height,	/* Size of available area. */
@@ -1159,7 +1159,7 @@ Tk_GetElementBorderWidth(
     Tk_Style style,		/* The widget style. */
     Tk_StyledElement element,	/* The styled element, previously returned by
 				 * Tk_GetStyledElement. */
-    char *recordPtr,		/* The widget record. */
+    void *recordPtr,		/* The widget record. */
     Tk_Window tkwin)		/* The widget window. */
 {
     Style *stylePtr = (Style *) style;
@@ -1190,7 +1190,7 @@ Tk_DrawElement(
     Tk_Style style,		/* The widget style. */
     Tk_StyledElement element,	/* The styled element, previously returned by
 				 * Tk_GetStyledElement. */
-    char *recordPtr,		/* The widget record. */
+    void *recordPtr,		/* The widget record. */
     Tk_Window tkwin,		/* The widget window. */
     Drawable d,			/* Where to draw element. */
     int x, int y,		/* Top left corner of element. */
