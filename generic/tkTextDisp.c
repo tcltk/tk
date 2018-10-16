@@ -162,7 +162,7 @@ typedef struct StyleValues {
  */
 
 typedef struct TextStyle {
-    int refCount;		/* Number of times this structure is
+    TkSizeT refCount;		/* Number of times this structure is
 				 * referenced in Chunks. */
     GC bgGC;			/* Graphics context for background. None means
 				 * use widget background. */
@@ -400,7 +400,7 @@ typedef struct TextDInfo {
 				 * to so far... */
     int metricPixelHeight;	/* ...and this is for the height calculation
 				 * so far...*/
-    int metricEpoch;		/* ...and this for the epoch of the partial
+    TkSizeT metricEpoch;		/* ...and this for the epoch of the partial
 				 * calculation so it can be cancelled if
 				 * things change once more. This field will be
 				 * -1 if there is no long-line calculation in
@@ -1052,8 +1052,7 @@ FreeStyle(
     register TextStyle *stylePtr)
 				/* Information about style to free. */
 {
-    stylePtr->refCount--;
-    if (stylePtr->refCount == 0) {
+    if (stylePtr->refCount-- <= 1) {
 	if (stylePtr->bgGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->bgGC);
 	}
@@ -3044,7 +3043,7 @@ AsyncUpdateLineMetrics(
      * and we've reached the last line, then we're done.
      */
 
-    if (dInfoPtr->metricEpoch == -1
+    if (dInfoPtr->metricEpoch == TCL_AUTO_LENGTH
 	    && lineNum == dInfoPtr->lastMetricUpdateLine) {
 	/*
 	 * We have looped over all lines, so we're done. We must release our
@@ -3194,7 +3193,7 @@ TkTextUpdateLineMetrics(
 	     * then we can't be done.
 	     */
 
-	    if (textPtr->dInfoPtr->metricEpoch == -1 && lineNum == endLine) {
+	    if (textPtr->dInfoPtr->metricEpoch == TCL_AUTO_LENGTH && lineNum == endLine) {
 		/*
 		 * We have looped over all lines, so we're done.
 		 */
@@ -6258,7 +6257,7 @@ TkTextPendingsync(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
     return (
-        ((dInfoPtr->metricEpoch == -1) &&
+        ((dInfoPtr->metricEpoch == TCL_AUTO_LENGTH) &&
          (dInfoPtr->lastMetricUpdateLine == dInfoPtr->currentMetricUpdateLine)) ?
         0 : 1);
 }
