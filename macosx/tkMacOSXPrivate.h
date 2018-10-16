@@ -332,6 +332,13 @@ VISIBILITY_HIDDEN
 - (void) generateExposeEvents: (HIShapeRef) shape;
 - (void) viewDidEndLiveResize;
 - (BOOL) isOpaque;
+/* Prototypes for layer-backed drawing.*/
+#if 0
+- (BOOL) wantsLayer;
+- (BOOL) wantsUpdateLayer;
+- (id) layerContentsRedrawPolicy;
+- (BOOL) canDrawSubviewsIntoLayer;
+#endif
 - (BOOL) wantsDefaultClipping;
 - (BOOL) acceptsFirstResponder;
 - (void) keyDown: (NSEvent *) theEvent;
