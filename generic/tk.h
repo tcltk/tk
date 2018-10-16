@@ -190,13 +190,14 @@ typedef struct Tk_OptionSpec {
     const char *defValue;	/* Default value for option if not specified
 				 * in command line, the option database, or
 				 * the system. */
-    int objOffset;		/* Where in record to store a Tcl_Obj * that
+#if TCL_MAJOR_VERSION > 8
+    size_t objOffset;		/* Where in record to store a Tcl_Obj * that
 				 * holds the value of this option, specified
 				 * as an offset in bytes from the start of the
 				 * record. Use the Tk_Offset macro to generate
 				 * values for this. -1 means don't store the
 				 * Tcl_Obj in the record. */
-    int internalOffset;		/* Where in record to store the internal
+    size_t internalOffset;		/* Where in record to store the internal
 				 * representation of the value of this option,
 				 * such as an int or XColor *. This field is
 				 * specified as an offset in bytes from the
@@ -204,6 +205,10 @@ typedef struct Tk_OptionSpec {
 				 * macro to generate values for it. -1 means
 				 * don't store the internal representation in
 				 * the record. */
+#else
+    int objOffset;
+    int internalOffset;
+#endif
     int flags;			/* Any combination of the values defined
 				 * below. */
     const void *clientData;	/* An alternate place to put option-specific
@@ -290,7 +295,7 @@ typedef struct Tk_SavedOption {
     double internalForm;	/* The old value of the option, in some
 				 * internal representation such as an int or
 				 * (XColor *). Valid only if the field
-				 * optionPtr->specPtr->objOffset is < 0. The
+				 * optionPtr->specPtr->objOffset is -1. The
 				 * space must be large enough to accommodate a
 				 * double, a long, or a pointer; right now it
 				 * looks like a double (i.e., 8 bytes) is big
@@ -310,7 +315,11 @@ typedef struct Tk_SavedOptions {
 				 * configuration options. */
     Tk_Window tkwin;		/* Window associated with recordPtr; needed to
 				 * restore certain options. */
-    int numItems;		/* The number of valid items in items field. */
+#if TCL_MAJOR_VERSION > 8
+    size_t numItems;		/* The number of valid items in items field. */
+#else
+    int numItems;
+#endif
     Tk_SavedOption items[TK_NUM_SAVED_OPTIONS];
 				/* Items used to hold old values. */
     struct Tk_SavedOptions *nextPtr;
@@ -368,9 +377,13 @@ typedef struct Tk_ConfigSpec {
     Tk_Uid dbClass;		/* Class for option in database. */
     Tk_Uid defValue;		/* Default value for option if not specified
 				 * in command line or database. */
-    int offset;			/* Where in widget record to store value; use
+#if TCL_MAJOR_VERSION > 8
+    size_t offset;			/* Where in widget record to store value; use
 				 * Tk_Offset macro to generate values for
 				 * this. */
+#else
+    int offset;
+#endif
     int specFlags;		/* Any combination of the values defined
 				 * below; other bits are used internally by
 				 * tkConfig.c. */
@@ -1051,8 +1064,12 @@ typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 typedef struct Tk_ItemType {
     CONST86 char *name;		/* The name of this type of item, such as
 				 * "line". */
-    int itemSize;		/* Total amount of space needed for item's
+#if TCL_MAJOR_VERSION > 8
+    size_t itemSize;		/* Total amount of space needed for item's
 				 * record. */
+#else
+    int itemSize;
+#endif
     Tk_ItemCreateProc *createProc;
 				/* Procedure to create a new item of this
 				 * type. */
@@ -1177,7 +1194,7 @@ typedef struct Tk_TSOffset {
 } Tk_TSOffset;
 
 /*
- * Bit fields in Tk_Offset->flags:
+ * Bit fields in Tk_TSOffset->flags:
  */
 
 #define TK_OFFSET_INDEX		1

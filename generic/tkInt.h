@@ -83,6 +83,10 @@
 #   endif
 #endif
 
+#ifndef TCL_AUTO_LENGTH
+#   define TCL_AUTO_LENGTH (-1)
+#endif
+
 /*
  * Standard integer support (C99).
  */
