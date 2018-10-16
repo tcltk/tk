@@ -5991,7 +5991,7 @@ test text-22.239 {TextSearchCmd, exact backwards search for the empty string} -b
 } -cleanup {
     destroy .t
     unset -nocomplain res C
-} -result {2.5 0}
+} -result {2.4 0}
 test text-22.240 {TextSearchCmd, exact backwards search all empty strings} -body {
     text .t
     set res [.t search -count C -backwards -all "" 1.0]
@@ -6003,12 +6003,12 @@ test text-22.240 {TextSearchCmd, exact backwards search all empty strings} -body
 test text-22.241 {TextSearchCmd, exact backwards search all empty strings} -body {
     text .t
     .t insert end "Searching for the\nempty string!"
-    set res [.t search -count C -backwards -all "" 2.5 2.8]
+    set res [.t search -count C -backwards -all "" 2.5 2.0]
     lappend res $C
 } -cleanup {
     destroy .t
     unset -nocomplain res C
-} -result {2.5 2.6 2.7 {0 0 0}}
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
 test text-22.242 {TextSearchCmd, exact backwards search all empty strings, with overlap} -body {
     text .t
     set res [.t search -count C -backwards -all -overlap "" 1.0]
@@ -6020,12 +6020,12 @@ test text-22.242 {TextSearchCmd, exact backwards search all empty strings, with 
 test text-22.243 {TextSearchCmd, exact backwards search all empty strings, with overlap} -body {
     text .t
     .t insert end "Searching for the\nempty string!"
-    set res [.t search -count C -backwards -all -overlap "" 2.5 2.8]
+    set res [.t search -count C -backwards -all -overlap "" 2.5 2.0]
     lappend res $C
 } -cleanup {
     destroy .t
     unset -nocomplain res C
-} -result {2.5 2.6 2.7 {0 0 0}}
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
 test text-22.244 {TextSearchCmd, regexp backwards search for the empty string} -body {
     text .t
     set res [.t search -count C -backwards -regexp "" 1.0]
@@ -6085,7 +6085,7 @@ test text-22.250 {TextSearchCmd, backwards search all matching at start of line}
     lappend res [.t search -backwards -all a end]  ; # used to hang
 } -cleanup {
     destroy .t
-} -result {1.1 1.0}
+} -result {1.1 1.0 1.0}
 
 test text-23.1 {TkTextGetTabs procedure} -setup {
     text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
