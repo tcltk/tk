@@ -1065,11 +1065,19 @@ typedef enum {
 struct TkRangeList;
 struct TkText;
 
+#if TCL_MAJOR_VERSION > 8
+#define TkSizeT size_t
+#else
+#define TkSizeT int
+#endif
+
 typedef struct TkSharedText {
-    unsigned refCount;		/* Reference count this shared object. */
-    TkTextBTree tree;		/* B-tree representation of text and tags for widget. */
-    Tcl_HashTable tagTable;	/* Hash table that maps from tag names to pointers to TkTextTag
-    				 * structures. The "sel" tag does not feature in this table, since
+    TkSizeT refCount;		/* Reference count this shared object. */
+    TkTextBTree tree;		/* B-tree representation of text and tags for
+				 * widget. */
+    Tcl_HashTable tagTable;	/* Hash table that maps from tag names to
+				 * pointers to TkTextTag structures. The "sel"
+				 * tag does not feature in this table, since
 				 * there's one of those for each text peer. */
     unsigned numEnabledTags;	/* Number of tags currently enabled; needed to keep track of
     				 * priorities. */
@@ -1802,8 +1810,8 @@ MODULE_SCOPE int	TkBTreeLoad(TkText *textPtr, Tcl_Obj *content, bool validOption
 MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkSharedText *sharedTextPtr,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
 			    int flags, TkTextUndoInfo *undoInfo);
-inline unsigned		TkBTreeEpoch(TkTextBTree tree);
-inline unsigned		TkBTreeIncrEpoch(TkTextBTree tree);
+inline TkSizeT		TkBTreeEpoch(TkTextBTree tree);
+inline TkSizeT		TkBTreeIncrEpoch(TkTextBTree tree);
 inline struct Node	* TkBTreeGetRoot(TkTextBTree tree);
 MODULE_SCOPE TkTextLine * TkBTreeFindLine(TkTextBTree tree, const TkText *textPtr, unsigned line);
 MODULE_SCOPE TkTextLine * TkBTreeFindPixelLine(TkTextBTree tree,
@@ -2103,7 +2111,7 @@ MODULE_SCOPE int	TkTextIndexPrint(const TkSharedText *sharedTextPtr, const TkTex
 MODULE_SCOPE void	TkTextIndexSetByteIndex(TkTextIndex *indexPtr, int byteIndex);
 MODULE_SCOPE void	TkTextIndexSetByteIndex2(TkTextIndex *indexPtr,
 			    TkTextLine *linePtr, int byteIndex);
-inline void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, unsigned epoch);
+inline void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, TkSizeT epoch);
 MODULE_SCOPE void	TkTextIndexSetSegment(TkTextIndex *indexPtr, TkTextSegment *segPtr);
 inline void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
 MODULE_SCOPE bool	TkTextIndexIsEmpty(const TkTextIndex *indexPtr);

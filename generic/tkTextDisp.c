@@ -12026,7 +12026,7 @@ TkTextPixelIndex(
     DLine *currDLinePtr;
     TkTextDispChunk *currChunkPtr;
     bool nearby = false;
-    unsigned epoch;
+    TkSizeT epoch;
 
     /*
      * Make sure that all of the layout information about what's displayed
