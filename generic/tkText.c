@@ -6088,8 +6088,8 @@ SearchCore(
 			    alreadySearchOffset -= matchLength;
 			}
 		    } else {
-                        firstOffset = (matchLength == 0) ? p - startOfLine + 1
-                                                         : p - startOfLine + matchLength;
+                        firstOffset = matchLength ? p - startOfLine + matchLength
+                                                  : p - startOfLine + 1;
 			if (firstOffset >= lastOffset) {
 			    /*
 			     * Now, we have to be careful not to find
