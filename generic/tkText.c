@@ -3332,7 +3332,7 @@ ClearText(
     TkTextIndex startIndex;
     TkText *tPtr;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
-    unsigned oldEpoch = TkBTreeEpoch(sharedTextPtr->tree);
+    TkSizeT oldEpoch = TkBTreeEpoch(sharedTextPtr->tree);
     bool steadyMarks = textPtr->sharedTextPtr->steadyMarks;
     bool debug = tkBTreeDebug;
 
@@ -3870,7 +3870,7 @@ TkConfigureText(
 {
     Tk_SavedOptions savedOptions;
     TkTextIndex start, end, current;
-    unsigned currentEpoch;
+    TkSizeT currentEpoch;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextBTree tree = sharedTextPtr->tree;
     bool oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
@@ -8119,7 +8119,7 @@ DumpSegment(
 	Tcl_GuardedDecrRefCount(tuple);
 	return true;
     } else {
-	unsigned oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
+	TkSizeT oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
 	Tcl_DString buf;
 	int code;
 
@@ -12067,8 +12067,8 @@ TkpTextDump(
 extern TkSharedText *	TkBTreeGetShared(TkTextBTree tree);
 extern int		TkBTreeGetNumberOfDisplayLines(const TkTextPixelInfo *pixelInfo);
 extern TkTextPixelInfo *TkBTreeLinePixelInfo(const TkText *textPtr, TkTextLine *linePtr);
-extern unsigned		TkBTreeEpoch(TkTextBTree tree);
-extern unsigned		TkBTreeIncrEpoch(TkTextBTree tree);
+extern TkSizeT		TkBTreeEpoch(TkTextBTree tree);
+extern TkSizeT		TkBTreeIncrEpoch(TkTextBTree tree);
 extern struct Node	*TkBTreeGetRoot(TkTextBTree tree);
 extern TkTextLine *	TkBTreePrevLogicalLine(const TkSharedText *sharedTextPtr,
 			    const TkText *textPtr, TkTextLine *linePtr);
@@ -12093,7 +12093,7 @@ extern bool		TkTextIsNormalMark(const TkTextSegment *segPtr);
 extern bool		TkTextIsStableMark(const TkTextSegment *segPtr);
 extern const TkTextDispChunk *TkTextGetFirstChunkOfNextDispLine(const TkTextDispChunk *chunkPtr);
 extern const TkTextDispChunk *TkTextGetLastChunkOfPrevDispLine(const TkTextDispChunk *chunkPtr);
-extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, unsigned epoch);
+extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, TkSizeT epoch);
 extern void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
 extern void		TkTextIndexSetToLastChar2(TkTextIndex *indexPtr, TkTextLine *linePtr);
 extern void		TkTextIndexInvalidate(TkTextIndex *indexPtr);

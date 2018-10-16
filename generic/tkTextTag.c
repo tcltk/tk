@@ -417,7 +417,7 @@ TkTextTagCmd(
 	break;
     case TAG_CLEAR: {
 	bool discardSelection;
-	unsigned epoch, countTags;
+	TkSizeT epoch, countTags;
 	TkTextTag **arrayPtr;
 	bool anyChanges;
 	int arg;

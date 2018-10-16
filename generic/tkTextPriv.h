@@ -406,7 +406,7 @@ TkBTreeGetShared(
  */
 
 inline
-unsigned
+TkSizeT
 TkBTreeIncrEpoch(
     TkTextBTree tree)		/* Tree to increment epoch. */
 {
@@ -431,7 +431,7 @@ TkBTreeIncrEpoch(
  */
 
 inline
-unsigned
+TkSizeT
 TkBTreeEpoch(
     TkTextBTree tree)		/* Tree to get epoch for. */
 {
@@ -986,7 +986,7 @@ inline
 void
 TkTextIndexSetEpoch(
     TkTextIndex *indexPtr,
-    unsigned epoch)
+    TkSizeT epoch)
 {
     assert(indexPtr->priv.linePtr);
     assert(indexPtr->priv.linePtr->parentPtr); /* expired? */
