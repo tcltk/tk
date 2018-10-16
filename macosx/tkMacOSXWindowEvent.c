@@ -884,6 +884,7 @@ ConfigureRestrictProc(
        ![w isOpaque]) ? NO : YES);
 }
 
+/* Prototypes for layer-backed drawing.*/
 #if 0
 - (BOOL) wantsLayer
 {
