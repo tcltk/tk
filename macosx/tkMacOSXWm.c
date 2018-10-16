@@ -5646,7 +5646,6 @@ TkMacOSXMakeRealWindowExist(
     }
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
-    [window setColorSpace:[NSColorSpace deviceRGBColorSpace]];
     [window setContentView:contentView];
     [contentView release];
     [window setDelegate:NSApp];
@@ -5659,7 +5658,7 @@ TkMacOSXMakeRealWindowExist(
     if ((styleMask & (NSTexturedBackgroundWindowMask|NSHUDWindowMask)) &&
 	    !(styleMask & NSDocModalWindowMask)) {
         /*
-	 * Workaround for [Bug 2824538]: Texured windows are draggable
+	 * Workaround for [Bug 2824538]: Textured windows are draggable
 	 *                               from opaque content.
 	 */
 	[window setMovableByWindowBackground:NO];

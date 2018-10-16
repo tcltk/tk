@@ -813,17 +813,7 @@ ConfigureRestrictProc(
 	r.origin.y = height - (r.origin.y + r.size.height);
 	HIShapeUnionWithRect(drawShape, &r);
     }
-    if (CFRunLoopGetMain() == CFRunLoopGetCurrent()) {
-	[self generateExposeEvents:(HIShapeRef)drawShape];
-    } else {
-	[self performSelectorOnMainThread:@selector(generateExposeEvents:)
-		withObject:(id)drawShape waitUntilDone:NO
-		modes:[NSArray arrayWithObjects:NSRunLoopCommonModes,
-
-			NSEventTrackingRunLoopMode, NSModalPanelRunLoopMode,
-			nil]];
-    }
-
+    [self generateExposeEvents:(HIShapeRef)drawShape];
     CFRelease(drawShape);
 }
 
@@ -845,11 +835,6 @@ ConfigureRestrictProc(
 	 */
 	[NSApp _lockAutoreleasePool];
 
-	/*
-	 * Try to prevent flickers and flashes.
-	 */
-	NSDisableScreenUpdates();
-
 	/* Disable Tk drawing until the window has been completely configured.*/
 	TkMacOSXSetDrawingEnabled(winPtr, 0);
 
@@ -857,7 +842,6 @@ ConfigureRestrictProc(
 	TkGenWMConfigureEvent(tkwin, Tk_X(tkwin), Tk_Y(tkwin), width, height,
 			      TK_SIZE_CHANGED | TK_MACOSX_HANDLE_EVENT_IMMEDIATELY);
     	oldProc = Tk_RestrictEvents(ConfigureRestrictProc, NULL, &oldArg);
-	while (Tk_DoOneEvent(TK_X_EVENTS|TK_DONT_WAIT)) {}
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/* Now that Tk has configured all subwindows we can create the clip regions. */
@@ -869,16 +853,14 @@ ConfigureRestrictProc(
 	HIRect bounds = NSRectToCGRect([self bounds]);
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
 	[self generateExposeEvents: shape];
-	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
-	[w displayIfNeeded];
-	NSEnableScreenUpdates();
+	while (Tk_DoOneEvent(TK_X_EVENTS|TK_DONT_WAIT)) {}
 	[NSApp _unlockAutoreleasePool];
     }
 }
 
 /*
  * As insurance against bugs that might cause layout glitches during a live
- * resize, we redraw the window one more time at the end of the resize
+ * resize, we mark the window as needing display at the end of the resize
  * operation.
  */
 
@@ -887,13 +869,13 @@ ConfigureRestrictProc(
     HIRect bounds = NSRectToCGRect([self bounds]);
     HIShapeRef shape = HIShapeCreateWithRect(&bounds);
     [super viewDidEndLiveResize];
-    [self generateExposeEvents: shape];
+    [self displayIfNeeded];
 }
 
-/* Core method of this class: generates expose events for redrawing.  If the
- * Tcl_ServiceMode is set to TCL_SERVICE_ALL then the expose events will be
- * immediately removed from the Tcl event loop and processed.  Typically, they
- * should be queued, however.
+/* Core method of this class: generates expose events for redrawing.  The
+ * expose events are immediately removed from the Tcl event loop and processed.
+ * This causes drawing procedures to be scheduled as idle events.  Then all
+ * pending idle events are processed so the drawing will actually take place.
  */
 - (void) generateExposeEvents: (HIShapeRef) shape
 {
@@ -912,13 +894,26 @@ ConfigureRestrictProc(
     serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     updatesNeeded = GenerateUpdates(shape, &updateBounds, winPtr);
 
-    /* Process the Expose events if the service mode is TCL_SERVICE_ALL */
-    if (updatesNeeded && Tcl_GetServiceMode() == TCL_SERVICE_ALL) {
+    if (updatesNeeded) {
+	/* Process all of the Expose events.*/
 	ClientData oldArg;
     	Tk_RestrictProc *oldProc = Tk_RestrictEvents(ExposeRestrictProc,
 						     UINT2PTR(serial), &oldArg);
-    	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {}
+    	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {};
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+	
+	/* Starting with OSX 10.14, which uses Core Animation to draw windows,
+	 * all drawing must be done within the drawRect method.  (The CGContext
+	 * which draws to the backing CALayer is created by the NSView before
+	 * calling drawRect, and destroyed when drawRect returns.  Drawing done
+	 * with the current CGContext outside of the drawRect method has no
+	 * effect.)
+	 *
+	 * Fortunately, Tk schedules all drawing to be done while Tcl is idle.
+	 * So we can do the drawing by processing all of the idle events that
+	 * were created when the expose events were processed.
+	 */
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
 }
 
