@@ -803,13 +803,10 @@ ConfigureRestrictProc(
 
     TkWindow *win = TkMacOSXGetTkWindow([self window]);
     MacDrawable *macwin = (MacDrawable *) win;
-    CGContextRef context, cg_context =NULL;
-    context =  [[NSGraphicsContext currentContext] graphicsPort];
-    cg_context = TkMacOSXGetCGContextForDrawable(macwin);
-    if (context != cg_context) { NSLog (@"contexts not the same"); return;}
+    TkMacOSXDrawingContext dc;
+    CGContextRef context = dc.context;
 
     if (context) {
-	NSLog(@"context");
 	CGContextSaveGState(context);
 	[self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
 
