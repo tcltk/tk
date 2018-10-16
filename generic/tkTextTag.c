@@ -406,7 +406,7 @@ TkTextTagCmd(
 	    if (!(tagPtr = FindTag(interp, textPtr, objv[3]))) {
 		return TCL_ERROR;
 	    }
-	    objPtr = Tk_GetOptionValue(interp, (char *) tagPtr,
+	    objPtr = Tk_GetOptionValue(interp, tagPtr,
 		    tagPtr->optionTable, objv[4], textPtr->tkwin);
 	    if (!objPtr) {
 		return TCL_ERROR;

@@ -1209,7 +1209,7 @@ CreateWidget(
 	    TkTextBindProc, textPtr);
     Tk_CreateSelHandler(textPtr->tkwin, XA_PRIMARY, XA_STRING, TextFetchSelection, textPtr, XA_STRING);
 
-    if (Tk_InitOptions(interp, (char *) textPtr, optionTable, textPtr->tkwin) != TCL_OK) {
+    if (Tk_InitOptions(interp, textPtr, optionTable, textPtr->tkwin) != TCL_OK) {
 	Tk_DestroyWindow(textPtr->tkwin);
 	return TCL_ERROR;
     }
@@ -1680,7 +1680,7 @@ TextWidgetObjCmd(
 
 #else /* if !SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
-	    objPtr = Tk_GetOptionValue(interp, (char *) textPtr,
+	    objPtr = Tk_GetOptionValue(interp, textPtr,
 		    textPtr->optionTable, objv[2], textPtr->tkwin);
 
 #endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
@@ -1726,7 +1726,7 @@ TextWidgetObjCmd(
     }
     case TEXT_CONFIGURE:
 	if (objc <= 3) {
-	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp, (char *) textPtr,
+	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp, textPtr,
 		    textPtr->optionTable, objc == 3 ? objv[2] : NULL, textPtr->tkwin);
 
 	    if (!objPtr) {

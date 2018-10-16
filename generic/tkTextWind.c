@@ -506,7 +506,7 @@ TkTextWindowCmd(
 
 	    objPtr = Tk_GetOptionInfo(
 		    interp,
-		    (char *) &ewPtr->body.ew,
+		    &ewPtr->body.ew,
 		    ewPtr->body.ew.optionTable,
 		    objc == 5 ? objv[4] : NULL,
 		    textPtr->tkwin);
@@ -809,7 +809,7 @@ EmbWinConfigure(
     ewPtr->body.ew.tkwin = client ? client->tkwin : NULL;
     oldWindow = ewPtr->body.ew.tkwin;
 
-    if (Tk_SetOptions(textPtr->interp, (char *) &ewPtr->body.ew,
+    if (Tk_SetOptions(textPtr->interp, &ewPtr->body.ew,
 	    ewPtr->body.ew.optionTable, objc, objv, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;
     }

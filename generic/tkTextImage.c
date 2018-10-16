@@ -440,7 +440,7 @@ TkTextImageCmd(
 	    int objn = 0, i;
 
 	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp,
-		    (char *) &eiPtr->body.ei, eiPtr->body.ei.optionTable,
+		    &eiPtr->body.ei, eiPtr->body.ei.optionTable,
 		    objc == 5 ? objv[4] : NULL, textPtr->tkwin);
 	    if (!objPtr) {
 		return TCL_ERROR;
@@ -709,7 +709,7 @@ EmbImageConfigure(
 	*maskPtr = 0;
     }
 
-    if (Tk_SetOptions(textPtr->interp, (char *) img, img->optionTable, objc, objv, textPtr->tkwin,
+    if (Tk_SetOptions(textPtr->interp, img, img->optionTable, objc, objv, textPtr->tkwin,
 		NULL, maskPtr) != TCL_OK) {
 	return TCL_ERROR;
     }
