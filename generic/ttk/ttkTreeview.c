@@ -1129,7 +1129,7 @@ static int ConfigureItem(
     Ttk_ImageSpec *newImageSpec = NULL;
     Ttk_TagSet newTagSet = NULL;
 
-    if (Tk_SetOptions(interp, (ClientData)item, tv->tree.itemOptionTable,
+    if (Tk_SetOptions(interp, item, tv->tree.itemOptionTable,
 		objc, objv, tv->core.tkwin, &savedOptions, &mask)
 		!= TCL_OK)
     {
@@ -1209,7 +1209,7 @@ static int ConfigureColumn(
     Tk_SavedOptions savedOptions;
     int mask;
 
-    if (Tk_SetOptions(interp, (ClientData)column,
+    if (Tk_SetOptions(interp, column,
 	    tv->tree.columnOptionTable, objc, objv, tv->core.tkwin,
 	    &savedOptions,&mask) != TCL_OK)
     {
@@ -1255,7 +1255,7 @@ static int ConfigureHeading(
     Tk_SavedOptions savedOptions;
     int mask;
 
-    if (Tk_SetOptions(interp, (ClientData)column,
+    if (Tk_SetOptions(interp, column,
 	    tv->tree.headingOptionTable, objc, objv, tv->core.tkwin,
 	    &savedOptions,&mask) != TCL_OK)
     {

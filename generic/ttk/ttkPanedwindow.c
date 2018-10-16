@@ -147,7 +147,7 @@ static int ConfigurePane(
     Tk_SavedOptions savedOptions;
     int mask = 0;
 
-    if (Tk_SetOptions(interp, (void*)pane, pw->paned.paneOptionTable,
+    if (Tk_SetOptions(interp, pane, pw->paned.paneOptionTable,
 	    objc, objv, slaveWindow, &savedOptions, &mask) != TCL_OK)
     {
 	return TCL_ERROR;

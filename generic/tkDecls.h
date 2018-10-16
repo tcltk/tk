@@ -632,7 +632,7 @@ EXTERN void		Tk_FreeBitmapFromObj(Tk_Window tkwin,
 /* 194 */
 EXTERN void		Tk_FreeColorFromObj(Tk_Window tkwin, Tcl_Obj *objPtr);
 /* 195 */
-EXTERN void		Tk_FreeConfigOptions(char *recordPtr,
+EXTERN void		Tk_FreeConfigOptions(void *recordPtr,
 				Tk_OptionTable optionToken, Tk_Window tkwin);
 /* 196 */
 EXTERN void		Tk_FreeSavedOptions(Tk_SavedOptions *savePtr);
@@ -654,12 +654,12 @@ EXTERN XColor *		Tk_GetColorFromObj(Tk_Window tkwin, Tcl_Obj *objPtr);
 /* 203 */
 EXTERN Tk_Cursor	Tk_GetCursorFromObj(Tk_Window tkwin, Tcl_Obj *objPtr);
 /* 204 */
-EXTERN Tcl_Obj *	Tk_GetOptionInfo(Tcl_Interp *interp, char *recordPtr,
+EXTERN Tcl_Obj *	Tk_GetOptionInfo(Tcl_Interp *interp, void *recordPtr,
 				Tk_OptionTable optionTable, Tcl_Obj *namePtr,
 				Tk_Window tkwin);
 /* 205 */
 EXTERN Tcl_Obj *	Tk_GetOptionValue(Tcl_Interp *interp,
-				char *recordPtr, Tk_OptionTable optionTable,
+				void *recordPtr, Tk_OptionTable optionTable,
 				Tcl_Obj *namePtr, Tk_Window tkwin);
 /* 206 */
 EXTERN int		Tk_GetJustifyFromObj(Tcl_Interp *interp,
@@ -679,7 +679,7 @@ EXTERN int		Tk_GetScrollInfoObj(Tcl_Interp *interp, int objc,
 				Tcl_Obj *const objv[], double *dblPtr,
 				int *intPtr);
 /* 211 */
-EXTERN int		Tk_InitOptions(Tcl_Interp *interp, char *recordPtr,
+EXTERN int		Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
 				Tk_OptionTable optionToken, Tk_Window tkwin);
 /* 212 */
 EXTERN void		Tk_MainEx(int argc, char **argv,
@@ -688,7 +688,7 @@ EXTERN void		Tk_MainEx(int argc, char **argv,
 /* 213 */
 EXTERN void		Tk_RestoreSavedOptions(Tk_SavedOptions *savePtr);
 /* 214 */
-EXTERN int		Tk_SetOptions(Tcl_Interp *interp, char *recordPtr,
+EXTERN int		Tk_SetOptions(Tcl_Interp *interp, void *recordPtr,
 				Tk_OptionTable optionTable, int objc,
 				Tcl_Obj *const objv[], Tk_Window tkwin,
 				Tk_SavedOptions *savePtr, int *maskPtr);
@@ -832,22 +832,22 @@ EXTERN Tk_StyledElement	 Tk_GetStyledElement(Tk_Style style, int elementId,
 				Tk_OptionTable optionTable);
 /* 261 */
 EXTERN void		Tk_GetElementSize(Tk_Style style,
-				Tk_StyledElement element, char *recordPtr,
+				Tk_StyledElement element, void *recordPtr,
 				Tk_Window tkwin, int width, int height,
 				int inner, int *widthPtr, int *heightPtr);
 /* 262 */
 EXTERN void		Tk_GetElementBox(Tk_Style style,
-				Tk_StyledElement element, char *recordPtr,
+				Tk_StyledElement element, void *recordPtr,
 				Tk_Window tkwin, int x, int y, int width,
 				int height, int inner, int *xPtr, int *yPtr,
 				int *widthPtr, int *heightPtr);
 /* 263 */
 EXTERN int		Tk_GetElementBorderWidth(Tk_Style style,
-				Tk_StyledElement element, char *recordPtr,
+				Tk_StyledElement element, void *recordPtr,
 				Tk_Window tkwin);
 /* 264 */
 EXTERN void		Tk_DrawElement(Tk_Style style,
-				Tk_StyledElement element, char *recordPtr,
+				Tk_StyledElement element, void *recordPtr,
 				Tk_Window tkwin, Drawable d, int x, int y,
 				int width, int height, int state);
 /* 265 */
@@ -1085,7 +1085,7 @@ typedef struct TkStubs {
     void (*tk_Free3DBorderFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 192 */
     void (*tk_FreeBitmapFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 193 */
     void (*tk_FreeColorFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 194 */
-    void (*tk_FreeConfigOptions) (char *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 195 */
+    void (*tk_FreeConfigOptions) (void *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 195 */
     void (*tk_FreeSavedOptions) (Tk_SavedOptions *savePtr); /* 196 */
     void (*tk_FreeCursorFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 197 */
     void (*tk_FreeFontFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 198 */
@@ -1094,17 +1094,17 @@ typedef struct TkStubs {
     Pixmap (*tk_GetBitmapFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 201 */
     XColor * (*tk_GetColorFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 202 */
     Tk_Cursor (*tk_GetCursorFromObj) (Tk_Window tkwin, Tcl_Obj *objPtr); /* 203 */
-    Tcl_Obj * (*tk_GetOptionInfo) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionTable, Tcl_Obj *namePtr, Tk_Window tkwin); /* 204 */
-    Tcl_Obj * (*tk_GetOptionValue) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionTable, Tcl_Obj *namePtr, Tk_Window tkwin); /* 205 */
+    Tcl_Obj * (*tk_GetOptionInfo) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, Tcl_Obj *namePtr, Tk_Window tkwin); /* 204 */
+    Tcl_Obj * (*tk_GetOptionValue) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, Tcl_Obj *namePtr, Tk_Window tkwin); /* 205 */
     int (*tk_GetJustifyFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Tk_Justify *justifyPtr); /* 206 */
     int (*tk_GetMMFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 207 */
     int (*tk_GetPixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, int *intPtr); /* 208 */
     int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr); /* 209 */
     int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
-    int (*tk_InitOptions) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
+    int (*tk_InitOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
     void (*tk_MainEx) (int argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
     void (*tk_RestoreSavedOptions) (Tk_SavedOptions *savePtr); /* 213 */
-    int (*tk_SetOptions) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
+    int (*tk_SetOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
     int (*tk_CreateConsoleWindow) (Tcl_Interp *interp); /* 216 */
     void (*tk_CreateSmoothMethod) (Tcl_Interp *interp, const Tk_SmoothMethod *method); /* 217 */
@@ -1151,10 +1151,10 @@ typedef struct TkStubs {
     Tk_Style (*tk_GetStyleFromObj) (Tcl_Obj *objPtr); /* 258 */
     void (*tk_FreeStyleFromObj) (Tcl_Obj *objPtr); /* 259 */
     Tk_StyledElement (*tk_GetStyledElement) (Tk_Style style, int elementId, Tk_OptionTable optionTable); /* 260 */
-    void (*tk_GetElementSize) (Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin, int width, int height, int inner, int *widthPtr, int *heightPtr); /* 261 */
-    void (*tk_GetElementBox) (Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 262 */
-    int (*tk_GetElementBorderWidth) (Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin); /* 263 */
-    void (*tk_DrawElement) (Tk_Style style, Tk_StyledElement element, char *recordPtr, Tk_Window tkwin, Drawable d, int x, int y, int width, int height, int state); /* 264 */
+    void (*tk_GetElementSize) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin, int width, int height, int inner, int *widthPtr, int *heightPtr); /* 261 */
+    void (*tk_GetElementBox) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 262 */
+    int (*tk_GetElementBorderWidth) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin); /* 263 */
+    void (*tk_DrawElement) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin, Drawable d, int x, int y, int width, int height, int state); /* 264 */
     int (*tk_PhotoExpand) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 265 */
     int (*tk_PhotoPutBlock) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int compRule); /* 266 */
     int (*tk_PhotoPutZoomedBlock) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 267 */

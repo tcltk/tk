@@ -311,7 +311,7 @@ typedef struct Tk_SavedOption {
 #endif
 
 typedef struct Tk_SavedOptions {
-    char *recordPtr;		/* The data structure in which to restore
+    void *recordPtr;		/* The data structure in which to restore
 				 * configuration options. */
     Tk_Window tkwin;		/* Window associated with recordPtr; needed to
 				 * restore certain options. */
