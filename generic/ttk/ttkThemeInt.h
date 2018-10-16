@@ -15,11 +15,11 @@ MODULE_SCOPE Ttk_ElementClass *Ttk_GetElement(Ttk_Theme, const char *name);
 MODULE_SCOPE const char *Ttk_ElementClassName(Ttk_ElementClass *);
 
 MODULE_SCOPE void Ttk_ElementSize(
-	Ttk_ElementClass *, Ttk_Style, char *recordPtr, Tk_OptionTable,
+	Ttk_ElementClass *, Ttk_Style, void *recordPtr, Tk_OptionTable,
 	Tk_Window tkwin, Ttk_State state,
 	int *widthPtr, int *heightPtr, Ttk_Padding*);
 MODULE_SCOPE void Ttk_DrawElement(
-	Ttk_ElementClass *, Ttk_Style, char *recordPtr, Tk_OptionTable,
+	Ttk_ElementClass *, Ttk_Style, void *recordPtr, Tk_OptionTable,
 	Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
 
 MODULE_SCOPE Tcl_Obj *Ttk_QueryStyle(
