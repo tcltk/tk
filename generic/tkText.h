@@ -532,8 +532,14 @@ typedef enum {
  * that are peers.
  */
 
+#if TCL_MAJOR_VERSION > 8
+#define TkSizeT size_t
+#else
+#define TkSizeT int
+#endif
+
 typedef struct TkSharedText {
-    int refCount;		/* Reference count this shared object. */
+    TkSizeT refCount;		/* Reference count this shared object. */
     TkTextBTree tree;		/* B-tree representation of text and tags for
 				 * widget. */
     Tcl_HashTable tagTable;	/* Hash table that maps from tag names to
@@ -562,7 +568,7 @@ typedef struct TkSharedText {
 				 * exist, so the table hasn't been created.
 				 * Each "object" used for this table is the
 				 * name of a tag. */
-    int stateEpoch;		/* This is incremented each time the B-tree's
+    TkSizeT stateEpoch;	/* This is incremented each time the B-tree's
 				 * contents change structurally, or when the
 				 * start/end limits change, and means that any
 				 * cached TkTextIndex objects are no longer
@@ -783,7 +789,7 @@ typedef struct TkText {
 				 * definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
-    int refCount;		/* Number of cached TkTextIndex objects
+    TkSizeT refCount;		/* Number of cached TkTextIndex objects
 				 * refering to us. */
     int insertCursorType;	/* 0 = standard insertion cursor, 1 = block
 				 * cursor. */
@@ -1009,7 +1015,7 @@ MODULE_SCOPE void	TkBTreeRemoveClient(TkTextBTree tree,
 MODULE_SCOPE void	TkBTreeDestroy(TkTextBTree tree);
 MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkTextBTree tree,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr);
-MODULE_SCOPE int	TkBTreeEpoch(TkTextBTree tree);
+MODULE_SCOPE TkSizeT	TkBTreeEpoch(TkTextBTree tree);
 MODULE_SCOPE TkTextLine *TkBTreeFindLine(TkTextBTree tree,
 			    const TkText *textPtr, int line);
 MODULE_SCOPE TkTextLine *TkBTreeFindPixelLine(TkTextBTree tree,
