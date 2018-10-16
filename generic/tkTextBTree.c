@@ -105,7 +105,7 @@ typedef struct BTree {
     int clients;		/* Number of clients of this B-tree. */
     int pixelReferences;	/* Number of clients of this B-tree which care
 				 * about pixel heights. */
-    int stateEpoch;		/* Updated each time any aspect of the B-tree
+    TkSizeT stateEpoch;	 /* Updated each time any aspect of the B-tree
 				 * changes. */
     TkSharedText *sharedTextPtr;/* Used to find tagTable in consistency
 				 * checking code, and to access list of all
@@ -501,7 +501,7 @@ TkBTreeDestroy(
  *----------------------------------------------------------------------
  */
 
-int
+TkSizeT
 TkBTreeEpoch(
     TkTextBTree tree)		/* Tree to get epoch for. */
 {

@@ -597,7 +597,11 @@ typedef struct TkMainInfo {
     Tcl_HashTable nameTable;	/* Hash table mapping path names to TkWindow
 				 * structs for all windows related to this
 				 * main window. Managed by tkWindow.c. */
-    long deletionEpoch;		/* Incremented by window deletions. */
+#if TCL_MAJOR_VERSION > 8
+    size_t deletionEpoch;		/* Incremented by window deletions. */
+#else
+    long deletionEpoch;
+#endif
     Tk_BindingTable bindingTable;
 				/* Used in conjunction with "bind" command to
 				 * bind events to Tcl commands. */
