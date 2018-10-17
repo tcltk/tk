@@ -940,8 +940,6 @@ ConfigureRestrictProc(
  
 /* These two methods allow Tk to register a virtual event for when the apperance changes on 10.14. */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
-
 - (void) updateAppearanceEvent
 {
     NSString *osxMode = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
@@ -975,7 +973,6 @@ ConfigureRestrictProc(
     }
 }
 
-#endif
 
 /*
  * This is no-op on 10.7 and up because Apple has removed this widget,
