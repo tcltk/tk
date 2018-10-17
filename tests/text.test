@@ -6204,7 +6204,219 @@ test text-22.225 {TextSearchCmd, strict limits} -body {
 } -cleanup {
     destroy .t
 } -result {}
-
+test text-22.226 {TextSearchCmd, exact search for the empty string} -body {
+    text .t
+    set res [.t search -count C "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.227 {TextSearchCmd, exact search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 0}
+test text-22.228 {TextSearchCmd, exact search all empty strings} -body {
+    text .t
+    set res [.t search -count C -all "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.229 {TextSearchCmd, exact search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.230 {TextSearchCmd, exact search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -all -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.231 {TextSearchCmd, exact search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all -overlap "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.232 {TextSearchCmd, regexp search for the empty string} -body {
+    text .t
+    set res [.t search -count C -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.233 {TextSearchCmd, regexp search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -regexp "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 0}
+test text-22.234 {TextSearchCmd, regexp search all empty strings} -body {
+    text .t
+    set res [.t search -count C -all -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.235 {TextSearchCmd, regexp search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all -regexp "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.236 {TextSearchCmd, regexp search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -all -regexp -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.237 {TextSearchCmd, regexp search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all -regexp -overlap "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.238 {TextSearchCmd, exact backwards search for the empty string} -body {
+    text .t
+    set res [.t search -count C -backwards "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.239 {TextSearchCmd, exact backwards search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 0}
+test text-22.240 {TextSearchCmd, exact backwards search all empty strings} -body {
+    text .t
+    set res [.t search -count C -backwards -all "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.241 {TextSearchCmd, exact backwards search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.242 {TextSearchCmd, exact backwards search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -backwards -all -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.243 {TextSearchCmd, exact backwards search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all -overlap "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.244 {TextSearchCmd, regexp backwards search for the empty string} -body {
+    text .t
+    set res [.t search -count C -backwards -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.245 {TextSearchCmd, regexpbackwards search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -regexp "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 0}
+test text-22.246 {TextSearchCmd, regexp backwards search all empty strings} -body {
+    text .t
+    set res [.t search -count C -backwards -all -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.247 {TextSearchCmd, regexp backwards search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all -regexp "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.248 {TextSearchCmd, regexp backwards search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -backwards -all -regexp -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.249 {TextSearchCmd, regexp backwards search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all -regexp -overlap "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.250 {TextSearchCmd, backwards search all matching at start of line} -body {
+    text .t
+    .t insert end "abc"
+    set res [.t search -backwards -all b end]      ; # works
+    lappend res [.t search -backwards a end]       ; # works
+    lappend res [.t search -backwards -all a end]  ; # used to hang
+} -cleanup {
+    destroy .t
+} -result {1.1 1.0 1.0}
 
 test text-23.1 {TkTextGetTabs procedure} -setup {
     text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100

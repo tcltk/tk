@@ -399,8 +399,7 @@ NSStatusItem *exitFullScreen;
 - (void)toggleFullScreen:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    Tk_Window tkwin = (TkWindow*)winPtr;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
+    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
 
     if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
     	TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
@@ -412,8 +411,7 @@ NSStatusItem *exitFullScreen;
 -(void)restoreOldScreen:(id)sender {
 
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    Tk_Window tkwin = (TkWindow*)winPtr;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
+    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
 
     TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
     [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
@@ -5646,7 +5644,6 @@ TkMacOSXMakeRealWindowExist(
     }
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
-    [window setColorSpace:[NSColorSpace deviceRGBColorSpace]];
     [window setContentView:contentView];
     [contentView release];
     [window setDelegate:NSApp];
@@ -5659,7 +5656,7 @@ TkMacOSXMakeRealWindowExist(
     if ((styleMask & (NSTexturedBackgroundWindowMask|NSHUDWindowMask)) &&
 	    !(styleMask & NSDocModalWindowMask)) {
         /*
-	 * Workaround for [Bug 2824538]: Texured windows are draggable
+	 * Workaround for [Bug 2824538]: Textured windows are draggable
 	 *                               from opaque content.
 	 */
 	[window setMovableByWindowBackground:NO];

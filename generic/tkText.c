@@ -10615,7 +10615,7 @@ SearchCore(
 	    firstOffset = 0;
 	}
 
-	if (alreadySearchOffset != -1) {
+	if (alreadySearchOffset >= 0) {
 	    if (searchSpecPtr->backwards) {
 		if (alreadySearchOffset < lastOffset) {
 		    lastOffset = alreadySearchOffset;
@@ -10701,17 +10701,18 @@ SearchCore(
 			 * match.
 			 */
 
-			const char c = pattern[0];
+			const char c = matchLength ? pattern[0] : '\0';
 
 			p = startOfLine;
-			if (alreadySearchOffset != -1) {
+			if (alreadySearchOffset >= 0) {
 			    p += alreadySearchOffset;
 			    alreadySearchOffset = -1;
 			} else {
 			    p += lastOffset - 1;
 			}
 			while (p >= startOfLine + firstOffset) {
-			    if (p[0] == c && strncmp(p, pattern, matchLength) == 0) {
+			    if (matchLength == 0 || (p[0] == c && !strncmp(
+				     p, pattern, (size_t) matchLength))) {
 				goto backwardsMatch;
 			    }
 			    p -= 1;
@@ -10872,10 +10873,14 @@ SearchCore(
 			if (firstNewLine != -1) {
 			    break;
 			} else {
-			    alreadySearchOffset -= matchLength;
+			    alreadySearchOffset -= (matchLength ? matchLength : 1);
+                            if (alreadySearchOffset < 0) {
+                                break;
+                            }
 			}
 		    } else {
-			firstOffset = p - startOfLine + matchLength;
+                        firstOffset = matchLength ? p - startOfLine + matchLength
+                                                  : p - startOfLine + 1;
 			if (firstOffset >= lastOffset) {
 			    /*
 			     * Now, we have to be careful not to find

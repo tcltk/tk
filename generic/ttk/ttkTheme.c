@@ -984,7 +984,7 @@ int InitializeElementRecord(
     int i;
     for (i=0; i<nResources; ++i, ++elementOption) {
 	Tcl_Obj **dest = (Tcl_Obj **)
-	    (elementRecord + elementOption->offset);
+	    ((char *)elementRecord + elementOption->offset);
 	const char *optionName = elementOption->optionName;
 	Tcl_Obj *dynamicSetting = Ttk_StyleMap(style, optionName, state);
 	Tcl_Obj *widgetValue = 0;
