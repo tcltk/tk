@@ -205,6 +205,13 @@ XMapWindow(
     event.xvisibility.type = VisibilityNotify;
     event.xvisibility.state = VisibilityUnobscured;
     NotifyVisibility(macWin->winPtr, &event);
+
+    /*
+     * Make sure that subwindows get displayed.
+     */
+
+    GenerateConfigureNotify(macWin->winPtr, 1);
+
 }
 
 /*
@@ -295,10 +302,12 @@ XUnmapWindow(
 	event.xunmap.from_configure = false;
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     } else {
+
 	/*
 	 * Rebuild the visRgn clip region for the parent so it will be allowed
 	 * to draw in the space from which this subwindow was removed.
 	 */
+
 	if (parentPtr && parentPtr->privatePtr->visRgn) {
 	    TkMacOSXInvalidateViewRegion(TkMacOSXDrawableView(parentPtr->privatePtr),
 					 parentPtr->privatePtr->visRgn);
@@ -380,10 +389,12 @@ XMoveResizeWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
 	if (w) {
+
 	    /* We explicitly convert everything to doubles so we don't get
 	     * surprised (again) by what happens when you do arithmetic with
 	     * unsigned ints.
 	     */
+
 	    CGFloat X = (CGFloat)x;
 	    CGFloat Y = (CGFloat)y;
 	    CGFloat Width = (CGFloat)width;
@@ -470,6 +481,7 @@ MoveResizeWindow(
 	if (contWinPtr) {
 	    macParent = contWinPtr->privatePtr;
 	} else {
+
 	    /*
 	     * Here we should handle out of process embedding. At this point,
 	     * we are assuming that the changes.x,y is not maintained, if you
@@ -478,6 +490,7 @@ MoveResizeWindow(
 	     */
 	}
     } else {
+
 	/*
 	 * TODO: update all xOff & yOffs
 	 */
@@ -569,6 +582,7 @@ XRaiseWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Above, NULL);
     } else {
+
 	/*
 	 * TODO: this should generate damage
 	 */
@@ -603,7 +617,8 @@ XLowerWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Below, NULL);
     } else {
-	/*
+
+        /*
 	 * TODO: this should generate damage
 	 */
     }
@@ -874,6 +889,7 @@ TkMacOSXUpdateClipRgn(
 	    }
 	    CFRelease(rgn);
 	} else {
+
 	    /*
 	     * An unmapped window has empty clip regions to prevent any
 	     * (erroneous) drawing into it or its children from becoming
@@ -1134,6 +1150,7 @@ void *
 TkMacOSXGetRootControl(
     Drawable drawable)
 {
+
     /*
      * will probably need to fix this up for embedding
      */
@@ -1314,6 +1331,7 @@ UpdateOffsets(
     TkWindow *childPtr;
 
     if (winPtr->privatePtr == NULL) {
+
 	/*
 	 * We haven't called Tk_MakeWindowExist for this window yet. The offset
 	 * information will be postponed and calulated at that time. (This will
