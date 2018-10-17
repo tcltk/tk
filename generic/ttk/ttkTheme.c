@@ -992,7 +992,7 @@ int InitializeElementRecord(
 
 	if (optionMap[i]) {
 	    widgetValue = *(Tcl_Obj **)
-		(widgetRecord + optionMap[i]->objOffset);
+		((char *)widgetRecord + optionMap[i]->objOffset);
 	}
 
 	if (widgetValue) {
