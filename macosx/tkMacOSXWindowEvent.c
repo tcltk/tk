@@ -938,7 +938,10 @@ ConfigureRestrictProc(
 }
 
  
-/* These two methods allow Tk to register a virtual event for when the apperance changes on 10.14. */
+/*
+ * These two methods allow Tk to register a virtual event which fires when the
+ * appearance changes on 10.14.
+ */
 
 - (void) updateAppearanceEvent
 {
@@ -966,13 +969,12 @@ ConfigureRestrictProc(
 	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 	return;
     }
-    if (osxMode = @"Dark") {
+    if ([osxMode isEqual:@"Dark"]) {
 	event.name = Tk_GetUid("DarkAqua");
 	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 	return;
     }
 }
-
 
 /*
  * This is no-op on 10.7 and up because Apple has removed this widget,
