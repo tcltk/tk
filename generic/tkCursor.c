@@ -463,8 +463,7 @@ FreeCursor(
 {
     TkCursor *prevPtr;
 
-    cursorPtr->resourceRefCount--;
-    if (cursorPtr->resourceRefCount > 0) {
+    if (cursorPtr->resourceRefCount-- > 1) {
 	return;
     }
 
@@ -590,8 +589,7 @@ FreeCursorObj(
     TkCursor *cursorPtr = objPtr->internalRep.twoPtrValue.ptr1;
 
     if (cursorPtr != NULL) {
-	cursorPtr->objRefCount--;
-	if ((cursorPtr->objRefCount == 0)
+	if ((cursorPtr->objRefCount-- <= 1)
 		&& (cursorPtr->resourceRefCount == 0)) {
 	    ckfree(cursorPtr);
 	}
@@ -864,9 +862,9 @@ TkDebugCursor(
 	for ( ; (cursorPtr != NULL); cursorPtr = cursorPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(cursorPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(cursorPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(cursorPtr->objRefCount));
+		    Tcl_NewWideIntObj(cursorPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }
