@@ -940,6 +940,11 @@ ConfigureRestrictProc(
  
 /* These two methods allow Tk to register a virtual event for when the apperance changes on 10.14. */
 
+- (void) viewDidChangeEffectiveAppearance
+{
+    [self updateAppearanceEvent];
+}
+
 - (void) updateAppearanceEvent
 {
     NSString *osxMode = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
