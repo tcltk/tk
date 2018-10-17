@@ -1065,10 +1065,12 @@ typedef enum {
 struct TkRangeList;
 struct TkText;
 
-#if TCL_MAJOR_VERSION > 8
-#define TkSizeT size_t
-#else
-#define TkSizeT int
+#ifndef TkSizeT
+#   if TCL_MAJOR_VERSION > 8
+#	define TkSizeT size_t
+#   else
+#	define TkSizeT int
+#   endif
 #endif
 
 typedef struct TkSharedText {

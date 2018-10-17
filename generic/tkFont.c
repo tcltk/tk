@@ -1424,8 +1424,7 @@ Tk_FreeFont(
     if (fontPtr == NULL) {
 	return;
     }
-    fontPtr->resourceRefCount--;
-    if (fontPtr->resourceRefCount > 0) {
+    if (fontPtr->resourceRefCount-- > 1) {
 	return;
     }
     if (fontPtr->namedHashPtr != NULL) {
@@ -1522,8 +1521,7 @@ FreeFontObj(
     TkFont *fontPtr = objPtr->internalRep.twoPtrValue.ptr1;
 
     if (fontPtr != NULL) {
-	fontPtr->objRefCount--;
-	if ((fontPtr->resourceRefCount == 0) && (fontPtr->objRefCount == 0)) {
+	if ((fontPtr->objRefCount-- <= 1) && (fontPtr->resourceRefCount == 0)) {
 	    ckfree(fontPtr);
 	}
 	objPtr->internalRep.twoPtrValue.ptr1 = NULL;
@@ -4283,9 +4281,9 @@ TkDebugFont(
 	for ( ; (fontPtr != NULL); fontPtr = fontPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(fontPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(fontPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(fontPtr->objRefCount));
+		    Tcl_NewWideIntObj(fontPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }
