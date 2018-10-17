@@ -585,7 +585,7 @@ DoObjConfig(
 
     specPtr = optionPtr->specPtr;
     if (specPtr->objOffset != TCL_AUTO_LENGTH) {
-	slotPtrPtr = (Tcl_Obj **) (recordPtr + specPtr->objOffset);
+	slotPtrPtr = (Tcl_Obj **) ((char *)recordPtr + specPtr->objOffset);
 	oldPtr = *slotPtrPtr;
     } else {
 	slotPtrPtr = NULL;
@@ -598,7 +598,7 @@ DoObjConfig(
      */
 
     if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
-	internalPtr = recordPtr + specPtr->internalOffset;
+	internalPtr = (char *)recordPtr + specPtr->internalOffset;
     } else {
 	internalPtr = NULL;
     }
@@ -1345,7 +1345,7 @@ Tk_RestoreSavedOptions(
     Tcl_Obj *newPtr;		/* New object value of option, which we
 				 * replace with old value and free. Taken from
 				 * record. */
-    char *internalPtr;		/* Points to internal value of option in
+    void *internalPtr;		/* Points to internal value of option in
 				 * record. */
     const Tk_OptionSpec *specPtr;
 
@@ -1370,12 +1370,12 @@ Tk_RestoreSavedOptions(
 	 */
 
 	if (specPtr->objOffset != TCL_AUTO_LENGTH) {
-	    newPtr = *((Tcl_Obj **) (savePtr->recordPtr + specPtr->objOffset));
+	    newPtr = *((Tcl_Obj **) ((char *)savePtr->recordPtr + specPtr->objOffset));
 	} else {
 	    newPtr = NULL;
 	}
 	if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
-	    internalPtr = savePtr->recordPtr + specPtr->internalOffset;
+	    internalPtr = (char *)savePtr->recordPtr + specPtr->internalOffset;
 	} else {
 	    internalPtr = NULL;
 	}
@@ -1391,7 +1391,7 @@ Tk_RestoreSavedOptions(
 	 */
 
 	if (specPtr->objOffset != TCL_AUTO_LENGTH) {
-	    *((Tcl_Obj **) (savePtr->recordPtr + specPtr->objOffset))
+	    *((Tcl_Obj **) ((char *)savePtr->recordPtr + specPtr->objOffset))
 		    = savePtr->items[i].valuePtr;
 	}
 	if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
@@ -1549,14 +1549,14 @@ Tk_FreeConfigOptions(
 		continue;
 	    }
 	    if (specPtr->objOffset != TCL_AUTO_LENGTH) {
-		oldPtrPtr = (Tcl_Obj **) (recordPtr + specPtr->objOffset);
+		oldPtrPtr = (Tcl_Obj **) ((char *)recordPtr + specPtr->objOffset);
 		oldPtr = *oldPtrPtr;
 		*oldPtrPtr = NULL;
 	    } else {
 		oldPtr = NULL;
 	    }
 	    if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
-		oldInternalPtr = recordPtr + specPtr->internalOffset;
+		oldInternalPtr = (char *)recordPtr + specPtr->internalOffset;
 	    } else {
 		oldInternalPtr = NULL;
 	    }
@@ -1825,7 +1825,7 @@ GetConfigList(
 	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
 
 	if (optionPtr->specPtr->objOffset != TCL_AUTO_LENGTH) {
-	    elementPtr = *((Tcl_Obj **) (recordPtr
+	    elementPtr = *((Tcl_Obj **) ((char *)recordPtr
 		    + optionPtr->specPtr->objOffset));
 	    if (elementPtr == NULL) {
 		elementPtr = Tcl_NewObj();
@@ -1872,7 +1872,7 @@ GetObjectForOption(
 
     objPtr = NULL;
     if (optionPtr->specPtr->internalOffset >= 0) {
-       internalPtr = recordPtr + optionPtr->specPtr->internalOffset;
+       internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
        switch (optionPtr->specPtr->type) {
        case TK_OPTION_BOOLEAN:
 	   objPtr = Tcl_NewIntObj(*((int *) internalPtr));
@@ -2022,7 +2022,7 @@ Tk_GetOptionValue(
 	optionPtr = optionPtr->extra.synonymPtr;
     }
     if (optionPtr->specPtr->objOffset != TCL_AUTO_LENGTH) {
-	resultPtr = *((Tcl_Obj **) (recordPtr+optionPtr->specPtr->objOffset));
+	resultPtr = *((Tcl_Obj **) ((char *)recordPtr+optionPtr->specPtr->objOffset));
 	if (resultPtr == NULL) {
 	    /*
 	     * This option has a null value and is represented by a null
