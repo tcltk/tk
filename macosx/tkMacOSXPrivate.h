@@ -331,6 +331,8 @@ VISIBILITY_HIDDEN
 - (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIShapeRef) shape;
 - (void) viewDidEndLiveResize;
+- (void) viewDidChangeEffectiveAppearance;
+- (void) updateAppearanceEvent;
 - (void) tkToolbarButton: (id) sender;
 - (BOOL) isOpaque;
 - (BOOL) wantsDefaultClipping;

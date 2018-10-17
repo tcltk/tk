@@ -171,6 +171,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     return (winPtr ? NO : YES);
 }
 
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 
 - (void) windowDragStart: (NSNotification *) notification
@@ -210,6 +211,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	//Tk_UnmapWindow((Tk_Window) winPtr);
     }
 }
+
+
 #endif /* TK_MAC_DEBUG_NOTIFICATIONS */
 
 - (void) _setupWindowNotifications
@@ -233,6 +236,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidOrderOffScreenNotification, windowUnmapped:);
 #endif
 #undef observe
+ 
 }
 @end
 
@@ -933,6 +937,46 @@ ConfigureRestrictProc(
     }
 }
 
+ 
+/* These two methods allow Tk to register a virtual event for when the apperance changes on 10.14. */
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_14
+
+- (void) updateAppearanceEvent
+{
+    NSString *osxMode = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
+    NSWindow *w = [self window];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    XVirtualEvent event;
+    int x, y;
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    bzero(&event, sizeof(XVirtualEvent));
+    event.type = VirtualEvent;
+    event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+    event.send_event = false;
+    event.display = Tk_Display(tkwin);
+    event.event = Tk_WindowId(tkwin);
+    event.root = XRootWindow(Tk_Display(tkwin), 0);
+    event.subwindow = None;
+    event.time = TkpGetMS();
+    XQueryPointer(NULL, winPtr->window, NULL, NULL,
+    		  &event.x_root, &event.y_root, &x, &y, &event.state);
+    Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
+    event.same_screen = true;
+    if (osxMode == nil) {
+	event.name = Tk_GetUid("LightAqua");
+	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
+	return;
+    }
+    if (osxMode = @"Dark") {
+	event.name = Tk_GetUid("DarkAqua");
+	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
+	return;
+    }
+}
+
+#endif
+
 /*
  * This is no-op on 10.7 and up because Apple has removed this widget,
  * but we are leaving it here for backwards compatibility.
@@ -967,7 +1011,6 @@ ConfigureRestrictProc(
 - (BOOL) isOpaque
 {
     NSWindow *w = [self window];
-
       return (w && (([w styleMask] & NSTexturedBackgroundWindowMask) ||
     	    ![w isOpaque]) ? NO : YES);
 }
