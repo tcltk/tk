@@ -399,8 +399,7 @@ NSStatusItem *exitFullScreen;
 - (void)toggleFullScreen:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    Tk_Window tkwin = (TkWindow*)winPtr;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
+    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
 
     if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
     	TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
@@ -412,8 +411,7 @@ NSStatusItem *exitFullScreen;
 -(void)restoreOldScreen:(id)sender {
 
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    Tk_Window tkwin = (TkWindow*)winPtr;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
+    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
 
     TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
     [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
