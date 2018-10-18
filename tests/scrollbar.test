@@ -24,6 +24,7 @@ proc getTroughSize {w} {
 	    return [expr [winfo width $w] - 2*[testmetrics cxhscroll $w]]
 	}
     } else {
+        # Calculations here assume that the arrow area is a square.
 	if [string match v* [$w cget -orient]] {
 	    return [expr [winfo height $w] \
 		    - ([winfo width $w] \
