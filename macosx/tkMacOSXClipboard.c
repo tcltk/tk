@@ -289,28 +289,6 @@ TkSelPropProc(
 }
 
 /*
- *----------------------------------------------------------------------
- *
- * TkSuspendClipboard --
- *
- *	Handle clipboard conversion as required by the suppend event.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The value of changeCount is synchronized.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkSuspendClipboard(void)
-{
-    changeCount = [[NSPasteboard generalPasteboard] changeCount];
-}
-
-/*
  * Local Variables:
  * mode: objc
  * c-basic-offset: 4
