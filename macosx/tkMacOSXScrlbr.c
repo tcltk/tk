@@ -279,7 +279,7 @@ TkpComputeScrollbarGeometry(
      * window, if any). Then arrange for the window to be redisplayed.
      */
 
-    if (scrollPtr->vertical) {
+      if (scrollPtr->vertical) {
        Tk_GeometryRequest(scrollPtr->tkwin,
               scrollPtr->width + 2*scrollPtr->inset,
               2*(scrollPtr->arrowLength + scrollPtr->borderWidth
@@ -377,7 +377,7 @@ TkpScrollbarPosition(
     int x, int y)		/* Coordinates within scrollPtr's window. */
 {
 
-  /*
+   /*
    * Using code from tkUnixScrlbr.c because Unix scroll bindings are
    * driving the display at the script level. All the Mac scrollbar
    * has to do is re-draw itself.
@@ -412,12 +412,13 @@ TkpScrollbarPosition(
     if (y < scrollPtr->sliderFirst) {
   	return TOP_GAP;
     }
-    if (y < scrollPtr->sliderLast){
+    if (y < scrollPtr->sliderLast) {
   	return SLIDER;
     }
     if (y >= length - (scrollPtr->arrowLength + inset)) {
   	return BOTTOM_ARROW;
     }
+
     return BOTTOM_GAP;
 
 }
