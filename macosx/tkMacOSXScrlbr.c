@@ -386,21 +386,16 @@ TkpScrollbarPosition(
     int length, width, tmp;
     register const int inset = scrollPtr->inset;
 
-
     if (scrollPtr->vertical) {
   	length = Tk_Height(scrollPtr->tkwin);
-
   	width = Tk_Width(scrollPtr->tkwin);
     } else {
   	tmp = x;
   	x = y;
   	y = tmp;
   	length = Tk_Width(scrollPtr->tkwin);
-
   	width = Tk_Height(scrollPtr->tkwin);
     }
-
-
 
     if (x<inset || x>=width-inset || y<inset || y>=length-inset) {
   	return OUTSIDE;
@@ -417,14 +412,12 @@ TkpScrollbarPosition(
     if (y < scrollPtr->sliderFirst) {
   	return TOP_GAP;
     }
-    if (y < scrollPtr->sliderLast){
+    if (y < scrollPtr->sliderLast) {
   	return SLIDER;
     }
     if (y >= length - (scrollPtr->arrowLength + inset)) {
   	return BOTTOM_ARROW;
     }
-
-
 
     return BOTTOM_GAP;
 
