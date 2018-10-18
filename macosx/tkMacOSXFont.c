@@ -851,6 +851,10 @@ TkpMeasureCharsInContext(
 	double maxWidth = maxLength + offset;
 	NSCharacterSet *cs;
 
+        /*
+         * Get a line breakpoint in the source string.
+         */
+
 	index = start;
 	if (flags & TK_WHOLE_WORDS) {
 	    index = CTTypesetterSuggestLineBreak(typesetter, start, maxWidth);
@@ -861,15 +865,43 @@ TkpMeasureCharsInContext(
 	if (index <= start && !(flags & TK_WHOLE_WORDS)) {
 	    index = CTTypesetterSuggestClusterBreak(typesetter, start, maxWidth);
 	}
+
+        /*
+         * Trim right whitespace/lineending characters.
+         */
+
 	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
 	while (index > start &&
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {
 	    index--;
 	}
+
+        /*
+         * If there is no line breakpoint in the source string between
+         * its start and the index position that fits in maxWidth, then
+         * CTTypesetterSuggestLineBreak() returns that very last index.
+         * However if the TK_WHOLE_WORDS flag is set, we want to break
+         * at a word boundary. In this situation, unless TK_AT_LEAST_ONE
+         * is set, we must report that zero chars actually fit (in other
+         * words the smallest word of the source string is still larger
+         * than maxWidth).
+         */
+
+        if ((index >= start) && (index < len) &&
+                (flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE) &&
+                ![cs characterIsMember:[string characterAtIndex:index]]) {
+            index = start;
+        }
+
 	if (index <= start && (flags & TK_AT_LEAST_ONE)) {
 	    index = start + 1;
 	}
+
+        /*
+         * Now measure the string width in pixels.
+         */
+
 	if (index > 0) {
 	    range.length = index;
 	    line = CTTypesetterCreateLine(typesetter, range);

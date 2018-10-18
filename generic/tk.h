@@ -1174,7 +1174,7 @@ typedef struct Tk_TSOffset {
 } Tk_TSOffset;
 
 /*
- * Bit fields in Tk_Offset->flags:
+ * Bit fields in Tk_TSOffset->flags:
  */
 
 #define TK_OFFSET_INDEX		1

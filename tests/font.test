@@ -38,7 +38,7 @@ wm geom .t +0+0
 update idletasks
 
 switch [tk windowingsystem] {
-    x11	 	{set fixed "fixed"}
+    x11	 	{set fixed "TkFixedFont"}
     win32	{set fixed "courier 12"}
     aqua	{set fixed "monaco 9"}
 }
@@ -921,7 +921,7 @@ test font-21.5 {Tk_PostscriptFontName procedure: spaces} -constraints {
     }
 } -result {LucidaBright}
 test font-21.6 {Tk_PostscriptFontName procedure: spaces} -constraints {
-	unix 
+	x11 
 } -body {
     psfontname "{new century schoolbook} 10"
 } -result {NewCenturySchlbk-Roman}
