@@ -68,7 +68,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     BOOL movedOnly = [[notification name]
-	    isEqualToString:NSWindowDidMoveNotification];
+			 isEqualToString:NSWindowDidMoveNotification];
+
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
@@ -257,7 +258,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
-    TkSuspendClipboard();
 }
 
 - (void) applicationShowHide: (NSNotification *) notification
