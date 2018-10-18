@@ -594,7 +594,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXWindowOffset, /* 37 */
     TkSetMacColor, /* 38 */
     TkSetWMName, /* 39 */
-    TkSuspendClipboard, /* 40 */
+    0, /* 40 */
     TkMacOSXZoomToplevel, /* 41 */
     Tk_TopCoordsToWindow, /* 42 */
     TkMacOSXContainerId, /* 43 */
