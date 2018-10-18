@@ -983,9 +983,9 @@ declare 38 aqua {
 declare 39 aqua {
     void TkSetWMName(TkWindow *winPtr, Tk_Uid titleUid)
 }
-declare 40 aqua {
-    void TkSuspendClipboard(void)
-}
+#
+# Slot 40 unused (WAS: TkSuspendClipboard)
+#
 declare 41 aqua {
     int TkMacOSXZoomToplevel(void *whichWindow, short zoomPart)
 }
