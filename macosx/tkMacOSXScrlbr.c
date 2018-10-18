@@ -231,17 +231,18 @@ TkpComputeScrollbarGeometry(
     * Using code from tkUnixScrlbr.c because Unix scroll bindings are
     * driving the display at the script level. All the Mac scrollbar
     * has to do is re-draw itself.
+    * There is a difference with Unix however: on macOS later than 10.6
+    * (Snow Leopard) the scrollbars have no arrows at all. This is
+    * handled by having scrollPtr->arrowLength set to zero.
     */
 
-    int width, fieldLength;
+    int fieldLength;
 
     if (scrollPtr->highlightWidth < 0) {
        scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    width = (scrollPtr->vertical) ? Tk_Width(scrollPtr->tkwin)
-           : Tk_Height(scrollPtr->tkwin);
-    scrollPtr->arrowLength = width - 2*scrollPtr->inset + 1;
+    scrollPtr->arrowLength = 0;
     fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
            : Tk_Width(scrollPtr->tkwin))
            - 2*(scrollPtr->arrowLength + scrollPtr->inset);
