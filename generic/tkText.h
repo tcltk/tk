@@ -495,7 +495,7 @@ typedef struct TkTextSection {
 typedef struct TkTextIndex {
     TkTextBTree tree;		/* Tree containing desired position. */
     struct TkText *textPtr;	/* The associated text widget (required). */
-    uint32_t stateEpoch;	/* The epoch of the segment pointer. */
+    TkSizeT stateEpoch;	/* The epoch of the segment pointer. */
 
     /*
      * The following attribtes should not be accessed directly, use the TkTextIndex*
@@ -837,7 +837,7 @@ typedef struct TkTextTag {
     struct TkTextTag *succPtr;	/* Only TextInspectCmd will use this attribute. */
     uint32_t flag;		/* Only for temporary usage (currently only TextInspectCmd, and
     				 * EmbImageConfigure will use this attribute). */
-    uint32_t epoch;		/* Only TkBTreeGetTags, TkBTreeGetSegmentTags, and TkBTreeClearTags
+    TkSizeT epoch;		/* Only TkBTreeGetTags, TkBTreeGetSegmentTags, and TkBTreeClearTags
     				 * will use this attribute. */
 
     /*

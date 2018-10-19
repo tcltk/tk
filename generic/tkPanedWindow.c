@@ -236,7 +236,7 @@ static void		AdjustForSticky(int sticky, int cavityWidth,
 			    int *slaveWidthPtr, int *slaveHeightPtr);
 static void		MoveSash(PanedWindow *pwPtr, int sash, int diff);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
-static char *		ComputeSlotAddress(char *recordPtr, int offset);
+static void *	ComputeSlotAddress(void *recordPtr, int offset);
 static int		PanedWindowIdentifyCoords(PanedWindow *pwPtr,
 			    Tcl_Interp *interp, int x, int y);
 
@@ -2455,7 +2455,8 @@ SetSticky(
     int flags)			/* Flags for the option, set Tk_SetOptions. */
 {
     int sticky = 0;
-    char c, *internalPtr;
+    char c;
+    void *internalPtr;
     const char *string;
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
@@ -3019,13 +3020,13 @@ ObjectIsEmpty(
  *----------------------------------------------------------------------
  */
 
-static char *
+static void *
 ComputeSlotAddress(
-    char *recordPtr,	/* Pointer to the start of a record. */
+    void *recordPtr,	/* Pointer to the start of a record. */
     int offset)		/* Offset of a slot within that record; may be < 0. */
 {
     if (offset >= 0) {
-	return recordPtr + offset;
+	return (char *)recordPtr + offset;
     } else {
 	return NULL;
     }
