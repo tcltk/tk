@@ -168,7 +168,7 @@ static int		TestmenubarObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 #endif
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
 static int		TestmetricsObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
@@ -276,17 +276,17 @@ Tktest_Init(
             TestPhotoStringMatchCmd, (ClientData) Tk_MainWindow(interp),
             NULL);
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
     Tcl_CreateObjCommand(interp, "testmetrics", TestmetricsObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-#elif !defined(__CYGWIN__)
+#elif !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
     Tcl_CreateObjCommand(interp, "testmenubar", TestmenubarObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testsend", TkpTestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwrapper", TestwrapperObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-#endif /* _WIN32 || MAC_OSX_TK */
+#endif /* _WIN32 */
 
     /*
      * Create test image type.
@@ -1774,7 +1774,7 @@ TestmenubarObjCmd(
  *----------------------------------------------------------------------
  */
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
 static int
 TestmetricsObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1785,38 +1785,15 @@ TestmetricsObjCmd(
     char buf[TCL_INTEGER_SPACE];
     int val;
 
-#ifdef _WIN32
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-#else
-    Tk_Window tkwin = (Tk_Window) clientData;
-    TkWindow *winPtr;
-
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option window");
-	return TCL_ERROR;
-    }
-
-    winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
-    if (winPtr == NULL) {
-	return TCL_ERROR;
-    }
-#endif
 
     if (strcmp(Tcl_GetString(objv[1]), "cyvscroll") == 0) {
-#ifdef _WIN32
 	val = GetSystemMetrics(SM_CYVSCROLL);
-#else
-	val = ((TkScrollbar *) winPtr->instanceData)->width;
-#endif
     } else  if (strcmp(Tcl_GetString(objv[1]), "cxhscroll") == 0) {
-#ifdef _WIN32
 	val = GetSystemMetrics(SM_CXHSCROLL);
-#else
-	val = ((TkScrollbar *) winPtr->instanceData)->width;
-#endif
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
 		"\": must be cxhscroll or cyvscroll", NULL);
