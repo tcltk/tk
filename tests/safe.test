@@ -28,7 +28,7 @@ namespace import -force tcltest::test
 # This probably means that tk wasn't installed properly.
 
 ## it indicates that something went wrong sourcing tk.tcl.
-## Ensure that any changes that occured to tk.tcl will work or are properly
+## Ensure that any changes that occurred to tk.tcl will work or are properly
 ## prevented in a safe interpreter.  -- hobbs
 
 # The set of hidden commands is platform dependent:
