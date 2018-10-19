@@ -538,7 +538,7 @@ typedef struct {
 	Bool send_event;	/* true if this came from a SendEvent request */
 	Display *display;	/* Display the event was read from */
 	Window window;	        /* "event" window it is reported relative to */
-	Window root;	        /* root window that the event occured on */
+	Window root;	        /* root window that the event occurred on */
 	Window subwindow;	/* child window */
 	Time time;		/* milliseconds */
 	int x, y;		/* pointer x, y coordinates in event window */
@@ -559,7 +559,7 @@ typedef struct {
 	Bool send_event;	/* true if this came from a SendEvent request */
 	Display *display;	/* Display the event was read from */
 	Window window;	        /* "event" window it is reported relative to */
-	Window root;	        /* root window that the event occured on */
+	Window root;	        /* root window that the event occurred on */
 	Window subwindow;	/* child window */
 	Time time;		/* milliseconds */
 	int x, y;		/* pointer x, y coordinates in event window */
@@ -577,7 +577,7 @@ typedef struct {
 	Bool send_event;	/* true if this came from a SendEvent request */
 	Display *display;	/* Display the event was read from */
 	Window window;	        /* "event" window reported relative to */
-	Window root;	        /* root window that the event occured on */
+	Window root;	        /* root window that the event occurred on */
 	Window subwindow;	/* child window */
 	Time time;		/* milliseconds */
 	int x, y;		/* pointer x, y coordinates in event window */
@@ -594,7 +594,7 @@ typedef struct {
 	Bool send_event;	/* true if this came from a SendEvent request */
 	Display *display;	/* Display the event was read from */
 	Window window;	        /* "event" window reported relative to */
-	Window root;	        /* root window that the event occured on */
+	Window root;	        /* root window that the event occurred on */
 	Window subwindow;	/* child window */
 	Time time;		/* milliseconds */
 	int x, y;		/* pointer x, y coordinates in event window */
