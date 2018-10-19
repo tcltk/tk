@@ -2971,8 +2971,8 @@ LayoutFinalizeCharInfo(
     CharInfo *ciPtr = data->chunkPtr->clientData;
 
     assert(data->trimSpaces ?
-	    data->chunkPtr->numBytes >= ciPtr->numBytes :
-	    data->chunkPtr->numBytes == ciPtr->numBytes);
+	    (TkSizeT)data->chunkPtr->numBytes >= ciPtr->numBytes :
+	    (TkSizeT)data->chunkPtr->numBytes == ciPtr->numBytes);
 
     /*
      * Update the character information. Take into account that we don't want
