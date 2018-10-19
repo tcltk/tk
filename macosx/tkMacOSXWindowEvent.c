@@ -333,7 +333,7 @@ GenerateUpdates(
     }
 
     /*
-     * Compute the bounding box of the area that the damage occured in.
+     * Compute the bounding box of the area that the damage occurred in.
      */
 
     boundsRgn = HIShapeCreateWithRect(&bounds);

@@ -383,7 +383,7 @@ typedef struct TkIntPlatStubs {
     void (*tkMacOSXWindowOffset) (void *wRef, int *xOffset, int *yOffset); /* 37 */
     int (*tkSetMacColor) (unsigned long pixel, void *macColor); /* 38 */
     void (*tkSetWMName) (TkWindow *winPtr, Tk_Uid titleUid); /* 39 */
-    void (*reserved40) (void);
+    void (*reserved40)(void);
     int (*tkMacOSXZoomToplevel) (void *whichWindow, short zoomPart); /* 41 */
     Tk_Window (*tk_TopCoordsToWindow) (Tk_Window tkwin, int rootX, int rootY, int *newX, int *newY); /* 42 */
     MacDrawable * (*tkMacOSXContainerId) (TkWindow *winPtr); /* 43 */

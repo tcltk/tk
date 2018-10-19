@@ -2238,7 +2238,7 @@
 	inputContext to null.
 
 	* win/Makefile.in: changed gdb and shell targets to properly build
-	all binaries before running (otherwise an error often occured).
+	all binaries before running (otherwise an error often occurred).
 
 2002-03-28  David Gravereaux <davygrvy@pobox.com>
 
