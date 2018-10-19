@@ -1871,7 +1871,7 @@ GetObjectForOption(
 				 * record. */
 
     objPtr = NULL;
-    if (optionPtr->specPtr->internalOffset >= 0) {
+    if (optionPtr->specPtr->internalOffset != TCL_AUTO_LENGTH) {
        internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
        switch (optionPtr->specPtr->type) {
        case TK_OPTION_BOOLEAN:
