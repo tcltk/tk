@@ -2971,8 +2971,8 @@ LayoutFinalizeCharInfo(
     CharInfo *ciPtr = data->chunkPtr->clientData;
 
     assert(data->trimSpaces ?
-	    (int) data->chunkPtr->numBytes >= ciPtr->numBytes :
-	    (int) data->chunkPtr->numBytes == ciPtr->numBytes);
+	    data->chunkPtr->numBytes >= ciPtr->numBytes :
+	    data->chunkPtr->numBytes == ciPtr->numBytes);
 
     /*
      * Update the character information. Take into account that we don't want
@@ -14280,7 +14280,7 @@ CharChunkMeasureChars(
 	}
     }
 
-    if (start == ciPtr->baseOffset) {
+    if ((TkSizeT)start == ciPtr->baseOffset) {
 	/*
 	 * This is a very frequent case, and MeasureChars() is not needed here.
 	 */
@@ -14777,7 +14777,7 @@ DrawChars(
 	start = ciPtr->baseOffset + offsetBytes;
 	len = ciPtr->numBytes - offsetBytes;
 
-	assert(ciPtr->numBytes >= offsetBytes);
+	assert(ciPtr->numBytes >= (TkSizeT)offsetBytes);
 
 	if (len == 0 || (string[start + len - 1] == '\t' && --len == 0)) {
 	    return;
@@ -14941,7 +14941,7 @@ TkpTextPrintDispChunk(
 	fprintf(stdout, "CHAR=");
 	if (chunkPtr->clientData) {
 	    const CharInfo *ciPtr = (const CharInfo *) chunkPtr->clientData;
-	    int i;
+	    TkSizeT i;
 
 	    for (i = 0; i < ciPtr->numBytes; ++i) {
 		char c = ciPtr->u.chars[i];
