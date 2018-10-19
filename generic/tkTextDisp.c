@@ -306,8 +306,8 @@ typedef struct CharInfo {
 				 * the base chunk. */
 	struct CharInfo *next;	/* Pointer to next free info struct. */
     } u;
-    int32_t numBytes;		/* Number of bytes that belong to this chunk. */
-    int32_t baseOffset;		/* Starting offset in baseChars of base chunk; always zero if
+    TkSizeT numBytes;		/* Number of bytes that belong to this chunk. */
+    TkSizeT baseOffset;		/* Starting offset in baseChars of base chunk; always zero if
     				 * context drawing is not used. */
     TkTextSegment *segPtr;	/* Pointer to char segment containing the chars. */
 } CharInfo;
@@ -12735,7 +12735,7 @@ CharBboxProc(
 
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex, chunkPtr->x, -1, textPtr->spaceMode, 0, xPtr);
 
-    if (byteIndex >= ciPtr->numBytes) {
+    if (byteIndex >= (int)ciPtr->numBytes) {
 	/*
 	 * This situation only happens if the last character in a line is a
 	 * space character, in which case it absorbs all of the extra space in
@@ -12743,7 +12743,7 @@ CharBboxProc(
 	 */
 
 	*widthPtr = maxX - *xPtr;
-    } else if (ciPtr->u.chars[offset] == '\t' && byteIndex == ciPtr->numBytes - 1) {
+    } else if (ciPtr->u.chars[offset] == '\t' && byteIndex == (int)ciPtr->numBytes - 1) {
 	/*
 	 * The desired character is a tab character that terminates a chunk;
 	 * give it all the space left in the chunk.
