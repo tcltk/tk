@@ -415,6 +415,22 @@ test option-16.1 {ReadOptionFile} -body {
     removeFile $option4
 } -result {true false}
 
+set opt162val {label {
+  foo bar
+}
+}
+set opt162list [split $opt162val \n]
+
+test option-16.2 {ticket 766ef52f3} {
+    set option5 [makeFile {} option.file4]
+    set file [open $option5 w]
+    fconfigure $file -translation crlf
+    puts $file "*notok: $opt162list"
+    close $file
+    option read $option5 userDefault
+    option get . notok notok
+} $opt162list
+
 deleteWindows
 
 # cleanup
