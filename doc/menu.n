@@ -19,7 +19,7 @@ menu, tk_menuSetFocus \- Create and manipulate 'menu' widgets and menubars
 \-activebackground	\-borderwidth	\-foreground
 \-activeborderwidth	\-cursor	\-relief
 \-activeforeground	\-disabledforeground	\-takefocus
-\-background	\-font
+\-background	\-font	\-activerelief
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-postcommand postCommand Command
@@ -34,12 +34,12 @@ For menu entries that are check buttons or radio buttons, this option
 specifies the color to display in the indicator when the check button
 or radio button is selected.
 .OP \-tearoff tearOff TearOff
-This option must have a proper boolean value, which specifies
-whether or not the menu should include a tear-off entry at the
-top.  If so, it will exist as entry 0 of the menu and the other
-entries will number starting at 1.  The default
-menu bindings arrange for the menu to be torn off when the tear-off
-entry is invoked.
+This option must have a proper boolean value (default is false),
+which specifies whether or not the menu should include a tear-off
+entry at the top.  If so, it will exist as entry 0 of the menu and
+the other entries will number starting at 1.  The default menu
+bindings arrange for the menu to be torn off when the tear-off entry
+is invoked.
 This option is ignored under Aqua/Mac OS X, where menus cannot
 be torn off.
 .OP \-tearoffcommand tearOffCommand TearOffCommand
@@ -98,8 +98,10 @@ a bitmap, or an image, controlled by the \fB\-label\fR,
 \fB\-bitmap\fR, and \fB\-image\fR options for the entry.
 If the  \fB\-accelerator\fR option is specified for an entry then a second
 textual field is displayed to the right of the label.  The accelerator
-typically describes a keystroke sequence that may be typed in the
+typically describes a keystroke sequence that may be used in the
 application to cause the same result as invoking the menu entry.
+This is a display option, it does not actually set the corresponding
+binding (which can be achieved using the \fBbind\fR command).
 The third field is an \fIindicator\fR.  The indicator is present only for
 checkbutton or radiobutton entries.  It indicates whether the entry
 is selected or not, and is displayed to the left of the entry's
@@ -537,8 +539,10 @@ This option is not available for separator or tear-off entries.
 .
 Specifies a string to display at the right side of the menu entry.
 Normally describes an accelerator keystroke sequence that may be
-typed to invoke the same function as the menu entry.  This option
-is not available for separator or tear-off entries.
+used to invoke the same function as the menu entry. This is a display
+option, it does not actually set the corresponding binding (which can
+be achieved using the \fBbind\fR command). This option is not available
+for separator or tear-off entries.
 .TP
 \fB\-background \fIvalue\fR
 .

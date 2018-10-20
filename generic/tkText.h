@@ -347,6 +347,9 @@ typedef struct TkTextTag {
     int lMargin2;		/* Left margin for second and later display
 				 * lines of each text line, in pixels. Only
 				 * valid if lMargin2String is non-NULL. */
+    Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
+                                 * This is used for both lmargin1 and lmargin2.
+				 * NULL means no value specified here. */
     char *offsetString;		/* -offset option string (malloc-ed). NULL
 				 * means option not specified. */
     int offset;			/* Vertical offset of text's baseline from
@@ -358,10 +361,18 @@ typedef struct TkTextTag {
     int overstrike;		/* Non-zero means draw horizontal line through
 				 * middle of text. Only valid if
 				 * overstrikeString is non-NULL. */
+    XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
+                                 * color as foreground. */
     char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
 				 * means option not specified. */
     int rMargin;		/* Right margin for text, in pixels. Only
 				 * valid if rMarginString is non-NULL. */
+    Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
+				 * NULL means no value specified here. */
+    Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
+				 * NULL means no value specified here. */
+    XColor *selFgColor;		/* Foreground color for selected text. NULL means
+				 * no value specified here. */
     char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
 				 * means option not specified. */
     int spacing1;		/* Extra spacing above first display line for
@@ -389,6 +400,8 @@ typedef struct TkTextTag {
     int underline;		/* Non-zero means draw underline underneath
 				 * text. Only valid if underlineString is
 				 * non-NULL. */
+    XColor *underlineColor;     /* Color for the underline. NULL means same
+                                 * color as foreground. */
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * Must be TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, or
@@ -519,8 +532,16 @@ typedef enum {
  * that are peers.
  */
 
+#ifndef TkSizeT
+#   if TCL_MAJOR_VERSION > 8
+#	define TkSizeT size_t
+#   else
+#	define TkSizeT int
+#   endif
+#endif
+
 typedef struct TkSharedText {
-    int refCount;		/* Reference count this shared object. */
+    TkSizeT refCount;		/* Reference count this shared object. */
     TkTextBTree tree;		/* B-tree representation of text and tags for
 				 * widget. */
     Tcl_HashTable tagTable;	/* Hash table that maps from tag names to
@@ -549,7 +570,7 @@ typedef struct TkSharedText {
 				 * exist, so the table hasn't been created.
 				 * Each "object" used for this table is the
 				 * name of a tag. */
-    int stateEpoch;		/* This is incremented each time the B-tree's
+    TkSizeT stateEpoch;	/* This is incremented each time the B-tree's
 				 * contents change structurally, or when the
 				 * start/end limits change, and means that any
 				 * cached TkTextIndex objects are no longer
@@ -567,6 +588,8 @@ typedef struct TkSharedText {
 				 * statements. */
     int autoSeparators;		/* Non-zero means the separators will be
 				 * inserted automatically. */
+    int undoMarkId;             /* Counts undo marks temporarily used during
+                                   undo and redo operations. */
     int isDirty;		/* Flag indicating the 'dirtyness' of the
 				 * text widget. If the flag is not zero,
 				 * unsaved modifications have been applied to
@@ -768,7 +791,7 @@ typedef struct TkText {
 				 * definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
-    int refCount;		/* Number of cached TkTextIndex objects
+    TkSizeT refCount;		/* Number of cached TkTextIndex objects
 				 * refering to us. */
     int insertCursorType;	/* 0 = standard insertion cursor, 1 = block
 				 * cursor. */
@@ -994,7 +1017,7 @@ MODULE_SCOPE void	TkBTreeRemoveClient(TkTextBTree tree,
 MODULE_SCOPE void	TkBTreeDestroy(TkTextBTree tree);
 MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkTextBTree tree,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr);
-MODULE_SCOPE int	TkBTreeEpoch(TkTextBTree tree);
+MODULE_SCOPE TkSizeT	TkBTreeEpoch(TkTextBTree tree);
 MODULE_SCOPE TkTextLine *TkBTreeFindLine(TkTextBTree tree,
 			    const TkText *textPtr, int line);
 MODULE_SCOPE TkTextLine *TkBTreeFindPixelLine(TkTextBTree tree,

@@ -27,6 +27,7 @@ exec_prefix		= @exec_prefix@
 bindir			= @bindir@
 libdir			= @libdir@
 includedir		= @includedir@
+datarootdir		= @datarootdir@
 mandir			= @mandir@
 
 # The following definition can be set to non-null for special systems
@@ -169,7 +170,7 @@ LDFLAGS_OPTIMIZE = @LDFLAGS_OPTIMIZE@
 #CFLAGS		= $(CFLAGS_DEBUG)
 #CFLAGS		= $(CFLAGS_OPTIMIZE)
 #CFLAGS		= $(CFLAGS_DEBUG) $(CFLAGS_OPTIMIZE)
-CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@ -DUNICODE -D_UNICODE
+CFLAGS		= @CFLAGS@ @CFLAGS_DEFAULT@ -DUNICODE -D_UNICODE -D_ATL_XP_TARGETING
 
 # Special compiler flags to use when building man2tcl on Windows.
 MAN2TCLFLAGS	= @MAN2TCLFLAGS@
@@ -215,6 +216,7 @@ NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
 # required just to do a normal build although it can be required to run
 # make dist.
 TCL_EXE			= @TCLSH_PROG@
+WINE    		= @WINE@
 
 CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
@@ -316,6 +318,7 @@ TK_OBJS = \
 	tkGrid.$(OBJEXT) \
 	tkImage.$(OBJEXT) \
 	tkImgBmap.$(OBJEXT) \
+	tkImgListFormat.$(OBJEXT) \
 	tkImgGIF.$(OBJEXT) \
 	tkImgPNG.$(OBJEXT) \
 	tkImgPPM.$(OBJEXT) \
@@ -438,23 +441,23 @@ $(MAN2TCL): $(TCL_SRC_DIR)/tools/man2tcl.c
 test: test-classic test-ttk
 
 test-classic: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
-	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
-	$(TESTFLAGS) | ./$(CAT32)
+	$(SHELL_ENV) $(WINE) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
+	$(TESTFLAGS) | $(WINE) ./$(CAT32)
 
 test-ttk: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
-	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/ttk/all.tcl" \
-	$(TESTFLAGS) | ./$(CAT32)
+	$(SHELL_ENV) $(WINE) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/ttk/all.tcl" \
+	$(TESTFLAGS) | $(WINE) ./$(CAT32)
 
 runtest: binaries $(TKTEST) $(TEST_DLL_FILE)
-	$(SHELL_ENV) ./$(TKTEST) $(TESTFLAGS) $(SCRIPT)
+	$(SHELL_ENV) $(WINE) ./$(TKTEST) $(TESTFLAGS) $(SCRIPT)
 
 # This target can be used to run wish from the build directory
 # via `make shell` or `make shell SCRIPT=foo.tcl`
 shell: binaries
-	$(SHELL_ENV) ./$(WISH) $(SCRIPT)
+	$(SHELL_ENV) $(WINE) ./$(WISH) $(SCRIPT)
 
 demo: $(WISH)
-	$(SHELL_ENV) ./$(WISH) $(ROOT_DIR)/library/demos/widget
+	$(SHELL_ENV) $(WINE) ./$(WISH) $(ROOT_DIR)/library/demos/widget
 
 # This target can be used to run wish inside either gdb or insight
 gdb: binaries
@@ -486,7 +489,7 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl 8.6.0}]} return";\
+	echo "if {[catch {package present Tcl 8.6-}]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
 	echo "    package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]] Tk]";\
@@ -729,7 +732,7 @@ genstubs:
 	    "$(GENERIC_DIR_NATIVE)" \
 	    "$(GENERIC_DIR_NATIVE)/tk.decls" \
 	    "$(GENERIC_DIR_NATIVE)/tkInt.decls"
-	$(TCL_EXE) "$(TTK_DIR)/ttkGenStubs.tcl" \
+	$(TCL_EXE) "$(TCL_TOOL_DIR)/genStubs.tcl" \
 	    "$(TTK_DIR)" \
 	    "$(TTK_DIR)/ttk.decls"
 

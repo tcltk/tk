@@ -110,7 +110,7 @@ TkImgPhotoConfigureInstance(
 	 */
 
 	if (colorTablePtr != NULL) {
-	    colorTablePtr->liveRefCount -= 1;
+	    colorTablePtr->liveRefCount--;
 	    FreeColorTable(colorTablePtr, 0);
 	}
 	GetColorTable(instancePtr);
@@ -404,6 +404,9 @@ TkImgPhotoGet(
  *
  *	Note that Win32 pre-defines those operations that we really need.
  *
+ *	Note that on MacOS, if the background comes from a Retina display
+ *	then it will be twice as wide and twice as high as the photoimage.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -415,6 +418,13 @@ TkImgPhotoGet(
 	(UCHAR(r) << red_shift)   | \
 	(UCHAR(g) << green_shift) | \
 	(UCHAR(b) << blue_shift)  ))
+#ifdef MAC_OSX_TK
+#define RGBA(r, g, b, a) ((unsigned)( \
+	(UCHAR(r) << red_shift)   | \
+	(UCHAR(g) << green_shift) | \
+	(UCHAR(b) << blue_shift)  | \
+	(UCHAR(a) << alpha_shift) ))
+#endif
 #define RGB15(r, g, b)	((unsigned)( \
 	(((r) * red_mask / 255)   & red_mask)   | \
 	(((g) * green_mask / 255) & green_mask) | \
@@ -433,7 +443,16 @@ BlendComplexAlpha(
     unsigned long pixel;
     unsigned char r, g, b, alpha, unalpha, *masterPtr;
     unsigned char *alphaAr = iPtr->masterPtr->pix32;
-
+#if defined(MAC_OSX_TK)
+    /* Background "pixels" are actually 2^pp x 2^pp blocks of subpixels.  Each
+     * block gets blended with the color of one image pixel.  Since we iterate
+     * over the background subpixels, we reset the width and height to the
+     * subpixel dimensions of the background image we are using.
+     */
+    int pp = bgImg->pixelpower;
+    width = width << pp;
+    height = height << pp;
+#endif
     /*
      * This blending is an integer version of the Source-Over compositing rule
      * (see Porter&Duff, "Compositing Digital Images", proceedings of SIGGRAPH
@@ -473,6 +492,13 @@ BlendComplexAlpha(
     while ((0x0001 & (blue_mask >> blue_shift)) == 0) {
 	blue_shift++;
     }
+#ifdef MAC_OSX_TK
+    unsigned long alpha_mask = visual->alpha_mask;
+    unsigned long alpha_shift = 0;
+    while ((0x0001 & (alpha_mask >> alpha_shift)) == 0) {
+	alpha_shift++;
+    }
+#endif
 #endif /* !_WIN32 */
 
     /*
@@ -532,9 +558,16 @@ BlendComplexAlpha(
 #endif /* !_WIN32 && !MAC_OSX_TK */
 
     for (y = 0; y < height; y++) {
+# if !defined(MAC_OSX_TK)
 	line = (y + yOffset) * iPtr->masterPtr->width;
 	for (x = 0; x < width; x++) {
 	    masterPtr = alphaAr + ((line + x + xOffset) * 4);
+#else
+	/* Repeat each image row and column 2^pp times. */
+	line = ((y>>pp) + yOffset) * iPtr->masterPtr->width;
+	for (x = 0; x < width; x++) {
+	    masterPtr = alphaAr + ((line + (x>>pp) + xOffset) * 4);
+#endif
 	    alpha = masterPtr[3];
 
 	    /*
@@ -566,7 +599,11 @@ BlendComplexAlpha(
 		    g = ALPHA_BLEND(ga, g, alpha, unalpha);
 		    b = ALPHA_BLEND(ba, b, alpha, unalpha);
 		}
+#ifndef MAC_OSX_TK
 		XPutPixel(bgImg, x, y, RGB(r, g, b));
+#else
+		XPutPixel(bgImg, x, y, RGBA(r, g, b, alpha));
+#endif
 	    }
 	}
     }
@@ -635,7 +672,9 @@ TkImgPhotoDisplay(
 		(unsigned int)width, (unsigned int)height, AllPlanes, ZPixmap);
 	if (bgImg == NULL) {
 	    Tk_DeleteErrorHandler(handler);
-	    /* We failed to get the image so draw without blending alpha. It's the best we can do */
+	    /* We failed to get the image, so draw without blending alpha.
+	     * It's the best we can do.
+	     */
 	    goto fallBack;
 	}
 
@@ -700,8 +739,7 @@ TkImgPhotoFree(
     PhotoInstance *instancePtr = clientData;
     ColorTable *colorPtr;
 
-    instancePtr->refCount -= 1;
-    if (instancePtr->refCount > 0) {
+    if (instancePtr->refCount-- > 1) {
 	return;
     }
 
@@ -714,7 +752,7 @@ TkImgPhotoFree(
 
     colorPtr = instancePtr->colorTablePtr;
     if (colorPtr != NULL) {
-	colorPtr->liveRefCount -= 1;
+	colorPtr->liveRefCount--;
     }
 
     Tcl_DoWhenIdle(TkImgDisposeInstance, instancePtr);
@@ -1097,8 +1135,7 @@ FreeColorTable(
 				 * longer required by an instance. */
     int force)			/* Force free to happen immediately. */
 {
-    colorPtr->refCount--;
-    if (colorPtr->refCount > 0) {
+    if (colorPtr->refCount-- > 1) {
 	return;
     }
 
@@ -1241,7 +1278,7 @@ AllocateColors(
 		}
 	    } else {
 		/*
-		 * Monochrome display - allocate the shades of grey we want.
+		 * Monochrome display - allocate the shades of gray we want.
 		 */
 
 		for (i = 0; i < numColors; ++i) {

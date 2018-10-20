@@ -6,8 +6,7 @@
  * TODO: track active/pressed sash.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkManager.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
@@ -148,7 +147,7 @@ static int ConfigurePane(
     Tk_SavedOptions savedOptions;
     int mask = 0;
 
-    if (Tk_SetOptions(interp, (void*)pane, pw->paned.paneOptionTable,
+    if (Tk_SetOptions(interp, pane, pw->paned.paneOptionTable,
 	    objc, objv, slaveWindow, &savedOptions, &mask) != TCL_OK)
     {
 	return TCL_ERROR;
@@ -715,7 +714,7 @@ static int PanedForgetCommand(
 static int PanedIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    static const char *whatTable[] = { "element", "sash", NULL };
+    static const char *const whatTable[] = { "element", "sash", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_SASH };
     int what = IDENTIFY_SASH;
     Paned *pw = recordPtr;

@@ -9,9 +9,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkUnixInt.h"
 #include "tkMenu.h"
+#include "default.h"
 
 /*
  * Constants used for menu drawing.
@@ -52,8 +52,8 @@ static void		SetHelpMenu(TkMenu *menuPtr);
 static void		DrawMenuEntryAccelerator(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d, GC gc,
 			    Tk_Font tkfont, const Tk_FontMetrics *fmPtr,
-			    Tk_3DBorder activeBorder, int x, int y,
-			    int width, int height, int drawArrow);
+			    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
+			    int x, int y, int width, int height, int drawArrow);
 static void		DrawMenuEntryBackground(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Drawable d,
 			    Tk_3DBorder activeBorder, Tk_3DBorder bgBorder,
@@ -443,9 +443,8 @@ DrawMenuEntryBackground(
 		|| (menuPtr->postedCascade != mePtr))) {
 	    relief = TK_RELIEF_FLAT;
 	} else {
-	    relief = TK_RELIEF_RAISED;
+	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
 	}
-
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height,
@@ -481,6 +480,7 @@ DrawMenuEntryAccelerator(
     Tk_Font tkfont,		/* The precalculated font */
     const Tk_FontMetrics *fmPtr,/* The precalculated metrics */
     Tk_3DBorder activeBorder,	/* The border for an active item */
+    Tk_3DBorder bgBorder,	/* The background border */
     int x,			/* Left coordinate of entry rect */
     int y,			/* Top coordinate of entry rect */
     int width,			/* Width of entry */
@@ -510,8 +510,9 @@ DrawMenuEntryAccelerator(
     	points[1].y = points[0].y + CASCADE_ARROW_HEIGHT;
     	points[2].x = points[0].x + CASCADE_ARROW_WIDTH;
     	points[2].y = points[0].y + CASCADE_ARROW_HEIGHT/2;
-    	Tk_Fill3DPolygon(menuPtr->tkwin, d, activeBorder, points, 3,
-		DECORATION_BORDER_WIDTH,
+    	Tk_Fill3DPolygon(menuPtr->tkwin, d,
+		(mePtr->state == ENTRY_ACTIVE) ? activeBorder : bgBorder,
+		points, 3, DECORATION_BORDER_WIDTH,
 	    	(menuPtr->postedCascade == mePtr)
 	    	? TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
     } else if (mePtr->accelPtr != NULL) {
@@ -638,7 +639,7 @@ DrawMenuSeparator(
 
     points[0].x = x;
     points[0].y = y + height/2;
-    points[1].x = width - 1;
+    points[1].x = x + width - 1;
     points[1].y = points[0].y;
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
     Tk_Draw3DPolygon(menuPtr->tkwin, d, border, points, 2, 1,
@@ -1193,7 +1194,7 @@ DrawTearoffEntry(
     points[0].y = y + height/2;
     points[1].y = points[0].y;
     segmentWidth = 6;
-    maxX = width - 1;
+    maxX = x + width - 1;
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
 
     while (points[0].x < maxX) {
@@ -1326,8 +1327,7 @@ TkpDrawMenuEntry(
     int height,			/* Height of the current rectangle */
     int strictMotif,		/* Boolean flag */
     int drawArrow)		/* Whether or not to draw the cascade arrow
-				 * for cascade items. Only applies to
-				 * Windows. */
+				 * for cascade items. */
 {
     GC gc, indicatorGC;
     XColor *indicatorColor, *disableColor = NULL;
@@ -1435,7 +1435,8 @@ TkpDrawMenuEntry(
 	DrawMenuEntryLabel(menuPtr, mePtr, d, gc, tkfont, fmPtr, x, adjustedY,
 		width, adjustedHeight);
 	DrawMenuEntryAccelerator(menuPtr, mePtr, d, gc, tkfont, fmPtr,
-		activeBorder, x, adjustedY, width, adjustedHeight, drawArrow);
+		activeBorder, bgBorder, x, adjustedY, width, adjustedHeight,
+		drawArrow);
 	if (!mePtr->hideMargin) {
 	    if (mePtr->state == ENTRY_ACTIVE) {
 		bgBorder = activeBorder;
@@ -1718,7 +1719,7 @@ TkpComputeStandardMenuGeometry(
 	menuPtr->entries[j]->entryFlags |= ENTRY_LAST_COLUMN;
     }
     windowWidth = x + indicatorSpace + labelWidth + accelWidth
-	    + 2 * activeBorderWidth + 2 * borderWidth;
+	    + 2 * activeBorderWidth + borderWidth;
 
     windowHeight += borderWidth;
 

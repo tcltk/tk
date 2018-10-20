@@ -16,12 +16,6 @@
 #include "tkInt.h"
 #include "tkText.h"
 
-#ifdef _WIN32
-#include "tkWinInt.h"
-#elif defined(__CYGWIN__)
-#include "tkUnixInt.h"
-#endif
-
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #endif
@@ -136,11 +130,15 @@ typedef struct StyleValues {
 				 * line of each text line. */
     int lMargin2;		/* Left margin, in pixels, for second and
 				 * later display lines of each text line. */
+    Tk_3DBorder lMarginColor;	/* Color of left margins (1 and 2). */
     int offset;			/* Offset in pixels of baseline, relative to
 				 * baseline of line. */
     int overstrike;		/* Non-zero means draw overstrike through
 				 * text. */
+    XColor *overstrikeColor;	/* Foreground color for overstrike through
+                                 * text. */
     int rMargin;		/* Right margin, in pixels. */
+    Tk_3DBorder rMarginColor;	/* Color of right margin. */
     int spacing1;		/* Spacing above first dline in text line. */
     int spacing2;		/* Spacing between lines of dline. */
     int spacing3;		/* Spacing below last dline in text line. */
@@ -149,6 +147,8 @@ typedef struct StyleValues {
     int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
     int underline;		/* Non-zero means draw underline underneath
 				 * text. */
+    XColor *underlineColor;	/* Foreground color for underline underneath
+                                 * text. */
     int elide;			/* Zero means draw text, otherwise not. */
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * One of TEXT_WRAPMODE_CHAR,
@@ -162,11 +162,13 @@ typedef struct StyleValues {
  */
 
 typedef struct TextStyle {
-    int refCount;		/* Number of times this structure is
+    TkSizeT refCount;		/* Number of times this structure is
 				 * referenced in Chunks. */
     GC bgGC;			/* Graphics context for background. None means
 				 * use widget background. */
     GC fgGC;			/* Graphics context for foreground. */
+    GC ulGC;			/* Graphics context for underline. */
+    GC ovGC;			/* Graphics context for overstrike. */
     StyleValues *sValuePtr;	/* Raw information from which GCs were
 				 * derived. */
     Tcl_HashEntry *hPtr;	/* Pointer to entry in styleTable. Used to
@@ -234,6 +236,14 @@ typedef struct DLine {
     int spaceBelow;		/* How much extra space was added to the
 				 * bottom of the line because of spacing
 				 * options. This is included in height. */
+    Tk_3DBorder lMarginColor;	/* Background color of the area corresponding
+				 * to the left margin of the display line. */
+    int lMarginWidth;           /* Pixel width of the area corresponding to
+                                 * the left margin. */
+    Tk_3DBorder rMarginColor;	/* Background color of the area corresponding
+				 * to the right margin of the display line. */
+    int rMarginWidth;           /* Pixel width of the area corresponding to
+                                 * the right margin. */
     int length;			/* Total length of line, in pixels. */
     TkTextDispChunk *chunkPtr;	/* Pointer to first chunk in list of all of
 				 * those that are displayed on this line of
@@ -390,7 +400,7 @@ typedef struct TextDInfo {
 				 * to so far... */
     int metricPixelHeight;	/* ...and this is for the height calculation
 				 * so far...*/
-    int metricEpoch;		/* ...and this for the epoch of the partial
+    TkSizeT metricEpoch;		/* ...and this for the epoch of the partial
 				 * calculation so it can be cancelled if
 				 * things change once more. This field will be
 				 * -1 if there is no long-line calculation in
@@ -594,7 +604,7 @@ static void		AsyncUpdateLineMetrics(ClientData clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
-                            CONST TkTextIndex *indexPtr);
+                            const TkTextIndex *indexPtr);
 
 /*
  * Result values returned by TextGetScrollInfoObj:
@@ -748,6 +758,7 @@ GetStyle(
     TextStyle *stylePtr;
     Tcl_HashEntry *hPtr;
     int numTags, isNew, i;
+    int isSelected;
     XGCValues gcValues;
     unsigned long mask;
     /*
@@ -758,6 +769,7 @@ GetStyle(
     int fgPrio, fontPrio, fgStipplePrio;
     int underlinePrio, elidePrio, justifyPrio, offsetPrio;
     int lMargin1Prio, lMargin2Prio, rMarginPrio;
+    int lMarginColorPrio, rMarginColorPrio;
     int spacing1Prio, spacing2Prio, spacing3Prio;
     int overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
 
@@ -772,11 +784,14 @@ GetStyle(
     fgPrio = fontPrio = fgStipplePrio = -1;
     underlinePrio = elidePrio = justifyPrio = offsetPrio = -1;
     lMargin1Prio = lMargin2Prio = rMarginPrio = -1;
+    lMarginColorPrio = rMarginColorPrio = -1;
     spacing1Prio = spacing2Prio = spacing3Prio = -1;
     overstrikePrio = tabPrio = tabStylePrio = wrapPrio = -1;
     memset(&styleValues, 0, sizeof(StyleValues));
     styleValues.relief = TK_RELIEF_FLAT;
     styleValues.fgColor = textPtr->fgColor;
+    styleValues.underlineColor = textPtr->fgColor;
+    styleValues.overstrikeColor = textPtr->fgColor;
     styleValues.tkfont = textPtr->tkfont;
     styleValues.justify = TK_JUSTIFY_LEFT;
     styleValues.spacing1 = textPtr->spacing1;
@@ -786,12 +801,22 @@ GetStyle(
     styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
     styleValues.elide = 0;
+    isSelected = 0;
+
+    for (i = 0 ; i < numTags; i++) {
+        if (textPtr->selTagPtr == tagPtrs[i]) {
+            isSelected = 1;
+            break;
+        }
+    }
 
     for (i = 0 ; i < numTags; i++) {
 	Tk_3DBorder border;
+        XColor *fgColor;
 
 	tagPtr = tagPtrs[i];
 	border = tagPtr->border;
+        fgColor = tagPtr->fgColor;
 
 	/*
 	 * If this is the selection tag, and inactiveSelBorder is NULL (the
@@ -810,6 +835,14 @@ GetStyle(
 	    }
 	    border = textPtr->inactiveSelBorder;
 	}
+
+        if ((tagPtr->selBorder != NULL) && (isSelected)) {
+            border = tagPtr->selBorder;
+        }
+
+        if ((tagPtr->selFgColor != None) && (isSelected)) {
+            fgColor = tagPtr->selFgColor;
+        }
 
 	if ((border != NULL) && (tagPtr->priority > borderPrio)) {
 	    styleValues.border = border;
@@ -834,8 +867,8 @@ GetStyle(
 	    styleValues.bgStipple = tagPtr->bgStipple;
 	    bgStipplePrio = tagPtr->priority;
 	}
-	if ((tagPtr->fgColor != None) && (tagPtr->priority > fgPrio)) {
-	    styleValues.fgColor = tagPtr->fgColor;
+	if ((fgColor != None) && (tagPtr->priority > fgPrio)) {
+	    styleValues.fgColor = fgColor;
 	    fgPrio = tagPtr->priority;
 	}
 	if ((tagPtr->tkfont != None) && (tagPtr->priority > fontPrio)) {
@@ -862,6 +895,11 @@ GetStyle(
 	    styleValues.lMargin2 = tagPtr->lMargin2;
 	    lMargin2Prio = tagPtr->priority;
 	}
+	if ((tagPtr->lMarginColor != NULL)
+		&& (tagPtr->priority > lMarginColorPrio)) {
+	    styleValues.lMarginColor = tagPtr->lMarginColor;
+	    lMarginColorPrio = tagPtr->priority;
+	}
 	if ((tagPtr->offsetString != NULL)
 		&& (tagPtr->priority > offsetPrio)) {
 	    styleValues.offset = tagPtr->offset;
@@ -871,11 +909,21 @@ GetStyle(
 		&& (tagPtr->priority > overstrikePrio)) {
 	    styleValues.overstrike = tagPtr->overstrike;
 	    overstrikePrio = tagPtr->priority;
+            if (tagPtr->overstrikeColor != None) {
+                 styleValues.overstrikeColor = tagPtr->overstrikeColor;
+            } else if (fgColor != None) {
+                 styleValues.overstrikeColor = fgColor;
+            }
 	}
 	if ((tagPtr->rMarginString != NULL)
 		&& (tagPtr->priority > rMarginPrio)) {
 	    styleValues.rMargin = tagPtr->rMargin;
 	    rMarginPrio = tagPtr->priority;
+	}
+	if ((tagPtr->rMarginColor != NULL)
+		&& (tagPtr->priority > rMarginColorPrio)) {
+	    styleValues.rMarginColor = tagPtr->rMarginColor;
+	    rMarginColorPrio = tagPtr->priority;
 	}
 	if ((tagPtr->spacing1String != NULL)
 		&& (tagPtr->priority > spacing1Prio)) {
@@ -906,6 +954,11 @@ GetStyle(
 		&& (tagPtr->priority > underlinePrio)) {
 	    styleValues.underline = tagPtr->underline;
 	    underlinePrio = tagPtr->priority;
+            if (tagPtr->underlineColor != None) {
+                 styleValues.underlineColor = tagPtr->underlineColor;
+            } else if (fgColor != None) {
+                 styleValues.underlineColor = fgColor;
+            }
 	}
 	if ((tagPtr->elideString != NULL)
 		&& (tagPtr->priority > elidePrio)) {
@@ -962,6 +1015,11 @@ GetStyle(
 	mask |= GCStipple|GCFillStyle;
     }
     stylePtr->fgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
+    mask = GCForeground;
+    gcValues.foreground = styleValues.underlineColor->pixel;
+    stylePtr->ulGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
+    gcValues.foreground = styleValues.overstrikeColor->pixel;
+    stylePtr->ovGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     stylePtr->sValuePtr = (StyleValues *)
 	    Tcl_GetHashKey(&textPtr->dInfoPtr->styleTable, hPtr);
     stylePtr->hPtr = hPtr;
@@ -994,13 +1052,18 @@ FreeStyle(
     register TextStyle *stylePtr)
 				/* Information about style to free. */
 {
-    stylePtr->refCount--;
-    if (stylePtr->refCount == 0) {
+    if (stylePtr->refCount-- <= 1) {
 	if (stylePtr->bgGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->bgGC);
 	}
 	if (stylePtr->fgGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->fgGC);
+	}
+	if (stylePtr->ulGC != None) {
+	    Tk_FreeGC(textPtr->display, stylePtr->ulGC);
+	}
+	if (stylePtr->ovGC != None) {
+	    Tk_FreeGC(textPtr->display, stylePtr->ovGC);
 	}
 	Tcl_DeleteHashEntry(stylePtr->hPtr);
 	ckfree(stylePtr);
@@ -1113,6 +1176,10 @@ LayoutDLine(
     dlPtr->nextPtr = NULL;
     dlPtr->flags = NEW_LAYOUT | OLD_Y_INVALID;
     dlPtr->logicalLinesMerged = 0;
+    dlPtr->lMarginColor = NULL;
+    dlPtr->lMarginWidth = 0;
+    dlPtr->rMarginColor = NULL;
+    dlPtr->rMarginWidth = 0;
 
     /*
      * This is not necessarily totally correct, where we have merged logical
@@ -1387,6 +1454,7 @@ LayoutDLine(
 
 		x = chunkPtr->stylePtr->sValuePtr->lMargin2;
 	    }
+            dlPtr->lMarginWidth = x;
 	    if (wrapMode == TEXT_WRAPMODE_NONE) {
 		maxX = -1;
 	    } else {
@@ -1698,6 +1766,11 @@ LayoutDLine(
     }
     dlPtr->height += dlPtr->spaceAbove + dlPtr->spaceBelow;
     dlPtr->baseline += dlPtr->spaceAbove;
+    dlPtr->lMarginColor = sValuePtr->lMarginColor;
+    dlPtr->rMarginColor = sValuePtr->rMarginColor;
+    if (wrapMode != TEXT_WRAPMODE_NONE) {
+        dlPtr->rMarginWidth = rMargin;
+    }
 
     /*
      * Recompute line length: may have changed because of justification.
@@ -2384,10 +2457,24 @@ DisplayDLine(
 	    Tk_Width(textPtr->tkwin), dlPtr->height, 0, TK_RELIEF_FLAT);
 
     /*
-     * Next, draw background information for the whole line.
+     * Second, draw background information for the whole line.
      */
 
     DisplayLineBackground(textPtr, dlPtr, prevPtr, pixmap);
+
+    /*
+     * Third, draw the background color of the left and right margins.
+     */
+    if (dlPtr->lMarginColor != NULL) {
+        Tk_Fill3DRectangle(textPtr->tkwin, pixmap, dlPtr->lMarginColor, 0, y,
+                dlPtr->lMarginWidth + dInfoPtr->x - dInfoPtr->curXPixelOffset,
+                dlPtr->height, 0, TK_RELIEF_FLAT);
+    }
+    if (dlPtr->rMarginColor != NULL) {
+        Tk_Fill3DRectangle(textPtr->tkwin, pixmap, dlPtr->rMarginColor,
+                dInfoPtr->maxX - dlPtr->rMarginWidth + dInfoPtr->curXPixelOffset,
+                y, dlPtr->rMarginWidth, dlPtr->height, 0, TK_RELIEF_FLAT);
+    }
 
     /*
      * Make another pass through all of the chunks to redraw the insertion
@@ -2911,7 +2998,7 @@ AsyncUpdateLineMetrics(
 	 * The widget has been deleted, or is not mapped. Don't do anything.
 	 */
 
-	if (--textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	}
 	return;
@@ -2956,7 +3043,7 @@ AsyncUpdateLineMetrics(
      * and we've reached the last line, then we're done.
      */
 
-    if (dInfoPtr->metricEpoch == -1
+    if (dInfoPtr->metricEpoch == TCL_AUTO_LENGTH
 	    && lineNum == dInfoPtr->lastMetricUpdateLine) {
 	/*
 	 * We have looped over all lines, so we're done. We must release our
@@ -2986,8 +3073,7 @@ AsyncUpdateLineMetrics(
 
         GenerateWidgetViewSyncEvent(textPtr, 1);
 
-	textPtr->refCount--;
-	if (textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	}
 	return;
@@ -3010,7 +3096,7 @@ AsyncUpdateLineMetrics(
  *      Send the <<WidgetViewSync>> event related to the text widget
  *      line metrics asynchronous update.
  *      This is equivalent to:
- *         event generate $textWidget <<WidgetViewSync>> -detail $s
+ *         event generate $textWidget <<WidgetViewSync>> -data $s
  *      where $s is the sync status: true (when the widget view is in
  *      sync with its internal data) or false (when it is not).
  *
@@ -3026,19 +3112,10 @@ AsyncUpdateLineMetrics(
 static void
 GenerateWidgetViewSyncEvent(
     TkText *textPtr,		/* Information about text widget. */
-    Bool InSync)                /* True if in sync, false otherwise */
+    Bool InSync)                /* true if in sync, false otherwise */
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(textPtr->tkwin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(textPtr->tkwin);
-    event.general.xany.display = Tk_Display(textPtr->tkwin);
-    event.virtual.name = Tk_GetUid("WidgetViewSync");
-    event.virtual.user_data = Tcl_NewBooleanObj(InSync);
-    Tk_HandleEvent(&event.general);
+    TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
+        Tcl_NewBooleanObj(InSync));
 }
 
 /*
@@ -3116,7 +3193,7 @@ TkTextUpdateLineMetrics(
 	     * then we can't be done.
 	     */
 
-	    if (textPtr->dInfoPtr->metricEpoch == -1 && lineNum == endLine) {
+	    if (textPtr->dInfoPtr->metricEpoch == TCL_AUTO_LENGTH && lineNum == endLine) {
 		/*
 		 * We have looped over all lines, so we're done.
 		 */
@@ -4036,8 +4113,8 @@ DisplayText(
     MacDrawable *macWin = winPtr->privatePtr;
     if (macWin && (macWin->flags & TK_DO_NOT_DRAW)){
 	dInfoPtr->flags &= ~REDRAW_PENDING;
-	return;
-    }
+    	return;
+     }
 #endif
 
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
@@ -4078,7 +4155,7 @@ DisplayText(
 	textPtr->refCount++;
 	dInfoPtr->flags &= ~REPICK_NEEDED;
 	TkTextPickCurrent(textPtr, &textPtr->pickEvent);
-	if (--textPtr->refCount == 0) {
+	if (textPtr->refCount-- <= 1) {
 	    ckfree(textPtr);
 	    goto end;
 	}
@@ -4190,7 +4267,6 @@ DisplayText(
 	    }
 	    dlPtr = dlPtr->nextPtr;
 	}
-
 	/*
 	 * Scan through the lines following the copied ones to see if we are
 	 * going to overwrite them with the copy operation. If so, mark them
@@ -4215,7 +4291,6 @@ DisplayText(
 		oldY, dInfoPtr->maxX-dInfoPtr->x, height, 0, y-oldY,
 		damageRgn)) {
 	    TextInvalidateRegion(textPtr, damageRgn);
-
 	}
 	numCopies++;
 	TkDestroyRegion(damageRgn);
@@ -4357,11 +4432,38 @@ DisplayText(
 		}
 		dlPtr->oldY = dlPtr->y;
 		dlPtr->flags &= ~(NEW_LAYOUT | OLD_Y_INVALID);
+#ifdef MAC_OSX_TK
+	    } else if (dlPtr->chunkPtr != NULL) {
+		/*
+		 * On macOS we need to redisplay all embedded windows which
+		 * were moved by the call to TkScrollWindows above.  This is
+		 * not necessary on Unix or Windows because XScrollWindow will
+		 * have included the bounding rectangles of all of these
+		 * windows in the damage region.  The macosx implementation of
+		 * TkScrollWindow does not do this.  It simply generates a
+		 * damage region which is the scroll source rectangle minus
+		 * the scroll destination rectangle.  This is because there is
+		 * no efficient process available for iterating through the
+		 * subwindows which meet the scrolled area.  (On Unix this is
+		 * handled by GraphicsExpose events generated by XCopyArea and
+		 * on Windows by ScrollWindowEx.  On macOS the low level
+		 * scrolling is accomplished by calling [view scrollRect:by:].
+		 * This method does not provide any damage information and, in
+		 * any case, could not be aware of Tk windows which were not
+		 * based on NSView objects.
+		 *
+		 * On the other hand, this loop is already iterating through
+		 * all embedded windows which could possibly have been moved
+		 * by the scrolling.  So it is as efficient to redisplay them
+		 * here as it would have been if they had been redisplayed by
+		 * the call to TextInvalidateRegion above.
+		 */
+#else
 	    } else if (dlPtr->chunkPtr != NULL && ((dlPtr->y < 0)
 		    || (dlPtr->y + dlPtr->height > dInfoPtr->maxY))) {
-		register TkTextDispChunk *chunkPtr;
-
 		/*
+		 * On platforms other than the Mac:
+		 *
 		 * It's the first or last DLine which are also overlapping the
 		 * top or bottom of the window, but we decided above it wasn't
 		 * necessary to display them (we were able to update them by
@@ -4375,6 +4477,8 @@ DisplayText(
 		 * So, we loop through all the chunks, calling the display
 		 * proc of embedded windows only.
 		 */
+#endif
+		register TkTextDispChunk *chunkPtr;
 
 		for (chunkPtr = dlPtr->chunkPtr; (chunkPtr != NULL);
 			chunkPtr = chunkPtr->nextPtr) {
@@ -4397,13 +4501,18 @@ DisplayText(
 
 			x = -chunkPtr->width;
 		    }
+		    if (tkTextDebug) {
+			char string[TK_POS_CHARS];
+
+			TkTextPrintIndex(textPtr, &dlPtr->index, string);
+			LOG("tk_textEmbWinDisplay", string);
+		    }
 		    TkTextEmbWinDisplayProc(textPtr, chunkPtr, x,
 			    dlPtr->spaceAbove,
 			    dlPtr->height-dlPtr->spaceAbove-dlPtr->spaceBelow,
 			    dlPtr->baseline - dlPtr->spaceAbove, NULL,
 			    (Drawable) None, dlPtr->y + dlPtr->spaceAbove);
 		}
-
 	    }
 	}
 #ifndef TK_NO_DOUBLE_BUFFERING
@@ -5973,7 +6082,7 @@ TkTextYviewCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace, type;
     int pixels, count;
-    int switchLength;
+    size_t switchLength;
     double fraction;
     TkTextIndex index;
 
@@ -5993,7 +6102,7 @@ TkTextYviewCmd(
     pickPlace = 0;
     if (Tcl_GetString(objv[2])[0] == '-') {
 	register const char *switchStr =
-		Tcl_GetStringFromObj(objv[2], &switchLength);
+		TkGetStringFromObj(objv[2], &switchLength);
 
 	if ((switchLength >= 2) && (strncmp(switchStr, "-pickplace",
 		(unsigned) switchLength) == 0)) {
@@ -6148,7 +6257,7 @@ TkTextPendingsync(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
     return (
-        ((dInfoPtr->metricEpoch == -1) &&
+        ((dInfoPtr->metricEpoch == TCL_AUTO_LENGTH) &&
          (dInfoPtr->lastMetricUpdateLine == dInfoPtr->currentMetricUpdateLine)) ?
         0 : 1);
 }
@@ -6667,7 +6776,7 @@ AsyncUpdateYScrollbar(
 	GetYView(textPtr->interp, textPtr, 1);
     }
 
-    if (--textPtr->refCount == 0) {
+    if (textPtr->refCount-- <= 1) {
 	ckfree(textPtr);
     }
 }
@@ -6805,7 +6914,7 @@ FindDLine(
 static int
 IsStartOfNotMergedLine(
       TkText *textPtr,              /* Widget record for text widget. */
-      CONST TkTextIndex *indexPtr)  /* Index to check. */
+      const TkTextIndex *indexPtr)  /* Index to check. */
 {
     TkTextIndex indexPtr2;
 
@@ -7457,6 +7566,9 @@ TkTextCharLayoutProc(
      *	 (b) at least one pixel of the character is visible, we have not
      *	     already exceeded the character limit, and the next character is a
      *	     white space character.
+     * In the specific case of 'word' wrapping mode however, include all space
+     * characters following the characters that fit in the space we've got,
+     * even if no pixel of them is visible.
      */
 
     p = segPtr->body.chars + byteOffset;
@@ -7496,8 +7608,8 @@ TkTextCharLayoutProc(
 
     if (bytesThatFit < maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
-	    Tcl_UniChar ch;
-	    int chLen = Tcl_UtfToUniChar(p, &ch);
+	    int ch;
+	    int chLen = TkUtfToUniChar(p, &ch);
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
@@ -7519,6 +7631,21 @@ TkTextCharLayoutProc(
 	    nextX = maxX;
 	    bytesThatFit++;
 	}
+        if (wrapMode == TEXT_WRAPMODE_WORD) {
+            while (p[bytesThatFit] == ' ') {
+                /*
+                 * Space characters that would go at the beginning of the
+                 * next line are allocated to the current line. This gives
+                 * the effect of trimming white spaces that would otherwise
+                 * be seen at the beginning of wrapped lines.
+                 * Note that testing for '\t' is useless here because the
+                 * chunk always includes at most one trailing \t, see
+                 * LayoutDLine.
+                 */
+
+                bytesThatFit++;
+            }
+        }
 	if (p[bytesThatFit] == '\n') {
 	    /*
 	     * A newline character takes up no space, so if the previous
@@ -7562,7 +7689,7 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #if !TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = ckalloc((Tk_Offset(CharInfo, chars) + 1) + bytesThatFit);
+    ciPtr = ckalloc(Tk_Offset(CharInfo, chars) + 1 + bytesThatFit);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, (unsigned) bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -7716,7 +7843,7 @@ CharChunkMeasureChars(
 
 	    MeasureChars(tkfont, chars, charsLen, 0, bstart,
 		    0, -1, 0, &widthUntilStart);
-	    xDisplacement = startX - widthUntilStart - chunkPtr->x;
+	    xDisplacement = startX - widthUntilStart - ciPtr->baseChunkPtr->x;
 	}
 
 	fit = MeasureChars(tkfont, chars, charsLen, 0, bend,
@@ -7845,7 +7972,7 @@ CharDisplayProc(
 		y + baseline - sValuePtr->offset);
 
 	if (sValuePtr->underline) {
-	    TkUnderlineCharsInContext(display, dst, stylePtr->fgGC,
+	    TkUnderlineCharsInContext(display, dst, stylePtr->ulGC,
 		    sValuePtr->tkfont, string, numBytes,
 		    ciPtr->baseChunkPtr->x + xDisplacement,
 		    y + baseline - sValuePtr->offset,
@@ -7855,7 +7982,7 @@ CharDisplayProc(
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(sValuePtr->tkfont, &fm);
-	    TkUnderlineCharsInContext(display, dst, stylePtr->fgGC,
+	    TkUnderlineCharsInContext(display, dst, stylePtr->ovGC,
 		    sValuePtr->tkfont, string, numBytes,
 		    ciPtr->baseChunkPtr->x + xDisplacement,
 		    y + baseline - sValuePtr->offset
@@ -7872,7 +7999,7 @@ CharDisplayProc(
 	Tk_DrawChars(display, dst, stylePtr->fgGC, sValuePtr->tkfont, string,
 		numBytes, offsetX, y + baseline - sValuePtr->offset);
 	if (sValuePtr->underline) {
-	    Tk_UnderlineChars(display, dst, stylePtr->fgGC, sValuePtr->tkfont,
+	    Tk_UnderlineChars(display, dst, stylePtr->ulGC, sValuePtr->tkfont,
 		    string, offsetX,
 		    y + baseline - sValuePtr->offset,
 		    0, numBytes);
@@ -7882,7 +8009,7 @@ CharDisplayProc(
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(sValuePtr->tkfont, &fm);
-	    Tk_UnderlineChars(display, dst, stylePtr->fgGC, sValuePtr->tkfont,
+	    Tk_UnderlineChars(display, dst, stylePtr->ovGC, sValuePtr->tkfont,
 		    string, offsetX,
 		    y + baseline - sValuePtr->offset
 			    - fm.descent - (fm.ascent * 3) / 10,
@@ -8690,7 +8817,7 @@ FinalizeBaseChunk(
 #if TK_DRAW_IN_CONTEXT
 	newwidth = 0;
 	CharChunkMeasureChars(chunkPtr, NULL, 0, 0, -1, 0, -1, 0, &newwidth);
-	if (newwidth != chunkPtr->width) {
+	if (newwidth < chunkPtr->width) {
 	    widthAdjust += newwidth - chunkPtr->width;
 	    chunkPtr->width = newwidth;
 	}
@@ -8878,13 +9005,13 @@ RemoveFromBaseChunk(
 
     bciPtr = baseCharChunkPtr->clientData;
 
+#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
     if ((ciPtr->baseOffset + ciPtr->numBytes)
 	    != Tcl_DStringLength(&bciPtr->baseChars)) {
-#ifdef DEBUG_LAYOUT_WITH_BASE_CHUNKS
 	fprintf(stderr,"RemoveFromBaseChunk called with wrong chunk "
 		"(not last)\n");
-#endif
     }
+#endif
 
     Tcl_DStringSetLength(&bciPtr->baseChars, ciPtr->baseOffset);
 

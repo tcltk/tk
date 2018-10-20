@@ -17,9 +17,13 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkScale.h"
+#include "default.h"
+
+#if defined(_WIN32)
+#define snprintf _snprintf
+#endif
 
 /*
  * The following table defines the legal values for the -orient option. It is
@@ -296,12 +300,18 @@ Tk_ScaleObjCmd(
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ScaleEventProc, scalePtr);
 
-    if ((Tk_InitOptions(interp, (char *) scalePtr, optionTable, tkwin)
+    if ((Tk_InitOptions(interp, scalePtr, optionTable, tkwin)
 	    != TCL_OK) ||
 	    (ConfigureScale(interp, scalePtr, objc - 2, objv + 2) != TCL_OK)) {
 	Tk_DestroyWindow(scalePtr->tkwin);
 	return TCL_ERROR;
     }
+
+    /*
+     * The widget was just created, no command callback must be invoked.
+     */
+
+    scalePtr->flags &= ~INVOKE_COMMAND;
 
     Tcl_SetObjResult(interp, TkNewWindowObj(scalePtr->tkwin));
     return TCL_OK;
@@ -353,7 +363,7 @@ ScaleWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 1, objv, "cget option");
 	    goto error;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) scalePtr,
+	objPtr = Tk_GetOptionValue(interp, scalePtr,
 		scalePtr->optionTable, objv[2], scalePtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
@@ -362,7 +372,7 @@ ScaleWidgetObjCmd(
 	break;
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) scalePtr,
+	    objPtr = Tk_GetOptionInfo(interp, scalePtr,
 		    scalePtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL, scalePtr->tkwin);
 	    if (objPtr == NULL) {
@@ -572,7 +582,7 @@ ConfigureScale(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) scalePtr,
+	    if (Tk_SetOptions(interp, scalePtr,
 		    scalePtr->optionTable, objc, objv, scalePtr->tkwin,
 		    &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -628,7 +638,7 @@ ConfigureScale(
 
 	ComputeFormat(scalePtr);
 
-	scalePtr->labelLength = scalePtr->label ? (int)strlen(scalePtr->label) : 0;
+	scalePtr->labelLength = scalePtr->label ? strlen(scalePtr->label) : 0;
 
 	Tk_SetBackgroundFromBorder(scalePtr->tkwin, scalePtr->bgBorder);
 
@@ -671,9 +681,9 @@ ConfigureScale(
 	} else {
 	    char varString[TCL_DOUBLE_SPACE], scaleString[TCL_DOUBLE_SPACE];
 
-	    sprintf(varString, scalePtr->format, varValue);
-	    sprintf(scaleString, scalePtr->format, scalePtr->value);
-	    if (strcmp(varString, scaleString)) {
+            Tcl_PrintDouble(NULL, varValue, varString);
+            Tcl_PrintDouble(NULL, scalePtr->value, scaleString);
+            if (strcmp(varString, scaleString)) {
 		ScaleSetVariable(scalePtr);
 	    }
 	}
@@ -930,10 +940,16 @@ ComputeScaleGeometry(
      * whichever length is longer.
      */
 
-    sprintf(valueString, scalePtr->format, scalePtr->fromValue);
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+            scalePtr->fromValue) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
     valuePixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 
-    sprintf(valueString, scalePtr->format, scalePtr->toValue);
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+            scalePtr->toValue) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
     tmp = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
     if (valuePixels < tmp) {
 	valuePixels = tmp;
@@ -1177,6 +1193,19 @@ ScaleVarProc(
     int result;
 
     /*
+     * See ticket [5d991b82].
+     */
+
+    if (scalePtr->varNamePtr == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    ScaleVarProc, clientData);
+	}
+	return NULL;
+    }
+
+    /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.
      */
@@ -1268,7 +1297,14 @@ TkScaleSetValue(
 	return;
     }
     scalePtr->value = value;
-    if (invokeCommand) {
+
+    /*
+     * Schedule command callback invocation only if there is such a command
+     * already registered, otherwise the callback would trigger later when
+     * configuring the widget -command option even if the value did not change.
+     */
+
+    if ((invokeCommand) && (scalePtr->command != NULL)) {
 	scalePtr->flags |= INVOKE_COMMAND;
     }
     TkEventuallyRedrawScale(scalePtr, REDRAW_SLIDER);
@@ -1301,7 +1337,10 @@ ScaleSetVariable(
     if (scalePtr->varNamePtr != NULL) {
 	char string[TCL_DOUBLE_SPACE];
 
-	sprintf(string, scalePtr->format, scalePtr->value);
+        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+                scalePtr->value) < 0) {
+            string[TCL_DOUBLE_SPACE - 1] = '\0';
+        }
 	scalePtr->flags |= SETTING_VAR;
 	Tcl_ObjSetVar2(scalePtr->interp, scalePtr->varNamePtr, NULL,
 		Tcl_NewStringObj(string, -1), TCL_GLOBAL_ONLY);
