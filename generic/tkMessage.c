@@ -13,8 +13,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * A data structure of the following type is kept for each message widget
@@ -242,7 +242,7 @@ Tk_MessageObjCmd(
     optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
     msgPtr = ckalloc(sizeof(Message));
-    memset(msgPtr, 0, (size_t) sizeof(Message));
+    memset(msgPtr, 0, sizeof(Message));
 
     /*
      * Set values for those fields that don't take a 0 or NULL value.
@@ -267,7 +267,7 @@ Tk_MessageObjCmd(
     Tk_CreateEventHandler(msgPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    MessageEventProc, msgPtr);
-    if (Tk_InitOptions(interp, (char *)msgPtr, optionTable, tkwin) != TCL_OK) {
+    if (Tk_InitOptions(interp, msgPtr, optionTable, tkwin) != TCL_OK) {
 	Tk_DestroyWindow(msgPtr->tkwin);
 	return TCL_ERROR;
     }
@@ -331,7 +331,7 @@ MessageWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    result = TCL_ERROR;
 	} else {
-	    objPtr = Tk_GetOptionValue(interp, (char *) msgPtr,
+	    objPtr = Tk_GetOptionValue(interp, msgPtr,
 		    msgPtr->optionTable, objv[2], msgPtr->tkwin);
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
@@ -343,7 +343,7 @@ MessageWidgetObjCmd(
 	break;
     case MESSAGE_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) msgPtr,
+	    objPtr = Tk_GetOptionInfo(interp, msgPtr,
 		    msgPtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    msgPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -455,7 +455,7 @@ ConfigureMessage(
 		MessageTextVarProc, msgPtr);
     }
 
-    if (Tk_SetOptions(interp, (char *) msgPtr, msgPtr->optionTable, objc, objv,
+    if (Tk_SetOptions(interp, msgPtr, msgPtr->optionTable, objc, objv,
 	    msgPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	return TCL_ERROR;
@@ -837,6 +837,19 @@ MessageTextVarProc(
 {
     register Message *msgPtr = clientData;
     const char *value;
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (msgPtr->textVarName == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    MessageTextVarProc, clientData);
+	}
+	return NULL;
+    }
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole

@@ -41,6 +41,9 @@ If fewer than four elements are specified,
 \fIbottom\fR defaults to \fItop\fR,
 \fIright\fR defaults to \fIleft\fR, and
 \fItop\fR defaults to \fIleft\fR.
+In other words, a list of three numbers specify the left, vertical, and right padding;
+a list of two numbers specify the horizontal and the vertical padding;
+a single number specifies the same padding all the way around the widget.
 .OP \-width width Width
 If present and greater than zero,
 specifies the desired width of the pane area
@@ -171,7 +174,8 @@ Otherwise, sets the \fI\-option\fRs to the corresponding \fIvalue\fRs.
 See \fBTAB OPTIONS\fR for the available options.
 .TP
 \fIpathname \fBtabs\fR
-Returns the list of windows managed by the notebook.
+Returns the list of windows managed by the notebook, in the index order of
+their associated tabs.
 .SH "KEYBOARD TRAVERSAL"
 To enable keyboard traversal for a toplevel window
 containing a notebook widget \fI$nb\fR, call:
@@ -204,6 +208,56 @@ pack [\fBttk::notebook\fR .nb]
 \&.nb select .nb.f2
 ttk::notebook::enableTraversal .nb
 .CE
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::notebook\fP is \fBTNotebook\fP.  The tab has
+a class name of \fBTNotebook.Tab\fP
+.PP
+Dynamic states: \fBactive\fP, \fBdisabled\fP, \fBselected\fP.
+.PP
+\fBTNotebook\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-darkcolor\fP \fIcolor\fP
+.br
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-lightcolor\fP \fIcolor\fP
+.br
+\fB\-padding\fP \fIpadding\fP
+.br
+\fB\-tabmargins\fP \fIpadding\fP
+.br
+\fB\-tabposition\fP \fIside\fP
+.br
+.PP
+\fBTNotebook.Tab\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-expand\fP \fIpadding\fP
+.RS
+Defines how much the tab grows in size.  Usually used with the
+\fBselected\fP dynamic state.  \fB\-tabmargins\fP should be
+set appropriately so that there is room for the tab growth.
+.RE
+\fB\-font\fP \fIfont\fP
+.br
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-padding\fP \fIpadding\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), grid(n)
 .SH "KEYWORDS"

@@ -590,7 +590,7 @@ XResizeWindow(
 /*
  *----------------------------------------------------------------------
  *
- * XRaiseWindow --
+ * XRaiseWindow, XLowerWindow --
  *
  *	Change the stacking order of a window.
  *
@@ -612,6 +612,18 @@ XRaiseWindow(
 
     display->request++;
     SetWindowPos(window, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+    return Success;
+}
+
+int
+XLowerWindow(
+    Display *display,
+    Window w)
+{
+    HWND window = Tk_GetHWND(w);
+
+    display->request++;
+    SetWindowPos(window, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     return Success;
 }
 
@@ -748,6 +760,33 @@ XChangeWindowAttributes(
 	XDefineCursor(display, w, attributes->cursor);
     }
     return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * XReparentWindow --
+ *
+ *	TODO: currently placeholder to satisfy Xlib stubs.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	TODO.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+XReparentWindow(
+    Display *display,
+    Window w,
+    Window parent,
+    int x,
+    int y)
+{
+    return BadWindow;
 }
 
 /*

@@ -1998,6 +1998,25 @@ test grid-22.5 {remove} {
     grid info .c
 } {-in . -column 0 -row 0 -columnspan 2 -rowspan 2 -ipadx 0 -ipady 0 -padx {3 5} -pady {4 7} -sticky ns}
 grid_reset 22.5
+
+test grid-23 {grid configure -in leaked from previous master - bug
+              6aea69fccbb266b7f0437686379fbe5b55442958} {
+    frame .f
+    frame .g
+    pack .f .g
+    text .t
+    grid .t -in .f
+    pack forget .f
+    update
+    grid .t -in .g
+    # .t is now managed by .g; following lines must have no effect on .t
+    pack .f
+    update
+    pack forget .f
+    update
+    winfo ismapped .t ; # must return 1
+} {1}
+grid_reset 23
 
 # cleanup
 cleanupTests

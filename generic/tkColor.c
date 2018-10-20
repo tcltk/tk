@@ -480,8 +480,7 @@ Tk_FreeColor(
 	Tcl_Panic("Tk_FreeColor called with bogus color");
     }
 
-    tkColPtr->resourceRefCount--;
-    if (tkColPtr->resourceRefCount > 0) {
+    if (tkColPtr->resourceRefCount-- > 1) {
 	return;
     }
 
@@ -587,8 +586,7 @@ FreeColorObj(
     TkColor *tkColPtr = objPtr->internalRep.twoPtrValue.ptr1;
 
     if (tkColPtr != NULL) {
-	tkColPtr->objRefCount--;
-	if ((tkColPtr->objRefCount == 0)
+	if ((tkColPtr->objRefCount-- <= 1)
 		&& (tkColPtr->resourceRefCount == 0)) {
 	    ckfree(tkColPtr);
 	}
@@ -820,9 +818,9 @@ TkDebugColor(
 	    Tcl_Obj *objPtr = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(tkColPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(tkColPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(tkColPtr->objRefCount));
+		    Tcl_NewWideIntObj(tkColPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

@@ -168,7 +168,7 @@ static int		TestmenubarObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 #endif
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
 static int		TestmetricsObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
@@ -192,6 +192,9 @@ static void		CustomOptionFree(ClientData clientData,
 static int		TestpropObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
+static int		TestprintfObjCmd(ClientData dummy,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj * const objv[]);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int		TestwrapperObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
@@ -203,6 +206,9 @@ static int		TrivialConfigObjCmd(ClientData dummy,
 			    Tcl_Obj * const objv[]);
 static void		TrivialEventProc(ClientData clientData,
 			    XEvent *eventPtr);
+static int              TestPhotoStringMatchCmd(ClientData dummy,
+                            Tcl_Interp *interp, int objc,
+                            Tcl_Obj * const objv[]);
 
 /*
  *----------------------------------------------------------------------
@@ -227,7 +233,7 @@ Tktest_Init(
 {
     static int initialized = 0;
 
-    if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	return TCL_ERROR;
     }
     if (Tk_InitStubs(interp, TK_VERSION, 0) == NULL) {
@@ -239,7 +245,7 @@ Tktest_Init(
      */
 
     if (Tcl_PkgProvideEx(interp, "Tktest", TK_PATCH_LEVEL, NULL) == TCL_ERROR) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     Tcl_CreateObjCommand(interp, "square", SquareObjCmd, NULL, NULL);
@@ -263,20 +269,24 @@ Tktest_Init(
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testprop", TestpropObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand(interp, "testphotostringmatch",
+            TestPhotoStringMatchCmd, (ClientData) Tk_MainWindow(interp),
+            NULL);
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
     Tcl_CreateObjCommand(interp, "testmetrics", TestmetricsObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-#elif !defined(__CYGWIN__)
+#elif !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
     Tcl_CreateObjCommand(interp, "testmenubar", TestmenubarObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testsend", TkpTestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwrapper", TestwrapperObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-#endif /* _WIN32 || MAC_OSX_TK */
+#endif /* _WIN32 */
 
     /*
      * Create test image type.
@@ -452,7 +462,7 @@ TestcursorObjCmd(
  *	A standard Tcl result.
  *
  * Side effects:
- *	All the intepreters created by previous calls to "testnewapp" get
+ *	All the interpreters created by previous calls to "testnewapp" get
  *	deleted.
  *
  *----------------------------------------------------------------------
@@ -665,7 +675,7 @@ TestobjconfigObjCmd(
 	recordPtr->mmPtr = NULL;
 	recordPtr->stringTablePtr = NULL;
 	recordPtr->customPtr = NULL;
-	result = Tk_InitOptions(interp, (char *) recordPtr, optionTable,
+	result = Tk_InitOptions(interp, recordPtr, optionTable,
 		tkwin);
 	if (result == TCL_OK) {
 	    recordPtr->header.widgetCmd = Tcl_CreateObjCommand(interp,
@@ -673,7 +683,7 @@ TestobjconfigObjCmd(
 		    (ClientData) recordPtr, TrivialCmdDeletedProc);
 	    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
 		    TrivialEventProc, (ClientData) recordPtr);
-	    result = Tk_SetOptions(interp, (char *) recordPtr, optionTable,
+	    result = Tk_SetOptions(interp, recordPtr, optionTable,
 		    objc-3, objv+3, tkwin, NULL, NULL);
 	    if (result != TCL_OK) {
 		Tk_DestroyWindow(tkwin);
@@ -708,12 +718,12 @@ TestobjconfigObjCmd(
 	recordPtr->header.tkwin = tkwin;
 	recordPtr->base1ObjPtr = recordPtr->base2ObjPtr = NULL;
 	recordPtr->extension3ObjPtr = recordPtr->extension4ObjPtr = NULL;
-	result = Tk_InitOptions(interp, (char *)recordPtr, optionTable, tkwin);
+	result = Tk_InitOptions(interp, recordPtr, optionTable, tkwin);
 	if (result == TCL_OK) {
-	    result = Tk_SetOptions(interp, (char *) recordPtr, optionTable,
+	    result = Tk_SetOptions(interp, recordPtr, optionTable,
 		    objc-3, objv+3, tkwin, NULL, NULL);
 	    if (result != TCL_OK) {
-		Tk_FreeConfigOptions((char *) recordPtr, optionTable, tkwin);
+		Tk_FreeConfigOptions(recordPtr, optionTable, tkwin);
 	    }
 	}
 	if (result == TCL_OK) {
@@ -762,9 +772,9 @@ TestobjconfigObjCmd(
 	recordPtr->base1ObjPtr = recordPtr->base2ObjPtr = NULL;
 	recordPtr->extension3ObjPtr = recordPtr->extension4ObjPtr = NULL;
 	recordPtr->extension5ObjPtr = NULL;
-	result = Tk_InitOptions(interp, (char *)recordPtr, optionTable, tkwin);
+	result = Tk_InitOptions(interp, recordPtr, optionTable, tkwin);
 	if (result == TCL_OK) {
-	    result = Tk_SetOptions(interp, (char *) recordPtr, optionTable,
+	    result = Tk_SetOptions(interp, recordPtr, optionTable,
 		    objc-3, objv+3, tkwin, NULL, NULL);
 	    if (result != TCL_OK) {
 		Tk_FreeConfigOptions((char *) recordPtr, optionTable, tkwin);
@@ -796,7 +806,7 @@ TestobjconfigObjCmd(
 	widgetRecord.intPtr = NULL;
 	optionTable = Tk_CreateOptionTable(interp, errorSpecs);
 	tables[index] = optionTable;
-	return Tk_InitOptions(interp, (char *) &widgetRecord, optionTable,
+	return Tk_InitOptions(interp, &widgetRecord, optionTable,
 		(Tk_Window) NULL);
     }
 
@@ -944,7 +954,7 @@ TestobjconfigObjCmd(
 	recordPtr->mm = 0.0;
 	recordPtr->tkwin = NULL;
 	recordPtr->custom = NULL;
-	result = Tk_InitOptions(interp, (char *) recordPtr, optionTable,
+	result = Tk_InitOptions(interp, recordPtr, optionTable,
 		tkwin);
 	if (result == TCL_OK) {
 	    recordPtr->header.widgetCmd = Tcl_CreateObjCommand(interp,
@@ -952,7 +962,7 @@ TestobjconfigObjCmd(
 		    recordPtr, TrivialCmdDeletedProc);
 	    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
 		    TrivialEventProc, recordPtr);
-	    result = Tk_SetOptions(interp, (char *) recordPtr, optionTable,
+	    result = Tk_SetOptions(interp, recordPtr, optionTable,
 		    objc - 3, objv + 3, tkwin, NULL, NULL);
 	    if (result != TCL_OK) {
 		Tk_DestroyWindow(tkwin);
@@ -1005,10 +1015,10 @@ TestobjconfigObjCmd(
 	recordPtr->one = recordPtr->two = recordPtr->three = NULL;
 	recordPtr->four = recordPtr->five = NULL;
 	Tcl_SetObjResult(interp, objv[2]);
-	result = Tk_InitOptions(interp, (char *) recordPtr,
+	result = Tk_InitOptions(interp, recordPtr,
 		recordPtr->header.optionTable, (Tk_Window) NULL);
 	if (result == TCL_OK) {
-	    result = Tk_SetOptions(interp, (char *) recordPtr,
+	    result = Tk_SetOptions(interp, recordPtr,
 		    recordPtr->header.optionTable, objc - 3, objv + 3,
 		    (Tk_Window) NULL, NULL, NULL);
 	    if (result == TCL_OK) {
@@ -1016,7 +1026,7 @@ TestobjconfigObjCmd(
 			Tcl_GetString(objv[2]), TrivialConfigObjCmd,
 			(ClientData) recordPtr, TrivialCmdDeletedProc);
 	    } else {
-		Tk_FreeConfigOptions((char *) recordPtr,
+		Tk_FreeConfigOptions(recordPtr,
 			recordPtr->header.optionTable, (Tk_Window) NULL);
 	    }
 	}
@@ -1045,8 +1055,8 @@ TestobjconfigObjCmd(
 	Tk_SetClass(tkwin, "Config");
 	optionTable = Tk_CreateOptionTable(interp, errorSpecs);
 	tables[index] = optionTable;
-	Tk_InitOptions(interp, (char *) &record, optionTable, tkwin);
-	if (Tk_SetOptions(interp, (char *) &record, optionTable, 1,
+	Tk_InitOptions(interp, &record, optionTable, tkwin);
+	if (Tk_SetOptions(interp, &record, optionTable, 1,
 		&newObjPtr, tkwin, NULL, NULL) != TCL_OK) {
 	    result = TCL_ERROR;
 	}
@@ -1083,10 +1093,10 @@ TestobjconfigObjCmd(
 	recordPtr->header.tkwin = tkwin;
 	recordPtr->windowPtr = NULL;
 
-	result = Tk_InitOptions(interp,  (char *) recordPtr,
+	result = Tk_InitOptions(interp, recordPtr,
 		recordPtr->header.optionTable, tkwin);
 	if (result == TCL_OK) {
-	    result = Tk_SetOptions(interp, (char *) recordPtr,
+	    result = Tk_SetOptions(interp, recordPtr,
 		    recordPtr->header.optionTable, objc - 3, objv + 3,
 		    tkwin, NULL, NULL);
 	    if (result == TCL_OK) {
@@ -1097,7 +1107,7 @@ TestobjconfigObjCmd(
 			TrivialEventProc, recordPtr);
 		Tcl_SetObjResult(interp, objv[2]);
 	    } else {
-		Tk_FreeConfigOptions((char *) recordPtr,
+		Tk_FreeConfigOptions(recordPtr,
 			recordPtr->header.optionTable, tkwin);
 	    }
 	}
@@ -1168,7 +1178,7 @@ TrivialConfigObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	resultObjPtr = Tk_GetOptionValue(interp, (char *) clientData,
+	resultObjPtr = Tk_GetOptionValue(interp, clientData,
 		headerPtr->optionTable, objv[2], tkwin);
 	if (resultObjPtr != NULL) {
 	    Tcl_SetObjResult(interp, resultObjPtr);
@@ -1179,7 +1189,7 @@ TrivialConfigObjCmd(
 	break;
     case CONFIGURE:
 	if (objc == 2) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) clientData,
+	    resultObjPtr = Tk_GetOptionInfo(interp, clientData,
 		    headerPtr->optionTable, NULL, tkwin);
 	    if (resultObjPtr == NULL) {
 		result = TCL_ERROR;
@@ -1187,7 +1197,7 @@ TrivialConfigObjCmd(
 		Tcl_SetObjResult(interp, resultObjPtr);
 	    }
 	} else if (objc == 3) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) clientData,
+	    resultObjPtr = Tk_GetOptionInfo(interp, clientData,
 		    headerPtr->optionTable, objv[2], tkwin);
 	    if (resultObjPtr == NULL) {
 		result = TCL_ERROR;
@@ -1195,7 +1205,7 @@ TrivialConfigObjCmd(
 		Tcl_SetObjResult(interp, resultObjPtr);
 	    }
 	} else {
-	    result = Tk_SetOptions(interp, (char *) clientData,
+	    result = Tk_SetOptions(interp, clientData,
 		    headerPtr->optionTable, objc - 2, objv + 2,
 		    tkwin, NULL, &mask);
 	    if (result == TCL_OK) {
@@ -1204,7 +1214,7 @@ TrivialConfigObjCmd(
 	}
 	break;
     case CSAVE:
-	result = Tk_SetOptions(interp, (char *) clientData,
+	result = Tk_SetOptions(interp, clientData,
 		headerPtr->optionTable, objc - 2, objv + 2,
 		tkwin, &saved, &mask);
 	Tk_FreeSavedOptions(&saved);
@@ -1550,9 +1560,8 @@ ImageDisplay(
     TImageInstance *instPtr = (TImageInstance *) clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
 
-    sprintf(buffer, "%s display %d %d %d %d %d %d",
-	    instPtr->masterPtr->imageName, imageX, imageY, width, height,
-	    drawableX, drawableY);
+    sprintf(buffer, "%s display %d %d %d %d",
+	    instPtr->masterPtr->imageName, imageX, imageY, width, height);
     Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
 	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     if (width > (instPtr->masterPtr->width - imageX)) {
@@ -1765,7 +1774,7 @@ TestmenubarObjCmd(
  *----------------------------------------------------------------------
  */
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
 static int
 TestmetricsObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1776,38 +1785,15 @@ TestmetricsObjCmd(
     char buf[TCL_INTEGER_SPACE];
     int val;
 
-#ifdef _WIN32
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-#else
-    Tk_Window tkwin = (Tk_Window) clientData;
-    TkWindow *winPtr;
-
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option window");
-	return TCL_ERROR;
-    }
-
-    winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
-    if (winPtr == NULL) {
-	return TCL_ERROR;
-    }
-#endif
 
     if (strcmp(Tcl_GetString(objv[1]), "cyvscroll") == 0) {
-#ifdef _WIN32
 	val = GetSystemMetrics(SM_CYVSCROLL);
-#else
-	val = ((TkScrollbar *) winPtr->instanceData)->width;
-#endif
     } else  if (strcmp(Tcl_GetString(objv[1]), "cxhscroll") == 0) {
-#ifdef _WIN32
 	val = GetSystemMetrics(SM_CXHSCROLL);
-#else
-	val = ((TkScrollbar *) winPtr->instanceData)->width;
-#endif
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
 		"\": must be cxhscroll or cyvscroll", NULL);
@@ -1893,6 +1879,60 @@ TestpropObjCmd(
     if (property != NULL) {
 	XFree(property);
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestpropObjCmd --
+ *
+ *	This function implements the "testprop" command. It fetches and prints
+ *	the value of a property on a window.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+	/* ARGSUSED */
+static int
+TestprintfObjCmd(
+    ClientData clientData,	/* Not used */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
+{
+    char buffer[256];
+    Tcl_WideInt wideInt;
+#ifdef _WIN32
+    __int64 longLongInt;
+#else
+    long long longLongInt;
+#endif
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "wideint");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetWideIntFromObj(interp, objv[1], &wideInt) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    longLongInt = wideInt;
+
+    /* Just add a lot of arguments to sprintf. Reason: on AMD64, the first
+     * 4 or 6 arguments (we assume 8, just in case) might be put in registers,
+     * which still woudn't tell if the assumed size is correct: We want this
+     * test-case to fail if the 64-bit value is printed as truncated to 32-bit.
+     */
+    sprintf(buffer, "%s%s%s%s%s%s%s%s%" TCL_LL_MODIFIER "d %"
+	    TCL_LL_MODIFIER "u", "", "", "", "", "", "", "", "",
+	    (Tcl_WideInt)longLongInt, (Tcl_WideUInt)longLongInt);
+    Tcl_AppendResult(interp, buffer, NULL);
     return TCL_OK;
 }
 
@@ -1990,7 +2030,7 @@ CustomOptionSet(
 
     objEmpty = 0;
 
-    if (internalOffset >= 0) {
+    if (internalOffset != -1) {
 	internalPtr = recordPtr + internalOffset;
     } else {
 	internalPtr = NULL;
@@ -2066,6 +2106,54 @@ CustomOptionFree(
 	ckfree(*(char **)internalPtr);
     }
 }
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestPhotoStringMatchCmd --
+ *
+ *	This function implements the "testphotostringmatch" command. It
+ *	provides a way from Tcl to call the string match function for the
+ *	default image handler directly.
+ *
+ * Results:
+ *	A standard Tcl result. If data is in the proper format, the result in
+ *	interp will contain width and height as a list. If the data cannot be
+ *	parsed as default image format, returns TCL_ERROR and leaves an
+ *	appropriate error message in interp.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+	/* ARGSUSED */
+static int
+TestPhotoStringMatchCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])		/* Argument strings. */
+{
+    Tcl_Obj *dummy = NULL;
+    Tcl_Obj *resultObj[2];
+    int width, height;
+
+    if (objc != 2) {
+        Tcl_WrongNumArgs(interp, 1, objv, "imageData");
+        return TCL_ERROR;
+    }
+    if (TkDebugPhotoStringMatchDef(interp, objv[1], dummy, &width, &height)) {
+        resultObj[0] = Tcl_NewIntObj(width);
+        resultObj[1] = Tcl_NewIntObj(height);
+        Tcl_SetObjResult(interp, Tcl_NewListObj(2, resultObj));
+        return TCL_OK;
+    } else {
+        return TCL_ERROR;
+    }
+}
+
+
 
 /*
  * Local Variables:

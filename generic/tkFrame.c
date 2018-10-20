@@ -12,8 +12,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * The following enum is used to define the type of the frame.
@@ -447,6 +447,29 @@ TkCreateFrame(
     return result;
 }
 
+int
+TkListCreateFrame(
+    ClientData clientData,	/* Either NULL or pointer to option table. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    Tcl_Obj *listObj,		/* List of arguments. */
+    int toplevel,		/* Non-zero means create a toplevel window,
+				 * zero means create a frame. */
+    Tcl_Obj *nameObj)		/* Should only be non-NULL if there is no main
+				 * window associated with the interpreter.
+				 * Gives the base name to use for the new
+				 * application. */
+{
+    int objc;
+    Tcl_Obj **objv;
+
+    if (TCL_OK != Tcl_ListObjGetElements(interp, listObj, &objc, &objv)) {
+	return TCL_ERROR;
+    }
+    return CreateFrame(clientData, interp, objc, objv,
+	    toplevel ? TYPE_TOPLEVEL : TYPE_FRAME,
+	    nameObj ? Tcl_GetString(nameObj) : NULL);
+}
+
 static int
 CreateFrame(
     ClientData clientData,	/* NULL. */
@@ -465,7 +488,8 @@ CreateFrame(
     Tk_Window newWin;
     const char *className, *screenName, *visualName, *colormapName;
     const char *arg, *useOption;
-    int i, length, depth;
+    int i, depth;
+    size_t length;
     unsigned int mask;
     Colormap colormap;
     Visual *visual;
@@ -492,24 +516,24 @@ CreateFrame(
     className = colormapName = screenName = visualName = useOption = NULL;
     colormap = None;
     for (i = 2; i < objc; i += 2) {
-	arg = Tcl_GetStringFromObj(objv[i], &length);
+	arg = TkGetStringFromObj(objv[i], &length);
 	if (length < 2) {
 	    continue;
 	}
 	if ((arg[1] == 'c') && (length >= 3)
-		&& (strncmp(arg, "-class", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-class", length) == 0)) {
 	    className = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 'c') && (length >= 3)
-		&& (strncmp(arg, "-colormap", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-colormap", length) == 0)) {
 	    colormapName = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 's') && (type == TYPE_TOPLEVEL)
-		&& (strncmp(arg, "-screen", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-screen", length) == 0)) {
 	    screenName = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 'u') && (type == TYPE_TOPLEVEL)
-		&& (strncmp(arg, "-use", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-use", length) == 0)) {
 	    useOption = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 'v')
-		&& (strncmp(arg, "-visual", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-visual", length) == 0)) {
 	    visualName = Tcl_GetString(objv[i+1]);
 	}
     }
@@ -659,7 +683,7 @@ CreateFrame(
 	mask |= ActivateMask;
     }
     Tk_CreateEventHandler(newWin, mask, FrameEventProc, framePtr);
-    if ((Tk_InitOptions(interp, (char *) framePtr, optionTable, newWin)
+    if ((Tk_InitOptions(interp, framePtr, optionTable, newWin)
 	    != TCL_OK) ||
 	    (ConfigureFrame(interp, framePtr, objc-2, objv+2) != TCL_OK)) {
 	goto error;
@@ -720,7 +744,8 @@ FrameWidgetObjCmd(
     };
     register Frame *framePtr = clientData;
     int result = TCL_OK, index;
-    int c, i, length;
+    int c, i;
+    size_t length;
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
@@ -739,7 +764,7 @@ FrameWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) framePtr,
+	objPtr = Tk_GetOptionValue(interp, framePtr,
 		framePtr->optionTable, objv[2], framePtr->tkwin);
 	if (objPtr == NULL) {
 	    result = TCL_ERROR;
@@ -749,7 +774,7 @@ FrameWidgetObjCmd(
 	break;
     case FRAME_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) framePtr,
+	    objPtr = Tk_GetOptionInfo(interp, framePtr,
 		    framePtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    framePtr->tkwin);
 	    if (objPtr == NULL) {
@@ -764,7 +789,7 @@ FrameWidgetObjCmd(
 	     */
 
 	    for (i = 2; i < objc; i++) {
-		const char *arg = Tcl_GetStringFromObj(objv[i], &length);
+		const char *arg = TkGetStringFromObj(objv[i], &length);
 
 		if (length < 2) {
 		    continue;
@@ -937,7 +962,7 @@ ConfigureFrame(
     if (framePtr->type == TYPE_LABELFRAME) {
 	oldWindow = labelframePtr->labelWin;
     }
-    if (Tk_SetOptions(interp, (char *) framePtr,
+    if (Tk_SetOptions(interp, framePtr,
 	    framePtr->optionTable, objc, objv,
 	    framePtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 	if (oldMenuName != NULL) {
