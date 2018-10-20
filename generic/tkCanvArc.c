@@ -62,10 +62,12 @@ typedef struct ArcItem {
 				 * start (see ComputeArcOutline). */
     double center2[2];		/* Coordinates of center of arc outline at
 				 * start+extent (see ComputeArcOutline). */
-
-    double height;              /* Distance from the arc's chord to its mid-point */
-    double startPoint[2];       /* Start point of arc used when specifying height */
-    double endPoint[2];         /* End point of arc used when specifying height */
+    double height;              /* Distance from the arc's chord to its
+				 * mid-point. */
+    double startPoint[2];       /* Start point of arc used when specifying
+				 * height. */
+    double endPoint[2];         /* End point of arc used when specifying
+				 * height. */
 } ArcItem;
 
 /*
@@ -300,7 +302,6 @@ CreateArc(
     arcPtr->fillGC = None;
     arcPtr->height = 0;
 
-
     /*
      * Process the arguments to fill in the item record.
      */
@@ -360,8 +361,8 @@ ArcCoords(
 	objs[2] = Tcl_NewDoubleObj(arcPtr->bbox[2]);
 	objs[3] = Tcl_NewDoubleObj(arcPtr->bbox[3]);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(4, objs));
-    } else if ((objc == 1)||(objc == 4)) {
-	if (objc==1) {
+    } else if ((objc == 1) || (objc == 4)) {
+	if (objc == 1) {
 	    if (Tcl_ListObjGetElements(interp, objv[0], &objc,
 		    (Tcl_Obj ***) &objv) != TCL_OK) {
 		return TCL_ERROR;
@@ -385,9 +386,10 @@ ArcCoords(
 	}
 
 	/*
-	* Store bbox as start and end points so they can be used
-	* if either radius or height is specified.
-	*/
+	 * Store bbox as start and end points so they can be used if either
+	 * radius or height is specified.
+	 */
+
 	arcPtr->startPoint[0] = arcPtr->bbox[0];
 	arcPtr->startPoint[1] = arcPtr->bbox[1];
 	arcPtr->endPoint[0] = arcPtr->bbox[2];
@@ -589,8 +591,8 @@ ConfigureArc(
  *
  * ComputeArcFromHeight --
  *
- *	This function calculates the arc parameters given
- *	start-point, end-point and height (!= 0).
+ *	This function calculates the arc parameters given start-point,
+ *	end-point and height (!= 0).
  *
  * Results:
  *	None.
@@ -603,44 +605,69 @@ ConfigureArc(
 
 static void
 ComputeArcFromHeight(
-		     ArcItem* arcPtr)
+    ArcItem* arcPtr)
 {
     double chordLen, chordDir[2], chordCen[2], arcCen[2], d, radToDeg, radius;
 
-    /* The chord */
-    chordLen = hypot(arcPtr->endPoint[1]-arcPtr->startPoint[1], arcPtr->startPoint[0]-arcPtr->endPoint[0]);
-    chordDir[0] = (arcPtr->endPoint[0]-arcPtr->startPoint[0])/chordLen;
-    chordDir[1] = (arcPtr->endPoint[1]-arcPtr->startPoint[1])/chordLen;
-    chordCen[0] = (arcPtr->startPoint[0]+arcPtr->endPoint[0])/2;
-    chordCen[1] = (arcPtr->startPoint[1]+arcPtr->endPoint[1])/2;
+    /*
+     * The chord.
+     */
 
-    /* Calculate the radius (assumes height != 0) */
-    radius = (4*pow(arcPtr->height,2) + pow(chordLen,2))/(8*arcPtr->height);
+    chordLen = hypot(arcPtr->endPoint[1] - arcPtr->startPoint[1],
+	    arcPtr->startPoint[0] - arcPtr->endPoint[0]);
+    chordDir[0] = (arcPtr->endPoint[0] - arcPtr->startPoint[0]) / chordLen;
+    chordDir[1] = (arcPtr->endPoint[1] - arcPtr->startPoint[1]) / chordLen;
+    chordCen[0] = (arcPtr->startPoint[0] + arcPtr->endPoint[0]) / 2;
+    chordCen[1] = (arcPtr->startPoint[1] + arcPtr->endPoint[1]) / 2;
 
-    /* The arc centre */
+    /*
+     * Calculate the radius (assumes height != 0).
+     */
+
+    radius = (4*pow(arcPtr->height, 2) + pow(chordLen, 2))
+	    / (8 * arcPtr->height);
+
+    /*
+     * The arc centre.
+     */
+
     d = radius - arcPtr->height;
-    arcCen[0] = chordCen[0] - d*chordDir[1];
-    arcCen[1] = chordCen[1] + d*chordDir[0];
+    arcCen[0] = chordCen[0] - d * chordDir[1];
+    arcCen[1] = chordCen[1] + d * chordDir[0];
 
-    /* The arc start and span. Angles are negated because the coordinate system is left-handed */
-    radToDeg = 45/atan(1);
-    arcPtr->start = atan2(arcCen[1]-arcPtr->startPoint[1],arcPtr->startPoint[0]-arcCen[0])*radToDeg;
-    arcPtr->extent = -2*asin(chordLen/(2*radius))*radToDeg;
+    /*
+     * The arc start and span. Angles are negated because the coordinate
+     * system is left-handed.
+     */
 
-    /* Handle spans > 180 */
-    if (fabs(2*arcPtr->height) > chordLen) {
-	arcPtr->extent = arcPtr->extent > 0 ? (360 - arcPtr->extent) : -(360+arcPtr->extent);
+    radToDeg = 45 / atan(1);
+    arcPtr->start = atan2(arcCen[1] - arcPtr->startPoint[1],
+	    arcPtr->startPoint[0] - arcCen[0]) * radToDeg;
+    arcPtr->extent = -2 * asin(chordLen / (2 * radius)) * radToDeg;
+
+    /*
+     * Handle spans > 180.
+     */
+
+    if (fabs(2 * arcPtr->height) > chordLen) {
+	arcPtr->extent = arcPtr->extent > 0 ? (360 - arcPtr->extent)
+		: -(360 + arcPtr->extent);
     }
 
-    /* Create the bounding box */
-    arcPtr->bbox[0] = arcCen[0]-radius;
-    arcPtr->bbox[1] = arcCen[1]-radius;
-    arcPtr->bbox[2] = arcCen[0]+radius;
-    arcPtr->bbox[3] = arcCen[1]+radius;
+    /*
+     * Create the bounding box.
+     */
 
-    /* Set the height to 0 so that itemcget -height returns 0 */
+    arcPtr->bbox[0] = arcCen[0] - radius;
+    arcPtr->bbox[1] = arcCen[1] - radius;
+    arcPtr->bbox[2] = arcCen[0] + radius;
+    arcPtr->bbox[3] = arcCen[1] + radius;
+
+    /*
+     * Set the height to 0 so that itemcget -height returns 0.
+     */
+
     arcPtr->height = 0;
-
 }
 
 /*
