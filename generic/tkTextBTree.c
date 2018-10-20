@@ -105,7 +105,7 @@ typedef struct BTree {
     int clients;		/* Number of clients of this B-tree. */
     int pixelReferences;	/* Number of clients of this B-tree which care
 				 * about pixel heights. */
-    int stateEpoch;		/* Updated each time any aspect of the B-tree
+    TkSizeT stateEpoch;	 /* Updated each time any aspect of the B-tree
 				 * changes. */
     TkSharedText *sharedTextPtr;/* Used to find tagTable in consistency
 				 * checking code, and to access list of all
@@ -140,10 +140,10 @@ int tkBTreeDebug = 0;
  * Macros that determine how much space to allocate for new segments:
  */
 
-#define CSEG_SIZE(chars) ((unsigned) (Tk_Offset(TkTextSegment, body) \
-	+ 1 + (chars)))
-#define TSEG_SIZE ((unsigned) (Tk_Offset(TkTextSegment, body) \
-	+ sizeof(TkTextToggle)))
+#define CSEG_SIZE(chars) (Tk_Offset(TkTextSegment, body) \
+	+ 1 + (chars))
+#define TSEG_SIZE (Tk_Offset(TkTextSegment, body) \
+	+ sizeof(TkTextToggle))
 
 /*
  * Forward declarations for functions defined in this file:
@@ -501,7 +501,7 @@ TkBTreeDestroy(
  *----------------------------------------------------------------------
  */
 
-int
+TkSizeT
 TkBTreeEpoch(
     TkTextBTree tree)		/* Tree to get epoch for. */
 {
@@ -799,6 +799,7 @@ RemovePixelClient(
 		nodePtr->numPixels[treePtr->pixelReferences-1];
     }
     if (treePtr->pixelReferences == 1) {
+	ckfree(nodePtr->numPixels);
 	nodePtr->numPixels = NULL;
     } else {
 	nodePtr->numPixels = ckrealloc(nodePtr->numPixels,
@@ -1020,7 +1021,7 @@ TkBTreeInsertChars(
 				 * this line). */
     register TkTextSegment *segPtr;
     TkTextLine *newLinePtr;
-    int chunkSize;		/* # characters in current chunk. */
+    size_t chunkSize;		/* # characters in current chunk. */
     register const char *eol;	/* Pointer to character just after last one in
 				 * current chunk. */
     int changeToLineCount;	/* Counts change to total number of lines in
@@ -1069,7 +1070,7 @@ TkBTreeInsertChars(
 	    curPtr->nextPtr = segPtr;
 	}
 	segPtr->size = chunkSize;
-	memcpy(segPtr->body.chars, string, (size_t) chunkSize);
+	memcpy(segPtr->body.chars, string, chunkSize);
 	segPtr->body.chars[chunkSize] = 0;
 
 	if (eol[-1] != '\n') {
@@ -1439,6 +1440,8 @@ TkBTreeDeleteIndexRange(
 		    prevNodePtr->nextPtr = curNodePtr->nextPtr;
 		}
 		parentPtr->numChildren--;
+		DeleteSummaries(curNodePtr->summaryPtr);
+		ckfree(curNodePtr->numPixels);
 		ckfree(curNodePtr);
 		curNodePtr = parentPtr;
 	    }
@@ -4185,6 +4188,7 @@ Rebalance(
 		    treePtr->rootPtr = nodePtr->children.nodePtr;
 		    treePtr->rootPtr->parentPtr = NULL;
 		    DeleteSummaries(nodePtr->summaryPtr);
+		    ckfree(nodePtr->numPixels);
 		    ckfree(nodePtr);
 		}
 		return;
@@ -4274,6 +4278,7 @@ Rebalance(
 		nodePtr->nextPtr = otherPtr->nextPtr;
 		nodePtr->parentPtr->numChildren--;
 		DeleteSummaries(otherPtr->summaryPtr);
+		ckfree(otherPtr->numPixels);
 		ckfree(otherPtr);
 		continue;
 	    }
@@ -4558,7 +4563,7 @@ CharSplitProc(
     newPtr1->typePtr = &tkTextCharType;
     newPtr1->nextPtr = newPtr2;
     newPtr1->size = index;
-    memcpy(newPtr1->body.chars, segPtr->body.chars, (size_t) index);
+    memcpy(newPtr1->body.chars, segPtr->body.chars, index);
     newPtr1->body.chars[index] = 0;
     newPtr2->typePtr = &tkTextCharType;
     newPtr2->nextPtr = segPtr->nextPtr;

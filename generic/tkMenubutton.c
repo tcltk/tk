@@ -308,7 +308,7 @@ Tk_MenubuttonObjCmd(
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    MenuButtonEventProc, mbPtr);
 
-    if (Tk_InitOptions(interp, (char *) mbPtr, optionTable, tkwin) != TCL_OK) {
+    if (Tk_InitOptions(interp, mbPtr, optionTable, tkwin) != TCL_OK) {
 	Tk_DestroyWindow(mbPtr->tkwin);
 	return TCL_ERROR;
     }
@@ -369,7 +369,7 @@ MenuButtonWidgetObjCmd(
 	    goto error;
 	}
 
-	objPtr = Tk_GetOptionValue(interp, (char *) mbPtr,
+	objPtr = Tk_GetOptionValue(interp, mbPtr,
 		mbPtr->optionTable, objv[2], mbPtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
@@ -379,7 +379,7 @@ MenuButtonWidgetObjCmd(
 
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) mbPtr,
+	    objPtr = Tk_GetOptionInfo(interp, mbPtr,
 		    mbPtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    mbPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -524,7 +524,7 @@ ConfigureMenuButton(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) mbPtr,
+	    if (Tk_SetOptions(interp, mbPtr,
 		    mbPtr->optionTable, objc, objv,
 		    mbPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -880,6 +880,19 @@ MenuButtonTextVarProc(
     register TkMenuButton *mbPtr = clientData;
     const char *value;
     unsigned len;
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (mbPtr->textVarName == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    MenuButtonTextVarProc, clientData);
+	}
+	return NULL;
+    }
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole

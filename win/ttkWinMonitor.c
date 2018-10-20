@@ -122,12 +122,15 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
     case WM_THEMECHANGED:
 	/*
-	 * Reset the application theme to 'xpnative' if present,
-	 * which will in turn fall back to 'winnative' if XP theming
-	 * is disabled.
+         * Reset the application theme.
+         * On windows, it is possible to sign in as a second user, change
+         * the theme to 'winnative' (by setting the ui to 'best performance'),
+         * which is a machine-wide change, and then sign back on to the original user.
+         * Ttk_UseTheme needs to be executed again in order to process the fallback
+         * from vista/xpnative to winnative.
 	 */
 
-	theme = Ttk_GetTheme(interp, "xpnative");
+	theme = Ttk_GetCurrentTheme(interp);
 	if (theme) {
 	    Ttk_UseTheme(interp, theme);
 	    /* @@@ What to do about errors here? */

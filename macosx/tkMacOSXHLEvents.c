@@ -36,7 +36,7 @@ typedef struct KillEvent {
 static void tkMacOSXProcessFiles(NSAppleEventDescriptor* event,
 				 NSAppleEventDescriptor* replyEvent,
 				 Tcl_Interp *interp,
-				 char* procedure);
+				 const char* procedure);
 static int  MissedAnyParameters(const AppleEvent *theEvent);
 static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 
@@ -277,9 +277,9 @@ tkMacOSXProcessFiles(
     NSAppleEventDescriptor* event,
     NSAppleEventDescriptor* replyEvent,
     Tcl_Interp *interp,
-    char* procedure)
+    const char* procedure)
 {
-    Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
+    Tcl_Encoding utf8;
     const AEDesc *fileSpecDesc = nil;
     AEDesc contents;
     char URLString[1 + URL_MAX_LENGTH];
@@ -331,6 +331,7 @@ tkMacOSXProcessFiles(
 
     Tcl_DStringInit(&command);
     Tcl_DStringAppend(&command, procedure, -1);
+    utf8 = Tcl_GetEncoding(NULL, "utf-8");
 
     for (index = 1; index <= count; index++) {
 	if (noErr != AEGetNthPtr(fileSpecDesc, index, typeFileURL, &keyword,
@@ -349,6 +350,8 @@ tkMacOSXProcessFiles(
 	Tcl_DStringAppendElement(&command, Tcl_DStringValue(&pathName));
 	Tcl_DStringFree(&pathName);
     }
+
+    Tcl_FreeEncoding(utf8);
     AEDisposeDesc(&contents);
 
     /*
@@ -361,7 +364,6 @@ tkMacOSXProcessFiles(
 	Tcl_BackgroundException(interp, code);
     }
     Tcl_DStringFree(&command);
-    return;
 }
 
 /*

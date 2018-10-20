@@ -91,10 +91,10 @@ value.
 Whenever the scale is manipulated interactively, the variable
 will be modified to reflect the scale's new value.
 .OP \-width width Width
-Specifies the desired narrow dimension of the trough in screen units
+Specifies the desired narrow dimension of the scale in screen units
 (i.e. any of the forms acceptable to \fBTk_GetPixels\fR).
-For vertical scales this is the trough's width;  for horizontal scales
-this is the trough's height.
+For vertical scales this is the scale's width;  for horizontal scales
+this is the scale's height.
 .BE
 .SH DESCRIPTION
 .PP

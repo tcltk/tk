@@ -73,7 +73,7 @@ typedef struct TkScale {
 				 * values. 0 means we get to choose the number
 				 * based on resolution and/or the range of the
 				 * scale. */
-    char format[10];		/* Sprintf conversion specifier computed from
+    char format[16];		/* Sprintf conversion specifier computed from
 				 * digits and other information. */
     double bigIncrement;	/* Amount to use for large increments to scale
 				 * value. (0 means we pick a value). */
@@ -85,7 +85,11 @@ typedef struct TkScale {
     int repeatInterval;		/* Interval between autorepeats (in ms). */
     char *label;		/* Label to display above or to right of
 				 * scale; NULL means don't display a label. */
-    int labelLength;		/* Number of non-NULL chars. in label. */
+#if TK_MAJOR_VERSION > 8
+    size_t labelLength;		/* Number of non-NULL chars. in label. */
+#else
+    unsigned int labelLength;		/* Number of non-NULL chars. in label. */
+#endif
     enum state state;		/* Values are active, normal, or disabled.
 				 * Value of scale cannot be changed when
 				 * disabled. */

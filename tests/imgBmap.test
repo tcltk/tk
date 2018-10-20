@@ -380,7 +380,8 @@ test imageBmap-7.9 {ImgBmapCmd procedure} -body {
 test imageBmap-7.10 {ImgBmapCmd procedure} -body {
     i1 gorp
 } -returnCodes error -result {bad option "gorp": must be cget or configure}
-
+# Clean it up after use!!
+imageCleanup
 
 test imageBmap-8.1 {ImgBmapGet/Free procedures, shared instances} -setup {
     destroy .c

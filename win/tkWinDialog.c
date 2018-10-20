@@ -644,12 +644,7 @@ static void LoadShellProcs()
     if (shell32_handle != NULL)
         return; /* We have already been through here. */
 
-    /*
-     * XXX - Note we never call FreeLibrary. There is no point because
-     * shell32.dll is loaded at startup anyways and stays for the duration
-     * of the process so why bother with keeping track of when to unload
-     */
-    shell32_handle = LoadLibrary(TEXT("shell32.dll"));
+    shell32_handle = GetModuleHandle(TEXT("shell32.dll"));
     if (shell32_handle == NULL) /* Should never happen but check anyways. */
         return;
 
@@ -674,19 +669,25 @@ static void LoadShellProcs()
  * 	processing functions are used to cope with keyboard navigation of
  * 	controls.)
  *
- * 	Here is one solution. After returning, we poll the message queue for
- * 	1/4s looking for WM_LBUTTON up messages. If we see one it's consumed.
- * 	If we get a WM_LBUTTONDOWN message, then we exit early, since the user
- * 	must be doing something new. This fix only works for the current
- * 	application, so the problem will still occur if the open dialog
- * 	happens to be over another applications button. However this is a
- * 	fairly rare occurrance.
+ * 	Here is one solution. After returning, we flush all mouse events
+ *      for 1/4 second. In 8.6.5 and earlier, the code used to
+ *      poll the message queue consuming WM_LBUTTONUP messages.
+ * 	On seeing a WM_LBUTTONDOWN message, it would exit early, since the user
+ * 	must be doing something new. However this early exit does not work
+ *      on Vista and later because the Windows sends both BUTTONDOWN and
+ *      BUTTONUP after the DBLCLICK instead of just BUTTONUP as on XP.
+ *      Rather than try and figure out version specific sequences, we
+ *      ignore all mouse events in that interval.
+ *
+ *      This fix only works for the current application, so the problem will
+ * 	still occur if the open dialog happens to be over another applications
+ * 	button. However this is a fairly rare occurrance.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Consumes an unwanted BUTTON messages.
+ *	Consumes unwanted mouse related messages.
  *
  *-------------------------------------------------------------------------
  */
@@ -698,10 +699,7 @@ EatSpuriousMessageBugFix(void)
     DWORD nTime = GetTickCount() + 250;
 
     while (GetTickCount() < nTime) {
-	if (PeekMessageA(&msg, 0, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_NOREMOVE)){
-	    break;
-	}
-	PeekMessageA(&msg, 0, WM_LBUTTONUP, WM_LBUTTONUP, PM_REMOVE);
+	PeekMessage(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE);
     }
 }
 
@@ -1113,7 +1111,7 @@ ParseOFNOptions(
             if (strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
                 goto error_return;
             if (i + 1 == objc) {
-                Tcl_SetResult(interp, "value for \"-xpstyle\" missing", TCL_STATIC);
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("value for \"-xpstyle\" missing", -1));
                 Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
                 goto error_return;
             }
@@ -1281,9 +1279,8 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     int oldMode;
 
     if (tsdPtr->newFileDialogsState != FDLG_STATE_USE_NEW) {
-        /* XXX - should be an assert but Tcl does not seem to have one? */
-        Tcl_SetResult(interp, "Internal error: GetFileNameVista: IFileDialog API not available", TCL_STATIC);
-        return TCL_ERROR;
+	Tcl_Panic("Internal error: GetFileNameVista: IFileDialog API not available");
+	return TCL_ERROR;
     }
 
     /*
@@ -1377,17 +1374,27 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
         goto vamoose;
 
     if (optsPtr->extObj != NULL) {
-        wstr = Tcl_GetUnicode(optsPtr->extObj);
+        Tcl_DString ds;
+        const char *src;
+
+        src = Tcl_GetString(optsPtr->extObj);
+        wstr = (LPWSTR) Tcl_WinUtfToTChar(src, optsPtr->extObj->length, &ds);
         if (wstr[0] == L'.')
             ++wstr;
         hr = fdlgIf->lpVtbl->SetDefaultExtension(fdlgIf, wstr);
+        Tcl_DStringFree(&ds);
         if (FAILED(hr))
             goto vamoose;
     }
 
     if (optsPtr->titleObj != NULL) {
-        hr = fdlgIf->lpVtbl->SetTitle(fdlgIf,
-                                       Tcl_GetUnicode(optsPtr->titleObj));
+        Tcl_DString ds;
+        const char *src;
+
+        src = Tcl_GetString(optsPtr->titleObj);
+        wstr = (LPWSTR) Tcl_WinUtfToTChar(src, optsPtr->titleObj->length, &ds);
+        hr = fdlgIf->lpVtbl->SetTitle(fdlgIf, wstr);
+        Tcl_DStringFree(&ds);
         if (FAILED(hr))
             goto vamoose;
     }
@@ -1425,6 +1432,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
     hr = fdlgIf->lpVtbl->Show(fdlgIf, hWnd);
     Tcl_SetServiceMode(oldMode);
+    EatSpuriousMessageBugFix();
 
     /*
      * Ensure that hWnd is enabled, because it can happen that we have updated
@@ -1461,12 +1469,14 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                                         SIGDN_FILESYSPATH, &wstr);
                         if (SUCCEEDED(hr)) {
                             Tcl_DString fnds;
+
                             ConvertExternalFilename(wstr, &fnds);
                             CoTaskMemFree(wstr);
                             Tcl_ListObjAppendElement(
                                 interp, multiObj,
                                 Tcl_NewStringObj(Tcl_DStringValue(&fnds),
                                                  Tcl_DStringLength(&fnds)));
+                            Tcl_DStringFree(&fnds);
                         }
                         itemIf->lpVtbl->Release(itemIf);
                         if (FAILED(hr))
@@ -1487,10 +1497,12 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                                                       &wstr);
                 if (SUCCEEDED(hr)) {
                     Tcl_DString fnds;
+
                     ConvertExternalFilename(wstr, &fnds);
                     resultObj = Tcl_NewStringObj(Tcl_DStringValue(&fnds),
                                                  Tcl_DStringLength(&fnds));
                     CoTaskMemFree(wstr);
+                    Tcl_DStringFree(&fnds);
                 }
                 resultIf->lpVtbl->Release(resultIf);
             }
@@ -1498,13 +1510,20 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
         if (SUCCEEDED(hr)) {
             if (filterPtr && optsPtr->typeVariableObj) {
                 UINT ftix;
+
                 hr = fdlgIf->lpVtbl->GetFileTypeIndex(fdlgIf, &ftix);
                 if (SUCCEEDED(hr)) {
                     /* Note ftix is a 1-based index */
                     if (ftix > 0 && ftix <= nfilters) {
+                        Tcl_DString ftds;
+                        Tcl_Obj *ftobj;
+
+                        Tcl_WinTCharToUtf(filterPtr[ftix-1].pszName, -1, &ftds);
+                        ftobj = Tcl_NewStringObj(Tcl_DStringValue(&ftds),
+                                Tcl_DStringLength(&ftds));
                         Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
-                               Tcl_NewUnicodeObj(filterPtr[ftix-1].pszName, -1),
-                               TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
+                                ftobj, TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG);
+                        Tcl_DStringFree(&ftds);
                     }
                 }
             }
@@ -2208,9 +2227,9 @@ static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr)
         DWORD dw;
         for (dw = 0; dw < count; ++dw) {
             if (dlgFilterPtr[dw].pszName != NULL)
-                ckfree(dlgFilterPtr[dw].pszName);
+                ckfree((char *)dlgFilterPtr[dw].pszName);
             if (dlgFilterPtr[dw].pszSpec != NULL)
-                ckfree(dlgFilterPtr[dw].pszSpec);
+                ckfree((char *)dlgFilterPtr[dw].pszSpec);
         }
         ckfree(dlgFilterPtr);
     }
@@ -2783,6 +2802,9 @@ Tk_MessageBoxObjCmd(
     };
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    Tcl_DString titleBuf, tmpBuf;
+    const WCHAR *titlePtr, *tmpPtr;
+    const char *src;
 
     defaultBtn = -1;
     detailObj = NULL;
@@ -2893,7 +2915,9 @@ Tk_MessageBoxObjCmd(
 	    : Tcl_NewUnicodeObj(NULL, 0);
     Tcl_IncrRefCount(tmpObj);
     if (detailObj) {
-	Tcl_AppendUnicodeToObj(tmpObj, L"\n\n", 2);
+	const Tcl_UniChar twoNL[] = { '\n', '\n' };
+
+	Tcl_AppendUnicodeToObj(tmpObj, twoNL, 2);
 	Tcl_AppendObjToObj(tmpObj, detailObj);
     }
 
@@ -2912,8 +2936,18 @@ Tk_MessageBoxObjCmd(
     tsdPtr->hBigIcon   = TkWinGetIcon(parent, ICON_BIG);
     tsdPtr->hMsgBoxHook = SetWindowsHookEx(WH_CBT, MsgBoxCBTProc, NULL,
 	    GetCurrentThreadId());
-    winCode = MessageBox(hWnd, Tcl_GetUnicode(tmpObj),
-	    titleObj ? Tcl_GetUnicode(titleObj) : L"", flags);
+    src = Tcl_GetString(tmpObj);
+    tmpPtr = Tcl_WinUtfToTChar(src, tmpObj->length, &tmpBuf);
+    if (titleObj != NULL) {
+	src = Tcl_GetString(titleObj);
+	titlePtr = Tcl_WinUtfToTChar(src, titleObj->length, &titleBuf);
+    } else {
+	titlePtr = L"";
+	Tcl_DStringInit(&titleBuf);
+    }
+    winCode = MessageBox(hWnd, tmpPtr, titlePtr, flags);
+    Tcl_DStringFree(&titleBuf);
+    Tcl_DStringFree(&tmpBuf);
     UnhookWindowsHookEx(tsdPtr->hMsgBoxHook);
     (void) Tcl_SetServiceMode(oldMode);
 
@@ -3145,13 +3179,13 @@ HookProc(
 	if (IsWindow(hwndCtrl)) {
 	    EnableWindow(hwndCtrl, FALSE);
 	}
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility");
+	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 1; /* we handled the message */
     }
 
     if (WM_DESTROY == msg) {
 	phd->hwnd = NULL;
-	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility");
+	TkSendVirtualEvent(phd->parent, "TkFontchooserVisibility", NULL);
 	return 0;
     }
 
@@ -3169,7 +3203,7 @@ HookProc(
 	    ApplyLogfont(phd->interp, phd->cmdObj, hdc, &lf);
 	}
 	if (phd && phd->parent) {
-	    TkSendVirtualEvent(phd->parent, "TkFontchooserFontChanged");
+	    TkSendVirtualEvent(phd->parent, "TkFontchooserFontChanged", NULL);
 	}
 	return 1;
     }
@@ -3344,7 +3378,7 @@ FontchooserConfigureCmd(
 	    if (hdPtr->fontObj) {
 		Tcl_DecrRefCount(hdPtr->fontObj);
 	    }
-	    (void)Tcl_GetString(objv[i+1]);
+	    Tcl_GetString(objv[i+1]);
 	    if (objv[i+1]->length) {
 		hdPtr->fontObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->fontObj)) {
@@ -3359,7 +3393,7 @@ FontchooserConfigureCmd(
 	    if (hdPtr->cmdObj) {
 		Tcl_DecrRefCount(hdPtr->cmdObj);
 	    }
-	    (void)Tcl_GetString(objv[i+1]);
+	    Tcl_GetString(objv[i+1]);
 	    if (objv[i+1]->length) {
 		hdPtr->cmdObj = objv[i+1];
 		if (Tcl_IsShared(hdPtr->cmdObj)) {
@@ -3448,7 +3482,7 @@ FontchooserShowCmd(
 		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);
 	lf.lfFaceName[LF_FACESIZE-1] = 0;
-	lf.lfHeight = -MulDiv(TkFontGetPoints(tkwin, fontPtr->fa.size),
+	lf.lfHeight = -MulDiv((int)(TkFontGetPoints(tkwin, fontPtr->fa.size) + 0.5),
 	    GetDeviceCaps(hdc, LOGPIXELSY), 72);
 	if (fontPtr->fa.weight == TK_FW_BOLD) {
 	    lf.lfWeight = FW_BOLD;
@@ -3481,7 +3515,7 @@ FontchooserShowCmd(
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
 	    if (hdPtr->parent) {
-		TkSendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged");
+		TkSendVirtualEvent(hdPtr->parent, "TkFontchooserFontChanged", NULL);
 	    }
 	}
 	Tcl_SetServiceMode(oldMode);

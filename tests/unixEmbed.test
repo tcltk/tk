@@ -1,4 +1,4 @@
-# This file is a Tcl script to test out the procedures in the file 
+# This file is a Tcl script to test out the procedures in the file
 # tkUnixEmbed.c.  It is organized in the standard fashion for Tcl
 # tests.
 #
@@ -55,14 +55,14 @@ proc colorsFree {w {red 31} {green 245} {blue 192}} {
 }
 
 test unixEmbed-1.1 {TkpUseWindow procedure, bad window identifier} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
     toplevel .t -use xyz
 } -returnCodes error -result {expected integer but got "xyz"}
 test unixEmbed-1.2 {TkpUseWindow procedure, bad window identifier} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -237,7 +237,7 @@ test unixEmbed-3.1 {ContainerEventProc procedure, detect creation} -constraints 
 	deleteWindows
 } -result {{{XXX .f1 {} {}}} {{XXX .f1 XXX {}}}}
 test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -250,7 +250,7 @@ test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} -constra
 	deleteWindows
 } -result {200x200+0+0}
 test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -271,7 +271,7 @@ test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} -co
 	deleteWindows
 } -result {200x200+0+0}
 test unixEmbed-3.4 {ContainerEventProc procedure, disallow position changes} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -292,7 +292,7 @@ test unixEmbed-3.4 {ContainerEventProc procedure, disallow position changes} -co
 	deleteWindows
 } -result {300x100+0+0}
 test unixEmbed-3.5 {ContainerEventProc procedure, geometry requests} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -313,7 +313,7 @@ test unixEmbed-3.5 {ContainerEventProc procedure, geometry requests} -constraint
 	deleteWindows
 } -result {300 80 300x80+0+0}
 test unixEmbed-3.6 {ContainerEventProc procedure, map requests} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -336,7 +336,7 @@ test unixEmbed-3.6 {ContainerEventProc procedure, map requests} -constraints {
 	deleteWindows
 } -result {mapped}
 test unixEmbed-3.7 {ContainerEventProc procedure, destroy events} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -361,7 +361,7 @@ test unixEmbed-3.7 {ContainerEventProc procedure, destroy events} -constraints {
 
 
 test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -405,7 +405,7 @@ test unixEmbed-4.2 {EmbedStructureProc procedure, destroy events} -constraints {
 
 
 test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -426,7 +426,7 @@ test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
 	deleteWindows
 } -result {{focus in .t1}}
 test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -448,7 +448,7 @@ test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} -constrai
 	deleteWindows
 } -result {}
 test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -474,7 +474,7 @@ test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} -constraints {
 
 
 test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -497,7 +497,7 @@ test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} -constr
 	deleteWindows
 } -result {{{configure .t1 300 120}} 300x120+0+0}
 test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -525,7 +525,7 @@ test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} -constr
 
 
 test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -554,7 +554,7 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
     bind . <KeyPress> {}
 } -result {{{key a 1}} {}}
 test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -679,7 +679,7 @@ test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} -constraint
 
 
 test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {
@@ -694,7 +694,7 @@ test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
 	deleteWindows
 } -result {150x80+0+0}
 test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
-	unix 
+	unix
 } -setup {
 	deleteWindows
 } -body {

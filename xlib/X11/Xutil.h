@@ -535,27 +535,11 @@ extern Status XMatchVisualInfo(
 #endif
 );
 
-extern void XOffsetRegion(
+extern int XOffsetRegion(
 #if NeedFunctionPrototypes
     Region		/* r */,
     int			/* dx */,
     int			/* dy */
-#endif
-);
-
-extern Bool XPointInRegion(
-#if NeedFunctionPrototypes
-    Region		/* r */,
-    int			/* x */,
-    int			/* y */
-#endif
-);
-
-extern Region XPolygonRegion(
-#if NeedFunctionPrototypes
-    XPoint*		/* points */,
-    int			/* n */,
-    int			/* fill_rule */
 #endif
 );
 
@@ -764,22 +748,6 @@ extern int XmbTextListToTextProperty(
 #endif
 );
 
-extern int XwcTextListToTextProperty(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    wchar_t**		/* list */,
-    int			/* count */,
-    XICCEncodingStyle	/* style */,
-    XTextProperty*	/* text_prop_return */
-#endif
-);
-
-extern void XwcFreeStringList(
-#if NeedFunctionPrototypes
-    wchar_t**		/* list */
-#endif
-);
-
 extern Status XTextPropertyToStringList(
 #if NeedFunctionPrototypes
     XTextProperty*	/* text_prop */,
@@ -797,15 +765,6 @@ extern int XmbTextPropertyToTextList(
 #endif
 );
 
-extern int XwcTextPropertyToTextList(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    XTextProperty*	/* text_prop */,
-    wchar_t***		/* list_return */,
-    int*		/* count_return */
-#endif
-);
-
 extern void XUnionRectWithRegion(
 #if NeedFunctionPrototypes
     XRectangle*		/* rectangle */,
@@ -814,7 +773,7 @@ extern void XUnionRectWithRegion(
 #endif
 );
 
-extern void XUnionRegion(
+extern int XUnionRegion(
 #if NeedFunctionPrototypes
     Region		/* sra */,
     Region		/* srb */,

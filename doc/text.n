@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH text n 8.5 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -486,6 +486,16 @@ much the line should be indented from the left edge of the window.
 option is only used when wrapping is enabled, and it only applies to the
 second and later display lines for a text line.
 .TP
+\fB\-lmargincolor \fIcolor\fR
+.
+\fIColor\fR specifies the background color to use in regions that do not
+contain characters because they are indented by \fB\-lmargin1\fR or
+\fB\-lmargin2\fR. It may have any of the forms accepted by
+\fBTk_GetColor\fR. If \fIcolor\fR has not been specified, or if it is
+specified as an empty string, then the color used is specified by the
+\fB-background\fR tag option (or, if this is also unspecified, by the
+\fB-background\fR widget option).
+.TP
 \fB\-offset \fIpixels\fR
 .
 \fIPixels\fR specifies an amount by which the text's baseline should be offset
@@ -499,6 +509,13 @@ distances.
 Specifies whether or not to draw a horizontal rule through the middle of
 characters. \fIBoolean\fR may have any of the forms accepted by
 \fBTcl_GetBoolean\fR.
+.TP
+\fB\-overstrikefg \fIcolor\fR
+.
+\fIColor\fR specifies the color to use when displaying the overstrike. It may
+have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
+been specified, or if it is specified as an empty string, then the color
+specified by the \fB\-foreground\fR tag option is used.
 .TP
 \fB\-relief \fIrelief\fR
 .
@@ -516,6 +533,29 @@ leave between the end of the line and the right edge of the window.
 option is only used when wrapping is enabled. If a text line wraps, the right
 margin for each line on the display is determined by the first non-elided
 character of that display line.
+.TP
+\fB\-rmargincolor \fIcolor\fR
+.
+\fIColor\fR specifies the background color to use in regions that do not
+contain characters because they are indented by \fB\-rmargin\fR. It may
+have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
+been specified, or if it is specified as an empty string, then the color
+used is specified by the \fB-background\fR tag option (or, if this is also
+unspecified, by the \fB-background\fR widget option).
+.TP
+\fB\-selectbackground \fIcolor\fR
+\fIColor\fR specifies the background color to use when displaying selected
+items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
+\fIcolor\fR has not been specified, or if it is specified as an empty
+string, then the color specified by the \fB\-background\fR tag option is
+used.
+.TP
+\fB\-selectforeground \fIcolor\fR
+\fIColor\fR specifies the foreground color to use when displaying selected
+items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
+\fIcolor\fR has not been specified, or if it is specified as an empty
+string, then the color specified by the \fB\-foreground\fR tag option is
+used.
 .TP
 \fB\-spacing1 \fIpixels\fR
 .
@@ -559,12 +599,21 @@ unspecified for the tag (the default).
 \fIBoolean\fR specifies whether or not to draw an underline underneath
 characters. It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 .TP
+\fB\-underlinefg \fIcolor\fR
+.
+\fIColor\fR specifies the color to use when displaying the underline. It may
+have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
+been specified, or if it is specified as an empty string, then the color
+specified by the \fB\-foreground\fR tag option is used.
+.TP
 \fB\-wrap \fImode\fR
 .
 \fIMode\fR specifies how to handle lines that are wider than the text's
-window. It has the same legal values as the \fB\-wrap\fR option for the text
-widget: \fBnone\fR, \fBchar\fR, or \fBword\fR. If this tag option is
-specified, it overrides the \fB\-wrap\fR option for the text widget.
+window. This option only applies to a display line if it applies to the
+first non-elided character on that display line. It has the same legal
+values as the \fB\-wrap\fR option for the text widget: \fBnone\fR,
+\fBchar\fR, or \fBword\fR. If this tag option is specified, it
+overrides the \fB\-wrap\fR option for the text widget.
 .PP
 If a character has several tags associated with it, and if their display
 options conflict, then the options of the highest priority tag are used. If a
@@ -852,6 +901,9 @@ separator is already present at the top of the undo stack no other will be
 inserted. That means that two separators on the undo stack are always
 separated by at least one insert or delete action.
 .PP
+The \fB<<UndoStack>>\fR virtual event is generated every time the undo stack
+or the redo stack becomes empty or unempty.
+.PP
 The undo mechanism is also linked to the modified flag. This means that
 undoing or redoing changes can take a modified text widget back to the
 unmodified state or vice versa. The modified flag will be set automatically to
@@ -935,7 +987,7 @@ geometry manager), one can resort to \fIpathName \fBsync\fR and \fIpathName
 \fBpendingsync\fR to control the synchronization of the view of text widgets.
 .PP
 The \fB<<WidgetViewSync>>\fR virtual event fires when the line heights of the
-text widget becomes obsolete (due to some editing command or configuration
+text widget become obsolete (due to some editing command or configuration
 change), and again when the internal data of the text widget are back in sync
 with the widget view. The detail field (%d substitution) is either true (when
 the widget is in sync) or false (when it is not).
@@ -1128,22 +1180,30 @@ test suite.
 .TP
 \fIpathName \fBdelete \fIindex1 \fR?\fIindex2 ...\fR?
 .
-Delete a range of characters from the text. If both \fIindex1\fR and
-\fIindex2\fR are specified, then delete all the characters starting with the
-one given by \fIindex1\fR and stopping just before \fIindex2\fR (i.e. the
-character at \fIindex2\fR is not deleted). If \fIindex2\fR does not specify a
-position later in the text than \fIindex1\fR then no characters are deleted.
-If \fIindex2\fR is not specified then the single character at \fIindex1\fR is
-deleted. It is not allowable to delete characters in a way that would leave
-the text without a newline as the last character. The command returns an empty
-string. If more indices are given, multiple ranges of text will be deleted.
-All indices are first checked for validity before any deletions are made. They
-are sorted and the text is removed from the last range to the first range so
-deleted text does not cause an undesired index shifting side-effects. If
-multiple ranges with the same start index are given, then the longest range is
-used. If overlapping ranges are given, then they will be merged into spans
-that do not cause deletion of text outside the given ranges due to text
-shifted during deletion.
+Delete a range of characters from the text.
+If both \fIindex1\fR and \fIindex2\fR are specified, then delete
+all the characters starting with the one given by \fIindex1\fR
+and stopping just before \fIindex2\fR (i.e. the character at
+\fIindex2\fR is not deleted).
+If \fIindex2\fR does not specify a position later in the text
+than \fIindex1\fR then no characters are deleted.
+If \fIindex2\fR is not specified then the single character at
+\fIindex1\fR is deleted.
+Attempts to delete characters in a way that would leave
+the text without a newline as the last character will be tweaked by the
+text widget to avoid this. In particular, deletion of complete lines of
+text up to the end of the text will also delete the newline character just
+before the deleted block so that it is replaced by the new final newline
+of the text widget.
+The command returns an empty string.
+If more indices are given, multiple ranges of text will be deleted.
+All indices are first checked for validity before any deletions are made.
+They are sorted and the text is removed from the last range to the
+first range so deleted text does not cause an undesired index shifting
+side-effects.  If multiple ranges with the same start index are given,
+then the longest range is used.  If overlapping ranges are given, then
+they will be merged into spans that do not cause deletion of text
+outside the given ranges due to text shifted during deletion.
 .TP
 \fIpathName \fBdlineinfo \fIindex\fR
 .
@@ -1229,6 +1289,16 @@ behavior of the command depends on the \fIoption\fR argument that follows the
 supported:
 .RS
 .TP
+\fIpathName \fBedit canredo\fR
+.
+Returns a boolean true if redo is possible, i.e. when the redo stack is not
+empty. Otherwise returns false.
+.TP
+\fIpathName \fBedit canundo\fR
+.
+Returns a boolean true if undo is possible, i.e. when the undo stack is not
+empty. Otherwise returns false.
+.TP
 \fIpathName \fBedit modified \fR?\fIboolean\fR?
 .
 If \fIboolean\fR is not specified, returns the modified flag of the widget.
@@ -1239,8 +1309,9 @@ of the widget to \fIboolean\fR.
 \fIpathName \fBedit redo\fR
 .
 When the \fB\-undo\fR option is true, reapplies the last undone edits provided
-no other edits were done since then. Generates an error when the redo stack is
-empty. Does nothing when the \fB\-undo\fR option is false.
+no other edits were done since then, and returns a list of indices indicating
+what ranges were changed by the redo operation. Generates an error when the
+redo stack is empty. Does nothing when the \fB\-undo\fR option is false.
 .TP
 \fIpathName \fBedit reset\fR
 .
@@ -1253,9 +1324,10 @@ Inserts a separator (boundary) on the undo stack. Does nothing when the
 .TP
 \fIpathName \fBedit undo\fR
 .
-Undoes the last edit action when the \fB\-undo\fR option is true. An edit
-action is defined as all the insert and delete commands that are recorded on
-the undo stack in between two separators. Generates an error when the undo
+Undoes the last edit action when the \fB\-undo\fR option is true, and returns a
+list of indices indicating what ranges were changed by the undo operation. An
+edit action is defined as all the insert and delete commands that are recorded
+on the undo stack in between two separators. Generates an error when the undo
 stack is empty. Does nothing when the \fB\-undo\fR option is false.
 .RE
 .TP
@@ -2085,11 +2157,11 @@ insertion cursor without moving the insertion cursor.
 Meta-backspace and Meta-Delete delete the word to the left of the insertion
 cursor.
 .IP [30]
-Control-x deletes whatever is selected in the text widget after copying it to
-the clipboard.
-.IP [31]
 Control-t reverses the order of the two characters to the right of the
 insertion cursor.
+.IP [31]
+Control-x deletes whatever is selected in the text widget after copying it to
+the clipboard.
 .IP [32]
 Control-z undoes the last edit action if the \fB\-undo\fR option is true.
 Does nothing otherwise.

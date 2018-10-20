@@ -29,6 +29,15 @@ test text-1.1 {configuration option: "autoseparators"} -setup {
 } -cleanup {
     destroy .t
 } -result {1}
+test text-1.1b {configuration option: "autoseparators", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -autoseparators
+} -cleanup {
+    destroy .t
+} -result {1}
 test text-1.2 {configuration option: "autoseparators"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -428,6 +437,15 @@ test text-1.43 {configuration option: "maxundo"} -setup {
 } -cleanup {
     destroy .t
 } -result {5}
+test text-1.43b {configuration option: "maxundo", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -maxundo
+} -cleanup {
+    destroy .t
+} -result {0}
 test text-1.44 {configuration option: "maxundo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -732,6 +750,15 @@ test text-1.75 {configuration option: "undo"} -setup {
 } -cleanup {
     destroy .t
 } -result {1}
+test text-1.75b {configuration option: "undo", default} -setup {
+    text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
+    pack .t
+    update
+} -body {
+    .t cget -undo
+} -cleanup {
+    destroy .t
+} -result {0}
 test text-1.76 {configuration option: "undo"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -883,7 +910,7 @@ test text-2.7 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {flat}
@@ -892,16 +919,16 @@ test text-2.8 {Tk_TextCmd procedure} -constraints {
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
-} -result {solid}
+} -result {flat}
 test text-2.9 {Tk_TextCmd procedure} -constraints {
-    unix
+    unix notAqua
 } -body {
     catch {destroy .t}
     text .t
-    .t tag cget sel -relief 
+    .t tag cget sel -relief
 } -cleanup {
     destroy .t
 } -result {raised}
@@ -1458,7 +1485,19 @@ Line 7"
     rename .t {}
     rename test.t .t
     destroy .t
-} -result {{edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} {insert 2.1 ef} {mark set insert 2.3} {see insert}}
+} -result [list {edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} \
+                {mark set tk::undoMarkL2 2.1} {mark set tk::undoMarkR2 2.4} \
+                {mark gravity tk::undoMarkL2 left} {mark gravity tk::undoMarkR2 right} \
+                {insert 2.1 ef} {mark set insert 2.3} {see insert} \
+                {mark set tk::undoMarkL1 2.1} {mark set tk::undoMarkR1 2.3} \
+                {mark gravity tk::undoMarkL1 left} {mark gravity tk::undoMarkR1 right} \
+                {mark names} \
+                {index tk::undoMarkL1} {index tk::undoMarkR1} \
+                {mark unset tk::undoMarkL1 tk::undoMarkR1} \
+                {index tk::undoMarkL2} {index tk::undoMarkR2} \
+                {mark unset tk::undoMarkL2 tk::undoMarkR2} \
+                {compare 2.1 > 2.3} {compare 2.6 > 2.3} ]
+
 test text-8.23 {TextWidgetCmd procedure, "replace" option with undo} -setup {
     text .t
 } -body {
@@ -1547,6 +1586,25 @@ test text-8.26 {TextWidgetCmd procedure, "replace" option crash} -setup {
 } -body {
     .tt insert 0.0 foo\n
     .tt replace end-1l end bar
+} -cleanup {
+    destroy .tt
+} -result {}
+test text-8.27 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    text .tt
+} -body {
+    .tt insert 0.0 \na
+    for {set i 0} {$i < 2} {incr i} {
+        .tt replace 2.0 3.0 b
+    }
+} -cleanup {
+    destroy .tt
+} -result {}
+test text-8.28 {TextWidgetCmd procedure, "replace" option crash} -setup {
+    text .tt
+} -body {
+    .tt insert end "foo\n"
+    .tt tag add sel 1.0 end
+    .tt replace sel.first sel.last "bar"
 } -cleanup {
     destroy .tt
 } -result {}
@@ -1989,7 +2047,7 @@ Line 7"
     .t tag configure elide -elide 1
     .t tag add elide 5.2 5.4
     .t window create 5.4
-    .t delete 5.4 
+    .t delete 5.4
     .t tag add elide 5.5 5.6
     .t get -displaychars 5.2 5.8
 } -cleanup {
@@ -2604,7 +2662,7 @@ test text-10.37 {TextWidgetCmd procedure, "count" option} -setup {
 } -result {3}
 test text-10.38 {TextWidgetCmd procedure, "count" option} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
 } -body {
     .t configure -width 20 -height 10
     update
@@ -2700,7 +2758,7 @@ test text-9.2.47 {TextWidgetCmd procedure, "count" option} -setup {
 
 test text-11.1 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
 } -body {
     .t insert end "hello"
     .t configure -wrap none
@@ -2717,7 +2775,7 @@ test text-11.1 {counting with tag priority eliding} -setup {
 } -result {0 1 2 3 4 5 5 6}
 test text-11.2 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
 } -body {
     .t insert end "hello"
     .t tag configure elide1 -elide 0
@@ -2829,7 +2887,7 @@ test text-11.7 {counting with tag priority eliding}  -setup {
 } -result {5 5}
 test text-11.8 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     set res {}
 } -body {
     .t insert end "hello"
@@ -2855,7 +2913,7 @@ test text-11.8 {counting with tag priority eliding} -setup {
 } -result {0 0 0 0 3 2 1 1}
 test text-11.9 {counting with tag priority eliding} -setup {
     text .t -font {Courier -12} -borderwidth 2 -highlightthickness 2
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     set res {}
 } -body {
     .t tag configure WELCOME -elide 1
@@ -2871,7 +2929,7 @@ test text-11.9 {counting with tag priority eliding} -setup {
     lappend res [.t index "1.0 +1 indices"]
     lappend res [.t index "1.0 +1 display indices"]
     lappend res [.t index "1.0 +1 display chars"]
-    lappend res [.t index end] 
+    lappend res [.t index end]
     lappend res [.t index "end -1 indices"]
     lappend res [.t index "end -1 display indices"]
     lappend res [.t index "end -1 display chars"]
@@ -3043,7 +3101,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     vwait res  ; # event dealt with by the event loop, with %d==0 i.e. we're out of sync
     # ensure the test is relevant
     lappend res "Pending:[.top.yt pendingsync]"
-    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs 
+    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs
     # - there is no more any pending sync after running 'sync'
     .top.yt sync
     vwait res  ; # event dealt with by the event loop, with %d==1 i.e. we're in sync again
@@ -3052,6 +3110,25 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
 } -cleanup {
     destroy .top.yt .top
 } -result {Sync:0 Pending:1 Sync:1 Pending:0}
+
+test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
+                  NOT Tk_HandleEvent().
+                  Bug [b362182e45704dd7bbd6aed91e48122035ea3d16]} -setup {
+    destroy .top.t .top
+} -body {
+    set res {}
+    toplevel .top
+    pack [text .top.t]
+    for {set i 1} {$i < 10000} {incr i} {
+        .top.t insert end "Hello world!\n"
+    }
+    bind .top.t <<WidgetViewSync>> {destroy .top.t}
+    .top.t tag add mytag 1.5 8000.8    ; # shall not crash
+    update
+    set res "Still doing fine!"
+} -cleanup {
+    destroy .top.t .top
+} -result {Still doing fine!}
 
 test text-12.1 {TextWidgetCmd procedure, "index" option} -setup {
     text .t
@@ -3246,11 +3323,11 @@ test text-14.5 {ConfigureText procedure} -setup {
     .t configure -tabs {30 foo}
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad tab alignment "foo": must be left, right, center, or numeric} 
+} -returnCodes {error} -result {bad tab alignment "foo": must be left, right, center, or numeric}
 test text-14.6 {ConfigureText procedure} -setup {
     text .t
 } -body {
-    catch {.t configure -tabs {30 foo}} 
+    catch {.t configure -tabs {30 foo}}
     .t configure -tabs {10 20 30}
     return $errorInfo
 } -cleanup {
@@ -3269,7 +3346,7 @@ test text-14.7 {ConfigureText procedure} -setup {
     destroy .t
 } -result {}
 test text-14.8 {ConfigureText procedure} -setup {
-   text .t 
+   text .t
 } -body {
     .t configure -wrap bogus
 } -cleanup {
@@ -3295,7 +3372,7 @@ test text-14.10 {ConfigureText procedure} -setup {
     destroy .t
 } -result {}
 test text-14.11 {ConfigureText procedure} -setup {
-    text .t 
+    text .t
 } -body {
     .t configure -selectborderwidth foo
 } -cleanup {
@@ -3385,8 +3462,8 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
 } -body {
-    .top.t configure -width 20 -height 10 
-    pack append .top .top.t top
+    .top.t configure -width 20 -height 10
+    pack .top.t
     update
     set geom [wm geometry .top]
     set x [string range $geom 0 [string first + $geom]]
@@ -3403,7 +3480,7 @@ test text-14.19 {ConfigureText procedure} -setup {
 } -body {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     update
     wm geometry .top
@@ -3420,7 +3497,7 @@ test text-14.20 {ConfigureText procedure} -setup {
 } -body {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     update
     set result [wm geometry .top]
@@ -3474,7 +3551,7 @@ test text-17.1 {TextCmdDeletedProc procedure} -body {
 test text-17.2 {TextCmdDeletedProc procedure, disabling -setgrid} -constraints {
     fonts
 } -body {
-   toplevel .top 
+   toplevel .top
    text .top.t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold} \
     -setgrid 1 -width 20 -height 10
    pack .top.t
@@ -3673,10 +3750,9 @@ Line 4"
     list [.t tag ranges sel] [.t get 1.0 end]
 } -cleanup {
     destroy .t
-} -result {{1.0 4.0} {Line 1
+} -result {{1.0 3.5} {Line 1
 abcde
 12345
-
 }}
 test text-19.9 {DeleteChars procedure} -body {
     text .t
@@ -3711,7 +3787,7 @@ Line 4
 test text-19.11 {DeleteChars procedure} -body {
     toplevel .top
     text .top.t -width 20 -height 5
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     .top.t insert 1.0 "abc\n123\nx\ny\nz\nq\nr\ns"
     update
@@ -3723,7 +3799,7 @@ test text-19.11 {DeleteChars procedure} -body {
 test text-19.12 {DeleteChars procedure} -body {
     toplevel .top
     text .top.t -width 20 -height 5
-    pack append .top .top.t top
+    pack .top.t
     wm geometry .top +0+0
     .top.t insert 1.0 "abc\n123\nx\ny\nz\nq\nr\ns"
     .top.t yview 3.0
@@ -3783,7 +3859,7 @@ test text-19.16 {DeleteChars procedure, updates affecting topIndex} -setup {
     wm geometry .top +0+0
     update
 } -body {
-    .top.t insert end "abc def\n01 2345 678 9101112\nLine 3\nLine 4\nLine 5\n6\n7\n8\n"
+    .top.t insert end "abc def\n01 2a345 678 9101112\nLine 3\nLine 4\nLine 5\n6\n7\n8\n"
     .top.t yview 2.4
     .top.t delete 2.5
     set x [.top.t index @0,0]
@@ -3796,7 +3872,7 @@ test text-19.16 {DeleteChars procedure, updates affecting topIndex} -setup {
 
 test text-20.1 {TextFetchSelection procedure} -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3811,7 +3887,7 @@ b.0b.1b.2b.3b.4
 c.0c}
 test text-20.2 {TextFetchSelection procedure} -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3831,7 +3907,7 @@ b.0b.1b.2b.3b.4
 c.0c}
 test text-20.3 {TextFetchSelection procedure}  -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3845,7 +3921,7 @@ test text-20.3 {TextFetchSelection procedure}  -setup {
 } -result {m}
 test text-20.4 {TextFetchSelection procedure}  -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
 } -body {
     foreach i {a b c d e f g h i j k l m n o p q r s t u v w x y z} {
@@ -3865,7 +3941,7 @@ test text-20.4 {TextFetchSelection procedure}  -setup {
 cj.0j.1j.2j.3j.4m}
 test text-20.5 {TextFetchSelection procedure, long selections} -setup {
     text .t -width 20 -height 10
-    pack append . .t {top expand fill}
+    pack .t -expand 1 -fill both
     update
     set x ""
 } -body {
@@ -3880,7 +3956,7 @@ test text-20.5 {TextFetchSelection procedure, long selections} -setup {
 } -result {1}
 
 
-test text-21.1 {TkTextLostSelection procedure} -constraints unix -setup {
+test text-21.1 {TkTextLostSelection procedure} -constraints {x11} -setup {
     text .t
     .t insert 1.0 "Line 1"
     entry .t.e
@@ -3895,7 +3971,7 @@ test text-21.1 {TkTextLostSelection procedure} -constraints unix -setup {
 } -cleanup {
     destroy .t .t2
 } -result {}
-test text-21.2 {TkTextLostSelection procedure} -constraints win -setup {
+test text-21.2 {TkTextLostSelection procedure} -constraints aquaOrWin32 -setup {
     text .t
     .t insert 1.0 "Line 1"
     entry .t.e
@@ -4867,7 +4943,7 @@ test text-22.118 {TextSearchCmd, multiline matching end of window} -body {
 test text-22.119 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -4884,7 +4960,7 @@ test text-22.120 {TextSearchCmd, multiline regexp matching} -body {
     pack [text .t]
     .t insert 1.0 {static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -4898,7 +4974,7 @@ test text-22.121 {TextSearchCmd, multiline regexp matching} -body {
     .t insert 1.0 {
 static int		SetFsPathFromAny _ANSI_ARGS_((Tcl_Interp *interp,
 			    Tcl_Obj *objPtr));
-static Tcl_Obj*         FSNormalizeAbsolutePath 
+static Tcl_Obj*         FSNormalizeAbsolutePath
 			    _ANSI_ARGS_((Tcl_Interp* interp, Tcl_Obj *pathPtr));}
     set markExpr "^(\[A-Za-z0-9~_\]+\[ \t\n\r\]*\\(|(\[^ \t\(#\n\r/@:\*\]\[^=\(\r\n\]*\[ \t\]+\\*?)?"
     append markExpr "(\[A-Za-z0-9~_\]+(<\[^>\]*>)?(::)?(\[A-Za-z0-9~_\]+::)*\[-A-Za-z0-9~_+ <>\|\\*/\]+|\[A-Za-z0-9~_\]+)"
@@ -5493,9 +5569,7 @@ test text-22.198 {TextSearchCmd, regexp search multi-line} -body {
 } -cleanup {
     destroy .t
 } -result {2.0 19}
-test text-22.199 {TextSearchCmd, regexp search multi-line} -constraints {
-    knownBug
-} -body {
+test text-22.199 {TextSearchCmd, regexp search multi-line} -body {
     pack [text .t]
     .t insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
     set foo {}
@@ -5504,9 +5578,7 @@ test text-22.199 {TextSearchCmd, regexp search multi-line} -constraints {
 } -cleanup {
     destroy .t
 } -result {2.0 19}
-test text-22.200 {TextSearchCmd, regexp search multi-line} -constraints {
-    knownBug
-} -body {
+test text-22.200 {TextSearchCmd, regexp search multi-line} -body {
     pack [text .t]
     .t insert 1.0 "aaaa\nbbbb\ncccc\nbbbb\naaaa\n"
     set foo {}
@@ -5524,23 +5596,18 @@ test text-22.201 {TextSearchCmd, regexp search multi-line} -body {
 } -cleanup {
     destroy .t
 } -result {1.0 24}
-test text-22.202 {TextSearchCmd, regexp search multi-line} -constraints {
-    knownBug
-} -body {
+test text-22.202 {TextSearchCmd, regexp search multi-line} -body {
     pack [text .t]
     .t insert 1.0 "aaaa\nbbbb\nbbbb\nbbbb\nbbbb\n"
     list [.t search -regexp -backward -all -count foo \
-      -- {b+\n|a+\n(b+\n)+} end] $foo
+      -- {(b+\n|a+\n)(b+\n)+} end] $foo
 } -cleanup {
     destroy .t
 } -result {1.0 25}
-test text-22.203 {TextSearchCmd, regexp search multi-line} -constraints {
-    knownBug
-} -body {
+test text-22.203 {TextSearchCmd, regexp search multi-line} -body {
     pack [text .t]
     .t insert 1.0 "aaaa\nbbbb\nbbbb\nbbbb\nbbbb\n"
-    .t search -regexp -backward -- {b+\n|a+\n(b+\n)+} end
-# Should match at 1.0 for a true greedy match
+    .t search -regexp -backward -- {(b+\n|a+\n)(b+\n)+} end
 } -cleanup {
     destroy .t
 } -result {1.0}
@@ -5809,7 +5876,219 @@ test text-22.225 {TextSearchCmd, strict limits} -body {
 } -cleanup {
     destroy .t
 } -result {}
-
+test text-22.226 {TextSearchCmd, exact search for the empty string} -body {
+    text .t
+    set res [.t search -count C "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.227 {TextSearchCmd, exact search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 0}
+test text-22.228 {TextSearchCmd, exact search all empty strings} -body {
+    text .t
+    set res [.t search -count C -all "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.229 {TextSearchCmd, exact search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.230 {TextSearchCmd, exact search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -all -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.231 {TextSearchCmd, exact search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all -overlap "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.232 {TextSearchCmd, regexp search for the empty string} -body {
+    text .t
+    set res [.t search -count C -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.233 {TextSearchCmd, regexp search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -regexp "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 0}
+test text-22.234 {TextSearchCmd, regexp search all empty strings} -body {
+    text .t
+    set res [.t search -count C -all -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.235 {TextSearchCmd, regexp search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all -regexp "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.236 {TextSearchCmd, regexp search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -all -regexp -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.237 {TextSearchCmd, regexp search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -all -regexp -overlap "" 2.5 2.8]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.5 2.6 2.7 {0 0 0}}
+test text-22.238 {TextSearchCmd, exact backwards search for the empty string} -body {
+    text .t
+    set res [.t search -count C -backwards "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.239 {TextSearchCmd, exact backwards search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 0}
+test text-22.240 {TextSearchCmd, exact backwards search all empty strings} -body {
+    text .t
+    set res [.t search -count C -backwards -all "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.241 {TextSearchCmd, exact backwards search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.242 {TextSearchCmd, exact backwards search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -backwards -all -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.243 {TextSearchCmd, exact backwards search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all -overlap "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.244 {TextSearchCmd, regexp backwards search for the empty string} -body {
+    text .t
+    set res [.t search -count C -backwards -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.245 {TextSearchCmd, regexpbackwards search for the empty string} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -regexp "" 2.5]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 0}
+test text-22.246 {TextSearchCmd, regexp backwards search all empty strings} -body {
+    text .t
+    set res [.t search -count C -backwards -all -regexp "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.247 {TextSearchCmd, regexp backwards search all empty strings} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all -regexp "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.248 {TextSearchCmd, regexp backwards search all empty strings, with overlap} -body {
+    text .t
+    set res [.t search -count C -backwards -all -regexp -overlap "" 1.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {1.0 0}
+test text-22.249 {TextSearchCmd, regexp backwards search all empty strings, with overlap} -body {
+    text .t
+    .t insert end "Searching for the\nempty string!"
+    set res [.t search -count C -backwards -all -regexp -overlap "" 2.5 2.0]
+    lappend res $C
+} -cleanup {
+    destroy .t
+    unset -nocomplain res C
+} -result {2.4 2.3 2.2 2.1 2.0 {0 0 0 0 0}}
+test text-22.250 {TextSearchCmd, backwards search all matching at start of line} -body {
+    text .t
+    .t insert end "abc"
+    set res [.t search -backwards -all b end]      ; # works
+    lappend res [.t search -backwards a end]       ; # works
+    lappend res [.t search -backwards -all a end]  ; # used to hang
+} -cleanup {
+    destroy .t
+} -result {1.1 1.0 1.0}
 
 test text-23.1 {TkTextGetTabs procedure} -setup {
     text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
@@ -5891,7 +6170,7 @@ test text-23.7 {TkTextGetTabs procedure} -setup {
 test text-24.1 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump
 } -cleanup {
     destroy .t
@@ -5899,7 +6178,7 @@ test text-24.1 {TextDumpCmd procedure, bad args} -body {
 test text-24.2 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -all
 } -cleanup {
     destroy .t
@@ -5907,7 +6186,7 @@ test text-24.2 {TextDumpCmd procedure, bad args} -body {
 test text-24.3 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -command
 } -cleanup {
     destroy .t
@@ -5915,7 +6194,7 @@ test text-24.3 {TextDumpCmd procedure, bad args} -body {
 test text-24.4 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump -bogus
 } -cleanup {
     destroy .t
@@ -5923,7 +6202,7 @@ test text-24.4 {TextDumpCmd procedure, bad args} -body {
 test text-24.5 {TextDumpCmd procedure, bad args} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump bogus
 } -cleanup {
     destroy .t
@@ -5960,7 +6239,7 @@ test text-24.9 {TextDumpCmd procedure, same indices} -body {
 test text-24.10 {TextDumpCmd procedure, negative range} -body {
     pack [text .t]
     .t insert 1.0 "One Line"
-    .t mark set insert 1.0 
+    .t mark set insert 1.0
     .t dump 1.5 1.0
 } -cleanup {
     destroy .t
@@ -6189,7 +6468,7 @@ test text-27.2 {TextEditCmd procedure, argument parsing} -body {
     .t edit gorp
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad edit option "gorp": must be modified, redo, reset, separator, or undo}
+} -returnCodes {error} -result {bad edit option "gorp": must be canundo, canredo, modified, redo, reset, separator, or undo}
 test text-27.3 {TextEditUndo procedure, undoing changes} -body {
     text .t -undo 1
     pack .t
@@ -6276,12 +6555,13 @@ test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
     text .t
     pack .t
     set ::retval {}
+    update
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
 # Shouldn't require [update idle] to trigger event [Bug 1809538]
     lappend ::retval [.t edit modified]
     .t edit modified 1
-    update idletasks
+    update
     lappend ::retval [.t edit modified]
     .t edit modified 1 ; # binding should only fire once [Bug 1799782]
     update idletasks
@@ -6296,6 +6576,7 @@ test text-27.12 {<<Modified>> virtual event} -body {
     bind .t <<Modified>> "set ::retval modified"
     update idletasks
     .t insert end "nothing special\n"
+    update
     return $::retval
 } -cleanup {
     destroy .t
@@ -6306,6 +6587,7 @@ test text-27.13 {<<Modified>> virtual event - insert before Modified} -body {
     bind .t <<Modified>> { set ::retval [.t get 1.0 end-1c] }
     update idletasks
     .t insert end "nothing special"
+    update
     return $::retval
 } -cleanup {
     destroy .t
@@ -6318,21 +6600,142 @@ test text-27.14 {<<Modified>> virtual event - delete before Modified} -body {
     .t insert end "nothing special"
     .t edit modified 0
     .t delete 1.0 1.2
+    update
     set ::retval
 } -cleanup {
     destroy .t
 } -result {thing special}
-test text-27.15 {<<Selection>> virtual event} -body {
+test text-27.14a {<<Modified>> virtual event - propagation to peers} -body {
+# Bug [fd3a4dc111], <<Modified>> event is not always sent to peers
+    set ::retval 0
+    text .t -undo 1
+    .t peer create .tt
+    pack .t .tt
+    bind .t <<Modified>> {incr ::retval}
+    bind .tt <<Modified>> {incr ::retval}
+    .t insert end "This increments ::retval once for each peer, i.e. twice."
+    .t edit modified 0  ; # shall increment twice as well, not just once
+    update
+    set ::retval
+} -cleanup {
+    destroy .t .tt
+} -result {4}
+test text-27.15 {<<Selection>> virtual event on sel tagging} -body {
     set ::retval no_selection
-    pack [text .t -undo 1]
+    pack [text .t]
     bind .t <<Selection>> "set ::retval selection_changed"
     update idletasks
     .t insert end "nothing special\n"
     .t tag add sel 1.0 1.1
+    update
     set ::retval
 } -cleanup {
     destroy .t
 } -result {selection_changed}
+test text-27.15a {<<Selection>> virtual event on sel removal} -body {
+    set ::retval no_selection
+    pack [text .t]
+    .t insert end "nothing special\n"
+    .t tag add sel 1.0 1.1
+    bind .t <<Selection>> "set ::retval selection_changed"
+    update idletasks
+    .t tag remove 1.0 end
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {selection_changed}
+test text-27.15b {<<Selection>> virtual event on <<PasteSelection>> inside widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <<PasteSelection>> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<PasteSelection>> -x 15 -y 3
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {<<Selection>>_fired}
+test text-27.15c {No <<Selection>> virtual event on <<PasteSelection>> outside widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "but it will not be impacted by the <<PasteSelection>> event received."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<PasteSelection>> -x 15 -y 80
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {no_<<Selection>>_event_fired}
+test text-27.15d {<<Selection>> virtual event on <Delete> with cursor inside selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <Delete> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    .t mark set insert 1.15
+    focus .t
+    event generate .t <Delete>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {<<Selection>>_fired}
+test text-27.15e {No <<Selection>> virtual event on <Delete> with cursor outside selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "but it will not be impacted by the <Delete> event received."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    .t mark set insert 2.15
+    focus .t
+    event generate .t <Delete>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {no_<<Selection>>_event_fired}
+test text-27.15f {<<Selection>> virtual event on <<Cut>> with a widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <<Cut>> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    .t tag add sel 1.0 1.28
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<Cut>>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {<<Selection>>_fired}
+test text-27.15g {No <<Selection>> virtual event on <<Cut>> without widget selection} -body {
+    pack [text .t]
+    .t insert end "There is a selection in this text widget,\n"
+    .t insert end "and it will be impacted by the <<Cut>> event received.\n"
+    .t insert end "Therefore a <<Selection>> event must fire back."
+    bind .t <<Selection>> "set ::retval <<Selection>>_fired"
+    update
+    set ::retval no_<<Selection>>_event_fired
+    event generate .t <<Cut>>
+    update
+    set ::retval
+} -cleanup {
+    destroy .t
+} -result {no_<<Selection>>_event_fired}
 test text-27.16 {-maxundo configuration option} -body {
     text .t -undo 1  -autoseparators 1 -maxundo 2
     pack .t
@@ -6346,6 +6749,36 @@ test text-27.16 {-maxundo configuration option} -body {
 } -cleanup {
     destroy .t
 } -result "line 1\n\n"
+test text-27.16a {undo configuration options with peers} -body {
+    text .t -undo 1 -autoseparators 0 -maxundo 100
+    .t peer create .tt
+    set res     [.t  cget -undo]
+    lappend res [.tt cget -undo]
+    lappend res [.t  cget -autoseparators]
+    lappend res [.tt cget -autoseparators]
+    lappend res [.t  cget -maxundo]
+    lappend res [.tt cget -maxundo]
+    .t insert end "The undo stack is common between peers"
+    lappend res [.t  edit canundo]
+    lappend res [.tt edit canundo]
+} -cleanup {
+    destroy .t .tt
+} -result {1 1 0 0 100 100 1 1}
+test text-27.16b {undo configuration options with peers, defaults} -body {
+    text .t
+    .t peer create .tt
+    set res     [.t  cget -undo]
+    lappend res [.tt cget -undo]
+    lappend res [.t  cget -autoseparators]
+    lappend res [.tt cget -autoseparators]
+    lappend res [.t  cget -maxundo]
+    lappend res [.tt cget -maxundo]
+    .t insert end "The undo stack is common between peers"
+    lappend res [.t  edit canundo]
+    lappend res [.tt edit canundo]
+} -cleanup {
+    destroy .t .tt
+} -result {0 0 1 1 0 0 0 0}
 test text-27.17 {bug fix 1536735 - undo with empty text} -body {
     text .t -undo 1
     set r [.t edit modified]
@@ -6368,7 +6801,7 @@ test text-27.18 {patch 1469210 - inserting after undo} -setup {
 } -cleanup {
     destroy .t
 } -result 1
-test text-25.19 {patch 1669632 (i) - undo after <Control-1>} -setup {
+test text-27.19 {patch 1669632 (i) - undo after <Control-1>} -setup {
     destroy .t
 } -body {
     text .t -undo 1
@@ -6382,7 +6815,7 @@ test text-25.19 {patch 1669632 (i) - undo after <Control-1>} -setup {
 } -cleanup {
     destroy .t
 } -result WORLD
-test text-25.20 {patch 1669632 (iv) - undo after <<SelectNone>>} -setup {
+test text-27.20 {patch 1669632 (iv) - undo after <<SelectNone>>} -setup {
     destroy .top .top.t
 } -body {
     toplevel .top
@@ -6401,7 +6834,7 @@ test text-25.20 {patch 1669632 (iv) - undo after <<SelectNone>>} -setup {
 } -cleanup {
     destroy .top.t .top
 } -result HELLO
-test text-25.21 {patch 1669632 (vii) - <<Undo>> shall not remove separators} -setup {
+test text-27.21 {patch 1669632 (vii) - <<Undo>> shall not remove separators} -setup {
     destroy .t
 } -body {
     text .t -undo 1
@@ -6417,7 +6850,7 @@ test text-25.21 {patch 1669632 (vii) - <<Undo>> shall not remove separators} -se
 } -cleanup {
     destroy .t
 } -result "This WORLD is an example text"
-test text-25.22 {patch 1669632 (v) - <<Clear>> is atomic} -setup {
+test text-27.22 {patch 1669632 (v) - <<Clear>> is atomic} -setup {
     destroy .t
 } -body {
     toplevel .top
@@ -6437,7 +6870,7 @@ test text-25.22 {patch 1669632 (v) - <<Clear>> is atomic} -setup {
 } -cleanup {
     destroy .top.t .top
 } -result "This A an example text"
- test text-25.23 {patch 1669632 (v) - <<Cut>> is atomic} -setup {
+ test text-27.23 {patch 1669632 (v) - <<Cut>> is atomic} -setup {
     destroy .t
 } -body {
     toplevel .top
@@ -6457,6 +6890,135 @@ test text-25.22 {patch 1669632 (v) - <<Clear>> is atomic} -setup {
 } -cleanup {
     destroy .top.t .top
 } -result "This A an example text"
+test text-27.24 {TextEditCmd procedure, canundo and canredo} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo false -autoseparators false
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t configure -undo true
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t insert end "DO\n"
+    .t edit separator
+    .t insert end "IT\n"
+    .t insert end "YOURSELF\n"
+    .t edit separator
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t edit undo
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t configure -undo false
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t configure -undo true
+    lappend res [.t edit canundo] [.t edit canredo]
+    .t edit redo
+    lappend res [.t edit canundo] [.t edit canredo]
+} -cleanup {
+    destroy .t
+} -result {0 0 0 0 1 0 1 1 0 0 1 1 1 0}
+test text-27.25 {<<UndoStack>> virtual event} -setup {
+    destroy .t
+    set res {}
+    set nbUS 0
+} -body {
+    text .t -undo false -autoseparators false
+    bind .t <<UndoStack>> {incr nbUS}
+    update ; lappend res $nbUS
+    .t configure -undo true
+    update ; lappend res $nbUS
+    .t insert end "DO\n"
+    .t edit separator
+    .t insert end "IT\n"
+    .t insert end "YOURSELF\n"
+    .t edit separator
+    .t insert end "MAN\n"
+    .t edit separator
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit redo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit undo
+    update ; lappend res $nbUS
+    .t edit reset
+    update ; lappend res $nbUS
+} -cleanup {
+    destroy .t
+} -result {0 0 1 2 3 4 4 5 6 6 7 8 8 9}
+test text-27.26 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    .t insert end "Hello "
+    .t edit separator
+    .t insert end "World!\n"
+    .t insert 1.6 "GREAT "
+    .t insert end "Another edit here!!"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t edit separator
+    .t delete 1.6
+    .t delete 1.9 1.10
+    .t insert 1.9 L
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t replace 1.6 1.10 Tcl/Tk
+    .t replace 2.8 2.12 "one bites the dust"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {1.6 2.0}           \
+                {1.6 2.19}          \
+                {1.6 1.7 1.10 1.12} \
+                {1.6 1.7 1.9 1.11}  \
+                {1.6 1.16 2.8 2.19} \
+                {1.6 1.16 2.8 2.30} ]
+test text-27.27 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    for {set i 3} {$i >= 1} {incr i -1} {
+        .t insert 1.0 "Line $i\n"
+    }
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {1.0 2.0} \
+                {1.0 4.0} ]
+test text-27.28 {edit undo and edit redo do not leave \
+                 spurious temporary marks behind them} -setup {
+    destroy .t
+    set res {}
+} -body {
+    pack [text .t -undo true -autoseparators false]
+    .t insert end "Hello World.\n"
+    .t edit separator
+    .t insert end "Again hello.\n"
+    .t edit undo
+    lappend res [lsearch [.t mark names] tk::undoMark*]
+    .t edit redo
+    lappend res [lsearch [.t mark names] tk::undoMark*]
+} -cleanup {
+    destroy .t
+} -result [list -1 -1]
+
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
     pack [text .t -wrap none]
@@ -6726,7 +7288,7 @@ test text-31.14 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 3.0 5.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     lappend res [.t tag prevrange sel 1.0]
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
@@ -6747,7 +7309,7 @@ test text-31.15 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	   .t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 3.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
@@ -6767,7 +7329,7 @@ test text-31.16 {peer widgets} -setup {
     for {set i 1} {$i < 20} {incr i} {
 	.t insert end "Line $i\n"
     }
-    .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0 
+    .t tag add sel 1.0 7.0 9.0 11.0 13.0 15.0 17.0 19.0
     .t configure -start 6 -end 12
     lappend res [.t tag ranges sel]
     lappend res "next" [.t tag nextrange sel 4.0] \
@@ -6812,7 +7374,7 @@ test text-31.18 {peer widgets} -setup {
     return $res
 } -cleanup {
     destroy .t
-} -result {1.0 11.0} 
+} -result {1.0 11.0}
 test text-31.19 {peer widgets} -body {
     pack [text .t]
     for {set i 1} {$i < 20} {incr i} {
@@ -6857,7 +7419,7 @@ test text-32.1 {line heights on creation} -setup {
     update
     set after [$w count -ypixels 1.0 2.0]
     destroy .g
-    expr {$before eq $after} 
+    expr {$before eq $after}
 } -cleanup {
     destroy .t
 } -result {1}
@@ -7133,7 +7695,9 @@ test text-35.3 {widget dump -command destroys widget} -setup {
 
 
 test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-36.1
+    proc returnerror-36.1 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t-1]]
 } -body {
@@ -7144,9 +7708,14 @@ test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy .t-1
+    rename returnerror-36.1 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
 } -result {}
 test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-36.2
+    proc returnerror-36.2 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t+1]]
 } -body {
@@ -7157,9 +7726,14 @@ test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy $w
+    rename returnerror-36.2 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
 } -result {}
 test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
-    proc bgerror {m} {set ::my_error $m}
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-36.3
+    proc returnerror-36.3 {m opts} {set ::my_error $m}
     set ::my_error {}
     pack [set w [text .t*1]]
 } -body {
@@ -7170,6 +7744,32 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
     set ::my_error
 } -cleanup {
     destroy $w
+    rename returnerror-36.3 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error w
+} -result {}
+
+
+test text-37.1 "bug #dd9667635d: text anchor not set" -setup {
+    set save [interp bgerror {}]
+    interp bgerror {} returnerror-37.1
+    proc returnerror-37.1 {m opts} {set ::my_error $m}
+    destroy .t
+    set ::my_error {}
+    pack [text .t]
+} -body {
+    .t insert end "Hello world!"
+    .t tag add sel 1.0 end
+    # this line shall not trigger error:
+    #     bad text index "tk::anchorN"
+    event generate .t <<SelectPrevLine>>
+    update
+    set ::my_error
+} -cleanup {
+    destroy .t
+    rename returnerror-37.1 ""
+    interp bgerror {} $save
+    unset -nocomplain save ::my_error
 } -result {}
 
 # cleanup

@@ -38,6 +38,43 @@ MODULE_SCOPE const TkStubs tkStubs;
  */
 
 #undef Tk_MainEx
+#undef Tk_FreeXId
+#undef Tk_FreeStyleFromObj
+#undef Tk_GetStyleFromObj
+#undef TkWinGetPlatformId
+
+#if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
+#define Tk_MainEx 0
+#define Tk_FreeXId 0
+#define Tk_FreeStyleFromObj 0
+#define Tk_GetStyleFromObj 0
+#define TkWinGetPlatformId 0
+#define Tk_PhotoPutBlock_NoComposite 0
+#define Tk_PhotoPutZoomedBlock_NoComposite 0
+#define Tk_PhotoExpand_Panic 0
+#define Tk_PhotoPutBlock_Panic 0
+#define Tk_PhotoPutZoomedBlock_Panic 0
+#define Tk_PhotoSetSize_Panic 0
+#else
+static void
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+}
+#define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
+#define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *)) doNothing)
+#define Tk_GetStyleFromObj getStyleFromObj
+static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
+{
+	return Tk_AllocStyleFromObj(NULL, obj);
+}
+#if defined(_WIN32) || defined(__CYGWIN__)
+#define TkWinGetPlatformId winGetPlatformId
+static int TkWinGetPlatformId(void) {
+    return 2;
+}
+#endif /* defined(_WIN32) || defined(__CYGWIN__) */
+#endif /* !TK_NO_DEPRECATED */
 
 #ifdef _WIN32
 
@@ -62,6 +99,11 @@ TkCreateXEventSource(void)
 #   define TkUnixContainerId 0
 #   define TkUnixDoOneXEvent 0
 #   define TkUnixSetMenubar 0
+#   define XCreateWindow 0
+#   define XOffsetRegion 0
+#   define XUnionRegion 0
+#   define XPolygonRegion 0
+#   define XPointInRegion 0
 #   define TkWmCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkSendCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkpTestsendCmd 0
@@ -200,7 +242,6 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkWinSetForegroundWindow 0
 #	define TkWinDialogDebug 0
 #	define TkWinGetMenuSystemDefault 0
-#	define TkWinGetPlatformId 0
 #	define TkWinSetHINSTANCE 0
 #	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
@@ -233,6 +274,14 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
  * below should be made in the generic/tk.decls script.
  */
 
+#ifdef __GNUC__
+/*
+ * The rest of this file shouldn't warn about deprecated functions; they're
+ * there because we intend them to be so and know that this file is OK to
+ * touch those fields.
+ */
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 /* !BEGIN!: Do not edit below this line. */
 
 static const TkIntStubs tkIntStubs = {
@@ -450,6 +499,7 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
+    TkDebugPhotoStringMatchDef, /* 185 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
@@ -544,7 +594,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXWindowOffset, /* 37 */
     TkSetMacColor, /* 38 */
     TkSetWMName, /* 39 */
-    TkSuspendClipboard, /* 40 */
+    0, /* 40 */
     TkMacOSXZoomToplevel, /* 41 */
     Tk_TopCoordsToWindow, /* 42 */
     TkMacOSXContainerId, /* 43 */
@@ -698,6 +748,31 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSynchronize, /* 112 */
     XSync, /* 113 */
     XVisualIDFromVisual, /* 114 */
+    0, /* 115 */
+    0, /* 116 */
+    0, /* 117 */
+    0, /* 118 */
+    0, /* 119 */
+    XOffsetRegion, /* 120 */
+    XUnionRegion, /* 121 */
+    XCreateWindow, /* 122 */
+    0, /* 123 */
+    0, /* 124 */
+    0, /* 125 */
+    0, /* 126 */
+    0, /* 127 */
+    0, /* 128 */
+    XLowerWindow, /* 129 */
+    XFillArcs, /* 130 */
+    XDrawArcs, /* 131 */
+    XDrawRectangles, /* 132 */
+    XDrawSegments, /* 133 */
+    XDrawPoint, /* 134 */
+    XDrawPoints, /* 135 */
+    XReparentWindow, /* 136 */
+    XPutImage, /* 137 */
+    XPolygonRegion, /* 138 */
+    XPointInRegion, /* 139 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     XSetDashes, /* 0 */

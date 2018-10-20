@@ -4,10 +4,7 @@
  * Tk alternate theme, intended to match the MSUE and Gtk's (old) default theme
  */
 
-#include <math.h>
-#include <string.h>
-
-#include <tkInt.h>
+#include "tkInt.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include "ttkTheme.h"
@@ -209,6 +206,9 @@ void TtkFillArrow(
     ArrowPoints(b, dir, points);
     XFillPolygon(display, d, gc, points, 3, Convex, CoordModeOrigin);
     XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+
+    /* Work around bug [77527326e5] - ttk artifacts on Ubuntu */
+    XDrawPoint(display, d, gc, points[2].x, points[2].y);
 }
 
 /*public*/
@@ -218,6 +218,9 @@ void TtkDrawArrow(
     XPoint points[4];
     ArrowPoints(b, dir, points);
     XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
+
+    /* Work around bug [77527326e5] - ttk artifacts on Ubuntu */
+    XDrawPoint(display, d, gc, points[2].x, points[2].y);
 }
 
 /*
@@ -680,7 +683,7 @@ typedef struct {
     Tcl_Obj *colorObj;
 } MenubuttonArrowElement;
 
-static const char *directionStrings[] = {	/* See also: button.c */
+static const char *const directionStrings[] = {	/* See also: button.c */
     "above", "below", "left", "right", "flush", NULL
 };
 enum { POST_ABOVE, POST_BELOW, POST_LEFT, POST_RIGHT, POST_FLUSH };

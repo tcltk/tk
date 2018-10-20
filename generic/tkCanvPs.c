@@ -491,7 +491,7 @@ TkCanvPostscriptCmd(
 	Tcl_AppendObjToObj(psObj, preambleObj);
 
 	if (psInfo.chan != NULL) {
-	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
 	    channelWriteFailed:
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"problem writing postscript data to channel: %s",
@@ -545,7 +545,7 @@ TkCanvPostscriptCmd(
 		psInfo.x, Tk_PostscriptY((double)psInfo.y2,
 			(Tk_PostscriptInfo)psInfoPtr));
 	if (psInfo.chan != NULL) {
-	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
 		goto channelWriteFailed;
 	    }
 	    Tcl_DecrRefCount(psObj);
@@ -587,7 +587,7 @@ TkCanvPostscriptCmd(
 	Tcl_AppendToObj(psObj, "grestore\n", -1);
 
 	if (psInfo.chan != NULL) {
-	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
 		goto channelWriteFailed;
 	    }
 	    Tcl_DecrRefCount(psObj);
@@ -608,7 +608,7 @@ TkCanvPostscriptCmd(
 		"%%EOF\n", -1);
 
 	if (psInfo.chan != NULL) {
-	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
 		goto channelWriteFailed;
 	    }
 	}
@@ -825,7 +825,7 @@ Tk_PostscriptFont(
     fontname = Tcl_DStringValue(&ds);
     Tcl_AppendPrintfToObj(GetPostscriptBuffer(interp),
 	    "/%s findfont %d scalefont%s setfont\n",
-	    fontname, TkFontGetPoints(psInfoPtr->tkwin, points),
+	    fontname, (int)(TkFontGetPoints(psInfoPtr->tkwin, points) + 0.5),
 	    strncasecmp(fontname, "Symbol", 7) ? " ISOEncode" : "");
     Tcl_CreateHashEntry(&psInfoPtr->fontTable, Tcl_DStringValue(&ds), &i);
     Tcl_DStringFree(&ds);

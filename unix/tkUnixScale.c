@@ -13,6 +13,10 @@
 #include "tkInt.h"
 #include "tkScale.h"
 
+#if defined(_WIN32)
+#define snprintf _snprintf
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */
@@ -267,7 +271,9 @@ DisplayVerticalValue(
 
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = TkScaleValueToPixel(scalePtr, value) + fm.ascent/2;
-    sprintf(valueString, scalePtr->format, value);
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format, value) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
     length = (int) strlen(valueString);
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
@@ -352,7 +358,10 @@ DisplayHorizontalScale(
 
 	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
 		    / tickInterval);
-	    sprintf(valueString, scalePtr->format, scalePtr->fromValue);
+            if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+                    scalePtr->fromValue) < 0) {
+                valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+            }
 	    maxTicks = (double) Tk_Width(tkwin)
 		    / (double) Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 	    if (ticks > maxTicks) {
@@ -484,7 +493,9 @@ DisplayHorizontalValue(
     x = TkScaleValueToPixel(scalePtr, value);
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = top + fm.ascent;
-    sprintf(valueString, scalePtr->format, value);
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format, value) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
     length = (int) strlen(valueString);
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
@@ -551,7 +562,10 @@ TkpDisplayScale(
     Tcl_Preserve(scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
 	Tcl_Preserve(interp);
-	sprintf(string, scalePtr->format, scalePtr->value);
+        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+                scalePtr->value) < 0) {
+            string[TCL_DOUBLE_SPACE - 1] = '\0';
+        }
 	Tcl_DStringInit(&buf);
 	Tcl_DStringAppend(&buf, scalePtr->command, -1);
 	Tcl_DStringAppend(&buf, " ", -1);

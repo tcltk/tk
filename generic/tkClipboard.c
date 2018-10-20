@@ -449,10 +449,11 @@ Tk_ClipboardObjCmd(
 	    "-displayof", "-format", "-type", NULL
 	};
 	enum appendOptions { APPEND_DISPLAYOF, APPEND_FORMAT, APPEND_TYPE };
-	int subIndex, length;
+	int subIndex;
+	size_t length;
 
 	for (i = 2; i < objc - 1; i++) {
-	    string = Tcl_GetStringFromObj(objv[i], &length);
+	    string = TkGetStringFromObj(objv[i], &length);
 	    if (string[0] != '-') {
 		break;
 	    }

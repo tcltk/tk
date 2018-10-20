@@ -12,7 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-
+#include "tkMacOSXConstants.h"
 /*
  * This structure holds information about native bitmaps.
  */
@@ -210,7 +210,7 @@ OSTypeFromString(const char *s, OSType *t) {
     Tcl_UtfToExternalDString(encoding, s, -1, &ds);
     if (Tcl_DStringLength(&ds) <= 4) {
 	char string[4] = {};
-	memcpy(string, Tcl_DStringValue(&ds), (size_t) Tcl_DStringLength(&ds));
+	memcpy(string, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
 	*t = (OSType) string[0] << 24 | (OSType) string[1] << 16 |
 	     (OSType) string[2] <<  8 | (OSType) string[3];
 	result = TCL_OK;
@@ -298,7 +298,7 @@ TkpGetNativeAppBitmap(
 	string = [NSString stringWithUTF8String:name];
 	image = [NSImage imageNamed:string];
 	if (!image) {
-	    NSURL *url = [NSURL URLWithString:string];
+	    NSURL *url = [NSURL fileURLWithPath:string];
 	    if (url) {
 		image = [[[NSImage alloc] initWithContentsOfURL:url]
 			autorelease];

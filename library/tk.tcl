@@ -10,10 +10,8 @@
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-# Insist on running with compatible version of Tcl
-package require Tcl 8.6
 # Verify that we have Tk binary and script components from the same release
-package require -exact Tk  8.7a0
+package require -exact Tk  8.7a2
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -602,8 +600,9 @@ proc ::tk::AmpWidget {class path args} {
 # ::tk::AmpMenuArgs --
 #	Processes arguments for a menu entry, turning -label option into
 #	-label and -underline options, returned by ::tk::UnderlineAmpersand.
+#      The cmd argument is supposed to be either "add" or "entryconfigure"
 #
-proc ::tk::AmpMenuArgs {widget add type args} {
+proc ::tk::AmpMenuArgs {widget cmd type args} {
     set options {}
     foreach {opt val} $args {
 	if {$opt eq "-label"} {
@@ -613,7 +612,7 @@ proc ::tk::AmpMenuArgs {widget add type args} {
 	    lappend options $opt $val
 	}
     }
-    $widget add $type {*}$options
+    $widget $cmd $type {*}$options
 }
 
 # ::tk::FindAltKeyTarget --

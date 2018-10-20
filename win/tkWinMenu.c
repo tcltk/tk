@@ -155,7 +155,7 @@ static void		DrawWindowsSystemBitmap(Display *display,
 			    Drawable drawable, GC gc, const RECT *rectPtr,
 			    int bitmapID, int alignFlags);
 static void		FreeID(WORD commandID);
-static char *		GetEntryText(TkMenuEntry *mePtr);
+static char *		GetEntryText(TkMenu *menuPtr, TkMenuEntry *mePtr);
 static void		GetMenuAccelGeometry(TkMenu *menuPtr,
 			    TkMenuEntry *mePtr, Tk_Font tkfont,
 			    const Tk_FontMetrics *fmPtr, int *widthPtr,
@@ -486,6 +486,7 @@ TkpDestroyMenuEntry(
 
 static char *
 GetEntryText(
+    TkMenu *menuPtr,		/* The menu considered. */
     TkMenuEntry *mePtr)		/* A pointer to the menu entry. */
 {
     char *itemText;
@@ -506,7 +507,7 @@ GetEntryText(
 	int i;
 	const char *label = (mePtr->labelPtr == NULL) ? ""
 		: Tcl_GetString(mePtr->labelPtr);
-	const char *accel = (mePtr->accelPtr == NULL) ? ""
+	const char *accel = ((menuPtr->menuType == MENUBAR) || (mePtr->accelPtr == NULL)) ? ""
 		: Tcl_GetString(mePtr->accelPtr);
 	const char *p, *next;
 	Tcl_DString itemString;
@@ -605,7 +606,7 @@ ReconfigureWindowsMenu(
 	    continue;
 	}
 
-	itemText = GetEntryText(mePtr);
+	itemText = GetEntryText(menuPtr, mePtr);
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 	    Tcl_WinUtfToTChar(itemText, -1, &translatedText);
@@ -899,7 +900,7 @@ TkWinMenuProc(
     LRESULT lResult;
 
     if (!TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &lResult)) {
-	lResult = DefWindowProcA(hwnd, message, wParam, lParam);
+	lResult = DefWindowProc(hwnd, message, wParam, lParam);
     }
     return lResult;
 }
@@ -998,7 +999,7 @@ TkWinEmbeddedMenuProc(
 	}
 
     default:
-	lResult = DefWindowProcA(hwnd, message, wParam, lParam);
+	lResult = DefWindowProc(hwnd, message, wParam, lParam);
 	break;
     }
     return lResult;
@@ -1287,7 +1288,17 @@ TkWinHandleMenuEvent(
 	    if (menuPtr != NULL) {
 		long entryIndex = LOWORD(*pwParam);
 
-		mePtr = NULL;
+                if ((menuPtr->menuType == MENUBAR) && menuPtr->tearoff) {
+                    /*
+                     * Windows passes the entry index starting at 0 for
+                     * the first menu entry. However this entry #0 is the
+                     * tearoff entry for Tk (the menu has -tearoff 1),
+                     * which is ignored for MENUBAR menues on Windows.
+                     */
+
+                    entryIndex++;
+                }
+                mePtr = NULL;
 		if (flags != 0xFFFF) {
 		    if ((flags&MF_POPUP) && (entryIndex<menuPtr->numEntries)) {
 			mePtr = menuPtr->entries[entryIndex];
@@ -1471,6 +1482,15 @@ GetMenuIndicatorGeometry(
 	Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
 		menuPtr->borderWidthPtr, &borderWidth);
 	*widthPtr = indicatorDimensions[1] - borderWidth;
+
+        /*
+         * Quite dubious about the above (why would borderWidth play a role?)
+         * and about how indicatorDimensions[1] is obtained in SetDefaults().
+         * At least don't let the result be negative!
+         */
+        if (*widthPtr < 0) {
+            *widthPtr = 0;
+        }
     }
 }
 
@@ -1502,12 +1522,12 @@ GetMenuAccelGeometry(
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
 	*widthPtr = 0;
-    } else if (mePtr->accelPtr == NULL) {
-	*widthPtr = 0;
-    } else {
+    } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
 	*widthPtr = Tk_TextWidth(tkfont, accel, mePtr->accelLength);
+    } else {
+    	*widthPtr = 0;
     }
 }
 
@@ -1763,6 +1783,10 @@ DrawMenuEntryAccelerator(
     int leftEdge = x + mePtr->indicatorSpace + mePtr->labelWidth;
     const char *accel;
 
+    if (menuPtr->menuType == MENUBAR) {
+        return;
+    }
+
     if (mePtr->accelPtr != NULL) {
 	accel = Tcl_GetString(mePtr->accelPtr);
     } else {
@@ -1825,7 +1849,7 @@ DrawMenuEntryArrow(
     int width,			/* Width of menu entry */
     int height,			/* Height of menu entry */
     int drawArrow)		/* For cascade menus, whether of not to draw
-				 * the arraw. I cannot figure out Windows'
+				 * the arrow. I cannot figure out Windows'
 				 * algorithm for where to draw this. */
 {
     COLORREF oldFgColor;
@@ -2021,33 +2045,33 @@ TkWinMenuKeyObjCmd(
     if (eventPtr->type == KeyPress) {
 	switch (keySym) {
 	case XK_Alt_L:
-	    scanCode = MapVirtualKeyA(VK_LMENU, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_LMENU, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_MENU,
 		    (int) (scanCode << 16) | (1 << 29));
 	    break;
 	case XK_Alt_R:
-	    scanCode = MapVirtualKeyA(VK_RMENU, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_RMENU, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_MENU,
 		    (int) (scanCode << 16) | (1 << 29) | (1 << 24));
 	    break;
 	case XK_F10:
-	    scanCode = MapVirtualKeyA(VK_F10, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_F10, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_F10, (int) (scanCode << 16));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
-	    scanCode = MapVirtualKeyA(virtualKey, 0);
+	    scanCode = MapVirtualKey(virtualKey, 0);
 	    if (0 != scanCode) {
 		XKeyEvent xkey = eventPtr->xkey;
-		CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYDOWN, virtualKey,
 			(int) ((scanCode << 16) | (1 << 29)));
 		if (xkey.nbytes > 0) {
 		    for (i = 0; i < xkey.nbytes; i++) {
-			CallWindowProcA(DefWindowProcA,
+			CallWindowProc(DefWindowProc,
 				Tk_GetHWND(Tk_WindowId(tkwin)), WM_SYSCHAR,
 				xkey.trans_chars[i],
 				(int) ((scanCode << 16) | (1 << 29)));
@@ -2058,28 +2082,28 @@ TkWinMenuKeyObjCmd(
     } else if (eventPtr->type == KeyRelease) {
 	switch (keySym) {
 	case XK_Alt_L:
-	    scanCode = MapVirtualKeyA(VK_LMENU, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_LMENU, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16)
 		    | (1 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_Alt_R:
-	    scanCode = MapVirtualKeyA(VK_RMENU, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_RMENU, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16) | (1 << 24)
-		    | (0x111 << 29) | (1 << 30) | (1 << 31));
+		    | (1 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_F10:
-	    scanCode = MapVirtualKeyA(VK_F10, 0);
-	    CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKey(VK_F10, 0);
+	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_F10,
 		    (int) (scanCode << 16) | (1 << 30) | (1 << 31));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
-	    scanCode = MapVirtualKeyA(virtualKey, 0);
+	    scanCode = MapVirtualKey(virtualKey, 0);
 	    if (0 != scanCode) {
-		CallWindowProcA(DefWindowProcA, Tk_GetHWND(Tk_WindowId(tkwin)),
+		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYUP, virtualKey, (int) ((scanCode << 16)
 			| (1 << 29) | (1 << 30) | (1 << 31)));
 	    }
@@ -2413,7 +2437,7 @@ DrawTearoffEntry(
     points[0].y = y + height/2;
     points[1].y = points[0].y;
     segmentWidth = 6;
-    maxX = width - 1;
+    maxX = x + width - 1;
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
 
     while (points[0].x < maxX) {
@@ -2485,7 +2509,7 @@ TkpDrawMenuEntry(
     int strictMotif,		/* Boolean flag */
     int drawingParameters)	/* Whether or not to draw the cascade arrow
 				 * for cascade items and accelerator
-				 * cues. Only applies to Windows. */
+				 * cues. */
 {
     GC gc, indicatorGC;
     TkMenu *menuPtr = mePtr->menuPtr;
@@ -2775,10 +2799,26 @@ DrawMenuEntryBackground(
 {
     if (mePtr->state == ENTRY_ACTIVE
 		|| (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)!=0 ) {
+	int relief;
+	int activeBorderWidth;
+
 	bgBorder = activeBorder;
+
+	if ((menuPtr->menuType == MENUBAR)
+		&& ((menuPtr->postedCascade == NULL)
+		|| (menuPtr->postedCascade != mePtr))) {
+	    relief = TK_RELIEF_FLAT;
+	} else {
+	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
+	}
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height,
+		activeBorderWidth, relief);
+    } else {
+        Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height, 0,
+                TK_RELIEF_FLAT);
     }
-    Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height, 0,
-	    TK_RELIEF_FLAT);
 }
 
 /*
@@ -2859,7 +2899,7 @@ TkpComputeStandardMenuGeometry(
 		menuPtr->entries[j]->entryFlags &= ~ENTRY_LAST_COLUMN;
 	    }
 	    x += indicatorSpace + labelWidth + accelWidth
-		    + 2 * borderWidth;
+		    + 2 * activeBorderWidth;
 	    indicatorSpace = labelWidth = accelWidth = 0;
 	    lastColumnBreak = i;
 	    y = borderWidth;
@@ -2929,8 +2969,8 @@ TkpComputeStandardMenuGeometry(
 	menuPtr->entries[j]->x = x;
 	menuPtr->entries[j]->entryFlags |= ENTRY_LAST_COLUMN;
     }
-    windowWidth = x + indicatorSpace + labelWidth + accelWidth + accelSpace
-	    + 2 * activeBorderWidth + 2 * borderWidth;
+    windowWidth = x + indicatorSpace + labelWidth + accelWidth
+	    + 2 * activeBorderWidth + borderWidth;
 
 
     windowHeight += borderWidth;
@@ -3184,16 +3224,11 @@ SetDefaults(
     HDC scratchDC;
     int bold = 0;
     int italic = 0;
-    TEXTMETRICA tm;
+    TEXTMETRIC tm;
     int pointSize;
     HFONT menuFont;
     /* See: [Bug #3239768] tk8.4.19 (and later) WIN32 menu font support */
-    struct {
-        NONCLIENTMETRICS metrics;
-#if (WINVER < 0x0600)
-        int padding;
-#endif
-    } nc;
+    NONCLIENTMETRICS metrics;
     OSVERSIONINFOW os;
 
     /*
@@ -3212,19 +3247,19 @@ SetDefaults(
     }
     Tcl_DStringInit(&menuFontDString);
 
-    nc.metrics.cbSize = sizeof(nc);
+    metrics.cbSize = sizeof(metrics);
 
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
     GetVersionExW(&os);
     if (os.dwMajorVersion < 6) {
-	nc.metrics.cbSize -= sizeof(int);
+	metrics.cbSize -= sizeof(int);
     }
 
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, nc.metrics.cbSize,
-	    &nc.metrics, 0);
-    menuFont = CreateFontIndirect(&nc.metrics.lfMenuFont);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, metrics.cbSize,
+	    &metrics, 0);
+    menuFont = CreateFontIndirect(&metrics.lfMenuFont);
     SelectObject(scratchDC, menuFont);
-    GetTextMetricsA(scratchDC, &tm);
+    GetTextMetrics(scratchDC, &tm);
     GetTextFaceA(scratchDC, LF_FACESIZE, faceName);
     pointSize = MulDiv(tm.tmHeight - tm.tmInternalLeading,
 	    72, GetDeviceCaps(scratchDC, LOGPIXELSY));
@@ -3266,6 +3301,7 @@ SetDefaults(
      *
      * The code below was given to me by Microsoft over the phone. It is the
      * only way to ensure menu items line up, and is not documented.
+     * How strange the calculation of indicatorDimensions[1] is...!
      */
 
     indicatorDimensions[0] = GetSystemMetrics(SM_CYMENUCHECK);
@@ -3280,9 +3316,7 @@ SetDefaults(
      */
 
     showMenuAccelerators = TRUE;
-    if (TkWinGetPlatformId() == VER_PLATFORM_WIN32_NT) {
-	SystemParametersInfoA(SPI_GETKEYBOARDCUES, 0, &showMenuAccelerators, 0);
-    }
+    SystemParametersInfo(SPI_GETKEYBOARDCUES, 0, &showMenuAccelerators, 0);
 }
 
 /*

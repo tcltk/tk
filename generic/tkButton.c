@@ -749,7 +749,7 @@ ButtonCreate(
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ButtonEventProc, butPtr);
 
-    if (Tk_InitOptions(interp, (char *) butPtr, optionTable, tkwin)
+    if (Tk_InitOptions(interp, butPtr, optionTable, tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(butPtr->tkwin);
 	return TCL_ERROR;
@@ -810,7 +810,7 @@ ButtonWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 1, objv, "cget option");
 	    goto error;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) butPtr,
+	objPtr = Tk_GetOptionValue(interp, butPtr,
 		butPtr->optionTable, objv[2], butPtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
@@ -820,7 +820,7 @@ ButtonWidgetObjCmd(
 
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) butPtr,
+	    objPtr = Tk_GetOptionInfo(interp, butPtr,
 		    butPtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    butPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -1068,7 +1068,7 @@ ConfigureButton(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) butPtr,
+	    if (Tk_SetOptions(interp, butPtr,
 		    butPtr->optionTable, objc, objv,
 		    butPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -1611,6 +1611,19 @@ ButtonVarProc(
     Tcl_Obj *valuePtr;
 
     /*
+     * See ticket [5d991b82].
+     */
+
+    if (butPtr->selVarNamePtr == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    ButtonVarProc, clientData);
+	}
+	return NULL;
+    }
+
+    /*
      * If the variable is being unset, then just re-establish the trace unless
      * the whole interpreter is going away.
      */
@@ -1692,8 +1705,8 @@ static char *
 ButtonTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Not used. */
-    const char *name2,		/* Not used. */
+    const char *name1,		/* Name of variable. */
+    const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     TkButton *butPtr = clientData;
@@ -1702,6 +1715,19 @@ ButtonTextVarProc(
     if (butPtr->flags & BUTTON_DELETED) {
 	return NULL;
     }
+
+    /*
+     * See ticket [5d991b82].
+     */
+
+    if (butPtr->textVarNamePtr == NULL) {
+	if (!(flags & TCL_INTERP_DESTROYED)) {
+	    Tcl_UntraceVar2(interp, name1, name2,
+		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		    ButtonTextVarProc, clientData);
+	}
+ 	return NULL;
+     }
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
