@@ -541,11 +541,7 @@ test scrollbar-6.24 {ScrollbarPosition procedure} unix {
 test scrollbar-6.25 {ScrollbarPosition procedure} unix {
     .s identify 8 179
 } {trough2}
-test scrollbar-6.27 {ScrollbarPosition procedure} {testmetrics win knownBug} {
-    # This asks for 8,21, which is actually the slider, but there is a
-    # bug in that GetSystemMetrics(SM_CYVTHUMB) actually returns a value
-    # that is larger than the thumb displayed, skewing the ability to
-    # calculate the trough2 area correctly (Win2k).  -- hobbs
+test scrollbar-6.27 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \
 						 + [testmetrics cyvscroll .s]]
 } {trough2}
