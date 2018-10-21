@@ -212,7 +212,7 @@ static int windowHashInit = false;
 {
     return [self convertScreenToBase:point];
 }
-#elif MAC_OS_X_VERSION_MIN_REQUIRED < 1012
+#elif MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 - (NSPoint) convertPointToScreen: (NSPoint) point
 {
     NSRect pointrect;

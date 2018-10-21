@@ -153,6 +153,19 @@ long tkMacOSXMacOSXVersion = 0;
     [NSApp setPoolLock:0];
 
     /*
+     * Record the OS version we are running on.
+     */
+    int minorVersion;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+    Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
+#else
+    NSOperatingSystemVersion systemVersion;
+    systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
+    minorVersion = systemVersion.minorVersion;
+#endif
+    [NSApp setMacMinorVersion: minorVersion]; 
+    
+    /*
      * Be our own delegate.
      */
     [self setDelegate:self];

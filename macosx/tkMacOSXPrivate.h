@@ -265,9 +265,11 @@ VISIBILITY_HIDDEN
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
+    int _macMinorVersion;
 #endif
 }
 @property int poolLock;
+@property int macMinorVersion;
 
 @end
 @interface TKApplication(TKInit)
@@ -344,7 +346,7 @@ VISIBILITY_HIDDEN
 @end
 
 @interface NSWindow(TKWm)
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1012
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 - (NSPoint) convertPointToScreen:(NSPoint)point;
 - (NSPoint) convertPointFromScreen:(NSPoint)point;
 #endif

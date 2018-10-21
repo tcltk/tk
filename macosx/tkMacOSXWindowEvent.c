@@ -930,10 +930,14 @@ ConfigureRestrictProc(
 	 *
 	 * Fortunately, Tk schedules all drawing to be done while Tcl is idle.
 	 * So we can do the drawing by processing all of the idle events that
-	 * were created when the expose events were processed.
+	 * were created when the expose events were processed.  Unfortunately,
+	 * doing this on 10.13 or earlier causes hangs when drawRect is called
+	 * while Tcl is waiting for events or variable changes. 
 	 */
 
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	if ([NSApp macMinorVersion] > 13 || [self inLiveResize]) {
+	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	}
     }
 }
 
