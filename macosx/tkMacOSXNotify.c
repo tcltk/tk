@@ -39,31 +39,26 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 - (void) _modalSession: (NSModalSession) session sendEvent: (NSEvent *) event;
 @end
 
-@implementation NSWindow(TKNotify)
-- (id) tkDisplayIfNeeded
-{
-    if (![self isAutodisplay]) {
-	[self displayIfNeeded];
-    }
-    return nil;
-}
-@end
-
 @implementation TKApplication(TKNotify)
-/* Display all windows each time an event is removed from the queue.*/
-- (NSEvent *) nextEventMatchingMask: (NSUInteger) mask
-	untilDate: (NSDate *) expiration inMode: (NSString *) mode
-	dequeue: (BOOL) deqFlag
-{
-    NSEvent *event = [super nextEventMatchingMask:mask
-					untilDate:expiration
-					   inMode:mode
-					  dequeue:deqFlag];
-    /* Retain this event for later use. Must be released.*/
-    [event retain];
-    [NSApp makeWindowsPerform:@selector(tkDisplayIfNeeded) inOrder:NO];
-    return event;
-}
+/*
+ * Earlier versions of Tk would override nextEventMatchingMask here, adding a
+ * call to displayIfNeeded on all windows after calling super. This would cause
+ * windows to be redisplayed (if necessary) each time that an event was
+ * received.  This was intended to replace Apple's default autoDisplay
+ * mechanism, which the earlier versions of Tk would disable.  When autoDisplay
+ * is set to the default value of YES, the Apple event loop will call
+ * displayIfNeeded on all windows at the beginning of each iteration of their
+ * event loop.  Since Tk does not call the Apple event loop, it was thought
+ * that the autoDisplay behavior needed to be replicated.
+ *
+ * However, as of OSX 10.14 (Mojave) the autoDisplay property became
+ * deprecated.  Luckily it turns out that, even though we don't ever start the
+ * Apple event loop, the Apple window manager still calls displayIfNeeded on
+ * all windows on a regular basis, perhaps each time the queue is empty.  So we
+ * no longer, and perhaps never did need to set autoDisplay to NO, nor call
+ * displayIfNeeded on our windows.  We can just leave all of that to the window
+ * manager.
+ */
 
 /*
  * Call super then check the pasteboard.
@@ -229,7 +224,6 @@ TkMacOSXEventsSetupProc(
 	    if (currentEvent.type > 0) {
 		Tcl_SetMaxBlockTime(&zeroBlockTime);
 	    }
-	    [currentEvent release];
 	}
     }
 }
@@ -298,7 +292,6 @@ TkMacOSXEventsCheckProc(
 			[NSApp sendEvent:currentEvent];
 		    }
 		}
-		[currentEvent release];
 	    } else {
 		break;
 	    }
