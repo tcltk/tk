@@ -212,7 +212,7 @@ static int windowHashInit = false;
 {
     return [self convertScreenToBase:point];
 }
-#else
+#elif MAC_OS_X_VERSION_MIN_REQUIRED < 1012
 - (NSPoint) convertPointToScreen: (NSPoint) point
 {
     NSRect pointrect;
@@ -5649,7 +5649,6 @@ TkMacOSXMakeRealWindowExist(
     [window setDelegate:NSApp];
     [window setAcceptsMouseMovedEvents:YES];
     [window setReleasedWhenClosed:NO];
-    [window setAutodisplay:NO];
     if (styleMask & NSUtilityWindowMask) {
 	[(NSPanel*)window setFloatingPanel:YES];
     }
