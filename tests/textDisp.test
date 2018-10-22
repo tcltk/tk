@@ -3409,6 +3409,16 @@ test textDisp-24.24 {TkTextCharLayoutProc, justification and tabs} {textfonts} {
     .t tag add x 1.0 end
     list [.t bbox 1.0] [.t bbox 1.10]
 } [list [list 45 3 7 $fixedHeight] [list 94 3 7 $fixedHeight]]
+test textDisp-24.25 {TkTextCharLayoutProc, justification and tabs} -constraints {textfonts} -setup {
+    text .tt -tabs {40 right} -wrap none -font $fixedFont
+    pack .tt
+} -body {
+    .tt insert end \t9\n\t99\n\t999
+    update
+    list [.tt bbox 1.1] [.tt bbox 2.2] [.tt bbox 3.3]
+} -cleanup {
+    destroy .tt
+} -result [list [list 38 5 7 $fixedHeight] [list 38 20 7 $fixedHeight] [list 38 35 7 $fixedHeight]]
 
 .t configure -width 40 -bd 0 -relief flat -highlightthickness 0 -padx 0 \
     -tabs 100
