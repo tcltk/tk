@@ -180,13 +180,13 @@ InitKeyMaps(void)
     for (kPtr = keyArray; kPtr->keycode != 0; kPtr++) {
 	hPtr = Tcl_CreateHashEntry(&keycodeTable, INT2PTR(kPtr->keycode),
 		&dummy);
-	Tcl_SetHashValue(hPtr, kPtr->keysym);
+	Tcl_SetHashValue(hPtr, INT2PTR(kPtr->keysym));
     }
     Tcl_InitHashTable(&vkeyTable, TCL_ONE_WORD_KEYS);
     for (kPtr = virtualkeyArray; kPtr->keycode != 0; kPtr++) {
 	hPtr = Tcl_CreateHashEntry(&vkeyTable, INT2PTR(kPtr->keycode),
 		&dummy);
-	Tcl_SetHashValue(hPtr, kPtr->keysym);
+	Tcl_SetHashValue(hPtr, INT2PTR(kPtr->keysym));
     }
     initialized = 1;
 }
