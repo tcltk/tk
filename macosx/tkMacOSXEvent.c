@@ -112,14 +112,16 @@ enum {
  *
  * TkMacOSXFlushWindows --
  *
- *	This routine flushes all the visible windows of the application. It is
- *	called by XSync().
+ *	This routine is a stub called by XSync.  It used to call
+ *      displayIfNeeded on all NSWindows which belong to XWindows.  This is not
+ *      needed, and in fact dangerous, with the current design of drawRect.
+ *      Now it is a no-op.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Flushes all visible Cocoa windows
+ *	None
  *
  *----------------------------------------------------------------------
  */
@@ -127,13 +129,6 @@ enum {
 MODULE_SCOPE void
 TkMacOSXFlushWindows(void)
 {
-    NSArray *macWindows = [NSApp orderedWindows];
-
-    for (NSWindow *w in macWindows) {
-	if (TkMacOSXGetXWindow(w)) {
-	    [w displayIfNeeded];
-	}
-    }
 }
 
 
