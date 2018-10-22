@@ -622,6 +622,19 @@ TkpGetSubFonts(
  *----------------------------------------------------------------------
  */
 
+/* we need backward compatibility */
+#if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7
+# define UNICHAR Tcl_UniChar
+# define TkUtfToUniChar Tcl_UtfToUniChar
+#else /* if !(TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7) */
+# define UNICHAR int
+# if TCL_UTF_MAX > 4
+#  define TkUtfToUniChar Tcl_UtfToUniChar
+# else /* if TCL_UTF_MAX <= 4 */
+/*extern int TkUtfToUniChar(const char *src, int *chPtr);*/
+# endif /* TCL_UTF_MAX > 4 */
+#endif /* TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7 */
+
 void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
