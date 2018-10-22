@@ -8,7 +8,7 @@
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2015-2017 Gregor Cramer
+ * Copyright (c) 2015-2018 Gregor Cramer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -40,7 +40,7 @@
 # ifndef DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED
 #  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "1"
 # endif
-#else /* for partability to 8.5/6 */
+#else /* for portability to 8.5/6 */
 # ifndef DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED
 #  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "0"
 # endif
@@ -2097,11 +2097,11 @@ MakeStyle(
 		     * the focus.
 		     */
 		    || (textPtr->selAttrs.inactiveBorder
-		    /*
-		     * Don't show inactive selection in readonly widgets.
-		     */
-		    && !(textPtr->state != TK_TEXT_STATE_NORMAL
-			&& *DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED == '1')))) {
+			/*
+			 * Don't show inactive selection in readonly widgets.
+			 */
+			&& (textPtr->state == TK_TEXT_STATE_NORMAL
+			    || *DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED == '0')))) {
 	    borderPrio = FillStyle(tagPtr, &styleValues, haveFocus, containsSelection);
 
 	    if (borderPrio == -1) {
@@ -2425,6 +2425,7 @@ static TkTextSegment *
 LayoutGetNextSegment(
     TkTextSegment *segPtr)
 {
+    assert(segPtr);
     while ((segPtr = segPtr->nextPtr)) {
 	if (segPtr->typePtr == &tkTextCharType) {
 	    return segPtr;
@@ -2440,6 +2441,7 @@ static TkTextDispChunk *
 LayoutGetNextCharChunk(
     TkTextDispChunk *chunkPtr)
 {
+    assert(chunkPtr);
     while ((chunkPtr = chunkPtr->nextPtr)) {
 	switch (chunkPtr->layoutProcs->type) {
 	case TEXT_DISP_CHAR:	return chunkPtr;
@@ -3300,6 +3302,7 @@ AtEndOfLine(
     TkTextSegment *segPtr,
     int offset)
 {
+    assert(segPtr);
     if (offset < segPtr->size) {
 	return false;
     }
@@ -8897,7 +8900,7 @@ DisplayText(
 		dlPtr->oldY = dlPtr->y;
 		dlPtr->flags &= ~(NEW_LAYOUT | OLD_Y_INVALID);
 #ifdef MAC_OSX_TK
-	    } else if (dInfoPtr->countWindows > 0 && dlPtr->chunkPtr != NULL) {
+	    } else if (dInfoPtr->countWindows > 0 && dlPtr->chunkPtr) {
 		/*
 		 * On macOS we need to redisplay all embedded windows which
 		 * were moved by the call to TkScrollWindows above.  This is
@@ -11997,6 +12000,8 @@ static TkTextDispChunk *
 FindNextTagInfoChunk(
     TkTextDispChunk *chunkPtr)
 {
+    assert(chunkPtr);
+
     for ( ; chunkPtr->nextPtr; chunkPtr = chunkPtr->nextPtr) {
 	switch (chunkPtr->layoutProcs->type) {
 	case TEXT_DISP_CHAR:   /* fallthru */
@@ -12881,7 +12886,11 @@ AdjustForTab(
 	    for (chPtr = nextChunkPtr; chPtr; chPtr = chPtr->nextPtr) {
 		width += chPtr->width;
 	    }
-	    desired = MIN(tabX, data->maxX) - width/2;
+	    if (data->maxX >= 0) {
+		desired = MIN(tabX, data->maxX) - width/2;
+	    } else {
+		desired = tabX - width/2;
+	    }
 	    break;
 
 	case RIGHT:
@@ -12894,7 +12903,11 @@ AdjustForTab(
 	    for (chPtr = nextChunkPtr; chPtr; chPtr = chPtr->nextPtr) {
 		width += chPtr->width;
 	    }
-	    desired = MIN(tabX, data->maxX - data->tabOverhang) - width;
+	    if (data->maxX - data->tabOverhang >= 0) {
+		desired = MIN(tabX, data->maxX - data->tabOverhang) - width;
+	    } else {
+		desired = tabX - width;
+	    }
 	    break;
 
 	case NUMERIC:
@@ -12906,7 +12919,11 @@ AdjustForTab(
 	    for (chPtr = nextChunkPtr; chPtr && !chPtr->integralPart; chPtr = chPtr->nextPtr) {
 		width += chPtr->width;
 	    }
-	    desired = MIN(tabX, data->maxX - data->tabOverhang) - width;
+	    if (data->maxX - data->tabOverhang >= 0) {
+		desired = MIN(tabX, data->maxX - data->tabOverhang) - width;
+	    } else {
+		desired = data->maxX - data->tabOverhang - width;
+	    }
 	    data->tabApplied = false;
 	    break;
 	}
