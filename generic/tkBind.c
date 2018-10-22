@@ -687,11 +687,11 @@ TkBindInit(
 	    Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
 	    for (kPtr = keyArray; kPtr->name != NULL; kPtr++) {
 		hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &newEntry);
-		Tcl_SetHashValue(hPtr, kPtr->value);
-		hPtr = Tcl_CreateHashEntry(&nameTable, (char *) kPtr->value,
+		Tcl_SetHashValue(hPtr, INT2PTR(kPtr->value));
+		hPtr = Tcl_CreateHashEntry(&nameTable, INT2PTR(kPtr->value),
 			&newEntry);
 		if (newEntry) {
-		    Tcl_SetHashValue(hPtr, kPtr->name);
+		    Tcl_SetHashValue(hPtr, (char *) kPtr->name);
 		}
 	    }
 #endif /* REDO_KEYSYM_LOOKUP */
@@ -699,13 +699,13 @@ TkBindInit(
 	    Tcl_InitHashTable(&modTable, TCL_STRING_KEYS);
 	    for (modPtr = modArray; modPtr->name != NULL; modPtr++) {
 		hPtr = Tcl_CreateHashEntry(&modTable, modPtr->name, &newEntry);
-		Tcl_SetHashValue(hPtr, modPtr);
+		Tcl_SetHashValue(hPtr, (ModInfo *) modPtr);
 	    }
 
 	    Tcl_InitHashTable(&eventTable, TCL_STRING_KEYS);
 	    for (eiPtr = eventArray; eiPtr->name != NULL; eiPtr++) {
 		hPtr = Tcl_CreateHashEntry(&eventTable, eiPtr->name, &newEntry);
-		Tcl_SetHashValue(hPtr, eiPtr);
+		Tcl_SetHashValue(hPtr, (EventInfo *) eiPtr);
 	    }
 	    initialized = 1;
 	}

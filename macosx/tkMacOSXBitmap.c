@@ -173,7 +173,7 @@ TkpCreateNativeBitmap(
     OSErr err;
 
     err = ChkErr(GetIconRef, kOnSystemDisk, kSystemIconsCreator,
-	    PTR2UINT(source), &icon);
+	    (unsigned int)PTR2UINT(source), &icon);
     if (err == noErr) {
 	pixmap = GetBitmapForIcon(display, icon, CGSizeMake(builtInIconSize,
 		builtInIconSize));

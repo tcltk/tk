@@ -237,7 +237,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidOrderOffScreenNotification, windowUnmapped:);
 #endif
 #undef observe
- 
+
 }
 @end
 
@@ -937,7 +937,7 @@ ConfigureRestrictProc(
     }
 }
 
- 
+
 /*
  * These two methods allow Tk to register a virtual event which fires when the
  * appearance changes on 10.14.

@@ -478,7 +478,7 @@ UpdateControlValues(
     } else {
       info.attributes |= kThemeTrackHorizontal;
     }
- 
+
     /*
      * Given the Tk parameters for the fractions of the start and end of the
      * thumb, the following calculation determines the location for the
