@@ -17,11 +17,11 @@
 #include "tkDList.h"
 #include "tkArray.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include "tkWinInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
-#else
+#else /* if defined(__unix__) */
 #include "tkUnixInt.h"
 #endif
 
@@ -41,14 +41,17 @@
 # define snprintf _snprintf
 #endif
 
-#define SIZE_OF_ARRAY(arr) sizeof(arr)/sizeof(arr[0])
+#define SIZE_OF_ARRAY(arr) (sizeof(arr)/sizeof(arr[0]))
 
 /*
  * Simple boolean type support.
  */
 
 #define bool int
+
+#ifndef MAC_OSX_TK /* Mac provides 'true' and 'false' */
 enum { true = (bool) 1, false = (bool) 0 };
+#endif
 
 /*
  * File structure:
@@ -764,7 +767,6 @@ GetCount(
     unsigned index)
 {
     assert(psPtr);
-    assert(psPtr->numPats >= 1);
     assert(index < psPtr->numPats);
 
     return psPtr->pats[index].count;
@@ -1132,6 +1134,9 @@ TkBindInit(
 
     /* ensure that our matching algorithm is working (when testing detail) */
     assert(sizeof(Detail) == sizeof(Tk_Uid));
+
+    /* test boolean support for safety, because used for 1 bit fields */
+    assert(false == 0 && true == 1);
 
     /* test expected indices of Button1..Button5, otherwise our button handling is not working */
     assert(Button1 == 1 && Button2 == 2 && Button3 == 3 && Button4 == 4 && Button5 == 5);
@@ -4506,7 +4511,6 @@ FinalizeParseEventDescription(
     const char* errCode)
 {
     assert(patPtr);
-    assert(copy);
 
     if (errorObj) {
 	Tcl_SetObjResult(interp, errorObj);
@@ -5060,7 +5064,7 @@ TkpCancelWarp(
  *----------------------------------------------------------------------
  */
 
-#if !NDEBUG
+#if SUPPORT_DEBUGGING
 void
 TkpDumpPS(
     const PatSeq *psPtr)
@@ -5096,7 +5100,7 @@ TkpDumpPS(
  *----------------------------------------------------------------------
  */
 
-#if !NDEBUG
+#if SUPPORT_DEBUGGING
 void
 TkpDumpPSList(
     const PSList *psList)

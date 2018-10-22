@@ -518,7 +518,7 @@ AT##_Find(const struct AT *arr, const ElemType *elem)				\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     if (arr) {									\
-	ElemType * const * buf = arr->buf;					\
+	ElemType *const *buf = arr->buf;					\
 	size_t i;								\
 	for (i = 0; i < arr->size; ++i) {					\
 	    if (buf[i] == elem) {						\
