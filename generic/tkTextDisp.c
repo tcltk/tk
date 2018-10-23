@@ -5134,6 +5134,7 @@ TkTextRelayoutWindow(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     GC newGC;
     XGCValues gcValues;
+    Bool inSync = true;
 
     /*
      * Schedule the window redisplay. See TkTextChanged for the reason why
@@ -5142,6 +5143,7 @@ TkTextRelayoutWindow(
 
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
 	Tcl_DoWhenIdle(DisplayText, textPtr);
+	inSync = false;
     }
     dInfoPtr->flags |= REDRAW_PENDING|REDRAW_BORDERS|DINFO_OUT_OF_DATE
 	    |REPICK_NEEDED;
@@ -5213,6 +5215,7 @@ TkTextRelayoutWindow(
     dInfoPtr->yScrollFirst = dInfoPtr->yScrollLast = -1;
 
     if (mask & TK_TEXT_LINE_GEOMETRY) {
+
 	/*
 	 * Set up line metric recalculation.
 	 *
@@ -5237,7 +5240,11 @@ TkTextRelayoutWindow(
 	    textPtr->refCount++;
 	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		    AsyncUpdateLineMetrics, textPtr);
-            GenerateWidgetViewSyncEvent(textPtr, 0);
+	    inSync = false;
+	}
+	
+	if (!inSync) {
+	    GenerateWidgetViewSyncEvent(textPtr, 0);
 	}
     }
 }
