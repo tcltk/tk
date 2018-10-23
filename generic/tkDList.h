@@ -317,11 +317,11 @@ LT##_Prev(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static int									\
+static unsigned									\
 LT##_Size(const struct LT *head)						\
 {										\
     const struct ElemType *elem;						\
-    int size = 0;								\
+    unsigned size = 0;								\
     assert(head);								\
     if ((elem = head->first)) {							\
 	for ( ; elem != (void *) head; elem = elem->_dl_.next) {		\

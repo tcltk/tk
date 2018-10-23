@@ -6145,10 +6145,11 @@ test bind-32.3 {should trigger best match of modifier states} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
+    set x {}
 } -body {
-    bind .t.f <Alt-Control-Key-A> { set x "Alt-Control" }
-    bind .t.f <Shift-Control-Key-A> { set x "Shift-Control" }
-    bind .t.f <Shift-Key-A> { set x "Shift" }
+    bind .t.f <Alt-Control-Key-A> { lappend x "Alt-Control" }
+    bind .t.f <Shift-Control-Key-A> { lappend x "Shift-Control" }
+    bind .t.f <Shift-Key-A> { lappend x "Shift" }
     event generate .t.f <Alt-Control-Key-A>
     set x
 } -cleanup {
@@ -6175,6 +6176,9 @@ test bind-32.5 {should trigger Quadruple-1} -setup {
     set x {}
 } -body {
     bind .t.f <Quadruple-1> { set x "Quadruple" }
+    bind .t.f <Triple-1> { set x "Triple" }
+    bind .t.f <Double-1> { set x "Double" }
+    bind .t.f <1> { set x "Single" }
     # Old implementation triggers "Double", but new implementation
     # will trigger "Quadruple", the latter behavior conforms to other
     # toolkits.
@@ -6206,8 +6210,8 @@ test bind-33.1 {prefer longest match} -setup {
     update
     set x {}
 } -body {
-     bind .t.f <a><1><1> { set x "a11" }
-     bind .t.f <Double-1> { set x "Double" }
+     bind .t.f <a><1><1> { lappend x "a11" }
+     bind .t.f <Double-1> { lappend x "Double" }
      event generate .t.f <a>
      event generate .t.f <1>
      event generate .t.f <1>
@@ -6221,8 +6225,8 @@ test bind-33.2 {don't prefer more specialized event} -setup {
     update
     set x {}
 } -body {
-     bind .t.f <Double-1> { set x "Double" }
-     bind .t.f <1><1> { set x "11" }
+     bind .t.f <Double-1> { lappend x "Double" }
+     bind .t.f <1><1> { lappend x "11" }
      event generate .t.f <1>
      event generate .t.f <1>
      set x
@@ -6231,7 +6235,24 @@ test bind-33.2 {don't prefer more specialized event} -setup {
     # This test case shows that old implementation has an issue, because
     # in my opinion it is expected that <Double-1> is matching, because
     # this binding is more specialized. But new implementation will be
-    # conform to old, and so "11" is the correct result.
+    # conform to old, and so "11" is the expected result.
+} -result {11}
+test bind-33.3 {don't prefer more specialized event} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+     bind .t.f <1><1> { lappend x "11" }
+     bind .t.f <Double-1> { lappend x "Double" }
+     event generate .t.f <1> -time 0
+     event generate .t.f <1> -time 1000
+     set x
+} -cleanup {
+    destroy .t.f
+    # This test case also shows that old implementation has an issue, because
+    # here <1><1> will be triggered correctly, but this is not consistent with
+    # test case 33.2.
 } -result {11}
 
 

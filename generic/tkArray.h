@@ -179,23 +179,23 @@ static int									\
 AT##_IsEmpty(struct AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
-    return !arr || arr->size == 0;						\
+    return !arr || arr->size == 0u;						\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static size_t									\
 AT##_Size(const struct AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
-    return arr ? arr->size : 0;							\
+    return arr ? arr->size : 0u;						\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static size_t									\
 AT##_Capacity(const struct AT *arr)						\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
-    return arr ? arr->capacity : 0;						\
+    return arr ? arr->capacity : 0u;						\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
@@ -331,6 +331,23 @@ AT##_Free(struct AT **arrp)							\
 {										\
     AT##_Resize(arrp, 0);							\
 }										\
+										\
+__TK_ARRAY_UNUSED								\
+static int									\
+AT##_Find(const struct AT *arr, const ElemType *elem)				\
+{										\
+    assert(!arr || arr->size != 0xdeadbeef);					\
+    if (arr) {									\
+	const ElemType *buf = arr->buf;						\
+	size_t i;								\
+	for (i = 0; i < arr->size; ++i) {					\
+	    if (memcmp(&buf[i], elem, sizeof(struct ElemType)) == 0) {		\
+		return (int) i;							\
+	    }									\
+	}									\
+    }										\
+    return -1;									\
+}										\
 /* ------------------------------------------------------------------------- */
 
 #define TK_PTR_ARRAY_DEFINE(AT, ElemType) /* AT = type of array */		\
@@ -398,7 +415,7 @@ AT##_Back(struct AT *arr)							\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static size_t									\
 AT##_Size(const struct AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -406,7 +423,7 @@ AT##_Size(const struct AT *arr)							\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
-static int									\
+static size_t									\
 AT##_Capacity(const struct AT *arr)						\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
@@ -425,7 +442,7 @@ AT##_Resize(struct AT **arrp, size_t newCapacity)				\
 	*arrp = NULL;								\
     } else {									\
 	int init = *arrp == NULL;						\
-	unsigned memSize = sizeof(AT) + (newCapacity - 1)*sizeof(ElemType *);	\
+	size_t memSize = sizeof(AT) + (newCapacity - 1)*sizeof(ElemType *);	\
 	*arrp = ckrealloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
@@ -522,7 +539,7 @@ AT##_Find(const struct AT *arr, const ElemType *elem)				\
 	size_t i;								\
 	for (i = 0; i < arr->size; ++i) {					\
 	    if (buf[i] == elem) {						\
-		return i;							\
+		return (int) i;							\
 	    }									\
 	}									\
     }										\

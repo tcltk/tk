@@ -335,7 +335,7 @@ typedef struct PatSeq {
  * Tcl/Tk does not support C99 integer support.)
  */
 
-#define NO_NUMBER (((Tcl_WideUInt) 1) << (8*sizeof(Tcl_WideInt) - 1))
+#define NO_NUMBER (((Tcl_WideInt) 1) << (8*sizeof(Tcl_WideInt) - 1))
 
 /*
  * The following structure is used in the nameTable of a virtual event table
@@ -796,7 +796,7 @@ FreePatSeq(
 {
     assert(psPtr);
     assert(!psPtr->owned);
-    DEBUG(psPtr->added = 0xdeadbeef);
+    DEBUG(psPtr->added = (int) 0xdeadbeef);
     ckfree(psPtr->script);
     if (!psPtr->object) {
 	VirtOwners_Free(&psPtr->ptr.owners);
@@ -849,14 +849,14 @@ ResolveModifiers(
 
     if (dispPtr->metaModMask) {
 	if (modMask & META_MASK) {
-	    modMask |= dispPtr->metaModMask;
 	    modMask &= ~META_MASK;
+	    modMask |= dispPtr->metaModMask;
 	}
     }
     if (dispPtr->altModMask) {
 	if (modMask & ALT_MASK) {
-	    modMask |= dispPtr->altModMask;
 	    modMask &= ~ALT_MASK;
+	    modMask |= dispPtr->altModMask;
 	}
     }
 
@@ -931,7 +931,7 @@ MakeListEntry(
 
     assert(pool);
     assert(psPtr);
-    assert(psPtr->added != 0xdeadbeef);
+    assert(psPtr->added != (int) 0xdeadbeef);
 
     if (PSList_IsEmpty(pool)) {
 	newEntry = ckalloc(sizeof(PSEntry));
@@ -1115,13 +1115,17 @@ ClearPromotionLists(
  *---------------------------------------------------------------------------
  */
 
+/*
+ * Windoze compiler does not allow the definition of static variables inside a function,
+ * otherwise this should belong to function TkBindInit().
+ */
+TCL_DECLARE_MUTEX(bindMutex);
+static bool initialized = false;
+
 void
 TkBindInit(
     TkMainInfo *mainPtr)	/* The newly created application. */
 {
-    TCL_DECLARE_MUTEX(bindMutex);
-    static bool initialized = false;
-
     BindInfo *bindInfoPtr;
 
     assert(mainPtr);
@@ -1141,10 +1145,9 @@ TkBindInit(
     /* test expected indices of Button1..Button5, otherwise our button handling is not working */
     assert(Button1 == 1 && Button2 == 2 && Button3 == 3 && Button4 == 4 && Button5 == 5);
     assert(Button2Mask == (Button1Mask << 1));
-    assert(Button2Mask == (Button1Mask << 2));
-    assert(Button3Mask == (Button1Mask << 3));
-    assert(Button4Mask == (Button1Mask << 4));
-    assert(Button5Mask == (Button1Mask << 5));
+    assert(Button3Mask == (Button1Mask << 2));
+    assert(Button4Mask == (Button1Mask << 3));
+    assert(Button5Mask == (Button1Mask << 4));
 
     /* test expected values of button motion masks, otherwise our button handling is not working */
     assert(Button1MotionMask == Button1Mask);
@@ -1383,7 +1386,7 @@ Tk_DeleteBindingTable(
 
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
 	    nextPtr = psPtr->nextSeqPtr;
-	    assert(psPtr->added != 0xdeadbeef);
+	    assert(psPtr->added != (int) 0xdeadbeef);
 	    FreePatSeq(psPtr);
 	}
     }
@@ -1433,7 +1436,7 @@ InsertPatSeq(
     assert(lookupTables);
     assert(psPtr);
     assert(psPtr->numPats >= 1);
-    assert(psPtr->added != 0xdeadbeef);
+    assert(psPtr->added != (int) 0xdeadbeef);
 
     if (!(psPtr->added)) {
 	PatternTableKey key;
@@ -1512,7 +1515,7 @@ Tk_CreateBinding(
     if (!psPtr) {
 	return 0;
     }
-    assert(psPtr->added != 0xdeadbeef);
+    assert(psPtr->added != (int) 0xdeadbeef);
 
     if (psPtr->numPats > PromArr_Capacity(bindPtr->promArr)) {
 	/*
@@ -1598,7 +1601,7 @@ Tk_DeleteBinding(
 	Tcl_HashEntry *hPtr;
 	PatSeq *prevPtr;
 
-	assert(psPtr->added != 0xdeadbeef);
+	assert(psPtr->added != (int) 0xdeadbeef);
 
 	/*
 	 * Unlink the binding from the list for its object.
@@ -1665,7 +1668,7 @@ Tk_GetBinding(
     assert(eventString);
 
     psPtr = FindSequence(interp, &bindPtr->lookupTables, object, eventString, false, true, NULL);
-    assert(!psPtr || psPtr->added != 0xdeadbeef);
+    assert(!psPtr || psPtr->added != (int) 0xdeadbeef);
     return psPtr ? psPtr->script : NULL;
 }
 
@@ -1709,7 +1712,7 @@ Tk_GetAllBindings(
 	 */
 
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = psPtr->ptr.nextObj) {
-	    assert(psPtr->added != 0xdeadbeef);
+	    assert(psPtr->added != (int) 0xdeadbeef);
 	    Tcl_ListObjAppendElement(NULL, resultObj, GetPatternObj(psPtr));
 	}
 	Tcl_SetObjResult(interp, resultObj);
@@ -1903,7 +1906,7 @@ Tk_DeleteAllBindings(
     ClearPromotionLists(bindPtr, object);
 
     for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
-	assert(psPtr->added != 0xdeadbeef);
+	assert(psPtr->added != (int) 0xdeadbeef);
 	DEBUG(psPtr->added = false);
 	nextPtr = DeletePatSeq(psPtr);
     }
@@ -1982,7 +1985,7 @@ Tk_BindEvent(
     const char *p;
     const char *end;
     unsigned scriptCount;
-    unsigned oldScreen;
+    int oldScreen;
     unsigned flags;
     unsigned arraySize;
     unsigned newArraySize;
@@ -2057,7 +2060,7 @@ Tk_BindEvent(
 	    bindInfoPtr->lastEventTime = eventPtr->xkey.time;
 	}
 	/* modifier keys are not influencing button events */
-	for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
+	for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
 		return;
 	    }
@@ -2177,14 +2180,14 @@ Tk_BindEvent(
     arraySize = 0;
     Tcl_DStringInit(&scripts);
 
-    if (numObjects > SIZE_OF_ARRAY(matchPtrBuf)) {
+    if ((unsigned) numObjects > SIZE_OF_ARRAY(matchPtrBuf)) {
 	/* it's unrealistic that the buffer size is too small, but who knows? */
 	matchPtrArr = ckalloc(numObjects*sizeof(matchPtrArr[0]));
     }
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
 
     if (!PromArr_IsEmpty(bindPtr->promArr)) {
-	for (k = 0; k < numObjects; ++k) {
+	for (k = 0; k < (unsigned) numObjects; ++k) {
 	    psl[1] = PromArr_Last(bindPtr->promArr);
 	    psl[0] = psl[1] - 1;
 
@@ -2216,7 +2219,7 @@ Tk_BindEvent(
      * 2. Look for bindings without detail.
      */
 
-    for (k = 0; k < numObjects; ++k) {
+    for (k = 0; k < (unsigned) numObjects; ++k) {
 	PSList *psSuccList = PromArr_First(bindPtr->promArr);
 	PatSeq *bestPtr;
 
@@ -2332,7 +2335,7 @@ Tk_BindEvent(
 		    || psEntry->window != curEvent->xev.xany.window
 		    || (patPtr->info
 			&& curEvent->detail.info
-			&& patPtr->eventType == curEvent->xev.type
+			&& patPtr->eventType == (unsigned) curEvent->xev.type
 			&& patPtr->info != curEvent->detail.info)) {
 		RemoveListEntry(&bindPtr->lookupTables.entryPool, psEntry);
 	    } else {
@@ -2568,7 +2571,7 @@ MatchPatterns(
 	if (patIndex == 0 || psEntry->window == window) {
 	    PatSeq* psPtr = psEntry->psPtr;
 
-	    assert(psPtr->added != 0xdeadbeef);
+	    assert(psPtr->added != (int) 0xdeadbeef);
 	    assert((psPtr->object == NULL) == (physPtrPtr != NULL));
 	    assert(psPtr->object || patIndex == 0);
 	    assert(psPtr->numPats > patIndex);
@@ -2578,7 +2581,7 @@ MatchPatterns(
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
 
-		if (patPtr->eventType == curEvent->xev.type
+		if (patPtr->eventType == (unsigned) curEvent->xev.type
 			&& (curEvent->xev.type != CreateNotify
 				|| curEvent->xev.xcreatewindow.parent == window)
 			&& (!patPtr->name || patPtr->name == curEvent->detail.name)
@@ -2650,6 +2653,7 @@ MatchPatterns(
     }
 
     if (bestPhysPtr) {
+	assert(physPtrPtr);
 	*physPtrPtr = bestPhysPtr;
     }
     return bestPtr;
@@ -3201,7 +3205,7 @@ DeleteVirtualEventTable(
 
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
 	    nextPtr = psPtr->nextSeqPtr;
-	    assert(psPtr->added != 0xdeadbeef);
+	    assert(psPtr->added != (int) 0xdeadbeef);
 	    DEBUG(psPtr->owned = false);
 	    FreePatSeq(psPtr);
 	}
@@ -3267,7 +3271,7 @@ CreateVirtualEvent(
     if (!(psPtr = FindSequence(interp, &vetPtr->lookupTables, NULL, eventString, true, false, NULL))) {
 	return false;
     }
-    assert(psPtr->added != 0xdeadbeef);
+    assert(psPtr->added != (int) 0xdeadbeef);
 
     /*
      * Find/create virtual event.
@@ -3363,7 +3367,7 @@ DeleteVirtualEvent(
     for (iPhys = PhysOwned_Size(owned); --iPhys >= 0; ) {
 	PatSeq *psPtr = PhysOwned_Get(owned, iPhys);
 
-	assert(psPtr->added != 0xdeadbeef);
+	assert(psPtr->added != (int) 0xdeadbeef);
 
 	if (!eventPSPtr || psPtr == eventPSPtr) {
 	    VirtOwners *owners = psPtr->ptr.owners;
@@ -3390,8 +3394,7 @@ DeleteVirtualEvent(
 	    } else {
 		/*
 		 * Removed last reference to this physical event, so remove it
-		 * from physical->virtual map. And don't forget to remove it
-		 * from lookup tables.
+		 * from lookup table.
 		 */
 		DEBUG(psPtr->owned = false);
 		RemovePatSeqFromLookup(&vetPtr->lookupTables, psPtr);
@@ -3409,7 +3412,7 @@ DeleteVirtualEvent(
 		 * Just deleting this one physical event. Consolidate list of
 		 * owned physical events and return.
 		 */
-		if (iPhys < PhysOwned_Size(owned)) {
+		if ((unsigned) iPhys < PhysOwned_Size(owned)) {
 		    PhysOwned_Set(owned, iPhys, lastElemPtr);
 		}
 		return TCL_OK;
@@ -3691,7 +3694,7 @@ HandleEventGenerate(
     warp = 0;
     pos = TCL_QUEUE_TAIL;
 
-    for (i = 2; i < objc; i += 2) {
+    for (i = 2; i < (unsigned) objc; i += 2) {
 	Tcl_Obj *optionPtr, *valuePtr;
 	bool badOpt = false;
 	int index;
@@ -3731,7 +3734,7 @@ HandleEventGenerate(
 	    if ((int) pos < -1) {
 		return TCL_ERROR;
 	    }
-	    synch = (pos == -1);
+	    synch = ((int) pos == -1);
 	    break;
 	case EVENT_ABOVE:
 	    if (!NameToWindow(interp, tkwin, valuePtr, &tkwin2)) {
