@@ -112,16 +112,18 @@ enum {
  *
  * TkMacOSXFlushWindows --
  *
- *	This routine is a stub called by XSync.  It used to call
- *      displayIfNeeded on all NSWindows which belong to XWindows.  This is not
- *      needed, and in fact dangerous, with the current design of drawRect.
- *      Now it is a no-op.
+ *	This routine is a stub called by XSync, which is called during
+ *      the Tk update command.  It calls displayIfNeeded on all visible
+ *      windows.  This is necessary in order to insure that update will
+ *      run all of the display procedures which have been registered as
+ *      idle tasks.  The test suite assumes that this is the case.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	None
+ *	Calls the drawRect method of the contentView of each visible
+ *      window.
  *
  *----------------------------------------------------------------------
  */
@@ -129,6 +131,14 @@ enum {
 MODULE_SCOPE void
 TkMacOSXFlushWindows(void)
 {
+    NSArray *macWindows = [NSApp orderedWindows];
+
+    for (NSWindow *w in macWindows) {
+	if (TkMacOSXGetXWindow(w)) {
+	    [w displayIfNeeded];
+	}
+    }
+
 }
 
 
