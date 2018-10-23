@@ -5134,7 +5134,7 @@ TkTextRelayoutWindow(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     GC newGC;
     XGCValues gcValues;
-    Bool inSync = true;
+    Bool inSync = 1;
 
     /*
      * Schedule the window redisplay. See TkTextChanged for the reason why
@@ -5143,7 +5143,7 @@ TkTextRelayoutWindow(
 
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
 	Tcl_DoWhenIdle(DisplayText, textPtr);
-	inSync = false;
+	inSync = 0;
     }
     dInfoPtr->flags |= REDRAW_PENDING|REDRAW_BORDERS|DINFO_OUT_OF_DATE
 	    |REPICK_NEEDED;
@@ -5240,7 +5240,7 @@ TkTextRelayoutWindow(
 	    textPtr->refCount++;
 	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		    AsyncUpdateLineMetrics, textPtr);
-	    inSync = false;
+	    inSync = 0;
 	}
 	
 	if (!inSync) {
