@@ -18,6 +18,7 @@
  */
 
 /*
+ * -------------------------------------------------------------------------------
  * Use the array in the following way:
  * -------------------------------------------------------------------------------
  * typedef struct { int key, value; } Pair;
@@ -26,6 +27,25 @@
  * if (MyArray_IsEmpty(arr)) {
  *     MyArray_Append(&arr, MakePair(1, 2));
  *     MyArray_Append(&arr, MakePair(2, 3));
+ *     for (i = 0; i < MyArray_Size(arr); ++i) {
+ *         const Pair *p = MyArray_Get(arr, i);
+ *         printf("%d -> %d\n", p->key, p->value);
+ *         ckfree(p);
+ *     }
+ *     MyArray_Free(&arr);
+ *     assert(arr == NULL);
+ * }
+ * -------------------------------------------------------------------------------
+ * Or with aggregated elements:
+ * -------------------------------------------------------------------------------
+ * typedef struct { int key, value; } Pair;
+ * TK_ARRAY_DEFINE(MyArray, Pair);
+ * Pair p1 = { 1, 2 };
+ * Pair p2 = { 2, 3 };
+ * MyArray *arr = NULL;
+ * if (MyArray_IsEmpty(arr)) {
+ *     MyArray_Append(&arr, p1);
+ *     MyArray_Append(&arr, p2);
  *     for (i = 0; i < MyArray_Size(arr); ++i) {
  *         const Pair *p = MyArray_Get(arr, i);
  *         printf("%d -> %d\n", p->key, p->value);
@@ -161,6 +181,15 @@ typedef struct AT {								\
 } AT;										\
 										\
 __TK_ARRAY_UNUSED								\
+static void									\
+AT##_Init(AT *arr)								\
+{										\
+    assert(arr);								\
+    arr->size = 0;								\
+    arr->capacity = 0;								\
+}										\
+										\
+__TK_ARRAY_UNUSED								\
 static size_t									\
 AT##_ElemSize()									\
 {										\
@@ -176,7 +205,7 @@ AT##_BufferSize(size_t numElems)						\
 										\
 __TK_ARRAY_UNUSED								\
 static int									\
-AT##_IsEmpty(struct AT *arr)							\
+AT##_IsEmpty(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return !arr || arr->size == 0u;						\
@@ -184,7 +213,7 @@ AT##_IsEmpty(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_Size(const struct AT *arr)							\
+AT##_Size(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return arr ? arr->size : 0u;						\
@@ -192,7 +221,7 @@ AT##_Size(const struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_Capacity(const struct AT *arr)						\
+AT##_Capacity(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return arr ? arr->capacity : 0u;						\
@@ -200,7 +229,7 @@ AT##_Capacity(const struct AT *arr)						\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType *								\
-AT##_First(struct AT *arr)							\
+AT##_First(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return arr ? arr->buf : NULL;						\
@@ -208,7 +237,7 @@ AT##_First(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType *								\
-AT##_Last(struct AT *arr)							\
+AT##_Last(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return arr ? arr->buf + arr->size : NULL;					\
@@ -216,7 +245,7 @@ AT##_Last(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType *								\
-AT##_Front(struct AT *arr)							\
+AT##_Front(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     assert(!AT##_IsEmpty(arr));							\
@@ -225,7 +254,7 @@ AT##_Front(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType *								\
-AT##_Back(struct AT *arr)							\
+AT##_Back(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     assert(!AT##_IsEmpty(arr));							\
@@ -234,7 +263,7 @@ AT##_Back(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Resize(struct AT **arrp, size_t newSize)					\
+AT##_Resize(AT **arrp, size_t newSize)						\
 {										\
     assert(arrp);								\
     assert(!*arrp || (*arrp)->size != 0xdeadbeef);				\
@@ -244,7 +273,8 @@ AT##_Resize(struct AT **arrp, size_t newSize)					\
 	*arrp = NULL;								\
     } else {									\
 	int init = *arrp == NULL;						\
-	*arrp = ckrealloc(*arrp, sizeof(AT) + (newSize - 1)*sizeof(ElemType));	\
+	size_t memSize = AT##_BufferSize(newSize - 1) + sizeof(AT);		\
+	*arrp = ckrealloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
 	} else if (newSize < (*arrp)->size) {					\
@@ -256,31 +286,30 @@ AT##_Resize(struct AT **arrp, size_t newSize)					\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Clear(struct AT *arr, size_t from, size_t to)				\
+AT##_Clear(AT *arr, size_t from, size_t to)					\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
-    assert(to <= AT##_Size(arr));						\
+    assert(to <= AT##_Capacity(arr));						\
     assert(from <= to);								\
     memset(arr->buf + from, 0, AT##_BufferSize(to - from));			\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_ResizeAndClear(struct AT **arrp, size_t newSize)				\
+AT##_ResizeAndClear(AT **arrp, size_t newSize)					\
 {										\
     size_t oldCapacity;								\
     assert(arrp);								\
     oldCapacity = *arrp ? (*arrp)->capacity : 0;				\
     AT##_Resize(arrp, newSize);							\
     if (newSize > oldCapacity) {						\
-	size_t memSize = AT##_BufferSize(newSize - oldCapacity);		\
-	memset((*arrp)->buf + oldCapacity, 0, memSize);				\
+	AT##_Clear(*arrp, oldCapacity, newSize);				\
     }										\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_SetSize(struct AT *arr, size_t newSize)					\
+AT##_SetSize(AT *arr, size_t newSize)						\
 {										\
     assert(arr);								\
     assert(newSize <= AT##_Capacity(arr));					\
@@ -290,7 +319,7 @@ AT##_SetSize(struct AT *arr, size_t newSize)					\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Append(struct AT **arrp, ElemType *elem)					\
+AT##_Append(AT **arrp, ElemType *elem)						\
 {										\
     assert(arrp);								\
     if (!*arrp) {								\
@@ -303,7 +332,7 @@ AT##_Append(struct AT **arrp, ElemType *elem)					\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_PopBack(struct AT *arr)							\
+AT##_PopBack(AT *arr)								\
 {										\
     assert(!AT##_IsEmpty(arr));							\
     return arr->size -= 1;							\
@@ -311,7 +340,7 @@ AT##_PopBack(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType *								\
-AT##_Get(struct AT *arr, size_t at)						\
+AT##_Get(AT *arr, size_t at)							\
 {										\
     assert(at < AT##_Size(arr));						\
     return &arr->buf[at];							\
@@ -319,7 +348,7 @@ AT##_Get(struct AT *arr, size_t at)						\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Set(struct AT *arr, size_t at, ElemType *elem)				\
+AT##_Set(AT *arr, size_t at, ElemType *elem)					\
 {										\
     assert(at < AT##_Size(arr));						\
     arr->buf[at] = *elem;							\
@@ -327,21 +356,21 @@ AT##_Set(struct AT *arr, size_t at, ElemType *elem)				\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Free(struct AT **arrp)							\
+AT##_Free(AT **arrp)								\
 {										\
     AT##_Resize(arrp, 0);							\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
 static int									\
-AT##_Find(const struct AT *arr, const ElemType *elem)				\
+AT##_Find(const AT *arr, const ElemType *elem)					\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     if (arr) {									\
 	const ElemType *buf = arr->buf;						\
 	size_t i;								\
 	for (i = 0; i < arr->size; ++i) {					\
-	    if (memcmp(&buf[i], elem, sizeof(struct ElemType)) == 0) {		\
+	    if (memcmp(&buf[i], elem, sizeof(ElemType)) == 0) {			\
 		return (int) i;							\
 	    }									\
 	}									\
@@ -374,7 +403,7 @@ AT##_BufferSize(size_t numElems)						\
 										\
 __TK_ARRAY_UNUSED								\
 static int									\
-AT##_IsEmpty(struct AT *arr)							\
+AT##_IsEmpty(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return !arr || arr->size == 0;						\
@@ -382,7 +411,7 @@ AT##_IsEmpty(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType **								\
-AT##_First(struct AT *arr)							\
+AT##_First(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return arr ? arr->buf : NULL;						\
@@ -390,7 +419,7 @@ AT##_First(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType **								\
-AT##_Last(struct AT *arr)							\
+AT##_Last(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return arr ? arr->buf + arr->size : NULL;					\
@@ -398,7 +427,7 @@ AT##_Last(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType *								\
-AT##_Front(struct AT *arr)							\
+AT##_Front(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     assert(!AT##_IsEmpty(arr));							\
@@ -407,7 +436,7 @@ AT##_Front(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType *								\
-AT##_Back(struct AT *arr)							\
+AT##_Back(AT *arr)								\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     assert(!AT##_IsEmpty(arr));							\
@@ -416,7 +445,7 @@ AT##_Back(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_Size(const struct AT *arr)							\
+AT##_Size(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return arr ? arr->size : 0;							\
@@ -424,7 +453,7 @@ AT##_Size(const struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_Capacity(const struct AT *arr)						\
+AT##_Capacity(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return arr ? arr->capacity : 0;						\
@@ -432,7 +461,7 @@ AT##_Capacity(const struct AT *arr)						\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Resize(struct AT **arrp, size_t newCapacity)				\
+AT##_Resize(AT **arrp, size_t newCapacity)					\
 {										\
     assert(arrp);								\
     assert(!*arrp || (*arrp)->size != 0xdeadbeef);				\
@@ -442,7 +471,7 @@ AT##_Resize(struct AT **arrp, size_t newCapacity)				\
 	*arrp = NULL;								\
     } else {									\
 	int init = *arrp == NULL;						\
-	size_t memSize = sizeof(AT) + (newCapacity - 1)*sizeof(ElemType *);	\
+	size_t memSize = AT##_BufferSize(newCapacity - 1) + sizeof(AT);		\
 	*arrp = ckrealloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
@@ -455,30 +484,30 @@ AT##_Resize(struct AT **arrp, size_t newCapacity)				\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Clear(struct AT *arr, size_t from, size_t to)				\
+AT##_Clear(AT *arr, size_t from, size_t to)					\
 {										\
-    assert(to <= AT##_Size(arr));						\
+    assert(!arr || arr->size != 0xdeadbeef);					\
+    assert(to <= AT##_Capacity(arr));						\
     assert(from <= to);								\
-    memset(arr->buf + from, 0, PromArr_BufferSize(to - from));			\
+    memset(arr->buf + from, 0, AT##_BufferSize(to - from));			\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_ResizeAndClear(struct AT **arrp, size_t newCapacity)			\
+AT##_ResizeAndClear(AT **arrp, size_t newCapacity)				\
 {										\
     size_t oldCapacity;								\
     assert(arrp);								\
     oldCapacity = *arrp ? (*arrp)->capacity : 0;				\
     AT##_Resize(arrp, newCapacity);						\
     if (newCapacity > oldCapacity) {						\
-	size_t memSize = PromArr_BufferSize(newCapacity - oldCapacity);		\
-	memset((*arrp)->buf + oldCapacity, 0, memSize);				\
+	AT##_Clear(*arrp, oldCapacity, newCapacity);				\
     }										\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_SetSize(struct AT *arr, size_t newSize)					\
+AT##_SetSize(AT *arr, size_t newSize)						\
 {										\
     assert(arr);								\
     assert(newSize <= AT##_Capacity(arr));					\
@@ -487,7 +516,7 @@ AT##_SetSize(struct AT *arr, size_t newSize)					\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Append(struct AT **arrp, ElemType *elem)					\
+AT##_Append(AT **arrp, ElemType *elem)						\
 {										\
     assert(arrp);								\
     if (!*arrp) {								\
@@ -500,7 +529,7 @@ AT##_Append(struct AT **arrp, ElemType *elem)					\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_PopBack(struct AT *arr)							\
+AT##_PopBack(AT *arr)								\
 {										\
     assert(!AT##_IsEmpty(arr));							\
     return arr->size -= 1;							\
@@ -508,7 +537,7 @@ AT##_PopBack(struct AT *arr)							\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType *								\
-AT##_Get(const struct AT *arr, size_t at)					\
+AT##_Get(const AT *arr, size_t at)						\
 {										\
     assert(at < AT##_Size(arr));						\
     return arr->buf[at];							\
@@ -516,7 +545,7 @@ AT##_Get(const struct AT *arr, size_t at)					\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Set(struct AT *arr, size_t at, ElemType *elem)				\
+AT##_Set(AT *arr, size_t at, ElemType *elem)					\
 {										\
     assert(at < AT##_Size(arr));						\
     arr->buf[at] = elem;							\
@@ -524,14 +553,14 @@ AT##_Set(struct AT *arr, size_t at, ElemType *elem)				\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
-AT##_Free(struct AT **arrp)							\
+AT##_Free(AT **arrp)								\
 {										\
     AT##_Resize(arrp, 0);							\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
 static int									\
-AT##_Find(const struct AT *arr, const ElemType *elem)				\
+AT##_Find(const AT *arr, const ElemType *elem)					\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     if (arr) {									\
