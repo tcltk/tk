@@ -297,7 +297,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 /*
  *----------------------------------------------------------------------
  *
- * TkpMacOSXAppIsDrawing --
+ * TkpAppIsDrawing --
  *
  *      A widget display procedure can call this to determine whether it
  *      is being run inside of the drawRect method.  This is needed for
@@ -314,7 +314,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
  *----------------------------------------------------------------------
  */
 MODULE_SCOPE Bool
-TkpMacOSXAppIsDrawing(void) {
+TkpAppIsDrawing(void) {
     return [NSApp isDrawing];
 }
 
