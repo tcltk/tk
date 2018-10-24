@@ -5679,6 +5679,33 @@ TkMacOSXMakeRealWindowExist(
 /*
  *----------------------------------------------------------------------
  *
+ * TkpDisplayWindow --
+ *
+ *      Mark the contentView of this window as needing display so the
+ *      window will be drawn by the window manager.  If this is called
+ *      within the drawRect method, do nothing.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      The window's contentView is marked as needing display.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkpDisplayWindow(Tk_Window tkwin) {
+    if (![NSApp isDrawing]) {
+    	TkWindow *winPtr = (TkWindow*)tkwin;
+    	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
+    	[[w contentView] setNeedsDisplay: YES];
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkMacOSXRegisterOffScreenWindow --
  *
  *	This function adds the passed in Off Screen Port to the hash table
