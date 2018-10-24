@@ -266,10 +266,12 @@ VISIBILITY_HIDDEN
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
     int _macMinorVersion;
+    Bool _isDrawing;
 #endif
 }
 @property int poolLock;
 @property int macMinorVersion;
+@property Bool isDrawing;
 
 @end
 @interface TKApplication(TKInit)

@@ -206,10 +206,28 @@ typedef struct TextStyle {
  * Macro to make debugging/testing logging a little easier.
  */
 
+#ifndef MAC_OSX_TK
 #define LOG(toVar,what) \
     Tcl_SetVar2(textPtr->interp, toVar, NULL, (what), \
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
 
+#define CLEAR(var) \
+    Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
+#else
+/*
+ * Drawing procedures are sometimes run because the system has decided
+ * to redraw the window.  This can corrupt the data that a test is
+ * trying to collect.  So we don't write to the logging variables when
+ * the drawing procedure is being run that way.
+ */
+#define LOG(toVar,what) \
+    if (!TkpMacOSXAppIsDrawing())					\
+        Tcl_SetVar2(textPtr->interp, toVar, NULL, (what),		\
+		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)	
+#define CLEAR(var) \
+    if (!TkpMacOSXAppIsDrawing())				\
+        Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
+#endif
 /*
  * The following structure describes one line of the display, which may be
  * either part or all of one line of the text.
@@ -4136,7 +4154,7 @@ DisplayText(
     Tcl_Preserve(interp);
 
     if (tkTextDebug) {
-	Tcl_SetVar2(interp, "tk_textRelayout", NULL, "", TCL_GLOBAL_ONLY);
+	CLEAR("tk_textRelayout");
     }
 
     if (!Tk_IsMapped(textPtr->tkwin) || (dInfoPtr->maxX <= dInfoPtr->x)
@@ -4147,7 +4165,7 @@ DisplayText(
     }
     numRedisplays++;
     if (tkTextDebug) {
-	Tcl_SetVar2(interp, "tk_textRedraw", NULL, "", TCL_GLOBAL_ONLY);
+	CLEAR("tk_textRedraw");
     }
 
     /*
