@@ -20,6 +20,7 @@
  */
 
 /*
+ * -------------------------------------------------------------------------------
  * Use the double linked list in the following way:
  * -------------------------------------------------------------------------------
  * typedef struct MyListEntry { TK_DLIST_LINKS(MyListEntry); int value; } MyListEntry;
@@ -232,11 +233,11 @@ typedef struct LT {								\
     struct ElemType *last;	/* last element */				\
 } LT;										\
 										\
-typedef ElemType *(LT##_Func)(struct LT *head, struct ElemType *elem);		\
+typedef struct ElemType *(LT##_Func)(LT *head, struct ElemType *elem);		\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_Init(struct LT *head)							\
+LT##_Init(LT *head)								\
 {										\
     assert(head);								\
     head->first = NULL;								\
@@ -254,7 +255,7 @@ LT##_ElemInit(struct ElemType *elem)						\
 										\
 __TK_DLIST_UNUSED								\
 static int									\
-LT##_IsEmpty(struct LT *head)							\
+LT##_IsEmpty(LT *head)								\
 {										\
     assert(head);								\
     return head->first == NULL;							\
@@ -285,23 +286,23 @@ LT##_IsLast(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static ElemType *								\
-LT##_First(struct LT *head)							\
+static struct ElemType *							\
+LT##_First(LT *head)								\
 {										\
     assert(head);								\
     return head->first;								\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static ElemType *								\
-LT##_Last(struct LT *head)							\
+static struct ElemType *							\
+LT##_Last(LT *head)								\
 {										\
     assert(head);								\
     return head->last;								\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static ElemType *								\
+static struct ElemType *							\
 LT##_Next(struct ElemType *elem)						\
 {										\
     assert(elem);								\
@@ -309,7 +310,7 @@ LT##_Next(struct ElemType *elem)						\
 }										\
 										\
 __TK_DLIST_UNUSED								\
-static ElemType *								\
+static struct ElemType *							\
 LT##_Prev(struct ElemType *elem)						\
 {										\
     assert(elem);								\
@@ -318,7 +319,7 @@ LT##_Prev(struct ElemType *elem)						\
 										\
 __TK_DLIST_UNUSED								\
 static unsigned									\
-LT##_Size(const struct LT *head)						\
+LT##_Size(const LT *head)							\
 {										\
     const struct ElemType *elem;						\
     unsigned size = 0;								\
@@ -337,10 +338,10 @@ LT##_InsertAfter(struct ElemType *listElem, struct ElemType *elem)		\
 {										\
     assert(listElem);								\
     assert(elem);								\
-    elem->_dl_.next = (listElem)->_dl_.next;					\
-    elem->_dl_.prev = (listElem);						\
-    listElem->_dl_.next->_dl_.prev = (elem);					\
-    listElem->_dl_.next = (elem);						\
+    elem->_dl_.next = listElem->_dl_.next;					\
+    elem->_dl_.prev = listElem;							\
+    listElem->_dl_.next->_dl_.prev = elem;					\
+    listElem->_dl_.next = elem;							\
 }										\
 										\
 __TK_DLIST_UNUSED								\
@@ -357,12 +358,12 @@ LT##_InsertBefore(struct ElemType *listElem, struct ElemType *elem)		\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_Prepend(struct LT *head, struct ElemType *elem)				\
+LT##_Prepend(LT *head, struct ElemType *elem)					\
 {										\
     assert(head);								\
     assert(elem);								\
     elem->_dl_.prev = (void *) head;						\
-    if (head->first == NULL) {							\
+    if (!head->first) {								\
 	elem->_dl_.next = (void *) head;					\
 	head->last = elem;							\
     } else {									\
@@ -374,12 +375,12 @@ LT##_Prepend(struct LT *head, struct ElemType *elem)				\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_Append(struct LT *head, struct ElemType *elem)				\
+LT##_Append(LT *head, struct ElemType *elem)					\
 {										\
     assert(head);								\
     assert(elem);								\
     elem->_dl_.next = (void *) head;						\
-    if (head->first == NULL) {							\
+    if (!head->first) {								\
 	elem->_dl_.prev = (void *) head;					\
 	head->first = elem;							\
     } else {									\
@@ -391,7 +392,7 @@ LT##_Append(struct LT *head, struct ElemType *elem)				\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_Move(struct LT *dst, struct LT *src)					\
+LT##_Move(LT *dst, LT *src)							\
 {										\
     assert(dst);								\
     assert(src);								\
@@ -445,7 +446,7 @@ LT##_Free(struct ElemType *elem)						\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_RemoveHead(struct LT *head)						\
+LT##_RemoveHead(LT *head)							\
 {										\
     assert(!LT##_IsEmpty(head));						\
     LT##_Remove(head->first);							\
@@ -453,7 +454,7 @@ LT##_RemoveHead(struct LT *head)						\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_RemoveTail(struct LT *head)						\
+LT##_RemoveTail(LT *head)							\
 {										\
     assert(!LT##_IsEmpty(head));						\
     LT##_Remove(head->last);							\
@@ -461,7 +462,7 @@ LT##_RemoveTail(struct LT *head)						\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_FreeHead(struct LT *head)							\
+LT##_FreeHead(LT *head)								\
 {										\
     assert(!LT##_IsEmpty(head));						\
     LT##_Free(head->first);							\
@@ -469,7 +470,7 @@ LT##_FreeHead(struct LT *head)							\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_FreeTail(struct LT *head)							\
+LT##_FreeTail(LT *head)								\
 {										\
     assert(!LT##_IsEmpty(head));						\
     LT##_Free(head->last);							\
@@ -501,7 +502,7 @@ LT##_SwapElems(struct ElemType *lhs, struct ElemType *rhs)			\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_Clear(struct LT *head)							\
+LT##_Clear(LT *head)								\
 {										\
     struct ElemType *p;								\
     struct ElemType *next;							\
@@ -515,7 +516,7 @@ LT##_Clear(struct LT *head)							\
 										\
 __TK_DLIST_UNUSED								\
 static void									\
-LT##_Traverse(struct LT *head, LT##_Func func)					\
+LT##_Traverse(LT *head, LT##_Func func)						\
 {										\
     struct ElemType *next;							\
     struct ElemType *p;								\
