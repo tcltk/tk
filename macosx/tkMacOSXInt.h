@@ -199,6 +199,8 @@ MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
 MODULE_SCOPE void TkpRetainRegion(TkRegion r);
 MODULE_SCOPE void TkpReleaseRegion(TkRegion r);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
+MODULE_SCOPE Bool TkpMacOSXAppIsDrawing(void);
+
 /*
  * Include the stubbed internal platform-specific API.
  */
