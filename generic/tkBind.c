@@ -895,6 +895,9 @@ SetupPatternKey(
     assert(key);
     assert(psPtr);
 
+    /* otherwise on some systems the key contains uninitialized bytes */
+    memset(key, 0, sizeof(PatternTableKey));
+
     patPtr = psPtr->pats;
     key->object = psPtr->object;
     key->type = patPtr->eventType;
@@ -978,8 +981,8 @@ GetLookupForEvent(
     assert(lookupTables);
     assert(eventPtr);
 
-    key.detail.name = NULL;
-    key.detail.info = 0;
+    /* otherwise on some systems the key contains uninitialized bytes */
+    memset(&key, 0, sizeof(PatternTableKey));
 
     if (onlyConsiderDetailedEvents) {
 	switch (eventPtr->xev.type) {
@@ -2510,7 +2513,9 @@ VirtPatIsBound(
 	}
     }
 
+    /* otherwise on some systems the key contains uninitialized bytes */
     memset(&key, 0, sizeof(key));
+
     key.object = object;
     key.type = VirtualEvent;
     owners = psPtr->ptr.owners;
