@@ -826,27 +826,35 @@ ConfigureRestrictProc(
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
 
+#ifdef TK_MAC_DEBUG_DRAWING
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    if (winPtr) printf("drawRect: drawing %s\n", Tk_PathName(winPtr));
+#endif
+    
     [NSApp setIsDrawing: YES];
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
-
-#ifdef TK_MAC_DEBUG_DRAWING
-    TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd, NSStringFromRect(rect));
-    [[NSColor colorWithDeviceRed:0.0 green:1.0 blue:0.0 alpha:.1] setFill];
-    NSRectFillListUsingOperation(rectsBeingDrawn, rectsBeingDrawnCount,
-	    NSCompositeSourceOver);
-#endif
-
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
 
     while (rectsBeingDrawnCount--) {
 	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
+
+#ifdef TK_MAC_DEBUG_DRAWING
+	printf("drawRect: %dx%d@(%d,%d)\n", (int)r.size.width,
+	       (int)r.size.height, (int)r.origin.x, (int)r.origin.y);
+#endif
+
 	r.origin.y = height - (r.origin.y + r.size.height);
 	HIShapeUnionWithRect(drawShape, &r);
     }
     [self generateExposeEvents:(HIShapeRef)drawShape];
     CFRelease(drawShape);
     [NSApp setIsDrawing: NO];
+
+#ifdef TK_MAC_DEBUG_DRAWING
+    printf("drawRect: done.\n");
+#endif
+
 }
 
 -(void) setFrameSize: (NSSize)newsize
@@ -920,7 +928,7 @@ ConfigureRestrictProc(
     ClientData oldArg;
     Tk_RestrictProc *oldProc;
     if (!winPtr) {
-		return;
+	return;
     }
 
     /*

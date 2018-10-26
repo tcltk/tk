@@ -32,6 +32,84 @@ static void TkMacOSXNotifyExitHandler(ClientData clientData);
 static void TkMacOSXEventsSetupProc(ClientData clientData, int flags);
 static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 
+#ifdef TK_MAC_DEBUG_EVENTS
+static char* Tk_EventName[39] = {
+    "",
+    "",
+    "KeyPress",		/*2*/
+    "KeyRelease",      	/*3*/
+    "ButtonPress",     	/*4*/
+    "ButtonRelease",	/*5*/
+    "MotionNotify",    	/*6*/
+    "EnterNotify",     	/*7*/
+    "LeaveNotify",     	/*8*/
+    "FocusIn",		/*9*/
+    "FocusOut",		/*10*/
+    "KeymapNotify",    	/*11*/
+    "Expose",		/*12*/
+    "GraphicsExpose",	/*13*/
+    "NoExpose",		/*14*/
+    "VisibilityNotify",	/*15*/
+    "CreateNotify",    	/*16*/
+    "DestroyNotify",	/*17*/
+    "UnmapNotify",     	/*18*/
+    "MapNotify",       	/*19*/
+    "MapRequest",      	/*20*/
+    "ReparentNotify",	/*21*/
+    "ConfigureNotify",	/*22*/
+    "ConfigureRequest",	/*23*/
+    "GravityNotify",	/*24*/
+    "ResizeRequest",	/*25*/
+    "CirculateNotify",	/*26*/
+    "CirculateRequest",	/*27*/
+    "PropertyNotify",	/*28*/
+    "SelectionClear",	/*29*/
+    "SelectionRequest",	/*30*/
+    "SelectionNotify",	/*31*/
+    "ColormapNotify",	/*32*/
+    "ClientMessage",	/*33*/
+    "MappingNotify",	/*34*/
+    "VirtualEvent",    	/*35*/
+    "ActivateNotify",	/*36*/
+    "DeactivateNotify",	/*37*/
+    "MouseWheelEvent"	/*38*/
+};
+
+static Tk_RestrictAction
+InspectQueueRestrictProc(
+     ClientData arg,
+     XEvent *eventPtr)
+{
+    XVirtualEvent* ve = (XVirtualEvent*) eventPtr;
+    const char *name;
+    long serial = ve->serial;
+    long time = eventPtr->xkey.time;
+    
+    if (eventPtr->type == VirtualEvent) {
+	name = ve->name;
+    } else {
+	name = Tk_EventName[eventPtr->type];
+    }
+    printf("    > %s;serial = %lu; time=%lu)\n", name, serial, time);
+    return TK_DEFER_EVENT;
+}
+
+/*
+ * Debugging tool which prints the current Tcl queue.
+ */
+
+void DebugPrintQueue(void)
+{
+    ClientData oldArg;
+    Tk_RestrictProc *oldProc;
+
+    oldProc = Tk_RestrictEvents(InspectQueueRestrictProc, NULL, &oldArg);
+    printf("Current queue:\n");
+    while (Tcl_DoOneEvent(TCL_ALL_EVENTS|TCL_DONT_WAIT)) {};
+    Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+}
+# endif
+
 #pragma mark TKApplication(TKNotify)
 
 @interface NSApplication(TKNotify)
@@ -67,6 +145,10 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 {
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
+#ifdef TK_MAC_DEBUG_EVENTS
+    printf("Sending event of type %d\n", (int)[theEvent type]); 
+    DebugPrintQueue();
+#endif
 }
 @end
 
