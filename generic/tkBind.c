@@ -109,6 +109,13 @@ enum { true = (bool) 1, false = (bool) 0 };
 #define SUPPORT_DEBUGGING 0
 
 /*
+ * Test validity of PSEntry items.
+ */
+
+# define TEST_PSENTRY(psPtr) psPtr->added != (int) 0xdeadbeef
+# define MARK_PSENTRY(psPtr) psPtr->added = 0xdeadbeef
+
+/*
  * The following union is used to hold the detail information from an XEvent
  * (including Tk's XVirtualEvent extension).
  */
@@ -143,6 +150,8 @@ typedef struct PSEntry {
     TK_DLIST_LINKS(PSEntry);	/* Makes this struct a double linked list; must be first entry. */
     struct PatSeq* psPtr;	/* Pointer to pattern sequence. */
     Window window;		/* Window of last match. */
+    unsigned count:30;		/* Only promote to next level if this count has reached count of
+    				 * pattern. */
     unsigned expired:1;		/* Whether this entry is expired, this means it has to be removed
     				 * from promotion list. */
     unsigned isNew:1;		/* Whether this entry is recently created. */
@@ -282,9 +291,9 @@ TK_PTR_ARRAY_DEFINE(VirtOwners, Tcl_HashEntry); /* define array of hash entries 
 typedef struct PatSeq {
     unsigned numPats;		/* Number of patterns in sequence (usually 1). */
     unsigned count;		/* Total number of repetition counts, summed over count in TkPattern. */
-    unsigned number;		/* Needed for the decision whether a binding is later than another,
-    				 * it is guaranteed that the most recently bound event has the
-				 * highest number. */
+    unsigned number;		/* Needed for the decision whether a binding is less recently defined
+    				 * than another, it is guaranteed that the most recently bound event
+				 * has the highest number. */
     bool added;			/* Is this pattern sequence already added to lookup table? */
     char *script;		/* Binding script to evaluate when sequence matches (ckalloc()ed) */
     Tcl_Obj* object;		/* Token for object with which binding is associated. For virtual
@@ -712,7 +721,7 @@ static void		InsertPatSeq(LookupTables *lookupTables, PatSeq *psPtr);
  * Some useful helper functions.
  */
 #ifdef SUPPORT_DEBUGGING
-static int N = 0;
+static int BindCount = 0;
 #endif
 
 static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
@@ -745,11 +754,7 @@ GetButtonNumber(
     const char *field)
 {
     assert(field);
-
-    if (field[0] >= '1' && field[0] <= '5' && field[1] == '\0') {
-	return field[0] - '0';
-    }
-    return 0;
+    return (field[0] >= '1' && field[0] <= '5' && field[1] == '\0') ? field[0] - '0' : 0;
 }
 
 static Time
@@ -760,7 +765,17 @@ CurrentTimeInMilliSecs()
     return ((Time) now.sec)*1000 + ((Time) now.usec)/1000;
 }
 
-#if PREFER_MOST_SPECIALIZED_EVENT
+static unsigned long
+GetInfo(
+    const PatSeq *psPtr,
+    unsigned index)
+{
+    assert(psPtr);
+    assert(index < psPtr->numPats);
+
+    return psPtr->pats[index].info;
+}
+
 static unsigned
 GetCount(
     const PatSeq *psPtr,
@@ -771,7 +786,6 @@ GetCount(
 
     return psPtr->pats[index].count;
 }
-#endif
 
 static bool
 MatchEventNearby(
@@ -796,7 +810,7 @@ FreePatSeq(
 {
     assert(psPtr);
     assert(!psPtr->owned);
-    DEBUG(psPtr->added = (int) 0xdeadbeef);
+    DEBUG(MARK_PSENTRY(psPtr));
     ckfree(psPtr->script);
     if (!psPtr->object) {
 	VirtOwners_Free(&psPtr->ptr.owners);
@@ -934,7 +948,7 @@ MakeListEntry(
 
     assert(pool);
     assert(psPtr);
-    assert(psPtr->added != (int) 0xdeadbeef);
+    assert(TEST_PSENTRY(psPtr));
 
     if (PSList_IsEmpty(pool)) {
 	newEntry = ckalloc(sizeof(PSEntry));
@@ -947,6 +961,7 @@ MakeListEntry(
     newEntry->window = None;
     newEntry->expired = false;
     newEntry->isNew = true;
+    newEntry->count = 1;
     DEBUG(psPtr->owned = false);
 
     return newEntry;
@@ -986,22 +1001,13 @@ GetLookupForEvent(
 
     if (onlyConsiderDetailedEvents) {
 	switch (eventPtr->xev.type) {
-	case ButtonPress:
-	case ButtonRelease:
-	    key.detail.info = eventPtr->xev.xbutton.button;
-	    break;
-	case MotionNotify:
-	    key.detail.info = ButtonNumberFromState(eventPtr->xev.xmotion.state);
-	    break;
-	case KeyPress:
-	case KeyRelease:
-	    key.detail.info = eventPtr->detail.info;
-	    break;
-	case VirtualEvent:
-	    key.detail.name = eventPtr->detail.name;
-	    break;
+	case ButtonPress:   /* fallthru */
+	case ButtonRelease: key.detail.info = eventPtr->xev.xbutton.button; break;
+	case MotionNotify:  key.detail.info = ButtonNumberFromState(eventPtr->xev.xmotion.state); break;
+	case KeyPress:      /* fallthru */
+	case KeyRelease:    key.detail.info = eventPtr->detail.info; break;
+	case VirtualEvent:  key.detail.name = eventPtr->detail.name; break;
 	}
-
 	if (!key.detail.name) {
 	    return NULL;
 	}
@@ -1119,7 +1125,7 @@ ClearPromotionLists(
  */
 
 /*
- * Windoze compiler does not allow the definition of static variables inside a function,
+ * Windoze compiler does not allow the definition of these static variables inside a function,
  * otherwise this should belong to function TkBindInit().
  */
 TCL_DECLARE_MUTEX(bindMutex);
@@ -1145,6 +1151,9 @@ TkBindInit(
     /* test boolean support for safety, because used for 1 bit fields */
     assert(false == 0 && true == 1);
 
+    /* test that this constant is indeed out of integer range */
+    assert(NO_NUMBER != (((Tcl_WideInt) 1) << (8*sizeof(int) - 1)));
+
     /* test expected indices of Button1..Button5, otherwise our button handling is not working */
     assert(Button1 == 1 && Button2 == 2 && Button3 == 3 && Button4 == 4 && Button5 == 5);
     assert(Button2Mask == (Button1Mask << 1));
@@ -1161,6 +1170,9 @@ TkBindInit(
 
     /* because we expect zero if keySym is empty */
     assert(NoSymbol == 0L);
+
+    /* this must be a union, not a struct, otherwise comparison with NULL will not work */
+    assert(Tk_Offset(Detail, name) == Tk_Offset(Detail, info));
 
     /* we use some constraints about X*Event */
     assert(Tk_Offset(XButtonEvent, time) == Tk_Offset(XMotionEvent, time));
@@ -1388,8 +1400,8 @@ Tk_DeleteBindingTable(
 	PatSeq *psPtr;
 
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
+	    assert(TEST_PSENTRY(psPtr));
 	    nextPtr = psPtr->nextSeqPtr;
-	    assert(psPtr->added != (int) 0xdeadbeef);
 	    FreePatSeq(psPtr);
 	}
     }
@@ -1438,8 +1450,8 @@ InsertPatSeq(
 {
     assert(lookupTables);
     assert(psPtr);
+    assert(TEST_PSENTRY(psPtr));
     assert(psPtr->numPats >= 1);
-    assert(psPtr->added != (int) 0xdeadbeef);
 
     if (!(psPtr->added)) {
 	PatternTableKey key;
@@ -1518,7 +1530,7 @@ Tk_CreateBinding(
     if (!psPtr) {
 	return 0;
     }
-    assert(psPtr->added != (int) 0xdeadbeef);
+    assert(TEST_PSENTRY(psPtr));
 
     if (psPtr->numPats > PromArr_Capacity(bindPtr->promArr)) {
 	/*
@@ -1604,7 +1616,7 @@ Tk_DeleteBinding(
 	Tcl_HashEntry *hPtr;
 	PatSeq *prevPtr;
 
-	assert(psPtr->added != (int) 0xdeadbeef);
+	assert(TEST_PSENTRY(psPtr));
 
 	/*
 	 * Unlink the binding from the list for its object.
@@ -1671,7 +1683,7 @@ Tk_GetBinding(
     assert(eventString);
 
     psPtr = FindSequence(interp, &bindPtr->lookupTables, object, eventString, false, true, NULL);
-    assert(!psPtr || psPtr->added != (int) 0xdeadbeef);
+    assert(!psPtr || TEST_PSENTRY(psPtr));
     return psPtr ? psPtr->script : NULL;
 }
 
@@ -1715,7 +1727,7 @@ Tk_GetAllBindings(
 	 */
 
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = psPtr->ptr.nextObj) {
-	    assert(psPtr->added != (int) 0xdeadbeef);
+	    assert(TEST_PSENTRY(psPtr));
 	    Tcl_ListObjAppendElement(NULL, resultObj, GetPatternObj(psPtr));
 	}
 	Tcl_SetObjResult(interp, resultObj);
@@ -1909,7 +1921,7 @@ Tk_DeleteAllBindings(
     ClearPromotionLists(bindPtr, object);
 
     for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
-	assert(psPtr->added != (int) 0xdeadbeef);
+	assert(TEST_PSENTRY(psPtr));
 	DEBUG(psPtr->added = false);
 	nextPtr = DeletePatSeq(psPtr);
     }
@@ -1949,16 +1961,37 @@ IsBetterMatch(
     const PatSeq *sndMatchPtr,	/* this is a better match? */
     unsigned patIndex)
 {
+    int i;
+
     if (!sndMatchPtr) { return false; }
     if (!fstMatchPtr) { return true; }
+
+    for (i = patIndex; i >= 0; --i) {
+	unsigned long fstInfo = GetInfo(fstMatchPtr, i);
+	unsigned long sndInfo = GetInfo(sndMatchPtr, i);
+
+	if (sndInfo && !fstInfo) { return true; }
+	if (!sndInfo && fstInfo) { return false; }
+    }
+
+#if PREFER_MOST_SPECIALIZED_EVENT
+    for (i = patIndex; i >= 0; --i) {
+	unsigned fstCount = GetCount(fstMatchPtr, i);
+	unsigned sndCount = GetCount(sndMatchPtr, i);
+
+	if (sndCount > fstCount) { return true; }
+	if (sndCount < fstCount) { return false; }
+    }
+#endif
+
     if (sndMatchPtr->count > fstMatchPtr->count) { return true; }
     if (sndMatchPtr->count < fstMatchPtr->count) { return false; }
+
 #if PREFER_MOST_SPECIALIZED_EVENT
-    if (GetCount(sndMatchPtr, patIndex) > GetCount(fstMatchPtr, patIndex)) { return true; }
-    if (GetCount(sndMatchPtr, patIndex) < GetCount(fstMatchPtr, patIndex)) { return false; }
     if (fstMatchPtr->numPats > sndMatchPtr->numPats) { return true; }
     if (fstMatchPtr->numPats < sndMatchPtr->numPats) { return false; }
 #endif
+
     return sndMatchPtr->number > fstMatchPtr->number;
 }
 
@@ -2236,7 +2269,7 @@ Tk_BindEvent(
 
 	if (!PSList_IsEmpty(psSuccList)) {
 	    /* we have promoted sequences, adjust array size */
-	    arraySize = Max(1, arraySize);
+	    arraySize = Max(1u, arraySize);
 	}
 
 	bestPtr = psPtr[0] ? psPtr[0] : psPtr[1];
@@ -2535,6 +2568,38 @@ VirtPatIsBound(
     return false;
 }
 
+/* helper function */
+static int
+Compare(
+    const PatSeq *fstMatchPtr,
+    const PatSeq *sndMatchPtr, /* most recent match */
+    unsigned patIndex)
+{
+    int i;
+
+    assert(sndMatchPtr);
+
+    if (!fstMatchPtr) { return +1; }
+
+    for (i = patIndex; i >= 0; --i) {
+	unsigned long fstInfo = GetInfo(fstMatchPtr, i);
+	unsigned long sndInfo = GetInfo(sndMatchPtr, i);
+
+	if (sndInfo && !fstInfo) { return +1; }
+	if (!sndInfo && fstInfo) { return -1; }
+    }
+
+    {	/* local scope */
+	unsigned fstCount = GetCount(fstMatchPtr, patIndex);
+	unsigned sndCount = GetCount(sndMatchPtr, patIndex);
+
+	if (sndCount > fstCount) { return +1; }
+	if (sndCount < fstCount) { return -1; }
+    }
+
+    return 0;
+}
+
 static PatSeq *
 MatchPatterns(
     TkDisplay *dispPtr,		/* Display from which the event came. */
@@ -2553,9 +2618,7 @@ MatchPatterns(
     PSEntry *psEntry;
     PatSeq *bestPtr;
     PatSeq *bestPhysPtr;
-    unsigned bestCount;
-    unsigned long bestModStateMask;
-    unsigned long bestInfo;
+    unsigned long bestModMask;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -2565,9 +2628,7 @@ MatchPatterns(
 	return NULL;
     }
 
-    bestModStateMask = 0;
-    bestCount = 0;
-    bestInfo = 0;
+    bestModMask = 0;
     bestPtr = NULL;
     bestPhysPtr = NULL;
     window = curEvent->xev.xany.window;
@@ -2576,7 +2637,7 @@ MatchPatterns(
 	if (patIndex == 0 || psEntry->window == window) {
 	    PatSeq* psPtr = psEntry->psPtr;
 
-	    assert(psPtr->added != (int) 0xdeadbeef);
+	    assert(TEST_PSENTRY(psPtr));
 	    assert((psPtr->object == NULL) == (physPtrPtr != NULL));
 	    assert(psPtr->object || patIndex == 0);
 	    assert(psPtr->numPats > patIndex);
@@ -2590,66 +2651,76 @@ MatchPatterns(
 			&& (curEvent->xev.type != CreateNotify
 				|| curEvent->xev.xcreatewindow.parent == window)
 			&& (!patPtr->name || patPtr->name == curEvent->detail.name)
-			&& (patPtr->info == 0
-				? patPtr->count <= curEvent->countAny
-				: patPtr->info == curEvent->detail.info
-				    && patPtr->count <= curEvent->countDetailed)) {
-		    unsigned long modStateMask = patPtr->modStateMask;
+			&& (!patPtr->info || patPtr->info == curEvent->detail.info)) {
+		    unsigned long modMask = patPtr->modStateMask;
 		    unsigned long curModStateMask = bindPtr->curModStateMask;
 
-		    if (modStateMask) {
+		    if (modMask) {
 			/*
 			 * Resolve the modifier mask for Alt and Mod keys. Unfortunately this
 			 * cannot be done in ParseEventDescription, otherwise this function would
 			 * be the better place.
 			 */
-			modStateMask = ResolveModifiers(dispPtr, modStateMask);
+			modMask = ResolveModifiers(dispPtr, modMask);
 			curModStateMask = ResolveModifiers(dispPtr, curModStateMask);
 		    }
 
-		    if ((modStateMask & ~curModStateMask) == 0) {
+		    psEntry->expired = true; /* remove it from promotion list */
+
+		    if ((modMask & ~curModStateMask) == 0) {
+			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
+
 			/*
 			 * This pattern is finally matching.
 			 */
+
 			if (psPtr->numPats == patIndex + 1) {
-			    /*
-			     * This is also a final pattern.
-			     * We always prefer the pattern with higher repetition count.
-			     *
-			     * In case of same repetition count:
-			     * 1. Choose pattern with more specialized info (Key or Button).
-			     * 2. Choose pattern with more specialized modifier state.
-			     * 3. Best match don't has modifier states, or this pattern has one,
-			     *    and it is not a real subset.
-			     */
-			    if (bestCount < patPtr->count
-				|| (bestCount == patPtr->count
-				    && (!curEvent->detail.info || !bestInfo || patPtr->info)
-				    && (!bestModStateMask
-					|| (modStateMask
-					    && (modStateMask != bestModStateMask
-					    && (bestModStateMask & modStateMask) != modStateMask))))) {
-				bestPtr = psPtr;
-				bestCount = patPtr->count;
-				bestInfo = patPtr->info;
-				bestModStateMask = modStateMask;
-				if (physPtrPtr) {
-				    bestPhysPtr = *physPtrPtr;
+			    if (patPtr->count <= count) {
+				int cmp = Compare(bestPtr, psPtr, patIndex);
+
+				/*
+				 * This is also a final pattern.
+				 * We always prefer the pattern with better match.
+				 *
+				 * In case of equality:
+				 * 1. Choose pattern with more specialized modifier state.
+				 * 2. Best match don't has modifier states, or this pattern has one,
+				 *    and it is not a real subset.
+				 */
+
+				if (cmp > 0
+				    || (cmp == 0
+					&& (!bestModMask
+					    || (modMask
+						&& modMask != bestModMask
+						&& (bestModMask & modMask) != modMask)))) {
+				    bestPtr = psPtr;
+				    bestModMask = modMask;
+				    if (physPtrPtr) {
+					bestPhysPtr = *physPtrPtr;
+				    }
 				}
 			    }
-			    psEntry->expired = true; /* remove it from promotion list */
 			} else if (psSuccList) {
-			    PSEntry *psEntry;
-
 			    /*
 			     * Not a final pattern, but matching, so promote it to next level.
+			     * But do not promote if count of current pattern is not yet reached.
 			     */
+			    if (patPtr->count == psEntry->count) {
+				PSEntry *psNewEntry;
 
-			    assert(!patPtr->name);
-			    psEntry = MakeListEntry(&bindPtr->lookupTables.entryPool, psPtr);
-			    assert(psEntry->isNew);
-			    PSList_Append(psSuccList, psEntry);
-			    psEntry->window = window; /* bind to current window */
+				assert(!patPtr->name);
+				psNewEntry = MakeListEntry(&bindPtr->lookupTables.entryPool, psPtr);
+				assert(psNewEntry->isNew);
+				assert(psNewEntry->count == 1);
+				PSList_Append(psSuccList, psNewEntry);
+				psNewEntry->window = window; /* bind to current window */
+			    } else {
+				assert(psEntry->count < patPtr->count);
+				psEntry->count += 1;
+				psEntry->isNew = true; /* don't remove it from promotion list */
+				DEBUG(psEntry->expired = false);
+			    }
 			}
 		    }
 		}
@@ -3087,7 +3158,7 @@ Tk_EventObjCmd(
 		Tcl_WrongNumArgs(interp, 1, objv, "debug number");
 		return TCL_ERROR;
 	    }
-	    Tcl_GetIntFromObj(interp, objv[2], &N);
+	    Tcl_GetIntFromObj(interp, objv[2], &BindCount);
 	    return TCL_OK;
 	}
 #endif
@@ -3209,8 +3280,8 @@ DeleteVirtualEventTable(
 	PatSeq *psPtr;
 
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
+	    assert(TEST_PSENTRY(psPtr));
 	    nextPtr = psPtr->nextSeqPtr;
-	    assert(psPtr->added != (int) 0xdeadbeef);
 	    DEBUG(psPtr->owned = false);
 	    FreePatSeq(psPtr);
 	}
@@ -3276,7 +3347,7 @@ CreateVirtualEvent(
     if (!(psPtr = FindSequence(interp, &vetPtr->lookupTables, NULL, eventString, true, false, NULL))) {
 	return false;
     }
-    assert(psPtr->added != (int) 0xdeadbeef);
+    assert(TEST_PSENTRY(psPtr));
 
     /*
      * Find/create virtual event.
@@ -3372,7 +3443,7 @@ DeleteVirtualEvent(
     for (iPhys = PhysOwned_Size(owned); --iPhys >= 0; ) {
 	PatSeq *psPtr = PhysOwned_Get(owned, iPhys);
 
-	assert(psPtr->added != (int) 0xdeadbeef);
+	assert(TEST_PSENTRY(psPtr));
 
 	if (!eventPSPtr || psPtr == eventPSPtr) {
 	    VirtOwners *owners = psPtr->ptr.owners;
