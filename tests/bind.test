@@ -342,11 +342,11 @@ test bind-9.2 {Tk_DeleteBinding procedure} -setup {
 } -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i {a b c d} {
-	bind .t.f $i "binding for $i"
+        bind .t.f $i "binding for $i"
     }
     foreach i {b d a c} {
-	bind .t.f $i {}
-	lappend result [lsort [bind .t.f]]
+        bind .t.f $i {}
+        lappend result [lsort [bind .t.f]]
     }
     return $result
 } -cleanup {
@@ -357,11 +357,11 @@ test bind-9.3 {Tk_DeleteBinding procedure} -setup {
 } -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i {<1> <Meta-1> <Control-1> <Double-Alt-1>} {
-	bind .t.f $i "binding for $i"
+        bind .t.f $i "binding for $i"
     }
     foreach i {<Control-1> <Double-Alt-1> <1> <Meta-1>} {
-	bind .t.f $i {}
-	lappend result [lsort [bind .t.f]]
+        bind .t.f $i {}
+        lappend result [lsort [bind .t.f]]
     }
     return $result
 } -cleanup {
@@ -385,7 +385,7 @@ test bind-10.2 {Tk_GetBinding procedure} -body {
 test bind-11.1 {Tk_GetAllBindings procedure} -body {
     frame .t.f 
     foreach i "! a \\\{ ~ <Delete> <space> <<Paste>> <Tab> <Linefeed> <less> <Meta-a> <Acircumflex>" {
-	bind .t.f $i Test
+        bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -394,7 +394,7 @@ test bind-11.1 {Tk_GetAllBindings procedure} -body {
 test bind-11.2 {Tk_GetAllBindings procedure} -body {
     frame .t.f 
     foreach i "<Double-1> <Triple-1> <Meta-Control-a> <Double-Alt-Enter> <1>" {
-	bind .t.f $i Test
+        bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -403,7 +403,7 @@ test bind-11.2 {Tk_GetAllBindings procedure} -body {
 test bind-11.3 {Tk_GetAllBindings procedure} -body {
     frame .t.f 
     foreach i "<Double-Triple-1> abcd a<Leave>b" {
-	bind .t.f $i Test
+        bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
@@ -418,7 +418,7 @@ test bind-12.1 {Tk_DeleteAllBindings procedure} -body {
 test bind-12.2 {Tk_DeleteAllBindings procedure} -body {
     frame .t.f -class Test -width 150 -height 100
     foreach i "a b c <Meta-1> <Alt-a> <Control-a>" {
-	bind .t.f $i x
+        bind .t.f $i x
     }
     destroy .t.f
 } -result {}
@@ -6133,7 +6133,7 @@ test bind-32.2 {detection of double click should not fail} -setup {
     # the event loop overflows, and the double click will not be detected.
     # But new implementation should work properly.
     for {set i 0} {$i < 1000} {incr i} {
-	event generate .t.f <Expose>
+        event generate .t.f <Expose>
     }
     event generate .t.f <ButtonPress-1>
     event generate .t.f <ButtonRelease-1>
@@ -6179,9 +6179,8 @@ test bind-32.5 {should trigger Quadruple-1} -setup {
     bind .t.f <Triple-1> { set x "Triple" }
     bind .t.f <Double-1> { set x "Double" }
     bind .t.f <1> { set x "Single" }
-    # Old implementation triggers "Double", but new implementation
-    # will trigger "Quadruple", the latter behavior conforms to other
-    # toolkits.
+    # Old implementation triggers "Double", but new implementation will
+    # trigger "Quadruple", the latter behavior conforms to other toolkits.
     event generate .t.f <Button-1> -time 0
     event generate .t.f <Button-1> -time 400
     event generate .t.f <Button-1> -time 800
@@ -6203,6 +6202,38 @@ test bind-32.6 {problem with sendevent} -setup {
 } -cleanup {
     destroy .t.f
 } -result {sendevent=1}
+test bind-32.7 {test sequences} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Double-1> { lappend x "Double" }
+    bind .t.f <1><1><a> { lappend x "11" }
+    event generate .t.f <1>
+    event generate .t.f <1>
+    event generate .t.f <a>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {Double 11}
+test bind-32.8 {test sequences} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <a><1><Double-1><1><a> { lappend x "Double" }
+    event generate .t.f <a>
+    event generate .t.f <1>
+    event generate .t.f <1>
+    event generate .t.f <1>
+    event generate .t.f <1>
+    event generate .t.f <a>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {Double}
 
 test bind-33.1 {prefer longest match} -setup {
     pack [frame .t.f]
@@ -6210,56 +6241,138 @@ test bind-33.1 {prefer longest match} -setup {
     update
     set x {}
 } -body {
-     bind .t.f <a><1><1> { lappend x "a11" }
-     bind .t.f <Double-1> { lappend x "Double" }
-     event generate .t.f <a>
-     event generate .t.f <1>
-     event generate .t.f <1>
-     set x
+    bind .t.f <a><1><1> { lappend x "a11" }
+    bind .t.f <Double-1> { lappend x "Double" }
+    event generate .t.f <a>
+    event generate .t.f <1>
+    event generate .t.f <1>
+    set x
 } -cleanup {
     destroy .t.f
 } -result {a11}
-test bind-33.2 {don't prefer more specialized event} -setup {
+test bind-33.2 {should prefer more specialized event} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
     set x {}
 } -body {
-     bind .t.f <Double-1> { lappend x "Double" }
-     bind .t.f <1><1> { lappend x "11" }
-     event generate .t.f <1>
-     event generate .t.f <1>
-     set x
+    bind .t.f <Double-1> { lappend x "Double" }
+    bind .t.f <1><1> { lappend x "11" }
+    event generate .t.f <1>
+    event generate .t.f <1>
+    set x
 } -cleanup {
     destroy .t.f
     # This test case shows that old implementation has an issue, because
-    # in my opinion it is expected that <Double-1> is matching, because
-    # this binding is more specialized. But new implementation will be
-    # conform to old, and so "11" is the expected result.
+    # in my opinion it is expected that <Double-1> is matching, this binding
+    # is more specialized. But new implementation will be conform to old,
+    # and so "11" is the expected result.
 } -result {11}
-test bind-33.3 {don't prefer more specialized event} -setup {
+test bind-33.3 {should prefer more specialized event} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
     set x {}
 } -body {
-     bind .t.f <1><1> { lappend x "11" }
-     bind .t.f <Double-1> { lappend x "Double" }
-     event generate .t.f <1> -time 0
-     event generate .t.f <1> -time 1000
-     set x
+    bind .t.f <a><Double-1><a> { lappend x "Double" }
+    bind .t.f <a><1><1><a> { lappend x "11" }
+    event generate .t.f <a>
+    event generate .t.f <1>
+    event generate .t.f <1>
+    event generate .t.f <a>
+    set x
+} -cleanup {
+    destroy .t.f
+    # Also this test case shows that old implementation has an issue, it is
+    # expected that <a><Double-1><a> is matching, because <Double-1> is more
+    # specialized than <1><1>. But new implementation will be conform to old,
+    # and so "11" is the expected result.
+} -result {11}
+test bind-33.4 {should prefer more specialized event} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <1><1> { lappend x "11" }
+    bind .t.f <Double-1> { lappend x "Double" }
+    event generate .t.f <1> -time 0
+    event generate .t.f <1> -time 1000
+    set x
 } -cleanup {
     destroy .t.f
     # This test case also shows that old implementation has an issue, because
     # here <1><1> will be triggered correctly, but this is not consistent with
     # test case 33.2.
 } -result {11}
+test bind-33.5 {pefer most specialized} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <1><1> { lappend x "11" }
+    bind .t.f <Double-ButtonPress> { lappend x "Double" }
+    event generate .t.f <1>
+    event generate .t.f <1>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {11}
+test bind-33.6 {pefer most specialized} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <a><1><1><1><1><a> { lappend x "1111" }
+    bind .t.f <a><ButtonPress><Double-ButtonPress><ButtonPress><a> { lappend x "Any-Double-Any" }
+    event generate .t.f <a>
+    event generate .t.f <1>
+    event generate .t.f <1>
+    event generate .t.f <1>
+    event generate .t.f <1>
+    event generate .t.f <a>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {1111}
+test bind-33.7 {pefer most specialized} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <ButtonPress-1><a> { lappend x "1" }
+    bind .t.f <ButtonPress><a> { lappend x "Any" }
+    event generate .t.f <1>
+    event generate .t.f <a>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {1}
+test bind-33.8 {pefer most specialized} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Double-ButtonPress-1><a> { lappend x "1" }
+    bind .t.f <ButtonPress><ButtonPress><a> { lappend x "Any" }
+    event generate .t.f <1>
+    event generate .t.f <1>
+    event generate .t.f <a>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {1}
 
 
 # cleanup
 cleanupTests
 return
 
+# vi:set ts=4 sw=4 et:
 # Local Variables:
 # mode: tcl
 # End:
