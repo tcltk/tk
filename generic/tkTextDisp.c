@@ -3840,6 +3840,7 @@ LayoutLogicalLine(
     LayoutData *data,
     DLine *dlPtr)
 {
+    const TkTextDispLineInfo *dispLineInfo = NULL;
     TkTextSegment *segPtr, *endPtr;
     int byteIndex, byteOffset;
 
@@ -3848,8 +3849,16 @@ LayoutLogicalLine(
     byteIndex = TkTextIndexGetByteIndex(&data->index);
 
     if (data->displayLineNo > 0) {
-	const TkTextDispLineInfo *dispLineInfo =
-		TkBTreeLinePixelInfo(data->textPtr, data->logicalLinePtr)->dispLineInfo;
+	dispLineInfo = TkBTreeLinePixelInfo(data->textPtr, data->logicalLinePtr)->dispLineInfo;
+	/*
+	 * It's possible that display line info not exists. But this can only happen if the
+	 * content is out of date and will be re-computed later. In such a case the next block
+	 * of code can be skipped. This happens only in rare cases, for example when
+	 * TextBlinkProc() has been invoked.
+	 */
+    }
+
+    if (dispLineInfo) {
 	const TkTextDispLineEntry *dispLineEntry = dispLineInfo->entry + (data->displayLineNo - 1);
 
 	if (dispLineEntry->tabIndex) {
