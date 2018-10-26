@@ -806,7 +806,6 @@ TkWmMapWindow(
     /*Add window to Window menu.*/
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
     [win setExcludedFromWindowsMenu:NO];
-
 }
 
 /*
@@ -6570,11 +6569,11 @@ TkMacOSXMakeFullscreen(
 	exitFullScreen = [[[NSStatusBar systemStatusBar]
 				   statusItemWithLength:NSVariableStatusItemLength] retain];
 	NSImage *exitIcon = [NSImage imageNamed:@"NSExitFullScreenTemplate"];
-	[exitFullScreen setImage:exitIcon];
-	[exitFullScreen setHighlightMode:YES];
-	[exitFullScreen setToolTip:@"Exit Full Screen"];
-	[exitFullScreen setTarget:window];
-	[exitFullScreen setAction:@selector(restoreOldScreen:)];
+	exitFullScreen.button.image = exitIcon;
+	exitFullScreen.button.cell.highlighted = YES;
+	exitFullScreen.button.toolTip = @"Exit Full Screen";
+	exitFullScreen.button.target = window;
+	exitFullScreen.button.action = @selector(restoreOldScreen:);
 	#endif
 
 	Tk_MapWindow((Tk_Window) winPtr);
