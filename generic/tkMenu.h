@@ -91,7 +91,6 @@ typedef struct TkMenuEntry {
 				 * Malloc'ed. */
     TkSizeT accelLength;	/* Number of non-NULL characters in
 				 * accelerator. */
-#endif
     int indicatorOn;		/* True means draw indicator, false means
 				 * don't draw it. This field is ignored unless
 				 * the entry is a radio or check button. */
