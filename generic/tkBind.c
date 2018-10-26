@@ -75,7 +75,20 @@ typedef union {
  * EVENT_BUFFER_SIZE too much, shift multi-clicks will be lost.
  */
 
-#define EVENT_BUFFER_SIZE 30
+/*
+ * NOTE: The changes which were needed to make Tk work on OSX 10.14 (Mojave)
+ * also demand that the event ring be a bit bigger.  It might be wise to
+ * augment the current double-click pattern matching by adding a new
+ * DoubleClick modifier bit which could be set based on the clickCount of the
+ * Apple NSEvent object.
+ */
+
+#ifndef TK_MAC_OSX
+  #define EVENT_BUFFER_SIZE 45
+#else
+  #define EVENT_BUFFER_SIZE 30
+#endif
+
 typedef struct Tk_BindingTable_ {
     XEvent eventRing[EVENT_BUFFER_SIZE];
 				/* Circular queue of recent events (higher
