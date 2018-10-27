@@ -860,10 +860,10 @@ ConfigureRestrictProc(
 -(void) setFrameSize: (NSSize)newsize
 {
     [super setFrameSize: newsize];
-    if ([self inLiveResize]) {
-	NSWindow *w = [self window];
-	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	Tk_Window tkwin = (Tk_Window) winPtr;
+    NSWindow *w = [self window];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    if (winPtr) {
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
 	ClientData oldArg;
