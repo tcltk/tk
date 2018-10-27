@@ -387,11 +387,12 @@ static void		RemapWindows(TkWindow *winPtr,
 
 
 @implementation TKWindow: NSWindow
-#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
+
 /*
- * Override automatic fullscreen button on >10.12 because system fullscreen API
- * confuses Tk window geometry. Custom implementation setting fullscreen status using
- * Tk API and NSStatusItem in menubar to exit fullscreen status.
+ * Override toggleFullscreen on >10.12 because, for some unknown reason, the
+ * window titlebar does not get drawn in the menubar when the menubar drops down.
+ * This custom implementation adds a button in the menubar which can be used
+ * to exit fullscreen status.
  */
 
 NSStatusItem *exitFullScreen;
@@ -401,10 +402,14 @@ NSStatusItem *exitFullScreen;
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
     Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
 
-    if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
-    	TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+    if ([NSApp macMinorVersion] > 12) {
+	if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
+	    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+	} else {
+	    TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
+	}
     } else {
-    	TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
+	[super toggleFullScreen: sender];
     }
 }
 
@@ -417,7 +422,6 @@ NSStatusItem *exitFullScreen;
     [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
 }
 
-#endif
 @end
 
 @implementation TKWindow(TKWm)
@@ -6519,14 +6523,6 @@ TkMacOSXMakeFullscreen(
     int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
     int screenHeight = HeightOfScreen(Tk_Screen(winPtr));
 
-    /*
-     * When switching to Fullscreen we can save the current state in static
-     * variables because only one window can be Fullscreen at a time.
-     */
-
-    static unsigned long prevMask = 0, prevPres = 0;
-    static NSRect bounds;
-
     if (fullscreen) {
 
 	/*
@@ -6550,9 +6546,9 @@ TkMacOSXMakeFullscreen(
 	 * Save the current window state.
 	 */
 
-	bounds = [window frame];
-	prevMask = [window styleMask];
-	prevPres = [NSApp presentationOptions];
+	wmPtr->cachedBounds = [window frame];
+	wmPtr->cachedStyle = [window styleMask];
+	wmPtr->cachedPresentation = [NSApp presentationOptions];
 
 	/*
 	 * Adjust the window style so it looks like a Fullscreen window.
@@ -6578,10 +6574,9 @@ TkMacOSXMakeFullscreen(
 	 * Resize the window to fill the screen. (After setting the style!)
 	 */
 
-	NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
 	wmPtr->flags |= WM_SYNC_PENDING;
-	[window setFrame:[window frameRectForContentRect: screenBounds]
-		 display:YES];
+	NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
+	[window setFrame:screenBounds display:YES];
 	wmPtr->flags &= ~WM_SYNC_PENDING;
 	wmPtr->flags |= WM_FULLSCREEN;
     } else {
@@ -6590,8 +6585,8 @@ TkMacOSXMakeFullscreen(
 	 * Restore the previous styles and attributes.
 	 */
 
-	[NSApp setPresentationOptions: prevPres];
-	[window setStyleMask: prevMask];
+	[NSApp setPresentationOptions: wmPtr->cachedPresentation];
+	[window setStyleMask: wmPtr->cachedStyle];
 	UInt64 oldAttributes = wmPtr->attributes;
 	wmPtr->flags &= ~WM_FULLSCREEN;
 	wmPtr->attributes |= wmPtr->configAttributes &
@@ -6604,7 +6599,7 @@ TkMacOSXMakeFullscreen(
 	 */
 
 	wmPtr->flags |= WM_SYNC_PENDING;
-	[window setFrame:[window frameRectForContentRect:bounds] display:YES];
+	[window setFrame:wmPtr->cachedBounds display:YES];
 	wmPtr->flags &= ~WM_SYNC_PENDING;
     }
     return TCL_OK;
