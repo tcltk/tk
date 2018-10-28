@@ -155,7 +155,7 @@ static char scriptPath[PATH_MAX + 1] = "";
      * Record the OS version we are running on.
      */
     int minorVersion;
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
     Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
 #else
     NSOperatingSystemVersion systemVersion;

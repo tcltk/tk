@@ -6562,6 +6562,7 @@ TkMacOSXMakeFullscreen(
 
 	/*For 10.13 and later add a button for exiting Fullscreen.*/
 	if ([NSApp macMinorVersion] > 12) {
+#if __MAC_OSX_VERSION_MAX_ALLOWED > 1090
 	    exitFullScreen = [[[NSStatusBar systemStatusBar]
 				   statusItemWithLength:NSVariableStatusItemLength] retain];
 	    NSImage *exitIcon = [NSImage imageNamed:@"NSExitFullScreenTemplate"];
@@ -6570,6 +6571,7 @@ TkMacOSXMakeFullscreen(
 	    exitFullScreen.button.toolTip = @"Exit Full Screen";
 	    exitFullScreen.button.target = window;
 	    exitFullScreen.button.action = @selector(restoreOldScreen:);
+#endif
 	}
 
 	/*
