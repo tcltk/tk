@@ -349,8 +349,8 @@ VISIBILITY_HIDDEN
 
 @interface NSWindow(TKWm)
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
-- (NSPoint) convertPointToScreen:(NSPoint)point;
-- (NSPoint) convertPointFromScreen:(NSPoint)point;
+- (NSPoint) tkConvertPointToScreen:(NSPoint)point;
+- (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
 #endif
 @end
 
