@@ -566,7 +566,7 @@ Tk_EntryObjCmd(
     Tk_CreateSelHandler(entryPtr->tkwin, XA_PRIMARY, XA_STRING,
 	    EntryFetchSelection, entryPtr, XA_STRING);
 
-    if ((Tk_InitOptions(interp, (char *) entryPtr, optionTable, tkwin)
+    if ((Tk_InitOptions(interp, entryPtr, optionTable, tkwin)
 	    != TCL_OK) ||
 	    (ConfigureEntry(interp, entryPtr, objc-2, objv+2) != TCL_OK)) {
 	Tk_DestroyWindow(entryPtr->tkwin);
@@ -654,7 +654,7 @@ EntryWidgetObjCmd(
 	    goto error;
 	}
 
-	objPtr = Tk_GetOptionValue(interp, (char *) entryPtr,
+	objPtr = Tk_GetOptionValue(interp, entryPtr,
 		entryPtr->optionTable, objv[2], entryPtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
@@ -664,7 +664,7 @@ EntryWidgetObjCmd(
 
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) entryPtr,
+	    objPtr = Tk_GetOptionInfo(interp, entryPtr,
 		    entryPtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL,
 		    entryPtr->tkwin);
@@ -1151,7 +1151,7 @@ ConfigureEntry(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) entryPtr,
+	    if (Tk_SetOptions(interp, entryPtr,
 		    entryPtr->optionTable, objc, objv,
 		    entryPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -2132,9 +2132,7 @@ InsertChars(
     const char *value)		/* New characters to add (NULL-terminated
 				 * string). */
 {
-    ptrdiff_t byteIndex;
-    size_t byteCount, newByteCount;
-    int oldChars, charsAdded;
+    size_t byteIndex, byteCount, newByteCount, oldChars, charsAdded;
     const char *string;
     char *newStr;
 
@@ -3350,7 +3348,7 @@ EntryValidate(
  *
  * Results:
  *	TCL_OK if the validatecommand accepts the new string, TCL_ERROR if any
- *	problems occured with validatecommand.
+ *	problems occurred with validatecommand.
  *
  * Side effects:
  *	The insertion/deletion may be aborted, and the validatecommand might
@@ -3407,7 +3405,7 @@ EntryValidateChange(
     /*
      * If e->validate has become VALIDATE_NONE during the validation, or we
      * now have VALIDATE_VAR set (from EntrySetValue) and didn't before, it
-     * means that a loop condition almost occured. Do not allow this
+     * means that a loop condition almost occurred. Do not allow this
      * validation result to finish.
      */
 
@@ -3761,7 +3759,7 @@ Tk_SpinboxObjCmd(
     Tk_CreateSelHandler(entryPtr->tkwin, XA_PRIMARY, XA_STRING,
 	    EntryFetchSelection, entryPtr, XA_STRING);
 
-    if (Tk_InitOptions(interp, (char *) sbPtr, optionTable, tkwin)
+    if (Tk_InitOptions(interp, sbPtr, optionTable, tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(entryPtr->tkwin);
 	return TCL_ERROR;
@@ -3856,7 +3854,7 @@ SpinboxWidgetObjCmd(
 	    goto error;
 	}
 
-	objPtr = Tk_GetOptionValue(interp, (char *) entryPtr,
+	objPtr = Tk_GetOptionValue(interp, entryPtr,
 		entryPtr->optionTable, objv[2], entryPtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
@@ -3866,7 +3864,7 @@ SpinboxWidgetObjCmd(
 
     case SB_CMD_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) entryPtr,
+	    objPtr = Tk_GetOptionInfo(interp, entryPtr,
 		    entryPtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    entryPtr->tkwin);
 	    if (objPtr == NULL) {

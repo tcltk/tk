@@ -259,6 +259,9 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	"Background", DEF_MENU_ACTIVE_FG_COLOR,
 	Tk_Offset(TkMenu, activeFgPtr), -1, 0,
 	(ClientData) DEF_MENU_ACTIVE_FG_MONO, 0},
+    {TK_OPTION_RELIEF, "-activerelief", "activeRelief", "Relief",
+	DEF_MENU_ACTIVE_RELIEF, Tk_Offset(TkMenu, activeReliefPtr),
+	-1, 0, NULL, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENU_BG_COLOR, Tk_Offset(TkMenu, borderPtr), -1, 0,
 	(ClientData) DEF_MENU_BG_MONO, 0},
@@ -465,7 +468,7 @@ Tk_MenuObjCmd(
     Tk_CreateEventHandler(newWin,
 	    ExposureMask|StructureNotifyMask|ActivateMask,
 	    TkMenuEventProc, menuPtr);
-    if (Tk_InitOptions(interp, (char *) menuPtr,
+    if (Tk_InitOptions(interp, menuPtr,
 	    tsdPtr->menuOptionTable, menuPtr->tkwin)
 	    != TCL_OK) {
     	Tk_DestroyWindow(menuPtr->tkwin);
@@ -672,7 +675,7 @@ MenuWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    goto error;
 	}
-	resultPtr = Tk_GetOptionValue(interp, (char *) menuPtr,
+	resultPtr = Tk_GetOptionValue(interp, menuPtr,
 		tsdPtr->menuOptionTable, objv[2],
 		menuPtr->tkwin);
 	if (resultPtr == NULL) {
@@ -692,7 +695,7 @@ MenuWidgetObjCmd(
 	Tcl_Obj *resultPtr;
 
 	if (objc == 2) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) menuPtr,
+	    resultPtr = Tk_GetOptionInfo(interp, menuPtr,
 		    tsdPtr->menuOptionTable, NULL,
 		    menuPtr->tkwin);
 	    if (resultPtr == NULL) {
@@ -702,7 +705,7 @@ MenuWidgetObjCmd(
 		Tcl_SetObjResult(interp, resultPtr);
 	    }
 	} else if (objc == 3) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) menuPtr,
+	    resultPtr = Tk_GetOptionInfo(interp, menuPtr,
 		    tsdPtr->menuOptionTable, objv[2],
 		    menuPtr->tkwin);
 	    if (resultPtr == NULL) {
@@ -776,7 +779,7 @@ MenuWidgetObjCmd(
 	}
 	mePtr = menuPtr->entries[index];
 	Tcl_Preserve(mePtr);
-	resultPtr = Tk_GetOptionValue(interp, (char *) mePtr,
+	resultPtr = Tk_GetOptionValue(interp, mePtr,
 		mePtr->optionTable, objv[3], menuPtr->tkwin);
 	Tcl_Release(mePtr);
 	if (resultPtr == NULL) {
@@ -802,7 +805,7 @@ MenuWidgetObjCmd(
 	mePtr = menuPtr->entries[index];
 	Tcl_Preserve(mePtr);
 	if (objc == 3) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) mePtr,
+	    resultPtr = Tk_GetOptionInfo(interp, mePtr,
 		    mePtr->optionTable, NULL, menuPtr->tkwin);
 	    if (resultPtr == NULL) {
 		result = TCL_ERROR;
@@ -811,7 +814,7 @@ MenuWidgetObjCmd(
 		Tcl_SetObjResult(interp, resultPtr);
 	    }
 	} else if (objc == 4) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) mePtr,
+	    resultPtr = Tk_GetOptionInfo(interp, mePtr,
 		    mePtr->optionTable, objv[3], menuPtr->tkwin);
 	    if (resultPtr == NULL) {
 		result = TCL_ERROR;
@@ -1528,7 +1531,7 @@ ConfigureMenu(
     for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
 	menuListPtr->errorStructPtr = ckalloc(sizeof(Tk_SavedOptions));
-	result = Tk_SetOptions(interp, (char *) menuListPtr,
+	result = Tk_SetOptions(interp, menuListPtr,
 		tsdPtr->menuOptionTable, objc, objv,
 		menuListPtr->tkwin, menuListPtr->errorStructPtr, NULL);
 	if (result != TCL_OK) {
@@ -1924,7 +1927,7 @@ ConfigureMenuEntry(
 
     result = TCL_OK;
     if (menuPtr->tkwin != NULL) {
-	if (Tk_SetOptions(menuPtr->interp, (char *) mePtr,
+	if (Tk_SetOptions(menuPtr->interp, mePtr,
 		mePtr->optionTable, objc, objv, menuPtr->tkwin,
 		&errorStruct, NULL) != TCL_OK) {
 	    return TCL_ERROR;
@@ -2298,7 +2301,7 @@ MenuNewEntry(
     mePtr->entryFlags = 0;
     mePtr->index = index;
     mePtr->nextCascadePtr = NULL;
-    if (Tk_InitOptions(menuPtr->interp, (char *) mePtr,
+    if (Tk_InitOptions(menuPtr->interp, mePtr,
 	    mePtr->optionTable, menuPtr->tkwin) != TCL_OK) {
 	ckfree(mePtr);
 	return NULL;
