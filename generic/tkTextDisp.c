@@ -28,7 +28,7 @@
 #define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
 #else
 #define OK_TO_LOG 1
-#define FORCE_DISPLAY(winPtr) do {} while 0
+#define FORCE_DISPLAY(winPtr)
 #endif
 
 /*
