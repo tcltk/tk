@@ -204,16 +204,16 @@ static int windowHashInit = false;
 
 @implementation NSWindow(TKWm)
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) convertPointToScreen: (NSPoint) point
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
     return [self convertBaseToScreen:point];
 }
-- (NSPoint) convertPointFromScreen: (NSPoint)point
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
     return [self convertScreenToBase:point];
 }
-#elif MAC_OS_X_VERSION_MIN_REQUIRED < 101400
-- (NSPoint) convertPointToScreen: (NSPoint) point
+#else
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
     NSRect pointrect;
     pointrect.origin = point;
@@ -221,7 +221,7 @@ static int windowHashInit = false;
     pointrect.size.height = 0;
     return [self convertRectToScreen:pointrect].origin;
 }
-- (NSPoint) convertPointFromScreen: (NSPoint)point
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
     NSRect pointrect;
     pointrect.origin = point;
