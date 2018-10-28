@@ -246,6 +246,9 @@ typedef struct {
 /*
  * The following structure defines a pattern, which is matched against X
  * events as part of the process of converting X events into Tcl commands.
+ *
+ * For technical reasons we do not use 'union Detail', although this would be possible,
+ * instead 'info' and 'name' are both included.
  */
 
 typedef struct {
@@ -323,14 +326,6 @@ typedef struct PatSeq {
 
 #define NEARBY_PIXELS	5
 #define NEARBY_MS	500
-
-/*
- * Constants for access to appropriate slot container.
- */
-
-#define PRESS		0 /* for ButtonPress */
-#define RELEASE		1 /* for ButtonRelease */
-#define PRESSED		2 /* for MotionNotify */
 
 /*
  * Constant for any (non-zero) button.
@@ -2114,7 +2109,7 @@ Tk_BindEvent(
 	bindPtr->eventInfo[KeyPress].countDetailed = 0;
 	bindPtr->eventInfo[KeyRelease].countAny = 0;
 	bindPtr->eventInfo[KeyRelease].countDetailed = 0;
-	// fallthru
+	/* fallthru */
     case MotionNotify:
 	if (eventPtr->xmotion.time) {
 	    bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
@@ -2541,7 +2536,7 @@ VirtPatIsBound(
 	    if (physModMask == 0
 		    || virtModMask == physModMask
 		    || (virtModMask & physModMask) != physModMask) {
-		return false; // we cannot surpass this match
+		return false; /* we cannot surpass this match */
 	    }
 	}
     }
