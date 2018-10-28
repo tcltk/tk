@@ -202,6 +202,14 @@ The slaves will no longer be managed by the grid geometry manager.
 The configuration options for that window are forgotten, so that if the
 slave is managed once more by the grid geometry manager, the initial
 default settings are used.
+.RS
+.PP
+.VS TIP518
+If the last slave of the master becomes unmanaged, this will also send
+the virtual event \fB<<NoManagedChild>>\fR to the master; the master
+may choose to resize itself (or otherwise respond) to such a change.
+.VE TIP518
+.RE
 .TP
 \fBgrid info \fIslave\fR
 .
@@ -278,6 +286,14 @@ However, the configuration options for that window are remembered,
 so that if the
 slave is managed once more by the grid geometry manager, the previous
 values are retained.
+.RS
+.PP
+.VS TIP518
+If the last slave of the master becomes unmanaged, this will also send
+the virtual event \fB<<NoManagedChild>>\fR to the master; the master
+may choose to resize itself (or otherwise respond) to such a change.
+.VE TIP518
+.RE
 .TP
 \fBgrid size \fImaster\fR
 .

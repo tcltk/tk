@@ -1735,12 +1735,13 @@ ArrangeGrid(
      * If the master has no slaves anymore, then don't change the master size.
      * Otherwise there is no way to "relinquish" control over the master
      * so another geometry manager can take over.
-     * Send event to "NoManagedChild" to inform about no managed grid but
-     * not resized.
+     *
+     * Sends the event "NoManagedChild" to the master to inform it about there
+     * being no managed children inside it.
      */
 
     if (masterPtr->slavePtr == NULL) {
-        TkSendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
+	TkSendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
 	return;
     }
 
