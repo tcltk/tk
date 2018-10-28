@@ -388,39 +388,34 @@ static void		RemapWindows(TkWindow *winPtr,
 
 @implementation TKWindow: NSWindow
 
-/*
- * Override toggleFullscreen on >10.12 because, for some unknown reason, the
- * window titlebar does not get drawn in the menubar when the menubar drops down.
- * This custom implementation adds a button in the menubar which can be used
- * to exit fullscreen status.
- */
+/* Custom fullscreen implementation on 10.13 and above. On older versions of macOS dating back to 10.7, the NSWindow fullscreen API was opt-in, requiring explicit calls to toggleFullScreen. On 10.13, the API became implicit, applying to all NSWindows unless they were marked non-resizable; this caused issues with Tk, which was not aware of changes in screen geometry. Here we override the toggleFullScreen call to hook directly into Tk's own fullscreen API, allowing Tk to function smoothly with the Mac's fullscreen button.*/
 
 NSStatusItem *exitFullScreen;
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
+
 - (void)toggleFullScreen:(id)sender
 {
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
+  TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+  Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
 
-    if ([NSApp macMinorVersion] > 12) {
-	if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
-	    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
-	} else {
-	    TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
-	}
-    } else {
-	[super toggleFullScreen: sender];
-    }
+  if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
+    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+  } else {
+    TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
+  }
 }
+
 
 -(void)restoreOldScreen:(id)sender {
 
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
+  TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+  Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
 
-    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
-    [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
+  TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+  [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
 }
+#endif
 
 @end
 
@@ -6564,7 +6559,7 @@ TkMacOSXMakeFullscreen(
 				   statusItemWithLength:NSVariableStatusItemLength] retain];
 	    NSImage *exitIcon = [NSImage imageNamed:@"NSExitFullScreenTemplate"];
 	    exitFullScreen.button.image = exitIcon;
-	    exitFullScreen.button.cell.highlighted = YES;
+	    exitFullScreen.button.cell.highlighted = NO;
 	    exitFullScreen.button.toolTip = @"Exit Full Screen";
 	    exitFullScreen.button.target = window;
 	    exitFullScreen.button.action = @selector(restoreOldScreen:);
