@@ -242,7 +242,7 @@ Tk_MessageObjCmd(
     optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
     msgPtr = ckalloc(sizeof(Message));
-    memset(msgPtr, 0, (size_t) sizeof(Message));
+    memset(msgPtr, 0, sizeof(Message));
 
     /*
      * Set values for those fields that don't take a 0 or NULL value.
@@ -267,7 +267,7 @@ Tk_MessageObjCmd(
     Tk_CreateEventHandler(msgPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    MessageEventProc, msgPtr);
-    if (Tk_InitOptions(interp, (char *)msgPtr, optionTable, tkwin) != TCL_OK) {
+    if (Tk_InitOptions(interp, msgPtr, optionTable, tkwin) != TCL_OK) {
 	Tk_DestroyWindow(msgPtr->tkwin);
 	return TCL_ERROR;
     }
@@ -331,7 +331,7 @@ MessageWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    result = TCL_ERROR;
 	} else {
-	    objPtr = Tk_GetOptionValue(interp, (char *) msgPtr,
+	    objPtr = Tk_GetOptionValue(interp, msgPtr,
 		    msgPtr->optionTable, objv[2], msgPtr->tkwin);
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
@@ -343,7 +343,7 @@ MessageWidgetObjCmd(
 	break;
     case MESSAGE_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) msgPtr,
+	    objPtr = Tk_GetOptionInfo(interp, msgPtr,
 		    msgPtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    msgPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -455,7 +455,7 @@ ConfigureMessage(
 		MessageTextVarProc, msgPtr);
     }
 
-    if (Tk_SetOptions(interp, (char *) msgPtr, msgPtr->optionTable, objc, objv,
+    if (Tk_SetOptions(interp, msgPtr, msgPtr->optionTable, objc, objv,
 	    msgPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	return TCL_ERROR;

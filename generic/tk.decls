@@ -105,7 +105,7 @@ declare 18 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 19 {
-    CONST86 char *Tk_CanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
+    const char *Tk_CanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 20 {
@@ -404,7 +404,7 @@ declare 97 {
 }
 declare 98 {
     ClientData Tk_GetImageMasterData(Tcl_Interp *interp,
-	    const char *name, CONST86 Tk_ImageType **typePtrPtr)
+	    const char *name, const Tk_ImageType **typePtrPtr)
 }
 declare 99 {
     Tk_ItemType *Tk_GetItemTypes(void)
@@ -744,7 +744,7 @@ declare 194 {
     void  Tk_FreeColorFromObj(Tk_Window tkwin, Tcl_Obj *objPtr)
 }
 declare 195 {
-    void  Tk_FreeConfigOptions(char *recordPtr, Tk_OptionTable optionToken,
+    void  Tk_FreeConfigOptions(void *recordPtr, Tk_OptionTable optionToken,
 	    Tk_Window tkwin)
 }
 declare 196 {
@@ -774,11 +774,11 @@ declare 203 {
 }
 declare 204 {
     Tcl_Obj *Tk_GetOptionInfo(Tcl_Interp *interp,
-	    char *recordPtr, Tk_OptionTable optionTable,
+	    void *recordPtr, Tk_OptionTable optionTable,
 	    Tcl_Obj *namePtr, Tk_Window tkwin)
 }
 declare 205 {
-    Tcl_Obj *Tk_GetOptionValue(Tcl_Interp *interp, char *recordPtr,
+    Tcl_Obj *Tk_GetOptionValue(Tcl_Interp *interp, void *recordPtr,
 	    Tk_OptionTable optionTable, Tcl_Obj *namePtr, Tk_Window tkwin)
 }
 declare 206 {
@@ -802,7 +802,7 @@ declare 210 {
 	    int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr)
 }
 declare 211 {
-    int	 Tk_InitOptions(Tcl_Interp *interp, char *recordPtr,
+    int	 Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
 	    Tk_OptionTable optionToken, Tk_Window tkwin)
 }
 declare 212 {
@@ -813,7 +813,7 @@ declare 213 {
     void  Tk_RestoreSavedOptions(Tk_SavedOptions *savePtr)
 }
 declare 214 {
-    int	 Tk_SetOptions(Tcl_Interp *interp, char *recordPtr,
+    int	 Tk_SetOptions(Tcl_Interp *interp, void *recordPtr,
 	    Tk_OptionTable optionTable, int objc,
 	    Tcl_Obj *const objv[], Tk_Window tkwin,
 	    Tk_SavedOptions *savePtr, int *maskPtr)
@@ -1001,22 +1001,22 @@ declare 260 {
 }
 declare 261 {
     void Tk_GetElementSize(Tk_Style style, Tk_StyledElement element,
-	    char *recordPtr, Tk_Window tkwin, int width, int height,
+	    void *recordPtr, Tk_Window tkwin, int width, int height,
 	    int inner, int *widthPtr, int *heightPtr)
 }
 declare 262 {
     void Tk_GetElementBox(Tk_Style style, Tk_StyledElement element,
-	    char *recordPtr, Tk_Window tkwin, int x, int y, int width,
+	    void *recordPtr, Tk_Window tkwin, int x, int y, int width,
 	    int height, int inner, int *xPtr, int *yPtr, int *widthPtr,
 	    int *heightPtr)
 }
 declare 263 {
     int Tk_GetElementBorderWidth(Tk_Style style, Tk_StyledElement element,
-	    char *recordPtr, Tk_Window tkwin)
+	    void *recordPtr, Tk_Window tkwin)
 }
 declare 264 {
     void Tk_DrawElement(Tk_Style style, Tk_StyledElement element,
-	    char *recordPtr, Tk_Window tkwin, Drawable d, int x, int y,
+	    void *recordPtr, Tk_Window tkwin, Drawable d, int x, int y,
 	    int width, int height, int state)
 }
 

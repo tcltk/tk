@@ -567,7 +567,7 @@ Tk_ListboxObjCmd(
 	    ListboxEventProc, listPtr);
     Tk_CreateSelHandler(listPtr->tkwin, XA_PRIMARY, XA_STRING,
 	    ListboxFetchSelection, listPtr, XA_STRING);
-    if (Tk_InitOptions(interp, (char *)listPtr,
+    if (Tk_InitOptions(interp, listPtr,
 	    optionTables->listboxOptionTable, tkwin) != TCL_OK) {
 	Tk_DestroyWindow(listPtr->tkwin);
 	return TCL_ERROR;
@@ -682,7 +682,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 
-	objPtr = Tk_GetOptionValue(interp, (char *) listPtr,
+	objPtr = Tk_GetOptionValue(interp, listPtr,
 		listPtr->optionTable, objv[2], listPtr->tkwin);
 	if (objPtr == NULL) {
 	    result = TCL_ERROR;
@@ -694,7 +694,7 @@ ListboxWidgetObjCmd(
 
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) listPtr,
+	    objPtr = Tk_GetOptionInfo(interp, listPtr,
 		    listPtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL, listPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -926,7 +926,7 @@ ListboxWidgetObjCmd(
 
 	attrPtr = ListboxGetItemAttributes(interp, listPtr, index);
 	if (objc <= 4) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) attrPtr,
+	    objPtr = Tk_GetOptionInfo(interp, attrPtr,
 		    listPtr->itemAttrOptionTable,
 		    (objc == 4) ? objv[3] : NULL, listPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -1416,7 +1416,7 @@ ListboxGetItemAttributes(
 	attrs->selBorder = NULL;
 	attrs->fgColor = NULL;
 	attrs->selFgColor = NULL;
-	Tk_InitOptions(interp, (char *)attrs, listPtr->itemAttrOptionTable,
+	Tk_InitOptions(interp, attrs, listPtr->itemAttrOptionTable,
 		listPtr->tkwin);
 	Tcl_SetHashValue(entry, attrs);
     } else {
@@ -1579,7 +1579,7 @@ ConfigureListbox(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) listPtr,
+	    if (Tk_SetOptions(interp, listPtr,
 		    listPtr->optionTable, objc, objv,
 		    listPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -1725,7 +1725,7 @@ ConfigureListboxItem(
 {
     Tk_SavedOptions savedOptions;
 
-    if (Tk_SetOptions(interp, (char *)attrs,
+    if (Tk_SetOptions(interp, attrs,
 	    listPtr->itemAttrOptionTable, objc, objv, listPtr->tkwin,
 	    &savedOptions, NULL) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
@@ -3166,14 +3166,14 @@ ListboxFetchSelection(
      * Copy the requested portion of the selection to the buffer.
      */
 
-    count = length - offset;
-    if (count <= 0) {
+    if (length <= (size_t)offset) {
 	count = 0;
     } else {
+	count = length - offset;
 	if (count > maxBytes) {
 	    count = maxBytes;
 	}
-	memcpy(buffer, Tcl_DStringValue(&selection) + offset, (size_t) count);
+	memcpy(buffer, Tcl_DStringValue(&selection) + offset, count);
     }
     buffer[count] = '\0';
     Tcl_DStringFree(&selection);

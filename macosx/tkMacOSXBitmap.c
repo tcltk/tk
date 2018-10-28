@@ -173,7 +173,7 @@ TkpCreateNativeBitmap(
     OSErr err;
 
     err = ChkErr(GetIconRef, kOnSystemDisk, kSystemIconsCreator,
-	    PTR2UINT(source), &icon);
+	    (unsigned int)PTR2UINT(source), &icon);
     if (err == noErr) {
 	pixmap = GetBitmapForIcon(display, icon, CGSizeMake(builtInIconSize,
 		builtInIconSize));
@@ -210,7 +210,7 @@ OSTypeFromString(const char *s, OSType *t) {
     Tcl_UtfToExternalDString(encoding, s, -1, &ds);
     if (Tcl_DStringLength(&ds) <= 4) {
 	char string[4] = {};
-	memcpy(string, Tcl_DStringValue(&ds), (size_t) Tcl_DStringLength(&ds));
+	memcpy(string, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
 	*t = (OSType) string[0] << 24 | (OSType) string[1] << 16 |
 	     (OSType) string[2] <<  8 | (OSType) string[3];
 	result = TCL_OK;

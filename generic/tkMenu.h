@@ -68,11 +68,7 @@ typedef struct TkMenuEntry {
     Tk_OptionTable optionTable;	/* Option table for this menu entry. */
     Tcl_Obj *labelPtr;		/* Main text label displayed in entry (NULL if
 				 * no label). */
-#if TK_MAJOR_VERSION > 8
-    size_t labelLength;		/* Number of non-NULL characters in label. */
-#else
-    unsigned int labelLength;		/* Number of non-NULL characters in label. */
-#endif
+    TkSizeT labelLength;	/* Number of non-NULL characters in label. */
     int state;			/* State of button for display purposes:
 				 * normal, active, or disabled. */
     int underline;		/* Value of -underline option: specifies index
@@ -93,13 +89,8 @@ typedef struct TkMenuEntry {
     Tcl_Obj *accelPtr;		/* Accelerator string displayed at right of
 				 * menu entry. NULL means no such accelerator.
 				 * Malloc'ed. */
-#if TK_MAJOR_VERSION > 8
-    size_t accelLength;		/* Number of non-NULL characters in
+    TkSizeT accelLength;	/* Number of non-NULL characters in
 				 * accelerator. */
-#else
-    unsigned int accelLength;		/* Number of non-NULL characters in
-				 * accelerator. */
-#endif
     int indicatorOn;		/* True means draw indicator, false means
 				 * don't draw it. This field is ignored unless
 				 * the entry is a radio or check button. */
@@ -391,6 +382,7 @@ typedef struct TkMenu {
 				/* We actually have to allocate these because
 				 * multiple menus get changed during one
 				 * ConfigureMenu call. */
+    Tcl_Obj *activeReliefPtr;	/* 3-d effect for active element. */
 } TkMenu;
 
 /*

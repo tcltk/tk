@@ -260,7 +260,7 @@ Tk_AddOption(
     register const char *p;
     const char *field;
     int count, firstField;
-    ptrdiff_t length;
+    size_t length;
 #define TMP_SIZE 100
     char tmp[TMP_SIZE+1];
     ThreadSpecificData *tsdPtr =
@@ -311,7 +311,7 @@ Tk_AddOption(
 	if (length > TMP_SIZE) {
 	    length = TMP_SIZE;
 	}
-	strncpy(tmp, field, (size_t) length);
+	strncpy(tmp, field, length);
 	tmp[length] = 0;
 	newEl.nameUid = Tk_GetUid(tmp);
 	if (isupper(UCHAR(*field))) {

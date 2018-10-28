@@ -1272,7 +1272,6 @@ size_t TkUniCharToUtf(int ch, char *buf)
 
 #endif
 
-#ifndef TCL_TYPE_I
 unsigned char *
 TkGetByteArrayFromObj(
 	Tcl_Obj *objPtr,
@@ -1281,7 +1280,7 @@ TkGetByteArrayFromObj(
     int length;
 
     unsigned char *result = Tcl_GetByteArrayFromObj(objPtr, &length);
-#if TK_MAJOR_VERSION > 8
+#if TCL_MAJOR_VERSION > 8
     if (sizeof(TCL_HASH_TYPE) > sizeof(int)) {
 	/* 64-bit and TIP #494 situation: */
 	 *lengthPtr = *(TCL_HASH_TYPE *) objPtr->internalRep.twoPtrValue.ptr1;
@@ -1291,7 +1290,6 @@ TkGetByteArrayFromObj(
     *lengthPtr = (size_t) (unsigned) length;
     return result;
 }
-#endif /* !TCL_TYPE_I */
 
 /*
  * Local Variables:

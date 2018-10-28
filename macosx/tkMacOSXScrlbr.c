@@ -68,7 +68,7 @@ typedef struct ScrollbarMetrics {
 
 
 static ScrollbarMetrics metrics = {
-  (15, 54, 26, 14, 14, kControlSizeNormal), /* kThemeScrollBarMedium */
+  15, 54, 26, 14, 14, kControlSizeNormal /* kThemeScrollBarMedium */
 };
 
 HIThemeTrackDrawInfo info = {
@@ -231,17 +231,18 @@ TkpComputeScrollbarGeometry(
     * Using code from tkUnixScrlbr.c because Unix scroll bindings are
     * driving the display at the script level. All the Mac scrollbar
     * has to do is re-draw itself.
+    * There is a difference with Unix however: on macOS later than 10.6
+    * (Snow Leopard) the scrollbars have no arrows at all. This is
+    * handled by having scrollPtr->arrowLength set to zero.
     */
 
-    int width, fieldLength;
+    int fieldLength;
 
     if (scrollPtr->highlightWidth < 0) {
        scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    width = (scrollPtr->vertical) ? Tk_Width(scrollPtr->tkwin)
-           : Tk_Height(scrollPtr->tkwin);
-    scrollPtr->arrowLength = width - 2*scrollPtr->inset + 1;
+    scrollPtr->arrowLength = 0;
     fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
            : Tk_Width(scrollPtr->tkwin))
            - 2*(scrollPtr->arrowLength + scrollPtr->inset);
@@ -278,15 +279,16 @@ TkpComputeScrollbarGeometry(
      * window, if any). Then arrange for the window to be redisplayed.
      */
 
-    if (scrollPtr->vertical) {
+      if (scrollPtr->vertical) {
        Tk_GeometryRequest(scrollPtr->tkwin,
               scrollPtr->width + 2*scrollPtr->inset,
               2*(scrollPtr->arrowLength + scrollPtr->borderWidth
-              + scrollPtr->inset));
+              + scrollPtr->inset) + metrics.minThumbHeight);
     } else {
        Tk_GeometryRequest(scrollPtr->tkwin,
               2*(scrollPtr->arrowLength + scrollPtr->borderWidth
-              + scrollPtr->inset), scrollPtr->width + 2*scrollPtr->inset);
+              + scrollPtr->inset) + metrics.minThumbHeight,
+              scrollPtr->width + 2*scrollPtr->inset);
     }
     Tk_SetInternalBorder(scrollPtr->tkwin, scrollPtr->inset);
 }
@@ -375,30 +377,25 @@ TkpScrollbarPosition(
     int x, int y)		/* Coordinates within scrollPtr's window. */
 {
 
-  /*
+   /*
    * Using code from tkUnixScrlbr.c because Unix scroll bindings are
    * driving the display at the script level. All the Mac scrollbar
    * has to do is re-draw itself.
    */
 
-    int length, fieldlength, width, tmp;
+    int length, width, tmp;
     register const int inset = scrollPtr->inset;
-    register const int arrowSize = scrollPtr->arrowLength + inset;
 
     if (scrollPtr->vertical) {
   	length = Tk_Height(scrollPtr->tkwin);
-  	fieldlength = length - 2 * arrowSize;
   	width = Tk_Width(scrollPtr->tkwin);
     } else {
   	tmp = x;
   	x = y;
   	y = tmp;
   	length = Tk_Width(scrollPtr->tkwin);
-  	fieldlength = length - 2 * arrowSize;
   	width = Tk_Height(scrollPtr->tkwin);
     }
-
-    fieldlength = fieldlength < 0 ? 0 : fieldlength;
 
     if (x<inset || x>=width-inset || y<inset || y>=length-inset) {
   	return OUTSIDE;
@@ -409,19 +406,20 @@ TkpScrollbarPosition(
      * TkpDisplayScrollbar. Be sure to keep the two consistent.
      */
 
+    if (y < inset + scrollPtr->arrowLength) {
+  	return TOP_ARROW;
+    }
     if (y < scrollPtr->sliderFirst) {
   	return TOP_GAP;
     }
     if (y < scrollPtr->sliderLast) {
   	return SLIDER;
     }
-    if (y < fieldlength){
-  	return BOTTOM_GAP;
+    if (y >= length - (scrollPtr->arrowLength + inset)) {
+  	return BOTTOM_ARROW;
     }
-    if (y < fieldlength + arrowSize) {
-  	return TOP_ARROW;
-    }
-    return BOTTOM_ARROW;
+
+    return BOTTOM_GAP;
 
 }
 

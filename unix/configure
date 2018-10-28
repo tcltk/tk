@@ -695,6 +695,7 @@ TCL_LIBS
 LIBOBJS
 AR
 RANLIB
+SHARED_BUILD
 EGREP
 GREP
 CPP
@@ -755,7 +756,8 @@ PACKAGE_VERSION
 PACKAGE_TARNAME
 PACKAGE_NAME
 PATH_SEPARATOR
-SHELL'
+SHELL
+OBJEXT_FOR_BUILD'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
@@ -3981,6 +3983,7 @@ $as_echo "#define STATIC_BUILD 1" >>confdefs.h
     fi
 
 
+
 #--------------------------------------------------------------------
 # The statements below define a collection of compile flags.  This
 # macro depends on the value of SHARED_BUILD, and should be called
@@ -4271,7 +4274,7 @@ fi
     if test "$GCC" = yes; then :
 
 	CFLAGS_OPTIMIZE=-O2
-	CFLAGS_WARNING="-Wall -Wwrite-strings -Wsign-compare -Wdeclaration-after-statement"
+	CFLAGS_WARNING="-Wall -Wwrite-strings -Wsign-compare -Wdeclaration-after-statement -Wpointer-arith"
 
 else
 
