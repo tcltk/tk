@@ -413,6 +413,7 @@ NSStatusItem *exitFullScreen;
   } else {
       NSLog (@"toggleFullScreen is ignored by Tk on OSX versions < 10.13");
   }
+}
 
 -(void)restoreOldScreen:(id)sender {
 
