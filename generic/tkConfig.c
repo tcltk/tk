@@ -115,14 +115,14 @@ typedef struct OptionTable {
  * Forward declarations for functions defined later in this file:
  */
 
-static int		DoObjConfig(Tcl_Interp *interp, char *recordPtr,
+static int		DoObjConfig(Tcl_Interp *interp, void *recordPtr,
 			    Option *optionPtr, Tcl_Obj *valuePtr,
 			    Tk_Window tkwin, Tk_SavedOption *savePtr);
 static void		FreeResources(Option *optionPtr, Tcl_Obj *objPtr,
-			    char *internalPtr, Tk_Window tkwin);
-static Tcl_Obj *	GetConfigList(char *recordPtr,
+			    void *internalPtr, Tk_Window tkwin);
+static Tcl_Obj *	GetConfigList(void *recordPtr,
 			    Option *optionPtr, Tk_Window tkwin);
-static Tcl_Obj *	GetObjectForOption(char *recordPtr,
+static Tcl_Obj *	GetObjectForOption(void *recordPtr,
 			    Option *optionPtr, Tk_Window tkwin);
 static Option *		GetOption(const char *name, OptionTable *tablePtr);
 static Option *		GetOptionFromObj(Tcl_Interp *interp,
@@ -279,7 +279,7 @@ Tk_CreateOptionTable(
 	    }
 	}
 	if (((specPtr->type == TK_OPTION_STRING)
-		&& (specPtr->internalOffset >= 0))
+		&& (specPtr->internalOffset != TCL_AUTO_LENGTH))
 		|| (specPtr->type == TK_OPTION_COLOR)
 		|| (specPtr->type == TK_OPTION_FONT)
 		|| (specPtr->type == TK_OPTION_BITMAP)
@@ -381,7 +381,7 @@ int
 Tk_InitOptions(
     Tcl_Interp *interp,		/* Interpreter for error reporting. NULL means
 				 * don't leave an error message. */
-    char *recordPtr,		/* Pointer to the record to configure. Note:
+    void *recordPtr,		/* Pointer to the record to configure. Note:
 				 * the caller should have properly initialized
 				 * the record with NULL pointers for each
 				 * option value. */
@@ -552,7 +552,7 @@ DoObjConfig(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
 				 * then no message is left if an error
 				 * occurs. */
-    char *recordPtr,		/* The record to modify to hold the new option
+    void *recordPtr,		/* The record to modify to hold the new option
 				 * value. */
     Option *optionPtr,		/* Pointer to information about the option. */
     Tcl_Obj *valuePtr,		/* New value for option. */
@@ -568,10 +568,10 @@ DoObjConfig(
 				 * free the old value). */
 {
     Tcl_Obj **slotPtrPtr, *oldPtr;
-    char *internalPtr;		/* Points to location in record where internal
+    void *internalPtr;		/* Points to location in record where internal
 				 * representation of value should be stored,
 				 * or NULL. */
-    char *oldInternalPtr;	/* Points to location in which to save old
+    void *oldInternalPtr;	/* Points to location in which to save old
 				 * internal representation of value. */
     Tk_SavedOption internal;	/* Used to save the old internal
 				 * representation of the value if
@@ -584,8 +584,8 @@ DoObjConfig(
      */
 
     specPtr = optionPtr->specPtr;
-    if (specPtr->objOffset >= 0) {
-	slotPtrPtr = (Tcl_Obj **) (recordPtr + specPtr->objOffset);
+    if (specPtr->objOffset != TCL_AUTO_LENGTH) {
+	slotPtrPtr = (Tcl_Obj **) ((char *)recordPtr + specPtr->objOffset);
 	oldPtr = *slotPtrPtr;
     } else {
 	slotPtrPtr = NULL;
@@ -597,8 +597,8 @@ DoObjConfig(
      * object and internal forms, if they exist.
      */
 
-    if (specPtr->internalOffset >= 0) {
-	internalPtr = recordPtr + specPtr->internalOffset;
+    if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
+	internalPtr = (char *)recordPtr + specPtr->internalOffset;
     } else {
 	internalPtr = NULL;
     }
@@ -1222,7 +1222,7 @@ int
 Tk_SetOptions(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
 				 * then no error message is returned.*/
-    char *recordPtr,	    	/* The record to configure. */
+    void *recordPtr,	    	/* The record to configure. */
     Tk_OptionTable optionTable,	/* Describes valid options. */
     int objc,			/* The number of elements in objv. */
     Tcl_Obj *const objv[],	/* Contains one or more name-value pairs. */
@@ -1340,12 +1340,12 @@ Tk_RestoreSavedOptions(
     Tk_SavedOptions *savePtr)	/* Holds saved option information; must have
 				 * been passed to Tk_SetOptions. */
 {
-    int i;
+    size_t i;
     Option *optionPtr;
     Tcl_Obj *newPtr;		/* New object value of option, which we
 				 * replace with old value and free. Taken from
 				 * record. */
-    char *internalPtr;		/* Points to internal value of option in
+    void *internalPtr;		/* Points to internal value of option in
 				 * record. */
     const Tk_OptionSpec *specPtr;
 
@@ -1360,7 +1360,7 @@ Tk_RestoreSavedOptions(
 	ckfree(savePtr->nextPtr);
 	savePtr->nextPtr = NULL;
     }
-    for (i = savePtr->numItems - 1; i >= 0; i--) {
+    for (i = savePtr->numItems - 1; i != (size_t)-1; i--) {
 	optionPtr = savePtr->items[i].optionPtr;
 	specPtr = optionPtr->specPtr;
 
@@ -1369,13 +1369,13 @@ Tk_RestoreSavedOptions(
 	 * record.
 	 */
 
-	if (specPtr->objOffset >= 0) {
-	    newPtr = *((Tcl_Obj **) (savePtr->recordPtr + specPtr->objOffset));
+	if (specPtr->objOffset != TCL_AUTO_LENGTH) {
+	    newPtr = *((Tcl_Obj **) ((char *)savePtr->recordPtr + specPtr->objOffset));
 	} else {
 	    newPtr = NULL;
 	}
-	if (specPtr->internalOffset >= 0) {
-	    internalPtr = savePtr->recordPtr + specPtr->internalOffset;
+	if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
+	    internalPtr = (char *)savePtr->recordPtr + specPtr->internalOffset;
 	} else {
 	    internalPtr = NULL;
 	}
@@ -1390,11 +1390,11 @@ Tk_RestoreSavedOptions(
 	 * Now restore the old value of the option.
 	 */
 
-	if (specPtr->objOffset >= 0) {
-	    *((Tcl_Obj **) (savePtr->recordPtr + specPtr->objOffset))
+	if (specPtr->objOffset != TCL_AUTO_LENGTH) {
+	    *((Tcl_Obj **) ((char *)savePtr->recordPtr + specPtr->objOffset))
 		    = savePtr->items[i].valuePtr;
 	}
-	if (specPtr->internalOffset >= 0) {
+	if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
 	    register char *ptr = (char *) &savePtr->items[i].internalForm;
 
 	    CLANG_ASSERT(internalPtr);
@@ -1487,7 +1487,7 @@ Tk_FreeSavedOptions(
     Tk_SavedOptions *savePtr)	/* Contains options saved in a previous call
 				 * to Tk_SetOptions. */
 {
-    int count;
+    size_t count;
     Tk_SavedOption *savedOptionPtr;
 
     if (savePtr->nextPtr != NULL) {
@@ -1527,7 +1527,7 @@ Tk_FreeSavedOptions(
 	/* ARGSUSED */
 void
 Tk_FreeConfigOptions(
-    char *recordPtr,		/* Record whose fields contain current values
+    void *recordPtr,		/* Record whose fields contain current values
 				 * for options. */
     Tk_OptionTable optionTable,	/* Describes legal options. */
     Tk_Window tkwin)		/* Window associated with recordPtr; needed
@@ -1537,7 +1537,7 @@ Tk_FreeConfigOptions(
     Option *optionPtr;
     size_t count;
     Tcl_Obj **oldPtrPtr, *oldPtr;
-    char *oldInternalPtr;
+    void *oldInternalPtr;
     const Tk_OptionSpec *specPtr;
 
     for (tablePtr = (OptionTable *) optionTable; tablePtr != NULL;
@@ -1548,15 +1548,15 @@ Tk_FreeConfigOptions(
 	    if (specPtr->type == TK_OPTION_SYNONYM) {
 		continue;
 	    }
-	    if (specPtr->objOffset >= 0) {
-		oldPtrPtr = (Tcl_Obj **) (recordPtr + specPtr->objOffset);
+	    if (specPtr->objOffset != TCL_AUTO_LENGTH) {
+		oldPtrPtr = (Tcl_Obj **) ((char *)recordPtr + specPtr->objOffset);
 		oldPtr = *oldPtrPtr;
 		*oldPtrPtr = NULL;
 	    } else {
 		oldPtr = NULL;
 	    }
-	    if (specPtr->internalOffset >= 0) {
-		oldInternalPtr = recordPtr + specPtr->internalOffset;
+	    if (specPtr->internalOffset != TCL_AUTO_LENGTH) {
+		oldInternalPtr = (char *)recordPtr + specPtr->internalOffset;
 	    } else {
 		oldInternalPtr = NULL;
 	    }
@@ -1593,10 +1593,10 @@ FreeResources(
     Option *optionPtr,		/* Description of the configuration option. */
     Tcl_Obj *objPtr,		/* The current value of the option, specified
 				 * as an object. */
-    char *internalPtr,		/* A pointer to an internal representation for
+    void *internalPtr,		/* A pointer to an internal representation for
 				 * the option's value, such as an int or
 				 * (XColor *). Only valid if
-				 * optionPtr->specPtr->internalOffset >= 0. */
+				 * optionPtr->specPtr->internalOffset != -1. */
     Tk_Window tkwin)		/* The window in which this option is used. */
 {
     int internalFormExists;
@@ -1607,7 +1607,7 @@ FreeResources(
      * form, then use the object form.
      */
 
-    internalFormExists = optionPtr->specPtr->internalOffset >= 0;
+    internalFormExists = optionPtr->specPtr->internalOffset != TCL_AUTO_LENGTH;
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_STRING:
 	if (internalFormExists) {
@@ -1713,7 +1713,7 @@ Tcl_Obj *
 Tk_GetOptionInfo(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
 				 * then no error message is created. */
-    char *recordPtr,		/* Record whose fields contain current values
+    void *recordPtr,		/* Record whose fields contain current values
 				 * for options. */
     Tk_OptionTable optionTable,	/* Describes all the legal options. */
     Tcl_Obj *namePtr,		/* If non-NULL, the string value selects a
@@ -1781,7 +1781,7 @@ Tk_GetOptionInfo(
 
 static Tcl_Obj *
 GetConfigList(
-    char *recordPtr,		/* Pointer to record holding current values of
+    void *recordPtr,		/* Pointer to record holding current values of
 				 * configuration options. */
     Option *optionPtr,		/* Pointer to information describing a
 				 * particular option. */
@@ -1824,8 +1824,8 @@ GetConfigList(
 	}
 	Tcl_ListObjAppendElement(NULL, listPtr, elementPtr);
 
-	if (optionPtr->specPtr->objOffset >= 0) {
-	    elementPtr = *((Tcl_Obj **) (recordPtr
+	if (optionPtr->specPtr->objOffset != TCL_AUTO_LENGTH) {
+	    elementPtr = *((Tcl_Obj **) ((char *)recordPtr
 		    + optionPtr->specPtr->objOffset));
 	    if (elementPtr == NULL) {
 		elementPtr = Tcl_NewObj();
@@ -1859,7 +1859,7 @@ GetConfigList(
 
 static Tcl_Obj *
 GetObjectForOption(
-    char *recordPtr,		/* Pointer to record holding current values of
+    void *recordPtr,		/* Pointer to record holding current values of
 				 * configuration options. */
     Option *optionPtr,		/* Pointer to information describing an option
 				 * whose internal value is stored in
@@ -1867,10 +1867,10 @@ GetObjectForOption(
     Tk_Window tkwin)		/* Window corresponding to recordPtr. */
 {
     Tcl_Obj *objPtr;
-    char *internalPtr;		/* Points to internal value of option in
+    void *internalPtr;		/* Points to internal value of option in
 				 * record. */
 
-    internalPtr = recordPtr + optionPtr->specPtr->internalOffset;
+    internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
     objPtr = NULL;
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_BOOLEAN:
@@ -2001,7 +2001,7 @@ Tk_GetOptionValue(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL
 				 * then no messages are provided for
 				 * errors. */
-    char *recordPtr,		/* Record whose fields contain current values
+    void *recordPtr,		/* Record whose fields contain current values
 				 * for options. */
     Tk_OptionTable optionTable,	/* Describes legal options. */
     Tcl_Obj *namePtr,		/* Gives the command-line name for the option
@@ -2019,8 +2019,8 @@ Tk_GetOptionValue(
     if (optionPtr->specPtr->type == TK_OPTION_SYNONYM) {
 	optionPtr = optionPtr->extra.synonymPtr;
     }
-    if (optionPtr->specPtr->objOffset >= 0) {
-	resultPtr = *((Tcl_Obj **) (recordPtr+optionPtr->specPtr->objOffset));
+    if (optionPtr->specPtr->objOffset != TCL_AUTO_LENGTH) {
+	resultPtr = *((Tcl_Obj **) ((char *)recordPtr+optionPtr->specPtr->objOffset));
 	if (resultPtr == NULL) {
 	    /*
 	     * This option has a null value and is represented by a null

@@ -90,6 +90,7 @@
 #define NSUnifiedTitleAndToolbarWindowMask NSWindowStyleMaskUnifiedTitleAndToolbar
 #define NSMiniaturizableWindowMask NSWindowStyleMaskMiniaturizable
 #define NSBorderlessWindowMask NSWindowStyleMaskBorderless
+#define NSFullScreenWindowMask NSWindowStyleMaskFullScreen
 #endif
 
 #endif

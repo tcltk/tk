@@ -5099,7 +5099,7 @@ correctly. (hobbs)
 2001-08-28 (bug fix) removed 2 second 'raise' delay seen by some Unix
 window managers. (hobbs, baker)
 
-2001-09-14 (bug fix) fixed memory leaks that occured if errors were
+2001-09-14 (bug fix) fixed memory leaks that occurred if errors were
 thrown while initializing the channel for an image. (darley)
 
 2001-09-20 (new feature) --enable-64bit support was added for HP 11 when

@@ -66,7 +66,7 @@ typedef struct ProtocolHandler {
 } ProtocolHandler;
 
 #define HANDLER_SIZE(cmdLength) \
-    ((unsigned) ((Tk_Offset(ProtocolHandler, command) + 1) + cmdLength))
+    (Tk_Offset(ProtocolHandler, command) + 1 + cmdLength)
 
 /*
  * Helper type passed via lParam to TkWmStackorderToplevelEnumProc
@@ -3728,7 +3728,7 @@ WmFrameCmd(
     if (hwnd == NULL) {
 	hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) winPtr));
     }
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%x", PTR2INT(hwnd)));
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%" TCL_Z_MODIFIER "x", (size_t)PTR2INT(hwnd)));
     return TCL_OK;
 }
 
