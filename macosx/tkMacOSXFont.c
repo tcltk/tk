@@ -18,7 +18,7 @@
 
 #define defaultOrientation kCTFontDefaultOrientation
 #define verticalOrientation kCTFontVerticalOrientation
-#define fixedPitch kCTFontUIFontUserFixedPitch
+#define fixedPitch kCTFontUserFixedPitchFontType
 
 /*
 #ifdef TK_MAC_DEBUG
