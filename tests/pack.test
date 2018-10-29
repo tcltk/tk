@@ -1626,6 +1626,64 @@ test pack-19.2 {test support for minreqsize} -setup {
     destroy .pack.l .pack.lf
 } -result {162x127+0+0 172x112+0+0}
 
+test pack-20.1 {<<NoManagedChild>> fires on last pack forget} -body {
+    global A
+    catch {unset A}
+    pack [frame .1]
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1
+} -result {1}
+
+test pack-20.2 {<Configure> does not fire on last pack forget} -body {
+    global A
+    catch {unset A}
+    pack [frame .1]
+    update
+    bind . <Configure> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <Configure> {}
+    destroy .1
+} -result {0}
+
+test pack-20.3 {<<NoManagedChild>> does not fire on forelast pack forget} -body {
+    global A
+    catch {unset A}
+    pack [frame .1]
+    pack [frame .2]
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1 .2
+} -result {0}
+
+test pack-20.4 {<Configure> does not fire on last pack forget} -body {
+    global A
+    catch {unset A}
+    pack [frame .1]
+    pack [frame .2]
+    update
+    bind . <Configure> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <Configure> {}
+    destroy .1 .2
+} -result {1}
+
 
 # cleanup
 cleanupTests
