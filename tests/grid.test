@@ -2029,10 +2029,24 @@ test grid-24.1 {<<NoManagedChild>> fires on last grid forget} -body {
     info exists A
 } -cleanup {
     bind . <<NoManagedChild>> {}
-    grid_reset 14.1
+    grid_reset 24.1
 } -result {1}
 
-test grid-24.2 {<Configure> does not fire on last grid forget} -body {
+test grid-24.2 {<<NoManagedChild>> fires on last grid remove} -body {
+    global A
+    catch {unset A}
+    grid [frame .1]
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    grid remove .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    grid_reset 24.2
+} -result {1}
+
+test grid-24.3 {<Configure> does not fire on last grid forget} -body {
     global A
     catch {unset A}
     grid [frame .1]
@@ -2043,10 +2057,10 @@ test grid-24.2 {<Configure> does not fire on last grid forget} -body {
     info exists A
 } -cleanup {
     bind . <Configure> {}
-    grid_reset 14.2
+    grid_reset 24.3
 } -result {0}
 
-test grid-24.3 {<Configure> fires on forelast grid forget} -body {
+test grid-24.4 {<Configure> fires on forelast grid forget} -body {
     global A
     catch {unset A}
     grid [frame .1]
@@ -2058,10 +2072,10 @@ test grid-24.3 {<Configure> fires on forelast grid forget} -body {
     info exists A
 } -cleanup {
     bind . <Configure> {}
-    grid_reset 14.3
+    grid_reset 24.4
 } -result {1}
 
-test grid-24.4 {<<NoManagedChild>> does not fire on forelast grid forget} -body {
+test grid-24.5 {<<NoManagedChild>> does not fire on forelast grid forget} -body {
     global A
     catch {unset A}
     grid [frame .1]
@@ -2073,10 +2087,10 @@ test grid-24.4 {<<NoManagedChild>> does not fire on forelast grid forget} -body 
     info exists A
 } -cleanup {
     bind . <<NoManagedChild>> {}
-    grid_reset 14.4
+    grid_reset 24.5
 } -result {0}
 
-test grid-24.5 {<<NoManagedChild>> should not fire on grid anchor} -body {
+test grid-24.6 {<<NoManagedChild>> does not fire on grid anchor} -body {
     global A
     bind . <<NoManagedChild>> {set A 1}
     grid anchor . w
@@ -2085,7 +2099,7 @@ test grid-24.5 {<<NoManagedChild>> should not fire on grid anchor} -body {
 } -cleanup {
     grid anchor . nw
     bind . <<NoManagedChild>> {}
-    grid_reset 14.5
+    grid_reset 24.6
 } -result {0}
 
 
