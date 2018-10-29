@@ -2017,6 +2017,77 @@ test grid-23 {grid configure -in leaked from previous master - bug
     winfo ismapped .t ; # must return 1
 } {1}
 grid_reset 23
+
+test grid-24.1 {<<NoManagedChild>> fires on last grid forget} -body {
+    global A
+    catch {unset A}
+    grid [frame .1]
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    grid forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    grid_reset 14.1
+} -result {1}
+
+test grid-24.2 {<Configure> does not fire on last grid forget} -body {
+    global A
+    catch {unset A}
+    grid [frame .1]
+    update
+    bind . <Configure> {set A 1}
+    grid forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <Configure> {}
+    grid_reset 14.2
+} -result {0}
+
+test grid-24.3 {<Configure> fires on forelast grid forget} -body {
+    global A
+    catch {unset A}
+    grid [frame .1]
+    grid [frame .2]
+    update
+    bind . <Configure> {set A 1}
+    grid forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <Configure> {}
+    grid_reset 14.3
+} -result {1}
+
+test grid-24.4 {<<NoManagedChild>> does not fire on forelast grid forget} -body {
+    global A
+    catch {unset A}
+    grid [frame .1]
+    grid [frame .2]
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    grid forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    grid_reset 14.4
+} -result {0}
+
+test grid-24.5 {<<NoManagedChild>> should not fire on grid anchor} -body {
+    global A
+    bind . <<NoManagedChild>> {set A 1}
+    grid anchor . w
+    update
+    info exists A
+} -cleanup {
+    grid anchor . nw
+    bind . <<NoManagedChild>> {}
+    grid_reset 14.5
+} -result {0}
+
 
 # cleanup
 cleanupTests
