@@ -348,10 +348,8 @@ VISIBILITY_HIDDEN
 @end
 
 @interface NSWindow(TKWm)
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
 - (NSPoint) tkConvertPointToScreen:(NSPoint)point;
 - (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
-#endif
 @end
 
 #pragma mark NSMenu & NSMenuItem Utilities
