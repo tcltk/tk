@@ -936,13 +936,10 @@ static int
 ObjectIsEmpty(
     Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
 {
-    if (objPtr == NULL) {
-	return 1;
-    }
-    if (objPtr->bytes == NULL) {
-	Tcl_GetString(objPtr);
-    }
-    return (objPtr->length == 0);
+    int length;
+
+    (void)Tcl_GetStringFromObj(objPtr, &length);
+    return (length == 0);
 }
 
 /*
@@ -1061,15 +1058,11 @@ GetOptionFromObj(
 {
     Option *bestPtr;
     const char *name;
+    Tcl_ObjIntRep ir;
+    Tcl_ObjIntRep *irPtr = Tcl_FetchIntRep(objPtr, &optionObjType);
 
-    /*
-     * First, check to see if the object already has the answer cached.
-     */
-
-    if (objPtr->typePtr == &optionObjType) {
-	if (objPtr->internalRep.twoPtrValue.ptr1 == (void *) tablePtr) {
-	    return (Option *) objPtr->internalRep.twoPtrValue.ptr2;
-	}
+    if (irPtr && irPtr->twoPtrValue.ptr1 == tablePtr) {
+	return (Option *) irPtr->twoPtrValue.ptr2;
     }
 
     /*
@@ -1079,26 +1072,19 @@ GetOptionFromObj(
     name = Tcl_GetString(objPtr);
     bestPtr = GetOption(name, tablePtr);
     if (bestPtr == NULL) {
-	goto error;
+	if (interp != NULL) {
+	    Tcl_SetObjResult(interp,
+		    Tcl_ObjPrintf("unknown option \"%s\"", name));
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", name, NULL);
+	}
+	return NULL;
     }
 
-    if ((objPtr->typePtr != NULL)
-	    && (objPtr->typePtr->freeIntRepProc != NULL)) {
-	objPtr->typePtr->freeIntRepProc(objPtr);
-    }
-    objPtr->internalRep.twoPtrValue.ptr1 = (void *) tablePtr;
-    objPtr->internalRep.twoPtrValue.ptr2 = (void *) bestPtr;
-    objPtr->typePtr = &optionObjType;
     tablePtr->refCount++;
+    ir.twoPtrValue.ptr1 = tablePtr;
+    ir.twoPtrValue.ptr2 = bestPtr;
+    Tcl_StoreIntRep(objPtr, &optionObjType, &ir);
     return bestPtr;
-
-  error:
-    if (interp != NULL) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"unknown option \"%s\"", name));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", name, NULL);
-    }
-    return NULL;
 }
 
 /*
@@ -1162,12 +1148,8 @@ static void
 FreeOptionInternalRep(
     register Tcl_Obj *objPtr)	/* Object whose internal rep to free. */
 {
-    register Tk_OptionTable tablePtr = (Tk_OptionTable) objPtr->internalRep.twoPtrValue.ptr1;
-
-    Tk_DeleteOptionTable(tablePtr);
-    objPtr->typePtr = NULL;
-    objPtr->internalRep.twoPtrValue.ptr1 = NULL;
-    objPtr->internalRep.twoPtrValue.ptr2 = NULL;
+    Tk_DeleteOptionTable(
+	    Tcl_FetchIntRep(objPtr, &optionObjType)->twoPtrValue.ptr1);
 }
 
 /*
@@ -1186,10 +1168,11 @@ DupOptionInternalRep(
     Tcl_Obj *srcObjPtr,		/* The object we are copying from. */
     Tcl_Obj *dupObjPtr)		/* The object we are copying to. */
 {
-    register OptionTable *tablePtr = (OptionTable *) srcObjPtr->internalRep.twoPtrValue.ptr1;
+    Tcl_ObjIntRep *irPtr = Tcl_FetchIntRep(srcObjPtr, &optionObjType);
+    OptionTable *tablePtr = (OptionTable *)irPtr->twoPtrValue.ptr1;
+
     tablePtr->refCount++;
-    dupObjPtr->typePtr = srcObjPtr->typePtr;
-    dupObjPtr->internalRep = srcObjPtr->internalRep;
+    Tcl_StoreIntRep(dupObjPtr, &optionObjType, irPtr);
 }
 
 /*
