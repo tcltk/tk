@@ -112,14 +112,18 @@ enum {
  *
  * TkMacOSXFlushWindows --
  *
- *	This routine flushes all the visible windows of the application. It is
- *	called by XSync().
+ *	This routine is a stub called by XSync, which is called during
+ *      the Tk update command.  It calls displayIfNeeded on all visible
+ *      windows.  This is necessary in order to insure that update will
+ *      run all of the display procedures which have been registered as
+ *      idle tasks.  The test suite assumes that this is the case.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Flushes all visible Cocoa windows
+ *	Calls the drawRect method of the contentView of each visible
+ *      window.
  *
  *----------------------------------------------------------------------
  */
@@ -134,6 +138,7 @@ TkMacOSXFlushWindows(void)
 	    [w displayIfNeeded];
 	}
     }
+
 }
 
 
