@@ -297,6 +297,31 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 /*
  *----------------------------------------------------------------------
  *
+ * TkpAppIsDrawing --
+ *
+ *      A widget display procedure can call this to determine whether it
+ *      is being run inside of the drawRect method.  This is needed for
+ *      some tests, especially of the Text widget, which record data in
+ *      a global Tcl variable and assume that display procedures will be
+ *      run in a predictable sequence as Tcl idle tasks.
+ *
+ * Results:
+ *	True only while running the drawRect method of a TKContentView;
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+MODULE_SCOPE Bool
+TkpAppIsDrawing(void) {
+    return [NSApp isDrawing];
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
  * GenerateUpdates --
  *
  *	Given a Macintosh update region and a Tk window this function geneates
@@ -801,34 +826,44 @@ ConfigureRestrictProc(
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
 
-    [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
-
 #ifdef TK_MAC_DEBUG_DRAWING
-    TKLog(@"-[%@(%p) %s%@]", [self class], self, _cmd, NSStringFromRect(rect));
-    [[NSColor colorWithDeviceRed:0.0 green:1.0 blue:0.0 alpha:.1] setFill];
-    NSRectFillListUsingOperation(rectsBeingDrawn, rectsBeingDrawnCount,
-	    NSCompositeSourceOver);
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    if (winPtr) printf("drawRect: drawing %s\n", Tk_PathName(winPtr));
 #endif
-
+    
+    [NSApp setIsDrawing: YES];
+    [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
 
     while (rectsBeingDrawnCount--) {
 	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
+
+#ifdef TK_MAC_DEBUG_DRAWING
+	printf("drawRect: %dx%d@(%d,%d)\n", (int)r.size.width,
+	       (int)r.size.height, (int)r.origin.x, (int)r.origin.y);
+#endif
+
 	r.origin.y = height - (r.origin.y + r.size.height);
 	HIShapeUnionWithRect(drawShape, &r);
     }
     [self generateExposeEvents:(HIShapeRef)drawShape];
     CFRelease(drawShape);
+    [NSApp setIsDrawing: NO];
+
+#ifdef TK_MAC_DEBUG_DRAWING
+    printf("drawRect: done.\n");
+#endif
+
 }
 
 -(void) setFrameSize: (NSSize)newsize
 {
     [super setFrameSize: newsize];
-    if ([self inLiveResize]) {
-	NSWindow *w = [self window];
-	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	Tk_Window tkwin = (Tk_Window) winPtr;
+    NSWindow *w = [self window];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    if (winPtr) {
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
 	ClientData oldArg;
@@ -890,9 +925,10 @@ ConfigureRestrictProc(
     CGRect updateBounds;
     int updatesNeeded;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-
+    ClientData oldArg;
+    Tk_RestrictProc *oldProc;
     if (!winPtr) {
-		return;
+	return;
     }
 
     /*
@@ -914,9 +950,7 @@ ConfigureRestrictProc(
 	 * First process all of the Expose events.
 	 */
 
-	ClientData oldArg;
-    	Tk_RestrictProc *oldProc = Tk_RestrictEvents(ExposeRestrictProc,
-						     UINT2PTR(serial), &oldArg);
+    	oldProc = Tk_RestrictEvents(ExposeRestrictProc, UINT2PTR(serial), &oldArg);
     	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS)) {};
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
@@ -930,10 +964,12 @@ ConfigureRestrictProc(
 	 *
 	 * Fortunately, Tk schedules all drawing to be done while Tcl is idle.
 	 * So we can do the drawing by processing all of the idle events that
-	 * were created when the expose events were processed.
+	 * were created when the expose events were processed. Unfortunately
+	 * this does not work in macOS 10.13.
 	 */
-
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	if ([NSApp macMinorVersion] > 13 || [self inLiveResize]) {
+	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	}
     }
 }
 

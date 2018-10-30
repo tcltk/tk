@@ -32,6 +32,84 @@ static void TkMacOSXNotifyExitHandler(ClientData clientData);
 static void TkMacOSXEventsSetupProc(ClientData clientData, int flags);
 static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 
+#ifdef TK_MAC_DEBUG_EVENTS
+static char* Tk_EventName[39] = {
+    "",
+    "",
+    "KeyPress",		/*2*/
+    "KeyRelease",      	/*3*/
+    "ButtonPress",     	/*4*/
+    "ButtonRelease",	/*5*/
+    "MotionNotify",    	/*6*/
+    "EnterNotify",     	/*7*/
+    "LeaveNotify",     	/*8*/
+    "FocusIn",		/*9*/
+    "FocusOut",		/*10*/
+    "KeymapNotify",    	/*11*/
+    "Expose",		/*12*/
+    "GraphicsExpose",	/*13*/
+    "NoExpose",		/*14*/
+    "VisibilityNotify",	/*15*/
+    "CreateNotify",    	/*16*/
+    "DestroyNotify",	/*17*/
+    "UnmapNotify",     	/*18*/
+    "MapNotify",       	/*19*/
+    "MapRequest",      	/*20*/
+    "ReparentNotify",	/*21*/
+    "ConfigureNotify",	/*22*/
+    "ConfigureRequest",	/*23*/
+    "GravityNotify",	/*24*/
+    "ResizeRequest",	/*25*/
+    "CirculateNotify",	/*26*/
+    "CirculateRequest",	/*27*/
+    "PropertyNotify",	/*28*/
+    "SelectionClear",	/*29*/
+    "SelectionRequest",	/*30*/
+    "SelectionNotify",	/*31*/
+    "ColormapNotify",	/*32*/
+    "ClientMessage",	/*33*/
+    "MappingNotify",	/*34*/
+    "VirtualEvent",    	/*35*/
+    "ActivateNotify",	/*36*/
+    "DeactivateNotify",	/*37*/
+    "MouseWheelEvent"	/*38*/
+};
+
+static Tk_RestrictAction
+InspectQueueRestrictProc(
+     ClientData arg,
+     XEvent *eventPtr)
+{
+    XVirtualEvent* ve = (XVirtualEvent*) eventPtr;
+    const char *name;
+    long serial = ve->serial;
+    long time = eventPtr->xkey.time;
+    
+    if (eventPtr->type == VirtualEvent) {
+	name = ve->name;
+    } else {
+	name = Tk_EventName[eventPtr->type];
+    }
+    printf("    > %s;serial = %lu; time=%lu)\n", name, serial, time);
+    return TK_DEFER_EVENT;
+}
+
+/*
+ * Debugging tool which prints the current Tcl queue.
+ */
+
+void DebugPrintQueue(void)
+{
+    ClientData oldArg;
+    Tk_RestrictProc *oldProc;
+
+    oldProc = Tk_RestrictEvents(InspectQueueRestrictProc, NULL, &oldArg);
+    printf("Current queue:\n");
+    while (Tcl_DoOneEvent(TCL_ALL_EVENTS|TCL_DONT_WAIT)) {};
+    Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+}
+# endif
+
 #pragma mark TKApplication(TKNotify)
 
 @interface NSApplication(TKNotify)
@@ -39,31 +117,26 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 - (void) _modalSession: (NSModalSession) session sendEvent: (NSEvent *) event;
 @end
 
-@implementation NSWindow(TKNotify)
-- (id) tkDisplayIfNeeded
-{
-    if (![self isAutodisplay]) {
-	[self displayIfNeeded];
-    }
-    return nil;
-}
-@end
-
 @implementation TKApplication(TKNotify)
-/* Display all windows each time an event is removed from the queue.*/
-- (NSEvent *) nextEventMatchingMask: (NSUInteger) mask
-	untilDate: (NSDate *) expiration inMode: (NSString *) mode
-	dequeue: (BOOL) deqFlag
-{
-    NSEvent *event = [super nextEventMatchingMask:mask
-					untilDate:expiration
-					   inMode:mode
-					  dequeue:deqFlag];
-    /* Retain this event for later use. Must be released.*/
-    [event retain];
-    [NSApp makeWindowsPerform:@selector(tkDisplayIfNeeded) inOrder:NO];
-    return event;
-}
+/*
+ * Earlier versions of Tk would override nextEventMatchingMask here, adding a
+ * call to displayIfNeeded on all windows after calling super. This would cause
+ * windows to be redisplayed (if necessary) each time that an event was
+ * received.  This was intended to replace Apple's default autoDisplay
+ * mechanism, which the earlier versions of Tk would disable.  When autoDisplay
+ * is set to the default value of YES, the Apple event loop will call
+ * displayIfNeeded on all windows at the beginning of each iteration of their
+ * event loop.  Since Tk does not call the Apple event loop, it was thought
+ * that the autoDisplay behavior needed to be replicated.
+ *
+ * However, as of OSX 10.14 (Mojave) the autoDisplay property became
+ * deprecated.  Luckily it turns out that, even though we don't ever start the
+ * Apple event loop, the Apple window manager still calls displayIfNeeded on
+ * all windows on a regular basis, perhaps each time the queue is empty.  So we
+ * no longer, and perhaps never did need to set autoDisplay to NO, nor call
+ * displayIfNeeded on our windows.  We can just leave all of that to the window
+ * manager.
+ */
 
 /*
  * Call super then check the pasteboard.
@@ -72,6 +145,10 @@ static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 {
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
+#ifdef TK_MAC_DEBUG_EVENTS
+    printf("Sending event of type %d\n", (int)[theEvent type]); 
+    DebugPrintQueue();
+#endif
 }
 @end
 
@@ -229,7 +306,6 @@ TkMacOSXEventsSetupProc(
 	    if (currentEvent.type > 0) {
 		Tcl_SetMaxBlockTime(&zeroBlockTime);
 	    }
-	    [currentEvent release];
 	}
     }
 }
@@ -298,7 +374,6 @@ TkMacOSXEventsCheckProc(
 			[NSApp sendEvent:currentEvent];
 		    }
 		}
-		[currentEvent release];
 	    } else {
 		break;
 	    }
