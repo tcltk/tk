@@ -6345,12 +6345,13 @@ DisplayDLine(
     rMargin = (sValuePtr->wrapMode == TEXT_WRAPMODE_NONE) ? 0 : sValuePtr->rMargin;
     xIndent = GetLeftLineMargin(dlPtr, sValuePtr);
 
-    if (sValuePtr->lMarginColor != NULL) {
-        Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->lMarginColor, 0, 0,
-                xIndent + dInfoPtr->x - dInfoPtr->curXPixelOffset,
-                dlPtr->height, 0, TK_RELIEF_FLAT);
+    if (xIndent > 0 && sValuePtr->lMarginColor != NULL) {
+	int pad = textPtr->padX ? textPtr->padX + 1 : 0;
+        Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->lMarginColor, textPtr->padX, 0,
+                xIndent + dInfoPtr->x - dInfoPtr->curXPixelOffset - pad,
+		dlPtr->height, 0, TK_RELIEF_FLAT);
     }
-    if (sValuePtr->rMarginColor != NULL) {
+    if (rMargin > 0 && sValuePtr->rMarginColor != NULL) {
         Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->rMarginColor,
                 dInfoPtr->maxX - rMargin + dInfoPtr->curXPixelOffset,
                 0, rMargin, dlPtr->height, 0, TK_RELIEF_FLAT);
