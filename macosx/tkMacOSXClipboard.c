@@ -12,6 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include "tkSelect.h"
 
 static NSInteger changeCount = -1;

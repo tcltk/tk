@@ -18,6 +18,11 @@
 
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
+#define OK_TO_LOG (!TkpAppIsDrawing())
+#define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
+#else
+#define OK_TO_LOG 1
+#define FORCE_DISPLAY(winPtr)
 #endif
 
 /*
@@ -197,12 +202,21 @@ typedef struct TextStyle {
     (fabs((double1)-(double2))*((scaleFactor)+1.0) < 0.3)
 
 /*
- * Macro to make debugging/testing logging a little easier.
+ * Macros to make debugging/testing logging a little easier.
+ *
+ * On OSX 10.14 Drawing procedures are sometimes run because the system has
+ * decided to redraw the window.  This can corrupt the data that a test is
+ * trying to collect.  So we don't write to the logging variables when the
+ * drawing procedure is being run that way.  Other systems can always log.
  */
 
-#define LOG(toVar,what) \
-    Tcl_SetVar2(textPtr->interp, toVar, NULL, (what), \
-	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
+#define LOG(toVar,what)							\
+    if (OK_TO_LOG)							\
+        Tcl_SetVar2(textPtr->interp, toVar, NULL, (what),		\
+		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)	
+#define CLEAR(var)							\
+    if (OK_TO_LOG)							\
+	Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
 
 /*
  * The following structure describes one line of the display, which may be
@@ -3114,6 +3128,18 @@ GenerateWidgetViewSyncEvent(
     TkText *textPtr,		/* Information about text widget. */
     Bool InSync)                /* true if in sync, false otherwise */
 {
+    /*
+     * OSX 10.14 needs to be told to display the window when the Text Widget
+     * is in sync.  (That is, to run DisplayText inside of the drawRect
+     * method.)  Otherwise the screen might not get updated until an event
+     * like a mouse click is received.  But that extra drawing corrupts the
+     * data that the test suite is trying to collect.
+     */
+    
+    if (!tkTextDebug) {
+	FORCE_DISPLAY(textPtr->tkwin);
+    }
+    
     TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
         Tcl_NewBooleanObj(InSync));
 }
@@ -4129,7 +4155,7 @@ DisplayText(
     Tcl_Preserve(interp);
 
     if (tkTextDebug) {
-	Tcl_SetVar2(interp, "tk_textRelayout", NULL, "", TCL_GLOBAL_ONLY);
+	CLEAR("tk_textRelayout");
     }
 
     if (!Tk_IsMapped(textPtr->tkwin) || (dInfoPtr->maxX <= dInfoPtr->x)
@@ -4140,7 +4166,7 @@ DisplayText(
     }
     numRedisplays++;
     if (tkTextDebug) {
-	Tcl_SetVar2(interp, "tk_textRedraw", NULL, "", TCL_GLOBAL_ONLY);
+	CLEAR("tk_textRedraw");
     }
 
     /*
@@ -5127,6 +5153,7 @@ TkTextRelayoutWindow(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     GC newGC;
     XGCValues gcValues;
+    Bool inSync = 1;
 
     /*
      * Schedule the window redisplay. See TkTextChanged for the reason why
@@ -5135,6 +5162,7 @@ TkTextRelayoutWindow(
 
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
 	Tcl_DoWhenIdle(DisplayText, textPtr);
+	inSync = 0;
     }
     dInfoPtr->flags |= REDRAW_PENDING|REDRAW_BORDERS|DINFO_OUT_OF_DATE
 	    |REPICK_NEEDED;
@@ -5206,6 +5234,7 @@ TkTextRelayoutWindow(
     dInfoPtr->yScrollFirst = dInfoPtr->yScrollLast = -1;
 
     if (mask & TK_TEXT_LINE_GEOMETRY) {
+
 	/*
 	 * Set up line metric recalculation.
 	 *
@@ -5230,7 +5259,11 @@ TkTextRelayoutWindow(
 	    textPtr->refCount++;
 	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		    AsyncUpdateLineMetrics, textPtr);
-            GenerateWidgetViewSyncEvent(textPtr, 0);
+	    inSync = 0;
+	}
+	
+	if (!inSync) {
+	    GenerateWidgetViewSyncEvent(textPtr, 0);
 	}
     }
 }

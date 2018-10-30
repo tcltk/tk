@@ -15,14 +15,27 @@
 #ifndef _TKMACCONSTANTS
 #define _TKMACCONSTANTS
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
+#define NSFullScreenWindowMask (1 << 14)
+#endif
+
 /*
  * Let's raise a glass for the project manager who improves our lives by
  * generating deprecation warnings about pointless changes of the names
  * of constants.
  */
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+#define kCTFontDefaultOrientation kCTFontOrientationDefault
+#define kCTFontVerticalOrientation kCTFontOrientationVertical
+#endif
+
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 #define NSOKButton NSModalResponseOK
+#endif
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101100
+#define kCTFontUserFixedPitchFontType kCTFontUIFontUserFixedPitch
 #endif
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101200
@@ -93,4 +106,14 @@
 #define NSFullScreenWindowMask NSWindowStyleMaskFullScreen
 #endif
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+#define NSStringPboardType NSPasteboardTypeString
+#define NSOnState NSControlStateValueOn
+#define NSOffState NSControlStateValueOff
+// Now we are also changing names of methods!
+#define graphicsContextWithGraphicsPort graphicsContextWithCGContext
 #endif
+
+
+#endif
+
