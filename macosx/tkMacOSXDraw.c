@@ -18,6 +18,12 @@
 #include "tkMacOSXDebug.h"
 #include "tkButton.h"
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+#define GET_CGCONTEXT [[NSGraphicsContext currentContext] CGContext]
+#else
+#define GET_CGCONTEXT [[NSGraphicsContext currentContext] graphicsPort]
+#endif
+
 /*
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_DRAWING
@@ -1489,7 +1495,7 @@ TkMacOSXSetupDrawingContext(
 		goto end;
 	    }
 	    dc.view = view;
-	    dc.context = [[NSGraphicsContext currentContext] graphicsPort];
+	    dc.context = GET_CGCONTEXT;
 	    dc.portBounds = NSRectToCGRect([view bounds]);
 	    if (dc.clipRgn) {
 		clipBounds = CGContextGetClipBoundingBox(dc.context);
@@ -1658,7 +1664,7 @@ TkMacOSXGetClipRgn(
 	TkMacOSXDbgMsg("%s", macDraw->winPtr->pathName);
 	NSView *view = TkMacOSXDrawableView(macDraw);
 	if ([view lockFocusIfCanDraw]) {
-	    CGContextRef context = [[NSGraphicsContext currentContext] graphicsPort];
+	    CGContextRef context = GET_CGCONTEXT;
 	    CGContextSaveGState(context);
 	    CGContextConcatCTM(context, CGAffineTransformMake(1.0, 0.0, 0.0,
 		    -1.0, 0.0, [view bounds].size.height));

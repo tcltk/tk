@@ -330,7 +330,7 @@ unsigned short releaseCode;
   pt.y = caret_y;
 
   pt = [self convertPoint: pt toView: nil];
-  pt = [[self window] convertPointToScreen: pt];
+  pt = [[self window] tkConvertPointToScreen: pt];
   pt.y -= caret_height;
 
   rect.origin = pt;
