@@ -1693,6 +1693,20 @@ test pack-20.5 {<Configure> does not fire on last pack forget} -body {
     bind . <Configure> {}
     destroy .1 .2
 } -result {1}
+test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagation is off} -body {
+    global A
+    catch {unset A}
+    pack [frame .1]
+    pack propagate . 0
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1
+} -result {0}
 
 
 # cleanup
