@@ -2100,6 +2100,7 @@ test grid-24.6 {<<NoManagedChild>> does not fire on forelast grid forget} -body 
 } -result {0}
 test grid-24.7 {<<NoManagedChild>> does not fire on grid anchor} -body {
     global A
+    catch {unset A}
     bind . <<NoManagedChild>> {set A 1}
     grid anchor . w
     update
@@ -2108,6 +2109,20 @@ test grid-24.7 {<<NoManagedChild>> does not fire on grid anchor} -body {
     grid anchor . nw
     bind . <<NoManagedChild>> {}
     grid_reset 24.7
+} -result {0}
+test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagation is off} -body {
+    global A
+    catch {unset A}
+    grid [frame .1]
+    grid propagate . 0
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    grid forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    grid_reset 24.8
 } -result {0}
 
 
