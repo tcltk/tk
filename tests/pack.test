@@ -1639,8 +1639,20 @@ test pack-20.1 {<<NoManagedChild>> fires on last pack forget} -body {
     bind . <<NoManagedChild>> {}
     destroy .1
 } -result {1}
-
-test pack-20.2 {<Configure> does not fire on last pack forget} -body {
+test pack-20.2 {<<NoManagedChild>> fires on last packed child destruction} -body {
+    global A
+    catch {unset A}
+    pack [frame .1]
+    update
+    bind . <<NoManagedChild>> {incr A}
+    destroy .1
+    update
+    set A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1
+} -result {1}
+test pack-20.3 {<Configure> does not fire on last pack forget} -body {
     global A
     catch {unset A}
     pack [frame .1]
@@ -1653,8 +1665,7 @@ test pack-20.2 {<Configure> does not fire on last pack forget} -body {
     bind . <Configure> {}
     destroy .1
 } -result {0}
-
-test pack-20.3 {<<NoManagedChild>> does not fire on forelast pack forget} -body {
+test pack-20.4 {<<NoManagedChild>> does not fire on forelast pack forget} -body {
     global A
     catch {unset A}
     pack [frame .1]
@@ -1668,8 +1679,7 @@ test pack-20.3 {<<NoManagedChild>> does not fire on forelast pack forget} -body 
     bind . <<NoManagedChild>> {}
     destroy .1 .2
 } -result {0}
-
-test pack-20.4 {<Configure> does not fire on last pack forget} -body {
+test pack-20.5 {<Configure> does not fire on last pack forget} -body {
     global A
     catch {unset A}
     pack [frame .1]
