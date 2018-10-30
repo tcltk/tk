@@ -785,7 +785,7 @@ TkpPostMenu(
     NSRect frame = NSMakeRect(x + 9, tkMacOSXZeroScreenHeight - y - 9, 1, 1);
 
     frame.origin = [view convertPoint:
-	    [win convertPointFromScreen:frame.origin] fromView:nil];
+	    [win tkConvertPointFromScreen:frame.origin] fromView:nil];
 
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSPopUpButtonCell *popUpButtonCell = [[NSPopUpButtonCell alloc]
