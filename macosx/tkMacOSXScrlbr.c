@@ -40,9 +40,12 @@
  */
 
 typedef struct MacScrollbar {
-    TkScrollbar information;	 /* Generic scrollbar info. */
+    TkScrollbar information;	/* Generic scrollbar info. */
     GC troughGC;		/* For drawing trough. */
     GC copyGC;			/* Used for copying from pixmap onto screen. */
+    Bool buttonDown;            /* Is the mouse button down? */  
+    Bool mouseOver;             /* Is the pointer over the scrollbar. */
+    HIThemeTrackDrawInfo info;  /* Controls how the scrollbar is drawn. */
 } MacScrollbar;
 
 /*
@@ -71,7 +74,7 @@ static ScrollbarMetrics metrics = {
   15, 54, 26, 14, 14, kControlSizeNormal /* kThemeScrollBarMedium */
 };
 
-HIThemeTrackDrawInfo info = {
+HIThemeTrackDrawInfo defaultInfo = {
     .version = 0,
     .min = 0.0,
     .max = 100.0,
@@ -84,7 +87,7 @@ HIThemeTrackDrawInfo info = {
  */
 
 static void ScrollbarEventProc(ClientData clientData, XEvent *eventPtr);
-static int ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr);
+static int ScrollbarEvent(TkScrollbar *scrollPtr, XEvent *eventPtr);
 static void UpdateControlValues(TkScrollbar  *scrollPtr);
 
 /*
@@ -112,8 +115,19 @@ TkpCreateScrollbar(
 
     scrollPtr->troughGC = None;
     scrollPtr->copyGC = None;
-
-    Tk_CreateEventHandler(tkwin,ExposureMask|StructureNotifyMask|FocusChangeMask|ButtonPressMask|ButtonReleaseMask|EnterWindowMask|LeaveWindowMask|VisibilityChangeMask, ScrollbarEventProc, scrollPtr);
+    scrollPtr->info = defaultInfo;
+    scrollPtr->buttonDown = false;
+    
+    Tk_CreateEventHandler(tkwin,
+			  ExposureMask        |
+			  StructureNotifyMask |
+			  FocusChangeMask     |
+			  ButtonPressMask     |
+			  ButtonReleaseMask   |
+			  EnterWindowMask     |
+			  LeaveWindowMask     |
+			  VisibilityChangeMask,
+			  ScrollbarEventProc, scrollPtr);
 
     return (TkScrollbar *) scrollPtr;
 }
@@ -141,6 +155,7 @@ TkpDisplayScrollbar(
 		    ClientData clientData)	/* Information about window. */
 {
     register TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
+    MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
     register Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkMacOSXDrawingContext dc;
@@ -191,9 +206,9 @@ TkpDisplayScrollbar(
     /*Update values and draw in native rect.*/
     UpdateControlValues(scrollPtr);
     if (MOUNTAIN_LION_STYLE) {
-      HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationInverted);
+	HIThemeDrawTrack (&(msPtr->info), 0, dc.context, kHIThemeOrientationInverted);
     } else {
-      HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
+	HIThemeDrawTrack (&(msPtr->info), 0, dc.context, kHIThemeOrientationNormal);
     }
     TkMacOSXRestoreDrawingContext(&dc);
 
@@ -228,12 +243,14 @@ TkpComputeScrollbarGeometry(
 {
 
    /*
-    * Using code from tkUnixScrlbr.c because Unix scroll bindings are
-    * driving the display at the script level. All the Mac scrollbar
-    * has to do is re-draw itself.
-    * There is a difference with Unix however: on macOS later than 10.6
-    * (Snow Leopard) the scrollbars have no arrows at all. This is
-    * handled by having scrollPtr->arrowLength set to zero.
+    * Using code from tkUnixScrlbr.c because Unix scroll bindings are driving
+    * the display at the script level. All the Mac scrollbar has to do is
+    * re-draw itself.  But we must account for some differences from Unix: on
+    * macOS versions newer than 10.6 (Snow Leopard) the scrollbars have no
+    * arrows at all. This is handled by having scrollPtr->arrowLength set to
+    * zero.  Also on 10.6 both arrows are at the bottom.  This is handled by
+    * shifting the scrollbar up by the arrowLength, which only has an effect on
+    * 10.6 since the arrowLength is 0 on newer systems.
     */
 
     int fieldLength;
@@ -242,7 +259,11 @@ TkpComputeScrollbarGeometry(
        scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    scrollPtr->arrowLength = 0;
+    if ([NSApp macMinorVersion] == 6) {
+      scrollPtr->arrowLength = scrollPtr->width;
+    } else {
+      scrollPtr->arrowLength = 0;
+    }
     fieldLength = (scrollPtr->vertical ? Tk_Height(scrollPtr->tkwin)
            : Tk_Width(scrollPtr->tkwin))
            - 2*(scrollPtr->arrowLength + scrollPtr->inset);
@@ -270,8 +291,8 @@ TkpComputeScrollbarGeometry(
     if (scrollPtr->sliderLast > fieldLength) {
        scrollPtr->sliderLast = fieldLength;
     }
-    scrollPtr->sliderFirst += scrollPtr->arrowLength + scrollPtr->inset;
-    scrollPtr->sliderLast += scrollPtr->arrowLength + scrollPtr->inset;
+    scrollPtr->sliderFirst += -scrollPtr->arrowLength + scrollPtr->inset;
+    scrollPtr->sliderLast += scrollPtr->inset;
 
     /*
      * Register the desired geometry for the window (leave enough space for
@@ -397,7 +418,8 @@ TkpScrollbarPosition(
   	width = Tk_Height(scrollPtr->tkwin);
     }
 
-    if (x<inset || x>=width-inset || y<inset || y>=length-inset) {
+    if (x < inset || x >= width - inset ||
+	y < inset || y >= length - inset) {
   	return OUTSIDE;
     }
 
@@ -406,21 +428,19 @@ TkpScrollbarPosition(
      * TkpDisplayScrollbar. Be sure to keep the two consistent.
      */
 
-    if (y < inset + scrollPtr->arrowLength) {
-  	return TOP_ARROW;
-    }
-    if (y < scrollPtr->sliderFirst) {
+    if (y < scrollPtr->sliderFirst + scrollPtr->arrowLength) {
   	return TOP_GAP;
-    }
-    if (y < scrollPtr->sliderLast) {
+      }
+      if (y < scrollPtr->sliderLast) {
   	return SLIDER;
-    }
-    if (y >= length - (scrollPtr->arrowLength + inset)) {
-  	return BOTTOM_ARROW;
-    }
-
-    return BOTTOM_GAP;
-
+      }
+      if (y < length - (2*scrollPtr->arrowLength + inset)) {
+  	return BOTTOM_GAP;
+      }
+      if (y < length - (scrollPtr->arrowLength + inset)) {
+  	return TOP_ARROW;
+      }
+      return BOTTOM_ARROW;
 }
 
 /*
@@ -447,6 +467,7 @@ static void
 UpdateControlValues(
 		    TkScrollbar *scrollPtr)		/* Scrollbar data struct. */
 {
+    MacScrollbar *msPtr = (MacScrollbar *)scrollPtr;
     Tk_Window tkwin = scrollPtr->tkwin;
     MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
     double dViewSize;
@@ -462,7 +483,7 @@ UpdateControlValues(
     frame.origin.y = viewHeight - (frame.origin.y + frame.size.height);
 
     contrlRect = NSRectToCGRect(frame);
-    info.bounds = contrlRect;
+    msPtr->info.bounds = contrlRect;
 
     width = contrlRect.size.width;
     height = contrlRect.size.height;
@@ -472,11 +493,11 @@ UpdateControlValues(
      * have been computed.
      */
 
-    info.bounds = contrlRect;
+    msPtr->info.bounds = contrlRect;
     if (scrollPtr->vertical) {
-      info.attributes &= ~kThemeTrackHorizontal;
+      msPtr->info.attributes &= ~kThemeTrackHorizontal;
     } else {
-      info.attributes |= kThemeTrackHorizontal;
+      msPtr->info.attributes |= kThemeTrackHorizontal;
     }
 
     /*
@@ -493,25 +514,25 @@ UpdateControlValues(
     factor = RangeToFactor(maximum);
     dViewSize = (scrollPtr->lastFraction - scrollPtr->firstFraction)
 	* factor;
-    info.max =  MIN_SCROLLBAR_VALUE +
+    msPtr->info.max =  MIN_SCROLLBAR_VALUE +
 	factor - dViewSize;
-    info.trackInfo.scrollbar.viewsize = dViewSize;
+    msPtr->info.trackInfo.scrollbar.viewsize = dViewSize;
     if (scrollPtr->vertical) {
       if (MOUNTAIN_LION_STYLE) {
-	info.value = factor * scrollPtr->firstFraction;
+	msPtr->info.value = factor * scrollPtr->firstFraction;
       } else {
-	info.value = info.max - factor * scrollPtr->firstFraction;
+	msPtr->info.value = msPtr->info.max - factor * scrollPtr->firstFraction;
       }
     } else {
-	 info.value =  MIN_SCROLLBAR_VALUE + factor * scrollPtr->firstFraction;
+	 msPtr->info.value =  MIN_SCROLLBAR_VALUE + factor * scrollPtr->firstFraction;
     }
 
     if((scrollPtr->firstFraction <= 0.0 && scrollPtr->lastFraction >= 1.0)
        || height <= metrics.minHeight) {
-    	info.enableState = kThemeTrackHideTrack;
+    	msPtr->info.enableState = kThemeTrackHideTrack;
     } else {
-    	info.enableState = kThemeTrackActive;
-    	info.attributes = kThemeTrackShowThumb |  kThemeTrackThumbRgnIsNotGhost;
+        msPtr->info.enableState = kThemeTrackActive;
+    	msPtr->info.attributes = kThemeTrackShowThumb |  kThemeTrackThumbRgnIsNotGhost;
     }
 
 }
@@ -519,29 +540,78 @@ UpdateControlValues(
 /*
  *--------------------------------------------------------------
  *
- * ScrollbarPress --
+ * ScrollbarEvent --
  *
  *	This procedure is invoked in response to <ButtonPress>, <ButtonRelease>,
- *      <EnterNotify>, and <LeaveNotify> events. Scrollbar appearance is modified.
+ *      <EnterNotify>, and <LeaveNotify> events. The Scrollbar appearance is
+ *      modified for each event.
  *
  *--------------------------------------------------------------
  */
 
 static int
-ScrollbarPress(TkScrollbar *scrollPtr, XEvent *eventPtr)
+ScrollbarEvent(TkScrollbar *scrollPtr, XEvent *eventPtr)
 {
+    MacScrollbar *msPtr = (MacScrollbar *)scrollPtr;
+    
+    /* The pressState does not indicate whether the moused button was
+     * pressed at some location in the Scrollbar.  Rather, it indicates
+     * that the scrollbar should appear as if it were pressed in that
+     * location. The standard Mac behavior is that once the button is
+     * pressed inside the Scrollbar the appearance should not change until
+     * the button is released, even if the mouse moves outside of the
+     * scrollbar.  However, if the mouse lies over the scrollbar but the
+     * button is not pressed then the appearance should be the same as if
+     * the button had been pressed on the slider, i.e. kThemeThumbPressed.
+     */
 
-  if (eventPtr->type == ButtonPress) {
-    UpdateControlValues(scrollPtr);
-    info.trackInfo.scrollbar.pressState = 1;
-  }
-   if (eventPtr->type == EnterNotify) {
-    info.trackInfo.scrollbar.pressState = 1;
-  }
-  if (eventPtr->type == ButtonRelease || eventPtr->type == LeaveNotify) {
-    info.trackInfo.scrollbar.pressState = 0;
-  }
-  return TCL_OK;
+    if (eventPtr->type == ButtonPress) {
+	msPtr->buttonDown = true;
+	UpdateControlValues(scrollPtr);
+	int where = TkpScrollbarPosition(scrollPtr,
+					 eventPtr->xbutton.x,
+					 eventPtr->xbutton.y);
+	switch(where) {
+	case OUTSIDE:
+	    msPtr->info.trackInfo.scrollbar.pressState = 0;
+	    break;
+	case TOP_GAP:
+	    msPtr->info.trackInfo.scrollbar.pressState = kThemeTopTrackPressed;
+	    break;
+	case SLIDER:
+	    msPtr->info.trackInfo.scrollbar.pressState = kThemeThumbPressed;
+	    break;
+	case BOTTOM_GAP:
+	    msPtr->info.trackInfo.scrollbar.pressState = kThemeBottomTrackPressed;
+	    break;
+	case TOP_ARROW:
+	    /* This looks wrong and the docs say it is wrong but it works. */
+	    msPtr->info.trackInfo.scrollbar.pressState = kThemeTopInsideArrowPressed;
+	    break;
+	case BOTTOM_ARROW:
+	    msPtr->info.trackInfo.scrollbar.pressState = kThemeBottomOutsideArrowPressed;
+	    break;
+	}
+    }
+    if (eventPtr->type == ButtonRelease) {
+	msPtr->buttonDown = false;
+	if (!msPtr->mouseOver) {
+	    msPtr->info.trackInfo.scrollbar.pressState = 0;
+	}
+    }
+    if (eventPtr->type == EnterNotify) {
+	msPtr->mouseOver = true;
+	if (!msPtr->buttonDown) {
+	    msPtr->info.trackInfo.scrollbar.pressState = kThemeThumbPressed;
+	}
+    }
+    if (eventPtr->type == LeaveNotify) {
+	msPtr->mouseOver = false;
+	if (!msPtr->buttonDown) {
+	    msPtr->info.trackInfo.scrollbar.pressState = 0;
+	}
+    }
+    return TCL_OK;
 }
 
 
@@ -583,9 +653,18 @@ ScrollbarEventProc(
     case ButtonRelease:
     case EnterNotify:
     case LeaveNotify:
-    	ScrollbarPress(clientData, eventPtr);
+    	ScrollbarEvent(clientData, eventPtr);
 	break;
     default:
 	TkScrollbarEventProc(clientData, eventPtr);
     }
 }
+
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */
