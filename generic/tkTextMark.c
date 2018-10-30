@@ -2605,7 +2605,7 @@ TkTextGetCursorBbox(
     assert(w);
     assert(h);
 
-    cursorExtent = MIN(textPtr->padX, textPtr->insertWidth/2);
+    cursorExtent = MAX(1, MIN(textPtr->padX, textPtr->insertWidth/2));
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 
     if (!TkTextIndexBbox(textPtr, &index, false, x, y, w, h, &charWidth, &thisChar)) {
@@ -2686,7 +2686,7 @@ TkTextGetCursorWidth(
     int *extent)		/* Extent of cursor to left side, can be NULL. */
 {
     int width;
-    int cursorExtent = MIN(textPtr->padX, textPtr->insertWidth/2);
+    int cursorExtent = MAX(1, MIN(textPtr->padX, textPtr->insertWidth/2));
 
     if (extent) {
 	*extent = -cursorExtent;
