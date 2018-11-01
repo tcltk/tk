@@ -197,15 +197,6 @@ AC_CHECK_HEADERS(sys/time.h)
 AC_HEADER_TIME
 
 #--------------------------------------------------------------------
-#	Under Solaris 2.4, strtod returns the wrong value for the
-#	terminating character under some conditions.  Check for this
-#	and if the problem exists use a substitute procedure
-#	"fixstrtod" (provided by Tcl) that corrects the error.
-#--------------------------------------------------------------------
-
-SC_BUGGY_STRTOD
-
-#--------------------------------------------------------------------
 #	Check for various typedefs and provide substitutes if
 #	they don't exist.
 #--------------------------------------------------------------------
