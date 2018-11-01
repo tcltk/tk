@@ -414,7 +414,7 @@ RBC_OBJS = \
 	rbcGrPen.$(OBJEXT) \
 	rbcGrPs.$(OBJEXT) \
 	rbcImage.$(OBJEXT) \
-	rbcInt.$(OBJEXT) \
+	rbcMain.$(OBJEXT) \
 	rbcParse.$(OBJEXT) \
 	rbcPs.$(OBJEXT) \
 	rbcSpline.$(OBJEXT) \
