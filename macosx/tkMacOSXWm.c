@@ -411,7 +411,7 @@ NSStatusItem *exitFullScreen;
 	  TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
       }
   } else {
-      NSLog (@"toggleFullScreen is ignored by Tk on OSX versions < 10.13");
+      TKLog (@"toggleFullScreen is ignored by Tk on OSX versions < 10.13");
   }
 }
 

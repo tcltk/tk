@@ -386,7 +386,7 @@ GenerateUpdates(
     Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    NSLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
+    TKLog(@"Expose %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
 	event.xexpose.y, event.xexpose.width, event.xexpose.height);
 #endif
 
@@ -836,6 +836,7 @@ ConfigureRestrictProc(
      * We do not allow recursive calls to drawRect.
      */
     if ([NSApp isDrawing]) {
+	TKLog(@"WARNING: a recursive call to drawRect was aborted.");
 	return;
     }
     [NSApp setIsDrawing: YES];
