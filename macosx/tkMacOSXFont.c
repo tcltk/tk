@@ -14,19 +14,11 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXFont.h"
+#include "tkMacOSXConstants.h"
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
 #define defaultOrientation kCTFontDefaultOrientation
 #define verticalOrientation kCTFontVerticalOrientation
-#else
-#define defaultOrientation kCTFontOrientationDefault
-#define verticalOrientation kCTFontOrientationVertical
-#endif
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101100
 #define fixedPitch kCTFontUserFixedPitchFontType
-#else
-#define fixedPitch kCTFontUIFontUserFixedPitch
-#endif
 
 /*
 #ifdef TK_MAC_DEBUG
