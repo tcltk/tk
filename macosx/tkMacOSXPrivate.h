@@ -265,9 +265,13 @@ VISIBILITY_HIDDEN
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
+    int _macMinorVersion;
+    Bool _isDrawing;
 #endif
 }
 @property int poolLock;
+@property int macMinorVersion;
+@property Bool isDrawing;
 
 @end
 @interface TKApplication(TKInit)
@@ -330,7 +334,8 @@ VISIBILITY_HIDDEN
 @interface TKContentView(TKWindowEvent)
 - (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIShapeRef) shape;
-- (void) viewDidEndLiveResize;
+- (void) viewDidChangeEffectiveAppearance;
+- (void) updateAppearanceEvent;
 - (void) tkToolbarButton: (id) sender;
 - (BOOL) isOpaque;
 - (BOOL) wantsDefaultClipping;
@@ -343,8 +348,8 @@ VISIBILITY_HIDDEN
 @end
 
 @interface NSWindow(TKWm)
-- (NSPoint) convertPointToScreen:(NSPoint)point;
-- (NSPoint) convertPointFromScreen:(NSPoint)point;
+- (NSPoint) tkConvertPointToScreen:(NSPoint)point;
+- (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
 @end
 
 #pragma mark NSMenu & NSMenuItem Utilities
