@@ -1,31 +1,31 @@
-namespace eval ::rbc {}
-set ::rbc::library [file normalize [file dirname [info script]]]
-
-
-proc Rbc_ActiveLegend { graph } {
-    $graph legend bind all <Enter> [list rbc::ActivateLegend $graph ]
-    $graph legend bind all <Leave> [list rbc::DeactivateLegend $graph]
-    $graph legend bind all <ButtonPress-1> [list rbc::HighlightLegend $graph]
+namespace eval ::rbc {
+    variable library [file normalize [file dirname [info script]]]
+    variable legacyAPI true
+    variable zoomInfo
+    array set zoomInfo {}
 }
 
-proc Rbc_Crosshairs { graph } {
-    rbc::Crosshairs $graph 
-}
-
-proc Rbc_ResetCrosshairs { graph state } {
-    rbc::Crosshairs $graph "Any-Motion" $state
-}
-
-proc Rbc_ZoomStack { graph } {
-    rbc::ZoomStack $graph
-}
-
-proc Rbc_PrintKey { graph } {
-    rbc::PrintKey $graph
-}
-
-proc Rbc_ClosestPoint { graph } {
-    rbc::ClosestPoint $graph
+if {$::rbc::legacyAPI} {
+    proc Rbc_ActiveLegend { graph } {
+	$graph legend bind all <Enter> [list rbc::ActivateLegend $graph ]
+	$graph legend bind all <Leave> [list rbc::DeactivateLegend $graph]
+	$graph legend bind all <ButtonPress-1> [list rbc::HighlightLegend $graph]
+    }
+    proc Rbc_Crosshairs { graph } {
+	rbc::Crosshairs $graph 
+    }
+    proc Rbc_ResetCrosshairs { graph state } {
+	rbc::Crosshairs $graph "Any-Motion" $state
+    }
+    proc Rbc_ZoomStack { graph } {
+	rbc::ZoomStack $graph
+    }
+    proc Rbc_PrintKey { graph } {
+	rbc::PrintKey $graph
+    }
+    proc Rbc_ClosestPoint { graph } {
+	rbc::ClosestPoint $graph
+    }
 }
 
 #
@@ -66,15 +66,15 @@ proc rbc::Crosshairs { graph {event "Any-Motion"} {state "on"}} {
 	%W crosshairs on
     }
     $graph crosshairs configure -color red
-    if { $state == "on" } {
+    if { $state eq "on" } {
 	rbc::AddBindTag $graph crosshairs-$graph
-    } elseif { $state == "off" } {
+    } elseif { $state eq "off" } {
 	rbc::RemoveBindTag $graph crosshairs-$graph
     }
 }
 
 proc rbc::InitStack { graph } {
-    global zoomInfo
+    variable zoomInfo
     set zoomInfo($graph,interval) 100
     set zoomInfo($graph,afterId) 0
     set zoomInfo($graph,A,x) {}
@@ -86,7 +86,8 @@ proc rbc::InitStack { graph } {
 }
 
 proc rbc::ZoomStack { graph {start "ButtonPress-1"} {reset "ButtonPress-3"} } {
-    global zoomInfo zoomMod
+    variable zoomInfo
+    global zoomMod
     
     rbc::InitStack $graph
     
@@ -105,7 +106,7 @@ proc rbc::ZoomStack { graph {start "ButtonPress-1"} {reset "ButtonPress-3"} } {
 }
 
 proc rbc::PrintKey { graph {event "Shift-ButtonRelease-3"} } {
-    bind print-$graph <$event>  { Rbc_PostScriptDialog %W }
+    bind print-$graph <$event> { Rbc_PostScriptDialog %W }
     rbc::AddBindTag $graph print-$graph
 }
 
@@ -118,8 +119,8 @@ proc rbc::ClosestPoint { graph {event "Control-ButtonPress-2"} } {
 
 proc rbc::AddBindTag { widget tag } {
     set oldTagList [bindtags $widget]
-    if { [lsearch $oldTagList $tag] < 0 } {
-	bindtags $widget [linsert $oldTagList 0  $tag]
+    if {$tag ni $oldTagList} {
+	bindtags $widget [linsert $oldTagList 0 $tag]
     }
 }
 
@@ -132,7 +133,7 @@ proc rbc::RemoveBindTag { widget tag } {
 }
 
 proc rbc::FindElement { graph x y } {
-    if ![$graph element closest $x $y info -interpolate yes] {
+    if {![$graph element closest $x $y info -interpolate yes]} {
 	beep
 	return
     }
@@ -160,7 +161,7 @@ proc rbc::FindElement { graph x y } {
 	-name line.$markerName 
 
     rbc::FlashPoint $graph $info(name) $info(index) 10
-    rbc::FlashPoint $graph $info(name) [expr $info(index) + 1] 10
+    rbc::FlashPoint $graph $info(name) [expr {$info(index) + 1}] 10
 }
 
 proc rbc::FlashPoint { graph name index count } {
@@ -171,15 +172,15 @@ proc rbc::FlashPoint { graph name index count } {
     }
     incr count -1
     if { $count > 0 } {
-	after 200 rbc::FlashPoint $graph $name $index $count
+	after 200 [list rbc::FlashPoint $graph $name $index $count]
 	update
     } else {
-	eval $graph marker delete [$graph marker names "rbcClosest_*"]
+	$graph marker delete {*}[$graph marker names "rbcClosest_*"]
     }
 }
 
 proc rbc::GetCoords { graph x y index } {
-    global zoomInfo
+    variable zoomInfo
     if { [$graph cget -invertxy] } {
 	set zoomInfo($graph,$index,x) $y
 	set zoomInfo($graph,$index,y) $x
@@ -190,7 +191,7 @@ proc rbc::GetCoords { graph x y index } {
 }
 
 proc rbc::MarkPoint { graph index } {
-    global zoomInfo
+    variable zoomInfo
     set x [$graph xaxis invtransform $zoomInfo($graph,$index,x)]
     set y [$graph yaxis invtransform $zoomInfo($graph,$index,y)]
     set marker "zoomText_$index"
@@ -206,7 +207,7 @@ proc rbc::MarkPoint { graph index } {
 }
 
 proc rbc::DestroyZoomTitle { graph } {
-    global zoomInfo
+    variable zoomInfo
 
     if { $zoomInfo($graph,corner) == "A" } {
 	catch { $graph marker delete "zoomTitle" }
@@ -214,19 +215,17 @@ proc rbc::DestroyZoomTitle { graph } {
 }
 
 proc rbc::PopZoom { graph } {
-    global zoomInfo
+    namespace upvar ::rbc zoomInfo($graph,stack) zoomStack
 
-    set zoomStack $zoomInfo($graph,stack)
     if { [llength $zoomStack] > 0 } {
-	set cmd [lindex $zoomStack 0]
-	set zoomInfo($graph,stack) [lrange $zoomStack 1 end]
-	eval $cmd
+	set zoomStack [lassign $zoomStack cmd]
+	uplevel #0 $cmd
 	rbc::ZoomTitleLast $graph
-	#busy hold $graph
+	#tk busy hold $graph
 	event generate $graph <Configure>
 	update idletasks
-	#busy release $graph
-	after 2000 "rbc::DestroyZoomTitle $graph"
+	#tk busy forget $graph
+	after 2000 [list rbc::DestroyZoomTitle $graph]
     } else {
 	catch { $graph marker delete "zoomTitle" }
     }
@@ -235,8 +234,8 @@ proc rbc::PopZoom { graph } {
 # Push the old axis limits on the stack and set the new ones
 
 proc rbc::PushZoom { graph } {
-    global zoomInfo
-    eval $graph marker delete [$graph marker names "zoom*"]
+    variable zoomInfo
+    $graph marker delete {*}[$graph marker names "zoom*"]
     if { [info exists zoomInfo($graph,afterId)] } {
 	after cancel $zoomInfo($graph,afterId)
     }
@@ -254,12 +253,11 @@ proc rbc::PushZoom { graph } {
 	foreach axis [$graph $margin use] {
 	    set min [$graph axis cget $axis -min] 
 	    set max [$graph axis cget $axis -max]
-	    set c [list $graph axis configure $axis -min $min -max $max]
-	    append cmd "$c\n"
+	    append cmd [list $graph axis configure $axis -min $min -max $max] \
+		"\n"
 	}
     }
     set zoomInfo($graph,stack) [linsert $zoomInfo($graph,stack) 0 $cmd]
-
 
     foreach margin { xaxis x2axis } {
 	foreach axis [$graph $margin use] {
@@ -283,10 +281,10 @@ proc rbc::PushZoom { graph } {
 	    }
 	}
     }
-    #busy hold $graph 
+    #tk busy hold $graph 
     event generate $graph <Configure>
     update idletasks
-    #busy release $graph
+    #tk busy forget $graph
 }
 
 #
@@ -295,12 +293,12 @@ proc rbc::PushZoom { graph } {
 #
 
 proc rbc::ResetZoom { graph } {
-    global zoomInfo 
+    variable zoomInfo
 
     if { ![info exists zoomInfo($graph,corner)] } {
 	rbc::InitStack $graph 
     }
-    eval $graph marker delete [$graph marker names "zoom*"]
+    $graph marker delete {*}[$graph marker names "zoom*"]
 
     if { $zoomInfo($graph,corner) == "A" } {
 	# Reset the whole axis
@@ -324,8 +322,9 @@ option add *zoomTitle.foreground  yellow1
 option add *zoomTitle.coords	  "-Inf Inf"
 
 proc rbc::ZoomTitleNext { graph } {
-    global zoomInfo
-    set level [expr [llength $zoomInfo($graph,stack)] + 1]
+    variable zoomInfo
+
+    set level [expr {[llength $zoomInfo($graph,stack)] + 1}]
     if { [$graph cget -invertxy] } {
 	set coords "-Inf -Inf"
     } else {
@@ -336,7 +335,7 @@ proc rbc::ZoomTitleNext { graph } {
 }
 
 proc rbc::ZoomTitleLast { graph } {
-    global zoomInfo
+    variable zoomInfo
 
     set level [llength $zoomInfo($graph,stack)]
     if { $level > 0 } {
@@ -347,7 +346,9 @@ proc rbc::ZoomTitleLast { graph } {
 
 
 proc rbc::SetZoomPoint { graph x y } {
-    global zoomInfo zoomMod
+    variable zoomInfo
+    global zoomMod
+
     if { ![info exists zoomInfo($graph,corner)] } {
 	rbc::InitStack $graph
     }
@@ -387,7 +388,7 @@ option add *zoomOutline.lineWidth	2
 option add *zoomOutline.xor		yes
 
 proc rbc::MarchingAnts { graph offset } {
-    global zoomInfo
+    variable zoomInfo
 
     incr offset
     if { [$graph marker exists zoomOutline] } {
@@ -399,7 +400,7 @@ proc rbc::MarchingAnts { graph offset } {
 }
 
 proc rbc::Box { graph } {
-    global zoomInfo
+    variable zoomInfo
 
     if { $zoomInfo($graph,A,x) > $zoomInfo($graph,B,x) } { 
 	set x1 [$graph xaxis invtransform $zoomInfo($graph,B,x)]
@@ -490,7 +491,9 @@ proc rbc::ResetPostScript { graph } {
 	pady paperwidth paperheight width height colormode } {
 	global $graph.$var
 	set old [$graph postscript cget -$var]
-	if { [catch {$graph postscript configure -$var [set $graph.$var]}] != 0 } {
+	if {[catch {
+	    $graph postscript configure -$var [set $graph.$var]
+	}]} {
 	    $graph postscript configure -$var $old
 	    set $graph.$var $old
 	}
