@@ -448,7 +448,8 @@ NSStatusItem *exitFullScreen;
 	title = "unnamed window";
     }
     if (DEBUG_ZOMBIES > 1){
-	printf("Retained <%s>. Count is: %lu\n", title, [self retainCount]);
+	fprintf(stderr, "Retained <%s>. Count is: %lu\n",
+		title, [self retainCount]);
     }
     return result;
 }
