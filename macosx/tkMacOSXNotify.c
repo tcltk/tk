@@ -90,7 +90,8 @@ InspectQueueRestrictProc(
     } else {
 	name = Tk_EventName[eventPtr->type];
     }
-    printf("    > %s;serial = %lu; time=%lu)\n", name, serial, time);
+    fprintf(stderr, "    > %s;serial = %lu; time=%lu)\n",
+	    name, serial, time);
     return TK_DEFER_EVENT;
 }
 
@@ -104,7 +105,7 @@ void DebugPrintQueue(void)
     Tk_RestrictProc *oldProc;
 
     oldProc = Tk_RestrictEvents(InspectQueueRestrictProc, NULL, &oldArg);
-    printf("Current queue:\n");
+    fprintf(stderr, "Current queue:\n");
     while (Tcl_DoOneEvent(TCL_ALL_EVENTS|TCL_DONT_WAIT)) {};
     Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 }
@@ -146,7 +147,7 @@ void DebugPrintQueue(void)
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
 #ifdef TK_MAC_DEBUG_EVENTS
-    printf("Sending event of type %d\n", (int)[theEvent type]); 
+    fprintf(stderr, "Sending event of type %d\n", (int)[theEvent type]); 
     DebugPrintQueue();
 #endif
 }
