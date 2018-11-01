@@ -237,7 +237,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidOrderOffScreenNotification, windowUnmapped:);
 #endif
 #undef observe
- 
+
 }
 @end
 
@@ -828,10 +828,18 @@ ConfigureRestrictProc(
 
 #ifdef TK_MAC_DEBUG_DRAWING
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    if (winPtr) printf("drawRect: drawing %s\n", Tk_PathName(winPtr));
+    if (winPtr) fprintf(stderr, "drawRect: drawing %s\n",
+			Tk_PathName(winPtr));
 #endif
-    
+
+    /*
+     * We do not allow recursive calls to drawRect.
+     */
+    if ([NSApp isDrawing]) {
+	return;
+    }
     [NSApp setIsDrawing: YES];
+
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
     CGFloat height = [self bounds].size.height;
     HIMutableShapeRef drawShape = HIShapeCreateMutable();
@@ -840,7 +848,7 @@ ConfigureRestrictProc(
 	CGRect r = NSRectToCGRect(*rectsBeingDrawn++);
 
 #ifdef TK_MAC_DEBUG_DRAWING
-	printf("drawRect: %dx%d@(%d,%d)\n", (int)r.size.width,
+	fprintf(stderr, "drawRect: %dx%d@(%d,%d)\n", (int)r.size.width,
 	       (int)r.size.height, (int)r.origin.x, (int)r.origin.y);
 #endif
 
@@ -852,7 +860,7 @@ ConfigureRestrictProc(
     [NSApp setIsDrawing: NO];
 
 #ifdef TK_MAC_DEBUG_DRAWING
-    printf("drawRect: done.\n");
+    fprintf(stderr, "drawRect: done.\n");
 #endif
 
 }
@@ -973,7 +981,7 @@ ConfigureRestrictProc(
     }
 }
 
- 
+
 /*
  * These two methods allow Tk to register a virtual event which fires when the
  * appearance changes on 10.14.
