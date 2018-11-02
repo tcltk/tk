@@ -45,7 +45,7 @@ proc rbc::DeactivateLegend { graph } {
 proc rbc::HighlightLegend { graph } {
     set elem [$graph legend get current]
     set relief [$graph element cget $elem -labelrelief]
-    if { $relief == "flat" } {
+    if { $relief eq "flat" } {
 	$graph element configure $elem -labelrelief raised
 	$graph element activate $elem
     } else {
@@ -209,7 +209,7 @@ proc rbc::MarkPoint { graph index } {
 proc rbc::DestroyZoomTitle { graph } {
     variable zoomInfo
 
-    if { $zoomInfo($graph,corner) == "A" } {
+    if { $zoomInfo($graph,corner) eq "A" } {
 	catch { $graph marker delete "zoomTitle" }
     }
 }
@@ -300,7 +300,7 @@ proc rbc::ResetZoom { graph } {
     }
     $graph marker delete {*}[$graph marker names "zoom*"]
 
-    if { $zoomInfo($graph,corner) == "A" } {
+    if { $zoomInfo($graph,corner) eq "A" } {
 	# Reset the whole axis
 	rbc::PopZoom $graph
     } else {
@@ -319,16 +319,16 @@ proc rbc::ResetZoom { graph } {
 option add *zoomTitle.font	  -*-helvetica-medium-R-*-*-18-*-*-*-*-*-*-* 
 option add *zoomTitle.shadow	  yellow4
 option add *zoomTitle.foreground  yellow1
-option add *zoomTitle.coords	  "-Inf Inf"
+option add *zoomTitle.coords	  [list -Inf Inf]
 
 proc rbc::ZoomTitleNext { graph } {
     variable zoomInfo
 
     set level [expr {[llength $zoomInfo($graph,stack)] + 1}]
     if { [$graph cget -invertxy] } {
-	set coords "-Inf -Inf"
+	set coords [list -Inf -Inf]
     } else {
-	set coords "-Inf Inf"
+	set coords [list -Inf Inf]
     }
     $graph marker create text -name "zoomTitle" -text "Zoom #$level" \
 	-coords $coords -bindtags "" -anchor nw
@@ -363,7 +363,7 @@ proc rbc::SetZoomPoint { graph x y } {
 	#rbc::MarkPoint $graph B
 	rbc::Box %W
     }
-    if { $zoomInfo($graph,corner) == "A" } {
+    if { $zoomInfo($graph,corner) eq "A" } {
 	if { ![$graph inside $x $y] } {
 	    return
 	}
@@ -440,50 +440,50 @@ proc Rbc_PostScriptDialog { graph } {
     set row 1
     set col 0
     label $top.title -text "PostScript Options"
-    table $top $top.title -cspan 7
+    grid $top.title -columnspan 7
     foreach bool { center landscape maxpect preview decorations } {
 	set w $top.$bool-label
 	label $w -text "-$bool" -font *courier*-r-*12* 
-	table $top $row,$col $w -anchor e -pady { 2 0 } -padx { 0 4 }
+	grid $w -row $row -column 0 -anchor e -pady { 2 0 } -padx { 0 4 }
 	set w $top.$bool-yes
 	global $graph.$bool
 	radiobutton $w -text "yes" -variable $graph.$bool -value 1
-	table $top $row,$col+1 $w -anchor w
+	grid $w -row $row -column 1 -anchor w
 	set w $top.$bool-no
 	radiobutton $w -text "no" -variable $graph.$bool -value 0
-	table $top $row,$col+2 $w -anchor w
+	grid $w -row $row -column 2 -anchor w
 	incr row
     }
-    label $top.modes -text "-colormode" -font *courier*-r-*12* 
-    table $top $row,0 $top.modes -anchor e  -pady { 2 0 } -padx { 0 4 }
+    label $top.modes -text "-colormode" -font *courier*-r-*12*
+    grid $top.modes -row $row -anchor e  -pady { 2 0 } -padx { 0 4 }
     set col 1
     foreach m { color greyscale } {
 	set w $top.$m
 	radiobutton $w -text $m -variable $graph.colormode -value $m
-	table $top $row,$col $w -anchor w
+	grid $w -row $row -column $col -anchor w
 	incr col
     }
     set row 1
     frame $top.sep -width 2 -bd 1 -relief sunken
-    table $top $row,3 $top.sep -fill y -rspan 6
+    grid $top.sep -row 1 -column 3 -fill y -rowspan 6
     set col 4
     foreach value { padx pady paperwidth paperheight width height } {
 	set w $top.$value-label
-	label $w -text "-$value" -font *courier*-r-*12* 
-	table $top $row,$col $w -anchor e  -pady { 2 0 } -padx { 0 4 }
+	label $w -text "-$value" -font *courier*-r-*12*
+	grid $w -row $row -column 4 -anchor e -pady {2 0} -padx {0 4}
 	set w $top.$value-entry
 	global $graph.$value
 	entry $w -textvariable $graph.$value -width 8
-	table $top $row,$col+1 $w -cspan 2 -anchor w -padx 8
+	grid $w - -row $row -column 5 -anchor w -padx 8
 	incr row
     }
-    table configure $top c3 -width .125i
-    button $top.cancel -text "Cancel" -command "destroy $top"
-    table $top $row,0 $top.cancel  -width 1i -pady 2 -cspan 3
-    button $top.reset -text "Reset" -command "destroy $top"
-    #table $top $row,1 $top.reset  -width 1i
-    button $top.print -text "Print" -command "rbc::ResetPostScript $graph"
-    table $top $row,4 $top.print  -width 1i -pady 2 -cspan 2
+    grid columnconfigure $top 3 -minsize .125i
+    button $top.cancel -text "Cancel" -command [list destroy $top]
+    grid $top.cancel - - -row $row -column 0 -pady 2
+    button $top.reset -text "Reset" -command [list destroy $top]
+    #grid $top.reset -row $row -column 1
+    button $top.print -text "Print" -command [list rbc::ResetPostScript $graph]
+    grid $top.print - -row $row -column 4 -pady 2
 }
 
 proc rbc::ResetPostScript { graph } {
@@ -498,7 +498,8 @@ proc rbc::ResetPostScript { graph } {
 	    set $graph.$var $old
 	}
     }
-    $graph postscript output "out.ps"
-    puts stdout "wrote file \"out.ps\"."
+    set filename "out.ps"
+    $graph postscript output $filename
+    puts stdout [format "wrote file \"%s\"." $filename]
     flush stdout
 }
