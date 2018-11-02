@@ -4441,6 +4441,7 @@ FindSequence(
     assert(eventString);
 
     psPtr = ckalloc(sizeof(PatSeq) + (patsBufSize - 1)*sizeof(TkPattern));
+    memset(psPtr->pats, 0, patsBufSize*sizeof(TkPattern)); /* otherwise memcmp doesn't work */
 
     /*
      *------------------------------------------------------------------
@@ -4454,6 +4455,7 @@ FindSequence(
 	    patsBufSize *= 2;
 	    psPtr = ckrealloc(psPtr, sizeof(PatSeq) + (patsBufSize - 1)*sizeof(TkPattern));
 	    patPtr = psPtr->pats + pos;
+	    memset(patPtr, 0, (patsBufSize - pos)*sizeof(TkPattern)); /* otherwise memcmp doesn't work */
 	}
 
 	if ((count = ParseEventDescription(interp, &p, patPtr, &eventMask)) == 0) {
@@ -4510,6 +4512,7 @@ FindSequence(
 	PatSeq *psPtr2;
 
 	for (psPtr2 = Tcl_GetHashValue(hPtr); psPtr2; psPtr2 = psPtr2->nextSeqPtr) {
+	    assert(TEST_PSENTRY(psPtr2));
 	    if (numPats == psPtr2->numPats && memcmp(patPtr, psPtr2->pats, sequenceSize) == 0) {
 		ckfree(psPtr);
 		if (maskPtr) {
