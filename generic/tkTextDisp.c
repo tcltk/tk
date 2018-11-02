@@ -6283,8 +6283,15 @@ ComputeCursorExtents(
      * already eliminated, otherwise we cannot do this optimization.
      */
 
-    *extent1 = MIN(textPtr->padX, textPtr->insertWidth/2);
-    *extent2 = MIN(textPtr->padX, (textPtr->insertWidth + 1)/2);
+    /*
+     * NOTE:
+     * The cursor disappears (when not using at least value 1 for the extents) if it's at the
+     * very left of the first character of display line. But we prefer that the cursor is always
+     * visible, thus we allow to overlap the first character in this special case.
+     */
+
+    *extent1 = MAX(1, MIN(textPtr->padX, textPtr->insertWidth/2));
+    *extent2 = MAX(1, MIN(textPtr->padX, (textPtr->insertWidth + 1)/2));
 }
 
 
@@ -6552,9 +6559,10 @@ DisplayDLine(
      */
 
     ComputeCursorExtents(textPtr, &extent1, &extent2);
+    xOffs = MAX(0, dInfoPtr->x - extent1);
     XCopyArea(display, pixmap, Tk_WindowId(textPtr->tkwin), dInfoPtr->copyGC,
-	    dInfoPtr->x - extent1, yOffs, dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, lineHeight,
-	    dInfoPtr->x - extent1, dlPtr->y + yOffs);
+	    xOffs, yOffs, dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, lineHeight,
+	    xOffs, dlPtr->y + yOffs);
 
     DEBUG(stats.linesRedrawn += 1);
 }
@@ -8772,7 +8780,7 @@ DisplayText(
 	 */
 
 	damageRgn = TkCreateRegion();
-	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, dInfoPtr->x - extent1, oldY,
+	if (TkScrollWindow(textPtr->tkwin, dInfoPtr->scrollGC, MAX(0, dInfoPtr->x - extent1), oldY,
 		dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, height, 0, y - oldY, damageRgn)) {
 	    TextInvalidateRegion(textPtr, damageRgn);
 	}

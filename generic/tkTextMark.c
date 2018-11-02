@@ -2748,7 +2748,12 @@ TkTextInsertDisplayProc(
 	return;
     }
 
-    x -= halfWidth;
+    /*
+     * Always show insert cursor, so don't allow negative x position.
+     * See also function ComputeCursorExtents() in file tkTextDisp.c.
+     */
+
+    x = MAX(0, x - halfWidth);
 
     Tk_SetCaretPos(textPtr->tkwin, x, screenY, height);
 
