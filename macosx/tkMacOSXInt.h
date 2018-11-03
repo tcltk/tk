@@ -83,11 +83,10 @@ typedef struct TkWindowPrivate MacDrawable;
 #define TK_CLIP_INVALID		0x02
 #define TK_HOST_EXISTS		0x04
 #define TK_DRAWN_UNDER_MENU	0x08
-#define TK_FOCUSED_VIEW		0x10
-#define TK_IS_PIXMAP		0x20
-#define TK_IS_BW_PIXMAP		0x40
-#define TK_DO_NOT_DRAW          0x80
-#define TK_USE_XIMAGE_ALPHA     0x100
+#define TK_IS_PIXMAP		0x10
+#define TK_IS_BW_PIXMAP		0x20
+#define TK_DO_NOT_DRAW          0x40
+#define TK_USE_XIMAGE_ALPHA     0x80
 /*
  * I am reserving TK_EMBEDDED = 0x100 in the MacDrawable flags
  * This is defined in tk.h. We need to duplicate the TK_EMBEDDED flag in the
