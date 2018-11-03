@@ -915,9 +915,19 @@ ConfigureRestrictProc(
 
 	HIRect bounds = NSRectToCGRect([self bounds]);
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
+	Bool locked = false;
+	/*
+	 * On OSX versions below 10.14 we *must* lock focus to enable drawing.
+	 * As of 10.14 this is unnecessary and lockFocusIfCanDraw is deprecated.
+	 */
+	if (self != [NSView focusView]) {
+	    locked = [self lockFocusIfCanDraw];
+	}
 	[self generateExposeEvents: shape];
 	[w displayIfNeeded];
-	[NSApp _unlockAutoreleasePool];
+	if (locked) {
+	    [self unlockFocus];
+	}
 	[NSApp setIsDrawing:NO];
     }
 }
@@ -977,9 +987,7 @@ ConfigureRestrictProc(
 	 * were created when the expose events were processed. Unfortunately
 	 * this does not work in macOS 10.13.
 	 */
-	if ([NSApp macMinorVersion] > 13 || [self inLiveResize]) {
-	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
-	}
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
 }
 
