@@ -863,7 +863,6 @@ ConfigureRestrictProc(
 #ifdef TK_MAC_DEBUG_DRAWING
     fprintf(stderr, "drawRect: done.\n");
 #endif
-
 }
 
 -(void) setFrameSize: (NSSize)newsize
@@ -873,6 +872,7 @@ ConfigureRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
     if (winPtr) {
+	[NSApp setIsDrawing:YES];
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
 	ClientData oldArg;
@@ -918,6 +918,7 @@ ConfigureRestrictProc(
 	[self generateExposeEvents: shape];
 	[w displayIfNeeded];
 	[NSApp _unlockAutoreleasePool];
+	[NSApp setIsDrawing:NO];
     }
 }
 

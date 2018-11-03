@@ -131,7 +131,6 @@ typedef struct TkMacOSXDrawingContext {
     NSView *view;
     HIShapeRef clipRgn;
     CGRect portBounds;
-    int focusLocked;
 } TkMacOSXDrawingContext;
 
 /*
