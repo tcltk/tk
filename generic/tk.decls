@@ -805,7 +805,7 @@ declare 211 {
     int	 Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
 	    Tk_OptionTable optionToken, Tk_Window tkwin)
 }
-declare 212 {
+declare 212 {nostub {Don't use this function in a stub-enabled extension}} {
     void  Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
 	    Tcl_Interp *interp)
 }
