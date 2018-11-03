@@ -872,7 +872,12 @@ ConfigureRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
     if (winPtr) {
-	[NSApp setIsDrawing:YES];
+	/* On OSX versions below 10.14 setFrame calls drawRect.
+	 * On 10.14 it does its own drawing.
+	 */
+	if ([NSApp macMinorVersion] > 13) {
+	    [NSApp setIsDrawing:YES];
+	}
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
 	ClientData oldArg;
@@ -928,7 +933,9 @@ ConfigureRestrictProc(
 	if (locked) {
 	    [self unlockFocus];
 	}
-	[NSApp setIsDrawing:NO];
+	if ([NSApp macMinorVersion] > 13) {
+	    [NSApp setIsDrawing:NO];
+	}
     }
 }
 
