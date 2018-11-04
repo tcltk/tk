@@ -2605,7 +2605,7 @@ TkTextGetCursorBbox(
     assert(w);
     assert(h);
 
-    cursorExtent = MAX(1, MIN(textPtr->padX, textPtr->insertWidth/2));
+    cursorExtent = MAX(1, textPtr->insertWidth/2);
     TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 
     if (!TkTextIndexBbox(textPtr, &index, false, x, y, w, h, &charWidth, &thisChar)) {
@@ -2656,7 +2656,7 @@ TkTextGetCursorBbox(
 	/* NOTE: the block cursor extent is always rounded towards zero. */
 	*w = charWidth + 2*cursorExtent;
     } else {
-	*w = MIN(textPtr->insertWidth, textPtr->padX + cursorExtent);
+	*w = textPtr->insertWidth;
     }
 
     *x -= cursorExtent;
@@ -2686,7 +2686,7 @@ TkTextGetCursorWidth(
     int *extent)		/* Extent of cursor to left side, can be NULL. */
 {
     int width;
-    int cursorExtent = MAX(1, MIN(textPtr->padX, textPtr->insertWidth/2));
+    int cursorExtent = MAX(1, textPtr->insertWidth/2);
 
     if (extent) {
 	*extent = -cursorExtent;
@@ -2699,7 +2699,7 @@ TkTextGetCursorWidth(
 	    return 0; /* cursor is not visible at all */
 	}
     } else {
-	width = MIN(textPtr->insertWidth, textPtr->padX + cursorExtent);
+	width = textPtr->insertWidth;
     }
 
     return width;
@@ -2737,7 +2737,7 @@ TkTextInsertDisplayProc(
 {
     int halfWidth = textPtr->insertWidth/2;
     int width = TkTextGetCursorWidth(textPtr, &x, NULL);
-    int rightSideWidth = width + halfWidth - textPtr->insertWidth;
+    int rightSideWidth = MAX(1, width + halfWidth - textPtr->insertWidth);
 
     if ((x + rightSideWidth) < 0) {
 	/*
@@ -2748,12 +2748,11 @@ TkTextInsertDisplayProc(
 	return;
     }
 
-    /*
-     * Always show insert cursor, so don't allow negative x position.
-     * See also function ComputeCursorExtents() in file tkTextDisp.c.
-     */
-
-    x = MAX(0, x - halfWidth);
+    x -= halfWidth;
+    if (halfWidth == 0 && x >= TkTextGetLastXPixel(textPtr)) {
+	/* Ensure visibility of at least 1 pixel */
+	x -= 1;
+    }
 
     Tk_SetCaretPos(textPtr->tkwin, x, screenY, height);
 
