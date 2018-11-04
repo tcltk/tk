@@ -833,9 +833,10 @@ ConfigureRestrictProc(
 #endif
 
     /*
-     * We do not allow recursive calls to drawRect.
+     * We do not allow recursive calls to drawRect.  Only log this
+     * in 10.14 and higher, where it should not happen.
      */
-    if ([NSApp isDrawing]) {
+    if ([NSApp isDrawing] && [NSApp macMinorVersion] > 13) {
 	TKLog(@"WARNING: a recursive call to drawRect was aborted.");
 	return;
     }
@@ -920,19 +921,8 @@ ConfigureRestrictProc(
 
 	HIRect bounds = NSRectToCGRect([self bounds]);
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
-	Bool locked = false;
-	/*
-	 * On OSX versions below 10.14 we *must* lock focus to enable drawing.
-	 * As of 10.14 this is unnecessary and lockFocusIfCanDraw is deprecated.
-	 */
-	if (self != [NSView focusView]) {
-	    locked = [self lockFocusIfCanDraw];
-	}
 	[self generateExposeEvents: shape];
 	[w displayIfNeeded];
-	if (locked) {
-	    [self unlockFocus];
-	}
 	if ([NSApp macMinorVersion] > 13) {
 	    [NSApp setIsDrawing:NO];
 	}
