@@ -7566,4 +7566,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-10-30 (new platform) port to system changes in Mac OSX 10.14 (culler)
 
+2018-11-04 (bug)[6b22d4] [treeview] binding fix (ohagan)
+
 - Released 8.6.9, November 9, 2018 - http://core.tcl-lang.org/tk/ for details -
