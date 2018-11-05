@@ -31,6 +31,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
+#define APP_IS_DRAWING (TkTestAppIsDrawing())
+#else
+#define APP_IS_DRAWING 1
 #endif
 
 #ifdef __UNIX__
@@ -1550,15 +1553,26 @@ ImageDisplay(
     TImageInstance *instPtr = (TImageInstance *) clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
 
-    sprintf(buffer, "%s display %d %d %d %d",
-	    instPtr->masterPtr->imageName, imageX, imageY, width, height);
-    Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
-	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
-    if (width > (instPtr->masterPtr->width - imageX)) {
-	width = instPtr->masterPtr->width - imageX;
-    }
-    if (height > (instPtr->masterPtr->height - imageY)) {
-	height = instPtr->masterPtr->height - imageY;
+    /*
+     * On macOS the fake drawing below will not take place when this
+     * displayProc is run as an idle task.  That is because the idle task will
+     * not have a valid graphics context available.  Instead, the window will
+     * be marked as needing redisplay and will get redrawn in the next call to
+     * its contentView's drawRect method.  We only record the display
+     * information when the actual drawing takes place to avoid duplicate
+     * records which would cause some image tests to fail.
+     */
+    if (APP_IS_DRAWING) {
+	sprintf(buffer, "%s display %d %d %d %d",
+		instPtr->masterPtr->imageName, imageX, imageY, width, height);
+	Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
+		    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+	if (width > (instPtr->masterPtr->width - imageX)) {
+	    width = instPtr->masterPtr->width - imageX;
+	}
+	if (height > (instPtr->masterPtr->height - imageY)) {
+	    height = instPtr->masterPtr->height - imageY;
+	}
     }
     XDrawRectangle(display, drawable, instPtr->gc, drawableX, drawableY,
 	    (unsigned) (width-1), (unsigned) (height-1));
