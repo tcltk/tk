@@ -861,6 +861,22 @@ ConfigureRestrictProc(
     CFRelease(drawShape);
     [NSApp setIsDrawing: NO];
 
+    /*
+     * To make it possible to wait for this method, we post an application
+     * defined event when all drawing has been done.
+     */
+    NSEvent* drawEvent = [NSEvent otherEventWithType:NSApplicationDefined
+				      location:NSMakePoint(0,0)
+				     modifierFlags:0
+					 timestamp:0
+				      windowNumber:[[self window] windowNumber]
+					   context:nil
+					   subtype:1
+					       data1:0
+					       data2:0
+			  ];
+    [NSApp postEvent:drawEvent atStart:YES];
+    
 #ifdef TK_MAC_DEBUG_DRAWING
     fprintf(stderr, "drawRect: done.\n");
 #endif
@@ -981,8 +997,7 @@ ConfigureRestrictProc(
 	 *
 	 * Fortunately, Tk schedules all drawing to be done while Tcl is idle.
 	 * So we can do the drawing by processing all of the idle events that
-	 * were created when the expose events were processed. Unfortunately
-	 * this does not work in macOS 10.13.
+	 * were created when the expose events were processed.
 	 */
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }

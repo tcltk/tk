@@ -112,11 +112,16 @@ enum {
  *
  * TkMacOSXFlushWindows --
  *
- *	This routine is a stub called by XSync, which is called during
- *      the Tk update command.  It calls displayIfNeeded on all visible
- *      windows.  This is necessary in order to insure that update will
- *      run all of the display procedures which have been registered as
- *      idle tasks.  The test suite assumes that this is the case.
+ *	This routine is a stub called by XSync, which is called during the Tk
+ *      update command.  The language specification does not require that the
+ *      update command be synchronous but many of the tests assume that is the
+ *      case.  It is not naturally the case on macOS since many idle tasks are
+ *      run inside of the drawRect method of a window's contentView, and that
+ *      method will not be called until after this function returns.  To make
+ *      the tests work, we attempt to force this to be synchronous by waiting
+ *      until drawRect has been called for each window.  The mechanism we use
+ *      for this is to have drawRect post an ApplicationDefined NSEvent on the
+ *      AppKit event queue when it finishes drawing, and wait for it here.
  *
  * Results:
  *	None.
@@ -131,11 +136,19 @@ enum {
 MODULE_SCOPE void
 TkMacOSXFlushWindows(void)
 {
+    NSModalSession modalSession = TkMacOSXGetModalSession();
+    NSEvent *syncEvent;
     NSArray *macWindows = [NSApp orderedWindows];
-
     for (NSWindow *w in macWindows) {
 	if (TkMacOSXGetXWindow(w)) {
 	    [w displayIfNeeded];
+	    syncEvent = [NSApp
+		nextEventMatchingMask:NSApplicationDefinedEventMask
+			    untilDate:[NSDate distantPast]
+			       inMode:GetRunLoopMode(modalSession)
+			      dequeue:YES];
+	    [NSApp discardEventsMatchingMask:NSApplicationDefinedEventMask 
+				 beforeEvent:syncEvent];
 	}
     }
 
