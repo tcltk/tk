@@ -143,11 +143,11 @@ TkMacOSXFlushWindows(void)
 	if (TkMacOSXGetXWindow(w)) {
 	    [w displayIfNeeded];
 	    syncEvent = [NSApp
-		nextEventMatchingMask:NSApplicationDefinedEventMask
+		nextEventMatchingMask:NSApplicationDefinedMask
 			    untilDate:[NSDate distantPast]
 			       inMode:GetRunLoopMode(modalSession)
 			      dequeue:YES];
-	    [NSApp discardEventsMatchingMask:NSApplicationDefinedEventMask 
+	    [NSApp discardEventsMatchingMask:NSApplicationDefinedMask 
 				 beforeEvent:syncEvent];
 	}
     }
