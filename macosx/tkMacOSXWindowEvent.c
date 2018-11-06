@@ -832,14 +832,19 @@ ConfigureRestrictProc(
 			Tk_PathName(winPtr));
 #endif
 
+    if ([NSApp simulateDrawing]) {
+    	return;
+    }
+
     /*
-     * We do not allow recursive calls to drawRect.  Only log this
-     * in 10.14 and higher, where it should not happen.
+     * We do not allow recursive calls to drawRect.
      */
-    if ([NSApp isDrawing] && [NSApp macMinorVersion] > 13) {
+
+    if ([NSApp isDrawing]) {
 	TKLog(@"WARNING: a recursive call to drawRect was aborted.");
 	return;
     }
+
     [NSApp setIsDrawing: YES];
 
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
@@ -861,22 +866,6 @@ ConfigureRestrictProc(
     CFRelease(drawShape);
     [NSApp setIsDrawing: NO];
 
-    /*
-     * To make it possible to wait for this method, we post an application
-     * defined event when all drawing has been done.
-     */
-    NSEvent* drawEvent = [NSEvent otherEventWithType:NSApplicationDefined
-				      location:NSMakePoint(0,0)
-				     modifierFlags:0
-					 timestamp:0
-				      windowNumber:[[self window] windowNumber]
-					   context:nil
-					   subtype:1
-					       data1:0
-					       data2:0
-			  ];
-    [NSApp postEvent:drawEvent atStart:YES];
-    
 #ifdef TK_MAC_DEBUG_DRAWING
     fprintf(stderr, "drawRect: done.\n");
 #endif
