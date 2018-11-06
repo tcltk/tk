@@ -837,10 +837,11 @@ ConfigureRestrictProc(
     }
 
     /*
-     * We do not allow recursive calls to drawRect.
+     * We do not allow recursive calls to drawRect, but we only log
+     * them on OSX > 10.13, where they should never happen.
      */
 
-    if ([NSApp isDrawing]) {
+    if ([NSApp isDrawing] && [NSApp macMinorVersion] > 13) {
 	TKLog(@"WARNING: a recursive call to drawRect was aborted.");
 	return;
     }
