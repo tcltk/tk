@@ -82,25 +82,28 @@ DebuggerObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TkTestAppIsDrawing --
+ * TkTestSimulateDrawing --
  *
- *      A widget display procedure can call this to determine whether it
- *      is being run inside of the drawRect method.  This is needed for
- *      some tests, especially of the Text widget, which record data in
- *      a global Tcl variable and assume that display procedures will be
- *      run in a predictable sequence as Tcl idle tasks.
+ *      A test widget display procedure which records calls can use this to
+ *      avoid duplicate calls which would occur due to fact that no valid
+ *      graphics context is available to the idle task which is running the
+ *      display proc.  Note that no actual drawing to the screen will take
+ *      place when this flag is set.  This is just a wrapper for the NSApp
+ *      property.
+ *
  *
  * Results:
- *	True only while running the drawRect method of a TKContentView;
+ *      Calls to low level drawing routines will return without actually
+ *	drawing anything to the screen.
  *
  * Side effects:
  *	None
  *
  *----------------------------------------------------------------------
  */
-MODULE_SCOPE Bool
-TkTestAppIsDrawing(void) {
-    return [NSApp isDrawing];
+MODULE_SCOPE void
+TkTestSimulateDrawing(Bool yesno) {
+    [NSApp setSimulateDrawing:yesno];
 }
 
 
