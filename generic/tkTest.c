@@ -31,9 +31,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define APP_IS_DRAWING (TkTestAppIsDrawing())
+#define SIMULATE_DRAWING TkTestSimulateDrawing(true);
 #else
-#define APP_IS_DRAWING 1
+#define SIMULATE_DRAWING
 #endif
 
 #ifdef __UNIX__
@@ -1554,26 +1554,34 @@ ImageDisplay(
     char buffer[200 + TCL_INTEGER_SPACE * 6];
 
     /*
-     * On macOS the fake drawing below will not take place when this
-     * displayProc is run as an idle task.  That is because the idle task will
-     * not have a valid graphics context available.  Instead, the window will
-     * be marked as needing redisplay and will get redrawn in the next call to
-     * its contentView's drawRect method.  We only record the display
-     * information when the actual drawing takes place to avoid duplicate
-     * records which would cause some image tests to fail.
+     * The purpose of the test image type is to track the calls to an image
+     * display proc and record the parameters passed in each call.  On macOS
+     * these tests will fail because of the asynchronous drawing.  The low
+     * level graphics calls below which are supposed to draw a rectangle will
+     * not draw anything to the screen because the idle task will not be
+     * processed inside of the drawRect method and hence will not be able to
+     * obtain a valid graphics context. Instead, the window will be marked as
+     * needing display, and will be redrawn during a future asynchronous call
+     * to drawRect.  This will generate an other call to this display proc,
+     * and the recorded data will show extra calls, causing the test to fail.
+     * To avoid this, we can set the [NSApp simulateDrawing] flag, which will
+     * cause all low level drawing routines to return immediately and not
+     * schedule the window for drawing later.  This flag is cleared by the
+     * next call to XSync, which is called by the update command.
      */
-    if (APP_IS_DRAWING) {
-	sprintf(buffer, "%s display %d %d %d %d",
-		instPtr->masterPtr->imageName, imageX, imageY, width, height);
-	Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
-		    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
-	if (width > (instPtr->masterPtr->width - imageX)) {
-	    width = instPtr->masterPtr->width - imageX;
-	}
-	if (height > (instPtr->masterPtr->height - imageY)) {
-	    height = instPtr->masterPtr->height - imageY;
-	}
+
+    sprintf(buffer, "%s display %d %d %d %d",
+	    instPtr->masterPtr->imageName, imageX, imageY, width, height);
+    Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
+		buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+    if (width > (instPtr->masterPtr->width - imageX)) {
+	width = instPtr->masterPtr->width - imageX;
     }
+    if (height > (instPtr->masterPtr->height - imageY)) {
+	height = instPtr->masterPtr->height - imageY;
+    }
+
+    SIMULATE_DRAWING
     XDrawRectangle(display, drawable, instPtr->gc, drawableX, drawableY,
 	    (unsigned) (width-1), (unsigned) (height-1));
     XDrawLine(display, drawable, instPtr->gc, drawableX, drawableY,

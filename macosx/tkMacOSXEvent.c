@@ -136,22 +136,16 @@ enum {
 MODULE_SCOPE void
 TkMacOSXFlushWindows(void)
 {
-    NSModalSession modalSession = TkMacOSXGetModalSession();
-    NSEvent *syncEvent;
     NSArray *macWindows = [NSApp orderedWindows];
-    for (NSWindow *w in macWindows) {
-	if (TkMacOSXGetXWindow(w)) {
-	    [w displayIfNeeded];
-	    syncEvent = [NSApp
-		nextEventMatchingMask:NSApplicationDefinedMask
-			    untilDate:[NSDate distantPast]
-			       inMode:GetRunLoopMode(modalSession)
-			      dequeue:YES];
-	    [NSApp discardEventsMatchingMask:NSApplicationDefinedMask 
-				 beforeEvent:syncEvent];
-	}
+    if ([NSApp simulateDrawing]) {
+	[NSApp setSimulateDrawing:NO];
+	return;
     }
-
+    for (NSWindow *w in macWindows) {
+    	if (TkMacOSXGetXWindow(w)) {
+    	    [w displayIfNeeded];
+    	}
+    }
 }
 
 
