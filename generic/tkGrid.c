@@ -1732,10 +1732,9 @@ ArrangeGrid(
     masterPtr->flags &= ~REQUESTED_RELAYOUT;
 
     /*
-     * If the master has no slaves anymore, then don't do anything at all:
-     * just leave the master's size as-is. Otherwise there is no way to
-     * "relinquish" control over the master so another geometry manager can
-     * take over.
+     * If the master has no slaves anymore, then don't change the master size.
+     * Otherwise there is no way to "relinquish" control over the master
+     * so another geometry manager can take over.
      */
 
     if (masterPtr->slavePtr == NULL) {
@@ -2777,11 +2776,15 @@ Unlink(
     /*
      * If we have emptied this master from slaves it means we are no longer
      * handling it and should mark it as free.
+     *
+     * Send the event "NoManagedChild" to the master to inform it about there
+     * being no managed children inside it.
      */
 
     if ((masterPtr->slavePtr == NULL) && (masterPtr->flags & ALLOCED_MASTER)) {
 	TkFreeGeometryMaster(masterPtr->tkwin, "grid");
 	masterPtr->flags &= ~ALLOCED_MASTER;
+	TkSendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
     }
 }
 
@@ -3509,11 +3512,15 @@ ConfigureSlaves(
     /*
      * If we have emptied this master from slaves it means we are no longer
      * handling it and should mark it as free.
+     *
+     * Send the event "NoManagedChild" to the master to inform it about there
+     * being no managed children inside it.
      */
 
     if (masterPtr->slavePtr == NULL && masterPtr->flags & ALLOCED_MASTER) {
 	TkFreeGeometryMaster(masterPtr->tkwin, "grid");
 	masterPtr->flags &= ~ALLOCED_MASTER;
+	TkSendVirtualEvent(masterPtr->tkwin, "NoManagedChild", NULL);
     }
 
     return TCL_OK;
