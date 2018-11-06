@@ -93,7 +93,7 @@
 #define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
 #define NSShiftKeyMask NSEventModifierFlagShift
 #define NSAnyEventMask NSEventMaskAny
-#define NSApplicationDefinedEventMask NSEventMaskApplicationDefined
+#define NSApplicationDefinedMask NSEventMaskApplicationDefined
 #define NSTexturedBackgroundWindowMask NSWindowStyleMaskTexturedBackground
 #define NSUtilityWindowMask NSWindowStyleMaskUtilityWindow
 #define NSNonactivatingPanelMask NSWindowStyleMaskNonactivatingPanel
