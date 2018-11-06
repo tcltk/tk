@@ -47,8 +47,10 @@
  * Simple boolean type support.
  */
 
+#ifdef bool
+# undef bool /* needed for Mac */
+#endif
 #define bool int
-
 #ifndef MAC_OSX_TK /* Mac provides 'true' and 'false' */
 enum { true = (bool) 1, false = (bool) 0 };
 #endif
@@ -339,7 +341,7 @@ typedef struct PatSeq {
  * Tcl/Tk does not support C99 integer support.)
  */
 
-#define NO_NUMBER (((Tcl_WideInt) 1) << (8*sizeof(Tcl_WideInt) - 1))
+#define NO_NUMBER ((Tcl_WideInt) (~((Tcl_WideUInt) 1) + 1))
 
 /*
  * The following structure is used in the nameTable of a virtual event table
@@ -908,11 +910,15 @@ SetupPatternKey(
     memset(key, 0, sizeof(PatternTableKey));
 
     patPtr = psPtr->pats;
+    assert(!patPtr->info || !patPtr->name);
+    assert(!patPtr->name || !patPtr->info);
+
     key->object = psPtr->object;
     key->type = patPtr->eventType;
-    key->detail.name = patPtr->name;
     if (patPtr->info) {
 	key->detail.info = patPtr->info;
+    } else {
+	key->detail.name = patPtr->name;
     }
 }
 
@@ -1147,7 +1153,7 @@ TkBindInit(
     assert(false == 0 && true == 1);
 
     /* test that this constant is indeed out of integer range */
-    assert(NO_NUMBER != (((Tcl_WideInt) 1) << (8*sizeof(int) - 1)));
+    assert((Tcl_WideUInt) NO_NUMBER > (Tcl_WideUInt) ~1u + 1u);
 
     /* test expected indices of Button1..Button5, otherwise our button handling is not working */
     assert(Button1 == 1 && Button2 == 2 && Button3 == 3 && Button4 == 4 && Button5 == 5);
@@ -1185,6 +1191,9 @@ TkBindInit(
     assert(Tk_Offset(XCreateWindowEvent, x) == Tk_Offset(XGravityEvent, x));
     assert(Tk_Offset(XCreateWindowEvent, y) == Tk_Offset(XConfigureEvent, y));
     assert(Tk_Offset(XCreateWindowEvent, y) == Tk_Offset(XGravityEvent, y));
+    assert(Tk_Offset(XCrossingEvent, time) == Tk_Offset(XEnterWindowEvent, time));
+    assert(Tk_Offset(XCrossingEvent, time) == Tk_Offset(XLeaveWindowEvent, time));
+    assert(Tk_Offset(XCrossingEvent, time) == Tk_Offset(XKeyEvent, time));
     assert(Tk_Offset(XKeyEvent, root) == Tk_Offset(XButtonEvent, root));
     assert(Tk_Offset(XKeyEvent, root) == Tk_Offset(XCrossingEvent, root));
     assert(Tk_Offset(XKeyEvent, root) == Tk_Offset(XMotionEvent, root));
@@ -1194,7 +1203,6 @@ TkBindInit(
     assert(Tk_Offset(XKeyEvent, subwindow) == Tk_Offset(XCrossingEvent, subwindow));
     assert(Tk_Offset(XKeyEvent, subwindow) == Tk_Offset(XMotionEvent, subwindow));
     assert(Tk_Offset(XKeyEvent, time) == Tk_Offset(XButtonEvent, time));
-    assert(Tk_Offset(XKeyEvent, time) == Tk_Offset(XCrossingEvent, time));
     assert(Tk_Offset(XKeyEvent, time) == Tk_Offset(XMotionEvent, time));
     assert(Tk_Offset(XKeyEvent, x) == Tk_Offset(XButtonEvent, x));
     assert(Tk_Offset(XKeyEvent, x) == Tk_Offset(XCrossingEvent, x));
@@ -1446,7 +1454,7 @@ InsertPatSeq(
     assert(lookupTables);
     assert(psPtr);
     assert(TEST_PSENTRY(psPtr));
-    assert(psPtr->numPats >= 1);
+    assert(psPtr->numPats >= 1u);
 
     if (!(psPtr->added)) {
 	PatternTableKey key;
@@ -2211,7 +2219,7 @@ Tk_BindEvent(
     arraySize = 0;
     Tcl_DStringInit(&scripts);
 
-    if ((unsigned) numObjects > SIZE_OF_ARRAY(matchPtrBuf)) {
+    if ((size_t) numObjects > SIZE_OF_ARRAY(matchPtrBuf)) {
 	/* it's unrealistic that the buffer size is too small, but who knows? */
 	matchPtrArr = ckalloc(numObjects*sizeof(matchPtrArr[0]));
     }
@@ -2278,45 +2286,40 @@ Tk_BindEvent(
 		 * process the level zero patterns because of possible promotions.
 		 */
 	    }
-
 	    /*
 	     * Now we have to catch up the processing of the script.
 	     */
-
-	    ExpandPercents(winPtr, matchPtrArr[k]->script, curEvent, scriptCount++, &scripts);
-	    Tcl_DStringAppend(&scripts, "", 1);
-	    continue;
-	}
-
-	/*
-	 * We have to look whether we can find a better match in virtual table, provided that we
-	 * don't have a higher level match.
-	 */
-
-	matchPtrArr[k] = bestPtr;
-
-	if (eventPtr->type != VirtualEvent) {
-	    LookupTables *virtTables = &bindInfoPtr->virtualEventTable.lookupTables;
-	    PatSeq *matchPtr = matchPtrArr[k];
-	    PatSeq *mPtr;
-	    PSList *psl[2];
-
+	} else {
 	    /*
-	     * Note that virtual events cannot promote.
+	     * We have to look whether we can find a better match in virtual table, provided that we
+	     * don't have a higher level match.
 	     */
 
-	    psl[0] = GetLookupForEvent(virtTables, curEvent, NULL, true);
-	    psl[1] = GetLookupForEvent(virtTables, curEvent, NULL, false);
+	    matchPtrArr[k] = bestPtr;
 
-	    assert(psl[0] == NULL || psl[0] != psl[1]);
+	    if (eventPtr->type != VirtualEvent) {
+		LookupTables *virtTables = &bindInfoPtr->virtualEventTable.lookupTables;
+		PatSeq *matchPtr = matchPtrArr[k];
+		PatSeq *mPtr;
+		PSList *psl[2];
 
-	    mPtr = MatchPatterns(dispPtr, bindPtr, psl[0], NULL, 0, curEvent, objArr[k], &matchPtr);
-	    if (mPtr) {
-		matchPtrArr[k] = matchPtr;
-		matchPtr = mPtr;
-	    }
-	    if (MatchPatterns(dispPtr, bindPtr, psl[1], NULL, 0, curEvent, objArr[k], &matchPtr)) {
-		matchPtrArr[k] = matchPtr;
+		/*
+		 * Note that virtual events cannot promote.
+		 */
+
+		psl[0] = GetLookupForEvent(virtTables, curEvent, NULL, true);
+		psl[1] = GetLookupForEvent(virtTables, curEvent, NULL, false);
+
+		assert(psl[0] == NULL || psl[0] != psl[1]);
+
+		mPtr = MatchPatterns(dispPtr, bindPtr, psl[0], NULL, 0, curEvent, objArr[k], &matchPtr);
+		if (mPtr) {
+		    matchPtrArr[k] = matchPtr;
+		    matchPtr = mPtr;
+		}
+		if (MatchPatterns(dispPtr, bindPtr, psl[1], NULL, 0, curEvent, objArr[k], &matchPtr)) {
+		    matchPtrArr[k] = matchPtr;
+		}
 	    }
 	}
 
@@ -2584,15 +2587,7 @@ Compare(
 	if (!sndInfo && fstInfo) { return -1; }
     }
 
-    {	/* local scope */
-	unsigned fstCount = GetCount(fstMatchPtr, patIndex);
-	unsigned sndCount = GetCount(sndMatchPtr, patIndex);
-
-	if (sndCount > fstCount) { return +1; }
-	if (sndCount < fstCount) { return -1; }
-    }
-
-    return 0;
+    return (int) GetCount(sndMatchPtr, patIndex) - (int) GetCount(fstMatchPtr, patIndex);
 }
 
 static PatSeq *
@@ -2647,18 +2642,13 @@ MatchPatterns(
 				|| curEvent->xev.xcreatewindow.parent == window)
 			&& (!patPtr->name || patPtr->name == curEvent->detail.name)
 			&& (!patPtr->info || patPtr->info == curEvent->detail.info)) {
-		    unsigned long modMask = patPtr->modStateMask;
-		    unsigned long curModStateMask = bindPtr->curModStateMask;
-
-		    if (modMask) {
-			/*
-			 * Resolve the modifier mask for Alt and Mod keys. Unfortunately this
-			 * cannot be done in ParseEventDescription, otherwise this function would
-			 * be the better place.
-			 */
-			modMask = ResolveModifiers(dispPtr, modMask);
-			curModStateMask = ResolveModifiers(dispPtr, curModStateMask);
-		    }
+		    /*
+		     * Resolve the modifier mask for Alt and Mod keys. Unfortunately this
+		     * cannot be done in ParseEventDescription, otherwise this function would
+		     * be the better place.
+		     */
+		    unsigned long modMask = ResolveModifiers(dispPtr, patPtr->modStateMask);
+		    unsigned long curModStateMask = ResolveModifiers(dispPtr, bindPtr->curModStateMask);
 
 		    psEntry->expired = true; /* remove it from promotion list */
 
@@ -2707,7 +2697,7 @@ MatchPatterns(
 				assert(!patPtr->name);
 				psNewEntry = MakeListEntry(&bindPtr->lookupTables.entryPool, psPtr);
 				assert(psNewEntry->isNew);
-				assert(psNewEntry->count == 1);
+				assert(psNewEntry->count == 1u);
 				PSList_Append(psSuccList, psNewEntry);
 				psNewEntry->window = window; /* bind to current window */
 			    } else {
@@ -3483,7 +3473,7 @@ DeleteVirtualEvent(
 		 * Just deleting this one physical event. Consolidate list of
 		 * owned physical events and return.
 		 */
-		if ((unsigned) iPhys < PhysOwned_Size(owned)) {
+		if ((size_t) iPhys < PhysOwned_Size(owned)) {
 		    PhysOwned_Set(owned, iPhys, lastElemPtr);
 		}
 		return TCL_OK;
@@ -3704,7 +3694,7 @@ HandleEventGenerate(
     if ((count = ParseEventDescription(interp, &p, &pat, &eventMask)) == 0) {
 	return TCL_ERROR;
     }
-    if (count != 1) {
+    if (count != 1u) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("Double or Triple modifier not allowed", -1));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", NULL);
 	return TCL_ERROR;
@@ -4452,7 +4442,7 @@ FindSequence(
     for (patPtr = psPtr->pats, numPats = 0; *(p = SkipSpaces(p)); ++patPtr, ++numPats) {
 	if (numPats >= patsBufSize) {
 	    unsigned pos = patPtr - psPtr->pats;
-	    patsBufSize *= 2;
+	    patsBufSize += patsBufSize;
 	    psPtr = ckrealloc(psPtr, sizeof(PatSeq) + (patsBufSize - 1)*sizeof(TkPattern));
 	    patPtr = psPtr->pats + pos;
 	    memset(patPtr, 0, (patsBufSize - pos)*sizeof(TkPattern)); /* otherwise memcmp doesn't work */
@@ -4475,7 +4465,7 @@ FindSequence(
 	    virtualFound = true;
 	}
 
-	if (count > 1) {
+	if (count > 1u) {
 	    maxCount = Max(count, maxCount);
 	}
 
@@ -4495,11 +4485,14 @@ FindSequence(
 	ckfree(psPtr);
 	return NULL;
     }
-    if (numPats > 1 && virtualFound) {
+    if (numPats > 1u && virtualFound) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("virtual events may not be composed", -1));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION", NULL);
 	ckfree(psPtr);
 	return NULL;
+    }
+    if (patsBufSize > numPats) {
+	psPtr = ckrealloc(psPtr, sizeof(PatSeq) + (numPats - 1)*sizeof(TkPattern));
     }
 
     patPtr = psPtr->pats;
@@ -4870,7 +4863,7 @@ GetField(
     assert(p);
     assert(copy);
 
-    for ( ; *p && !isspace(UCHAR(*p)) && *p != '>' && *p != '-' && size > 1; --size) {
+    for ( ; *p && !isspace(UCHAR(*p)) && *p != '>' && *p != '-' && size > 1u; --size) {
 	*copy++ = *p++;
     }
     *copy = '\0';
@@ -4955,7 +4948,7 @@ GetPatternObj(
 	    }
 
 	    assert(patPtr->eventType < TK_LASTEVENT);
-	    assert(((unsigned) eventArrayIndex[patPtr->eventType]) < SIZE_OF_ARRAY(eventArray));
+	    assert(((size_t) eventArrayIndex[patPtr->eventType]) < SIZE_OF_ARRAY(eventArray));
 	    Tcl_AppendToObj(patternObj, eventArray[eventArrayIndex[patPtr->eventType]].name, -1);
 
 	    if (patPtr->info) {
@@ -5023,7 +5016,7 @@ TkStringToKeysym(
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
     assert(name);
-    if (strlen(name) == 1) {
+    if (strlen(name) == 1u) {
 	KeySym keysym = (KeySym) (unsigned char) name[0];
 
 	if (TkKeysymToString(keysym)) {
