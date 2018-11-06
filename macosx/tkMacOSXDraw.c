@@ -1448,7 +1448,7 @@ TkMacOSXSetUpGraphicsPort(
  *----------------------------------------------------------------------
  */
 
-int
+Bool
 TkMacOSXSetupDrawingContext(
     Drawable d,
     GC gc,
@@ -1462,16 +1462,26 @@ TkMacOSXSetupDrawingContext(
     CGRect clipBounds;
 
     /*
-     * If the drawable is not a pixmap and it has an associated
-     * NSWindow then we are drawing to a window.
+     * If we are simulating drawing for tests, just return false.
      */
+
+    if ([NSApp simulateDrawing]) {
+	return false;
+    }
+
+    /*
+     * If the drawable is not a pixmap and it has an associated
+     * NSWindow then we know we are drawing to a window.
+     */
+
     if (!(macDraw->flags & TK_IS_PIXMAP)) {
 	win = TkMacOSXDrawableWindow(d);
     }
-    
+
     /*
      * Check that we have a non-empty clipping region.
      */
+
     dc.clipRgn = TkMacOSXGetClipRgn(d);
     ClipToGC(d, gc, &dc.clipRgn);
     if (dc.clipRgn && HIShapeIsEmpty(dc.clipRgn)) {
@@ -1484,12 +1494,14 @@ TkMacOSXSetupDrawingContext(
      * are drawing to a window then we can get one from the
      * window.
      */
+
     dc.context = TkMacOSXGetCGContextForDrawable(d);
     if (dc.context) {
 	dc.portBounds = clipBounds = CGContextGetClipBoundingBox(dc.context);
     } else if (win) {
 	NSView *view = TkMacOSXDrawableView(macDraw);
 	if (view) {
+
 	    /*
 	     * We can only draw into the view when the current CGContext is
 	     * valid and belongs to the view.  Validity can only be guaranteed
@@ -1501,6 +1513,7 @@ TkMacOSXSetupDrawingContext(
 	     * then we mark our view as needing display and return failure.
 	     * It should get drawn in a later call to drawRect.
 	     */
+
            if (view != [NSView focusView]) {
 	       [view setNeedsDisplay:YES];
 	       canDraw = false;
@@ -1520,9 +1533,11 @@ TkMacOSXSetupDrawingContext(
 	Tcl_Panic("TkMacOSXSetupDrawingContext(): "
 		"no context to draw into !");
     }
+
     /*
      * Configure the drawing context.
      */
+
     if (dc.context) {
 	CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
 		.ty = dc.portBounds.size.height};
