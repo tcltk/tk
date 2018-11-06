@@ -1800,7 +1800,6 @@ test grid-17.1 {forget and pending idle handlers} -body {
     set result ok
 } -result ok
 
-
 test grid-18.1 {test respect for internalborder} -body {
     toplevel .pack
     wm geometry .pack 200x200
@@ -2018,9 +2017,10 @@ test grid-23 {grid configure -in leaked from previous master - bug
 } {1}
 grid_reset 23
 
-test grid-24.1 {<<NoManagedChild>> fires on last grid forget} -body {
+test grid-24.1 {<<NoManagedChild>> fires on last grid forget} -setup {
     global A
-    catch {unset A}
+    unset -nocomplain A
+} -body {
     grid [frame .1]
     update
     bind . <<NoManagedChild>> {set A 1}
@@ -2031,9 +2031,10 @@ test grid-24.1 {<<NoManagedChild>> fires on last grid forget} -body {
     bind . <<NoManagedChild>> {}
     grid_reset 24.1
 } -result {1}
-test grid-24.2 {<<NoManagedChild>> fires on last grid remove} -body {
+test grid-24.2 {<<NoManagedChild>> fires on last grid remove} -setup {
     global A
-    catch {unset A}
+    unset -nocomplain A
+} -body {
     grid [frame .1]
     update
     bind . <<NoManagedChild>> {set A 1}
@@ -2044,9 +2045,10 @@ test grid-24.2 {<<NoManagedChild>> fires on last grid remove} -body {
     bind . <<NoManagedChild>> {}
     grid_reset 24.2
 } -result {1}
-test grid-24.3 {<<NoManagedChild>> fires on last gridded child destruction} -body {
+test grid-24.3 {<<NoManagedChild>> fires on last gridded child destruction} -setup {
     global A
-    catch {unset A}
+    unset -nocomplain A
+} -body {
     grid [frame .1]
     update
     bind . <<NoManagedChild>> {incr A}
@@ -2057,9 +2059,10 @@ test grid-24.3 {<<NoManagedChild>> fires on last gridded child destruction} -bod
     bind . <<NoManagedChild>> {}
     grid_reset 24.3
 } -result {1}
-test grid-24.4 {<Configure> does not fire on last grid forget} -body {
+test grid-24.4 {<Configure> does not fire on last grid forget} -setup {
     global A
-    catch {unset A}
+    unset -nocomplain A
+} -body {
     grid [frame .1]
     update
     bind . <Configure> {set A 1}
@@ -2070,9 +2073,10 @@ test grid-24.4 {<Configure> does not fire on last grid forget} -body {
     bind . <Configure> {}
     grid_reset 24.4
 } -result {0}
-test grid-24.5 {<Configure> fires on forelast grid forget} -body {
+test grid-24.5 {<Configure> fires on forelast grid forget} -setup {
     global A
-    catch {unset A}
+    unset -nocomplain A
+} -body {
     grid [frame .1]
     grid [frame .2]
     update
@@ -2084,9 +2088,10 @@ test grid-24.5 {<Configure> fires on forelast grid forget} -body {
     bind . <Configure> {}
     grid_reset 24.5
 } -result {1}
-test grid-24.6 {<<NoManagedChild>> does not fire on forelast grid forget} -body {
+test grid-24.6 {<<NoManagedChild>> does not fire on forelast grid forget} -setup {
     global A
-    catch {unset A}
+    unset -nocomplain A
+} -body {
     grid [frame .1]
     grid [frame .2]
     update
@@ -2098,9 +2103,10 @@ test grid-24.6 {<<NoManagedChild>> does not fire on forelast grid forget} -body 
     bind . <<NoManagedChild>> {}
     grid_reset 24.6
 } -result {0}
-test grid-24.7 {<<NoManagedChild>> does not fire on grid anchor} -body {
+test grid-24.7 {<<NoManagedChild>> does not fire on grid anchor} -setup {
     global A
-    catch {unset A}
+    unset -nocomplain A
+} -body {
     bind . <<NoManagedChild>> {set A 1}
     grid anchor . w
     update
@@ -2110,9 +2116,10 @@ test grid-24.7 {<<NoManagedChild>> does not fire on grid anchor} -body {
     bind . <<NoManagedChild>> {}
     grid_reset 24.7
 } -result {0}
-test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagation is off} -body {
+test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagation is off} -setup {
     global A
-    catch {unset A}
+    unset -nocomplain A
+} -body {
     grid [frame .1]
     grid propagate . 0
     update
@@ -2124,7 +2131,6 @@ test grid-24.8 {<<NoManagedChild>> does not fire on last grid forget if propagat
     bind . <<NoManagedChild>> {}
     grid_reset 24.8
 } -result {0}
-
 
 # cleanup
 cleanupTests
