@@ -206,7 +206,7 @@ XGetImage(
 	    (bitmap_fmt != 0 && bitmap_fmt != 1) ||
 	    [bitmap_rep samplesPerPixel] != 4    ||
 	    [bitmap_rep isPlanar] != 0           ||
-	    bytes_per_row != 4 * scaled_width    ||
+	    bytes_per_row < 4 * scaled_width    ||
 	    size != bytes_per_row*scaled_height  ) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
 	    CFRelease(bitmap_rep);
@@ -237,8 +237,8 @@ XGetImage(
 	 */
 	struct pixel_fmt pixel = bitmap_fmt == 0 ? bgra : abgr;
 
-	for (row=0, n=0; row<scaled_height; row++, n+=bytes_per_row) {
-	    for (m=n; m<n+bytes_per_row; m+=4) {
+	for (row = 0, n = 0; row < scaled_height; row++, n += bytes_per_row) {
+	    for (m = n; m < n + 4*scaled_width; m += 4) {
 		R = *(bitmap + m + pixel.r);
 		G = *(bitmap + m + pixel.g);
 		B = *(bitmap + m + pixel.b);

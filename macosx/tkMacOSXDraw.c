@@ -155,16 +155,32 @@ TkMacOSXBitmapRepFromDrawableRect(
 	    CGImageRelease(cg_image);
 	}
     } else if ( (view = TkMacOSXDrawableView(mac_drawable)) ) {
+
 	/*
 	 * Convert Tk top-left to NSView bottom-left coordinates.
 	 */
+
 	int view_height = [view bounds].size.height;
 	NSRect view_rect = NSMakeRect(x + mac_drawable->xOff,
 			       view_height - height - y - mac_drawable->yOff,
 			       width, height);
-	bitmap_rep = [view bitmapImageRepForCachingDisplayInRect: view_rect];
-	[bitmap_rep retain];
-	[view cacheDisplayInRect:view_rect toBitmapImageRep:bitmap_rep];
+
+	/*
+	 * Attempt to copy from the view to a bitmapImageRep.  If the view does
+	 * not have a valid CGContext, doing this will silently corrupt memory
+	 * and make a big mess. So, in that case, we mark the view as needing 
+	 * display and return NULL.
+	 */
+	
+	if (view == [NSView focusView]) {
+	    bitmap_rep = [view bitmapImageRepForCachingDisplayInRect: view_rect];
+	    [bitmap_rep retain];
+	    [view cacheDisplayInRect:view_rect toBitmapImageRep:bitmap_rep];
+	} else {
+	    TkMacOSXDbgMsg("No CGContext - cannot copy from screen to bitmap.");
+	    [view setNeedsDisplay:YES];
+	    return NULL;
+	}
     } else {
 	TkMacOSXDbgMsg("Invalid source drawable");
     }
