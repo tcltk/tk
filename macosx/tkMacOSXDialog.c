@@ -1199,16 +1199,39 @@ TkAboutDlg(void)
 
     [dateFormatter release];
    
-    /*Replace old about dialog with standard alert that displays correctly on 10.14.*/
+    /*
+     * This replaces the old about dialog with a standard alert that displays
+     * correctly on 10.14.
+     */
+    
     NSString *version =  @"Tcl " TCL_PATCH_LEVEL " & Tk " TCL_PATCH_LEVEL;
-    NSString *copyright = @"Copyright 1987-";
-    NSString *contributors =   @" Tcl Core Team and Contributors";
-    NSString *credits = [NSString stringWithFormat:@"%@%@%@", copyright, year, contributors];	
-    NSAlert *about = [[NSAlert alloc] init];
+    NSString *url =   @"www.tcl-lang.org";
+    NSTextView *credits = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,300,300)];
+    NSFont *font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
+    NSDictionary *textAttributes = [NSDictionary dictionaryWithObject:font
+					        forKey:NSFontAttributeName];
+    [credits insertText: [[NSAttributedString alloc]
+		 initWithString:[NSString stringWithFormat: @"\n"
+		"Tcl and Tk are distributed under a modified BSD license: "
+		"www.tcl.tk/software/tcltk/license.html\n\n"
+		"%1$C 1987-%2$@ Tcl Core Team and Contributers.\n\n"
+		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC.\n\n"
+		"%1$C 2014-%2$@ Marc Culler.\n\n"
+		"%1$C 2002-2012 Daniel A. Steffen.\n\n"
+		"%1$C 2001-2009 Apple Inc.\n\n"
+		"%1$C 2001-2002 Jim Ingham & Ian Reid\n\n"
+		"%1$C 1998-2000 Jim Ingham & Ray Johnson\n\n"
+		"%1$C 1998-2000 Scriptics Inc.\n\n"
+		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year]
+	     attributes:textAttributes]
+             replacementRange:NSMakeRange(0,0)];
+    [credits setDrawsBackground:NO];
+    [credits setEditable:NO];
+     NSAlert *about = [[NSAlert alloc] init];
     [[about window] setTitle:@"About Tcl & Tk"];
     [about setMessageText: version];
-    [about setInformativeText:credits];
-    [about addButtonWithTitle:@"OK"];
+    [about setInformativeText:url];
+    about.accessoryView = credits;
     [about runModal];
     [about release];
 }
