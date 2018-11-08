@@ -1205,7 +1205,7 @@ TkAboutDlg(void)
     NSString *contributors =   @" Tcl Core Team and Contributors";
     NSString *credits = [NSString stringWithFormat:@"%@%@%@", copyright, year, contributors];	
     NSAlert *about = [[NSAlert alloc] init];
-    [[about window] setTitle:@"About Tcl/Tk"];
+    [[about window] setTitle:@"About Tcl & Tk"];
     [about setMessageText: version];
     [about setInformativeText:credits];
     [about addButtonWithTitle:@"OK"];
