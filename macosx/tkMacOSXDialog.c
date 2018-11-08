@@ -1240,7 +1240,7 @@ TkMacOSXStandardAboutPanelObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-    [NSApp orderFrontStandardAboutPanelWithOptions:[NSDictionary dictionary]];
+    TkAboutDlg();
     return TCL_OK;
 }
 
