@@ -40,6 +40,7 @@
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101200
 #define NSAppKitDefined NSEventTypeAppKitDefined
+#define NSApplicationDefined NSEventTypeApplicationDefined
 #define NSApplicationActivatedEventType NSEventSubtypeApplicationActivated
 #define NSApplicationDeactivatedEventType NSEventSubtypeApplicationDeactivated
 #define NSWindowExposedEventType NSEventSubtypeWindowExposed
@@ -92,6 +93,7 @@
 #define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
 #define NSShiftKeyMask NSEventModifierFlagShift
 #define NSAnyEventMask NSEventMaskAny
+#define NSApplicationDefinedMask NSEventMaskApplicationDefined
 #define NSTexturedBackgroundWindowMask NSWindowStyleMaskTexturedBackground
 #define NSUtilityWindowMask NSWindowStyleMaskUtilityWindow
 #define NSNonactivatingPanelMask NSWindowStyleMaskNonactivatingPanel

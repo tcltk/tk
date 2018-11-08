@@ -68,15 +68,19 @@ unsigned short releaseCode;
         processingCompose = NO;
       }
 
+    w = [theEvent window];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    XEvent xEvent;
+
+    if (!winPtr) {
+	return theEvent;
+    }
+
     switch (type) {
     case NSKeyUp:
-
 	/*Fix for bug #1ba71a86bb: key release firing on key press.*/
-	w = [theEvent window];
-	XEvent xEvent;
 	setupXEvent(&xEvent, w, 0);
-	TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-	Tk_Window tkwin = (Tk_Window) winPtr;
 	xEvent.xany.type = KeyRelease;
 	xEvent.xkey.keycode = releaseCode;
 	xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
@@ -88,8 +92,7 @@ unsigned short releaseCode;
     case NSFlagsChanged:
 	modifiers = [theEvent modifierFlags];
 	keyCode = [theEvent keyCode];
-	//	w = [self windowWithWindowNumber:[theEvent windowNumber]];
-	w = [theEvent window];
+
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d", [self class], self, _cmd, repeat, modifiers, characters, charactersIgnoringModifiers, keyCode,([charactersIgnoringModifiers length] == 0) ? 0 : [charactersIgnoringModifiers characterAtIndex: 0], w, type);
 #endif
