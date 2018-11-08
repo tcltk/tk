@@ -605,15 +605,15 @@ FrontWindowAtPoint(
 {
     NSPoint p = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
     NSArray *windows = [NSApp orderedWindows];
-    TkWindow *front = NULL;
+    TkWindow *winPtr = NULL;
 
     for (NSWindow *w in windows) {
-	    if (w && NSMouseInRect(p, [w frame], NO)) {
-		front = TkMacOSXGetTkWindow(w);
-		break;
-	    }
+	winPtr = TkMacOSXGetTkWindow(w);
+	if (winPtr && NSMouseInRect(p, [w frame], NO)) {
+	    break;
 	}
-    return front;
+    }
+    return winPtr;
 }
 
 /*
@@ -741,7 +741,6 @@ TkWmMapWindow(
 				 * mapped. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	/*
 	 * Create the underlying Mac window for this Tk window.
@@ -5677,7 +5676,7 @@ TkMacOSXMakeRealWindowExist(
     geometry.size.height += structureRect.size.height;
     geometry.origin.y = tkMacOSXZeroScreenHeight - (geometry.origin.y +
 	    geometry.size.height);
-    [window setFrame:geometry display:NO];
+    [window setFrame:geometry display:YES];
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
     macWin->flags |= TK_HOST_EXISTS;
 }
