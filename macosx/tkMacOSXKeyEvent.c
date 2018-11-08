@@ -76,7 +76,7 @@ unsigned short releaseCode;
     if (!winPtr) {
 	return theEvent;
     }
-    
+
     switch (type) {
     case NSKeyUp:
 	/*Fix for bug #1ba71a86bb: key release firing on key press.*/
@@ -92,8 +92,7 @@ unsigned short releaseCode;
     case NSFlagsChanged:
 	modifiers = [theEvent modifierFlags];
 	keyCode = [theEvent keyCode];
-	//	w = [self windowWithWindowNumber:[theEvent windowNumber]];
-	//	w = [theEvent window];
+
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d", [self class], self, _cmd, repeat, modifiers, characters, charactersIgnoringModifiers, keyCode,([charactersIgnoringModifiers length] == 0) ? 0 : [charactersIgnoringModifiers characterAtIndex: 0], w, type);
 #endif
