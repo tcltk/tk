@@ -1198,36 +1198,19 @@ TkAboutDlg(void)
     NSString *year = [dateFormatter stringFromDate:[NSDate date]];
 
     [dateFormatter release];
-
-    NSMutableParagraphStyle *style =
-	    [[[NSParagraphStyle defaultParagraphStyle] mutableCopy]
-	    autorelease];
-
-    [style setAlignment:NSCenterTextAlignment];
-
-    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
-	    @"Tcl & Tk", @"ApplicationName",
-	    @"Tcl " TCL_VERSION " & Tk " TK_VERSION, @"ApplicationVersion",
-	    @TK_PATCH_LEVEL, @"Version",
-	    image, @"ApplicationIcon",
-	    [NSString stringWithFormat:@"Copyright %1$C 1987-%2$@.", 0xA9,
-	    year], @"Copyright",
-	    [[[NSAttributedString alloc] initWithString:
-	    [NSString stringWithFormat:
-	    @"%1$C 1987-%2$@ Tcl Core Team." "\n\n"
-		"%1$C 1989-%2$@ Contributors." "\n\n"
-		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC." "\n\n"
-		"%1$C 2014-%2$@ Marc Culler." "\n\n"
-		"%1$C 2002-%2$@ Daniel A. Steffen." "\n\n"
-		"%1$C 2001-2009 Apple Inc." "\n\n"
-		"%1$C 2001-2002 Jim Ingham & Ian Reid" "\n\n"
-		"%1$C 1998-2000 Jim Ingham & Ray Johnson" "\n\n"
-		"%1$C 1998-2000 Scriptics Inc." "\n\n"
-		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year] attributes:
-	    [NSDictionary dictionaryWithObject:style
-	    forKey:NSParagraphStyleAttributeName]] autorelease], @"Credits",
-	    nil];
-    [NSApp orderFrontStandardAboutPanelWithOptions:options];
+   
+    /*Replace old about dialog with standard alert that displays correctly on 10.14.*/
+    NSString *version =  @"Tcl " TCL_PATCH_LEVEL " & Tk " TCL_PATCH_LEVEL;
+    NSString *copyright = @"Copyright 1987-";
+    NSString *contributors =   @" Tcl Core Team and Contributors";
+    NSString *credits = [NSString stringWithFormat:@"%@%@%@", copyright, year, contributors];	
+    NSAlert *about = [[NSAlert alloc] init];
+    [[about window] setTitle:@"About Tcl/Tk"];
+    [about setMessageText: version];
+    [about setInformativeText:credits];
+    [about addButtonWithTitle:@"OK"];
+    [about runModal];
+    [about release];
 }
 
 /*
