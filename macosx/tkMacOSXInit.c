@@ -47,6 +47,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 @synthesize poolLock = _poolLock;
 @synthesize macMinorVersion = _macMinorVersion;
 @synthesize isDrawing = _isDrawing;
+@synthesize simulateDrawing = _simulateDrawing;
 @end
 
 /*
@@ -162,13 +163,14 @@ static char scriptPath[PATH_MAX + 1] = "";
     systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
     minorVersion = systemVersion.minorVersion;
 #endif
-    [NSApp setMacMinorVersion: minorVersion]; 
+    [NSApp setMacMinorVersion: minorVersion];
 
     /*
      * We are not drawing yet.
      */
 
-    [NSApp setIsDrawing: NO];
+    [NSApp setIsDrawing:NO];
+    [NSApp setSimulateDrawing:NO];
 
     /*
      * Be our own delegate.
@@ -178,6 +180,7 @@ static char scriptPath[PATH_MAX + 1] = "";
     /*
      * Make sure we are allowed to open windows.
      */
+
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
     /*
