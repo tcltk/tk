@@ -3,7 +3,7 @@
  *
  *	This file contains most of the X calls called by Tk. Many of these
  *	calls are just stubs and either don't make sense on the Macintosh or
- *	their implamentation just doesn't do anything. Other calls will
+ *	their implementation just doesn't do anything. Other calls will
  *	eventually be moved into other files.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
