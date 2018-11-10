@@ -531,6 +531,7 @@ TkPutImage(
     unsigned int height)	/* distination and source. */
 {
     TkMacOSXDrawingContext dc;
+    MacDrawable *macDraw = (MacDrawable *) drawable;
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
@@ -539,7 +540,14 @@ TkPutImage(
     if (dc.context) {
 	CGRect bounds, srcRect, dstRect;
 	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image);
-	CGContextSetBlendMode(dc.context, kCGBlendModeSourceAtop);
+	if (macDraw->flags & TK_IS_PIXMAP) {
+	    /*
+	     * The CGContext for a pixmap is RGB only, with A = 0.
+	     */
+	    CGContextSetBlendMode(dc.context, kCGImageAlphaNoneSkipLast);
+	} else {
+	    CGContextSetBlendMode(dc.context, kCGBlendModeSourceAtop);
+	}
 	if (img) {
 
 	    /* If the XImage has big pixels, the source is rescaled to reflect
