@@ -31,6 +31,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
+#define SIMULATE_DRAWING TkTestSimulateDrawing(true);
+#else
+#define SIMULATE_DRAWING
 #endif
 
 #ifdef __UNIX__
@@ -168,7 +171,7 @@ static int		TestmenubarObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 #endif
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
 static int		TestmetricsObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
@@ -266,17 +269,17 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
     Tcl_CreateObjCommand(interp, "testmetrics", TestmetricsObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-#elif !defined(__CYGWIN__)
+#elif !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
     Tcl_CreateObjCommand(interp, "testmenubar", TestmenubarObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testsend", TkpTestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwrapper", TestwrapperObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-#endif /* _WIN32 || MAC_OSX_TK */
+#endif /* _WIN32 */
 
     /*
      * Create test image type.
@@ -1550,17 +1553,35 @@ ImageDisplay(
     TImageInstance *instPtr = (TImageInstance *) clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
 
-    sprintf(buffer, "%s display %d %d %d %d %d %d",
-	    instPtr->masterPtr->imageName, imageX, imageY, width, height,
-	    drawableX, drawableY);
+    /*
+     * The purpose of the test image type is to track the calls to an image
+     * display proc and record the parameters passed in each call.  On macOS
+     * these tests will fail because of the asynchronous drawing.  The low
+     * level graphics calls below which are supposed to draw a rectangle will
+     * not draw anything to the screen because the idle task will not be
+     * processed inside of the drawRect method and hence will not be able to
+     * obtain a valid graphics context. Instead, the window will be marked as
+     * needing display, and will be redrawn during a future asynchronous call
+     * to drawRect.  This will generate an other call to this display proc,
+     * and the recorded data will show extra calls, causing the test to fail.
+     * To avoid this, we can set the [NSApp simulateDrawing] flag, which will
+     * cause all low level drawing routines to return immediately and not
+     * schedule the window for drawing later.  This flag is cleared by the
+     * next call to XSync, which is called by the update command.
+     */
+
+    sprintf(buffer, "%s display %d %d %d %d",
+	    instPtr->masterPtr->imageName, imageX, imageY, width, height);
     Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
-	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+		buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     if (width > (instPtr->masterPtr->width - imageX)) {
 	width = instPtr->masterPtr->width - imageX;
     }
     if (height > (instPtr->masterPtr->height - imageY)) {
 	height = instPtr->masterPtr->height - imageY;
     }
+
+    SIMULATE_DRAWING
     XDrawRectangle(display, drawable, instPtr->gc, drawableX, drawableY,
 	    (unsigned) (width-1), (unsigned) (height-1));
     XDrawLine(display, drawable, instPtr->gc, drawableX, drawableY,
@@ -1765,7 +1786,7 @@ TestmenubarObjCmd(
  *----------------------------------------------------------------------
  */
 
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32)
 static int
 TestmetricsObjCmd(
     ClientData clientData,	/* Main window for application. */
@@ -1776,38 +1797,15 @@ TestmetricsObjCmd(
     char buf[TCL_INTEGER_SPACE];
     int val;
 
-#ifdef _WIN32
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
-#else
-    Tk_Window tkwin = (Tk_Window) clientData;
-    TkWindow *winPtr;
-
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option window");
-	return TCL_ERROR;
-    }
-
-    winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
-    if (winPtr == NULL) {
-	return TCL_ERROR;
-    }
-#endif
 
     if (strcmp(Tcl_GetString(objv[1]), "cyvscroll") == 0) {
-#ifdef _WIN32
 	val = GetSystemMetrics(SM_CYVSCROLL);
-#else
-	val = ((TkScrollbar *) winPtr->instanceData)->width;
-#endif
     } else  if (strcmp(Tcl_GetString(objv[1]), "cxhscroll") == 0) {
-#ifdef _WIN32
 	val = GetSystemMetrics(SM_CXHSCROLL);
-#else
-	val = ((TkScrollbar *) winPtr->instanceData)->width;
-#endif
     } else {
 	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
 		"\": must be cxhscroll or cyvscroll", NULL);

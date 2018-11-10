@@ -41,6 +41,8 @@ static int caret_x = 0, caret_y = 0, caret_height = 0;
 static void setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state);
 static unsigned isFunctionKey(unsigned int code);
 
+unsigned short releaseCode;
+
 
 #pragma mark TKApplication(TKKeyEvent)
 
@@ -66,14 +68,22 @@ static unsigned isFunctionKey(unsigned int code);
         processingCompose = NO;
       }
 
+    w = [theEvent window];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    XEvent xEvent;
+
+    if (!winPtr) {
+	return theEvent;
+    }
+
     switch (type) {
     case NSKeyUp:
-      if (finishedCompose)
-        {
-          // if we were composing, swallow the last release since we already sent
-          finishedCompose = NO;
-          return theEvent;
-        }
+	/*Fix for bug #1ba71a86bb: key release firing on key press.*/
+	setupXEvent(&xEvent, w, 0);
+	xEvent.xany.type = KeyRelease;
+	xEvent.xkey.keycode = releaseCode;
+	xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
     case NSKeyDown:
 	repeat = [theEvent isARepeat];
 	characters = [theEvent characters];
@@ -82,10 +92,9 @@ static unsigned isFunctionKey(unsigned int code);
     case NSFlagsChanged:
 	modifiers = [theEvent modifierFlags];
 	keyCode = [theEvent keyCode];
-	//	w = [self windowWithWindowNumber:[theEvent windowNumber]];
-	w = [theEvent window];
+
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
-	NSLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d", [self class], self, _cmd, repeat, modifiers, characters, charactersIgnoringModifiers, keyCode,([charactersIgnoringModifiers length] == 0) ? 0 : [charactersIgnoringModifiers characterAtIndex: 0], w, type);
+	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d", [self class], self, _cmd, repeat, modifiers, characters, charactersIgnoringModifiers, keyCode,([charactersIgnoringModifiers length] == 0) ? 0 : [charactersIgnoringModifiers characterAtIndex: 0], w, type);
 #endif
 	break;
 
@@ -171,7 +180,7 @@ static unsigned isFunctionKey(unsigned int code);
               xEvent.xkey.keycode = (modifiers ^ savedModifiers);
             } else {
               if (type == NSKeyUp || repeat) {
-                xEvent.xany.type = KeyRelease;
+		  xEvent.xany.type = KeyRelease;
               } else {
                 xEvent.xany.type = KeyPress;
               }
@@ -238,11 +247,9 @@ static unsigned isFunctionKey(unsigned int code);
 {
   int i, len = [(NSString *)aString length];
   XEvent xEvent;
-  TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-  Tk_Window tkwin = (Tk_Window) winPtr;
 
   if (NS_KEYLOG)
-    NSLog (@"insertText '%@'\tlen = %d", aString, len);
+    TKLog (@"insertText '%@'\tlen = %d", aString, len);
   processingCompose = NO;
   finishedCompose = YES;
 
@@ -255,20 +262,17 @@ static unsigned isFunctionKey(unsigned int code);
   xEvent.xany.type = KeyPress;
 
   for (i =0; i<len; i++)
-    {
-      xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
-      [[aString substringWithRange: NSMakeRange(i,1)]
-        getCString: xEvent.xkey.trans_chars
-         maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
-      xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
-      xEvent.xany.type = KeyPress;
-      Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-
-      xEvent.xany.type = KeyRelease;
-      xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-      Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-      xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-    }
+      {
+	  xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
+	  [[aString substringWithRange: NSMakeRange(i,1)]
+	      getCString: xEvent.xkey.trans_chars
+	       maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
+	  xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
+	  xEvent.xany.type = KeyPress;
+	  releaseCode =  (UInt16) [aString characterAtIndex: 0];
+	  Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+      }
+  releaseCode =  (UInt16) [aString characterAtIndex: 0];
 }
 
 
@@ -278,7 +282,7 @@ static unsigned isFunctionKey(unsigned int code);
   NSString *str = [aString respondsToSelector: @selector (string)] ?
     [aString string] : aString;
   if (NS_KEYLOG)
-    NSLog (@"setMarkedText '%@' len =%lu range %lu from %lu", str,
+    TKLog (@"setMarkedText '%@' len =%lu range %lu from %lu", str,
 	   (unsigned long) [str length], (unsigned long) selRange.length,
 	   (unsigned long) selRange.location);
 
@@ -305,7 +309,7 @@ static unsigned isFunctionKey(unsigned int code);
   NSRange rng = privateWorkingText != nil
     ? NSMakeRange (0, [privateWorkingText length]) : NSMakeRange (NSNotFound, 0);
   if (NS_KEYLOG)
-    NSLog (@"markedRange request");
+    TKLog (@"markedRange request");
   return rng;
 }
 
@@ -313,7 +317,7 @@ static unsigned isFunctionKey(unsigned int code);
 - (void)unmarkText
 {
   if (NS_KEYLOG)
-    NSLog (@"unmark (accept) text");
+    TKLog (@"unmark (accept) text");
   [self deleteWorkingText];
   processingCompose = NO;
 }
@@ -329,7 +333,7 @@ static unsigned isFunctionKey(unsigned int code);
   pt.y = caret_y;
 
   pt = [self convertPoint: pt toView: nil];
-  pt = [[self window] convertPointToScreen: pt];
+  pt = [[self window] tkConvertPointToScreen: pt];
   pt.y -= caret_height;
 
   rect.origin = pt;
@@ -348,7 +352,7 @@ static unsigned isFunctionKey(unsigned int code);
 - (void)doCommandBySelector: (SEL)aSelector
 {
   if (NS_KEYLOG)
-    NSLog (@"doCommandBySelector: %@", NSStringFromSelector (aSelector));
+    TKLog (@"doCommandBySelector: %@", NSStringFromSelector (aSelector));
   processingCompose = NO;
   if (aSelector == @selector (deleteBackward:))
     {
@@ -378,7 +382,7 @@ static unsigned isFunctionKey(unsigned int code);
 - (NSRange)selectedRange
 {
   if (NS_KEYLOG)
-    NSLog (@"selectedRange request");
+    TKLog (@"selectedRange request");
   return NSMakeRange (NSNotFound, 0);
 }
 
@@ -386,7 +390,7 @@ static unsigned isFunctionKey(unsigned int code);
 - (NSUInteger)characterIndexForPoint: (NSPoint)thePoint
 {
   if (NS_KEYLOG)
-    NSLog (@"characterIndexForPoint request");
+    TKLog (@"characterIndexForPoint request");
   return 0;
 }
 
@@ -396,7 +400,7 @@ static unsigned isFunctionKey(unsigned int code);
   static NSAttributedString *str = nil;
   if (str == nil) str = [NSAttributedString new];
   if (NS_KEYLOG)
-    NSLog (@"attributedSubstringFromRange request");
+    TKLog (@"attributedSubstringFromRange request");
   return str;
 }
 /* End <NSTextInput> impl. */
@@ -410,7 +414,7 @@ static unsigned isFunctionKey(unsigned int code);
   if (privateWorkingText == nil)
     return;
   if (NS_KEYLOG)
-    NSLog(@"deleteWorkingText len = %lu\n",
+    TKLog(@"deleteWorkingText len = %lu\n",
 	    (unsigned long)[privateWorkingText length]);
   [privateWorkingText release];
   privateWorkingText = nil;

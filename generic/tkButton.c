@@ -879,7 +879,13 @@ ButtonWidgetObjCmd(
 
 		Tcl_CancelIdleCall(TkpDisplayButton, butPtr);
 		XFlush(butPtr->display);
+		#ifndef MAC_OSX_TK
+		/*
+		 * On the mac you can not sleep in a display proc, and the
+		 * flash command doesn't do anything anyway.
+		 */
 		Tcl_Sleep(50);
+		#endif
 	    }
 	}
 	break;
@@ -1728,7 +1734,7 @@ ButtonTextVarProc(
 	}
  	return NULL;
      }
- 
+
     /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.
