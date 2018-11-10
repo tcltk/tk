@@ -80,6 +80,45 @@ is set directly.
 The spinbox widget generates a \fB<<Increment>>\fR virtual event when
 the user presses <Up>, and a \fB<<Decrement>>\fR virtual event when the
 user presses <Down>.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::spinbox\fP is \fBTSpinbox\fP.
+.PP
+Dynamic states: \fBactive\fP, \fBdisabled\fP, \fBfocus\fP, \fBreadonly\fP.
+.PP
+\fBTSpinbox\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-arrowcolor\fP \fIcolor\fP
+.br
+\fB\-arrowsize\fP \fIamount\fP
+.br
+\fB\-background\fP \fIcolor\fP
+.RS
+When using the aqua theme (Mac OS X), changes the \fB\-fieldbackground\fP.
+.RE
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-darkcolor\fP \fIcolor\fP
+.br
+\fB\-fieldbackground\fP \fIcolor\fP
+.RS
+Does not work with the aqua theme (Mac OS X).
+.RE
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-lightcolor\fP \fIcolor\fP
+.br
+\fB\-padding\fP \fIpadding\fP
+.br
+\fB\-selectbackground\fP \fIcolor\fP
+.br
+\fB\-selectforeground\fP \fIcolor\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::entry(n), spinbox(n)
 .SH KEYWORDS

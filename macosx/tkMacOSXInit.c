@@ -16,7 +16,6 @@
 #include "tkMacOSXPrivate.h"
 
 #include <sys/stat.h>
-#include <sys/utsname.h>
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 
@@ -28,8 +27,6 @@ static char tkLibPath[PATH_MAX + 1] = "";
  */
 
 static char scriptPath[PATH_MAX + 1] = "";
-
-long tkMacOSXMacOSXVersion = 0;
 
 #pragma mark TKApplication(TKInit)
 
@@ -48,6 +45,9 @@ long tkMacOSXMacOSXVersion = 0;
 
 @implementation TKApplication
 @synthesize poolLock = _poolLock;
+@synthesize macMinorVersion = _macMinorVersion;
+@synthesize isDrawing = _isDrawing;
+@synthesize simulateDrawing = _simulateDrawing;
 @end
 
 /*
@@ -153,6 +153,26 @@ long tkMacOSXMacOSXVersion = 0;
     [NSApp setPoolLock:0];
 
     /*
+     * Record the OS version we are running on.
+     */
+    int minorVersion;
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
+    Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
+#else
+    NSOperatingSystemVersion systemVersion;
+    systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
+    minorVersion = systemVersion.minorVersion;
+#endif
+    [NSApp setMacMinorVersion: minorVersion];
+
+    /*
+     * We are not drawing yet.
+     */
+
+    [NSApp setIsDrawing:NO];
+    [NSApp setSimulateDrawing:NO];
+
+    /*
      * Be our own delegate.
      */
     [self setDelegate:self];
@@ -160,6 +180,7 @@ long tkMacOSXMacOSXVersion = 0;
     /*
      * Make sure we are allowed to open windows.
      */
+
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
 
     /*
@@ -255,7 +276,6 @@ TkpInit(
      */
 
     if (!initialized) {
-	struct utsname name;
 	struct stat st;
 
 	initialized = 1;
@@ -267,20 +287,6 @@ TkpInit(
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 #   error Mac OS X 10.6 required
 #endif
-
-	if (!uname(&name)) {
-	    tkMacOSXMacOSXVersion = (strtod(name.release, NULL) + 96) * 10;
-	}
-       /*Check for new versioning scheme on Yosemite (10.10) and later.*/
-	if (MAC_OS_X_VERSION_MIN_REQUIRED > 100000) {
-		tkMacOSXMacOSXVersion = MAC_OS_X_VERSION_MIN_REQUIRED/100;
-	    }
-	if (tkMacOSXMacOSXVersion && MAC_OS_X_VERSION_MIN_REQUIRED < 100000 &&
-		tkMacOSXMacOSXVersion/10 < MAC_OS_X_VERSION_MIN_REQUIRED/10) {
-	    Tcl_Panic("Mac OS X 10.%d or later required !",
-		    (MAC_OS_X_VERSION_MIN_REQUIRED/10)-100);
-	}
-
 
 #ifdef TK_FRAMEWORK
 	/*

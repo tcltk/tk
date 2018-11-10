@@ -204,16 +204,16 @@ static int windowHashInit = false;
 
 @implementation NSWindow(TKWm)
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) convertPointToScreen: (NSPoint) point
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
     return [self convertBaseToScreen:point];
 }
-- (NSPoint) convertPointFromScreen: (NSPoint)point
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
     return [self convertScreenToBase:point];
 }
 #else
-- (NSPoint) convertPointToScreen: (NSPoint) point
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
     NSRect pointrect;
     pointrect.origin = point;
@@ -221,7 +221,7 @@ static int windowHashInit = false;
     pointrect.size.height = 0;
     return [self convertRectToScreen:pointrect].origin;
 }
-- (NSPoint) convertPointFromScreen: (NSPoint)point
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
     NSRect pointrect;
     pointrect.origin = point;
@@ -231,6 +231,21 @@ static int windowHashInit = false;
 }
 #endif
 
+- (NSSize)windowWillResize:(NSWindow *)sender
+                    toSize:(NSSize)frameSize
+{
+    NSRect currentFrame = [sender frame];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
+    if (winPtr) {
+	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
+	    frameSize.width = currentFrame.size.width;
+	}
+	if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
+	    frameSize.height = currentFrame.size.height;
+	}
+    }
+    return frameSize;
+}
 @end
 
 #pragma mark -
@@ -372,20 +387,43 @@ static void		RemapWindows(TkWindow *winPtr,
 
 
 @implementation TKWindow: NSWindow
-#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
-/*
- * Override automatic fullscreen button on >10.12 because system fullscreen API
- * confuses Tk window geometry.
- */
+
+/* Custom fullscreen implementation on 10.13 and above. On older versions of
+ * macOS dating back to 10.7, the NSWindow fullscreen API was opt-in, requiring
+ * explicit calls to toggleFullScreen. On 10.13, the API became implicit,
+ * applying to all NSWindows unless they were marked non-resizable; this caused
+ * issues with Tk, which was not aware of changes in screen geometry. Here we
+ * override the toggleFullScreen call to hook directly into Tk's own fullscreen
+ * API, allowing Tk to function smoothly with the Mac's fullscreen button.
+*/
+
+NSStatusItem *exitFullScreen;
+
+
 - (void)toggleFullScreen:(id)sender
 {
-    if ([self isZoomed]) {
-	TkMacOSXZoomToplevel(self, inZoomIn);
-    } else {
-	TkMacOSXZoomToplevel(self, inZoomOut);
-    }
+  TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+  Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
+  if ([NSApp macMinorVersion] > 12) {
+      if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
+	  TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+      } else {
+	  TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
+      }
+  } else {
+      TKLog (@"toggleFullScreen is ignored by Tk on OSX versions < 10.13");
+  }
 }
-#endif
+
+-(void)restoreOldScreen:(id)sender {
+
+  TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+  Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
+
+  TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+  [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
+}
+
 @end
 
 @implementation TKWindow(TKWm)
@@ -410,7 +448,8 @@ static void		RemapWindows(TkWindow *winPtr,
 	title = "unnamed window";
     }
     if (DEBUG_ZOMBIES > 1){
-	printf("Retained <%s>. Count is: %lu\n", title, [self retainCount]);
+	fprintf(stderr, "Retained <%s>. Count is: %lu\n",
+		title, [self retainCount]);
     }
     return result;
 }
@@ -566,15 +605,15 @@ FrontWindowAtPoint(
 {
     NSPoint p = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
     NSArray *windows = [NSApp orderedWindows];
-    TkWindow *front = NULL;
+    TkWindow *winPtr = NULL;
 
     for (NSWindow *w in windows) {
-	    if (w && NSMouseInRect(p, [w frame], NO)) {
-		front = TkMacOSXGetTkWindow(w);
-		break;
-	    }
+	winPtr = TkMacOSXGetTkWindow(w);
+	if (winPtr && NSMouseInRect(p, [w frame], NO)) {
+	    break;
 	}
-    return front;
+    }
+    return winPtr;
 }
 
 /*
@@ -702,7 +741,6 @@ TkWmMapWindow(
 				 * mapped. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	/*
 	 * Create the underlying Mac window for this Tk window.
@@ -774,7 +812,6 @@ TkWmMapWindow(
     /*Add window to Window menu.*/
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
     [win setExcludedFromWindowsMenu:NO];
-
 }
 
 /*
@@ -3430,7 +3467,15 @@ WmTransientCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tk_MakeWindowExist(master);
+	TkWindow* masterPtr = (TkWindow*) master;
+	while (!Tk_TopWinHierarchy(masterPtr)) {
+            /*
+             * Ensure that the master window is actually a Tk toplevel.
+             */
+
+            masterPtr = masterPtr->parentPtr;
+        }
+	Tk_MakeWindowExist((Tk_Window)masterPtr);
 
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3440,8 +3485,7 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	wmPtr2 = ((TkWindow *) master)->wmInfoPtr;
-
+	wmPtr2 = masterPtr->wmInfoPtr;
 	/* Under some circumstances, wmPtr2 is NULL here */
 	if (wmPtr2 != NULL && wmPtr2->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3451,15 +3495,16 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	if ((TkWindow *) master == winPtr) {
+	if (masterPtr == winPtr) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't make \"%s\" its own master", Tk_PathName(winPtr)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
 	    return TCL_ERROR;
 	}
 
-	wmPtr->master = Tk_WindowId(master);
-	masterWindowName = Tcl_GetStringFromObj(objv[3], &length);
+	wmPtr->master = Tk_WindowId(masterPtr);
+	masterWindowName = masterPtr->pathName;
+	length = strlen(masterWindowName);
 	if (wmPtr->masterWindowName != NULL) {
 	    ckfree(wmPtr->masterWindowName);
 	}
@@ -4251,15 +4296,7 @@ Tk_GetRootCoords(
 	     */
 
 	    winPtr = otherPtr;
-
-	    /*
-	     * Remember to offset by the container window here, since at the
-	     * end of this if branch, we will pop out to the container's
-	     * parent...
-	     */
-
-	    x += winPtr->changes.x + winPtr->changes.border_width;
-	    y += winPtr->changes.y + winPtr->changes.border_width;
+            continue;
 	}
 	winPtr = winPtr->parentPtr;
     }
@@ -5612,20 +5649,18 @@ TkMacOSXMakeRealWindowExist(
     }
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
-    [window setColorSpace:[NSColorSpace deviceRGBColorSpace]];
     [window setContentView:contentView];
     [contentView release];
     [window setDelegate:NSApp];
     [window setAcceptsMouseMovedEvents:YES];
     [window setReleasedWhenClosed:NO];
-    [window setAutodisplay:NO];
     if (styleMask & NSUtilityWindowMask) {
 	[(NSPanel*)window setFloatingPanel:YES];
     }
     if ((styleMask & (NSTexturedBackgroundWindowMask|NSHUDWindowMask)) &&
 	    !(styleMask & NSDocModalWindowMask)) {
         /*
-	 * Workaround for [Bug 2824538]: Texured windows are draggable
+	 * Workaround for [Bug 2824538]: Textured windows are draggable
 	 *                               from opaque content.
 	 */
 	[window setMovableByWindowBackground:NO];
@@ -5641,9 +5676,36 @@ TkMacOSXMakeRealWindowExist(
     geometry.size.height += structureRect.size.height;
     geometry.origin.y = tkMacOSXZeroScreenHeight - (geometry.origin.y +
 	    geometry.size.height);
-    [window setFrame:geometry display:NO];
+    [window setFrame:geometry display:YES];
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
     macWin->flags |= TK_HOST_EXISTS;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDisplayWindow --
+ *
+ *      Mark the contentView of this window as needing display so the
+ *      window will be drawn by the window manager.  If this is called
+ *      within the drawRect method, do nothing.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      The window's contentView is marked as needing display.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkpDisplayWindow(Tk_Window tkwin) {
+    if (![NSApp isDrawing]) {
+    	TkWindow *winPtr = (TkWindow*)tkwin;
+    	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
+    	[[w contentView] setNeedsDisplay: YES];
+    }
 }
 
 /*
@@ -6268,12 +6330,15 @@ ApplyWindowAttributeFlagChanges(
 	    [[macWindow standardWindowButton:NSWindowZoomButton]
 		    setEnabled:(newAttributes & kWindowResizableAttribute) &&
 		    (newAttributes & kWindowFullZoomAttribute)];
-	    if (newAttributes & kWindowResizableAttribute) {
-		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+	    if (newAttributes & kWindowHorizontalZoomAttribute) {
+		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE);
 	    } else {
-		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE);
+	    }
+	    if (newAttributes & kWindowVerticalZoomAttribute) {
+		wmPtr->flags &= ~(WM_HEIGHT_NOT_RESIZABLE);
+	    } else {
+		wmPtr->flags |= (WM_HEIGHT_NOT_RESIZABLE);
 	    }
 	    WmUpdateGeom(wmPtr, winPtr);
 	}
@@ -6457,12 +6522,10 @@ TkMacOSXMakeFullscreen(
     Tcl_Interp *interp)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int result = TCL_OK, wasFullscreen = (wmPtr->flags & WM_FULLSCREEN);
-    static unsigned long prevMask = 0, prevPres = 0;
+    int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
+    int screenHeight = HeightOfScreen(Tk_Screen(winPtr));
 
     if (fullscreen) {
-	int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
-	int screenHeight = HeightOfScreen(Tk_Screen(winPtr));
 
 	/*
 	 * Check max width and height if set by the user.
@@ -6477,58 +6540,73 @@ TkMacOSXMakeFullscreen(
 		Tcl_SetErrorCode(interp, "TK", "FULLSCREEN",
 			"CONSTRAINT_FAILURE", NULL);
 	    }
-	    result = TCL_ERROR;
 	    wmPtr->flags &= ~WM_FULLSCREEN;
-	} else {
-	    Tk_UnmapWindow((Tk_Window) winPtr);
-	    NSRect bounds = [window contentRectForFrameRect:[window frame]];
-	    NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
-
-	    if (!NSEqualRects(bounds, screenBounds) && !wasFullscreen) {
-		wmPtr->configX = wmPtr->x;
-		wmPtr->configY = wmPtr->y;
-		wmPtr->configAttributes = wmPtr->attributes;
-		wmPtr->attributes &= ~kWindowResizableAttribute;
-		ApplyWindowAttributeFlagChanges(winPtr, window,
-			wmPtr->configAttributes, wmPtr->flags, 1, 0);
-		wmPtr->flags |= WM_SYNC_PENDING;
-		[window setFrame:[window frameRectForContentRect:
-			screenBounds] display:YES];
-		wmPtr->flags &= ~WM_SYNC_PENDING;
-	    }
-	    wmPtr->flags |= WM_FULLSCREEN;
+	    return TCL_ERROR;
 	}
 
-	prevMask = [window styleMask];
-	prevPres = [NSApp presentationOptions];
-	[window setStyleMask: NSBorderlessWindowMask];
-	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
-	                          | NSApplicationPresentationAutoHideMenuBar];
-	Tk_MapWindow((Tk_Window) winPtr);
+	/*
+	 * Save the current window state.
+	 */
+
+	wmPtr->cachedBounds = [window frame];
+	wmPtr->cachedStyle = [window styleMask];
+	wmPtr->cachedPresentation = [NSApp presentationOptions];
+
+	/*
+	 * Adjust the window style so it looks like a Fullscreen window.
+	 */
+
+	[window setStyleMask: NSFullScreenWindowMask];
+	[NSApp setPresentationOptions: (NSApplicationPresentationAutoHideDock |
+					NSApplicationPresentationAutoHideMenuBar)];
+
+	/*For 10.13 and later add a button for exiting Fullscreen.*/
+	if ([NSApp macMinorVersion] > 12) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 101200
+	    exitFullScreen = [[[NSStatusBar systemStatusBar]
+				   statusItemWithLength:NSVariableStatusItemLength] retain];
+	    NSImage *exitIcon = [NSImage imageNamed:@"NSExitFullScreenTemplate"];
+	    exitFullScreen.button.image = exitIcon;
+	    exitFullScreen.button.cell.highlighted = NO;
+	    exitFullScreen.button.toolTip = @"Exit Full Screen";
+	    exitFullScreen.button.target = window;
+	    exitFullScreen.button.action = @selector(restoreOldScreen:);
+#endif
+	}
+
+	/*
+	 * Resize the window to fill the screen. (After setting the style!)
+	 */
+
+	wmPtr->flags |= WM_SYNC_PENDING;
+	NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
+	[window setFrame:screenBounds display:YES];
+	wmPtr->flags &= ~WM_SYNC_PENDING;
+	wmPtr->flags |= WM_FULLSCREEN;
     } else {
-	wmPtr->flags &= ~WM_FULLSCREEN;
-	[NSApp setPresentationOptions: prevPres];
-	[window setStyleMask: prevMask];
-    }
 
-    if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
-	Tk_UnmapWindow((Tk_Window) winPtr);
+	/*
+	 * Restore the previous styles and attributes.
+	 */
+
+	[NSApp setPresentationOptions: wmPtr->cachedPresentation];
+	[window setStyleMask: wmPtr->cachedStyle];
 	UInt64 oldAttributes = wmPtr->attributes;
-	NSRect bounds = NSMakeRect(wmPtr->configX, tkMacOSXZeroScreenHeight -
-		(wmPtr->configY + wmPtr->yInParent + wmPtr->configHeight),
-		wmPtr->xInParent + wmPtr->configWidth,
-		wmPtr->yInParent + wmPtr->configHeight);
-
+	wmPtr->flags &= ~WM_FULLSCREEN;
 	wmPtr->attributes |= wmPtr->configAttributes &
 		kWindowResizableAttribute;
 	ApplyWindowAttributeFlagChanges(winPtr, window, oldAttributes,
 		wmPtr->flags, 1, 0);
+
+	/*
+	 * Resize the window to its previous size.
+	 */
+
 	wmPtr->flags |= WM_SYNC_PENDING;
-	[window setFrame:[window frameRectForContentRect:bounds] display:YES];
+	[window setFrame:wmPtr->cachedBounds display:YES];
 	wmPtr->flags &= ~WM_SYNC_PENDING;
-       Tk_MapWindow((Tk_Window) winPtr);
     }
-    return result;
+    return TCL_OK;
 }
 
 /*

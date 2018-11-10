@@ -679,10 +679,10 @@ test config-4.56 {DoObjConfig - new bitmap} -constraints testobjconfig -body {
 test config-4.57 {DoObjConfig - invalid bitmap} -constraints {
     testobjconfig
 } -body {
-    testobjconfig alltypes .foo -bitmap foo
+    testobjconfig alltypes .foo -bitmap foobar
 } -cleanup {
     killTables
-} -returnCodes error -result {bitmap "foo" not defined}
+} -returnCodes error -result {bitmap "foobar" not defined}
 test config-4.58 {DoObjConfig - null bitmap} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -bitmap {}
 } -cleanup {

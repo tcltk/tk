@@ -117,7 +117,7 @@ enum alertIconOptions {
     ICON_ERROR, ICON_INFO, ICON_QUESTION, ICON_WARNING
 };
 static const char *const alertButtonStrings[] = {
-    "abort", "retry", "ignore", "ok", "cancel", "yes", "no", NULL
+    "abort", "retry", "ignore", "ok", "cancel", "no", "yes", NULL
 };
 
 static const NSString *const alertButtonNames[][3] = {
@@ -147,8 +147,8 @@ static const short alertButtonIndexAndTypeToNativeButtonIndex[][7] = {
     [TYPE_OK] =			{0,    0,    0,    1,    0,    0,    0},
     [TYPE_OKCANCEL] =		{0,    0,    0,    1,    2,    0,    0},
     [TYPE_RETRYCANCEL] =	{0,    1,    0,    0,    2,    0,    0},
-    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    1,    2},
-    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    1,    2},
+    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    2,    1},
+    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    2,    1},
 };
 
 /*
@@ -161,8 +161,8 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_OK] =			{3, 0, 0},
     [TYPE_OKCANCEL] =		{3, 4, 0},
     [TYPE_RETRYCANCEL] =	{1, 4, 0},
-    [TYPE_YESNO] =		{5, 6, 0},
-    [TYPE_YESNOCANCEL] =	{5, 6, 4},
+    [TYPE_YESNO] =		{6, 5, 0},
+    [TYPE_YESNOCANCEL] =	{6, 5, 4},
 };
 
 /*
@@ -746,7 +746,7 @@ Tk_GetOpenFileObjCmd(
 	/*
 	 * The -typevariable must be set to the selected file type, if the dialog was not cancelled
 	 */
-	NSInteger selectedFilterIndex = filterInfo.fileTypeIndex;
+	NSUInteger selectedFilterIndex = filterInfo.fileTypeIndex;
 	NSString *selectedFilter = NULL;
 	if (filterInfo.userHasSelectedFilter) {
 	    selectedFilterIndex = filterInfo.fileTypeIndex;
@@ -772,7 +772,7 @@ Tk_GetOpenFileObjCmd(
 		selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 	    } else {
 		// scan the list
-		int i;
+		NSUInteger i;
 		for (i = 0; i < [filterInfo.fileTypeNames count]; i++) {
 		    if (filterCompatible(extension, i)) {
 			selectedFilterIndex = i;
@@ -1198,36 +1198,42 @@ TkAboutDlg(void)
     NSString *year = [dateFormatter stringFromDate:[NSDate date]];
 
     [dateFormatter release];
-
-    NSMutableParagraphStyle *style =
-	    [[[NSParagraphStyle defaultParagraphStyle] mutableCopy]
-	    autorelease];
-
-    [style setAlignment:NSCenterTextAlignment];
-
-    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
-	    @"Tcl & Tk", @"ApplicationName",
-	    @"Tcl " TCL_VERSION " & Tk " TK_VERSION, @"ApplicationVersion",
-	    @TK_PATCH_LEVEL, @"Version",
-	    image, @"ApplicationIcon",
-	    [NSString stringWithFormat:@"Copyright %1$C 1987-%2$@.", 0xA9,
-	    year], @"Copyright",
-	    [[[NSAttributedString alloc] initWithString:
-	    [NSString stringWithFormat:
-	    @"%1$C 1987-%2$@ Tcl Core Team." "\n\n"
-		"%1$C 1989-%2$@ Contributors." "\n\n"
-		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC." "\n\n"
-		"%1$C 2014-%2$@ Marc Culler." "\n\n"
-		"%1$C 2002-%2$@ Daniel A. Steffen." "\n\n"
-		"%1$C 2001-2009 Apple Inc." "\n\n"
-		"%1$C 2001-2002 Jim Ingham & Ian Reid" "\n\n"
-		"%1$C 1998-2000 Jim Ingham & Ray Johnson" "\n\n"
-		"%1$C 1998-2000 Scriptics Inc." "\n\n"
-		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year] attributes:
-	    [NSDictionary dictionaryWithObject:style
-	    forKey:NSParagraphStyleAttributeName]] autorelease], @"Credits",
-	    nil];
-    [NSApp orderFrontStandardAboutPanelWithOptions:options];
+   
+    /*
+     * This replaces the old about dialog with a standard alert that displays
+     * correctly on 10.14.
+     */
+    
+    NSString *version =  @"Tcl " TCL_PATCH_LEVEL " & Tk " TCL_PATCH_LEVEL;
+    NSString *url =   @"www.tcl-lang.org";
+    NSTextView *credits = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,300,300)];
+    NSFont *font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
+    NSDictionary *textAttributes = [NSDictionary dictionaryWithObject:font
+					        forKey:NSFontAttributeName];
+    [credits insertText: [[NSAttributedString alloc]
+		 initWithString:[NSString stringWithFormat: @"\n"
+		"Tcl and Tk are distributed under a modified BSD license: "
+		"www.tcl.tk/software/tcltk/license.html\n\n"
+		"%1$C 1987-%2$@ Tcl Core Team and Contributers.\n\n"
+		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC.\n\n"
+		"%1$C 2014-%2$@ Marc Culler.\n\n"
+		"%1$C 2002-2012 Daniel A. Steffen.\n\n"
+		"%1$C 2001-2009 Apple Inc.\n\n"
+		"%1$C 2001-2002 Jim Ingham & Ian Reid\n\n"
+		"%1$C 1998-2000 Jim Ingham & Ray Johnson\n\n"
+		"%1$C 1998-2000 Scriptics Inc.\n\n"
+		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year]
+	     attributes:textAttributes]
+             replacementRange:NSMakeRange(0,0)];
+    [credits setDrawsBackground:NO];
+    [credits setEditable:NO];
+     NSAlert *about = [[NSAlert alloc] init];
+    [[about window] setTitle:@"About Tcl & Tk"];
+    [about setMessageText: version];
+    [about setInformativeText:url];
+    about.accessoryView = credits;
+    [about runModal];
+    [about release];
 }
 
 /*
@@ -1257,7 +1263,7 @@ TkMacOSXStandardAboutPanelObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-    [NSApp orderFrontStandardAboutPanelWithOptions:[NSDictionary dictionary]];
+    TkAboutDlg();
     return TCL_OK;
 }
 
@@ -1330,7 +1336,7 @@ Tk_MessageBoxObjCmd(
 
 	case ALERT_ICON:
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertIconStrings,
-		    sizeof(char *), "value", TCL_EXACT, &iconIndex) != TCL_OK) {
+		    sizeof(char *), "-icon value", TCL_EXACT, &iconIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1360,7 +1366,7 @@ Tk_MessageBoxObjCmd(
 
 	case ALERT_TYPE:
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertTypeStrings,
-		    sizeof(char *), "value", TCL_EXACT, &typeIndex) != TCL_OK) {
+		    sizeof(char *), "-type value", TCL_EXACT, &typeIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1376,7 +1382,7 @@ Tk_MessageBoxObjCmd(
 	 */
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[indexDefaultOption + 1],
-		alertButtonStrings, sizeof(char *), "value", TCL_EXACT, &index) != TCL_OK) {
+		alertButtonStrings, sizeof(char *), "-default value", TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 
