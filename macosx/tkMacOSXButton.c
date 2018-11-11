@@ -1201,3 +1201,11 @@ PulseDefaultButtonProc(ClientData clientData)
             PULSE_TIMER_MSECS, PulseDefaultButtonProc, clientData);
 }
 
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */

@@ -418,16 +418,15 @@ NSStatusItem *exitFullScreen;
   }
 }
 
--(void)restoreOldScreen:(id)sender {
-
-  TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-  if (!winPtr) {
-      return;
-  }
-  Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
-
-  TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
-  [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
+-(void)restoreOldScreen:(id)sender
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    if (!winPtr) {
+	return;
+    }
+    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
+    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+    [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
 }
 
 @end
@@ -437,15 +436,14 @@ NSStatusItem *exitFullScreen;
 - (BOOL) canBecomeKeyWindow
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-  if (!winPtr) {
-      return NO;
-  }
-    return (winPtr->wmInfoPtr && (winPtr->wmInfoPtr->macClass ==
-	    kHelpWindowClass || winPtr->wmInfoPtr->attributes &
-	    kWindowNoActivatesAttribute)) ? NO : YES;
+    if (!winPtr) {
+	return NO;
+    }
+    return (winPtr->wmInfoPtr &&
+	    (winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
+	     winPtr->wmInfoPtr->attributes & kWindowNoActivatesAttribute)
+	    ) ? NO : YES;
 }
-
-
 
 #if DEBUG_ZOMBIES
 - (id) retain
