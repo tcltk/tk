@@ -403,6 +403,9 @@ NSStatusItem *exitFullScreen;
 - (void)toggleFullScreen:(id)sender
 {
   TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+  if (!winPtr) {
+      return;
+  }
   Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
   if ([NSApp macMinorVersion] > 12) {
       if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
@@ -418,6 +421,9 @@ NSStatusItem *exitFullScreen;
 -(void)restoreOldScreen:(id)sender {
 
   TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+  if (!winPtr) {
+      return;
+  }
   Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
 
   TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
@@ -431,8 +437,10 @@ NSStatusItem *exitFullScreen;
 - (BOOL) canBecomeKeyWindow
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-
-    return (winPtr && winPtr->wmInfoPtr && (winPtr->wmInfoPtr->macClass ==
+  if (!winPtr) {
+      return NO;
+  }
+    return (winPtr->wmInfoPtr && (winPtr->wmInfoPtr->macClass ==
 	    kHelpWindowClass || winPtr->wmInfoPtr->attributes &
 	    kWindowNoActivatesAttribute)) ? NO : YES;
 }

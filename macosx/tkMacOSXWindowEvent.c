@@ -991,7 +991,50 @@ ConfigureRestrictProc(
 	 */
 	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
-} 
+}
+
+/*
+ * This method is called when a user changes between light and dark mode.
+ * The implementation here generates a Tk virtual event which can be bound
+ * to a function that redraws the window in an appropriate style.
+ */
+
+- (void) viewDidChangeEffectiveAppearance
+{
+    XVirtualEvent event;
+    int x, y;
+    NSString *osxMode = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
+    NSWindow *w = [self window];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    Tk_Window tkwin = (Tk_Window) winPtr;
+
+    if (!winPtr) {
+	return;
+    }
+    bzero(&event, sizeof(XVirtualEvent));
+    event.type = VirtualEvent;
+    event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+    event.send_event = false;
+    event.display = Tk_Display(tkwin);
+    event.event = Tk_WindowId(tkwin);
+    event.root = XRootWindow(Tk_Display(tkwin), 0);
+    event.subwindow = None;
+    event.time = TkpGetMS();
+    XQueryPointer(NULL, winPtr->window, NULL, NULL,
+    		  &event.x_root, &event.y_root, &x, &y, &event.state);
+    Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
+    event.same_screen = true;
+    if (osxMode == nil) {
+	event.name = Tk_GetUid("LightAqua");
+	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
+	return;
+    }
+    if ([osxMode isEqual:@"Dark"]) {
+	event.name = Tk_GetUid("DarkAqua");
+	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
+	return;
+    }
+}
 
 /*
  * This is no-op on 10.7 and up because Apple has removed this widget,
@@ -1007,6 +1050,9 @@ ConfigureRestrictProc(
     int x, y;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window) winPtr;
+    if (!winPtr){
+	return;
+    }
     bzero(&event, sizeof(XVirtualEvent));
     event.type = VirtualEvent;
     event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
