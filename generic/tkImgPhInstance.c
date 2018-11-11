@@ -609,6 +609,7 @@ TkImgPhotoDisplay(
 				 * to imageX and imageY. */
 {
     PhotoInstance *instancePtr = clientData;
+    XVisualInfo visInfo = instancePtr->visualInfo;
 
     /*
      * If there's no pixmap, it means that an error occurred while creating
@@ -637,8 +638,6 @@ TkImgPhotoDisplay(
     photo->data = NULL;
     XDestroyImage(photo);
 #else
-    XVisualInfo visInfo = instancePtr->visualInfo;
-    
     if ((instancePtr->masterPtr->flags & COMPLEX_ALPHA)
 	    && visInfo.depth >= 15
 	    && (visInfo.class == DirectColor || visInfo.class == TrueColor)) {
