@@ -1008,14 +1008,9 @@ ConfigureRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
 
-    /*
-     * If there is no Tk window associated to this NSWindow, just return.
-     */
-
     if (!winPtr) {
 	return;
     }
-
     bzero(&event, sizeof(XVirtualEvent));
     event.type = VirtualEvent;
     event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
@@ -1055,6 +1050,9 @@ ConfigureRestrictProc(
     int x, y;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window) winPtr;
+    if (!winPtr){
+	return;
+    }
     bzero(&event, sizeof(XVirtualEvent));
     event.type = VirtualEvent;
     event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
