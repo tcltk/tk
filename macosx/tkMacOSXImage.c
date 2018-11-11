@@ -540,12 +540,12 @@ TkPutImage(
     if (dc.context) {
 	CGRect bounds, srcRect, dstRect;
 	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image);
-	if (macDraw->flags & TK_IS_PIXMAP) {
-	    /*
-	     * The CGContext for a pixmap is RGB only, with A = 0.
-	     */
-	    CGContextSetBlendMode(dc.context, kCGImageAlphaNoneSkipLast);
-	} else {
+
+	/*
+	 * The CGContext for a pixmap is RGB only, with A = 0.
+	 */
+
+	if (!(macDraw->flags & TK_IS_PIXMAP)) {
 	    CGContextSetBlendMode(dc.context, kCGBlendModeSourceAtop);
 	}
 	if (img) {
