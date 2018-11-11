@@ -434,6 +434,9 @@ setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state)
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
+    if (!winPtr) {
+	return;
+    }
 
     memset(xEvent, 0, sizeof(XEvent));
     xEvent->xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
