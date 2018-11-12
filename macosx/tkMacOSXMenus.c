@@ -379,13 +379,13 @@ GenerateEditEvent(
     XVirtualEvent event;
     int x, y;
     TkWindow *winPtr = TkMacOSXGetTkWindow([NSApp keyWindow]);
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin;
 
-    if (tkwin == NULL) {
+    if (!winPtr) {
 	return;
     }
     tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
-    if (tkwin == NULL) {
+    if (!tkwin) {
 	return;
     }
     bzero(&event, sizeof(XVirtualEvent));

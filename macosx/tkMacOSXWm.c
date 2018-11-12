@@ -403,6 +403,9 @@ NSStatusItem *exitFullScreen;
 - (void)toggleFullScreen:(id)sender
 {
   TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+  if (!winPtr) {
+      return;
+  }
   Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
   if ([NSApp macMinorVersion] > 12) {
       if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
@@ -415,13 +418,15 @@ NSStatusItem *exitFullScreen;
   }
 }
 
--(void)restoreOldScreen:(id)sender {
-
-  TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-  Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
-
-  TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
-  [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
+-(void)restoreOldScreen:(id)sender
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    if (!winPtr) {
+	return;
+    }
+    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
+    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+    [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
 }
 
 @end
@@ -431,13 +436,14 @@ NSStatusItem *exitFullScreen;
 - (BOOL) canBecomeKeyWindow
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-
-    return (winPtr && winPtr->wmInfoPtr && (winPtr->wmInfoPtr->macClass ==
-	    kHelpWindowClass || winPtr->wmInfoPtr->attributes &
-	    kWindowNoActivatesAttribute)) ? NO : YES;
+    if (!winPtr) {
+	return NO;
+    }
+    return (winPtr->wmInfoPtr &&
+	    (winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
+	     winPtr->wmInfoPtr->attributes & kWindowNoActivatesAttribute)
+	    ) ? NO : YES;
 }
-
-
 
 #if DEBUG_ZOMBIES
 - (id) retain
@@ -605,15 +611,15 @@ FrontWindowAtPoint(
 {
     NSPoint p = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
     NSArray *windows = [NSApp orderedWindows];
-    TkWindow *front = NULL;
+    TkWindow *winPtr = NULL;
 
     for (NSWindow *w in windows) {
-	    if (w && NSMouseInRect(p, [w frame], NO)) {
-		front = TkMacOSXGetTkWindow(w);
-		break;
-	    }
+	winPtr = TkMacOSXGetTkWindow(w);
+	if (winPtr && NSMouseInRect(p, [w frame], NO)) {
+	    break;
 	}
-    return front;
+    }
+    return winPtr;
 }
 
 /*
@@ -741,7 +747,6 @@ TkWmMapWindow(
 				 * mapped. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	/*
 	 * Create the underlying Mac window for this Tk window.
@@ -5677,7 +5682,7 @@ TkMacOSXMakeRealWindowExist(
     geometry.size.height += structureRect.size.height;
     geometry.origin.y = tkMacOSXZeroScreenHeight - (geometry.origin.y +
 	    geometry.size.height);
-    [window setFrame:geometry display:NO];
+    [window setFrame:geometry display:YES];
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
     macWin->flags |= TK_HOST_EXISTS;
 }
