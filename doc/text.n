@@ -320,7 +320,7 @@ will be gobbled at all, even when breaking lines. Mode \fBtrim\fR may be
 used for trimming consecutive space characters, but a single space will
 never be trimmed, instead it will be gobbled when a line break happens at
 this space (if option \fB\-wrap\fR is set to \fBword\fR or \fBcodepoint\fR).
-Normally the latter mode will not be used in conjunction with state
+Normally mode \fBtrim\fR will not be used in conjunction with state
 \fBnormal\fR (see option \fB\-state\fR).
 .OP \-spacing1 spacing1 Spacing1
 Requests additional space above each text line in the widget, using any of the
@@ -393,7 +393,7 @@ widget is not overall clean, this may cause errors in the order of the
 marks, therefore this is forbidden.)
 .PP
 This option is facilitating programmed editor control, because the shuffle
-effect is eliminated, any every mark now has a defined order relative to other
+effect is eliminated, every mark now has a defined order relative to other
 marks, this order is not changing as long as the mark will not be moved with
 \fBmark set\fR. Note that the handling of marks, especially the change of
 the gravity, will be performed more efficiently when this option is
@@ -1266,12 +1266,12 @@ evaluated again the next time the annotation is displayed.
 .TP
 \fB\-owner \fIboolean\fR
 .
-If true then the text widget is the owner of the embedded window. Only if it
-is the owner the window will be destroyed if the range of text containing
+If \fItrue\fR then the text widget is the owner of the embedded window. Only
+if it is the owner the window will be destroyed if the range of text containing
 the embedded window is deleted, and the deleted text is not saved on undo
-stack. Per default this option is true. Setting this option to false should
-be done with care, because in this case the text widget is not responsible
-for the lifetime of the embedded window.
+stack. Per default this option is \fItrue\fR. Setting this option to
+\fIfalse\fR should be done with care, because in this case the text widget
+is not responsible for the lifetime of the embedded window.
 .TP
 \fB\-padx \fIpixels\fR
 .
@@ -3039,7 +3039,7 @@ into consideration):
 \fIGravity\fR       = "\fBleft\fR" | "\fBright\fR";
 \fIElide\fR         = "\fBelide\fR", ("\fBon\fR" | "\fBoff\fR");
 \fITagInfo\fR       = (\fITags\fR, \fITags\fR?)?;
-\fITags\fR          = BEG, \fITagName\fR* , END;
+\fITags\fR          = BEG, \fITagName\fR*, END;
 \fICharacter\fR     = ?Any character except newline?;
 \fINewline\fR       = ?The newline character?;
 \fITextOptions\fR   = ?See \fBSTANDARD OPTIONS\fR and \fBWIDGET-SPECIFIC OPTIONS\fR?;
@@ -4596,14 +4596,14 @@ lines and does not show an insertion cursor) cannot be modified.
 Replace all occurrences
 .QW "\fB[$w edit canredo]\fR"
 with
-.QW "\fB[set [$w edit info](redodepth)]\fR" .
+.QW "\fB[$w edit info -redodepth]\fR" .
 .IP \(bu 3
 \fBtk::text: Command "edit canundo" is deprecated, please use "edit info".\fR
 .PP
 Replace all occurrences
 .QW "\fB[$w edit canundo]\fR"
 with
-.QW "\fB[set [$w edit info](undodepth)]\fR" .
+.QW "\fB[$w edit info -undodepth]\fR" .
 .IP \(bu 3
 \fBtk::text: "begin" is a reserved index identifier and shouldn't be used for mark names anymore.\fR
 .PP
