@@ -169,7 +169,7 @@ void DebugPrintQueue(void)
  *----------------------------------------------------------------------
  */
 
-static NSString *
+NSString *
 GetRunLoopMode(NSModalSession modalSession)
 {
     NSString *runLoopMode = nil;
