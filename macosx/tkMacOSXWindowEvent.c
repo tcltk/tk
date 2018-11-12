@@ -832,13 +832,20 @@ ConfigureRestrictProc(
 			Tk_PathName(winPtr));
 #endif
 
+    if ([NSApp simulateDrawing]) {
+    	return;
+    }
+
     /*
-     * We do not allow recursive calls to drawRect.
+     * We do not allow recursive calls to drawRect, but we only log
+     * them on OSX > 10.13, where they should never happen.
      */
-    if ([NSApp isDrawing]) {
+
+    if ([NSApp isDrawing] && [NSApp macMinorVersion] > 13) {
 	TKLog(@"WARNING: a recursive call to drawRect was aborted.");
 	return;
     }
+
     [NSApp setIsDrawing: YES];
 
     [self getRectsBeingDrawn:&rectsBeingDrawn count:&rectsBeingDrawnCount];
@@ -863,7 +870,6 @@ ConfigureRestrictProc(
 #ifdef TK_MAC_DEBUG_DRAWING
     fprintf(stderr, "drawRect: done.\n");
 #endif
-
 }
 
 -(void) setFrameSize: (NSSize)newsize
@@ -873,6 +879,12 @@ ConfigureRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
     if (winPtr) {
+	/* On OSX versions below 10.14 setFrame calls drawRect.
+	 * On 10.14 it does its own drawing.
+	 */
+	if ([NSApp macMinorVersion] > 13) {
+	    [NSApp setIsDrawing:YES];
+	}
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
 	ClientData oldArg;
@@ -917,7 +929,9 @@ ConfigureRestrictProc(
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
 	[self generateExposeEvents: shape];
 	[w displayIfNeeded];
-	[NSApp _unlockAutoreleasePool];
+	if ([NSApp macMinorVersion] > 13) {
+	    [NSApp setIsDrawing:NO];
+	}
     }
 }
 
@@ -973,34 +987,30 @@ ConfigureRestrictProc(
 	 *
 	 * Fortunately, Tk schedules all drawing to be done while Tcl is idle.
 	 * So we can do the drawing by processing all of the idle events that
-	 * were created when the expose events were processed. Unfortunately
-	 * this does not work in macOS 10.13.
+	 * were created when the expose events were processed.
 	 */
-	if ([NSApp macMinorVersion] > 13 || [self inLiveResize]) {
-	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
-	}
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
 }
 
-
 /*
- * These two methods allow Tk to register a virtual event which fires when the
- * appearance changes on 10.14.
+ * This method is called when a user changes between light and dark mode.
+ * The implementation here generates a Tk virtual event which can be bound
+ * to a function that redraws the window in an appropriate style.
  */
 
 - (void) viewDidChangeEffectiveAppearance
 {
-    [self updateAppearanceEvent];
-}
-
-- (void) updateAppearanceEvent
-{
+    XVirtualEvent event;
+    int x, y;
     NSString *osxMode = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
-    XVirtualEvent event;
-    int x, y;
     Tk_Window tkwin = (Tk_Window) winPtr;
+
+    if (!winPtr) {
+	return;
+    }
     bzero(&event, sizeof(XVirtualEvent));
     event.type = VirtualEvent;
     event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
@@ -1040,6 +1050,9 @@ ConfigureRestrictProc(
     int x, y;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window) winPtr;
+    if (!winPtr){
+	return;
+    }
     bzero(&event, sizeof(XVirtualEvent));
     event.type = VirtualEvent;
     event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
