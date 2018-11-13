@@ -6542,6 +6542,8 @@ test text-27.10 {TextEditCmd procedure, set modified flag} -body {
 test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
     text .t
     pack .t
+# Make sure the Text is mapped before we start
+    update
     set ::retval {}
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
