@@ -3021,7 +3021,6 @@ test text-11a.22 {TextWidgetCmd procedure, "sync" option with -command} -setup {
     set ::x 0
     toplevel .top
     pack [text .top.yt]
-    update
     set content {}
     for {set i 1} {$i < 30} {incr i} {
         append content [string repeat "$i " 15] \n
@@ -3048,7 +3047,6 @@ test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
 } -body {
     toplevel .top
     pack [text .top.yt]
-    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 15] \n
@@ -3082,7 +3080,6 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     set res {}
     toplevel .top
     pack [text .top.yt]
-    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 50] \n
