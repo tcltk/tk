@@ -349,6 +349,7 @@ test image-8.1 {Tk_ImageCmd procedure, "inuse" option} -constraints {
 test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c delete all
     imageCleanup
+    update
 } -body {
     image create test foo -variable x
     .c create image 50 50 -image foo
@@ -364,6 +365,7 @@ test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
 test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c delete all
     imageCleanup
+    update
 } -body {
     image create test foo -variable x
     .c create image 50 50 -image foo
