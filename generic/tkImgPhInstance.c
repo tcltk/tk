@@ -19,6 +19,9 @@
  */
 
 #include "tkImgPhoto.h"
+#ifdef MAC_OSX_TK
+#define TKPUTIMAGE_CAN_BLEND
+#endif
 
 /*
  * Declaration for internal Xlib function used here:
@@ -30,7 +33,7 @@ extern int		_XInitImageFuncPtrs(XImage *image);
  * Forward declarations
  */
 
-#ifndef MAC_OSX_TK
+#ifndef TKPUTIMAGE_CAN_BLEND 
 static void		BlendComplexAlpha(XImage *bgImg, PhotoInstance *iPtr,
 			    int xOffset, int yOffset, int width, int height);
 #endif
@@ -411,7 +414,7 @@ TkImgPhotoGet(
  *
  *----------------------------------------------------------------------
  */
-#ifndef MAC_OSX_TK
+#ifndef TKPUTIMAGE_CAN_BLEND
 #ifndef _WIN32
 #define GetRValue(rgb)	(UCHAR(((rgb) & red_mask) >> red_shift))
 #define GetGValue(rgb)	(UCHAR(((rgb) & green_mask) >> green_shift))
@@ -486,7 +489,7 @@ BlendComplexAlpha(
      * optimized.
      */
 
-#if !(defined(_WIN32) || defined(MAC_OSX_TK))
+#if !defined(_WIN32)
     if (bgImg->depth < 24) {
 	unsigned char red_mlen, green_mlen, blue_mlen;
 
@@ -534,7 +537,7 @@ BlendComplexAlpha(
 	}
 	return;
     }
-#endif /* !_WIN32 && !MAC_OSX_TK */
+#endif /* !_WIN32 */
 
     for (y = 0; y < height; y++) {
 	line = (y + yOffset) * iPtr->masterPtr->width;
@@ -577,7 +580,7 @@ BlendComplexAlpha(
     }
 #undef ALPHA_BLEND
 }
-#endif /* MAC_OSX_TK */
+#endif /* TKPUTIMAGE_CAN_BLEND */
 
 /*
  *----------------------------------------------------------------------
@@ -609,8 +612,10 @@ TkImgPhotoDisplay(
 				 * to imageX and imageY. */
 {
     PhotoInstance *instancePtr = clientData;
+#ifndef TKPUTIMAGE_CAN_BLEND
     XVisualInfo visInfo = instancePtr->visualInfo;
-
+#endif
+    
     /*
      * If there's no pixmap, it means that an error occurred while creating
      * the image instance so it can't be displayed.
@@ -620,14 +625,13 @@ TkImgPhotoDisplay(
 	return;
     }
 
-#ifdef MAC_OSX_TK
+#ifdef TKPUTIMAGE_CAN_BLEND
     /*
-     * The Mac version of TkPutImage handles RGBA images directly.  There is
+     * If TkPutImage can handle RGBA Ximages directly there is
      * no need to call XGetImage or to do the Porter-Duff compositing by hand.
-     * We just let the CG graphics library do it, using the graphics hardware.
      */
-    unsigned char *rgbaPixels = instancePtr->masterPtr->pix32;
 
+    unsigned char *rgbaPixels = instancePtr->masterPtr->pix32;
     XImage *photo = XCreateImage(display, NULL, 32, ZPixmap, 0, (char*)rgbaPixels,
 				 (unsigned int)instancePtr->width,
 				 (unsigned int)instancePtr->height,
@@ -638,6 +642,7 @@ TkImgPhotoDisplay(
     photo->data = NULL;
     XDestroyImage(photo);
 #else
+
     if ((instancePtr->masterPtr->flags & COMPLEX_ALPHA)
 	    && visInfo.depth >= 15
 	    && (visInfo.class == DirectColor || visInfo.class == TrueColor)) {
