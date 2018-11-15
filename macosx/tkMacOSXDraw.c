@@ -1496,14 +1496,6 @@ TkMacOSXSetupDrawingContext(
     CGRect clipBounds;
 
     /*
-     * If we are simulating drawing for tests, just return false.
-     */
-
-    if ([NSApp simulateDrawing]) {
-	return false;
-    }
-
-    /*
      * If the drawable is not a pixmap and it has an associated
      * NSWindow then we know we are drawing to a window.
      */
