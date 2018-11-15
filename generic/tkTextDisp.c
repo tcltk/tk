@@ -33,6 +33,8 @@
 
 #ifdef MAC_OSX_TK
 # include "tkMacOSXInt.h"
+#define OK_TO_LOG (!TkpAppIsDrawing())
+#define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
 /* Version 8.5 has forgotten to define this constant. */
 # ifndef TK_DO_NOT_DRAW
 #  define TK_DO_NOT_DRAW 0x80
@@ -41,6 +43,8 @@
 #  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "1"
 # endif
 #else /* for portability to 8.5/6 */
+#define OK_TO_LOG 1
+#define FORCE_DISPLAY(winPtr)
 # ifndef DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED
 #  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "0"
 # endif
@@ -7176,6 +7180,48 @@ UpdateLineMetrics(
 	/* The update process has removed the finished lines. */
 	range = TkRangeListFirst(dInfoPtr->lineMetricUpdateRanges);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GenerateWidgetViewSyncEvent --
+ *
+ *      Send the <<WidgetViewSync>> event related to the text widget
+ *      line metrics asynchronous update.
+ *      This is equivalent to:
+ *         event generate $textWidget <<WidgetViewSync>> -data $s
+ *      where $s is the sync status: true (when the widget view is in
+ *      sync with its internal data) or false (when it is not).
+ *
+ * Results:
+ *      None
+ *
+ * Side effects:
+ *      If corresponding bindings are present, they will trigger.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+GenerateWidgetViewSyncEvent(
+    TkText *textPtr,		/* Information about text widget. */
+    Bool InSync)                /* true if in sync, false otherwise */
+{
+    /*
+     * OSX 10.14 needs to be told to display the window when the Text Widget
+     * is in sync.  (That is, to run DisplayText inside of the drawRect
+     * method.)  Otherwise the screen might not get updated until an event
+     * like a mouse click is received.  But that extra drawing corrupts the
+     * data that the test suite is trying to collect.
+     */
+    
+    if (!tkTextDebug) {
+	FORCE_DISPLAY(textPtr->tkwin);
+    }
+    
+    TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
+        Tcl_NewBooleanObj(InSync));
 }
 
 /*

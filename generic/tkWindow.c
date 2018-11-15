@@ -2834,7 +2834,7 @@ static HMODULE tkcygwindll = NULL;
 /*
  * Run Tk_MainEx from libtk8.?.dll
  *
- * This function is only ever called from wish8.4.exe, the cygwin port of Tcl.
+ * This function is only ever called from wish8.?.exe, the cygwin port of Tcl.
  * This means that the system encoding is utf-8, so we don't have to do any
  * encoding conversions.
  */
@@ -2850,7 +2850,7 @@ TkCygwinMainEx(
     Tcl_Interp *interp)
 {
     TCHAR name[MAX_PATH];
-    int len;
+    size_t len;
     void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
     /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
