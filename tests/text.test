@@ -3021,6 +3021,7 @@ test text-11a.22 {TextWidgetCmd procedure, "sync" option with -command} -setup {
     set ::x 0
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
     for {set i 1} {$i < 30} {incr i} {
         append content [string repeat "$i " 15] \n
@@ -3047,6 +3048,7 @@ test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
 } -body {
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 15] \n
@@ -3080,6 +3082,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     set res {}
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 50] \n
@@ -6542,6 +6545,8 @@ test text-27.10 {TextEditCmd procedure, set modified flag} -body {
 test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
     text .t
     pack .t
+# Make sure the Text is mapped before we start
+    update
     set ::retval {}
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
