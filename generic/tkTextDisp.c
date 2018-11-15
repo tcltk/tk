@@ -34,7 +34,6 @@
 #ifdef MAC_OSX_TK
 # include "tkMacOSXInt.h"
 # define OK_TO_LOG (!TkpAppIsDrawing())
-# define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
 /* Version 8.5 has forgotten to define this constant. */
 # ifndef TK_DO_NOT_DRAW
 #  define TK_DO_NOT_DRAW 0x80
@@ -44,7 +43,6 @@
 # endif
 #else /* for portability to 8.5/6 */
 # define OK_TO_LOG 1
-# define FORCE_DISPLAY(winPtr)
 # ifndef DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED
 #  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "0"
 # endif
