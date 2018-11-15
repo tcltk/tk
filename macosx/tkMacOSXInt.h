@@ -200,7 +200,7 @@ MODULE_SCOPE void TkpReleaseRegion(TkRegion r);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
 MODULE_SCOPE Bool TkpAppIsDrawing(void);
 MODULE_SCOPE void TkpDisplayWindow(Tk_Window tkwin);
-MODULE_SCOPE void TkTestSimulateDrawing(Bool);
+MODULE_SCOPE Bool TkTestAppIsDrawing(void);
 
 /*
  * Include the stubbed internal platform-specific API.
