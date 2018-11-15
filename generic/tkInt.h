@@ -563,7 +563,7 @@ typedef struct TkDisplay {
 #endif /* TK_USE_INPUT_METHODS */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
-    size_t refCount;		/* Reference count of how many Tk applications
+    TkSizeT refCount;		/* Reference count of how many Tk applications
 				 * are using this display. Used to clean up
 				 * the display when we no longer have any Tk
 				 * applications using it. */
@@ -667,7 +667,7 @@ typedef struct TkEventHandler {
  */
 
 typedef struct TkMainInfo {
-    size_t refCount;		/* Number of windows whose "mainPtr" fields
+    TkSizeT refCount;		/* Number of windows whose "mainPtr" fields
 				 * point here. When this becomes zero, can
 				 * free up the structure (the reference count
 				 * is zero because windows can get deleted in
@@ -918,7 +918,7 @@ typedef struct {
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
 				 * allocated with ckalloc(). */
-    size_t charValueLen;	/* Length of string in charValuePtr when that
+    TkSizeT charValueLen;	/* Length of string in charValuePtr when that
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
@@ -1346,20 +1346,12 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
     MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
 #endif
 
-#ifdef TCL_TYPE_I
-/* With TIP #481 available, we don't need to do anything special here */
-#define TkGetStringFromObj(objPtr, lenPtr) \
-	Tcl_GetStringFromObj(objPtr, lenPtr)
-#define TkGetByteArrayFromObj(objPtr, lenPtr) \
-	Tcl_GetByteArrayFromObj(objPtr, lenPtr)
-#else
 #define TkGetStringFromObj(objPtr, lenPtr) \
 	(((objPtr)->bytes ? 0 : Tcl_GetString(objPtr)), \
 	*(lenPtr) = (objPtr)->length, (objPtr)->bytes)
 
 MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
 	size_t *lengthPtr);
-#endif
 
 /*
  * Unsupported commands.

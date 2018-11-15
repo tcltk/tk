@@ -722,6 +722,7 @@ test canvImg-9.1 {DisplayImage procedure} -constraints testImageType -setup {
 
 test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
+    update
 } -body {
 	image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
@@ -737,6 +738,7 @@ test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
 
 test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
+    update
 } -body {
 	image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
@@ -768,6 +770,7 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 	testImageType
 } -setup {
     .c delete all
+    update
 } -body {
     image create test foo -variable x
 	image create test foo2 -variable y

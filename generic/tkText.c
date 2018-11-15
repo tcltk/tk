@@ -84,6 +84,12 @@
 # define DEF_TEXT_INACTIVE_SELECT_BG_COLOR DEF_TEXT_INACTIVE_SELECT_COLOR
 #endif
 
+#if defined(MAC_OSX_TK)
+# define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
+#else
+# define FORCE_DISPLAY(winPtr)
+#endif
+
 /*
  * For compatibility with Tk 4.0 through 8.4.x, we allow tabs to be
  * mis-specified with non-increasing values. These are converted into tabs
@@ -10289,6 +10295,18 @@ FireWidgetViewSyncEvent(
 
     interp = textPtr->interp;
     Tcl_Preserve((ClientData) interp);
+    /*
+     * OSX 10.14 needs to be told to display the window when the Text Widget
+     * is in sync.  (That is, to run DisplayText inside of the drawRect
+     * method.)  Otherwise the screen might not get updated until an event
+     * like a mouse click is received.  But that extra drawing corrupts the
+     * data that the test suite is trying to collect.
+     */
+    
+    if (!tkTextDebug) {
+	FORCE_DISPLAY(textPtr->tkwin);
+    }
+
     SendVirtualEvent(textPtr->tkwin, "WidgetViewSync", Tcl_NewBooleanObj(syncState));
     Tcl_Release((ClientData) interp);
 }
