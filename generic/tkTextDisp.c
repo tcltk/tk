@@ -33,6 +33,8 @@
 
 #ifdef MAC_OSX_TK
 # include "tkMacOSXInt.h"
+# define OK_TO_LOG (!TkpAppIsDrawing())
+# define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
 /* Version 8.5 has forgotten to define this constant. */
 # ifndef TK_DO_NOT_DRAW
 #  define TK_DO_NOT_DRAW 0x80
@@ -41,6 +43,8 @@
 #  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "1"
 # endif
 #else /* for portability to 8.5/6 */
+# define OK_TO_LOG 1
+# define FORCE_DISPLAY(winPtr)
 # ifndef DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED
 #  define DEF_TEXT_INACTIVE_SELECT_COLOR_DISABLED "0"
 # endif
@@ -160,11 +164,20 @@ static int TkpDrawingIsDisabled(Tk_Window tkwin) { return 0; }
     (fabs((double1) - (double2))*((scaleFactor) + 1.0) < 0.3)
 
 /*
- * Macro to make debugging/testing logging a little easier.
+ * Macros to make debugging/testing logging a little easier.
+ *
+ * On OSX 10.14 Drawing procedures are sometimes run because the system has
+ * decided to redraw the window.  This can corrupt the data that a test is
+ * trying to collect.  So we don't write to the logging variables when the
+ * drawing procedure is being run that way.  Other systems can always log.
  */
 
 #define LOG(toVar,what) \
-    Tcl_SetVar2(textPtr->interp, toVar, NULL, what, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
+    if (OK_TO_LOG) \
+        Tcl_SetVar2(textPtr->interp, toVar, NULL, what, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
+#define CLEAR(var) \
+    if (OK_TO_LOG) \
+	Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
 
 /*
  * Speed up if the text content only contains monospaced line heights, and line wrapping
@@ -8609,7 +8622,7 @@ DisplayText(
     interp = textPtr->interp;
     Tcl_Preserve(interp);
 
-    TK_TEXT_DEBUG(Tcl_SetVar2(interp, "tk_textRelayout", NULL, "", TCL_GLOBAL_ONLY));
+    TK_TEXT_DEBUG(CLEAR("tk_textRelayout"));
 
     if (!Tk_IsMapped(textPtr->tkwin) || dInfoPtr->maxX <= dInfoPtr->x || dInfoPtr->maxY <= dInfoPtr->y) {
 	UpdateDisplayInfo(textPtr);
@@ -8618,7 +8631,7 @@ DisplayText(
 	goto doScrollbars;
     }
     DEBUG(stats.numRedisplays += 1);
-    TK_TEXT_DEBUG(Tcl_SetVar2(interp, "tk_textRedraw", NULL, "", TCL_GLOBAL_ONLY));
+    TK_TEXT_DEBUG(CLEAR("tk_textRedraw"));
 
     /*
      * Choose a new current item if that is needed (this could cause event
