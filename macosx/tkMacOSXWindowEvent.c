@@ -832,10 +832,6 @@ ConfigureRestrictProc(
 			Tk_PathName(winPtr));
 #endif
 
-    if ([NSApp simulateDrawing]) {
-    	return;
-    }
-
     /*
      * We do not allow recursive calls to drawRect, but we only log
      * them on OSX > 10.13, where they should never happen.

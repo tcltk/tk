@@ -47,7 +47,6 @@ static char scriptPath[PATH_MAX + 1] = "";
 @synthesize poolLock = _poolLock;
 @synthesize macMinorVersion = _macMinorVersion;
 @synthesize isDrawing = _isDrawing;
-@synthesize simulateDrawing = _simulateDrawing;
 @end
 
 /*
@@ -165,15 +164,15 @@ static char scriptPath[PATH_MAX + 1] = "";
     [NSApp setMacMinorVersion: minorVersion];
 
     /*
-     * We are not drawing yet.
+     * We are not drawing right now.
      */
 
     [NSApp setIsDrawing:NO];
-    [NSApp setSimulateDrawing:NO];
 
     /*
      * Be our own delegate.
      */
+
     [self setDelegate:self];
 
     /*
