@@ -82,30 +82,28 @@ DebuggerObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * TkTestSimulateDrawing --
+ * TkTestAppIsDrawing --
  *
  *      A test widget display procedure which records calls can use this to
- *      avoid duplicate calls which would occur due to fact that no valid
- *      graphics context is available to the idle task which is running the
- *      display proc.  Note that no actual drawing to the screen will take
- *      place when this flag is set.  This is just a wrapper for the NSApp
+ *      detect whether it is being called from within [NSView drawRect].
+ *      If so, it probably should not be recording the call since it was
+ *      probably generated spontaneously by the window manager rather than
+ *      by an explicit call to update. This is just a wrapper for the NSApp
  *      property.
  *
  *
  * Results:
- *      Calls to low level drawing routines will return without actually
- *	drawing anything to the screen.
+ *      Returns true if and only if called from within [NSView drawRect].
  *
  * Side effects:
  *	None
  *
  *----------------------------------------------------------------------
  */
-MODULE_SCOPE void
-TkTestSimulateDrawing(Bool yesno) {
-    [NSApp setSimulateDrawing:yesno];
+MODULE_SCOPE Bool
+TkTestAppIsDrawing(void) {
+    return [NSApp isDrawing];
 }
-
 
 
 /*
