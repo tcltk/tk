@@ -468,7 +468,8 @@ NSStatusItem *exitFullScreen;
 	title = "unnamed window";
     }
     if (DEBUG_ZOMBIES > 1){
-	printf("Autoreleased <%s>. Count is %lu\n", title, [self retainCount]);
+	fprintf(stderr, "Autoreleased <%s>. Count is %lu\n",
+		title, [self retainCount]);
     }
     return result;
 }
@@ -479,7 +480,8 @@ NSStatusItem *exitFullScreen;
 	title = "unnamed window";
     }
     if (DEBUG_ZOMBIES > 1){
-	printf("Releasing <%s>. Count is %lu\n", title, [self retainCount]);
+	fprintf(stderr, "Releasing <%s>. Count is %lu\n",
+		title, [self retainCount]);
     }
     [super release];
 }
@@ -490,7 +492,8 @@ NSStatusItem *exitFullScreen;
 	title = "unnamed window";
     }
     if (DEBUG_ZOMBIES > 0){
-	printf(">>>> Freeing <%s>. Count is %lu\n", title, [self retainCount]);
+	fprintf(stderr, ">>>> Freeing <%s>. Count is %lu\n",
+		title, [self retainCount]);
     }
     [super dealloc];
 }

@@ -912,13 +912,19 @@ ConfigureRestrictProc(
 	TkMacOSXUpdateClipRgn(winPtr);
 
 	 /*
-	  * Finally, generate and process expose events to redraw the window.
+	  * Generate and process expose events to redraw the window.
 	  */
 
 	HIRect bounds = NSRectToCGRect([self bounds]);
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
 	[self generateExposeEvents: shape];
 	[w displayIfNeeded];
+
+	/*
+	 * Finally, unlock the main autoreleasePool.
+	 */
+	
+	[NSApp _unlockAutoreleasePool];
     }
 }
 
