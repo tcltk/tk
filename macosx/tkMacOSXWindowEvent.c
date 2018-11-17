@@ -919,6 +919,9 @@ ConfigureRestrictProc(
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
 	[self generateExposeEvents: shape];
 	[w displayIfNeeded];
+	if ([NSApp macMinorVersion] > 13) {
+	    [NSApp setIsDrawing:NO];
+	}
 
 	/*
 	 * Finally, unlock the main autoreleasePool.
