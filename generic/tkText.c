@@ -5538,15 +5538,6 @@ RunAfterSyncCmd(
 	return;
     }
 
-    if (textPtr->afterSyncCmd == NULL) {
-	/*
-	 * [Bug 0a9c9151b5] Probably should have idle handlers coded so that
-	 * this cannot happen, but a safety check here at least prevents a
-	 * crash.
-	 */
-	return;
-    }
-
     Tcl_Preserve((ClientData) textPtr->interp);
     code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
     if (code == TCL_ERROR) {
