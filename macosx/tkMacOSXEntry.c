@@ -91,7 +91,7 @@ TkpDrawEntryBorderAndFocus(
     TkMacOSXDrawingContext dc;
     GC bgGC;
     Tk_Window tkwin = entryPtr->tkwin;
-    int oldWidth = 0;
+    int boxWidth;
     MacDrawable *macDraw = (MacDrawable *) d;
     const HIThemeFrameDrawInfo info = {
 	.version = 0,
@@ -122,12 +122,9 @@ TkpDrawEntryBorderAndFocus(
 
     if (isSpinbox) {
 	int incDecWidth;
-
-	oldWidth = Tk_Width(tkwin);
-
 	ComputeIncDecParameters(Tk_Height(tkwin) - 2 * MAC_OSX_FOCUS_WIDTH,
 		&incDecWidth);
-	Tk_Width(tkwin) -= incDecWidth + 1;
+	boxWidth = Tk_Width(tkwin) - incDecWidth - 1;
     }
 
    /*
@@ -146,16 +143,13 @@ TkpDrawEntryBorderAndFocus(
 
     bounds.origin.x = macDraw->xOff + MAC_OSX_FOCUS_WIDTH;
     bounds.origin.y = macDraw->yOff + MAC_OSX_FOCUS_WIDTH;
-    bounds.size.width = Tk_Width(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
+    bounds.size.width = boxWidth - 2*MAC_OSX_FOCUS_WIDTH;
     bounds.size.height = Tk_Height(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
     if (!TkMacOSXSetupDrawingContext(d, NULL, 1, &dc)) {
 	return 0;
     }
     ChkErr(HIThemeDrawFrame, &bounds, &info, dc.context, HIOrientation);
     TkMacOSXRestoreDrawingContext(&dc);
-    if (isSpinbox) {
-	Tk_Width(tkwin) = oldWidth;
-    }
     return 1;
 }
 
