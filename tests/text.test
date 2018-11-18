@@ -3088,14 +3088,19 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
         append content [string repeat "$i " 50] \n
     }
     bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
-    .top.yt insert 1.0 $content
-    vwait res  ; # event dealt with by the event loop, with %d==0 i.e. we're out of sync
-    # ensure the test is relevant
-    lappend res "Pending:[.top.yt pendingsync]"
-    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs 
-    # - there is no more any pending sync after running 'sync'
+    # make initial sync state known
     .top.yt sync
-    vwait res  ; # event dealt with by the event loop, with %d==1 i.e. we're in sync again
+    update
+    # the next line triggers <<WidgetViewSync>> with %d==0 i.e. we're out of sync
+    .top.yt insert 1.0 $content
+    vwait res
+    # ensure the test is relevant: the line metrics are not up-to-date (pendingsync is 1)
+    lappend res "Pending:[.top.yt pendingsync]"
+    # wait for the end of line metrics update by calling the sync command
+    # <<WidgetViewSync>> fires when sync returns with %d==1 i.e. we're in sync again
+    # at this time line metrics are up-to-date (pendingsync is 0)
+    .top.yt sync
+    vwait res
     lappend res "Pending:[.top.yt pendingsync]"
     set res
 } -cleanup {
