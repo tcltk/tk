@@ -837,8 +837,10 @@ ConfigureRestrictProc(
      * them on OSX > 10.13, where they should never happen.
      */
 
-    if ([NSApp isDrawing] && [NSApp macMinorVersion] > 13) {
-	TKLog(@"WARNING: a recursive call to drawRect was aborted.");
+    if ([NSApp isDrawing]) {
+	if ([NSApp macMinorVersion] > 13) {
+	    TKLog(@"WARNING: a recursive call to drawRect was aborted.");
+	}
 	return;
     }
 
@@ -919,6 +921,9 @@ ConfigureRestrictProc(
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
 	[self generateExposeEvents: shape];
 	[w displayIfNeeded];
+	if ([NSApp macMinorVersion] > 13) {
+	    [NSApp setIsDrawing:NO];
+	}
 
 	/*
 	 * Finally, unlock the main autoreleasePool.
