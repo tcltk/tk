@@ -408,25 +408,17 @@ NSStatusItem *exitFullScreen;
   }
   Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
   if ([NSApp macMinorVersion] > 12) {
-      if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
-	  TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
-      } else {
+      if (([self styleMask] & NSFullScreenWindowMask) != NSFullScreenWindowMask) {
 	  TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
+	  return;
       }
-  } else {
+        if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
+	  TKLog(@"returning to regular screen");
+	  TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
+	  return;
+      }
+  }   
       TKLog (@"toggleFullScreen is ignored by Tk on OSX versions < 10.13");
-  }
-}
-
--(void)restoreOldScreen:(id)sender
-{
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    if (!winPtr) {
-	return;
-    }
-    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
-    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
-    [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
 }
 
 @end
@@ -6561,13 +6553,6 @@ TkMacOSXMakeFullscreen(
 	wmPtr->cachedStyle = [window styleMask];
 	wmPtr->cachedPresentation = [NSApp presentationOptions];
 
-	/*
-	 * Adjust the window style so it looks like a Fullscreen window.
-	 */
-
-	[window setStyleMask: NSFullScreenWindowMask];
-	[NSApp setPresentationOptions: (NSApplicationPresentationAutoHideDock |
-					NSApplicationPresentationAutoHideMenuBar)];
 
 	/*For 10.13 and later add a button for exiting Fullscreen.*/
 	if ([NSApp macMinorVersion] > 12) {
@@ -6579,25 +6564,51 @@ TkMacOSXMakeFullscreen(
 	    exitFullScreen.button.cell.highlighted = NO;
 	    exitFullScreen.button.toolTip = @"Exit Full Screen";
 	    exitFullScreen.button.target = window;
-	    exitFullScreen.button.action = @selector(restoreOldScreen:);
+	    exitFullScreen.button.action = @selector(toggleFullScreen:);
 #endif
 	}
 
 	/*
-	 * Resize the window to fill the screen. (After setting the style!)
+	 * Resize the window to fill the screen. Unmapping/mapping is necessary
+         * to correctly reset the window configurations in Tk.
+	 */
+	Tk_UnmapWindow((Tk_Window) winPtr);
+	NSRect bounds = [window contentRectForFrameRect:[window frame]];
+	NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
+
+
+	if (!NSEqualRects(bounds, screenBounds)) {
+	    wmPtr->configX = wmPtr->x;
+	    wmPtr->configY = wmPtr->y;
+	    wmPtr->configAttributes = wmPtr->attributes;
+	    wmPtr->attributes &= ~kWindowResizableAttribute;
+	    ApplyWindowAttributeFlagChanges(winPtr, window,
+					    wmPtr->configAttributes, wmPtr->flags, 1, 0);
+	    wmPtr->flags |= WM_SYNC_PENDING;
+	    [window setFrame:[window frameRectForContentRect:
+				       screenBounds] display:YES];
+	    wmPtr->flags &= ~WM_SYNC_PENDING;
+	}
+	wmPtr->flags |= WM_FULLSCREEN;
+
+	 /*
+	 * Adjust the window style so it looks like a Fullscreen window.
 	 */
 
-	wmPtr->flags |= WM_SYNC_PENDING;
-	NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
-	[window setFrame:screenBounds display:YES];
-	wmPtr->flags &= ~WM_SYNC_PENDING;
-	wmPtr->flags |= WM_FULLSCREEN;
+	[window setStyleMask: NSFullScreenWindowMask];
+	[NSApp setPresentationOptions: (NSApplicationPresentationAutoHideDock |
+					NSApplicationPresentationAutoHideMenuBar)];
+	[window setStyleMask: NSFullScreenWindowMask];
+	Tk_MapWindow((Tk_Window) winPtr);
+	
     } else {
 
 	/*
-	 * Restore the previous styles and attributes.
+	 * Restore the previous styles and attributes. Unmapping/mapping 
+         * is necessary to correctly reset the window configurations in Tk.
 	 */
 
+	Tk_UnmapWindow((Tk_Window) winPtr);
 	[NSApp setPresentationOptions: wmPtr->cachedPresentation];
 	[window setStyleMask: wmPtr->cachedStyle];
 	UInt64 oldAttributes = wmPtr->attributes;
@@ -6614,6 +6625,10 @@ TkMacOSXMakeFullscreen(
 	wmPtr->flags |= WM_SYNC_PENDING;
 	[window setFrame:wmPtr->cachedBounds display:YES];
 	wmPtr->flags &= ~WM_SYNC_PENDING;
+        if ([NSApp macMinorVersion] > 12) {
+	    [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
+	}
+	Tk_MapWindow((Tk_Window) winPtr);
     }
     return TCL_OK;
 }
