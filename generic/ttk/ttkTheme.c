@@ -513,6 +513,10 @@ static void ThemeChangedProc(ClientData clientData)
 	Tcl_BackgroundException(pkgPtr->interp, code);
     }
     pkgPtr->themeChangePending = 0;
+#ifdef MAC_OSX_TK
+    extern void TkMacOSXFlushWindows(void);
+    TkMacOSXFlushWindows();
+#endif
 }
 
 /*
