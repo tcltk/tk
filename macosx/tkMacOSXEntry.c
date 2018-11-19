@@ -91,7 +91,7 @@ TkpDrawEntryBorderAndFocus(
     TkMacOSXDrawingContext dc;
     GC bgGC;
     Tk_Window tkwin = entryPtr->tkwin;
-    int boxWidth;
+    int oldWidth;
     MacDrawable *macDraw = (MacDrawable *) d;
     const HIThemeFrameDrawInfo info = {
 	.version = 0,
@@ -122,9 +122,18 @@ TkpDrawEntryBorderAndFocus(
 
     if (isSpinbox) {
 	int incDecWidth;
+
+	/*
+	 * Temporarily change the width of the widget so that the same code can
+	 * be used for drawing the Entry portion of the Spinbox as is used to
+	 * draw an ordinary Entry.  The width must be restored before
+	 * returning.
+	 */
+
+	oldWidth = Tk_Width(tkwin);
 	ComputeIncDecParameters(Tk_Height(tkwin) - 2 * MAC_OSX_FOCUS_WIDTH,
 		&incDecWidth);
-	boxWidth = Tk_Width(tkwin) - incDecWidth - 1;
+	Tk_Width(tkwin) -= incDecWidth + 1;
     }
 
    /*
@@ -143,13 +152,25 @@ TkpDrawEntryBorderAndFocus(
 
     bounds.origin.x = macDraw->xOff + MAC_OSX_FOCUS_WIDTH;
     bounds.origin.y = macDraw->yOff + MAC_OSX_FOCUS_WIDTH;
-    bounds.size.width = boxWidth - 2*MAC_OSX_FOCUS_WIDTH;
+    bounds.size.width = Tk_Width(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
     bounds.size.height = Tk_Height(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
     if (!TkMacOSXSetupDrawingContext(d, NULL, 1, &dc)) {
+
+	/* 
+	 * No graphics context is available.  If the widget is a Spinbox, we
+	 * must restore its width before returning 0. (Ticket [273b6a4996].)
+	 */ 
+
+	if (isSpinbox) {
+	    Tk_Width(tkwin) = oldWidth;
+	}
 	return 0;
     }
     ChkErr(HIThemeDrawFrame, &bounds, &info, dc.context, HIOrientation);
     TkMacOSXRestoreDrawingContext(&dc);
+    if (isSpinbox) {
+	Tk_Width(tkwin) = oldWidth;
+    }
     return 1;
 }
 
