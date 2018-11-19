@@ -413,7 +413,6 @@ NSStatusItem *exitFullScreen;
 	  return;
       }
         if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
-	  TKLog(@"returning to regular screen");
 	  TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
 	  return;
       }
@@ -6598,7 +6597,6 @@ TkMacOSXMakeFullscreen(
 	[window setStyleMask: NSFullScreenWindowMask];
 	[NSApp setPresentationOptions: (NSApplicationPresentationAutoHideDock |
 					NSApplicationPresentationAutoHideMenuBar)];
-	[window setStyleMask: NSFullScreenWindowMask];
 	Tk_MapWindow((Tk_Window) winPtr);
 	
     } else {
