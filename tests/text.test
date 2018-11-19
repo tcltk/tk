@@ -3089,6 +3089,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
         append content [string repeat "$i " 50] \n
     }
     bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
+    update
     set res {}
     # the next line triggers <<WidgetViewSync>> with %d==0 i.e. we're out of sync
     .top.yt insert 1.0 $content
