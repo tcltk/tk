@@ -3079,18 +3079,17 @@ test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
 test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -body {
-    set res {}
     toplevel .top
     pack [text .top.yt]
+    # make initial sync state known
     update
+    .top.yt sync
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 50] \n
     }
     bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
-    # make initial sync state known
-    .top.yt sync
-    update
+    set res {}
     # the next line triggers <<WidgetViewSync>> with %d==0 i.e. we're out of sync
     .top.yt insert 1.0 $content
     vwait res
