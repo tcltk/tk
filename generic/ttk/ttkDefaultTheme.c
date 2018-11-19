@@ -510,7 +510,7 @@ static void IndicatorElementDraw(
     XGCValues gcValues;
     GC copyGC;
     unsigned long imgColors[8];
-    XImage *img;
+    XImage *img = NULL;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
@@ -550,11 +550,17 @@ static void IndicatorElementDraw(
     /*
      * Create a scratch buffer to store the image:
      */
-    img = XGetImage(display,d, 0, 0,
-	    (unsigned int)spec->width, (unsigned int)spec->height,
-	    AllPlanes, ZPixmap);
-    if (img == NULL)
-	return;
+
+    img = XCreateImage(display, NULL, 32, ZPixmap, 0, NULL,
+		       (unsigned int)spec->width, (unsigned int)spec->height,
+		       0, 0);
+    if (img == NULL) {
+      return;
+    }
+    img->data = ckalloc(img->bytes_per_line * img->height);
+    if (img->data == NULL) {
+      return;
+    }
 
     /*
      * Create the image, painting it into an XImage one pixel at a time.
@@ -572,7 +578,6 @@ static void IndicatorElementDraw(
      */
     memset(&gcValues, 0, sizeof(gcValues));
     copyGC = Tk_GetGC(tkwin, 0, &gcValues);
-
     TkPutImage(NULL, 0, display, d, copyGC, img, 0, 0, b.x, b.y,
                spec->width, spec->height);
 
