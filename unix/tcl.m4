@@ -3069,6 +3069,165 @@ if test "x$NEED_FAKE_RFC2553" = "x1"; then
    AC_CHECK_FUNC(strlcpy)
 fi
 ])
+
+#------------------------------------------------------------------------
+# SC_CC_FOR_BUILD
+#	For cross compiles, locate a C compiler that can generate native binaries.
+#
+# Arguments:
+#	none
+#
+# Results:
+#	Substitutes the following vars:
+#		CC_FOR_BUILD
+#		EXEEXT_FOR_BUILD
+#------------------------------------------------------------------------
+
+dnl Get a default for CC_FOR_BUILD to put into Makefile.
+AC_DEFUN([AX_CC_FOR_BUILD],[# Put a plausible default for CC_FOR_BUILD in Makefile.
+    if test -z "$CC_FOR_BUILD"; then
+      if test "x$cross_compiling" = "xno"; then
+        CC_FOR_BUILD='$(CC)'
+      else
+        AC_MSG_CHECKING([for gcc])
+        AC_CACHE_VAL(ac_cv_path_cc, [
+            search_path=`echo ${PATH} | sed -e 's/:/ /g'`
+            for dir in $search_path ; do
+                for j in `ls -r $dir/gcc 2> /dev/null` \
+                        `ls -r $dir/gcc 2> /dev/null` ; do
+                    if test x"$ac_cv_path_cc" = x ; then
+                        if test -f "$j" ; then
+                            ac_cv_path_cc=$j
+                            break
+                        fi
+                    fi
+                done
+            done
+        ])
+      fi
+    fi
+    AC_SUBST(CC_FOR_BUILD)
+    # Also set EXEEXT_FOR_BUILD.
+    if test "x$cross_compiling" = "xno"; then
+      EXEEXT_FOR_BUILD='$(EXEEXT)'
+      OBJEXT_FOR_BUILD='$(OBJEXT)'
+    else
+      OBJEXT_FOR_BUILD='.no'
+      AC_CACHE_CHECK([for build system executable suffix], bfd_cv_build_exeext,
+        [rm -f conftest*
+         echo 'int main () { return 0; }' > conftest.c
+         bfd_cv_build_exeext=
+         ${CC_FOR_BUILD} -o conftest conftest.c 1>&5 2>&5
+         for file in conftest.*; do
+           case $file in
+           *.c | *.o | *.obj | *.ilk | *.pdb) ;;
+           *) bfd_cv_build_exeext=`echo $file | sed -e s/conftest//` ;;
+           esac
+         done
+         rm -f conftest*
+         test x"${bfd_cv_build_exeext}" = x && bfd_cv_build_exeext=no])
+      EXEEXT_FOR_BUILD=""
+      test x"${bfd_cv_build_exeext}" != xno && EXEEXT_FOR_BUILD=${bfd_cv_build_exeext}
+    fi
+    AC_SUBST(EXEEXT_FOR_BUILD)])dnl
+    AC_SUBST(OBJEXT_FOR_BUILD)])dnl
+])
+
+###
+# Tip 430 - ZipFS Modifications
+###
+#------------------------------------------------------------------------
+# SC_ZIPFS_SUPPORT
+#	Locate a zip encoder installed on the system path, or none.
+#
+# Arguments:
+#	none
+#
+# Results:
+#	Substitutes the following vars:
+#		TCL_ZIP_FILE
+#		TCL_ZIPFS_SUPPORT
+#		TCL_ZIPFS_FLAG
+#		ZIP_PROG
+#       ZIP_PROG_OPTIONS
+#       ZIP_PROG_VFSSEARCH
+#------------------------------------------------------------------------
+AC_DEFUN([SC_ZIPFS_SUPPORT], [
+    AC_MSG_CHECKING([for zip support])
+    ZIP_PROG=""
+    ZIP_PROG_OPTIONS=""
+    ZIP_PROG_VFSSEARCH=""
+    INSTALL_MSGS=""
+    # ZIPFS Support
+    eval "TCL_ZIP_FILE=\"${TCL_ZIP_FILE}\""
+    if test "${TCL_ZIP_FILE}" = ""; then
+      AC_MSG_CHECKING([core does not support zipfs])
+      TCL_ZIPFS_SUPPORT=0
+      TCL_ZIPFS_FLAG=
+      INSTALL_LIBRARIES=install-libraries
+      INSTALL_MSGS=install-msgs
+    else
+      AC_MSG_CHECKING([for zip encoder])
+      # If our native tclsh processes the "install" command line option
+      # we can use it to mint zip files
+      AS_IF([$TCLSH_PROG install],[
+        ZIP_PROG=${TCLSH_PROG}
+        ZIP_PROG_OPTIONS="install mkzip"
+        ZIP_PROG_VFSSEARCH="."
+        AC_MSG_RESULT([Can use Native Tclsh for Zip encoding])
+      ])
+      if test "x$ZIP_PROG" = "x"; then
+          AC_CACHE_VAL(ac_cv_path_zip, [
+          search_path=`echo ${PATH} | sed -e 's/:/ /g'`
+          for dir in $search_path ; do
+              for j in `ls -r $dir/zip 2> /dev/null` \
+                  `ls -r $dir/zip 2> /dev/null` ; do
+              if test x"$ac_cv_path_zip" = x ; then
+                  if test -f "$j" ; then
+                  ac_cv_path_zip=$j
+                  break
+                  fi
+              fi
+              done
+          done
+          ])
+          if test -f "$ac_cv_path_zip"; then
+              ZIP_PROG="$ac_cv_path_zip "
+              AC_MSG_RESULT([$ZIP_PROG])
+              ZIP_PROG_OPTIONS="-rq"
+              ZIP_PROG_VFSSEARCH="."
+              AC_MSG_RESULT([Found INFO Zip in environment])
+              # Use standard arguments for zip
+          fi
+      fi
+      if test "x$ZIP_PROG" = "x"; then
+        # It is not an error if an installed version of Zip can't be located.
+          ZIP_PROG=""
+          ZIP_PROG_OPTIONS=""
+          ZIP_PROG_VFSSEARCH=""
+          TCL_ZIPFS_SUPPORT=0
+          TCL_ZIPFS_FLAG=
+      else
+           if test ${SHARED_BUILD} = 1; then
+              TCL_ZIPFS_SUPPORT=1
+              INSTALL_LIBRARIES=install-libraries-zipfs-shared
+           else
+              TCL_ZIPFS_SUPPORT=2
+              INSTALL_LIBRARIES=install-libraries-zipfs-static
+           fi
+          TCL_ZIPFS_FLAG=-DTCL_ZIPFS_SUPPORT
+      fi
+    fi
+
+    AC_SUBST(TCL_ZIP_FILE)
+    AC_SUBST(TCL_ZIPFS_SUPPORT)
+    AC_SUBST(TCL_ZIPFS_FLAG)
+    AC_SUBST(ZIP_PROG)
+    AC_SUBST(ZIP_PROG_OPTIONS)
+    AC_SUBST(ZIP_PROG_VFSSEARCH)
+    AC_SUBST(INSTALL_LIBRARIES)
+    AC_SUBST(INSTALL_MSGS)
+])
 # Local Variables:
 # mode: autoconf
 # End:

@@ -315,6 +315,27 @@ TEST_DIR		= $(TOP_DIR)/tests
 MAC_OSX_DIR		= $(TOP_DIR)/macosx
 XLIB_DIR		= $(TOP_DIR)/xlib
 
+###
+# Tip 430 - ZipFS Modifications
+###
+TK_ZIP_FILE		= libtk_${MAJOR_VERSION}_${MINOR_VERSION}_${PATCH_LEVEL}.zip
+TK_VFS_PATH		= libtk.vfs/tk_library
+TK_VFS_ROOT		= libtk.vfs
+TCL_ZIP_FILE		=  @TCL_ZIP_FILE@
+TCL_ZIPFS_SUPPORT       = @TCL_ZIPFS_SUPPORT@
+TCL_ZIPFS_FLAG          = @TCL_ZIPFS_FLAG@
+TCL_ZIPFS_OBJS          =
+ZIP_PROG        = @ZIP_PROG@
+ZIP_PROG_OPTIONS		= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH  = @ZIP_PROG_VFSSEARCH@
+
+ifeq (${TCL_ZIPFS_SUPPORT},1)
+	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
+endif
+ifeq (${TCL_ZIPFS_SUPPORT},2)
+	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
+endif
+
 #----------------------------------------------------------------
 # The information below should be usable as is.  The configure
 # script won't modify it and you shouldn't need to modify it
@@ -331,7 +352,7 @@ CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} -I${TCL_GENERIC_DIR} \
 -I${TCL_PLATFORM_DIR} ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${AC_FLAGS} \
 ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
+${NO_DEPRECATED_FLAGS} ${TCL_ZIPFS_FLAG} @EXTRA_CC_SWITCHES@
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -369,8 +390,9 @@ GENERIC_OBJS = tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
 	tkClipboard.o \
 	tkCmds.o tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o \
 	tkEvent.o tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o \
-	tkGrid.o tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o tkPlace.o \
-	tkSelect.o tkStyle.o tkUndo.o tkUtil.o tkVisual.o tkWindow.o
+	tkGrid.o tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o \
+	tkPkgConfig.o tkPlace.o \
+	tkSelect.o tkStyle.o tkUndo.o tkUtil.o tkVisual.o tkWindow.o \
 
 TTK_OBJS = \
 	ttkBlink.o ttkButton.o ttkCache.o ttkClamTheme.o ttkClassicTheme.o \
@@ -431,6 +453,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkGrid.c $(GENERIC_DIR)/tkConsole.c \
 	$(GENERIC_DIR)/tkMain.c $(GENERIC_DIR)/tkOption.c \
 	$(GENERIC_DIR)/tkPack.c $(GENERIC_DIR)/tkPlace.c \
+	$(GENERIC_DIR)/tkPkgConfig.c \
 	$(GENERIC_DIR)/tkSelect.c $(GENERIC_DIR)/tkStyle.c \
 	$(GENERIC_DIR)/tkUndo.c $(GENERIC_DIR)/tkUtil.c \
 	$(GENERIC_DIR)/tkVisual.c $(GENERIC_DIR)/tkWindow.c \
@@ -580,11 +603,20 @@ $(TOP_DIR)/doc/man.macros:
 
 doc: $(TOP_DIR)/doc/man.macros
 
+${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
+	rm -rf ${TK_VFS_ROOT}
+	mkdir -p ${TK_VFS_PATH}
+	cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}
+	cd  ${TK_VFS_ROOT} ; ${ZIP_PROG} ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}
+
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
-${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS}
+${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TCL_ZIPFS_OBJS}
 	rm -f $@
 	@MAKE_LIB@
+ifeq (${TCL_ZIPFS_SUPPORT},1)
+	  cat ${TK_ZIP_FILE} >> ${LIB_FILE}
+endif
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
 	@if test "x${LIB_FILE}" = "xlibtk${MAJOR_VERSION}.${MINOR_VERSION}.dll"; then \
@@ -760,6 +792,26 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	@$(INSTALL_DATA_DIR) $(LIB_INSTALL_DIR)/pkgconfig
 	@$(INSTALL_DATA) tk.pc $(LIB_INSTALL_DIR)/pkgconfig/tk.pc
 
+
+install-libraries-zipfs-shared: libraries
+	@for i in "$(SCRIPT_INSTALL_DIR)"; \
+	    do \
+	    if [ ! -d "$$i" ] ; then \
+		echo "Making directory $$i"; \
+		$(INSTALL_DATA_DIR) "$$i"; \
+		else true; \
+		fi; \
+	    done;
+	@echo "Installing library files to $(SCRIPT_INSTALL_DIR)/";
+	@for i in \
+		$(UNIX_DIR)/tkAppInit.c; \
+	    do \
+	    $(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)"; \
+	    done;
+
+install-libraries-zipfs-static: install-libraries-zipfs-shared
+	$(INSTALL_DATA) ${TCL_ZIP_FILE} "$(LIB_INSTALL_DIR)" ;\
+
 install-libraries: libraries
 	@for i in "$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
 		"$(SCRIPT_INSTALL_DIR)/msgs" "$(SCRIPT_INSTALL_DIR)/ttk"; \
@@ -899,10 +951,12 @@ Makefile: $(UNIX_DIR)/Makefile.in
 #	$(SHELL) config.status
 
 clean:
+	rm -rf ${TL_VFS_ROOT}
 	rm -f *.a *.o libtk* core errs *~ \#* TAGS *.E a.out \
 		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc
 
 distclean: clean
+	rm -rf ${TL_VFS_ROOT}
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
 		tkConfig.h *.plist Tk.framework tk.pc
 
@@ -930,7 +984,7 @@ tkTestInit.o: $(UNIX_DIR)/tkAppInit.c ${WISH_EXE}
 	fi;
 
 tkAppInit.o: $(UNIX_DIR)/tkAppInit.c
-	$(CC) -c $(APP_CC_SWITCHES) $(UNIX_DIR)/tkAppInit.c
+	$(CC) -c $(APP_CC_SWITCHES) ${TCL_ZIPFS_FLAG} $(UNIX_DIR)/tkAppInit.c
 
 tk3d.o: $(GENERIC_DIR)/tk3d.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tk3d.c
@@ -1009,6 +1063,34 @@ tkOption.o: $(GENERIC_DIR)/tkOption.c
 
 tkPack.o: $(GENERIC_DIR)/tkPack.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPack.c
+
+# TIP #59, embedding of configuration information into the binary library.
+#
+# Part of Tk's configuration information are the paths where it was installed
+# and where it will look for its libraries (which can be different). We derive
+# this information from the variables which can be overridden by the user. As
+# every path can be configured separately we do not remember one general
+# prefix/exec_prefix but all the different paths individually.
+
+tkPkgConfig.o: $(GENERIC_DIR)/tkPkgConfig.c
+	$(CC) -c $(CC_SWITCHES)					\
+		-DCFG_INSTALL_LIBDIR="\"$(LIB_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_BINDIR="\"$(BIN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_SCRDIR="\"$(SCRIPT_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_INCDIR="\"$(INCLUDE_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DOCDIR="\"$(MAN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		\
+		-DCFG_RUNTIME_LIBDIR="\"$(libdir)\"" \
+		-DCFG_RUNTIME_BINDIR="\"$(bindir)\"" \
+		-DCFG_RUNTIME_SCRDIR="\"$(TK_LIBRARY)\"" \
+		-DCFG_RUNTIME_INCDIR="\"$(includedir)\"" \
+		-DCFG_RUNTIME_DOCDIR="\"$(mandir)\"" \
+		-DCFG_RUNTIME_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_LIB_FILE)\"" \
+		-DCFG_RUNTIME_ZIPFILE="\"$(TK_ZIP_FILE)\"" \
+		\
+		$(GENERIC_DIR)/tkPkgConfig.c
 
 tkPlace.o: $(GENERIC_DIR)/tkPlace.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPlace.c
