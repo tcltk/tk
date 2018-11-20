@@ -413,7 +413,7 @@ SHELL_ENV = \
 ###
 # Tip 430 - ZipFS Modifications
 ###
-TK_ZIP_FILE		= libtk_@TK_MAJOR_VERSION@_@TK_MINOR_VERSION@_@TK_PATCH_LEVEL@.zip
+TK_ZIP_FILE		= libtk_@TK_MAJOR_VERSION@.@TK_MINOR_VERSION@@TK_PATCH_LEVEL@.zip
 TCL_ZIP_FILE		=  @TCL_ZIP_FILE@
 TK_VFS_PATH		= libtk.vfs/tk_library
 TK_VFS_ROOT		= libtk.vfs
@@ -423,13 +423,6 @@ TCL_ZIPFS_OBJS          =
 ZIP_PROG		= @ZIP_PROG@
 ZIP_PROG_OPTIONS	= @ZIP_PROG_OPTIONS@
 ZIP_PROG_VFSSEARCH	= @ZIP_PROG_VFSSEARCH@
-
-ifeq (${TCL_ZIPFS_SUPPORT},1)
-	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
-endif
-ifeq (${TCL_ZIPFS_SUPPORT},2)
-	TCL_ZIPFS_OBJS=${TK_ZIP_FILE} ${TCL_ZIP_FILE}
-endif
 
 # Main targets.  The default target -- all -- builds the binaries,
 # performs any post processing on libraries or documents.
@@ -706,18 +699,29 @@ ${TK_STUB_LIB_FILE}: ${STUB_OBJS}
 	@MAKE_STUB_LIB@ ${STUB_OBJS}
 	@POST_MAKE_LIB@
 
-${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES) ${TCL_ZIPFS_OBJS}
+${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES)
 	@$(RM) ${TK_DLL_FILE}
 	@MAKE_DLL@ ${TK_OBJS} $(TK_RES) $(SHLIB_LD_LIBS)
 	@VC_MANIFEST_EMBED_DLL@
-	ifeq (${TCL_ZIPFS_SUPPORT},1)
-		cat ${TK_ZIP_FILE} >> ${TK_DLL_FILE}
-	endif
+	@if test "${TCL_ZIPFS_SUPPORT}" = "1" ; then \
+		rm -rf ${TK_VFS_ROOT} ${TK_ZIP_FILE}; \
+		mkdir -p ${TK_VFS_PATH}; \
+		cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
+		(cd  ${TK_VFS_ROOT} ; ${ZIP_PROG} ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}); \
+		cat ${TK_ZIP_FILE} >> ${LIB_FILE}; \
+	  ${ZIP_PROG} -A ${LIB_FILE}; \
+	fi
 
 ${TK_LIB_FILE}: ${TK_OBJS}
 	@$(RM) ${TK_LIB_FILE}
 	@MAKE_LIB@ ${TK_OBJS}
 	@POST_MAKE_LIB@
+	@if test "${TCL_ZIPFS_SUPPORT}" = "2" ; then \
+		rm -rf ${TK_VFS_ROOT} ${TK_ZIP_FILE}; \
+		mkdir -p ${TK_VFS_PATH}; \
+		cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
+		(cd  ${TK_VFS_ROOT} ; ${ZIP_PROG} ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH});
+	fi
 
 # Special case object file targets
 
