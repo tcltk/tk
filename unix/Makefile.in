@@ -318,7 +318,7 @@ XLIB_DIR		= $(TOP_DIR)/xlib
 ###
 # Tip 430 - ZipFS Modifications
 ###
-TK_ZIP_FILE		= libtk_${MAJOR_VERSION}_${MINOR_VERSION}_${PATCH_LEVEL}.zip
+TK_ZIP_FILE		= libtk_${MAJOR_VERSION}.${MINOR_VERSION}${PATCH_LEVEL}.zip
 TK_VFS_PATH		= libtk.vfs/tk_library
 TK_VFS_ROOT		= libtk.vfs
 TCL_ZIP_FILE		=  @TCL_ZIP_FILE@
@@ -328,13 +328,6 @@ TCL_ZIPFS_OBJS          =
 ZIP_PROG        = @ZIP_PROG@
 ZIP_PROG_OPTIONS		= @ZIP_PROG_OPTIONS@
 ZIP_PROG_VFSSEARCH  = @ZIP_PROG_VFSSEARCH@
-
-ifeq (${TCL_ZIPFS_SUPPORT},1)
-	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
-endif
-ifeq (${TCL_ZIPFS_SUPPORT},2)
-	TCL_ZIPFS_OBJS=${TK_ZIP_FILE}
-endif
 
 #----------------------------------------------------------------
 # The information below should be usable as is.  The configure
@@ -614,9 +607,20 @@ ${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
 ${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TCL_ZIPFS_OBJS}
 	rm -f $@
 	@MAKE_LIB@
-ifeq (${TCL_ZIPFS_SUPPORT},1)
-	  cat ${TK_ZIP_FILE} >> ${LIB_FILE}
-endif
+	@if test "${TCL_ZIPFS_SUPPORT}" = "1" ; then \
+		rm -rf ${TK_VFS_ROOT} ${TK_ZIP_FILE}; \
+		mkdir -p ${TK_VFS_PATH}; \
+		cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
+		(cd  ${TK_VFS_ROOT} ; ${ZIP_PROG} ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}); \
+		cat ${TK_ZIP_FILE} >> ${LIB_FILE}; \
+	  ${ZIP_PROG} -A ${LIB_FILE}; \
+	fi
+	@if test "${TCL_ZIPFS_SUPPORT}" = "2" ; then \
+		rm -rf ${TK_VFS_ROOT} ${TK_ZIP_FILE}; \
+		mkdir -p ${TK_VFS_PATH}; \
+		cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
+		(cd  ${TK_VFS_ROOT} ; ${ZIP_PROG} ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH});
+	fi
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
 	@if test "x${LIB_FILE}" = "xlibtk${MAJOR_VERSION}.${MINOR_VERSION}.dll"; then \
