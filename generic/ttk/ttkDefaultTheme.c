@@ -15,6 +15,10 @@ static const int WIN32_XDRAWLINE_HACK = 1;
 static const int WIN32_XDRAWLINE_HACK = 0;
 #endif
 
+#if defined(MAC_OSX_TK)
+  #define IGNORES_VISUAL
+#endif
+
 #define BORDERWIDTH     2
 #define SCROLLBAR_WIDTH 14
 #define MIN_THUMB_SIZE  8
@@ -507,7 +511,7 @@ static void IndicatorElementDraw(
     XGCValues gcValues;
     GC copyGC;
     unsigned long imgColors[8];
-    XImage *img;
+    XImage *img = NULL;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
@@ -547,15 +551,48 @@ static void IndicatorElementDraw(
     /*
      * Create a scratch buffer to store the image:
      */
-    img = XGetImage(display,d, 0, 0,
-	    (unsigned int)spec->width, (unsigned int)spec->height,
-	    AllPlanes, ZPixmap);
-    if (img == NULL)
-	return;
+
+#if defined(IGNORES_VISUAL)
 
     /*
-     * Create the image, painting it into an XImage one pixel at a time.
+     * Platforms which ignore the VisualInfo can use XCreateImage to get the
+     * scratch image.  This is essential on macOS, where it is not safe to call
+     * XGetImage in a display procedure.
      */
+
+    img = XCreateImage(display, NULL, 32, ZPixmap, 0, NULL,
+		       (unsigned int)spec->width, (unsigned int)spec->height,
+		       0, 0);
+#else
+
+    /*
+     * This trick allows creating the scratch XImage without having to
+     * construct a VisualInfo.
+     */
+
+    img = XGetImage(display, d, 0, 0,
+		    (unsigned int)spec->width, (unsigned int)spec->height,
+		    AllPlanes, ZPixmap);
+#endif
+
+    if (img == NULL) {
+        return;
+    }
+
+#if defined(IGNORES_VISUAL)
+
+    img->data = ckalloc(img->bytes_per_line * img->height);
+    if (img->data == NULL) {
+        XDestroyImage(img);
+	return;
+    }
+
+#endif
+
+    /*
+     * Create the image, painting it into the XImage one pixel at a time.
+     */
+
     index = Ttk_StateTableLookup(spec->map, state);
     for (iy=0 ; iy<spec->height ; iy++) {
 	for (ix=0 ; ix<spec->width ; ix++) {
@@ -565,17 +602,18 @@ static void IndicatorElementDraw(
     }
 
     /*
-     * Copy onto our target drawable surface.
+     * Copy the image onto our target drawable surface.
      */
+
     memset(&gcValues, 0, sizeof(gcValues));
     copyGC = Tk_GetGC(tkwin, 0, &gcValues);
-
     TkPutImage(NULL, 0, display, d, copyGC, img, 0, 0, b.x, b.y,
                spec->width, spec->height);
 
     /*
-     * Tidy up.
+     * Tidy up. Note that XDestroyImage frees img->data.
      */
+
     Tk_FreeGC(display, copyGC);
     XDestroyImage(img);
 }
