@@ -611,10 +611,22 @@ static void IndicatorElementDraw(
                spec->width, spec->height);
 
     /*
-     * Tidy up. Note that XDestroyImage frees img->data.
+     * Tidy up.
      */
 
     Tk_FreeGC(display, copyGC);
+
+    /*
+     * Protect against the possibility that some future platform might
+     * not use the Tk memory manager in its implementation of XDestroyImage,
+     * even though that would be an extremely strange thing to do.
+     */
+    
+#if defined(IGNORES_VISUAL)
+    ckfree(img->data);
+    img->data = NULL;
+#endif
+    
     XDestroyImage(img);
 }
 
