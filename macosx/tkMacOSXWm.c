@@ -388,17 +388,6 @@ static void		RemapWindows(TkWindow *winPtr,
 
 @implementation TKWindow: NSWindow
 
-- (void)toggleFullScreen:(id)sender
-{
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    MacDrawable *macWin = winPtr->privatePtr;
-    if (!winPtr) {
-	return;
-    }
-    [super toggleFullScreen:sender];
-    TkMacOSXApplyWindowAttributes(macWin->winPtr, self);
-}
-
 - (void)toggleTabBar:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
