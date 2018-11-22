@@ -166,9 +166,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     MacDrawable *macWin = winPtr->privatePtr;
 
     /*
-     * We must apply the current window attributes when the window becomes a
-     * FullScreen or a split screen window.  Otherwise the mouse cursor will be
-     * offset by the title bar height.  The notification is sent in both cases.
+     * Also apply the current window attributes when the window returns to its
+     * normal size, for the same reason.
      */
     
     if (winPtr) {
