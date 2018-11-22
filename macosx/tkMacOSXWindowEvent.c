@@ -136,6 +136,26 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
+- (void) windowEnteredFullScreen: (NSNotification *) notification
+{
+#ifdef TK_MAC_DEBUG_NOTIFICATIONS
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+#endif
+    NSWindow *w = [notification object];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    MacDrawable *macWin = winPtr->privatePtr;
+
+    /*
+     * We must apply the current window attributes when the window becomes a
+     * FullScreen or a split screen window.  Otherwise the mouse cursor will be
+     * offset by the title bar height.  The notification is sent in both cases.
+     */
+    
+    if (winPtr) {
+	TkMacOSXApplyWindowAttributes(macWin->winPtr, w);
+    }
+}
+
 - (void) windowCollapsed: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -228,6 +248,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
+    observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     observe(NSWindowWillMoveNotification, windowDragStart:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
