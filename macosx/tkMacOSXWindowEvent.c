@@ -136,6 +136,59 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
+- (NSSize)window:(NSWindow *)window
+  willUseFullScreenContentSize:(NSSize)proposedSize
+{
+
+    /*
+     * We don't need to change the proposed size, but we do need to
+     * implement this method.  Otherwise the full screen window will
+     * be sized to the screen's visibleFrame, leaving black bands at
+     * the top and bottom.
+     */
+
+    return proposedSize;
+}
+
+- (void) windowEnteredFullScreen: (NSNotification *) notification
+{
+#ifdef TK_MAC_DEBUG_NOTIFICATIONS
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+#endif
+    NSWindow *w = [notification object];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    MacDrawable *macWin = winPtr->privatePtr;
+
+    /*
+     * We must apply the current window attributes when the window becomes a
+     * FullScreen or a split screen window.  Otherwise the mouse cursor will be
+     * offset by the title bar height.  The notification is sent in both cases.
+     */
+    
+    if (winPtr) {
+	TkMacOSXApplyWindowAttributes(macWin->winPtr, w);
+    }
+}
+
+- (void) windowExitedFullScreen: (NSNotification *) notification
+{
+#ifdef TK_MAC_DEBUG_NOTIFICATIONS
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+#endif
+    NSWindow *w = [notification object];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    MacDrawable *macWin = winPtr->privatePtr;
+
+    /*
+     * Also apply the current window attributes when the window returns to its
+     * normal size, for the same reason.
+     */
+    
+    if (winPtr) {
+	TkMacOSXApplyWindowAttributes(macWin->winPtr, w);
+    }
+}
+
 - (void) windowCollapsed: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -222,12 +275,19 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 #define observe(n, s) \
 	[nc addObserver:self selector:@selector(s) name:(n) object:nil]
+
     observe(NSWindowDidBecomeKeyNotification, windowActivation:);
     observe(NSWindowDidResignKeyNotification, windowActivation:);
     observe(NSWindowDidMoveNotification, windowBoundsChanged:);
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
+
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+    observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
+    observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
+#endif
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     observe(NSWindowWillMoveNotification, windowDragStart:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);

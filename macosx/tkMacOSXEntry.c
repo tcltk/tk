@@ -91,7 +91,7 @@ TkpDrawEntryBorderAndFocus(
     TkMacOSXDrawingContext dc;
     GC bgGC;
     Tk_Window tkwin = entryPtr->tkwin;
-    int oldWidth;
+    int oldWidth = 0;
     MacDrawable *macDraw = (MacDrawable *) d;
     const HIThemeFrameDrawInfo info = {
 	.version = 0,
