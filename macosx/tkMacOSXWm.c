@@ -388,6 +388,7 @@ static void		RemapWindows(TkWindow *winPtr,
 
 @implementation TKWindow: NSWindow
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 101100
 - (void)toggleTabBar:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
@@ -398,6 +399,7 @@ static void		RemapWindows(TkWindow *winPtr,
     [super toggleTabBar:sender];
     TkMacOSXApplyWindowAttributes(macWin->winPtr, self);
 }
+#endif
 
 @end
 
@@ -1270,7 +1272,11 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolean != ((wmPtr->flags & WM_FULLSCREEN) != 0)) {
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
 	    [macWindow toggleFullScreen:macWindow];
+#else
+	    TKLog(@"The fullscreen attribute is ignored on this system..");
+#endif
 	}
 	break;
     case WMATT_MODIFIED:
@@ -6357,6 +6363,18 @@ ApplyWindowAttributeFlagChanges(
 		tkCanJoinAllSpacesAttribute | tkMoveToActiveSpaceAttribute)) ||
 		initial) {
 	    NSWindowCollectionBehavior b = NSWindowCollectionBehaviorDefault;
+
+	    /*
+	     * This behavior, which makes the green button expand a window to
+	     * full screen, was included in the default as of OSX 10.13.  For
+	     * uniformity we use the new default in all versions of the OS
+	     * where the behavior exists.
+	     */
+
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+	    b |= NSWindowCollectionBehaviorFullScreenPrimary;
+#endif
+
 	    if (newAttributes & tkCanJoinAllSpacesAttribute) {
 		b |= NSWindowCollectionBehaviorCanJoinAllSpaces;
 	    } else if (newAttributes & tkMoveToActiveSpaceAttribute) {

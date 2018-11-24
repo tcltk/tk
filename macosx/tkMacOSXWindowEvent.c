@@ -136,6 +136,20 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
+- (NSSize)window:(NSWindow *)window
+  willUseFullScreenContentSize:(NSSize)proposedSize
+{
+
+    /*
+     * We don't need to change the proposed size, but we do need to
+     * implement this method.  Otherwise the full screen window will
+     * be sized to the screen's visibleFrame, leaving black bands at
+     * the top and bottom.
+     */
+
+    return proposedSize;
+}
+
 - (void) windowEnteredFullScreen: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -261,14 +275,19 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 #define observe(n, s) \
 	[nc addObserver:self selector:@selector(s) name:(n) object:nil]
+
     observe(NSWindowDidBecomeKeyNotification, windowActivation:);
     observe(NSWindowDidResignKeyNotification, windowActivation:);
     observe(NSWindowDidMoveNotification, windowBoundsChanged:);
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
+
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
     observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
+#endif
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     observe(NSWindowWillMoveNotification, windowDragStart:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
