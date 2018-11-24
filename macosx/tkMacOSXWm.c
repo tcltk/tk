@@ -388,7 +388,7 @@ static void		RemapWindows(TkWindow *winPtr,
 
 @implementation TKWindow: NSWindow
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 101100
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
 - (void)toggleTabBar:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
@@ -397,7 +397,9 @@ static void		RemapWindows(TkWindow *winPtr,
 	return;
     }
     [super toggleTabBar:sender];
-    TkMacOSXApplyWindowAttributes(macWin->winPtr, self);
+    if (([self styleMask] & NSFullScreenWindowMask) == 0) {
+	TkMacOSXApplyWindowAttributes(macWin->winPtr, self);
+    }
 }
 #endif
 
