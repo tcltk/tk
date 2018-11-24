@@ -388,46 +388,20 @@ static void		RemapWindows(TkWindow *winPtr,
 
 @implementation TKWindow: NSWindow
 
-/* Custom fullscreen implementation on 10.13 and above. On older versions of
- * macOS dating back to 10.7, the NSWindow fullscreen API was opt-in, requiring
- * explicit calls to toggleFullScreen. On 10.13, the API became implicit,
- * applying to all NSWindows unless they were marked non-resizable; this caused
- * issues with Tk, which was not aware of changes in screen geometry. Here we
- * override the toggleFullScreen call to hook directly into Tk's own fullscreen
- * API, allowing Tk to function smoothly with the Mac's fullscreen button.
-*/
-
-NSStatusItem *exitFullScreen;
-
-
-- (void)toggleFullScreen:(id)sender
-{
-  TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-  if (!winPtr) {
-      return;
-  }
-  Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
-  if ([NSApp macMinorVersion] > 12) {
-      if (([self styleMask] & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
-	  TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
-      } else {
-	  TkMacOSXMakeFullscreen(winPtr, self, 1, interp);
-      }
-  } else {
-      TKLog (@"toggleFullScreen is ignored by Tk on OSX versions < 10.13");
-  }
-}
-
--(void)restoreOldScreen:(id)sender
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+- (void)toggleTabBar:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    MacDrawable *macWin = winPtr->privatePtr;
     if (!winPtr) {
 	return;
     }
-    Tcl_Interp *interp = Tk_Interp((Tk_Window)winPtr);
-    TkMacOSXMakeFullscreen(winPtr, self, 0, interp);
-    [[NSStatusBar systemStatusBar] removeStatusItem: exitFullScreen];
+    [super toggleTabBar:sender];
+    if (([self styleMask] & NSFullScreenWindowMask) == 0) {
+	TkMacOSXApplyWindowAttributes(macWin->winPtr, self);
+    }
 }
+#endif
 
 @end
 
@@ -1300,10 +1274,11 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolean != ((wmPtr->flags & WM_FULLSCREEN) != 0)) {
-	    if (TkMacOSXMakeFullscreen(winPtr, macWindow, boolean, interp)
-		    != TCL_OK) {
-		return TCL_ERROR;
-	    }
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+	    [macWindow toggleFullScreen:macWindow];
+#else
+	    TKLog(@"The fullscreen attribute is ignored on this system..");
+#endif
 	}
 	break;
     case WMATT_MODIFIED:
@@ -6390,6 +6365,18 @@ ApplyWindowAttributeFlagChanges(
 		tkCanJoinAllSpacesAttribute | tkMoveToActiveSpaceAttribute)) ||
 		initial) {
 	    NSWindowCollectionBehavior b = NSWindowCollectionBehaviorDefault;
+
+	    /*
+	     * This behavior, which makes the green button expand a window to
+	     * full screen, was included in the default as of OSX 10.13.  For
+	     * uniformity we use the new default in all versions of the OS
+	     * where the behavior exists.
+	     */
+
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+	    b |= NSWindowCollectionBehaviorFullScreenPrimary;
+#endif
+
 	    if (newAttributes & tkCanJoinAllSpacesAttribute) {
 		b |= NSWindowCollectionBehaviorCanJoinAllSpaces;
 	    } else if (newAttributes & tkMoveToActiveSpaceAttribute) {
@@ -6505,117 +6492,6 @@ ApplyMasterOverrideChanges(
 	ApplyWindowAttributeFlagChanges(winPtr, macWindow, oldAttributes,
 		oldFlags, 0, 0);
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXMakeFullscreen --
- *
- *	This procedure sets a fullscreen window to the size of the screen.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXMakeFullscreen(
-    TkWindow *winPtr,
-    NSWindow *window,
-    int fullscreen,
-    Tcl_Interp *interp)
-{
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
-    int screenHeight = HeightOfScreen(Tk_Screen(winPtr));
-
-    if (fullscreen) {
-
-	/*
-	 * Check max width and height if set by the user.
-	 */
-
-	if ((wmPtr->maxWidth > 0 && wmPtr->maxWidth < screenWidth)
-		|| (wmPtr->maxHeight > 0 && wmPtr->maxHeight < screenHeight)) {
-	    if (interp) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't set fullscreen attribute for \"%s\": max"
-			" width/height is too small", winPtr->pathName));
-		Tcl_SetErrorCode(interp, "TK", "FULLSCREEN",
-			"CONSTRAINT_FAILURE", NULL);
-	    }
-	    wmPtr->flags &= ~WM_FULLSCREEN;
-	    return TCL_ERROR;
-	}
-
-	/*
-	 * Save the current window state.
-	 */
-
-	wmPtr->cachedBounds = [window frame];
-	wmPtr->cachedStyle = [window styleMask];
-	wmPtr->cachedPresentation = [NSApp presentationOptions];
-
-	/*
-	 * Adjust the window style so it looks like a Fullscreen window.
-	 */
-
-	[window setStyleMask: NSFullScreenWindowMask];
-	[NSApp setPresentationOptions: (NSApplicationPresentationAutoHideDock |
-					NSApplicationPresentationAutoHideMenuBar)];
-
-	/*For 10.13 and later add a button for exiting Fullscreen.*/
-	if ([NSApp macMinorVersion] > 12) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 101200
-	    exitFullScreen = [[[NSStatusBar systemStatusBar]
-				   statusItemWithLength:NSVariableStatusItemLength] retain];
-	    NSImage *exitIcon = [NSImage imageNamed:@"NSExitFullScreenTemplate"];
-	    exitFullScreen.button.image = exitIcon;
-	    exitFullScreen.button.cell.highlighted = NO;
-	    exitFullScreen.button.toolTip = @"Exit Full Screen";
-	    exitFullScreen.button.target = window;
-	    exitFullScreen.button.action = @selector(restoreOldScreen:);
-#endif
-	}
-
-	/*
-	 * Resize the window to fill the screen. (After setting the style!)
-	 */
-
-	wmPtr->flags |= WM_SYNC_PENDING;
-	NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
-	[window setFrame:screenBounds display:YES];
-	wmPtr->flags &= ~WM_SYNC_PENDING;
-	wmPtr->flags |= WM_FULLSCREEN;
-    } else {
-
-	/*
-	 * Restore the previous styles and attributes.
-	 */
-
-	[NSApp setPresentationOptions: wmPtr->cachedPresentation];
-	[window setStyleMask: wmPtr->cachedStyle];
-	UInt64 oldAttributes = wmPtr->attributes;
-	wmPtr->flags &= ~WM_FULLSCREEN;
-	wmPtr->attributes |= wmPtr->configAttributes &
-		kWindowResizableAttribute;
-	ApplyWindowAttributeFlagChanges(winPtr, window, oldAttributes,
-		wmPtr->flags, 1, 0);
-
-	/*
-	 * Resize the window to its previous size.
-	 */
-
-	wmPtr->flags |= WM_SYNC_PENDING;
-	[window setFrame:wmPtr->cachedBounds display:YES];
-	wmPtr->flags &= ~WM_SYNC_PENDING;
-    }
-    return TCL_OK;
 }
 
 /*
