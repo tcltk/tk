@@ -3,7 +3,7 @@
  *
  *	This file contains most of the X calls called by Tk. Many of these
  *	calls are just stubs and either don't make sense on the Macintosh or
- *	their implamentation just doesn't do anything. Other calls will
+ *	their implementation just doesn't do anything. Other calls will
  *	eventually be moved into other files.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
@@ -178,7 +178,7 @@ TkpOpenDisplay(
     {
 	int major, minor, patch;
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
 	Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
 	Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
 	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
@@ -203,7 +203,6 @@ TkpOpenDisplay(
     screen->root_visual = ckalloc(sizeof(Visual));
     screen->root_visual->visualid     = 0;
     screen->root_visual->class	      = TrueColor;
-    screen->root_visual->alpha_mask   = 0xFF000000;
     screen->root_visual->red_mask     = 0x00FF0000;
     screen->root_visual->green_mask   = 0x0000FF00;
     screen->root_visual->blue_mask    = 0x000000FF;

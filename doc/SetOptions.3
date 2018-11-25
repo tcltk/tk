@@ -52,7 +52,7 @@ pointed to by this argument must exist for the lifetime of the Tk_OptionTable.
 .AP Tk_OptionTable optionTable in
 Token for an option table.  Must have been returned by a previous call
 to \fBTk_CreateOptionTable\fR.
-.AP char *recordPtr in/out
+.AP void *recordPtr in/out
 Points to structure in which values of configuration options are stored;
 fields of this record are modified by procedures such as \fBTk_SetOptions\fR
 and read by procedures such as \fBTk_GetOptionValue\fR.

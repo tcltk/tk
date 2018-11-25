@@ -343,7 +343,7 @@ TkTextTagCmd(
 	    if (tagPtr == NULL) {
 		return TCL_ERROR;
 	    }
-	    objPtr = Tk_GetOptionValue(interp, (char *) tagPtr,
+	    objPtr = Tk_GetOptionValue(interp, tagPtr,
 		    tagPtr->optionTable, objv[4], textPtr->tkwin);
 	    if (objPtr == NULL) {
 		return TCL_ERROR;
@@ -362,7 +362,7 @@ TkTextTagCmd(
 	}
 	tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), &newTag);
 	if (objc <= 5) {
-	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp, (char *) tagPtr,
+	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp, tagPtr,
 		    tagPtr->optionTable,
 		    (objc == 5) ? objv[4] : NULL, textPtr->tkwin);
 
@@ -374,7 +374,7 @@ TkTextTagCmd(
 	} else {
 	    int result = TCL_OK;
 
-	    if (Tk_SetOptions(interp, (char *) tagPtr, tagPtr->optionTable,
+	    if (Tk_SetOptions(interp, tagPtr, tagPtr->optionTable,
 		    objc-4, objv+4, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 		return TCL_ERROR;
 	    }

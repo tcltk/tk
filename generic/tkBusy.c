@@ -571,7 +571,7 @@ CreateBusy(
     busyPtr->cursor = None;
     Tk_SetClass(tkBusy, "Busy");
     busyPtr->optionTable = Tk_CreateOptionTable(interp, busyOptionSpecs);
-    if (Tk_InitOptions(interp, (char *) busyPtr, busyPtr->optionTable,
+    if (Tk_InitOptions(interp, busyPtr, busyPtr->optionTable,
 	    tkBusy) != TCL_OK) {
 	Tk_DestroyWindow(tkBusy);
 	return NULL;
@@ -638,7 +638,7 @@ ConfigureBusy(
 {
     Tk_Cursor oldCursor = busyPtr->cursor;
 
-    if (Tk_SetOptions(interp, (char *) busyPtr, busyPtr->optionTable, objc,
+    if (Tk_SetOptions(interp, busyPtr, busyPtr->optionTable, objc,
 	    objv, busyPtr->tkBusy, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -850,7 +850,7 @@ Tk_BusyObjCmd(
 	    return TCL_ERROR;
 	}
 	Tcl_Preserve(busyPtr);
-	objPtr = Tk_GetOptionValue(interp, (char *) busyPtr,
+	objPtr = Tk_GetOptionValue(interp, busyPtr,
 		busyPtr->optionTable, objv[3], busyPtr->tkBusy);
 	if (objPtr == NULL) {
 	    result = TCL_ERROR;
@@ -871,7 +871,7 @@ Tk_BusyObjCmd(
 	}
 	Tcl_Preserve(busyPtr);
 	if (objc <= 4) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) busyPtr,
+	    objPtr = Tk_GetOptionInfo(interp, busyPtr,
 		    busyPtr->optionTable, (objc == 4) ? objv[3] : NULL,
 		    busyPtr->tkBusy);
 	    if (objPtr == NULL) {

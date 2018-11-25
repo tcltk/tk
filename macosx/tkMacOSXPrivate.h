@@ -131,7 +131,6 @@ typedef struct TkMacOSXDrawingContext {
     NSView *view;
     HIShapeRef clipRgn;
     CGRect portBounds;
-    int focusLocked;
 } TkMacOSXDrawingContext;
 
 /*
@@ -190,8 +189,7 @@ MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
 MODULE_SCOPE NSBitmapImageRep* TkMacOSXBitmapRepFromDrawableRect(Drawable drawable,
 			    int x, int y, unsigned int width, unsigned int height);
-MODULE_SCOPE CGImageRef TkMacOSXCreateCGImageWithXImage(XImage *image,
-			    int use_ximage_alpha);
+MODULE_SCOPE CGImageRef TkMacOSXCreateCGImageWithXImage(XImage *image);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
 			    unsigned long imageBackground, CGRect imageBounds,
@@ -265,9 +263,13 @@ VISIBILITY_HIDDEN
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
+    int _macMinorVersion;
+    Bool _isDrawing;
 #endif
 }
 @property int poolLock;
+@property int macMinorVersion;
+@property Bool isDrawing;
 
 @end
 @interface TKApplication(TKInit)
@@ -329,8 +331,7 @@ VISIBILITY_HIDDEN
 
 @interface TKContentView(TKWindowEvent)
 - (void) drawRect: (NSRect) rect;
-- (void) generateExposeEvents: (HIShapeRef) shape;
-- (void) viewDidEndLiveResize;
+- (void) generateExposeEvents: (HIShapeRef) shape; 
 - (void) tkToolbarButton: (id) sender;
 - (BOOL) isOpaque;
 - (BOOL) wantsDefaultClipping;
@@ -343,8 +344,8 @@ VISIBILITY_HIDDEN
 @end
 
 @interface NSWindow(TKWm)
-- (NSPoint) convertPointToScreen:(NSPoint)point;
-- (NSPoint) convertPointFromScreen:(NSPoint)point;
+- (NSPoint) tkConvertPointToScreen:(NSPoint)point;
+- (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
 @end
 
 #pragma mark NSMenu & NSMenuItem Utilities

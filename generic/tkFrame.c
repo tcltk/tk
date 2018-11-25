@@ -683,7 +683,7 @@ CreateFrame(
 	mask |= ActivateMask;
     }
     Tk_CreateEventHandler(newWin, mask, FrameEventProc, framePtr);
-    if ((Tk_InitOptions(interp, (char *) framePtr, optionTable, newWin)
+    if ((Tk_InitOptions(interp, framePtr, optionTable, newWin)
 	    != TCL_OK) ||
 	    (ConfigureFrame(interp, framePtr, objc-2, objv+2) != TCL_OK)) {
 	goto error;
@@ -764,7 +764,7 @@ FrameWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) framePtr,
+	objPtr = Tk_GetOptionValue(interp, framePtr,
 		framePtr->optionTable, objv[2], framePtr->tkwin);
 	if (objPtr == NULL) {
 	    result = TCL_ERROR;
@@ -774,7 +774,7 @@ FrameWidgetObjCmd(
 	break;
     case FRAME_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) framePtr,
+	    objPtr = Tk_GetOptionInfo(interp, framePtr,
 		    framePtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    framePtr->tkwin);
 	    if (objPtr == NULL) {
@@ -962,7 +962,7 @@ ConfigureFrame(
     if (framePtr->type == TYPE_LABELFRAME) {
 	oldWindow = labelframePtr->labelWin;
     }
-    if (Tk_SetOptions(interp, (char *) framePtr,
+    if (Tk_SetOptions(interp, framePtr,
 	    framePtr->optionTable, objc, objv,
 	    framePtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 	if (oldMenuName != NULL) {

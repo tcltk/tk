@@ -75,7 +75,20 @@ typedef union {
  * EVENT_BUFFER_SIZE too much, shift multi-clicks will be lost.
  */
 
-#define EVENT_BUFFER_SIZE 30
+/*
+ * NOTE: The changes which were needed to make Tk work on OSX 10.14 (Mojave)
+ * also demand that the event ring be a bit bigger.  It might be wise to
+ * augment the current double-click pattern matching by adding a new
+ * DoubleClick modifier bit which could be set based on the clickCount of the
+ * Apple NSEvent object.
+ */
+
+#ifndef TK_MAC_OSX
+  #define EVENT_BUFFER_SIZE 45
+#else
+  #define EVENT_BUFFER_SIZE 30
+#endif
+
 typedef struct Tk_BindingTable_ {
     XEvent eventRing[EVENT_BUFFER_SIZE];
 				/* Circular queue of recent events (higher
@@ -687,11 +700,11 @@ TkBindInit(
 	    Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
 	    for (kPtr = keyArray; kPtr->name != NULL; kPtr++) {
 		hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &newEntry);
-		Tcl_SetHashValue(hPtr, kPtr->value);
-		hPtr = Tcl_CreateHashEntry(&nameTable, (char *) kPtr->value,
+		Tcl_SetHashValue(hPtr, INT2PTR(kPtr->value));
+		hPtr = Tcl_CreateHashEntry(&nameTable, INT2PTR(kPtr->value),
 			&newEntry);
 		if (newEntry) {
-		    Tcl_SetHashValue(hPtr, kPtr->name);
+		    Tcl_SetHashValue(hPtr, (char *) kPtr->name);
 		}
 	    }
 #endif /* REDO_KEYSYM_LOOKUP */
@@ -699,13 +712,13 @@ TkBindInit(
 	    Tcl_InitHashTable(&modTable, TCL_STRING_KEYS);
 	    for (modPtr = modArray; modPtr->name != NULL; modPtr++) {
 		hPtr = Tcl_CreateHashEntry(&modTable, modPtr->name, &newEntry);
-		Tcl_SetHashValue(hPtr, modPtr);
+		Tcl_SetHashValue(hPtr, (ModInfo *) modPtr);
 	    }
 
 	    Tcl_InitHashTable(&eventTable, TCL_STRING_KEYS);
 	    for (eiPtr = eventArray; eiPtr->name != NULL; eiPtr++) {
 		hPtr = Tcl_CreateHashEntry(&eventTable, eiPtr->name, &newEntry);
-		Tcl_SetHashValue(hPtr, eiPtr);
+		Tcl_SetHashValue(hPtr, (EventInfo *) eiPtr);
 	    }
 	    initialized = 1;
 	}
@@ -2505,7 +2518,7 @@ DeleteVirtualEventTable(
  *	already defined, the new definition augments those that already exist.
  *
  * Results:
- *	The return value is TCL_ERROR if an error occured while creating the
+ *	The return value is TCL_ERROR if an error occurred while creating the
  *	virtual binding. In this case, an error message will be left in the
  *	interp's result. If all went well then the return value is TCL_OK.
  *

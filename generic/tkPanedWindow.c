@@ -236,7 +236,7 @@ static void		AdjustForSticky(int sticky, int cavityWidth,
 			    int *slaveWidthPtr, int *slaveHeightPtr);
 static void		MoveSash(PanedWindow *pwPtr, int sash, int diff);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
-static void *		ComputeSlotAddress(void *recordPtr, size_t offset);
+static void *	ComputeSlotAddress(void *recordPtr, size_t offset);
 static int		PanedWindowIdentifyCoords(PanedWindow *pwPtr,
 			    Tcl_Interp *interp, int x, int y);
 
@@ -459,7 +459,7 @@ Tk_PanedWindowObjCmd(
 
     Tcl_Preserve(pwPtr->tkwin);
 
-    if (Tk_InitOptions(interp, (char *) pwPtr, pwOpts->pwOptions,
+    if (Tk_InitOptions(interp, pwPtr, pwOpts->pwOptions,
 	    tkwin) != TCL_OK) {
 	Tk_DestroyWindow(pwPtr->tkwin);
 	return TCL_ERROR;
@@ -578,7 +578,7 @@ PanedWindowWidgetObjCmd(
 	    result = TCL_ERROR;
 	    break;
 	}
-	resultObj = Tk_GetOptionValue(interp, (char *) pwPtr,
+	resultObj = Tk_GetOptionValue(interp, pwPtr,
 		pwPtr->optionTable, objv[2], pwPtr->tkwin);
 	if (resultObj == NULL) {
 	    result = TCL_ERROR;
@@ -590,7 +590,7 @@ PanedWindowWidgetObjCmd(
     case PW_CONFIGURE:
 	resultObj = NULL;
 	if (objc <= 3) {
-	    resultObj = Tk_GetOptionInfo(interp, (char *) pwPtr,
+	    resultObj = Tk_GetOptionInfo(interp, pwPtr,
 		    pwPtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL, pwPtr->tkwin);
 	    if (resultObj == NULL) {
@@ -669,7 +669,7 @@ PanedWindowWidgetObjCmd(
 	for (i = 0; i < pwPtr->numSlaves; i++) {
 	    if (pwPtr->slaves[i]->tkwin == tkwin) {
 		resultObj = Tk_GetOptionValue(interp,
-			(char *) pwPtr->slaves[i], pwPtr->slaveOpts,
+			pwPtr->slaves[i], pwPtr->slaveOpts,
 			objv[3], tkwin);
 	    }
 	}
@@ -709,7 +709,7 @@ PanedWindowWidgetObjCmd(
 	    for (i = 0; i < pwPtr->numSlaves; i++) {
 		if (pwPtr->slaves[i]->tkwin == tkwin) {
 		    resultObj = Tk_GetOptionInfo(interp,
-			    (char *) pwPtr->slaves[i], pwPtr->slaveOpts,
+			    pwPtr->slaves[i], pwPtr->slaveOpts,
 			    (objc == 4) ? objv[3] : NULL,
 			    pwPtr->tkwin);
 		    if (resultObj == NULL) {
@@ -848,7 +848,7 @@ ConfigureSlaves(
      */
 
     memset((void *)&options, 0, sizeof(Slave));
-    if (Tk_SetOptions(interp, (char *) &options, pwPtr->slaveOpts,
+    if (Tk_SetOptions(interp, &options, pwPtr->slaveOpts,
 	    objc - firstOptionArg, objv + firstOptionArg,
 	    pwPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;
@@ -925,7 +925,7 @@ ConfigureSlaves(
 	found = 0;
 	for (j = 0; j < pwPtr->numSlaves; j++) {
 	    if (pwPtr->slaves[j] != NULL && pwPtr->slaves[j]->tkwin == tkwin) {
-		Tk_SetOptions(interp, (char *) pwPtr->slaves[j],
+		Tk_SetOptions(interp, pwPtr->slaves[j],
 			pwPtr->slaveOpts, objc - firstOptionArg,
 			objv + firstOptionArg, pwPtr->tkwin, NULL, NULL);
 		if (pwPtr->slaves[j]->minSize < 0) {
@@ -972,9 +972,9 @@ ConfigureSlaves(
 
 	slavePtr = ckalloc(sizeof(Slave));
 	memset(slavePtr, 0, sizeof(Slave));
-	Tk_InitOptions(interp, (char *)slavePtr, pwPtr->slaveOpts,
+	Tk_InitOptions(interp, slavePtr, pwPtr->slaveOpts,
 		pwPtr->tkwin);
-	Tk_SetOptions(interp, (char *)slavePtr, pwPtr->slaveOpts,
+	Tk_SetOptions(interp, slavePtr, pwPtr->slaveOpts,
 		objc - firstOptionArg, objv + firstOptionArg,
 		pwPtr->tkwin, NULL, NULL);
 	slavePtr->tkwin = tkwin;
@@ -1249,7 +1249,7 @@ ConfigurePanedWindow(
     Tk_SavedOptions savedOptions;
     int typemask = 0;
 
-    if (Tk_SetOptions(interp, (char *) pwPtr, pwPtr->optionTable, objc, objv,
+    if (Tk_SetOptions(interp, pwPtr, pwPtr->optionTable, objc, objv,
 	    pwPtr->tkwin, &savedOptions, &typemask) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	return TCL_ERROR;
@@ -3026,7 +3026,7 @@ ComputeSlotAddress(
     size_t offset)		/* Offset of a slot within that record; may be -1. */
 {
     if (offset != (size_t)-1) {
-	return recordPtr + offset;
+	return (char *)recordPtr + offset;
     } else {
 	return NULL;
     }

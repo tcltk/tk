@@ -105,7 +105,7 @@ declare 18 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 19 {
-    CONST86 char *Tk_CanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
+    const char *Tk_CanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 20 {
@@ -404,7 +404,7 @@ declare 97 {
 }
 declare 98 {
     ClientData Tk_GetImageMasterData(Tcl_Interp *interp,
-	    const char *name, CONST86 Tk_ImageType **typePtrPtr)
+	    const char *name, const Tk_ImageType **typePtrPtr)
 }
 declare 99 {
     Tk_ItemType *Tk_GetItemTypes(void)
@@ -805,7 +805,7 @@ declare 211 {
     int	 Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
 	    Tk_OptionTable optionToken, Tk_Window tkwin)
 }
-declare 212 {
+declare 212 {nostub {Don't use this function in a stub-enabled extension}} {
     void  Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
 	    Tcl_Interp *interp)
 }

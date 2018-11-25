@@ -161,7 +161,7 @@ TkTextImageCmd(
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", NULL);
 	    return TCL_ERROR;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) &eiPtr->body.ei,
+	objPtr = Tk_GetOptionValue(interp, &eiPtr->body.ei,
 		eiPtr->body.ei.optionTable, objv[4], textPtr->tkwin);
 	if (objPtr == NULL) {
 	    return TCL_ERROR;
@@ -188,7 +188,7 @@ TkTextImageCmd(
 	}
 	if (objc <= 5) {
 	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp,
-		    (char *) &eiPtr->body.ei, eiPtr->body.ei.optionTable,
+		    &eiPtr->body.ei, eiPtr->body.ei.optionTable,
 		    (objc == 5) ? objv[4] : NULL, textPtr->tkwin);
 
 	    if (objPtr == NULL) {
@@ -337,7 +337,7 @@ EmbImageConfigure(
     int conflict = 0;		/* True if we have a name conflict */
     size_t len;			/* length of image name */
 
-    if (Tk_SetOptions(textPtr->interp, (char *) &eiPtr->body.ei,
+    if (Tk_SetOptions(textPtr->interp, &eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,
 	    objc, objv, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;

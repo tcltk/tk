@@ -217,7 +217,7 @@ static int ConfigureTab(
     Tk_SavedOptions savedOptions;
     int mask = 0;
 
-    if (Tk_SetOptions(interp, (ClientData)tab, nb->notebook.paneOptionTable,
+    if (Tk_SetOptions(interp, tab, nb->notebook.paneOptionTable,
 	    objc, objv, slaveWindow, &savedOptions, &mask) != TCL_OK)
     {
 	return TCL_ERROR;
