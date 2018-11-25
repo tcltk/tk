@@ -15,8 +15,10 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-# Note that these tests may fail if another application is grabbing the
-# clipboard (e.g. an X server)
+#################################################################
+# Note that some of these tests may fail if another application #
+# is grabbing the clipboard (e.g. an X server, or a VNC viewer) #
+#################################################################
 
 test winClipboard-1.1 {TkSelGetSelection} -constraints win -setup {
     clipboard clear
