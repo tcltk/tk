@@ -58,6 +58,14 @@
 #   endif
 #endif
 
+#ifndef TkSizeT
+#   if TCL_MAJOR_VERSION > 8
+#	define TkSizeT size_t
+#   else
+#	define TkSizeT int
+#   endif
+#endif
+
 /*
  * Macros used to cast between pointers and integers (e.g. when storing an int
  * in ClientData), on 64-bit architectures they avoid gcc warning about "cast
@@ -67,25 +75,35 @@
 #if !defined(INT2PTR) && !defined(PTR2INT)
 #   if defined(HAVE_INTPTR_T) || defined(intptr_t)
 #	define INT2PTR(p) ((void*)(intptr_t)(p))
-#	define PTR2INT(p) ((int)(intptr_t)(p))
+#	define PTR2INT(p) ((intptr_t)(p))
 #   else
 #	define INT2PTR(p) ((void*)(p))
-#	define PTR2INT(p) ((int)(p))
+#	define PTR2INT(p) ((long)(p))
 #   endif
 #endif
 #if !defined(UINT2PTR) && !defined(PTR2UINT)
 #   if defined(HAVE_UINTPTR_T) || defined(uintptr_t)
 #	define UINT2PTR(p) ((void*)(uintptr_t)(p))
-#	define PTR2UINT(p) ((unsigned int)(uintptr_t)(p))
+#	define PTR2UINT(p) ((uintptr_t)(p))
 #   else
 #	define UINT2PTR(p) ((void*)(p))
-#	define PTR2UINT(p) ((unsigned int)(p))
+#	define PTR2UINT(p) ((unsigned long)(p))
 #   endif
 #endif
 
 #ifndef TCL_AUTO_LENGTH
 #   define TCL_AUTO_LENGTH (-1)
 #endif
+
+#ifndef TCL_Z_MODIFIER
+#   if defined(_WIN64)
+#	define TCL_Z_MODIFIER	"I"
+#   elif defined(__GNUC__) && !defined(_WIN32)
+#	define TCL_Z_MODIFIER	"z"
+#   else
+#	define TCL_Z_MODIFIER	""
+#   endif
+#endif /* !TCL_Z_MODIFIER */
 
 /*
  * Opaque type declarations:
@@ -110,7 +128,7 @@ typedef struct TkCursor {
     Tk_Cursor cursor;		/* System specific identifier for cursor. */
     Display *display;		/* Display containing cursor. Needed for
 				 * disposal and retrieval of cursors. */
-    int resourceRefCount;	/* Number of active uses of this cursor (each
+    TkSizeT resourceRefCount;	/* Number of active uses of this cursor (each
 				 * active use corresponds to a call to
 				 * Tk_AllocPreserveFromObj or Tk_Preserve). If
 				 * this count is 0, then this structure is no
@@ -119,7 +137,7 @@ typedef struct TkCursor {
 				 * there are objects referring to it. The
 				 * structure is freed when resourceRefCount
 				 * and objRefCount are both 0. */
-    int objRefCount;		/* Number of Tcl objects that reference this
+    TkSizeT objRefCount;		/* Number of Tcl objects that reference this
 				 * structure.. */
     Tcl_HashTable *otherTable;	/* Second table (other than idTable) used to
 				 * index this entry. */
@@ -269,7 +287,7 @@ typedef struct TkDisplay {
 				/* First in list of error handlers for this
 				 * display. NULL means no handlers exist at
 				 * present. */
-    int deleteCount;		/* Counts # of handlers deleted since last
+    TkSizeT deleteCount;		/* Counts # of handlers deleted since last
 				 * time inactive handlers were garbage-
 				 * collected. When this number gets big,
 				 * handlers get cleaned up. */
@@ -482,7 +500,7 @@ typedef struct TkDisplay {
 #endif /* TK_USE_INPUT_METHODS */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
-    size_t refCount;		/* Reference count of how many Tk applications
+    TkSizeT refCount;		/* Reference count of how many Tk applications
 				 * are using this display. Used to clean up
 				 * the display when we no longer have any Tk
 				 * applications using it. */
@@ -586,7 +604,7 @@ typedef struct TkEventHandler {
  */
 
 typedef struct TkMainInfo {
-    size_t refCount;		/* Number of windows whose "mainPtr" fields
+    TkSizeT refCount;		/* Number of windows whose "mainPtr" fields
 				 * point here. When this becomes zero, can
 				 * free up the structure (the reference count
 				 * is zero because windows can get deleted in
@@ -597,7 +615,11 @@ typedef struct TkMainInfo {
     Tcl_HashTable nameTable;	/* Hash table mapping path names to TkWindow
 				 * structs for all windows related to this
 				 * main window. Managed by tkWindow.c. */
-    long deletionEpoch;		/* Incremented by window deletions. */
+#if TCL_MAJOR_VERSION > 8
+    size_t deletionEpoch;		/* Incremented by window deletions. */
+#else
+    long deletionEpoch;
+#endif
     Tk_BindingTable bindingTable;
 				/* Used in conjunction with "bind" command to
 				 * bind events to Tcl commands. */
@@ -833,7 +855,7 @@ typedef struct {
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
 				 * allocated with ckalloc(). */
-    size_t charValueLen;	/* Length of string in charValuePtr when that
+    TkSizeT charValueLen;	/* Length of string in charValuePtr when that
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
@@ -1257,20 +1279,12 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
     MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
 #endif
 
-#ifdef TCL_TYPE_I
-/* With TIP #481 available, we don't need to do anything special here */
-#define TkGetStringFromObj(objPtr, lenPtr) \
-	Tcl_GetStringFromObj(objPtr, lenPtr)
-#define TkGetByteArrayFromObj(objPtr, lenPtr) \
-	Tcl_GetByteArrayFromObj(objPtr, lenPtr)
-#else
 #define TkGetStringFromObj(objPtr, lenPtr) \
 	(((objPtr)->bytes ? 0 : Tcl_GetString(objPtr)), \
 	*(lenPtr) = (objPtr)->length, (objPtr)->bytes)
 
 MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
 	size_t *lengthPtr);
-#endif
 
 /*
  * Unsupported commands.

@@ -290,7 +290,7 @@ Tk_PlaceObjCmd(
 	    if (slavePtr == NULL) {
 		return TCL_OK;
 	    }
-	    objPtr = Tk_GetOptionInfo(interp, (char *) slavePtr, optionTable,
+	    objPtr = Tk_GetOptionInfo(interp, slavePtr, optionTable,
 		    (objc == 4) ? objv[3] : NULL, tkwin);
 	    if (objPtr == NULL) {
 		return TCL_ERROR;
@@ -628,7 +628,7 @@ ConfigureSlave(
 
     slavePtr = CreateSlave(tkwin, table);
 
-    if (Tk_SetOptions(interp, (char *) slavePtr, table, objc, objv,
+    if (Tk_SetOptions(interp, slavePtr, table, objc, objv,
 	    slavePtr->tkwin, &savedOptions, &mask) != TCL_OK) {
 	goto error;
     }

@@ -1256,7 +1256,7 @@ GenerateXEvent(
  * GetState --
  *
  *	This function constructs a state mask for the mouse buttons and
- *	modifier keys as they were before the event occured.
+ *	modifier keys as they were before the event occurred.
  *
  * Results:
  *	Returns a composite value of all the modifier and button state flags

@@ -156,7 +156,7 @@ Tk_GetAtomName(
 	}
 	name = Tcl_GetHashKey(&dispPtr->nameTable, hPtr);
 	hPtr = Tcl_CreateHashEntry(&dispPtr->atomTable, INT2PTR(atom), &isNew);
-	Tcl_SetHashValue(hPtr, name);
+	Tcl_SetHashValue(hPtr, (char *)name);
     }
     return Tcl_GetHashValue(hPtr);
 }
@@ -202,7 +202,7 @@ AtomInit(
 	Tcl_SetHashValue(hPtr, INT2PTR(atom));
 	name = Tcl_GetHashKey(&dispPtr->nameTable, hPtr);
 	hPtr = Tcl_CreateHashEntry(&dispPtr->atomTable, INT2PTR(atom), &isNew);
-	Tcl_SetHashValue(hPtr, name);
+	Tcl_SetHashValue(hPtr, (char *)name);
     }
 }
 

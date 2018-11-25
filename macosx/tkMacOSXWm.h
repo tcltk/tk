@@ -185,6 +185,15 @@ typedef struct TkWmInfo {
     TkWindow *scrollWinPtr;	/* Ptr to scrollbar handling grow widget. */
     TkMenu *menuPtr;
     NSWindow *window;
+
+    /*
+     * Space to cache current window state when window becomes Fullscreen.
+     */
+
+    unsigned long cachedStyle;
+    unsigned long cachedPresentation;
+    NSRect cachedBounds;
+
 } WmInfo;
 
 /*

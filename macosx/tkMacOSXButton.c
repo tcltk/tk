@@ -420,6 +420,9 @@ TkpComputeButtonGeometry(
 
     width += butPtr->inset*2;
     height += butPtr->inset*2;
+    if ([NSApp macMinorVersion] == 6) {
+      width += 12;
+    }
 
     Tk_GeometryRequest(butPtr->tkwin, width, height);
     Tk_SetInternalBorder(butPtr->tkwin, butPtr->inset);
@@ -1198,3 +1201,11 @@ PulseDefaultButtonProc(ClientData clientData)
             PULSE_TIMER_MSECS, PulseDefaultButtonProc, clientData);
 }
 
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */

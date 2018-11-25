@@ -15,6 +15,13 @@
 
 #define PKG_ASSOC_KEY "Ttk"
 
+#ifdef MAC_OSX_TK
+    extern void TkMacOSXFlushWindows(void);
+    #define UPDATE_WINDOWS() TkMacOSXFlushWindows()
+#else
+    #define UPDATE_WINDOWS()
+#endif
+
 /*------------------------------------------------------------------------
  * +++ Styles.
  *
@@ -510,6 +517,7 @@ static void ThemeChangedProc(ClientData clientData)
 	Tcl_BackgroundException(pkgPtr->interp, code);
     }
     pkgPtr->themeChangePending = 0;
+    UPDATE_WINDOWS();
 }
 
 /*
@@ -970,12 +978,12 @@ static
 int InitializeElementRecord(
     Ttk_ElementClass *eclass,	/* Element instance to initialize */
     Ttk_Style style,		/* Style table */
-    char *widgetRecord,		/* Source of widget option values */
+    void *widgetRecord,		/* Source of widget option values */
     Tk_OptionTable optionTable,	/* Option table describing widget record */
     Tk_Window tkwin,		/* Corresponding window */
     Ttk_State state)	/* Widget or element state */
 {
-    char *elementRecord = eclass->elementRecord;
+    void *elementRecord = eclass->elementRecord;
     OptionMap optionMap = GetOptionMap(eclass,optionTable);
     int nResources = eclass->nResources;
     Ttk_ResourceCache cache = style->cache;
@@ -984,7 +992,7 @@ int InitializeElementRecord(
     int i;
     for (i=0; i<nResources; ++i, ++elementOption) {
 	Tcl_Obj **dest = (Tcl_Obj **)
-	    (elementRecord + elementOption->offset);
+	    ((char *)elementRecord + elementOption->offset);
 	const char *optionName = elementOption->optionName;
 	Tcl_Obj *dynamicSetting = Ttk_StyleMap(style, optionName, state);
 	Tcl_Obj *widgetValue = 0;
@@ -992,7 +1000,7 @@ int InitializeElementRecord(
 
 	if (optionMap[i]) {
 	    widgetValue = *(Tcl_Obj **)
-		(widgetRecord + optionMap[i]->objOffset);
+		((char *)widgetRecord + optionMap[i]->objOffset);
 	}
 
 	if (widgetValue) {

@@ -103,7 +103,7 @@ EXTERN int		Tk_CanvasTagsParseProc(ClientData clientData,
 				Tcl_Interp *interp, Tk_Window tkwin,
 				const char *value, char *widgRec, int offset);
 /* 19 */
-EXTERN CONST86 char *	Tk_CanvasTagsPrintProc(ClientData clientData,
+EXTERN const char *	Tk_CanvasTagsPrintProc(ClientData clientData,
 				Tk_Window tkwin, char *widgRec, int offset,
 				Tcl_FreeProc **freeProcPtr);
 /* 20 */
@@ -357,7 +357,7 @@ EXTERN Tk_Image		Tk_GetImage(Tcl_Interp *interp, Tk_Window tkwin,
 /* 98 */
 EXTERN ClientData	Tk_GetImageMasterData(Tcl_Interp *interp,
 				const char *name,
-				CONST86 Tk_ImageType **typePtrPtr);
+				const Tk_ImageType **typePtrPtr);
 /* 99 */
 EXTERN Tk_ItemType *	Tk_GetItemTypes(void);
 /* 100 */
@@ -909,7 +909,7 @@ typedef struct TkStubs {
     double (*tk_CanvasPsY) (Tk_Canvas canvas, double y); /* 16 */
     void (*tk_CanvasSetStippleOrigin) (Tk_Canvas canvas, GC gc); /* 17 */
     int (*tk_CanvasTagsParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, int offset); /* 18 */
-    CONST86 char * (*tk_CanvasTagsPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr); /* 19 */
+    const char * (*tk_CanvasTagsPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr); /* 19 */
     Tk_Window (*tk_CanvasTkwin) (Tk_Canvas canvas); /* 20 */
     void (*tk_CanvasWindowCoords) (Tk_Canvas canvas, double x, double y, short *screenXPtr, short *screenYPtr); /* 21 */
     void (*tk_ChangeWindowAttributes) (Tk_Window tkwin, unsigned long valueMask, XSetWindowAttributes *attsPtr); /* 22 */
@@ -988,7 +988,7 @@ typedef struct TkStubs {
     void (*tk_GetFontMetrics) (Tk_Font font, Tk_FontMetrics *fmPtr); /* 95 */
     GC (*tk_GetGC) (Tk_Window tkwin, unsigned long valueMask, XGCValues *valuePtr); /* 96 */
     Tk_Image (*tk_GetImage) (Tcl_Interp *interp, Tk_Window tkwin, const char *name, Tk_ImageChangedProc *changeProc, ClientData clientData); /* 97 */
-    ClientData (*tk_GetImageMasterData) (Tcl_Interp *interp, const char *name, CONST86 Tk_ImageType **typePtrPtr); /* 98 */
+    ClientData (*tk_GetImageMasterData) (Tcl_Interp *interp, const char *name, const Tk_ImageType **typePtrPtr); /* 98 */
     Tk_ItemType * (*tk_GetItemTypes) (void); /* 99 */
     int (*tk_GetJoinStyle) (Tcl_Interp *interp, const char *str, int *joinPtr); /* 100 */
     int (*tk_GetJustify) (Tcl_Interp *interp, const char *str, Tk_Justify *justifyPtr); /* 101 */
@@ -1102,7 +1102,7 @@ typedef struct TkStubs {
     int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr); /* 209 */
     int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
     int (*tk_InitOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
-    void (*tk_MainEx) (int argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
+    TCL_DEPRECATED_API("Don't use this function in a stub-enabled extension") void (*tk_MainEx) (int argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
     void (*tk_RestoreSavedOptions) (Tk_SavedOptions *savePtr); /* 213 */
     int (*tk_SetOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */

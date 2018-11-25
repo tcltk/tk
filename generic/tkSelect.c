@@ -357,7 +357,7 @@ Tk_OwnSelection(
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkSelectionInfo *infoPtr;
     Tk_LostSelProc *clearProc = NULL;
-    ClientData clearData = NULL;/* Initialization needed only to prevent
+    void *clearData = NULL;/* Initialization needed only to prevent
 				 * compiler warning. */
 
     if (dispPtr->multipleAtom == None) {
@@ -466,7 +466,7 @@ Tk_ClearSelection(
     TkSelectionInfo *prevPtr;
     TkSelectionInfo *nextPtr;
     Tk_LostSelProc *clearProc = NULL;
-    ClientData clearData = NULL;/* Initialization needed only to prevent
+    void *clearData = NULL;/* Initialization needed only to prevent
 				 * compiler warning. */
 
     if (dispPtr->multipleAtom == None) {
@@ -1246,7 +1246,7 @@ TkSelClearSelection(
     }
 
     if (infoPtr != NULL && (infoPtr->owner == tkwin) &&
-	    (eventPtr->xselectionclear.serial >= (unsigned) infoPtr->serial)) {
+	    (eventPtr->xselectionclear.serial >= (unsigned long) infoPtr->serial)) {
 	if (prevPtr == NULL) {
 	    dispPtr->selectionInfoPtr = infoPtr->nextPtr;
 	} else {
