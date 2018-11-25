@@ -381,6 +381,14 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
 
+    /*
+     * Workaround for 3efbe4a397; console not accepting keyboard input on 10.14
+     * if displayed before main window. This places console in background and it
+     * accepts input after being raised.
+     */
+		     
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+
     return TCL_OK;
 }
 
