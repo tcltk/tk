@@ -113,11 +113,6 @@ void DebugPrintQueue(void)
 
 #pragma mark TKApplication(TKNotify)
 
-@interface NSApplication(TKNotify)
-/* We need to declare this hidden method. */
-- (void) _modalSession: (NSModalSession) session sendEvent: (NSEvent *) event;
-@end
-
 @implementation TKApplication(TKNotify)
 /*
  * Earlier versions of Tk would override nextEventMatchingMask here, adding a

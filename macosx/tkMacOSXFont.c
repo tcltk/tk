@@ -95,12 +95,6 @@ static void DrawCharsInContext(Display *display, Drawable drawable, GC gc,
 	Tk_Font tkfont, const char *source, int numBytes, int rangeStart,
 	int rangeLength, int x, int y, double angle);
 
-@interface NSFont(TKFont)
-- (NSFont *) bestMatchingFontForCharacters: (const UTF16Char *) characters
-	length: (NSUInteger) length attributes: (NSDictionary *) attributes
-	actualCoveredLength: (NSUInteger *) coveredLength;
-@end
-
 #pragma mark -
 #pragma mark Font Helpers:
 
