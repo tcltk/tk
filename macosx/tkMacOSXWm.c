@@ -379,13 +379,6 @@ static void		RemapWindows(TkWindow *winPtr,
 
 #pragma mark TKWindow(TKWm)
 
-@interface NSDrawerWindow : NSWindow
-{
-    id _i1, _i2;
-}
-@end
-
-
 @implementation TKWindow: NSWindow
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
@@ -6374,7 +6367,9 @@ ApplyWindowAttributeFlagChanges(
 	     */
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
-	    b |= NSWindowCollectionBehaviorFullScreenPrimary;
+	    if (!(macWindow.styleMask & NSWindowStyleMaskUtilityWindow)) {
+		b |= NSWindowCollectionBehaviorFullScreenPrimary;
+	    }
 #endif
 
 	    if (newAttributes & tkCanJoinAllSpacesAttribute) {
