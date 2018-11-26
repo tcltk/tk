@@ -30,19 +30,6 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 #pragma mark TKApplication(TKInit)
 
-@interface TKApplication(TKKeyboard)
-- (void) keyboardChanged: (NSNotification *) notification;
-@end
-
-#define TKApplication_NSApplicationDelegate <NSApplicationDelegate>
-@interface TKApplication(TKWindowEvent) TKApplication_NSApplicationDelegate
-- (void) _setupWindowNotifications;
-@end
-
-@interface TKApplication(TKMenus)
-- (void) _setupMenus;
-@end
-
 @implementation TKApplication
 @synthesize poolLock = _poolLock;
 @synthesize macMinorVersion = _macMinorVersion;

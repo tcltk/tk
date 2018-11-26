@@ -110,15 +110,16 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 #pragma mark TKMenu
 
+/*
+ * This interface is not declared in tkMacOSXPrivate.h because it requires
+ * tkMenu.h.
+ */
+
 @interface TKMenu(TKMenuPrivate)
 - (id) initWithTkMenu: (TkMenu *) tkMenu;
 - (TkMenu *) tkMenu;
 - (int) tkIndexOfItem: (NSMenuItem *) menuItem;
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index;
-@end
-
-#define TKMenu_NSMenuDelegate <NSMenuDelegate>
-@interface TKMenu(TKMenuDelegate) TKMenu_NSMenuDelegate
 @end
 
 @implementation TKMenu
@@ -366,10 +367,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 @end
 
 #pragma mark TKApplication(TKMenu)
-
-@interface NSApplication(TKMenu)
-- (void) setAppleMenu: (NSMenu *) menu;
-@end
 
 @implementation TKApplication(TKMenu)
 
