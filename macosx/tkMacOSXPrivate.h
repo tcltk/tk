@@ -351,12 +351,17 @@ VISIBILITY_HIDDEN
 @end
 
 VISIBILITY_HIDDEN
-@interface TKWindow : NSWindow
-@end
-
 @interface NSWindow(TKWm)
 - (NSPoint) tkConvertPointToScreen:(NSPoint)point;
 - (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
+@end
+
+VISIBILITY_HIDDEN
+@interface TKWindow : NSWindow
+@end
+
+@interface TKWindow(TKWm)
+- (void)    tkLayoutChanged;
 @end
 
 @interface NSDrawerWindow : NSWindow
