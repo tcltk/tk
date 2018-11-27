@@ -10,7 +10,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2017 Marc Culler.
+ * Copyright (c) 2017-2018 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -195,62 +195,6 @@ static int tkMacOSXWmAttrNotifyVal = 0;
 static Tcl_HashTable windowTable;
 static int windowHashInit = false;
 
-
-#pragma mark NSWindow(TKWm)
-
-/*
- * Conversion of coordinates between window and screen.
- */
-
-@implementation NSWindow(TKWm)
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) tkConvertPointToScreen: (NSPoint) point
-{
-    return [self convertBaseToScreen:point];
-}
-- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
-{
-    return [self convertScreenToBase:point];
-}
-#else
-- (NSPoint) tkConvertPointToScreen: (NSPoint) point
-{
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
-    return [self convertRectToScreen:pointrect].origin;
-}
-- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
-{
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
-    return [self convertRectFromScreen:pointrect].origin;
-}
-#endif
-
-- (NSSize)windowWillResize:(NSWindow *)sender
-                    toSize:(NSSize)frameSize
-{
-    NSRect currentFrame = [sender frame];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
-    if (winPtr) {
-	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
-	    frameSize.width = currentFrame.size.width;
-	}
-	if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
-	    frameSize.height = currentFrame.size.height;
-	}
-    }
-    return frameSize;
-}
-@end
-
-#pragma mark -
-
-
 /*
  * Forward declarations for procedures defined in this file:
  */
@@ -377,28 +321,104 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 
-#pragma mark TKWindow(TKWm)
+#pragma mark NSWindow(TKWm)
 
-@implementation TKWindow: NSWindow
+@implementation NSWindow(TKWm)
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
-- (void)toggleTabBar:(id)sender
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    MacDrawable *macWin = winPtr->privatePtr;
-    if (!winPtr) {
-	return;
-    }
-    [super toggleTabBar:sender];
-    if (([self styleMask] & NSFullScreenWindowMask) == 0) {
-	TkMacOSXApplyWindowAttributes(macWin->winPtr, self);
-    }
+    return [self convertBaseToScreen:point];
+}
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
+{
+    return [self convertScreenToBase:point];
+}
+#else
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
+{
+    NSRect pointrect;
+    pointrect.origin = point;
+    pointrect.size.width = 0;
+    pointrect.size.height = 0;
+    return [self convertRectToScreen:pointrect].origin;
+}
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
+{
+    NSRect pointrect;
+    pointrect.origin = point;
+    pointrect.size.width = 0;
+    pointrect.size.height = 0;
+    return [self convertRectFromScreen:pointrect].origin;
 }
 #endif
 
 @end
 
+#pragma mark -
+
+#pragma mark TKWindow(TKWm)
+
+@implementation TKWindow: NSWindow
+
+@end
+
 @implementation TKWindow(TKWm)
+
+- (void) tkLayoutChanged
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+
+    if (winPtr) {
+	NSRect frameRect;
+	
+	/*
+	 * This avoids including the title bar for full screen windows
+	 * but does include it for normal windows.
+	 */
+	
+	if ([self styleMask] & NSFullScreenWindowMask) {
+	    frameRect = [NSWindow frameRectForContentRect:NSZeroRect
+				  styleMask:[self styleMask]];
+	} else {
+	    frameRect = [self frameRectForContentRect:NSZeroRect];
+	}
+	WmInfo *wmPtr = winPtr->wmInfoPtr;
+	wmPtr->xInParent = -frameRect.origin.x;
+	wmPtr->yInParent = frameRect.origin.y + frameRect.size.height;
+	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width;
+	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height;
+    }
+}
+
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+- (void)toggleTabBar:(id)sender
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    if (!winPtr) {
+	return;
+    }
+    [super toggleTabBar:sender];
+    [self tkLayoutChanged];
+}
+#endif
+
+
+- (NSSize)windowWillResize:(NSWindow *)sender
+                    toSize:(NSSize)frameSize
+{
+    NSRect currentFrame = [sender frame];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
+    if (winPtr) {
+	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
+	    frameSize.width = currentFrame.size.width;
+	}
+	if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
+	    frameSize.height = currentFrame.size.height;
+	}
+    }
+    return frameSize;
+}
 
 - (BOOL) canBecomeKeyWindow
 {
@@ -6393,7 +6413,7 @@ ApplyWindowAttributeFlagChanges(
 
 	/*
 	 * The change of window class/attributes might have changed the window
-	 * structure widths:
+	 * frame geometry:
 	 */
 
 	NSRect structureRect = [macWindow frameRectForContentRect:NSZeroRect];
