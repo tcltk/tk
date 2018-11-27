@@ -916,7 +916,7 @@ ConfigureRestrictProc(
 
     if (![self inLiveResize] &&
 	[w respondsToSelector: @selector (tkLayoutChanged)]) {
-	[w tkLayoutChanged];
+	[(TKWindow *)w tkLayoutChanged];
     }
 
     if (winPtr) {
