@@ -708,6 +708,7 @@ PostScriptPreamble(
     Screen         *screenPtr;
     char           *nl;
     int             paperHeightPixels;
+    Tcl_Obj *preambleObj;
 
     paperHeightPixels = ComputeBoundingBox(graphPtr, psPtr);
     if (fileName == NULL) {
@@ -771,9 +772,12 @@ PostScriptPreamble(
     if ((psPtr->addPreview) && (psPtr->previewFormat == PS_PREVIEW_EPSI)) {
         PreviewImage(graphPtr, psToken);
     }
-    if (RbcFileToPostScript(psToken, "rbcGraph.pro") != TCL_OK) {
-        return TCL_ERROR;
+    preambleObj = Tcl_GetVar2Ex(graphPtr->interp, "::graph::ps_preamble", NULL,
+	    TCL_LEAVE_ERR_MSG);
+    if (preambleObj == NULL) {
+	    return TCL_ERROR;
     }
+    RbcAppendToPostScript(psToken, Tcl_GetString(preambleObj), (char *) NULL);
     if (psPtr->footer) {
         const char     *who;
 
@@ -1097,7 +1101,6 @@ CreateWindowsEPS(
     /* Build a description string. */
     Tcl_DStringInit(&dString);
     Tcl_DStringAppend(&dString, "Rbc Graph ", -1);
-    Tcl_DStringAppend(&dString, RBC_VERSION, -1);
     Tcl_DStringAppend(&dString, "\0", -1);
     Tcl_DStringAppend(&dString, Tk_PathName(graphPtr->tkwin), -1);
     Tcl_DStringAppend(&dString, "\0", -1);

@@ -173,16 +173,15 @@ double          rbcNaN;
 /*
  * -----------------------------------------------------------------------
  *
- * RbcVectorInit --
+ * Rbcdrand48 --
  *
- *      This procedure is invoked to initialize the "vector" command.
+ *      TODO
  *
  * Results:
- *      None.
+ *      TODO
  *
  * Side effects:
- *      Creates the new command and adds a new entry into a global Tcl
- *      associative array.
+ *      TODO
  *
  * ------------------------------------------------------------------------
  */
@@ -196,7 +195,7 @@ Rbcdrand48(
 /*
  * -----------------------------------------------------------------------
  *
- * RbcVectorInit --
+ * Rbc_VectorInit --
  *
  *      This procedure is invoked to initialize the "vector" command.
  *
@@ -210,9 +209,10 @@ Rbcdrand48(
  * ------------------------------------------------------------------------
  */
 int
-RbcVectorInit(
+Rbc_VectorInit(
     Tcl_Interp * interp)
 {
+    Tcl_Namespace *nsPtr;
     RbcVectorInterpData *dataPtr;       /* Interpreter-specific data. */
 #ifdef __BORLANDC__
     union Real {
@@ -233,8 +233,21 @@ RbcVectorInit(
     rbcNaN = 0.0 / 0.0;         /* Generate IEEE 754 Not-A-Number. */
 #endif /* !__BORLANDC__  && !_MSC_VER */
 
+    /*
+     * Create holding namespace.
+     */
+    nsPtr = Tcl_CreateNamespace(interp, "::graph", NULL, NULL);
+    if (nsPtr == NULL) {
+        return TCL_ERROR;
+    }
+    /*
+     * Create and export our public API.
+     */
     dataPtr = RbcVectorGetInterpData(interp);
-    Tcl_CreateObjCommand(interp, "rbc::vector", VectorObjCmd, dataPtr, NULL);
+    Tcl_CreateObjCommand(interp, "::graph::vector", VectorObjCmd, dataPtr, NULL);
+    if (Tcl_Export(interp, nsPtr, "vector", 0) != TCL_OK) {
+        return TCL_ERROR;
+    }
 
     return TCL_OK;
 }
@@ -820,7 +833,7 @@ VectorDestroyObjCmd(
                 &vPtr) != TCL_OK) {
             return TCL_ERROR;
         }
-        RbcVectorFree(vPtr);
+        Rbc_VectorFree(vPtr);
     }
 
     return TCL_OK;
@@ -849,7 +862,7 @@ VectorExprObjCmd(
     int objc,
     Tcl_Obj * const objv[])
 {
-    return RbcExprVector(interp, Tcl_GetString(objv[2]), (RbcVector *) NULL);
+    return RbcExprVector(interp, Tcl_GetString(objv[2]), (Rbc_Vector *) NULL);
 }
 
 /*
@@ -973,7 +986,7 @@ VectorInterpDeleteProc(
         hPtr != NULL; hPtr = Tcl_NextHashEntry(&cursor)) {
         vPtr = (RbcVectorObject *) Tcl_GetHashValue(hPtr);
         vPtr->hashPtr = NULL;
-        RbcVectorFree(vPtr);
+        Rbc_VectorFree(vPtr);
     }
     Tcl_DeleteHashTable(&(dataPtr->vectorTable));
 
@@ -1176,7 +1189,7 @@ RbcVectorObject *RbcVectorCreate(
 
   error:
     if (vPtr != NULL) {
-        RbcVectorFree(vPtr);
+        Rbc_VectorFree(vPtr);
     }
     Tcl_DStringFree(&qualVecNamePtr);
     return NULL;
@@ -1206,13 +1219,13 @@ VectorInstDeleteProc(
     RbcVectorObject *vPtr = clientData;
 
     vPtr->cmdToken = 0;
-    RbcVectorFree(vPtr);
+    Rbc_VectorFree(vPtr);
 }
 
 /*
  * ----------------------------------------------------------------------
  *
- * RbcVectorFree --
+ * Rbc_VectorFree --
  *
  *     Removes the memory and frees resources associated with the
  *     vector.
@@ -1235,7 +1248,7 @@ VectorInstDeleteProc(
  * ----------------------------------------------------------------------
  */
 void
-RbcVectorFree(
+Rbc_VectorFree(
     RbcVectorObject * vPtr)
 {                               /* The vector to free */
     RbcChainLink   *linkPtr;
@@ -1560,7 +1573,7 @@ VectorNotifyClients(
     }
     /*
      * Some clients may not handle the "destroy" callback properly
-     * (they should call RbcFreeVectorId to release the client
+     * (they should call Rbc_FreeVectorId to release the client
      * identifier), so mark any remaining clients to indicate that
      * vector's server has gone away.
      */
@@ -1868,7 +1881,7 @@ RbcVectorGetIndex(
     const char *string,
     int *indexPtr,              /* index to convert */
     int flags,
-    RbcVectorIndexProc ** procPtrPtr)
+    Rbc_VectorIndexProc ** procPtrPtr)
 {
     char            c;
     int             value;
@@ -1897,7 +1910,7 @@ RbcVectorGetIndex(
         hPtr = Tcl_FindHashEntry(&(vPtr->dataPtr->indexProcTable), string);
         if (hPtr != NULL) {
             *indexPtr = RBC_SPECIAL_INDEX;
-            *procPtrPtr = (RbcVectorIndexProc *) Tcl_GetHashValue(hPtr);
+            *procPtrPtr = (Rbc_VectorIndexProc *) Tcl_GetHashValue(hPtr);
             return TCL_OK;
         }
     }
@@ -1961,7 +1974,7 @@ RbcVectorGetIndexRange(
     RbcVectorObject * vPtr,     /* The vector object to get the range from */
     const char *string,         /* The index in the vector to convert */
     int flags,                  /* The flags for special cases */
-    RbcVectorIndexProc ** procPtrPtr)
+    Rbc_VectorIndexProc ** procPtrPtr)
 {                               /* The index procedure */
     int             ielem;
     char           *colon;
@@ -1980,7 +1993,7 @@ RbcVectorGetIndexRange(
             *colon = '\0';
             result =
                 RbcVectorGetIndex(interp, vPtr, string, &ielem, flags,
-                (RbcVectorIndexProc **) NULL);
+                (Rbc_VectorIndexProc **) NULL);
             *colon = ':';
             if (result != TCL_OK) {
                 return TCL_ERROR;
@@ -1992,7 +2005,7 @@ RbcVectorGetIndexRange(
             vPtr->last = (vPtr->length > 0) ? vPtr->length - 1 : 0;
         } else {
             if (RbcVectorGetIndex(interp, vPtr, colon + 1, &ielem, flags,
-                    (RbcVectorIndexProc **) NULL) != TCL_OK) {
+                    (Rbc_VectorIndexProc **) NULL) != TCL_OK) {
                 return TCL_ERROR;
             }
             vPtr->last = ielem;
@@ -2091,7 +2104,7 @@ RbcVectorParseElement(
         *p = '\0';
         result =
             RbcVectorGetIndexRange(interp, vPtr, start,
-            (RBC_INDEX_COLON | RBC_INDEX_CHECK), (RbcVectorIndexProc **) NULL);
+            (RBC_INDEX_COLON | RBC_INDEX_CHECK), (Rbc_VectorIndexProc **) NULL);
         *p = ')';
         if (result != TCL_OK) {
             return NULL;
@@ -2124,7 +2137,6 @@ void
 RbcVectorUpdateClients(
     RbcVectorObject * vPtr)
 {                               /* The vector to update clients for */
-    vPtr->dirty++;
     vPtr->max = vPtr->min = rbcNaN;
     if (vPtr->notifyFlags & NOTIFY_NEVER) {
         return;
@@ -2164,7 +2176,7 @@ VectorVarTrace(
     const char *part2,          /* name of array element accessed */
     int flags)
 {
-    RbcVectorIndexProc *indexProc;
+    Rbc_VectorIndexProc *indexProc;
     RbcVectorObject *vPtr = clientData;
     int             first, last;
     int             varFlags;
@@ -2177,7 +2189,7 @@ VectorVarTrace(
             ckfree((char *) vPtr->arrayName);
             vPtr->arrayName = NULL;
             if (vPtr->freeOnUnset) {
-                RbcVectorFree(vPtr);
+                Rbc_VectorFree(vPtr);
             }
         }
         return NULL;
@@ -2234,7 +2246,7 @@ VectorVarTrace(
                 value = vPtr->valueArr[first];
             } else {
                 vPtr->first = 0, vPtr->last = vPtr->length - 1;
-                value = (*indexProc) ((RbcVector *) vPtr);
+                value = (*indexProc) ((Rbc_Vector *) vPtr);
             }
             objPtr = Tcl_NewDoubleObj(value);
             if (Tcl_SetVar2Ex(interp, part1, part2, objPtr, varFlags) == NULL) {
@@ -2686,7 +2698,7 @@ RbcGetDouble(
 /*
  *--------------------------------------------------------------
  *
- * RbcFreeVectorId --
+ * Rbc_FreeVectorId --
  *
  *      Releases the token for an existing vector.  This
  *      indicates that the client is no longer interested
@@ -2704,7 +2716,7 @@ RbcGetDouble(
  *--------------------------------------------------------------
  */
 void
-RbcFreeVectorId(
+Rbc_FreeVectorId(
     RbcVectorId clientId)
 {                               /* Client token identifying the vector */
     VectorClient   *clientPtr = (VectorClient *) clientId;
@@ -2722,7 +2734,7 @@ RbcFreeVectorId(
 /*
  * -----------------------------------------------------------------------
  *
- * RbcGetVectorById --
+ * Rbc_GetVectorById --
  *
  *      Returns a pointer to the vector associated with the client
  *      token.
@@ -2738,10 +2750,10 @@ RbcFreeVectorId(
  * -----------------------------------------------------------------------
  */
 int
-RbcGetVectorById(
+Rbc_GetVectorById(
     Tcl_Interp * interp,
     RbcVectorId clientId,       /* Client token identifying the vector */
-    RbcVector ** vecPtrPtr)
+    Rbc_Vector ** vecPtrPtr)
 {
     VectorClient   *clientPtr = (VectorClient *) clientId;
 
@@ -2754,14 +2766,14 @@ RbcGetVectorById(
         return TCL_ERROR;
     }
     RbcVectorUpdateRange(clientPtr->serverPtr);
-    *vecPtrPtr = (RbcVector *) clientPtr->serverPtr;
+    *vecPtrPtr = (Rbc_Vector *) clientPtr->serverPtr;
     return TCL_OK;
 }
 
 /*
  * ----------------------------------------------------------------------
  *
- * RbcVectorExists2 --
+ * Rbc_VectorExists --
  *
  *      Returns whether the vector associated with the client token
  *      still exists.
@@ -2775,7 +2787,7 @@ RbcGetVectorById(
  * ----------------------------------------------------------------------
  */
 int
-RbcVectorExists2(
+Rbc_VectorExists(
     Tcl_Interp * interp,
     const char *vecName)
 {
@@ -2848,7 +2860,7 @@ RbcAllocVectorId(
 /*
  * -----------------------------------------------------------------------
  *
- * RbcSetVectorChangedProc --
+ * Rbc_SetVectorChangedProc --
  *
  *      Sets the routine to be called back when the vector is changed
  *      or deleted.  *clientData* will be provided as an argument. If
@@ -2864,7 +2876,7 @@ RbcAllocVectorId(
  * -----------------------------------------------------------------------
  */
 void
-RbcSetVectorChangedProc(
+Rbc_SetVectorChangedProc(
     RbcVectorId clientId,       /* Client token identifying the vector */
     RbcVectorChangedProc * proc,        /* Address of routine to call when the contents
                                          * of the vector change. If NULL, no routine
@@ -2884,7 +2896,7 @@ RbcSetVectorChangedProc(
 /*
  *--------------------------------------------------------------
  *
- * RbcNameOfVectorId --
+ * Rbc_NameOfVectorId --
  *
  *      Returns the name of the vector (and array variable).
  *
@@ -2897,7 +2909,7 @@ RbcSetVectorChangedProc(
  *--------------------------------------------------------------
  */
 char           *
-RbcNameOfVectorId(
+Rbc_NameOfVectorId(
     RbcVectorId clientId)
 {                               /* Client token identifying the vector */
     VectorClient   *clientPtr = (VectorClient *) clientId;
@@ -2911,7 +2923,7 @@ RbcNameOfVectorId(
 /*
  * -----------------------------------------------------------------------
  *
- * RbcGetVector --
+ * Rbc_GetVector --
  *
  *      Returns a pointer to the vector associated with the given name.
  *
@@ -2926,10 +2938,10 @@ RbcNameOfVectorId(
  * -----------------------------------------------------------------------
  */
 int
-RbcGetVector(
+Rbc_GetVector(
     Tcl_Interp * interp,
     const char *name,
-    RbcVector ** vecPtrPtr)
+    Rbc_Vector ** vecPtrPtr)
 {
     RbcVectorInterpData *dataPtr;       /* Interpreter-specific data. */
     RbcVectorObject *vPtr;
@@ -2950,7 +2962,7 @@ RbcGetVector(
         return TCL_ERROR;
     }
     RbcVectorUpdateRange(vPtr);
-    *vecPtrPtr = (RbcVector *) vPtr;
+    *vecPtrPtr = (Rbc_Vector *) vPtr;
     return TCL_OK;
 }
 
@@ -2979,7 +2991,7 @@ RbcCreateVector2(
     const char *cmdName,
     const char *varName,
     int initialSize,
-    RbcVector ** vecPtrPtr)
+    Rbc_Vector ** vecPtrPtr)
 {
     RbcVectorInterpData *dataPtr;       /* Interpreter-specific data. */
     RbcVectorObject *vPtr;
@@ -3006,7 +3018,7 @@ RbcCreateVector2(
         }
     }
     if (vecPtrPtr != NULL) {
-        *vecPtrPtr = (RbcVector *) vPtr;
+        *vecPtrPtr = (Rbc_Vector *) vPtr;
     }
     return TCL_OK;
 }
@@ -3014,7 +3026,7 @@ RbcCreateVector2(
 /*
  *--------------------------------------------------------------
  *
- * RbcCreateVector --
+ * Rbc_CreateVector --
  *
  *      TODO: Description
  *
@@ -3027,11 +3039,11 @@ RbcCreateVector2(
  *--------------------------------------------------------------
  */
 int
-RbcCreateVector(
+Rbc_CreateVector(
     Tcl_Interp * interp,
     const char *name,
     int size,
-    RbcVector ** vecPtrPtr)
+    Rbc_Vector ** vecPtrPtr)
 {
     return RbcCreateVector2(interp, name, name, name, size, vecPtrPtr);
 }
@@ -3039,7 +3051,7 @@ RbcCreateVector(
 /*
  * -----------------------------------------------------------------------
  *
- * RbcResizeVector --
+ * Rbc_ResizeVector --
  *
  *      Changes the size of the vector.  All clients with designated
  *      callback routines will be notified of the size change.
@@ -3056,8 +3068,8 @@ RbcCreateVector(
  * -----------------------------------------------------------------------
  */
 int
-RbcResizeVector(
-    RbcVector * vecPtr,
+Rbc_ResizeVector(
+    Rbc_Vector * vecPtr,
     int length)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *) vecPtr;
@@ -3091,7 +3103,7 @@ RbcResizeVector(
  */
 char           *
 RbcNameOfVector(
-    RbcVector * vecPtr)
+    Rbc_Vector * vecPtr)
 {                               /* Vector to query. */
     RbcVectorObject *vPtr = (RbcVectorObject *) vecPtr;
     return vPtr->name;
@@ -3100,7 +3112,7 @@ RbcNameOfVector(
 /*
  * -----------------------------------------------------------------------
  *
- * RbcResetVector --
+ * Rbc_ResetVector --
  *
  *      Resets the vector data.  This is called by a client to
  *      indicate that the vector data has changed.  The vector does
@@ -3119,8 +3131,8 @@ RbcNameOfVector(
  * -----------------------------------------------------------------------
  */
 int
-RbcResetVector(
-    RbcVector * vecPtr,
+Rbc_ResetVector(
+    Rbc_Vector * vecPtr,
     double *valueArr,           /* Array containing the elements of the
                                  * vector. If NULL, indicates to reset the
                                  * vector.*/

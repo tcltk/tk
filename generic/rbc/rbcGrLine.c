@@ -5053,7 +5053,7 @@ NormalLineToPostScript(
 }
 #define FreeVector(v) \
     if ((v).clientId != NULL) { \
-	RbcFreeVectorId((v).clientId); \
+	Rbc_FreeVectorId((v).clientId); \
     } else if ((v).valueArr != NULL) { \
 	ckfree((char *)(v).valueArr); \
     }

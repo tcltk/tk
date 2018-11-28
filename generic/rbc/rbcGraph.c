@@ -46,6 +46,7 @@ extern Tk_CustomOption rbcBarModeOption;
 extern Tk_CustomOption rbcPadOption;
 extern Tk_CustomOption rbcTileOption;
 extern Tk_CustomOption rbcShadowOption;
+extern Tk_CustomOption rbcStyleOption;
 
 #define DEF_GRAPH_ASPECT_RATIO      "0.0"
 #define DEF_GRAPH_BAR_BASELINE      "0.0"
@@ -125,6 +126,8 @@ static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_BOOLEAN, "-buffergraph", "bufferGraph", "BufferGraph",
             DEF_GRAPH_BUFFER_GRAPH, Tk_Offset(RbcGraph, doubleBuffer),
         TK_CONFIG_DONT_SET_DEFAULT},
+    {TK_CONFIG_CUSTOM, "-style", "style", "Style", NULL,
+        Tk_Offset(RbcGraph, chartStyle), 0, &rbcStyleOption},
     {TK_CONFIG_ACTIVE_CURSOR, "-cursor", "cursor", "Cursor", DEF_GRAPH_CURSOR,
         Tk_Offset(RbcGraph, cursor), TK_CONFIG_NULL_OK},
     {TK_CONFIG_STRING, "-data", "data", "Data", (char *) NULL,
@@ -256,28 +259,14 @@ static Tcl_FreeProc DestroyGraph;
 static Tk_EventProc GraphEventProc;
 
 static RbcBindPickProc PickEntry;
-static Tcl_CmdProc StripchartCmd;
-static Tcl_CmdProc BarchartCmd;
-static Tcl_CmdProc GraphCmd;
-static Tcl_CmdDeleteProc GraphInstCmdDeleteProc;
 static RbcTileChangedProc TileChangedProc;
 
 static void     AdjustAxisPointers(
     RbcGraph * graphPtr);
 static int      InitPens(
     RbcGraph * graphPtr);
-static RbcGraph *CreateGraph(
-    Tcl_Interp * interp,
-    int argc,
-    const const char **argv,
-    RbcUid classUid);
 static void     ConfigureGraph(
     RbcGraph * graphPtr);
-static int      NewGraph(
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv,
-    RbcUid classUid);
 static void     DrawMargins(
     RbcGraph * graphPtr,
     Drawable drawable);
@@ -326,7 +315,7 @@ static int      ConfigureOp(
     RbcGraph * graphPtr,
     Tcl_Interp * interp,
     int argc,
-    const const char **argv);
+    const char **argv);
 static int      CgetOp(
     RbcGraph * graphPtr,
     Tcl_Interp * interp,
@@ -357,6 +346,53 @@ static int      SnapOp(
     Tcl_Interp * interp,
     int argc,
     const char **argv);
+
+static int GraphMethod(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+static void GraphMetaDelete(ClientData clientData);
+static int GraphConstructor(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[]);
+
+static Tcl_ObjectMetadataType pathMeta = {
+    TCL_OO_METADATA_VERSION_CURRENT,
+    "GraphMeta",
+    GraphMetaDelete,
+    NULL
+};
+
+static Tcl_MethodType graphMethods[] = {
+    {TCL_OO_METHOD_VERSION_CURRENT,NULL , GraphConstructor    , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"axis" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"bar" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"cget" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"configure" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"crosshairs" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"element" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"extents" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"grid" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"inside" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"invtransform" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"legend" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"line" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"marker" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"pen" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"postscript" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"snap" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"transform" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"x2axis" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"xaxis" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"y2axis" , GraphMethod , NULL , NULL },
+    {TCL_OO_METHOD_VERSION_CURRENT,"yaxis" , GraphMethod , NULL , NULL },
+    { -1    , NULL          , NULL     , NULL , NULL }
+};
 
 #ifdef __WIN32
 static int      InitMetaFileHeader(
@@ -393,6 +429,9 @@ void
 RbcEventuallyRedrawGraph(
     RbcGraph * graphPtr)
 {                               /* Graph widget record */
+    if ((graphPtr->flags & RBC_GRAPH_DELETED) || !Tk_IsMapped(graphPtr->tkwin)) {
+    return;
+    }
     if ((graphPtr->tkwin != NULL) && !(graphPtr->flags & RBC_REDRAW_PENDING)) {
         Tcl_DoWhenIdle(DisplayGraph, graphPtr);
         graphPtr->flags |= RBC_REDRAW_PENDING;
@@ -440,51 +479,21 @@ GraphEventProc(
             RbcEventuallyRedrawGraph(graphPtr);
         }
     } else if (eventPtr->type == DestroyNotify) {
-        if (graphPtr->tkwin != NULL) {
-            RbcDeleteWindowInstanceData(graphPtr->tkwin);
-            graphPtr->tkwin = NULL;
-            Tcl_DeleteCommandFromToken(graphPtr->interp, graphPtr->cmdToken);
+        if (!(graphPtr->flags & RBC_GRAPH_DELETED)) {
+            graphPtr->flags |= RBC_GRAPH_DELETED;
+            if (graphPtr->tkwin != NULL) {
+                RbcDeleteWindowInstanceData(graphPtr->tkwin);
+                graphPtr->tkwin = NULL;
+                Tcl_DeleteCommandFromToken(graphPtr->interp, graphPtr->cmdToken);
+            }
+            if (graphPtr->flags & RBC_REDRAW_PENDING) {
+                Tcl_CancelIdleCall(DisplayGraph, graphPtr);
+            }
+            Tcl_EventuallyFree(graphPtr, DestroyGraph);
         }
-        if (graphPtr->flags & RBC_REDRAW_PENDING) {
-            Tcl_CancelIdleCall(DisplayGraph, graphPtr);
-        }
-        Tcl_EventuallyFree(graphPtr, DestroyGraph);
     } else if (eventPtr->type == ConfigureNotify) {
         graphPtr->flags |= (RBC_MAP_WORLD | RBC_REDRAW_WORLD);
         RbcEventuallyRedrawGraph(graphPtr);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * GraphInstCmdDeleteProc --
- *
- *      This procedure is invoked when a widget command is deleted.  If
- *      the widget isn't already in the process of being destroyed,
- *      this command destroys it.
- *
- * Results:
- *      None.
- *
- * Side effects:
- *      The widget is destroyed.
- *
- *---------------------------------------------------------------------- */
-static void
-GraphInstCmdDeleteProc(
-    ClientData clientData)
-{                               /* Pointer to widget record. */
-    RbcGraph       *graphPtr = clientData;
-
-    if (graphPtr->tkwin != NULL) {      /* NULL indicates window has
-                                         * already been destroyed. */
-        Tk_Window       tkwin;
-
-        tkwin = graphPtr->tkwin;
-        graphPtr->tkwin = NULL;
-        RbcDeleteWindowInstanceData(tkwin);
-        Tk_DestroyWindow(tkwin);
     }
 }
 
@@ -889,121 +898,6 @@ DestroyGraph(
         RbcFreeTile(graphPtr->tile);
     }
     ckfree((char *) graphPtr);
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * CreateGraph --
- *
- *      This procedure creates and initializes a new widget.
- *
- * Results:
- *      The return value is a pointer to a structure describing
- *      the new widget.  If an error occurred, then the return
- *      value is NULL and an error message is left in interp->result.
- *
- * Side effects:
- *      Memory is allocated, a Tk_Window is created, etc.
- *
- *----------------------------------------------------------------------
- */
-static RbcGraph *
-CreateGraph(
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv,
-    RbcUid classUid)
-{
-    RbcGraph       *graphPtr;
-    Tk_Window       tkwin;
-
-    tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp), argv[1],
-        (char *) NULL);
-    if (tkwin == NULL) {
-        return NULL;
-    }
-    graphPtr = RbcCalloc(1, sizeof(RbcGraph));
-    assert(graphPtr);
-    /* Initialize the graph data structure. */
-
-    graphPtr->tkwin = tkwin;
-    graphPtr->display = Tk_Display(tkwin);
-    graphPtr->interp = interp;
-    graphPtr->classUid = classUid;
-    graphPtr->backingStore = TRUE;
-    graphPtr->doubleBuffer = TRUE;
-    graphPtr->highlightWidth = 2;
-    graphPtr->plotRelief = TK_RELIEF_SUNKEN;
-    graphPtr->relief = TK_RELIEF_FLAT;
-    graphPtr->flags = (RBC_RESET_WORLD);
-    graphPtr->nextMarkerId = 1;
-    graphPtr->padX.side1 = graphPtr->padX.side2 = 8;
-    graphPtr->padY.side1 = graphPtr->padY.side2 = 8;
-    graphPtr->margins[RBC_MARGIN_BOTTOM].site = RBC_MARGIN_BOTTOM;
-    graphPtr->margins[RBC_MARGIN_LEFT].site = RBC_MARGIN_LEFT;
-    graphPtr->margins[RBC_MARGIN_TOP].site = RBC_MARGIN_TOP;
-    graphPtr->margins[RBC_MARGIN_RIGHT].site = RBC_MARGIN_RIGHT;
-    RbcInitTextStyle(&graphPtr->titleTextStyle);
-
-    Tcl_InitHashTable(&graphPtr->axes.table, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&graphPtr->axes.tagTable, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&graphPtr->elements.table, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&graphPtr->elements.tagTable, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&graphPtr->markers.table, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&graphPtr->markers.tagTable, TCL_STRING_KEYS);
-    graphPtr->elements.displayList = RbcChainCreate();
-    graphPtr->markers.displayList = RbcChainCreate();
-    graphPtr->axes.displayList = RbcChainCreate();
-
-    if (classUid == rbcLineElementUid) {
-        Tk_SetClass(tkwin, "Graph");
-    } else if (classUid == rbcBarElementUid) {
-        Tk_SetClass(tkwin, "Barchart");
-    } else if (classUid == rbcStripElementUid) {
-        Tk_SetClass(tkwin, "Stripchart");
-    }
-    RbcSetWindowInstanceData(tkwin, graphPtr);
-
-    if (InitPens(graphPtr) != TCL_OK) {
-        goto error;
-    }
-    if (Tk_ConfigureWidget(interp, tkwin, configSpecs, argc - 2, argv + 2,
-            (char *) graphPtr, 0) != TCL_OK) {
-        goto error;
-    }
-    if (RbcDefaultAxes(graphPtr) != TCL_OK) {
-        goto error;
-    }
-    AdjustAxisPointers(graphPtr);
-
-    if (RbcCreatePostScript(graphPtr) != TCL_OK) {
-        goto error;
-    }
-    if (RbcCreateCrosshairs(graphPtr) != TCL_OK) {
-        goto error;
-    }
-    if (RbcCreateLegend(graphPtr) != TCL_OK) {
-        goto error;
-    }
-    if (RbcCreateGrid(graphPtr) != TCL_OK) {
-        goto error;
-    }
-    Tk_CreateEventHandler(graphPtr->tkwin,
-        ExposureMask | StructureNotifyMask | FocusChangeMask, GraphEventProc,
-        graphPtr);
-
-    graphPtr->cmdToken =
-        Tcl_CreateCommand(interp, argv[1], RbcGraphInstCmdProc, graphPtr,
-        GraphInstCmdDeleteProc);
-    ConfigureGraph(graphPtr);
-    graphPtr->bindTable =
-        RbcCreateBindingTable(interp, tkwin, graphPtr, PickEntry);
-    return graphPtr;
-
-  error:
-    DestroyGraph((char *) graphPtr);
-    return NULL;
 }
 
 /* Widget sub-commands */
@@ -1622,7 +1516,7 @@ CreateAPMetaFile(
 
     result = TCL_ERROR;
     hMem = NULL;
-    hFile = CreateFile(fileName,        /* File path */
+    hFile = CreateFile((LPCWSTR)fileName,        /* File path */
         GENERIC_WRITE,          /* Access mode */
         0,                      /* No sharing. */
         NULL,                   /* Security attributes */
@@ -1716,7 +1610,7 @@ SnapOp(
             argv[0], "snap ?switches? name\"", (char *) NULL);
         return TCL_ERROR;
     }
-    data.name = argv[i];
+    data.name = (char *)argv[i];
     if (data.width < 2) {
         data.width = 400;
     }
@@ -1758,7 +1652,7 @@ SnapOp(
         Tcl_DStringAppend(&dString, Tk_PathName(graphPtr->tkwin), -1);
         Tcl_DStringAppend(&dString, "\0", -1);
         title = Tcl_DStringValue(&dString);
-        hDC = CreateEnhMetaFile(hRefDC, NULL, NULL, title);
+        hDC = CreateEnhMetaFile(hRefDC, NULL, NULL, (LPCWSTR)title);
         Tcl_DStringFree(&dString);
 
         if (hDC == NULL) {
@@ -1797,7 +1691,7 @@ SnapOp(
             } else {
                 HENHMETAFILE    hMetaFile2;
 
-                hMetaFile2 = CopyEnhMetaFile(hMetaFile, data.name);
+                hMetaFile2 = CopyEnhMetaFile(hMetaFile, (LPCWSTR)data.name);
                 if (hMetaFile2 != NULL) {
                     result = TCL_OK;
                     DeleteEnhMetaFile(hMetaFile2);
@@ -1877,122 +1771,6 @@ RbcGraphInstCmdProc(
     result = (*proc) (graphPtr, interp, argc, argv);
     Tcl_Release(graphPtr);
     return result;
-}
-
-/*
- * --------------------------------------------------------------------------
- *
- * NewGraph --
- *
- *      Creates a new window and Tcl command representing an
- *      instance of a graph widget.
- *
- * Results:
- *      A standard Tcl result.
- *
- * Side effects:
- *      See the user documentation.
- *
- * --------------------------------------------------------------------------
- */
-static int
-NewGraph(
-    Tcl_Interp * interp,
-    int argc,
-    const char **argv,
-    RbcUid classUid)
-{
-    RbcGraph       *graphPtr;
-    if (argc < 2) {
-        Tcl_AppendResult(interp, "wrong # args: should be \"", argv[0],
-            " pathName ?option value?...\"", (char *) NULL);
-        return TCL_ERROR;
-    }
-    graphPtr = CreateGraph(interp, argc, argv, classUid);
-    if (graphPtr == NULL) {
-        return TCL_ERROR;
-    }
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(graphPtr->tkwin),
-            -1));
-    return TCL_OK;
-}
-
-/*
- * --------------------------------------------------------------------------
- *
- * GraphCmd --
- *
- *      Creates a new window and Tcl command representing an
- *      instance of a graph widget.
- *
- * Results:
- *      A standard Tcl result.
- *
- * Side effects:
- *      See the user documentation.
- *
- * --------------------------------------------------------------------------
- */
-static int
-GraphCmd(
-    ClientData clientData,      /* Not used. */
-    Tcl_Interp * interp,
-    int argc,
-    const char *argv[])
-{
-    return NewGraph(interp, argc, argv, rbcLineElementUid);
-}
-
-/*
- *--------------------------------------------------------------
- *
- * BarchartCmd --
- *
- *      Creates a new window and Tcl command representing an
- *      instance of a barchart widget.
- *
- * Results:
- *      A standard Tcl result.
- *
- * Side effects:
- *      See the user documentation.
- *
- *--------------------------------------------------------------
- */
-static int
-BarchartCmd(
-    ClientData clientData,      /* Not used. */
-    Tcl_Interp * interp,
-    int argc,
-    const char *argv[])
-{
-    return NewGraph(interp, argc, argv, rbcBarElementUid);
-}
-
-/*
- *--------------------------------------------------------------
- *
- * StripchartCmd --
- *
- *      Creates a new window and Tcl command representing an
- *      instance of a barchart widget.
- *
- * Results:
- *      A standard Tcl result.
- *
- * Side effects:
- *      See the user documentation.
- *
- *--------------------------------------------------------------
- */
-static int
-StripchartCmd(
-    ClientData clientData,      /* Not used. */
-    Tcl_Interp * interp,
-    int argc,
-    const char *argv[])
-{
-    return NewGraph(interp, argc, argv, rbcStripElementUid);
 }
 
 /*
@@ -2324,6 +2102,9 @@ DisplayGraph(
     RbcGraph       *graphPtr = clientData;
     Pixmap          drawable;
 
+    if (graphPtr->flags & RBC_GRAPH_DELETED) {
+    return;
+    }
     graphPtr->flags &= ~RBC_REDRAW_PENDING;
     if (graphPtr->tkwin == NULL) {
         return;                 /* Window destroyed (should not get here) */
@@ -2387,49 +2168,6 @@ DisplayGraph(
 /*
  *----------------------------------------------------------------------
  *
- * RbcGraphInit --
- *
- *      TODO: Description
- *
- * Results:
- *      TODO: Results
- *
- * Side Effects:
- *      TODO: Side Effects
- *
- *----------------------------------------------------------------------
- */
-int
-RbcGraphInit(
-    Tcl_Interp * interp)
-{
-    rbcBarElementUid = (RbcUid) Tk_GetUid("BarElement");
-    rbcLineElementUid = (RbcUid) Tk_GetUid("LineElement");
-    rbcStripElementUid = (RbcUid) Tk_GetUid("StripElement");
-    rbcContourElementUid = (RbcUid) Tk_GetUid("ContourElement");
-
-    rbcLineMarkerUid = (RbcUid) Tk_GetUid("LineMarker");
-    rbcBitmapMarkerUid = (RbcUid) Tk_GetUid("BitmapMarker");
-    rbcImageMarkerUid = (RbcUid) Tk_GetUid("ImageMarker");
-    rbcTextMarkerUid = (RbcUid) Tk_GetUid("TextMarker");
-    rbcPolygonMarkerUid = (RbcUid) Tk_GetUid("PolygonMarker");
-    rbcWindowMarkerUid = (RbcUid) Tk_GetUid("WindowMarker");
-
-    rbcXAxisUid = (RbcUid) Tk_GetUid("X");
-    rbcYAxisUid = (RbcUid) Tk_GetUid("Y");
-
-    Tcl_CreateCommand(interp, "rbc::graph", GraphCmd, (ClientData) NULL,
-        (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateCommand(interp, "rbc::barchart", BarchartCmd, (ClientData) NULL,
-        (Tcl_CmdDeleteProc *) NULL);
-    Tcl_CreateCommand(interp, "rbc::stripchart", StripchartCmd,
-        (ClientData) NULL, (Tcl_CmdDeleteProc *) NULL);
-    return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * RbcGetGraphFromWindowData --
  *
  *      TODO: Description
@@ -2485,6 +2223,417 @@ RbcGraphType(
         return RBC_STRIPCHART;
     }
     return 0;
+}
+
+//============================================================================
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Rbc_GraphInit --
+ *
+ *        Initializer for the graph widget package.
+ *
+ * Results:
+ *        A standard Tcl result.
+ *
+ * Side Effects:
+ *       Tcl commands created
+ *
+ *----------------------------------------------------------------------
+ */
+int
+Rbc_GraphInit(
+    Tcl_Interp * interp)
+{
+    Tcl_Class clazz;
+    Tcl_Object object;
+    Tcl_Obj *objPtr;
+    int i;
+	static const char *initScript =
+		"::oo::class create ::graph {"
+		" self method unknown {args} {uplevel #0 ::graph create {*}$args; return [lindex $args 0]}\n"
+        " self unexport new destroy\n"
+        " unexport new create destroy\n"
+        "}";
+
+    rbcBarElementUid = (RbcUid) Tk_GetUid("BarElement");
+    rbcLineElementUid = (RbcUid) Tk_GetUid("LineElement");
+    rbcStripElementUid = (RbcUid) Tk_GetUid("StripElement");
+    rbcContourElementUid = (RbcUid) Tk_GetUid("ContourElement");
+
+    rbcLineMarkerUid = (RbcUid) Tk_GetUid("LineMarker");
+    rbcBitmapMarkerUid = (RbcUid) Tk_GetUid("BitmapMarker");
+    rbcImageMarkerUid = (RbcUid) Tk_GetUid("ImageMarker");
+    rbcTextMarkerUid = (RbcUid) Tk_GetUid("TextMarker");
+    rbcPolygonMarkerUid = (RbcUid) Tk_GetUid("PolygonMarker");
+    rbcWindowMarkerUid = (RbcUid) Tk_GetUid("WindowMarker");
+
+    rbcXAxisUid = (RbcUid) Tk_GetUid("X");
+    rbcYAxisUid = (RbcUid) Tk_GetUid("Y");
+
+	/* Needed oo extension */
+	if (Tcl_OOInitStubs(interp) == NULL) {
+		return TCL_ERROR;
+	}
+
+    /* Create widget class. */
+    if (Tcl_Eval(interp, initScript) != TCL_OK) {
+        return TCL_ERROR;
+    }
+
+    /* Get class object */
+    objPtr = Tcl_NewStringObj("::graph", -1);
+    Tcl_IncrRefCount(objPtr);
+    if ((object = Tcl_GetObjectFromObj(interp, objPtr)) == NULL) {
+        Tcl_DecrRefCount(objPtr);
+        return TCL_ERROR;
+    }
+    Tcl_DecrRefCount(objPtr);
+    if ((clazz = Tcl_GetObjectAsClass(object)) == NULL) {
+        return TCL_ERROR;
+    }
+    /* Add methods */
+    Tcl_ClassSetConstructor(interp, clazz, Tcl_NewMethod(interp, clazz, NULL, 1, &graphMethods[0], NULL));
+    for (i = 1; graphMethods[i].name != NULL; i++) {
+        Tcl_NewMethod(interp, clazz, Tcl_NewStringObj(graphMethods[i].name, -1), 1, &graphMethods[i], NULL);
+    }
+
+    return TCL_OK;
+}
+
+/* Constructor */
+static int GraphConstructor(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    Tcl_Object object;
+    RbcGraph       *graphPtr;
+    Tk_Window tkWin;
+    RbcUid classUid = rbcLineElementUid;
+    int i;
+    const char *chPtr;
+    int myArgc;
+    const char **myArgv;
+
+	/* Get current object. Should not fail? */
+    if ((object = Tcl_ObjectContextObject(objectContext)) == NULL) {
+        return TCL_ERROR;
+    }
+    /* Check calling args */
+    if (objc < 3 || strcmp("create", Tcl_GetString(objv[1])) != 0) {
+        Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
+        return TCL_ERROR;
+    }
+
+    tkWin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp), Tcl_GetString(objv[2]), NULL);
+    if (tkWin == NULL) {
+        return TCL_ERROR;
+    }
+
+    /*
+     * Convert objv to argv and check on -class option
+     */
+    myArgv = ckalloc((objc-1)*sizeof(char *));
+    myArgv[0] = Tcl_GetString(objv[0]);
+    myArgv[1] = Tcl_GetString(objv[2]);
+    myArgc = 2;
+    for (i=3; i<objc; i += 2) {
+        chPtr = Tcl_GetString(objv[i]);
+        if (strcmp(chPtr,"-style") == 0) {
+            chPtr = Tcl_GetString(objv[i+1]);
+            if (strcmp(chPtr,"line") == 0) {
+                classUid = rbcLineElementUid;
+            } else if (strcmp(chPtr,"bar") == 0) {
+                classUid = rbcBarElementUid;
+            } else if (strcmp(chPtr,"strip") == 0) {
+                classUid = rbcStripElementUid;
+            } else {
+                ckfree(myArgv);
+                Tk_DestroyWindow(tkWin);
+                Tcl_WrongNumArgs(interp, 1, objv, "pathName -style line|bar|strip ?options?");
+                return TCL_ERROR;
+            }
+        } else {
+            myArgv[myArgc++] = chPtr;
+            myArgv[myArgc++] = Tcl_GetString(objv[i+1]);
+        }
+    }
+    /*
+     * Create and initialize the graph data structure.
+     */
+    graphPtr = RbcCalloc(1, sizeof(RbcGraph));
+    assert(graphPtr);
+    if (classUid == rbcLineElementUid) {
+        Tk_SetClass(tkWin, "Graph");
+        graphPtr->chartStyle = "line";
+    } else if (classUid == rbcBarElementUid) {
+        Tk_SetClass(tkWin, "Barchart");
+        graphPtr->chartStyle = "bar";
+    } else if (classUid == rbcStripElementUid) {
+        Tk_SetClass(tkWin, "Stripchart");
+        graphPtr->chartStyle = "strip";
+    }
+    graphPtr->classUid = classUid;
+
+    graphPtr->tkwin = tkWin;
+    graphPtr->display = Tk_Display(tkWin);
+    graphPtr->interp = interp;
+    graphPtr->backingStore = TRUE;
+    graphPtr->doubleBuffer = TRUE;
+    graphPtr->highlightWidth = 2;
+    graphPtr->plotRelief = TK_RELIEF_SUNKEN;
+    graphPtr->relief = TK_RELIEF_FLAT;
+    graphPtr->flags = (RBC_RESET_WORLD);
+    graphPtr->nextMarkerId = 1;
+    graphPtr->padX.side1 = graphPtr->padX.side2 = 8;
+    graphPtr->padY.side1 = graphPtr->padY.side2 = 8;
+    graphPtr->margins[RBC_MARGIN_BOTTOM].site = RBC_MARGIN_BOTTOM;
+    graphPtr->margins[RBC_MARGIN_LEFT].site = RBC_MARGIN_LEFT;
+    graphPtr->margins[RBC_MARGIN_TOP].site = RBC_MARGIN_TOP;
+    graphPtr->margins[RBC_MARGIN_RIGHT].site = RBC_MARGIN_RIGHT;
+    RbcInitTextStyle(&graphPtr->titleTextStyle);
+
+    Tcl_InitHashTable(&graphPtr->axes.table, TCL_STRING_KEYS);
+    Tcl_InitHashTable(&graphPtr->axes.tagTable, TCL_STRING_KEYS);
+    Tcl_InitHashTable(&graphPtr->elements.table, TCL_STRING_KEYS);
+    Tcl_InitHashTable(&graphPtr->elements.tagTable, TCL_STRING_KEYS);
+    Tcl_InitHashTable(&graphPtr->markers.table, TCL_STRING_KEYS);
+    Tcl_InitHashTable(&graphPtr->markers.tagTable, TCL_STRING_KEYS);
+    graphPtr->elements.displayList = RbcChainCreate();
+    graphPtr->markers.displayList = RbcChainCreate();
+    graphPtr->axes.displayList = RbcChainCreate();
+
+    RbcSetWindowInstanceData(tkWin, graphPtr);
+
+    if (InitPens(graphPtr) != TCL_OK) {
+        goto error;
+    }
+    if (Tk_ConfigureWidget(interp, tkWin, configSpecs, myArgc - 2, myArgv + 2,
+            (char *) graphPtr, 0) != TCL_OK) {
+        goto error;
+    }
+    if (RbcDefaultAxes(graphPtr) != TCL_OK) {
+        goto error;
+    }
+    AdjustAxisPointers(graphPtr);
+
+    if (RbcCreatePostScript(graphPtr) != TCL_OK) {
+        goto error;
+    }
+    if (RbcCreateCrosshairs(graphPtr) != TCL_OK) {
+        goto error;
+    }
+    if (RbcCreateLegend(graphPtr) != TCL_OK) {
+        goto error;
+    }
+    if (RbcCreateGrid(graphPtr) != TCL_OK) {
+        goto error;
+    }
+    Tk_CreateEventHandler(tkWin,
+        ExposureMask | StructureNotifyMask | FocusChangeMask, GraphEventProc,
+        graphPtr);
+
+    graphPtr->cmdToken = Tcl_GetObjectCommand(object);
+    Tcl_ObjectSetMetadata(object, &pathMeta, (ClientData)graphPtr);
+    ConfigureGraph(graphPtr);
+    graphPtr->bindTable =
+        RbcCreateBindingTable(interp, tkWin, graphPtr, PickEntry);
+
+	/* No need to set return value. It will be ignored by "oo::class create" */
+    return TCL_OK;
+
+  error:
+    ckfree(myArgv);
+    Tk_DestroyWindow(tkWin);
+    DestroyGraph((char *) graphPtr);
+    return TCL_ERROR;
+
+}
+
+static const char *const graphCmdNames[] = {
+    "axis", "bar", "cget", "configure",
+    "crosshairs", "element", "extents", "grid",
+    "inside", "invtransform", "legend", "line",
+    "marker", "pen", "postscript",
+    "snap", "transform",
+    "x2axis", "xaxis", "y2axis", "yaxis",
+    NULL
+};
+
+enum graphCmd {
+    COMMAND_AXIS, COMMAND_BAR, COMMAND_CGET, COMMAND_CONFIGURE,
+    COMMAND_CROSSHAIRS, COMMAND_ELEMENT, COMMAND_EXTENTS, COMMAND_GRID,
+    COMMAND_INSIDE, COMMAND_INVTRANSFORM, COMMAND_LEGEND, COMMAND_LINE,
+    COMMAND_MARKER, COMMAND_PEN, COMMAND_POSTSCRIPT,
+    COMMAND_SNAP, COMMAND_TRANSFORM,
+    COMMAND_X2AXIS, COMMAND_XAXIS, COMMAND_Y2AXIS, COMMAND_YAXIS
+};
+
+/*
+ *
+ */
+static int GraphMethod(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    Tcl_ObjectContext objectContext,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    int cmdIndex, result;
+    RbcOp           proc;
+    int i;
+    const char **myArgv;
+
+    RbcGraph *graphPtr = (RbcGraph *)Tcl_ObjectGetMetadata(Tcl_ObjectContextObject(objectContext), &pathMeta);
+
+    /*
+     * Parse the widget command by looking up the second token in the list of
+     * valid command names.
+     */
+
+    result = Tcl_GetIndexFromObj(interp, objv[1], graphCmdNames, "option", 0,
+	    &cmdIndex);
+    if (result != TCL_OK) {
+	    return result;
+    }
+
+    switch ((enum graphCmd) cmdIndex) {
+        case COMMAND_AXIS: {
+            proc = (RbcOp)RbcVirtualAxisOp;
+            break;
+        }
+        case COMMAND_BAR: {
+            proc = BarOp;
+            break;
+        }
+        case COMMAND_CGET: {
+            if (objc != 3) {
+                Tcl_WrongNumArgs(interp, 2, objv, "option");
+                return TCL_ERROR;
+            }
+            proc = CgetOp;
+            break;
+        }
+        case COMMAND_CONFIGURE: {
+            proc = ConfigureOp;
+            break;
+        }
+        case COMMAND_CROSSHAIRS: {
+            proc = RbcCrosshairsOp;
+            break;
+        }
+        case COMMAND_ELEMENT: {
+            proc = ElementOp;
+            break;
+        }
+        case COMMAND_EXTENTS: {
+            if (objc != 3) {
+                Tcl_WrongNumArgs(interp, 2, objv, "item");
+                return TCL_ERROR;
+            }
+            proc = ExtentsOp;
+            break;
+        }
+        case COMMAND_GRID: {
+            proc = RbcGridOp;
+            break;
+        }
+        case COMMAND_INSIDE: {
+            if (objc != 4) {
+                Tcl_WrongNumArgs(interp, 2, objv, "winX winY");
+                return TCL_ERROR;
+            }
+            proc = InsideOp;
+            break;
+        }
+        case COMMAND_INVTRANSFORM: {
+            if (objc != 4) {
+                Tcl_WrongNumArgs(interp, 2, objv, "winX winY");
+                return TCL_ERROR;
+            }
+            proc = InvtransformOp;
+            break;
+        }
+        case COMMAND_LEGEND: {
+            proc = RbcLegendOp;
+            break;
+        }
+        case COMMAND_LINE: {
+            proc = LineOp;
+            break;
+        }
+        case COMMAND_MARKER: {
+            proc = RbcMarkerOp;
+            break;
+        }
+        case COMMAND_PEN: {
+            proc = RbcPenOp;
+            break;
+        }
+        case COMMAND_POSTSCRIPT: {
+            proc = RbcPostScriptOp;
+            break;
+        }
+        case COMMAND_SNAP: {
+            if (objc < 3) {
+                Tcl_WrongNumArgs(interp, 2, objv, "?switchse? name");
+                return TCL_ERROR;
+            }
+            proc = SnapOp;
+            break;
+        }
+        case COMMAND_TRANSFORM: {
+            if (objc != 4) {
+                Tcl_WrongNumArgs(interp, 2, objv, "x y");
+                return TCL_ERROR;
+            }
+            proc = TransformOp;
+            break;
+        }
+        case COMMAND_X2AXIS: {
+            proc = X2AxisOp;
+            break;
+        }
+        case COMMAND_XAXIS: {
+            proc = XAxisOp;
+            break;
+        }
+        case COMMAND_Y2AXIS: {
+            proc = Y2AxisOp;
+            break;
+        }
+        case COMMAND_YAXIS: {
+            proc = YAxisOp;
+            break;
+        }
+        default: {return TCL_ERROR;}
+    }
+    myArgv = ckalloc(objc*sizeof(char *));
+    for (i=0; i<objc; i ++) {
+        myArgv[i] = Tcl_GetString(objv[i]);
+    }
+    Tcl_Preserve(graphPtr);
+    result = (*proc) (graphPtr, interp, objc, myArgv);
+    Tcl_Release(graphPtr);
+    ckfree(myArgv);
+    return result;
+}
+
+/*
+ *
+ */
+static void
+GraphMetaDelete(ClientData clientData) {
+    register RbcGraph *graphPtr = clientData;
+
+    /* Destroy window will calling DestroyGraph() also. */
+    if (graphPtr && (!(graphPtr->flags & RBC_GRAPH_DELETED))) {
+        Tk_DestroyWindow(graphPtr->tkwin);
+    }
 }
 
 /* vim: set ts=4 sw=4 sts=4 ff=unix et : */

@@ -355,7 +355,7 @@ RbcBinreadOp(
             }
             string = Tcl_GetString(objv[i]);
             if (RbcVectorGetIndex(interp, vPtr, string, &first, 0,
-                    (RbcVectorIndexProc **) NULL) != TCL_OK) {
+                    (Rbc_VectorIndexProc **) NULL) != TCL_OK) {
                 return TCL_ERROR;
             }
             if (first > vPtr->length) {
@@ -474,7 +474,7 @@ RbcDeleteOp(
 
     /* FIXME: Don't delete vector with no indices.  */
     if (objc == 2) {
-        RbcVectorFree(vPtr);
+        Rbc_VectorFree(vPtr);
         return TCL_OK;
     }
     /*
@@ -494,7 +494,7 @@ RbcDeleteOp(
         string = Tcl_GetStringFromObj(objv[i], NULL);
         if (RbcVectorGetIndexRange(interp, vPtr, string,
                 (RBC_INDEX_COLON | RBC_INDEX_CHECK),
-                (RbcVectorIndexProc **) NULL) != TCL_OK) {
+                (Rbc_VectorIndexProc **) NULL) != TCL_OK) {
             ckfree((char *) unsetArr);
             return TCL_ERROR;
         }
@@ -595,7 +595,7 @@ RbcExprOp(
     Tcl_Obj * const objv[])
 {
     if (RbcExprVector(interp, Tcl_GetStringFromObj(objv[2], NULL),
-            (RbcVector *) vPtr) != TCL_OK) {
+            (Rbc_Vector *) vPtr) != TCL_OK) {
         return TCL_ERROR;
     }
     if (vPtr->flush) {
@@ -635,7 +635,7 @@ RbcIndexOp(
 
     string = Tcl_GetStringFromObj(objv[2], NULL);
     if (RbcVectorGetIndexRange(interp, vPtr, string, RBC_INDEX_ALL_FLAGS,
-            (RbcVectorIndexProc **) NULL) != TCL_OK) {
+            (Rbc_VectorIndexProc **) NULL) != TCL_OK) {
         return TCL_ERROR;
     }
     first = vPtr->first, last = vPtr->last;
@@ -1046,10 +1046,10 @@ RbcRangeOp(
 
     if ((RbcVectorGetIndex(interp, vPtr, Tcl_GetStringFromObj(objv[2], NULL),
                 &first, RBC_INDEX_CHECK,
-                (RbcVectorIndexProc **) NULL) != TCL_OK)
+                (Rbc_VectorIndexProc **) NULL) != TCL_OK)
         || (RbcVectorGetIndex(interp, vPtr, Tcl_GetStringFromObj(objv[3], NULL),
                 &last, RBC_INDEX_CHECK,
-                (RbcVectorIndexProc **) NULL) != TCL_OK)) {
+                (Rbc_VectorIndexProc **) NULL) != TCL_OK)) {
         return TCL_ERROR;
     }
     listObjPtr = Tcl_NewListObj(0, NULL);
@@ -1246,7 +1246,7 @@ RbcSetOp(
             if (result == TCL_OK) {
                 result = RbcVectorDuplicate(vPtr, tmpPtr);
             }
-            RbcVectorFree(tmpPtr);
+            Rbc_VectorFree(tmpPtr);
         } else {
             result = RbcVectorDuplicate(vPtr, v2Ptr);
         }

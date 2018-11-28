@@ -17,6 +17,7 @@
 
 #include <tcl.h>
 #include <tclInt.h>             /* only #define's and inline functions */
+#include "tclOO.h"
 
 #include <tk.h>
 #include <tkInt.h>
@@ -36,6 +37,8 @@
 #include "tk3d.h"
 #include "tkFont.h"
 
+#define _USE_MATH_DEFINES
+#include <math.h> /* VC math constants M_PI, M_SQRT1_2 */
 #include <assert.h>
 
 /*
@@ -269,6 +272,8 @@
 #define RBC_GRAPH_FOCUS		(1<<12) /* 0x1000 */
 #define RBC_DATA_CHANGED		(1<<13) /* 0x2000 */
 
+#define RBC_GRAPH_DELETED   (1<<15) /* 0x8000 */
+
 #define	RBC_MAP_WORLD		(RBC_MAP_ALL|RBC_RESET_AXES|RBC_GET_AXIS_GEOMETRY)
 #define RBC_REDRAW_WORLD	(RBC_DRAW_MARGINS | RBC_DRAW_LEGEND)
 #define RBC_RESET_WORLD		(RBC_REDRAW_WORLD | RBC_MAP_WORLD)
@@ -493,16 +498,14 @@ typedef struct {
 } RbcChain;
 
 /*
- * RbcVector --
+ * Rbc_Vector --
  */
 typedef struct {
     double         *valueArr;   /* Array of values (possibly malloc-ed) */
     int             numValues;  /* Number of values in the array */
     int             arraySize;  /* Size of the allocated space */
     double          min, max;   /* Minimum and maximum values in the vector */
-    int             dirty;      /* Indicates if the vector has been updated */
-    int             reserved;   /* Reserved for future use */
-} RbcVector;
+} Rbc_Vector;
 
 /*
  * RbcVectorInterpData --
@@ -543,8 +546,6 @@ typedef struct {
     int             size;       /* Maximum number of values that can be stored
                                  * in the value array. */
     double          min, max;   /* Minimum and maximum values in the vector */
-    int             dirty;      /* Indicates if the vector has been updated */
-    int             reserved;
     /* The following fields are local to this module  */
     char           *name;       /* The namespace-qualified name of the vector command.
                                  * It points to the hash key allocated for the
@@ -588,15 +589,15 @@ typedef enum {
     RBC_VECTOR_NOTIFY_UPDATE = 1,       /* The vector's values has been updated */
     RBC_VECTOR_NOTIFY_DESTROY   /* The vector has been destroyed and the client
                                  * should no longer use its data (calling
-                                 * RbcFreeVectorId) */
+                                 * Rbc_FreeVectorId) */
 } RbcVectorNotify;
 
 typedef void    (RbcVectorChangedProc) (
     Tcl_Interp * interp,
     ClientData clientData,
     RbcVectorNotify notify);
-typedef double  (RbcVectorIndexProc) (
-    RbcVector * vecPtr);
+typedef double  (Rbc_VectorIndexProc) (
+    Rbc_Vector * vecPtr);
 
 /*
  * RbcParseValue --
@@ -1172,7 +1173,7 @@ typedef struct {
  * for convenience, the number and minimum/maximum values.
  */
 typedef struct {
-    RbcVector      *vecPtr;
+    Rbc_Vector      *vecPtr;
     double         *valueArr;
     int             nValues;
     int             arraySize;
@@ -1470,6 +1471,7 @@ typedef struct RbcGraph {
                     markers,
                     axes;
     RbcUid          classUid;   /* Default element type */
+    const char     *chartStyle; /* one of line, bar or strip */
     RbcBindTable   *bindTable;
     int             nextMarkerId;       /* Tracks next marker identifier available */
     RbcChain       *axisChain[4];       /* Chain of axes for each of the
@@ -2316,9 +2318,6 @@ MODULE_SCOPE void RbcAppendToPostScript(
 MODULE_SCOPE void RbcFormatToPostScript(
     RbcPsToken * psToken,
     ...);
-MODULE_SCOPE int RbcFileToPostScript(
-    RbcPsToken * psToken,
-    const char *fileName);
 MODULE_SCOPE void RbcBackgroundToPostScript(
     RbcPsToken * psToken,
     XColor * colorPtr);
@@ -2660,13 +2659,13 @@ MODULE_SCOPE void RbcVectorInstallMathFunctions(
 MODULE_SCOPE void RbcVectorInstallSpecialIndices(
     Tcl_HashTable * tablePtr);
 MODULE_SCOPE double RbcVecMin(
-    RbcVector * vecPtr);
+    Rbc_Vector * vecPtr);
 MODULE_SCOPE double RbcVecMax(
-    RbcVector * vecPtr);
+    Rbc_Vector * vecPtr);
 MODULE_SCOPE int RbcExprVector(
     Tcl_Interp * interp,
     char *string,
-    RbcVector * vecPtr);
+    Rbc_Vector * vecPtr);
 
 /* rbcVecObjCmd.c */
 MODULE_SCOPE int RbcAppendOp(
@@ -2793,7 +2792,7 @@ MODULE_SCOPE RbcVectorObject *RbcVectorCreate(
     const char *cmdName,
     const char *varName,
     int *newPtr);
-MODULE_SCOPE void RbcVectorFree(
+MODULE_SCOPE void Rbc_VectorFree(
     RbcVectorObject * vPtr);
 MODULE_SCOPE int RbcVectorDuplicate(
     RbcVectorObject * destPtr,
@@ -2827,13 +2826,13 @@ MODULE_SCOPE int RbcVectorGetIndex(
     const char *string,
     int *indexPtr,
     int flags,
-    RbcVectorIndexProc ** procPtrPtr);
+    Rbc_VectorIndexProc ** procPtrPtr);
 MODULE_SCOPE int RbcVectorGetIndexRange(
     Tcl_Interp * interp,
     RbcVectorObject * vPtr,
     const char *string,
     int flags,
-    RbcVectorIndexProc ** procPtrPtr);
+    Rbc_VectorIndexProc ** procPtrPtr);
 RbcVectorObject *RbcVectorParseElement(
     Tcl_Interp * interp,
     RbcVectorInterpData * dataPtr,
@@ -2855,47 +2854,47 @@ MODULE_SCOPE int RbcGetDouble(
     Tcl_Interp * interp,
     Tcl_Obj * objPtr,
     double *valuePtr);
-MODULE_SCOPE void RbcFreeVectorId(
+MODULE_SCOPE void Rbc_FreeVectorId(
     RbcVectorId clientId);
-MODULE_SCOPE int RbcGetVectorById(
+MODULE_SCOPE int Rbc_GetVectorById(
     Tcl_Interp * interp,
     RbcVectorId clientId,
-    RbcVector ** vecPtrPtr);
-MODULE_SCOPE int RbcVectorExists2(
+    Rbc_Vector ** vecPtrPtr);
+MODULE_SCOPE int Rbc_VectorExists(
     Tcl_Interp * interp,
     const char *vecName);
 MODULE_SCOPE RbcVectorId RbcAllocVectorId(
     Tcl_Interp * interp,
     const char *vecName);
-MODULE_SCOPE void RbcSetVectorChangedProc(
+MODULE_SCOPE void Rbc_SetVectorChangedProc(
     RbcVectorId clientId,
     RbcVectorChangedProc * proc,
     ClientData clientData);
-MODULE_SCOPE char *RbcNameOfVectorId(
+MODULE_SCOPE char *Rbc_NameOfVectorId(
     RbcVectorId clientId);
-MODULE_SCOPE int RbcGetVector(
+MODULE_SCOPE int Rbc_GetVector(
     Tcl_Interp * interp,
     const char *vecName,
-    RbcVector ** vecPtrPtr);
+    Rbc_Vector ** vecPtrPtr);
 MODULE_SCOPE int RbcCreateVector2(
     Tcl_Interp * interp,
     const char *vecName,
     const char *cmdName,
     const char *varName,
     int initialSize,
-    RbcVector ** vecPtrPtr);
-MODULE_SCOPE int RbcCreateVector(
+    Rbc_Vector ** vecPtrPtr);
+MODULE_SCOPE int Rbc_CreateVector(
     Tcl_Interp * interp,
     const char *vecName,
     int size,
-    RbcVector ** vecPtrPtr);
-MODULE_SCOPE int RbcResizeVector(
-    RbcVector * vecPtr,
+    Rbc_Vector ** vecPtrPtr);
+MODULE_SCOPE int Rbc_ResizeVector(
+    Rbc_Vector * vecPtr,
     int nValues);
 MODULE_SCOPE char *RbcNameOfVector(
-    RbcVector * vecPtr);
-MODULE_SCOPE int RbcResetVector(
-    RbcVector * vecPtr,
+    Rbc_Vector * vecPtr);
+MODULE_SCOPE int Rbc_ResetVector(
+    Rbc_Vector * vecPtr,
     double *dataArr,
     int nValues,
     int arraySize,
@@ -2952,71 +2951,6 @@ MODULE_SCOPE Pixmap RbcScaleRotateBitmapRegion(
     unsigned int virtWidth,
     unsigned int virtHeight,
     double theta);
-
-/* rbcScrollbar.c */
-#include <tclOO.h>
-MODULE_SCOPE int RbcScrollbarInit(
-    Tcl_Interp *interp);
-MODULE_SCOPE int RbcScrollbarConstructor(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
-MODULE_SCOPE int RbcScrollbarDestructor(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
-MODULE_SCOPE int RbcScrollbarActivate(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
-MODULE_SCOPE int RbcScrollbarCget(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
-MODULE_SCOPE int RbcScrollbarConfigure(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
-MODULE_SCOPE int RbcScrollbarDelta(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
-MODULE_SCOPE int RbcScrollbarFraction(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
-MODULE_SCOPE int RbcScrollbarGet(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
-MODULE_SCOPE int RbcScrollbarIdentify(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
-MODULE_SCOPE int RbcScrollbarSet(
-    ClientData clientData,
-	Tcl_Interp *interp,
-    Tcl_ObjectContext objectContext,
-    int objc,
-    Tcl_Obj *const objv[]);
 
 /* Windows */
 #ifdef _WIN32
