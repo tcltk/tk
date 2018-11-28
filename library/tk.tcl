@@ -510,6 +510,7 @@ if {$::tk_library ne ""} {
 	SourceLibFile scrlbar
 	SourceLibFile spinbox
 	SourceLibFile text
+	SourceLibFile graph
     }
 }
 
@@ -687,11 +688,6 @@ if {[tk windowingsystem] eq "aqua"} {
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source $::ttk::library/ttk.tcl]
-}
-
-# load rbc related file
-if {$::tk_library ne ""} {
-    uplevel \#0 [list source $::tk_library/rbc/graph.tcl]
 }
 
 

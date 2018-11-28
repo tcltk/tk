@@ -338,7 +338,7 @@ FreeDataVector(
     RbcElemVector * vPtr)
 {
     if (vPtr->clientId != NULL) {
-        RbcFreeVectorId(vPtr->clientId);        /* Free the old vector */
+        Rbc_FreeVectorId(vPtr->clientId);        /* Free the old vector */
         vPtr->clientId = NULL;
     } else if (vPtr->valueArr != NULL) {
         ckfree((char *) vPtr->valueArr);
@@ -381,7 +381,7 @@ VectorChangedProc(
 
     case RBC_VECTOR_NOTIFY_UPDATE:
     default:
-        RbcGetVectorById(interp, vPtr->clientId, &vPtr->vecPtr);
+        Rbc_GetVectorById(interp, vPtr->clientId, &vPtr->vecPtr);
         SyncElemVector(vPtr);
         break;
     }
@@ -491,14 +491,14 @@ StringToData(
     RbcElemVector  *vPtr = (RbcElemVector *) (widgRec + offset);
 
     FreeDataVector(vPtr);
-    if (RbcVectorExists2(interp, string)) {
+    if (Rbc_VectorExists(interp, string)) {
         RbcVectorId     clientId;
 
         clientId = RbcAllocVectorId(interp, string);
-        if (RbcGetVectorById(interp, clientId, &vPtr->vecPtr) != TCL_OK) {
+        if (Rbc_GetVectorById(interp, clientId, &vPtr->vecPtr) != TCL_OK) {
             return TCL_ERROR;
         }
-        RbcSetVectorChangedProc(clientId, VectorChangedProc, vPtr);
+        Rbc_SetVectorChangedProc(clientId, VectorChangedProc, vPtr);
         vPtr->elemPtr = elemPtr;
         vPtr->clientId = clientId;
         SyncElemVector(vPtr);
@@ -550,7 +550,7 @@ DataToString(
     double         *p, *endPtr;
 
     if (vPtr->clientId != NULL) {
-        return RbcNameOfVectorId(vPtr->clientId);
+        return Rbc_NameOfVectorId(vPtr->clientId);
     }
     if (vPtr->nValues == 0) {
         return "";

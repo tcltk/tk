@@ -542,7 +542,6 @@ RBC_SRCS = \
         $(RBC_DIR)/rbcGrPen.c \
         $(RBC_DIR)/rbcGrPs.c \
         $(RBC_DIR)/rbcImage.c \
-        $(RBC_DIR)/rbcMain.c \
         $(RBC_DIR)/rbcParse.c \
         $(RBC_DIR)/rbcPs.c \
         $(RBC_DIR)/rbcSpline.c \
@@ -1574,9 +1573,6 @@ rbcGrPs.o: $(RBC_DIR)/rbcGrPs.c
 
 rbcImage.o: $(RBC_DIR)/rbcImage.c
 	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcImage.c
-
-rbcMain.o: $(RBC_DIR)/rbcMain.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcMain.c
 
 rbcParse.o: $(RBC_DIR)/rbcParse.c
 	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcParse.c

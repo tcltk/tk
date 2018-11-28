@@ -56,6 +56,24 @@ Tk_CustomOption rbcFillOption = {
     StringToFill, FillToString, (ClientData) 0
 };
 
+static int      StringToStyle(
+    ClientData clientData,
+    Tcl_Interp * interp,
+    Tk_Window tkwin,
+    const char *string,
+    char *widgRec,
+    int flags);
+static const char *StyleToString(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *widgRec,
+    int offset,
+    Tcl_FreeProc ** freeProcPtr);
+
+Tk_CustomOption rbcStyleOption = {
+    StringToStyle, StyleToString, (ClientData) 0
+};
+
 static int      StringToPad(
     ClientData clientData,
     Tcl_Interp * interp,
@@ -327,6 +345,62 @@ FillToString(
         return "unknown value";
     }
 }
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * StringToStyle --
+ *
+ *      Not possible. throw an error.
+ *
+ * Results:
+ *      Return error message.
+ *
+ * Side Effects:
+ *      None
+ *
+ *----------------------------------------------------------------------
+ */
+static int
+StringToStyle(
+    ClientData clientData,      /* Not used. */
+    Tcl_Interp * interp,        /* Interpreter to send results back to */
+    Tk_Window tkwin,            /* Not used. */
+    const char *string,         /* New string */
+    char *widgRec,              /* Structure record */
+    int offset)
+{                               /* Offset of style in record */
+    Tcl_AppendResult(interp, "-style can only be set in constructor", (char *) NULL);
+    return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * StyleToString --
+ *
+ *      Returns the fill style string based upon the fill flags.
+ *
+ * Results:
+ *      The string is returned.
+ *
+ * Side Effects:
+ *      None
+ *
+ *----------------------------------------------------------------------
+ */
+static const char *
+StyleToString(
+    ClientData clientData,      /* Not used. */
+    Tk_Window tkwin,            /* Not used. */
+    char *widgRec,              /* Widget structure record */
+    int offset,                 /* String in widget record */
+    Tcl_FreeProc ** freeProcPtr)
+{                               /* Not used. */
+    return (widgRec + offset);
+}
+
 
 /*
  *----------------------------------------------------------------------

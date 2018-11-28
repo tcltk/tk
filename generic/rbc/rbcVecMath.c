@@ -114,27 +114,27 @@ typedef int     (VectorProc)     (RbcVectorObject * vPtr);
 typedef double  (ScalarProc)     (RbcVectorObject * vPtr);
 
 
-static void   InstallIndexProc   (Tcl_HashTable *tablePtr, const char *string, RbcVectorIndexProc *procPtr);
+static void   InstallIndexProc   (Tcl_HashTable *tablePtr, const char *string, Rbc_VectorIndexProc *procPtr);
 static int    First              (RbcVectorObject *vPtr);
 static int    Next               (RbcVectorObject *vPtr, int current);
-static double Mean               (RbcVector *vecPtr);
-static double Sum                (RbcVector *vecPtr);
-static double Product            (RbcVector *vecPtr);
+static double Mean               (Rbc_Vector *vecPtr);
+static double Sum                (Rbc_Vector *vecPtr);
+static double Product            (Rbc_Vector *vecPtr);
 static double Fabs               (double value);
-static double AvgDeviation       (RbcVector *vecPtr);
-static double Kurtosis           (RbcVector *vecPtr);
-static double Length             (RbcVector *vecPtr);
-static double Median             (RbcVector *vecPtr);
-static int    Norm               (RbcVector *vecPtr);
-static double Nonzeros           (RbcVector *vecPtr);
-static double Q1                 (RbcVector *vecPtr);
-static double Q3                 (RbcVector *vecPtr);
+static double AvgDeviation       (Rbc_Vector *vecPtr);
+static double Kurtosis           (Rbc_Vector *vecPtr);
+static double Length             (Rbc_Vector *vecPtr);
+static double Median             (Rbc_Vector *vecPtr);
+static int    Norm               (Rbc_Vector *vecPtr);
+static double Nonzeros           (Rbc_Vector *vecPtr);
+static double Q1                 (Rbc_Vector *vecPtr);
+static double Q3                 (Rbc_Vector *vecPtr);
 static double Round              (double value);
-static double StdDeviation       (RbcVector *vecPtr);
-static double Skew               (RbcVector *vecPtr);
+static double StdDeviation       (Rbc_Vector *vecPtr);
+static double Skew               (Rbc_Vector *vecPtr);
 static int    Sort               (RbcVectorObject *vPtr);
-static double Sum                (RbcVector *vecPtr);
-static double Variance           (RbcVector *vecPtr);
+static double Sum                (Rbc_Vector *vecPtr);
+static double Variance           (Rbc_Vector *vecPtr);
 static int    EvaluateExpression (Tcl_Interp *interp, char *string, RbcParseVector *valuePtr);
 static int    NextValue          (Tcl_Interp *interp, ParseInfo *parsePtr, int prec, RbcParseVector *valuePtr);
 static void   MathError          (Tcl_Interp *interp, double value);
@@ -261,7 +261,7 @@ static void
 InstallIndexProc(
     Tcl_HashTable *tablePtr,
     const char *string,
-    RbcVectorIndexProc *procPtr) /* Pointer to function to be called
+    Rbc_VectorIndexProc *procPtr) /* Pointer to function to be called
                                    * when the vector finds the named index.
                                    * If NULL, this indicates to remove
                                    * the index from the table.
@@ -357,7 +357,7 @@ Next(
  */
 double
 RbcVecMin(
-    RbcVector *vecPtr) /* The vector to calculate the min for */
+    Rbc_Vector *vecPtr) /* The vector to calculate the min for */
 {
     RbcVectorObject *vPtr = (RbcVectorObject *) vecPtr;
     double min;
@@ -397,7 +397,7 @@ RbcVecMin(
  */
 double
 RbcVecMax(
-    RbcVector *vecPtr) /* The vector to calculate the max for */
+    Rbc_Vector *vecPtr) /* The vector to calculate the max for */
 {
     RbcVectorObject *vPtr = (RbcVectorObject *) vecPtr;
     double max;
@@ -437,7 +437,7 @@ RbcVecMax(
  */
 static double
 Mean(
-    RbcVector *vecPtr) /* The vector to calculate the mean of */
+    Rbc_Vector *vecPtr) /* The vector to calculate the mean of */
 {
     RbcVectorObject *vPtr = (RbcVectorObject *) vecPtr;
     register int i;
@@ -469,7 +469,7 @@ Mean(
  */
 static double
 Sum(
-    RbcVector *vecPtr) /* The vector to calculate the sum for */
+    Rbc_Vector *vecPtr) /* The vector to calculate the sum for */
 {
     RbcVectorObject *vPtr = (RbcVectorObject *) vecPtr;
     register int i;
@@ -498,7 +498,7 @@ Sum(
  */
 static double
 Product(
-    RbcVector *vecPtr) /* The Vector to calculate product for */
+    Rbc_Vector *vecPtr) /* The Vector to calculate product for */
 {
     RbcVectorObject *vPtr = (RbcVectorObject *) vecPtr;
     register int i;
@@ -561,7 +561,7 @@ Sort(
  */
 static double
 Length(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     int count;
@@ -589,7 +589,7 @@ Length(
  */
 static double
 Median(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     int *iArr;
@@ -630,7 +630,7 @@ Median(
  */
 static double
 Variance(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     register double dx, var, mean;
@@ -667,7 +667,7 @@ Variance(
  */
 static double
 Skew(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     register double diff, var, skew, mean, diffsq;
@@ -708,7 +708,7 @@ Skew(
  */
 static double
 StdDeviation(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     double var;
     var = Variance(vecPtr);
@@ -734,7 +734,7 @@ StdDeviation(
  */
 static double
 AvgDeviation(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     register double diff, avg, mean;
@@ -771,7 +771,7 @@ AvgDeviation(
  */
 static double
 Kurtosis(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     register double diff, diffsq, kurt, var, mean;
@@ -814,7 +814,7 @@ Kurtosis(
  */
 static double
 Q1(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     double q1;
@@ -860,7 +860,7 @@ Q1(
  */
 static double
 Q3(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     double q3;
@@ -906,7 +906,7 @@ Q3(
  */
 static int
 Norm(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     double norm, range, min, max;
@@ -937,7 +937,7 @@ Norm(
  */
 static double
 Nonzeros(
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorObject *vPtr = (RbcVectorObject *)vecPtr;
     register int i;
@@ -1023,7 +1023,7 @@ int
 RbcExprVector(
     Tcl_Interp *interp,
     char *string,
-    RbcVector *vecPtr)
+    Rbc_Vector *vecPtr)
 {
     RbcVectorInterpData *dataPtr; /* Interpreter-specific data. */
     RbcVectorObject *vPtr = (RbcVectorObject *) vecPtr;
@@ -1033,7 +1033,7 @@ RbcExprVector(
     dataPtr = (vecPtr != NULL) ? vPtr->dataPtr : RbcVectorGetInterpData(interp);
     value.vPtr = RbcVectorNew(dataPtr);
     if (EvaluateExpression(interp, string, &value) != TCL_OK) {
-        RbcVectorFree(value.vPtr);
+        Rbc_VectorFree(value.vPtr);
         return TCL_ERROR;
     }
     if (vPtr != NULL) {
@@ -1046,7 +1046,7 @@ RbcExprVector(
             Tcl_AppendElement(interp, stringDouble);
         }
     }
-    RbcVectorFree(value.vPtr);
+    Rbc_VectorFree(value.vPtr);
     return TCL_OK;
 }
 /*
@@ -1578,13 +1578,13 @@ done:
     if (value2.pv.buffer != value2.staticSpace) {
         ckfree((char *)value2.pv.buffer);
     }
-    RbcVectorFree(v2Ptr);
+    Rbc_VectorFree(v2Ptr);
     return result;
 error:
     if (value2.pv.buffer != value2.staticSpace) {
         ckfree((char *)value2.pv.buffer);
     }
-    RbcVectorFree(v2Ptr);
+    Rbc_VectorFree(v2Ptr);
     return TCL_ERROR;
 }
 /*

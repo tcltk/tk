@@ -3316,7 +3316,11 @@ Initialize(
      * Initialize the rbc widget set
      */
 #ifndef MAC_OSX_TK
-    code = Rbc_Init(interp);
+    code = Rbc_VectorInit(interp);
+    if (code != TCL_OK) {
+	goto done;
+    }
+    code = Rbc_GraphInit(interp);
     if (code != TCL_OK) {
 	goto done;
     }

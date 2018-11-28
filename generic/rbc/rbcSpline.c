@@ -1099,7 +1099,7 @@ SplineCmd(
     const char *argv[])
 {
     RbcOp           proc;
-    RbcVector      *x, *y, *splX, *splY;
+    Rbc_Vector      *x, *y, *splX, *splY;
     double         *xArr, *yArr;
     register int    i;
     RbcPoint2D     *origPts, *intpPts;
@@ -1109,9 +1109,9 @@ SplineCmd(
     if (proc == NULL) {
         return TCL_ERROR;
     }
-    if ((RbcGetVector(interp, argv[2], &x) != TCL_OK) ||
-        (RbcGetVector(interp, argv[3], &y) != TCL_OK) ||
-        (RbcGetVector(interp, argv[4], &splX) != TCL_OK)) {
+    if ((Rbc_GetVector(interp, argv[2], &x) != TCL_OK) ||
+        (Rbc_GetVector(interp, argv[3], &y) != TCL_OK) ||
+        (Rbc_GetVector(interp, argv[4], &splX) != TCL_OK)) {
         return TCL_ERROR;
     }
     nOrigPts = x->numValues;
@@ -1139,13 +1139,13 @@ SplineCmd(
         return TCL_ERROR;
     }
     nIntpPts = splX->numValues;
-    if (RbcGetVector(interp, argv[5], &splY) != TCL_OK) {
+    if (Rbc_GetVector(interp, argv[5], &splY) != TCL_OK) {
         /*
          * If the named vector to hold the ordinates of the spline
          * doesn't exist, create one the same size as the vector
          * containing the abscissas.
          */
-        if (RbcCreateVector(interp, argv[5], nIntpPts, &splY) != TCL_OK) {
+        if (Rbc_CreateVector(interp, argv[5], nIntpPts, &splY) != TCL_OK) {
             return TCL_ERROR;
         }
     } else if (nIntpPts != splY->numValues) {
@@ -1153,7 +1153,7 @@ SplineCmd(
          * The x and y vectors differ in size. Make the number of ordinates
          * the same as the number of abscissas.
          */
-        if (RbcResizeVector(splY, nIntpPts) != TCL_OK) {
+        if (Rbc_ResizeVector(splY, nIntpPts) != TCL_OK) {
             return TCL_ERROR;
         }
     }
@@ -1199,7 +1199,7 @@ SplineCmd(
     /* Finally update the vector. The size of the vector hasn't
      * changed, just the data. Reset the vector using TCL_STATIC to
      * indicate this. */
-    if (RbcResetVector(splY, splY->valueArr, splY->numValues,
+    if (Rbc_ResetVector(splY, splY->valueArr, splY->numValues,
             splY->arraySize, TCL_STATIC) != TCL_OK) {
         return TCL_ERROR;
     }
