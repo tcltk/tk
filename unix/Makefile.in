@@ -399,7 +399,6 @@ RBC_OBJS = \
         rbcGrPen.o \
         rbcGrPs.o \
         rbcImage.o \
-        rbcMain.o \
         rbcParse.o \
         rbcPs.o \
         rbcSpline.o \
