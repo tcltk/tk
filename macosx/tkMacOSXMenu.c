@@ -110,15 +110,16 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 #pragma mark TKMenu
 
+/*
+ * This interface is not declared in tkMacOSXPrivate.h because it requires
+ * tkMenu.h.
+ */
+
 @interface TKMenu(TKMenuPrivate)
 - (id) initWithTkMenu: (TkMenu *) tkMenu;
 - (TkMenu *) tkMenu;
 - (int) tkIndexOfItem: (NSMenuItem *) menuItem;
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index;
-@end
-
-#define TKMenu_NSMenuDelegate <NSMenuDelegate>
-@interface TKMenu(TKMenuDelegate) TKMenu_NSMenuDelegate
 @end
 
 @implementation TKMenu
@@ -366,10 +367,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 @end
 
 #pragma mark TKApplication(TKMenu)
-
-@interface NSApplication(TKMenu)
-- (void) setAppleMenu: (NSMenu *) menu;
-@end
 
 @implementation TKApplication(TKMenu)
 
@@ -785,7 +782,7 @@ TkpPostMenu(
     NSRect frame = NSMakeRect(x + 9, tkMacOSXZeroScreenHeight - y - 9, 1, 1);
 
     frame.origin = [view convertPoint:
-	    [win convertPointFromScreen:frame.origin] fromView:nil];
+	    [win tkConvertPointFromScreen:frame.origin] fromView:nil];
 
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSPopUpButtonCell *popUpButtonCell = [[NSPopUpButtonCell alloc]
@@ -1139,7 +1136,7 @@ TkpComputeStandardMenuGeometry(
 		columnEntryPtr->x = x;
 		columnEntryPtr->entryFlags &= ~ENTRY_LAST_COLUMN;
 	    }
-	    x += maxIndicatorSpace + maxWidth + 2 * borderWidth;
+	    x += maxIndicatorSpace + maxWidth + 2 * activeBorderWidth;
 	    maxWidth = maxIndicatorSpace = 0;
 	    lastColumnBreak = i;
 	    y = borderWidth;
@@ -1625,8 +1622,7 @@ TkpDrawMenuEntry(
     int height,			/* Height of the current rectangle */
     int strictMotif,		/* Boolean flag */
     int drawArrow)		/* Whether or not to draw the cascade arrow
-				 * for cascade items. Only applies to
-				 * Windows. */
+				 * for cascade items. */
 {
 }
 

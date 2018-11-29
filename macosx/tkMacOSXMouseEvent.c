@@ -90,14 +90,14 @@ enum {
     /* Create an Xevent to add to the Tk queue. */
     NSPoint global, local = [theEvent locationInWindow];
     if (eventWindow) { /* local will be in window coordinates. */
-	global = [eventWindow convertPointToScreen: local];
+	global = [eventWindow tkConvertPointToScreen: local];
 	local.y = [eventWindow frame].size.height - local.y;
 	global.y = tkMacOSXZeroScreenHeight - global.y;
     } else { /* local will be in screen coordinates. */
 	if (_windowWithMouse ) {
 	    eventWindow = _windowWithMouse;
 	    global = local;
-	    local = [eventWindow convertPointFromScreen: local];
+	    local = [eventWindow tkConvertPointFromScreen: local];
 	    local.y = [eventWindow frame].size.height - local.y;
 	    global.y = tkMacOSXZeroScreenHeight - global.y;
 	} else { /* We have no window. Use the screen???*/
@@ -373,7 +373,7 @@ XQueryPointer(
 	    if (win) {
 		NSPoint local;
 
-		local = [win convertPointFromScreen:global];
+		local = [win tkConvertPointFromScreen:global];
 		local.y = [win frame].size.height - local.y;
 		if (macWin->winPtr && macWin->winPtr->wmInfoPtr) {
 		    local.x -= macWin->winPtr->wmInfoPtr->xInParent;
@@ -471,7 +471,7 @@ TkGenerateButtonEvent(
     if (win) {
 	NSPoint local = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
 
-	local = [win convertPointFromScreen:local];
+	local = [win tkConvertPointFromScreen:local];
 	local.y = [win frame].size.height - local.y;
 	if (macWin->winPtr && macWin->winPtr->wmInfoPtr) {
 	    local.x -= macWin->winPtr->wmInfoPtr->xInParent;
