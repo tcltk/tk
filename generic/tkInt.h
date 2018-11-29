@@ -1009,7 +1009,8 @@ MODULE_SCOPE int	Ttk_Init(Tcl_Interp *interp);
  * Used Rbc widget set functions:
  */
 #ifndef MAC_OSX_TK
-MODULE_SCOPE int	Rbc_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	Rbc_VectorInit(Tcl_Interp *interp);
+MODULE_SCOPE int	Rbc_GraphInit(Tcl_Interp *interp);
 MODULE_SCOPE int	Rbc_SnapWindow(Tcl_Interp *interp,Tk_Window tkmain,
 			    const char*pathname, const char *photoimage,
 			    int destWidth, int destHeight);
