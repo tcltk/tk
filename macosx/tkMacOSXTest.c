@@ -80,6 +80,33 @@ DebuggerObjCmd(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkTestAppIsDrawing --
+ *
+ *      A test widget display procedure which records calls can use this to
+ *      detect whether it is being called from within [NSView drawRect].
+ *      If so, it probably should not be recording the call since it was
+ *      probably generated spontaneously by the window manager rather than
+ *      by an explicit call to update. This is just a wrapper for the NSApp
+ *      property.
+ *
+ *
+ * Results:
+ *      Returns true if and only if called from within [NSView drawRect].
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+MODULE_SCOPE Bool
+TkTestAppIsDrawing(void) {
+    return [NSApp isDrawing];
+}
+
+
+/*
  * Local Variables:
  * mode: objc
  * c-basic-offset: 4

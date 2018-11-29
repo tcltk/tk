@@ -49,9 +49,6 @@ Specifies the 3-D effect desired for the widget border.
 Valid values are
 \fBflat\fR, \fBgroove\fR, \fBraised\fR, \fBridge\fR, \fBsolid\fR,
 and \fBsunken\fR.
-.OP \-text text Text
-Specifies a text string to be displayed inside the widget
-(unless overridden by \fB\-textvariable\fR).
 .OP \-wraplength wrapLength WrapLength
 Specifies the maximum line length (in pixels).
 If this option is less than or equal to zero,
