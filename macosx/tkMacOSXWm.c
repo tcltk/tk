@@ -309,6 +309,8 @@ static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 static int		WmWinStyle(Tcl_Interp *interp, TkWindow *winPtr,
 			    int objc, Tcl_Obj *const objv[]);
+static int		WmWinTabbingId(Tcl_Interp *interp, TkWindow *winPtr,
+			    int objc, Tcl_Obj *const objv[]);
 static void		ApplyWindowAttributeFlagChanges(TkWindow *winPtr,
 			    NSWindow *macWindow, UInt64 oldAttributes,
 			    int oldFlags, int create, int initial);
@@ -365,18 +367,27 @@ static void		RemapWindows(TkWindow *winPtr,
 
 @implementation TKWindow(TKWm)
 
+/*
+ * This method synchronizes Tk's understanding of the bounds of a contentView
+ * with the window's.  It is needed because there are situations when the
+ * window manager can change the layout of an NSWindow without having been
+ * requested to do so by Tk.  Examples are when a window goes FullScreen or
+ * shows a tab bar.  NSWindow methods which involve such layout changes should
+ * be overridden or protected by methods which call this.
+ */
+
 - (void) tkLayoutChanged
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
 
     if (winPtr) {
 	NSRect frameRect;
-	
+
 	/*
 	 * This avoids including the title bar for full screen windows
 	 * but does include it for normal windows.
 	 */
-	
+
 	if ([self styleMask] & NSFullScreenWindowMask) {
 	    frameRect = [NSWindow frameRectForContentRect:NSZeroRect
 				  styleMask:[self styleMask]];
@@ -5270,10 +5281,10 @@ TkUnsupported1ObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const subcmds[] = {
-	"style", NULL
+	"style", "tabbingid", NULL
     };
     enum SubCmds {
-	TKMWS_STYLE
+	TKMWS_STYLE, TKMWS_TABID
     };
     Tk_Window tkwin = clientData;
     TkWindow *winPtr;
@@ -5307,6 +5318,17 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	return WmWinStyle(interp, winPtr, objc, objv);
+    } else if (((enum SubCmds) index) == TKMWS_TABID) {
+	if ([NSApp macMinorVersion] < 12) {
+	    Tcl_AddErrorInfo(interp,
+	        "\n    (TabbingIdentifiers only exist on OSX 10.12 or later)");
+	    return TCL_ERROR;
+	}
+	if ((objc < 3) || (objc > 4)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "tabbingid window ?newid?");
+	    return TCL_ERROR;
+	}
+	return WmWinTabbingId(interp, winPtr, objc, objv);
     }
     /* won't be reached */
     return TCL_ERROR;
@@ -5510,6 +5532,63 @@ WmWinStyle(
     }
 
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmWinTabbingId --
+ *
+ *	This procedure is invoked to process the
+ *	"::tk::unsupported::MacWindowStyle tabbingid" subcommand. The command
+ *	allows you to get or set the tabbingIdentifier for the NSWindow
+ *      associated with a Tk Window.  The syntax is:
+ *      tk::unsupported::MacWindowStyle tabbingid window ?newId?
+ *
+ * Results:
+ *	Returns the tabbingIdentifier of the window prior to calling this
+ *      function.  If the optional newId argument is omitted, the window's
+ *      tabbingIdentifier is not changed.
+ *
+ * Side effects:
+ *	Windows may only be grouped together as tabs if they all have the same
+ *      tabbingIdentifier.  In particular, by giving a window a unique
+ *      tabbingIdentifier one can prevent it from becoming a tab in any other
+ *      window.  Note, however, that changing the tabbingIdentifier of a window
+ *      which is already a tab does not cause it to become a separate window.
+ *
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmWinTabbingId(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    TkWindow *winPtr,		/* Window to be manipulated. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj * const objv[])	/* Argument objects. */
+{
+    Tcl_Obj *result = NULL;
+    NSString *idString;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    if (win) {
+	idString = win.tabbingIdentifier;
+	result = Tcl_NewStringObj(idString.UTF8String, [idString length]);
+    }
+    if (result == NULL) {
+	Tcl_Panic("Failed to read tabbing identifier.");
+    }
+    Tcl_SetObjResult(interp, result);
+    if (objc == 3) {
+	return TCL_OK;
+    } else if (objc == 4) {
+	int len;
+	char *newId = Tcl_GetStringFromObj(objv[3], &len);
+	NSString *newIdString = [NSString stringWithUTF8String:newId];
+	[win setTabbingIdentifier: newIdString];
+	return TCL_OK;
+    }
+    return TCL_ERROR;
 }
 
 /*
