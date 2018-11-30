@@ -511,6 +511,7 @@ if {$::tk_library ne ""} {
 	SourceLibFile spinbox
 	SourceLibFile text
 	SourceLibFile graph
+	SourceLibFile path
     }
 }
 

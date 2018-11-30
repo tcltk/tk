@@ -2252,7 +2252,7 @@ Rbc_GraphInit(
     int i;
 	static const char *initScript =
 		"::oo::class create ::graph {"
-		" self method unknown {args} {uplevel #0 ::graph create {*}$args; return [lindex $args 0]}\n"
+		" self method unknown {args} {uplevel #0 ::graph create args; return [lindex $args 0]}\n"
         " self unexport new destroy\n"
         " unexport new create destroy\n"
         "}";

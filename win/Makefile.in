@@ -190,13 +190,16 @@ LDFLAGS_WINDOW	= @LDFLAGS_WINDOW@
 EXEEXT		= @EXEEXT@
 OBJEXT		= @OBJEXT@
 STLIB_LD	= @STLIB_LD@
-SHLIB_LD	= @SHLIB_LD@
+#RZ TODO search for C++ compiler in configure AC_PROG_CC
+#RZ SHLIB_LD	= @SHLIB_LD@
+SHLIB_LD	= g++ -shared
 SHLIB_LD_LIBS	= @SHLIB_LD_LIBS@
 SHLIB_CFLAGS	= @SHLIB_CFLAGS@
 SHLIB_SUFFIX	= @SHLIB_SUFFIX@
 VER		= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER		= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
-LIBS		= $(TCL_STUB_LIB_FILE) @LIBS@ @LIBS_GUI@
+#RZ TODO add -lgdiplus in configure
+LIBS		= $(TCL_STUB_LIB_FILE) @LIBS@ @LIBS_GUI@ -lgdiplus
 RMDIR		= rm -rf
 MKDIR		= mkdir -p
 SHELL		= @SHELL@
@@ -427,6 +430,23 @@ RBC_OBJS = \
 	rbcWindow.$(OBJEXT) \
 	rbcWinDraw.$(OBJEXT) \
 	rbcWinImage.$(OBJEXT) \
+	tkPathCanvArrow.$(OBJEXT) \
+	tkPathCanvas.$(OBJEXT) \
+	tkPathCanvEllipse.$(OBJEXT) \
+	tkPathCanvGroup.$(OBJEXT) \
+	tkPathCanvImage.$(OBJEXT) \
+	tkPathCanvLine.$(OBJEXT) \
+	tkPathCanvPath.$(OBJEXT) \
+	tkPathCanvPoly.$(OBJEXT) \
+	tkPathCanvRect.$(OBJEXT) \
+	tkPathCanvText.$(OBJEXT) \
+	tkPathCanvWindow.$(OBJEXT) \
+	tkPathGeneric.$(OBJEXT) \
+	tkPathGradient.$(OBJEXT) \
+	tkPathStyle.$(OBJEXT) \
+	tkPathSurface.$(OBJEXT) \
+	tkPathUtil.$(OBJEXT) \
+	tkWinGDIPlusPath.$(OBJEXT) \
 
 STUB_OBJS = \
 	tkStubLib.$(OBJEXT) \
@@ -545,8 +565,7 @@ install-libraries: libraries
 	@for i in $(INSTALL_ROOT)$(prefix)/lib \
 		$(INCLUDE_INSTALL_DIR) $(INCLUDE_INSTALL_DIR)/X11 \
 		$(SCRIPT_INSTALL_DIR) $(SCRIPT_INSTALL_DIR)/images \
-		$(SCRIPT_INSTALL_DIR)/msgs $(SCRIPT_INSTALL_DIR)/ttk \
-		$(SCRIPT_INSTALL_DIR)/rbc; \
+		$(SCRIPT_INSTALL_DIR)/msgs $(SCRIPT_INSTALL_DIR)/ttk ; \
 	    do \
 	    if [ ! -d $$i ] ; then \
 		echo "Making directory $$i"; \
@@ -671,8 +690,9 @@ $(TKTEST): testMain.$(OBJEXT) $(TEST_DLL_FILE) @LIBRARIES@ $(TK_STUB_LIB_FILE) w
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 	@VC_MANIFEST_EMBED_EXE@
 
+#RZ TODO configure should add -static-libstdc++
 ${TEST_DLL_FILE}: ${TKTEST_OBJS} ${TK_STUB_LIB_FILE}
-	@MAKE_DLL@ ${TKTEST_OBJS} $(TK_STUB_LIB_FILE) $(SHLIB_LD_LIBS)
+	@MAKE_DLL@ -static-libstdc++ ${TKTEST_OBJS} $(TK_STUB_LIB_FILE) $(SHLIB_LD_LIBS)
 
 # Msys make requires this next rule for some reason.
 $(TCL_SRC_DIR)/win/cat.c:
@@ -691,9 +711,10 @@ ${TK_STUB_LIB_FILE}: ${STUB_OBJS}
 	@MAKE_STUB_LIB@ ${STUB_OBJS}
 	@POST_MAKE_LIB@
 
+#RZ TODO configure should add -static-libstdc++
 ${TK_DLL_FILE}: ${TK_OBJS} $(TK_RES)
 	@$(RM) ${TK_DLL_FILE}
-	@MAKE_DLL@ ${TK_OBJS} $(TK_RES) $(SHLIB_LD_LIBS)
+	@MAKE_DLL@ -static-libstdc++ ${TK_OBJS} $(TK_RES) $(SHLIB_LD_LIBS)
 	@VC_MANIFEST_EMBED_DLL@
 
 ${TK_LIB_FILE}: ${TK_OBJS}
@@ -740,6 +761,9 @@ tkWindow.$(OBJEXT): configure Makefile
 
 %.$(OBJEXT): %.c
 	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
+
+%.$(OBJEXT): %.cpp
+	$(CXX) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
 
 .rc.$(RES):
 	$(RC) @RC_OUT@ $@ @RC_TYPE@ @RC_DEFINES@ @RC_INCLUDE@ "$(GENERIC_DIR_NATIVE)" @RC_INCLUDE@ "$(TCL_GENERIC_NATIVE)" @RC_INCLUDE@ "$(RC_DIR_NATIVE)" @DEPARG@

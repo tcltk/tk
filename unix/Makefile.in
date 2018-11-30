@@ -148,14 +148,16 @@ LDFLAGS			= @LDFLAGS_DEFAULT@ @LDFLAGS@
 # X11 include files accessible (the configure script will try to
 # set this value, and will cause it to be an empty string if the
 # include files are accessible via /usr/include).
-X11_INCLUDES		= @XINCLUDES@
+#RZ TODO add search for cairo lib to configure
+X11_INCLUDES		= @XINCLUDES@ -I/usr/include/cairo
 
 AQUA_INCLUDES		= -I$(MAC_OSX_DIR) -I$(XLIB_DIR)
 
 # Linker switch(es) to use to link with the X11 library archive (the
 # configure script will try to set this value automatically, but you
 # can override it).
-X11_LIB_SWITCHES	= $(XFT_LIBS) @XLIBSW@
+#RZ TODO add search for cairo lib to configure
+X11_LIB_SWITCHES	= $(XFT_LIBS) @XLIBSW@ -lcairo
 
 
 # To turn off the security checks that disallow incoming sends when
@@ -411,6 +413,24 @@ RBC_OBJS = \
         rbcVector.o \
         rbcWindow.o \
         rbcUnixImage.o \
+	tkPathCanvArrow.o \
+	tkPathCanvas.o \
+	tkPathCanvEllipse.o \
+	tkPathCanvGroup.o \
+	tkPathCanvImage.o \
+	tkPathCanvLine.o \
+	tkPathCanvPath.o \
+	tkPathCanvPoly.o \
+	tkPathCanvRect.o \
+	tkPathCanvText.o \
+	tkPathCanvWindow.o \
+	tkPathGeneric.o \
+	tkPathGradient.o \
+	tkPathInit.o \
+	tkPathStyle.o \
+	tkPathSurface.o \
+	tkPathUtil.o \
+	tkUnixCairoPath.o
 
 STUB_OBJS = tkStubInit.o
 
@@ -553,7 +573,24 @@ RBC_SRCS = \
         $(RBC_DIR)/rbcVector.c \
         $(RBC_DIR)/rbcWindow.c \
         $(RBC_DIR)/rbcUnixImage.c \
-
+	$(RBC_DIR)/tkPathCanvArrow.c \
+	$(RBC_DIR)/tkPathCanvas.c \
+	$(RBC_DIR)/tkPathCanvEllipse.c \
+	$(RBC_DIR)/tkPathCanvGroup.c \
+	$(RBC_DIR)/tkPathCanvImage.c \
+	$(RBC_DIR)/tkPathCanvLine.c \
+	$(RBC_DIR)/tkPathCanvPath.c \
+	$(RBC_DIR)/tkPathCanvPoly.c \
+	$(RBC_DIR)/tkPathCanvRect.c \
+	$(RBC_DIR)/tkPathCanvText.c \
+	$(RBC_DIR)/tkPathCanvWindow.c \
+	$(RBC_DIR)/tkPathGeneric.c \
+	$(RBC_DIR)/tkPathGradient.c \
+	$(RBC_DIR)/tkPathInit.c \
+	$(RBC_DIR)/tkPathStyle.c \
+	$(RBC_DIR)/tkPathSurface.c \
+	$(RBC_DIR)/tkPathUtil.c \
+	$(RBC_DIR)/tkUnixCairoPath.c
 
 X11_SRCS = \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
@@ -1524,6 +1561,60 @@ ttkWidget.o: $(TTK_DIR)/ttkWidget.c
 
 ttkMacOSXTheme.o: $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/ttkMacOSXTheme.c
+
+tkPathCanvArrow.o: $(RBC_DIR)/tkPathCanvArrow.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvArrow.c
+
+tkPathCanvas.o: $(RBC_DIR)/tkPathCanvas.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvas.c
+
+tkPathCanvEllipse.o: $(RBC_DIR)/tkPathCanvEllipse.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvEllipse.c
+
+tkPathCanvGroup.o: $(RBC_DIR)/tkPathCanvGroup.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvGroup.c
+
+tkPathCanvImage.o: $(RBC_DIR)/tkPathCanvImage.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvImage.c
+
+tkPathCanvLine.o: $(RBC_DIR)/tkPathCanvLine.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvLine.c
+
+tkPathCanvPath.o: $(RBC_DIR)/tkPathCanvPath.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvPath.c
+
+tkPathCanvPoly.o: $(RBC_DIR)/tkPathCanvPoly.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvPoly.c
+
+tkPathCanvRect.o: $(RBC_DIR)/tkPathCanvRect.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvRect.c
+
+tkPathCanvText.o: $(RBC_DIR)/tkPathCanvText.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvText.c
+
+tkPathCanvWindow.o: $(RBC_DIR)/tkPathCanvWindow.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvWindow.c
+
+tkPathGeneric.o: $(RBC_DIR)/tkPathGeneric.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathGeneric.c
+
+tkPathGradient.o: $(RBC_DIR)/tkPathGradient.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathGradient.c
+
+tkPathInit.o: $(RBC_DIR)/tkPathInit.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathInit.c
+
+tkPathStyle.o: $(RBC_DIR)/tkPathStyle.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathStyle.c
+
+tkPathSurface.o: $(RBC_DIR)/tkPathSurface.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathSurface.c
+
+tkPathUtil.o: $(RBC_DIR)/tkPathUtil.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathUtil.c
+
+tkUnixCairoPath.o: $(RBC_DIR)/tkUnixCairoPath.c
+	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkUnixCairoPath.c
 
 rbcBind.o: $(RBC_DIR)/rbcBind.c
 	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcBind.c

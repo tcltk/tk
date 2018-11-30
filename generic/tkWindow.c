@@ -3315,7 +3315,6 @@ Initialize(
     /*
      * Initialize the rbc widget set
      */
-#ifndef MAC_OSX_TK
     code = Rbc_VectorInit(interp);
     if (code != TCL_OK) {
 	goto done;
@@ -3324,7 +3323,14 @@ Initialize(
     if (code != TCL_OK) {
 	goto done;
     }
-#endif
+
+    /*
+     * Initialize the tkpath widget set
+     */
+    code = Tk_PathInit(interp);
+    if (code != TCL_OK) {
+	goto done;
+    }
 
     /*
      * Invoke platform-specific initialization. Unlock mutex before entering
