@@ -1,6 +1,5 @@
-# vector(n) -- Vector data type for Tcl
+# graph::vector(n) -- Vector data type for graph widgets
 
-*   [NAME]((#NAME)
 *   [SYNOPSIS](#SYNOPSIS)
 *   [DESCRIPTION](#DESCRIPTION)
 *   [SYNTAX](#SYNTAX)
@@ -53,13 +52,9 @@
 * [C API EXAMPLE](#C-API-EXAMPLE)
 * [INCOMPATIBILITIEA](#INCOMPATIBILITIES)
 * [EXAMPLE](#EXAMPLE)
+* [CREDITS](#CREDITS)  
 * [KEYWORDS](#KEYWORDS)
 * [COPYRIGHT](#COPYRIGHT)
-
-<a name="NAME"></a>
-## NAME 
-
-graph::vector - Vector data type for graph widgets
 
 <a name="SYNOPSIS"></a>
 ## SYNOPSIS 
@@ -1025,6 +1020,17 @@ graph::S expr A+B
 graph::T expr S+last; # Running total  
 </code>
 
+<a name="CREDITS"></a>
+## CREDITS
+
+[BLT][] was originally develeoped by George A. Howlett. It can be found at <https://sourceforge.net/projects/blt/>.
+
+Refactored [BLT][] Components ([Rbc][]), includes data vectors and graph widgets from the original [BLT][]. Both can be found at sourceforge.
+
+User visible changes to the original [Rbc][] code are:
+
+- command name is now **graph::vector**
+
 <a name="KEYWORDS"></a>
 ## KEYWORDS
 
@@ -1039,4 +1045,5 @@ vector, graph, widget
 
 &copy; 2018 René Zaumseil <r.zaumseil@freenet.de>
 
-
+[BLT]: <https://sourceforge.net/projects/blt/>
+[Rbc]: <https://sourceforge.net/projects/rbctoolkit/>

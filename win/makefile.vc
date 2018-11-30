@@ -257,6 +257,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkStubInit.obj \
 	$(TMP_DIR)\tkWindow.obj \
 	$(TTK_OBJS) \
+	$(RBC_OBJS) \
 !if !$(STATIC_BUILD)
 	$(TMP_DIR)\tk.res
 !endif
@@ -296,6 +297,54 @@ TTK_OBJS = \
         $(TMP_DIR)\ttkWidget.obj \
         $(TMP_DIR)\ttkStubInit.obj
 
+RBC_OBJS = \
+	$(TMP_DIR)\rbcBind.obj \
+	$(TMP_DIR)\rbcChain.obj \
+	$(TMP_DIR)\rbcConfig.obj \
+	$(TMP_DIR)\rbcGraph.obj \
+	$(TMP_DIR)\rbcGrAxis.obj \
+	$(TMP_DIR)\rbcGrBar.obj \
+	$(TMP_DIR)\rbcGrElem.obj \
+	$(TMP_DIR)\rbcGrGrid.obj \
+	$(TMP_DIR)\rbcGrHairs.obj \
+	$(TMP_DIR)\rbcGrLegd.obj \
+	$(TMP_DIR)\rbcGrLine.obj \
+	$(TMP_DIR)\rbcGrMarker.obj \
+	$(TMP_DIR)\rbcGrMisc.obj \
+	$(TMP_DIR)\rbcGrPen.obj \
+	$(TMP_DIR)\rbcGrPs.obj \
+	$(TMP_DIR)\rbcImage.obj \
+	$(TMP_DIR)\rbcParse.obj \
+	$(TMP_DIR)\rbcPs.obj \
+	$(TMP_DIR)\rbcSpline.obj \
+	$(TMP_DIR)\rbcSwitch.obj \
+	$(TMP_DIR)\rbcText.obj \
+	$(TMP_DIR)\rbcTile.obj \
+	$(TMP_DIR)\rbcUtil.obj \
+	$(TMP_DIR)\rbcVecMath.obj \
+	$(TMP_DIR)\rbcVecObjCmd.obj \
+	$(TMP_DIR)\rbcVector.obj \
+	$(TMP_DIR)\rbcWindow.obj \
+	$(TMP_DIR)\rbcWinDraw.obj \
+	$(TMP_DIR)\rbcWinImage.obj \
+	$(TMP_DIR)\tkPathCanvArrow.obj \
+	$(TMP_DIR)\tkPathCanvas.obj \
+	$(TMP_DIR)\tkPathCanvEllipse.obj \
+	$(TMP_DIR)\tkPathCanvGroup.obj \
+	$(TMP_DIR)\tkPathCanvImage.obj \
+	$(TMP_DIR)\tkPathCanvLine.obj \
+	$(TMP_DIR)\tkPathCanvPath.obj \
+	$(TMP_DIR)\tkPathCanvPoly.obj \
+	$(TMP_DIR)\tkPathCanvRect.obj \
+	$(TMP_DIR)\tkPathCanvText.obj \
+	$(TMP_DIR)\tkPathCanvWindow.obj \
+	$(TMP_DIR)\tkPathGeneric.obj \
+	$(TMP_DIR)\tkPathGradient.obj \
+	$(TMP_DIR)\tkPathStyle.obj \
+	$(TMP_DIR)\tkPathSurface.obj \
+	$(TMP_DIR)\tkPathUtil.obj \
+	$(TMP_DIR)\tkWinGDIPlusPath.obj \
+
 TKSTUBOBJS = \
 	$(TMP_DIR)\tkStubLib.obj \
 	$(TMP_DIR)\ttkStubLib.obj
@@ -304,6 +353,7 @@ TKSTUBOBJS = \
 ### the left side of implicit rules.
 XLIBDIR		= $(ROOT)\xlib
 TTKDIR		= $(ROOT)\generic\ttk
+RBCDIR		= $(ROOT)\generic\rbc
 BITMAPDIR	= $(ROOT)\bitmaps
 
 # Additional include and C macro definitions for the implicit rules
@@ -327,7 +377,7 @@ CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= -DBUILD_ttk $(CONFIG_DEFS) -Dinline=__inline -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib
+PRJ_LIBS   = netapi32.lib gdiplus.lib gdi32.lib user32.lib userenv.lib
 
 
 #---------------------------------------------------------------------
@@ -556,6 +606,10 @@ $(TMP_DIR)\winMain.obj: $(WINDIR)\winMain.c
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
 	$(cc32) $(pkgcflags) -DTK_ASCII_MAIN -Fo$@ $?
 
+$(TMP_DIR)\tkWinGDIPlusPath.obj: $(RBCDIR)\tkWinGDIPlusPath.cpp
+	$(cc32) $(pkgcflags) -DTK_ASCII_MAIN -Fo$@ $?
+
+
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
 # and no reference made to a C runtime.
@@ -586,7 +640,7 @@ depend:
 	$(TCLSH) $(TCLTOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
 		-passthru:"-DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
 		$(WINDIR),$$(WINDIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
-		$(BITMAPDIR),$$(BITMAPDIR) @<<
+		$(RBCDIR),$$(RBCDIR) $(BITMAPDIR),$$(BITMAPDIR) @<<
 $(TKOBJS)
 <<
 !endif
@@ -620,6 +674,11 @@ $<
 <<
 
 {$(TTKDIR)}.c{$(TMP_DIR)}.obj::
+	$(CCPKGCMD) @<<
+$<
+<<
+
+{$(RBCDIR)}.c{$(TMP_DIR)}.obj::
 	$(CCPKGCMD) @<<
 $<
 <<

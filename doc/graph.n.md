@@ -1,134 +1,422 @@
 # graph(n) -- 2D graph for plotting X-Y coordinate data
 
-*   [NAME]((#NAME)
-*   [SYNOPSIS](#SYNOPSIS)
-*   [DESCRIPTION](#DESCRIPTION)
-*   [INTRODUCTION](#INTRODUCTION)
-*   [SYNTAX](#SYNTAX)
-*   [GRAPH OPERATIONS](#GRAPH-OPERATIONS)
-  * [pathName axis](#pathName-axis) *operation ?arg?...*
-  * [pathName binding](#pathName-binding) *?crosshairs? ?findelement? ?legend? ?zoom?*
-  * [pathName bar](#pathName-bar) *elemName ?option value?...*
-  * [pathName cget](#pathName-cget) *option*
-  * [pathName configure](#pathName-configure) *?option value?...*
-  * [pathName crosshairs](#pathName-crosshairs) *operation ?arg?*
-  * [pathName element](#pathName-element) *operation ?arg?...*
-  * [pathName extents](#pathName-extents) *item*
-  * [pathName grid](#pathName-grid) *operation ?arg?...*
-  * [pathName invtransform](#pathName-invtransform) *winX winY*
-  * [pathName inside](#pathName-inside) *x y*
-  * [pathName legend](#pathName-legend) *operation ?arg?...*
-  * [pathName line](#pathName-line) *operation arg...*
-  * [pathName marker](#pathName-marker) *operation ?arg?...*
-  * [pathName postscript](#pathName-postscript) *operation ?arg?...*
-  * [pathName snap](#pathName-snap) *?switches? outputName*
-  * [pathName transform](#pathName-transform) *x y*
-  * [pathName xaxis](#pathName-xaxis) *operation ?arg?...*
-  * [pathName x2axis](#pathName-x2axis) *operation ?arg?...*
-  * [pathName yaxis](#pathName-yaxis) *operation ?arg?...*
-  * [pathName y2axis](#pathName-y2axis) *operation ?arg?...*
-* [AXIS COMPONENT](#AXIS-COMPONENT)
-  * [pathName axis bind](#pathName-axis-bind) *tagName ?sequence? ?command?*
-  * [pathName axis cget](#pathName-axis-cget) *axisName option*
-  * [pathName axis configure](#pathName-axis-configure) *axisName ?axisName?... ?option value?...*
-  * [pathName axis create](#pathName-axis-create) *axisName ?option value?...*
-  * [pathName axis delete](#pathName-axis-delete) *?axisName?...*
-  * [pathName axis invtransform](#pathName-axis-invtransform) *axisName value*
-  * [pathName axis limits](#pathName-axis-limits) *axisName*
-  * [pathName axis names](#pathName-axis-names) *?pattern?...*
-  * [pathName axis transform](#pathName-axis-transform) *axisName value*
-  * [pathName axis view](#pathName-axis-view) *axisName*
-* [CROSSHAIRS COMPONENT](#)
-  * [pathName crosshairs cget](#pathName-crosshairs-cget) *option*
-  * [pathName crosshairs configure](#pathName-crosshairs-configure) *?option value?...*
-  * [pathName crosshairs off](#pathName-crosshairs-off)
-  * [pathName crosshairs on](#pathName-crosshairs-on)
-  * [pathName crosshairs toggle](#pathName-crosshairs-toggle)
-* [ELEMENT COMPONENT](#ELEMENT-COMPONENT)
-  * [pathName element activate](#pathName-element-activate) *elemName ?index?...*
-  * [pathName element bind](#pathName-element-bind) *tagName ?sequence? ?command?*
-  * [pathName element cget](#pathName-element-cget) *elemName option*
-  * [pathName element closest](#pathName-element-closest) *x y varName ?option value?... ?elemName?...*
-  * [pathName element configure](#pathName-element-configure) *elemName ?elemName... ?option value?...*
-  * [pathName element create](#pathName-element-create) *elemName ?option value?...*
-  * [pathName element deactivate](#pathName-element-deactivate) *elemName ?elemName?...*
-  * [pathName element delete](#pathName-element-delete) *?elemName?...*
-  * [pathName element exists](#pathName-element-exists) *elemName*
-  * [pathName element names](#pathName-element-names) *?pattern?...*
-  * [pathName element show](#pathName-element-show) *?nameList?*
-  * [pathName element type](#pathName-element-type) *elemName*
-* [GRID COMPONENT](#GRID-COMPONENT)
-  * [pathName grid cget](#pathName-grid-cget) *option*
-  * [pathName grid configure](#pathName-grid-configure) *?option value?...*
-  * [pathName grid off](#pathName-grid-off)
-  * [pathName grid on](#pathName-grid-on)
-  * [pathName grid toggle](#pathName-grid-toggle)
-* [LEGEND COMPONENT](#LEGEND-COMPONENT)
-  * [pathName legend activate](#pathName-legend-activate) *pattern...*
-  * [pathName legend bind](#pathName-legend-bind) *tagName ?sequence? ?command?*
-  * [pathName legend cget](#pathName-legend-cget) *option*
-  * [pathName legend configure](#pathName-legend-configure) *?option value?...*
-  * [pathName legend deactivate](#pathName-legend-deactivate) *pattern...*
-  * [pathName legend get](#pathName-legend-get) *pos*
-* [PEN COMPONENT](#PEN-COMPONENT)
-  * [pathName pen cget](#pathName-pen-cget) *penName option*
-  * [pathName pen configure](#pathName-pen-configure) *penName ?penName... ?option value?...*
-  * [pathName pen create](#pathName-pen-create) *penName ?option value?...*
-  * [pathName pen delete](#pathName-pen-delete) *?penName?...*
-  * [pathName pen names](#pathName-pen-names) *?pattern?...*
-* [POSTSCRIPT COMPONENT](#POSTSCRIPT-COMPONENT)
-  * [pathName postscript cget](#pathName-postscript-cget) *option*
-  * [pathName postscript configure](#pathName-postscript-configure) *?option value?...*
-  * [pathName postscript output](#pathName-postscript-output) *?fileName? ?option value?...*
-* [MARKER COMPONENT](#MARKER-COMPONENT)
-  * [pathName marker after](#pathName-marker-after) *markerId ?afterId?*
-  * [pathName marker before](#pathName-marker-before) *markerId ?beforeId?*
-  * [pathName marker bind](#pathName-marker-bind) *tagName ?sequence? ?command?*
-  * [pathName marker cget](#pathName-marker-cget) *option*
-  * [pathName marker configure](#pathName-marker-configure) *markerId ?option value?...*
-  * [pathName marker create](#pathName-marker-create) *type ?option value?...*
-  * [pathName marker delete](#pathName-marker-delete) *?name?...*
-  * [pathName marker exists](#pathName-marker-exists) *markerId*
-  * [pathName marker names](#pathName-marker-names) *?pattern?*
-  * [pathName marker type](#pathName-marker-type) *markerId*
-  * [BITMAP MARKERS](#BITMAP-MARKERS)
-  * [pathName marker create bitmap](#pathName-marker-create-bitmap) *?option value?...*
-  * [IMAGE MARKERS](#IMAGE-MARKERS)
-  * [pathName marker create image](#pathName-marker-create-image) *?option value?...*
-  * [LINE MARKERS](#LINE-MARKERS)
-  * [pathName marker create line](#pathName-marker-create-line) *?option value?...*
-  * [POLYGON MARKERS](#POLYGON-MARKERS)
-  * [pathName marker create polygon](#pathName-marker-create-polygon) *?option value?...*
-  * [TEXT MARKERS](#TEXT-MARKERS)
-  * [pathName marker create text](#pathName-marker-create-text) *?option value?...*
-  * [WINDOW MARKERS](#WINDOW-MARKERS)
-  * [pathName marker create window](#pathName-marker-create-window) *?option value?...*
-*   [GRAPH COMPONENT BINDINGS](#GRAPH-COMPONENT-BINDINGS)
-*   [C LANGUAGE API](#[C-LANGUAGE-API)
-*   [SPEED TIPS](#SPEED-TIPS)
-*   [LIMITATIONS](#LIMITATIONS)
-*   [EXAMPLE](#EXAMPLE)
-*   [KEYWORDS](#KEYWORDS)
-
-<a name="NAME"></a>
-## NAME 
-
-graph - 2D graph for plotting X-Y coordinate data.
+*   [SYNOPSIS](#SYNOPSIS)  
+*   [STANDARD OPTIONS](#STANDARD-OPTIONS)  
+  [-background or -bg, background, Background](options.htm#M-background)  
+  [-borderwidth or -bd, borderWidth, BorderWidth](options.htm#M-borderwidth)  
+  [-cursor, cursor, Cursor](options.htm#M-cursor)  
+  [-foreground or -fg, foreground, Foreground](options.htm#M-foreground)  
+  [-height, height, Height](options.htm#M-height)  
+  [-width, width, Width](options.htm#M-width)  
+*   [WIDGET-SPECIFIC OPTIONS](#WIDGET-SPECIFIC-OPTIONS)  
+  [-aspect, aspect, Aspect](#-aspect) *width/height*  
+  [-barmode, barMode, BarMode](#-barmode)  
+  [-barwidth, barWidth, BarWidth](#-barwidth)  
+  [-baseline, baseline, Baseline](#-baseline)  
+  [-bottommargin, bottomMargin, Margin](#-bottommargin) *pixels*  
+  [-bottomvariable, bottomVariable, BottomVariable](#-bottomvariable)  
+  [-bufferelements, bufferElements, BufferElements](#-bufferelements) *boolean*  
+  [-buffergraph, bufferGraph, BufferGraph](#-buffergraph)  
+  [-style, style, Style](#-style) *line|bar|strip*  
+  [-data, data, Data](#-data)  
+  [-datacommand, dataCommand, DataCommand](#-datacommand)  
+  [-font, font, Font](#-font) *fontName*  
+  [-halo, halo, Halo](#-halo) *pixels*  
+  [-highlightbackground, highlightBackground, HighlightBackground](#-highlightbackground)  
+  [-highlightcolor, highlightColor, HighlightColor](#-highlightcolor)  
+  [-highlightthickness, highlightThickness, HighlightThickness](#-highlightthickness)  
+  [-invertxy, invertXY, InvertXY](#-invertxy) *boolean*  
+  [-justify, justify, Justify](#-justify) *justify*  
+  [-leftmargin or -lm, leftMargin, Margin](#-leftmargin) *pixels*  
+  [-leftvariable, leftVariable, LeftVariable](#-leftvariable)  
+  [-plotbackground, plotBackground, Background](#-plotbackground) *color*  
+  [-plotborderwidth, plotBorderWidth, BorderWidth](#-plotborderwidth) *pixels*  
+  [-plotpadx, plotPadX, PlotPad](#-plotpadx) *pad*  
+  [-plotpady, plotPadY, PlotPad](#-plotpadx) *pad*  
+  [-plotrelief, plotRelief, Relief](#-plotrelief) *relief*  
+  [-relief, relief, Relief](#-relief) *relief*  
+  [-rightmargin or -rm, rightMargin, Margin](#-rightmargin) *pixels*  
+  [-rightvariable, rightVariable, RightVariable](#-rightvariable)  
+  [-shadow, shadow, Shadow](#-shadow)  
+  [-takefocus, takeFocus, TakeFocus](#-takefocus)  
+  [-title, title, Title](#-title) *text|image*  
+  [-topmargin or -tm, topMargin, Margin](#-topmargin) *pixels*  
+  [-topvariable, topVariable, TopVariable](#-topvariable)  
+*   [DESCRIPTION](#DESCRIPTION)  
+*   [WIDGET COMMAND](#WIDGET-COMMAND)  
+  [*pathName* **axis**](#pathName-axis) *operation ?arg?...*  
+  [*pathName* **binding**](#pathName-binding) *?crosshairs? ?findelement? ?legend? ?zoom?*  
+  [*pathName* **bar**](#pathName-bar) *elemName ?option value?...*  
+  [*pathName* **cget**](#pathName-cget) *option*  
+  [*pathName* **configure**](#pathName-configure) *?option value?...*  
+  [*pathName* **crosshairs**](#pathName-crosshairs) *operation ?arg?*  
+  [*pathName* **element**](#pathName-element) *operation ?arg?...*  
+  [*pathName* **extents**](#pathName-extents) *item*  
+  [*pathName* **grid**](#pathName-grid) *operation ?arg?...*  
+  [*pathName* **invtransform**](#pathName-invtransform) *winX winY*  
+  [*pathName* **inside**](#pathName-inside) *x y*  
+  [*pathName* **legend**](#pathName-legend) *operation ?arg?...*  
+  [*pathName* **line**](#pathName-line) *operation arg...*  
+  [*pathName* **marker**](#pathName-marker) *operation ?arg?...*  
+  [*pathName* **postscript**](#pathName-postscript) *operation ?arg?...*  
+  [*pathName* **snap**](#pathName-snap) *?switches? outputName*  
+  [*pathName* **transform**](#pathName-transform) *x y*  
+  [*pathName* **xaxis**](#pathName-xaxis) *operation ?arg?...*  
+  [*pathName* **x2axis**](#pathName-x2axis) *operation ?arg?...*  
+  [*pathName* **yaxis**](#pathName-yaxis) *operation ?arg?...*  
+  [*pathName* **y2axis**](#pathName-y2axis) *operation ?arg?...*  
+* [AXIS COMPONENT](#AXIS-COMPONENT)  
+  [*pathName* **axis bind**](#pathName-axis-bind) *tagName ?sequence? ?command?*  
+  [*pathName* **axis cget**](#pathName-axis-cget) *axisName option*  
+  [*pathName* **axis configure**](#pathName-axis-configure) *axisName ?axisName?... ?option value?...*  
+  [*pathName* **axis create**](#pathName-axis-create) *axisName ?option value?...*  
+  [*pathName* **axis delete**](#pathName-axis-delete) *?axisName?...*  
+  [*pathName* **axis invtransform**](#pathName-axis-invtransform) *axisName value*  
+  [*pathName* **axis limits**](#pathName-axis-limits) *axisName*  
+  [*pathName* **axis names**](#pathName-axis-names) *?pattern?...*  
+  [*pathName* **axis transform**](#pathName-axis-transform) *axisName value*  
+  [*pathName* **axis view**](#pathName-axis-view) *axisName*  
+* [CROSSHAIRS COMPONENT](#)  
+  [*pathName* **crosshairs cget**](#pathName-crosshairs-cget) *option*  
+  [*pathName* **crosshairs configure**](#pathName-crosshairs-configure) *?option value?...*  
+  [*pathName* **crosshairs off**](#pathName-crosshairs-off)  
+  [*pathName* **crosshairs on**](#pathName-crosshairs-on)  
+  [*pathName* **crosshairs toggle**](#pathName-crosshairs-toggle)  
+* [ELEMENT COMPONENT](#ELEMENT-COMPONENT)  
+  [*pathName* **element activate**](#pathName-element-activate) *elemName ?index?...*  
+  [*pathName* **element bind**](#pathName-element-bind) *tagName ?sequence? ?command?*  
+  [*pathName* **element cget**](#pathName-element-cget) *elemName option*  
+  [*pathName* **element closest**](#pathName-element-closest) *x y varName ?option value?... ?elemName?...*  
+  [*pathName* **element configure**](#pathName-element-configure) *elemName ?elemName... ?option value?...*  
+  [*pathName* **element create**](#pathName-element-create) *elemName ?option value?...*  
+  [*pathName* **element deactivate**](#pathName-element-deactivate) *elemName ?elemName?...*  
+  [*pathName* **element delete**](#pathName-element-delete) *?elemName?...*  
+  [*pathName* **element exists**](#pathName-element-exists) *elemName*  
+  [*pathName* **element names**](#pathName-element-names) *?pattern?...*  
+  [*pathName* **element show**](#pathName-element-show) *?nameList?*  
+  [*pathName* **element type**](#pathName-element-type) *elemName*  
+* [GRID COMPONENT](#GRID-COMPONENT)  
+  [*pathName* **grid cget**](#pathName-grid-cget) *option*  
+  [*pathName* **grid configure**](#pathName-grid-configure) *?option value?...*  
+  [*pathName* **grid off**](#pathName-grid-off)  
+  [*pathName* **grid on**](#pathName-grid-on)  
+  [*pathName* **grid toggle**](#pathName-grid-toggle)  
+* [LEGEND COMPONENT](#LEGEND-COMPONENT)  
+  [*pathName* **legend activate**](#pathName-legend-activate) *pattern...*  
+  [*pathName* **legend bind**](#pathName-legend-bind) *tagName ?sequence? ?command?*  
+  [*pathName* **legend cget**](#pathName-legend-cget) *option*  
+  [*pathName* **legend configure**](#pathName-legend-configure) *?option value?...*  
+  [*pathName* **legend deactivate**](#pathName-legend-deactivate) *pattern...*  
+  [*pathName* **legend get**](#pathName-legend-get) *pos*  
+* [PEN COMPONENT](#PEN-COMPONENT)  
+  [*pathName* **pen cget**](#pathName-pen-cget) *penName option*  
+  [*pathName* **pen configure**](#pathName-pen-configure) *penName ?penName... ?option value?...*  
+  [*pathName* **pen create**](#pathName-pen-create) *penName ?option value?...*  
+  [*pathName* **pen delete**](#pathName-pen-delete) *?penName?...*  
+  [*pathName* **pen names**](#pathName-pen-names) *?pattern?...*  
+* [POSTSCRIPT COMPONENT](#POSTSCRIPT-COMPONENT)  
+  [*pathName* **postscript cget**](#pathName-postscript-cget) *option*  
+  [*pathName* **postscript configure**](#pathName-postscript-configure) *?option value?...*  
+  [*pathName* **postscript output**](#pathName-postscript-output) *?fileName? ?option value?...*  
+* [MARKER COMPONENT](#MARKER-COMPONENT)  
+  [*pathName* **marker after**](#pathName-marker-after) *markerId ?afterId?*  
+  [*pathName* **marker before**](#pathName-marker-before) *markerId ?beforeId?*  
+  [*pathName* **marker bind**](#pathName-marker-bind) *tagName ?sequence? ?command?*  
+  [*pathName* **marker cget**](#pathName-marker-cget) *option*  
+  [*pathName* **marker configure**](#pathName-marker-configure) *markerId ?option value?...*  
+  [*pathName* **marker create**](#pathName-marker-create) *type ?option value?...*  
+  [*pathName* **marker delete**](#pathName-marker-delete) *?name?...*  
+  [*pathName* **marker exists**](#pathName-marker-exists) *markerId*  
+  [*pathName* **marker names**](#pathName-marker-names) *?pattern?*  
+  [*pathName* **marker type**](#pathName-marker-type) *markerId*  
+  [BITMAP MARKERS](#BITMAP-MARKERS)  
+  [*pathName* **marker create bitmap**](#pathName-marker-create-bitmap) *?option value?...*  
+  [IMAGE MARKERS](#IMAGE-MARKERS)  
+  [*pathName* **marker create image**](#pathName-marker-create-image) *?option value?...*  
+  [LINE MARKERS](#LINE-MARKERS)  
+  [*pathName* **marker create line**](#pathName-marker-create-line) *?option value?...*  
+  [POLYGON MARKERS](#POLYGON-MARKERS)  
+  [*pathName* **marker create polygon**](#pathName-marker-create-polygon) *?option value?...*  
+  [TEXT MARKERS](#TEXT-MARKERS)  
+  [*pathName* **marker create text**](#pathName-marker-create-text) *?option value?...*  
+  [WINDOW MARKERS](#WINDOW-MARKERS)  
+  [*pathName* **marker create window**](#pathName-marker-create-window) *?option value?...*  
+*   [GRAPH COMPONENT BINDINGS](#GRAPH-COMPONENT-BINDINGS)  
+*   [C LANGUAGE API](#[C-LANGUAGE-API)  
+*   [SPEED TIPS](#SPEED-TIPS)  
+*   [LIMITATIONS](#LIMITATIONS)  
+*   [EXAMPLE](#EXAMPLE)  
+*   [CREDITS](#CREDITS)  
+*   [KEYWORDS](#KEYWORDS)  
+*   [COPYRIGHT](#COPYRIGHT)  
 
 <a name="SYNOPSIS"></a>
 ## SYNOPSIS 
 
-**graph** *pathName ?option value?...*
+**graph** *pathName ?-style line|bar|strip? ?option value?...*
+
+The graph command creates a new window pathName and makes it into a graph widget. At the time this command is invoked, there must not exist a window named pathName, but pathName's parent must exist. Additional options may be specified on the command line or in the option database to configure aspects of the graph such as its colors and font. See the configure operation below for the exact details about what option and value pairs are valid.
+
+The *-style* option can only be set on creation time of the new window. The option control the appearance of the widget. Default value is "line".
+
+If successful, graph returns the path name of the widget. It also creates a new Tcl command by the same name. You can use this command to invoke various operations that query or modify the graph. The general form is:
+
+**pathName** *operation ?arg?...*
+
+Both operation and its arguments determine the exact behavior of the command. The operations available for the graph are described in the section.
+
+The command can also be used to access components of the graph.
+
+**pathName component** *operation ?arg?...*
+
+A graph is composed of several components: coordinate axes, data elements, legend, grid, cross hairs, postscript, and annotation markers. Instead of one big set of configuration options and operations, the graph is partitioned, where each component has its own configuration options and operations that specifically control that aspect or part of the graph.
+
+The operation, now located after the name of the component, is the function to be performed on that component. Each component has its own set of operations that manipulate that component. They will be described below in their own sections.
+
+<a name="STANDARD-OPTIONS"></a>
+## STANDARD OPTIONS
+
+[-background or -bg, background, Background](options.htm#M-background) This includes the margins and legend, but not the plotting area.  
+[-borderwidth or -bd, borderWidth, BorderWidth](options.htm#M-borderwidth)  
+[-cursor, cursor, Cursor](options.htm#M-cursor)  
+[-foreground or -fg, foreground, Foreground](options.htm#M-foreground)  
+[-height, height, Height](options.htm#M-height) The default is 4i.  
+[-width, width, Width](options.htm#M-width) The default is 5i.  
+
+See the [options][] manual entry for details on the standard options.
+
+<a name="WIDGET-SPECIFIC-OPTIONS"></a>
+## WIDGET-SPECIFIC OPTIONS
+
+<a name="-aspect"></a>
+Command-Line Name: **-aspect**  
+Database Name: **aspect**  
+Database Class: **Aspect**
+
+> > Force a fixed aspect ratio of width/height, a floating point number.
+
+<a name="-barmode"></a>
+Command-Line Name: **-barmode**  
+Database Name: **barMode**  
+Database Class: **BarMode**
+
+<a name="-barwidth"></a>
+Command-Line Name: **-barwidth**  
+Database Name: **barWidth**  
+Database Class: **BarWidth**
+
+<a name="-baseline"></a>
+Command-Line Name: **-baseline**  
+Database Name: **baseline**  
+Database Class: **Baseline**
+
+<a name="-bottommargin"></a>
+Command-Line Name: **-bottommargin or -bm**  
+Database Name: **bottomMargin**  
+Database Class: **Margin**
+
+> > If non-zero, overrides the computed size of the margin extending below the X-coordinate axis. If pixels is 0, the automatically computed size is used. The default is 0.
+
+<a name="-bottomvariable"></a>
+Command-Line Name: **-bottomvariable**  
+Database Name: **bottomVariable**  
+Database Class: **BottomVariable**
+
+<a name="-bufferelements"></a>
+Command-Line Name: **-bufferelements**  
+Database Name: **bufferElements**  
+Database Class: **BufferElements**
+
+> > Indicates whether an internal pixmap to buffer the display of data elements should be used. If boolean is true, data elements are drawn to an internal pixmap. This option is especially useful when the graph is redrawn frequently while the remains data unchanged (for example, moving a marker across the plot). See the section. The default is 1.
+
+<a name="-buffergraph"></a>
+Command-Line Name: **-buffergraph**  
+Database Name: **bufferGraph**  
+Database Class: **BufferGraph**
+
+<a name="-style"></a>
+Command-Line Name: **-style**  
+Database Name: **style**  
+Database Class: **Style**
+
+The option can only be set on creation time of the new window. The option control the appearance of the widget. Default value is **line**.
+
+> **line**
+
+> > Display X-Y plotchart
+
+> **bar**
+
+> > Display barchart.
+
+> **strip**
+
+> > Display stripchart.
+
+<a name="-data"></a>
+Command-Line Name: **-data**  
+Database Name: **data**  
+Database Class: **Data**
+
+<a name="-datacommand"></a>
+Command-Line Name: **-datacommand**  
+Database Name: **dataCommand**  
+Database Class: **DataCommand**
+
+<a name="-font"></a>
+Command-Line Name: **-font**  
+Database Name: **font**  
+Database Class: **Font**
+
+> > Specifies the font of the graph title. The default is `*-Helvetica-Bold-R-Normal-*-18-180-*`.
+
+<a name="-halo"></a>
+Command-Line Name: **-halo**  
+Database Name: **halo**  
+Database Class: **Halo**
+
+> > Specifies a maximum distance to consider when searching for the closest data point (see the element's closest operation below). Data points further than pixels away are ignored. The default is 0.5i.
+
+<a name="-highlightbackground"></a>
+Command-Line Name: **-highlightbackground**  
+Database Name: **highlightBackground**  
+Database Class: **HighlightBackground**
+
+<a name="-highlightcolor"></a>
+Command-Line Name: **-highlightcolor**  
+Database Name: **highlightColor**  
+Database Class: **HighlightColor**
+
+<a name="-highlightthickness"></a>
+Command-Line Name: **-highlightthickness**  
+Database Name: **highlightThickness**  
+Database Class: **HighlightThickness**
+
+<a name="-invertxy"></a>
+Command-Line Name: **-invertxy**  
+Database Name: **invertXY**  
+Database Class: **InvertXY**
+
+> > Indicates whether the placement X-axis and Y-axis should be inverted. If boolean is true, the X and Y axes are swapped. The default is 0.
+
+<a name="-justify"></a>
+Command-Line Name: **-justify**  
+Database Name: **justify**  
+Database Class: **Justify**
+
+> > Specifies how the title should be justified. This matters only when the title contains more than one line of text. Justify must be left, right, or center. The default is center.
+
+<a name="-leftmargin"></a>
+Command-Line Name: **-leftmargin or -lm**  
+Database Name: **leftMargin**  
+Database Class: **Margin**
+
+> > If non-zero, overrides the computed size of the margin extending from the left edge of the window to the Y-coordinate axis. If pixels is 0, the automatically computed size is used. The default is 0.
+
+<a name="-leftvariable"></a>
+Command-Line Name: **-leftvariable**  
+Database Name: **leftVariable**  
+Database Class: **LeftVariable**
+
+<a name="-plotbackground"></a>
+Command-Line Name: **-plotbackground**  
+Database Name: **plotBackground**  
+Database Class: **Background**
+
+> > Specifies the background color of the plotting area. The default is white.
+
+<a name="-plotborderwidth"></a>
+Command-Line Name: **-plotborderwidth**  
+Database Name: **plotBorderWidth**  
+Database Class: **BorderWidth**
+
+> > Sets the width of the 3-D border around the plotting area. The -plotrelief option determines if a border is drawn. The default is 2.
+
+<a name="-plotpadx"></a>
+Command-Line Name: **-plotpadx**  
+Database Name: **plotPadX**  
+Database Class: **PlotPad**
+
+
+> > Sets the amount of padding to be added to the left and right sides of the plotting area. Pad can be a list of one or two screen distances. If pad has two elements, the left side of the plotting area entry is padded by the first distance and the right side by the second. If pad is just one distance, both the left and right sides are padded evenly. The default is 8.
+
+<a name="-plotpady"></a>
+Command-Line Name: **-plotpady**  
+Database Name: **plotPadY**  
+Database Class: **PlotPad**
+
+> > Sets the amount of padding to be added to the top and bottom of the plotting area. Pad can be a list of one or two screen distances. If pad has two elements, the top of the plotting area is padded by the first distance and the bottom by the second. If pad is just one distance, both the top and bottom are padded evenly. The default is 8.
+
+> **-plotrelief**
+<a name="-plotrelief"></a>
+Command-Line Name: **-plotrelief**  
+Database Name: **plotRelief**  
+Database Class: **Relief**
+
+> > Specifies the 3-D effect for the plotting area. Relief specifies how the interior of the plotting area should appear relative to rest of the graph; for example, raised means the plot should appear to protrude from the graph, relative to the surface of the graph. The default is sunken.
+
+> **-relief** *relief*
+<a name="-relief"></a>
+Command-Line Name: **-relief**  
+Database Name: **relief**  
+Database Class: **Relief**
+
+> > Specifies the 3-D effect for the graph widget. Relief specifies how the graph should appear relative to widget it is packed into; for example, raised means the graph should appear to protrude. The default is flat.
+
+<a name="-rightmargin"></a>
+Command-Line Name: **-rightmargin**  
+Database Name: **rightMargin**  
+Database Class: **Margin**
+
+> > If non-zero, overrides the computed size of the margin extending from the plotting area to the right edge of the window. By default, the legend is drawn in this margin. If pixels is 0, the automatically computed size is used. The default is 0.
+
+<a name="-rightvariable"></a>
+Command-Line Name: **-rightvariable**  
+Database Name: **rightVariable**  
+Database Class: **RightVariable**
+
+<a name="-shadow"></a>
+Command-Line Name: **-shadow**  
+Database Name: **shadow**  
+Database Class: **Shadow**
+
+> **-takefocus** *focus*
+<a name="-takefocus"></a>
+Command-Line Name: **-takefocus**  
+Database Name: **takeFocus**  
+Database Class: **TakeFocus**
+
+> > Provides information used when moving the focus from window to window via keyboard traversal (e.g., Tab and Shift-Tab). If focus is 0, this means that this window should be skipped entirely during keyboard traversal. 1 means that the this window should always receive the input focus. An empty value means that the traversal scripts make the decision whether to focus on the window. The default is "".
+
+<a name="-tile"></a>
+Command-Line Name: **-tile**  
+Database Name: **tile**  
+Database Class: **Title**
+
+> **image**
+
+> > Specifies a tiled background for the widget. If image isn't "", the background is tiled using image. Otherwise, the normal background color is drawn (see the -background option). Image must be an image created using the Tk image command. The default is "".
+
+> **text**
+
+> > Sets the title to text. If text is "", no title will be displayed.
+
+<a name="-topmargin"></a>
+Command-Line Name: **-topmargin**  
+Database Name: **topMargin**  
+Database Class: **Margin**
+
+> > If non-zero, overrides the computed size of the margin above the x2 axis. If pixels is 0, the automatically computed size is used. The default is 0.
+
+<a name="-topvariable"></a>
+Command-Line Name: **-topvariable**  
+Database Name: **topVariable**  
+Database Class: **TopVariable**
 
 <a name="DESCRIPTION"></a>
 ## DESCRIPTION 
 
-The graph command creates a graph for plotting two-dimensional data (X-Y coordinates). It has many configurable components: coordinate axes, elements, legend, grid lines, cross hairs, etc. They allow you to customize the look and feel of the graph.
-
-<a name="INTRODUCTION"></a>
-## INTRODUCTION 
-
-The graph command creates a new window for plotting two-dimensional data (X-Y coordinates). Data points are plotted in a rectangular area displayed in the center of the new window. This is the plotting area. The coordinate axes are drawn in the margins around the plotting area. By default, the legend is displayed in the right margin. The title is displayed in top margin.
+The graph command creates a new window for plotting two-dimensional data (X-Y coordinates). Data points are plotted in a rectangular area displayed in the center of the new window. This is the plotting area. The coordinate axes are drawn in the margins around the plotting area. By default, the legend is displayed in the right margin. The title is displayed in top margin. They allow you to customize the look and feel of the graph.
 
 The graph widget is composed of several components: coordinate axes, data elements, legend, grid, cross hairs, pens, postscript, and annotation markers.
 
@@ -156,31 +444,8 @@ The graph widget is composed of several components: coordinate axes, data elemen
 **postscript**
     The widget can generate encapsulated PostScript output. This component has several options to configure how the PostScript is generated.
 
-<a name="SYNTAX"></a>
-## SYNTAX
-
-**graph** *pathName ?-style line|bar|strip? ?option value?...*
-
-The graph command creates a new window pathName and makes it into a graph widget. At the time this command is invoked, there must not exist a window named pathName, but pathName's parent must exist. Additional options may be specified on the command line or in the option database to configure aspects of the graph such as its colors and font. See the configure operation below for the exact details about what option and value pairs are valid.
-
-The *-style* option can only be set on creation time of the new window. The option control the appearance of the widget. Default value is "line".
-
-If successful, graph returns the path name of the widget. It also creates a new Tcl command by the same name. You can use this command to invoke various operations that query or modify the graph. The general form is:
-
-**pathName** *operation ?arg?...*
-
-Both operation and its arguments determine the exact behavior of the command. The operations available for the graph are described in the section.
-
-The command can also be used to access components of the graph.
-
-**pathName component** *operation ?arg?...*
-
-A graph is composed of several components: coordinate axes, data elements, legend, grid, cross hairs, postscript, and annotation markers. Instead of one big set of configuration options and operations, the graph is partitioned, where each component has its own configuration options and operations that specifically control that aspect or part of the graph.
-
-The operation, now located after the name of the component, is the function to be performed on that component. Each component has its own set of operations that manipulate that component. They will be described below in their own sections.
-
-<a name="GRAPH-OPERATIONS"></a>
-## GRAPH OPERATIONS
+<a name="WIDGET-COMMAND"></a>
+## WIDGET COMMAND
 
 <a name="pathName-axis"></a>
 **pathName axis** *operation ?arg?...*
@@ -227,103 +492,7 @@ The procedure allows the setting of some default bindings. It will add bindings 
 <a name="pathName-configure"></a>
 **pathName configure** *?option value?...*
 
-> Queries or modifies the configuration options of the graph. If option isn't specified, a list describing the current options for pathName is returned. If option is specified, but not value, then a list describing option is returned. If one or more option and value pairs are specified, then for each pair, the option option is set to value. The following options are valid.
-
-> **-aspect** *width/height*
-
-> > Force a fixed aspect ratio of width/height, a floating point number.
-
-> **-background** *color*
-
-> > Sets the background color. This includes the margins and legend, but not the plotting area.
-
-> **-borderwidth** *pixels*
-
-> > Sets the width of the 3-D border around the outside edge of the widget. The -relief option determines if the border is to be drawn. The default is 2.
-
-> **-bottommargin** *pixels*
-
-> > If non-zero, overrides the computed size of the margin extending below the X-coordinate axis. If pixels is 0, the automatically computed size is used. The default is 0.
-
-> **-bufferelements** *boolean*
-
-> > Indicates whether an internal pixmap to buffer the display of data elements should be used. If boolean is true, data elements are drawn to an internal pixmap. This option is especially useful when the graph is redrawn frequently while the remains data unchanged (for example, moving a marker across the plot). See the section. The default is 1.
-
-> **-cursor** *cursor*
-
-> > Specifies the widget's cursor. The default cursor is crosshair.
-
-> **-font** *fontName*
-
-> > Specifies the font of the graph title. The default is `*-Helvetica-Bold-R-Normal-*-18-180-*`.
-
-> **-halo** *pixels*
-
-> > Specifies a maximum distance to consider when searching for the closest data point (see the element's closest operation below). Data points further than pixels away are ignored. The default is 0.5i.
-
-> **-height** *pixels*
-
-> > Specifies the requested height of widget. The default is 4i.
-
-> **-invertxy** *boolean*
-
-> > Indicates whether the placement X-axis and Y-axis should be inverted. If boolean is true, the X and Y axes are swapped. The default is 0.
-
-> **-justify** *justify*
-
-> > Specifies how the title should be justified. This matters only when the title contains more than one line of text. Justify must be left, right, or center. The default is center.
-
-> **-leftmargin** *pixels*
-
-> > If non-zero, overrides the computed size of the margin extending from the left edge of the window to the Y-coordinate axis. If pixels is 0, the automatically computed size is used. The default is 0.
-
-> **-plotbackground** *color*
-
-> > Specifies the background color of the plotting area. The default is white.
-
-> **-plotborderwidth** *pixels*
-
-> > Sets the width of the 3-D border around the plotting area. The -plotrelief option determines if a border is drawn. The default is 2.
-
-> **-plotpadx** *pad*
-
-> > Sets the amount of padding to be added to the left and right sides of the plotting area. Pad can be a list of one or two screen distances. If pad has two elements, the left side of the plotting area entry is padded by the first distance and the right side by the second. If pad is just one distance, both the left and right sides are padded evenly. The default is 8.
-
-> **-plotpady** *pad*
-
-> > Sets the amount of padding to be added to the top and bottom of the plotting area. Pad can be a list of one or two screen distances. If pad has two elements, the top of the plotting area is padded by the first distance and the bottom by the second. If pad is just one distance, both the top and bottom are padded evenly. The default is 8.
-
-> **-plotrelief** *relief*
-
-> > Specifies the 3-D effect for the plotting area. Relief specifies how the interior of the plotting area should appear relative to rest of the graph; for example, raised means the plot should appear to protrude from the graph, relative to the surface of the graph. The default is sunken.
-
-> **-relief** *relief*
-
-> > Specifies the 3-D effect for the graph widget. Relief specifies how the graph should appear relative to widget it is packed into; for example, raised means the graph should appear to protrude. The default is flat.
-
-> **-rightmargin** *pixels*
-
-> > If non-zero, overrides the computed size of the margin extending from the plotting area to the right edge of the window. By default, the legend is drawn in this margin. If pixels is 0, the automatically computed size is used. The default is 0.
-
-> **-takefocus** *focus*
-
-> > Provides information used when moving the focus from window to window via keyboard traversal (e.g., Tab and Shift-Tab). If focus is 0, this means that this window should be skipped entirely during keyboard traversal. 1 means that the this window should always receive the input focus. An empty value means that the traversal scripts make the decision whether to focus on the window. The default is "".
-
-> **-tile** *image*
-
-> > Specifies a tiled background for the widget. If image isn't "", the background is tiled using image. Otherwise, the normal background color is drawn (see the -background option). Image must be an image created using the Tk image command. The default is "".
-
-> **-title** *text*
-
-> > Sets the title to text. If text is "", no title will be displayed.
-
-> **-topmargin** *pixels*
-
-> > If non-zero, overrides the computed size of the margin above the x2 axis. If pixels is 0, the automatically computed size is used. The default is 0.
-
-> **-width** *pixels*
-
-> > Specifies the requested width of the widget. The default is 5i.
+> Query or modify the configuration options of the widget. If no *option* is specified, returns a list describing all of the available options for pathName (see [Tk_ConfigureInfo][] for information on the format of this list). If *option* is specified with no *value*, then the command returns a list describing the one named option (this list will be identical to the corresponding sublist of the value returned if no option is specified). If one or more *option-value* pairs are specified, then the command modifies the given widget option(s) to have the given value(s); in this case the command returns an empty string. *Option* may have any of the values accepted by the **graph** command. 
 
 <a name="pathName-crosshairs"></a>
 **pathName crosshairs** *operation ?arg?*
@@ -1625,7 +1794,7 @@ It is possible for multiple bindings to match a particular event. This could occ
 
 The -bindtags option for these components controls addition tag names which can be matched. Implicitly elements and markers always have tags matching their names. Setting the value of the -bindtags option doesn't change this.
 
-Some common bindings can be set with the [pathName binding](#pathName-binding) command.
+Some common bindings can be set with the [*pathName* **binding**](#pathName-binding) command.
 
 ## <a name="C-LANGUAGE-API"></a>
 ## C LANGUAGE API 
@@ -1857,12 +2026,26 @@ Finally, to get hardcopy of the graph, use the postscript component.
 
 This generates a file file.ps containing the encapsulated PostScript of the graph. The option -maxpect says to scale the plot to the size of the page. Turning off the -decorations option denotes that no borders or color backgrounds should be drawn (i.e. the background of the margins, legend, and plotting area will be white).
 
+<a name="CREDITS"></a>
+## CREDITS
+
+[BLT][] was originally develeoped by George A. Howlett. It can be found at <https://sourceforge.net/projects/blt/>.
+
+Refactored [BLT][] Components ([Rbc][]), includes data vectors and graph widgets from the original [BLT][]. Both can be found at sourceforge.
+
+User visible changes to the original [Rbc][] code are:
+
+- widget name is **graph**
+- new **-style** *line|bar|strip* option instead of three different commands **graph**, **barchart** and **stripchart**
+- no unique abbreviations of widget commands
+
 <a name="KEYWORDS"></a>
 ## KEYWORDS
 
 graph, widget
 
-<a name="COPYRIGHT"></a>
+<a name="COPYRIGHT"></a>:1
+
 ## COPYRIGHT
 
 &copy; 1995-1997 Roger E. Critchlow Jr.
@@ -1870,4 +2053,7 @@ graph, widget
 &copy; 2001 George A. Howlett.
 
 &copy; 2018 René Zaumseil <r.zaumseil@freenet.de>
+
+[BLT]: <https://sourceforge.net/projects/blt/>
+[Rbc]: <https://sourceforge.net/projects/rbctoolkit/>
 
