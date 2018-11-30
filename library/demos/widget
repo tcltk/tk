@@ -118,6 +118,11 @@ if {[tk windowingsystem] ne "aqua"} {
 		-command {exit} -accelerator [mc "Meta-Q"]
 	bind . <[mc "Meta-q"]> {exit}
     }
+} else {
+    menu .menuBar.view -tearoff 0
+    .menuBar add cascade -label "View" -menu .menuBar.view
+    menu .menuBar.window -tearoff 0
+    .menuBar add cascade -label "Window" -menu .menuBar.window
 }
 
 . configure -menu .menuBar
