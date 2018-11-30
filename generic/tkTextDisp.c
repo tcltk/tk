@@ -6290,7 +6290,8 @@ TkTextPendingsync(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
     return (
-        ((dInfoPtr->metricEpoch == TCL_AUTO_LENGTH) &&
+        (!(dInfoPtr->flags & REDRAW_PENDING) &&
+	 (dInfoPtr->metricEpoch == TCL_AUTO_LENGTH) &&
          (dInfoPtr->lastMetricUpdateLine == dInfoPtr->currentMetricUpdateLine)) ?
         0 : 1);
 }
