@@ -1889,7 +1889,7 @@ ParseArrowShape(
     int argc;
     const char **argv = NULL;
 
-    if (offset != offsetof(LineItem, arrowShapeA)) {
+    if ((size_t)offset != offsetof(LineItem, arrowShapeA)) {
 	Tcl_Panic("ParseArrowShape received bogus offset");
     }
 

@@ -2400,7 +2400,7 @@ GetSticky(
     int internalOffset)		/* Offset within *recordPtr containing the
 				 * sticky value. */
 {
-    int sticky = *(int *)((char *)recordPtr + internalOffset);
+    int sticky = *(int *)(recordPtr + internalOffset);
     char buffer[5];
     char *p = &buffer[0];
 

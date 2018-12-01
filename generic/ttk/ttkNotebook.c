@@ -58,7 +58,7 @@ typedef struct
 static Tk_OptionSpec TabOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-state", "", "",
-	"normal", -1,offsetof(Tab,state),
+	"normal", -1, offsetof(Tab,state),
 	0,(ClientData)TabStateStrings,0 },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Tab,textObj), -1, 0,0,GEOMETRY_CHANGED },
