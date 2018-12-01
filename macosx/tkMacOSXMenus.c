@@ -105,7 +105,12 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     	    [NSMenuItem itemWithTitle:@"Zoom" action:@selector(performZoom:)
     	    	   target:nil],
 	    nil];
-    if ([NSApp macMinorVersion] > 11) {
+
+    /*
+     * On OS X 10.12 we get duplicate tab control items if we create them here.
+     */
+
+    if ([NSApp macMinorVersion] > 12) {
 	_defaultWindowsMenuItems = [_defaultWindowsMenuItems
 	     arrayByAddingObjectsFromArray:
 	     [NSArray arrayWithObjects:

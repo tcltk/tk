@@ -5568,6 +5568,7 @@ WmWinTabbingId(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
     Tcl_Obj *result = NULL;
     NSString *idString;
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
@@ -5588,6 +5589,7 @@ WmWinTabbingId(
 	[win setTabbingIdentifier: newIdString];
 	return TCL_OK;
     }
+#endif
     return TCL_ERROR;
 }
 
@@ -6466,7 +6468,7 @@ ApplyWindowAttributeFlagChanges(
 	     */
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
-	    if (!(macWindow.styleMask & NSWindowStyleMaskUtilityWindow)) {
+	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
 		b |= NSWindowCollectionBehaviorFullScreenPrimary;
 	    }
 #endif
