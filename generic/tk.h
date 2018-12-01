@@ -440,9 +440,9 @@ typedef struct {
     const char *key;		/* The key string that flags the option in the
 				 * argv array. */
     int type;			/* Indicates option type; see below. */
-    char *src;			/* Value to be used in setting dst; usage
+    void *src;			/* Value to be used in setting dst; usage
 				 * depends on type. */
-    char *dst;			/* Address of value to be modified; usage
+    void *dst;			/* Address of value to be modified; usage
 				 * depends on type. */
     const char *help;		/* Documentation message describing this
 				 * option. */
