@@ -190,7 +190,7 @@ Tk_CreateSelHandler(
 		     * should make a copy for this selPtr.
 		     */
 
-		    unsigned cmdInfoLen = offsetof(CommandInfo, command) + 1 +
+		    size_t cmdInfoLen = offsetof(CommandInfo, command) + 1 +
 			    ((CommandInfo *)clientData)->cmdLength;
 
 		    selPtr->clientData = ckalloc(cmdInfoLen);

@@ -188,7 +188,7 @@ typedef struct {
 } BorderElement;
 
 static Ttk_ElementOptionSpec BorderElementOptions[] = {
-    { "-relief",TK_OPTION_RELIEF,offsetof(BorderElement,reliefObj), "flat" },
+    { "-relief",TK_OPTION_RELIEF, offsetof(BorderElement,reliefObj), "flat" },
     {NULL, 0, 0, NULL}
 };
 
@@ -542,7 +542,7 @@ typedef struct {
 } ThumbElement;
 
 static Ttk_ElementOptionSpec ThumbElementOptions[] = {
-    { "-orient", TK_OPTION_ANY,offsetof(ThumbElement,orientObj),"horizontal"},
+    { "-orient", TK_OPTION_ANY, offsetof(ThumbElement,orientObj),"horizontal"},
     { NULL, 0, 0, NULL }
 };
 

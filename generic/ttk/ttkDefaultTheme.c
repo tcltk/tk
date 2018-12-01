@@ -253,7 +253,7 @@ static Ttk_ElementOptionSpec BorderElementOptions[] = {
 	offsetof(BorderElement,borderColorObj), "black" },
     { "-default", TK_OPTION_ANY, offsetof(BorderElement,defaultStateObj),
     	"disabled" },
-    { "-borderwidth",TK_OPTION_PIXELS,offsetof(BorderElement,borderWidthObj),
+    { "-borderwidth",TK_OPTION_PIXELS, offsetof(BorderElement,borderWidthObj),
     	STRINGIFY(BORDERWIDTH) },
     { "-relief", TK_OPTION_RELIEF, offsetof(BorderElement,reliefObj),
     	"flat" },
@@ -909,8 +909,8 @@ static Ttk_ElementOptionSpec ThumbElementOptions[] = {
 	DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR, offsetof(ThumbElement,borderColorObj),
 	"black" },
-    { "-relief", TK_OPTION_RELIEF,offsetof(ThumbElement,reliefObj),"raised" },
-    { "-orient", TK_OPTION_ANY,offsetof(ThumbElement,orientObj),"horizontal"},
+    { "-relief", TK_OPTION_RELIEF, offsetof(ThumbElement,reliefObj),"raised" },
+    { "-orient", TK_OPTION_ANY, offsetof(ThumbElement,orientObj),"horizontal"},
     { NULL, 0, 0, NULL }
 };
 
@@ -988,7 +988,7 @@ typedef struct {
 static Ttk_ElementOptionSpec SliderElementOptions[] = {
     { "-sliderlength", TK_OPTION_PIXELS, offsetof(SliderElement,lengthObj),
 	"15" },
-    { "-sliderthickness",TK_OPTION_PIXELS,offsetof(SliderElement,thicknessObj),
+    { "-sliderthickness",TK_OPTION_PIXELS, offsetof(SliderElement,thicknessObj),
 	"15" },
     { "-sliderrelief", TK_OPTION_RELIEF, offsetof(SliderElement,reliefObj),
 	"raised" },
