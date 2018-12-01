@@ -213,7 +213,7 @@ typedef struct TextStyle {
 #define LOG(toVar,what)							\
     if (OK_TO_LOG)							\
         Tcl_SetVar2(textPtr->interp, toVar, NULL, (what),		\
-		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)	
+		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
 #define CLEAR(var)							\
     if (OK_TO_LOG)							\
 	Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
@@ -3135,11 +3135,11 @@ GenerateWidgetViewSyncEvent(
      * like a mouse click is received.  But that extra drawing corrupts the
      * data that the test suite is trying to collect.
      */
-    
+
     if (!tkTextDebug) {
 	FORCE_DISPLAY(textPtr->tkwin);
     }
-    
+
     TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
         Tcl_NewBooleanObj(InSync));
 }
@@ -5261,7 +5261,7 @@ TkTextRelayoutWindow(
 		    AsyncUpdateLineMetrics, textPtr);
 	    inSync = 0;
 	}
-	
+
 	if (!inSync) {
 	    GenerateWidgetViewSyncEvent(textPtr, 0);
 	}
@@ -6290,7 +6290,8 @@ TkTextPendingsync(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
     return (
-        ((dInfoPtr->metricEpoch == TCL_AUTO_LENGTH) &&
+        (!(dInfoPtr->flags & REDRAW_PENDING) &&
+	 (dInfoPtr->metricEpoch == TCL_AUTO_LENGTH) &&
          (dInfoPtr->lastMetricUpdateLine == dInfoPtr->currentMetricUpdateLine)) ?
         0 : 1);
 }

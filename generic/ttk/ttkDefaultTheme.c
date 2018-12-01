@@ -621,12 +621,12 @@ static void IndicatorElementDraw(
      * not use the Tk memory manager in its implementation of XDestroyImage,
      * even though that would be an extremely strange thing to do.
      */
-    
+
 #if defined(IGNORES_VISUAL)
     ckfree(img->data);
     img->data = NULL;
 #endif
-    
+
     XDestroyImage(img);
 }
 
