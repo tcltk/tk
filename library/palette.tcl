@@ -135,6 +135,12 @@ proc ::tk_setPalette {args} {
 	option add *$option $new($option) widgetDefault
     }
 
+    # Minimal adjustment to ttk style
+
+    ttk::style map . -background [list active $new(activeBackground) {} $new(background)]
+    ttk::style map . -foreground [list active $new(activeForeground) \
+                                       disabled $new(disabledForeground) {} $new(foreground)]
+
     # Save the options in the variable ::tk::Palette, for use the
     # next time we change the options.
 
