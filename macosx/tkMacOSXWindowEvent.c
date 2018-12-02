@@ -136,6 +136,36 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
+- (NSSize)window:(NSWindow *)window
+  willUseFullScreenContentSize:(NSSize)proposedSize
+{
+
+    /*
+     * We don't need to change the proposed size, but we do need to
+     * implement this method.  Otherwise the full screen window will
+     * be sized to the screen's visibleFrame, leaving black bands at
+     * the top and bottom.
+     */
+
+    return proposedSize;
+}
+
+- (void) windowEnteredFullScreen: (NSNotification *) notification
+{
+#ifdef TK_MAC_DEBUG_NOTIFICATIONS
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+#endif
+    [(TKWindow *)[notification object] tkLayoutChanged];
+}
+
+- (void) windowExitedFullScreen: (NSNotification *) notification
+{
+#ifdef TK_MAC_DEBUG_NOTIFICATIONS
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+#endif
+    [(TKWindow *)[notification object] tkLayoutChanged];
+}
+
 - (void) windowCollapsed: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
@@ -222,12 +252,19 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 #define observe(n, s) \
 	[nc addObserver:self selector:@selector(s) name:(n) object:nil]
+
     observe(NSWindowDidBecomeKeyNotification, windowActivation:);
     observe(NSWindowDidResignKeyNotification, windowActivation:);
     observe(NSWindowDidMoveNotification, windowBoundsChanged:);
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
+
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+    observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
+    observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
+#endif
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     observe(NSWindowWillMoveNotification, windowDragStart:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
@@ -832,17 +869,15 @@ ConfigureRestrictProc(
 			Tk_PathName(winPtr));
 #endif
 
-    if ([NSApp simulateDrawing]) {
-    	return;
-    }
-
     /*
      * We do not allow recursive calls to drawRect, but we only log
      * them on OSX > 10.13, where they should never happen.
      */
 
-    if ([NSApp isDrawing] && [NSApp macMinorVersion] > 13) {
-	TKLog(@"WARNING: a recursive call to drawRect was aborted.");
+    if ([NSApp isDrawing]) {
+	if ([NSApp macMinorVersion] > 13) {
+	    TKLog(@"WARNING: a recursive call to drawRect was aborted.");
+	}
 	return;
     }
 
@@ -878,13 +913,13 @@ ConfigureRestrictProc(
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
+
+    if (![self inLiveResize] &&
+	[w respondsToSelector: @selector (tkLayoutChanged)]) {
+	[(TKWindow *)w tkLayoutChanged];
+    }
+
     if (winPtr) {
-	/* On OSX versions below 10.14 setFrame calls drawRect.
-	 * On 10.14 it does its own drawing.
-	 */
-	if ([NSApp macMinorVersion] > 13) {
-	    [NSApp setIsDrawing:YES];
-	}
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
 	ClientData oldArg;
@@ -922,16 +957,19 @@ ConfigureRestrictProc(
 	TkMacOSXUpdateClipRgn(winPtr);
 
 	 /*
-	  * Finally, generate and process expose events to redraw the window.
+	  * Generate and process expose events to redraw the window.
 	  */
 
 	HIRect bounds = NSRectToCGRect([self bounds]);
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
 	[self generateExposeEvents: shape];
 	[w displayIfNeeded];
-	if ([NSApp macMinorVersion] > 13) {
-	    [NSApp setIsDrawing:NO];
-	}
+
+	/*
+	 * Finally, unlock the main autoreleasePool.
+	 */
+	
+	[NSApp _unlockAutoreleasePool];
     }
 }
 

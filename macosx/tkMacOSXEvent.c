@@ -137,14 +137,22 @@ MODULE_SCOPE void
 TkMacOSXFlushWindows(void)
 {
     NSArray *macWindows = [NSApp orderedWindows];
-    if ([NSApp simulateDrawing]) {
-	[NSApp setSimulateDrawing:NO];
-	return;
+
+    if ([macWindows count] > 0) {
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
     }
-    for (NSWindow *w in macWindows) {
-    	if (TkMacOSXGetXWindow(w)) {
-    	    [w displayIfNeeded];
-    	}
+    if ([NSApp isDrawing]) {
+	for (NSWindow *w in macWindows) {
+	    if (TkMacOSXGetXWindow(w)) {
+		[w setViewsNeedDisplay:YES];
+	    }
+	}
+    } else {
+	for (NSWindow *w in macWindows) {
+	    if (TkMacOSXGetXWindow(w)) {
+		[w display];
+	    }
+	}
     }
 }
 

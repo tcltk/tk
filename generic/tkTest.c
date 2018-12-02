@@ -31,9 +31,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define SIMULATE_DRAWING TkTestSimulateDrawing(true);
+#define APP_IS_DRAWING TkTestAppIsDrawing()
 #else
-#define SIMULATE_DRAWING
+#define APP_IS_DRAWING 0
 #endif
 
 #ifdef __UNIX__
@@ -1582,8 +1582,10 @@ ImageDisplay(
 
     sprintf(buffer, "%s display %d %d %d %d",
 	    instPtr->masterPtr->imageName, imageX, imageY, width, height);
-    Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName, NULL,
-		buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+    if (!APP_IS_DRAWING) {
+	Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName,
+	    NULL, buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+    }
     if (width > (instPtr->masterPtr->width - imageX)) {
 	width = instPtr->masterPtr->width - imageX;
     }
@@ -1591,7 +1593,6 @@ ImageDisplay(
 	height = instPtr->masterPtr->height - imageY;
     }
 
-    SIMULATE_DRAWING
     XDrawRectangle(display, drawable, instPtr->gc, drawableX, drawableY,
 	    (unsigned) (width-1), (unsigned) (height-1));
     XDrawLine(display, drawable, instPtr->gc, drawableX, drawableY,
