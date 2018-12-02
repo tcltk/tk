@@ -3254,17 +3254,17 @@ test text-11a.22 {TextWidgetCmd procedure, "sync" option with -command} -setup {
     }
     .top.yt insert 1.0 $content
     # first case: line metrics calculation still running when launching 'sync -command'
-    lappend res [.top.yt pendingsync]
+    lappend res [.top.yt pendingsync]       ; # {1}
     .top.yt sync -command [list set ::x 1]
-    lappend res $::x
+    lappend res $::x                        ; # {1 0}
     # now finish line metrics calculations
     while {[.top.yt pendingsync]} {update}
-    lappend res [.top.yt pendingsync] $::x
+    lappend res [.top.yt pendingsync] $::x  ; # {1 0 0 1}
     # second case: line metrics calculation completed when launching 'sync -command'
     .top.yt sync -command [list set ::x 2]
-    lappend res $::x
+    lappend res $::x                        ; # {1 0 0 1 1}
     vwait ::x
-    lappend res $::x
+    lappend res $::x                        ; # {1 0 0 1 1 2}
 } -cleanup {
     destroy .top.yt .top
 } -result {1 0 0 1 1 2}

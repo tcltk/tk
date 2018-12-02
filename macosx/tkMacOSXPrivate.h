@@ -250,6 +250,9 @@ VISIBILITY_HIDDEN
 - (BOOL)isSpecial:(NSUInteger)special;
 @end
 
+@interface TKMenu(TKMenuDelegate) <NSMenuDelegate>
+@end
+
 VISIBILITY_HIDDEN
 @interface TKApplication : NSApplication {
 @private
@@ -265,13 +268,11 @@ VISIBILITY_HIDDEN
     int _poolLock;
     int _macMinorVersion;
     Bool _isDrawing;
-    Bool _simulateDrawing;
 #endif
 }
 @property int poolLock;
 @property int macMinorVersion;
 @property Bool isDrawing;
-@property Bool simulateDrawing;
 
 @end
 @interface TKApplication(TKInit)
@@ -279,6 +280,22 @@ VISIBILITY_HIDDEN
 - (void)_resetAutoreleasePool;
 - (void)_lockAutoreleasePool;
 - (void)_unlockAutoreleasePool;
+@end
+@interface TKApplication(TKKeyboard)
+- (void) keyboardChanged: (NSNotification *) notification;
+@end
+@interface TKApplication(TKWindowEvent) <NSApplicationDelegate>
+- (void) _setupWindowNotifications;
+@end
+@interface TKApplication(TKMenu)
+- (void)tkSetMainMenu:(TKMenu *)menu;
+@end
+@interface TKApplication(TKMenus)
+- (void) _setupMenus;
+@end
+@interface NSApplication(TKNotify)
+/* We need to declare this hidden method. */
+- (void) _modalSession: (NSModalSession) session sendEvent: (NSEvent *) event;
 @end
 @interface TKApplication(TKEvent)
 - (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;
@@ -288,9 +305,6 @@ VISIBILITY_HIDDEN
 @end
 @interface TKApplication(TKKeyEvent)
 - (NSEvent *)tkProcessKeyEvent:(NSEvent *)theEvent;
-@end
-@interface TKApplication(TKMenu)
-- (void)tkSetMainMenu:(TKMenu *)menu;
 @end
 @interface TKApplication(TKClipboard)
 - (void)tkProvidePasteboard:(TkDisplay *)dispPtr;
@@ -316,13 +330,8 @@ VISIBILITY_HIDDEN
 @end
 
 VISIBILITY_HIDDEN
-@interface TKContentView : NSView <NSTextInput> {
-@private
-  /*Remove private API calls.*/
-#if 0
-    id _savedSubviews;
-    BOOL _subviewsSetAside;
-#endif
+@interface TKContentView : NSView <NSTextInput>
+{
     NSString *privateWorkingText;
 }
 @end
@@ -341,13 +350,23 @@ VISIBILITY_HIDDEN
 - (void) keyDown: (NSEvent *) theEvent;
 @end
 
+@interface NSWindow(TKWm)
+- (NSPoint) tkConvertPointToScreen:(NSPoint)point;
+- (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
+@end
+
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
 @end
 
-@interface NSWindow(TKWm)
-- (NSPoint) tkConvertPointToScreen:(NSPoint)point;
-- (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
+@interface TKWindow(TKWm)
+- (void)    tkLayoutChanged;
+@end
+
+@interface NSDrawerWindow : NSWindow
+{
+    id _i1, _i2;
+}
 @end
 
 #pragma mark NSMenu & NSMenuItem Utilities
@@ -378,4 +397,32 @@ VISIBILITY_HIDDEN
 	keyEquivalentModifierMask:(NSUInteger)keyEquivalentModifierMask;
 @end
 
+@interface NSColorPanel(TKDialog)
+- (void) _setUseModalAppearance: (BOOL) flag;
+@end
+
+@interface NSFont(TKFont)
+- (NSFont *) bestMatchingFontForCharacters: (const UTF16Char *) characters
+	length: (NSUInteger) length attributes: (NSDictionary *) attributes
+	actualCoveredLength: (NSUInteger *) coveredLength;
+@end
+
+/*
+ * This method of NSApplication is not declared in NSApplication.h so we
+ * declare it here to be a method of the TKMenu category.
+ */
+
+@interface NSApplication(TKMenu)
+- (void) setAppleMenu: (NSMenu *) menu;
+@end
+
 #endif /* _TKMACPRIV */
+
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */
