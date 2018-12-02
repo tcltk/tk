@@ -350,13 +350,17 @@ VISIBILITY_HIDDEN
 - (void) keyDown: (NSEvent *) theEvent;
 @end
 
+@interface NSWindow(TKWm)
+- (NSPoint) tkConvertPointToScreen:(NSPoint)point;
+- (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
+@end
+
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
 @end
 
-@interface NSWindow(TKWm)
-- (NSPoint) tkConvertPointToScreen:(NSPoint)point;
-- (NSPoint) tkConvertPointFromScreen:(NSPoint)point;
+@interface TKWindow(TKWm)
+- (void)    tkLayoutChanged;
 @end
 
 @interface NSDrawerWindow : NSWindow
