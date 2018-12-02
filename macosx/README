@@ -270,9 +270,10 @@ by the argument.
 
 Since NSWindows can only be grouped together as tabs if they all have the same
 tabbingIdentifier, one can prevent a window from becoming a tab by giving it a
-unique tabbingIdentifier. This is independent of any preferences setting. Note,
-however, that changing the tabbingIdentifier of a window which is already
-displayed as a tab does not cause it to become a separate window.
+unique tabbingIdentifier. This is independent of any preferences setting. To
+ensure that we maintain consistency, changing the tabbingIdentifier of a window
+which is already displayed as a tab will also cause it to become a separate
+window.
 
 
 4. Building Tcl/Tk on macOS
