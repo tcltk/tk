@@ -33,7 +33,7 @@ extern int		_XInitImageFuncPtrs(XImage *image);
  * Forward declarations
  */
 
-#ifndef TKPUTIMAGE_CAN_BLEND 
+#ifndef TKPUTIMAGE_CAN_BLEND
 static void		BlendComplexAlpha(XImage *bgImg, PhotoInstance *iPtr,
 			    int xOffset, int yOffset, int width, int height);
 #endif
@@ -615,7 +615,7 @@ TkImgPhotoDisplay(
 #ifndef TKPUTIMAGE_CAN_BLEND
     XVisualInfo visInfo = instancePtr->visualInfo;
 #endif
-    
+
     /*
      * If there's no pixmap, it means that an error occurred while creating
      * the image instance so it can't be displayed.

@@ -10,7 +10,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2017 Marc Culler.
+ * Copyright (c) 2017-2018 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -195,62 +195,6 @@ static int tkMacOSXWmAttrNotifyVal = 0;
 static Tcl_HashTable windowTable;
 static int windowHashInit = false;
 
-
-#pragma mark NSWindow(TKWm)
-
-/*
- * Conversion of coordinates between window and screen.
- */
-
-@implementation NSWindow(TKWm)
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) tkConvertPointToScreen: (NSPoint) point
-{
-    return [self convertBaseToScreen:point];
-}
-- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
-{
-    return [self convertScreenToBase:point];
-}
-#else
-- (NSPoint) tkConvertPointToScreen: (NSPoint) point
-{
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
-    return [self convertRectToScreen:pointrect].origin;
-}
-- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
-{
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
-    return [self convertRectFromScreen:pointrect].origin;
-}
-#endif
-
-- (NSSize)windowWillResize:(NSWindow *)sender
-                    toSize:(NSSize)frameSize
-{
-    NSRect currentFrame = [sender frame];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
-    if (winPtr) {
-	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
-	    frameSize.width = currentFrame.size.width;
-	}
-	if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
-	    frameSize.height = currentFrame.size.height;
-	}
-    }
-    return frameSize;
-}
-@end
-
-#pragma mark -
-
-
 /*
  * Forward declarations for procedures defined in this file:
  */
@@ -365,6 +309,8 @@ static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 static int		WmWinStyle(Tcl_Interp *interp, TkWindow *winPtr,
 			    int objc, Tcl_Obj *const objv[]);
+static int		WmWinTabbingId(Tcl_Interp *interp, TkWindow *winPtr,
+			    int objc, Tcl_Obj *const objv[]);
 static void		ApplyWindowAttributeFlagChanges(TkWindow *winPtr,
 			    NSWindow *macWindow, UInt64 oldAttributes,
 			    int oldFlags, int create, int initial);
@@ -377,28 +323,113 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 
-#pragma mark TKWindow(TKWm)
+#pragma mark NSWindow(TKWm)
 
-@implementation TKWindow: NSWindow
+@implementation NSWindow(TKWm)
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
-- (void)toggleTabBar:(id)sender
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-    MacDrawable *macWin = winPtr->privatePtr;
-    if (!winPtr) {
-	return;
-    }
-    [super toggleTabBar:sender];
-    if (([self styleMask] & NSFullScreenWindowMask) == 0) {
-	TkMacOSXApplyWindowAttributes(macWin->winPtr, self);
-    }
+    return [self convertBaseToScreen:point];
+}
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
+{
+    return [self convertScreenToBase:point];
+}
+#else
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
+{
+    NSRect pointrect;
+    pointrect.origin = point;
+    pointrect.size.width = 0;
+    pointrect.size.height = 0;
+    return [self convertRectToScreen:pointrect].origin;
+}
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
+{
+    NSRect pointrect;
+    pointrect.origin = point;
+    pointrect.size.width = 0;
+    pointrect.size.height = 0;
+    return [self convertRectFromScreen:pointrect].origin;
 }
 #endif
 
 @end
 
+#pragma mark -
+
+#pragma mark TKWindow(TKWm)
+
+@implementation TKWindow: NSWindow
+
+@end
+
 @implementation TKWindow(TKWm)
+
+/*
+ * This method synchronizes Tk's understanding of the bounds of a contentView
+ * with the window's.  It is needed because there are situations when the
+ * window manager can change the layout of an NSWindow without having been
+ * requested to do so by Tk.  Examples are when a window goes FullScreen or
+ * shows a tab bar.  NSWindow methods which involve such layout changes should
+ * be overridden or protected by methods which call this.
+ */
+
+- (void) tkLayoutChanged
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+
+    if (winPtr) {
+	NSRect frameRect;
+
+	/*
+	 * This avoids including the title bar for full screen windows
+	 * but does include it for normal windows.
+	 */
+
+	if ([self styleMask] & NSFullScreenWindowMask) {
+	    frameRect = [NSWindow frameRectForContentRect:NSZeroRect
+				  styleMask:[self styleMask]];
+	} else {
+	    frameRect = [self frameRectForContentRect:NSZeroRect];
+	}
+	WmInfo *wmPtr = winPtr->wmInfoPtr;
+	wmPtr->xInParent = -frameRect.origin.x;
+	wmPtr->yInParent = frameRect.origin.y + frameRect.size.height;
+	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width;
+	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height;
+    }
+}
+
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+- (void)toggleTabBar:(id)sender
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    if (!winPtr) {
+	return;
+    }
+    [super toggleTabBar:sender];
+    [self tkLayoutChanged];
+}
+#endif
+
+
+- (NSSize)windowWillResize:(NSWindow *)sender
+                    toSize:(NSSize)frameSize
+{
+    NSRect currentFrame = [sender frame];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
+    if (winPtr) {
+	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
+	    frameSize.width = currentFrame.size.width;
+	}
+	if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
+	    frameSize.height = currentFrame.size.height;
+	}
+    }
+    return frameSize;
+}
 
 - (BOOL) canBecomeKeyWindow
 {
@@ -5250,10 +5281,10 @@ TkUnsupported1ObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const subcmds[] = {
-	"style", NULL
+	"style", "tabbingid", NULL
     };
     enum SubCmds {
-	TKMWS_STYLE
+	TKMWS_STYLE, TKMWS_TABID
     };
     Tk_Window tkwin = clientData;
     TkWindow *winPtr;
@@ -5287,6 +5318,17 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	return WmWinStyle(interp, winPtr, objc, objv);
+    } else if (((enum SubCmds) index) == TKMWS_TABID) {
+	if ([NSApp macMinorVersion] < 12) {
+	    Tcl_AddErrorInfo(interp,
+	        "\n    (TabbingIdentifiers only exist on OSX 10.12 or later)");
+	    return TCL_ERROR;
+	}
+	if ((objc < 3) || (objc > 4)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "tabbingid window ?newid?");
+	    return TCL_ERROR;
+	}
+	return WmWinTabbingId(interp, winPtr, objc, objv);
     }
     /* won't be reached */
     return TCL_ERROR;
@@ -5490,6 +5532,65 @@ WmWinStyle(
     }
 
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmWinTabbingId --
+ *
+ *	This procedure is invoked to process the
+ *	"::tk::unsupported::MacWindowStyle tabbingid" subcommand. The command
+ *	allows you to get or set the tabbingIdentifier for the NSWindow
+ *      associated with a Tk Window.  The syntax is:
+ *      tk::unsupported::MacWindowStyle tabbingid window ?newId?
+ *
+ * Results:
+ *	Returns the tabbingIdentifier of the window prior to calling this
+ *      function.  If the optional newId argument is omitted, the window's
+ *      tabbingIdentifier is not changed.
+ *
+ * Side effects:
+ *	Windows may only be grouped together as tabs if they all have the same
+ *      tabbingIdentifier.  In particular, by giving a window a unique
+ *      tabbingIdentifier one can prevent it from becoming a tab in any other
+ *      window.  Note, however, that changing the tabbingIdentifier of a window
+ *      which is already a tab does not cause it to become a separate window.
+ *
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmWinTabbingId(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    TkWindow *winPtr,		/* Window to be manipulated. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj * const objv[])	/* Argument objects. */
+{
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+    Tcl_Obj *result = NULL;
+    NSString *idString;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    if (win) {
+	idString = win.tabbingIdentifier;
+	result = Tcl_NewStringObj(idString.UTF8String, [idString length]);
+    }
+    if (result == NULL) {
+	Tcl_Panic("Failed to read tabbing identifier.");
+    }
+    Tcl_SetObjResult(interp, result);
+    if (objc == 3) {
+	return TCL_OK;
+    } else if (objc == 4) {
+	int len;
+	char *newId = Tcl_GetStringFromObj(objv[3], &len);
+	NSString *newIdString = [NSString stringWithUTF8String:newId];
+	[win setTabbingIdentifier: newIdString];
+	return TCL_OK;
+    }
+#endif
+    return TCL_ERROR;
 }
 
 /*
@@ -6367,8 +6468,17 @@ ApplyWindowAttributeFlagChanges(
 	     */
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
-	    if (!(macWindow.styleMask & NSWindowStyleMaskUtilityWindow)) {
+	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
+		NSSize screenSize = [[macWindow screen]frame].size; 
 		b |= NSWindowCollectionBehaviorFullScreenPrimary;
+
+		/* The default max size has height less than the screen height.
+		 * This causes the window manager to refuse to allow the window
+		 * to be resized when it is a split window.  To work around
+		 * this we make the max size equal to the screen size.
+		 */
+		
+		[macWindow setMaxFullScreenContentSize:screenSize];
 	    }
 #endif
 
@@ -6393,7 +6503,7 @@ ApplyWindowAttributeFlagChanges(
 
 	/*
 	 * The change of window class/attributes might have changed the window
-	 * structure widths:
+	 * frame geometry:
 	 */
 
 	NSRect structureRect = [macWindow frameRectForContentRect:NSZeroRect];
