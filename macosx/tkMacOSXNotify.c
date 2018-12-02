@@ -135,7 +135,9 @@ void DebugPrintQueue(void)
  */
 
 /*
- * Call super then check the pasteboard.
+ * Since the contentView is the first responder for a Tk Window, it is
+ * responsible for sending events up the responder chain.  We also check
+ * the pasteboard here. 
  */
 - (void) sendEvent: (NSEvent *) theEvent
 {
@@ -360,7 +362,7 @@ TkMacOSXEventsCheckProc(
 		int oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 		NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
 		Tcl_SetServiceMode(oldServiceMode);
-		if (processedEvent) { /* Should always be non-NULL. */
+		if (processedEvent) {
 #ifdef TK_MAC_DEBUG_EVENTS
 		    TKLog(@"   event: %@", currentEvent);
 #endif
@@ -370,6 +372,7 @@ TkMacOSXEventsCheckProc(
 			[NSApp sendEvent:currentEvent];
 		    }
 		}
+
 	    } else {
 		break;
 	    }

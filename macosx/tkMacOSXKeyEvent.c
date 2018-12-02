@@ -55,9 +55,11 @@ unsigned short releaseCode;
 #endif
     NSWindow*	    w;
     NSEventType	    type = [theEvent type];
-    NSUInteger	    modifiers, len = 0;
+    NSUInteger modifiers = ([theEvent modifierFlags] &
+			    NSDeviceIndependentModifierFlagsMask);
+    NSUInteger	    len = 0;
     BOOL	    repeat = NO;
-    unsigned short  keyCode;
+    unsigned short  keyCode = [theEvent keyCode];
     NSString	    *characters = nil, *charactersIgnoringModifiers = nil;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray;
@@ -77,6 +79,16 @@ unsigned short releaseCode;
 	return theEvent;
     }
 
+    /*
+     * Control-Tab and Control-Shift-Tab are used to switch tabs in a tabbed
+     * window.  We do not want to generate an Xevent for these since that might
+     * cause the deselected tab to be reactivated.
+     */
+
+    if (keyCode == 48 && (modifiers & NSControlKeyMask) == NSControlKeyMask) {
+	return theEvent;
+    }
+
     switch (type) {
     case NSKeyUp:
 	/*Fix for bug #1ba71a86bb: key release firing on key press.*/
@@ -90,8 +102,6 @@ unsigned short releaseCode;
 	charactersIgnoringModifiers = [theEvent charactersIgnoringModifiers];
         len = [charactersIgnoringModifiers length];
     case NSFlagsChanged:
-	modifiers = [theEvent modifierFlags];
-	keyCode = [theEvent keyCode];
 
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	TKLog(@"-[%@(%p) %s] r=%d mods=%u '%@' '%@' code=%u c=%d %@ %d", [self class], self, _cmd, repeat, modifiers, characters, charactersIgnoringModifiers, keyCode,([charactersIgnoringModifiers length] == 0) ? 0 : [charactersIgnoringModifiers characterAtIndex: 0], w, type);
