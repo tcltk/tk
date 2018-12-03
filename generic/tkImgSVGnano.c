@@ -82,7 +82,7 @@ static void		FreeCache(ClientData clientData, Tcl_Interp *interp);
  */
 
 Tk_PhotoImageFormat tkImgFmtSVGnano = {
-    "svgnano",			/* name */
+    "svg",			/* name */
     FileMatchSVG,		/* fileMatchProc */
     StringMatchSVG,		/* stringMatchProc */
     FileReadSVG,		/* fileReadProc */
@@ -328,10 +328,10 @@ ParseSVGWithOptions(
     char *inputCopy = NULL;
     NSVGimage *nsvgImage;
     static const char *const fmtOptions[] = {
-        "-dpi", "-scale", "-unit", "-x", "-y", NULL
+        "-dpi", "-scale", "-unit", NULL
     };
     enum fmtOptions {
-	OPT_DPI, OPT_SCALE, OPT_UNIT, OPT_X, OPT_Y
+	OPT_DPI, OPT_SCALE, OPT_UNIT
     };
 
     /*
@@ -363,10 +363,10 @@ ParseSVGWithOptions(
 	int optIndex;
 
 	/*
-	 * Ignore the "svgnano" part of the format specification.
+	 * Ignore the "svg" part of the format specification.
 	 */
 
-	if (!strcasecmp(Tcl_GetString(objv[0]), "svgnano")) {
+	if (!strcasecmp(Tcl_GetString(objv[0]), "svg")) {
 	    continue;
 	}
 
@@ -416,16 +416,6 @@ ParseSVGWithOptions(
 	    if ((p != NULL) && (p[0])) {
 	        strncpy(unit, p, 3);
 		unit[2] = '\0';
-	    }
-	    break;
-	case OPT_X:
-	    if (Tcl_GetDoubleFromObj(interp, objv[0], &ropts->x) == TCL_ERROR) {
-	        goto error;
-	    }
-	    break;
-	case OPT_Y:
-	    if (Tcl_GetDoubleFromObj(interp, objv[0], &ropts->y) == TCL_ERROR) {
-	        goto error;
 	    }
 	    break;
 	}
