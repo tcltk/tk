@@ -569,7 +569,7 @@ The supported SVG features are:
 .
 .RS
 \fB elements:\fR g, path, rect, circle, ellipse, line, polyline, polygon,
-linearGradient, radialGradient, stop, defs, svg, style \fR
+linearGradient, radialGradient, stop, defs, svg, style
 .
 \fB attributes:\fR width, height, viewBox,
 preserveAspectRatio with none, xMin, xMid, xMax, yMin, yMid, yMax, slice
