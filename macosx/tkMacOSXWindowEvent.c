@@ -310,6 +310,20 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
 }
 
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)sender 
+                    hasVisibleWindows:(BOOL)flag
+{
+    /*
+     * Allowing the default response means that withdrawn windows will get
+     * displayed on the screen with unresponsive title buttons.  We don't
+     * really want that.  Besides, we can write our own code to handle this
+     * with ::tk::mac::ReopenApplication.  So we just say NO.
+     */
+
+    return NO;
+}
+
+
 - (void) applicationShowHide: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
