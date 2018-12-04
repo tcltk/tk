@@ -148,15 +148,17 @@ typedef struct {
 
 struct PatSeq; /* forward declaration */
 
+#define PSENTRY_ISNEW 1    /* Whether this entry is recently created. */
+#define PSENTRY_EXPIRED 2  /* Whether this entry is expired, this means it has to be removed
+                            * from promotion list. */
+
 typedef struct PSEntry {
     TK_DLIST_LINKS(PSEntry);	/* Makes this struct a double linked list; must be first entry. */
     struct PatSeq* psPtr;	/* Pointer to pattern sequence. */
     Window window;		/* Window of last match. */
-    unsigned count:30;		/* Only promote to next level if this count has reached count of
+    unsigned count;		/* Only promote to next level if this count has reached count of
     				 * pattern. */
-    unsigned expired:1;		/* Whether this entry is expired, this means it has to be removed
-    				 * from promotion list. */
-    unsigned isNew:1;		/* Whether this entry is recently created. */
+    int flags;		/* combination of PSENTRY_ISNEW/PSENTRY_EXPIRED */
 } PSEntry;
 
 TK_DLIST_DEFINE(PSList, PSEntry);/* defining the whole PSList_* stuff (list of PSEntry items) */
@@ -960,8 +962,7 @@ MakeListEntry(
 
     newEntry->psPtr = psPtr;
     newEntry->window = None;
-    newEntry->expired = false;
-    newEntry->isNew = true;
+    newEntry->flags = PSENTRY_ISNEW;
     newEntry->count = 1;
     DEBUG(psPtr->owned = false);
 
@@ -2361,11 +2362,11 @@ Tk_BindEvent(
 	     * 5) Current entry has been matched with a different window.
 	     */
 
-	    if (psEntry->isNew) {
+	    if (psEntry->flags & PSENTRY_ISNEW) {
 		/* this pattern has been added recently */
-		assert(!psEntry->expired);
-		psEntry->isNew = false;
-	    } else if (psEntry->expired
+		assert(!(psEntry->flags & PSENTRY_EXPIRED));
+		psEntry->flags &= ~PSENTRY_ISNEW;
+	    } else if (psEntry->flags & PSENTRY_EXPIRED
 		    || psEntry->window != curEvent->xev.xany.window
 		    || (patPtr->info
 			&& curEvent->detail.info
@@ -2650,7 +2651,7 @@ MatchPatterns(
 		    unsigned long modMask = ResolveModifiers(dispPtr, patPtr->modStateMask);
 		    unsigned long curModStateMask = ResolveModifiers(dispPtr, bindPtr->curModStateMask);
 
-		    psEntry->expired = true; /* remove it from promotion list */
+		    psEntry->flags |= PSENTRY_EXPIRED; /* remove it from promotion list */
 
 		    if ((modMask & ~curModStateMask) == 0) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
@@ -2696,15 +2697,15 @@ MatchPatterns(
 
 				assert(!patPtr->name);
 				psNewEntry = MakeListEntry(&bindPtr->lookupTables.entryPool, psPtr);
-				assert(psNewEntry->isNew);
+				assert(psNewEntry->flags & PSENTRY_ISNEW);
 				assert(psNewEntry->count == 1u);
 				PSList_Append(psSuccList, psNewEntry);
 				psNewEntry->window = window; /* bind to current window */
 			    } else {
 				assert(psEntry->count < patPtr->count);
 				psEntry->count += 1;
-				psEntry->isNew = true; /* don't remove it from promotion list */
-				DEBUG(psEntry->expired = false);
+				psEntry->flags |= PSENTRY_ISNEW; /* don't remove it from promotion list */
+				DEBUG(psEntry->flags &= ~PSENTRY_EXPIRED);
 			    }
 			}
 		    }
