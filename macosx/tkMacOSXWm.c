@@ -414,7 +414,6 @@ static void		RemapWindows(TkWindow *winPtr,
 }
 #endif
 
-
 - (NSSize)windowWillResize:(NSWindow *)sender
                     toSize:(NSSize)frameSize
 {
@@ -1736,6 +1735,7 @@ WmDeiconifyCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -1758,6 +1758,9 @@ WmDeiconifyCmd(
 
     TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ?
 	    ZoomState : NormalState);
+    [win setExcludedFromWindowsMenu:NO];
+    TkMacOSXApplyWindowAttributes(winPtr, win);
+    [win orderFront:nil];
     return TCL_OK;
 }
 
@@ -2241,7 +2244,7 @@ WmIconifyCmd(
 
     if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"can't iconify \"%s\": override-redirect flag is set",
+		"can't iconify \"%s\": overrideredirect flag is set",
 		winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "OVERRIDE_REDIRECT",
 		NULL);
@@ -2822,6 +2825,19 @@ WmOverrideredirectCmd(
     atts.override_redirect = (boolean) ? True : False;
     Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
     ApplyMasterOverrideChanges(winPtr, NULL);
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    if (boolean) {
+	[win setExcludedFromWindowsMenu:YES];
+	[win setStyleMask:([win styleMask] & ~NSTitledWindowMask)];
+    } else {
+	const char *title = winPtr->wmInfoPtr->titleUid;
+	if (!title) {
+	    title = winPtr->nameUid;
+	}
+	[win setStyleMask:([win styleMask] | NSTitledWindowMask)];
+	[win setTitle:[NSString stringWithUTF8String:title]];
+	[win setExcludedFromWindowsMenu:NO];
+    }
     return TCL_OK;
 }
 
@@ -3563,8 +3579,8 @@ WmWithdrawCmd(
 	return TCL_ERROR;
     }
     TkpWmSetState(winPtr, WithdrawnState);
-    /*Remove window from Window menu.*/
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    [win orderOut:nil];
     [win setExcludedFromWindowsMenu:YES];
 
     return TCL_OK;
@@ -5199,7 +5215,8 @@ MODULE_SCOPE int
 TkMacOSXIsWindowZoomed(
     TkWindow *winPtr)
 {
-    return [TkMacOSXDrawableWindow(winPtr->window) isZoomed];
+    NSWindow *macWindow = TkMacOSXDrawableWindow(winPtr->window); 
+    return [macWindow isZoomed];
 }
 
 
@@ -5244,13 +5261,13 @@ TkMacOSXZoomToplevel(
      * Do nothing if already in desired zoom state.
      */
 
-    if ((![window isZoomed] == (zoomPart == inZoomIn))) {
+    if (([window isZoomed] == (zoomPart == inZoomOut))) {
 	return false;
     }
-      [window zoom:NSApp];
+    [window zoom:NSApp];
 
-     wmPtr->hints.initial_state =
-    	    (zoomPart == inZoomIn ? NormalState : ZoomState);
+    wmPtr->hints.initial_state =
+	(zoomPart == inZoomIn ? NormalState : ZoomState);
     return true;
 }
 

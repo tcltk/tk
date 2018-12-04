@@ -136,6 +136,19 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
+- (NSRect)windowWillUseStandardFrame:(NSWindow *)window 
+                        defaultFrame:(NSRect)newFrame
+{
+    
+    /*
+     * This method needs to be implemented in order for [NSWindow isZoomed]
+     * to give the correct answer.  But it suffices to always validate
+     * every request.
+     */
+    
+    return newFrame;
+}
+
 - (NSSize)window:(NSWindow *)window
   willUseFullScreenContentSize:(NSSize)proposedSize
 {
