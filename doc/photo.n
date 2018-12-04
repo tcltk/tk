@@ -570,28 +570,28 @@ The supported SVG features are:
 .RS
 \fB elements:\fR g, path, rect, circle, ellipse, line, polyline, polygon,
 linearGradient, radialGradient, stop, defs, svg, style
-.
+.PP
 \fB attributes:\fR width, height, viewBox,
 preserveAspectRatio with none, xMin, xMid, xMax, yMin, yMid, yMax, slice
-.
+.PP
 \fB gradient attributes:\fR gradientUnits with objectBoundingBox,
 gradientTransform, cx, cy, r fx, fy x1, y1, x2, y2
 spreadMethod with pad, reflect or repeat,
 xlink:href
-.
-\fB poly attibutes: \fR points
-.
-\fB line attibutes: \fR x1, y1, x2, y2
-.
-\fB ellipse attibutes: \fR cx, cy, rx, ry
-.
-\fB circle attibutes: \fR cx, cy, r
-.
-\fB rectangle attibutes: \fR x, y, width, height, rx, ry
-.
-\fB path attibutes: \fR d with m, M, l, L, h, H, v, V, c, C, s, S, q, Q, t, T, a, A, z, Z
-.
-\fB style attibutes: \fR display with none, visibility, hidden, visible,
+.PP
+\fB poly attributes: \fR points
+.PP
+\fB line attributes: \fR x1, y1, x2, y2
+.PP
+\fB ellipse attributes: \fR cx, cy, rx, ry
+.PP
+\fB circle attributes: \fR cx, cy, r
+.PP
+\fB rectangle attributes: \fR x, y, width, height, rx, ry
+.PP
+\fB path attributes: \fR d with m, M, l, L, h, H, v, V, c, C, s, S, q, Q, t, T, a, A, z, Z
+.PP
+\fB style attributes: \fR display with none, visibility, hidden, visible,
 fill with nonzero and evenodd, opacity, fill-opacity,
 stroke, stroke-width, stroke-dasharray, stroke-dashoffset, stroke-opacity,
 stroke-linecap with butt, round and square,
