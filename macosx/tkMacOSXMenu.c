@@ -227,14 +227,16 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 @end
 
 @implementation TKMenu(TKMenuActions)
-// target methods
 
 - (BOOL) validateMenuItem: (NSMenuItem *) menuItem
 {
     return [menuItem isEnabled];
 }
 
-// Workaround for bug 3572016; leaves menu items enabled during modal dialog.
+/*
+ * Workaround for bug 3572016; leave menu items enabled during modal dialog.
+ */
+
 - (BOOL)worksWhenModal
 {
     return YES;
@@ -244,8 +246,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 {
     /*
      * With the delegate matching key equivalents, when a menu action is sent
-     * in response to a key equivalent, sender is the whole menu and not the
-     * the specific menu item, use this to ignore key equivalents for our
+     * in response to a key equivalent, the sender is the whole menu and not the
+     * specific menu item.  We use this to ignore key equivalents for Tk
      * menus (as Tk handles them directly via bindings).
      */
 
@@ -256,10 +258,12 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 	if (menuPtr && mePtr) {
 	    Tcl_Interp *interp = menuPtr->interp;
+
 	    /*Add time for errors to fire if necessary. This is sub-optimal
 	     *but avoids issues with Tcl/Cocoa event loop integration.
 	     */
-	    Tcl_Sleep(100);
+
+	    //Tcl_Sleep(100);
 	    Tcl_Preserve(interp);
 	    Tcl_Preserve(menuPtr);
 
@@ -278,40 +282,56 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 @end
 
 @implementation TKMenu(TKMenuDelegate)
-#define keyEquivModifiersMatch(km, m) (( \
-    ((km) & NSCommandKeyMask) != ((m) & NSCommandKeyMask) || \
-    ((km) & NSAlternateKeyMask) != ((m) & NSAlternateKeyMask) || \
-    ((km) & NSControlKeyMask) != ((m) & NSControlKeyMask) || \
-    (((km) & NSShiftKeyMask) != ((m) & NSShiftKeyMask) && \
-    ((m) & NSFunctionKeyMask))) ? NO : YES)
 
 - (BOOL) menuHasKeyEquivalent: (NSMenu *) menu forEvent: (NSEvent *) event
 	target: (id *) target action: (SEL *) action
 {
-    /*Use lowercaseString to keep "shift" from firing twice if bound to different procedure.*/
+    /*
+     * Use lowercaseString when comparing keyEquivalents since the notion of
+     * a shifted upper case letter does not make much sense.
+     */
+
     NSString *key = [[event charactersIgnoringModifiers] lowercaseString];
     NSUInteger modifiers = [event modifierFlags] &
 	    NSDeviceIndependentModifierFlagsMask;
 
     if (modifiers == (NSCommandKeyMask | NSShiftKeyMask) &&
 	    [key compare:@"?"] == NSOrderedSame) {
-	return NO;
-    }
+	/*
+	 * Command-Shift-? has not been allowed as a keyboard equivalent since
+	 * the first aqua port, for some mysterious reason.
+	 */
 
-    // For command key, take input manager's word so things
-    // like dvorak / qwerty layout work.
-    if (([event modifierFlags] & NSCommandKeyMask) == NSCommandKeyMask) {
-      key = [event characters];
+	return NO;
+    } else if (modifiers == (NSControlKeyMask | NSShiftKeyMask) &&
+	    [event keyCode] == 48) {
+
+	/* Starting with OSX 10.12 Control-Tab and Control-Shift-Tab are used
+	 * to select window tabs.  But for some even more mysterious reason the
+	 * Control-Shift-Tab event has character 0x19 = NSBackTabCharacter
+	 * rather than 0x09 = NSTabCharacter.  At the same time, the
+	 * keyEquivalent must be \0x09 in order for it to be displayed
+	 * correctly in the menu. This makes it impossible for the standard
+	 * "Select Previous Tab" to work correctly, unless we intervene.
+	 */
+
+	key = @"\t";
+    } else if (([event modifierFlags] & NSCommandKeyMask) == NSCommandKeyMask) {
+
+	/*
+	 * If the command modifier is set, use the full character string so
+	 * things like the dvorak / qwerty layout will work.
+	 */
+
+	key = [event characters];
     }
 
     NSArray *itemArray = [self itemArray];
-
     for (NSMenuItem *item in itemArray) {
-	if ([item isEnabled] && [[item keyEquivalent] compare:key] ==
-		NSOrderedSame) {
+	if ([item isEnabled] &&
+	    [[item keyEquivalent] compare:key] == NSOrderedSame) {
 	    NSUInteger keyEquivModifiers = [item keyEquivalentModifierMask];
-
-	    if (keyEquivModifiersMatch(keyEquivModifiers, modifiers)) {
+	    if (keyEquivModifiers == modifiers) {
 		*target = [item target];
 		*action = [item action];
 		return YES;
