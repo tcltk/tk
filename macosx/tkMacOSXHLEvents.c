@@ -93,12 +93,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 - (void) handleReopenApplicationEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
-    ProcessSerialNumber thePSN = {0, kCurrentProcess};
-    SetFrontProcess(&thePSN);
-#else
-    [[NSApplication sharedApplication] activateIgnoringOtherApps: YES];
-#endif
+    [NSApp activateIgnoringOtherApps: YES];
     if (_eventInterp && Tcl_FindCommand(_eventInterp,
 	    "::tk::mac::ReopenApplication", NULL, 0)) {
 	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ReopenApplication",
