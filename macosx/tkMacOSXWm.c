@@ -389,7 +389,7 @@ static void		RemapWindows(TkWindow *winPtr,
 	 */
 
 	if ([self styleMask] & NSFullScreenWindowMask) {
-	    frameRect = [NSWindow frameRectForContentRect:NSZeroRect
+ 	    frameRect = [NSWindow frameRectForContentRect:NSZeroRect
 				  styleMask:[self styleMask]];
 	} else {
 	    frameRect = [self frameRectForContentRect:NSZeroRect];
@@ -934,7 +934,8 @@ TkWmDeadWindow(
 	    if (title == nil) {
 		title = "unnamed window";
 	    }
-	    printf(">>>> Closing <%s>. Count is: %lu\n", title, [window retainCount]);
+	    fprintf(stderr, ">>>> Closing <%s>. Count is: %lu\n", title,
+		    [window retainCount]);
 	}
 #endif
 	[window close];
@@ -2244,7 +2245,7 @@ WmIconifyCmd(
 
     if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"can't iconify \"%s\": overrideredirect flag is set",
+		"can't iconify \"%s\": override-redirect flag is set",
 		winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "OVERRIDE_REDIRECT",
 		NULL);
@@ -2805,8 +2806,9 @@ WmOverrideredirectCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int boolean;
+    int flag;
     XSetWindowAttributes atts;
+    TKWindow *win = (TKWindow *)TkMacOSXDrawableWindow(winPtr->window);
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
@@ -2819,25 +2821,12 @@ WmOverrideredirectCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolean) != TCL_OK) {
+    if (Tcl_GetBooleanFromObj(interp, objv[3], &flag) != TCL_OK) {
 	return TCL_ERROR;
     }
-    atts.override_redirect = (boolean) ? True : False;
+    atts.override_redirect = flag ? True : False;
     Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
-    ApplyMasterOverrideChanges(winPtr, NULL);
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    if (boolean) {
-	[win setExcludedFromWindowsMenu:YES];
-	[win setStyleMask:([win styleMask] & ~NSTitledWindowMask)];
-    } else {
-	const char *title = winPtr->wmInfoPtr->titleUid;
-	if (!title) {
-	    title = winPtr->nameUid;
-	}
-	[win setStyleMask:([win styleMask] | NSTitledWindowMask)];
-	[win setTitle:[NSString stringWithUTF8String:title]];
-	[win setExcludedFromWindowsMenu:NO];
-    }
+    ApplyMasterOverrideChanges(winPtr, win);
     return TCL_OK;
 }
 
@@ -3884,6 +3873,7 @@ UpdateGeometryInfo(
     if (wmPtr->flags & WM_FULLSCREEN) {
 	return;
     }
+
 
     /*
      * Compute the new size for the top-level window. See the user
@@ -5215,7 +5205,7 @@ MODULE_SCOPE int
 TkMacOSXIsWindowZoomed(
     TkWindow *winPtr)
 {
-    NSWindow *macWindow = TkMacOSXDrawableWindow(winPtr->window); 
+    NSWindow *macWindow = TkMacOSXDrawableWindow(winPtr->window);
     return [macWindow isZoomed];
 }
 
@@ -5681,6 +5671,8 @@ TkMacOSXMakeRealWindowExist(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     MacDrawable *macWin;
+    WindowClass macClass;
+    Bool overrideRedirect = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
 
     if (TkMacOSXHostToplevelExists(winPtr)) {
 	return;
@@ -5717,7 +5709,16 @@ TkMacOSXMakeRealWindowExist(
 	 * TODO: Here we should handle out of process embedding.
 	 */
     }
-    WindowClass macClass = wmPtr->macClass;
+
+    /*
+     * If this is an override-redirect window, the NSWindow is created
+     * first as a document window then converted to a simple window.
+     */
+
+    if (overrideRedirect) {
+	wmPtr->macClass = kDocumentWindowClass;
+    }
+    macClass = wmPtr->macClass;
     wmPtr->attributes &= (tkAlwaysValidAttributes |
 	    macClassAttrs[macClass].validAttrs);
     wmPtr->flags |= macClassAttrs[macClass].flags |
@@ -5770,12 +5771,10 @@ TkMacOSXMakeRealWindowExist(
 	 */
 	[window setMovableByWindowBackground:NO];
     }
-
     [window setDocumentEdited:NO];
     wmPtr->window = window;
     macWin->view = window.contentView;
     TkMacOSXApplyWindowAttributes(winPtr, window);
-
     NSRect geometry = InitialWindowBounds(winPtr, window);
     geometry.size.width +=  structureRect.size.width;
     geometry.size.height += structureRect.size.height;
@@ -5783,7 +5782,14 @@ TkMacOSXMakeRealWindowExist(
 	    geometry.size.height);
     [window setFrame:geometry display:YES];
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
+
     macWin->flags |= TK_HOST_EXISTS;
+    if (overrideRedirect) {
+    	XSetWindowAttributes atts;
+    	atts.override_redirect = True;
+    	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
+    	ApplyMasterOverrideChanges(winPtr, NULL);
+    }
 }
 
 /*
@@ -6496,7 +6502,7 @@ ApplyWindowAttributeFlagChanges(
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
 	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
-		NSSize screenSize = [[macWindow screen]frame].size; 
+		NSSize screenSize = [[macWindow screen]frame].size;
 		b |= NSWindowCollectionBehaviorFullScreenPrimary;
 
 		/* The default max size has height less than the screen height.
@@ -6504,7 +6510,7 @@ ApplyWindowAttributeFlagChanges(
 		 * to be resized when it is a split window.  To work around
 		 * this we make the max size equal to the screen size.
 		 */
-		
+
 		[macWindow setMaxFullScreenContentSize:screenSize];
 	    }
 #endif
@@ -6565,6 +6571,14 @@ ApplyMasterOverrideChanges(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     UInt64 oldAttributes = wmPtr->attributes;
     int oldFlags = wmPtr->flags;
+    unsigned long styleMask;
+    NSRect structureRect;
+
+    if (!macWindow && winPtr->window != None &&
+	    TkMacOSXHostToplevelExists(winPtr)) {
+	macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    }
+    styleMask = [macWindow styleMask];
 
     /*
      * FIX: We need an UpdateWrapper equivalent to make this 100% correct
@@ -6576,6 +6590,7 @@ ApplyMasterOverrideChanges(
 	    wmPtr->attributes = macClassAttrs[kSimpleWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes |= kWindowNoActivatesAttribute;
+	styleMask &= ~NSTitledWindowMask;
     } else {
 	if (wmPtr->macClass == kSimpleWindowClass &&
 		oldAttributes == kWindowNoActivatesAttribute) {
@@ -6584,18 +6599,43 @@ ApplyMasterOverrideChanges(
 		    macClassAttrs[kDocumentWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes &= ~kWindowNoActivatesAttribute;
-    }
-    if (!macWindow && winPtr->window != None &&
-	    TkMacOSXHostToplevelExists(winPtr)) {
-	macWindow = TkMacOSXDrawableWindow(winPtr->window);
+	styleMask |= NSTitledWindowMask;
     }
     if (macWindow) {
-	if (winPtr->atts.override_redirect && wmPtr->master != None) {
-	    wmPtr->flags |= WM_TOPMOST;
+	NSWindow *parentWindow = [macWindow parentWindow];
+	structureRect = [NSWindow frameRectForContentRect:NSZeroRect
+				  styleMask:styleMask];
+
+	/*
+	 * Synchronize the wmInfoPtr to match the new window configuration
+	 * so windowBoundsChanged won't corrupt the window manager info.
+	 */
+
+	wmPtr->xInParent = -structureRect.origin.x;
+	wmPtr->yInParent = structureRect.origin.y + structureRect.size.height;
+	wmPtr->parentWidth = winPtr->changes.width + structureRect.size.width;
+	wmPtr->parentHeight = winPtr->changes.height + structureRect.size.height;
+	if (winPtr->atts.override_redirect) {
+	    [macWindow setExcludedFromWindowsMenu:YES];
+	    [macWindow setStyleMask:styleMask];
+	    if (wmPtr->hints.initial_state == NormalState) {
+		[macWindow orderFront:nil];
+	    }
+	    if (wmPtr->master != None) {
+		wmPtr->flags |= WM_TOPMOST;
+	    } else {
+		wmPtr->flags &= ~WM_TOPMOST;
+	    }
 	} else {
+	    const char *title = winPtr->wmInfoPtr->titleUid;
+	    if (!title) {
+		title = winPtr->nameUid;
+	    }
+	    [macWindow setStyleMask:styleMask];
+	    [macWindow setTitle:[NSString stringWithUTF8String:title]];
+	    [macWindow setExcludedFromWindowsMenu:NO];
 	    wmPtr->flags &= ~WM_TOPMOST;
 	}
-	NSWindow *parentWindow = [macWindow parentWindow];
 	if (wmPtr->master != None) {
 	    TkDisplay *dispPtr = TkGetDisplayList();
 	    TkWindow *masterWinPtr = (TkWindow *)
@@ -6623,6 +6663,7 @@ ApplyMasterOverrideChanges(
 	}
 	ApplyWindowAttributeFlagChanges(winPtr, macWindow, oldAttributes,
 		oldFlags, 0, 0);
+	//TkMacOSXApplyWindowAttributes(winPtr, macWindow);
     }
 }
 
