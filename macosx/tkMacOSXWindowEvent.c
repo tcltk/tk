@@ -136,16 +136,16 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
-- (NSRect)windowWillUseStandardFrame:(NSWindow *)window 
+- (NSRect)windowWillUseStandardFrame:(NSWindow *)window
                         defaultFrame:(NSRect)newFrame
 {
-    
+
     /*
      * This method needs to be implemented in order for [NSWindow isZoomed]
      * to give the correct answer.  But it suffices to always validate
      * every request.
      */
-    
+
     return newFrame;
 }
 
@@ -310,7 +310,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
 }
 
-- (BOOL)applicationShouldHandleReopen:(NSApplication *)sender 
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
                     hasVisibleWindows:(BOOL)flag
 {
     /*
@@ -995,7 +995,7 @@ ConfigureRestrictProc(
 	/*
 	 * Finally, unlock the main autoreleasePool.
 	 */
-	
+
 	[NSApp _unlockAutoreleasePool];
     }
 }
