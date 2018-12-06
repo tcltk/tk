@@ -31,7 +31,7 @@
  */
 
 static int		GenerateUpdates(HIShapeRef updateRgn,
-			    CGRect *updateBounds, TkWindow *winPtr);
+			   CGRect *updateBounds, TkWindow *winPtr);
 static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
 static void		DoWindowActivate(ClientData clientData);
@@ -75,10 +75,12 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if (winPtr) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	NSRect bounds = [w frame];
+	NSRect screenRect = [[w screen] frame];
 	int x, y, width = -1, height = -1, flags = 0;
 	int minY = 1 + [[NSApp mainMenu] menuBarHeight];
+
 	x = bounds.origin.x;
-	y = tkMacOSXZeroScreenHeight - (bounds.origin.y + bounds.size.height);
+	y = screenRect.size.height - (bounds.origin.y + bounds.size.height);
 	if (winPtr->changes.x != x || winPtr->changes.y != y) {
 	    flags |= TK_LOCATION_CHANGED;
 	} else {
@@ -679,7 +681,7 @@ TkGenWMConfigureEvent(
 	if (flags & TK_LOCATION_CHANGED) {
 	    wmPtr->x = x;
 	    wmPtr->y = y;
-	    wmPtr->flags &= ~(WM_NEGATIVE_X | WM_NEGATIVE_Y);
+	    //wmPtr->flags &= ~(WM_NEGATIVE_X | WM_NEGATIVE_Y);
 	}
 	if ((flags & TK_SIZE_CHANGED) && !(wmPtr->flags & WM_SYNC_PENDING) &&
 		((width != Tk_Width(tkwin)) || (height != Tk_Height(tkwin)))) {
@@ -721,6 +723,7 @@ TkGenWMConfigureEvent(
 	    wmPtr->configHeight = height;
 	}
     }
+
 
     /*
      * Now set up the changes structure. Under X we wait for the
