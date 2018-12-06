@@ -1951,8 +1951,9 @@ WmGeometryCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char xSign, ySign;
-    int width, height;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    char xSign = '+', ySign = '+';
+    int width, height, x = wmPtr->x, y= wmPtr->y;
     char *argv3;
 
     if ((objc != 3) && (objc != 4)) {
@@ -1960,8 +1961,6 @@ WmGeometryCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
-	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
 	if (wmPtr->gridWin != NULL) {
 	    width = wmPtr->reqGridWidth + (winPtr->changes.width
 		    - winPtr->reqWidth)/wmPtr->widthInc;
@@ -1971,8 +1970,20 @@ WmGeometryCmd(
 	    width = winPtr->changes.width;
 	    height = winPtr->changes.height;
 	}
+	if (win) {
+	    if (wmPtr->flags & WM_NEGATIVE_X) {
+		xSign = '-';
+		x = wmPtr->vRootWidth - wmPtr->x
+		    - (width + (wmPtr->parentWidth - winPtr->changes.width));
+	    }
+	    if (wmPtr->flags & WM_NEGATIVE_Y) {
+		ySign = '-';
+		y = wmPtr->vRootHeight - wmPtr->y
+		    - (height + (wmPtr->parentHeight - winPtr->changes.height));
+	    }
+	}
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
-		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
+		width, height, xSign, x, ySign, y));
 	return TCL_OK;
     }
     argv3 = Tcl_GetString(objv[3]);
@@ -3874,7 +3885,6 @@ UpdateGeometryInfo(
 	return;
     }
 
-
     /*
      * Compute the new size for the top-level window. See the user
      * documentation for details on this, but the size requested depends on
@@ -4216,7 +4226,6 @@ ParseGeometry(
 	flags |= WM_MOVE_PENDING;
     }
     wmPtr->flags = flags;
-
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
 	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
@@ -4677,7 +4686,7 @@ Tk_MoveToplevelWindow(
     wmPtr->x = x;
     wmPtr->y = y;
     wmPtr->flags |= WM_MOVE_PENDING;
-    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
+    //    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
     if (!(wmPtr->sizeHintsFlags & (USPosition|PPosition))) {
 	wmPtr->sizeHintsFlags |= USPosition;
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
