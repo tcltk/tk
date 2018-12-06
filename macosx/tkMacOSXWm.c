@@ -6663,7 +6663,6 @@ ApplyMasterOverrideChanges(
 	}
 	ApplyWindowAttributeFlagChanges(winPtr, macWindow, oldAttributes,
 		oldFlags, 0, 0);
-	//TkMacOSXApplyWindowAttributes(winPtr, macWindow);
     }
 }
 
