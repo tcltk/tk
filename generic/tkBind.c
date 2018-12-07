@@ -257,9 +257,9 @@ typedef struct {
 
 typedef struct {
     unsigned eventType;		/* Type of X event, e.g. ButtonPress. */
+    unsigned count;		/* Multi-event count, e.g. double-clicks, triple-clicks, etc. */
     unsigned long modStateMask;	/* Mask of modifiers that must be present (zero means no modifiers
     				 * are required). */
-    unsigned count;		/* Multi-event count, e.g. double-clicks, triple-clicks, etc. */
     unsigned long info;		/* Additional information that must match event. Normally this is zero,
     				 * meaning no additional information must match. For KeyPress and
 				 * KeyRelease events, it may be specified to select a particular
@@ -788,19 +788,33 @@ GetCount(
 
 static bool
 MatchEventNearby(
-    const XEvent *lhs,
-    const XEvent *rhs)
+    const XEvent *lhs,	/* previous button event */
+    const XEvent *rhs)	/* current button event */
 {
     assert(lhs);
     assert(rhs);
-    assert(lhs->type == ButtonPress || lhs->type == ButtonRelease || lhs->type == MotionNotify);
+    assert(lhs->type == ButtonPress || lhs->type == ButtonRelease);
     assert(lhs->type == rhs->type);
 
     /* assert: lhs->xbutton.time <= rhs->xbutton.time */
 
-    return rhs->xbutton.time - lhs->xbutton.time <= NEARBY_MS
+    return Abs(rhs->xbutton.time - lhs->xbutton.time) <= NEARBY_MS
 	    && Abs(rhs->xbutton.x_root - lhs->xbutton.x_root) <= NEARBY_PIXELS
 	    && Abs(rhs->xbutton.y_root - lhs->xbutton.y_root) <= NEARBY_PIXELS;
+}
+
+static bool
+MatchEventRepeat(
+    const XEvent *lhs,	/* previous key event */
+    const XEvent *rhs)	/* current key event */
+{
+    assert(lhs);
+    assert(rhs);
+    assert(lhs->type == KeyPress || lhs->type == KeyRelease);
+    assert(lhs->type == rhs->type);
+
+    /* assert: lhs->xkey.time <= rhs->xkey.time */
+    return Abs(rhs->xkey.time - lhs->xkey.time) <= NEARBY_MS;
 }
 
 static void
@@ -913,7 +927,6 @@ SetupPatternKey(
 
     patPtr = psPtr->pats;
     assert(!patPtr->info || !patPtr->name);
-    assert(!patPtr->name || !patPtr->info);
 
     key->object = psPtr->object;
     key->type = patPtr->eventType;
@@ -1011,6 +1024,7 @@ GetLookupForEvent(
 	case VirtualEvent:  key.detail.name = eventPtr->detail.name; break;
 	}
 	if (!key.detail.name) {
+	    assert(!key.detail.info);
 	    return NULL;
 	}
     }
@@ -1101,7 +1115,7 @@ ClearPromotionLists(
 	PSList *psList = PromArr_Get(bindPtr->promArr, i);
 	ClearList(psList, &bindPtr->lookupTables.entryPool, object);
 	if (!PSList_IsEmpty(psList)) {
-	    newArraySize = Max(newArraySize, i + 1);
+	    newArraySize = i + 1;
 	}
     }
 
@@ -1252,6 +1266,7 @@ TkBindInit(
 	    for (i = 0; i < SIZE_OF_ARRAY(eventArray); ++i) {
 		unsigned type = eventArray[i].type;
 		assert(type < TK_LASTEVENT);
+		assert(type > 0 || i == SIZE_OF_ARRAY(eventArray) - 1);
 		if (type > 0 && eventArrayIndex[type] == -1) {
 		    eventArrayIndex[type] = i;
 		}
@@ -2145,7 +2160,7 @@ Tk_BindEvent(
 	switch (eventPtr->type) {
 	case KeyPress:
 	case KeyRelease:
-	    if (eventPtr->xkey.time - curEvent->xev.xkey.time <= NEARBY_MS) {
+	    if (MatchEventRepeat(&curEvent->xev, eventPtr)) {
 		if (curEvent->xev.xkey.keycode == eventPtr->xkey.keycode) {
 		    ++curEvent->countDetailed;
 		} else {
@@ -2169,23 +2184,16 @@ Tk_BindEvent(
 		curEvent->countAny = curEvent->countDetailed = 1;
 	    }
 	    break;
-	case MotionNotify:
-	    if (MatchEventNearby(&curEvent->xev, eventPtr)) {
-		++curEvent->countAny;
-	    } else {
-		curEvent->countAny = 1;
-	    }
-	    break;
 	case EnterNotify:
 	case LeaveNotify:
-	    if (eventPtr->xcrossing.time - curEvent->xev.xcrossing.time <= NEARBY_MS) {
+	    if (Abs(eventPtr->xcrossing.time - curEvent->xev.xcrossing.time) <= NEARBY_MS) {
 		++curEvent->countAny;
 	    } else {
 		curEvent->countAny = 1;
 	    }
 	    break;
 	case PropertyNotify:
-	    if (eventPtr->xproperty.time - curEvent->xev.xproperty.time <= NEARBY_MS) {
+	    if (Abs(eventPtr->xproperty.time - curEvent->xev.xproperty.time) <= NEARBY_MS) {
 		++curEvent->countAny;
 	    } else {
 		curEvent->countAny = 1;
@@ -4432,7 +4440,6 @@ FindSequence(
     assert(eventString);
 
     psPtr = ckalloc(sizeof(PatSeq) + (patsBufSize - 1)*sizeof(TkPattern));
-    memset(psPtr->pats, 0, patsBufSize*sizeof(TkPattern)); /* otherwise memcmp doesn't work */
 
     /*
      *------------------------------------------------------------------
@@ -4446,7 +4453,6 @@ FindSequence(
 	    patsBufSize += patsBufSize;
 	    psPtr = ckrealloc(psPtr, sizeof(PatSeq) + (patsBufSize - 1)*sizeof(TkPattern));
 	    patPtr = psPtr->pats + pos;
-	    memset(patPtr, 0, (patsBufSize - pos)*sizeof(TkPattern)); /* otherwise memcmp doesn't work */
 	}
 
 	if ((count = ParseEventDescription(interp, &p, patPtr, &eventMask)) == 0) {
@@ -4498,7 +4504,6 @@ FindSequence(
 
     patPtr = psPtr->pats;
     psPtr->object = object;
-    memset(&key, 0, sizeof(key));
     SetupPatternKey(&key, psPtr);
     hPtr = Tcl_CreateHashEntry(&lookupTables->patternTable, (char *) &key, &isNew);
     if (!isNew) {
@@ -4582,6 +4587,7 @@ FinalizeParseEventDescription(
     const char* errCode)
 {
     assert(patPtr);
+    assert(!errorObj == (count > 0));
 
     if (errorObj) {
 	Tcl_SetObjResult(interp, errorObj);
@@ -4608,11 +4614,7 @@ ParseEventDescription(
     assert(eventMaskPtr);
 
     p = *eventStringPtr;
-
-    patPtr->eventType = -1;
-    patPtr->modStateMask = 0;
-    patPtr->info = 0;
-    patPtr->name = NULL;
+    memset(patPtr, 0, sizeof(TkPattern)); /* otherwise memcmp doesn't work */
 
     /*
      * Handle simple ASCII characters.
