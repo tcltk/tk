@@ -1517,8 +1517,9 @@ test wm-stackorder-5.1 {a menu is not a toplevel} -body {
     destroy .t
 } -result {.t .}
 test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
-    overrideredirect toplevel} -constraints notAqua -body {
+    overrideredirect toplevel on unix} -constraints unix -body {
     toplevel .t
+    tkwait visibility .t	    
     wm overrideredirect .t 1
     raise .
     update
@@ -1527,6 +1528,18 @@ test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
 } -cleanup {
     destroy .t
 } -result 0
+test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
+    overrideredirect toplevel on macOS or win} -constraints aquaOrWin32 -body {
+    toplevel .t
+    tkwait visibility .t	    
+    wm overrideredirect .t 1
+    raise .
+    update
+    raiseDelay
+    wm stackorder . isabove .t
+} -cleanup {
+    destroy .t
+} -result 1
 test wm-stackorder-5.3 {An overrideredirect window\
         can be explicitly lowered} -body {
     toplevel .t
@@ -1541,7 +1554,7 @@ test wm-stackorder-5.3 {An overrideredirect window\
 } -result 1
 
 test wm-stackorder-6.1 {An embedded toplevel does not\
-        appear in the stacking order} -constraints notAqua -body {
+        appear in the stacking order on unix or win} -constraints notAqua -body {
     toplevel .real -container 1
     toplevel .embd -bg blue -use [winfo id .real]
     update
@@ -1549,6 +1562,15 @@ test wm-stackorder-6.1 {An embedded toplevel does not\
 } -cleanup {
     deleteWindows
 } -result {. .real}
+test wm-stackorder-6.1.1 {An embedded toplevel does\
+        appear in the stacking order on macOS} -constraints aqua -body {
+    toplevel .real -container 1
+    toplevel .embd -bg blue -use [winfo id .real]
+    update
+    wm stackorder .
+} -cleanup {
+    deleteWindows
+} -result {. .embd}
 
 
 stdWindow
