@@ -1517,7 +1517,7 @@ test wm-stackorder-5.1 {a menu is not a toplevel} -body {
     destroy .t
 } -result {.t .}
 test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
-    overrideredirect toplevel} -constraints !aqua -body {
+    overrideredirect toplevel} -constraints notAqua -body {
     toplevel .t
     wm overrideredirect .t 1
     raise .
@@ -1541,7 +1541,7 @@ test wm-stackorder-5.3 {An overrideredirect window\
 } -result 1
 
 test wm-stackorder-6.1 {An embedded toplevel does not\
-        appear in the stacking order} -constraints !aqua -body {
+        appear in the stacking order} -constraints notAqua -body {
     toplevel .real -container 1
     toplevel .embd -bg blue -use [winfo id .real]
     update
