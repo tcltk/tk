@@ -176,7 +176,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
      * be sized to the screen's visibleFrame, leaving black bands at
      * the top and bottom.
      */
-
     return proposedSize;
 }
 

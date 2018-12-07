@@ -6511,16 +6511,21 @@ ApplyWindowAttributeFlagChanges(
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
 	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
-		NSSize screenSize = [[macWindow screen]frame].size;
-		b |= NSWindowCollectionBehaviorFullScreenPrimary;
+		if (winPtr->atts.override_redirect) {
+		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
+			  NSWindowCollectionBehaviorFullScreenAuxiliary);
+		} else {
+		    NSSize screenSize = [[macWindow screen]frame].size;
+		    b |= NSWindowCollectionBehaviorFullScreenPrimary;
 
-		/* The default max size has height less than the screen height.
-		 * This causes the window manager to refuse to allow the window
-		 * to be resized when it is a split window.  To work around
-		 * this we make the max size equal to the screen size.
-		 */
+		    /* The default max size has height less than the screen height.
+		     * This causes the window manager to refuse to allow the window
+		     * to be resized when it is a split window.  To work around
+		     * this we make the max size equal to the screen size.
+		     */
 
-		[macWindow setMaxFullScreenContentSize:screenSize];
+		    [macWindow setMaxFullScreenContentSize:screenSize];
+		}
 	    }
 #endif
 
