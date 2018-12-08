@@ -1461,7 +1461,7 @@ DisposeColorTable(
 	ckfree(colorPtr->pixelMap);
     }
 
-    entry = Tcl_FindHashEntry(&imgPhotoColorHash, (char *) &colorPtr->id);
+    entry = Tcl_FindHashEntry(&imgPhotoColorHash, &colorPtr->id);
     if (entry == NULL) {
 	Tcl_Panic("DisposeColorTable couldn't find hash entry");
     }

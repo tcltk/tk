@@ -13,8 +13,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/* #define USE_OLD_TAG_SEARCH 1 */
-
 #include "tkInt.h"
 #include "tkCanvas.h"
 #include "default.h"
@@ -28,26 +26,6 @@
  * See tkCanvas.h for key data structures used to implement canvases.
  */
 
-#ifdef USE_OLD_TAG_SEARCH
-/*
- * The structure defined below is used to keep track of a tag search in
- * progress. No field should be accessed by anyone other than StartTagSearch
- * and NextItem.
- */
-
-typedef struct TagSearch {
-    TkCanvas *canvasPtr;	/* Canvas widget being searched. */
-    Tk_Uid tag;			/* Tag to search for. 0 means return all
-				 * items. */
-    Tk_Item *currentPtr;	/* Pointer to last item returned. */
-    Tk_Item *lastPtr;		/* The item right before the currentPtr is
-				 * tracked so if the currentPtr is deleted we
-				 * don't have to start from the beginning. */
-    int searchOver;		/* Non-zero means NextItem should always
-				 * return NULL. */
-} TagSearch;
-
-#else /* USE_OLD_TAG_SEARCH */
 /*
  * The structure defined below is used to keep track of a tag search in
  * progress. No field should be accessed by anyone other than TagSearchScan,
@@ -93,8 +71,6 @@ typedef struct TagSearch {
 #define SEARCH_TYPE_ALL		2	/* Looking for all items */
 #define SEARCH_TYPE_TAG		3	/* Looking for an item by simple tag */
 #define SEARCH_TYPE_EXPR	4	/* Compound search */
-
-#endif /* USE_OLD_TAG_SEARCH */
 
 /*
  * Custom option for handling "-state" and "-offset"
@@ -215,7 +191,6 @@ static Tk_ItemType *typeList = NULL;
 				 * yet. */
 TCL_DECLARE_MUTEX(typeListMutex)
 
-#ifndef USE_OLD_TAG_SEARCH
 /*
  * Uids for operands in compiled advanced tag search expressions.
  * Initialization is done by GetStaticUids()
@@ -236,7 +211,6 @@ typedef struct {
 
 static Tcl_ThreadDataKey dataKey;
 static SearchUids *	GetStaticUids(void);
-#endif /* USE_OLD_TAG_SEARCH */
 
 /*
  * Prototypes for functions defined later in this file:
@@ -267,40 +241,25 @@ static void		CanvasWorldChanged(ClientData instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, int argc,
 			    Tcl_Obj *const *argv, int flags);
-static void		DestroyCanvas(char *memPtr);
-static int              DrawCanvas(Tcl_Interp *interp, ClientData clientData, Tk_PhotoHandle photohandle, int subsample, int zoom);
+static void		DestroyCanvas(void *memPtr);
+static int		DrawCanvas(Tcl_Interp *interp, ClientData clientData, Tk_PhotoHandle photohandle, int subsample, int zoom);
 static void		DisplayCanvas(ClientData clientData);
 static void		DoItem(Tcl_Obj *accumObj,
 			    Tk_Item *itemPtr, Tk_Uid tag);
 static void		EventuallyRedrawItem(TkCanvas *canvasPtr,
 			    Tk_Item *itemPtr);
-#ifdef USE_OLD_TAG_SEARCH
-static int		FindItems(Tcl_Interp *interp, TkCanvas *canvasPtr,
-			    int argc, Tcl_Obj *const *argv,
-			    Tcl_Obj *newTagObj, int first);
-#else /* USE_OLD_TAG_SEARCH */
 static int		FindItems(Tcl_Interp *interp, TkCanvas *canvasPtr,
 			    int argc, Tcl_Obj *const *argv,
 			    Tcl_Obj *newTagObj, int first,
 			    TagSearch **searchPtrPtr);
-#endif /* USE_OLD_TAG_SEARCH */
 static int		FindArea(Tcl_Interp *interp, TkCanvas *canvasPtr,
 			    Tcl_Obj *const *argv, Tk_Uid uid, int enclosed);
 static double		GridAlign(double coord, double spacing);
 static const char**	TkGetStringsFromObjs(int argc, Tcl_Obj *const *objv);
 static void		InitCanvas(void);
-#ifdef USE_OLD_TAG_SEARCH
-static Tk_Item *	NextItem(TagSearch *searchPtr);
-#endif /* USE_OLD_TAG_SEARCH */
 static void		PickCurrentItem(TkCanvas *canvasPtr, XEvent *eventPtr);
 static Tcl_Obj *	ScrollFractions(int screen1,
 			    int screen2, int object1, int object2);
-#ifdef USE_OLD_TAG_SEARCH
-static void		RelinkItems(TkCanvas *canvasPtr,
-			    Tcl_Obj *tag, Tk_Item *prevPtr);
-static Tk_Item *	StartTagSearch(TkCanvas *canvasPtr,
-			    Tcl_Obj *tag, TagSearch *searchPtr);
-#else /* USE_OLD_TAG_SEARCH */
 static int		RelinkItems(TkCanvas *canvasPtr, Tcl_Obj *tag,
 			    Tk_Item *prevPtr, TagSearch **searchPtrPtr);
 static void 		TagSearchExprInit(TagSearchExpr **exprPtrPtr);
@@ -314,7 +273,6 @@ static int		TagSearchEvalExpr(TagSearchExpr *expr,
 			    Tk_Item *itemPtr);
 static Tk_Item *	TagSearchFirst(TagSearch *searchPtr);
 static Tk_Item *	TagSearchNext(TagSearch *searchPtr);
-#endif /* USE_OLD_TAG_SEARCH */
 
 /*
  * The structure below defines canvas class behavior by means of functions
@@ -332,17 +290,6 @@ static const Tk_ClassProcs canvasClass = {
  * Macros that significantly simplify all code that finds items.
  */
 
-#ifdef USE_OLD_TAG_SEARCH
-#define FIRST_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
-    itemPtr = StartTagSearch(canvasPtr,(objPtr),&search)
-#define FOR_EVERY_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
-    for (itemPtr = StartTagSearch(canvasPtr, (objPtr), &search); \
-	    itemPtr != NULL; itemPtr = NextItem(&search))
-#define FIND_ITEMS(objPtr, n) \
-    FindItems(interp, canvasPtr, objc, objv, (objPtr), (n))
-#define RELINK_ITEMS(objPtr, itemPtr) \
-    RelinkItems(canvasPtr, (objPtr), (itemPtr))
-#else /* USE_OLD_TAG_SEARCH */
 #define FIRST_CANVAS_ITEM_MATCHING(objPtr,searchPtrPtr,errorExitClause) \
     if ((result=TagSearchScan(canvasPtr,(objPtr),(searchPtrPtr))) != TCL_OK){ \
 	errorExitClause; \
@@ -358,7 +305,6 @@ static const Tk_ClassProcs canvasClass = {
     FindItems(interp, canvasPtr, objc, objv, (objPtr), (n), &searchPtr)
 #define RELINK_ITEMS(objPtr, itemPtr) \
     result = RelinkItems(canvasPtr, (objPtr), (itemPtr), &searchPtr)
-#endif /* USE_OLD_TAG_SEARCH */
 
 /*
  * ----------------------------------------------------------------------
@@ -736,9 +682,7 @@ Tk_CanvasObjCmd(
     canvasPtr->tsoffset.flags = 0;
     canvasPtr->tsoffset.xoffset = 0;
     canvasPtr->tsoffset.yoffset = 0;
-#ifndef USE_OLD_TAG_SEARCH
     canvasPtr->bindTagExprs = NULL;
-#endif
     Tcl_InitHashTable(&canvasPtr->idTable, TCL_ONE_WORD_KEYS);
 
     Tk_SetClass(canvasPtr->tkwin, "Canvas");
@@ -793,12 +737,8 @@ CanvasWidgetCmd(
     int c, result;
     Tk_Item *itemPtr = NULL;	/* Initialization needed only to prevent
 				 * compiler warning. */
-#ifdef USE_OLD_TAG_SEARCH
-    TagSearch search;
-#else /* USE_OLD_TAG_SEARCH */
     TagSearch *searchPtr = NULL;/* Allocated by first TagSearchScan, freed by
 				 * TagSearchDestroy */
-#endif /* USE_OLD_TAG_SEARCH */
 
     int index;
     static const char *const optionStrings[] = {
@@ -900,7 +840,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_BIND: {
-	ClientData object;
+	void *object;
 
 	if ((objc < 3) || (objc > 5)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?sequence? ?command?");
@@ -914,35 +854,6 @@ CanvasWidgetCmd(
 	 */
 
 	object = NULL;
-#ifdef USE_OLD_TAG_SEARCH
-	if (isdigit(UCHAR(Tcl_GetString(objv[2])[0]))) {
-	    int id;
-	    char *end;
-	    Tcl_HashEntry *entryPtr;
-
-	    id = strtoul(Tcl_GetString(objv[2]), &end, 0);
-	    if (*end != 0) {
-		goto bindByTag;
-	    }
-	    entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, (char *) id);
-	    if (entryPtr != NULL) {
-		itemPtr = Tcl_GetHashValue(entryPtr);
-		object = itemPtr;
-	    }
-
-	    if (object == NULL) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"item \"%s\" doesn't exist", Tcl_GetString(objv[2])));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM",
-			Tcl_GetString(objv[2]), NULL);
-		result = TCL_ERROR;
-		goto done;
-	    }
-	} else {
-	bindByTag:
-	    object = Tk_GetUid(Tcl_GetString(objv[2]));
-	}
-#else /* USE_OLD_TAG_SEARCH */
 	result = TagSearchScan(canvasPtr, objv[2], &searchPtr);
 	if (result != TCL_OK) {
 	    goto done;
@@ -951,7 +862,7 @@ CanvasWidgetCmd(
 	    Tcl_HashEntry *entryPtr;
 
 	    entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable,
-		    (char *) INT2PTR(searchPtr->id));
+		    INT2PTR(searchPtr->id));
 	    if (entryPtr != NULL) {
 		itemPtr = Tcl_GetHashValue(entryPtr);
 		object = itemPtr;
@@ -966,9 +877,8 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	} else {
-    	    object = (ClientData) searchPtr->expr->uid;
+	    object = (char *)searchPtr->expr->uid;
 	}
-#endif /* USE_OLD_TAG_SEARCH */
 
 	/*
 	 * Make a binding table if the canvas doesn't already have one.
@@ -988,7 +898,6 @@ CanvasWidgetCmd(
 			object, Tcl_GetString(objv[3]));
 		goto done;
 	    }
-#ifndef USE_OLD_TAG_SEARCH
 	    if (searchPtr->type == SEARCH_TYPE_EXPR) {
 		/*
 		 * If new tag expression, then insert in linked list.
@@ -1019,7 +928,6 @@ CanvasWidgetCmd(
 		    searchPtr->expr = NULL;
 		}
 	    }
-#endif /* not USE_OLD_TAG_SEARCH */
 	    if (argv4[0] == '+') {
 		argv4++;
 		append = 1;
@@ -1317,7 +1225,7 @@ CanvasWidgetCmd(
 
 	itemPtr->nextPtr = NULL;
 	entryPtr = Tcl_CreateHashEntry(&canvasPtr->idTable,
-		(char *) INT2PTR(itemPtr->id), &isNew);
+		INT2PTR(itemPtr->id), &isNew);
 	Tcl_SetHashValue(entryPtr, itemPtr);
 	itemPtr->prevPtr = canvasPtr->lastItemPtr;
 	canvasPtr->hotPtr = itemPtr;
@@ -1396,7 +1304,7 @@ CanvasWidgetCmd(
 		    ckfree(itemPtr->tagPtr);
 		}
 		entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable,
-			(char *) INT2PTR(itemPtr->id));
+			INT2PTR(itemPtr->id));
 		Tcl_DeleteHashEntry(entryPtr);
 		if (itemPtr->nextPtr != NULL) {
 		    itemPtr->nextPtr->prevPtr = itemPtr->prevPtr;
@@ -2176,9 +2084,7 @@ CanvasWidgetCmd(
     }
 
   done:
-#ifndef USE_OLD_TAG_SEARCH
     TagSearchDestroy(searchPtr);
-#endif /* not USE_OLD_TAG_SEARCH */
     Tcl_Release(canvasPtr);
     return result;
 }
@@ -2203,13 +2109,11 @@ CanvasWidgetCmd(
 
 static void
 DestroyCanvas(
-    char *memPtr)		/* Info about canvas widget. */
+    void *memPtr)		/* Info about canvas widget. */
 {
-    TkCanvas *canvasPtr = (TkCanvas *) memPtr;
+    TkCanvas *canvasPtr = memPtr;
     Tk_Item *itemPtr;
-#ifndef USE_OLD_TAG_SEARCH
     TagSearchExpr *expr, *next;
-#endif
 
     /*
      * Free up all of the items in the canvas.
@@ -2234,14 +2138,12 @@ DestroyCanvas(
     if (canvasPtr->pixmapGC != None) {
 	Tk_FreeGC(canvasPtr->display, canvasPtr->pixmapGC);
     }
-#ifndef USE_OLD_TAG_SEARCH
     expr = canvasPtr->bindTagExprs;
     while (expr) {
 	next = expr->next;
 	TagSearchExprDestroy(expr);
 	expr = next;
     }
-#endif /* USE_OLD_TAG_SEARCH */
     Tcl_DeleteTimerHandler(canvasPtr->insertBlinkHandler);
     if (canvasPtr->bindingTable != NULL) {
 	Tk_DeleteBindingTable(canvasPtr->bindingTable);
@@ -3586,208 +3488,6 @@ InitCanvas(void)
     Tcl_MutexUnlock(&typeListMutex);
 }
 
-#ifdef USE_OLD_TAG_SEARCH
-/*
- *--------------------------------------------------------------
- *
- * StartTagSearch --
- *
- *	This function is called to initiate an enumeration of all items in a
- *	given canvas that contain a given tag.
- *
- * Results:
- *	The return value is a pointer to the first item in canvasPtr that
- *	matches tag, or NULL if there is no such item. The information at
- *	*searchPtr is initialized such that successive calls to NextItem will
- *	return successive items that match tag.
- *
- * Side effects:
- *	SearchPtr is linked into a list of searches in progress on canvasPtr,
- *	so that elements can safely be deleted while the search is in
- *	progress. EndTagSearch must be called at the end of the search to
- *	unlink searchPtr from this list.
- *
- *--------------------------------------------------------------
- */
-
-static Tk_Item *
-StartTagSearch(
-    TkCanvas *canvasPtr,	/* Canvas whose items are to be searched. */
-    Tcl_Obj *tagObj,		/* Object giving tag value. */
-    TagSearch *searchPtr)	/* Record describing tag search; will be
-				 * initialized here. */
-{
-    int id;
-    Tk_Item *itemPtr, *lastPtr;
-    Tk_Uid *tagPtr;
-    Tk_Uid uid;
-    char *tag = Tcl_GetString(tagObj);
-    int count;
-    TkWindow *tkwin = (TkWindow *) canvasPtr->tkwin;
-    TkDisplay *dispPtr = tkwin->dispPtr;
-
-    /*
-     * Initialize the search.
-     */
-
-    searchPtr->canvasPtr = canvasPtr;
-    searchPtr->searchOver = 0;
-
-    /*
-     * Find the first matching item in one of several ways. If the tag is a
-     * number then it selects the single item with the matching identifier.
-     * In this case see if the item being requested is the hot item, in which
-     * case the search can be skipped.
-     */
-
-    if (isdigit(UCHAR(*tag))) {
-	char *end;
-	Tcl_HashEntry *entryPtr;
-
-	dispPtr->numIdSearches++;
-	id = strtoul(tag, &end, 0);
-	if (*end == 0) {
-	    itemPtr = canvasPtr->hotPtr;
-	    lastPtr = canvasPtr->hotPrevPtr;
-	    if ((itemPtr == NULL) || (itemPtr->id != id) || (lastPtr == NULL)
-		    || (lastPtr->nextPtr != itemPtr)) {
-		dispPtr->numSlowSearches++;
-		entryPtr = Tcl_FindHashEntry(&canvasPtr->idTable, (char*) id);
-		if (entryPtr != NULL) {
-		    itemPtr = Tcl_GetHashValue(entryPtr);
-		    lastPtr = itemPtr->prevPtr;
-		} else {
-		    lastPtr = itemPtr = NULL;
-		}
-	    }
-	    searchPtr->lastPtr = lastPtr;
-	    searchPtr->searchOver = 1;
-	    canvasPtr->hotPtr = itemPtr;
-	    canvasPtr->hotPrevPtr = lastPtr;
-	    return itemPtr;
-	}
-    }
-
-    searchPtr->tag = uid = Tk_GetUid(tag);
-    if (uid == Tk_GetUid("all")) {
-	/*
-	 * All items match.
-	 */
-
-	searchPtr->tag = NULL;
-	searchPtr->lastPtr = NULL;
-	searchPtr->currentPtr = canvasPtr->firstItemPtr;
-	return canvasPtr->firstItemPtr;
-    }
-
-    /*
-     * None of the above. Search for an item with a matching tag.
-     */
-
-    for (lastPtr = NULL, itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
-	    lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
-	for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
-		count > 0; tagPtr++, count--) {
-	    if (*tagPtr == uid) {
-		searchPtr->lastPtr = lastPtr;
-		searchPtr->currentPtr = itemPtr;
-		return itemPtr;
-	    }
-	}
-    }
-    searchPtr->lastPtr = lastPtr;
-    searchPtr->searchOver = 1;
-    return NULL;
-}
-
-/*
- *--------------------------------------------------------------
- *
- * NextItem --
- *
- *	This function returns successive items that match a given tag; it
- *	should be called only after StartTagSearch has been used to begin a
- *	search.
- *
- * Results:
- *	The return value is a pointer to the next item that matches the tag
- *	specified to StartTagSearch, or NULL if no such item exists.
- *	*SearchPtr is updated so that the next call to this function will
- *	return the next item.
- *
- * Side effects:
- *	None.
- *
- *--------------------------------------------------------------
- */
-
-static Tk_Item *
-NextItem(
-    TagSearch *searchPtr)	/* Record describing search in progress. */
-{
-    Tk_Item *itemPtr, *lastPtr;
-    int count;
-    Tk_Uid uid;
-    Tk_Uid *tagPtr;
-
-    /*
-     * Find next item in list (this may not actually be a suitable one to
-     * return), and return if there are no items left.
-     */
-
-    lastPtr = searchPtr->lastPtr;
-    if (lastPtr == NULL) {
-	itemPtr = searchPtr->canvasPtr->firstItemPtr;
-    } else {
-	itemPtr = lastPtr->nextPtr;
-    }
-    if ((itemPtr == NULL) || (searchPtr->searchOver)) {
-	searchPtr->searchOver = 1;
-	return NULL;
-    }
-    if (itemPtr != searchPtr->currentPtr) {
-	/*
-	 * The structure of the list has changed. Probably the previously-
-	 * returned item was removed from the list. In this case, don't
-	 * advance lastPtr; just return its new successor (i.e. do nothing
-	 * here).
-	 */
-    } else {
-	lastPtr = itemPtr;
-	itemPtr = lastPtr->nextPtr;
-    }
-
-    /*
-     * Handle special case of "all" search by returning next item.
-     */
-
-    uid = searchPtr->tag;
-    if (uid == NULL) {
-	searchPtr->lastPtr = lastPtr;
-	searchPtr->currentPtr = itemPtr;
-	return itemPtr;
-    }
-
-    /*
-     * Look for an item with a particular tag.
-     */
-
-    for ( ; itemPtr != NULL; lastPtr = itemPtr, itemPtr = itemPtr->nextPtr) {
-	for (tagPtr = itemPtr->tagPtr, count = itemPtr->numTags;
-		count > 0; tagPtr++, count--) {
-	    if (*tagPtr == uid) {
-		searchPtr->lastPtr = lastPtr;
-		searchPtr->currentPtr = itemPtr;
-		return itemPtr;
-	    }
-	}
-    }
-    searchPtr->lastPtr = lastPtr;
-    searchPtr->searchOver = 1;
-    return NULL;
-}
-
-#else /* !USE_OLD_TAG_SEARCH */
 /*
  *----------------------------------------------------------------------
  *
@@ -4551,7 +4251,7 @@ TagSearchFirst(
 	if ((itemPtr == NULL) || (itemPtr->id != searchPtr->id)
 		|| (lastPtr == NULL) || (lastPtr->nextPtr != itemPtr)) {
 	    entryPtr = Tcl_FindHashEntry(&searchPtr->canvasPtr->idTable,
-		    (char *) INT2PTR(searchPtr->id));
+		    INT2PTR(searchPtr->id));
 	    if (entryPtr != NULL) {
 		itemPtr = Tcl_GetHashValue(entryPtr);
 		lastPtr = itemPtr->prevPtr;
@@ -4716,7 +4416,6 @@ TagSearchNext(
     searchPtr->searchOver = 1;
     return NULL;
 }
-#endif /* USE_OLD_TAG_SEARCH */
 
 /*
  *--------------------------------------------------------------
@@ -4829,14 +4528,9 @@ FindItems(
     int first			/* For error messages: gives number of
 				 * elements of objv which are already
 				 * handled. */
-#ifndef USE_OLD_TAG_SEARCH
     ,TagSearch **searchPtrPtr	/* From CanvasWidgetCmd local vars*/
-#endif /* not USE_OLD_TAG_SEARCH */
     )
 {
-#ifdef USE_OLD_TAG_SEARCH
-    TagSearch search;
-#endif /* USE_OLD_TAG_SEARCH */
     Tk_Item *itemPtr;
     Tk_Uid uid;
     int index, result;
@@ -5153,16 +4847,6 @@ FindArea(
  *--------------------------------------------------------------
  */
 
-#ifdef USE_OLD_TAG_SEARCH
-static void
-RelinkItems(
-    TkCanvas *canvasPtr,	/* Canvas to be modified. */
-    Tcl_Obj *tag,		/* Tag identifying items to be moved in the
-				 * redisplay list. */
-    Tk_Item *prevPtr)		/* Reposition the items so that they go just
-				 * after this item (NULL means put at
-				 * beginning of list). */
-#else /* USE_OLD_TAG_SEARCH */
 static int
 RelinkItems(
     TkCanvas *canvasPtr,	/* Canvas to be modified. */
@@ -5172,12 +4856,8 @@ RelinkItems(
 				 * after this item (NULL means put at
 				 * beginning of list). */
     TagSearch **searchPtrPtr)	/* From CanvasWidgetCmd local vars */
-#endif /* USE_OLD_TAG_SEARCH */
 {
     Tk_Item *itemPtr;
-#ifdef USE_OLD_TAG_SEARCH
-    TagSearch search;
-#endif /* USE_OLD_TAG_SEARCH */
     Tk_Item *firstMovePtr, *lastMovePtr;
     int result;
 
@@ -5229,11 +4909,7 @@ RelinkItems(
      */
 
     if (firstMovePtr == NULL) {
-#ifdef USE_OLD_TAG_SEARCH
-	return;
-#else /* USE_OLD_TAG_SEARCH */
 	return TCL_OK;
-#endif /* USE_OLD_TAG_SEARCH */
     }
     if (prevPtr == NULL) {
 	if (canvasPtr->firstItemPtr != NULL) {
@@ -5254,9 +4930,7 @@ RelinkItems(
     if (canvasPtr->lastItemPtr == prevPtr) {
 	canvasPtr->lastItemPtr = lastMovePtr;
     }
-#ifndef USE_OLD_TAG_SEARCH
     return TCL_OK;
-#endif /* not USE_OLD_TAG_SEARCH */
 }
 
 /*
@@ -5400,9 +5074,7 @@ PickCurrentItem(
     double coords[2];
     int buttonDown;
     Tk_Item *prevItemPtr;
-#ifndef USE_OLD_TAG_SEARCH
     SearchUids *searchUids = GetStaticUids();
-#endif
 
     /*
      * Check whether or not a button is down. If so, we'll log entry and exit
@@ -5525,11 +5197,7 @@ PickCurrentItem(
 
 	if ((itemPtr == canvasPtr->currentItemPtr) && !buttonDown) {
 	    for (i = itemPtr->numTags-1; i >= 0; i--) {
-#ifdef USE_OLD_TAG_SEARCH
-		if (itemPtr->tagPtr[i] == Tk_GetUid("current"))
-#else /* USE_OLD_TAG_SEARCH */
 		if (itemPtr->tagPtr[i] == searchUids->currentUid)
-#endif /* USE_OLD_TAG_SEARCH */
 		    /* then */ {
 		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
 		    itemPtr->numTags--;
@@ -5566,11 +5234,7 @@ PickCurrentItem(
     if (canvasPtr->currentItemPtr != NULL) {
 	XEvent event;
 
-#ifdef USE_OLD_TAG_SEARCH
-	DoItem(NULL, canvasPtr->currentItemPtr, Tk_GetUid("current"));
-#else /* USE_OLD_TAG_SEARCH */
 	DoItem(NULL, canvasPtr->currentItemPtr, searchUids->currentUid);
-#endif /* USE_OLD_TAG_SEARCH */
 	if ((canvasPtr->currentItemPtr->redraw_flags & TK_ITEM_STATE_DEPENDANT
 		&& prevItemPtr != canvasPtr->currentItemPtr)) {
 	    ItemConfigure(canvasPtr, canvasPtr->currentItemPtr, 0, NULL);
@@ -5664,15 +5328,13 @@ CanvasDoEvent(
 				 * processed. */
 {
 #define NUM_STATIC 3
-    ClientData staticObjects[NUM_STATIC];
-    ClientData *objectPtr;
+    void *staticObjects[NUM_STATIC];
+    void **objectPtr;
     int numObjects, i;
     Tk_Item *itemPtr;
-#ifndef USE_OLD_TAG_SEARCH
     TagSearchExpr *expr;
     int numExprs;
     SearchUids *searchUids = GetStaticUids();
-#endif /* not USE_OLD_TAG_SEARCH */
 
     if (canvasPtr->bindingTable == NULL) {
 	return;
@@ -5686,16 +5348,6 @@ CanvasDoEvent(
 	return;
     }
 
-#ifdef USE_OLD_TAG_SEARCH
-    /*
-     * Set up an array with all the relevant objects for processing this
-     * event. The relevant objects are (a) the event's item, (b) the tags
-     * associated with the event's item, and (c) the tag "all". If there are a
-     * lot of tags then malloc an array to hold all of the objects.
-     */
-
-    numObjects = itemPtr->numTags + 2;
-#else /* USE_OLD_TAG_SEARCH */
     /*
      * Set up an array with all the relevant objects for processing this
      * event. The relevant objects are:
@@ -5724,23 +5376,17 @@ CanvasDoEvent(
     }
 
     numObjects = itemPtr->numTags + numExprs + 2;
-#endif /* not USE_OLD_TAG_SEARCH */
     if (numObjects <= NUM_STATIC) {
 	objectPtr = staticObjects;
     } else {
-	objectPtr = ckalloc(numObjects * sizeof(ClientData));
+	objectPtr = ckalloc(numObjects * sizeof(void *));
     }
-#ifdef USE_OLD_TAG_SEARCH
-    objectPtr[0] = (ClientData) Tk_GetUid("all");
-#else /* USE_OLD_TAG_SEARCH */
-    objectPtr[0] = (ClientData) searchUids->allUid;
-#endif /* USE_OLD_TAG_SEARCH */
+    objectPtr[0] = (char *)searchUids->allUid;
     for (i = itemPtr->numTags-1; i >= 0; i--) {
-	objectPtr[i+1] = (ClientData) itemPtr->tagPtr[i];
+	objectPtr[i+1] = (char *)itemPtr->tagPtr[i];
     }
     objectPtr[itemPtr->numTags+1] = itemPtr;
 
-#ifndef USE_OLD_TAG_SEARCH
     /*
      * Copy uids of matching expressions into object array
      */
@@ -5753,7 +5399,6 @@ CanvasDoEvent(
 	}
 	expr = expr->next;
     }
-#endif /* not USE_OLD_TAG_SEARCH */
 
     /*
      * Invoke the binding system, then free up the object array if it was

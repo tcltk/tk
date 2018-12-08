@@ -1474,7 +1474,7 @@ PackStructureProc(
 	if (packPtr->tkwin != NULL) {
 	    TkDisplay *dispPtr = ((TkWindow *) packPtr->tkwin)->dispPtr;
             Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->packerHashTable,
-		    (char *) packPtr->tkwin));
+		    packPtr->tkwin));
 	}
 
 	if (packPtr->flags & REQUESTED_REPACK) {

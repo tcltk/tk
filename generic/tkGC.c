@@ -307,7 +307,7 @@ Tk_FreeGC(
 	return;
     }
 
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->gcIdTable, (char *) gc);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->gcIdTable, gc);
     if (idHashPtr == NULL) {
 	Tcl_Panic("Tk_FreeGC received unknown gc argument");
     }

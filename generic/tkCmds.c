@@ -1860,7 +1860,7 @@ Tk_WmObjCmd(
 	TKWM_TRACING,	TKWM_TRANSIENT,	TKWM_WITHDRAW
     };
 
-    tkwin = (Tk_Window) clientData;
+    tkwin = clientData;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option window ?arg?");
