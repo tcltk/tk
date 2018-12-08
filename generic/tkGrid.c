@@ -2885,7 +2885,7 @@ GridStructureProc(
 	    slavePtr->nextPtr = NULL;
 	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->gridHashTable,
-		(char *) gridPtr->tkwin));
+		gridPtr->tkwin));
 	if (gridPtr->flags & REQUESTED_RELAYOUT) {
 	    Tcl_CancelIdleCall(ArrangeGrid, gridPtr);
 	}

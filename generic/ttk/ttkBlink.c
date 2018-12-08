@@ -68,7 +68,7 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
 static void
 CursorBlinkProc(ClientData clientData)
 {
-    CursorManager *cm = (CursorManager*)clientData;
+    CursorManager *cm = clientData;
     int blinkTime;
 
     if (cm->owner->flags & CURSOR_ON) {

@@ -256,7 +256,7 @@ TkWinXInit(
      * Make sure we cleanup on finalize.
      */
 
-    TkCreateExitHandler(TkWinXCleanup, (ClientData) hInstance);
+    TkCreateExitHandler(TkWinXCleanup, hInstance);
 }
 
 /*
@@ -279,7 +279,7 @@ void
 TkWinXCleanup(
     ClientData clientData)
 {
-    HINSTANCE hInstance = (HINSTANCE) clientData;
+    HINSTANCE hInstance = clientData;
 
     /*
      * Clean up our own class.
@@ -650,7 +650,7 @@ TkClipCleanup(
 		dispPtr->windowAtom);
 
 	Tk_DestroyWindow(dispPtr->clipWindow);
-	Tcl_Release((ClientData) dispPtr->clipWindow);
+	Tcl_Release(dispPtr->clipWindow);
 	dispPtr->clipWindow = NULL;
     }
 }
