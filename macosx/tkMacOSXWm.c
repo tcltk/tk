@@ -5440,21 +5440,6 @@ WmWinStyle(
 	{ "moveToActiveSpace",	tkMoveToActiveSpaceAttribute		     },
 	{ "nonActivating",	tkNonactivatingPanelAttribute		     },
 	{ "hud",		tkHUDWindowAttribute			     },
-	{ "black",		0			                     },
-	{ "dark",		0			                     },
-	{ "light",		0			                     },
-	{ "gray",		0			                     },
-	{ "red",		0 			                     },
-	{ "green",		0                			     },
-	{ "blue",		0           			             },
-	{ "cyan",		0			                     },
-	{ "yellow",		0			                     },
-	{ "magenta",		0  			                     },
-	{ "orange",		0 			                     },
-	{ "purple",		0			                     },
-	{ "brown",		0			                     },
-	{ "clear",		0			                     },
-	{ "opacity",		0			                     },
 	{ NULL }
     };
 
@@ -5536,10 +5521,8 @@ WmWinStyle(
 		macClassAttrs[macClass].validAttrs);
 	wmPtr->flags |= macClassAttrs[macClass].flags;
 	wmPtr->macClass = macClass;
-
 	ApplyWindowAttributeFlagChanges(winPtr, NULL, oldAttributes, oldFlags,
 		0, 1);
-
 	return TCL_OK;
 
     badClassAttrs:
@@ -6511,7 +6494,14 @@ ApplyWindowAttributeFlagChanges(
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
 	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
-		if (winPtr->atts.override_redirect) {
+		
+		/*
+		 * Exclude overrideredirect, transient, and "help"-styled
+		 * windows from moving into their own fullscreen space. 
+		 *
+		 */
+		    
+		if ((winPtr->atts.override_redirect) || (wmPtr->master != None) || (winPtr->wmInfoPtr->macClass == kHelpWindowClass)) {
 		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
 			  NSWindowCollectionBehaviorFullScreenAuxiliary);
 		} else {
