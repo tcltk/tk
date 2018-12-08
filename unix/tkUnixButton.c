@@ -396,7 +396,7 @@ void
 TkpDisplayButton(
     ClientData clientData)	/* Information about widget. */
 {
-    register TkButton *butPtr = (TkButton *) clientData;
+    register TkButton *butPtr = clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;

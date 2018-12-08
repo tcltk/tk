@@ -428,7 +428,7 @@ Tk_NameOfCursor(
 	sprintf(dispPtr->cursorString, "cursor id %p", cursor);
 	return dispPtr->cursorString;
     }
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, cursor);
     if (idHashPtr == NULL) {
 	goto printid;
     }
@@ -517,7 +517,7 @@ Tk_FreeCursor(
 	Tcl_Panic("Tk_FreeCursor called before Tk_GetCursor");
     }
 
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, cursor);
     if (idHashPtr == NULL) {
 	Tcl_Panic("Tk_FreeCursor received unknown cursor argument");
     }

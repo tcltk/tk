@@ -997,7 +997,7 @@ Tk_DeleteBinding(
      * its pattern.
      */
 
-    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object);
+    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, object);
     if (hPtr == NULL) {
 	Tcl_Panic("Tk_DeleteBinding couldn't find object table entry");
     }
@@ -1110,7 +1110,7 @@ Tk_GetAllBindings(
     Tcl_HashEntry *hPtr;
     Tcl_Obj *resultObj;
 
-    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object);
+    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, object);
     if (hPtr == NULL) {
 	return;
     }
@@ -1154,7 +1154,7 @@ Tk_DeleteAllBindings(
     PatSeq *nextPtr;
     Tcl_HashEntry *hPtr;
 
-    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object);
+    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, object);
     if (hPtr == NULL) {
 	return;
     }
@@ -1376,14 +1376,14 @@ Tk_BindEvent(
 	key.type = ringPtr->type;
 	key.detail = detail;
 
-	hPtr = Tcl_FindHashEntry(veptPtr, (char *) &key);
+	hPtr = Tcl_FindHashEntry(veptPtr, &key);
 	if (hPtr != NULL) {
 	    vMatchDetailList = Tcl_GetHashValue(hPtr);
 	}
 
 	if (key.detail.clientData != 0) {
 	    key.detail.clientData = 0;
-	    hPtr = Tcl_FindHashEntry(veptPtr, (char *) &key);
+	    hPtr = Tcl_FindHashEntry(veptPtr, &key);
 	    if (hPtr != NULL) {
 		vMatchNoDetailList = Tcl_GetHashValue(hPtr);
 	    }
@@ -1415,7 +1415,7 @@ Tk_BindEvent(
 	key.object = *objectPtr;
 	key.type = ringPtr->type;
 	key.detail = detail;
-	hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, (char *) &key);
+	hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, &key);
 	if (hPtr != NULL) {
 	    matchPtr = MatchPatterns(dispPtr, bindPtr, Tcl_GetHashValue(hPtr),
 		    matchPtr, NULL, &sourcePtr);
@@ -1433,7 +1433,7 @@ Tk_BindEvent(
 
 	if ((detail.clientData != 0) && (matchPtr == NULL)) {
 	    key.detail.clientData = 0;
-	    hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, (char *) &key);
+	    hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, &key);
 	    if (hPtr != NULL) {
 		matchPtr = MatchPatterns(dispPtr, bindPtr,
 			Tcl_GetHashValue(hPtr), matchPtr, NULL, &sourcePtr);
@@ -1806,8 +1806,7 @@ MatchPatterns(
 
 		key.detail.name = (Tk_Uid) Tcl_GetHashKey(hPtr->tablePtr,
 			hPtr);
-		hPtr = Tcl_FindHashEntry(&bindPtr->patternTable,
-			(char *) &key);
+		hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, &key);
 		if (hPtr != NULL) {
 		    /*
 		     * This tag is interested in this virtual event and its
@@ -4291,7 +4290,7 @@ TkKeysymToString(
     KeySym keysym)
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&nameTable, (char *)keysym);
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&nameTable, keysym);
 
     if (hPtr != NULL) {
 	return Tcl_GetHashValue(hPtr);

@@ -67,15 +67,15 @@ TkplatformtestInit(
      */
 
     Tcl_CreateObjCommand(interp, "testclipboard", TestclipboardObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwinevent", TestwineventObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testfindwindow", TestfindwindowObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwinlocale", TestwinlocaleObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }
 
@@ -244,7 +244,7 @@ TestclipboardObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
 
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);

@@ -587,7 +587,7 @@ Tk_UnmaintainGeometry(
     if (!(((TkWindow *) slave)->flags & TK_ALREADY_DEAD)) {
 	Tk_UnmapWindow(slave);
     }
-    hPtr = Tcl_FindHashEntry(&dispPtr->maintainHashTable, (char *) master);
+    hPtr = Tcl_FindHashEntry(&dispPtr->maintainHashTable, master);
     if (hPtr == NULL) {
 	return;
     }

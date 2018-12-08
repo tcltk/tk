@@ -356,7 +356,7 @@ static int
 EntryFetchSelection(
     ClientData clientData, int offset, char *buffer, int maxBytes)
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
     size_t byteCount;
     const char *string;
     const char *selStart, *selEnd;
@@ -389,7 +389,7 @@ EntryFetchSelection(
  */
 static void EntryLostSelection(ClientData clientData)
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
     entryPtr->core.flags &= ~GOT_SELECTION;
     entryPtr->entry.selectFirst = entryPtr->entry.selectLast = -1;
     TtkRedisplayWidget(&entryPtr->core);
@@ -924,7 +924,7 @@ DeleteChars(
 static void
 EntryEventProc(ClientData clientData, XEvent *eventPtr)
 {
-    Entry *entryPtr = (Entry *) clientData;
+    Entry *entryPtr = clientData;
 
     Tcl_Preserve(clientData);
     switch (eventPtr->type) {

@@ -687,7 +687,7 @@ GetBusy(
 	    &tkwin) != TCL_OK) {
 	return NULL;
     }
-    hPtr = Tcl_FindHashEntry(busyTablePtr, (char *) tkwin);
+    hPtr = Tcl_FindHashEntry(busyTablePtr, tkwin);
     if (hPtr == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't find busy window \"%s\"", Tcl_GetString(windowObj)));

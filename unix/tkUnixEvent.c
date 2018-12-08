@@ -462,7 +462,7 @@ DisplayFileProc(
     ClientData clientData,	/* The display pointer. */
     int flags)			/* Should be TCL_READABLE. */
 {
-    TkDisplay *dispPtr = (TkDisplay *) clientData;
+    TkDisplay *dispPtr = clientData;
     Display *display = dispPtr->display;
     int numFound;
 

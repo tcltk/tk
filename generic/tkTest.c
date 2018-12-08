@@ -537,7 +537,7 @@ TestobjconfigObjCmd(
 	CustomOptionFree,
 	INT2PTR(1)
     };
-    Tk_Window mainWin = (Tk_Window) clientData;
+    Tk_Window mainWin = clientData;
     Tk_Window tkwin;
     int index, result = TCL_OK;
 
@@ -651,7 +651,7 @@ TestobjconfigObjCmd(
 
 	optionTable = Tk_CreateOptionTable(interp, typesSpecs);
 	tables[index] = optionTable;
-	tkwin = Tk_CreateWindowFromPath(interp, (Tk_Window) clientData,
+	tkwin = Tk_CreateWindowFromPath(interp, clientData,
 		Tcl_GetString(objv[2]), NULL);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
@@ -706,7 +706,7 @@ TestobjconfigObjCmd(
 	Tk_Window tkwin;
 	Tk_OptionTable optionTable;
 
-	tkwin = Tk_CreateWindowFromPath(interp, (Tk_Window) clientData,
+	tkwin = Tk_CreateWindowFromPath(interp, clientData,
 		Tcl_GetString(objv[2]), NULL);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
@@ -759,7 +759,7 @@ TestobjconfigObjCmd(
 	Tk_Window tkwin;
 	Tk_OptionTable optionTable;
 
-	tkwin = Tk_CreateWindowFromPath(interp, (Tk_Window) clientData,
+	tkwin = Tk_CreateWindowFromPath(interp, clientData,
 		Tcl_GetString(objv[2]), NULL);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
@@ -929,7 +929,7 @@ TestobjconfigObjCmd(
 
 	optionTable = Tk_CreateOptionTable(interp, internalSpecs);
 	tables[index] = optionTable;
-	tkwin = Tk_CreateWindowFromPath(interp, (Tk_Window) clientData,
+	tkwin = Tk_CreateWindowFromPath(interp, clientData,
 		Tcl_GetString(objv[2]), NULL);
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
@@ -1081,7 +1081,7 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_Window tkwin = Tk_CreateWindowFromPath(interp,
-		(Tk_Window) clientData, Tcl_GetString(objv[2]), NULL);
+		clientData, Tcl_GetString(objv[2]), NULL);
 
 	if (tkwin == NULL) {
 	    return TCL_ERROR;
@@ -1158,7 +1158,7 @@ TrivialConfigObjCmd(
     };
     Tcl_Obj *resultObjPtr;
     int index, mask;
-    TrivialCommandHeader *headerPtr = (TrivialCommandHeader *) clientData;
+    TrivialCommandHeader *headerPtr = clientData;
     Tk_Window tkwin = headerPtr->tkwin;
     Tk_SavedOptions saved;
 
@@ -1253,7 +1253,7 @@ static void
 TrivialCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TrivialCommandHeader *headerPtr = (TrivialCommandHeader *) clientData;
+    TrivialCommandHeader *headerPtr = clientData;
     Tk_Window tkwin = headerPtr->tkwin;
 
     if (tkwin != NULL) {
@@ -1265,8 +1265,8 @@ TrivialCmdDeletedProc(
 	 * here.
 	 */
 
-	Tk_FreeConfigOptions((char *) clientData,
-		headerPtr->optionTable, (Tk_Window) NULL);
+	Tk_FreeConfigOptions(clientData,
+		headerPtr->optionTable, NULL);
 	Tcl_EventuallyFree(clientData, TCL_DYNAMIC);
     }
 }
@@ -1292,11 +1292,11 @@ TrivialEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TrivialCommandHeader *headerPtr = (TrivialCommandHeader *) clientData;
+    TrivialCommandHeader *headerPtr = clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	if (headerPtr->tkwin != NULL) {
-	    Tk_FreeConfigOptions((char *) clientData,
+	    Tk_FreeConfigOptions(clientData,
 		    headerPtr->optionTable, headerPtr->tkwin);
 	    headerPtr->optionTable = NULL;
 	    headerPtr->tkwin = NULL;
@@ -1338,7 +1338,7 @@ TestfontObjCmd(
     Tk_Window tkwin;
     Tk_Font tkfont;
 
-    tkwin = (Tk_Window) clientData;
+    tkwin = clientData;
 
     if (objc < 3) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option fontName");
@@ -1458,7 +1458,7 @@ ImageObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
-    TImageMaster *timPtr = (TImageMaster *) clientData;
+    TImageMaster *timPtr = clientData;
     int x, y, width, height;
 
     if (objc < 2) {
@@ -1513,7 +1513,7 @@ ImageGet(
 				 * used. */
     ClientData clientData)	/* Pointer to TImageMaster for image. */
 {
-    TImageMaster *timPtr = (TImageMaster *) clientData;
+    TImageMaster *timPtr = clientData;
     TImageInstance *instPtr;
     char buffer[100];
     XGCValues gcValues;
@@ -1560,7 +1560,7 @@ ImageDisplay(
 				/* Coordinates in drawable corresponding to
 				 * imageX and imageY. */
 {
-    TImageInstance *instPtr = (TImageInstance *) clientData;
+    TImageInstance *instPtr = clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
 
     /*
@@ -1624,7 +1624,7 @@ ImageFree(
     ClientData clientData,	/* Pointer to TImageInstance for instance. */
     Display *display)		/* Display where image was to be drawn. */
 {
-    TImageInstance *instPtr = (TImageInstance *) clientData;
+    TImageInstance *instPtr = clientData;
     char buffer[200];
 
     sprintf(buffer, "%s free", instPtr->masterPtr->imageName);
@@ -1658,7 +1658,7 @@ ImageDelete(
 				 * this function is called, no more instances
 				 * exist. */
 {
-    TImageMaster *timPtr = (TImageMaster *) clientData;
+    TImageMaster *timPtr = clientData;
     char buffer[100];
 
     sprintf(buffer, "%s delete", timPtr->imageName);
@@ -1697,7 +1697,7 @@ TestmakeexistObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
-    Tk_Window mainWin = (Tk_Window) clientData;
+    Tk_Window mainWin = clientData;
     int i;
     Tk_Window tkwin;
 
@@ -1740,7 +1740,7 @@ TestmenubarObjCmd(
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
 #ifdef __UNIX__
-    Tk_Window mainWin = (Tk_Window) clientData;
+    Tk_Window mainWin = clientData;
     Tk_Window tkwin, menubar;
 
     if (objc < 2) {
@@ -1853,7 +1853,7 @@ TestpropObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
-    Tk_Window mainWin = (Tk_Window) clientData;
+    Tk_Window mainWin = clientData;
     int result, actualFormat;
     unsigned long bytesAfter, length, value;
     Atom actualType, propName;
@@ -1994,7 +1994,7 @@ TestwrapperObjCmd(
 	return TCL_ERROR;
     }
 
-    tkwin = (Tk_Window) clientData;
+    tkwin = clientData;
     winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[1]), tkwin);
     if (winPtr == NULL) {
 	return TCL_ERROR;
