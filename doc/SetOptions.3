@@ -8,7 +8,7 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_CreateOptionTable, Tk_DeleteOptionTable, Tk_InitOptions, Tk_SetOptions, Tk_FreeSavedOptions, Tk_RestoreSavedOptions, Tk_GetOptionValue,  Tk_GetOptionInfo, Tk_FreeConfigOptions, Tk_Offset \- process configuration options
+Tk_CreateOptionTable, Tk_DeleteOptionTable, Tk_InitOptions, Tk_SetOptions, Tk_FreeSavedOptions, Tk_RestoreSavedOptions, Tk_GetOptionValue,  Tk_GetOptionInfo, Tk_FreeConfigOptions \- process configuration options
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -35,9 +35,6 @@ Tcl_Obj *
 \fBTk_GetOptionInfo(\fIinterp, recordPtr, optionTable, namePtr, tkwin\fB)\fR
 .sp
 \fBTk_FreeConfigOptions(\fIrecordPtr, optionTable, tkwin\fB)\fR
-.sp
-int
-\fBTk_Offset(\fItype, field\fB)\fR
 .SH ARGUMENTS
 .AS Tk_SavedOptions "*const objv[]" in/out
 .AP Tcl_Interp *interp in
@@ -239,12 +236,6 @@ is returned and an error message is left in \fIinterp\fR's result unless
 \fBTk_FreeConfigOptions\fR must be invoked when a widget is deleted.
 It frees all of the resources associated with any of the configuration
 options defined in \fIrecordPtr\fR by \fIoptionTable\fR.
-.PP
-The \fBTk_Offset\fR macro is provided as a safe way of generating the
-\fIobjOffset\fR and \fIinternalOffset\fR values for entries in
-Tk_OptionSpec structures.  It takes two arguments: the name of a type
-of record, and the name of a field in that record. It returns the byte
-offset of the named field in records of the given type.
 .SH "TEMPLATES"
 .PP
 The array of Tk_OptionSpec structures passed to \fBTk_CreateOptionTable\fR
@@ -281,7 +272,7 @@ value is specified in the option database.  The \fIobjOffset\fR and
 \fIinternalOffset\fR fields indicate where to store the value of this
 option in widget records (more on this below); values for the \fIobjOffset\fR
 and \fIinternalOffset\fR fields should always be generated with the
-\fBTk_Offset\fR macro.
+\fBoffsetof\fR macro.
 The \fIflags\fR field contains additional information
 to control the processing of this configuration option (see below
 for details).

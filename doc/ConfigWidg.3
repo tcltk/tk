@@ -468,13 +468,6 @@ for which this entry is valid.  When calling \fBTk_ConfigureWidget\fR,
 \fIflags\fR will have a single one of these bits set to select the
 entries for the desired widget type.  For a working example of
 this feature, see the code in tkButton.c.
-.SH TK_OFFSET
-.PP
-The \fBTk_Offset\fR macro is provided as a safe way of generating
-the \fIoffset\fR values for entries in Tk_ConfigSpec structures.
-It takes two arguments:  the name of a type of record, and the
-name of a field in that record.  It returns the byte offset of
-the named field in records of the given type.
 .SH TK_CONFIGUREINFO
 .PP
 The \fBTk_ConfigureInfo\fR procedure may be used to obtain
