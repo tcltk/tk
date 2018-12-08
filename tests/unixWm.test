@@ -19,6 +19,14 @@ proc sleep ms {
     vwait x
 }
 
+# Recent versions of macOS show an animation when a window is deiconified.
+# Tests which check the geometry of a window after deiconifying it should
+# wait for the animation to finish.
+
+proc deiconifyDelay {} {
+    sleep 250
+}
+
 # Procedure to set up a collection of top-level windows
 
 proc makeToplevels {} {
@@ -76,6 +84,7 @@ foreach geom {+20+80 +80+20 +0+0 -0-0 +0-0 -0+0 -10-5 -10+5 +10-5} {
 	wm geom .t $geom
 	update
 	wm deiconify .t
+	deiconifyDelay
 	scan [wm geom .t] %dx%d%1s%d%1s%d width height xsign x ysign y
 	format "%s%d%s%d" $xsign [eval expr $x$xsign$xerr] $ysign \
 		[eval expr $y$ysign$yerr]
@@ -91,6 +100,7 @@ foreach geom {+20+80 +100+40 +0+0} {
 	wm geom .t $geom
 	update
 	wm deiconify .t
+	deiconifyDelay
 	wm geom .t
     } 100x150$geom
     incr i
@@ -401,6 +411,7 @@ test unixWm-9.4 {TkWmMapWindow procedure, icon windows} unix {
     sleep 500
     toplevel .t -width 100 -height 50 -bg blue
     wm iconwindow . .t
+    sleep 200
     update
     set result [winfo ismapped .t]
 } {0}

@@ -6494,14 +6494,16 @@ ApplyWindowAttributeFlagChanges(
 
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
 	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
-		
+
 		/*
 		 * Exclude overrideredirect, transient, and "help"-styled
-		 * windows from moving into their own fullscreen space. 
+		 * windows from moving into their own fullscreen space.
 		 *
 		 */
-		    
-		if ((winPtr->atts.override_redirect) || (wmPtr->master != None) || (winPtr->wmInfoPtr->macClass == kHelpWindowClass)) {
+
+		if ((winPtr->atts.override_redirect) ||
+		    (wmPtr->master != None) ||
+		    (winPtr->wmInfoPtr->macClass == kHelpWindowClass)) {
 		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
 			  NSWindowCollectionBehaviorFullScreenAuxiliary);
 		} else {
