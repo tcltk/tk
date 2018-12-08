@@ -58,7 +58,7 @@ void
 TkpDisplayMenuButton(
     ClientData clientData)	/* Information about widget. */
 {
-    register TkMenuButton *mbPtr = (TkMenuButton *) clientData;
+    register TkMenuButton *mbPtr = clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;

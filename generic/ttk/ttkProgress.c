@@ -159,7 +159,7 @@ static void CheckAnimation(Progressbar *pb)
     if (AnimationEnabled(pb)) {
 	if (pb->progress.timer == 0) {
 	    pb->progress.timer = Tcl_CreateTimerHandler(
-		pb->progress.period, AnimateProgressProc, (ClientData)pb);
+		pb->progress.period, AnimateProgressProc, pb);
 	}
     } else {
 	if (pb->progress.timer != 0) {

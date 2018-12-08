@@ -6411,7 +6411,7 @@ TkWmStackorderToplevel(
 	windows = NULL;
     } else {
 	for (i = 0; i < numChildren; i++) {
-	    hPtr = Tcl_FindHashEntry(&table, (char *) children[i]);
+	    hPtr = Tcl_FindHashEntry(&table, children[i]);
 	    if (hPtr != NULL) {
 		childWinPtr = Tcl_GetHashValue(hPtr);
 		*window_ptr++ = childWinPtr;

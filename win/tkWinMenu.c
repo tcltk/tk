@@ -420,7 +420,7 @@ TkpDestroyMenu(
 
 	if (tsdPtr->menuHWND != NULL) {
 	    Tcl_HashEntry *hashEntryPtr =
-		Tcl_FindHashEntry(&tsdPtr->winMenuTable, (char *) winMenuHdl);
+		Tcl_FindHashEntry(&tsdPtr->winMenuTable, winMenuHdl);
 
 	    if (hashEntryPtr != NULL) {
 		Tcl_DeleteHashEntry(hashEntryPtr);
@@ -1043,7 +1043,7 @@ TkWinHandleMenuEvent(
     switch (*pMessage) {
     case WM_UNINITMENUPOPUP:
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-		(char *) *pwParam);
+		*pwParam);
 	if (hashEntryPtr != NULL) {
 	    menuPtr = Tcl_GetHashValue(hashEntryPtr);
 	    if ((menuPtr->menuRefPtr != NULL)
@@ -1057,7 +1057,7 @@ TkWinHandleMenuEvent(
     case WM_INITMENU:
 	TkMenuInit();
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-		(char *) *pwParam);
+		*pwParam);
 	if (hashEntryPtr != NULL) {
 	    tsdPtr->oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 	    menuPtr = Tcl_GetHashValue(hashEntryPtr);
@@ -1142,7 +1142,7 @@ TkWinHandleMenuEvent(
 
     case WM_MENUCHAR: {
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-		(char *) *plParam);
+		*plParam);
 	if (hashEntryPtr != NULL) {
 	    int i, len, underline;
 	    Tcl_Obj *labelPtr;
@@ -1279,7 +1279,7 @@ TkWinHandleMenuEvent(
 	    menuPtr = NULL;
 	    if (*plParam != 0) {
 		hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-			(char *) *plParam);
+			*plParam);
 		if (hashEntryPtr != NULL) {
 		    menuPtr = Tcl_GetHashValue(hashEntryPtr);
 		}
@@ -1404,7 +1404,7 @@ TkpSetWindowMenuBar(
 
 	winMenuHdl = (HMENU) menuPtr->platformData;
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-		(char *) winMenuHdl);
+		winMenuHdl);
 	Tcl_DeleteHashEntry(hashEntryPtr);
 	DestroyMenu(winMenuHdl);
 	winMenuHdl = CreateMenu();
@@ -2148,8 +2148,7 @@ TkpInitializeMenuBindings(
      */
 
     (void) Tcl_CreateObjCommand(interp, "tk::WinMenuKey",
-	    TkWinMenuKeyObjCmd,
-	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+	    TkWinMenuKeyObjCmd, Tk_MainWindow(interp), NULL);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
 	    "<Alt_L>", "tk::WinMenuKey %W %N", 0);

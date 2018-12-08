@@ -173,7 +173,7 @@ void Tk_MapEmbeddedWindow(
 	TkpWmSetState(winPtr, state);
 	TkWmMapWindow(winPtr);
     }
-    Tcl_Release((ClientData)winPtr);
+    Tcl_Release(winPtr);
 }
 
 /*
@@ -331,8 +331,8 @@ TkpUseWindow(
      * window.
      */
 
-    Tcl_Preserve((ClientData) winPtr);
-    Tcl_DoWhenIdle((Tcl_IdleProc*) Tk_MapEmbeddedWindow, (ClientData) winPtr);
+    Tcl_Preserve(winPtr);
+    Tcl_DoWhenIdle((Tcl_IdleProc*) Tk_MapEmbeddedWindow, winPtr);
 
     return TCL_OK;
 }
@@ -392,7 +392,7 @@ TkpMakeContainer(
      */
 
     Tk_CreateEventHandler(tkwin, StructureNotifyMask,
-	    ContainerEventProc, (ClientData) containerPtr);
+	    ContainerEventProc, containerPtr);
 }
 
 /*
