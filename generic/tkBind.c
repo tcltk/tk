@@ -2121,6 +2121,7 @@ Tk_BindEvent(
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
 #if 1 /* test case bind-22.46 */
 printf("22.46-2: %u\n", eventPtr->xkey.keycode);
+fflush(stdout);
 #endif
 		return;
 	    }
@@ -2872,6 +2873,7 @@ ExpandPercents(
 	    }
 #if 1 /* test case bind-22.46 */
 printf("22.46-3: %d -- %d -- %u -- %d\n", flags & KEY, evPtr->type, evPtr->xkey.keycode, (int) number);
+fflush(stdout);
 #endif
 	    break;
 	case 'm':
@@ -3920,6 +3922,7 @@ HandleEventGenerate(
 		event.general.xkey.keycode = number;
 #if 1 /* test case bind-22.46 */
 printf("22.46-1: %u\n", event.general.xkey.keycode);
+fflush(stdout);
 #endif
 	    } else {
 		badOpt = true;
