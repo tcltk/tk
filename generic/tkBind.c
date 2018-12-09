@@ -148,17 +148,15 @@ typedef struct {
 
 struct PatSeq; /* forward declaration */
 
-#define PSENTRY_ISNEW 1    /* Whether this entry is recently created. */
-#define PSENTRY_EXPIRED 2  /* Whether this entry is expired, this means it has to be removed
-                            * from promotion list. */
-
 typedef struct PSEntry {
     TK_DLIST_LINKS(PSEntry);	/* Makes this struct a double linked list; must be first entry. */
     struct PatSeq* psPtr;	/* Pointer to pattern sequence. */
     Window window;		/* Window of last match. */
-    unsigned count;		/* Only promote to next level if this count has reached count of
+    unsigned count:30;		/* Only promote to next level if this count has reached count of
     				 * pattern. */
-    int flags;		/* combination of PSENTRY_ISNEW/PSENTRY_EXPIRED */
+    unsigned expired:1;		/* Whether this entry is expired, this means it has to be removed
+    				 * from promotion list. */
+    unsigned isNew:1;		/* Whether this entry is recently created. */
 } PSEntry;
 
 TK_DLIST_DEFINE(PSList, PSEntry);/* defining the whole PSList_* stuff (list of PSEntry items) */
@@ -727,6 +725,9 @@ static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
 static bool IsOdd(int n) { return n & 1; }
 
+static bool TestNearbyTime(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_MS; }
+static bool TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_PIXELS; }
+
 static const char*
 SkipSpaces(
     const char* s)
@@ -798,9 +799,9 @@ MatchEventNearby(
 
     /* assert: lhs->xbutton.time <= rhs->xbutton.time */
 
-    return Abs(rhs->xbutton.time - lhs->xbutton.time) <= NEARBY_MS
-	    && Abs(rhs->xbutton.x_root - lhs->xbutton.x_root) <= NEARBY_PIXELS
-	    && Abs(rhs->xbutton.y_root - lhs->xbutton.y_root) <= NEARBY_PIXELS;
+    return TestNearbyTime(rhs->xbutton.time, lhs->xbutton.time)
+	    && TestNearbyCoords(rhs->xbutton.x_root, lhs->xbutton.x_root)
+	    && TestNearbyCoords(rhs->xbutton.y_root, lhs->xbutton.y_root);
 }
 
 static bool
@@ -814,7 +815,7 @@ MatchEventRepeat(
     assert(lhs->type == rhs->type);
 
     /* assert: lhs->xkey.time <= rhs->xkey.time */
-    return Abs(rhs->xkey.time - lhs->xkey.time) <= NEARBY_MS;
+    return TestNearbyTime(rhs->xkey.time, lhs->xkey.time);
 }
 
 static void
@@ -975,7 +976,8 @@ MakeListEntry(
 
     newEntry->psPtr = psPtr;
     newEntry->window = None;
-    newEntry->flags = PSENTRY_ISNEW;
+    newEntry->expired = false;
+    newEntry->isNew = true;
     newEntry->count = 1;
     DEBUG(psPtr->owned = false);
 
@@ -2186,14 +2188,14 @@ Tk_BindEvent(
 	    break;
 	case EnterNotify:
 	case LeaveNotify:
-	    if (Abs(eventPtr->xcrossing.time - curEvent->xev.xcrossing.time) <= NEARBY_MS) {
+	    if (TestNearbyTime(eventPtr->xcrossing.time, curEvent->xev.xcrossing.time)) {
 		++curEvent->countAny;
 	    } else {
 		curEvent->countAny = 1;
 	    }
 	    break;
 	case PropertyNotify:
-	    if (Abs(eventPtr->xproperty.time - curEvent->xev.xproperty.time) <= NEARBY_MS) {
+	    if (TestNearbyTime(eventPtr->xproperty.time, curEvent->xev.xproperty.time)) {
 		++curEvent->countAny;
 	    } else {
 		curEvent->countAny = 1;
@@ -2370,11 +2372,11 @@ Tk_BindEvent(
 	     * 5) Current entry has been matched with a different window.
 	     */
 
-	    if (psEntry->flags & PSENTRY_ISNEW) {
+	    if (psEntry->isNew) {
 		/* this pattern has been added recently */
-		assert(!(psEntry->flags & PSENTRY_EXPIRED));
-		psEntry->flags &= ~PSENTRY_ISNEW;
-	    } else if (psEntry->flags & PSENTRY_EXPIRED
+		assert(!psEntry->expired);
+		psEntry->isNew = false;
+	    } else if (psEntry->expired
 		    || psEntry->window != curEvent->xev.xany.window
 		    || (patPtr->info
 			&& curEvent->detail.info
@@ -2659,7 +2661,7 @@ MatchPatterns(
 		    unsigned long modMask = ResolveModifiers(dispPtr, patPtr->modStateMask);
 		    unsigned long curModStateMask = ResolveModifiers(dispPtr, bindPtr->curModStateMask);
 
-		    psEntry->flags |= PSENTRY_EXPIRED; /* remove it from promotion list */
+		    psEntry->expired = true; /* remove it from promotion list */
 
 		    if ((modMask & ~curModStateMask) == 0) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
@@ -2705,15 +2707,15 @@ MatchPatterns(
 
 				assert(!patPtr->name);
 				psNewEntry = MakeListEntry(&bindPtr->lookupTables.entryPool, psPtr);
-				assert(psNewEntry->flags & PSENTRY_ISNEW);
+				assert(psNewEntry->isNew);
 				assert(psNewEntry->count == 1u);
 				PSList_Append(psSuccList, psNewEntry);
 				psNewEntry->window = window; /* bind to current window */
 			    } else {
 				assert(psEntry->count < patPtr->count);
 				psEntry->count += 1;
-				psEntry->flags |= PSENTRY_ISNEW; /* don't remove it from promotion list */
-				DEBUG(psEntry->flags &= ~PSENTRY_EXPIRED);
+				psEntry->isNew = true; /* don't remove it from promotion list */
+				DEBUG(psEntry->expired = false);
 			    }
 			}
 		    }
