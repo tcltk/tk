@@ -2752,7 +2752,7 @@ test bind-22.5 {HandleEventGenerate} -body {
 } -returnCodes error -result {bad event type or keysym "xyz"}
 test bind-22.6 {HandleEventGenerate} -body {
     event generate . <Double-Button-1>
-} -returnCodes error -result {Double or Triple modifier not allowed}
+} -returnCodes error -result {Double, Triple, or Quadruple modifier not allowed}
 test bind-22.7 {HandleEventGenerate} -body {
     event generate . xyz
 } -returnCodes error -result {only one event specification allowed}

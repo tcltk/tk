@@ -2871,7 +2871,7 @@ ExpandPercents(
 		number = evPtr->xkey.keycode;
 	    }
 #if 1 /* test case bind-22.46 */
-printf("22.46-3: %d -- %d -- %u -- %d\n", flags & KEY, evPtr->type, evPtr->xkey.keycode, number);
+printf("22.46-3: %d -- %d -- %u -- %d\n", flags & KEY, evPtr->type, evPtr->xkey.keycode, (int) number);
 #endif
 	    break;
 	case 'm':
@@ -3712,7 +3712,8 @@ HandleEventGenerate(
 	return TCL_ERROR;
     }
     if (count != 1u) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("Double or Triple modifier not allowed", -1));
+	Tcl_SetObjResult(interp,
+		Tcl_NewStringObj("Double, Triple, or Quadruple modifier not allowed", -1));
 	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", NULL);
 	return TCL_ERROR;
     }
@@ -3948,7 +3949,7 @@ printf("22.46-1: %u\n", event.general.xkey.keycode);
 	    break;
 	}
 	case EVENT_MODE:
-	    if ((number = TkFindStateNumObj(interp,optionPtr,notifyMode,valuePtr)) < 0) {
+	    if ((number = TkFindStateNumObj(interp, optionPtr, notifyMode, valuePtr)) < 0) {
 		return TCL_ERROR;
 	    }
 	    if (flags & CROSSING) {
