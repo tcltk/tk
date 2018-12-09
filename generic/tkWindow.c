@@ -1443,7 +1443,7 @@ Tk_DestroyWindow(
 	}
 #endif
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->winTable,
-		(char *) winPtr->window));
+		winPtr->window));
 	winPtr->window = None;
     }
     UnlinkWindow(winPtr);
@@ -2362,7 +2362,7 @@ Tk_IdToWindow(
 	return NULL;
     }
 
-    hPtr = Tcl_FindHashEntry(&dispPtr->winTable, (char *) window);
+    hPtr = Tcl_FindHashEntry(&dispPtr->winTable, window);
     if (hPtr == NULL) {
 	return NULL;
     }

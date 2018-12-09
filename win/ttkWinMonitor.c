@@ -152,7 +152,7 @@ MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
     HWND hwnd;
 
     hwnd = CreateThemeMonitorWindow(Tk_GetHINSTANCE(), interp);
-    Ttk_RegisterCleanup(interp, (ClientData)hwnd, DestroyThemeMonitorWindow);
+    Ttk_RegisterCleanup(interp, hwnd, DestroyThemeMonitorWindow);
 
     TtkWinTheme_Init(interp, hwnd);
     TtkXPTheme_Init(interp, hwnd);

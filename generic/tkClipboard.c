@@ -422,7 +422,7 @@ Tk_ClipboardObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
     const char *path = NULL;
     Atom selection;
     static const char *const optionStrings[] = { "append", "clear", "get", NULL };
@@ -709,7 +709,7 @@ ClipboardGetProc(
 				 * used). */
     const char *portion)	/* New information to be appended. */
 {
-    Tcl_DStringAppend((Tcl_DString *) clientData, portion, -1);
+    Tcl_DStringAppend(clientData, portion, -1);
     return TCL_OK;
 }
 

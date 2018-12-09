@@ -264,7 +264,10 @@ contents are inserted into the standard Window menu of the user's
 menubar whenever the window's menubar is in front. The first items in
 the menu are provided by Mac OS X, and the names of the current
 toplevels are automatically appended after all the Tk-defined items and
-a separator.
+a separator. The Window menu on the Mac also allows toggling the
+window into a fullscreen state, and managing a tabbed window interface
+(multiple windows grouped into a single window) if supported by that
+version of the operating system. 
 .PP
 When Tk sees a .menubar.help menu on the Macintosh, the menu's contents
 are appended to the standard Help menu of the user's menubar whenever

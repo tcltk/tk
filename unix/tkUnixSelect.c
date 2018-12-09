@@ -766,7 +766,7 @@ SelTimeoutProc(
 	retrPtr->result = TCL_ERROR;
     } else {
 	retrPtr->timeout = Tcl_CreateTimerHandler(1000, SelTimeoutProc,
-		(ClientData) retrPtr);
+		retrPtr);
     }
 }
 
