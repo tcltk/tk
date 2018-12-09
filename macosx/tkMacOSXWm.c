@@ -1762,6 +1762,9 @@ WmDeiconifyCmd(
     [win setExcludedFromWindowsMenu:NO];
     TkMacOSXApplyWindowAttributes(winPtr, win);
     [win orderFront:nil];
+    if (wmPtr->icon) {
+	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
+    }
     return TCL_OK;
 }
 
@@ -2281,6 +2284,9 @@ WmIconifyCmd(
     }
 
     TkpWmSetState(winPtr, IconicState);
+    if (wmPtr->icon) {
+	Tk_MapWindow((Tk_Window)wmPtr->icon);
+    }
     return TCL_OK;
 }
 
@@ -2599,8 +2605,17 @@ WmIconwindowCmd(
 	    return TCL_ERROR;
 	}
 	if (wmPtr->icon != NULL) {
-	    WmInfo *wmPtr3 = ((TkWindow *) wmPtr->icon)->wmInfoPtr;
+	    TkWindow *oldIcon = (TkWindow *)wmPtr->icon;
+	    WmInfo *wmPtr3 = oldIcon->wmInfoPtr;
+	    NSWindow *win = TkMacOSXDrawableWindow(oldIcon->window);
 
+	    /*
+	     * The old icon should be withdrawn.
+	     */
+	    
+	    TkpWmSetState(oldIcon, WithdrawnState);
+	    [win orderOut:nil];
+    	    [win setExcludedFromWindowsMenu:YES];
 	    wmPtr3->iconFor = NULL;
 	}
 	Tk_MakeWindowExist(tkwin2);
@@ -2609,11 +2624,16 @@ WmIconwindowCmd(
 	wmPtr->icon = tkwin2;
 	wmPtr2->iconFor = (Tk_Window) winPtr;
 	if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
+
 	    /*
-	     * Don't have iconwindows on the Mac. We just withdraw.
+	     * If the window is in normal or zoomed state, the icon should be
+	     * unmapped.
 	     */
 
-	    Tk_UnmapWindow(tkwin2);
+	    if (wmPtr->hints.initial_state == NormalState ||
+		wmPtr->hints.initial_state == ZoomState) {
+		Tk_UnmapWindow(tkwin2);
+	    }
 	}
     }
     return TCL_OK;
@@ -3493,6 +3513,7 @@ WmTransientCmd(
 	}
 	TkWindow* masterPtr = (TkWindow*) master;
 	while (!Tk_TopWinHierarchy(masterPtr)) {
+
             /*
              * Ensure that the master window is actually a Tk toplevel.
              */
@@ -3963,27 +3984,8 @@ UpdateGeometryInfo(
     } else if ((max > 0) && (height > max)) {
 	height = max;
     }
-
-    /*
-     * Compute the new position for the upper-left pixel of the window's
-     * decorative frame. This is tricky, because we need to include the border
-     * widths supplied by a reparented parent in this calculation, but can't
-     * use the parent's current overall size since that may change as a result
-     * of this code.
-     */
-
-    if (wmPtr->flags & WM_NEGATIVE_X) {
-	x = wmPtr->vRootWidth - wmPtr->x
-	    - (width + (wmPtr->parentWidth - winPtr->changes.width));
-    } else {
-	x =  wmPtr->x;
-    }
-    if (wmPtr->flags & WM_NEGATIVE_Y) {
-	y = wmPtr->vRootHeight - wmPtr->y
-	    - (height + (wmPtr->parentHeight - winPtr->changes.height));
-    } else {
-	y =  wmPtr->y;
-    }
+    x = wmPtr->x;
+    y = wmPtr->y;
 
     /*
      * If the window's size is going to change and the window is supposed to
@@ -4144,8 +4146,8 @@ ParseGeometry(
 
     width = wmPtr->width;
     height = wmPtr->height;
-    x = wmPtr->x;
-    y = wmPtr->y;
+    x = -1;
+    y = -1;
     flags = wmPtr->flags;
     if (isdigit(UCHAR(*p))) {
 	width = strtoul(p, &end, 10);
@@ -4209,22 +4211,44 @@ ParseGeometry(
      * Everything was parsed OK. Update the fields of *wmPtr and arrange for
      * the appropriate information to be percolated out to the window manager
      * at the next idle moment.
+     *
+     * Computing the new position for the upper-left pixel of the window's
+     * decorative frame is tricky because we need to include the border
+     * widths supplied by a reparented parent in the calculation, but we can't
+     * use the parent's current overall size since that may change as a result
+     * of this code.
      */
 
     wmPtr->width = width;
     wmPtr->height = height;
-    if ((x != wmPtr->x) || (y != wmPtr->y)
-	    || ((flags & (WM_NEGATIVE_X|WM_NEGATIVE_Y))
-		    != (wmPtr->flags & (WM_NEGATIVE_X|WM_NEGATIVE_Y)))) {
-	if (wmPtr->flags & WM_FULLSCREEN) {
-	    wmPtr->configX = x;
-	    wmPtr->configY = y;
-	} else {
-	    wmPtr->x = x;
-	    wmPtr->y = y;
-	}
-	flags |= WM_MOVE_PENDING;
+    if (flags & WM_NEGATIVE_X) {
+	int borderwidth = wmPtr->parentWidth - winPtr->changes.width;
+	int newWidth = width == -1 ? winPtr->changes.width : width;
+	x = (x == -1) ?
+	    wmPtr->x + winPtr->changes.width - newWidth :
+	    wmPtr->vRootWidth - x - newWidth - borderwidth;
     }
+    if (x == -1) {
+	x = wmPtr->x;
+    }
+    if (flags & WM_NEGATIVE_Y) {
+	int borderheight = wmPtr->parentHeight - winPtr->changes.height;
+	int newHeight = height == -1 ? winPtr->changes.height : height;
+	y = (y == -1) ?
+	    wmPtr->y + winPtr->changes.height - newHeight :
+	    wmPtr->vRootHeight - y - newHeight - borderheight;
+    }
+    if (y == -1) {
+	y = wmPtr->y;
+    }
+    if (wmPtr->flags & WM_FULLSCREEN) {
+	wmPtr->configX = x;
+	wmPtr->configY = y;
+    } else {
+	wmPtr->x = x;
+	wmPtr->y = y;
+    }
+    flags |= WM_MOVE_PENDING;
     wmPtr->flags = flags;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
 	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
