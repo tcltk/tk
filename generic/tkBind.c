@@ -2119,6 +2119,9 @@ Tk_BindEvent(
 	/* modifier keys are not influencing button events */
 	for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
+#if 1 /* test case bind-22.46 */
+printf("22.46-2: %u\n", eventPtr->xkey.keycode);
+#endif
 		return;
 	    }
 	}
@@ -2867,6 +2870,9 @@ ExpandPercents(
 	    if ((flags & KEY) && evPtr->type != MouseWheelEvent) {
 		number = evPtr->xkey.keycode;
 	    }
+#if 1 /* test case bind-22.46 */
+printf("22.46-3: %d -- %d -- %u -- %d\n", flags & KEY, evPtr->type, evPtr->xkey.keycode, number);
+#endif
 	    break;
 	case 'm':
 	    if (flags & CROSSING) {
@@ -3911,6 +3917,9 @@ HandleEventGenerate(
 	    }
 	    if ((flags & KEY) && event.general.xkey.type != MouseWheelEvent) {
 		event.general.xkey.keycode = number;
+#if 1 /* test case bind-22.46 */
+printf("22.46-1: %u\n", event.general.xkey.keycode);
+#endif
 	    } else {
 		badOpt = true;
 	    }
