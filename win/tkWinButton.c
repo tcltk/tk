@@ -315,7 +315,7 @@ TkpDisplayButton(
 {
     TkWinDCState state;
     HDC dc;
-    register TkButton *butPtr = (TkButton *) clientData;
+    register TkButton *butPtr = clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
@@ -1253,7 +1253,7 @@ ButtonProc(
 	PAINTSTRUCT ps;
 	BeginPaint(hwnd, &ps);
 	EndPaint(hwnd, &ps);
-	TkpDisplayButton((ClientData)butPtr);
+	TkpDisplayButton(butPtr);
 
 	/*
 	 * Special note: must cancel any existing idle handler for
@@ -1261,7 +1261,7 @@ ButtonProc(
 	 * cleared the REDRAW_PENDING flag.
 	 */
 
-	Tcl_CancelIdleCall(TkpDisplayButton, (ClientData)butPtr);
+	Tcl_CancelIdleCall(TkpDisplayButton, butPtr);
 	return 0;
     }
     case BN_CLICKED: {
@@ -1276,14 +1276,14 @@ ButtonProc(
 	    Tcl_Interp *interp = butPtr->info.interp;
 
 	    if (butPtr->info.state != STATE_DISABLED) {
-		Tcl_Preserve((ClientData)interp);
+		Tcl_Preserve(interp);
 		code = TkInvokeButton((TkButton*)butPtr);
 		if (code != TCL_OK && code != TCL_CONTINUE
 			&& code != TCL_BREAK) {
 		    Tcl_AddErrorInfo(interp, "\n    (button invoke)");
 		    Tcl_BackgroundException(interp, code);
 		}
-		Tcl_Release((ClientData)interp);
+		Tcl_Release(interp);
 	    }
 	    Tcl_ServiceAll();
 	    return 0;

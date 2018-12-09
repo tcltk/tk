@@ -5587,6 +5587,16 @@ WmWinTabbingId(
 	char *newId = Tcl_GetStringFromObj(objv[3], &len);
 	NSString *newIdString = [NSString stringWithUTF8String:newId];
 	[win setTabbingIdentifier: newIdString];
+
+	/*
+	 * If the tabbingIdentifier of a tab is changed we also turn it into a
+	 * separate window so we don't violate the rule that all tabs in the
+	 * same frame must have the same tabbingIdentifier.
+	 */
+
+	if ([idString compare:newIdString] != NSOrderedSame && [win tab]) {
+	    [win moveTabToNewWindow:nil];
+	}
 	return TCL_OK;
     }
 #endif

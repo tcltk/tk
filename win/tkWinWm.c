@@ -6677,7 +6677,7 @@ TkWmStackorderToplevelEnumProc(
 
     /*fprintf(stderr, "Looking up HWND %d\n", hwnd);*/
 
-    hPtr = Tcl_FindHashEntry(pair->table, (char *) hwnd);
+    hPtr = Tcl_FindHashEntry(pair->table, hwnd);
     if (hPtr != NULL) {
 	childWinPtr = Tcl_GetHashValue(hPtr);
 

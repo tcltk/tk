@@ -275,7 +275,7 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    WinScrollbar *scrollPtr = (WinScrollbar *) clientData;
+    WinScrollbar *scrollPtr = clientData;
     Tk_Window tkwin = scrollPtr->info.tkwin;
 
     scrollPtr->info.flags &= ~REDRAW_PENDING;
@@ -295,7 +295,7 @@ TkpDisplayScrollbar(
 	DestroyWindow(hwnd);
 
 	CreateProc(tkwin, Tk_WindowId(Tk_Parent(tkwin)),
-		(ClientData) scrollPtr);
+		scrollPtr);
     } else {
 	UpdateScrollbar(scrollPtr);
     }
@@ -617,7 +617,7 @@ ModalLoop(
     int oldMode;
 
     if (scrollPtr->hwnd) {
-	Tcl_Preserve((ClientData)scrollPtr);
+	Tcl_Preserve(scrollPtr);
 	scrollPtr->winFlags |= IN_MODAL_LOOP;
 	oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 	TkWinResendEvent(scrollPtr->oldProc, scrollPtr->hwnd, eventPtr);
@@ -626,7 +626,7 @@ ModalLoop(
 	if (scrollPtr->hwnd && scrollPtr->winFlags & ALREADY_DEAD) {
 	    DestroyWindow(scrollPtr->hwnd);
 	}
-	Tcl_Release((ClientData)scrollPtr);
+	Tcl_Release(scrollPtr);
     }
 }
 
