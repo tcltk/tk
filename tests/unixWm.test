@@ -13,11 +13,11 @@ tcltest::loadTestedCommands
 
 namespace import -force ::tk::test:loadTkCommand
 
-proc sleep ms {
-    global x
-    after $ms {set x 1}
-    vwait x
-}
+ proc animationDelay {} {
+    if {[tk windowingsystem] == "aqua"} {
+    sleep 250
+    }
+ }
 
 # Recent versions of macOS show an animation when a window is deiconified.
 # Tests which check the geometry of a window after deiconifying it should
