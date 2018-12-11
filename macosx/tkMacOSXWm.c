@@ -6513,10 +6513,10 @@ ApplyWindowAttributeFlagChanges(
 	     * This behavior, which makes the green button expand a window to
 	     * full screen, was included in the default as of OSX 10.13.  For
 	     * uniformity we use the new default in all versions of the OS
-	     * where the behavior exists.
+	     * after 10.10.
 	     */
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101000)
 	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
 
 		/*
@@ -6620,7 +6620,11 @@ ApplyMasterOverrideChanges(
 	    wmPtr->attributes = macClassAttrs[kSimpleWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes |= kWindowNoActivatesAttribute;
-	styleMask &= ~NSTitledWindowMask;
+	if ([NSApp macMinorVersion] == 6) {
+	    styleMask = 0;
+	} else {
+	    styleMask &= ~NSTitledWindowMask;
+	}
     } else {
 	if (wmPtr->macClass == kSimpleWindowClass &&
 		oldAttributes == kWindowNoActivatesAttribute) {
@@ -6629,7 +6633,14 @@ ApplyMasterOverrideChanges(
 		    macClassAttrs[kDocumentWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes &= ~kWindowNoActivatesAttribute;
-	styleMask |= NSTitledWindowMask;
+	if ([NSApp macMinorVersion] == 6) {
+	    styleMask = NSTitledWindowMask         |
+		        NSClosableWindowMask       |
+		        NSMiniaturizableWindowMask |
+		        NSResizableWindowMask;
+	} else {
+	    styleMask |= NSTitledWindowMask;
+	}
     }
     if (macWindow) {
 	NSWindow *parentWindow = [macWindow parentWindow];
