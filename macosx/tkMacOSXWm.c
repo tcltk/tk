@@ -615,11 +615,16 @@ FrontWindowAtPoint(
 
     for (NSWindow *w in windows) {
 	winPtr = TkMacOSXGetTkWindow(w);
-	if (winPtr && NSMouseInRect(p, [w frame], NO)) {
-	    break;
+	if (winPtr) {
+	    WmInfo *wmPtr = winPtr->wmInfoPtr;
+	    if (NSMouseInRect(p, [w frame], NO) &&
+		(wmPtr->hints.initial_state == NormalState ||
+		 wmPtr->hints.initial_state == ZoomState)) {
+		return winPtr;
+	    }
 	}
     }
-    return winPtr;
+    return NULL;
 }
 
 /*
