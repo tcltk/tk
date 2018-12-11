@@ -31,7 +31,7 @@
  */
 
 static int		GenerateUpdates(HIShapeRef updateRgn,
-			    CGRect *updateBounds, TkWindow *winPtr);
+			   CGRect *updateBounds, TkWindow *winPtr);
 static int		GenerateActivateEvents(TkWindow *winPtr,
 			    int activeFlag);
 static void		DoWindowActivate(ClientData clientData);
@@ -69,18 +69,19 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 #endif
     BOOL movedOnly = [[notification name]
 			 isEqualToString:NSWindowDidMoveNotification];
-
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	NSRect bounds = [w frame];
+	NSRect screenRect = [[w screen] frame];
 	int x, y, width = -1, height = -1, flags = 0;
+	int minY = 1 + [[NSApp mainMenu] menuBarHeight];
 
 	x = bounds.origin.x;
-	y = tkMacOSXZeroScreenHeight - (bounds.origin.y + bounds.size.height);
-	if (winPtr->changes.x != x || winPtr->changes.y != y){
+	y = screenRect.size.height - (bounds.origin.y + bounds.size.height);
+	if (winPtr->changes.x != x || winPtr->changes.y != y) {
 	    flags |= TK_LOCATION_CHANGED;
 	} else {
 	    x = y = -1;
@@ -99,8 +100,24 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 	    flags |= TK_MACOSX_HANDLE_EVENT_IMMEDIATELY;
 	}
+
+	/*
+	 * Mac windows cannot go higher than the bottom of the menu bar.  The
+	 * Tk window manager can request that a window be drawn so that it
+	 * overlaps the menu bar, but it will actually be drawn immediately
+	 * below the menu bar. In such a case it saves a lot of trouble and
+	 * causes no harm if we let Tk think that the window is located at the
+	 * requested point. (Many of the the tests assume that this is the
+	 * case, especially for windows with upper left corner at (0,0).)  So
+	 * we just tell a harmless white lie here.
+	 */
+
+	if (y == minY && wmPtr->y < minY) {
+	    y = wmPtr->y;
+	}
 	TkGenWMConfigureEvent((Tk_Window) winPtr, x, y, width, height, flags);
     }
+
 }
 
 - (void) windowExpanded: (NSNotification *) notification
@@ -136,6 +153,19 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
+- (NSRect)windowWillUseStandardFrame:(NSWindow *)window
+                        defaultFrame:(NSRect)newFrame
+{
+
+    /*
+     * This method needs to be implemented in order for [NSWindow isZoomed]
+     * to give the correct answer.  But it suffices to always validate
+     * every request.
+     */
+
+    return newFrame;
+}
+
 - (NSSize)window:(NSWindow *)window
   willUseFullScreenContentSize:(NSSize)proposedSize
 {
@@ -146,7 +176,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
      * be sized to the screen's visibleFrame, leaving black bands at
      * the top and bottom.
      */
-
     return proposedSize;
 }
 
@@ -296,6 +325,20 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
 }
+
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
+                    hasVisibleWindows:(BOOL)flag
+{
+    /*
+     * Allowing the default response means that withdrawn windows will get
+     * displayed on the screen with unresponsive title buttons.  We don't
+     * really want that.  Besides, we can write our own code to handle this
+     * with ::tk::mac::ReopenApplication.  So we just say NO.
+     */
+
+    return NO;
+}
+
 
 - (void) applicationShowHide: (NSNotification *) notification
 {
@@ -637,7 +680,7 @@ TkGenWMConfigureEvent(
 	if (flags & TK_LOCATION_CHANGED) {
 	    wmPtr->x = x;
 	    wmPtr->y = y;
-	    wmPtr->flags &= ~(WM_NEGATIVE_X | WM_NEGATIVE_Y);
+	    //wmPtr->flags &= ~(WM_NEGATIVE_X | WM_NEGATIVE_Y);
 	}
 	if ((flags & TK_SIZE_CHANGED) && !(wmPtr->flags & WM_SYNC_PENDING) &&
 		((width != Tk_Width(tkwin)) || (height != Tk_Height(tkwin)))) {
@@ -679,6 +722,7 @@ TkGenWMConfigureEvent(
 	    wmPtr->configHeight = height;
 	}
     }
+
 
     /*
      * Now set up the changes structure. Under X we wait for the
@@ -968,7 +1012,7 @@ ConfigureRestrictProc(
 	/*
 	 * Finally, unlock the main autoreleasePool.
 	 */
-	
+
 	[NSApp _unlockAutoreleasePool];
     }
 }
