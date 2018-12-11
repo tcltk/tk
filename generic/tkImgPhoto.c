@@ -39,6 +39,7 @@ struct SubcommandOptions {
     XColor *background;		/* Value specified for -background option. */
     int compositingRule;	/* Value specified for -compositingrule
 				 * option. */
+    Tcl_Obj *metadata;		/* Value specified for -metadata option. */
 };
 
 /*
@@ -59,6 +60,7 @@ struct SubcommandOptions {
  * OPT_TO:			Set if -to option allowed/specified.
  * OPT_WITHALPHA:		Set if -withalpha option allowed/specified.
  * OPT_ZOOM:			Set if -zoom option allowed/specified.
+ * OPT_METADATA:                Set if -metadata option allowed/specified.
  */
 
 #define OPT_ALPHA	1
@@ -72,6 +74,7 @@ struct SubcommandOptions {
 #define OPT_TO		0x100
 #define OPT_WITHALPHA	0x200
 #define OPT_ZOOM	0x400
+#define OPT_METADATA	0x800
 
 /*
  * List of option names. The order here must match the order of declarations
@@ -90,6 +93,7 @@ static const char *const optionNames[] = {
     "-to",
     "-withalpha",
     "-zoom",
+    "-metadata",
     NULL
 };
 
@@ -457,7 +461,11 @@ ImgPhotoCmd(
 	    if (masterPtr->format) {
 		Tcl_SetObjResult(interp, masterPtr->format);
 	    }
-	} else {
+        } else if (strncmp(arg, "-metadata", length) == 0) {
+            if (masterPtr->metadata) {
+                Tcl_SetObjResult(interp, masterPtr->metadata);
+            }
+        } else {
 	    Tk_ConfigureValue(interp, Tk_MainWindow(interp), configSpecs,
 		    (char *) masterPtr, Tcl_GetString(objv[2]), 0);
 	}
@@ -492,7 +500,14 @@ ImgPhotoCmd(
 		Tcl_AppendStringsToObj(subobj, " {}", NULL);
 	    }
 	    Tcl_ListObjAppendElement(interp, obj, subobj);
-	    Tcl_ListObjAppendList(interp, obj, Tcl_GetObjResult(interp));
+            subobj = Tcl_NewStringObj("-metadata {} {} {}", 16);
+            if (masterPtr->metadata) {
+                Tcl_ListObjAppendElement(NULL, subobj, masterPtr->metadata);
+            } else {
+                Tcl_AppendStringsToObj(subobj, " {}", NULL);
+            }
+            Tcl_ListObjAppendElement(interp, obj, subobj);
+            Tcl_ListObjAppendList(interp, obj, Tcl_GetObjResult(interp));
 	    Tcl_SetObjResult(interp, obj);
 	    return TCL_OK;
 
@@ -526,7 +541,22 @@ ImgPhotoCmd(
 		    Tcl_AppendResult(interp, " {}", NULL);
 		}
 		return TCL_OK;
-	    } else {
+            } else if (length > 1 &&
+                !strncmp(arg, "-metadata", length)) {
+                Tcl_AppendResult(interp, "-metadata {} {} {}", NULL);
+                if (masterPtr->metadata) {
+                    /*
+                    * TODO: Modifying result is bad!
+                    */
+
+                    Tcl_ListObjAppendElement(NULL, Tcl_GetObjResult(interp),
+                        masterPtr->metadata);
+                }
+                else {
+                    Tcl_AppendResult(interp, " {}", NULL);
+                }
+                return TCL_OK;
+            } else {
 		return Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
 			configSpecs, (char *) masterPtr, arg, 0);
 	    }
@@ -683,7 +713,8 @@ ImgPhotoCmd(
 	options.fromX = 0;
 	options.fromY = 0;
 	if (ParseSubcommandOptions(&options, interp,
-		OPT_FORMAT | OPT_FROM | OPT_GRAYSCALE | OPT_BACKGROUND,
+		OPT_FORMAT | OPT_FROM | OPT_GRAYSCALE | OPT_BACKGROUND
+                | OPT_METADATA,
 		&index, objc, objv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -868,7 +899,8 @@ ImgPhotoCmd(
 	memset(&options, 0, sizeof(options));
 	options.name = NULL;
 	options.format = NULL;
-	if (ParseSubcommandOptions(&options, interp, OPT_TO|OPT_FORMAT,
+	if (ParseSubcommandOptions(&options, interp,
+                OPT_TO|OPT_FORMAT|OPT_METADATA,
 		&index, objc, objv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -933,7 +965,7 @@ ImgPhotoCmd(
 	options.name = NULL;
 	options.format = NULL;
 	if (ParseSubcommandOptions(&options, interp,
-		OPT_FORMAT | OPT_FROM | OPT_TO | OPT_SHRINK,
+		OPT_FORMAT | OPT_FROM | OPT_TO | OPT_SHRINK | OPT_METADATA,
 		&index, objc, objv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -1282,7 +1314,8 @@ ImgPhotoCmd(
 	options.name = NULL;
 	options.format = NULL;
 	if (ParseSubcommandOptions(&options, interp,
-		OPT_FORMAT | OPT_FROM | OPT_GRAYSCALE | OPT_BACKGROUND,
+		OPT_FORMAT | OPT_FROM | OPT_GRAYSCALE | OPT_BACKGROUND
+                | OPT_METADATA,
 		&index, objc, objv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -1441,8 +1474,8 @@ GetExtension(
  *
  *	This function is invoked to process one of the options which may be
  *	specified for the photo image subcommands, namely, -from, -to, -zoom,
- *	-subsample, -format, -shrink, -compositingrule, -alpha, -boolean and
- *	-withalpha.
+ *	-subsample, -format, -shrink, -compositingrule, -alpha, -boolean,
+ *	-withalpha and -metadata.
  *	Parsing starts at the index in *optIndexPtr and stops at the end of
  *	objv[] or at the first value that does not belong to an option.
  *
@@ -1560,7 +1593,18 @@ ParseSubcommandOptions(
 	    }
 	    *optIndexPtr = ++index;
 	    optPtr->format = objv[index];
-	} else if (bit == OPT_COMPOSITE) {
+        } else if (bit == OPT_METADATA) {
+            /*
+            * The -metadata option takes a single dict value. Note that
+            * parsing this is outside the scope of this function.
+            */
+
+            if (index + 1 >= objc) {
+                goto oneValueRequired;
+            }
+            *optIndexPtr = ++index;
+            optPtr->metadata = objv[index];
+        } else if (bit == OPT_COMPOSITE) {
 	    /*
 	     * The -compositingrule option takes a single value from a
 	     * well-known set.
@@ -1756,7 +1800,7 @@ ImgPhotoConfigureMaster(
 {
     PhotoInstance *instancePtr;
     const char *oldFileString, *oldPaletteString;
-    Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL;
+    Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL, *metadata = NULL;
     Tcl_Obj *tempdata, *tempformat;
     size_t length;
     int i, j, result, imageWidth, imageHeight, oldformat;
@@ -1795,7 +1839,21 @@ ImgPhotoConfigureMaster(
 			    "MISSING_VALUE", NULL);
 		    return TCL_ERROR;
 		}
-	    }
+            } else if ((args[j][1] == 'm') &&
+                !strncmp(args[j], "-metadata", length)) {
+                if (++i < objc) {
+                    metadata = objv[i];
+                    j--;
+                }
+                else {
+                    ckfree(args);
+                    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                        "value for \"-metadata\" missing", -1));
+                    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+                        "MISSING_VALUE", NULL);
+                    return TCL_ERROR;
+                }
+            }
 	}
     }
 
@@ -1834,7 +1892,7 @@ ImgPhotoConfigureMaster(
     ckfree(args);
 
     /*
-     * Regard the empty string for -file, -data or -format as the null value.
+     * Regard the empty string for -file, -data, -format or -metadata as the null value.
      */
 
     if ((masterPtr->fileString != NULL) && (masterPtr->fileString[0] == 0)) {
@@ -1875,6 +1933,25 @@ ImgPhotoConfigureMaster(
 	    Tcl_DecrRefCount(masterPtr->format);
 	}
 	masterPtr->format = format;
+    }
+    if (metadata) {
+        /*
+        * Stringify to ignore -metadata "". It may come in as a list or other
+        * object.
+        */
+
+        /* HaO: ToDo: value is a dict, not a string */
+        (void)Tcl_GetString(metadata);
+        if (metadata->length) {
+            Tcl_IncrRefCount(metadata);
+        }
+        else {
+            metadata = NULL;
+        }
+        if (masterPtr->metadata) {
+            Tcl_DecrRefCount(masterPtr->metadata);
+        }
+        masterPtr->metadata = metadata;
     }
     /*
      * Set the image to the user-requested size, if any, and make sure storage
