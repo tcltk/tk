@@ -19,6 +19,16 @@ proc sleep ms {
     vwait x
 }
 
+# The macOS window manager shows an animation when a window is deiconified.
+# Tests which check the geometry of a window after deiconifying it should
+# wait for the animation to finish.
+
+ proc animationDelay {} {
+    if {[tk windowingsystem] == "aqua"} {
+    sleep 250
+    }
+ }
+
 # Procedure to set up a collection of top-level windows
 
 proc makeToplevels {} {
@@ -76,6 +86,7 @@ foreach geom {+20+80 +80+20 +0+0 -0-0 +0-0 -0+0 -10-5 -10+5 +10-5} {
 	wm geom .t $geom
 	update
 	wm deiconify .t
+	animationDelay
 	scan [wm geom .t] %dx%d%1s%d%1s%d width height xsign x ysign y
 	format "%s%d%s%d" $xsign [eval expr $x$xsign$xerr] $ysign \
 		[eval expr $y$ysign$yerr]
@@ -91,6 +102,7 @@ foreach geom {+20+80 +100+40 +0+0} {
 	wm geom .t $geom
 	update
 	wm deiconify .t
+	animationDelay
 	wm geom .t
     } 100x150$geom
     incr i
@@ -400,6 +412,7 @@ test unixWm-9.4 {TkWmMapWindow procedure, icon windows} unix {
     destroy .t
     sleep 500
     toplevel .t -width 100 -height 50 -bg blue
+    tkwait visibility .t
     wm iconwindow . .t
     update
     set result [winfo ismapped .t]
@@ -795,9 +808,14 @@ test unixWm-22.2 {Tk_WmCmd procedure, "iconbitmap" option} {unix testwrapper} {
 	    WM_HINTS] 0]]]
     lappend result [wm iconbitmap .t] $bit
 } {{} questhead 0x4 {} 0x0}
-test unixWm-22.3 {Tk_WmCmd procedure, "iconbitmap" option} unix {
+test unixWm-22.3.1 {Tk_WmCmd procedure, "iconbitmap" option for unix only} \
+{unix notAqua} {
     list [catch {wm iconbitmap .t bad-bitmap} msg] $msg
 } {1 {bitmap "bad-bitmap" not defined}}
+test unixWm-22.3.2 {Tk_WmCmd procedure, "iconbitmap" option for Aqua only} \
+Aqua {
+    list [catch {wm iconbitmap .t bad-bitmap} msg] $msg
+} {1 {}}
 
 test unixWm-23.1 {Tk_WmCmd procedure, "iconify" option} unix {
     list [catch {wm iconify .t 12} msg] $msg
@@ -1201,9 +1219,12 @@ test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
 
-test unixWm-35.1 {Tk_WmCmd procedure, "state" option} unix {
+test unixWm-35.1.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
     list [catch {wm state .t 1} msg]  $msg
 } {1 {bad argument "1": must be normal, iconic, or withdrawn}}
+test unixWm-35.1.2 {Tk_WmCmd procedure, "state" option} Aqua {
+    list [catch {wm state .t 1} msg]  $msg
+} {1 {bad argument "1": must be normal, iconic, withdrawn, or zoomed}}
 test unixWm-35.2 {Tk_WmCmd procedure, "state" option} unix {
     list [catch {wm state .t iconic 1} msg]  $msg
 } {1 {wrong # args: should be "wm state window ?state?"}}
@@ -1415,9 +1436,11 @@ test unixWm-42.1 {WrapperEventProc procedure, map and unmap events} unix {
     bind .t <Unmap> {set x "unmapped"}
     set x {no event}
     wm iconify .t
+    animationDelay
     lappend result $x [winfo ismapped .t]
     set x {no event}
     wm deiconify .t
+    animationDelay
     lappend result $x [winfo ismapped .t]
 } {unmapped 0 mapped 1}
 
@@ -1507,9 +1530,9 @@ test unixWm-44.5 {UpdateGeometryInfo procedure, negative width} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {1 72}
+destroy .t
+toplevel .t -width 80 -height 60
 test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} unix {
-    destroy .t
-    toplevel .t -width 80 -height 60
     wm grid .t 18 7 10 12
     wm geometry .t +30+40
     wm overrideredirect .t 1
@@ -1518,22 +1541,24 @@ test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} unix {
     update
     list [winfo width .t] [winfo height .t]
 } {100 1}
-
 destroy .t
 toplevel .t -width 80 -height 60
 test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} unix {
-    wm geometry .t +5-10
-    wm overrideredirect .t 1
     tkwait visibility .t
+    wm overrideredirect .t 1
+    update
+    wm geometry .t +5-10
+    update
     list [winfo x .t] [winfo y .t]
 } [list 5 [expr [winfo screenheight .t] - 70]]
-
 destroy .t
 toplevel .t -width 80 -height 60
 test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} unix {
-    wm geometry .t -30+2
-    wm overrideredirect .t 1
     tkwait visibility .t
+    wm overrideredirect .t 1
+    update
+    wm geometry .t -30+2
+    update
     list [winfo x .t] [winfo y .t]
 } [list [expr [winfo screenwidth .t] - 110] 2]
 destroy .t
