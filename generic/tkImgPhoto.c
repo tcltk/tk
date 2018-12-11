@@ -461,11 +461,11 @@ ImgPhotoCmd(
 	    if (masterPtr->format) {
 		Tcl_SetObjResult(interp, masterPtr->format);
 	    }
-        } else if (strncmp(arg, "-metadata", length) == 0) {
-            if (masterPtr->metadata) {
-                Tcl_SetObjResult(interp, masterPtr->metadata);
-            }
-        } else {
+	} else if (strncmp(arg, "-metadata", length) == 0) {
+	    if (masterPtr->metadata) {
+		Tcl_SetObjResult(interp, masterPtr->metadata);
+	    }
+	} else {
 	    Tk_ConfigureValue(interp, Tk_MainWindow(interp), configSpecs,
 		    (char *) masterPtr, Tcl_GetString(objv[2]), 0);
 	}
@@ -500,14 +500,14 @@ ImgPhotoCmd(
 		Tcl_AppendStringsToObj(subobj, " {}", NULL);
 	    }
 	    Tcl_ListObjAppendElement(interp, obj, subobj);
-            subobj = Tcl_NewStringObj("-metadata {} {} {}", 16);
-            if (masterPtr->metadata) {
-                Tcl_ListObjAppendElement(NULL, subobj, masterPtr->metadata);
-            } else {
-                Tcl_AppendStringsToObj(subobj, " {}", NULL);
-            }
-            Tcl_ListObjAppendElement(interp, obj, subobj);
-            Tcl_ListObjAppendList(interp, obj, Tcl_GetObjResult(interp));
+	    subobj = Tcl_NewStringObj("-metadata {} {} {}", 16);
+	    if (masterPtr->metadata) {
+		Tcl_ListObjAppendElement(NULL, subobj, masterPtr->metadata);
+	    } else {
+		Tcl_AppendStringsToObj(subobj, " {}", NULL);
+	    }
+	    Tcl_ListObjAppendElement(interp, obj, subobj);
+	    Tcl_ListObjAppendList(interp, obj, Tcl_GetObjResult(interp));
 	    Tcl_SetObjResult(interp, obj);
 	    return TCL_OK;
 
@@ -541,22 +541,21 @@ ImgPhotoCmd(
 		    Tcl_AppendResult(interp, " {}", NULL);
 		}
 		return TCL_OK;
-            } else if (length > 1 &&
-                !strncmp(arg, "-metadata", length)) {
-                Tcl_AppendResult(interp, "-metadata {} {} {}", NULL);
-                if (masterPtr->metadata) {
-                    /*
-                    * TODO: Modifying result is bad!
-                    */
+	    } else if (length > 1 &&
+		!strncmp(arg, "-metadata", length)) {
+		Tcl_AppendResult(interp, "-metadata {} {} {}", NULL);
+		if (masterPtr->metadata) {
+		    /*
+		     * TODO: Modifying result is bad!
+		     */
 
-                    Tcl_ListObjAppendElement(NULL, Tcl_GetObjResult(interp),
-                        masterPtr->metadata);
-                }
-                else {
-                    Tcl_AppendResult(interp, " {}", NULL);
-                }
-                return TCL_OK;
-            } else {
+		    Tcl_ListObjAppendElement(NULL, Tcl_GetObjResult(interp),
+			masterPtr->metadata);
+		} else {
+		    Tcl_AppendResult(interp, " {}", NULL);
+		}
+		return TCL_OK;
+	    } else {
 		return Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
 			configSpecs, (char *) masterPtr, arg, 0);
 	    }
@@ -714,7 +713,7 @@ ImgPhotoCmd(
 	options.fromY = 0;
 	if (ParseSubcommandOptions(&options, interp,
 		OPT_FORMAT | OPT_FROM | OPT_GRAYSCALE | OPT_BACKGROUND
-                | OPT_METADATA,
+		| OPT_METADATA,
 		&index, objc, objv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -900,7 +899,7 @@ ImgPhotoCmd(
 	options.name = NULL;
 	options.format = NULL;
 	if (ParseSubcommandOptions(&options, interp,
-                OPT_TO|OPT_FORMAT|OPT_METADATA,
+		OPT_TO|OPT_FORMAT|OPT_METADATA,
 		&index, objc, objv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -1315,7 +1314,7 @@ ImgPhotoCmd(
 	options.format = NULL;
 	if (ParseSubcommandOptions(&options, interp,
 		OPT_FORMAT | OPT_FROM | OPT_GRAYSCALE | OPT_BACKGROUND
-                | OPT_METADATA,
+		| OPT_METADATA,
 		&index, objc, objv) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -1593,18 +1592,18 @@ ParseSubcommandOptions(
 	    }
 	    *optIndexPtr = ++index;
 	    optPtr->format = objv[index];
-        } else if (bit == OPT_METADATA) {
-            /*
-            * The -metadata option takes a single dict value. Note that
-            * parsing this is outside the scope of this function.
-            */
+	} else if (bit == OPT_METADATA) {
+	    /*
+	    * The -metadata option takes a single dict value. Note that
+	    * parsing this is outside the scope of this function.
+	    */
 
-            if (index + 1 >= objc) {
-                goto oneValueRequired;
-            }
-            *optIndexPtr = ++index;
-            optPtr->metadata = objv[index];
-        } else if (bit == OPT_COMPOSITE) {
+	    if (index + 1 >= objc) {
+		goto oneValueRequired;
+	    }
+	    *optIndexPtr = ++index;
+	    optPtr->metadata = objv[index];
+	} else if (bit == OPT_COMPOSITE) {
 	    /*
 	     * The -compositingrule option takes a single value from a
 	     * well-known set.
@@ -1839,21 +1838,20 @@ ImgPhotoConfigureMaster(
 			    "MISSING_VALUE", NULL);
 		    return TCL_ERROR;
 		}
-            } else if ((args[j][1] == 'm') &&
-                !strncmp(args[j], "-metadata", length)) {
-                if (++i < objc) {
-                    metadata = objv[i];
-                    j--;
-                }
-                else {
-                    ckfree(args);
-                    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-                        "value for \"-metadata\" missing", -1));
-                    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-                        "MISSING_VALUE", NULL);
-                    return TCL_ERROR;
-                }
-            }
+	    } else if ((args[j][1] == 'm') &&
+		!strncmp(args[j], "-metadata", length)) {
+		if (++i < objc) {
+		    metadata = objv[i];
+		    j--;
+		} else {
+		    ckfree(args);
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"value for \"-metadata\" missing", -1));
+		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+			"MISSING_VALUE", NULL);
+		    return TCL_ERROR;
+		}
+	    }
 	}
     }
 
@@ -1935,23 +1933,23 @@ ImgPhotoConfigureMaster(
 	masterPtr->format = format;
     }
     if (metadata) {
-        /*
-        * Stringify to ignore -metadata "". It may come in as a list or other
-        * object.
-        */
+	/*
+	 * Stringify to ignore -metadata "". It may come in as a list or other
+	 * object.
+	 */
 
-        /* HaO: ToDo: value is a dict, not a string */
-        (void)Tcl_GetString(metadata);
-        if (metadata->length) {
-            Tcl_IncrRefCount(metadata);
-        }
-        else {
-            metadata = NULL;
-        }
-        if (masterPtr->metadata) {
-            Tcl_DecrRefCount(masterPtr->metadata);
-        }
-        masterPtr->metadata = metadata;
+	/* HaO: ToDo: value is a dict, not a string */
+	(void)Tcl_GetString(metadata);
+	if (metadata->length) {
+	    Tcl_IncrRefCount(metadata);
+	}
+	else {
+	    metadata = NULL;
+	}
+	if (masterPtr->metadata) {
+	    Tcl_DecrRefCount(masterPtr->metadata);
+	}
+	masterPtr->metadata = metadata;
     }
     /*
      * Set the image to the user-requested size, if any, and make sure storage
