@@ -6234,6 +6234,33 @@ test bind-32.8 {test sequences} -setup {
 } -cleanup {
     destroy .t.f
 } -result {Double}
+test bind-32.9 {trigger events for modifier keys} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Any-Key> { set x "Key" }
+    event generate .t.f <KeyPress> -keysym Shift_Lock
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {Key}
+test bind-32.10 {clash of Space with VK_CAPITAL (Windows only)} -setup {
+    pack [frame .t.f]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <1> { set x "Single" }
+    bind .t.f <Double-1> { set x "Double" }
+    event generate .t.f <1>
+    event generate .t.f <KeyPress> -keycode 20
+    event generate .t.f <1>
+    set x
+} -cleanup {
+    destroy .t.f
+} -result {Single}
 
 test bind-33.1 {prefer longest match} -setup {
     pack [frame .t.f]
