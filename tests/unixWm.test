@@ -19,7 +19,7 @@ proc sleep ms {
     vwait x
 }
 
-# Recent versions of macOS show an animation when a window is deiconified.
+# The macOS window manager shows an animation when a window is deiconified.
 # Tests which check the geometry of a window after deiconifying it should
 # wait for the animation to finish.
 
