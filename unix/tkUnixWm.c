@@ -5856,14 +5856,27 @@ Tk_CoordsToWindow(
 	for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL;
 		wmPtr = wmPtr->nextPtr) {
             winPtr = wmPtr->winPtr;
-            if (wmPtr->winPtr == NULL) {
+            if (winPtr == NULL) {
+                
+                /*
+                 * This happens, for example, if the wmPtr points to a Gnome3
+                 * "invisible border".  Ignore this window and keep searching.
+                 */
+
                 continue;
             }
-            if (x >= winPtr->changes.x &&
-                x < winPtr->changes.x + winPtr->changes.width &&
-                y < winPtr->changes.y + winPtr->changes.height) {
-                goto gotToplevel;
+            if (x < winPtr->changes.x ||
+                x > winPtr->changes.x + winPtr->changes.width ||
+                y < winPtr->changes.y ||
+                y > winPtr->changes.y + winPtr->changes.height) {
+                
+                /*
+                 * The point is completely outside the window; keep searching.
+                 */
+
+                continue;
             }
+            goto gotToplevel;
 	}
 	x = childX;
 	y = childY;
@@ -5871,7 +5884,7 @@ Tk_CoordsToWindow(
 	window = child;
     }
 
-  gotToplevel:
+ gotToplevel:
     if (handler) {
 	/*
 	 * Check value of handler, because we can reach this label from above
@@ -5895,6 +5908,7 @@ Tk_CoordsToWindow(
 
     x = childX - winPtr->changes.x;
     y = childY - winPtr->changes.y;
+
     if (y < 0) {
 	winPtr = (TkWindow *) wmPtr->menubar;
 	if (winPtr == NULL) {
