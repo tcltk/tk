@@ -1779,46 +1779,47 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
 deleteWindows
 wm iconify .
 test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords} unix {
-    deleteWindows
+    update
     toplevel .t -width 300 -height 400 -bg green
-    wm geom .t +40+0
+    wm geom .t +100+100
     tkwait visibility .t
-    toplevel .t2 -width 100 -height 80 -bg red
-    wm geom .t2 +140+200
+    toplevel .t2 -width 100 -height 200 -bg red
+    wm geom .t2 +200+200
     tkwait visibility .t2
     raise .t2
+    update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    list [winfo containing [expr $x - 30] [expr $y + 250]] \
-	    [winfo containing [expr $x - 1] [expr $y + 250]] \
-	    [winfo containing $x [expr $y + 250]] \
-	    [winfo containing [expr $x + 99] [expr $y + 250]] \
-	    [winfo containing [expr $x + 100] [expr $y + 250]] \
-	    [winfo containing [expr $x + 199] [expr $y + 250]] \
-	    [winfo containing [expr $x + 200] [expr $y + 250]] \
-	    [winfo containing [expr $x + 220] [expr $y + 250]]
-} {{} {} .t {} .t2 .t2 {} .t}
+    list [winfo containing [expr $x - 30]  [expr $y + 250]] \
+	 [winfo containing [expr $x - 1]   [expr $y + 250]] \
+	 [winfo containing $x              [expr $y + 250]] \
+	 [winfo containing [expr $x + 99]  [expr $y + 250]] \
+	 [winfo containing [expr $x + 100] [expr $y + 250]] \
+	 [winfo containing [expr $x + 199] [expr $y + 250]] \
+	 [winfo containing [expr $x + 200] [expr $y + 250]] \
+	 [winfo containing [expr $x + 220] [expr $y + 250]]
+} {{} {} .t .t .t2 .t2 .t .t}
 test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and overrideredirect} unix {
     deleteWindows
-    toplevel .t -width 300 -height 400 -bg yellow
-    wm geom .t +0+50
+    toplevel .t -width 400 -height 300 -bg yellow
+    wm geom .t +100+100
     tkwait visibility .t
-    toplevel .t2 -width 100 -height 80 -bg blue
+    toplevel .t2 -width 200 -height 100 -bg blue
     wm overrideredirect .t2 1
-    wm geom .t2 +100+200
+    wm geom .t2 +200+200
     tkwait visibility .t2
     raise .t2
     set x [winfo rootx .t]
     set y [winfo rooty .t]
     set y2 [winfo rooty .t2]
-    list [winfo containing [expr $x +150] 10] \
-	    [winfo containing [expr $x +150] [expr $y - 1]] \
-	    [winfo containing [expr $x +150] $y] \
-	    [winfo containing [expr $x +150] [expr $y2 - 1]] \
-	    [winfo containing [expr $x +150] $y2] \
-	    [winfo containing [expr $x +150] [expr $y2 + 79]] \
-	    [winfo containing [expr $x +150] [expr $y2 + 80]] \
-	    [winfo containing [expr $x +150] [expr $y + 450]]
+    list [winfo containing [expr $x +200] [expr $y - 30]] \
+	 [winfo containing [expr $x +200] [expr $y - 1]] \
+	 [winfo containing [expr $x +200] $y] \
+	 [winfo containing [expr $x +200] [expr $y2 - 1]] \
+	 [winfo containing [expr $x +200] $y2] \
+	 [winfo containing [expr $x +200] [expr $y2 + 99]] \
+	 [winfo containing [expr $x +200] [expr $y2 + 100]] \
+	 [winfo containing [expr $x +200] [expr $y + 450]]
 } {{} {} .t .t .t2 .t2 .t {}}
 test unixWm-50.3 {
 	Tk_CoordsToWindow procedure, finding a toplevel with embedding
@@ -1876,13 +1877,13 @@ test unixWm-50.5 {Tk_CoordsToWindow procedure, handling menubars} {unix testmenu
     update
     set x [winfo rootx .t]
     set y [winfo rooty .t]
-    list [winfo containing $x [expr $y - 31]] \
-		[winfo containing $x [expr $y - 30]] \
-		[winfo containing [expr $x + 50] [expr $y - 19]] \
-		[winfo containing [expr $x + 50] [expr $y - 18]] \
-		[winfo containing [expr $x + 50] $y] \
-		[winfo containing [expr $x + 11] [expr $y + 152]] \
-		[winfo containing [expr $x + 12] [expr $y + 152]]
+    list [winfo containing $x             [expr $y - 31]] \
+	 [winfo containing $x             [expr $y - 30]] \
+	 [winfo containing [expr $x + 50] [expr $y - 19]] \
+	 [winfo containing [expr $x + 50] [expr $y - 18]] \
+	 [winfo containing [expr $x + 50] $y] \
+	 [winfo containing [expr $x + 11] [expr $y + 152]] \
+	 [winfo containing [expr $x + 12] [expr $y + 152]]
 } {{} .t.menu .t.menu .t.menu.f .t .t .t.f}
 test unixWm-50.6 {Tk_CoordsToWindow procedure, embedding within one app.} unix {
     deleteWindows

@@ -5866,9 +5866,9 @@ Tk_CoordsToWindow(
                 continue;
             }
             if (x < winPtr->changes.x ||
-                x > winPtr->changes.x + winPtr->changes.width ||
+                x >= winPtr->changes.x + winPtr->changes.width ||
                 y < winPtr->changes.y ||
-                y > winPtr->changes.y + winPtr->changes.height) {
+                y >= winPtr->changes.y + winPtr->changes.height) {
                 
                 /*
                  * The point is completely outside the window; keep searching.
@@ -5876,6 +5876,15 @@ Tk_CoordsToWindow(
 
                 continue;
             }
+            if (wmPtr->hints.initial_state != NormalState) {
+
+                /*
+                 * Ignore iconified windows.
+                 */
+
+                continue;
+            }
+
             goto gotToplevel;
 	}
 	x = childX;
