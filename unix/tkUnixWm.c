@@ -5855,32 +5855,16 @@ Tk_CoordsToWindow(
 	}
 	for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL;
 		wmPtr = wmPtr->nextPtr) {
-            winPtr = wmPtr->winPtr;
-            if (wmPtr->hints.initial_state != NormalState) {
-                continue;
-            }
-            if (x < winPtr->changes.x ||
-                x >= winPtr->changes.x + winPtr->changes.width ||
-                y < winPtr->changes.y - wmPtr->menuHeight ||
-                y >= winPtr->changes.y + winPtr->changes.height) {
-                continue;
-            }
-
-            /*
-             * This complicated conjunction is responsible for causing
-             * the command to return NULL when the point is covered by
-             * a higher window belonging to a different process.  Surely
-             * there is a better way ...
-             */
-            
-            if (wmPtr == (WmInfo *) dispPtr->firstWmPtr &&
-                wmPtr->wrapperPtr != NULL &&
-                child != wmPtr->wrapperPtr->window &&
-                child != wmPtr->reparent &&
-                child != wmPtr->winPtr->window) {
-                return NULL;
-            }
-            goto gotToplevel;
+	    if (wmPtr->reparent == child) {
+		goto gotToplevel;
+	    }
+	    if (wmPtr->wrapperPtr != NULL) {
+		if (child == wmPtr->wrapperPtr->window) {
+		    goto gotToplevel;
+		}
+	    } else if (child == wmPtr->winPtr->window) {
+		goto gotToplevel;
+	    }
 	}
 	x = childX;
 	y = childY;
@@ -5888,7 +5872,7 @@ Tk_CoordsToWindow(
 	window = child;
     }
 
- gotToplevel:
+  gotToplevel:
     if (handler) {
 	/*
 	 * Check value of handler, because we can reach this label from above
@@ -5898,6 +5882,7 @@ Tk_CoordsToWindow(
 	Tk_DeleteErrorHandler(handler);
 	handler = NULL;
     }
+    winPtr = wmPtr->winPtr;
     if (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
 	return NULL;
     }
@@ -5912,13 +5897,19 @@ Tk_CoordsToWindow(
 
     x = childX - winPtr->changes.x;
     y = childY - winPtr->changes.y;
-
-    if (y < 0 && y >= -wmPtr->menuHeight ) {
- 	winPtr = (TkWindow *) wmPtr->menubar;
-        y += wmPtr->menuHeight;
- 	if (winPtr == NULL) {
- 	    return NULL;
- 	}
+    if ((x < 0) || (x >= winPtr->changes.width)
+	    || (y >= winPtr->changes.height)) {
+	return NULL;
+    }
+    if (y < 0) {
+	winPtr = (TkWindow *) wmPtr->menubar;
+	if (winPtr == NULL) {
+	    return NULL;
+	}
+	y += wmPtr->menuHeight;
+	if (y < 0) {
+	    return NULL;
+	}
     }
 
     /*
