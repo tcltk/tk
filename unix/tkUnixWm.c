@@ -5856,35 +5856,30 @@ Tk_CoordsToWindow(
 	for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL;
 		wmPtr = wmPtr->nextPtr) {
             winPtr = wmPtr->winPtr;
-            if (winPtr == NULL) {
-                
-                /*
-                 * This happens, for example, if the wmPtr points to a Gnome3
-                 * "invisible border".  Ignore this window and keep searching.
-                 */
-
+            if (wmPtr->hints.initial_state != NormalState) {
                 continue;
             }
             if (x < winPtr->changes.x ||
                 x >= winPtr->changes.x + winPtr->changes.width ||
-                y < winPtr->changes.y ||
+                y < winPtr->changes.y - wmPtr->menuHeight ||
                 y >= winPtr->changes.y + winPtr->changes.height) {
-                
-                /*
-                 * The point is completely outside the window; keep searching.
-                 */
-
-                continue;
-            }
-            if (wmPtr->hints.initial_state != NormalState) {
-
-                /*
-                 * Ignore iconified windows.
-                 */
-
                 continue;
             }
 
+            /*
+             * This complicated conjunction is responsible for causing
+             * the command to return NULL when the point is covered by
+             * a higher window belonging to a different process.  Surely
+             * there is a better way ...
+             */
+            
+            if (wmPtr == (WmInfo *) dispPtr->firstWmPtr &&
+                wmPtr->wrapperPtr != NULL &&
+                child != wmPtr->wrapperPtr->window &&
+                child != wmPtr->reparent &&
+                child != wmPtr->winPtr->window) {
+                return NULL;
+            }
             goto gotToplevel;
 	}
 	x = childX;
@@ -5918,15 +5913,12 @@ Tk_CoordsToWindow(
     x = childX - winPtr->changes.x;
     y = childY - winPtr->changes.y;
 
-    if (y < 0) {
-	winPtr = (TkWindow *) wmPtr->menubar;
-	if (winPtr == NULL) {
-	    return NULL;
-	}
-	y += wmPtr->menuHeight;
-	if (y < 0) {
-	    return NULL;
-	}
+    if (y < 0 && y >= -wmPtr->menuHeight ) {
+ 	winPtr = (TkWindow *) wmPtr->menubar;
+        y += wmPtr->menuHeight;
+ 	if (winPtr == NULL) {
+ 	    return NULL;
+ 	}
     }
 
     /*
