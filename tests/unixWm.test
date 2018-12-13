@@ -1777,7 +1777,9 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
 } {52 7 12 62}
 
 deleteWindows
-wm iconify .
+# added temporarily because the root was not being iconified on Ubuntu.
+wm geometry . +1000+1000
+#wm iconify .
 test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords} unix {
     update
     toplevel .t -width 300 -height 400 -bg green

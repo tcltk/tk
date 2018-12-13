@@ -5800,7 +5800,8 @@ Tk_CoordsToWindow(
     TkWindow *winPtr, *childPtr, *nextPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
     Tk_ErrorHandler handler = NULL;
-
+    int gnome3flag = 0;
+    
     /*
      * Step 1: scan the list of toplevel windows to see if there is a virtual
      * root for the screen we're interested in. If so, we have to translate
@@ -5855,6 +5856,12 @@ Tk_CoordsToWindow(
 	}
 	for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL;
 		wmPtr = wmPtr->nextPtr) {
+            if (wmPtr->winPtr->mainPtr == NULL) {
+                continue;
+            }
+            if (gnome3flag) {
+                goto gotToplevel;
+            }
 	    if (child == wmPtr->reparent) {
                 XWindowChanges changes = wmPtr->winPtr->changes;
 
@@ -5864,11 +5871,11 @@ Tk_CoordsToWindow(
                  * the child whenever the point is inside the invisible
                  * border.  But we only want to use the window as our toplevel
                  * when the point is actually inside the window.  If the point
-                 * is outside, we replace the window by the next window in the
-                 * stack, provided it is a Tk window.  (Gnome3 adds its own
-                 * private window below when no lower Tk window contains the
-                 * point.  We can detect this by checking whether the winPtr
-                 * is NULL.)
+                 * is outside, we set the gnome3flag, which means to use the
+                 * next genuine Tk window on the stack.  (Gnome3 may add its
+                 * own private window below the window with the invisible
+                 * border.  We can detect this by checking whether
+                 * winPtr->mainPtr is NULL.)
                  */
 
                 if (x >= changes.x &&
@@ -5876,12 +5883,8 @@ Tk_CoordsToWindow(
                     y >= changes.y - wmPtr->menuHeight &&
                     y < changes.y + changes.height) {
                     goto gotToplevel;
-                } else if (wmPtr->nextPtr != NULL) {
-                    wmPtr = wmPtr->nextPtr;
-                    if (wmPtr->winPtr == NULL) {
-                        return NULL;
-                    }
-                    goto gotToplevel;
+                } else {
+                    gnome3flag = 1;
                 }
 	    }
 	    if (wmPtr->wrapperPtr != NULL) {
