@@ -5855,8 +5855,34 @@ Tk_CoordsToWindow(
 	}
 	for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL;
 		wmPtr = wmPtr->nextPtr) {
-	    if (wmPtr->reparent == child) {
-		goto gotToplevel;
+	    if (child == wmPtr->reparent) {
+                XWindowChanges changes = wmPtr->winPtr->changes;
+
+                /* Gnome3-based window managers place an invisible border
+                 * around a window to help grab the edge for resizing.
+                 * XTranslateCoordinates returns a reparent of the window as
+                 * the child whenever the point is inside the invisible
+                 * border.  But we only want to use the window as our toplevel
+                 * when the point is actually inside the window.  If the point
+                 * is outside, we replace the window by the next window in the
+                 * stack, provided it is a Tk window.  (Gnome3 adds its own
+                 * private window below when no lower Tk window contains the
+                 * point.  We can detect this by checking whether the winPtr
+                 * is NULL.)
+                 */
+
+                if (x >= changes.x &&
+                    x < changes.x + changes.width &&
+                    y >= changes.y - wmPtr->menuHeight &&
+                    y < changes.y + changes.height) {
+                    goto gotToplevel;
+                } else if (wmPtr->nextPtr != NULL) {
+                    wmPtr = wmPtr->nextPtr;
+                    if (wmPtr->winPtr == NULL) {
+                        return NULL;
+                    }
+                    goto gotToplevel;
+                }
 	    }
 	    if (wmPtr->wrapperPtr != NULL) {
 		if (child == wmPtr->wrapperPtr->window) {
