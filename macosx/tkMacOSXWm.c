@@ -617,7 +617,16 @@ FrontWindowAtPoint(
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (winPtr) {
 	    WmInfo *wmPtr = winPtr->wmInfoPtr;
-	    if (NSMouseInRect(p, [w frame], NO) &&
+	    NSRect frame = [w frame];
+
+	    /*
+	     * For consistency with other platforms, points in the
+	     * title bar are not considered to be contained in the
+	     * window.
+	     */
+	    
+	    frame.size.height  = [[w contentView] frame].size.height;
+	    if (NSMouseInRect(p, frame, NO) &&
 		(wmPtr->hints.initial_state == NormalState ||
 		 wmPtr->hints.initial_state == ZoomState)) {
 		return winPtr;
