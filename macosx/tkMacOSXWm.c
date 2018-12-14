@@ -609,8 +609,7 @@ SetWindowSizeLimits(
 static TkWindow*
 FrontWindowAtPoint(
     int x,
-    int y,
-    TkMainInfo *mainPtr)
+    int y)
 {
     NSPoint p = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
     NSArray *windows = [NSApp orderedWindows];
@@ -618,7 +617,7 @@ FrontWindowAtPoint(
 
     for (NSWindow *w in windows) {
 	winPtr = TkMacOSXGetTkWindow(w);
-	if (winPtr && winPtr->mainPtr == mainPtr) {
+	if (winPtr) {
 	    WmInfo *wmPtr = winPtr->wmInfoPtr;
 	    NSRect frame = [w frame];
 
@@ -4401,7 +4400,6 @@ Tk_CoordsToWindow(
     TkWindow *winPtr, *childPtr;
     TkWindow *nextPtr;		/* Coordinates of highest child found so far
 				 * that contains point. */
-    TkMainInfo *mainPtr = ((TkWindow *) tkwin)->mainPtr;
     int x, y;			/* Coordinates in winPtr. */
     int tmpx, tmpy, bd;
     
@@ -4409,8 +4407,8 @@ Tk_CoordsToWindow(
      * Step 1: find the top-level window that contains the desired point.
      */
 
-    winPtr = FrontWindowAtPoint(rootX, rootY, mainPtr);
-    if (!winPtr) {
+    winPtr = FrontWindowAtPoint(rootX, rootY);
+    if (!winPtr || winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
 	return NULL;
     }
 
