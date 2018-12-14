@@ -1777,7 +1777,11 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
 } {52 7 12 62}
 
 deleteWindows
-# added temporarily because the root was not being iconified on Ubuntu.
+# The root window must not overlap the test windows during these
+# tests.  Previously this was arranged by iconifying the root.  But
+# this does not work on Ubuntu Unity, possibly because of
+# https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1502370
+# A workaround is to just move it far away.
 wm geometry . +1000+1000
 #wm iconify .
 test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords} unix {
