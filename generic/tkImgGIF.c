@@ -165,9 +165,11 @@ Tk_PhotoImageFormat tkImgFmtGIF = {
  * Prototypes for local functions defined in this file:
  */
 
+static int		ReadOneByte(Tcl_Interp *interp,
+			    GIFImageConfig *gifConfPtr, Tcl_Channel chan);
 static int		DoExtension(GIFImageConfig *gifConfPtr,
 			    Tcl_Channel chan, int label, unsigned char *buffer,
-			    int *transparent);
+			    int *transparent, Tcl_Obj *metadata);
 static int		GetCode(Tcl_Channel chan, int code_size, int flag,
 			    GIFImageConfig *gifConfPtr);
 static int		GetDataBlock(GIFImageConfig *gifConfPtr,
@@ -399,6 +401,8 @@ FileReadGIF(
     unsigned char buf[100];
     unsigned char *trashBuffer = NULL;
     int bitPixel;
+    Tcl_Obj *metadata;
+    int gifLabel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
     static const char *const optionStrings[] = {
@@ -499,25 +503,28 @@ FileReadGIF(
 	    destX + width, destY + height) != TCL_OK) {
 	return TCL_ERROR;
     }
+    
+    /*
+     * -------------------------------------------------------------------------
+     * From here on, go to error to not leave memory leaks
+     * -------------------------------------------------------------------------
+     */
 
+    /*
+     * Initialize the metadata dict
+     */
+    metadata = Tcl_NewDictObj();
+    
     /*
      * Search for the frame from the GIF to display.
      */
 
     while (1) {
-	if (Fread(gifConfPtr, buf, 1, 1, chan) != 1) {
-	    /*
-	     * Premature end of image.
-	     */
-
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "premature end of image data for this index", -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "PREMATURE_END",
-		    NULL);
+	if (-1 == (gifLabel = ReadOneByte( interp, gifConfPtr, chan ) ) ) {
 	    goto error;
 	}
 
-	switch (buf[0]) {
+	switch (gifLabel) {
 	case GIF_TERMINATOR:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "no image data for this index", -1));
@@ -529,16 +536,11 @@ FileReadGIF(
 	     * This is a GIF extension.
 	     */
 
-	    if (Fread(gifConfPtr, buf, 1, 1, chan) != 1) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"error reading extension function code in GIF image",
-			-1));
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
-			NULL);
+	    if (-1 == (gifLabel = ReadOneByte( interp, gifConfPtr, chan ) ) ) {
 		goto error;
 	    }
-	    if (DoExtension(gifConfPtr, chan, buf[0],
-		    gifConfPtr->workingBuffer, &transparent) < 0) {
+	    if (DoExtension(gifConfPtr, chan, gifLabel,
+		    gifConfPtr->workingBuffer, &transparent, metadata) < 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"error reading extension in GIF image", -1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
@@ -716,8 +718,71 @@ FileReadGIF(
      * which suits as well). We're done.
      */
 
+    /*
+     * Read final zero
+     */
+    if (-1 == (gifLabel = ReadOneByte( interp, gifConfPtr, chan ) ) ) {
+        goto error;
+    }
+    if (gifLabel != '\0') {
+	/*
+	 * Premature end of image.
+	 */
+
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"no image data termination", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "PREMATURE_END",
+		NULL);
+	goto error;
+    }
+    while (1) {
+	if (-1 == (gifLabel = ReadOneByte( interp, gifConfPtr, chan ) ) ) {
+	    goto error;
+	}
+	switch (gifLabel) {
+	case GIF_TERMINATOR:
+	    break;
+
+	case GIF_EXTENSION:
+	    /*
+	     * This is a GIF extension.
+	     */
+
+	    if (-1 == (gifLabel = ReadOneByte( interp, gifConfPtr, chan ) ) ) {
+		goto error;
+	    }
+	    if (DoExtension(gifConfPtr, chan, gifLabel,
+		    gifConfPtr->workingBuffer, &transparent, metadata) < 0) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"error reading extension in GIF image", -1));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
+			NULL);
+		goto error;
+	    }
+	    continue;
+	case GIF_START:
+	    /*
+	     * There should not be a second image block - bail out without error
+	     */
+	    break;
+	default:
+	    /*
+	     * Not a valid start character; ignore it.
+	     */
+
+	    continue;
+	}
+	break;
+    }
+
     Tcl_SetObjResult(interp, Tcl_NewStringObj(tkImgFmtGIF.name, -1));
     result = TCL_OK;
+
+    /*
+     * Set the metadata object.
+     * This increments the ref count
+     */
+    Tk_PhotoSetMetadata(imageHandle, metadata);
 
   error:
     /*
@@ -727,7 +792,52 @@ FileReadGIF(
     if (trashBuffer != NULL) {
 	ckfree(trashBuffer);
     }
+    
+    /*
+     * free the metadata object in case of error.
+     * Otherwise, it is not freed as the ref count was incremented above.
+     */
+    Tcl_IncrRefCount(metadata);
     return result;
+}
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Read one Byte --
+ *
+ *	Read one byte (label byte) from the image stream.
+ *
+ * Results:
+ *	The return value is 1 if the first characters in the data are like GIF
+ *	data, and 0 otherwise.
+ *
+ * Side effects:
+ *	The size of the image is placed in widthPtr and heightPtr.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ReadOneByte(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    GIFImageConfig *gifConfPtr,
+    Tcl_Channel chan		/* The image file, open for reading. */
+    )
+{
+    unsigned char buf[2];
+    if (Fread(gifConfPtr, buf, 1, 1, chan) != 1) {
+        /*
+         * Premature end of image.
+         */
+
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"premature end of image data", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "PREMATURE_END", NULL);
+	return -1;
+    }
+    return buf[0];
 }
 
 /*
@@ -747,6 +857,7 @@ FileReadGIF(
  *
  *----------------------------------------------------------------------
  */
+
 
 static int
 StringMatchGIF(
@@ -937,9 +1048,13 @@ DoExtension(
     Tcl_Channel chan,
     int label,
     unsigned char *buf,
-    int *transparent)
+    int *transparent,
+    Tcl_Obj *metadata)
 {
     int count;
+    Tcl_Obj *metadataData;
+    int length;
+    unsigned char *bytePtr;
 
     switch (label) {
     case 0x01:			/* Plain Text Extension */
@@ -949,24 +1064,35 @@ DoExtension(
 	break;
 
     case 0xfe:			/* Comment Extension */
-	do {
-	    count = GetDataBlock(gifConfPtr, chan, buf);
-	} while (count > 0);
+	length = 0;
+	while ( 0 <
+		(count = GetDataBlock(gifConfPtr, chan, buf)) ) {
+	    if (length == 0) {
+		metadataData = Tcl_NewByteArrayObj(buf, count);
+	    } else {
+		bytePtr = Tcl_SetByteArrayLength(metadataData, length+count);
+		memcpy(bytePtr+length,buf,count);
+	    }
+	    length += count;
+	}
+	if (length > 0) {
+	    if ( TCL_OK != Tcl_DictObjPut(NULL, metadata,
+		    Tcl_NewStringObj("comment",-1), metadataData)) {
+		return -1;
+	    }
+	}
 	return count;
 
     case 0xf9:			/* Graphic Control Extension */
 	count = GetDataBlock(gifConfPtr, chan, buf);
 	if (count < 0) {
+	    /* HaO: return 1 on file read error will not show error - why ? */
 	    return 1;
 	}
 	if ((buf[0] & 0x1) != 0) {
 	    *transparent = buf[3];
 	}
-
-	do {
-	    count = GetDataBlock(gifConfPtr, chan, buf);
-	} while (count > 0);
-	return count;
+	break;
     }
 
     do {

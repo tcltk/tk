@@ -3804,6 +3804,72 @@ Tk_PhotoSetSize(
 /*
  *----------------------------------------------------------------------
  *
+ * Tk_PhotoGetMetadata --
+ *
+ *	This function is called to obtain the metadata object of a photo
+ *	image.
+ *
+ * Results:
+ *	The image's metadata object pointer.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Tcl_Obj *
+Tk_PhotoGetMetadata(
+    Tk_PhotoHandle handle)	/* Handle for the image whose dimensions are
+				 * requested. */
+{
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
+
+    return masterPtr->metadata;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * Tk_PhotoSetMetadata --
+ *
+ *	This function is called to obtain to set the metadata object of a
+ *	photo image.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+Tk_PhotoSetMetadata(
+    Tk_PhotoHandle handle,	/* Handle for the image whose dimensions are
+				 * requested. */
+    Tcl_Obj *metadata)
+{
+    PhotoMaster *masterPtr = (PhotoMaster *) handle;
+    /*
+     * Free current object if present
+     */
+    if(masterPtr->metadata != NULL) {
+	Tcl_DecrRefCount(masterPtr->metadata);
+    }
+    /*
+     * Increment ref count of new object to get it
+     */
+    if (metadata != NULL) {
+	Tcl_IncrRefCount(metadata);
+    }
+    masterPtr->metadata = metadata;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkGetPhotoValidRegion --
  *
  *	This function is called to get the part of the photo where there is

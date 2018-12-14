@@ -1180,6 +1180,8 @@ const TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
+    Tk_PhotoGetMetadata, /* 274 */
+    Tk_PhotoSetMetadata, /* 275 */
 };
 
 /* !END!: Do not edit above this line. */
