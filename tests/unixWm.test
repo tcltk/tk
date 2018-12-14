@@ -1855,14 +1855,6 @@ test unixWm-50.3 {
 } -cleanup {
     cleanupbg
 } -result {{} .x .t .t.f}
-# On X11 winfo containing returns an empty string if the top window
-# containing the point belongs to a different interpreter.  Not so
-# on aqua.
-if {[tk windowingsystem] == "aqua"} {
-    set result_50_4 [list ".t" "."]
-    } else {
-    set result_50_4 [list "" "."]
-}
 test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix {
     destroy .t
 
@@ -1877,7 +1869,7 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix
 	    [slave eval {winfo containing 100 100}]]
     interp delete slave
     set result
-} $result_50_4
+} {{} .}
 test unixWm-50.5 {Tk_CoordsToWindow procedure, handling menubars} {unix testmenubar} {
     deleteWindows
     toplevel .t -width 300 -height 400 -bd 2 -relief raised
