@@ -1068,6 +1068,14 @@ declare 272 {
 declare 273 {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
+# New in Tk8.7
+declare 274 {
+    Tcl_Obj *Tk_PhotoGetMetadata(Tk_PhotoHandle handle);
+}
+declare 275 {
+    void Tk_PhotoSetMetadata(Tk_PhotoHandle handle,Tcl_Obj *metadata);
+}
+
 
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
