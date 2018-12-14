@@ -5785,6 +5785,18 @@ Tk_GetRootCoords(
  *----------------------------------------------------------------------
  */
 
+static int PointInWindow(
+    int x,
+    int y, 
+    WmInfo *wmPtr)
+{
+    XWindowChanges changes = wmPtr->winPtr->changes;
+    return (x >= changes.x &&
+            x < changes.x + changes.width &&
+            y >= changes.y - wmPtr->menuHeight &&
+            y < changes.y + changes.height);
+}
+
 Tk_Window
 Tk_CoordsToWindow(
     int rootX, int rootY,	/* Coordinates of point in root window. If a
@@ -5800,7 +5812,6 @@ Tk_CoordsToWindow(
     TkWindow *winPtr, *childPtr, *nextPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
     Tk_ErrorHandler handler = NULL;
-    int gnome3flag = 0;
     
     /*
      * Step 1: scan the list of toplevel windows to see if there is a virtual
@@ -5859,32 +5870,46 @@ Tk_CoordsToWindow(
             if (wmPtr->winPtr->mainPtr == NULL) {
                 continue;
             }
-            if (gnome3flag) {
-                goto gotToplevel;
-            }
 	    if (child == wmPtr->reparent) {
-                XWindowChanges changes = wmPtr->winPtr->changes;
-
-                /* Gnome3-based window managers place an invisible border
-                 * around a window to help grab the edge for resizing.
-                 * XTranslateCoordinates returns a reparent of the window as
-                 * the child whenever the point is inside the invisible
-                 * border.  But we only want to use the window as our toplevel
-                 * when the point is actually inside the window.  If the point
-                 * is outside, we set the gnome3flag, which means to use the
-                 * next genuine Tk window on the stack.  (Gnome3 may add its
-                 * own private window below the window with the invisible
-                 * border.  We can detect this by checking whether
-                 * winPtr->mainPtr is NULL.)
-                 */
-
-                if (x >= changes.x &&
-                    x < changes.x + changes.width &&
-                    y >= changes.y - wmPtr->menuHeight &&
-                    y < changes.y + changes.height) {
+                if (PointInWindow(x, y, wmPtr)) {
                     goto gotToplevel;
                 } else {
-                    gnome3flag = 1;
+
+                    /* Ouch!  The point is not in the reparented window!
+                     *
+                     * This can happen with Gnome3-based window managers.
+                     * They provide an invisible border around a window to
+                     * help grab the edge for resizing.  When the point is
+                     * inside the invisible border of some window,
+                     * XTranslateCoordinates will set the child to be a
+                     * reparent of that window.  But we don't want that
+                     * window. What we have to do in this case is to search
+                     * through all of the toplevels below this one and find
+                     * the highest one which actually contains the point.
+                     */
+
+                    TkWindow **windows, **window_ptr;
+                    windows = TkWmStackorderToplevel(
+                                  ((TkWindow *) tkwin)->mainPtr->winPtr);
+                    if (windows == NULL) {
+                        return NULL;
+                    }
+                    winPtr = NULL;
+                    for (window_ptr = windows; *window_ptr ; window_ptr++) {
+                        wmPtr = (*window_ptr)->wmInfoPtr;
+                        if (wmPtr == NULL) {
+                            continue;
+                        }
+                        if (PointInWindow(x, y, wmPtr)) {
+                            winPtr = *window_ptr;
+                            break;
+                        }
+                    }
+                    ckfree(windows);
+                    if (winPtr == NULL) {
+                        return NULL;
+                    }
+                    goto gotToplevel;
                 }
 	    }
 	    if (wmPtr->wrapperPtr != NULL) {
