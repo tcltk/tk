@@ -142,7 +142,7 @@ typedef struct {
  */
 typedef struct RbcMarker {
     char           *name;       /* Identifier for marker in list */
-    RbcUid          classUid;   /* Type of marker. */
+    Tk_Uid          classUid;   /* Type of marker. */
     RbcGraph       *graphPtr;   /* Graph widget of marker. */
     unsigned int    flags;
     char          **tags;
@@ -174,7 +174,7 @@ typedef struct RbcMarker {
  */
 typedef struct {
     char           *name;       /* Identifier for marker */
-    RbcUid          classUid;   /* Type of marker */
+    Tk_Uid          classUid;   /* Type of marker */
     RbcGraph       *graphPtr;   /* The graph this marker belongs to */
     unsigned int    flags;
     char          **tags;
@@ -288,7 +288,7 @@ static Tk_ConfigSpec textConfigSpecs[] = {
  */
 typedef struct {
     char           *name;       /* Identifier for marker */
-    RbcUid          classUid;   /* Type of marker */
+    Tk_Uid          classUid;   /* Type of marker */
     RbcGraph       *graphPtr;   /* Graph marker belongs to */
     unsigned int    flags;
     char          **tags;
@@ -373,7 +373,7 @@ static Tk_ConfigSpec windowConfigSpecs[] = {
  */
 typedef struct {
     char           *name;       /* Identifier for marker */
-    RbcUid          classUid;   /* Type of marker */
+    Tk_Uid          classUid;   /* Type of marker */
     RbcGraph       *graphPtr;   /* Graph marker belongs to */
     unsigned int    flags;
     char          **tags;
@@ -496,7 +496,7 @@ static Tk_ConfigSpec bitmapConfigSpecs[] = {
  */
 typedef struct {
     char           *name;       /* Identifier for marker */
-    RbcUid          classUid;   /* Type of marker */
+    Tk_Uid          classUid;   /* Type of marker */
     RbcGraph       *graphPtr;   /* Graph marker belongs to */
     unsigned int    flags;
     char          **tags;
@@ -590,7 +590,7 @@ static Tk_ConfigSpec imageConfigSpecs[] = {
  */
 typedef struct {
     char           *name;       /* Identifier for marker */
-    RbcUid          classUid;   /* Type is "linemarker" */
+    Tk_Uid          classUid;   /* Type is "linemarker" */
     RbcGraph       *graphPtr;   /* Graph marker belongs to */
     unsigned int    flags;
     char          **tags;
@@ -712,7 +712,7 @@ static Tk_ConfigSpec lineConfigSpecs[] = {
  */
 typedef struct {
     char           *name;       /* Identifier for marker */
-    RbcUid          classUid;   /* Type of marker */
+    Tk_Uid          classUid;   /* Type of marker */
     RbcGraph       *graphPtr;   /* Graph marker belongs to */
     unsigned int    flags;
     char          **tags;
@@ -909,7 +909,7 @@ static RbcPoint2D MapPoint(
 static RbcMarker *CreateMarker(
     RbcGraph * graphPtr,
     const char *name,
-    RbcUid classUid);
+    Tk_Uid classUid);
 static void     DestroyMarker(
     RbcMarker * markerPtr);
 static int      NameToMarker(
@@ -1515,7 +1515,7 @@ static RbcMarker *
 CreateMarker(
     RbcGraph * graphPtr,
     const char *name,
-    RbcUid classUid)
+    Tk_Uid classUid)
 {
     RbcMarker      *markerPtr;
 
@@ -4614,7 +4614,7 @@ CreateOp(
     RbcMarker      *markerPtr;
     Tcl_HashEntry  *hPtr;
     int             isNew;
-    RbcUid          classUid;
+    Tk_Uid          classUid;
     register int    i;
     const char     *name;
     char            string[200];

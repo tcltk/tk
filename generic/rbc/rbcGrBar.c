@@ -29,7 +29,7 @@ typedef struct {
 typedef struct {
     char           *name;       /* Pen style identifier.  If NULL pen
                                  * was statically allocated. */
-    RbcUid          classUid;   /* Type of pen */
+    Tk_Uid          classUid;   /* Type of pen */
     char           *typeId;     /* String token identifying the type of pen */
     unsigned int    flags;      /* Indicates if the pen element is active or
                                  * normal */
@@ -101,7 +101,7 @@ typedef struct {
                                  * element. Used in the "insert",
                                  * "delete", or "show", commands. */
 
-    RbcUid          classUid;   /* Type of element; either
+    Tk_Uid          classUid;   /* Type of element; either
                                  * rbcBarElementUid, rbcLineElementUid, or
                                  * rbcStripElementUid. */
 
@@ -2301,7 +2301,7 @@ RbcElement     *
 RbcBarElement(
     RbcGraph * graphPtr,
     const char *name,
-    RbcUid type)
+    Tk_Uid type)
 {
     register Bar   *barPtr;
 

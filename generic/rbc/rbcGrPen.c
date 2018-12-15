@@ -198,7 +198,7 @@ StringToPen(
     char *widgRec,              /* Widget record */
     int offset)
 {                               /* Offset of pen field in record */
-    RbcUid          classUid = *(RbcUid *) clientData;  /* Element type. */
+    Tk_Uid          classUid = *(Tk_Uid *) clientData;  /* Element type. */
     RbcPen        **penPtrPtr = (RbcPen **) (widgRec + offset);
     RbcPen         *penPtr;
     RbcGraph       *graphPtr;
@@ -363,7 +363,7 @@ RbcPen         *
 RbcCreatePen(
     RbcGraph * graphPtr,
     const char *penName,
-    RbcUid classUid,
+    Tk_Uid classUid,
     int nOpts,
     const char **options)
 {
@@ -460,7 +460,7 @@ int
 RbcGetPen(
     RbcGraph * graphPtr,
     const char *name,
-    RbcUid classUid,
+    Tk_Uid classUid,
     RbcPen ** penPtrPtr)
 {
     RbcPen         *penPtr;

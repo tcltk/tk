@@ -40,7 +40,7 @@ static RbcVectorChangedProc VectorChangedProc;
 static int      GetPenStyle(
     RbcGraph * graphPtr,
     const char *string,
-    RbcUid type,
+    Tk_Uid type,
     RbcPenStyle * stylePtr);
 static void     SyncElemVector(
     RbcElemVector * vPtr);
@@ -67,7 +67,7 @@ static int      CreateElement(
     Tcl_Interp * interp,
     int argc,
     const char **argv,
-    RbcUid classUid);
+    Tk_Uid classUid);
 static void     DestroyElement(
     RbcGraph * graphPtr,
     RbcElement * elemPtr);
@@ -90,7 +90,7 @@ static int      CreateOp(
     Tcl_Interp * interp,
     int argc,
     const char **argv,
-    RbcUid type);
+    Tk_Uid type);
 static int      ConfigureOp(
     RbcGraph * graphPtr,
     Tcl_Interp * interp,
@@ -157,7 +157,7 @@ static int
 GetPenStyle(
     RbcGraph * graphPtr,
     const char *string,
-    RbcUid type,
+    Tk_Uid type,
     RbcPenStyle * stylePtr)
 {
     RbcPen         *penPtr;
@@ -1318,7 +1318,7 @@ CreateElement(
     Tcl_Interp * interp,
     int argc,
     const char **argv,
-    RbcUid classUid)
+    Tk_Uid classUid)
 {
     RbcElement     *elemPtr;
     Tcl_HashEntry  *hPtr;
@@ -1830,7 +1830,7 @@ CreateOp(
     Tcl_Interp * interp,
     int argc,
     const char **argv,
-    RbcUid type)
+    Tk_Uid type)
 {
     return CreateElement(graphPtr, interp, argc, argv, type);
 }
@@ -2471,7 +2471,7 @@ RbcElementOp(
     Tcl_Interp * interp,
     int argc,                   /* # arguments */
     const char **argv,          /* Argument list */
-    RbcUid type)
+    Tk_Uid type)
 {
     RbcOp           proc;
     int             result;
