@@ -331,11 +331,6 @@ typedef struct RbcCrosshairs RbcCrosshairs;
 typedef struct RbcParseValue RbcParseValue;
 
 /*
- * RbcUid --
- */
-typedef const char *RbcUid;
-
-/*
  * RbcPad --
  *
  * 	Specifies vertical and horizontal padding.
@@ -907,7 +902,7 @@ typedef struct {
     char           *name;       /* Identifier to refer the element.
                                  * Used in the "insert", "delete", or
                                  * "show", commands. */
-    RbcUid          classUid;   /* Type of axis. */
+    Tk_Uid          classUid;   /* Type of axis. */
     RbcGraph       *graphPtr;   /* Graph widget of element */
     unsigned int    flags;      /* Set bit field definitions below */
     /*
@@ -1190,7 +1185,7 @@ typedef struct RbcElement {
     char           *name;       /* Identifier to refer the element.
                                  * Used in the "insert", "delete", or
                                  * "show", commands. */
-    RbcUid          classUid;   /* Type of element */
+    Tk_Uid          classUid;   /* Type of element */
     RbcGraph       *graphPtr;   /* Graph widget of element */
     unsigned int    flags;      /* Indicates if the entire element is
                                  * active, or if coordinates need to
@@ -1300,7 +1295,7 @@ typedef void    (
 typedef struct RbcPen {
     char           *name;       /* Pen style identifier.  If NULL pen
                                  * was statically allocated. */
-    RbcUid          classUid;   /* Type of pen */
+    Tk_Uid          classUid;   /* Type of pen */
     char           *typeId;     /* String token identifying the type of pen */
     unsigned int    flags;      /* Indicates if the pen element is active or
                                  * normal */
@@ -1470,7 +1465,7 @@ typedef struct RbcGraph {
     } elements     ,
                     markers,
                     axes;
-    RbcUid          classUid;   /* Default element type */
+    Tk_Uid          classUid;   /* Default element type */
     const char     *chartStyle; /* one of line, bar or strip */
     RbcBindTable   *bindTable;
     int             nextMarkerId;       /* Tracks next marker identifier available */
@@ -1629,17 +1624,17 @@ typedef struct {
  */
 extern double   rbcNaN;
 extern RbcResampleFilter *rbcBoxFilterPtr;      /* The ubiquitous box filter */
-extern RbcUid   rbcBarElementUid;
-extern RbcUid   rbcLineElementUid;
-extern RbcUid   rbcStripElementUid;
-extern RbcUid   rbcLineMarkerUid;
-extern RbcUid   rbcBitmapMarkerUid;
-extern RbcUid   rbcImageMarkerUid;
-extern RbcUid   rbcTextMarkerUid;
-extern RbcUid   rbcPolygonMarkerUid;
-extern RbcUid   rbcWindowMarkerUid;
-extern RbcUid   rbcXAxisUid;
-extern RbcUid   rbcYAxisUid;
+extern Tk_Uid   rbcBarElementUid;
+extern Tk_Uid   rbcLineElementUid;
+extern Tk_Uid   rbcStripElementUid;
+extern Tk_Uid   rbcLineMarkerUid;
+extern Tk_Uid   rbcBitmapMarkerUid;
+extern Tk_Uid   rbcImageMarkerUid;
+extern Tk_Uid   rbcTextMarkerUid;
+extern Tk_Uid   rbcPolygonMarkerUid;
+extern Tk_Uid   rbcWindowMarkerUid;
+extern Tk_Uid   rbcXAxisUid;
+extern Tk_Uid   rbcYAxisUid;
 
 /*
  * Inline function declarations:
@@ -1864,7 +1859,7 @@ MODULE_SCOPE RbcPen *RbcBarPen(
 MODULE_SCOPE RbcElement *RbcBarElement(
     RbcGraph * graphPtr,
     const char *name,
-    RbcUid type);
+    Tk_Uid type);
 MODULE_SCOPE void RbcInitFreqTable(
     RbcGraph * graphPtr);
 MODULE_SCOPE void RbcComputeStacks(
@@ -1924,7 +1919,7 @@ MODULE_SCOPE int RbcElementOp(
     Tcl_Interp * interp,
     int argc,
     const char **argv,
-    RbcUid classUid);
+    Tk_Uid classUid);
 
 /* rbcGrGrid.c */
 MODULE_SCOPE void RbcMapGrid(
@@ -2008,7 +2003,7 @@ MODULE_SCOPE RbcPen *RbcLinePen(
 MODULE_SCOPE RbcElement *RbcLineElement(
     RbcGraph *graphPtr,
     const char *name,
-    RbcUid classUid);
+    Tk_Uid classUid);
 
 /* rbcGrMarker.c */
 MODULE_SCOPE ClientData RbcMakeMarkerTag(
@@ -2145,13 +2140,13 @@ MODULE_SCOPE void RbcFreePen(
 MODULE_SCOPE RbcPen *RbcCreatePen(
     RbcGraph * graphPtr,
     const char *penName,
-    RbcUid classUid,
+    Tk_Uid classUid,
     int nOpts,
     const char **options);
 MODULE_SCOPE int RbcGetPen(
     RbcGraph * graphPtr,
     const char *name,
-    RbcUid classUid,
+    Tk_Uid classUid,
     RbcPen ** penPtrPtr);
 MODULE_SCOPE void RbcDestroyPens(
     RbcGraph * graphPtr);
@@ -2630,12 +2625,6 @@ MODULE_SCOPE void *RbcCalloc(
     size_t size);
 MODULE_SCOPE char *RbcStrdup(
     const char *ptr);
-MODULE_SCOPE RbcUid RbcGetUid(
-    const char *string);
-MODULE_SCOPE void RbcFreeUid(
-    RbcUid uid);
-MODULE_SCOPE RbcUid RbcFindUid(
-    char *string);
 MODULE_SCOPE RbcOp RbcGetOp(
     Tcl_Interp * interp,
     int nSpecs,

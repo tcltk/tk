@@ -26,18 +26,18 @@
 
 #include "rbcInt.h"
 
-RbcUid          rbcXAxisUid;
-RbcUid          rbcYAxisUid;
-RbcUid          rbcBarElementUid;
-RbcUid          rbcLineElementUid;
-RbcUid          rbcStripElementUid;
-RbcUid          rbcContourElementUid;
-RbcUid          rbcLineMarkerUid;
-RbcUid          rbcBitmapMarkerUid;
-RbcUid          rbcImageMarkerUid;
-RbcUid          rbcTextMarkerUid;
-RbcUid          rbcPolygonMarkerUid;
-RbcUid          rbcWindowMarkerUid;
+Tk_Uid          rbcXAxisUid;
+Tk_Uid          rbcYAxisUid;
+Tk_Uid          rbcBarElementUid;
+Tk_Uid          rbcLineElementUid;
+Tk_Uid          rbcStripElementUid;
+Tk_Uid          rbcContourElementUid;
+Tk_Uid          rbcLineMarkerUid;
+Tk_Uid          rbcBitmapMarkerUid;
+Tk_Uid          rbcImageMarkerUid;
+Tk_Uid          rbcTextMarkerUid;
+Tk_Uid          rbcPolygonMarkerUid;
+Tk_Uid          rbcWindowMarkerUid;
 
 extern Tk_CustomOption rbcLinePenOption;
 extern Tk_CustomOption rbcBarPenOption;
@@ -2252,25 +2252,25 @@ Rbc_GraphInit(
     int i;
 	static const char *initScript =
 		"::oo::class create ::graph {"
-		" self method unknown {args} {uplevel #0 ::graph create args; return [lindex $args 0]}\n"
+		" self method unknown {args} {uplevel #0 ::graph create $args; return [lindex $args 0]}\n"
         " self unexport new destroy\n"
         " unexport new create destroy\n"
         "}";
 
-    rbcBarElementUid = (RbcUid) Tk_GetUid("BarElement");
-    rbcLineElementUid = (RbcUid) Tk_GetUid("LineElement");
-    rbcStripElementUid = (RbcUid) Tk_GetUid("StripElement");
-    rbcContourElementUid = (RbcUid) Tk_GetUid("ContourElement");
+    rbcBarElementUid = Tk_GetUid("BarElement");
+    rbcLineElementUid = Tk_GetUid("LineElement");
+    rbcStripElementUid = Tk_GetUid("StripElement");
+    rbcContourElementUid = Tk_GetUid("ContourElement");
 
-    rbcLineMarkerUid = (RbcUid) Tk_GetUid("LineMarker");
-    rbcBitmapMarkerUid = (RbcUid) Tk_GetUid("BitmapMarker");
-    rbcImageMarkerUid = (RbcUid) Tk_GetUid("ImageMarker");
-    rbcTextMarkerUid = (RbcUid) Tk_GetUid("TextMarker");
-    rbcPolygonMarkerUid = (RbcUid) Tk_GetUid("PolygonMarker");
-    rbcWindowMarkerUid = (RbcUid) Tk_GetUid("WindowMarker");
+    rbcLineMarkerUid = Tk_GetUid("LineMarker");
+    rbcBitmapMarkerUid = Tk_GetUid("BitmapMarker");
+    rbcImageMarkerUid = Tk_GetUid("ImageMarker");
+    rbcTextMarkerUid = Tk_GetUid("TextMarker");
+    rbcPolygonMarkerUid = Tk_GetUid("PolygonMarker");
+    rbcWindowMarkerUid = Tk_GetUid("WindowMarker");
 
-    rbcXAxisUid = (RbcUid) Tk_GetUid("X");
-    rbcYAxisUid = (RbcUid) Tk_GetUid("Y");
+    rbcXAxisUid = Tk_GetUid("X");
+    rbcYAxisUid = Tk_GetUid("Y");
 
 	/* Needed oo extension */
 	if (Tcl_OOInitStubs(interp) == NULL) {
@@ -2313,7 +2313,7 @@ static int GraphConstructor(
     Tcl_Object object;
     RbcGraph       *graphPtr;
     Tk_Window tkWin;
-    RbcUid classUid = rbcLineElementUid;
+    Tk_Uid classUid = rbcLineElementUid;
     int i;
     const char *chPtr;
     int myArgc;

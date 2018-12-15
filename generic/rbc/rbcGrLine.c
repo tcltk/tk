@@ -105,7 +105,7 @@ typedef struct {
     const char *name; /* Name of pen style. If the pen was
                  * statically allocated the name will
                  * be NULL. */
-    RbcUid classUid; /* Type of pen */
+    Tk_Uid classUid; /* Type of pen */
     char *typeId;/* String token identifying the type
                   * of pen */
     unsigned int flags; /* Indicates if the pen element is
@@ -167,7 +167,7 @@ typedef struct {
     char *name;			/* Identifier used to refer the
 				 * element. Used in the "insert",
 				 * "delete", or "show", operations. */
-    RbcUid classUid;		/* Type of element */
+    Tk_Uid classUid;		/* Type of element */
     RbcGraph *graphPtr;		/* Graph widget of element*/
     unsigned int flags;		/* Indicates if the entire element is
 				 * active, or if coordinates need to
@@ -5151,7 +5151,7 @@ RbcElement *
 RbcLineElement(
     RbcGraph *graphPtr,
     const char *name,
-    RbcUid classUid)
+    Tk_Uid classUid)
 {
     register Line *linePtr;
     linePtr = RbcCalloc(1, sizeof(Line));

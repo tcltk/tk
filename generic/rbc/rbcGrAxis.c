@@ -417,7 +417,7 @@ static int      NameToAxis(
 static int      GetAxis(
     RbcGraph * graphPtr,
     const char *name,
-    RbcUid classUid,
+    Tk_Uid classUid,
     RbcAxis ** axisPtrPtr);
 static void     FreeAxis(
     RbcGraph * graphPtr,
@@ -633,7 +633,7 @@ StringToAnyAxis(
     int offset)
 {                               /* Offset of field in structure. */
     RbcAxis       **axisPtrPtr = (RbcAxis **) (widgRec + offset);
-    RbcUid          classUid = *(RbcUid *) clientData;
+    Tk_Uid          classUid = *(Tk_Uid *) clientData;
     RbcGraph       *graphPtr;
     RbcAxis        *axisPtr;
 
@@ -677,7 +677,7 @@ StringToAxis(
     int offset)
 {                               /* Offset of field in structure. */
     RbcAxis       **axisPtrPtr = (RbcAxis **) (widgRec + offset);
-    RbcUid          classUid = *(RbcUid *) clientData;
+    Tk_Uid          classUid = *(Tk_Uid *) clientData;
     RbcGraph       *graphPtr;
 
     graphPtr = RbcGetGraphFromWindowData(tkwin);
@@ -3704,7 +3704,7 @@ static int
 GetAxis(
     RbcGraph * graphPtr,
     const char *axisName,
-    RbcUid classUid,
+    Tk_Uid classUid,
     RbcAxis ** axisPtrPtr)
 {
     RbcAxis        *axisPtr;
@@ -4171,7 +4171,7 @@ UseOp(
     const char    **names;
     RbcChainLink   *linkPtr;
     int             i;
-    RbcUid          classUid;
+    Tk_Uid          classUid;
     int             margin;
 
     margin = (int) argv[-1];

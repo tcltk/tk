@@ -176,24 +176,6 @@ Tk_CustomOption rbcShadowOption = {
     StringToShadow, ShadowToString, (ClientData) 0
 };
 
-static int      StringToUid(
-    ClientData clientData,
-    Tcl_Interp * interp,
-    Tk_Window tkwin,
-    const char *string,
-    char *widgRec,
-    int flags);
-static const char *UidToString(
-    ClientData clientData,
-    Tk_Window tkwin,
-    char *widgRec,
-    int offset,
-    Tcl_FreeProc ** freeProcPtr);
-
-Tk_CustomOption rbcUidOption = {
-    StringToUid, UidToString, (ClientData) 0
-};
-
 static int      StringToState(
     ClientData clientData,
     Tcl_Interp * interp,
@@ -1017,73 +999,6 @@ DashesToString(
     }
     *freeProcPtr = (Tcl_FreeProc *) Tcl_Free;
     return result;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * StringToUid --
- *
- *      Converts the string to a RbcUid. RbcUid's are hashed, reference
- *      counted strings.
- *
- * Results:
- *      TODO: Results
- *
- * Side Effects:
- *      TODO: Side Effects
- *
- *----------------------------------------------------------------------
- */
-static int
-StringToUid(
-    ClientData clientData,      /* Not used. */
-    Tcl_Interp * interp,        /* Interpreter to send results back to */
-    Tk_Window tkwin,            /* Not used. */
-    const char *string,         /* Fill style string */
-    char *widgRec,              /* Cubicle structure record */
-    int offset)
-{                               /* Offset of style in record */
-    RbcUid         *uidPtr = (RbcUid *) (widgRec + offset);
-    RbcUid          newId;
-
-    newId = NULL;
-    if ((string != NULL) && (*string != '\0')) {
-        newId = RbcGetUid(string);
-    }
-    if (*uidPtr != NULL) {
-        RbcFreeUid(*uidPtr);
-    }
-    *uidPtr = newId;
-    return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * UidToString --
- *
- *      Returns the fill style string based upon the fill flags.
- *
- * Results:
- *      The fill style string is returned.
- *
- * Side Effects:
- *      TODO: Side Effects
- *
- *----------------------------------------------------------------------
- */
-static const char *
-UidToString(
-    ClientData clientData,      /* Not used. */
-    Tk_Window tkwin,            /* Not used. */
-    char *widgRec,              /* Widget structure record */
-    int offset,                 /* Offset of fill in widget record */
-    Tcl_FreeProc ** freeProcPtr)
-{                               /* Not used. */
-    RbcUid          uid = *(RbcUid *) (widgRec + offset);
-
-    return (uid == NULL) ? "" : uid;
 }
 
 /*

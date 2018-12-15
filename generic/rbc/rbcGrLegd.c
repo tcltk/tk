@@ -25,7 +25,7 @@
  */
 typedef struct RbcLegend {
     unsigned int    flags;
-    RbcUid          classUid;   /* Type: Element or Marker. */
+    Tk_Uid          classUid;   /* Type: Element or Marker. */
     int             hidden;     /* If non-zero, don't display the legend. */
     int             raised;     /* If non-zero, draw the legend last, above
                                  * everything else. */
