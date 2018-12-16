@@ -808,14 +808,15 @@ test unixWm-22.2 {Tk_WmCmd procedure, "iconbitmap" option} {unix testwrapper} {
 	    WM_HINTS] 0]]]
     lappend result [wm iconbitmap .t] $bit
 } {{} questhead 0x4 {} 0x0}
-test unixWm-22.3.1 {Tk_WmCmd procedure, "iconbitmap" option for unix only} \
-{unix notAqua} {
+if {[tk windowingsystem] == "aqua"} {
+    set result_22_3 {0 {}} 
+} else {
+    set result_22_3 {1 {bitmap "bad-bitmap" not defined}}
+}
+test unixWm-22.3 {Tk_WmCmd procedure, "iconbitmap" option for unix only} \
+unix {
     list [catch {wm iconbitmap .t bad-bitmap} msg] $msg
-} {1 {bitmap "bad-bitmap" not defined}}
-test unixWm-22.3.2 {Tk_WmCmd procedure, "iconbitmap" option for Aqua only} \
-Aqua {
-    list [catch {wm iconbitmap .t bad-bitmap} msg] $msg
-} {1 {}}
+} $result_22_3
 
 test unixWm-23.1 {Tk_WmCmd procedure, "iconify" option} unix {
     list [catch {wm iconify .t 12} msg] $msg
@@ -1218,13 +1219,14 @@ test unixWm-34.2 {Tk_WmCmd procedure, "sizefrom" option} {unix testwrapper} {
 test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
-
-test unixWm-35.1.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
+if {[tk windowingsystem] == "aqua"} {
+    set result_35_1 {1 {bad argument "1": must be normal, iconic, withdrawn, or zoomed}}
+} else {
+    set result_35_1 {1 {bad argument "1": must be normal, iconic, or withdrawn}}
+}
+test unixWm-35.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
     list [catch {wm state .t 1} msg]  $msg
-} {1 {bad argument "1": must be normal, iconic, or withdrawn}}
-test unixWm-35.1.2 {Tk_WmCmd procedure, "state" option} Aqua {
-    list [catch {wm state .t 1} msg]  $msg
-} {1 {bad argument "1": must be normal, iconic, withdrawn, or zoomed}}
+} $result_35_1
 test unixWm-35.2 {Tk_WmCmd procedure, "state" option} unix {
     list [catch {wm state .t iconic 1} msg]  $msg
 } {1 {wrong # args: should be "wm state window ?state?"}}
