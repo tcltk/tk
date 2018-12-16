@@ -5812,7 +5812,7 @@ Tk_CoordsToWindow(
     TkWindow *winPtr, *childPtr, *nextPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
     Tk_ErrorHandler handler = NULL;
-    
+
     /*
      * Step 1: scan the list of toplevel windows to see if there is a virtual
      * root for the screen we're interested in. If so, we have to translate
@@ -5915,7 +5915,14 @@ Tk_CoordsToWindow(
 	    if (wmPtr->wrapperPtr != NULL) {
 		if (child == wmPtr->wrapperPtr->window) {
 		    goto gotToplevel;
-		}
+		} else if (wmPtr->winPtr->flags & TK_EMBEDDED &&
+                           TkpGetOtherWindow(wmPtr->winPtr) == NULL) {
+                    int rx, ry;
+                    Tk_GetRootCoords((Tk_Window) wmPtr->winPtr, &rx, &ry);
+                    childX -= rx;
+                    childY -= ry;
+                    goto gotToplevel;
+                }
 	    } else if (child == wmPtr->winPtr->window) {
 		goto gotToplevel;
 	    }
@@ -5937,9 +5944,6 @@ Tk_CoordsToWindow(
 	handler = NULL;
     }
     winPtr = wmPtr->winPtr;
-    if (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
-	return NULL;
-    }
 
     /*
      * Step 3: at this point winPtr and wmPtr refer to the toplevel that
@@ -5996,27 +6000,30 @@ Tk_CoordsToWindow(
 	if (nextPtr == NULL) {
 	    break;
 	}
-	winPtr = nextPtr;
-	x -= winPtr->changes.x;
-	y -= winPtr->changes.y;
-	if ((winPtr->flags & TK_CONTAINER)
-		&& (winPtr->flags & TK_BOTH_HALVES)) {
+	x -= nextPtr->changes.x;
+	y -= nextPtr->changes.y;
+	if ((nextPtr->flags & TK_CONTAINER)
+		&& (nextPtr->flags & TK_BOTH_HALVES)) {
 	    /*
 	     * The window containing the point is a container, and the
 	     * embedded application is in this same process. Switch over to
 	     * the toplevel for the embedded application and start processing
 	     * that toplevel from scratch.
 	     */
-
-	    winPtr = TkpGetOtherWindow(winPtr);
+	    winPtr = TkpGetOtherWindow(nextPtr);
 	    if (winPtr == NULL) {
-		return NULL;
+		return (Tk_Window) nextPtr;
 	    }
 	    wmPtr = winPtr->wmInfoPtr;
 	    childX = x;
 	    childY = y;
 	    goto gotToplevel;
-	}
+	} else {
+            winPtr = nextPtr;
+        }
+    }
+    if (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
+        return NULL;
     }
     return (Tk_Window) winPtr;
 }
