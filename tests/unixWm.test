@@ -1829,32 +1829,34 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
 } {{} {} .t .t .t2 .t2 .t {}}
 test unixWm-50.3 {
 	Tk_CoordsToWindow procedure, finding a toplevel with embedding
-} -constraints tempNotWin -setup {
+} tempNotWin {
     deleteWindows
     toplevel .t -width 300 -height 400 -bg blue
-    wm geom .t +0+50
-    frame .t.f -container 1
+    wm geom .t +100+100
+    frame .t.f -container 1 -bg red
     place .t.f -x 150 -y 50
     tkwait visibility .t.f
-    setupbg
-} -body {
-    dobg "
+    update
+    interp create slave
+    load {} Tk slave
+    slave alias frameid winfo id .t.f
+    slave eval {
 	wm withdraw .
-	toplevel .x -width 100 -height 80 -use [winfo id .t.f] -bg yellow
-	tkwait visibility .x"
-    set result [dobg {
-	set x [winfo rootx .x]
-	set y [winfo rooty .x]
-	list [winfo containing [expr $x - 1] [expr $y + 50]] \
-		[winfo containing $x [expr $y +50]]
-    }]
+        toplevel .x -width 100 -height 80 -use [frameid] -bg yellow
+        tkwait visibility .x
+        update
+        set x [winfo rootx .x]
+        set y [winfo rooty .x]
+    }
+    set result [list [slave eval {winfo containing [expr $x - 1]  [expr $y + 50]}] \
+	       	     [slave eval {winfo containing $x [expr $y + 50]}]]
+    interp delete slave
     set x [winfo rootx .t]
     set y [winfo rooty .t]
     lappend result [winfo containing [expr $x + 200] [expr $y + 49]] \
-		[winfo containing [expr $x + 200] [expr $y +50]]
-} -cleanup {
-    cleanupbg
-} -result {{} .x .t .t.f}
+	[winfo containing [expr $x + 200] [expr $y +50]]
+    set result
+} {{} .x .t .t.f}
 test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix {
     destroy .t
 
