@@ -1831,6 +1831,8 @@ test unixWm-50.3 {
 	Tk_CoordsToWindow procedure, finding a toplevel with embedding
 } tempNotWin {
     deleteWindows
+    catch {interp delete slave}
+    
     toplevel .t -width 300 -height 400 -bg blue
     wm geom .t +100+100
     frame .t.f -container 1 -bg red
@@ -1862,13 +1864,14 @@ test unixWm-50.4 {Tk_CoordsToWindow procedure, window in other application} unix
 
     catch {interp delete slave}
     toplevel .t -width 200 -height 200 -bg green
-    wm geometry .t +0+0
+    wm geometry .t +100+100
     tkwait visibility .t
+    update
     interp create slave
     load {} Tk slave
-    slave eval {wm geometry . 200x200+0+0; tkwait visibility .}
-    set result [list [winfo containing 100 100] \
-	    [slave eval {winfo containing 100 100}]]
+    slave eval {wm geometry . 200x200+100+100; tkwait visibility . ; update}
+    set result [list [winfo containing 200 200] \
+	    [slave eval {winfo containing 200 200}]]
     interp delete slave
     set result
 } {{} .}

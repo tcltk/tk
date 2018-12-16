@@ -4408,7 +4408,7 @@ Tk_CoordsToWindow(
      */
 
     winPtr = FrontWindowAtPoint(rootX, rootY);
-    if (!winPtr || winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
+    if (!winPtr) {
 	return NULL;
     }
 
@@ -4471,6 +4471,9 @@ Tk_CoordsToWindow(
 	    break;
 	}
 	winPtr = nextPtr;
+    }
+    if (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
+	return NULL;
     }
     return (Tk_Window) winPtr;
 }
