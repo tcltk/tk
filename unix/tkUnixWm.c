@@ -5875,41 +5875,11 @@ Tk_CoordsToWindow(
                     goto gotToplevel;
                 } else {
 
-                    /* Ouch!  The point is not in the reparented window!
-                     *
-                     * This can happen with Gnome3-based window managers.
-                     * They provide an invisible border around a window to
-                     * help grab the edge for resizing.  When the point is
-                     * inside the invisible border of some window,
-                     * XTranslateCoordinates will set the child to be a
-                     * reparent of that window.  But we don't want that
-                     * window. What we have to do in this case is to search
-                     * through all of the toplevels below this one and find
-                     * the highest one which actually contains the point.
+                    /*
+                     * Return NULL if the point is in the title bar or border.
                      */
 
-                    TkWindow **windows, **window_ptr;
-                    windows = TkWmStackorderToplevel(
-                                  ((TkWindow *) tkwin)->mainPtr->winPtr);
-                    if (windows == NULL) {
-                        return NULL;
-                    }
-                    winPtr = NULL;
-                    for (window_ptr = windows; *window_ptr ; window_ptr++) {
-                        wmPtr = (*window_ptr)->wmInfoPtr;
-                        if (wmPtr == NULL) {
-                            continue;
-                        }
-                        if (PointInWindow(x, y, wmPtr)) {
-                            winPtr = *window_ptr;
-                            break;
-                        }
-                    }
-                    ckfree(windows);
-                    if (winPtr == NULL) {
-                        return NULL;
-                    }
-                    goto gotToplevel;
+                    return NULL;
                 }
 	    }
 	    if (wmPtr->wrapperPtr != NULL) {
