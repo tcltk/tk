@@ -833,10 +833,6 @@ TkWmMapWindow(
      */
 
     XMapWindow(winPtr->display, winPtr->window);
-
-    /*Add window to Window menu.*/
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win setExcludedFromWindowsMenu:NO];
 }
 
 /*
