@@ -1395,7 +1395,7 @@ WmSetAttribute(
 	    }
 	break;
     case WMATT_TYPE:
-	TKLog(@"The type attribute is ignored on macOX.");
+	TKLog(@"The type attribute is ignored on macOS.");
 	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
