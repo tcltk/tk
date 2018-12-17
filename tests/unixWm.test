@@ -2543,8 +2543,7 @@ test unixWm-61.2 {Tk_WmCmd procedure, "iconphoto" option} unix {
     image delete blank16 blank32
 } {}
 
-# Aqua does not support wm attributes -type
-test unixWm-62.0 {wm attributes -type void} -constraints {unix notAqua} -setup {
+test unixWm-62.0 {wm attributes -type void} -constraints unix -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2553,7 +2552,7 @@ test unixWm-62.0 {wm attributes -type void} -constraints {unix notAqua} -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.1 {wm attributes -type name} -constraints {unix notAqua} -setup {
+test unixWm-62.1 {wm attributes -type name} -constraints unix -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2562,7 +2561,7 @@ test unixWm-62.1 {wm attributes -type name} -constraints {unix notAqua} -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.2 {wm attributes -type name} -constraints {unix notAqua} -setup {
+test unixWm-62.2 {wm attributes -type name} -constraints unix -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2572,7 +2571,7 @@ test unixWm-62.2 {wm attributes -type name} -constraints {unix notAqua} -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.3 {wm attributes -type list} -constraints {unix notAqua} -setup {
+test unixWm-62.3 {wm attributes -type list} -constraints unix -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2581,7 +2580,7 @@ test unixWm-62.3 {wm attributes -type list} -constraints {unix notAqua} -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.4 {wm attributes -type list} -constraints {unix notAqua} -setup {
+test unixWm-62.4 {wm attributes -type list} -constraints unix -setup {
     destroy .t
     toplevel .t
 } -body {
