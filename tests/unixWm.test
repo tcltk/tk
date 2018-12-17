@@ -2495,7 +2495,8 @@ test unixWm-59.3 {exit processing} unix {
 #
 if {[tk windowingsystem] == "aqua"} {
     set result_60_1 {-alpha 1.0 -fullscreen 0 -modified 0 -notify 0\
-			 -titlepath {} -topmost 0 -transparent 0}
+			 -titlepath {} -topmost 0 -transparent 0\
+			 -type unsupported}
 } else {
     set result_60_1 {-alpha 1.0 -topmost 0 -zoomed 0 -fullscreen 0 -type {}}
 }

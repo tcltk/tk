@@ -1447,6 +1447,9 @@ WmGetAttribute(
     case WMATT_TRANSPARENT:
 	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
 	break;
+    case WMATT_TYPE:
+	result = Tcl_NewStringObj("unsupported", -1);
+	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
 	break;
