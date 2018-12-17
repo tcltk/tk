@@ -594,8 +594,8 @@ SetWindowSizeLimits(
  *
  * FrontWindowAtPoint --
  *
- *	Find frontmost toplevel window at a given screen location
- *      which has the specified mainPtr.
+ *	Find frontmost toplevel window at a given screen location which has the
+ *      specified mainPtr.  If the location is in the title bar, return NULL.
  *
  * Results:
  *	TkWindow*.
@@ -619,19 +619,22 @@ FrontWindowAtPoint(
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (winPtr) {
 	    WmInfo *wmPtr = winPtr->wmInfoPtr;
-	    NSRect frame = [w frame];
-
+	    NSRect windowFrame = [w frame];
+	    NSRect contentFrame = [w frame];
+	    contentFrame.size.height  = [[w contentView] frame].size.height;
 	    /*
 	     * For consistency with other platforms, points in the
 	     * title bar are not considered to be contained in the
 	     * window.
 	     */
 	    
-	    frame.size.height  = [[w contentView] frame].size.height;
-	    if (NSMouseInRect(p, frame, NO) &&
-		(wmPtr->hints.initial_state == NormalState ||
+	    if ((wmPtr->hints.initial_state == NormalState ||
 		 wmPtr->hints.initial_state == ZoomState)) {
-		return winPtr;
+		if (NSMouseInRect(p, contentFrame, NO)) {
+		    return winPtr;
+		} else if (NSMouseInRect(p, windowFrame, NO)) {
+		    return NULL;
+		}
 	    }
 	}
     }
