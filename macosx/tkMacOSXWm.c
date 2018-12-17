@@ -152,13 +152,13 @@ static const struct {
 typedef enum {
     WMATT_ALPHA, WMATT_FULLSCREEN, WMATT_MODIFIED, WMATT_NOTIFY,
     WMATT_TITLEPATH, WMATT_TOPMOST, WMATT_TRANSPARENT,
-    _WMATT_LAST_ATTRIBUTE
+    WMATT_TYPE, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
     "-alpha", "-fullscreen", "-modified", "-notify",
     "-titlepath", "-topmost", "-transparent",
-    NULL
+    "-type", NULL
 };
 
 /*
@@ -1316,7 +1316,7 @@ WmSetAttribute(
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
 	    [macWindow toggleFullScreen:macWindow];
 #else
-	    TKLog(@"The fullscreen attribute is ignored on this system..");
+	    TKLog(@"The fullscreen attribute is ignored on this system.");
 #endif
 	}
 	break;
@@ -1393,6 +1393,9 @@ WmSetAttribute(
 	    TkMacOSXInvalidateWindow((MacDrawable *) winPtr->window,
 		    TK_PARENT_WINDOW);
 	    }
+	break;
+    case WMATT_TYPE:
+	TKLog(@"The type attribute is ignored on macOX.");
 	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
