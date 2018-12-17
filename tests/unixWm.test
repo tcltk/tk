@@ -2050,6 +2050,7 @@ test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapp
 test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} unix {
     foreach w {.t .t2 .t3} {
 	destroy $w
+	update
 	toplevel $w -width 200 -height 200 -bg green
 	wm geometry $w +0+0
     }
@@ -2086,13 +2087,19 @@ test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix 
     raise .t2
     lappend result [winfo containing $x $y]
 } {.t2 .t .t2}
+# The mac won't put an overrideredirect window above the root,
+if {[tk windowingsystem] == "aqua"} {
+    wm withdraw .
+}
 test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} unix {
     foreach w {.t .t2 .t3} {
 	destroy $w
+	update
 	toplevel $w -width 200 -height 200 -bg green
 	wm overrideredirect $w 1
 	wm geometry $w +0+0
 	tkwait visibility $w
+	update
     }
     lower .t3 .t2
     update
@@ -2108,6 +2115,9 @@ test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} 
     lower .t2
     lappend result [winfo containing $x $y]
 } {.t2 .t3}
+if {[tk windowingsystem] == "aqua"} {
+    wm deiconify .
+}
 test unixWm-51.10 {TkWmRestackToplevel procedure, don't move window that's already in the right place} unix {
     makeToplevels
     raise .raise1
@@ -2483,11 +2493,17 @@ test unixWm-59.3 {exit processing} unix {
 # NOTE: since [wm attributes] is not guaranteed to have any effect,
 # the only thing we can really test here is the syntax.
 #
+if {[tk windowingsystem] == "aqua"} {
+    set result_60_1 {-alpha 1.0 -fullscreen 0 -modified 0 -notify 0\
+			 -titlepath {} -topmost 0 -transparent 0}
+} else {
+    set result_60_1 {-alpha 1.0 -topmost 0 -zoomed 0 -fullscreen 0 -type {}}
+}
 test unixWm-60.1 {wm attributes - test} -constraints unix -body {
     destroy .t
     toplevel .t
     wm attributes .t
-} -result [list -alpha 1.0 -topmost 0 -zoomed 0 -fullscreen 0 -type {}]
+} -result $result_60_1
 
 test unixWm-60.2 {wm attributes - test} -constraints unix -body {
     destroy .t
@@ -2527,7 +2543,8 @@ test unixWm-61.2 {Tk_WmCmd procedure, "iconphoto" option} unix {
     image delete blank16 blank32
 } {}
 
-test unixWm-62.0 {wm attributes -type void} -constraints unix -setup {
+# Aqua does not support wm attributes -type
+test unixWm-62.0 {wm attributes -type void} -constraints {unix notAqua} -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2536,7 +2553,7 @@ test unixWm-62.0 {wm attributes -type void} -constraints unix -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.1 {wm attributes -type name} -constraints unix -setup {
+test unixWm-62.1 {wm attributes -type name} -constraints {unix notAqua} -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2545,7 +2562,7 @@ test unixWm-62.1 {wm attributes -type name} -constraints unix -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.2 {wm attributes -type name} -constraints unix -setup {
+test unixWm-62.2 {wm attributes -type name} -constraints {unix notAqua} -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2555,7 +2572,7 @@ test unixWm-62.2 {wm attributes -type name} -constraints unix -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.3 {wm attributes -type list} -constraints unix -setup {
+test unixWm-62.3 {wm attributes -type list} -constraints {unix notAqua} -setup {
     destroy .t
     toplevel .t
 } -body {
@@ -2564,7 +2581,7 @@ test unixWm-62.3 {wm attributes -type list} -constraints unix -setup {
     destroy .t
 } -result {}
 
-test unixWm-62.4 {wm attributes -type list} -constraints unix -setup {
+test unixWm-62.4 {wm attributes -type list} -constraints {unix notAqua} -setup {
     destroy .t
     toplevel .t
 } -body {
