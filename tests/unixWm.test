@@ -1779,14 +1779,15 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
 } {52 7 12 62}
 
 deleteWindows
-# The root window must not overlap the test windows during these
-# tests.  Previously this was arranged by iconifying the root.  But
-# this does not work on Ubuntu Unity, possibly because of
-# https://bugs.launchpad.net/ubuntu/+source/unity/+bug/1502370
-# A workaround is to just move it far away.
-wm geometry . +1000+1000
-#wm iconify .
-test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords} unix {
+wm withdraw .
+if {[tk windowingsystem] == "aqua"} {
+    # Modern mac windows have no border.
+    set result_50_1 {{} {} .t .t .t2 {} .t2 .t .t} 
+} else {
+    # Windows are assumed to have a border (invisible in Gnome 3).
+    set result_50_1 {{} {} .t {} .t2 {} .t2 {} .t}
+}
+test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords, title bar} unix {
     update
     toplevel .t -width 300 -height 400 -bg green
     wm geom .t +100+100
@@ -1803,10 +1804,11 @@ test unixWm-50.1 {Tk_CoordsToWindow procedure, finding a toplevel, x-coords} uni
 	 [winfo containing $x              [expr $y + 250]] \
 	 [winfo containing [expr $x + 99]  [expr $y + 250]] \
 	 [winfo containing [expr $x + 100] [expr $y + 250]] \
+	 [winfo containing [expr $x + 150] [expr $y + 90]] \
 	 [winfo containing [expr $x + 199] [expr $y + 250]] \
 	 [winfo containing [expr $x + 200] [expr $y + 250]] \
-	 [winfo containing [expr $x + 220] [expr $y + 250]]
-} {{} {} .t .t .t2 .t2 .t .t}
+	 [winfo containing [expr $x + 220] [expr $y + 250]] \
+} $result_50_1
 test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and overrideredirect} unix {
     deleteWindows
     toplevel .t -width 400 -height 300 -bg yellow
@@ -1962,6 +1964,7 @@ test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} unix {
     tkwait visibility .t2
     set result [list [winfo containing 100 100]]
     wm iconify .t2
+    animationDelay
     lappend result [winfo containing 100 100]
 } {.t2 .t}
 test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
