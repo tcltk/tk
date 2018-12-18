@@ -6261,6 +6261,23 @@ test bind-32.10 {clash of Space with VK_CAPITAL (Windows only)} -setup {
 } -cleanup {
     destroy .t.f
 } -result {Single}
+test bind-32.11 {match detaileded virtual} -setup {
+    pack [frame .t.f -class Test]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    event add <<TestControlButton1>> <Control-Button-1>
+    bind Test <<TestControlButton1>> { set x "Control-Button-1" }
+    bind Test <Button-1> { set x "Button-1" }
+    bind .t.f <Button-1> { set x "Button-1" }
+    event generate .t.f <Control-ButtonPress-1>
+    set x
+} -cleanup {
+    destroy .t.f
+    event delete <<TestControlButton1>>
+    bind Test <Button-1> {#}
+} -result {Control-Button-1}
 
 test bind-33.1 {prefer longest match} -setup {
     pack [frame .t.f]
@@ -6332,7 +6349,7 @@ test bind-33.4 {should prefer more specialized event} -setup {
     # here <1><1> will be triggered correctly, but this is not consistent with
     # test case 33.2.
 } -result {11}
-test bind-33.5 {pefer most specialized} -setup {
+test bind-33.5 {prefer most specialized} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6346,7 +6363,7 @@ test bind-33.5 {pefer most specialized} -setup {
 } -cleanup {
     destroy .t.f
 } -result {11}
-test bind-33.6 {pefer most specialized} -setup {
+test bind-33.6 {prefer most specialized} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6364,7 +6381,7 @@ test bind-33.6 {pefer most specialized} -setup {
 } -cleanup {
     destroy .t.f
 } -result {1111}
-test bind-33.7 {pefer most specialized} -setup {
+test bind-33.7 {prefer most specialized} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6378,7 +6395,7 @@ test bind-33.7 {pefer most specialized} -setup {
 } -cleanup {
     destroy .t.f
 } -result {1}
-test bind-33.8 {pefer most specialized} -setup {
+test bind-33.8 {prefer most specialized} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update

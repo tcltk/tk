@@ -2551,7 +2551,7 @@ VirtPatIsBound(
 	    unsigned long physModMask = physPatPtr->modStateMask;
 	    unsigned long virtModMask = virtPatPtr->modStateMask;
 
-	    if (physModMask == 0
+	    if (virtModMask == 0
 		    || virtModMask == physModMask
 		    || (virtModMask & physModMask) != physModMask) {
 		return false; /* we cannot surpass this match */
