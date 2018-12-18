@@ -6261,7 +6261,7 @@ test bind-32.10 {clash of Space with VK_CAPITAL (Windows only)} -setup {
 } -cleanup {
     destroy .t.f
 } -result {Single}
-test bind-32.11 {match detaileded virtual} -setup {
+test bind-32.11 {match detailed virtual} -setup {
     pack [frame .t.f -class Test]
     focus -force .t.f
     update
