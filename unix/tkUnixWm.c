@@ -5787,7 +5787,7 @@ Tk_GetRootCoords(
 
 static int PointInWindow(
     int x,
-    int y, 
+    int y,
     WmInfo *wmPtr)
 {
     XWindowChanges changes = wmPtr->winPtr->changes;
@@ -5887,6 +5887,12 @@ Tk_CoordsToWindow(
 		    goto gotToplevel;
 		} else if (wmPtr->winPtr->flags & TK_EMBEDDED &&
                            TkpGetOtherWindow(wmPtr->winPtr) == NULL) {
+
+                    /*
+                     * This toplevel is embedded in a window belonging to
+                     * a different application.
+                     */
+
                     int rx, ry;
                     Tk_GetRootCoords((Tk_Window) wmPtr->winPtr, &rx, &ry);
                     childX -= rx;
