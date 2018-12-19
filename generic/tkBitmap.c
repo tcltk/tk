@@ -1157,9 +1157,9 @@ TkDebugBitmap(
 	for ( ; (bitmapPtr != NULL); bitmapPtr = bitmapPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(bitmapPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(bitmapPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(bitmapPtr->objRefCount));
+		    Tcl_NewWideIntObj(bitmapPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

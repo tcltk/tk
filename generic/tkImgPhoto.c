@@ -1934,16 +1934,21 @@ ImgPhotoConfigureMaster(
     }
     if (metadata) {
 	/*
-	 * Stringify to ignore -metadata "". It may come in as a list or other
-	 * object.
+	 * make -metadata a dict and take it if keys in.
+	 * Otherwise set a metadata null pointer.
 	 */
+	int dictSize;
 
-	/* HaO: ToDo: value is a dict, not a string */
-	(void)Tcl_GetString(metadata);
-	if (metadata->length) {
-	    Tcl_IncrRefCount(metadata);
+	if (TCL_OK != Tcl_DictObjSize(interp,metadata, &dictSize)) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "value for \"-metadata\" not a dict", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		    "UNRECOGNIZED_DATA", NULL);
+	    return TCL_ERROR;
 	}
-	else {
+	if (dictSize > 0) {
+	    Tcl_IncrRefCount(metadata);
+	} else {
 	    metadata = NULL;
 	}
 	if (masterPtr->metadata) {

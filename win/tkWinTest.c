@@ -570,7 +570,7 @@ TestwinlocaleObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-    Tcl_SetObjResult(interp, Tcl_NewIntObj((int)GetThreadLocale()));
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetThreadLocale()));
     return TCL_OK;
 }
 
