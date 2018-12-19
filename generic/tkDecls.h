@@ -882,7 +882,7 @@ EXTERN void		Tk_CreateOldPhotoImageFormat(
 EXTERN Tcl_Obj *Tk_PhotoGetMetadata(Tk_PhotoHandle handle);
 /* 275 */
 EXTERN void Tk_PhotoSetMetadata(Tk_PhotoHandle handle,Tcl_Obj *metadata);
-				
+
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
     const struct TkIntStubs *tkIntStubs;
