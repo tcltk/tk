@@ -596,7 +596,7 @@ static const TkStateMap visNotify[] = {
 };
 
 static const TkStateMap configureRequestDetail[] = {
-    {None,		"None"},
+    {0,		"None"},
     {Above,		"Above"},
     {Below,		"Below"},
     {BottomIf,		"BottomIf"},
@@ -3580,14 +3580,14 @@ DoWarp(
 
     if ((dispPtr->warpWindow == NULL) ||
             (Tk_IsMapped(dispPtr->warpWindow)
-            && (Tk_WindowId(dispPtr->warpWindow) != None))) {
+            && Tk_WindowId(dispPtr->warpWindow))) {
         TkpWarpPointer(dispPtr);
         XForceScreenSaver(dispPtr->display, ScreenSaverReset);
     }
 
     if (dispPtr->warpWindow) {
 	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = None;
+	dispPtr->warpWindow = 0;
     }
     dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
