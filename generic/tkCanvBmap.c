@@ -180,16 +180,16 @@ TkcCreateBitmap(
      */
 
     bmapPtr->anchor = TK_ANCHOR_CENTER;
-    bmapPtr->bitmap = None;
-    bmapPtr->activeBitmap = None;
-    bmapPtr->disabledBitmap = None;
+    bmapPtr->bitmap = 0;
+    bmapPtr->activeBitmap = 0;
+    bmapPtr->disabledBitmap = 0;
     bmapPtr->fgColor = NULL;
     bmapPtr->activeFgColor = NULL;
     bmapPtr->disabledFgColor = NULL;
     bmapPtr->bgColor = NULL;
     bmapPtr->activeBgColor = NULL;
     bmapPtr->disabledBgColor = NULL;
-    bmapPtr->gc = None;
+    bmapPtr->gc = 0;
 
     /*
      * Process the arguments to fill in the item record. Only 1 (list) or 2 (x
@@ -331,9 +331,9 @@ ConfigureBitmap(
 
     state = itemPtr->state;
 
-    if (bmapPtr->activeFgColor!=NULL ||
-	    bmapPtr->activeBgColor!=NULL ||
-	    bmapPtr->activeBitmap!=None) {
+    if (bmapPtr->activeFgColor ||
+	    bmapPtr->activeBgColor ||
+	    bmapPtr->activeBitmap) {
 	itemPtr->redraw_flags |= TK_ITEM_STATE_DEPENDANT;
     } else {
 	itemPtr->redraw_flags &= ~TK_ITEM_STATE_DEPENDANT;
@@ -350,33 +350,33 @@ ConfigureBitmap(
     bgColor = bmapPtr->bgColor;
     bitmap = bmapPtr->bitmap;
     if (Canvas(canvas)->currentItemPtr == itemPtr) {
-	if (bmapPtr->activeFgColor!=NULL) {
+	if (bmapPtr->activeFgColor) {
 	    fgColor = bmapPtr->activeFgColor;
 	}
-	if (bmapPtr->activeBgColor!=NULL) {
+	if (bmapPtr->activeBgColor) {
 	    bgColor = bmapPtr->activeBgColor;
 	}
-	if (bmapPtr->activeBitmap!=None) {
+	if (bmapPtr->activeBitmap) {
 	    bitmap = bmapPtr->activeBitmap;
 	}
     } else if (state == TK_STATE_DISABLED) {
-	if (bmapPtr->disabledFgColor!=NULL) {
+	if (bmapPtr->disabledFgColor) {
 	    fgColor = bmapPtr->disabledFgColor;
 	}
-	if (bmapPtr->disabledBgColor!=NULL) {
+	if (bmapPtr->disabledBgColor) {
 	    bgColor = bmapPtr->disabledBgColor;
 	}
-	if (bmapPtr->disabledBitmap!=None) {
+	if (bmapPtr->disabledBitmap) {
 	    bitmap = bmapPtr->disabledBitmap;
 	}
     }
 
-    if (bitmap == None) {
-	newGC = None;
+    if (!bitmap) {
+	newGC = 0;
     } else {
 	gcValues.foreground = fgColor->pixel;
 	mask = GCForeground;
-	if (bgColor != NULL) {
+	if (bgColor) {
 	    gcValues.background = bgColor->pixel;
 	    mask |= GCBackground;
 	} else {
@@ -385,7 +385,7 @@ ConfigureBitmap(
 	}
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (bmapPtr->gc != None) {
+    if (bmapPtr->gc) {
 	Tk_FreeGC(Tk_Display(tkwin), bmapPtr->gc);
     }
     bmapPtr->gc = newGC;
@@ -419,34 +419,34 @@ DeleteBitmap(
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
 
-    if (bmapPtr->bitmap != None) {
+    if (bmapPtr->bitmap) {
 	Tk_FreeBitmap(display, bmapPtr->bitmap);
     }
-    if (bmapPtr->activeBitmap != None) {
+    if (bmapPtr->activeBitmap) {
 	Tk_FreeBitmap(display, bmapPtr->activeBitmap);
     }
-    if (bmapPtr->disabledBitmap != None) {
+    if (bmapPtr->disabledBitmap) {
 	Tk_FreeBitmap(display, bmapPtr->disabledBitmap);
     }
-    if (bmapPtr->fgColor != NULL) {
+    if (bmapPtr->fgColor) {
 	Tk_FreeColor(bmapPtr->fgColor);
     }
-    if (bmapPtr->activeFgColor != NULL) {
+    if (bmapPtr->activeFgColor) {
 	Tk_FreeColor(bmapPtr->activeFgColor);
     }
-    if (bmapPtr->disabledFgColor != NULL) {
+    if (bmapPtr->disabledFgColor) {
 	Tk_FreeColor(bmapPtr->disabledFgColor);
     }
-    if (bmapPtr->bgColor != NULL) {
+    if (bmapPtr->bgColor) {
 	Tk_FreeColor(bmapPtr->bgColor);
     }
-    if (bmapPtr->activeBgColor != NULL) {
+    if (bmapPtr->activeBgColor) {
 	Tk_FreeColor(bmapPtr->activeBgColor);
     }
-    if (bmapPtr->disabledBgColor != NULL) {
+    if (bmapPtr->disabledBgColor) {
 	Tk_FreeColor(bmapPtr->disabledBgColor);
     }
-    if (bmapPtr->gc != NULL) {
+    if (bmapPtr->gc) {
 	Tk_FreeGC(display, bmapPtr->gc);
     }
 }
@@ -485,11 +485,11 @@ ComputeBitmapBbox(
     }
     bitmap = bmapPtr->bitmap;
     if (Canvas(canvas)->currentItemPtr == (Tk_Item *)bmapPtr) {
-	if (bmapPtr->activeBitmap!=None) {
+	if (bmapPtr->activeBitmap) {
 	    bitmap = bmapPtr->activeBitmap;
 	}
-    } else if (state==TK_STATE_DISABLED) {
-	if (bmapPtr->disabledBitmap!=None) {
+    } else if (state == TK_STATE_DISABLED) {
+	if (bmapPtr->disabledBitmap) {
 	    bitmap = bmapPtr->disabledBitmap;
 	}
     }
@@ -497,7 +497,7 @@ ComputeBitmapBbox(
     x = (int) (bmapPtr->x + ((bmapPtr->x >= 0) ? 0.5 : - 0.5));
     y = (int) (bmapPtr->y + ((bmapPtr->y >= 0) ? 0.5 : - 0.5));
 
-    if (state==TK_STATE_HIDDEN || bitmap == None) {
+    if ((state == TK_STATE_HIDDEN) || !bitmap) {
 	bmapPtr->header.x1 = bmapPtr->header.x2 = x;
 	bmapPtr->header.y1 = bmapPtr->header.y2 = y;
 	return;
@@ -595,16 +595,16 @@ DisplayBitmap(
     }
     bitmap = bmapPtr->bitmap;
     if (Canvas(canvas)->currentItemPtr == itemPtr) {
-	if (bmapPtr->activeBitmap!=None) {
+	if (bmapPtr->activeBitmap) {
 	    bitmap = bmapPtr->activeBitmap;
 	}
     } else if (state == TK_STATE_DISABLED) {
-	if (bmapPtr->disabledBitmap!=None) {
+	if (bmapPtr->disabledBitmap) {
 	    bitmap = bmapPtr->disabledBitmap;
 	}
     }
 
-    if (bitmap != None) {
+    if (bitmap) {
 	if (x > bmapPtr->header.x1) {
 	    bmapX = x - bmapPtr->header.x1;
 	    bmapWidth = bmapPtr->header.x2 - x;
@@ -864,28 +864,28 @@ BitmapToPostscript(
     bgColor = bmapPtr->bgColor;
     bitmap = bmapPtr->bitmap;
     if (Canvas(canvas)->currentItemPtr == itemPtr) {
-	if (bmapPtr->activeFgColor!=NULL) {
+	if (bmapPtr->activeFgColor) {
 	    fgColor = bmapPtr->activeFgColor;
 	}
-	if (bmapPtr->activeBgColor!=NULL) {
+	if (bmapPtr->activeBgColor) {
 	    bgColor = bmapPtr->activeBgColor;
 	}
-	if (bmapPtr->activeBitmap!=None) {
+	if (bmapPtr->activeBitmap) {
 	    bitmap = bmapPtr->activeBitmap;
 	}
     } else if (state == TK_STATE_DISABLED) {
-	if (bmapPtr->disabledFgColor!=NULL) {
+	if (bmapPtr->disabledFgColor) {
 	    fgColor = bmapPtr->disabledFgColor;
 	}
-	if (bmapPtr->disabledBgColor!=NULL) {
+	if (bmapPtr->disabledBgColor) {
 	    bgColor = bmapPtr->disabledBgColor;
 	}
-	if (bmapPtr->disabledBitmap!=None) {
+	if (bmapPtr->disabledBitmap) {
 	    bitmap = bmapPtr->disabledBitmap;
 	}
     }
 
-    if (bitmap == None) {
+    if (!bitmap) {
 	return TCL_OK;
     }
 
