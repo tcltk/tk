@@ -73,7 +73,9 @@ typedef unsigned long KeyCode;	/* In order to use IME, the Macintosh needs
  * RESERVED RESOURCE AND CONSTANT DEFINITIONS
  *****************************************************************/
 
-#define None                 0L	/* universal null resource or null atom */
+#ifndef _WIN32 /* prevent conflicting define against windows.h, bug [9e31fd9449] */
+#   define None              0L	/* universal null resource or null atom */
+#endif
 
 #define ParentRelative       1L	/* background pixmap in CreateWindow
 				    and ChangeWindowAttributes */
@@ -179,7 +181,9 @@ are reserved in the protocol for errors and replies. */
 
 #define ShiftMask		(1<<0)
 #define LockMask		(1<<1)
-#define ControlMask		(1<<2)
+#ifndef _WIN32 /* prevent conflicting define against windows.h, bug [9e31fd9449] */
+#   define ControlMask		(1<<2)
+#endif
 #define Mod1Mask		(1<<3)
 #define Mod2Mask		(1<<4)
 #define Mod3Mask		(1<<5)
@@ -294,7 +298,7 @@ are reserved in the protocol for errors and replies. */
 
 /* Used in SetInputFocus, GetInputFocus */
 
-#define RevertToNone		(int)None
+#define RevertToNone		0
 #define RevertToPointerRoot	(int)PointerRoot
 #define RevertToParent		2
 
