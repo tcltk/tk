@@ -389,7 +389,7 @@ static void		RemapWindows(TkWindow *winPtr,
 	 */
 
 	if ([self styleMask] & NSFullScreenWindowMask) {
-	    frameRect = [NSWindow frameRectForContentRect:NSZeroRect
+ 	    frameRect = [NSWindow frameRectForContentRect:NSZeroRect
 				  styleMask:[self styleMask]];
 	} else {
 	    frameRect = [self frameRectForContentRect:NSZeroRect];
@@ -413,7 +413,6 @@ static void		RemapWindows(TkWindow *winPtr,
     [self tkLayoutChanged];
 }
 #endif
-
 
 - (NSSize)windowWillResize:(NSWindow *)sender
                     toSize:(NSSize)frameSize
@@ -935,7 +934,8 @@ TkWmDeadWindow(
 	    if (title == nil) {
 		title = "unnamed window";
 	    }
-	    printf(">>>> Closing <%s>. Count is: %lu\n", title, [window retainCount]);
+	    fprintf(stderr, ">>>> Closing <%s>. Count is: %lu\n", title,
+		    [window retainCount]);
 	}
 #endif
 	[window close];
@@ -1736,6 +1736,7 @@ WmDeiconifyCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -1758,6 +1759,12 @@ WmDeiconifyCmd(
 
     TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ?
 	    ZoomState : NormalState);
+    [win setExcludedFromWindowsMenu:NO];
+    TkMacOSXApplyWindowAttributes(winPtr, win);
+    [win orderFront:nil];
+    if (wmPtr->icon) {
+	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
+    }
     return TCL_OK;
 }
 
@@ -1947,8 +1954,9 @@ WmGeometryCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char xSign, ySign;
-    int width, height;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    char xSign = '+', ySign = '+';
+    int width, height, x = wmPtr->x, y= wmPtr->y;
     char *argv3;
 
     if ((objc != 3) && (objc != 4)) {
@@ -1956,8 +1964,6 @@ WmGeometryCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
-	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
 	if (wmPtr->gridWin != NULL) {
 	    width = wmPtr->reqGridWidth + (winPtr->changes.width
 		    - winPtr->reqWidth)/wmPtr->widthInc;
@@ -1967,8 +1973,20 @@ WmGeometryCmd(
 	    width = winPtr->changes.width;
 	    height = winPtr->changes.height;
 	}
+	if (win) {
+	    if (wmPtr->flags & WM_NEGATIVE_X) {
+		xSign = '-';
+		x = wmPtr->vRootWidth - wmPtr->x
+		    - (width + (wmPtr->parentWidth - winPtr->changes.width));
+	    }
+	    if (wmPtr->flags & WM_NEGATIVE_Y) {
+		ySign = '-';
+		y = wmPtr->vRootHeight - wmPtr->y
+		    - (height + (wmPtr->parentHeight - winPtr->changes.height));
+	    }
+	}
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
-		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
+		width, height, xSign, x, ySign, y));
 	return TCL_OK;
     }
     argv3 = Tcl_GetString(objv[3]);
@@ -2266,6 +2284,9 @@ WmIconifyCmd(
     }
 
     TkpWmSetState(winPtr, IconicState);
+    if (wmPtr->icon) {
+	Tk_MapWindow((Tk_Window)wmPtr->icon);
+    }
     return TCL_OK;
 }
 
@@ -2584,8 +2605,17 @@ WmIconwindowCmd(
 	    return TCL_ERROR;
 	}
 	if (wmPtr->icon != NULL) {
-	    WmInfo *wmPtr3 = ((TkWindow *) wmPtr->icon)->wmInfoPtr;
+	    TkWindow *oldIcon = (TkWindow *)wmPtr->icon;
+	    WmInfo *wmPtr3 = oldIcon->wmInfoPtr;
+	    NSWindow *win = TkMacOSXDrawableWindow(oldIcon->window);
 
+	    /*
+	     * The old icon should be withdrawn.
+	     */
+	    
+	    TkpWmSetState(oldIcon, WithdrawnState);
+	    [win orderOut:nil];
+    	    [win setExcludedFromWindowsMenu:YES];
 	    wmPtr3->iconFor = NULL;
 	}
 	Tk_MakeWindowExist(tkwin2);
@@ -2594,11 +2624,16 @@ WmIconwindowCmd(
 	wmPtr->icon = tkwin2;
 	wmPtr2->iconFor = (Tk_Window) winPtr;
 	if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
+
 	    /*
-	     * Don't have iconwindows on the Mac. We just withdraw.
+	     * If the window is in normal or zoomed state, the icon should be
+	     * unmapped.
 	     */
 
-	    Tk_UnmapWindow(tkwin2);
+	    if (wmPtr->hints.initial_state == NormalState ||
+		wmPtr->hints.initial_state == ZoomState) {
+		Tk_UnmapWindow(tkwin2);
+	    }
 	}
     }
     return TCL_OK;
@@ -2802,8 +2837,9 @@ WmOverrideredirectCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int boolean;
+    int flag;
     XSetWindowAttributes atts;
+    TKWindow *win = (TKWindow *)TkMacOSXDrawableWindow(winPtr->window);
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
@@ -2816,12 +2852,12 @@ WmOverrideredirectCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolean) != TCL_OK) {
+    if (Tcl_GetBooleanFromObj(interp, objv[3], &flag) != TCL_OK) {
 	return TCL_ERROR;
     }
-    atts.override_redirect = (boolean) ? True : False;
+    atts.override_redirect = flag ? True : False;
     Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
-    ApplyMasterOverrideChanges(winPtr, NULL);
+    ApplyMasterOverrideChanges(winPtr, win);
     return TCL_OK;
 }
 
@@ -3477,6 +3513,7 @@ WmTransientCmd(
 	}
 	TkWindow* masterPtr = (TkWindow*) master;
 	while (!Tk_TopWinHierarchy(masterPtr)) {
+
             /*
              * Ensure that the master window is actually a Tk toplevel.
              */
@@ -3563,8 +3600,8 @@ WmWithdrawCmd(
 	return TCL_ERROR;
     }
     TkpWmSetState(winPtr, WithdrawnState);
-    /*Remove window from Window menu.*/
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    [win orderOut:nil];
     [win setExcludedFromWindowsMenu:YES];
 
     return TCL_OK;
@@ -3947,27 +3984,8 @@ UpdateGeometryInfo(
     } else if ((max > 0) && (height > max)) {
 	height = max;
     }
-
-    /*
-     * Compute the new position for the upper-left pixel of the window's
-     * decorative frame. This is tricky, because we need to include the border
-     * widths supplied by a reparented parent in this calculation, but can't
-     * use the parent's current overall size since that may change as a result
-     * of this code.
-     */
-
-    if (wmPtr->flags & WM_NEGATIVE_X) {
-	x = wmPtr->vRootWidth - wmPtr->x
-	    - (width + (wmPtr->parentWidth - winPtr->changes.width));
-    } else {
-	x =  wmPtr->x;
-    }
-    if (wmPtr->flags & WM_NEGATIVE_Y) {
-	y = wmPtr->vRootHeight - wmPtr->y
-	    - (height + (wmPtr->parentHeight - winPtr->changes.height));
-    } else {
-	y =  wmPtr->y;
-    }
+    x = wmPtr->x;
+    y = wmPtr->y;
 
     /*
      * If the window's size is going to change and the window is supposed to
@@ -4128,8 +4146,8 @@ ParseGeometry(
 
     width = wmPtr->width;
     height = wmPtr->height;
-    x = wmPtr->x;
-    y = wmPtr->y;
+    x = -1;
+    y = -1;
     flags = wmPtr->flags;
     if (isdigit(UCHAR(*p))) {
 	width = strtoul(p, &end, 10);
@@ -4193,24 +4211,45 @@ ParseGeometry(
      * Everything was parsed OK. Update the fields of *wmPtr and arrange for
      * the appropriate information to be percolated out to the window manager
      * at the next idle moment.
+     *
+     * Computing the new position for the upper-left pixel of the window's
+     * decorative frame is tricky because we need to include the border
+     * widths supplied by a reparented parent in the calculation, but we can't
+     * use the parent's current overall size since that may change as a result
+     * of this code.
      */
 
     wmPtr->width = width;
     wmPtr->height = height;
-    if ((x != wmPtr->x) || (y != wmPtr->y)
-	    || ((flags & (WM_NEGATIVE_X|WM_NEGATIVE_Y))
-		    != (wmPtr->flags & (WM_NEGATIVE_X|WM_NEGATIVE_Y)))) {
-	if (wmPtr->flags & WM_FULLSCREEN) {
-	    wmPtr->configX = x;
-	    wmPtr->configY = y;
-	} else {
-	    wmPtr->x = x;
-	    wmPtr->y = y;
-	}
-	flags |= WM_MOVE_PENDING;
+    if (flags & WM_NEGATIVE_X) {
+	int borderwidth = wmPtr->parentWidth - winPtr->changes.width;
+	int newWidth = width == -1 ? winPtr->changes.width : width;
+	x = (x == -1) ?
+	    wmPtr->x + winPtr->changes.width - newWidth :
+	    wmPtr->vRootWidth - x - newWidth - borderwidth;
     }
+    if (x == -1) {
+	x = wmPtr->x;
+    }
+    if (flags & WM_NEGATIVE_Y) {
+	int borderheight = wmPtr->parentHeight - winPtr->changes.height;
+	int newHeight = height == -1 ? winPtr->changes.height : height;
+	y = (y == -1) ?
+	    wmPtr->y + winPtr->changes.height - newHeight :
+	    wmPtr->vRootHeight - y - newHeight - borderheight;
+    }
+    if (y == -1) {
+	y = wmPtr->y;
+    }
+    if (wmPtr->flags & WM_FULLSCREEN) {
+	wmPtr->configX = x;
+	wmPtr->configY = y;
+    } else {
+	wmPtr->x = x;
+	wmPtr->y = y;
+    }
+    flags |= WM_MOVE_PENDING;
     wmPtr->flags = flags;
-
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
 	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
@@ -4671,7 +4710,7 @@ Tk_MoveToplevelWindow(
     wmPtr->x = x;
     wmPtr->y = y;
     wmPtr->flags |= WM_MOVE_PENDING;
-    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
+    //    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
     if (!(wmPtr->sizeHintsFlags & (USPosition|PPosition))) {
 	wmPtr->sizeHintsFlags |= USPosition;
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
@@ -5199,7 +5238,8 @@ MODULE_SCOPE int
 TkMacOSXIsWindowZoomed(
     TkWindow *winPtr)
 {
-    return [TkMacOSXDrawableWindow(winPtr->window) isZoomed];
+    NSWindow *macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    return [macWindow isZoomed];
 }
 
 
@@ -5244,13 +5284,13 @@ TkMacOSXZoomToplevel(
      * Do nothing if already in desired zoom state.
      */
 
-    if ((![window isZoomed] == (zoomPart == inZoomIn))) {
+    if (([window isZoomed] == (zoomPart == inZoomOut))) {
 	return false;
     }
-      [window zoom:NSApp];
+    [window zoom:NSApp];
 
-     wmPtr->hints.initial_state =
-    	    (zoomPart == inZoomIn ? NormalState : ZoomState);
+    wmPtr->hints.initial_state =
+	(zoomPart == inZoomIn ? NormalState : ZoomState);
     return true;
 }
 
@@ -5424,21 +5464,6 @@ WmWinStyle(
 	{ "moveToActiveSpace",	tkMoveToActiveSpaceAttribute		     },
 	{ "nonActivating",	tkNonactivatingPanelAttribute		     },
 	{ "hud",		tkHUDWindowAttribute			     },
-	{ "black",		0			                     },
-	{ "dark",		0			                     },
-	{ "light",		0			                     },
-	{ "gray",		0			                     },
-	{ "red",		0 			                     },
-	{ "green",		0                			     },
-	{ "blue",		0           			             },
-	{ "cyan",		0			                     },
-	{ "yellow",		0			                     },
-	{ "magenta",		0  			                     },
-	{ "orange",		0 			                     },
-	{ "purple",		0			                     },
-	{ "brown",		0			                     },
-	{ "clear",		0			                     },
-	{ "opacity",		0			                     },
 	{ NULL }
     };
 
@@ -5520,10 +5545,8 @@ WmWinStyle(
 		macClassAttrs[macClass].validAttrs);
 	wmPtr->flags |= macClassAttrs[macClass].flags;
 	wmPtr->macClass = macClass;
-
 	ApplyWindowAttributeFlagChanges(winPtr, NULL, oldAttributes, oldFlags,
 		0, 1);
-
 	return TCL_OK;
 
     badClassAttrs:
@@ -5664,6 +5687,8 @@ TkMacOSXMakeRealWindowExist(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     MacDrawable *macWin;
+    WindowClass macClass;
+    Bool overrideRedirect = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
 
     if (TkMacOSXHostToplevelExists(winPtr)) {
 	return;
@@ -5700,7 +5725,16 @@ TkMacOSXMakeRealWindowExist(
 	 * TODO: Here we should handle out of process embedding.
 	 */
     }
-    WindowClass macClass = wmPtr->macClass;
+
+    /*
+     * If this is an override-redirect window, the NSWindow is created
+     * first as a document window then converted to a simple window.
+     */
+
+    if (overrideRedirect) {
+	wmPtr->macClass = kDocumentWindowClass;
+    }
+    macClass = wmPtr->macClass;
     wmPtr->attributes &= (tkAlwaysValidAttributes |
 	    macClassAttrs[macClass].validAttrs);
     wmPtr->flags |= macClassAttrs[macClass].flags |
@@ -5753,12 +5787,10 @@ TkMacOSXMakeRealWindowExist(
 	 */
 	[window setMovableByWindowBackground:NO];
     }
-
     [window setDocumentEdited:NO];
     wmPtr->window = window;
     macWin->view = window.contentView;
     TkMacOSXApplyWindowAttributes(winPtr, window);
-
     NSRect geometry = InitialWindowBounds(winPtr, window);
     geometry.size.width +=  structureRect.size.width;
     geometry.size.height += structureRect.size.height;
@@ -5766,7 +5798,14 @@ TkMacOSXMakeRealWindowExist(
 	    geometry.size.height);
     [window setFrame:geometry display:YES];
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
+
     macWin->flags |= TK_HOST_EXISTS;
+    if (overrideRedirect) {
+    	XSetWindowAttributes atts;
+    	atts.override_redirect = True;
+    	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
+    	ApplyMasterOverrideChanges(winPtr, NULL);
+    }
 }
 
 /*
@@ -6474,21 +6513,35 @@ ApplyWindowAttributeFlagChanges(
 	     * This behavior, which makes the green button expand a window to
 	     * full screen, was included in the default as of OSX 10.13.  For
 	     * uniformity we use the new default in all versions of the OS
-	     * where the behavior exists.
+	     * after 10.10.
 	     */
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101000)
 	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
-		NSSize screenSize = [[macWindow screen]frame].size; 
-		b |= NSWindowCollectionBehaviorFullScreenPrimary;
 
-		/* The default max size has height less than the screen height.
-		 * This causes the window manager to refuse to allow the window
-		 * to be resized when it is a split window.  To work around
-		 * this we make the max size equal to the screen size.
+		/*
+		 * Exclude overrideredirect, transient, and "help"-styled
+		 * windows from moving into their own fullscreen space.
+		 *
 		 */
-		
-		[macWindow setMaxFullScreenContentSize:screenSize];
+
+		if ((winPtr->atts.override_redirect) ||
+		    (wmPtr->master != None) ||
+		    (winPtr->wmInfoPtr->macClass == kHelpWindowClass)) {
+		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
+			  NSWindowCollectionBehaviorFullScreenAuxiliary);
+		} else {
+		    NSSize screenSize = [[macWindow screen]frame].size;
+		    b |= NSWindowCollectionBehaviorFullScreenPrimary;
+
+		    /* The default max size has height less than the screen height.
+		     * This causes the window manager to refuse to allow the window
+		     * to be resized when it is a split window.  To work around
+		     * this we make the max size equal to the screen size.
+		     */
+
+		    [macWindow setMaxFullScreenContentSize:screenSize];
+		}
 	    }
 #endif
 
@@ -6548,6 +6601,14 @@ ApplyMasterOverrideChanges(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     UInt64 oldAttributes = wmPtr->attributes;
     int oldFlags = wmPtr->flags;
+    unsigned long styleMask;
+    NSRect structureRect;
+
+    if (!macWindow && winPtr->window != None &&
+	    TkMacOSXHostToplevelExists(winPtr)) {
+	macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    }
+    styleMask = [macWindow styleMask];
 
     /*
      * FIX: We need an UpdateWrapper equivalent to make this 100% correct
@@ -6559,6 +6620,11 @@ ApplyMasterOverrideChanges(
 	    wmPtr->attributes = macClassAttrs[kSimpleWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes |= kWindowNoActivatesAttribute;
+	if ([NSApp macMinorVersion] == 6) {
+	    styleMask = 0;
+	} else {
+	    styleMask &= ~NSTitledWindowMask;
+	}
     } else {
 	if (wmPtr->macClass == kSimpleWindowClass &&
 		oldAttributes == kWindowNoActivatesAttribute) {
@@ -6567,18 +6633,50 @@ ApplyMasterOverrideChanges(
 		    macClassAttrs[kDocumentWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes &= ~kWindowNoActivatesAttribute;
-    }
-    if (!macWindow && winPtr->window != None &&
-	    TkMacOSXHostToplevelExists(winPtr)) {
-	macWindow = TkMacOSXDrawableWindow(winPtr->window);
+	if ([NSApp macMinorVersion] == 6) {
+	    styleMask = NSTitledWindowMask         |
+		        NSClosableWindowMask       |
+		        NSMiniaturizableWindowMask |
+		        NSResizableWindowMask;
+	} else {
+	    styleMask |= NSTitledWindowMask;
+	}
     }
     if (macWindow) {
-	if (winPtr->atts.override_redirect && wmPtr->master != None) {
-	    wmPtr->flags |= WM_TOPMOST;
+	NSWindow *parentWindow = [macWindow parentWindow];
+	structureRect = [NSWindow frameRectForContentRect:NSZeroRect
+				  styleMask:styleMask];
+
+	/*
+	 * Synchronize the wmInfoPtr to match the new window configuration
+	 * so windowBoundsChanged won't corrupt the window manager info.
+	 */
+
+	wmPtr->xInParent = -structureRect.origin.x;
+	wmPtr->yInParent = structureRect.origin.y + structureRect.size.height;
+	wmPtr->parentWidth = winPtr->changes.width + structureRect.size.width;
+	wmPtr->parentHeight = winPtr->changes.height + structureRect.size.height;
+	if (winPtr->atts.override_redirect) {
+	    [macWindow setExcludedFromWindowsMenu:YES];
+	    [macWindow setStyleMask:styleMask];
+	    if (wmPtr->hints.initial_state == NormalState) {
+		[macWindow orderFront:nil];
+	    }
+	    if (wmPtr->master != None) {
+		wmPtr->flags |= WM_TOPMOST;
+	    } else {
+		wmPtr->flags &= ~WM_TOPMOST;
+	    }
 	} else {
+	    const char *title = winPtr->wmInfoPtr->titleUid;
+	    if (!title) {
+		title = winPtr->nameUid;
+	    }
+	    [macWindow setStyleMask:styleMask];
+	    [macWindow setTitle:[NSString stringWithUTF8String:title]];
+	    [macWindow setExcludedFromWindowsMenu:NO];
 	    wmPtr->flags &= ~WM_TOPMOST;
 	}
-	NSWindow *parentWindow = [macWindow parentWindow];
 	if (wmPtr->master != None) {
 	    TkDisplay *dispPtr = TkGetDisplayList();
 	    TkWindow *masterWinPtr = (TkWindow *)

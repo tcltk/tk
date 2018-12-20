@@ -1155,7 +1155,7 @@ CreateWidget(
 
     textPtr->state = TK_TEXT_STATE_NORMAL;
     textPtr->relief = TK_RELIEF_FLAT;
-    textPtr->cursor = None;
+    textPtr->cursor = 0;
     textPtr->charWidth = 1;
     textPtr->spaceWidth = 1;
     textPtr->lineHeight = -1;

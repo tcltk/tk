@@ -150,7 +150,7 @@ Tk_AllocCursorFromObj(
     cursorPtr = TkcGetCursor(interp, tkwin, Tcl_GetString(objPtr));
     objPtr->internalRep.twoPtrValue.ptr1 = cursorPtr;
     if (cursorPtr == NULL) {
-	return None;
+	return 0;
     }
     cursorPtr->objRefCount++;
     return cursorPtr->cursor;
@@ -190,7 +190,7 @@ Tk_GetCursor(
     TkCursor *cursorPtr = TkcGetCursor(interp, tkwin, string);
 
     if (cursorPtr == NULL) {
-	return None;
+	return 0;
     }
     return cursorPtr->cursor;
 }
@@ -388,7 +388,7 @@ Tk_GetCursorFromData(
 
   error:
     Tcl_DeleteHashEntry(dataHashPtr);
-    return None;
+    return 0;
 }
 
 /*

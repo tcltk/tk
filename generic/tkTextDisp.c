@@ -1650,9 +1650,9 @@ TkTextCreateDInfo(
     dInfoPtr = calloc(1, sizeof(TextDInfo));
     Tcl_InitHashTable(&dInfoPtr->styleTable, sizeof(StyleValues)/sizeof(int));
     gcValues.graphics_exposures = True;
-    dInfoPtr->copyGC = None;
+    dInfoPtr->copyGC = 0;
     dInfoPtr->scrollGC = Tk_GetGC(textPtr->tkwin, GCGraphicsExposures, &gcValues);
-    dInfoPtr->insertFgGC = None;
+    dInfoPtr->insertFgGC = 0;
     dInfoPtr->xScrollFirst = -1;
     dInfoPtr->xScrollLast = -1;
     dInfoPtr->yScrollFirst = -1;
@@ -1811,11 +1811,11 @@ TkTextFreeDInfo(
     FreeDLines(textPtr, NULL, NULL, DLINE_CACHE);  /* release cached lines */
     FreeDLines(textPtr, NULL, NULL, DLINE_METRIC); /* release cached lines */
 
-    if (dInfoPtr->copyGC != None) {
+    if (dInfoPtr->copyGC) {
 	Tk_FreeGC(textPtr->display, dInfoPtr->copyGC);
     }
     Tk_FreeGC(textPtr->display, dInfoPtr->scrollGC);
-    if (dInfoPtr->insertFgGC != None) {
+    if (dInfoPtr->insertFgGC) {
 	Tk_FreeGC(textPtr->display, dInfoPtr->insertFgGC);
     }
     if (dInfoPtr->lineUpdateTimer) {
@@ -1993,12 +1993,12 @@ FillStyle(
     }
 
     if (border)                         { stylePtr->border = border; }
-    if (fgColor != None)                { stylePtr->fgColor = fgColor; }
+    if (fgColor)                        { stylePtr->fgColor = fgColor; }
     if (tagPtr->reliefPtr)              { stylePtr->relief = tagPtr->relief; }
-    if (tagPtr->bgStipple != None)      { stylePtr->bgStipple = tagPtr->bgStipple; }
-    if (tagPtr->indentBgString != None) { stylePtr->indentBg = tagPtr->indentBg; }
-    if (tagPtr->tkfont != None)         { stylePtr->tkfont = tagPtr->tkfont; }
-    if (tagPtr->fgStipple != None)      { stylePtr->fgStipple = tagPtr->fgStipple; }
+    if (tagPtr->bgStipple)              { stylePtr->bgStipple = tagPtr->bgStipple; }
+    if (tagPtr->indentBgString)         { stylePtr->indentBg = tagPtr->indentBg; }
+    if (tagPtr->tkfont)                 { stylePtr->tkfont = tagPtr->tkfont; }
+    if (tagPtr->fgStipple)              { stylePtr->fgStipple = tagPtr->fgStipple; }
     if (tagPtr->justifyString)          { stylePtr->justify = tagPtr->justify; }
     if (tagPtr->lMargin1String)         { stylePtr->lMargin1 = tagPtr->lMargin1; }
     if (tagPtr->lMargin2String)         { stylePtr->lMargin2 = tagPtr->lMargin2; }
@@ -2025,18 +2025,18 @@ FillStyle(
 
     if (tagPtr->overstrikeString) {
 	stylePtr->overstrike = tagPtr->overstrike;
-	if (tagPtr->overstrikeColor != None) {
+	if (tagPtr->overstrikeColor) {
 	     stylePtr->overstrikeColor = tagPtr->overstrikeColor;
-	} else if (tagPtr->attrs.fgColor != None) {
+	} else if (tagPtr->attrs.fgColor) {
 	     stylePtr->overstrikeColor = tagPtr->attrs.fgColor;
 	}
     }
 
     if (tagPtr->underlineString) {
 	stylePtr->underline = tagPtr->underline;
-	if (tagPtr->underlineColor != None) {
+	if (tagPtr->underlineColor) {
 	    stylePtr->underlineColor = tagPtr->underlineColor;
-	} else if (tagPtr->attrs.fgColor != None) {
+	} else if (tagPtr->attrs.fgColor) {
 	    stylePtr->underlineColor = tagPtr->attrs.fgColor;
 	}
     }
@@ -2067,7 +2067,7 @@ MakeStyle(
 
     memset(&styleValues, 0, sizeof(StyleValues));
     styleValues.relief = TK_RELIEF_FLAT;
-    styleValues.fgColor = None;
+    styleValues.fgColor = 0;
     styleValues.underlineColor = textPtr->fgColor;
     styleValues.overstrikeColor = textPtr->fgColor;
     styleValues.eolColor = textPtr->eolColor;
@@ -2142,7 +2142,7 @@ MakeStyle(
      * Setup with fallback values if needed.
      */
 
-    if (styleValues.fgColor == None) {
+    if (!styleValues.fgColor) {
 	styleValues.fgColor = textPtr->fgColor;
     }
     if (styleValues.relief != TK_RELIEF_FLAT && !styleValues.border) {
@@ -2167,14 +2167,14 @@ MakeStyle(
     if (styleValues.border) {
 	gcValues.foreground = Tk_3DBorderColor(styleValues.border)->pixel;
 	mask = GCForeground;
-	if (styleValues.bgStipple != None) {
+	if (styleValues.bgStipple) {
 	    gcValues.stipple = styleValues.bgStipple;
 	    gcValues.fill_style = FillStippled;
 	    mask |= GCStipple|GCFillStyle;
 	}
 	stylePtr->bgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
-	stylePtr->bgGC = None;
+	stylePtr->bgGC = 0;
     }
     mask = GCFont;
     gcValues.font = Tk_FontId(styleValues.tkfont);
@@ -2183,22 +2183,22 @@ MakeStyle(
 	gcValues.foreground = styleValues.eolColor->pixel;
 	stylePtr->eolGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
-	stylePtr->eolGC = None;
+	stylePtr->eolGC = 0;
     }
     if (styleValues.eotColor && textPtr->showEndOfText) {
 	gcValues.foreground = styleValues.eotColor->pixel;
 	stylePtr->eotGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
-	stylePtr->eotGC = None;
+	stylePtr->eotGC = 0;
     }
     if (styleValues.hyphenColor && textPtr->hyphenate) {
 	gcValues.foreground = styleValues.hyphenColor->pixel;
 	stylePtr->hyphenGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
-	stylePtr->hyphenGC = None;
+	stylePtr->hyphenGC = 0;
     }
     gcValues.foreground = styleValues.fgColor->pixel;
-    if (styleValues.fgStipple != None) {
+    if (styleValues.fgStipple) {
 	gcValues.stipple = styleValues.fgStipple;
 	gcValues.fill_style = FillStippled;
 	mask |= GCStipple|GCFillStyle;
@@ -2304,25 +2304,25 @@ FreeStyle(
     assert(stylePtr->refCount > 0);
 
     if (--stylePtr->refCount == 0) {
-	if (stylePtr->bgGC != None) {
+	if (stylePtr->bgGC) {
 	    Tk_FreeGC(textPtr->display, stylePtr->bgGC);
 	}
-	if (stylePtr->fgGC != None) {
+	if (stylePtr->fgGC) {
 	    Tk_FreeGC(textPtr->display, stylePtr->fgGC);
 	}
-	if (stylePtr->ulGC != None) {
+	if (stylePtr->ulGC) {
 	    Tk_FreeGC(textPtr->display, stylePtr->ulGC);
 	}
-	if (stylePtr->ovGC != None) {
+	if (stylePtr->ovGC) {
 	    Tk_FreeGC(textPtr->display, stylePtr->ovGC);
 	}
-	if (stylePtr->eolGC != None) {
+	if (stylePtr->eolGC) {
 	    Tk_FreeGC(textPtr->display, stylePtr->eolGC);
 	}
-	if (stylePtr->eotGC != None) {
+	if (stylePtr->eotGC) {
 	    Tk_FreeGC(textPtr->display, stylePtr->eotGC);
 	}
-	if (stylePtr->hyphenGC != None) {
+	if (stylePtr->hyphenGC) {
 	    Tk_FreeGC(textPtr->display, stylePtr->hyphenGC);
 	}
 	Tcl_DeleteHashEntry(stylePtr->hPtr);
@@ -6445,13 +6445,13 @@ DisplayDLine(
 	int cxMin, cxMax, cWidth, cOffs;
 	GC bgGC;
 
-	assert(dInfoPtr->insertFgGC != None);
+	assert(dInfoPtr->insertFgGC);
 
 	cxMin = dlPtr->cursorChunkPtr->x + xOffs;
 	cWidth = TkTextGetCursorWidth(textPtr, &cxMin, &cOffs);
 
 	if (cWidth > 0) {
-	    if ((bgGC = dlPtr->cursorChunkPtr->stylePtr->bgGC) == None) {
+	    if (!(bgGC = dlPtr->cursorChunkPtr->stylePtr->bgGC)) {
 		Tk_3DBorder border;
 
 		if (!(border = dlPtr->cursorChunkPtr->stylePtr->sValuePtr->border)) {
@@ -6681,7 +6681,7 @@ DisplayLineBackground(
 	if (!chunkPtr->nextPtr && rightX < maxX) {
 	    rightX = maxX;
 	}
-	if (chunkPtr->stylePtr->bgGC != None) {
+	if (chunkPtr->stylePtr->bgGC) {
 	    int indent = 0;
 
 	    /*
@@ -9009,7 +9009,7 @@ DisplayText(
 			    dlPtr->spaceAbove,
 			    dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow,
 			    dlPtr->baseline - dlPtr->spaceAbove, NULL,
-			    (Drawable) None, dlPtr->y + dlPtr->spaceAbove);
+			    0, dlPtr->y + dlPtr->spaceAbove);
 		}
 	    }
 	}
@@ -9722,7 +9722,7 @@ TkTextRelayoutWindow(
 
     gcValues.graphics_exposures = False;
     newGC = Tk_GetGC(textPtr->tkwin, GCGraphicsExposures, &gcValues);
-    if (dInfoPtr->copyGC != None) {
+    if (dInfoPtr->copyGC) {
 	Tk_FreeGC(textPtr->display, dInfoPtr->copyGC);
     }
     dInfoPtr->copyGC = newGC;
@@ -9731,9 +9731,9 @@ TkTextRelayoutWindow(
      * (Re-)create the graphics context for drawing the characters "behind" the block cursor.
      */
 
-    if (dInfoPtr->insertFgGC != None) {
+    if (dInfoPtr->insertFgGC) {
 	Tk_FreeGC(textPtr->display, dInfoPtr->insertFgGC);
-	dInfoPtr->insertFgGC = None;
+	dInfoPtr->insertFgGC = 0;
     }
     if (textPtr->state == TK_TEXT_STATE_NORMAL
 	    && textPtr->blockCursorType
@@ -14721,15 +14721,15 @@ GetForegroundGC(
     assert(chunkPtr->stylePtr->refCount > 0);
 
     if (segPtr->typePtr == &tkTextHyphenType) {
-	if (chunkPtr->stylePtr->hyphenGC != None) {
+	if (chunkPtr->stylePtr->hyphenGC) {
 	    return chunkPtr->stylePtr->hyphenGC;
 	}
     } else if (segPtr == textPtr->dInfoPtr->endOfLineSegPtr) {
-	if (chunkPtr->stylePtr->eolGC != None) {
+	if (chunkPtr->stylePtr->eolGC) {
 	    return chunkPtr->stylePtr->eolGC;
 	}
     } else if (segPtr == textPtr->dInfoPtr->endOfTextSegPtr) {
-	if (chunkPtr->stylePtr->eotGC != None) {
+	if (chunkPtr->stylePtr->eotGC) {
 	    return chunkPtr->stylePtr->eotGC;
 	}
     }
@@ -14884,7 +14884,7 @@ DrawChars(
     if (numBytes > offsetBytes) {
 	const TextStyle *stylePtr = chunkPtr->stylePtr;
 
-	if (stylePtr->fgGC != None) {
+	if (stylePtr->fgGC) {
 	    const StyleValues *sValuePtr;
 	    const char *string;
 	    GC fgGC;
@@ -14938,7 +14938,7 @@ DisplayChars(
 
     assert(!stylePtr->sValuePtr->elide);
 
-    if (stylePtr->fgGC == None) {
+    if (stylePtr->fgGC == 0) {
 	return;
     }
 
