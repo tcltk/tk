@@ -253,9 +253,9 @@ CreateText(
     textPtr->disabledColor = NULL;
     textPtr->tkfont	= NULL;
     textPtr->justify	= TK_JUSTIFY_LEFT;
-    textPtr->stipple	= None;
-    textPtr->activeStipple = None;
-    textPtr->disabledStipple = None;
+    textPtr->stipple	= 0;
+    textPtr->activeStipple = 0;
+    textPtr->disabledStipple = 0;
     textPtr->text	= NULL;
     textPtr->width	= 0;
     textPtr->underline	= -1;
@@ -265,9 +265,9 @@ CreateText(
     textPtr->textLayout = NULL;
     textPtr->leftEdge	= 0;
     textPtr->rightEdge	= 0;
-    textPtr->gc		= None;
-    textPtr->selTextGC	= None;
-    textPtr->cursorOffGC = None;
+    textPtr->gc		= 0;
+    textPtr->selTextGC	= 0;
+    textPtr->cursorOffGC = 0;
 
     /*
      * Process the arguments to fill in the item record. Only 1 (list) or 2 (x
@@ -414,7 +414,7 @@ ConfigureText(
 
     state = itemPtr->state;
 
-    if (textPtr->activeColor != NULL || textPtr->activeStipple != None) {
+    if (textPtr->activeColor || textPtr->activeStipple) {
 	itemPtr->redraw_flags |= TK_ITEM_STATE_DEPENDANT;
     } else {
 	itemPtr->redraw_flags &= ~TK_ITEM_STATE_DEPENDANT;
@@ -427,29 +427,29 @@ ConfigureText(
     color = textPtr->color;
     stipple = textPtr->stipple;
     if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
-	if (textPtr->activeColor!=NULL) {
+	if (textPtr->activeColor) {
 	    color = textPtr->activeColor;
 	}
-	if (textPtr->activeStipple!=None) {
+	if (textPtr->activeStipple) {
 	    stipple = textPtr->activeStipple;
 	}
     } else if (state==TK_STATE_DISABLED) {
-	if (textPtr->disabledColor!=NULL) {
+	if (textPtr->disabledColor) {
 	    color = textPtr->disabledColor;
 	}
-	if (textPtr->disabledStipple!=None) {
+	if (textPtr->disabledStipple) {
 	    stipple = textPtr->disabledStipple;
 	}
     }
 
-    newGC = newSelGC = None;
-    if (textPtr->tkfont != NULL) {
+    newGC = newSelGC = 0;
+    if (textPtr->tkfont) {
 	gcValues.font = Tk_FontId(textPtr->tkfont);
 	mask = GCFont;
-	if (color != NULL) {
+	if (color) {
 	    gcValues.foreground = color->pixel;
 	    mask |= GCForeground;
-	    if (stipple != None) {
+	    if (stipple) {
 		gcValues.stipple = stipple;
 		gcValues.fill_style = FillStippled;
 		mask |= GCStipple|GCFillStyle;
@@ -457,7 +457,7 @@ ConfigureText(
 	    newGC = Tk_GetGC(tkwin, mask, &gcValues);
 	}
 	mask &= ~(GCTile|GCFillStyle|GCStipple);
-	if (stipple != None) {
+	if (stipple) {
 	    gcValues.stipple = stipple;
 	    gcValues.fill_style = FillStippled;
 	    mask |= GCStipple|GCFillStyle;
@@ -467,11 +467,11 @@ ConfigureText(
 	}
 	newSelGC = Tk_GetGC(tkwin, mask|GCForeground, &gcValues);
     }
-    if (textPtr->gc != None) {
+    if (textPtr->gc) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->gc);
     }
     textPtr->gc = newGC;
-    if (textPtr->selTextGC != None) {
+    if (textPtr->selTextGC) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->selTextGC);
     }
     textPtr->selTextGC = newSelGC;
@@ -486,9 +486,9 @@ ConfigureText(
 	}
 	newGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
     } else {
-	newGC = None;
+	newGC = 0;
     }
-    if (textPtr->cursorOffGC != None) {
+    if (textPtr->cursorOffGC) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->cursorOffGC);
     }
     textPtr->cursorOffGC = newGC;
@@ -548,37 +548,37 @@ DeleteText(
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
-    if (textPtr->color != NULL) {
+    if (textPtr->color) {
 	Tk_FreeColor(textPtr->color);
     }
-    if (textPtr->activeColor != NULL) {
+    if (textPtr->activeColor) {
 	Tk_FreeColor(textPtr->activeColor);
     }
-    if (textPtr->disabledColor != NULL) {
+    if (textPtr->disabledColor) {
 	Tk_FreeColor(textPtr->disabledColor);
     }
     Tk_FreeFont(textPtr->tkfont);
-    if (textPtr->stipple != None) {
+    if (textPtr->stipple) {
 	Tk_FreeBitmap(display, textPtr->stipple);
     }
-    if (textPtr->activeStipple != None) {
+    if (textPtr->activeStipple) {
 	Tk_FreeBitmap(display, textPtr->activeStipple);
     }
-    if (textPtr->disabledStipple != None) {
+    if (textPtr->disabledStipple) {
 	Tk_FreeBitmap(display, textPtr->disabledStipple);
     }
-    if (textPtr->text != NULL) {
+    if (textPtr->text) {
 	ckfree(textPtr->text);
     }
 
     Tk_FreeTextLayout(textPtr->textLayout);
-    if (textPtr->gc != None) {
+    if (textPtr->gc) {
 	Tk_FreeGC(display, textPtr->gc);
     }
-    if (textPtr->selTextGC != None) {
+    if (textPtr->selTextGC) {
 	Tk_FreeGC(display, textPtr->selTextGC);
     }
-    if (textPtr->cursorOffGC != None) {
+    if (textPtr->cursorOffGC) {
 	Tk_FreeGC(display, textPtr->cursorOffGC);
     }
 }
@@ -731,16 +731,16 @@ DisplayCanvText(
     }
     stipple = textPtr->stipple;
     if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
-	if (textPtr->activeStipple!=None) {
+	if (textPtr->activeStipple) {
 	    stipple = textPtr->activeStipple;
 	}
     } else if (state==TK_STATE_DISABLED) {
-	if (textPtr->disabledStipple!=None) {
+	if (textPtr->disabledStipple) {
 	    stipple = textPtr->disabledStipple;
 	}
     }
 
-    if (textPtr->gc == None) {
+    if (!textPtr->gc) {
 	return;
     }
 
@@ -750,7 +750,7 @@ DisplayCanvText(
      * read-only.
      */
 
-    if (stipple != None) {
+    if (stipple) {
 	Tk_CanvasSetOffset(canvas, textPtr->gc, &textPtr->tsoffset);
     }
 
@@ -830,7 +830,7 @@ DisplayCanvText(
 			drawableX, drawableY,
 			textInfoPtr->insertWidth, height,
 			textInfoPtr->insertBorderWidth, TK_RELIEF_RAISED);
-	    } else if (textPtr->cursorOffGC != None) {
+	    } else if (textPtr->cursorOffGC) {
 		/*
 		 * Redraw the background over the area of the cursor, even
 		 * though the cursor is turned off. This guarantees that the
@@ -874,7 +874,7 @@ DisplayCanvText(
     Tk_UnderlineTextLayout(display, drawable, textPtr->gc, textPtr->textLayout,
 	    drawableX, drawableY, textPtr->underline);
 
-    if (stipple != None) {
+    if (stipple) {
 	XSetTSOrigin(display, textPtr->gc, 0, 0);
     }
 }
@@ -1447,14 +1447,14 @@ TextToPostscript(
 	if (textPtr->activeColor!=NULL) {
 	    color = textPtr->activeColor;
 	}
-	if (textPtr->activeStipple!=None) {
+	if (textPtr->activeStipple) {
 	    stipple = textPtr->activeStipple;
 	}
     } else if (state==TK_STATE_DISABLED) {
-	if (textPtr->disabledColor!=NULL) {
+	if (textPtr->disabledColor) {
 	    color = textPtr->disabledColor;
 	}
-	if (textPtr->disabledStipple!=None) {
+	if (textPtr->disabledStipple) {
 	    stipple = textPtr->disabledStipple;
 	}
     }
@@ -1462,13 +1462,13 @@ TextToPostscript(
     if (Tk_CanvasPsFont(interp, canvas, textPtr->tkfont) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (prepass != 0) {
+    if (prepass) {
 	return TCL_OK;
     }
     if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (stipple != None) {
+    if (stipple) {
 	Tcl_AppendResult(interp, "/StippleText {\n    ", NULL);
 	Tk_CanvasPsStipple(interp, canvas, stipple);
 	Tcl_AppendResult(interp, "} bind def\n", NULL);
@@ -1506,7 +1506,7 @@ TextToPostscript(
     Tcl_PrintDouble(NULL, y / 2.0, buffer);
     Tcl_AppendResult(interp, " ", buffer, NULL);
     sprintf(buffer, " %s %s DrawText\n",
-	    justify, ((stipple == None) ? "false" : "true"));
+	    justify, (stipple ? "true" : "false"));
     Tcl_AppendResult(interp, buffer, NULL);
 
     return TCL_OK;
