@@ -219,7 +219,7 @@ Tk_AllocBitmapFromObj(
     bitmapPtr = GetBitmap(interp, tkwin, Tcl_GetString(objPtr));
     objPtr->internalRep.twoPtrValue.ptr1 = bitmapPtr;
     if (bitmapPtr == NULL) {
-	return None;
+	return 0;
     }
     bitmapPtr->objRefCount++;
     return bitmapPtr->bitmap;
@@ -261,7 +261,7 @@ Tk_GetBitmap(
     TkBitmap *bitmapPtr = GetBitmap(interp, tkwin, string);
 
     if (bitmapPtr == NULL) {
-	return None;
+	return 0;
     }
     return bitmapPtr->bitmap;
 }
@@ -385,7 +385,7 @@ GetBitmap(
 	    bitmap = TkpGetNativeAppBitmap(Tk_Display(tkwin), string,
 		    &width, &height);
 
-	    if (bitmap == None) {
+	    if (!bitmap) {
 		if (interp != NULL) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "bitmap \"%s\" not defined", string));
@@ -401,7 +401,7 @@ GetBitmap(
 	    if (predefPtr->native) {
 		bitmap = TkpCreateNativeBitmap(Tk_Display(tkwin),
 		    predefPtr->source);
-		if (bitmap == None) {
+		if (!bitmap) {
 		    Tcl_Panic("native bitmap creation failed");
 		}
 	    } else {
@@ -1157,9 +1157,9 @@ TkDebugBitmap(
 	for ( ; (bitmapPtr != NULL); bitmapPtr = bitmapPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(bitmapPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(bitmapPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(bitmapPtr->objRefCount));
+		    Tcl_NewWideIntObj(bitmapPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

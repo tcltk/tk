@@ -242,7 +242,7 @@ TkpUseWindow(
 */
 
 /*
-    if (winPtr->window != None) {
+    if (winPtr->window) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't modify container after widget is created", -1));
 	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);

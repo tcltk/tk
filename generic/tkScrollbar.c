@@ -187,7 +187,7 @@ Tk_ScrollbarObjCmd(
 #endif /* TK_NO_DEPRECATED */
     scrollPtr->firstFraction = 0.0;
     scrollPtr->lastFraction = 0.0;
-    scrollPtr->cursor = None;
+    scrollPtr->cursor = 0;
     scrollPtr->takeFocus = NULL;
     scrollPtr->flags = 0;
 
