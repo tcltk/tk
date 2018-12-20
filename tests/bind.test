@@ -6241,7 +6241,7 @@ test bind-32.9 {trigger events for modifier keys} -setup {
     set x {}
 } -body {
     bind .t.f <Any-Key> { set x "Key" }
-    event generate .t.f <KeyPress> -keysym Shift_Lock
+    event generate .t.f <KeyPress> -keysym Caps_Lock
     set x
 } -cleanup {
     destroy .t.f
