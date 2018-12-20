@@ -182,10 +182,6 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 
 #pragma mark TKApplication(TKDialog)
 
-@interface NSColorPanel(TKDialog)
-- (void) _setUseModalAppearance: (BOOL) flag;
-@end
-
 @implementation TKApplication(TKDialog)
 
 - (void) tkFilePanelDidEnd: (NSSavePanel *) panel
@@ -1216,36 +1212,42 @@ TkAboutDlg(void)
     NSString *year = [dateFormatter stringFromDate:[NSDate date]];
 
     [dateFormatter release];
-
-    NSMutableParagraphStyle *style =
-	    [[[NSParagraphStyle defaultParagraphStyle] mutableCopy]
-	    autorelease];
-
-    [style setAlignment:NSCenterTextAlignment];
-
-    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
-	    @"Tcl & Tk", @"ApplicationName",
-	    @"Tcl " TCL_VERSION " & Tk " TK_VERSION, @"ApplicationVersion",
-	    @TK_PATCH_LEVEL, @"Version",
-	    image, @"ApplicationIcon",
-	    [NSString stringWithFormat:@"Copyright %1$C 1987-%2$@.", 0xA9,
-	    year], @"Copyright",
-	    [[[NSAttributedString alloc] initWithString:
-	    [NSString stringWithFormat:
-	    @"%1$C 1987-%2$@ Tcl Core Team." "\n\n"
-		"%1$C 1989-%2$@ Contributors." "\n\n"
-		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC." "\n\n"
-		"%1$C 2014-%2$@ Marc Culler." "\n\n"
-		"%1$C 2002-%2$@ Daniel A. Steffen." "\n\n"
-		"%1$C 2001-2009 Apple Inc." "\n\n"
-		"%1$C 2001-2002 Jim Ingham & Ian Reid" "\n\n"
-		"%1$C 1998-2000 Jim Ingham & Ray Johnson" "\n\n"
-		"%1$C 1998-2000 Scriptics Inc." "\n\n"
-		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year] attributes:
-	    [NSDictionary dictionaryWithObject:style
-	    forKey:NSParagraphStyleAttributeName]] autorelease], @"Credits",
-	    nil];
-    [NSApp orderFrontStandardAboutPanelWithOptions:options];
+   
+    /*
+     * This replaces the old about dialog with a standard alert that displays
+     * correctly on 10.14.
+     */
+    
+    NSString *version =  @"Tcl " TCL_PATCH_LEVEL " & Tk " TCL_PATCH_LEVEL;
+    NSString *url =   @"www.tcl-lang.org";
+    NSTextView *credits = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,300,300)];
+    NSFont *font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
+    NSDictionary *textAttributes = [NSDictionary dictionaryWithObject:font
+					        forKey:NSFontAttributeName];
+    [credits insertText: [[NSAttributedString alloc]
+		 initWithString:[NSString stringWithFormat: @"\n"
+		"Tcl and Tk are distributed under a modified BSD license: "
+		"www.tcl.tk/software/tcltk/license.html\n\n"
+		"%1$C 1987-%2$@ Tcl Core Team and Contributers.\n\n"
+		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC.\n\n"
+		"%1$C 2014-%2$@ Marc Culler.\n\n"
+		"%1$C 2002-2012 Daniel A. Steffen.\n\n"
+		"%1$C 2001-2009 Apple Inc.\n\n"
+		"%1$C 2001-2002 Jim Ingham & Ian Reid\n\n"
+		"%1$C 1998-2000 Jim Ingham & Ray Johnson\n\n"
+		"%1$C 1998-2000 Scriptics Inc.\n\n"
+		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year]
+	     attributes:textAttributes]
+             replacementRange:NSMakeRange(0,0)];
+    [credits setDrawsBackground:NO];
+    [credits setEditable:NO];
+     NSAlert *about = [[NSAlert alloc] init];
+    [[about window] setTitle:@"About Tcl & Tk"];
+    [about setMessageText: version];
+    [about setInformativeText:url];
+    about.accessoryView = credits;
+    [about runModal];
+    [about release];
 }
 
 /*
@@ -1275,7 +1277,7 @@ TkMacOSXStandardAboutPanelObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-    [NSApp orderFrontStandardAboutPanelWithOptions:[NSDictionary dictionary]];
+    TkAboutDlg();
     return TCL_OK;
 }
 

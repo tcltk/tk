@@ -18,6 +18,10 @@ static const int WIN32_XDRAWLINE_HACK = 1;
 static const int WIN32_XDRAWLINE_HACK = 0;
 #endif
 
+#if defined(MAC_OSX_TK)
+  #define IGNORES_VISUAL
+#endif
+
 #define BORDERWIDTH     2
 #ifdef PLATFORM_SDL
 #ifdef ANDROID
@@ -629,7 +633,7 @@ static void IndicatorElementDraw(
     XGCValues gcValues;
     GC copyGC;
     unsigned long imgColors[8];
-    XImage *img;
+    XImage *img = NULL;
 #ifdef PLATFORM_SDL
     int wM, wS, hM, hS;
 #endif
@@ -704,15 +708,48 @@ static void IndicatorElementDraw(
     /*
      * Create a scratch buffer to store the image:
      */
-    img = XGetImage(display,d, 0, 0,
-	    (unsigned int)w, (unsigned int)h,
-	    AllPlanes, ZPixmap);
-    if (img == NULL)
-	return;
+
+#if defined(IGNORES_VISUAL)
 
     /*
-     * Create the image, painting it into an XImage one pixel at a time.
+     * Platforms which ignore the VisualInfo can use XCreateImage to get the
+     * scratch image.  This is essential on macOS, where it is not safe to call
+     * XGetImage in a display procedure.
      */
+
+    img = XCreateImage(display, NULL, 32, ZPixmap, 0, NULL,
+		       (unsigned int)w, (unsigned int)h,
+		       0, 0);
+#else
+
+    /*
+     * This trick allows creating the scratch XImage without having to
+     * construct a VisualInfo.
+     */
+
+    img = XGetImage(display, d, 0, 0,
+		    (unsigned int)w, (unsigned int)h,
+		    AllPlanes, ZPixmap);
+#endif
+
+    if (img == NULL) {
+        return;
+    }
+
+#if defined(IGNORES_VISUAL)
+
+    img->data = ckalloc(img->bytes_per_line * img->height);
+    if (img->data == NULL) {
+        XDestroyImage(img);
+	return;
+    }
+
+#endif
+
+    /*
+     * Create the image, painting it into the XImage one pixel at a time.
+     */
+
     index = Ttk_StateTableLookup(spec->map, state);
     dim = w;
     w = spec->width;
@@ -742,11 +779,11 @@ static void IndicatorElementDraw(
     }
 
     /*
-     * Copy onto our target drawable surface.
+     * Copy the image onto our target drawable surface.
      */
+
     memset(&gcValues, 0, sizeof(gcValues));
     copyGC = Tk_GetGC(tkwin, 0, &gcValues);
-
 #if (!defined(_WIN32) && !defined(MAC_OSX_TK)) || defined(PLATFORM_SDL)
     XPutImage(display, d, copyGC, img, 0, 0, b.x, b.y, w, h);
 #else
@@ -756,7 +793,20 @@ static void IndicatorElementDraw(
     /*
      * Tidy up.
      */
+
     Tk_FreeGC(display, copyGC);
+
+    /*
+     * Protect against the possibility that some future platform might
+     * not use the Tk memory manager in its implementation of XDestroyImage,
+     * even though that would be an extremely strange thing to do.
+     */
+
+#if defined(IGNORES_VISUAL)
+    ckfree(img->data);
+    img->data = NULL;
+#endif
+
     XDestroyImage(img);
 }
 

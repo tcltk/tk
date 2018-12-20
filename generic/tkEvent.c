@@ -425,11 +425,11 @@ GetTkWindowFromXEvent(
 	}
 	TkSelPropProc(eventPtr);
 	parentXId = ParentXId(eventPtr->xany.display, handlerWindow);
-	if (parentXId == None) {
+	if (!parentXId) {
 	    return NULL;
 	}
 	winPtr = (TkWindow *) Tk_IdToWindow(eventPtr->xany.display, parentXId);
-	if (winPtr == NULL) {
+	if (!winPtr) {
 	    return NULL;
 	}
 	if (!(winPtr->flags & TK_PROP_PROPCHANGE)) {
@@ -615,7 +615,7 @@ UpdateButtonEventState(
 	}
 #endif
 	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
-	dispPtr->mouseButtonWindow = None;
+	dispPtr->mouseButtonWindow = 0;
 	dispPtr->mouseButtonState &= ~GetButtonMask(eventPtr->xbutton.button);
 	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
 	break;
@@ -631,7 +631,7 @@ UpdateButtonEventState(
 		 */
 
 		dispPtr->mouseButtonState &= ~allButtonsMask;
-		dispPtr->mouseButtonWindow = None;
+		dispPtr->mouseButtonWindow = 0;
 	    } else {
 		eventPtr->xmotion.state |= dispPtr->mouseButtonState;
 	    }
@@ -1204,7 +1204,7 @@ ParentXId(
 	XFree(childList);
     }
     if (status == 0) {
-	parent = None;
+	parent = 0;
     }
 
     return parent;
@@ -1398,7 +1398,7 @@ Tk_HandleEvent(
 	 * handle CreateNotify events, so we gotta pass 'em through.
 	 */
 
-	if ((ip.winPtr != None)
+	if ((ip.winPtr)
 		&& ((mask != SubstructureNotifyMask)
 		|| (eventPtr->type == CreateNotify))) {
 	    TkBindEventProc(winPtr, eventPtr);
@@ -1412,7 +1412,7 @@ Tk_HandleEvent(
      */
 
   releaseInterpreter:
-    if (interp != NULL) {
+    if (interp) {
 	Tcl_Release(interp);
     }
 
@@ -1460,7 +1460,7 @@ TkEventDeadWindow(
      * to quit (all of the handlers are being deleted).
      */
 
-    while (winPtr->handlerList != NULL) {
+    while (winPtr->handlerList) {
 	handlerPtr = winPtr->handlerList;
 	winPtr->handlerList = handlerPtr->nextPtr;
 	for (ipPtr = tsdPtr->pendingPtr; ipPtr != NULL;
@@ -1469,7 +1469,7 @@ TkEventDeadWindow(
 		ipPtr->nextHandler = NULL;
 	    }
 	    if (ipPtr->winPtr == winPtr) {
-		ipPtr->winPtr = None;
+		ipPtr->winPtr = 0;
 	    }
 	}
 	ckfree(handlerPtr);

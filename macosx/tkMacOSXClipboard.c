@@ -12,6 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include "tkSelect.h"
 
 static NSInteger changeCount = -1;
@@ -82,10 +83,8 @@ static Tk_Window clipboardOwner = NULL;
     if (clipboardOwner && [[NSPasteboard generalPasteboard] changeCount] !=
 	    changeCount) {
 	TkDisplay *dispPtr = TkGetDisplayList();
-
 	if (dispPtr) {
 	    XEvent event;
-
 	    event.xany.type = SelectionClear;
 	    event.xany.serial = NextRequest(Tk_Display(clipboardOwner));
 	    event.xany.send_event = False;
@@ -137,8 +136,10 @@ TkSelGetSelection(
     int result = TCL_ERROR;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (dispPtr && selection == dispPtr->clipboardAtom && (target == XA_STRING
-	    || target == dispPtr->utf8Atom)) {
+    int haveExternalClip = ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
+    if (dispPtr && (haveExternalClip || dispPtr->clipboardActive)
+	        && selection == dispPtr->clipboardAtom
+	        && (target == XA_STRING || target == dispPtr->utf8Atom)) {
 	NSString *string = nil;
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
 	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
@@ -197,7 +198,6 @@ XSetSelectionOwner(
 	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
 	if (!dispPtr->clipboardActive) {
 	    NSPasteboard *pb = [NSPasteboard generalPasteboard];
-
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
@@ -308,28 +308,6 @@ void
 TkSelPropProc(
     register XEvent *eventPtr)	/* X PropertyChange event. */
 {
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkSuspendClipboard --
- *
- *	Handle clipboard conversion as required by the suppend event.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The local scrap is moved to the global scrap.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkSuspendClipboard(void)
-{
-    changeCount = [[NSPasteboard generalPasteboard] changeCount];
 }
 
 /*

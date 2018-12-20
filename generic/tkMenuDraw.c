@@ -43,12 +43,12 @@ void
 TkMenuInitializeDrawingFields(
     TkMenu *menuPtr)		/* The menu we are initializing. */
 {
-    menuPtr->textGC = None;
-    menuPtr->gray = None;
-    menuPtr->disabledGC = None;
-    menuPtr->activeGC = None;
-    menuPtr->indicatorGC = None;
-    menuPtr->disabledImageGC = None;
+    menuPtr->textGC = 0;
+    menuPtr->gray = 0;
+    menuPtr->disabledGC = 0;
+    menuPtr->activeGC = 0;
+    menuPtr->indicatorGC = 0;
+    menuPtr->disabledImageGC = 0;
     menuPtr->totalWidth = menuPtr->totalHeight = 0;
 }
 
@@ -79,10 +79,10 @@ TkMenuInitializeEntryDrawingFields(
     mePtr->y = 0;
     mePtr->indicatorSpace = 0;
     mePtr->labelWidth = 0;
-    mePtr->textGC = None;
-    mePtr->activeGC = None;
-    mePtr->disabledGC = None;
-    mePtr->indicatorGC = None;
+    mePtr->textGC = 0;
+    mePtr->activeGC = 0;
+    mePtr->disabledGC = 0;
+    mePtr->indicatorGC = 0;
 }
 
 /*
@@ -106,22 +106,22 @@ void
 TkMenuFreeDrawOptions(
     TkMenu *menuPtr)
 {
-    if (menuPtr->textGC != None) {
+    if (menuPtr->textGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->textGC);
     }
-    if (menuPtr->disabledImageGC != None) {
+    if (menuPtr->disabledImageGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledImageGC);
     }
-    if (menuPtr->gray != None) {
+    if (menuPtr->gray) {
 	Tk_FreeBitmap(menuPtr->display, menuPtr->gray);
     }
-    if (menuPtr->disabledGC != None) {
+    if (menuPtr->disabledGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledGC);
     }
-    if (menuPtr->activeGC != None) {
+    if (menuPtr->activeGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->activeGC);
     }
-    if (menuPtr->indicatorGC != None) {
+    if (menuPtr->indicatorGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->indicatorGC);
     }
 }
@@ -147,16 +147,16 @@ void
 TkMenuEntryFreeDrawOptions(
     TkMenuEntry *mePtr)
 {
-    if (mePtr->textGC != None) {
+    if (mePtr->textGC) {
 	Tk_FreeGC(mePtr->menuPtr->display, mePtr->textGC);
     }
-    if (mePtr->disabledGC != None) {
+    if (mePtr->disabledGC) {
 	Tk_FreeGC(mePtr->menuPtr->display, mePtr->disabledGC);
     }
-    if (mePtr->activeGC != None) {
+    if (mePtr->activeGC) {
 	Tk_FreeGC(mePtr->menuPtr->display, mePtr->activeGC);
     }
-    if (mePtr->indicatorGC != None) {
+    if (mePtr->indicatorGC) {
 	Tk_FreeGC(mePtr->menuPtr->display, mePtr->indicatorGC);
     }
 }
@@ -205,7 +205,7 @@ TkMenuConfigureDrawOptions(
     gcValues.background = Tk_3DBorderColor(border)->pixel;
     newGC = Tk_GetGC(menuPtr->tkwin, GCForeground|GCBackground|GCFont,
 	    &gcValues);
-    if (menuPtr->textGC != None) {
+    if (menuPtr->textGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->textGC);
     }
     menuPtr->textGC = newGC;
@@ -222,34 +222,34 @@ TkMenuConfigureDrawOptions(
     } else {
 	gcValues.foreground = gcValues.background;
 	mask = GCForeground;
-	if (menuPtr->gray == None) {
+	if (!menuPtr->gray) {
 	    menuPtr->gray = Tk_GetBitmap(menuPtr->interp, menuPtr->tkwin,
 		    "gray50");
 	}
-	if (menuPtr->gray != None) {
+	if (menuPtr->gray) {
 	    gcValues.fill_style = FillStippled;
 	    gcValues.stipple = menuPtr->gray;
 	    mask = GCForeground|GCFillStyle|GCStipple;
 	}
     }
     newGC = Tk_GetGC(menuPtr->tkwin, mask, &gcValues);
-    if (menuPtr->disabledGC != None) {
+    if (menuPtr->disabledGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledGC);
     }
     menuPtr->disabledGC = newGC;
 
     gcValues.foreground = Tk_3DBorderColor(border)->pixel;
-    if (menuPtr->gray == None) {
+    if (!menuPtr->gray) {
 	menuPtr->gray = Tk_GetBitmap(menuPtr->interp, menuPtr->tkwin,
 		"gray50");
     }
-    if (menuPtr->gray != None) {
+    if (menuPtr->gray) {
 	gcValues.fill_style = FillStippled;
 	gcValues.stipple = menuPtr->gray;
 	newGC = Tk_GetGC(menuPtr->tkwin,
 	    GCForeground|GCFillStyle|GCStipple, &gcValues);
     }
-    if (menuPtr->disabledImageGC != None) {
+    if (menuPtr->disabledImageGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledImageGC);
     }
     menuPtr->disabledImageGC = newGC;
@@ -262,7 +262,7 @@ TkMenuConfigureDrawOptions(
     gcValues.background = Tk_3DBorderColor(activeBorder)->pixel;
     newGC = Tk_GetGC(menuPtr->tkwin, GCForeground|GCBackground|GCFont,
 	    &gcValues);
-    if (menuPtr->activeGC != None) {
+    if (menuPtr->activeGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->activeGC);
     }
     menuPtr->activeGC = newGC;
@@ -273,7 +273,7 @@ TkMenuConfigureDrawOptions(
     gcValues.background = Tk_3DBorderColor(border)->pixel;
     newGC = Tk_GetGC(menuPtr->tkwin, GCForeground|GCBackground|GCFont,
 	    &gcValues);
-    if (menuPtr->indicatorGC != None) {
+    if (menuPtr->indicatorGC) {
 	Tk_FreeGC(menuPtr->display, menuPtr->indicatorGC);
     }
     menuPtr->indicatorGC = newGC;
@@ -385,24 +385,24 @@ TkMenuConfigureEntryDrawOptions(
 		GCForeground|GCBackground|GCFont|GCGraphicsExposures,
 		&gcValues);
     } else {
-	newGC = None;
-	newActiveGC = None;
-	newDisabledGC = None;
-	newIndicatorGC = None;
+	newGC = 0;
+	newActiveGC = 0;
+	newDisabledGC = 0;
+	newIndicatorGC = 0;
     }
-    if (mePtr->textGC != None) {
+    if (mePtr->textGC) {
 	Tk_FreeGC(menuPtr->display, mePtr->textGC);
     }
     mePtr->textGC = newGC;
-    if (mePtr->activeGC != None) {
+    if (mePtr->activeGC) {
 	Tk_FreeGC(menuPtr->display, mePtr->activeGC);
     }
     mePtr->activeGC = newActiveGC;
-    if (mePtr->disabledGC != None) {
+    if (mePtr->disabledGC) {
 	Tk_FreeGC(menuPtr->display, mePtr->disabledGC);
     }
     mePtr->disabledGC = newDisabledGC;
-    if (mePtr->indicatorGC != None) {
+    if (mePtr->indicatorGC) {
 	Tk_FreeGC(menuPtr->display, mePtr->indicatorGC);
     }
     mePtr->indicatorGC = newIndicatorGC;
@@ -624,7 +624,6 @@ DisplayMenu(
     int width;
     int borderWidth;
     Tk_3DBorder border;
-    int activeBorderWidth;
     int relief;
 
 
@@ -636,8 +635,6 @@ DisplayMenu(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
 	    &borderWidth);
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
-	    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 
     if (menuPtr->menuType == MENUBAR) {
 	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, borderWidth,
@@ -668,28 +665,16 @@ DisplayMenu(
 	}
 	mePtr->entryFlags &= ~ENTRY_NEEDS_REDISPLAY;
 
-	if (menuPtr->menuType == MENUBAR) {
-	    width = mePtr->width;
-	} else {
-	    if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
-		width = Tk_Width(menuPtr->tkwin) - mePtr->x
-			- activeBorderWidth;
-	    } else {
-		width = mePtr->width + borderWidth;
-	    }
-	}
 	TkpDrawMenuEntry(mePtr, Tk_WindowId(menuPtr->tkwin), tkfont,
-		&menuMetrics, mePtr->x, mePtr->y, width,
+		&menuMetrics, mePtr->x, mePtr->y, mePtr->width,
 		mePtr->height, strictMotif, 1);
 	if ((index > 0) && (menuPtr->menuType != MENUBAR)
 		&& mePtr->columnBreak) {
 	    mePtr = menuPtr->entries[index - 1];
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
-		mePtr->x, mePtr->y + mePtr->height,
-		mePtr->width,
-		Tk_Height(tkwin) - mePtr->y - mePtr->height -
-		activeBorderWidth, 0,
-		TK_RELIEF_FLAT);
+		mePtr->x, mePtr->y + mePtr->height, mePtr->width,
+		Tk_Height(tkwin) - mePtr->y - mePtr->height - borderWidth,
+		0, TK_RELIEF_FLAT);
 	}
     }
 
@@ -698,19 +683,18 @@ DisplayMenu(
 
 	if (menuPtr->numEntries == 0) {
 	    x = y = borderWidth;
-	    width = Tk_Width(tkwin) - 2 * activeBorderWidth;
-	    height = Tk_Height(tkwin) - 2 * activeBorderWidth;
+	    width = Tk_Width(tkwin) - 2 * borderWidth;
+	    height = Tk_Height(tkwin) - 2 * borderWidth;
 	} else {
 	    mePtr = menuPtr->entries[menuPtr->numEntries - 1];
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
 		border, mePtr->x, mePtr->y + mePtr->height, mePtr->width,
-		Tk_Height(tkwin) - mePtr->y - mePtr->height
-		- activeBorderWidth, 0,
-		TK_RELIEF_FLAT);
+		Tk_Height(tkwin) - mePtr->y - mePtr->height - borderWidth,
+		0, TK_RELIEF_FLAT);
 	    x = mePtr->x + mePtr->width;
 	    y = mePtr->y + mePtr->height;
-	    width = Tk_Width(tkwin) - x - activeBorderWidth;
-	    height = Tk_Height(tkwin) - y - activeBorderWidth;
+	    width = Tk_Width(tkwin) - x - borderWidth;
+	    height = Tk_Height(tkwin) - y - borderWidth;
 	}
 	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, x, y,
 		width, height, 0, TK_RELIEF_FLAT);

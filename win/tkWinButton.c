@@ -433,10 +433,10 @@ TkpDisplayButton(
      * Display image or bitmap or text for button.
      */
 
-    if (butPtr->image != None) {
+    if (butPtr->image) {
 	Tk_SizeOfImage(butPtr->image, &width, &height);
 	haveImage = 1;
-    } else if (butPtr->bitmap != None) {
+    } else if (butPtr->bitmap) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
 	haveImage = 1;
     }
@@ -839,7 +839,7 @@ TkpComputeButtonGeometry(
     if (butPtr->image != NULL) {
 	Tk_SizeOfImage(butPtr->image, &imgWidth, &imgHeight);
 	haveImage = 1;
-    } else if (butPtr->bitmap != None) {
+    } else if (butPtr->bitmap) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap,
 		&imgWidth, &imgHeight);
 	haveImage = 1;

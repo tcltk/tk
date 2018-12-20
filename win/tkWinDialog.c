@@ -3376,7 +3376,7 @@ FontchooserConfigureCmd(
 	    Tk_Window parent = Tk_NameToWindow(interp,
 		    Tcl_GetString(objv[i+1]), tkwin);
 
-	    if (parent == None) {
+	    if (!parent) {
 		return TCL_ERROR;
 	    }
 	    if (hdPtr->parentObj) {
@@ -3471,7 +3471,7 @@ FontchooserShowCmd(
     if (hdPtr->parentObj) {
 	parent = Tk_NameToWindow(interp, Tcl_GetString(hdPtr->parentObj),
 		tkwin);
-	if (parent == None) {
+	if (!parent) {
 	    return TCL_ERROR;
 	}
     }
