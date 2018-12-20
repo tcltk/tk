@@ -775,7 +775,7 @@ Tk_PostscriptImage(
 
     gcValues.foreground = WhitePixelOfScreen(Tk_Screen(tkwin));
     newGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
-    if (newGC != None) {
+    if (newGC) {
 	XFillRectangle(Tk_Display(tkwin), pmap, newGC, 0, 0,
 		(unsigned) width, (unsigned) height);
 	Tk_FreeGC(Tk_Display(tkwin), newGC);
@@ -788,7 +788,7 @@ Tk_PostscriptImage(
 
     Tk_FreePixmap(Tk_Display(tkwin), pmap);
 
-    if (ximage == NULL) {
+    if (!ximage) {
 	/*
 	 * The XGetImage() function is apparently not implemented on this
 	 * system. Just ignore it.
