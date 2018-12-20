@@ -398,18 +398,18 @@ Tk_GetColormap(
      */
 
     other = Tk_NameToWindow(interp, string, tkwin);
-    if (other == NULL) {
-	return None;
+    if (!other) {
+	return 0;
     }
     if (Tk_Screen(other) != Tk_Screen(tkwin)) {
 	Tcl_AppendResult(interp, "can't use colormap for ", string,
 		": not on same screen", NULL);
-	return None;
+	return 0;
     }
     if (Tk_Visual(other) != Tk_Visual(tkwin)) {
 	Tcl_AppendResult(interp, "can't use colormap for ", string,
 		": incompatible visuals", NULL);
-	return None;
+	return 0;
     }
     colormap = Tk_Colormap(other);
 
