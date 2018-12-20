@@ -747,10 +747,10 @@ DoObjConfig(
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-	    newBitmap = None;
+	    newBitmap = 0;
 	} else {
 	    newBitmap = Tk_AllocBitmapFromObj(interp, tkwin, valuePtr);
-	    if (newBitmap == None) {
+	    if (!newBitmap) {
 		return TCL_ERROR;
 	    }
 	}
@@ -799,11 +799,11 @@ DoObjConfig(
 	Tk_Cursor newCursor;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
-	    newCursor = None;
+	    newCursor = 0;
 	    valuePtr = NULL;
 	} else {
 	    newCursor = Tk_AllocCursorFromObj(interp, tkwin, valuePtr);
-	    if (newCursor == None) {
+	    if (!newCursor) {
 		return TCL_ERROR;
 	    }
 	}
@@ -861,7 +861,7 @@ DoObjConfig(
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-	    newWin = None;
+	    newWin = 0;
 	} else {
 	    if (TkGetWindowFromObj(interp, tkwin, valuePtr,
 		    &newWin) != TCL_OK) {
@@ -1643,9 +1643,9 @@ FreeResources(
 	break;
     case TK_OPTION_BITMAP:
 	if (internalFormExists) {
-	    if (*((Pixmap *) internalPtr) != None) {
+	    if (*((Pixmap *) internalPtr)) {
 		Tk_FreeBitmap(Tk_Display(tkwin), *((Pixmap *) internalPtr));
-		*((Pixmap *) internalPtr) = None;
+		*((Pixmap *) internalPtr) = 0;
 	    }
 	} else if (objPtr != NULL) {
 	    Tk_FreeBitmapFromObj(tkwin, objPtr);
@@ -1663,9 +1663,9 @@ FreeResources(
 	break;
     case TK_OPTION_CURSOR:
 	if (internalFormExists) {
-	    if (*((Tk_Cursor *) internalPtr) != None) {
+	    if (*((Tk_Cursor *) internalPtr)) {
 		Tk_FreeCursor(Tk_Display(tkwin), *((Tk_Cursor *) internalPtr));
-		*((Tk_Cursor *) internalPtr) = None;
+		*((Tk_Cursor *) internalPtr) = 0;
 	    }
 	} else if (objPtr != NULL) {
 	    Tk_FreeCursorFromObj(tkwin, objPtr);
@@ -1916,7 +1916,7 @@ GetObjectForOption(
     case TK_OPTION_BITMAP: {
 	Pixmap pixmap = *((Pixmap *) internalPtr);
 
-	if (pixmap != None) {
+	if (pixmap) {
 	    objPtr = Tcl_NewStringObj(
 		    Tk_NameOfBitmap(Tk_Display(tkwin), pixmap), -1);
 	}
@@ -1936,7 +1936,7 @@ GetObjectForOption(
     case TK_OPTION_CURSOR: {
 	Tk_Cursor cursor = *((Tk_Cursor *) internalPtr);
 
-	if (cursor != None) {
+	if (cursor) {
 	    objPtr = Tcl_NewStringObj(
 		    Tk_NameOfCursor(Tk_Display(tkwin), cursor), -1);
 	}

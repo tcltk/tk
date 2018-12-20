@@ -2363,7 +2363,7 @@ DrawMenuEntryLabel(
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
 	} else if ((mePtr->image != NULL)
-		&& (menuPtr->disabledImageGC != None)) {
+		&& menuPtr->disabledImageGC) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
 		    leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset),
@@ -3020,7 +3020,7 @@ MenuSelectEvent(
     Tk_MakeWindowExist(menuPtr->tkwin);
     event.event = Tk_WindowId(menuPtr->tkwin);
     event.root = XRootWindow(menuPtr->display, 0);
-    event.subwindow = None;
+    event.subwindow = 0;
     event.time = TkpGetMS();
 
     root.msgpos = GetMessagePos();

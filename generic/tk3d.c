@@ -235,10 +235,10 @@ Tk_Get3DBorder(
     borderPtr->bgColorPtr = bgColorPtr;
     borderPtr->darkColorPtr = NULL;
     borderPtr->lightColorPtr = NULL;
-    borderPtr->shadow = None;
-    borderPtr->bgGC = None;
-    borderPtr->darkGC = None;
-    borderPtr->lightGC = None;
+    borderPtr->shadow = 0;
+    borderPtr->bgGC = 0;
+    borderPtr->darkGC = 0;
+    borderPtr->lightGC = 0;
     borderPtr->hashPtr = hashPtr;
     borderPtr->nextPtr = existingBorderPtr;
     Tcl_SetHashValue(hashPtr, borderPtr);
@@ -374,7 +374,7 @@ Tk_3DBorderGC(
 {
     TkBorder * borderPtr = (TkBorder *) border;
 
-    if ((borderPtr->lightGC == None) && (which != TK_3D_FLAT_GC)) {
+    if (!borderPtr->lightGC && (which != TK_3D_FLAT_GC)) {
 	TkpGetShadows(borderPtr, tkwin);
     }
     if (which == TK_3D_FLAT_GC) {
@@ -391,7 +391,7 @@ Tk_3DBorderGC(
      * compilers happy.
      */
 
-    return (GC) None;
+    return 0;
 }
 
 /*
@@ -427,29 +427,29 @@ Tk_Free3DBorder(
 
     prevPtr = Tcl_GetHashValue(borderPtr->hashPtr);
     TkpFreeBorder(borderPtr);
-    if (borderPtr->bgColorPtr != NULL) {
+    if (borderPtr->bgColorPtr) {
 	Tk_FreeColor(borderPtr->bgColorPtr);
     }
-    if (borderPtr->darkColorPtr != NULL) {
+    if (borderPtr->darkColorPtr) {
 	Tk_FreeColor(borderPtr->darkColorPtr);
     }
-    if (borderPtr->lightColorPtr != NULL) {
+    if (borderPtr->lightColorPtr) {
 	Tk_FreeColor(borderPtr->lightColorPtr);
     }
-    if (borderPtr->shadow != None) {
+    if (borderPtr->shadow) {
 	Tk_FreeBitmap(display, borderPtr->shadow);
     }
-    if (borderPtr->bgGC != None) {
+    if (borderPtr->bgGC) {
 	Tk_FreeGC(display, borderPtr->bgGC);
     }
-    if (borderPtr->darkGC != None) {
+    if (borderPtr->darkGC) {
 	Tk_FreeGC(display, borderPtr->darkGC);
     }
-    if (borderPtr->lightGC != None) {
+    if (borderPtr->lightGC) {
 	Tk_FreeGC(display, borderPtr->lightGC);
     }
     if (prevPtr == borderPtr) {
-	if (borderPtr->nextPtr == NULL) {
+	if (!borderPtr->nextPtr) {
 	    Tcl_DeleteHashEntry(borderPtr->hashPtr);
 	} else {
 	    Tcl_SetHashValue(borderPtr->hashPtr, borderPtr->nextPtr);
@@ -765,7 +765,7 @@ Tk_Draw3DPolygon(
     int i, lightOnLeft, dx, dy, parallel, pointsSeen;
     Display *display = Tk_Display(tkwin);
 
-    if (borderPtr->lightGC == None) {
+    if (!borderPtr->lightGC) {
 	TkpGetShadows(borderPtr, tkwin);
     }
 
