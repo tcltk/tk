@@ -242,7 +242,7 @@ TkpUseWindow(
 */
 
 /*
-    if (winPtr->window != None) {
+    if (winPtr->window) {
 	Tcl_AppendResult(interp,
 		"can't modify container after widget is created", NULL);
 	return TCL_ERROR;
@@ -298,7 +298,7 @@ TkpUseWindow(
 	 * order to avoid bug 1096074 in future.
 	 */
 
-	char msg[256];
+	char msg[260];
 
 	sprintf(msg, "Unable to get information of window \"%.80s\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
 	if (IDCANCEL == MessageBox(hwnd, msg, "Tk Warning",

@@ -296,11 +296,11 @@ CreateArc(
     arcPtr->fillColor = NULL;
     arcPtr->activeFillColor = NULL;
     arcPtr->disabledFillColor = NULL;
-    arcPtr->fillStipple = None;
-    arcPtr->activeFillStipple = None;
-    arcPtr->disabledFillStipple = None;
+    arcPtr->fillStipple = 0;
+    arcPtr->activeFillStipple = 0;
+    arcPtr->disabledFillStipple = 0;
     arcPtr->style = PIESLICE_STYLE;
-    arcPtr->fillGC = None;
+    arcPtr->fillGC = 0;
 
     /*
      * Process the arguments to fill in the item record.
@@ -452,11 +452,11 @@ ConfigureArc(
      */
 
     if (arcPtr->outline.activeWidth > arcPtr->outline.width ||
-	    arcPtr->outline.activeDash.number != 0 ||
-	    arcPtr->outline.activeColor != NULL ||
-	    arcPtr->outline.activeStipple != None ||
-	    arcPtr->activeFillColor != NULL ||
-	    arcPtr->activeFillStipple != None) {
+	    arcPtr->outline.activeDash.number ||
+	    arcPtr->outline.activeColor ||
+	    arcPtr->outline.activeStipple ||
+	    arcPtr->activeFillColor ||
+	    arcPtr->activeFillStipple) {
 	itemPtr->redraw_flags |= TK_ITEM_STATE_DEPENDANT;
     } else {
 	itemPtr->redraw_flags &= ~TK_ITEM_STATE_DEPENDANT;
@@ -493,9 +493,9 @@ ConfigureArc(
 	mask |= GCCapStyle;
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = None;
+	newGC = 0;
     }
-    if (arcPtr->outline.gc != None) {
+    if (arcPtr->outline.gc) {
 	Tk_FreeGC(Tk_Display(tkwin), arcPtr->outline.gc);
     }
     arcPtr->outline.gc = newGC;
@@ -511,25 +511,23 @@ ConfigureArc(
     color = arcPtr->fillColor;
     stipple = arcPtr->fillStipple;
     if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
-	if (arcPtr->activeFillColor!=NULL) {
+	if (arcPtr->activeFillColor) {
 	    color = arcPtr->activeFillColor;
 	}
-	if (arcPtr->activeFillStipple!=None) {
+	if (arcPtr->activeFillStipple) {
 	    stipple = arcPtr->activeFillStipple;
 	}
     } else if (state==TK_STATE_DISABLED) {
-	if (arcPtr->disabledFillColor!=NULL) {
+	if (arcPtr->disabledFillColor) {
 	    color = arcPtr->disabledFillColor;
 	}
-	if (arcPtr->disabledFillStipple!=None) {
+	if (arcPtr->disabledFillStipple) {
 	    stipple = arcPtr->disabledFillStipple;
 	}
       }
 
-    if (arcPtr->style == ARC_STYLE) {
-	newGC = None;
-    } else if (color == NULL) {
-	newGC = None;
+    if ((arcPtr->style == ARC_STYLE) || !color) {
+	newGC = 0;
     } else {
 	gcValues.foreground = color->pixel;
 	if (arcPtr->style == CHORD_STYLE) {
@@ -538,14 +536,14 @@ ConfigureArc(
 	    gcValues.arc_mode = ArcPieSlice;
 	}
 	mask = GCForeground|GCArcMode;
-	if (stipple != None) {
+	if (stipple) {
 	    gcValues.stipple = stipple;
 	    gcValues.fill_style = FillStippled;
 	    mask |= GCStipple|GCFillStyle;
 	}
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (arcPtr->fillGC != None) {
+    if (arcPtr->fillGC) {
 	Tk_FreeGC(Tk_Display(tkwin), arcPtr->fillGC);
     }
     arcPtr->fillGC = newGC;
@@ -600,25 +598,25 @@ DeleteArc(
     if (arcPtr->numOutlinePoints != 0) {
 	ckfree((char *) arcPtr->outlinePtr);
     }
-    if (arcPtr->fillColor != NULL) {
+    if (arcPtr->fillColor) {
 	Tk_FreeColor(arcPtr->fillColor);
     }
-    if (arcPtr->activeFillColor != NULL) {
+    if (arcPtr->activeFillColor) {
 	Tk_FreeColor(arcPtr->activeFillColor);
     }
-    if (arcPtr->disabledFillColor != NULL) {
+    if (arcPtr->disabledFillColor) {
 	Tk_FreeColor(arcPtr->disabledFillColor);
     }
-    if (arcPtr->fillStipple != None) {
+    if (arcPtr->fillStipple) {
 	Tk_FreeBitmap(display, arcPtr->fillStipple);
     }
-    if (arcPtr->activeFillStipple != None) {
+    if (arcPtr->activeFillStipple) {
 	Tk_FreeBitmap(display, arcPtr->activeFillStipple);
     }
-    if (arcPtr->disabledFillStipple != None) {
+    if (arcPtr->disabledFillStipple) {
 	Tk_FreeBitmap(display, arcPtr->disabledFillStipple);
     }
-    if (arcPtr->fillGC != None) {
+    if (arcPtr->fillGC) {
 	Tk_FreeGC(display, arcPtr->fillGC);
     }
 }
@@ -749,7 +747,7 @@ ComputeArcBbox(
      * drawn) and add one extra pixel just for safety.
      */
 
-    if (arcPtr->outline.gc == None) {
+    if (!arcPtr->outline.gc) {
 	tmp = 1;
     } else {
 	tmp = (int) ((width + 1.0)/2.0 + 1);
@@ -806,20 +804,20 @@ DisplayArc(
 	if (arcPtr->outline.activeWidth>lineWidth) {
 	    lineWidth = arcPtr->outline.activeWidth;
 	}
-	if (arcPtr->outline.activeDash.number != 0) {
+	if (arcPtr->outline.activeDash.number) {
 	    dashnumber = arcPtr->outline.activeDash.number;
 	}
-	if (arcPtr->activeFillStipple != None) {
+	if (arcPtr->activeFillStipple) {
 	    stipple = arcPtr->activeFillStipple;
 	}
     } else if (state == TK_STATE_DISABLED) {
 	if (arcPtr->outline.disabledWidth > 0) {
 	    lineWidth = arcPtr->outline.disabledWidth;
 	}
-	if (arcPtr->outline.disabledDash.number != 0) {
+	if (arcPtr->outline.disabledDash.number) {
 	    dashnumber = arcPtr->outline.disabledDash.number;
 	}
-	if (arcPtr->disabledFillStipple != None) {
+	if (arcPtr->disabledFillStipple) {
 	    stipple = arcPtr->disabledFillStipple;
 	}
     }
@@ -848,8 +846,8 @@ DisplayArc(
      * window servers to crash and should be a no-op anyway.
      */
 
-    if ((arcPtr->fillGC != None) && (extent != 0)) {
-	if (stipple != None) {
+    if ((arcPtr->fillGC) && (extent != 0)) {
+	if (stipple) {
 	    int w = 0;
 	    int h = 0;
 	    Tk_TSOffset *tsoffset = &arcPtr->tsoffset;
@@ -878,14 +876,14 @@ DisplayArc(
 	}
 	XFillArc(display, drawable, arcPtr->fillGC, x1, y1, (unsigned) (x2-x1),
 		(unsigned) (y2-y1), start, extent);
-	if (stipple != None) {
+	if (stipple) {
 	    XSetTSOrigin(display, arcPtr->fillGC, 0, 0);
 	}
     }
-    if (arcPtr->outline.gc != None) {
+    if (arcPtr->outline.gc) {
 	Tk_ChangeOutlineGC(canvas, itemPtr, &(arcPtr->outline));
 
-	if (extent != 0) {
+	if (extent) {
 	    XDrawArc(display, drawable, arcPtr->outline.gc, x1, y1,
 		    (unsigned) (x2-x1), (unsigned) (y2-y1), start, extent);
 	}
@@ -897,7 +895,7 @@ DisplayArc(
 	 * outline is dashed, because then polygons don't work.
 	 */
 
-	if (lineWidth < 1.5 || dashnumber != 0) {
+	if (lineWidth < 1.5 || dashnumber) {
 	    Tk_CanvasDrawableCoords(canvas, arcPtr->center1[0],
 		    arcPtr->center1[1], &x1, &y1);
 	    Tk_CanvasDrawableCoords(canvas, arcPtr->center2[0],
@@ -920,13 +918,13 @@ DisplayArc(
 	} else {
 	    if (arcPtr->style == CHORD_STYLE) {
 		TkFillPolygon(canvas, arcPtr->outlinePtr, CHORD_OUTLINE_PTS,
-			display, drawable, arcPtr->outline.gc, None);
+			display, drawable, arcPtr->outline.gc, 0);
 	    } else if (arcPtr->style == PIESLICE_STYLE) {
 		TkFillPolygon(canvas, arcPtr->outlinePtr, PIE_OUTLINE1_PTS,
-			display, drawable, arcPtr->outline.gc, None);
+			display, drawable, arcPtr->outline.gc, 0);
 		TkFillPolygon(canvas, arcPtr->outlinePtr + 2*PIE_OUTLINE1_PTS,
 			PIE_OUTLINE2_PTS, display, drawable,
-			arcPtr->outline.gc, None);
+			arcPtr->outline.gc, 0);
 	    }
 	}
 
@@ -1032,12 +1030,12 @@ ArcToPoint(
 	return dist;
     }
 
-    if ((arcPtr->fillGC != None) || (arcPtr->outline.gc == None)) {
+    if (arcPtr->fillGC || !arcPtr->outline.gc) {
 	filled = 1;
     } else {
 	filled = 0;
     }
-    if (arcPtr->outline.gc == None) {
+    if (!arcPtr->outline.gc) {
 	width = 0.0;
     }
 
@@ -1159,12 +1157,12 @@ ArcToArea(
 	}
     }
 
-    if ((arcPtr->fillGC != None) || (arcPtr->outline.gc == None)) {
+    if ((arcPtr->fillGC) || !arcPtr->outline.gc) {
 	filled = 1;
     } else {
 	filled = 0;
     }
-    if (arcPtr->outline.gc == None) {
+    if (!arcPtr->outline.gc) {
 	width = 0.0;
     }
 
@@ -1859,29 +1857,29 @@ ArcToPostscript(
     fillColor = arcPtr->fillColor;
     fillStipple = arcPtr->fillStipple;
     if (((TkCanvas *)canvas)->currentItemPtr == itemPtr) {
-	if (arcPtr->outline.activeColor!=NULL) {
+	if (arcPtr->outline.activeColor) {
 	    color = arcPtr->outline.activeColor;
 	}
-	if (arcPtr->outline.activeStipple!=None) {
+	if (arcPtr->outline.activeStipple) {
 	    stipple = arcPtr->outline.activeStipple;
 	}
-	if (arcPtr->activeFillColor!=NULL) {
+	if (arcPtr->activeFillColor) {
 	    fillColor = arcPtr->activeFillColor;
 	}
-	if (arcPtr->activeFillStipple!=None) {
+	if (arcPtr->activeFillStipple) {
 	    fillStipple = arcPtr->activeFillStipple;
 	}
     } else if (state == TK_STATE_DISABLED) {
-	if (arcPtr->outline.disabledColor!=NULL) {
+	if (arcPtr->outline.disabledColor) {
 	    color = arcPtr->outline.disabledColor;
 	}
-	if (arcPtr->outline.disabledStipple!=None) {
+	if (arcPtr->outline.disabledStipple) {
 	    stipple = arcPtr->outline.disabledStipple;
 	}
-	if (arcPtr->disabledFillColor!=NULL) {
+	if (arcPtr->disabledFillColor) {
 	    fillColor = arcPtr->disabledFillColor;
 	}
-	if (arcPtr->disabledFillStipple!=None) {
+	if (arcPtr->disabledFillStipple) {
 	    fillStipple = arcPtr->disabledFillStipple;
 	}
     }
@@ -1891,7 +1889,7 @@ ArcToPostscript(
      * arc.
      */
 
-    if (arcPtr->fillGC != None) {
+    if (arcPtr->fillGC) {
 	sprintf(buffer, "matrix currentmatrix\n%.15g %.15g translate %.15g %.15g scale\n",
 		(arcPtr->bbox[0] + arcPtr->bbox[2])/2, (y1 + y2)/2,
 		(arcPtr->bbox[2] - arcPtr->bbox[0])/2, (y1 - y2)/2);
@@ -1908,12 +1906,12 @@ ArcToPostscript(
 	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (fillStipple != None) {
+	if (fillStipple) {
 	    Tcl_AppendResult(interp, "clip ", NULL);
 	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (arcPtr->outline.gc != None) {
+	    if (arcPtr->outline.gc) {
 		Tcl_AppendResult(interp, "grestore gsave\n", NULL);
 	    }
 	} else {
@@ -1925,7 +1923,7 @@ ArcToPostscript(
      * If there's an outline for the arc, draw it.
      */
 
-    if (arcPtr->outline.gc != None) {
+    if (arcPtr->outline.gc) {
 	sprintf(buffer, "matrix currentmatrix\n%.15g %.15g translate %.15g %.15g scale\n",
 		(arcPtr->bbox[0] + arcPtr->bbox[2])/2, (y1 + y2)/2,
 		(arcPtr->bbox[2] - arcPtr->bbox[0])/2, (y1 - y2)/2);
@@ -1948,7 +1946,7 @@ ArcToPostscript(
 			!= TCL_OK) {
 		    return TCL_ERROR;
 		}
-		if (stipple != None) {
+		if (stipple) {
 		    Tcl_AppendResult(interp, "clip ", NULL);
 		    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK){
 			return TCL_ERROR;
@@ -1965,7 +1963,7 @@ ArcToPostscript(
 		    != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (stipple != None) {
+	    if (stipple) {
 		Tcl_AppendResult(interp, "clip ", NULL);
 		if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 		    return TCL_ERROR;

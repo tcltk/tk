@@ -303,7 +303,7 @@ CreateLine(
     linePtr->coordPtr = NULL;
     linePtr->capStyle = CapButt;
     linePtr->joinStyle = JoinRound;
-    linePtr->arrowGC = None;
+    linePtr->arrowGC = 0;
     linePtr->arrow = ARROWS_NONE;
     linePtr->arrowShapeA = (float)8.0;
     linePtr->arrowShapeB = (float)10.0;
@@ -503,9 +503,9 @@ ConfigureLine(
     }
 
     if (linePtr->outline.activeWidth > linePtr->outline.width ||
-	    linePtr->outline.activeDash.number != 0 ||
-	    linePtr->outline.activeColor != NULL ||
-	    linePtr->outline.activeStipple != None) {
+	    linePtr->outline.activeDash.number ||
+	    linePtr->outline.activeColor ||
+	    linePtr->outline.activeStipple) {
 	itemPtr->redraw_flags |= TK_ITEM_STATE_DEPENDANT;
     } else {
 	itemPtr->redraw_flags &= ~TK_ITEM_STATE_DEPENDANT;
@@ -531,12 +531,12 @@ ConfigureLine(
 #endif
 	arrowGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = arrowGC = None;
+	newGC = arrowGC = 0;
     }
-    if (linePtr->outline.gc != None) {
+    if (linePtr->outline.gc) {
 	Tk_FreeGC(Tk_Display(tkwin), linePtr->outline.gc);
     }
-    if (linePtr->arrowGC != None) {
+    if (linePtr->arrowGC) {
 	Tk_FreeGC(Tk_Display(tkwin), linePtr->arrowGC);
     }
     linePtr->outline.gc = newGC;
@@ -552,7 +552,7 @@ ConfigureLine(
 	linePtr->splineSteps = 100;
     }
 
-    if ((!linePtr->numPoints) || (state==TK_STATE_HIDDEN)) {
+    if (!linePtr->numPoints || (state==TK_STATE_HIDDEN)) {
 	ComputeLineBbox(canvas, linePtr);
 	return TCL_OK;
     }
@@ -562,7 +562,7 @@ ConfigureLine(
      * line's endpoints (they were shortened when the arrowheads were added).
      */
 
-    if ((linePtr->firstArrowPtr != NULL) && (linePtr->arrow != ARROWS_FIRST)
+    if (linePtr->firstArrowPtr && (linePtr->arrow != ARROWS_FIRST)
 	    && (linePtr->arrow != ARROWS_BOTH)) {
 	linePtr->coordPtr[0] = linePtr->firstArrowPtr[0];
 	linePtr->coordPtr[1] = linePtr->firstArrowPtr[1];
@@ -618,16 +618,16 @@ DeleteLine(
     LineItem *linePtr = (LineItem *) itemPtr;
 
     Tk_DeleteOutline(display, &(linePtr->outline));
-    if (linePtr->coordPtr != NULL) {
+    if (linePtr->coordPtr) {
 	ckfree((char *) linePtr->coordPtr);
     }
-    if (linePtr->arrowGC != None) {
+    if (linePtr->arrowGC) {
 	Tk_FreeGC(display, linePtr->arrowGC);
     }
-    if (linePtr->firstArrowPtr != NULL) {
+    if (linePtr->firstArrowPtr) {
 	ckfree((char *) linePtr->firstArrowPtr);
     }
-    if (linePtr->lastArrowPtr != NULL) {
+    if (linePtr->lastArrowPtr) {
 	ckfree((char *) linePtr->lastArrowPtr);
     }
 }
@@ -664,7 +664,7 @@ ComputeLineBbox(
 	state = ((TkCanvas *)canvas)->canvas_state;
     }
 
-    if (!(linePtr->numPoints) || (state==TK_STATE_HIDDEN)) {
+    if (!(linePtr->numPoints) || (state == TK_STATE_HIDDEN)) {
 	linePtr->header.x1 = -1;
 	linePtr->header.x2 = -1;
 	linePtr->header.y1 = -1;
@@ -677,7 +677,7 @@ ComputeLineBbox(
 	if (linePtr->outline.activeWidth>width) {
 	    width = linePtr->outline.activeWidth;
 	}
-    } else if (state==TK_STATE_DISABLED) {
+    } else if (state == TK_STATE_DISABLED) {
 	if (linePtr->outline.disabledWidth>0) {
 	    width = linePtr->outline.disabledWidth;
 	}
@@ -846,7 +846,7 @@ DisplayLine(
     int numPoints;
     Tk_State state = itemPtr->state;
 
-    if ((!linePtr->numPoints)||(linePtr->outline.gc==None)) {
+    if (!linePtr->numPoints || !linePtr->outline.gc) {
 	return;
     }
 
@@ -2251,7 +2251,7 @@ LineToPostscript(
 				 * being created. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    char buffer[64 + TCL_INTEGER_SPACE];
+    char buffer[64 + 4*TCL_INTEGER_SPACE];
     char *style;
 
     double width;
@@ -2270,20 +2270,20 @@ LineToPostscript(
 	if (linePtr->outline.activeWidth>width) {
 	    width = linePtr->outline.activeWidth;
 	}
-	if (linePtr->outline.activeColor!=NULL) {
+	if (linePtr->outline.activeColor) {
 	    color = linePtr->outline.activeColor;
 	}
-	if (linePtr->outline.activeStipple!=None) {
+	if (linePtr->outline.activeStipple) {
 	    stipple = linePtr->outline.activeStipple;
 	}
     } else if (state==TK_STATE_DISABLED) {
 	if (linePtr->outline.disabledWidth>0) {
 	    width = linePtr->outline.disabledWidth;
 	}
-	if (linePtr->outline.disabledColor!=NULL) {
+	if (linePtr->outline.disabledColor) {
 	    color = linePtr->outline.disabledColor;
 	}
-	if (linePtr->outline.disabledStipple!=None) {
+	if (linePtr->outline.disabledStipple) {
 	    stipple = linePtr->outline.disabledStipple;
 	}
     }
@@ -2301,7 +2301,7 @@ LineToPostscript(
 	if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (stipple != None) {
+	if (stipple) {
 	    Tcl_AppendResult(interp, "clip ", NULL);
 	    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 		return TCL_ERROR;
@@ -2319,7 +2319,7 @@ LineToPostscript(
     if ((!linePtr->smooth) || (linePtr->numPoints < 3)) {
 	Tk_CanvasPsPath(interp, canvas, linePtr->coordPtr, linePtr->numPoints);
     } else {
-	if ((stipple == None) && linePtr->smooth->postscriptProc) {
+	if (!stipple && linePtr->smooth->postscriptProc) {
 	    linePtr->smooth->postscriptProc(interp, canvas,
 		    linePtr->coordPtr, linePtr->numPoints, linePtr->splineSteps);
 	} else {
@@ -2379,8 +2379,8 @@ LineToPostscript(
      * Output polygons for the arrowheads, if there are any.
      */
 
-    if (linePtr->firstArrowPtr != NULL) {
-	if (stipple != None) {
+    if (linePtr->firstArrowPtr) {
+	if (stipple) {
 	    Tcl_AppendResult(interp, "grestore gsave\n", NULL);
 	}
 	if (ArrowheadPostscript(interp, canvas, linePtr,
@@ -2389,7 +2389,7 @@ LineToPostscript(
 	}
     }
     if (linePtr->lastArrowPtr != NULL) {
-	if (stipple != None) {
+	if (stipple) {
 	    Tcl_AppendResult(interp, "grestore gsave\n", NULL);
 	}
 	if (ArrowheadPostscript(interp, canvas, linePtr,
@@ -2438,17 +2438,17 @@ ArrowheadPostscript(
 
     stipple = linePtr->outline.stipple;
     if (((TkCanvas *)canvas)->currentItemPtr == (Tk_Item *)linePtr) {
-	if (linePtr->outline.activeStipple!=None) {
+	if (linePtr->outline.activeStipple) {
 	    stipple = linePtr->outline.activeStipple;
 	}
     } else if (state==TK_STATE_DISABLED) {
-	if (linePtr->outline.activeStipple!=None) {
+	if (linePtr->outline.activeStipple) {
 	    stipple = linePtr->outline.disabledStipple;
 	}
     }
 
     Tk_CanvasPsPath(interp, canvas, arrowPtr, PTS_IN_ARROW);
-    if (stipple != None) {
+    if (stipple) {
 	Tcl_AppendResult(interp, "clip ", NULL);
 	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 	    return TCL_ERROR;

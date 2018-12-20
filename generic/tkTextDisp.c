@@ -632,7 +632,7 @@ TkTextCreateDInfo(
     dInfoPtr = (TextDInfo *) ckalloc(sizeof(TextDInfo));
     Tcl_InitHashTable(&dInfoPtr->styleTable, sizeof(StyleValues)/sizeof(int));
     dInfoPtr->dLinePtr = NULL;
-    dInfoPtr->copyGC = None;
+    dInfoPtr->copyGC = 0;
     gcValues.graphics_exposures = True;
     dInfoPtr->scrollGC = Tk_GetGC(textPtr->tkwin, GCGraphicsExposures,
 	    &gcValues);
@@ -696,19 +696,19 @@ TkTextFreeDInfo(
 
     FreeDLines(textPtr, dInfoPtr->dLinePtr, NULL, DLINE_UNLINK);
     Tcl_DeleteHashTable(&dInfoPtr->styleTable);
-    if (dInfoPtr->copyGC != None) {
+    if (dInfoPtr->copyGC) {
 	Tk_FreeGC(textPtr->display, dInfoPtr->copyGC);
     }
     Tk_FreeGC(textPtr->display, dInfoPtr->scrollGC);
     if (dInfoPtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(DisplayText, (ClientData) textPtr);
     }
-    if (dInfoPtr->lineUpdateTimer != NULL) {
+    if (dInfoPtr->lineUpdateTimer) {
 	Tcl_DeleteTimerHandler(dInfoPtr->lineUpdateTimer);
 	textPtr->refCount--;
 	dInfoPtr->lineUpdateTimer = NULL;
     }
-    if (dInfoPtr->scrollbarTimer != NULL) {
+    if (dInfoPtr->scrollbarTimer) {
 	Tcl_DeleteTimerHandler(dInfoPtr->scrollbarTimer);
 	textPtr->refCount--;
 	dInfoPtr->scrollbarTimer = NULL;
@@ -827,70 +827,70 @@ GetStyle(
 	    styleValues.relief = tagPtr->relief;
 	    reliefPrio = tagPtr->priority;
 	}
-	if ((tagPtr->bgStipple != None)
+	if ((tagPtr->bgStipple)
 		&& (tagPtr->priority > bgStipplePrio)) {
 	    styleValues.bgStipple = tagPtr->bgStipple;
 	    bgStipplePrio = tagPtr->priority;
 	}
-	if ((tagPtr->fgColor != None) && (tagPtr->priority > fgPrio)) {
+	if ((tagPtr->fgColor) && (tagPtr->priority > fgPrio)) {
 	    styleValues.fgColor = tagPtr->fgColor;
 	    fgPrio = tagPtr->priority;
 	}
-	if ((tagPtr->tkfont != None) && (tagPtr->priority > fontPrio)) {
+	if ((tagPtr->tkfont) && (tagPtr->priority > fontPrio)) {
 	    styleValues.tkfont = tagPtr->tkfont;
 	    fontPrio = tagPtr->priority;
 	}
-	if ((tagPtr->fgStipple != None)
+	if ((tagPtr->fgStipple)
 		&& (tagPtr->priority > fgStipplePrio)) {
 	    styleValues.fgStipple = tagPtr->fgStipple;
 	    fgStipplePrio = tagPtr->priority;
 	}
-	if ((tagPtr->justifyString != NULL)
+	if ((tagPtr->justifyString)
 		&& (tagPtr->priority > justifyPrio)) {
 	    styleValues.justify = tagPtr->justify;
 	    justifyPrio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin1String != NULL)
+	if ((tagPtr->lMargin1String)
 		&& (tagPtr->priority > lMargin1Prio)) {
 	    styleValues.lMargin1 = tagPtr->lMargin1;
 	    lMargin1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin2String != NULL)
+	if ((tagPtr->lMargin2String)
 		&& (tagPtr->priority > lMargin2Prio)) {
 	    styleValues.lMargin2 = tagPtr->lMargin2;
 	    lMargin2Prio = tagPtr->priority;
 	}
-	if ((tagPtr->offsetString != NULL)
+	if ((tagPtr->offsetString)
 		&& (tagPtr->priority > offsetPrio)) {
 	    styleValues.offset = tagPtr->offset;
 	    offsetPrio = tagPtr->priority;
 	}
-	if ((tagPtr->overstrikeString != NULL)
+	if ((tagPtr->overstrikeString)
 		&& (tagPtr->priority > overstrikePrio)) {
 	    styleValues.overstrike = tagPtr->overstrike;
 	    overstrikePrio = tagPtr->priority;
 	}
-	if ((tagPtr->rMarginString != NULL)
+	if ((tagPtr->rMarginString)
 		&& (tagPtr->priority > rMarginPrio)) {
 	    styleValues.rMargin = tagPtr->rMargin;
 	    rMarginPrio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing1String != NULL)
+	if ((tagPtr->spacing1String)
 		&& (tagPtr->priority > spacing1Prio)) {
 	    styleValues.spacing1 = tagPtr->spacing1;
 	    spacing1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing2String != NULL)
+	if ((tagPtr->spacing2String)
 		&& (tagPtr->priority > spacing2Prio)) {
 	    styleValues.spacing2 = tagPtr->spacing2;
 	    spacing2Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing3String != NULL)
+	if ((tagPtr->spacing3String)
 		&& (tagPtr->priority > spacing3Prio)) {
 	    styleValues.spacing3 = tagPtr->spacing3;
 	    spacing3Prio = tagPtr->priority;
 	}
-	if ((tagPtr->tabStringPtr != NULL)
+	if ((tagPtr->tabStringPtr)
 		&& (tagPtr->priority > tabPrio)) {
 	    styleValues.tabArrayPtr = tagPtr->tabArrayPtr;
 	    tabPrio = tagPtr->priority;
@@ -900,12 +900,12 @@ GetStyle(
 	    styleValues.tabStyle = tagPtr->tabStyle;
 	    tabStylePrio = tagPtr->priority;
 	}
-	if ((tagPtr->underlineString != NULL)
+	if ((tagPtr->underlineString)
 		&& (tagPtr->priority > underlinePrio)) {
 	    styleValues.underline = tagPtr->underline;
 	    underlinePrio = tagPtr->priority;
 	}
-	if ((tagPtr->elideString != NULL)
+	if ((tagPtr->elideString)
 		&& (tagPtr->priority > elidePrio)) {
 	    styleValues.elide = tagPtr->elide;
 	    elidePrio = tagPtr->priority;
@@ -916,7 +916,7 @@ GetStyle(
 	    wrapPrio = tagPtr->priority;
 	}
     }
-    if (tagPtrs != NULL) {
+    if (tagPtrs) {
 	ckfree((char *) tagPtrs);
     }
 
@@ -941,20 +941,20 @@ GetStyle(
     if (styleValues.border != NULL) {
 	gcValues.foreground = Tk_3DBorderColor(styleValues.border)->pixel;
 	mask = GCForeground;
-	if (styleValues.bgStipple != None) {
+	if (styleValues.bgStipple) {
 	    gcValues.stipple = styleValues.bgStipple;
 	    gcValues.fill_style = FillStippled;
 	    mask |= GCStipple|GCFillStyle;
 	}
 	stylePtr->bgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
-	stylePtr->bgGC = None;
+	stylePtr->bgGC = 0;
     }
     mask = GCFont;
     gcValues.font = Tk_FontId(styleValues.tkfont);
     mask |= GCForeground;
     gcValues.foreground = styleValues.fgColor->pixel;
-    if (styleValues.fgStipple != None) {
+    if (styleValues.fgStipple) {
 	gcValues.stipple = styleValues.fgStipple;
 	gcValues.fill_style = FillStippled;
 	mask |= GCStipple|GCFillStyle;
@@ -994,10 +994,10 @@ FreeStyle(
 {
     stylePtr->refCount--;
     if (stylePtr->refCount == 0) {
-	if (stylePtr->bgGC != None) {
+	if (stylePtr->bgGC) {
 	    Tk_FreeGC(textPtr->display, stylePtr->bgGC);
 	}
-	if (stylePtr->fgGC != None) {
+	if (stylePtr->fgGC) {
 	    Tk_FreeGC(textPtr->display, stylePtr->fgGC);
 	}
 	Tcl_DeleteHashEntry(stylePtr->hPtr);
@@ -2578,7 +2578,7 @@ DisplayLineBackground(
 	if ((chunkPtr->nextPtr == NULL) && (rightX < maxX)) {
 	    rightX = maxX;
 	}
-	if (chunkPtr->stylePtr->bgGC != None) {
+	if (chunkPtr->stylePtr->bgGC) {
 	    /*
 	     * Not visible - bail out now.
 	     */
@@ -4335,7 +4335,7 @@ DisplayText(
 			    dlPtr->spaceAbove,
 			    dlPtr->height-dlPtr->spaceAbove-dlPtr->spaceBelow,
 			    dlPtr->baseline - dlPtr->spaceAbove, NULL,
-			    (Drawable) None, dlPtr->y + dlPtr->spaceAbove);
+			    0, dlPtr->y + dlPtr->spaceAbove);
 		}
 
 	    }
@@ -4970,7 +4970,7 @@ TkTextRelayoutWindow(
 
     gcValues.graphics_exposures = False;
     newGC = Tk_GetGC(textPtr->tkwin, GCGraphicsExposures, &gcValues);
-    if (dInfoPtr->copyGC != None) {
+    if (dInfoPtr->copyGC) {
 	Tk_FreeGC(textPtr->display, dInfoPtr->copyGC);
     }
     dInfoPtr->copyGC = newGC;
@@ -7708,7 +7708,7 @@ CharDisplayProc(
      */
 
     if (!sValuePtr->elide && (numBytes > offsetBytes)
-	    && (stylePtr->fgGC != None)) {
+	    && stylePtr->fgGC) {
 #if TK_DRAW_IN_CONTEXT
 	int start = ciPtr->baseOffset + offsetBytes;
 	int len = ciPtr->numBytes - offsetBytes;

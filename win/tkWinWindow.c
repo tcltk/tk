@@ -228,7 +228,7 @@ TkpScanWindowId(
     if (tkwin) {
 	*idPtr = Tk_WindowId(tkwin);
     } else {
-	*idPtr = None;
+	*idPtr = 0;
     }
     return TCL_OK;
 }
@@ -259,7 +259,7 @@ TkpMakeWindow(
     int style;
     HWND hwnd;
 
-    if (parent != None) {
+    if (parent) {
 	parentWin = Tk_GetHWND(parent);
 	style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     } else {
@@ -657,7 +657,7 @@ XConfigureWindow(
     if (valueMask & CWStackMode) {
 	HWND sibling;
 
-	if ((valueMask & CWSibling) && (values->sibling != None)) {
+	if ((valueMask & CWSibling) && values->sibling) {
 	    sibling = Tk_GetHWND(values->sibling);
 	} else {
 	    sibling = NULL;
