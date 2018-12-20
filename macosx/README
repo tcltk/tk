@@ -152,14 +152,13 @@ app bundle files used by the about panel.
 This support was added with the Cocoa-based Tk 8.5.7.
 
 - TkAqua has three special menu names that give access to the standard
-Application, Window and Help menus, see menu.n for details.
-By default, the platform-specific standard Help menu item "YourApp Help" peforms
-the default Cocoa action of showing the Help Book configured in the
-application's Info.plist (or displaying an alert if no Help Book is set). This
-action can be customized by defining a procedure named [tk::mac::ShowHelp], if
-present, this procedure is invoked instead by the standard Help menu item.
-Support for the Window menu and [tk::mac::ShowHelp] was added with the
-Cocoa-based Tk 8.5.7.
+Application, Window and Help menus, see menu.n for details.  By default, the
+platform-specific standard Help menu item "YourApp Help" performs the default
+Cocoa action of showing the Help Book configured in the application's
+Info.plist (or displaying an alert if no Help Book is set). This action can be
+customized by defining a procedure named [tk::mac::ShowHelp]. If present, this
+procedure is invoked instead by the standard Help menu item.  Support for the
+Window menu and [tk::mac::ShowHelp] was added with the Cocoa-based Tk 8.5.7.
 
 - The TkAqua-specific command [tk::unsupported::MacWindowStyle style] is used to
 get and set macOS-specific toplevel window class and attributes. Note that
@@ -180,18 +179,104 @@ Window attribute names:
     noActivates, hideOnSuspend, inWindowMenu, ignoreClicks, doesNotHide,
     canJoinAllSpaces, moveToActiveSpace, nonActivating
 
-Note that not all attributes are valid for all window classes.
-Support for the 3 argument form was added with the Cocoa-based Tk 8.5.7, at the
-same time support for some legacy Carbon-specific classes and attributes was
-removed (they are still accepted by the command but no longer have any effect).
+Note that not all attributes are valid for all window classes.  Support for the
+3 argument form was added with the Cocoa-based Tk 8.5.7, at the same time
+support for some legacy Carbon-specific classes and attributes was removed
+(they are still accepted by the command but no longer have any effect).
 
-If you want to use Remote Debugging with Xcode, you need to set the
+- Another command available in the tk::unsupported::MacWindowStyle namespace is
+tk::unsupported::MacWindowStyle tabbingid window ?newId?  which can be used to
+get or set the tabbingIdentifier for the NSWindow associated with a Tk Window.
+See section 3 for details.
+
+- If you want to use Remote Debugging with Xcode, you need to set the
 environment variable XCNOSTDIN to 1 in the Executable editor for Wish. That will
 cause us to force closing stdin & stdout.  Otherwise, given how Xcode launches
 Wish remotely, they will be left open and then Wish & gdb will fight for stdin.
 
+3. FullScreen, Split View and Tabbed Windows
+--------------------------------------------
 
-3. Building Tcl/Tk on macOS
+Since the release of OSX 10.6 (Snow Leopard) a steadily expanding sequence of
+high level window operations have been added to Apple's window manager.  These
+operations are launched by user actions which are handled directly by the
+window manager; they are not initiated by the application.  In some, but not
+all cases, the application is notified before and after the operations are
+carried out.
+
+In OSX releases up to and including 10.6 there were three buttons with
+stoplight colors located on the left side of a window's title bar.  The
+function of the green button was to "zoom" or "maximize" the window, i.e. to
+expand the window so that it fills the entire screen, while preserving the
+appearance of the window including its title bar.  The release of OSX 10.7
+(Lion) introduced the "FullScreen" window which not only filled the screen but
+also hid the window's title bar and the menu bar which normally appears at the
+top of the screen. These hidden objects would only become visible when the
+mouse hovered near the top of the screen.  FullScreen mode was initiated by
+pressing a button showing two outward pointing arrows located on the right side
+of the title bar; it was terminated by pressing a similar button with inward
+pointing arrows on the right hand side of the menu bar.  In OSX 10.10
+(Yosemite) the FullScreen button was removed. The green button was repurposed
+to cause a window to become a FullScreen window. To zoom a window the user had
+to hold down the option key while pressing the green button.  The release of
+OSX 10.11 added a third function to the green button: to create two half-screen
+windows with hidden title bars and a hidden menu bar, called Split View
+windows.  If the green button is held down for one second its window expands to
+fill half of the screen.  It can be moved to one side or the other with the
+mouse.  The opposite side shows thumbnail images of other windows.  Selecting
+one of the thumbnails expands its window to fill that half of the screen.  The
+divider between the two windows can be moved to adjust the percentage of the
+screen occupied by each of the two tiles.  In OSX 10.12 (Sierra) Tabbed windows
+were introduced.  These allow an application with multiple windows to display
+its windows as tabs within a single window frame.  Clicking on a tab brings its
+window into view.  Tabs can be rearranged by dragging.  Dragging a tab to the
+desktop turns it into a separate window.  Items in the Window menu can be used
+to cycle through the tabs, move tabbed windows to separate windows, or merge a
+set of separate windows as tabs in the same window frame.
+
+Tk now fully supports all of these high level window operations on any system
+where the operation exists.  The FullScreen and Split View windows are handled
+automatically with no action required on the part of the programmer.  Tabbed
+windows, on the other hand, require some attention from the programmer.
+Because many of the operations with tabs are handled through the application's
+Window menu, it is essential that an application provide a Windows menu to
+avoid presenting a confusing interface to the user. This cannot be ignored, in
+part because the systemwide Dock Preferences offers an option to always attempt
+to open application windows as tabs. An application which does not provide a
+Window menu will necessarily present a confusing interface to any user who has
+selected this option.
+
+A further complication is that it is not neccessarily appropriate for all of an
+application's windows to be grouped together as tabs in the same frame.  In
+fact, the Apple guidelines insist that windows which are grouped together as
+tabs should be similar to each other.  The mechanism provided for arranging
+this was to assign to each NSwindow a tabbingIdentifier, and to require that
+all windows grouped together as tabs in the same window frame must have the
+same tabbingIdentifier.  A tabbingIdentifier is implemented as an arbitrary
+string, and a system-generated default tabbingIdentifier is provided to all new
+windows.
+
+Tk provides a means for getting and setting the tabbingIdentifier of
+the NSWindow underlying a Tk Window. This is handled by the command
+
+tk::unsupported::MacWindowStyle tabbingid window ?newId?
+
+(This command generates an error if used on OSX 10.11 or earlier, since the
+tabbingIdentifier does not exist on those systems.)  The command returns the
+tabbingIdentifier which had been assigned to the window prior to execution of
+the command.  If the optional newId argument is omitted, the window's
+tabbingIdentifier is not changed.  Otherwise it is set to the string specified
+by the argument.
+
+Since NSWindows can only be grouped together as tabs if they all have the same
+tabbingIdentifier, one can prevent a window from becoming a tab by giving it a
+unique tabbingIdentifier. This is independent of any preferences setting. To
+ensure that we maintain consistency, changing the tabbingIdentifier of a window
+which is already displayed as a tab will also cause it to become a separate
+window.
+
+
+4. Building Tcl/Tk on macOS
 ------------------------------
 
 - At least macOS 10.3 is required to build Tcl and TkX11, and macOS 10.6
@@ -199,7 +284,7 @@ is required to build TkAqua.  The XCode application provides everything
 needed to build Tk, but it is not necessary to install the full XCode.
 It suffices to install the Command Line Tools package, which can be done
 by running the command:
-xcode-selecct --install
+xcode-select --install
 
 - Tcl/Tk are most easily built as macOS frameworks via GNUmakefile in
 tcl/macosx and tk/macosx (see below for details), but can also be built with the
@@ -354,10 +439,10 @@ make overrides to the tk/macosx GNUmakefile, e.g.
 	    TCL_FRAMEWORK_DIR=$HOME/Library/Frameworks TCLSH_DIR=$HOME/usr/bin
 The Makefile variables TCL_FRAMEWORK_DIR and TCLSH_DIR were added with Tk 8.4.3.
 
-4. Details regarding the macOS port of Tk.
+5. Details regarding the macOS port of Tk.
 -------------------------------------------
 
-4.1 About the event loop
+5.1 About the event loop
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 The main program in a typical OSX application looks like this (see
@@ -416,7 +501,7 @@ for each dirty rectangle of the NSView, and then adds the expose
 event to the Tcl queue.
 
 
-4.2 Autorelease pools
+5.2 Autorelease pools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to carry out the job of managing autorelease pools, which
@@ -451,7 +536,7 @@ called in these preliminary stages need to create and drain their own
 NSAutoreleasePools whenever they call methods of Appkit objects
 (e.g. NSFont).
 
-4.3 Clipping regions and "ghost windows"
+5.3 Clipping regions and "ghost windows"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Another unusual aspect of the macOS port is its use of clipping
@@ -561,3 +646,12 @@ source and destination rectangles for the scrolling.  The embedded
 windows are redrawn within the DisplayText function by some
 conditional code which is only used for macOS.
 
+6.0 Virtual events on 10.14
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+10.14 supports system appearance changes, and has added a "Dark Mode"
+that casts all window frames and menus as black. Tk 8.6.9 has added two
+virtual events, <<LightAqua>> and <<DarkAqua>>, to allow you to update
+your Tk app's appearance when the system appearance changes. Just bind
+your appearance-updating code to these virtual events and you will see
+it triggered when the system appearance toggles between dark and light.

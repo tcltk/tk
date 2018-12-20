@@ -432,16 +432,16 @@ ComputeImageBbox(
     Tk_Image image;
     Tk_State state = imgPtr->header.state;
 
-    if(state == TK_STATE_NULL) {
+    if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
     }
     image = imgPtr->image;
     if (Canvas(canvas)->currentItemPtr == (Tk_Item *)imgPtr) {
-	if (imgPtr->activeImage != NULL) {
+	if (imgPtr->activeImage) {
 	    image = imgPtr->activeImage;
 	}
     } else if (state == TK_STATE_DISABLED) {
-	if (imgPtr->disabledImage != NULL) {
+	if (imgPtr->disabledImage) {
 	    image = imgPtr->disabledImage;
 	}
     }
@@ -449,7 +449,7 @@ ComputeImageBbox(
     x = (int) (imgPtr->x + ((imgPtr->x >= 0) ? 0.5 : - 0.5));
     y = (int) (imgPtr->y + ((imgPtr->y >= 0) ? 0.5 : - 0.5));
 
-    if ((state == TK_STATE_HIDDEN) || (image == None)) {
+    if ((state == TK_STATE_HIDDEN) || !image) {
 	imgPtr->header.x1 = imgPtr->header.x2 = x;
 	imgPtr->header.y1 = imgPtr->header.y2 = y;
 	return;

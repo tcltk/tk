@@ -25,7 +25,7 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
 TK_VERSION=8.6
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=6
-TK_PATCH_LEVEL=".8"
+TK_PATCH_LEVEL=".9"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -212,15 +212,6 @@ fi
 
 AC_CHECK_HEADERS(sys/time.h)
 AC_HEADER_TIME
-
-#--------------------------------------------------------------------
-#	Under Solaris 2.4, strtod returns the wrong value for the
-#	terminating character under some conditions.  Check for this
-#	and if the problem exists use a substitute procedure
-#	"fixstrtod" (provided by Tcl) that corrects the error.
-#--------------------------------------------------------------------
-
-SC_BUGGY_STRTOD
 
 #--------------------------------------------------------------------
 #	Check for various typedefs and provide substitutes if

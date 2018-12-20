@@ -47,7 +47,9 @@
 #   define _tcslen strlen
 #   define _tcsncmp strncmp
 #endif
+#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
 #include "zipfs.h"
+#endif
 
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
@@ -308,8 +310,12 @@ Tk_ZipMain(
     Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
 	    Tcl_NewIntObj(interactive), TCL_GLOBAL_ONLY);
 
+#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
     zipOk = Tclzipfs_Init(interp);
     if (zipOk == TCL_OK) {
+#else
+    {
+#endif
 	int relax = 0;
 
 	if (zipFile == NULL) {
@@ -327,16 +333,16 @@ Tk_ZipMain(
 	}
 	if (zipFile != NULL) {
 #ifdef ANDROID
-	    zipOk = Tclzipfs_Mount(interp, zipFile, "", NULL);
+	    zipOk = TclZipfs_Mount(interp, zipFile, "", NULL);
 #else
-	    zipOk = Tclzipfs_Mount(interp, zipFile, exeName, NULL);
+	    zipOk = TclZipfs_Mount(interp, zipFile, exeName, NULL);
 #endif
 	    if (!relax && (zipOk != TCL_OK)) {
 		Tcl_Exit(1);
 	    }
 #ifdef ANDROID
 	    if (zipFile2 != NULL) {
-		zipOk = Tclzipfs_Mount(interp, zipFile2, "/assets", NULL);
+		zipOk = TclZipfs_Mount(interp, zipFile2, "/assets", NULL);
 		if (zipOk != TCL_OK) {
 		    Tcl_Exit(1);
 		}
@@ -358,7 +364,7 @@ Tk_ZipMain(
 	Tcl_DString dsTcl;
 
 	/* Use canonicalized mount point. */
-	Tclzipfs_Mount(interp, zipFile, NULL, NULL);
+	TclZipfs_Mount(interp, zipFile, NULL, NULL);
 	mntpt = Tcl_GetObjResult(interp);
 	Tcl_IncrRefCount(mntpt);
 	tcl_pkg = Tcl_GetString(mntpt);
@@ -663,7 +669,7 @@ Tk_ZipMain(
 	if ((length > 6) && (strncasecmp(filename, "zipfs:", 6) == 0)) {
 	    Tcl_Obj *newPath;
 
-	    zipOk = Tclzipfs_Mount(interp, filename + 6, "/app", NULL);
+	    zipOk = TclZipfs_Mount(interp, filename + 6, "/app", NULL);
 	    if (zipOk == TCL_OK) {
 		newPath = Tcl_NewStringObj("/app/main.tcl", -1);
 		Tcl_IncrRefCount(newPath);
@@ -689,7 +695,7 @@ Tk_ZipMain(
 		    goto doit;
 		}
 		Tcl_DecrRefCount(newPath);
-		Tclzipfs_Unmount(interp, filename + 6);
+		TclZipfs_Unmount(interp, filename + 6);
 	    }
 	}
 #ifndef ANDROID

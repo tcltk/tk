@@ -840,3 +840,11 @@ TkMacOSXComputeMenuButtonDrawParams(TkMenuButton * butPtr, DrawParams * dpPtr)
     return 1;
 }
 
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */

@@ -39,10 +39,10 @@ proc unsetBindings {} {
 # events to make sure that there are no stray events in the ring
 # buffer which might cause the pattern matcher to find unintended
 # matches.  The size of the ring buffer is EVENT_BUFFER_SIZE, which is
-# currently set to 30.  If this changes, the code below will need to
-# change.
+# currently set to 30 (or 45 on macOS).  If this changes, the code
+# below will need to change.
 proc clearRingBuffer {{event}} {
-    for {set i 0} {$i < 30} {incr i} {
+    for {set i 0} {$i < 45} {incr i} {
 	event generate . $event
     }
 }

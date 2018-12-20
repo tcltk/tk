@@ -110,7 +110,7 @@ TkpGetString(
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
 {
-    int len, mincode, maxcode;
+    int len;
     Tcl_DString buf;
     TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 

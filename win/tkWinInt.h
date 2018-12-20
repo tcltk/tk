@@ -37,6 +37,11 @@
 #define SPI_SETKEYBOARDCUES 0x100B
 #endif
 
+#if defined(_WIN32) && !defined(ControlMask) /* prevent conflicting define against windows.h, bug [9e31fd9449] */
+#   define ControlMask		(1<<2)
+#endif
+
+
 /*
  * The TkWinDCState is used to save the state of a device context so that it
  * can be restored later.

@@ -88,7 +88,20 @@ typedef union {
  * EVENT_BUFFER_SIZE too much, shift multi-clicks will be lost.
  */
 
-#define EVENT_BUFFER_SIZE 30
+/*
+ * NOTE: The changes which were needed to make Tk work on OSX 10.14 (Mojave)
+ * also demand that the event ring be a bit bigger.  It might be wise to
+ * augment the current double-click pattern matching by adding a new
+ * DoubleClick modifier bit which could be set based on the clickCount of the
+ * Apple NSEvent object.
+ */
+
+#ifndef TK_MAC_OSX
+  #define EVENT_BUFFER_SIZE 45
+#else
+  #define EVENT_BUFFER_SIZE 30
+#endif
+
 typedef struct Tk_BindingTable_ {
     XEvent eventRing[EVENT_BUFFER_SIZE];
 				/* Circular queue of recent events (higher
@@ -600,7 +613,7 @@ static const TkStateMap visNotify[] = {
 };
 
 static const TkStateMap configureRequestDetail[] = {
-    {None,		"None"},
+    {0,		"None"},
     {Above,		"Above"},
     {Below,		"Below"},
     {BottomIf,		"BottomIf"},
@@ -3583,14 +3596,14 @@ DoWarp(
 
     if ((dispPtr->warpWindow == NULL) ||
             (Tk_IsMapped(dispPtr->warpWindow)
-            && (Tk_WindowId(dispPtr->warpWindow) != None))) {
+            && Tk_WindowId(dispPtr->warpWindow))) {
         TkpWarpPointer(dispPtr);
         XForceScreenSaver(dispPtr->display, ScreenSaverReset);
     }
 
     if (dispPtr->warpWindow) {
 	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = None;
+	dispPtr->warpWindow = 0;
     }
     dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }

@@ -587,7 +587,7 @@ CreateWidget(
 
     textPtr->state = TK_TEXT_STATE_NORMAL;
     textPtr->relief = TK_RELIEF_FLAT;
-    textPtr->cursor = None;
+    textPtr->cursor = 0;
     textPtr->charWidth = 1;
     textPtr->charHeight = 10;
     textPtr->wrapMode = TEXT_WRAPMODE_CHAR;
@@ -2280,17 +2280,17 @@ ConfigureText(
     }
     textPtr->selTagPtr->affectsDisplay = 0;
     textPtr->selTagPtr->affectsDisplayGeometry = 0;
-    if ((textPtr->selTagPtr->elideString != NULL)
-	    || (textPtr->selTagPtr->tkfont != None)
-	    || (textPtr->selTagPtr->justifyString != NULL)
-	    || (textPtr->selTagPtr->lMargin1String != NULL)
-	    || (textPtr->selTagPtr->lMargin2String != NULL)
-	    || (textPtr->selTagPtr->offsetString != NULL)
-	    || (textPtr->selTagPtr->rMarginString != NULL)
-	    || (textPtr->selTagPtr->spacing1String != NULL)
-	    || (textPtr->selTagPtr->spacing2String != NULL)
-	    || (textPtr->selTagPtr->spacing3String != NULL)
-	    || (textPtr->selTagPtr->tabStringPtr != NULL)
+    if (textPtr->selTagPtr->elideString
+	    || textPtr->selTagPtr->tkfont
+	    || textPtr->selTagPtr->justifyString
+	    || textPtr->selTagPtr->lMargin1String
+	    || textPtr->selTagPtr->lMargin2String
+	    || textPtr->selTagPtr->offsetString
+	    || textPtr->selTagPtr->rMarginString
+	    || textPtr->selTagPtr->spacing1String
+	    || textPtr->selTagPtr->spacing2String
+	    || textPtr->selTagPtr->spacing3String
+	    || textPtr->selTagPtr->tabStringPtr
 	    || (textPtr->selTagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
 	textPtr->selTagPtr->affectsDisplayGeometry = 1;
@@ -2298,10 +2298,10 @@ ConfigureText(
     if ((textPtr->selTagPtr->border != NULL)
 	    || (textPtr->selTagPtr->selBorder != NULL)
 	    || (textPtr->selTagPtr->reliefString != NULL)
-	    || (textPtr->selTagPtr->bgStipple != None)
+	    || textPtr->selTagPtr->bgStipple
 	    || (textPtr->selTagPtr->fgColor != NULL)
 	    || (textPtr->selTagPtr->selFgColor != NULL)
-	    || (textPtr->selTagPtr->fgStipple != None)
+	    || textPtr->selTagPtr->fgStipple
 	    || (textPtr->selTagPtr->overstrikeString != NULL)
 	    || (textPtr->selTagPtr->overstrikeColor != NULL)
 	    || (textPtr->selTagPtr->underlineString != NULL)
@@ -5830,7 +5830,7 @@ SearchCore(
 	    firstOffset = 0;
 	}
 
-	if (alreadySearchOffset != -1) {
+	if (alreadySearchOffset >= 0) {
 	    if (searchSpecPtr->backwards) {
 		if (alreadySearchOffset < lastOffset) {
 		    lastOffset = alreadySearchOffset;
@@ -5919,17 +5919,17 @@ SearchCore(
 			 * match.
 			 */
 
-			const char c = pattern[0];
+			const char c = matchLength ? pattern[0] : '\0';
 
-			if (alreadySearchOffset != -1) {
+			if (alreadySearchOffset >= 0) {
 			    p = startOfLine + alreadySearchOffset;
 			    alreadySearchOffset = -1;
 			} else {
 			    p = startOfLine + lastOffset -1;
 			}
 			while (p >= startOfLine + firstOffset) {
-			    if (p[0] == c && !strncmp(p, pattern,
-				    (size_t) matchLength)) {
+			    if (matchLength == 0 || (p[0] == c && !strncmp(
+				     p, pattern, (size_t) matchLength))) {
 				goto backwardsMatch;
 			    }
 			    p--;
@@ -6092,10 +6092,14 @@ SearchCore(
 			if (firstNewLine != -1) {
 			    break;
 			} else {
-			    alreadySearchOffset -= matchLength;
+			    alreadySearchOffset -= (matchLength ? matchLength : 1);
+                            if (alreadySearchOffset < 0) {
+                                break;
+                            }
 			}
 		    } else {
-			firstOffset = p - startOfLine + matchLength;
+                        firstOffset = matchLength ? p - startOfLine + matchLength
+                                                  : p - startOfLine + 1;
 			if (firstOffset >= lastOffset) {
 			    /*
 			     * Now, we have to be careful not to find

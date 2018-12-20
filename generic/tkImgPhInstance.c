@@ -19,6 +19,9 @@
  */
 
 #include "tkImgPhoto.h"
+#ifdef MAC_OSX_TK
+#define TKPUTIMAGE_CAN_BLEND
+#endif
 
 /*
  * Declaration for internal Xlib function used here:
@@ -30,8 +33,10 @@ extern int		_XInitImageFuncPtrs(XImage *image);
  * Forward declarations
  */
 
+#ifndef TKPUTIMAGE_CAN_BLEND
 static void		BlendComplexAlpha(XImage *bgImg, PhotoInstance *iPtr,
 			    int xOffset, int yOffset, int width, int height);
+#endif
 static int		IsValidPalette(PhotoInstance *instancePtr,
 			    const char *palette);
 static int		CountBits(pixel mask);
@@ -162,7 +167,7 @@ TkImgPhotoConfigureInstance(
      * has the side effect of allocating a pixmap for us.
      */
 
-    if ((instancePtr->pixels == None) || (instancePtr->error == NULL)
+    if (!instancePtr->pixels || (instancePtr->error == NULL)
 	    || (instancePtr->width != masterPtr->width)
 	    || (instancePtr->height != masterPtr->height)) {
 	TkImgPhotoInstanceSetSize(instancePtr);
@@ -280,7 +285,7 @@ TkImgPhotoGet(
     Tk_PreserveColormap(instancePtr->display, instancePtr->colormap);
     instancePtr->refCount = 1;
     instancePtr->colorTablePtr = NULL;
-    instancePtr->pixels = None;
+    instancePtr->pixels = 0;
     instancePtr->error = NULL;
     instancePtr->width = 0;
     instancePtr->height = 0;
@@ -409,7 +414,7 @@ TkImgPhotoGet(
  *
  *----------------------------------------------------------------------
  */
-
+#ifndef TKPUTIMAGE_CAN_BLEND
 #if !defined(_WIN32) || defined(PLATFORM_SDL)
 #define GetRValue(rgb)	(UCHAR(((rgb) & red_mask) >> red_shift))
 #define GetGValue(rgb)	(UCHAR(((rgb) & green_mask) >> green_shift))
@@ -418,13 +423,6 @@ TkImgPhotoGet(
 	(UCHAR(r) << red_shift)   | \
 	(UCHAR(g) << green_shift) | \
 	(UCHAR(b) << blue_shift)  ))
-#ifdef MAC_OSX_TK
-#define RGBA(r, g, b, a) ((unsigned)( \
-	(UCHAR(r) << red_shift)   | \
-	(UCHAR(g) << green_shift) | \
-	(UCHAR(b) << blue_shift)  | \
-	(UCHAR(a) << alpha_shift) ))
-#endif
 #define RGB15(r, g, b)	((unsigned)( \
 	(((r) * red_mask / 255)   & red_mask)   | \
 	(((g) * green_mask / 255) & green_mask) | \
@@ -443,16 +441,7 @@ BlendComplexAlpha(
     unsigned long pixel;
     unsigned char r, g, b, alpha, unalpha, *masterPtr;
     unsigned char *alphaAr = iPtr->masterPtr->pix32;
-#if defined(MAC_OSX_TK)
-    /* Background "pixels" are actually 2^pp x 2^pp blocks of subpixels.  Each
-     * block gets blended with the color of one image pixel.  Since we iterate
-     * over the background subpixels, we reset the width and height to the
-     * subpixel dimensions of the background image we are using.
-     */
-    int pp = bgImg->pixelpower;
-    width = width << pp;
-    height = height << pp;
-#endif
+
     /*
      * This blending is an integer version of the Source-Over compositing rule
      * (see Porter&Duff, "Compositing Digital Images", proceedings of SIGGRAPH
@@ -492,13 +481,6 @@ BlendComplexAlpha(
     while ((0x0001 & (blue_mask >> blue_shift)) == 0) {
 	blue_shift++;
     }
-#ifdef MAC_OSX_TK
-    unsigned long alpha_mask = visual->alpha_mask;
-    unsigned long alpha_shift = 0;
-    while ((0x0001 & (alpha_mask >> alpha_shift)) == 0) {
-	alpha_shift++;
-    }
-#endif
 #endif /* !_WIN32 */
 
     /*
@@ -507,7 +489,7 @@ BlendComplexAlpha(
      * optimized.
      */
 
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) || defined(PLATFORM_SDL)
+#if !defined(_WIN32) || defined(PLATFORM_SDL)
     if (bgImg->depth < 24) {
 	unsigned char red_mlen, green_mlen, blue_mlen;
 
@@ -555,19 +537,12 @@ BlendComplexAlpha(
 	}
 	return;
     }
-#endif /* !_WIN32 && !MAC_OSX_TK */
+#endif /* !_WIN32 */
 
     for (y = 0; y < height; y++) {
-# if !defined(MAC_OSX_TK)
 	line = (y + yOffset) * iPtr->masterPtr->width;
 	for (x = 0; x < width; x++) {
 	    masterPtr = alphaAr + ((line + x + xOffset) * 4);
-#else
-	/* Repeat each image row and column 2^pp times. */
-	line = ((y>>pp) + yOffset) * iPtr->masterPtr->width;
-	for (x = 0; x < width; x++) {
-	    masterPtr = alphaAr + ((line + (x>>pp) + xOffset) * 4);
-#endif
 	    alpha = masterPtr[3];
 
 	    /*
@@ -599,16 +574,13 @@ BlendComplexAlpha(
 		    g = ALPHA_BLEND(ga, g, alpha, unalpha);
 		    b = ALPHA_BLEND(ba, b, alpha, unalpha);
 		}
-#ifndef MAC_OSX_TK
 		XPutPixel(bgImg, x, y, RGB(r, g, b));
-#else
-		XPutPixel(bgImg, x, y, RGBA(r, g, b, alpha));
-#endif
 	    }
 	}
     }
 #undef ALPHA_BLEND
 }
+#endif /* TKPUTIMAGE_CAN_BLEND */
 
 /*
  *----------------------------------------------------------------------
@@ -640,16 +612,36 @@ TkImgPhotoDisplay(
 				 * to imageX and imageY. */
 {
     PhotoInstance *instancePtr = clientData;
+#ifndef TKPUTIMAGE_CAN_BLEND
     XVisualInfo visInfo = instancePtr->visualInfo;
+#endif
 
     /*
      * If there's no pixmap, it means that an error occurred while creating
      * the image instance so it can't be displayed.
      */
 
-    if (instancePtr->pixels == None) {
+    if (!instancePtr->pixels) {
 	return;
     }
+
+#ifdef TKPUTIMAGE_CAN_BLEND
+    /*
+     * If TkPutImage can handle RGBA Ximages directly there is
+     * no need to call XGetImage or to do the Porter-Duff compositing by hand.
+     */
+
+    unsigned char *rgbaPixels = instancePtr->masterPtr->pix32;
+    XImage *photo = XCreateImage(display, NULL, 32, ZPixmap, 0, (char*)rgbaPixels,
+				 (unsigned int)instancePtr->width,
+				 (unsigned int)instancePtr->height,
+				 0, (unsigned int)(4 * instancePtr->width));
+    TkPutImage(NULL, 0, display, drawable, instancePtr->gc,
+	       photo, imageX, imageY, drawableX, drawableY,
+	       (unsigned int) width, (unsigned int) height);
+    photo->data = NULL;
+    XDestroyImage(photo);
+#else
 
     if ((instancePtr->masterPtr->flags & COMPLEX_ALPHA)
 	    && visInfo.depth >= 15
@@ -710,10 +702,11 @@ TkImgPhotoDisplay(
 	XCopyArea(display, instancePtr->pixels, drawable, instancePtr->gc,
 		imageX, imageY, (unsigned) width, (unsigned) height,
 		drawableX, drawableY);
-	XSetClipMask(display, instancePtr->gc, None);
+	XSetClipMask(display, instancePtr->gc, 0);
 	XSetClipOrigin(display, instancePtr->gc, 0, 0);
     }
     XFlush(display);
+#endif
 }
 
 /*
@@ -796,7 +789,7 @@ TkImgPhotoInstanceSetSize(
 
     if ((instancePtr->width != masterPtr->width)
 	    || (instancePtr->height != masterPtr->height)
-	    || (instancePtr->pixels == None)) {
+	    || !instancePtr->pixels) {
 	newPixmap = Tk_GetPixmap(instancePtr->display,
 		RootWindow(instancePtr->display,
 			instancePtr->visualInfo.screen),
@@ -818,7 +811,7 @@ TkImgPhotoInstanceSetSize(
 
 	TkSetPixmapColormap(newPixmap, instancePtr->colormap);
 
-	if (instancePtr->pixels != None) {
+	if (instancePtr->pixels) {
 	    /*
 	     * Copy any common pixels from the old pixmap and free it.
 	     */
@@ -1599,10 +1592,10 @@ TkImgDisposeInstance(
     PhotoInstance *instancePtr = clientData;
     PhotoInstance *prevPtr;
 
-    if (instancePtr->pixels != None) {
+    if (instancePtr->pixels) {
 	Tk_FreePixmap(instancePtr->display, instancePtr->pixels);
     }
-    if (instancePtr->gc != None) {
+    if (instancePtr->gc) {
 	Tk_FreeGC(instancePtr->display, instancePtr->gc);
     }
     if (instancePtr->imagePtr != NULL) {

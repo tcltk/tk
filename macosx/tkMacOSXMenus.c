@@ -17,6 +17,7 @@
 
 static void		GenerateEditEvent(const char *name);
 static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
+
 
 #pragma mark TKApplication(TKMenus)
 
@@ -97,19 +98,49 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 		   target:nil],
 	    nil]];
 
-    _defaultWindowsMenuItems = [[NSArray arrayWithObjects:
-	    [NSMenuItem itemWithTitle:@"Minimize"
-		   action:@selector(performMiniaturize:) target:nil
-		   keyEquivalent:@"m"],
-	    [NSMenuItem itemWithTitle:@"Zoom" action:@selector(performZoom:)
-		   target:nil],
-	    [NSMenuItem separatorItem],
-	    [NSMenuItem itemWithTitle:@"Bring All to Front"
-		   action:@selector(arrangeInFront:)],
-	    nil] retain];
+    _defaultWindowsMenuItems = [NSArray arrayWithObjects:
+    	    [NSMenuItem itemWithTitle:@"Minimize"
+    	    	   action:@selector(performMiniaturize:) target:nil
+    	    	   keyEquivalent:@"m"],
+    	    [NSMenuItem itemWithTitle:@"Zoom" action:@selector(performZoom:)
+    	    	   target:nil],
+	    nil];
 
+    /*
+     * On OS X 10.12 we get duplicate tab control items if we create them here.
+     */
+
+    if ([NSApp macMinorVersion] > 12) {
+	_defaultWindowsMenuItems = [_defaultWindowsMenuItems
+	     arrayByAddingObjectsFromArray:
+	     [NSArray arrayWithObjects:
+        	    [NSMenuItem separatorItem],
+    	            [NSMenuItem itemWithTitle:@"Show Previous Tab"
+		           action:@selector(selectPreviousTab:)
+		           target:nil
+			   keyEquivalent:@"\t"
+		           keyEquivalentModifierMask:
+		    	       NSControlKeyMask|NSShiftKeyMask],
+	            [NSMenuItem itemWithTitle:@"Show Next Tab"
+		           action:@selector(selectNextTab:)
+		           target:nil
+			   keyEquivalent:@"\t"
+		           keyEquivalentModifierMask:NSControlKeyMask],
+    	            [NSMenuItem itemWithTitle:@"Move Tab To New Window"
+    	    	           action:@selector(moveTabToNewWindow:)
+    	    	           target:nil],
+    	            [NSMenuItem itemWithTitle:@"Merge All Windows"
+    	    	           action:@selector(mergeAllWindows:)
+    	    	           target:nil],
+    	            [NSMenuItem separatorItem],
+	            nil]];
+    }
+    _defaultWindowsMenuItems = [_defaultWindowsMenuItems arrayByAddingObject:
+	    [NSMenuItem itemWithTitle:@"Bring All to Front"
+		   action:@selector(arrangeInFront:)]];
+    [_defaultWindowsMenuItems retain];
     TKMenu *windowsMenu = [TKMenu menuWithTitle:@"Window" menuItems:
-	    _defaultWindowsMenuItems];
+    				      _defaultWindowsMenuItems];
 
     _defaultHelpMenuItems = [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
@@ -379,13 +410,13 @@ GenerateEditEvent(
     XVirtualEvent event;
     int x, y;
     TkWindow *winPtr = TkMacOSXGetTkWindow([NSApp keyWindow]);
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin;
 
-    if (tkwin == NULL) {
+    if (!winPtr) {
 	return;
     }
     tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
-    if (tkwin == NULL) {
+    if (!tkwin) {
 	return;
     }
     bzero(&event, sizeof(XVirtualEvent));
