@@ -947,7 +947,7 @@ TestobjconfigObjCmd(
 	recordPtr->index = 0;
 	recordPtr->colorPtr = NULL;
 	recordPtr->tkfont = NULL;
-	recordPtr->bitmap = None;
+	recordPtr->bitmap = 0;
 	recordPtr->border = NULL;
 	recordPtr->relief = TK_RELIEF_FLAT;
 	recordPtr->cursor = NULL;
@@ -1874,7 +1874,7 @@ TestpropObjCmd(
 	    w, propName, 0, 100000, False, AnyPropertyType,
 	    &actualType, &actualFormat, &length,
 	    &bytesAfter, &property);
-    if ((result == Success) && (actualType != None)) {
+    if ((result == Success) && actualType) {
 	if ((actualFormat == 8) && (actualType == XA_STRING)) {
 	    for (p = property; ((unsigned long)(p-property)) < length; p++) {
 		if (*p == 0) {

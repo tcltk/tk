@@ -205,7 +205,7 @@ DoConfigureNotify(
     if (winPtr->changes.stack_mode == Above) {
 	event.xconfigure.above = winPtr->changes.sibling;
     } else {
-	event.xconfigure.above = None;
+	event.xconfigure.above = 0;
     }
     event.xconfigure.override_redirect = winPtr->atts.override_redirect;
     Tk_HandleEvent(&event);
@@ -421,7 +421,7 @@ MakeTransparentWindowExist(
     int notUsed;
     TkDisplay *dispPtr;
 
-    if (winPtr->window != None) {
+    if (winPtr->window) {
 	return;			/* Window already exists. */
     }
 
@@ -431,7 +431,7 @@ MakeTransparentWindowExist(
 
     TkpMakeTransparentWindowExist(tkwin, parent);
 
-    if (winPtr->window == None) {
+    if (!winPtr->window) {
 	return;			/* Platform didn't make Window. */
     }
 
@@ -458,7 +458,7 @@ MakeTransparentWindowExist(
 
 	for (winPtr2 = winPtr->nextPtr; winPtr2 != NULL;
 		winPtr2 = winPtr2->nextPtr) {
-	    if ((winPtr2->window != None) &&
+	    if ((winPtr2->window) &&
 		    !(winPtr2->flags & (TK_TOP_HIERARCHY|TK_REPARENTED))) {
 		XWindowChanges changes;
 
@@ -568,7 +568,7 @@ CreateBusy(
     busyPtr->height = Tk_Height(tkRef);
     busyPtr->x = Tk_X(tkRef);
     busyPtr->y = Tk_Y(tkRef);
-    busyPtr->cursor = None;
+    busyPtr->cursor = 0;
     Tk_SetClass(tkBusy, "Busy");
     busyPtr->optionTable = Tk_CreateOptionTable(interp, busyOptionSpecs);
     if (Tk_InitOptions(interp, busyPtr, busyPtr->optionTable,
@@ -598,7 +598,7 @@ CreateBusy(
      */
 
     Tk_ManageGeometry(tkBusy, &busyMgrInfo, busyPtr);
-    if (busyPtr->cursor != None) {
+    if (busyPtr->cursor) {
 	Tk_DefineCursor(tkBusy, busyPtr->cursor);
     }
 
@@ -643,7 +643,7 @@ ConfigureBusy(
 	return TCL_ERROR;
     }
     if (busyPtr->cursor != oldCursor) {
-	if (busyPtr->cursor == None) {
+	if (!busyPtr->cursor) {
 	    Tk_UndefineCursor(busyPtr->tkBusy);
 	} else {
 	    Tk_DefineCursor(busyPtr->tkBusy, busyPtr->cursor);

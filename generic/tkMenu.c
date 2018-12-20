@@ -458,7 +458,7 @@ Tk_MenuObjCmd(
 	    Tk_PathName(menuPtr->tkwin), MenuWidgetObjCmd, menuPtr,
 	    MenuCmdDeletedProc);
     menuPtr->active = -1;
-    menuPtr->cursorPtr = None;
+    menuPtr->cursorPtr = 0;
     menuPtr->masterMenuPtr = menuPtr;
     menuPtr->menuType = UNKNOWN_TYPE;
     TkMenuInitializeDrawingFields(menuPtr);

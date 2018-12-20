@@ -587,7 +587,7 @@ CreateWidget(
 
     textPtr->state = TK_TEXT_STATE_NORMAL;
     textPtr->relief = TK_RELIEF_FLAT;
-    textPtr->cursor = None;
+    textPtr->cursor = 0;
     textPtr->charWidth = 1;
     textPtr->charHeight = 10;
     textPtr->wrapMode = TEXT_WRAPMODE_CHAR;
@@ -2274,17 +2274,17 @@ ConfigureText(
     }
     textPtr->selTagPtr->affectsDisplay = 0;
     textPtr->selTagPtr->affectsDisplayGeometry = 0;
-    if ((textPtr->selTagPtr->elideString != NULL)
-	    || (textPtr->selTagPtr->tkfont != None)
-	    || (textPtr->selTagPtr->justifyString != NULL)
-	    || (textPtr->selTagPtr->lMargin1String != NULL)
-	    || (textPtr->selTagPtr->lMargin2String != NULL)
-	    || (textPtr->selTagPtr->offsetString != NULL)
-	    || (textPtr->selTagPtr->rMarginString != NULL)
-	    || (textPtr->selTagPtr->spacing1String != NULL)
-	    || (textPtr->selTagPtr->spacing2String != NULL)
-	    || (textPtr->selTagPtr->spacing3String != NULL)
-	    || (textPtr->selTagPtr->tabStringPtr != NULL)
+    if (textPtr->selTagPtr->elideString
+	    || textPtr->selTagPtr->tkfont
+	    || textPtr->selTagPtr->justifyString
+	    || textPtr->selTagPtr->lMargin1String
+	    || textPtr->selTagPtr->lMargin2String
+	    || textPtr->selTagPtr->offsetString
+	    || textPtr->selTagPtr->rMarginString
+	    || textPtr->selTagPtr->spacing1String
+	    || textPtr->selTagPtr->spacing2String
+	    || textPtr->selTagPtr->spacing3String
+	    || textPtr->selTagPtr->tabStringPtr
 	    || (textPtr->selTagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
 	textPtr->selTagPtr->affectsDisplayGeometry = 1;
@@ -2292,10 +2292,10 @@ ConfigureText(
     if ((textPtr->selTagPtr->border != NULL)
 	    || (textPtr->selTagPtr->selBorder != NULL)
 	    || (textPtr->selTagPtr->reliefString != NULL)
-	    || (textPtr->selTagPtr->bgStipple != None)
+	    || textPtr->selTagPtr->bgStipple
 	    || (textPtr->selTagPtr->fgColor != NULL)
 	    || (textPtr->selTagPtr->selFgColor != NULL)
-	    || (textPtr->selTagPtr->fgStipple != None)
+	    || textPtr->selTagPtr->fgStipple
 	    || (textPtr->selTagPtr->overstrikeString != NULL)
 	    || (textPtr->selTagPtr->overstrikeColor != NULL)
 	    || (textPtr->selTagPtr->underlineString != NULL)

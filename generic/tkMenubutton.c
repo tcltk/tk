@@ -263,7 +263,7 @@ Tk_MenubuttonObjCmd(
     mbPtr->text = NULL;
     mbPtr->underline = -1;
     mbPtr->textVarName = NULL;
-    mbPtr->bitmap = None;
+    mbPtr->bitmap = 0;
     mbPtr->imageString = NULL;
     mbPtr->image = NULL;
     mbPtr->state = STATE_NORMAL;
@@ -279,11 +279,11 @@ Tk_MenubuttonObjCmd(
     mbPtr->normalFg = NULL;
     mbPtr->activeFg = NULL;
     mbPtr->disabledFg = NULL;
-    mbPtr->normalTextGC = None;
-    mbPtr->activeTextGC = None;
-    mbPtr->gray = None;
-    mbPtr->disabledGC = None;
-    mbPtr->stippleGC = None;
+    mbPtr->normalTextGC = 0;
+    mbPtr->activeTextGC = 0;
+    mbPtr->gray = 0;
+    mbPtr->disabledGC = 0;
+    mbPtr->stippleGC = 0;
     mbPtr->leftBearing = 0;
     mbPtr->rightBearing = 0;
     mbPtr->widthString = NULL;
@@ -300,7 +300,7 @@ Tk_MenubuttonObjCmd(
     mbPtr->indicatorWidth = 0;
     mbPtr->indicatorHeight = 0;
     mbPtr->direction = DIRECTION_FLUSH;
-    mbPtr->cursor = None;
+    mbPtr->cursor = 0;
     mbPtr->takeFocus = NULL;
     mbPtr->flags = 0;
 
@@ -443,22 +443,22 @@ DestroyMenuButton(
     if (mbPtr->image != NULL) {
 	Tk_FreeImage(mbPtr->image);
     }
-    if (mbPtr->normalTextGC != None) {
+    if (mbPtr->normalTextGC) {
 	Tk_FreeGC(mbPtr->display, mbPtr->normalTextGC);
     }
-    if (mbPtr->activeTextGC != None) {
+    if (mbPtr->activeTextGC) {
 	Tk_FreeGC(mbPtr->display, mbPtr->activeTextGC);
     }
-    if (mbPtr->disabledGC != None) {
+    if (mbPtr->disabledGC) {
 	Tk_FreeGC(mbPtr->display, mbPtr->disabledGC);
     }
-    if (mbPtr->stippleGC != None) {
+    if (mbPtr->stippleGC) {
 	Tk_FreeGC(mbPtr->display, mbPtr->stippleGC);
     }
-    if (mbPtr->gray != None) {
+    if (mbPtr->gray) {
 	Tk_FreeBitmap(mbPtr->display, mbPtr->gray);
     }
-    if (mbPtr->textLayout != NULL) {
+    if (mbPtr->textLayout) {
 	Tk_FreeTextLayout(mbPtr->textLayout);
     }
     Tk_FreeConfigOptions((char *) mbPtr, mbPtr->optionTable, mbPtr->tkwin);
@@ -587,7 +587,7 @@ ConfigureMenuButton(
 	 * Recompute the geometry for the button.
 	 */
 
-	if ((mbPtr->bitmap != None) || (mbPtr->image != NULL)) {
+	if (mbPtr->bitmap || mbPtr->image) {
 	    if (Tk_GetPixels(interp, mbPtr->tkwin, mbPtr->widthString,
 		    &mbPtr->width) != TCL_OK) {
 	    widthError:
@@ -690,7 +690,7 @@ TkMenuButtonWorldChanged(
     gcValues.graphics_exposures = False;
     mask = GCForeground | GCBackground | GCFont | GCGraphicsExposures;
     gc = Tk_GetGC(mbPtr->tkwin, mask, &gcValues);
-    if (mbPtr->normalTextGC != None) {
+    if (mbPtr->normalTextGC) {
 	Tk_FreeGC(mbPtr->display, mbPtr->normalTextGC);
     }
     mbPtr->normalTextGC = gc;
@@ -699,7 +699,7 @@ TkMenuButtonWorldChanged(
     gcValues.background = Tk_3DBorderColor(mbPtr->activeBorder)->pixel;
     mask = GCForeground | GCBackground | GCFont;
     gc = Tk_GetGC(mbPtr->tkwin, mask, &gcValues);
-    if (mbPtr->activeTextGC != None) {
+    if (mbPtr->activeTextGC) {
 	Tk_FreeGC(mbPtr->display, mbPtr->activeTextGC);
     }
     mbPtr->activeTextGC = gc;
@@ -710,13 +710,13 @@ TkMenuButtonWorldChanged(
      * Create the GC that can be used for stippling
      */
 
-    if (mbPtr->stippleGC == None) {
+    if (!mbPtr->stippleGC) {
 	gcValues.foreground = gcValues.background;
 	mask = GCForeground;
-	if (mbPtr->gray == None) {
+	if (!mbPtr->gray) {
 	    mbPtr->gray = Tk_GetBitmap(NULL, mbPtr->tkwin, "gray50");
 	}
-	if (mbPtr->gray != None) {
+	if (mbPtr->gray) {
 	    gcValues.fill_style = FillStippled;
 	    gcValues.stipple = mbPtr->gray;
 	    mask |= GCFillStyle | GCStipple;
@@ -730,13 +730,13 @@ TkMenuButtonWorldChanged(
      */
 
     mask = GCForeground | GCBackground | GCFont;
-    if (mbPtr->disabledFg != NULL) {
+    if (mbPtr->disabledFg) {
 	gcValues.foreground = mbPtr->disabledFg->pixel;
     } else {
 	gcValues.foreground = gcValues.background;
     }
     gc = Tk_GetGC(mbPtr->tkwin, mask, &gcValues);
-    if (mbPtr->disabledGC != None) {
+    if (mbPtr->disabledGC) {
 	Tk_FreeGC(mbPtr->display, mbPtr->disabledGC);
     }
     mbPtr->disabledGC = gc;

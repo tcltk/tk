@@ -256,11 +256,11 @@ Tk_MessageObjCmd(
 	    MessageCmdDeletedProc);
     msgPtr->optionTable = optionTable;
     msgPtr->relief = TK_RELIEF_FLAT;
-    msgPtr->textGC = None;
+    msgPtr->textGC = 0;
     msgPtr->anchor = TK_ANCHOR_CENTER;
     msgPtr->aspect = 150;
     msgPtr->justify = TK_JUSTIFY_LEFT;
-    msgPtr->cursor = None;
+    msgPtr->cursor = 0;
 
     Tk_SetClass(msgPtr->tkwin, "Message");
     Tk_SetClassProcs(msgPtr->tkwin, &messageClass, msgPtr);
@@ -398,13 +398,13 @@ DestroyMessage(
      * Tk_FreeConfigOptions handle all the standard option-related stuff.
      */
 
-    if (msgPtr->textGC != None) {
+    if (msgPtr->textGC) {
 	Tk_FreeGC(msgPtr->display, msgPtr->textGC);
     }
-    if (msgPtr->textLayout != NULL) {
+    if (msgPtr->textLayout) {
 	Tk_FreeTextLayout(msgPtr->textLayout);
     }
-    if (msgPtr->textVarName != NULL) {
+    if (msgPtr->textVarName) {
 	Tcl_UntraceVar2(msgPtr->interp, msgPtr->textVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, msgPtr);
@@ -471,7 +471,7 @@ ConfigureMessage(
 	const char *value;
 
 	value = Tcl_GetVar2(interp, msgPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
-	if (value == NULL) {
+	if (!value) {
 	    Tcl_SetVar2(interp, msgPtr->textVarName, NULL, msgPtr->string,
 		    TCL_GLOBAL_ONLY);
 	} else {
@@ -525,18 +525,18 @@ MessageWorldChanged(
     ClientData instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
-    GC gc = None;
+    GC gc = 0;
     Tk_FontMetrics fm;
     Message *msgPtr = instanceData;
 
-    if (msgPtr->border != NULL) {
+    if (msgPtr->border) {
 	Tk_SetBackgroundFromBorder(msgPtr->tkwin, msgPtr->border);
     }
 
     gcValues.font = Tk_FontId(msgPtr->tkfont);
     gcValues.foreground = msgPtr->fgColorPtr->pixel;
     gc = Tk_GetGC(msgPtr->tkwin, GCForeground | GCFont, &gcValues);
-    if (msgPtr->textGC != None) {
+    if (msgPtr->textGC) {
 	Tk_FreeGC(msgPtr->display, msgPtr->textGC);
     }
     msgPtr->textGC = gc;
