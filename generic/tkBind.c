@@ -1341,6 +1341,60 @@ TkBindFree(
 }
 
 /*
+ *---------------------------------------------------------------------------
+ *
+ * TkBindDeadWindow --
+ *
+ *	This function is invoked when it is determined that a window is dead.
+ *	It cleans up event-related information about the window.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Various things get cleaned up.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+void
+TkpBindDeadWindow(
+    TkWindow *winPtr)	/* Information about the window that is being deleted. */
+{
+    BindingTable *bindPtr;
+    Event *curEvent;
+    Window window;
+
+    assert(winPtr);
+
+    if (!winPtr->mainPtr) {
+	return;
+    }
+
+    bindPtr = winPtr->mainPtr->bindingTable;
+    window = Tk_WindowId(winPtr);
+
+    curEvent = bindPtr->curEvent;
+    if (curEvent->xev.xany.window == window) {
+	bindPtr->curEvent->xev.xany.window = None;
+    }
+
+    curEvent = bindPtr->eventInfo + KeyPress;
+    if (curEvent->xev.xany.window == window) {
+	curEvent->xev.xany.window = None;
+	bindPtr->eventInfo[KeyPress].countAny = 0;
+	bindPtr->eventInfo[KeyPress].countDetailed = 0;
+    }
+
+    curEvent = bindPtr->eventInfo + KeyRelease;
+    if (curEvent->xev.xany.window == window) {
+	curEvent->xev.xany.window = None;
+	bindPtr->eventInfo[KeyRelease].countAny = 0;
+	bindPtr->eventInfo[KeyRelease].countDetailed = 0;
+    }
+}
+
+/*
  *--------------------------------------------------------------
  *
  * Tk_CreateBindingTable --
@@ -2088,8 +2142,6 @@ Tk_BindEvent(
      * problems for mega-widgets, since the internal structure of a
      * mega-widget isn't supposed to be visible to people watching the parent.
      *
-     * Also ignore modifier key events, these events cannot be bound.
-     *
      * Furthermore we have to compute current time, needed for "event generate".
      */
 
@@ -2100,13 +2152,10 @@ Tk_BindEvent(
 	    bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
 	    bindInfoPtr->lastEventTime = eventPtr->xcrossing.time;
 	}
-	if (eventPtr->xcrossing.detail == NotifyInferior) {
-	    return;
-	}
-	break;
+	/* fallthru */
     case FocusIn:
     case FocusOut:
-	if (eventPtr->xfocus.detail == NotifyInferior) {
+	if (eventPtr->xcrossing.detail == NotifyInferior) {
 	    return;
 	}
 	break;
@@ -2118,7 +2167,7 @@ Tk_BindEvent(
 	    bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
 	    bindInfoPtr->lastEventTime = eventPtr->xkey.time;
 	}
-	/* modifier keys are not influencing button events */
+	/* modifier keys should not influence button events */
 	for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
 		reset = false;
@@ -3763,6 +3812,12 @@ HandleEventGenerate(
 	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
     }
 
+#ifdef DONT_REDIRECT_GENERATED_KEY_EVENTS
+    if (event.general.xany.type == KeyPress || event.general.xany.type == KeyRelease) {
+	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
+    }
+#endif
+
     /*
      * Process the remaining arguments to fill in additional fields of the event.
      */
@@ -5093,10 +5148,10 @@ XEvent *
 TkpGetBindingXEvent(
     Tcl_Interp *interp)		/* Interpreter. */
 {
-   TkWindow *winPtr = (TkWindow *) Tk_MainWindow(interp);
-   BindingTable *bindPtr = winPtr->mainPtr->bindingTable;
+    TkWindow *winPtr = (TkWindow *) Tk_MainWindow(interp);
+    BindingTable *bindPtr = winPtr->mainPtr->bindingTable;
 
-   return &bindPtr->curEvent->xev;
+    return &bindPtr->curEvent->xev;
 }
 
 /*

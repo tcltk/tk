@@ -6246,21 +6246,20 @@ test bind-32.9 {trigger events for modifier keys} -setup {
 } -cleanup {
     destroy .t.f
 } -result {Key}
-test bind-32.10 {clash of Space with VK_CAPITAL (Windows only)} -setup {
-    pack [frame .t.f]
-    focus -force .t.f
-    update
+test bind-32.10 {reset key state when destroying window} -setup {
     set x {}
 } -body {
-    bind .t.f <1> { set x "Single" }
-    bind .t.f <Double-1> { set x "Double" }
-    event generate .t.f <1>
-    event generate .t.f <KeyPress> -keycode 20
-    event generate .t.f <1>
-    set x
-} -cleanup {
+    pack [frame .t.f]; update; focus -force .t.f
+    bind .t.f <Key-A> { set x "A" }
+    event generate .t.f <KeyPress-A>
     destroy .t.f
-} -result {Single}
+    pack [frame .t.f]; update; focus -force .t.f
+    bind .t.f <Key-A> { set x "A" }
+    bind .t.f <Double-Key-A> { set x "AA" }
+    event generate .t.f <KeyPress-A>
+    destroy .t.f
+    set x
+} -result {A}
 test bind-32.11 {match detailed virtual} -setup {
     pack [frame .t.f -class Test]
     focus -force .t.f
@@ -6278,6 +6277,39 @@ test bind-32.11 {match detailed virtual} -setup {
     event delete <<TestControlButton1>>
     bind Test <Button-1> {#}
 } -result {Control-Button-1}
+test bind-32.12 {don't detect repetition when window has changed} -setup {
+    pack [frame .t.f]
+    pack [frame .t.g]
+    focus -force .t.f
+    update
+    set x {}
+} -body {
+    bind .t.f <Button-1> { set x "1" }
+    bind .t.f <Double-Button-1> { set x "11" }
+    event generate .t.f <ButtonPress-1>
+    event generate .t.g <ButtonPress-1>
+    event generate .t.f <ButtonPress-1>
+    set x
+} -cleanup {
+    destroy .t.f
+    destroy .t.g
+} -result {1}
+test bind-32.13 {don't detect repetition when window has changed} -setup {
+    pack [frame .t.f]
+    pack [frame .t.g]
+    update
+    set x {}
+} -body {
+    bind .t.f <Key-A> { set x "A" }
+    bind .t.f <Double-Key-A> { set x "AA" }
+    focus -force .t.f; event generate .t.f <KeyPress-A>
+    focus -force .t.g; event generate .t.g <KeyPress-A>
+    focus -force .t.f; event generate .t.f <KeyPress-A>
+    set x
+} -cleanup {
+    destroy .t.f
+    destroy .t.g
+} -result {A}
 
 test bind-33.1 {prefer longest match} -setup {
     pack [frame .t.f]
