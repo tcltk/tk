@@ -6252,7 +6252,7 @@ test bind-32.10 {reset key state when destroying window} -setup {
     pack [frame .t.f]; update; focus -force .t.f
     bind .t.f <Key-A> { set x "A" }
     event generate .t.f <KeyPress-A>
-    destroy .t.f
+    destroy .t.f; update
     pack [frame .t.f]; update; focus -force .t.f
     bind .t.f <Key-A> { set x "A" }
     bind .t.f <Double-Key-A> { set x "AA" }
