@@ -672,6 +672,12 @@ static const TkStateMap propNotify[] = {
     {-1, NULL}
 };
 
+DEBUG(static int countTableItems = 0);
+DEBUG(static int countEntryItems = 0);
+DEBUG(static int countListItems = 0);
+DEBUG(static int countBindItems = 0);
+DEBUG(static int countSeqItems = 0);
+
 /*
  * Prototypes for local functions defined in this file:
  */
@@ -830,6 +836,7 @@ FreePatSeq(
 	VirtOwners_Free(&psPtr->ptr.owners);
     }
     ckfree(psPtr);
+    DEBUG(countSeqItems -= 1);
 }
 
 static void
@@ -969,6 +976,7 @@ MakeListEntry(
 
     if (PSList_IsEmpty(pool)) {
 	newEntry = ckalloc(sizeof(PSEntry));
+	DEBUG(countEntryItems += 1);
     } else {
 	newEntry = PSList_First(pool);
 	PSList_RemoveHead(pool);
@@ -1082,6 +1090,7 @@ ClearLookupTable(
 	psList = Tcl_GetHashValue(hPtr);
 	PSList_Move(pool, psList);
 	ckfree(psList);
+	DEBUG(countListItems -= 1);
     }
 }
 
@@ -1302,6 +1311,7 @@ TkBindInit(
     bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
     bindInfoPtr->lastEventTime = 0;
     mainPtr->bindInfo = bindInfoPtr;
+    DEBUG(countBindItems += 1);
 
     TkpInitializeMenuBindings(mainPtr->interp, mainPtr->bindingTable);
 }
@@ -1338,6 +1348,12 @@ TkBindFree(
     bindInfoPtr->deleted = true;
     Tcl_EventuallyFree(bindInfoPtr, TCL_DYNAMIC);
     mainPtr->bindInfo = NULL;
+
+    DEBUG(countBindItems -= 1);
+    assert(countBindItems > 0 || countTableItems == 0);
+    assert(countBindItems > 0 || countEntryItems == 0);
+    assert(countBindItems > 0 || countListItems == 0);
+    assert(countBindItems > 0 || countSeqItems == 0);
 }
 
 /*
@@ -1420,6 +1436,7 @@ Tk_CreateBindingTable(
     unsigned i;
 
     assert(interp);
+    DEBUG(countTableItems += 1);
 
     /*
      * Create and initialize a new binding table.
@@ -1488,6 +1505,7 @@ Tk_DeleteBindingTable(
     ClearLookupTable(&bindPtr->lookupTables, NULL);
     ClearPromotionLists(bindPtr, NULL);
     PromArr_Free(&bindPtr->promArr);
+    DEBUG(countEntryItems -= PSList_Size(&bindPtr->lookupTables.entryPool));
     PSList_Clear(&bindPtr->lookupTables.entryPool);
 
     /*
@@ -1499,6 +1517,7 @@ Tk_DeleteBindingTable(
     Tcl_DeleteHashTable(&bindPtr->objectTable);
 
     ckfree(bindPtr);
+    DEBUG(countTableItems -= 1);
 }
 
 /*
@@ -1542,6 +1561,7 @@ InsertPatSeq(
 	    psList = ckalloc(sizeof(PSList));
 	    PSList_Init(psList);
 	    Tcl_SetHashValue(hPtr, psList);
+	    DEBUG(countListItems += 1);
 	} else {
 	    psList = Tcl_GetHashValue(hPtr);
 	}
@@ -1641,7 +1661,7 @@ Tk_CreateBinding(
 	newStr = ckalloc(length1 + length2 + 2);
 	memcpy(newStr, oldStr, length1);
 	newStr[length1] = '\n';
-	memcpy(newStr+length1 + 1, script, length2 + 1);
+	memcpy(newStr + length1 + 1, script, length2 + 1);
     } else {
 	size_t length = strlen(script);
 
@@ -3342,9 +3362,10 @@ DeleteVirtualEventTable(
 	ckfree(Tcl_GetHashValue(hPtr));
     }
     Tcl_DeleteHashTable(&vetPtr->nameTable);
+    Tcl_DeleteHashTable(&vetPtr->lookupTables.listTable);
 
     ClearLookupTable(&vetPtr->lookupTables, NULL);
-    Tcl_DeleteHashTable(&vetPtr->lookupTables.listTable);
+    DEBUG(countEntryItems -= PSList_Size(&vetPtr->lookupTables.entryPool));
     PSList_Clear(&vetPtr->lookupTables.entryPool);
 }
 
@@ -3498,9 +3519,7 @@ DeleteVirtualEvent(
 	    VirtOwners *owners = psPtr->ptr.owners;
 	    int iVirt = VirtOwners_Find(owners, vhPtr);
 
-	    if (iVirt == -1) {
-		Tcl_Panic("DeleteVirtualEvent: couldn't find owner");
-	    }
+	    assert(iVirt != -1); /* otherwise we couldn't find owner, and this should not happen */
 
 	    /*
 	     * Remove association between this physical event and the given
@@ -4599,6 +4618,8 @@ FindSequence(
 	ckfree(psPtr);
 	return NULL;
     }
+
+    DEBUG(countSeqItems += 1);
 
     psPtr->numPats = numPats;
     psPtr->count = totalCount;
