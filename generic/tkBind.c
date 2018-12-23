@@ -734,6 +734,14 @@ static bool IsOdd(int n) { return n & 1; }
 static bool TestNearbyTime(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_MS; }
 static bool TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_PIXELS; }
 
+static bool
+IsSubsetOf(
+    unsigned long lhsMask,	/* this is a subset */
+    unsigned long rhsMask)	/* of this bit field? */
+{
+    return (lhsMask & rhsMask) == lhsMask;
+}
+
 static const char*
 SkipSpaces(
     const char* s)
@@ -2620,9 +2628,7 @@ VirtPatIsBound(
 	    unsigned long physModMask = physPatPtr->modStateMask;
 	    unsigned long virtModMask = virtPatPtr->modStateMask;
 
-	    if (virtModMask == 0
-		    || virtModMask == physModMask
-		    || (virtModMask & physModMask) != physModMask) {
+	    if (IsSubsetOf(virtModMask, physModMask)) {
 		return false; /* we cannot surpass this match */
 	    }
 	}
@@ -2751,18 +2757,11 @@ MatchPatterns(
 				 * This is also a final pattern.
 				 * We always prefer the pattern with better match.
 				 *
-				 * In case of equality:
-				 * 1. Choose pattern with more specialized modifier state.
-				 * 2. Best match don't has modifier states, or this pattern has one,
-				 *    and it is not a real subset.
+				 * In case of equality: choose this match if modifier states is
+				 * not a subset of those in best match.
 				 */
 
-				if (cmp > 0
-				    || (cmp == 0
-					&& (!bestModMask
-					    || (modMask
-						&& modMask != bestModMask
-						&& (bestModMask & modMask) != modMask)))) {
+				if (cmp > 0 || (cmp == 0 && !IsSubsetOf(modMask, bestModMask))) {
 				    bestPtr = psPtr;
 				    bestModMask = modMask;
 				    if (physPtrPtr) {
