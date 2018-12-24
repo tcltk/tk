@@ -731,7 +731,14 @@ static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
 static bool IsOdd(int n) { return n & 1; }
 
+#if 1
+static bool TestNearbyTime(int lhs, int rhs) {
+printf("TestNearbyTime: %d, %d => %d\n", lhs, rhs, Abs(lhs - rhs));
+    return Abs(lhs - rhs) <= NEARBY_MS;
+}
+#else
 static bool TestNearbyTime(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_MS; }
+#endif
 static bool TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_PIXELS; }
 
 static bool
@@ -813,6 +820,10 @@ MatchEventNearby(
 
     /* assert: lhs->xbutton.time <= rhs->xbutton.time */
 
+#if 1
+printf("MatchEventNearby: %lu, %lu (%d, %d)\n", (unsigned long) rhs->xbutton.time,
+(unsigned long) lhs->xbutton.time, (int) rhs->xbutton.time, (int) lhs->xbutton.time);
+#endif
     return TestNearbyTime(rhs->xbutton.time, lhs->xbutton.time)
 	    && TestNearbyCoords(rhs->xbutton.x_root, lhs->xbutton.x_root)
 	    && TestNearbyCoords(rhs->xbutton.y_root, lhs->xbutton.y_root);
@@ -4160,6 +4171,9 @@ HandleEventGenerate(
 	    } else {
 		badOpt = true;
 	    }
+#if 1
+printf("HandleEventGenerate: %lu (%d)\n", (unsigned long) event.general.xkey.time, number);
+#endif
 	    break;
 	}
 	case EVENT_WIDTH:
