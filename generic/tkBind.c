@@ -596,7 +596,7 @@ static const TkStateMap visNotify[] = {
 };
 
 static const TkStateMap configureRequestDetail[] = {
-    {0,		"None"},
+    {0,			"None"},
     {Above,		"Above"},
     {Below,		"Below"},
     {BottomIf,		"BottomIf"},
