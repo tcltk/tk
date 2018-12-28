@@ -341,7 +341,7 @@ typedef struct PatSeq {
  * Tcl/Tk does not provide C99 integer support.)
  */
 
-#define NO_NUMBER ((Tcl_WideInt) (~((Tcl_WideUInt) 1) + 1))
+#define NO_NUMBER (((Tcl_WideInt) (~ (unsigned) 0)) + 1)
 
 /*
  * The following structure is used in the nameTable of a virtual event table
@@ -731,14 +731,7 @@ static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
 static bool IsOdd(int n) { return n & 1; }
 
-#if 1
-static bool TestNearbyTime(int lhs, int rhs) {
-printf("TestNearbyTime: %d, %d => %d\n", lhs, rhs, Abs(lhs - rhs));
-    return Abs(lhs - rhs) <= NEARBY_MS;
-}
-#else
 static bool TestNearbyTime(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_MS; }
-#endif
 static bool TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_PIXELS; }
 
 static bool
@@ -820,10 +813,6 @@ MatchEventNearby(
 
     /* assert: lhs->xbutton.time <= rhs->xbutton.time */
 
-#if 1
-printf("MatchEventNearby: %lu, %lu (%d, %d)\n", (unsigned long) rhs->xbutton.time,
-(unsigned long) lhs->xbutton.time, (int) rhs->xbutton.time, (int) lhs->xbutton.time);
-#endif
     return TestNearbyTime(rhs->xbutton.time, lhs->xbutton.time)
 	    && TestNearbyCoords(rhs->xbutton.x_root, lhs->xbutton.x_root)
 	    && TestNearbyCoords(rhs->xbutton.y_root, lhs->xbutton.y_root);
@@ -1197,8 +1186,9 @@ TkBindInit(
     /* test boolean support for safety, because used for 1 bit fields */
     assert(false == 0 && true == 1);
 
-    /* test that this constant is indeed out of integer range */
-    assert((Tcl_WideUInt) NO_NUMBER > (Tcl_WideUInt) ~1u + 1u);
+    /* test that constant NO_NUMBER is indeed out of integer range */
+    assert(sizeof(NO_NUMBER) > sizeof(int));
+    assert(((int) NO_NUMBER) == 0 && NO_NUMBER != 0);
 
     /* test expected indices of Button1..Button5, otherwise our button handling is not working */
     assert(Button1 == 1 && Button2 == 2 && Button3 == 3 && Button4 == 4 && Button5 == 5);
@@ -3110,7 +3100,9 @@ ExpandPercents(
 	    break;
 	case 'W': {
 	    Tk_Window tkwin = Tk_IdToWindow(evPtr->xany.display, evPtr->xany.window);
-	    string = tkwin ? Tk_PathName(tkwin) : "??";
+	    if (tkwin) {
+		string = Tk_PathName(tkwin);
+	    }
 	    break;
 	}
 	case 'X':
@@ -4171,9 +4163,6 @@ HandleEventGenerate(
 	    } else {
 		badOpt = true;
 	    }
-#if 1
-printf("HandleEventGenerate: %lu (%d)\n", (unsigned long) event.general.xkey.time, number);
-#endif
 	    break;
 	}
 	case EVENT_WIDTH:
