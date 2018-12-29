@@ -519,6 +519,9 @@ TkPutImage(
     BITMAPINFO *infoPtr;
     HBITMAP bitmap;
     char *data;
+#ifndef NO_WINRGBFIX
+    Visual *visual;
+#endif
 
     display->request++;
 
@@ -564,13 +567,18 @@ TkPutImage(
 	infoPtr->bmiHeader.biHeight = -image->height; /* Top-down order */
 	infoPtr->bmiHeader.biPlanes = 1;
 	infoPtr->bmiHeader.biBitCount = image->bits_per_pixel;
+#ifdef NO_WINRGBFIX
 	infoPtr->bmiHeader.biCompression = BI_RGB;
+#endif
 	infoPtr->bmiHeader.biSizeImage = 0;
 	infoPtr->bmiHeader.biXPelsPerMeter = 0;
 	infoPtr->bmiHeader.biYPelsPerMeter = 0;
 	infoPtr->bmiHeader.biClrImportant = 0;
 
 	if (usePalette) {
+#ifndef NO_WINRGBFIX
+	    infoPtr->bmiHeader.biCompression = BI_RGB;
+#endif
 	    infoPtr->bmiHeader.biClrUsed = ncolors;
 	    for (i = 0; i < ncolors; i++) {
 		infoPtr->bmiColors[i].rgbBlue = GetBValue(colors[i]);
@@ -579,7 +587,17 @@ TkPutImage(
 		infoPtr->bmiColors[i].rgbReserved = 0;
 	    }
 	} else {
+#ifdef NO_WINRGBFIX
 	    infoPtr->bmiHeader.biClrUsed = 0;
+#else
+	    infoPtr->bmiHeader.biCompression = BI_BITFIELDS;
+	    /* Modelled on XGetVisualInfo() in xutil.c.
+	     * We want to get the rgb masks for the default visual for the given display. */
+	    visual = DefaultVisual(display,0);
+	    *((DWORD *)((unsigned char *)infoPtr + sizeof(BITMAPINFOHEADER))) = visual->blue_mask;
+	    *((DWORD *)((unsigned char *)infoPtr + sizeof(BITMAPINFOHEADER))+1) = visual->green_mask;
+	    *((DWORD *)((unsigned char *)infoPtr + sizeof(BITMAPINFOHEADER))+2) = visual->red_mask;
+#endif
 	}
 	bitmap = CreateDIBitmap(dc, &infoPtr->bmiHeader, CBM_INIT,
 		image->data, infoPtr, DIB_RGB_COLORS);

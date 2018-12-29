@@ -2777,7 +2777,7 @@ DrawCanvas(
              * swap anything here.
              */
 
-#ifdef _WIN32
+#if defined(NO_WINRGBFIX) && defined(_WIN32)
 #define   R_OFFSET 2
 #define   B_OFFSET 0
 #else
