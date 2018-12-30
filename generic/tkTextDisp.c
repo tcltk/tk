@@ -3526,8 +3526,14 @@ TextInvalidateLineMetrics(
 	textPtr->refCount++;
 	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		AsyncUpdateLineMetrics, textPtr);
-        GenerateWidgetViewSyncEvent(textPtr, 0);
     }
+
+    /*
+     * The widget is now out of sync: send a <<WidgetViewSync>> event.
+     */
+    
+    GenerateWidgetViewSyncEvent(textPtr, 0);
+
 }
 
 /*
