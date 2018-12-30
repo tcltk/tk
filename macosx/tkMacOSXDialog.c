@@ -182,10 +182,6 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 
 #pragma mark TKApplication(TKDialog)
 
-@interface NSColorPanel(TKDialog)
-- (void) _setUseModalAppearance: (BOOL) flag;
-@end
-
 @implementation TKApplication(TKDialog)
 
 - (void) tkFilePanelDidEnd: (NSSavePanel *) panel
