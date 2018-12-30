@@ -1389,6 +1389,9 @@ TkpBindDeadWindow(
     BindingTable *bindPtr;
     Event *curEvent;
     Window window;
+    LookupTables *lookupTables;
+    unsigned newArraySize;
+    unsigned i;
 
     assert(winPtr);
 
@@ -1417,6 +1420,28 @@ TkpBindDeadWindow(
 	bindPtr->eventInfo[KeyRelease].countAny = 0;
 	bindPtr->eventInfo[KeyRelease].countDetailed = 0;
     }
+
+    lookupTables = &bindPtr->lookupTables;
+
+    for (i = newArraySize = 0; i < PromArr_Size(bindPtr->promArr); ++i) {
+	PSList *psList = PromArr_Get(bindPtr->promArr, i);
+	PSEntry *psEntry;
+	PSEntry *psNext;
+
+	for (psEntry = PSList_First(psList); psEntry; psEntry = psNext) {
+	    psNext = PSList_Next(psEntry);
+
+	    if (psEntry->window == window) {
+		RemoveListEntry(&lookupTables->entryPool, psEntry);
+	    }
+	}
+
+	if (!PSList_IsEmpty(psList)) {
+	    newArraySize = i + 1;
+	}
+    }
+
+    PromArr_SetSize(bindPtr->promArr, newArraySize);
 }
 
 /*
