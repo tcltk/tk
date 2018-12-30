@@ -1382,16 +1382,31 @@ TkBindFree(
  *---------------------------------------------------------------------------
  */
 
+/* helper function */
+static void
+ResetCounters(
+    Event *eventInfo,
+    unsigned eventType,
+    Window window)
+{
+    Event *curEvent;
+
+    assert(eventInfo);
+    curEvent = eventInfo + eventType;
+
+    if (curEvent->xev.xany.window == window) {
+	curEvent->xev.xany.window = None;
+	eventInfo[eventType].countAny = 0;
+	eventInfo[eventType].countDetailed = 0;
+    }
+}
+
 void
 TkpBindDeadWindow(
     TkWindow *winPtr)	/* Information about the window that is being deleted. */
 {
     BindingTable *bindPtr;
-    Event *curEvent;
     Window window;
-    LookupTables *lookupTables;
-    unsigned newArraySize;
-    unsigned i;
 
     assert(winPtr);
 
@@ -1402,46 +1417,14 @@ TkpBindDeadWindow(
     bindPtr = winPtr->mainPtr->bindingTable;
     window = Tk_WindowId(winPtr);
 
-    curEvent = bindPtr->curEvent;
-    if (curEvent->xev.xany.window == window) {
+    if (bindPtr->curEvent->xev.xany.window == window) {
 	bindPtr->curEvent->xev.xany.window = None;
     }
 
-    curEvent = bindPtr->eventInfo + KeyPress;
-    if (curEvent->xev.xany.window == window) {
-	curEvent->xev.xany.window = None;
-	bindPtr->eventInfo[KeyPress].countAny = 0;
-	bindPtr->eventInfo[KeyPress].countDetailed = 0;
-    }
-
-    curEvent = bindPtr->eventInfo + KeyRelease;
-    if (curEvent->xev.xany.window == window) {
-	curEvent->xev.xany.window = None;
-	bindPtr->eventInfo[KeyRelease].countAny = 0;
-	bindPtr->eventInfo[KeyRelease].countDetailed = 0;
-    }
-
-    lookupTables = &bindPtr->lookupTables;
-
-    for (i = newArraySize = 0; i < PromArr_Size(bindPtr->promArr); ++i) {
-	PSList *psList = PromArr_Get(bindPtr->promArr, i);
-	PSEntry *psEntry;
-	PSEntry *psNext;
-
-	for (psEntry = PSList_First(psList); psEntry; psEntry = psNext) {
-	    psNext = PSList_Next(psEntry);
-
-	    if (psEntry->window == window) {
-		RemoveListEntry(&lookupTables->entryPool, psEntry);
-	    }
-	}
-
-	if (!PSList_IsEmpty(psList)) {
-	    newArraySize = i + 1;
-	}
-    }
-
-    PromArr_SetSize(bindPtr->promArr, newArraySize);
+    ResetCounters(bindPtr->eventInfo, KeyPress, window);
+    ResetCounters(bindPtr->eventInfo, KeyRelease, window);
+    ResetCounters(bindPtr->eventInfo, ButtonPress, window);
+    ResetCounters(bindPtr->eventInfo, ButtonRelease, window);
 }
 
 /*
@@ -2651,10 +2634,7 @@ VirtPatIsBound(
 	const TkPattern *virtPatPtr = psPtr->pats;
 
 	if (physPatPtr->info || !virtPatPtr->info) {
-	    unsigned long physModMask = physPatPtr->modStateMask;
-	    unsigned long virtModMask = virtPatPtr->modStateMask;
-
-	    if (IsSubsetOf(virtModMask, physModMask)) {
+	    if (IsSubsetOf(virtPatPtr->modStateMask, physPatPtr->modStateMask)) {
 		return false; /* we cannot surpass this match */
 	    }
 	}
