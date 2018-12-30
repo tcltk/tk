@@ -6252,6 +6252,7 @@ test bind-32.10 {reset key state when destroying window} -setup {
     pack [frame .t.f]; update; focus -force .t.f
     bind .t.f <Key-A> { set x "A" }
     event generate .t.f <KeyPress-A>
+    event generate .t.f <KeyPress-A>
     destroy .t.f; update
     pack [frame .t.f]; update; focus -force .t.f
     bind .t.f <Key-A> { set x "A" }
@@ -6331,6 +6332,7 @@ test bind-32.15 {reset button state when destroying window} -setup {
 } -body {
     pack [frame .t.f]; update; focus -force .t.f
     bind .t.f <ButtonPress-1> { set x "1" }
+    event generate .t.f <ButtonPress-1>
     event generate .t.f <ButtonPress-1>
     destroy .t.f; update
     pack [frame .t.f]; update; focus -force .t.f
