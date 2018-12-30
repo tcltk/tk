@@ -1228,7 +1228,7 @@ MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
-MODULE_SCOPE void	TkpBindDeadWindow(TkWindow *winPtr);
+MODULE_SCOPE void	TkBindDeadWindow(TkWindow *winPtr);
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
