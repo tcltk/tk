@@ -115,7 +115,7 @@ Tk_GetPixmap(
 
     if (newTwdPtr->bitmap.handle == NULL) {
 	ckfree(newTwdPtr);
-	return None;
+	return 0;
     }
 
     return (Pixmap) newTwdPtr;
