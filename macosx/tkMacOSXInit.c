@@ -30,19 +30,6 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 #pragma mark TKApplication(TKInit)
 
-@interface TKApplication(TKKeyboard)
-- (void) keyboardChanged: (NSNotification *) notification;
-@end
-
-#define TKApplication_NSApplicationDelegate <NSApplicationDelegate>
-@interface TKApplication(TKWindowEvent) TKApplication_NSApplicationDelegate
-- (void) _setupWindowNotifications;
-@end
-
-@interface TKApplication(TKMenus)
-- (void) _setupMenus;
-@end
-
 @implementation TKApplication
 @synthesize poolLock = _poolLock;
 @synthesize macMinorVersion = _macMinorVersion;
@@ -381,6 +368,14 @@ TkpInit(
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
+
+    /*
+     * Workaround for 3efbe4a397; console not accepting keyboard input on 10.14
+     * if displayed before main window. This places console in background and it
+     * accepts input after being raised.
+     */
+		     
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 
     return TCL_OK;
 }
