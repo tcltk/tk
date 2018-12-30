@@ -1449,7 +1449,7 @@ TkEventDeadWindow(
      * Also clean up binding information.
      */
 
-    TkpBindDeadWindow(winPtr);
+    TkBindDeadWindow(winPtr);
 }
 
 /*

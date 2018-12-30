@@ -1402,7 +1402,7 @@ ResetCounters(
 }
 
 void
-TkpBindDeadWindow(
+TkBindDeadWindow(
     TkWindow *winPtr)	/* Information about the window that is being deleted. */
 {
     BindingTable *bindPtr;
