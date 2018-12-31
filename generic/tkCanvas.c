@@ -678,9 +678,9 @@ Tk_CanvasObjCmd(
     canvasPtr->highlightBgColorPtr = NULL;
     canvasPtr->highlightColorPtr = NULL;
     canvasPtr->inset = 0;
-    canvasPtr->pixmapGC = 0;
-    canvasPtr->width = 0;
-    canvasPtr->height = 0;
+    canvasPtr->pixmapGC = NULL;
+    canvasPtr->width = None;
+    canvasPtr->height = None;
     canvasPtr->confine = 0;
     canvasPtr->textInfo.selBorder = NULL;
     canvasPtr->textInfo.selBorderWidth = 0;
@@ -724,7 +724,7 @@ Tk_CanvasObjCmd(
     canvasPtr->scanYOrigin = 0;
     canvasPtr->hotPtr = NULL;
     canvasPtr->hotPrevPtr = NULL;
-    canvasPtr->cursor = 0;
+    canvasPtr->cursor = NULL;
     canvasPtr->takeFocus = NULL;
     canvasPtr->pixelsPerMM = WidthOfScreen(Tk_Screen(newWin));
     canvasPtr->pixelsPerMM /= WidthMMOfScreen(Tk_Screen(newWin));
@@ -2189,7 +2189,7 @@ DestroyCanvas(
      */
 
     Tcl_DeleteHashTable(&canvasPtr->idTable);
-    if (canvasPtr->pixmapGC) {
+    if (canvasPtr->pixmapGC != None) {
 	Tk_FreeGC(canvasPtr->display, canvasPtr->pixmapGC);
     }
 #ifndef USE_OLD_TAG_SEARCH
@@ -2265,7 +2265,7 @@ ConfigureCanvas(
     gcValues.foreground = Tk_3DBorderColor(canvasPtr->bgBorder)->pixel;
     newGC = Tk_GetGC(canvasPtr->tkwin,
 	    GCFunction|GCGraphicsExposures|GCForeground, &gcValues);
-    if (canvasPtr->pixmapGC) {
+    if (canvasPtr->pixmapGC != None) {
 	Tk_FreeGC(canvasPtr->display, canvasPtr->pixmapGC);
     }
     canvasPtr->pixmapGC = newGC;
@@ -4901,7 +4901,7 @@ PickCurrentItem(
 	    canvasPtr->pickEvent.xcrossing.display = eventPtr->xmotion.display;
 	    canvasPtr->pickEvent.xcrossing.window = eventPtr->xmotion.window;
 	    canvasPtr->pickEvent.xcrossing.root = eventPtr->xmotion.root;
-	    canvasPtr->pickEvent.xcrossing.subwindow = 0;
+	    canvasPtr->pickEvent.xcrossing.subwindow = None;
 	    canvasPtr->pickEvent.xcrossing.time = eventPtr->xmotion.time;
 	    canvasPtr->pickEvent.xcrossing.x = eventPtr->xmotion.x;
 	    canvasPtr->pickEvent.xcrossing.y = eventPtr->xmotion.y;

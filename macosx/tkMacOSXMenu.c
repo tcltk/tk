@@ -1481,10 +1481,10 @@ TkpMenuInit(void)
 #undef observe
 
     [NSMenuItem setUsesUserKeyEquivalents:NO];
-    tkColPtr = TkpGetColor(None, DEF_MENU_BG_COLOR);
+    tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
     defaultBg = tkColPtr->color.pixel;
     ckfree(tkColPtr);
-    tkColPtr = TkpGetColor(None, DEF_MENU_FG);
+    tkColPtr = TkpGetColor(NULL, DEF_MENU_FG);
     defaultFg = tkColPtr->color.pixel;
     ckfree(tkColPtr);
 
