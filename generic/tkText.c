@@ -533,6 +533,7 @@ CreateWidget(
     textPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(textPtr->tkwin), TextWidgetObjCmd,
 	    textPtr, TextCmdDeletedProc);
+    textPtr->inSync = 1;
 
     if (sharedPtr == NULL) {
 	sharedPtr = ckalloc(sizeof(TkSharedText));
