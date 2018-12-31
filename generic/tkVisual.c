@@ -401,20 +401,20 @@ Tk_GetColormap(
      */
 
     other = Tk_NameToWindow(interp, string, tkwin);
-    if (!other) {
-	return 0;
+    if (other == NULL) {
+	return None;
     }
     if (Tk_Screen(other) != Tk_Screen(tkwin)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't use colormap for %s: not on same screen", string));
 	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "SCREEN", NULL);
-	return 0;
+	return None;
     }
     if (Tk_Visual(other) != Tk_Visual(tkwin)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't use colormap for %s: incompatible visuals", string));
 	Tcl_SetErrorCode(interp, "TK", "COLORMAP", "INCOMPATIBLE", NULL);
-	return 0;
+	return None;
     }
     colormap = Tk_Colormap(other);
 
