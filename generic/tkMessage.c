@@ -254,11 +254,11 @@ Tk_MessageObjCmd(
 	    (ClientData) msgPtr, MessageCmdDeletedProc);
     msgPtr->optionTable = optionTable;
     msgPtr->relief = TK_RELIEF_FLAT;
-    msgPtr->textGC = 0;
+    msgPtr->textGC = NULL;
     msgPtr->anchor = TK_ANCHOR_CENTER;
     msgPtr->aspect = 150;
     msgPtr->justify = TK_JUSTIFY_LEFT;
-    msgPtr->cursor = 0;
+    msgPtr->cursor = NULL;
 
     Tk_SetClass(msgPtr->tkwin, "Message");
     Tk_SetClassProcs(msgPtr->tkwin, &messageClass, (ClientData) msgPtr);
@@ -396,13 +396,13 @@ DestroyMessage(
      * Tk_FreeConfigOptions handle all the standard option-related stuff.
      */
 
-    if (msgPtr->textGC) {
+    if (msgPtr->textGC != None) {
 	Tk_FreeGC(msgPtr->display, msgPtr->textGC);
     }
-    if (msgPtr->textLayout) {
+    if (msgPtr->textLayout != NULL) {
 	Tk_FreeTextLayout(msgPtr->textLayout);
     }
-    if (msgPtr->textVarName) {
+    if (msgPtr->textVarName != NULL) {
 	Tcl_UntraceVar(msgPtr->interp, msgPtr->textVarName,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MessageTextVarProc, (ClientData) msgPtr);
@@ -469,7 +469,7 @@ ConfigureMessage(
 	CONST char *value;
 
 	value = Tcl_GetVar(interp, msgPtr->textVarName, TCL_GLOBAL_ONLY);
-	if (!value) {
+	if (value == NULL) {
 	    Tcl_SetVar(interp, msgPtr->textVarName, msgPtr->string,
 		    TCL_GLOBAL_ONLY);
 	} else {
@@ -523,20 +523,20 @@ MessageWorldChanged(
     ClientData instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
-    GC gc = 0;
+    GC gc = NULL;
     Tk_FontMetrics fm;
     Message *msgPtr;
 
     msgPtr = (Message *) instanceData;
 
-    if (msgPtr->border) {
+    if (msgPtr->border != NULL) {
 	Tk_SetBackgroundFromBorder(msgPtr->tkwin, msgPtr->border);
     }
 
     gcValues.font = Tk_FontId(msgPtr->tkfont);
     gcValues.foreground = msgPtr->fgColorPtr->pixel;
     gc = Tk_GetGC(msgPtr->tkwin, GCForeground | GCFont, &gcValues);
-    if (msgPtr->textGC) {
+    if (msgPtr->textGC != None) {
 	Tk_FreeGC(msgPtr->display, msgPtr->textGC);
     }
     msgPtr->textGC = gc;

@@ -104,8 +104,8 @@ TkpCreateScrollbar(
 
     MacScrollbar *scrollPtr = (MacScrollbar *)ckalloc(sizeof(MacScrollbar));
 
-    scrollPtr->troughGC = None;
-    scrollPtr->copyGC = None;
+    scrollPtr->troughGC = NULL;
+    scrollPtr->copyGC = NULL;
 
     Tk_CreateEventHandler(tkwin,ExposureMask|StructureNotifyMask|FocusChangeMask|ButtonPressMask|VisibilityChangeMask, ScrollbarEventProc, scrollPtr);
     

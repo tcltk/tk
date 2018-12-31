@@ -414,7 +414,7 @@ Tk_GCForColor(
 	Tcl_Panic("Tk_GCForColor called with bogus color");
     }
 
-    if (!tkColPtr->gc) {
+    if (tkColPtr->gc == None) {
 	gcValues.foreground = tkColPtr->color.pixel;
 	tkColPtr->gc = XCreateGC(DisplayOfScreen(tkColPtr->screen), drawable,
 		GCForeground, &gcValues);
@@ -469,7 +469,7 @@ Tk_FreeColor(
      * longer any objects referencing it.
      */
 
-    if (tkColPtr->gc) {
+    if (tkColPtr->gc != None) {
 	XFreeGC(DisplayOfScreen(screen), tkColPtr->gc);
 	tkColPtr->gc = 0;
     }

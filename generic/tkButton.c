@@ -688,7 +688,7 @@ ButtonCreate(
     butPtr->textPtr = NULL;
     butPtr->underline = -1;
     butPtr->textVarNamePtr = NULL;
-    butPtr->bitmap = 0;
+    butPtr->bitmap = None;
     butPtr->imagePtr = NULL;
     butPtr->image = NULL;
     butPtr->selectImagePtr = NULL;
@@ -710,12 +710,12 @@ ButtonCreate(
     butPtr->normalFg = NULL;
     butPtr->activeFg = NULL;
     butPtr->disabledFg = NULL;
-    butPtr->normalTextGC = 0;
-    butPtr->activeTextGC = 0;
-    butPtr->disabledGC = 0;
-    butPtr->stippleGC = 0;
-    butPtr->gray = 0;
-    butPtr->copyGC = 0;
+    butPtr->normalTextGC = NULL;
+    butPtr->activeTextGC = NULL;
+    butPtr->disabledGC = NULL;
+    butPtr->stippleGC = NULL;
+    butPtr->gray = None;
+    butPtr->copyGC = NULL;
     butPtr->widthPtr = NULL;
     butPtr->width = 0;
     butPtr->heightPtr = NULL;
@@ -740,7 +740,7 @@ ButtonCreate(
     butPtr->onValuePtr = NULL;
     butPtr->offValuePtr = NULL;
     butPtr->tristateValuePtr = NULL;
-    butPtr->cursor = 0;
+    butPtr->cursor = NULL;
     butPtr->takeFocusPtr = NULL;
     butPtr->commandPtr = NULL;
     butPtr->flags = 0;
@@ -969,37 +969,37 @@ DestroyButton(
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonTextVarProc, (ClientData) butPtr);
     }
-    if (butPtr->image) {
+    if (butPtr->image != NULL) {
 	Tk_FreeImage(butPtr->image);
     }
-    if (butPtr->selectImage) {
+    if (butPtr->selectImage != NULL) {
 	Tk_FreeImage(butPtr->selectImage);
     }
-    if (butPtr->tristateImage) {
+    if (butPtr->tristateImage != NULL) {
 	Tk_FreeImage(butPtr->tristateImage);
     }
-    if (butPtr->normalTextGC) {
+    if (butPtr->normalTextGC != None) {
 	Tk_FreeGC(butPtr->display, butPtr->normalTextGC);
     }
-    if (butPtr->activeTextGC) {
+    if (butPtr->activeTextGC != None) {
 	Tk_FreeGC(butPtr->display, butPtr->activeTextGC);
     }
-    if (butPtr->disabledGC) {
+    if (butPtr->disabledGC != None) {
 	Tk_FreeGC(butPtr->display, butPtr->disabledGC);
     }
-    if (butPtr->stippleGC) {
+    if (butPtr->stippleGC != None) {
 	Tk_FreeGC(butPtr->display, butPtr->stippleGC);
     }
-    if (butPtr->gray) {
+    if (butPtr->gray != None) {
 	Tk_FreeBitmap(butPtr->display, butPtr->gray);
     }
-    if (butPtr->copyGC) {
+    if (butPtr->copyGC != None) {
 	Tk_FreeGC(butPtr->display, butPtr->copyGC);
     }
-    if (butPtr->textLayout) {
+    if (butPtr->textLayout != NULL) {
 	Tk_FreeTextLayout(butPtr->textLayout);
     }
-    if (butPtr->selVarNamePtr) {
+    if (butPtr->selVarNamePtr != NULL) {
 	Tcl_UntraceVar(butPtr->interp, Tcl_GetString(butPtr->selVarNamePtr),
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonVarProc, (ClientData) butPtr);
@@ -1184,7 +1184,7 @@ ConfigureButton(
 	 * don't go to zero and cause image data to be discarded.
 	 */
 
-	if (butPtr->imagePtr) {
+	if (butPtr->imagePtr != NULL) {
 	    image = Tk_GetImage(butPtr->interp, butPtr->tkwin,
 		    Tcl_GetString(butPtr->imagePtr), ButtonImageProc,
 		    (ClientData) butPtr);
@@ -1198,7 +1198,7 @@ ConfigureButton(
 	    Tk_FreeImage(butPtr->image);
 	}
 	butPtr->image = image;
-	if (butPtr->selectImagePtr) {
+	if (butPtr->selectImagePtr != NULL) {
 	    image = Tk_GetImage(butPtr->interp, butPtr->tkwin,
 		    Tcl_GetString(butPtr->selectImagePtr),
 		    ButtonSelectImageProc, (ClientData) butPtr);
@@ -1208,7 +1208,7 @@ ConfigureButton(
 	} else {
 	    image = NULL;
 	}
-	if (butPtr->selectImage) {
+	if (butPtr->selectImage != NULL) {
 	    Tk_FreeImage(butPtr->selectImage);
 	}
 	butPtr->selectImage = image;
@@ -1228,7 +1228,7 @@ ConfigureButton(
 	butPtr->tristateImage = image;
 
 	haveImage = 0;
-	if (butPtr->imagePtr || butPtr->bitmap) {
+	if (butPtr->imagePtr != NULL || butPtr->bitmap != None) {
 	    haveImage = 1;
 	}
 	if ((!haveImage || butPtr->compound != COMPOUND_NONE)
@@ -1243,14 +1243,14 @@ ConfigureButton(
 
 	    namePtr = butPtr->textVarNamePtr;
 	    valuePtr = Tcl_ObjGetVar2(interp, namePtr, NULL, TCL_GLOBAL_ONLY);
-	    if (!valuePtr) {
+	    if (valuePtr == NULL) {
 		if (Tcl_ObjSetVar2(interp, namePtr, NULL, butPtr->textPtr,
 			TCL_GLOBAL_ONLY|TCL_LEAVE_ERR_MSG)
 			== NULL) {
 		    continue;
 		}
 	    } else {
-		if (butPtr->textPtr) {
+		if (butPtr->textPtr != NULL) {
 		    Tcl_DecrRefCount(butPtr->textPtr);
 		}
 		butPtr->textPtr = valuePtr;
@@ -1258,7 +1258,7 @@ ConfigureButton(
 	    }
 	}
 
-	if (butPtr->bitmap || butPtr->imagePtr) {
+	if ((butPtr->bitmap != None) || (butPtr->imagePtr != NULL)) {
 	    /*
 	     * The button must display the contents of an image or bitmap.
 	     */
@@ -1366,17 +1366,17 @@ TkButtonWorldChanged(
     gcValues.graphics_exposures = False;
     mask = GCForeground | GCBackground | GCFont | GCGraphicsExposures;
     newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
-    if (butPtr->normalTextGC) {
+    if (butPtr->normalTextGC != None) {
 	Tk_FreeGC(butPtr->display, butPtr->normalTextGC);
     }
     butPtr->normalTextGC = newGC;
 
-    if (butPtr->activeFg) {
+    if (butPtr->activeFg != NULL) {
 	gcValues.foreground = butPtr->activeFg->pixel;
 	gcValues.background = Tk_3DBorderColor(butPtr->activeBorder)->pixel;
 	mask = GCForeground | GCBackground | GCFont;
 	newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
-	if (butPtr->activeTextGC) {
+	if (butPtr->activeTextGC != None) {
 	    Tk_FreeGC(butPtr->display, butPtr->activeTextGC);
 	}
 	butPtr->activeTextGC = newGC;
@@ -1388,13 +1388,13 @@ TkButtonWorldChanged(
      * Create the GC that can be used for stippling
      */
 
-    if (!butPtr->stippleGC) {
+    if (butPtr->stippleGC == None) {
 	gcValues.foreground = gcValues.background;
 	mask = GCForeground;
-	if (!butPtr->gray) {
+	if (butPtr->gray == None) {
 	    butPtr->gray = Tk_GetBitmap(NULL, butPtr->tkwin, "gray50");
 	}
-	if (butPtr->gray) {
+	if (butPtr->gray != None) {
 	    gcValues.fill_style = FillStippled;
 	    gcValues.stipple = butPtr->gray;
 	    mask |= GCFillStyle | GCStipple;
@@ -1408,18 +1408,18 @@ TkButtonWorldChanged(
      */
 
     mask = GCForeground | GCBackground | GCFont;
-    if (butPtr->disabledFg) {
+    if (butPtr->disabledFg != NULL) {
 	gcValues.foreground = butPtr->disabledFg->pixel;
     } else {
 	gcValues.foreground = gcValues.background;
     }
     newGC = Tk_GetGC(butPtr->tkwin, mask, &gcValues);
-    if (butPtr->disabledGC) {
+    if (butPtr->disabledGC != None) {
 	Tk_FreeGC(butPtr->display, butPtr->disabledGC);
     }
     butPtr->disabledGC = newGC;
 
-    if (!butPtr->copyGC) {
+    if (butPtr->copyGC == None) {
 	butPtr->copyGC = Tk_GetGC(butPtr->tkwin, 0, &gcValues);
     }
 
