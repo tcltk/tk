@@ -748,10 +748,10 @@ DoObjConfig(
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-	    newBitmap = 0;
+	    newBitmap = None;
 	} else {
 	    newBitmap = Tk_AllocBitmapFromObj(interp, tkwin, valuePtr);
-	    if (!newBitmap) {
+	    if (newBitmap == None) {
 		return TCL_ERROR;
 	    }
 	}
@@ -804,7 +804,7 @@ DoObjConfig(
 	    valuePtr = NULL;
 	} else {
 	    newCursor = Tk_AllocCursorFromObj(interp, tkwin, valuePtr);
-	    if (!newCursor) {
+	    if (newCursor == None) {
 		return TCL_ERROR;
 	    }
 	}
@@ -1646,9 +1646,9 @@ FreeResources(
 	break;
     case TK_OPTION_BITMAP:
 	if (internalFormExists) {
-	    if (*((Pixmap *) internalPtr)) {
+	    if (*((Pixmap *) internalPtr) != None) {
 		Tk_FreeBitmap(Tk_Display(tkwin), *((Pixmap *) internalPtr));
-		*((Pixmap *) internalPtr) = 0;
+		*((Pixmap *) internalPtr) = None;
 	    }
 	} else if (objPtr != NULL) {
 	    Tk_FreeBitmapFromObj(tkwin, objPtr);
@@ -1666,7 +1666,7 @@ FreeResources(
 	break;
     case TK_OPTION_CURSOR:
 	if (internalFormExists) {
-	    if (*((Tk_Cursor *) internalPtr)) {
+	    if (*((Tk_Cursor *) internalPtr) != None) {
 		Tk_FreeCursor(Tk_Display(tkwin), *((Tk_Cursor *) internalPtr));
 		*((Tk_Cursor *) internalPtr) = 0;
 	    }
@@ -1919,7 +1919,7 @@ GetObjectForOption(
     case TK_OPTION_BITMAP: {
 	Pixmap pixmap = *((Pixmap *) internalPtr);
 
-	if (pixmap) {
+	if (pixmap != None) {
 	    objPtr = Tcl_NewStringObj(
 		    Tk_NameOfBitmap(Tk_Display(tkwin), pixmap), -1);
 	}
@@ -1939,7 +1939,7 @@ GetObjectForOption(
     case TK_OPTION_CURSOR: {
 	Tk_Cursor cursor = *((Tk_Cursor *) internalPtr);
 
-	if (cursor) {
+	if (cursor != None) {
 	    objPtr = Tcl_NewStringObj(
 		    Tk_NameOfCursor(Tk_Display(tkwin), cursor), -1);
 	}
