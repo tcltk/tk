@@ -377,6 +377,13 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
     }										\
     return -1;									\
 }										\
+										\
+__TK_ARRAY_UNUSED								\
+static int									\
+AT##_Contains(const AT *arr, const ElemType *elem)				\
+{										\
+    return AT##_Find(arr, elem) != -1;						\
+}										\
 /* ------------------------------------------------------------------------- */
 
 #define TK_PTR_ARRAY_DEFINE(AT, ElemType) /* AT = type of array */		\
@@ -573,6 +580,13 @@ AT##_Find(const AT *arr, const ElemType *elem)					\
 	}									\
     }										\
     return -1;									\
+}										\
+										\
+__TK_ARRAY_UNUSED								\
+static int									\
+AT##_Contains(const AT *arr, const ElemType *elem)				\
+{										\
+    return AT##_Find(arr, elem) != -1;						\
 }										\
 /* ------------------------------------------------------------------------- */
 
