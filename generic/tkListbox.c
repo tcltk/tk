@@ -534,15 +534,15 @@ Tk_ListboxObjCmd(
 	    ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->itemAttrTable, TCL_ONE_WORD_KEYS);
     listPtr->relief		 = TK_RELIEF_RAISED;
-    listPtr->textGC		 = 0;
-    listPtr->selFgColorPtr	 = 0;
-    listPtr->selTextGC		 = 0;
+    listPtr->textGC		 = NULL;
+    listPtr->selFgColorPtr	 = NULL;
+    listPtr->selTextGC		 = NULL;
     listPtr->fullLines		 = 1;
     listPtr->xScrollUnit	 = 1;
     listPtr->exportSelection	 = 1;
-    listPtr->cursor		 = 0;
+    listPtr->cursor		 = NULL;
     listPtr->state		 = STATE_NORMAL;
-    listPtr->gray		 = 0;
+    listPtr->gray		 = None;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the listbox,
@@ -1474,13 +1474,13 @@ DestroyListbox(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-    if (listPtr->textGC) {
+    if (listPtr->textGC != None) {
 	Tk_FreeGC(listPtr->display, listPtr->textGC);
     }
-    if (listPtr->selTextGC) {
+    if (listPtr->selTextGC != None) {
 	Tk_FreeGC(listPtr->display, listPtr->selTextGC);
     }
-    if (listPtr->gray) {
+    if (listPtr->gray != None) {
 	Tk_FreeBitmap(Tk_Display(listPtr->tkwin), listPtr->gray);
     }
 
@@ -1765,10 +1765,10 @@ ListboxWorldChanged(
     } else {
 	gcValues.foreground = listPtr->fgColorPtr->pixel;
 	mask = GCForeground | GCFont;
-	if (!listPtr->gray) {
+	if (listPtr->gray == None) {
 	    listPtr->gray = Tk_GetBitmap(NULL, listPtr->tkwin, "gray50");
 	}
-	if (listPtr->gray) {
+	if (listPtr->gray != None) {
 	    gcValues.fill_style = FillStippled;
 	    gcValues.stipple = listPtr->gray;
 	    mask |= GCFillStyle | GCStipple;
@@ -1777,18 +1777,18 @@ ListboxWorldChanged(
 
     gcValues.font = Tk_FontId(listPtr->tkfont);
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
-    if (listPtr->textGC) {
+    if (listPtr->textGC != None) {
 	Tk_FreeGC(listPtr->display, listPtr->textGC);
     }
     listPtr->textGC = gc;
 
-    if (listPtr->selFgColorPtr) {
+    if (listPtr->selFgColorPtr != NULL) {
 	gcValues.foreground = listPtr->selFgColorPtr->pixel;
     }
     gcValues.font = Tk_FontId(listPtr->tkfont);
     mask = GCForeground | GCFont;
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
-    if (listPtr->selTextGC) {
+    if (listPtr->selTextGC != None) {
 	Tk_FreeGC(listPtr->display, listPtr->selTextGC);
     }
     listPtr->selTextGC = gc;

@@ -506,7 +506,7 @@ MenuCmd(
 	    Tk_PathName(menuPtr->tkwin), MenuWidgetObjCmd,
 	    (ClientData) menuPtr, MenuCmdDeletedProc);
     menuPtr->active = -1;
-    menuPtr->cursorPtr = 0;
+    menuPtr->cursorPtr = NULL;
     menuPtr->masterMenuPtr = menuPtr;
     menuPtr->menuType = UNKNOWN_TYPE;
     menuPtr->optionTablesPtr = optionTablesPtr;
