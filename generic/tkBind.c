@@ -1647,7 +1647,7 @@ Tk_CreateBinding(
     if (psPtr->numPats > PromArr_Capacity(bindPtr->promArr)) {
 	/*
 	 * We have to increase the size of array containing the lists of promoted sequences.
-	 * Normally the maximal size is 2, only in very seldom cases a bigger size is needed.
+	 * Normally the maximal size is 1, only in very seldom cases a bigger size is needed.
 	 * Note that for technical reasons the capacity should be one higher than the expected
 	 * maximal size.
 	 */
@@ -3438,7 +3438,7 @@ CreateVirtualEvent(
 
     owned = Tcl_GetHashValue(vhPtr);
 
-    if (PhysOwned_Find(owned, psPtr) == -1) {
+    if (!PhysOwned_Contains(owned, psPtr)) {
 	PhysOwned_Append(&owned, psPtr);
 	Tcl_SetHashValue(vhPtr, owned);
 	DEBUG(psPtr->owned = true);
