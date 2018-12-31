@@ -37,7 +37,7 @@
 #define ACTIVE_BG		"systemButtonFacePressed"
 #define ACTIVE_FG		"systemPushButtonPressedText"
 #define SELECT_BG		"systemHighlight"
-#define SELECT_FG		None
+#define SELECT_FG		NULL
 #define INACTIVE_SELECT_BG	"systemHighlightSecondary"
 #define TROUGH			"#c3c3c3"
 #define INDICATOR		"#b03060"
@@ -284,7 +284,7 @@
 #define DEF_MENU_ENTRY_ACTIVE_FG	NULL
 #define DEF_MENU_ENTRY_ACCELERATOR	NULL
 #define DEF_MENU_ENTRY_BG		NULL
-#define DEF_MENU_ENTRY_BITMAP		None
+#define DEF_MENU_ENTRY_BITMAP		NULL
 #define DEF_MENU_ENTRY_COLUMN_BREAK	"0"
 #define DEF_MENU_ENTRY_COMMAND		NULL
 #define DEF_MENU_ENTRY_COMPOUND		"none"
