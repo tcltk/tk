@@ -579,7 +579,7 @@ DisplayWinItem(
      * A drawable of None is used by the canvas UnmapNotify handler
      * to indicate that we should no longer display ourselves.
      */
-    if (state == TK_STATE_HIDDEN || !drawable) {
+    if (state == TK_STATE_HIDDEN || drawable == None) {
 	if (canvasTkwin == Tk_Parent(winItemPtr->tkwin)) {
 	    Tk_UnmapWindow(winItemPtr->tkwin);
 	} else {

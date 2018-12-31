@@ -448,9 +448,9 @@ Tk_PanedWindowObjCmd(
     pwPtr->optionTable = pwOpts->pwOptions;
     pwPtr->slaveOpts = pwOpts->slaveOpts;
     pwPtr->relief = TK_RELIEF_RAISED;
-    pwPtr->gc = 0;
-    pwPtr->cursor = 0;
-    pwPtr->sashCursor = 0;
+    pwPtr->gc = NULL;
+    pwPtr->cursor = NULL;
+    pwPtr->sashCursor = NULL;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the widget,
@@ -862,7 +862,7 @@ ConfigureSlaves(
 
     index = -1;
     haveLoc = 0;
-    if (options.after) {
+    if (options.after != None) {
 	tkwin = options.after;
 	haveLoc = 1;
 	for (i = 0; i < pwPtr->numSlaves; i++) {
@@ -871,7 +871,7 @@ ConfigureSlaves(
 		break;
 	    }
 	}
-    } else if (options.before) {
+    } else if (options.before != None) {
 	tkwin = options.before;
 	haveLoc = 1;
 	for (i = 0; i < pwPtr->numSlaves; i++) {
@@ -1304,7 +1304,7 @@ PanedWindowWorldChanged(
 
     gcValues.background = Tk_3DBorderColor(pwPtr->background)->pixel;
     newGC = Tk_GetGC(pwPtr->tkwin, GCBackground, &gcValues);
-    if (pwPtr->gc) {
+    if (pwPtr->gc != None) {
 	Tk_FreeGC(pwPtr->display, pwPtr->gc);
     }
     pwPtr->gc = newGC;
@@ -2044,10 +2044,10 @@ Unlink(
 
     for (i = 0; i < masterPtr->numSlaves; i++) {
 	if (masterPtr->slaves[i]->before == slavePtr->tkwin) {
-	    masterPtr->slaves[i]->before = 0;
+	    masterPtr->slaves[i]->before = NULL;
 	}
 	if (masterPtr->slaves[i]->after == slavePtr->tkwin) {
-	    masterPtr->slaves[i]->after = 0;
+	    masterPtr->slaves[i]->after = NULL;
 	}
     }
 
