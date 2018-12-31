@@ -3115,8 +3115,14 @@ AsyncUpdateLineMetrics(
  * GenerateWidgetViewSyncEvent --
  *
  *      Send the <<WidgetViewSync>> event related to the text widget
- *      line metrics asynchronous update.
- *      This is equivalent to:
+ *      line metrics asynchronous update.  These events should only
+ *      be sent when the sync status has changed.  So this function
+ *      compares the requested state with the state saved in the
+ *      TkTest structure, and only generates the event if they are
+ *      different.  This means that it is safe to call this function
+ *      at any time when the state is known.
+ *
+ *      If an event is sent, the effect is equivalent to:
  *         event generate $textWidget <<WidgetViewSync>> -data $s
  *      where $s is the sync status: true (when the widget view is in
  *      sync with its internal data) or false (when it is not).
@@ -3147,8 +3153,11 @@ GenerateWidgetViewSyncEvent(
 	FORCE_DISPLAY(textPtr->tkwin);
     }
 
-    TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
-        Tcl_NewBooleanObj(InSync));
+    if (InSync != textPtr->inSync) {
+        textPtr->inSync = InSync;
+        TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
+                           Tcl_NewBooleanObj(InSync));
+    }
 }
 
 /*
@@ -3531,9 +3540,8 @@ TextInvalidateLineMetrics(
     /*
      * The widget is now out of sync: send a <<WidgetViewSync>> event.
      */
-    
-    GenerateWidgetViewSyncEvent(textPtr, 0);
 
+    GenerateWidgetViewSyncEvent(textPtr, 0);
 }
 
 /*
