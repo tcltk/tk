@@ -1371,7 +1371,7 @@ void
 Tk_ResetUserInactiveTime(
     Display *dpy)
 {
-    IOGPoint loc;
+    IOGPoint loc = {0};
     kern_return_t kr;
     NXEvent nullEvent = {NX_NULLEVENT, {0, 0}, 0, -1, 0};
     enum { kNULLEventPostThrottle = 10 };

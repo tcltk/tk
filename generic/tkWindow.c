@@ -73,7 +73,7 @@ static const XWindowChanges defChanges = {
     EnterWindowMask|LeaveWindowMask|PointerMotionMask|ExposureMask| \
     VisibilityChangeMask|PropertyChangeMask|ColormapChangeMask
 static const XSetWindowAttributes defAtts= {
-    0,			/* background_pixmap */
+    None,			/* background_pixmap */
     0,				/* background_pixel */
     CopyFromParent,		/* border_pixmap */
     0,				/* border_pixel */
@@ -87,7 +87,7 @@ static const XSetWindowAttributes defAtts= {
     0,				/* do_not_propagate_mask */
     False,			/* override_redirect */
     CopyFromParent,		/* colormap */
-    0			/* cursor */
+    None			/* cursor */
 };
 
 /*
@@ -504,9 +504,9 @@ GetScreen(
 
 	    dispPtr->lastEventTime = CurrentTime;
 	    dispPtr->bindInfoStale = 1;
-	    dispPtr->cursorFont = 0;
-	    dispPtr->warpWindow = 0;
-	    dispPtr->multipleAtom = 0;
+	    dispPtr->cursorFont = None;
+	    dispPtr->warpWindow = None;
+	    dispPtr->multipleAtom = None;
 
 	    /*
 	     * By default we do want to collapse motion events in
@@ -667,7 +667,7 @@ TkAllocWindow(
 	winPtr->visual = DefaultVisual(dispPtr->display, screenNum);
 	winPtr->depth = DefaultDepth(dispPtr->display, screenNum);
     }
-    winPtr->window = 0;
+    winPtr->window = None;
     winPtr->childList = NULL;
     winPtr->lastChildPtr = NULL;
     winPtr->parentPtr = NULL;
@@ -1403,7 +1403,7 @@ Tk_DestroyWindow(
 	    winPtr->pathName != NULL &&
 	    !(winPtr->flags & TK_ANONYMOUS_WINDOW)) {
 	halfdeadPtr->flags |= HD_DESTROY_EVENT;
-	if (!winPtr->window) {
+	if (winPtr->window == None) {
 	    Tk_MakeWindowExist(tkwin);
 	}
 	event.type = DestroyNotify;
@@ -1449,7 +1449,7 @@ Tk_DestroyWindow(
     } else if (winPtr->flags & TK_WM_COLORMAP_WINDOW) {
 	TkWmRemoveFromColormapWindows(winPtr);
     }
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 #if defined(MAC_OSX_TK) || defined(__WIN32__)
 	XDestroyWindow(winPtr->display, winPtr->window);
 #else
@@ -1469,7 +1469,7 @@ Tk_DestroyWindow(
 	TkFreeWindowId(dispPtr, winPtr->window);
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->winTable,
 		(char *) winPtr->window));
-	winPtr->window = 0;
+	winPtr->window = None;
     }
     dispPtr->destroyCount--;
     UnlinkWindow(winPtr);
@@ -1642,7 +1642,7 @@ Tk_MapWindow(
     if (winPtr->flags & TK_MAPPED) {
 	return;
     }
-    if (!winPtr->window) {
+    if (winPtr->window == None) {
 	Tk_MakeWindowExist(tkwin);
     }
     /*
@@ -1704,21 +1704,21 @@ Tk_MakeWindowExist(
     Tk_ClassCreateProc *createProc;
     int isNew;
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	return;
     }
 
     if ((winPtr->parentPtr == NULL) || (winPtr->flags & TK_TOP_HIERARCHY)) {
 	parent = XRootWindow(winPtr->display, winPtr->screenNum);
     } else {
-	if (!winPtr->parentPtr->window) {
+	if (winPtr->parentPtr->window == None) {
 	    Tk_MakeWindowExist((Tk_Window) winPtr->parentPtr);
 	}
 	parent = winPtr->parentPtr->window;
     }
 
     createProc = Tk_GetClassProc(winPtr->classProcsPtr, createProc);
-    if (createProc != NULL && parent) {
+    if (createProc != NULL && parent != None) {
 	winPtr->window = (*createProc)(tkwin, parent, winPtr->instanceData);
     } else {
 	winPtr->window = TkpMakeWindow(winPtr, parent);
@@ -1744,7 +1744,7 @@ Tk_MakeWindowExist(
 
 	for (winPtr2 = winPtr->nextPtr; winPtr2 != NULL;
 		winPtr2 = winPtr2->nextPtr) {
-	    if (winPtr2->window
+	    if ((winPtr2->window != None)
 		    && !(winPtr2->flags & (TK_TOP_HIERARCHY|TK_REPARENTED))) {
 		XWindowChanges changes;
 		changes.sibling = winPtr2->window;
@@ -1863,7 +1863,7 @@ Tk_ConfigureWindow(
 	Tcl_Panic("Can't set sibling or stack mode from Tk_ConfigureWindow.");
     }
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XConfigureWindow(winPtr->display, winPtr->window,
 		valueMask, valuePtr);
 	TkDoConfigureNotify(winPtr);
@@ -1882,7 +1882,7 @@ Tk_MoveWindow(
 
     winPtr->changes.x = x;
     winPtr->changes.y = y;
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XMoveWindow(winPtr->display, winPtr->window, x, y);
 	TkDoConfigureNotify(winPtr);
     } else {
@@ -1900,7 +1900,7 @@ Tk_ResizeWindow(
 
     winPtr->changes.width = (unsigned) width;
     winPtr->changes.height = (unsigned) height;
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XResizeWindow(winPtr->display, winPtr->window, (unsigned) width,
 		(unsigned) height);
 	TkDoConfigureNotify(winPtr);
@@ -1922,7 +1922,7 @@ Tk_MoveResizeWindow(
     winPtr->changes.y = y;
     winPtr->changes.width = (unsigned) width;
     winPtr->changes.height = (unsigned) height;
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XMoveResizeWindow(winPtr->display, winPtr->window, x, y,
 		(unsigned) width, (unsigned) height);
 	TkDoConfigureNotify(winPtr);
@@ -1940,7 +1940,7 @@ Tk_SetWindowBorderWidth(
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->changes.border_width = width;
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XSetWindowBorderWidth(winPtr->display, winPtr->window,
 		(unsigned) width);
 	TkDoConfigureNotify(winPtr);
@@ -2007,7 +2007,7 @@ Tk_ChangeWindowAttributes(
 	winPtr->atts.cursor = attsPtr->cursor;
     }
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XChangeWindowAttributes(winPtr->display, winPtr->window,
 		valueMask, attsPtr);
     } else {
@@ -2025,7 +2025,7 @@ Tk_SetWindowBackground(
 
     winPtr->atts.background_pixel = pixel;
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XSetWindowBackground(winPtr->display, winPtr->window, pixel);
     } else {
 	winPtr->dirtyAtts = (winPtr->dirtyAtts & (unsigned) ~CWBackPixmap)
@@ -2042,7 +2042,7 @@ Tk_SetWindowBackgroundPixmap(
 
     winPtr->atts.background_pixmap = pixmap;
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XSetWindowBackgroundPixmap(winPtr->display,
 		winPtr->window, pixmap);
     } else {
@@ -2060,7 +2060,7 @@ Tk_SetWindowBorder(
 
     winPtr->atts.border_pixel = pixel;
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XSetWindowBorder(winPtr->display, winPtr->window, pixel);
     } else {
 	winPtr->dirtyAtts = (winPtr->dirtyAtts & (unsigned) ~CWBorderPixmap)
@@ -2077,7 +2077,7 @@ Tk_SetWindowBorderPixmap(
 
     winPtr->atts.border_pixmap = pixmap;
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XSetWindowBorderPixmap(winPtr->display,
 		winPtr->window, pixmap);
     } else {
@@ -2099,7 +2099,7 @@ Tk_DefineCursor(
     winPtr->atts.cursor = (Cursor) cursor;
 #endif
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XDefineCursor(winPtr->display, winPtr->window, winPtr->atts.cursor);
     } else {
 	winPtr->dirtyAtts = winPtr->dirtyAtts | CWCursor;
@@ -2110,7 +2110,7 @@ void
 Tk_UndefineCursor(
     Tk_Window tkwin)		/* Window to manipulate. */
 {
-    Tk_DefineCursor(tkwin, 0);
+    Tk_DefineCursor(tkwin, NULL);
 }
 
 void
@@ -2122,7 +2122,7 @@ Tk_SetWindowColormap(
 
     winPtr->atts.colormap = colormap;
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XSetWindowColormap(winPtr->display, winPtr->window, colormap);
 	if (!(winPtr->flags & TK_WIN_MANAGED)) {
 	    TkWmAddToColormapWindows(winPtr);
@@ -2162,7 +2162,7 @@ Tk_SetWindowVisual(
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	/* Too late! */
 	return 0;
     }
@@ -2222,7 +2222,7 @@ TkDoConfigureNotify(
     if (winPtr->changes.stack_mode == Above) {
 	event.xconfigure.above = winPtr->changes.sibling;
     } else {
-	event.xconfigure.above = 0;
+	event.xconfigure.above = None;
     }
     event.xconfigure.override_redirect = winPtr->atts.override_redirect;
     Tk_HandleEvent(&event);
@@ -2585,7 +2585,7 @@ Tk_RestackWindow(
      * will be handled properly when the window is finally created.
      */
 
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	XWindowChanges changes;
 	unsigned int mask;
 
@@ -2593,7 +2593,7 @@ Tk_RestackWindow(
 	changes.stack_mode = Above;
 	for (otherPtr = winPtr->nextPtr; otherPtr != NULL;
 		otherPtr = otherPtr->nextPtr) {
-	    if (otherPtr->window
+	    if ((otherPtr->window != None)
 		    && !(otherPtr->flags & (TK_TOP_HIERARCHY|TK_REPARENTED))){
 		changes.sibling = otherPtr->window;
 		changes.stack_mode = Below;

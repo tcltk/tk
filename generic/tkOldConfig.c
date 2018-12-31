@@ -431,16 +431,16 @@ DoConfig(
 	    Pixmap newBmp, oldBmp;
 
 	    if (nullValue) {
-		newBmp = 0;
+		newBmp = None;
 	    } else {
 		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
 		newBmp = Tk_GetBitmap(interp, tkwin, uid);
-		if (!newBmp) {
+		if (newBmp == None) {
 		    return TCL_ERROR;
 		}
 	    }
 	    oldBmp = *((Pixmap *) ptr);
-	    if (oldBmp) {
+	    if (oldBmp != None) {
 		Tk_FreeBitmap(Tk_Display(tkwin), oldBmp);
 	    }
 	    *((Pixmap *) ptr) = newBmp;
@@ -454,12 +454,12 @@ DoConfig(
 	    } else {
 		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
 		newBorder = Tk_Get3DBorder(interp, tkwin, uid);
-		if (!newBorder) {
+		if (newBorder == NULL) {
 		    return TCL_ERROR;
 		}
 	    }
 	    oldBorder = *((Tk_3DBorder *) ptr);
-	    if (oldBorder) {
+	    if (oldBorder != NULL) {
 		Tk_Free3DBorder(oldBorder);
 	    }
 	    *((Tk_3DBorder *) ptr) = newBorder;
@@ -480,12 +480,12 @@ DoConfig(
 	    } else {
 		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
 		newCursor = Tk_GetCursor(interp, tkwin, uid);
-		if (!newCursor) {
+		if (newCursor == None) {
 		    return TCL_ERROR;
 		}
 	    }
 	    oldCursor = *((Tk_Cursor *) ptr);
-	    if (oldCursor) {
+	    if (oldCursor != None) {
 		Tk_FreeCursor(Tk_Display(tkwin), oldCursor);
 	    }
 	    *((Tk_Cursor *) ptr) = newCursor;
@@ -794,7 +794,7 @@ FormatConfigValue(
     case TK_CONFIG_UID: {
 	Tk_Uid uid = *((Tk_Uid *) ptr);
 
-	if (uid) {
+	if (uid != NULL) {
 	    result = uid;
 	}
 	break;
@@ -802,7 +802,7 @@ FormatConfigValue(
     case TK_CONFIG_COLOR: {
 	XColor *colorPtr = *((XColor **) ptr);
 
-	if (colorPtr) {
+	if (colorPtr != NULL) {
 	    result = Tk_NameOfColor(colorPtr);
 	}
 	break;
@@ -810,7 +810,7 @@ FormatConfigValue(
     case TK_CONFIG_FONT: {
 	Tk_Font tkfont = *((Tk_Font *) ptr);
 
-	if (tkfont) {
+	if (tkfont != NULL) {
 	    result = Tk_NameOfFont(tkfont);
 	}
 	break;
@@ -818,7 +818,7 @@ FormatConfigValue(
     case TK_CONFIG_BITMAP: {
 	Pixmap pixmap = *((Pixmap *) ptr);
 
-	if (pixmap) {
+	if (pixmap != None) {
 	    result = Tk_NameOfBitmap(Tk_Display(tkwin), pixmap);
 	}
 	break;
@@ -826,7 +826,7 @@ FormatConfigValue(
     case TK_CONFIG_BORDER: {
 	Tk_3DBorder border = *((Tk_3DBorder *) ptr);
 
-	if (border) {
+	if (border != NULL) {
 	    result = Tk_NameOf3DBorder(border);
 	}
 	break;
@@ -838,7 +838,7 @@ FormatConfigValue(
     case TK_CONFIG_ACTIVE_CURSOR: {
 	Tk_Cursor cursor = *((Tk_Cursor *) ptr);
 
-	if (cursor) {
+	if (cursor != None) {
 	    result = Tk_NameOfCursor(Tk_Display(tkwin), cursor);
 	}
 	break;
@@ -995,7 +995,7 @@ Tk_FreeOptions(
 	ptr = widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_STRING:
-	    if (*((char **) ptr)) {
+	    if (*((char **) ptr) != NULL) {
 		ckfree(*((char **) ptr));
 		*((char **) ptr) = NULL;
 	    }
@@ -1011,22 +1011,22 @@ Tk_FreeOptions(
 	    *((Tk_Font *) ptr) = NULL;
 	    break;
 	case TK_CONFIG_BITMAP:
-	    if (*((Pixmap *) ptr)) {
+	    if (*((Pixmap *) ptr) != None) {
 		Tk_FreeBitmap(display, *((Pixmap *) ptr));
-		*((Pixmap *) ptr) = 0;
+		*((Pixmap *) ptr) = None;
 	    }
 	    break;
 	case TK_CONFIG_BORDER:
-	    if (*((Tk_3DBorder *) ptr)) {
+	    if (*((Tk_3DBorder *) ptr) != NULL) {
 		Tk_Free3DBorder(*((Tk_3DBorder *) ptr));
 		*((Tk_3DBorder *) ptr) = NULL;
 	    }
 	    break;
 	case TK_CONFIG_CURSOR:
 	case TK_CONFIG_ACTIVE_CURSOR:
-	    if (*((Tk_Cursor *) ptr)) {
+	    if (*((Tk_Cursor *) ptr) != None) {
 		Tk_FreeCursor(display, *((Tk_Cursor *) ptr));
-		*((Tk_Cursor *) ptr) = 0;
+		*((Tk_Cursor *) ptr) = NULL;
 	    }
 	}
     }

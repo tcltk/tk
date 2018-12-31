@@ -187,7 +187,10 @@ Tk_GetCursor(
 				 * details on legal syntax. */
 {
     TkCursor *cursorPtr = TkcGetCursor(interp, tkwin, string);
-    return cursorPtr ? cursorPtr->cursor : 0;
+    if (cursorPtr == NULL) {
+	return 0;
+    }
+    return cursorPtr->cursor;
 }
 
 /*
