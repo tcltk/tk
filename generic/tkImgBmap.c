@@ -384,9 +384,9 @@ ImgBmapConfigureInstance(
      */
 
     oldBitmap = instancePtr->bitmap;
-    instancePtr->bitmap = 0;
+    instancePtr->bitmap = None;
     oldMask = instancePtr->mask;
-    instancePtr->mask = 0;
+    instancePtr->mask = None;
 
     if (masterPtr->data != NULL) {
 	instancePtr->bitmap = XCreateBitmapFromData(
@@ -417,7 +417,7 @@ ImgBmapConfigureInstance(
 	if (instancePtr->bg) {
 	    gcValues.background = instancePtr->bg->pixel;
 	    mask |= GCBackground;
-	    if (instancePtr->mask) {
+	    if (instancePtr->mask != None) {
 		gcValues.clip_mask = instancePtr->mask;
 		mask |= GCClipMask;
 	    }
@@ -427,7 +427,7 @@ ImgBmapConfigureInstance(
 	}
 	gc = Tk_GetGC(instancePtr->tkwin, mask, &gcValues);
     } else {
-	gc = 0;
+	gc = NULL;
     }
     if (instancePtr->gc) {
 	Tk_FreeGC(Tk_Display(instancePtr->tkwin), instancePtr->gc);
@@ -444,7 +444,7 @@ ImgBmapConfigureInstance(
     if (instancePtr->gc) {
 	Tk_FreeGC(Tk_Display(instancePtr->tkwin), instancePtr->gc);
     }
-    instancePtr->gc = 0;
+    instancePtr->gc = NULL;
     Tcl_AppendObjToErrorInfo(masterPtr->interp, Tcl_ObjPrintf(
 	    "\n    (while configuring image \"%s\")", Tk_NameOfImage(
 	    masterPtr->tkMaster)));
@@ -846,9 +846,9 @@ ImgBmapGet(
     instancePtr->tkwin = tkwin;
     instancePtr->fg = NULL;
     instancePtr->bg = NULL;
-    instancePtr->bitmap = 0;
-    instancePtr->mask = 0;
-    instancePtr->gc = 0;
+    instancePtr->bitmap = None;
+    instancePtr->mask = None;
+    instancePtr->gc = NULL;
     instancePtr->nextPtr = masterPtr->instancePtr;
     masterPtr->instancePtr = instancePtr;
     ImgBmapConfigureInstance(instancePtr);
@@ -902,7 +902,7 @@ ImgBmapDisplay(
      * creating the image instance so it can't be displayed.
      */
 
-    if (!instancePtr->gc) {
+    if (instancePtr->gc == None) {
 	return;
     }
 
@@ -912,7 +912,7 @@ ImgBmapDisplay(
      * image and reset the clip origin, if there's a mask.
      */
 
-    masking = instancePtr->mask || !instancePtr->bg;
+    masking = (instancePtr->mask != None) || (instancePtr->bg == NULL);
     if (masking) {
 	XSetClipOrigin(display, instancePtr->gc, drawableX - imageX,
 		drawableY - imageY);
@@ -960,19 +960,19 @@ ImgBmapFree(
      * instance structure.
      */
 
-    if (instancePtr->fg) {
+    if (instancePtr->fg != NULL) {
 	Tk_FreeColor(instancePtr->fg);
     }
-    if (instancePtr->bg) {
+    if (instancePtr->bg != NULL) {
 	Tk_FreeColor(instancePtr->bg);
     }
-    if (instancePtr->bitmap) {
+    if (instancePtr->bitmap != None) {
 	Tk_FreePixmap(display, instancePtr->bitmap);
     }
-    if (instancePtr->mask) {
+    if (instancePtr->mask != None) {
 	Tk_FreePixmap(display, instancePtr->mask);
     }
-    if (instancePtr->gc) {
+    if (instancePtr->gc != None) {
 	Tk_FreeGC(display, instancePtr->gc);
     }
     if (instancePtr->masterPtr->instancePtr == instancePtr) {
@@ -1011,17 +1011,17 @@ ImgBmapDelete(
 {
     BitmapMaster *masterPtr = masterData;
 
-    if (masterPtr->instancePtr) {
+    if (masterPtr->instancePtr != NULL) {
 	Tcl_Panic("tried to delete bitmap image when instances still exist");
     }
     masterPtr->tkMaster = NULL;
-    if (masterPtr->imageCmd) {
+    if (masterPtr->imageCmd != NULL) {
 	Tcl_DeleteCommandFromToken(masterPtr->interp, masterPtr->imageCmd);
     }
-    if (masterPtr->data) {
+    if (masterPtr->data != NULL) {
 	ckfree(masterPtr->data);
     }
-    if (masterPtr->maskData) {
+    if (masterPtr->maskData != NULL) {
 	ckfree(masterPtr->maskData);
     }
     Tk_FreeOptions(configSpecs, (char *) masterPtr, NULL, 0);
@@ -1053,7 +1053,7 @@ ImgBmapCmdDeletedProc(
     BitmapMaster *masterPtr = clientData;
 
     masterPtr->imageCmd = NULL;
-    if (masterPtr->tkMaster) {
+    if (masterPtr->tkMaster != NULL) {
 	Tk_DeleteImage(masterPtr->interp, Tk_NameOfImage(masterPtr->tkMaster));
     }
 }
