@@ -1401,6 +1401,9 @@ ResetCounters(
     }
 }
 
+#if 1
+static int N = 0;
+#endif
 void
 TkBindDeadWindow(
     TkWindow *winPtr)	/* Information about the window that is being deleted. */
@@ -1414,6 +1417,10 @@ TkBindDeadWindow(
 	return;
     }
 
+#if 1
+if (68 <= N && N <= 69)
+printf("TkBindDeadWindow(%s)\n", Tk_PathName(winPtr));
+#endif
     bindPtr = winPtr->mainPtr->bindingTable;
     window = Tk_WindowId(winPtr);
 
@@ -2024,6 +2031,11 @@ Tk_DeleteAllBindings(
     if (!(hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object))) {
 	return;
     }
+#if 1
+if (68 <= N && N <= 69)
+printf("Tk_DeleteAllBindings(%s): %d\n", (char *) object, N);
+N += 1;
+#endif
 
     /*
      * Don't forget to clear lookup tables.
@@ -2298,6 +2310,11 @@ Tk_BindEvent(
     } else {
 	curEvent->countAny = curEvent->countDetailed = 1;
     }
+#if 1
+if (eventPtr->type == ButtonPress)
+if (68 <= N && N <= 69)
+printf("Tk_BindEvent(%s): %d %d\n", Tk_PathName(winPtr), curEvent->countAny, curEvent->countDetailed);
+#endif
 
     /*
      * Now update the details.
@@ -2755,6 +2772,10 @@ MatchPatterns(
 			 * This pattern is finally matching.
 			 */
 
+#if 1
+if (68 <= N && N <= 69)
+printf("MatchPatterns(%lu): %u %u\n", patPtr->info, patPtr->count, count);
+#endif
 			if (psPtr->numPats == patIndex + 1) {
 			    if (patPtr->count <= count) {
 				int cmp = Compare(bestPtr, psPtr, patIndex);
