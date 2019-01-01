@@ -1419,7 +1419,7 @@ TkBindDeadWindow(
 
 #if 1
 if (68 <= N && N <= 69)
-printf("TkBindDeadWindow(%s)\n", Tk_PathName(winPtr));
+printf("TkBindDeadWindow(%s)\n", Tk_PathName(winPtr)); fflush(stdout);
 #endif
     bindPtr = winPtr->mainPtr->bindingTable;
     window = Tk_WindowId(winPtr);
@@ -2033,7 +2033,7 @@ Tk_DeleteAllBindings(
     }
 #if 1
 if (68 <= N && N <= 69)
-printf("Tk_DeleteAllBindings(%s): %d\n", (char *) object, N);
+printf("Tk_DeleteAllBindings(%s): %d\n", (char *) object, N); fflush(stdout);
 N += 1;
 #endif
 
@@ -2313,7 +2313,7 @@ Tk_BindEvent(
 #if 1
 if (eventPtr->type == ButtonPress)
 if (68 <= N && N <= 69)
-printf("Tk_BindEvent(%s): %d %d\n", Tk_PathName(winPtr), curEvent->countAny, curEvent->countDetailed);
+printf("Tk_BindEvent(%s): %d %d\n", Tk_PathName(winPtr), curEvent->countAny, curEvent->countDetailed); fflush(stdout);
 #endif
 
     /*
@@ -2774,7 +2774,7 @@ MatchPatterns(
 
 #if 1
 if (68 <= N && N <= 69)
-printf("MatchPatterns(%lu): %u %u\n", patPtr->info, patPtr->count, count);
+printf("MatchPatterns(%lu): %u %u\n", patPtr->info, patPtr->count, count); fflush(stdout);
 #endif
 			if (psPtr->numPats == patIndex + 1) {
 			    if (patPtr->count <= count) {
