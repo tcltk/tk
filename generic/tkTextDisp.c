@@ -3363,7 +3363,7 @@ TkTextUpdateLineMetrics(
     }
     if (doThisMuch == -1) {
 	/*
-	 * If we were requested to provide a full update, then also update the
+	 * If we were requested to update the entire range, then also update the
 	 * scrollbar.
 	 */
 
