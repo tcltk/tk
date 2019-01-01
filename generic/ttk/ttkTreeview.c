@@ -1709,17 +1709,8 @@ static void PrepareItem(
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
     Ttk_State state = ItemState(tv, item);
 
-    /*
-     * Tag options have precedence over the style, unless in selected state.
-     */
-
-    if (state & TTK_STATE_SELECTED) {
-        Ttk_TagSetValues(tv->tree.tagTable, item->tagset, displayItem);
-        Ttk_TagSetApplyStyle(tv->tree.tagTable, style, state, displayItem);
-    } else {
-        Ttk_TagSetApplyStyle(tv->tree.tagTable, style, state, displayItem);
-        Ttk_TagSetValues(tv->tree.tagTable, item->tagset, displayItem);
-    }
+    Ttk_TagSetValues(tv->tree.tagTable, item->tagset, displayItem);
+    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, state, displayItem);
 }
 
 /* + DrawCells --
