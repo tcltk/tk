@@ -3091,7 +3091,6 @@ AsyncUpdateLineMetrics(
          * with its internal data (actually it will be after the next trip
          * through the event loop, because the widget redraws at idle-time).
          */
-
         GenerateWidgetViewSyncEvent(textPtr, 1);
 
 	if (textPtr->refCount-- <= 1) {
@@ -3200,7 +3199,10 @@ TkTextUpdateLineMetrics(
     TkTextLine *linePtr = NULL;
     int count = 0;
     int totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
-
+    int fullSync = (lineNum == 0 &&
+                    endLine == totalLines &&
+                    doThisMuch == -1);
+    
     if (totalLines == 0) {
 	/*
 	 * Empty peer widget.
@@ -3366,6 +3368,9 @@ TkTextUpdateLineMetrics(
 	 */
 
 	GetYView(textPtr->interp, textPtr, 1);
+    }
+    if (fullSync) {
+        GenerateWidgetViewSyncEvent(textPtr, 1);
     }
     return lineNum;
 }
@@ -3538,9 +3543,8 @@ TextInvalidateLineMetrics(
     }
 
     /*
-     * The widget is now out of sync: send a <<WidgetViewSync>> event.
+     * The widget is out of sync: send a <<WidgetViewSync>> event.
      */
-
     GenerateWidgetViewSyncEvent(textPtr, 0);
 }
 
@@ -5283,9 +5287,7 @@ TkTextRelayoutWindow(
 	    inSync = 0;
 	}
 
-	if (!inSync) {
-	    GenerateWidgetViewSyncEvent(textPtr, 0);
-	}
+        GenerateWidgetViewSyncEvent(textPtr, inSync);
     }
 }
 
