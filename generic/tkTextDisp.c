@@ -3117,7 +3117,7 @@ AsyncUpdateLineMetrics(
  *      line metrics asynchronous update.  These events should only
  *      be sent when the sync status has changed.  So this function
  *      compares the requested state with the state saved in the
- *      TkTest structure, and only generates the event if they are
+ *      TkText structure, and only generates the event if they are
  *      different.  This means that it is safe to call this function
  *      at any time when the state is known.
  *
@@ -3199,9 +3199,9 @@ TkTextUpdateLineMetrics(
     TkTextLine *linePtr = NULL;
     int count = 0;
     int totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
-    int fullSync = (lineNum == 0 &&
-                    endLine == totalLines &&
-                    doThisMuch == -1);
+    int fullUpdateRequested = (lineNum == 0 &&
+                               endLine == totalLines &&
+                               doThisMuch == -1);
     
     if (totalLines == 0) {
 	/*
@@ -3369,8 +3369,9 @@ TkTextUpdateLineMetrics(
 
 	GetYView(textPtr->interp, textPtr, 1);
     }
-    if (fullSync) {
+    if (fullUpdateRequested) {
         TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+
         dInfoPtr->lastMetricUpdateLine = lineNum;
         dInfoPtr->currentMetricUpdateLine = lineNum;
         GenerateWidgetViewSyncEvent(textPtr, 1);
