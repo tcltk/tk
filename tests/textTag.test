@@ -311,6 +311,25 @@ test textTag-1.37 {configuration options} -body {
 } -cleanup {
     .t tag configure x -underlinecolor [lindex [.t tag configure x -underlinecolor] 3]
 } -returnCodes error -result {unknown color name "stupid"}
+test textTag-1.38 {configuration options} -body {
+    .t tag configure x -undo eh
+} -cleanup {
+    .t tag configure x -undo 1
+} -returnCodes error -result {expected boolean value but got "eh"}
+test textTag-1.39 {configuration options} -setup {
+    .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
+} -body {
+    .t tag cget x -undo
+} -result {1}
+test textTag-1.40 {configuration options} -setup {
+    text .u
+} -body {
+    .u configure -undotagging 0
+    .u tag configure x -underline 0
+    .u tag cget x -undo
+} -cleanup {
+    destroy .u
+} -result {0}
 
 
 test textTag-2.1 {TkTextTagCmd - "add" option} -body {

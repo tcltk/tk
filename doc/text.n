@@ -487,6 +487,11 @@ The new text will not receive any tags from surrounded text.
 .RE
 .OP \-undo undo Undo
 Specifies a boolean that says whether the undo mechanism is active or not.
+.OP \-undotagging undoTagging UndoTagging
+This boolean value specifies the setup value for \fB-undo\fR option when
+creating tags. Per default the setup value is \fItrue\fR. Note that this
+value will not be used for the special tag \fBsel\fR. See description of
+tag option \fB-undo\fR for more information.
 .OP \-width width Width
 Specifies the desired width for the window in units of characters in the font
 given by the \fB\-font\fR option. If the font does not have a uniform width
@@ -1116,8 +1121,9 @@ See equivalent tag option \fB\-underlinecolor\fR for a description.
 .
 Specifies whether adding/removing this tag to/from text will be undone with
 \fBundo\fR operation. If this flag is \fIfalse\fR, then changes of tag
-associations will not be undone for this tag. The default is \fItrue\fR, except
-for the special selection flag \fBsel\fR, the default for this tag is \fIfalse\fR.
+associations will not be undone for this tag. The default is given with
+text option \fB-undotagging\fR (normally \fItrue\fR), except for the special
+selection flag \fBsel\fR, the default for this tag is always \fIfalse\fR.
 .TP
 \fB\-wrap \fImode\fR
 .
