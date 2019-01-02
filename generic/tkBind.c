@@ -156,7 +156,7 @@ typedef struct PSEntry {
     				 * pattern. */
     unsigned expired:1;		/* Whether this entry is expired, this means it has to be removed
     				 * from promotion list. */
-    unsigned isNew:1;		/* Whether this entry is recently created. */
+    unsigned keepIt:1;		/* Whether to keep this entry, even if expired. */
 } PSEntry;
 
 TK_DLIST_DEFINE(PSList, PSEntry);/* defining the whole PSList_* stuff (list of PSEntry items) */
@@ -993,7 +993,7 @@ MakeListEntry(
     newEntry->psPtr = psPtr;
     newEntry->window = None;
     newEntry->expired = false;
-    newEntry->isNew = true;
+    newEntry->keepIt = true;
     newEntry->count = 1;
     DEBUG(psPtr->owned = false);
 
@@ -1363,75 +1363,6 @@ TkBindFree(
     assert(countBindItems > 0 || countEntryItems == 0);
     assert(countBindItems > 0 || countListItems == 0);
     assert(countBindItems > 0 || countSeqItems == 0);
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkBindDeadWindow --
- *
- *	This function is invoked when it is determined that a window is dead.
- *	It cleans up event-related information about the window.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Various things get cleaned up.
- *
- *---------------------------------------------------------------------------
- */
-
-/* helper function */
-static void
-ResetCounters(
-    Event *eventInfo,
-    unsigned eventType,
-    Window window)
-{
-    Event *curEvent;
-
-    assert(eventInfo);
-    curEvent = eventInfo + eventType;
-
-    if (curEvent->xev.xany.window == window) {
-	curEvent->xev.xany.window = None;
-	eventInfo[eventType].countAny = 0;
-	eventInfo[eventType].countDetailed = 0;
-    }
-}
-
-#if 1
-static int N = 0;
-#endif
-void
-TkBindDeadWindow(
-    TkWindow *winPtr)	/* Information about the window that is being deleted. */
-{
-    BindingTable *bindPtr;
-    Window window;
-
-    assert(winPtr);
-
-    if (!winPtr->mainPtr) {
-	return;
-    }
-
-#if 1
-if (68 <= N && N <= 69)
-printf("TkBindDeadWindow(%s)\n", Tk_PathName(winPtr)); fflush(stdout);
-#endif
-    bindPtr = winPtr->mainPtr->bindingTable;
-    window = Tk_WindowId(winPtr);
-
-    if (bindPtr->curEvent->xev.xany.window == window) {
-	bindPtr->curEvent->xev.xany.window = None;
-    }
-
-    ResetCounters(bindPtr->eventInfo, KeyPress, window);
-    ResetCounters(bindPtr->eventInfo, KeyRelease, window);
-    ResetCounters(bindPtr->eventInfo, ButtonPress, window);
-    ResetCounters(bindPtr->eventInfo, ButtonRelease, window);
 }
 
 /*
@@ -2031,11 +1962,6 @@ Tk_DeleteAllBindings(
     if (!(hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object))) {
 	return;
     }
-#if 1
-if (68 <= N && N <= 69)
-printf("Tk_DeleteAllBindings(%s): %d\n", (char *) object, N); fflush(stdout);
-N += 1;
-#endif
 
     /*
      * Don't forget to clear lookup tables.
@@ -2077,6 +2003,25 @@ N += 1;
  *
  *---------------------------------------------------------------------------
  */
+
+/* helper function */
+static void
+ResetCounters(
+    Event *eventInfo,
+    unsigned eventType,
+    Window window)
+{
+    Event *curEvent;
+
+    assert(eventInfo);
+    curEvent = eventInfo + eventType;
+
+    if (curEvent->xev.xany.window == window) {
+	curEvent->xev.xany.window = None;
+	eventInfo[eventType].countAny = 0;
+	eventInfo[eventType].countDetailed = 0;
+    }
+}
 
 /* helper function */
 static bool
@@ -2182,6 +2127,7 @@ Tk_BindEvent(
 
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
     bindInfoPtr = winPtr->mainPtr->bindInfo;
+    curEvent = bindPtr->eventInfo + eventPtr->type;
 
     /*
      * Ignore the event completely if it is an Enter, Leave, FocusIn, or
@@ -2251,9 +2197,13 @@ Tk_BindEvent(
 	    bindInfoPtr->lastEventTime = eventPtr->xproperty.time;
 	}
 	break;
+    case DestroyNotify:
+	ResetCounters(bindPtr->eventInfo, KeyPress, eventPtr->xany.window);
+	ResetCounters(bindPtr->eventInfo, KeyRelease, eventPtr->xany.window);
+	ResetCounters(bindPtr->eventInfo, ButtonPress, eventPtr->xany.window);
+	ResetCounters(bindPtr->eventInfo, ButtonRelease, eventPtr->xany.window);
+	break;
     }
-
-    curEvent = bindPtr->eventInfo + eventPtr->type;
 
     /*
      * Now check whether this is a repeating event (multi-click, repeated key press, and so on).
@@ -2310,11 +2260,6 @@ Tk_BindEvent(
     } else {
 	curEvent->countAny = curEvent->countDetailed = 1;
     }
-#if 1
-if (eventPtr->type == ButtonPress)
-if (68 <= N && N <= 69)
-printf("Tk_BindEvent(%s): %d %d\n", Tk_PathName(winPtr), curEvent->countAny, curEvent->countDetailed); fflush(stdout);
-#endif
 
     /*
      * Now update the details.
@@ -2469,7 +2414,7 @@ printf("Tk_BindEvent(%s): %d %d\n", Tk_PathName(winPtr), curEvent->countAny, cur
 
 	    /*
 	     * We have to remove the following entries from promotion list (but
-	     * only if it is not added recently):
+	     * only if we don't want to keep it):
 	     * ------------------------------------------------------------------
 	     * 1) It is marked as expired (see MatchPatterns()).
 	     * 2) If we have a Key event, and current entry is matching a Button.
@@ -2479,10 +2424,9 @@ printf("Tk_BindEvent(%s): %d %d\n", Tk_PathName(winPtr), curEvent->countAny, cur
 	     * 5) Current entry has been matched with a different window.
 	     */
 
-	    if (psEntry->isNew) {
-		/* this pattern has been added recently */
+	    if (psEntry->keepIt) {
 		assert(!psEntry->expired);
-		psEntry->isNew = false;
+		psEntry->keepIt = false;
 	    } else if (psEntry->expired
 		    || psEntry->window != curEvent->xev.xany.window
 		    || (patPtr->info
@@ -2772,10 +2716,6 @@ MatchPatterns(
 			 * This pattern is finally matching.
 			 */
 
-#if 1
-if (68 <= N && N <= 69)
-printf("MatchPatterns(%lu): %u %u\n", patPtr->info, patPtr->count, count); fflush(stdout);
-#endif
 			if (psPtr->numPats == patIndex + 1) {
 			    if (patPtr->count <= count) {
 				int cmp = Compare(bestPtr, psPtr, patIndex);
@@ -2806,14 +2746,14 @@ printf("MatchPatterns(%lu): %u %u\n", patPtr->info, patPtr->count, count); fflus
 
 				assert(!patPtr->name);
 				psNewEntry = MakeListEntry(&bindPtr->lookupTables.entryPool, psPtr);
-				assert(psNewEntry->isNew);
+				assert(psNewEntry->keepIt);
 				assert(psNewEntry->count == 1u);
 				PSList_Append(psSuccList, psNewEntry);
 				psNewEntry->window = window; /* bind to current window */
 			    } else {
 				assert(psEntry->count < patPtr->count);
 				psEntry->count += 1;
-				psEntry->isNew = true; /* don't remove it from promotion list */
+				psEntry->keepIt = true; /* don't remove it from promotion list */
 				DEBUG(psEntry->expired = false);
 			    }
 			}
