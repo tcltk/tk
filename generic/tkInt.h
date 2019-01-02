@@ -923,6 +923,11 @@ typedef struct TkpClipMask {
 #define META_MASK	(AnyModifier<<1)
 #define ALT_MASK	(AnyModifier<<2)
 #define EXTENDED_MASK	(AnyModifier<<3)
+#ifdef USE_MAC_CLICKCOUNT
+#ifdef MAC_OSX_TK
+#define REPEAT_MASK (AnyModifier<<4)
+#endif
+#endif
 
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
@@ -1228,7 +1233,6 @@ MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
-MODULE_SCOPE void	TkBindDeadWindow(TkWindow *winPtr);
 
 #ifdef _WIN32
 #define TkParseColor XParseColor

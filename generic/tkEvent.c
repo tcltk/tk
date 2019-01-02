@@ -1444,12 +1444,6 @@ TkEventDeadWindow(
 	}
 	ckfree(handlerPtr);
     }
-
-    /*
-     * Also clean up binding information.
-     */
-
-    TkBindDeadWindow(winPtr);
 }
 
 /*
