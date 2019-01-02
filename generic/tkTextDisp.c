@@ -3209,16 +3209,22 @@ TkTextUpdateLineMetrics(
                                endLine == totalLines &&
                                doThisMuch == -1);
 
-    if (fullUpdateRequested && (textPtr->dInfoPtr->flags & REDRAW_PENDING)) {
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
-    }
-
     if (totalLines == 0) {
 	/*
 	 * Empty peer widget.
 	 */
 
 	return endLine;
+    }
+
+    /*
+     * When called by the sync command we need to ensure that no redraw is
+     * pending before updating the line metrics. Otherwise pendingsync
+     * would remain true after the sync.
+     */
+
+    if (fullUpdateRequested && (textPtr->dInfoPtr->flags & REDRAW_PENDING)) {
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
 
     while (1) {
