@@ -923,11 +923,6 @@ typedef struct TkpClipMask {
 #define META_MASK	(AnyModifier<<1)
 #define ALT_MASK	(AnyModifier<<2)
 #define EXTENDED_MASK	(AnyModifier<<3)
-#ifdef USE_MAC_CLICKCOUNT
-#ifdef MAC_OSX_TK
-#define REPEAT_MASK (AnyModifier<<4)
-#endif
-#endif
 
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
