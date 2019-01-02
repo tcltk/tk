@@ -3077,8 +3077,8 @@ AsyncUpdateLineMetrics(
 	 */
 
         if (textPtr->afterSyncCmd) {
-	    Tcl_CancelIdleCall(TkTextRunAfterSyncCmd, textPtr);
             int code;
+	    Tcl_CancelIdleCall(TkTextRunAfterSyncCmd, textPtr);
             Tcl_Preserve((ClientData) textPtr->interp);
             code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd,
                     TCL_EVAL_GLOBAL);
