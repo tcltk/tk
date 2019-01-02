@@ -785,8 +785,7 @@ typedef struct TkText {
 				 * refering to us. */
     int insertCursorType;	/* 0 = standard insertion cursor, 1 = block
 				 * cursor. */
-    int inSync;                 /* The last value sent as a <<WidgetViewSync>>
-                                   event. Initialized to 1.*/
+
     /*
      * Copies of information from the shared section relating to the undo/redo
      * functonality

@@ -533,7 +533,6 @@ CreateWidget(
     textPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(textPtr->tkwin), TextWidgetObjCmd,
 	    textPtr, TextCmdDeletedProc);
-    textPtr->inSync = 1;
 
     if (sharedPtr == NULL) {
 	sharedPtr = ckalloc(sizeof(TkSharedText));
@@ -1560,7 +1559,6 @@ TextWidgetObjCmd(
 	    Tcl_DecrRefCount(textPtr->afterSyncCmd);
 	}
 	textPtr->afterSyncCmd = NULL;
-        while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 	TkTextUpdateLineMetrics(textPtr, 0,
 		TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), -1);
 	break;

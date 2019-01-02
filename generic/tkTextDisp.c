@@ -497,13 +497,15 @@ static TkTextDispChunk *baseCharChunkPtr = NULL;
  *				different character might be under the mouse
  *				cursor now). Need to recompute the current
  *				character before the next redisplay.
+ * OUT_OF_SYNC                  1 means that the last <<WidgetViewSync>> event had
+ *                              value 0, indicating that the widget is out of sync.
  */
 
 #define DINFO_OUT_OF_DATE	1
 #define REDRAW_PENDING		2
 #define REDRAW_BORDERS		4
 #define REPICK_NEEDED		8
-
+#define OUT_OF_SYNC             16
 /*
  * Action values for FreeDLines:
  *
@@ -3152,8 +3154,12 @@ GenerateWidgetViewSyncEvent(
 	FORCE_DISPLAY(textPtr->tkwin);
     }
 
-    if (InSync != textPtr->inSync) {
-        textPtr->inSync = InSync;
+    if (InSync == !!(textPtr->dInfoPtr->flags & OUT_OF_SYNC)) {
+	if (InSync) {
+	    textPtr->dInfoPtr->flags &= ~OUT_OF_SYNC;
+	} else {
+	    textPtr->dInfoPtr->flags |= OUT_OF_SYNC;
+	}
         TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
                            Tcl_NewBooleanObj(InSync));
     }
@@ -3202,7 +3208,11 @@ TkTextUpdateLineMetrics(
     int fullUpdateRequested = (lineNum == 0 &&
                                endLine == totalLines &&
                                doThisMuch == -1);
-    
+
+    if (fullUpdateRequested && (textPtr->dInfoPtr->flags & REDRAW_PENDING)) {
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+    }
+
     if (totalLines == 0) {
 	/*
 	 * Empty peer widget.
