@@ -3179,11 +3179,13 @@ test text-11a.1 {TextWidgetCmd procedure, "pendingsync" option} -setup {
 } -cleanup {
     destroy .yt
 } -result {1 {wrong # args: should be ".yt pendingsync"}}
+
 test text-11a.2 {TextWidgetCmd procedure, "pendingsync" option} -setup {
     destroy .top.yt .top
 } -body {
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 15] \n
@@ -3221,9 +3223,11 @@ test text-11a.12 {TextWidgetCmd procedure, "sync" option} -setup {
 } -body {
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
+    # Use long lines so the line metrics will need updating.
     for {set i 1} {$i < 30} {incr i} {
-        append content [string repeat "$i " 15] \n
+        append content [string repeat "$i " 200] \n
     }
     .top.yt insert 1.0 $content
     # wait for end of line metrics calculation to get correct $fraction1
@@ -3361,19 +3365,18 @@ test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 15] \n
     }
-    .top.yt insert 1.0 $content
+    # Sync the widget and process <<WidgetViewSync>> events before binding.
+    .top.yt sync
     update
     bind .top.yt <<WidgetViewSync>> { if {%d} {set yud(%W) 1} }
-    # wait for end of line metrics calculation to get correct $fraction1
-    # as a reference
-    if {[.top.yt pendingsync]} {vwait yud(.top.yt)}
+    .top.yt insert 1.0 $content
     .top.yt yview moveto 1
     set fraction1 [lindex [.top.yt yview] 0]
     set res [expr {$fraction1 > 0}]
     .top.yt delete 1.0 end
     .top.yt insert 1.0 $content
     # synchronously wait for completion of line metrics calculation
-    # and ensure the test is relevant
+    # and verify that the fractions agree.
     set waited 0
     if {[.top.yt pendingsync]} {set waited 1 ; vwait yud(.top.yt)}
     lappend res $waited
@@ -3410,38 +3413,33 @@ test text-11a.33 {"<<WidgetViewSync>>" event after "sync"} -setup {
 test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -body {
-    set res {}
     toplevel .top
     pack [text .top.yt]
-    # For this test it is required that the ConfigureNotify event is
-    # not messing up the sync state, see comment below (GC).
-    while {![winfo ismapped .top.yt]} {
-	update
-    }
+    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 50] \n
     }
-    bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
-    .top.yt insert 1.0 $content
-    # The original test did contain the lines below, but it makes no sense,
-    # because both values (Sync:0 and Sync:1) are ok (GC).
-    #    vwait res  ; # event dealt with by the event loop, with %d==0 i.e. we're out of sync
-    #    # ensure the test is relevant
-    #    lappend res "Pending:[.top.yt pendingsync]"
-    # --------------------------------------------------------------------------
-    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs
-    # - there is no more any pending sync after running 'sync'
+    # Sync the widget and process all <<WidgetViewSync>> events before binding. 
     .top.yt sync
-    vwait res  ; # event dealt with by the event loop, with %d==1 i.e. we're in sync again
+    update
+    bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
+    set res {}
+    # The next line triggers <<WidgetViewSync>> with %d==0 i.e. out of sync.
+    .top.yt insert 1.0 $content
+    vwait res
+    # Verify that the line metrics are not up-to-date (pendingsync is 1).
     lappend res "Pending:[.top.yt pendingsync]"
-    # Without waiting for Map event the last pending state can be 1, because it can happen
-    # that the Configure event will be triggered during vwait (and this is invalidating the
-    # line-heights).
+    # Update all line metrics by calling the sync command.
+    .top.yt sync
+    # <<WidgetViewSync>> should fire with %d==1 i.e. back in sync.
+    vwait res
+    # At this time the line metrics should be up-to-date (pendingsync is 0).
+    lappend res "Pending:[.top.yt pendingsync]"
     set res
 } -cleanup {
     destroy .top.yt .top
-} -result {Sync:1 Pending:0}
+} -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
 test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
                   NOT Tk_HandleEvent().
@@ -7931,7 +7929,6 @@ test text-32.4 {peer widget -start, -end and deletion (bug 1630262)} -setup {
 # NOTE: The peer widget is empty, and in revised version always a last newline
 # exists, so the last line index has been increased by 1 (57 -> 58).
 } -result {5 11 8 10 5 8 6 8 22 27 38 44 55 60 57 58}
-
 
 test text-33.1 {TextWidgetCmd procedure, "peer" option} -setup {
     text .t
