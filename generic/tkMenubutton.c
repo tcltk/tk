@@ -279,11 +279,11 @@ Tk_MenubuttonObjCmd(
     mbPtr->normalFg = NULL;
     mbPtr->activeFg = NULL;
     mbPtr->disabledFg = NULL;
-    mbPtr->normalTextGC = NULL;
-    mbPtr->activeTextGC = NULL;
+    mbPtr->normalTextGC = None;
+    mbPtr->activeTextGC = None;
     mbPtr->gray = None;
-    mbPtr->disabledGC = NULL;
-    mbPtr->stippleGC = NULL;
+    mbPtr->disabledGC = None;
+    mbPtr->stippleGC = None;
     mbPtr->leftBearing = 0;
     mbPtr->rightBearing = 0;
     mbPtr->widthString = NULL;
@@ -300,7 +300,7 @@ Tk_MenubuttonObjCmd(
     mbPtr->indicatorWidth = 0;
     mbPtr->indicatorHeight = 0;
     mbPtr->direction = DIRECTION_FLUSH;
-    mbPtr->cursor = NULL;
+    mbPtr->cursor = None;
     mbPtr->takeFocus = NULL;
     mbPtr->flags = 0;
 

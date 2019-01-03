@@ -534,10 +534,10 @@ TkTextTagCmd(
 	    if ((tagPtr->border != NULL)
 		    || (tagPtr->selBorder != NULL)
 		    || (tagPtr->reliefString != NULL)
-		    || tagPtr->bgStipple
+		    || (tagPtr->bgStipple != None)
 		    || (tagPtr->fgColor != NULL)
 		    || (tagPtr->selFgColor != NULL)
-		    || tagPtr->fgStipple
+		    || (tagPtr->fgStipple != None)
 		    || (tagPtr->overstrikeString != NULL)
                     || (tagPtr->overstrikeColor != NULL)
 		    || (tagPtr->underlineString != NULL)

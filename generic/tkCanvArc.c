@@ -290,7 +290,7 @@ CreateArc(
     arcPtr->activeFillStipple = None;
     arcPtr->disabledFillStipple = None;
     arcPtr->style = PIESLICE_STYLE;
-    arcPtr->fillGC = NULL;
+    arcPtr->fillGC = None;
 
     /*
      * Process the arguments to fill in the item record.
@@ -478,7 +478,7 @@ ConfigureArc(
 	mask |= GCCapStyle;
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = NULL;
+	newGC = None;
     }
     if (arcPtr->outline.gc != None) {
 	Tk_FreeGC(Tk_Display(tkwin), arcPtr->outline.gc);
@@ -511,8 +511,10 @@ ConfigureArc(
 	}
       }
 
-    if ((arcPtr->style == ARC_STYLE) || (!color)) {
-	newGC = NULL;
+    if (arcPtr->style == ARC_STYLE) {
+	newGC = None;
+    } else if (color == NULL) {
+	newGC = None;
     } else {
 	gcValues.foreground = color->pixel;
 	if (arcPtr->style == CHORD_STYLE) {
@@ -903,13 +905,13 @@ DisplayArc(
 	} else {
 	    if (arcPtr->style == CHORD_STYLE) {
 		TkFillPolygon(canvas, arcPtr->outlinePtr, CHORD_OUTLINE_PTS,
-			display, drawable, arcPtr->outline.gc, NULL);
+			display, drawable, arcPtr->outline.gc, None);
 	    } else if (arcPtr->style == PIESLICE_STYLE) {
 		TkFillPolygon(canvas, arcPtr->outlinePtr, PIE_OUTLINE1_PTS,
-			display, drawable, arcPtr->outline.gc, NULL);
+			display, drawable, arcPtr->outline.gc, None);
 		TkFillPolygon(canvas, arcPtr->outlinePtr + 2*PIE_OUTLINE1_PTS,
 			PIE_OUTLINE2_PTS, display, drawable,
-			arcPtr->outline.gc, NULL);
+			arcPtr->outline.gc, None);
 	    }
 	}
 
@@ -1901,7 +1903,7 @@ ArcToPostscript(
 	}
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
-	if (fillStipple) {
+	if (fillStipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 
 	    Tcl_ResetResult(interp);
@@ -1910,7 +1912,7 @@ ArcToPostscript(
 	    }
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
-	    if (arcPtr->outline.gc) {
+	    if (arcPtr->outline.gc != None) {
 		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	    }
 	} else {
@@ -1953,7 +1955,7 @@ ArcToPostscript(
 		}
 		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
-		if (stipple) {
+		if (stipple != None) {
 		    Tcl_AppendToObj(psObj, "clip ", -1);
 
 		    Tcl_ResetResult(interp);
@@ -1976,7 +1978,7 @@ ArcToPostscript(
 	    }
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
-	    if (stipple) {
+	    if (stipple != None) {
 		Tcl_AppendToObj(psObj, "clip ", -1);
 
 		Tcl_ResetResult(interp);

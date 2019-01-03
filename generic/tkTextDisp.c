@@ -666,7 +666,7 @@ TkTextCreateDInfo(
     dInfoPtr = ckalloc(sizeof(TextDInfo));
     Tcl_InitHashTable(&dInfoPtr->styleTable, sizeof(StyleValues)/sizeof(int));
     dInfoPtr->dLinePtr = NULL;
-    dInfoPtr->copyGC = NULL;
+    dInfoPtr->copyGC = None;
     gcValues.graphics_exposures = True;
     dInfoPtr->scrollGC = Tk_GetGC(textPtr->tkwin, GCGraphicsExposures,
 	    &gcValues);
@@ -862,7 +862,7 @@ GetStyle(
             border = tagPtr->selBorder;
         }
 
-        if ((tagPtr->selFgColor) && (isSelected)) {
+        if ((tagPtr->selFgColor != None) && (isSelected)) {
             fgColor = tagPtr->selFgColor;
         }
 
@@ -889,7 +889,7 @@ GetStyle(
 	    styleValues.bgStipple = tagPtr->bgStipple;
 	    bgStipplePrio = tagPtr->priority;
 	}
-	if (fgColor && (tagPtr->priority > fgPrio)) {
+	if ((fgColor != None) && (tagPtr->priority > fgPrio)) {
 	    styleValues.fgColor = fgColor;
 	    fgPrio = tagPtr->priority;
 	}
@@ -931,9 +931,9 @@ GetStyle(
 		&& (tagPtr->priority > overstrikePrio)) {
 	    styleValues.overstrike = tagPtr->overstrike;
 	    overstrikePrio = tagPtr->priority;
-            if (tagPtr->overstrikeColor) {
+            if (tagPtr->overstrikeColor != None) {
                  styleValues.overstrikeColor = tagPtr->overstrikeColor;
-            } else if (fgColor) {
+            } else if (fgColor != None) {
                  styleValues.overstrikeColor = fgColor;
             }
 	}
@@ -976,9 +976,9 @@ GetStyle(
 		&& (tagPtr->priority > underlinePrio)) {
 	    styleValues.underline = tagPtr->underline;
 	    underlinePrio = tagPtr->priority;
-            if (tagPtr->underlineColor) {
+            if (tagPtr->underlineColor != None) {
                  styleValues.underlineColor = tagPtr->underlineColor;
-            } else if (fgColor) {
+            } else if (fgColor != None) {
                  styleValues.underlineColor = fgColor;
             }
 	}
@@ -1025,7 +1025,7 @@ GetStyle(
 	}
 	stylePtr->bgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
-	stylePtr->bgGC = NULL;
+	stylePtr->bgGC = None;
     }
     mask = GCFont;
     gcValues.font = Tk_FontId(styleValues.tkfont);
@@ -1082,10 +1082,10 @@ FreeStyle(
 	if (stylePtr->fgGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->fgGC);
 	}
-	if (stylePtr->ulGC) {
+	if (stylePtr->ulGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->ulGC);
 	}
-	if (stylePtr->ovGC) {
+	if (stylePtr->ovGC != None) {
 	    Tk_FreeGC(textPtr->display, stylePtr->ovGC);
 	}
 	Tcl_DeleteHashEntry(stylePtr->hPtr);

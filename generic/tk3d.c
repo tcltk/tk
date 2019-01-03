@@ -236,9 +236,9 @@ Tk_Get3DBorder(
     borderPtr->darkColorPtr = NULL;
     borderPtr->lightColorPtr = NULL;
     borderPtr->shadow = None;
-    borderPtr->bgGC = 0;
-    borderPtr->darkGC = 0;
-    borderPtr->lightGC = 0;
+    borderPtr->bgGC = None;
+    borderPtr->darkGC = None;
+    borderPtr->lightGC = None;
     borderPtr->hashPtr = hashPtr;
     borderPtr->nextPtr = existingBorderPtr;
     Tcl_SetHashValue(hashPtr, borderPtr);

@@ -542,13 +542,13 @@ Tk_ListboxObjCmd(
     listPtr->itemAttrTable	 = ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->itemAttrTable, TCL_ONE_WORD_KEYS);
     listPtr->relief		 = TK_RELIEF_RAISED;
-    listPtr->textGC		 = NULL;
-    listPtr->selFgColorPtr	 = NULL;
-    listPtr->selTextGC		 = NULL;
+    listPtr->textGC		 = None;
+    listPtr->selFgColorPtr	 = None;
+    listPtr->selTextGC		 = None;
     listPtr->fullLines		 = 1;
     listPtr->xScrollUnit	 = 1;
     listPtr->exportSelection	 = 1;
-    listPtr->cursor		 = NULL;
+    listPtr->cursor		 = None;
     listPtr->state		 = STATE_NORMAL;
     listPtr->gray		 = None;
     listPtr->justify             = TK_JUSTIFY_LEFT;

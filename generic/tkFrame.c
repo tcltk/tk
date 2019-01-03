@@ -662,13 +662,13 @@ CreateFrame(
     framePtr->type = type;
     framePtr->colormap = colormap;
     framePtr->relief = TK_RELIEF_FLAT;
-    framePtr->cursor = NULL;
+    framePtr->cursor = None;
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	Labelframe *labelframePtr = (Labelframe *) framePtr;
 
 	labelframePtr->labelAnchor = LABELANCHOR_NW;
-	labelframePtr->textGC = NULL;
+	labelframePtr->textGC = None;
     }
 
     /*

@@ -3580,14 +3580,14 @@ DoWarp(
 
     if ((dispPtr->warpWindow == NULL) ||
             (Tk_IsMapped(dispPtr->warpWindow)
-            && Tk_WindowId(dispPtr->warpWindow))) {
+            && (Tk_WindowId(dispPtr->warpWindow) != None))) {
         TkpWarpPointer(dispPtr);
         XForceScreenSaver(dispPtr->display, ScreenSaverReset);
     }
 
     if (dispPtr->warpWindow) {
 	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = 0;
+	dispPtr->warpWindow = None;
     }
     dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }

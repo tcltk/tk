@@ -477,7 +477,7 @@ DoConfig(
 	    Tk_Cursor newCursor, oldCursor;
 
 	    if (nullValue) {
-		newCursor = 0;
+		newCursor = None;
 	    } else {
 		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
 		newCursor = Tk_GetCursor(interp, tkwin, uid);
@@ -1024,7 +1024,7 @@ Tk_FreeOptions(
 	case TK_CONFIG_ACTIVE_CURSOR:
 	    if (*((Tk_Cursor *) ptr) != None) {
 		Tk_FreeCursor(display, *((Tk_Cursor *) ptr));
-		*((Tk_Cursor *) ptr) = NULL;
+		*((Tk_Cursor *) ptr) = None;
 	    }
 	}
     }

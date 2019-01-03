@@ -256,11 +256,11 @@ Tk_MessageObjCmd(
 	    MessageCmdDeletedProc);
     msgPtr->optionTable = optionTable;
     msgPtr->relief = TK_RELIEF_FLAT;
-    msgPtr->textGC = NULL;
+    msgPtr->textGC = None;
     msgPtr->anchor = TK_ANCHOR_CENTER;
     msgPtr->aspect = 150;
     msgPtr->justify = TK_JUSTIFY_LEFT;
-    msgPtr->cursor = NULL;
+    msgPtr->cursor = None;
 
     Tk_SetClass(msgPtr->tkwin, "Message");
     Tk_SetClassProcs(msgPtr->tkwin, &messageClass, msgPtr);
@@ -525,7 +525,7 @@ MessageWorldChanged(
     ClientData instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
-    GC gc = NULL;
+    GC gc = None;
     Tk_FontMetrics fm;
     Message *msgPtr = instanceData;
 

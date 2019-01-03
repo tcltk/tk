@@ -961,7 +961,7 @@ void
 Tk_CreateOutline(
     Tk_Outline *outline)	/* Outline structure to be filled in. */
 {
-    outline->gc = NULL;
+    outline->gc = None;
     outline->width = 1.0;
     outline->activeWidth = 0.0;
     outline->disabledWidth = 0.0;
@@ -1477,7 +1477,7 @@ Tk_CanvasPsOutline(
      * Note that psObj might hold an invalid reference now.
      */
 
-    if (stipple) {
+    if (stipple != None) {
 	Tcl_AppendToObj(GetPostscriptBuffer(interp), "StrokeClip ", -1);
 	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 	    return TCL_ERROR;

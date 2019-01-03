@@ -586,7 +586,7 @@ CreateWidget(
 
     textPtr->state = TK_TEXT_STATE_NORMAL;
     textPtr->relief = TK_RELIEF_FLAT;
-    textPtr->cursor = NULL;
+    textPtr->cursor = None;
     textPtr->charWidth = 1;
     textPtr->charHeight = 10;
     textPtr->wrapMode = TEXT_WRAPMODE_CHAR;
@@ -2294,10 +2294,10 @@ ConfigureText(
     if ((textPtr->selTagPtr->border != NULL)
 	    || (textPtr->selTagPtr->selBorder != NULL)
 	    || (textPtr->selTagPtr->reliefString != NULL)
-	    || textPtr->selTagPtr->bgStipple
+	    || (textPtr->selTagPtr->bgStipple != None)
 	    || (textPtr->selTagPtr->fgColor != NULL)
 	    || (textPtr->selTagPtr->selFgColor != NULL)
-	    || textPtr->selTagPtr->fgStipple
+	    || (textPtr->selTagPtr->fgStipple != None)
 	    || (textPtr->selTagPtr->overstrikeString != NULL)
 	    || (textPtr->selTagPtr->overstrikeColor != NULL)
 	    || (textPtr->selTagPtr->underlineString != NULL)

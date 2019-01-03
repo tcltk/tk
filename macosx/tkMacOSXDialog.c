@@ -1950,7 +1950,7 @@ FontchooserParentEventHandler(
     if (eventPtr->type == DestroyNotify) {
 	Tk_DeleteEventHandler(fcdPtr->parent, StructureNotifyMask,
 		FontchooserParentEventHandler, fcdPtr);
-	fcdPtr->parent = NULL;
+	fcdPtr->parent = None;
 	FontchooserHideCmd(NULL, NULL, 0, NULL);
     }
 }

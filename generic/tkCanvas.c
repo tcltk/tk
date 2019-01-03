@@ -678,7 +678,7 @@ Tk_CanvasObjCmd(
     canvasPtr->highlightBgColorPtr = NULL;
     canvasPtr->highlightColorPtr = NULL;
     canvasPtr->inset = 0;
-    canvasPtr->pixmapGC = NULL;
+    canvasPtr->pixmapGC = None;
     canvasPtr->width = None;
     canvasPtr->height = None;
     canvasPtr->confine = 0;
@@ -724,7 +724,7 @@ Tk_CanvasObjCmd(
     canvasPtr->scanYOrigin = 0;
     canvasPtr->hotPtr = NULL;
     canvasPtr->hotPrevPtr = NULL;
-    canvasPtr->cursor = NULL;
+    canvasPtr->cursor = None;
     canvasPtr->takeFocus = NULL;
     canvasPtr->pixelsPerMM = WidthOfScreen(Tk_Screen(newWin));
     canvasPtr->pixelsPerMM /= WidthMMOfScreen(Tk_Screen(newWin));
@@ -2754,7 +2754,7 @@ CanvasEventProc(
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
 		itemPtr = itemPtr->nextPtr) {
 	    if (AlwaysRedraw(itemPtr)) {
-		ItemDisplay(canvasPtr, itemPtr, 0, 0, 0, 0, 0);
+		ItemDisplay(canvasPtr, itemPtr, None, 0, 0, 0, 0);
 	    }
 	}
     }
