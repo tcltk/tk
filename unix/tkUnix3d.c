@@ -48,7 +48,7 @@ TkpGetBorder(void)
 {
     UnixBorder *borderPtr = ckalloc(sizeof(UnixBorder));
 
-    borderPtr->solidGC = None;
+    borderPtr->solidGC = NULL;
     return (TkBorder *) borderPtr;
 }
 
@@ -216,7 +216,7 @@ Tk_3DHorizontalBevel(
     Display *display = Tk_Display(tkwin);
     int bottom, halfway, x1, x2, x1Delta, x2Delta;
     UnixBorder *unixBorderPtr = (UnixBorder *) borderPtr;
-    GC topGC = None, bottomGC = None;
+    GC topGC = NULL, bottomGC = NULL;
 				/* Initializations needed only to prevent
 				 * compiler warnings. */
 
