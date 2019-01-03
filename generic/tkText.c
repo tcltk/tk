@@ -5156,8 +5156,8 @@ InsertChars(
      * insertion, since the insertion could invalidate it.
      */
 
-    if (sharedTextPtr->numPeers > sizeof(textPosition)/sizeof(textPosition[0])) {
-	textPosition = malloc(sizeof(textPosition[0])*sharedTextPtr->numPeers);
+    if (sharedTextPtr->numPeers > sizeof(textPosBuf)/sizeof(textPosBuf[0])) {
+	textPosition = malloc(sizeof(TkTextPosition)*sharedTextPtr->numPeers);
     } else {
 	textPosition = textPosBuf;
     }
