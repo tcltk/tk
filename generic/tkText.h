@@ -1080,7 +1080,7 @@ MODULE_SCOPE int	TkTextGetObjIndex(Tcl_Interp *interp, TkText *textPtr,
 MODULE_SCOPE int	TkTextSharedGetObjIndex(Tcl_Interp *interp,
 			    TkSharedText *sharedTextPtr, Tcl_Obj *idxPtr,
 			    TkTextIndex *indexPtr);
-MODULE_SCOPE const TkTextIndex *TkTextGetIndexFromObj(Tcl_Interp *interp,
+MODULE_SCOPE const	TkTextIndex *TkTextGetIndexFromObj(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *objPtr);
 MODULE_SCOPE TkTextTabArray *TkTextGetTabs(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *stringPtr);
@@ -1169,7 +1169,7 @@ MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
-
+MODULE_SCOPE void       TkTextRunAfterSyncCmd(ClientData clientData);
 #endif /* _TKTEXT */
 
 /*

@@ -2948,11 +2948,13 @@ test text-11a.1 {TextWidgetCmd procedure, "pendingsync" option} -setup {
 } -cleanup {
     destroy .yt
 } -result {1 {wrong # args: should be ".yt pendingsync"}}
+
 test text-11a.2 {TextWidgetCmd procedure, "pendingsync" option} -setup {
     destroy .top.yt .top
 } -body {
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 15] \n
@@ -2990,9 +2992,11 @@ test text-11a.12 {TextWidgetCmd procedure, "sync" option} -setup {
 } -body {
     toplevel .top
     pack [text .top.yt]
+    update
     set content {}
+    # Use long lines so the line metrics will need updating.
     for {set i 1} {$i < 30} {incr i} {
-        append content [string repeat "$i " 15] \n
+        append content [string repeat "$i " 200] \n
     }
     .top.yt insert 1.0 $content
     # wait for end of line metrics calculation to get correct $fraction1
@@ -3065,19 +3069,18 @@ test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 15] \n
     }
-    .top.yt insert 1.0 $content
+    # Sync the widget and process <<WidgetViewSync>> events before binding.
+    .top.yt sync
     update
     bind .top.yt <<WidgetViewSync>> { if {%d} {set yud(%W) 1} }
-    # wait for end of line metrics calculation to get correct $fraction1
-    # as a reference
-    if {[.top.yt pendingsync]} {vwait yud(.top.yt)}
+    .top.yt insert 1.0 $content
     .top.yt yview moveto 1
     set fraction1 [lindex [.top.yt yview] 0]
     set res [expr {$fraction1 > 0}]
     .top.yt delete 1.0 end
     .top.yt insert 1.0 $content
     # synchronously wait for completion of line metrics calculation
-    # and ensure the test is relevant
+    # and verify that the fractions agree.
     set waited 0
     if {[.top.yt pendingsync]} {set waited 1 ; vwait yud(.top.yt)}
     lappend res $waited
@@ -3091,7 +3094,6 @@ test text-11a.31 {"<<WidgetViewSync>>" event} -setup {
 test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -body {
-    set res {}
     toplevel .top
     pack [text .top.yt]
     update
@@ -3099,15 +3101,21 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 50] \n
     }
-    bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
-    .top.yt insert 1.0 $content
-    vwait res  ; # event dealt with by the event loop, with %d==0 i.e. we're out of sync
-    # ensure the test is relevant
-    lappend res "Pending:[.top.yt pendingsync]"
-    # - <<WidgetViewSync>> fires when sync returns if there was pending syncs
-    # - there is no more any pending sync after running 'sync'
+    # Sync the widget and process all <<WidgetViewSync>> events before binding. 
     .top.yt sync
-    vwait res  ; # event dealt with by the event loop, with %d==1 i.e. we're in sync again
+    update
+    bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}
+    set res {}
+    # The next line triggers <<WidgetViewSync>> with %d==0 i.e. out of sync.
+    .top.yt insert 1.0 $content
+    vwait res
+    # Verify that the line metrics are not up-to-date (pendingsync is 1).
+    lappend res "Pending:[.top.yt pendingsync]"
+    # Update all line metrics by calling the sync command.
+    .top.yt sync
+    # <<WidgetViewSync>> should fire with %d==1 i.e. back in sync.
+    vwait res
+    # At this time the line metrics should be up-to-date (pendingsync is 0).
     lappend res "Pending:[.top.yt pendingsync]"
     set res
 } -cleanup {
@@ -3122,6 +3130,7 @@ test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
     set res {}
     toplevel .top
     pack [text .top.t]
+    update
     for {set i 1} {$i < 10000} {incr i} {
         .top.t insert end "Hello world!\n"
     }
@@ -7429,6 +7438,100 @@ test text-32.1 {line heights on creation} -setup {
     destroy .t
 } -result {1}
 
+test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+    destroy .t .pt
+    set res {}
+} -body {
+    text .t
+    .t peer create .pt
+    for {set i 1} {$i < 100} {incr i} {
+      .t insert end "Line $i\n"
+    }
+    .t configure -startline 5
+    # none of the following delete shall crash
+    # (all did before fixing bug 1630262)
+    # 1. delete on the same line: line1 == line2 in DeleteIndexRange,
+    #    and resetView is true neither for .t not for .pt
+    .pt delete 2.0 2.2
+    # 2. delete just one line: line1 < line2 in DeleteIndexRange,
+    #    and resetView is true only for .t, not for .pt
+    .pt delete 2.0 3.0
+    # 3. delete several lines: line1 < line2 in DeleteIndexRange,
+    #    and resetView is true only for .t, not for .pt
+    .pt delete 2.0 5.0
+    # 4. delete to the end line: line1 < line2 in DeleteIndexRange,
+    #    and resetView is true only for .t, not for .pt
+    .pt delete 2.0 end
+    # this test succeeds provided there is no crash
+    set res 1
+} -cleanup {
+    destroy .pt
+} -result {1}
+
+test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+    destroy .t .pt
+    set res {}
+} -body {
+    text .t
+    .t peer create .pt
+    for {set i 1} {$i < 100} {incr i} {
+      .t insert end "Line $i\n"
+    }
+    .t configure -startline 5
+    .pt configure -startline 3
+    # the following delete shall not crash
+    # (it did before fixing bug 1630262)
+    .pt delete 2.0 3.0
+    # moreover -startline shall be correct
+    # (was wrong before fixing bug 1630262)
+    lappend res [.t cget -start] [.pt cget -start]
+} -cleanup {
+    destroy .pt
+} -result {4 3}
+
+test text-32.4 {peer widget -start, -end and deletion (bug 1630262)} -setup {
+    destroy .t .pt
+    set res {}
+} -body {
+    text .t
+    .t peer create .pt
+    for {set i 1} {$i < 100} {incr i} {
+      .t insert end "Line $i\n"
+    }
+    .t configure -startline 5 -endline 15
+    .pt configure -startline 8 -endline 12
+    # .pt now shows a range entirely inside the range of .pt
+    # from .t, delete lines located after [.pt cget -end]
+    .t delete 9.0 10.0
+    # from .t, delete lines straddling [.pt cget -end]
+    .t delete 6.0 9.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+    .t configure -startline 5 -endline 12
+    .pt configure -startline 8 -endline 12
+    # .pt now shows again a range entirely inside the range of .pt
+    # from .t, delete lines located before [.pt cget -start]
+    .t delete 2.0 3.0
+    # from .t, delete lines straddling [.pt cget -start]
+    .t delete 2.0 5.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+    .t configure -startline 22 -endline 31
+    .pt configure -startline 42 -endline 51
+    # .t now shows a range entirely before the range of .pt
+    # from .t, delete some lines, then do it from .pt
+    .t delete 2.0 3.0
+    .t delete 2.0 5.0
+    .pt delete 2.0 5.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+    .t configure -startline 55 -endline 75
+    .pt configure -startline 60 -endline 70
+    # .pt now shows a range entirely inside the range of .t
+    # from .t, delete a range straddling the entire range of .pt
+    .t delete 3.0 18.0
+    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
+} -cleanup {
+    destroy .pt .t
+} -result {5 11 8 10 5 8 6 8 22 27 38 44 55 60 57 57}
+
 
 test text-33.1 {TextWidgetCmd procedure, "peer" option} -setup {
     text .t
@@ -7560,100 +7663,6 @@ test text-34.1 {peer widget -start, -end and selection} -setup {
 } -cleanup {
     destroy .t
 } -result {{10.0 20.0} {6.0 16.0} {6.0 11.0} {1.0 6.0} {1.0 2.0} {} {10.0 20.0}}
-
-test text-32.2 {peer widget -start, -end and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5
-    # none of the following delete shall crash
-    # (all did before fixing bug 1630262)
-    # 1. delete on the same line: line1 == line2 in DeleteIndexRange,
-    #    and resetView is true neither for .t not for .pt
-    .pt delete 2.0 2.2
-    # 2. delete just one line: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 3.0
-    # 3. delete several lines: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 5.0
-    # 4. delete to the end line: line1 < line2 in DeleteIndexRange,
-    #    and resetView is true only for .t, not for .pt
-    .pt delete 2.0 end
-    # this test succeeds provided there is no crash
-    set res 1
-} -cleanup {
-    destroy .pt
-} -result {1}
-
-test text-32.3 {peer widget -start, -end and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5
-    .pt configure -startline 3
-    # the following delete shall not crash
-    # (it did before fixing bug 1630262)
-    .pt delete 2.0 3.0
-    # moreover -startline shall be correct
-    # (was wrong before fixing bug 1630262)
-    lappend res [.t cget -start] [.pt cget -start]
-} -cleanup {
-    destroy .pt
-} -result {4 3}
-
-test text-32.4 {peer widget -start, -end and deletion (bug 1630262)} -setup {
-    destroy .t .pt
-    set res {}
-} -body {
-    text .t
-    .t peer create .pt
-    for {set i 1} {$i < 100} {incr i} {
-      .t insert end "Line $i\n"
-    }
-    .t configure -startline 5 -endline 15
-    .pt configure -startline 8 -endline 12
-    # .pt now shows a range entirely inside the range of .pt
-    # from .t, delete lines located after [.pt cget -end]
-    .t delete 9.0 10.0
-    # from .t, delete lines straddling [.pt cget -end]
-    .t delete 6.0 9.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 5 -endline 12
-    .pt configure -startline 8 -endline 12
-    # .pt now shows again a range entirely inside the range of .pt
-    # from .t, delete lines located before [.pt cget -start]
-    .t delete 2.0 3.0
-    # from .t, delete lines straddling [.pt cget -start]
-    .t delete 2.0 5.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 22 -endline 31
-    .pt configure -startline 42 -endline 51
-    # .t now shows a range entirely before the range of .pt
-    # from .t, delete some lines, then do it from .pt
-    .t delete 2.0 3.0
-    .t delete 2.0 5.0
-    .pt delete 2.0 5.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-    .t configure -startline 55 -endline 75
-    .pt configure -startline 60 -endline 70
-    # .pt now shows a range entirely inside the range of .t
-    # from .t, delete a range straddling the entire range of .pt
-    .t delete 3.0 18.0
-    lappend res [.t cget -start] [.t cget -end] [.pt cget -start] [.pt cget -end]
-} -cleanup {
-    destroy .pt .t
-} -result {5 11 8 10 5 8 6 8 22 27 38 44 55 60 57 57}
 
 test text-35.1 {widget dump -command alters tags} -setup {
      proc Dumpy {key value index} {

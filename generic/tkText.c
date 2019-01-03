@@ -406,7 +406,6 @@ static Tcl_Obj *	TextGetText(const TkText *textPtr,
 static void		GenerateModifiedEvent(TkText *textPtr);
 static void		GenerateUndoStackEvent(TkText *textPtr);
 static void		UpdateDirtyFlag(TkSharedText *sharedPtr);
-static void		RunAfterSyncCmd(ClientData clientData);
 static void		TextPushUndoAction(TkText *textPtr,
 			    Tcl_Obj *undoString, int insert,
 			    const TkTextIndex *index1Ptr,
@@ -1544,7 +1543,7 @@ TextWidgetObjCmd(
 		textPtr->afterSyncCmd = cmd;
 	    } else {
 		textPtr->afterSyncCmd = cmd;
-		Tcl_DoWhenIdle(RunAfterSyncCmd, (ClientData) textPtr);
+		Tcl_DoWhenIdle(TkTextRunAfterSyncCmd, (ClientData) textPtr);
 	    }
 	    break;
 	} else if (objc != 2) {
@@ -1556,7 +1555,7 @@ TextWidgetObjCmd(
 	    Tcl_DecrRefCount(textPtr->afterSyncCmd);
 	}
 	textPtr->afterSyncCmd = NULL;
-	TkTextUpdateLineMetrics(textPtr, 1,
+	TkTextUpdateLineMetrics(textPtr, 0,
 		TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), -1);
 	break;
     }
@@ -5587,7 +5586,7 @@ UpdateDirtyFlag(
 /*
  *----------------------------------------------------------------------
  *
- * RunAfterSyncCmd --
+ * TkTextRunAfterSyncCmd --
  *
  *	This function is called by the event loop and executes the command
  *      scheduled by [.text sync -command $cmd].
@@ -5601,8 +5600,8 @@ UpdateDirtyFlag(
  *----------------------------------------------------------------------
  */
 
-static void
-RunAfterSyncCmd(
+void
+TkTextRunAfterSyncCmd(
     ClientData clientData)		/* Information about text widget. */
 {
     register TkText *textPtr = clientData;
