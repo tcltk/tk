@@ -7218,9 +7218,11 @@ TkTextUpdateLineMetrics(
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     const TkRange *range;
+    int totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+    int fullUpdateRequested = (lineNum == 0 && endLine == totalLines); 
 
     assert(lineNum <= endLine);
-    assert((int) endLine <= TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr));
+    assert((int) endLine <= totalLines);
     assert(textPtr->sharedTextPtr->allowUpdateLineMetrics);
 
     dInfoPtr->insideLineMetricUpdate = true;
@@ -7231,8 +7233,8 @@ TkTextUpdateLineMetrics(
 	unsigned high = range->high;
 
 	lineNum = range->low;
-	endLine = MIN((int) endLine, TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr) - 1);
-	assert((int) lineNum < TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr));
+	endLine = MIN((int) endLine, totalLines - 1);
+	assert((int) lineNum < totalLines);
 
 	while (true) {
 	    const TkTextPixelInfo *pixelInfo;
@@ -7297,6 +7299,9 @@ TkTextUpdateLineMetrics(
 
     dInfoPtr->insideLineMetricUpdate = false;
     CheckIfLineMetricIsUpToDate(textPtr);
+    if (fullUpdateRequested) {
+	TkTextGenerateWidgetViewSyncEvent(textPtr, true);
+    }
 }
 
 /*
