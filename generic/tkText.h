@@ -5,7 +5,7 @@
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
  * Copyright (c) 1994-1995 Sun Microsystems, Inc.
- * Copyright (c) 2015-2017 Gregor Cramer
+ * Copyright (c) 2015-2018 Gregor Cramer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1202,6 +1202,7 @@ typedef struct TkSharedText {
     bool undoStackEvent;	/* Flag indicating whether <<UndoStack>> is already triggered. */
     bool pushSeparator;		/* Flag indicating whether a separator has to be pushed before next
     				 * insert/delete item. */
+    bool undoTagging;		/* Global default value for TkTextTag::undo. */
     unsigned undoLevel;		/* The undo level which corresponds to the unmodified state. */
     TkTextEditMode lastEditMode;/* Keeps track of what the last edit mode was. */
     int lastUndoTokenType;	/* Type of newest undo token on stack. */
@@ -1490,7 +1491,7 @@ typedef struct TkText {
     				 * true  = new editor control mode. */
 
     /*
-     * Copies of information from the shared section relating to the undo/redo functonality:
+     * Copies of information from the shared section relating to the undo/redo functionality:
      */
 
     int undo;			/* Non-zero means the undo/redo behaviour is enabled. */
@@ -1500,6 +1501,7 @@ typedef struct TkText {
     				 * maximum number of compound statements. */
     int maxUndoSize;		/* The maximum number of bytes kept on the undo stack. */
     int autoSeparators;		/* Non-zero means the separators will be inserted automatically. */
+    bool undoTagging;		/* Global default value for TkTextTag::undo. */
 
     /*
      * Support of sync command:
