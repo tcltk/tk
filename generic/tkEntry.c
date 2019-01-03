@@ -2453,7 +2453,7 @@ EntryEventProc(
 	    } else {
 		cursor = NULL;
 	    }
-	    if (cursor) {
+	    if (cursor != None) {
 		Tk_DefineCursor(entryPtr->tkwin, cursor);
 	    } else {
 		Tk_UndefineCursor(entryPtr->tkwin);

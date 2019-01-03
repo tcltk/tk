@@ -446,7 +446,7 @@ ConfigureText(
     if (textPtr->tkfont != NULL) {
 	gcValues.font = Tk_FontId(textPtr->tkfont);
 	mask = GCFont;
-	if (color) {
+	if (color != NULL) {
 	    gcValues.foreground = color->pixel;
 	    mask |= GCForeground;
 	    if (stipple != None) {
@@ -457,7 +457,7 @@ ConfigureText(
 	    newGC = Tk_GetGC(tkwin, mask, &gcValues);
 	}
 	mask &= ~(GCTile|GCFillStyle|GCStipple);
-	if (stipple) {
+	if (stipple != None) {
 	    gcValues.stipple = stipple;
 	    gcValues.fill_style = FillStippled;
 	    mask |= GCStipple|GCFillStyle;
@@ -467,7 +467,7 @@ ConfigureText(
 	}
 	newSelGC = Tk_GetGC(tkwin, mask|GCForeground, &gcValues);
     }
-    if (textPtr->gc) {
+    if (textPtr->gc != None) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->gc);
     }
     textPtr->gc = newGC;
@@ -488,7 +488,7 @@ ConfigureText(
     } else {
 	newGC = NULL;
     }
-    if (textPtr->cursorOffGC) {
+    if (textPtr->cursorOffGC != None) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->cursorOffGC);
     }
     textPtr->cursorOffGC = newGC;

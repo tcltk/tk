@@ -1436,7 +1436,7 @@ TkEventDeadWindow(
 		ipPtr->nextHandler = NULL;
 	    }
 	    if (ipPtr->winPtr == winPtr) {
-		ipPtr->winPtr = 0;
+		ipPtr->winPtr = NULL;
 	    }
 	}
 	ckfree((char *) handlerPtr);

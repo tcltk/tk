@@ -376,7 +376,7 @@ ConfigureBitmap(
 	}
     }
 
-    if (!bitmap) {
+    if (bitmap == None) {
 	newGC = NULL;
     } else {
 	gcValues.foreground = fgColor->pixel;

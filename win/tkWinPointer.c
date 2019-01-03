@@ -387,7 +387,7 @@ XGetInputFocus(
 {
     Tk_Window tkwin = Tk_HWNDToWindow(GetFocus());
 
-    *focus_return = tkwin ? Tk_WindowId(tkwin) : 0;
+    *focus_return = tkwin ? Tk_WindowId(tkwin) : None;
     *revert_to_return = RevertToParent;
     display->request++;
     return Success;
@@ -418,7 +418,7 @@ XSetInputFocus(
     Time time)
 {
     display->request++;
-    if (focus) {
+    if (focus != None) {
 	SetFocus(Tk_GetHWND(focus));
     }
     return Success;
@@ -465,7 +465,7 @@ TkpChangeFocus(
 	}
     }
 
-    if (!winPtr->window) {
+    if (winPtr->window == None) {
 	Tcl_Panic("ChangeXFocus got null X window");
     }
 

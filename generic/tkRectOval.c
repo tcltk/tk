@@ -475,7 +475,7 @@ ConfigureRectOval(
     } else {
 	newGC = NULL;
     }
-    if (rectOvalPtr->outline.gc) {
+    if (rectOvalPtr->outline.gc != None) {
 	Tk_FreeGC(Tk_Display(tkwin), rectOvalPtr->outline.gc);
     }
     rectOvalPtr->outline.gc = newGC;
@@ -506,7 +506,7 @@ ConfigureRectOval(
 	}
     }
 
-    if (!color) {
+    if (color == NULL) {
 	newGC = NULL;
     } else {
 	gcValues.foreground = color->pixel;
@@ -522,13 +522,13 @@ ConfigureRectOval(
 	 * Mac OS X CG drawing needs access to the outline linewidth
 	 * even for fills (as linewidth controls antialiasing).
 	 */
-	gcValues.line_width = rectOvalPtr->outline.gc ?
+	gcValues.line_width = rectOvalPtr->outline.gc != None ?
 		rectOvalPtr->outline.gc->line_width : 0;
 	mask |= GCLineWidth;
 #endif
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (rectOvalPtr->fillGC) {
+    if (rectOvalPtr->fillGC != None) {
 	Tk_FreeGC(Tk_Display(tkwin), rectOvalPtr->fillGC);
     }
     rectOvalPtr->fillGC = newGC;
