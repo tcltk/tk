@@ -4335,7 +4335,7 @@ DisplayText(
 			    dlPtr->spaceAbove,
 			    dlPtr->height-dlPtr->spaceAbove-dlPtr->spaceBelow,
 			    dlPtr->baseline - dlPtr->spaceAbove, NULL,
-			    (Drawable) None, dlPtr->y + dlPtr->spaceAbove);
+			    None, dlPtr->y + dlPtr->spaceAbove);
 		}
 
 	    }

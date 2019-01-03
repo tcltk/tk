@@ -854,7 +854,7 @@ DoObjConfig(
 	Tk_Cursor newCursor;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
-	    newCursor = 0;
+	    newCursor = NULL;
 	    valuePtr = NULL;
 	} else {
 	    newCursor = Tk_AllocCursorFromObj(interp, tkwin, valuePtr);
@@ -916,7 +916,7 @@ DoObjConfig(
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-	    newWin = 0;
+	    newWin = NULL;
 	} else {
 	    if (TkGetWindowFromObj(interp, tkwin, valuePtr,
 		    &newWin) != TCL_OK) {
@@ -1702,7 +1702,7 @@ FreeResources(
 	if (internalFormExists) {
 	    if (*((Tk_Cursor *) internalPtr) != None) {
 		Tk_FreeCursor(Tk_Display(tkwin), *((Tk_Cursor *) internalPtr));
-		*((Tk_Cursor *) internalPtr) = 0;
+		*((Tk_Cursor *) internalPtr) = NULL;
 	    }
 	} else if (objPtr != NULL) {
 	    Tk_FreeCursorFromObj(tkwin, objPtr);
