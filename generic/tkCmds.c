@@ -942,11 +942,11 @@ InactiveCmd(
 	return TCL_ERROR;
     }
     if (objc - skip == 1) {
-	long inactive;
+	Tcl_WideInt inactive;
 
 	inactive = (Tcl_IsSafe(interp) ? -1 :
 		Tk_GetUserInactiveTime(Tk_Display(tkwin)));
-	Tcl_SetObjResult(interp, Tcl_NewLongObj(inactive));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(inactive));
     } else if (objc - skip == 2) {
 	const char *string;
 
@@ -1579,11 +1579,11 @@ Tk_WinfoObjCmd(
 	objv += skip;
 	string = Tcl_GetString(objv[2]);
 	Tcl_SetObjResult(interp,
-		Tcl_NewLongObj((long) Tk_InternAtom(tkwin, string)));
+		Tcl_NewWideIntObj(Tk_InternAtom(tkwin, string)));
 	break;
     case WIN_ATOMNAME: {
 	const char *name;
-	long id;
+	Tcl_WideInt id;
 
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
 	if (skip < 0) {
@@ -1594,7 +1594,7 @@ Tk_WinfoObjCmd(
 	    return TCL_ERROR;
 	}
 	objv += skip;
-	if (Tcl_GetLongFromObj(interp, objv[2], &id) != TCL_OK) {
+	if (Tcl_GetWideIntFromObj(interp, objv[2], &id) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	name = Tk_GetAtomName(tkwin, (Atom) id);
