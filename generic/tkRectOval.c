@@ -258,7 +258,7 @@ CreateRectOval(
     rectOvalPtr->fillStipple = None;
     rectOvalPtr->activeFillStipple = None;
     rectOvalPtr->disabledFillStipple = None;
-    rectOvalPtr->fillGC = NULL;
+    rectOvalPtr->fillGC = None;
 
     /*
      * Process the arguments to fill in the item record.
@@ -466,9 +466,9 @@ ConfigureRectOval(
 	mask |= GCCapStyle;
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = NULL;
+	newGC = None;
     }
-    if (rectOvalPtr->outline.gc) {
+    if (rectOvalPtr->outline.gc != None) {
 	Tk_FreeGC(Tk_Display(tkwin), rectOvalPtr->outline.gc);
     }
     rectOvalPtr->outline.gc = newGC;
@@ -499,8 +499,8 @@ ConfigureRectOval(
 	}
     }
 
-    if (!color) {
-	newGC = NULL;
+    if (color == NULL) {
+	newGC = None;
     } else {
 	gcValues.foreground = color->pixel;
 	if (stipple != None) {
@@ -516,13 +516,13 @@ ConfigureRectOval(
 	 * fills (as linewidth controls antialiasing).
 	 */
 
-	gcValues.line_width = rectOvalPtr->outline.gc ?
+	gcValues.line_width = rectOvalPtr->outline.gc != None ?
 		rectOvalPtr->outline.gc->line_width : 0;
 	mask |= GCLineWidth;
 #endif
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (rectOvalPtr->fillGC) {
+    if (rectOvalPtr->fillGC != None) {
 	Tk_FreeGC(Tk_Display(tkwin), rectOvalPtr->fillGC);
     }
     rectOvalPtr->fillGC = newGC;
@@ -1470,7 +1470,7 @@ RectOvalToPostscript(
 	}
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
-	if (fillStipple) {
+	if (fillStipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 
 	    Tcl_ResetResult(interp);

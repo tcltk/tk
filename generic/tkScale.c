@@ -270,11 +270,11 @@ Tk_ScaleObjCmd(
     scalePtr->activeBorder	= NULL;
     scalePtr->sliderRelief	= TK_RELIEF_RAISED;
     scalePtr->troughColorPtr	= NULL;
-    scalePtr->troughGC		= NULL;
-    scalePtr->copyGC		= NULL;
+    scalePtr->troughGC		= None;
+    scalePtr->copyGC		= None;
     scalePtr->tkfont		= NULL;
     scalePtr->textColorPtr	= NULL;
-    scalePtr->textGC		= NULL;
+    scalePtr->textGC		= None;
     scalePtr->relief		= TK_RELIEF_FLAT;
     scalePtr->highlightWidth	= 0;
     scalePtr->highlightBorder	= NULL;
@@ -291,7 +291,7 @@ Tk_ScaleObjCmd(
     scalePtr->vertTroughX	= 0;
     scalePtr->vertLabelX	= 0;
     scalePtr->fontHeight	= 0;
-    scalePtr->cursor		= NULL;
+    scalePtr->cursor		= None;
     scalePtr->takeFocusPtr	= NULL;
     scalePtr->flags		= NEVER_SET;
 

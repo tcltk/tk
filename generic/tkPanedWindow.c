@@ -448,9 +448,9 @@ Tk_PanedWindowObjCmd(
     pwPtr->optionTable = pwOpts->pwOptions;
     pwPtr->slaveOpts = pwOpts->slaveOpts;
     pwPtr->relief = TK_RELIEF_RAISED;
-    pwPtr->gc = NULL;
-    pwPtr->cursor = NULL;
-    pwPtr->sashCursor = NULL;
+    pwPtr->gc = None;
+    pwPtr->cursor = None;
+    pwPtr->sashCursor = None;
 
     /*
      * Keep a hold of the associated tkwin until we destroy the widget,
@@ -2044,10 +2044,10 @@ Unlink(
 
     for (i = 0; i < masterPtr->numSlaves; i++) {
 	if (masterPtr->slaves[i]->before == slavePtr->tkwin) {
-	    masterPtr->slaves[i]->before = NULL;
+	    masterPtr->slaves[i]->before = None;
 	}
 	if (masterPtr->slaves[i]->after == slavePtr->tkwin) {
-	    masterPtr->slaves[i]->after = NULL;
+	    masterPtr->slaves[i]->after = None;
 	}
     }
 

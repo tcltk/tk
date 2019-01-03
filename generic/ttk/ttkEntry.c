@@ -1265,7 +1265,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	    cursorX = field.x + field.width - cursorWidth;
 	}
 
-	gc = EntryGetGC(entryPtr, es.insertColorObj, 0);
+	gc = EntryGetGC(entryPtr, es.insertColorObj, None);
 	XFillRectangle(Tk_Display(tkwin), d, gc,
 	    cursorX, cursorY, cursorWidth, cursorHeight);
 	Tk_FreeGC(Tk_Display(tkwin), gc);

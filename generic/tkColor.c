@@ -245,7 +245,7 @@ Tk_GetColor(
      */
 
     tkColPtr->magic = COLOR_MAGIC;
-    tkColPtr->gc = 0;
+    tkColPtr->gc = None;
     tkColPtr->screen = Tk_Screen(tkwin);
     tkColPtr->colormap = Tk_Colormap(tkwin);
     tkColPtr->visual = Tk_Visual(tkwin);
@@ -326,7 +326,7 @@ Tk_GetColorByValue(
 
     tkColPtr = TkpGetColorByValue(tkwin, colorPtr);
     tkColPtr->magic = COLOR_MAGIC;
-    tkColPtr->gc = 0;
+    tkColPtr->gc = None;
     tkColPtr->screen = Tk_Screen(tkwin);
     tkColPtr->colormap = valueKey.colormap;
     tkColPtr->visual = Tk_Visual(tkwin);
@@ -493,7 +493,7 @@ Tk_FreeColor(
 
     if (tkColPtr->gc != None) {
 	XFreeGC(DisplayOfScreen(screen), tkColPtr->gc);
-	tkColPtr->gc = 0;
+	tkColPtr->gc = None;
     }
     TkpFreeColor(tkColPtr);
 

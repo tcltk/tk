@@ -710,12 +710,12 @@ ButtonCreate(
     butPtr->normalFg = NULL;
     butPtr->activeFg = NULL;
     butPtr->disabledFg = NULL;
-    butPtr->normalTextGC = NULL;
-    butPtr->activeTextGC = NULL;
-    butPtr->disabledGC = NULL;
-    butPtr->stippleGC = NULL;
+    butPtr->normalTextGC = None;
+    butPtr->activeTextGC = None;
+    butPtr->disabledGC = None;
+    butPtr->stippleGC = None;
     butPtr->gray = None;
-    butPtr->copyGC = NULL;
+    butPtr->copyGC = None;
     butPtr->widthPtr = NULL;
     butPtr->width = 0;
     butPtr->heightPtr = NULL;
@@ -740,7 +740,7 @@ ButtonCreate(
     butPtr->onValuePtr = NULL;
     butPtr->offValuePtr = NULL;
     butPtr->tristateValuePtr = NULL;
-    butPtr->cursor = NULL;
+    butPtr->cursor = None;
     butPtr->takeFocusPtr = NULL;
     butPtr->commandPtr = NULL;
     butPtr->flags = 0;
