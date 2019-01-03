@@ -117,7 +117,7 @@
  */
 
 #define TkpDefineNativeBitmaps()
-#define TkpCreateNativeBitmap(display, source) 0
-#define TkpGetNativeAppBitmap(display, name, w, h) 0
+#define TkpCreateNativeBitmap(display, source) None
+#define TkpGetNativeAppBitmap(display, name, w, h) None
 
 #endif /* _WINPORT */

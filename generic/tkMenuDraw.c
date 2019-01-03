@@ -43,12 +43,12 @@ void
 TkMenuInitializeDrawingFields(
     TkMenu *menuPtr)		/* The menu we are initializing. */
 {
-    menuPtr->textGC = NULL;
+    menuPtr->textGC = None;
     menuPtr->gray = None;
-    menuPtr->disabledGC = NULL;
-    menuPtr->activeGC = NULL;
-    menuPtr->indicatorGC = NULL;
-    menuPtr->disabledImageGC = NULL;
+    menuPtr->disabledGC = None;
+    menuPtr->activeGC = None;
+    menuPtr->indicatorGC = None;
+    menuPtr->disabledImageGC = None;
     menuPtr->totalWidth = menuPtr->totalHeight = 0;
 }
 
@@ -79,10 +79,10 @@ TkMenuInitializeEntryDrawingFields(
     mePtr->y = 0;
     mePtr->indicatorSpace = 0;
     mePtr->labelWidth = 0;
-    mePtr->textGC = NULL;
-    mePtr->activeGC = NULL;
-    mePtr->disabledGC = NULL;
-    mePtr->indicatorGC = NULL;
+    mePtr->textGC = None;
+    mePtr->activeGC = None;
+    mePtr->disabledGC = None;
+    mePtr->indicatorGC = None;
 }
 
 /*
@@ -385,10 +385,10 @@ TkMenuConfigureEntryDrawOptions(
 		GCForeground|GCBackground|GCFont|GCGraphicsExposures,
 		&gcValues);
     } else {
-	newGC = NULL;
-	newActiveGC = NULL;
-	newDisabledGC = NULL;
-	newIndicatorGC = NULL;
+	newGC = None;
+	newActiveGC = None;
+	newDisabledGC = None;
+	newIndicatorGC = None;
     }
     if (mePtr->textGC != None) {
 	Tk_FreeGC(menuPtr->display, mePtr->textGC);

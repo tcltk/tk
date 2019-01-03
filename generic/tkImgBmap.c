@@ -403,18 +403,18 @@ ImgBmapConfigureInstance(
 		(unsigned) masterPtr->height);
     }
 
-    if (oldMask) {
+    if (oldMask != None) {
 	Tk_FreePixmap(Tk_Display(instancePtr->tkwin), oldMask);
     }
-    if (oldBitmap) {
+    if (oldBitmap != None) {
 	Tk_FreePixmap(Tk_Display(instancePtr->tkwin), oldBitmap);
     }
 
-    if (masterPtr->data) {
+    if (masterPtr->data != NULL) {
 	gcValues.foreground = instancePtr->fg->pixel;
 	gcValues.graphics_exposures = False;
 	mask = GCForeground|GCGraphicsExposures;
-	if (instancePtr->bg) {
+	if (instancePtr->bg != NULL) {
 	    gcValues.background = instancePtr->bg->pixel;
 	    mask |= GCBackground;
 	    if (instancePtr->mask != None) {
@@ -427,9 +427,9 @@ ImgBmapConfigureInstance(
 	}
 	gc = Tk_GetGC(instancePtr->tkwin, mask, &gcValues);
     } else {
-	gc = NULL;
+	gc = None;
     }
-    if (instancePtr->gc) {
+    if (instancePtr->gc != None) {
 	Tk_FreeGC(Tk_Display(instancePtr->tkwin), instancePtr->gc);
     }
     instancePtr->gc = gc;
@@ -441,10 +441,10 @@ ImgBmapConfigureInstance(
      * it clear that this instance cannot be displayed. Then report the error.
      */
 
-    if (instancePtr->gc) {
+    if (instancePtr->gc != None) {
 	Tk_FreeGC(Tk_Display(instancePtr->tkwin), instancePtr->gc);
     }
-    instancePtr->gc = NULL;
+    instancePtr->gc = None;
     Tcl_AppendObjToErrorInfo(masterPtr->interp, Tcl_ObjPrintf(
 	    "\n    (while configuring image \"%s\")", Tk_NameOfImage(
 	    masterPtr->tkMaster)));
@@ -848,7 +848,7 @@ ImgBmapGet(
     instancePtr->bg = NULL;
     instancePtr->bitmap = None;
     instancePtr->mask = None;
-    instancePtr->gc = NULL;
+    instancePtr->gc = None;
     instancePtr->nextPtr = masterPtr->instancePtr;
     masterPtr->instancePtr = instancePtr;
     ImgBmapConfigureInstance(instancePtr);

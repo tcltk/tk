@@ -524,16 +524,16 @@ Tk_EntryObjCmd(
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
 
-    entryPtr->cursor		= NULL;
+    entryPtr->cursor		= None;
     entryPtr->exportSelection	= 1;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
     entryPtr->displayString	= entryPtr->string;
     entryPtr->inset		= XPAD;
-    entryPtr->textGC		= NULL;
-    entryPtr->selTextGC		= NULL;
-    entryPtr->highlightGC	= NULL;
+    entryPtr->textGC		= None;
+    entryPtr->selTextGC		= None;
+    entryPtr->highlightGC	= None;
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
@@ -1430,7 +1430,7 @@ EntryWorldChanged(
     ClientData instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
-    GC gc = NULL;
+    GC gc = None;
     unsigned long mask;
     Tk_3DBorder border;
     XColor *colorPtr;
@@ -2457,9 +2457,9 @@ EntryEventProc(
 	    } else if ((elem == SEL_BUTTONDOWN) || (elem == SEL_BUTTONUP)) {
 		cursor = sbPtr->bCursor;
 	    } else {
-		cursor = NULL;
+		cursor = None;
 	    }
-	    if (cursor) {
+	    if (cursor != None) {
 		Tk_DefineCursor(entryPtr->tkwin, cursor);
 	    } else {
 		Tk_UndefineCursor(entryPtr->tkwin);
@@ -3633,22 +3633,22 @@ Tk_SpinboxObjCmd(
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
 
-    entryPtr->cursor		= NULL;
+    entryPtr->cursor		= None;
     entryPtr->exportSelection	= 1;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
     entryPtr->displayString	= entryPtr->string;
     entryPtr->inset		= XPAD;
-    entryPtr->textGC		= NULL;
-    entryPtr->selTextGC		= NULL;
-    entryPtr->highlightGC	= NULL;
+    entryPtr->textGC		= None;
+    entryPtr->selTextGC		= None;
+    entryPtr->highlightGC	= None;
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
     sbPtr->selElement		= SEL_NONE;
     sbPtr->curElement		= SEL_NONE;
-    sbPtr->bCursor		= NULL;
+    sbPtr->bCursor		= None;
     sbPtr->repeatDelay		= 400;
     sbPtr->repeatInterval	= 100;
     sbPtr->fromValue		= 0.0;
