@@ -119,8 +119,8 @@ TkpCreateScrollbar(
 
     MacScrollbar *scrollPtr = (MacScrollbar *)ckalloc(sizeof(MacScrollbar));
 
-    scrollPtr->troughGC = None;
-    scrollPtr->copyGC = None;
+    scrollPtr->troughGC = NULL;
+    scrollPtr->copyGC = NULL;
     scrollPtr->info = defaultInfo;
     scrollPtr->buttonDown = false;
     
