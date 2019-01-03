@@ -3391,10 +3391,6 @@ TkTextUpdateLineMetrics(
 	GetYView(textPtr->interp, textPtr, 1);
     }
     if (fullUpdateRequested) {
-        TextDInfo *dInfoPtr = textPtr->dInfoPtr;
-
-        dInfoPtr->lastMetricUpdateLine = lineNum;
-        dInfoPtr->currentMetricUpdateLine = lineNum;
         GenerateWidgetViewSyncEvent(textPtr, 1);
     }
     return lineNum;
