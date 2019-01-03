@@ -3142,11 +3142,11 @@ AsyncUpdateLineMetrics(
 
 static void
 GenerateWidgetViewSyncEvent(
-    TkText *textPtr,		/* Information about text widget. */
-    Bool NewSyncState)          /* true if becoming in sync, false otherwise */
+    TkText *textPtr,	  /* Information about text widget. */
+    Bool InSync)          /* true if becoming in sync, false otherwise */
 {
-    NewSyncState = (NewSyncState != 0); /* ensure 0 or 1 value */
-    Bool OldSyncState = ((textPtr->dInfoPtr->flags & OUT_OF_SYNC) == 0);
+    Bool NewSyncState = (InSync != 0); /* ensure 0 or 1 value */
+    Bool OldSyncState = !(textPtr->dInfoPtr->flags & OUT_OF_SYNC);
     
     /*
      * OSX 10.14 needs to be told to display the window when the Text Widget
