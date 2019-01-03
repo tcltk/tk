@@ -332,7 +332,7 @@ EntryFetchSelection(
     ClientData clientData, int offset, char *buffer, int maxBytes)
 {
     Entry *entryPtr = (Entry *) clientData;
-    size_t byteCount;
+    int byteCount;
     const char *string;
     const char *selStart, *selEnd;
 
@@ -345,7 +345,7 @@ EntryFetchSelection(
     selEnd = Tcl_UtfAtIndex(selStart,
 	    entryPtr->entry.selectLast - entryPtr->entry.selectFirst);
     byteCount = selEnd - selStart - offset;
-    if (byteCount > (size_t)maxBytes) {
+    if (byteCount > maxBytes) {
     /* @@@POSSIBLE BUG: Can transfer partial UTF-8 sequences.  Is this OK? */
 	byteCount = maxBytes;
     }

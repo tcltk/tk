@@ -533,10 +533,10 @@ ConfigureLine(
     } else {
 	newGC = arrowGC = NULL;
     }
-    if (linePtr->outline.gc) {
+    if (linePtr->outline.gc != None) {
 	Tk_FreeGC(Tk_Display(tkwin), linePtr->outline.gc);
     }
-    if (linePtr->arrowGC) {
+    if (linePtr->arrowGC != None) {
 	Tk_FreeGC(Tk_Display(tkwin), linePtr->arrowGC);
     }
     linePtr->outline.gc = newGC;
@@ -2251,7 +2251,7 @@ LineToPostscript(
 				 * being created. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    char buffer[64 + TCL_INTEGER_SPACE];
+    char buffer[64 + 4*TCL_INTEGER_SPACE];
     char *style;
 
     double width;

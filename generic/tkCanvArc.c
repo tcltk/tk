@@ -526,7 +526,9 @@ ConfigureArc(
 	}
       }
 
-    if ((arcPtr->style == ARC_STYLE) || (!color)) {
+    if (arcPtr->style == ARC_STYLE) {
+	newGC = NULL;
+    } else if (color == NULL) {
 	newGC = NULL;
     } else {
 	gcValues.foreground = color->pixel;

@@ -486,7 +486,7 @@ ConfigurePolygon(
     } else {
 	newGC = NULL;
     }
-    if (polyPtr->outline.gc) {
+    if (polyPtr->outline.gc != None) {
 	Tk_FreeGC(Tk_Display(tkwin), polyPtr->outline.gc);
     }
     polyPtr->outline.gc = newGC;
@@ -509,12 +509,12 @@ ConfigurePolygon(
 	}
     }
 
-    if (!color) {
+    if (color == NULL) {
 	newGC = NULL;
     } else {
 	gcValues.foreground = color->pixel;
 	mask = GCForeground;
-	if (stipple) {
+	if (stipple != None) {
 	    gcValues.stipple = stipple;
 	    gcValues.fill_style = FillStippled;
 	    mask |= GCStipple|GCFillStyle;
