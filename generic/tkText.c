@@ -9,7 +9,7 @@
  * Copyright (c) 1992-1994 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
  * Copyright (c) 1999 by Scriptics Corporation.
- * Copyright (c) 2015-2017 Gregor Cramer
+ * Copyright (c) 2015-2018 Gregor Cramer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -377,8 +377,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_STATE, -1, Tk_Offset(TkText, state), 0, stateStrings, 0},
     {TK_OPTION_BOOLEAN, "-steadymarks", "steadyMarks", "SteadyMarks",
 	"0", -1, Tk_Offset(TkText, steadyMarks), TK_OPTION_DONT_SET_DEFAULT, 0, 0},
-    {TK_OPTION_INT, "-synctime", "syncTime", "SyncTime", "150", -1, Tk_Offset(TkText, syncTime),
-	0, 0, TK_TEXT_SYNCHRONIZE},
+    {TK_OPTION_INT, "-synctime", "syncTime", "SyncTime",
+	"150", -1, Tk_Offset(TkText, syncTime), 0, 0, TK_TEXT_SYNCHRONIZE},
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, Tk_Offset(TkText, tabOptionPtr), -1, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
@@ -389,6 +389,8 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_TAKE_FOCUS, -1, Tk_Offset(TkText, takeFocus), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-undo", "undo", "Undo",
 	DEF_TEXT_UNDO, -1, Tk_Offset(TkText, undo), TK_OPTION_DONT_SET_DEFAULT, 0 ,0},
+    {TK_OPTION_BOOLEAN, "-undotagging", "undoTagging", "UndoTagging",
+	"1", -1, Tk_Offset(TkText, undoTagging), 0, 0 ,0},
     {TK_OPTION_BOOLEAN, "-useunibreak", "useUniBreak", "UseUniBreak",
 	"0", -1, Tk_Offset(TkText, useUniBreak), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_INT, "-width", "width", "Width",
@@ -1050,6 +1052,7 @@ CreateWidget(
 	sharedTextPtr->emptyTagInfoPtr = TkTextTagSetResize(NULL, 0);
 	sharedTextPtr->maxRedoDepth = -1;
 	sharedTextPtr->autoSeparators = true;
+	sharedTextPtr->undoTagging = true;
 	sharedTextPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
 	sharedTextPtr->lastUndoTokenType = -1;
 	sharedTextPtr->startMarker = TkTextMakeStartEndMark(NULL, &tkTextLeftMarkType);
@@ -1176,12 +1179,13 @@ CreateWidget(
     TkTextSetYView(textPtr, &startIndex, 0);
     textPtr->exportSelection = true;
     textPtr->pickEvent.type = LeaveNotify;
-    textPtr->steadyMarks = textPtr->sharedTextPtr->steadyMarks;
-    textPtr->undo = textPtr->sharedTextPtr->undo;
-    textPtr->maxUndoDepth = textPtr->sharedTextPtr->maxUndoDepth;
-    textPtr->maxRedoDepth = textPtr->sharedTextPtr->maxRedoDepth;
-    textPtr->maxUndoSize = textPtr->sharedTextPtr->maxUndoSize;
-    textPtr->autoSeparators = textPtr->sharedTextPtr->autoSeparators;
+    textPtr->steadyMarks = sharedTextPtr->steadyMarks;
+    textPtr->undo = sharedTextPtr->undo;
+    textPtr->maxUndoDepth = sharedTextPtr->maxUndoDepth;
+    textPtr->maxRedoDepth = sharedTextPtr->maxRedoDepth;
+    textPtr->maxUndoSize = sharedTextPtr->maxUndoSize;
+    textPtr->autoSeparators = sharedTextPtr->autoSeparators;
+    textPtr->undoTagging = sharedTextPtr->undoTagging;
 
     /*
      * Create the "sel" tag and the "current" and "insert" marks.
@@ -3879,12 +3883,13 @@ TkConfigureText(
     TkSizeT currentEpoch;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextBTree tree = sharedTextPtr->tree;
+    bool copyDownFlags = false;
     bool oldExport = (textPtr->exportSelection) && (!Tcl_IsSafe(textPtr->interp));
     bool oldTextDebug = tkTextDebug;
     bool didHyphenate = textPtr->hyphenate;
+    bool oldUndoTagging = textPtr->undoTagging;
     int oldHyphenRules = textPtr->hyphenRules;
     int mask = 0;
-    bool copyDownFlags = false;
 
     tkTextDebug = false; /* debugging is not useful here */
 
@@ -4068,6 +4073,15 @@ TkConfigureText(
      * Copy up shared flags.
      */
 
+    /*
+     * Update default value for undoing tag operations.
+     */
+
+    if (oldUndoTagging != textPtr->undoTagging) {
+	sharedTextPtr->undoTagging = textPtr->undoTagging;
+	copyDownFlags = true;
+    }
+
     /* This flag cannot alter if we have peers. */
     sharedTextPtr->steadyMarks = textPtr->steadyMarks;
 
@@ -4133,6 +4147,7 @@ TkConfigureText(
 	    tPtr->maxRedoDepth = sharedTextPtr->maxRedoDepth;
 	    tPtr->maxUndoSize = sharedTextPtr->maxUndoSize;
 	    tPtr->undo = sharedTextPtr->undo;
+	    tPtr->undoTagging = sharedTextPtr->undoTagging;
 	}
     }
 

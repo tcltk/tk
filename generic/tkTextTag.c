@@ -7,7 +7,7 @@
  *
  * Copyright (c) 1992-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2015-2017 Gregor Cramer
+ * Copyright (c) 2015-2018 Gregor Cramer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -2025,14 +2025,14 @@ TkTextCreateTag(
     tagPtr = calloc(1, sizeof(TkTextTag));
     tagPtr->name = name;
     tagPtr->index = index;
-    tagPtr->priority = textPtr->sharedTextPtr->numEnabledTags;
+    tagPtr->priority = sharedTextPtr->numEnabledTags;
     tagPtr->isSelTag = isSelTag;
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
     tagPtr->justify = TK_TEXT_JUSTIFY_LEFT;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NONE;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
-    tagPtr->undo = !isSelTag;
+    tagPtr->undo = sharedTextPtr->undoTagging && !isSelTag;
     tagPtr->sharedTextPtr = sharedTextPtr;
     tagPtr->undoTagListIndex = -1;
     tagPtr->refCount = 1;
@@ -2042,8 +2042,8 @@ TkTextCreateTag(
     tagPtr->optionTable = Tk_CreateOptionTable(textPtr->interp, tagOptionSpecs);
     assert(!tagPtr->reliefPtr);
 
-    textPtr->sharedTextPtr->numTags += 1;
-    textPtr->sharedTextPtr->numEnabledTags += 1;
+    sharedTextPtr->numTags += 1;
+    sharedTextPtr->numEnabledTags += 1;
 
     if (isSelTag) {
 	tagPtr->textPtr = textPtr;
