@@ -3143,8 +3143,11 @@ AsyncUpdateLineMetrics(
 static void
 GenerateWidgetViewSyncEvent(
     TkText *textPtr,		/* Information about text widget. */
-    Bool InSync)                /* true if in sync, false otherwise */
+    Bool NewSyncState)          /* true if becoming in sync, false otherwise */
 {
+    NewSyncState = (NewSyncState != 0); /* ensure 0 or 1 value */
+    Bool OldSyncState = ((textPtr->dInfoPtr->flags & OUT_OF_SYNC) == 0);
+    
     /*
      * OSX 10.14 needs to be told to display the window when the Text Widget
      * is in sync.  (That is, to run DisplayText inside of the drawRect
@@ -3157,14 +3160,14 @@ GenerateWidgetViewSyncEvent(
 	FORCE_DISPLAY(textPtr->tkwin);
     }
 
-    if (InSync == !!(textPtr->dInfoPtr->flags & OUT_OF_SYNC)) {
-	if (InSync) {
+    if (NewSyncState != OldSyncState) {
+	if (NewSyncState) {
 	    textPtr->dInfoPtr->flags &= ~OUT_OF_SYNC;
 	} else {
 	    textPtr->dInfoPtr->flags |= OUT_OF_SYNC;
 	}
         TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
-                           Tcl_NewBooleanObj(InSync));
+                           Tcl_NewBooleanObj(NewSyncState));
     }
 }
 
@@ -6334,7 +6337,7 @@ TkTextPendingsync(
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
-    return dInfoPtr->flags & OUT_OF_SYNC;
+    return ((dInfoPtr->flags & OUT_OF_SYNC) != 0);
 }
 
 /*
