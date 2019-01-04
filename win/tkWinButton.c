@@ -127,7 +127,7 @@ InitBoxes(void)
     HRSRC hrsrc;
     HGLOBAL hblk;
     LPBITMAPINFOHEADER newBitmap;
-    DWORD size;
+    size_t size;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -146,8 +146,9 @@ InitBoxes(void)
 
     if (tsdPtr->boxesPtr != NULL && !(tsdPtr->boxesPtr->biWidth % 4)
 	    && !(tsdPtr->boxesPtr->biHeight % 2)) {
-	size = tsdPtr->boxesPtr->biSize + (1 << tsdPtr->boxesPtr->biBitCount)
-		* sizeof(RGBQUAD) + tsdPtr->boxesPtr->biSizeImage;
+	size = tsdPtr->boxesPtr->biSize
+		+ (sizeof(RGBQUAD) << tsdPtr->boxesPtr->biBitCount)
+		+ tsdPtr->boxesPtr->biSizeImage;
 	newBitmap = ckalloc(size);
 	memcpy(newBitmap, tsdPtr->boxesPtr, size);
 	tsdPtr->boxesPtr = newBitmap;
@@ -156,7 +157,7 @@ InitBoxes(void)
 	tsdPtr->boxesPalette = (DWORD*) (((LPSTR) tsdPtr->boxesPtr)
 		+ tsdPtr->boxesPtr->biSize);
 	tsdPtr->boxesBits = ((LPSTR) tsdPtr->boxesPalette)
-	    + ((1 << tsdPtr->boxesPtr->biBitCount) * sizeof(RGBQUAD));
+		+ (sizeof(RGBQUAD) << tsdPtr->boxesPtr->biBitCount);
     } else {
 	tsdPtr->boxesPtr = NULL;
     }
