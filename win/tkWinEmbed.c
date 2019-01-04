@@ -300,7 +300,7 @@ TkpUseWindow(
 
 	char msg[256];
 
-	sprintf(msg, "Unable to get information of window \"%.80s\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
+	sprintf(msg, "Unable to get information of window \"%.79s\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
 	if (IDCANCEL == MessageBox(hwnd, msg, "Tk Warning",
 		MB_OKCANCEL | MB_ICONWARNING)) {
     	    Tcl_SetResult(interp, "Operation has been canceled", TCL_STATIC);
