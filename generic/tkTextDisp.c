@@ -3245,6 +3245,7 @@ TkTextUpdateLineMetrics(
 
 	    if (textPtr->dInfoPtr->metricEpoch == TCL_AUTO_LENGTH && lineNum == endLine) {
 
+
 		/*
 		 * We have looped over all lines, so we're done.
 		 */

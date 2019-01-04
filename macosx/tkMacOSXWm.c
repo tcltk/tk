@@ -152,13 +152,13 @@ static const struct {
 typedef enum {
     WMATT_ALPHA, WMATT_FULLSCREEN, WMATT_MODIFIED, WMATT_NOTIFY,
     WMATT_TITLEPATH, WMATT_TOPMOST, WMATT_TRANSPARENT,
-    _WMATT_LAST_ATTRIBUTE
+    WMATT_TYPE, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
     "-alpha", "-fullscreen", "-modified", "-notify",
     "-titlepath", "-topmost", "-transparent",
-    NULL
+    "-type", NULL
 };
 
 /*
@@ -594,7 +594,8 @@ SetWindowSizeLimits(
  *
  * FrontWindowAtPoint --
  *
- *	Find frontmost toplevel window at a given screen location.
+ *	Find frontmost toplevel window at a given screen location which has the
+ *      specified mainPtr.  If the location is in the title bar, return NULL.
  *
  * Results:
  *	TkWindow*.
@@ -607,7 +608,8 @@ SetWindowSizeLimits(
 
 static TkWindow*
 FrontWindowAtPoint(
-    int x, int y)
+    int x,
+    int y)
 {
     NSPoint p = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
     NSArray *windows = [NSApp orderedWindows];
@@ -615,11 +617,28 @@ FrontWindowAtPoint(
 
     for (NSWindow *w in windows) {
 	winPtr = TkMacOSXGetTkWindow(w);
-	if (winPtr && NSMouseInRect(p, [w frame], NO)) {
-	    break;
+	if (winPtr) {
+	    WmInfo *wmPtr = winPtr->wmInfoPtr;
+	    NSRect windowFrame = [w frame];
+	    NSRect contentFrame = [w frame];
+	    contentFrame.size.height  = [[w contentView] frame].size.height;
+	    /*
+	     * For consistency with other platforms, points in the
+	     * title bar are not considered to be contained in the
+	     * window.
+	     */
+	    
+	    if ((wmPtr->hints.initial_state == NormalState ||
+		 wmPtr->hints.initial_state == ZoomState)) {
+		if (NSMouseInRect(p, contentFrame, NO)) {
+		    return winPtr;
+		} else if (NSMouseInRect(p, windowFrame, NO)) {
+		    return NULL;
+		}
+	    }
 	}
     }
-    return winPtr;
+    return NULL;
 }
 
 /*
@@ -814,10 +833,6 @@ TkWmMapWindow(
      */
 
     XMapWindow(winPtr->display, winPtr->window);
-
-    /*Add window to Window menu.*/
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win setExcludedFromWindowsMenu:NO];
 }
 
 /*
@@ -1301,7 +1316,7 @@ WmSetAttribute(
 #if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
 	    [macWindow toggleFullScreen:macWindow];
 #else
-	    TKLog(@"The fullscreen attribute is ignored on this system..");
+	    TKLog(@"The fullscreen attribute is ignored on this system.");
 #endif
 	}
 	break;
@@ -1379,6 +1394,9 @@ WmSetAttribute(
 		    TK_PARENT_WINDOW);
 	    }
 	break;
+    case WMATT_TYPE:
+	TKLog(@"The type attribute is ignored on macOS.");
+	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
 	return TCL_ERROR;
@@ -1428,6 +1446,9 @@ WmGetAttribute(
 	break;
     case WMATT_TRANSPARENT:
 	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
+	break;
+    case WMATT_TYPE:
+	result = Tcl_NewStringObj("unsupported", -1);
 	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
@@ -4386,7 +4407,7 @@ Tk_CoordsToWindow(
 				 * that contains point. */
     int x, y;			/* Coordinates in winPtr. */
     int tmpx, tmpy, bd;
-
+    
     /*
      * Step 1: find the top-level window that contains the desired point.
      */
@@ -4455,6 +4476,9 @@ Tk_CoordsToWindow(
 	    break;
 	}
 	winPtr = nextPtr;
+    }
+    if (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
+	return NULL;
     }
     return (Tk_Window) winPtr;
 }
