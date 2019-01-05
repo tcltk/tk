@@ -139,18 +139,26 @@ unsigned short releaseCode;
         }
 
         /*
-         * The focus must be in the FrontWindow on the Macintosh. We then query Tk
-         * to determine the exact Tk window that owns the focus.
+         * Events are only received for the front Window on the Macintosh.
+	 * So to build an XEvent we look up the Tk window associated to the
+	 * Front window. If a different window has a local grab we ignore
+	 * the event.
          */
 
         TkWindow *winPtr = TkMacOSXGetTkWindow(w);
         Tk_Window tkwin = (Tk_Window) winPtr;
 
-        if (!tkwin) {
-          TkMacOSXDbgMsg("tkwin == NULL");
-          return theEvent;
-        }
-        tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	if (tkwin) {
+	    TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
+	    if (grabWinPtr &&
+		grabWinPtr != winPtr &&
+		!winPtr->dispPtr->grabFlags && /* this means the grab is local. */
+		grabWinPtr->mainPtr == winPtr->mainPtr) {
+		return theEvent;
+	    }
+	} else {
+	    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	}
         if (!tkwin) {
           TkMacOSXDbgMsg("tkwin == NULL");
           return theEvent;  /* Give up. No window for this event. */
@@ -160,6 +168,7 @@ unsigned short releaseCode;
          * If it's a function key, or we have modifiers other than Shift or Alt,
          * pass it straight to Tk.  Otherwise we'll send for input processing.
          */
+
         int code = (len == 0) ?
           0 : [charactersIgnoringModifiers characterAtIndex: 0];
         if (type != NSKeyDown || isFunctionKey(code)
