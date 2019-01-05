@@ -106,23 +106,32 @@ enum {
 	}
     }
 
-    Window window = TkMacOSXGetXWindow(eventWindow);
-    Tk_Window tkwin = window ? Tk_IdToWindow(TkGetDisplayList()->display,
-	    window) : NULL;
-    if (!tkwin) {
+    TkWindow *winPtr = TkMacOSXGetTkWindow(eventWindow);
+    Tk_Window tkwin = (Tk_Window) winPtr;
+
+    if (tkwin) {
+	TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
+	if (grabWinPtr &&
+	    grabWinPtr != winPtr &&
+	    !winPtr->dispPtr->grabFlags && /* this means the grab is local. */
+	    grabWinPtr->mainPtr == winPtr->mainPtr) {
+	    return theEvent;
+	}
+    } else {
 	tkwin = TkMacOSXGetCapture();
     }
     if (!tkwin) {
+	TkMacOSXDbgMsg("tkwin == NULL");
 	return theEvent; /* Give up.  No window for this event. */
-    }
-
-    TkWindow  *winPtr = (TkWindow *) tkwin;
+    } else {
+	winPtr = (TkWindow *)tkwin;
+    }	
+    
     local.x -= winPtr->wmInfoPtr->xInParent;
     local.y -= winPtr->wmInfoPtr->yInParent;
 
     int win_x, win_y;
-    tkwin = Tk_TopCoordsToWindow(tkwin, local.x, local.y,
-		&win_x, &win_y);
+    tkwin = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
 
     unsigned int state = 0;
     NSInteger button = [theEvent buttonNumber];
