@@ -103,7 +103,7 @@ TkpDisplayMenuButton(
 	border = mbPtr->normalBorder;
     }
 
-    if (mbPtr->image != None) {
+    if (mbPtr->image != NULL) {
 	Tk_SizeOfImage(mbPtr->image, &width, &height);
 	haveImage = 1;
     } else if (mbPtr->bitmap != None) {
@@ -369,7 +369,7 @@ TkpComputeMenuButtonGeometry(
     txtHeight = 0;
     avgWidth = 0;
 
-    if (mbPtr->image != None) {
+    if (mbPtr->image != NULL) {
 	Tk_SizeOfImage(mbPtr->image, &width, &height);
 	haveImage = 1;
     } else if (mbPtr->bitmap != None) {
