@@ -140,7 +140,7 @@ test wm-attributes-1.2.4 {usage} -constraints {unix notAqua} -returnCodes error 
 } -result {bad attribute "_": must be -alpha, -topmost, -zoomed, -fullscreen, or -type}
 test wm-attributes-1.2.5 {usage} -constraints aqua -returnCodes error -body {
     wm attributes . _
-} -result {bad attribute "_": must be -alpha, -fullscreen, -modified, -notify, -titlepath, -topmost, or -transparent}
+} -result {bad attribute "_": must be -alpha, -fullscreen, -modified, -notify, -titlepath, -topmost, -transparent, or -type}
 
 
 ### wm client ###

@@ -1033,10 +1033,10 @@ DestroyEntry(
 		EntryTextVarProc, entryPtr);
 	entryPtr->flags &= ~ENTRY_VAR_TRACED;
     }
-    if (entryPtr->textGC != None) {
+    if (entryPtr->textGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->textGC);
     }
-    if (entryPtr->selTextGC != None) {
+    if (entryPtr->selTextGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
     Tcl_DeleteTimerHandler(entryPtr->insertBlinkHandler);
@@ -1482,7 +1482,7 @@ EntryWorldChanged(
     gcValues.graphics_exposures = False;
     mask = GCForeground | GCFont | GCGraphicsExposures;
     gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
-    if (entryPtr->textGC != None) {
+    if (entryPtr->textGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->textGC);
     }
     entryPtr->textGC = gc;
@@ -1493,7 +1493,7 @@ EntryWorldChanged(
     gcValues.font = Tk_FontId(entryPtr->tkfont);
     mask = GCForeground | GCFont;
     gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
-    if (entryPtr->selTextGC != None) {
+    if (entryPtr->selTextGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
     entryPtr->selTextGC = gc;
@@ -2459,7 +2459,7 @@ EntryEventProc(
 	    } else {
 		cursor = NULL;
 	    }
-	    if (cursor) {
+	    if (cursor != NULL) {
 		Tk_DefineCursor(entryPtr->tkwin, cursor);
 	    } else {
 		Tk_UndefineCursor(entryPtr->tkwin);

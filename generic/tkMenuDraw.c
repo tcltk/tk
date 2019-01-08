@@ -106,22 +106,22 @@ void
 TkMenuFreeDrawOptions(
     TkMenu *menuPtr)
 {
-    if (menuPtr->textGC != None) {
+    if (menuPtr->textGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->textGC);
     }
-    if (menuPtr->disabledImageGC != None) {
+    if (menuPtr->disabledImageGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledImageGC);
     }
     if (menuPtr->gray != None) {
 	Tk_FreeBitmap(menuPtr->display, menuPtr->gray);
     }
-    if (menuPtr->disabledGC != None) {
+    if (menuPtr->disabledGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledGC);
     }
-    if (menuPtr->activeGC != None) {
+    if (menuPtr->activeGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->activeGC);
     }
-    if (menuPtr->indicatorGC != None) {
+    if (menuPtr->indicatorGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->indicatorGC);
     }
 }
@@ -147,16 +147,16 @@ void
 TkMenuEntryFreeDrawOptions(
     TkMenuEntry *mePtr)
 {
-    if (mePtr->textGC != None) {
+    if (mePtr->textGC != NULL) {
 	Tk_FreeGC(mePtr->menuPtr->display, mePtr->textGC);
     }
-    if (mePtr->disabledGC != None) {
+    if (mePtr->disabledGC != NULL) {
 	Tk_FreeGC(mePtr->menuPtr->display, mePtr->disabledGC);
     }
-    if (mePtr->activeGC != None) {
+    if (mePtr->activeGC != NULL) {
 	Tk_FreeGC(mePtr->menuPtr->display, mePtr->activeGC);
     }
-    if (mePtr->indicatorGC != None) {
+    if (mePtr->indicatorGC != NULL) {
 	Tk_FreeGC(mePtr->menuPtr->display, mePtr->indicatorGC);
     }
 }
@@ -205,7 +205,7 @@ TkMenuConfigureDrawOptions(
     gcValues.background = Tk_3DBorderColor(border)->pixel;
     newGC = Tk_GetGC(menuPtr->tkwin, GCForeground|GCBackground|GCFont,
 	    &gcValues);
-    if (menuPtr->textGC != None) {
+    if (menuPtr->textGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->textGC);
     }
     menuPtr->textGC = newGC;
@@ -233,7 +233,7 @@ TkMenuConfigureDrawOptions(
 	}
     }
     newGC = Tk_GetGC(menuPtr->tkwin, mask, &gcValues);
-    if (menuPtr->disabledGC != None) {
+    if (menuPtr->disabledGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledGC);
     }
     menuPtr->disabledGC = newGC;
@@ -249,7 +249,7 @@ TkMenuConfigureDrawOptions(
 	newGC = Tk_GetGC(menuPtr->tkwin,
 	    GCForeground|GCFillStyle|GCStipple, &gcValues);
     }
-    if (menuPtr->disabledImageGC != None) {
+    if (menuPtr->disabledImageGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->disabledImageGC);
     }
     menuPtr->disabledImageGC = newGC;
@@ -262,7 +262,7 @@ TkMenuConfigureDrawOptions(
     gcValues.background = Tk_3DBorderColor(activeBorder)->pixel;
     newGC = Tk_GetGC(menuPtr->tkwin, GCForeground|GCBackground|GCFont,
 	    &gcValues);
-    if (menuPtr->activeGC != None) {
+    if (menuPtr->activeGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->activeGC);
     }
     menuPtr->activeGC = newGC;
@@ -273,7 +273,7 @@ TkMenuConfigureDrawOptions(
     gcValues.background = Tk_3DBorderColor(border)->pixel;
     newGC = Tk_GetGC(menuPtr->tkwin, GCForeground|GCBackground|GCFont,
 	    &gcValues);
-    if (menuPtr->indicatorGC != None) {
+    if (menuPtr->indicatorGC != NULL) {
 	Tk_FreeGC(menuPtr->display, menuPtr->indicatorGC);
     }
     menuPtr->indicatorGC = newGC;
@@ -390,19 +390,19 @@ TkMenuConfigureEntryDrawOptions(
 	newDisabledGC = NULL;
 	newIndicatorGC = NULL;
     }
-    if (mePtr->textGC != None) {
+    if (mePtr->textGC != NULL) {
 	Tk_FreeGC(menuPtr->display, mePtr->textGC);
     }
     mePtr->textGC = newGC;
-    if (mePtr->activeGC != None) {
+    if (mePtr->activeGC != NULL) {
 	Tk_FreeGC(menuPtr->display, mePtr->activeGC);
     }
     mePtr->activeGC = newActiveGC;
-    if (mePtr->disabledGC != None) {
+    if (mePtr->disabledGC != NULL) {
 	Tk_FreeGC(menuPtr->display, mePtr->disabledGC);
     }
     mePtr->disabledGC = newDisabledGC;
-    if (mePtr->indicatorGC != None) {
+    if (mePtr->indicatorGC != NULL) {
 	Tk_FreeGC(menuPtr->display, mePtr->indicatorGC);
     }
     mePtr->indicatorGC = newIndicatorGC;
