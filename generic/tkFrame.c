@@ -864,7 +864,7 @@ DestroyFrame(
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	Tk_FreeTextLayout(labelframePtr->textLayout);
-	if (labelframePtr->textGC != None) {
+	if (labelframePtr->textGC != NULL) {
 	    Tk_FreeGC(framePtr->display, labelframePtr->textGC);
 	}
     }
@@ -1120,7 +1120,7 @@ FrameWorldChanged(
 	gcValues.graphics_exposures = False;
 	gc = Tk_GetGC(tkwin, GCForeground | GCFont | GCGraphicsExposures,
 		&gcValues);
-	if (labelframePtr->textGC != None) {
+	if (labelframePtr->textGC != NULL) {
 	    Tk_FreeGC(framePtr->display, labelframePtr->textGC);
 	}
 	labelframePtr->textGC = gc;

@@ -516,7 +516,7 @@ TkTextTagCmd(
 	    tagPtr->affectsDisplay = 0;
 	    tagPtr->affectsDisplayGeometry = 0;
 	    if ((tagPtr->elideString != NULL)
-		    || (tagPtr->tkfont != None)
+		    || (tagPtr->tkfont != NULL)
 		    || (tagPtr->justifyString != NULL)
 		    || (tagPtr->lMargin1String != NULL)
 		    || (tagPtr->lMargin2String != NULL)
@@ -534,10 +534,10 @@ TkTextTagCmd(
 	    if ((tagPtr->border != NULL)
 		    || (tagPtr->selBorder != NULL)
 		    || (tagPtr->reliefString != NULL)
-		    || tagPtr->bgStipple
+		    || (tagPtr->bgStipple != None)
 		    || (tagPtr->fgColor != NULL)
 		    || (tagPtr->selFgColor != NULL)
-		    || tagPtr->fgStipple
+		    || (tagPtr->fgStipple != None)
 		    || (tagPtr->overstrikeString != NULL)
                     || (tagPtr->overstrikeColor != NULL)
 		    || (tagPtr->underlineString != NULL)

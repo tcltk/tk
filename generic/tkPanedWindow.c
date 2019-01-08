@@ -862,7 +862,7 @@ ConfigureSlaves(
 
     index = -1;
     haveLoc = 0;
-    if (options.after != None) {
+    if (options.after != NULL) {
 	tkwin = options.after;
 	haveLoc = 1;
 	for (i = 0; i < pwPtr->numSlaves; i++) {
@@ -871,7 +871,7 @@ ConfigureSlaves(
 		break;
 	    }
 	}
-    } else if (options.before != None) {
+    } else if (options.before != NULL) {
 	tkwin = options.before;
 	haveLoc = 1;
 	for (i = 0; i < pwPtr->numSlaves; i++) {
@@ -1304,7 +1304,7 @@ PanedWindowWorldChanged(
 
     gcValues.background = Tk_3DBorderColor(pwPtr->background)->pixel;
     newGC = Tk_GetGC(pwPtr->tkwin, GCBackground, &gcValues);
-    if (pwPtr->gc != None) {
+    if (pwPtr->gc != NULL) {
 	Tk_FreeGC(pwPtr->display, pwPtr->gc);
     }
     pwPtr->gc = newGC;

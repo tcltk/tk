@@ -371,7 +371,7 @@ ConfigureBitmap(
 	}
     }
 
-    if (!bitmap) {
+    if (bitmap == None) {
 	newGC = NULL;
     } else {
 	gcValues.foreground = fgColor->pixel;
@@ -385,7 +385,7 @@ ConfigureBitmap(
 	}
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (bmapPtr->gc != None) {
+    if (bmapPtr->gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), bmapPtr->gc);
     }
     bmapPtr->gc = newGC;

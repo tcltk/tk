@@ -403,18 +403,18 @@ ImgBmapConfigureInstance(
 		(unsigned) masterPtr->height);
     }
 
-    if (oldMask) {
+    if (oldMask != None) {
 	Tk_FreePixmap(Tk_Display(instancePtr->tkwin), oldMask);
     }
-    if (oldBitmap) {
+    if (oldBitmap != None) {
 	Tk_FreePixmap(Tk_Display(instancePtr->tkwin), oldBitmap);
     }
 
-    if (masterPtr->data) {
+    if (masterPtr->data != NULL) {
 	gcValues.foreground = instancePtr->fg->pixel;
 	gcValues.graphics_exposures = False;
 	mask = GCForeground|GCGraphicsExposures;
-	if (instancePtr->bg) {
+	if (instancePtr->bg != NULL) {
 	    gcValues.background = instancePtr->bg->pixel;
 	    mask |= GCBackground;
 	    if (instancePtr->mask != None) {
@@ -429,7 +429,7 @@ ImgBmapConfigureInstance(
     } else {
 	gc = NULL;
     }
-    if (instancePtr->gc) {
+    if (instancePtr->gc != NULL) {
 	Tk_FreeGC(Tk_Display(instancePtr->tkwin), instancePtr->gc);
     }
     instancePtr->gc = gc;
@@ -441,7 +441,7 @@ ImgBmapConfigureInstance(
      * it clear that this instance cannot be displayed. Then report the error.
      */
 
-    if (instancePtr->gc) {
+    if (instancePtr->gc != NULL) {
 	Tk_FreeGC(Tk_Display(instancePtr->tkwin), instancePtr->gc);
     }
     instancePtr->gc = NULL;
@@ -902,7 +902,7 @@ ImgBmapDisplay(
      * creating the image instance so it can't be displayed.
      */
 
-    if (instancePtr->gc == None) {
+    if (instancePtr->gc == NULL) {
 	return;
     }
 
@@ -973,7 +973,7 @@ ImgBmapFree(
     if (instancePtr->mask != None) {
 	Tk_FreePixmap(display, instancePtr->mask);
     }
-    if (instancePtr->gc != None) {
+    if (instancePtr->gc != NULL) {
 	Tk_FreeGC(display, instancePtr->gc);
     }
     if (instancePtr->masterPtr->instancePtr == instancePtr) {

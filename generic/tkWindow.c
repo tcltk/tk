@@ -474,9 +474,9 @@ GetScreen(
 
 	    dispPtr->lastEventTime = CurrentTime;
 	    dispPtr->bindInfoStale = 1;
-	    dispPtr->cursorFont = 0;
+	    dispPtr->cursorFont = None;
 	    dispPtr->warpWindow = NULL;
-	    dispPtr->multipleAtom = 0;
+	    dispPtr->multipleAtom = None;
 
 	    /*
 	     * By default we do want to collapse motion events in
@@ -2357,7 +2357,7 @@ Tk_IdToWindow(
 	    break;
 	}
     }
-    if (!window) {
+    if (window == None) {
 	return NULL;
     }
 
