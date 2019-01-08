@@ -1002,7 +1002,7 @@ Tk_DeleteOutline(
     Display *display,		/* Display containing window. */
     Tk_Outline *outline)
 {
-    if (outline->gc != None) {
+    if (outline->gc != NULL) {
 	Tk_FreeGC(display, outline->gc);
     }
     if ((unsigned) ABS(outline->dash.number) > sizeof(char *)) {
@@ -1477,7 +1477,7 @@ Tk_CanvasPsOutline(
      * Note that psObj might hold an invalid reference now.
      */
 
-    if (stipple) {
+    if (stipple != None) {
 	Tcl_AppendToObj(GetPostscriptBuffer(interp), "StrokeClip ", -1);
 	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
 	    return TCL_ERROR;

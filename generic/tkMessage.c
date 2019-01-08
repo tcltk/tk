@@ -398,7 +398,7 @@ DestroyMessage(
      * Tk_FreeConfigOptions handle all the standard option-related stuff.
      */
 
-    if (msgPtr->textGC != None) {
+    if (msgPtr->textGC != NULL) {
 	Tk_FreeGC(msgPtr->display, msgPtr->textGC);
     }
     if (msgPtr->textLayout != NULL) {
@@ -536,7 +536,7 @@ MessageWorldChanged(
     gcValues.font = Tk_FontId(msgPtr->tkfont);
     gcValues.foreground = msgPtr->fgColorPtr->pixel;
     gc = Tk_GetGC(msgPtr->tkwin, GCForeground | GCFont, &gcValues);
-    if (msgPtr->textGC != None) {
+    if (msgPtr->textGC != NULL) {
 	Tk_FreeGC(msgPtr->display, msgPtr->textGC);
     }
     msgPtr->textGC = gc;

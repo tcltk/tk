@@ -523,10 +523,10 @@ ConfigureLine(
     } else {
 	newGC = arrowGC = NULL;
     }
-    if (linePtr->outline.gc) {
+    if (linePtr->outline.gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), linePtr->outline.gc);
     }
-    if (linePtr->arrowGC) {
+    if (linePtr->arrowGC != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), linePtr->arrowGC);
     }
     linePtr->outline.gc = newGC;
@@ -611,7 +611,7 @@ DeleteLine(
     if (linePtr->coordPtr != NULL) {
 	ckfree(linePtr->coordPtr);
     }
-    if (linePtr->arrowGC != None) {
+    if (linePtr->arrowGC != NULL) {
 	Tk_FreeGC(display, linePtr->arrowGC);
     }
     if (linePtr->firstArrowPtr != NULL) {
@@ -654,7 +654,7 @@ ComputeLineBbox(
 	state = Canvas(canvas)->canvas_state;
     }
 
-    if (!(linePtr->numPoints) || (state==TK_STATE_HIDDEN)) {
+    if (!(linePtr->numPoints) || (state == TK_STATE_HIDDEN)) {
 	linePtr->header.x1 = -1;
 	linePtr->header.x2 = -1;
 	linePtr->header.y1 = -1;
@@ -667,7 +667,7 @@ ComputeLineBbox(
 	if (linePtr->outline.activeWidth > width) {
 	    width = linePtr->outline.activeWidth;
 	}
-    } else if (state==TK_STATE_DISABLED) {
+    } else if (state == TK_STATE_DISABLED) {
 	if (linePtr->outline.disabledWidth > 0) {
 	    width = linePtr->outline.disabledWidth;
 	}
@@ -840,7 +840,7 @@ DisplayLine(
     int numPoints;
     Tk_State state = itemPtr->state;
 
-    if ((!linePtr->numPoints) || !linePtr->outline.gc) {
+    if (!linePtr->numPoints || (linePtr->outline.gc == NULL)) {
 	return;
     }
 
@@ -2277,20 +2277,20 @@ LineToPostscript(
 	if (linePtr->outline.activeWidth > width) {
 	    width = linePtr->outline.activeWidth;
 	}
-	if (linePtr->outline.activeColor) {
+	if (linePtr->outline.activeColor != NULL) {
 	    color = linePtr->outline.activeColor;
 	}
-	if (linePtr->outline.activeStipple) {
+	if (linePtr->outline.activeStipple != None) {
 	    stipple = linePtr->outline.activeStipple;
 	}
     } else if (state == TK_STATE_DISABLED) {
 	if (linePtr->outline.disabledWidth > 0) {
 	    width = linePtr->outline.disabledWidth;
 	}
-	if (linePtr->outline.disabledColor) {
+	if (linePtr->outline.disabledColor != NULL) {
 	    color = linePtr->outline.disabledColor;
 	}
-	if (linePtr->outline.disabledStipple) {
+	if (linePtr->outline.disabledStipple != None) {
 	    stipple = linePtr->outline.disabledStipple;
 	}
     }
@@ -2324,7 +2324,7 @@ LineToPostscript(
 	}
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
-	if (stipple) {
+	if (stipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 	    Tcl_ResetResult(interp);
 	    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
@@ -2345,7 +2345,7 @@ LineToPostscript(
     Tcl_ResetResult(interp);
     if ((!linePtr->smooth) || (linePtr->numPoints < 3)) {
 	Tk_CanvasPsPath(interp, canvas, linePtr->coordPtr, linePtr->numPoints);
-    } else if (!stipple && linePtr->smooth->postscriptProc) {
+    } else if ((stipple == None) && linePtr->smooth->postscriptProc) {
 	linePtr->smooth->postscriptProc(interp, canvas, linePtr->coordPtr,
 		linePtr->numPoints, linePtr->splineSteps);
     } else {
@@ -2495,7 +2495,7 @@ ArrowheadPostscript(
     Tk_CanvasPsPath(interp, canvas, arrowPtr, PTS_IN_ARROW);
     Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
-    if (stipple) {
+    if (stipple != None) {
 	Tcl_AppendToObj(psObj, "clip ", -1);
 
 	Tcl_ResetResult(interp);
