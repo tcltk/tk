@@ -490,7 +490,7 @@ TkTextTagCmd(
 	    tagPtr->affectsDisplay = 0;
 	    tagPtr->affectsDisplayGeometry = 0;
 	    if ((tagPtr->elideString != NULL)
-		    || (tagPtr->tkfont != None)
+		    || (tagPtr->tkfont != NULL)
 		    || (tagPtr->justifyString != NULL)
 		    || (tagPtr->lMargin1String != NULL)
 		    || (tagPtr->lMargin2String != NULL)

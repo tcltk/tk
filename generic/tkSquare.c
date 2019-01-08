@@ -166,7 +166,7 @@ SquareObjCmd(
     squarePtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(squarePtr->tkwin), SquareWidgetObjCmd,
 	    (ClientData) squarePtr, SquareDeletedProc);
-    squarePtr->gc = None;
+    squarePtr->gc = NULL;
     squarePtr->optionTable = optionTable;
 
     if (Tk_InitOptions(interp, (char *) squarePtr, optionTable, tkwin)

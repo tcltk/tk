@@ -491,7 +491,7 @@ TkMacOSXContainerId(
 	}
     }
     Tcl_Panic("TkMacOSXContainerId couldn't find window");
-    return None;
+    return NULL;
 }
 
 /*
@@ -527,8 +527,8 @@ TkMacOSXGetHostToplevel(
      * TODO: Here we should handle out of process embedding.
      */
 
-    if (contWinPtr == NULL) {
-	return None;
+    if (!contWinPtr) {
+	return NULL;
     }
     return TkMacOSXGetHostToplevel(contWinPtr);
 }

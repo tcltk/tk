@@ -265,9 +265,9 @@ CreateText(
     textPtr->textLayout = NULL;
     textPtr->leftEdge	= 0;
     textPtr->rightEdge	= 0;
-    textPtr->gc		= None;
-    textPtr->selTextGC	= None;
-    textPtr->cursorOffGC = None;
+    textPtr->gc		= NULL;
+    textPtr->selTextGC	= NULL;
+    textPtr->cursorOffGC = NULL;
 
     /*
      * Process the arguments to fill in the item record. Only 1 (list) or 2 (x
@@ -442,7 +442,7 @@ ConfigureText(
 	}
     }
 
-    newGC = newSelGC = None;
+    newGC = newSelGC = NULL;
     if (textPtr->tkfont != NULL) {
 	gcValues.font = Tk_FontId(textPtr->tkfont);
 	mask = GCFont;
@@ -467,11 +467,11 @@ ConfigureText(
 	}
 	newSelGC = Tk_GetGC(tkwin, mask|GCForeground, &gcValues);
     }
-    if (textPtr->gc != None) {
+    if (textPtr->gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->gc);
     }
     textPtr->gc = newGC;
-    if (textPtr->selTextGC != None) {
+    if (textPtr->selTextGC != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->selTextGC);
     }
     textPtr->selTextGC = newSelGC;
@@ -486,9 +486,9 @@ ConfigureText(
 	}
 	newGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
     } else {
-	newGC = None;
+	newGC = NULL;
     }
-    if (textPtr->cursorOffGC != None) {
+    if (textPtr->cursorOffGC != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->cursorOffGC);
     }
     textPtr->cursorOffGC = newGC;
@@ -572,13 +572,13 @@ DeleteText(
     }
 
     Tk_FreeTextLayout(textPtr->textLayout);
-    if (textPtr->gc != None) {
+    if (textPtr->gc != NULL) {
 	Tk_FreeGC(display, textPtr->gc);
     }
-    if (textPtr->selTextGC != None) {
+    if (textPtr->selTextGC != NULL) {
 	Tk_FreeGC(display, textPtr->selTextGC);
     }
-    if (textPtr->cursorOffGC != None) {
+    if (textPtr->cursorOffGC != NULL) {
 	Tk_FreeGC(display, textPtr->cursorOffGC);
     }
 }
@@ -740,7 +740,7 @@ DisplayCanvText(
 	}
     }
 
-    if (textPtr->gc == None) {
+    if (textPtr->gc == NULL) {
 	return;
     }
 
@@ -830,7 +830,7 @@ DisplayCanvText(
 			drawableX, drawableY,
 			textInfoPtr->insertWidth, height,
 			textInfoPtr->insertBorderWidth, TK_RELIEF_RAISED);
-	    } else if (textPtr->cursorOffGC != None) {
+	    } else if (textPtr->cursorOffGC != NULL) {
 		/*
 		 * Redraw the background over the area of the cursor, even
 		 * though the cursor is turned off. This guarantees that the

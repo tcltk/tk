@@ -424,9 +424,9 @@ ImgBmapConfigureInstance(
 	}
 	gc = Tk_GetGC(instancePtr->tkwin, mask, &gcValues);
     } else {
-	gc = None;
+	gc = NULL;
     }
-    if (instancePtr->gc != None) {
+    if (instancePtr->gc != NULL) {
 	Tk_FreeGC(Tk_Display(instancePtr->tkwin), instancePtr->gc);
     }
     instancePtr->gc = gc;
@@ -438,10 +438,10 @@ ImgBmapConfigureInstance(
      * it clear that this instance cannot be displayed. Then report the error.
      */
 
-    if (instancePtr->gc != None) {
+    if (instancePtr->gc != NULL) {
 	Tk_FreeGC(Tk_Display(instancePtr->tkwin), instancePtr->gc);
     }
-    instancePtr->gc = None;
+    instancePtr->gc = NULL;
     Tcl_AddErrorInfo(masterPtr->interp, "\n    (while configuring image \"");
     Tcl_AddErrorInfo(masterPtr->interp, Tk_NameOfImage(masterPtr->tkMaster));
     Tcl_AddErrorInfo(masterPtr->interp, "\")");
@@ -836,7 +836,7 @@ ImgBmapGet(
     instancePtr->bg = NULL;
     instancePtr->bitmap = None;
     instancePtr->mask = None;
-    instancePtr->gc = None;
+    instancePtr->gc = NULL;
     instancePtr->nextPtr = masterPtr->instancePtr;
     masterPtr->instancePtr = instancePtr;
     ImgBmapConfigureInstance(instancePtr);
@@ -890,7 +890,7 @@ ImgBmapDisplay(
      * creating the image instance so it can't be displayed.
      */
 
-    if (instancePtr->gc == None) {
+    if (instancePtr->gc == NULL) {
 	return;
     }
 
@@ -961,7 +961,7 @@ ImgBmapFree(
     if (instancePtr->mask != None) {
 	Tk_FreePixmap(display, instancePtr->mask);
     }
-    if (instancePtr->gc != None) {
+    if (instancePtr->gc != NULL) {
 	Tk_FreeGC(display, instancePtr->gc);
     }
     if (instancePtr->masterPtr->instancePtr == instancePtr) {
