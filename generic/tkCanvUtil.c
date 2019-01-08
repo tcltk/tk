@@ -959,7 +959,7 @@ void
 Tk_CreateOutline(
     Tk_Outline *outline)	/* Outline structure to be filled in. */
 {
-    outline->gc = None;
+    outline->gc = NULL;
     outline->width = 1.0;
     outline->activeWidth = 0.0;
     outline->disabledWidth = 0.0;
@@ -1000,7 +1000,7 @@ Tk_DeleteOutline(
     Display *display,		/* Display containing window. */
     Tk_Outline *outline)
 {
-    if (outline->gc != None) {
+    if (outline->gc != NULL) {
 	Tk_FreeGC(display, outline->gc);
     }
     if ((unsigned int)ABS(outline->dash.number) > sizeof(char *)) {
