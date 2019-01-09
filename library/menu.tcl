@@ -274,8 +274,13 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     if {[tk windowingsystem] ne "aqua"} {
 	set Priv(relief) [$w cget -relief]
 	$w configure -relief raised
+	set xoffset {0 0 0 0 0}
+	set yoffset {0 0 0 0 0}
     } else {
 	$w configure -state active
+	# Compensate for offsets created by the macOS window manager.
+	set xoffset {9 9 18 9 0}
+	set yoffset {6 13 13 13 9}
     }
 
     set Priv(postedMb) $w
@@ -291,22 +296,26 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     if {[catch {
 	switch [$w cget -direction] {
 	    above {
-		set x [winfo rootx $w]
+		set x [expr {[winfo rootx $w]}]
 		set y [expr {[winfo rooty $w] - [winfo reqheight $menu]}]
 		# if we go offscreen to the top, show as 'below'
 		if {$y < [winfo vrooty $w]} {
 		    set y [expr {[winfo vrooty $w] + [winfo rooty $w] + [winfo reqheight $w]}]
 		}
+		incr x [lindex $xoffset 0]
+		incr y [lindex $yoffset 0]
 		PostOverPoint $menu $x $y
 	    }
 	    below {
-		set x [winfo rootx $w]
+		set x [expr {[winfo rootx $w]}]
 		set y [expr {[winfo rooty $w] + [winfo height $w]}]
 		# if we go offscreen to the bottom, show as 'above'
 		set mh [winfo reqheight $menu]
 		if {($y + $mh) > ([winfo vrooty $w] + [winfo vrootheight $w])} {
 		    set y [expr {[winfo vrooty $w] + [winfo vrootheight $w] + [winfo rooty $w] - $mh}]
 		}
+		incr x [lindex $xoffset 1]
+		incr y [lindex $yoffset 1]
 		PostOverPoint $menu $x $y
 	    }
 	    left {
@@ -325,6 +334,8 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 			        + [$menu yposition [expr {$entry+1}]])/2}]
 		    }
 		}
+		incr x [lindex $xoffset 2]
+		incr y [lindex $yoffset 2]
 		PostOverPoint $menu $x $y
 		if {$entry ne "" \
 			&& [$menu entrycget $entry -state] ne "disabled"} {
@@ -348,6 +359,8 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 			        + [$menu yposition [expr {$entry+1}]])/2}]
 		    }
 		}
+		incr x [lindex $xoffset 3]
+		incr y [lindex $yoffset 3]
 		PostOverPoint $menu $x $y
 		if {$entry ne "" \
 			&& [$menu entrycget $entry -state] ne "disabled"} {
@@ -356,6 +369,8 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 		}
 	    }
 	    default {
+		incr x [lindex $xoffset 4]
+		incr y [lindex $yoffset 4]
 		if {[$w cget -indicatoron]} {
 		    if {$y eq ""} {
 			set x [expr {[winfo rootx $w] + [winfo width $w]/2}]
