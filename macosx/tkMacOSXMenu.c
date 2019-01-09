@@ -799,7 +799,7 @@ TkpPostMenu(
 
     int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
     NSView *view = [win contentView];
-    NSRect frame = NSMakeRect(x + 9, tkMacOSXZeroScreenHeight - y - 9, 1, 1);
+    NSRect frame = NSMakeRect(x, tkMacOSXZeroScreenHeight - y, 1, 1);
 
     frame.origin = [view convertPoint:
 	    [win tkConvertPointFromScreen:frame.origin] fromView:nil];
@@ -1092,9 +1092,9 @@ TkpComputeStandardMenuGeometry(
     int modifierCharWidth, menuModifierCharWidth;
     int x, y, modifierWidth, labelWidth, indicatorSpace;
     int windowWidth, windowHeight, accelWidth;
-    int i, j, lastColumnBreak, maxWidth;
+    int i, maxWidth;
     int entryWidth, maxIndicatorSpace, borderWidth, activeBorderWidth;
-    TkMenuEntry *mePtr, *columnEntryPtr;
+    TkMenuEntry *mePtr;
     int haveAccel = 0;
 
     if (menuPtr->tkwin == NULL) {
@@ -1106,7 +1106,7 @@ TkpComputeStandardMenuGeometry(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
     x = y = borderWidth;
-    windowHeight = maxWidth = lastColumnBreak = 0;
+    windowHeight = maxWidth = 0;
     maxIndicatorSpace = 0;
 
     /*
@@ -1130,9 +1130,12 @@ TkpComputeStandardMenuGeometry(
 	    break;
 	}
     }
-
+    
     for (i = 0; i < menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
+	if (mePtr->type == TEAROFF_ENTRY) {
+	    continue;
+	}
 	if (mePtr->fontPtr == NULL) {
 	    tkfont = menuFont;
 	    fmPtr = &menuMetrics;
@@ -1143,26 +1146,8 @@ TkpComputeStandardMenuGeometry(
 	    fmPtr = &entryMetrics;
 	    modifierCharWidth = ModifierCharWidth(tkfont);
 	}
-
-	if ((i > 0) && mePtr->columnBreak) {
-	    if (maxIndicatorSpace != 0) {
-		maxIndicatorSpace += 2;
-	    }
-	    for (j = lastColumnBreak; j < i; j++) {
-		columnEntryPtr = menuPtr->entries[j];
-		columnEntryPtr->indicatorSpace = maxIndicatorSpace;
-		columnEntryPtr->width = maxIndicatorSpace + maxWidth
-			+ 2 * activeBorderWidth;
-		columnEntryPtr->x = x;
-		columnEntryPtr->entryFlags &= ~ENTRY_LAST_COLUMN;
-	    }
-	    x += maxIndicatorSpace + maxWidth + 2 * activeBorderWidth;
-	    maxWidth = maxIndicatorSpace = 0;
-	    lastColumnBreak = i;
-	    y = borderWidth;
-	}
 	accelWidth = modifierWidth = indicatorSpace = 0;
-	if (mePtr->type == SEPARATOR_ENTRY || mePtr->type == TEAROFF_ENTRY) {
+	if (mePtr->type == SEPARATOR_ENTRY) {
 	    mePtr->height = menuSeparatorHeight;
 	} else {
 	    /*
@@ -1176,16 +1161,16 @@ TkpComputeStandardMenuGeometry(
 
 	    NSMenuItem *menuItem = (NSMenuItem *) mePtr->platformEntryData;
 	    int haveImage = 0, width = 0, height = 0;
-
 	    if (mePtr->image) {
 		Tk_SizeOfImage(mePtr->image, &width, &height);
 		haveImage = 1;
+		height += 2; /* tweak */
 	    } else if (mePtr->bitmapPtr) {
 		Pixmap bitmap = Tk_GetBitmapFromObj(menuPtr->tkwin,
 			mePtr->bitmapPtr);
-
 		Tk_SizeOfBitmap(menuPtr->display, bitmap, &width, &height);
 		haveImage = 1;
+		height += 2; /* tweak */
 	    }
 	    if (!haveImage || (mePtr->compound != COMPOUND_NONE)) {
 		NSAttributedString *attrTitle = [menuItem attributedTitle];
@@ -1197,11 +1182,8 @@ TkpComputeStandardMenuGeometry(
 		    size = [[menuItem title] sizeWithAttributes:
 			TkMacOSXNSFontAttributesForFont(tkfont)];
 		}
-		size.width += menuTextLeadingEdgeMargin +
-			menuTextTrailingEdgeMargin;
-		if (size.height < fmPtr->linespace) {
-		    size.height = fmPtr->linespace;
-		}
+		size.width += menuTextLeadingEdgeMargin + menuTextTrailingEdgeMargin;
+		size.height -= 1; /* tweak */
 		if (haveImage && (mePtr->compound != COMPOUND_NONE)) {
 		    int margin = width + menuIconTrailingEdgeMargin;
 
@@ -1219,7 +1201,6 @@ TkpComputeStandardMenuGeometry(
 	    }
 	    labelWidth = width + menuItemExtraWidth;
 	    mePtr->height = height + menuItemExtraHeight;
-
 	    if (mePtr->type == CASCADE_ENTRY) {
 		modifierWidth = modifierCharWidth;
 	    } else if (mePtr->accelLength == 0) {
@@ -1250,8 +1231,10 @@ TkpComputeStandardMenuGeometry(
 	    if (entryWidth > maxWidth) {
 		maxWidth = entryWidth;
 	    }
+	    menuPtr->entries[i]->width = entryWidth;
 	    mePtr->height += 2 * activeBorderWidth;
 	}
+	mePtr->x = x;
 	mePtr->y = y;
 	y += menuPtr->entries[i]->height + borderWidth;
 	if (y > windowHeight) {
@@ -1259,14 +1242,6 @@ TkpComputeStandardMenuGeometry(
 	}
     }
 
-    for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
-	columnEntryPtr = menuPtr->entries[j];
-	columnEntryPtr->indicatorSpace = maxIndicatorSpace;
-	columnEntryPtr->width = maxIndicatorSpace + maxWidth
-		+ 2 * activeBorderWidth;
-	columnEntryPtr->x = x;
-	columnEntryPtr->entryFlags |= ENTRY_LAST_COLUMN;
-    }
     windowWidth = x + maxIndicatorSpace + maxWidth
 	    + 2 * activeBorderWidth + borderWidth;
     windowHeight += borderWidth;
