@@ -1183,6 +1183,19 @@ test scale-14.12 {RoundValueToResolution procedure} -body {
 } -result {168.75}
 destroy .s
 
+test scale-14.13 {RoundValueToResolution procedure, round-off errors} -setup {
+    # see [220665ffff], and duplicates [220265ffff] and [779559ffff]
+    set x NotSet
+    pack [scale .s -orient horizontal -resolution .1 -from -180 -to 180 -command "set x"]
+    update
+} -body {
+    .s configure -background red
+    update
+    set x
+} -cleanup {
+    destroy .s
+} -result {NotSet}
+
 test scale-14a.1 {RoundValueToResolution, RoundIntervalToResolution procedures} -setup {
     pack [scale .s -orient horizontal]
     update
