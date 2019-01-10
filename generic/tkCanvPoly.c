@@ -273,7 +273,7 @@ CreatePolygon(
     polyPtr->fillStipple = None;
     polyPtr->activeFillStipple = None;
     polyPtr->disabledFillStipple = None;
-    polyPtr->fillGC = None;
+    polyPtr->fillGC = NULL;
     polyPtr->smooth = NULL;
     polyPtr->splineSteps = 12;
     polyPtr->autoClosed = 0;
@@ -478,9 +478,9 @@ ConfigurePolygon(
 	mask |= GCCapStyle|GCJoinStyle;
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = None;
+	newGC = NULL;
     }
-    if (polyPtr->outline.gc != None) {
+    if (polyPtr->outline.gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), polyPtr->outline.gc);
     }
     polyPtr->outline.gc = newGC;
@@ -504,7 +504,7 @@ ConfigurePolygon(
     }
 
     if (color == NULL) {
-	newGC = None;
+	newGC = NULL;
     } else {
 	gcValues.foreground = color->pixel;
 	mask = GCForeground;
@@ -524,7 +524,7 @@ ConfigurePolygon(
 #endif
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (polyPtr->fillGC != None) {
+    if (polyPtr->fillGC != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), polyPtr->fillGC);
     }
     polyPtr->fillGC = newGC;
@@ -590,7 +590,7 @@ DeletePolygon(
     if (polyPtr->disabledFillStipple != None) {
 	Tk_FreeBitmap(display, polyPtr->disabledFillStipple);
     }
-    if (polyPtr->fillGC != None) {
+    if (polyPtr->fillGC != NULL) {
 	Tk_FreeGC(display, polyPtr->fillGC);
     }
 }
@@ -694,7 +694,7 @@ ComputePolygonBbox(
 	}
     }
 
-    if (polyPtr->outline.gc != None) {
+    if (polyPtr->outline.gc != NULL) {
 	tsoffset = &polyPtr->outline.tsoffset;
 	if (tsoffset) {
 	    if (tsoffset->flags & TK_OFFSET_INDEX) {
@@ -836,11 +836,11 @@ TkFillPolygon(
      * allocated.
      */
 
-    if (gc != None && numPoints > 3) {
+    if (gc != NULL && numPoints > 3) {
 	XFillPolygon(display, drawable, gc, pointPtr, numPoints, Complex,
 		CoordModeOrigin);
     }
-    if (outlineGC != None) {
+    if (outlineGC != NULL) {
 	XDrawLines(display, drawable, outlineGC, pointPtr, numPoints,
 		CoordModeOrigin);
     }
@@ -881,9 +881,9 @@ DisplayPolygon(
     Pixmap stipple = polyPtr->fillStipple;
     double linewidth = polyPtr->outline.width;
 
-    if (((polyPtr->fillGC == None) && (polyPtr->outline.gc == None)) ||
+    if (((polyPtr->fillGC == NULL) && (polyPtr->outline.gc == NULL)) ||
 	    (polyPtr->numPoints < 1) ||
-	    (polyPtr->numPoints < 3 && polyPtr->outline.gc == None)) {
+	    (polyPtr->numPoints < 3 && polyPtr->outline.gc == NULL)) {
 	return;
     }
 
@@ -911,7 +911,7 @@ DisplayPolygon(
      * reset the offset when done, since the GC is supposed to be read-only.
      */
 
-    if ((stipple != None) && (polyPtr->fillGC != None)) {
+    if ((stipple != None) && (polyPtr->fillGC != NULL)) {
 	Tk_TSOffset *tsoffset = &polyPtr->tsoffset;
 	int w = 0, h = 0;
 	int flags = tsoffset->flags;
@@ -973,11 +973,11 @@ DisplayPolygon(
 	}
 	numPoints = polyPtr->smooth->coordProc(canvas, polyPtr->coordPtr,
 		polyPtr->numPoints, polyPtr->splineSteps, pointPtr, NULL);
-	if (polyPtr->fillGC != None) {
+	if (polyPtr->fillGC != NULL) {
 	    XFillPolygon(display, drawable, polyPtr->fillGC, pointPtr,
 		    numPoints, Complex, CoordModeOrigin);
 	}
-	if (polyPtr->outline.gc != None) {
+	if (polyPtr->outline.gc != NULL) {
 	    XDrawLines(display, drawable, polyPtr->outline.gc, pointPtr,
 		    numPoints, CoordModeOrigin);
 	}
@@ -986,7 +986,7 @@ DisplayPolygon(
 	}
     }
     Tk_ResetOutlineGC(canvas, itemPtr, &polyPtr->outline);
-    if ((stipple != None) && (polyPtr->fillGC != None)) {
+    if ((stipple != None) && (polyPtr->fillGC != NULL)) {
 	XSetTSOrigin(display, polyPtr->fillGC, 0, 0);
     }
 }
@@ -1299,7 +1299,7 @@ PolygonToPoint(
     if (bestDist <= 0.0) {
 	goto donepoint;
     }
-    if ((polyPtr->outline.gc != None) && (polyPtr->joinStyle == JoinRound)) {
+    if ((polyPtr->outline.gc != NULL) && (polyPtr->joinStyle == JoinRound)) {
 	dist = bestDist - radius;
 	if (dist <= 0.0) {
 	    bestDist = 0.0;
@@ -1309,7 +1309,7 @@ PolygonToPoint(
 	}
     }
 
-    if ((polyPtr->outline.gc == None) || (width <= 1)) {
+    if ((polyPtr->outline.gc == NULL) || (width <= 1)) {
 	goto donepoint;
     }
 
@@ -1515,7 +1515,7 @@ PolygonToArea(
 	goto donearea;
     }
 
-    if (polyPtr->outline.gc == None) {
+    if (polyPtr->outline.gc == NULL) {
 	goto donearea;
     }
 

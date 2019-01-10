@@ -157,11 +157,15 @@ XMapWindow(
 	     * the app to activate too early can make the menu bar
 	     * unresponsive.
 	     */
+	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
+	    [win setExcludedFromWindowsMenu:NO];
 	    [NSApp activateIgnoringOtherApps:NO];
+	    [[win contentView] setNeedsDisplay:YES];
 	    if ( [win canBecomeKeyWindow] ) {
 		[win makeKeyAndOrderFront:NSApp];
+	    } else {
+		[win orderFrontRegardless];
 	    }
-	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
 	} else {
 	    /*
 	     * Rebuild the container's clipping region and display

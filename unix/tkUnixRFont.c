@@ -937,7 +937,7 @@ Tk_DrawChars(
 
   doUnderlineStrikeout:
     if (tsdPtr->clipRegion != None) {
-	XftDrawSetClip(fontPtr->ftDraw, None);
+	XftDrawSetClip(fontPtr->ftDraw, NULL);
     }
     if (fontPtr->font.fa.underline != 0) {
 	XFillRectangle(display, drawable, gc, xStart,
@@ -1183,7 +1183,7 @@ TkDrawAngledChars(
 
   doUnderlineStrikeout:
     if (tsdPtr->clipRegion != None) {
-	XftDrawSetClip(fontPtr->ftDraw, None);
+	XftDrawSetClip(fontPtr->ftDraw, NULL);
     }
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {
 	XPoint points[5];
