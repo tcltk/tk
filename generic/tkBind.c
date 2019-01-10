@@ -4384,7 +4384,7 @@ DoWarp(
 
     if (dispPtr->warpWindow) {
 	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = None;
+	dispPtr->warpWindow = NULL;
     }
     dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }

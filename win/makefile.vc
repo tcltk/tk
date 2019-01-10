@@ -66,8 +66,8 @@
 #       c:\tcl_src\win\>nmake -f makefile.vc test
 # Install Tk in location specified by INSTALLDIR macro
 #       c:\tcl_src\win\>nmake -f makefile.vc install INSTALLDIR=c:\progra~1\tcl
-# Build release with PDF files 
-#       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=pdbs 
+# Build release with PDF files
+#       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=pdbs
 # Build debug version
 #       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=symbols
 #

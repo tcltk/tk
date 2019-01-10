@@ -347,7 +347,7 @@ XGetImageZPixmap(
 
     size = sizeof(BITMAPINFO);
     if (depth <= 8) {
-	size += sizeof(unsigned short) * (1 << depth);
+	size += sizeof(unsigned short) << depth;
     }
     bmInfo = ckalloc(size);
 
