@@ -125,8 +125,8 @@ enum {
 	return theEvent; /* Give up.  No window for this event. */
     } else {
 	winPtr = (TkWindow *)tkwin;
-    }	
-    
+    }
+
     local.x -= winPtr->wmInfoPtr->xInParent;
     local.y -= winPtr->wmInfoPtr->yInParent;
 

@@ -1590,7 +1590,7 @@ TkImgDisposeInstance(
     if (instancePtr->pixels != None) {
 	Tk_FreePixmap(instancePtr->display, instancePtr->pixels);
     }
-    if (instancePtr->gc != None) {
+    if (instancePtr->gc != NULL) {
 	Tk_FreeGC(instancePtr->display, instancePtr->gc);
     }
     if (instancePtr->imagePtr != NULL) {

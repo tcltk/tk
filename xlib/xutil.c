@@ -9,12 +9,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include <stdlib.h>
-#include <tk.h>
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
+#include "tkInt.h"
 
 /*
  *----------------------------------------------------------------------

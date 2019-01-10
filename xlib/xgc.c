@@ -50,7 +50,7 @@
 static TkpClipMask *AllocClipMask(GC gc) {
     TkpClipMask *clip_mask = (TkpClipMask*) gc->clip_mask;
 
-    if (clip_mask == None) {
+    if (clip_mask == NULL) {
 	clip_mask = ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
 #ifdef MAC_OSX_TK
@@ -125,7 +125,7 @@ XCreateGC(
 
     gp = ckalloc(sizeof(XGCValues) + MAX_DASH_LIST_SIZE + gcCacheSize);
     if (!gp) {
-	return None;
+	return NULL;
     }
 
 #define InitField(name,maskbit,default) \
@@ -268,7 +268,7 @@ int XFreeGC(
     Display *d,
     GC gc)
 {
-    if (gc != None) {
+    if (gc != NULL) {
 	FreeClipMask(gc);
 	TkpFreeGCCache(gc);
 	ckfree(gc);
@@ -464,8 +464,8 @@ TkSetRegion(
     GC gc,
     TkRegion r)
 {
-    if (r == None) {
-	Tcl_Panic("must not pass None to TkSetRegion for compatibility with X11; use XSetClipMask instead");
+    if (r == NULL) {
+	Tcl_Panic("must not pass NULL to TkSetRegion for compatibility with X11; use XSetClipMask instead");
     } else {
 	TkpClipMask *clip_mask = AllocClipMask(gc);
 

@@ -627,7 +627,7 @@ FrontWindowAtPoint(
 	     * title bar are not considered to be contained in the
 	     * window.
 	     */
-	    
+
 	    if ((wmPtr->hints.initial_state == NormalState ||
 		 wmPtr->hints.initial_state == ZoomState)) {
 		if (NSMouseInRect(p, contentFrame, NO)) {
@@ -2633,7 +2633,7 @@ WmIconwindowCmd(
 	    /*
 	     * The old icon should be withdrawn.
 	     */
-	    
+
 	    TkpWmSetState(oldIcon, WithdrawnState);
 	    [win orderOut:nil];
     	    [win setExcludedFromWindowsMenu:YES];
@@ -4407,7 +4407,7 @@ Tk_CoordsToWindow(
 				 * that contains point. */
     int x, y;			/* Coordinates in winPtr. */
     int tmpx, tmpy, bd;
-    
+
     /*
      * Step 1: find the top-level window that contains the desired point.
      */
