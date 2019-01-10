@@ -719,6 +719,10 @@ static void		RemovePatSeqFromLookup(LookupTables *lookupTables, PatSeq *psPtr);
 static void		RemovePatSeqFromPromotionLists(Tk_BindingTable bindPtr, PatSeq *psPtr);
 static PatSeq *		DeletePatSeq(PatSeq *psPtr);
 static void		InsertPatSeq(LookupTables *lookupTables, PatSeq *psPtr);
+#if SUPPORT_DEBUGGING
+void			TkpDumpPS(const PatSeq *psPtr);
+void			TkpDumpPSList(const PSList *psList);
+#endif
 
 /*
  * Some useful helper functions.
@@ -2044,6 +2048,9 @@ IsBetterMatch(
     }
 
 #if PREFER_MOST_SPECIALIZED_EVENT
+    if (fstMatchPtr->numPats > sndMatchPtr->numPats) { return true; }
+    if (fstMatchPtr->numPats < sndMatchPtr->numPats) { return false; }
+
     for (i = patIndex; i >= 0; --i) {
 	unsigned fstCount = GetCount(fstMatchPtr, i);
 	unsigned sndCount = GetCount(sndMatchPtr, i);
@@ -2055,11 +2062,6 @@ IsBetterMatch(
 
     if (sndMatchPtr->count > fstMatchPtr->count) { return true; }
     if (sndMatchPtr->count < fstMatchPtr->count) { return false; }
-
-#if PREFER_MOST_SPECIALIZED_EVENT
-    if (fstMatchPtr->numPats > sndMatchPtr->numPats) { return true; }
-    if (fstMatchPtr->numPats < sndMatchPtr->numPats) { return false; }
-#endif
 
     return sndMatchPtr->number > fstMatchPtr->number;
 }
@@ -2637,12 +2639,19 @@ Compare(
 
     if (!fstMatchPtr) { return +1; }
 
+    assert(patIndex < fstMatchPtr->numPats);
+    assert(patIndex < sndMatchPtr->numPats);
+
     for (i = patIndex; i >= 0; --i) {
 	unsigned long fstInfo = GetInfo(fstMatchPtr, i);
 	unsigned long sndInfo = GetInfo(sndMatchPtr, i);
 
 	if (sndInfo && !fstInfo) { return +1; }
 	if (!sndInfo && fstInfo) { return -1; }
+    }
+
+    if (patIndex == fstMatchPtr->numPats - 1 && patIndex == sndMatchPtr->numPats - 1) {
+	return (int) sndMatchPtr->count - (int) fstMatchPtr->count;
     }
 
     return (int) GetCount(sndMatchPtr, patIndex) - (int) GetCount(fstMatchPtr, patIndex);
@@ -2725,11 +2734,19 @@ MatchPatterns(
 				 * This is also a final pattern.
 				 * We always prefer the pattern with better match.
 				 *
-				 * In case of equality: choose this match if modifier states is
-				 * not a subset of those in best match.
+				 * In case of equal modifier masks:
+				 *     this match has same mask as best match:
+				 *         choose this match if number is higher
+				 *     otherwise:
+				 *         choose this match if modifier states is not a subset
+				 *         of those in best match.
 				 */
 
-				if (cmp > 0 || (cmp == 0 && !IsSubsetOf(modMask, bestModMask))) {
+				if (cmp > 0
+				    || (cmp == 0
+					&& (modMask == bestModMask
+					    ? bestPtr->number < psPtr->number
+					    : !IsSubsetOf(modMask, bestModMask)))) {
 				    bestPtr = psPtr;
 				    bestModMask = modMask;
 				    if (physPtrPtr) {
