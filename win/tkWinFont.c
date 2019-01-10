@@ -988,7 +988,7 @@ Tk_MeasureChars(
     }
 
     *lengthPtr = curX;
-    return p - source;
+    return (int)(p - source);
 }
 
 /*
