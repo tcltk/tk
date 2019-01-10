@@ -373,7 +373,7 @@ TkpInit(
      * if displayed before main window. This places console in background and it
      * accepts input after being raised.
      */
-		     
+
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 
     return TCL_OK;

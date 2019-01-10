@@ -1037,7 +1037,7 @@ TkTextUpdateTagDisplayFlags(
     tagPtr->affectsDisplayGeometry = false;
 
     if (tagPtr->elideString
-	    || tagPtr->tkfont != None
+	    || tagPtr->tkfont
 	    || tagPtr->justifyString
 	    || tagPtr->lMargin1String
 	    || tagPtr->lMargin2String
@@ -1373,7 +1373,7 @@ TkConfigureTag(
     if (tagPtr->affectsDisplay) {
 	affectsDisplay = true;
     }
-    if (tagPtr->tkfont != None && tagPtr->tkfont != textPtr->tkfont) {
+    if (tagPtr->tkfont != NULL && tagPtr->tkfont != textPtr->tkfont) {
 	Tk_FontMetrics fm;
 
 	Tk_GetFontMetrics(tagPtr->tkfont, &fm);
@@ -1450,7 +1450,7 @@ TkTextFontHeightChanged(
 	    hPtr = Tcl_NextHashEntry(&search)) {
 	const TkTextTag *tagPtr = Tcl_GetHashValue(hPtr);
 
-	if (tagPtr->tkfont != None && tagPtr->tkfont != textPtr->tkfont) {
+	if (tagPtr->tkfont != NULL && tagPtr->tkfont != textPtr->tkfont) {
 	    Tk_FontMetrics fm;
 
 	    Tk_GetFontMetrics(tagPtr->tkfont, &fm);

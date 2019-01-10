@@ -1194,12 +1194,12 @@ TkAboutDlg(void)
     NSString *year = [dateFormatter stringFromDate:[NSDate date]];
 
     [dateFormatter release];
-   
+
     /*
      * This replaces the old about dialog with a standard alert that displays
      * correctly on 10.14.
      */
-    
+
     NSString *version =  @"Tcl " TCL_PATCH_LEVEL " & Tk " TCL_PATCH_LEVEL;
     NSString *url =   @"www.tcl-lang.org";
     NSTextView *credits = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,300,300)];

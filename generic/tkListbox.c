@@ -542,13 +542,13 @@ Tk_ListboxObjCmd(
     listPtr->itemAttrTable	 = ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->itemAttrTable, TCL_ONE_WORD_KEYS);
     listPtr->relief		 = TK_RELIEF_RAISED;
-    listPtr->textGC		 = None;
-    listPtr->selFgColorPtr	 = None;
-    listPtr->selTextGC		 = None;
+    listPtr->textGC		 = NULL;
+    listPtr->selFgColorPtr	 = NULL;
+    listPtr->selTextGC		 = NULL;
     listPtr->fullLines		 = 1;
     listPtr->xScrollUnit	 = 1;
     listPtr->exportSelection	 = 1;
-    listPtr->cursor		 = None;
+    listPtr->cursor		 = NULL;
     listPtr->state		 = STATE_NORMAL;
     listPtr->gray		 = None;
     listPtr->justify             = TK_JUSTIFY_LEFT;
@@ -1489,10 +1489,10 @@ DestroyListbox(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-    if (listPtr->textGC != None) {
+    if (listPtr->textGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->textGC);
     }
-    if (listPtr->selTextGC != None) {
+    if (listPtr->selTextGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->selTextGC);
     }
     if (listPtr->gray != None) {
@@ -1792,7 +1792,7 @@ ListboxWorldChanged(
 
     gcValues.font = Tk_FontId(listPtr->tkfont);
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
-    if (listPtr->textGC != None) {
+    if (listPtr->textGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->textGC);
     }
     listPtr->textGC = gc;
@@ -1803,7 +1803,7 @@ ListboxWorldChanged(
     gcValues.font = Tk_FontId(listPtr->tkfont);
     mask = GCForeground | GCFont;
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
-    if (listPtr->selTextGC != None) {
+    if (listPtr->selTextGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->selTextGC);
     }
     listPtr->selTextGC = gc;

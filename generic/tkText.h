@@ -1324,7 +1324,7 @@ typedef struct TkText {
     				 * has the focus. <= 0 means don't draw a highlight. */
     XColor *highlightBgColorPtr;/* Color for drawing traversal highlight area when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
-    Tk_Cursor cursor;		/* Current cursor for window, or None. */
+    Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
     XColor *fgColor;		/* Default foreground color for text. */
     XColor *eolColor;		/* Foreground color for end of line symbol, can be NULL. */
     XColor *eotColor;		/* Foreground color for end of text symbol, can be NULL. */

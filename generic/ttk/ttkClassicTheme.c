@@ -6,8 +6,6 @@
  */
 
 #include "tkInt.h"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include "ttkTheme.h"
 
 #define DEFAULT_BORDERWIDTH "2"
