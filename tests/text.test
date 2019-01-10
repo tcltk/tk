@@ -3101,7 +3101,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     for {set i 1} {$i < 300} {incr i} {
         append content [string repeat "$i " 50] \n
     }
-    # Sync the widget and process all <<WidgetViewSync>> events before binding. 
+    # Sync the widget and process all <<WidgetViewSync>> events before binding.
     .top.yt sync
     update
     bind .top.yt <<WidgetViewSync>> {lappend res Sync:%d}

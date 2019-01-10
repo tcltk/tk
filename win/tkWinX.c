@@ -539,7 +539,7 @@ TkpOpenDisplay(
 
     twdPtr = ckalloc(sizeof(TkWinDrawable));
     if (twdPtr == NULL) {
-	return None;
+	return NULL;
     }
     twdPtr->type = TWD_WINDOW;
     twdPtr->window.winPtr = NULL;
