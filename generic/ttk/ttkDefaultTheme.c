@@ -5,8 +5,6 @@
  */
 
 #include "tkInt.h"
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
 #include "ttkTheme.h"
 
 #if defined(_WIN32)

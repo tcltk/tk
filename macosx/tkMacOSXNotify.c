@@ -84,7 +84,7 @@ InspectQueueRestrictProc(
     const char *name;
     long serial = ve->serial;
     long time = eventPtr->xkey.time;
-    
+
     if (eventPtr->type == VirtualEvent) {
 	name = ve->name;
     } else {
@@ -137,14 +137,14 @@ void DebugPrintQueue(void)
 /*
  * Since the contentView is the first responder for a Tk Window, it is
  * responsible for sending events up the responder chain.  We also check
- * the pasteboard here. 
+ * the pasteboard here.
  */
 - (void) sendEvent: (NSEvent *) theEvent
 {
     [super sendEvent:theEvent];
     [NSApp tkCheckPasteboard];
 #ifdef TK_MAC_DEBUG_EVENTS
-    fprintf(stderr, "Sending event of type %d\n", (int)[theEvent type]); 
+    fprintf(stderr, "Sending event of type %d\n", (int)[theEvent type]);
     DebugPrintQueue();
 #endif
 }

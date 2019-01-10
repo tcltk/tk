@@ -809,7 +809,7 @@ test unixWm-22.2 {Tk_WmCmd procedure, "iconbitmap" option} {unix testwrapper} {
     lappend result [wm iconbitmap .t] $bit
 } {{} questhead 0x4 {} 0x0}
 if {[tk windowingsystem] == "aqua"} {
-    set result_22_3 {0 {}} 
+    set result_22_3 {0 {}}
 } else {
     set result_22_3 {1 {bitmap "bad-bitmap" not defined}}
 }
@@ -1782,7 +1782,7 @@ deleteWindows
 wm withdraw .
 if {[tk windowingsystem] == "aqua"} {
     # Modern mac windows have no border.
-    set result_50_1 {{} {} .t .t .t2 {} .t2 .t .t} 
+    set result_50_1 {{} {} .t .t .t2 {} .t2 .t .t}
 } else {
     # Windows are assumed to have a border (invisible in Gnome 3).
     set result_50_1 {{} {} .t {} .t2 {} .t2 {} .t}
@@ -1836,7 +1836,7 @@ test unixWm-50.3 {
 } tempNotWin {
     deleteWindows
     catch {interp delete slave}
-    
+
     toplevel .t -width 300 -height 400 -bg blue
     wm geom .t +100+100
     frame .t.f -container 1 -bg red

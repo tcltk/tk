@@ -2089,7 +2089,7 @@ void
 Tk_UndefineCursor(
     Tk_Window tkwin)		/* Window to manipulate. */
 {
-    Tk_DefineCursor(tkwin, None);
+    Tk_DefineCursor(tkwin, NULL);
 }
 
 void
