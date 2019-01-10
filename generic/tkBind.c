@@ -2099,6 +2099,7 @@ Tk_BindEvent(
     assert(bindPtr);
     assert(eventPtr);
     assert(tkwin);
+    assert(numObjects > 0);
 
     /*
      * Ignore events on windows that don't have names: these are windows like
@@ -2735,6 +2736,9 @@ MatchPatterns(
 					bestPhysPtr = *physPtrPtr;
 				    }
 				}
+			    } else {
+				psEntry->keepIt = true; /* don't remove it from promotion list */
+				DEBUG(psEntry->expired = false);
 			    }
 			} else if (psSuccList) {
 			    /*
@@ -3796,6 +3800,7 @@ HandleEventGenerate(
     }
 
     if (event.general.xany.type == FocusIn || event.general.xany.type == FocusOut) {
+	/* XXX doesn't work for any reason, see tkFocus.c:283 */
 	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
     }
 
