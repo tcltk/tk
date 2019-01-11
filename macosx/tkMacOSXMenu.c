@@ -755,7 +755,10 @@ TkpDestroyMenuEntry(
  *
  * TkpPostMenu --
  *
- *	Posts a menu on the screen
+ *	Posts a menu on the screen.  If entry is < 0 then the menu is
+ *      drawn so its top left corner is located at the point with
+ *      screen coordinates (x, y).  Otherwise the top left corner of
+ *      the specified entry is located at that point.
  *
  * Results:
  *	None.
@@ -770,49 +773,47 @@ int
 TkpPostMenu(
     Tcl_Interp *interp,		/* The interpreter this menu lives in */
     TkMenu *menuPtr,		/* The menu we are posting */
-    int x,			/* The global x-coordinate of the top, left-
-				 * hand corner of where the menu is supposed
-				 * to be posted. */
-    int y)			/* The global y-coordinate */
+    int x, int y,		/* The screen coordinates where the top left
+				 * corner of the menu, or of the specified
+				 * entry, will be located. */
+    int entry)
 {
-
-
     /* Get the object that holds this Tk Window.*/
-    Tk_Window root;
-    root = Tk_MainWindow(interp);
+    Tk_Window root = Tk_MainWindow(interp);
+
     if (root == NULL) {
 	return TCL_ERROR;
+    }
+    if (menuPtr->menuType == TEAROFF_MENU) {
+	entry -= 1;
     }
 
     Drawable d = Tk_WindowId(root);
     NSView *rootview = TkMacOSXGetRootControl(d);
     NSWindow *win = [rootview window];
-    int result;
+    NSView *view = [win contentView];
+    NSMenu *menu = (NSMenu *) menuPtr->platformData;
+    NSMenuItem *item = nil;
+    NSInteger index = entry;
+    NSPoint location = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
+    int result, oldMode;
 
     inPostMenu = 1;
-
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
         inPostMenu = 0;
         return result;
     }
-
-    int oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
-    NSView *view = [win contentView];
-    NSRect frame = NSMakeRect(x, tkMacOSXZeroScreenHeight - y, 1, 1);
-
-    frame.origin = [view convertPoint:
-	    [win tkConvertPointFromScreen:frame.origin] fromView:nil];
-
-    NSMenu *menu = (NSMenu *) menuPtr->platformData;
-    NSPopUpButtonCell *popUpButtonCell = [[NSPopUpButtonCell alloc]
-	    initTextCell:@"" pullsDown:NO];
-
-    [popUpButtonCell setAltersStateOfSelectedItem:NO];
-    [popUpButtonCell setMenu:menu];
-    [popUpButtonCell selectItem:nil];
-    [popUpButtonCell performClickWithFrame:frame inView:view];
-    [popUpButtonCell release];
+    if (index >= [menu numberOfItems]) {
+	index = [menu numberOfItems] - 1;
+    }
+    if (index >= 0) {
+	item = [menu itemAtIndex:index];
+    }
+    oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
+    [menu popUpMenuPositioningItem:item
+	  atLocation:[win tkConvertPointFromScreen:location]
+	  inView:view];
     Tcl_SetServiceMode(oldMode);
     inPostMenu = 0;
     return TCL_OK;
@@ -1087,6 +1088,7 @@ void
 TkpComputeStandardMenuGeometry(
     TkMenu *menuPtr)		/* Structure describing menu. */
 {
+    NSSize menuSize = [(NSMenu *)menuPtr->platformData size];
     Tk_Font tkfont, menuFont;
     Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
     int modifierCharWidth, menuModifierCharWidth;
@@ -1130,7 +1132,7 @@ TkpComputeStandardMenuGeometry(
 	    break;
 	}
     }
-    
+
     for (i = 0; i < menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == TEAROFF_ENTRY) {
@@ -1199,6 +1201,9 @@ TkpComputeStandardMenuGeometry(
 		    height = size.height;
 		}
 	    }
+	    else {
+		/* image only. */
+	    }
 	    labelWidth = width + menuItemExtraWidth;
 	    mePtr->height = height + menuItemExtraHeight;
 	    if (mePtr->type == CASCADE_ENTRY) {
@@ -1237,18 +1242,12 @@ TkpComputeStandardMenuGeometry(
 	mePtr->x = x;
 	mePtr->y = y;
 	y += menuPtr->entries[i]->height + borderWidth;
-	if (y > windowHeight) {
-	    windowHeight = y;
-	}
     }
-
-    windowWidth = x + maxIndicatorSpace + maxWidth
-	    + 2 * activeBorderWidth + borderWidth;
-    windowHeight += borderWidth;
-
+    windowWidth = menuSize.width;
     if (windowWidth <= 0) {
 	windowWidth = 1;
     }
+    windowHeight = menuSize.height;
     if (windowHeight <= 0) {
 	windowHeight = 1;
     }
