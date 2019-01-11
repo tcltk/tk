@@ -870,32 +870,46 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_POST: {
-	int x, y;
+	int x, y, entry = -1;
 
-	if (objc != 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "x y");
+	if (objc != 4 && objc != 5) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "x y ?entry?");
 	    goto error;
 	}
 	if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
 	    goto error;
 	}
+	if (objc == 5) {
+	    if (menuPtr->menuType == TEAROFF_MENU) {
+		Tcl_AppendResult(interp,
+		    "the index option is invalid for tearoff menus", NULL);
+		return TCL_ERROR;
+	    }
+	    if (Tcl_GetIntFromObj(interp, objv[4], &entry) != TCL_OK) {
+		goto error;
+	    }
+	}
 
 	/*
-	 * Tearoff menus are posted differently on Mac and Windows than
-	 * non-tearoffs. TkpPostMenu does not actually map the menu's window
-	 * on those platforms, and popup menus have to be handled specially.
-         * Also, menubar menues are not intended to be posted (bug 1567681,
-         * 2160206).
+	 * Tearoff menus are the same as ordinary menus on the Mac and are
+	 * posted differently on Windows than non-tearoffs. TkpPostMenu
+	 * does not actually map the menu's window on those platforms, and
+	 * popup menus have to be handled specially.  Also, menubar menus are
+	 * not intended to be posted (bug 1567681, 2160206).
 	 */
 
 	if (menuPtr->menuType == MENUBAR) {
             Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
             return TCL_ERROR;
         } else if (menuPtr->menuType != TEAROFF_MENU) {
-	    result = TkpPostMenu(interp, menuPtr, x, y);
+	    result = TkpPostMenu(interp, menuPtr, x, y, entry);
 	} else {
+#ifdef TK_MAC_OSX
+	    result = TkpPostMenu(interp, menuPtr, x, y, entry);
+#else
 	    result = TkPostTearoffMenu(interp, menuPtr, x, y);
+#endif
 	}
 	break;
     }

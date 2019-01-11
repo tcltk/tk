@@ -889,7 +889,10 @@ DrawMenuUnderline(
  *
  * TkpPostMenu --
  *
- *	Posts a menu on the screen
+ *	Posts a menu on the screen so that the top left corner of the
+ *      specified entry is located at the point (x, y) in screen coordinates.
+ *      If the entry parameter is negative, the upper left corner of the
+ *      menu itself is placed at the point.
  *
  * Results:
  *	None.
@@ -904,8 +907,14 @@ int
 TkpPostMenu(
     Tcl_Interp *interp,
     TkMenu *menuPtr,
-    int x, int y)
+    int x, int y, int entry)
 {
+    if (entry >= menuPtr->numEntries) {
+	entry = menuPtr->numEntries - 1;
+    }
+    if (entry >= 0) {
+	y -= menuPtr->entries[entry]->y;
+    }
     return TkPostTearoffMenu(interp, menuPtr, x, y);
 }
 
@@ -1721,7 +1730,6 @@ TkpComputeStandardMenuGeometry(
     }
     windowWidth = x + indicatorSpace + labelWidth + accelWidth
 	    + 2 * activeBorderWidth + borderWidth;
-
     windowHeight += borderWidth;
 
     /*
