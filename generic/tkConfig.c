@@ -803,7 +803,7 @@ DoObjConfig(
 	    valuePtr = NULL;
 	} else {
 	    newCursor = Tk_AllocCursorFromObj(interp, tkwin, valuePtr);
-	    if (newCursor == None) {
+	    if (newCursor == NULL) {
 		return TCL_ERROR;
 	    }
 	}
@@ -1937,7 +1937,7 @@ GetObjectForOption(
        case TK_OPTION_CURSOR: {
 	   Tk_Cursor cursor = *((Tk_Cursor *) internalPtr);
 
-	   if (cursor != None) {
+	   if (cursor != NULL) {
 	       objPtr = Tcl_NewStringObj(
 		       Tk_NameOfCursor(Tk_Display(tkwin), cursor), -1);
 	   }
