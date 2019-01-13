@@ -7,7 +7,7 @@
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  * Copyright (c) 1998 by Scriptics Corporation.
- * Copyright (c) 2018 by Gregor Cramer.
+ * Copyright (c) 2018-2019 by Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -108,22 +108,24 @@ enum { true = (bool) 1, false = (bool) 0 };
 #ifdef SUPPORT_DEBUGGING
 # undef SUPPORT_DEBUGGING
 #endif
-#define SUPPORT_DEBUGGING 0
+#define SUPPORT_DEBUGGING 1
 
 /*
  * Test validity of PSEntry items.
  */
 
-# define TEST_PSENTRY(psPtr) psPtr->added != (int) 0xdeadbeef
-# define MARK_PSENTRY(psPtr) psPtr->added = 0xdeadbeef
+# define TEST_PSENTRY(psPtr) psPtr->number != 0xdeadbeef
+# define MARK_PSENTRY(psPtr) psPtr->number = 0xdeadbeef
 
 /*
  * The following union is used to hold the detail information from an XEvent
  * (including Tk's XVirtualEvent extension).
  */
 
+typedef KeySym Info;
+
 typedef union {
-    unsigned long info;	/* This either corresponds to xkey.keycode, or to xbutton.button,
+    Info info;		/* This either corresponds to xkey.keycode, or to xbutton.button,
     			 * or is meaningless, depending on event type. */
     Tk_Uid name;	/* Tk_Uid of virtual event. */
 } Detail;
@@ -148,10 +150,18 @@ typedef struct {
 
 struct PatSeq; /* forward declaration */
 
+/* We need this array for bookkeeping the last matching modifier mask per pattern. */
+TK_ARRAY_DEFINE(PSModMaskArr, Mask);
+
 typedef struct PSEntry {
     TK_DLIST_LINKS(PSEntry);	/* Makes this struct a double linked list; must be first entry. */
-    struct PatSeq* psPtr;	/* Pointer to pattern sequence. */
     Window window;		/* Window of last match. */
+    struct PatSeq* psPtr;	/* Pointer to pattern sequence. */
+    PSModMaskArr *lastModMaskArr;
+    				/* Last matching modifier mask per pattern (except last pattern).
+    				 * Only needed if pattern sequence is not single (more than one
+				 * pattern), and if one of these patterns contains a non-zero
+				 * modifier mask. */
     unsigned count:30;		/* Only promote to next level if this count has reached count of
     				 * pattern. */
     unsigned expired:1;		/* Whether this entry is expired, this means it has to be removed
@@ -159,7 +169,11 @@ typedef struct PSEntry {
     unsigned keepIt:1;		/* Whether to keep this entry, even if expired. */
 } PSEntry;
 
-TK_DLIST_DEFINE(PSList, PSEntry);/* defining the whole PSList_* stuff (list of PSEntry items) */
+/* Defining the whole PSList_* stuff (list of PSEntry items). */
+TK_DLIST_DEFINE(PSList, PSEntry);
+
+/* Don't keep larger arrays of modifier masks inside PSEntry. */
+#define MAX_MOD_MASK_ARR_SIZE 8
 
 /*
  * Maps and lookup tables from an event to a list of patterns that match that event.
@@ -193,8 +207,7 @@ typedef struct Tk_BindingTable_ {
     				/* Containing the most recent event for every event type. */
     PromArr *promArr;		/* Contains the promoted pattern sequences. */
     Event *curEvent;		/* Pointing to most recent event. */
-    unsigned long curModStateMask;
-    				/* Containing the current modifier mask. */
+    Mask curModMask;		/* Containing the current modifier mask. */
     LookupTables lookupTables;	/* Containing hash tables for fast lookup. */
     Tcl_HashTable objectTable;	/* Used to map from an object to a list of patterns associated with
     				 * that object. Keys are ClientData, values are (PatSeq *). */
@@ -249,16 +262,16 @@ typedef struct {
  * The following structure defines a pattern, which is matched against X
  * events as part of the process of converting X events into Tcl commands.
  *
- * For technical reasons we do not use 'union Detail', although this would be possible,
- * instead 'info' and 'name' are both included.
+ * For technical reasons we do not use 'union Detail', although this would
+ * be possible, instead 'info' and 'name' are both included.
  */
 
 typedef struct {
     unsigned eventType;		/* Type of X event, e.g. ButtonPress. */
     unsigned count;		/* Multi-event count, e.g. double-clicks, triple-clicks, etc. */
-    unsigned long modStateMask;	/* Mask of modifiers that must be present (zero means no modifiers
+    Mask modMask;		/* Mask of modifiers that must be present (zero means no modifiers
     				 * are required). */
-    unsigned long info;		/* Additional information that must match event. Normally this is zero,
+    Info info;			/* Additional information that must match event. Normally this is zero,
     				 * meaning no additional information must match. For KeyPress and
 				 * KeyRelease events, it may be specified to select a particular
 				 * keystroke (zero means any keystrokes). For button events, specifies
@@ -299,7 +312,9 @@ typedef struct PatSeq {
     unsigned number;		/* Needed for the decision whether a binding is less recently defined
     				 * than another, it is guaranteed that the most recently bound event
 				 * has the highest number. */
-    bool added;			/* Is this pattern sequence already added to lookup table? */
+    unsigned added:1;		/* Is this pattern sequence already added to lookup table? */
+    unsigned modMaskUsed:1;	/* Does at least one pattern contain a non-zero modifier mask? */
+    DEBUG(unsigned owned:1);	/* For debugging purposes. */
     char *script;		/* Binding script to evaluate when sequence matches (ckalloc()ed) */
     Tcl_Obj* object;		/* Token for object with which binding is associated. For virtual
     				 * event table this is NULL. */
@@ -315,11 +330,16 @@ typedef struct PatSeq {
 				 * the same object (NULL for end of list). Needed to implement
 				 * Tk_DeleteAllBindings. In a virtual event table it has no meaning. */
     } ptr;
-    DEBUG(bool owned);		/* For debugging purposes. */
     TkPattern pats[1];		/* Array of "numPats" patterns. Only one element is declared here
     				 * but in actuality enough space will be allocated for "numPats"
 				 * patterns (but usually 1). */
 } PatSeq;
+
+/*
+ * Compute memory size of struct PatSeq with given pattern size.
+ * The caller must be sure that pattern size is greater than zero.
+ */
+#define PATSEQ_MEMSIZE(numPats) (sizeof(PatSeq) + (numPats - 1)*sizeof(TkPattern))
 
 /*
  * Constants that define how close together two events must be in milliseconds
@@ -692,7 +712,7 @@ static void		ExpandPercents(TkWindow *winPtr, const char *before, Event *eventPt
 			    unsigned scriptCount, Tcl_DString *dsPtr);
 static PatSeq *		FindSequence(Tcl_Interp *interp, LookupTables *lookupTables,
 			    ClientData object, const char *eventString, bool create,
-			    bool allowVirtual, unsigned long *maskPtr);
+			    bool allowVirtual, Mask *maskPtr);
 static void		GetAllVirtualEvents(Tcl_Interp *interp, VirtualEventTable *vetPtr);
 static const char *	GetField(const char *p, char *copy, unsigned size);
 static Tcl_Obj *	GetPatternObj(const PatSeq *psPtr);
@@ -708,13 +728,13 @@ static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSLi
 static bool		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
-			    TkPattern *patPtr, unsigned long *eventMaskPtr);
+			    TkPattern *patPtr, Mask *eventMaskPtr);
 static void		DoWarp(ClientData clientData);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, bool onlyConsiderDetailedEvents);
 static void		ClearLookupTable(LookupTables *lookupTables, ClientData object);
 static void		ClearPromotionLists(Tk_BindingTable bindPtr, ClientData object);
-static PSEntry *	MakeListEntry(PSList *pool, PatSeq *psPtr);
+static PSEntry *	MakeListEntry(PSList *pool, PatSeq *psPtr, bool needModMasks);
 static void		RemovePatSeqFromLookup(LookupTables *lookupTables, PatSeq *psPtr);
 static void		RemovePatSeqFromPromotionLists(Tk_BindingTable bindPtr, PatSeq *psPtr);
 static PatSeq *		DeletePatSeq(PatSeq *psPtr);
@@ -740,8 +760,8 @@ static bool TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY
 
 static bool
 IsSubsetOf(
-    unsigned long lhsMask,	/* this is a subset */
-    unsigned long rhsMask)	/* of this bit field? */
+    Mask lhsMask,	/* this is a subset */
+    Mask rhsMask)	/* of this bit field? */
 {
     return (lhsMask & rhsMask) == lhsMask;
 }
@@ -783,7 +803,7 @@ CurrentTimeInMilliSecs()
     return ((Time) now.sec)*1000 + ((Time) now.usec)/1000;
 }
 
-static unsigned long
+static Info
 GetInfo(
     const PatSeq *psPtr,
     unsigned index)
@@ -794,6 +814,7 @@ GetInfo(
     return psPtr->pats[index].info;
 }
 
+#if PREFER_MOST_SPECIALIZED_EVENT
 static unsigned
 GetCount(
     const PatSeq *psPtr,
@@ -804,6 +825,7 @@ GetCount(
 
     return psPtr->pats[index].count;
 }
+#endif
 
 static bool
 MatchEventNearby(
@@ -859,6 +881,9 @@ RemoveListEntry(
     assert(pool);
     assert(psEntry);
 
+    if (PSModMaskArr_Capacity(psEntry->lastModMaskArr) > MAX_MOD_MASK_ARR_SIZE) {
+	PSModMaskArr_Free(&psEntry->lastModMaskArr);
+    }
     PSList_Remove(psEntry);
     PSList_Append(pool, psEntry);
 }
@@ -885,6 +910,17 @@ ClearList(
     } else {
 	PSList_Move(pool, psList);
     }
+}
+
+static PSEntry *
+FreePatSeqEntry(
+    PSList *pool,
+    PSEntry *entry)
+{
+    PSEntry *next = PSList_Next(entry);
+    PSModMaskArr_Free(&entry->lastModMaskArr);
+    ckfree(entry);
+    return next;
 }
 
 static unsigned
@@ -978,20 +1014,32 @@ SetupPatternKey(
 static PSEntry *
 MakeListEntry(
     PSList *pool,
-    PatSeq *psPtr)
+    PatSeq *psPtr,
+    bool needModMasks)
 {
     PSEntry *newEntry = NULL;
 
     assert(pool);
     assert(psPtr);
+    assert(psPtr->numPats > 0);
     assert(TEST_PSENTRY(psPtr));
 
     if (PSList_IsEmpty(pool)) {
 	newEntry = ckalloc(sizeof(PSEntry));
+	newEntry->lastModMaskArr = NULL;
 	DEBUG(countEntryItems += 1);
     } else {
 	newEntry = PSList_First(pool);
 	PSList_RemoveHead(pool);
+    }
+
+    if (!needModMasks) {
+	PSModMaskArr_SetSize(newEntry->lastModMaskArr, 0);
+    } else {
+	if (PSModMaskArr_Capacity(newEntry->lastModMaskArr) < psPtr->numPats - 1) {
+	    PSModMaskArr_Resize(&newEntry->lastModMaskArr, psPtr->numPats - 1);
+	}
+	PSModMaskArr_SetSize(newEntry->lastModMaskArr, psPtr->numPats - 1);
     }
 
     newEntry->psPtr = psPtr;
@@ -1182,7 +1230,8 @@ TkBindInit(
     assert(sizeof(XEvent) >= sizeof(XVirtualEvent));
 
     /* type of TkPattern.info is well defined? */
-    assert(sizeof(unsigned long) >= sizeof(KeySym));
+    assert(sizeof(Info) >= sizeof(KeySym));
+    assert(sizeof(Info) >= sizeof(unsigned));
 
     /* ensure that our matching algorithm is working (when testing detail) */
     assert(sizeof(Detail) == sizeof(Tk_Uid));
@@ -1465,7 +1514,7 @@ Tk_DeleteBindingTable(
     ClearPromotionLists(bindPtr, NULL);
     PromArr_Free(&bindPtr->promArr);
     DEBUG(countEntryItems -= PSList_Size(&bindPtr->lookupTables.entryPool));
-    PSList_Clear(&bindPtr->lookupTables.entryPool);
+    PSList_Traverse(&bindPtr->lookupTables.entryPool, FreePatSeqEntry);
 
     /*
      * Clean up the rest of the information associated with the binding table.
@@ -1525,7 +1574,7 @@ InsertPatSeq(
 	    psList = Tcl_GetHashValue(hPtr);
 	}
 
-	psEntry = MakeListEntry(&lookupTables->entryPool, psPtr);
+	psEntry = MakeListEntry(&lookupTables->entryPool, psPtr, false);
 	PSList_Append(psList, psEntry);
 	psPtr->added = true;
     }
@@ -1554,7 +1603,7 @@ InsertPatSeq(
  *--------------------------------------------------------------
  */
 
-unsigned long
+Mask
 Tk_CreateBinding(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_BindingTable bindPtr,	/* Table in which to create binding. */
@@ -1567,7 +1616,7 @@ Tk_CreateBinding(
 				 * existing binding will always be replaced. */
 {
     PatSeq *psPtr;
-    unsigned long eventMask;
+    Mask eventMask;
     char *oldStr;
     char *newStr;
 
@@ -1576,11 +1625,14 @@ Tk_CreateBinding(
     assert(eventString);
     assert(script);
 
+    psPtr = FindSequence(interp, &bindPtr->lookupTables, object, eventString,
+	    !!*script, true, &eventMask);
+
     if (!*script) {
+	assert(!psPtr || psPtr->added);
 	/* Silently ignore empty scripts -- see SF#3006842 */
-	return 1;
+	return eventMask;
     }
-    psPtr = FindSequence(interp, &bindPtr->lookupTables, object, eventString, true, true, &eventMask);
     if (!psPtr) {
 	return 0;
     }
@@ -2040,8 +2092,8 @@ IsBetterMatch(
     if (!fstMatchPtr) { return true; }
 
     for (i = patIndex; i >= 0; --i) {
-	unsigned long fstInfo = GetInfo(fstMatchPtr, i);
-	unsigned long sndInfo = GetInfo(sndMatchPtr, i);
+	Info fstInfo = GetInfo(fstMatchPtr, i);
+	Info sndInfo = GetInfo(sndMatchPtr, i);
 
 	if (sndInfo && !fstInfo) { return true; }
 	if (!sndInfo && fstInfo) { return false; }
@@ -2123,9 +2175,9 @@ Tk_BindEvent(
     }
 
     if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-	bindPtr->curModStateMask = eventPtr->xkey.state;
+	bindPtr->curModMask = eventPtr->xkey.state;
     } else if (flags & CROSSING) {
-	bindPtr->curModStateMask = eventPtr->xcrossing.state;
+	bindPtr->curModMask = eventPtr->xcrossing.state;
     }
 
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -2150,10 +2202,13 @@ Tk_BindEvent(
 	    bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
 	    bindInfoPtr->lastEventTime = eventPtr->xcrossing.time;
 	}
-	/* fallthru */
+	if (eventPtr->xcrossing.detail == NotifyInferior) {
+	    return;
+	}
+	break;
     case FocusIn:
     case FocusOut:
-	if (eventPtr->xcrossing.detail == NotifyInferior) {
+	if (eventPtr->xfocus.detail == NotifyInferior) {
 	    return;
 	}
 	break;
@@ -2598,7 +2653,7 @@ VirtPatIsBound(
 	const TkPattern *virtPatPtr = psPtr->pats;
 
 	if (physPatPtr->info || !virtPatPtr->info) {
-	    if (IsSubsetOf(virtPatPtr->modStateMask, physPatPtr->modStateMask)) {
+	    if (IsSubsetOf(virtPatPtr->modMask, physPatPtr->modMask)) {
 		return false; /* we cannot surpass this match */
 	    }
 	}
@@ -2639,22 +2694,62 @@ Compare(
 
     if (!fstMatchPtr) { return +1; }
 
-    assert(patIndex < fstMatchPtr->numPats);
-    assert(patIndex < sndMatchPtr->numPats);
+    assert(patIndex == fstMatchPtr->numPats - 1);
+    assert(patIndex == sndMatchPtr->numPats - 1);
 
     for (i = patIndex; i >= 0; --i) {
-	unsigned long fstInfo = GetInfo(fstMatchPtr, i);
-	unsigned long sndInfo = GetInfo(sndMatchPtr, i);
+	Info fstInfo = GetInfo(fstMatchPtr, i);
+	Info sndInfo = GetInfo(sndMatchPtr, i);
 
 	if (sndInfo && !fstInfo) { return +1; }
 	if (!sndInfo && fstInfo) { return -1; }
     }
 
-    if (patIndex == fstMatchPtr->numPats - 1 && patIndex == sndMatchPtr->numPats - 1) {
-	return (int) sndMatchPtr->count - (int) fstMatchPtr->count;
+    return (int) sndMatchPtr->count - (int) fstMatchPtr->count;
+}
+
+/* helper function */
+static bool
+CompareModMasks(
+    const PSModMaskArr *fstModMaskArr,
+    const PSModMaskArr *sndModMaskArr,
+    Mask fstModMask,
+    Mask sndModMask)
+{
+    int fstCount = 0;
+    int sndCount = 0;
+    int i;
+
+    if (PSModMaskArr_IsEmpty(fstModMaskArr)) {
+	if (!PSModMaskArr_IsEmpty(sndModMaskArr)) {
+	    for (i = PSModMaskArr_Size(sndModMaskArr) - 1; i >= 0; --i) {
+		if (*PSModMaskArr_Get(sndModMaskArr, i)) {
+		    ++sndCount;
+		}
+	    }
+	}
+    } else if (PSModMaskArr_IsEmpty(sndModMaskArr)) {
+	for (i = PSModMaskArr_Size(fstModMaskArr) - 1; i >= 0; --i) {
+	    if (*PSModMaskArr_Get(fstModMaskArr, i)) {
+		++fstCount;
+	    }
+	}
+    } else {
+	assert(PSModMaskArr_Size(fstModMaskArr) == PSModMaskArr_Size(sndModMaskArr));
+
+	for (i = PSModMaskArr_Size(fstModMaskArr) - 1; i >= 0; --i) {
+	    Mask fstModMask = *PSModMaskArr_Get(fstModMaskArr, i);
+	    Mask sndModMask = *PSModMaskArr_Get(sndModMaskArr, i);
+
+	    if (IsSubsetOf(fstModMask, sndModMask)) { ++sndCount; }
+	    if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
+	}
     }
 
-    return (int) GetCount(sndMatchPtr, patIndex) - (int) GetCount(fstMatchPtr, patIndex);
+    if (IsSubsetOf(fstModMask, sndModMask)) { ++sndCount; }
+    if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
+
+    return fstCount - sndCount;
 }
 
 static PatSeq *
@@ -2675,7 +2770,8 @@ MatchPatterns(
     PSEntry *psEntry;
     PatSeq *bestPtr;
     PatSeq *bestPhysPtr;
-    unsigned long bestModMask;
+    Mask bestModMask;
+    const PSModMaskArr *bestModMaskArr;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -2714,13 +2810,17 @@ MatchPatterns(
 		     * cannot be done in ParseEventDescription, otherwise this function would
 		     * be the better place.
 		     */
-		    unsigned long modMask = ResolveModifiers(dispPtr, patPtr->modStateMask);
-		    unsigned long curModStateMask = ResolveModifiers(dispPtr, bindPtr->curModStateMask);
+		    Mask modMask = ResolveModifiers(dispPtr, patPtr->modMask);
+		    Mask curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
 		    psEntry->expired = true; /* remove it from promotion list */
 
-		    if ((modMask & ~curModStateMask) == 0) {
+		    if ((modMask & ~curModMask) == 0) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
+
+			if (patIndex < PSModMaskArr_Size(psEntry->lastModMaskArr)) {
+			    PSModMaskArr_Set(psEntry->lastModMaskArr, patIndex, &modMask);
+			}
 
 			/*
 			 * This pattern is finally matching.
@@ -2728,34 +2828,30 @@ MatchPatterns(
 
 			if (psPtr->numPats == patIndex + 1) {
 			    if (patPtr->count <= count) {
-				int cmp = Compare(bestPtr, psPtr, patIndex);
-
 				/*
 				 * This is also a final pattern.
 				 * We always prefer the pattern with better match.
 				 *
-				 * In case of equal modifier masks:
-				 *     this match has same mask as best match:
-				 *         choose this match if number is higher
-				 *     otherwise:
-				 *         choose this match if modifier states is not a subset
-				 *         of those in best match.
 				 */
 
-				if (cmp > 0
-				    || (cmp == 0
-					&& (modMask == bestModMask
-					    ? bestPtr->number < psPtr->number
-					    : !IsSubsetOf(modMask, bestModMask)))) {
+				int cmp = Compare(bestPtr, psPtr, patIndex);
+
+				if (cmp == 0) {
+				    cmp = CompareModMasks(psEntry->lastModMaskArr, bestModMaskArr,
+					    modMask, bestModMask);
+				}
+
+				if (cmp > 0 || (cmp == 0 && bestPtr->number < psPtr->number)) {
 				    bestPtr = psPtr;
 				    bestModMask = modMask;
+				    bestModMaskArr = psEntry->lastModMaskArr;
 				    if (physPtrPtr) {
 					bestPhysPtr = *physPtrPtr;
 				    }
 				}
 			    } else {
-				psEntry->keepIt = true; /* don't remove it from promotion list */
 				DEBUG(psEntry->expired = false);
+				psEntry->keepIt = true; /* don't remove it from promotion list */
 			    }
 			} else if (psSuccList) {
 			    /*
@@ -2766,16 +2862,20 @@ MatchPatterns(
 				PSEntry *psNewEntry;
 
 				assert(!patPtr->name);
-				psNewEntry = MakeListEntry(&bindPtr->lookupTables.entryPool, psPtr);
+				psNewEntry = MakeListEntry(
+				    &bindPtr->lookupTables.entryPool, psPtr, psPtr->modMaskUsed);
+				if (!PSModMaskArr_IsEmpty(psNewEntry->lastModMaskArr)) {
+				    PSModMaskArr_Set(psNewEntry->lastModMaskArr, patIndex, &modMask);
+				}
 				assert(psNewEntry->keepIt);
 				assert(psNewEntry->count == 1u);
 				PSList_Append(psSuccList, psNewEntry);
 				psNewEntry->window = window; /* bind to current window */
 			    } else {
 				assert(psEntry->count < patPtr->count);
+				DEBUG(psEntry->expired = false);
 				psEntry->count += 1;
 				psEntry->keepIt = true; /* don't remove it from promotion list */
-				DEBUG(psEntry->expired = false);
 			    }
 			}
 		    }
@@ -3355,7 +3455,7 @@ DeleteVirtualEventTable(
 
     ClearLookupTable(&vetPtr->lookupTables, NULL);
     DEBUG(countEntryItems -= PSList_Size(&vetPtr->lookupTables.entryPool));
-    PSList_Clear(&vetPtr->lookupTables.entryPool);
+    PSList_Traverse(&vetPtr->lookupTables.entryPool, FreePatSeqEntry);
 }
 
 /*
@@ -3711,7 +3811,7 @@ HandleEventGenerate(
     Tk_Window tkwin;
     Tk_Window tkwin2;
     TkWindow *mainPtr;
-    unsigned long eventMask;
+    Mask eventMask;
     Tcl_Obj *userDataObj;
     bool synch;
     bool warp;
@@ -3798,7 +3898,7 @@ HandleEventGenerate(
 	return TCL_OK;
     }
     if (flags & KEY_BUTTON_MOTION_VIRTUAL) {
-	event.general.xkey.state = pat.modStateMask;
+	event.general.xkey.state = pat.modMask;
 	if ((flags & KEY) && event.general.xany.type != MouseWheelEvent) {
 	    TkpSetKeycodeAndState(tkwin, pat.info, &event.general);
 	} else if (flags & BUTTON) {
@@ -4490,7 +4590,7 @@ FindSequence(
     				 * True means create. */
     bool allowVirtual,		/* False means that virtual events are not allowed in the sequence.
     				 * True otherwise. */
-    unsigned long *maskPtr)	/* *maskPtr is filled in with the event types on which this
+    Mask *maskPtr)		/* *maskPtr is filled in with the event types on which this
     				 * pattern sequence depends. */
 {
     unsigned patsBufSize = 1;
@@ -4504,13 +4604,14 @@ FindSequence(
     bool isNew;
     unsigned count;
     unsigned maxCount = 0;
-    unsigned long eventMask = 0;
+    Mask eventMask = 0;
+    Mask modMask = 0;
     PatternTableKey key;
 
     assert(lookupTables);
     assert(eventString);
 
-    psPtr = ckalloc(sizeof(PatSeq) + (patsBufSize - 1)*sizeof(TkPattern));
+    psPtr = ckalloc(PATSEQ_MEMSIZE(patsBufSize));
 
     /*
      *------------------------------------------------------------------
@@ -4522,7 +4623,7 @@ FindSequence(
 	if (numPats >= patsBufSize) {
 	    unsigned pos = patPtr - psPtr->pats;
 	    patsBufSize += patsBufSize;
-	    psPtr = ckrealloc(psPtr, sizeof(PatSeq) + (patsBufSize - 1)*sizeof(TkPattern));
+	    psPtr = ckrealloc(psPtr, PATSEQ_MEMSIZE(patsBufSize));
 	    patPtr = psPtr->pats + pos;
 	}
 
@@ -4548,6 +4649,7 @@ FindSequence(
 	}
 
 	totalCount += count;
+	modMask |= patPtr->modMask;
     }
 
     /*
@@ -4570,7 +4672,7 @@ FindSequence(
 	return NULL;
     }
     if (patsBufSize > numPats) {
-	psPtr = ckrealloc(psPtr, sizeof(PatSeq) + (numPats - 1)*sizeof(TkPattern));
+	psPtr = ckrealloc(psPtr, PATSEQ_MEMSIZE(numPats));
     }
 
     patPtr = psPtr->pats;
@@ -4615,6 +4717,7 @@ FindSequence(
     psPtr->count = totalCount;
     psPtr->number = lookupTables->number++;
     psPtr->added = false;
+    psPtr->modMaskUsed = (modMask != 0);
     psPtr->script = NULL;
     psPtr->nextSeqPtr = Tcl_GetHashValue(hPtr);
     psPtr->hPtr = hPtr;
@@ -4676,10 +4779,10 @@ ParseEventDescription(
     const char **eventStringPtr,/* On input, holds a pointer to start of event string. On exit,
     				 * gets pointer to rest of string after parsed event. */
     TkPattern *patPtr,		/* Filled with the pattern parsed from the event string. */
-    unsigned long *eventMaskPtr)/* Filled with event mask of matched event. */
+    Mask *eventMaskPtr)		/* Filled with event mask of matched event. */
 {
     const char *p;
-    unsigned long eventMask = 0;
+    Mask eventMask = 0;
     unsigned count = 1;
 
     assert(eventStringPtr);
@@ -4791,7 +4894,7 @@ ParseEventDescription(
 		    break;
 		}
 		modPtr = Tcl_GetHashValue(hPtr);
-		patPtr->modStateMask |= modPtr->mask;
+		patPtr->modMask |= modPtr->mask;
 		if (modPtr->flags & MULT_CLICKS) {
 		    unsigned i = modPtr->flags & MULT_CLICKS;
 
@@ -4852,7 +4955,7 @@ ParseEventDescription(
 				"NON_BUTTON");
 		    }
 #if SUPPORT_ADDITIONAL_MOTION_SYNTAX
-		    patPtr->modStateMask |= ButtonNumberToMask(button);
+		    patPtr->modMask |= ButtonNumberToMask(button);
 		    p = SkipFieldDelims(p);
 		    while (*p && *p != '>') {
 			p = SkipFieldDelims(GetField(p, field, sizeof(field)));
@@ -4862,9 +4965,9 @@ ParseEventDescription(
 				    patPtr, 0,
 				    Tcl_ObjPrintf("bad button number \"%s\"", field), "BUTTON");
 			}
-			patPtr->modStateMask |= ButtonNumberToMask(button);
+			patPtr->modMask |= ButtonNumberToMask(button);
 		    }
-		    patPtr->info = ButtonNumberFromState(patPtr->modStateMask);
+		    patPtr->info = ButtonNumberFromState(patPtr->modMask);
 #endif
 		} else {
 		    return FinalizeParseEventDescription(
@@ -4879,7 +4982,7 @@ ParseEventDescription(
 			patPtr, 0,
 			Tcl_NewStringObj("no event type or button # or keysym", -1), "UNMODIFIABLE");
 	    } else if (patPtr->eventType == MotionNotify) {
-		patPtr->info = ButtonNumberFromState(patPtr->modStateMask);
+		patPtr->info = ButtonNumberFromState(patPtr->modMask);
 	    }
 
 	    p = SkipFieldDelims(p);
@@ -4981,7 +5084,7 @@ GetPatternObj(
 	 */
 	if (patPtr->eventType == KeyPress
 		&& patPtr->count == 1
-		&& patPtr->modStateMask == 0
+		&& patPtr->modMask == 0
 		&& patPtr->info < 128
 		&& isprint(UCHAR(patPtr->info))
 		&& patPtr->info != '<'
@@ -4992,7 +5095,7 @@ GetPatternObj(
 	    assert(patPtr->name);
 	    Tcl_AppendPrintfToObj(patternObj, "<<%s>>", patPtr->name);
 	} else {
-	    unsigned modStateMask;
+	    unsigned modMask;
 	    const ModInfo *modPtr;
 
 	    /*
@@ -5009,16 +5112,16 @@ GetPatternObj(
 	    case 4: Tcl_AppendToObj(patternObj, "Quadruple-", 10); break;
 	    }
 
-	    modStateMask = patPtr->modStateMask;
+	    modMask = patPtr->modMask;
 #if PRINT_SHORT_MOTION_SYNTAX
 	    if (patPtr->eventType == MotionNotify) {
-		modStateMask &= ~ALL_BUTTONS_MASK;
+		modMask &= ~ALL_BUTTONS_MASK;
 	    }
 #endif
 
-	    for (modPtr = modArray; modStateMask; ++modPtr) {
-		if (modPtr->mask & modStateMask) {
-		    modStateMask &= ~modPtr->mask;
+	    for (modPtr = modArray; modMask; ++modPtr) {
+		if (modPtr->mask & modMask) {
+		    modMask &= ~modPtr->mask;
 		    Tcl_AppendPrintfToObj(patternObj, "%s-", modPtr->name);
 		}
 	    }
@@ -5045,7 +5148,7 @@ GetPatternObj(
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {
-		    unsigned mask = patPtr->modStateMask;
+		    unsigned mask = patPtr->modMask;
 		    while (mask & ALL_BUTTONS_MASK) {
 			unsigned button = ButtonNumberFromState(mask);
 			Tcl_AppendPrintfToObj(patternObj, "-%u", button);
