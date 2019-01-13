@@ -148,10 +148,13 @@ typedef struct {
  * We need a structure providing a list of pattern sequences.
  */
 
+typedef unsigned EventMask;
+typedef unsigned long ModMask;
+
 struct PatSeq; /* forward declaration */
 
 /* We need this array for bookkeeping the last matching modifier mask per pattern. */
-TK_ARRAY_DEFINE(PSModMaskArr, Mask);
+TK_ARRAY_DEFINE(PSModMaskArr, ModMask);
 
 typedef struct PSEntry {
     TK_DLIST_LINKS(PSEntry);	/* Makes this struct a double linked list; must be first entry. */
@@ -207,7 +210,7 @@ typedef struct Tk_BindingTable_ {
     				/* Containing the most recent event for every event type. */
     PromArr *promArr;		/* Contains the promoted pattern sequences. */
     Event *curEvent;		/* Pointing to most recent event. */
-    Mask curModMask;		/* Containing the current modifier mask. */
+    ModMask curModMask;		/* Containing the current modifier mask. */
     LookupTables lookupTables;	/* Containing hash tables for fast lookup. */
     Tcl_HashTable objectTable;	/* Used to map from an object to a list of patterns associated with
     				 * that object. Keys are ClientData, values are (PatSeq *). */
@@ -269,7 +272,7 @@ typedef struct {
 typedef struct {
     unsigned eventType;		/* Type of X event, e.g. ButtonPress. */
     unsigned count;		/* Multi-event count, e.g. double-clicks, triple-clicks, etc. */
-    Mask modMask;		/* Mask of modifiers that must be present (zero means no modifiers
+    ModMask modMask;		/* Mask of modifiers that must be present (zero means no modifiers
     				 * are required). */
     Info info;			/* Additional information that must match event. Normally this is zero,
     				 * meaning no additional information must match. For KeyPress and
@@ -712,7 +715,7 @@ static void		ExpandPercents(TkWindow *winPtr, const char *before, Event *eventPt
 			    unsigned scriptCount, Tcl_DString *dsPtr);
 static PatSeq *		FindSequence(Tcl_Interp *interp, LookupTables *lookupTables,
 			    ClientData object, const char *eventString, bool create,
-			    bool allowVirtual, Mask *maskPtr);
+			    bool allowVirtual, EventMask *maskPtr);
 static void		GetAllVirtualEvents(Tcl_Interp *interp, VirtualEventTable *vetPtr);
 static const char *	GetField(const char *p, char *copy, unsigned size);
 static Tcl_Obj *	GetPatternObj(const PatSeq *psPtr);
@@ -728,7 +731,7 @@ static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSLi
 static bool		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
-			    TkPattern *patPtr, Mask *eventMaskPtr);
+			    TkPattern *patPtr, EventMask *eventMaskPtr);
 static void		DoWarp(ClientData clientData);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, bool onlyConsiderDetailedEvents);
@@ -760,8 +763,8 @@ static bool TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY
 
 static bool
 IsSubsetOf(
-    Mask lhsMask,	/* this is a subset */
-    Mask rhsMask)	/* of this bit field? */
+    ModMask lhsMask,	/* this is a subset */
+    ModMask rhsMask)	/* of this bit field? */
 {
     return (lhsMask & rhsMask) == lhsMask;
 }
@@ -1603,7 +1606,7 @@ InsertPatSeq(
  *--------------------------------------------------------------
  */
 
-Mask
+unsigned long
 Tk_CreateBinding(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_BindingTable bindPtr,	/* Table in which to create binding. */
@@ -1616,7 +1619,7 @@ Tk_CreateBinding(
 				 * existing binding will always be replaced. */
 {
     PatSeq *psPtr;
-    Mask eventMask;
+    EventMask eventMask;
     char *oldStr;
     char *newStr;
 
@@ -2713,8 +2716,8 @@ static bool
 CompareModMasks(
     const PSModMaskArr *fstModMaskArr,
     const PSModMaskArr *sndModMaskArr,
-    Mask fstModMask,
-    Mask sndModMask)
+    ModMask fstModMask,
+    ModMask sndModMask)
 {
     int fstCount = 0;
     int sndCount = 0;
@@ -2738,8 +2741,8 @@ CompareModMasks(
 	assert(PSModMaskArr_Size(fstModMaskArr) == PSModMaskArr_Size(sndModMaskArr));
 
 	for (i = PSModMaskArr_Size(fstModMaskArr) - 1; i >= 0; --i) {
-	    Mask fstModMask = *PSModMaskArr_Get(fstModMaskArr, i);
-	    Mask sndModMask = *PSModMaskArr_Get(sndModMaskArr, i);
+	    ModMask fstModMask = *PSModMaskArr_Get(fstModMaskArr, i);
+	    ModMask sndModMask = *PSModMaskArr_Get(sndModMaskArr, i);
 
 	    if (IsSubsetOf(fstModMask, sndModMask)) { ++sndCount; }
 	    if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
@@ -2770,7 +2773,7 @@ MatchPatterns(
     PSEntry *psEntry;
     PatSeq *bestPtr;
     PatSeq *bestPhysPtr;
-    Mask bestModMask;
+    ModMask bestModMask;
     const PSModMaskArr *bestModMaskArr;
 
     assert(dispPtr);
@@ -2810,8 +2813,8 @@ MatchPatterns(
 		     * cannot be done in ParseEventDescription, otherwise this function would
 		     * be the better place.
 		     */
-		    Mask modMask = ResolveModifiers(dispPtr, patPtr->modMask);
-		    Mask curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
+		    ModMask modMask = ResolveModifiers(dispPtr, patPtr->modMask);
+		    ModMask curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
 		    psEntry->expired = true; /* remove it from promotion list */
 
@@ -3811,7 +3814,7 @@ HandleEventGenerate(
     Tk_Window tkwin;
     Tk_Window tkwin2;
     TkWindow *mainPtr;
-    Mask eventMask;
+    EventMask eventMask;
     Tcl_Obj *userDataObj;
     bool synch;
     bool warp;
@@ -4590,7 +4593,7 @@ FindSequence(
     				 * True means create. */
     bool allowVirtual,		/* False means that virtual events are not allowed in the sequence.
     				 * True otherwise. */
-    Mask *maskPtr)		/* *maskPtr is filled in with the event types on which this
+    EventMask *maskPtr)		/* *maskPtr is filled in with the event types on which this
     				 * pattern sequence depends. */
 {
     unsigned patsBufSize = 1;
@@ -4604,8 +4607,8 @@ FindSequence(
     bool isNew;
     unsigned count;
     unsigned maxCount = 0;
-    Mask eventMask = 0;
-    Mask modMask = 0;
+    EventMask eventMask = 0;
+    ModMask modMask = 0;
     PatternTableKey key;
 
     assert(lookupTables);
@@ -4779,10 +4782,10 @@ ParseEventDescription(
     const char **eventStringPtr,/* On input, holds a pointer to start of event string. On exit,
     				 * gets pointer to rest of string after parsed event. */
     TkPattern *patPtr,		/* Filled with the pattern parsed from the event string. */
-    Mask *eventMaskPtr)		/* Filled with event mask of matched event. */
+    EventMask *eventMaskPtr)	/* Filled with event mask of matched event. */
 {
     const char *p;
-    Mask eventMask = 0;
+    EventMask eventMask = 0;
     unsigned count = 1;
 
     assert(eventStringPtr);

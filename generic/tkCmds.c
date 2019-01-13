@@ -200,7 +200,7 @@ Tk_BindObjCmd(
 
     if (objc == 4) {
 	int append = 0;
-	Mask mask;
+	unsigned long mask;
 	const char *sequence = Tcl_GetString(objv[2]);
 	const char *script = Tcl_GetString(objv[3]);
 

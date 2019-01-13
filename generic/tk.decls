@@ -163,7 +163,7 @@ declare 32 {
     Tk_Window Tk_CoordsToWindow(int rootX, int rootY, Tk_Window tkwin)
 }
 declare 33 {
-    Mask Tk_CreateBinding(Tcl_Interp *interp,
+    unsigned long Tk_CreateBinding(Tcl_Interp *interp,
 	    Tk_BindingTable bindingTable, ClientData object,
 	    const char *eventStr, const char *script, int append)
 }
