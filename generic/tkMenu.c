@@ -881,11 +881,6 @@ MenuWidgetObjCmd(
 	    goto error;
 	}
 	if (objc == 5) {
-	    if (menuPtr->menuType == TEAROFF_MENU) {
-		Tcl_AppendResult(interp,
-		    "the index option is invalid for tearoff menus", NULL);
-		return TCL_ERROR;
-	    }
 	    if (Tcl_GetIntFromObj(interp, objv[4], &entry) != TCL_OK) {
 		goto error;
 	    }
@@ -905,11 +900,7 @@ MenuWidgetObjCmd(
         } else if (menuPtr->menuType != TEAROFF_MENU) {
 	    result = TkpPostMenu(interp, menuPtr, x, y, entry);
 	} else {
-#ifdef TK_MAC_OSX
-	    result = TkpPostMenu(interp, menuPtr, x, y, entry);
-#else
-	    result = TkPostTearoffMenu(interp, menuPtr, x, y);
-#endif
+	    result = TkpPostTearoffMenu(interp, menuPtr, x, y, entry);
 	}
 	break;
     }

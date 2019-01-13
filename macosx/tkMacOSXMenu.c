@@ -753,9 +753,10 @@ TkpDestroyMenuEntry(
 /*
  *----------------------------------------------------------------------
  *
- * TkpPostMenu --
+ * TkpPostMenu, TkPostTearoffMenu --
  *
- *	Posts a menu on the screen.  If entry is < 0 then the menu is
+ *	Posts a menu on the screen.  (Tearoff menus are the same as
+ *      ordinary menus on the mac.)  If entry is < 0 then the menu is
  *      drawn so its top left corner is located at the point with
  *      screen coordinates (x, y).  Otherwise the top left corner of
  *      the specified entry is located at that point.
@@ -784,10 +785,6 @@ TkpPostMenu(
     if (root == NULL) {
 	return TCL_ERROR;
     }
-    if (menuPtr->menuType == TEAROFF_MENU) {
-	entry -= 1;
-    }
-
     Drawable d = Tk_WindowId(root);
     NSView *rootview = TkMacOSXGetRootControl(d);
     NSWindow *win = [rootview window];
@@ -817,6 +814,18 @@ TkpPostMenu(
     Tcl_SetServiceMode(oldMode);
     inPostMenu = 0;
     return TCL_OK;
+}
+
+int
+TkpPostTearoffMenu(
+    Tcl_Interp *interp,		/* The interpreter this menu lives in */
+    TkMenu *menuPtr,		/* The menu we are posting */
+    int x, int y,		/* The screen coordinates where the top left
+				 * corner of the menu, or of the specified
+				 * entry, will be located. */
+    int entry)
+{
+    return TkpPostMenu(interp, menuPtr, x, y, entry);
 }
 
 /*
