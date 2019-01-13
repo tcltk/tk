@@ -1142,17 +1142,8 @@ TkRoundValueToResolution(
     TkScale *scalePtr,		/* Information about scale widget. */
     double value)		/* Value to round. */
 {
-    double rem, start;
-
-    if (scalePtr->resolution <= 0) {
-	return value;
-    }
-    start = fmod(scalePtr->fromValue, scalePtr->resolution);
-    rem = fmod(value - start + scalePtr->resolution/2, scalePtr->resolution);
-    if (rem < 0) {
-        rem += scalePtr->resolution;
-    }
-    return value + scalePtr->resolution/2 - rem;
+    return TkRoundIntervalToResolution(scalePtr, value - scalePtr->fromValue)
+            + scalePtr->fromValue;
 }
 
 double
@@ -1160,16 +1151,24 @@ TkRoundIntervalToResolution(
     TkScale *scalePtr,		/* Information about scale widget. */
     double value)		/* Value to round. */
 {
-    double rem;
+    double rem, rounded, tick;
 
     if (scalePtr->resolution <= 0) {
 	return value;
     }
-    rem = fmod(value + scalePtr->resolution/2, scalePtr->resolution);
+    tick = floor(value/scalePtr->resolution);
+    rounded = scalePtr->resolution * tick;
+    rem = value - rounded;
     if (rem < 0) {
-        rem += scalePtr->resolution;
+        if (rem <= -scalePtr->resolution/2) {
+            rounded = (tick - 1.0) * scalePtr->resolution;
+        }
+    } else {
+        if (rem >= scalePtr->resolution/2) {
+            rounded = (tick + 1.0) * scalePtr->resolution;
+        }
     }
-    return value + scalePtr->resolution/2 - rem;
+    return rounded;
 }
 
 /*
