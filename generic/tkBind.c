@@ -3920,7 +3920,6 @@ HandleEventGenerate(
     }
 
     if (event.general.xany.type == FocusIn || event.general.xany.type == FocusOut) {
-	/* XXX doesn't work for any reason, see tkFocus.c:283 */
 	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
     }
 
