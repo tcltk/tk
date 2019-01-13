@@ -244,7 +244,7 @@ void
 TkpComputeMenuButtonGeometry(butPtr)
     register TkMenuButton *butPtr;	/* Widget record for menu button. */
 {
-    int width, height, avgWidth, haveImage = 0, haveText = 0;
+    int width, height, avgWidth, haveImage = 0;
     int txtWidth, txtHeight;
     Tk_FontMetrics fm;
     int highlightWidth = butPtr->highlightWidth > 0 ? butPtr->highlightWidth : 0;
@@ -267,6 +267,16 @@ TkpComputeMenuButtonGeometry(butPtr)
         haveImage = 1;
     }
 
+    /*
+     * Mac menubuttons do not display correctly with no image and empty text.
+     */
+
+    if (haveImage == 0 && strlen(butPtr->text) == 0) {
+	ckfree(butPtr->text);
+	butPtr->text = ckalloc(2);
+	strcpy(butPtr->text, " ");
+    }
+    
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
         Tk_FreeTextLayout(butPtr->textLayout);
         butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
@@ -277,7 +287,6 @@ TkpComputeMenuButtonGeometry(butPtr)
         txtHeight = butPtr->textHeight;
         avgWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
         Tk_GetFontMetrics(butPtr->tkfont, &fm);
-        haveText = (txtWidth != 0 && txtHeight != 2);
     }
 
     /*
@@ -287,7 +296,7 @@ TkpComputeMenuButtonGeometry(butPtr)
      * image, because otherwise it is not really a compound button.
      */
 
-    if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+    if (butPtr->compound != COMPOUND_NONE && haveImage) {
         switch ((enum compound) butPtr->compound) {
             case COMPOUND_TOP:
             case COMPOUND_BOTTOM: {
