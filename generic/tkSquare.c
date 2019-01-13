@@ -332,7 +332,7 @@ SquareConfigure(
     Tk_SetWindowBackground(squarePtr->tkwin,
 	    Tk_3DBorderColor(bgBorder)->pixel);
     Tcl_GetBooleanFromObj(NULL, squarePtr->doubleBufferPtr, &doubleBuffer);
-    if ((squarePtr->gc == None) && (doubleBuffer)) {
+    if ((squarePtr->gc == NULL) && doubleBuffer) {
 	XGCValues gcValues;
 	gcValues.function = GXcopy;
 	gcValues.graphics_exposures = False;
@@ -397,7 +397,7 @@ SquareObjEventProc(
 	if (squarePtr->tkwin != NULL) {
 	    Tk_FreeConfigOptions((char *) squarePtr, squarePtr->optionTable,
 		    squarePtr->tkwin);
-	    if (squarePtr->gc != None) {
+	    if (squarePtr->gc != NULL) {
 		Tk_FreeGC(squarePtr->display, squarePtr->gc);
 	    }
 	    squarePtr->tkwin = NULL;
