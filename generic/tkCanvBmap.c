@@ -189,7 +189,7 @@ TkcCreateBitmap(
     bmapPtr->bgColor = NULL;
     bmapPtr->activeBgColor = NULL;
     bmapPtr->disabledBgColor = NULL;
-    bmapPtr->gc = None;
+    bmapPtr->gc = NULL;
 
     /*
      * Process the arguments to fill in the item record. Only 1 (list) or 2 (x
@@ -372,7 +372,7 @@ ConfigureBitmap(
     }
 
     if (bitmap == None) {
-	newGC = None;
+	newGC = NULL;
     } else {
 	gcValues.foreground = fgColor->pixel;
 	mask = GCForeground;
@@ -385,7 +385,7 @@ ConfigureBitmap(
 	}
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (bmapPtr->gc != None) {
+    if (bmapPtr->gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), bmapPtr->gc);
     }
     bmapPtr->gc = newGC;

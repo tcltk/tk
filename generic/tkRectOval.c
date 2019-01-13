@@ -258,7 +258,7 @@ CreateRectOval(
     rectOvalPtr->fillStipple = None;
     rectOvalPtr->activeFillStipple = None;
     rectOvalPtr->disabledFillStipple = None;
-    rectOvalPtr->fillGC = None;
+    rectOvalPtr->fillGC = NULL;
 
     /*
      * Process the arguments to fill in the item record.
@@ -466,9 +466,9 @@ ConfigureRectOval(
 	mask |= GCCapStyle;
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = None;
+	newGC = NULL;
     }
-    if (rectOvalPtr->outline.gc != None) {
+    if (rectOvalPtr->outline.gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), rectOvalPtr->outline.gc);
     }
     rectOvalPtr->outline.gc = newGC;
@@ -500,7 +500,7 @@ ConfigureRectOval(
     }
 
     if (color == NULL) {
-	newGC = None;
+	newGC = NULL;
     } else {
 	gcValues.foreground = color->pixel;
 	if (stipple != None) {
@@ -515,14 +515,13 @@ ConfigureRectOval(
 	 * Mac OS X CG drawing needs access to the outline linewidth even for
 	 * fills (as linewidth controls antialiasing).
 	 */
-
-	gcValues.line_width = rectOvalPtr->outline.gc != None ?
+	gcValues.line_width = rectOvalPtr->outline.gc != NULL ?
 		rectOvalPtr->outline.gc->line_width : 0;
 	mask |= GCLineWidth;
 #endif
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (rectOvalPtr->fillGC != None) {
+    if (rectOvalPtr->fillGC != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), rectOvalPtr->fillGC);
     }
     rectOvalPtr->fillGC = newGC;
@@ -595,7 +594,7 @@ DeleteRectOval(
     if (rectOvalPtr->disabledFillStipple != None) {
 	Tk_FreeBitmap(display, rectOvalPtr->disabledFillStipple);
     }
-    if (rectOvalPtr->fillGC != None) {
+    if (rectOvalPtr->fillGC != NULL) {
 	Tk_FreeGC(display, rectOvalPtr->fillGC);
     }
 }
@@ -664,7 +663,7 @@ ComputeRectOvalBbox(
 	rectOvalPtr->bbox[0] = tmpX;
     }
 
-    if (rectOvalPtr->outline.gc == None) {
+    if (rectOvalPtr->outline.gc == NULL) {
 	/*
 	 * The Win32 switch was added for 8.3 to solve a problem with ovals
 	 * leaving traces on bottom and right of 1 pixel. This may not be the
@@ -878,7 +877,7 @@ DisplayRectOval(
 	}
     }
 
-    if (rectOvalPtr->fillGC != None) {
+    if (rectOvalPtr->fillGC != NULL) {
 	if (fillStipple != None) {
 	    Tk_TSOffset *tsoffset;
 	    int w = 0, h = 0;
@@ -922,7 +921,7 @@ DisplayRectOval(
 	}
     }
 
-    if (rectOvalPtr->outline.gc != None) {
+    if (rectOvalPtr->outline.gc != NULL) {
 	Tk_ChangeOutlineGC(canvas, itemPtr, &(rectOvalPtr->outline));
 	if (rectOvalPtr->header.typePtr == &tkRectangleType) {
 	    XDrawRectangle(display, drawable, rectOvalPtr->outline.gc,
@@ -993,7 +992,7 @@ RectToPoint(
     y1 = rectPtr->bbox[1];
     x2 = rectPtr->bbox[2];
     y2 = rectPtr->bbox[3];
-    if (rectPtr->outline.gc != None) {
+    if (rectPtr->outline.gc != NULL) {
 	inc = width/2.0;
 	x1 -= inc;
 	y1 -= inc;
@@ -1009,7 +1008,7 @@ RectToPoint(
 
     if ((pointPtr[0] >= x1) && (pointPtr[0] < x2)
 	    && (pointPtr[1] >= y1) && (pointPtr[1] < y2)) {
-	if ((rectPtr->fillGC != None) || (rectPtr->outline.gc == None)) {
+	if ((rectPtr->fillGC != NULL) || (rectPtr->outline.gc == NULL)) {
 	    return 0.0;
 	}
 	xDiff = pointPtr[0] - x1;
@@ -1105,8 +1104,8 @@ OvalToPoint(
     }
 
 
-    filled = ovalPtr->fillGC != None;
-    if (ovalPtr->outline.gc == None) {
+    filled = ovalPtr->fillGC != NULL;
+    if (ovalPtr->outline.gc == NULL) {
 	width = 0.0;
 	filled = 1;
     }
@@ -1161,7 +1160,7 @@ RectToArea(
     }
 
     halfWidth = width/2.0;
-    if (rectPtr->outline.gc == None) {
+    if (rectPtr->outline.gc == NULL) {
 	halfWidth = 0.0;
     }
 
@@ -1171,7 +1170,7 @@ RectToArea(
 	    || (areaPtr[1] >= (rectPtr->bbox[3] + halfWidth))) {
 	return -1;
     }
-    if ((rectPtr->fillGC == None) && (rectPtr->outline.gc != None)
+    if ((rectPtr->fillGC == NULL) && (rectPtr->outline.gc != NULL)
 	    && (areaPtr[0] >= (rectPtr->bbox[0] + halfWidth))
 	    && (areaPtr[1] >= (rectPtr->bbox[1] + halfWidth))
 	    && (areaPtr[2] <= (rectPtr->bbox[2] - halfWidth))
@@ -1239,7 +1238,7 @@ OvalToArea(
      */
 
     halfWidth = width/2.0;
-    if (ovalPtr->outline.gc == None) {
+    if (ovalPtr->outline.gc == NULL) {
 	halfWidth = 0.0;
     }
     oval[0] = ovalPtr->bbox[0] - halfWidth;
@@ -1256,8 +1255,8 @@ OvalToArea(
      * return "outside".
      */
 
-    if ((result == 0) && (ovalPtr->outline.gc != None)
-	    && (ovalPtr->fillGC == None)) {
+    if ((result == 0) && (ovalPtr->outline.gc != NULL)
+	    && (ovalPtr->fillGC == NULL)) {
 	double centerX, centerY, height;
 	double xDelta1, yDelta1, xDelta2, yDelta2;
 

@@ -539,7 +539,7 @@ TkpOpenDisplay(
 
     twdPtr = ckalloc(sizeof(TkWinDrawable));
     if (twdPtr == NULL) {
-	return None;
+	return NULL;
     }
     twdPtr->type = TWD_WINDOW;
     twdPtr->window.winPtr = NULL;
@@ -1837,8 +1837,8 @@ Tk_SetCaretPos(
  *	Return the number of milliseconds the user was inactive.
  *
  * Results:
- *	Milliseconds of user inactive time or -1 if the user32.dll doesn't
- *	have the symbol GetLastInputInfo or GetLastInputInfo returns an error.
+ *	Milliseconds of user inactive time or -1 if GetLastInputInfo
+ *	returns an error.
  *
  * Side effects:
  *	None.
@@ -1853,7 +1853,7 @@ Tk_GetUserInactiveTime(
     LASTINPUTINFO li;
 
     li.cbSize = sizeof(li);
-    if (!(BOOL)GetLastInputInfo(&li)) {
+    if (!GetLastInputInfo(&li)) {
 	return -1;
     }
 
@@ -1875,7 +1875,7 @@ Tk_GetUserInactiveTime(
  *	none
  *
  * Side effects:
- *	The user inactivity timer of the underlaying windowing system is reset
+ *	The user inactivity timer of the underlying windowing system is reset
  *	to zero.
  *
  *----------------------------------------------------------------------

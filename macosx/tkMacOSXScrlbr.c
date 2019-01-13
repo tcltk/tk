@@ -48,7 +48,7 @@ typedef struct MacScrollbar {
     TkScrollbar information;	/* Generic scrollbar info. */
     GC troughGC;		/* For drawing trough. */
     GC copyGC;			/* Used for copying from pixmap onto screen. */
-    Bool buttonDown;            /* Is the mouse button down? */  
+    Bool buttonDown;            /* Is the mouse button down? */
     Bool mouseOver;             /* Is the pointer over the scrollbar. */
     HIThemeTrackDrawInfo info;  /* Controls how the scrollbar is drawn. */
 } MacScrollbar;
@@ -119,11 +119,11 @@ TkpCreateScrollbar(
 
     MacScrollbar *scrollPtr = (MacScrollbar *)ckalloc(sizeof(MacScrollbar));
 
-    scrollPtr->troughGC = None;
-    scrollPtr->copyGC = None;
+    scrollPtr->troughGC = NULL;
+    scrollPtr->copyGC = NULL;
     scrollPtr->info = defaultInfo;
     scrollPtr->buttonDown = false;
-    
+
     Tk_CreateEventHandler(tkwin,
 			  ExposureMask        |
 			  StructureNotifyMask |
@@ -561,7 +561,7 @@ static int
 ScrollbarEvent(TkScrollbar *scrollPtr, XEvent *eventPtr)
 {
     MacScrollbar *msPtr = (MacScrollbar *)scrollPtr;
-    
+
     /* The pressState does not indicate whether the moused button was
      * pressed at some location in the Scrollbar.  Rather, it indicates
      * that the scrollbar should appear as if it were pressed in that
