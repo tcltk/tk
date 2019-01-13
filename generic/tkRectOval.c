@@ -515,8 +515,7 @@ ConfigureRectOval(
 	 * Mac OS X CG drawing needs access to the outline linewidth even for
 	 * fills (as linewidth controls antialiasing).
 	 */
-
-	gcValues.line_width = rectOvalPtr->outline.gc != None ?
+	gcValues.line_width = rectOvalPtr->outline.gc != NULL ?
 		rectOvalPtr->outline.gc->line_width : 0;
 	mask |= GCLineWidth;
 #endif
