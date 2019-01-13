@@ -9,8 +9,6 @@
  */
 
 #include "tkInt.h"
-#include <X11/Xatom.h>
-
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -357,7 +355,7 @@ EntryFetchSelection(
     ClientData clientData, int offset, char *buffer, int maxBytes)
 {
     Entry *entryPtr = clientData;
-    size_t byteCount;
+    int byteCount;
     const char *string;
     const char *selStart, *selEnd;
 
@@ -371,7 +369,7 @@ EntryFetchSelection(
     selEnd = Tcl_UtfAtIndex(selStart,
 	    entryPtr->entry.selectLast - entryPtr->entry.selectFirst);
     byteCount = selEnd - selStart - offset;
-    if (byteCount > (size_t)maxBytes) {
+    if (byteCount > maxBytes) {
     /* @@@POSSIBLE BUG: Can transfer partial UTF-8 sequences.  Is this OK? */
 	byteCount = maxBytes;
     }
@@ -1179,7 +1177,7 @@ static GC EntryGetGC(Entry *entryPtr, Tcl_Obj *colorObj, TkRegion clip)
 	mask |= GCForeground;
     }
     gc = Tk_GetGC(entryPtr->core.tkwin, mask, &gcValues);
-    if (clip != None) {
+    if (clip != NULL) {
 	TkSetRegion(Tk_Display(entryPtr->core.tkwin), gc, clip);
     }
     return gc;
@@ -1290,7 +1288,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	    cursorX = field.x + field.width - cursorWidth;
 	}
 
-	gc = EntryGetGC(entryPtr, es.insertColorObj, None);
+	gc = EntryGetGC(entryPtr, es.insertColorObj, NULL);
 	XFillRectangle(Tk_Display(tkwin), d, gc,
 	    cursorX, cursorY, cursorWidth, cursorHeight);
 	Tk_FreeGC(Tk_Display(tkwin), gc);
@@ -1336,7 +1334,7 @@ static void EntryDisplay(void *clientData, Drawable d)
      * it from the Xft guts (if they're being used).
      */
 #ifdef HAVE_XFT
-    TkUnixSetXftClipRegion(None);
+    TkUnixSetXftClipRegion(NULL);
 #endif
     TkDestroyRegion(clipRegion);
 }

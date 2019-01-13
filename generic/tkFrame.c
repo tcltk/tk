@@ -663,13 +663,13 @@ CreateFrame(
     framePtr->type = type;
     framePtr->colormap = colormap;
     framePtr->relief = TK_RELIEF_FLAT;
-    framePtr->cursor = None;
+    framePtr->cursor = NULL;
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	Labelframe *labelframePtr = (Labelframe *) framePtr;
 
 	labelframePtr->labelAnchor = LABELANCHOR_NW;
-	labelframePtr->textGC = None;
+	labelframePtr->textGC = NULL;
     }
 
     /*
@@ -866,7 +866,7 @@ DestroyFrame(
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	Tk_FreeTextLayout(labelframePtr->textLayout);
-	if (labelframePtr->textGC != None) {
+	if (labelframePtr->textGC != NULL) {
 	    Tk_FreeGC(framePtr->display, labelframePtr->textGC);
 	}
     }
@@ -1122,7 +1122,7 @@ FrameWorldChanged(
 	gcValues.graphics_exposures = False;
 	gc = Tk_GetGC(tkwin, GCForeground | GCFont | GCGraphicsExposures,
 		&gcValues);
-	if (labelframePtr->textGC != None) {
+	if (labelframePtr->textGC != NULL) {
 	    Tk_FreeGC(framePtr->display, labelframePtr->textGC);
 	}
 	labelframePtr->textGC = gc;
