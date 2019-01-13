@@ -5,7 +5,7 @@
  * Random access to any item is very fast. New items can be either appended
  * or prepended. An array may be traversed in the forward or backward direction.
  *
- * Copyright (c) 2018 by Gregor Cramer.
+ * Copyright (c) 2018-2019 by Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -28,7 +28,7 @@
  *     MyArray_Append(&arr, MakePair(1, 2));
  *     MyArray_Append(&arr, MakePair(2, 3));
  *     for (i = 0; i < MyArray_Size(arr); ++i) {
- *         const Pair *p = MyArray_Get(arr, i);
+ *         Pair *p = MyArray_Get(arr, i);
  *         printf("%d -> %d\n", p->key, p->value);
  *         ckfree(p);
  *     }
@@ -49,7 +49,6 @@
  *     for (i = 0; i < MyArray_Size(arr); ++i) {
  *         const Pair *p = MyArray_Get(arr, i);
  *         printf("%d -> %d\n", p->key, p->value);
- *         ckfree(p);
  *     }
  *     MyArray_Free(&arr);
  *     assert(arr == NULL);
@@ -205,7 +204,7 @@ AT##_BufferSize(size_t numElems)						\
 										\
 __TK_ARRAY_UNUSED								\
 static int									\
-AT##_IsEmpty(AT *arr)								\
+AT##_IsEmpty(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return !arr || arr->size == 0u;						\
@@ -247,7 +246,8 @@ __TK_ARRAY_UNUSED								\
 static ElemType *								\
 AT##_Front(AT *arr)								\
 {										\
-    assert(!arr || arr->size != 0xdeadbeef);					\
+    assert(arr);								\
+    assert(arr->size != 0xdeadbeef);						\
     assert(!AT##_IsEmpty(arr));							\
     return &arr->buf[0];							\
 }										\
@@ -256,7 +256,8 @@ __TK_ARRAY_UNUSED								\
 static ElemType *								\
 AT##_Back(AT *arr)								\
 {										\
-    assert(!arr || arr->size != 0xdeadbeef);					\
+    assert(arr);								\
+    assert(arr->size != 0xdeadbeef);						\
     assert(!AT##_IsEmpty(arr));							\
     return &arr->buf[arr->size - 1];						\
 }										\
@@ -288,7 +289,8 @@ __TK_ARRAY_UNUSED								\
 static void									\
 AT##_Clear(AT *arr, size_t from, size_t to)					\
 {										\
-    assert(!arr || arr->size != 0xdeadbeef);					\
+    assert(arr);								\
+    assert(arr->size != 0xdeadbeef);						\
     assert(to <= AT##_Capacity(arr));						\
     assert(from <= to);								\
     memset(arr->buf + from, 0, AT##_BufferSize(to - from));			\
@@ -311,10 +313,11 @@ __TK_ARRAY_UNUSED								\
 static void									\
 AT##_SetSize(AT *arr, size_t newSize)						\
 {										\
-    assert(arr);								\
     assert(newSize <= AT##_Capacity(arr));					\
     assert(!arr || arr->size != 0xdeadbeef);					\
-    arr->size = newSize;							\
+    if (arr) {									\
+	arr->size = newSize;							\
+    }										\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
@@ -340,16 +343,18 @@ AT##_PopBack(AT *arr)								\
 										\
 __TK_ARRAY_UNUSED								\
 static ElemType *								\
-AT##_Get(AT *arr, size_t at)							\
+AT##_Get(const AT *arr, size_t at)						\
 {										\
+    assert(arr);								\
     assert(at < AT##_Size(arr));						\
-    return &arr->buf[at];							\
+    return (ElemType *) &arr->buf[at];						\
 }										\
 										\
 __TK_ARRAY_UNUSED								\
 static void									\
 AT##_Set(AT *arr, size_t at, ElemType *elem)					\
 {										\
+    assert(arr);								\
     assert(at < AT##_Size(arr));						\
     arr->buf[at] = *elem;							\
 }										\
@@ -410,7 +415,7 @@ AT##_BufferSize(size_t numElems)						\
 										\
 __TK_ARRAY_UNUSED								\
 static int									\
-AT##_IsEmpty(AT *arr)								\
+AT##_IsEmpty(const AT *arr)							\
 {										\
     assert(!arr || arr->size != 0xdeadbeef);					\
     return !arr || arr->size == 0;						\
@@ -436,7 +441,8 @@ __TK_ARRAY_UNUSED								\
 static ElemType *								\
 AT##_Front(AT *arr)								\
 {										\
-    assert(!arr || arr->size != 0xdeadbeef);					\
+    assert(arr);								\
+    assert(arr->size != 0xdeadbeef);						\
     assert(!AT##_IsEmpty(arr));							\
     return arr->buf[0];								\
 }										\
@@ -445,7 +451,8 @@ __TK_ARRAY_UNUSED								\
 static ElemType *								\
 AT##_Back(AT *arr)								\
 {										\
-    assert(!arr || arr->size != 0xdeadbeef);					\
+    assert(arr);								\
+    assert(arr->size != 0xdeadbeef);						\
     assert(!AT##_IsEmpty(arr));							\
     return arr->buf[arr->size - 1];						\
 }										\
@@ -493,7 +500,8 @@ __TK_ARRAY_UNUSED								\
 static void									\
 AT##_Clear(AT *arr, size_t from, size_t to)					\
 {										\
-    assert(!arr || arr->size != 0xdeadbeef);					\
+    assert(arr);								\
+    assert(arr->size != 0xdeadbeef);						\
     assert(to <= AT##_Capacity(arr));						\
     assert(from <= to);								\
     memset(arr->buf + from, 0, AT##_BufferSize(to - from));			\
@@ -546,6 +554,7 @@ __TK_ARRAY_UNUSED								\
 static ElemType *								\
 AT##_Get(const AT *arr, size_t at)						\
 {										\
+    assert(arr);								\
     assert(at < AT##_Size(arr));						\
     return arr->buf[at];							\
 }										\
@@ -554,6 +563,7 @@ __TK_ARRAY_UNUSED								\
 static void									\
 AT##_Set(AT *arr, size_t at, ElemType *elem)					\
 {										\
+    assert(arr);								\
     assert(at < AT##_Size(arr));						\
     arr->buf[at] = elem;							\
 }										\

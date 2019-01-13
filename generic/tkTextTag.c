@@ -273,7 +273,7 @@ TkTextTagCmd(
 
 	if (objc == 6) {
 	    int append = 0;
-	    unsigned long mask;
+	    Mask mask;
 	    const char *fifth = Tcl_GetString(objv[5]);
 
 	    if (fifth[0] == 0) {
@@ -292,7 +292,7 @@ TkTextTagCmd(
 	    if (mask == 0) {
 		return TCL_ERROR;
 	    }
-	    if (mask & (unsigned) ~(ButtonMotionMask|Button1MotionMask
+	    if (mask & (Mask) ~(ButtonMotionMask|Button1MotionMask
 		    |Button2MotionMask|Button3MotionMask|Button4MotionMask
 		    |Button5MotionMask|ButtonPressMask|ButtonReleaseMask
 		    |EnterWindowMask|LeaveWindowMask|KeyPressMask
@@ -1460,7 +1460,7 @@ TkTextBindProc(
     if (eventPtr->type == ButtonPress) {
 	textPtr->flags |= BUTTON_DOWN;
     } else if (eventPtr->type == ButtonRelease) {
-	int mask;
+	Mask mask;
 
 	switch (eventPtr->xbutton.button) {
 	case Button1:
@@ -1482,7 +1482,7 @@ TkTextBindProc(
 	    mask = 0;
 	    break;
 	}
-	if ((eventPtr->xbutton.state & AnyButtonMask) == (unsigned) mask) {
+	if ((eventPtr->xbutton.state & AnyButtonMask) == mask) {
 	    textPtr->flags &= ~BUTTON_DOWN;
 	    repick = 1;
 	}

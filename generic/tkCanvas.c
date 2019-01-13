@@ -977,7 +977,7 @@ CanvasWidgetCmd(
 
 	if (objc == 5) {
 	    int append = 0;
-	    unsigned long mask;
+	    Mask mask;
 	    const char *argv4 = Tcl_GetString(objv[4]);
 
 	    if (argv4[0] == 0) {
@@ -1027,7 +1027,7 @@ CanvasWidgetCmd(
 		result = TCL_ERROR;
 		goto done;
 	    }
-	    if (mask & (unsigned) ~(ButtonMotionMask|Button1MotionMask
+	    if (mask & (Mask) ~(ButtonMotionMask|Button1MotionMask
 		    |Button2MotionMask|Button3MotionMask|Button4MotionMask
 		    |Button5MotionMask|ButtonPressMask|ButtonReleaseMask
 		    |EnterWindowMask|LeaveWindowMask|KeyPressMask
@@ -4747,7 +4747,7 @@ CanvasBindProc(
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkCanvas *canvasPtr = clientData;
-    int mask;
+    Mask mask;
 
     Tcl_Preserve(canvasPtr);
 
