@@ -493,11 +493,13 @@ proc ::tk::MenuMotion {menu x y state} {
             if {[string is false $mode]} {
                 set delay [expr {[$menu cget -type] eq "menubar" ? 0 : 50}]
                 if {[$menu type $index] eq "cascade"} {
+                    # Catch these postcascade commands since the menu could be
+                    # destroyed before they run.
                     set Priv(menuActivatedTimer) \
-                        [after $delay [list $menu postcascade active]]
+                        [after $delay "catch {$menu postcascade active}"]
                 } else {
                     set Priv(menuDeactivatedTimer) \
-                        [after $delay [list $menu postcascade none]]
+                        [after $delay "catch {$menu postcascade none}"]
                 }
             }
         }
