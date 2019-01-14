@@ -110,7 +110,6 @@ Tk_ClassProcs tkpMenubuttonClass = {
 #define LEFT_INSET 8
 #define RIGHT_INSET 28
 #define MIN_HEIGHT 22
-
 
 /*
  *----------------------------------------------------------------------
@@ -267,22 +266,11 @@ TkpComputeMenuButtonGeometry(butPtr)
         haveImage = 1;
     }
 
-    /*
-     * Mac menubuttons do not display correctly with no image and empty text.
-     */
-
-    if (haveImage == 0 && strlen(butPtr->text) == 0) {
-	ckfree(butPtr->text);
-	butPtr->text = ckalloc(2);
-	strcpy(butPtr->text, " ");
-    }
-    
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
         Tk_FreeTextLayout(butPtr->textLayout);
         butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
                 butPtr->text, -1, butPtr->wrapLength,
                 butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
-
         txtWidth = butPtr->textWidth;
         txtHeight = butPtr->textHeight;
         avgWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
@@ -358,8 +346,8 @@ TkpComputeMenuButtonGeometry(butPtr)
     }
     
     butPtr->inset = highlightWidth + butPtr->borderWidth;
-    width  += LEFT_INSET + RIGHT_INSET + 2*butPtr->inset;
-	height += 2*butPtr->inset;
+    width += LEFT_INSET + RIGHT_INSET + 2*butPtr->inset;
+    height += 2*butPtr->inset;
     height = height < MIN_HEIGHT ? MIN_HEIGHT : height;
     Tk_GeometryRequest(butPtr->tkwin, width, height);
     Tk_SetInternalBorder(butPtr->tkwin, butPtr->inset);
@@ -425,8 +413,8 @@ DrawMenuButtonImageAndText(
         pressed = 1;
     }
 
-  haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
-   if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
+    haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
+    if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
         int x = 0;
         int y = 0;
         textXOffset = 0;
@@ -609,9 +597,11 @@ TkMacOSXDrawMenuButton(
             hiinfo.animation.time.start = hiinfo.animation.time.current;
         }
 
-        HIThemeDrawButton(&cntrRect, &hiinfo, dc.context, kHIThemeOrientationNormal, &contHIRec);
+        HIThemeDrawButton(&cntrRect, &hiinfo, dc.context,
+			  kHIThemeOrientationNormal, &contHIRec);
 	TkMacOSXRestoreDrawingContext(&dc);
-        MenuButtonContentDrawCB( mbPtr->btnkind, &mbPtr->drawinfo, (MacMenuButton *)mbPtr, 32, true);
+        MenuButtonContentDrawCB( mbPtr->btnkind, &mbPtr->drawinfo,
+				 (MacMenuButton *)mbPtr, 32, true);
     } else {
 	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
 	    return;
@@ -748,19 +738,18 @@ MenuButtonEventProc(
  */
 
 static void
-TkMacOSXComputeMenuButtonParams(TkMenuButton * butPtr, ThemeButtonKind* btnkind, HIThemeButtonDrawInfo *drawinfo)
+TkMacOSXComputeMenuButtonParams(
+    TkMenuButton * butPtr,
+    ThemeButtonKind* btnkind,
+    HIThemeButtonDrawInfo *drawinfo)
 {
     MacMenuButton *mbPtr = (MacMenuButton *)butPtr;
 
-    if (butPtr->image || butPtr->bitmap) {
+    if (butPtr->image || butPtr->bitmap || butPtr->text) {
 	/* TODO: allow for Small and Mini menubuttons. */
 	*btnkind = kThemePopupButton;
-    } else {
-        if (!butPtr->text || !*butPtr->text) {
-            *btnkind = kThemeArrowButton;
-        } else {
-            *btnkind = kThemePopupButton;
-        }
+    } else { /* This should never happen. */
+	*btnkind = kThemeArrowButton;
     }
 
     drawinfo->value = kThemeButtonOff;
@@ -812,9 +801,12 @@ TkMacOSXComputeMenuButtonParams(TkMenuButton * butPtr, ThemeButtonKind* btnkind,
  */
 
 static void
-TkMacOSXComputeMenuButtonDrawParams(TkMenuButton * butPtr, DrawParams * dpPtr)
+TkMacOSXComputeMenuButtonDrawParams(
+    TkMenuButton * butPtr,
+    DrawParams * dpPtr)
 {
-    dpPtr->hasImageOrBitmap = ((butPtr->image != NULL) || (butPtr->bitmap != None));
+    dpPtr->hasImageOrBitmap = ((butPtr->image != NULL) ||
+			       (butPtr->bitmap != None));
     dpPtr->border = butPtr->normalBorder;
     if ((butPtr->state == STATE_DISABLED) && (butPtr->disabledFg != NULL)) {
         dpPtr->gc = butPtr->disabledGC;
