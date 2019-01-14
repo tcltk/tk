@@ -754,6 +754,10 @@ void			TkpDumpPSList(const PSList *psList);
 static int BindCount = 0;
 #endif
 
+#if PREFER_MOST_SPECIALIZED_EVENT
+static unsigned Sqr(unsigned x) { return x*x; }
+#endif
+
 static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
 static bool IsOdd(int n) { return n & 1; }
@@ -817,7 +821,6 @@ GetInfo(
     return psPtr->pats[index].info;
 }
 
-#if PREFER_MOST_SPECIALIZED_EVENT
 static unsigned
 GetCount(
     const PatSeq *psPtr,
@@ -828,7 +831,28 @@ GetCount(
 
     return psPtr->pats[index].count;
 }
-#endif
+
+static int
+CountSpecialized(
+    const PatSeq *fstMatchPtr,
+    const PatSeq *sndMatchPtr)
+{
+    int fstCount = 0;
+    int sndCount = 0;
+    unsigned i;
+
+    assert(fstMatchPtr);
+    assert(sndMatchPtr);
+
+    for (i = 0; i < fstMatchPtr->numPats; ++i) {
+	if (GetInfo(fstMatchPtr, i)) { fstCount += GetCount(fstMatchPtr, i); }
+    }
+    for (i = 0; i < sndMatchPtr->numPats; ++i) {
+	if (GetInfo(sndMatchPtr, i)) { sndCount += GetCount(sndMatchPtr, i); }
+    }
+
+    return sndCount - fstCount;
+}
 
 static bool
 MatchEventNearby(
@@ -2086,37 +2110,40 @@ ResetCounters(
 static bool
 IsBetterMatch(
     const PatSeq *fstMatchPtr,
-    const PatSeq *sndMatchPtr,	/* this is a better match? */
-    unsigned patIndex)
+    const PatSeq *sndMatchPtr)	/* this is a better match? */
 {
-    int i;
+    int diff;
 
     if (!sndMatchPtr) { return false; }
     if (!fstMatchPtr) { return true; }
+    
+    diff = CountSpecialized(fstMatchPtr, sndMatchPtr);
+    if (diff > 0) { return true; }
+    if (diff < 0) { return false; }
 
-    for (i = patIndex; i >= 0; --i) {
-	Info fstInfo = GetInfo(fstMatchPtr, i);
-	Info sndInfo = GetInfo(sndMatchPtr, i);
-
-	if (sndInfo && !fstInfo) { return true; }
-	if (!sndInfo && fstInfo) { return false; }
-    }
+    if (sndMatchPtr->count > fstMatchPtr->count) { return true; }
+    if (sndMatchPtr->count < fstMatchPtr->count) { return false; }
 
 #if PREFER_MOST_SPECIALIZED_EVENT
-    if (fstMatchPtr->numPats > sndMatchPtr->numPats) { return true; }
-    if (fstMatchPtr->numPats < sndMatchPtr->numPats) { return false; }
+    {	/* local scope */
+	unsigned fstCount = 0;
+	unsigned sndCount = 0;
+	unsigned i;
 
-    for (i = patIndex; i >= 0; --i) {
-	unsigned fstCount = GetCount(fstMatchPtr, i);
-	unsigned sndCount = GetCount(sndMatchPtr, i);
+	/*
+	 * Count the most high-ordered patterns.
+	 */
 
+	for (i = 0; i < fstMatchPtr->numPats; ++i) {
+	    fstCount += Sqr(GetCount(fstMatchPtr, i));
+	}
+	for (i = 0; i < sndMatchPtr->numPats; ++i) {
+	    sndCount += Sqr(GetCount(sndMatchPtr, i));
+	}
 	if (sndCount > fstCount) { return true; }
 	if (sndCount < fstCount) { return false; }
     }
 #endif
-
-    if (sndMatchPtr->count > fstMatchPtr->count) { return true; }
-    if (sndMatchPtr->count < fstMatchPtr->count) { return false; }
 
     return sndMatchPtr->number > fstMatchPtr->number;
 }
@@ -2365,7 +2392,7 @@ Tk_BindEvent(
 	    for (i = PromArr_Size(bindPtr->promArr); i > 0; --i, --psl[0], --psl[1]) {
 		psPtr[0] = MatchPatterns(dispPtr, bindPtr, psl[0], psl[1], i, curEvent, objArr[k], NULL);
 
-		if (IsBetterMatch(matchPtrArr[k], psPtr[0], i)) {
+		if (IsBetterMatch(matchPtrArr[k], psPtr[0])) {
 		    /* we will process it later, because we still may find a pattern with better match */
 		    matchPtrArr[k] = psPtr[0];
 		}
@@ -2402,7 +2429,7 @@ Tk_BindEvent(
 	bestPtr = psPtr[0] ? psPtr[0] : psPtr[1];
 
 	if (matchPtrArr[k]) {
-	    if (IsBetterMatch(matchPtrArr[k], bestPtr, 0)) {
+	    if (IsBetterMatch(matchPtrArr[k], bestPtr)) {
 		matchPtrArr[k] = bestPtr;
 	    } else {
 		/*
@@ -2688,27 +2715,14 @@ VirtPatIsBound(
 static int
 Compare(
     const PatSeq *fstMatchPtr,
-    const PatSeq *sndMatchPtr, /* most recent match */
-    unsigned patIndex)
+    const PatSeq *sndMatchPtr) /* most recent match */
 {
-    int i;
-
-    assert(sndMatchPtr);
+    int diff;
 
     if (!fstMatchPtr) { return +1; }
-
-    assert(patIndex == fstMatchPtr->numPats - 1);
-    assert(patIndex == sndMatchPtr->numPats - 1);
-
-    for (i = patIndex; i >= 0; --i) {
-	Info fstInfo = GetInfo(fstMatchPtr, i);
-	Info sndInfo = GetInfo(sndMatchPtr, i);
-
-	if (sndInfo && !fstInfo) { return +1; }
-	if (!sndInfo && fstInfo) { return -1; }
-    }
-
-    return (int) sndMatchPtr->count - (int) fstMatchPtr->count;
+    assert(sndMatchPtr);
+    diff = CountSpecialized(fstMatchPtr, sndMatchPtr);
+    return diff ? diff : (int) sndMatchPtr->count - (int) fstMatchPtr->count;
 }
 
 /* helper function */
@@ -2748,6 +2762,8 @@ CompareModMasks(
 	    if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
 	}
     }
+
+    /* Finally compare modifier masks of last pattern. */
 
     if (IsSubsetOf(fstModMask, sndModMask)) { ++sndCount; }
     if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
@@ -2834,10 +2850,10 @@ MatchPatterns(
 				/*
 				 * This is also a final pattern.
 				 * We always prefer the pattern with better match.
-				 *
+				 * If completely equal than prefer most recently defined pattern.
 				 */
 
-				int cmp = Compare(bestPtr, psPtr, patIndex);
+				int cmp = Compare(bestPtr, psPtr);
 
 				if (cmp == 0) {
 				    cmp = CompareModMasks(psEntry->lastModMaskArr, bestModMaskArr,
