@@ -779,7 +779,7 @@ TkpPostMenu(
 				 * entry, will be located. */
     int index)
 {
-    /* Get the object that holds this Tk Window.*/
+    int result, oldMode;
     Tk_Window root = Tk_MainWindow(interp);
 
     if (root == NULL) {
@@ -790,9 +790,10 @@ TkpPostMenu(
     NSWindow *win = [rootview window];
     NSView *view = [win contentView];
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
+    NSInteger itemIndex = index;
+    NSInteger numItems = [menu numberOfItems];
     NSMenuItem *item = nil;
     NSPoint location = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
-    int result, oldMode;
 
     inPostMenu = 1;
     result = TkPreprocessMenu(menuPtr);
@@ -800,17 +801,19 @@ TkpPostMenu(
         inPostMenu = 0;
         return result;
     }
-    if (index >= [menu numberOfItems]) {
-	index = [menu numberOfItems] - 1;
+    if (itemIndex >= numItems) {
+    	itemIndex = numItems - 1;
     }
-    if (index >= 0) {
-	item = [menu itemAtIndex:(NSInteger)index];
+    if (itemIndex >= 0) {
+	item = [menu itemAtIndex:itemIndex];
     }
-    oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
-    [menu popUpMenuPositioningItem:item
-	  atLocation:[win tkConvertPointFromScreen:location]
-	  inView:view];
-    Tcl_SetServiceMode(oldMode);
+    if (menu != nil && item != nil) {
+	oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
+	[menu popUpMenuPositioningItem:item
+	      atLocation:[win tkConvertPointFromScreen:location]
+	      inView:view];
+	Tcl_SetServiceMode(oldMode);
+    }
     inPostMenu = 0;
     return TCL_OK;
 }
@@ -824,6 +827,7 @@ TkpPostTearoffMenu(
 				 * entry, will be located. */
     int index)
 {
+    menuPtr->active = -1;
     return TkpPostMenu(interp, menuPtr, x, y, index);
 }
 
