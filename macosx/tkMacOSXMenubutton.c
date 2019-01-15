@@ -243,7 +243,7 @@ void
 TkpComputeMenuButtonGeometry(butPtr)
     register TkMenuButton *butPtr;	/* Widget record for menu button. */
 {
-    int width, height, avgWidth, haveImage = 0;
+    int width, height, avgWidth, haveImage = 0, haveText = 0;
     int txtWidth, txtHeight;
     Tk_FontMetrics fm;
     int highlightWidth = butPtr->highlightWidth > 0 ? butPtr->highlightWidth : 0;
@@ -266,7 +266,8 @@ TkpComputeMenuButtonGeometry(butPtr)
         haveImage = 1;
     }
 
-    if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
+    if (butPtr->text && strlen(butPtr->text) > 0) {
+	haveText = 1;
         Tk_FreeTextLayout(butPtr->textLayout);
         butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
                 butPtr->text, -1, butPtr->wrapLength,
@@ -284,7 +285,7 @@ TkpComputeMenuButtonGeometry(butPtr)
      * image, because otherwise it is not really a compound button.
      */
 
-    if (butPtr->compound != COMPOUND_NONE && haveImage) {
+    if (haveImage && haveText) {
         switch ((enum compound) butPtr->compound) {
             case COMPOUND_TOP:
             case COMPOUND_BOTTOM: {
@@ -326,14 +327,14 @@ TkpComputeMenuButtonGeometry(butPtr)
         }
 
     } else {
-        if (haveImage) {
+        if (haveImage) { /* Image only */
             if (butPtr->width > 0) {
                 width = butPtr->width;
             }
             if (butPtr->height > 0) {
                 height = butPtr->height;
             }
-        } else {
+        } else { /* Text only */
             width = txtWidth;
             height = txtHeight;
             if (butPtr->width > 0) {
