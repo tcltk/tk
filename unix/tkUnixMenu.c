@@ -907,9 +907,9 @@ int
 TkpPostMenu(
     Tcl_Interp *interp,
     TkMenu *menuPtr,
-    int x, int y, int entry)
+    int x, int y, int index)
 {
-    return TkpPostTearoffMenu(interp, menuPtr, x, y, entry);
+    return TkpPostTearoffMenu(interp, menuPtr, x, y, index);
 }
 
 /*
@@ -919,7 +919,7 @@ TkpPostMenu(
  *
  *	Posts a tearoff menu on the screen so that the top left corner of the
  *      specified entry is located at the point (x, y) in screen coordinates.
- *      If the entry parameter is negative, the upper left corner of the menu
+ *      If the index parameter is negative, the upper left corner of the menu
  *      itself is placed at the point.  On unix this is called when posting
  *      any menu.  Adjusts the menu's position so that it fits on the screen,
  *      and maps and raises the menu.
@@ -937,17 +937,17 @@ int
 TkpPostTearoffMenu(
     Tcl_Interp *interp,		/* The interpreter of the menu */
     TkMenu *menuPtr,		/* The menu we are posting */
-    int x, int y, int entry)	/* The root X,Y coordinates where the
+    int x, int y, int index)	/* The root X,Y coordinates where the
 				 * specified entry will be posted */
 {
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    if (entry >= menuPtr->numEntries) {
-	entry = menuPtr->numEntries - 1;
+    if (index >= menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
     }
-    if (entry >= 0) {
-	y -= menuPtr->entries[entry]->y;
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
     }
 
     TkActivateMenuEntry(menuPtr, -1);
