@@ -870,10 +870,10 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_POST: {
-	int x, y, entry = -1;
+	int x, y, index = -1;
 
 	if (objc != 4 && objc != 5) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "x y ?entry?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "x y ?index?");
 	    goto error;
 	}
 	if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
@@ -881,9 +881,9 @@ MenuWidgetObjCmd(
 	    goto error;
 	}
 	if (objc == 5) {
-	    if (Tcl_GetIntFromObj(interp, objv[4], &entry) != TCL_OK) {
-		goto error;
-	    }
+            if (TkGetMenuIndex(interp, menuPtr, objv[4], 0, &index) != TCL_OK) {
+                goto error;
+            }
 	}
 
 	/*
@@ -898,9 +898,9 @@ MenuWidgetObjCmd(
             Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
             return TCL_ERROR;
         } else if (menuPtr->menuType != TEAROFF_MENU) {
-	    result = TkpPostMenu(interp, menuPtr, x, y, entry);
+	    result = TkpPostMenu(interp, menuPtr, x, y, index);
 	} else {
-	    result = TkpPostTearoffMenu(interp, menuPtr, x, y, entry);
+	    result = TkpPostTearoffMenu(interp, menuPtr, x, y, index);
 	}
 	break;
     }
