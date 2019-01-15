@@ -777,7 +777,7 @@ TkpPostMenu(
     int x, int y,		/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
 				 * entry, will be located. */
-    int entry)
+    int index)
 {
     /* Get the object that holds this Tk Window.*/
     Tk_Window root = Tk_MainWindow(interp);
@@ -791,7 +791,7 @@ TkpPostMenu(
     NSView *view = [win contentView];
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSMenuItem *item = nil;
-    NSInteger index = entry;
+    NSInteger index = index;
     NSPoint location = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
     int result, oldMode;
 
@@ -823,9 +823,9 @@ TkpPostTearoffMenu(
     int x, int y,		/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
 				 * entry, will be located. */
-    int entry)
+    int index)
 {
-    return TkpPostMenu(interp, menuPtr, x, y, entry);
+    return TkpPostMenu(interp, menuPtr, x, y, index);
 }
 
 /*
