@@ -791,7 +791,6 @@ TkpPostMenu(
     NSView *view = [win contentView];
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSMenuItem *item = nil;
-    NSInteger index = index;
     NSPoint location = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
     int result, oldMode;
 
@@ -805,7 +804,7 @@ TkpPostMenu(
 	index = [menu numberOfItems] - 1;
     }
     if (index >= 0) {
-	item = [menu itemAtIndex:index];
+	item = [menu itemAtIndex:(NSInteger)index];
     }
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
     [menu popUpMenuPositioningItem:item
