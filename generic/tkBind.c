@@ -754,10 +754,6 @@ void			TkpDumpPSList(const PSList *psList);
 static int BindCount = 0;
 #endif
 
-#if PREFER_MOST_SPECIALIZED_EVENT
-static unsigned Sqr(unsigned x) { return x*x; }
-#endif
-
 static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
 static bool IsOdd(int n) { return n & 1; }
@@ -2121,24 +2117,30 @@ IsBetterMatch(
     if (diff > 0) { return true; }
     if (diff < 0) { return false; }
 
-    if (sndMatchPtr->count > fstMatchPtr->count) { return true; }
-    if (sndMatchPtr->count < fstMatchPtr->count) { return false; }
-
 #if PREFER_MOST_SPECIALIZED_EVENT
     {	/* local scope */
-	unsigned fstCount = 0;
-	unsigned sndCount = 0;
+#define M (Tcl_WideUInt)1000000
+	static const Tcl_WideUInt weight[5] = { 0, 1, M, M*M, M*M*M };
+#undef M
+	Tcl_WideUInt fstCount = 0;
+	Tcl_WideUInt sndCount = 0;
 	unsigned i;
 
 	/*
 	 * Count the most high-ordered patterns.
+	 *
+	 * (This computation assumes that a sequence does not contain more than
+	 * 1,000,000 single patterns. It can be precluded that in practice this
+	 * assumption will not be violated.)
 	 */
 
 	for (i = 0; i < fstMatchPtr->numPats; ++i) {
-	    fstCount += Sqr(GetCount(fstMatchPtr, i));
+	    assert(GetCount(fstMatchPtr, i) < SIZE_OF_ARRAY(weight));
+	    fstCount += weight[GetCount(fstMatchPtr, i)];
 	}
 	for (i = 0; i < sndMatchPtr->numPats; ++i) {
-	    sndCount += Sqr(GetCount(sndMatchPtr, i));
+	    assert(GetCount(sndMatchPtr, i) < SIZE_OF_ARRAY(weight));
+	    sndCount += weight[GetCount(sndMatchPtr, i)];
 	}
 	if (sndCount > fstCount) { return true; }
 	if (sndCount < fstCount) { return false; }

@@ -6358,7 +6358,7 @@ test bind-33.1 {prefer longest match} -setup {
 } -cleanup {
     destroy .t.f
 } -result {a11}
-test bind-33.2 {should prefer most specialized event} -setup {
+test bind-33.2 {should prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6373,10 +6373,10 @@ test bind-33.2 {should prefer most specialized event} -setup {
     destroy .t.f
     # This test case shows that old implementation has an issue, because
     # in my opinion it is expected that <Double-1> is matching, this binding
-    # is more specialized. But new implementation will be conform to old,
+    # is more specific. But new implementation will be conform to old,
     # and so "11" is the expected result.
 } -result {11}
-test bind-33.3 {should prefer most specialized event} -setup {
+test bind-33.3 {should prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6393,10 +6393,10 @@ test bind-33.3 {should prefer most specialized event} -setup {
     destroy .t.f
     # Also this test case shows that old implementation has an issue, it is
     # expected that <a><Double-1><a> is matching, because <Double-1> is more
-    # specialized than <1><1>. But new implementation will be conform to old,
+    # specific than <1><1>. But new implementation will be conform to old,
     # and so "11" is the expected result.
 } -result {11}
-test bind-33.4 {prefer most specialized event} -setup {
+test bind-33.4 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6413,7 +6413,7 @@ test bind-33.4 {prefer most specialized event} -setup {
     # here <1><1> will be triggered correctly, but this is not consistent with
     # test case 33.2.
 } -result {11}
-test bind-33.5 {prefer most specialized} -setup {
+test bind-33.5 {prefer most specific} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6427,7 +6427,7 @@ test bind-33.5 {prefer most specialized} -setup {
 } -cleanup {
     destroy .t.f
 } -result {11}
-test bind-33.6 {prefer most specialized} -setup {
+test bind-33.6 {prefer most specific} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6445,7 +6445,7 @@ test bind-33.6 {prefer most specialized} -setup {
 } -cleanup {
     destroy .t.f
 } -result {1111}
-test bind-33.7 {prefer most specialized} -setup {
+test bind-33.7 {prefer most specific} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6459,7 +6459,7 @@ test bind-33.7 {prefer most specialized} -setup {
 } -cleanup {
     destroy .t.f
 } -result {1}
-test bind-33.8 {prefer most specialized} -setup {
+test bind-33.8 {prefer most specific} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6474,7 +6474,7 @@ test bind-33.8 {prefer most specialized} -setup {
 } -cleanup {
     destroy .t.f
 } -result {1}
-test bind-33.9 {prefer last in case of homogeneous patterns} -setup {
+test bind-33.9 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6491,7 +6491,7 @@ test bind-33.9 {prefer last in case of homogeneous patterns} -setup {
 } -cleanup {
     destroy .t.f
 } -result {last}
-test bind-33.10 {prefer last in case of homogeneous patterns} -setup {
+test bind-33.10 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6508,7 +6508,7 @@ test bind-33.10 {prefer last in case of homogeneous patterns} -setup {
 } -cleanup {
     destroy .t.f
 } -result {last}
-test bind-33.11 {should prefer most specialized} -setup {
+test bind-33.11 {should prefer most specific} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6530,10 +6530,10 @@ test bind-33.11 {should prefer most specialized} -setup {
     destroy .t.f
     # This test case shows that old implementation has an issue, because
     # in my opinion it is expected that first one is matching, this binding
-    # is more specialized. But new implementation will be conform to old,
+    # is more specific. But new implementation will be conform to old,
     # and so "last" is the expected result.
 } -result {last}
-test bind-33.12 {prefer last in case of homogeneous patterns} -setup {
+test bind-33.12 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6547,7 +6547,7 @@ test bind-33.12 {prefer last in case of homogeneous patterns} -setup {
 } -cleanup {
     destroy .t.f
 } -result {last}
-test bind-33.13 {prefer last in case of homogeneous patterns} -setup {
+test bind-33.13 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6564,7 +6564,7 @@ test bind-33.13 {prefer last in case of homogeneous patterns} -setup {
     # because both bindings are homogeneous equal, so the latter must
     # be preferred.
 } -result {last}
-test bind-33.14 {prefer last in case of homogeneous patterns} -setup {
+test bind-33.14 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6580,7 +6580,7 @@ test bind-33.14 {prefer last in case of homogeneous patterns} -setup {
 } -cleanup {
     destroy .t.f
 } -result {last}
-test bind-33.15 {prefer last in case of homogeneous patterns} -setup {
+test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
