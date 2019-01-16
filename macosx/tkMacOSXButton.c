@@ -545,7 +545,6 @@ DrawButtonImageAndText(
         }
         imageXOffset += x;
         imageYOffset += y;
-        textYOffset -= 1;
 
         if (butPtr->image != NULL) {
 	  if ((butPtr->selectImage != NULL) &&
@@ -569,6 +568,7 @@ DrawButtonImageAndText(
 	  XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
         }
 
+	y += 1; /* Tweak to match native buttons. */
         Tk_DrawTextLayout(butPtr->display, pixmap,
                 dpPtr->gc, butPtr->textLayout,
                 x + textXOffset, y + textYOffset, 0, -1);
@@ -621,6 +621,7 @@ DrawButtonImageAndText(
 			butPtr->textWidth + butPtr->indicatorSpace,
 			  butPtr->textHeight, &x, &y);
 	x += butPtr->indicatorSpace;
+	y += 1; /* Tweak to match native buttons */
 	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
 			  x, y, 0, -1);
     }
