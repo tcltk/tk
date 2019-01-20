@@ -519,9 +519,7 @@ TkPutImage(
     BITMAPINFO *infoPtr;
     HBITMAP bitmap;
     char *data;
-#ifndef NO_WINRGBFIX
     Visual *visual;
-#endif
 
     display->request++;
 
