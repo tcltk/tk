@@ -335,7 +335,7 @@ SquareConfigure(
     Tk_SetWindowBackground(squarePtr->tkwin,
 	    Tk_3DBorderColor(bgBorder)->pixel);
     Tcl_GetBooleanFromObj(NULL, squarePtr->doubleBufferPtr, &doubleBuffer);
-    if ((squarePtr->gc == NULL) && (doubleBuffer)) {
+    if ((squarePtr->gc == NULL) && doubleBuffer) {
 	XGCValues gcValues;
 	gcValues.function = GXcopy;
 	gcValues.graphics_exposures = False;

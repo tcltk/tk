@@ -434,6 +434,9 @@ Specifies the font to use when drawing text.
 Specifies the item image, in case the item's \fB\-image\fR option is empty.
 .\" .PP
 .\" \fI(@@@ TODO: sort out order of precedence for options)\fR
+.PP
+Tag priority is decided by the creation order: tags created first receive
+higher priority.
 .SH "COLUMN IDENTIFIERS"
 .PP
 Column identifiers take any of the following forms:
