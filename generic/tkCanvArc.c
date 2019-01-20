@@ -13,6 +13,8 @@
 #include "tkInt.h"
 #include "tkCanvas.h"
 
+#include "float.h"
+
 /*
  * The structure below defines the record for each arc item.
  */
@@ -183,7 +185,7 @@ static void		ComputeArcBbox(Tk_Canvas canvas, ArcItem *arcPtr);
 static int		ConfigureArc(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
 			    Tcl_Obj *const objv[], int flags);
-static void		ComputeArcFromHeight(ArcItem *arcPtr);
+static int		ComputeArcFromHeight(ArcItem *arcPtr);
 static int		CreateArc(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
@@ -473,7 +475,14 @@ ConfigureArc(
      * overridden.
      */
     if (arcPtr->height != 0) {
-	ComputeArcFromHeight(arcPtr);
+	int ret = ComputeArcFromHeight(arcPtr);
+    if (ret != TCL_OK) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"coordinates too close to define a chord"));
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC",
+			NULL);
+        return ret;
+    }
 	ComputeArcBbox(canvas, arcPtr);
     }
 
@@ -595,7 +604,7 @@ ConfigureArc(
  *	end-point and height (!= 0).
  *
  * Results:
- *	None.
+ *	TCL_ERROR if the chord length is zero, TCL_OK otherwise.
  *
  * Side effects:
  *	The height parameter is set to 0 on exit.
@@ -603,7 +612,7 @@ ConfigureArc(
  *--------------------------------------------------------------
  */
 
-static void
+static int
 ComputeArcFromHeight(
     ArcItem* arcPtr)
 {
@@ -615,6 +624,10 @@ ComputeArcFromHeight(
 
     chordLen = hypot(arcPtr->endPoint[1] - arcPtr->startPoint[1],
 	    arcPtr->startPoint[0] - arcPtr->endPoint[0]);
+
+    if (chordLen < DBL_EPSILON)
+        return TCL_ERROR;
+
     chordDir[0] = (arcPtr->endPoint[0] - arcPtr->startPoint[0]) / chordLen;
     chordDir[1] = (arcPtr->endPoint[1] - arcPtr->startPoint[1]) / chordLen;
     chordCen[0] = (arcPtr->startPoint[0] + arcPtr->endPoint[0]) / 2;
@@ -668,6 +681,8 @@ ComputeArcFromHeight(
      */
 
     arcPtr->height = 0;
+    
+    return TCL_OK;
 }
 
 /*
