@@ -41,7 +41,7 @@ if {[tk windowingsystem] eq "aqua"} {
     set defaultBorder 10
 } else {
     set smallIndicator 27
-    set bigindicator 40
+    set bigIndicator 40
     set defaultBorder 20
 }
 test unixbutton-1.1 {TkpComputeButtonGeometry procedure} -constraints {
