@@ -476,13 +476,13 @@ ConfigureArc(
      */
     if (arcPtr->height != 0) {
 	int ret = ComputeArcFromHeight(arcPtr);
-    if (ret != TCL_OK) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"coordinates too close to define a chord"));
-		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC",
-			NULL);
-        return ret;
-    }
+        if (ret != TCL_OK) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                    "coordinates too close to define a chord"));
+                    Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC",
+                    NULL);
+            return ret;
+        }
 	ComputeArcBbox(canvas, arcPtr);
     }
 
@@ -806,7 +806,7 @@ ComputeArcBbox(
     ComputeArcOutline(canvas,arcPtr);
 
     /*
-     * To compute the bounding box, start with the the bbox formed by the two
+     * To compute the bounding box, start with the bbox formed by the two
      * endpoints of the arc. Then add in the center of the arc's oval (if
      * relevant) and the 3-o'clock, 6-o'clock, 9-o'clock, and 12-o'clock
      * positions, if they are relevant.
