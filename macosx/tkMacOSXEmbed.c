@@ -1061,7 +1061,6 @@ static void
 EmbedSendConfigure(
     Container *containerPtr)	/* Information about the embedding. */
 {
-    printf("Call to EmbedSendConfigure\n");
 }
 
 /*
