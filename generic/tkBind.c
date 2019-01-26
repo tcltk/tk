@@ -3941,12 +3941,6 @@ HandleEventGenerate(
 	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
     }
 
-#ifdef DONT_REDIRECT_GENERATED_KEY_EVENTS
-    if (event.general.xany.type == KeyPress || event.general.xany.type == KeyRelease) {
-	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
-    }
-#endif
-
     /*
      * Process the remaining arguments to fill in additional fields of the event.
      */
