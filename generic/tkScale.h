@@ -219,7 +219,8 @@ typedef struct TkScale {
  */
 
 MODULE_SCOPE void	TkEventuallyRedrawScale(TkScale *scalePtr, int what);
-MODULE_SCOPE double	TkRoundToResolution(TkScale *scalePtr, double value);
+MODULE_SCOPE double	TkRoundValueToResolution(TkScale *scalePtr, double value);
+MODULE_SCOPE double	TkRoundIntervalToResolution(TkScale *scalePtr, double value);
 MODULE_SCOPE TkScale *	TkpCreateScale(Tk_Window tkwin);
 MODULE_SCOPE void	TkpDestroyScale(TkScale *scalePtr);
 MODULE_SCOPE void	TkpDisplayScale(ClientData clientData);
