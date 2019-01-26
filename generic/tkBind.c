@@ -108,7 +108,7 @@ enum { true = (bool) 1, false = (bool) 0 };
 #ifdef SUPPORT_DEBUGGING
 # undef SUPPORT_DEBUGGING
 #endif
-#define SUPPORT_DEBUGGING 1
+#define SUPPORT_DEBUGGING 0
 
 /*
  * Test validity of PSEntry items.
