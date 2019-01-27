@@ -386,6 +386,7 @@ test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} -constra
 	unix
 } -setup {
 	deleteWindows
+    update
 } -body {
     toplevel .t1 -container 1
     wm geometry .t1 +0+0
