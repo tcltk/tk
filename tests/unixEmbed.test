@@ -390,9 +390,7 @@ test unixEmbed-3.2 {ContainerEventProc procedure, set size on creation} -constra
     toplevel .t1 -container 1
     wm geometry .t1 +0+0
     toplevel .t2 -use [winfo id .t1] -bg red
-    while {[winfo exists .t2] == 0} {
-	update
-    }
+    update
     wm geometry .t2
 } -cleanup {
 	deleteWindows
