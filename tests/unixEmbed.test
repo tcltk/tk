@@ -145,7 +145,7 @@ test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} -constra
 	deleteWindows
 } -result {{{XXX {} {} .t}} 0}
 test unixEmbed-1.5a {TkpUseWindow procedure, creating Container records} -constraints {
-        unix testembed
+    unix testembed
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -162,8 +162,8 @@ test unixEmbed-1.5a {TkpUseWindow procedure, creating Container records} -constr
         list [testembed] [expr {[lindex [lindex [testembed all] 0] 0] - [w]}]
     }
 } -cleanup {
-        interp delete slave
-        deleteWindows
+    interp delete slave
+    deleteWindows
 } -result {{{XXX {} {} .t}} 0}
 test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} -constraints {
 	unix testembed notAqua
@@ -185,7 +185,7 @@ test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} -constra
 	deleteWindows
 } -result {{XXX {} {} .t2} {XXX {} {} .t1}}
 test unixEmbed-1.6a {TkpUseWindow procedure, creating Container records} -constraints {
-        unix testembed
+    unix testembed
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -204,8 +204,8 @@ test unixEmbed-1.6a {TkpUseWindow procedure, creating Container records} -constr
         testembed
     }
 } -cleanup {
-        interp delete slave
-        deleteWindows
+    interp delete slave
+    deleteWindows
 } -result {{XXX {} {} .t2} {XXX {} {} .t1}}
 test unixEmbed-1.7 {TkpUseWindow procedure, container and embedded in same app} -constraints {
 	unix testembed
@@ -248,7 +248,7 @@ test unixEmbed-2.1 {EmbeddedEventProc procedure} -constraints {
 	deleteWindows
 } -result {}
 test unixEmbed-2.1a {EmbeddedEventProc procedure} -constraints {
-        unix testembed
+    unix testembed
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -269,7 +269,7 @@ test unixEmbed-2.1a {EmbeddedEventProc procedure} -constraints {
         testembed
     }
 } -cleanup {
-        deleteWindows
+    deleteWindows
 } -result {}
 test unixEmbed-2.2 {EmbeddedEventProc procedure} -constraints {
 	unix testembed notAqua
@@ -290,7 +290,7 @@ test unixEmbed-2.2 {EmbeddedEventProc procedure} -constraints {
 	deleteWindows
 } -result {}
 test unixEmbed-2.2a {EmbeddedEventProc procedure} -constraints {
-        unix testembed
+    unix testembed
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -418,7 +418,7 @@ test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} -co
 	deleteWindows
 } -result {200x200+0+0}
 test unixEmbed-3.3a {ContainerEventProc procedure, disallow position changes} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -506,7 +506,7 @@ test unixEmbed-3.5 {ContainerEventProc procedure, geometry requests} -constraint
 	deleteWindows
 } -result {300 80 300x80+0+0}
 test unixEmbed-3.5a {ContainerEventProc procedure, geometry requests} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -551,7 +551,7 @@ test unixEmbed-3.6 {ContainerEventProc procedure, map requests} -constraints {
 	deleteWindows
 } -result {mapped}
 test unixEmbed-3.6a {ContainerEventProc procedure, map requests} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -599,7 +599,7 @@ test unixEmbed-3.7 {ContainerEventProc procedure, destroy events} -constraints {
 	deleteWindows
 } -result {dead 0}
 test unixEmbed-3.7a {ContainerEventProc procedure, destroy events} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -648,7 +648,7 @@ test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} -constraints
 	deleteWindows
 } -result {180x100+0+0}
 test unixEmbed-4.1a {EmbedStructureProc procedure, configure events} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -691,7 +691,7 @@ test unixEmbed-4.2 {EmbedStructureProc procedure, destroy events} -constraints {
 	deleteWindows
 } -result {{{XXX .f1 XXX {}}} {}}
 test unixEmbed-4.2a {EmbedStructureProc procedure, destroy events} -constraints {
-        unix testembed
+    unix testembed
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -737,7 +737,7 @@ test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
 	deleteWindows
 } -result {{focus in .t1}}
 test unixEmbed-5.1a {EmbedFocusProc procedure, FocusIn events} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -784,7 +784,7 @@ test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} -constrai
 	deleteWindows
 } -result {}
 test unixEmbed-5.2a {EmbedFocusProc procedure, focusing on dead window} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -832,7 +832,7 @@ test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} -constraints {
 	deleteWindows
 } -result {{{focus in .t1}} {{focus in .t1} {focus out .t1}}}
 test unixEmbed-5.3a {EmbedFocusProc procedure, FocusOut events} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -886,7 +886,7 @@ test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} -constr
 	deleteWindows
 } -result {{{configure .t1 300 120}} 300x120+0+0}
 test unixEmbed-6.1a {EmbedGeometryRequest procedure, window changes size} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -936,7 +936,7 @@ test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} -constr
 	deleteWindows
 } -result {{{configure .t1 200 200}} 200x200+0+0}
 test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -997,7 +997,7 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
     bind . <KeyPress> {}
 } -result {{{key a 1}} {}}
 test unixEmbed-7.1a {TkpRedirectKeyEvent procedure, forward keystroke} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -1060,7 +1060,7 @@ test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width
     bind . <KeyPress> {}
 } -result {{} {{key b}}}
 test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke width} -constraints {
-        unix
+    unix
 } -setup {
     deleteWindows
     catch {interp delete slave}
@@ -1217,7 +1217,7 @@ test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} -constraint
 	deleteWindows
 } -result {{{XXX {} {} .t1}} {}}
 test unixEmbed-9.2a {EmbedWindowDeleted procedure, check embeddedPtr} -constraints {
-        unix testembed
+    unix testembed
 } -setup {
     deleteWindows
     catch {interp delete slave}
