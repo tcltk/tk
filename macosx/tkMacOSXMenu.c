@@ -807,7 +807,7 @@ TkpPostMenu(
     if (itemIndex >= 0) {
 	item = [menu itemAtIndex:itemIndex];
     }
-    if (menu != nil && item != nil) {
+    if (menu != nil) {
 	oldMode = Tcl_SetServiceMode(TCL_SERVICE_NONE);
 	[menu popUpMenuPositioningItem:item
 	      atLocation:[win tkConvertPointFromScreen:location]
