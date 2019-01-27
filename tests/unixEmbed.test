@@ -752,6 +752,7 @@ test unixEmbed-5.1a {EmbedFocusProc procedure, FocusIn events} -constraints {
         toplevel .t1 -use [w1]
         bind .t1 <FocusIn> {lappend x "focus in %W"}
         bind .t1 <FocusOut> {lappend x "focus out %W"}
+        update
         set x {}
     }
     focus -force .f1
