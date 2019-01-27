@@ -681,6 +681,7 @@ TkWmNewWindow(
     wmPtr->masterWindowName = NULL;
     wmPtr->icon = NULL;
     wmPtr->iconFor = NULL;
+    wmPtr->transientPtr = NULL;
     wmPtr->sizeHintsFlags = 0;
     wmPtr->minWidth = wmPtr->minHeight = 1;
     wmPtr->maxWidth = 0;
@@ -882,6 +883,7 @@ TkWmDeadWindow(
     TkWindow *winPtr)		/* Top-level window that's being deleted. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
+    TkDisplay *dispPtr = TkGetDisplayList();
 
     if (wmPtr == NULL) {
 	return;
@@ -915,7 +917,6 @@ TkWmDeadWindow(
     }
     while (wmPtr->protPtr != NULL) {
 	ProtocolHandler *protPtr = wmPtr->protPtr;
-
 	wmPtr->protPtr = protPtr->nextPtr;
 	Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
     }
@@ -927,6 +928,30 @@ TkWmDeadWindow(
     }
     if (wmPtr->flags & WM_UPDATE_PENDING) {
 	Tcl_CancelIdleCall(UpdateGeometryInfo, winPtr);
+    }
+
+    /*
+     * If the dead window has a transient, remove references to it from
+     * the transient.
+     */
+    
+    for (Transient *transientPtr = wmPtr->transientPtr;
+	 transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
+	TkWindow *winPtr2 = transientPtr->winPtr;
+	Window master = TkGetTransientMaster(winPtr2);
+	TkWindow *masterPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, master); 
+    	if (masterPtr == winPtr) {
+	    wmPtr2 = winPtr2->wmInfoPtr;
+	    wmPtr2->master = None;
+	    ckfree(wmPtr2->masterWindowName);
+	    wmPtr2->masterWindowName = NULL;
+    	}
+    }
+
+    while (wmPtr->transientPtr != NULL) {
+	Transient *transientPtr = wmPtr->transientPtr;
+	wmPtr->transientPtr = transientPtr->nextPtr;
+	ckfree(transientPtr);
     }
 
     /*
@@ -1758,6 +1783,7 @@ WmDeiconifyCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    TkDisplay *dispPtr = TkGetDisplayList();
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -1786,6 +1812,27 @@ WmDeiconifyCmd(
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
     }
+
+    /*
+     * If this window has a transient, the transient must also be deiconified if
+     * it was withdrawn by the master.
+     */
+
+    for (Transient *transientPtr = wmPtr->transientPtr;
+	 transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
+	TkWindow *winPtr2 = transientPtr->winPtr;
+	WmInfo *wmPtr2 = winPtr2->wmInfoPtr;
+	Window master = TkGetTransientMaster(winPtr2);
+	TkWindow *masterPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, master); 
+    	if (masterPtr == winPtr) {
+	    if (!(wmPtr2->hints.initial_state == WithdrawnState &&
+		  (transientPtr->flags & WITHDRAWN_BY_MASTER) == 0)) {
+		TkpWmSetState(winPtr2, NormalState);
+		transientPtr->flags &= ~WITHDRAWN_BY_MASTER;
+	    }
+	}
+    }
+    
     return TCL_OK;
 }
 
@@ -2272,6 +2319,7 @@ WmIconifyCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
+    TkDisplay *dispPtr = TkGetDisplayList();
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -2308,6 +2356,24 @@ WmIconifyCmd(
     if (wmPtr->icon) {
 	Tk_MapWindow((Tk_Window)wmPtr->icon);
     }
+
+    /*
+     * If this window has a transient the transient must be withdrawn when
+     * the master is iconified.
+     */
+
+    for (Transient *transientPtr = wmPtr->transientPtr;
+	 transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
+	TkWindow *winPtr2 = transientPtr->winPtr;
+	Window master = TkGetTransientMaster(winPtr2);
+	TkWindow *masterPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, master); 
+    	if (masterPtr == winPtr &&
+	    winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
+	    TkpWmSetState(winPtr2, WithdrawnState);
+	    transientPtr->flags |= WITHDRAWN_BY_MASTER;
+	}
+    }
+
     return TCL_OK;
 }
 
@@ -3508,6 +3574,7 @@ WmTransientCmd(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window master;
     WmInfo *wmPtr2;
+    TkDisplay *dispPtr = TkGetDisplayList();
     char *masterWindowName;
     int length;
 
@@ -3523,16 +3590,39 @@ WmTransientCmd(
 	return TCL_OK;
     }
     if (Tcl_GetString(objv[3])[0] == '\0') {
-	wmPtr->master = None;
-	if (wmPtr->masterWindowName != NULL) {
-	    ckfree(wmPtr->masterWindowName);
+
+	/*
+	 * Remove the transient from its master's list.
+	 */
+
+	if (wmPtr->master != None) {
+	    TkWindow *masterPtr = (TkWindow*)Tk_IdToWindow(dispPtr->display,
+							   wmPtr->master);
+	    wmPtr2 = masterPtr->wmInfoPtr;
+	    Transient *transientPtr = wmPtr2->transientPtr;
+	    if (transientPtr->winPtr == winPtr) {
+		wmPtr2->transientPtr = transientPtr->nextPtr;
+	    } else while (transientPtr->nextPtr != NULL) {
+		    if (transientPtr->nextPtr->winPtr == winPtr) {
+			transientPtr->nextPtr = transientPtr->nextPtr->nextPtr;
+			break;
+		    }
+		    transientPtr = transientPtr->nextPtr;
+		}
+	    if (transientPtr!= NULL) {
+		ckfree(transientPtr);
+	    }
+	    wmPtr->master = None;
+	    if (wmPtr->masterWindowName != NULL) {
+		ckfree(wmPtr->masterWindowName);
+	    }
+	    wmPtr->masterWindowName = NULL;
 	}
-	wmPtr->masterWindowName = NULL;
     } else {
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	TkWindow* masterPtr = (TkWindow*) master;
+	TkWindow *masterPtr = (TkWindow*) master;
 	while (!Tk_TopWinHierarchy(masterPtr)) {
 
             /*
@@ -3566,6 +3656,26 @@ WmTransientCmd(
 		    "can't make \"%s\" its own master", Tk_PathName(winPtr)));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
 	    return TCL_ERROR;
+	}
+
+	/*
+	 * Add the transient to the master's list.
+	 */
+
+	Transient *transient = ckalloc(sizeof(Transient));
+	transient->winPtr = winPtr;
+	transient->flags = 0;
+	transient->nextPtr = wmPtr->transientPtr;
+	wmPtr2->transientPtr = transient;
+	
+	/*
+	 * If the master is withdrawn or iconic then withdraw the transient.
+	 */
+	if ((wmPtr2->hints.initial_state == WithdrawnState ||
+	     wmPtr2->hints.initial_state == IconicState) &&
+	    wmPtr->hints.initial_state != WithdrawnState){
+	    TkpWmSetState(winPtr, WithdrawnState);
+	    transient->flags |= WITHDRAWN_BY_MASTER;
 	}
 
 	wmPtr->master = Tk_WindowId(masterPtr);
@@ -3620,10 +3730,28 @@ WmWithdrawCmd(
 	Tcl_SetErrorCode(interp, "TK", "WM", "WITHDRAW", "ICON", NULL);
 	return TCL_ERROR;
     }
+
     TkpWmSetState(winPtr, WithdrawnState);
+    
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    TkDisplay *dispPtr = TkGetDisplayList();
     [win orderOut:nil];
     [win setExcludedFromWindowsMenu:YES];
+
+    /*
+     * If this window has a transient, the transient must also be withdrawn.
+     */
+    for (Transient *transientPtr = wmPtr->transientPtr;
+	 transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
+	TkWindow *winPtr2 = transientPtr->winPtr;
+	Window master = TkGetTransientMaster(winPtr2);
+	TkWindow *masterPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, master); 
+    	if (masterPtr == winPtr &&
+	    winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
+	    TkpWmSetState(winPtr2, WithdrawnState);
+	    transientPtr->flags |= WITHDRAWN_BY_MASTER;
+	}
+    }
 
     return TCL_OK;
 }
@@ -4734,7 +4862,6 @@ Tk_MoveToplevelWindow(
     wmPtr->x = x;
     wmPtr->y = y;
     wmPtr->flags |= WM_MOVE_PENDING;
-    //    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
     if (!(wmPtr->sizeHintsFlags & (USPosition|PPosition))) {
 	wmPtr->sizeHintsFlags |= USPosition;
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
