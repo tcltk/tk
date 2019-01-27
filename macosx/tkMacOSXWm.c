@@ -322,6 +322,7 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
+static void             RemoveTransient(TkWindow *winPtr);
 
 #pragma mark NSWindow(TKWm)
 
@@ -888,6 +889,13 @@ TkWmDeadWindow(
     if (wmPtr == NULL) {
 	return;
     }
+    
+    /* 
+     *If the dead window is a transient, remove it from the master's list.
+     */
+
+    RemoveTransient(winPtr);
+
     Tk_ManageGeometry((Tk_Window) winPtr, NULL, NULL);
     Tk_DeleteEventHandler((Tk_Window) winPtr, StructureNotifyMask,
 	    TopLevelEventProc, winPtr);
@@ -936,15 +944,15 @@ TkWmDeadWindow(
      */
     
     for (Transient *transientPtr = wmPtr->transientPtr;
-	 transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
-	TkWindow *winPtr2 = transientPtr->winPtr;
-	Window master = TkGetTransientMaster(winPtr2);
-	TkWindow *masterPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, master); 
+    	 transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
+    	TkWindow *winPtr2 = transientPtr->winPtr;
+    	Window master = TkGetTransientMaster(winPtr2);
+    	TkWindow *masterPtr = (TkWindow *)Tk_IdToWindow(dispPtr->display, master); 
     	if (masterPtr == winPtr) {
-	    wmPtr2 = winPtr2->wmInfoPtr;
-	    wmPtr2->master = None;
-	    ckfree(wmPtr2->masterWindowName);
-	    wmPtr2->masterWindowName = NULL;
+    	    wmPtr2 = winPtr2->wmInfoPtr;
+    	    wmPtr2->master = None;
+    	    ckfree(wmPtr2->masterWindowName);
+    	    wmPtr2->masterWindowName = NULL;
     	}
     }
 
@@ -3574,7 +3582,6 @@ WmTransientCmd(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window master;
     WmInfo *wmPtr2;
-    TkDisplay *dispPtr = TkGetDisplayList();
     char *masterWindowName;
     int length;
 
@@ -3590,34 +3597,8 @@ WmTransientCmd(
 	return TCL_OK;
     }
     if (Tcl_GetString(objv[3])[0] == '\0') {
+	RemoveTransient(winPtr);
 
-	/*
-	 * Remove the transient from its master's list.
-	 */
-
-	if (wmPtr->master != None) {
-	    TkWindow *masterPtr = (TkWindow*)Tk_IdToWindow(dispPtr->display,
-							   wmPtr->master);
-	    wmPtr2 = masterPtr->wmInfoPtr;
-	    Transient *transientPtr = wmPtr2->transientPtr;
-	    if (transientPtr->winPtr == winPtr) {
-		wmPtr2->transientPtr = transientPtr->nextPtr;
-	    } else while (transientPtr->nextPtr != NULL) {
-		    if (transientPtr->nextPtr->winPtr == winPtr) {
-			transientPtr->nextPtr = transientPtr->nextPtr->nextPtr;
-			break;
-		    }
-		    transientPtr = transientPtr->nextPtr;
-		}
-	    if (transientPtr!= NULL) {
-		ckfree(transientPtr);
-	    }
-	    wmPtr->master = None;
-	    if (wmPtr->masterWindowName != NULL) {
-		ckfree(wmPtr->masterWindowName);
-	    }
-	    wmPtr->masterWindowName = NULL;
-	}
     } else {
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {
 	    return TCL_ERROR;
@@ -3671,6 +3652,7 @@ WmTransientCmd(
 	/*
 	 * If the master is withdrawn or iconic then withdraw the transient.
 	 */
+
 	if ((wmPtr2->hints.initial_state == WithdrawnState ||
 	     wmPtr2->hints.initial_state == IconicState) &&
 	    wmPtr->hints.initial_state != WithdrawnState){
@@ -3689,6 +3671,61 @@ WmTransientCmd(
     }
     ApplyMasterOverrideChanges(winPtr, NULL);
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RemoveTransient --
+ *
+ *      Clears the transient's master record and removes the transient
+ *      from the master's list.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *      References to a master are removed from the transient's wmInfo
+ *	structure and references to the transient are removed from its
+ *      master's wmInfo.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RemoveTransient(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
+    TkDisplay *dispPtr = TkGetDisplayList();
+    TkWindow *masterPtr;
+    if (wmPtr == NULL || wmPtr->master == None) {
+	return;
+    }
+    masterPtr = (TkWindow*)Tk_IdToWindow(dispPtr->display, wmPtr->master);
+    wmPtr2 = masterPtr->wmInfoPtr;
+    if (wmPtr2 == NULL) {
+	return;
+    }
+    wmPtr->master = None;
+    if (wmPtr->masterWindowName != NULL) {
+	ckfree(wmPtr->masterWindowName);
+    }
+    wmPtr->masterWindowName = NULL;
+    Transient *temp, *cursor = wmPtr2->transientPtr;
+    if (cursor->winPtr == winPtr) {
+	temp = cursor->nextPtr;
+	ckfree(cursor);
+	cursor = temp;
+	masterPtr->wmInfoPtr->transientPtr = cursor;
+    }
+    while (cursor != NULL) {
+	if (cursor->winPtr == winPtr) {
+	    temp = cursor->nextPtr;
+	    ckfree(cursor);
+	    cursor = temp;
+	}
+    }
 }
 
 /*
