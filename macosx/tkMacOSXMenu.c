@@ -924,9 +924,6 @@ TkpPostTearoffMenu(
     }
     TkWmRestackToplevel((TkWindow *) menuPtr->tkwin, Above, NULL);
     return TCL_OK;
-
-    //    menuPtr->active = -1;
-    //    return TkpPostMenu(interp, menuPtr, x, y, index);
 }
 
 /*
