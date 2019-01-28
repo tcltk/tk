@@ -753,16 +753,15 @@ TkpDestroyMenuEntry(
 /*
  *----------------------------------------------------------------------
  *
- * TkpPostMenu, TkPostTearoffMenu --
+ * TkpPostMenu --
  *
- *	Posts a menu on the screen.  (Tearoff menus are the same as
- *      ordinary menus on the mac.)  If entry is < 0 then the menu is
+ *	Posts a menu on the screen. If entry is < 0 then the menu is
  *      drawn so its top left corner is located at the point with
  *      screen coordinates (x, y).  Otherwise the top left corner of
  *      the specified entry is located at that point.
  *
  * Results:
- *	None.
+ *	Returns a standard Tcl result.
  *
  * Side effects:
  *	The menu is posted and handled.
@@ -823,6 +822,34 @@ TkpPostMenu(
     inPostMenu = 0;
     return TCL_OK;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpPostTearoffMenu --
+ *
+ *	Tearoff menus are not supported on the Mac.  This placeholder
+ *      function, which is simply a copy of the unix function, posts a
+ *      completely useless window with a black background on the screen. If
+ *      entry is < 0 then the window is positioned so that its top left corner
+ *      is located at the point with screen coordinates (x, y).  Otherwise the
+ *      window position is offset so that top left corner of the specified
+ *      entry would be located at that point, if there actually were a menu.
+ *
+ *      Mac menus steal all mouse or keyboard input from the application until
+ *      the menu is dismissed, with or without a selection, by a mouse or key
+ *      event.  Posting a Mac menu in a regression test will cause the test to
+ *      halt waiting for user input.  This is why the TkpPostMenu function is
+ *      not being used as the placeholder.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A useless window is posted.
+ *
+ *----------------------------------------------------------------------
+ */
 
 int
 TkpPostTearoffMenu(
