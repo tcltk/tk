@@ -523,7 +523,7 @@ GenerateActivateEvents(
     int activeFlag)
 {
     TkGenerateActivateEvents(winPtr, activeFlag);
-    if (activeFlag) {
+    if (activeFlag || ![NSApp isActive]) {
 	TkMacOSXGenerateFocusEvent(winPtr, activeFlag);
     }
     return true;
