@@ -1130,19 +1130,19 @@ test unixEmbed-8.1a {TkpClaimFocus procedure} -constraints unix -setup {
     frame .f1 -container 1 -width 200 -height 50
     frame .f2 -width 200 -height 50
     pack .f1 .f2
+    update
     slave alias w1 winfo id .f1
     slave eval {
         destroy [winfo child .]
         toplevel .t1 -use [w1] -highlightthickness 2 -bd 2 -relief sunken
     }
+    # This should clear focus from the application embedded in .f1
     focus -force .f2
     update
     list [slave eval {
-        focus .t1
         set x [list [focus]]
-        update
-        after 500
-        update
+        focus .t1
+	update
         lappend x [focus]
     }] [focus]
 } -cleanup {
