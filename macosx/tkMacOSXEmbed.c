@@ -498,9 +498,7 @@ TkMacOSXGetHostToplevel(
  * TkpClaimFocus --
  *
  *	This procedure is invoked when someone asks for the input focus to be
- *	put on a window in an embedded application, but the application
- *	doesn't currently have the focus. It requests the input focus from the
- *	container application.
+ *	put on a window in an embedded application.
  *
  * Results:
  *	None.
@@ -539,7 +537,7 @@ TkpClaimFocus(
     event.xfocus.window = containerPtr->parent;
     event.xfocus.mode = EMBEDDED_APP_WANTS_FOCUS;
     event.xfocus.detail = force;
-    Tk_QueueWindowEvent(&event,TCL_QUEUE_TAIL);
+    Tk_HandleEvent(&event);
 }
 
 /*
@@ -914,7 +912,6 @@ EmbedActivateProc(
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = clientData;
-
     if (containerPtr->embeddedPtr != NULL) {
 	if (eventPtr->type == ActivateNotify) {
 	    TkGenerateActivateEvents(containerPtr->embeddedPtr,1);
