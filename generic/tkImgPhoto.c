@@ -2211,6 +2211,9 @@ ImgPhotoDelete(
     if (masterPtr->format != NULL) {
 	Tcl_DecrRefCount(masterPtr->format);
     }
+    if (masterPtr->metadata != NULL) {
+	Tcl_DecrRefCount(masterPtr->metadata);
+    }
     Tk_FreeOptions(configSpecs, (char *) masterPtr, NULL, 0);
     ckfree(masterPtr);
 }
