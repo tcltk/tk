@@ -512,9 +512,12 @@ FileReadGIF(
 
     /*
      * Initialize the metadata dict
+     * Start with a ref count of 1 to delete it in the error case with
+     * Tcl_DecrRefCount().
      */
     metadata = Tcl_NewDictObj();
-    
+    Tcl_IncrRefCount(metadata);
+
     /*
      * Search for the frame from the GIF to display.
      */
@@ -780,7 +783,7 @@ FileReadGIF(
      * free the metadata object in case of error.
      * Otherwise, it is not freed as the ref count was incremented above.
      */
-    Tcl_IncrRefCount(metadata);
+    Tcl_DecrRefCount(metadata);
     return result;
 }
 
