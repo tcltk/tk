@@ -470,18 +470,19 @@ a menu entry does not automatically unpost the menu;  the default
 bindings normally take care of this before invoking the \fBinvoke\fR
 widget command.
 .TP
-\fIpathName \fBpost \fIx y\fR
+\fIpathName \fBpost \fIx y\fR ?\fIindex\fR?
 .
 Arrange for the menu to be displayed on the screen at the root-window
-coordinates given by \fIx\fR and \fIy\fR.  These coordinates are
-adjusted if necessary to guarantee that the entire menu is visible on
-the screen.  This command normally returns an empty string.
-If the \fB\-postcommand\fR option has been specified, then its value is
-executed as a Tcl script before posting the menu and the result of
-that script is returned as the result of the \fBpost\fR widget
-command.
-If an error returns while executing the command, then the error is
-returned without posting the menu.
+coordinates given by \fIx\fR and \fIy\fR.  If an index is specified
+the menu will be located so that the entry with that index is
+displayed at the point.  These coordinates are adjusted if necessary to
+guarantee that the entire menu is visible on the screen.  This command
+normally returns an empty string.  If the \fB\-postcommand\fR option
+has been specified, then its value is executed as a Tcl script before
+posting the menu and the result of that script is returned as the
+result of the \fBpost\fR widget command.  If an error returns while
+executing the command, then the error is returned without posting the
+menu.
 .TP
 \fIpathName \fBpostcascade \fIindex\fR
 .
