@@ -394,7 +394,7 @@ test menubutton-4.1 {ConfigureMenuButton procedure} -setup {
     .mb1 configure -width 1i
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {expected integer but got "1i"} 
+} -returnCodes error -result {expected integer but got "1i"}
 test menubutton-4.2 {ConfigureMenuButton procedure} -setup {
     deleteWindows
 } -body {
@@ -451,7 +451,7 @@ test menubutton-4.6 {ConfigureMenuButton procedure} -setup {
 ".mb1 configure -width abc"}
 
 test menubutton-4.7 {ConfigureMenuButton procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     deleteWindows
     imageCleanup
@@ -464,7 +464,7 @@ test menubutton-4.7 {ConfigureMenuButton procedure} -constraints {
     imageCleanup
 } -returnCodes error -result {bad screen distance "0.5x"}
 test menubutton-4.8 {ConfigureMenuButton procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     deleteWindows
     imageCleanup
@@ -499,7 +499,7 @@ test menubutton-4.10 {ConfigureMenuButton procedure - bad direction} -setup {
     deleteWindows
 } -body {
     menubutton .mb -text "Test"
-    .mb configure -direction badValue 
+    .mb configure -direction badValue
 } -cleanup {
     deleteWindows
 } -returnCodes error -result {bad direction "badValue": must be above, below, flush, left, or right}
@@ -542,9 +542,13 @@ test menubutton-6.1 {MenuButtonCmdDeletedProc procedure} -setup {
     deleteWindows
 } -result {{} {}}
 
-
+if {[tk windowingsystem] == "aqua"} {
+    set extraWidth 36
+} else {
+    set extraWidth 0
+}
 test menubutton-7.1 {ComputeMenuButtonGeometry procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     deleteWindows
     image create test image1
@@ -555,35 +559,35 @@ test menubutton-7.1 {ComputeMenuButtonGeometry procedure} -constraints {
 } -cleanup {
     deleteWindows
     imageCleanup
-} -result {38 23}
+} -result [list [expr {38 + $extraWidth}] 23]
 test menubutton-7.2 {ComputeMenuButtonGeometry procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     deleteWindows
     image create test image1
 } -body {
-    menubutton .mb -image image1 -bd 1 -highlightthickness 2
+    menubutton .mb -image image1 -bd 3 -highlightthickness 1
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
     imageCleanup
-} -result {36 21}
+} -result [list [expr {38 + $extraWidth}] 23]
 test menubutton-7.3 {ComputeMenuButtonGeometry procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     deleteWindows
     image create test image1
 } -body {
-    menubutton .mb -image image1 -bd 0 -highlightthickness 2 -padx 5 -pady 5
+    menubutton .mb -image image1 -bd 1 -highlightthickness 3 -padx 5 -pady 5
     pack .mb
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
     imageCleanup
-} -result {34 19}
+} -result [list [expr {38 + $extraWidth}] 23]
 test menubutton-7.4 {ComputeMenuButtonGeometry procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     deleteWindows
     image create test image1
@@ -595,9 +599,9 @@ test menubutton-7.4 {ComputeMenuButtonGeometry procedure} -constraints {
 } -cleanup {
     deleteWindows
     imageCleanup
-} -result {48 23}
+} -result [list [expr {48 + $extraWidth}] 23]
 test menubutton-7.5 {ComputeMenuButtonGeometry procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     deleteWindows
     image create test image1
@@ -609,7 +613,7 @@ test menubutton-7.5 {ComputeMenuButtonGeometry procedure} -constraints {
 } -cleanup {
     deleteWindows
     imageCleanup
-} -result {38 38}
+} -result [list [expr {38 + $extraWidth}] 38]
 test menubutton-7.6 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
 } -body {
@@ -619,7 +623,7 @@ test menubutton-7.6 {ComputeMenuButtonGeometry procedure} -setup {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-} -result {25 35}
+} -result [list [expr {25 + $extraWidth}] 35]
 test menubutton-7.7 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
 } -body {
@@ -629,7 +633,7 @@ test menubutton-7.7 {ComputeMenuButtonGeometry procedure} -setup {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-} -result {46 33}
+} -result [list [expr {46 + $extraWidth}] 33]
 test menubutton-7.8 {ComputeMenuButtonGeometry procedure} -setup {
     deleteWindows
 } -body {
@@ -639,7 +643,7 @@ test menubutton-7.8 {ComputeMenuButtonGeometry procedure} -setup {
     list [winfo reqwidth .mb] [winfo reqheight .mb]
 } -cleanup {
     deleteWindows
-} -result {23 56}
+} -result [list [expr {23 + $extraWidth}] 56]
 test menubutton-7.9 {ComputeMenuButtonGeometry procedure} -constraints {
     fonts
 } -setup {

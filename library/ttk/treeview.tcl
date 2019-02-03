@@ -46,7 +46,7 @@ bind Treeview	<Shift-ButtonPress-1> \
 bind Treeview	<<ToggleSelection>> \
 		{ ttk::treeview::Select %W %x %y toggle }
 
-ttk::copyBindings TtkScrollable Treeview 
+ttk::copyBindings TtkScrollable Treeview
 
 ### Binding procedures.
 #

@@ -2227,9 +2227,9 @@ static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr)
         DWORD dw;
         for (dw = 0; dw < count; ++dw) {
             if (dlgFilterPtr[dw].pszName != NULL)
-                ckfree(dlgFilterPtr[dw].pszName);
+                ckfree((char *)dlgFilterPtr[dw].pszName);
             if (dlgFilterPtr[dw].pszSpec != NULL)
-                ckfree(dlgFilterPtr[dw].pszSpec);
+                ckfree((char *)dlgFilterPtr[dw].pszSpec);
         }
         ckfree(dlgFilterPtr);
     }
@@ -3022,7 +3022,7 @@ SetTkDialog(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     char buf[32];
 
-    sprintf(buf, "0x%p", (HWND) clientData);
+    sprintf(buf, "0x%p", clientData);
     Tcl_SetVar2(tsdPtr->debugInterp, "tk_dialog", NULL, buf, TCL_GLOBAL_ONLY);
 }
 

@@ -49,7 +49,7 @@ typedef struct BitmapMaster {
  */
 
 typedef struct BitmapInstance {
-    int refCount;		/* Number of instances that share this data
+    size_t refCount;		/* Number of instances that share this data
 				 * structure. */
     BitmapMaster *masterPtr;	/* Pointer to master for image. */
     Tk_Window tkwin;		/* Window in which the instances will be
@@ -951,8 +951,7 @@ ImgBmapFree(
     BitmapInstance *instancePtr = clientData;
     BitmapInstance *prevPtr;
 
-    instancePtr->refCount--;
-    if (instancePtr->refCount > 0) {
+    if (instancePtr->refCount-- > 1) {
 	return;
     }
 
@@ -1080,10 +1079,10 @@ GetByte(
     Tcl_Channel chan)	/* The channel we read from. */
 {
     char buffer;
-    int size;
+    size_t size;
 
     size = Tcl_Read(chan, &buffer, 1);
-    if (size <= 0) {
+    if ((size + 1) < 2) {
 	return EOF;
     } else {
 	return buffer;

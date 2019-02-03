@@ -85,7 +85,7 @@ typedef struct TkScale {
     int repeatInterval;		/* Interval between autorepeats (in ms). */
     char *label;		/* Label to display above or to right of
 				 * scale; NULL means don't display a label. */
-    int labelLength;		/* Number of non-NULL chars. in label. */
+    TkSizeT labelLength;	/* Number of non-NULL chars. in label. */
     enum state state;		/* Values are active, normal, or disabled.
 				 * Value of scale cannot be changed when
 				 * disabled. */
@@ -219,7 +219,8 @@ typedef struct TkScale {
  */
 
 MODULE_SCOPE void	TkEventuallyRedrawScale(TkScale *scalePtr, int what);
-MODULE_SCOPE double	TkRoundToResolution(TkScale *scalePtr, double value);
+MODULE_SCOPE double	TkRoundValueToResolution(TkScale *scalePtr, double value);
+MODULE_SCOPE double	TkRoundIntervalToResolution(TkScale *scalePtr, double value);
 MODULE_SCOPE TkScale *	TkpCreateScale(Tk_Window tkwin);
 MODULE_SCOPE void	TkpDestroyScale(TkScale *scalePtr);
 MODULE_SCOPE void	TkpDisplayScale(ClientData clientData);

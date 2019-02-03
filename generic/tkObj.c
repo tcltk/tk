@@ -73,8 +73,12 @@ typedef struct MMRep {
 typedef struct WindowRep {
     Tk_Window tkwin;		/* Cached window; NULL if not found. */
     TkMainInfo *mainPtr;	/* MainWindow associated with tkwin. */
-    long epoch;			/* Value of mainPtr->deletionEpoch at last
+#if TCL_MAJOR_VERSION > 8
+    size_t epoch;			/* Value of mainPtr->deletionEpoch at last
 				 * successful lookup. */
+#else
+    long epoch;
+#endif
 } WindowRep;
 
 /*
@@ -104,7 +108,7 @@ static const Tcl_ObjType pixelObjType = {
     FreePixelInternalRep,	/* freeIntRepProc */
     DupPixelInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetPixelFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -118,7 +122,7 @@ static const Tcl_ObjType mmObjType = {
     FreeMMInternalRep,		/* freeIntRepProc */
     DupMMInternalRep,		/* dupIntRepProc */
     UpdateStringOfMM,		/* updateStringProc */
-    SetMMFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*
@@ -131,7 +135,7 @@ static const Tcl_ObjType windowObjType = {
     FreeWindowInternalRep,	/* freeIntRepProc */
     DupWindowInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    SetWindowFromAny		/* setFromAnyProc */
+    NULL			/* setFromAnyProc */
 };
 
 /*

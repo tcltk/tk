@@ -172,7 +172,7 @@ SquareObjCmd(
     squarePtr->gc = NULL;
     squarePtr->optionTable = optionTable;
 
-    if (Tk_InitOptions(interp, (char *) squarePtr, optionTable, tkwin)
+    if (Tk_InitOptions(interp, squarePtr, optionTable, tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(squarePtr->tkwin);
 	ckfree(squarePtr);
@@ -181,7 +181,7 @@ SquareObjCmd(
 
     Tk_CreateEventHandler(squarePtr->tkwin, ExposureMask|StructureNotifyMask,
 	    SquareObjEventProc, squarePtr);
-    if (Tk_SetOptions(interp, (char *) squarePtr, optionTable, objc - 2,
+    if (Tk_SetOptions(interp, squarePtr, optionTable, objc - 2,
 	    objv + 2, tkwin, NULL, NULL) != TCL_OK) {
 	goto error;
     }
@@ -250,7 +250,7 @@ SquareWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    goto error;
 	}
-	resultObjPtr = Tk_GetOptionValue(interp, (char *) squarePtr,
+	resultObjPtr = Tk_GetOptionValue(interp, squarePtr,
 		squarePtr->optionTable, objv[2], squarePtr->tkwin);
 	if (resultObjPtr == NULL) {
 	    result = TCL_ERROR;
@@ -261,19 +261,19 @@ SquareWidgetObjCmd(
     case SQUARE_CONFIGURE:
 	resultObjPtr = NULL;
 	if (objc == 2) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
+	    resultObjPtr = Tk_GetOptionInfo(interp, squarePtr,
 		    squarePtr->optionTable, NULL, squarePtr->tkwin);
 	    if (resultObjPtr == NULL) {
 		result = TCL_ERROR;
 	    }
 	} else if (objc == 3) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
+	    resultObjPtr = Tk_GetOptionInfo(interp, squarePtr,
 		    squarePtr->optionTable, objv[2], squarePtr->tkwin);
 	    if (resultObjPtr == NULL) {
 		result = TCL_ERROR;
 	    }
 	} else {
-	    result = Tk_SetOptions(interp, (char *) squarePtr,
+	    result = Tk_SetOptions(interp, squarePtr,
 		    squarePtr->optionTable, objc - 2, objv + 2,
 		    squarePtr->tkwin, NULL, NULL);
 	    if (result == TCL_OK) {
@@ -335,7 +335,7 @@ SquareConfigure(
     Tk_SetWindowBackground(squarePtr->tkwin,
 	    Tk_3DBorderColor(bgBorder)->pixel);
     Tcl_GetBooleanFromObj(NULL, squarePtr->doubleBufferPtr, &doubleBuffer);
-    if ((squarePtr->gc == NULL) && (doubleBuffer)) {
+    if ((squarePtr->gc == NULL) && doubleBuffer) {
 	XGCValues gcValues;
 	gcValues.function = GXcopy;
 	gcValues.graphics_exposures = False;

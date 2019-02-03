@@ -420,7 +420,7 @@ TkpDestroyMenu(
 
 	if (tsdPtr->menuHWND != NULL) {
 	    Tcl_HashEntry *hashEntryPtr =
-		Tcl_FindHashEntry(&tsdPtr->winMenuTable, (char *) winMenuHdl);
+		Tcl_FindHashEntry(&tsdPtr->winMenuTable, winMenuHdl);
 
 	    if (hashEntryPtr != NULL) {
 		Tcl_DeleteHashEntry(hashEntryPtr);
@@ -743,7 +743,10 @@ ReconfigureWindowsMenu(
  *
  * TkpPostMenu --
  *
- *	Posts a menu on the screen
+ *	Posts a menu on the screen so that the top left corner of the
+ *      specified entry is located at the point (x, y) in screen coordinates.
+ *      If the entry parameter is negative, the upper left corner of the
+ *      menu itself is placed at the point.
  *
  * Results:
  *	None.
@@ -758,7 +761,7 @@ int
 TkpPostMenu(
     Tcl_Interp *interp,
     TkMenu *menuPtr,
-    int x, int y)
+    int x, int y, int index)
 {
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
     int result, flags;
@@ -770,13 +773,19 @@ TkpPostMenu(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->inPostMenu++;
-
     CallPendingReconfigureImmediately(menuPtr);
 
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
 	tsdPtr->inPostMenu--;
 	return result;
+    }
+
+    if (index >= menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
     }
 
     /*
@@ -835,6 +844,100 @@ TkpPostMenu(
     if (tsdPtr->inPostMenu) {
 	tsdPtr->inPostMenu = 0;
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpPostTearoffMenu --
+ *
+ *	Posts a tearoff menu on the screen so that the top left corner of the
+ *      specified entry is located at the point (x, y) in screen coordinates.
+ *      If the index parameter is negative, the upper left corner of the menu
+ *      itself is placed at the point.  Adjusts the menu's position so that it
+ *      fits on the screen, and maps and raises the menu.
+ *
+ * Results:
+ *	Returns a standard Tcl Error.
+ *
+ * Side effects:
+ *	The menu is posted.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpPostTearoffMenu(
+    Tcl_Interp *interp,		/* The interpreter of the menu */
+    TkMenu *menuPtr,		/* The menu we are posting */
+    int x, int y, int index)	/* The root X,Y coordinates where we are
+				 * posting */
+{
+    int vRootX, vRootY, vRootWidth, vRootHeight;
+    int result;
+
+    if (index >= menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
+    }
+
+    TkActivateMenuEntry(menuPtr, -1);
+    TkRecomputeMenu(menuPtr);
+    result = TkPostCommand(menuPtr);
+    if (result != TCL_OK) {
+    	return result;
+    }
+
+    /*
+     * The post commands could have deleted the menu, which means we are dead
+     * and should go away.
+     */
+
+    if (menuPtr->tkwin == NULL) {
+    	return TCL_OK;
+    }
+
+    /*
+     * Adjust the position of the menu if necessary to keep it visible on the
+     * screen. There are two special tricks to make this work right:
+     *
+     * 1. If a virtual root window manager is being used then the coordinates
+     *    are in the virtual root window of menuPtr's parent; since the menu
+     *    uses override-redirect mode it will be in the *real* root window for
+     *    the screen, so we have to map the coordinates from the virtual root
+     *    (if any) to the real root. Can't get the virtual root from the menu
+     *    itself (it will never be seen by the wm) so use its parent instead
+     *    (it would be better to have an an option that names a window to use
+     *    for this...).
+     * 2. The menu may not have been mapped yet, so its current size might be
+     *    the default 1x1. To compute how much space it needs, use its
+     *    requested size, not its actual size.
+     */
+
+    Tk_GetVRootGeometry(Tk_Parent(menuPtr->tkwin), &vRootX, &vRootY,
+	&vRootWidth, &vRootHeight);
+    vRootWidth -= Tk_ReqWidth(menuPtr->tkwin);
+    if (x > vRootX + vRootWidth) {
+	x = vRootX + vRootWidth;
+    }
+    if (x < vRootX) {
+	x = vRootX;
+    }
+    vRootHeight -= Tk_ReqHeight(menuPtr->tkwin);
+    if (y > vRootY + vRootHeight) {
+	y = vRootY + vRootHeight;
+    }
+    if (y < vRootY) {
+	y = vRootY;
+    }
+    Tk_MoveToplevelWindow(menuPtr->tkwin, x, y);
+    if (!Tk_IsMapped(menuPtr->tkwin)) {
+	Tk_MapWindow(menuPtr->tkwin);
+    }
+    TkWmRestackToplevel((TkWindow *) menuPtr->tkwin, Above, NULL);
     return TCL_OK;
 }
 
@@ -1043,7 +1146,7 @@ TkWinHandleMenuEvent(
     switch (*pMessage) {
     case WM_UNINITMENUPOPUP:
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-		(char *) *pwParam);
+		*pwParam);
 	if (hashEntryPtr != NULL) {
 	    menuPtr = Tcl_GetHashValue(hashEntryPtr);
 	    if ((menuPtr->menuRefPtr != NULL)
@@ -1057,7 +1160,7 @@ TkWinHandleMenuEvent(
     case WM_INITMENU:
 	TkMenuInit();
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-		(char *) *pwParam);
+		*pwParam);
 	if (hashEntryPtr != NULL) {
 	    tsdPtr->oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 	    menuPtr = Tcl_GetHashValue(hashEntryPtr);
@@ -1142,7 +1245,7 @@ TkWinHandleMenuEvent(
 
     case WM_MENUCHAR: {
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-		(char *) *plParam);
+		*plParam);
 	if (hashEntryPtr != NULL) {
 	    int i, len, underline;
 	    Tcl_Obj *labelPtr;
@@ -1279,7 +1382,7 @@ TkWinHandleMenuEvent(
 	    menuPtr = NULL;
 	    if (*plParam != 0) {
 		hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-			(char *) *plParam);
+			*plParam);
 		if (hashEntryPtr != NULL) {
 		    menuPtr = Tcl_GetHashValue(hashEntryPtr);
 		}
@@ -1404,7 +1507,7 @@ TkpSetWindowMenuBar(
 
 	winMenuHdl = (HMENU) menuPtr->platformData;
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
-		(char *) winMenuHdl);
+		winMenuHdl);
 	Tcl_DeleteHashEntry(hashEntryPtr);
 	DestroyMenu(winMenuHdl);
 	winMenuHdl = CreateMenu();
@@ -2148,8 +2251,7 @@ TkpInitializeMenuBindings(
      */
 
     (void) Tcl_CreateObjCommand(interp, "tk::WinMenuKey",
-	    TkWinMenuKeyObjCmd,
-	    (ClientData) Tk_MainWindow(interp), (Tcl_CmdDeleteProc *) NULL);
+	    TkWinMenuKeyObjCmd, Tk_MainWindow(interp), NULL);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
 	    "<Alt_L>", "tk::WinMenuKey %W %N", 0);
@@ -2799,10 +2901,26 @@ DrawMenuEntryBackground(
 {
     if (mePtr->state == ENTRY_ACTIVE
 		|| (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)!=0 ) {
+	int relief;
+	int activeBorderWidth;
+
 	bgBorder = activeBorder;
+
+	if ((menuPtr->menuType == MENUBAR)
+		&& ((menuPtr->postedCascade == NULL)
+		|| (menuPtr->postedCascade != mePtr))) {
+	    relief = TK_RELIEF_FLAT;
+	} else {
+	    Tk_GetReliefFromObj(NULL, menuPtr->activeReliefPtr, &relief);
+	}
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
+	Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height,
+		activeBorderWidth, relief);
+    } else {
+        Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height, 0,
+                TK_RELIEF_FLAT);
     }
-    Tk_Fill3DRectangle(menuPtr->tkwin, d, bgBorder, x, y, width, height, 0,
-	    TK_RELIEF_FLAT);
 }
 
 /*
@@ -2897,7 +3015,6 @@ TkpComputeStandardMenuGeometry(
 	    GetTearoffEntryGeometry(menuPtr, menuPtr->entries[i], tkfont,
 	    	    fmPtr, &width, &height);
 	    menuPtr->entries[i]->height = height;
-
 	} else {
 	    /*
 	     * For each entry, compute the height required by that particular
@@ -2955,8 +3072,6 @@ TkpComputeStandardMenuGeometry(
     }
     windowWidth = x + indicatorSpace + labelWidth + accelWidth
 	    + 2 * activeBorderWidth + borderWidth;
-
-
     windowHeight += borderWidth;
 
     /*
@@ -3212,12 +3327,7 @@ SetDefaults(
     int pointSize;
     HFONT menuFont;
     /* See: [Bug #3239768] tk8.4.19 (and later) WIN32 menu font support */
-    struct {
-        NONCLIENTMETRICS metrics;
-#if (WINVER < 0x0600)
-        int padding;
-#endif
-    } nc;
+    NONCLIENTMETRICS metrics;
     OSVERSIONINFOW os;
 
     /*
@@ -3236,17 +3346,17 @@ SetDefaults(
     }
     Tcl_DStringInit(&menuFontDString);
 
-    nc.metrics.cbSize = sizeof(nc);
+    metrics.cbSize = sizeof(metrics);
 
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
     GetVersionExW(&os);
     if (os.dwMajorVersion < 6) {
-	nc.metrics.cbSize -= sizeof(int);
+	metrics.cbSize -= sizeof(int);
     }
 
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, nc.metrics.cbSize,
-	    &nc.metrics, 0);
-    menuFont = CreateFontIndirect(&nc.metrics.lfMenuFont);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, metrics.cbSize,
+	    &metrics, 0);
+    menuFont = CreateFontIndirect(&metrics.lfMenuFont);
     SelectObject(scratchDC, menuFont);
     GetTextMetrics(scratchDC, &tm);
     GetTextFaceA(scratchDC, LF_FACESIZE, faceName);

@@ -16,12 +16,6 @@
 #include "tkInt.h"
 #include "tkText.h"
 
-#ifdef _WIN32
-#include "tkWinInt.h"
-#elif defined(__CYGWIN__)
-#include "tkUnixInt.h"
-#endif
-
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #define OK_TO_LOG (!TkpAppIsDrawing())
@@ -173,7 +167,7 @@ typedef struct StyleValues {
  */
 
 typedef struct TextStyle {
-    int refCount;		/* Number of times this structure is
+    TkSizeT refCount;		/* Number of times this structure is
 				 * referenced in Chunks. */
     GC bgGC;			/* Graphics context for background. None means
 				 * use widget background. */
@@ -420,7 +414,7 @@ typedef struct TextDInfo {
 				 * to so far... */
     int metricPixelHeight;	/* ...and this is for the height calculation
 				 * so far...*/
-    int metricEpoch;		/* ...and this for the epoch of the partial
+    TkSizeT metricEpoch;		/* ...and this for the epoch of the partial
 				 * calculation so it can be cancelled if
 				 * things change once more. This field will be
 				 * -1 if there is no long-line calculation in
@@ -626,7 +620,7 @@ static void		AsyncUpdateLineMetrics(ClientData clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
-                            CONST TkTextIndex *indexPtr);
+                            const TkTextIndex *indexPtr);
 
 /*
  * Result values returned by TextGetScrollInfoObj:
@@ -1074,8 +1068,7 @@ FreeStyle(
     register TextStyle *stylePtr)
 				/* Information about style to free. */
 {
-    stylePtr->refCount--;
-    if (stylePtr->refCount == 0) {
+    if (stylePtr->refCount-- <= 1) {
 	if (stylePtr->bgGC != NULL) {
 	    Tk_FreeGC(textPtr->display, stylePtr->bgGC);
 	}
@@ -3066,7 +3059,7 @@ AsyncUpdateLineMetrics(
      * and we've reached the last line, then we're done.
      */
 
-    if (dInfoPtr->metricEpoch == -1
+    if (dInfoPtr->metricEpoch == TCL_AUTO_LENGTH
 	    && lineNum == dInfoPtr->lastMetricUpdateLine) {
 	/*
 	 * We have looped over all lines, so we're done. We must release our
@@ -3250,7 +3243,8 @@ TkTextUpdateLineMetrics(
 	     * then we can't be done.
 	     */
 
-	    if (textPtr->dInfoPtr->metricEpoch == -1 && lineNum == endLine) {
+	    if (textPtr->dInfoPtr->metricEpoch == TCL_AUTO_LENGTH && lineNum == endLine) {
+
 
 		/*
 		 * We have looped over all lines, so we're done.
@@ -6159,7 +6153,7 @@ TkTextYviewCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace, type;
     int pixels, count;
-    int switchLength;
+    size_t switchLength;
     double fraction;
     TkTextIndex index;
 
@@ -6179,7 +6173,7 @@ TkTextYviewCmd(
     pickPlace = 0;
     if (Tcl_GetString(objv[2])[0] == '-') {
 	register const char *switchStr =
-		Tcl_GetStringFromObj(objv[2], &switchLength);
+		TkGetStringFromObj(objv[2], &switchLength);
 
 	if ((switchLength >= 2) && (strncmp(switchStr, "-pickplace",
 		(unsigned) switchLength) == 0)) {
@@ -6988,7 +6982,7 @@ FindDLine(
 static int
 IsStartOfNotMergedLine(
       TkText *textPtr,              /* Widget record for text widget. */
-      CONST TkTextIndex *indexPtr)  /* Index to check. */
+      const TkTextIndex *indexPtr)  /* Index to check. */
 {
     TkTextIndex indexPtr2;
 
@@ -7763,9 +7757,9 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #if !TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = ckalloc((Tk_Offset(CharInfo, chars) + 1) + bytesThatFit);
+    ciPtr = ckalloc(Tk_Offset(CharInfo, chars) + 1 + bytesThatFit);
     chunkPtr->clientData = ciPtr;
-    memcpy(ciPtr->chars, p, (unsigned) bytesThatFit);
+    memcpy(ciPtr->chars, p, bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
 
     ciPtr->numBytes = bytesThatFit;

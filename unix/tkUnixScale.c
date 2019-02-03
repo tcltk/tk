@@ -150,11 +150,11 @@ DisplayVerticalScale(
 	    for (tickValue = scalePtr->fromValue; ;
 		    tickValue += tickInterval) {
 		/*
-		 * The TkRoundToResolution call gets rid of accumulated
+		 * The TkRoundValueToResolution call gets rid of accumulated
 		 * round-off errors, if any.
 		 */
 
-		tickValue = TkRoundToResolution(scalePtr, tickValue);
+		tickValue = TkRoundValueToResolution(scalePtr, tickValue);
 		if (scalePtr->toValue >= scalePtr->fromValue) {
 		    if (tickValue > scalePtr->toValue) {
 			break;
@@ -370,11 +370,11 @@ DisplayHorizontalScale(
 	    for (tickValue = scalePtr->fromValue; ;
 		 tickValue += tickInterval) {
 		/*
-		 * The TkRoundToResolution call gets rid of accumulated
+		 * The TkRoundValueToResolution call gets rid of accumulated
 		 * round-off errors, if any.
 		 */
 
-		tickValue = TkRoundToResolution(scalePtr, tickValue);
+		tickValue = TkRoundValueToResolution(scalePtr, tickValue);
 		if (scalePtr->toValue >= scalePtr->fromValue) {
 		    if (tickValue > scalePtr->toValue) {
 			break;
@@ -541,7 +541,7 @@ void
 TkpDisplayScale(
     ClientData clientData)	/* Widget record for scale. */
 {
-    TkScale *scalePtr = (TkScale *) clientData;
+    TkScale *scalePtr = clientData;
     Tk_Window tkwin = scalePtr->tkwin;
     Tcl_Interp *interp = scalePtr->interp;
     Pixmap pixmap;

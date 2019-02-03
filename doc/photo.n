@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 '\" Author: Paul Mackerras (paulus@cs.anu.edu.au),
 '\"	    Department of Computer Science,
 '\"	    Australian National University.
@@ -24,7 +24,7 @@ photo \- Full-color images
 \fIimageName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 \fIimageName \fBcopy \fIsourceImage\fR ?\fIoption value(s) ...\fR?
 \fIimageName \fBdata\fR ?\fIoption value(s) ...\fR?
-\fIimageName \fBget \fIx y\fR
+\fIimageName \fBget \fIx y\fR ?\fIoption\fR?
 \fIimageName \fBput \fIdata\fR ?\fIoption value(s) ...\fR?
 \fIimageName \fBread \fIfilename\fR ?\fIoption value(s) ...\fR?
 \fIimageName \fBredither\fR
@@ -34,21 +34,21 @@ photo \- Full-color images
 .BE
 .SH DESCRIPTION
 .PP
-A photo is an image whose pixels can display any color or be
-transparent.  A photo image is stored internally in full color (32
-bits per pixel), and is displayed using dithering if necessary.  Image
-data for a photo image can be obtained from a file or a string, or it
-can be supplied from
-C code through a procedural interface.  At present, only
+A photo is an image whose pixels can display any color with a varying
+degree of transparency (the alpha channel). A photo image is stored
+internally in full color (32 bits per pixel), and is displayed using
+dithering if necessary.  Image data for a photo image can be obtained
+from a file or a string, or it can be supplied from C code through a
+procedural interface.  At present, only
 .VS 8.6
 PNG,
 .VE 8.6
-GIF and PPM/PGM
-formats are supported, but an interface exists to allow additional
-image file formats to be added easily.  A photo image is transparent
-in regions where no image data has been supplied
-or where it has been set transparent by the \fBtransparency set\fR
-subcommand.
+GIF and PPM/PGM formats are supported, but an interface exists to
+allow additional image file formats to be added easily.  A photo image
+is (semi)transparent if the image data it was obtained from had
+transparency informaton. In regions where no image data has been
+supplied, it is fully transparent. Transparency may also be modified
+with the \fBtransparency set\fR subcommand.
 .SH "CREATING PHOTOS"
 .PP
 Like all images, photos are created using the \fBimage create\fR
@@ -57,19 +57,25 @@ Photos support the following \fIoptions\fR:
 .TP
 \fB\-data \fIstring\fR
 .
-Specifies the contents of the image as a string.  The string should
-contain binary data or, for some formats, base64-encoded data (this is
+Specifies the contents of the image as a string.
+.VS 8.7
+The string should
+contain data in the default list-of-lists form,
+.VE 8.7
+binary data or, for some formats, base64-encoded data (this is
 currently guaranteed to be supported for PNG and GIF images). The
-format of the
-string must be one of those for which there is an image file format
-handler that will accept string data.  If both the \fB\-data\fR
-and \fB\-file\fR options are specified, the \fB\-file\fR option takes
-precedence.
+format of the string must be one of those for which there is an image
+file format handler that will accept string data.  If both the
+\fB\-data\fR and \fB\-file\fR options are specified, the \fB\-file\fR
+option takes precedence.
 .TP
-\fB\-format \fIformat-name\fR
+\fB\-format\fR {\fIformat-name\fR ?\fIoption value ...\fR?}
 .
 Specifies the name of the file format for the data specified with the
-\fB\-data\fR or \fB\-file\fR option.
+\fB\-data\fR or \fB\-file\fR option and optional arguments passed to
+the format handler. Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-file \fIname\fR
 .
@@ -233,8 +239,14 @@ the source image is used as-is.  The default compositing rule is
 .TP
 \fIimageName \fBdata\fR ?\fIoption value(s) ...\fR?
 .
-Returns image data in the form of a string. The following options
-may be specified:
+Returns image data in the form of a string.
+.VS 8.7
+The format of the string depends on the format handler. By default, a
+human readable format as a list of lists of pixel data is used, other
+formats can be chosen with the \fB-format\fR option.
+See \fBIMAGE FORMATS\fR below for details.
+.VE 8.7
+The following options may be specified:
 .RS
 .TP
 \fB\-background\fI color\fR
@@ -243,19 +255,23 @@ If the color is specified, the data will not contain any transparency
 information. In all transparent pixels the color will be replaced by
 the specified color.
 .TP
-\fB\-format\fI format-name\fR
+\fB\-format\fR {\fIformat-name\fR ?\fIoption value ...\fR?}
 .
-Specifies the name of the image file format handler to be used.
-Specifically, this subcommand searches
-for the first handler whose name matches an initial substring of
-\fIformat-name\fR and which has the capability to write a string
-containing this image data.
-If this option is not given, this subcommand uses a format that
-consists of a list (one element per row) of lists (one element per
-pixel/column) of colors in
+Specifies the name of the image file format handler to use and,
+optionally, arguments to the format handler.  Specifically, this
+subcommand searches for the first handler whose name matches an
+initial substring of \fIformat-name\fR and which has the capability to
+write a string containing this image data.
+.VS 8.7
+If this option is not given, this subcommand uses the default format
+that consists of a list (one element per row) of lists (one element
+per pixel/column) of colors in
 .QW \fB#\fIrrggbb\fR
-format (where \fIrr\fR is a pair of hexadecimal digits for the red
-channel, \fIgg\fR for green, and \fIbb\fR for blue).
+format (see \fBIMAGE FORMATS\fR below).
+.VE 8.7
+Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-from \fIx1 y1 x2 y2\fR
 .
@@ -272,34 +288,40 @@ whole image.
 If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
 .RE
+.VS 8.7
 .TP
-\fIimageName \fBget\fR \fIx y\fR
+\fIimageName \fBget\fR \fIx y\fR ?\fB-withalpha\fR?
 .
 Returns the color of the pixel at coordinates (\fIx\fR,\fIy\fR) in the
 image as a list of three integers between 0 and 255, representing the
-red, green and blue components respectively.
+red, green and blue components respectively. If the \fB-withalpha\fR
+option is specified, the returned list will have a fourth element
+representing the alpha value of the pixel as an integer between 0 and
+255.
+.VE 8.7
 .TP
 \fIimageName \fBput\fR \fIdata\fR ?\fIoption value(s) ...\fR?
 .
 Sets pixels in \fI imageName\fR to the data specified in \fIdata\fR.
-This command first searches the list of image file format handlers for
+.VS 8.7
+This command searches the list of image file format handlers for
 a handler that can interpret the data in \fIdata\fR, and then reads
 the image encoded within into \fIimageName\fR (the destination image).
-If \fIdata\fR does not match any known format, an attempt to interpret
-it as a (top-to-bottom) list of scan-lines is made, with each
-scan-line being a (left-to-right) list of pixel colors (see
-\fBTk_GetColor\fR for a description of valid colors.)  Every scan-line
-must be of the same length.  Note that when \fIdata\fR is a single
-color name, you are instructing Tk to fill a rectangular region with
-that color.  The following options may be specified:
+See \fBIMAGE FORMATS\fR below for details on formats for image data.
+.VE 8.7
+The following options may be specified:
 .RS
 .TP
-\fB\-format \fIformat-name\fR
+\fB\-format\fR {\fIformat-name\fR ?\fIoption value ..\fR?}
 .
-Specifies the format of the image data in \fIdata\fR.
+Specifies the format of the image data in \fIdata\fR and, optionally,
+arguments to be passed to the format handler.
 Specifically, only image file format handlers whose names begin with
 \fIformat-name\fR will be used while searching for an image data
 format handler to read the data.
+Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-to \fIx1 y1\fR ?\fIx2 y2\fR?
 .
@@ -308,7 +330,9 @@ of the region of \fIimageName\fR into which the image data will be
 copied.  The default position is (0,0).  If \fIx2\fR,\fIy2\fR is given
 and \fIdata\fR is not large enough to cover the rectangle specified by
 this option, the image data extracted will be tiled so it covers the
-entire destination rectangle.  Note that if \fIdata\fR specifies a
+entire destination rectangle. If the region specified with this opion
+is smaller than the supplied \fIdata\fR, the exceeding data is silently
+discarded. Note that if \fIdata\fR specifies a
 single color value, then a region extending to the bottom-right corner
 represented by (\fIx2\fR,\fIy2\fR) will be filled with that color.
 .RE
@@ -323,12 +347,16 @@ in \fIfilename\fR, and then reads the image in \fIfilename\fR into
 specified:
 .RS
 .TP
-\fB\-format \fIformat-name\fR
+\fB\-format {\fIformat-name\fR ?\fIoption value ..\fR?}
 .
-Specifies the format of the image data in \fIfilename\fR.
+Specifies the format of the image data in \fIfilename\fR and,
+optionally, additional options to the format handler.
 Specifically, only image file format handlers whose names begin with
 \fIformat-name\fR will be used while searching for an image data
 format handler to read the data.
+Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-from \fIx1 y1 x2 y2\fR
 .
@@ -371,16 +399,26 @@ displayed.
 Allows examination and manipulation of the transparency information in
 the photo image.  Several subcommands are available:
 .RS
+.VS 8.7
 .TP
-\fIimageName \fBtransparency get \fIx y\fR
+\fIimageName \fBtransparency get \fIx y\fR ?\fB-alpha\fR?
 .
-Returns a boolean indicating if the pixel at (\fIx\fR,\fIy\fR) is
-transparent.
+Returns true if the pixel at (\fIx\fR,\fIy\fR) is fully transparent,
+false otherwise.  If the option \fB-alpha\fR is passed, returns the
+alpha value of the pixel instead, as an integer in the range 0 to 255.
+.VE 8.7
+
+.VS 8.7
 .TP
-\fIimageName \fBtransparency set \fIx y boolean\fR
+\fIimageName \fBtransparency set \fIx y\fR \fInewVal\fR ?\fB-alpha\fR?
 .
-Makes the pixel at (\fIx\fR,\fIy\fR) transparent if \fIboolean\fR is
-true, and makes that pixel opaque otherwise.
+Change the transparency of the pixel at (\fIx\fR,\fIy\fR) to
+\fInewVal.\fR If no additional option is passed, \fInewVal\fR is
+interpreted as a boolean and the pixel is made fully transparent if
+that value is true, fully opaque otherwise.  If the \fB-alpha\fR
+option is passed, \fInewVal\fR is interpreted as an integral alpha
+value for the pixel, which must be in the range 0 to 255.
+.VE 8.7
 .RE
 .TP
 \fIimageName \fBwrite \fIfilename\fR ?\fIoption value(s) ...\fR?
@@ -395,15 +433,19 @@ If the color is specified, the data will not contain any transparency
 information. In all transparent pixels the color will be replaced by
 the specified color.
 .TP
-\fB\-format\fI format-name\fR
+\fB\-format\fR {\fIformat-name\fR ?\fIoption value ...\fR?}
 .
 Specifies the name of the image file format handler to be used to
-write the data to the file.  Specifically, this subcommand searches
-for the first handler whose name matches an initial substring of
-\fIformat-name\fR and which has the capability to write an image
-file.  If this option is not given, the format is guessed from
-the file extension. If that cannot be determined, this subcommand
-uses the first handler that has the capability to write an image file.
+write the data to the file and, optionally, options to pass to the
+format handler.  Specifically, this subcommand searches for the first
+handler whose name matches an initial substring of \fIformat-name\fR
+and which has the capability to write an image file.  If this option
+is not given, the format is guessed from the file extension. If that
+cannot be determined, this subcommand uses the first handler that has
+the capability to write an image file.
+Note: the value of this option must be a Tcl list.
+This means that the braces may be omitted if the argument has only one
+word. Also, instead of braces, double quotes may be used for quoting.
 .TP
 \fB\-from \fIx1 y1 x2 y2\fR
 .
@@ -426,20 +468,24 @@ image file formats to be added easily.  The photo image code maintains
 a list of these handlers.  Handlers are added to the list by
 registering them with a call to \fBTk_CreatePhotoImageFormat\fR.  The
 standard Tk distribution comes with handlers for PPM/PGM, PNG and GIF
-formats, which are automatically registered on initialization.
+formats,
+.VS 8.7
+as well as the \fBdefault\fR handler to encode/decode image
+data in a human readable form.
+.VE 8.7
+These handlers are automatically registered on initialization.
 .PP
-When reading an image file or processing
-string data specified with the \fB\-data\fR configuration option, the
-photo image code invokes each handler in turn until one is
-found that claims to be able to read the data in the file or string.
-Usually this will find the correct handler, but if it does not, the
-user may give a format name with the \fB\-format\fR option to specify
-which handler to use.  In fact the photo image code will try those
-handlers whose names begin with the string specified for the
-\fB\-format\fR option (the comparison is case-insensitive).  For
-example, if the user specifies \fB\-format gif\fR, then a handler
-named GIF87 or GIF89 may be invoked, but a handler
-named JPEG may not (assuming that such handlers had been
+When reading an image file or processing string data specified with
+the \fB\-data\fR configuration option, the photo image code invokes
+each handler in turn until one is found that claims to be able to read
+the data in the file or string.  Usually this will find the correct
+handler, but if it does not, the user may give a format name with the
+\fB\-format\fR option to specify which handler to use.  In this case,
+the photo image code will try those handlers whose names begin with
+the string specified for the \fB\-format\fR option (the comparison is
+case-insensitive).  For example, if the user specifies \fB\-format
+gif\fR, then a handler named GIF87 or GIF89 may be invoked, but a
+handler named JPEG may not (assuming that such handlers had been
 registered).
 .PP
 When writing image data to a file, the processing of the
@@ -450,27 +496,109 @@ that, which the handler can use, for example, to specify which variant
 to use of the formats supported by the handler.
 Note that not all image handlers may support writing transparency data
 to a file, even where the target image format does.
+.VS 8.7
+.SS "THE DEFAULT IMAGE HANDLER"
+.PP
+The \fBdefault\fR image handler cannot be used to read or write data
+from/to a file. Its sole purpose is to encode and decode image data in
+string form in a clear text, human readable, form. The \fIimageName\fR
+\fBdata\fR subcommand uses this handler when no other format is
+specified. When reading image data from a string with \fIimageName\fR
+\fBput\fR or the \fB-data\fR option, the default handler is treated
+as the other handlers.
+.PP
+Image data in the \fBdefault\fR string format is a (top-to-bottom)
+list of scan-lines, with each scan-line being a (left-to-right) list
+of pixel data. Every scan-line has the same length. The color
+and, optionally, alpha value of each pixel is specified in any of
+the forms described in the \fBCOLOR FORMATS\fR section below.
+.VE 8.7
+
 .SS "FORMAT SUBOPTIONS"
 .PP
 .VS 8.6
-Some image formats support sub-options, which are specified at the time that
-the image is loaded using additional words in the \fB\-format\fR option. At
-the time of writing, the following are supported:
+Image formats may support sub-options, wich ahre specified using
+additional words in the value to the \fB\-format\fR option. These
+suboptions can affect how image data is read or written to file or
+string. The nature and values of these options is up to the format
+handler.
+The built-in handlers support these suboptions:
+.VS 8.7
+.TP
+\fBdefault \-colorformat\fI formatType\fR
+.
+The option is allowed when writing image data to a string with
+\fIimageName\fR \fBdata\fR. Specifies the format to use for the color
+string of each pixel. \fIformatType\fR may be one of: \fBrgb\fR to
+encode pixel data in the form \fB#\fIRRGGBB\fR, \fBrgba\fR to encode
+pixel data in the form \fB#\fIRRGGBBAA\fR or \fBlist\fR to encode
+pixel data as a list with four elements. See \fBCOLOR FORMATS\fR
+below for details. The default is \fBrgb\fR.
+.VE 8.7
 .TP
 \fBgif \-index\fI indexValue\fR
 .
-When parsing a multi-part GIF image, Tk normally only accesses the first
-image. By giving the \fB\-index\fR sub-option, the \fIindexValue\fR'th value
-may be used instead. The \fIindexValue\fR must be an integer from 0 up to the
-number of image parts in the GIF data.
+The option has effect when reading image data from a file. When
+parsing a multi-part GIF image, Tk normally only accesses the first
+image. By giving the \fB\-index\fR sub-option, the \fIindexValue\fR'th
+value may be used instead. The \fIindexValue\fR must be an integer
+from 0 up to the number of image parts in the GIF data.
 .TP
 \fBpng \-alpha\fI alphaValue\fR
 .
-An additional alpha filtering for the overall image, which allows the
-background on which the image is displayed to show through. This usually also
-has the effect of desaturating the image. The \fIalphaValue\fR must be between
-0.0 and 1.0.
+The option has effect when reading image data from a file. Specifies
+an additional alpha filtering for the overall image, which allows the
+background on which the image is displayed to show through.  This
+usually also has the effect of desaturating the image.  The
+\fIalphaValue\fR must be between 0.0 and 1.0.
 .VE 8.6
+.VS 8.7
+.SH "COLOR FORMATS"
+.PP
+The default image handler can represent/parse color and alpha values
+of a pixel in one of the formats listed below. If a color format does
+not contain transparency information, full opacity is assumed.  The
+available color formats are:
+.IP \(bu 3
+The empty string - interpreted as full transparency, the color value
+is undefined.
+.IP \(bu 3
+Any value accepted by \fBTk_GetColor\fR, optionally followed by an
+alpha suffix. The alpha suffix may be one of:
+.RS
+.TP
+\fB@\fR\fIA\fR
+.
+The alpha value \fIA\fR must be a fractional value in the range  0.0
+(fully transparent) to 1.0 (fully opaque).
+.TP
+\fB#\fR\fIX\fR
+.
+The alpha value \fIX\fR is a hexadecimal digit that specifies an integer
+alpha value in the range 0 (fully transparent) to 255 (fully opaque).
+This is expanded in range from 4 bits wide to 8 bits wide by
+multiplication by 0x11.
+.TP
+\fB#\fR\fIXX\fR
+.
+The alpha value \fIXX\fR is passed as two hexadecimal digits that
+specify an integer alpha value in the range 0 (fully transparent) to 255
+(fully opaque).
+.RE
+.IP \(bu 3
+A Tcl list with three or four integers in the range 0 to 255,
+specifying the values for the red, green, blue and (optionally)
+alpha channels respectively.
+.IP \(bu 3
+\fB#\fR\fIRGBA\fR format: a \fB#\fR followed by four hexadecimal digits,
+where each digit is the value for the red, green, blue and alpha
+channels respectively. Each digit will be expanded internally to
+8 bits by multiplication by 0x11.
+.IP \(bu 3
+\fB#\fR\fIRRGGBBAA\fR format: \fB#\fR followed by eight hexadecimal digits,
+where each pair of  subsequent digits represents the value for the red,
+green, blue and alpha channels respectively.
+.VE 8.7
 .SH "COLOR ALLOCATION"
 .PP
 When a photo image is displayed in a window, the photo image code
@@ -534,6 +662,23 @@ buttons:
 button .b \-image icon \-disabledimage iconDisabled
 .CE
 .VE 8.6
+.PP
+.VS 8.7
+Create a green box with a simple shadow effect
+.PP
+.CS
+\fBimage create photo\fR foo
+
+# Make a simple graduated fill varying in alpha for the shadow
+for {set i 14} {$i > 0} {incr i -1} {
+   set i2 [expr {$i + 30}]
+   foo \fBput\fR [format black#%x [expr {15-$i}]] -to $i $i $i2 $i2
+}
+
+# Put a solid green rectangle on top
+foo \fBput\fR #F080 -to 0 0 30 30
+.VE 8.7
+.CE
 .SH "SEE ALSO"
 image(n)
 .SH KEYWORDS

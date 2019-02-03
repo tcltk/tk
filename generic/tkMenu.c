@@ -38,7 +38,7 @@
  * implemented using menu clones. Menu clones are full menus in their own
  * right; they have a Tk window and pathname associated with them; they have a
  * TkMenu structure and array of entries. However, they are linked with the
- * original menu that they were cloned from. The reflect the attributes of the
+ * original menu that they were cloned from. They reflect the attributes of the
  * original, or "master", menu. So if an item is added to a menu, and that
  * menu has clones, then the item must be added to all of its clones also.
  * Menus are cloned when a menu is torn-off or when a menu is assigned as a
@@ -259,6 +259,9 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	"Background", DEF_MENU_ACTIVE_FG_COLOR,
 	Tk_Offset(TkMenu, activeFgPtr), -1, 0,
 	(ClientData) DEF_MENU_ACTIVE_FG_MONO, 0},
+    {TK_OPTION_RELIEF, "-activerelief", "activeRelief", "Relief",
+	DEF_MENU_ACTIVE_RELIEF, Tk_Offset(TkMenu, activeReliefPtr),
+	-1, 0, NULL, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENU_BG_COLOR, Tk_Offset(TkMenu, borderPtr), -1, 0,
 	(ClientData) DEF_MENU_BG_MONO, 0},
@@ -465,7 +468,7 @@ Tk_MenuObjCmd(
     Tk_CreateEventHandler(newWin,
 	    ExposureMask|StructureNotifyMask|ActivateMask,
 	    TkMenuEventProc, menuPtr);
-    if (Tk_InitOptions(interp, (char *) menuPtr,
+    if (Tk_InitOptions(interp, menuPtr,
 	    tsdPtr->menuOptionTable, menuPtr->tkwin)
 	    != TCL_OK) {
     	Tk_DestroyWindow(menuPtr->tkwin);
@@ -672,7 +675,7 @@ MenuWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    goto error;
 	}
-	resultPtr = Tk_GetOptionValue(interp, (char *) menuPtr,
+	resultPtr = Tk_GetOptionValue(interp, menuPtr,
 		tsdPtr->menuOptionTable, objv[2],
 		menuPtr->tkwin);
 	if (resultPtr == NULL) {
@@ -692,7 +695,7 @@ MenuWidgetObjCmd(
 	Tcl_Obj *resultPtr;
 
 	if (objc == 2) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) menuPtr,
+	    resultPtr = Tk_GetOptionInfo(interp, menuPtr,
 		    tsdPtr->menuOptionTable, NULL,
 		    menuPtr->tkwin);
 	    if (resultPtr == NULL) {
@@ -702,7 +705,7 @@ MenuWidgetObjCmd(
 		Tcl_SetObjResult(interp, resultPtr);
 	    }
 	} else if (objc == 3) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) menuPtr,
+	    resultPtr = Tk_GetOptionInfo(interp, menuPtr,
 		    tsdPtr->menuOptionTable, objv[2],
 		    menuPtr->tkwin);
 	    if (resultPtr == NULL) {
@@ -776,7 +779,7 @@ MenuWidgetObjCmd(
 	}
 	mePtr = menuPtr->entries[index];
 	Tcl_Preserve(mePtr);
-	resultPtr = Tk_GetOptionValue(interp, (char *) mePtr,
+	resultPtr = Tk_GetOptionValue(interp, mePtr,
 		mePtr->optionTable, objv[3], menuPtr->tkwin);
 	Tcl_Release(mePtr);
 	if (resultPtr == NULL) {
@@ -802,7 +805,7 @@ MenuWidgetObjCmd(
 	mePtr = menuPtr->entries[index];
 	Tcl_Preserve(mePtr);
 	if (objc == 3) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) mePtr,
+	    resultPtr = Tk_GetOptionInfo(interp, mePtr,
 		    mePtr->optionTable, NULL, menuPtr->tkwin);
 	    if (resultPtr == NULL) {
 		result = TCL_ERROR;
@@ -811,7 +814,7 @@ MenuWidgetObjCmd(
 		Tcl_SetObjResult(interp, resultPtr);
 	    }
 	} else if (objc == 4) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) mePtr,
+	    resultPtr = Tk_GetOptionInfo(interp, mePtr,
 		    mePtr->optionTable, objv[3], menuPtr->tkwin);
 	    if (resultPtr == NULL) {
 		result = TCL_ERROR;
@@ -870,32 +873,37 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_POST: {
-	int x, y;
+	int x, y, index = -1;
 
-	if (objc != 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "x y");
+	if (objc != 4 && objc != 5) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "x y ?index?");
 	    goto error;
 	}
 	if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
 	    goto error;
 	}
+	if (objc == 5) {
+            if (TkGetMenuIndex(interp, menuPtr, objv[4], 0, &index) != TCL_OK) {
+                goto error;
+            }
+	}
 
 	/*
-	 * Tearoff menus are posted differently on Mac and Windows than
-	 * non-tearoffs. TkpPostMenu does not actually map the menu's window
-	 * on those platforms, and popup menus have to be handled specially.
-         * Also, menubar menues are not intended to be posted (bug 1567681,
-         * 2160206).
+	 * Tearoff menus are the same as ordinary menus on the Mac and are
+	 * posted differently on Windows than non-tearoffs. TkpPostMenu
+	 * does not actually map the menu's window on those platforms, and
+	 * popup menus have to be handled specially.  Also, menubar menus are
+	 * not intended to be posted (bug 1567681, 2160206).
 	 */
 
 	if (menuPtr->menuType == MENUBAR) {
             Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
             return TCL_ERROR;
         } else if (menuPtr->menuType != TEAROFF_MENU) {
-	    result = TkpPostMenu(interp, menuPtr, x, y);
+	    result = TkpPostMenu(interp, menuPtr, x, y, index);
 	} else {
-	    result = TkPostTearoffMenu(interp, menuPtr, x, y);
+	    result = TkpPostTearoffMenu(interp, menuPtr, x, y, index);
 	}
 	break;
     }
@@ -1528,7 +1536,7 @@ ConfigureMenu(
     for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
 	menuListPtr->errorStructPtr = ckalloc(sizeof(Tk_SavedOptions));
-	result = Tk_SetOptions(interp, (char *) menuListPtr,
+	result = Tk_SetOptions(interp, menuListPtr,
 		tsdPtr->menuOptionTable, objc, objv,
 		menuListPtr->tkwin, menuListPtr->errorStructPtr, NULL);
 	if (result != TCL_OK) {
@@ -1700,12 +1708,12 @@ PostProcessEntry(
     if (mePtr->labelPtr == NULL) {
 	mePtr->labelLength = 0;
     } else {
-	Tcl_GetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
+	(void)TkGetStringFromObj(mePtr->labelPtr, &mePtr->labelLength);
     }
     if (mePtr->accelPtr == NULL) {
 	mePtr->accelLength = 0;
     } else {
-	Tcl_GetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
+	(void)TkGetStringFromObj(mePtr->accelPtr, &mePtr->accelLength);
     }
 
     /*
@@ -1924,7 +1932,7 @@ ConfigureMenuEntry(
 
     result = TCL_OK;
     if (menuPtr->tkwin != NULL) {
-	if (Tk_SetOptions(menuPtr->interp, (char *) mePtr,
+	if (Tk_SetOptions(menuPtr->interp, mePtr,
 		mePtr->optionTable, objc, objv, menuPtr->tkwin,
 		&errorStruct, NULL) != TCL_OK) {
 	    return TCL_ERROR;
@@ -2298,7 +2306,7 @@ MenuNewEntry(
     mePtr->entryFlags = 0;
     mePtr->index = index;
     mePtr->nextCascadePtr = NULL;
-    if (Tk_InitOptions(menuPtr->interp, (char *) mePtr,
+    if (Tk_InitOptions(menuPtr->interp, mePtr,
 	    mePtr->optionTable, menuPtr->tkwin) != TCL_OK) {
 	ckfree(mePtr);
 	return NULL;

@@ -24,7 +24,7 @@
 typedef struct ConsoleInfo {
     Tcl_Interp *consoleInterp;	/* Interpreter displaying the console. */
     Tcl_Interp *interp;		/* Interpreter controlled by console. */
-    int refCount;
+    size_t refCount;
 } ConsoleInfo;
 
 /*
@@ -223,7 +223,7 @@ Tk_InitConsoleChannels(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
         return;
     }
 
@@ -456,7 +456,7 @@ Tk_CreateConsoleWindow(
 	if (mainWindow) {
 	    Tk_DeleteEventHandler(mainWindow, StructureNotifyMask,
 		    ConsoleEventProc, info);
-	    if (--info->refCount <= 0) {
+	    if (info->refCount-- <= 1) {
 		ckfree(info);
 	    }
 	}
@@ -596,7 +596,7 @@ ConsoleClose(
     ConsoleInfo *info = data->info;
 
     if (info) {
-	if (--info->refCount <= 0) {
+	if (info->refCount-- <= 1) {
 	    /*
 	     * Assuming the Tcl_Interp * fields must already be NULL.
 	     */
@@ -885,7 +885,7 @@ InterpDeleteProc(
 	Tcl_DeleteThreadExitHandler(DeleteConsoleInterp, info->consoleInterp);
 	info->consoleInterp = NULL;
     }
-    if (--info->refCount <= 0) {
+    if (info->refCount-- <= 1) {
 	ckfree(info);
     }
 }
@@ -916,7 +916,7 @@ ConsoleDeleteProc(
     if (info->consoleInterp) {
 	Tcl_DeleteInterp(info->consoleInterp);
     }
-    if (--info->refCount <= 0) {
+    if (info->refCount-- <= 1) {
 	ckfree(info);
     }
 }
@@ -953,7 +953,7 @@ ConsoleEventProc(
 	    Tcl_EvalEx(consoleInterp, "tk::ConsoleExit", -1, TCL_EVAL_GLOBAL);
 	}
 
-	if (--info->refCount <= 0) {
+	if (info->refCount-- <= 1) {
 	    ckfree(info);
 	}
     }

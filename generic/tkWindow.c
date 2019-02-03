@@ -336,6 +336,7 @@ CreateTopLevelWindow(
 	 * Create built-in photo image formats.
 	 */
 
+        Tk_CreatePhotoImageFormat(&tkImgFmtDefault);
 	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPNG);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
@@ -949,7 +950,7 @@ TkCreateMainWindow(
     }
 
     /*
-     * Set variables for the intepreter.
+     * Set variables for the interpreter.
      */
 
     Tcl_SetVar2(interp, "tk_patchLevel", NULL, TK_PATCH_LEVEL, TCL_GLOBAL_ONLY);
@@ -1135,7 +1136,7 @@ Tk_CreateWindowFromPath(
     char fixedSpace[FIXED_SPACE+1];
     char *p;
     Tk_Window parent;
-    int numChars;
+    size_t numChars;
 
     /*
      * Strip the parent's name out of pathName (it's everything up to the last
@@ -1152,7 +1153,7 @@ Tk_CreateWindowFromPath(
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
 	return NULL;
     }
-    numChars = (int) (p-pathName);
+    numChars = p-pathName;
     if (numChars > FIXED_SPACE) {
 	p = ckalloc(numChars + 1);
     } else {
@@ -1162,7 +1163,7 @@ Tk_CreateWindowFromPath(
 	*p = '.';
 	p[1] = '\0';
     } else {
-	strncpy(p, pathName, (size_t) numChars);
+	strncpy(p, pathName, numChars);
 	p[numChars] = '\0';
     }
 
@@ -1442,7 +1443,7 @@ Tk_DestroyWindow(
 	}
 #endif
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->winTable,
-		(char *) winPtr->window));
+		winPtr->window));
 	winPtr->window = None;
     }
     UnlinkWindow(winPtr);
@@ -2361,7 +2362,7 @@ Tk_IdToWindow(
 	return NULL;
     }
 
-    hPtr = Tcl_FindHashEntry(&dispPtr->winTable, (char *) window);
+    hPtr = Tcl_FindHashEntry(&dispPtr->winTable, window);
     if (hPtr == NULL) {
 	return NULL;
     }
@@ -2833,7 +2834,7 @@ static HMODULE tkcygwindll = NULL;
 /*
  * Run Tk_MainEx from libtk8.?.dll
  *
- * This function is only ever called from wish8.4.exe, the cygwin port of Tcl.
+ * This function is only ever called from wish8.?.exe, the cygwin port of Tcl.
  * This means that the system encoding is utf-8, so we don't have to do any
  * encoding conversions.
  */
@@ -2849,7 +2850,7 @@ TkCygwinMainEx(
     Tcl_Interp *interp)
 {
     TCHAR name[MAX_PATH];
-    int len;
+    size_t len;
     void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
     /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
@@ -3059,7 +3060,7 @@ Initialize(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3201,8 +3202,8 @@ Initialize(
      */
 
     {
-	int numBytes;
-	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
+	size_t numBytes;
+	const char *bytes = TkGetStringFromObj(nameObj, &numBytes);
 
 	classObj = Tcl_NewStringObj(bytes, numBytes);
 

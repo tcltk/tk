@@ -11,9 +11,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkText.h"
+#include "default.h"
 
 /*
  * Index to use to select last character in line (very large integer):
@@ -40,9 +40,9 @@ static const char *	StartEnd(TkText *textPtr, const char *string,
 static int		GetIndex(Tcl_Interp *interp, TkSharedText *sharedPtr,
 			    TkText *textPtr, const char *string,
 			    TkTextIndex *indexPtr, int *canCachePtr);
-static int              IndexCountBytesOrdered(CONST TkText *textPtr,
-                            CONST TkTextIndex *indexPtr1,
-                            CONST TkTextIndex *indexPtr2);
+static int              IndexCountBytesOrdered(const TkText *textPtr,
+                            const TkTextIndex *indexPtr1,
+                            const TkTextIndex *indexPtr2);
 
 /*
  * The "textindex" Tcl_Obj definition:
@@ -64,7 +64,7 @@ static void		UpdateStringOfTextIndex(Tcl_Obj *objPtr);
 #define SET_TEXTINDEX(objPtr, indexPtr) \
 	((objPtr)->internalRep.twoPtrValue.ptr1 = (void *) (indexPtr))
 #define SET_INDEXEPOCH(objPtr, epoch) \
-	((objPtr)->internalRep.twoPtrValue.ptr2 = INT2PTR(epoch))
+	((objPtr)->internalRep.twoPtrValue.ptr2 = (void *) (size_t) (epoch))
 
 /*
  * Define the 'textindex' object type, which Tk uses to represent indices in
@@ -104,7 +104,7 @@ DupTextIndexInternalRep(
     Tcl_Obj *srcPtr,		/* TextIndex obj with internal rep to copy. */
     Tcl_Obj *copyPtr)		/* TextIndex obj with internal rep to set. */
 {
-    int epoch;
+    TkSizeT epoch;
     TkTextIndex *dupIndexPtr, *indexPtr;
 
     dupIndexPtr = ckalloc(sizeof(TkTextIndex));
@@ -206,7 +206,7 @@ TkTextGetIndexFromObj(
     int cache;
 
     if (objPtr->typePtr == &tkTextIndexType) {
-	int epoch;
+	TkSizeT epoch;
 
 	indexPtr = GET_TEXTINDEX(objPtr);
 	epoch = GET_INDEXEPOCH(objPtr);
@@ -923,7 +923,7 @@ GetIndex(
     }
     if ((string[0] == 'e')
 	    && (strncmp(string, "end",
-	    (size_t) (endOfBase-Tcl_DStringValue(&copy))) == 0)) {
+	    endOfBase-Tcl_DStringValue(&copy)) == 0)) {
 	/*
 	 * Base position is end of text.
 	 */
@@ -1636,9 +1636,9 @@ TkTextIndexForwChars(
 
 int
 TkTextIndexCountBytes(
-    CONST TkText *textPtr,
-    CONST TkTextIndex *indexPtr1, /* Index describing one location. */
-    CONST TkTextIndex *indexPtr2) /* Index describing second location. */
+    const TkText *textPtr,
+    const TkTextIndex *indexPtr1, /* Index describing one location. */
+    const TkTextIndex *indexPtr2) /* Index describing second location. */
 {
     int compare = TkTextIndexCmp(indexPtr1, indexPtr2);
 
@@ -1653,11 +1653,11 @@ TkTextIndexCountBytes(
 
 static int
 IndexCountBytesOrdered(
-    CONST TkText *textPtr,
-    CONST TkTextIndex *indexPtr1,
+    const TkText *textPtr,
+    const TkTextIndex *indexPtr1,
 				/* Index describing location of character from
 				 * which to count. */
-    CONST TkTextIndex *indexPtr2)
+    const TkTextIndex *indexPtr2)
 				/* Index describing location of last character
 				 * at which to stop the count. */
 {

@@ -2,11 +2,7 @@
  * Copyright (c) 2004, Joe English
  */
 
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"
@@ -221,7 +217,7 @@ static int ConfigureTab(
     Tk_SavedOptions savedOptions;
     int mask = 0;
 
-    if (Tk_SetOptions(interp, (ClientData)tab, nb->notebook.paneOptionTable,
+    if (Tk_SetOptions(interp, tab, nb->notebook.paneOptionTable,
 	    objc, objv, slaveWindow, &savedOptions, &mask) != TCL_OK)
     {
 	return TCL_ERROR;
@@ -1053,7 +1049,7 @@ static int NotebookHideCommand(
 static int NotebookIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    static const char *whatTable[] = { "element", "tab", NULL };
+    static const char *const whatTable[] = { "element", "tab", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_TAB };
     int what = IDENTIFY_ELEMENT;
     Notebook *nb = recordPtr;

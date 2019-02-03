@@ -340,8 +340,10 @@ test canvas-8.1 {canvas arc bbox} -setup {
     set coordBox [.c bbox arc2]
     .c create arc 300 10 500 210 -start 10 -extent 50 -style pieslice -tags arc3
     set pieBox [.c bbox arc3]
-    list $arcBox $coordBox $pieBox
-} -result {{48 21 100 94} {248 21 300 94} {398 21 500 112}}
+    .c create arc 100 200 300 200 -height [expr {(1-0.5*sqrt(3))*200}] -style arc -tags arc4
+    set arcSegBox [.c bbox arc4]
+    list $arcBox $coordBox $pieBox $arcSegBox
+} -result {{48 21 100 94} {248 21 300 94} {398 21 500 112} {98 171 302 202}}
 
 test canvas-9.1 {canvas id creation and deletion} -setup {
     catch {destroy .c}
@@ -537,10 +539,10 @@ test canvas-12.1 {canvas mm obj, patch SF-403327, 102471} -setup {
     destroy .c
     pack [canvas .c]
 } -body {
-    set qx [expr {1.+1.}] 
-    # qx has type double and no string representation 
+    set qx [expr {1.+1.}]
+    # qx has type double and no string representation
     .c scale all $qx 0 1. 1.
-    # qx has now type MMRep and no string representation 
+    # qx has now type MMRep and no string representation
     list $qx [string length $qx]
 } -result {2.0 3}
 test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} -setup {
@@ -549,9 +551,9 @@ test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} -setup {
 } -body {
     set val 10
     incr val
-    # qx has type double and no string representation 
+    # qx has type double and no string representation
     .c scale all $val 0 1 1
-    # qx has now type MMRep and no string representation 
+    # qx has now type MMRep and no string representation
     incr val
 } -result 12
 
@@ -727,7 +729,7 @@ test canvas-15.19 "basic coords check: centimeters are larger than pixels" -setu
     destroy .c
     canvas .c
 } -body {
-    set id [.c create rect 0 0 1cm 1cm] 
+    set id [.c create rect 0 0 1cm 1cm]
     expr {[lindex [.c coords $id] 2]>1}
 } -result {1}
 destroy .c
@@ -949,6 +951,94 @@ test canvas-19.11 {rchars method - errors} -setup {
 } -cleanup {
     destroy .c
 } -returnCodes error -result {bad index "foo"}
+
+# Procedure used in test cases 20.1 20.2 20.3
+proc matchPixels {pixels expected} {
+    set matched 1
+    foreach pline $pixels eline $expected {
+        foreach ppixel $pline epixel $eline {
+            if {$ppixel != $epixel} {
+                set matched 0
+                break
+            }
+        }
+    }
+    return $matched
+}
+
+test canvas-20.1 {canvas image} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 0 9 -fill #000080 -outline #000080
+    .c image testimage
+    matchPixels [testimage data] { \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
+test canvas-20.2 {canvas image with subsample} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 1 9 -fill #008000 -outline #008000
+    .c image testimage 2
+    matchPixels [testimage data] { \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
+test canvas-20.3 {canvas image with subsample and zoom} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 9 0 -fill #800000 -outline #800000
+    .c image testimage 1 2
+    matchPixels [testimage data] { \
+        {#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
+        {#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
 
 # cleanup
 imageCleanup

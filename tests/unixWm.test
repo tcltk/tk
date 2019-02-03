@@ -643,7 +643,7 @@ test unixWm-17.2 {Tk_WmCmd procedure, "focusmodel" option} unix {
     list [catch {wm focusmodel .t bogus} msg] $msg
 } {1 {bad argument "bogus": must be active or passive}}
 test unixWm-17.3 {Tk_WmCmd procedure, "focusmodel" option} unix {
-    set result {} 
+    set result {}
     lappend result [wm focusmodel .t]
     wm focusmodel .t active
     lappend result [wm focusmodel .t]
@@ -809,7 +809,7 @@ test unixWm-22.2 {Tk_WmCmd procedure, "iconbitmap" option} {unix testwrapper} {
     lappend result [wm iconbitmap .t] $bit
 } {{} questhead 0x4 {} 0x0}
 if {[tk windowingsystem] == "aqua"} {
-    set result_22_3 {0 {}} 
+    set result_22_3 {0 {}}
 } else {
     set result_22_3 {1 {bitmap "bad-bitmap" not defined}}
 }
@@ -1349,7 +1349,7 @@ test unixWm-40.1 {Tk_SetGrid procedure, set grid dimensions before turning on gr
     destroy .t
     toplevel .t
     wm geometry .t 30x10+0+0
-    listbox .t.l -height 20 -width 20 -setgrid 1 
+    listbox .t.l -height 20 -width 20 -setgrid 1
     pack .t.l -fill both -expand 1
     update
     wm geometry .t
@@ -1358,7 +1358,7 @@ test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already 
     destroy .t
     toplevel .t
     wm geometry .t 200x100+0+0
-    listbox .t.l -height 20 -width 20 
+    listbox .t.l -height 20 -width 20
     pack .t.l -fill both -expand 1
     update
     .t.l configure -setgrid 1
@@ -1775,14 +1775,14 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
     testmenubar window .t .t.m
     update
     list [expr [winfo rootx .t.m.f] - $x] [expr [winfo rooty .t.m.f] - $y] \
-	    [expr [winfo rootx .t.f] - $x] [expr [winfo rooty .t.f] - $y] 
+	    [expr [winfo rootx .t.f] - $x] [expr [winfo rooty .t.f] - $y]
 } {52 7 12 62}
 
 deleteWindows
 wm withdraw .
 if {[tk windowingsystem] == "aqua"} {
     # Modern mac windows have no border.
-    set result_50_1 {{} {} .t .t .t2 {} .t2 .t .t} 
+    set result_50_1 {{} {} .t .t .t2 {} .t2 .t .t}
 } else {
     # Windows are assumed to have a border (invisible in Gnome 3).
     set result_50_1 {{} {} .t {} .t2 {} .t2 {} .t}
@@ -1836,7 +1836,7 @@ test unixWm-50.3 {
 } tempNotWin {
     deleteWindows
     catch {interp delete slave}
-    
+
     toplevel .t -width 300 -height 400 -bg blue
     wm geom .t +100+100
     frame .t.f -container 1 -bg red

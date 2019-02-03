@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH pack n 4.0 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -129,6 +129,14 @@ than receiving default values.
 Removes each of the \fIslave\fRs from the packing order for its
 master and unmaps their windows.
 The slaves will no longer be managed by the packer.
+.RS
+.PP
+.VS TIP518
+If the last slave of the master becomes unmanaged, this will also send
+the virtual event \fB<<NoManagedChild>>\fR to the master; the master
+may choose to resize itself (or otherwise respond) to such a change.
+.VE TIP518
+.RE
 .TP
 \fBpack info \fIslave\fR
 Returns a list whose elements are the current configuration state of

@@ -4,8 +4,7 @@
  * label, button, checkbutton, radiobutton, and menubutton widgets.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -23,6 +22,7 @@ typedef struct
      * Text element resources:
      */
     Tcl_Obj *textObj;
+    Tcl_Obj *justifyObj;
     Tcl_Obj *textVariableObj;
     Tcl_Obj *underlineObj;
     Tcl_Obj *widthObj;
@@ -56,6 +56,9 @@ typedef struct
 
 static Tk_OptionSpec BaseOptionSpecs[] =
 {
+    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
+        "left", Tk_Offset(Base,base.justifyObj), -1,
+        TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	Tk_Offset(Base,base.textObj), -1,
 	0,0,GEOMETRY_CHANGED },
@@ -491,7 +494,7 @@ CheckbuttonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Checkbutton *checkPtr = recordPtr;
     Tcl_Obj *varName = checkPtr->checkbutton.variableObj;
     Ttk_TraceHandle *vt = NULL;
-        
+
     if (varName != NULL && *Tcl_GetString(varName) != '\0') {
         vt = Ttk_TraceVariable(interp, varName,
 	    CheckbuttonVariableChanged, checkPtr);

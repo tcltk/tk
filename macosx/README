@@ -646,12 +646,13 @@ source and destination rectangles for the scrolling.  The embedded
 windows are redrawn within the DisplayText function by some
 conditional code which is only used for macOS.
 
-6.0 Virtual events on 10.14
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+6. Virtual events on 10.14
+---------------------------
 
 10.14 supports system appearance changes, and has added a "Dark Mode"
-that casts all window frames and menus as black. Tk 8.6.9 has added two
-virtual events, <<LightAqua>> and <<DarkAqua>>, to allow you to update
-your Tk app's appearance when the system appearance changes. Just bind
-your appearance-updating code to these virtual events and you will see
-it triggered when the system appearance toggles between dark and light.
+that casts all window frames and menus as black. Tk 8.6.9 supports Dark
+Mode by having the window decorations, menus, and dialogs automatically
+take on the appropriate appearance when the system appearance is changed.
+Because the window content itself is drawn by Tk, it will not change when
+the system mode changes.
+

@@ -179,10 +179,12 @@ Tk_ScrollbarObjCmd(
     scrollPtr->sliderLast = 0;
     scrollPtr->activeField = 0;
     scrollPtr->activeRelief = TK_RELIEF_RAISED;
+#ifndef TK_NO_DEPRECATED
     scrollPtr->totalUnits = 0;
     scrollPtr->windowUnits = 0;
     scrollPtr->firstUnit = 0;
     scrollPtr->lastUnit = 0;
+#endif /* TK_NO_DEPRECATED */
     scrollPtr->firstFraction = 0.0;
     scrollPtr->lastFraction = 0.0;
     scrollPtr->cursor = NULL;
@@ -224,8 +226,8 @@ ScrollbarWidgetObjCmd(
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     register TkScrollbar *scrollPtr = clientData;
-    int result = TCL_OK;
-    int length, cmdIndex;
+    int result = TCL_OK, cmdIndex;
+    size_t length;
     static const char *const commandNames[] = {
         "activate", "cget", "configure", "delta", "fraction",
         "get", "identify", "set", NULL
@@ -269,7 +271,7 @@ ScrollbarWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 1, objv, "activate element");
 	    goto error;
 	}
-	c = Tcl_GetStringFromObj(objv[2], &length)[0];
+	c = TkGetStringFromObj(objv[2], &length)[0];
 	oldActiveField = scrollPtr->activeField;
 	if ((c == 'a') && (strcmp(Tcl_GetString(objv[2]), "arrow1") == 0)) {
 	    scrollPtr->activeField = TOP_ARROW;
@@ -377,17 +379,19 @@ ScrollbarWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 1, objv, "get");
 	    goto error;
 	}
-	if (scrollPtr->flags & NEW_STYLE_COMMANDS) {
-	    resObjs[0] = Tcl_NewDoubleObj(scrollPtr->firstFraction);
-	    resObjs[1] = Tcl_NewDoubleObj(scrollPtr->lastFraction);
-	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, resObjs));
-	} else {
+#ifndef TK_NO_DEPRECATED
+	if (scrollPtr->flags & OLD_STYLE_COMMANDS) {
 	    resObjs[0] = Tcl_NewIntObj(scrollPtr->totalUnits);
 	    resObjs[1] = Tcl_NewIntObj(scrollPtr->windowUnits);
 	    resObjs[2] = Tcl_NewIntObj(scrollPtr->firstUnit);
 	    resObjs[3] = Tcl_NewIntObj(scrollPtr->lastUnit);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, resObjs));
+	    break;
 	}
+#endif /* TK_NO_DEPRECATED */
+	resObjs[0] = Tcl_NewDoubleObj(scrollPtr->firstFraction);
+	resObjs[1] = Tcl_NewDoubleObj(scrollPtr->lastFraction);
+	Tcl_SetObjResult(interp, Tcl_NewListObj(2, resObjs));
 	break;
     }
     case COMMAND_IDENTIFY: {
@@ -413,8 +417,6 @@ ScrollbarWidgetObjCmd(
 	break;
     }
     case COMMAND_SET: {
-	int totalUnits, windowUnits, firstUnit, lastUnit;
-
 	if (objc == 4) {
 	    double first, last;
 
@@ -438,8 +440,10 @@ ScrollbarWidgetObjCmd(
 	    } else {
 		scrollPtr->lastFraction = last;
 	    }
-	    scrollPtr->flags |= NEW_STYLE_COMMANDS;
+#ifndef TK_NO_DEPRECATED
+	    scrollPtr->flags &= ~OLD_STYLE_COMMANDS;
 	} else if (objc == 6) {
+	    int totalUnits, windowUnits, firstUnit, lastUnit;
 	    if (Tcl_GetIntFromObj(interp, objv[2], &totalUnits) != TCL_OK) {
 		goto error;
 	    }
@@ -476,11 +480,10 @@ ScrollbarWidgetObjCmd(
 		scrollPtr->firstFraction = ((double) firstUnit)/totalUnits;
 		scrollPtr->lastFraction = ((double) (lastUnit+1))/totalUnits;
 	    }
-	    scrollPtr->flags &= ~NEW_STYLE_COMMANDS;
+	    scrollPtr->flags |= OLD_STYLE_COMMANDS;
+#endif /* !TK_NO_DEPRECATED */
 	} else {
 		Tcl_WrongNumArgs(interp, 1, objv, "set firstFraction lastFraction");
-		Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]),
-			" set totalUnits windowUnits firstUnit lastUnit\"", NULL);
 	    goto error;
 	}
 	TkpComputeScrollbarGeometry(scrollPtr);

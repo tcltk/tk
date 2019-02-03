@@ -97,7 +97,7 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    register TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
+    register TkScrollbar *scrollPtr = clientData;
     register Tk_Window tkwin = scrollPtr->tkwin;
     XPoint points[7];
     Tk_3DBorder border;
