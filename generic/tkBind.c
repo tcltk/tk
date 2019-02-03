@@ -74,21 +74,21 @@ enum { true = (bool) 1, false = (bool) 0 };
 /*
  * In old implementation (the one that used an event ring), <Double-1> and <1><1> were
  * equivalent sequences. However it is logical to give <Double-1> higher precedence.
- * This can be achieved by setting PREFER_MOST_SPECIALIZED_EVENT to 1.
+ * This is achieved by setting PREFER_MOST_SPECIALIZED_EVENT to 1.
  */
 
 #ifndef PREFER_MOST_SPECIALIZED_EVENT
-# define PREFER_MOST_SPECIALIZED_EVENT 0
+# define PREFER_MOST_SPECIALIZED_EVENT 1
 #endif
 
 /*
  * Traditionally motion events can be combined with buttons in this way: <B1-B2-Motion>.
- * However it should be allowed to express this as <Motion-1-2> in addition. This can be
- * achieved by setting SUPPORT_ADDITIONAL_MOTION_SYNTAX to 1.
+ * However it should be allowed to express this as <Motion-1-2> in addition. This is achieved
+ * by setting SUPPORT_ADDITIONAL_MOTION_SYNTAX to 1.
  */
 
 #ifndef SUPPORT_ADDITIONAL_MOTION_SYNTAX
-# define SUPPORT_ADDITIONAL_MOTION_SYNTAX 0 /* set to 1 if wanted */
+# define SUPPORT_ADDITIONAL_MOTION_SYNTAX 1
 #endif
 
 /*
