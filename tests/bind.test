@@ -6358,7 +6358,7 @@ test bind-33.1 {prefer longest match} -setup {
 } -cleanup {
     destroy .t.f
 } -result {a11}
-test bind-33.2 {should prefer most specific event} -setup {
+test bind-33.2 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6371,12 +6371,8 @@ test bind-33.2 {should prefer most specific event} -setup {
     set x
 } -cleanup {
     destroy .t.f
-    # This test case shows that old implementation has an issue, because
-    # it is expected that <Double-1> is matching, this binding
-    # is more specific. But new implementation will be conform to old,
-    # and so "11" is the expected result.
-} -result {11}
-test bind-33.3 {should prefer most specific event} -setup {
+} -result {Double}
+test bind-33.3 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
@@ -6391,11 +6387,7 @@ test bind-33.3 {should prefer most specific event} -setup {
     set x
 } -cleanup {
     destroy .t.f
-    # Also this test case shows that old implementation has an issue, it is
-    # expected that <a><Double-1><a> is matching, because <Double-1> is more
-    # specific than <1><1>. But new implementation will be conform to old,
-    # and so "11" is the expected result.
-} -result {11}
+} -result {Double}
 test bind-33.4 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6525,11 +6517,7 @@ test bind-33.11 {should prefer most specific} -setup {
     set x
 } -cleanup {
     destroy .t.f
-    # This test case shows that old implementation has an issue, because
-    # it is expected that first one is matching, this binding
-    # is more specific. But new implementation will be conform to old,
-    # and so "last" is the expected result.
-} -result {last}
+} -result {first}
 test bind-33.12 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
