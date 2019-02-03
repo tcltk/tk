@@ -17,9 +17,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkScale.h"
+#include "default.h"
 
 #if defined(_WIN32)
 #define snprintf _snprintf
@@ -300,7 +300,7 @@ Tk_ScaleObjCmd(
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ScaleEventProc, scalePtr);
 
-    if ((Tk_InitOptions(interp, (char *) scalePtr, optionTable, tkwin)
+    if ((Tk_InitOptions(interp, scalePtr, optionTable, tkwin)
 	    != TCL_OK) ||
 	    (ConfigureScale(interp, scalePtr, objc - 2, objv + 2) != TCL_OK)) {
 	Tk_DestroyWindow(scalePtr->tkwin);
@@ -363,7 +363,7 @@ ScaleWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 1, objv, "cget option");
 	    goto error;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) scalePtr,
+	objPtr = Tk_GetOptionValue(interp, scalePtr,
 		scalePtr->optionTable, objv[2], scalePtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
@@ -372,7 +372,7 @@ ScaleWidgetObjCmd(
 	break;
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) scalePtr,
+	    objPtr = Tk_GetOptionInfo(interp, scalePtr,
 		    scalePtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL, scalePtr->tkwin);
 	    if (objPtr == NULL) {
@@ -582,7 +582,7 @@ ConfigureScale(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) scalePtr,
+	    if (Tk_SetOptions(interp, scalePtr,
 		    scalePtr->optionTable, objc, objv, scalePtr->tkwin,
 		    &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -611,7 +611,7 @@ ConfigureScale(
 		    TCL_GLOBAL_ONLY);
 	    if ((valuePtr != NULL) &&
 		    (Tcl_GetDoubleFromObj(NULL, valuePtr, &value) == TCL_OK)) {
-		scalePtr->value = TkRoundToResolution(scalePtr, value);
+		scalePtr->value = TkRoundValueToResolution(scalePtr, value);
 	    }
 	}
 
@@ -620,10 +620,10 @@ ConfigureScale(
 	 * orientation and creating GCs.
 	 */
 
-	scalePtr->fromValue = TkRoundToResolution(scalePtr,
+	scalePtr->fromValue = TkRoundValueToResolution(scalePtr,
 		scalePtr->fromValue);
-	scalePtr->toValue = TkRoundToResolution(scalePtr, scalePtr->toValue);
-	scalePtr->tickInterval = TkRoundToResolution(scalePtr,
+	scalePtr->toValue = TkRoundValueToResolution(scalePtr, scalePtr->toValue);
+	scalePtr->tickInterval = TkRoundIntervalToResolution(scalePtr,
 		scalePtr->tickInterval);
 
 	/*
@@ -638,7 +638,7 @@ ConfigureScale(
 
 	ComputeFormat(scalePtr);
 
-	scalePtr->labelLength = scalePtr->label ? (int)strlen(scalePtr->label) : 0;
+	scalePtr->labelLength = scalePtr->label ? strlen(scalePtr->label) : 0;
 
 	Tk_SetBackgroundFromBorder(scalePtr->tkwin, scalePtr->bgBorder);
 
@@ -1119,10 +1119,14 @@ TkEventuallyRedrawScale(
 /*
  *--------------------------------------------------------------
  *
- * TkRoundToResolution --
+ * TkRoundValueToResolution, TkRoundIntervalToResolution --
  *
  *	Round a given floating-point value to the nearest multiple of the
  *	scale's resolution.
+ *	TkRoundValueToResolution rounds an absolute value based on the from
+ *	value as a reference.
+ *	TkRoundIntervalToResolution rounds a relative value without
+ *	reference, i.e.	it rounds an interval.
  *
  * Results:
  *	The return value is the rounded result.
@@ -1134,7 +1138,16 @@ TkEventuallyRedrawScale(
  */
 
 double
-TkRoundToResolution(
+TkRoundValueToResolution(
+    TkScale *scalePtr,		/* Information about scale widget. */
+    double value)		/* Value to round. */
+{
+    return TkRoundIntervalToResolution(scalePtr, value - scalePtr->fromValue)
+            + scalePtr->fromValue;
+}
+
+double
+TkRoundIntervalToResolution(
     TkScale *scalePtr,		/* Information about scale widget. */
     double value)		/* Value to round. */
 {
@@ -1147,13 +1160,13 @@ TkRoundToResolution(
     rounded = scalePtr->resolution * tick;
     rem = value - rounded;
     if (rem < 0) {
-	if (rem <= -scalePtr->resolution/2) {
-	    rounded = (tick - 1.0) * scalePtr->resolution;
-	}
+        if (rem <= -scalePtr->resolution/2) {
+            rounded = (tick - 1.0) * scalePtr->resolution;
+        }
     } else {
-	if (rem >= scalePtr->resolution/2) {
-	    rounded = (tick + 1.0) * scalePtr->resolution;
-	}
+        if (rem >= scalePtr->resolution/2) {
+            rounded = (tick + 1.0) * scalePtr->resolution;
+        }
     }
     return rounded;
 }
@@ -1238,7 +1251,7 @@ ScaleVarProc(
 	resultStr = "can't assign non-numeric value to scale variable";
 	ScaleSetVariable(scalePtr);
     } else {
-	scalePtr->value = TkRoundToResolution(scalePtr, value);
+	scalePtr->value = TkRoundValueToResolution(scalePtr, value);
 
 	/*
 	 * This code is a bit tricky because it sets the scale's value before
@@ -1282,7 +1295,7 @@ TkScaleSetValue(
     int invokeCommand)		/* Non-zero means invoked -command option to
 				 * notify of new value, 0 means don't. */
 {
-    value = TkRoundToResolution(scalePtr, value);
+    value = TkRoundValueToResolution(scalePtr, value);
     if ((value < scalePtr->fromValue)
 	    ^ (scalePtr->toValue < scalePtr->fromValue)) {
 	value = scalePtr->fromValue;
@@ -1402,7 +1415,7 @@ TkScalePixelToValue(
     }
     value = scalePtr->fromValue +
 		value * (scalePtr->toValue - scalePtr->fromValue);
-    return TkRoundToResolution(scalePtr, value);
+    return TkRoundValueToResolution(scalePtr, value);
 }
 
 /*

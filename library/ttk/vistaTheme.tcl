@@ -3,7 +3,7 @@
 #
 
 # The Vista theme can only be defined on Windows Vista and above. The theme
-# is created in C due to the need to assign a theme-enabled function for 
+# is created in C due to the need to assign a theme-enabled function for
 # detecting when themeing is disabled. On systems that cannot support the
 # Vista theme, there will be no such theme created and we must not
 # evaluate this script.
@@ -48,10 +48,8 @@ namespace eval ttk::theme::vista {
 	ttk::style configure Treeview -background SystemWindow
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
-				{!disabled !selected} SystemWindow \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
-				{!disabled !selected} SystemWindowText \
 				selected SystemHighlightText]
 
         # Label and Toolbutton
@@ -153,7 +151,7 @@ namespace eval ttk::theme::vista {
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
 
-        
+
         # SCROLLBAR elements (Vista includes a state for 'hover')
         ttk::style element create Vertical.Scrollbar.uparrow vsapi \
             SCROLLBAR 1 {disabled 4 pressed 3 active 2 hover 17 {} 1} \
@@ -189,6 +187,7 @@ namespace eval ttk::theme::vista {
         ttk::style layout Horizontal.TProgressbar {
             Horizontal.Progressbar.trough -sticky nswe -children {
                 Horizontal.Progressbar.pbar -side left -sticky ns
+                Horizontal.Progressbar.text -sticky nesw
             }
         }
         ttk::style element create Vertical.Progressbar.pbar vsapi \
@@ -198,7 +197,7 @@ namespace eval ttk::theme::vista {
                 Vertical.Progressbar.pbar -side bottom -sticky we
             }
         }
-        
+
         # Scale
         ttk::style element create Horizontal.Scale.slider vsapi \
             TRACKBAR 3 {disabled 5 focus 4 pressed 3 active 2 {} 1} \
@@ -222,10 +221,10 @@ namespace eval ttk::theme::vista {
                 }
             }
         }
-        
+
         # Treeview
         ttk::style configure Item -padding {4 0 0 0}
-        
+
         package provide ttk::theme::vista 1.0
     }
 }

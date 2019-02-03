@@ -290,7 +290,7 @@ Tk_PlaceObjCmd(
 	    if (slavePtr == NULL) {
 		return TCL_OK;
 	    }
-	    objPtr = Tk_GetOptionInfo(interp, (char *) slavePtr, optionTable,
+	    objPtr = Tk_GetOptionInfo(interp, slavePtr, optionTable,
 		    (objc == 4) ? objv[3] : NULL, tkwin);
 	    if (objPtr == NULL) {
 		return TCL_ERROR;
@@ -315,7 +315,7 @@ Tk_PlaceObjCmd(
 	}
 	UnlinkSlave(slavePtr);
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
-		(char *) tkwin));
+		tkwin));
 	Tk_DeleteEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
 		slavePtr);
 	Tk_ManageGeometry(tkwin, NULL, NULL);
@@ -455,7 +455,7 @@ FindSlave(
     register Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_FindHashEntry(&dispPtr->slaveTable, (char *) tkwin);
+    hPtr = Tcl_FindHashEntry(&dispPtr->slaveTable, tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
@@ -578,7 +578,7 @@ FindMaster(
     register Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_FindHashEntry(&dispPtr->masterTable, (char *) tkwin);
+    hPtr = Tcl_FindHashEntry(&dispPtr->masterTable, tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
@@ -628,7 +628,7 @@ ConfigureSlave(
 
     slavePtr = CreateSlave(tkwin, table);
 
-    if (Tk_SetOptions(interp, (char *) slavePtr, table, objc, objv,
+    if (Tk_SetOptions(interp, slavePtr, table, objc, objv,
 	    slavePtr->tkwin, &savedOptions, &mask) != TCL_OK) {
 	goto error;
     }
@@ -1084,7 +1084,7 @@ MasterStructureProc(
 	    slavePtr->nextPtr = NULL;
 	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->masterTable,
-		(char *) masterPtr->tkwin));
+		masterPtr->tkwin));
 	if (masterPtr->flags & PARENT_RECONFIG_PENDING) {
 	    Tcl_CancelIdleCall(RecomputePlacement, masterPtr);
 	}
@@ -1151,7 +1151,7 @@ SlaveStructureProc(
 	    UnlinkSlave(slavePtr);
 	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
-		(char *) slavePtr->tkwin));
+		slavePtr->tkwin));
 	FreeSlave(slavePtr);
     }
 }
@@ -1230,7 +1230,7 @@ PlaceLostSlaveProc(
     Tk_UnmapWindow(tkwin);
     UnlinkSlave(slavePtr);
     Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
-	    (char *) tkwin));
+	    tkwin));
     Tk_DeleteEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
 	    slavePtr);
     FreeSlave(slavePtr);

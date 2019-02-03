@@ -19,8 +19,8 @@
  * Macro that determines the size of a mark segment:
  */
 
-#define MSEG_SIZE ((unsigned) (Tk_Offset(TkTextSegment, body) \
-	+ sizeof(TkTextMark)))
+#define MSEG_SIZE (Tk_Offset(TkTextSegment, body) \
+	+ sizeof(TkTextMark))
 
 /*
  * Forward references for functions defined in this file:
@@ -126,14 +126,14 @@ TkTextMarkCmd(
     switch ((enum markOptions) optionIndex) {
     case MARK_GRAVITY: {
 	char c;
-	int length;
+	size_t length;
 	const char *str;
 
 	if (objc < 4 || objc > 5) {
 	    Tcl_WrongNumArgs(interp, 3, objv, "markName ?gravity?");
 	    return TCL_ERROR;
 	}
-	str = Tcl_GetStringFromObj(objv[3], &length);
+	str = TkGetStringFromObj(objv[3], &length);
 	if (length == 6 && !strcmp(str, "insert")) {
 	    markPtr = textPtr->insertMarkPtr;
 	} else if (length == 7 && !strcmp(str, "current")) {
@@ -160,7 +160,7 @@ TkTextMarkCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, -1));
 	    return TCL_OK;
 	}
-	str = Tcl_GetStringFromObj(objv[4],&length);
+	str = TkGetStringFromObj(objv[4],&length);
 	c = str[0];
 	if ((c == 'l') && (strncmp(str, "left", (unsigned) length) == 0)) {
 	    newTypePtr = &tkTextLeftMarkType;

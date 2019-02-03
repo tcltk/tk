@@ -13,8 +13,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * Flag values for "sticky"ness. The 16 combinations subsume the packer's
@@ -236,7 +236,7 @@ static void		AdjustForSticky(int sticky, int cavityWidth,
 			    int *slaveWidthPtr, int *slaveHeightPtr);
 static void		MoveSash(PanedWindow *pwPtr, int sash, int diff);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
-static char *		ComputeSlotAddress(char *recordPtr, int offset);
+static void *	ComputeSlotAddress(void *recordPtr, int offset);
 static int		PanedWindowIdentifyCoords(PanedWindow *pwPtr,
 			    Tcl_Interp *interp, int x, int y);
 
@@ -459,7 +459,7 @@ Tk_PanedWindowObjCmd(
 
     Tcl_Preserve(pwPtr->tkwin);
 
-    if (Tk_InitOptions(interp, (char *) pwPtr, pwOpts->pwOptions,
+    if (Tk_InitOptions(interp, pwPtr, pwOpts->pwOptions,
 	    tkwin) != TCL_OK) {
 	Tk_DestroyWindow(pwPtr->tkwin);
 	return TCL_ERROR;
@@ -578,7 +578,7 @@ PanedWindowWidgetObjCmd(
 	    result = TCL_ERROR;
 	    break;
 	}
-	resultObj = Tk_GetOptionValue(interp, (char *) pwPtr,
+	resultObj = Tk_GetOptionValue(interp, pwPtr,
 		pwPtr->optionTable, objv[2], pwPtr->tkwin);
 	if (resultObj == NULL) {
 	    result = TCL_ERROR;
@@ -590,7 +590,7 @@ PanedWindowWidgetObjCmd(
     case PW_CONFIGURE:
 	resultObj = NULL;
 	if (objc <= 3) {
-	    resultObj = Tk_GetOptionInfo(interp, (char *) pwPtr,
+	    resultObj = Tk_GetOptionInfo(interp, pwPtr,
 		    pwPtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL, pwPtr->tkwin);
 	    if (resultObj == NULL) {
@@ -669,7 +669,7 @@ PanedWindowWidgetObjCmd(
 	for (i = 0; i < pwPtr->numSlaves; i++) {
 	    if (pwPtr->slaves[i]->tkwin == tkwin) {
 		resultObj = Tk_GetOptionValue(interp,
-			(char *) pwPtr->slaves[i], pwPtr->slaveOpts,
+			pwPtr->slaves[i], pwPtr->slaveOpts,
 			objv[3], tkwin);
 	    }
 	}
@@ -709,7 +709,7 @@ PanedWindowWidgetObjCmd(
 	    for (i = 0; i < pwPtr->numSlaves; i++) {
 		if (pwPtr->slaves[i]->tkwin == tkwin) {
 		    resultObj = Tk_GetOptionInfo(interp,
-			    (char *) pwPtr->slaves[i], pwPtr->slaveOpts,
+			    pwPtr->slaves[i], pwPtr->slaveOpts,
 			    (objc == 4) ? objv[3] : NULL,
 			    pwPtr->tkwin);
 		    if (resultObj == NULL) {
@@ -848,7 +848,7 @@ ConfigureSlaves(
      */
 
     memset((void *)&options, 0, sizeof(Slave));
-    if (Tk_SetOptions(interp, (char *) &options, pwPtr->slaveOpts,
+    if (Tk_SetOptions(interp, &options, pwPtr->slaveOpts,
 	    objc - firstOptionArg, objv + firstOptionArg,
 	    pwPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;
@@ -925,7 +925,7 @@ ConfigureSlaves(
 	found = 0;
 	for (j = 0; j < pwPtr->numSlaves; j++) {
 	    if (pwPtr->slaves[j] != NULL && pwPtr->slaves[j]->tkwin == tkwin) {
-		Tk_SetOptions(interp, (char *) pwPtr->slaves[j],
+		Tk_SetOptions(interp, pwPtr->slaves[j],
 			pwPtr->slaveOpts, objc - firstOptionArg,
 			objv + firstOptionArg, pwPtr->tkwin, NULL, NULL);
 		if (pwPtr->slaves[j]->minSize < 0) {
@@ -972,9 +972,9 @@ ConfigureSlaves(
 
 	slavePtr = ckalloc(sizeof(Slave));
 	memset(slavePtr, 0, sizeof(Slave));
-	Tk_InitOptions(interp, (char *)slavePtr, pwPtr->slaveOpts,
+	Tk_InitOptions(interp, slavePtr, pwPtr->slaveOpts,
 		pwPtr->tkwin);
-	Tk_SetOptions(interp, (char *)slavePtr, pwPtr->slaveOpts,
+	Tk_SetOptions(interp, slavePtr, pwPtr->slaveOpts,
 		objc - firstOptionArg, objv + firstOptionArg,
 		pwPtr->tkwin, NULL, NULL);
 	slavePtr->tkwin = tkwin;
@@ -1249,7 +1249,7 @@ ConfigurePanedWindow(
     Tk_SavedOptions savedOptions;
     int typemask = 0;
 
-    if (Tk_SetOptions(interp, (char *) pwPtr, pwPtr->optionTable, objc, objv,
+    if (Tk_SetOptions(interp, pwPtr, pwPtr->optionTable, objc, objv,
 	    pwPtr->tkwin, &savedOptions, &typemask) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	return TCL_ERROR;
@@ -1484,10 +1484,10 @@ DisplayPanedWindow(
      */
 
     if (horizontal) {
-	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderWidth(tkwin));
+	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
 	sashWidth = pwPtr->sashWidth;
     } else {
-	sashWidth = Tk_Width(tkwin) - (2 * Tk_InternalBorderWidth(tkwin));
+	sashWidth = Tk_Width(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
 	sashHeight = pwPtr->sashWidth;
     }
 
@@ -1754,7 +1754,7 @@ ArrangePanes(
      */
 
     paneDynSize = paneDynMinSize = 0;
-    internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
+    internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
     pwHeight = Tk_Height(pwPtr->tkwin) - (2 * internalBW);
     pwWidth = Tk_Width(pwPtr->tkwin) - (2 * internalBW);
     x = y = internalBW;
@@ -2200,7 +2200,7 @@ ComputeGeometry(
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
-    x = y = internalBw = Tk_InternalBorderWidth(pwPtr->tkwin);
+    x = y = internalBw = Tk_InternalBorderLeft(pwPtr->tkwin);
     reqWidth = reqHeight = 0;
 
     /*
@@ -2455,7 +2455,8 @@ SetSticky(
     int flags)			/* Flags for the option, set Tk_SetOptions. */
 {
     int sticky = 0;
-    char c, *internalPtr;
+    char c;
+    void *internalPtr;
     const char *string;
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
@@ -2906,7 +2907,7 @@ PanedWindowProxyCommand(
 	    return TCL_ERROR;
 	}
 
-        internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
+        internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	    if (x < 0) {
 		x = 0;
@@ -2915,10 +2916,10 @@ PanedWindowProxyCommand(
             if (x > pwWidth) {
                 x = pwWidth;
             }
-            y = Tk_InternalBorderWidth(pwPtr->tkwin);
+            y = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashWidth = pwPtr->sashWidth;
 	    sashHeight = Tk_Height(pwPtr->tkwin) -
-		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
+		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	} else {
 	    if (y < 0) {
 		y = 0;
@@ -2927,10 +2928,10 @@ PanedWindowProxyCommand(
             if (y > pwHeight) {
                 y = pwHeight;
             }
-	    x = Tk_InternalBorderWidth(pwPtr->tkwin);
+	    x = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashHeight = pwPtr->sashWidth;
 	    sashWidth = Tk_Width(pwPtr->tkwin) -
-		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
+		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	}
 
 	if (sashWidth < 1) {
@@ -3019,13 +3020,13 @@ ObjectIsEmpty(
  *----------------------------------------------------------------------
  */
 
-static char *
+static void *
 ComputeSlotAddress(
-    char *recordPtr,	/* Pointer to the start of a record. */
+    void *recordPtr,	/* Pointer to the start of a record. */
     int offset)		/* Offset of a slot within that record; may be < 0. */
 {
     if (offset >= 0) {
-	return recordPtr + offset;
+	return (char *)recordPtr + offset;
     } else {
 	return NULL;
     }
@@ -3066,7 +3067,7 @@ PanedWindowIdentifyCoords(
 	} else {
 	    sashHeight = Tk_ReqHeight(pwPtr->tkwin);
 	}
-	sashHeight -= 2 * Tk_InternalBorderWidth(pwPtr->tkwin);
+	sashHeight -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->showHandle && pwPtr->handleSize > pwPtr->sashWidth) {
 	    sashWidth = pwPtr->handleSize;
 	    lpad = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
@@ -3094,7 +3095,7 @@ PanedWindowIdentifyCoords(
 	} else {
 	    sashWidth = Tk_ReqWidth(pwPtr->tkwin);
 	}
-	sashWidth -= 2 * Tk_InternalBorderWidth(pwPtr->tkwin);
+	sashWidth -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	lpad = rpad = 0;
     }
 

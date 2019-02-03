@@ -26,7 +26,7 @@ typedef struct {
     int charOffset;		/* The offset of the next char to retrieve. */
     int byteOffset;		/* The expected byte offset of the next
 				 * chunk. */
-    char buffer[TCL_UTF_MAX];	/* A buffer to hold part of a UTF character
+    char buffer[4];		/* A buffer to hold part of a UTF character
 				 * that is split across chunks. */
     char command[1];		/* Command to invoke. Actual space is
 				 * allocated as large as necessary. This must
@@ -190,7 +190,7 @@ Tk_CreateSelHandler(
 		     * should make a copy for this selPtr.
 		     */
 
-		    unsigned cmdInfoLen = Tk_Offset(CommandInfo, command) + 1 +
+		    size_t cmdInfoLen = Tk_Offset(CommandInfo, command) + 1 +
 			    ((CommandInfo *)clientData)->cmdLength;
 
 		    selPtr->clientData = ckalloc(cmdInfoLen);
@@ -357,7 +357,7 @@ Tk_OwnSelection(
     TkDisplay *dispPtr = winPtr->dispPtr;
     TkSelectionInfo *infoPtr;
     Tk_LostSelProc *clearProc = NULL;
-    ClientData clearData = NULL;/* Initialization needed only to prevent
+    void *clearData = NULL;/* Initialization needed only to prevent
 				 * compiler warning. */
 
     if (dispPtr->multipleAtom == None) {
@@ -466,7 +466,7 @@ Tk_ClearSelection(
     TkSelectionInfo *prevPtr;
     TkSelectionInfo *nextPtr;
     Tk_LostSelProc *clearProc = NULL;
-    ClientData clearData = NULL;/* Initialization needed only to prevent
+    void *clearData = NULL;/* Initialization needed only to prevent
 				 * compiler warning. */
 
     if (dispPtr->multipleAtom == None) {
@@ -831,7 +831,7 @@ Tk_SelectionObjCmd(
 	const char *targetName = NULL;
 	const char *formatName = NULL;
 	register CommandInfo *cmdInfoPtr;
-	int cmdLength;
+	size_t cmdLength;
 	static const char *const handleOptionStrings[] = {
 	    "-format", "-selection", "-type", NULL
 	};
@@ -900,7 +900,7 @@ Tk_SelectionObjCmd(
 	} else {
 	    format = XA_STRING;
 	}
-	string = Tcl_GetStringFromObj(objs[1], &cmdLength);
+	string = TkGetStringFromObj(objs[1], &cmdLength);
 	if (cmdLength == 0) {
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {
@@ -1246,7 +1246,7 @@ TkSelClearSelection(
     }
 
     if (infoPtr != NULL && (infoPtr->owner == tkwin) &&
-	    (eventPtr->xselectionclear.serial >= (unsigned) infoPtr->serial)) {
+	    (eventPtr->xselectionclear.serial >= (unsigned long) infoPtr->serial)) {
 	if (prevPtr == NULL) {
 	    dispPtr->selectionInfoPtr = infoPtr->nextPtr;
 	} else {

@@ -428,7 +428,7 @@ Tk_NameOfCursor(
 	sprintf(dispPtr->cursorString, "cursor id %p", cursor);
 	return dispPtr->cursorString;
     }
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, cursor);
     if (idHashPtr == NULL) {
 	goto printid;
     }
@@ -463,8 +463,7 @@ FreeCursor(
 {
     TkCursor *prevPtr;
 
-    cursorPtr->resourceRefCount--;
-    if (cursorPtr->resourceRefCount > 0) {
+    if (cursorPtr->resourceRefCount-- > 1) {
 	return;
     }
 
@@ -518,7 +517,7 @@ Tk_FreeCursor(
 	Tcl_Panic("Tk_FreeCursor called before Tk_GetCursor");
     }
 
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, (char *) cursor);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, cursor);
     if (idHashPtr == NULL) {
 	Tcl_Panic("Tk_FreeCursor received unknown cursor argument");
     }
@@ -590,8 +589,7 @@ FreeCursorObj(
     TkCursor *cursorPtr = objPtr->internalRep.twoPtrValue.ptr1;
 
     if (cursorPtr != NULL) {
-	cursorPtr->objRefCount--;
-	if ((cursorPtr->objRefCount == 0)
+	if ((cursorPtr->objRefCount-- <= 1)
 		&& (cursorPtr->resourceRefCount == 0)) {
 	    ckfree(cursorPtr);
 	}
@@ -864,9 +862,9 @@ TkDebugCursor(
 	for ( ; (cursorPtr != NULL); cursorPtr = cursorPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(cursorPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(cursorPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(cursorPtr->objRefCount));
+		    Tcl_NewWideIntObj(cursorPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

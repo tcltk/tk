@@ -68,11 +68,11 @@ typedef struct TkMenuEntry {
     Tk_OptionTable optionTable;	/* Option table for this menu entry. */
     Tcl_Obj *labelPtr;		/* Main text label displayed in entry (NULL if
 				 * no label). */
-    int labelLength;		/* Number of non-NULL characters in label. */
+    TkSizeT labelLength;	/* Number of non-NULL characters in label. */
     int state;			/* State of button for display purposes:
 				 * normal, active, or disabled. */
     int underline;		/* Value of -underline option: specifies index
-				 * of character to underline (<0 means don't
+				 * of character to underline (-1 means don't
 				 * underline anything). */
     Tcl_Obj *underlinePtr;	/* Index of character to underline. */
     Tcl_Obj *bitmapPtr;		/* Bitmap to display in menu entry, or NULL.
@@ -89,7 +89,7 @@ typedef struct TkMenuEntry {
     Tcl_Obj *accelPtr;		/* Accelerator string displayed at right of
 				 * menu entry. NULL means no such accelerator.
 				 * Malloc'ed. */
-    int accelLength;		/* Number of non-NULL characters in
+    TkSizeT accelLength;	/* Number of non-NULL characters in
 				 * accelerator. */
     int indicatorOn;		/* True means draw indicator, false means
 				 * don't draw it. This field is ignored unless
@@ -382,6 +382,7 @@ typedef struct TkMenu {
 				/* We actually have to allocate these because
 				 * multiple menus get changed during one
 				 * ConfigureMenu call. */
+    Tcl_Obj *activeReliefPtr;	/* 3-d effect for active element. */
 } TkMenu;
 
 /*
@@ -520,7 +521,7 @@ MODULE_SCOPE int	TkPostCommand(TkMenu *menuPtr);
 MODULE_SCOPE int	TkPostSubmenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y);
+					   int x, int y);
 MODULE_SCOPE int	TkPreprocessMenu(TkMenu *menuPtr);
 MODULE_SCOPE void	TkRecomputeMenu(TkMenu *menuPtr);
 
@@ -543,7 +544,9 @@ MODULE_SCOPE void	TkpMenuInit(void);
 MODULE_SCOPE int	TkpMenuNewEntry(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);
 MODULE_SCOPE int	TkpPostMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y);
+			    int x, int y, int index);
+MODULE_SCOPE int	TkpPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
+					   int x, int y, int index);
 MODULE_SCOPE void	TkpSetWindowMenuBar(Tk_Window tkwin, TkMenu *menuPtr);
 
 #endif /* _TKMENU */

@@ -4,8 +4,7 @@
  * ttk::scrollbar widget.
  */
 
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -22,7 +21,7 @@ typedef struct
     double	first;			/* top fraction */
     double	last;			/* bottom fraction */
 
-    Ttk_Box	troughBox;		/* trough parcel */ 
+    Ttk_Box	troughBox;		/* trough parcel */
     int 	minSize;		/* minimum size of thumb */
 } ScrollbarPart;
 
@@ -50,7 +49,7 @@ static Tk_OptionSpec ScrollbarOptionSpecs[] =
  * +++ Widget hooks.
  */
 
-static void 
+static void
 ScrollbarInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Scrollbar *sb = recordPtr;
@@ -241,7 +240,7 @@ ScrollbarDeltaCommand(
 
 /* $sb fraction $x $y --
  * 	Returns a real number between 0 and 1 indicating  where  the
- * 	point given by x and y lies in the trough area of the scrollbar. 
+ * 	point given by x and y lies in the trough area of the scrollbar.
  */
 static int
 ScrollbarFractionCommand(

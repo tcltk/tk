@@ -102,7 +102,6 @@ static char scriptPath[PATH_MAX + 1] = "";
     _defaultMainMenu = nil;
     [self _setupMenus];
 
-
     /*
      * Initialize event processing.
      */

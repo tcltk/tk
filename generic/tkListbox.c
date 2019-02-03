@@ -12,8 +12,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -567,7 +567,7 @@ Tk_ListboxObjCmd(
 	    ListboxEventProc, listPtr);
     Tk_CreateSelHandler(listPtr->tkwin, XA_PRIMARY, XA_STRING,
 	    ListboxFetchSelection, listPtr, XA_STRING);
-    if (Tk_InitOptions(interp, (char *)listPtr,
+    if (Tk_InitOptions(interp, listPtr,
 	    optionTables->listboxOptionTable, tkwin) != TCL_OK) {
 	Tk_DestroyWindow(listPtr->tkwin);
 	return TCL_ERROR;
@@ -682,7 +682,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 
-	objPtr = Tk_GetOptionValue(interp, (char *) listPtr,
+	objPtr = Tk_GetOptionValue(interp, listPtr,
 		listPtr->optionTable, objv[2], listPtr->tkwin);
 	if (objPtr == NULL) {
 	    result = TCL_ERROR;
@@ -694,7 +694,7 @@ ListboxWidgetObjCmd(
 
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) listPtr,
+	    objPtr = Tk_GetOptionInfo(interp, listPtr,
 		    listPtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL, listPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -926,7 +926,7 @@ ListboxWidgetObjCmd(
 
 	attrPtr = ListboxGetItemAttributes(interp, listPtr, index);
 	if (objc <= 4) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) attrPtr,
+	    objPtr = Tk_GetOptionInfo(interp, attrPtr,
 		    listPtr->itemAttrOptionTable,
 		    (objc == 4) ? objv[3] : NULL, listPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -1102,7 +1102,8 @@ ListboxBboxSubCmd(
     if ((listPtr->topIndex <= index) && (index < lastVisibleIndex)) {
 	Tcl_Obj *el, *results[4];
 	const char *stringRep;
-	int pixelWidth, stringLen, x, y, result;
+	int pixelWidth, x, y, result;
+	size_t stringLen;
 	Tk_FontMetrics fm;
 
 	/*
@@ -1114,7 +1115,7 @@ ListboxBboxSubCmd(
 	    return result;
 	}
 
-	stringRep = Tcl_GetStringFromObj(el, &stringLen);
+	stringRep = TkGetStringFromObj(el, &stringLen);
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
@@ -1415,7 +1416,7 @@ ListboxGetItemAttributes(
 	attrs->selBorder = NULL;
 	attrs->fgColor = NULL;
 	attrs->selFgColor = NULL;
-	Tk_InitOptions(interp, (char *)attrs, listPtr->itemAttrOptionTable,
+	Tk_InitOptions(interp, attrs, listPtr->itemAttrOptionTable,
 		listPtr->tkwin);
 	Tcl_SetHashValue(entry, attrs);
     } else {
@@ -1578,7 +1579,7 @@ ConfigureListbox(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) listPtr,
+	    if (Tk_SetOptions(interp, listPtr,
 		    listPtr->optionTable, objc, objv,
 		    listPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -1724,7 +1725,7 @@ ConfigureListboxItem(
 {
     Tk_SavedOptions savedOptions;
 
-    if (Tk_SetOptions(interp, (char *)attrs,
+    if (Tk_SetOptions(interp, attrs,
 	    listPtr->itemAttrOptionTable, objc, objv, listPtr->tkwin,
 	    &savedOptions, NULL) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
@@ -1840,7 +1841,8 @@ DisplayListbox(
     register Listbox *listPtr = clientData;
     register Tk_Window tkwin = listPtr->tkwin;
     GC gc;
-    int i, limit, x, y, prevSelected, freeGC, stringLen;
+    int i, limit, x, y, prevSelected, freeGC;
+    size_t stringLen;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
@@ -2074,7 +2076,7 @@ DisplayListbox(
 	 */
 
         Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
-        stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+        stringRep = TkGetStringFromObj(curElement, &stringLen);
         textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
@@ -2236,7 +2238,8 @@ ListboxComputeGeometry(
 				 * Tk_UnsetGrid to update gridding for the
 				 * window. */
 {
-    int width, height, pixelWidth, pixelHeight, textLength, i, result;
+    int width, height, pixelWidth, pixelHeight, i, result;
+    size_t textLength;
     Tk_FontMetrics fm;
     Tcl_Obj *element;
     const char *text;
@@ -2257,7 +2260,7 @@ ListboxComputeGeometry(
 	    if (result != TCL_OK) {
 		continue;
 	    }
-	    text = Tcl_GetStringFromObj(element, &textLength);
+	    text = TkGetStringFromObj(element, &textLength);
 	    Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, text, textLength);
 	    if (pixelWidth > listPtr->maxWidth) {
@@ -2323,7 +2326,8 @@ ListboxInsertSubCmd(
     int objc,			/* Number of new elements to add. */
     Tcl_Obj *const objv[])	/* New elements (one per entry). */
 {
-    int i, oldMaxWidth, pixelWidth, result, length;
+    int i, oldMaxWidth, pixelWidth, result;
+    size_t length;
     Tcl_Obj *newListObj;
     const char *stringRep;
 
@@ -2334,7 +2338,7 @@ ListboxInsertSubCmd(
 	 * if so, update our notion of "widest."
 	 */
 
-	stringRep = Tcl_GetStringFromObj(objv[i], &length);
+	stringRep = TkGetStringFromObj(objv[i], &length);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	if (pixelWidth > listPtr->maxWidth) {
 	    listPtr->maxWidth = pixelWidth;
@@ -2437,7 +2441,8 @@ ListboxDeleteSubCmd(
     int first,			/* Index of first element to delete. */
     int last)			/* Index of last element to delete. */
 {
-    int count, i, widthChanged, length, result, pixelWidth;
+    int count, i, widthChanged, result, pixelWidth;
+    size_t length;
     Tcl_Obj *newListObj, *element;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -2492,7 +2497,7 @@ ListboxDeleteSubCmd(
 
 	if (widthChanged == 0) {
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &element);
-	    stringRep = Tcl_GetStringFromObj(element, &length);
+	    stringRep = TkGetStringFromObj(element, &length);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	    if (pixelWidth == listPtr->maxWidth) {
 		widthChanged = 1;
@@ -3122,7 +3127,8 @@ ListboxFetchSelection(
 {
     register Listbox *listPtr = clientData;
     Tcl_DString selection;
-    int length, count, needNewline, stringLen, i;
+    int count, needNewline, i;
+    size_t length, stringLen;
     Tcl_Obj *curElement;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -3145,7 +3151,7 @@ ListboxFetchSelection(
 	    }
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i,
 		    &curElement);
-	    stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+	    stringRep = TkGetStringFromObj(curElement, &stringLen);
 	    Tcl_DStringAppend(&selection, stringRep, stringLen);
 	    needNewline = 1;
 	}
@@ -3160,14 +3166,14 @@ ListboxFetchSelection(
      * Copy the requested portion of the selection to the buffer.
      */
 
-    count = length - offset;
-    if (count <= 0) {
+    if (length <= (size_t)offset) {
 	count = 0;
     } else {
+	count = length - offset;
 	if (count > maxBytes) {
 	    count = maxBytes;
 	}
-	memcpy(buffer, Tcl_DStringValue(&selection) + offset, (size_t) count);
+	memcpy(buffer, Tcl_DStringValue(&selection) + offset, count);
     }
     buffer[count] = '\0';
     Tcl_DStringFree(&selection);

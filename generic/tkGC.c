@@ -23,7 +23,7 @@
 typedef struct {
     GC gc;			/* Graphics context. */
     Display *display;		/* Display to which gc belongs. */
-    int refCount;		/* Number of active uses of gc. */
+    size_t refCount;		/* Number of active uses of gc. */
     Tcl_HashEntry *valueHashPtr;/* Entry in valueTable (needed when deleting
 				 * this structure). */
 } TkGC;
@@ -307,13 +307,12 @@ Tk_FreeGC(
 	return;
     }
 
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->gcIdTable, (char *) gc);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->gcIdTable, gc);
     if (idHashPtr == NULL) {
 	Tcl_Panic("Tk_FreeGC received unknown gc argument");
     }
     gcPtr = Tcl_GetHashValue(idHashPtr);
-    gcPtr->refCount--;
-    if (gcPtr->refCount == 0) {
+    if (gcPtr->refCount-- <= 1) {
 	XFreeGC(gcPtr->display, gcPtr->gc);
 	Tcl_DeleteHashEntry(gcPtr->valueHashPtr);
 	Tcl_DeleteHashEntry(idHashPtr);

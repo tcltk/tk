@@ -536,7 +536,7 @@ Tk_NameOfBitmap(
 	Tcl_Panic("Tk_NameOfBitmap received unknown bitmap argument");
     }
 
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->bitmapIdTable, (char *) bitmap);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->bitmapIdTable, bitmap);
     if (idHashPtr == NULL) {
 	goto unknown;
     }
@@ -578,7 +578,7 @@ Tk_SizeOfBitmap(
 	Tcl_Panic("Tk_SizeOfBitmap received unknown bitmap argument");
     }
 
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->bitmapIdTable, (char *) bitmap);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->bitmapIdTable, bitmap);
     if (idHashPtr == NULL) {
 	goto unknownBitmap;
     }
@@ -667,7 +667,7 @@ Tk_FreeBitmap(
 	Tcl_Panic("Tk_FreeBitmap called before Tk_GetBitmap");
     }
 
-    idHashPtr = Tcl_FindHashEntry(&dispPtr->bitmapIdTable, (char *) bitmap);
+    idHashPtr = Tcl_FindHashEntry(&dispPtr->bitmapIdTable, bitmap);
     if (idHashPtr == NULL) {
 	Tcl_Panic("Tk_FreeBitmap received unknown bitmap argument");
     }
@@ -1157,9 +1157,9 @@ TkDebugBitmap(
 	for ( ; (bitmapPtr != NULL); bitmapPtr = bitmapPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(bitmapPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(bitmapPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewIntObj(bitmapPtr->objRefCount));
+		    Tcl_NewWideIntObj(bitmapPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

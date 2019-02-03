@@ -4,9 +4,7 @@
  * ttk::progressbar widget.
  */
 
-#include <math.h>
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -23,13 +21,19 @@ static const char *const ProgressbarModeStrings[] = {
 };
 
 typedef struct {
-    Tcl_Obj 	*orientObj;
+    Tcl_Obj 	*anchorObj;
+    Tcl_Obj 	*fontObj;
+    Tcl_Obj 	*foregroundObj;
+    Tcl_Obj 	*justifyObj;
     Tcl_Obj 	*lengthObj;
-    Tcl_Obj 	*modeObj;
-    Tcl_Obj 	*variableObj;
     Tcl_Obj 	*maximumObj;
-    Tcl_Obj 	*valueObj;
+    Tcl_Obj 	*modeObj;
+    Tcl_Obj 	*orientObj;
     Tcl_Obj 	*phaseObj;
+    Tcl_Obj 	*textObj;
+    Tcl_Obj 	*valueObj;
+    Tcl_Obj 	*variableObj;
+    Tcl_Obj 	*wrapLengthObj;
 
     int 	mode;
     Ttk_TraceHandle *variableTrace;	/* Trace handle for -variable option */
@@ -46,28 +50,46 @@ typedef struct {
 
 static Tk_OptionSpec ProgressbarOptionSpecs[] =
 {
-    {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
-	"horizontal", Tk_Offset(Progressbar,progress.orientObj), -1,
-	0, (ClientData)ttkOrientStrings, STYLE_CHANGED },
+    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
+	"w", Tk_Offset(Progressbar,progress.anchorObj), -1,
+	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
+    {TK_OPTION_FONT, "-font", "font", "Font",
+	DEFAULT_FONT, Tk_Offset(Progressbar,progress.fontObj), -1,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+    {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
+	"black", Tk_Offset(Progressbar,progress.foregroundObj), -1,
+	TK_OPTION_NULL_OK,0,0 },
+    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
+	"left", Tk_Offset(Progressbar,progress.justifyObj), -1,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-length", "length", "Length",
         DEF_PROGRESSBAR_LENGTH, Tk_Offset(Progressbar,progress.lengthObj), -1,
 	0, 0, GEOMETRY_CHANGED },
+    {TK_OPTION_DOUBLE, "-maximum", "maximum", "Maximum",
+	"100", Tk_Offset(Progressbar,progress.maximumObj), -1,
+	0, 0, 0 },
     {TK_OPTION_STRING_TABLE, "-mode", "mode", "ProgressMode", "determinate",
 	Tk_Offset(Progressbar,progress.modeObj),
 	Tk_Offset(Progressbar,progress.mode),
 	0, (ClientData)ProgressbarModeStrings, 0 },
-    {TK_OPTION_DOUBLE, "-maximum", "maximum", "Maximum",
-	"100", Tk_Offset(Progressbar,progress.maximumObj), -1,
+    {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
+	"horizontal", Tk_Offset(Progressbar,progress.orientObj), -1,
+	0, (ClientData)ttkOrientStrings, STYLE_CHANGED },
+    {TK_OPTION_INT, "-phase", "phase", "Phase",
+	"0", Tk_Offset(Progressbar,progress.phaseObj), -1,
+	0, 0, 0 },
+    {TK_OPTION_STRING, "-text", "text", "Text", "",
+	Tk_Offset(Progressbar,progress.textObj), -1,
+	0,0,GEOMETRY_CHANGED },
+    {TK_OPTION_DOUBLE, "-value", "value", "Value",
+	"0.0", Tk_Offset(Progressbar,progress.valueObj), -1,
 	0, 0, 0 },
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
 	NULL, Tk_Offset(Progressbar,progress.variableObj), -1,
 	TK_OPTION_NULL_OK, 0, 0 },
-    {TK_OPTION_DOUBLE, "-value", "value", "Value",
-	"0.0", Tk_Offset(Progressbar,progress.valueObj), -1,
-	0, 0, 0 },
-    {TK_OPTION_INT, "-phase", "phase", "Phase",
-	"0", Tk_Offset(Progressbar,progress.phaseObj), -1,
-	0, 0, 0 },
+    {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
+	"0", Tk_Offset(Progressbar, progress.wrapLengthObj), -1,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -137,7 +159,7 @@ static void CheckAnimation(Progressbar *pb)
     if (AnimationEnabled(pb)) {
 	if (pb->progress.timer == 0) {
 	    pb->progress.timer = Tcl_CreateTimerHandler(
-		pb->progress.period, AnimateProgressProc, (ClientData)pb);
+		pb->progress.period, AnimateProgressProc, pb);
 	}
     } else {
 	if (pb->progress.timer != 0) {
@@ -398,7 +420,7 @@ static int ProgressbarStepCommand(
 {
     Progressbar *pb = recordPtr;
     double value = 0.0, stepAmount = 1.0;
-    Tcl_Obj *newValueObj; 
+    Tcl_Obj *newValueObj;
 
     if (objc == 3) {
 	if (Tcl_GetDoubleFromObj(interp, objv[2], &stepAmount) != TCL_OK) {
@@ -425,7 +447,7 @@ static int ProgressbarStepCommand(
 
     TtkRedisplayWidget(&pb->core);
 
-    /* Update value by setting the linked -variable, if there is one: 
+    /* Update value by setting the linked -variable, if there is one:
      */
     if (pb->progress.variableTrace) {
 	int result = Tcl_ObjSetVar2(
@@ -446,7 +468,7 @@ static int ProgressbarStepCommand(
 }
 
 /* $sb start|stop ?args? --
- * Change [$sb $cmd ...] to [ttk::progressbar::$cmd ...] 
+ * Change [$sb $cmd ...] to [ttk::progressbar::$cmd ...]
  * and pass to interpreter.
  */
 static int ProgressbarStartStopCommand(
@@ -524,7 +546,8 @@ TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(HorizontalProgressbarLayout)
     TTK_GROUP("Horizontal.Progressbar.trough", TTK_FILL_BOTH,
-	TTK_NODE("Horizontal.Progressbar.pbar", TTK_PACK_LEFT|TTK_FILL_Y))
+	TTK_NODE("Horizontal.Progressbar.pbar", TTK_PACK_LEFT|TTK_FILL_Y)
+	TTK_NODE("Horizontal.Progressbar.text", TTK_PACK_LEFT))
 TTK_END_LAYOUT
 
 /*

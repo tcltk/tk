@@ -14,9 +14,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkUndo.h"
+#include "default.h"
 
 #if defined(MAC_OSX_TK)
 #define Style TkStyle
@@ -660,7 +660,7 @@ CreateWidget(
     Tk_CreateSelHandler(textPtr->tkwin, XA_PRIMARY, XA_STRING,
 	    TextFetchSelection, textPtr, XA_STRING);
 
-    if (Tk_InitOptions(interp, (char *) textPtr, optionTable, textPtr->tkwin)
+    if (Tk_InitOptions(interp, textPtr, optionTable, textPtr->tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(textPtr->tkwin);
 	return TCL_ERROR;
@@ -763,7 +763,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	} else {
-	    Tcl_Obj *objPtr = Tk_GetOptionValue(interp, (char *) textPtr,
+	    Tcl_Obj *objPtr = Tk_GetOptionValue(interp, textPtr,
 		    textPtr->optionTable, objv[2], textPtr->tkwin);
 
 	    if (objPtr == NULL) {
@@ -826,7 +826,7 @@ TextWidgetObjCmd(
     }
     case TEXT_CONFIGURE:
 	if (objc <= 3) {
-	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp, (char *) textPtr,
+	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp, textPtr,
 		    textPtr->optionTable, ((objc == 3) ? objv[2] : NULL),
 		    textPtr->tkwin);
 
@@ -865,10 +865,9 @@ TextWidgetObjCmd(
 	for (i = 2; i < objc-2; i++) {
 	    int value;
 	    size_t length;
-	    const char *option = Tcl_GetString(objv[i]);
+	    const char *option = TkGetStringFromObj(objv[i], &length);
 	    char c;
 
-	    length = objv[i]->length;
 	    if (length < 2 || option[0] != '-') {
 		goto badOption;
 	    }
@@ -1155,14 +1154,14 @@ TextWidgetObjCmd(
 		    objc++;
 		}
 		useIdx = ckalloc(objc);
-		memset(useIdx, 0, (size_t) objc);
+		memset(useIdx, 0, objc);
 
 		/*
 		 * Do a decreasing order sort so that we delete the end ranges
 		 * first to maintain index consistency.
 		 */
 
-		qsort(indices, (size_t) objc / 2,
+		qsort(indices, objc / 2,
 			2 * sizeof(TkTextIndex), TextIndexSortProc);
 		lastStart = NULL;
 
@@ -1276,14 +1275,12 @@ TextWidgetObjCmd(
 
 	i = 2;
 	if (objc > 3) {
-	    name = Tcl_GetString(objv[i]);
-	    length = objv[i]->length;
+	    name = TkGetStringFromObj(objv[i], &length);
 	    if (length > 1 && name[0] == '-') {
 		if (strncmp("-displaychars", name, length) == 0) {
 		    i++;
 		    visible = 1;
-		    name = Tcl_GetString(objv[i]);
-		    length = objv[i]->length;
+		    name = TkGetStringFromObj(objv[i], &length);
 		}
 		if ((i < objc-1) && (length == 2) && !strcmp("--", name)) {
 		    i++;
@@ -2639,9 +2636,8 @@ InsertChars(
     int *lineAndByteIndex;
     int resetViewCount;
     int pixels[2*PIXEL_CLIENTS];
-    const char *string = Tcl_GetString(stringPtr);
+    const char *string = TkGetStringFromObj(stringPtr, &length);
 
-    length = stringPtr->length;
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
     }
@@ -2782,6 +2778,9 @@ TextPushUndoAction(
 {
     TkUndoSubAtom *iAtom, *dAtom;
     int canUndo, canRedo;
+    char lMarkName[20] = "tk::undoMarkL";
+    char rMarkName[20] = "tk::undoMarkR";
+    char stringUndoMarkId[7] = "";
 
     /*
      * Create the helpers.
@@ -2792,6 +2791,10 @@ TextPushUndoAction(
     Tcl_Obj *markSet2InsertObj = NULL;
     Tcl_Obj *insertCmdObj = Tcl_NewObj();
     Tcl_Obj *deleteCmdObj = Tcl_NewObj();
+    Tcl_Obj *markSetLUndoMarkCmdObj = Tcl_NewObj();
+    Tcl_Obj *markSetRUndoMarkCmdObj = NULL;
+    Tcl_Obj *markGravityLUndoMarkCmdObj = Tcl_NewObj();
+    Tcl_Obj *markGravityRUndoMarkCmdObj = NULL;
 
     /*
      * Get the index positions.
@@ -2841,6 +2844,40 @@ TextPushUndoAction(
     Tcl_ListObjAppendElement(NULL, deleteCmdObj, index1Obj);
     Tcl_ListObjAppendElement(NULL, deleteCmdObj, index2Obj);
 
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
+	    Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), -1));
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
+	    Tcl_NewStringObj("mark", 4));
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
+	    Tcl_NewStringObj("set", 3));
+    markSetRUndoMarkCmdObj = Tcl_DuplicateObj(markSetLUndoMarkCmdObj);
+    textPtr->sharedTextPtr->undoMarkId++;
+    sprintf(stringUndoMarkId, "%d", textPtr->sharedTextPtr->undoMarkId);
+    strcat(lMarkName, stringUndoMarkId);
+    strcat(rMarkName, stringUndoMarkId);
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
+	    Tcl_NewStringObj(lMarkName, -1));
+    Tcl_ListObjAppendElement(NULL, markSetRUndoMarkCmdObj,
+	    Tcl_NewStringObj(rMarkName, -1));
+    Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj, index1Obj);
+    Tcl_ListObjAppendElement(NULL, markSetRUndoMarkCmdObj, index2Obj);
+
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+	    Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), -1));
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+	    Tcl_NewStringObj("mark", 4));
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+	    Tcl_NewStringObj("gravity", 7));
+    markGravityRUndoMarkCmdObj = Tcl_DuplicateObj(markGravityLUndoMarkCmdObj);
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+	    Tcl_NewStringObj(lMarkName, -1));
+    Tcl_ListObjAppendElement(NULL, markGravityRUndoMarkCmdObj,
+	    Tcl_NewStringObj(rMarkName, -1));
+    Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
+            Tcl_NewStringObj("left", 4));
+    Tcl_ListObjAppendElement(NULL, markGravityRUndoMarkCmdObj,
+            Tcl_NewStringObj("right", 5));
+
     /*
      * Note: we don't wish to use textPtr->widgetCmd in these callbacks
      * because if we delete the textPtr, but peers still exist, we will then
@@ -2858,11 +2895,19 @@ TextPushUndoAction(
 	    insertCmdObj, NULL);
     TkUndoMakeCmdSubAtom(NULL, markSet2InsertObj, iAtom);
     TkUndoMakeCmdSubAtom(NULL, seeInsertObj, iAtom);
+    TkUndoMakeCmdSubAtom(NULL, markSetLUndoMarkCmdObj, iAtom);
+    TkUndoMakeCmdSubAtom(NULL, markSetRUndoMarkCmdObj, iAtom);
+    TkUndoMakeCmdSubAtom(NULL, markGravityLUndoMarkCmdObj, iAtom);
+    TkUndoMakeCmdSubAtom(NULL, markGravityRUndoMarkCmdObj, iAtom);
 
     dAtom = TkUndoMakeSubAtom(&TextUndoRedoCallback, textPtr->sharedTextPtr,
 	    deleteCmdObj, NULL);
     TkUndoMakeCmdSubAtom(NULL, markSet1InsertObj, dAtom);
     TkUndoMakeCmdSubAtom(NULL, seeInsertObj, dAtom);
+    TkUndoMakeCmdSubAtom(NULL, markSetLUndoMarkCmdObj, dAtom);
+    TkUndoMakeCmdSubAtom(NULL, markSetRUndoMarkCmdObj, dAtom);
+    TkUndoMakeCmdSubAtom(NULL, markGravityLUndoMarkCmdObj, dAtom);
+    TkUndoMakeCmdSubAtom(NULL, markGravityRUndoMarkCmdObj, dAtom);
 
     Tcl_DecrRefCount(seeInsertObj);
     Tcl_DecrRefCount(index1Obj);
@@ -4714,8 +4759,7 @@ TextDumpCmd(
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	str = Tcl_GetString(objv[arg]);
-	length = objv[arg]->length;
+	str = TkGetStringFromObj(objv[arg], &length);
 	if (strncmp(str, "end", length) == 0) {
 	    atEnd = 1;
 	}
@@ -5031,7 +5075,7 @@ DumpSegment(
 	Tcl_DecrRefCount(tuple);
 	return 0;
     } else {
-	int oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
+	TkSizeT oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
 	Tcl_DString buf;
 	int code;
 
@@ -5074,6 +5118,8 @@ TextEditUndo(
     TkText *textPtr)		/* Overall information about text widget. */
 {
     int status;
+    Tcl_Obj *cmdObj;
+    int code;
 
     if (!textPtr->sharedTextPtr->undo) {
 	return TCL_OK;
@@ -5096,6 +5142,22 @@ TextEditUndo(
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
     }
     textPtr->sharedTextPtr->undo = 1;
+
+    /*
+     * Convert undo/redo temporary marks set by TkUndoRevert() into
+     * indices left in the interp result.
+     */
+
+    cmdObj = Tcl_ObjPrintf("::tk::TextUndoRedoProcessMarks %s",
+            Tk_PathName(textPtr->tkwin));
+    Tcl_IncrRefCount(cmdObj);
+    code = Tcl_EvalObjEx(textPtr->interp, cmdObj, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+        Tcl_AddErrorInfo(textPtr->interp,
+                "\n    (on undoing)");
+        Tcl_BackgroundException(textPtr->interp, code);
+    }
+    Tcl_DecrRefCount(cmdObj);
 
     return status;
 }
@@ -5122,6 +5184,8 @@ TextEditRedo(
     TkText *textPtr)		/* Overall information about text widget. */
 {
     int status;
+    Tcl_Obj *cmdObj;
+    int code;
 
     if (!textPtr->sharedTextPtr->undo) {
 	return TCL_OK;
@@ -5144,6 +5208,23 @@ TextEditRedo(
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
     }
     textPtr->sharedTextPtr->undo = 1;
+
+    /*
+     * Convert undo/redo temporary marks set by TkUndoApply() into
+     * indices left in the interp result.
+     */
+
+    cmdObj = Tcl_ObjPrintf("::tk::TextUndoRedoProcessMarks %s",
+            Tk_PathName(textPtr->tkwin));
+    Tcl_IncrRefCount(cmdObj);
+    code = Tcl_EvalObjEx(textPtr->interp, cmdObj, TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+        Tcl_AddErrorInfo(textPtr->interp,
+                "\n    (on undoing)");
+        Tcl_BackgroundException(textPtr->interp, code);
+    }
+    Tcl_DecrRefCount(cmdObj);
+
     return status;
 }
 
@@ -5523,7 +5604,7 @@ void
 TkTextRunAfterSyncCmd(
     ClientData clientData)		/* Information about text widget. */
 {
-    register TkText *textPtr = (TkText *) clientData;
+    register TkText *textPtr = clientData;
     int code;
 
     if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
@@ -5751,8 +5832,7 @@ SearchCore(
 	 * it has dual purpose.
 	 */
 
-	pattern = Tcl_GetString(patObj);
-	matchLength = patObj->length;
+	pattern = Tcl_GetStringFromObj(patObj, &matchLength);
 	nl = strchr(pattern, '\n');
 
 	/*
@@ -6752,7 +6832,7 @@ SetLineStartEnd(
     TkText *textPtr = (TkText *) recordPtr;
 
     if (internalOffset >= 0) {
-	internalPtr = recordPtr + internalOffset;
+	internalPtr = (char *)recordPtr + internalOffset;
     } else {
 	internalPtr = NULL;
     }

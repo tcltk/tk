@@ -749,7 +749,7 @@ ButtonCreate(
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ButtonEventProc, butPtr);
 
-    if (Tk_InitOptions(interp, (char *) butPtr, optionTable, tkwin)
+    if (Tk_InitOptions(interp, butPtr, optionTable, tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(butPtr->tkwin);
 	return TCL_ERROR;
@@ -810,7 +810,7 @@ ButtonWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 1, objv, "cget option");
 	    goto error;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) butPtr,
+	objPtr = Tk_GetOptionValue(interp, butPtr,
 		butPtr->optionTable, objv[2], butPtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
@@ -820,7 +820,7 @@ ButtonWidgetObjCmd(
 
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) butPtr,
+	    objPtr = Tk_GetOptionInfo(interp, butPtr,
 		    butPtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    butPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -1074,7 +1074,7 @@ ConfigureButton(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) butPtr,
+	    if (Tk_SetOptions(interp, butPtr,
 		    butPtr->optionTable, objc, objv,
 		    butPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
