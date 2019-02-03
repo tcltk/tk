@@ -874,9 +874,7 @@ test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} -constr
     dobg {
 	    eval destroy [winfo child .]
 	    toplevel .t1 -use $w1
-    }
-    update
-    dobg {
+            update
 	    bind .t1 <Configure> {lappend x {configure .t1 %w %h}}
 	    set x {}
 	    .t1 configure -width 300 -height 120
@@ -922,15 +920,11 @@ test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} -constr
     dobg {
 	    eval destroy [winfo child .]
 	    toplevel .t1 -use $w1
-    }
-    after 300 {set x done}
-    vwait x
-    dobg {
+            update
 	    bind .t1 <Configure> {lappend x {configure .t1 %w %h}}
 	    set x {}
 	    .t1 configure -width 300 -height 120
-            after 300 {set y done}
-            vwait y
+            update
 	    list $x [winfo geom .t1]
     }
 } -cleanup {
@@ -946,14 +940,14 @@ test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -const
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     place .f1 -width 200 -height 200
-    update idletasks
+    update
     slave alias w1 winfo id .f1
     slave eval {
         destroy [winfo child .]
-	set x {}
         toplevel .t1 -use [w1]
         update
         bind .t1 <Configure> {lappend x {configure .t1 %w %h}}
+	set x {}
         .t1 configure -width 300 -height 120
         update
         list $x [winfo geom .t1]
