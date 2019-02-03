@@ -72,10 +72,9 @@ enum { true = (bool) 1, false = (bool) 0 };
  */
 
 /*
- * In old implementation <Double-1> and <1><1> are equivalent sequences. This is not logical,
- * in my opinion <Double-1> should have higher precedence, but we will keep the new implementation
- * conform. If the decision about this point will change then PREFER_MOST_SPECIALIZED_EVENT
- * should be set to 1.
+ * In old implementation (the one that used an event ring), <Double-1> and <1><1> were
+ * equivalent sequences. However it is logical to give <Double-1> higher precedence.
+ * This can be achieved by setting PREFER_MOST_SPECIALIZED_EVENT to 1.
  */
 
 #ifndef PREFER_MOST_SPECIALIZED_EVENT
@@ -84,13 +83,19 @@ enum { true = (bool) 1, false = (bool) 0 };
 
 /*
  * Traditionally motion events can be combined with buttons in this way: <B1-B2-Motion>.
- * I think it should be allowed to express this as <Motion-1-2>. The latter syntax form
- * is already implemented, but still commented out.
+ * However it should be allowed to express this as <Motion-1-2> in addition. This can be
+ * achieved by setting SUPPORT_ADDITIONAL_MOTION_SYNTAX to 1.
  */
 
 #ifndef SUPPORT_ADDITIONAL_MOTION_SYNTAX
 # define SUPPORT_ADDITIONAL_MOTION_SYNTAX 0 /* set to 1 if wanted */
 #endif
+
+/*
+ * The output for motion events is of the type <B1-Motion>. This can be changed to become
+ * <Motion-1> instead by setting PRINT_SHORT_MOTION_SYNTAX to 1, however this would be a
+ * backwards incompatibility.
+ */
 
 #ifndef PRINT_SHORT_MOTION_SYNTAX
 # define PRINT_SHORT_MOTION_SYNTAX 0 /* set to 1 if wanted */
