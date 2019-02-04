@@ -323,11 +323,6 @@ test unixEmbed-2.3 {EmbeddedEventProc procedure} -constraints {
     destroy .f1
     testembed
 } -result {}
-if {[tk windowingsystem] eq "aqua"} {
-    set wrapperId {{}}
-} else {
-    set wrapperId XXX
-}
 test unixEmbed-2.4 {EmbeddedEventProc procedure} -constraints {
 	unix testembed
 } -setup {
@@ -342,7 +337,7 @@ test unixEmbed-2.4 {EmbeddedEventProc procedure} -constraints {
     list $x [winfo exists .t1] [winfo exists .f1] [testembed]
 } -cleanup {
 	deleteWindows
-} -result "{{XXX .f1 $wrapperId .t1}} 0 0 {}"
+} -result "{{XXX .f1 {} .t1}} 0 0 {}"
 
 
 test unixEmbed-3.1 {ContainerEventProc procedure, detect creation} -constraints {
@@ -899,7 +894,7 @@ test unixEmbed-6.1a {EmbedGeometryRequest procedure, window changes size} -const
         destroy [winfo child .]
         toplevel .t1 -use [w1]
         update
-        bind .t1 <Configure> {lappend x {configure .t1 %w %h}}
+        bind .t1 <Configure> {set x {configure .t1 %w %h}}
         set x {}
         .t1 configure -width 300 -height 120
         update
@@ -908,7 +903,7 @@ test unixEmbed-6.1a {EmbedGeometryRequest procedure, window changes size} -const
 } -cleanup {
     interp delete slave
     deleteWindows
-} -result {{{configure .t1 300 120}} 300x120+0+0}
+} -result {{configure .t1 300 120} 300x120+0+0}
 test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} -constraints {
 	unix notAqua
 } -setup {
@@ -946,7 +941,7 @@ test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -const
         destroy [winfo child .]
         toplevel .t1 -use [w1]
         update
-        bind .t1 <Configure> {lappend x {configure .t1 %w %h}}
+        bind .t1 <Configure> {set x {configure .t1 %w %h}}
 	set x {}
         .t1 configure -width 300 -height 120
         update
@@ -955,7 +950,7 @@ test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -const
 } -cleanup {
     interp delete slave
     deleteWindows
-} -result {{{configure .t1 200 200}} 200x200+0+0}
+} -result {{configure .t1 200 200} 200x200+0+0}
 
 # Can't think up any tests for TkpGetOtherWindow procedure.
 
