@@ -6385,8 +6385,10 @@ XSetInputFocus(
  *
  * TkpChangeFocus --
  *
- *	This procedure is a stub on the Mac because we always own the focus if
- *	we are a front most application.
+ *	This function is called when Tk moves focus from one window to another.
+ *      It should be passed a non-embedded TopLevel. That toplevel gets raised
+ *      to the top of the Tk stacking order and the associated NSWindow is
+ *      ordered Front.
  *
  * Results:
  *	The return value is the serial number of the command that changed the
