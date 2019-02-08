@@ -861,7 +861,7 @@ ContainerEventProc(
          * Send a ConfigureNotify  to the embedded application.
          */
 
-        if (containerPtr->embeddedPtr != None) {
+        if (containerPtr->embeddedPtr != NULL) {
             TkDoConfigureNotify(containerPtr->embeddedPtr);
         }
 
