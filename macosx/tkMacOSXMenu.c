@@ -1038,8 +1038,8 @@ TkpSetMainMenubar(
  * CheckForSpecialMenu --
  *
  *	Given a menu, check to see whether or not it is a cascade in a menubar
- *	with one of the special names .apple, .help or .window If it is, the
- *	entry that points to this menu will be marked.
+ *	with one of the special names ".apple", ".help" or ".window".  If it
+ *	is, the entry that points to this menu will be marked.
  *
  * Results:
  *	None.
@@ -1216,7 +1216,7 @@ void
 TkpComputeStandardMenuGeometry(
     TkMenu *menuPtr)		/* Structure describing menu. */
 {
-    NSSize menuSize = [(NSMenu *)menuPtr->platformData size];
+    NSSize menuSize;
     Tk_Font tkfont, menuFont;
     Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
     int modifierCharWidth, menuModifierCharWidth;
@@ -1227,10 +1227,14 @@ TkpComputeStandardMenuGeometry(
     TkMenuEntry *mePtr;
     int haveAccel = 0;
 
-    if (menuPtr->tkwin == NULL) {
+    /*
+     * Do nothing if this menu is a clone.
+     */
+    if (menuPtr->tkwin == NULL || menuPtr->masterMenuPtr != menuPtr) {
 	return;
     }
-
+    
+    menuSize = [(NSMenu *)menuPtr->platformData size];
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
 	    &borderWidth);
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
