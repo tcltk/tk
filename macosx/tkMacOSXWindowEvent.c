@@ -76,7 +76,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	NSRect bounds = [w frame];
 	int x, y, width = -1, height = -1, flags = 0;
-	int minY = 1 + [[NSApp mainMenu] menuBarHeight];
 
 	x = bounds.origin.x;
 	y = tkMacOSXZeroScreenHeight - (bounds.origin.y + bounds.size.height);
