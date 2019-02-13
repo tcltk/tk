@@ -100,20 +100,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    flags |= TK_MACOSX_HANDLE_EVENT_IMMEDIATELY;
 	}
 
-	/*
-	 * Mac windows are not allowed to overlap the menu bar.  The
-	 * Tk window manager can request that a window be drawn so that it
-	 * overlaps the menu bar, but it will actually be drawn immediately
-	 * below the menu bar. In such a case it saves a lot of trouble and
-	 * causes no harm if we let Tk think that the window is located at the
-	 * requested point. (Many of the the tests assume that this is the
-	 * case, especially for windows with upper left corner at (0,0).)  So
-	 * we just tell a harmless white lie here.
-	 */
-
-	if (y == minY && wmPtr->y < minY) {
-	    y = wmPtr->y;
-	}
 	TkGenWMConfigureEvent((Tk_Window) winPtr, x, y, width, height, flags);
     }
 
