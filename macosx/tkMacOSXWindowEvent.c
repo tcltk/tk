@@ -75,12 +75,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if (winPtr) {
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 	NSRect bounds = [w frame];
-	NSRect screenRect = [[w screen] frame];
 	int x, y, width = -1, height = -1, flags = 0;
 	int minY = 1 + [[NSApp mainMenu] menuBarHeight];
 
 	x = bounds.origin.x;
-	y = screenRect.size.height - (bounds.origin.y + bounds.size.height);
+	y = tkMacOSXZeroScreenHeight - (bounds.origin.y + bounds.size.height);
 	if (winPtr->changes.x != x || winPtr->changes.y != y) {
 	    flags |= TK_LOCATION_CHANGED;
 	} else {
@@ -102,7 +101,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	}
 
 	/*
-	 * Mac windows cannot go higher than the bottom of the menu bar.  The
+	 * Mac windows are not allowed to overlap the menu bar.  The
 	 * Tk window manager can request that a window be drawn so that it
 	 * overlaps the menu bar, but it will actually be drawn immediately
 	 * below the menu bar. In such a case it saves a lot of trouble and
@@ -682,7 +681,6 @@ TkGenWMConfigureEvent(
 	if (flags & TK_LOCATION_CHANGED) {
 	    wmPtr->x = x;
 	    wmPtr->y = y;
-	    //wmPtr->flags &= ~(WM_NEGATIVE_X | WM_NEGATIVE_Y);
 	}
 	if ((flags & TK_SIZE_CHANGED) && !(wmPtr->flags & WM_SYNC_PENDING) &&
 		((width != Tk_Width(tkwin)) || (height != Tk_Height(tkwin)))) {
