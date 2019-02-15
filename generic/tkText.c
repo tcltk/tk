@@ -5622,7 +5622,7 @@ TkTextRunAfterSyncCmd(
     code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
     if (code == TCL_ERROR) {
 	Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
-	Tcl_BackgroundError(textPtr->interp);
+	Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
     }
     Tcl_Release((ClientData) textPtr->interp);
     Tcl_DecrRefCount(textPtr->afterSyncCmd);
