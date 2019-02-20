@@ -24,11 +24,13 @@
 static void		DisplayHorizontalScale(TkScale *scalePtr,
 			    Drawable drawable, XRectangle *drawnAreaPtr);
 static void		DisplayHorizontalValue(TkScale *scalePtr,
-			    Drawable drawable, double value, int top);
+			    Drawable drawable, double value,
+			    int top, char* format);
 static void		DisplayVerticalScale(TkScale *scalePtr,
 			    Drawable drawable, XRectangle *drawnAreaPtr);
 static void		DisplayVerticalValue(TkScale *scalePtr,
-			    Drawable drawable, double value, int rightEdge);
+			    Drawable drawable, double value, 
+			    int rightEdge, char* format);
 
 /*
  *----------------------------------------------------------------------
@@ -165,7 +167,7 @@ DisplayVerticalScale(
 		    }
 		}
 		DisplayVerticalValue(scalePtr, drawable, tickValue,
-			scalePtr->vertTickRightX);
+			scalePtr->vertTickRightX, scalePtr->tickFormat);
 	    }
 	}
     }
@@ -176,7 +178,7 @@ DisplayVerticalScale(
 
     if (scalePtr->showValue) {
 	DisplayVerticalValue(scalePtr, drawable, scalePtr->value,
-		scalePtr->vertValueRightX);
+	        scalePtr->vertValueRightX, scalePtr->valueFormat);
     }
 
     /*
@@ -261,8 +263,9 @@ DisplayVerticalValue(
     double value,		/* Y-coordinate of number to display,
 				 * specified in application coords, not in
 				 * pixels (we'll compute pixels). */
-    int rightEdge)		/* X-coordinate of right edge of text,
+    int rightEdge,		/* X-coordinate of right edge of text,
 				 * specified in pixels. */
+    char* format)               /* Format string to use for the value */
 {
     register Tk_Window tkwin = scalePtr->tkwin;
     int y, width, length;
@@ -271,7 +274,7 @@ DisplayVerticalValue(
 
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = TkScaleValueToPixel(scalePtr, value) + fm.ascent/2;
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format, value) < 0) {
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     length = (int) strlen(valueString);
@@ -358,7 +361,7 @@ DisplayHorizontalScale(
 
 	    ticks = fabs((scalePtr->toValue - scalePtr->fromValue)
 		    / tickInterval);
-            if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+            if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
                     scalePtr->fromValue) < 0) {
                 valueString[TCL_DOUBLE_SPACE - 1] = '\0';
             }
@@ -385,7 +388,7 @@ DisplayHorizontalScale(
 		    }
 		}
 		DisplayHorizontalValue(scalePtr, drawable, tickValue,
-			scalePtr->horizTickY);
+			scalePtr->horizTickY, scalePtr->tickFormat);
 	    }
 	}
     }
@@ -396,7 +399,7 @@ DisplayHorizontalScale(
 
     if (scalePtr->showValue) {
 	DisplayHorizontalValue(scalePtr, drawable, scalePtr->value,
-		scalePtr->horizValueY);
+		scalePtr->horizValueY, scalePtr->valueFormat);
     }
 
     /*
@@ -482,8 +485,9 @@ DisplayHorizontalValue(
     double value,		/* X-coordinate of number to display,
 				 * specified in application coords, not in
 				 * pixels (we'll compute pixels). */
-    int top)			/* Y-coordinate of top edge of text, specified
+    int top,			/* Y-coordinate of top edge of text, specified
 				 * in pixels. */
+    char* format)               /* Format string to use for the value */
 {
     register Tk_Window tkwin = scalePtr->tkwin;
     int x, y, length, width;
@@ -493,7 +497,7 @@ DisplayHorizontalValue(
     x = TkScaleValueToPixel(scalePtr, value);
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     y = top + fm.ascent;
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format, value) < 0) {
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     length = (int) strlen(valueString);
@@ -562,7 +566,7 @@ TkpDisplayScale(
     Tcl_Preserve(scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
 	Tcl_Preserve(interp);
-        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
                 scalePtr->value) < 0) {
             string[TCL_DOUBLE_SPACE - 1] = '\0';
         }
