@@ -157,7 +157,7 @@ enum command {
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		ComputeFormat(TkScale *scalePtr);
+static void		ComputeFormat(TkScale *scalePtr, int forTicks);
 static void		ComputeScaleGeometry(TkScale *scalePtr);
 static int		ConfigureScale(Tcl_Interp *interp, TkScale *scalePtr,
 			    int objc, Tcl_Obj *const objv[]);
@@ -430,7 +430,7 @@ ScaleWidgetObjCmd(
 	    }
 	    value = TkScalePixelToValue(scalePtr, x, y);
 	}
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(scalePtr->format, value));
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(scalePtr->valueFormat, value));
 	break;
     }
     case COMMAND_IDENTIFY: {
@@ -636,7 +636,8 @@ ConfigureScale(
 	    scalePtr->tickInterval = -scalePtr->tickInterval;
 	}
 
-	ComputeFormat(scalePtr);
+	ComputeFormat(scalePtr, 0);
+	ComputeFormat(scalePtr, 1);
 
 	scalePtr->labelLength = scalePtr->label ? (int)strlen(scalePtr->label) : 0;
 
@@ -764,22 +765,22 @@ ScaleWorldChanged(
  *
  * ComputeFormat --
  *
- *	This procedure is invoked to recompute the "format" field of a scale's
- *	widget record, which determines how the value of the scale is
- *	converted to a string.
+ *	This procedure is invoked to recompute the "valueFormat" or
+ *	"tickFormat" field of a scale's widget record, which determines how
+ *	the value of the scale or one of its ticks is converted to a string.
  *
  * Results:
  *	None.
  *
- * Side effects:
- *	The format field of scalePtr is modified.
+ * Side effects: The valueFormat or tickFormat field of scalePtr is modified.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 ComputeFormat(
-    TkScale *scalePtr)		/* Information about scale widget. */
+    TkScale *scalePtr,		/* Information about scale widget. */
+    int forTicks)               /* Do for ticks rather than value */
 {
     double maxValue, x;
     int mostSigDigit, numDigits, leastSigDigit, afterDecimal;
@@ -800,46 +801,60 @@ ComputeFormat(
     }
     mostSigDigit = (int) floor(log10(maxValue));
 
-    /*
-     * If the number of significant digits wasn't specified explicitly,
-     * compute it. It's the difference between the most significant digit
-     * needed to represent any number on the scale and the most significant
-     * digit of the smallest difference between numbers on the scale. In other
-     * words, display enough digits so that at least one digit will be
-     * different between any two adjacent positions of the scale.
-     */
+    if (forTicks) {
+	/*
+	 * Display only enough digits to ensure adjacent ticks have different
+	 * values
+	 */
 
-    numDigits = scalePtr->digits;
-    if (numDigits > TCL_MAX_PREC) {
-	numDigits = 0;
-    }
-    if (numDigits <= 0) {
-	if (scalePtr->resolution > 0) {
-	    /*
-	     * A resolution was specified for the scale, so just use it.
-	     */
-
-	    leastSigDigit = (int) floor(log10(scalePtr->resolution));
+	if (scalePtr->tickInterval > 0) {
+	    numDigits = 1 + mostSigDigit - (int) floor(log10(scalePtr->tickInterval));
 	} else {
-	    /*
-	     * No resolution was specified, so compute the difference in value
-	     * between adjacent pixels and use it for the least significant
-	     * digit.
-	     */
-
-	    x = fabs(scalePtr->fromValue - scalePtr->toValue);
-	    if (scalePtr->length > 0) {
-		x /= scalePtr->length;
-	    }
-	    if (x > 0){
-		leastSigDigit = (int) floor(log10(x));
-	    } else {
-		leastSigDigit = 0;
-	    }
-	}
-	numDigits = mostSigDigit - leastSigDigit + 1;
-	if (numDigits < 1) {
 	    numDigits = 1;
+	}
+    } else {
+	/*
+	 * If the number of significant digits wasn't specified explicitly,
+	 * compute it. It's the difference between the most significant digit
+	 * needed to represent any number on the scale and the most
+	 * significant digit of the smallest difference between numbers on the
+	 * scale. In other words, display enough digits so that at least one
+	 * digit will be different between any two adjacent positions of the
+	 * scale.
+	 */
+
+	numDigits = scalePtr->digits;
+	if (numDigits > TCL_MAX_PREC) {
+	    numDigits = 0;
+	}
+	if (numDigits <= 0) {
+	    if (scalePtr->resolution > 0) {
+		/*
+		 * A resolution was specified for the scale, so just use it.
+		 */
+		
+		leastSigDigit = (int) floor(log10(scalePtr->resolution));
+	    } else {
+		/*
+		 * No resolution was specified, so compute the difference in
+		 * value between adjacent pixels and use it for the least
+		 * significant digit.
+		 */
+		
+		x = fabs(scalePtr->fromValue - scalePtr->toValue);
+		if (scalePtr->length > 0) {
+		    x /= scalePtr->length;
+		}
+		if (x > 0){
+		    leastSigDigit = (int) floor(log10(x));
+		} else {
+		    leastSigDigit = 0;
+		}
+	    }
+	    numDigits = mostSigDigit - leastSigDigit + 1;
+	    if (numDigits < 1) {
+		numDigits = 1;
+	    }
 	}
     }
 
@@ -863,10 +878,18 @@ ComputeFormat(
     if (mostSigDigit < 0) {
 	fDigits++;			/* Zero to left of decimal point. */
     }
-    if (fDigits <= eDigits) {
-	sprintf(scalePtr->format, "%%.%df", afterDecimal);
+    if (forTicks) {
+	if (fDigits <= eDigits) {
+	    sprintf(scalePtr->tickFormat, "%%.%df", afterDecimal);
+	} else {
+	    sprintf(scalePtr->tickFormat, "%%.%de", numDigits-1);
+	}
     } else {
-	sprintf(scalePtr->format, "%%.%de", numDigits-1);
+	if (fDigits <= eDigits) {
+	    sprintf(scalePtr->valueFormat, "%%.%df", afterDecimal);
+	} else {
+	    sprintf(scalePtr->valueFormat, "%%.%de", numDigits-1);
+	}
     }
 }
 
@@ -894,7 +917,7 @@ ComputeScaleGeometry(
     register TkScale *scalePtr)	/* Information about widget. */
 {
     char valueString[TCL_DOUBLE_SPACE];
-    int tmp, valuePixels, x, y, extraSpace;
+    int tmp, valuePixels, tickPixels, x, y, extraSpace;
     Tk_FontMetrics fm;
 
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
@@ -940,13 +963,13 @@ ComputeScaleGeometry(
      * whichever length is longer.
      */
 
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
             scalePtr->fromValue) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     valuePixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
             scalePtr->toValue) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
@@ -956,18 +979,37 @@ ComputeScaleGeometry(
     }
 
     /*
+     * Now do the same thing for the tick values
+     */
+
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
+            scalePtr->fromValue) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
+    tickPixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
+
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
+            scalePtr->toValue) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
+    tmp = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
+    if (tickPixels < tmp) {
+	tickPixels = tmp;
+    }
+
+    /*
      * Assign x-locations to the elements of the scale, working from left to
      * right.
      */
 
     x = scalePtr->inset;
     if ((scalePtr->tickInterval != 0) && (scalePtr->showValue)) {
-	scalePtr->vertTickRightX = x + SPACING + valuePixels;
+	scalePtr->vertTickRightX = x + SPACING + tickPixels;
 	scalePtr->vertValueRightX = scalePtr->vertTickRightX + valuePixels
 		+ fm.ascent/2;
 	x = scalePtr->vertValueRightX + SPACING;
     } else if (scalePtr->tickInterval != 0) {
-	scalePtr->vertTickRightX = x + SPACING + valuePixels;
+	scalePtr->vertTickRightX = x + SPACING + tickPixels;
 	scalePtr->vertValueRightX = scalePtr->vertTickRightX;
 	x = scalePtr->vertTickRightX + SPACING;
     } else if (scalePtr->showValue) {
@@ -1350,7 +1392,7 @@ ScaleSetVariable(
     if (scalePtr->varNamePtr != NULL) {
 	char string[TCL_DOUBLE_SPACE];
 
-        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
                 scalePtr->value) < 0) {
             string[TCL_DOUBLE_SPACE - 1] = '\0';
         }
