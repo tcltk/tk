@@ -1314,7 +1314,7 @@ TkMacOSXWinCGBounds(
  * UpdateOffsets --
  *
  *	Updates the X & Y offsets of the given TkWindow from the TopLevel it is
- *	a decendant of.
+ *	a descendant of.
  *
  * Results:
  *	None.
