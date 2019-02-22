@@ -611,7 +611,7 @@ ConfigureScale(
 		    TCL_GLOBAL_ONLY);
 	    if ((valuePtr != NULL) &&
 		    (Tcl_GetDoubleFromObj(NULL, valuePtr, &value) == TCL_OK)) {
-		scalePtr->value = TkRoundToResolution(scalePtr, value);
+		scalePtr->value = TkRoundValueToResolution(scalePtr, value);
 	    }
 	}
 
@@ -620,10 +620,10 @@ ConfigureScale(
 	 * orientation and creating GCs.
 	 */
 
-	scalePtr->fromValue = TkRoundToResolution(scalePtr,
+	scalePtr->fromValue = TkRoundValueToResolution(scalePtr,
 		scalePtr->fromValue);
-	scalePtr->toValue = TkRoundToResolution(scalePtr, scalePtr->toValue);
-	scalePtr->tickInterval = TkRoundToResolution(scalePtr,
+	scalePtr->toValue = TkRoundValueToResolution(scalePtr, scalePtr->toValue);
+	scalePtr->tickInterval = TkRoundIntervalToResolution(scalePtr,
 		scalePtr->tickInterval);
 
 	/*
@@ -1119,10 +1119,14 @@ TkEventuallyRedrawScale(
 /*
  *--------------------------------------------------------------
  *
- * TkRoundToResolution --
+ * TkRoundValueToResolution, TkRoundIntervalToResolution --
  *
  *	Round a given floating-point value to the nearest multiple of the
  *	scale's resolution.
+ *	TkRoundValueToResolution rounds an absolute value based on the from
+ *	value as a reference.
+ *	TkRoundIntervalToResolution rounds a relative value without
+ *	reference, i.e.	it rounds an interval.
  *
  * Results:
  *	The return value is the rounded result.
@@ -1134,7 +1138,16 @@ TkEventuallyRedrawScale(
  */
 
 double
-TkRoundToResolution(
+TkRoundValueToResolution(
+    TkScale *scalePtr,		/* Information about scale widget. */
+    double value)		/* Value to round. */
+{
+    return TkRoundIntervalToResolution(scalePtr, value - scalePtr->fromValue)
+            + scalePtr->fromValue;
+}
+
+double
+TkRoundIntervalToResolution(
     TkScale *scalePtr,		/* Information about scale widget. */
     double value)		/* Value to round. */
 {
@@ -1147,13 +1160,13 @@ TkRoundToResolution(
     rounded = scalePtr->resolution * tick;
     rem = value - rounded;
     if (rem < 0) {
-	if (rem <= -scalePtr->resolution/2) {
-	    rounded = (tick - 1.0) * scalePtr->resolution;
-	}
+        if (rem <= -scalePtr->resolution/2) {
+            rounded = (tick - 1.0) * scalePtr->resolution;
+        }
     } else {
-	if (rem >= scalePtr->resolution/2) {
-	    rounded = (tick + 1.0) * scalePtr->resolution;
-	}
+        if (rem >= scalePtr->resolution/2) {
+            rounded = (tick + 1.0) * scalePtr->resolution;
+        }
     }
     return rounded;
 }
@@ -1238,7 +1251,7 @@ ScaleVarProc(
 	resultStr = "can't assign non-numeric value to scale variable";
 	ScaleSetVariable(scalePtr);
     } else {
-	scalePtr->value = TkRoundToResolution(scalePtr, value);
+	scalePtr->value = TkRoundValueToResolution(scalePtr, value);
 
 	/*
 	 * This code is a bit tricky because it sets the scale's value before
@@ -1282,7 +1295,7 @@ TkScaleSetValue(
     int invokeCommand)		/* Non-zero means invoked -command option to
 				 * notify of new value, 0 means don't. */
 {
-    value = TkRoundToResolution(scalePtr, value);
+    value = TkRoundValueToResolution(scalePtr, value);
     if ((value < scalePtr->fromValue)
 	    ^ (scalePtr->toValue < scalePtr->fromValue)) {
 	value = scalePtr->fromValue;
@@ -1402,7 +1415,7 @@ TkScalePixelToValue(
     }
     value = scalePtr->fromValue +
 		value * (scalePtr->toValue - scalePtr->fromValue);
-    return TkRoundToResolution(scalePtr, value);
+    return TkRoundValueToResolution(scalePtr, value);
 }
 
 /*
