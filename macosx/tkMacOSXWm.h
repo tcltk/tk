@@ -36,6 +36,17 @@ typedef struct ProtocolHandler {
 				 * THE LAST FIELD OF THE STRUCTURE. */
 } ProtocolHandler;
 
+/* The following data structure is used in the TkWmInfo to maintain a list of all of the
+ * transient windows belonging to a given master.
+ */
+
+typedef struct Transient {
+    TkWindow *winPtr;
+    int flags;
+    struct Transient *nextPtr;    
+} Transient;
+
+#define WITHDRAWN_BY_MASTER 0x1
 
 /*
  * A data structure of the following type holds window-manager-related
@@ -70,6 +81,9 @@ typedef struct TkWmInfo {
 				 * NULL. */
     Tk_Window iconFor;		/* Window for which this window is icon, or
 				 * NULL if this isn't an icon for anyone. */
+    Transient *transientPtr;    /* First item in a list of all transient windows
+				 * belonging to this window, or NULL if there
+				 * are no transients. */
 
     /*
      * Information used to construct an XSizeHints structure for the window

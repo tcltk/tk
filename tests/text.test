@@ -3802,6 +3802,12 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # minimum size and it was interfering with the size requested by the -setgrid.
 # The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
 # to the appropriate size.
+# On macOS, however, there is no way to make the window overlap the menubar.
+if {[tk windowingsystem] == "aqua"} {
+    set minY 23
+} else {
+    set minY 0
+}
 test text-14.19 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -3809,16 +3815,17 @@ test text-14.19 {ConfigureText procedure} -setup {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
     pack .top.t
-    wm geometry .top +0+0
+    wm geometry .top +0+$minY
     update
     wm geometry .top
 } -cleanup {
     destroy .top
-} -result {20x10+0+0}
+} -result "20x10+0+$minY"
 # This test was failing on Windows because the title bar on .t was a certain
 # minimum size and it was interfering with the size requested by the -setgrid.
 # The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
 # to the appropriate size.
+# On macOS we again use minY as a workaround.
 test text-14.20 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -3826,7 +3833,7 @@ test text-14.20 {ConfigureText procedure} -setup {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
     pack .top.t
-    wm geometry .top +0+0
+    wm geometry .top +0+$minY
     update
     set result [wm geometry .top]
     wm geometry .top 15x8
@@ -3837,7 +3844,7 @@ test text-14.20 {ConfigureText procedure} -setup {
     lappend result [wm geometry .top]
 } -cleanup {
     destroy .top
-} -result {20x10+0+0 15x8+0+0 15x8+0+0}
+} -result "20x10+0+$minY 15x8+0+$minY 15x8+0+$minY"
 
 
 test text-15.1 {TextWorldChanged procedure, spacing options} -constraints {
