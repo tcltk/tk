@@ -6871,7 +6871,6 @@ ApplyMasterOverrideChanges(
 	    TkDisplay *dispPtr = TkGetDisplayList();
 	    TkWindow *masterWinPtr = (TkWindow *)
 		    Tk_IdToWindow(dispPtr->display, wmPtr->master);
-
 	    if (masterWinPtr && masterWinPtr->window != None &&
 		    TkMacOSXHostToplevelExists(masterWinPtr)) {
 		NSWindow *masterMacWin =
@@ -6882,8 +6881,20 @@ ApplyMasterOverrideChanges(
 		    if (parentWindow) {
 			[parentWindow removeChildWindow:macWindow];
 		    }
-		    [masterMacWin addChildWindow:macWindow
-			    ordered:NSWindowAbove];
+		    
+		    /*
+		     * A child NSWindow retains its relative position with
+		     * respect to the parent when the parent is moved.  This is
+		     * pointless if the parent is offscreen, and adding a child
+		     * to an offscreen window causes the parent to be displayed
+		     * as a zombie.  So we should only do this if the parent is
+		     * visible.
+		     */
+
+		    if ([masterMacWin isVisible]) {
+			[masterMacWin addChildWindow:macWindow
+					     ordered:NSWindowAbove];
+		    }
 		    if (wmPtr->flags & WM_TOPMOST) {
 			[macWindow setLevel:kCGUtilityWindowLevel];
 		    }
