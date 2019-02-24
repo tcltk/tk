@@ -32,15 +32,15 @@
 
 #include "tkMacOSXPrivate.h"
 #include "ttk/ttkTheme.h"
-
+#include <math.h>
 /*
  * Use this version in the core:
  */
 #define BEGIN_DRAWING(d) { \
-	TkMacOSXDrawingContext dc; \
-	if (!TkMacOSXSetupDrawingContext((d), NULL, 1, &dc)) {return;}
+    TkMacOSXDrawingContext dc; \
+    if (!TkMacOSXSetupDrawingContext((d), NULL, 1, &dc)) {return;}
 #define END_DRAWING \
-	TkMacOSXRestoreDrawingContext(&dc); }
+    TkMacOSXRestoreDrawingContext(&dc); }
 
 #define HIOrientation kHIThemeOrientationNormal
 
@@ -56,8 +56,8 @@
 
 /*
  * BoxToRect --
- *	Convert a Ttk_Box in Tk coordinates relative to the given Drawable
- *	to a native Rect relative to the containing port.
+ *    Convert a Ttk_Box in Tk coordinates relative to the given Drawable
+ *    to a native Rect relative to the containing port.
  */
 static inline CGRect BoxToRect(Drawable d, Ttk_Box b)
 {
@@ -135,10 +135,10 @@ static Ttk_StateTable ButtonAdornmentTable[] = {
 
 /*
  * computeButtonDrawInfo --
- *	Fill in an appearance manager HIThemeButtonDrawInfo record.
+ *    Fill in an appearance manager HIThemeButtonDrawInfo record.
  */
 static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
-	ThemeButtonParams *params, Ttk_State state)
+    ThemeButtonParams *params, Ttk_State state)
 {
     const HIThemeButtonDrawInfo info = {
 	.version = 0,
@@ -317,7 +317,6 @@ static void TabElementDraw(
 	.kind = kHIThemeTabKindNormal,
 	.position = Ttk_StateTableLookup(TabPositionTable, state),
     };
-
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
@@ -345,6 +344,7 @@ static void PaneElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
+    TkWindow *winPtr = (TkWindow *)tkwin;
     CGRect bounds = BoxToRect(d, b);
     HIThemeTabPaneDrawInfo info = {
 	.version = 1,
@@ -354,12 +354,14 @@ static void PaneElementDraw(
 	.kind = kHIThemeTabKindNormal,
 	.adornment = kHIThemeTabPaneAdornmentNormal,
     };
-
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
     END_DRAWING
+    if (winPtr->privatePtr != NULL) {
+	winPtr->privatePtr->flags |= TTK_HAS_DARKER_BG;
+    }
 }
 
 static Ttk_ElementSpec PaneElementSpec = {
@@ -391,16 +393,19 @@ static void GroupElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
+    TkWindow *winPtr = (TkWindow *)tkwin;
     CGRect bounds = BoxToRect(d, b);
     const HIThemeGroupBoxDrawInfo info = {
 	.version = 0,
 	.state = Ttk_StateTableLookup(ThemeStateTable, state),
-	.kind = kHIThemeGroupBoxKindPrimaryOpaque,
+	.kind = kHIThemeGroupBoxKindPrimary,
     };
-
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
     END_DRAWING
+    if (winPtr->privatePtr != NULL) {
+	winPtr->privatePtr->flags |= TTK_HAS_DARKER_BG;
+    }
 }
 
 static Ttk_ElementSpec GroupElementSpec = {
@@ -413,8 +418,8 @@ static Ttk_ElementSpec GroupElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Entry element --
- *	3 pixels padding for focus rectangle
- *	2 pixels padding for EditTextFrame
+ *    3 pixels padding for focus rectangle
+ *    2 pixels padding for EditTextFrame
  */
 
 typedef struct {
@@ -476,8 +481,8 @@ static Ttk_ElementSpec EntryElementSpec = {
  * +++ Combobox:
  *
  * NOTES:
- *	kThemeMetricComboBoxLargeDisclosureWidth -> 17
- *	Padding and margins guesstimated by trial-and-error.
+ *    kThemeMetricComboBoxLargeDisclosureWidth -> 17
+ *    Padding and margins guesstimated by trial-and-error.
  */
 
 static Ttk_Padding ComboboxPadding = { 2, 3, 17, 1 };
@@ -525,9 +530,9 @@ static Ttk_ElementSpec ComboboxElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Spinbuttons.
  *
- * From Apple HIG, part III, section "Controls", "The Stepper Control":
- * there should be 2 pixels of space between the stepper control
- * (AKA IncDecButton, AKA "little arrows") and the text field it modifies.
+ *    From Apple HIG, part III, section "Controls", "The Stepper Control":
+ *    there should be 2 pixels of space between the stepper control (AKA
+ *    IncDecButton, AKA "little arrows") and the text field it modifies.
  */
 
 static Ttk_Padding SpinbuttonMargins = {2,0,2,0};
@@ -575,7 +580,7 @@ static Ttk_ElementSpec SpinButtonElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ DrawThemeTrack-based elements --
- * Progress bars and scales. (See also: <<NOTE-TRACKS>>)
+ *    Progress bars and scales. (See also: <<NOTE-TRACKS>>)
  */
 
 static Ttk_StateTable ThemeTrackEnableTable[] = {
@@ -780,9 +785,9 @@ static Ttk_ElementSpec PbarElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Separator element.
  *
- * DrawThemeSeparator() guesses the orientation of the line from
- * the width and height of the rectangle, so the same element can
- * can be used for horizontal, vertical, and general separators.
+ *    DrawThemeSeparator() guesses the orientation of the line from the width
+ *    and height of the rectangle, so the same element can can be used for
+ *    horizontal, vertical, and general separators.
  */
 
 static void SeparatorElementSize(
@@ -870,28 +875,89 @@ static Ttk_ElementSpec SizegripElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Background and fill elements.
  *
- *	This isn't quite right: In Aqua, the correct background for
- *	a control depends on what kind of container it belongs to,
- *	and the type of the top-level window.
+ *    Before drawing any ttk widget, its bounding rectangle is filled with a
+ *    background color.  This color must match the background color of the
+ *    containing widget to avoid looking ugly. The need for care when doing
+ *    this is exacerbated by the fact that ttk enforces its "native look" by
+ *    not allowing user control of the background or highlight colors of ttk
+ *    widgets.
  *
- *	Also: patterned backgrounds should be aligned with the coordinate
- *	system of the top-level window.  If we're drawing into an
- *	off-screen graphics port this leads to alignment glitches.
+ *    The first attempt at implementing this attempted to match colors by
+ *    drawing all widgets with the system background color used for dialog
+ *    windows.  (In particular, ttk widgets were meant for use in windows like
+ *    those in the Apple preferences application.)  The code chose either the
+ *    active background or the inactive background based on the ttk state.
+ *    (Note that current OS releases use the same color #ebebeb in both
+ *    states.)
+ *
+ *    Unfortunately, there is a problem with this approach.  The Appkit
+ *    GroupBox (used for ttk LabelFrames) and TabbedPane (used for the Notebook
+ *    widget) both place their content inside a rectangle with rounded corners
+ *    which is darker than the dialog background color.  Moreover, although the
+ *    Apple human interface guidelines recommend against doing so, there are
+ *    times when one wants to nest these widgets, for example having a GroupBox
+ *    inside of a TabbedPane.  In this case the inner widget uses an even
+ *    darker rounded rectangle.  In Mojave's preferences panes, these darker
+ *    gray colors appear to be #e3e4e3 and #dbdcdb respectively.  The first of
+ *    these is close but not quite equal to the system color
+ *    BackgroundSecondary GroupBox, which appears to be #e3e3e3.  The HITheme
+ *    library, which we use to draw these widgets, uses #e2e3e3, which again is
+ *    slightly different.  Since none of these quite match, we use a hardwired
+ *    RGB color which matches that used by HITheme.
+ *
+ *    Patterned backgrounds, which are now obsolete, should be aligned with the
+ *    coordinate system of the top-level window.  Apparently failing to do this
+ *    used to cause graphics anomalies when drawing into an off-screen graphics
+ *    port.  The code for handling this is currently commented out.
  */
 
 static void FillElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
+    TkWindow *winPtr = (TkWindow *)tkwin;
     CGRect bounds = BoxToRect(d, b);
-    ThemeBrush brush = (state & TTK_STATE_BACKGROUND)
+    ThemeBrush brush;
+    static double RB1 = 0.8897365196078432;
+    static double G1 = 0.8936734068627451; 
+    static double DELTA = 0.031495098039215685;
+    int depth = 0;
+    for (TkWindow *topPtr = winPtr->parentPtr; topPtr != NULL;
+	 topPtr = topPtr->parentPtr) {
+	if (topPtr->privatePtr &&
+	    (topPtr->privatePtr->flags & TTK_HAS_DARKER_BG)) {
+	    depth++;
+	} else {
+	    Tk_Uid className = Tk_Class(topPtr);
+	    if (className) {
+		if ((strcmp(className, "TLabelFrame") == 0) ||
+		    (strcmp(className, "TNotebook") == 0)) {
+		    depth++;
+		}
+	    }
+	}
+    }
+    BEGIN_DRAWING(d)
+    switch(depth) {
+    case 0:
+	brush = (state & TTK_STATE_BACKGROUND)
 	    ? kThemeBrushModelessDialogBackgroundInactive
 	    : kThemeBrushModelessDialogBackgroundActive;
-
-    BEGIN_DRAWING(d)
-    ChkErr(HIThemeSetFill, brush, NULL, dc.context, HIOrientation);
-    //QDSetPatternOrigin(PatternOrigin(tkwin, d));
+	ChkErr(HIThemeSetFill, brush, NULL, dc.context, HIOrientation);
+	break;
+    case 1:
+	CGContextSetRGBFillColor(dc.context, RB1, G1, RB1, 1.0);
+	break;
+    default:
+	/* Really, you should not be nesting this deeply ... */
+	CGContextSetRGBFillColor(dc.context,
+	    RB1 - DELTA*(depth - 1),
+	    G1 - DELTA*(depth - 1),
+	    RB1 - DELTA*(depth - 1), 1.0); 
+	break;
+    }
     CGContextFillRect(dc.context, bounds);
+    //QDSetPatternOrigin(PatternOrigin(tkwin, d));
     END_DRAWING
 }
 
@@ -899,9 +965,8 @@ static void BackgroundElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    FillElementDraw(
-	clientData, elementRecord, tkwin,
-	d, Ttk_WinBox(tkwin), state);
+    FillElementDraw(clientData, elementRecord, tkwin, d, Ttk_WinBox(tkwin),
+		    state);
 }
 
 static Ttk_ElementSpec FillElementSpec = {
@@ -923,14 +988,14 @@ static Ttk_ElementSpec BackgroundElementSpec = {
 /*----------------------------------------------------------------------
  * +++ ToolbarBackground element -- toolbar style for frames.
  *
- *	This is very similar to the normal background element, but uses a
- *	different ThemeBrush in order to get the lighter pinstripe effect
- *	used in toolbars. We use SetThemeBackground() rather than
- *	ApplyThemeBackground() in order to get the right style.
+ *    This is very similar to the normal background element, but uses a
+ *    different ThemeBrush in order to get the lighter pinstripe effect
+ *    used in toolbars. We use SetThemeBackground() rather than
+ *    ApplyThemeBackground() in order to get the right style.
  *
  * <URL: http://developer.apple.com/documentation/Carbon/Reference/
- *	Appearance_Manager/appearance_manager/constant_7.html#/
- *	/apple_ref/doc/uid/TP30000243/C005321>
+ *    Appearance_Manager/appearance_manager/constant_7.html#/
+ *    /apple_ref/doc/uid/TP30000243/C005321>
  *
  */
 static void ToolbarBackgroundElementDraw(
@@ -957,7 +1022,7 @@ static Ttk_ElementSpec ToolbarBackgroundElementSpec = {
 
 /*----------------------------------------------------------------------
  * +++ Treeview header
- *	Redefine the header to use a kThemeListHeaderButton.
+ *    Redefine the header to use a kThemeListHeaderButton.
  */
 
 #define TTK_TREEVIEW_STATE_SORTARROW	TTK_STATE_USER1
