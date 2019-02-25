@@ -927,14 +927,6 @@ static void FillElementDraw(
 	if (topPtr->privatePtr &&
 	    (topPtr->privatePtr->flags & TTK_HAS_DARKER_BG)) {
 	    depth++;
-	} else {
-	    Tk_Uid className = Tk_Class(topPtr);
-	    if (className) {
-		if ((strcmp(className, "TLabelFrame") == 0) ||
-		    (strcmp(className, "TNotebook") == 0)) {
-		    depth++;
-		}
-	    }
 	}
     }
     BEGIN_DRAWING(d)
