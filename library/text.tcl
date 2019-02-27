@@ -85,9 +85,6 @@ bind Text <B1-Enter> {
 }
 bind Text <ButtonRelease-1> {
     tk::CancelRepeat
-    if {[tk windowingsystem] eq "aqua"} {
-	catch {tk::CheckSelection %W}
-    }
 }
 bind Text <Control-1> {
     %W mark set insert @%x,%y
@@ -1215,11 +1212,4 @@ proc ::tk::TextScanDrag {w x y} {
     if {[info exists Priv(mouseMoved)] && $Priv(mouseMoved)} {
 	$w scan dragto $x $y
     }
-}
-
-
-proc ::tk::CheckSelection {w} {
-    clipboard clear
-    clipboard append [$w get sel.first sel.last]
-
 }
