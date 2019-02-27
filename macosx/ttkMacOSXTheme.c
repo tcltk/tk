@@ -204,11 +204,25 @@ static void ButtonElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
+    BEGIN_DRAWING(d)
     ThemeButtonParams *params = clientData;
     CGRect bounds = BoxToRect(d, Ttk_PadBox(b, ButtonMargins));
-    const HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state);
+    HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state);
+    Tk_Uid className = Tk_Class(tkwin);
 
-    BEGIN_DRAWING(d)
+    /*
+     * HIToolbox does not support Dark Mode, and Apple says it never will.  So
+     * the best we can do to approximate a Dark Mode button is to draw it in
+     * the inactive state.  The color is not quite as dark as the gray that
+     * Apple uses for buttons in Dark Mode.  But it isn't too far off.  We
+     * don't have to worry about checkButtons and radioButtons.  They look OK,
+     */
+
+    if (TkMacOSXInDarkMode(tkwin) && className &&
+	strcmp(className, "TCheckbutton") != 0 &&
+	strcmp(className, "TRadiobutton") != 0) {
+	info.state = kThemeStateInactive;
+    }
     ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
 }
@@ -900,7 +914,7 @@ static Ttk_ElementSpec SizegripElementSpec = {
  *    darker rounded rectangle.  In Mojave's preferences panes, these darker
  *    gray colors appear to be #e3e4e3 and #dbdcdb respectively.  The first of
  *    these is close but not quite equal to the system color
- *    BackgroundSecondary GroupBox, which appears to be #e3e3e3.  The HITheme
+ *    BackgroundSecondaryGroupBox, which appears to be #e3e3e3.  The HITheme
  *    library, which we use to draw these widgets, uses #e2e3e3, which again is
  *    slightly different.  Since none of these quite match, we use a hardwired
  *    RGB color which matches that used by HITheme.
@@ -917,37 +931,31 @@ static void FillElementDraw(
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
     CGRect bounds = BoxToRect(d, b);
-    ThemeBrush brush;
-    static double RB1 = 0.8897365196078432;
-    static double G1 = 0.8936734068627451; 
-    static double DELTA = 0.031495098039215685;
     int depth = 0;
+    NSColor *bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
+			   [NSColorSpace deviceRGBColorSpace]];
+    CGFloat rgba[4];
+    BEGIN_DRAWING(d)
     for (TkWindow *topPtr = winPtr->parentPtr; topPtr != NULL;
 	 topPtr = topPtr->parentPtr) {
 	if (topPtr->privatePtr &&
 	    (topPtr->privatePtr->flags & TTK_HAS_DARKER_BG)) {
 	    depth++;
 	}
+	if (depth > 7) {
+	    break;
+	}
     }
-    BEGIN_DRAWING(d)
-    switch(depth) {
-    case 0:
-	brush = (state & TTK_STATE_BACKGROUND)
-	    ? kThemeBrushModelessDialogBackgroundInactive
-	    : kThemeBrushModelessDialogBackgroundActive;
-	ChkErr(HIThemeSetFill, brush, NULL, dc.context, HIOrientation);
-	break;
-    case 1:
-	CGContextSetRGBFillColor(dc.context, RB1, G1, RB1, 1.0);
-	break;
-    default:
-	/* Really, you should not be nesting this deeply ... */
-	CGContextSetRGBFillColor(dc.context,
-	    RB1 - DELTA*(depth - 1),
-	    G1 - DELTA*(depth - 1),
-	    RB1 - DELTA*(depth - 1), 1.0); 
-	break;
+
+    /*
+     * Darken the background color one step for each level of nesting.
+     */
+
+    [bgColor getComponents: rgba];
+    for (int i=0; i<4; i++) {
+	rgba[i] -= depth*(8.0/255.0);
     }
+    CGContextSetRGBFillColor(dc.context, rgba[0], rgba[1], rgba[2], rgba[3]);
     CGContextFillRect(dc.context, bounds);
     //QDSetPatternOrigin(PatternOrigin(tkwin, d));
     END_DRAWING
