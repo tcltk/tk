@@ -374,8 +374,12 @@ TkpInit(
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
 
+    Tk_MacOSXServices_Init();
+
     Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
+	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
 
