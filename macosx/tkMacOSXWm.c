@@ -3646,7 +3646,7 @@ WmTransientCmd(
 	Transient *transient = ckalloc(sizeof(Transient));
 	transient->winPtr = winPtr;
 	transient->flags = 0;
-	transient->nextPtr = wmPtr->transientPtr;
+	transient->nextPtr = wmPtr2->transientPtr;
 	wmPtr2->transientPtr = transient;
 	
 	/*
