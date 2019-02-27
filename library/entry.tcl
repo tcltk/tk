@@ -75,6 +75,9 @@ bind Entry <<TraverseIn>> {
 # Standard Motif bindings:
 
 bind Entry <1> {
+    if {[tk windowingsystem] eq "aqua"} {
+	tk::RegisterServiceWidget %W
+    }
     tk::EntryButton1 %W %x
     %W selection clear
 }
@@ -113,6 +116,9 @@ bind Entry <B1-Enter> {
 }
 bind Entry <ButtonRelease-1> {
     tk::CancelRepeat
+    if {[tk windowingsystem] eq "aqua"} {
+	catch {::tk::CheckEntrySelection %W}
+    }
 }
 bind Entry <Control-1> {
     %W icursor @%x
@@ -652,3 +658,26 @@ proc ::tk::EntryGetSelection {w} {
     }
     return $entryString
 }
+
+# ::tk::CheckEntrySelection --
+#
+# Writes selected text to the clipboard on macOS.
+#
+# Arguments:
+# w -         The entry window from which the text to get
+
+proc ::tk::CheckEntrySelection {w} {
+    if {[$w selection present]} {
+	clipboard clear
+	clipboard append [::tk::EntryGetSelection $w]
+    }
+}
+
+
+
+
+
+
+
+
+
