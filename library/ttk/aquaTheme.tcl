@@ -8,18 +8,18 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure . \
 	    -font TkDefaultFont \
 	    -background systemWindowBody \
-	    -foreground systemModelessDialogActiveText \
+	    -foreground systemTtkForeground \
 	    -selectbackground systemHighlight \
-	    -selectforeground systemModelessDialogActiveText \
+	    -selectforeground systemTtkForeground \
 	    -selectborderwidth 0 \
 	    -insertwidth 1
 
 	ttk::style map . \
-	    -foreground {disabled systemModelessDialogInactiveText
-		    background systemModelessDialogInactiveText} \
+	    -foreground {disabled systemTtkForeground
+		    background systemTtkForeground} \
 	    -selectbackground {background systemHighlightSecondary
 		    !focus systemHighlightSecondary} \
-	    -selectforeground {background systemModelessDialogInactiveText
+	    -selectforeground {background systemTtkForeground
 		    !focus systemDialogActiveText}
 
 	# Workaround for #1100117:
@@ -28,6 +28,7 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure . -stipple {}
 
 	ttk::style configure TButton -anchor center -width -6
+
 	ttk::style configure Toolbutton -padding 4
 
 	ttk::style configure TNotebook -tabmargins {10 0} -tabposition n
@@ -44,8 +45,8 @@ namespace eval ttk::theme::aqua {
 	    -background [list disabled systemDialogBackgroundInactive \
 				{selected background} systemHighlightSecondary \
 				selected systemHighlight] \
-	    -foreground [list disabled systemModelessDialogInactiveText \
-				selected systemModelessDialogActiveText]
+	    -foreground [list disabled black \
+				selected black]
 
 	# Enable animation for ttk::progressbar widget:
 	ttk::style configure TProgressbar -period 100 -maxphase 255
