@@ -24,6 +24,12 @@ tk::mac \- Access Mac-Specific Functionality on OS X from Tk
 \fB::tk::mac::ShowHelp\fR
 \fB::tk::mac::PerformService\fR
 
+\fB::tk::mac::LaunchURL \fIURL...\fR
+\fB::tk::mac::LaunchFile  \fIfile...\fR
+\fB::tk::mac::GetAppPath\fR
+\fB::tk::mac::GetDefaultApp  \fIURL...\fR
+\fB::tk::mac::SetDefaultApp \fIURL \fIfile...\fR
+
 \fB::tk::mac::standardAboutPanel\fR
 
 \fB::tk::mac::useCompatibilityMetrics \fIboolean\fR
@@ -172,6 +178,32 @@ process is not desired, the NSServices keys can be deleted from
 the application's Info.plist file. The underlying code supporting this
 command also allows the text, entry and ttk::entry widgets to access
 services from other applications via the Services menu.
+.TP
+\fB::tk::mac::LaunchURL \fIURL...\fR
+.
+If defined, launches a URL within Tk. This would be used if a Tk
+application wants to handle a URL itself, such as displaying data from
+an RSS feed, rather than launching a default application to handle the
+URL, although it can defined as such.
+.TP
+\fB::tk::mac::LaunchFile  \fIfile...\fR
+.
+If defined, launches a file with the system's default application for
+that file format.
+.TP
+\fB::tk::mac::GetAppPath\fR
+.
+Returns the current applications's file path.
+\fB::tk::mac::GetDefaultApp  \fIURL...\fR
+.
+Returns the current default application for a URL format.
+.TP
+\fB::tk::mac::SetDefaultApp \fIURL \fIfile...\fR
+.
+Sets a specific application as the system default handler for a
+specific URL format.
+.TP
+
 .SH "ADDITIONAL DIALOGS"
 .PP
 The Aqua/Mac OS X defines additional dialogs that applications should
