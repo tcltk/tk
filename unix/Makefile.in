@@ -396,7 +396,7 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
 	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXImage.o \
 	tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
-	tkMacOSXLaunchServices.o \
+	tkMacOSXLaunch.o \
 	tkMacOSXMenu.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
 	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
@@ -524,7 +524,7 @@ AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXImage.c \
 	$(MAC_OSX_DIR)/tkMacOSXInit.c $(MAC_OSX_DIR)/tkMacOSXKeyboard.c \
 	$(MAC_OSX_DIR)/tkMacOSXKeyEvent.c \
-        $(MAC_OSX_DIR)/tkMacOSXLaunchServices.c \
+        $(MAC_OSX_DIR)/tkMacOSXLaunch.c \
 	$(MAC_OSX_DIR)/tkMacOSXMenu.c \
 	$(MAC_OSX_DIR)/tkMacOSXMenubutton.c $(MAC_OSX_DIR)/tkMacOSXMenus.c \
 	$(MAC_OSX_DIR)/tkMacOSXMouseEvent.c $(MAC_OSX_DIR)/tkMacOSXNotify.c \
