@@ -822,7 +822,7 @@ ComputeFormat(
     TkScale *scalePtr,		/* Information about scale widget. */
     int forTicks)               /* Do for ticks rather than value */
 {
-    double maxValue, x, tickResolution;
+    double maxValue, x;
     int mostSigDigit, numDigits, leastSigDigit, afterDecimal;
     int eDigits, fDigits;
 
