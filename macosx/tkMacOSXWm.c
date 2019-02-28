@@ -3569,6 +3569,7 @@ WmTransientCmd(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window master;
     WmInfo *wmPtr2;
+    Transient *transient;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?master?");
@@ -3625,14 +3626,19 @@ WmTransientCmd(
 	}
 
 	/*
-	 * Add the transient to the master's list.
+	 * Add the transient to the master's list, if it not already there.
 	 */
-
-	Transient *transient = ckalloc(sizeof(Transient));
-	transient->winPtr = winPtr;
-	transient->flags = 0;
-	transient->nextPtr = wmPtr2->transientPtr;
-	wmPtr2->transientPtr = transient;
+	
+	for (transient = wmPtr2->transientPtr;
+	     transient != NULL && transient->winPtr != winPtr;
+	     transient = transient->nextPtr) {}
+	if (transient == NULL) {
+	    transient = ckalloc(sizeof(Transient));
+	    transient->winPtr = winPtr;
+	    transient->flags = 0;
+	    transient->nextPtr = wmPtr2->transientPtr;
+	    wmPtr2->transientPtr = transient;
+	}
 
 	/*
 	 * If the master is withdrawn or iconic then withdraw the transient.
@@ -3676,6 +3682,8 @@ RemoveTransient(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
     TkWindow *masterPtr;
+    Transient *T, *temp;
+    
     if (wmPtr == NULL || wmPtr->master == NULL) {
 	return;
     }
@@ -3685,18 +3693,23 @@ RemoveTransient(
 	return;
     }
     wmPtr->master = NULL;
-    Transient *temp, *cursor = wmPtr2->transientPtr;
-    if (cursor->winPtr == winPtr) {
-	temp = cursor->nextPtr;
-	ckfree(cursor);
-	cursor = temp;
-	masterPtr->wmInfoPtr->transientPtr = cursor;
+    T = wmPtr2->transientPtr;
+    while (T != NULL) {
+	if (T->winPtr != winPtr) {
+	    break;
+	}
+	temp = T->nextPtr;
+	ckfree(T);
+	T = temp;
     }
-    while (cursor != NULL) {
-	if (cursor->winPtr == winPtr) {
-	    temp = cursor->nextPtr;
-	    ckfree(cursor);
-	    cursor = temp;
+    wmPtr2->transientPtr = T;
+    while (T != NULL) {
+	if (T->nextPtr && T->nextPtr->winPtr == winPtr) {
+	    temp = T->nextPtr;
+	    T->nextPtr = temp->nextPtr;
+	    ckfree(temp);
+	} else {
+	    T = T->nextPtr;
 	}
     }
 }
