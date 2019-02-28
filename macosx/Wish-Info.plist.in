@@ -36,6 +36,17 @@
 			<string>Viewer</string>
 		</dict>
 	</array>
+	 <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string></string>
+        </array>
+        <key>CFBundleURLName</key>
+        <string></string>
+    </dict>
+  </array>
 	<key>CFBundleExecutable</key>
 	<string>Wish</string>
 	<key>CFBundleGetInfoString</key>

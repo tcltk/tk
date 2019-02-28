@@ -246,6 +246,25 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
     }
     return;
 }
+
+- (void)handleURLEvent:(NSAppleEventDescriptor*)event
+        withReplyEvent:(NSAppleEventDescriptor*)replyEvent
+{
+    NSString* url = [[event paramDescriptorForKeyword:keyDirectObject]
+                        stringValue];
+    Tcl_DString launch;
+    Tcl_DStringInit(&launch);
+    if (Tcl_FindCommand(_eventInterp, "::tk::mac::LaunchURL", NULL, 0)){
+	Tcl_DStringAppend(&command, "::tk::mac::LaunchURL", -1);
+    } 
+    Tcl_DStringAppendElement(&launch, url);
+    int  tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&launch),
+			     Tcl_DStringLength(&launch), TCL_EVAL_GLOBAL);
+    if (tclErr!= TCL_OK) {
+	Tcl_BackgroundException(_eventInterp, tclErr);
+         }
+    }
+}
 @end
 
 #pragma mark -
@@ -415,6 +434,11 @@ TkMacOSXInitAppleEvents(
 	[aeManager setEventHandler:NSApp
 	    andSelector:@selector(handleDoScriptEvent:withReplyEvent:)
 	    forEventClass:kAEMiscStandards andEventID:kAEDoScript];
+
+	[aeManager setEventHandler:NSApp
+	    andSelector:@selector(handleURLEvent:withReplyEvent:)
+	    forEventClass:kInternetEventClass andEventID:kAEGetURL];
+	
     }
 }
 
