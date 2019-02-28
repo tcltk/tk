@@ -6793,6 +6793,7 @@ ApplyMasterOverrideChanges(
     int oldFlags = wmPtr->flags;
     unsigned long styleMask;
     NSRect structureRect;
+    NSWindow *parentWindow;
 
     if (!macWindow && winPtr->window != None &&
 	    TkMacOSXHostToplevelExists(winPtr)) {
@@ -6833,7 +6834,6 @@ ApplyMasterOverrideChanges(
 	}
     }
     if (macWindow) {
-	NSWindow *parentWindow = [macWindow parentWindow];
 	structureRect = [NSWindow frameRectForContentRect:NSZeroRect
 				  styleMask:styleMask];
 
@@ -6873,35 +6873,51 @@ ApplyMasterOverrideChanges(
 		    Tk_IdToWindow(dispPtr->display, wmPtr->master);
 	    if (masterWinPtr && masterWinPtr->window != None &&
 		    TkMacOSXHostToplevelExists(masterWinPtr)) {
-		NSWindow *masterMacWin =
-			TkMacOSXDrawableWindow(masterWinPtr->window);
+		NSWindow *masterMacWin = TkMacOSXDrawableWindow(masterWinPtr->window);
+		
+		/*
+		 * Try to add the transient window as a child window of the
+		 * master. A child NSWindow retains its relative position with
+		 * respect to the parent when the parent is moved.  This is
+		 * pointless if the parent is offscreen, and adding a child to
+		 * an offscreen window causes the parent to be displayed as a
+		 * zombie.  So we only do this if the parent is visible.
+		 */
 
-		if (masterMacWin && masterMacWin != parentWindow &&
-			(winPtr->flags & TK_MAPPED)) {
-		    if (parentWindow) {
+		if (masterMacWin &&
+		    [masterMacWin isVisible] &&
+		    (winPtr->flags & TK_MAPPED)) {
+
+		    /*
+		     * If the transient is already a child of some other window,
+		     * remove it.
+		     */
+		    
+		    parentWindow = [macWindow parentWindow];
+		    if (parentWindow && parentWindow != masterMacWin) {
 			[parentWindow removeChildWindow:macWindow];
 		    }
-		    
-		    /*
-		     * A child NSWindow retains its relative position with
-		     * respect to the parent when the parent is moved.  This is
-		     * pointless if the parent is offscreen, and adding a child
-		     * to an offscreen window causes the parent to be displayed
-		     * as a zombie.  So we should only do this if the parent is
-		     * visible.
-		     */
 
-		    if ([masterMacWin isVisible]) {
-			[masterMacWin addChildWindow:macWindow
+		    /* 
+		     * To avoid cycles, if the master is a child of some
+		       other window, remove it.
+		     */
+		    parentWindow = [masterMacWin parentWindow];
+		    if (parentWindow) {
+			[parentWindow removeChildWindow:masterMacWin];
+		    }
+		    [masterMacWin addChildWindow:macWindow
 					     ordered:NSWindowAbove];
 		    }
-		    if (wmPtr->flags & WM_TOPMOST) {
-			[macWindow setLevel:kCGUtilityWindowLevel];
-		    }
-		}
 	    }
-	} else if (parentWindow) {
-	    [parentWindow removeChildWindow:macWindow];
+	} else {
+	    parentWindow = [macWindow parentWindow];
+	    if (parentWindow) {
+		[parentWindow removeChildWindow:macWindow];
+	    }
+	}
+	if (wmPtr->flags & WM_TOPMOST) {
+	    [macWindow setLevel:kCGUtilityWindowLevel];
 	}
 	ApplyWindowAttributeFlagChanges(winPtr, macWindow, oldAttributes,
 		oldFlags, 0, 0);
