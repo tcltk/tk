@@ -759,6 +759,46 @@ ScaleWorldChanged(
 
     TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
 }
+
+
+ /*
+  *----------------------------------------------------------------------
+  *
+  * MaxTickRoundingError --
+  *
+  *      Given the separation between values that can be displayed on ticks,
+  *      this calculates the maximum magnitude of error for the displayed
+  *      value. Tries to be clever by working out the increment in error
+  *      between ticks rather than testing all of them, so may overestimate
+  *      error if it is greater than 0.25 x the value separation.
+  *
+  * Results:
+  *      Maximum error magnitude of tick numbers.
+  *
+  * Side effects:
+  *      None.
+  *
+  *----------------------------------------------------------------------
+  */
+ 
+static double 
+MaxTickRoundingError(
+    TkScale *scalePtr,		/* Information about scale widget. */
+    double tickResolution)      /* Separation between displayable values. */
+{
+    double tickPosn, firstTickError, lastTickError, intervalError;
+    int tickCount;
+
+    tickPosn = scalePtr->fromValue/tickResolution; 
+    firstTickError = tickPosn - round(tickPosn);
+    tickPosn = scalePtr->tickInterval/tickResolution; 
+    intervalError = tickPosn - round(tickPosn);
+    tickCount = (int)((scalePtr->toValue-scalePtr->fromValue) /
+		      scalePtr->tickInterval); // not including first
+    lastTickError = fmin(fabs(firstTickError + tickCount*intervalError), 0.5);
+    return fmax(fabs(firstTickError),lastTickError)*tickResolution;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -782,7 +822,7 @@ ComputeFormat(
     TkScale *scalePtr,		/* Information about scale widget. */
     int forTicks)               /* Do for ticks rather than value */
 {
-    double maxValue, x;
+    double maxValue, x, tickResolution;
     int mostSigDigit, numDigits, leastSigDigit, afterDecimal;
     int eDigits, fDigits;
 
@@ -807,8 +847,16 @@ ComputeFormat(
 	 * values
 	 */
 
-	if (scalePtr->tickInterval > 0) {
-	    numDigits = 1 + mostSigDigit - (int) floor(log10(scalePtr->tickInterval));
+	if (scalePtr->tickInterval != 0) {
+	    leastSigDigit = (int) floor(log10(fabs(scalePtr->tickInterval)));
+	    /*
+	     * Now add more digits until max error is less than 0.2 intervals
+	     */
+	    while (MaxTickRoundingError(scalePtr, pow(10,leastSigDigit)) > 
+		   fabs(0.2*scalePtr->tickInterval))
+		--leastSigDigit;
+
+	    numDigits = 1 + mostSigDigit - leastSigDigit;
 	} else {
 	    numDigits = 1;
 	}
