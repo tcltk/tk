@@ -254,8 +254,8 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
                         stringValue];
     Tcl_DString launch;
     Tcl_DStringInit(&launch);
-    if (Tcl_FindCommand(_eventInterp, "::tk::mac::LaunchURL", NULL, 0)){
-	Tcl_DStringAppend(&command, "::tk::mac::LaunchURL", -1);
+    if (Tcl_FindCommand(_eventInterp, "::tk::mac::LaunchURL", NULL, 0)) {
+	Tcl_DStringAppend(&launch, "::tk::mac::LaunchURL", -1);
     } 
     Tcl_DStringAppendElement(&launch, url);
     int  tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&launch),
@@ -264,7 +264,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 	Tcl_BackgroundException(_eventInterp, tclErr);
          }
     }
-}
+
 @end
 
 #pragma mark -

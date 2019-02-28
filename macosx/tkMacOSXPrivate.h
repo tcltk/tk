@@ -331,7 +331,7 @@ VISIBILITY_HIDDEN
 - (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 - (void)handleURLEvent:                (NSAppleEventDescriptor*)event
-                   withReplyEvent:(NSAppleEventDescriptor*)replyEvent
+	           withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
 @end
 
 VISIBILITY_HIDDEN
