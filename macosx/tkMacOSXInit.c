@@ -374,7 +374,8 @@ TkpInit(
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
 
-    Tk_MacOSXServices_Init();
+    Tk_MacOSXServices_Init(interp);
+    TkMacOSXLaunch_Init(interp);
 
     Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
@@ -382,6 +383,7 @@ TkpInit(
 	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
+    
 
     /*
      * Workaround for 3efbe4a397; console not accepting keyboard input on 10.14

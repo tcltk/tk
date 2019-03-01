@@ -23,7 +23,6 @@ tk::mac \- Access Mac-Specific Functionality on OS X from Tk
 \fB::tk::mac::OnShow\fR
 \fB::tk::mac::ShowHelp\fR
 \fB::tk::mac::PerformService\fR
-
 \fB::tk::mac::LaunchURL \fIURL...\fR
 \fB::tk::mac::LaunchFile  \fIfile...\fR
 \fB::tk::mac::GetAppPath\fR
@@ -36,6 +35,7 @@ tk::mac \- Access Mac-Specific Functionality on OS X from Tk
 \fB::tk::mac::CGAntialiasLimit \fIlimit\fR
 \fB::tk::mac::antialiasedtext \fInumber\fR
 \fB::tk::mac::useThemedToplevel \fIboolean\fR
+
 
 \fB::tk::mac::iconBitmap \fIname width height \-kind value\fR
 .fi
@@ -194,6 +194,7 @@ that file format.
 \fB::tk::mac::GetAppPath\fR
 .
 Returns the current applications's file path.
+.TP
 \fB::tk::mac::GetDefaultApp  \fIURL...\fR
 .
 Returns the current default application for a URL format.

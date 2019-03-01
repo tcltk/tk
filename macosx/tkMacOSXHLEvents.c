@@ -252,12 +252,13 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 {
     NSString* url = [[event paramDescriptorForKeyword:keyDirectObject]
                         stringValue];
+    const char *cURL=[url UTF8String];
     Tcl_DString launch;
     Tcl_DStringInit(&launch);
     if (Tcl_FindCommand(_eventInterp, "::tk::mac::LaunchURL", NULL, 0)) {
 	Tcl_DStringAppend(&launch, "::tk::mac::LaunchURL", -1);
     } 
-    Tcl_DStringAppendElement(&launch, url);
+    Tcl_DStringAppendElement(&launch, cURL);
     int  tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&launch),
 			     Tcl_DStringLength(&launch), TCL_EVAL_GLOBAL);
     if (tclErr!= TCL_OK) {

@@ -17,9 +17,16 @@
 #include <ApplicationServices/ApplicationServices.h>
 #define panic Tcl_Panic
 
+/*Forward declarations of functions.*/
+int TkMacOSXLaunchURL(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]);
+int TkMacOSXLaunchFile(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]);
+int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]);
+int TkMacOSXGetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]);
+int TkMacOSXSetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]);
+
 
 /*Tcl function to launch URL with default app.*/
-int LaunchURL(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+int TkMacOSXLaunchURL(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 
   if(objc != 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "url");
@@ -43,7 +50,7 @@ int LaunchURL(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 }
 
 /*Tcl function to launch file with default app.*/
-int LaunchFile(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+int TkMacOSXLaunchFile(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 
   if(objc != 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "file");
@@ -67,7 +74,7 @@ int LaunchFile(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 
 
 /*Tcl function to get path to app bundle.*/
-int GetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 
   CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
 
@@ -89,8 +96,8 @@ int GetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 
 }
 
-/*Tcl function to launch file with default app.*/
-int GetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+/*Tcl function to get default app for URL.*/
+int TkMacOSXGetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 
   if(objc != 2) {
     Tcl_WrongNumArgs(ip, 1, objv, "url");
@@ -103,10 +110,12 @@ int GetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]
 
   CFStringRef defaultApp;
   defaultApp =  LSCopyDefaultHandlerForURLScheme(url);
-
+  CFStringRef appURL;
   OSStatus result;
-  CFURLRef appURL = NULL;
   result = LSFindApplicationForInfo(kLSUnknownCreator, defaultApp, NULL, NULL, &appURL);
+
+CFURLRef  httpURL = CFURLCreateWithString(kCFAllocatorDefault, CFSTR("feed://"), NULL);
+NSLog(@"%@", LSCopyDefaultApplicationURLForURL(httpURL, kLSRolesAll, nil));
 
   /* Convert the URL reference into a string reference. */
   CFStringRef appPath = CFURLCopyFileSystemPath(appURL, kCFURLPOSIXPathStyle);
@@ -128,7 +137,7 @@ int GetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]
 }
 
 /*Tcl function to set default app for URL.*/
-int SetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+int TkMacOSXSetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
 
   if(objc != 3) {
     Tcl_WrongNumArgs(ip, 1, objv, "url path");
@@ -143,7 +152,7 @@ int SetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]
 
   CFStringRef apppath = CFStringCreateWithCString(NULL, Tcl_GetString(objv[2]),  kCFStringEncodingUTF8);
 
-  /* Convert filepath to URL, create bundle object, get bundle ID. */
+ /* Convert filepath to URL, create bundle object, get bundle ID. */
   appURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, apppath, kCFURLPOSIXPathStyle, false);
   bundle = CFBundleCreate(NULL, appURL);
 
@@ -158,28 +167,20 @@ int SetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]
   CFRelease(apppath);
   CFRelease(bundleID);
 
-  return TCL_OK;
+  return TCL_OK; 
 
 }
 
 
 /*Initalize the package in the tcl interpreter, create Tcl commands. */
-int  TkMacOSXLauncher_Init (Tcl_Interp *interp) {
-
- 
-  if (Tcl_InitStubs(interp, "8.5", 0) == NULL) {
-    return TCL_ERROR;  
-  }
-  if (Tk_InitStubs(interp, "8.5", 0) == NULL) {
-    return TCL_ERROR;
-  }
+int  TkMacOSXLaunch_Init (Tcl_Interp *interp) {
 
 
-  Tcl_CreateObjCommand(interp, "::tk::mac::LaunchURL", LaunchURL,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-  Tcl_CreateObjCommand(interp, "::tk::mac::LaunchFile", LaunchFile,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-  Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", GetAppPath,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-  Tcl_CreateObjCommand(interp, "::tk::mac::GetDefaultApp", GetDefaultApp,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-  Tcl_CreateObjCommand(interp, "::tk::mac::SetDefaultApp",SetDefaultApp,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+  Tcl_CreateObjCommand(interp, "::tk::mac::LaunchURL", TkMacOSXLaunchURL,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+  Tcl_CreateObjCommand(interp, "::tk::mac::LaunchFile", TkMacOSXLaunchFile,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+  Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+  Tcl_CreateObjCommand(interp, "::tk::mac::GetDefaultApp",TkMacOSXGetDefaultApp,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+  Tcl_CreateObjCommand(interp, "::tk::mac::SetDefaultApp",TkMacOSXSetDefaultApp,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
 
  
   return TCL_OK;
