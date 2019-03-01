@@ -1290,6 +1290,9 @@ tkMacOSXKeyboard.o: $(MAC_OSX_DIR)/tkMacOSXKeyboard.c
 
 tkMacOSXKeyEvent.o: $(MAC_OSX_DIR)/tkMacOSXKeyEvent.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXKeyEvent.c
+	
+tkMacOSXLaunch.o: $(MAC_OSX_DIR)/tkMacOSXLaunch.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXLaunch.c
 
 tkMacOSXMenu.o: $(MAC_OSX_DIR)/tkMacOSXMenu.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXMenu.c
