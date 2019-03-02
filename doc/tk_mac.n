@@ -198,6 +198,9 @@ Returns the current applications's file path.
 \fB::tk::mac::GetDefaultApp  \fIURL...\fR
 .
 Returns the current default application for a URL format.
+.CS
+::tk::mac::GetDefaultApp "http://"
+.CE
 .TP
 \fB::tk::mac::SetDefaultApp \fIURL \fIfile...\fR
 .
