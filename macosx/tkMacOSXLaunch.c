@@ -109,6 +109,10 @@ int TkMacOSXGetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONS
 					      kCFStringEncodingUTF8);
  /*Get default app for URL.*/
  CFURLRef  defaultApp = CFURLCreateWithString(kCFAllocatorDefault, url, NULL);
+ if (!defaultApp) {
+   NSLog(@"Error: please provide well-formed URL in url:// format.")
+     return TCL_OK;
+ };
  CFStringRef appURL = LSCopyDefaultApplicationURLForURL(defaultApp, kLSRolesAll, nil);
 
   /* Convert the URL reference into a string reference. */
