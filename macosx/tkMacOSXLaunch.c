@@ -105,20 +105,15 @@ int TkMacOSXGetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONS
   }
 
   /* Get url string, convert to CFStringRef. */
-  CFStringRef url = CFStringCreateWithCString(NULL, Tcl_GetString(objv[1]),
+ CFStringRef url = CFStringCreateWithCString(NULL, Tcl_GetString(objv[1]),
 					      kCFStringEncodingUTF8);
-
-  CFStringRef defaultApp;
-  defaultApp =  LSCopyDefaultHandlerForURLScheme(url);
-  CFStringRef appURL;
-  OSStatus result;
-  result = LSFindApplicationForInfo(kLSUnknownCreator, defaultApp, NULL, NULL, &appURL);
-
-CFURLRef  httpURL = CFURLCreateWithString(kCFAllocatorDefault, CFSTR("feed://"), NULL);
-NSLog(@"%@", LSCopyDefaultApplicationURLForURL(httpURL, kLSRolesAll, nil));
+ /*Get default app for URL.*/
+ CFURLRef  defaultApp = CFURLCreateWithString(kCFAllocatorDefault, url, NULL);
+ CFStringRef appURL = LSCopyDefaultApplicationURLForURL(defaultApp, kLSRolesAll, nil);
 
   /* Convert the URL reference into a string reference. */
-  CFStringRef appPath = CFURLCopyFileSystemPath(appURL, kCFURLPOSIXPathStyle);
+ CFStringRef appPath = CFURLCopyFileSystemPath(appURL, kCFURLPOSIXPathStyle);
+
  
   /* Get the system encoding method. */
   CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
@@ -130,6 +125,7 @@ NSLog(@"%@", LSCopyDefaultApplicationURLForURL(httpURL, kLSRolesAll, nil));
 
   CFRelease(defaultApp);
   CFRelease(appPath);
+  CFRelease(appURL);
   CFRelease(url);
 
   return TCL_OK;
