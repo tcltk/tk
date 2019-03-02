@@ -198,14 +198,16 @@ Returns the current applications's file path.
 \fB::tk::mac::GetDefaultApp  \fIURL...\fR
 .
 Returns the current default application for a URL format.
-.CS
-::tk::mac::GetDefaultApp "http://"
-.CE
+Note that the URL must be in the format
+.QW url://
+or it will return an error. 
 .TP
-\fB::tk::mac::SetDefaultApp \fIURL \fIfile...\fR
+\fB::tk::mac::SetDefaultApp \fIURL \fIpath-to-app...\fR
 .
 Sets a specific application as the system default handler for a
-specific URL format.
+specific URL format. Note that the URL must be in the format
+.QW url://
+or it will return an error. 
 .TP
 
 .SH "ADDITIONAL DIALOGS"

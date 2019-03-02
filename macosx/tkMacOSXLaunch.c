@@ -107,12 +107,16 @@ int TkMacOSXGetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONS
   /* Get url string, convert to CFStringRef. */
  CFStringRef url = CFStringCreateWithCString(NULL, Tcl_GetString(objv[1]),
 					      kCFStringEncodingUTF8);
+
+ /*Ensure arg is well-formed.*/
+   NSString *testString = (NSString*) url;
+   if ([testString rangeOfString:@"://"].location == NSNotFound) {
+     NSLog(@"Error: please provide well-formed URL in url:// format.");
+     return TCL_OK;
+   }
+     
  /*Get default app for URL.*/
  CFURLRef  defaultApp = CFURLCreateWithString(kCFAllocatorDefault, url, NULL);
- if (!defaultApp) {
-   NSLog(@"Error: please provide well-formed URL in url:// format.")
-     return TCL_OK;
- };
  CFStringRef appURL = LSCopyDefaultApplicationURLForURL(defaultApp, kLSRolesAll, nil);
 
   /* Convert the URL reference into a string reference. */
@@ -147,6 +151,17 @@ int TkMacOSXSetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONS
   /* Get url and path strings, convert to CFStringRef. */
   CFStringRef url = CFStringCreateWithCString(NULL, Tcl_GetString(objv[1]),
 					      kCFStringEncodingUTF8);
+
+  
+ /*Ensure arg is well-formed.*/
+  NSString *testString = (NSString*) url;
+ if ([testString rangeOfString:@"://"].location == NSNotFound) {
+     NSLog(@"Error: please provide well-formed URL in url:// format.");
+     return TCL_OK;
+   }
+ 
+ NSString *setURL = [(NSString*)url stringByReplacingOccurrencesOfString:@"://" withString:@""];
+
   CFURLRef appURL = NULL;
   CFBundleRef bundle = NULL;
 
@@ -160,7 +175,7 @@ int TkMacOSXSetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONS
 
   /* Finally, set default app. */
   OSStatus err;
-  err= LSSetDefaultHandlerForURLScheme(url, bundleID);
+  err= LSSetDefaultHandlerForURLScheme((CFStringRef *)setURL, bundleID);
 
   /* Free memory.  */
   CFRelease(url);
