@@ -34,6 +34,11 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook -tabmargins {10 0} -tabposition n
 	ttk::style configure TNotebook -padding {18 8 18 17}
 	ttk::style configure TNotebook.Tab -padding {12 3 12 2}
+	ttk::style configure TNotebook.Tab -foreground white
+	ttk::style map TNotebook.Tab -foreground {
+	    {background !disabled} black
+	    disabled darkgray
+	    !selected black}
 
 	# Combobox:
 	ttk::style configure TCombobox -postoffset {5 -2 -10 0}
