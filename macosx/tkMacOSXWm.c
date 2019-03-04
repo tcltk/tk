@@ -3568,6 +3568,7 @@ WmTransientCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window master;
+    TkWindow *masterPtr, *w;
     WmInfo *wmPtr2;
     Transient *transient;
 
@@ -3589,7 +3590,7 @@ WmTransientCmd(
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	TkWindow *masterPtr = (TkWindow*) master;
+	masterPtr = (TkWindow*) master;
 	while (!Tk_TopWinHierarchy(masterPtr)) {
 
             /*
@@ -3618,11 +3619,15 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	if (masterPtr == winPtr) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't make \"%s\" its own master", Tk_PathName(winPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
-	    return TCL_ERROR;
+	for (w = masterPtr; w != NULL && w->wmInfoPtr != NULL;
+	     w = (TkWindow *)w->wmInfoPtr->master) {
+	    if (w == winPtr) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "setting \"%s\" as master creates a transient/master cycle",
+		    Tk_PathName(masterPtr)));
+		Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
+		return TCL_ERROR;
+	    }
 	}
 
 	/*
@@ -6881,14 +6886,6 @@ ApplyMasterOverrideChanges(
 			[parentWindow removeChildWindow:macWindow];
 		    }
 
-		    /*
-		     * To avoid cycles, if the master is a child of some
-		       other window, remove it.
-		     */
-		    parentWindow = [masterMacWin parentWindow];
-		    if (parentWindow) {
-			[parentWindow removeChildWindow:masterMacWin];
-		    }
 		    [masterMacWin addChildWindow:macWindow
 					     ordered:NSWindowAbove];
 		    }
