@@ -84,7 +84,7 @@ typedef union {
  */
 
 #ifndef TK_MAC_OSX
-  #define EVENT_BUFFER_SIZE 45
+  #define EVENT_BUFFER_SIZE 90
 #else
   #define EVENT_BUFFER_SIZE 30
 #endif
