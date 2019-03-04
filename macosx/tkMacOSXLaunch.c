@@ -105,22 +105,22 @@ int TkMacOSXGetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONS
   }
 
   /* Get url string, convert to CFStringRef. */
- CFStringRef url = CFStringCreateWithCString(NULL, Tcl_GetString(objv[1]),
+  CFStringRef url = CFStringCreateWithCString(NULL, Tcl_GetString(objv[1]),
 					      kCFStringEncodingUTF8);
 
- /*Ensure arg is well-formed.*/
-   NSString *testString = (NSString*) url;
-   if ([testString rangeOfString:@"://"].location == NSNotFound) {
-     NSLog(@"Error: please provide well-formed URL in url:// format.");
-     return TCL_OK;
-   }
+  /*Ensure arg is well-formed.*/
+  NSString *testString = (NSString*) url;
+  if ([testString rangeOfString:@"://"].location == NSNotFound) {
+    NSLog(@"Error: please provide well-formed URL in url:// format.");
+    return TCL_OK;
+  }
      
- /*Get default app for URL.*/
- CFURLRef  defaultApp = CFURLCreateWithString(kCFAllocatorDefault, url, NULL);
- CFStringRef appURL = LSCopyDefaultApplicationURLForURL(defaultApp, kLSRolesAll, nil);
+  /*Get default app for URL.*/
+  CFURLRef  defaultApp = CFURLCreateWithString(kCFAllocatorDefault, url, NULL);
+  CFStringRef appURL = LSCopyDefaultApplicationURLForURL(defaultApp, kLSRolesAll, nil);
 
   /* Convert the URL reference into a string reference. */
- CFStringRef appPath = CFURLCopyFileSystemPath(appURL, kCFURLPOSIXPathStyle);
+  CFStringRef appPath = CFURLCopyFileSystemPath(appURL, kCFURLPOSIXPathStyle);
 
  
   /* Get the system encoding method. */
@@ -153,21 +153,22 @@ int TkMacOSXSetDefaultApp(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONS
 					      kCFStringEncodingUTF8);
 
   
- /*Ensure arg is well-formed.*/
+  /*Ensure arg is well-formed.*/
   NSString *testString = (NSString*) url;
- if ([testString rangeOfString:@"://"].location == NSNotFound) {
-     NSLog(@"Error: please provide well-formed URL in url:// format.");
-     return TCL_OK;
-   }
- 
- NSString *setURL = [(NSString*)url stringByReplacingOccurrencesOfString:@"://" withString:@""];
+  if ([testString rangeOfString:@"://"].location == NSNotFound) {
+    NSLog(@"Error: please provide well-formed URL in url:// format.");
+    return TCL_OK;
+  }
+
+  /*Strip colon and slashes because the API to set default handlers does not use them.*/
+  NSString *setURL = [(NSString*)url stringByReplacingOccurrencesOfString:@"://" withString:@""];
 
   CFURLRef appURL = NULL;
   CFBundleRef bundle = NULL;
 
   CFStringRef apppath = CFStringCreateWithCString(NULL, Tcl_GetString(objv[2]),  kCFStringEncodingUTF8);
 
- /* Convert filepath to URL, create bundle object, get bundle ID. */
+  /* Convert filepath to URL, create bundle object, get bundle ID. */
   appURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, apppath, kCFURLPOSIXPathStyle, false);
   bundle = CFBundleCreate(NULL, appURL);
 
