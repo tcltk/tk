@@ -185,6 +185,10 @@ static const Tk_ClassProcs scaleClass = {
     NULL,					/* createProc */
     NULL					/* modalProc */
 };
+
+#define ROUND(d)    ((int) floor((d) + 0.5))
+#define MIN(a, b)   ((a) < (b)? (a): (b))
+#define MAX(a, b)   ((a) > (b)? (a): (b))
 
 /*
  *--------------------------------------------------------------
@@ -790,13 +794,13 @@ MaxTickRoundingError(
     int tickCount;
 
     tickPosn = scalePtr->fromValue/tickResolution; 
-    firstTickError = tickPosn - round(tickPosn);
+    firstTickError = tickPosn - ROUND(tickPosn);
     tickPosn = scalePtr->tickInterval/tickResolution; 
-    intervalError = tickPosn - round(tickPosn);
+    intervalError = tickPosn - ROUND(tickPosn);
     tickCount = (int)((scalePtr->toValue-scalePtr->fromValue) /
 		      scalePtr->tickInterval); // not including first
-    lastTickError = fmin(fabs(firstTickError + tickCount*intervalError), 0.5);
-    return fmax(fabs(firstTickError),lastTickError)*tickResolution;
+    lastTickError = MIN(fabs(firstTickError + tickCount*intervalError), 0.5);
+    return MAX(fabs(firstTickError),lastTickError)*tickResolution;
 }
 
 
