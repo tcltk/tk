@@ -151,7 +151,7 @@ typedef struct TkScale {
      */
 
     int fontHeight;		/* Height of scale font. */
-    Tk_Cursor cursor;		/* Current cursor for window, or None. */
+    Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
     Tcl_Obj *takeFocusPtr;	/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. May be NULL. */
@@ -219,7 +219,8 @@ typedef struct TkScale {
  */
 
 MODULE_SCOPE void	TkEventuallyRedrawScale(TkScale *scalePtr, int what);
-MODULE_SCOPE double	TkRoundToResolution(TkScale *scalePtr, double value);
+MODULE_SCOPE double	TkRoundValueToResolution(TkScale *scalePtr, double value);
+MODULE_SCOPE double	TkRoundIntervalToResolution(TkScale *scalePtr, double value);
 MODULE_SCOPE TkScale *	TkpCreateScale(Tk_Window tkwin);
 MODULE_SCOPE void	TkpDestroyScale(TkScale *scalePtr);
 MODULE_SCOPE void	TkpDisplayScale(ClientData clientData);

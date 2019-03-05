@@ -156,10 +156,10 @@ TkpDrawEntryBorderAndFocus(
     bounds.size.height = Tk_Height(tkwin) - 2*MAC_OSX_FOCUS_WIDTH;
     if (!TkMacOSXSetupDrawingContext(d, NULL, 1, &dc)) {
 
-	/* 
+	/*
 	 * No graphics context is available.  If the widget is a Spinbox, we
 	 * must restore its width before returning 0. (Ticket [273b6a4996].)
-	 */ 
+	 */
 
 	if (isSpinbox) {
 	    Tk_Width(tkwin) = oldWidth;

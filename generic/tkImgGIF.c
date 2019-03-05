@@ -1364,6 +1364,7 @@ ReadImage(
 	}
 	pixelPtr = imagePtr + (ypos) * len * ((transparent>=0)?4:3);
     }
+
     /*
      * Now read until the final zero byte.
      * It was observed that there might be 1 length blocks

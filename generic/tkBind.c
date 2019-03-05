@@ -84,7 +84,7 @@ typedef union {
  */
 
 #ifndef TK_MAC_OSX
-  #define EVENT_BUFFER_SIZE 45
+  #define EVENT_BUFFER_SIZE 90
 #else
   #define EVENT_BUFFER_SIZE 30
 #endif
@@ -3587,7 +3587,7 @@ DoWarp(
 
     if (dispPtr->warpWindow) {
 	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = None;
+	dispPtr->warpWindow = NULL;
     }
     dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }

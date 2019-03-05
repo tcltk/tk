@@ -121,7 +121,17 @@ static char scriptPath[PATH_MAX + 1] = "";
      * method is called.  Activating too early can cause the menu
      * bar to be unresponsive.
      */
+
     [NSApp activateIgnoringOtherApps: YES];
+
+    /*
+     * Process events to ensure that the root window is fully
+     * initialized. See ticket 56a1823c73.
+     */
+    
+    [NSApp _lockAutoreleasePool];
+    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
+    [NSApp _unlockAutoreleasePool];
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -373,7 +383,7 @@ TkpInit(
      * if displayed before main window. This places console in background and it
      * accepts input after being raised.
      */
-		     
+
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 
     return TCL_OK;
