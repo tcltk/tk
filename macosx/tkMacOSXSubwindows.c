@@ -149,6 +149,7 @@ XMapWindow(
     if (Tk_IsTopLevel(macWin->winPtr)) {
 	if (!Tk_IsEmbedded(macWin->winPtr)) {
 	    NSWindow *win = TkMacOSXDrawableWindow(window);
+
 	    /*
 	     * We want to activate Tk when a toplevel is mapped
 	     * but we must not supply YES here.  This is because
@@ -157,16 +158,32 @@ XMapWindow(
 	     * the app to activate too early can make the menu bar
 	     * unresponsive.
 	     */
+
+	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
+	    [win setExcludedFromWindowsMenu:NO];
 	    [NSApp activateIgnoringOtherApps:NO];
+	    [[win contentView] setNeedsDisplay:YES];
 	    if ( [win canBecomeKeyWindow] ) {
 		[win makeKeyAndOrderFront:NSApp];
+	    } else {
+		[win orderFrontRegardless];
 	    }
-	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
+	    
+	    /*
+	     * In some cases the toplevel will not be drawn unless we process
+	     * all pending events now.  See ticket 56a1823c73.
+	     */
+
+	    [NSApp _lockAutoreleasePool];
+	    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
+	    [NSApp _unlockAutoreleasePool];
 	} else {
+
 	    /*
 	     * Rebuild the container's clipping region and display
 	     * the window.
 	     */
+
 	    TkWindow *contWinPtr = TkpGetOtherWindow(macWin->winPtr);
 	    TkMacOSXInvalClipRgns((Tk_Window)contWinPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
@@ -186,7 +203,9 @@ XMapWindow(
 	event.xmap.event = window;
 	event.xmap.override_redirect = macWin->winPtr->atts.override_redirect;
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+
     } else {
+
 	/*
 	 * Rebuild the parent's clipping region and display the window.
 	 *
@@ -207,11 +226,10 @@ XMapWindow(
     NotifyVisibility(macWin->winPtr, &event);
 
     /*
-     * Make sure that subwindows get displayed.
+     * This seems to be needed to ensure that all subwindows get displayed.
      */
 
     GenerateConfigureNotify(macWin->winPtr, 1);
-
 }
 
 /*
@@ -280,11 +298,7 @@ XUnmapWindow(
 	if (!Tk_IsEmbedded(winPtr) &&
 		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
 	    NSWindow *win = TkMacOSXDrawableWindow(window);
-
-	    if ([win isVisible]) {
-		[[win parentWindow] removeChildWindow:win];
-		[win orderOut:NSApp];
-	    }
+	    [win orderOut:nil];
 	}
 	TkMacOSXInvalClipRgns((Tk_Window) winPtr);
 
@@ -1310,7 +1324,7 @@ TkMacOSXWinCGBounds(
  * UpdateOffsets --
  *
  *	Updates the X & Y offsets of the given TkWindow from the TopLevel it is
- *	a decendant of.
+ *	a descendant of.
  *
  * Results:
  *	None.

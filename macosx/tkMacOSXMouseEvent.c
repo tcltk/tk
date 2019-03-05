@@ -24,6 +24,7 @@ typedef struct {
     Point global;
     Point local;
 } MouseEventData;
+static Tk_Window captureWinPtr = NULL; /* Current capture window; may be NULL. */
 
 static int		GenerateButtonEvent(MouseEventData *medPtr);
 static unsigned int	ButtonModifiers2State(UInt32 buttonState,
@@ -106,23 +107,32 @@ enum {
 	}
     }
 
-    Window window = TkMacOSXGetXWindow(eventWindow);
-    Tk_Window tkwin = window ? Tk_IdToWindow(TkGetDisplayList()->display,
-	    window) : NULL;
-    if (!tkwin) {
+    TkWindow *winPtr = TkMacOSXGetTkWindow(eventWindow);
+    Tk_Window tkwin = (Tk_Window) winPtr;
+
+    if (tkwin) {
+	TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
+	if (grabWinPtr &&
+	    grabWinPtr != winPtr &&
+	    !winPtr->dispPtr->grabFlags && /* this means the grab is local. */
+	    grabWinPtr->mainPtr == winPtr->mainPtr) {
+	    return theEvent;
+	}
+    } else {
 	tkwin = TkMacOSXGetCapture();
     }
     if (!tkwin) {
+	TkMacOSXDbgMsg("tkwin == NULL");
 	return theEvent; /* Give up.  No window for this event. */
+    } else {
+	winPtr = (TkWindow *)tkwin;
     }
 
-    TkWindow  *winPtr = (TkWindow *) tkwin;
     local.x -= winPtr->wmInfoPtr->xInParent;
     local.y -= winPtr->wmInfoPtr->yInParent;
 
     int win_x, win_y;
-    tkwin = Tk_TopCoordsToWindow(tkwin, local.x, local.y,
-		&win_x, &win_y);
+    tkwin = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
 
     unsigned int state = 0;
     NSInteger button = [theEvent buttonNumber];
@@ -571,6 +581,56 @@ TkpWarpPointer(
     CFRelease(theEvent);
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpSetCapture --
+ *
+ *	This function captures the mouse so that all future events will be
+ *	reported to this window, even if the mouse is outside the window. If
+ *	the specified window is NULL, then the mouse is released.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Sets the capture flag and captures the mouse.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpSetCapture(
+    TkWindow *winPtr)		/* Capture window, or NULL. */
+{
+    while (winPtr && !Tk_IsTopLevel(winPtr)) {
+	winPtr = winPtr->parentPtr;
+    }
+    captureWinPtr = (Tk_Window) winPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetCapture --
+ *
+ * Results:
+ *	Returns the current grab window
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Tk_Window
+TkMacOSXGetCapture(void)
+{
+    return captureWinPtr;
+}
+
+
+
 /*
  * Local Variables:
  * mode: objc

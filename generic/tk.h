@@ -587,7 +587,11 @@ typedef void (Tk_ClassWorldChangedProc) (ClientData instanceData);
 typedef void (Tk_ClassModalProc) (Tk_Window tkwin, XEvent *eventPtr);
 
 typedef struct Tk_ClassProcs {
+#if TCL_MAJOR_VERSION > 8
+    size_t size;
+#else
     unsigned int size;
+#endif
     Tk_ClassWorldChangedProc *worldChangedProc;
 				/* Procedure to invoke when the widget needs
 				 * to respond in some way to a change in the
@@ -617,7 +621,7 @@ typedef struct Tk_ClassProcs {
 
 #define Tk_GetClassProc(procs, which) \
     (((procs) == NULL) ? NULL : \
-    (((procs)->size <= Tk_Offset(Tk_ClassProcs, which)) ? NULL:(procs)->which))
+    (((procs)->size <= (size_t)Tk_Offset(Tk_ClassProcs, which)) ? NULL:(procs)->which))
 
 /*
  * Each geometry manager (the packer, the placer, etc.) is represented by a
@@ -1481,6 +1485,7 @@ typedef struct Tk_ElementSpec {
  *----------------------------------------------------------------------
  */
 
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #define TK_READABLE		TCL_READABLE
 #define TK_WRITABLE		TCL_WRITABLE
 #define TK_EXCEPTION		TCL_EXCEPTION
@@ -1514,6 +1519,7 @@ typedef struct Tk_ElementSpec {
 #define Tk_FreeProc		Tcl_FreeProc
 #define Tk_Preserve		Tcl_Preserve
 #define Tk_Release		Tcl_Release
+#endif
 
 /* Removed Tk_Main, use macro instead */
 #if defined(_WIN32) || defined(__CYGWIN__)

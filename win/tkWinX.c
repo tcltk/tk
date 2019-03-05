@@ -457,21 +457,21 @@ TkWinDisplayChanged(
     } else if (screen->root_depth == 12) {
 	screen->root_visual->class = TrueColor;
 	screen->root_visual->map_entries = 32;
-	screen->root_visual->red_mask = 0xf0;
+	screen->root_visual->red_mask = 0xf00000;
 	screen->root_visual->green_mask = 0xf000;
-	screen->root_visual->blue_mask = 0xf00000;
+	screen->root_visual->blue_mask = 0xf0;
     } else if (screen->root_depth == 16) {
 	screen->root_visual->class = TrueColor;
 	screen->root_visual->map_entries = 64;
-	screen->root_visual->red_mask = 0xf8;
+	screen->root_visual->red_mask = 0xf80000;
 	screen->root_visual->green_mask = 0xfc00;
-	screen->root_visual->blue_mask = 0xf80000;
+	screen->root_visual->blue_mask = 0xf8;
     } else if (screen->root_depth >= 24) {
 	screen->root_visual->class = TrueColor;
 	screen->root_visual->map_entries = 256;
-	screen->root_visual->red_mask = 0xff;
+	screen->root_visual->red_mask = 0xff0000;
 	screen->root_visual->green_mask = 0xff00;
-	screen->root_visual->blue_mask = 0xff0000;
+	screen->root_visual->blue_mask = 0xff;
     }
     screen->root_visual->bits_per_rgb = screen->root_depth;
     ReleaseDC(NULL, dc);
@@ -539,7 +539,7 @@ TkpOpenDisplay(
 
     twdPtr = ckalloc(sizeof(TkWinDrawable));
     if (twdPtr == NULL) {
-	return None;
+	return NULL;
     }
     twdPtr->type = TWD_WINDOW;
     twdPtr->window.winPtr = NULL;

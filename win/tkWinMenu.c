@@ -743,7 +743,10 @@ ReconfigureWindowsMenu(
  *
  * TkpPostMenu --
  *
- *	Posts a menu on the screen
+ *	Posts a menu on the screen so that the top left corner of the
+ *      specified entry is located at the point (x, y) in screen coordinates.
+ *      If the entry parameter is negative, the upper left corner of the
+ *      menu itself is placed at the point.
  *
  * Results:
  *	None.
@@ -758,7 +761,7 @@ int
 TkpPostMenu(
     Tcl_Interp *interp,
     TkMenu *menuPtr,
-    int x, int y)
+    int x, int y, int index)
 {
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
     int result, flags;
@@ -770,13 +773,19 @@ TkpPostMenu(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->inPostMenu++;
-
     CallPendingReconfigureImmediately(menuPtr);
 
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
 	tsdPtr->inPostMenu--;
 	return result;
+    }
+
+    if (index >= menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
     }
 
     /*
@@ -835,6 +844,100 @@ TkpPostMenu(
     if (tsdPtr->inPostMenu) {
 	tsdPtr->inPostMenu = 0;
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpPostTearoffMenu --
+ *
+ *	Posts a tearoff menu on the screen so that the top left corner of the
+ *      specified entry is located at the point (x, y) in screen coordinates.
+ *      If the index parameter is negative, the upper left corner of the menu
+ *      itself is placed at the point.  Adjusts the menu's position so that it
+ *      fits on the screen, and maps and raises the menu.
+ *
+ * Results:
+ *	Returns a standard Tcl Error.
+ *
+ * Side effects:
+ *	The menu is posted.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpPostTearoffMenu(
+    Tcl_Interp *interp,		/* The interpreter of the menu */
+    TkMenu *menuPtr,		/* The menu we are posting */
+    int x, int y, int index)	/* The root X,Y coordinates where we are
+				 * posting */
+{
+    int vRootX, vRootY, vRootWidth, vRootHeight;
+    int result;
+
+    if (index >= menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
+    }
+
+    TkActivateMenuEntry(menuPtr, -1);
+    TkRecomputeMenu(menuPtr);
+    result = TkPostCommand(menuPtr);
+    if (result != TCL_OK) {
+    	return result;
+    }
+
+    /*
+     * The post commands could have deleted the menu, which means we are dead
+     * and should go away.
+     */
+
+    if (menuPtr->tkwin == NULL) {
+    	return TCL_OK;
+    }
+
+    /*
+     * Adjust the position of the menu if necessary to keep it visible on the
+     * screen. There are two special tricks to make this work right:
+     *
+     * 1. If a virtual root window manager is being used then the coordinates
+     *    are in the virtual root window of menuPtr's parent; since the menu
+     *    uses override-redirect mode it will be in the *real* root window for
+     *    the screen, so we have to map the coordinates from the virtual root
+     *    (if any) to the real root. Can't get the virtual root from the menu
+     *    itself (it will never be seen by the wm) so use its parent instead
+     *    (it would be better to have an an option that names a window to use
+     *    for this...).
+     * 2. The menu may not have been mapped yet, so its current size might be
+     *    the default 1x1. To compute how much space it needs, use its
+     *    requested size, not its actual size.
+     */
+
+    Tk_GetVRootGeometry(Tk_Parent(menuPtr->tkwin), &vRootX, &vRootY,
+	&vRootWidth, &vRootHeight);
+    vRootWidth -= Tk_ReqWidth(menuPtr->tkwin);
+    if (x > vRootX + vRootWidth) {
+	x = vRootX + vRootWidth;
+    }
+    if (x < vRootX) {
+	x = vRootX;
+    }
+    vRootHeight -= Tk_ReqHeight(menuPtr->tkwin);
+    if (y > vRootY + vRootHeight) {
+	y = vRootY + vRootHeight;
+    }
+    if (y < vRootY) {
+	y = vRootY;
+    }
+    Tk_MoveToplevelWindow(menuPtr->tkwin, x, y);
+    if (!Tk_IsMapped(menuPtr->tkwin)) {
+	Tk_MapWindow(menuPtr->tkwin);
+    }
+    TkWmRestackToplevel((TkWindow *) menuPtr->tkwin, Above, NULL);
     return TCL_OK;
 }
 
@@ -2363,7 +2466,7 @@ DrawMenuEntryLabel(
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
 	} else if ((mePtr->image != NULL)
-		&& (menuPtr->disabledImageGC != None)) {
+		&& (menuPtr->disabledImageGC != NULL)) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
 		    leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset),
@@ -2912,7 +3015,6 @@ TkpComputeStandardMenuGeometry(
 	    GetTearoffEntryGeometry(menuPtr, menuPtr->entries[i], tkfont,
 	    	    fmPtr, &width, &height);
 	    menuPtr->entries[i]->height = height;
-
 	} else {
 	    /*
 	     * For each entry, compute the height required by that particular
@@ -2970,8 +3072,6 @@ TkpComputeStandardMenuGeometry(
     }
     windowWidth = x + indicatorSpace + labelWidth + accelWidth
 	    + 2 * activeBorderWidth + borderWidth;
-
-
     windowHeight += borderWidth;
 
     /*

@@ -140,7 +140,7 @@ test wm-attributes-1.2.4 {usage} -constraints {unix notAqua} -returnCodes error 
 } -result {bad attribute "_": must be -alpha, -topmost, -zoomed, -fullscreen, or -type}
 test wm-attributes-1.2.5 {usage} -constraints aqua -returnCodes error -body {
     wm attributes . _
-} -result {bad attribute "_": must be -alpha, -fullscreen, -modified, -notify, -titlepath, -topmost, or -transparent}
+} -result {bad attribute "_": must be -alpha, -fullscreen, -modified, -notify, -titlepath, -topmost, -transparent, or -type}
 
 
 ### wm client ###
@@ -1519,7 +1519,7 @@ test wm-stackorder-5.1 {a menu is not a toplevel} -body {
 test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
     overrideredirect toplevel on unix} -constraints x11 -body {
     toplevel .t
-    tkwait visibility .t	    
+    tkwait visibility .t
     wm overrideredirect .t 1
     raise .
     update
@@ -1531,7 +1531,7 @@ test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
 test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
     overrideredirect toplevel on macOS or win} -constraints aquaOrWin32 -body {
     toplevel .t
-    tkwait visibility .t	    
+    tkwait visibility .t
     wm overrideredirect .t 1
     raise .
     update
@@ -1543,7 +1543,7 @@ test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
 test wm-stackorder-5.3 {An overrideredirect window\
         can be explicitly lowered} -body {
     toplevel .t
-    tkwait visibility .t	    
+    tkwait visibility .t
     wm overrideredirect .t 1
     lower .t
     update
@@ -1640,14 +1640,24 @@ test wm-transient-1.7 {usage} -returnCodes error -body {
     wm transient .master .master
 } -cleanup {
     deleteWindows
-} -result {can't make ".master" its own master}
+} -result {setting ".master" as master creates a transient/master cycle}
 test wm-transient-1.8 {usage} -returnCodes error -body {
+    toplevel .t1
+    toplevel .t2
+    toplevel .t3
+    wm transient .t2 .t1
+    wm transient .t3 .t2
+    wm transient .t1 .t3
+} -cleanup {
+    deleteWindows
+} -result {setting ".t3" as master creates a transient/master cycle}
+test wm-transient-1.9 {usage} -returnCodes error -body {
     toplevel .master
     frame .master.f
     wm transient .master .master.f
 } -cleanup {
     deleteWindows
-} -result {can't make ".master" its own master}
+} -result {setting ".master" as master creates a transient/master cycle}
 
 test wm-transient-2.1 {basic get/set of master} -setup {
     set results [list]

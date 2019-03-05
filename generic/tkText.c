@@ -406,7 +406,6 @@ static Tcl_Obj *	TextGetText(const TkText *textPtr,
 static void		GenerateModifiedEvent(TkText *textPtr);
 static void		GenerateUndoStackEvent(TkText *textPtr);
 static void		UpdateDirtyFlag(TkSharedText *sharedPtr);
-static void		RunAfterSyncCmd(ClientData clientData);
 static void		TextPushUndoAction(TkText *textPtr,
 			    Tcl_Obj *undoString, int insert,
 			    const TkTextIndex *index1Ptr,
@@ -587,7 +586,7 @@ CreateWidget(
 
     textPtr->state = TK_TEXT_STATE_NORMAL;
     textPtr->relief = TK_RELIEF_FLAT;
-    textPtr->cursor = None;
+    textPtr->cursor = NULL;
     textPtr->charWidth = 1;
     textPtr->charHeight = 10;
     textPtr->wrapMode = TEXT_WRAPMODE_CHAR;
@@ -1544,7 +1543,7 @@ TextWidgetObjCmd(
 		textPtr->afterSyncCmd = cmd;
 	    } else {
 		textPtr->afterSyncCmd = cmd;
-		Tcl_DoWhenIdle(RunAfterSyncCmd, (ClientData) textPtr);
+		Tcl_DoWhenIdle(TkTextRunAfterSyncCmd, (ClientData) textPtr);
 	    }
 	    break;
 	} else if (objc != 2) {
@@ -1556,7 +1555,7 @@ TextWidgetObjCmd(
 	    Tcl_DecrRefCount(textPtr->afterSyncCmd);
 	}
 	textPtr->afterSyncCmd = NULL;
-	TkTextUpdateLineMetrics(textPtr, 1,
+	TkTextUpdateLineMetrics(textPtr, 0,
 		TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr), -1);
 	break;
     }
@@ -2275,7 +2274,7 @@ ConfigureText(
     textPtr->selTagPtr->affectsDisplay = 0;
     textPtr->selTagPtr->affectsDisplayGeometry = 0;
     if ((textPtr->selTagPtr->elideString != NULL)
-	    || (textPtr->selTagPtr->tkfont != None)
+	    || (textPtr->selTagPtr->tkfont != NULL)
 	    || (textPtr->selTagPtr->justifyString != NULL)
 	    || (textPtr->selTagPtr->lMargin1String != NULL)
 	    || (textPtr->selTagPtr->lMargin2String != NULL)
@@ -5587,7 +5586,7 @@ UpdateDirtyFlag(
 /*
  *----------------------------------------------------------------------
  *
- * RunAfterSyncCmd --
+ * TkTextRunAfterSyncCmd --
  *
  *	This function is called by the event loop and executes the command
  *      scheduled by [.text sync -command $cmd].
@@ -5601,8 +5600,8 @@ UpdateDirtyFlag(
  *----------------------------------------------------------------------
  */
 
-static void
-RunAfterSyncCmd(
+void
+TkTextRunAfterSyncCmd(
     ClientData clientData)		/* Information about text widget. */
 {
     register TkText *textPtr = clientData;
@@ -5623,7 +5622,7 @@ RunAfterSyncCmd(
     code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
     if (code == TCL_ERROR) {
 	Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
-	Tcl_BackgroundError(textPtr->interp);
+	Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
     }
     Tcl_Release((ClientData) textPtr->interp);
     Tcl_DecrRefCount(textPtr->afterSyncCmd);
