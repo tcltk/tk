@@ -36,15 +36,17 @@
 			<string>Viewer</string>
 		</dict>
 	</array>
-	 <key>CFBundleURLTypes</key>
+ <key>CFBundleURLTypes</key>
   <array>
     <dict>
+     <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
         <key>CFBundleURLSchemes</key>
         <array>
-            <string></string>
+            <string>foo</string>
         </array>
         <key>CFBundleURLName</key>
-        <string></string>
+        <string>Get Foo</string>
     </dict>
   </array>
 	<key>CFBundleExecutable</key>
