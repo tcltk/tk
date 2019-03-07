@@ -126,7 +126,7 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 - (void) handlePrintDocumentsEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
-    tkMacOSXProcessFiles(event, replyEvent, _eventInterp, "::tk::mac::PrintDocument");
+     tkMacOSXProcessFiles(event, replyEvent, _eventInterp, "::tk::mac::PrintDocument");
 }
 
 - (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event
@@ -429,7 +429,7 @@ TkMacOSXInitAppleEvents(
 	    forEventClass:kCoreEventClass andEventID:kAEOpenDocuments];
 
 	[aeManager setEventHandler:NSApp
-	    andSelector:@selector(handleOpenDocumentsEvent:withReplyEvent:)
+	    andSelector:@selector(handlePrintDocumentsEvent:withReplyEvent:)
 	    forEventClass:kCoreEventClass andEventID:kAEPrintDocuments];
 
 	[aeManager setEventHandler:NSApp
