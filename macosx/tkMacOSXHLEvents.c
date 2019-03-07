@@ -126,8 +126,23 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 - (void) handlePrintDocumentsEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
-     tkMacOSXProcessFiles(event, replyEvent, _eventInterp, "::tk::mac::PrintDocument");
+    
+    NSString* file = [[event paramDescriptorForKeyword:keyDirectObject]
+			 stringValue];
+    const char *printFile=[file UTF8String];
+    Tcl_DString print;
+    Tcl_DStringInit(&print);
+    if (Tcl_FindCommand(_eventInterp, "::tk::mac::PrintDocument", NULL, 0)) {
+	Tcl_DStringAppend(&print, "::tk::mac::PrintDocument", -1);
+    } 
+    Tcl_DStringAppendElement(&print, printFile);
+    int  tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&print),
+			     Tcl_DStringLength(&print), TCL_EVAL_GLOBAL);
+    if (tclErr!= TCL_OK) {
+	Tcl_BackgroundException(_eventInterp, tclErr);
+    }
 }
+
 
 - (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
