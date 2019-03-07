@@ -117,9 +117,8 @@ proc ::tk::mac::OpenDocument {args} {
 If a proc of this name is defined it is the default Apple Event handler for
 kAEPrintDocuments,
 .QW pdoc ,
-the Apple Event sent when your application is asked to print one or more
-documents (e.g., via the Print menu item in the Finder).  It works the same
-way as \fBtk::mac::OpenDocument\fR in terms of arguments.
+the Apple Event sent when your application is asked to print a
+document.  It takes a single absolute file path as an argument.
 .TP
 \fB::tk::mac::Quit\fR
 .
