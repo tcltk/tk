@@ -29,7 +29,7 @@ namespace eval ttk::theme::aqua {
 
 	ttk::style configure TButton -anchor center -width -6
 
-	ttk::style configure Toolbutton -padding 4
+	ttk::style configure Toolbutton -padding 4 -foreground black
 
 	ttk::style configure TNotebook -tabmargins {10 0} -tabposition n
 	ttk::style configure TNotebook -padding {18 8 18 17}

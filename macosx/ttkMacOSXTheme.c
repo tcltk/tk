@@ -200,6 +200,108 @@ static void ButtonElementSize(
     *heightPtr += Ttk_PaddingHeight(ButtonMargins);
 }
 
+/*
+ * MacOSXDrawDarkButton --
+ *
+ *    The HIToolbox does not support Dark Mode, and apparently never will.
+ *    This is a standalone drawing procedure which draws PushButtons and
+ *    PopupButtons in the Dark Mode style.
+ */
+
+static CGFloat darkButtonFill[4] = {107.0/255, 108.0/255, 110.0/255.0, 1.0};
+static CGFloat darkButtonStroke[4] = {1.0, 1.0, 1.0, 0.5};
+static CGFloat darkButtonGradient[8] = {1.0, 1.0, 1.0, 0.45, 1.0, 1.0, 1.0, 0.0};
+static CGFloat darkPopupGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
+					 20.0/255, 94.0/255, 206.0/255, 1.0};
+
+static void MacOSXDrawDarkButton(
+    CGRect bounds,
+    HIThemeButtonDrawInfo *info,
+    CGContextRef c)
+{
+    CGPathRef path;
+    CGColorSpaceRef RGB = CGColorSpaceCreateDeviceRGB();
+    CGGradientRef topGradient = CGGradientCreateWithColorComponents(
+				    RGB, darkButtonGradient, NULL, 2);
+    CGFloat *fill, *stroke;
+
+    /*
+     * Compensate for the missing bottom border on dark buttons.
+     */
+	
+    bounds.size.height -= 1;
+    bounds.origin.y += 1;
+    CGPoint start = {bounds.origin.x + 5, bounds.origin.y};
+    CGPoint end = {bounds.origin.x + 5, bounds.origin.y + 5};
+    
+    fill = darkButtonFill;
+    CGContextSetRGBFillColor(c, fill[0], fill[1], fill[2], fill[3]);
+    stroke = darkButtonStroke;
+    CGContextSetRGBStrokeColor(c, stroke[0], stroke[1], stroke[2], stroke[3]);
+    CGContextSetLineWidth(c, 0.5);
+    CGContextClipToRect(c, bounds);
+
+    /*
+     * Fill a rounded rectangle with the dark background color.
+     */
+    
+    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
+    CGContextBeginPath(c);
+    CGContextAddPath(c, path);
+    CGContextDrawPath(c, kCGPathFill);
+
+    /*
+     * Draw the arrow button if this is a popup.
+     */
+
+    if (info->kind == kThemePopupButton) {
+	CGFloat x, y;
+	CGRect arrowBounds = bounds;
+	arrowBounds.size.width = 16;
+	arrowBounds.origin.x += bounds.size.width - 16;
+	CGContextSaveGState(c);
+	if (info->state == kThemeStateActive) { 
+	    CGGradientRef popupGradient = CGGradientCreateWithColorComponents(
+					      RGB, darkPopupGradient, NULL, 2);
+	    CGPoint popupStart = {arrowBounds.origin.x + 8, arrowBounds.origin.y};
+	    CGPoint popupEnd = {arrowBounds.origin.x + 8,
+				arrowBounds.origin.y + arrowBounds.size.height};
+	    CGContextBeginPath(c);
+	    CGContextAddPath(c, path);
+	    CGContextClip(c);
+	    CGContextClipToRect(c, arrowBounds);
+	    CGContextDrawLinearGradient(c, popupGradient, popupStart, popupEnd, 0);
+	    CFRelease(popupGradient);
+	}
+	CGContextSetRGBStrokeColor(c, 1.0, 1.0, 1.0, 1.0);
+	CGContextSetLineWidth(c, 1.5);
+	x = arrowBounds.origin.x + 5;
+	y = arrowBounds.origin.y + trunc(arrowBounds.size.height/2);
+	CGContextBeginPath(c);
+	CGPoint bottomArrow[3] = {{x, y + 2}, {x + 3.5, y + 5.5}, {x + 7, y + 2}}; 
+	CGContextAddLines(c, bottomArrow, 3);
+	CGPoint topArrow[3] = {{x, y - 2}, {x + 3.5, y - 5.5}, {x + 7, y - 2}}; 
+	CGContextAddLines(c, topArrow, 3);
+	CGContextStrokePath(c);
+	CGContextRestoreGState(c);
+    }
+    
+    /*
+     * Draw the top border with a transparent white gradient.
+     */
+
+    CGContextBeginPath(c);
+    CGContextAddArc(c, bounds.origin.x + 4, bounds.origin.y + 4, 4, PI, 3*PI/2, 0);
+    CGContextAddArc(c, bounds.origin.x + bounds.size.width - 4,
+		    bounds.origin.y + 4, 4, 3*PI/2, 0.0, 0);
+    CGContextReplacePathWithStrokedPath(c);
+    CGContextClip(c);
+    CGContextDrawLinearGradient(c, topGradient, start, end, 0);
+    CFRelease(path);
+    CFRelease(topGradient);
+    CGColorSpaceRelease(RGB);
+}
+
 static void ButtonElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
@@ -208,22 +310,13 @@ static void ButtonElementDraw(
     ThemeButtonParams *params = clientData;
     CGRect bounds = BoxToRect(d, Ttk_PadBox(b, ButtonMargins));
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state);
-    Tk_Uid className = Tk_Class(tkwin);
 
-    /*
-     * HIToolbox does not support Dark Mode, and Apple says it never will.  So
-     * the best we can do to approximate a Dark Mode button is to draw it in
-     * the inactive state.  The color is not quite as dark as the gray that
-     * Apple uses for buttons in Dark Mode.  But it isn't too far off.  We
-     * don't have to worry about checkButtons and radioButtons.  They look OK,
-     */
-
-    if (TkMacOSXInDarkMode(tkwin) && className &&
-	strcmp(className, "TCheckbutton") != 0 &&
-	strcmp(className, "TRadiobutton") != 0) {
-	info.state = kThemeStateInactive;
+    if (TkMacOSXInDarkMode(tkwin) &&
+	(info.kind == kThemePushButton || info.kind == kThemePopupButton)) {
+	MacOSXDrawDarkButton(bounds, &info, dc.context);
+    } else {
+	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
 }
 
@@ -1210,7 +1303,7 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElementSpec(themePtr, "Radiobutton.button",
 	&ButtonElementSpec, &RadioButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Toolbutton.border",
-	&ButtonElementSpec, &BevelButtonParams);
+     	&ButtonElementSpec, &BevelButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
 	&ButtonElementSpec, &PopupButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Spinbox.spinbutton",
