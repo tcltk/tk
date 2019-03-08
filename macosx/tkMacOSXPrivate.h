@@ -423,6 +423,8 @@ VISIBILITY_HIDDEN
 
 #endif /* _TKMACPRIV */
 
+int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]);
+
 /*
  * Local Variables:
  * mode: objc

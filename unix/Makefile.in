@@ -396,7 +396,6 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
 	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXImage.o \
 	tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
-	tkMacOSXLaunch.o \
 	tkMacOSXMenu.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
 	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
@@ -524,7 +523,6 @@ AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXImage.c \
 	$(MAC_OSX_DIR)/tkMacOSXInit.c $(MAC_OSX_DIR)/tkMacOSXKeyboard.c \
 	$(MAC_OSX_DIR)/tkMacOSXKeyEvent.c \
-        $(MAC_OSX_DIR)/tkMacOSXLaunch.c \
 	$(MAC_OSX_DIR)/tkMacOSXMenu.c \
 	$(MAC_OSX_DIR)/tkMacOSXMenubutton.c $(MAC_OSX_DIR)/tkMacOSXMenus.c \
 	$(MAC_OSX_DIR)/tkMacOSXMouseEvent.c $(MAC_OSX_DIR)/tkMacOSXNotify.c \
@@ -1290,9 +1288,6 @@ tkMacOSXKeyboard.o: $(MAC_OSX_DIR)/tkMacOSXKeyboard.c
 
 tkMacOSXKeyEvent.o: $(MAC_OSX_DIR)/tkMacOSXKeyEvent.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXKeyEvent.c
-	
-tkMacOSXLaunch.o: $(MAC_OSX_DIR)/tkMacOSXLaunch.c
-	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXLaunch.c
 
 tkMacOSXMenu.o: $(MAC_OSX_DIR)/tkMacOSXMenu.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXMenu.c
