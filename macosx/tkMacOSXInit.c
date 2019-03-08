@@ -375,7 +375,6 @@ TkpInit(
     }
 
     Tk_MacOSXServices_Init(interp);
-    TkMacOSXLaunch_Init(interp);
 
     Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
@@ -383,6 +382,7 @@ TkpInit(
 	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
     
 
     /*
@@ -584,6 +584,44 @@ TkMacOSXGetStringObjFromCFString(
 	}
     }
     return obj;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetAppPath --
+ *
+ *	Retrieves the path to the current installed Wish application.
+ *
+ * Results:
+ *	Returns the application name path.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+
+  CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+
+  
+  /* Convert the URL reference into a string reference. */
+  CFStringRef appPath = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+ 
+  /* Get the system encoding method. */
+  CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
+ 
+  /* Convert the string reference into a C string. */
+  char *path = CFStringGetCStringPtr(appPath, encodingMethod);
+
+  Tcl_SetResult(ip, path, NULL);
+
+  CFRelease(mainBundleURL);
+  CFRelease(appPath);
+  return TCL_OK;
+
 }
 
 /*

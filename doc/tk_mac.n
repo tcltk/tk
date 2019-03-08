@@ -24,10 +24,7 @@ tk::mac \- Access Mac-Specific Functionality on OS X from Tk
 \fB::tk::mac::ShowHelp\fR
 \fB::tk::mac::PerformService\fR
 \fB::tk::mac::LaunchURL \fIURL...\fR
-\fB::tk::mac::LaunchFile  \fIfile...\fR
 \fB::tk::mac::GetAppPath\fR
-\fB::tk::mac::GetDefaultApp  \fIURL...\fR
-\fB::tk::mac::SetDefaultApp \fIURL \fIfile...\fR
 
 \fB::tk::mac::standardAboutPanel\fR
 
@@ -185,29 +182,11 @@ application wants to handle a URL itself, such as displaying data from
 an RSS feed, rather than launching a default application to handle the
 URL, although it can defined as such.
 .TP
-\fB::tk::mac::LaunchFile  \fIfile...\fR
-.
-If defined, launches a file with the system's default application for
-that file format.
-.TP
 \fB::tk::mac::GetAppPath\fR
 .
 Returns the current applications's file path.
 .TP
-\fB::tk::mac::GetDefaultApp  \fIURL...\fR
-.
-Returns the current default application for a URL format.
-Note that the URL must be in the format
-.QW url://
-or it will return an error. 
-.TP
-\fB::tk::mac::SetDefaultApp \fIURL \fIpath-to-app...\fR
-.
-Sets a specific application as the system default handler for a
-specific URL format. Note that the URL must be in the format
-.QW url://
-or it will return an error. 
-.TP
+
 
 .SH "ADDITIONAL DIALOGS"
 .PP
