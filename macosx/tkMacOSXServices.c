@@ -80,7 +80,7 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
   return YES;
 }
 
-//get selected text, copy to pasteboard
+/*Get selected text, copy to pasteboard.*/
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard  types:(NSArray *)types { 
   NSArray *typesDeclared; 
   if ([types containsObject:NSStringPboardType] == NO) { 
@@ -181,13 +181,12 @@ int Tk_MacOSXServices_Init (Tcl_Interp *interp) {
   /* Set up an autorelease pool. */
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-
   /* Initialize instance of TclServices to provide service functionality. */
   TkService *service = [[TkService alloc] init];
   ServicesInterp = interp;
   [NSApp setServicesProvider:service];
 
-  [pool release];
+  [pool drain];
       
   return TCL_OK;
 	

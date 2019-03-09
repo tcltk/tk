@@ -133,6 +133,8 @@ static char scriptPath[PATH_MAX + 1] = "";
     [NSApp _lockAutoreleasePool];
     while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];
+
+    Tk_MacOSXServices_Init(_eventInterp);
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -374,8 +376,6 @@ TkpInit(
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
 
-    Tk_MacOSXServices_Init(interp);
-
     Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
@@ -383,15 +383,6 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
-    
-
-    /*
-     * Workaround for 3efbe4a397; console not accepting keyboard input on 10.14
-     * if displayed before main window. This places console in background and it
-     * accepts input after being raised.
-     */
-
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 
     return TCL_OK;
 }
@@ -431,6 +422,43 @@ TkpGetAppName(
 	}
     }
     Tcl_DStringAppend(namePtr, name, -1);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetAppPath --
+ *
+ *	Returns the path of the Wish application bundle.
+ *
+ * Results:
+ *	Returns the application path.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ *//*Tcl function to get path to app bundle.*/
+int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+
+  CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+
+  
+  /* Convert the URL reference into a string reference. */
+  CFStringRef appPath = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+ 
+  /* Get the system encoding method. */
+  CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
+ 
+  /* Convert the string reference into a C string. */
+  char *path = CFStringGetCStringPtr(appPath, encodingMethod);
+
+  Tcl_SetResult(ip, path, NULL);
+
+  CFRelease(mainBundleURL);
+  CFRelease(appPath);
+  return TCL_OK;
+
 }
 
 /*
@@ -584,44 +612,6 @@ TkMacOSXGetStringObjFromCFString(
 	}
     }
     return obj;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXGetAppPath --
- *
- *	Retrieves the path to the current installed Wish application.
- *
- * Results:
- *	Returns the application name path.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
-
-  CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-
-  
-  /* Convert the URL reference into a string reference. */
-  CFStringRef appPath = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
- 
-  /* Get the system encoding method. */
-  CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
- 
-  /* Convert the string reference into a C string. */
-  char *path = CFStringGetCStringPtr(appPath, encodingMethod);
-
-  Tcl_SetResult(ip, path, NULL);
-
-  CFRelease(mainBundleURL);
-  CFRelease(appPath);
-  return TCL_OK;
-
 }
 
 /*
