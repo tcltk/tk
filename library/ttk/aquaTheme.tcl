@@ -15,12 +15,15 @@ namespace eval ttk::theme::aqua {
 	    -insertwidth 1
 
 	ttk::style map . \
-	    -foreground {disabled systemTtkForeground
-		    background systemTtkForeground} \
-	    -selectbackground {background systemHighlight
-		    !focus systemHighlightSecondary} \
-	    -selectforeground {background systemTtkForeground
-		    !focus systemDialogActiveText}
+	    -foreground {
+		disabled systemTtkForeground
+		background systemTtkForeground} \
+	    -selectbackground {
+		background systemHighlight
+		!focus systemHighlightSecondary} \
+	    -selectforeground {
+		background systemTtkForeground
+		!focus systemDialogActiveText}
 
 	# Buttons
 	ttk::style configure TButton -anchor center -width -6
@@ -36,10 +39,11 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook -padding {18 8 18 17}
 	ttk::style configure TNotebook.Tab -padding {12 3 12 2}
 	ttk::style configure TNotebook.Tab -foreground white
-	ttk::style map TNotebook.Tab -foreground {
-	    {background !disabled} black
-	    disabled darkgray
-	    !selected black}
+	ttk::style map TNotebook.Tab \
+	    -foreground {
+		{background !disabled} black
+		disabled darkgray
+		!selected black}
 
 	# Combobox:
 	ttk::style configure TCombobox -postoffset {5 -2 -10 0}
@@ -48,11 +52,13 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure Heading -font TkHeadingFont
 	ttk::style configure Treeview -rowheight 18 -background White
 	ttk::style map Treeview \
-	    -background [list disabled systemDialogBackgroundInactive \
-				{selected background} systemHighlightSecondary \
-				selected systemHighlight] \
-	    -foreground [list disabled black \
-				selected black]
+	    -background {
+		disabled systemDialogBackgroundInactive
+		{selected background} systemHighlightSecondary
+		selected systemHighlight} \
+	    -foreground {
+		disabled black
+		!disabled black}
 
 	# Enable animation for ttk::progressbar widget:
 	ttk::style configure TProgressbar -period 100 -maxphase 255

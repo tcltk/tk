@@ -173,7 +173,7 @@ static CGFloat darkPopupGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
 static void MacOSXDrawDarkButton(
     CGRect bounds,
     HIThemeButtonDrawInfo *info,
-    CGContextRef c)
+    CGContextRef context)
 {
     CGPathRef path;
     CGColorSpaceRef RGB = CGColorSpaceCreateDeviceRGB();
@@ -191,20 +191,20 @@ static void MacOSXDrawDarkButton(
     CGPoint end = {bounds.origin.x + 5, bounds.origin.y + 5};
 
     fill = darkButtonFill;
-    CGContextSetRGBFillColor(c, fill[0], fill[1], fill[2], fill[3]);
+    CGContextSetRGBFillColor(context, fill[0], fill[1], fill[2], fill[3]);
     stroke = darkButtonStroke;
-    CGContextSetRGBStrokeColor(c, stroke[0], stroke[1], stroke[2], stroke[3]);
-    CGContextSetLineWidth(c, 0.5);
-    CGContextClipToRect(c, bounds);
+    CGContextSetRGBStrokeColor(context, stroke[0], stroke[1], stroke[2], stroke[3]);
+    CGContextSetLineWidth(context, 0.5);
+    CGContextClipToRect(context, bounds);
 
     /*
      * Fill a rounded rectangle with the dark background color.
      */
 
     path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
-    CGContextBeginPath(c);
-    CGContextAddPath(c, path);
-    CGContextFillPath(c);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextFillPath(context);
 
     /*
      * Draw the arrow button if this is a popup.
@@ -215,44 +215,46 @@ static void MacOSXDrawDarkButton(
 	CGRect arrowBounds = bounds;
 	arrowBounds.size.width = 16;
 	arrowBounds.origin.x += bounds.size.width - 16;
-	CGContextSaveGState(c);
+	CGContextSaveGState(context);
 	if (info->state == kThemeStateActive) {
 	    CGGradientRef popupGradient = CGGradientCreateWithColorComponents(
 					      RGB, darkPopupGradient, NULL, 2);
-	    CGPoint popupStart = {arrowBounds.origin.x + 8, arrowBounds.origin.y};
+	    CGPoint popupStart = {arrowBounds.origin.x + 8,
+				  arrowBounds.origin.y};
 	    CGPoint popupEnd = {arrowBounds.origin.x + 8,
 				arrowBounds.origin.y + arrowBounds.size.height};
-	    CGContextBeginPath(c);
-	    CGContextAddPath(c, path);
-	    CGContextClip(c);
-	    CGContextClipToRect(c, arrowBounds);
-	    CGContextDrawLinearGradient(c, popupGradient, popupStart, popupEnd, 0);
+	    CGContextBeginPath(context);
+	    CGContextAddPath(context, path);
+	    CGContextClip(context);
+	    CGContextClipToRect(context, arrowBounds);
+	    CGContextDrawLinearGradient(context, popupGradient,
+					popupStart, popupEnd, 0);
 	    CFRelease(popupGradient);
 	}
-	CGContextSetRGBStrokeColor(c, 1.0, 1.0, 1.0, 1.0);
-	CGContextSetLineWidth(c, 1.5);
+	CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
+	CGContextSetLineWidth(context, 1.5);
 	x = arrowBounds.origin.x + 5;
 	y = arrowBounds.origin.y + trunc(arrowBounds.size.height/2);
-	CGContextBeginPath(c);
-	CGPoint bottomArrow[3] = {{x, y + 2}, {x + 3.5, y + 5.5}, {x + 7, y + 2}};
-	CGContextAddLines(c, bottomArrow, 3);
-	CGPoint topArrow[3] = {{x, y - 2}, {x + 3.5, y - 5.5}, {x + 7, y - 2}};
-	CGContextAddLines(c, topArrow, 3);
-	CGContextStrokePath(c);
-	CGContextRestoreGState(c);
+	CGContextBeginPath(context);
+	CGPoint bottomArrow[3] = {{x, y+2}, {x+3.5, y+5.5}, {x+7, y+2}};
+	CGContextAddLines(context, bottomArrow, 3);
+	CGPoint topArrow[3] = {{x, y-2}, {x+3.5, y-5.5}, {x+7, y-2}};
+	CGContextAddLines(context, topArrow, 3);
+	CGContextStrokePath(context);
+	CGContextRestoreGState(context);
     }
 
     /*
      * Draw the top border with a transparent white gradient.
      */
 
-    CGContextBeginPath(c);
-    CGContextAddArc(c, bounds.origin.x + 4, bounds.origin.y + 4, 4, PI, 3*PI/2, 0);
-    CGContextAddArc(c, bounds.origin.x + bounds.size.width - 4,
+    CGContextBeginPath(context);
+    CGContextAddArc(context, bounds.origin.x + 4, bounds.origin.y + 4, 4, PI, 3*PI/2, 0);
+    CGContextAddArc(context, bounds.origin.x + bounds.size.width - 4,
 		    bounds.origin.y + 4, 4, 3*PI/2, 0.0, 0);
-    CGContextReplacePathWithStrokedPath(c);
-    CGContextClip(c);
-    CGContextDrawLinearGradient(c, topGradient, start, end, 0);
+    CGContextReplacePathWithStrokedPath(context);
+    CGContextClip(context);
+    CGContextDrawLinearGradient(context, topGradient, start, end, 0);
     CFRelease(path);
     CFRelease(topGradient);
     CGColorSpaceRelease(RGB);
@@ -267,16 +269,15 @@ static void MacOSXDrawDarkButton(
 
 static void MacOSXDrawDarkGroupBox(
     CGRect bounds,
-    const HIThemeGroupBoxDrawInfo *info,
     CGContextRef context,
     Tk_Window tkwin)
 {
     CGPathRef path;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *borderColor;
-    static CGFloat stroke[4] = {1.0, 1.0, 1.0, 0.25};
+    static CGFloat border[4] = {1.0, 1.0, 1.0, 0.25};
     MacOSXSetBoxColor(context, tkwin, 1);
-    borderColor = [NSColor colorWithColorSpace: deviceRGB components: stroke
+    borderColor = [NSColor colorWithColorSpace: deviceRGB components: border
 					 count: 4];
     path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
     CGContextClipToRect(context, bounds);
@@ -291,6 +292,19 @@ static void MacOSXDrawDarkGroupBox(
     CFRelease(path);
 }
 
+static void MacOSXDrawDarkSeparator(
+    CGRect bounds,
+    CGContextRef context,
+    Tk_Window tkwin)
+{
+    static CGFloat fill[4] = {1.0, 1.0, 1.0, 0.3};
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *fillColor = [NSColor colorWithColorSpace: deviceRGB
+					   components: fill
+						count:4];
+    CGContextSetFillColorWithColor(context, fillColor.CGColor);
+    CGContextFillRect(context, bounds);
+}
 
 /*----------------------------------------------------------------------
  * +++ Button element: Used for elements drawn with DrawThemeButton.
@@ -563,7 +577,7 @@ static void PaneElementDraw(
     bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
-	MacOSXDrawDarkGroupBox(bounds, &info, dc.context, tkwin);
+	MacOSXDrawDarkGroupBox(bounds, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
     }
@@ -612,7 +626,7 @@ static void GroupElementDraw(
     };
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
-	MacOSXDrawDarkGroupBox(bounds, &info, dc.context, tkwin);
+	MacOSXDrawDarkGroupBox(bounds, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
     }
@@ -1019,7 +1033,11 @@ static void SeparatorElementDraw(
     };
 
     BEGIN_DRAWING(d)
-    ChkErr(HIThemeDrawSeparator, &bounds, &info, dc.context, HIOrientation);
+    if (TkMacOSXInDarkMode(tkwin)) {
+	MacOSXDrawDarkSeparator(bounds, dc.context, tkwin);
+    } else {
+	ChkErr(HIThemeDrawSeparator, &bounds, &info, dc.context, HIOrientation);
+    }
     END_DRAWING
 }
 
