@@ -17,20 +17,21 @@ namespace eval ttk::theme::aqua {
 	ttk::style map . \
 	    -foreground {disabled systemTtkForeground
 		    background systemTtkForeground} \
-	    -selectbackground {background systemHighlightSecondary
+	    -selectbackground {background systemHighlight
 		    !focus systemHighlightSecondary} \
 	    -selectforeground {background systemTtkForeground
 		    !focus systemDialogActiveText}
 
+	# Buttons
+	ttk::style configure TButton -anchor center -width -6
+	ttk::style configure Toolbutton -padding 4 -foreground black
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
 	# disabled buttons even if it did work...
 	ttk::style configure . -stipple {}
 
-	ttk::style configure TButton -anchor center -width -6
 
-	ttk::style configure Toolbutton -padding 4 -foreground black
-
+	# Notebook
 	ttk::style configure TNotebook -tabmargins {10 0} -tabposition n
 	ttk::style configure TNotebook -padding {18 8 18 17}
 	ttk::style configure TNotebook.Tab -padding {12 3 12 2}
