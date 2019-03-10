@@ -34,7 +34,7 @@
 #include "ttk/ttkTheme.h"
 #include <math.h>
 /*
- * Use this version in the core:
+ * Macros for handling drawing contexts.
  */
 #define BEGIN_DRAWING(d) { \
     TkMacOSXDrawingContext dc; \
@@ -92,6 +92,205 @@ static Ttk_StateTable ThemeStateTable[] = {
     {kThemeStatePressedDown, 0, 0}
 */
 };
+
+/*----------------------------------------------------------------------
+ * +++ Support for contrasting background colors when nesting GroupBoxes
+ * or Tabbed panes.
+ */
+
+static int MacOSXSetBoxColor(
+    CGContextRef context,
+    Tk_Window tkwin,
+    int depth)
+{
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *windowColor = [[NSColor windowBackgroundColor]
+			       colorUsingColorSpace: deviceRGB];
+    NSColor *bgColor;
+    CGFloat intensity, fill[4];
+    [windowColor getComponents: fill];
+    intensity = fill[0] + fill[1] + fill[2];
+    int isDark = (intensity < 1.5);
+
+    /*
+     * Compute the nesting depth of the widget.
+     */
+
+    for (TkWindow *topPtr = winPtr->parentPtr; topPtr != NULL;
+	 topPtr = topPtr->parentPtr) {
+	if (topPtr->privatePtr &&
+	    (topPtr->privatePtr->flags & TTK_HAS_DARKER_BG)) {
+	    depth++;
+	}
+	if (depth > 7) {
+	    break;
+	}
+    }
+
+    /*
+     * Increase the contrast by one step for each level of nesting.
+     */
+
+    if (isDark) {
+	for (int i=0; i<3; i++) {
+	    fill[i] += (1.0 + depth*7.0)/255.0;
+	}
+    } else {
+	for (int i=0; i<3; i++) {
+	    fill[i] -= (depth*8.0)/255.0;
+	}
+    }
+    bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
+				     count: 4];
+    CGContextSetFillColorSpace(context, deviceRGB.CGColorSpace);
+    CGContextSetFillColorWithColor(context, bgColor.CGColor);
+    return depth;
+}
+
+/*----------------------------------------------------------------------
+ * +++ Drawing procedures for widgets in Apple's "Dark Mode" (10.14 and up).
+ *
+ *    The HIToolbox does not support Dark Mode, and apparently never will,
+ *    so to make widgets look "native" we have to provide analogues of the
+ *    HITheme drawing functions to be used in DarkAqua.  We continue to use
+ *    HITheme in Aqua, since it understands earlier versions of the OS.
+ */
+
+/*
+ * MacOSXDrawDarkButton --
+ *
+ *    This is a standalone drawing procedure which draws PushButtons and
+ *    PopupButtons in the Dark Mode style.
+ */
+
+static CGFloat darkButtonFill[4] = {107.0/255, 108.0/255, 110.0/255.0, 1.0};
+static CGFloat darkButtonStroke[4] = {1.0, 1.0, 1.0, 0.5};
+static CGFloat darkButtonGradient[8] = {1.0, 1.0, 1.0, 0.45, 1.0, 1.0, 1.0, 0.0};
+static CGFloat darkPopupGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
+					 20.0/255, 94.0/255, 206.0/255, 1.0};
+
+static void MacOSXDrawDarkButton(
+    CGRect bounds,
+    HIThemeButtonDrawInfo *info,
+    CGContextRef c)
+{
+    CGPathRef path;
+    CGColorSpaceRef RGB = CGColorSpaceCreateDeviceRGB();
+    CGGradientRef topGradient = CGGradientCreateWithColorComponents(
+				    RGB, darkButtonGradient, NULL, 2);
+    CGFloat *fill, *stroke;
+
+    /*
+     * Compensate for the missing bottom border on dark buttons.
+     */
+
+    bounds.size.height -= 1;
+    bounds.origin.y += 1;
+    CGPoint start = {bounds.origin.x + 5, bounds.origin.y};
+    CGPoint end = {bounds.origin.x + 5, bounds.origin.y + 5};
+
+    fill = darkButtonFill;
+    CGContextSetRGBFillColor(c, fill[0], fill[1], fill[2], fill[3]);
+    stroke = darkButtonStroke;
+    CGContextSetRGBStrokeColor(c, stroke[0], stroke[1], stroke[2], stroke[3]);
+    CGContextSetLineWidth(c, 0.5);
+    CGContextClipToRect(c, bounds);
+
+    /*
+     * Fill a rounded rectangle with the dark background color.
+     */
+
+    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
+    CGContextBeginPath(c);
+    CGContextAddPath(c, path);
+    CGContextFillPath(c);
+
+    /*
+     * Draw the arrow button if this is a popup.
+     */
+
+    if (info->kind == kThemePopupButton) {
+	CGFloat x, y;
+	CGRect arrowBounds = bounds;
+	arrowBounds.size.width = 16;
+	arrowBounds.origin.x += bounds.size.width - 16;
+	CGContextSaveGState(c);
+	if (info->state == kThemeStateActive) {
+	    CGGradientRef popupGradient = CGGradientCreateWithColorComponents(
+					      RGB, darkPopupGradient, NULL, 2);
+	    CGPoint popupStart = {arrowBounds.origin.x + 8, arrowBounds.origin.y};
+	    CGPoint popupEnd = {arrowBounds.origin.x + 8,
+				arrowBounds.origin.y + arrowBounds.size.height};
+	    CGContextBeginPath(c);
+	    CGContextAddPath(c, path);
+	    CGContextClip(c);
+	    CGContextClipToRect(c, arrowBounds);
+	    CGContextDrawLinearGradient(c, popupGradient, popupStart, popupEnd, 0);
+	    CFRelease(popupGradient);
+	}
+	CGContextSetRGBStrokeColor(c, 1.0, 1.0, 1.0, 1.0);
+	CGContextSetLineWidth(c, 1.5);
+	x = arrowBounds.origin.x + 5;
+	y = arrowBounds.origin.y + trunc(arrowBounds.size.height/2);
+	CGContextBeginPath(c);
+	CGPoint bottomArrow[3] = {{x, y + 2}, {x + 3.5, y + 5.5}, {x + 7, y + 2}};
+	CGContextAddLines(c, bottomArrow, 3);
+	CGPoint topArrow[3] = {{x, y - 2}, {x + 3.5, y - 5.5}, {x + 7, y - 2}};
+	CGContextAddLines(c, topArrow, 3);
+	CGContextStrokePath(c);
+	CGContextRestoreGState(c);
+    }
+
+    /*
+     * Draw the top border with a transparent white gradient.
+     */
+
+    CGContextBeginPath(c);
+    CGContextAddArc(c, bounds.origin.x + 4, bounds.origin.y + 4, 4, PI, 3*PI/2, 0);
+    CGContextAddArc(c, bounds.origin.x + bounds.size.width - 4,
+		    bounds.origin.y + 4, 4, 3*PI/2, 0.0, 0);
+    CGContextReplacePathWithStrokedPath(c);
+    CGContextClip(c);
+    CGContextDrawLinearGradient(c, topGradient, start, end, 0);
+    CFRelease(path);
+    CFRelease(topGradient);
+    CGColorSpaceRelease(RGB);
+}
+
+/*
+ * MacOSXDrawDarkGroupBox --
+ *
+ *    This is a standalone drawing procedure which draws the contrasting
+ *    rounded rectangular contrasting box for Labelframes and Notebook panes
+ */
+
+static void MacOSXDrawDarkGroupBox(
+    CGRect bounds,
+    const HIThemeGroupBoxDrawInfo *info,
+    CGContextRef context,
+    Tk_Window tkwin)
+{
+    CGPathRef path;
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *borderColor;
+    static CGFloat stroke[4] = {1.0, 1.0, 1.0, 0.25};
+    MacOSXSetBoxColor(context, tkwin, 1);
+    borderColor = [NSColor colorWithColorSpace: deviceRGB components: stroke
+					 count: 4];
+    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
+    CGContextClipToRect(context, bounds);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextFillPath(context);
+    CGContextSetFillColorWithColor(context, borderColor.CGColor);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextReplacePathWithStrokedPath(context);
+    CGContextFillPath(context);
+    CFRelease(path);
+}
+
 
 /*----------------------------------------------------------------------
  * +++ Button element: Used for elements drawn with DrawThemeButton.
@@ -200,107 +399,6 @@ static void ButtonElementSize(
     *heightPtr += Ttk_PaddingHeight(ButtonMargins);
 }
 
-/*
- * MacOSXDrawDarkButton --
- *
- *    The HIToolbox does not support Dark Mode, and apparently never will.
- *    This is a standalone drawing procedure which draws PushButtons and
- *    PopupButtons in the Dark Mode style.
- */
-
-static CGFloat darkButtonFill[4] = {107.0/255, 108.0/255, 110.0/255.0, 1.0};
-static CGFloat darkButtonStroke[4] = {1.0, 1.0, 1.0, 0.5};
-static CGFloat darkButtonGradient[8] = {1.0, 1.0, 1.0, 0.45, 1.0, 1.0, 1.0, 0.0};
-static CGFloat darkPopupGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
-					 20.0/255, 94.0/255, 206.0/255, 1.0};
-
-static void MacOSXDrawDarkButton(
-    CGRect bounds,
-    HIThemeButtonDrawInfo *info,
-    CGContextRef c)
-{
-    CGPathRef path;
-    CGColorSpaceRef RGB = CGColorSpaceCreateDeviceRGB();
-    CGGradientRef topGradient = CGGradientCreateWithColorComponents(
-				    RGB, darkButtonGradient, NULL, 2);
-    CGFloat *fill, *stroke;
-
-    /*
-     * Compensate for the missing bottom border on dark buttons.
-     */
-	
-    bounds.size.height -= 1;
-    bounds.origin.y += 1;
-    CGPoint start = {bounds.origin.x + 5, bounds.origin.y};
-    CGPoint end = {bounds.origin.x + 5, bounds.origin.y + 5};
-    
-    fill = darkButtonFill;
-    CGContextSetRGBFillColor(c, fill[0], fill[1], fill[2], fill[3]);
-    stroke = darkButtonStroke;
-    CGContextSetRGBStrokeColor(c, stroke[0], stroke[1], stroke[2], stroke[3]);
-    CGContextSetLineWidth(c, 0.5);
-    CGContextClipToRect(c, bounds);
-
-    /*
-     * Fill a rounded rectangle with the dark background color.
-     */
-    
-    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
-    CGContextBeginPath(c);
-    CGContextAddPath(c, path);
-    CGContextDrawPath(c, kCGPathFill);
-
-    /*
-     * Draw the arrow button if this is a popup.
-     */
-
-    if (info->kind == kThemePopupButton) {
-	CGFloat x, y;
-	CGRect arrowBounds = bounds;
-	arrowBounds.size.width = 16;
-	arrowBounds.origin.x += bounds.size.width - 16;
-	CGContextSaveGState(c);
-	if (info->state == kThemeStateActive) { 
-	    CGGradientRef popupGradient = CGGradientCreateWithColorComponents(
-					      RGB, darkPopupGradient, NULL, 2);
-	    CGPoint popupStart = {arrowBounds.origin.x + 8, arrowBounds.origin.y};
-	    CGPoint popupEnd = {arrowBounds.origin.x + 8,
-				arrowBounds.origin.y + arrowBounds.size.height};
-	    CGContextBeginPath(c);
-	    CGContextAddPath(c, path);
-	    CGContextClip(c);
-	    CGContextClipToRect(c, arrowBounds);
-	    CGContextDrawLinearGradient(c, popupGradient, popupStart, popupEnd, 0);
-	    CFRelease(popupGradient);
-	}
-	CGContextSetRGBStrokeColor(c, 1.0, 1.0, 1.0, 1.0);
-	CGContextSetLineWidth(c, 1.5);
-	x = arrowBounds.origin.x + 5;
-	y = arrowBounds.origin.y + trunc(arrowBounds.size.height/2);
-	CGContextBeginPath(c);
-	CGPoint bottomArrow[3] = {{x, y + 2}, {x + 3.5, y + 5.5}, {x + 7, y + 2}}; 
-	CGContextAddLines(c, bottomArrow, 3);
-	CGPoint topArrow[3] = {{x, y - 2}, {x + 3.5, y - 5.5}, {x + 7, y - 2}}; 
-	CGContextAddLines(c, topArrow, 3);
-	CGContextStrokePath(c);
-	CGContextRestoreGState(c);
-    }
-    
-    /*
-     * Draw the top border with a transparent white gradient.
-     */
-
-    CGContextBeginPath(c);
-    CGContextAddArc(c, bounds.origin.x + 4, bounds.origin.y + 4, 4, PI, 3*PI/2, 0);
-    CGContextAddArc(c, bounds.origin.x + bounds.size.width - 4,
-		    bounds.origin.y + 4, 4, 3*PI/2, 0.0, 0);
-    CGContextReplacePathWithStrokedPath(c);
-    CGContextClip(c);
-    CGContextDrawLinearGradient(c, topGradient, start, end, 0);
-    CFRelease(path);
-    CFRelease(topGradient);
-    CGColorSpaceRelease(RGB);
-}
 
 static void ButtonElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -464,7 +562,11 @@ static void PaneElementDraw(
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
-    ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
+    if (TkMacOSXInDarkMode(tkwin)) {
+	MacOSXDrawDarkGroupBox(bounds, &info, dc.context, tkwin);
+    } else {
+	ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
+    }
     END_DRAWING
     if (winPtr->privatePtr != NULL) {
 	winPtr->privatePtr->flags |= TTK_HAS_DARKER_BG;
@@ -502,13 +604,18 @@ static void GroupElementDraw(
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
     CGRect bounds = BoxToRect(d, b);
+
     const HIThemeGroupBoxDrawInfo info = {
 	.version = 0,
 	.state = Ttk_StateTableLookup(ThemeStateTable, state),
 	.kind = kHIThemeGroupBoxKindPrimary,
     };
     BEGIN_DRAWING(d)
-    ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
+    if (TkMacOSXInDarkMode(tkwin)) {
+	MacOSXDrawDarkGroupBox(bounds, &info, dc.context, tkwin);
+    } else {
+	ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
+    }
     END_DRAWING
     if (winPtr->privatePtr != NULL) {
 	winPtr->privatePtr->flags |= TTK_HAS_DARKER_BG;
@@ -629,10 +736,6 @@ static Ttk_ElementSpec ComboboxElementSpec = {
     ComboboxElementSize,
     ComboboxElementDraw
 };
-
-
-
-
 
 /*----------------------------------------------------------------------
  * +++ Spinbuttons.
@@ -1018,37 +1121,14 @@ static Ttk_ElementSpec SizegripElementSpec = {
  *    port.  The code for handling this is currently commented out.
  */
 
+
 static void FillElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
     CGRect bounds = BoxToRect(d, b);
-    int depth = 0;
-    NSColor *bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
-			   [NSColorSpace deviceRGBColorSpace]];
-    CGFloat rgba[4];
     BEGIN_DRAWING(d)
-    for (TkWindow *topPtr = winPtr->parentPtr; topPtr != NULL;
-	 topPtr = topPtr->parentPtr) {
-	if (topPtr->privatePtr &&
-	    (topPtr->privatePtr->flags & TTK_HAS_DARKER_BG)) {
-	    depth++;
-	}
-	if (depth > 7) {
-	    break;
-	}
-    }
-
-    /*
-     * Darken the background color one step for each level of nesting.
-     */
-
-    [bgColor getComponents: rgba];
-    for (int i=0; i<4; i++) {
-	rgba[i] -= depth*(8.0/255.0);
-    }
-    CGContextSetRGBFillColor(dc.context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    MacOSXSetBoxColor(dc.context, tkwin, 0);
     CGContextFillRect(dc.context, bounds);
     //QDSetPatternOrigin(PatternOrigin(tkwin, d));
     END_DRAWING
@@ -1362,4 +1442,3 @@ int Ttk_MacOSXPlatformInit(Tcl_Interp *interp)
  * coding: utf-8
  * End:
  */
-

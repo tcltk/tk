@@ -277,7 +277,7 @@ SetCGColorComponents(
 	bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
 			   [NSColorSpace deviceRGBColorSpace]];
 	[bgColor getComponents: rgba];
-	for (int i=0; i<4; i++) {
+	for (int i=0; i<3; i++) {
 	    rgba[i] -= entry.value*(8.0/255.0);
 	}
 	break;
@@ -546,7 +546,6 @@ TkMacOSXSetColorInContext(
     CGColorRef cgColor = CopyCachedColor(gc, pixel);
     struct SystemColorMapEntry entry;
     CGRect rect;
-    CGFloat rgba[4] = {0.0, 0.0, 0.0, 1.0};
     HIThemeBackgroundDrawInfo info = { 0, kThemeStateActive, entry.value };
     static CGColorSpaceRef deviceRGBSpace = NULL;
     if (!deviceRGBSpace) {
