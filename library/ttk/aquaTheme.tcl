@@ -27,6 +27,7 @@ namespace eval ttk::theme::aqua {
 
 	# Buttons
 	ttk::style configure TButton -anchor center -width -6
+	#-padding {0 2 0 3}
 	ttk::style configure Toolbutton -padding 4 -foreground black
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
