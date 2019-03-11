@@ -241,6 +241,9 @@ static void		CanvasWorldChanged(ClientData instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, int argc,
 			    Tcl_Obj *const *argv, int flags);
+static void		DefaultRotateImplementation(TkCanvas *canvasPtr,
+			    Tk_Item *itemPtr, double x, double y,
+			    double angleRadians);
 static void		DestroyCanvas(void *memPtr);
 static int		DrawCanvas(Tcl_Interp *interp, ClientData clientData, Tk_PhotoHandle photohandle, int subsample, int zoom);
 static void		DisplayCanvas(ClientData clientData);
@@ -567,63 +570,94 @@ ItemRotate(
     Tk_Item *itemPtr,
     double x,
     double y,
-    double angle)
+    double angleRadians)
 {
     if (itemPtr->typePtr->rotateProc != NULL) {
 	itemPtr->typePtr->rotateProc((Tk_Canvas) canvasPtr,
-		itemPtr, x, y, angle);
+		itemPtr, x, y, angleRadians);
     } else {
-	int objc, i, ok = 1;
-	Tcl_Obj **objv;
-	double *coordv;
-	double s = sin(angle);
-	double c = cos(angle);
-	Tcl_Interp *interp = canvasPtr->interp;
-
-	if (ItemCoords(canvasPtr, itemPtr, 0, NULL) == TCL_OK &&
-		Tcl_ListObjGetElements(NULL, Tcl_GetObjResult(interp),
-			&objc, &objv) == TCL_OK) {
-	    coordv = (double *) Tcl_Alloc(sizeof(double) * objc);
-	    for (i=0 ; i<objc ; i++) {
-		if (Tcl_GetDoubleFromObj(NULL, objv[i], &coordv[i]) != TCL_OK) {
-		    ok = 0;
-		    break;
-		}
-	    }
-	    if (ok) {
-		/*
-		 * Apply the rotation.
-		 */
-
-		for (i=0 ; i<objc ; i+=2) {
-		    double px = coordv[i+0] - x;
-		    double py = coordv[i+1] - y;
-		    double nx = px * c - py * s;
-		    double ny = px * s + py * c;
-
-		    coordv[i+0] = nx + x;
-		    coordv[i+1] = ny + y;
-		}
-
-		/*
-		 * Write the coordinates back into the item.
-		 */
-
-		objv = (Tcl_Obj **) Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
-		for (i=0 ; i<objc ; i++) {
-		    objv[i] = Tcl_NewDoubleObj(coordv[i]);
-		    Tcl_IncrRefCount(objv[i]);
-		}
-		ItemCoords(canvasPtr, itemPtr, objc, objv);
-		for (i=0 ; i<objc ; i++) {
-		    Tcl_DecrRefCount(objv[i]);
-		}
-		Tcl_Free((char *) objv);
-	    }
-	    Tcl_Free((char *) coordv);
-	}
-	Tcl_ResetResult(interp);
+	DefaultRotateImplementation(canvasPtr, itemPtr, x, y, angleRadians);
     }
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * DefaultRotateImplementation --
+ *
+ *	The default implementation of the rotation operation, used when items
+ *	do not provide their own version.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+DefaultRotateImplementation(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    double x,
+    double y,
+    double angleRadians)
+{
+    int objc, i, ok = 1;
+    Tcl_Obj **objv, **newObjv;
+    double *coordv;
+    double s = sin(angleRadians);
+    double c = cos(angleRadians);
+    Tcl_Interp *interp = canvasPtr->interp;
+
+    /*
+     * Get the coordinates out of the item.
+     */
+
+    if (ItemCoords(canvasPtr, itemPtr, 0, NULL) == TCL_OK &&
+	    Tcl_ListObjGetElements(NULL, Tcl_GetObjResult(interp),
+		    &objc, &objv) == TCL_OK) {
+	coordv = (double *) Tcl_Alloc(sizeof(double) * objc);
+	for (i=0 ; i<objc ; i++) {
+	    if (Tcl_GetDoubleFromObj(NULL, objv[i], &coordv[i]) != TCL_OK) {
+		ok = 0;
+		break;
+	    }
+	}
+	if (ok) {
+	    /*
+	     * Apply the rotation.
+	     */
+
+	    for (i=0 ; i<objc ; i+=2) {
+		double px = coordv[i+0] - x;
+		double py = coordv[i+1] - y;
+		double nx = px * c - py * s;
+		double ny = px * s + py * c;
+
+		coordv[i+0] = nx + x;
+		coordv[i+1] = ny + y;
+	    }
+
+	    /*
+	     * Write the coordinates back into the item.
+	     */
+
+	    newObjv = (Tcl_Obj **) Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
+	    for (i=0 ; i<objc ; i++) {
+		newObjv[i] = Tcl_NewDoubleObj(coordv[i]);
+		Tcl_IncrRefCount(newObjv[i]);
+	    }
+	    ItemCoords(canvasPtr, itemPtr, objc, newObjv);
+	    for (i=0 ; i<objc ; i++) {
+		Tcl_DecrRefCount(newObjv[i]);
+	    }
+	    Tcl_Free((char *) newObjv);
+	}
+	Tcl_Free((char *) coordv);
+    }
+
+    /*
+     * The interpreter result was (probably) modified above; reset it.
+     */
+
+    Tcl_ResetResult(interp);
 }
 
 /*

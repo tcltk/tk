@@ -105,6 +105,8 @@ static void		DeleteBitmap(Tk_Canvas canvas,
 static void		DisplayBitmap(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
+static void		RotateBitmap(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleBitmap(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -137,7 +139,8 @@ Tk_ItemType tkBitmapType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateBitmap,		/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -784,6 +787,46 @@ ScaleBitmap(
 
     bmapPtr->x = originX + scaleX*(bmapPtr->x - originX);
     bmapPtr->y = originY + scaleY*(bmapPtr->y - originY);
+    ComputeBitmapBbox(canvas, bmapPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateBitmap --
+ *
+ *	This function is called to rotate a bitmap's origin by a given amount.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the bitmap is rotated by angleRad radians about
+ *	(originX, originY), and the bounding box is updated in the generic
+ *	part of the item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateBitmap(
+    Tk_Canvas canvas,
+    Tk_Item *itemPtr,
+    double originX,
+    double originY,
+    double angleRad)
+{
+    BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+    double x, y, nx, ny;
+    double s = sin(angleRad);
+    double c = cos(angleRad);
+
+    x = bmapPtr->x - originX;
+    y = bmapPtr->y - originY;
+    nx = x * c - y * s;
+    ny = x * s + y * c;
+    bmapPtr->x = nx + originX;
+    bmapPtr->y = ny + originY;
     ComputeBitmapBbox(canvas, bmapPtr);
 }
 
