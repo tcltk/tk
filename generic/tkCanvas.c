@@ -560,6 +560,71 @@ ItemTranslate(
     itemPtr->typePtr->translateProc((Tk_Canvas) canvasPtr, itemPtr,
 	    xDelta, yDelta);
 }
+
+static inline void
+ItemRotate(
+    TkCanvas *canvasPtr,
+    Tk_Item *itemPtr,
+    double x,
+    double y,
+    double angle)
+{
+    if (itemPtr->typePtr->rotateProc != NULL) {
+	itemPtr->typePtr->rotateProc((Tk_Canvas) canvasPtr,
+		itemPtr, x, y, angle);
+    } else {
+	int objc, i, ok = 1;
+	Tcl_Obj **objv;
+	double *coordv;
+	double s = sin(angle);
+	double c = cos(angle);
+	Tcl_Interp *interp = canvasPtr->interp;
+
+	if (ItemCoords(canvasPtr, itemPtr, 0, NULL) == TCL_OK &&
+		Tcl_ListObjGetElements(NULL, Tcl_GetObjResult(interp),
+			&objc, &objv) == TCL_OK) {
+	    coordv = (double *) Tcl_Alloc(sizeof(double) * objc);
+	    for (i=0 ; i<objc ; i++) {
+		if (Tcl_GetDoubleFromObj(NULL, objv[i], &coordv[i]) != TCL_OK) {
+		    ok = 0;
+		    break;
+		}
+	    }
+	    if (ok) {
+		/*
+		 * Apply the rotation.
+		 */
+
+		for (i=0 ; i<objc ; i+=2) {
+		    double px = coordv[i+0] - x;
+		    double py = coordv[i+1] - y;
+		    double nx = px * c - py * s;
+		    double ny = px * s + py * c;
+
+		    coordv[i+0] = nx + x;
+		    coordv[i+1] = ny + y;
+		}
+
+		/*
+		 * Write the coordinates back into the item.
+		 */
+
+		objv = (Tcl_Obj **) Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
+		for (i=0 ; i<objc ; i++) {
+		    objv[i] = Tcl_NewDoubleObj(coordv[i]);
+		    Tcl_IncrRefCount(objv[i]);
+		}
+		ItemCoords(canvasPtr, itemPtr, objc, objv);
+		for (i=0 ; i<objc ; i++) {
+		    Tcl_DecrRefCount(objv[i]);
+		}
+		Tcl_Free((char *) objv);
+	    }
+	    Tcl_Free((char *) coordv);
+	}
+	Tcl_ResetResult(interp);
+    }
+}
 
 /*
  *--------------------------------------------------------------
@@ -746,25 +811,24 @@ CanvasWidgetCmd(
 	"canvasy",	"cget",		"configure",	"coords",
 	"create",	"dchars",	"delete",	"dtag",
 	"find",		"focus",	"gettags",	"icursor",
-        "image",
-	"imove",	"index",	"insert",	"itemcget",
-	"itemconfigure",
+        "image",	"imove",	"index",	"insert",
+	"itemcget",	"itemconfigure",
 	"lower",	"move",		"moveto",	"postscript",
-	"raise",	"rchars",	"scale",	"scan",
-	"select",	"type",		"xview",	"yview",
-	NULL
+	"raise",	"rchars",	"rotate",	"scale",
+	"scan",		"select",	"type",		"xview",
+	"yview",	NULL
     };
     enum options {
 	CANV_ADDTAG,	CANV_BBOX,	CANV_BIND,	CANV_CANVASX,
 	CANV_CANVASY,	CANV_CGET,	CANV_CONFIGURE,	CANV_COORDS,
 	CANV_CREATE,	CANV_DCHARS,	CANV_DELETE,	CANV_DTAG,
 	CANV_FIND,	CANV_FOCUS,	CANV_GETTAGS,	CANV_ICURSOR,
-        CANV_IMAGE,
-	CANV_IMOVE,	CANV_INDEX,	CANV_INSERT,	CANV_ITEMCGET,
-	CANV_ITEMCONFIGURE,
+        CANV_IMAGE,	CANV_IMOVE,	CANV_INDEX,	CANV_INSERT,
+	CANV_ITEMCGET,	CANV_ITEMCONFIGURE,
 	CANV_LOWER,	CANV_MOVE,	CANV_MOVETO,	CANV_POSTSCRIPT,
-	CANV_RAISE,	CANV_RCHARS,	CANV_SCALE,	CANV_SCAN,
-	CANV_SELECT,	CANV_TYPE,	CANV_XVIEW,	CANV_YVIEW
+	CANV_RAISE,	CANV_RCHARS,	CANV_ROTATE,	CANV_SCALE,
+	CANV_SCAN,	CANV_SELECT,	CANV_TYPE,	CANV_XVIEW,
+	CANV_YVIEW
     };
 
     if (objc < 2) {
@@ -1757,6 +1821,30 @@ CanvasWidgetCmd(
 		EventuallyRedrawItem(canvasPtr, itemPtr);
 	    }
 	    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+	}
+	break;
+    }
+    case CANV_ROTATE: {
+	double x, y, angle;
+	Tk_Canvas canvas = (Tk_Canvas) canvasPtr;
+
+	if (objc != 6) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId x y angle");
+	    result = TCL_ERROR;
+	    goto done;
+	}
+	if (Tk_CanvasGetCoordFromObj(interp, canvas, objv[3], &x) != TCL_OK ||
+		Tk_CanvasGetCoordFromObj(interp, canvas, objv[4], &y) != TCL_OK ||
+		Tcl_GetDoubleFromObj(interp, objv[5], &angle) != TCL_OK) {
+	    result = TCL_ERROR;
+	    goto done;
+	}
+	angle = angle * 3.1415927 / 180.0;
+	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
+	    EventuallyRedrawItem(canvasPtr, itemPtr);
+	    ItemRotate(canvasPtr, itemPtr, x, y, angle);
+	    EventuallyRedrawItem(canvasPtr, itemPtr);
+	    canvasPtr->flags |= REPICK_NEEDED;
 	}
 	break;
     }
