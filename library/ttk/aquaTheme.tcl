@@ -8,26 +8,29 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure . \
 	    -font TkDefaultFont \
 	    -background systemWindowBody \
-	    -foreground systemTtkForeground \
+	    -foreground systemLabelColor \
 	    -selectbackground systemHighlight \
-	    -selectforeground systemTtkForeground \
+	    -selectforeground systemLabelColor \
 	    -selectborderwidth 0 \
 	    -insertwidth 1
 
 	ttk::style map . \
 	    -foreground {
-		disabled systemTtkForeground
-		background systemTtkForeground} \
+		disabled systemLabelColor
+		background systemLabelColor} \
 	    -selectbackground {
 		background systemHighlight
 		!focus systemHighlightSecondary} \
 	    -selectforeground {
-		background systemTtkForeground
+		background systemLabelColor
 		!focus systemDialogActiveText}
 
 	# Buttons
-	ttk::style configure TButton -anchor center -width -6
-	#-padding {0 2 0 3}
+	ttk::style configure TButton -anchor center -width -6 \
+	    -foreground systemControlTextColor
+	ttk::style map TButton \
+	    -foreground {
+		disabled systemDisabledControlTextColor}
 	ttk::style configure Toolbutton -padding 4 -foreground black
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
@@ -43,7 +46,7 @@ namespace eval ttk::theme::aqua {
 	ttk::style map TNotebook.Tab \
 	    -foreground {
 		{background !disabled} black
-		disabled darkgray
+		disabled darkGray
 		!selected black}
 
 	# Combobox:

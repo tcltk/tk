@@ -162,6 +162,7 @@ static int MacOSXSetBoxColor(
 
 
 static CGFloat darkButtonFill[4] = {112.0/255, 113.0/255, 115.0/255, 1.0};
+static CGFloat darkDisabledButtonFill[4] = {86.0/255, 87.0/255, 89.0/255, 1.0};
 static CGFloat darkTopGradient[8] = {1.0, 1.0, 1.0, 0.3,
 				     1.0, 1.0, 1.0, 0.0};
 static CGFloat darkBackgroundGradient[8] = {0.0, 0.0, 0.0, 0.1,
@@ -211,9 +212,15 @@ static void MacOSXDrawDarkButton(
      * Fill the button face with the button fill color.
      */
     bounds = CGRectInset(bounds, 1, 1);
+    if (state & TTK_STATE_DISABLED) {
     fill = [NSColor colorWithColorSpace: deviceRGB
-			     components: darkButtonFill
+			     components: darkDisabledButtonFill
 				  count: 4];
+    } else {
+	fill = [NSColor colorWithColorSpace: deviceRGB
+				 components: darkButtonFill
+				      count: 4];
+    }
     CGContextSetFillColorWithColor(context, fill.CGColor);
     path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
     CGContextBeginPath(context);
@@ -1185,7 +1192,7 @@ static void BackgroundElementDraw(
     Drawable d, Ttk_Box b, unsigned int state)
 {
     FillElementDraw(clientData, elementRecord, tkwin, d, Ttk_WinBox(tkwin),
-		    state);
+    		    state);
 }
 
 static Ttk_ElementSpec FillElementSpec = {
