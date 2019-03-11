@@ -176,6 +176,8 @@ static double		PolygonToPoint(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *pointPtr);
 static int		PolygonToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
+static void		RotatePolygon(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScalePolygon(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -202,13 +204,14 @@ Tk_ItemType tkPolygonType = {
     PolygonToPostscript,		/* postscriptProc */
     ScalePolygon,			/* scaleProc */
     TranslatePolygon,			/* translateProc */
-    GetPolygonIndex,	/* indexProc */
+    GetPolygonIndex,			/* indexProc */
     NULL,				/* icursorProc */
     NULL,				/* selectionProc */
-    PolygonInsert,		/* insertProc */
+    PolygonInsert,			/* insertProc */
     PolygonDeleteCoords,		/* dTextProc */
     NULL,				/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotatePolygon,			/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -1733,6 +1736,48 @@ GetPolygonIndex(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
     Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", NULL);
     return TCL_ERROR;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotatePolygon --
+ *
+ *	This function is called to rotate a polygon by a given amount about a
+ *	point.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the polygon is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotatePolygon(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being moved. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    PolygonItem *polyPtr = (PolygonItem *) itemPtr;
+    double *coordPtr;
+    int i;
+    double s = sin(angleRad), c = cos(angleRad);
+
+    for (i = 0, coordPtr = polyPtr->coordPtr; i < polyPtr->numPoints;
+	    i++, coordPtr += 2) {
+	double x = coordPtr[0] - originX;
+	double y = coordPtr[1] - originY;
+
+	coordPtr[0] = originX + x * c - y * s;
+	coordPtr[1] = originY + x * s + y * c;
+    }
+    ComputePolygonBbox(canvas, polyPtr);
 }
 
 /*
