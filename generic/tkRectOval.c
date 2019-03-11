@@ -148,6 +148,8 @@ static int		RectToArea(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double *areaPtr);
 static double		RectToPoint(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double *pointPtr);
+static void		RotateRectOval(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleRectOval(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double originX, double originY,
 			    double scaleX, double scaleY);
@@ -180,7 +182,8 @@ Tk_ItemType tkRectangleType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateRectOval,		/* rotateProc */
+    0, NULL, NULL
 };
 
 Tk_ItemType tkOvalType = {
@@ -204,7 +207,8 @@ Tk_ItemType tkOvalType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateRectOval,		/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -1280,6 +1284,56 @@ OvalToArea(
 	}
     }
     return result;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateRectOval --
+ *
+ *	This function is invoked to rotate a rectangle or oval item's
+ *	coordinates. It's probably unwise to rotate these by anything other
+ *	than 90-degree increments.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the rectangle or oval is rotated by angleRad about
+ *	(originX, originY), and the bounding box is updated in the generic
+ *	part of the item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static inline void
+DoRotate(
+    double originX, double originY,
+    double sine, double cosine,
+    double *xPtr, double *yPtr)
+{
+    double x = *xPtr - originX;
+    double y = *yPtr - originY;
+
+    *xPtr = originX + x * cosine - y * sine;
+    *yPtr = originY + x * sine + y * cosine;
+}
+
+static void
+RotateRectOval(
+    Tk_Canvas canvas,		/* Canvas containing rectangle. */
+    Tk_Item *itemPtr,		/* Rectangle to be scaled. */
+    double originX, double originY,
+				/* Origin about which to rotate rect. */
+    double angleRad)		/* Amount to scale in X direction. */
+{
+    RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
+    double s = sin(angleRad), c = cos(angleRad);
+    double *coords = rectOvalPtr->bbox;
+
+    DoRotate(originX, originY, s, c, &coords[0], &coords[1]);
+    DoRotate(originX, originY, s, c, &coords[2], &coords[3]);
+    ComputeRectOvalBbox(canvas, rectOvalPtr);
 }
 
 /*
