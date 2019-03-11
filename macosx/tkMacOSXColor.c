@@ -197,10 +197,12 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "TtkBackground5",			    ttkBackground, 5 },						    /* 171 */
     { "TtkBackground6",			    ttkBackground, 6 },						    /* 172 */
     { "TtkBackground7",			    ttkBackground, 7 },						    /* 173 */
-    { "TtkForeground",                      ttkForeground, 0 },						    /* 174 */
+    { "LabelColor",			    ttkForeground, 0 },						    /* 174 */
+    { "ControlTextColor",      		    ttkForeground, 1 },						    /* 175 */
+    { "DisabledControlTextColor",	    ttkForeground, 2 },						    /* 176 */
     { NULL,				    0, 0 }
 };
-#define MAX_PIXELCODE 174
+#define MAX_PIXELCODE 176
 
 /*
  *----------------------------------------------------------------------
@@ -282,8 +284,20 @@ SetCGColorComponents(
 	}
 	break;
     case ttkForeground:
-	fgColor = [[NSColor labelColor] colorUsingColorSpace:
-			   [NSColorSpace deviceRGBColorSpace]];
+	switch (entry.value) {
+	case 1:
+	    fgColor = [[NSColor controlTextColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
+	    break;
+	case 2:
+	    fgColor = [[NSColor disabledControlTextColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
+	    break;
+	default:
+	    fgColor = [[NSColor labelColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
+	    break;
+	}
 	[fgColor getComponents: rgba];
 	break;
     case clearColor:
