@@ -50,6 +50,9 @@
 #define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
 #endif /* __LP64__ */
 
+#define TTK_STATE_FIRST_TAB	TTK_STATE_USER1
+#define TTK_STATE_LAST_TAB 	TTK_STATE_USER2
+
 /*----------------------------------------------------------------------
  * +++ Utilities.
  */
@@ -157,6 +160,15 @@ static int MacOSXSetBoxColor(
  *    HITheme in Aqua, since it understands earlier versions of the OS.
  */
 
+
+static CGFloat darkButtonFill[4] = {112.0/255, 113.0/255, 115.0/255, 1.0};
+static CGFloat darkTopGradient[8] = {1.0, 1.0, 1.0, 0.3,
+				     1.0, 1.0, 1.0, 0.0};
+static CGFloat darkBackgroundGradient[8] = {0.0, 0.0, 0.0, 0.1,
+					    0.0, 0.0, 0.0, 0.25};
+static CGFloat darkSelectedGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
+					  20.0/255, 94.0/255,  206.0/255, 1.0};
+
 /*
  * MacOSXDrawDarkButton --
  *
@@ -164,73 +176,84 @@ static int MacOSXSetBoxColor(
  *    PopupButtons in the Dark Mode style.
  */
 
-static CGFloat darkButtonFill[4] = {107.0/255, 108.0/255, 110.0/255.0, 1.0};
-static CGFloat darkButtonStroke[4] = {1.0, 1.0, 1.0, 0.5};
-static CGFloat darkButtonGradient[8] = {1.0, 1.0, 1.0, 0.45, 1.0, 1.0, 1.0, 0.0};
-static CGFloat darkPopupGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
-					 20.0/255, 94.0/255, 206.0/255, 1.0};
-
 static void MacOSXDrawDarkButton(
     CGRect bounds,
-    HIThemeButtonDrawInfo *info,
+    ThemeButtonKind kind,
+    Ttk_State state,
     CGContextRef context)
 {
     CGPathRef path;
-    CGColorSpaceRef RGB = CGColorSpaceCreateDeviceRGB();
-    CGGradientRef topGradient = CGGradientCreateWithColorComponents(
-				    RGB, darkButtonGradient, NULL, 2);
-    CGFloat *fill, *stroke;
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    CGGradientRef topGradient, backgroundGradient, selectedGradient;
+    NSColor *fill;
 
     /*
-     * Compensate for the missing bottom border on dark buttons.
+     * Fill the rounded bounded rectangle with a transparent black gradient.
      */
 
-    bounds.size.height -= 1;
-    bounds.origin.y += 1;
-    CGPoint start = {bounds.origin.x + 5, bounds.origin.y};
-    CGPoint end = {bounds.origin.x + 5, bounds.origin.y + 5};
-
-    fill = darkButtonFill;
-    CGContextSetRGBFillColor(context, fill[0], fill[1], fill[2], fill[3]);
-    stroke = darkButtonStroke;
-    CGContextSetRGBStrokeColor(context, stroke[0], stroke[1], stroke[2], stroke[3]);
-    CGContextSetLineWidth(context, 0.5);
+    CGContextSetLineWidth(context, 1.0);
     CGContextClipToRect(context, bounds);
 
-    /*
-     * Fill a rounded rectangle with the dark background color.
-     */
+    backgroundGradient = CGGradientCreateWithColorComponents(
+	deviceRGB.CGColorSpace, darkBackgroundGradient, NULL, 2);
+    CGPoint backgroundEnd = {bounds.origin.x,
+			     bounds.origin.y + bounds.size.height};
+    CGContextBeginPath(context);
+    path = CGPathCreateWithRoundedRect(bounds, 5, 5, NULL);
+    CGContextAddPath(context, path);
+    CGContextClip(context);
+    CGContextDrawLinearGradient(context, backgroundGradient,
+					bounds.origin, backgroundEnd, 0);
+    CFRelease(backgroundGradient);
 
+
+    /*
+     * Fill the button face with the button fill color.
+     */
+    bounds = CGRectInset(bounds, 1, 1);
+    fill = [NSColor colorWithColorSpace: deviceRGB
+			     components: darkButtonFill
+				  count: 4];
+    CGContextSetFillColorWithColor(context, fill.CGColor);
     path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextFillPath(context);
+    CFRelease(path);
 
     /*
-     * Draw the arrow button if this is a popup.
+     * If this is a popup, draw the arrow button.
      */
 
-    if (info->kind == kThemePopupButton) {
+    if (kind == kThemePopupButton) {
 	CGFloat x, y;
 	CGRect arrowBounds = bounds;
 	arrowBounds.size.width = 16;
 	arrowBounds.origin.x += bounds.size.width - 16;
 	CGContextSaveGState(context);
-	if (info->state == kThemeStateActive) {
-	    CGGradientRef popupGradient = CGGradientCreateWithColorComponents(
-					      RGB, darkPopupGradient, NULL, 2);
-	    CGPoint popupStart = {arrowBounds.origin.x + 8,
-				  arrowBounds.origin.y};
-	    CGPoint popupEnd = {arrowBounds.origin.x + 8,
-				arrowBounds.origin.y + arrowBounds.size.height};
+
+	/*
+	 * If the toplevel is front, paint the button blue.
+	 */
+
+	if (!(state & TTK_STATE_BACKGROUND)) {
+	    selectedGradient = CGGradientCreateWithColorComponents(
+		deviceRGB.CGColorSpace, darkSelectedGradient, NULL, 2);
+	    CGPoint arrowEnd = {arrowBounds.origin.x + 8,
+	     			arrowBounds.origin.y + arrowBounds.size.height};
 	    CGContextBeginPath(context);
 	    CGContextAddPath(context, path);
 	    CGContextClip(context);
 	    CGContextClipToRect(context, arrowBounds);
-	    CGContextDrawLinearGradient(context, popupGradient,
-					popupStart, popupEnd, 0);
-	    CFRelease(popupGradient);
+	    CGContextDrawLinearGradient(context, selectedGradient,
+					arrowBounds.origin, arrowEnd, 0);
+	    CFRelease(selectedGradient);
 	}
+
+	/*
+	 * Stroke the arrows.
+	 */
+
 	CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
 	CGContextSetLineWidth(context, 1.5);
 	x = arrowBounds.origin.x + 5;
@@ -245,19 +268,23 @@ static void MacOSXDrawDarkButton(
     }
 
     /*
-     * Draw the top border with a transparent white gradient.
+     * Accent the top border with a transparent white gradient.
      */
 
+    CGPoint topEnd = {bounds.origin.x, bounds.origin.y + 3};
+    topGradient = CGGradientCreateWithColorComponents(
+    		      deviceRGB.CGColorSpace, darkTopGradient, NULL, 2);
+    CGContextSaveGState(context);
     CGContextBeginPath(context);
-    CGContextAddArc(context, bounds.origin.x + 4, bounds.origin.y + 4, 4, PI, 3*PI/2, 0);
+    CGContextAddArc(context, bounds.origin.x + 4, bounds.origin.y + 4,
+    		    4, PI, 3*PI/2, 0);
     CGContextAddArc(context, bounds.origin.x + bounds.size.width - 4,
-		    bounds.origin.y + 4, 4, 3*PI/2, 0.0, 0);
+    		    bounds.origin.y + 4, 4, 3*PI/2, 0, 0);
     CGContextReplacePathWithStrokedPath(context);
     CGContextClip(context);
-    CGContextDrawLinearGradient(context, topGradient, start, end, 0);
-    CFRelease(path);
+    CGContextDrawLinearGradient(context, topGradient, bounds.origin, topEnd, 0.0);
+    CGContextRestoreGState(context);
     CFRelease(topGradient);
-    CGColorSpaceRelease(RGB);
 }
 
 /*
@@ -399,9 +426,14 @@ static void ButtonElementSize(
 	&scratchBounds, &info, &contentBounds);
 
     paddingPtr->left = CGRectGetMinX(contentBounds);
-    paddingPtr->top = CGRectGetMinY(contentBounds);
     paddingPtr->right = CGRectGetMaxX(scratchBounds) - CGRectGetMaxX(contentBounds) + 1;
-    paddingPtr->bottom = CGRectGetMaxY(scratchBounds) - CGRectGetMaxY(contentBounds);
+    if (TkMacOSXInDarkMode(tkwin)) {
+	paddingPtr->top = CGRectGetMinY(contentBounds) + 2;
+	paddingPtr->bottom = CGRectGetMaxY(scratchBounds) - CGRectGetMaxY(contentBounds) + 3;
+    } else {
+	paddingPtr->top = CGRectGetMinY(contentBounds) + 3;
+	paddingPtr->bottom = CGRectGetMaxY(scratchBounds) - CGRectGetMaxY(contentBounds) + 2;
+    }
 
     /*
      * Now add a little extra padding to account for drop shadows.
@@ -425,7 +457,7 @@ static void ButtonElementDraw(
 
     if (TkMacOSXInDarkMode(tkwin) &&
 	(info.kind == kThemePushButton || info.kind == kThemePopupButton)) {
-	MacOSXDrawDarkButton(bounds, &info, dc.context);
+	MacOSXDrawDarkButton(bounds, info.kind, state, dc.context);
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
@@ -447,12 +479,10 @@ static Ttk_ElementSpec ButtonElementSpec = {
 
 /* Tab position logic, c.f. ttkNotebook.c TabState() */
 
-#define TTK_STATE_NOTEBOOK_FIRST	TTK_STATE_USER1
-#define TTK_STATE_NOTEBOOK_LAST 	TTK_STATE_USER2
 static Ttk_StateTable TabStyleTable[] = {
-    { kThemeTabFrontInactive, TTK_STATE_SELECTED|TTK_STATE_BACKGROUND},
+    { kThemeTabFrontInactive, TTK_STATE_SELECTED | TTK_STATE_BACKGROUND},
     { kThemeTabNonFrontInactive, TTK_STATE_BACKGROUND},
-    { kThemeTabFrontUnavailable, TTK_STATE_DISABLED|TTK_STATE_SELECTED},
+    { kThemeTabFrontUnavailable, TTK_STATE_DISABLED | TTK_STATE_SELECTED},
     { kThemeTabNonFrontUnavailable, TTK_STATE_DISABLED},
     { kThemeTabFront, TTK_STATE_SELECTED},
     { kThemeTabNonFrontPressed, TTK_STATE_PRESSED},
@@ -460,18 +490,16 @@ static Ttk_StateTable TabStyleTable[] = {
 };
 
 static Ttk_StateTable TabAdornmentTable[] = {
-    { kHIThemeTabAdornmentNone,
-	    TTK_STATE_NOTEBOOK_FIRST|TTK_STATE_NOTEBOOK_LAST},
-    {kHIThemeTabAdornmentTrailingSeparator, TTK_STATE_NOTEBOOK_FIRST},
-    {kHIThemeTabAdornmentNone, TTK_STATE_NOTEBOOK_LAST},
-    {kHIThemeTabAdornmentTrailingSeparator, 0 },
+    { kHIThemeTabAdornmentNone, TTK_STATE_FIRST_TAB | TTK_STATE_LAST_TAB},
+    { kHIThemeTabAdornmentTrailingSeparator, TTK_STATE_FIRST_TAB},
+    { kHIThemeTabAdornmentNone, TTK_STATE_LAST_TAB},
+    { kHIThemeTabAdornmentTrailingSeparator, 0 },
 };
 
 static Ttk_StateTable TabPositionTable[] = {
-    { kHIThemeTabPositionOnly,
-	    TTK_STATE_NOTEBOOK_FIRST|TTK_STATE_NOTEBOOK_LAST},
-    { kHIThemeTabPositionFirst, TTK_STATE_NOTEBOOK_FIRST},
-    { kHIThemeTabPositionLast, TTK_STATE_NOTEBOOK_LAST},
+    { kHIThemeTabPositionOnly, TTK_STATE_FIRST_TAB | TTK_STATE_LAST_TAB},
+    { kHIThemeTabPositionFirst, TTK_STATE_FIRST_TAB},
+    { kHIThemeTabPositionLast, TTK_STATE_LAST_TAB},
     { kHIThemeTabPositionMiddle, 0 },
 };
 
