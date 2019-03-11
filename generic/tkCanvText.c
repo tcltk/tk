@@ -170,6 +170,8 @@ static double		TextToPoint(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *pointPtr);
 static int		TextToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
+static void		RotateText(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		TranslateText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double deltaX, double deltaY);
 
@@ -199,7 +201,8 @@ Tk_ItemType tkTextType = {
     TextInsert,			/* insertProc */
     TextDeleteChars,		/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateText,			/* rotateProc */
+    0, NULL, NULL
 };
 
 #define ROUND(d) ((int) floor((d) + 0.5))
@@ -1245,6 +1248,42 @@ TextToArea(
 	    (int) (rectPtr[2] - rectPtr[0] + 0.5),
 	    (int) (rectPtr[3] - rectPtr[1] + 0.5),
 	    textPtr->angle);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateText --
+ *
+ *	This function is called to rotate a text item by a given amount about a
+ *	point. Note that this does *not* rotate the text of the item.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the text anchor is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateText(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being rotated. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    TextItem *textPtr = (TextItem *) itemPtr;
+    double s = sin(angleRad), c = cos(angleRad);
+    double x = textPtr->x - originX;
+    double y = textPtr->y - originY;
+
+    textPtr->x = originX + x * c - y * s;
+    textPtr->y = originY + x * s + y * c;
+    ComputeTextBbox(canvas, textPtr);
 }
 
 /*
