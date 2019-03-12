@@ -269,7 +269,7 @@ SetCGColorComponents(
     switch (entry.type) {
     case HIBrush:
 	err = ChkErr(HIThemeBrushCreateCGColor, entry.value, c);
-	break;
+	return err;
     case rgbColor:
 	rgba[0] = ((pixel >> 16) & 0xff) / 255.0;
 	rgba[1] = ((pixel >>  8) & 0xff) / 255.0;
@@ -294,9 +294,15 @@ SetCGColorComponents(
 			  [NSColorSpace deviceRGBColorSpace]];
 	    break;
 	default:
-	    fgColor = [[NSColor labelColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
-	    break;
+	    if ([NSApp macMinorVersion] < 10) {
+		err = ChkErr(HIThemeBrushCreateCGColor,
+			     kThemeBrushDialogBackgroundActive, c);
+		return err;
+	    } else {
+		fgColor = [[NSColor labelColor] colorUsingColorSpace:
+			      [NSColorSpace deviceRGBColorSpace]];
+		break;
+	    }
 	}
 	[fgColor getComponents: rgba];
 	break;
@@ -337,9 +343,10 @@ SetCGColorComponents(
 
 MODULE_SCOPE Bool
 TkMacOSXInDarkMode(Tk_Window tkwin) {
+    static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
     TkWindow *winPtr = (TkWindow*)tkwin;
     NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
-    if (view && [view.effectiveAppearance.name isEqualToString:NSAppearanceNameDarkAqua]) {
+    if (view && [view.effectiveAppearance.name isEqualToString:darkAqua]) {
 	return True;
     } else {
 	return false;

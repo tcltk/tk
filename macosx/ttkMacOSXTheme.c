@@ -163,6 +163,8 @@ static int MacOSXSetBoxColor(
 
 static CGFloat darkButtonFill[4] = {112.0/255, 113.0/255, 115.0/255, 1.0};
 static CGFloat darkDisabledButtonFill[4] = {86.0/255, 87.0/255, 89.0/255, 1.0};
+static CGFloat darkInactiveSelectedTab[4] = {159.0/255, 160.0/255, 161.0/255, 1.0};
+static CGFloat darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
 static CGFloat darkTopGradient[8] = {1.0, 1.0, 1.0, 0.3,
 				     1.0, 1.0, 1.0, 0.0};
 static CGFloat darkBackgroundGradient[8] = {0.0, 0.0, 0.0, 0.1,
@@ -189,7 +191,7 @@ static void MacOSXDrawDarkButton(
     NSColor *fill;
 
     /*
-     * Fill the rounded bounded rectangle with a transparent black gradient.
+     * Fill the rounded bounding rectangle with a transparent black gradient.
      */
 
     CGContextSetLineWidth(context, 1.0);
@@ -213,7 +215,7 @@ static void MacOSXDrawDarkButton(
      */
     bounds = CGRectInset(bounds, 1, 1);
     if (state & TTK_STATE_DISABLED) {
-    fill = [NSColor colorWithColorSpace: deviceRGB
+	fill = [NSColor colorWithColorSpace: deviceRGB
 			     components: darkDisabledButtonFill
 				  count: 4];
     } else {
@@ -246,7 +248,7 @@ static void MacOSXDrawDarkButton(
 	if (!(state & TTK_STATE_BACKGROUND)) {
 	    selectedGradient = CGGradientCreateWithColorComponents(
 		deviceRGB.CGColorSpace, darkSelectedGradient, NULL, 2);
-	    CGPoint arrowEnd = {arrowBounds.origin.x + 8,
+	    CGPoint arrowEnd = {arrowBounds.origin.x,
 	     			arrowBounds.origin.y + arrowBounds.size.height};
 	    CGContextBeginPath(context);
 	    CGContextAddPath(context, path);
@@ -292,6 +294,158 @@ static void MacOSXDrawDarkButton(
     CGContextDrawLinearGradient(context, topGradient, bounds.origin, topEnd, 0.0);
     CGContextRestoreGState(context);
     CFRelease(topGradient);
+}
+
+/*
+ * MacOSXDrawDarkTab --
+ *
+ *    This is a standalone drawing procedure which draws Tabbed Pane
+ *    Tabs in the Dark Mode style.
+ */
+
+static void MacOSXDrawDarkTab(
+    CGRect bounds,
+    Ttk_State state,
+    CGContextRef context)
+{
+    CGPathRef path;
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    CGGradientRef topGradient, backgroundGradient, selectedGradient;
+    NSColor *fill, *stroke;
+    CGRect originalBounds= bounds;
+    
+    CGContextSetLineWidth(context, 1.0);
+    CGContextClipToRect(context, bounds);
+
+    /*
+     * Extend the bounds to one or both sides so the rounded part will be
+     * clipped off.
+     */
+
+    if (!(state & TTK_STATE_FIRST_TAB)) {
+	bounds.origin.x -= 10;
+	bounds.size.width += 10;
+    }
+
+    if (!(state & TTK_STATE_LAST_TAB)) {
+	bounds.size.width += 10;
+    }
+
+    
+    /*
+     * Fill the rounded bounding rectangle with a transparent black gradient.
+     */
+
+    backgroundGradient = CGGradientCreateWithColorComponents(
+            deviceRGB.CGColorSpace, darkBackgroundGradient, NULL, 2);
+    CGPoint backgroundEnd = {bounds.origin.x,
+			     bounds.origin.y + bounds.size.height};
+    CGContextBeginPath(context);
+    path = CGPathCreateWithRoundedRect(bounds, 5, 5, NULL);
+    CGContextAddPath(context, path);
+    CGContextClip(context);
+    CGContextDrawLinearGradient(context, backgroundGradient,
+				bounds.origin, backgroundEnd, 0);
+    CFRelease(backgroundGradient);
+    bounds = CGRectInset(bounds, 1, 1);
+    
+    /*
+     * Fill the button face with the button fill color.  Use the
+     * background color if the tab is not selected, otherwise the
+     * blue or gray gradient.
+     */
+
+    if (!(state & TTK_STATE_SELECTED)) {
+	if (state & TTK_STATE_DISABLED) {
+	    fill = [NSColor colorWithColorSpace: deviceRGB
+				     components: darkDisabledButtonFill
+					  count: 4];
+	} else {
+	    fill = [NSColor colorWithColorSpace: deviceRGB
+				     components: darkButtonFill
+					  count: 4];
+	}
+	CGContextSetFillColorWithColor(context, fill.CGColor);
+	path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
+	CGContextBeginPath(context);
+	CGContextAddPath(context, path);
+	CGContextFillPath(context);
+	CFRelease(path);
+
+	/*
+	 * Draw a separator line on the left side of the tab if it
+	 * not first.
+	 */
+
+	if (!(state & TTK_STATE_FIRST_TAB)) {
+	    CGContextSaveGState(context);
+	    CGContextSetShouldAntialias(context, false);
+	    stroke = [NSColor colorWithColorSpace: deviceRGB
+				       components: darkTabSeparator
+					    count: 4];
+	    CGContextSetStrokeColorWithColor(context, stroke.CGColor);
+	    CGContextBeginPath(context);
+	    CGContextMoveToPoint(context, originalBounds.origin.x,
+	        originalBounds.origin.y + 1);
+	    CGContextAddLineToPoint(context, originalBounds.origin.x,
+	        originalBounds.origin.y + originalBounds.size.height - 1);
+	    CGContextStrokePath(context);
+	    CGContextRestoreGState(context);
+	}
+    } else {
+	
+	/*
+	 * This is the selected tab; paint it.  If it is first, cover up
+	 * the separator line drawn by the second one.
+	 */
+	if ((state && TTK_STATE_FIRST_TAB) && !(state && TTK_STATE_LAST_TAB)) {
+	    bounds.size.width += 1;
+	}
+
+	if (!(state & TTK_STATE_BACKGROUND)) {
+	    selectedGradient = CGGradientCreateWithColorComponents(
+		deviceRGB.CGColorSpace, darkSelectedGradient, NULL, 2);
+	    CGPoint end = {bounds.origin.x, bounds.origin.y + bounds.size.height};
+	    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
+	    CGContextBeginPath(context);
+	    CGContextAddPath(context, path);
+	    CGContextClip(context);
+	    CGContextDrawLinearGradient(context, selectedGradient,
+				    bounds.origin, end, 0);
+	    CFRelease(path);
+	    CFRelease(selectedGradient);
+	} else {
+	    fill = [NSColor colorWithColorSpace: deviceRGB
+				     components: darkInactiveSelectedTab
+					  count: 4];
+	    CGContextSetFillColorWithColor(context, fill.CGColor);
+	    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
+	    CGContextBeginPath(context);
+	    CGContextAddPath(context, path);
+	    CGContextFillPath(context);
+	    CFRelease(path);
+	}
+
+	/*
+	 * Accent the top border with a transparent white gradient.
+	 */
+
+	CGPoint topEnd = {bounds.origin.x, bounds.origin.y + 3};
+	topGradient = CGGradientCreateWithColorComponents(
+		          deviceRGB.CGColorSpace, darkTopGradient, NULL, 2);
+	CGContextSaveGState(context);
+	CGContextBeginPath(context);
+	CGContextAddArc(context, bounds.origin.x + 4, bounds.origin.y + 4,
+			4, PI, 3*PI/2, 0);
+	CGContextAddArc(context, bounds.origin.x + bounds.size.width - 4,
+			bounds.origin.y + 4, 4, 3*PI/2, 0, 0);
+	CGContextReplacePathWithStrokedPath(context);
+	CGContextClip(context);
+	CGContextDrawLinearGradient(context, topGradient, bounds.origin,
+				    topEnd, 0.0);
+	CFRelease(topGradient);
+	CGContextRestoreGState(context);
+    }
 }
 
 /*
@@ -572,7 +726,11 @@ static void TabElementDraw(
 	.position = Ttk_StateTableLookup(TabPositionTable, state),
     };
     BEGIN_DRAWING(d)
-    ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation, NULL);
+    if (TkMacOSXInDarkMode(tkwin)) {
+	MacOSXDrawDarkTab(bounds, state, dc.context);
+    } else {
+	ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation, NULL);
+    }
     END_DRAWING
 }
 
