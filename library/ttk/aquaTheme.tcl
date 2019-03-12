@@ -45,9 +45,10 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook.Tab -foreground white
 	ttk::style map TNotebook.Tab \
 	    -foreground {
-		{background !disabled} black
-		disabled darkGray
-		!selected black}
+		{background !disabled !selected} systemControlTextColor
+		{background selected} black
+		disabled systemDisabledControlTextColor
+		!selected systemControlTextColor}
 
 	# Combobox:
 	ttk::style configure TCombobox -postoffset {5 -2 -10 0}
