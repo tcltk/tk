@@ -398,7 +398,7 @@ static void MacOSXDrawDarkTab(
 	 * This is the selected tab; paint it.  If it is first, cover up
 	 * the separator line drawn by the second one.
 	 */
-	if ((state && TTK_STATE_FIRST_TAB) && !(state && TTK_STATE_LAST_TAB)) {
+	if ((state & TTK_STATE_FIRST_TAB) && !(state & TTK_STATE_LAST_TAB)) {
 	    bounds.size.width += 1;
 	}
 
