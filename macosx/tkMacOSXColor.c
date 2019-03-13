@@ -31,8 +31,8 @@ enum colorType {
     HIBrush,       /* The value is a HITheme brush color table index. */
     HIText,        /* The value is a HITheme text color table index. */
     HIBackground,  /* The value is a HITheme background color table index. */
-    ttkBackground, /* The value can be used as a parameter.*/  
-    ttkForeground, /* The value can be used as a parameter.*/  
+    ttkBackground, /* The value can be used as a parameter.*/
+    ttkForeground, /* The value can be used as a parameter.*/
 };
 
 /*
@@ -295,12 +295,13 @@ SetCGColorComponents(
 	    break;
 	default:
 	    if ([NSApp macMinorVersion] < 10) {
-		err = ChkErr(HIThemeBrushCreateCGColor,
-			     kThemeBrushDialogBackgroundActive, c);
-		return err;
+	    fgColor = [[NSColor textColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
 	    } else {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 		fgColor = [[NSColor labelColor] colorUsingColorSpace:
 			      [NSColorSpace deviceRGBColorSpace]];
+#endif
 		break;
 	    }
 	}
@@ -317,7 +318,7 @@ SetCGColorComponents(
      */
 
     case HIText:
-    case HIBackground:	
+    case HIBackground:
     default:
 	break;
     }
@@ -343,6 +344,9 @@ SetCGColorComponents(
 
 MODULE_SCOPE Bool
 TkMacOSXInDarkMode(Tk_Window tkwin) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
+    return false;
+#else
     static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
     TkWindow *winPtr = (TkWindow*)tkwin;
     NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
@@ -351,6 +355,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin) {
     } else {
 	return false;
     }
+#endif
 }
 
 
@@ -576,7 +581,7 @@ TkMacOSXSetColorInContext(
     if (!cgColor && GetEntryFromPixelCode((pixel >> 24) & 0xff, &entry)) {
 	switch (entry.type) {
 	case HIBrush:
-	    err = ChkErr(HIThemeSetFill, entry.value, NULL, context,   
+	    err = ChkErr(HIThemeSetFill, entry.value, NULL, context,
 		    kHIThemeOrientationNormal);
 	    if (err == noErr) {
 		err = ChkErr(HIThemeSetStroke, entry.value, NULL, context,
@@ -607,7 +612,7 @@ TkMacOSXSetColorInContext(
     }
     if (err != noErr) {
 	TkMacOSXDbgMsg("Ignored unknown pixel value 0x%lx", pixel);
-    } 
+    }
 }
 
 /*
