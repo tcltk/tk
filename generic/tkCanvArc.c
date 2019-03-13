@@ -1520,23 +1520,21 @@ RotateArc(
     double angleRad)
 {
     ArcItem *arcPtr = (ArcItem *) itemPtr;
-    double x, y, nx, ny;
-    double s = sin(angleRad);
-    double c = cos(angleRad);
+    double s = sin(angleRad), c = cos(angleRad);
+    double coords[4];
 
-    x = arcPtr->bbox[0] - originX;
-    y = arcPtr->bbox[1] - originY;
-    nx = x * c - y * s;
-    ny = x * s + y * c;
-    arcPtr->bbox[0] = nx + originX;
-    arcPtr->bbox[1] = ny + originY;
+    memcpy(coords, arcPtr->bbox, sizeof(coords));
+    TkRotatePoint(originX, originY, s, c, &coords[0], &coords[1]);
+    TkRotatePoint(originX, originY, s, c, &coords[2], &coords[3]);
 
-    x = arcPtr->bbox[2] - originX;
-    y = arcPtr->bbox[3] - originY;
-    nx = x * c - y * s;
-    ny = x * s + y * c;
-    arcPtr->bbox[2] = nx + originX;
-    arcPtr->bbox[3] = ny + originY;
+    /*
+     * Sort the points for the bounding box.
+     */
+
+    arcPtr->bbox[0] = (coords[0] < coords[2]) ? coords[0] : coords[2];
+    arcPtr->bbox[1] = (coords[1] < coords[3]) ? coords[1] : coords[3];
+    arcPtr->bbox[2] = (coords[0] < coords[2]) ? coords[2] : coords[0];
+    arcPtr->bbox[3] = (coords[1] < coords[3]) ? coords[3] : coords[1];
 
     /*
      * TODO: update the arc endpoints?

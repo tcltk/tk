@@ -789,16 +789,9 @@ RotateImage(
     double angleRad)
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
-    double x, y, nx, ny;
-    double s = sin(angleRad);
-    double c = cos(angleRad);
 
-    x = imgPtr->x - originX;
-    y = imgPtr->y - originY;
-    nx = x * c - y * s;
-    ny = x * s + y * c;
-    imgPtr->x = nx + originX;
-    imgPtr->y = ny + originY;
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &imgPtr->x, &imgPtr->y);
     ComputeImageBbox(canvas, imgPtr);
 }
 

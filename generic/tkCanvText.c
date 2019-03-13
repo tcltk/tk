@@ -1277,12 +1277,9 @@ RotateText(
     double angleRad)		/* Amount by which item is to be rotated. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    double s = sin(angleRad), c = cos(angleRad);
-    double x = textPtr->x - originX;
-    double y = textPtr->y - originY;
 
-    textPtr->x = originX + x * c - y * s;
-    textPtr->y = originY + x * s + y * c;
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &textPtr->x, &textPtr->y);
     ComputeTextBbox(canvas, textPtr);
 }
 

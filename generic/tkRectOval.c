@@ -1306,19 +1306,6 @@ OvalToArea(
  *--------------------------------------------------------------
  */
 
-static inline void
-DoRotate(
-    double originX, double originY,
-    double sine, double cosine,
-    double *xPtr, double *yPtr)
-{
-    double x = *xPtr - originX;
-    double y = *yPtr - originY;
-
-    *xPtr = originX + x * cosine - y * sine;
-    *yPtr = originY + x * sine + y * cosine;
-}
-
 static void
 RotateRectOval(
     Tk_Canvas canvas,		/* Canvas containing rectangle. */
@@ -1329,10 +1316,20 @@ RotateRectOval(
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
     double s = sin(angleRad), c = cos(angleRad);
-    double *coords = rectOvalPtr->bbox;
+    double coords[4];
 
-    DoRotate(originX, originY, s, c, &coords[0], &coords[1]);
-    DoRotate(originX, originY, s, c, &coords[2], &coords[3]);
+    memcpy(coords, rectOvalPtr->bbox, sizeof(coords));
+    TkRotatePoint(originX, originY, s, c, &coords[0], &coords[1]);
+    TkRotatePoint(originX, originY, s, c, &coords[2], &coords[3]);
+
+    /*
+     * Sort the points for the bounding box.
+     */
+
+    rectOvalPtr->bbox[0] = (coords[0] < coords[2]) ? coords[0] : coords[2];
+    rectOvalPtr->bbox[1] = (coords[1] < coords[3]) ? coords[1] : coords[3];
+    rectOvalPtr->bbox[2] = (coords[0] < coords[2]) ? coords[2] : coords[0];
+    rectOvalPtr->bbox[3] = (coords[1] < coords[3]) ? coords[3] : coords[1];
     ComputeRectOvalBbox(canvas, rectOvalPtr);
 }
 
