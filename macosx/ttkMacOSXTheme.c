@@ -96,6 +96,7 @@ static Ttk_StateTable ThemeStateTable[] = {
 */
 };
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 /*----------------------------------------------------------------------
  * +++ Support for contrasting background colors when GroupBoxes
  * or Tabbed panes are nested inside each other.
@@ -162,7 +163,7 @@ static int MacOSXGetBoxColor(
 }
 
 /*
- * MacOSXDrawDarkGroupBox --
+ * MacOSXDrawGroupBox --
  *
  *    This is a standalone drawing procedure which draws the contrasting
  *    rounded rectangular box for LabelFrames and Notebook panes.
@@ -191,6 +192,9 @@ static void MacOSXDrawGroupBox(
     borderColor = [NSColor colorWithColorSpace: deviceRGB components: border
 					 count: 4];
     CGContextSetFillColorWithColor(context, borderColor.CGColor);
+    [borderColor getComponents: fill];
+    CGContextSetRGBFillColor(context, fill[0], fill[1], fill[2], fill[3]);
+
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextReplacePathWithStrokedPath(context);
@@ -198,6 +202,9 @@ static void MacOSXDrawGroupBox(
     CFRelease(path);
 }
 
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED > 1080 */
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 /*----------------------------------------------------------------------
  * +++ Drawing procedures for widgets in Apple's "Dark Mode" (10.14 and up).
  *
@@ -516,6 +523,8 @@ static void MacOSXDrawDarkSeparator(
     CGContextFillRect(context, bounds);
 }
 
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED < 101300 */
+
 /*----------------------------------------------------------------------
  * +++ Button element: Used for elements drawn with DrawThemeButton.
  */
@@ -640,12 +649,16 @@ static void ButtonElementDraw(
     CGRect bounds = BoxToRect(d, Ttk_PadBox(b, ButtonMargins));
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state);
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin) &&
 	(info.kind == kThemePushButton || info.kind == kThemePopupButton)) {
 	MacOSXDrawDarkButton(bounds, info.kind, state, dc.context);
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
+#else
+    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+#endif
     END_DRAWING
 }
 
@@ -750,11 +763,15 @@ static void TabElementDraw(
 	.position = Ttk_StateTableLookup(TabPositionTable, state),
     };
     BEGIN_DRAWING(d)
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	MacOSXDrawDarkTab(bounds, state, dc.context);
     } else {
 	ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation, NULL);
     }
+#else
+    ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation, NULL);
+#endif
     END_DRAWING
 }
 
@@ -787,7 +804,21 @@ static void PaneElementDraw(
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 10800
     MacOSXDrawGroupBox(bounds, dc.context, tkwin);
+#else
+    HIThemeTabPaneDrawInfo info = {
+	.version = 1,
+	.state = Ttk_StateTableLookup(ThemeStateTable, state),
+	.direction = kThemeTabNorth,
+	.size = kHIThemeTabSizeNormal,
+	.kind = kHIThemeTabKindNormal,
+	.adornment = kHIThemeTabPaneAdornmentNormal,
+    };
+    bounds.origin.y -= kThemeMetricTabFrameOverlap;
+    bounds.size.height += kThemeMetricTabFrameOverlap;
+    ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
+#endif
     END_DRAWING
     [TkMacOSXDrawableView(macWin) setNeedsDisplay:YES];
     if (macWin != NULL) {
@@ -829,7 +860,16 @@ static void GroupElementDraw(
     CGRect bounds = BoxToRect(d, b);
 
     BEGIN_DRAWING(d)
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 10800
     MacOSXDrawGroupBox(bounds, dc.context, tkwin);
+#else
+    const HIThemeGroupBoxDrawInfo info = {
+	.version = 0,
+	.state = Ttk_StateTableLookup(ThemeStateTable, state),
+	.kind = kHIThemeGroupBoxKindPrimaryOpaque,
+    };
+    ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
+#endif
     END_DRAWING
     if (winPtr->privatePtr != NULL) {
 	winPtr->privatePtr->flags |= TTK_HAS_DARKER_BG;
@@ -1234,11 +1274,15 @@ static void SeparatorElementDraw(
     };
 
     BEGIN_DRAWING(d)
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	MacOSXDrawDarkSeparator(bounds, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawSeparator, &bounds, &info, dc.context, HIOrientation);
     }
+#else
+    ChkErr(HIThemeDrawSeparator, &bounds, &info, dc.context, HIOrientation);
+#endif
     END_DRAWING
 }
 
@@ -1349,6 +1393,7 @@ static void FillElementDraw(
 {
     CGRect bounds = BoxToRect(d, b);
     BEGIN_DRAWING(d)
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 10800
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *bgColor;
     CGFloat fill[4];
@@ -1358,7 +1403,14 @@ static void FillElementDraw(
     CGContextSetFillColorSpace(dc.context, deviceRGB.CGColorSpace);
     CGContextSetFillColorWithColor(dc.context, bgColor.CGColor);
     CGContextFillRect(dc.context, bounds);
+#else
+    ThemeBrush brush = (state & TTK_STATE_BACKGROUND)
+	    ? kThemeBrushModelessDialogBackgroundInactive
+	    : kThemeBrushModelessDialogBackgroundActive;
+    ChkErr(HIThemeSetFill, brush, NULL, dc.context, HIOrientation);
     //QDSetPatternOrigin(PatternOrigin(tkwin, d));
+    CGContextFillRect(dc.context, bounds);
+#endif
     END_DRAWING
 }
 
