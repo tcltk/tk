@@ -97,24 +97,38 @@ static Ttk_StateTable ThemeStateTable[] = {
 };
 
 /*----------------------------------------------------------------------
- * +++ Support for contrasting background colors when nesting GroupBoxes
- * or Tabbed panes.
+ * +++ Support for contrasting background colors when GroupBoxes
+ * or Tabbed panes are nested inside each other.
  */
 
-static int MacOSXSetBoxColor(
+/*
+ * For systems older than 10.14, [NSColor windowBackGroundColor] generates
+ * garbage when called from this function.  In 10.14 it works correctly,
+ * and must be used in order to have a background color which responds
+ * to Dark Mode.  So we use this hard-wired RGBA color on the older systems
+ * which don't support Dark Mode anyway.
+ */
+
+static CGFloat windowBackground[4] = {235.0/255, 235.0/255, 235.0/255, 1.0};
+
+static int MacOSXGetBoxColor(
     CGContextRef context,
     Tk_Window tkwin,
-    int depth)
+    int depth,
+    CGFloat *fill)
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *windowColor = [[NSColor windowBackgroundColor]
-			       colorUsingColorSpace: deviceRGB];
-    NSColor *bgColor;
-    CGFloat intensity, fill[4];
-    [windowColor getComponents: fill];
-    intensity = fill[0] + fill[1] + fill[2];
-    int isDark = (intensity < 1.5);
+    if ([NSApp macMinorVersion] > 13) {
+        NSColor *windowColor = [[NSColor windowBackgroundColor]
+				   colorUsingColorSpace: deviceRGB];
+        [windowColor getComponents: fill];
+    } else {
+	for (int i = 0; i < 4; i++) {
+	    fill[i] = windowBackground[i];
+	}
+    }
+    int isDark  = (fill[0] + fill[1] + fill[2] < 1.5);
 
     /*
      * Compute the nesting depth of the widget.
@@ -144,11 +158,44 @@ static int MacOSXSetBoxColor(
 	    fill[i] -= (depth*8.0)/255.0;
 	}
     }
+    return depth;
+}
+
+/*
+ * MacOSXDrawDarkGroupBox --
+ *
+ *    This is a standalone drawing procedure which draws the contrasting
+ *    rounded rectangular box for LabelFrames and Notebook panes.
+ */
+
+static void MacOSXDrawGroupBox(
+    CGRect bounds,
+    CGContextRef context,
+    Tk_Window tkwin)
+{
+    CGPathRef path;
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *borderColor, *bgColor;
+    static CGFloat border[4] = {1.0, 1.0, 1.0, 0.25};
+    CGFloat fill[4];
+    MacOSXGetBoxColor(context, tkwin, 1, fill);
     bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
 				     count: 4];
     CGContextSetFillColorSpace(context, deviceRGB.CGColorSpace);
     CGContextSetFillColorWithColor(context, bgColor.CGColor);
-    return depth;
+    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
+    CGContextClipToRect(context, bounds);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextFillPath(context);
+    borderColor = [NSColor colorWithColorSpace: deviceRGB components: border
+					 count: 4];
+    CGContextSetFillColorWithColor(context, borderColor.CGColor);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextReplacePathWithStrokedPath(context);
+    CGContextFillPath(context);
+    CFRelease(path);
 }
 
 /*----------------------------------------------------------------------
@@ -313,7 +360,7 @@ static void MacOSXDrawDarkTab(
     CGGradientRef topGradient, backgroundGradient, selectedGradient;
     NSColor *fill, *stroke;
     CGRect originalBounds= bounds;
-    
+
     CGContextSetLineWidth(context, 1.0);
     CGContextClipToRect(context, bounds);
 
@@ -331,7 +378,6 @@ static void MacOSXDrawDarkTab(
 	bounds.size.width += 10;
     }
 
-    
     /*
      * Fill the rounded bounding rectangle with a transparent black gradient.
      */
@@ -348,10 +394,10 @@ static void MacOSXDrawDarkTab(
 				bounds.origin, backgroundEnd, 0);
     CFRelease(backgroundGradient);
     bounds = CGRectInset(bounds, 1, 1);
-    
+
     /*
      * Fill the button face with the button fill color.  Use the
-     * background color if the tab is not selected, otherwise the
+     * background color if the tab is not selected, otherwise use a
      * blue or gray gradient.
      */
 
@@ -393,11 +439,12 @@ static void MacOSXDrawDarkTab(
 	    CGContextRestoreGState(context);
 	}
     } else {
-	
+
 	/*
 	 * This is the selected tab; paint it.  If it is first, cover up
 	 * the separator line drawn by the second one.
 	 */
+
 	if ((state & TTK_STATE_FIRST_TAB) && !(state & TTK_STATE_LAST_TAB)) {
 	    bounds.size.width += 1;
 	}
@@ -449,36 +496,11 @@ static void MacOSXDrawDarkTab(
 }
 
 /*
- * MacOSXDrawDarkGroupBox --
+ * MacOSXDrawDarkSeparator --
  *
- *    This is a standalone drawing procedure which draws the contrasting
- *    rounded rectangular contrasting box for Labelframes and Notebook panes
+ *    This is a standalone drawing procedure which draws a separator widget
+ *    in Dark Mode.
  */
-
-static void MacOSXDrawDarkGroupBox(
-    CGRect bounds,
-    CGContextRef context,
-    Tk_Window tkwin)
-{
-    CGPathRef path;
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *borderColor;
-    static CGFloat border[4] = {1.0, 1.0, 1.0, 0.25};
-    MacOSXSetBoxColor(context, tkwin, 1);
-    borderColor = [NSColor colorWithColorSpace: deviceRGB components: border
-					 count: 4];
-    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
-    CGContextClipToRect(context, bounds);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextFillPath(context);
-    CGContextSetFillColorWithColor(context, borderColor.CGColor);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextReplacePathWithStrokedPath(context);
-    CGContextFillPath(context);
-    CFRelease(path);
-}
 
 static void MacOSXDrawDarkSeparator(
     CGRect bounds,
@@ -501,7 +523,7 @@ static void MacOSXDrawDarkSeparator(
 /*
  * Extra margins to account for drop shadow.
  */
-static Ttk_Padding ButtonMargins = {2,2,2,2};
+static Ttk_Padding ButtonMargins = {2, 2, 2, 2};
 
 #define NoThemeMetric 0xFFFFFFFF
 
@@ -538,6 +560,7 @@ static Ttk_StateTable ButtonAdornmentTable[] = {
  * computeButtonDrawInfo --
  *    Fill in an appearance manager HIThemeButtonDrawInfo record.
  */
+
 static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
     ThemeButtonParams *params, Ttk_State state)
 {
@@ -583,6 +606,7 @@ static void ButtonElementSize(
      * for the content bounds of a dummy rectangle, then use
      * the difference as the padding.
      */
+
     ChkErr(HIThemeGetButtonContentBounds,
 	&scratchBounds, &info, &contentBounds);
 
@@ -745,6 +769,7 @@ static Ttk_ElementSpec TabElementSpec = {
 /*
  * Notebook panes:
  */
+
 static void PaneElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
@@ -757,26 +782,16 @@ static void PaneElementDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
+    MacDrawable *macWin = winPtr->privatePtr;
     CGRect bounds = BoxToRect(d, b);
-    HIThemeTabPaneDrawInfo info = {
-	.version = 1,
-	.state = Ttk_StateTableLookup(ThemeStateTable, state),
-	.direction = kThemeTabNorth,
-	.size = kHIThemeTabSizeNormal,
-	.kind = kHIThemeTabKindNormal,
-	.adornment = kHIThemeTabPaneAdornmentNormal,
-    };
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
-    if (TkMacOSXInDarkMode(tkwin)) {
-	MacOSXDrawDarkGroupBox(bounds, dc.context, tkwin);
-    } else {
-	ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
-    }
+    MacOSXDrawGroupBox(bounds, dc.context, tkwin);
     END_DRAWING
-    if (winPtr->privatePtr != NULL) {
-	winPtr->privatePtr->flags |= TTK_HAS_DARKER_BG;
+    [TkMacOSXDrawableView(macWin) setNeedsDisplay:YES];
+    if (macWin != NULL) {
+	macWin->flags |= TTK_HAS_DARKER_BG;
     }
 }
 
@@ -798,6 +813,7 @@ static Ttk_ElementSpec PaneElementSpec = {
  * "Maximum of 2 pixels thick" is apparently a lie;
  * looks more like 4 to me with shading.
  */
+
 static void GroupElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
@@ -812,17 +828,8 @@ static void GroupElementDraw(
     TkWindow *winPtr = (TkWindow *)tkwin;
     CGRect bounds = BoxToRect(d, b);
 
-    const HIThemeGroupBoxDrawInfo info = {
-	.version = 0,
-	.state = Ttk_StateTableLookup(ThemeStateTable, state),
-	.kind = kHIThemeGroupBoxKindPrimary,
-    };
     BEGIN_DRAWING(d)
-    if (TkMacOSXInDarkMode(tkwin)) {
-	MacOSXDrawDarkGroupBox(bounds, dc.context, tkwin);
-    } else {
-	ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
-    }
+    MacOSXDrawGroupBox(bounds, dc.context, tkwin);
     END_DRAWING
     if (winPtr->privatePtr != NULL) {
 	winPtr->privatePtr->flags |= TTK_HAS_DARKER_BG;
@@ -878,6 +885,7 @@ static void EntryElementDraw(
     /*
      * Erase w/background color:
      */
+
     XFillRectangle(Tk_Display(tkwin), d,
 	    Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
 	    inner.x,inner.y, inner.width, inner.height);
@@ -1245,6 +1253,7 @@ static Ttk_ElementSpec SeparatorElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Size grip element.
  */
+
 static const ThemeGrowDirection sizegripGrowDirection
 	= kThemeGrowRight|kThemeGrowDown;
 
@@ -1303,28 +1312,29 @@ static Ttk_ElementSpec SizegripElementSpec = {
  *    not allowing user control of the background or highlight colors of ttk
  *    widgets.
  *
- *    The first attempt at implementing this attempted to match colors by
- *    drawing all widgets with the system background color used for dialog
- *    windows.  (In particular, ttk widgets were meant for use in windows like
- *    those in the Apple preferences application.)  The code chose either the
- *    active background or the inactive background based on the ttk state.
- *    (Note that current OS releases use the same color #ebebeb in both
- *    states.)
+ *    This job is made more complicated by the fact that the Appkit GroupBox
+ *    (used for ttk LabelFrames) and TabbedPane (used for the Notebook widget)
+ *    both place their content inside a rectangle with rounded corners that has
+ *    a color which contrasts with the dialog background color.  Moreover,
+ *    although the Apple human interface guidelines recommend against doing so,
+ *    there are times when one wants to nest these widgets, for example having
+ *    a GroupBox inside of a TabbedPane.  To have the right contrast, each
+ *    level of nesting requires a different color.
  *
- *    Unfortunately, there is a problem with this approach.  The Appkit
- *    GroupBox (used for ttk LabelFrames) and TabbedPane (used for the Notebook
- *    widget) both place their content inside a rectangle with rounded corners
- *    which is darker than the dialog background color.  Moreover, although the
- *    Apple human interface guidelines recommend against doing so, there are
- *    times when one wants to nest these widgets, for example having a GroupBox
- *    inside of a TabbedPane.  In this case the inner widget uses an even
- *    darker rounded rectangle.  In Mojave's preferences panes, these darker
- *    gray colors appear to be #e3e4e3 and #dbdcdb respectively.  The first of
- *    these is close but not quite equal to the system color
- *    BackgroundSecondaryGroupBox, which appears to be #e3e3e3.  The HITheme
- *    library, which we use to draw these widgets, uses #e2e3e3, which again is
- *    slightly different.  Since none of these quite match, we use a hardwired
- *    RGB color which matches that used by HITheme.
+ *    Previous Tk releases used the HIThemeDrawGroupBox routine This meant that
+ *    the best that could be done was to set the GroupBox to be of kind
+ *    kHIThemeGroupBoxKindPrimaryOpaque, and set its fill color to be the
+ *    system background color.  If widgets inside the box were drawn with the
+ *    system background color the backgrounds would match.  But this produces a
+ *    GroupBox with no contrast, so the only visual clue is a faint
+ *    highlighting around the top of the GroupBox.  Moreover, the TabbedPane
+ *    does not have an Opaque version, so while it is drawn inside a
+ *    contrasting rounded rectangle, the widgets inside the pane needed to be
+ *    enclosed in a frame with the system background color. This added a visual
+ *    artifact since the frame's background color does not match the Pane's
+ *    background color.  That code has been replaced with the standalone
+ *    drawing procedure macOSXDrawGroupBox, which draws a rounded rectangle
+ *    with an appropriate contrasting background color.
  *
  *    Patterned backgrounds, which are now obsolete, should be aligned with the
  *    coordinate system of the top-level window.  Apparently failing to do this
@@ -1339,7 +1349,14 @@ static void FillElementDraw(
 {
     CGRect bounds = BoxToRect(d, b);
     BEGIN_DRAWING(d)
-    MacOSXSetBoxColor(dc.context, tkwin, 0);
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *bgColor;
+    CGFloat fill[4];
+    MacOSXGetBoxColor(dc.context, tkwin, 0, fill);
+    bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
+				     count: 4];
+    CGContextSetFillColorSpace(dc.context, deviceRGB.CGColorSpace);
+    CGContextSetFillColorWithColor(dc.context, bgColor.CGColor);
     CGContextFillRect(dc.context, bounds);
     //QDSetPatternOrigin(PatternOrigin(tkwin, d));
     END_DRAWING
@@ -1382,6 +1399,7 @@ static Ttk_ElementSpec BackgroundElementSpec = {
  *    /apple_ref/doc/uid/TP30000243/C005321>
  *
  */
+
 static void ToolbarBackgroundElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
@@ -1456,6 +1474,7 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
 /*
  * Disclosure triangle:
  */
+
 #define TTK_TREEVIEW_STATE_OPEN 	TTK_STATE_USER1
 #define TTK_TREEVIEW_STATE_LEAF 	TTK_STATE_USER2
 static Ttk_StateTable DisclosureValueTable[] = {
