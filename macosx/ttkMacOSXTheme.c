@@ -215,16 +215,118 @@ static void MacOSXDrawGroupBox(
  */
 
 
-static CGFloat darkButtonFill[4] = {112.0/255, 113.0/255, 115.0/255, 1.0};
-static CGFloat darkDisabledButtonFill[4] = {86.0/255, 87.0/255, 89.0/255, 1.0};
+static CGFloat darkButtonFace[4] = {112.0/255, 113.0/255, 115.0/255, 1.0};
+static CGFloat darkDisabledButtonFace[4] = {86.0/255, 87.0/255, 89.0/255, 1.0};
 static CGFloat darkInactiveSelectedTab[4] = {159.0/255, 160.0/255, 161.0/255, 1.0};
 static CGFloat darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
 static CGFloat darkTopGradient[8] = {1.0, 1.0, 1.0, 0.3,
 				     1.0, 1.0, 1.0, 0.0};
 static CGFloat darkBackgroundGradient[8] = {0.0, 0.0, 0.0, 0.1,
 					    0.0, 0.0, 0.0, 0.25};
+static CGFloat darkCheckGradient[8] = {89.0/255, 90.0/255, 93.0/255, 1.0,
+				       119.0/255, 120.0/255, 122.0/255, 1.0};
 static CGFloat darkSelectedGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
 					  20.0/255, 94.0/255,  206.0/255, 1.0};
+
+/* FillButtonBackground --
+ *
+ *    Fills a rounded rectangle with a transparent black gradient.
+ */
+
+static void FillButtonBackground(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat radius)
+{
+    CGPathRef path;
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    CGGradientRef backgroundGradient = CGGradientCreateWithColorComponents(
+	deviceRGB.CGColorSpace, darkBackgroundGradient, NULL, 2);
+    CGPoint backgroundEnd = {bounds.origin.x,
+			     bounds.origin.y + bounds.size.height};
+    CGContextBeginPath(context);
+    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    CGContextAddPath(context, path);
+    CGContextClip(context);
+    CGContextDrawLinearGradient(context, backgroundGradient,
+				bounds.origin, backgroundEnd, 0);
+    CFRelease(path);
+    CFRelease(backgroundGradient);
+}
+
+/* HighlightButtonBorder --
+ *
+ * Accent the top border of a rounded rectangle with a transparent
+ * white gradient.
+ */
+
+static void HighlightButtonBorder(
+    CGContextRef context,
+    CGRect bounds)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    CGPoint topEnd = {bounds.origin.x, bounds.origin.y + 3};
+    CGGradientRef topGradient = CGGradientCreateWithColorComponents(
+    		      deviceRGB.CGColorSpace, darkTopGradient, NULL, 2);
+    CGContextSaveGState(context);
+    CGContextBeginPath(context);
+    CGContextAddArc(context, bounds.origin.x + 4, bounds.origin.y + 4,
+    		    4, PI, 3*PI/2, 0);
+    CGContextAddArc(context, bounds.origin.x + bounds.size.width - 4,
+    		    bounds.origin.y + 4, 4, 3*PI/2, 0, 0);
+    CGContextReplacePathWithStrokedPath(context);
+    CGContextClip(context);
+    CGContextDrawLinearGradient(context, topGradient, bounds.origin, topEnd, 0.0);
+    CGContextRestoreGState(context);
+    CFRelease(topGradient);
+}
+
+/* SolidFillButtonFace --
+ *
+ *     Fill a rounded rectangle with a specified solid color.
+ */
+
+static void SolidFillButtonFace(
+   CGContextRef context,
+   CGRect bounds,
+   CGFloat radius,
+   NSColor *color)
+{
+    CGPathRef path;
+    CGContextSetFillColorWithColor(context, color.CGColor);
+    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextFillPath(context);
+    CFRelease(path);
+}
+
+/* GradientFillButtonFace --
+ *
+ *     Fill a rounded rectangle with a specified gradient.
+ */
+
+static void GradientFillButtonFace(
+   CGContextRef context,
+   CGRect bounds,
+   CGFloat radius,
+   CGFloat* colors,
+   int numColors)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    CGPathRef path;
+    CGPoint end = {bounds.origin.x,
+		   bounds.origin.y + bounds.size.height};
+    CGGradientRef gradient = CGGradientCreateWithColorComponents(
+	 deviceRGB.CGColorSpace, colors, NULL, numColors);
+    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextClip(context);
+    CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0);
+    CFRelease(path);
+    CFRelease(gradient);
+}
 
 /*
  * MacOSXDrawDarkButton --
@@ -239,50 +341,28 @@ static void MacOSXDrawDarkButton(
     Ttk_State state,
     CGContextRef context)
 {
-    CGPathRef path;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    CGGradientRef topGradient, backgroundGradient, selectedGradient;
-    NSColor *fill;
-
-    /*
-     * Fill the rounded bounding rectangle with a transparent black gradient.
-     */
+    NSColor *faceColor;
 
     CGContextSetLineWidth(context, 1.0);
     CGContextClipToRect(context, bounds);
-
-    backgroundGradient = CGGradientCreateWithColorComponents(
-	deviceRGB.CGColorSpace, darkBackgroundGradient, NULL, 2);
-    CGPoint backgroundEnd = {bounds.origin.x,
-			     bounds.origin.y + bounds.size.height};
-    CGContextBeginPath(context);
-    path = CGPathCreateWithRoundedRect(bounds, 5, 5, NULL);
-    CGContextAddPath(context, path);
-    CGContextClip(context);
-    CGContextDrawLinearGradient(context, backgroundGradient,
-					bounds.origin, backgroundEnd, 0);
-    CFRelease(backgroundGradient);
-
+    FillButtonBackground(context, bounds, 5);
 
     /*
-     * Fill the button face with the button fill color.
+     * Fill the button face with the appropriate color.
      */
+
     bounds = CGRectInset(bounds, 1, 1);
     if (state & TTK_STATE_DISABLED) {
-	fill = [NSColor colorWithColorSpace: deviceRGB
-			     components: darkDisabledButtonFill
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+			     components: darkDisabledButtonFace
 				  count: 4];
     } else {
-	fill = [NSColor colorWithColorSpace: deviceRGB
-				 components: darkButtonFill
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+				 components: darkButtonFace
 				      count: 4];
     }
-    CGContextSetFillColorWithColor(context, fill.CGColor);
-    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextFillPath(context);
-    CFRelease(path);
+    SolidFillButtonFace(context, bounds, 4, faceColor);
 
     /*
      * If this is a popup, draw the arrow button.
@@ -300,17 +380,8 @@ static void MacOSXDrawDarkButton(
 	 */
 
 	if (!(state & TTK_STATE_BACKGROUND)) {
-	    selectedGradient = CGGradientCreateWithColorComponents(
-		deviceRGB.CGColorSpace, darkSelectedGradient, NULL, 2);
-	    CGPoint arrowEnd = {arrowBounds.origin.x,
-	     			arrowBounds.origin.y + arrowBounds.size.height};
-	    CGContextBeginPath(context);
-	    CGContextAddPath(context, path);
-	    CGContextClip(context);
-	    CGContextClipToRect(context, arrowBounds);
-	    CGContextDrawLinearGradient(context, selectedGradient,
-					arrowBounds.origin, arrowEnd, 0);
-	    CFRelease(selectedGradient);
+	    GradientFillButtonFace(context, arrowBounds, 4,
+				   darkSelectedGradient, 2);
 	}
 
 	/*
@@ -330,24 +401,56 @@ static void MacOSXDrawDarkButton(
 	CGContextRestoreGState(context);
     }
 
-    /*
-     * Accent the top border with a transparent white gradient.
-     */
+    HighlightButtonBorder(context, bounds);
+}
 
-    CGPoint topEnd = {bounds.origin.x, bounds.origin.y + 3};
-    topGradient = CGGradientCreateWithColorComponents(
-    		      deviceRGB.CGColorSpace, darkTopGradient, NULL, 2);
-    CGContextSaveGState(context);
-    CGContextBeginPath(context);
-    CGContextAddArc(context, bounds.origin.x + 4, bounds.origin.y + 4,
-    		    4, PI, 3*PI/2, 0);
-    CGContextAddArc(context, bounds.origin.x + bounds.size.width - 4,
-    		    bounds.origin.y + 4, 4, 3*PI/2, 0, 0);
-    CGContextReplacePathWithStrokedPath(context);
-    CGContextClip(context);
-    CGContextDrawLinearGradient(context, topGradient, bounds.origin, topEnd, 0.0);
-    CGContextRestoreGState(context);
-    CFRelease(topGradient);
+/*
+ * MacOSXDrawDarkCheckBox --
+ *
+ *    This is a standalone drawing procedure which draws Checkboxes
+ *    in the Dark Mode style.
+ */
+
+static void MacOSXDrawDarkCheckBox(
+    CGRect bounds,
+    Ttk_State state,
+    CGContextRef context)
+{
+    CGRect checkbounds = {{2, 3},{16, 16}};
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *stroke;
+    CGFloat x, y;
+    bounds = CGRectOffset(checkbounds, bounds.origin.x, bounds.origin.y);
+    x = bounds.origin.x;
+    y = bounds.origin.y;
+
+    CGContextClipToRect(context, bounds);
+    FillButtonBackground(context, bounds, 4);
+    bounds = CGRectInset(bounds, 1, 1);
+    GradientFillButtonFace(context, bounds, 3, darkCheckGradient, 2);
+    HighlightButtonBorder(context, bounds);
+    if ((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
+	CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
+	if (state & TTK_STATE_DISABLED) {
+	    stroke = [NSColor disabledControlTextColor];
+	} else {
+	    stroke = [NSColor controlTextColor];
+	}
+	CGContextSetStrokeColorWithColor(context, stroke.CGColor);
+    }
+    if (state & TTK_STATE_SELECTED) {
+	CGContextSetLineWidth(context, 1.5);
+	CGContextBeginPath(context);
+	CGPoint check[3] = {{x+3, y+7}, {x+6.5, y+9.5}, {x+10, y+4}};
+	CGContextAddLines(context, check, 3);
+	CGContextStrokePath(context);
+    } else if (state & TTK_STATE_ALTERNATE) {
+	CGContextSetLineWidth(context, 2.0);
+	CGContextBeginPath(context);
+	CGPoint check[2] = {{x+4, y+7}, {x+12, y+7}};
+	CGContextAddLines(context, check, 2);
+	CGContextStrokePath(context);
+    }
 }
 
 /*
@@ -362,10 +465,8 @@ static void MacOSXDrawDarkTab(
     Ttk_State state,
     CGContextRef context)
 {
-    CGPathRef path;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    CGGradientRef topGradient, backgroundGradient, selectedGradient;
-    NSColor *fill, *stroke;
+    NSColor *faceColor, *stroke;
     CGRect originalBounds= bounds;
 
     CGContextSetLineWidth(context, 1.0);
@@ -386,44 +487,23 @@ static void MacOSXDrawDarkTab(
     }
 
     /*
-     * Fill the rounded bounding rectangle with a transparent black gradient.
+     * Fill the tab face with the appropriate color or gradient.  Use a
+     * solid color if the tab is not selected, otherwise use a blue or
+     * gray gradient.
      */
 
-    backgroundGradient = CGGradientCreateWithColorComponents(
-            deviceRGB.CGColorSpace, darkBackgroundGradient, NULL, 2);
-    CGPoint backgroundEnd = {bounds.origin.x,
-			     bounds.origin.y + bounds.size.height};
-    CGContextBeginPath(context);
-    path = CGPathCreateWithRoundedRect(bounds, 5, 5, NULL);
-    CGContextAddPath(context, path);
-    CGContextClip(context);
-    CGContextDrawLinearGradient(context, backgroundGradient,
-				bounds.origin, backgroundEnd, 0);
-    CFRelease(backgroundGradient);
     bounds = CGRectInset(bounds, 1, 1);
-
-    /*
-     * Fill the button face with the button fill color.  Use the
-     * background color if the tab is not selected, otherwise use a
-     * blue or gray gradient.
-     */
-
     if (!(state & TTK_STATE_SELECTED)) {
 	if (state & TTK_STATE_DISABLED) {
-	    fill = [NSColor colorWithColorSpace: deviceRGB
-				     components: darkDisabledButtonFill
+	    faceColor = [NSColor colorWithColorSpace: deviceRGB
+				     components: darkDisabledButtonFace
 					  count: 4];
 	} else {
-	    fill = [NSColor colorWithColorSpace: deviceRGB
-				     components: darkButtonFill
+	    faceColor = [NSColor colorWithColorSpace: deviceRGB
+				     components: darkButtonFace
 					  count: 4];
 	}
-	CGContextSetFillColorWithColor(context, fill.CGColor);
-	path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
-	CGContextBeginPath(context);
-	CGContextAddPath(context, path);
-	CGContextFillPath(context);
-	CFRelease(path);
+	SolidFillButtonFace(context, bounds, 4, faceColor);
 
 	/*
 	 * Draw a separator line on the left side of the tab if it
@@ -448,57 +528,23 @@ static void MacOSXDrawDarkTab(
     } else {
 
 	/*
-	 * This is the selected tab; paint it.  If it is first, cover up
-	 * the separator line drawn by the second one.
+	 * This is the selected tab; paint it blue.  If it is first, cover up
+	 * the separator line drawn by the second one.  (The selected tab is
+	 * always drawn last.)
 	 */
 
 	if ((state & TTK_STATE_FIRST_TAB) && !(state & TTK_STATE_LAST_TAB)) {
 	    bounds.size.width += 1;
 	}
-
 	if (!(state & TTK_STATE_BACKGROUND)) {
-	    selectedGradient = CGGradientCreateWithColorComponents(
-		deviceRGB.CGColorSpace, darkSelectedGradient, NULL, 2);
-	    CGPoint end = {bounds.origin.x, bounds.origin.y + bounds.size.height};
-	    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
-	    CGContextBeginPath(context);
-	    CGContextAddPath(context, path);
-	    CGContextClip(context);
-	    CGContextDrawLinearGradient(context, selectedGradient,
-				    bounds.origin, end, 0);
-	    CFRelease(path);
-	    CFRelease(selectedGradient);
+	    GradientFillButtonFace(context, bounds, 4, darkSelectedGradient, 2);
 	} else {
-	    fill = [NSColor colorWithColorSpace: deviceRGB
+	    faceColor = [NSColor colorWithColorSpace: deviceRGB
 				     components: darkInactiveSelectedTab
 					  count: 4];
-	    CGContextSetFillColorWithColor(context, fill.CGColor);
-	    path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
-	    CGContextBeginPath(context);
-	    CGContextAddPath(context, path);
-	    CGContextFillPath(context);
-	    CFRelease(path);
+	    SolidFillButtonFace(context, bounds, 4, faceColor);
 	}
-
-	/*
-	 * Accent the top border with a transparent white gradient.
-	 */
-
-	CGPoint topEnd = {bounds.origin.x, bounds.origin.y + 3};
-	topGradient = CGGradientCreateWithColorComponents(
-		          deviceRGB.CGColorSpace, darkTopGradient, NULL, 2);
-	CGContextSaveGState(context);
-	CGContextBeginPath(context);
-	CGContextAddArc(context, bounds.origin.x + 4, bounds.origin.y + 4,
-			4, PI, 3*PI/2, 0);
-	CGContextAddArc(context, bounds.origin.x + bounds.size.width - 4,
-			bounds.origin.y + 4, 4, 3*PI/2, 0, 0);
-	CGContextReplacePathWithStrokedPath(context);
-	CGContextClip(context);
-	CGContextDrawLinearGradient(context, topGradient, bounds.origin,
-				    topEnd, 0.0);
-	CFRelease(topGradient);
-	CGContextRestoreGState(context);
+	HighlightButtonBorder(context, bounds);
     }
 }
 
@@ -523,7 +569,7 @@ static void MacOSXDrawDarkSeparator(
     CGContextFillRect(context, bounds);
 }
 
-#endif /* MAC_OS_X_VERSION_MIN_REQUIRED < 101300 */
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED >101300 */
 
 /*----------------------------------------------------------------------
  * +++ Button element: Used for elements drawn with DrawThemeButton.
@@ -650,9 +696,22 @@ static void ButtonElementDraw(
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state);
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
-    if (TkMacOSXInDarkMode(tkwin) &&
-	(info.kind == kThemePushButton || info.kind == kThemePopupButton)) {
-	MacOSXDrawDarkButton(bounds, info.kind, state, dc.context);
+    if (TkMacOSXInDarkMode(tkwin)) {
+	switch (info.kind) {
+	case kThemePushButton:
+	case kThemePopupButton:
+	    MacOSXDrawDarkButton(bounds, info.kind, state, dc.context);
+	    break;
+	case kThemeCheckBox:
+	    if (!(state & (TTK_STATE_SELECTED | TTK_STATE_ALTERNATE)) ||
+		(state & TTK_STATE_BACKGROUND) ||
+		(state & TTK_STATE_DISABLED)) {
+		MacOSXDrawDarkCheckBox(bounds, state, dc.context);
+		break;
+	    }
+	default:
+	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+	}
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
