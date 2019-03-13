@@ -1875,19 +1875,6 @@ TranslateLine(
  *--------------------------------------------------------------
  */
 
-static inline void
-DoRotate(
-    double originX, double originY,
-    double sine, double cosine,
-    double *xPtr, double *yPtr)
-{
-    double x = *xPtr - originX;
-    double y = *yPtr - originY;
-
-    *xPtr = originX + x * cosine - y * sine;
-    *yPtr = originY + x * sine + y * cosine;
-}
-
 static void
 RotateLine(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1902,18 +1889,18 @@ RotateLine(
 
     for (i = 0, coordPtr = linePtr->coordPtr; i < linePtr->numPoints;
 	    i++, coordPtr += 2) {
-	DoRotate(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+	TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
     }
     if (linePtr->firstArrowPtr != NULL) {
 	for (i = 0, coordPtr = linePtr->firstArrowPtr; i < PTS_IN_ARROW;
 		i++, coordPtr += 2) {
-	    DoRotate(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+	    TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
 	}
     }
     if (linePtr->lastArrowPtr != NULL) {
 	for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
 		i++, coordPtr += 2) {
-	    DoRotate(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+	    TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
 	}
     }
     ComputeLineBbox(canvas, linePtr);

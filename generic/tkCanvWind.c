@@ -943,12 +943,9 @@ RotateWinItem(
     double angleRad)		/* Amount by which item is to be rotated. */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
-    double s = sin(angleRad), c = cos(angleRad);
-    double x = winItemPtr->x - originX;
-    double y = winItemPtr->y - originY;
 
-    winItemPtr->x = originX + x * c - y * s;
-    winItemPtr->y = originY + x * s + y * c;
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &winItemPtr->x, &winItemPtr->y);
     ComputeWindowBbox(canvas, winItemPtr);
 }
 

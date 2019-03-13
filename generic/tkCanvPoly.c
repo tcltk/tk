@@ -1771,11 +1771,7 @@ RotatePolygon(
 
     for (i = 0, coordPtr = polyPtr->coordPtr; i < polyPtr->numPoints;
 	    i++, coordPtr += 2) {
-	double x = coordPtr[0] - originX;
-	double y = coordPtr[1] - originY;
-
-	coordPtr[0] = originX + x * c - y * s;
-	coordPtr[1] = originY + x * s + y * c;
+	TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
     }
     ComputePolygonBbox(canvas, polyPtr);
 }

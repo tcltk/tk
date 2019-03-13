@@ -817,16 +817,9 @@ RotateBitmap(
     double angleRad)
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
-    double x, y, nx, ny;
-    double s = sin(angleRad);
-    double c = cos(angleRad);
 
-    x = bmapPtr->x - originX;
-    y = bmapPtr->y - originY;
-    nx = x * c - y * s;
-    ny = x * s + y * c;
-    bmapPtr->x = nx + originX;
-    bmapPtr->y = ny + originY;
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &bmapPtr->x, &bmapPtr->y);
     ComputeBitmapBbox(canvas, bmapPtr);
 }
 
