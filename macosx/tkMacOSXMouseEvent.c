@@ -94,7 +94,7 @@ enum {
      * Compute the mouse position in Tk screen coordinates (global) and in
      * the Tk coordinates of its containing Tk Window.
      */
-    
+
     NSPoint global, local = [theEvent locationInWindow];
 
     /*
@@ -106,7 +106,7 @@ enum {
 	eventWindow == _windowWithMouse;
     }
     if (eventWindow) {
-	
+
 	/*
 	 * Set the local mouse position to its NSWindow flipped coordinates,
 	 * with the origin at top left, and the global mouse position to the
@@ -120,7 +120,7 @@ enum {
     } else {
 
 	/*
-	 * As a last resort, with no NSWindow to work witn, set both local and
+	 * As a last resort, with no NSWindow to work with, set both local and
 	 * global to the screen coordinates.
 	 */
 
@@ -160,7 +160,7 @@ enum {
      * Convert local from NSWindow flipped coordinates to the toplevel's
      * coordinates.
      */
-    
+
     local.x -= winPtr->wmInfoPtr->xInParent;
     local.y -= winPtr->wmInfoPtr->yInParent;
 
@@ -178,7 +178,7 @@ enum {
     /*
      *  Generate an XEvent for this mouse event.
      */
-    
+
     unsigned int state = 0;
     NSInteger button = [theEvent buttonNumber];
     EventRef eventRef = (EventRef)[theEvent eventRef];
