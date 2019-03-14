@@ -3520,7 +3520,7 @@ WmTransientCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    TkWindow *masterPtr = wmPtr->masterPtr;
+    TkWindow *masterPtr = wmPtr->masterPtr, *w;
     WmInfo *wmPtr2;
 
     if ((objc != 3) && (objc != 4)) {
@@ -3589,12 +3589,18 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	if (masterPtr == winPtr) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't make \"%s\" its own master", Tk_PathName(winPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
-	    return TCL_ERROR;
-	} else if (masterPtr != wmPtr->masterPtr) {
+	for (w = masterPtr; w != NULL && w->wmInfoPtr != NULL;
+	     w = (TkWindow *)w->wmInfoPtr->masterPtr) {
+	    if (w == winPtr) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "setting \"%s\" as master creates a transient/master cycle",
+		    Tk_PathName(masterPtr)));
+		Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
+		return TCL_ERROR;
+	    }
+	}
+
+	if (masterPtr != wmPtr->masterPtr) {
 	    /*
 	     * Remove old master map/unmap binding before setting the new
 	     * master. The event handler will ensure that transient states
