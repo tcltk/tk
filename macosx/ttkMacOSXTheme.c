@@ -8,6 +8,7 @@
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright 2008-2009, Apple Inc.
  * Copyright 2009 Kevin Walzer/WordTech Communications LLC.
+ * Copyright 2019 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -43,6 +44,7 @@
     TkMacOSXRestoreDrawingContext(&dc); }
 
 #define HIOrientation kHIThemeOrientationNormal
+#define NoThemeMetric 0xFFFFFFFF
 
 #ifdef __LP64__
 #define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
@@ -264,6 +266,7 @@ static CGFloat darkButtonFace[4] = {112.0/255, 113.0/255, 115.0/255, 1.0};
 static CGFloat darkDisabledButtonFace[4] = {86.0/255, 87.0/255, 89.0/255, 1.0};
 static CGFloat darkInactiveSelectedTab[4] = {159.0/255, 160.0/255, 161.0/255, 1.0};
 static CGFloat darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
+static CGFloat darkTrack[4] = {1.0, 1.0, 1.0, 0.25};
 static CGFloat darkTopGradient[8] = {1.0, 1.0, 1.0, 0.3,
 				     1.0, 1.0, 1.0, 0.0};
 static CGFloat darkBackgroundGradient[8] = {0.0, 0.0, 0.0, 0.1,
@@ -661,7 +664,6 @@ static void DrawDarkSeparator(
  * +++ Button element: Used for elements drawn with DrawThemeButton.
  */
 
-#define NoThemeMetric 0xFFFFFFFF
 
 typedef struct {
     ThemeButtonKind kind;
@@ -698,17 +700,35 @@ static Ttk_StateTable ButtonAdornmentTable[] = {
  */
 
 static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
-    ThemeButtonParams *params, Ttk_State state)
+    ThemeButtonParams *params,
+    Ttk_State state,
+    Tk_Window tkwin)
 {
     /*
      *  See ButtonElementDraw for the explanation of why we always draw
-     *  PushButtons in the active state.
+     *  PushButtons in the active state.  The deprecated BezelButton can be
+     *  faked to at least be usable in Dark Mode if it is always drawn as
+     *  inactive.
      */
-    
+
+    SInt32 HIThemeState;
+    switch (params->kind) {
+    case kThemePushButton:
+	HIThemeState = kThemeStateActive;
+	break;
+    case kThemeBevelButton:
+	if (TkMacOSXInDarkMode(tkwin)) {
+	    HIThemeState = kThemeStateInactive;
+	    break;
+	}
+    default:
+	HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
+	break;
+    }
+	
     const HIThemeButtonDrawInfo info = {
 	.version = 0,
-	.state = params && params->kind == kThemePushButton ?
-	    kThemeStateActive : Ttk_StateTableLookup(ThemeStateTable, state),
+	.state = HIThemeState,
 	.kind = params ? params->kind : 0,
 	.value = Ttk_StateTableLookup(ButtonValueTable, state),
 	.adornment = Ttk_StateTableLookup(ButtonAdornmentTable, state),
@@ -735,7 +755,7 @@ static void ButtonElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ThemeButtonParams *params = clientData;
-    const HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, 0);
+    const HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, 0, tkwin);
     static const CGRect scratchBounds = {{0, 0}, {100, 100}};
     CGRect contentBounds;
 
@@ -762,7 +782,7 @@ static void ButtonElementDraw(
     BEGIN_DRAWING(d)
     ThemeButtonParams *params = clientData;
     CGRect bounds = BoxToRect(d, b);
-    HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state);
+    HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state, tkwin);
     bounds = NormalizeButtonBounds(params->heightMetric, bounds);
 
     if (TkMacOSXInDarkMode(tkwin)) {
@@ -780,6 +800,7 @@ static void ButtonElementDraw(
 	    break;
 	default:
 	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+	}
 #endif
     } else {
 	/*
@@ -1188,9 +1209,14 @@ static Ttk_ElementSpec SpinButtonElementSpec = {
  *    Progress bars and scales. (See also: <<NOTE-TRACKS>>)
  */
 
+/*
+ * Apple does not change the appearance of a slider when the window
+ * becomes inactive.  So we shouldn't either.
+ */
+
 static Ttk_StateTable ThemeTrackEnableTable[] = {
     { kThemeTrackDisabled, TTK_STATE_DISABLED, 0 },
-    { kThemeTrackInactive, TTK_STATE_BACKGROUND, 0 },
+    { kThemeTrackActive, TTK_STATE_BACKGROUND, 0 },
     { kThemeTrackActive, 0, 0 }
     /* { kThemeTrackNothingToScroll, ?, ? }, */
 };
@@ -1263,11 +1289,30 @@ static void TrackElementDraw(
     if (info.kind == kThemeSlider) {
 	info.trackInfo.slider.pressState = state & TTK_STATE_PRESSED ?
 		kThemeThumbPressed : 0;
-	info.trackInfo.slider.thumbDir = kThemeThumbPlain;
+	if (state & TTK_STATE_ALTERNATE) {
+	    info.trackInfo.slider.thumbDir = kThemeThumbDownward;
+	} else {
+	    info.trackInfo.slider.thumbDir = kThemeThumbPlain;
+	}
     }
 
 
     BEGIN_DRAWING(d)
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
+    if (TkMacOSXInDarkMode(tkwin)) {
+	CGRect bounds = BoxToRect(d, b);
+	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	NSColor *trackColor = [NSColor colorWithColorSpace: deviceRGB
+	 					components: darkTrack
+	 					     count: 4];
+	if (orientation == TTK_ORIENT_HORIZONTAL) {
+	    bounds = CGRectInset(bounds, 1, bounds.size.height/2 - 3); 
+	} else {
+	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 1); 
+	}
+	SolidFillButtonFace(dc.context, bounds, 3, trackColor);
+    }
+#endif
     ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
     END_DRAWING
 }
@@ -1342,7 +1387,8 @@ static void PbarElementSize(
     SInt32 size = 24;	/* @@@ Check HIG for correct default */
 
     ChkErr(GetThemeMetric, kThemeMetricLargeProgressBarThickness, &size);
-    *widthPtr = *heightPtr = size;
+    //    *widthPtr = *heightPtr = size;
+    *heightPtr = size;
 }
 
 static void PbarElementDraw(
@@ -1375,6 +1421,21 @@ static void PbarElementDraw(
     };
 
     BEGIN_DRAWING(d)
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
+    if (TkMacOSXInDarkMode(tkwin)) {
+	CGRect bounds = BoxToRect(d, b);
+	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	NSColor *trackColor = [NSColor colorWithColorSpace: deviceRGB
+	 					components: darkTrack
+	 					     count: 4];
+	if (orientation == TTK_ORIENT_HORIZONTAL) {
+	    bounds = CGRectInset(bounds, 1, bounds.size.height/2 - 3); 
+	} else {
+	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 1); 
+	}
+	SolidFillButtonFace(dc.context, bounds, 3, trackColor);
+    }
+#endif
     ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
     END_DRAWING
 }
@@ -1822,15 +1883,15 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElementSpec(themePtr, "Notebook.tab", &TabElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Notebook.client", &PaneElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr, "Labelframe.border",&GroupElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr, "Entry.field",&EntryElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr, "Spinbox.field",&EntryElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "Labelframe.border", &GroupElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "Entry.field", &EntryElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "Spinbox.field", &EntryElementSpec,0);
 
-    Ttk_RegisterElementSpec(themePtr, "separator",&SeparatorElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr, "hseparator",&SeparatorElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr, "vseparator",&SeparatorElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "separator", &SeparatorElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "hseparator", &SeparatorElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "vseparator", &SeparatorElementSpec,0);
 
-    Ttk_RegisterElementSpec(themePtr, "sizegrip",&SizegripElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "sizegrip", &SizegripElementSpec,0);
 
     /*
      * <<NOTE-TRACKS>>
@@ -1840,7 +1901,7 @@ static int AquaTheme_Init(Tcl_Interp *interp)
      */
     Ttk_RegisterElementSpec(themePtr,"Scale.trough",
 	&TrackElementSpec, &ScaleData);
-    Ttk_RegisterElementSpec(themePtr,"Scale.slider",&SliderElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr,"Scale.slider", &SliderElementSpec,0);
     Ttk_RegisterElementSpec(themePtr,"Progressbar.track", &PbarElementSpec, 0);
 
     /*
