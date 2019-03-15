@@ -983,11 +983,14 @@ anticlockwise, in degrees. (Negative values rotate clockwise.)
 This command returns an empty string.
 .RS
 .PP
-Implementation note: not all item types work well with rotations. In
-particular, the \fBarc\fR, \fBoval\fR and \fBrectangle\fR types are very
-unlikely to work as you expect. Several other item types only have a single
-coordinate; this command can move that anchor point, but will not rotate the
-item about that anchor point.
+Implementation note: not all item types work the same with rotations. In
+particular,\fB bitmap\fR,\fB image\fR,\fB text\fR and\fB window\fR items only
+rotate their anchor points and do not rotate the items themselves about those
+points, and the \fBarc\fR, \fBoval\fR and \fBrectangle\fR types rotate about a
+computed center point instead of moving the bounding box coordinates directly.
+.PP
+Some items (currently \fBarc\R and\fB text\fR) have angles in their options;
+this command \fIdoes not\fR affect those options.
 .RE
 .VE "8.7, TIP164"
 .TP
