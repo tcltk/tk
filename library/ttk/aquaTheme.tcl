@@ -38,16 +38,11 @@ namespace eval ttk::theme::aqua {
 	    -foreground {
 		disabled systemDisabledControlTextColor}
 	ttk::style configure Toolbutton -padding 4
-#	ttk::style configure Toolbutton -padding 4 -foreground black
-#	ttk::style map Toolbutton \
-#	    -background {
-#		background systemWindowBody}
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
 	# disabled buttons even if it did work...
 	ttk::style configure . -stipple {}
-
 
 	# Notebook
 	ttk::style configure TNotebook -tabmargins {10 0} -tabposition n
