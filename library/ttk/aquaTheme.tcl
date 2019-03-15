@@ -31,7 +31,18 @@ namespace eval ttk::theme::aqua {
 	ttk::style map TButton \
 	    -foreground {
 		disabled systemDisabledControlTextColor}
-	ttk::style configure Toolbutton -padding 4 -foreground black
+	ttk::style map TCheckbutton \
+	    -foreground {
+		disabled systemDisabledControlTextColor}
+	ttk::style map TRadiobutton \
+	    -foreground {
+		disabled systemDisabledControlTextColor}
+	ttk::style configure Toolbutton -padding 4
+#	ttk::style configure Toolbutton -padding 4 -foreground black
+#	ttk::style map Toolbutton \
+#	    -background {
+#		background systemWindowBody}
+
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
 	# disabled buttons even if it did work...
