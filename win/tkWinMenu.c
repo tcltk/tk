@@ -1249,7 +1249,9 @@ TkWinHandleMenuEvent(
 	if (hashEntryPtr != NULL) {
 	    int i, len, underline;
 	    Tcl_Obj *labelPtr;
-	    Tcl_UniChar *wlabel, menuChar;
+	    WCHAR *wlabel;
+	    Tcl_UniChar menuChar;
+	    Tcl_DString ds;
 
 	    *plResult = 0;
 	    menuPtr = Tcl_GetHashValue(hashEntryPtr);
@@ -1259,6 +1261,7 @@ TkWinHandleMenuEvent(
 	     */
 	    menuChar = Tcl_UniCharToUpper((Tcl_UniChar) LOWORD(*pwParam));
 
+	    Tcl_DStringInit(&ds);
 	    for (i = 0; i < menuPtr->numEntries; i++) {
 		underline = menuPtr->entries[i]->underline;
 		labelPtr = menuPtr->entries[i]->labelPtr;
@@ -1266,7 +1269,10 @@ TkWinHandleMenuEvent(
 		    /*
 		     * Ensure we don't exceed the label length, then check
 		     */
-		    wlabel = Tcl_GetUnicodeFromObj(labelPtr, &len);
+		    const char *src = Tcl_GetStringFromObj(labelPtr, &len);
+
+		    Tcl_DStringFree(&ds);
+		    wlabel = (WCHAR *) Tcl_WinUtfToTChar(src, len, &ds);
 		    if ((underline < len) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
@@ -1275,6 +1281,7 @@ TkWinHandleMenuEvent(
 		    }
 		}
 	    }
+	    Tcl_DStringFree(&ds);
 	}
 	break;
     }
@@ -2070,8 +2077,7 @@ DrawMenuUnderline(
     if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
 	int len;
 
-	/* do the unicode call just to prevent overruns */
-	Tcl_GetUnicodeFromObj(mePtr->labelPtr, &len);
+	len = Tcl_GetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len) {
 	    const char *label, *start, *end;
 
@@ -2466,7 +2472,7 @@ DrawMenuEntryLabel(
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
 	} else if ((mePtr->image != NULL)
-		&& (menuPtr->disabledImageGC != NULL)) {
+		&& menuPtr->disabledImageGC) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
 		    leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset),
