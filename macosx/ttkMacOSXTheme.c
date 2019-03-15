@@ -112,7 +112,7 @@ static Ttk_StateTable ThemeStateTable[] = {
 
 static CGFloat windowBackground[4] = {235.0/255, 235.0/255, 235.0/255, 1.0};
 
-static int MacOSXGetBoxColor(
+static int GetBoxColor(
     CGContextRef context,
     Tk_Window tkwin,
     int depth,
@@ -163,13 +163,13 @@ static int MacOSXGetBoxColor(
 }
 
 /*
- * MacOSXDrawGroupBox --
+ * DrawGroupBox --
  *
  *    This is a standalone drawing procedure which draws the contrasting
  *    rounded rectangular box for LabelFrames and Notebook panes.
  */
 
-static void MacOSXDrawGroupBox(
+static void DrawGroupBox(
     CGRect bounds,
     CGContextRef context,
     Tk_Window tkwin)
@@ -179,7 +179,7 @@ static void MacOSXDrawGroupBox(
     NSColor *borderColor, *bgColor;
     static CGFloat border[4] = {1.0, 1.0, 1.0, 0.25};
     CGFloat fill[4];
-    MacOSXGetBoxColor(context, tkwin, 1, fill);
+    GetBoxColor(context, tkwin, 1, fill);
     bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
 				     count: 4];
     CGContextSetFillColorSpace(context, deviceRGB.CGColorSpace);
@@ -214,6 +214,9 @@ static void MacOSXDrawGroupBox(
  *    HITheme in Aqua, since it understands earlier versions of the OS.
  */
 
+/*
+ *  Colors and gradients used in Dark Mode.
+ */
 
 static CGFloat darkButtonFace[4] = {112.0/255, 113.0/255, 115.0/255, 1.0};
 static CGFloat darkDisabledButtonFace[4] = {86.0/255, 87.0/255, 89.0/255, 1.0};
@@ -223,10 +226,32 @@ static CGFloat darkTopGradient[8] = {1.0, 1.0, 1.0, 0.3,
 				     1.0, 1.0, 1.0, 0.0};
 static CGFloat darkBackgroundGradient[8] = {0.0, 0.0, 0.0, 0.1,
 					    0.0, 0.0, 0.0, 0.25};
-static CGFloat darkCheckGradient[8] = {89.0/255, 90.0/255, 93.0/255, 1.0,
+static CGFloat darkInactiveGradient[8] = {89.0/255, 90.0/255, 93.0/255, 1.0,
 				       119.0/255, 120.0/255, 122.0/255, 1.0};
 static CGFloat darkSelectedGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
 					  20.0/255, 94.0/255,  206.0/255, 1.0};
+
+/*
+ * NormalizeButtonBounds --
+ *
+ * Apple's Human Interface Guidelines only allow three specific heights for buttons:
+ * Regular, small and mini. We always use the regular size.  However, Ttk may
+ * provide an arbitrary bounding rectangle.  We always draw the button centered
+ * vertically on the rectangle, and having the same width as the rectangle.
+ * This function returns the actual bounding rectangle that will be used in
+ * drawing the button.
+ */
+
+static CGRect NormalizeButtonBounds(
+    SInt32 heightMetric,
+    CGRect bounds)
+{
+    SInt32 height;
+    ChkErr(GetThemeMetric, heightMetric, &height);
+    bounds.origin.y += (bounds.size.height - height)/2;
+    bounds.size.height = height;
+    return bounds;
+}
 
 /* FillButtonBackground --
  *
@@ -329,13 +354,13 @@ static void GradientFillButtonFace(
 }
 
 /*
- * MacOSXDrawDarkButton --
+ * DrawDarkButton --
  *
  *    This is a standalone drawing procedure which draws PushButtons and
  *    PopupButtons in the Dark Mode style.
  */
 
-static void MacOSXDrawDarkButton(
+static void DrawDarkButton(
     CGRect bounds,
     ThemeButtonKind kind,
     Ttk_State state,
@@ -344,7 +369,13 @@ static void MacOSXDrawDarkButton(
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *faceColor;
 
-    CGContextSetLineWidth(context, 1.0);
+    /*
+     * To match the appearance of Apple's buttons we need to increase the
+     * height by 1 pixel.
+     */
+
+    bounds.size.height += 1;
+
     CGContextClipToRect(context, bounds);
     FillButtonBackground(context, bounds, 5);
 
@@ -405,18 +436,18 @@ static void MacOSXDrawDarkButton(
 }
 
 /*
- * MacOSXDrawDarkCheckBox --
+ * DrawDarkCheckBox --
  *
  *    This is a standalone drawing procedure which draws Checkboxes
  *    in the Dark Mode style.
  */
 
-static void MacOSXDrawDarkCheckBox(
+static void DrawDarkCheckBox(
     CGRect bounds,
     Ttk_State state,
     CGContextRef context)
 {
-    CGRect checkbounds = {{2, 3},{16, 16}};
+    CGRect checkbounds = {{0, bounds.size.height/2 - 8},{16, 16}};
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *stroke;
     CGFloat x, y;
@@ -427,7 +458,12 @@ static void MacOSXDrawDarkCheckBox(
     CGContextClipToRect(context, bounds);
     FillButtonBackground(context, bounds, 4);
     bounds = CGRectInset(bounds, 1, 1);
-    GradientFillButtonFace(context, bounds, 3, darkCheckGradient, 2);
+    if (!(state & TTK_STATE_BACKGROUND) &&
+	((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
+	GradientFillButtonFace(context, bounds, 3, darkSelectedGradient, 2);
+    } else {
+	GradientFillButtonFace(context, bounds, 3, darkInactiveGradient, 2);
+    }
     HighlightButtonBorder(context, bounds);
     if ((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
 	CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
@@ -441,26 +477,76 @@ static void MacOSXDrawDarkCheckBox(
     if (state & TTK_STATE_SELECTED) {
 	CGContextSetLineWidth(context, 1.5);
 	CGContextBeginPath(context);
-	CGPoint check[3] = {{x+3, y+7}, {x+6.5, y+9.5}, {x+10, y+4}};
+	CGPoint check[3] = {{x+4, y+8}, {x+7, y+11}, {x+11, y+4}};
 	CGContextAddLines(context, check, 3);
 	CGContextStrokePath(context);
     } else if (state & TTK_STATE_ALTERNATE) {
 	CGContextSetLineWidth(context, 2.0);
 	CGContextBeginPath(context);
-	CGPoint check[2] = {{x+4, y+7}, {x+12, y+7}};
-	CGContextAddLines(context, check, 2);
+	CGPoint bar[2] = {{x+4, y+8}, {x+12, y+8}};
+	CGContextAddLines(context, bar, 2);
 	CGContextStrokePath(context);
     }
 }
 
 /*
- * MacOSXDrawDarkTab --
+ * DrawDarkRadioButton --
+ *
+ *    This is a standalone drawing procedure which draws RadioButtons
+ *    in the Dark Mode style.
+ */
+
+static void DrawDarkRadioButton(
+    CGRect bounds,
+    Ttk_State state,
+    CGContextRef context)
+{
+    CGRect checkbounds = {{0, bounds.size.height/2 - 9},{18, 18}};
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *fill;
+    CGFloat x, y;
+    bounds = CGRectOffset(checkbounds, bounds.origin.x, bounds.origin.y);
+    x = bounds.origin.x;
+    y = bounds.origin.y;
+
+    CGContextClipToRect(context, bounds);
+    FillButtonBackground(context, bounds, 9);
+    bounds = CGRectInset(bounds, 1, 1);
+    if (!(state & TTK_STATE_BACKGROUND) &&
+	((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
+	GradientFillButtonFace(context, bounds, 8, darkSelectedGradient, 2);
+    } else {
+	GradientFillButtonFace(context, bounds, 8, darkInactiveGradient, 2);
+    }
+    HighlightButtonBorder(context, bounds);
+    if ((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
+	CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
+	if (state & TTK_STATE_DISABLED) {
+	    fill = [NSColor disabledControlTextColor];
+	} else {
+	    fill = [NSColor controlTextColor];
+	}
+	CGContextSetFillColorWithColor(context, fill.CGColor);
+    }
+    if (state & TTK_STATE_SELECTED) {
+	CGContextBeginPath(context);
+	CGRect dot = {{x + 6, y + 6}, {6, 6}};
+	CGContextAddEllipseInRect(context, dot);
+	CGContextFillPath(context);
+    } else if (state & TTK_STATE_ALTERNATE) {
+	CGRect bar = {{x + 5, y + 8}, {8, 2}};
+	CGContextFillRect(context, bar);
+    }
+}
+
+/*
+ * DrawDarkTab --
  *
  *    This is a standalone drawing procedure which draws Tabbed Pane
  *    Tabs in the Dark Mode style.
  */
 
-static void MacOSXDrawDarkTab(
+static void DrawDarkTab(
     CGRect bounds,
     Ttk_State state,
     CGContextRef context)
@@ -549,13 +635,13 @@ static void MacOSXDrawDarkTab(
 }
 
 /*
- * MacOSXDrawDarkSeparator --
+ * DrawDarkSeparator --
  *
  *    This is a standalone drawing procedure which draws a separator widget
  *    in Dark Mode.
  */
 
-static void MacOSXDrawDarkSeparator(
+static void DrawDarkSeparator(
     CGRect bounds,
     CGContextRef context,
     Tk_Window tkwin)
@@ -574,11 +660,6 @@ static void MacOSXDrawDarkSeparator(
 /*----------------------------------------------------------------------
  * +++ Button element: Used for elements drawn with DrawThemeButton.
  */
-
-/*
- * Extra margins to account for drop shadow.
- */
-static Ttk_Padding ButtonMargins = {2, 2, 2, 2};
 
 #define NoThemeMetric 0xFFFFFFFF
 
@@ -619,9 +700,15 @@ static Ttk_StateTable ButtonAdornmentTable[] = {
 static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
     ThemeButtonParams *params, Ttk_State state)
 {
+    /*
+     *  See ButtonElementDraw for the explanation of why we always draw
+     *  PushButtons in the active state.
+     */
+    
     const HIThemeButtonDrawInfo info = {
 	.version = 0,
-	.state = Ttk_StateTableLookup(ThemeStateTable, state),
+	.state = params && params->kind == kThemePushButton ?
+	    kThemeStateActive : Ttk_StateTableLookup(ThemeStateTable, state),
 	.kind = params ? params->kind : 0,
 	.value = Ttk_StateTableLookup(ButtonValueTable, state),
 	.adornment = Ttk_StateTableLookup(ButtonAdornmentTable, state),
@@ -652,9 +739,8 @@ static void ButtonElementSize(
     static const CGRect scratchBounds = {{0, 0}, {100, 100}};
     CGRect contentBounds;
 
-    ButtonElementSizeNoPadding(
-	clientData, elementRecord, tkwin,
-	widthPtr, heightPtr, paddingPtr);
+    ButtonElementSizeNoPadding( clientData, elementRecord, tkwin,
+    	widthPtr, heightPtr, paddingPtr);
 
     /*
      * To compute internal padding, query the appearance manager
@@ -666,25 +752,8 @@ static void ButtonElementSize(
 	&scratchBounds, &info, &contentBounds);
 
     paddingPtr->left = CGRectGetMinX(contentBounds);
-    paddingPtr->right = CGRectGetMaxX(scratchBounds) - CGRectGetMaxX(contentBounds) + 1;
-    if (TkMacOSXInDarkMode(tkwin)) {
-	paddingPtr->top = CGRectGetMinY(contentBounds) + 2;
-	paddingPtr->bottom = CGRectGetMaxY(scratchBounds) - CGRectGetMaxY(contentBounds) + 3;
-    } else {
-	paddingPtr->top = CGRectGetMinY(contentBounds) + 3;
-	paddingPtr->bottom = CGRectGetMaxY(scratchBounds) - CGRectGetMaxY(contentBounds) + 2;
-    }
-
-    /*
-     * Now add a little extra padding to account for drop shadows.
-     * @@@ SHOULD: call GetThemeButtonBackgroundBounds() instead.
-     */
-
-    *paddingPtr = Ttk_AddPadding(*paddingPtr, ButtonMargins);
-    *widthPtr += Ttk_PaddingWidth(ButtonMargins);
-    *heightPtr += Ttk_PaddingHeight(ButtonMargins);
+    paddingPtr->right = CGRectGetMaxX(scratchBounds) - CGRectGetMaxX(contentBounds);
 }
-
 
 static void ButtonElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -692,32 +761,45 @@ static void ButtonElementDraw(
 {
     BEGIN_DRAWING(d)
     ThemeButtonParams *params = clientData;
-    CGRect bounds = BoxToRect(d, Ttk_PadBox(b, ButtonMargins));
+    CGRect bounds = BoxToRect(d, b);
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state);
+    bounds = NormalizeButtonBounds(params->heightMetric, bounds);
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 	switch (info.kind) {
 	case kThemePushButton:
 	case kThemePopupButton:
-	    MacOSXDrawDarkButton(bounds, info.kind, state, dc.context);
+	    DrawDarkButton(bounds, info.kind, state, dc.context);
 	    break;
 	case kThemeCheckBox:
-	    if (!(state & (TTK_STATE_SELECTED | TTK_STATE_ALTERNATE)) ||
-		(state & TTK_STATE_BACKGROUND) ||
-		(state & TTK_STATE_DISABLED)) {
-		MacOSXDrawDarkCheckBox(bounds, state, dc.context);
-		break;
-	    }
+	    DrawDarkCheckBox(bounds, state, dc.context);
+	    break;
+	case kThemeRadioButton:
+	    DrawDarkRadioButton(bounds, state, dc.context);
+	    break;
 	default:
 	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+#endif
 	}
     } else {
+	/*
+	 *  Apple's PushButton and PopupButton do not change their (white) fill
+	 *  color when the window is inactive although, except in 10.7 (Lion),
+	 *  the color of the arrow button on a PopupButton does change.  For
+	 *  some reason HITheme fills inactive buttons with a transparent color
+	 *  that allows the window background to show through, leading to
+	 *  inconsistent behavior.  We work around this by filling behind an
+	 *  inactive PopupButton with a white color before asking HIToolbox to
+	 *  draw it.  PopupButton.  For PushButtons, we simply draw them in the
+	 *  active state.
+	 */
+	if (info.kind == kThemePopupButton && (state & TTK_STATE_BACKGROUND)) {
+	    CGRect innerBounds = CGRectInset(bounds, 1, 1);
+	    SolidFillButtonFace(dc.context, innerBounds, 4, [NSColor whiteColor]);
+	}
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
-#else
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
-#endif
     END_DRAWING
 }
 
@@ -824,7 +906,7 @@ static void TabElementDraw(
     BEGIN_DRAWING(d)
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
-	MacOSXDrawDarkTab(bounds, state, dc.context);
+	DrawDarkTab(bounds, state, dc.context);
     } else {
 	ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation, NULL);
     }
@@ -864,7 +946,7 @@ static void PaneElementDraw(
     bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 10800
-    MacOSXDrawGroupBox(bounds, dc.context, tkwin);
+    DrawGroupBox(bounds, dc.context, tkwin);
 #else
     HIThemeTabPaneDrawInfo info = {
 	.version = 1,
@@ -920,7 +1002,7 @@ static void GroupElementDraw(
 
     BEGIN_DRAWING(d)
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 10800
-    MacOSXDrawGroupBox(bounds, dc.context, tkwin);
+    DrawGroupBox(bounds, dc.context, tkwin);
 #else
     const HIThemeGroupBoxDrawInfo info = {
 	.version = 0,
@@ -1014,7 +1096,7 @@ static Ttk_ElementSpec EntryElementSpec = {
  */
 
 static Ttk_Padding ComboboxPadding = { 2, 3, 17, 1 };
-static Ttk_Padding ComboboxMargins = { 3, 3, 4, 4 };
+static Ttk_Padding ComboboxMargins = { 3, 4, 4, 3 };
 
 static void ComboboxElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -1335,7 +1417,7 @@ static void SeparatorElementDraw(
     BEGIN_DRAWING(d)
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
-	MacOSXDrawDarkSeparator(bounds, dc.context, tkwin);
+	DrawDarkSeparator(bounds, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawSeparator, &bounds, &info, dc.context, HIOrientation);
     }
@@ -1415,29 +1497,31 @@ static Ttk_ElementSpec SizegripElementSpec = {
  *    not allowing user control of the background or highlight colors of ttk
  *    widgets.
  *
- *    This job is made more complicated by the fact that the Appkit GroupBox
- *    (used for ttk LabelFrames) and TabbedPane (used for the Notebook widget)
- *    both place their content inside a rectangle with rounded corners that has
- *    a color which contrasts with the dialog background color.  Moreover,
- *    although the Apple human interface guidelines recommend against doing so,
- *    there are times when one wants to nest these widgets, for example having
- *    a GroupBox inside of a TabbedPane.  To have the right contrast, each
- *    level of nesting requires a different color.
+ *    This job is made more complicated in recent versions of macOS by the fact
+ *    that the Appkit GroupBox (used for ttk LabelFrames) and TabbedPane (used
+ *    for the Notebook widget) both place their content inside a rectangle with
+ *    rounded corners that has a color which contrasts with the dialog
+ *    background color.  Moreover, although the Apple human interface
+ *    guidelines recommend against doing so, there are times when one wants to
+ *    nest these widgets, for example having a GroupBox inside of a TabbedPane.
+ *    To have the right contrast, each level of nesting requires a different
+ *    color.
  *
- *    Previous Tk releases used the HIThemeDrawGroupBox routine This meant that
- *    the best that could be done was to set the GroupBox to be of kind
- *    kHIThemeGroupBoxKindPrimaryOpaque, and set its fill color to be the
- *    system background color.  If widgets inside the box were drawn with the
- *    system background color the backgrounds would match.  But this produces a
- *    GroupBox with no contrast, so the only visual clue is a faint
- *    highlighting around the top of the GroupBox.  Moreover, the TabbedPane
- *    does not have an Opaque version, so while it is drawn inside a
- *    contrasting rounded rectangle, the widgets inside the pane needed to be
- *    enclosed in a frame with the system background color. This added a visual
- *    artifact since the frame's background color does not match the Pane's
- *    background color.  That code has been replaced with the standalone
- *    drawing procedure macOSXDrawGroupBox, which draws a rounded rectangle
- *    with an appropriate contrasting background color.
+ *    Previous Tk releases used the HIThemeDrawGroupBox routine to draw
+ *    GroupBoxes and TabbedPanes. This meant that the best that could be done
+ *    was to set the GroupBox to be of kind kHIThemeGroupBoxKindPrimaryOpaque,
+ *    and set its fill color to be the system background color.  If widgets
+ *    inside the box were drawn with the system background color the
+ *    backgrounds would match.  But this produces a GroupBox with no contrast,
+ *    the only visual clue being a faint highlighting around the top of the
+ *    GroupBox.  Moreover, the TabbedPane does not have an Opaque version, so
+ *    while it is drawn inside a contrasting rounded rectangle, the widgets
+ *    inside the pane needed to be enclosed in a frame with the system
+ *    background color. This added a visual artifact since the frame's
+ *    background color does not match the Pane's background color.  That code
+ *    has now been replaced with the standalone drawing procedure
+ *    macOSXDrawGroupBox, which draws a rounded rectangle with an appropriate
+ *    contrasting background color.
  *
  *    Patterned backgrounds, which are now obsolete, should be aligned with the
  *    coordinate system of the top-level window.  Apparently failing to do this
@@ -1456,7 +1540,7 @@ static void FillElementDraw(
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *bgColor;
     CGFloat fill[4];
-    MacOSXGetBoxColor(dc.context, tkwin, 0, fill);
+    GetBoxColor(dc.context, tkwin, 0, fill);
     bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
 				     count: 4];
     CGContextSetFillColorSpace(dc.context, deviceRGB.CGColorSpace);
