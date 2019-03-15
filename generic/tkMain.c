@@ -71,22 +71,35 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #endif
 
 /*
- * Further on, in UNICODE mode, we need to use Tcl_NewUnicodeObj,
- * while otherwise NewNativeObj is needed (which provides proper
- * conversion from native encoding to UTF-8).
+ * Further on, in UNICODE mode we just use Tcl_NewUnicodeObj, otherwise
+ * NewNativeObj is needed (which provides proper conversion from native
+ * encoding to UTF-8).
  */
-#ifdef UNICODE
+
+#if defined(UNICODE) && (TCL_UTF_MAX <= 4)
 #   define NewNativeObj Tcl_NewUnicodeObj
-#else /* !UNICODE */
-    static Tcl_Obj *NewNativeObj(char *string, int length) {
-	Tcl_Obj *obj;
-	Tcl_DString ds;
-	Tcl_ExternalToUtfDString(NULL, string, length, &ds);
-	obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
-	Tcl_DStringFree(&ds);
-	return obj;
+#else /* !UNICODE || (TCL_UTF_MAX > 4) */
+static inline Tcl_Obj *
+NewNativeObj(
+    TCHAR *string,
+    int length)
+{
+    Tcl_Obj *obj;
+    Tcl_DString ds;
+
+#ifdef UNICODE
+    if (length > 0) {
+	length *= sizeof(WCHAR);
+    }
+    Tcl_WinTCharToUtf(string, length, &ds);
+#else
+    Tcl_ExternalToUtfDString(NULL, (char *) string, length, &ds);
+#endif
+    obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    Tcl_DStringFree(&ds);
+    return obj;
 }
-#endif /* !UNICODE */
+#endif /* !UNICODE || (TCL_UTF_MAX > 4) */
 
 /*
  * Declarations for various library functions and variables (don't want to
