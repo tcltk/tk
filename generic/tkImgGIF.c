@@ -1260,7 +1260,7 @@ ReadImage(
      *
      * The field "stack" is abused for temporary buffer. it has 4096 bytes
      * and we need 256.
-     * 
+     *
      * Loop until we hit a 0 length block which is the end sign.
      */
     while ( 0 < (count = GetDataBlock(gifConfPtr, chan, stack)))

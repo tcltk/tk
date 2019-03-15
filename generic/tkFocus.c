@@ -630,7 +630,7 @@ TkSetFocusWin(
     tlFocusPtr->focusWinPtr = winPtr;
 
     if (topLevelPtr->flags & TK_EMBEDDED) {
-			
+
 	/*
 	 * We are assigning focus to an embedded toplevel.  The platform
 	 * specific function TkpClaimFocus needs to handle the job of
@@ -646,7 +646,7 @@ TkSetFocusWin(
 	 * toplevel from a different application, clear the focus in that
 	 * application.
 	 */
-	
+
     	if (force) {
 	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
 	    if (focusPtr && focusPtr->mainPtr != winPtr->mainPtr) {
@@ -660,7 +660,7 @@ TkSetFocusWin(
 	 * Call the platform specific function TkpChangeFocus to move the
 	 * window manager's focus to a new toplevel.
 	 */
-	
+
 	serial = TkpChangeFocus(TkpGetWrapperWindow(topLevelPtr), force);
 	if (serial != 0) {
 	    displayFocusPtr->focusSerial = serial;
