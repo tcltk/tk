@@ -202,6 +202,48 @@ static void DrawGroupBox(
     CFRelease(path);
 }
 
+/*
+ * NormalizeButtonBounds --
+ *
+ * Apple's Human Interface Guidelines only allow three specific heights for buttons:
+ * Regular, small and mini. We always use the regular size.  However, Ttk may
+ * provide an arbitrary bounding rectangle.  We always draw the button centered
+ * vertically on the rectangle, and having the same width as the rectangle.
+ * This function returns the actual bounding rectangle that will be used in
+ * drawing the button.
+ */
+
+static CGRect NormalizeButtonBounds(
+    SInt32 heightMetric,
+    CGRect bounds)
+{
+    SInt32 height;
+    ChkErr(GetThemeMetric, heightMetric, &height);
+    bounds.origin.y += (bounds.size.height - height)/2;
+    bounds.size.height = height;
+    return bounds;
+}
+
+/* SolidFillButtonFace --
+ *
+ *     Fill a rounded rectangle with a specified solid color.
+ */
+
+static void SolidFillButtonFace(
+   CGContextRef context,
+   CGRect bounds,
+   CGFloat radius,
+   NSColor *color)
+{
+    CGPathRef path;
+    CGContextSetFillColorWithColor(context, color.CGColor);
+    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextFillPath(context);
+    CFRelease(path);
+}
+
 #endif /* MAC_OS_X_VERSION_MIN_REQUIRED > 1080 */
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
@@ -230,28 +272,6 @@ static CGFloat darkInactiveGradient[8] = {89.0/255, 90.0/255, 93.0/255, 1.0,
 				       119.0/255, 120.0/255, 122.0/255, 1.0};
 static CGFloat darkSelectedGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
 					  20.0/255, 94.0/255,  206.0/255, 1.0};
-
-/*
- * NormalizeButtonBounds --
- *
- * Apple's Human Interface Guidelines only allow three specific heights for buttons:
- * Regular, small and mini. We always use the regular size.  However, Ttk may
- * provide an arbitrary bounding rectangle.  We always draw the button centered
- * vertically on the rectangle, and having the same width as the rectangle.
- * This function returns the actual bounding rectangle that will be used in
- * drawing the button.
- */
-
-static CGRect NormalizeButtonBounds(
-    SInt32 heightMetric,
-    CGRect bounds)
-{
-    SInt32 height;
-    ChkErr(GetThemeMetric, heightMetric, &height);
-    bounds.origin.y += (bounds.size.height - height)/2;
-    bounds.size.height = height;
-    return bounds;
-}
 
 /* FillButtonBackground --
  *
@@ -304,26 +324,6 @@ static void HighlightButtonBorder(
     CGContextDrawLinearGradient(context, topGradient, bounds.origin, topEnd, 0.0);
     CGContextRestoreGState(context);
     CFRelease(topGradient);
-}
-
-/* SolidFillButtonFace --
- *
- *     Fill a rounded rectangle with a specified solid color.
- */
-
-static void SolidFillButtonFace(
-   CGContextRef context,
-   CGRect bounds,
-   CGFloat radius,
-   NSColor *color)
-{
-    CGPathRef path;
-    CGContextSetFillColorWithColor(context, color.CGColor);
-    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextFillPath(context);
-    CFRelease(path);
 }
 
 /* GradientFillButtonFace --
@@ -781,7 +781,6 @@ static void ButtonElementDraw(
 	default:
 	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
 #endif
-	}
     } else {
 	/*
 	 *  Apple's PushButton and PopupButton do not change their (white) fill
