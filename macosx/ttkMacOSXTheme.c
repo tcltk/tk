@@ -1295,8 +1295,6 @@ static void TrackElementDraw(
 	    info.trackInfo.slider.thumbDir = kThemeThumbPlain;
 	}
     }
-
-
     BEGIN_DRAWING(d)
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
@@ -1306,11 +1304,11 @@ static void TrackElementDraw(
 	 					components: darkTrack
 	 					     count: 4];
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
-	    bounds = CGRectInset(bounds, 1, bounds.size.height/2 - 3); 
+	    bounds = CGRectInset(bounds, 1, bounds.size.height/2 - 2); 
 	} else {
-	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 1); 
+	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 2); 
 	}
-	SolidFillButtonFace(dc.context, bounds, 3, trackColor);
+	SolidFillButtonFace(dc.context, bounds, 2, trackColor);
     }
 #endif
     ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
@@ -1387,8 +1385,7 @@ static void PbarElementSize(
     SInt32 size = 24;	/* @@@ Check HIG for correct default */
 
     ChkErr(GetThemeMetric, kThemeMetricLargeProgressBarThickness, &size);
-    //    *widthPtr = *heightPtr = size;
-    *heightPtr = size;
+    *widthPtr = *heightPtr = size;
 }
 
 static void PbarElementDraw(
