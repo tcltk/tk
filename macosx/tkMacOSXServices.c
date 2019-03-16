@@ -175,7 +175,7 @@ int TkMacOSXRegisterServiceWidgetObjCmd (ClientData cd, Tcl_Interp *ip, int objc
 }
 
 
-//initalize the package in the tcl interpreter, create tcl commands
+/*Initalize the package in the tcl interpreter, create tcl commands.*/
 int Tk_MacOSXServices_Init (Tcl_Interp *interp) {
 
   /* Set up an autorelease pool. */
