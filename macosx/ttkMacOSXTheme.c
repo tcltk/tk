@@ -462,6 +462,7 @@ static void DrawDarkCheckBox(
     FillButtonBackground(context, bounds, 4);
     bounds = CGRectInset(bounds, 1, 1);
     if (!(state & TTK_STATE_BACKGROUND) &&
+	!(state & TTK_STATE_DISABLED) &&
 	((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
 	GradientFillButtonFace(context, bounds, 3, darkSelectedGradient, 2);
     } else {
@@ -516,6 +517,7 @@ static void DrawDarkRadioButton(
     FillButtonBackground(context, bounds, 9);
     bounds = CGRectInset(bounds, 1, 1);
     if (!(state & TTK_STATE_BACKGROUND) &&
+	!(state & TTK_STATE_DISABLED) &&
 	((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
 	GradientFillButtonFace(context, bounds, 8, darkSelectedGradient, 2);
     } else {
