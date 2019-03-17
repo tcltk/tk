@@ -387,17 +387,22 @@ static void DrawDarkButton(
      */
 
     bounds = CGRectInset(bounds, 1, 1);
-    if (state & TTK_STATE_DISABLED) {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-			     components: darkDisabledButtonFace
-				  count: 4];
+    if (kind == kThemePushButton && (state & TTK_STATE_PRESSED)) {
+	GradientFillButtonFace(context, bounds, 4,
+				   darkSelectedGradient, 2);
     } else {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-				 components: darkButtonFace
-				      count: 4];
+	if (state & TTK_STATE_DISABLED) {
+	    faceColor = [NSColor colorWithColorSpace: deviceRGB
+					  components: darkDisabledButtonFace
+					       count: 4];
+	} else {
+	    faceColor = [NSColor colorWithColorSpace: deviceRGB
+					  components: darkButtonFace
+					       count: 4];
+	}
+	SolidFillButtonFace(context, bounds, 4, faceColor);
     }
-    SolidFillButtonFace(context, bounds, 4, faceColor);
-
+	
     /*
      * If this is a popup, draw the arrow button.
      */
@@ -689,12 +694,11 @@ static Ttk_StateTable ButtonValueTable[] = {
 };
 
 static Ttk_StateTable ButtonAdornmentTable[] = {
-    { kThemeAdornmentDefault| kThemeAdornmentFocus,
-	TTK_STATE_ALTERNATE| TTK_STATE_FOCUS, 0 },
+    { kThemeAdornmentDefault | kThemeAdornmentFocus,
+	TTK_STATE_ALTERNATE | TTK_STATE_FOCUS, 0 },
     { kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0 },
     { kThemeAdornmentFocus, TTK_STATE_FOCUS, 0 },
-    { kThemeAdornmentNone, 0, 0 }
-};
+    { kThemeAdornmentNone, 0, 0 }};
 
 /*
  * computeButtonDrawInfo --
@@ -708,9 +712,7 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
 {
     /*
      *  See ButtonElementDraw for the explanation of why we always draw
-     *  PushButtons in the active state.  The deprecated BezelButton can be
-     *  faked to at least be usable in Dark Mode if it is always drawn as
-     *  inactive.
+     *  PushButtons in the active state.
      */
 
     SInt32 HIThemeState;
@@ -718,11 +720,6 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
     case kThemePushButton:
 	HIThemeState = kThemeStateActive;
 	break;
-    case kThemeBevelButton:
-	if (TkMacOSXInDarkMode(tkwin)) {
-	    HIThemeState = kThemeStateInactive;
-	    break;
-	}
     default:
 	HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
 	break;
