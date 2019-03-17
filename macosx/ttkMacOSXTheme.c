@@ -45,6 +45,10 @@
 
 #define HIOrientation kHIThemeOrientationNormal
 #define NoThemeMetric 0xFFFFFFFF
+#define BEVEL_XPAD 6
+#define BEVEL_YPAD 6
+static Ttk_Padding BevelButtonMargins = {BEVEL_XPAD, BEVEL_YPAD,
+					 BEVEL_XPAD, BEVEL_YPAD};
 
 #ifdef __LP64__
 #define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
@@ -207,13 +211,17 @@ static void DrawGroupBox(
 /*
  * NormalizeButtonBounds --
  *
- * Apple's Human Interface Guidelines only allow three specific heights for buttons:
- * Regular, small and mini. We always use the regular size.  However, Ttk may
- * provide an arbitrary bounding rectangle.  We always draw the button centered
- * vertically on the rectangle, and having the same width as the rectangle.
- * This function returns the actual bounding rectangle that will be used in
- * drawing the button.
+ * Apple's Human Interface Guidelines only allow three specific heights for
+ * most buttons: Regular, small and mini. We always use the regular size.
+ * However, Ttk may provide an arbitrary bounding rectangle.  We always draw
+ * the button centered vertically on the rectangle, and having the same width
+ * as the rectangle.  This function returns the actual bounding rectangle that
+ * will be used in drawing the button.
+ * 
+ * The BevelButton is allowed to have arbitrary size, and also has external
+ * padding.  This is handled separately here. 
  */
+
 
 static CGRect NormalizeButtonBounds(
     SInt32 heightMetric,
@@ -228,12 +236,12 @@ static CGRect NormalizeButtonBounds(
     return bounds;
 }
 
-/* SolidFillButtonFace --
+/* SolidFillRoundedRectangle --
  *
  *     Fill a rounded rectangle with a specified solid color.
  */
 
-static void SolidFillButtonFace(
+static void SolidFillRoundedRectangle(
    CGContextRef context,
    CGRect bounds,
    CGFloat radius,
@@ -246,6 +254,34 @@ static void SolidFillButtonFace(
     CGContextAddPath(context, path);
     CGContextFillPath(context);
     CFRelease(path);
+}
+
+
+/* GradientFillRoundedRectangle --
+ *
+ *     Fill a rounded rectangle with a specified gradient.
+ */
+
+static void GradientFillRoundedRectangle(
+   CGContextRef context,
+   CGRect bounds,
+   CGFloat radius,
+   CGFloat* colors,
+   int numColors)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    CGPathRef path;
+    CGPoint end = {bounds.origin.x,
+		   bounds.origin.y + bounds.size.height};
+    CGGradientRef gradient = CGGradientCreateWithColorComponents(
+	 deviceRGB.CGColorSpace, colors, NULL, numColors);
+    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextClip(context);
+    CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0);
+    CFRelease(path);
+    CFRelease(gradient);
 }
 
 #endif /* MAC_OS_X_VERSION_MIN_REQUIRED > 1080 */
@@ -331,33 +367,6 @@ static void HighlightButtonBorder(
     CFRelease(topGradient);
 }
 
-/* GradientFillButtonFace --
- *
- *     Fill a rounded rectangle with a specified gradient.
- */
-
-static void GradientFillButtonFace(
-   CGContextRef context,
-   CGRect bounds,
-   CGFloat radius,
-   CGFloat* colors,
-   int numColors)
-{
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    CGPathRef path;
-    CGPoint end = {bounds.origin.x,
-		   bounds.origin.y + bounds.size.height};
-    CGGradientRef gradient = CGGradientCreateWithColorComponents(
-	 deviceRGB.CGColorSpace, colors, NULL, numColors);
-    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextClip(context);
-    CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0);
-    CFRelease(path);
-    CFRelease(gradient);
-}
-
 /*
  * DrawDarkButton --
  *
@@ -390,7 +399,7 @@ static void DrawDarkButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (kind == kThemePushButton && (state & TTK_STATE_PRESSED)) {
-	GradientFillButtonFace(context, bounds, 4,
+	GradientFillRoundedRectangle(context, bounds, 4,
 				   darkSelectedGradient, 2);
     } else {
 	if (state & TTK_STATE_DISABLED) {
@@ -402,7 +411,7 @@ static void DrawDarkButton(
 					  components: darkButtonFace
 					       count: 4];
 	}
-	SolidFillButtonFace(context, bounds, 4, faceColor);
+	SolidFillRoundedRectangle(context, bounds, 4, faceColor);
     }
 	
     /*
@@ -421,7 +430,7 @@ static void DrawDarkButton(
 	 */
 
 	if (!(state & TTK_STATE_BACKGROUND)) {
-	    GradientFillButtonFace(context, arrowBounds, 4,
+	    GradientFillRoundedRectangle(context, arrowBounds, 4,
 				   darkSelectedGradient, 2);
 	}
 
@@ -471,9 +480,11 @@ static void DrawDarkCheckBox(
     if (!(state & TTK_STATE_BACKGROUND) &&
 	!(state & TTK_STATE_DISABLED) &&
 	((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
-	GradientFillButtonFace(context, bounds, 3, darkSelectedGradient, 2);
+	GradientFillRoundedRectangle(context, bounds, 3,
+				     darkSelectedGradient, 2);
     } else {
-	GradientFillButtonFace(context, bounds, 3, darkInactiveGradient, 2);
+	GradientFillRoundedRectangle(context, bounds, 3,
+				     darkInactiveGradient, 2);
     }
     HighlightButtonBorder(context, bounds);
     if ((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
@@ -526,9 +537,11 @@ static void DrawDarkRadioButton(
     if (!(state & TTK_STATE_BACKGROUND) &&
 	!(state & TTK_STATE_DISABLED) &&
 	((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
-	GradientFillButtonFace(context, bounds, 8, darkSelectedGradient, 2);
+	GradientFillRoundedRectangle(context, bounds, 8,
+				     darkSelectedGradient, 2);
     } else {
-	GradientFillButtonFace(context, bounds, 8, darkInactiveGradient, 2);
+	GradientFillRoundedRectangle(context, bounds, 8,
+				     darkInactiveGradient, 2);
     }
     HighlightButtonBorder(context, bounds);
     if ((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
@@ -601,7 +614,7 @@ static void DrawDarkTab(
 				     components: darkButtonFace
 					  count: 4];
 	}
-	SolidFillButtonFace(context, bounds, 4, faceColor);
+	SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 
 	/*
 	 * Draw a separator line on the left side of the tab if it
@@ -635,12 +648,13 @@ static void DrawDarkTab(
 	    bounds.size.width += 1;
 	}
 	if (!(state & TTK_STATE_BACKGROUND)) {
-	    GradientFillButtonFace(context, bounds, 4, darkSelectedGradient, 2);
+	    GradientFillRoundedRectangle(context, bounds, 4,
+					 darkSelectedGradient, 2);
 	} else {
 	    faceColor = [NSColor colorWithColorSpace: deviceRGB
 				     components: darkInactiveSelectedTab
 					  count: 4];
-	    SolidFillButtonFace(context, bounds, 4, faceColor);
+	    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 	}
 	HighlightButtonBorder(context, bounds);
     }
@@ -683,7 +697,7 @@ static ThemeButtonParams
     PushButtonParams = { kThemePushButton, kThemeMetricPushButtonHeight },
     CheckBoxParams = { kThemeCheckBox, kThemeMetricCheckBoxHeight },
     RadioButtonParams = { kThemeRadioButton, kThemeMetricRadioButtonHeight },
-    BevelButtonParams = { kThemeBevelButton, NoThemeMetric },
+    BevelButtonParams = { kThemeRoundedBevelButton, NoThemeMetric },
     PopupButtonParams = { kThemePopupButton, kThemeMetricPopupButtonHeight },
     DisclosureParams = { kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight },
     ListHeaderParams = { kThemeListHeaderButton, kThemeMetricListHeaderHeight };
@@ -699,6 +713,7 @@ static Ttk_StateTable ButtonAdornmentTable[] = {
     { kThemeAdornmentDefault | kThemeAdornmentFocus,
 	TTK_STATE_ALTERNATE | TTK_STATE_FOCUS, 0 },
     { kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0 },
+    { kThemeAdornmentNone, TTK_STATE_ALTERNATE, 0 },
     { kThemeAdornmentFocus, TTK_STATE_FOCUS, 0 },
     { kThemeAdornmentNone, 0, 0 }};
 
@@ -759,6 +774,7 @@ static void ButtonElementSize(
     const HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, 0, tkwin);
     static const CGRect scratchBounds = {{0, 0}, {100, 100}};
     CGRect contentBounds;
+    int verticalPad;
 
     ButtonElementSizeNoPadding( clientData, elementRecord, tkwin,
     	widthPtr, heightPtr, paddingPtr);
@@ -772,8 +788,17 @@ static void ButtonElementSize(
     ChkErr(HIThemeGetButtonContentBounds,
 	&scratchBounds, &info, &contentBounds);
 
-    paddingPtr->left = CGRectGetMinX(contentBounds);
-    paddingPtr->right = CGRectGetMaxX(scratchBounds) - CGRectGetMaxX(contentBounds);
+    CGRect backgroundBounds;
+    ChkErr(HIThemeGetButtonBackgroundBounds,
+	   &scratchBounds, &info, &backgroundBounds);
+
+    paddingPtr->left = contentBounds.origin.x - backgroundBounds.origin.x;
+    paddingPtr->right = CGRectGetMaxX(backgroundBounds) - CGRectGetMaxX(contentBounds);
+    verticalPad = contentBounds.origin.y - backgroundBounds.origin.y;
+    verticalPad += CGRectGetMaxY(backgroundBounds) - CGRectGetMaxY(contentBounds);
+    paddingPtr->top = verticalPad /2;
+    paddingPtr->bottom = verticalPad - paddingPtr->top;
+
 }
 
 static void ButtonElementDraw(
@@ -817,7 +842,19 @@ static void ButtonElementDraw(
 	 */
 	if (info.kind == kThemePopupButton && (state & TTK_STATE_BACKGROUND)) {
 	    CGRect innerBounds = CGRectInset(bounds, 1, 1);
-	    SolidFillButtonFace(dc.context, innerBounds, 4, [NSColor whiteColor]);
+	    NSColor *white = [NSColor whiteColor];
+	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, white);
+	}
+
+	/*
+	 * A BevelButton with mixed value is drawn borderless, which does make
+	 * much sense for us.
+	 */
+	
+	if (info.kind == kThemeRoundedBevelButton &&
+	    info.value ==  kThemeButtonMixed) {
+	    info.value = kThemeButtonOff;
+	    info.state = kThemeStateInactive;
 	}
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
@@ -1309,7 +1346,7 @@ static void TrackElementDraw(
 	} else {
 	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 2); 
 	}
-	SolidFillButtonFace(dc.context, bounds, 2, trackColor);
+	SolidFillRoundedRectangle(dc.context, bounds, 2, trackColor);
     }
 #endif
     ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
@@ -1431,7 +1468,7 @@ static void PbarElementDraw(
 	} else {
 	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 1); 
 	}
-	SolidFillButtonFace(dc.context, bounds, 3, trackColor);
+	SolidFillRoundedRectangle(dc.context, bounds, 3, trackColor);
     }
 #endif
     ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
