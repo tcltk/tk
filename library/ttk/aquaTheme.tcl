@@ -26,7 +26,8 @@ namespace eval ttk::theme::aqua {
 		!focus systemDialogActiveText}
 
 	# Buttons
-	ttk::style configure TButton -anchor center -width -6 \
+#	ttk::style configure TButton -anchor center -width -6 \
+	    ttk::style configure TButton -anchor center \
 	    -foreground systemControlTextColor
 	ttk::style map TButton \
 	    -foreground {
@@ -37,7 +38,10 @@ namespace eval ttk::theme::aqua {
 	ttk::style map TRadiobutton \
 	    -foreground {
 		disabled systemDisabledControlTextColor}
-	ttk::style configure Toolbutton -padding 4
+	ttk::style map Toolbutton \
+	    -foreground {
+		disabled systemDisabledControlTextColor
+	    }
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
