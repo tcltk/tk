@@ -45,10 +45,6 @@
 
 #define HIOrientation kHIThemeOrientationNormal
 #define NoThemeMetric 0xFFFFFFFF
-#define BEVEL_XPAD 6
-#define BEVEL_YPAD 6
-static Ttk_Padding BevelButtonMargins = {BEVEL_XPAD, BEVEL_YPAD,
-					 BEVEL_XPAD, BEVEL_YPAD};
 
 #ifdef __LP64__
 #define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
@@ -105,7 +101,8 @@ static Ttk_StateTable ThemeStateTable[] = {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 /*----------------------------------------------------------------------
  * +++ Support for contrasting background colors when GroupBoxes
- * or Tabbed panes are nested inside each other.
+ * or Tabbed panes are nested inside each other.  Early versions
+ * of macOS used ridged borders, so do not need contrasting backgrounds.
  */
 
 /*
@@ -117,6 +114,13 @@ static Ttk_StateTable ThemeStateTable[] = {
  */
 
 static CGFloat windowBackground[4] = {235.0/255, 235.0/255, 235.0/255, 1.0};
+
+/*
+ * GetBoxColor --
+ *
+ * Compute a contrasting box color, based on nesting depth, and save the
+ * RGBA components in an array.
+ */
 
 static int GetBoxColor(
     CGContextRef context,
@@ -301,6 +305,8 @@ static void GradientFillRoundedRectangle(
  */
 
 static CGFloat darkButtonFace[4] = {112.0/255, 113.0/255, 115.0/255, 1.0};
+static CGFloat darkPressedBevelFace[4] = {135.0/255, 136.0/255, 138.0/255, 1.0};
+static CGFloat darkSelectedBevelFace[4] = {162.0/255, 163.0/255, 165.0/255, 1.0};
 static CGFloat darkDisabledButtonFace[4] = {86.0/255, 87.0/255, 89.0/255, 1.0};
 static CGFloat darkInactiveSelectedTab[4] = {159.0/255, 160.0/255, 161.0/255, 1.0};
 static CGFloat darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
@@ -451,6 +457,50 @@ static void DrawDarkButton(
 	CGContextRestoreGState(context);
     }
 
+    HighlightButtonBorder(context, bounds);
+}
+
+/*
+ * DrawDarkButton --
+ *
+ *    This is a standalone drawing procedure which draws
+ *    RoundedBevelButtons in the Dark Mode style.
+ */
+
+static void DrawDarkBevelButton(
+    CGRect bounds,
+    Ttk_State state,
+    CGContextRef context)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *faceColor;
+    CGContextClipToRect(context, bounds);
+    FillButtonBackground(context, bounds, 5);
+
+    /*
+     * Fill the button face with the appropriate color.
+     */
+
+    bounds = CGRectInset(bounds, 1, 1);
+    if (state & TTK_STATE_PRESSED) {
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+					  components: darkPressedBevelFace
+					       count: 4];
+    } else if ((state & TTK_STATE_DISABLED) ||
+	       (state & TTK_STATE_ALTERNATE)){
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+				      components: darkDisabledButtonFace
+					   count: 4];
+    } else if (state & TTK_STATE_SELECTED) {
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+				      components: darkSelectedBevelFace
+					   count: 4];
+    } else {
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+				      components: darkButtonFace
+					   count: 4];
+    }
+    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
     HighlightButtonBorder(context, bounds);
 }
 
@@ -798,7 +848,11 @@ static void ButtonElementSize(
     verticalPad += CGRectGetMaxY(backgroundBounds) - CGRectGetMaxY(contentBounds);
     paddingPtr->top = verticalPad /2;
     paddingPtr->bottom = verticalPad - paddingPtr->top;
-
+    if (info.kind == kThemePopupButton) {
+	static Ttk_Padding popupTweak = {0, 1, 0, 1};
+	*paddingPtr = Ttk_AddPadding(*paddingPtr, popupTweak);
+	*heightPtr += Ttk_PaddingHeight(popupTweak);
+    }
 }
 
 static void ButtonElementDraw(
@@ -823,6 +877,9 @@ static void ButtonElementDraw(
 	    break;
 	case kThemeRadioButton:
 	    DrawDarkRadioButton(bounds, state, dc.context);
+	    break;
+	case kThemeRoundedBevelButton:
+	    DrawDarkBevelButton(bounds, state, dc.context);
 	    break;
 	default:
 	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
