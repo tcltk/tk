@@ -220,9 +220,11 @@ static CGRect NormalizeButtonBounds(
     CGRect bounds)
 {
     SInt32 height;
-    ChkErr(GetThemeMetric, heightMetric, &height);
-    bounds.origin.y += (bounds.size.height - height)/2;
-    bounds.size.height = height;
+    if (heightMetric != NoThemeMetric) {
+	ChkErr(GetThemeMetric, heightMetric, &height);
+	bounds.origin.y += (bounds.size.height - height)/2;
+	bounds.size.height = height;
+    }
     return bounds;
 }
 
