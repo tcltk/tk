@@ -61,7 +61,21 @@ namespace eval ttk::theme::aqua {
 		!selected systemControlTextColor}
 
 	# Combobox:
-	ttk::style configure TCombobox -postoffset {5 -2 -10 0}
+	# We do not have a drawing procedure for Dark Comboboxes.
+	# This fakes the color in Dark Mode by using the system
+	# background color for (light) inactive widgets, and uses a
+	# white background for active Comboboxes, even in Dark Mode.
+	ttk::style configure TCombobox -selectforeground black
+	ttk::style map TCombobox \
+	    -foreground {
+		disabled systemDisabledControlTextColor
+		focus black
+		{} black
+		!active systemControlTextColor
+	    } \
+	    -selectbackground {
+		!focus white
+	    }
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont
