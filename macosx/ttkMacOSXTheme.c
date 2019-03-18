@@ -1210,8 +1210,8 @@ static Ttk_ElementSpec EntryElementSpec = {
  *    Padding and margins guesstimated by trial-and-error.
  */
 
-static Ttk_Padding ComboboxPadding = { 2, 3, 17, 1 };
-static Ttk_Padding ComboboxMargins = { 3, 4, 4, 3 };
+static Ttk_Padding ComboboxPadding = { 3, 0, 17, 4 };
+static Ttk_Padding ComboboxMargins = { 3, 5, 4, 2 };
 
 static void ComboboxElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -1236,6 +1236,14 @@ static void ComboboxElementDraw(
     };
 
     BEGIN_DRAWING(d)
+    if (TkMacOSXInDarkMode(tkwin)) {
+	bounds.size.height += 1;
+    } else if ((state & TTK_STATE_BACKGROUND) &&
+	       !(state & TTK_STATE_DISABLED)) {
+	CGRect innerBounds = CGRectInset(bounds, 1, 1);
+	NSColor *white = [NSColor whiteColor];
+	SolidFillRoundedRectangle(dc.context, innerBounds, 4, white);
+    }
     ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
 }
