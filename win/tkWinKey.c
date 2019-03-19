@@ -122,7 +122,7 @@ TkpGetString(
 
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    len = Tcl_UniCharToUtf((Tcl_UniChar) (keysym & 255), buf);
+	    len = Tcl_UniCharToUtf(keysym & 255, buf);
 	    Tcl_DStringAppend(dsPtr, buf, len);
 	}
     }
