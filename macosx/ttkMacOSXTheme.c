@@ -744,13 +744,13 @@ typedef struct {
 } ThemeButtonParams;
 
 static ThemeButtonParams
-    PushButtonParams = { kThemePushButton, kThemeMetricPushButtonHeight },
-    CheckBoxParams = { kThemeCheckBox, kThemeMetricCheckBoxHeight },
+    PushButtonParams =  { kThemePushButton, kThemeMetricPushButtonHeight },
+    CheckBoxParams =    { kThemeCheckBox, kThemeMetricCheckBoxHeight },
     RadioButtonParams = { kThemeRadioButton, kThemeMetricRadioButtonHeight },
     BevelButtonParams = { kThemeRoundedBevelButton, NoThemeMetric },
     PopupButtonParams = { kThemePopupButton, kThemeMetricPopupButtonHeight },
-    DisclosureParams = { kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight },
-    ListHeaderParams = { kThemeListHeaderButton, kThemeMetricListHeaderHeight };
+    DisclosureParams =  { kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight },
+    ListHeaderParams =  { kThemeListHeaderButton, kThemeMetricListHeaderHeight };
 
 static Ttk_StateTable ButtonValueTable[] = {
     { kThemeButtonMixed, TTK_STATE_ALTERNATE, 0 },
@@ -802,57 +802,73 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
     return info;
 }
 
-static void ButtonElementSizeNoPadding(
+static void ButtonElementMinSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     ThemeButtonParams *params = clientData;
 
     if (params->heightMetric != NoThemeMetric) {
-	SInt32 height;
+	ChkErr(GetThemeMetric, params->heightMetric, minHeight);
 
-	ChkErr(GetThemeMetric, params->heightMetric, &height);
-	*heightPtr = height;
+	/*
+	 * The theme height does not include the 1-pixel border around
+	 * the button, although it does include the 1-pixel shadow at
+	 * the bottom.  The corner radius is 4, so 8 is a reasonable
+	 * minimum width.
+	 */
+
+	*minHeight += 2;
+	*minWidth = 8;
     }
 }
 
 static void ButtonElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     ThemeButtonParams *params = clientData;
     const HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, 0, tkwin);
-    static const CGRect scratchBounds = {{0, 0}, {100, 100}};
-    CGRect contentBounds;
+    static const CGRect scratchBounds = {{0, 0}, {100, 20}};
+    CGRect contentBounds, backgroundBounds;
     int verticalPad;
 
-    ButtonElementSizeNoPadding( clientData, elementRecord, tkwin,
-    	widthPtr, heightPtr, paddingPtr);
+    ButtonElementMinSize(clientData, elementRecord, tkwin,
+		      minWidth, minHeight, paddingPtr);
 
     /*
-     * To compute internal padding, query the appearance manager
-     * for the content bounds of a dummy rectangle, then use
-     * the difference as the padding.
+     * Given a hypothetical bounding rectangle for a button, HIToolbox will
+     * compute a bounding rectangle for the button contents and a bounding
+     * rectangle for the button background.  The background bounds are large
+     * enough to contain the image of the button in any state, which might
+     * include highlight borders, shadows, etc.  The content rectangle is not
+     * centered vertically within the background rectangle, presumably because
+     * shadows only appear on the bottom.  Nonetheless, when HITools is asked
+     * to draw a button with a certain bounding rectangle it draws the button
+     * centered within the rectangle.
+     *
+     * To compute the effective padding around a button we request the
+     * content and bounding rectangles for a 100x100 button and use the
+     * padding between those.  However, we symmetrize the padding on the
+     * top and bottom, because that is how the button will be drawn. 
      */
 
     ChkErr(HIThemeGetButtonContentBounds,
 	&scratchBounds, &info, &contentBounds);
-
-    CGRect backgroundBounds;
     ChkErr(HIThemeGetButtonBackgroundBounds,
 	   &scratchBounds, &info, &backgroundBounds);
-
+    if (info.kind == kThemeComboBox) {
+	printf("ButtonElementSize: combobox %s contentBounds = %s\n",
+	       Tk_PathName(tkwin), NSStringFromRect(contentBounds).UTF8String);
+	printf("ButtonElementSize: combobox %s backgroundBounds = %s\n\n",
+	       Tk_PathName(tkwin), NSStringFromRect(backgroundBounds).UTF8String);
+    }
     paddingPtr->left = contentBounds.origin.x - backgroundBounds.origin.x;
-    paddingPtr->right = CGRectGetMaxX(backgroundBounds) - CGRectGetMaxX(contentBounds);
-    verticalPad = contentBounds.origin.y - backgroundBounds.origin.y;
-    verticalPad += CGRectGetMaxY(backgroundBounds) - CGRectGetMaxY(contentBounds);
+    paddingPtr->right = (CGRectGetMaxX(backgroundBounds) -
+			 CGRectGetMaxX(contentBounds));
+    verticalPad = backgroundBounds.size.height - contentBounds.size.height;
     paddingPtr->top = verticalPad /2;
     paddingPtr->bottom = verticalPad - paddingPtr->top;
-    if (info.kind == kThemePopupButton) {
-	static Ttk_Padding popupTweak = {0, 1, 0, 1};
-	*paddingPtr = Ttk_AddPadding(*paddingPtr, popupTweak);
-	*heightPtr += Ttk_PaddingHeight(popupTweak);
-    }
 }
 
 static void ButtonElementDraw(
@@ -909,7 +925,7 @@ static void ButtonElementDraw(
 	 */
 	
 	if (info.kind == kThemeRoundedBevelButton &&
-	    info.value ==  kThemeButtonMixed) {
+	    info.value == kThemeButtonMixed) {
 	    info.value = kThemeButtonOff;
 	    info.state = kThemeStateInactive;
 	}
@@ -997,9 +1013,9 @@ static Ttk_StateTable TabPositionTable[] = {
 
 static void TabElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
-    GetThemeMetric(kThemeMetricLargeTabHeight, (SInt32 *)heightPtr);
+    GetThemeMetric(kThemeMetricLargeTabHeight, (SInt32 *)minHeight);
     *paddingPtr = Ttk_MakePadding(0, 0, 0, 2);
 
 }
@@ -1045,7 +1061,7 @@ static Ttk_ElementSpec TabElementSpec = {
 
 static void PaneElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     *paddingPtr = Ttk_MakePadding(9, 5, 9, 9);
 }
@@ -1103,7 +1119,7 @@ static Ttk_ElementSpec PaneElementSpec = {
 
 static void GroupElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     *paddingPtr = Ttk_UniformPadding(4);
 }
@@ -1158,7 +1174,7 @@ static Ttk_ElementOptionSpec EntryElementOptions[] = {
 
 static void EntryElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     *paddingPtr = Ttk_UniformPadding(5);
 }
@@ -1206,27 +1222,39 @@ static Ttk_ElementSpec EntryElementSpec = {
  * +++ Combobox:
  *
  * NOTES:
- *    kThemeMetricComboBoxLargeDisclosureWidth -> 17
- *    Padding and margins guesstimated by trial-and-error.
+ *    The HIToolbox has incomplete and inconsistent support for ComboBoxes.
+ *    There is no constant available to get the height of a ComboBox with
+ *    GetThemeMetric. In fact, ComboBoxes are the same (fixed) height as
+ *    PopupButtons and PushButtons, but they have no shadow at the bottom.
+ *    As a result, they are drawn 1 pixel above the center of the bounds
+ *    rectangle rather than being centered like the other buttons.  One
+ *    can request background bounds for a ComboBox, and it is reported with
+ *    height 23, while the actual button face, including its 1-pixel border
+ *    has height 21.  Attempting to request the content bounds returns a
+ *    0 x 0 rectangle.  Measurement indicates that the arrow button has
+ *    width 18.
+ *
+ *    With no help available from HIToolbox, we have to use hard-wired
+ *    constants for the padding.  We shift the bounding rectangle downward
+ *    by 1 pixel to account for the fact that the button is not centered.
  */
 
-static Ttk_Padding ComboboxPadding = { 3, 0, 17, 4 };
-static Ttk_Padding ComboboxMargins = { 3, 5, 4, 2 };
+static Ttk_Padding ComboboxPadding = {4, 2, 20, 2 };
 
 static void ComboboxElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
-    *widthPtr = 0;
-    *heightPtr = 0;
-    *paddingPtr = Ttk_AddPadding(ComboboxMargins, ComboboxPadding);
+    *minWidth = 24;
+    *minHeight = 23;
+    *paddingPtr = ComboboxPadding;
 }
 
 static void ComboboxElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    CGRect bounds = BoxToRect(d, Ttk_PadBox(b, ComboboxMargins));
+    CGRect bounds = BoxToRect(d, b);
     const HIThemeButtonDrawInfo info = {
 	.version = 0,
 	.state = Ttk_StateTableLookup(ThemeStateTable, state),
@@ -1240,10 +1268,11 @@ static void ComboboxElementDraw(
 	bounds.size.height += 1;
     } else if ((state & TTK_STATE_BACKGROUND) &&
 	       !(state & TTK_STATE_DISABLED)) {
-	CGRect innerBounds = CGRectInset(bounds, 1, 1);
+	CGRect innerBounds = CGRectInset(bounds, 1, 2);
 	NSColor *white = [NSColor whiteColor];
 	SolidFillRoundedRectangle(dc.context, innerBounds, 4, white);
     }
+    bounds.origin.y += 1;
     ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
 }
@@ -1267,14 +1296,14 @@ static Ttk_ElementSpec ComboboxElementSpec = {
 static Ttk_Padding SpinbuttonMargins = {2,0,2,0};
 static void SpinButtonElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     SInt32 s;
 
     ChkErr(GetThemeMetric, kThemeMetricLittleArrowsWidth, &s);
-    *widthPtr = s + Ttk_PaddingWidth(SpinbuttonMargins);
+    *minWidth = s + Ttk_PaddingWidth(SpinbuttonMargins);
     ChkErr(GetThemeMetric, kThemeMetricLittleArrowsHeight, &s);
-    *heightPtr = s + Ttk_PaddingHeight(SpinbuttonMargins);
+    *minHeight = s + Ttk_PaddingHeight(SpinbuttonMargins);
 }
 
 static void SpinButtonElementDraw(
@@ -1351,13 +1380,13 @@ static Ttk_ElementOptionSpec TrackElementOptions[] = {
 
 static void TrackElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     TrackElementData *data = clientData;
     SInt32 size = 24;	/* reasonable default ... */
 
     ChkErr(GetThemeMetric, data->thicknessMetric, &size);
-    *widthPtr = *heightPtr = size;
+    *minWidth = *minHeight = size;
 }
 
 static void TrackElementDraw(
@@ -1438,9 +1467,9 @@ static Ttk_ElementSpec TrackElementSpec = {
  */
 static void SliderElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
-    *widthPtr = *heightPtr = 24;
+    *minWidth = *minHeight = 24;
 }
 
 static Ttk_ElementSpec SliderElementSpec = {
@@ -1483,12 +1512,12 @@ static Ttk_ElementOptionSpec PbarElementOptions[] = {
 
 static void PbarElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     SInt32 size = 24;	/* @@@ Check HIG for correct default */
 
     ChkErr(GetThemeMetric, kThemeMetricLargeProgressBarThickness, &size);
-    *widthPtr = *heightPtr = size;
+    *minWidth = *minHeight = size;
 }
 
 static void PbarElementDraw(
@@ -1558,9 +1587,9 @@ static Ttk_ElementSpec PbarElementSpec = {
 
 static void SeparatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
-    *widthPtr = *heightPtr = 1;
+    *minWidth = *minHeight = 1;
 }
 
 static void SeparatorElementDraw(
@@ -1604,7 +1633,7 @@ static const ThemeGrowDirection sizegripGrowDirection
 
 static void SizegripElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     HIThemeGrowBoxDrawInfo info = {
 	.version = 0,
@@ -1616,8 +1645,8 @@ static void SizegripElementSize(
     CGRect bounds = CGRectZero;
 
     ChkErr(HIThemeGetGrowBoxBounds, &bounds.origin, &info, &bounds);
-    *widthPtr = bounds.size.width;
-    *heightPtr = bounds.size.height;
+    *minWidth = bounds.size.width;
+    *minHeight = bounds.size.height;
 }
 
 static void SizegripElementDraw(
@@ -1822,7 +1851,7 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    ButtonElementSizeNoPadding,
+    ButtonElementMinSize,
     TreeHeaderElementDraw
 };
 
@@ -1839,14 +1868,14 @@ static Ttk_StateTable DisclosureValueTable[] = {
 
 static void DisclosureElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
     SInt32 s;
 
     ChkErr(GetThemeMetric, kThemeMetricDisclosureTriangleWidth, &s);
-    *widthPtr = s;
+    *minWidth = s;
     ChkErr(GetThemeMetric, kThemeMetricDisclosureTriangleHeight, &s);
-    *heightPtr = s;
+    *minHeight = s;
 }
 
 static void DisclosureElementDraw(
@@ -1907,7 +1936,7 @@ TTK_LAYOUT("TMenubutton",
 	    TTK_NODE("Menubutton.label", TTK_PACK_LEFT))))
 
 TTK_LAYOUT("TCombobox",
-    TTK_GROUP("Combobox.button", TTK_PACK_TOP|TTK_FILL_X,
+     TTK_GROUP("Combobox.button", TTK_FILL_BOTH,
 	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Combobox.textarea", TTK_FILL_X))))
 
