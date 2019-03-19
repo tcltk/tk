@@ -103,7 +103,7 @@ enum {
      */
 
     if (eventWindow == NULL) {
-	eventWindow == _windowWithMouse;
+	eventWindow = _windowWithMouse;
     }
     if (eventWindow) {
 
