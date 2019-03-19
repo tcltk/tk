@@ -76,9 +76,6 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
  * encoding to UTF-8).
  */
 
-#if defined(UNICODE) && (TCL_UTF_MAX <= 4)
-#   define NewNativeObj Tcl_NewUnicodeObj
-#else /* !UNICODE || (TCL_UTF_MAX > 4) */
 static inline Tcl_Obj *
 NewNativeObj(
     TCHAR *string,
@@ -99,7 +96,6 @@ NewNativeObj(
     Tcl_DStringFree(&ds);
     return obj;
 }
-#endif /* !UNICODE || (TCL_UTF_MAX > 4) */
 
 /*
  * Declarations for various library functions and variables (don't want to
