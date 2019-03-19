@@ -1250,7 +1250,7 @@ TkWinHandleMenuEvent(
 	    int i, len, underline;
 	    Tcl_Obj *labelPtr;
 	    WCHAR *wlabel;
-	    Tcl_UniChar menuChar;
+	    int menuChar;
 	    Tcl_DString ds;
 
 	    *plResult = 0;
@@ -1259,7 +1259,7 @@ TkWinHandleMenuEvent(
 	     * Assume we have something directly convertable to Tcl_UniChar.
 	     * True at least for wide systems.
 	     */
-	    menuChar = Tcl_UniCharToUpper((Tcl_UniChar) LOWORD(*pwParam));
+	    menuChar = Tcl_UniCharToUpper(LOWORD(*pwParam));
 
 	    Tcl_DStringInit(&ds);
 	    for (i = 0; i < menuPtr->numEntries; i++) {
