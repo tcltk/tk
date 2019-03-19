@@ -856,11 +856,7 @@ DrawMenuUnderline(
     if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
 	int len;
 
-	/*
-	 * Do the unicode call just to prevent overruns.
-	 */
-
-	Tcl_GetUnicodeFromObj(mePtr->labelPtr, &len);
+	len = Tcl_GetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len) {
 	    int activeBorderWidth, leftEdge;
 	    const char *label, *start, *end;
