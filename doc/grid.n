@@ -177,7 +177,7 @@ If a slave's cell is larger than its requested dimensions, this
 option may be used to position (or stretch) the slave within its cell.
 \fIStyle\fR  is a string that contains zero or more of the characters
 \fBn\fR, \fBs\fR, \fBe\fR or \fBw\fR.
-The string can optionally contains spaces or
+The string can optionally contain spaces or
 commas, but they are ignored.  Each letter refers to a side (north, south,
 east, or west) that the slave will
 .QW stick
