@@ -202,6 +202,7 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "DisabledControlTextColor",	    ttkForeground, 2 },						    /* 176 */
     { NULL,				    0, 0 }
 };
+#define FIRST_SEMANTIC_COLOR 166
 #define MAX_PIXELCODE 176
 
 /*
@@ -404,7 +405,7 @@ TkSetMacColor(
  * Results:
  *	None resp. retained CGColorRef for CopyCachedColor()
  *
- * Side effects:
+ * Side effects:M
  *	None.
  *
  *----------------------------------------------------------------------
@@ -568,16 +569,19 @@ TkMacOSXSetColorInContext(
     CGContextRef context)
 {
     OSStatus err = noErr;
-    CGColorRef cgColor = CopyCachedColor(gc, pixel);
+    CGColorRef cgColor = nil;
     struct SystemColorMapEntry entry;
     CGRect rect;
+    int code = (pixel >> 24) & 0xff;
     HIThemeBackgroundDrawInfo info = { 0, kThemeStateActive, entry.value };
     static CGColorSpaceRef deviceRGBSpace = NULL;
     if (!deviceRGBSpace) {
 	deviceRGBSpace = CGColorSpaceCreateDeviceRGB();
     }
-
-    if (!cgColor && GetEntryFromPixelCode((pixel >> 24) & 0xff, &entry)) {
+    if (code < FIRST_SEMANTIC_COLOR) {
+	cgColor = CopyCachedColor(gc, pixel);
+    }
+    if (!cgColor && GetEntryFromPixelCode(code, &entry)) {
 	switch (entry.type) {
 	case HIBrush:
 	    err = ChkErr(HIThemeSetFill, entry.value, NULL, context,
