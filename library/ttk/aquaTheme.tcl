@@ -26,7 +26,7 @@ namespace eval ttk::theme::aqua {
 		!focus systemDialogActiveText}
 
 	# Buttons
-	ttk::style configure TButton -anchor center -width -6 \
+	ttk::style configure TButton -anchor center -width -6\
 	    -foreground systemControlTextColor
 	ttk::style map TButton \
 	    -foreground {
@@ -37,6 +37,7 @@ namespace eval ttk::theme::aqua {
 	ttk::style map TRadiobutton \
 	    -foreground {
 		disabled systemDisabledControlTextColor}
+	ttk::style configure Toolbutton -anchor center
 	ttk::style map Toolbutton \
 	    -foreground {
 		disabled systemDisabledControlTextColor
