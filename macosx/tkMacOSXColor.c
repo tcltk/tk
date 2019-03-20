@@ -660,6 +660,7 @@ TkpGetColor(
 	    CGColorRef c;
 	    unsigned char pixelCode = idx + MIN_PIXELCODE;
 	    struct SystemColorMapEntry entry = systemColorMap[idx];
+	    err = ChkErr(SetCGColorComponents, entry, 0, &c);
 	    if (err == noErr) {
 		const size_t n = CGColorGetNumberOfComponents(c);
 		const CGFloat *rgba = CGColorGetComponents(c);
