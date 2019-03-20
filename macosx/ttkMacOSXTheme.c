@@ -814,12 +814,19 @@ static void ButtonElementMinSize(
 	/*
 	 * The theme height does not include the 1-pixel border around
 	 * the button, although it does include the 1-pixel shadow at
-	 * the bottom.  The corner radius is 4, so 8 is a reasonable
-	 * minimum width.
+	 * the bottom.
 	 */
 
 	*minHeight += 2;
-	*minWidth = 8;
+
+	/* 
+	 * The minwidth must be 0 to force the generic ttk code to compute
+	 * the correct text layout.  For example, a non-zero value will cause the
+	 * text to be left justified, no matter what -anchor setting is used
+	 * in the style.
+	 */
+
+	*minWidth = 0;
     }
 }
 
