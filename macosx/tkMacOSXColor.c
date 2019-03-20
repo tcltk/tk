@@ -42,7 +42,7 @@ enum colorType {
 struct SystemColorMapEntry {
     const char *name;
     enum colorType type;
-    unsigned long value;
+    long value;
 };  /* unsigned char pixelCode; */
 
 /*
@@ -189,7 +189,7 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "ListViewWindowHeaderBackground",	    HIBackground, kThemeBackgroundListViewWindowHeader },	    /* 163 */
     { "SecondaryGroupBoxBackground",	    HIBackground, kThemeBackgroundSecondaryGroupBox },		    /* 164 */
     { "MetalBackground",		    HIBackground, kThemeBackgroundMetal },			    /* 165 */
-    { "TtkBackground",			    HIBrush,      kThemeBrushModelessDialogBackgroundActive },	    /* 166 */
+    { "TtkBackground",			    ttkBackground, 0 },	    					    /* 166 */
     { "TtkBackground1",			    ttkBackground, 1 },						    /* 167 */
     { "TtkBackground2",			    ttkBackground, 2 },						    /* 168 */
     { "TtkBackground3",			    ttkBackground, 3 },						    /* 169 */
@@ -388,7 +388,6 @@ TkSetMacColor(
     CGColorRef *color = (CGColorRef*)macColor;
     OSStatus err = -1;
     struct SystemColorMapEntry entry;
-
     if (GetEntryFromPixelCode((pixel >> 24) & 0xff, &entry)) {
 	err = ChkErr(SetCGColorComponents, entry, pixel, color);
     }
@@ -648,6 +647,7 @@ TkpGetColor(
      * Check to see if this is a system color. Otherwise, XParseColor
      * will do all the work.
      */
+
     if (strncasecmp(name, "system", 6) == 0) {
 	Tcl_Obj *strPtr = Tcl_NewStringObj(name+6, -1);
 	int idx, result;
@@ -660,8 +660,6 @@ TkpGetColor(
 	    CGColorRef c;
 	    unsigned char pixelCode = idx + MIN_PIXELCODE;
 	    struct SystemColorMapEntry entry = systemColorMap[idx];
-
-	    err = ChkErr(SetCGColorComponents, entry, 0, &c);
 	    if (err == noErr) {
 		const size_t n = CGColorGetNumberOfComponents(c);
 		const CGFloat *rgba = CGColorGetComponents(c);
