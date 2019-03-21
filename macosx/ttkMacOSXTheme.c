@@ -836,7 +836,7 @@ static void ButtonElementSize(
 {
     ThemeButtonParams *params = clientData;
     const HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, 0, tkwin);
-    static const CGRect scratchBounds = {{0, 0}, {100, 20}};
+    static const CGRect scratchBounds = {{0, 0}, {100, 100}};
     CGRect contentBounds, backgroundBounds;
     int verticalPad;
 
@@ -864,18 +864,11 @@ static void ButtonElementSize(
 	&scratchBounds, &info, &contentBounds);
     ChkErr(HIThemeGetButtonBackgroundBounds,
 	   &scratchBounds, &info, &backgroundBounds);
-    if (info.kind == kThemeComboBox) {
-	printf("ButtonElementSize: combobox %s contentBounds = %s\n",
-	       Tk_PathName(tkwin), NSStringFromRect(contentBounds).UTF8String);
-	printf("ButtonElementSize: combobox %s backgroundBounds = %s\n\n",
-	       Tk_PathName(tkwin), NSStringFromRect(backgroundBounds).UTF8String);
-    }
     paddingPtr->left = contentBounds.origin.x - backgroundBounds.origin.x;
     paddingPtr->right = (CGRectGetMaxX(backgroundBounds) -
 			 CGRectGetMaxX(contentBounds));
     verticalPad = backgroundBounds.size.height - contentBounds.size.height;
-    paddingPtr->top = verticalPad /2;
-    paddingPtr->bottom = verticalPad - paddingPtr->top;
+    paddingPtr->top = paddingPtr->bottom = verticalPad / 2;
 }
 
 static void ButtonElementDraw(
