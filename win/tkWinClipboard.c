@@ -155,7 +155,8 @@ TkSelGetSelection(
 		if (count) {
 		    Tcl_DStringAppend(&ds, "\n", 1);
 		}
-		Tcl_WinTCharToUtf(fname, -1, &dsTmp);
+		len = Tcl_UniCharLen((Tcl_UniChar *) fname);
+		Tcl_WinTCharToUtf(fname, len * sizeof(WCHAR), &dsTmp);
 		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
 			Tcl_DStringLength(&dsTmp));
 		Tcl_DStringFree(&dsTmp);
