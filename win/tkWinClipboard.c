@@ -149,13 +149,15 @@ TkSelGetSelection(
 	if (drop->fWide) {
 	    WCHAR *fname = (WCHAR *) ((char *) drop + drop->pFiles);
 	    Tcl_DString dsTmp;
-	    int count = 0, len;
+	    int count = 0;
+	    size_t len;
 
 	    while (*fname != 0) {
 		if (count) {
 		    Tcl_DStringAppend(&ds, "\n", 1);
 		}
-		Tcl_WinTCharToUtf(fname, -1, &dsTmp);
+		len = wcslen(fname);
+		Tcl_WinTCharToUtf(fname, len * sizeof(WCHAR), &dsTmp);
 		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
 			Tcl_DStringLength(&dsTmp));
 		Tcl_DStringFree(&dsTmp);
