@@ -217,6 +217,14 @@ typedef struct TkScale {
 #define SPACING 2
 
 /*
+ * The tick values are all displayed with the same number of decimal places.
+ * This number of decimal places is such that the displayed values are all
+ * accurate to within the following proportion of a tick interval.
+ */
+
+#define TICK_VALUES_DISPLAY_ACCURACY 0.2
+
+/*
  * Declaration of procedures used in the implementation of the scale widget.
  */
 

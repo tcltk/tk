@@ -904,11 +904,12 @@ ComputeFormat(
 	    leastSigDigit = ScaleDigit(scalePtr->tickInterval);
 
 	    /*
-	     * Now add more digits until max error is less than 0.2 intervals
+	     * Now add more digits until max error is less than
+	     * TICK_VALUES_DISPLAY_ACCURACY intervals
 	     */
 
 	    while (MaxTickRoundingError(scalePtr, pow(10, leastSigDigit))
-		    > fabs(0.2 * scalePtr->tickInterval)) {
+		    > fabs(TICK_VALUES_DISPLAY_ACCURACY * scalePtr->tickInterval)) {
 		--leastSigDigit;
 	    }
 	    numDigits = 1 + mostSigDigit - leastSigDigit;
