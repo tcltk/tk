@@ -162,6 +162,8 @@ static void		ComputeScaleGeometry(TkScale *scalePtr);
 static int		ConfigureScale(Tcl_Interp *interp, TkScale *scalePtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyScale(char *memPtr);
+static double		MaxTickRoundingError(TkScale *scalePtr,
+			    double tickResolution);
 static void		ScaleCmdDeletedProc(ClientData clientData);
 static void		ScaleEventProc(ClientData clientData,
 			    XEvent *eventPtr);
@@ -182,13 +184,50 @@ static void		ScaleSetVariable(TkScale *scalePtr);
 static const Tk_ClassProcs scaleClass = {
     sizeof(Tk_ClassProcs),	/* size */
     ScaleWorldChanged,		/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ScaleDigit, ScaleMax, ScaleMin, ScaleRound --
+ *
+ *	Simple math helper functions, designed to be automatically inlined by
+ *	the compiler most of the time.
+ *
+ *--------------------------------------------------------------
+ */
 
-#define ROUND(d)    ((int) floor((d) + 0.5))
-#define MIN(a, b)   ((a) < (b)? (a): (b))
-#define MAX(a, b)   ((a) > (b)? (a): (b))
+static inline int
+ScaleDigit(
+    double value)
+{
+    return (int) floor(log10(fabs(value)));
+}
+
+static inline double
+ScaleMax(
+    double a,
+    double b)
+{
+    return (a > b) ? a : b;
+}
+
+static inline double
+ScaleMin(
+    double a,
+    double b)
+{
+    return (a < b) ? a : b;
+}
+
+static inline int
+ScaleRound(
+    double value)
+{
+    return (int) floor(value + 0.5);
+}
 
 /*
  *--------------------------------------------------------------
@@ -763,7 +802,6 @@ ScaleWorldChanged(
 
     TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
 }
-
 
  /*
   *----------------------------------------------------------------------
@@ -784,8 +822,8 @@ ScaleWorldChanged(
   *
   *----------------------------------------------------------------------
   */
- 
-static double 
+
+static double
 MaxTickRoundingError(
     TkScale *scalePtr,		/* Information about scale widget. */
     double tickResolution)      /* Separation between displayable values. */
@@ -793,16 +831,27 @@ MaxTickRoundingError(
     double tickPosn, firstTickError, lastTickError, intervalError;
     int tickCount;
 
-    tickPosn = scalePtr->fromValue/tickResolution; 
-    firstTickError = tickPosn - ROUND(tickPosn);
-    tickPosn = scalePtr->tickInterval/tickResolution; 
-    intervalError = tickPosn - ROUND(tickPosn);
-    tickCount = (int)((scalePtr->toValue-scalePtr->fromValue) /
-		      scalePtr->tickInterval); // not including first
-    lastTickError = MIN(fabs(firstTickError + tickCount*intervalError), 0.5);
-    return MAX(fabs(firstTickError),lastTickError)*tickResolution;
-}
+    /*
+     * Compute the error for each tick-related measure.
+     */
 
+    tickPosn = scalePtr->fromValue / tickResolution;
+    firstTickError = tickPosn - ScaleRound(tickPosn);
+
+    tickPosn = scalePtr->tickInterval / tickResolution;
+    intervalError = tickPosn - ScaleRound(tickPosn);
+
+    tickCount = (int) ((scalePtr->toValue - scalePtr->fromValue) /
+	    scalePtr->tickInterval);	/* not including first */
+    lastTickError = ScaleMin(0.5,
+	    fabs(firstTickError + tickCount * intervalError));
+
+    /*
+     * Compute the maximum cumulative rounding error.
+     */
+
+    return ScaleMax(fabs(firstTickError), lastTickError) * tickResolution;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -843,23 +892,25 @@ ComputeFormat(
     if (maxValue == 0) {
 	maxValue = 1;
     }
-    mostSigDigit = (int) floor(log10(maxValue));
+    mostSigDigit = ScaleDigit(maxValue);
 
     if (forTicks) {
 	/*
 	 * Display only enough digits to ensure adjacent ticks have different
-	 * values
+	 * values.
 	 */
 
 	if (scalePtr->tickInterval != 0) {
-	    leastSigDigit = (int) floor(log10(fabs(scalePtr->tickInterval)));
+	    leastSigDigit = ScaleDigit(scalePtr->tickInterval);
+
 	    /*
 	     * Now add more digits until max error is less than 0.2 intervals
 	     */
-	    while (MaxTickRoundingError(scalePtr, pow(10,leastSigDigit)) > 
-		   fabs(0.2*scalePtr->tickInterval))
-		--leastSigDigit;
 
+	    while (MaxTickRoundingError(scalePtr, pow(10, leastSigDigit))
+		    > fabs(0.2 * scalePtr->tickInterval)) {
+		--leastSigDigit;
+	    }
 	    numDigits = 1 + mostSigDigit - leastSigDigit;
 	} else {
 	    numDigits = 1;
@@ -884,21 +935,21 @@ ComputeFormat(
 		/*
 		 * A resolution was specified for the scale, so just use it.
 		 */
-		
-		leastSigDigit = (int) floor(log10(scalePtr->resolution));
+
+		leastSigDigit = ScaleDigit(scalePtr->resolution);
 	    } else {
 		/*
 		 * No resolution was specified, so compute the difference in
 		 * value between adjacent pixels and use it for the least
 		 * significant digit.
 		 */
-		
+
 		x = fabs(scalePtr->fromValue - scalePtr->toValue);
 		if (scalePtr->length > 0) {
 		    x /= scalePtr->length;
 		}
-		if (x > 0){
-		    leastSigDigit = (int) floor(log10(x));
+		if (x > 0) {
+		    leastSigDigit = ScaleDigit(x);
 		} else {
 		    leastSigDigit = 0;
 		}
@@ -930,17 +981,18 @@ ComputeFormat(
     if (mostSigDigit < 0) {
 	fDigits++;			/* Zero to left of decimal point. */
     }
+
     if (forTicks) {
 	if (fDigits <= eDigits) {
 	    sprintf(scalePtr->tickFormat, "%%.%df", afterDecimal);
 	} else {
-	    sprintf(scalePtr->tickFormat, "%%.%de", numDigits-1);
+	    sprintf(scalePtr->tickFormat, "%%.%de", numDigits - 1);
 	}
     } else {
 	if (fDigits <= eDigits) {
 	    sprintf(scalePtr->valueFormat, "%%.%df", afterDecimal);
 	} else {
-	    sprintf(scalePtr->valueFormat, "%%.%de", numDigits-1);
+	    sprintf(scalePtr->valueFormat, "%%.%de", numDigits - 1);
 	}
     }
 }
@@ -1546,8 +1598,8 @@ TkScaleValueToPixel(
     if (valueRange == 0) {
 	y = 0;
     } else {
-	y = (int) ((value - scalePtr->fromValue) * pixelRange
-		/ valueRange + 0.5);
+	y = ScaleRound((value - scalePtr->fromValue) * pixelRange
+		/ valueRange);
 	if (y < 0) {
 	    y = 0;
 	} else if (y > pixelRange) {
