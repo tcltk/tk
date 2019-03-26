@@ -1200,7 +1200,7 @@ static void EntryElementDraw(
 
     XFillRectangle(Tk_Display(tkwin), d,
 	    Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
-	    inner.x,inner.y, inner.width, inner.height);
+	    inner.x, inner.y, inner.width, inner.height);
 
     BEGIN_DRAWING(d)
     ChkErr(HIThemeDrawFrame, &bounds, &info, dc.context, HIOrientation);
@@ -1268,9 +1268,9 @@ static void ComboboxElementDraw(
 	bounds.size.height += 1;
     } else if ((state & TTK_STATE_BACKGROUND) &&
 	       !(state & TTK_STATE_DISABLED)) {
+	NSColor *background = [NSColor textBackgroundColor];
 	CGRect innerBounds = CGRectInset(bounds, 1, 2);
-	NSColor *white = [NSColor whiteColor];
-	SolidFillRoundedRectangle(dc.context, innerBounds, 4, white);
+	SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
     }
     bounds.origin.y += 1;
     ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
@@ -1807,6 +1807,41 @@ static Ttk_ElementSpec ToolbarBackgroundElementSpec = {
 };
 
 /*----------------------------------------------------------------------
+ * +++ Field element:
+ * 	Used for the Treeview widget. This is like the BackgroundElement
+ *      except that the fieldbackground color is configureable.
+ */
+
+typedef struct {
+    Tcl_Obj	*backgroundObj;
+} FieldElement;
+
+static Ttk_ElementOptionSpec FieldElementOptions[] = {
+    { "-fieldbackground", TK_OPTION_BORDER,
+	    Tk_Offset(FieldElement, backgroundObj), "white" },
+    { NULL, 0, 0, NULL }
+};
+
+static void FieldElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, Ttk_State state)
+{
+    FieldElement *e = elementRecord;
+    Tk_3DBorder backgroundPtr = Tk_Get3DBorderFromObj(tkwin,e->backgroundObj);
+    XFillRectangle(Tk_Display(tkwin), d,
+		   Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
+		   b.x, b.y, b.width, b.height);
+}
+
+static Ttk_ElementSpec FieldElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(FieldElement),
+    FieldElementOptions,
+    TtkNullElementSize,
+    FieldElementDraw
+};
+
+/*----------------------------------------------------------------------
  * +++ Treeview header
  *    Redefine the header to use a kThemeListHeaderButton.
  */
@@ -1851,7 +1886,7 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    ButtonElementMinSize,
+    ButtonElementSize,
     TreeHeaderElementDraw
 };
 
@@ -1938,7 +1973,7 @@ TTK_LAYOUT("TMenubutton",
 TTK_LAYOUT("TCombobox",
      TTK_GROUP("Combobox.button", TTK_FILL_BOTH,
 	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Combobox.textarea", TTK_FILL_X))))
+	    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH))))
 
 /* Notebook tabs -- no focus ring */
 TTK_LAYOUT("Tab",
@@ -1955,11 +1990,17 @@ TTK_LAYOUT("TSpinbox",
 TTK_LAYOUT("TProgressbar",
     TTK_NODE("Progressbar.track", TTK_EXPAND|TTK_FILL_BOTH))
 
+/* Treeview -- no border. */
+TTK_LAYOUT("Treeview",
+    TTK_GROUP("Treeview.field", TTK_FILL_BOTH,
+        TTK_GROUP("Treeview.padding", TTK_FILL_BOTH,
+		  TTK_NODE("Treeview.treearea", TTK_FILL_BOTH))))
+
 /* Tree heading -- no border, fixed height */
 TTK_LAYOUT("Heading",
-    TTK_NODE("Treeheading.cell", TTK_FILL_X)
+    TTK_NODE("Treeheading.cell", TTK_FILL_BOTH)
     TTK_NODE("Treeheading.image", TTK_PACK_RIGHT)
-    TTK_NODE("Treeheading.text", 0))
+    TTK_NODE("Treeheading.text", TTK_PACK_TOP))
 
 /* Tree items -- omit focus ring */
 TTK_LAYOUT("Item",
@@ -1987,6 +2028,7 @@ static int AquaTheme_Init(Tcl_Interp *interp)
      */
     Ttk_RegisterElementSpec(themePtr, "background", &BackgroundElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "fill", &FillElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "field", &FieldElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Toolbar.background",
 	&ToolbarBackgroundElementSpec, 0);
 
