@@ -203,10 +203,11 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "ControlTextColor",      		    semantic, 3 },						    /* 177 */
     { "DisabledControlTextColor",	    semantic, 4 },						    /* 178 */
     { "TextBackgroundColor",		    semantic, 5 },						    /* 179 */
+    { "SelectedTextBackgroundColor",	    semantic, 6 },						    /* 180 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 179
+#define MAX_PIXELCODE 180
 
 /*
  *----------------------------------------------------------------------
@@ -311,6 +312,10 @@ SetCGColorComponents(
 	    break;
 	case 5:
 	    color = [[NSColor textBackgroundColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
+	    break;
+	case 6:
+	    color = [[NSColor selectedTextBackgroundColor] colorUsingColorSpace:
 			  [NSColorSpace deviceRGBColorSpace]];
 	    break;
 	default:

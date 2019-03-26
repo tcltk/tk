@@ -71,18 +71,22 @@ namespace eval ttk::theme::aqua {
 		!selected systemControlTextColor}
 
 	# Combobox:
-	ttk::style configure TCombobox -selectforeground black \
-	    -background systemTextBackgroundColor
+	ttk::style configure TCombobox \
+	    -foreground systemTextColor \
+	    -background systemTransparent \
+	    -selectforeground systemSelectedTextColor \
+	    -selectbackground systemSelectedTextBackgroundColor
 	ttk::style map TCombobox \
 	    -foreground {
 		disabled systemDisabledControlTextColor
-		focus black
-		{} black
+	    } \
+	    -selectforeground {
 		!active systemTextColor
 	    } \
 	    -selectbackground {
-		!focus white
-
+		!active systemTextBackgroundColor
+		!focus systemTextBackgroundColor
+		focus systemSelectedTextBackgroundColor
 	    }
 
 	# Treeview:
@@ -91,14 +95,6 @@ namespace eval ttk::theme::aqua {
 	    -fieldbackground systemTextBackgroundColor \
 	    -background systemTextBackgroundColor \
 	    -foreground systemTextColor
-	# ttk::style map Treeview \
-	#     -background {
-	# 	disabled systemDialogBackgroundInactive
-	# 	{selected background} systemHighlightSecondary
-	# 	selected systemHighlight} \
-	#     -foreground {
-	# 	!active black
-	#     }
 
 	# Enable animation for ttk::progressbar widget:
 	ttk::style configure TProgressbar -period 100 -maxphase 255

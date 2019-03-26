@@ -373,6 +373,41 @@ static void HighlightButtonBorder(
     CFRelease(topGradient);
 }
 
+
+static void DrawUpDownArrows(
+    CGRect bounds,
+    CGContextRef context)
+{
+    CGFloat x, y;
+    CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + 5;
+    y = bounds.origin.y + trunc(bounds.size.height/2);
+    CGContextBeginPath(context);
+    CGPoint bottomArrow[3] = {{x, y+2}, {x+3.5, y+5.5}, {x+7, y+2}};
+    CGContextAddLines(context, bottomArrow, 3);
+    CGPoint topArrow[3] = {{x, y-2}, {x+3.5, y-5.5}, {x+7, y-2}};
+    CGContextAddLines(context, topArrow, 3);
+    CGContextStrokePath(context);
+    CGContextRestoreGState(context);
+}
+
+static void DrawDownArrow(
+    CGRect bounds,
+    CGContextRef context)
+{
+    CGFloat x, y;
+    CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + 5;
+    y = bounds.origin.y + trunc(bounds.size.height/2);
+    CGContextBeginPath(context);
+    CGPoint bottomArrow[3] = {{x, y-3}, {x+3.5, y+3}, {x+7, y-3}};
+    CGContextAddLines(context, bottomArrow, 3);
+    CGContextStrokePath(context);
+    CGContextRestoreGState(context);
+}
+
 /*
  * DrawDarkButton --
  *
@@ -424,8 +459,7 @@ static void DrawDarkButton(
      * If this is a popup, draw the arrow button.
      */
 
-    if (kind == kThemePopupButton) {
-	CGFloat x, y;
+    if (kind == kThemePopupButton | kind == kThemeComboBox) {
 	CGRect arrowBounds = bounds;
 	arrowBounds.size.width = 16;
 	arrowBounds.origin.x += bounds.size.width - 16;
@@ -439,29 +473,18 @@ static void DrawDarkButton(
 	    GradientFillRoundedRectangle(context, arrowBounds, 4,
 				   darkSelectedGradient, 2);
 	}
-
-	/*
-	 * Stroke the arrows.
-	 */
-
-	CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
-	CGContextSetLineWidth(context, 1.5);
-	x = arrowBounds.origin.x + 5;
-	y = arrowBounds.origin.y + trunc(arrowBounds.size.height/2);
-	CGContextBeginPath(context);
-	CGPoint bottomArrow[3] = {{x, y+2}, {x+3.5, y+5.5}, {x+7, y+2}};
-	CGContextAddLines(context, bottomArrow, 3);
-	CGPoint topArrow[3] = {{x, y-2}, {x+3.5, y-5.5}, {x+7, y-2}};
-	CGContextAddLines(context, topArrow, 3);
-	CGContextStrokePath(context);
-	CGContextRestoreGState(context);
+	if (kind == kThemePopupButton) {
+	    DrawUpDownArrows(arrowBounds, context);
+	} else {
+	    DrawDownArrow(arrowBounds, context);
+	}
     }
 
     HighlightButtonBorder(context, bounds);
 }
 
 /*
- * DrawDarkButton --
+ * DrawDarkBevelButton --
  *
  *    This is a standalone drawing procedure which draws
  *    RoundedBevelButtons in the Dark Mode style.
@@ -1264,16 +1287,19 @@ static void ComboboxElementDraw(
     };
 
     BEGIN_DRAWING(d)
+    bounds.origin.y += 1;
     if (TkMacOSXInDarkMode(tkwin)) {
 	bounds.size.height += 1;
-    } else if ((state & TTK_STATE_BACKGROUND) &&
-	       !(state & TTK_STATE_DISABLED)) {
-	NSColor *background = [NSColor textBackgroundColor];
-	CGRect innerBounds = CGRectInset(bounds, 1, 2);
-	SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
+	DrawDarkButton(bounds, info.kind, state, dc.context);
+    } else {
+	if ((state & TTK_STATE_BACKGROUND) &&
+	    !(state & TTK_STATE_DISABLED)) {
+	    NSColor *background = [NSColor textBackgroundColor];
+	    CGRect innerBounds = CGRectInset(bounds, 1, 2);
+	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
+	}
+	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
-    bounds.origin.y += 1;
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
 }
 
@@ -1918,10 +1944,12 @@ static void DisclosureElementDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     if (!(state & TTK_TREEVIEW_STATE_LEAF)) {
+	int triangleState = TkMacOSXInDarkMode(tkwin) ?
+	    kThemeStateInactive : kThemeStateActive; 
 	CGRect bounds = BoxToRect(d, b);
 	const HIThemeButtonDrawInfo info = {
 	    .version = 0,
-	    .state = Ttk_StateTableLookup(ThemeStateTable, state),
+	    .state = triangleState,
 	    .kind = kThemeDisclosureTriangle,
 	    .value = Ttk_StateTableLookup(DisclosureValueTable, state),
 	    .adornment = kThemeAdornmentDrawIndicatorOnly,
