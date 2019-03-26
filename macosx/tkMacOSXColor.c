@@ -20,7 +20,7 @@
 /*
  * The colorType specifies how the color value should be interpreted.  For the
  * unique rgbColor entry, the RGB values are generated from the pixel value of
- * an XColor.  The ttkBackground and ttkForeground types are dynamic, meaning
+ * an XColor.  The ttkBackground and semantic types are dynamic, meaning
  * that they change when dark mode is enabled on OSX 10.13 and later.
  */
 
@@ -32,7 +32,7 @@ enum colorType {
     HIText,        /* The value is a HITheme text color table index. */
     HIBackground,  /* The value is a HITheme background color table index. */
     ttkBackground, /* The value can be used as a parameter.*/
-    ttkForeground, /* The value can be used as a parameter.*/
+    semantic, /* The value can be used as a parameter.*/
 };
 
 /*
@@ -197,13 +197,16 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "TtkBackground5",			    ttkBackground, 5 },						    /* 171 */
     { "TtkBackground6",			    ttkBackground, 6 },						    /* 172 */
     { "TtkBackground7",			    ttkBackground, 7 },						    /* 173 */
-    { "LabelColor",			    ttkForeground, 0 },						    /* 174 */
-    { "ControlTextColor",      		    ttkForeground, 1 },						    /* 175 */
-    { "DisabledControlTextColor",	    ttkForeground, 2 },						    /* 176 */
+    { "TextColor",			    semantic, 0 },						    /* 174 */
+    { "SelectedTextColor",		    semantic, 1 },						    /* 175 */
+    { "LabelColor",			    semantic, 2 },						    /* 176 */
+    { "ControlTextColor",      		    semantic, 3 },						    /* 177 */
+    { "DisabledControlTextColor",	    semantic, 4 },						    /* 178 */
+    { "TextBackgroundColor",		    semantic, 5 },						    /* 179 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 176
+#define MAX_PIXELCODE 179
 
 /*
  *----------------------------------------------------------------------
@@ -260,7 +263,7 @@ SetCGColorComponents(
     CGColorRef *c)
 {
     OSStatus err = noErr;
-    NSColor *bgColor, *fgColor;
+    NSColor *bgColor, *color;
     CGFloat rgba[4] = {0, 0, 0, 1};
     static CGColorSpaceRef deviceRGBSpace = NULL;
     if (!deviceRGBSpace) {
@@ -284,29 +287,45 @@ SetCGColorComponents(
 	    rgba[i] -= entry.value*(8.0/255.0);
 	}
 	break;
-    case ttkForeground:
+    case semantic:
 	switch (entry.value) {
+	case 0:
+	    color = [[NSColor textColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
+	    break;
 	case 1:
-	    fgColor = [[NSColor controlTextColor] colorUsingColorSpace:
+	    color = [[NSColor selectedTextColor] colorUsingColorSpace:
 			  [NSColorSpace deviceRGBColorSpace]];
 	    break;
 	case 2:
-	    fgColor = [[NSColor disabledControlTextColor] colorUsingColorSpace:
+	    color = [[NSColor labelColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
+	    break;
+	case 3:
+	    color = [[NSColor controlTextColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
+	    break;
+	case 4:
+	    color = [[NSColor disabledControlTextColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
+	    break;
+	case 5:
+	    color = [[NSColor textBackgroundColor] colorUsingColorSpace:
 			  [NSColorSpace deviceRGBColorSpace]];
 	    break;
 	default:
 	    if ([NSApp macMinorVersion] < 10) {
-	    fgColor = [[NSColor textColor] colorUsingColorSpace:
+	    color = [[NSColor textColor] colorUsingColorSpace:
 			  [NSColorSpace deviceRGBColorSpace]];
 	    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
-		fgColor = [[NSColor labelColor] colorUsingColorSpace:
+		color = [[NSColor labelColor] colorUsingColorSpace:
 			      [NSColorSpace deviceRGBColorSpace]];
 #endif
 		break;
 	    }
 	}
-	[fgColor getComponents: rgba];
+	[color getComponents: rgba];
 	break;
     case clearColor:
 	rgba[3]	= 0.0;

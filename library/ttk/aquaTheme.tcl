@@ -25,7 +25,7 @@ namespace eval ttk::theme::aqua {
 		background systemLabelColor
 		!focus systemDialogActiveText}
 
-	# Buttons
+	# Button
 	ttk::style configure TButton -anchor center -width -6\
 	    -foreground systemControlTextColor
 	ttk::style map TButton \
@@ -37,11 +37,21 @@ namespace eval ttk::theme::aqua {
 	ttk::style map TRadiobutton \
 	    -foreground {
 		disabled systemDisabledControlTextColor}
+	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
 	ttk::style configure Toolbutton -anchor center
 	ttk::style map Toolbutton \
 	    -foreground {
 		disabled systemDisabledControlTextColor
 	    }
+
+	# Entry
+	ttk::style configure TEntry \
+	    -foreground systemTextColor \
+	    -background systemTextBackgroundColor \
+	    -selectforeground systemSelectedTextColor
+	ttk::style map TEntry \
+	    -foreground {
+		disabled systemDisabledControlTextColor}
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
@@ -56,39 +66,39 @@ namespace eval ttk::theme::aqua {
 	ttk::style map TNotebook.Tab \
 	    -foreground {
 		{background !disabled !selected} systemControlTextColor
-		{background selected} black
+		{background selected} systemTextBackgroundColor
 		disabled systemDisabledControlTextColor
 		!selected systemControlTextColor}
 
 	# Combobox:
-	# We do not have a drawing procedure for Dark Comboboxes.
-	# This fakes the color in Dark Mode by using the system
-	# background color for (light) inactive widgets, and uses a
-	# white background for active Comboboxes, even in Dark Mode.
-	ttk::style configure TCombobox -selectforeground black
+	ttk::style configure TCombobox -selectforeground black \
+	    -background systemTextBackgroundColor
 	ttk::style map TCombobox \
 	    -foreground {
 		disabled systemDisabledControlTextColor
 		focus black
 		{} black
-		!active systemControlTextColor
+		!active systemTextColor
 	    } \
 	    -selectbackground {
 		!focus white
+
 	    }
 
 	# Treeview:
-	ttk::style configure Heading -font TkHeadingFont
-	ttk::style configure Treeview -rowheight 18 -background White \
-	    -foreground black
-	ttk::style map Treeview \
-	    -background {
-		disabled systemDialogBackgroundInactive
-		{selected background} systemHighlightSecondary
-		selected systemHighlight} \
-	    -foreground {
-		!active black
-	    }
+	ttk::style configure Heading -font TkHeadingFont -foreground black
+	ttk::style configure Treeview -rowheight 18 \
+	    -fieldbackground systemTextBackgroundColor \
+	    -background systemTextBackgroundColor \
+	    -foreground systemTextColor
+	# ttk::style map Treeview \
+	#     -background {
+	# 	disabled systemDialogBackgroundInactive
+	# 	{selected background} systemHighlightSecondary
+	# 	selected systemHighlight} \
+	#     -foreground {
+	# 	!active black
+	#     }
 
 	# Enable animation for ttk::progressbar widget:
 	ttk::style configure TProgressbar -period 100 -maxphase 255
