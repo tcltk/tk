@@ -905,11 +905,11 @@ ComputeFormat(
 
 	    /*
 	     * Now add more digits until max error is less than
-	     * TICK_VALUES_DISPLAY_ACCURACY intervals
+	     * TICK_VALUES_DISPLAY_PRECISION intervals
 	     */
 
 	    while (MaxTickRoundingError(scalePtr, pow(10, leastSigDigit))
-		    > fabs(TICK_VALUES_DISPLAY_ACCURACY * scalePtr->tickInterval)) {
+		    > fabs(TICK_VALUES_DISPLAY_PRECISION * scalePtr->tickInterval)) {
 		--leastSigDigit;
 	    }
 	    numDigits = 1 + mostSigDigit - leastSigDigit;
