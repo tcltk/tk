@@ -173,14 +173,22 @@ there is no other supported way to obtain the data.  If the Services
 process is not desired, the NSServices keys can be deleted from
 the application's Info.plist file. The underlying code supporting this
 command also allows the text, entry and ttk::entry widgets to access
-services from other applications via the Services menu.
+services from other applications via the Services menu. The NSPortName
+key in Wish's Info.plist file is currently set as
+.QW "Wish"
+; if a developer changes the name of the Wish executable to something
+  else, this key should be modified with the same name.
 .TP
 \fB::tk::mac::LaunchURL \fIURL...\fR
 .
 If defined, launches a URL within Tk. This would be used if a Tk
 application wants to handle a URL itself, such as displaying data from
 an RSS feed, rather than launching a default application to handle the
-URL, although it can defined as such.
+URL, although it can defined as such. Wish includes a stub URL scheme
+of
+.QW foo://
+in the CFBundleURLSchemes key of its Info.plist file; this should be customized for the specific URL
+scheme the developer wants to support. 
 .TP
 \fB::tk::mac::GetAppPath\fR
 .
