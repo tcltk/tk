@@ -451,90 +451,90 @@ AC_DEFUN([SC_LOAD_TKCONFIG], [
 #------------------------------------------------------------------------
 
 AC_DEFUN([SC_TCL_FIND_SOURCES],[
-	[TCL_ACTUAL_SRC_DIR=` <<-'EOF' "$TCLSH_PROG" - "$srcdir" "$TCL_SRC_DIR" \
-		"$TCL_MAJOR_VERSION" "$TCL_MINOR_VERSION"
+    [TCL_ACTUAL_SRC_DIR=` <<-'EOF' "$TCLSH_PROG" - "$srcdir" "$TCL_SRC_DIR" \
+	"$TCL_MAJOR_VERSION" "$TCL_MINOR_VERSION"
 
-	proc cat fname {
-		set chan [open $fname]
-		try {
-			read $chan
-		} finally {
-			close $chan
+    proc cat fname {
+	set chan [open $fname]
+	try {
+	    read $chan
+	} finally {
+	    close $chan
+	}
+    }
+
+    proc main {argv0 argv} {
+	try {
+	    lassign $argv -> srcdir tcl_src_dir majortarget minortarget
+	    lappend candidates $tcl_src_dir
+	    set srcdir [file dirname [file normalize $srcdir/...]]
+	    set topsrcdir [file dirname $srcdir]
+	    set sources [file dirname $topsrcdir]
+	    foreach dirname [glob -nocomplain -directory $sources *] {
+		if {$dirname ni $candidates} {
+		    lappend candidates $dirname
 		}
+	    }
+	    foreach candidate $candidates {
+		set res [check $candidate $majortarget $minortarget]
+		if {$res eq {}} continue else {
+		    puts -nonewline $res
+		    break
+		}
+	    }
+	    set status 0
+	} on error {tres topts} {
+	    puts stderr [dict get $topts -errorinfo]
+	    set status 1
+	}
+	exit $status
+    }
+
+    proc check {candidate majortarget minortarget} {
+	set tclh $candidate/generic/tcl.h
+
+	if {![file exists $tclh]} {
+	    return {} 
 	}
 
-	proc main {argv0 argv} {
-		try {
-			lassign $argv -> srcdir tcl_src_dir majortarget minortarget
-			lappend candidates $tcl_src_dir
-			set srcdir [file dirname [file normalize $srcdir/...]]
-			set topsrcdir [file dirname $srcdir]
-			set sources [file dirname $topsrcdir]
-			foreach dirname [glob -nocomplain -directory $sources *] {
-				if {$dirname ni $candidates} {
-					lappend candidates $dirname
-				}
-			}
-			foreach candidate $candidates {
-				set res [check $candidate $majortarget $minortarget]
-				if {$res eq {}} continue else {
-					puts -nonewline $res
-					break
-				}
-			}
-			set status 0
-		} on error {tres topts} {
-			puts stderr [dict get $topts -errorinfo]
-			set status 1
-		}
-		exit $status
+	set version [tclhversion [cat $tclh]]
+	if {[llength $version]} {
+	    lassign $version major minor
+	    if {[package vcompare $major.$minor \
+		$majortarget.$minortarget] >= 0} {
+		return [list $candidate $major $minor]
+	    }
 	}
 
-	proc check {candidate majortarget minortarget} {
-		set tclh $candidate/generic/tcl.h
+	return {} 
+    }
 
-		if {![file exists $tclh]} {
-			return {} 
-		}
-
-		set version [tclhversion [cat $tclh]]
-		if {[llength $version]} {
-			lassign $version major minor
-			if {[package vcompare $major.$minor \
-				$majortarget.$minortarget] >= 0} {
-				return [list $candidate $major $minor]
-			}
-		}
-
-		return {} 
+    proc tclhversion data {
+	if {[regexp -line {^#define\s+_TCL} $data]} {
+	    if {[
+		regexp -line {^#define\s+TCL_VERSION\s+\"([^.])+\.([^.\"]+)} \
+		    $data -> major minor
+	    ]} {
+		return [list $major $minor]
+	    }
 	}
+	return {}
+    }
+    main $argv0 $argv
+    EOF
+    ]
+    `
 
-	proc tclhversion data {
-		if {[regexp -line {^#define\s+_TCL} $data]} {
-			if {[
-				regexp -line {^#define\s+TCL_VERSION\s+\"([^.])+\.([^.\"]+)} \
-					$data -> major minor
-			]} {
-				return [list $major $minor]
-			}
-		}
-		return {}
-	}
-	main $argv0 $argv
-	EOF
-	]
-	`
-
-	if test "x${TCL_ACTUAL_SRC_DIR}" = x; then
-		AC_MSG_ERROR([could not find Tcl sources])
-	else
-		TCL_SOURCE_MAJOR_VERSION=SC_TCL_LINDEX([$TCL_ACTUAL_SRC_DIR] ,1)
-		AC_SUBST(TCL_SOURCE_MAJOR_VERSION)
-		TCL_SOURCE_MINOR_VERSION=SC_TCL_LINDEX([$TCL_ACTUAL_SRC_DIR] ,2)
-		AC_SUBST(TCL_SOURCE_MINOR_VERSION)
-		TCL_ACTUAL_SRC_DIR=SC_TCL_LINDEX([$TCL_ACTUAL_SRC_DIR] ,0)
-		AC_SUBST(TCL_ACTUAL_SRC_DIR)
-	fi
+    if test "x${TCL_ACTUAL_SRC_DIR}" = x; then
+	AC_MSG_ERROR([could not find Tcl sources])
+    else
+	TCL_SOURCE_MAJOR_VERSION=SC_TCL_LINDEX([$TCL_ACTUAL_SRC_DIR] ,1)
+	AC_SUBST(TCL_SOURCE_MAJOR_VERSION)
+	TCL_SOURCE_MINOR_VERSION=SC_TCL_LINDEX([$TCL_ACTUAL_SRC_DIR] ,2)
+	AC_SUBST(TCL_SOURCE_MINOR_VERSION)
+	TCL_ACTUAL_SRC_DIR=SC_TCL_LINDEX([$TCL_ACTUAL_SRC_DIR] ,0)
+	AC_SUBST(TCL_ACTUAL_SRC_DIR)
+    fi
 ])
 
 
@@ -543,22 +543,23 @@ AC_DEFUN([SC_TCL_FIND_SOURCES],[
 #------------------------------------------------------------------------
 
 AC_DEFUN([SC_TCL_LINDEX],
-	[[` <<-'EOF' "$TCLSH_PROG" - "$1" "$2"
-		proc main {argv0 argv} {
-			try {
-				lassign $argv -> list index
-				puts -nonewline [lindex $list $index]
-				set status 0
-			} on error {tres topts} {
-				puts stderr [dict get $topts -errorinfo]
-				set status 1
-			}
-			exit $status
-		}
-		main $argv0 $argv
-		EOF
-	]]
-	`
+    [[` <<-'EOF' "$TCLSH_PROG" - "$1" "$2"
+	proc main {argv0 argv} {
+	    try {
+		lassign $argv -> list index
+		puts -nonewline [lindex $list $index]
+		set status 0
+	    } on error {tres topts} {
+		puts stderr [dict get $topts -errorinfo]
+		set status 1
+	    }
+	    exit $status
+	}
+	main $argv0 $argv
+	EOF
+    `
+    ]]
+    
 )
 
 #------------------------------------------------------------------------
