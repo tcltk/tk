@@ -119,7 +119,7 @@ static CGFloat windowBackground[4] = {235.0/255, 235.0/255, 235.0/255, 1.0};
  * GetBoxColor --
  *
  * Compute a contrasting box color, based on nesting depth, and save the
- * RGBA components in an array.
+ * RGBA components in an array.  Used by the Fill and Background elements.
  */
 
 static int GetBoxColor(
@@ -221,9 +221,9 @@ static void DrawGroupBox(
  * the button centered vertically on the rectangle, and having the same width
  * as the rectangle.  This function returns the actual bounding rectangle that
  * will be used in drawing the button.
- * 
+ *
  * The BevelButton is allowed to have arbitrary size, and also has external
- * padding.  This is handled separately here. 
+ * padding.  This is handled separately here.
  */
 
 
@@ -454,7 +454,7 @@ static void DrawDarkButton(
 	}
 	SolidFillRoundedRectangle(context, bounds, 4, faceColor);
     }
-	
+
     /*
      * If this is a popup, draw the arrow button.
      */
@@ -814,7 +814,7 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
 	HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
 	break;
     }
-	
+
     const HIThemeButtonDrawInfo info = {
 	.version = 0,
 	.state = HIThemeState,
@@ -842,7 +842,7 @@ static void ButtonElementMinSize(
 
 	*minHeight += 2;
 
-	/* 
+	/*
 	 * The minwidth must be 0 to force the generic ttk code to compute
 	 * the correct text layout.  For example, a non-zero value will cause the
 	 * text to be left justified, no matter what -anchor setting is used
@@ -880,7 +880,7 @@ static void ButtonElementSize(
      * To compute the effective padding around a button we request the
      * content and bounding rectangles for a 100x100 button and use the
      * padding between those.  However, we symmetrize the padding on the
-     * top and bottom, because that is how the button will be drawn. 
+     * top and bottom, because that is how the button will be drawn.
      */
 
     ChkErr(HIThemeGetButtonContentBounds,
@@ -926,14 +926,14 @@ static void ButtonElementDraw(
 #endif
     } else {
 	/*
-	 *  Apple's PushButton and PopupButton do not change their (white) fill
-	 *  color when the window is inactive although, except in 10.7 (Lion),
-	 *  the color of the arrow button on a PopupButton does change.  For
-	 *  some reason HITheme fills inactive buttons with a transparent color
-	 *  that allows the window background to show through, leading to
+	 *  Apple's PushButton and PopupButton do not change their fill color
+	 *  when the window is inactive.  However, except in 10.7 (Lion), the
+	 *  color of the arrow button on a PopupButton does change.  For some
+	 *  reason HITheme fills inactive buttons with a transparent color that
+	 *  allows the window background to show through, leading to
 	 *  inconsistent behavior.  We work around this by filling behind an
-	 *  inactive PopupButton with a white color before asking HIToolbox to
-	 *  draw it.  PopupButton.  For PushButtons, we simply draw them in the
+	 *  inactive PopupButton with a text background color before asking
+	 *  HIToolbox to draw it. For PushButtons, we simply draw them in the
 	 *  active state.
 	 */
 	if (info.kind == kThemePopupButton && (state & TTK_STATE_BACKGROUND)) {
@@ -946,7 +946,7 @@ static void ButtonElementDraw(
 	 * A BevelButton with mixed value is drawn borderless, which does make
 	 * much sense for us.
 	 */
-	
+
 	if (info.kind == kThemeRoundedBevelButton &&
 	    info.value == kThemeButtonMixed) {
 	    info.value = kThemeButtonOff;
@@ -968,7 +968,6 @@ static Ttk_ElementSpec ButtonElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Notebook elements.
  */
-
 
 /* Tab position logic, c.f. ttkNotebook.c TabState() */
 
@@ -1462,9 +1461,9 @@ static void TrackElementDraw(
 	 					components: darkTrack
 	 					     count: 4];
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
-	    bounds = CGRectInset(bounds, 1, bounds.size.height/2 - 2); 
+	    bounds = CGRectInset(bounds, 1, bounds.size.height/2 - 2);
 	} else {
-	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 2); 
+	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 2);
 	}
 	SolidFillRoundedRectangle(dc.context, bounds, 2, trackColor);
     }
@@ -1507,7 +1506,7 @@ static Ttk_ElementSpec SliderElementSpec = {
 };
 
 /*----------------------------------------------------------------------
- * +++ Progress bar element (new):
+ * +++ Progress bar element:
  *
  * @@@ NOTE: According to an older revision of the Aqua reference docs,
  * @@@ the 'phase' field is between 0 and 4. Newer revisions say
@@ -1584,9 +1583,9 @@ static void PbarElementDraw(
 	 					components: darkTrack
 	 					     count: 4];
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
-	    bounds = CGRectInset(bounds, 1, bounds.size.height/2 - 3); 
+	    bounds = CGRectInset(bounds, 1, bounds.size.height/2 - 3);
 	} else {
-	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 1); 
+	    bounds = CGRectInset(bounds, bounds.size.width/2 - 3, 1);
 	}
 	SolidFillRoundedRectangle(dc.context, bounds, 3, trackColor);
     }
@@ -1601,6 +1600,138 @@ static Ttk_ElementSpec PbarElementSpec = {
     PbarElementOptions,
     PbarElementSize,
     PbarElementDraw
+};
+
+/*----------------------------------------------------------------------
+ * +++ Scrollbar element
+ */
+
+typedef struct
+{
+    Tcl_Obj     *orientObj;
+} ScrollbarElement;
+
+static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
+    { "-orient", TK_OPTION_STRING,
+	Tk_Offset(ScrollbarElement,orientObj), "horizontal" },
+    {0,0,0,0}
+};
+
+static void TroughElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+{
+    ScrollbarElement *scrollbar = elementRecord;
+    int orientation = TTK_ORIENT_HORIZONTAL;
+    SInt32 thickness = 15;
+
+    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &thickness);
+    if (orientation == TTK_ORIENT_HORIZONTAL) {
+    	*minHeight = thickness;
+    } else {
+    	*minWidth = thickness;
+    }
+}
+
+static void TroughElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, Ttk_State state)
+{
+    ScrollbarElement *scrollbar = elementRecord;
+    int orientation = TTK_ORIENT_HORIZONTAL;
+    CGRect bounds = BoxToRect(d, b);
+    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    if (orientation == TTK_ORIENT_HORIZONTAL) {
+	bounds = CGRectInset(bounds, 0, 1);
+    } else {
+	bounds = CGRectInset(bounds, 1, 0);
+    }
+    BEGIN_DRAWING(d)
+    ChkErr(HIThemeSetFill, kThemeBrushDocumentWindowBackground, NULL,
+	   dc.context, HIOrientation);
+    CGContextFillRect(dc.context, bounds);
+    END_DRAWING
+}
+
+static Ttk_ElementSpec TroughElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(ScrollbarElement),
+    ScrollbarElementOptions,
+    TroughElementSize,
+    TroughElementDraw
+};
+
+static void ThumbElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+{
+    ScrollbarElement *scrollbar = elementRecord;
+    int orientation = TTK_ORIENT_HORIZONTAL;
+    SInt32 thickness = 15;
+
+    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &thickness);
+    if (orientation == TTK_ORIENT_HORIZONTAL) {
+    	*minHeight = thickness;
+    } else {
+    	*minWidth = thickness;
+    }
+}
+
+static void ThumbElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, Ttk_State state)
+{
+    ScrollbarElement *scrollbar = elementRecord;
+    int orientation = TTK_ORIENT_HORIZONTAL;
+    CGRect bounds = BoxToRect(d, b);
+    int viewSize = RangeToFactor(100);
+    HIThemeTrackDrawInfo info = {
+	.version = 0,
+	.bounds = bounds,
+	.min = 0.0,
+	.max = 100.0,
+	.attributes = kThemeTrackShowThumb | kThemeTrackThumbRgnIsNotGhost,
+	.enableState = kThemeTrackActive
+    };
+    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    if (orientation == TTK_ORIENT_HORIZONTAL) {
+      info.attributes |= kThemeTrackHorizontal;
+    } else {
+      info.attributes &= ~kThemeTrackHorizontal;
+    }
+    info.trackInfo.scrollbar.viewsize = viewSize;
+    info.value = viewSize * (bounds.origin.y / Tk_Height(tkwin));
+    if ((state & TTK_STATE_PRESSED) ||
+	(state & TTK_STATE_HOVER) ) {
+	info.trackInfo.scrollbar.pressState = kThemeThumbPressed;
+    } else {
+	info.trackInfo.scrollbar.pressState = 0;
+    }
+    BEGIN_DRAWING(d)
+    if (0) {
+	HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationInverted);
+    } else {
+	HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
+    }
+    END_DRAWING
+}
+
+static Ttk_ElementSpec ThumbElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(ScrollbarElement),
+    ScrollbarElementOptions,
+    ThumbElementSize,
+    ThumbElementDraw
+};
+
+static Ttk_ElementSpec NoArrowElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(NullElement),
+    TtkNullElementOptions,
+    TtkNullElementSize,
+    TtkNullElementDraw
 };
 
 /*----------------------------------------------------------------------
@@ -1945,7 +2076,7 @@ static void DisclosureElementDraw(
 {
     if (!(state & TTK_TREEVIEW_STATE_LEAF)) {
 	int triangleState = TkMacOSXInDarkMode(tkwin) ?
-	    kThemeStateInactive : kThemeStateActive; 
+	    kThemeStateInactive : kThemeStateActive;
 	CGRect bounds = BoxToRect(d, b);
 	const HIThemeButtonDrawInfo info = {
 	    .version = 0,
@@ -2009,12 +2140,12 @@ TTK_LAYOUT("Tab",
 	TTK_GROUP("Notebook.padding", TTK_EXPAND|TTK_FILL_BOTH,
 	    TTK_NODE("Notebook.label", TTK_EXPAND|TTK_FILL_BOTH))))
 
-/* Progress bars -- track only */
 TTK_LAYOUT("TSpinbox",
     TTK_NODE("Spinbox.spinbutton", TTK_PACK_RIGHT|TTK_STICK_E)
     TTK_GROUP("Spinbox.field", TTK_EXPAND|TTK_FILL_X,
 	TTK_NODE("Spinbox.textarea", TTK_EXPAND|TTK_FILL_X)))
 
+/* Progress bars -- track only */
 TTK_LAYOUT("TProgressbar",
     TTK_NODE("Progressbar.track", TTK_EXPAND|TTK_FILL_BOTH))
 
@@ -2082,30 +2213,47 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElementSpec(themePtr, "Notebook.tab", &TabElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Notebook.client", &PaneElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr, "Labelframe.border", &GroupElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr, "Entry.field", &EntryElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr, "Spinbox.field", &EntryElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "Labelframe.border", &GroupElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "Entry.field", &EntryElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "Spinbox.field", &EntryElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr, "separator", &SeparatorElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr, "hseparator", &SeparatorElementSpec,0);
-    Ttk_RegisterElementSpec(themePtr, "vseparator", &SeparatorElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "separator", &SeparatorElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "hseparator", &SeparatorElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "vseparator", &SeparatorElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr, "sizegrip", &SizegripElementSpec,0);
+    Ttk_RegisterElementSpec(themePtr, "sizegrip", &SizegripElementSpec, 0);
 
     /*
      * <<NOTE-TRACKS>>
-     * The Progressbar widget adjusts the size of the pbar element.
-     * In the Aqua theme, the appearance manager computes the bar geometry;
-     * we do all the drawing in the ".track" element and leave the .pbar out.
+     * In some themes the Layouts for a progress bar has a trough element and a
+     * pbar element.  But in our case the appearance manager draws both parts
+     * of the progress bar, so we just have a single element called ".track".
      */
-    Ttk_RegisterElementSpec(themePtr,"Scale.trough",
-	&TrackElementSpec, &ScaleData);
-    Ttk_RegisterElementSpec(themePtr,"Scale.slider", &SliderElementSpec,0);
+
     Ttk_RegisterElementSpec(themePtr,"Progressbar.track", &PbarElementSpec, 0);
+
+    Ttk_RegisterElementSpec(themePtr,"Scale.trough", &TrackElementSpec,
+			    &ScaleData);
+    Ttk_RegisterElementSpec(themePtr,"Scale.slider", &SliderElementSpec, 0);
+
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.trough", &TroughElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.thumb", &ThumbElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.trough", &TroughElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.thumb", &ThumbElementSpec, 0);
+
+    /*
+     * If we are not in Snow Leopard we don't display any buttons.
+     */
+
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.uparrow", &NoArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.downarrow", &NoArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.leftarrow", &NoArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.rightarrow", &NoArrowElementSpec, 0);
 
     /*
      * Layouts:
      */
+
     Ttk_RegisterLayouts(themePtr, LayoutTable);
 
     Tcl_PkgProvide(interp, "ttk::theme::aqua", TTK_VERSION);
