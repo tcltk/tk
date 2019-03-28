@@ -98,6 +98,34 @@ static Ttk_StateTable ThemeStateTable[] = {
 */
 };
 
+/*
+ * NormalizeButtonBounds --
+ *
+ * Apple's Human Interface Guidelines only allow three specific heights for
+ * most buttons: Regular, small and mini. We always use the regular size.
+ * However, Ttk may provide an arbitrary bounding rectangle.  We always draw
+ * the button centered vertically on the rectangle, and having the same width
+ * as the rectangle.  This function returns the actual bounding rectangle that
+ * will be used in drawing the button.
+ *
+ * The BevelButton is allowed to have arbitrary size, and also has external
+ * padding.  This is handled separately here.
+ */
+
+
+static CGRect NormalizeButtonBounds(
+    SInt32 heightMetric,
+    CGRect bounds)
+{
+    SInt32 height;
+    if (heightMetric != NoThemeMetric) {
+	ChkErr(GetThemeMetric, heightMetric, &height);
+	bounds.origin.y += (bounds.size.height - height)/2;
+	bounds.size.height = height;
+    }
+    return bounds;
+}
+
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 /*----------------------------------------------------------------------
  * +++ Support for contrasting background colors when GroupBoxes
@@ -210,34 +238,6 @@ static void DrawGroupBox(
     CGContextReplacePathWithStrokedPath(context);
     CGContextFillPath(context);
     CFRelease(path);
-}
-
-/*
- * NormalizeButtonBounds --
- *
- * Apple's Human Interface Guidelines only allow three specific heights for
- * most buttons: Regular, small and mini. We always use the regular size.
- * However, Ttk may provide an arbitrary bounding rectangle.  We always draw
- * the button centered vertically on the rectangle, and having the same width
- * as the rectangle.  This function returns the actual bounding rectangle that
- * will be used in drawing the button.
- *
- * The BevelButton is allowed to have arbitrary size, and also has external
- * padding.  This is handled separately here.
- */
-
-
-static CGRect NormalizeButtonBounds(
-    SInt32 heightMetric,
-    CGRect bounds)
-{
-    SInt32 height;
-    if (heightMetric != NoThemeMetric) {
-	ChkErr(GetThemeMetric, heightMetric, &height);
-	bounds.origin.y += (bounds.size.height - height)/2;
-	bounds.size.height = height;
-    }
-    return bounds;
 }
 
 /* SolidFillRoundedRectangle --
@@ -936,11 +936,14 @@ static void ButtonElementDraw(
 	 *  HIToolbox to draw it. For PushButtons, we simply draw them in the
 	 *  active state.
 	 */
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 	if (info.kind == kThemePopupButton && (state & TTK_STATE_BACKGROUND)) {
 	    CGRect innerBounds = CGRectInset(bounds, 1, 1);
 	    NSColor *white = [NSColor whiteColor];
 	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, white);
 	}
+#endif
 
 	/*
 	 * A BevelButton with mixed value is drawn borderless, which does make
@@ -1288,15 +1291,20 @@ static void ComboboxElementDraw(
     BEGIN_DRAWING(d)
     bounds.origin.y += 1;
     if (TkMacOSXInDarkMode(tkwin)) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 	bounds.size.height += 1;
 	DrawDarkButton(bounds, info.kind, state, dc.context);
-    } else {
+#endif
+    } else
+	{
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 	if ((state & TTK_STATE_BACKGROUND) &&
 	    !(state & TTK_STATE_DISABLED)) {
 	    NSColor *background = [NSColor textBackgroundColor];
 	    CGRect innerBounds = CGRectInset(bounds, 1, 2);
 	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
 	}
+#endif
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
     END_DRAWING
@@ -1629,10 +1637,23 @@ static void TroughElementSize(
     ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &thickness);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
     	*minHeight = thickness;
+	if ([NSApp macMinorVersion] > 7) {
+	    *paddingPtr = Ttk_MakePadding(4, 4, 4, 3);
+	}
     } else {
     	*minWidth = thickness;
+	if ([NSApp macMinorVersion] > 7) {
+	    *paddingPtr = Ttk_MakePadding(4, 4, 3, 4);
+	}
     }
 }
+
+static CGFloat lightTrough[4] = {250.0/255, 250.0/255, 250.0/255, 1.0};
+static CGFloat darkTrough[4] = {45.0/255, 46.0/255, 49.0/255, 1.0};
+static CGFloat lightInactiveThumb[4] = {200.0/255, 200.0/255, 200.0/255, 1.0};
+static CGFloat lightActiveThumb[4] = {133.0/255, 133.0/255, 133.0/255, 1.0};
+static CGFloat darkInactiveThumb[4] = {116.0/255, 117.0/255, 118.0/255, 1.0};
+static CGFloat darkActiveThumb[4] = {158.0/255, 158.0/255, 159.0/255, 1.0};
 
 static void TroughElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -1641,15 +1662,27 @@ static void TroughElementDraw(
     ScrollbarElement *scrollbar = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     CGRect bounds = BoxToRect(d, b);
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *troughColor;
+    CGFloat *rgba = TkMacOSXInDarkMode(tkwin) ? darkTrough : lightTrough;
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
 	bounds = CGRectInset(bounds, 0, 1);
     } else {
 	bounds = CGRectInset(bounds, 1, 0);
     }
+    troughColor = [NSColor colorWithColorSpace: deviceRGB
+				    components: rgba
+					 count: 4];
     BEGIN_DRAWING(d)
-    ChkErr(HIThemeSetFill, kThemeBrushDocumentWindowBackground, NULL,
-	   dc.context, HIOrientation);
+    if ([NSApp macMinorVersion] > 8) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
+	CGContextSetFillColorWithColor(dc.context, troughColor.CGColor);
+#endif
+    } else {
+	ChkErr(HIThemeSetFill, kThemeBrushDocumentWindowBackground, NULL,
+	       dc.context, HIOrientation);
+    }
     CGContextFillRect(dc.context, bounds);
     END_DRAWING
 }
@@ -1668,14 +1701,12 @@ static void ThumbElementSize(
 {
     ScrollbarElement *scrollbar = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
-    SInt32 thickness = 15;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
-    ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &thickness);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
-    	*minHeight = thickness;
+	*minHeight = 8;
     } else {
-    	*minWidth = thickness;
+    	*minWidth = 8;
     }
 }
 
@@ -1685,37 +1716,101 @@ static void ThumbElementDraw(
 {
     ScrollbarElement *scrollbar = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
-    CGRect bounds = BoxToRect(d, b);
-    int viewSize = RangeToFactor(100);
-    HIThemeTrackDrawInfo info = {
-	.version = 0,
-	.bounds = bounds,
-	.min = 0.0,
-	.max = 100.0,
-	.attributes = kThemeTrackShowThumb | kThemeTrackThumbRgnIsNotGhost,
-	.enableState = kThemeTrackActive
-    };
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
-    if (orientation == TTK_ORIENT_HORIZONTAL) {
-      info.attributes |= kThemeTrackHorizontal;
+
+    /*
+     * In order to make ttk scrollbars work correctly it is necessary to be
+     * able to display the thumb element at the size and location which the ttk
+     * scrollbar widget requests.  The algorithm that HIToolbox uses to
+     * determine the thumb geometry from the input values of min, max, value
+     * and viewSizeis, of course, undocumented.  And this turns out to be a
+     * hard reverse engineering problem.  A seemingly natural algorithm is
+     * implemented below, but it does not correctly compute the same thumb
+     * geometry as HITools (which also apparently does not agree with
+     * NSScrollbar).  This code uses that algorithm for older OS versions,
+     * because using HITools also handles drawing the buttons and 3D thumb used
+     * on those systems.  The incorrect geometry is annoying but not unusable.
+     * For newer systems the cleanest approach is to just draw the thumb
+     * directly.
+     */
+
+    if ([NSApp macMinorVersion] > 8) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
+	CGRect thumbBounds = BoxToRect(d, b);
+	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	NSColor *thumbColor;
+	CGFloat *rgba;
+	if ((orientation == TTK_ORIENT_HORIZONTAL &&
+	     thumbBounds.size.width >= Tk_Width(tkwin) - 8) ||
+	    (orientation == TTK_ORIENT_VERTICAL &&
+	     thumbBounds.size.height >= Tk_Height(tkwin) - 8)) {
+	    return;
+	}
+	int isDark = TkMacOSXInDarkMode(tkwin);
+	if ((state & TTK_STATE_PRESSED) ||
+	    (state & TTK_STATE_HOVER) ) {
+	    rgba = isDark ? darkActiveThumb : lightActiveThumb;
+	} else {
+	    rgba = isDark ? darkInactiveThumb : lightInactiveThumb;
+	}
+	thumbColor = [NSColor colorWithColorSpace: deviceRGB
+				       components: rgba
+					    count: 4];
+	BEGIN_DRAWING(d)
+	    SolidFillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
+	END_DRAWING
+#endif
     } else {
-      info.attributes &= ~kThemeTrackHorizontal;
-    }
-    info.trackInfo.scrollbar.viewsize = viewSize;
-    info.value = viewSize * (bounds.origin.y / Tk_Height(tkwin));
-    if ((state & TTK_STATE_PRESSED) ||
-	(state & TTK_STATE_HOVER) ) {
-	info.trackInfo.scrollbar.pressState = kThemeThumbPressed;
-    } else {
-	info.trackInfo.scrollbar.pressState = 0;
-    }
-    BEGIN_DRAWING(d)
-    if (0) {
-	HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationInverted);
-    } else {
-	HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
-    }
-    END_DRAWING
+	double thumbSize, trackSize, visibleSize, viewSize;
+	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
+	CGRect troughBounds = {{macWin->xOff, macWin->yOff},
+			       {Tk_Width(tkwin), Tk_Height(tkwin)}};
+
+	/* 
+	 * The info struct has integer fields, which will be converted to
+	 * floats in the drawing routine.  All of values provided in the info
+	 * struct, namely min, max, value, and viewSize are only defined up to
+	 * an arbitrary scale factor.  To avoid roundoff error we scale so that
+	 * the viewSize is a large float which is smaller than the largest int.
+	 */
+    
+	viewSize = RangeToFactor(100.0);
+	HIThemeTrackDrawInfo info = {
+	    .version = 0,
+	    .bounds = troughBounds,
+	    .min = 0,
+	    .attributes = kThemeTrackShowThumb | kThemeTrackThumbRgnIsNotGhost,
+	    .enableState = kThemeTrackActive
+	};
+	info.trackInfo.scrollbar.viewsize = viewSize*.8; 
+	if (orientation == TTK_ORIENT_HORIZONTAL) {
+	    trackSize = troughBounds.size.width;
+	    thumbSize = b.width;
+	    visibleSize = (thumbSize / trackSize) * viewSize;
+	    info.max = viewSize - visibleSize;
+	    info.value = info.max * (b.x / (trackSize - thumbSize)); 
+	} else {
+	    thumbSize = b.height;
+	    trackSize = troughBounds.size.height;
+	    visibleSize = (thumbSize / trackSize) * viewSize;
+	    info.max = viewSize - visibleSize;
+	    info.value = info.max * (b.y / (trackSize - thumbSize)); 
+	}
+	if ((state & TTK_STATE_PRESSED) ||
+	    (state & TTK_STATE_HOVER) ) {
+	    info.trackInfo.scrollbar.pressState = kThemeThumbPressed;
+	} else {
+	    info.trackInfo.scrollbar.pressState = 0;
+	}
+	if (orientation == TTK_ORIENT_HORIZONTAL) {
+	    info.attributes |= kThemeTrackHorizontal;
+	} else {
+	    info.attributes &= ~kThemeTrackHorizontal;
+	}
+	BEGIN_DRAWING(d)
+	    HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
+	END_DRAWING
+	    }
 }
 
 static Ttk_ElementSpec ThumbElementSpec = {
@@ -1726,11 +1821,22 @@ static Ttk_ElementSpec ThumbElementSpec = {
     ThumbElementDraw
 };
 
-static Ttk_ElementSpec NoArrowElementSpec = {
+static void ArrowElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+{
+    if ([NSApp macMinorVersion] < 8) {
+	*minHeight = *minWidth = 14;
+    } else {
+	*minHeight = *minWidth = -1;
+    }
+}
+
+static Ttk_ElementSpec ArrowElementSpec = {
     TK_STYLE_VERSION_2,
-    sizeof(NullElement),
-    TtkNullElementOptions,
-    TtkNullElementSize,
+    sizeof(ScrollbarElement),
+    ScrollbarElementOptions,
+    ArrowElementSize,
     TtkNullElementDraw
 };
 
@@ -1882,7 +1988,7 @@ static void FillElementDraw(
 {
     CGRect bounds = BoxToRect(d, b);
     BEGIN_DRAWING(d)
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 10800
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *bgColor;
     CGFloat fill[4];
@@ -2168,6 +2274,20 @@ TTK_LAYOUT("Item",
 	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
 	TTK_NODE("Treeitem.text", TTK_PACK_LEFT)))
 
+/* Scrollbar Layout -- Buttons at the bottom (Snow Leopard and Lion only) */
+
+TTK_LAYOUT("Vertical.TScrollbar",
+    TTK_GROUP("Vertical.Scrollbar.trough", TTK_FILL_Y,
+	TTK_NODE("Vertical.Scrollbar.thumb", TTK_PACK_TOP|TTK_EXPAND|TTK_FILL_BOTH)
+        TTK_NODE("Vertical.Scrollbar.downarrow", TTK_PACK_BOTTOM)
+	TTK_NODE("Vertical.Scrollbar.uparrow", TTK_PACK_BOTTOM)))
+
+TTK_LAYOUT("Horizontal.TScrollbar",
+    TTK_GROUP("Horizontal.Scrollbar.trough", TTK_FILL_X,
+	TTK_NODE("Horizontal.Scrollbar.thumb", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_BOTH)
+	TTK_NODE("Horizontal.Scrollbar.rightarrow", TTK_PACK_RIGHT)
+	TTK_NODE("Horizontal.Scrollbar.leftarrow", TTK_PACK_RIGHT)))
+
 TTK_END_LAYOUT_TABLE
 
 /*----------------------------------------------------------------------
@@ -2242,13 +2362,13 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.thumb", &ThumbElementSpec, 0);
 
     /*
-     * If we are not in Snow Leopard we don't display any buttons.
+     * If we are not in Snow Leopard or Lion the arrows won't actually be displayed.
      */
 
-    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.uparrow", &NoArrowElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.downarrow", &NoArrowElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.leftarrow", &NoArrowElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.rightarrow", &NoArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.uparrow", &ArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.downarrow", &ArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.leftarrow", &ArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.rightarrow", &ArrowElementSpec, 0);
 
     /*
      * Layouts:
