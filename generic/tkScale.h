@@ -222,7 +222,7 @@ typedef struct TkScale {
  * accurate to within the following proportion of a tick interval.
  */
 
-#define TICK_VALUES_DISPLAY_PRECISION 0.2
+#define TICK_VALUES_DISPLAY_ACCURACY 0.2
 
 /*
  * Declaration of procedures used in the implementation of the scale widget.
