@@ -299,8 +299,13 @@ SetCGColorComponents(
 			  [NSColorSpace deviceRGBColorSpace]];
 	    break;
 	case 2:
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101000
 	    color = [[NSColor labelColor] colorUsingColorSpace:
 			  [NSColorSpace deviceRGBColorSpace]];
+#else
+	    color = [[NSColor textColor] colorUsingColorSpace:
+			  [NSColorSpace deviceRGBColorSpace]];
+#endif
 	    break;
 	case 3:
 	    color = [[NSColor controlTextColor] colorUsingColorSpace:
