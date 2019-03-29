@@ -567,6 +567,11 @@ TkpOpenDisplay(
     tsdPtr->wheelTickPrev = GetTickCount();
     tsdPtr->wheelAcc = 0;
 
+    /*
+     * Key map info must be available immediately, because of "send event".
+     */
+    TkpInitKeymapInfo(tsdPtr->winDisplay);
+
     return tsdPtr->winDisplay;
 }
 
