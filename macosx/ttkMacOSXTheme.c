@@ -1324,10 +1324,19 @@ static Ttk_ElementSpec ComboboxElementSpec = {
  *    From Apple HIG, part III, section "Controls", "The Stepper Control":
  *    there should be 2 pixels of space between the stepper control (AKA
  *    IncDecButton, AKA "little arrows") and the text field it modifies.
+ *
+ *    Ttk expects the up and down arrows to be distinct elements but HIToolbox
+ *    draws them as one widget with two different pressed states.  We work
+ *    around this by defining them as separate elements in the layout, but
+ *    making each one have a drawing method which also draws the other one.
+ *    The down button does no drawing when not pressed, and when pressed draws
+ *    the entire IncDecButton in its "pressed down" state.  The up button draws
+ *    the entire IncDecButton when not pressed and when pressed draws the
+ *    IncDecButton in its "pressed up" state.
  */
 
-static Ttk_Padding SpinbuttonMargins = {2,0,2,0};
-static void SpinButtonElementSize(
+static Ttk_Padding SpinbuttonMargins = {0, 0, 2, 0};
+static void SpinButtonUpElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
@@ -1336,20 +1345,24 @@ static void SpinButtonElementSize(
     ChkErr(GetThemeMetric, kThemeMetricLittleArrowsWidth, &s);
     *minWidth = s + Ttk_PaddingWidth(SpinbuttonMargins);
     ChkErr(GetThemeMetric, kThemeMetricLittleArrowsHeight, &s);
-    *minHeight = s + Ttk_PaddingHeight(SpinbuttonMargins);
+    *minHeight = (s + Ttk_PaddingHeight(SpinbuttonMargins)) / 2;    
 }
 
-static void SpinButtonElementDraw(
+static void SpinButtonUpElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, Ttk_PadBox(b, SpinbuttonMargins));
-    /* @@@ can't currently distinguish PressedUp (== Pressed) from PressedDown;
-     * ignore this bit for now [see #2219588]
-     */
+    int infoState;
+    bounds.size.height *= 2;
+    if (state & TTK_STATE_PRESSED) {
+	infoState = kThemeStatePressedUp;
+    } else {
+	infoState = Ttk_StateTableLookup(ThemeStateTable, state);
+    }
     const HIThemeButtonDrawInfo info = {
 	.version = 0,
-	.state = Ttk_StateTableLookup(ThemeStateTable, state & ~TTK_STATE_PRESSED),
+	.state = infoState,
 	.kind = kThemeIncDecButton,
 	.value = Ttk_StateTableLookup(ButtonValueTable, state),
 	.adornment = kThemeAdornmentNone,
@@ -1360,14 +1373,59 @@ static void SpinButtonElementDraw(
     END_DRAWING
 }
 
-static Ttk_ElementSpec SpinButtonElementSpec = {
+static Ttk_ElementSpec SpinButtonUpElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    SpinButtonElementSize,
-    SpinButtonElementDraw
+    SpinButtonUpElementSize,
+    SpinButtonUpElementDraw
 };
 
+static void SpinButtonDownElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+{
+    SInt32 s;
+
+    ChkErr(GetThemeMetric, kThemeMetricLittleArrowsWidth, &s);
+    *minWidth = s + Ttk_PaddingWidth(SpinbuttonMargins);
+    ChkErr(GetThemeMetric, kThemeMetricLittleArrowsHeight, &s);
+    *minHeight = (s + Ttk_PaddingHeight(SpinbuttonMargins)) / 2;
+}
+
+static void SpinButtonDownElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, Ttk_State state)
+{
+    CGRect bounds = BoxToRect(d, Ttk_PadBox(b, SpinbuttonMargins));
+    int infoState = 0;
+    bounds.origin.y -= bounds.size.height;
+    bounds.size.height *= 2;
+    if (state & TTK_STATE_PRESSED) {
+	infoState = kThemeStatePressedDown;
+    } else {
+	return;
+    }
+    const HIThemeButtonDrawInfo info = {
+	.version = 0,
+	.state = infoState,
+	.kind = kThemeIncDecButton,
+	.value = Ttk_StateTableLookup(ButtonValueTable, state),
+	.adornment = kThemeAdornmentNone,
+    };
+
+    BEGIN_DRAWING(d)
+    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+    END_DRAWING
+}
+
+static Ttk_ElementSpec SpinButtonDownElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(NullElement),
+    TtkNullElementOptions,
+    SpinButtonDownElementSize,
+    SpinButtonDownElementDraw
+};
 
 /*----------------------------------------------------------------------
  * +++ DrawThemeTrack-based elements --
@@ -2246,10 +2304,13 @@ TTK_LAYOUT("Tab",
 	TTK_GROUP("Notebook.padding", TTK_EXPAND|TTK_FILL_BOTH,
 	    TTK_NODE("Notebook.label", TTK_EXPAND|TTK_FILL_BOTH))))
 
-TTK_LAYOUT("TSpinbox",
-    TTK_NODE("Spinbox.spinbutton", TTK_PACK_RIGHT|TTK_STICK_E)
-    TTK_GROUP("Spinbox.field", TTK_EXPAND|TTK_FILL_X,
-	TTK_NODE("Spinbox.textarea", TTK_EXPAND|TTK_FILL_X)))
+/* Spinbox -- buttons 2px to the right of the field. */
+ TTK_LAYOUT("TSpinbox",
+     TTK_GROUP("Spinbox.buttons", TTK_PACK_RIGHT,
+         TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
+         TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
+     TTK_GROUP("Spinbox.field", TTK_EXPAND|TTK_FILL_X,
+	 TTK_NODE("Spinbox.textarea", TTK_EXPAND|TTK_FILL_X)))
 
 /* Progress bars -- track only */
 TTK_LAYOUT("TProgressbar",
@@ -2321,8 +2382,10 @@ static int AquaTheme_Init(Tcl_Interp *interp)
      	&ButtonElementSpec, &BevelButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
 	&ButtonElementSpec, &PopupButtonParams);
-    Ttk_RegisterElementSpec(themePtr, "Spinbox.spinbutton",
-    	&SpinButtonElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "Spinbox.uparrow",
+	&SpinButtonUpElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "Spinbox.downarrow",
+    	&SpinButtonDownElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Combobox.button",
 	&ComboboxElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Treeitem.indicator",
