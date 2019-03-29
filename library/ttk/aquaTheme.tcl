@@ -92,7 +92,7 @@ namespace eval ttk::theme::aqua {
 	# Spinbox
 	ttk::style configure TSpinbox \
 	    -foreground systemTextColor \
-	    -background systemTransparent \
+	    -background systemTextBackgroundColor \
 	    -selectforeground systemSelectedTextColor \
 	    -selectbackground systemSelectedTextBackgroundColor
 	ttk::style map TSpinbox \

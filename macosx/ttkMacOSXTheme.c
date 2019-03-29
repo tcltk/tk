@@ -375,37 +375,39 @@ static void HighlightButtonBorder(
 
 
 static void DrawUpDownArrows(
+    CGContextRef context,
     CGRect bounds,
-    CGContextRef context)
+    CGFloat inset,
+    CGFloat size)
 {
     CGFloat x, y;
     CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
     CGContextSetLineWidth(context, 1.5);
-    x = bounds.origin.x + 5;
+    x = bounds.origin.x + inset;
     y = bounds.origin.y + trunc(bounds.size.height/2);
     CGContextBeginPath(context);
-    CGPoint bottomArrow[3] = {{x, y+2}, {x+3.5, y+5.5}, {x+7, y+2}};
+    CGPoint bottomArrow[3] = {{x, y+2}, {x+size/2, y+2+size/2}, {x+size, y+2}};
     CGContextAddLines(context, bottomArrow, 3);
-    CGPoint topArrow[3] = {{x, y-2}, {x+3.5, y-5.5}, {x+7, y-2}};
+    CGPoint topArrow[3] = {{x, y-2}, {x+size/2, y-2-size/2}, {x+size, y-2}};
     CGContextAddLines(context, topArrow, 3);
     CGContextStrokePath(context);
-    CGContextRestoreGState(context);
 }
 
 static void DrawDownArrow(
+    CGContextRef context,
     CGRect bounds,
-    CGContextRef context)
+    CGFloat inset,
+    CGFloat size)
 {
     CGFloat x, y;
     CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
     CGContextSetLineWidth(context, 1.5);
-    x = bounds.origin.x + 5;
+    x = bounds.origin.x + inset;
     y = bounds.origin.y + trunc(bounds.size.height/2);
     CGContextBeginPath(context);
-    CGPoint bottomArrow[3] = {{x, y-3}, {x+3.5, y+3}, {x+7, y-3}};
+    CGPoint bottomArrow[3] = {{x, y-size/2}, {x+size/2, y+size/2}, {x+size, y-size/2}};
     CGContextAddLines(context, bottomArrow, 3);
     CGContextStrokePath(context);
-    CGContextRestoreGState(context);
 }
 
 /*
@@ -474,12 +476,68 @@ static void DrawDarkButton(
 				   darkSelectedGradient, 2);
 	}
 	if (kind == kThemePopupButton) {
-	    DrawUpDownArrows(arrowBounds, context);
+	    DrawUpDownArrows(context, arrowBounds, 5, 7);
 	} else {
-	    DrawDownArrow(arrowBounds, context);
+	    DrawDownArrow(context, arrowBounds, 5, 7);
 	}
     }
 
+    HighlightButtonBorder(context, bounds);
+}
+
+/*
+ * DrawDarkIncDecButton --
+ *
+ *    This is a standalone drawing procedure which draws an IncDecButton
+ *    (as used in a Spinbox) in the Dark Mode style.
+ */
+
+static void DrawDarkIncDecButton(
+    CGRect bounds,
+    ThemeDrawState drawState,
+    Ttk_State state,
+    CGContextRef context)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *faceColor;
+
+    bounds = CGRectInset(bounds, 0, -1);
+    CGContextClipToRect(context, bounds);
+    FillButtonBackground(context, bounds, 6);
+
+    /*
+     * Fill the button face with the appropriate color.
+     */
+
+    bounds = CGRectInset(bounds, 1, 1);
+    if (state & TTK_STATE_DISABLED) {
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+				      components: darkDisabledButtonFace
+					   count: 4];
+    } else {
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+				      components: darkButtonFace
+					   count: 4];
+    }
+    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
+
+    /*
+     * If pressed, paint the appropriate half blue.
+     */
+    
+    if (state & TTK_STATE_PRESSED) {
+	CGRect clip = bounds;
+	clip.size.height /= 2;
+	CGContextSaveGState(context);
+	if (drawState == kThemeStatePressedDown) {
+	    clip.origin.y += clip.size.height;
+	}
+	CGContextClipToRect(context, clip);
+	GradientFillRoundedRectangle(context, bounds, 5,
+				   darkSelectedGradient, 2);
+	CGContextRestoreGState(context);
+    }
+    DrawUpDownArrows(context, bounds, 3, 5);
     HighlightButtonBorder(context, bounds);
 }
 
@@ -1367,9 +1425,12 @@ static void SpinButtonUpElementDraw(
 	.value = Ttk_StateTableLookup(ButtonValueTable, state),
 	.adornment = kThemeAdornmentNone,
     };
-
     BEGIN_DRAWING(d)
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+    if (TkMacOSXInDarkMode(tkwin)) {
+	DrawDarkIncDecButton(bounds, infoState, state, dc.context);
+    } else {
+	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+    }
     END_DRAWING
 }
 
@@ -1415,7 +1476,11 @@ static void SpinButtonDownElementDraw(
     };
 
     BEGIN_DRAWING(d)
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+    if (TkMacOSXInDarkMode(tkwin)) {
+	DrawDarkIncDecButton(bounds, infoState, state, dc.context);
+    } else {
+	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+    }
     END_DRAWING
 }
 
