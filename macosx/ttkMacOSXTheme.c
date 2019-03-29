@@ -1390,7 +1390,11 @@ static Ttk_ElementSpec ComboboxElementSpec = {
  *    The down button does no drawing when not pressed, and when pressed draws
  *    the entire IncDecButton in its "pressed down" state.  The up button draws
  *    the entire IncDecButton when not pressed and when pressed draws the
- *    IncDecButton in its "pressed up" state.
+ *    IncDecButton in its "pressed up" state.  NOTE: This means that when the
+ *    down button is pressed the IncDecButton will be drawn twice, first
+ *    in unpressed state by the up arrow and then in "pressed down" state by
+ *    the down button.  The drawing must be done in that order.  So the up
+ *    button must be listed first in the layout.
  */
 
 static Ttk_Padding SpinbuttonMargins = {0, 0, 2, 0};
