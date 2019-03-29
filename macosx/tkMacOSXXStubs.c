@@ -225,6 +225,12 @@ TkpOpenDisplay(
     bzero(gMacDisplay, sizeof(TkDisplay));
     gMacDisplay->display = display;
     [pool drain];
+
+    /*
+     * Key map info must be available immediately, because of "send event".
+     */
+    TkpInitKeymapInfo(gMacDisplay);
+
     return gMacDisplay;
 }
 
