@@ -67,9 +67,28 @@ typedef struct {
 } MacButton;
 
 /*
- * Forward declarations for procedures defined later in this file:
+ * When drawing highlight borders for Buttons or Labels, the function
+ * Tk_Draw3DRectangle is called with SOLID relief.  This in turn calls the
+ * stubs Tk_3DVerticalBevel and Tk_3DHorizontalBevel. The Mac port does not
+ * define these stubs itself, but instead uses the ones defined in tkUnix3d.c,
+ * which gets compiled and linked into the Mac Tk library.  One of the
+ * arguments to these stubs is a pointer to a UnixBorder struct, which is an
+ * extension of TkBorder containing one additional field which is a graphics
+ * context to be used when drawing the bevels.  The UnixBorder is declared in
+ * the file tkUnix3d.c and not in any header file.  We include the declaration
+ * here, so that we can draw highlight borders.  But this declaration must be
+ * kept in sync with the one in tkUnix3d.c.
  */
 
+#include "tk3d.h"
+typedef struct {
+    TkBorder info;
+    GC solidGC;         /* Used to draw solid relief. */
+} UnixBorder;
+
+/*
+ * Forward declarations for procedures defined later in this file:
+ */
 
 static void ButtonBackgroundDrawCB (const HIRect *btnbounds, MacButton *ptr,
         SInt16 depth, Boolean isColorDev);
@@ -227,8 +246,17 @@ TkpDisplayButton(
 
     /* Draw highlight border, if needed. */
     if (needhighlight) {
-        if ((butPtr->flags & GOT_FOCUS)) {
-            Tk_Draw3DRectangle(tkwin, pixmap, butPtr->normalBorder, 0, 0,
+        if ((butPtr->flags & GOT_FOCUS || butPtr->type == TYPE_LABEL)) {
+	    GC gc;
+	    UnixBorder border;
+	    if (butPtr->highlightColorPtr) {
+		gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
+	    } else {
+		gc = Tk_GCForColor(Tk_3DBorderColor(butPtr->highlightBorder),
+                    pixmap);
+	    }
+	    border.solidGC = gc;
+            Tk_Draw3DRectangle(tkwin, pixmap, &border, 0, 0,
                 Tk_Width(tkwin), Tk_Height(tkwin),
                 butPtr->highlightWidth, TK_RELIEF_SOLID);
         }
