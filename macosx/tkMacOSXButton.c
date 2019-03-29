@@ -29,17 +29,8 @@
  * be allowed when drawing the HITheme button.
  */
 
-#define HI_PADX 2
+#define HI_PADX 14
 #define HI_PADY 1
-
-/*
- * Some defines used to control what type of control is drawn.
- */
-
-#define DRAW_LABEL	0	/* Labels are treated genericly. */
-#define DRAW_CONTROL	1	/* Draw using the Native control. */
-#define DRAW_CUSTOM	2	/* Make our own button drawing. */
-#define DRAW_BEVEL	3
 
 /*
  * The delay in milliseconds between pulsing default button redraws.
@@ -52,7 +43,6 @@
 
 
 typedef struct {
-    int drawType;
     Tk_3DBorder border;
     int relief;
     int offset;			/* 0 means this is a normal widget. 1 means
@@ -271,11 +261,7 @@ TkpComputeButtonGeometry(
     int txtWidth = 0, txtHeight = 0;
     MacButton *mbPtr = (MacButton*)butPtr;
     Tk_FontMetrics fm;
-    DrawParams drawParams;
-
-    /*
-     * First figure out the size of the contents of the button.
-     */
+    char *text = Tcl_GetString(butPtr->textPtr);
 
     TkMacOSXComputeButtonParams(butPtr, &mbPtr->btnkind, &mbPtr->drawinfo);
 
@@ -283,7 +269,7 @@ TkpComputeButtonGeometry(
      * If the indicator is on, get its size.
      */
 
-    if ( butPtr->indicatorOn ) {
+    if (butPtr->indicatorOn) {
       switch (butPtr->type) {
       case TYPE_RADIO_BUTTON:
 	GetThemeMetric(kThemeMetricRadioButtonWidth, (SInt32 *)&butPtr->indicatorDiameter);
@@ -312,20 +298,19 @@ TkpComputeButtonGeometry(
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
-		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+		text, -1, butPtr->wrapLength, butPtr->justify, 0,
+		&butPtr->textWidth, &butPtr->textHeight);
 
-	txtWidth = butPtr->textWidth;
-	txtHeight = butPtr->textHeight;
-	charWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
-	Tk_GetFontMetrics(butPtr->tkfont, &fm);
-	haveText = (txtWidth != 0 && txtHeight != 0);
+	txtWidth = butPtr->textWidth + 2*butPtr->padX;
+	txtHeight = butPtr->textHeight + 2*butPtr->padY;
+	haveText = 1;
     }
 
     if (haveImage && haveText) { /* Image and Text */
 	switch ((enum compound) butPtr->compound) {
 	    case COMPOUND_TOP:
 	    case COMPOUND_BOTTOM:
+
 		/*
 		 * Image is above or below text.
 		 */
@@ -335,14 +320,16 @@ TkpComputeButtonGeometry(
 		break;
 	    case COMPOUND_LEFT:
 	    case COMPOUND_RIGHT:
+
 		/*
 		 * Image is left or right of text.
 		 */
 
-		width += txtWidth + butPtr->padX;
+		width += txtWidth + 2*butPtr->padX;
 		height = (height > txtHeight ? height : txtHeight);
 		break;
 	    case COMPOUND_CENTER:
+
 		/*
 		 * Image and text are superimposed.
 		 */
@@ -354,25 +341,26 @@ TkpComputeButtonGeometry(
 		break;
 	}
 	width += butPtr->indicatorSpace;
-
     } else if (haveImage) { /* Image only */
-      width = butPtr->width > 0 ? butPtr->width : width + butPtr->indicatorSpace;
-      height = butPtr->height > 0 ? butPtr->height : height;
-
+	width = butPtr->width > 0 ? butPtr->width : width + butPtr->indicatorSpace;
+	height = butPtr->height > 0 ? butPtr->height : height;
+	if (butPtr->type == TYPE_BUTTON) {
+	    /* Allow room to shift the image. */
+	    width += 2;
+	    height += 2;
+	}
     } else { /* Text only */
         width = txtWidth + butPtr->indicatorSpace;
 	height = txtHeight;
 	if (butPtr->width > 0) {
-	   width = butPtr->width * charWidth;
+	    charWidth = Tk_TextWidth(butPtr->tkfont, "0", 1);
+	    width = butPtr->width * charWidth + 2*butPtr->padX;
 	}
 	if (butPtr->height > 0) {
-	  height = butPtr->height * fm.linespace;
+	    Tk_GetFontMetrics(butPtr->tkfont, &fm);
+	    height = butPtr->height * fm.linespace + 2*butPtr->padY;
 	}
     }
-
-    /* Add padding */
-    width  += 2 * butPtr->padX;
-    height += 2 * butPtr->padY;
 
     /*
      * Now figure out the size of the border decorations for the button.
@@ -382,48 +370,35 @@ TkpComputeButtonGeometry(
 	butPtr->highlightWidth = 0;
     }
 
-    butPtr->inset = 0;
-    butPtr->inset += butPtr->highlightWidth;
-
-    if (TkMacOSXComputeButtonDrawParams(butPtr,&drawParams)) {
-        HIRect tmpRect;
-    	HIRect contBounds;
-        int paddingx = 0;
-        int paddingy = 0;
-
-    	tmpRect = CGRectMake(0, 0, width + 2*HI_PADX, height + 2*HI_PADY);
-
-        HIThemeGetButtonContentBounds(&tmpRect, &mbPtr->drawinfo, &contBounds);
-        /* If the content region has a minimum height, match it. */
-        if (height < contBounds.size.height) {
-    	  height = contBounds.size.height;
-        }
-
-        /* If the content region has a minimum width, match it. */
-        if (width < contBounds.size.width) {
-    	  width = contBounds.size.width;
-        }
-
-        /* Pad to fill difference between content bounds and button bounds. */
-    	paddingx = contBounds.origin.x;
-    	paddingy = contBounds.origin.y;
-
-        if (height < paddingx - 4) {
-            /* can't have buttons much shorter than button side diameter. */
-            height = paddingx - 4;
-    	}
-
-    } else {
-        height += butPtr->borderWidth*2;
-        width += butPtr->borderWidth*2;
-    }
+    butPtr->inset = butPtr->borderWidth + butPtr->highlightWidth;
 
     width += butPtr->inset*2;
     height += butPtr->inset*2;
     if ([NSApp macMinorVersion] == 6) {
       width += 12;
     }
+    if (mbPtr->btnkind == kThemePushButton) {
+        HIRect tmpRect;
+    	HIRect contBounds;
 
+	/*
+	 * A PushButton has a minimum size.  We make sure that we
+	 * are not underestimating the size by requesting the content
+	 * size of a Pushbutton whose overall size is our content size
+	 * expanded by the standard padding.
+	 */
+	
+    	tmpRect = CGRectMake(0, 0, width + 2*HI_PADX, height + 2*HI_PADY);
+        HIThemeGetButtonContentBounds(&tmpRect, &mbPtr->drawinfo, &contBounds);
+        if (height < contBounds.size.height) {
+	    height = contBounds.size.height;
+        }
+        if (width < contBounds.size.width) {
+	    width = contBounds.size.width;
+        }
+	height += 2*HI_PADY;
+	width += 2*HI_PADX;
+    }
     Tk_GeometryRequest(butPtr->tkwin, width, height);
     Tk_SetInternalBorder(butPtr->tkwin, butPtr->inset);
 }
@@ -570,7 +545,6 @@ DrawButtonImageAndText(
         }
         imageXOffset += x;
         imageYOffset += y;
-        textYOffset -= 1;
 
         if (butPtr->image != NULL) {
 	  if ((butPtr->selectImage != NULL) &&
@@ -594,6 +568,7 @@ DrawButtonImageAndText(
 	  XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
         }
 
+	y += 1; /* Tweak to match native buttons. */
         Tk_DrawTextLayout(butPtr->display, pixmap,
                 dpPtr->gc, butPtr->textLayout,
                 x + textXOffset, y + textYOffset, 0, -1);
@@ -646,6 +621,7 @@ DrawButtonImageAndText(
 			butPtr->textWidth + butPtr->indicatorSpace,
 			  butPtr->textHeight, &x, &y);
 	x += butPtr->indicatorSpace;
+	y += 1; /* Tweak to match native buttons */
 	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
 			  x, y, 0, -1);
     }
@@ -1119,7 +1095,6 @@ TkMacOSXComputeButtonDrawParams(
         }
     }
 
-
     dpPtr->border = butPtr->normalBorder;
     if ((butPtr->state == STATE_DISABLED) && (butPtr->disabledFg != NULL)) {
 	dpPtr->gc = butPtr->disabledGC;
@@ -1149,29 +1124,22 @@ TkMacOSXComputeButtonDrawParams(
 	}
     }
 
-    /*
-     * Determine the draw type
-     */
-
-    if (butPtr->type == TYPE_LABEL) {
-	dpPtr->drawType = DRAW_LABEL;
-    } else if (butPtr->type == TYPE_BUTTON) {
-	if (!dpPtr->hasImageOrBitmap) {
-	    dpPtr->drawType = DRAW_CONTROL;
-	} else {
-            dpPtr->drawType = DRAW_BEVEL;
-	}
-    } else if (butPtr->indicatorOn) {
-      dpPtr->drawType = DRAW_CONTROL;
-    } else if (dpPtr->hasImageOrBitmap) {
-	dpPtr->drawType = DRAW_BEVEL;
-    } else {
-	dpPtr->drawType = DRAW_CUSTOM;
-    }
-
-    if ((dpPtr->drawType == DRAW_CONTROL) || (dpPtr->drawType == DRAW_BEVEL)) {
+    if (butPtr->type != TYPE_LABEL &&
+	(butPtr->type == TYPE_BUTTON ||
+	 butPtr->indicatorOn         ||
+	 dpPtr->hasImageOrBitmap)) {
+	
+	/*
+	 * Draw this widget as a native control.
+	 */
+	
 	return 1;
     } else {
+
+	/*
+	 * Draw this widget from scratch.
+	 */
+	
 	return 0;
     }
 }

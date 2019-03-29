@@ -1185,6 +1185,12 @@ PlaceRequestProc(
 
     if ((slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH))
 	    && (slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT))) {
+        /*
+         * Send a ConfigureNotify to indicate that the size change
+         * request was rejected.
+         */
+
+        TkDoConfigureNotify((TkWindow *)(slavePtr->tkwin));
 	return;
     }
     masterPtr = slavePtr->masterPtr;
