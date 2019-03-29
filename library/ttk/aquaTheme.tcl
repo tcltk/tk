@@ -89,6 +89,25 @@ namespace eval ttk::theme::aqua {
 		focus systemSelectedTextBackgroundColor
 	    }
 
+	# Spinbox
+	ttk::style configure TSpinbox \
+	    -foreground systemTextColor \
+	    -background systemTransparent \
+	    -selectforeground systemSelectedTextColor \
+	    -selectbackground systemSelectedTextBackgroundColor
+	ttk::style map TSpinbox \
+	    -foreground {
+		disabled systemDisabledControlTextColor
+	    } \
+	    -selectforeground {
+		!active systemTextColor
+	    } \
+	    -selectbackground {
+		!active systemTextBackgroundColor
+		!focus systemTextBackgroundColor
+		focus systemSelectedTextBackgroundColor
+	    }
+	
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -foreground black
 	ttk::style configure Treeview -rowheight 18 \
