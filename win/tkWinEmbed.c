@@ -856,6 +856,15 @@ ContainerEventProc(
     Tk_Window tkwin = (Tk_Window)containerPtr->parentPtr;
 
     if (eventPtr->type == ConfigureNotify) {
+
+	/*
+         * Send a ConfigureNotify  to the embedded application.
+         */
+
+        if (containerPtr->embeddedPtr != NULL) {
+            TkDoConfigureNotify(containerPtr->embeddedPtr);
+        }
+
 	/*
 	 * Resize the embedded window, if there is any.
 	 */

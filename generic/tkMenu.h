@@ -520,7 +520,7 @@ MODULE_SCOPE int	TkPostCommand(TkMenu *menuPtr);
 MODULE_SCOPE int	TkPostSubmenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y);
+					   int x, int y);
 MODULE_SCOPE int	TkPreprocessMenu(TkMenu *menuPtr);
 MODULE_SCOPE void	TkRecomputeMenu(TkMenu *menuPtr);
 
@@ -543,7 +543,9 @@ MODULE_SCOPE void	TkpMenuInit(void);
 MODULE_SCOPE int	TkpMenuNewEntry(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);
 MODULE_SCOPE int	TkpPostMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y);
+			    int x, int y, int index);
+MODULE_SCOPE int	TkpPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
+					   int x, int y, int index);
 MODULE_SCOPE void	TkpSetWindowMenuBar(Tk_Window tkwin, TkMenu *menuPtr);
 
 #endif /* _TKMENU */
