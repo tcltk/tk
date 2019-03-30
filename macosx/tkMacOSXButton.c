@@ -67,26 +67,6 @@ typedef struct {
 } MacButton;
 
 /*
- * When drawing highlight borders for Buttons or Labels, the function
- * Tk_Draw3DRectangle is called with SOLID relief.  This in turn calls the
- * stubs Tk_3DVerticalBevel and Tk_3DHorizontalBevel. The Mac port does not
- * define these stubs itself, but instead uses the ones defined in tkUnix3d.c,
- * which gets compiled and linked into the Mac Tk library.  One of the
- * arguments to these stubs is a pointer to a UnixBorder struct, which is an
- * extension of TkBorder containing one additional field which is a graphics
- * context to be used when drawing the bevels.  The UnixBorder is declared in
- * the file tkUnix3d.c and not in any header file.  We include the declaration
- * here, so that we can draw highlight borders.  But this declaration must be
- * kept in sync with the one in tkUnix3d.c.
- */
-
-#include "tk3d.h"
-typedef struct {
-    TkBorder info;
-    GC solidGC;         /* Used to draw solid relief. */
-} UnixBorder;
-
-/*
  * Forward declarations for procedures defined later in this file:
  */
 
@@ -208,6 +188,12 @@ TkpDisplayButton(
 	return;
     }
     pixmap = (Pixmap) Tk_WindowId(tkwin);
+
+    /*
+     * Set up clipping region. Make sure the we are using the port
+     * for this button, or we will set the wrong window's clip.
+     */
+    
     TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     if (TkMacOSXComputeButtonDrawParams(butPtr, dpPtr) ) {
@@ -215,13 +201,6 @@ TkpDisplayButton(
     } else {
 	macButtonPtr->useTkText = 1;
     }
-
-
-    /*
-     * Set up clipping region. Make sure the we are using the port
-     * for this button, or we will set the wrong window's clip.
-     */
-
     if (macButtonPtr->useTkText) {
 	if (butPtr->type == TYPE_BUTTON) {
 	    Tk_Fill3DRectangle(tkwin, pixmap, butPtr->highlightBorder, 0, 0,
@@ -248,17 +227,13 @@ TkpDisplayButton(
     if (needhighlight) {
         if ((butPtr->flags & GOT_FOCUS || butPtr->type == TYPE_LABEL)) {
 	    GC gc;
-	    UnixBorder border;
 	    if (butPtr->highlightColorPtr) {
-		gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
+	    	gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
 	    } else {
 		gc = Tk_GCForColor(Tk_3DBorderColor(butPtr->highlightBorder),
                     pixmap);
 	    }
-	    border.solidGC = gc;
-            Tk_Draw3DRectangle(tkwin, pixmap, &border, 0, 0,
-                Tk_Width(tkwin), Tk_Height(tkwin),
-                butPtr->highlightWidth, TK_RELIEF_SOLID);
+	    TkMacOSXDrawSolidBorder(tkwin, gc, 0, butPtr->highlightWidth);
         }
     }
 }

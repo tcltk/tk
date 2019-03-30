@@ -19,8 +19,7 @@
 
 /*
  * This structure is used to keep track of the extra colors used by Unix 3D
- * borders. Warning: The structure of the same name in tkMacOSXButton.c must
- * be kept in sync with this one. 
+ * borders.
  */
 
 typedef struct {
