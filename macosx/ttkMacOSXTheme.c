@@ -465,7 +465,6 @@ static void DrawDarkButton(
 	CGRect arrowBounds = bounds;
 	arrowBounds.size.width = 16;
 	arrowBounds.origin.x += bounds.size.width - 16;
-	CGContextSaveGState(context);
 
 	/*
 	 * If the toplevel is front, paint the button blue.
@@ -956,12 +955,12 @@ static void ButtonElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    BEGIN_DRAWING(d)
     ThemeButtonParams *params = clientData;
     CGRect bounds = BoxToRect(d, b);
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state, tkwin);
     bounds = NormalizeButtonBounds(params->heightMetric, bounds);
-
+    
+    BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 	switch (info.kind) {
