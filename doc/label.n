@@ -68,11 +68,6 @@ one of the characters may optionally be underlined using the
 \fB\-underline\fR option.
 The label can be manipulated in a few simple ways, such as
 changing its relief or text, using the commands described below.
-.PP
-With respect to the \fB-highlightbackground\fR option, a label is
-considered to always have focus, meaning that the highlight border
-will always be drawn, provided that \fB-highllightthickness\fR is
-positive.
 .SH "WIDGET COMMAND"
 .PP
 The \fBlabel\fR command creates a new Tcl command whose

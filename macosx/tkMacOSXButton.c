@@ -225,14 +225,13 @@ TkpDisplayButton(
 
     /* Draw highlight border, if needed. */
     if (needhighlight) {
-        if ((butPtr->flags & GOT_FOCUS || butPtr->type == TYPE_LABEL)) {
-	    GC gc;
-	    if (butPtr->highlightColorPtr) {
-	    	gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
-	    } else {
-		gc = Tk_GCForColor(Tk_3DBorderColor(butPtr->highlightBorder),
-                    pixmap);
-	    }
+	GC gc = NULL;
+        if ((butPtr->flags & GOT_FOCUS) && butPtr->highlightColorPtr) {
+	    gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
+	} else if (butPtr->type == TYPE_LABEL) {
+	    gc = Tk_GCForColor(Tk_3DBorderColor(butPtr->highlightBorder), pixmap);
+	}
+	if (gc) {
 	    TkMacOSXDrawSolidBorder(tkwin, gc, 0, butPtr->highlightWidth);
         }
     }
