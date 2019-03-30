@@ -111,9 +111,13 @@ namespace eval ttk::theme::aqua {
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -foreground black
 	ttk::style configure Treeview -rowheight 18 \
-	    -fieldbackground systemTextBackgroundColor \
 	    -background systemTextBackgroundColor \
-	    -foreground systemTextColor
+	    -foreground systemTextColor \
+	    -fieldbackground systemTextBackgroundColor
+	ttk::style map Treeview \
+	    -background {
+		selected systemSelectedTextBackgroundColor
+	    }
 
 	# Enable animation for ttk::progressbar widget:
 	ttk::style configure TProgressbar -period 100 -maxphase 255

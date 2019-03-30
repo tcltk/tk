@@ -2389,7 +2389,7 @@ TTK_LAYOUT("TProgressbar",
 TTK_LAYOUT("Treeview",
     TTK_GROUP("Treeview.field", TTK_FILL_BOTH,
         TTK_GROUP("Treeview.padding", TTK_FILL_BOTH,
-		  TTK_NODE("Treeview.treearea", TTK_FILL_BOTH))))
+	     TTK_NODE("Treeview.treearea", TTK_FILL_BOTH))))
 
 /* Tree heading -- no border, fixed height */
 TTK_LAYOUT("Heading",
