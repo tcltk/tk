@@ -186,6 +186,12 @@ TkpOpenDisplay(
 #endif
     Tcl_CreateFileHandler(ConnectionNumber(display), TCL_READABLE,
 	    DisplayFileProc, dispPtr);
+
+    /*
+     * Key map info must be available immediately, because of "send event".
+     */
+    TkpInitKeymapInfo(dispPtr);
+
     return dispPtr;
 }
 
