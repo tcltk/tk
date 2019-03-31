@@ -295,11 +295,11 @@ TkpComputeButtonGeometry(
 	haveImage = 1;
     }
 
-    if (strlen(text) > 0) {
+    if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
-		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
+		text, -1, butPtr->wrapLength, butPtr->justify, 0,
+		&butPtr->textWidth, &butPtr->textHeight);
 
 	txtWidth = butPtr->textWidth + 2*butPtr->padX;
 	txtHeight = butPtr->textHeight + 2*butPtr->padY;
