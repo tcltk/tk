@@ -43,7 +43,7 @@ typedef struct ProtocolHandler {
 typedef struct Transient {
     TkWindow *winPtr;
     int flags;
-    struct Transient *nextPtr;    
+    struct Transient *nextPtr;
 } Transient;
 
 #define WITHDRAWN_BY_MASTER 0x1
