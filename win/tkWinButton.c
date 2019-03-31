@@ -762,11 +762,12 @@ TkpDisplayButton(
 		butPtr->borderWidth, relief);
     }
     if (defaultWidth != 0) {
-        int highlightColor =
-                (int) Tk_3DBorderColor(butPtr->highlightBorder)->pixel;
+        int highlightColor;
 
 	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-        if (butPtr->flags & GOT_FOCUS) {
+        if (butPtr->type == TYPE_LABEL) {
+            highlightColor = (int) Tk_3DBorderColor(butPtr->highlightBorder)->pixel;
+        } else {
             highlightColor = (int) butPtr->highlightColorPtr->pixel;
         }
 	TkWinFillRect(dc, 0, 0, Tk_Width(tkwin), defaultWidth,
