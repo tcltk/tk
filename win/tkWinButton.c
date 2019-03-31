@@ -405,12 +405,15 @@ TkpDisplayButton(
      * Compute width of default ring and offset for pushed buttons.
      */
 
-    if (butPtr->type == TYPE_BUTTON) {
+    if (butPtr->type == TYPE_LABEL) {
+	defaultWidth = butPtr->highlightWidth;
+        offset = 0;
+    } else if (butPtr->type == TYPE_BUTTON) {
 	defaultWidth = ((butPtr->defaultState == DEFAULT_ACTIVE)
 		? butPtr->highlightWidth : 0);
 	offset = 1;
     } else {
-	defaultWidth = butPtr->highlightWidth;;
+	defaultWidth = 0;
 	if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) {
 	    offset = 1;
 	} else {
