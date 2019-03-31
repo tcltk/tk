@@ -410,7 +410,7 @@ TkpDisplayButton(
 		? butPtr->highlightWidth : 0);
 	offset = 1;
     } else {
-	defaultWidth = 0;
+	defaultWidth = butPtr->highlightWidth;;
 	if ((butPtr->type >= TYPE_CHECK_BUTTON) && !butPtr->indicatorOn) {
 	    offset = 1;
 	} else {
@@ -759,17 +759,23 @@ TkpDisplayButton(
 		butPtr->borderWidth, relief);
     }
     if (defaultWidth != 0) {
+        int highlightColor =
+                (int) Tk_3DBorderColor(butPtr->highlightBorder)->pixel;
+
 	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
+        if (butPtr->flags & GOT_FOCUS) {
+            highlightColor = (int) butPtr->highlightColorPtr->pixel;
+        }
 	TkWinFillRect(dc, 0, 0, Tk_Width(tkwin), defaultWidth,
-		(int) butPtr->highlightColorPtr->pixel);
+		highlightColor);
 	TkWinFillRect(dc, 0, 0, defaultWidth, Tk_Height(tkwin),
-		(int) butPtr->highlightColorPtr->pixel);
+		highlightColor);
 	TkWinFillRect(dc, 0, Tk_Height(tkwin) - defaultWidth,
 		Tk_Width(tkwin), defaultWidth,
-		(int) butPtr->highlightColorPtr->pixel);
+		highlightColor);
 	TkWinFillRect(dc, Tk_Width(tkwin) - defaultWidth, 0,
 		defaultWidth, Tk_Height(tkwin),
-		(int) butPtr->highlightColorPtr->pixel);
+		highlightColor);
 	TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
