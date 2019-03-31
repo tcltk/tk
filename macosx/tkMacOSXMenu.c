@@ -699,7 +699,7 @@ TkpConfigureMenuEntry(
 		    TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
 		    /* Work around an apparent bug where itemArray can have
                       more items than the menu's entries[] array. */
-                    if (i >= menuRefPtr->menuPtr->numEntries) break;
+                    if (i >= (int)menuRefPtr->menuPtr->numEntries) break;
 		    [item setEnabled: !(submePtr->state == ENTRY_DISABLED)];
 		    i++;
 		  }
@@ -806,7 +806,7 @@ TkpPostMenu(
     if (itemIndex >= 0) {
 	item = [menu itemAtIndex:itemIndex];
     }
-    
+
     /*
      * The post commands could have deleted the menu, which means we are dead
      * and should go away.
@@ -862,7 +862,7 @@ TkpPostTearoffMenu(
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    if (index >= menuPtr->numEntries) {
+    if (index >= (int)menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -1025,7 +1025,7 @@ TkpSetMainMenubar(
      * to a different application.  In that case, install the default
      * menubar.
      */
-    
+
     if (menu || interp != currentInterp) {
 	[NSApp tkSetMainMenu:menu];
     }
@@ -1233,7 +1233,7 @@ TkpComputeStandardMenuGeometry(
     if (menuPtr->tkwin == NULL || menuPtr->masterMenuPtr != menuPtr) {
 	return;
     }
-    
+
     menuSize = [(NSMenu *)menuPtr->platformData size];
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
 	    &borderWidth);
@@ -1257,7 +1257,7 @@ TkpComputeStandardMenuGeometry(
     Tk_GetFontMetrics(menuFont, &menuMetrics);
     menuModifierCharWidth = ModifierCharWidth(menuFont);
 
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int)menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == CASCADE_ENTRY || mePtr->accelLength > 0) {
 	    haveAccel = 1;
@@ -1265,7 +1265,7 @@ TkpComputeStandardMenuGeometry(
 	}
     }
 
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int)menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == TEAROFF_ENTRY) {
 	    continue;
@@ -1413,7 +1413,7 @@ GenerateMenuSelectEvent(
     if (menuPtr) {
 	int index = [menu tkIndexOfItem:menuItem];
 
-	if (index < 0 || index >= menuPtr->numEntries ||
+	if (index < 0 || index >= (int)menuPtr->numEntries ||
 		(menuPtr->entries[index])->state == ENTRY_DISABLED) {
 	    TkActivateMenuEntry(menuPtr, -1);
 	} else {
@@ -1492,7 +1492,7 @@ RecursivelyClearActiveMenu(
     int i;
 
     TkActivateMenuEntry(menuPtr, -1);
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int)menuPtr->numEntries; i++) {
 	TkMenuEntry *mePtr = menuPtr->entries[i];
 
 	if (mePtr->type == CASCADE_ENTRY
