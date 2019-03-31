@@ -191,8 +191,8 @@ TkpDisplayMenuButton(
     /* Draw highlight border, if needed. */
     if (butPtr->highlightWidth < 3) {
         if (butPtr->flags & GOT_FOCUS) {
-	GC gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
-	TkMacOSXDrawSolidBorder(tkwin, gc, 0, butPtr->highlightWidth);
+	    GC gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
+	    TkMacOSXDrawSolidBorder(tkwin, gc, 0, butPtr->highlightWidth);
 	}
     }
 }
