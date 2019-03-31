@@ -1053,7 +1053,6 @@ TkMacOSXDrawSolidBorder(
     int thickness)
 {
     Drawable d = Tk_WindowId(tkwin);
-    MacDrawable *macWin = (MacDrawable *) d;
     TkMacOSXDrawingContext dc;
     CGRect outerRect, innerRect;
 
