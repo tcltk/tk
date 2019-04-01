@@ -769,7 +769,8 @@ typedef struct TkWindow {
 				/* Information about geometry manager for this
 				 * window. */
     ClientData geomData;	/* Argument for geometry manager functions. */
-    Tk_Window *geomMasterPtr;   /* Tk_MaintainGeometry maintains this field. */
+    struct TkWindow *geomMasterPtr;
+                                /* Master assigned by Tk_MaintainGeometry.*/
     int reqWidth, reqHeight;	/* Arguments from last call to
 				 * Tk_GeometryRequest, or 0's if
 				 * Tk_GeometryRequest hasn't been called. */
