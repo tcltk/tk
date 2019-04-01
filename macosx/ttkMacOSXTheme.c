@@ -156,7 +156,6 @@ static int GetBoxColor(
     int depth,
     CGFloat *fill)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     if ([NSApp macMinorVersion] > 13) {
         NSColor *windowColor = [[NSColor windowBackgroundColor]
@@ -173,10 +172,10 @@ static int GetBoxColor(
      * Compute the nesting depth of the widget.
      */
 
-    for (TkWindow *topPtr = winPtr->parentPtr; topPtr != NULL;
-	 topPtr = topPtr->parentPtr) {
-	if (topPtr->privatePtr &&
-	    (topPtr->privatePtr->flags & TTK_HAS_DARKER_BG)) {
+    for (TkWindow *masterPtr = (TkWindow *)Tk_GeomMaster(tkwin); masterPtr != NULL;
+	 masterPtr = (TkWindow *)Tk_GeomMaster(masterPtr)) {
+	if (masterPtr->privatePtr &&
+	    (masterPtr->privatePtr->flags & TTK_HAS_DARKER_BG)) {
 	    depth++;
 	}
 	if (depth > 7) {
