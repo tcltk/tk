@@ -7,7 +7,7 @@ namespace eval ttk::theme::aqua {
 
 	ttk::style configure . \
 	    -font TkDefaultFont \
-	    -background systemWindowBody \
+	    -background systemTtkBackground \
 	    -foreground systemLabelColor \
 	    -selectbackground systemHighlight \
 	    -selectforeground systemLabelColor \
