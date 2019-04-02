@@ -831,10 +831,10 @@ CanvasWidgetCmd(
 	if (gotAny) {
 	    Tcl_Obj *resultObjs[4];
 
-	    resultObjs[0] = Tcl_NewIntObj(x1);
-	    resultObjs[1] = Tcl_NewIntObj(y1);
-	    resultObjs[2] = Tcl_NewIntObj(x2);
-	    resultObjs[3] = Tcl_NewIntObj(y2);
+	    resultObjs[0] = Tcl_NewWideIntObj(x1);
+	    resultObjs[1] = Tcl_NewWideIntObj(y1);
+	    resultObjs[2] = Tcl_NewWideIntObj(x2);
+	    resultObjs[3] = Tcl_NewWideIntObj(y2);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, resultObjs));
 	}
 	break;
@@ -1239,7 +1239,7 @@ CanvasWidgetCmd(
 	itemPtr->redraw_flags |= FORCE_REDRAW;
 	EventuallyRedrawItem(canvasPtr, itemPtr);
 	canvasPtr->flags |= REPICK_NEEDED;
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(itemPtr->id));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(itemPtr->id));
 	break;
     }
     case CANV_DCHARS: {
@@ -1385,7 +1385,7 @@ CanvasWidgetCmd(
 	itemPtr = canvasPtr->textInfo.focusItemPtr;
 	if (objc == 2) {
 	    if (itemPtr != NULL) {
-		Tcl_SetObjResult(interp, Tcl_NewIntObj(itemPtr->id));
+		Tcl_SetObjResult(interp, Tcl_NewWideIntObj(itemPtr->id));
 	    }
 	    goto done;
 	}
@@ -1477,7 +1477,7 @@ CanvasWidgetCmd(
 	if (result != TCL_OK) {
 	    goto done;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	break;
     }
     case CANV_INSERT: {
@@ -1924,7 +1924,7 @@ CanvasWidgetCmd(
 	    }
 	    if (canvasPtr->textInfo.selItemPtr != NULL) {
 		Tcl_SetObjResult(interp,
-			Tcl_NewIntObj(canvasPtr->textInfo.selItemPtr->id));
+			Tcl_NewWideIntObj(canvasPtr->textInfo.selItemPtr->id));
 	    }
 	    break;
 	case CANV_TO:
@@ -4441,7 +4441,7 @@ DoItem(
      */
 
     if (tag == NULL) {
-	Tcl_ListObjAppendElement(NULL, accumObj, Tcl_NewIntObj(itemPtr->id));
+	Tcl_ListObjAppendElement(NULL, accumObj, Tcl_NewWideIntObj(itemPtr->id));
 	return;
     }
 
