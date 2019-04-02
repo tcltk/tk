@@ -769,6 +769,9 @@ typedef struct TkWindow {
 				/* Information about geometry manager for this
 				 * window. */
     ClientData geomData;	/* Argument for geometry manager functions. */
+    char *geomMgrName;          /* Records the name of the geometry manager. */
+    struct TkWindow *geomMasterPtr;
+                                /* The master assigned by Tk_MaintainGeometry.*/
     int reqWidth, reqHeight;	/* Arguments from last call to
 				 * Tk_GeometryRequest, or 0's if
 				 * Tk_GeometryRequest hasn't been called. */
@@ -812,7 +815,6 @@ typedef struct TkWindow {
 
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
-    char *geometryMaster;
 #ifdef TK_USE_INPUT_METHODS
     int ximGeneration;          /* Used to invalidate XIC */
 #endif /* TK_USE_INPUT_METHODS */
