@@ -1487,6 +1487,7 @@ typedef struct Tk_ElementSpec {
  *----------------------------------------------------------------------
  */
 
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #define TK_READABLE		TCL_READABLE
 #define TK_WRITABLE		TCL_WRITABLE
 #define TK_EXCEPTION		TCL_EXCEPTION
@@ -1520,6 +1521,7 @@ typedef struct Tk_ElementSpec {
 #define Tk_FreeProc		Tcl_FreeProc
 #define Tk_Preserve		Tcl_Preserve
 #define Tk_Release		Tcl_Release
+#endif
 
 /* Removed Tk_Main, use macro instead */
 #if defined(_WIN32) || defined(__CYGWIN__)

@@ -347,6 +347,9 @@ all:	  release $(CAT32)
 core:	  setup $(TKSTUBLIB) $(TKLIB)
 cwish:	  $(WISHC)
 install:  install-binaries install-libraries install-docs
+!if $(SYMBOLS)
+install:    install-pdbs
+!endif
 tktest:	  setup $(TKTEST) $(CAT32)
 
 setup: default-setup
@@ -525,6 +528,11 @@ install-docs:
 	@echo Installing compiled HTML help
 	@$(CPY) "$(CHMFILE)" "$(DOC_INSTALL_DIR)\"
 !endif
+# "emacs font-lock highlighting fix
+
+install-pdbs:
+	@echo Installing debug symbols
+	@$(CPY) "$(OUT_DIR)\*.pdb" "$(BIN_INSTALL_DIR)\"
 # "emacs font-lock highlighting fix
 
 #---------------------------------------------------------------------

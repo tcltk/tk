@@ -24,9 +24,6 @@
 */
 #define NS_KEYLOG 0
 
-
-static Tk_Window grabWinPtr = NULL;
-				/* Current grab window, NULL if no grab. */
 static Tk_Window keyboardGrabWinPtr = NULL;
 				/* Current keyboard grab window. */
 static NSWindow *keyboardGrabNSWindow = nil;
@@ -500,11 +497,12 @@ XGrabKeyboard(
     Time time)
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
-    if (keyboardGrabWinPtr && grabWinPtr) {
+    TkWindow *captureWinPtr = (TkWindow *)TkMacOSXGetCapture(); 
+    if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
 	MacDrawable *macWin = (MacDrawable *) grab_window;
 
-	if (w && macWin->toplevel->winPtr == (TkWindow*) grabWinPtr) {
+	if (w && macWin->toplevel->winPtr == (TkWindow*) captureWinPtr) {
 	    if (modalSession) {
 		Tcl_Panic("XGrabKeyboard: already grabbed");
 	    }
@@ -551,26 +549,6 @@ XUngrabKeyboard(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetCapture --
- *
- * Results:
- *	Returns the current grab window
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Tk_Window
-TkMacOSXGetCapture(void)
-{
-    return grabWinPtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXGetModalSession --
  *
  * Results:
@@ -586,34 +564,6 @@ MODULE_SCOPE NSModalSession
 TkMacOSXGetModalSession(void)
 {
     return modalSession;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpSetCapture --
- *
- *	This function captures the mouse so that all future events will be
- *	reported to this window, even if the mouse is outside the window. If
- *	the specified window is NULL, then the mouse is released.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Sets the capture flag and captures the mouse.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpSetCapture(
-    TkWindow *winPtr)		/* Capture window, or NULL. */
-{
-    while (winPtr && !Tk_IsTopLevel(winPtr)) {
-	winPtr = winPtr->parentPtr;
-    }
-    grabWinPtr = (Tk_Window) winPtr;
 }
 
 /*

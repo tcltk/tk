@@ -267,9 +267,9 @@ typedef struct TkMenu {
     Tcl_Command widgetCmd;	/* Token for menu's widget command. */
     TkMenuEntry **entries;	/* Array of pointers to all the entries in the
 				 * menu. NULL means no entries. */
-    int numEntries;		/* Number of elements in entries. */
-    int active;			/* Index of active entry. -1 means nothing
-				 * active. */
+    TkSizeT numEntries;		/* Number of elements in entries. */
+    TkSizeT active;			/* Index of active entry. TCL_INDEX_NONE means
+				 * nothing active. */
     int menuType;		/* MASTER_MENU, TEAROFF_MENU, or MENUBAR. See
     				 * below for definitions. */
     Tcl_Obj *menuTypePtr;	/* Used to control whether created tkwin is a
@@ -482,7 +482,7 @@ typedef struct TkMenuReferences {
  * the outside world:
  */
 
-MODULE_SCOPE int	TkActivateMenuEntry(TkMenu *menuPtr, int index);
+MODULE_SCOPE int	TkActivateMenuEntry(TkMenu *menuPtr, TkSizeT index);
 MODULE_SCOPE void	TkBindMenu(Tk_Window tkwin, TkMenu *menuPtr);
 MODULE_SCOPE TkMenuReferences*TkCreateMenuReferences(Tcl_Interp *interp,
 			    const char *name);
@@ -503,7 +503,7 @@ MODULE_SCOPE int	TkInvokeMenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    int index);
 MODULE_SCOPE void	TkMenuConfigureDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE int	TkMenuConfigureEntryDrawOptions(
-			    TkMenuEntry *mePtr, int index);
+			    TkMenuEntry *mePtr, TkSizeT index);
 MODULE_SCOPE void	TkMenuFreeDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuEntryFreeDrawOptions(TkMenuEntry *mePtr);
 MODULE_SCOPE void	TkMenuEventProc(ClientData clientData,
@@ -521,7 +521,7 @@ MODULE_SCOPE int	TkPostCommand(TkMenu *menuPtr);
 MODULE_SCOPE int	TkPostSubmenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y);
+					   int x, int y);
 MODULE_SCOPE int	TkPreprocessMenu(TkMenu *menuPtr);
 MODULE_SCOPE void	TkRecomputeMenu(TkMenu *menuPtr);
 
@@ -544,7 +544,9 @@ MODULE_SCOPE void	TkpMenuInit(void);
 MODULE_SCOPE int	TkpMenuNewEntry(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);
 MODULE_SCOPE int	TkpPostMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y);
+			    int x, int y, int index);
+MODULE_SCOPE int	TkpPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
+					   int x, int y, int index);
 MODULE_SCOPE void	TkpSetWindowMenuBar(Tk_Window tkwin, TkMenu *menuPtr);
 
 #endif /* _TKMENU */

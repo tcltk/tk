@@ -743,7 +743,10 @@ ReconfigureWindowsMenu(
  *
  * TkpPostMenu --
  *
- *	Posts a menu on the screen
+ *	Posts a menu on the screen so that the top left corner of the
+ *      specified entry is located at the point (x, y) in screen coordinates.
+ *      If the entry parameter is negative, the upper left corner of the
+ *      menu itself is placed at the point.
  *
  * Results:
  *	None.
@@ -758,7 +761,7 @@ int
 TkpPostMenu(
     Tcl_Interp *interp,
     TkMenu *menuPtr,
-    int x, int y)
+    int x, int y, int index)
 {
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
     int result, flags;
@@ -770,13 +773,19 @@ TkpPostMenu(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->inPostMenu++;
-
     CallPendingReconfigureImmediately(menuPtr);
 
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
 	tsdPtr->inPostMenu--;
 	return result;
+    }
+
+    if (index >= (int)menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
     }
 
     /*
@@ -835,6 +844,100 @@ TkpPostMenu(
     if (tsdPtr->inPostMenu) {
 	tsdPtr->inPostMenu = 0;
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpPostTearoffMenu --
+ *
+ *	Posts a tearoff menu on the screen so that the top left corner of the
+ *      specified entry is located at the point (x, y) in screen coordinates.
+ *      If the index parameter is negative, the upper left corner of the menu
+ *      itself is placed at the point.  Adjusts the menu's position so that it
+ *      fits on the screen, and maps and raises the menu.
+ *
+ * Results:
+ *	Returns a standard Tcl Error.
+ *
+ * Side effects:
+ *	The menu is posted.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkpPostTearoffMenu(
+    Tcl_Interp *interp,		/* The interpreter of the menu */
+    TkMenu *menuPtr,		/* The menu we are posting */
+    int x, int y, int index)	/* The root X,Y coordinates where we are
+				 * posting */
+{
+    int vRootX, vRootY, vRootWidth, vRootHeight;
+    int result;
+
+    if (index >= (int)menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
+    }
+
+    TkActivateMenuEntry(menuPtr, -1);
+    TkRecomputeMenu(menuPtr);
+    result = TkPostCommand(menuPtr);
+    if (result != TCL_OK) {
+    	return result;
+    }
+
+    /*
+     * The post commands could have deleted the menu, which means we are dead
+     * and should go away.
+     */
+
+    if (menuPtr->tkwin == NULL) {
+    	return TCL_OK;
+    }
+
+    /*
+     * Adjust the position of the menu if necessary to keep it visible on the
+     * screen. There are two special tricks to make this work right:
+     *
+     * 1. If a virtual root window manager is being used then the coordinates
+     *    are in the virtual root window of menuPtr's parent; since the menu
+     *    uses override-redirect mode it will be in the *real* root window for
+     *    the screen, so we have to map the coordinates from the virtual root
+     *    (if any) to the real root. Can't get the virtual root from the menu
+     *    itself (it will never be seen by the wm) so use its parent instead
+     *    (it would be better to have an an option that names a window to use
+     *    for this...).
+     * 2. The menu may not have been mapped yet, so its current size might be
+     *    the default 1x1. To compute how much space it needs, use its
+     *    requested size, not its actual size.
+     */
+
+    Tk_GetVRootGeometry(Tk_Parent(menuPtr->tkwin), &vRootX, &vRootY,
+	&vRootWidth, &vRootHeight);
+    vRootWidth -= Tk_ReqWidth(menuPtr->tkwin);
+    if (x > vRootX + vRootWidth) {
+	x = vRootX + vRootWidth;
+    }
+    if (x < vRootX) {
+	x = vRootX;
+    }
+    vRootHeight -= Tk_ReqHeight(menuPtr->tkwin);
+    if (y > vRootY + vRootHeight) {
+	y = vRootY + vRootHeight;
+    }
+    if (y < vRootY) {
+	y = vRootY;
+    }
+    Tk_MoveToplevelWindow(menuPtr->tkwin, x, y);
+    if (!Tk_IsMapped(menuPtr->tkwin)) {
+	Tk_MapWindow(menuPtr->tkwin);
+    }
+    TkWmRestackToplevel((TkWindow *) menuPtr->tkwin, Above, NULL);
     return TCL_OK;
 }
 
@@ -1144,9 +1247,11 @@ TkWinHandleMenuEvent(
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
 		*plParam);
 	if (hashEntryPtr != NULL) {
-	    int i, len, underline;
+	    size_t i, len, underline;
 	    Tcl_Obj *labelPtr;
-	    Tcl_UniChar *wlabel, menuChar;
+	    WCHAR *wlabel;
+	    int menuChar;
+	    Tcl_DString ds;
 
 	    *plResult = 0;
 	    menuPtr = Tcl_GetHashValue(hashEntryPtr);
@@ -1154,17 +1259,21 @@ TkWinHandleMenuEvent(
 	     * Assume we have something directly convertable to Tcl_UniChar.
 	     * True at least for wide systems.
 	     */
-	    menuChar = Tcl_UniCharToUpper((Tcl_UniChar) LOWORD(*pwParam));
+	    menuChar = Tcl_UniCharToUpper(LOWORD(*pwParam));
 
-	    for (i = 0; i < menuPtr->numEntries; i++) {
+	    Tcl_DStringInit(&ds);
+	    for (i = 0; i < (size_t)menuPtr->numEntries; i++) {
 		underline = menuPtr->entries[i]->underline;
 		labelPtr = menuPtr->entries[i]->labelPtr;
-		if ((underline >= 0) && (labelPtr != NULL)) {
+		if ((underline != (size_t)-1) && (labelPtr != NULL)) {
 		    /*
 		     * Ensure we don't exceed the label length, then check
 		     */
-		    wlabel = Tcl_GetUnicodeFromObj(labelPtr, &len);
-		    if ((underline < len) && (menuChar ==
+		    const char *src = TkGetStringFromObj(labelPtr, &len);
+
+		    Tcl_DStringFree(&ds);
+		    wlabel = (WCHAR *) Tcl_WinUtfToTChar(src, len, &ds);
+		    if ((underline + 1 < len + 1) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
 			returnResult = 1;
@@ -1172,6 +1281,7 @@ TkWinHandleMenuEvent(
 		    }
 		}
 	    }
+	    Tcl_DStringFree(&ds);
 	}
 	break;
     }
@@ -1300,7 +1410,7 @@ TkWinHandleMenuEvent(
                 }
                 mePtr = NULL;
 		if (flags != 0xFFFF) {
-		    if ((flags&MF_POPUP) && (entryIndex<menuPtr->numEntries)) {
+		    if ((flags&MF_POPUP) && (entryIndex < (int)menuPtr->numEntries)) {
 			mePtr = menuPtr->entries[entryIndex];
 		    } else {
 			hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
@@ -1314,7 +1424,7 @@ TkWinHandleMenuEvent(
 		if ((mePtr == NULL) || (mePtr->state == ENTRY_DISABLED)) {
 		    TkActivateMenuEntry(menuPtr, -1);
 		} else {
-		    if (mePtr->index >= menuPtr->numEntries) {
+		    if (mePtr->index >= (int)menuPtr->numEntries) {
 			Tcl_Panic("Trying to activate an entry which doesn't exist");
 		    }
 		    TkActivateMenuEntry(menuPtr, mePtr->index);
@@ -1351,7 +1461,7 @@ void
 RecursivelyClearActiveMenu(
     TkMenu *menuPtr)		/* The menu to reset. */
 {
-    int i;
+    TkSizeT i;
     TkMenuEntry *mePtr;
 
     TkActivateMenuEntry(menuPtr, -1);
@@ -1967,8 +2077,7 @@ DrawMenuUnderline(
     if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
 	int len;
 
-	/* do the unicode call just to prevent overruns */
-	Tcl_GetUnicodeFromObj(mePtr->labelPtr, &len);
+	len = Tcl_GetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len) {
 	    const char *label, *start, *end;
 
@@ -2363,7 +2472,7 @@ DrawMenuEntryLabel(
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
 	} else if ((mePtr->image != NULL)
-		&& (menuPtr->disabledImageGC != NULL)) {
+		&& menuPtr->disabledImageGC) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
 		    leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset),
@@ -2875,7 +2984,7 @@ TkpComputeStandardMenuGeometry(
     Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
 	    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int)menuPtr->numEntries; i++) {
 	if (menuPtr->entries[i]->fontPtr == NULL) {
 	    tkfont = menuFont;
 	    fmPtr = &menuMetrics;
@@ -2912,7 +3021,6 @@ TkpComputeStandardMenuGeometry(
 	    GetTearoffEntryGeometry(menuPtr, menuPtr->entries[i], tkfont,
 	    	    fmPtr, &width, &height);
 	    menuPtr->entries[i]->height = height;
-
 	} else {
 	    /*
 	     * For each entry, compute the height required by that particular
@@ -2960,7 +3068,7 @@ TkpComputeStandardMenuGeometry(
     if (accelWidth != 0) {
 	labelWidth += accelSpace;
     }
-    for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
+    for (j = lastColumnBreak; j < (int)menuPtr->numEntries; j++) {
 	menuPtr->entries[j]->indicatorSpace = indicatorSpace;
 	menuPtr->entries[j]->labelWidth = labelWidth;
 	menuPtr->entries[j]->width = indicatorSpace + labelWidth
@@ -2970,8 +3078,6 @@ TkpComputeStandardMenuGeometry(
     }
     windowWidth = x + indicatorSpace + labelWidth + accelWidth
 	    + 2 * activeBorderWidth + borderWidth;
-
-
     windowHeight += borderWidth;
 
     /*
@@ -3188,7 +3294,7 @@ TkWinGetMenuSystemDefault(
 
     if ((strcmp(dbName, "activeBorderWidth") == 0) ||
 	    (strcmp(dbName, "borderWidth") == 0)) {
-	valuePtr = Tcl_NewIntObj(defaultBorderWidth);
+	valuePtr = Tcl_NewWideIntObj(defaultBorderWidth);
     } else if (strcmp(dbName, "font") == 0) {
 	valuePtr = Tcl_NewStringObj(Tcl_DStringValue(&menuFontDString), -1);
     }

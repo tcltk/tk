@@ -2144,7 +2144,7 @@ static int TreeviewExistsCommand(
     }
 
     entryPtr = Tcl_FindHashEntry(&tv->tree.items, Tcl_GetString(objv[2]));
-    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(entryPtr != 0));
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(entryPtr != 0));
     return TCL_OK;
 }
 
@@ -2231,7 +2231,9 @@ static int TreeviewHorribleIdentify(
 	    Ttk_Element element;
 
 	    BoundingBox(tv, item, NULL, &itemBox);
-	    PrepareItem(tv, item, &displayItem); /*@@@ FIX: -text, etc*/
+	    PrepareItem(tv, item, &displayItem);
+            if (item->textObj) { displayItem.textObj = item->textObj; }
+            if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), itemBox);
 	    element = Ttk_IdentifyElement(layout, x, y);
@@ -2343,7 +2345,9 @@ static int TreeviewIdentifyCommand(
 		return TCL_OK;
 	    }
 
-	    PrepareItem(tv, item, &displayItem); /*@@@ FIX: fill in -text,etc */
+	    PrepareItem(tv, item, &displayItem);
+            if (item->textObj) { displayItem.textObj = item->textObj; }
+            if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), bbox);
 	    element = Ttk_IdentifyElement(layout, x, y);
@@ -3110,7 +3114,7 @@ static int TreeviewTagHasCommand(
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp,
-	    Tcl_NewBooleanObj(Ttk_TagSetContains(item->tagset, tag)));
+	    Tcl_NewWideIntObj(Ttk_TagSetContains(item->tagset, tag)));
 	return TCL_OK;
     } else {
     	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?item?");

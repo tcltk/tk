@@ -1212,7 +1212,7 @@ TrivialConfigObjCmd(
 		    headerPtr->optionTable, objc - 2, objv + 2,
 		    tkwin, NULL, &mask);
 	    if (result == TCL_OK) {
-		Tcl_SetObjResult(interp, Tcl_NewIntObj(mask));
+		Tcl_SetObjResult(interp, Tcl_NewWideIntObj(mask));
 	    }
 	}
 	break;
@@ -1222,7 +1222,7 @@ TrivialConfigObjCmd(
 		tkwin, &saved, &mask);
 	Tk_FreeSavedOptions(&saved);
 	if (result == TCL_OK) {
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(mask));
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(mask));
 	}
 	break;
     }
@@ -2167,8 +2167,8 @@ TestPhotoStringMatchCmd(
         return TCL_ERROR;
     }
     if (TkDebugPhotoStringMatchDef(interp, objv[1], dummy, &width, &height)) {
-        resultObj[0] = Tcl_NewIntObj(width);
-        resultObj[1] = Tcl_NewIntObj(height);
+        resultObj[0] = Tcl_NewWideIntObj(width);
+        resultObj[1] = Tcl_NewWideIntObj(height);
         Tcl_SetObjResult(interp, Tcl_NewListObj(2, resultObj));
         return TCL_OK;
     } else {

@@ -71,22 +71,31 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #endif
 
 /*
- * Further on, in UNICODE mode, we need to use Tcl_NewUnicodeObj,
- * while otherwise NewNativeObj is needed (which provides proper
- * conversion from native encoding to UTF-8).
+ * Further on, in UNICODE mode we just use Tcl_NewUnicodeObj, otherwise
+ * NewNativeObj is needed (which provides proper conversion from native
+ * encoding to UTF-8).
  */
+
+static inline Tcl_Obj *
+NewNativeObj(
+    TCHAR *string,
+    int length)
+{
+    Tcl_Obj *obj;
+    Tcl_DString ds;
+
 #ifdef UNICODE
-#   define NewNativeObj Tcl_NewUnicodeObj
-#else /* !UNICODE */
-    static Tcl_Obj *NewNativeObj(char *string, int length) {
-	Tcl_Obj *obj;
-	Tcl_DString ds;
-	Tcl_ExternalToUtfDString(NULL, string, length, &ds);
-	obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
-	Tcl_DStringFree(&ds);
-	return obj;
+    if (length > 0) {
+	length *= sizeof(WCHAR);
+    }
+    Tcl_WinTCharToUtf(string, length, &ds);
+#else
+    Tcl_ExternalToUtfDString(NULL, (char *) string, length, &ds);
+#endif
+    obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    Tcl_DStringFree(&ds);
+    return obj;
 }
-#endif /* !UNICODE */
 
 /*
  * Declarations for various library functions and variables (don't want to
@@ -289,7 +298,7 @@ Tk_MainEx(
     argc--;
     argv++;
 
-    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewIntObj(argc), TCL_GLOBAL_ONLY);
+    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj(argc), TCL_GLOBAL_ONLY);
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
@@ -316,7 +325,7 @@ Tk_MainEx(
     }
 #endif
     Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
-	    Tcl_NewIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
+	    Tcl_NewWideIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.

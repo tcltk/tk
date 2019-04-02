@@ -3017,7 +3017,7 @@ GetEncodingAlias(
     const EncodingAlias *aliasPtr;
 
     for (aliasPtr = encodingAliases; aliasPtr->aliasPattern != NULL; ) {
-	if (Tcl_StringMatch(name, aliasPtr->aliasPattern)) {
+	if (Tcl_StringCaseMatch(name, aliasPtr->aliasPattern, 0)) {
 	    return aliasPtr->realName;
 	}
 	aliasPtr++;

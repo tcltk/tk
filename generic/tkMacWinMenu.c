@@ -66,7 +66,7 @@ PreprocessMenu(
 
     do {
 	finished = 1;
-	for (index = 0; index < menuPtr->numEntries; index++) {
+	for (index = 0; index < (int)menuPtr->numEntries; index++) {
 	    register TkMenuEntry *entryPtr = menuPtr->entries[index];
 
 	    if ((entryPtr->type == CASCADE_ENTRY)
