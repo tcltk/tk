@@ -1114,7 +1114,7 @@ Tk_WmObjCmd(
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
-	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(wmTracing));
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(wmTracing != 0));
 	    return TCL_OK;
 	}
 	return Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing);
@@ -1250,10 +1250,10 @@ WmAspectCmd(
 	if (wmPtr->sizeHintsFlags & PAspect) {
 	    Tcl_Obj *results[4];
 
-	    results[0] = Tcl_NewIntObj(wmPtr->minAspect.x);
-	    results[1] = Tcl_NewIntObj(wmPtr->minAspect.y);
-	    results[2] = Tcl_NewIntObj(wmPtr->maxAspect.x);
-	    results[3] = Tcl_NewIntObj(wmPtr->maxAspect.y);
+	    results[0] = Tcl_NewWideIntObj(wmPtr->minAspect.x);
+	    results[1] = Tcl_NewWideIntObj(wmPtr->minAspect.y);
+	    results[2] = Tcl_NewWideIntObj(wmPtr->maxAspect.x);
+	    results[3] = Tcl_NewWideIntObj(wmPtr->maxAspect.y);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, results));
 	}
 	return TCL_OK;
@@ -1453,23 +1453,23 @@ WmGetAttribute(
 	result = Tcl_NewDoubleObj([macWindow alphaValue]);
 	break;
     case WMATT_FULLSCREEN:
-	result = Tcl_NewBooleanObj(wmPtr->flags & WM_FULLSCREEN);
+	result = Tcl_NewWideIntObj((wmPtr->flags & WM_FULLSCREEN) != 0);
 	break;
     case WMATT_MODIFIED:
-	result = Tcl_NewBooleanObj([macWindow isDocumentEdited]);
+	result = Tcl_NewWideIntObj([macWindow isDocumentEdited] != 0);
 	break;
     case WMATT_NOTIFY:
-	result = Tcl_NewBooleanObj(tkMacOSXWmAttrNotifyVal);
+	result = Tcl_NewWideIntObj(tkMacOSXWmAttrNotifyVal != 0);
 	break;
     case WMATT_TITLEPATH:
 	result = Tcl_NewStringObj([[macWindow representedFilename] UTF8String],
 		-1);
 	break;
     case WMATT_TOPMOST:
-	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TOPMOST);
+	result = Tcl_NewWideIntObj((wmPtr->flags & WM_TOPMOST) != 0);
 	break;
     case WMATT_TRANSPARENT:
-	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
+	result = Tcl_NewWideIntObj((wmPtr->flags & WM_TRANSPARENT) != 0);
 	break;
     case WMATT_TYPE:
 	result = Tcl_NewStringObj("unsupported", -1);
@@ -2102,10 +2102,10 @@ WmGridCmd(
 	if (wmPtr->sizeHintsFlags & PBaseSize) {
 	    Tcl_Obj *results[4];
 
-	    results[0] = Tcl_NewIntObj(wmPtr->reqGridWidth);
-	    results[1] = Tcl_NewIntObj(wmPtr->reqGridHeight);
-	    results[2] = Tcl_NewIntObj(wmPtr->widthInc);
-	    results[3] = Tcl_NewIntObj(wmPtr->heightInc);
+	    results[0] = Tcl_NewWideIntObj(wmPtr->reqGridWidth);
+	    results[1] = Tcl_NewWideIntObj(wmPtr->reqGridHeight);
+	    results[2] = Tcl_NewWideIntObj(wmPtr->widthInc);
+	    results[3] = Tcl_NewWideIntObj(wmPtr->heightInc);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, results));
 	}
 	return TCL_OK;
@@ -2596,8 +2596,8 @@ WmIconpositionCmd(
 	if (wmPtr->hints.flags & IconPositionHint) {
 	    Tcl_Obj *results[2];
 
-	    results[0] = Tcl_NewIntObj(wmPtr->hints.icon_x);
-	    results[1] = Tcl_NewIntObj(wmPtr->hints.icon_y);
+	    results[0] = Tcl_NewWideIntObj(wmPtr->hints.icon_x);
+	    results[1] = Tcl_NewWideIntObj(wmPtr->hints.icon_y);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	}
 	return TCL_OK;
@@ -2823,8 +2823,8 @@ WmMaxsizeCmd(
 	Tcl_Obj *results[2];
 
 	GetMaxSize(winPtr, &width, &height);
-	results[0] = Tcl_NewIntObj(width);
-	results[1] = Tcl_NewIntObj(height);
+	results[0] = Tcl_NewWideIntObj(width);
+	results[1] = Tcl_NewWideIntObj(height);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
@@ -2877,8 +2877,8 @@ WmMinsizeCmd(
 	Tcl_Obj *results[2];
 
 	GetMinSize(winPtr, &width, &height);
-	results[0] = Tcl_NewIntObj(width);
-	results[1] = Tcl_NewIntObj(height);
+	results[0] = Tcl_NewWideIntObj(width);
+	results[1] = Tcl_NewWideIntObj(height);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
@@ -2929,8 +2929,8 @@ WmOverrideredirectCmd(
     }
 
     if (objc == 3) {
-	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		Tk_Attributes((Tk_Window) winPtr)->override_redirect));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
+		Tk_Attributes((Tk_Window) winPtr)->override_redirect != 0));
 	return TCL_OK;
     }
 
@@ -3148,8 +3148,8 @@ WmResizableCmd(
     if (objc == 3) {
 	Tcl_Obj *results[2];
 
-	results[0] = Tcl_NewBooleanObj(!(wmPtr->flags & WM_WIDTH_NOT_RESIZABLE));
-	results[1] = Tcl_NewBooleanObj(!(wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE));
+	results[0] = Tcl_NewWideIntObj((wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) == 0);
+	results[1] = Tcl_NewWideIntObj((wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) == 0);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
@@ -3374,7 +3374,7 @@ WmStackorderCmd(
 	} else { /* OPT_ISBELOW */
 	    result = index1 < index2;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result != 0));
 	return TCL_OK;
     }
 }
@@ -3633,7 +3633,7 @@ WmTransientCmd(
 	/*
 	 * Add the transient to the master's list, if it not already there.
 	 */
-	
+
 	for (transient = wmPtr2->transientPtr;
 	     transient != NULL && transient->winPtr != winPtr;
 	     transient = transient->nextPtr) {}
@@ -3688,7 +3688,7 @@ RemoveTransient(
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
     TkWindow *masterPtr;
     Transient *T, *temp;
-    
+
     if (wmPtr == NULL || wmPtr->master == NULL) {
 	return;
     }

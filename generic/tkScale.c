@@ -451,8 +451,8 @@ ScaleWidgetObjCmd(
 	    y = scalePtr->horizTroughY + scalePtr->width/2
 		    + scalePtr->borderWidth;
 	}
-	coords[0] = Tcl_NewIntObj(x);
-	coords[1] = Tcl_NewIntObj(y);
+	coords[0] = Tcl_NewWideIntObj(x);
+	coords[1] = Tcl_NewWideIntObj(y);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	break;
     }

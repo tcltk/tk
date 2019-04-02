@@ -2052,7 +2052,7 @@ TkpTestsendCmd(
 	    Tcl_DStringFree(&tmp);
 	}
     } else if (index == TESTSEND_SERIAL) {
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(localData.sendSerial+1));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(localData.sendSerial+1));
     }
     return TCL_OK;
 }

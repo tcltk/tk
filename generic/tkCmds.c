@@ -746,15 +746,15 @@ CaretCmd(
 	Tcl_ListObjAppendElement(interp, objPtr,
 		Tcl_NewStringObj("-height", 7));
 	Tcl_ListObjAppendElement(interp, objPtr,
-		Tcl_NewIntObj(caretPtr->height));
+		Tcl_NewWideIntObj(caretPtr->height));
 	Tcl_ListObjAppendElement(interp, objPtr,
 		Tcl_NewStringObj("-x", 2));
 	Tcl_ListObjAppendElement(interp, objPtr,
-		Tcl_NewIntObj(caretPtr->x));
+		Tcl_NewWideIntObj(caretPtr->x));
 	Tcl_ListObjAppendElement(interp, objPtr,
 		Tcl_NewStringObj("-y", 2));
 	Tcl_ListObjAppendElement(interp, objPtr,
-		Tcl_NewIntObj(caretPtr->y));
+		Tcl_NewWideIntObj(caretPtr->y));
 	Tcl_SetObjResult(interp, objPtr);
     } else if (objc == 3) {
 	int value;
@@ -774,7 +774,7 @@ CaretCmd(
 	} else /* if (index == TK_CARET_HEIGHT) -- last case */ {
 	    value = caretPtr->height;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(value));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(value));
     } else {
 	int i, value, x = 0, y = 0, height = -1;
 
@@ -1363,7 +1363,7 @@ Tk_WinfoObjCmd(
     switch ((enum options) index) {
     case WIN_CELLS:
 	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(Tk_Visual(tkwin)->map_entries));
+		Tcl_NewWideIntObj(Tk_Visual(tkwin)->map_entries));
 	break;
     case WIN_CHILDREN: {
 	Tcl_Obj *strPtr, *resultPtr = Tcl_NewObj();
@@ -1386,14 +1386,14 @@ Tk_WinfoObjCmd(
 		Tcl_NewBooleanObj(TkpCmapStressed(tkwin,Tk_Colormap(tkwin))));
 	break;
     case WIN_DEPTH:
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(Tk_Depth(tkwin)));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(Tk_Depth(tkwin)));
 	break;
     case WIN_GEOMETRY:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d+%d+%d",
 		Tk_Width(tkwin), Tk_Height(tkwin), Tk_X(tkwin), Tk_Y(tkwin)));
 	break;
     case WIN_HEIGHT:
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(Tk_Height(tkwin)));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(Tk_Height(tkwin)));
 	break;
     case WIN_ID: {
 	char buf[TCL_INTEGER_SPACE];
@@ -1444,28 +1444,28 @@ Tk_WinfoObjCmd(
 	if (useX & useY) {
 	    Tcl_Obj *xyObj[2];
 
-	    xyObj[0] = Tcl_NewIntObj(x);
-	    xyObj[1] = Tcl_NewIntObj(y);
+	    xyObj[0] = Tcl_NewWideIntObj(x);
+	    xyObj[1] = Tcl_NewWideIntObj(y);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, xyObj));
 	} else if (useX) {
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(x));
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(x));
 	} else {
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(y));
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(y));
 	}
 	break;
     case WIN_REQHEIGHT:
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(Tk_ReqHeight(tkwin)));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(Tk_ReqHeight(tkwin)));
 	break;
     case WIN_REQWIDTH:
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(Tk_ReqWidth(tkwin)));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(Tk_ReqWidth(tkwin)));
 	break;
     case WIN_ROOTX:
 	Tk_GetRootCoords(tkwin, &x, &y);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(x));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(x));
 	break;
     case WIN_ROOTY:
 	Tk_GetRootCoords(tkwin, &x, &y);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(y));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(y));
 	break;
     case WIN_SCREEN:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s.%d",
@@ -1473,27 +1473,27 @@ Tk_WinfoObjCmd(
 	break;
     case WIN_SCREENCELLS:
 	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(CellsOfScreen(Tk_Screen(tkwin))));
+		Tcl_NewWideIntObj(CellsOfScreen(Tk_Screen(tkwin))));
 	break;
     case WIN_SCREENDEPTH:
 	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(DefaultDepthOfScreen(Tk_Screen(tkwin))));
+		Tcl_NewWideIntObj(DefaultDepthOfScreen(Tk_Screen(tkwin))));
 	break;
     case WIN_SCREENHEIGHT:
 	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(HeightOfScreen(Tk_Screen(tkwin))));
+		Tcl_NewWideIntObj(HeightOfScreen(Tk_Screen(tkwin))));
 	break;
     case WIN_SCREENWIDTH:
 	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(WidthOfScreen(Tk_Screen(tkwin))));
+		Tcl_NewWideIntObj(WidthOfScreen(Tk_Screen(tkwin))));
 	break;
     case WIN_SCREENMMHEIGHT:
 	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(HeightMMOfScreen(Tk_Screen(tkwin))));
+		Tcl_NewWideIntObj(HeightMMOfScreen(Tk_Screen(tkwin))));
 	break;
     case WIN_SCREENMMWIDTH:
 	Tcl_SetObjResult(interp,
-		Tcl_NewIntObj(WidthMMOfScreen(Tk_Screen(tkwin))));
+		Tcl_NewWideIntObj(WidthMMOfScreen(Tk_Screen(tkwin))));
 	break;
     case WIN_SCREENVISUAL:
 	class = DefaultVisualOfScreen(Tk_Screen(tkwin))->class;
@@ -1539,28 +1539,28 @@ Tk_WinfoObjCmd(
 	break;
     case WIN_VROOTHEIGHT:
 	Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(height));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(height));
 	break;
     case WIN_VROOTWIDTH:
 	Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(width));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(width));
 	break;
     case WIN_VROOTX:
 	Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(x));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(x));
 	break;
     case WIN_VROOTY:
 	Tk_GetVRootGeometry(tkwin, &x, &y, &width, &height);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(y));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(y));
 	break;
     case WIN_WIDTH:
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(Tk_Width(tkwin)));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(Tk_Width(tkwin)));
 	break;
     case WIN_X:
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(Tk_X(tkwin)));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(Tk_X(tkwin)));
 	break;
     case WIN_Y:
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(Tk_Y(tkwin)));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(Tk_Y(tkwin)));
 	break;
 
 	/*
@@ -1735,7 +1735,7 @@ Tk_WinfoObjCmd(
 	if (Tk_GetPixels(interp, tkwin, string, &pixels) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(pixels));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(pixels));
 	break;
     }
     case WIN_RGB: {
