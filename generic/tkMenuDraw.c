@@ -298,7 +298,7 @@ TkMenuConfigureDrawOptions(
 int
 TkMenuConfigureEntryDrawOptions(
     TkMenuEntry *mePtr,
-    int index)
+    TkSizeT index)
 {
     XGCValues gcValues;
     GC newGC, newActiveGC, newDisabledGC, newIndicatorGC;
@@ -487,7 +487,7 @@ TkEventuallyRedrawMenu(
     register TkMenuEntry *mePtr)/* Entry to redraw. NULL means redraw all the
 				 * entries in the menu. */
 {
-    int i;
+    TkSizeT i;
 
     if (menuPtr->tkwin == NULL) {
 	return;
@@ -618,7 +618,8 @@ DisplayMenu(
     register TkMenu *menuPtr = clientData;
     register TkMenuEntry *mePtr;
     register Tk_Window tkwin = menuPtr->tkwin;
-    int index, strictMotif;
+    TkSizeT index;
+    int strictMotif;
     Tk_Font tkfont;
     Tk_FontMetrics menuMetrics;
     int width;
@@ -807,9 +808,8 @@ TkMenuImageProc(
  *
  * TkPostTearoffMenu --
  *
- *	Posts a menu on the screen. Used to post tearoff menus. On Unix, all
- *	menus are posted this way. Adjusts the menu's position so that it fits
- *	on the screen, and maps and raises the menu.
+ *	Posts a tearoff menu on the screen. Adjusts the menu's position so
+ *	that it fits on the screen, and maps and raises the menu.
  *
  * Results:
  *	Returns a standard Tcl Error.
@@ -827,64 +827,7 @@ TkPostTearoffMenu(
     int x, int y)		/* The root X,Y coordinates where we are
 				 * posting */
 {
-    int vRootX, vRootY, vRootWidth, vRootHeight;
-    int result;
-
-    TkActivateMenuEntry(menuPtr, -1);
-    TkRecomputeMenu(menuPtr);
-    result = TkPostCommand(menuPtr);
-    if (result != TCL_OK) {
-    	return result;
-    }
-
-    /*
-     * The post commands could have deleted the menu, which means we are dead
-     * and should go away.
-     */
-
-    if (menuPtr->tkwin == NULL) {
-    	return TCL_OK;
-    }
-
-    /*
-     * Adjust the position of the menu if necessary to keep it visible on the
-     * screen. There are two special tricks to make this work right:
-     *
-     * 1. If a virtual root window manager is being used then the coordinates
-     *    are in the virtual root window of menuPtr's parent; since the menu
-     *    uses override-redirect mode it will be in the *real* root window for
-     *    the screen, so we have to map the coordinates from the virtual root
-     *    (if any) to the real root. Can't get the virtual root from the menu
-     *    itself (it will never be seen by the wm) so use its parent instead
-     *    (it would be better to have an an option that names a window to use
-     *    for this...).
-     * 2. The menu may not have been mapped yet, so its current size might be
-     *    the default 1x1. To compute how much space it needs, use its
-     *    requested size, not its actual size.
-     */
-
-    Tk_GetVRootGeometry(Tk_Parent(menuPtr->tkwin), &vRootX, &vRootY,
-	&vRootWidth, &vRootHeight);
-    vRootWidth -= Tk_ReqWidth(menuPtr->tkwin);
-    if (x > vRootX + vRootWidth) {
-	x = vRootX + vRootWidth;
-    }
-    if (x < vRootX) {
-	x = vRootX;
-    }
-    vRootHeight -= Tk_ReqHeight(menuPtr->tkwin);
-    if (y > vRootY + vRootHeight) {
-	y = vRootY + vRootHeight;
-    }
-    if (y < vRootY) {
-	y = vRootY;
-    }
-    Tk_MoveToplevelWindow(menuPtr->tkwin, x, y);
-    if (!Tk_IsMapped(menuPtr->tkwin)) {
-	Tk_MapWindow(menuPtr->tkwin);
-    }
-    TkWmRestackToplevel((TkWindow *) menuPtr->tkwin, Above, NULL);
-    return TCL_OK;
+    return TkpPostTearoffMenu(interp, menuPtr, x, y, -1);
 }
 
 /*
@@ -969,8 +912,8 @@ TkPostSubmenu(
 	menuPtr->postedCascade = mePtr;
 	subary[0] = mePtr->namePtr;
 	subary[1] = Tcl_NewStringObj("post", -1);
-	subary[2] = Tcl_NewIntObj(x);
-	subary[3] = Tcl_NewIntObj(y);
+	subary[2] = Tcl_NewWideIntObj(x);
+	subary[3] = Tcl_NewWideIntObj(y);
 	Tcl_IncrRefCount(subary[1]);
 	Tcl_IncrRefCount(subary[2]);
 	Tcl_IncrRefCount(subary[3]);

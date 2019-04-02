@@ -728,7 +728,7 @@ ListboxWidgetObjCmd(
 	objPtr = Tcl_NewObj();
 	for (i = 0; i < listPtr->nElements; i++) {
 	    if (Tcl_FindHashEntry(listPtr->selection, KEY(i))) {
-		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewIntObj(i));
+		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewWideIntObj(i));
 	    }
 	}
 	Tcl_SetObjResult(interp, objPtr);
@@ -841,7 +841,7 @@ ListboxWidgetObjCmd(
 	if (result != TCL_OK) {
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	result = TCL_OK;
 	break;
 
@@ -956,7 +956,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 	index = NearestListboxElement(listPtr, y);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	result = TCL_OK;
 	break;
     }
@@ -1044,7 +1044,7 @@ ListboxWidgetObjCmd(
 	    result = TCL_ERROR;
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(listPtr->nElements));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(listPtr->nElements));
 	result = TCL_OK;
 	break;
     case COMMAND_XVIEW:
@@ -1130,10 +1130,10 @@ ListboxBboxSubCmd(
         }
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
 		+ listPtr->inset + listPtr->selBorderWidth;
-	results[0] = Tcl_NewIntObj(x);
-	results[1] = Tcl_NewIntObj(y);
-	results[2] = Tcl_NewIntObj(pixelWidth);
-	results[3] = Tcl_NewIntObj(fm.linespace);
+	results[0] = Tcl_NewWideIntObj(x);
+	results[1] = Tcl_NewWideIntObj(y);
+	results[2] = Tcl_NewWideIntObj(pixelWidth);
+	results[3] = Tcl_NewWideIntObj(fm.linespace);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(4, results));
     }
     return TCL_OK;

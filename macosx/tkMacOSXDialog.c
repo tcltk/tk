@@ -1674,8 +1674,8 @@ FontchooserCget(
 	}
 	break;
     case FontchooserVisible:
-	resObj = Tcl_NewBooleanObj([[[NSFontManager sharedFontManager]
-		fontPanel:NO] isVisible]);
+	resObj = Tcl_NewWideIntObj([[[NSFontManager sharedFontManager]
+		fontPanel:NO] isVisible] != 0);
 	break;
     default:
 	resObj = Tcl_NewObj();
@@ -1950,7 +1950,7 @@ FontchooserParentEventHandler(
     if (eventPtr->type == DestroyNotify) {
 	Tk_DeleteEventHandler(fcdPtr->parent, StructureNotifyMask,
 		FontchooserParentEventHandler, fcdPtr);
-	fcdPtr->parent = None;
+	fcdPtr->parent = NULL;
 	FontchooserHideCmd(NULL, NULL, 0, NULL);
     }
 }

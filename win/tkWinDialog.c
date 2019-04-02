@@ -2911,13 +2911,10 @@ Tk_MessageBoxObjCmd(
 
     flags |= icon | type | MB_TASKMODAL | MB_SETFOREGROUND;
 
-    tmpObj = messageObj ? Tcl_DuplicateObj(messageObj)
-	    : Tcl_NewUnicodeObj(NULL, 0);
+    tmpObj = messageObj ? Tcl_DuplicateObj(messageObj) : Tcl_NewObj();
     Tcl_IncrRefCount(tmpObj);
     if (detailObj) {
-	const Tcl_UniChar twoNL[] = { '\n', '\n' };
-
-	Tcl_AppendUnicodeToObj(tmpObj, twoNL, 2);
+	Tcl_AppendStringsToObj(tmpObj, "\n\n", NULL);
 	Tcl_AppendObjToObj(tmpObj, detailObj);
     }
 
@@ -3079,7 +3076,7 @@ GetFontObj(
 	    Tcl_NewStringObj(Tcl_DStringValue(&ds), -1));
     Tcl_DStringFree(&ds);
     pt = -MulDiv(plf->lfHeight, 72, GetDeviceCaps(hdc, LOGPIXELSY));
-    Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewIntObj(pt));
+    Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewWideIntObj(pt));
     if (plf->lfWeight >= 700) {
 	Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewStringObj("bold", -1));
     }
@@ -3257,7 +3254,7 @@ FontchooserCget(
 	}
 	break;
     case FontchooserVisible:
-	resObj = Tcl_NewBooleanObj(hdPtr->hwnd && IsWindow(hdPtr->hwnd));
+	resObj = Tcl_NewWideIntObj((hdPtr->hwnd != NULL) && IsWindow(hdPtr->hwnd));
 	break;
     default:
 	resObj = Tcl_NewStringObj("", 0);

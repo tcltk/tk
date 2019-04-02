@@ -831,10 +831,10 @@ CanvasWidgetCmd(
 	if (gotAny) {
 	    Tcl_Obj *resultObjs[4];
 
-	    resultObjs[0] = Tcl_NewIntObj(x1);
-	    resultObjs[1] = Tcl_NewIntObj(y1);
-	    resultObjs[2] = Tcl_NewIntObj(x2);
-	    resultObjs[3] = Tcl_NewIntObj(y2);
+	    resultObjs[0] = Tcl_NewWideIntObj(x1);
+	    resultObjs[1] = Tcl_NewWideIntObj(y1);
+	    resultObjs[2] = Tcl_NewWideIntObj(x2);
+	    resultObjs[3] = Tcl_NewWideIntObj(y2);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, resultObjs));
 	}
 	break;
@@ -1239,7 +1239,7 @@ CanvasWidgetCmd(
 	itemPtr->redraw_flags |= FORCE_REDRAW;
 	EventuallyRedrawItem(canvasPtr, itemPtr);
 	canvasPtr->flags |= REPICK_NEEDED;
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(itemPtr->id));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(itemPtr->id));
 	break;
     }
     case CANV_DCHARS: {
@@ -1385,7 +1385,7 @@ CanvasWidgetCmd(
 	itemPtr = canvasPtr->textInfo.focusItemPtr;
 	if (objc == 2) {
 	    if (itemPtr != NULL) {
-		Tcl_SetObjResult(interp, Tcl_NewIntObj(itemPtr->id));
+		Tcl_SetObjResult(interp, Tcl_NewWideIntObj(itemPtr->id));
 	    }
 	    goto done;
 	}
@@ -1477,7 +1477,7 @@ CanvasWidgetCmd(
 	if (result != TCL_OK) {
 	    goto done;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	break;
     }
     case CANV_INSERT: {
@@ -1924,7 +1924,7 @@ CanvasWidgetCmd(
 	    }
 	    if (canvasPtr->textInfo.selItemPtr != NULL) {
 		Tcl_SetObjResult(interp,
-			Tcl_NewIntObj(canvasPtr->textInfo.selItemPtr->id));
+			Tcl_NewWideIntObj(canvasPtr->textInfo.selItemPtr->id));
 	    }
 	    break;
 	case CANV_TO:
@@ -2769,21 +2769,10 @@ DrawCanvas(
              * colours and place them in the photo block. Perhaps we could
              * just not bother with the alpha byte because we are using
              * TK_PHOTO_COMPOSITE_SET later?
-             * ***Windows: We have to swap the red and blue values. The
-             * XImage storage is B - G - R - A which becomes a 32bit ARGB
-             * quad. However the visual mask is a 32bit ABGR quad. And
-             * Tk_PhotoPutBlock() wants R-G-B-A which is a 32bit ABGR quad.
-             * If the visual mask was correct there would be no need to
-             * swap anything here.
              */
 
-#ifdef _WIN32
-#define   R_OFFSET 2
-#define   B_OFFSET 0
-#else
 #define   R_OFFSET 0
 #define   B_OFFSET 2
-#endif
             blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + R_OFFSET] =
                     (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
             blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +1] =
@@ -4452,7 +4441,7 @@ DoItem(
      */
 
     if (tag == NULL) {
-	Tcl_ListObjAppendElement(NULL, accumObj, Tcl_NewIntObj(itemPtr->id));
+	Tcl_ListObjAppendElement(NULL, accumObj, Tcl_NewWideIntObj(itemPtr->id));
 	return;
     }
 

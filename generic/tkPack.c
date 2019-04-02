@@ -163,10 +163,10 @@ TkAppendPadAmount(
 
     if (halfSpace*2 == allSpace) {
 	Tcl_DictObjPut(NULL, bufferObj, Tcl_NewStringObj(switchName, -1),
-		Tcl_NewIntObj(halfSpace));
+		Tcl_NewWideIntObj(halfSpace));
     } else {
-	padding[0] = Tcl_NewIntObj(halfSpace);
-	padding[1] = Tcl_NewIntObj(allSpace - halfSpace);
+	padding[0] = Tcl_NewWideIntObj(halfSpace);
+	padding[1] = Tcl_NewWideIntObj(allSpace - halfSpace);
 	Tcl_DictObjPut(NULL, bufferObj, Tcl_NewStringObj(switchName, -1),
 		Tcl_NewListObj(2, padding));
     }
