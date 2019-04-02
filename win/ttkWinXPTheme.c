@@ -826,13 +826,13 @@ static void TextElementSize(
     RECT rc = {0, 0};
     HRESULT hr = S_OK;
     const char *src;
-    int len;
+    size_t len;
     Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
 
-    src = Tcl_GetStringFromObj(element->textObj, &len);
+    src = TkGetStringFromObj(element->textObj, &len);
     Tcl_WinUtfToTChar(src, len, &ds);
     hr = elementData->procs->GetThemeTextExtent(
 	    elementData->hTheme,
@@ -865,13 +865,13 @@ static void TextElementDraw(
     RECT rc = BoxToRect(b);
     HRESULT hr = S_OK;
     const char *src;
-    int len;
+    size_t len;
     Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, d))
 	return;
 
-    src = Tcl_GetStringFromObj(element->textObj, &len);
+    src = TkGetStringFromObj(element->textObj, &len);
     Tcl_WinUtfToTChar(src, len, &ds);
     hr = elementData->procs->DrawThemeText(
 	    elementData->hTheme,
@@ -1116,7 +1116,7 @@ Ttk_CreateVsapiElement(
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
     int flags = 0;
-    int length = 0;
+    size_t length = 0;
     char *name;
     LPWSTR wname;
     Ttk_ElementSpec *elementSpec = &GenericElementSpec;
@@ -1138,7 +1138,7 @@ Ttk_CreateVsapiElement(
     if (Tcl_GetIntFromObj(interp, objv[1], &partId) != TCL_OK) {
 	return TCL_ERROR;
     }
-    name = Tcl_GetStringFromObj(objv[0], &length);
+    name = TkGetStringFromObj(objv[0], &length);
     className = (WCHAR *) Tcl_WinUtfToTChar(name, length, &classBuf);
 
     /* flags or padding */

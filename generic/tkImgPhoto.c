@@ -849,10 +849,10 @@ ImgPhotoCmd(
 	 */
 
 	pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
-	channels[0] = Tcl_NewIntObj(pixelPtr[0]);
-	channels[1] = Tcl_NewIntObj(pixelPtr[1]);
-	channels[2] = Tcl_NewIntObj(pixelPtr[2]);
-	channels[3] = Tcl_NewIntObj(pixelPtr[3]);
+	channels[0] = Tcl_NewWideIntObj(pixelPtr[0]);
+	channels[1] = Tcl_NewWideIntObj(pixelPtr[1]);
+	channels[2] = Tcl_NewWideIntObj(pixelPtr[2]);
+	channels[3] = Tcl_NewWideIntObj(pixelPtr[3]);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(channelCount, channels));
 	return TCL_OK;
     }
@@ -1141,7 +1141,7 @@ ImgPhotoCmd(
 	    if (boolMode) {
 		Tcl_SetObjResult(interp, Tcl_NewBooleanObj( ! pixelPtr[3]));
 	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewIntObj(pixelPtr[3]));
+		Tcl_SetObjResult(interp, Tcl_NewWideIntObj(pixelPtr[3]));
 	    }
 	    return TCL_OK;
 	}

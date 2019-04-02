@@ -1247,7 +1247,7 @@ TkWinHandleMenuEvent(
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
 		*plParam);
 	if (hashEntryPtr != NULL) {
-	    int i, len, underline;
+	    size_t i, len, underline;
 	    Tcl_Obj *labelPtr;
 	    WCHAR *wlabel;
 	    int menuChar;
@@ -1262,18 +1262,18 @@ TkWinHandleMenuEvent(
 	    menuChar = Tcl_UniCharToUpper(LOWORD(*pwParam));
 
 	    Tcl_DStringInit(&ds);
-	    for (i = 0; i < (int)menuPtr->numEntries; i++) {
+	    for (i = 0; i < (size_t)menuPtr->numEntries; i++) {
 		underline = menuPtr->entries[i]->underline;
 		labelPtr = menuPtr->entries[i]->labelPtr;
-		if ((underline >= 0) && (labelPtr != NULL)) {
+		if ((underline != (size_t)-1) && (labelPtr != NULL)) {
 		    /*
 		     * Ensure we don't exceed the label length, then check
 		     */
-		    const char *src = Tcl_GetStringFromObj(labelPtr, &len);
+		    const char *src = TkGetStringFromObj(labelPtr, &len);
 
 		    Tcl_DStringFree(&ds);
 		    wlabel = (WCHAR *) Tcl_WinUtfToTChar(src, len, &ds);
-		    if ((underline < len) && (menuChar ==
+		    if ((underline + 1 < len + 1) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
 			returnResult = 1;

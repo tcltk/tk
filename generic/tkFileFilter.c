@@ -262,8 +262,8 @@ AddClause(
 	 */
 
 	for (i=0; i<ostypeCount; i++) {
-	    int len;
-	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
+	    size_t len;
+	    const char *strType = TkGetStringFromObj(ostypeList[i], &len);
 
 	    /*
 	     * If len is < 4, it is definitely an error. If equal or longer,
@@ -322,8 +322,8 @@ AddClause(
     if (globCount > 0 && globList != NULL) {
 	for (i=0; i<globCount; i++) {
 	    GlobPattern *globPtr = ckalloc(sizeof(GlobPattern));
-	    int len;
-	    const char *str = Tcl_GetStringFromObj(globList[i], &len);
+	    size_t len;
+	    const char *str = TkGetStringFromObj(globList[i], &len);
 
 	    len = (len + 1) * sizeof(char);
 	    if (str[0] && str[0] != '*') {
@@ -375,9 +375,9 @@ AddClause(
 	}
 	for (i=0; i<ostypeCount; i++) {
 	    Tcl_DString osTypeDS;
-	    int len;
+	    size_t len;
 	    MacFileType *mfPtr = ckalloc(sizeof(MacFileType));
-	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
+	    const char *strType = TkGetStringFromObj(ostypeList[i], &len);
 	    char *string;
 
 	    /*
