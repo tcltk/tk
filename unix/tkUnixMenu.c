@@ -938,7 +938,7 @@ TkpPostTearoffMenu(
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    if (index >= menuPtr->numEntries) {
+    if (index >= (int)menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -1130,7 +1130,7 @@ TkpComputeMenubarGeometry(
 	menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
 	Tk_GetFontMetrics(menuFont, &menuMetrics);
 
-	for (i = 0; i < menuPtr->numEntries; i++) {
+	for (i = 0; i < (int)menuPtr->numEntries; i++) {
 	    mePtr = menuPtr->entries[i];
 	    mePtr->entryFlags &= ~ENTRY_LAST_COLUMN;
 	    if (mePtr->fontPtr != NULL) {
@@ -1207,7 +1207,7 @@ TkpComputeMenubarGeometry(
 	    maxWidth = x + menuPtr->entries[lastEntry]->width + borderWidth;
 	}
 	x = borderWidth;
-	for (j = lastRowBreak; j < menuPtr->numEntries; j++) {
+	for (j = lastRowBreak; j < (int)menuPtr->numEntries; j++) {
 	    if (j == helpMenuIndex) {
 		continue;
 	    }
@@ -1709,7 +1709,7 @@ TkpComputeStandardMenuGeometry(
     Tk_GetFontMetrics(menuFont, &menuMetrics);
     accelSpace = Tk_TextWidth(menuFont, "M", 1);
 
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int)menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->fontPtr == NULL) {
 	    tkfont = menuFont;
@@ -1804,7 +1804,7 @@ TkpComputeStandardMenuGeometry(
     if (accelWidth != 0) {
 	labelWidth += accelSpace;
     }
-    for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
+    for (j = lastColumnBreak; j < (int)menuPtr->numEntries; j++) {
 	menuPtr->entries[j]->indicatorSpace = indicatorSpace;
 	menuPtr->entries[j]->labelWidth = labelWidth;
 	menuPtr->entries[j]->width = indicatorSpace + labelWidth

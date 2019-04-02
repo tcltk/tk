@@ -640,10 +640,10 @@ EntryWidgetObjCmd(
 	    index--;
 	}
 	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
-	bbox[0] = Tcl_NewIntObj(x + entryPtr->layoutX);
-	bbox[1] = Tcl_NewIntObj(y + entryPtr->layoutY);
-	bbox[2] = Tcl_NewIntObj(width);
-	bbox[3] = Tcl_NewIntObj(height);
+	bbox[0] = Tcl_NewWideIntObj(x + entryPtr->layoutX);
+	bbox[1] = Tcl_NewWideIntObj(y + entryPtr->layoutY);
+	bbox[2] = Tcl_NewWideIntObj(width);
+	bbox[3] = Tcl_NewWideIntObj(height);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(4, bbox));
 	break;
     }
@@ -734,7 +734,7 @@ EntryWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	break;
     }
 
@@ -3840,10 +3840,10 @@ SpinboxWidgetObjCmd(
 	    index--;
 	}
 	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
-	bbox[0] = Tcl_NewIntObj(x + entryPtr->layoutX);
-	bbox[1] = Tcl_NewIntObj(y + entryPtr->layoutY);
-	bbox[2] = Tcl_NewIntObj(width);
-	bbox[3] = Tcl_NewIntObj(height);
+	bbox[0] = Tcl_NewWideIntObj(x + entryPtr->layoutX);
+	bbox[1] = Tcl_NewWideIntObj(y + entryPtr->layoutY);
+	bbox[2] = Tcl_NewWideIntObj(width);
+	bbox[3] = Tcl_NewWideIntObj(height);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(4, bbox));
 	break;
     }
@@ -3954,7 +3954,7 @@ SpinboxWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	break;
     }
 
