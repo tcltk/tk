@@ -1841,6 +1841,7 @@ ArrangeGrid(
 	 */
 
 	if (masterPtr->tkwin == Tk_Parent(slavePtr->tkwin)) {
+	    Tk_GeomMaster(slavePtr->tkwin) = masterPtr->tkwin;
 	    if ((width <= 0) || (height <= 0)) {
 		Tk_UnmapWindow(slavePtr->tkwin);
 	    } else {

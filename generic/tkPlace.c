@@ -1007,6 +1007,7 @@ RecomputePlacement(
 	 */
 
 	if (masterPtr->tkwin == Tk_Parent(slavePtr->tkwin)) {
+	    Tk_GeomMaster(slavePtr->tkwin) = masterPtr->tkwin;
 	    if ((x != Tk_X(slavePtr->tkwin))
 		    || (y != Tk_Y(slavePtr->tkwin))
 		    || (width != Tk_Width(slavePtr->tkwin))
