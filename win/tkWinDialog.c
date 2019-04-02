@@ -2936,13 +2936,10 @@ Tk_MessageBoxObjCmd(
 
     flags |= icon | type | MB_TASKMODAL | MB_SETFOREGROUND;
 
-    tmpObj = messageObj ? Tcl_DuplicateObj(messageObj)
-	    : Tcl_NewUnicodeObj(NULL, 0);
+    tmpObj = messageObj ? Tcl_DuplicateObj(messageObj) : Tcl_NewObj();
     Tcl_IncrRefCount(tmpObj);
     if (detailObj) {
-	const Tcl_UniChar twoNL[] = { '\n', '\n' };
-
-	Tcl_AppendUnicodeToObj(tmpObj, twoNL, 2);
+	Tcl_AppendStringsToObj(tmpObj, "\n\n", NULL);
 	Tcl_AppendObjToObj(tmpObj, detailObj);
     }
 
@@ -3376,7 +3373,7 @@ FontchooserConfigureCmd(
 	    Tk_Window parent = Tk_NameToWindow(interp,
 		    Tcl_GetString(objv[i+1]), tkwin);
 
-	    if (!parent) {
+	    if (parent == NULL) {
 		return TCL_ERROR;
 	    }
 	    if (hdPtr->parentObj) {
@@ -3471,7 +3468,7 @@ FontchooserShowCmd(
     if (hdPtr->parentObj) {
 	parent = Tk_NameToWindow(interp, Tcl_GetString(hdPtr->parentObj),
 		tkwin);
-	if (!parent) {
+	if (parent == NULL) {
 	    return TCL_ERROR;
 	}
     }

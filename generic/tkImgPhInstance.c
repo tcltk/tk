@@ -167,7 +167,7 @@ TkImgPhotoConfigureInstance(
      * has the side effect of allocating a pixmap for us.
      */
 
-    if (!instancePtr->pixels || (instancePtr->error == NULL)
+    if ((instancePtr->pixels == None) || (instancePtr->error == NULL)
 	    || (instancePtr->width != masterPtr->width)
 	    || (instancePtr->height != masterPtr->height)) {
 	TkImgPhotoInstanceSetSize(instancePtr);
@@ -285,7 +285,7 @@ TkImgPhotoGet(
     Tk_PreserveColormap(instancePtr->display, instancePtr->colormap);
     instancePtr->refCount = 1;
     instancePtr->colorTablePtr = NULL;
-    instancePtr->pixels = 0;
+    instancePtr->pixels = None;
     instancePtr->error = NULL;
     instancePtr->width = 0;
     instancePtr->height = 0;
@@ -621,7 +621,7 @@ TkImgPhotoDisplay(
      * the image instance so it can't be displayed.
      */
 
-    if (!instancePtr->pixels) {
+    if (instancePtr->pixels == None) {
 	return;
     }
 
@@ -702,7 +702,7 @@ TkImgPhotoDisplay(
 	XCopyArea(display, instancePtr->pixels, drawable, instancePtr->gc,
 		imageX, imageY, (unsigned) width, (unsigned) height,
 		drawableX, drawableY);
-	XSetClipMask(display, instancePtr->gc, 0);
+	XSetClipMask(display, instancePtr->gc, None);
 	XSetClipOrigin(display, instancePtr->gc, 0, 0);
     }
     XFlush(display);
@@ -789,7 +789,7 @@ TkImgPhotoInstanceSetSize(
 
     if ((instancePtr->width != masterPtr->width)
 	    || (instancePtr->height != masterPtr->height)
-	    || !instancePtr->pixels) {
+	    || (instancePtr->pixels == None)) {
 	newPixmap = Tk_GetPixmap(instancePtr->display,
 		RootWindow(instancePtr->display,
 			instancePtr->visualInfo.screen),
@@ -811,7 +811,7 @@ TkImgPhotoInstanceSetSize(
 
 	TkSetPixmapColormap(newPixmap, instancePtr->colormap);
 
-	if (instancePtr->pixels) {
+	if (instancePtr->pixels != None) {
 	    /*
 	     * Copy any common pixels from the old pixmap and free it.
 	     */
@@ -1592,10 +1592,10 @@ TkImgDisposeInstance(
     PhotoInstance *instancePtr = clientData;
     PhotoInstance *prevPtr;
 
-    if (instancePtr->pixels) {
+    if (instancePtr->pixels != None) {
 	Tk_FreePixmap(instancePtr->display, instancePtr->pixels);
     }
-    if (instancePtr->gc) {
+    if (instancePtr->gc != NULL) {
 	Tk_FreeGC(instancePtr->display, instancePtr->gc);
     }
     if (instancePtr->imagePtr != NULL) {

@@ -243,7 +243,7 @@ EXTERN int		TkpIsWindowFloating(void *window);
 EXTERN Tk_Window	TkMacOSXGetCapture(void);
 /* Slot 48 is reserved */
 /* 49 */
-EXTERN Window		TkGetTransientMaster(TkWindow *winPtr);
+EXTERN Tk_Window	TkGetTransientMaster(TkWindow *winPtr);
 /* 50 */
 EXTERN int		TkGenerateButtonEvent(int x, int y, Window window,
 				unsigned int state);
@@ -392,7 +392,7 @@ typedef struct TkIntPlatStubs {
     int (*tkpIsWindowFloating) (void *window); /* 46 */
     Tk_Window (*tkMacOSXGetCapture) (void); /* 47 */
     void (*reserved48)(void);
-    Window (*tkGetTransientMaster) (TkWindow *winPtr); /* 49 */
+    Tk_Window (*tkGetTransientMaster) (TkWindow *winPtr); /* 49 */
     int (*tkGenerateButtonEvent) (int x, int y, Window window, unsigned int state); /* 50 */
     void (*tkGenWMDestroyEvent) (Tk_Window tkwin); /* 51 */
     void (*tkMacOSXSetDrawingEnabled) (TkWindow *winPtr, int flag); /* 52 */

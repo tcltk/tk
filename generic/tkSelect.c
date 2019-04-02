@@ -26,7 +26,7 @@ typedef struct {
     int charOffset;		/* The offset of the next char to retrieve. */
     int byteOffset;		/* The expected byte offset of the next
 				 * chunk. */
-    char buffer[TCL_UTF_MAX];	/* A buffer to hold part of a UTF character
+    char buffer[4];	/* A buffer to hold part of a UTF character
 				 * that is split across chunks. */
     char command[1];		/* Command to invoke. Actual space is
 				 * allocated as large as necessary. This must
@@ -128,7 +128,7 @@ Tk_CreateSelHandler(
     register TkSelHandler *selPtr;
     TkWindow *winPtr = (TkWindow *) tkwin;
 
-    if (!winPtr->dispPtr->multipleAtom) {
+    if (winPtr->dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
     }
 
@@ -360,7 +360,7 @@ Tk_OwnSelection(
     ClientData clearData = NULL;/* Initialization needed only to prevent
 				 * compiler warning. */
 
-    if (!dispPtr->multipleAtom) {
+    if (dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
     }
     Tk_MakeWindowExist(tkwin);
@@ -469,7 +469,7 @@ Tk_ClearSelection(
     ClientData clearData = NULL;/* Initialization needed only to prevent
 				 * compiler warning. */
 
-    if (!dispPtr->multipleAtom) {
+    if (dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
     }
 
@@ -492,7 +492,7 @@ Tk_ClearSelection(
 	clearData = infoPtr->clearData;
 	ckfree(infoPtr);
     }
-    XSetSelectionOwner(winPtr->display, selection, 0, CurrentTime);
+    XSetSelectionOwner(winPtr->display, selection, None, CurrentTime);
 
     if (clearProc != NULL) {
 	clearProc(clearData);
@@ -559,7 +559,7 @@ Tk_GetSelection(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (!dispPtr->multipleAtom) {
+    if (dispPtr->multipleAtom == None) {
 	TkSelInit(tkwin);
     }
 

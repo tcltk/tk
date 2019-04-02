@@ -184,13 +184,14 @@ GenerateEnterLeave(
 	} else {
 	    TkWindow *targetPtr;
 
-	    if (!lastWinPtr || !lastWinPtr->window) {
+	    if ((lastWinPtr == NULL)
+		|| (lastWinPtr->window == None)) {
 		targetPtr = winPtr;
 	    } else {
 		targetPtr = lastWinPtr;
 	    }
 
-	    if (targetPtr && targetPtr->window) {
+	    if (targetPtr && (targetPtr->window != None)) {
 		XEvent event;
 
 		/*
@@ -607,7 +608,7 @@ static void
 UpdateCursor(
     TkWindow *winPtr)
 {
-    Cursor cursor = 0;
+    Cursor cursor = None;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -617,8 +618,8 @@ UpdateCursor(
      */
 
     tsdPtr->cursorWinPtr = winPtr;
-    while (winPtr) {
-	if (winPtr->atts.cursor) {
+    while (winPtr != NULL) {
+	if (winPtr->atts.cursor != None) {
 	    cursor = winPtr->atts.cursor;
 	    break;
 	} else if (winPtr->flags & TK_TOP_HIERARCHY) {

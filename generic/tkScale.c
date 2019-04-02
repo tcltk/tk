@@ -157,11 +157,13 @@ enum command {
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		ComputeFormat(TkScale *scalePtr);
+static void		ComputeFormat(TkScale *scalePtr, int forTicks);
 static void		ComputeScaleGeometry(TkScale *scalePtr);
 static int		ConfigureScale(Tcl_Interp *interp, TkScale *scalePtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyScale(char *memPtr);
+static double		MaxTickRoundingError(TkScale *scalePtr,
+			    double tickResolution);
 static void		ScaleCmdDeletedProc(ClientData clientData);
 static void		ScaleEventProc(ClientData clientData,
 			    XEvent *eventPtr);
@@ -182,9 +184,50 @@ static void		ScaleSetVariable(TkScale *scalePtr);
 static const Tk_ClassProcs scaleClass = {
     sizeof(Tk_ClassProcs),	/* size */
     ScaleWorldChanged,		/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
+
+/*
+ *--------------------------------------------------------------
+ *
+ * ScaleDigit, ScaleMax, ScaleMin, ScaleRound --
+ *
+ *	Simple math helper functions, designed to be automatically inlined by
+ *	the compiler most of the time.
+ *
+ *--------------------------------------------------------------
+ */
+
+static inline int
+ScaleDigit(
+    double value)
+{
+    return (int) floor(log10(fabs(value)));
+}
+
+static inline double
+ScaleMax(
+    double a,
+    double b)
+{
+    return (a > b) ? a : b;
+}
+
+static inline double
+ScaleMin(
+    double a,
+    double b)
+{
+    return (a < b) ? a : b;
+}
+
+static inline int
+ScaleRound(
+    double value)
+{
+    return (int) floor(value + 0.5);
+}
 
 /*
  *--------------------------------------------------------------
@@ -270,11 +313,11 @@ Tk_ScaleObjCmd(
     scalePtr->activeBorder	= NULL;
     scalePtr->sliderRelief	= TK_RELIEF_RAISED;
     scalePtr->troughColorPtr	= NULL;
-    scalePtr->troughGC		= 0;
-    scalePtr->copyGC		= 0;
+    scalePtr->troughGC		= NULL;
+    scalePtr->copyGC		= NULL;
     scalePtr->tkfont		= NULL;
     scalePtr->textColorPtr	= NULL;
-    scalePtr->textGC		= 0;
+    scalePtr->textGC		= NULL;
     scalePtr->relief		= TK_RELIEF_FLAT;
     scalePtr->highlightWidth	= 0;
     scalePtr->highlightBorder	= NULL;
@@ -291,7 +334,7 @@ Tk_ScaleObjCmd(
     scalePtr->vertTroughX	= 0;
     scalePtr->vertLabelX	= 0;
     scalePtr->fontHeight	= 0;
-    scalePtr->cursor		= 0;
+    scalePtr->cursor		= NULL;
     scalePtr->takeFocusPtr	= NULL;
     scalePtr->flags		= NEVER_SET;
 
@@ -430,7 +473,7 @@ ScaleWidgetObjCmd(
 	    }
 	    value = TkScalePixelToValue(scalePtr, x, y);
 	}
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(scalePtr->format, value));
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(scalePtr->valueFormat, value));
 	break;
     }
     case COMMAND_IDENTIFY: {
@@ -518,13 +561,13 @@ DestroyScale(
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ScaleVarProc, scalePtr);
     }
-    if (scalePtr->troughGC) {
+    if (scalePtr->troughGC != NULL) {
 	Tk_FreeGC(scalePtr->display, scalePtr->troughGC);
     }
-    if (scalePtr->copyGC) {
+    if (scalePtr->copyGC != NULL) {
 	Tk_FreeGC(scalePtr->display, scalePtr->copyGC);
     }
-    if (scalePtr->textGC) {
+    if (scalePtr->textGC != NULL) {
 	Tk_FreeGC(scalePtr->display, scalePtr->textGC);
     }
     Tk_FreeConfigOptions((char *) scalePtr, scalePtr->optionTable,
@@ -611,7 +654,7 @@ ConfigureScale(
 		    TCL_GLOBAL_ONLY);
 	    if ((valuePtr != NULL) &&
 		    (Tcl_GetDoubleFromObj(NULL, valuePtr, &value) == TCL_OK)) {
-		scalePtr->value = TkRoundToResolution(scalePtr, value);
+		scalePtr->value = TkRoundValueToResolution(scalePtr, value);
 	    }
 	}
 
@@ -620,10 +663,10 @@ ConfigureScale(
 	 * orientation and creating GCs.
 	 */
 
-	scalePtr->fromValue = TkRoundToResolution(scalePtr,
+	scalePtr->fromValue = TkRoundValueToResolution(scalePtr,
 		scalePtr->fromValue);
-	scalePtr->toValue = TkRoundToResolution(scalePtr, scalePtr->toValue);
-	scalePtr->tickInterval = TkRoundToResolution(scalePtr,
+	scalePtr->toValue = TkRoundValueToResolution(scalePtr, scalePtr->toValue);
+	scalePtr->tickInterval = TkRoundIntervalToResolution(scalePtr,
 		scalePtr->tickInterval);
 
 	/*
@@ -636,7 +679,8 @@ ConfigureScale(
 	    scalePtr->tickInterval = -scalePtr->tickInterval;
 	}
 
-	ComputeFormat(scalePtr);
+	ComputeFormat(scalePtr, 0);
+	ComputeFormat(scalePtr, 1);
 
 	scalePtr->labelLength = scalePtr->label ? (int)strlen(scalePtr->label) : 0;
 
@@ -729,7 +773,7 @@ ScaleWorldChanged(
 
     gcValues.foreground = scalePtr->troughColorPtr->pixel;
     gc = Tk_GetGC(scalePtr->tkwin, GCForeground, &gcValues);
-    if (scalePtr->troughGC) {
+    if (scalePtr->troughGC != NULL) {
 	Tk_FreeGC(scalePtr->display, scalePtr->troughGC);
     }
     scalePtr->troughGC = gc;
@@ -737,12 +781,12 @@ ScaleWorldChanged(
     gcValues.font = Tk_FontId(scalePtr->tkfont);
     gcValues.foreground = scalePtr->textColorPtr->pixel;
     gc = Tk_GetGC(scalePtr->tkwin, GCForeground | GCFont, &gcValues);
-    if (scalePtr->textGC) {
+    if (scalePtr->textGC != NULL) {
 	Tk_FreeGC(scalePtr->display, scalePtr->textGC);
     }
     scalePtr->textGC = gc;
 
-    if (!scalePtr->copyGC) {
+    if (scalePtr->copyGC == NULL) {
 	gcValues.graphics_exposures = False;
 	scalePtr->copyGC = Tk_GetGC(scalePtr->tkwin, GCGraphicsExposures,
 		&gcValues);
@@ -759,27 +803,77 @@ ScaleWorldChanged(
     TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
 }
 
+ /*
+  *----------------------------------------------------------------------
+  *
+  * MaxTickRoundingError --
+  *
+  *      Given the separation between values that can be displayed on ticks,
+  *      this calculates the maximum magnitude of error for the displayed
+  *      value. Tries to be clever by working out the increment in error
+  *      between ticks rather than testing all of them, so may overestimate
+  *      error if it is greater than 0.25 x the value separation.
+  *
+  * Results:
+  *      Maximum error magnitude of tick numbers.
+  *
+  * Side effects:
+  *      None.
+  *
+  *----------------------------------------------------------------------
+  */
+
+static double
+MaxTickRoundingError(
+    TkScale *scalePtr,		/* Information about scale widget. */
+    double tickResolution)      /* Separation between displayable values. */
+{
+    double tickPosn, firstTickError, lastTickError, intervalError;
+    int tickCount;
+
+    /*
+     * Compute the error for each tick-related measure.
+     */
+
+    tickPosn = scalePtr->fromValue / tickResolution;
+    firstTickError = tickPosn - ScaleRound(tickPosn);
+
+    tickPosn = scalePtr->tickInterval / tickResolution;
+    intervalError = tickPosn - ScaleRound(tickPosn);
+
+    tickCount = (int) ((scalePtr->toValue - scalePtr->fromValue) /
+	    scalePtr->tickInterval);	/* not including first */
+    lastTickError = ScaleMin(0.5,
+	    fabs(firstTickError + tickCount * intervalError));
+
+    /*
+     * Compute the maximum cumulative rounding error.
+     */
+
+    return ScaleMax(fabs(firstTickError), lastTickError) * tickResolution;
+}
+
 /*
  *----------------------------------------------------------------------
  *
  * ComputeFormat --
  *
- *	This procedure is invoked to recompute the "format" field of a scale's
- *	widget record, which determines how the value of the scale is
- *	converted to a string.
+ *	This procedure is invoked to recompute the "valueFormat" or
+ *	"tickFormat" field of a scale's widget record, which determines how
+ *	the value of the scale or one of its ticks is converted to a string.
  *
  * Results:
  *	None.
  *
- * Side effects:
- *	The format field of scalePtr is modified.
+ * Side effects: The valueFormat or tickFormat field of scalePtr is modified.
  *
  *----------------------------------------------------------------------
  */
 
 static void
 ComputeFormat(
-    TkScale *scalePtr)		/* Information about scale widget. */
+    TkScale *scalePtr,		/* Information about scale widget. */
+    int forTicks)               /* Do for ticks rather than value */
 {
     double maxValue, x;
     int mostSigDigit, numDigits, leastSigDigit, afterDecimal;
@@ -798,48 +892,73 @@ ComputeFormat(
     if (maxValue == 0) {
 	maxValue = 1;
     }
-    mostSigDigit = (int) floor(log10(maxValue));
+    mostSigDigit = ScaleDigit(maxValue);
 
-    /*
-     * If the number of significant digits wasn't specified explicitly,
-     * compute it. It's the difference between the most significant digit
-     * needed to represent any number on the scale and the most significant
-     * digit of the smallest difference between numbers on the scale. In other
-     * words, display enough digits so that at least one digit will be
-     * different between any two adjacent positions of the scale.
-     */
+    if (forTicks) {
+	/*
+	 * Display only enough digits to ensure adjacent ticks have different
+	 * values.
+	 */
 
-    numDigits = scalePtr->digits;
-    if (numDigits > TCL_MAX_PREC) {
-	numDigits = 0;
-    }
-    if (numDigits <= 0) {
-	if (scalePtr->resolution > 0) {
+	if (scalePtr->tickInterval != 0) {
+	    leastSigDigit = ScaleDigit(scalePtr->tickInterval);
+
 	    /*
-	     * A resolution was specified for the scale, so just use it.
+	     * Now add more digits until max error is less than
+	     * TICK_VALUES_DISPLAY_ACCURACY intervals
 	     */
 
-	    leastSigDigit = (int) floor(log10(scalePtr->resolution));
+	    while (MaxTickRoundingError(scalePtr, pow(10, leastSigDigit))
+		    > fabs(TICK_VALUES_DISPLAY_ACCURACY * scalePtr->tickInterval)) {
+		--leastSigDigit;
+	    }
+	    numDigits = 1 + mostSigDigit - leastSigDigit;
 	} else {
-	    /*
-	     * No resolution was specified, so compute the difference in value
-	     * between adjacent pixels and use it for the least significant
-	     * digit.
-	     */
-
-	    x = fabs(scalePtr->fromValue - scalePtr->toValue);
-	    if (scalePtr->length > 0) {
-		x /= scalePtr->length;
-	    }
-	    if (x > 0){
-		leastSigDigit = (int) floor(log10(x));
-	    } else {
-		leastSigDigit = 0;
-	    }
-	}
-	numDigits = mostSigDigit - leastSigDigit + 1;
-	if (numDigits < 1) {
 	    numDigits = 1;
+	}
+    } else {
+	/*
+	 * If the number of significant digits wasn't specified explicitly,
+	 * compute it. It's the difference between the most significant digit
+	 * needed to represent any number on the scale and the most
+	 * significant digit of the smallest difference between numbers on the
+	 * scale. In other words, display enough digits so that at least one
+	 * digit will be different between any two adjacent positions of the
+	 * scale.
+	 */
+
+	numDigits = scalePtr->digits;
+	if (numDigits > TCL_MAX_PREC) {
+	    numDigits = 0;
+	}
+	if (numDigits <= 0) {
+	    if (scalePtr->resolution > 0) {
+		/*
+		 * A resolution was specified for the scale, so just use it.
+		 */
+
+		leastSigDigit = ScaleDigit(scalePtr->resolution);
+	    } else {
+		/*
+		 * No resolution was specified, so compute the difference in
+		 * value between adjacent pixels and use it for the least
+		 * significant digit.
+		 */
+
+		x = fabs(scalePtr->fromValue - scalePtr->toValue);
+		if (scalePtr->length > 0) {
+		    x /= scalePtr->length;
+		}
+		if (x > 0) {
+		    leastSigDigit = ScaleDigit(x);
+		} else {
+		    leastSigDigit = 0;
+		}
+	    }
+	    numDigits = mostSigDigit - leastSigDigit + 1;
+	    if (numDigits < 1) {
+		numDigits = 1;
+	    }
 	}
     }
 
@@ -863,10 +982,19 @@ ComputeFormat(
     if (mostSigDigit < 0) {
 	fDigits++;			/* Zero to left of decimal point. */
     }
-    if (fDigits <= eDigits) {
-	sprintf(scalePtr->format, "%%.%df", afterDecimal);
+
+    if (forTicks) {
+	if (fDigits <= eDigits) {
+	    sprintf(scalePtr->tickFormat, "%%.%df", afterDecimal);
+	} else {
+	    sprintf(scalePtr->tickFormat, "%%.%de", numDigits - 1);
+	}
     } else {
-	sprintf(scalePtr->format, "%%.%de", numDigits-1);
+	if (fDigits <= eDigits) {
+	    sprintf(scalePtr->valueFormat, "%%.%df", afterDecimal);
+	} else {
+	    sprintf(scalePtr->valueFormat, "%%.%de", numDigits - 1);
+	}
     }
 }
 
@@ -894,7 +1022,7 @@ ComputeScaleGeometry(
     register TkScale *scalePtr)	/* Information about widget. */
 {
     char valueString[TCL_DOUBLE_SPACE];
-    int tmp, valuePixels, x, y, extraSpace;
+    int tmp, valuePixels, tickPixels, x, y, extraSpace;
     Tk_FontMetrics fm;
 
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
@@ -940,13 +1068,13 @@ ComputeScaleGeometry(
      * whichever length is longer.
      */
 
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
             scalePtr->fromValue) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
     valuePixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
 
-    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->format,
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
             scalePtr->toValue) < 0) {
         valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
@@ -956,18 +1084,37 @@ ComputeScaleGeometry(
     }
 
     /*
+     * Now do the same thing for the tick values
+     */
+
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
+            scalePtr->fromValue) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
+    tickPixels = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
+
+    if (snprintf(valueString, TCL_DOUBLE_SPACE, scalePtr->tickFormat,
+            scalePtr->toValue) < 0) {
+        valueString[TCL_DOUBLE_SPACE - 1] = '\0';
+    }
+    tmp = Tk_TextWidth(scalePtr->tkfont, valueString, -1);
+    if (tickPixels < tmp) {
+	tickPixels = tmp;
+    }
+
+    /*
      * Assign x-locations to the elements of the scale, working from left to
      * right.
      */
 
     x = scalePtr->inset;
     if ((scalePtr->tickInterval != 0) && (scalePtr->showValue)) {
-	scalePtr->vertTickRightX = x + SPACING + valuePixels;
+	scalePtr->vertTickRightX = x + SPACING + tickPixels;
 	scalePtr->vertValueRightX = scalePtr->vertTickRightX + valuePixels
 		+ fm.ascent/2;
 	x = scalePtr->vertValueRightX + SPACING;
     } else if (scalePtr->tickInterval != 0) {
-	scalePtr->vertTickRightX = x + SPACING + valuePixels;
+	scalePtr->vertTickRightX = x + SPACING + tickPixels;
 	scalePtr->vertValueRightX = scalePtr->vertTickRightX;
 	x = scalePtr->vertTickRightX + SPACING;
     } else if (scalePtr->showValue) {
@@ -1119,10 +1266,14 @@ TkEventuallyRedrawScale(
 /*
  *--------------------------------------------------------------
  *
- * TkRoundToResolution --
+ * TkRoundValueToResolution, TkRoundIntervalToResolution --
  *
  *	Round a given floating-point value to the nearest multiple of the
  *	scale's resolution.
+ *	TkRoundValueToResolution rounds an absolute value based on the from
+ *	value as a reference.
+ *	TkRoundIntervalToResolution rounds a relative value without
+ *	reference, i.e.	it rounds an interval.
  *
  * Results:
  *	The return value is the rounded result.
@@ -1134,7 +1285,16 @@ TkEventuallyRedrawScale(
  */
 
 double
-TkRoundToResolution(
+TkRoundValueToResolution(
+    TkScale *scalePtr,		/* Information about scale widget. */
+    double value)		/* Value to round. */
+{
+    return TkRoundIntervalToResolution(scalePtr, value - scalePtr->fromValue)
+            + scalePtr->fromValue;
+}
+
+double
+TkRoundIntervalToResolution(
     TkScale *scalePtr,		/* Information about scale widget. */
     double value)		/* Value to round. */
 {
@@ -1147,13 +1307,13 @@ TkRoundToResolution(
     rounded = scalePtr->resolution * tick;
     rem = value - rounded;
     if (rem < 0) {
-	if (rem <= -scalePtr->resolution/2) {
-	    rounded = (tick - 1.0) * scalePtr->resolution;
-	}
+        if (rem <= -scalePtr->resolution/2) {
+            rounded = (tick - 1.0) * scalePtr->resolution;
+        }
     } else {
-	if (rem >= scalePtr->resolution/2) {
-	    rounded = (tick + 1.0) * scalePtr->resolution;
-	}
+        if (rem >= scalePtr->resolution/2) {
+            rounded = (tick + 1.0) * scalePtr->resolution;
+        }
     }
     return rounded;
 }
@@ -1238,7 +1398,7 @@ ScaleVarProc(
 	resultStr = "can't assign non-numeric value to scale variable";
 	ScaleSetVariable(scalePtr);
     } else {
-	scalePtr->value = TkRoundToResolution(scalePtr, value);
+	scalePtr->value = TkRoundValueToResolution(scalePtr, value);
 
 	/*
 	 * This code is a bit tricky because it sets the scale's value before
@@ -1282,7 +1442,7 @@ TkScaleSetValue(
     int invokeCommand)		/* Non-zero means invoked -command option to
 				 * notify of new value, 0 means don't. */
 {
-    value = TkRoundToResolution(scalePtr, value);
+    value = TkRoundValueToResolution(scalePtr, value);
     if ((value < scalePtr->fromValue)
 	    ^ (scalePtr->toValue < scalePtr->fromValue)) {
 	value = scalePtr->fromValue;
@@ -1337,7 +1497,7 @@ ScaleSetVariable(
     if (scalePtr->varNamePtr != NULL) {
 	char string[TCL_DOUBLE_SPACE];
 
-        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->valueFormat,
                 scalePtr->value) < 0) {
             string[TCL_DOUBLE_SPACE - 1] = '\0';
         }
@@ -1402,7 +1562,7 @@ TkScalePixelToValue(
     }
     value = scalePtr->fromValue +
 		value * (scalePtr->toValue - scalePtr->fromValue);
-    return TkRoundToResolution(scalePtr, value);
+    return TkRoundValueToResolution(scalePtr, value);
 }
 
 /*
@@ -1439,8 +1599,8 @@ TkScaleValueToPixel(
     if (valueRange == 0) {
 	y = 0;
     } else {
-	y = (int) ((value - scalePtr->fromValue) * pixelRange
-		/ valueRange + 0.5);
+	y = ScaleRound((value - scalePtr->fromValue) * pixelRange
+		/ valueRange);
 	if (y < 0) {
 	    y = 0;
 	} else if (y > pixelRange) {

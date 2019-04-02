@@ -395,7 +395,7 @@ CreateSlave(
     slavePtr = ckalloc(sizeof(Slave));
     memset(slavePtr, 0, sizeof(Slave));
     slavePtr->tkwin = tkwin;
-    slavePtr->inTkwin = 0;
+    slavePtr->inTkwin = NULL;
     slavePtr->anchor = TK_ANCHOR_NW;
     slavePtr->borderMode = BM_INSIDE;
     slavePtr->optionTable = table;
@@ -1185,6 +1185,12 @@ PlaceRequestProc(
 
     if ((slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH))
 	    && (slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT))) {
+        /*
+         * Send a ConfigureNotify to indicate that the size change
+         * request was rejected.
+         */
+
+        TkDoConfigureNotify((TkWindow *)(slavePtr->tkwin));
 	return;
     }
     masterPtr = slavePtr->masterPtr;

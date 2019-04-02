@@ -515,17 +515,17 @@ TkTextTagCmd(
 
 	    tagPtr->affectsDisplay = 0;
 	    tagPtr->affectsDisplayGeometry = 0;
-	    if (tagPtr->elideString
-		    || tagPtr->tkfont
-		    || tagPtr->justifyString
-		    || tagPtr->lMargin1String
-		    || tagPtr->lMargin2String
-		    || tagPtr->offsetString
-		    || tagPtr->rMarginString
-		    || tagPtr->spacing1String
-		    || tagPtr->spacing2String
-		    || tagPtr->spacing3String
-		    || tagPtr->tabStringPtr
+	    if ((tagPtr->elideString != NULL)
+		    || (tagPtr->tkfont != NULL)
+		    || (tagPtr->justifyString != NULL)
+		    || (tagPtr->lMargin1String != NULL)
+		    || (tagPtr->lMargin2String != NULL)
+		    || (tagPtr->offsetString != NULL)
+		    || (tagPtr->rMarginString != NULL)
+		    || (tagPtr->spacing1String != NULL)
+		    || (tagPtr->spacing2String != NULL)
+		    || (tagPtr->spacing3String != NULL)
+		    || (tagPtr->tabStringPtr != NULL)
 		    || (tagPtr->tabStyle != TK_TEXT_TABSTYLE_NONE)
 		    || (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 		tagPtr->affectsDisplay = 1;
@@ -534,10 +534,10 @@ TkTextTagCmd(
 	    if ((tagPtr->border != NULL)
 		    || (tagPtr->selBorder != NULL)
 		    || (tagPtr->reliefString != NULL)
-		    || tagPtr->bgStipple
+		    || (tagPtr->bgStipple != None)
 		    || (tagPtr->fgColor != NULL)
 		    || (tagPtr->selFgColor != NULL)
-		    || tagPtr->fgStipple
+		    || (tagPtr->fgStipple != None)
 		    || (tagPtr->overstrikeString != NULL)
                     || (tagPtr->overstrikeColor != NULL)
 		    || (tagPtr->underlineString != NULL)
@@ -1030,10 +1030,10 @@ TkTextCreateTag(
     tagPtr->borderWidthPtr = NULL;
     tagPtr->reliefString = NULL;
     tagPtr->relief = TK_RELIEF_FLAT;
-    tagPtr->bgStipple = 0;
+    tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;
     tagPtr->tkfont = NULL;
-    tagPtr->fgStipple = 0;
+    tagPtr->fgStipple = None;
     tagPtr->justifyString = NULL;
     tagPtr->justify = TK_JUSTIFY_LEFT;
     tagPtr->lMargin1String = NULL;
@@ -1608,7 +1608,7 @@ TkTextPickCurrent(
 	    textPtr->pickEvent.xcrossing.display = eventPtr->xmotion.display;
 	    textPtr->pickEvent.xcrossing.window = eventPtr->xmotion.window;
 	    textPtr->pickEvent.xcrossing.root = eventPtr->xmotion.root;
-	    textPtr->pickEvent.xcrossing.subwindow = 0;
+	    textPtr->pickEvent.xcrossing.subwindow = None;
 	    textPtr->pickEvent.xcrossing.time = eventPtr->xmotion.time;
 	    textPtr->pickEvent.xcrossing.x = eventPtr->xmotion.x;
 	    textPtr->pickEvent.xcrossing.y = eventPtr->xmotion.y;

@@ -4,12 +4,7 @@
  * Tk alternate theme, intended to match the MSUE and Gtk's (old) default theme
  */
 
-#include <math.h>
-#include <string.h>
-
-#include <tkInt.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 
 #if defined(_WIN32) && !defined(PLATFORM_SDL)
