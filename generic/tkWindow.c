@@ -664,7 +664,6 @@ TkAllocWindow(
     winPtr->selHandlerList = NULL;
     winPtr->geomMgrPtr = NULL;
     winPtr->geomData = NULL;
-    winPtr->geomMasterPtr = NULL;
     winPtr->reqWidth = winPtr->reqHeight = 1;
     winPtr->internalBorderLeft = 0;
     winPtr->wmInfoPtr = NULL;
