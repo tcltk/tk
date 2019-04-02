@@ -255,10 +255,10 @@ CreateRectOval(
     rectOvalPtr->fillColor = NULL;
     rectOvalPtr->activeFillColor = NULL;
     rectOvalPtr->disabledFillColor = NULL;
-    rectOvalPtr->fillStipple = 0;
-    rectOvalPtr->activeFillStipple = 0;
-    rectOvalPtr->disabledFillStipple = 0;
-    rectOvalPtr->fillGC = 0;
+    rectOvalPtr->fillStipple = None;
+    rectOvalPtr->activeFillStipple = None;
+    rectOvalPtr->disabledFillStipple = None;
+    rectOvalPtr->fillGC = NULL;
 
     /*
      * Process the arguments to fill in the item record.
@@ -422,11 +422,11 @@ ConfigureRectOval(
      */
 
     if (rectOvalPtr->outline.activeWidth > rectOvalPtr->outline.width ||
-	    rectOvalPtr->outline.activeDash.number ||
-	    rectOvalPtr->outline.activeColor ||
-	    rectOvalPtr->outline.activeStipple ||
-	    rectOvalPtr->activeFillColor ||
-	    rectOvalPtr->activeFillStipple) {
+	    rectOvalPtr->outline.activeDash.number != 0 ||
+	    rectOvalPtr->outline.activeColor != NULL ||
+	    rectOvalPtr->outline.activeStipple != None ||
+	    rectOvalPtr->activeFillColor != NULL ||
+	    rectOvalPtr->activeFillStipple != None) {
 	itemPtr->redraw_flags |= TK_ITEM_STATE_DEPENDANT;
     } else {
 	itemPtr->redraw_flags &= ~TK_ITEM_STATE_DEPENDANT;
@@ -460,15 +460,15 @@ ConfigureRectOval(
     mask = Tk_ConfigOutlineGC(&gcValues, canvas, itemPtr,
 	    &(rectOvalPtr->outline));
     if (mask && \
-	    rectOvalPtr->outline.width && \
-	    rectOvalPtr->outline.color) {
+	    rectOvalPtr->outline.width != 0 && \
+	    rectOvalPtr->outline.color != NULL) {
 	gcValues.cap_style = CapProjecting;
 	mask |= GCCapStyle;
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = 0;
+	newGC = NULL;
     }
-    if (rectOvalPtr->outline.gc) {
+    if (rectOvalPtr->outline.gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), rectOvalPtr->outline.gc);
     }
     rectOvalPtr->outline.gc = newGC;
@@ -487,23 +487,23 @@ ConfigureRectOval(
 	if (rectOvalPtr->activeFillColor!=NULL) {
 	    color = rectOvalPtr->activeFillColor;
 	}
-	if (rectOvalPtr->activeFillStipple) {
+	if (rectOvalPtr->activeFillStipple!=None) {
 	    stipple = rectOvalPtr->activeFillStipple;
 	}
     } else if (state == TK_STATE_DISABLED) {
-	if (rectOvalPtr->disabledFillColor) {
+	if (rectOvalPtr->disabledFillColor!=NULL) {
 	    color = rectOvalPtr->disabledFillColor;
 	}
-	if (rectOvalPtr->disabledFillStipple) {
+	if (rectOvalPtr->disabledFillStipple!=None) {
 	    stipple = rectOvalPtr->disabledFillStipple;
 	}
     }
 
-    if (!color) {
-	newGC = 0;
+    if (color == NULL) {
+	newGC = NULL;
     } else {
 	gcValues.foreground = color->pixel;
-	if (stipple) {
+	if (stipple != None) {
 	    gcValues.stipple = stipple;
 	    gcValues.fill_style = FillStippled;
 	    mask = GCForeground|GCStipple|GCFillStyle;
@@ -515,14 +515,13 @@ ConfigureRectOval(
 	 * Mac OS X CG drawing needs access to the outline linewidth even for
 	 * fills (as linewidth controls antialiasing).
 	 */
-
-	gcValues.line_width = rectOvalPtr->outline.gc != None ?
+	gcValues.line_width = rectOvalPtr->outline.gc != NULL ?
 		rectOvalPtr->outline.gc->line_width : 0;
 	mask |= GCLineWidth;
 #endif
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (rectOvalPtr->fillGC) {
+    if (rectOvalPtr->fillGC != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), rectOvalPtr->fillGC);
     }
     rectOvalPtr->fillGC = newGC;
@@ -577,25 +576,25 @@ DeleteRectOval(
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
 
     Tk_DeleteOutline(display, &(rectOvalPtr->outline));
-    if (rectOvalPtr->fillColor) {
+    if (rectOvalPtr->fillColor != NULL) {
 	Tk_FreeColor(rectOvalPtr->fillColor);
     }
-    if (rectOvalPtr->activeFillColor) {
+    if (rectOvalPtr->activeFillColor != NULL) {
 	Tk_FreeColor(rectOvalPtr->activeFillColor);
     }
-    if (rectOvalPtr->disabledFillColor) {
+    if (rectOvalPtr->disabledFillColor != NULL) {
 	Tk_FreeColor(rectOvalPtr->disabledFillColor);
     }
-    if (rectOvalPtr->fillStipple) {
+    if (rectOvalPtr->fillStipple != None) {
 	Tk_FreeBitmap(display, rectOvalPtr->fillStipple);
     }
-    if (rectOvalPtr->activeFillStipple) {
+    if (rectOvalPtr->activeFillStipple != None) {
 	Tk_FreeBitmap(display, rectOvalPtr->activeFillStipple);
     }
-    if (rectOvalPtr->disabledFillStipple) {
+    if (rectOvalPtr->disabledFillStipple != None) {
 	Tk_FreeBitmap(display, rectOvalPtr->disabledFillStipple);
     }
-    if (rectOvalPtr->fillGC) {
+    if (rectOvalPtr->fillGC != NULL) {
 	Tk_FreeGC(display, rectOvalPtr->fillGC);
     }
 }
@@ -664,7 +663,7 @@ ComputeRectOvalBbox(
 	rectOvalPtr->bbox[0] = tmpX;
     }
 
-    if (!rectOvalPtr->outline.gc) {
+    if (rectOvalPtr->outline.gc == NULL) {
 	/*
 	 * The Win32 switch was added for 8.3 to solve a problem with ovals
 	 * leaving traces on bottom and right of 1 pixel. This may not be the
@@ -869,17 +868,17 @@ DisplayRectOval(
     }
     fillStipple = rectOvalPtr->fillStipple;
     if (Canvas(canvas)->currentItemPtr == (Tk_Item *) rectOvalPtr) {
-	if (rectOvalPtr->activeFillStipple) {
+	if (rectOvalPtr->activeFillStipple != None) {
 	    fillStipple = rectOvalPtr->activeFillStipple;
 	}
     } else if (state == TK_STATE_DISABLED) {
-	if (rectOvalPtr->disabledFillStipple) {
+	if (rectOvalPtr->disabledFillStipple != None) {
 	    fillStipple = rectOvalPtr->disabledFillStipple;
 	}
     }
 
-    if (rectOvalPtr->fillGC) {
-	if (fillStipple) {
+    if (rectOvalPtr->fillGC != NULL) {
+	if (fillStipple != None) {
 	    Tk_TSOffset *tsoffset;
 	    int w = 0, h = 0;
 
@@ -917,12 +916,12 @@ DisplayRectOval(
 		    x1, y1, (unsigned) (x2-x1), (unsigned) (y2-y1),
 		    0, 360*64);
 	}
-	if (fillStipple) {
+	if (fillStipple != None) {
 	    XSetTSOrigin(display, rectOvalPtr->fillGC, 0, 0);
 	}
     }
 
-    if (rectOvalPtr->outline.gc) {
+    if (rectOvalPtr->outline.gc != NULL) {
 	Tk_ChangeOutlineGC(canvas, itemPtr, &(rectOvalPtr->outline));
 	if (rectOvalPtr->header.typePtr == &tkRectangleType) {
 	    XDrawRectangle(display, drawable, rectOvalPtr->outline.gc,
@@ -993,7 +992,7 @@ RectToPoint(
     y1 = rectPtr->bbox[1];
     x2 = rectPtr->bbox[2];
     y2 = rectPtr->bbox[3];
-    if (rectPtr->outline.gc) {
+    if (rectPtr->outline.gc != NULL) {
 	inc = width/2.0;
 	x1 -= inc;
 	y1 -= inc;
@@ -1009,7 +1008,7 @@ RectToPoint(
 
     if ((pointPtr[0] >= x1) && (pointPtr[0] < x2)
 	    && (pointPtr[1] >= y1) && (pointPtr[1] < y2)) {
-	if (rectPtr->fillGC || !rectPtr->outline.gc) {
+	if ((rectPtr->fillGC != NULL) || (rectPtr->outline.gc == NULL)) {
 	    return 0.0;
 	}
 	xDiff = pointPtr[0] - x1;
@@ -1105,8 +1104,8 @@ OvalToPoint(
     }
 
 
-    filled = ovalPtr->fillGC != 0;
-    if (!ovalPtr->outline.gc) {
+    filled = ovalPtr->fillGC != NULL;
+    if (ovalPtr->outline.gc == NULL) {
 	width = 0.0;
 	filled = 1;
     }
@@ -1161,7 +1160,7 @@ RectToArea(
     }
 
     halfWidth = width/2.0;
-    if (!rectPtr->outline.gc) {
+    if (rectPtr->outline.gc == NULL) {
 	halfWidth = 0.0;
     }
 
@@ -1171,7 +1170,7 @@ RectToArea(
 	    || (areaPtr[1] >= (rectPtr->bbox[3] + halfWidth))) {
 	return -1;
     }
-    if (!rectPtr->fillGC && rectPtr->outline.gc
+    if ((rectPtr->fillGC == NULL) && (rectPtr->outline.gc != NULL)
 	    && (areaPtr[0] >= (rectPtr->bbox[0] + halfWidth))
 	    && (areaPtr[1] >= (rectPtr->bbox[1] + halfWidth))
 	    && (areaPtr[2] <= (rectPtr->bbox[2] - halfWidth))
@@ -1239,7 +1238,7 @@ OvalToArea(
      */
 
     halfWidth = width/2.0;
-    if (!ovalPtr->outline.gc) {
+    if (ovalPtr->outline.gc == NULL) {
 	halfWidth = 0.0;
     }
     oval[0] = ovalPtr->bbox[0] - halfWidth;
@@ -1256,8 +1255,8 @@ OvalToArea(
      * return "outside".
      */
 
-    if ((result == 0) && ovalPtr->outline.gc
-	    && !ovalPtr->fillGC) {
+    if ((result == 0) && (ovalPtr->outline.gc != NULL)
+	    && (ovalPtr->fillGC == NULL)) {
 	double centerX, centerY, height;
 	double xDelta1, yDelta1, xDelta2, yDelta2;
 
@@ -1432,20 +1431,20 @@ RectOvalToPostscript(
 	if (rectOvalPtr->outline.activeColor!=NULL) {
 	    color = rectOvalPtr->outline.activeColor;
 	}
-	if (rectOvalPtr->activeFillColor) {
+	if (rectOvalPtr->activeFillColor!=NULL) {
 	    fillColor = rectOvalPtr->activeFillColor;
 	}
-	if (rectOvalPtr->activeFillStipple) {
+	if (rectOvalPtr->activeFillStipple!=None) {
 	    fillStipple = rectOvalPtr->activeFillStipple;
 	}
     } else if (state == TK_STATE_DISABLED) {
 	if (rectOvalPtr->outline.disabledColor!=NULL) {
 	    color = rectOvalPtr->outline.disabledColor;
 	}
-	if (rectOvalPtr->disabledFillColor) {
+	if (rectOvalPtr->disabledFillColor!=NULL) {
 	    fillColor = rectOvalPtr->disabledFillColor;
 	}
-	if (rectOvalPtr->disabledFillStipple) {
+	if (rectOvalPtr->disabledFillStipple!=None) {
 	    fillStipple = rectOvalPtr->disabledFillStipple;
 	}
     }
@@ -1461,7 +1460,7 @@ RectOvalToPostscript(
      * First draw the filled area of the rectangle.
      */
 
-    if (fillColor) {
+    if (fillColor != NULL) {
 	Tcl_AppendObjToObj(psObj, pathObj);
 
 	Tcl_ResetResult(interp);
@@ -1470,7 +1469,7 @@ RectOvalToPostscript(
 	}
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
-	if (fillStipple) {
+	if (fillStipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 
 	    Tcl_ResetResult(interp);
@@ -1490,7 +1489,7 @@ RectOvalToPostscript(
      * Now draw the outline, if there is one.
      */
 
-    if (color) {
+    if (color != NULL) {
 	Tcl_AppendObjToObj(psObj, pathObj);
 	Tcl_AppendToObj(psObj, "0 setlinejoin 2 setlinecap\n", -1);
 

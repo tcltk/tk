@@ -97,7 +97,7 @@ typedef union {
  */
 
 #ifndef TK_MAC_OSX
-  #define EVENT_BUFFER_SIZE 45
+  #define EVENT_BUFFER_SIZE 90
 #else
   #define EVENT_BUFFER_SIZE 30
 #endif
@@ -613,7 +613,7 @@ static const TkStateMap visNotify[] = {
 };
 
 static const TkStateMap configureRequestDetail[] = {
-    {0,		"None"},
+    {None,		"None"},
     {Above,		"Above"},
     {Below,		"Below"},
     {BottomIf,		"BottomIf"},
@@ -3596,14 +3596,14 @@ DoWarp(
 
     if ((dispPtr->warpWindow == NULL) ||
             (Tk_IsMapped(dispPtr->warpWindow)
-            && Tk_WindowId(dispPtr->warpWindow))) {
+            && (Tk_WindowId(dispPtr->warpWindow) != None))) {
         TkpWarpPointer(dispPtr);
         XForceScreenSaver(dispPtr->display, ScreenSaverReset);
     }
 
     if (dispPtr->warpWindow) {
 	Tcl_Release(dispPtr->warpWindow);
-	dispPtr->warpWindow = 0;
+	dispPtr->warpWindow = NULL;
     }
     dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }

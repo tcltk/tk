@@ -6,7 +6,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -2248,7 +2248,9 @@ static int TreeviewHorribleIdentify(
 	    Ttk_Element element;
 
 	    BoundingBox(tv, item, NULL, &itemBox);
-	    PrepareItem(tv, item, &displayItem); /*@@@ FIX: -text, etc*/
+	    PrepareItem(tv, item, &displayItem);
+            if (item->textObj) { displayItem.textObj = item->textObj; }
+            if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), itemBox);
 	    element = Ttk_IdentifyElement(layout, x, y);
@@ -2360,7 +2362,9 @@ static int TreeviewIdentifyCommand(
 		return TCL_OK;
 	    }
 
-	    PrepareItem(tv, item, &displayItem); /*@@@ FIX: fill in -text,etc */
+	    PrepareItem(tv, item, &displayItem);
+            if (item->textObj) { displayItem.textObj = item->textObj; }
+            if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), bbox);
 	    element = Ttk_IdentifyElement(layout, x, y);

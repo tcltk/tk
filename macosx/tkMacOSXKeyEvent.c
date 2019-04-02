@@ -24,9 +24,6 @@
 */
 #define NS_KEYLOG 0
 
-
-static Tk_Window grabWinPtr = NULL;
-				/* Current grab window, NULL if no grab. */
 static Tk_Window keyboardGrabWinPtr = NULL;
 				/* Current keyboard grab window. */
 static NSWindow *keyboardGrabNSWindow = nil;
@@ -139,18 +136,26 @@ unsigned short releaseCode;
         }
 
         /*
-         * The focus must be in the FrontWindow on the Macintosh. We then query Tk
-         * to determine the exact Tk window that owns the focus.
+         * Events are only received for the front Window on the Macintosh.
+	 * So to build an XEvent we look up the Tk window associated to the
+	 * Front window. If a different window has a local grab we ignore
+	 * the event.
          */
 
         TkWindow *winPtr = TkMacOSXGetTkWindow(w);
         Tk_Window tkwin = (Tk_Window) winPtr;
 
-        if (!tkwin) {
-          TkMacOSXDbgMsg("tkwin == NULL");
-          return theEvent;
-        }
-        tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	if (tkwin) {
+	    TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
+	    if (grabWinPtr &&
+		grabWinPtr != winPtr &&
+		!winPtr->dispPtr->grabFlags && /* this means the grab is local. */
+		grabWinPtr->mainPtr == winPtr->mainPtr) {
+		return theEvent;
+	    }
+	} else {
+	    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	}
         if (!tkwin) {
           TkMacOSXDbgMsg("tkwin == NULL");
           return theEvent;  /* Give up. No window for this event. */
@@ -160,6 +165,7 @@ unsigned short releaseCode;
          * If it's a function key, or we have modifiers other than Shift or Alt,
          * pass it straight to Tk.  Otherwise we'll send for input processing.
          */
+
         int code = (len == 0) ?
           0 : [charactersIgnoringModifiers characterAtIndex: 0];
         if (type != NSKeyDown || isFunctionKey(code)
@@ -491,11 +497,12 @@ XGrabKeyboard(
     Time time)
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
-    if (keyboardGrabWinPtr && grabWinPtr) {
+    TkWindow *captureWinPtr = (TkWindow *)TkMacOSXGetCapture(); 
+    if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
 	MacDrawable *macWin = (MacDrawable *) grab_window;
 
-	if (w && macWin->toplevel->winPtr == (TkWindow*) grabWinPtr) {
+	if (w && macWin->toplevel->winPtr == (TkWindow*) captureWinPtr) {
 	    if (modalSession) {
 		Tcl_Panic("XGrabKeyboard: already grabbed");
 	    }
@@ -542,26 +549,6 @@ XUngrabKeyboard(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetCapture --
- *
- * Results:
- *	Returns the current grab window
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-Tk_Window
-TkMacOSXGetCapture(void)
-{
-    return grabWinPtr;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkMacOSXGetModalSession --
  *
  * Results:
@@ -577,34 +564,6 @@ MODULE_SCOPE NSModalSession
 TkMacOSXGetModalSession(void)
 {
     return modalSession;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpSetCapture --
- *
- *	This function captures the mouse so that all future events will be
- *	reported to this window, even if the mouse is outside the window. If
- *	the specified window is NULL, then the mouse is released.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Sets the capture flag and captures the mouse.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpSetCapture(
-    TkWindow *winPtr)		/* Capture window, or NULL. */
-{
-    while (winPtr && !Tk_IsTopLevel(winPtr)) {
-	winPtr = winPtr->parentPtr;
-    }
-    grabWinPtr = (Tk_Window) winPtr;
 }
 
 /*

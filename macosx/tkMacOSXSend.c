@@ -325,7 +325,7 @@ Tk_SendObjCmd(
     int objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
 {
-    const char *const sendOptions[] = {"-async", "-displayof", "-", NULL};
+    const char *const sendOptions[] = {"-async", "-displayof", "--", NULL};
     char *stringRep, *destName;
     /*int async = 0;*/
     int i, index, firstArg;

@@ -100,7 +100,7 @@ TkMacOSXCreateCGImageWithXImage(
 	    /*
 	     * CGCreateImage complains on early macOS releases.
 	     */
-	    
+
 	    return NULL;
 	}
 	bitsPerComponent = 8;

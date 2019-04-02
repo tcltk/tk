@@ -242,7 +242,7 @@ TkpUseWindow(
 */
 
 /*
-    if (winPtr->window) {
+    if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't modify container after widget is created", -1));
 	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
@@ -856,6 +856,15 @@ ContainerEventProc(
     Tk_Window tkwin = (Tk_Window)containerPtr->parentPtr;
 
     if (eventPtr->type == ConfigureNotify) {
+
+	/*
+         * Send a ConfigureNotify  to the embedded application.
+         */
+
+        if (containerPtr->embeddedPtr != NULL) {
+            TkDoConfigureNotify(containerPtr->embeddedPtr);
+        }
+
 	/*
 	 * Resize the embedded window, if there is any.
 	 */

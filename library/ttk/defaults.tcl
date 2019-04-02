@@ -178,10 +178,8 @@ namespace eval ttk::theme::default {
 	    -foreground $colors(-text) ;
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-				{!disabled !selected} $colors(-window) \
 				selected $colors(-selectbg)] \
 	    -foreground [list disabled $colors(-disabledfg) \
-				{!disabled !selected} black \
 				selected $colors(-selectfg)]
 
 	# Combobox popdown frame

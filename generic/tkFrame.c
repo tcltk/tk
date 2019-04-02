@@ -513,7 +513,7 @@ CreateFrame(
      */
 
     className = colormapName = screenName = visualName = useOption = NULL;
-    colormap = 0;
+    colormap = None;
     for (i = 2; i < objc; i += 2) {
 	arg = Tcl_GetStringFromObj(objv[i], &length);
 	if (length < 2) {
@@ -617,14 +617,14 @@ CreateFrame(
     if (visualName != NULL) {
 	visual = Tk_GetVisual(interp, newWin, visualName, &depth,
 		(colormapName == NULL) ? &colormap : NULL);
-	if (!visual) {
+	if (visual == NULL) {
 	    goto error;
 	}
 	Tk_SetWindowVisual(newWin, visual, depth, colormap);
     }
-    if (colormapName) {
+    if (colormapName != NULL) {
 	colormap = Tk_GetColormap(interp, newWin, colormapName);
-	if (!colormap) {
+	if (colormap == None) {
 	    goto error;
 	}
 	Tk_SetWindowColormap(newWin, colormap);
@@ -662,13 +662,13 @@ CreateFrame(
     framePtr->type = type;
     framePtr->colormap = colormap;
     framePtr->relief = TK_RELIEF_FLAT;
-    framePtr->cursor = 0;
+    framePtr->cursor = NULL;
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	Labelframe *labelframePtr = (Labelframe *) framePtr;
 
 	labelframePtr->labelAnchor = LABELANCHOR_NW;
-	labelframePtr->textGC = 0;
+	labelframePtr->textGC = NULL;
     }
 
     /*
@@ -864,11 +864,11 @@ DestroyFrame(
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	Tk_FreeTextLayout(labelframePtr->textLayout);
-	if (labelframePtr->textGC) {
+	if (labelframePtr->textGC != NULL) {
 	    Tk_FreeGC(framePtr->display, labelframePtr->textGC);
 	}
     }
-    if (framePtr->colormap) {
+    if (framePtr->colormap != None) {
 	Tk_FreeColormap(framePtr->display, framePtr->colormap);
     }
     ckfree(framePtr);
@@ -990,7 +990,7 @@ ConfigureFrame(
     if (framePtr->border != NULL) {
 	Tk_SetBackgroundFromBorder(framePtr->tkwin, framePtr->border);
     } else {
-	Tk_SetWindowBackgroundPixmap(framePtr->tkwin, 0);
+	Tk_SetWindowBackgroundPixmap(framePtr->tkwin, None);
     }
 
     if (framePtr->highlightWidth < 0) {
@@ -1120,7 +1120,7 @@ FrameWorldChanged(
 	gcValues.graphics_exposures = False;
 	gc = Tk_GetGC(tkwin, GCForeground | GCFont | GCGraphicsExposures,
 		&gcValues);
-	if (labelframePtr->textGC) {
+	if (labelframePtr->textGC != NULL) {
 	    Tk_FreeGC(framePtr->display, labelframePtr->textGC);
 	}
 	labelframePtr->textGC = gc;
@@ -1563,8 +1563,8 @@ DisplayFrame(
 		    labelframePtr->labelTextX + LABELSPACING,
 		    labelframePtr->labelTextY + LABELSPACING, 0, -1);
 
-	    if (clipRegion) {
-		XSetClipMask(framePtr->display, labelframePtr->textGC, 0);
+	    if (clipRegion != NULL) {
+		XSetClipMask(framePtr->display, labelframePtr->textGC, None);
 		TkDestroyRegion(clipRegion);
 	    }
 	} else {

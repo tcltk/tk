@@ -46,7 +46,7 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
  * The default prompt used when the user has not overridden it.
  */
 
-#define DEFAULT_PRIMARY_PROMPT	"% "
+static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
 
 /*
  * This file can be compiled on Windows in UNICODE mode, as well as
@@ -245,11 +245,21 @@ Tk_MainEx(
     Tcl_Preserve(interp);
 
 #if defined(PLATFORM_SDL) || (defined(_WIN32) && !defined(__CYGWIN__))
-#if !defined(STATIC_BUILD)
-    /* If compiled for Win32 but running on Cygwin, don't use console */
-    if (!tclStubsPtr->reserved9)
-#endif
+#ifdef _WIN32
     Tk_InitConsoleChannels(interp);
+#else
+    {
+	char *flag = getenv("TK_CONSOLE");
+	int docon = 1;
+
+	if ((flag != NULL) && (*flag == '0')) {
+	    docon = !isatty(0);
+	}
+	if (docon) {
+	    Tk_InitConsoleChannels(interp);
+	}
+    }
+#endif
 #endif
 
 #ifdef MAC_OSX_TK
@@ -535,7 +545,7 @@ Prompt(
 	    chan = Tcl_GetStdChannel(TCL_STDOUT);
 	    if (chan != NULL) {
 		Tcl_WriteChars(chan, DEFAULT_PRIMARY_PROMPT,
-			strlen(DEFAULT_PRIMARY_PROMPT));
+			sizeof(DEFAULT_PRIMARY_PROMPT) - 1);
 	    }
 	}
     } else {

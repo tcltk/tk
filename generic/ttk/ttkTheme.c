@@ -10,10 +10,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <tk.h>
-#include <tkInt.h>
+#include "tkInt.h"
 #include "ttkThemeInt.h"
 
 #define PKG_ASSOC_KEY "Ttk"

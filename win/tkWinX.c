@@ -528,10 +528,10 @@ TkWinDisplayChanged(
     screen->root_visual->bits_per_rgb = screen->root_depth;
     ReleaseDC(NULL, dc);
 
-    if (screen->cmap) {
+    if (screen->cmap != None) {
 	XFreeColormap(display, screen->cmap);
     }
-    screen->cmap = XCreateColormap(display, 0, screen->root_visual,
+    screen->cmap = XCreateColormap(display, None, screen->root_visual,
 	    AllocNone);
 }
 
@@ -591,7 +591,7 @@ TkpOpenDisplay(
 
     twdPtr = ckalloc(sizeof(TkWinDrawable));
     if (twdPtr == NULL) {
-	return 0;
+	return NULL;
     }
     twdPtr->type = TWD_WINDOW;
     twdPtr->window.winPtr = NULL;
@@ -604,7 +604,7 @@ TkpOpenDisplay(
 
     screen->white_pixel = RGB(255, 255, 255);
     screen->black_pixel = RGB(0, 0, 0);
-    screen->cmap = 0;
+    screen->cmap = None;
 
     display->screens		= screen;
     display->nscreens		= 1;
@@ -618,6 +618,11 @@ TkpOpenDisplay(
     tsdPtr->updatingClipboard = FALSE;
     tsdPtr->wheelTickPrev = GetTickCount();
     tsdPtr->wheelAcc = 0;
+
+    /*
+     * Key map info must be available immediately, because of "send event".
+     */
+    TkpInitKeymapInfo(tsdPtr->winDisplay);
 
     return tsdPtr->winDisplay;
 }
@@ -661,10 +666,10 @@ TkpCloseDisplay(
 	if (display->screens->root_visual != NULL) {
 	    ckfree(display->screens->root_visual);
 	}
-	if (display->screens->root) {
+	if (display->screens->root != None) {
 	    ckfree(display->screens->root);
 	}
-	if (display->screens->cmap) {
+	if (display->screens->cmap != None) {
 	    XFreeColormap(display, display->screens->cmap);
 	}
 	ckfree(display->screens);
@@ -1011,7 +1016,7 @@ GenerateXEvent(
     }
 
     winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
-    if (!winPtr || !winPtr->window) {
+    if (!winPtr || winPtr->window == None) {
 	return;
     }
 
@@ -1134,7 +1139,7 @@ GenerateXEvent(
 	 */
 
 	event.xbutton.root = RootWindow(winPtr->display, winPtr->screenNum);
-	event.xbutton.subwindow = 0;
+	event.xbutton.subwindow = None;
 	event.xbutton.x = clientPoint.x;
 	event.xbutton.y = clientPoint.y;
 	event.xbutton.x_root = root.point.x;
@@ -1636,7 +1641,7 @@ HandleIMEComposition(
 	event.xkey.display = winPtr->display;
 	event.xkey.window = winPtr->window;
 	event.xkey.root = RootWindow(winPtr->display, winPtr->screenNum);
-	event.xkey.subwindow = 0;
+	event.xkey.subwindow = None;
 	event.xkey.state = TkWinGetModifierState();
 	event.xkey.time = TkpGetMS();
 	event.xkey.same_screen = True;
