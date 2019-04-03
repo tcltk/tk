@@ -312,6 +312,8 @@ Tk_PlaceObjCmd(
 	if ((slavePtr->masterPtr != NULL) &&
 		(slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin))) {
 	    Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+	} else {
+	    Tk_GeomMaster(slavePtr->tkwin) = NULL;
 	}
 	UnlinkSlave(slavePtr);
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
@@ -706,6 +708,8 @@ ConfigureSlave(
 	if ((slavePtr->masterPtr != NULL) &&
 		(slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin))) {
 	    Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+	} else {
+	    Tk_GeomMaster(slavePtr->tkwin) = NULL;
 	}
 	UnlinkSlave(slavePtr);
 	masterWin = tkwin;
@@ -1233,6 +1237,8 @@ PlaceLostSlaveProc(
 
     if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+    } else {
+	Tk_GeomMaster(slavePtr->tkwin) = NULL;
     }
     Tk_UnmapWindow(tkwin);
     UnlinkSlave(slavePtr);

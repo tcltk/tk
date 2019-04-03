@@ -1145,6 +1145,7 @@ TkTextEmbWinDisplayProc(
     client->displayed = 1;
 
     if (textPtr->tkwin == Tk_Parent(tkwin)) {
+	Tk_GeomMaster(tkwin) = textPtr->tkwin;
 	if ((windowX != Tk_X(tkwin)) || (windowY != Tk_Y(tkwin))
 		|| (Tk_ReqWidth(tkwin) != Tk_Width(tkwin))
 		|| (height != Tk_Height(tkwin))) {
@@ -1311,6 +1312,7 @@ EmbWinDelayedUnmap(
 	if (client->textPtr->tkwin != Tk_Parent(client->tkwin)) {
 	    Tk_UnmaintainGeometry(client->tkwin, client->textPtr->tkwin);
 	} else {
+	    Tk_GeomMaster(client->tkwin) = NULL;
 	    Tk_UnmapWindow(client->tkwin);
 	}
     }

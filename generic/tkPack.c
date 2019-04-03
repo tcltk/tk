@@ -320,6 +320,8 @@ Tk_PackObjCmd(
 		if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 		    Tk_UnmaintainGeometry(slavePtr->tkwin,
 			    slavePtr->masterPtr->tkwin);
+		} else {
+		    Tk_GeomMaster(slavePtr->tkwin) = NULL; 
 		}
 		Unlink(slavePtr);
 		Tk_UnmapWindow(slavePtr->tkwin);
@@ -475,6 +477,8 @@ Tk_PackObjCmd(
 	    if (packPtr->masterPtr->tkwin != Tk_Parent(packPtr->tkwin)) {
 		Tk_UnmaintainGeometry(packPtr->tkwin,
 			packPtr->masterPtr->tkwin);
+	    } else {
+		Tk_GeomMaster(packPtr->tkwin) = NULL; 
 	    }
 	    Unlink(packPtr);
 	    Tk_UnmapWindow(packPtr->tkwin);
@@ -549,6 +553,8 @@ PackLostSlaveProc(
 
     if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+    } else {
+	Tk_GeomMaster(slavePtr->tkwin) = NULL; 
     }
     Unlink(slavePtr);
     Tk_UnmapWindow(slavePtr->tkwin);
@@ -1265,6 +1271,7 @@ PackAfter(
 		    Tk_UnmaintainGeometry(packPtr->tkwin,
 			    packPtr->masterPtr->tkwin);
 		}
+		Tk_GeomMaster(packPtr->tkwin) = NULL; 
 		Unlink(packPtr);
 	    }
 
@@ -1292,6 +1299,7 @@ PackAfter(
 		}
 		masterPtr->flags |= ALLOCED_MASTER;
 	    }
+	    Tk_GeomMaster(packPtr->tkwin) = masterPtr->tkwin; 
 	}
     }
 
@@ -1815,6 +1823,7 @@ ConfigureSlaves(
 	}
 
 	slavePtr->masterPtr = masterPtr;
+	Tk_GeomMaster(slavePtr->tkwin) = masterPtr->tkwin; 
 	if (prevPtr == NULL) {
 	    slavePtr->nextPtr = masterPtr->slavePtr;
 	    masterPtr->slavePtr = slavePtr;

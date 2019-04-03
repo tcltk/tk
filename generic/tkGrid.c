@@ -688,6 +688,8 @@ GridForgetRemoveCommand(
 	    if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 		Tk_UnmaintainGeometry(slavePtr->tkwin,
 			slavePtr->masterPtr->tkwin);
+	    } else {
+		Tk_GeomMaster(slavePtr->tkwin) = NULL;
 	    }
 	    Unlink(slavePtr);
 	    Tk_UnmapWindow(slavePtr->tkwin);
@@ -1467,6 +1469,8 @@ GridLostSlaveProc(
 
     if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 	Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
+    } else {
+	Tk_GeomMaster(slavePtr->tkwin) = NULL;
     }
     Unlink(slavePtr);
     Tk_UnmapWindow(slavePtr->tkwin);
@@ -3319,7 +3323,9 @@ ConfigureSlaves(
 	if (slavePtr->masterPtr != NULL && slavePtr->masterPtr != masterPtr) {
             if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
                 Tk_UnmaintainGeometry(slavePtr->tkwin, slavePtr->masterPtr->tkwin);
-            }
+            } else {
+		Tk_GeomMaster(slavePtr->tkwin) = NULL;
+	    }
 	    Unlink(slavePtr);
 	    slavePtr->masterPtr = NULL;
 	}
