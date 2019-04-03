@@ -185,7 +185,7 @@ static void		ComputeArcBbox(Tk_Canvas canvas, ArcItem *arcPtr);
 static int		ConfigureArc(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
 			    Tcl_Obj *const objv[], int flags);
-static int		ComputeArcFromHeight(ArcItem *arcPtr);
+static void		ComputeArcFromHeight(ArcItem *arcPtr);
 static int		CreateArc(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
@@ -475,14 +475,7 @@ ConfigureArc(
      * overridden.
      */
     if (arcPtr->height != 0) {
-	int ret = ComputeArcFromHeight(arcPtr);
-        if (ret != TCL_OK) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                    "coordinates too close to define a chord"));
-                    Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC",
-                    NULL);
-            return ret;
-        }
+	ComputeArcFromHeight(arcPtr);
 	ComputeArcBbox(canvas, arcPtr);
     }
 
@@ -604,7 +597,7 @@ ConfigureArc(
  *	end-point and height (!= 0).
  *
  * Results:
- *	TCL_ERROR if the chord length is zero, TCL_OK otherwise.
+ *	None.
  *
  * Side effects:
  *	The height parameter is set to 0 on exit.
@@ -612,7 +605,7 @@ ConfigureArc(
  *--------------------------------------------------------------
  */
 
-static int
+static void
 ComputeArcFromHeight(
     ArcItem* arcPtr)
 {
@@ -625,8 +618,20 @@ ComputeArcFromHeight(
     chordLen = hypot(arcPtr->endPoint[1] - arcPtr->startPoint[1],
 	    arcPtr->startPoint[0] - arcPtr->endPoint[0]);
 
-    if (chordLen < DBL_EPSILON)
-        return TCL_ERROR;
+    if (chordLen < DBL_EPSILON) {
+
+        /*
+         * Specialize computations for zero-length arc to avoid NaN or Inf.
+         */
+
+        arcPtr->start = arcPtr->extent = 0;
+        arcPtr->bbox[0] = arcPtr->bbox[2] =
+                (arcPtr->startPoint[0] + arcPtr->endPoint[0]) / 2;
+        arcPtr->bbox[1] = arcPtr->bbox[3] =
+                (arcPtr->startPoint[1] + arcPtr->endPoint[1]) / 2;
+        arcPtr->height = 0;
+        return;
+    }
 
     chordDir[0] = (arcPtr->endPoint[0] - arcPtr->startPoint[0]) / chordLen;
     chordDir[1] = (arcPtr->endPoint[1] - arcPtr->startPoint[1]) / chordLen;
@@ -681,8 +686,6 @@ ComputeArcFromHeight(
      */
 
     arcPtr->height = 0;
-    
-    return TCL_OK;
 }
 
 /*
