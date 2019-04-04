@@ -712,7 +712,7 @@ Tk_FontObjCmd(
     case FONT_MEASURE: {
 	const char *string;
 	Tk_Font tkfont;
-	size_t length = 0;
+	TkSizeT length = 0;
 	int skip = 0;
 
 	if (objc > 4) {
@@ -3245,7 +3245,7 @@ Tk_TextLayoutToPostscript(
     int baseline = chunkPtr->y;
     Tcl_Obj *psObj = Tcl_NewObj();
     int i, j;
-    size_t len;
+    TkSizeT len;
     const char *p, *glyphname;
     char uindex[5], c, *ps;
     int ch;

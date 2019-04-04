@@ -2968,7 +2968,7 @@ ConfigureSlaves(
 
     firstChar = 0;
     for (numWindows=0, i=0; i < objc; i++) {
-	size_t length;
+	TkSizeT length;
 	char prevChar = firstChar;
 
 	string = TkGetStringFromObj(objv[i], &length);

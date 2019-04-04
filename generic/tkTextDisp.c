@@ -7218,7 +7218,7 @@ TkTextUpdateLineMetrics(
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     const TkRange *range;
-    int totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+    unsigned totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
     int fullUpdateRequested = (lineNum == 0 && endLine == totalLines); 
 
     assert(lineNum <= endLine);
@@ -7233,7 +7233,7 @@ TkTextUpdateLineMetrics(
 	unsigned high = range->high;
 
 	lineNum = range->low;
-	endLine = MIN((int) endLine, totalLines - 1);
+	endLine = MIN(endLine, totalLines - 1);
 	assert((int) lineNum < totalLines);
 
 	while (true) {
@@ -11140,7 +11140,7 @@ TkTextYviewCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace;
     int pixels, count;
-    int switchLength;
+    TkSizeT switchLength;
     double fraction;
     TkTextIndex index;
 
@@ -11159,7 +11159,8 @@ TkTextYviewCmd(
 
     pickPlace = 0;
     if (Tcl_GetString(objv[2])[0] == '-') {
-	const char *switchStr = Tcl_GetStringFromObj(objv[2], &switchLength);
+	const char *switchStr =
+		TkGetStringFromObj(objv[2], &switchLength);
 
 	if (switchLength >= 2 && strncmp(switchStr, "-pickplace", switchLength) == 0) {
 	    pickPlace = 1;

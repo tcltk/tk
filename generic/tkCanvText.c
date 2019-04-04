@@ -1007,7 +1007,7 @@ TextInsert(
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int byteIndex, charsAdded;
-    size_t byteCount;
+    TkSizeT byteCount;
     char *newStr, *text;
     const char *string;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
@@ -1344,7 +1344,7 @@ GetTextIndex(
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    size_t length;
+    TkSizeT length;
     int c;
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
