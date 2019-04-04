@@ -1029,7 +1029,7 @@ TextInsert(
     }
 
     newStr = ckalloc(textPtr->numBytes + byteCount + 1);
-    memcpy(newStr, text, (size_t) byteIndex);
+    memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, string);
     strcpy(newStr + byteIndex + byteCount, text + byteIndex);
 
@@ -1110,7 +1110,7 @@ TextDeleteChars(
 	- (text + byteIndex);
 
     newStr = ckalloc(textPtr->numBytes + 1 - byteCount);
-    memcpy(newStr, text, (size_t) byteIndex);
+    memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, text + byteIndex + byteCount);
 
     ckfree(text);
@@ -1505,7 +1505,7 @@ GetSelText(
     if (byteCount <= 0) {
 	return 0;
     }
-    memcpy(buffer, selStart + offset, (size_t) byteCount);
+    memcpy(buffer, selStart + offset, byteCount);
     buffer[byteCount] = '\0';
     return byteCount;
 }

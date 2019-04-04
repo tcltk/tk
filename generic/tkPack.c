@@ -1240,7 +1240,7 @@ PackAfter(
 		packPtr->iPadY = 0;
 		index++;
 	    } else if ((c == 'f') && (length > 1)
-		    && (strncmp(curOpt, "frame", (size_t) length) == 0)) {
+		    && (strncmp(curOpt, "frame", length) == 0)) {
 		if (optionCount < (index+2)) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "wrong # args: \"frame\""
