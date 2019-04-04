@@ -315,7 +315,7 @@ static char *EntryDisplayString(const char *showChar, int numChars)
  */
 static void EntryUpdateTextLayout(Entry *entryPtr)
 {
-    size_t length;
+    TkSizeT length;
     char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
     if ((entryPtr->entry.numChars != 0) || (entryPtr->entry.placeholderObj == NULL)) {
@@ -1362,7 +1362,7 @@ EntryIndex(
     int *indexPtr)		/* Return value */
 {
 #   define EntryWidth(e) (Tk_Width(entryPtr->core.tkwin)) /* Not Right */
-    size_t length;
+    TkSizeT length;
     const char *string = TkGetStringFromObj(indexObj, &length);
 
     if (strncmp(string, "end", length) == 0) {

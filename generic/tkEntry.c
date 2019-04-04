@@ -4385,7 +4385,7 @@ SpinboxInvoke(
 		 */
 
 		int i, listc;
-		size_t elemLen, length = entryPtr->numChars;
+		TkSizeT elemLen, length = entryPtr->numChars;
 		const char *bytes;
 		Tcl_Obj **listv;
 

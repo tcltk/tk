@@ -864,7 +864,7 @@ TextWidgetObjCmd(
 
 	for (i = 2; i < objc-2; i++) {
 	    int value;
-	    size_t length;
+	    TkSizeT length;
 	    const char *option = TkGetStringFromObj(objv[i], &length);
 	    char c;
 
@@ -1259,7 +1259,7 @@ TextWidgetObjCmd(
 	Tcl_Obj *objPtr = NULL;
 	int i, found = 0, visible = 0;
 	const char *name;
-	size_t length;
+	TkSizeT length;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
@@ -2631,7 +2631,7 @@ InsertChars(
     int viewUpdate)		/* Update the view if set. */
 {
     int lineIndex;
-    size_t length;
+    TkSizeT length;
     TkText *tPtr;
     int *lineAndByteIndex;
     int resetViewCount;
@@ -3509,7 +3509,7 @@ TextFetchSelection(
 	    if ((segPtr->typePtr == &tkTextCharType)
 		    && !TkTextIsElided(textPtr, &textPtr->selIndex, NULL)) {
 		memcpy(buffer, segPtr->body.chars + offsetInSeg,
-			(size_t) chunkSize);
+			chunkSize);
 		buffer += chunkSize;
 		maxBytes -= chunkSize;
 		count += chunkSize;
@@ -4273,7 +4273,7 @@ TextSearchFoundMatch(
     int matchLength)		/* Length also in bytes/chars as per search
 				 * type. */
 {
-    size_t numChars;
+    TkSizeT numChars;
     int leftToScan;
     TkTextIndex curIndex, foundIndex;
     TkTextSegment *segPtr;
@@ -4313,7 +4313,7 @@ TextSearchFoundMatch(
 
     if (searchSpecPtr->strictLimits && lineNum == searchSpecPtr->stopLine) {
 	if (searchSpecPtr->backwards ^
-		((matchOffset + numChars + 1) > (size_t) searchSpecPtr->stopOffset + 1)) {
+		((matchOffset + numChars + 1) > (TkSizeT) searchSpecPtr->stopOffset + 1)) {
 	    return 0;
 	}
     }
@@ -4753,7 +4753,7 @@ TextDumpCmd(
     if (objc == arg) {
 	TkTextIndexForwChars(NULL, &index1, 1, &index2, COUNT_INDICES);
     } else {
-	size_t length;
+	TkSizeT length;
 	const char *str;
 
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
@@ -5760,7 +5760,7 @@ SearchCore(
      */
 
     int firstOffset, lastOffset;
-    size_t matchOffset,  matchLength;
+    TkSizeT matchOffset,  matchLength;
     int passes;
     int lineNum = searchSpecPtr->startLine;
     int code = TCL_OK;
@@ -5781,9 +5781,9 @@ SearchCore(
 
 #define LOTS_OF_MATCHES 20
     int matchNum = LOTS_OF_MATCHES;
-    size_t smArray[2 * LOTS_OF_MATCHES];
-    size_t *storeMatch = smArray;
-    size_t *storeLength = smArray + LOTS_OF_MATCHES;
+    TkSizeT smArray[2 * LOTS_OF_MATCHES];
+    TkSizeT *storeMatch = smArray;
+    TkSizeT *storeLength = smArray + LOTS_OF_MATCHES;
     int lastBackwardsLineMatch = -1;
     int lastBackwardsMatchOffset = -1;
 
@@ -5968,11 +5968,11 @@ SearchCore(
 	    do {
 		int ch;
 		const char *p;
-		size_t lastFullLine = lastOffset;
+		TkSizeT lastFullLine = lastOffset;
 
 		if (firstNewLine == -1) {
 		    if (searchSpecPtr->strictLimits
-			    && (firstOffset + matchLength + 1 > (size_t)lastOffset + 1)) {
+			    && (firstOffset + matchLength + 1 > (TkSizeT)lastOffset + 1)) {
 			/*
 			 * Not enough characters to match.
 			 */
@@ -6090,7 +6090,7 @@ SearchCore(
 			     * exact searches.
 			     */
 
-			    if ((size_t)lastTotal - skipFirst + 1 >= matchLength + 1) {
+			    if ((TkSizeT)lastTotal - skipFirst + 1 >= matchLength + 1) {
 				/*
 				 * We now have enough text to match, so we
 				 * make a final test and break whatever the
@@ -6172,7 +6172,7 @@ SearchCore(
 			}
 		    } else {
                         firstOffset = matchLength ? p - startOfLine + matchLength
-                                                  : p - startOfLine + (size_t)1;
+                                                  : p - startOfLine + (TkSizeT)1;
 			if (firstOffset >= lastOffset) {
 			    /*
 			     * Now, we have to be careful not to find
@@ -6212,7 +6212,7 @@ SearchCore(
 	    do {
 		Tcl_RegExpInfo info;
 		int match;
-		size_t lastFullLine = lastOffset;
+		TkSizeT lastFullLine = lastOffset;
 
 		match = Tcl_RegExpExecObj(interp, regexp, theLine,
 			firstOffset, 1, (firstOffset>0 ? TCL_REG_NOTBOL : 0));
@@ -6230,9 +6230,9 @@ SearchCore(
 
 		if (!match ||
 			((info.extendStart == info.matches[0].start)
-			&& ((size_t) info.matches[0].end == (size_t) lastOffset - firstOffset))) {
+			&& ((TkSizeT) info.matches[0].end == (TkSizeT) lastOffset - firstOffset))) {
 		    int extraLines = 0;
-		    size_t prevFullLine;
+		    TkSizeT prevFullLine;
 
 		    /*
 		     * If we find a match that overlaps more than one line, we
@@ -6248,7 +6248,7 @@ SearchCore(
 			lastNonOverlap = lastTotal;
 		    }
 
-		    if ((size_t) info.extendStart == (size_t) -1) {
+		    if ((TkSizeT) info.extendStart == TCL_AUTO_LENGTH) {
 			/*
 			 * No multi-line match is possible.
 			 */
@@ -6345,9 +6345,9 @@ SearchCore(
 			 */
 
 			if ((match &&
-				firstOffset+(size_t) info.matches[0].end != (size_t) lastTotal &&
-				firstOffset+(size_t) info.matches[0].end + 1 < prevFullLine + 1)
-				|| (size_t) info.extendStart == (size_t) -1) {
+				firstOffset + (TkSizeT) info.matches[0].end != (TkSizeT) lastTotal &&
+				firstOffset + (TkSizeT) info.matches[0].end + 1 < prevFullLine + 1)
+				|| (TkSizeT) info.extendStart == TCL_AUTO_LENGTH) {
 			    break;
 			}
 
@@ -6358,10 +6358,10 @@ SearchCore(
 			 * that line.
 			 */
 
-			if (match && ((size_t) info.matches[0].start + 1 >= (size_t) lastOffset + 1)) {
+			if (match && ((TkSizeT) info.matches[0].start + 1 >= (TkSizeT) lastOffset + 1)) {
 			    break;
 			}
-			if (match && ((firstOffset + (size_t) info.matches[0].end)
+			if (match && ((firstOffset + (TkSizeT) info.matches[0].end)
 				>= prevFullLine)) {
 			    if (extraLines > 0) {
 				extraLinesSearched = extraLines - 1;
@@ -6415,7 +6415,7 @@ SearchCore(
 				 * Possible overlap or enclosure.
 				 */
 
-				if ((size_t)thisOffset - lastNonOverlap >=
+				if ((TkSizeT)thisOffset - lastNonOverlap >=
 					lastBackwardsMatchOffset + matchLength + 1){
 				    /*
 				     * Totally encloses previous match, so
@@ -6497,11 +6497,11 @@ SearchCore(
 		 * previous match.
 		 */
 
-		if (matchOffset == (size_t)-1 ||
+		if (matchOffset == TCL_AUTO_LENGTH ||
 			((searchSpecPtr->all || searchSpecPtr->backwards)
-			&& (((size_t)firstOffset + 1< matchOffset + 1)
-			|| ((firstOffset + (size_t) info.matches[0].end
-				- (size_t) info.matches[0].start)
+			&& (((TkSizeT)firstOffset + 1< matchOffset + 1)
+			|| ((firstOffset + (TkSizeT) info.matches[0].end
+				- (TkSizeT) info.matches[0].start)
 				> matchOffset + matchLength)))) {
 
 		    matchOffset = firstOffset;
@@ -6520,11 +6520,11 @@ SearchCore(
 			     * matches on the heap.
 			     */
 
-			    size_t *newArray =
-				    ckalloc(4 * matchNum * sizeof(size_t));
-			    memcpy(newArray, storeMatch, matchNum*sizeof(size_t));
+			    TkSizeT *newArray =
+				    ckalloc(4 * matchNum * sizeof(TkSizeT));
+			    memcpy(newArray, storeMatch, matchNum*sizeof(TkSizeT));
 			    memcpy(newArray + 2*matchNum, storeLength,
-				    matchNum * sizeof(int));
+				    matchNum * sizeof(TkSizeT));
 			    if (storeMatch != smArray) {
 				ckfree(storeMatch);
 			    }
@@ -6665,7 +6665,7 @@ SearchCore(
 	 * we are done.
 	 */
 
-	if ((lastBackwardsLineMatch == -1) && (matchOffset != (size_t) -1)
+	if ((lastBackwardsLineMatch == -1) && (matchOffset != TCL_AUTO_LENGTH)
 		&& !searchSpecPtr->all) {
 	    searchSpecPtr->foundMatchProc(lineNum, searchSpecPtr, lineInfo,
 		    theLine, matchOffset, matchLength);
@@ -6940,7 +6940,7 @@ TkpTesttextCmd(
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TkText *textPtr;
-    size_t len;
+    TkSizeT len;
     int lineIndex, byteIndex, byteOffset;
     TkTextIndex index;
     char buf[64];

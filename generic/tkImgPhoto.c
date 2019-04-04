@@ -410,7 +410,7 @@ ImgPhotoCmd(
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
     Tk_PhotoImageFormat *imageFormat;
-    size_t length;
+    TkSizeT length;
     int imageWidth, imageHeight, matched, oldformat = 0;
     Tcl_Channel chan;
     Tk_PhotoHandle srcHandle;
@@ -1476,7 +1476,7 @@ ParseSubcommandOptions(
 				 * TK_PHOTO_COMPOSITE_* constants. */
 	NULL
     };
-    size_t length;
+    TkSizeT length;
     int index, c, bit, currentBit;
     int values[4], numValues, maxValues, argIndex;
     const char *option, *expandedOption, *needed;
@@ -1758,7 +1758,7 @@ ImgPhotoConfigureMaster(
     const char *oldFileString, *oldPaletteString;
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL;
     Tcl_Obj *tempdata, *tempformat;
-    size_t length;
+    TkSizeT length;
     int i, j, result, imageWidth, imageHeight, oldformat;
     double oldGamma;
     Tcl_Channel chan;
@@ -1846,7 +1846,7 @@ ImgPhotoConfigureMaster(
 	 * Force into ByteArray format, which most (all) image handlers will
 	 * use anyway. Empty length means ignore the -data option.
 	 */
-	size_t bytesize;
+	TkSizeT bytesize;
 
 	(void) TkGetByteArrayFromObj(data, &bytesize);
 	if (bytesize) {

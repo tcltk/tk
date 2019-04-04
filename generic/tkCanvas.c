@@ -1153,7 +1153,7 @@ CanvasWidgetCmd(
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
 	const char *arg;
-	size_t length;
+	TkSizeT length;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "type coords ?arg ...?");

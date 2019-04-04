@@ -656,7 +656,7 @@ DoObjConfig(
     case TK_OPTION_STRING: {
 	char *newStr;
 	const char *value;
-	size_t length;
+	TkSizeT length;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
