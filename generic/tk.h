@@ -761,7 +761,6 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
 #define Tk_MinReqHeight(tkwin)	(((Tk_FakeWin *) (tkwin))->minReqHeight)
 #define Tk_Parent(tkwin)	(((Tk_FakeWin *) (tkwin))->parentPtr)
 #define Tk_Colormap(tkwin)	(((Tk_FakeWin *) (tkwin))->atts.colormap)
-#define Tk_GeomMaster(tkwin)	(((Tk_FakeWin *) (tkwin))->geomMasterPtr)
 
 /*
  * The structure below is needed by the macros above so that they can access
@@ -804,13 +803,13 @@ typedef struct Tk_FakeWin {
     char *dummy14;		/* geomMgrPtr */
     ClientData dummy15;		/* geomData */
     char *dummy16;		/* geomMgrName */
-    Tk_Window geomMasterPtr;
+    Tk_Window dummy17;		/* maintainerPtr */
     int reqWidth, reqHeight;
     int internalBorderLeft;
-    char *dummy17;		/* wmInfoPtr */
-    char *dummy18;		/* classProcPtr */
-    ClientData dummy19;		/* instanceData */
-    char *dummy20;		/* privatePtr */
+    char *dummy18;		/* wmInfoPtr */
+    char *dummy19;		/* classProcPtr */
+    ClientData dummy20;		/* instanceData */
+    char *dummy21;		/* privatePtr */
     int internalBorderRight;
     int internalBorderTop;
     int internalBorderBottom;

@@ -323,6 +323,9 @@ typedef struct TkDisplay {
 				 * by that master. */
     int geomInit;
 
+#define Tk_GetGeomMaster(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
+    ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
+
     /*
      * Information used by tkGet.c only:
      */
@@ -770,7 +773,7 @@ typedef struct TkWindow {
 				 * window. */
     ClientData geomData;	/* Argument for geometry manager functions. */
     char *geomMgrName;          /* Records the name of the geometry manager. */
-    struct TkWindow *geomMasterPtr;
+    struct TkWindow *maintainerPtr;
                                 /* The master assigned by Tk_MaintainGeometry.*/
     int reqWidth, reqHeight;	/* Arguments from last call to
 				 * Tk_GeometryRequest, or 0's if
