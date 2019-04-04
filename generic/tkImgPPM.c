@@ -765,7 +765,7 @@ ReadPPMStringHeader(
 #define BUFFER_SIZE 1000
     char buffer[BUFFER_SIZE], c;
     int i, numFields, type = 0;
-    size_t dataSize;
+    TkSizeT dataSize;
     unsigned char *dataBuffer;
 
     dataBuffer = TkGetByteArrayFromObj(dataPtr, &dataSize);

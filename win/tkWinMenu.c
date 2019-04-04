@@ -1247,7 +1247,7 @@ TkWinHandleMenuEvent(
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
 		*plParam);
 	if (hashEntryPtr != NULL) {
-	    size_t i, len, underline;
+	    TkSizeT i, len, underline;
 	    Tcl_Obj *labelPtr;
 	    WCHAR *wlabel;
 	    int menuChar;
@@ -1262,10 +1262,10 @@ TkWinHandleMenuEvent(
 	    menuChar = Tcl_UniCharToUpper(LOWORD(*pwParam));
 
 	    Tcl_DStringInit(&ds);
-	    for (i = 0; i < (size_t)menuPtr->numEntries; i++) {
+	    for (i = 0; i < menuPtr->numEntries; i++) {
 		underline = menuPtr->entries[i]->underline;
 		labelPtr = menuPtr->entries[i]->labelPtr;
-		if ((underline != (size_t)-1) && (labelPtr != NULL)) {
+		if ((underline != TCL_AUTO_LENGTH) && (labelPtr != NULL)) {
 		    /*
 		     * Ensure we don't exceed the label length, then check
 		     */
