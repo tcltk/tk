@@ -729,7 +729,7 @@ Tk_GetScrollInfoObj(
     int *intPtr)		/* Filled in with number of pages or lines to
 				 * scroll, if any. */
 {
-    size_t length;
+    TkSizeT length;
     const char *arg = TkGetStringFromObj(objv[2], &length);
 
 #define ArgPfxEq(str) \
@@ -1272,24 +1272,17 @@ size_t TkUniCharToUtf(int ch, char *buf)
 
 #endif
 
+#if TCL_MAJOR_VERSION > 8
 unsigned char *
 TkGetByteArrayFromObj(
 	Tcl_Obj *objPtr,
 	size_t *lengthPtr
 ) {
-    int length;
-
-    unsigned char *result = Tcl_GetByteArrayFromObj(objPtr, &length);
-#if TCL_MAJOR_VERSION > 8
-    if (sizeof(TCL_HASH_TYPE) > sizeof(int)) {
-	/* 64-bit and TIP #494 situation: */
-	 *lengthPtr = *(TCL_HASH_TYPE *) objPtr->internalRep.twoPtrValue.ptr1;
-    } else
-#endif
-	/* 32-bit or without TIP #494 */
-    *lengthPtr = (size_t) (unsigned) length;
+    unsigned char *result = Tcl_GetByteArrayFromObj(objPtr, NULL);
+    *lengthPtr = *(size_t *) objPtr->internalRep.twoPtrValue.ptr1;
     return result;
 }
+#endif /* TCL_MAJOR_VERSION > 8 */
 
 /*
  * Local Variables:

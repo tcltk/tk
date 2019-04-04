@@ -831,7 +831,7 @@ Tk_SelectionObjCmd(
 	const char *targetName = NULL;
 	const char *formatName = NULL;
 	register CommandInfo *cmdInfoPtr;
-	size_t cmdLength;
+	TkSizeT cmdLength;
 	static const char *const handleOptionStrings[] = {
 	    "-format", "-selection", "-type", NULL
 	};

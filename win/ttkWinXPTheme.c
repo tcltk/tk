@@ -826,7 +826,7 @@ static void TextElementSize(
     RECT rc = {0, 0};
     HRESULT hr = S_OK;
     const char *src;
-    size_t len;
+    TkSizeT len;
     Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, 0))
@@ -865,7 +865,7 @@ static void TextElementDraw(
     RECT rc = BoxToRect(b);
     HRESULT hr = S_OK;
     const char *src;
-    size_t len;
+    TkSizeT len;
     Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, d))
@@ -1116,7 +1116,7 @@ Ttk_CreateVsapiElement(
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
     int flags = 0;
-    size_t length = 0;
+    TkSizeT length = 0;
     char *name;
     LPWSTR wname;
     Ttk_ElementSpec *elementSpec = &GenericElementSpec;

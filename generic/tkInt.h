@@ -1279,12 +1279,17 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
     MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
 #endif
 
+#if TCL_MAJOR_VERSION > 8
 #define TkGetStringFromObj(objPtr, lenPtr) \
 	(((objPtr)->bytes ? 0 : Tcl_GetString(objPtr)), \
 	*(lenPtr) = (objPtr)->length, (objPtr)->bytes)
-
 MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
 	size_t *lengthPtr);
+#else
+#define TkGetStringFromObj Tcl_GetStringFromObj
+#define TkGetByteArrayFromObj Tcl_GetByteArrayFromObj
+#endif
+
 
 /*
  * Unsupported commands.
