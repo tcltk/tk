@@ -144,59 +144,61 @@ static CGRect NormalizeButtonBounds(
 static CGFloat windowBackground[4] = {235.0/255, 235.0/255, 235.0/255, 1.0};
 
 /*
- * GetBoxColor --
+ * GetBackgroundColor --
  *
- * Compute a contrasting box color, based on nesting depth, and save the
- * RGBA components in an array.  Used by the Fill and Background elements.
+ * Fills the array rgba with the color coordinates for a background color.
+ * Start with the background color of a window's geometry master, or the
+ * standard ttk window background if not. If the contrast parameter is nonzero
+ * modify this color to be darker, for the aqua appearance, or lighter for the
+ * DarkAqua appearance.  This is used by the Fill and Background elements.
  */
 
-static int GetBoxColor(
+static void GetBackgroundColor(
     CGContextRef context,
     Tk_Window tkwin,
-    int depth,
-    CGFloat *fill)
+    int contrast,
+    CGFloat *rgba)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    if ([NSApp macMinorVersion] > 13) {
-        NSColor *windowColor = [[NSColor windowBackgroundColor]
-				   colorUsingColorSpace: deviceRGB];
-        [windowColor getComponents: fill];
-    } else {
-	for (int i = 0; i < 4; i++) {
-	    fill[i] = windowBackground[i];
-	}
-    }
-    int isDark  = (fill[0] + fill[1] + fill[2] < 1.5);
-
-    /*
-     * Compute the nesting depth of the widget.
-     */
-
-    for (TkWindow *masterPtr = (TkWindow *)Tk_GeomMaster(tkwin); masterPtr != NULL;
-	 masterPtr = (TkWindow *)Tk_GeomMaster(masterPtr)) {
-	if (masterPtr->privatePtr &&
-	    (masterPtr->privatePtr->flags & TTK_HAS_DARKER_BG)) {
-	    depth++;
-	}
-	if (depth > 7) {
+    TkWindow *winPtr = (TkWindow *)tkwin;
+    TkWindow *masterPtr = (TkWindow *)Tk_GetGeomMaster(tkwin);
+    while (masterPtr != NULL) {
+	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
+	masterPtr = (TkWindow *)Tk_GetGeomMaster(masterPtr);
     }
-
-    /*
-     * Increase the contrast by one step for each level of nesting.
-     */
-
-    if (isDark) {
-	for (int i=0; i<3; i++) {
-	    fill[i] += (1.0 + depth*7.0)/255.0;
+    if (masterPtr) {
+	for (int i = 0; i < 4; i++) {
+	    rgba[i] = masterPtr->privatePtr->fillRGBA[i];
 	}
     } else {
-	for (int i=0; i<3; i++) {
-	    fill[i] -= (depth*8.0)/255.0;
+	if ([NSApp macMinorVersion] > 13) {
+	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	    NSColor *windowColor = [[NSColor windowBackgroundColor]
+				       colorUsingColorSpace: deviceRGB];
+	    [windowColor getComponents: rgba];
+	} else {
+	    for (int i = 0; i < 4; i++) {
+		rgba[i] = windowBackground[i];
+	    }
 	}
     }
-    return depth;
+    if (contrast) {
+	int isDark  = (rgba[0] + rgba[1] + rgba[2] < 1.5);
+	if (isDark) {
+	    for (int i=0; i<3; i++) {
+		rgba[i] += 8.0/255.0;
+	    }
+	} else {
+	    for (int i=0; i<3; i++) {
+		rgba[i] -= 8.0/255.0;
+	    }
+	}
+	winPtr->privatePtr->flags |= TTK_HAS_CONTRASTING_BG;
+	for (int i = 0; i < 4; i++) {
+	    winPtr->privatePtr->fillRGBA[i] = rgba[i];
+	}
+    }
 }
 
 /*
@@ -216,7 +218,7 @@ static void DrawGroupBox(
     NSColor *borderColor, *bgColor;
     static CGFloat border[4] = {1.0, 1.0, 1.0, 0.25};
     CGFloat fill[4];
-    GetBoxColor(context, tkwin, 1, fill);
+    GetBackgroundColor(context, tkwin, 1, fill);
     bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
 				     count: 4];
     CGContextSetFillColorSpace(context, deviceRGB.CGColorSpace);
@@ -816,6 +818,10 @@ static void DrawDarkSeparator(
  * +++ Button element: Used for elements drawn with DrawThemeButton.
  */
 
+/*
+ * When Ttk draws the various types of buttons, a pointer to one of these
+ * is passed as the clientData.
+ */
 
 typedef struct {
     ThemeButtonKind kind;
@@ -1174,9 +1180,6 @@ static void PaneElementDraw(
 #endif
     END_DRAWING
     [TkMacOSXDrawableView(macWin) setNeedsDisplay:YES];
-    if (macWin != NULL) {
-	macWin->flags |= TTK_HAS_DARKER_BG;
-    }
 }
 
 static Ttk_ElementSpec PaneElementSpec = {
@@ -1209,7 +1212,6 @@ static void GroupElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
     CGRect bounds = BoxToRect(d, b);
 
     BEGIN_DRAWING(d)
@@ -1224,9 +1226,6 @@ static void GroupElementDraw(
     ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
 #endif
     END_DRAWING
-    if (winPtr->privatePtr != NULL) {
-	winPtr->privatePtr->flags |= TTK_HAS_DARKER_BG;
-    }
 }
 
 static Ttk_ElementSpec GroupElementSpec = {
@@ -2112,26 +2111,28 @@ static void FillElementDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
-    BEGIN_DRAWING(d)
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *bgColor;
     CGFloat fill[4];
-    GetBoxColor(dc.context, tkwin, 0, fill);
+    BEGIN_DRAWING(d)
+    GetBackgroundColor(dc.context, tkwin, 0, fill);
     bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
 				     count: 4];
     CGContextSetFillColorSpace(dc.context, deviceRGB.CGColorSpace);
     CGContextSetFillColorWithColor(dc.context, bgColor.CGColor);
     CGContextFillRect(dc.context, bounds);
+    END_DRAWING
 #else
     ThemeBrush brush = (state & TTK_STATE_BACKGROUND)
 	    ? kThemeBrushModelessDialogBackgroundInactive
 	    : kThemeBrushModelessDialogBackgroundActive;
+    BEGIN_DRAWING(d)
     ChkErr(HIThemeSetFill, brush, NULL, dc.context, HIOrientation);
     //QDSetPatternOrigin(PatternOrigin(tkwin, d));
     CGContextFillRect(dc.context, bounds);
-#endif
     END_DRAWING
+#endif
 }
 
 static void BackgroundElementDraw(

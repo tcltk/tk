@@ -425,7 +425,7 @@ Tk_MaintainGeometry(
     Tk_Window ancestor, parent;
     TkDisplay *dispPtr = ((TkWindow *) master)->dispPtr;
 
-    Tk_GeomMaster(slave) = master;
+    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)master;
     
     if (master == Tk_Parent(slave)) {
 	/*
@@ -572,7 +572,7 @@ Tk_UnmaintainGeometry(
     Tk_Window ancestor;
     TkDisplay *dispPtr = ((TkWindow *) slave)->dispPtr;
 
-    Tk_GeomMaster(slave) = NULL;
+    ((TkWindow *)slave)->maintainerPtr = NULL;
 
     if (master == Tk_Parent(slave)) {
 	/*

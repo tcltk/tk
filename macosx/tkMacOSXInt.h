@@ -71,6 +71,7 @@ struct TkWindowPrivate {
 				 * gone. */
     struct TkWindowPrivate *toplevel;
 				/* Pointer to the toplevel datastruct. */
+    CGFloat fillRGBA[4];        /* Background used by the ttk FillElement */
     int flags;			/* Various state see defines below. */
 };
 typedef struct TkWindowPrivate MacDrawable;
@@ -86,7 +87,7 @@ typedef struct TkWindowPrivate MacDrawable;
 #define TK_IS_PIXMAP		0x10
 #define TK_IS_BW_PIXMAP		0x20
 #define TK_DO_NOT_DRAW          0x40
-#define TTK_HAS_DARKER_BG       0x80
+#define TTK_HAS_CONTRASTING_BG  0x80
 
 /*
  * I am reserving TK_EMBEDDED = 0x100 in the MacDrawable flags
@@ -211,3 +212,12 @@ MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
 #include "tkIntPlatDecls.h"
 
 #endif /* _TKMACINT */
+
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */
