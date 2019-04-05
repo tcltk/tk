@@ -2938,6 +2938,7 @@ ConfigureSlaves(
     Gridder *masterPtr = NULL;
     Gridder *slavePtr;
     Tk_Window other, slave, parent, ancestor;
+    TkWindow *master;
     int i, j, tmp;
     int numWindows;
     int width;
@@ -3355,7 +3356,7 @@ ConfigureSlaves(
 	 * Check for management loops.
 	 */
 
-	for (TkWindow *master = (TkWindow *)masterPtr->tkwin; master != NULL;
+	for (master = (TkWindow *)masterPtr->tkwin; master != NULL;
 	     master = (TkWindow *)Tk_GetGeomMaster(master)) {
 	    if (master == (TkWindow *)slave) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(

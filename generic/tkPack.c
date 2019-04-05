@@ -1522,6 +1522,7 @@ ConfigureSlaves(
 {
     Packer *masterPtr, *slavePtr, *prevPtr, *otherPtr;
     Tk_Window other, slave, parent, ancestor;
+    TkWindow *master;
     int i, j, numWindows, tmp, positionGiven;
     const char *string;
     static const char *const optionStrings[] = {
@@ -1802,7 +1803,7 @@ ConfigureSlaves(
 	 * Check for management loops.
 	 */
 
-	for (TkWindow *master = (TkWindow *)masterPtr->tkwin; master != NULL;
+	for (master = (TkWindow *)masterPtr->tkwin; master != NULL;
 	     master = (TkWindow *)Tk_GetGeomMaster(master)) {
 	    if (master == (TkWindow *)slave) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(

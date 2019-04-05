@@ -617,6 +617,7 @@ ConfigureSlave(
     int mask;
     Slave *slavePtr;
     Tk_Window masterWin = (Tk_Window) NULL;
+    TkWindow *master;
 
     if (Tk_TopWinHierarchy(tkwin)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -699,7 +700,7 @@ ConfigureSlave(
 	 * Check for management loops.
 	 */
 
-	for (TkWindow *master = (TkWindow *)tkwin; master != NULL;
+	for (master = (TkWindow *)tkwin; master != NULL;
 	     master = (TkWindow *)Tk_GetGeomMaster(master)) {
 	    if (master == (TkWindow *)slavePtr->tkwin) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
