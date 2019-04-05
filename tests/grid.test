@@ -204,7 +204,6 @@ test grid-3.11 {configure: basic argument checking} -body {
     frame .f2
     grid .f1 -in .f2
     grid .f2 -in .f1
-    update
 } -cleanup {
     grid_reset 3.11
 } -returnCodes error -result {can't put .f2 inside .f1, would cause management loop}

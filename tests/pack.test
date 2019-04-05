@@ -989,10 +989,8 @@ test pack-10.6 {prevent management loops} -body {
     frame .f1
     frame .f2
     frame .f3
-    puts "packing frames"
     pack .f1 -in .f2
     pack .f2 -in .f3
-#    update idletasks
     pack .f3 -in .f1
 } -cleanup {
     destroy .f1
