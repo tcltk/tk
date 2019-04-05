@@ -1799,6 +1799,25 @@ ConfigureSlaves(
 	}
 
 	/*
+	 * Check for management loops.
+	 */
+
+	for (TkWindow *master = (TkWindow *)masterPtr->tkwin; master != NULL;
+	     master = (TkWindow *)Tk_GetGeomMaster(master)) {
+	    if (master == (TkWindow *)slave) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't put %s inside %s, would cause management loop",
+	            Tcl_GetString(objv[j]), Tk_PathName(masterPtr->tkwin)));
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
+		Unlink(slavePtr);
+		return TCL_ERROR;
+	    }
+	}
+	if (masterPtr->tkwin != Tk_Parent(slave)) {
+	    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)masterPtr->tkwin;
+	}
+
+	/*
 	 * Unpack the slave if it's currently packed, then position it after
 	 * prevPtr.
 	 */
