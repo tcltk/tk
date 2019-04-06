@@ -701,7 +701,7 @@ ConfigureSlave(
 	 */
 
 	for (master = (TkWindow *)tkwin; master != NULL;
-	     master = (TkWindow *)Tk_GetGeomMaster(master)) {
+	     master = (TkWindow *)TkGetGeomMaster(master)) {
 	    if (master == (TkWindow *)slavePtr->tkwin) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put %s inside %s, would cause management loop",
