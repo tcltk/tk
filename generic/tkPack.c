@@ -1804,13 +1804,12 @@ ConfigureSlaves(
 	 */
 
 	for (master = (TkWindow *)masterPtr->tkwin; master != NULL;
-	     master = (TkWindow *)Tk_GetGeomMaster(master)) {
+	     master = (TkWindow *)TkGetGeomMaster(master)) {
 	    if (master == (TkWindow *)slave) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put %s inside %s, would cause management loop",
 	            Tcl_GetString(objv[j]), Tk_PathName(masterPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
-		Unlink(slavePtr);
 		return TCL_ERROR;
 	    }
 	}
