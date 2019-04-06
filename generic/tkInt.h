@@ -344,6 +344,9 @@ typedef struct TkDisplay {
 				 * by that master. */
     int geomInit;
 
+#define TkGetGeomMaster(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
+    ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
+
     /*
      * Information used by tkGet.c only:
      */
@@ -794,6 +797,11 @@ typedef struct TkWindow {
 				/* Information about geometry manager for this
 				 * window. */
     ClientData geomData;	/* Argument for geometry manager functions. */
+    char *geomMgrName;          /* Records the name of the geometry manager. */
+    struct TkWindow *maintainerPtr;
+                                /* The geometry master for this window. The
+				 * value is NULL if the window has no master or
+				 * if its master is its parent. */
     int reqWidth, reqHeight;	/* Arguments from last call to
 				 * Tk_GeometryRequest, or 0's if
 				 * Tk_GeometryRequest hasn't been called. */
@@ -837,7 +845,6 @@ typedef struct TkWindow {
 
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
-    char *geometryMaster;
 #ifdef TK_USE_INPUT_METHODS
     int ximGeneration;          /* Used to invalidate XIC */
 #endif /* TK_USE_INPUT_METHODS */
