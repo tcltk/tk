@@ -150,7 +150,8 @@ static CGFloat windowBackground[4] = {235.0/255, 235.0/255, 235.0/255, 1.0};
  * Start with the background color of a window's geometry master, or the
  * standard ttk window background if not. If the contrast parameter is nonzero
  * modify this color to be darker, for the aqua appearance, or lighter for the
- * DarkAqua appearance.  This is used by the Fill and Background elements.
+ * DarkAqua appearance.  This is primarily used by the Fill and Background
+ * elements.
  */
 
 static void GetBackgroundColor(
@@ -160,12 +161,12 @@ static void GetBackgroundColor(
     CGFloat *rgba)
 {
     TkWindow *winPtr = (TkWindow *)tkwin;
-    TkWindow *masterPtr = (TkWindow *)Tk_GetGeomMaster(tkwin);
+    TkWindow *masterPtr = (TkWindow *)TkGetGeomMaster(tkwin);
     while (masterPtr != NULL) {
 	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
-	masterPtr = (TkWindow *)Tk_GetGeomMaster(masterPtr);
+	masterPtr = (TkWindow *)TkGetGeomMaster(masterPtr);
     }
     if (masterPtr) {
 	for (int i = 0; i < 4; i++) {
@@ -312,6 +313,9 @@ static CGFloat darkDisabledButtonFace[4] = {86.0/255, 87.0/255, 89.0/255, 1.0};
 static CGFloat darkInactiveSelectedTab[4] = {159.0/255, 160.0/255, 161.0/255, 1.0};
 static CGFloat darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
 static CGFloat darkTrack[4] = {1.0, 1.0, 1.0, 0.25};
+static CGFloat darkFrameTop[4] = {1.0, 1.0, 1.0, 0.0625};
+static CGFloat darkFrameBottom[4] = {1.0, 1.0, 1.0, 0.125};
+static CGFloat darkFrameAccent[4] = {0.0, 0.0, 0.0, 0.0625};
 static CGFloat darkTopGradient[8] = {1.0, 1.0, 1.0, 0.3,
 				     1.0, 1.0, 1.0, 0.0};
 static CGFloat darkBackgroundGradient[8] = {0.0, 0.0, 0.0, 0.1,
@@ -471,7 +475,8 @@ static void DrawDarkButton(
 	 * If the toplevel is front, paint the button blue.
 	 */
 
-	if (!(state & TTK_STATE_BACKGROUND)) {
+	if (!(state & TTK_STATE_BACKGROUND) &&
+	    !(state & TTK_STATE_DISABLED)) {
 	    GradientFillRoundedRectangle(context, arrowBounds, 4,
 				   darkSelectedGradient, 2);
 	}
@@ -812,6 +817,56 @@ static void DrawDarkSeparator(
     CGContextFillRect(context, bounds);
 }
 
+/*
+ * DrawDarkFrame --
+ *
+ *    This is a standalone drawing procedure which draws various
+ *    types of borders in Dark Mode.
+ */
+
+static void DrawDarkFrame(
+    CGRect bounds,
+    CGContextRef context,
+    HIThemeFrameKind kind)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *stroke;
+    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
+    CGFloat x = bounds.origin.x, y = bounds.origin.y;
+    CGFloat w = bounds.size.width, h = bounds.size.height;
+    CGPoint topPart[4] = {{x, y + h - 1}, {x, y}, {x + w, y}, {x + w, y + h - 1}};
+    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}}; 
+    CGPoint accent[2] = {{x, y + 1}, {x + w, y + 1}};
+    switch(kind) {
+    case kHIThemeFrameTextFieldSquare:
+	CGContextSaveGState(context);
+	CGContextSetShouldAntialias(context, false);
+	stroke = [NSColor colorWithColorSpace: deviceRGB
+				       components: darkFrameTop
+					    count: 4];
+	CGContextSetStrokeColorWithColor(context, stroke.CGColor);
+	CGContextBeginPath(context);
+	CGContextAddLines(context, topPart, 4);
+	CGContextStrokePath(context);
+	stroke = [NSColor colorWithColorSpace: deviceRGB
+				   components: darkFrameBottom
+					count: 4];
+	CGContextSetStrokeColorWithColor(context, stroke.CGColor);
+	CGContextAddLines(context, bottom, 2);
+	CGContextStrokePath(context);
+	stroke = [NSColor colorWithColorSpace: deviceRGB
+				   components: darkFrameAccent
+					count: 4];
+	CGContextSetStrokeColorWithColor(context, stroke.CGColor);
+	CGContextAddLines(context, accent, 2);
+	CGContextStrokePath(context);
+	CGContextRestoreGState(context);
+	break;
+    default:
+	break;
+    }
+}
+			  
 #endif /* MAC_OS_X_VERSION_MIN_REQUIRED >101300 */
 
 /*----------------------------------------------------------------------
@@ -1263,27 +1318,35 @@ static void EntryElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    EntryElement *e = elementRecord;
-    Tk_3DBorder backgroundPtr = Tk_Get3DBorderFromObj(tkwin,e->backgroundObj);
     Ttk_Box inner = Ttk_PadBox(b, Ttk_UniformPadding(3));
     CGRect bounds = BoxToRect(d, inner);
-    const HIThemeFrameDrawInfo info = {
-	.version = 0,
-	.kind = kHIThemeFrameTextFieldSquare,
-	.state = Ttk_StateTableLookup(ThemeStateTable, state),
-	.isFocused = state & TTK_STATE_FOCUS,
-    };
-
-    /*
-     * Erase w/background color:
-     */
-
-    XFillRectangle(Tk_Display(tkwin), d,
-	    Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
-	    inner.x, inner.y, inner.width, inner.height);
+    NSColor *background;
 
     BEGIN_DRAWING(d)
-    ChkErr(HIThemeDrawFrame, &bounds, &info, dc.context, HIOrientation);
+    if (TkMacOSXInDarkMode(tkwin)) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
+	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+	CGFloat fill[4];
+	GetBackgroundColor(dc.context, tkwin, 1, fill);
+	background = [NSColor colorWithColorSpace: deviceRGB
+				       components: fill
+					    count: 4];
+	CGContextSetFillColorWithColor(dc.context, background.CGColor);
+	CGContextFillRect(dc.context, bounds);
+	DrawDarkFrame(bounds, dc.context, kHIThemeFrameTextFieldSquare);
+#endif
+    } else {
+	const HIThemeFrameDrawInfo info = {
+	    .version = 0,
+	    .kind = kHIThemeFrameTextFieldSquare,
+	    .state = Ttk_StateTableLookup(ThemeStateTable, state),
+	    .isFocused = state & TTK_STATE_FOCUS,
+	};
+	background = [NSColor textBackgroundColor];
+	CGContextSetFillColorWithColor(dc.context, background.CGColor);
+	CGContextFillRect(dc.context, bounds);
+	ChkErr(HIThemeDrawFrame, &bounds, &info, dc.context, HIOrientation);
+    }
     /*if (state & TTK_STATE_FOCUS) {
 	ChkErr(DrawThemeFocusRect, &bounds, 1);
     }*/
