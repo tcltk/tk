@@ -80,6 +80,7 @@ test grid-1.9 {basic argument checking} -body {
     grid_reset 1.9
 } -returnCodes ok -result {}
 
+
 test grid-2.1 {bbox} -body {
     grid bbox .
 } -result {0 0 0 0}
@@ -192,6 +193,30 @@ test grid-3.9 {configure: basic argument checking} -body {
 } -cleanup {
     grid_reset 3.9
 } -returnCodes error -result {invalid window shortcut, "y" should be '-', 'x', or '^'}
+test grid-3.10 {configure: basic argument checking} -body {
+    frame .f
+    grid .f -in .f
+} -cleanup {
+    grid_reset 3.10
+} -returnCodes error -result {window can't be managed in itself}
+test grid-3.11 {configure: basic argument checking} -body {
+    frame .f1
+    frame .f2
+    grid .f1 -in .f2
+    grid .f2 -in .f1
+} -cleanup {
+    grid_reset 3.11
+} -returnCodes error -result {can't put .f2 inside .f1, would cause management loop}
+test grid-3.12 {configure: basic argument checking} -body {
+    frame .f1
+    frame .f2
+    frame .f3
+    grid .f1 -in .f2
+    grid .f2 -in .f3
+    grid .f3 -in .f1
+} -cleanup {
+    grid_reset 3.12
+} -returnCodes error -result {can't put .f3 inside .f1, would cause management loop}
 
 test grid-4.1 {forget: basic argument checking} -body {
     grid forget foo
