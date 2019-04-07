@@ -193,13 +193,13 @@ test grid-3.9 {configure: basic argument checking} -body {
 } -cleanup {
     grid_reset 3.9
 } -returnCodes error -result {invalid window shortcut, "y" should be '-', 'x', or '^'}
-test grid-3.10 {configure: basic argument checking} -body {
+test grid-3.10 {ConfigureSlave procedure, bad -in option} -body {
     frame .f
     grid .f -in .f
 } -cleanup {
     grid_reset 3.10
 } -returnCodes error -result {window can't be managed in itself}
-test grid-3.11 {configure: basic argument checking} -body {
+test grid-3.11 {prevent management loops} -body {
     frame .f1
     frame .f2
     grid .f1 -in .f2
@@ -207,7 +207,7 @@ test grid-3.11 {configure: basic argument checking} -body {
 } -cleanup {
     grid_reset 3.11
 } -returnCodes error -result {can't put .f2 inside .f1, would cause management loop}
-test grid-3.12 {configure: basic argument checking} -body {
+test grid-3.12 {prevent management loops} -body {
     frame .f1
     frame .f2
     frame .f3
