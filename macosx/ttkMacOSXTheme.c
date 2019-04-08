@@ -54,6 +54,7 @@
 
 #define TTK_STATE_FIRST_TAB	TTK_STATE_USER1
 #define TTK_STATE_LAST_TAB 	TTK_STATE_USER2
+#define TTK_TREEVIEW_STATE_SORTARROW	TTK_STATE_USER1
 
 /*----------------------------------------------------------------------
  * +++ Utilities.
@@ -142,6 +143,8 @@ static CGRect NormalizeButtonBounds(
  */
 
 static CGFloat windowBackground[4] = {235.0/255, 235.0/255, 235.0/255, 1.0};
+static CGFloat whiteRGBA[4] = {1.0, 1.0, 1.0, 1.0};
+static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
 
 /*
  * GetBackgroundColor --
@@ -290,6 +293,139 @@ static void GradientFillRoundedRectangle(
     CFRelease(gradient);
 }
 
+
+static void DrawUpDownArrows(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height/2);
+    CGContextBeginPath(context);
+    CGPoint bottomArrow[3] = {{x, y+2}, {x+size/2, y+2+size/2}, {x+size, y+2}};
+    CGContextAddLines(context, bottomArrow, 3);
+    CGPoint topArrow[3] = {{x, y-2}, {x+size/2, y-2-size/2}, {x+size, y-2}};
+    CGContextAddLines(context, topArrow, 3);
+    CGContextStrokePath(context);
+}
+
+static void DrawDownArrow(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height/2);
+    CGContextBeginPath(context);
+    CGPoint arrow[3] = {{x, y-size/4}, {x+size/2, y+size/4}, {x+size, y-size/4}};
+    CGContextAddLines(context, arrow, 3);
+    CGContextStrokePath(context);
+}
+
+static void DrawUpArrow(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height/2);
+    CGContextBeginPath(context);
+    CGPoint arrow[3] = {{x, y+size/4}, {x+size/2, y-size/4}, {x+size, y+size/4}};
+    CGContextAddLines(context, arrow, 3);
+    CGContextStrokePath(context);
+}
+
+/*
+ * DrawListHeader --
+ *
+ *    This is a standalone drawing procedure which draws column
+ *    headers for a Treeview in the Aqua appearance.  The HITheme
+ *    headers have not matched the native ones since OSX 10.8.
+ *    Note that the header image is ignored, but we draw arrows
+ *    according to the state.
+ */
+
+static void DrawListHeader(
+    CGRect bounds,
+    CGContextRef context,
+    Tk_Window tkwin,
+    int state)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *strokeColor, *bgColor;
+    static CGFloat borderRGBA[4] = {200.0/255, 200.0/255, 200.0/255, 1.0};
+    static CGFloat separatorRGBA[4] = {220.0/255, 220.0/255, 220.0/255, 1.0};
+    static CGFloat activeBgRGBA[4] = {238.0/255, 238.0/255, 238.0/255, 1.0};
+    static CGFloat inactiveBgRGBA[4] = {246.0/255, 246.0/255, 246.0/255, 1.0};
+
+    /*
+     * Apple changes the background of a list header when the window is not
+     * active.  But Ttk does not indicate that in the state of a TreeHeader.
+     * So we have to query the Apple window manager.
+     */
+
+    NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    CGFloat *bgRGBA = [win isKeyWindow] ? activeBgRGBA : inactiveBgRGBA;
+    CGFloat x = bounds.origin.x, y = bounds.origin.y;
+    CGFloat w = bounds.size.width, h = bounds.size.height;
+    CGPoint top[2] = {{x, y + 1}, {x + w, y + 1}};
+    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}}; 
+    CGPoint separator[2] = {{x + w - 1, y + 3}, {x + w - 1, y + h - 3}};
+    
+    bgColor = [NSColor colorWithColorSpace: deviceRGB
+     			       components: bgRGBA
+     				    count: 4];
+    CGContextSaveGState(context);
+    CGContextSetShouldAntialias(context, false);
+    CGContextSetFillColorSpace(context, deviceRGB.CGColorSpace);
+    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
+    CGContextBeginPath(context);
+    CGContextSetFillColorWithColor(context, bgColor.CGColor);
+    CGContextAddRect(context, bounds);
+    CGContextFillPath(context);
+    strokeColor = [NSColor colorWithColorSpace: deviceRGB
+			       components: separatorRGBA
+				    count: 4];
+    CGContextSetStrokeColorWithColor(context, strokeColor.CGColor);
+    CGContextAddLines(context, separator, 2);
+    CGContextStrokePath(context);
+    strokeColor = [NSColor colorWithColorSpace: deviceRGB
+			       components: borderRGBA
+				    count: 4];
+    CGContextSetStrokeColorWithColor(context, strokeColor.CGColor);
+    CGContextAddLines(context, top, 2);
+    CGContextStrokePath(context);
+    CGContextAddLines(context, bottom, 2);
+    CGContextStrokePath(context);
+    CGContextRestoreGState(context);
+
+    if (state & TTK_TREEVIEW_STATE_SORTARROW) {
+	CGRect arrowBounds = bounds;
+	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
+	arrowBounds.size.width = 16;
+	if (state & TTK_STATE_ALTERNATE) {
+	    DrawUpArrow(context, arrowBounds, 3, 8, blackRGBA);
+	} else if (state & TTK_STATE_SELECTED) {
+	    DrawDownArrow(context, arrowBounds, 3, 8, blackRGBA);
+	}
+    }
+}
+
 #endif /* MAC_OS_X_VERSION_MIN_REQUIRED > 1080 */
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
@@ -378,43 +514,6 @@ static void HighlightButtonBorder(
     CFRelease(topGradient);
 }
 
-
-static void DrawUpDownArrows(
-    CGContextRef context,
-    CGRect bounds,
-    CGFloat inset,
-    CGFloat size)
-{
-    CGFloat x, y;
-    CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
-    CGContextSetLineWidth(context, 1.5);
-    x = bounds.origin.x + inset;
-    y = bounds.origin.y + trunc(bounds.size.height/2);
-    CGContextBeginPath(context);
-    CGPoint bottomArrow[3] = {{x, y+2}, {x+size/2, y+2+size/2}, {x+size, y+2}};
-    CGContextAddLines(context, bottomArrow, 3);
-    CGPoint topArrow[3] = {{x, y-2}, {x+size/2, y-2-size/2}, {x+size, y-2}};
-    CGContextAddLines(context, topArrow, 3);
-    CGContextStrokePath(context);
-}
-
-static void DrawDownArrow(
-    CGContextRef context,
-    CGRect bounds,
-    CGFloat inset,
-    CGFloat size)
-{
-    CGFloat x, y;
-    CGContextSetRGBStrokeColor(context, 1.0, 1.0, 1.0, 1.0);
-    CGContextSetLineWidth(context, 1.5);
-    x = bounds.origin.x + inset;
-    y = bounds.origin.y + trunc(bounds.size.height/2);
-    CGContextBeginPath(context);
-    CGPoint bottomArrow[3] = {{x, y-size/2}, {x+size/2, y+size/2}, {x+size, y-size/2}};
-    CGContextAddLines(context, bottomArrow, 3);
-    CGContextStrokePath(context);
-}
-
 /*
  * DrawDarkButton --
  *
@@ -481,9 +580,9 @@ static void DrawDarkButton(
 				   darkSelectedGradient, 2);
 	}
 	if (kind == kThemePopupButton) {
-	    DrawUpDownArrows(context, arrowBounds, 5, 7);
+	    DrawUpDownArrows(context, arrowBounds, 3, 7, whiteRGBA);
 	} else {
-	    DrawDownArrow(context, arrowBounds, 5, 7);
+	    DrawDownArrow(context, arrowBounds, 4, 8, whiteRGBA);
 	}
     }
 
@@ -542,7 +641,7 @@ static void DrawDarkIncDecButton(
 				   darkSelectedGradient, 2);
 	CGContextRestoreGState(context);
     }
-    DrawUpDownArrows(context, bounds, 3, 5);
+    DrawUpDownArrows(context, bounds, 3, 5, whiteRGBA);
     HighlightButtonBorder(context, bounds);
 }
 
@@ -841,11 +940,11 @@ static void DrawDarkFrame(
     case kHIThemeFrameTextFieldSquare:
 	CGContextSaveGState(context);
 	CGContextSetShouldAntialias(context, false);
+	CGContextBeginPath(context);
 	stroke = [NSColor colorWithColorSpace: deviceRGB
 				       components: darkFrameTop
 					    count: 4];
 	CGContextSetStrokeColorWithColor(context, stroke.CGColor);
-	CGContextBeginPath(context);
 	CGContextAddLines(context, topPart, 4);
 	CGContextStrokePath(context);
 	stroke = [NSColor colorWithColorSpace: deviceRGB
@@ -866,7 +965,56 @@ static void DrawDarkFrame(
 	break;
     }
 }
-			  
+
+/*
+ * DrawListHeader --
+ *
+ *    This is a standalone drawing procedure which draws column
+ *    headers for a Treeview in the Dark Mode.
+ */
+
+static void DrawDarkListHeader(
+    CGRect bounds,
+    CGContextRef context,
+    Tk_Window tkwin,
+    int state)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *stroke;
+    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
+    CGFloat x = bounds.origin.x, y = bounds.origin.y;
+    CGFloat w = bounds.size.width, h = bounds.size.height;
+    CGPoint top[2] = {{x, y}, {x + w, y}};
+    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}}; 
+    CGPoint separator[2] = {{x + w, y + 3}, {x + w, y + h - 3}};
+
+    CGContextSaveGState(context);
+    CGContextSetShouldAntialias(context, false);
+    stroke = [NSColor colorWithColorSpace: deviceRGB
+			       components: darkFrameBottom
+				    count: 4];
+    CGContextSetStrokeColorWithColor(context, stroke.CGColor);
+    CGContextBeginPath(context);
+    CGContextAddLines(context, top, 2);
+    CGContextStrokePath(context);
+    CGContextAddLines(context, bottom, 2);
+    CGContextStrokePath(context);
+    CGContextAddLines(context, separator, 2);
+    CGContextStrokePath(context);
+    CGContextRestoreGState(context);
+
+    if (state & TTK_TREEVIEW_STATE_SORTARROW) {
+	CGRect arrowBounds = bounds;
+	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
+	arrowBounds.size.width = 16;
+	if (state & TTK_STATE_ALTERNATE) {
+	    DrawUpArrow(context, arrowBounds, 3, 8, whiteRGBA);
+	} else if (state & TTK_STATE_SELECTED) {
+	    DrawDownArrow(context, arrowBounds, 3, 8, whiteRGBA);
+	}
+    }
+}
+
 #endif /* MAC_OS_X_VERSION_MIN_REQUIRED >101300 */
 
 /*----------------------------------------------------------------------
@@ -1057,8 +1205,8 @@ static void ButtonElementDraw(
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 	if (info.kind == kThemePopupButton && (state & TTK_STATE_BACKGROUND)) {
 	    CGRect innerBounds = CGRectInset(bounds, 1, 1);
-	    NSColor *white = [NSColor whiteColor];
-	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, white);
+	    NSColor *whiteRGBA = [NSColor whiteColor];
+	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, whiteRGBA);
 	}
 #endif
 
@@ -1303,7 +1451,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec EntryElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	    Tk_Offset(EntryElement,backgroundObj), "white" },
+	    Tk_Offset(EntryElement,backgroundObj), "whiteRGBA" },
     {0}
 };
 
@@ -2298,7 +2446,6 @@ static Ttk_ElementSpec FieldElementSpec = {
  *    Redefine the header to use a kThemeListHeaderButton.
  */
 
-#define TTK_TREEVIEW_STATE_SORTARROW	TTK_STATE_USER1
 static Ttk_StateTable TreeHeaderValueTable[] = {
     { kThemeButtonOn, TTK_STATE_ALTERNATE},
     { kThemeButtonOn, TTK_STATE_SELECTED},
@@ -2315,6 +2462,41 @@ static Ttk_StateTable TreeHeaderAdornmentTable[] = {
     { kThemeAdornmentNone, 0}
 };
 
+static void TreeAreaElementSize (
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+{ 
+    /*
+     * Padding is needed to get the heading text to align correctly, since the
+     * widget expects the heading to be the same height as a row.
+     */
+
+   if ([NSApp macMinorVersion] > 8) {
+       paddingPtr->top = 4;
+    }
+}
+
+static Ttk_ElementSpec TreeAreaElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(NullElement),
+    TtkNullElementOptions,
+    TreeAreaElementSize,
+    TtkNullElementDraw
+};
+
+static void TreeHeaderElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+{
+    if ([NSApp macMinorVersion] > 8) {
+	*minHeight = 24;
+
+    } else {
+	ButtonElementSize(clientData, elementRecord, tkwin, minWidth,
+			  minHeight, paddingPtr);
+    }
+}
+
 static void TreeHeaderElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
@@ -2330,7 +2512,22 @@ static void TreeHeaderElementDraw(
     };
 
     BEGIN_DRAWING(d)
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+    if ([NSApp macMinorVersion] > 8) {
+
+	/*
+	 * Compensate for the padding added in TreeHeaderElementSize, so
+	 * the larger heading will be drawn at the top of the widget.
+	 */
+	
+	bounds.origin.y -= 4;
+	if (TkMacOSXInDarkMode(tkwin)) {
+	    DrawDarkListHeader(bounds, dc.context, tkwin, state);
+	} else {
+	    DrawListHeader(bounds, dc.context, tkwin, state);
+	}
+    } else {
+	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+    }
     END_DRAWING
 }
 
@@ -2338,7 +2535,7 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    ButtonElementSize,
+    TreeHeaderElementSize,
     TreeHeaderElementDraw
 };
 
@@ -2524,6 +2721,7 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElementSpec(themePtr, "Treeheading.cell",
 	&TreeHeaderElementSpec, &ListHeaderParams);
 
+    Ttk_RegisterElementSpec(themePtr, "Treeview.treearea", &TreeAreaElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Notebook.tab", &TabElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Notebook.client", &PaneElementSpec, 0);
 
