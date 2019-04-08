@@ -819,22 +819,22 @@ typedef struct Tk_FakeWin {
     char *dummy13;		/* selHandlerList */
     char *dummy14;		/* geomMgrPtr */
     ClientData dummy15;		/* geomData */
-    char *dummy16;		/* geomMgrName */
-    Tk_Window dummy17;		/* maintainerPtr */
     int reqWidth, reqHeight;
     int internalBorderLeft;
-    char *dummy18;		/* wmInfoPtr */
-    char *dummy19;		/* classProcPtr */
-    ClientData dummy20;		/* instanceData */
-    char *dummy21;		/* privatePtr */
+    char *dummy16;		/* wmInfoPtr */
+    char *dummy17;		/* classProcPtr */
+    ClientData dummy18;		/* instanceData */
+    char *dummy19;		/* privatePtr */
     int internalBorderRight;
     int internalBorderTop;
     int internalBorderBottom;
     int minReqWidth;
     int minReqHeight;
 #ifdef TK_USE_INPUT_METHODS
-    int dummy22;
+    int dummy20;
 #endif /* TK_USE_INPUT_METHODS */
+    char *dummy21;		/* geomMgrName */
+    Tk_Window dummy22;		/* maintainerPtr */
 } Tk_FakeWin;
 
 /*
