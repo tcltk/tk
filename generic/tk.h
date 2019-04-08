@@ -833,7 +833,7 @@ typedef struct Tk_FakeWin {
     int minReqWidth;
     int minReqHeight;
 #ifdef TK_USE_INPUT_METHODS
-    int dummy21;
+    int dummy22;
 #endif /* TK_USE_INPUT_METHODS */
 } Tk_FakeWin;
 
