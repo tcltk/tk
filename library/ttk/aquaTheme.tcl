@@ -109,7 +109,10 @@ namespace eval ttk::theme::aqua {
 	    }
 	
 	# Treeview:
-	ttk::style configure Heading -font TkHeadingFont -foreground black
+	ttk::style configure Heading \
+	    -font TkHeadingFont \
+	    -foreground systemTextColor \
+	    -background systemTtkBackground
 	ttk::style configure Treeview -rowheight 18 \
 	    -background systemTextBackgroundColor \
 	    -foreground systemTextColor \
