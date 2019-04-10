@@ -1447,11 +1447,16 @@ static Ttk_ElementSpec GroupElementSpec = {
 
 typedef struct {
     Tcl_Obj	*backgroundObj;
+    Tcl_Obj	*fieldbackgroundObj;
 } EntryElement;
+
+#define ENTRY_DEFAULT_BACKGROUND "systemTextBackgroundColor"
 
 static Ttk_ElementOptionSpec EntryElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	    Tk_Offset(EntryElement,backgroundObj), "whiteRGBA" },
+      Tk_Offset(EntryElement,backgroundObj), ENTRY_DEFAULT_BACKGROUND },
+    { "-fieldbackground", TK_OPTION_BORDER,
+      Tk_Offset(EntryElement,fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND },
     {0}
 };
 
@@ -1466,13 +1471,16 @@ static void EntryElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
+    EntryElement *e = elementRecord;
     Ttk_Box inner = Ttk_PadBox(b, Ttk_UniformPadding(3));
     CGRect bounds = BoxToRect(d, inner);
     NSColor *background;
+    Tk_3DBorder backgroundPtr = NULL;
+    static char *defaultBG = ENTRY_DEFAULT_BACKGROUND;
 
-    BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
+	BEGIN_DRAWING(d)
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	CGFloat fill[4];
 	GetBackgroundColor(dc.context, tkwin, 1, fill);
@@ -1482,6 +1490,7 @@ static void EntryElementDraw(
 	CGContextSetFillColorWithColor(dc.context, background.CGColor);
 	CGContextFillRect(dc.context, bounds);
 	DrawDarkFrame(bounds, dc.context, kHIThemeFrameTextFieldSquare);
+	END_DRAWING
 #endif
     } else {
 	const HIThemeFrameDrawInfo info = {
@@ -1490,15 +1499,38 @@ static void EntryElementDraw(
 	    .state = Ttk_StateTableLookup(ThemeStateTable, state),
 	    .isFocused = state & TTK_STATE_FOCUS,
 	};
-	background = [NSColor textBackgroundColor];
-	CGContextSetFillColorWithColor(dc.context, background.CGColor);
-	CGContextFillRect(dc.context, bounds);
+
+	/*
+	 * Earlier versions of the Aqua theme ignored the -fieldbackground
+	 * option and used the -background as if it were -fieldbackground.
+	 * Here we are enabling -fieldbackground.  For backwards compatibility,
+	 * if -fieldbackground is set to the default color and -background
+	 * is set to a different color then we use -background as -fieldbackground.
+	 */
+
+	if (0 != strcmp(Tcl_GetString(e->fieldbackgroundObj), defaultBG)) {
+	    backgroundPtr = Tk_Get3DBorderFromObj(tkwin,e->fieldbackgroundObj);
+	} else if (0 != strcmp(Tcl_GetString(e->backgroundObj), defaultBG)) {
+	    backgroundPtr = Tk_Get3DBorderFromObj(tkwin,e->backgroundObj);
+	}
+	if (backgroundPtr != NULL) {
+	    XFillRectangle(Tk_Display(tkwin), d,
+			   Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
+			   inner.x, inner.y, inner.width, inner.height);
+	}
+	BEGIN_DRAWING(d)
+	if (backgroundPtr == NULL) {
+	    CGRect innerRect = CGRectInset(bounds, 3, 3);
+	    background = [NSColor textBackgroundColor];
+	    CGContextSetFillColorWithColor(dc.context, background.CGColor);
+	    CGContextFillRect(dc.context, bounds);
+	}
 	ChkErr(HIThemeDrawFrame, &bounds, &info, dc.context, HIOrientation);
+	END_DRAWING
     }
     /*if (state & TTK_STATE_FOCUS) {
 	ChkErr(DrawThemeFocusRect, &bounds, 1);
     }*/
-    END_DRAWING
 }
 
 static Ttk_ElementSpec EntryElementSpec = {
