@@ -257,7 +257,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkStubInit.obj \
 	$(TMP_DIR)\tkWindow.obj \
 	$(TTK_OBJS) \
-	$(RBC_OBJS) \
+	$(TKO_OBJS) \
 !if !$(STATIC_BUILD)
 	$(TMP_DIR)\tk.res
 !endif
@@ -297,53 +297,55 @@ TTK_OBJS = \
         $(TMP_DIR)\ttkWidget.obj \
         $(TMP_DIR)\ttkStubInit.obj
 
-RBC_OBJS = \
-	$(TMP_DIR)\rbcBind.obj \
-	$(TMP_DIR)\rbcChain.obj \
-	$(TMP_DIR)\rbcConfig.obj \
-	$(TMP_DIR)\rbcGraph.obj \
-	$(TMP_DIR)\rbcGrAxis.obj \
-	$(TMP_DIR)\rbcGrBar.obj \
-	$(TMP_DIR)\rbcGrElem.obj \
-	$(TMP_DIR)\rbcGrGrid.obj \
-	$(TMP_DIR)\rbcGrHairs.obj \
-	$(TMP_DIR)\rbcGrLegd.obj \
-	$(TMP_DIR)\rbcGrLine.obj \
-	$(TMP_DIR)\rbcGrMarker.obj \
-	$(TMP_DIR)\rbcGrMisc.obj \
-	$(TMP_DIR)\rbcGrPen.obj \
-	$(TMP_DIR)\rbcGrPs.obj \
-	$(TMP_DIR)\rbcImage.obj \
-	$(TMP_DIR)\rbcParse.obj \
-	$(TMP_DIR)\rbcPs.obj \
-	$(TMP_DIR)\rbcSpline.obj \
-	$(TMP_DIR)\rbcSwitch.obj \
-	$(TMP_DIR)\rbcText.obj \
-	$(TMP_DIR)\rbcTile.obj \
-	$(TMP_DIR)\rbcUtil.obj \
-	$(TMP_DIR)\rbcVecMath.obj \
-	$(TMP_DIR)\rbcVecObjCmd.obj \
-	$(TMP_DIR)\rbcVector.obj \
-	$(TMP_DIR)\rbcWindow.obj \
-	$(TMP_DIR)\rbcWinDraw.obj \
-	$(TMP_DIR)\rbcWinImage.obj \
-	$(TMP_DIR)\tkPathCanvArrow.obj \
-	$(TMP_DIR)\tkPathCanvas.obj \
-	$(TMP_DIR)\tkPathCanvEllipse.obj \
-	$(TMP_DIR)\tkPathCanvGroup.obj \
-	$(TMP_DIR)\tkPathCanvImage.obj \
-	$(TMP_DIR)\tkPathCanvLine.obj \
-	$(TMP_DIR)\tkPathCanvPath.obj \
-	$(TMP_DIR)\tkPathCanvPoly.obj \
-	$(TMP_DIR)\tkPathCanvRect.obj \
-	$(TMP_DIR)\tkPathCanvText.obj \
-	$(TMP_DIR)\tkPathCanvWindow.obj \
-	$(TMP_DIR)\tkPathGeneric.obj \
-	$(TMP_DIR)\tkPathGradient.obj \
-	$(TMP_DIR)\tkPathStyle.obj \
-	$(TMP_DIR)\tkPathSurface.obj \
-	$(TMP_DIR)\tkPathUtil.obj \
-	$(TMP_DIR)\tkWinGDIPlusPath.obj \
+TKO_OBJS = \
+	$(TMP_DIR)\tkoWidget.obj \
+	$(TMP_DIR)\tkoFrame.obj \
+	$(TMP_DIR)\tkoRbcBind.obj \
+	$(TMP_DIR)\tkoRbcChain.obj \
+	$(TMP_DIR)\tkoRbcImage.obj \
+	$(TMP_DIR)\tkoRbcParse.obj \
+	$(TMP_DIR)\tkoRbcPs.obj \
+	$(TMP_DIR)\tkoRbcSpline.obj \
+	$(TMP_DIR)\tkoRbcSwitch.obj \
+	$(TMP_DIR)\tkoRbcText.obj \
+	$(TMP_DIR)\tkoRbcTile.obj \
+	$(TMP_DIR)\tkoRbcUtil.obj \
+	$(TMP_DIR)\tkoRbcWindow.obj \
+	$(TMP_DIR)\tkoRbcWinDraw.obj \
+	$(TMP_DIR)\tkoRbcWinImage.obj \
+	$(TMP_DIR)\tkoVectorMath.obj \
+	$(TMP_DIR)\tkoVectorObjCmd.obj \
+	$(TMP_DIR)\tkoVector.obj \
+	$(TMP_DIR)\tkoGraph.obj \
+	$(TMP_DIR)\tkoGraphConfig.obj \
+	$(TMP_DIR)\tkoGraphAxis.obj \
+	$(TMP_DIR)\tkoGraphBar.obj \
+	$(TMP_DIR)\tkoGraphElem.obj \
+	$(TMP_DIR)\tkoGraphGrid.obj \
+	$(TMP_DIR)\tkoGraphHairs.obj \
+	$(TMP_DIR)\tkoGraphLegd.obj \
+	$(TMP_DIR)\tkoGraphLine.obj \
+	$(TMP_DIR)\tkoGraphMarker.obj \
+	$(TMP_DIR)\tkoGraphMisc.obj \
+	$(TMP_DIR)\tkoGraphPen.obj \
+	$(TMP_DIR)\tkoGraphPs.obj \
+	$(TMP_DIR)\tkoPath.obj \
+	$(TMP_DIR)\tkoPathCanvArrow.obj \
+	$(TMP_DIR)\tkoPathCanvEllipse.obj \
+	$(TMP_DIR)\tkoPathCanvGroup.obj \
+	$(TMP_DIR)\tkoPathCanvImage.obj \
+	$(TMP_DIR)\tkoPathCanvLine.obj \
+	$(TMP_DIR)\tkoPathCanvPath.obj \
+	$(TMP_DIR)\tkoPathCanvPoly.obj \
+	$(TMP_DIR)\tkoPathCanvRect.obj \
+	$(TMP_DIR)\tkoPathCanvText.obj \
+	$(TMP_DIR)\tkoPathCanvWindow.obj \
+	$(TMP_DIR)\tkoPathGeneric.obj \
+	$(TMP_DIR)\tkoPathGradient.obj \
+	$(TMP_DIR)\tkoPathStyle.obj \
+	$(TMP_DIR)\tkoPathSurface.obj \
+	$(TMP_DIR)\tkoPathUtil.obj \
+	$(TMP_DIR)\tkoPath_WinGDIPlus.obj \
 
 TKSTUBOBJS = \
 	$(TMP_DIR)\tkStubLib.obj \
@@ -353,7 +355,7 @@ TKSTUBOBJS = \
 ### the left side of implicit rules.
 XLIBDIR		= $(ROOT)\xlib
 TTKDIR		= $(ROOT)\generic\ttk
-RBCDIR		= $(ROOT)\generic\rbc
+TKODIR		= $(ROOT)\generic\tko
 BITMAPDIR	= $(ROOT)\bitmaps
 
 # Additional include and C macro definitions for the implicit rules
@@ -606,7 +608,7 @@ $(TMP_DIR)\winMain.obj: $(WINDIR)\winMain.c
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
 	$(cc32) $(pkgcflags) -DTK_ASCII_MAIN -Fo$@ $?
 
-$(TMP_DIR)\tkWinGDIPlusPath.obj: $(RBCDIR)\tkWinGDIPlusPath.cpp
+$(TMP_DIR)\tkoPath_WinGDIPlus.obj: $(TKODIR)\tkoPath_WinGDIPlus.cpp
 	$(cc32) $(pkgcflags) -DTK_ASCII_MAIN -Fo$@ $?
 
 
@@ -640,7 +642,7 @@ depend:
 	$(TCLSH) $(TCLTOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
 		-passthru:"-DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
 		$(WINDIR),$$(WINDIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
-		$(RBCDIR),$$(RBCDIR) $(BITMAPDIR),$$(BITMAPDIR) @<<
+		$(TKODIR),$$(TKODIR) $(BITMAPDIR),$$(BITMAPDIR) @<<
 $(TKOBJS)
 <<
 !endif
@@ -678,7 +680,7 @@ $<
 $<
 <<
 
-{$(RBCDIR)}.c{$(TMP_DIR)}.obj::
+{$(TKODIR)}.c{$(TMP_DIR)}.obj::
 	$(CCPKGCMD) @<<
 $<
 <<

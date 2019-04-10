@@ -114,7 +114,7 @@ WIN_DIR			= $(SRC_DIR)
 UNIX_DIR		= $(SRC_DIR)/../unix
 GENERIC_DIR		= $(SRC_DIR)/../generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
-RBC_DIR			= $(GENERIC_DIR)/rbc
+TKO_DIR			= $(GENERIC_DIR)/tko
 BITMAP_DIR		= $(ROOT_DIR)/bitmaps
 XLIB_DIR		= $(ROOT_DIR)/xlib
 RC_DIR			= $(WIN_DIR)/rc
@@ -153,7 +153,7 @@ MAN2TCL			= man2tcl$(EXEEXT)
 # makefile to look into these paths when resolving .c to .obj
 # dependencies.
 
-VPATH = $(GENERIC_DIR):$(TTK_DIR):$(RBC_DIR):$(WIN_DIR):$(UNIX_DIR):$(XLIB_DIR):$(RC_DIR)
+VPATH = $(GENERIC_DIR):$(TTK_DIR):$(TKO_DIR):$(WIN_DIR):$(UNIX_DIR):$(XLIB_DIR):$(RC_DIR)
 
 # warning flags
 CFLAGS_WARNING	= @CFLAGS_WARNING@
@@ -363,7 +363,7 @@ TK_OBJS = \
 	tkStubInit.$(OBJEXT) \
 	tkWindow.$(OBJEXT) \
 	$(TTK_OBJS) \
-	$(RBC_OBJS)
+	$(TKO_OBJS)
 
 TTK_OBJS = \
 	ttkWinMonitor.$(OBJEXT) \
@@ -400,53 +400,55 @@ TTK_OBJS = \
 	ttkWidget.$(OBJEXT) \
 	ttkStubInit.$(OBJEXT)
 
-RBC_OBJS = \
-	rbcBind.$(OBJEXT) \
-	rbcChain.$(OBJEXT) \
-	rbcConfig.$(OBJEXT) \
-	rbcGraph.$(OBJEXT) \
-	rbcGrAxis.$(OBJEXT) \
-	rbcGrBar.$(OBJEXT) \
-	rbcGrElem.$(OBJEXT) \
-	rbcGrGrid.$(OBJEXT) \
-	rbcGrHairs.$(OBJEXT) \
-	rbcGrLegd.$(OBJEXT) \
-	rbcGrLine.$(OBJEXT) \
-	rbcGrMarker.$(OBJEXT) \
-	rbcGrMisc.$(OBJEXT) \
-	rbcGrPen.$(OBJEXT) \
-	rbcGrPs.$(OBJEXT) \
-	rbcImage.$(OBJEXT) \
-	rbcParse.$(OBJEXT) \
-	rbcPs.$(OBJEXT) \
-	rbcSpline.$(OBJEXT) \
-	rbcSwitch.$(OBJEXT) \
-	rbcText.$(OBJEXT) \
-	rbcTile.$(OBJEXT) \
-	rbcUtil.$(OBJEXT) \
-	rbcVecMath.$(OBJEXT) \
-	rbcVecObjCmd.$(OBJEXT) \
-	rbcVector.$(OBJEXT) \
-	rbcWindow.$(OBJEXT) \
-	rbcWinDraw.$(OBJEXT) \
-	rbcWinImage.$(OBJEXT) \
-	tkPathCanvArrow.$(OBJEXT) \
-	tkPathCanvas.$(OBJEXT) \
-	tkPathCanvEllipse.$(OBJEXT) \
-	tkPathCanvGroup.$(OBJEXT) \
-	tkPathCanvImage.$(OBJEXT) \
-	tkPathCanvLine.$(OBJEXT) \
-	tkPathCanvPath.$(OBJEXT) \
-	tkPathCanvPoly.$(OBJEXT) \
-	tkPathCanvRect.$(OBJEXT) \
-	tkPathCanvText.$(OBJEXT) \
-	tkPathCanvWindow.$(OBJEXT) \
-	tkPathGeneric.$(OBJEXT) \
-	tkPathGradient.$(OBJEXT) \
-	tkPathStyle.$(OBJEXT) \
-	tkPathSurface.$(OBJEXT) \
-	tkPathUtil.$(OBJEXT) \
-	tkWinGDIPlusPath.$(OBJEXT) \
+TKO_OBJS = \
+	tkoWidget.$(OBJEXT) \
+	tkoFrame.$(OBJEXT) \
+	tkoRbcBind.$(OBJEXT) \
+	tkoRbcChain.$(OBJEXT) \
+	tkoRbcImage.$(OBJEXT) \
+	tkoRbcParse.$(OBJEXT) \
+	tkoRbcPs.$(OBJEXT) \
+	tkoRbcSpline.$(OBJEXT) \
+	tkoRbcSwitch.$(OBJEXT) \
+	tkoRbcText.$(OBJEXT) \
+	tkoRbcTile.$(OBJEXT) \
+	tkoRbcUtil.$(OBJEXT) \
+	tkoRbcWindow.$(OBJEXT) \
+	tkoRbcWinDraw.$(OBJEXT) \
+	tkoRbcWinImage.$(OBJEXT) \
+	tkoVectorMath.$(OBJEXT) \
+	tkoVectorObjCmd.$(OBJEXT) \
+	tkoVector.$(OBJEXT) \
+	tkoGraph.$(OBJEXT) \
+	tkoGraphConfig.$(OBJEXT) \
+	tkoGraphAxis.$(OBJEXT) \
+	tkoGraphBar.$(OBJEXT) \
+	tkoGraphElem.$(OBJEXT) \
+	tkoGraphGrid.$(OBJEXT) \
+	tkoGraphHairs.$(OBJEXT) \
+	tkoGraphLegd.$(OBJEXT) \
+	tkoGraphLine.$(OBJEXT) \
+	tkoGraphMarker.$(OBJEXT) \
+	tkoGraphMisc.$(OBJEXT) \
+	tkoGraphPen.$(OBJEXT) \
+	tkoGraphPs.$(OBJEXT) \
+	tkoPath.$(OBJEXT) \
+	tkoPathCanvArrow.$(OBJEXT) \
+	tkoPathCanvEllipse.$(OBJEXT) \
+	tkoPathCanvGroup.$(OBJEXT) \
+	tkoPathCanvImage.$(OBJEXT) \
+	tkoPathCanvLine.$(OBJEXT) \
+	tkoPathCanvPath.$(OBJEXT) \
+	tkoPathCanvPoly.$(OBJEXT) \
+	tkoPathCanvRect.$(OBJEXT) \
+	tkoPathCanvText.$(OBJEXT) \
+	tkoPathCanvWindow.$(OBJEXT) \
+	tkoPathGeneric.$(OBJEXT) \
+	tkoPathGradient.$(OBJEXT) \
+	tkoPathStyle.$(OBJEXT) \
+	tkoPathSurface.$(OBJEXT) \
+	tkoPathUtil.$(OBJEXT) \
+	tkoPath_WinGDIPlus.$(OBJEXT) \
 
 STUB_OBJS = \
 	tkStubLib.$(OBJEXT) \
@@ -490,7 +492,7 @@ $(MAN2TCL): $(TCL_SRC_DIR)/tools/man2tcl.c
 # args to tcltest, ie:
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
-test: test-classic test-ttk test-rbc
+test: test-classic test-ttk test-tko
 
 test-classic: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
@@ -500,8 +502,8 @@ test-ttk: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/ttk/all.tcl" \
 	$(TESTFLAGS) | ./$(CAT32)
 
-test-rbc: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
-	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/rbc/all.tcl" \
+test-tko: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
+	$(SHELL_ENV) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/tko/all.tcl" \
 	$(TESTFLAGS) | ./$(CAT32)
 
 runtest: binaries $(TKTEST) $(TEST_DLL_FILE)
@@ -595,13 +597,6 @@ install-libraries: libraries
 	    do \
 	    if [ -f $$i ] ; then \
 		$(INSTALL_DATA) $$i $(SCRIPT_INSTALL_DIR)/ttk; \
-	    fi; \
-	    done;
-	@echo "Installing library rbc directory";
-	@for i in $(ROOT_DIR)/library/rbc/*.tcl; \
-	    do \
-	    if [ -f $$i ] ; then \
-		$(INSTALL_DATA) $$i $(SCRIPT_INSTALL_DIR)/rbc; \
 	    fi; \
 	    done;
 	@echo "Installing library images directory";

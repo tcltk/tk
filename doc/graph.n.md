@@ -17,9 +17,7 @@
   [-bottomvariable, bottomVariable, BottomVariable](#-bottomvariable)  
   [-bufferelements, bufferElements, BufferElements](#-bufferelements) *boolean*  
   [-buffergraph, bufferGraph, BufferGraph](#-buffergraph)  
-  [-style, style, Style](#-style) *line|bar|strip*  
-  [-data, data, Data](#-data)  
-  [-datacommand, dataCommand, DataCommand](#-datacommand)  
+  [-class, class, Class](options.htm#M-class)  
   [-font, font, Font](#-font) *fontName*  
   [-halo, halo, Halo](#-halo) *pixels*  
   [-highlightbackground, highlightBackground, HighlightBackground](#-highlightbackground)  
@@ -38,7 +36,9 @@
   [-rightmargin or -rm, rightMargin, Margin](#-rightmargin) *pixels*  
   [-rightvariable, rightVariable, RightVariable](#-rightvariable)  
   [-shadow, shadow, Shadow](#-shadow)  
+  [-style, style, Style](#-style) *line|bar|strip*  
   [-takefocus, takeFocus, TakeFocus](#-takefocus)  
+  [-tile, tile, Tile](#-tile)  
   [-title, title, Title](#-title) *text|image*  
   [-topmargin or -tm, topMargin, Margin](#-topmargin) *pixels*  
   [-topvariable, topVariable, TopVariable](#-topvariable)  
@@ -234,34 +234,12 @@ Command-Line Name: **-buffergraph**
 Database Name: **bufferGraph**  
 Database Class: **BufferGraph**
 
-<a name="-style"></a>
-Command-Line Name: **-style**  
-Database Name: **style**  
-Database Class: **Style**
+<a name="-class"></a>
+Command-Line Name: **-class**  
+Database Name: **class**  
+Database Class: **Class**
 
-The option can only be set on creation time of the new window. The option control the appearance of the widget. Default value is **line**.
-
-> **line**
-
-> > Display X-Y plotchart
-
-> **bar**
-
-> > Display barchart.
-
-> **strip**
-
-> > Display stripchart.
-
-<a name="-data"></a>
-Command-Line Name: **-data**  
-Database Name: **data**  
-Database Class: **Data**
-
-<a name="-datacommand"></a>
-Command-Line Name: **-datacommand**  
-Database Name: **dataCommand**  
-Database Class: **DataCommand**
+> > Define class for use in getting values from option database.
 
 <a name="-font"></a>
 Command-Line Name: **-font**  
@@ -379,6 +357,25 @@ Database Class: **RightVariable**
 Command-Line Name: **-shadow**  
 Database Name: **shadow**  
 Database Class: **Shadow**
+
+<a name="-style"></a>
+Command-Line Name: **-style**  
+Database Name: **style**  
+Database Class: **Style**
+
+The option can only be set on creation time of the new window. The option control the appearance of the widget. Default value is **line**.
+
+> **line**
+
+> > Display X-Y plotchart
+
+> **bar**
+
+> > Display barchart.
+
+> **strip**
+
+> > Display stripchart.
 
 > **-takefocus** *focus*
 <a name="-takefocus"></a>
