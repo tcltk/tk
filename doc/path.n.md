@@ -21,9 +21,11 @@
   [-xscrollcommand, xScrollCommand, ScrollCommand](options.htm#M-xscrollcommand)  
   [-yscrollcommand, yScrollCommand, ScrollCommand](options.htm#M-yscrollcommand)  
 * [WIDGET-SPECIFIC OPTIONS](#WIDGET-SPECIFIC-OPTIONS)  
+  [-class, class, Class](#-class)  
   [-closeenough, closeEnough, CloseEnough](#-closeenough)  
   [-confine, confine, Confine](#-confine)  
   [-height, height, Height](#-height)  
+  [-offset, offset, Offset](#-offset)  
   [-scrollregion, scrollRegion, ScrollRegion](#-scrollregion)  
   [-state, state, State](#-state)  
   [-tagstyle, tagstyle, Tagstyle](#-tagstyle)  
@@ -191,6 +193,13 @@ See the [options][] manual entry for details on the standard options.
 <a name="WIDGET-SPECIFIC-OPTIONS"></a>
 ## WIDGET-SPECIFIC OPTIONS
 
+<a name="-class"></a>
+Command-Line Name: **-class**  
+Database Name: **class**  
+Database Class: **Class**
+
+> > Define class for use in getting values from option database.
+
 <a name="-closeenough"></a>
 Command-Line Name: **-closeenough**  
 Database Name: **closeEnough**  
@@ -211,6 +220,13 @@ Database Name: **height**
 Database Class: **Height**
 
 > Specifies a desired window height that the canvas widget should request from its geometry manager. The value may be specified in any of the forms described in the [COORDINATES][] section below. 
+
+<a name="-offset"></a>
+Command-Line Name: **-offset**  
+Database Name: **offset**  
+Database Class: **Offset**
+
+> Stipple offset for outline. 
 
 <a name="-scrollregion"></a>
 Command-Line Name: **-scrollregion**  

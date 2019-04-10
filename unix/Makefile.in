@@ -310,7 +310,7 @@ SRC_DIR			= @srcdir@
 TOP_DIR			= $(SRC_DIR)/..
 GENERIC_DIR		= $(TOP_DIR)/generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
-RBC_DIR			= $(GENERIC_DIR)/rbc
+TKO_DIR			= $(GENERIC_DIR)/tko
 UNIX_DIR		= $(TOP_DIR)/unix
 BMAP_DIR		= $(TOP_DIR)/bitmaps
 TOOL_DIR		= @TCL_SRC_DIR@/tools
@@ -384,53 +384,54 @@ TTK_OBJS = \
 	ttkTagSet.o ttkTheme.o ttkTrace.o ttkTrack.o ttkTreeview.o \
 	ttkWidget.o ttkStubInit.o
 
-RBC_OBJS = \
-        rbcBind.o \
-        rbcChain.o \
-        rbcConfig.o \
-        rbcGraph.o \
-        rbcGrAxis.o \
-        rbcGrBar.o \
-        rbcGrElem.o \
-        rbcGrGrid.o \
-        rbcGrHairs.o \
-        rbcGrLegd.o \
-        rbcGrLine.o \
-        rbcGrMarker.o \
-        rbcGrMisc.o \
-        rbcGrPen.o \
-        rbcGrPs.o \
-        rbcImage.o \
-        rbcParse.o \
-        rbcPs.o \
-        rbcSpline.o \
-        rbcSwitch.o \
-        rbcText.o \
-        rbcTile.o \
-        rbcUtil.o \
-        rbcVecMath.o \
-        rbcVecObjCmd.o \
-        rbcVector.o \
-        rbcWindow.o \
-        rbcUnixImage.o \
-	tkPathCanvArrow.o \
-	tkPathCanvas.o \
-	tkPathCanvEllipse.o \
-	tkPathCanvGroup.o \
-	tkPathCanvImage.o \
-	tkPathCanvLine.o \
-	tkPathCanvPath.o \
-	tkPathCanvPoly.o \
-	tkPathCanvRect.o \
-	tkPathCanvText.o \
-	tkPathCanvWindow.o \
-	tkPathGeneric.o \
-	tkPathGradient.o \
-	tkPathInit.o \
-	tkPathStyle.o \
-	tkPathSurface.o \
-	tkPathUtil.o \
-	tkUnixCairoPath.o
+TKO_OBJS = \
+	tkoWidget.o \
+	tkoFrame.o \
+	tkoRbcBind.o \
+	tkoRbcChain.o \
+	tkoRbcImage.o \
+	tkoRbcParse.o \
+	tkoRbcPs.o \
+	tkoRbcSpline.o \
+	tkoRbcSwitch.o \
+	tkoRbcText.o \
+	tkoRbcTile.o \
+	tkoRbcUtil.o \
+	tkoRbcWindow.o \
+	tkoRbcUnixImage.o \
+	tkoVectorMath.o \
+	tkoVectorObjCmd.o \
+	tkoVector.o \
+	tkoGraph.o \
+	tkoGraphConfig.o \
+	tkoGraphAxis.o \
+	tkoGraphBar.o \
+	tkoGraphElem.o \
+	tkoGraphGrid.o \
+	tkoGraphHairs.o \
+	tkoGraphLegd.o \
+	tkoGraphLine.o \
+	tkoGraphMarker.o \
+	tkoGraphMisc.o \
+	tkoGraphPen.o \
+	tkoGraphPs.o \
+	tkoPath.o \
+	tkoPathCanvArrow.o \
+	tkoPathCanvEllipse.o \
+	tkoPathCanvGroup.o \
+	tkoPathCanvImage.o \
+	tkoPathCanvLine.o \
+	tkoPathCanvPath.o \
+	tkoPathCanvPoly.o \
+	tkoPathCanvRect.o \
+	tkoPathCanvText.o \
+	tkoPathCanvWindow.o \
+	tkoPathGeneric.o \
+	tkoPathGradient.o \
+	tkoPathStyle.o \
+	tkoPathSurface.o \
+	tkoPathUtil.o \
+	tkoPath_UnixCairo.o \
 
 STUB_OBJS = tkStubInit.o
 
@@ -458,7 +459,7 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
-	$(STUB_OBJS) $(TTK_OBJS) $(RBC_OBJS) \
+	$(STUB_OBJS) $(TTK_OBJS) $(TKO_OBJS) \
 	$(@TK_WINDOWINGSYSTEM@_OBJS) @PLAT_OBJS@
 
 TK_DECLS = \
@@ -544,53 +545,54 @@ TTK_SRCS = \
 TTK_STUB_SRCS = \
 	$(TTK_DIR)/ttkStubInit.c $(TTK_DIR)/ttkStubLib.c
 
-RBC_SRCS = \
-        $(RBC_DIR)/rbcBind.c \
-        $(RBC_DIR)/rbcChain.c \
-        $(RBC_DIR)/rbcConfig.c \
-        $(RBC_DIR)/rbcGraph.c \
-        $(RBC_DIR)/rbcGrAxis.c \
-        $(RBC_DIR)/rbcGrBar.c \
-        $(RBC_DIR)/rbcGrElem.c \
-        $(RBC_DIR)/rbcGrGrid.c \
-        $(RBC_DIR)/rbcGrHairs.c \
-        $(RBC_DIR)/rbcGrLegd.c \
-        $(RBC_DIR)/rbcGrLine.c \
-        $(RBC_DIR)/rbcGrMarker.c \
-        $(RBC_DIR)/rbcGrMisc.c \
-        $(RBC_DIR)/rbcGrPen.c \
-        $(RBC_DIR)/rbcGrPs.c \
-        $(RBC_DIR)/rbcImage.c \
-        $(RBC_DIR)/rbcParse.c \
-        $(RBC_DIR)/rbcPs.c \
-        $(RBC_DIR)/rbcSpline.c \
-        $(RBC_DIR)/rbcSwitch.c \
-        $(RBC_DIR)/rbcText.c \
-        $(RBC_DIR)/rbcTile.c \
-        $(RBC_DIR)/rbcUtil.c \
-        $(RBC_DIR)/rbcVecMath.c \
-        $(RBC_DIR)/rbcVecObjCmd.c \
-        $(RBC_DIR)/rbcVector.c \
-        $(RBC_DIR)/rbcWindow.c \
-        $(RBC_DIR)/rbcUnixImage.c \
-	$(RBC_DIR)/tkPathCanvArrow.c \
-	$(RBC_DIR)/tkPathCanvas.c \
-	$(RBC_DIR)/tkPathCanvEllipse.c \
-	$(RBC_DIR)/tkPathCanvGroup.c \
-	$(RBC_DIR)/tkPathCanvImage.c \
-	$(RBC_DIR)/tkPathCanvLine.c \
-	$(RBC_DIR)/tkPathCanvPath.c \
-	$(RBC_DIR)/tkPathCanvPoly.c \
-	$(RBC_DIR)/tkPathCanvRect.c \
-	$(RBC_DIR)/tkPathCanvText.c \
-	$(RBC_DIR)/tkPathCanvWindow.c \
-	$(RBC_DIR)/tkPathGeneric.c \
-	$(RBC_DIR)/tkPathGradient.c \
-	$(RBC_DIR)/tkPathInit.c \
-	$(RBC_DIR)/tkPathStyle.c \
-	$(RBC_DIR)/tkPathSurface.c \
-	$(RBC_DIR)/tkPathUtil.c \
-	$(RBC_DIR)/tkUnixCairoPath.c
+TKO_SRCS = \
+	$(TKO_DIR)\tkoWidget.c \
+	$(TKO_DIR)\tkoFrame.c \
+	$(TKO_DIR)\tkoRbcBind.c \
+	$(TKO_DIR)\tkoRbcChain.c \
+	$(TKO_DIR)\tkoRbcImage.c \
+	$(TKO_DIR)\tkoRbcParse.c \
+	$(TKO_DIR)\tkoRbcPs.c \
+	$(TKO_DIR)\tkoRbcSpline.c \
+	$(TKO_DIR)\tkoRbcSwitch.c \
+	$(TKO_DIR)\tkoRbcText.c \
+	$(TKO_DIR)\tkoRbcTile.c \
+	$(TKO_DIR)\tkoRbcUtil.c \
+	$(TKO_DIR)\tkoRbcWindow.c \
+	$(TKO_DIR)\tkoRbcUnixImage.c \
+	$(TKO_DIR)\tkoVectorMath.c \
+	$(TKO_DIR)\tkoVectorObjCmd.c \
+	$(TKO_DIR)\tkoVector.c \
+	$(TKO_DIR)\tkoGraph.c \
+	$(TKO_DIR)\tkoGraphConfig.c \
+	$(TKO_DIR)\tkoGraphAxis.c \
+	$(TKO_DIR)\tkoGraphBar.c \
+	$(TKO_DIR)\tkoGraphElem.c \
+	$(TKO_DIR)\tkoGraphGrid.c \
+	$(TKO_DIR)\tkoGraphHairs.c \
+	$(TKO_DIR)\tkoGraphLegd.c \
+	$(TKO_DIR)\tkoGraphLine.c \
+	$(TKO_DIR)\tkoGraphMarker.c \
+	$(TKO_DIR)\tkoGraphMisc.c \
+	$(TKO_DIR)\tkoGraphPen.c \
+	$(TKO_DIR)\tkoGraphPs.c \
+	$(TKO_DIR)\tkoPath.c \
+	$(TKO_DIR)\tkoPathCanvArrow.c \
+	$(TKO_DIR)\tkoPathCanvEllipse.c \
+	$(TKO_DIR)\tkoPathCanvGroup.c \
+	$(TKO_DIR)\tkoPathCanvImage.c \
+	$(TKO_DIR)\tkoPathCanvLine.c \
+	$(TKO_DIR)\tkoPathCanvPath.c \
+	$(TKO_DIR)\tkoPathCanvPoly.c \
+	$(TKO_DIR)\tkoPathCanvRect.c \
+	$(TKO_DIR)\tkoPathCanvText.c \
+	$(TKO_DIR)\tkoPathCanvWindow.c \
+	$(TKO_DIR)\tkoPathGeneric.c \
+	$(TKO_DIR)\tkoPathGradient.c \
+	$(TKO_DIR)\tkoPathStyle.c \
+	$(TKO_DIR)\tkoPathSurface.c \
+	$(TKO_DIR)\tkoPathUtil.c \
+	$(TKO_DIR)\tkoPath_WinGDIPlus.c \
 
 X11_SRCS = \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
@@ -747,7 +749,7 @@ tktest-real: ${TK_STUB_LIB_FILE}
 # args to tcltest, ie:
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
-test: test-classic test-ttk test-rbc
+test: test-classic test-ttk test-tko
 
 test-classic: $(TKTEST_EXE)
 	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 $(TESTFLAGS)
@@ -756,8 +758,8 @@ test-ttk: $(TKTEST_EXE)
 	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/ttk/all.tcl -geometry +0+0 \
 	$(TESTFLAGS)
 
-test-rbc: $(TKTEST_EXE)
-	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/rbc/all.tcl -geometry +0+0 \
+test-tko: $(TKTEST_EXE)
+	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/tko/all.tcl -geometry +0+0 \
 	$(TESTFLAGS)
 
 # Tests with different languages
@@ -865,8 +867,7 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 
 install-libraries: libraries
 	@for i in "$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
-		"$(SCRIPT_INSTALL_DIR)/msgs" "$(SCRIPT_INSTALL_DIR)/ttk" \
-		"$(SCRIPT_INSTALL_DIR)/rbc"; \
+		"$(SCRIPT_INSTALL_DIR)/msgs" "$(SCRIPT_INSTALL_DIR)/ttk" ; \
 	    do \
 	    if [ -n "$$i" -a ! -d "$$i" ] ; then \
 		echo "Making directory $$i"; \
@@ -885,13 +886,6 @@ install-libraries: libraries
 	    do \
 	    if [ -f $$i ] ; then \
 		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/ttk"; \
-	    fi; \
-	    done;
-	@echo "Installing Rbc library files to $(SCRIPT_INSTALL_DIR)/rbc/";
-	@for i in $(TOP_DIR)/library/rbc/*.tcl; \
-	    do \
-	    if [ -f $$i ] ; then \
-		$(INSTALL_DATA) $$i "$(SCRIPT_INSTALL_DIR)/rbc"; \
 	    fi; \
 	    done;
 	@echo "Installing library image files to $(SCRIPT_INSTALL_DIR)/images/";
@@ -1562,143 +1556,146 @@ ttkWidget.o: $(TTK_DIR)/ttkWidget.c
 ttkMacOSXTheme.o: $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 
-tkPathCanvArrow.o: $(RBC_DIR)/tkPathCanvArrow.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvArrow.c
+tkoWidget.o: $(TKO_DIR)/tkoWidget.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoWidget.c
 
-tkPathCanvas.o: $(RBC_DIR)/tkPathCanvas.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvas.c
+tkoFrame.o: $(TKO_DIR)/tkoFrame.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoFrame.c
 
-tkPathCanvEllipse.o: $(RBC_DIR)/tkPathCanvEllipse.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvEllipse.c
+tkoRbcBind.o: $(TKO_DIR)/tkoRbcBind.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcBind.c
 
-tkPathCanvGroup.o: $(RBC_DIR)/tkPathCanvGroup.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvGroup.c
+tkoRbcChain.o: $(TKO_DIR)/tkoRbcChain.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcChain.c
 
-tkPathCanvImage.o: $(RBC_DIR)/tkPathCanvImage.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvImage.c
+tkoRbcImage.o: $(TKO_DIR)/tkoRbcImage.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcImage.c
 
-tkPathCanvLine.o: $(RBC_DIR)/tkPathCanvLine.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvLine.c
+tkoRbcParse.o: $(TKO_DIR)/tkoRbcParse.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcParse.c
 
-tkPathCanvPath.o: $(RBC_DIR)/tkPathCanvPath.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvPath.c
+tkoRbcPs.o: $(TKO_DIR)/tkoRbcPs.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcPs.c
 
-tkPathCanvPoly.o: $(RBC_DIR)/tkPathCanvPoly.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvPoly.c
+tkoRbcSpline.o: $(TKO_DIR)/tkoRbcSpline.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcSpline.c
 
-tkPathCanvRect.o: $(RBC_DIR)/tkPathCanvRect.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvRect.c
+tkoRbcSwitch.o: $(TKO_DIR)/tkoRbcSwitch.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcSwitch.c
 
-tkPathCanvText.o: $(RBC_DIR)/tkPathCanvText.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvText.c
+tkoRbcText.o: $(TKO_DIR)/tkoRbcText.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcText.c
 
-tkPathCanvWindow.o: $(RBC_DIR)/tkPathCanvWindow.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathCanvWindow.c
+tkoRbcTile.o: $(TKO_DIR)/tkoRbcTile.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcTile.c
 
-tkPathGeneric.o: $(RBC_DIR)/tkPathGeneric.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathGeneric.c
+tkoRbcUtil.o: $(TKO_DIR)/tkoRbcUtil.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcUtil.c
 
-tkPathGradient.o: $(RBC_DIR)/tkPathGradient.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathGradient.c
+tkoRbcWindow.o: $(TKO_DIR)/tkoRbcWindow.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcWindow.c
 
-tkPathInit.o: $(RBC_DIR)/tkPathInit.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathInit.c
+tkoRbcUnixImage.o: $(TKO_DIR)/tkoRbcUnixImage.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoRbcUnixImage.c
 
-tkPathStyle.o: $(RBC_DIR)/tkPathStyle.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathStyle.c
+tkoVectorMath.o: $(TKO_DIR)/tkoVectorMath.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoVectorMath.c
 
-tkPathSurface.o: $(RBC_DIR)/tkPathSurface.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathSurface.c
+tkoVectorObjCmd.o: $(TKO_DIR)/tkoVectorObjCmd.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoVectorObjCmd.c
 
-tkPathUtil.o: $(RBC_DIR)/tkPathUtil.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkPathUtil.c
+tkoVector.o: $(TKO_DIR)/tkoVector.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoVector.c
 
-tkUnixCairoPath.o: $(RBC_DIR)/tkUnixCairoPath.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/tkUnixCairoPath.c
+tkoGraph.o: $(TKO_DIR)/tkoGraph.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraph.c
 
-rbcBind.o: $(RBC_DIR)/rbcBind.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcBind.c
+tkoGraphConfig.o: $(TKO_DIR)/tkoGraphConfig.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphConfig.c
 
-rbcChain.o: $(RBC_DIR)/rbcChain.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcChain.c
+tkoGraphAxis.o: $(TKO_DIR)/tkoGraphAxis.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphAxis.c
 
-rbcConfig.o: $(RBC_DIR)/rbcConfig.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcConfig.c
+tkoGraphBar.o: $(TKO_DIR)/tkoGraphBar.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphBar.c
 
-rbcGraph.o: $(RBC_DIR)/rbcGraph.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGraph.c
+tkoGraphElem.o: $(TKO_DIR)/tkoGraphElem.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphElem.c
 
-rbcGrAxis.o: $(RBC_DIR)/rbcGrAxis.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrAxis.c
+tkoGraphGrid.o: $(TKO_DIR)/tkoGraphGrid.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphGrid.c
 
-rbcGrBar.o: $(RBC_DIR)/rbcGrBar.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrBar.c
+tkoGraphHairs.o: $(TKO_DIR)/tkoGraphHairs.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphHairs.c
 
-rbcGrElem.o: $(RBC_DIR)/rbcGrElem.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrElem.c
+tkoGraphLegd.o: $(TKO_DIR)/tkoGraphLegd.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphLegd.c
 
-rbcGrGrid.o: $(RBC_DIR)/rbcGrGrid.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrGrid.c
+tkoGraphLine.o: $(TKO_DIR)/tkoGraphLine.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphLine.c
 
-rbcGrHairs.o: $(RBC_DIR)/rbcGrHairs.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrHairs.c
+tkoGraphMarker.o: $(TKO_DIR)/tkoGraphMarker.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphMarker.c
 
-rbcGrLegd.o: $(RBC_DIR)/rbcGrLegd.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrLegd.c
+tkoGraphMisc.o: $(TKO_DIR)/tkoGraphMisc.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphMisc.c
 
-rbcGrLine.o: $(RBC_DIR)/rbcGrLine.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrLine.c
+tkoGraphPen.o: $(TKO_DIR)/tkoGraphPen.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphPen.c
 
-rbcGrMarker.o: $(RBC_DIR)/rbcGrMarker.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrMarker.c
+tkoGraphPs.o: $(TKO_DIR)/tkoGraphPs.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoGraphPs.c
 
-rbcGrMisc.o: $(RBC_DIR)/rbcGrMisc.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrMisc.c
+tkoPath.o: $(TKO_DIR)/tkoPath.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPath.c
 
-rbcGrPen.o: $(RBC_DIR)/rbcGrPen.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrPen.c
+tkoPathCanvArrow.o: $(TKO_DIR)/tkoPathCanvArrow.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvArrow.c
 
-rbcGrPs.o: $(RBC_DIR)/rbcGrPs.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcGrPs.c
+tkoPathCanvEllipse.o: $(TKO_DIR)/tkoPathCanvEllipse.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvEllipse.c
 
-rbcImage.o: $(RBC_DIR)/rbcImage.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcImage.c
+tkoPathCanvGroup.o: $(TKO_DIR)/tkoPathCanvGroup.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvGroup.c
 
-rbcParse.o: $(RBC_DIR)/rbcParse.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcParse.c
+tkoPathCanvImage.o: $(TKO_DIR)/tkoPathCanvImage.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvImage.c
 
-rbcPs.o: $(RBC_DIR)/rbcPs.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcPs.c
+tkoPathCanvLine.o: $(TKO_DIR)/tkoPathCanvLine.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvLine.c
 
-rbcSpline.o: $(RBC_DIR)/rbcSpline.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcSpline.c
+tkoPathCanvPath.o: $(TKO_DIR)/tkoPathCanvPath.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvPath.c
 
-rbcSwitch.o: $(RBC_DIR)/rbcSwitch.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcSwitch.c
+tkoPathCanvPoly.o: $(TKO_DIR)/tkoPathCanvPoly.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvPoly.c
 
-rbcText.o: $(RBC_DIR)/rbcText.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcText.c
+tkoPathCanvRect.o: $(TKO_DIR)/tkoPathCanvRect.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvRect.c
 
-rbcTile.o: $(RBC_DIR)/rbcTile.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcTile.c
+tkoPathCanvText.o: $(TKO_DIR)/tkoPathCanvText.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvText.c
 
-rbcUtil.o: $(RBC_DIR)/rbcUtil.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcUtil.c
+tkoPathCanvWindow.o: $(TKO_DIR)/tkoPathCanvWindow.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathCanvWindow.c
 
-rbcVecMath.o: $(RBC_DIR)/rbcVecMath.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcVecMath.c
+tkoPathGeneric.o: $(TKO_DIR)/tkoPathGeneric.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathGeneric.c
 
-rbcVecObjCmd.o: $(RBC_DIR)/rbcVecObjCmd.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcVecObjCmd.c
+tkoPathGradient.o: $(TKO_DIR)/tkoPathGradient.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathGradient.c
 
-rbcVector.o: $(RBC_DIR)/rbcVector.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcVector.c
+tkoPathStyle.o: $(TKO_DIR)/tkoPathStyle.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathStyle.c
 
-rbcWindow.o: $(RBC_DIR)/rbcWindow.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcWindow.c
+tkoPathSurface.o: $(TKO_DIR)/tkoPathSurface.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathSurface.c
 
-rbcUnixImage.o: $(RBC_DIR)/rbcUnixImage.c
-	$(CC) -c $(CC_SWITCHES) $(RBC_DIR)/rbcUnixImage.c
+tkoPathUtil.o: $(TKO_DIR)/tkoPathUtil.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPathUtil.c
+
+tkoPath_UnixCairo.o: $(TKO_DIR)/tkoPath_UnixCairo.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoPath_UnixCairo.c
 
 
 .c.o:

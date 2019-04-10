@@ -1,0 +1,2778 @@
+# vector.test --
+#
+package require tcltest
+namespace import tcltest::*
+
+namespace eval ::TEST {
+
+#===============================================================================
+# This part tests the append function of the vector rbc component.
+# Append is an instance function of vector.
+#
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector append command works correctly when given a list of 
+# numbers.
+# ------------------------------------------------------------------------------
+test vector.append-1.1 {
+	::graph::vector set: list of numbers
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0}
+} -body {
+	foo append {3.0 4.0} 
+	expr {$foo(:)}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1.0 2.0 3.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector append command works correctly when given another vector.
+# ------------------------------------------------------------------------------
+test vector.append-1.2 {
+	::graph::vector append: another vector
+} -setup {
+	::graph::vector create foo
+	::graph::vector create goo
+	foo set {1.0 2.0}
+	goo set {3.0 4.0}
+} -body {
+	foo append goo
+	expr {$foo(:)}
+} -cleanup {
+	::graph::vector destroy foo
+	::graph::vector destroy goo
+} -result {1.0 2.0 3.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector append command works correctly when given a list  
+# containing characters.
+# ------------------------------------------------------------------------------
+test vector.append-1.3 {
+	::graph::vector append: list with characters
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0}
+} -body {
+	if {[catch {foo append {3.0 a}}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector append command works correctly when given a non-existent 
+# vector reference.
+# ------------------------------------------------------------------------------
+test vector.append-1.4 {
+	::graph::vector append: non-existent vector
+} -setup {
+	::graph::vector create foo
+} -body {
+	if {[catch {foo append goo}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {0}
+
+#===============================================================================
+# This part tests the different arithmetic operators for 
+# the vector RBC component.
+#
+
+# ------------------------------------------------------------------------------
+#  Test Constraints
+#  Some machines treat floating point numbers differently, so we set some
+#  constraints here for various vector related routines
+# ------------------------------------------------------------------------------
+tcltest::testConstraint twoDigitExponent   [expr {[format %1.0e 1e-20] eq "1e-20"}]
+tcltest::testConstraint threeDigitExponent [expr {[format %1.0e 1e-20] eq "1e-020"}]
+set tcl_precision 12
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the correct functioning of vector addition
+# ------------------------------------------------------------------------------ 
+test vector.arithmetic-1.1 {
+    Test vector addition
+} -setup {
+	::graph::vector create VectorX
+	::graph::vector create VectorY
+	VectorX set {2 4 -1 2.4 4}
+	VectorY set {5 -2 7 8 9.2}
+} -body {
+    VectorX + VectorY
+} -cleanup {
+	::graph::vector destroy VectorX
+	::graph::vector destroy VectorY
+} -result {7.0 2.0 6.0 10.4 13.2}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the correct functioning of addition using a scalar
+# ------------------------------------------------------------------------------ 
+test vector.arithmetic-1.2 {
+    Test scalar addition
+} -setup {
+	::graph::vector create VectorX
+	VectorX set {2 4 -1 2.4 4}
+} -body {
+    VectorX + 3.1
+} -cleanup {
+	::graph::vector destroy VectorX
+} -result {5.1 7.1 2.1 5.5 7.1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the correct functioning of vector subtraction
+# ------------------------------------------------------------------------------ 
+test vector.arithmetic-1.3 {
+    Test vector subtraction
+} -setup {
+	::graph::vector create VectorX
+	::graph::vector create VectorY
+	VectorX set {0 5 4 2 -8 -8}
+	VectorY set {5 0 2 4 4 -4}
+} -body {
+    VectorX - VectorY
+} -cleanup {
+	::graph::vector destroy VectorX
+	::graph::vector destroy VectorY
+} -result {-5.0 5.0 2.0 -2.0 -12.0 -4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the correct functioning of subtraction using a scalar
+# ------------------------------------------------------------------------------ 
+test vector.arithmetic-1.4 {
+    Test scalar subtraction
+} -setup {
+	::graph::vector create VectorX
+	VectorX set {0 5 4 2 -8}
+} -body {
+    VectorX - 3.1
+} -cleanup {
+	::graph::vector destroy VectorX
+} -result {-3.1 1.9 0.9 -1.1 -11.1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the correct functioning of vector multiplication
+# ------------------------------------------------------------------------------ 
+test vector.arithmetic-1.5 {
+    Test vector multiplication
+} -setup {
+	::graph::vector create VectorX
+	::graph::vector create VectorY
+	VectorX set {0 1 2 2.4 -4 -4}
+	VectorY set {5 5 5 2 2 -4}
+} -body {
+    VectorX * VectorY
+} -cleanup {
+	::graph::vector destroy VectorX
+	::graph::vector destroy VectorY
+} -result {0.0 5.0 10.0 4.8 -8.0 16.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the correct functioning of multiplication using a scalar
+# ------------------------------------------------------------------------------ 
+test vector.arithmetic-1.7 {
+    Test scalar multiplication
+} -setup {
+	::graph::vector create VectorX
+	VectorX set {0 1 2 2.4 -4}
+} -body {
+    VectorX * 2
+} -cleanup {
+	::graph::vector destroy VectorX
+} -result {0.0 2.0 4.0 4.8 -8.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the correct functioning of vector division
+# ------------------------------------------------------------------------------ 
+test vector.arithmetic-1.8 {
+    Test vector division
+} -setup {
+	::graph::vector create VectorX
+	::graph::vector create VectorY
+	VectorX set {0 1 5 -4 -8}
+	VectorY set {5 5 1 2 -4}
+} -body {
+    VectorX / VectorY
+} -cleanup {
+	::graph::vector destroy VectorX
+	::graph::vector destroy VectorY
+} -result {0.0 0.2 5.0 -2.0 2.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the correct functioning of division using a scalar
+# ------------------------------------------------------------------------------ 
+test vector.arithmetic-1.6 {
+    Test scalar division
+} -setup {
+	::graph::vector create VectorX
+	VectorX set {0 1 5 -10 10}
+} -body {
+    VectorX / 5
+} -cleanup {
+	::graph::vector destroy VectorX
+} -result {0.0 0.2 1.0 -2.0 2.0}
+
+#===============================================================================
+# This part tests the binread function of the vector rbc component.
+# binread is an instance function of vector.
+#
+
+# ------------------------------------------------------------------------------
+#  Test Constraints
+#  Some machines treat floating point numbers differently, so we set some
+#  constraints here for various vector related routines
+# ------------------------------------------------------------------------------
+tcltest::testConstraint twoDigitExponent   [expr {[format %1.0e 1e-20] eq "1e-20"}]
+tcltest::testConstraint threeDigitExponent [expr {[format %1.0e 1e-20] eq "1e-020"}]
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command reads the entire contents of a file when 
+# given no length parameter 
+# ------------------------------------------------------------------------------ 
+test vector.binread-1.1 {
+	::graph::vector binread entire file
+} -setup {
+	::graph::vector create Vector1
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 4.67887034632e+163}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command reads length number of items from the 
+# channel 
+# ------------------------------------------------------------------------------ 
+test vector.binread-1.2 {
+	::graph::vector binread length items
+} -setup {
+	::graph::vector create Vector1
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel 1
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command reads the entire contents of a file in 
+# the default endianess of the host machine 
+# ------------------------------------------------------------------------------ 
+test vector.binread-2.1 {
+	::graph::vector binread default endianess
+} -setup {
+	::graph::vector create Vector1
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 4.67887034632e+163}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command reads the entire contents of a file in 
+# the opposite endianess of the host machine 
+# ------------------------------------------------------------------------------ 
+test vector.binread-2.2 {
+	::graph::vector binread opposite endianess
+} -setup {
+	::graph::vector create Vector1
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -swap
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 2.96444328161e-319}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command reads the entire contents of a file into 
+# the vector starting at index# Purpose: 
+# ------------------------------------------------------------------------------ 
+test vector.binread-3.1 {
+	::graph::vector binread at index
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2}
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -at 1
+    expr {$Vector1(1:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 4.67887034632e+163}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command leaves all items preceding index 
+# unchanged 
+# ------------------------------------------------------------------------------ 
+test vector.binread-3.2 {
+	::graph::vector binread at index
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2}    
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -at 1
+    expr {$Vector1(0)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {1.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command can read the i1 format 
+# ------------------------------------------------------------------------------ 
+test vector.binread-4.1 {
+	::graph::vector binread format i1
+} -setup {
+	::graph::vector create Vector1
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -format i1
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 -22.0 97.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command can read the i2 format 
+# ------------------------------------------------------------------------------ 
+test vector.binread-4.2 {
+	::graph::vector binread format i2
+} -setup {
+	::graph::vector create Vector1
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -format i2
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 0.0 0.0 0.0 0.0 0.0 0.0 25066.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command can read the i4 format 
+# ------------------------------------------------------------------------------ 
+test vector.binread-4.3 {
+	::graph::vector binread format i4
+} -setup {
+	::graph::vector create Vector1
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -format i4
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 0.0 0.0 1642725376.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command can read the u1 format 
+# ------------------------------------------------------------------------------ 
+test vector.binread-4.4 {
+	::graph::vector binread format u1
+} -setup {
+	::graph::vector create Vector1
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -format u1
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 234.0 97.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command can read the u2 format 
+# ------------------------------------------------------------------------------ 
+test vector.binread-4.5 {
+	::graph::vector binread format u2
+} -setup {
+	::graph::vector create Vector1 
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -format u2
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 0.0 0.0 0.0 0.0 0.0 0.0 25066.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command can read the u4 format 
+# ------------------------------------------------------------------------------ 
+test vector.binread-4.6 {
+	::graph::vector binread format u4
+} -setup {
+	::graph::vector create Vector1 
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -format u4
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 0.0 0.0 1642725376.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command can read the r4 format 
+# ------------------------------------------------------------------------------ 
+test vector.binread-4.7-00 {
+	::graph::vector binread format r4
+} -constraints twoDigitExponent -setup {
+	::graph::vector create Vector1   
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -format r4
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 0.0 0.0 5.39567264156e+20}
+
+test vector.binread-4.7-000 {
+	::graph::vector binread format r4
+} -constraints threeDigitExponent -setup {
+	::graph::vector create Vector1   
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -format r4
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 0.0 0.0 5.39567264156e+020}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector binread command can read the r8 format 
+# ------------------------------------------------------------------------------ 
+test vector.binread-4.8 {
+	::graph::vector binread format r8
+} -setup {
+	::graph::vector create Vector1  
+    set Channel [open [file join [file dirname [info script]] binReadTestFile.txt] r]
+} -body {
+    Vector1 binread $Channel -format r8
+    expr {$Vector1(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+    close $Channel
+    unset Channel
+} -result {0.0 4.67887034632e+163}
+
+#===============================================================================
+# This part tests the clear function of the vector rbc component.
+# Clear is an instance function of vector.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector clear command works correctly.
+# ------------------------------------------------------------------------------
+test vector.clear-1.1 {
+	::graph::vector clear: 
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+	expr $foo(0)
+	expr $foo(1)
+} -body {
+	foo clear
+	array size foo
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1}
+	
+#===============================================================================
+# This part tests the different constructs for the create function of 
+# the vector rbc component when no switches are used.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that creating a vector with no size parameter creates a new vector
+# with zero elements (i.e. a length of zero)
+# ------------------------------------------------------------------------------ 
+test vector.create-1.1 {
+    Test default vector length
+} -body {
+	::graph::vector create Vector1
+    Vector1 length
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that creating a vector with a size parameter create a new vector
+# with the size parameter number of elements
+# ------------------------------------------------------------------------------ 
+test vector.create-1.2 {
+    Test vector size
+} -body {
+	::graph::vector create Vector1(5)
+    Vector1 length
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {5}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that creating a vector with a size parameter of zero creates a new
+# vector with zero elements
+# ------------------------------------------------------------------------------ 
+test vector.create-1.3 {
+    Test vector size
+} -body {
+	::graph::vector create Vector1(0)
+    Vector1 length
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with a size parameter greater than zero
+# creates a new vector with size components all initialized to 0
+# ------------------------------------------------------------------------------ 
+test vector.create-1.4 {
+    Test vector component initialization  
+} -body {
+	::graph::vector create Vector1(5)
+    for {set i 0} {$i < [Vector1 length]} {incr i} {
+        if {[Vector1 index $i]} {
+            return 1
+        }
+    }
+    return 0
+} -cleanup {
+	::graph::vector destroy Vector1
+    unset i
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with identical range parameters creates a 
+# new vector with 1 element
+# ------------------------------------------------------------------------------ 
+test vector.create-1.5 {
+    Test vector indexing size
+} -body {
+	::graph::vector create Vector1(4:4)
+    Vector1 length
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with firstIndex and lastIndex range 
+# parameters creates a new vector with lastIndex-firstIndex+1 items
+# ------------------------------------------------------------------------------ 
+test vector.create-1.6 {
+    Test vector indexing size
+} -body {
+	::graph::vector create Vector1(6:10)
+    Vector1 length
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {5}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with firstIndex and lastIndex range 
+# parameters creates a new vector whose index starts at firstIndex
+# ------------------------------------------------------------------------------ 
+test vector.create-1.7 {
+    Test vector indexing 
+} -body {
+	::graph::vector create Vector1(6:10)
+    Vector1 offset
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {6}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with firstIndex and lastIndex range 
+# parameters creates a new vector with with lastIndex-firstIndex+1 components, all of
+# which are initialized to 0
+# ------------------------------------------------------------------------------ 
+test vector.create-1.8 {
+    Test vector indexing component initialization
+} -body {
+	::graph::vector create Vector1(6:10)
+    for {set i [expr {[Vector1 offset]}]} {$i < [expr {[Vector1 offset] + [Vector1 length]}]} {incr i} {
+        if {[Vector1 index $i]} {
+            return 1
+        }
+    }
+    return 0    
+} -cleanup {
+	::graph::vector destroy Vector1
+    unset i
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector also creates a command with the same name
+# as the vector
+# ------------------------------------------------------------------------------
+test vector.create-1.9 {
+    Test default command creation
+} -body {
+	::graph::vector create Vector1
+    expr {[info commands Vector1] == "Vector1"}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector also creates a variable with the same name
+# as the vector
+# ------------------------------------------------------------------------------
+test vector.create-1.10 {
+    Test default variable creation
+} -body {
+	::graph::vector create Vector1
+    expr {[info vars Vector1] == "Vector1"}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that newly created vector shows up in the vector names command
+# ------------------------------------------------------------------------------
+test vector.create-1.11 {
+    Test default vector creation
+} -body {
+	::graph::vector create Vector1
+    expr {[::graph::vector names ::TEST::Vector1] == [list ::TEST::Vector1]}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with the variable switch creates a variable
+# ------------------------------------------------------------------------------ 
+test vector.create-2.1 {
+    Test vector variable switch
+} -body {
+	::graph::vector create Vector1 -variable Foo
+    info exists Foo
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with the variable switch causes the vector
+# name to not also be a variable reference
+# ------------------------------------------------------------------------------ 
+test vector.create-2.2 {
+    Test vector variable switch
+} -body {
+	::graph::vector create Vector1 -variable Foo
+    info exists Vector1
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with the command switch does not remove
+# the variable reference that exists with the vector name
+# ------------------------------------------------------------------------------ 
+test vector.create-3.1 {
+    Test vector command switch
+} -body {
+	::graph::vector create Vector1 -command Foo
+    info exists Vector1
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with the command switch does not create
+# a variable reference
+# ------------------------------------------------------------------------------ 
+test vector.create-3.2 {
+    Test vector command switch
+} -body {
+	::graph::vector create Vector1 -command Foo
+    info exists Foo
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with the command switch creates a Tcl 
+# command
+# ------------------------------------------------------------------------------ 
+test vector.create-3.3 {
+    Test vector command switch 
+} -body {
+	::graph::vector create Vector1 -command Foo
+    info commands Foo
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {Foo}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with the watchunset switch set to true
+# causes the vector to be destoyed when the variable name (in this case the same as
+# the vector name) is unset
+# ------------------------------------------------------------------------------ 
+test vector.create-4.1 {
+    Test vector watchunset true switch  
+} -body {
+	::graph::vector create Vector1 -watchunset true
+    unset Vector1
+    expr -1 != [lsearch -glob [::graph::vector names] *Vector1]
+} -cleanup {
+    # vector destroy Vector1
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensures that creating a vector with the watchunset switch set to false
+# does not destroy the vector when the variable name (in this case the same as the 
+# vector name) is unset
+# ------------------------------------------------------------------------------ 
+test vector.create-4.2 {
+    Test vector watchunset false switch
+} -body {
+	::graph::vector create Vector1 -watchunset false
+    unset Vector1
+    expr -1 != [lsearch -glob [::graph::vector names] *Vector1]
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+	
+#===============================================================================
+# This part tests the delete function of the vector rbc component.
+# Delete is an instance function of vector.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector delete command works correctly when given a single vector 
+# index.
+# ------------------------------------------------------------------------------
+test vector.delete-1.1 {
+	::graph::vector delete: single index
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	foo delete 2
+	expr {$foo(:)}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1.0 2.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector delete command works correctly when given multiple vector 
+# indices.
+# ------------------------------------------------------------------------------
+test vector.delete-1.2 {
+	::graph::vector delete: multiple indices
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	foo delete 0 2
+	expr {$foo(:)}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {2.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector delete command works correctly when given an invalid 
+# vector index.
+# ------------------------------------------------------------------------------
+test vector.delete-1.3 {
+	::graph::vector delete: invalid index
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	if {[catch {foo delete 4}] || [foo length] != 4} {
+		expr {$foo(:)}
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1.0 2.0 3.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector delete command works correctly when given both a valid 
+# and an invalid vector index.
+# ------------------------------------------------------------------------------
+test vector.delete-1.4 {
+	::graph::vector delete: valid and invalid indices
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	if {[catch {foo delete 0 4}] || [foo length] != 4 || [lsearch $foo(:) 1.0] == -1} {
+		expr {$foo(:)}
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1.0 2.0 3.0 4.0}
+
+#===============================================================================
+# This part tests the destroy function of the vector rbc component.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector destroy command works correctly when given a single
+# existing vector name and no command has been assigned during the vector create.
+# ------------------------------------------------------------------------------
+test vector.destroy-1.1 {
+	::graph::vector destroy: single vector name, no command
+} -setup {
+	::graph::vector create foo
+	foo set 3
+} -body {
+	::graph::vector destroy foo
+	
+	if {[catch {$foo(0)}] && [catch {foo length}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector destroy command works correctly when given a multiple 
+# existing vector names and no commands have been assigned during the vector create.
+# ------------------------------------------------------------------------------
+test vector.destroy-1.2 {
+	::graph::vector destroy: multiple vector names, no command
+} -setup {
+	::graph::vector create foo
+	foo set 3
+	::graph::vector create bar
+	bar set 5
+} -body {
+	::graph::vector destroy foo bar
+	
+	if {[catch {$foo(0)}] && [catch {foo length}]&& [catch {$bar(0)}] && [catch {bar length}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector destroy command works correctly when given a single 
+# existing vector name and a command has been assigned during the vector create.
+# ------------------------------------------------------------------------------
+test vector.destroy-1.3 {
+	::graph::vector destroy: single vector name, with command
+} -setup {
+	::graph::vector create foo -command bar
+	bar set 3
+} -body {
+	::graph::vector destroy foo
+	
+	if {[catch {$foo(0)}] && [catch {bar length}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector destroy command works correctly when given a multiple 
+# existing vector names and a commands have been assigned during the vector create.
+# ------------------------------------------------------------------------------
+test vector.destroy-1.4 {
+	::graph::vector destroy: multiple vector names, with command
+} -setup {
+	::graph::vector create foo -command bar
+	bar set 3
+	::graph::vector create moo -command nar
+	nar set 5
+} -body {
+	::graph::vector destroy foo moo
+	
+	if {[catch {$foo(0)}] && [catch {bar length}] && [catch {$moo(0)}] && [catch {nar length}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -result {0}
+
+#===============================================================================
+# This part tests the dup function of an instance of the vector
+# rbc component.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector dup command overwrites the contents of an existing 
+# destName vector with the contents of the instance vector 
+# ------------------------------------------------------------------------------ 
+test vector.dup-1.1 {
+    Test vector dup with overwriting
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2 3 4 5 6 7 8 9}       
+	::graph::vector create Vector2
+    Vector2 set {1 2}
+} -body {
+    Vector1 dup Vector2
+    expr {$Vector2(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector dup command creates a new vector with the contents of 
+# the instance vector when destName does not exist. 
+# ------------------------------------------------------------------------------ 
+test vector.dup-1.2 {
+    Test vector dup with vector creation
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2 3 4 5 6 7 8 9}       
+} -body {
+    Vector1 dup Vector2
+    expr {$Vector2(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0}
+
+#===============================================================================
+# This part tests the different operators of the expression feature
+# in the vector package.
+
+# ------------------------------------------------------------------------------
+#  Test Constraints
+#  Some machines treat floating point numbers differently, so we set some
+#  constraints here for various vector related routines
+# ------------------------------------------------------------------------------
+tcltest::testConstraint twoDigitExponent   [expr {[format %1.0e 1e-20] eq "1e-20"}]
+tcltest::testConstraint threeDigitExponent [expr {[format %1.0e 1e-20] eq "1e-020"}]
+set tcl_precision 12
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating unary minus
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.1 {
+	Test unary minus
+} -setup {
+	::graph::vector create Vector1(5)
+	
+	Vector1 set {2 0 -1 2.4 -4.3}
+} -body {
+	::graph::vector expr {-Vector1}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-2.0 0.0 1.0 -2.4 4.3}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating logical not
+# ------------------------------------------------------------------------------
+test vector.expr-1.2 {
+	Test logical not
+} -setup {
+	::graph::vector create Vector1(5)
+	
+	Vector1 set {2 0 -2 2.4 -4.4}
+} -body {
+	::graph::vector expr {!Vector1}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.0 1.0 0.0 0.0 0.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating exponentation
+# ------------------------------------------------------------------------------
+test vector.expr-1.3 {
+	Test exponentiation
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {0 1 12 4 2 -2 -2}
+	Vector2 set {5 5 0 0.5 3 3 4}
+} -body {
+	::graph::vector expr {Vector1 ^ Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {0.0 1.0 1.0 2.0 8.0 -8.0 16.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating multiplication
+# ------------------------------------------------------------------------------
+test vector.expr-1.4 {
+	Test multiplication
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {0 1 2 2.4 -4 -4}
+	Vector2 set {5 5 5 2 2 -4}
+} -body {
+	::graph::vector expr {Vector1 * Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {0.0 5.0 10.0 4.8 -8.0 16.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating division
+# ------------------------------------------------------------------------------
+test vector.expr-1.5 {
+	Test Division
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {0 1 5 -4 -8}
+	Vector2 set {5 5 1 2 -4}
+} -body {
+	::graph::vector expr {Vector1 / Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {0.0 0.2 5.0 -2.0 2.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating Modulo
+# ------------------------------------------------------------------------------
+test vector.expr-1.6 {
+	Test Modulo
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {38 12 -3 5}
+	Vector2 set {12 24 5 -3}
+} -body {
+	::graph::vector expr {Vector1 % Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {2.0 12.0 2.0 -1.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating Subtraction
+# ------------------------------------------------------------------------------
+test vector.expr-1.7 {
+	Test Subtraction
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {0 5 4 2 -8 -8}
+	Vector2 set {5 0 2 4 4 -4}
+} -body {
+	::graph::vector expr {Vector1 - Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {-5.0 5.0 2.0 -2.0 -12.0 -4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating addition
+# ------------------------------------------------------------------------------
+test vector.expr-1.8 {
+	Test Addition
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {2 4 -1 2.4 4}
+	Vector2 set {5 -2 7 8 9.2}
+} -body {
+	::graph::vector expr {Vector1 + Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {7.0 2.0 6.0 10.4 13.2}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating vector shift left
+# ------------------------------------------------------------------------------
+test vector.expr-1.9 {
+	Test shift left
+} -setup {
+	::graph::vector create Vector1(5)
+	
+	Vector1 set {0 1 5 -4 -8}
+} -body {
+	::graph::vector expr {Vector1 << 1}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1.0 5.0 -4.0 -8.0 0.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating vector shift right
+# ------------------------------------------------------------------------------
+test vector.expr-1.10 {
+	Test Shift Right
+} -setup {
+	::graph::vector create Vector1(5)
+	
+	Vector1 set {0 1 5 -4 -8}
+} -body {
+	::graph::vector expr {Vector1 >> 1}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-8.0 0.0 1.0 5.0 -4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating less than
+# ------------------------------------------------------------------------------
+test vector.expr-1.11 {
+	Test less than
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {2 4 -2 4 4 5}
+	Vector2 set {5 2 5 -2 4.4 5}
+} -body {
+	::graph::vector expr {Vector1 < Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {1.0 0.0 1.0 0.0 1.0 0.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating greater than
+# ------------------------------------------------------------------------------
+test vector.expr-1.12 {
+	Test Greater Than
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {2 4 -2 4 4 5}
+	Vector2 set {5 2 5 -2 4.4 5}
+} -body {
+	::graph::vector expr {Vector1 > Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {0.0 1.0 0.0 1.0 0.0 0.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating less than or equal
+# ------------------------------------------------------------------------------
+test vector.expr-1.13 {
+	Test Less than or equal
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {2 4 -2 4 4 5}
+	Vector2 set {5 2 5 -2 4.4 5}
+} -body {
+	::graph::vector expr {Vector1 <= Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {1.0 0.0 1.0 0.0 1.0 1.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating greater than or equal
+# ------------------------------------------------------------------------------
+test vector.expr-1.14 {
+	Test Greater than or equal
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {2 4 -2 4 4 5}
+	Vector2 set {5 2 5 -2 4.4 5}
+} -body {
+	::graph::vector expr {Vector1 >= Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {0.0 1.0 0.0 1.0 0.0 1.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating logical and
+# ------------------------------------------------------------------------------
+test vector.expr-1.15 {
+	Test logical and
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {0 5 0 5.5}
+	Vector2 set {0 0 5.2 6.0}
+} -body {
+	::graph::vector expr {Vector1 && Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {0.0 0.0 0.0 1.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating logical or
+# ------------------------------------------------------------------------------
+test vector.expr-1.16 {
+	Test logical or
+} -setup {
+	::graph::vector create Vector1(5)
+	::graph::vector create Vector2(5)
+	
+	Vector1 set {0 5 0 5.5}
+	Vector2 set {0 0 5.2 6.0}
+} -body {
+	::graph::vector expr {Vector1 || Vector2}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {0.0 1.0 1.0 1.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating acos (inverse cosine)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.17 {
+	Test acos
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {1 0 0.5 -1}
+} -body {
+	::graph::vector expr {acos(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.0 1.57079632679 1.0471975512 3.14159265359}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating asin (inverse sine)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.18 {
+	Test asin
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {1 0 0.5 -1}
+} -body {
+	::graph::vector expr {asin(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1.57079632679 0.0 0.523598775598 -1.57079632679}
+	
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating atan (inverse tangent)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.19 {
+	Test atan
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {1 0 0.5 -1}
+} -body {
+	::graph::vector expr {atan(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.785398163397 0.0 0.463647609001 -0.785398163397}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating ceil (ceiling)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.20- {
+	Test ceil
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {3.14159 4.5 8.4 .1 -0.1 -0.5 -2.1}
+} -body {
+	::graph::vector expr {ceil(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {4.0 5.0 9.0 1.0 0.0 0.0 -2.0}
+
+test vector.expr-1.20+ {
+	Test ceil
+} -constraints threeDigitExponent -setup {
+	::graph::vector create Vector1
+	Vector1 set {3.14159 4.5 8.4 .1 -0.1 -0.5 -2.1}
+} -body {
+	::graph::vector expr {ceil(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {4.0 5.0 9.0 1.0 0.0 0.0 -2.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating cos
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.21 {
+	Test cosine
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {0 3.14159 6.28318 -3.14159}
+} -body {
+	::graph::vector expr {cos(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1.0 -0.999999999996 0.999999999986 -0.999999999996}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating cosh
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.22 {
+	Test cosh
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {0 3.14159 6.28318 -3.14159}
+} -body {
+	::graph::vector expr {cosh(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1.0 11.5919226299 267.745340517 11.5919226299}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating exp
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.23 {
+	Test exp
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {2 -2 1.3 0}
+} -body {
+	::graph::vector expr {exp(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {7.38905609893 0.135335283237 3.66929666762 1.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating floor
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.24 {
+	Test floor
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {2.1 3.9 -0.1 -1.5}
+} -body {
+	::graph::vector expr {floor(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {2.0 3.0 -1.0 -2.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating log
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.25 {
+	Test log
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {12 2 3 5}
+} -body {
+	::graph::vector expr {log(Vector1)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {2.48490664979 0.69314718056 1.09861228867 1.60943791243}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating log10
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.26 {
+	Test log10
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {1 10 2.1 19} 
+} -body {
+	::graph::vector expr {log10(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.0 1.0 0.322219294734 1.27875360095}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating abs
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.27 {
+	Test abs
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {2 3 -3 5 4 -1.1 3.2}
+} -body {
+	::graph::vector expr {abs(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {2.0 3.0 3.0 5.0 4.0 1.1 3.2}	
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating sin
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.28-00 {
+	Test sin
+} -constraints twoDigitExponent -setup {
+	::graph::vector create Vector1
+	Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+} -body {
+	::graph::vector expr {sin(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {2.65358979335e-06 0.999999999999 0.0 -2.65358979335e-06 -0.846220404175 0.841470984808 -0.841470984808}
+test vector.expr-1.28-000 {
+	Test sin
+} -constraints threeDigitExponent -setup {
+	::graph::vector create Vector1
+	Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+} -body {
+	::graph::vector expr {sin(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {2.65358979335e-006 0.999999999999 0.0 -2.65358979335e-006 -0.846220404175 0.841470984808 -0.841470984808}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating sinh
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.29 {
+	Test sinh
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+} -body {
+	::graph::vector expr {sinh(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {11.548708597 2.30129557314 0.0 -11.548708597 4872401723.12 1.17520119364 -1.17520119364}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating sqrt
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.30 {
+	Test sqrt
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {0 2 4 144 3.14159}
+} -body {
+	::graph::vector expr {sqrt(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.0 1.41421356237 2.0 12.0 1.77245310234}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating tan
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.31-00 {
+	Test tan
+} -constraints twoDigitExponent -setup {
+	::graph::vector create Vector1
+	Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+} -body {
+	::graph::vector expr {tan(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-2.65358979336e-06 753695.995141 0.0 2.65358979336e-06 1.58815308339 1.55740772465 -1.55740772465}
+test vector.expr-1.31-000 {
+	Test tan
+} -constraints threeDigitExponent -setup {
+	::graph::vector create Vector1
+	Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+} -body {
+	::graph::vector expr {tan(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-2.65358979336e-006 753695.995141 0.0 2.65358979336e-006 1.58815308339 1.55740772465 -1.55740772465}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating tanh
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.32 {
+	Test tanh
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {3.14159 1.570795 0 -3.14159 23 1 -1}
+} -body {
+	::graph::vector expr {tanh(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.996272056473 0.91715212493 0.0 -0.996272056473 1.0 0.761594155956 -0.761594155956}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating round
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.33 {
+	Test round
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-3.11 -1.5 7.3 9.5 0}
+} -body {
+	::graph::vector expr {round(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-3.0 -2.0 7.0 10.0 0.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating adev
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.34 {
+	Test adev
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-3.11 -1.5 7.3 9.5 0}
+} -body {
+	::graph::vector expr {adev(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {4.7696}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating kurtosis (degree of peakedness)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.35 {
+	Test kurtosis
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-3.11 -1.5 7.3 9.5 0}
+} -body {
+	::graph::vector expr {kurtosis(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-2.13595720694}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests length with a vector containing elements (see 1.52 for no elements)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.36 {
+	Test length with elements
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-3.11 -1.5 7.3 9.5 0}
+} -body {
+	::graph::vector expr {length(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {5.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating max
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.37 {
+	Test max
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 0}
+} -body {
+	::graph::vector expr {max(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {9.5}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating mean
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.38 {
+	Test mean
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 0}
+} -body {
+	::graph::vector expr {mean(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.438}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating median
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.39 {
+	Test median
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {median(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.05}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating min
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.40 {
+	Test min
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {min(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-13.11}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating q1
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.41 {
+	Test q1
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {q1(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-1.3}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating q3
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.42 {
+	Test q3
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {q3(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {8.4}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating prod
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.43 {
+	Test prod
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {prod(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-1800.17343}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating sdev (standard deviation)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.44 {
+	Test sdev
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {sdev(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {7.99297295546}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating skew (skewedness)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.45 {
+	Test skew
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {skew(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1.16046217734}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating sum
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.46 {
+	Test sum
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {sum(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {2.29}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating var (variance)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.47 {
+	Test var
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {var(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {63.8876166667}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating norm
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.48 {
+	Test norm
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {norm(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.0 0.513489606369 0.902697921274 1.0 0.53118089341 0.632905793897}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating sort (ascending by default)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.49 {
+	Test sort
+} -setup {
+	::graph::vector create Vector1
+	Vector1 set {-13.11 -1.5 7.3 9.5 -1.1 1.2}
+} -body {
+	::graph::vector expr {sort(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {-13.11 -1.5 -1.1 1.2 7.3 9.5}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests different conditions when evaluating random (produces vector)
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.50 {
+	Test random
+} -setup {
+	::graph::vector create Vector1(5)
+} -body {
+	::graph::vector expr {random(Vector1)}
+	for {set i 0} {$i < [Vector1 length]} {incr i} {
+        if {[Vector1 index $i] < 0 || [Vector1 index $i] > 1} {
+            return 0
+        }
+    }
+    return 1
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests length when vector has no elements
+# ------------------------------------------------------------------------------ 
+test vector.expr-1.51 {
+	Test length no elements
+} -setup {
+	::graph::vector create Vector1(0)
+} -body {
+	::graph::vector expr {length(Vector1)} 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.0}
+
+#===============================================================================
+# This part tests the index function of the vector rbc component when only 
+# an index is given.
+# Index is an instance function of vector.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector index command works correctly when given a valid vector 
+# index.
+# ------------------------------------------------------------------------------
+test vector.index-1.1 {
+	::graph::vector index: valid index
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	foo index 2
+} -cleanup {
+	::graph::vector destroy foo
+} -result {3.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector index command works correctly when given an invalid 
+# vector index.
+# ------------------------------------------------------------------------------
+test vector.index-1.2 {
+	::graph::vector index: invalid index
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	if {[catch {foo index 4}]} {
+		expr {$foo(:)}
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1.0 2.0 3.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector index command works correctly when given a valid vector 
+# index and a valid value.
+# ------------------------------------------------------------------------------
+test vector.index-2.1 {
+	::graph::vector index: valid index, valid value
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	foo index 2 5.0
+	expr {$foo(:)}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1.0 2.0 5.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector index command works correctly when given an invalid 
+# vector index.
+# ------------------------------------------------------------------------------
+test vector.index-2.2 {
+	::graph::vector index: invalid index, valid value
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	if {[catch {foo index 4 5.0}]} {
+		expr {$foo(:)}
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1.0 2.0 3.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector index command works correctly when given a valid vector 
+# index and an invalid value.
+# ------------------------------------------------------------------------------
+test vector.index-2.3 {
+	::graph::vector index: valid index, invalid value
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	if {[catch {foo index 2 a}]} {
+		expr {$foo(:)}
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1.0 2.0 3.0 4.0}
+
+#===============================================================================
+# This part tests the different constructs for the length function of 
+# the vector rbc component using no arguments.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector will return the correct length
+# ------------------------------------------------------------------------------ 
+test vector.length-1.1 {
+    Test default vector length
+} -setup {
+	::graph::vector create TestVector(5)
+} -body {
+    TestVector length
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {5}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector will return the correct length when the vector
+#	has been offset
+# ------------------------------------------------------------------------------ 
+test vector.length-1.2 {
+    Test default vector length
+} -setup {
+	::graph::vector create TestVector(2:5)
+} -body {
+    TestVector length
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {4}
+
+	# ------------------------------------------------------------------------------
+# Purpose: Ensure that length which resizes returns the correct value
+# ------------------------------------------------------------------------------ 
+test vector.length-2.1 {
+    Test length resizing
+} -setup {
+	::graph::vector create TestVector(5)
+} -body {
+	TestVector length 10
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {10}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector will keep its offset after adjusted to the desired length
+# ------------------------------------------------------------------------------ 
+test vector.length-2.2 {
+    Test length resizing keeps offset
+} -setup {
+	::graph::vector create TestVector(2:5)
+} -body {
+	TestVector length 10
+    TestVector offset
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {2}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector will expand to the desired length
+# ------------------------------------------------------------------------------ 
+test vector.length-2.3 {
+    Test length resizing
+} -setup {
+	::graph::vector create TestVector(5)
+} -body {
+	TestVector length 10
+    TestVector length
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {10}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector will keep the data in the vector after resizing
+# ------------------------------------------------------------------------------ 
+test vector.length-2.4 {
+    Test length resizing keeps data
+} -setup {
+	::graph::vector create TestVector(5)
+	TestVector set {0 1 2 3 4}
+} -body {
+	TestVector length 10
+    for {set i 0} {$i < 5} {incr i} {
+		if {$i != [TestVector index $i]} {
+			return 0
+		}
+    }
+	
+	for {set i 5} {$i < 10} {incr i} {
+		if {0 != [TestVector index $i]} {
+			return 0
+		}
+	}
+	return 1
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector will expand to the desired length
+# ------------------------------------------------------------------------------ 
+test vector.length-2.5 {
+    Test length resizing
+} -setup {
+	::graph::vector create TestVector(5)
+} -body {
+	TestVector length 3
+    TestVector length
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {3}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector will keep the data in the vector after resizing
+# ------------------------------------------------------------------------------ 
+test vector.length-2.6 {
+    Test length resizing keeps data
+} -setup {
+	::graph::vector create TestVector(5)
+	TestVector set {0 1 2 3 4}
+} -body {
+	TestVector length 3
+    for {set i 0} {$i < 3} {incr i} {
+		if {$i != [TestVector index $i]} {
+			return 0
+		}
+    }
+	return 1
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {1}
+
+#===============================================================================
+# This part tests the merge function of the vector rbc
+# component by merging different permutations of vectors
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a single vector merge will overite data
+# ------------------------------------------------------------------------------ 
+test vector.merge-1.1 {
+    Test single vector merge
+} -setup {
+	::graph::vector create Foobar
+	::graph::vector create Foo
+    Foobar set {1 2 3 4 5}
+	Foo set {3 4}
+} -body {
+	Foobar merge Foo
+	Foobar range [Foobar offset] end
+} -cleanup {
+	::graph::vector destroy Foobar
+	::graph::vector destroy Foo
+} -result {3.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a multiple vector merge merges index by index
+# ------------------------------------------------------------------------------ 
+test vector.merge-1.1 {
+    Test multiple vector merge
+} -setup {
+	::graph::vector create Foobar
+	::graph::vector create Foo
+	::graph::vector create Bar
+	Foo set {1 3 5 7 9}
+	Bar set {2 4 6 8 10}
+} -body {
+	Foobar merge Foo Bar
+	Foobar range [Foobar offset] end
+} -cleanup {
+	::graph::vector destroy Foobar
+	::graph::vector destroy Foo
+	::graph::vector destroy Bar
+} -result {1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}
+
+#===============================================================================
+# This part tests the names function of the vector rbc component.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector names command works correctly when no pattern is given.
+# ------------------------------------------------------------------------------
+test vector.names-1.1 {
+	::graph::vector names: no pattern
+} -setup {
+	::graph::vector create foo
+	::graph::vector create goo
+} -body {
+	::graph::vector names
+} -cleanup {
+	::graph::vector destroy foo
+	::graph::vector destroy goo
+} -result {::TEST::foo ::TEST::goo}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector names command works correctly when an exact pattern is 
+# given.
+# ------------------------------------------------------------------------------
+test vector.names-1.2 {
+	::graph::vector names: exact pattern
+} -setup {
+	::graph::vector create foo
+	::graph::vector create goo
+} -body {
+	::graph::vector names ::TEST::goo
+} -cleanup {
+	::graph::vector destroy foo
+	::graph::vector destroy goo
+} -result {::TEST::goo}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector names command works correctly when a wildcard pattern is 
+# given.
+# ------------------------------------------------------------------------------
+test vector.names-1.3 {
+	::graph::vector names: wildcard pattern
+} -setup {
+	::graph::vector create foo
+	::graph::vector create food
+} -body {
+	::graph::vector names *f*
+} -cleanup {
+	::graph::vector destroy foo
+	::graph::vector destroy food
+} -result {::TEST::food ::TEST::foo}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector names command works correctly when an incorrect pattern 
+# is given.
+# ------------------------------------------------------------------------------
+test vector.names-1.4 {
+	::graph::vector names: incorrect pattern
+} -setup {
+	::graph::vector create foo
+	::graph::vector create food
+} -body {
+	::graph::vector names foo
+} -cleanup {
+	::graph::vector destroy foo
+	::graph::vector destroy food
+} -result {}
+
+#===============================================================================
+# This part tests the different constructs for the normalize function of 
+# the vector rbc component.
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests normalize to verify a vector of whole numbers is normalized properly
+# ------------------------------------------------------------------------------ 
+test vector.normalize-1.1 {
+    Test normalize ints
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 3 7 11 13 17 19 23 29}
+} -body {
+    Vector1 normalize
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0.0 0.0714285714286 0.214285714286 0.357142857143 0.428571428571 0.571428571429 0.642857142857 0.785714285714 1.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests normalize to verify a vector of negative numbers is normalized properly
+# ------------------------------------------------------------------------------ 
+test vector.normalize-1.2 {
+    Test normalize ints
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {-1 -3 -7 -11 -13 -17 -19 -23 -29}
+} -body {
+    Vector1 normalize
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1.0 0.928571428571 0.785714285714 0.642857142857 0.571428571429 0.428571428571 0.357142857143 0.214285714286 0.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests normalize to verify a vector of negative numbers is normalized properly
+# ------------------------------------------------------------------------------ 
+test vector.normalize-1.3 {
+    Test normalize ints
+} -setup {
+	::graph::vector create Vector1
+} -body {
+    Vector1 normalize
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {}	
+
+#===============================================================================
+# This part tests the offset function of 
+# the vector rbc component using no arguments.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector will return the correct offset
+# ------------------------------------------------------------------------------ 
+test vector.offset-1.1 {
+    Test default vector offset
+} -setup {
+	::graph::vector create TestVector(5:10)
+} -body {
+    TestVector offset
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {5}
+
+	# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector will shift to correct offset
+# ------------------------------------------------------------------------------ 
+test vector.offset-2.1 {
+    Test vector offset shift
+} -setup {
+	::graph::vector create TestVector(5:10)
+} -body {
+    TestVector offset 4
+	TestVector offset
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {4}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a vector's data will shift to correct offset
+# ------------------------------------------------------------------------------ 
+test vector.offset-2.1 {
+    Test vector offset shift
+} -setup {
+	::graph::vector create TestVector(5:10)
+	TestVector set {4 5 6 7 8}
+} -body {
+    TestVector offset 4
+	
+	for {set i 4} {$i < 5} {incr i} {
+		if {$i != [TestVector index $i]} {
+			return 0
+		}
+	}
+	return 1
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {1}
+
+#===============================================================================
+# This part tests the populate function of an instance of the vector
+# rbc component.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector populate command overwrites the contents of an existing
+# destName vector with the contents of the instance vector and density new components
+# between each pre-existing component 
+# ------------------------------------------------------------------------------ 
+test vector.populate-1.1 {
+    Test vector populate with overwriting
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2 3 4 5 6 7 8 9}       
+	::graph::vector create Vector2
+Vector2 set {1 2}
+} -body {
+    Vector1 populate Vector2 1
+    expr {$Vector2(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector populate command creates a new destName vector with the 
+# contents of the instance vector and density number of new components between each 
+# pre-existing component 
+# ------------------------------------------------------------------------------ 
+test vector.populate-1.2 {
+    Test vector populate with creation
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2 3 4 5 6 7 8 9}
+} -body {
+    Vector1 populate Vector2 1
+    expr {$Vector2(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 5.5 6.0 6.5 7.0 7.5 8.0 8.5 9.0}
+
+#===============================================================================
+# This part tests the different constructs for the random function of 
+# the vector rbc component.
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests random to verify it creates a random vector given an empty vector 
+# of set length
+# ------------------------------------------------------------------------------ 
+test vector.random-1.1 {
+    Test random
+} -setup {
+	::graph::vector create Vector1(5)
+} -body {
+	Vector1 random
+	for {set i 0} {$i < [Vector1 length]} {incr i} {
+        if {[Vector1 index $i] < 0 || [Vector1 index $i] > 1} {
+            return 0
+        }
+    }
+    return 1
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests random to verify it creates a random vector given an already 
+# initialized vector
+# ------------------------------------------------------------------------------ 
+test vector.random-1.2 {
+    Test random
+} -setup {
+	::graph::vector create Vector1(5)
+	Vector1 set {1 2 3 4 5}
+} -body {
+	Vector1 random
+	for {set i 0} {$i < [Vector1 length]} {incr i} {
+        if {[Vector1 index $i] < 0 || [Vector1 index $i] > 1} {
+            return 0
+        }
+    }
+    return 1
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}	
+
+#===============================================================================
+# This part tests the range function of the vector rbc component.
+# Range is an instance function of vector.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector range command works correctly when given two valid vector 
+# indices where the last index is greater than the first index.
+# ------------------------------------------------------------------------------
+test vector.range-1.1 {
+	::graph::vector range: valid indices
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	foo range 1 2
+} -cleanup {
+	::graph::vector destroy foo
+} -result {2.0 3.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector range command works correctly when given an invalid 
+# vector index.
+# ------------------------------------------------------------------------------
+test vector.range-1.2 {
+	::graph::vector range: invalid index
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	if {[catch {foo range 1 4}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector range command works correctly when given two valid vector 
+# indices where the last index is less than the first index.
+# ------------------------------------------------------------------------------
+test vector.range-1.3 {
+	::graph::vector range: valid indices, reversed
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	foo range 2 1
+} -cleanup {
+	::graph::vector destroy foo
+} -result {2.0 3.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector range command works correctly when given a valid vector 
+# index and the end keyword.
+# ------------------------------------------------------------------------------
+test vector.range-1.4 {
+	::graph::vector range: keyword
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	foo range 1 end
+} -cleanup {
+	::graph::vector destroy foo
+} -result {2.0 3.0 4.0}
+
+#===============================================================================
+# This part tests the different constructs for the search function of 
+# the vector rbc component.
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests search to verify it finds the locations of an element that occurs twice
+# ------------------------------------------------------------------------------ 
+test vector.search-1.1 {
+    Test search multipe instances
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {3 1 2 -3 4 1}
+} -body {
+    Vector1 search 1 
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1 5}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests search to verify it finds the locations of an element that occurs once
+# ------------------------------------------------------------------------------ 	
+test vector.search-1.2 {
+    Test search single instance
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {3 1 2 -3 4 1}
+} -body {
+    Vector1 search 3
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0}	
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests search to verify it returns nothing for an element that does not exist
+# ------------------------------------------------------------------------------ 	
+test vector.search-1.3 {
+    Test search zero instances
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {3 1 2 -3 4 1}
+} -body {
+    Vector1 search 7
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests search to verify it finds the locations of elements within a given
+# range where the numbers with in the range are included in the elements
+# ------------------------------------------------------------------------------ 	
+test vector.search-1.4 {
+    Test search
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2 3 4 5 6 5 4 3 2 1 0}
+} -body {
+    Vector1 search 2 5
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1 2 3 4 6 7 8 9}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests search to verify it finds the locations of elements within a given
+# range where the numbers provided are not included in the elements
+# ------------------------------------------------------------------------------ 	
+test vector.search-1.5 {
+    Test search
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2 3 4 5 6 5 4 3 2 1 0}
+} -body {
+    Vector1 search -1 10
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0 1 2 3 4 5 6 7 8 9 10 11}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests search to verify it returns nothing when given a range where no
+# elements exist
+# ------------------------------------------------------------------------------ 	
+test vector.search-1.6 {
+    Test search
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2 3 4 5 6 5 4 3 2 1 0}
+} -body {
+    Vector1 search 1.1 1.9
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {}	
+
+#===============================================================================
+# This part tests the different constructs for the sequence (seq) function of 
+# the vector rbc component using no arguments.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a sequence will be generated from start to finish
+# ------------------------------------------------------------------------------ 
+test vector.seq-1.1 {
+    Test sequence generation without step
+} -setup {
+	::graph::vector create TestVector
+} -body {
+	TestVector seq 2 5
+	TestVector range 0 end
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {2.0 3.0 4.0 5.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a sequence will be generated from start to finish with a step
+# ------------------------------------------------------------------------------ 
+test vector.seq-1.2 {
+    Test sequence generation with step
+} -setup {
+	::graph::vector create TestVector
+} -body {
+	TestVector seq 2 5 2
+	TestVector range 0 end
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {2.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure that a sequence will be generated when given a negative step
+# ------------------------------------------------------------------------------ 
+test vector.seq-1.3 {
+    Test sequence generation with negative step
+} -setup {
+	::graph::vector create TestVector
+} -body {
+	TestVector seq 5 0 -1
+	TestVector range 0 end
+} -cleanup {
+	::graph::vector destroy TestVector
+} -result {5.0 4.0 3.0 2.0 1.0 0.0}
+
+#===============================================================================
+# This part tests the set function of the vector rbc component.
+# Set is an instance function of vector.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector set command works correctly when given a list of 
+# numbers.
+# ------------------------------------------------------------------------------
+test vector.set-1.1 {
+	::graph::vector set: list of numbers
+} -setup {
+	::graph::vector create foo
+} -body {
+	foo set {1.0 2.0 3.0 4.0} 
+	expr {$foo(:)}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {1.0 2.0 3.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector set command works correctly when given another vector.
+# ------------------------------------------------------------------------------
+test vector.set-1.2 {
+	::graph::vector set: another vector
+} -setup {
+	::graph::vector create foo
+	::graph::vector create goo
+} -body {
+	goo set {1.0 2.0 3.0 4.0}
+	foo set goo
+	expr {$foo(:)}
+} -cleanup {
+	::graph::vector destroy foo
+	::graph::vector destroy goo
+} -result {1.0 2.0 3.0 4.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector set command works correctly when given a list containing 
+# characters.
+# ------------------------------------------------------------------------------
+test vector.set-1.3 {
+	::graph::vector set: list with characters
+} -setup {
+	::graph::vector create foo
+} -body {
+	if {[catch {foo set {1.0 2.0 3.0 a}}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector set command works correctly when given a non-existent 
+# vector reference.
+# ------------------------------------------------------------------------------
+test vector.set-1.4 {
+	::graph::vector set: non-existent vector
+} -setup {
+	::graph::vector create foo
+} -body {
+	if {[catch {foo set goo}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {0}
+
+#===============================================================================
+# This part tests the different constructs for the sort function of 
+# the vector rbc component when one vector is given.
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests sort to verify a vector of numbers is sorted properly
+# ------------------------------------------------------------------------------ 
+test vector.sort-1.1 {
+    Test sort basic
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {10 9 8 7 6 5 4 3 2 1}
+} -body {
+    Vector1 sort
+	for {set i 0} {$i < [Vector1 length] - 1} {incr i} {
+    if {[Vector1 index $i] > [Vector1 index $i+1]} {
+        return 0
+    }
+}
+    return 1
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests sort to verify a vector of numbers is sorted properly in reverse
+# ------------------------------------------------------------------------------ 
+test vector.sort-1.2 {
+    Test sort reverse
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2 3 4 5 6 7 8 9 10}
+} -body {
+    Vector1 sort -reverse
+for {set i 0} {$i < [Vector1 length] - 1} {incr i} {
+    if {[Vector1 index $i] < [Vector1 index $i+1]} {
+        return 0
+    }
+}
+	return 1
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests sort to verify a vector of numbers is sorted properly along with 
+# the associated vector
+# ------------------------------------------------------------------------------ 
+test vector.sort-2.1 {
+    Test sort vector and an associated vector
+} -setup {
+	::graph::vector create Vector1
+	::graph::vector create Vector2
+    Vector1 set {5 4 3 2 1}
+	Vector2 set {10 9 8 7 6}
+} -body {
+	Vector1 sort Vector2
+    Vector1 append Vector2
+	for {set i 0} {$i < [Vector1 length] - 1} {incr i} {
+    if {[Vector1 index $i] > [Vector1 index $i+1]} {
+        return 0
+    }
+}
+    return 1
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1}
+
+# ------------------------------------------------------------------------------
+# Purpose: Tests sort to verify a vector of numbers is sorted properly along with 
+# the associated vector using the reverse flag
+# ------------------------------------------------------------------------------ 	
+test vector.sort-2.2 {
+    Test sort vector and an associated vector -reverse
+} -setup {
+	::graph::vector create Vector1
+	::graph::vector create Vector2
+    Vector1 set {1 2 3 4 5}
+	Vector2 set {6 7 8 9 10}
+} -body {
+	Vector1 sort -reverse Vector2
+    Vector2 append Vector1
+	for {set i 0} {$i < [Vector2 length] - 1} {incr i} {
+    if {[Vector2 index $i] < [Vector2 index $i+1]} {
+        return 0
+    }
+}
+	return 1
+} -cleanup {
+	::graph::vector destroy Vector1
+	::graph::vector destroy Vector2
+} -result {1}
+
+#===============================================================================
+# This part tests the split function of the vector rbc component.
+# Split is an instance function of vector.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector split command works correctly when given a single vector 
+# name.
+# ------------------------------------------------------------------------------
+test vector.split-1.1 {
+	::graph::vector split: one vector name
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	foo split goo
+	if {[expr {$goo(:)}] != {1.0 2.0 3.0 4.0}} {
+		return 1
+	} elseif {[expr {$foo(:)}] != {1.0 2.0 3.0 4.0}} {
+		return 2
+	} else {
+		return 0
+	}
+} -cleanup {
+	::graph::vector destroy foo
+	::graph::vector destroy goo
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector split command works correctly when given multiple vector 
+# names.
+# ------------------------------------------------------------------------------
+test vector.split-1.2 {
+	::graph::vector split: multiple vector names
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0 5.0 6.0}
+} -body {
+	foo split goo moo too 
+	if {[expr {$goo(:)}] != {1.0 4.0} && [expr {$moo(:)}] != {2.0 5.0} && [expr {$too(:)}] != {3.0 6.0}} {
+		return 1
+	} elseif {[expr {$foo(:)}] != {1.0 2.0 3.0 4.0 5.0 6.0}} {
+		return 2
+	} else {
+		return 0
+	}
+} -cleanup {
+	::graph::vector destroy foo
+	::graph::vector destroy goo
+	::graph::vector destroy moo
+	::graph::vector destroy too
+} -result {0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector split command works correctly when the components of the 
+# vector cannot be evenly split into the given number of vector names.
+# ------------------------------------------------------------------------------
+test vector.split-1.3 {
+	::graph::vector split: incorrect number of vector names
+} -setup {
+	::graph::vector create foo
+	foo set {1.0 2.0 3.0 4.0}
+} -body {
+	if {[catch {foo split goo moo too}]} {
+		return 0
+	} else {
+		return 1
+	}
+} -cleanup {
+	::graph::vector destroy foo
+} -result {0}
+
+#===============================================================================
+# This part tests the variable function of an instance of the vector
+# rbc component.
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector variable command creates a new Tcl variable reference to
+# the vector instance 
+# ------------------------------------------------------------------------------ 
+test vector.variable-1.1 {
+    Test vector variable's variable creation
+} -setup {
+	::graph::vector create Vector1
+Vector1 set {1 2 3 4 5}
+} -body {
+    Vector1 variable VarName 
+    expr {$VarName(:)}
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {1.0 2.0 3.0 4.0 5.0}
+
+# ------------------------------------------------------------------------------
+# Purpose: Ensure the vector variable command removes any old Tcl variable reference 
+# to the vector instance 
+# ------------------------------------------------------------------------------ 
+test vector.variable-1.2 {
+    Test vector variable existing variable destruction
+} -setup {
+	::graph::vector create Vector1
+    Vector1 set {1 2 3 4 5}
+} -body {
+    Vector1 variable VarName 
+    info exists Vector1
+} -cleanup {
+	::graph::vector destroy Vector1
+} -result {0}
+
+	
+cleanupTests
+}
+catch {namespace delete ::TEST}
+# vim: set ts=4 sw=4 sts=4 ff=unix et :
