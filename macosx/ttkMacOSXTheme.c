@@ -1379,7 +1379,7 @@ static void PaneElementDraw(
     };
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
-    ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
+    ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrieRectntation);
 #endif
     END_DRAWING
     [TkMacOSXDrawableView(macWin) setNeedsDisplay:YES];
@@ -1520,7 +1520,6 @@ static void EntryElementDraw(
 	}
 	BEGIN_DRAWING(d)
 	if (backgroundPtr == NULL) {
-	    CGRect innerRect = CGRectInset(bounds, 3, 3);
 	    background = [NSColor textBackgroundColor];
 	    CGContextSetFillColorWithColor(dc.context, background.CGColor);
 	    CGContextFillRect(dc.context, bounds);
