@@ -5,21 +5,20 @@
   [-class, class, Class](#-class)  
   [-screen, screen, Screen](#-screen)  
 *   [DESCRIPTION](#DESCRIPTION)  
-*   [WIDGET OPTIONS](#WIDGET-OPTIONS)  
 *   [WIDGET METHODS](#WIDGET-METHODS)  
-*   [TKO WIDGETS](#TKO-WIDGETS)  
-
+*   [WIDGET OPTIONS](#WIDGET-OPTIONS)  
+*   [SEE ALSO](#SEE-ALSO)  
 *   [KEYWORDS](#KEYWORDS)  
 *   [COPYRIGHT](#COPYRIGHT)  
 
 <a name="SYNOPSIS"></a>
 ## SYNOPSIS
 
-**oo::class create** *widgetClass* {
-  {\*}$::tko::unknown ;# define unknown method to support common tk widget style
-  superclass *tkoClass* ;# one of the provided tko widget class's
-  variable tko ;# array with options *$tko(-option)* and widget path *$tko(.)*
-}
+    oo::class create "widgetClass" {
+      {*}$::tko::unknown    ;# define unknown method to support common tk widget style
+      superclass "tkoClass" ;# one of the provided tko widget class's
+      variable tko          ;# array with options *$tko(-option)* and widget path *$tko(.)*
+    }
 
 The command creates a new Tcl class whose name is *widgetClass*. This command may be used to create new widgets. Each new widget class has as a *tkoClass* as superclass. The common functionality is in the **tko::widget** class. Currently the following *tkoClass* superclasses are provided:
 
@@ -79,11 +78,6 @@ These class contain the functionality of the [Rbc][] graph widget command. It is
 ## path
 
 These class contain the functionality of the [Tkpath][] widget command. It is described in detail in the [path][] manpage.
-
-<a name="WIDGET-OPTIONS"></a>
-### WIDGET OPTIONS
-
-Widget options can be dynamically added and removed at class or object level.
 
 <a name="WIDGET-METHODS"></a>
 ### WIDGET METHODS
@@ -150,21 +144,44 @@ The **tko::widget** class provides the following methods.
 > > The method return the global varname of the tko array variable holding all option values.
 
 <a name="method-cget"></a>
-**_tko_configure**
+**\_tko\_configure**
 
 > This is an virtuel method of the **tko::widget** class. This method will be called at the end of each **configure** *-option value ..* call. It can be implemented in each class to amke necessary changes. If it is implemented it should also call **next** to notify underlying classes.
 
-<a name="KEYWORDS"></a>
-## KEYWORDS
+<a name="WIDGET-OPTIONS"></a>
+### WIDGET OPTIONS
 
-canvas, svg, widget
+Widget options can be dynamically added and removed at class or object level.
 
-<a name="COPYRIGHT"></a>
-## COPYRIGHT
+Add options at class level:
 
-&copy; 2019- René Zaumseil <r.zaumseil@freenet.de>
+    oo::class create myWidget {
+      {*}$::tko::unknown
+      superclass ::tko::frame
+      variable tko
+      method -myoption {} {puts $tko(-myoption)}
+      method -myreadonly {} {puts $tko(-myreadonly)}
+      constructor {optionlist arglist} {
+        next [concat $optionlist {
+          {-myoption myOption MyOption value}
+          {-myreadonly myReadonly MyReadonly value 1}
+        }] $arglist
+      }
+    }
 
-BSD style license.
+Deal with optons at object level. This is the raw part. May be we should add some sugar to it.
+
+    myWidget .w
+    oo::objdefine .w method -o1 {} {puts $tko(-o1)}
+    oo::objdefine .w method -o2 {} {puts $tko(-o2)}
+    .w configure optionadd -o1 o1 O1 v1 1
+    .w configure optionadd -o2 o2 O2 v2
+    ...
+    .w optiondel -o1
+
+Widget option values are saved in an option array. The option name is the field name in the array. Additionally is an field "**.**" containing the tk widget path name of the widget. The name of the option array variable can be retrieved using the following code:
+    set myVar [.w configure optionvar]
+    parray $myVar
 
 <a name="SEE-ALSO"></a>
 ## SEE ALSO
@@ -174,12 +191,20 @@ BSD style license.
 <a name="KEYWORDS"></a>
 ## KEYWORDS
 
-widget, oo
+oo widget method option
+
+<a name="COPYRIGHT"></a>
+## COPYRIGHT
+
+&copy; 2019- René Zaumseil <r.zaumseil@freenet.de>
+
+BSD style license.
 
 [options]: options.htm
 [frame]: frame.htm
 [labelframe]: labelframe.htm
 [toplevel]: toplevel.htm
+[oo::class]: class.htm
 [graph]: graph.htm
 [path]: path.htm
 [Tkpath]: <https://sourceforge.net/projects/tclbitprint/>
