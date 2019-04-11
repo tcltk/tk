@@ -426,6 +426,8 @@ Tk_MaintainGeometry(
     TkDisplay *dispPtr = ((TkWindow *) master)->dispPtr;
 
     ((TkWindow *)slave)->maintainerPtr = (TkWindow *)master;
+
+    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)master;
     if (master == Tk_Parent(slave)) {
 	/*
 	 * If the slave is a direct descendant of the master, don't bother
@@ -570,6 +572,8 @@ Tk_UnmaintainGeometry(
     register MaintainSlave *slavePtr, *prevPtr;
     Tk_Window ancestor;
     TkDisplay *dispPtr = ((TkWindow *) slave)->dispPtr;
+
+    ((TkWindow *)slave)->maintainerPtr = NULL;
 
     ((TkWindow *)slave)->maintainerPtr = NULL;
     if (master == Tk_Parent(slave)) {
