@@ -1394,7 +1394,6 @@ static void PaneElementDraw(
     ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrieRectntation);
 #endif
     END_DRAWING
-    [TkMacOSXDrawableView(macWin) setNeedsDisplay:YES];
 }
 
 static Ttk_ElementSpec PaneElementSpec = {
