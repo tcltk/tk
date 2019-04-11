@@ -21,14 +21,12 @@
  * Notes:
  *	"Active" means different things in Mac and Tk terminology --
  *	On Aqua, widgets are "Active" if they belong to the foreground window,
- *	"Inactive" if they are in a background window.
- *	Tk uses the term "active" to mean that the mouse cursor
- *	is over a widget; aka "hover", "prelight", or "hot-tracked".
- *	Aqua doesn't use this kind of feedback.
+ *	"Inactive" if they are in a background window.  Tk uses the term
+ *	"active" to mean that the mouse cursor is over a widget; aka "hover",
+ *	"prelight", or "hot-tracked".  Aqua doesn't use this kind of feedback.
  *
- *	The QuickDraw/Carbon coordinate system is relative to the
- *	top-level window, not to the Tk_Window.  BoxToRect()
- *	accounts for this.
+ *	The QuickDraw/Carbon coordinate system is relative to the top-level
+ *	window, not to the Tk_Window.  BoxToRect() accounts for this.
  */
 
 #include "tkMacOSXPrivate.h"
@@ -113,7 +111,6 @@ static Ttk_StateTable ThemeStateTable[] = {
  * padding.  This is handled separately here.
  */
 
-
 static CGRect NormalizeButtonBounds(
     SInt32 heightMetric,
     CGRect bounds)
@@ -129,32 +126,32 @@ static CGRect NormalizeButtonBounds(
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 /*----------------------------------------------------------------------
- * +++ Support for contrasting background colors when GroupBoxes
- * or Tabbed panes are nested inside each other.  Early versions
- * of macOS used ridged borders, so do not need contrasting backgrounds.
+ * +++ Support for contrasting background colors when GroupBoxes or Tabbed
+ * panes are nested inside each other.  Early versions of macOS used ridged
+ * borders, so do not need contrasting backgrounds.
  */
 
 /*
  * For systems older than 10.14, [NSColor windowBackGroundColor] generates
- * garbage when called from this function.  In 10.14 it works correctly,
- * and must be used in order to have a background color which responds
- * to Dark Mode.  So we use this hard-wired RGBA color on the older systems
- * which don't support Dark Mode anyway.
+ * garbage when called from this function.  In 10.14 it works correctly, and
+ * must be used in order to have a background color which responds to Dark
+ * Mode.  So we use this hard-wired RGBA color on the older systems which don't
+ * support Dark Mode anyway.
  */
 
 static CGFloat windowBackground[4] = {235.0/255, 235.0/255, 235.0/255, 1.0};
 static CGFloat whiteRGBA[4] = {1.0, 1.0, 1.0, 1.0};
 static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
 
-/*
+/*----------------------------------------------------------------------
  * GetBackgroundColor --
  *
- * Fills the array rgba with the color coordinates for a background color.
- * Start with the background color of a window's geometry master, or the
- * standard ttk window background if not. If the contrast parameter is nonzero
- * modify this color to be darker, for the aqua appearance, or lighter for the
- * DarkAqua appearance.  This is primarily used by the Fill and Background
- * elements.
+ *	Fills the array rgba with the color coordinates for a background color.
+ *	Start with the background color of a window's geometry master, or the
+ *	standard ttk window background if not. If the contrast parameter is
+ *	nonzero modify this color to be darker, for the aqua appearance, or
+ *	lighter for the DarkAqua appearance.  This is primarily used by the
+ *	Fill and Background elements.
  */
 
 static void GetBackgroundColor(
@@ -163,8 +160,8 @@ static void GetBackgroundColor(
     int contrast,
     CGFloat *rgba)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
-    TkWindow *masterPtr = (TkWindow *)TkGetGeomMaster(tkwin);
+    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
     while (masterPtr != NULL) {
 	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
@@ -188,7 +185,8 @@ static void GetBackgroundColor(
 	}
     }
     if (contrast) {
-	int isDark  = (rgba[0] + rgba[1] + rgba[2] < 1.5);
+	int isDark = (rgba[0] + rgba[1] + rgba[2] < 1.5);
+
 	if (isDark) {
 	    for (int i=0; i<3; i++) {
 		rgba[i] += 8.0/255.0;
@@ -205,11 +203,11 @@ static void GetBackgroundColor(
     }
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawGroupBox --
  *
- *    This is a standalone drawing procedure which draws the contrasting
- *    rounded rectangular box for LabelFrames and Notebook panes.
+ *	This is a standalone drawing procedure which draws the contrasting
+ *	rounded rectangular box for LabelFrames and Notebook panes.
  */
 
 static void DrawGroupBox(
@@ -245,16 +243,17 @@ static void DrawGroupBox(
     CFRelease(path);
 }
 
-/* SolidFillRoundedRectangle --
+/*----------------------------------------------------------------------
+ * SolidFillRoundedRectangle --
  *
- *     Fill a rounded rectangle with a specified solid color.
+ *	Fill a rounded rectangle with a specified solid color.
  */
 
 static void SolidFillRoundedRectangle(
-   CGContextRef context,
-   CGRect bounds,
-   CGFloat radius,
-   NSColor *color)
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat radius,
+    NSColor *color)
 {
     CGPathRef path;
     CGContextSetFillColorWithColor(context, color.CGColor);
@@ -265,25 +264,27 @@ static void SolidFillRoundedRectangle(
     CFRelease(path);
 }
 
-
-/* GradientFillRoundedRectangle --
+/*----------------------------------------------------------------------
+ * GradientFillRoundedRectangle --
  *
- *     Fill a rounded rectangle with a specified gradient.
+ *	Fill a rounded rectangle with a specified gradient.
  */
 
 static void GradientFillRoundedRectangle(
-   CGContextRef context,
-   CGRect bounds,
-   CGFloat radius,
-   CGFloat* colors,
-   int numColors)
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat radius,
+    CGFloat* colors,
+    int numColors)
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     CGPathRef path;
-    CGPoint end = {bounds.origin.x,
-		   bounds.origin.y + bounds.size.height};
+    CGPoint end = {
+	bounds.origin.x,
+	bounds.origin.y + bounds.size.height
+    };
     CGGradientRef gradient = CGGradientCreateWithColorComponents(
-	 deviceRGB.CGColorSpace, colors, NULL, numColors);
+	    deviceRGB.CGColorSpace, colors, NULL, numColors);
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
@@ -292,7 +293,6 @@ static void GradientFillRoundedRectangle(
     CFRelease(path);
     CFRelease(gradient);
 }
-
 
 static void DrawUpDownArrows(
     CGContextRef context,
@@ -327,7 +327,9 @@ static void DrawDownArrow(
     x = bounds.origin.x + inset;
     y = bounds.origin.y + trunc(bounds.size.height/2);
     CGContextBeginPath(context);
-    CGPoint arrow[3] = {{x, y-size/4}, {x+size/2, y+size/4}, {x+size, y-size/4}};
+    CGPoint arrow[3] = {
+	{x, y-size/4}, {x+size/2, y+size/4}, {x+size, y-size/4}
+    };
     CGContextAddLines(context, arrow, 3);
     CGContextStrokePath(context);
 }
@@ -345,19 +347,20 @@ static void DrawUpArrow(
     x = bounds.origin.x + inset;
     y = bounds.origin.y + trunc(bounds.size.height/2);
     CGContextBeginPath(context);
-    CGPoint arrow[3] = {{x, y+size/4}, {x+size/2, y-size/4}, {x+size, y+size/4}};
+    CGPoint arrow[3] = {
+	{x, y+size/4}, {x+size/2, y-size/4}, {x+size, y+size/4}
+    };
     CGContextAddLines(context, arrow, 3);
     CGContextStrokePath(context);
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawListHeader --
  *
- *    This is a standalone drawing procedure which draws column
- *    headers for a Treeview in the Aqua appearance.  The HITheme
- *    headers have not matched the native ones since OSX 10.8.
- *    Note that the header image is ignored, but we draw arrows
- *    according to the state.
+ *    This is a standalone drawing procedure which draws column headers for a
+ *    Treeview in the Aqua appearance.  The HITheme headers have not matched
+ *    the native ones since OSX 10.8.  Note that the header image is ignored,
+ *    but we draw arrows according to the state.
  */
 
 static void DrawListHeader(
@@ -439,7 +442,7 @@ static void DrawListHeader(
  */
 
 /*
- *  Colors and gradients used in Dark Mode.
+ * Colors and gradients used in Dark Mode.
  */
 
 static CGFloat darkButtonFace[4] = {112.0/255, 113.0/255, 115.0/255, 1.0};
@@ -461,7 +464,8 @@ static CGFloat darkInactiveGradient[8] = {89.0/255, 90.0/255, 93.0/255, 1.0,
 static CGFloat darkSelectedGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
 					  20.0/255, 94.0/255,  206.0/255, 1.0};
 
-/* FillButtonBackground --
+/*----------------------------------------------------------------------
+ * FillButtonBackground --
  *
  *    Fills a rounded rectangle with a transparent black gradient.
  */
@@ -474,20 +478,23 @@ static void FillButtonBackground(
     CGPathRef path;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     CGGradientRef backgroundGradient = CGGradientCreateWithColorComponents(
-	deviceRGB.CGColorSpace, darkBackgroundGradient, NULL, 2);
-    CGPoint backgroundEnd = {bounds.origin.x,
-			     bounds.origin.y + bounds.size.height};
+	    deviceRGB.CGColorSpace, darkBackgroundGradient, NULL, 2);
+    CGPoint backgroundEnd = {
+	bounds.origin.x,
+	bounds.origin.y + bounds.size.height
+    };
     CGContextBeginPath(context);
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextAddPath(context, path);
     CGContextClip(context);
     CGContextDrawLinearGradient(context, backgroundGradient,
-				bounds.origin, backgroundEnd, 0);
+	    bounds.origin, backgroundEnd, 0);
     CFRelease(path);
     CFRelease(backgroundGradient);
 }
 
-/* HighlightButtonBorder --
+/*----------------------------------------------------------------------
+ * HighlightButtonBorder --
  *
  * Accent the top border of a rounded rectangle with a transparent
  * white gradient.
@@ -500,13 +507,13 @@ static void HighlightButtonBorder(
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     CGPoint topEnd = {bounds.origin.x, bounds.origin.y + 3};
     CGGradientRef topGradient = CGGradientCreateWithColorComponents(
-    		      deviceRGB.CGColorSpace, darkTopGradient, NULL, 2);
+	    deviceRGB.CGColorSpace, darkTopGradient, NULL, 2);
     CGContextSaveGState(context);
     CGContextBeginPath(context);
     CGContextAddArc(context, bounds.origin.x + 4, bounds.origin.y + 4,
-    		    4, PI, 3*PI/2, 0);
+	    4, PI, 3*PI/2, 0);
     CGContextAddArc(context, bounds.origin.x + bounds.size.width - 4,
-    		    bounds.origin.y + 4, 4, 3*PI/2, 0, 0);
+	    bounds.origin.y + 4, 4, 3*PI/2, 0, 0);
     CGContextReplacePathWithStrokedPath(context);
     CGContextClip(context);
     CGContextDrawLinearGradient(context, topGradient, bounds.origin, topEnd, 0.0);
@@ -514,11 +521,11 @@ static void HighlightButtonBorder(
     CFRelease(topGradient);
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawDarkButton --
  *
- *    This is a standalone drawing procedure which draws PushButtons and
- *    PopupButtons in the Dark Mode style.
+ *	This is a standalone drawing procedure which draws PushButtons and
+ *	PopupButtons in the Dark Mode style.
  */
 
 static void DrawDarkButton(
@@ -547,7 +554,7 @@ static void DrawDarkButton(
     bounds = CGRectInset(bounds, 1, 1);
     if (kind == kThemePushButton && (state & TTK_STATE_PRESSED)) {
 	GradientFillRoundedRectangle(context, bounds, 4,
-				   darkSelectedGradient, 2);
+		darkSelectedGradient, 2);
     } else {
 	if (state & TTK_STATE_DISABLED) {
 	    faceColor = [NSColor colorWithColorSpace: deviceRGB
@@ -589,11 +596,11 @@ static void DrawDarkButton(
     HighlightButtonBorder(context, bounds);
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawDarkIncDecButton --
  *
- *    This is a standalone drawing procedure which draws an IncDecButton
- *    (as used in a Spinbox) in the Dark Mode style.
+ *	This is a standalone drawing procedure which draws an IncDecButton
+ *	(as used in a Spinbox) in the Dark Mode style.
  */
 
 static void DrawDarkIncDecButton(
@@ -645,11 +652,11 @@ static void DrawDarkIncDecButton(
     HighlightButtonBorder(context, bounds);
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawDarkBevelButton --
  *
- *    This is a standalone drawing procedure which draws
- *    RoundedBevelButtons in the Dark Mode style.
+ *	This is a standalone drawing procedure which draws RoundedBevelButtons
+ *	in the Dark Mode style.
  */
 
 static void DrawDarkBevelButton(
@@ -672,7 +679,7 @@ static void DrawDarkBevelButton(
 					  components: darkPressedBevelFace
 					       count: 4];
     } else if ((state & TTK_STATE_DISABLED) ||
-	       (state & TTK_STATE_ALTERNATE)){
+	       (state & TTK_STATE_ALTERNATE)) {
 	faceColor = [NSColor colorWithColorSpace: deviceRGB
 				      components: darkDisabledButtonFace
 					   count: 4];
@@ -689,11 +696,11 @@ static void DrawDarkBevelButton(
     HighlightButtonBorder(context, bounds);
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawDarkCheckBox --
  *
- *    This is a standalone drawing procedure which draws Checkboxes
- *    in the Dark Mode style.
+ *	This is a standalone drawing procedure which draws Checkboxes in the
+ *	Dark Mode style.
  */
 
 static void DrawDarkCheckBox(
@@ -713,16 +720,16 @@ static void DrawDarkCheckBox(
     FillButtonBackground(context, bounds, 4);
     bounds = CGRectInset(bounds, 1, 1);
     if (!(state & TTK_STATE_BACKGROUND) &&
-	!(state & TTK_STATE_DISABLED) &&
-	((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
+	    !(state & TTK_STATE_DISABLED) &&
+	    ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
 	GradientFillRoundedRectangle(context, bounds, 3,
-				     darkSelectedGradient, 2);
+		darkSelectedGradient, 2);
     } else {
 	GradientFillRoundedRectangle(context, bounds, 3,
-				     darkInactiveGradient, 2);
+		darkInactiveGradient, 2);
     }
     HighlightButtonBorder(context, bounds);
-    if ((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
+    if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
 	CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
 	if (state & TTK_STATE_DISABLED) {
 	    stroke = [NSColor disabledControlTextColor];
@@ -746,7 +753,7 @@ static void DrawDarkCheckBox(
     }
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawDarkRadioButton --
  *
  *    This is a standalone drawing procedure which draws RadioButtons
@@ -770,16 +777,16 @@ static void DrawDarkRadioButton(
     FillButtonBackground(context, bounds, 9);
     bounds = CGRectInset(bounds, 1, 1);
     if (!(state & TTK_STATE_BACKGROUND) &&
-	!(state & TTK_STATE_DISABLED) &&
-	((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
+	    !(state & TTK_STATE_DISABLED) &&
+	    ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
 	GradientFillRoundedRectangle(context, bounds, 8,
-				     darkSelectedGradient, 2);
+		darkSelectedGradient, 2);
     } else {
 	GradientFillRoundedRectangle(context, bounds, 8,
-				     darkInactiveGradient, 2);
+		darkInactiveGradient, 2);
     }
     HighlightButtonBorder(context, bounds);
-    if ((state  & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
+    if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
 	CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
 	if (state & TTK_STATE_DISABLED) {
 	    fill = [NSColor disabledControlTextColor];
@@ -799,7 +806,7 @@ static void DrawDarkRadioButton(
     }
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawDarkTab --
  *
  *    This is a standalone drawing procedure which draws Tabbed Pane
@@ -833,9 +840,8 @@ static void DrawDarkTab(
     }
 
     /*
-     * Fill the tab face with the appropriate color or gradient.  Use a
-     * solid color if the tab is not selected, otherwise use a blue or
-     * gray gradient.
+     * Fill the tab face with the appropriate color or gradient.  Use a solid
+     * color if the tab is not selected, otherwise use a blue or gray gradient.
      */
 
     bounds = CGRectInset(bounds, 1, 1);
@@ -872,7 +878,6 @@ static void DrawDarkTab(
 	    CGContextRestoreGState(context);
 	}
     } else {
-
 	/*
 	 * This is the selected tab; paint it blue.  If it is first, cover up
 	 * the separator line drawn by the second one.  (The selected tab is
@@ -895,7 +900,7 @@ static void DrawDarkTab(
     }
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawDarkSeparator --
  *
  *    This is a standalone drawing procedure which draws a separator widget
@@ -916,7 +921,7 @@ static void DrawDarkSeparator(
     CGContextFillRect(context, bounds);
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawDarkFrame --
  *
  *    This is a standalone drawing procedure which draws various
@@ -933,7 +938,9 @@ static void DrawDarkFrame(
     CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
-    CGPoint topPart[4] = {{x, y + h - 1}, {x, y}, {x + w, y}, {x + w, y + h - 1}};
+    CGPoint topPart[4] = {
+	{x, y + h - 1}, {x, y}, {x + w, y}, {x + w, y + h - 1}
+    };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}}; 
     CGPoint accent[2] = {{x, y + 1}, {x + w, y + 1}};
     switch(kind) {
@@ -966,7 +973,7 @@ static void DrawDarkFrame(
     }
 }
 
-/*
+/*----------------------------------------------------------------------
  * DrawListHeader --
  *
  *    This is a standalone drawing procedure which draws column
@@ -1005,6 +1012,7 @@ static void DrawDarkListHeader(
 
     if (state & TTK_TREEVIEW_STATE_SORTARROW) {
 	CGRect arrowBounds = bounds;
+
 	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
 	arrowBounds.size.width = 16;
 	if (state & TTK_STATE_ALTERNATE) {
@@ -1053,9 +1061,10 @@ static Ttk_StateTable ButtonAdornmentTable[] = {
     { kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0 },
     { kThemeAdornmentNone, TTK_STATE_ALTERNATE, 0 },
     { kThemeAdornmentFocus, TTK_STATE_FOCUS, 0 },
-    { kThemeAdornmentNone, 0, 0 }};
+    { kThemeAdornmentNone, 0, 0 }
+};
 
-/*
+/*----------------------------------------------------------------------
  * computeButtonDrawInfo --
  *    Fill in an appearance manager HIThemeButtonDrawInfo record.
  */
@@ -1066,8 +1075,8 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
     Tk_Window tkwin)
 {
     /*
-     *  See ButtonElementDraw for the explanation of why we always draw
-     *  PushButtons in the active state.
+     * See ButtonElementDraw for the explanation of why we always draw
+     * PushButtons in the active state.
      */
 
     SInt32 HIThemeState;
@@ -1108,10 +1117,10 @@ static void ButtonElementMinSize(
 	*minHeight += 2;
 
 	/*
-	 * The minwidth must be 0 to force the generic ttk code to compute
-	 * the correct text layout.  For example, a non-zero value will cause the
-	 * text to be left justified, no matter what -anchor setting is used
-	 * in the style.
+	 * The minwidth must be 0 to force the generic ttk code to compute the
+	 * correct text layout.  For example, a non-zero value will cause the
+	 * text to be left justified, no matter what -anchor setting is used in
+	 * the style.
 	 */
 
 	*minWidth = 0;
@@ -1129,7 +1138,7 @@ static void ButtonElementSize(
     int verticalPad;
 
     ButtonElementMinSize(clientData, elementRecord, tkwin,
-		      minWidth, minHeight, paddingPtr);
+	    minWidth, minHeight, paddingPtr);
 
     /*
      * Given a hypothetical bounding rectangle for a button, HIToolbox will
@@ -1149,12 +1158,12 @@ static void ButtonElementSize(
      */
 
     ChkErr(HIThemeGetButtonContentBounds,
-	&scratchBounds, &info, &contentBounds);
+	    &scratchBounds, &info, &contentBounds);
     ChkErr(HIThemeGetButtonBackgroundBounds,
-	   &scratchBounds, &info, &backgroundBounds);
+	    &scratchBounds, &info, &backgroundBounds);
     paddingPtr->left = contentBounds.origin.x - backgroundBounds.origin.x;
-    paddingPtr->right = (CGRectGetMaxX(backgroundBounds) -
-			 CGRectGetMaxX(contentBounds));
+    paddingPtr->right =
+	    CGRectGetMaxX(backgroundBounds) - CGRectGetMaxX(contentBounds);
     verticalPad = backgroundBounds.size.height - contentBounds.size.height;
     paddingPtr->top = paddingPtr->bottom = verticalPad / 2;
 }
@@ -1186,20 +1195,21 @@ static void ButtonElementDraw(
 	    DrawDarkBevelButton(bounds, state, dc.context);
 	    break;
 	default:
-	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context,
+		    HIOrientation, NULL);
 	}
 #endif
     } else {
 	/*
-	 *  Apple's PushButton and PopupButton do not change their fill color
-	 *  when the window is inactive.  However, except in 10.7 (Lion), the
-	 *  color of the arrow button on a PopupButton does change.  For some
-	 *  reason HITheme fills inactive buttons with a transparent color that
-	 *  allows the window background to show through, leading to
-	 *  inconsistent behavior.  We work around this by filling behind an
-	 *  inactive PopupButton with a text background color before asking
-	 *  HIToolbox to draw it. For PushButtons, we simply draw them in the
-	 *  active state.
+	 * Apple's PushButton and PopupButton do not change their fill color
+	 * when the window is inactive.  However, except in 10.7 (Lion), the
+	 * color of the arrow button on a PopupButton does change.  For some
+	 * reason HITheme fills inactive buttons with a transparent color that
+	 * allows the window background to show through, leading to
+	 * inconsistent behavior.  We work around this by filling behind an
+	 * inactive PopupButton with a text background color before asking
+	 * HIToolbox to draw it. For PushButtons, we simply draw them in the
+	 * active state.
 	 */
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
@@ -1220,7 +1230,8 @@ static void ButtonElementDraw(
 	    info.value = kThemeButtonOff;
 	    info.state = kThemeStateInactive;
 	}
-	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
+		NULL);
     }
     END_DRAWING
 }
@@ -1292,6 +1303,7 @@ static Ttk_StateTable TabPositionTable[] = {
  * the tab view, leave enough space below the tab view so the controls are 20
  * pixels above the bottom edge of the window and 12 pixels between the tab
  * view and the controls.
+ *
  * If you choose to extend the tab view sides and bottom so that they meet the
  * window sides and bottom, you should leave a margin of at least 20 pixels
  * between the content in the tab view and the tab-view edges.
@@ -1397,11 +1409,11 @@ static Ttk_ElementSpec PaneElementSpec = {
  * Labelframe borders:
  * Use "primary group box ..."
  * Quoth DrawThemePrimaryGroup reference:
- * "The primary group box frame is drawn inside the specified
- * rectangle and is a maximum of 2 pixels thick."
+ * "The primary group box frame is drawn inside the specified rectangle and is
+ * a maximum of 2 pixels thick."
  *
- * "Maximum of 2 pixels thick" is apparently a lie;
- * looks more like 4 to me with shading.
+ * "Maximum of 2 pixels thick" is apparently a lie; looks more like 4 to me
+ * with shading.
  */
 
 static void GroupElementSize(
@@ -1476,7 +1488,7 @@ static void EntryElementDraw(
     CGRect bounds = BoxToRect(d, inner);
     NSColor *background;
     Tk_3DBorder backgroundPtr = NULL;
-    static char *defaultBG = ENTRY_DEFAULT_BACKGROUND;
+    static const char *defaultBG = ENTRY_DEFAULT_BACKGROUND;
 
     if (TkMacOSXInDarkMode(tkwin)) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
@@ -1504,8 +1516,9 @@ static void EntryElementDraw(
 	 * Earlier versions of the Aqua theme ignored the -fieldbackground
 	 * option and used the -background as if it were -fieldbackground.
 	 * Here we are enabling -fieldbackground.  For backwards compatibility,
-	 * if -fieldbackground is set to the default color and -background
-	 * is set to a different color then we use -background as -fieldbackground.
+	 * if -fieldbackground is set to the default color and -background is
+	 * set to a different color then we use -background as
+	 * -fieldbackground.
 	 */
 
 	if (0 != strcmp(Tcl_GetString(e->fieldbackgroundObj), defaultBG)) {
@@ -1515,8 +1528,8 @@ static void EntryElementDraw(
 	}
 	if (backgroundPtr != NULL) {
 	    XFillRectangle(Tk_Display(tkwin), d,
-			   Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
-			   inner.x, inner.y, inner.width, inner.height);
+		    Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
+		    inner.x, inner.y, inner.width, inner.height);
 	}
 	BEGIN_DRAWING(d)
 	if (backgroundPtr == NULL) {
@@ -1544,21 +1557,20 @@ static Ttk_ElementSpec EntryElementSpec = {
  * +++ Combobox:
  *
  * NOTES:
- *    The HIToolbox has incomplete and inconsistent support for ComboBoxes.
- *    There is no constant available to get the height of a ComboBox with
- *    GetThemeMetric. In fact, ComboBoxes are the same (fixed) height as
- *    PopupButtons and PushButtons, but they have no shadow at the bottom.
- *    As a result, they are drawn 1 pixel above the center of the bounds
- *    rectangle rather than being centered like the other buttons.  One
- *    can request background bounds for a ComboBox, and it is reported with
- *    height 23, while the actual button face, including its 1-pixel border
- *    has height 21.  Attempting to request the content bounds returns a
- *    0 x 0 rectangle.  Measurement indicates that the arrow button has
- *    width 18.
+ *	The HIToolbox has incomplete and inconsistent support for ComboBoxes.
+ *	There is no constant available to get the height of a ComboBox with
+ *	GetThemeMetric. In fact, ComboBoxes are the same (fixed) height as
+ *	PopupButtons and PushButtons, but they have no shadow at the bottom.
+ *	As a result, they are drawn 1 pixel above the center of the bounds
+ *	rectangle rather than being centered like the other buttons.  One can
+ *	request background bounds for a ComboBox, and it is reported with
+ *	height 23, while the actual button face, including its 1-pixel border
+ *	has height 21. Attempting to request the content bounds returns a 0x0
+ *	rectangle.  Measurement indicates that the arrow button has width 18.
  *
- *    With no help available from HIToolbox, we have to use hard-wired
- *    constants for the padding.  We shift the bounding rectangle downward
- *    by 1 pixel to account for the fact that the button is not centered.
+ *	With no help available from HIToolbox, we have to use hard-wired
+ *	constants for the padding. We shift the bounding rectangle downward by
+ *	1 pixel to account for the fact that the button is not centered.
  */
 
 static Ttk_Padding ComboboxPadding = {4, 2, 20, 2 };
@@ -1618,22 +1630,22 @@ static Ttk_ElementSpec ComboboxElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Spinbuttons.
  *
- *    From Apple HIG, part III, section "Controls", "The Stepper Control":
- *    there should be 2 pixels of space between the stepper control (AKA
- *    IncDecButton, AKA "little arrows") and the text field it modifies.
+ *	From Apple HIG, part III, section "Controls", "The Stepper Control":
+ *	there should be 2 pixels of space between the stepper control (AKA
+ *	IncDecButton, AKA "little arrows") and the text field it modifies.
  *
- *    Ttk expects the up and down arrows to be distinct elements but HIToolbox
- *    draws them as one widget with two different pressed states.  We work
- *    around this by defining them as separate elements in the layout, but
- *    making each one have a drawing method which also draws the other one.
- *    The down button does no drawing when not pressed, and when pressed draws
- *    the entire IncDecButton in its "pressed down" state.  The up button draws
- *    the entire IncDecButton when not pressed and when pressed draws the
- *    IncDecButton in its "pressed up" state.  NOTE: This means that when the
- *    down button is pressed the IncDecButton will be drawn twice, first
- *    in unpressed state by the up arrow and then in "pressed down" state by
- *    the down button.  The drawing must be done in that order.  So the up
- *    button must be listed first in the layout.
+ *	Ttk expects the up and down arrows to be distinct elements but
+ *	HIToolbox draws them as one widget with two different pressed states.
+ *	We work around this by defining them as separate elements in the
+ *	layout, but making each one have a drawing method which also draws the
+ *	other one.  The down button does no drawing when not pressed, and when
+ *	pressed draws the entire IncDecButton in its "pressed down" state.  The
+ *	up button draws the entire IncDecButton when not pressed and when
+ *	pressed draws the IncDecButton in its "pressed up" state.  NOTE: This
+ *	means that when the down button is pressed the IncDecButton will be
+ *	drawn twice, first in unpressed state by the up arrow and then in
+ *	"pressed down" state by the down button.  The drawing must be done in
+ *	that order.  So the up button must be listed first in the layout.
  */
 
 static Ttk_Padding SpinbuttonMargins = {0, 0, 2, 0};
@@ -1669,9 +1681,12 @@ static void SpinButtonUpElementDraw(
 	.adornment = kThemeAdornmentNone,
     };
     BEGIN_DRAWING(d)
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	DrawDarkIncDecButton(bounds, infoState, state, dc.context);
-    } else {
+    } else
+#endif
+    {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
     END_DRAWING
@@ -1719,9 +1734,12 @@ static void SpinButtonDownElementDraw(
     };
 
     BEGIN_DRAWING(d)
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	DrawDarkIncDecButton(bounds, infoState, state, dc.context);
-    } else {
+    } else
+#endif
+    {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
     END_DRAWING
@@ -1741,8 +1759,8 @@ static Ttk_ElementSpec SpinButtonDownElementSpec = {
  */
 
 /*
- * Apple does not change the appearance of a slider when the window
- * becomes inactive.  So we shouldn't either.
+ * Apple does not change the appearance of a slider when the window becomes
+ * inactive.  So we shouldn't either.
  */
 
 static Ttk_StateTable ThemeTrackEnableTable[] = {
@@ -1760,7 +1778,6 @@ typedef struct {	/* TrackElement client data */
 static TrackElementData ScaleData = {
     kThemeSlider, kThemeMetricHSliderHeight
 };
-
 
 typedef struct {
     Tcl_Obj *fromObj;		/* minimum value */
@@ -1860,9 +1877,8 @@ static Ttk_ElementSpec TrackElementSpec = {
  * and uses it for hit detection. In the Aqua theme, the slider is actually
  * drawn as part of the trough element.
  *
- * Also buggy: The geometry here is a Wild-Assed-Guess; I can't
- * figure out how to get the Appearance Manager to tell me the
- * slider size.
+ * Also buggy: The geometry here is a Wild-Assed-Guess; I can't figure out how
+ * to get the Appearance Manager to tell me the slider size.
  */
 static void SliderElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -1913,7 +1929,7 @@ static void PbarElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 {
-    SInt32 size = 24;	/* @@@ Check HIG for correct default */
+    SInt32 size = 24;		/* @@@ Check HIG for correct default */
 
     ChkErr(GetThemeMetric, kThemeMetricLargeProgressBarThickness, &size);
     *minWidth = *minHeight = size;
@@ -1982,7 +1998,7 @@ static Ttk_ElementSpec PbarElementSpec = {
 
 typedef struct
 {
-    Tcl_Obj     *orientObj;
+    Tcl_Obj *orientObj;
 } ScrollbarElement;
 
 static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
@@ -2286,7 +2302,8 @@ static void SizegripElementDraw(
     HIThemeGrowBoxDrawInfo info = {
 	.version = 0,
 	/* Grow box only supports kThemeStateActive, kThemeStateInactive */
-	.state = Ttk_StateTableLookup(ThemeStateTable, state & TTK_STATE_BACKGROUND),
+	.state = Ttk_StateTableLookup(ThemeStateTable,
+		state & TTK_STATE_BACKGROUND),
 	.kind = kHIThemeGrowBoxKindNormal,
 	.direction = sizegripGrowDirection,
 	.size = kHIThemeGrowBoxSizeNormal,
@@ -2308,45 +2325,45 @@ static Ttk_ElementSpec SizegripElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Background and fill elements.
  *
- *    Before drawing any ttk widget, its bounding rectangle is filled with a
- *    background color.  This color must match the background color of the
- *    containing widget to avoid looking ugly. The need for care when doing
- *    this is exacerbated by the fact that ttk enforces its "native look" by
- *    not allowing user control of the background or highlight colors of ttk
- *    widgets.
+ *	Before drawing any ttk widget, its bounding rectangle is filled with a
+ *	background color.  This color must match the background color of the
+ *	containing widget to avoid looking ugly. The need for care when doing
+ *	this is exacerbated by the fact that ttk enforces its "native look" by
+ *	not allowing user control of the background or highlight colors of ttk
+ *	widgets.
  *
- *    This job is made more complicated in recent versions of macOS by the fact
- *    that the Appkit GroupBox (used for ttk LabelFrames) and TabbedPane (used
- *    for the Notebook widget) both place their content inside a rectangle with
- *    rounded corners that has a color which contrasts with the dialog
- *    background color.  Moreover, although the Apple human interface
- *    guidelines recommend against doing so, there are times when one wants to
- *    nest these widgets, for example having a GroupBox inside of a TabbedPane.
- *    To have the right contrast, each level of nesting requires a different
- *    color.
+ *	This job is made more complicated in recent versions of macOS by the
+ *	fact that the Appkit GroupBox (used for ttk LabelFrames) and TabbedPane
+ *	(used for the Notebook widget) both place their content inside a
+ *	rectangle with rounded corners that has a color which contrasts with
+ *	the dialog background color.  Moreover, although the Apple human
+ *	interface guidelines recommend against doing so, there are times when
+ *	one wants to nest these widgets, for example having a GroupBox inside
+ *	of a TabbedPane.  To have the right contrast, each level of nesting
+ *	requires a different color.
  *
- *    Previous Tk releases used the HIThemeDrawGroupBox routine to draw
- *    GroupBoxes and TabbedPanes. This meant that the best that could be done
- *    was to set the GroupBox to be of kind kHIThemeGroupBoxKindPrimaryOpaque,
- *    and set its fill color to be the system background color.  If widgets
- *    inside the box were drawn with the system background color the
- *    backgrounds would match.  But this produces a GroupBox with no contrast,
- *    the only visual clue being a faint highlighting around the top of the
- *    GroupBox.  Moreover, the TabbedPane does not have an Opaque version, so
- *    while it is drawn inside a contrasting rounded rectangle, the widgets
- *    inside the pane needed to be enclosed in a frame with the system
- *    background color. This added a visual artifact since the frame's
- *    background color does not match the Pane's background color.  That code
- *    has now been replaced with the standalone drawing procedure
- *    macOSXDrawGroupBox, which draws a rounded rectangle with an appropriate
- *    contrasting background color.
+ *	Previous Tk releases used the HIThemeDrawGroupBox routine to draw
+ *	GroupBoxes and TabbedPanes. This meant that the best that could be done
+ *	was to set the GroupBox to be of kind
+ *	kHIThemeGroupBoxKindPrimaryOpaque, and set its fill color to be the
+ *	system background color.  If widgets inside the box were drawn with the
+ *	system background color the backgrounds would match.  But this produces
+ *	a GroupBox with no contrast, the only visual clue being a faint
+ *	highlighting around the top of the GroupBox.  Moreover, the TabbedPane
+ *	does not have an Opaque version, so while it is drawn inside a
+ *	contrasting rounded rectangle, the widgets inside the pane needed to be
+ *	enclosed in a frame with the system background color. This added a
+ *	visual artifact since the frame's background color does not match the
+ *	Pane's background color.  That code has now been replaced with the
+ *	standalone drawing procedure macOSXDrawGroupBox, which draws a rounded
+ *	rectangle with an appropriate contrasting background color.
  *
- *    Patterned backgrounds, which are now obsolete, should be aligned with the
- *    coordinate system of the top-level window.  Apparently failing to do this
- *    used to cause graphics anomalies when drawing into an off-screen graphics
- *    port.  The code for handling this is currently commented out.
+ *	Patterned backgrounds, which are now obsolete, should be aligned with
+ *	the coordinate system of the top-level window.  Apparently failing to
+ *	do this used to cause graphics anomalies when drawing into an
+ *	off-screen graphics port.  The code for handling this is currently
+ *	commented out.
  */
-
 
 static void FillElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -2460,8 +2477,8 @@ static void FieldElementDraw(
     FieldElement *e = elementRecord;
     Tk_3DBorder backgroundPtr = Tk_Get3DBorderFromObj(tkwin,e->backgroundObj);
     XFillRectangle(Tk_Display(tkwin), d,
-		   Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
-		   b.x, b.y, b.width, b.height);
+	    Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
+	    b.x, b.y, b.width, b.height);
 }
 
 static Ttk_ElementSpec FieldElementSpec = {
@@ -2502,8 +2519,8 @@ static void TreeAreaElementSize (
      * widget expects the heading to be the same height as a row.
      */
 
-   if ([NSApp macMinorVersion] > 8) {
-       paddingPtr->top = 4;
+    if ([NSApp macMinorVersion] > 8) {
+	paddingPtr->top = 4;
     }
 }
 
@@ -2521,10 +2538,9 @@ static void TreeHeaderElementSize(
 {
     if ([NSApp macMinorVersion] > 8) {
 	*minHeight = 24;
-
     } else {
 	ButtonElementSize(clientData, elementRecord, tkwin, minWidth,
-			  minHeight, paddingPtr);
+		minHeight, paddingPtr);
     }
 }
 
@@ -2551,9 +2567,12 @@ static void TreeHeaderElementDraw(
 	 */
 	
 	bounds.origin.y -= 4;
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 	if (TkMacOSXInDarkMode(tkwin)) {
 	    DrawDarkListHeader(bounds, dc.context, tkwin, state);
-	} else {
+	} else
+#endif
+	{
 	    DrawListHeader(bounds, dc.context, tkwin, state);
 	}
     } else {
@@ -2785,7 +2804,8 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.thumb", &ThumbElementSpec, 0);
 
     /*
-     * If we are not in Snow Leopard or Lion the arrows won't actually be displayed.
+     * If we are not in Snow Leopard or Lion the arrows won't actually be
+     * displayed.
      */
 
     Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.uparrow", &ArrowElementSpec, 0);

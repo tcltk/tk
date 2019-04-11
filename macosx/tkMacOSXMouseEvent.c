@@ -24,11 +24,12 @@ typedef struct {
     Point global;
     Point local;
 } MouseEventData;
-static Tk_Window captureWinPtr = NULL; /* Current capture window; may be NULL. */
+static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
+					 * NULL. */
 
 static int		GenerateButtonEvent(MouseEventData *medPtr);
 static unsigned int	ButtonModifiers2State(UInt32 buttonState,
-					      UInt32 keyModifiers);
+			    UInt32 keyModifiers);
 
 #pragma mark TKApplication(TKMouseEvent)
 
@@ -48,14 +49,15 @@ enum {
 @implementation TKApplication(TKMouseEvent)
 - (NSEvent *) tkProcessMouseEvent: (NSEvent *) theEvent
 {
-    NSWindow*    eventWindow = [theEvent window];
-    NSEventType	 eventType = [theEvent type];
+    NSWindow *eventWindow = [theEvent window];
+    NSEventType eventType = [theEvent type];
     TkWindow *winPtr, *grabWinPtr;
     Tk_Window tkwin;
 #if 0
-    NSTrackingArea  *trackingArea = nil;
+    NSTrackingArea *trackingArea = nil;
     NSInteger eventNumber, clickCount, buttonNumber;
 #endif
+
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
@@ -76,12 +78,15 @@ enum {
     case NSTabletPoint:
     case NSTabletProximity:
     case NSScrollWheel:
-        break;
+	break;
     default: /* Unrecognized mouse event. */
 	return theEvent;
     }
 
-    /* Remember the window in case we need it next time. */
+    /*
+     * Remember the window in case we need it next time.
+     */
+
     if (eventWindow && eventWindow != _windowWithMouse) {
 	if (_windowWithMouse) {
 	    [_windowWithMouse release];
@@ -91,8 +96,8 @@ enum {
     }
 
     /*
-     * Compute the mouse position in Tk screen coordinates (global) and in
-     * the Tk coordinates of its containing Tk Window.
+     * Compute the mouse position in Tk screen coordinates (global) and in the
+     * Tk coordinates of its containing Tk Window.
      */
 
     NSPoint global, local = [theEvent locationInWindow];
@@ -106,7 +111,6 @@ enum {
 	eventWindow = _windowWithMouse;
     }
     if (eventWindow) {
-
 	/*
 	 * Set the local mouse position to its NSWindow flipped coordinates,
 	 * with the origin at top left, and the global mouse position to the
@@ -116,9 +120,7 @@ enum {
 	global = [eventWindow tkConvertPointToScreen: local];
 	local.y = [eventWindow frame].size.height - local.y;
 	global.y = tkMacOSXZeroScreenHeight - global.y;
-
     } else {
-
 	/*
 	 * As a last resort, with no NSWindow to work with, set both local and
 	 * global to the screen coordinates.
@@ -135,13 +137,15 @@ enum {
     winPtr = TkMacOSXGetTkWindow(eventWindow);
     if (winPtr == NULL) {
 	tkwin = TkMacOSXGetCapture();
-	winPtr = (TkWindow *)tkwin;
+	winPtr = (TkWindow *) tkwin;
     } else {
 	tkwin = (Tk_Window) winPtr;
     }
     if (!tkwin) {
+#ifdef TK_MAC_DEBUG_EVENTS
 	TkMacOSXDbgMsg("tkwin == NULL");
-	return theEvent; /* Give up.  No window for this event. */
+#endif
+	return theEvent;	/* Give up.  No window for this event. */
     }
 
     /*
@@ -150,9 +154,9 @@ enum {
 
     grabWinPtr = winPtr->dispPtr->grabWinPtr;
     if (grabWinPtr &&
-	grabWinPtr != winPtr &&
-	!winPtr->dispPtr->grabFlags && /* this means the grab is local. */
-	grabWinPtr->mainPtr == winPtr->mainPtr) {
+	    grabWinPtr != winPtr &&
+	    !winPtr->dispPtr->grabFlags && /* this means the grab is local. */
+	    grabWinPtr->mainPtr == winPtr->mainPtr) {
 	return theEvent;
     }
 
@@ -184,7 +188,7 @@ enum {
     EventRef eventRef = (EventRef)[theEvent eventRef];
     UInt32 buttons;
     OSStatus err = GetEventParameter(eventRef, kEventParamMouseChord,
-				     typeUInt32, NULL, sizeof(UInt32), NULL, &buttons);
+	    typeUInt32, NULL, sizeof(UInt32), NULL, &buttons);
 
     if (err == noErr) {
     	state |= (buttons & ((1<<5) - 1)) << 8;
@@ -227,17 +231,16 @@ enum {
     }
 
     if (eventType != NSScrollWheel) {
-
 	/*
 	 * For normal mouse events, Tk_UpdatePointer will send the XEvent.
 	 */
 
 #ifdef TK_MAC_DEBUG_EVENTS
-	TKLog(@"UpdatePointer %p x %f.0 y %f.0 %d", tkwin, global.x, global.y, state);
+	TKLog(@"UpdatePointer %p x %f.0 y %f.0 %d",
+		tkwin, global.x, global.y, state);
 #endif
 	Tk_UpdatePointer(tkwin, global.x, global.y, state);
     } else {
-
 	/*
 	 * For scroll wheel events we need to send the XEvent here.
 	 */
@@ -258,7 +261,7 @@ enum {
 	delta = [theEvent deltaY];
 	if (delta != 0.0) {
 	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
-		(signbit(delta) ? -1 : 1) : lround(delta);
+		    (signbit(delta) ? -1 : 1) : lround(delta);
 	    xEvent.xbutton.state = state;
 	    xEvent.xkey.keycode = coarseDelta;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
@@ -267,7 +270,7 @@ enum {
 	delta = [theEvent deltaX];
 	if (delta != 0.0) {
 	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
-		(signbit(delta) ? -1 : 1) : lround(delta);
+		    (signbit(delta) ? -1 : 1) : lround(delta);
 	    xEvent.xbutton.state = state | ShiftMask;
 	    xEvent.xkey.keycode = coarseDelta;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
@@ -627,10 +630,8 @@ TkpWarpPointer(
 
     buttonState = [NSEvent pressedMouseButtons];
     CGEventType type = kCGEventMouseMoved;
-    CGEventRef theEvent = CGEventCreateMouseEvent(NULL,
-						  type,
-						  pt,
-						  buttonState);
+    CGEventRef theEvent = CGEventCreateMouseEvent(NULL, type, pt,
+	    buttonState);
     CGWarpMouseCursorPosition(pt);
     CGEventPost(kCGHIDEventTap, theEvent);
     CFRelease(theEvent);
@@ -684,8 +685,6 @@ TkMacOSXGetCapture(void)
     return captureWinPtr;
 }
 
-
-
 /*
  * Local Variables:
  * mode: objc
