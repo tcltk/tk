@@ -10,7 +10,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2017-2018 Marc Culler.
+ * Copyright (c) 2017-2019 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -310,6 +310,8 @@ static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 static int		WmWinStyle(Tcl_Interp *interp, TkWindow *winPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static int		WmWinTabbingId(Tcl_Interp *interp, TkWindow *winPtr,
+			    int objc, Tcl_Obj *const objv[]);
+static int		WmWinAppearance(Tcl_Interp *interp, TkWindow *winPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		ApplyWindowAttributeFlagChanges(TkWindow *winPtr,
 			    NSWindow *macWindow, UInt64 oldAttributes,
@@ -5498,10 +5500,10 @@ TkUnsupported1ObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const subcmds[] = {
-	"style", "tabbingid", NULL
+	"style", "tabbingid", "appearance", NULL
     };
     enum SubCmds {
-	TKMWS_STYLE, TKMWS_TABID
+	TKMWS_STYLE, TKMWS_TABID, TKMWS_APPEARANCE
     };
     Tk_Window tkwin = clientData;
     TkWindow *winPtr;
@@ -5529,16 +5531,18 @@ TkUnsupported1ObjCmd(
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (((enum SubCmds) index) == TKMWS_STYLE) {
+    switch((enum SubCmds) index) {
+    case TKMWS_STYLE:
 	if ((objc < 3) || (objc > 5)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "window ?class attributes?");
 	    return TCL_ERROR;
 	}
 	return WmWinStyle(interp, winPtr, objc, objv);
-    } else if (((enum SubCmds) index) == TKMWS_TABID) {
+    case TKMWS_TABID:
 	if ([NSApp macMinorVersion] < 12) {
-	    Tcl_AddErrorInfo(interp,
-	        "\n    (TabbingIdentifiers only exist on OSX 10.12 or later)");
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                "Tabbing identifiers did not exist until OSX 10.12.", -1));
+	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "TABBINGID", NULL);
 	    return TCL_ERROR;
 	}
 	if ((objc < 3) || (objc > 4)) {
@@ -5546,9 +5550,27 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	return WmWinTabbingId(interp, winPtr, objc, objv);
+    case TKMWS_APPEARANCE:
+	if ([NSApp macMinorVersion] < 9) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                "Window appearances did not exist until OSX 10.9.", -1));
+	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "APPEARANCE", NULL);
+	    return TCL_ERROR;
+	}
+	if ((objc < 3) || (objc > 4)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "appearance window ?appearancename?");
+	    return TCL_ERROR;
+	}
+	if (objc == 4 && [NSApp macMinorVersion] < 14) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                "Window appearances cannot be changed before OSX 10.14.", -1));
+	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "APPEARANCE", NULL);
+	    return TCL_ERROR;
+	}
+	return WmWinAppearance(interp, winPtr, objc, objv);
+    default:
+	return TCL_ERROR;
     }
-    /* won't be reached */
-    return TCL_ERROR;
 }
 
 /*
@@ -5799,6 +5821,99 @@ WmWinTabbingId(
 	}
 	return TCL_OK;
     }
+#endif
+    return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmWinAppearance --
+ *
+ *	This procedure is invoked to process the
+ *	"::tk::unsupported::MacWindowStyle appearance" subcommand. The command
+ *	allows you to get or set the appearance for the NSWindow
+ *      associated with a Tk Window.  The syntax is:
+ *      tk::unsupported::MacWindowStyle tabbingid window ?newAppearance?
+ *      Allowed appearance names are "aqua", "darkaqua", and "auto".
+ *
+ * Results:
+ *      Returns the appearance setting of the window prior to calling this
+ *	function.
+ *
+ * Side effects:
+ *      The underlying NSWindow's appearance property is set to the specified
+ *      value if the optional newAppearance argument is supplied. Otherwise
+ *      the window's appearance property is not changed.  If the appearance is
+ *      set to aqua or darkaqua then the window will use the associated
+ *      NSAppearance even if the user has selected a different appearance with
+ *      the system preferences.  If it is set to auto then the appearance
+ *      property is set to nil, meaning that the preferences will determine the
+ *      appearance.
+ *
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmWinAppearance(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    TkWindow *winPtr,		/* Window to be manipulated. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj * const objv[])	/* Argument objects. */
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+    static const char *const appearanceStrings[] = {
+	"aqua", "darkaqua", "auto", NULL
+    };
+    enum appearances {
+	APPEARANCE_AQUA, APPEARANCE_DARKAQUA, APPEARANCE_AUTO
+    };
+    Tcl_Obj *result = NULL;
+    NSAppearanceName appearance;
+    const char *resultString;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    if (win) {
+	appearance = win.appearance.name;
+	if (appearance == nil) {
+	    resultString = appearanceStrings[APPEARANCE_AUTO];
+	} else if (appearance == NSAppearanceNameAqua) {
+	    resultString = appearanceStrings[APPEARANCE_AQUA];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	} else if (appearance == NSAppearanceNameDarkAqua) {
+	    resultString = appearanceStrings[APPEARANCE_DARKAQUA];
+#endif	    
+	} else {
+	    resultString = "unrecognized";
+	}
+	result = Tcl_NewStringObj(resultString, strlen(resultString));
+    }
+    if (result == NULL) {
+	Tcl_Panic("Failed to read appearance name.");
+    }
+    if (objc == 4) {
+	int index;
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], appearanceStrings,
+                sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
+            return TCL_ERROR;
+        }
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	switch ((enum appearances) index) {
+	case APPEARANCE_AQUA:
+	    win.appearance = [NSAppearance appearanceNamed:
+					       NSAppearanceNameAqua];
+	    break;
+	case APPEARANCE_DARKAQUA:
+	    win.appearance = [NSAppearance appearanceNamed:
+					       NSAppearanceNameDarkAqua];
+	    break;
+	default:
+	    win.appearance = nil;
+	}
+#endif
+    }
+    Tcl_SetObjResult(interp, result);
+    return TCL_OK;
 #endif
     return TCL_ERROR;
 }
