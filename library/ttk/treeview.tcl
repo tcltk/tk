@@ -108,7 +108,7 @@ proc ttk::treeview::Motion {w x y} {
     switch -- [$w identify region $x $y] {
 	separator {
                    if {[ttk::treeview::LastDisplayColumn $w] ne 
-                       [$w identify column $x $y]} {
+                           [$w identify column $x $y]} {
                        set cursor hresize
                    }
 	          }
