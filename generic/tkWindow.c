@@ -3313,25 +3313,14 @@ Initialize(
     }
 
     /*
-     * Initialize the rbc widget set
+     * Initialize the tko widget set
      */
-    code = Rbc_VectorInit(interp);
+#ifndef MAC_OSX_TK
+    code = Tko_Init(interp);
     if (code != TCL_OK) {
 	goto done;
     }
-    code = Rbc_GraphInit(interp);
-    if (code != TCL_OK) {
-	goto done;
-    }
-
-    /*
-     * Initialize the tkpath widget set
-     */
-    code = Tk_PathInit(interp);
-    if (code != TCL_OK) {
-	goto done;
-    }
-
+#endif
     /*
      * Invoke platform-specific initialization. Unlock mutex before entering
      * TkpInit, as that may run through the Tk_Init routine again for the
