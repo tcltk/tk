@@ -5912,7 +5912,7 @@ WmWinAppearance(
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	} else if (appearance == NSAppearanceNameDarkAqua) {
 	    resultString = appearanceStrings[APPEARANCE_DARKAQUA];
-#endif	    
+#endif
 	} else {
 	    resultString = "unrecognized";
 	}
