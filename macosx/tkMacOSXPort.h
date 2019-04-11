@@ -128,17 +128,6 @@
 #define TkpSync(display)
 
 /*
- * The following macro returns the pixel value that corresponds to the
- * RGB values in the given XColor structure.
- */
-
-#define PIXEL_MAGIC ((unsigned char) 0x69)
-#define TkpGetPixel(p) ((((((PIXEL_MAGIC << 8) \
-	| (((p)->red >> 8) & 0xff)) << 8) \
-	| (((p)->green >> 8) & 0xff)) << 8) \
-	| (((p)->blue >> 8) & 0xff))
-
-/*
  * This macro stores a representation of the window handle in a string.
  */
 
@@ -159,19 +148,20 @@
  */
 
 #define TRANSPARENT_PIXEL		30
-#define HIGHLIGHT_PIXEL			31
-#define HIGHLIGHT_SECONDARY_PIXEL	32
-#define HIGHLIGHT_TEXT_PIXEL		33
-#define HIGHLIGHT_ALTERNATE_PIXEL	34
-#define CONTROL_TEXT_PIXEL		35
-#define CONTROL_BODY_PIXEL		37
-#define CONTROL_FRAME_PIXEL		39
-#define WINDOW_BODY_PIXEL		41
-#define MENU_ACTIVE_PIXEL		43
-#define MENU_ACTIVE_TEXT_PIXEL		45
-#define MENU_BACKGROUND_PIXEL		47
-#define MENU_DISABLED_PIXEL		49
-#define MENU_TEXT_PIXEL			51
 #define APPEARANCE_PIXEL		52
+#define PIXEL_MAGIC ((unsigned char) 0x69)
+
+/*
+ * The following macro returns the pixel value that corresponds to the
+ * 16-bit RGB values in the given XColor structure.
+ * The format is: (PIXEL_MAGIC <<< 24) | (R << 16) | (G << 8) | B
+ * where each of R, G and B is the high order byte of a 16-bit component.
+ */
+
+#define TkpGetPixel(p) ((((((PIXEL_MAGIC << 8) \
+	| (((p)->red >> 8) & 0xff)) << 8) \
+	| (((p)->green >> 8) & 0xff)) << 8) \
+	| (((p)->blue >> 8) & 0xff))
+
 
 #endif /* _TKMACPORT */
