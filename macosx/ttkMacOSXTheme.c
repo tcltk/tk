@@ -1372,8 +1372,6 @@ static void PaneElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, Ttk_State state)
 {
-    TkWindow *winPtr = (TkWindow *)tkwin;
-    MacDrawable *macWin = winPtr->privatePtr;
     CGRect bounds = BoxToRect(d, b);
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
@@ -1391,7 +1389,7 @@ static void PaneElementDraw(
     };
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
-    ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrieRectntation);
+    ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
 #endif
     END_DRAWING
 }
@@ -1533,7 +1531,11 @@ static void EntryElementDraw(
 	BEGIN_DRAWING(d)
 	if (backgroundPtr == NULL) {
 	    background = [NSColor textBackgroundColor];
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 	    CGContextSetFillColorWithColor(dc.context, background.CGColor);
+#else
+	    CGContextSetRGBFillColor(dc.context, 1.0, 1.0, 1.0, 1.0);
+#endif
 	    CGContextFillRect(dc.context, bounds);
 	}
 	ChkErr(HIThemeDrawFrame, &bounds, &info, dc.context, HIOrientation);
@@ -2559,6 +2561,7 @@ static void TreeHeaderElementDraw(
 
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 
 	/*
 	 * Compensate for the padding added in TreeHeaderElementSize, so
@@ -2566,14 +2569,14 @@ static void TreeHeaderElementDraw(
 	 */
 	
 	bounds.origin.y -= 4;
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 	if (TkMacOSXInDarkMode(tkwin)) {
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 	    DrawDarkListHeader(bounds, dc.context, tkwin, state);
-	} else
 #endif
-	{
+	} else {
 	    DrawListHeader(bounds, dc.context, tkwin, state);
 	}
+#endif /* MAC_OS_X_VERSION_MIN_REQUIRED > 1080 */
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
