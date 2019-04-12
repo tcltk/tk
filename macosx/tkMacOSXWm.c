@@ -5886,7 +5886,7 @@ WmWinAppearance(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1090
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
     static const char *const appearanceStrings[] = {
 	"aqua", "darkaqua", "auto", NULL
     };
@@ -5902,6 +5902,7 @@ WmWinAppearance(
     const char *resultString;
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
     if (win) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
 	appearance = win.appearance.name;
 	if (appearance == nil) {
 	    resultString = appearanceStrings[APPEARANCE_AUTO];
@@ -5914,6 +5915,9 @@ WmWinAppearance(
 	} else {
 	    resultString = "unrecognized";
 	}
+#else
+    resultString = appearanceStrings[APPEARANCE_AQUA];
+#endif
 	result = Tcl_NewStringObj(resultString, strlen(resultString));
     }
     if (result == NULL) {
