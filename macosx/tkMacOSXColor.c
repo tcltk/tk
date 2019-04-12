@@ -257,6 +257,8 @@ GetEntryFromPixelCode(
  *----------------------------------------------------------------------
  */
 
+static NSColorSpace* deviceRGB = NULL;
+
 static OSStatus
 SetCGColorComponents(
     struct SystemColorMapEntry entry,
@@ -266,10 +268,16 @@ SetCGColorComponents(
     OSStatus err = noErr;
     NSColor *bgColor, *color;
     CGFloat rgba[4] = {0, 0, 0, 1};
-    static CGColorSpaceRef deviceRGBSpace = NULL;
-    if (!deviceRGBSpace) {
-	deviceRGBSpace = CGColorSpaceCreateDeviceRGB();
+    if (!deviceRGB) {
+	deviceRGB = [NSColorSpace deviceRGBColorSpace];
     }
+
+    /*
+     *  This function is called before our autorelease pool is set up,
+     *  so it needs its own pool.
+     */
+
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     switch (entry.type) {
     case HIBrush:
@@ -282,7 +290,7 @@ SetCGColorComponents(
 	break;
     case ttkBackground:
 	bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
-			   [NSColorSpace deviceRGBColorSpace]];
+			   deviceRGB];
 	[bgColor getComponents: rgba];
 	for (int i=0; i<3; i++) {
 	    rgba[i] -= entry.value*(8.0/255.0);
@@ -292,45 +300,45 @@ SetCGColorComponents(
 	switch (entry.value) {
 	case 0:
 	    color = [[NSColor textColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
+			  deviceRGB];
 	    break;
 	case 1:
 	    color = [[NSColor selectedTextColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
+			  deviceRGB];
 	    break;
 	case 2:
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101000
 	    color = [[NSColor labelColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
+			  deviceRGB];
 #else
 	    color = [[NSColor textColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
+			  deviceRGB];
 #endif
 	    break;
 	case 3:
 	    color = [[NSColor controlTextColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
+			  deviceRGB];
 	    break;
 	case 4:
 	    color = [[NSColor disabledControlTextColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
+			  deviceRGB];
 	    break;
 	case 5:
 	    color = [[NSColor textBackgroundColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
+			  deviceRGB];
 	    break;
 	case 6:
 	    color = [[NSColor selectedTextBackgroundColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
+			  deviceRGB];
 	    break;
 	default:
 	    if ([NSApp macMinorVersion] < 10) {
 	    color = [[NSColor textColor] colorUsingColorSpace:
-			  [NSColorSpace deviceRGBColorSpace]];
+			  deviceRGB];
 	    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 		color = [[NSColor labelColor] colorUsingColorSpace:
-			      [NSColorSpace deviceRGBColorSpace]];
+			      deviceRGB];
 #endif
 		break;
 	    }
@@ -352,7 +360,8 @@ SetCGColorComponents(
     default:
 	break;
     }
-    *c = CGColorCreate(deviceRGBSpace, rgba );
+    *c = CGColorCreate(deviceRGB.CGColorSpace, rgba );
+    [pool drain];
     return err;
 }
 
@@ -684,7 +693,6 @@ TkpGetColor(
     if (strncasecmp(name, "system", 6) == 0) {
 	Tcl_Obj *strPtr = Tcl_NewStringObj(name+6, -1);
 	int idx, result;
-
 	result = Tcl_GetIndexFromObjStruct(NULL, strPtr, systemColorMap,
 		    sizeof(struct SystemColorMapEntry), NULL, TCL_EXACT, &idx);
 	Tcl_DecrRefCount(strPtr);
