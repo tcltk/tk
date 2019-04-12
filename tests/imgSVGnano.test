@@ -39,7 +39,7 @@ test imgSVGnano-1.1 {reading simple image} -setup {
 test imgSVGnano-1.2 {simple image with options} -setup {
     catch {rename foo ""}
 } -body {
-    image create photo foo -data $data(plus) -format {svgnano -dpi 100 -scale 3}
+    image create photo foo -data $data(plus) -format {svg -dpi 100 -scale 3}
     list [image width foo] [image height foo]
 } -cleanup {
     rename foo ""
@@ -50,7 +50,7 @@ test imgSVGnano-1.3 {reformat image options} -setup {
     catch {rename foo ""}
 } -body {
     image create photo foo -data $data(plus)
-    catch {foo configure -format {svgnano -scale}}
+    catch {foo configure -format {svg -scale}}
     list {}
 } -cleanup {
     rename foo ""
@@ -60,14 +60,13 @@ test imgSVGnano-1.4 {image options} -setup {
     catch {rename foo ""}
 } -body {
     image create photo foo -data $data(plus)
-    foo configure -format {svgnano -scale 2}
-    foo configure -format {svgnano -x 20 -y -10}
-    foo configure -format {svgnano -unit pt}
-    foo configure -format {svgnano -unit mm}
-    foo configure -format {svgnano -unit cm}
-    foo configure -format {svgnano -unit in}
-    foo configure -format {svgnano -unit px}
-    foo configure -format {svgnano -dpi 600}
+    foo configure -format {svg -scale 2}
+    foo configure -format {svg -unit pt}
+    foo configure -format {svg -unit mm}
+    foo configure -format {svg -unit cm}
+    foo configure -format {svg -unit in}
+    foo configure -format {svg -unit px}
+    foo configure -format {svg -dpi 600}
     list [image width foo] [image height foo]
 } -cleanup {
     rename foo ""
@@ -75,10 +74,10 @@ test imgSVGnano-1.4 {image options} -setup {
 
 
 test imgSVGnano-2.1 {reading a bad image} -body {
-    image create photo foo -format svgnano -data $data(bad)
+    image create photo foo -format svg -data $data(bad)
 } -returnCodes error -result {couldn't recognize image data}
 test imgSVGnano-2.2 {using bad option} -body {
-    image create photo -data $data(plus) -format {svgnano -scale 0}
+    image create photo -data $data(plus) -format {svg -scale 0}
 } -returnCodes error -result {couldn't recognize image data}
 
 };# end of namespace svgnano
