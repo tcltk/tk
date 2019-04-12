@@ -74,35 +74,41 @@ if {[tk windowingsystem] eq "x11"} {
 
 if {[tk windowingsystem] eq "aqua"} {
     proc ::ttk::menubutton::PostPosition {mb menu} {
-	set mh [expr {[winfo reqheight $menu] - 6}]
-	set bh [expr {[winfo height $mb] + 1}]
-	set mw [expr {[winfo reqwidth $menu] - 2}]
-	set bw [expr {[winfo width $mb] -1}]
-	set dF [expr {[winfo width $mb] - [winfo reqwidth $menu] -9}]
+	set menuPad 5
+	set buttonPad 1
+	set bevelPad 4
+	set mh [winfo reqheight $menu]
+	set bh [expr {[winfo height $mb]} + $buttonPad]
+	set bbh [expr {[winfo height $mb]} + $bevelPad]
+	set mw [winfo reqwidth $menu]
+	set bw [winfo width $mb]
+	set dF [expr {[winfo width $mb] - [winfo reqwidth $menu] - $menuPad}]
 	set entry ""
 	set entry [::tk::MenuFindName $menu [$mb cget -text]]
 	if {$entry eq ""} {
 	    set entry 0
 	}
 	set x [winfo rootx $mb]
-	set y [expr {2 + [winfo rooty $mb]}]
+	set y [winfo rooty $mb]
 	switch [$mb cget -direction] {
 	    above {
 		set entry ""
-		incr y -$mh
+		incr y [expr {-$mh + 2 * $menuPad}]
 	    }
 	    below {
 		set entry ""
 		incr y $bh 
 	    }
 	    left {
+		incr y $menuPad
 		incr x -$mw
 	    }
 	    right {
+		incr y $menuPad
 		incr x $bw 
 	    }
 	    default {
-		incr x $dF 
+		incr y $bbh
 	    }
 	}
 	return [list $x $y $entry]
