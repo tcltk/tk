@@ -356,7 +356,7 @@ CANV_OBJS = tkCanvas.o tkCanvArc.o tkCanvBmap.o tkCanvImg.o \
 	tkCanvUtil.o tkCanvWind.o tkRectOval.o tkTrig.o
 
 IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPNG.o tkImgPPM.o \
-	tkImgPhoto.o tkImgPhInstance.o tkImgListFormat.o
+	tkImgPhoto.o tkImgPhInstance.o tkImgListFormat.o tkImgSVGnano.o
 
 TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 	tkTextMark.o tkTextTag.o tkTextWind.o
@@ -449,6 +449,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkTrig.c $(GENERIC_DIR)/tkImage.c \
 	$(GENERIC_DIR)/tkImgBmap.c $(GENERIC_DIR)/tkImgGIF.c \
 	$(GENERIC_DIR)/tkImgPNG.c $(GENERIC_DIR)/tkImgPPM.c \
+	$(GENERIC_DIR)/tkImgSVGnano.c $(GENERIC_DIR)/tkImgSVGnano.c \
 	$(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhInstance.c \
 	$(GENERIC_DIR)/tkImgListFormat.c $(GENERIC_DIR)/tkText.c \
 	$(GENERIC_DIR)/tkTextBTree.c $(GENERIC_DIR)/tkTextDisp.c \
@@ -1117,6 +1118,9 @@ tkImgPNG.o: $(GENERIC_DIR)/tkImgPNG.c
 
 tkImgPPM.o: $(GENERIC_DIR)/tkImgPPM.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPPM.c
+
+tkImgSVGnano.o: $(GENERIC_DIR)/tkImgSVGnano.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgSVGnano.c
 
 tkImgPhoto.o: $(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhoto.h
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPhoto.c

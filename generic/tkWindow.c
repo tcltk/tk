@@ -340,6 +340,7 @@ CreateTopLevelWindow(
 	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPNG);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
+	Tk_CreatePhotoImageFormat(&tkImgFmtSVGnano);
     }
 
     if ((parent != NULL) && (screenName != NULL) && (screenName[0] == '\0')) {
