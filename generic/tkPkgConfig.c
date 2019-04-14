@@ -105,21 +105,45 @@ static Tcl_Config const cfg[] = {
 
     /* Runtime paths to various stuff */
 
+#ifdef CFG_RUNTIME_LIBDIR
     {"libdir,runtime",		CFG_RUNTIME_LIBDIR},
+#endif
+#ifdef CFG_RUNTIME_BINDIR
     {"bindir,runtime",		CFG_RUNTIME_BINDIR},
+#endif
+#ifdef CFG_RUNTIME_SCRDIR
     {"scriptdir,runtime",	CFG_RUNTIME_SCRDIR},
+#endif
+#ifdef CFG_RUNTIME_INCDIR
     {"includedir,runtime",	CFG_RUNTIME_INCDIR},
+#endif
+#ifdef CFG_RUNTIME_DOCDIR
     {"docdir,runtime",		CFG_RUNTIME_DOCDIR},
+#endif
+#ifdef CFG_RUNTIME_DEMODIR
     {"demodir,runtime",		CFG_RUNTIME_DEMODIR},
+#endif 
 
     /* Installation paths to various stuff */
 
+#ifdef CFG_INSTALL_LIBDIR
     {"libdir,install",		CFG_INSTALL_LIBDIR},
+#endif
+#ifdef CFG_INSTALL_BINDIR
     {"bindir,install",		CFG_INSTALL_BINDIR},
+#endif
+#ifdef CFG_INSTALL_SCRDIR
     {"scriptdir,install",	CFG_INSTALL_SCRDIR},
+#endif
+#ifdef CFG_INSTALL_INCDIR
     {"includedir,install",	CFG_INSTALL_INCDIR},
+#endif
+#ifdef CFG_INSTALL_DOCDIR
     {"docdir,install",		CFG_INSTALL_DOCDIR},
+#endif
+#ifdef CFG_INSTALL_DEMODIR
     {"demodir,install",		CFG_INSTALL_DEMODIR},
+#endif
 
     /* Last entry, closes the array */
     {NULL, NULL}
