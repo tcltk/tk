@@ -322,19 +322,18 @@ static Tcl_Obj *
 GetWidgetDemoPath(
     Tcl_Interp *interp)
 {
-    Tcl_Obj *libpath, *result = NULL;
+    Tcl_Obj *result = NULL;
 
-    libpath = Tcl_GetVar2Ex(interp, "tk_library", NULL, TCL_GLOBAL_ONLY);
-    if (libpath) {
-	Tcl_Obj *demo[2] = {	Tcl_NewStringObj("demos", 5),
-				Tcl_NewStringObj("widget", 6) };
+    if (Tcl_EvalEx(interp, "::tk::pkgconfig get demodir,runtime",
+		   -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+	Tcl_Obj *libpath, *demo[1] = { Tcl_NewStringObj("widget", 6) };
 
+	libpath = Tcl_GetObjResult(interp);
 	Tcl_IncrRefCount(libpath);
-	result = Tcl_FSJoinToPath(libpath, 2, demo);
+	result = Tcl_FSJoinToPath(libpath, 1, demo);
 	Tcl_DecrRefCount(libpath);
-    } else {
-	Tcl_ResetResult(interp);
     }
+    Tcl_ResetResult(interp);
     return result;
 }
 
