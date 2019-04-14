@@ -1035,6 +1035,8 @@ typedef int	(Tk_ItemAreaProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double *rectPtr);
 typedef int	(Tk_ItemPostscriptProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int prepass);
+typedef void	(Tk_ItemRotateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    double originX, double originY, double angleRadians);
 typedef void	(Tk_ItemScaleProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double originX, double originY, double scaleX,
 		    double scaleY);
@@ -1118,7 +1120,9 @@ typedef struct Tk_ItemType {
 				/* Procedure to delete characters from an
 				 * item. */
     struct Tk_ItemType *nextPtr;/* Used to link types together into a list. */
-    char *reserved1;		/* Reserved for future extension. */
+    Tk_ItemRotateProc *rotateProc;
+				/* Procedure to rotate an item's coordinates
+				 * about a point. */
     int reserved2;		/* Carefully compatible with */
     char *reserved3;		/* Jan Nijtmans dash patch */
     char *reserved4;

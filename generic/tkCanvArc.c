@@ -214,6 +214,8 @@ static int		HorizLineToArc(double x1, double x2,
 static int		VertLineToArc(double x, double y1,
 			    double y2, double rx, double ry,
 			    double start, double extent);
+static void		RotateArc(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 
 /*
  * The structures below defines the arc item types by means of functions that
@@ -241,7 +243,8 @@ Tk_ItemType tkArcType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateArc,			/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -1487,6 +1490,60 @@ ScaleArc(
     arcPtr->bbox[1] = originY + scaleY*(arcPtr->bbox[1] - originY);
     arcPtr->bbox[2] = originX + scaleX*(arcPtr->bbox[2] - originX);
     arcPtr->bbox[3] = originY + scaleY*(arcPtr->bbox[3] - originY);
+    ComputeArcBbox(canvas, arcPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateArc --
+ *
+ *	This function is called to rotate an arc by a given amount.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the arc is rotated by angleRad radians about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateArc(
+    Tk_Canvas canvas,
+    Tk_Item *itemPtr,
+    double originX,
+    double originY,
+    double angleRad)
+{
+    ArcItem *arcPtr = (ArcItem *) itemPtr;
+    double newX, newY, oldX, oldY;
+
+    /*
+     * Compute the centre of the box, then rotate that about the origin.
+     */
+
+    newX = oldX = (arcPtr->bbox[0] + arcPtr->bbox[2]) / 2.0;
+    newY = oldY = (arcPtr->bbox[1] + arcPtr->bbox[3]) / 2.0;
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &newX, &newY);
+
+    /*
+     * Apply the translation to the box.
+     */
+
+    arcPtr->bbox[0] += newX - oldX;
+    arcPtr->bbox[1] += newY - oldY;
+    arcPtr->bbox[2] += newX - oldX;
+    arcPtr->bbox[3] += newY - oldY;
+
+    /*
+     * TODO: update the arc endpoints?
+     */
+
     ComputeArcBbox(canvas, arcPtr);
 }
 
