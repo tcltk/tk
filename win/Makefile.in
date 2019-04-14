@@ -341,6 +341,7 @@ TK_OBJS = \
 	tkOldConfig.$(OBJEXT) \
 	tkOption.$(OBJEXT) \
 	tkPack.$(OBJEXT) \
+	tkPkgConfig.$(OBJEXT) \
 	tkPlace.$(OBJEXT) \
 	tkPointer.$(OBJEXT) \
 	tkRangeList.$(OBJEXT) \
