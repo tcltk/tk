@@ -1234,6 +1234,7 @@ test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
 	deleteWindows
 } -body {
     frame .f1 -container 1 -width 200 -height 50
+    update
     pack .f1
     update
     toplevel .t1 -use [winfo id .f1] -width 150 -height 80

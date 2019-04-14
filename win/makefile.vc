@@ -220,6 +220,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkImgGIF.obj \
 	$(TMP_DIR)\tkImgPNG.obj \
 	$(TMP_DIR)\tkImgPPM.obj \
+	$(TMP_DIR)\tkImgSVGnano.obj \
 	$(TMP_DIR)\tkImgPhoto.obj \
 	$(TMP_DIR)\tkImgPhInstance.obj \
 	$(TMP_DIR)\tkImgUtil.obj \

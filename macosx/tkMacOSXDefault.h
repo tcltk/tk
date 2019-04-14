@@ -23,7 +23,9 @@
 /*
  * The definitions below provide symbolic names for the default colors.
  * NORMAL_BG -		Normal background color.
+ * NORMAL_FG -		Normal foreground color.
  * ACTIVE_BG -		Background color when widget is active.
+ * ACTIVE_FG -		Foreground color when widget is active.
  * SELECT_BG -		Background color for selected text.
  * SELECT_FG -		Foreground color for selected text.
  * TROUGH -		Background color for troughs in scales and scrollbars.
@@ -33,12 +35,13 @@
 
 #define BLACK			"Black"
 #define WHITE			"White"
-#define NORMAL_BG		"systemWindowBody"
-#define ACTIVE_BG		"systemButtonFacePressed"
-#define ACTIVE_FG		"systemPushButtonPressedText"
-#define SELECT_BG		"systemHighlight"
-#define SELECT_FG		NULL
-#define INACTIVE_SELECT_BG	"systemHighlightSecondary"
+#define NORMAL_BG		"systemTextBackgroundColor"
+#define NORMAL_FG		"systemTextColor"
+#define ACTIVE_BG		"systemTextBackgroundColor"
+#define ACTIVE_FG		"systemTextColor"
+#define SELECT_BG		"systemSelectedTextBackgroundColor"
+#define SELECT_FG		"systemSelectedTextColor"
+#define INACTIVE_SELECT_BG	"systemSelectedTextBackgroundColor"
 #define INACTIVE_SELECT_FG	"systemDialogActiveText"
 #define TROUGH			"#c3c3c3"
 #define INDICATOR		"#b03060"
@@ -55,7 +58,7 @@
 #define DEF_CHKRAD_ACTIVE_FG_COLOR	DEF_BUTTON_ACTIVE_FG_COLOR
 #define DEF_BUTTON_ACTIVE_FG_MONO	WHITE
 /* #define DEF_BUTTON_BG_COLOR	"systemButtonFace"*/
-#define DEF_BUTTON_BG_COLOR		WHITE
+#define DEF_BUTTON_BG_COLOR		NORMAL_BG
 #define DEF_BUTTON_BG_MONO		WHITE
 #define DEF_BUTTON_BITMAP		""
 #define DEF_BUTTON_BORDER_WIDTH		"2"
@@ -65,7 +68,7 @@
 #define DEF_BUTTON_DEFAULT		"disabled"
 #define DEF_BUTTON_DISABLED_FG_COLOR	DISABLED
 #define DEF_BUTTON_DISABLED_FG_MONO	""
-#define DEF_BUTTON_FG			"systemButtonText"
+#define DEF_BUTTON_FG			NORMAL_FG
 #define DEF_CHKRAD_FG			DEF_BUTTON_FG
 #define DEF_BUTTON_FONT			"TkDefaultFont"
 #define DEF_BUTTON_HEIGHT		"0"
@@ -179,12 +182,12 @@
 #define DEF_ENTRY_DISABLED_FG		DISABLED
 #define DEF_ENTRY_EXPORT_SELECTION	"1"
 #define DEF_ENTRY_FONT			"TkTextFont"
-#define DEF_ENTRY_FG			BLACK
+#define DEF_ENTRY_FG			NORMAL_FG
 #define DEF_ENTRY_HIGHLIGHT_BG		NORMAL_BG
 #define DEF_ENTRY_HIGHLIGHT		BLACK
 /* #define DEF_ENTRY_HIGHLIGHT_WIDTH	"3" */
 #define DEF_ENTRY_HIGHLIGHT_WIDTH	"3"
-#define DEF_ENTRY_INSERT_BG		BLACK
+#define DEF_ENTRY_INSERT_BG		NORMAL_FG
 #define DEF_ENTRY_INSERT_BD_COLOR	"0"
 #define DEF_ENTRY_INSERT_BD_MONO	"0"
 #define DEF_ENTRY_INSERT_OFF_TIME	"300"
@@ -240,7 +243,7 @@
 #define DEF_LABELFRAME_BORDER_WIDTH	"2"
 #define DEF_LABELFRAME_CLASS		"Labelframe"
 #define DEF_LABELFRAME_RELIEF		"groove"
-#define DEF_LABELFRAME_FG		"systemButtonText"
+#define DEF_LABELFRAME_FG		NORMAL_FG
 #define DEF_LABELFRAME_FONT		"TkDefaultFont"
 #define DEF_LABELFRAME_TEXT		""
 #define DEF_LABELFRAME_LABELANCHOR	"nw"
@@ -250,14 +253,14 @@
  */
 
 #define DEF_LISTBOX_ACTIVE_STYLE	"dotbox"
-#define DEF_LISTBOX_BG_COLOR		WHITE
+#define DEF_LISTBOX_BG_COLOR		NORMAL_BG
 #define DEF_LISTBOX_BG_MONO		WHITE
 #define DEF_LISTBOX_BORDER_WIDTH	"1"
 #define DEF_LISTBOX_CURSOR		""
 #define DEF_LISTBOX_DISABLED_FG		DISABLED
 #define DEF_LISTBOX_EXPORT_SELECTION	"1"
 #define DEF_LISTBOX_FONT		"TkTextFont"
-#define DEF_LISTBOX_FG			BLACK
+#define DEF_LISTBOX_FG			NORMAL_FG
 #define DEF_LISTBOX_HEIGHT		"10"
 #define DEF_LISTBOX_HIGHLIGHT_BG	NORMAL_BG
 #define DEF_LISTBOX_HIGHLIGHT		BLACK
@@ -352,7 +355,7 @@
 #define DEF_MENUBUTTON_DISABLED_FG_COLOR DISABLED
 #define DEF_MENUBUTTON_DISABLED_FG_MONO	""
 #define DEF_MENUBUTTON_FONT		"TkDefaultFont"
-#define DEF_MENUBUTTON_FG		BLACK
+#define DEF_MENUBUTTON_FG		NORMAL_FG
 #define DEF_MENUBUTTON_HEIGHT		"0"
 #define DEF_MENUBUTTON_HIGHLIGHT_BG_COLOR DEF_MENUBUTTON_BG_COLOR
 #define DEF_MENUBUTTON_HIGHLIGHT_BG_MONO  DEF_MENUBUTTON_BG_MONO
@@ -383,7 +386,7 @@
 #define DEF_MESSAGE_BG_MONO		WHITE
 #define DEF_MESSAGE_BORDER_WIDTH	"1"
 #define DEF_MESSAGE_CURSOR		""
-#define DEF_MESSAGE_FG			BLACK
+#define DEF_MESSAGE_FG			NORMAL_FG
 #define DEF_MESSAGE_FONT		"TkDefaultFont"
 #define DEF_MESSAGE_HIGHLIGHT_BG	NORMAL_BG
 #define DEF_MESSAGE_HIGHLIGHT		BLACK
@@ -447,7 +450,7 @@
 #define DEF_SCALE_CURSOR		""
 #define DEF_SCALE_DIGITS		"0"
 #define DEF_SCALE_FONT			"TkDefaultFont"
-#define DEF_SCALE_FG_COLOR		BLACK
+#define DEF_SCALE_FG_COLOR		NORMAL_FG
 #define DEF_SCALE_FG_MONO		BLACK
 #define DEF_SCALE_FROM			"0"
 #define DEF_SCALE_HIGHLIGHT_BG_COLOR	DEF_SCALE_BG_COLOR
@@ -509,14 +512,14 @@
 #define DEF_TEXT_BLOCK_CURSOR		"0"
 #define DEF_TEXT_BORDER_WIDTH		"0"
 #define DEF_TEXT_CURSOR			"xterm"
-#define DEF_TEXT_FG			BLACK
+#define DEF_TEXT_FG			NORMAL_FG
 #define DEF_TEXT_EXPORT_SELECTION	"1"
 #define DEF_TEXT_FONT			"TkFixedFont"
 #define DEF_TEXT_HEIGHT			"24"
 #define DEF_TEXT_HIGHLIGHT_BG		NORMAL_BG
 #define DEF_TEXT_HIGHLIGHT		BLACK
 #define DEF_TEXT_HIGHLIGHT_WIDTH	"3"
-#define DEF_TEXT_INSERT_BG		BLACK
+#define DEF_TEXT_INSERT_BG		NORMAL_FG
 #define DEF_TEXT_INSERT_BD_COLOR	"0"
 #define DEF_TEXT_INSERT_BD_MONO		"0"
 #define DEF_TEXT_INSERT_OFF_TIME	"300"
