@@ -1021,7 +1021,6 @@ TkWmDeadWindow(
 	    while (Tk_DoOneEvent(TK_WINDOW_EVENTS|TK_DONT_WAIT)) {}
 	}
 	[NSApp _resetAutoreleasePool];
-
 #if DEBUG_ZOMBIES > 0
 	fprintf(stderr, "================= Pool dump ===================\n");
 	[NSAutoreleasePool showPools];
@@ -5520,10 +5519,10 @@ TkUnsupported1ObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const subcmds[] = {
-	"style", "tabbingid", "appearance", NULL
+	"style", "tabbingid", "appearance", "isdark", NULL
     };
     enum SubCmds {
-	TKMWS_STYLE, TKMWS_TABID, TKMWS_APPEARANCE
+	TKMWS_STYLE, TKMWS_TABID, TKMWS_APPEARANCE, TKMWS_ISDARK
     };
     Tk_Window tkwin = clientData;
     TkWindow *winPtr;
@@ -5589,6 +5588,13 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	return WmWinAppearance(interp, winPtr, objc, objv);
+    case TKMWS_ISDARK:
+	if ((objc != 3)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "isdark window");
+	    return TCL_ERROR;
+	}
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(TkMacOSXInDarkMode(tkwin)));
+	return TCL_OK;
     default:
 	return TCL_ERROR;
     }

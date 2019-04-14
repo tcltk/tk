@@ -184,12 +184,13 @@ Note that not all attributes are valid for all window classes.  Support for the
 support for some legacy Carbon-specific classes and attributes was removed
 (they are still accepted by the command but no longer have any effect).
 
-- Another command available in the tk::unsupported::MacWindowStyle namespace is
-tk::unsupported::MacWindowStyle tabbingid window ?newId?  which can be used to
-get or set the tabbingIdentifier for the NSWindow associated with a Tk Window.
-See section 3 for details.
+- Another command available in the tk::unsupported::MacWindowStyle namespace is:
+  tk::unsupported::MacWindowStyle tabbingid window ?newId?
+which can be used to get or set the tabbingIdentifier for the NSWindow
+associated with a Tk Window.  See section 3 for details.
 
-- A command tk::unsupported::MacWindowStyle appearance window ?newAappearance?
+- The command:
+  tk::unsupported::MacWindowStyle appearance window ?newAappearance?
 is available when Tk is built and run on macOS 10.14 (Mojave) or later.  In
 that case the Ttk widgets all support the "Dark Mode" appearance which was
 introduced in 10.14. The command accepts the following values for the optional
@@ -198,6 +199,12 @@ to aqua or darkaqua then the window will be displayed with the corresponding
 appearance independent of any preferences settings.  If it is set to "auto"
 the appearance will be determined by the preferences.  This command can be
 used to opt out of Dark Mode on a per-window basis.
+
+- To determine the current appearance of a window in macOS 10.14 (Mojave) and
+higher, one can use the command:
+  tk::unsupported::MacWindowStyle isdark
+The boolean return value is true if the window is currently displayed with the
+dark appearance.
 
 - If you want to use Remote Debugging with Xcode, you need to set the
 environment variable XCNOSTDIN to 1 in the Executable editor for Wish. That will
