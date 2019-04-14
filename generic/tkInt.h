@@ -407,6 +407,9 @@ typedef struct TkDisplay {
 				 * by that master. */
     int geomInit;
 
+#define TkGetGeomMaster(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
+    ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
+
     /*
      * Information used by tkGet.c only:
      */
@@ -900,10 +903,14 @@ typedef struct TkWindow {
 
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
-    char *geometryMaster;
 #ifdef TK_USE_INPUT_METHODS
     int ximGeneration;          /* Used to invalidate XIC */
 #endif /* TK_USE_INPUT_METHODS */
+    char *geomMgrName;          /* Records the name of the geometry manager. */
+    struct TkWindow *maintainerPtr;
+				/* The geometry master for this window. The
+				 * value is NULL if the window has no master or
+				 * if its master is its parent. */
 } TkWindow;
 
 /*
@@ -1041,6 +1048,7 @@ MODULE_SCOPE void		(*tkHandleEventProc) (XEvent* eventPtr);
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtDefault;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPNG;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPPM;
+MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtSVGnano;
 MODULE_SCOPE TkMainInfo		*tkMainWindowList;
 MODULE_SCOPE Tk_ImageType	tkPhotoImageType;
 MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
@@ -1321,11 +1329,16 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
+MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
+			    Tcl_Interp *interp);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
+MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
+			    double sine, double cosine, double *xPtr,
+			    double *yPtr);
 
 #ifdef _WIN32
 #define TkParseColor XParseColor

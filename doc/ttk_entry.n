@@ -472,7 +472,9 @@ are:
 .PP
 \fB\-background\fP \fIcolor\fP
 .RS
-When using the aqua theme (Mac OS X), changes the \fB\-fieldbackground\fP.
+For backwards compatibility, when using the aqua theme (for macOS), this
+option behaves as an alias for the \fB\-fieldbackground\fP provided that no
+value is specified for \fB\-fieldbackground\fP. Otherwise it is ignored.
 .RE
 \fB\-bordercolor\fP \fIcolor\fP
 .br
@@ -480,8 +482,6 @@ When using the aqua theme (Mac OS X), changes the \fB\-fieldbackground\fP.
 .br
 \fB\-fieldbackground\fP \fIcolor\fP
 .RS
-Does not work with the aqua theme (Mac OS X).
-.br
 Some themes use a graphical background and their field background colors cannot be changed.
 .RE
 \fB\-foreground\fP \fIcolor\fP

@@ -1387,7 +1387,7 @@ HandleTclCommand(
 
 	string = Tcl_GetStringFromObj(Tcl_GetObjResult(interp), &length);
 	count = (length > maxBytes) ? maxBytes : length;
-	memcpy(buffer, string, (size_t) count);
+	memcpy(buffer, string, count);
 	buffer[count] = '\0';
 
 	/*
@@ -1410,7 +1410,7 @@ HandleTclCommand(
 		cmdInfoPtr->charOffset += numChars;
 		length = p - string;
 		if (length > 0) {
-		    strncpy(cmdInfoPtr->buffer, string, (size_t) length);
+		    strncpy(cmdInfoPtr->buffer, string, length);
 		}
 		cmdInfoPtr->buffer[length] = '\0';
 	    }

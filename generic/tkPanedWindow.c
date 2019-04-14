@@ -1011,7 +1011,7 @@ ConfigureSlaves(
 
     i = sizeof(Slave *) * (pwPtr->numSlaves + numNewSlaves);
     newSlaves = ckalloc(i);
-    memset(newSlaves, 0, (size_t) i);
+    memset(newSlaves, 0, i);
     if (index == -1) {
 	/*
 	 * If none of the existing slaves have to be moved, just copy the old

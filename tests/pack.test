@@ -965,6 +965,27 @@ test pack-10.4 {bad -in window does not change master} -setup {
     winfo manager .pack.a
     pack .pack.a -in .pack.a
 } -returnCodes error -result {can't pack .pack.a inside itself}
+test pack-10.5 {prevent management loops} -body {
+    frame .f1
+    frame .f2
+    pack .f1 -in .f2
+    pack .f2 -in .f1
+} -cleanup {
+    destroy .f1
+    destroy .f2
+} -returnCodes error -result {can't put .f2 inside .f1, would cause management loop}
+test pack-10.6 {prevent management loops} -body {
+    frame .f1
+    frame .f2
+    frame .f3
+    pack .f1 -in .f2
+    pack .f2 -in .f3
+    pack .f3 -in .f1
+} -cleanup {
+    destroy .f1
+    destroy .f2
+    destroy .f3
+} -returnCodes error -result {can't put .f3 inside .f1, would cause management loop}
 
 test pack-11.1 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d

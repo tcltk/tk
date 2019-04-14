@@ -867,8 +867,8 @@ TkImgPhotoInstanceSetSize(
 	    if (masterPtr->width == instancePtr->width) {
 		offset = validBox.y * masterPtr->width * 3;
 		memcpy(newError + offset, instancePtr->error + offset,
-			(size_t) (validBox.height
-			* masterPtr->width * 3 * sizeof(schar)));
+			(size_t) validBox.height
+			* masterPtr->width * 3 * sizeof(schar));
 
 	    } else if (validBox.width > 0 && validBox.height > 0) {
 		errDestPtr = newError +
@@ -1982,8 +1982,8 @@ TkImgResetDither(
 {
     if (instancePtr->error) {
 	memset(instancePtr->error, 0,
-	       /*(size_t)*/ (instancePtr->masterPtr->width
-		* instancePtr->masterPtr->height * 3 * sizeof(schar)));
+		(size_t) instancePtr->masterPtr->width
+		* instancePtr->masterPtr->height * 3 * sizeof(schar));
     }
 }
 

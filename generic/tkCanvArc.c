@@ -13,6 +13,8 @@
 #include "tkInt.h"
 #include "tkCanvas.h"
 
+#include "float.h"
+
 /*
  * The structure below defines the record for each arc item.
  */
@@ -183,7 +185,7 @@ static void		ComputeArcBbox(Tk_Canvas canvas, ArcItem *arcPtr);
 static int		ConfigureArc(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
 			    Tcl_Obj *const objv[], int flags);
-static void		ComputeArcFromHeight(ArcItem *arcPtr);
+static void		ComputeArcParametersFromHeight(ArcItem *arcPtr);
 static int		CreateArc(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
@@ -214,6 +216,8 @@ static int		HorizLineToArc(double x1, double x2,
 static int		VertLineToArc(double x, double y1,
 			    double y2, double rx, double ry,
 			    double start, double extent);
+static void		RotateArc(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 
 /*
  * The structures below defines the arc item types by means of functions that
@@ -241,7 +245,8 @@ Tk_ItemType tkArcType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateArc,			/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -469,13 +474,12 @@ ConfigureArc(
     }
 
     /*
-     * If either the height is provided then the start and extent will be
-     * overridden.
+     * Override the start and extent if the height is given.
      */
-    if (arcPtr->height != 0) {
-	ComputeArcFromHeight(arcPtr);
-	ComputeArcBbox(canvas, arcPtr);
-    }
+
+    ComputeArcParametersFromHeight(arcPtr);
+    
+    ComputeArcBbox(canvas, arcPtr);
 
     i = (int) (arcPtr->start/360.0);
     arcPtr->start -= i*360.0;
@@ -589,7 +593,7 @@ ConfigureArc(
 /*
  *--------------------------------------------------------------
  *
- * ComputeArcFromHeight --
+ * ComputeArcParametersFromHeight --
  *
  *	This function calculates the arc parameters given start-point,
  *	end-point and height (!= 0).
@@ -604,17 +608,30 @@ ConfigureArc(
  */
 
 static void
-ComputeArcFromHeight(
+ComputeArcParametersFromHeight(
     ArcItem* arcPtr)
 {
     double chordLen, chordDir[2], chordCen[2], arcCen[2], d, radToDeg, radius;
 
     /*
-     * The chord.
+     * Do nothing if no height has been specified.
+     */
+
+    if (arcPtr->height == 0)
+        return;
+
+    /*
+     * Calculate the chord length, return early if it is too small.
      */
 
     chordLen = hypot(arcPtr->endPoint[1] - arcPtr->startPoint[1],
 	    arcPtr->startPoint[0] - arcPtr->endPoint[0]);
+
+    if (chordLen < DBL_EPSILON) {
+        arcPtr->start = arcPtr->extent = arcPtr->height = 0;
+        return;
+    }
+
     chordDir[0] = (arcPtr->endPoint[0] - arcPtr->startPoint[0]) / chordLen;
     chordDir[1] = (arcPtr->endPoint[1] - arcPtr->startPoint[1]) / chordLen;
     chordCen[0] = (arcPtr->startPoint[0] + arcPtr->endPoint[0]) / 2;
@@ -791,7 +808,7 @@ ComputeArcBbox(
     ComputeArcOutline(canvas,arcPtr);
 
     /*
-     * To compute the bounding box, start with the the bbox formed by the two
+     * To compute the bounding box, start with the bbox formed by the two
      * endpoints of the arc. Then add in the center of the arc's oval (if
      * relevant) and the 3-o'clock, 6-o'clock, 9-o'clock, and 12-o'clock
      * positions, if they are relevant.
@@ -1487,6 +1504,60 @@ ScaleArc(
     arcPtr->bbox[1] = originY + scaleY*(arcPtr->bbox[1] - originY);
     arcPtr->bbox[2] = originX + scaleX*(arcPtr->bbox[2] - originX);
     arcPtr->bbox[3] = originY + scaleY*(arcPtr->bbox[3] - originY);
+    ComputeArcBbox(canvas, arcPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateArc --
+ *
+ *	This function is called to rotate an arc by a given amount.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the arc is rotated by angleRad radians about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateArc(
+    Tk_Canvas canvas,
+    Tk_Item *itemPtr,
+    double originX,
+    double originY,
+    double angleRad)
+{
+    ArcItem *arcPtr = (ArcItem *) itemPtr;
+    double newX, newY, oldX, oldY;
+
+    /*
+     * Compute the centre of the box, then rotate that about the origin.
+     */
+
+    newX = oldX = (arcPtr->bbox[0] + arcPtr->bbox[2]) / 2.0;
+    newY = oldY = (arcPtr->bbox[1] + arcPtr->bbox[3]) / 2.0;
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &newX, &newY);
+
+    /*
+     * Apply the translation to the box.
+     */
+
+    arcPtr->bbox[0] += newX - oldX;
+    arcPtr->bbox[1] += newY - oldY;
+    arcPtr->bbox[2] += newX - oldX;
+    arcPtr->bbox[3] += newY - oldY;
+
+    /*
+     * TODO: update the arc endpoints?
+     */
+
     ComputeArcBbox(canvas, arcPtr);
 }
 
