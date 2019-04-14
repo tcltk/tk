@@ -1070,7 +1070,6 @@ ConfigureRestrictProc(
 {
     XVirtualEvent event;
     int x, y;
-    NSString *osxMode = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
@@ -1091,16 +1090,12 @@ ConfigureRestrictProc(
     		  &event.x_root, &event.y_root, &x, &y, &event.state);
     Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
     event.same_screen = true;
-    if (osxMode == nil) {
-	event.name = Tk_GetUid("LightAqua");
-	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
-	return;
-    }
-    if ([osxMode isEqual:@"Dark"]) {
+    if (TkMacOSXInDarkMode(tkwin)) {
 	event.name = Tk_GetUid("DarkAqua");
-	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
-	return;
+    } else {
+        event.name = Tk_GetUid("LightAqua");
     }
+    Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 }
 
 /*
