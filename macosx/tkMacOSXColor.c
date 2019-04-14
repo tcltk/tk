@@ -189,6 +189,11 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "ListViewWindowHeaderBackground",	    HIBackground, kThemeBackgroundListViewWindowHeader },	    /* 163 */
     { "SecondaryGroupBoxBackground",	    HIBackground, kThemeBackgroundSecondaryGroupBox },		    /* 164 */
     { "MetalBackground",		    HIBackground, kThemeBackgroundMetal },			    /* 165 */
+
+    /*
+     * Colors based on "semantic" NSColors.
+     */
+
     { "WindowBackgroundColor",		    ttkBackground, 0 },	    					    /* 166 */
     { "WindowBackgroundColor1",		    ttkBackground, 1 },						    /* 167 */
     { "WindowBackgroundColor2",		    ttkBackground, 2 },						    /* 168 */
@@ -204,10 +209,11 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "DisabledControlTextColor",	    semantic, 4 },						    /* 178 */
     { "TextBackgroundColor",		    semantic, 5 },						    /* 179 */
     { "SelectedTextBackgroundColor",	    semantic, 6 },						    /* 180 */
+    { "ControlAccentColor",		    semantic, 7 },						    /* 181 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 180
+#define MAX_PIXELCODE 181
 
 /*
  *----------------------------------------------------------------------
@@ -258,6 +264,8 @@ GetEntryFromPixelCode(
  */
 
 static NSColorSpace* deviceRGB = NULL;
+static CGFloat blueAccentRGBA[4] = {0, 122.0/255, 1.0, 1.0};
+static CGFloat graphiteAccentRGBA[4] = {152.0/255, 152.0/255, 152.0/255, 1.0};
 
 static OSStatus
 SetCGColorComponents(
@@ -268,6 +276,7 @@ SetCGColorComponents(
     OSStatus err = noErr;
     NSColor *bgColor, *color;
     CGFloat rgba[4] = {0, 0, 0, 1};
+    NSInteger colorVariant = 1;
     if (!deviceRGB) {
 	deviceRGB = [NSColorSpace deviceRGBColorSpace];
     }
@@ -337,12 +346,32 @@ SetCGColorComponents(
 	    color = [[NSColor selectedTextBackgroundColor] colorUsingColorSpace:
 			  deviceRGB];
 	    break;
+	case 7:
+	    if ([NSApp macMinorVersion] < 14) {
+		colorVariant = [[NSUserDefaults standardUserDefaults]
+					   integerForKey:@"AppleAquaColorVariant"];
+		if (colorVariant == 6) {
+			color = [NSColor colorWithColorSpace: deviceRGB
+						  components: graphiteAccentRGBA
+						       count: 4];
+		} else {
+		    color = [NSColor colorWithColorSpace: deviceRGB
+					      components: blueAccentRGBA
+						   count: 4];
+		}
+	    } else {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+		color = [[NSColor controlAccentColor] colorUsingColorSpace:
+			      deviceRGB];
+#endif
+	    }
+	    break;
 	default:
 	    if ([NSApp macMinorVersion] < 10) {
 	    color = [[NSColor textColor] colorUsingColorSpace:
 			  deviceRGB];
 	    } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 		color = [[NSColor labelColor] colorUsingColorSpace:
 			      deviceRGB];
 #endif
