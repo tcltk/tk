@@ -189,14 +189,14 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "ListViewWindowHeaderBackground",	    HIBackground, kThemeBackgroundListViewWindowHeader },	    /* 163 */
     { "SecondaryGroupBoxBackground",	    HIBackground, kThemeBackgroundSecondaryGroupBox },		    /* 164 */
     { "MetalBackground",		    HIBackground, kThemeBackgroundMetal },			    /* 165 */
-    { "TtkBackground",			    ttkBackground, 0 },	    					    /* 166 */
-    { "TtkBackground1",			    ttkBackground, 1 },						    /* 167 */
-    { "TtkBackground2",			    ttkBackground, 2 },						    /* 168 */
-    { "TtkBackground3",			    ttkBackground, 3 },						    /* 169 */
-    { "TtkBackground4",			    ttkBackground, 4 },						    /* 170 */
-    { "TtkBackground5",			    ttkBackground, 5 },						    /* 171 */
-    { "TtkBackground6",			    ttkBackground, 6 },						    /* 172 */
-    { "TtkBackground7",			    ttkBackground, 7 },						    /* 173 */
+    { "WindowBackgroundColor",		    ttkBackground, 0 },	    					    /* 166 */
+    { "WindowBackgroundColor1",		    ttkBackground, 1 },						    /* 167 */
+    { "WindowBackgroundColor2",		    ttkBackground, 2 },						    /* 168 */
+    { "WindowBackgroundColor3",		    ttkBackground, 3 },						    /* 169 */
+    { "WindowBackgroundColor4",		    ttkBackground, 4 },						    /* 170 */
+    { "WindowBackgroundColor5",		    ttkBackground, 5 },						    /* 171 */
+    { "WindowBackgroundColor6",		    ttkBackground, 6 },						    /* 172 */
+    { "WindowBackgroundColor7",		    ttkBackground, 7 },						    /* 173 */
     { "TextColor",			    semantic, 0 },						    /* 174 */
     { "SelectedTextColor",		    semantic, 1 },						    /* 175 */
     { "LabelColor",			    semantic, 2 },						    /* 176 */
@@ -292,8 +292,14 @@ SetCGColorComponents(
 	bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
 			   deviceRGB];
 	[bgColor getComponents: rgba];
-	for (int i=0; i<3; i++) {
-	    rgba[i] -= entry.value*(8.0/255.0);
+	if (rgba[0] + rgba[1] + rgba[2] < 1.5) {
+	    for (int i=0; i<3; i++) {
+		rgba[i] += entry.value*8.0/255.0;
+	    }
+	} else {
+	    for (int i=0; i<3; i++) {
+		rgba[i] -= entry.value*8.0/255.0;
+	    }
 	}
 	break;
     case semantic:

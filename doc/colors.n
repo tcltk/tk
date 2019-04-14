@@ -784,9 +784,10 @@ YellowGreen	154	205 	50
 .TP
 \fBMac OS X\fR
 .
-On Mac OS X, the following additional system colors are available
-(note that the actual color values depend on the currently active OS theme,
-and typically many of these will in fact be patterns rather than pure colors):
+On macOS, the following additional system colors are available.
+This first group contains all colors available in the HIToolbox library.
+(Note that in some cases the actual color values may depend on the
+current Appearance.)
 .RS
 .DS
 systemActiveAreaFill
@@ -925,7 +926,39 @@ systemWindowHeaderBackground
 systemWindowHeaderInactiveText
 .DE
 .RE
+.
+The second group of MacOS colors below are based on Apple's "semantic"
+NScolors.  On OSX 10.14 (Mojave) and later these colors change value
+when Dark Mode is enabled.  However, the change is only observable
+when the Apple window manager is drawing to the screen. So the
+\fBwinfo rgb\fR command will return the color coordinates used in the
+standard Aqua mode, even if Dark Mode has been selected in the system
+preferences.  The numbered systemWindowBackgroundColors are used in
+the \fBttk::notebook\fR and \fBttk::labelframe\fR widgets to provide a
+contrasting background.  Each numbered color constrasts with its
+predecessor.
+.RS
+.DS
+systemControlTextColor
+systemDisabledControlTextColor
+systemLabelColor  
+systemSelectedTextBackgroundColor  
+systemSelectedTextColor
+systemTextBackgroundColor
+systemTextColor  
+systemWindowBackgroundColor
+systemWindowBackgroundColor1
+systemWindowBackgroundColor2
+systemWindowBackgroundColor3
+systemWindowBackgroundColor4
+systemWindowBackgroundColor5
+systemWindowBackgroundColor6
+systemWindowBackgroundColor7
+.DE
+.RE
 .TP
+
+
 \fBWindows\fR
 .
 On Windows, the following additional system colors are available

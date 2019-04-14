@@ -315,10 +315,11 @@ contrasts with the background of the containing object.  This means
 that the background color of a Ttk widget depends on how deeply it is
 nested inside of other widgets that use contrasting backgrounds.  To
 support this, there are 8 contrasting system colors named
-systemTtkBackground, systemTtkBackground1, ... , systemTtkBackground7.
-The systemTtkBackground color is the standard background for a dialog
-window and the others match the contrasting background colors for
-backgrounds which are nested to the corresponding depth.
+systemWindowBackgroundColor, and systemWindowBackgroundColor1 - 7.
+The systemWindowBackgroundColor is the standard background for a
+dialog window and the others match the contrasting background colors
+used in ttk::notebooks and ttk::labelframes which are nested to the
+corresponding depth.
 
 5. Building Tcl/Tk on macOS
 ------------------------------
