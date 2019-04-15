@@ -124,7 +124,7 @@ static CGRect NormalizeButtonBounds(
     return bounds;
 }
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
 /*----------------------------------------------------------------------
  * +++ Support for contrasting background colors when GroupBoxes or Tabbed
  * panes are nested inside each other.  Early versions of macOS used ridged
@@ -139,8 +139,7 @@ static CGRect NormalizeButtonBounds(
  * support Dark Mode anyway.
  */
 
-static CGFloat windowBackground[4] = {235.0/255, 235.0/255, 235.0/255, 1.0};
-static CGFloat whiteRGBA[4] = {1.0, 1.0, 1.0, 1.0};
+static CGFloat windowBackground[4] = {236.0/255, 236.0/255, 236.0/255, 1.0};
 static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
 
 /*----------------------------------------------------------------------
@@ -264,56 +263,6 @@ static void SolidFillRoundedRectangle(
     CFRelease(path);
 }
 
-/*----------------------------------------------------------------------
- * GradientFillRoundedRectangle --
- *
- *	Fill a rounded rectangle with a specified gradient.
- */
-
-static void GradientFillRoundedRectangle(
-    CGContextRef context,
-    CGRect bounds,
-    CGFloat radius,
-    CGFloat* colors,
-    int numColors)
-{
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    CGPathRef path;
-    CGPoint end = {
-	bounds.origin.x,
-	bounds.origin.y + bounds.size.height
-    };
-    CGGradientRef gradient = CGGradientCreateWithColorComponents(
-	    deviceRGB.CGColorSpace, colors, NULL, numColors);
-    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextClip(context);
-    CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0);
-    CFRelease(path);
-    CFRelease(gradient);
-}
-
-static void DrawUpDownArrows(
-    CGContextRef context,
-    CGRect bounds,
-    CGFloat inset,
-    CGFloat size,
-    CGFloat *rgba)
-{
-    CGFloat x, y;
-    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
-    CGContextSetLineWidth(context, 1.5);
-    x = bounds.origin.x + inset;
-    y = bounds.origin.y + trunc(bounds.size.height/2);
-    CGContextBeginPath(context);
-    CGPoint bottomArrow[3] = {{x, y+2}, {x+size/2, y+2+size/2}, {x+size, y+2}};
-    CGContextAddLines(context, bottomArrow, 3);
-    CGPoint topArrow[3] = {{x, y-2}, {x+size/2, y-2-size/2}, {x+size, y-2}};
-    CGContextAddLines(context, topArrow, 3);
-    CGContextStrokePath(context);
-}
-
 static void DrawDownArrow(
     CGContextRef context,
     CGRect bounds,
@@ -429,9 +378,9 @@ static void DrawListHeader(
     }
 }
 
-#endif /* MAC_OS_X_VERSION_MIN_REQUIRED > 1080 */
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED > 1080 */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 101300
 /*----------------------------------------------------------------------
  * +++ Drawing procedures for widgets in Apple's "Dark Mode" (10.14 and up).
  *
@@ -463,6 +412,57 @@ static CGFloat darkInactiveGradient[8] = {89.0/255, 90.0/255, 93.0/255, 1.0,
 				       119.0/255, 120.0/255, 122.0/255, 1.0};
 static CGFloat darkSelectedGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
 					  20.0/255, 94.0/255,  206.0/255, 1.0};
+
+ 
+/*----------------------------------------------------------------------
+ * GradientFillRoundedRectangle --
+ *
+ *	Fill a rounded rectangle with a specified gradient.
+ */
+
+static void GradientFillRoundedRectangle(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat radius,
+    CGFloat* colors,
+    int numColors)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    CGPathRef path;
+    CGPoint end = {
+	bounds.origin.x,
+	bounds.origin.y + bounds.size.height
+    };
+    CGGradientRef gradient = CGGradientCreateWithColorComponents(
+	    deviceRGB.CGColorSpace, colors, NULL, numColors);
+    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextClip(context);
+    CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0);
+    CFRelease(path);
+    CFRelease(gradient);
+}
+
+static void DrawUpDownArrows(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height/2);
+    CGContextBeginPath(context);
+    CGPoint bottomArrow[3] = {{x, y+2}, {x+size/2, y+2+size/2}, {x+size, y+2}};
+    CGContextAddLines(context, bottomArrow, 3);
+    CGPoint topArrow[3] = {{x, y-2}, {x+size/2, y-2-size/2}, {x+size, y-2}};
+    CGContextAddLines(context, topArrow, 3);
+    CGContextStrokePath(context);
+}
 
 /*----------------------------------------------------------------------
  * FillButtonBackground --
@@ -527,6 +527,8 @@ static void HighlightButtonBorder(
  *	This is a standalone drawing procedure which draws PushButtons and
  *	PopupButtons in the Dark Mode style.
  */
+
+static CGFloat whiteRGBA[4] = {1.0, 1.0, 1.0, 1.0};
 
 static void DrawDarkButton(
     CGRect bounds,
