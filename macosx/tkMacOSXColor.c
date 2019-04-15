@@ -266,6 +266,7 @@ GetEntryFromPixelCode(
 static NSColorSpace* deviceRGB = NULL;
 static CGFloat blueAccentRGBA[4] = {0, 122.0/255, 1.0, 1.0};
 static CGFloat graphiteAccentRGBA[4] = {152.0/255, 152.0/255, 152.0/255, 1.0};
+static CGFloat windowBackground[4] = {236.0/255, 236.0/255, 236.0/255, 1.0};
 
 static OSStatus
 SetCGColorComponents(
@@ -299,9 +300,21 @@ SetCGColorComponents(
 	rgba[2] = ((pixel      ) & 0xff) / 255.0;
 	break;
     case ttkBackground:
-	bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
-			   deviceRGB];
-	[bgColor getComponents: rgba];
+
+	/*
+	 * Prior to OSX 10.14, getComponents returns black when applied to
+	 * windowBackGroundColor.
+	 */
+
+	if ([NSApp macMinorVersion] < 14) {
+	    for (int i=0; i<3; i++) {
+		rgba[i] = windowBackground[i];
+	    }
+	} else {
+	    bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
+			    deviceRGB];
+	    [bgColor getComponents: rgba];
+	}
 	if (rgba[0] + rgba[1] + rgba[2] < 1.5) {
 	    for (int i=0; i<3; i++) {
 		rgba[i] += entry.value*8.0/255.0;
@@ -413,20 +426,20 @@ SetCGColorComponents(
  */
 
 MODULE_SCOPE Bool
-TkMacOSXInDarkMode(Tk_Window tkwin) {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
-    return false;
-#else
-    static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
-    TkWindow *winPtr = (TkWindow*) tkwin;
-    NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
+TkMacOSXInDarkMode(Tk_Window tkwin)
+{
+    int result = false;
 
-    if (view && [view.effectiveAppearance.name isEqualToString:darkAqua]) {
-	return True;
-    } else {
-	return false;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    if ([NSApp macMinorVersion] >= 14) {
+        static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
+        TkWindow *winPtr = (TkWindow*) tkwin;
+        NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
+        result = (view &&
+                  [view.effectiveAppearance.name isEqualToString:darkAqua]);
     }
 #endif
+    return result;
 }
 
 /*
