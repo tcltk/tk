@@ -662,10 +662,9 @@ test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
 } -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
-    update
     toplevel .x -width 140 -height 300 -use [winfo id .t] -bg green
     tkwait visibility .x
-    update
+    update idletasks
     list [expr {[winfo rootx .x] - [winfo rootx .t]}] \
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
 	    [winfo width .t] [winfo height .t]
