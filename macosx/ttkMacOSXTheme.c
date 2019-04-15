@@ -1378,9 +1378,11 @@ static void PaneElementDraw(
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
     BEGIN_DRAWING(d)
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 10800
+    if ([NSApp macMinorVersion] > 9) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
     DrawGroupBox(bounds, dc.context, tkwin);
-#else
+#endif
+    } else { 
     HIThemeTabPaneDrawInfo info = {
 	.version = 1,
 	.state = Ttk_StateTableLookup(ThemeStateTable, state),
@@ -1392,7 +1394,7 @@ static void PaneElementDraw(
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
     ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
-#endif
+    }
     END_DRAWING
 }
 
@@ -1429,16 +1431,18 @@ static void GroupElementDraw(
     CGRect bounds = BoxToRect(d, b);
 
     BEGIN_DRAWING(d)
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 10800
+    if ([NSApp macMinorVersion] > 9) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
     DrawGroupBox(bounds, dc.context, tkwin);
-#else
+#endif
+    } else { 
     const HIThemeGroupBoxDrawInfo info = {
 	.version = 0,
 	.state = Ttk_StateTableLookup(ThemeStateTable, state),
 	.kind = kHIThemeGroupBoxKindPrimaryOpaque,
     };
     ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
-#endif
+    }
     END_DRAWING
 }
 
