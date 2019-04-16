@@ -177,7 +177,6 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     SEL action = [anItem action];
 
     if (sel_isEqual(action, @selector(preferences:))) {
-
 	return (_eventInterp && Tcl_FindCommand(_eventInterp,
 		"::tk::mac::ShowPreferences", NULL, 0));
     } else if (sel_isEqual(action, @selector(tkDemo:))) {
