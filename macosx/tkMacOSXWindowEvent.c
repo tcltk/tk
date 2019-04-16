@@ -410,9 +410,9 @@ GenerateUpdates(
 {
     TkWindow *childPtr;
     XEvent event;
-    CGRect bounds, damageBounds;
+    CGRect bounds, damageBounds, insetBounds;
     HIShapeRef boundsRgn, damageRgn;
-
+    
     TkMacOSXWinCGBounds(winPtr, &bounds);
     if (!CGRectIntersectsRect(bounds, *updateBounds)) {
 	return 0;
@@ -434,6 +434,13 @@ GenerateUpdates(
     }
     HIShapeGetBounds(damageRgn, &damageBounds);
 
+    /*
+     * Expand the damage rectangle a bit to avoid artifacts when
+     * moving canvas items very quickly.
+     */
+    
+    damageBounds = CGRectInset(damageBounds, -10, -10);
+    
     CFRelease(damageRgn);
     CFRelease(boundsRgn);
 
@@ -459,11 +466,11 @@ GenerateUpdates(
      */
 
     for (childPtr = winPtr->childList; childPtr != NULL;
-	    childPtr = childPtr->nextPtr) {
-	if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
-	    continue;
-	}
-	GenerateUpdates(updateRgn, updateBounds, childPtr);
+    	    childPtr = childPtr->nextPtr) {
+    	if (!Tk_IsMapped(childPtr) || Tk_IsTopLevel(childPtr)) {
+    	    continue;
+    	}
+    	GenerateUpdates(updateRgn, updateBounds, childPtr);
     }
 
     /*
@@ -471,10 +478,10 @@ GenerateUpdates(
      */
 
     if (Tk_IsContainer(winPtr)) {
-	childPtr = TkpGetOtherWindow(winPtr);
-	if (childPtr != NULL && Tk_IsMapped(childPtr)) {
-	    GenerateUpdates(updateRgn, updateBounds, childPtr);
-	}
+        childPtr = TkpGetOtherWindow(winPtr);
+        if (childPtr != NULL && Tk_IsMapped(childPtr)) {
+            GenerateUpdates(updateRgn, updateBounds, childPtr);
+        }
 
 	/*
 	 * TODO: Here we should handle out of process embedding.
