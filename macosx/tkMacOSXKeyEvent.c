@@ -732,6 +732,7 @@ isFunctionKey(
     const unsigned last_keysym = (sizeof (convert_ns_to_X_keysym)
                                 / sizeof (convert_ns_to_X_keysym[0]));
     unsigned keysym;
+
     for (keysym = 0; keysym < last_keysym; keysym += 2) {
 	if (code == convert_ns_to_X_keysym[keysym]) {
 	    return 0xFF00 | convert_ns_to_X_keysym[keysym+1];

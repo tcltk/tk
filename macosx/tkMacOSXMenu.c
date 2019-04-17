@@ -698,6 +698,7 @@ TkpConfigureMenuEntry(
 
 		    int i = 0;
 		    NSArray *itemArray = [submenu itemArray];
+
 		    for (NSMenuItem *item in itemArray) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
 
