@@ -280,64 +280,10 @@ static void SolidFillRoundedRectangle(
 }
 
 /*----------------------------------------------------------------------
- * GradientFillRoundedRectangle --
+ * +++ Single Arrow Buttons --
  *
- *      Fill a rounded rectangle with a specified gradient.
+ * Used in ListHeaders and Comboboxes. 
  */
-
-static void GradientFillRoundedRectangle(
-    CGContextRef context,
-    CGRect bounds,
-    CGFloat radius,
-    CGFloat *colors,
-    int numColors)
-{
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    CGPathRef path;
-    CGPoint end = {
-	bounds.origin.x,
-	bounds.origin.y + bounds.size.height
-    };
-    CGGradientRef gradient = CGGradientCreateWithColorComponents(
-	deviceRGB.CGColorSpace, colors, NULL, numColors);
-
-    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextClip(context);
-    CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0);
-    CFRelease(path);
-    CFRelease(gradient);
-}
-
-/*----------------------------------------------------------------------
- * +++ Arrow Buttons --
- *
- * Used in MenuButtons, SpinButtons, ComboBoxes, ListHeaders. 
- */
-
-static void DrawUpDownArrows(
-    CGContextRef context,
-    CGRect bounds,
-    CGFloat inset,
-    CGFloat size,
-    CGFloat *rgba)
-{
-    CGFloat x, y;
-
-    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
-    CGContextSetLineWidth(context, 1.5);
-    x = bounds.origin.x + inset;
-    y = bounds.origin.y + trunc(bounds.size.height / 2);
-    CGContextBeginPath(context);
-    CGPoint bottomArrow[3] =
-    {{x, y + 2}, {x + size / 2, y + 2 + size / 2}, {x + size, y + 2}};
-    CGContextAddLines(context, bottomArrow, 3);
-    CGPoint topArrow[3] =
-    {{x, y - 2}, {x + size / 2, y - 2 - size / 2}, {x + size, y - 2}};
-    CGContextAddLines(context, topArrow, 3);
-    CGContextStrokePath(context);
-}
 
 static void DrawDownArrow(
     CGContextRef context,
@@ -518,6 +464,66 @@ static CGFloat darkSelectedGradient[8] = {
     23.0 / 255, 111.0 / 255, 232.0 / 255, 1.0,
     20.0 / 255, 94.0 / 255,  206.0 / 255, 1.0
 };
+
+/*----------------------------------------------------------------------
+ * GradientFillRoundedRectangle --
+ *
+ *      Fill a rounded rectangle with a specified gradient.
+ */
+
+static void GradientFillRoundedRectangle(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat radius,
+    CGFloat *colors,
+    int numColors)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    CGPathRef path;
+    CGPoint end = {
+	bounds.origin.x,
+	bounds.origin.y + bounds.size.height
+    };
+    CGGradientRef gradient = CGGradientCreateWithColorComponents(
+	deviceRGB.CGColorSpace, colors, NULL, numColors);
+
+    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextClip(context);
+    CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0);
+    CFRelease(path);
+    CFRelease(gradient);
+}
+
+/*----------------------------------------------------------------------
+ * +++ Double Arrow Buttons --
+ *
+ * Used in MenuButtons and SpinButtons. 
+ */
+
+static void DrawUpDownArrows(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat inset,
+    CGFloat size,
+    CGFloat *rgba)
+{
+    CGFloat x, y;
+
+    CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
+    CGContextSetLineWidth(context, 1.5);
+    x = bounds.origin.x + inset;
+    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    CGContextBeginPath(context);
+    CGPoint bottomArrow[3] =
+    {{x, y + 2}, {x + size / 2, y + 2 + size / 2}, {x + size, y + 2}};
+    CGContextAddLines(context, bottomArrow, 3);
+    CGPoint topArrow[3] =
+    {{x, y - 2}, {x + size / 2, y - 2 - size / 2}, {x + size, y - 2}};
+    CGContextAddLines(context, topArrow, 3);
+    CGContextStrokePath(context);
+}
 
 /*----------------------------------------------------------------------
  * +++ FillButtonBackground --
