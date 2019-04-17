@@ -690,6 +690,7 @@ TkpConfigureMenuEntry(
 		[submenu setTitle:title];
 
     		if ([menuItem isEnabled]) {
+
 		    /*
 		     * This menuItem might have been previously disabled (XXX:
 		     * track this), which would have disabled entries; we must
@@ -1015,7 +1016,7 @@ TkpSetMainMenubar(
 	}
 
 	/*
-	 * Attempt to find the NSMenu directly. If that fails, ask Tk to find
+	 * Attempt to find the NSMenu directly.  If that fails, ask Tk to find
 	 * it.
 	 */
 

@@ -403,7 +403,7 @@ TkpComputeButtonGeometry(
 	 * Pushbutton whose overall size is our content size expanded by the
 	 * standard padding.
 	 */
-	
+
 	tmpRect = CGRectMake(0, 0, width + 2*HI_PADX, height + 2*HI_PADY);
         HIThemeGetButtonContentBounds(&tmpRect, &mbPtr->drawinfo, &contBounds);
         if (height < contBounds.size.height) {
@@ -1134,7 +1134,7 @@ TkMacOSXComputeButtonDrawParams(
 	/*
 	 * Draw this widget from scratch.
 	 */
-	
+
 	return 0;
     }
 }
