@@ -60,10 +60,14 @@
 
 /*
  * BoxToRect --
- *    Convert a Ttk_Box in Tk coordinates relative to the given Drawable
- *    to a native Rect relative to the containing port.
+ *    Convert a Ttk_Box in Tk coordinates relative to the given Drawable to a
+ *    native Rect relative to the containing port.
  */
-static inline CGRect BoxToRect(Drawable d, Ttk_Box b)
+
+static inline CGRect
+BoxToRect(
+    Drawable d,
+    Ttk_Box b)
 {
     MacDrawable *md = (MacDrawable*)d;
     CGRect rect;
@@ -102,10 +106,10 @@ static Ttk_StateTable ThemeStateTable[] = {
  *
  * Apple's Human Interface Guidelines only allow three specific heights for
  * most buttons: Regular, small and mini. We always use the regular size.
- * However, Ttk may provide an arbitrary bounding rectangle.  We always draw
- * the button centered vertically on the rectangle, and having the same width
- * as the rectangle.  This function returns the actual bounding rectangle that
- * will be used in drawing the button.
+ * However, Ttk may provide an arbitrary bounding rectangle. We always draw the
+ * button centered vertically on the rectangle, and having the same width as
+ * the rectangle. This function returns the actual bounding rectangle that will
+ * be used in drawing the button.
  *
  * The BevelButton is allowed to have arbitrary size, and also has external
  * padding.  This is handled separately here.
@@ -115,8 +119,9 @@ static CGRect NormalizeButtonBounds(
     SInt32 heightMetric,
     CGRect bounds)
 {
-    SInt32 height;
-    if (heightMetric != NoThemeMetric) {
+    if (heightMetric != (SInt32) NoThemeMetric) {
+	SInt32 height;
+
 	ChkErr(GetThemeMetric, heightMetric, &height);
 	bounds.origin.y += (bounds.size.height - height)/2;
 	bounds.size.height = height;
@@ -149,8 +154,8 @@ static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
  *	Start with the background color of a window's geometry master, or the
  *	standard ttk window background if not. If the contrast parameter is
  *	nonzero modify this color to be darker, for the aqua appearance, or
- *	lighter for the DarkAqua appearance.  This is primarily used by the
- *	Fill and Background elements.
+ *	lighter for the DarkAqua appearance. This is primarily used by the Fill
+ *	and Background elements.
  */
 
 static void GetBackgroundColor(
@@ -161,11 +166,12 @@ static void GetBackgroundColor(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
+
     while (masterPtr != NULL) {
 	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
-	masterPtr = (TkWindow *)TkGetGeomMaster(masterPtr);
+	masterPtr = (TkWindow *) TkGetGeomMaster(masterPtr);
     }
     if (masterPtr) {
 	for (int i = 0; i < 4; i++) {
@@ -176,6 +182,7 @@ static void GetBackgroundColor(
 	    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	    NSColor *windowColor = [[NSColor windowBackgroundColor]
 				       colorUsingColorSpace: deviceRGB];
+
 	    [windowColor getComponents: rgba];
 	} else {
 	    for (int i = 0; i < 4; i++) {
@@ -219,6 +226,7 @@ static void DrawGroupBox(
     NSColor *borderColor, *bgColor;
     static CGFloat border[4] = {1.0, 1.0, 1.0, 0.25};
     CGFloat fill[4];
+
     GetBackgroundColor(context, tkwin, 1, fill);
     bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
 				     count: 4];
@@ -255,6 +263,7 @@ static void SolidFillRoundedRectangle(
     NSColor *color)
 {
     CGPathRef path;
+
     CGContextSetFillColorWithColor(context, color.CGColor);
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextBeginPath(context);
@@ -271,14 +280,17 @@ static void DrawDownArrow(
     CGFloat *rgba)
 {
     CGFloat x, y;
+
     CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
     CGContextSetLineWidth(context, 1.5);
     x = bounds.origin.x + inset;
     y = bounds.origin.y + trunc(bounds.size.height/2);
-    CGContextBeginPath(context);
+
     CGPoint arrow[3] = {
 	{x, y-size/4}, {x+size/2, y+size/4}, {x+size, y-size/4}
     };
+
+    CGContextBeginPath(context);
     CGContextAddLines(context, arrow, 3);
     CGContextStrokePath(context);
 }
@@ -291,14 +303,17 @@ static void DrawUpArrow(
     CGFloat *rgba)
 {
     CGFloat x, y;
+
     CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
     CGContextSetLineWidth(context, 1.5);
     x = bounds.origin.x + inset;
     y = bounds.origin.y + trunc(bounds.size.height/2);
-    CGContextBeginPath(context);
+
     CGPoint arrow[3] = {
 	{x, y+size/4}, {x+size/2, y-size/4}, {x+size, y+size/4}
     };
+
+    CGContextBeginPath(context);
     CGContextAddLines(context, arrow, 3);
     CGContextStrokePath(context);
 }
@@ -368,6 +383,7 @@ static void DrawListHeader(
 
     if (state & TTK_TREEVIEW_STATE_SORTARROW) {
 	CGRect arrowBounds = bounds;
+
 	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
 	arrowBounds.size.width = 16;
 	if (state & TTK_STATE_ALTERNATE) {
@@ -413,7 +429,6 @@ static CGFloat darkInactiveGradient[8] = {89.0/255, 90.0/255, 93.0/255, 1.0,
 static CGFloat darkSelectedGradient[8] = {23.0/255, 111.0/255, 232.0/255, 1.0,
 					  20.0/255, 94.0/255,  206.0/255, 1.0};
 
- 
 /*----------------------------------------------------------------------
  * GradientFillRoundedRectangle --
  *
@@ -424,7 +439,7 @@ static void GradientFillRoundedRectangle(
     CGContextRef context,
     CGRect bounds,
     CGFloat radius,
-    CGFloat* colors,
+    CGFloat *colors,
     int numColors)
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
@@ -435,6 +450,7 @@ static void GradientFillRoundedRectangle(
     };
     CGGradientRef gradient = CGGradientCreateWithColorComponents(
 	    deviceRGB.CGColorSpace, colors, NULL, numColors);
+
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
@@ -452,14 +468,17 @@ static void DrawUpDownArrows(
     CGFloat *rgba)
 {
     CGFloat x, y;
+
     CGContextSetRGBStrokeColor(context, rgba[0], rgba[1], rgba[2], rgba[3]);
     CGContextSetLineWidth(context, 1.5);
     x = bounds.origin.x + inset;
     y = bounds.origin.y + trunc(bounds.size.height/2);
     CGContextBeginPath(context);
+
     CGPoint bottomArrow[3] = {{x, y+2}, {x+size/2, y+2+size/2}, {x+size, y+2}};
-    CGContextAddLines(context, bottomArrow, 3);
     CGPoint topArrow[3] = {{x, y-2}, {x+size/2, y-2-size/2}, {x+size, y-2}};
+
+    CGContextAddLines(context, bottomArrow, 3);
     CGContextAddLines(context, topArrow, 3);
     CGContextStrokePath(context);
 }
@@ -483,6 +502,7 @@ static void FillButtonBackground(
 	bounds.origin.x,
 	bounds.origin.y + bounds.size.height
     };
+
     CGContextBeginPath(context);
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextAddPath(context, path);
@@ -508,6 +528,7 @@ static void HighlightButtonBorder(
     CGPoint topEnd = {bounds.origin.x, bounds.origin.y + 3};
     CGGradientRef topGradient = CGGradientCreateWithColorComponents(
 	    deviceRGB.CGColorSpace, darkTopGradient, NULL, 2);
+
     CGContextSaveGState(context);
     CGContextBeginPath(context);
     CGContextAddArc(context, bounds.origin.x + 4, bounds.origin.y + 4,
@@ -576,6 +597,7 @@ static void DrawDarkButton(
 
     if (kind == kThemePopupButton | kind == kThemeComboBox) {
 	CGRect arrowBounds = bounds;
+
 	arrowBounds.size.width = 16;
 	arrowBounds.origin.x += bounds.size.width - 16;
 
@@ -584,9 +606,9 @@ static void DrawDarkButton(
 	 */
 
 	if (!(state & TTK_STATE_BACKGROUND) &&
-	    !(state & TTK_STATE_DISABLED)) {
+		!(state & TTK_STATE_DISABLED)) {
 	    GradientFillRoundedRectangle(context, arrowBounds, 4,
-				   darkSelectedGradient, 2);
+		    darkSelectedGradient, 2);
 	}
 	if (kind == kThemePopupButton) {
 	    DrawUpDownArrows(context, arrowBounds, 3, 7, whiteRGBA);
@@ -601,8 +623,8 @@ static void DrawDarkButton(
 /*----------------------------------------------------------------------
  * DrawDarkIncDecButton --
  *
- *	This is a standalone drawing procedure which draws an IncDecButton
- *	(as used in a Spinbox) in the Dark Mode style.
+ *	This is a standalone drawing procedure which draws an IncDecButton (as
+ *	used in a Spinbox) in the Dark Mode style.
  */
 
 static void DrawDarkIncDecButton(
@@ -640,6 +662,7 @@ static void DrawDarkIncDecButton(
     
     if (state & TTK_STATE_PRESSED) {
 	CGRect clip = bounds;
+
 	clip.size.height /= 2;
 	CGContextSaveGState(context);
 	if (drawState == kThemeStatePressedDown) {
@@ -647,7 +670,7 @@ static void DrawDarkIncDecButton(
 	}
 	CGContextClipToRect(context, clip);
 	GradientFillRoundedRectangle(context, bounds, 5,
-				   darkSelectedGradient, 2);
+		darkSelectedGradient, 2);
 	CGContextRestoreGState(context);
     }
     DrawUpDownArrows(context, bounds, 3, 5, whiteRGBA);
@@ -714,6 +737,7 @@ static void DrawDarkCheckBox(
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *stroke;
     CGFloat x, y;
+
     bounds = CGRectOffset(checkbounds, bounds.origin.x, bounds.origin.y);
     x = bounds.origin.x;
     y = bounds.origin.y;
@@ -741,15 +765,17 @@ static void DrawDarkCheckBox(
 	CGContextSetStrokeColorWithColor(context, stroke.CGColor);
     }
     if (state & TTK_STATE_SELECTED) {
+	CGPoint check[3] = {{x+4, y+8}, {x+7, y+11}, {x+11, y+4}};
+
 	CGContextSetLineWidth(context, 1.5);
 	CGContextBeginPath(context);
-	CGPoint check[3] = {{x+4, y+8}, {x+7, y+11}, {x+11, y+4}};
 	CGContextAddLines(context, check, 3);
 	CGContextStrokePath(context);
     } else if (state & TTK_STATE_ALTERNATE) {
+	CGPoint bar[2] = {{x+4, y+8}, {x+12, y+8}};
+
 	CGContextSetLineWidth(context, 2.0);
 	CGContextBeginPath(context);
-	CGPoint bar[2] = {{x+4, y+8}, {x+12, y+8}};
 	CGContextAddLines(context, bar, 2);
 	CGContextStrokePath(context);
     }
@@ -758,8 +784,8 @@ static void DrawDarkCheckBox(
 /*----------------------------------------------------------------------
  * DrawDarkRadioButton --
  *
- *    This is a standalone drawing procedure which draws RadioButtons
- *    in the Dark Mode style.
+ *    This is a standalone drawing procedure which draws RadioButtons in the
+ *    Dark Mode style.
  */
 
 static void DrawDarkRadioButton(
@@ -771,6 +797,7 @@ static void DrawDarkRadioButton(
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *fill;
     CGFloat x, y;
+
     bounds = CGRectOffset(checkbounds, bounds.origin.x, bounds.origin.y);
     x = bounds.origin.x;
     y = bounds.origin.y;
@@ -798,12 +825,14 @@ static void DrawDarkRadioButton(
 	CGContextSetFillColorWithColor(context, fill.CGColor);
     }
     if (state & TTK_STATE_SELECTED) {
-	CGContextBeginPath(context);
 	CGRect dot = {{x + 6, y + 6}, {6, 6}};
+
+	CGContextBeginPath(context);
 	CGContextAddEllipseInRect(context, dot);
 	CGContextFillPath(context);
     } else if (state & TTK_STATE_ALTERNATE) {
 	CGRect bar = {{x + 5, y + 8}, {8, 2}};
+
 	CGContextFillRect(context, bar);
     }
 }
@@ -873,9 +902,9 @@ static void DrawDarkTab(
 	    CGContextSetStrokeColorWithColor(context, stroke.CGColor);
 	    CGContextBeginPath(context);
 	    CGContextMoveToPoint(context, originalBounds.origin.x,
-	        originalBounds.origin.y + 1);
+		    originalBounds.origin.y + 1);
 	    CGContextAddLineToPoint(context, originalBounds.origin.x,
-	        originalBounds.origin.y + originalBounds.size.height - 1);
+		    originalBounds.origin.y + originalBounds.size.height - 1);
 	    CGContextStrokePath(context);
 	    CGContextRestoreGState(context);
 	}
@@ -891,7 +920,7 @@ static void DrawDarkTab(
 	}
 	if (!(state & TTK_STATE_BACKGROUND)) {
 	    GradientFillRoundedRectangle(context, bounds, 4,
-					 darkSelectedGradient, 2);
+		    darkSelectedGradient, 2);
 	} else {
 	    faceColor = [NSColor colorWithColorSpace: deviceRGB
 				     components: darkInactiveSelectedTab
@@ -901,12 +930,12 @@ static void DrawDarkTab(
 	HighlightButtonBorder(context, bounds);
     }
 }
-
+
 /*----------------------------------------------------------------------
  * DrawDarkSeparator --
  *
- *    This is a standalone drawing procedure which draws a separator widget
- *    in Dark Mode.
+ *    This is a standalone drawing procedure which draws a separator widget in
+ *    Dark Mode.
  */
 
 static void DrawDarkSeparator(
@@ -919,15 +948,16 @@ static void DrawDarkSeparator(
     NSColor *fillColor = [NSColor colorWithColorSpace: deviceRGB
 					   components: fill
 						count:4];
+
     CGContextSetFillColorWithColor(context, fillColor.CGColor);
     CGContextFillRect(context, bounds);
 }
-
+
 /*----------------------------------------------------------------------
  * DrawDarkFrame --
  *
- *    This is a standalone drawing procedure which draws various
- *    types of borders in Dark Mode.
+ *    This is a standalone drawing procedure which draws various types of
+ *    borders in Dark Mode.
  */
 
 static void DrawDarkFrame(
@@ -937,7 +967,6 @@ static void DrawDarkFrame(
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *stroke;
-    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint topPart[4] = {
@@ -945,7 +974,9 @@ static void DrawDarkFrame(
     };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}}; 
     CGPoint accent[2] = {{x, y + 1}, {x + w, y + 1}};
-    switch(kind) {
+
+    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
+    switch (kind) {
     case kHIThemeFrameTextFieldSquare:
 	CGContextSaveGState(context);
 	CGContextSetShouldAntialias(context, false);
@@ -978,8 +1009,8 @@ static void DrawDarkFrame(
 /*----------------------------------------------------------------------
  * DrawListHeader --
  *
- *    This is a standalone drawing procedure which draws column
- *    headers for a Treeview in the Dark Mode.
+ *	This is a standalone drawing procedure which draws column headers for a
+ *	Treeview in the Dark Mode.
  */
 
 static void DrawDarkListHeader(
@@ -990,13 +1021,13 @@ static void DrawDarkListHeader(
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *stroke;
-    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint top[2] = {{x, y}, {x + w, y}};
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}}; 
     CGPoint separator[2] = {{x + w, y + 3}, {x + w, y + h - 3}};
 
+    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
     stroke = [NSColor colorWithColorSpace: deviceRGB
@@ -1032,8 +1063,8 @@ static void DrawDarkListHeader(
  */
 
 /*
- * When Ttk draws the various types of buttons, a pointer to one of these
- * is passed as the clientData.
+ * When Ttk draws the various types of buttons, a pointer to one of these is
+ * passed as the clientData.
  */
 
 typedef struct {
@@ -1082,6 +1113,7 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
      */
 
     SInt32 HIThemeState;
+
     switch (params->kind) {
     case kThemePushButton:
 	HIThemeState = kThemeStateActive;
@@ -1101,9 +1133,13 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
     return info;
 }
 
-static void ButtonElementMinSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+static void
+ButtonElementMinSize(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *minWidth, int *minHeight,
+    Ttk_Padding *paddingPtr)
 {
     ThemeButtonParams *params = clientData;
 
@@ -1111,9 +1147,8 @@ static void ButtonElementMinSize(
 	ChkErr(GetThemeMetric, params->heightMetric, minHeight);
 
 	/*
-	 * The theme height does not include the 1-pixel border around
-	 * the button, although it does include the 1-pixel shadow at
-	 * the bottom.
+	 * The theme height does not include the 1-pixel border around the
+	 * button, although it does include the 1-pixel shadow at the bottom.
 	 */
 
 	*minHeight += 2;
@@ -1129,9 +1164,13 @@ static void ButtonElementMinSize(
     }
 }
 
-static void ButtonElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+static void
+ButtonElementSize(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *minWidth, int *minHeight,
+    Ttk_Padding *paddingPtr)
 {
     ThemeButtonParams *params = clientData;
     const HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, 0, tkwin);
@@ -1153,10 +1192,10 @@ static void ButtonElementSize(
      * to draw a button with a certain bounding rectangle it draws the button
      * centered within the rectangle.
      *
-     * To compute the effective padding around a button we request the
-     * content and bounding rectangles for a 100x100 button and use the
-     * padding between those.  However, we symmetrize the padding on the
-     * top and bottom, because that is how the button will be drawn.
+     * To compute the effective padding around a button we request the content
+     * and bounding rectangles for a 100x100 button and use the padding between
+     * those. However, we symmetrize the padding on the top and bottom, because
+     * that is how the button will be drawn.
      */
 
     ChkErr(HIThemeGetButtonContentBounds,
@@ -1170,16 +1209,21 @@ static void ButtonElementSize(
     paddingPtr->top = paddingPtr->bottom = verticalPad / 2;
 }
 
-static void ButtonElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+static void
+ButtonElementDraw(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
     ThemeButtonParams *params = clientData;
     CGRect bounds = BoxToRect(d, b);
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state, tkwin);
     bounds = NormalizeButtonBounds(params->heightMetric, bounds);
     
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
     if (TkMacOSXInDarkMode(tkwin)) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 	switch (info.kind) {
@@ -1235,7 +1279,7 @@ static void ButtonElementDraw(
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 		NULL);
     }
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec ButtonElementSpec = {
@@ -1315,18 +1359,26 @@ static Ttk_StateTable TabPositionTable[] = {
  *       TP30000359-TPXREF116>
  */
 
-static void TabElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+static void
+TabElementSize(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *minWidth, int *minHeight,
+    Ttk_Padding *paddingPtr)
 {
-    GetThemeMetric(kThemeMetricLargeTabHeight, (SInt32 *)minHeight);
+    GetThemeMetric(kThemeMetricLargeTabHeight, (SInt32 *) minHeight);
     *paddingPtr = Ttk_MakePadding(0, 0, 0, 2);
-
 }
 
-static void TabElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+static void
+TabElementDraw(
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
     HIThemeTabDrawInfo info = {
@@ -1338,7 +1390,8 @@ static void TabElementDraw(
 	.kind = kHIThemeTabKindNormal,
 	.position = Ttk_StateTableLookup(TabPositionTable, state),
     };
-    BEGIN_DRAWING(d)
+
+    BEGIN_DRAWING(d);
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	DrawDarkTab(bounds, state, dc.context);
@@ -1348,7 +1401,7 @@ static void TabElementDraw(
 #else
     ChkErr(HIThemeDrawTab, &bounds, &info, dc.context, HIOrientation, NULL);
 #endif
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec TabElementSpec = {
@@ -1375,27 +1428,28 @@ static void PaneElementDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
+
     bounds.origin.y -= kThemeMetricTabFrameOverlap;
     bounds.size.height += kThemeMetricTabFrameOverlap;
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
     if ([NSApp macMinorVersion] > 9) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
-    DrawGroupBox(bounds, dc.context, tkwin);
+	DrawGroupBox(bounds, dc.context, tkwin);
 #endif
     } else { 
-    HIThemeTabPaneDrawInfo info = {
-	.version = 1,
-	.state = Ttk_StateTableLookup(ThemeStateTable, state),
-	.direction = kThemeTabNorth,
-	.size = kHIThemeTabSizeNormal,
-	.kind = kHIThemeTabKindNormal,
-	.adornment = kHIThemeTabPaneAdornmentNormal,
-    };
-    bounds.origin.y -= kThemeMetricTabFrameOverlap;
-    bounds.size.height += kThemeMetricTabFrameOverlap;
-    ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
+	HIThemeTabPaneDrawInfo info = {
+	    .version = 1,
+	    .state = Ttk_StateTableLookup(ThemeStateTable, state),
+	    .direction = kThemeTabNorth,
+	    .size = kHIThemeTabSizeNormal,
+	    .kind = kHIThemeTabKindNormal,
+	    .adornment = kHIThemeTabPaneAdornmentNormal,
+	};
+	bounds.origin.y -= kThemeMetricTabFrameOverlap;
+	bounds.size.height += kThemeMetricTabFrameOverlap;
+	ChkErr(HIThemeDrawTabPane, &bounds, &info, dc.context, HIOrientation);
     }
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec PaneElementSpec = {
@@ -1418,32 +1472,39 @@ static Ttk_ElementSpec PaneElementSpec = {
  */
 
 static void GroupElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *minWidth, int *minHeight,
+    Ttk_Padding *paddingPtr)
 {
     *paddingPtr = Ttk_UniformPadding(4);
 }
 
 static void GroupElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    void *clientData,
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
 
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
     if ([NSApp macMinorVersion] > 9) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
-    DrawGroupBox(bounds, dc.context, tkwin);
+	DrawGroupBox(bounds, dc.context, tkwin);
 #endif
     } else { 
-    const HIThemeGroupBoxDrawInfo info = {
-	.version = 0,
-	.state = Ttk_StateTableLookup(ThemeStateTable, state),
-	.kind = kHIThemeGroupBoxKindPrimaryOpaque,
-    };
-    ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
+	const HIThemeGroupBoxDrawInfo info = {
+	    .version = 0,
+	    .state = Ttk_StateTableLookup(ThemeStateTable, state),
+	    .kind = kHIThemeGroupBoxKindPrimaryOpaque,
+	};
+	ChkErr(HIThemeDrawGroupBox, &bounds, &info, dc.context, HIOrientation);
     }
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec GroupElementSpec = {
@@ -1469,9 +1530,9 @@ typedef struct {
 
 static Ttk_ElementOptionSpec EntryElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
-      Tk_Offset(EntryElement,backgroundObj), ENTRY_DEFAULT_BACKGROUND },
+	Tk_Offset(EntryElement,backgroundObj), ENTRY_DEFAULT_BACKGROUND },
     { "-fieldbackground", TK_OPTION_BORDER,
-      Tk_Offset(EntryElement,fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND },
+	Tk_Offset(EntryElement,fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND },
     {0}
 };
 
@@ -1495,9 +1556,10 @@ static void EntryElementDraw(
 
     if (TkMacOSXInDarkMode(tkwin)) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
-	BEGIN_DRAWING(d)
+	BEGIN_DRAWING(d);
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	CGFloat fill[4];
+
 	GetBackgroundColor(dc.context, tkwin, 1, fill);
 	background = [NSColor colorWithColorSpace: deviceRGB
 				       components: fill
@@ -1505,7 +1567,7 @@ static void EntryElementDraw(
 	CGContextSetFillColorWithColor(dc.context, background.CGColor);
 	CGContextFillRect(dc.context, bounds);
 	DrawDarkFrame(bounds, dc.context, kHIThemeFrameTextFieldSquare);
-	END_DRAWING
+	END_DRAWING;
 #endif
     } else {
 	const HIThemeFrameDrawInfo info = {
@@ -1534,7 +1596,7 @@ static void EntryElementDraw(
 		    Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
 		    inner.x, inner.y, inner.width, inner.height);
 	}
-	BEGIN_DRAWING(d)
+	BEGIN_DRAWING(d);
 	if (backgroundPtr == NULL) {
 	    background = [NSColor textBackgroundColor];
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
@@ -1545,7 +1607,7 @@ static void EntryElementDraw(
 	    CGContextFillRect(dc.context, bounds);
 	}
 	ChkErr(HIThemeDrawFrame, &bounds, &info, dc.context, HIOrientation);
-	END_DRAWING
+	END_DRAWING;
     }
     /*if (state & TTK_STATE_FOCUS) {
 	ChkErr(DrawThemeFocusRect, &bounds, 1);
@@ -1604,26 +1666,26 @@ static void ComboboxElementDraw(
 	.adornment = Ttk_StateTableLookup(ButtonAdornmentTable, state),
     };
 
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
     bounds.origin.y += 1;
     if (TkMacOSXInDarkMode(tkwin)) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 	bounds.size.height += 1;
 	DrawDarkButton(bounds, info.kind, state, dc.context);
 #endif
-    } else
-	{
+    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 	if ((state & TTK_STATE_BACKGROUND) &&
-	    !(state & TTK_STATE_DISABLED)) {
+		!(state & TTK_STATE_DISABLED)) {
 	    NSColor *background = [NSColor textBackgroundColor];
 	    CGRect innerBounds = CGRectInset(bounds, 1, 2);
+
 	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
 	}
 #endif
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec ComboboxElementSpec = {
@@ -1674,12 +1736,14 @@ static void SpinButtonUpElementDraw(
 {
     CGRect bounds = BoxToRect(d, Ttk_PadBox(b, SpinbuttonMargins));
     int infoState;
+
     bounds.size.height *= 2;
     if (state & TTK_STATE_PRESSED) {
 	infoState = kThemeStatePressedUp;
     } else {
 	infoState = Ttk_StateTableLookup(ThemeStateTable, state);
     }
+
     const HIThemeButtonDrawInfo info = {
 	.version = 0,
 	.state = infoState,
@@ -1687,7 +1751,8 @@ static void SpinButtonUpElementDraw(
 	.value = Ttk_StateTableLookup(ButtonValueTable, state),
 	.adornment = kThemeAdornmentNone,
     };
-    BEGIN_DRAWING(d)
+
+    BEGIN_DRAWING(d);
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	DrawDarkIncDecButton(bounds, infoState, state, dc.context);
@@ -1696,7 +1761,7 @@ static void SpinButtonUpElementDraw(
     {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec SpinButtonUpElementSpec = {
@@ -1725,12 +1790,13 @@ static void SpinButtonDownElementDraw(
 {
     CGRect bounds = BoxToRect(d, Ttk_PadBox(b, SpinbuttonMargins));
     int infoState = 0;
+
     bounds.origin.y -= bounds.size.height;
     bounds.size.height *= 2;
     if (state & TTK_STATE_PRESSED) {
 	infoState = kThemeStatePressedDown;
     } else {
-	return;
+	return;		// ???
     }
     const HIThemeButtonDrawInfo info = {
 	.version = 0,
@@ -1740,16 +1806,17 @@ static void SpinButtonDownElementDraw(
 	.adornment = kThemeAdornmentNone,
     };
 
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	DrawDarkIncDecButton(bounds, infoState, state, dc.context);
     } else
 #endif
     {
-	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
+	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
+		NULL);
     }
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec SpinButtonDownElementSpec = {
@@ -1850,7 +1917,7 @@ static void TrackElementDraw(
 	    info.trackInfo.slider.thumbDir = kThemeThumbPlain;
 	}
     }
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	CGRect bounds = BoxToRect(d, b);
@@ -1858,6 +1925,7 @@ static void TrackElementDraw(
 	NSColor *trackColor = [NSColor colorWithColorSpace: deviceRGB
 	 					components: darkTrack
 	 					     count: 4];
+
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
 	    bounds = CGRectInset(bounds, 1, bounds.size.height/2 - 2);
 	} else {
@@ -1867,7 +1935,7 @@ static void TrackElementDraw(
     }
 #endif
     ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec TrackElementSpec = {
@@ -1887,6 +1955,7 @@ static Ttk_ElementSpec TrackElementSpec = {
  * Also buggy: The geometry here is a Wild-Assed-Guess; I can't figure out how
  * to get the Appearance Manager to tell me the slider size.
  */
+
 static void SliderElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
@@ -1971,7 +2040,7 @@ static void PbarElementDraw(
 	.trackInfo.progress.phase = phase,
     };
 
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	CGRect bounds = BoxToRect(d, b);
@@ -1988,7 +2057,7 @@ static void PbarElementDraw(
     }
 #endif
     ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec PbarElementSpec = {
@@ -2054,6 +2123,7 @@ static void TroughElementDraw(
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *troughColor;
     CGFloat *rgba = TkMacOSXInDarkMode(tkwin) ? darkTrough : lightTrough;
+
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
 	bounds = CGRectInset(bounds, 0, 1);
@@ -2063,7 +2133,7 @@ static void TroughElementDraw(
     troughColor = [NSColor colorWithColorSpace: deviceRGB
 				    components: rgba
 					 count: 4];
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
     if ([NSApp macMinorVersion] > 8) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
 	CGContextSetFillColorWithColor(dc.context, troughColor.CGColor);
@@ -2073,7 +2143,7 @@ static void TroughElementDraw(
 	       dc.context, HIOrientation);
     }
     CGContextFillRect(dc.context, bounds);
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec TroughElementSpec = {
@@ -2105,6 +2175,7 @@ static void ThumbElementDraw(
 {
     ScrollbarElement *scrollbar = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
+
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
 
     /*
@@ -2129,15 +2200,18 @@ static void ThumbElementDraw(
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	NSColor *thumbColor;
 	CGFloat *rgba;
-	if ((orientation == TTK_ORIENT_HORIZONTAL &&
-	     thumbBounds.size.width >= Tk_Width(tkwin) - 8) ||
-	    (orientation == TTK_ORIENT_VERTICAL &&
-	     thumbBounds.size.height >= Tk_Height(tkwin) - 8)) {
+
+	if ((orientation == TTK_ORIENT_HORIZONTAL
+		&& thumbBounds.size.width >= Tk_Width(tkwin) - 8)
+		|| (orientation == TTK_ORIENT_VERTICAL
+		&& thumbBounds.size.height >= Tk_Height(tkwin) - 8)) {
 	    return;
 	}
+
 	int isDark = TkMacOSXInDarkMode(tkwin);
+
 	if ((state & TTK_STATE_PRESSED) ||
-	    (state & TTK_STATE_HOVER) ) {
+		(state & TTK_STATE_HOVER)) {
 	    rgba = isDark ? darkActiveThumb : lightActiveThumb;
 	} else {
 	    rgba = isDark ? darkInactiveThumb : lightInactiveThumb;
@@ -2145,9 +2219,9 @@ static void ThumbElementDraw(
 	thumbColor = [NSColor colorWithColorSpace: deviceRGB
 				       components: rgba
 					    count: 4];
-	BEGIN_DRAWING(d)
-	    SolidFillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
-	END_DRAWING
+	BEGIN_DRAWING(d);
+	SolidFillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
+	END_DRAWING;
 #endif
     } else {
 	double thumbSize, trackSize, visibleSize, viewSize;
@@ -2164,6 +2238,7 @@ static void ThumbElementDraw(
 	 */
     
 	viewSize = RangeToFactor(100.0);
+
 	HIThemeTrackDrawInfo info = {
 	    .version = 0,
 	    .bounds = troughBounds,
@@ -2171,6 +2246,7 @@ static void ThumbElementDraw(
 	    .attributes = kThemeTrackShowThumb | kThemeTrackThumbRgnIsNotGhost,
 	    .enableState = kThemeTrackActive
 	};
+
 	info.trackInfo.scrollbar.viewsize = viewSize*.8; 
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
 	    trackSize = troughBounds.size.width;
@@ -2186,7 +2262,7 @@ static void ThumbElementDraw(
 	    info.value = info.max * (b.y / (trackSize - thumbSize)); 
 	}
 	if ((state & TTK_STATE_PRESSED) ||
-	    (state & TTK_STATE_HOVER) ) {
+		(state & TTK_STATE_HOVER)) {
 	    info.trackInfo.scrollbar.pressState = kThemeThumbPressed;
 	} else {
 	    info.trackInfo.scrollbar.pressState = 0;
@@ -2196,10 +2272,10 @@ static void ThumbElementDraw(
 	} else {
 	    info.attributes &= ~kThemeTrackHorizontal;
 	}
-	BEGIN_DRAWING(d)
-	    HIThemeDrawTrack (&info, 0, dc.context, kHIThemeOrientationNormal);
-	END_DRAWING
-	    }
+	BEGIN_DRAWING(d);
+	HIThemeDrawTrack(&info, 0, dc.context, kHIThemeOrientationNormal);
+	END_DRAWING;
+    }
 }
 
 static Ttk_ElementSpec ThumbElementSpec = {
@@ -2255,7 +2331,7 @@ static void SeparatorElementDraw(
 	.state = Ttk_StateTableLookup(ThemeStateTable, state & TTK_STATE_BACKGROUND),
     };
 
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
     if (TkMacOSXInDarkMode(tkwin)) {
 	DrawDarkSeparator(bounds, dc.context, tkwin);
@@ -2265,7 +2341,7 @@ static void SeparatorElementDraw(
 #else
     ChkErr(HIThemeDrawSeparator, &bounds, &info, dc.context, HIOrientation);
 #endif
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec SeparatorElementSpec = {
@@ -2316,9 +2392,9 @@ static void SizegripElementDraw(
 	.size = kHIThemeGrowBoxSizeNormal,
     };
 
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
     ChkErr(HIThemeDrawGrowBox, &bounds.origin, &info, dc.context, HIOrientation);
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec SizegripElementSpec = {
@@ -2381,23 +2457,25 @@ static void FillElementDraw(
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *bgColor;
     CGFloat fill[4];
-    BEGIN_DRAWING(d)
+
+    BEGIN_DRAWING(d);
     GetBackgroundColor(dc.context, tkwin, 0, fill);
     bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
 				     count: 4];
     CGContextSetFillColorSpace(dc.context, deviceRGB.CGColorSpace);
     CGContextSetFillColorWithColor(dc.context, bgColor.CGColor);
     CGContextFillRect(dc.context, bounds);
-    END_DRAWING
+    END_DRAWING;
 #else
     ThemeBrush brush = (state & TTK_STATE_BACKGROUND)
 	    ? kThemeBrushModelessDialogBackgroundInactive
 	    : kThemeBrushModelessDialogBackgroundActive;
-    BEGIN_DRAWING(d)
+
+    BEGIN_DRAWING(d);
     ChkErr(HIThemeSetFill, brush, NULL, dc.context, HIOrientation);
     //QDSetPatternOrigin(PatternOrigin(tkwin, d));
     CGContextFillRect(dc.context, bounds);
-    END_DRAWING
+    END_DRAWING;
 #endif
 }
 
@@ -2406,7 +2484,7 @@ static void BackgroundElementDraw(
     Drawable d, Ttk_Box b, unsigned int state)
 {
     FillElementDraw(clientData, elementRecord, tkwin, d, Ttk_WinBox(tkwin),
-    		    state);
+	    state);
 }
 
 static Ttk_ElementSpec FillElementSpec = {
@@ -2429,9 +2507,9 @@ static Ttk_ElementSpec BackgroundElementSpec = {
  * +++ ToolbarBackground element -- toolbar style for frames.
  *
  *    This is very similar to the normal background element, but uses a
- *    different ThemeBrush in order to get the lighter pinstripe effect
- *    used in toolbars. We use SetThemeBackground() rather than
- *    ApplyThemeBackground() in order to get the right style.
+ *    different ThemeBrush in order to get the lighter pinstripe effect used in
+ *    toolbars. We use SetThemeBackground() rather than ApplyThemeBackground()
+ *    in order to get the right style.
  *
  * <URL: http://developer.apple.com/documentation/Carbon/Reference/
  *    Appearance_Manager/appearance_manager/constant_7.html#/
@@ -2446,11 +2524,11 @@ static void ToolbarBackgroundElementDraw(
     ThemeBrush brush = kThemeBrushToolbarBackground;
     CGRect bounds = BoxToRect(d, Ttk_WinBox(tkwin));
 
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
     ChkErr(HIThemeSetFill, brush, NULL, dc.context, HIOrientation);
     //QDSetPatternOrigin(PatternOrigin(tkwin, d));
     CGContextFillRect(dc.context, bounds);
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec ToolbarBackgroundElementSpec = {
@@ -2517,7 +2595,7 @@ static Ttk_StateTable TreeHeaderAdornmentTable[] = {
     { kThemeAdornmentNone, 0}
 };
 
-static void TreeAreaElementSize (
+static void TreeAreaElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *minWidth, int *minHeight, Ttk_Padding *paddingPtr)
 { 
@@ -2565,13 +2643,12 @@ static void TreeHeaderElementDraw(
 	.adornment = Ttk_StateTableLookup(TreeHeaderAdornmentTable, state),
     };
 
-    BEGIN_DRAWING(d)
+    BEGIN_DRAWING(d);
     if ([NSApp macMinorVersion] > 8) {
 #if MAC_OS_X_VERSION_MIN_REQUIRED > 1080
-
 	/*
-	 * Compensate for the padding added in TreeHeaderElementSize, so
-	 * the larger heading will be drawn at the top of the widget.
+	 * Compensate for the padding added in TreeHeaderElementSize, so the
+	 * larger heading will be drawn at the top of the widget.
 	 */
 	
 	bounds.origin.y -= 4;
@@ -2586,7 +2663,7 @@ static void TreeHeaderElementDraw(
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     }
-    END_DRAWING
+    END_DRAWING;
 }
 
 static Ttk_ElementSpec TreeHeaderElementSpec = {
@@ -2636,9 +2713,9 @@ static void DisclosureElementDraw(
 	    .adornment = kThemeAdornmentDrawIndicatorOnly,
 	};
 
-	BEGIN_DRAWING(d)
+	BEGIN_DRAWING(d);
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
-	END_DRAWING
+	END_DRAWING;
     }
 }
 
@@ -2735,13 +2812,15 @@ TTK_LAYOUT("Horizontal.TScrollbar",
 	TTK_NODE("Horizontal.Scrollbar.rightarrow", TTK_PACK_RIGHT)
 	TTK_NODE("Horizontal.Scrollbar.leftarrow", TTK_PACK_RIGHT)))
 
-TTK_END_LAYOUT_TABLE
+TTK_END_LAYOUT_TABLE;
 
 /*----------------------------------------------------------------------
  * +++ Initialization.
  */
 
-static int AquaTheme_Init(Tcl_Interp *interp)
+static int
+AquaTheme_Init(
+    Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_CreateTheme(interp, "aqua", NULL);
 
@@ -2752,38 +2831,41 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     /*
      * Elements:
      */
+
     Ttk_RegisterElementSpec(themePtr, "background", &BackgroundElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "fill", &FillElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "field", &FieldElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Toolbar.background",
-	&ToolbarBackgroundElementSpec, 0);
+	    &ToolbarBackgroundElementSpec, 0);
 
     Ttk_RegisterElementSpec(themePtr, "Button.button",
-	&ButtonElementSpec, &PushButtonParams);
+	    &ButtonElementSpec, &PushButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Checkbutton.button",
-	&ButtonElementSpec, &CheckBoxParams);
+	    &ButtonElementSpec, &CheckBoxParams);
     Ttk_RegisterElementSpec(themePtr, "Radiobutton.button",
-	&ButtonElementSpec, &RadioButtonParams);
+	    &ButtonElementSpec, &RadioButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Toolbutton.border",
-     	&ButtonElementSpec, &BevelButtonParams);
+     	    &ButtonElementSpec, &BevelButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
-	&ButtonElementSpec, &PopupButtonParams);
+	    &ButtonElementSpec, &PopupButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Spinbox.uparrow",
-	&SpinButtonUpElementSpec, 0);
+	    &SpinButtonUpElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Spinbox.downarrow",
-    	&SpinButtonDownElementSpec, 0);
+    	    &SpinButtonDownElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Combobox.button",
-	&ComboboxElementSpec, 0);
+	    &ComboboxElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Treeitem.indicator",
-	&DisclosureElementSpec, &DisclosureParams);
+	    &DisclosureElementSpec, &DisclosureParams);
     Ttk_RegisterElementSpec(themePtr, "Treeheading.cell",
-	&TreeHeaderElementSpec, &ListHeaderParams);
+	    &TreeHeaderElementSpec, &ListHeaderParams);
 
-    Ttk_RegisterElementSpec(themePtr, "Treeview.treearea", &TreeAreaElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "Treeview.treearea",
+	    &TreeAreaElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Notebook.tab", &TabElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Notebook.client", &PaneElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr, "Labelframe.border", &GroupElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr, "Labelframe.border",
+	    &GroupElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Entry.field", &EntryElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Spinbox.field", &EntryElementSpec, 0);
 
@@ -2803,23 +2885,31 @@ static int AquaTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElementSpec(themePtr,"Progressbar.track", &PbarElementSpec, 0);
 
     Ttk_RegisterElementSpec(themePtr,"Scale.trough", &TrackElementSpec,
-			    &ScaleData);
+	    &ScaleData);
     Ttk_RegisterElementSpec(themePtr,"Scale.slider", &SliderElementSpec, 0);
 
-    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.trough", &TroughElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.thumb", &ThumbElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.trough", &TroughElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.thumb", &ThumbElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.trough",
+	    &TroughElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.thumb",
+	    &ThumbElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.trough",
+	    &TroughElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.thumb",
+	    &ThumbElementSpec, 0);
 
     /*
      * If we are not in Snow Leopard or Lion the arrows won't actually be
      * displayed.
      */
 
-    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.uparrow", &ArrowElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.downarrow", &ArrowElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.leftarrow", &ArrowElementSpec, 0);
-    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.rightarrow", &ArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.uparrow",
+	    &ArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Vertical.Scrollbar.downarrow",
+	    &ArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.leftarrow",
+	    &ArrowElementSpec, 0);
+    Ttk_RegisterElementSpec(themePtr,"Horizontal.Scrollbar.rightarrow",
+	    &ArrowElementSpec, 0);
 
     /*
      * Layouts:
