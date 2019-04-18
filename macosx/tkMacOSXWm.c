@@ -5929,15 +5929,15 @@ WmWinAppearance(
 	    resultString = appearanceStrings[APPEARANCE_AUTO];
 	} else if (appearance == NSAppearanceNameAqua) {
 	    resultString = appearanceStrings[APPEARANCE_AQUA];
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	} else if (appearance == NSAppearanceNameDarkAqua) {
-	    resultString = appearanceStrings[APPEARANCE_DARKAQUA];
-#endif
+	} else if (@available(macOS 10.14, *)) {
+	    if (appearance == NSAppearanceNameDarkAqua) {
+		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
+	    }
 	} else {
 	    resultString = "unrecognized";
 	}
 #else
-    resultString = appearanceStrings[APPEARANCE_AQUA];
+	resultString = appearanceStrings[APPEARANCE_AQUA];
 #endif
 	result = Tcl_NewStringObj(resultString, strlen(resultString));
     }
@@ -5954,11 +5954,13 @@ WmWinAppearance(
 	switch ((enum appearances) index) {
 	case APPEARANCE_AQUA:
 	    win.appearance = [NSAppearance appearanceNamed:
-					       NSAppearanceNameAqua];
+		NSAppearanceNameAqua];
 	    break;
 	case APPEARANCE_DARKAQUA:
-	    win.appearance = [NSAppearance appearanceNamed:
-					       NSAppearanceNameDarkAqua];
+	    if (@available(macOS 10.14, *)) {
+		win.appearance = [NSAppearance appearanceNamed:
+		    NSAppearanceNameDarkAqua];
+	    }
 	    break;
 	default:
 	    win.appearance = nil;
