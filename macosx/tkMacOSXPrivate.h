@@ -268,11 +268,13 @@ VISIBILITY_HIDDEN
     int _poolLock;
     int _macMinorVersion;
     Bool _isDrawing;
+    Bool _doNotDraw;
 #endif
 }
 @property int poolLock;
 @property int macMinorVersion;
 @property Bool isDrawing;
+@property Bool doNotDraw;
 
 @end
 @interface TKApplication(TKInit)

@@ -85,6 +85,19 @@
 #endif
 
 /*
+ * Semaphore to make destructors atomic.
+ */
+
+#ifdef MAC_OSX_TK
+extern void TkpAppDoNotDraw(Bool);
+#define SET_SEMAPHORE TkpAppDoNotDraw(1);
+#define CLEAR_SEMAPHORE TkpAppDoNotDraw(0);
+#else
+#define SET_SEMAPHORE
+#define CLEAR_SEMAPHORE
+#endif
+
+/*
  * Opaque type declarations:
  */
 

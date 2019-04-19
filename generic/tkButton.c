@@ -954,6 +954,7 @@ static void
 DestroyButton(
     TkButton *butPtr)		/* Info about button widget. */
 {
+    SET_SEMAPHORE
     butPtr->flags |= BUTTON_DELETED;
     TkpDestroyButton(butPtr);
 
@@ -1011,6 +1012,7 @@ DestroyButton(
 	    butPtr->tkwin);
     butPtr->tkwin = NULL;
     Tcl_EventuallyFree(butPtr, TCL_DYNAMIC);
+    CLEAR_SEMAPHORE
 }
 
 /*
