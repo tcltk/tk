@@ -62,7 +62,7 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook -tabmargins {10 0} -tabposition n
 	ttk::style configure TNotebook -padding {18 8 18 17}
 	ttk::style configure TNotebook.Tab -padding {12 3 12 2}
-	ttk::style configure TNotebook.Tab -foreground white
+	ttk::style configure TNotebook.Tab -foreground systemControlTextColor
 	ttk::style map TNotebook.Tab \
 	    -foreground {
 		{background !disabled !selected} systemControlTextColor
