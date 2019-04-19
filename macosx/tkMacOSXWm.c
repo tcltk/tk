@@ -5933,8 +5933,8 @@ WmWinAppearance(
 	    if (appearance == NSAppearanceNameDarkAqua) {
 		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
 	    }
-	}
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	}
 	result = Tcl_NewStringObj(resultString, strlen(resultString));
     }
     if (result == NULL) {
