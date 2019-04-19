@@ -5919,26 +5919,21 @@ WmWinAppearance(
     NSAppearanceName appearance;
 #else
     NSString *appearance;
-#endif
-    const char *resultString;
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
+    const char *resultString = "unrecognized";
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
     if (win) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
 	appearance = win.appearance.name;
 	if (appearance == nil) {
 	    resultString = appearanceStrings[APPEARANCE_AUTO];
 	} else if (appearance == NSAppearanceNameAqua) {
 	    resultString = appearanceStrings[APPEARANCE_AQUA];
-	} else if (@available(macOS 10.14, *)) {
-	    if (appearance == NSAppearanceNameDarkAqua) {
-		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
-	    }
-	} else {
-	    resultString = "unrecognized";
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	} else if (@available(macOS 10.14, *) &&
+		appearance == NSAppearanceNameDarkAqua) {
+	    resultString = appearanceStrings[APPEARANCE_DARKAQUA];
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	}
-#else
-	resultString = appearanceStrings[APPEARANCE_AQUA];
-#endif
 	result = Tcl_NewStringObj(resultString, strlen(resultString));
     }
     if (result == NULL) {
@@ -5965,11 +5960,11 @@ WmWinAppearance(
 	default:
 	    win.appearance = nil;
 	}
-#endif
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     }
     Tcl_SetObjResult(interp, result);
     return TCL_OK;
-#endif
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED > 1090
     return TCL_ERROR;
 }
 
