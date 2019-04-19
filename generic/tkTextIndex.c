@@ -1321,8 +1321,16 @@ ForwBack(
 		    TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
 		    TkTextIndexBackChars(textPtr, indexPtr, 1, &indexPtr2,
 			    COUNT_DISPLAY_INDICES);
+
+                    /*
+                     * If we couldn't go to the previous line, then we wanted
+                       to go before the start of the text: arrange for returning
+                       the first index of the first display line.
+                     */
+
                     if (!TkTextIndexCmp(indexPtr, &indexPtr2)) {
                         xOffset = 0;
+                        break;
                     }
                     *indexPtr = indexPtr2;
 		}
