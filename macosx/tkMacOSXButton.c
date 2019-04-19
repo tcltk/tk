@@ -187,7 +187,7 @@ TkpDisplayButton(
     int needhighlight = 0;
 
     butPtr->flags &= ~REDRAW_PENDING;
-    if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
+    if ((tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
     }
     pixmap = (Pixmap) Tk_WindowId(tkwin);

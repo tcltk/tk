@@ -381,6 +381,34 @@ TkpAppIsDrawing(void) {
 /*
  *----------------------------------------------------------------------
  *
+ * TkpAppDoNotDraw --
+ *
+ *      A function such as a widget destructor can call this to force
+ *      atomic behavior with respect to the [NSView drawRect] method.
+ *      The drawRect method can be called at any time, and must run
+ *      widget display procedures.  Running the display procedure for a
+ *      widget which has been destroyed will cause a crash.  So a widget
+ *      destructor should set a semaphore by calling TkpAppDoNotDraw(YES)
+ *      before beginning the destruction process, and should call
+ *      TkpAppDoNotDraw(NO) when it is safe to resume drawing.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Allows or disallows drawing by [NSView drawRect].
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkpAppDoNotDraw(Bool yesno) {
+    [NSApp setDoNotDraw:yesno];
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * GenerateUpdates --
  *
  *	Given a Macintosh update region and a Tk window this function geneates
@@ -881,6 +909,10 @@ ConfigureRestrictProc(
 {
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
+
+    if ([NSApp doNotDraw]) {
+	return;
+    }
 
 #ifdef TK_MAC_DEBUG_DRAWING
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);

@@ -201,6 +201,7 @@ MODULE_SCOPE void TkpRetainRegion(TkRegion r);
 MODULE_SCOPE void TkpReleaseRegion(TkRegion r);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
 MODULE_SCOPE Bool TkpAppIsDrawing(void);
+MODULE_SCOPE void TkpAppDoNotDraw(Bool);
 MODULE_SCOPE void TkpDisplayWindow(Tk_Window tkwin);
 MODULE_SCOPE Bool TkTestAppIsDrawing(void);
 MODULE_SCOPE Bool TkMacOSXInDarkMode(Tk_Window tkwin);
