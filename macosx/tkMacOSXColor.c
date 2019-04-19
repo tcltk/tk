@@ -207,13 +207,14 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "LabelColor",			    semantic, 2 },						    /* 176 */
     { "ControlTextColor",      		    semantic, 3 },						    /* 177 */
     { "DisabledControlTextColor",	    semantic, 4 },						    /* 178 */
-    { "TextBackgroundColor",		    semantic, 5 },						    /* 179 */
-    { "SelectedTextBackgroundColor",	    semantic, 6 },						    /* 180 */
-    { "ControlAccentColor",		    semantic, 7 },						    /* 181 */
+    { "SelectedTabTextColor",		    semantic, 5 },						    /* 179 */
+    { "TextBackgroundColor",		    semantic, 6 },						    /* 180 */
+    { "SelectedTextBackgroundColor",	    semantic, 7 },						    /* 181 */
+    { "ControlAccentColor",		    semantic, 8 },						    /* 182 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 181
+#define MAX_PIXELCODE 182
 
 /*
  *----------------------------------------------------------------------
@@ -349,31 +350,47 @@ SetCGColorComponents(
 			  deviceRGB];
 	    break;
 	case 5:
+	    if ([NSApp macMinorVersion] > 6) {
+		color = [[NSColor whiteColor] colorUsingColorSpace:
+						  deviceRGB];
+	    } else {
+		color = [[NSColor blackColor] colorUsingColorSpace:
+						  deviceRGB];
+	    }		
+	    break;
+	case 6:
 	    color = [[NSColor textBackgroundColor] colorUsingColorSpace:
 			  deviceRGB];
 	    break;
-	case 6:
+	case 7:
 	    color = [[NSColor selectedTextBackgroundColor] colorUsingColorSpace:
 			  deviceRGB];
 	    break;
-	case 7:
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	case 8:
 	    if ([NSApp macMinorVersion] >= 14) {
-		color = [[NSColor controlAccentColor] colorUsingColorSpace:
-			      deviceRGB];
-		break;
-	    }
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
+		if (@available(macOS 10.14, *)) {
+		    color = [[NSColor controlAccentColor] colorUsingColorSpace:
+							      deviceRGB];
+		    break;
+		} else {
+		    color = [NSColor colorWithColorSpace: deviceRGB
+					      components: blueAccentRGBA
+						   count: 4];
+		}
 #endif
-	    colorVariant = [[NSUserDefaults standardUserDefaults]
-				       integerForKey:@"AppleAquaColorVariant"];
-	    if (colorVariant == 6) {
-		color = [NSColor colorWithColorSpace: deviceRGB
-					  components: graphiteAccentRGBA
-					       count: 4];
 	    } else {
-		color = [NSColor colorWithColorSpace: deviceRGB
-					  components: blueAccentRGBA
-					       count: 4];
+		colorVariant = [[NSUserDefaults standardUserDefaults]
+				       integerForKey:@"AppleAquaColorVariant"];
+		if (colorVariant == 6) {
+		    color = [NSColor colorWithColorSpace: deviceRGB
+					      components: graphiteAccentRGBA
+						   count: 4];
+		} else {
+		    color = [NSColor colorWithColorSpace: deviceRGB
+					      components: blueAccentRGBA
+						   count: 4];
+		}
 	    }
 	    break;
 	default:
