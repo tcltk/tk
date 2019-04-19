@@ -68,7 +68,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     BOOL movedOnly = [[notification name]
-			 isEqualToString:NSWindowDidMoveNotification];
+	    isEqualToString:NSWindowDidMoveNotification];
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
@@ -91,7 +91,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    flags |= TK_SIZE_CHANGED;
 	}
 	if (Tcl_GetServiceMode() != TCL_SERVICE_NONE) {
-
 	    /*
 	     * Propagate geometry changes immediately.
 	     */
@@ -140,11 +139,10 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (NSRect)windowWillUseStandardFrame:(NSWindow *)window
                         defaultFrame:(NSRect)newFrame
 {
-
     /*
-     * This method needs to be implemented in order for [NSWindow isZoomed]
-     * to give the correct answer.  But it suffices to always validate
-     * every request.
+     * This method needs to be implemented in order for [NSWindow isZoomed] to
+     * give the correct answer. But it suffices to always validate every
+     * request.
      */
 
     return newFrame;
@@ -153,13 +151,12 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (NSSize)window:(NSWindow *)window
   willUseFullScreenContentSize:(NSSize)proposedSize
 {
-
     /*
-     * We don't need to change the proposed size, but we do need to
-     * implement this method.  Otherwise the full screen window will
-     * be sized to the screen's visibleFrame, leaving black bands at
-     * the top and bottom.
+     * We don't need to change the proposed size, but we do need to implement
+     * this method.  Otherwise the full screen window will be sized to the
+     * screen's visibleFrame, leaving black bands at the top and bottom.
      */
+
     return proposedSize;
 }
 
@@ -208,13 +205,12 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 
     /*
-     * If necessary, TkGenWMDestroyEvent() handles [close]ing the window,
-     * so can always return NO from -windowShouldClose: for a Tk window.
+     * If necessary, TkGenWMDestroyEvent() handles [close]ing the window, so
+     * can always return NO from -windowShouldClose: for a Tk window.
      */
 
     return (winPtr ? NO : YES);
 }
-
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 
@@ -255,7 +251,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	//Tk_UnmapWindow((Tk_Window) winPtr);
     }
 }
-
 
 #endif /* TK_MAC_DEBUG_NOTIFICATIONS */
 
@@ -363,11 +358,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
  *
  * TkpAppIsDrawing --
  *
- *      A widget display procedure can call this to determine whether it
- *      is being run inside of the drawRect method.  This is needed for
- *      some tests, especially of the Text widget, which record data in
- *      a global Tcl variable and assume that display procedures will be
- *      run in a predictable sequence as Tcl idle tasks.
+ *      A widget display procedure can call this to determine whether it is
+ *      being run inside of the drawRect method. This is needed for some tests,
+ *      especially of the Text widget, which record data in a global Tcl
+ *      variable and assume that display procedures will be run in a
+ *      predictable sequence as Tcl idle tasks.
  *
  * Results:
  *	True only while running the drawRect method of a TKContentView;
@@ -377,11 +372,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
  *
  *----------------------------------------------------------------------
  */
+
 MODULE_SCOPE Bool
 TkpAppIsDrawing(void) {
     return [NSApp isDrawing];
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -670,12 +665,10 @@ TkGenWMConfigureEvent(
 	if ((flags & TK_SIZE_CHANGED) && !(wmPtr->flags & WM_SYNC_PENDING) &&
 		((width != Tk_Width(tkwin)) || (height != Tk_Height(tkwin)))) {
 	    if ((wmPtr->width == -1) && (width == winPtr->reqWidth)) {
-
 		/*
 		 * Don't set external width, since the user didn't change it
 		 * from what the widgets asked for.
 		 */
-
 	    } else if (wmPtr->gridWin != NULL) {
 		wmPtr->width = wmPtr->reqGridWidth
 			+ (width - winPtr->reqWidth)/wmPtr->widthInc;
@@ -687,12 +680,10 @@ TkGenWMConfigureEvent(
 	    }
 
 	    if ((wmPtr->height == -1) && (height == winPtr->reqHeight)) {
-
 		/*
 		 * Don't set external height, since the user didn't change it
 		 * from what the widgets asked for.
 		 */
-
 	    } else if (wmPtr->gridWin != NULL) {
 		wmPtr->height = wmPtr->reqGridHeight
 			+ (height - winPtr->reqHeight)/wmPtr->heightInc;
@@ -707,7 +698,6 @@ TkGenWMConfigureEvent(
 	    wmPtr->configHeight = height;
 	}
     }
-
 
     /*
      * Now set up the changes structure. Under X we wait for the
@@ -899,8 +889,8 @@ ConfigureRestrictProc(
 #endif
 
     /*
-     * We do not allow recursive calls to drawRect, but we only log
-     * them on OSX > 10.13, where they should never happen.
+     * We do not allow recursive calls to drawRect, but we only log them on OSX
+     * > 10.13, where they should never happen.
      */
 
     if ([NSApp isDrawing]) {
@@ -955,9 +945,9 @@ ConfigureRestrictProc(
     	Tk_RestrictProc *oldProc;
 
 	/*
-	 * This can be called from outside the Tk event loop.
-	 * Since it calls Tcl_DoOneEvent, we need to make sure we
-	 * don't clobber the AutoreleasePool set up by the caller.
+	 * This can be called from outside the Tk event loop.  Since it calls
+	 * Tcl_DoOneEvent, we need to make sure we don't clobber the
+	 * AutoreleasePool set up by the caller.
 	 */
 
 	[NSApp _lockAutoreleasePool];
@@ -973,7 +963,7 @@ ConfigureRestrictProc(
 	  */
 
 	TkGenWMConfigureEvent(tkwin, Tk_X(tkwin), Tk_Y(tkwin), width, height,
-			      TK_SIZE_CHANGED | TK_MACOSX_HANDLE_EVENT_IMMEDIATELY);
+		TK_SIZE_CHANGED | TK_MACOSX_HANDLE_EVENT_IMMEDIATELY);
     	oldProc = Tk_RestrictEvents(ConfigureRestrictProc, NULL, &oldArg);
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
@@ -1061,16 +1051,15 @@ ConfigureRestrictProc(
 }
 
 /*
- * This method is called when a user changes between light and dark mode.
- * The implementation here generates a Tk virtual event which can be bound
- * to a function that redraws the window in an appropriate style.
+ * This method is called when a user changes between light and dark mode. The
+ * implementation here generates a Tk virtual event which can be bound to a
+ * function that redraws the window in an appropriate style.
  */
 
 - (void) viewDidChangeEffectiveAppearance
 {
     XVirtualEvent event;
     int x, y;
-    NSString *osxMode = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
@@ -1091,21 +1080,17 @@ ConfigureRestrictProc(
     		  &event.x_root, &event.y_root, &x, &y, &event.state);
     Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
     event.same_screen = true;
-    if (osxMode == nil) {
-	event.name = Tk_GetUid("LightAqua");
-	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
-	return;
-    }
-    if ([osxMode isEqual:@"Dark"]) {
+    if (TkMacOSXInDarkMode(tkwin)) {
 	event.name = Tk_GetUid("DarkAqua");
-	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
-	return;
+    } else {
+        event.name = Tk_GetUid("LightAqua");
     }
+    Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
 }
 
 /*
- * This is no-op on 10.7 and up because Apple has removed this widget,
- * but we are leaving it here for backwards compatibility.
+ * This is no-op on 10.7 and up because Apple has removed this widget, but we
+ * are leaving it here for backwards compatibility.
  */
 
 - (void) tkToolbarButton: (id) sender
