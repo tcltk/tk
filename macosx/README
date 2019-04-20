@@ -303,7 +303,7 @@ but rather refers to the context in which the color should be used.
 Tk now provides the following semantic colors as system colors:
 systemTextColor, systemTextBackgroundColor, systemSelectedTextColor,
 systemSelectedTextBackgroundColor, systemControlTextColor,
-systemDisabledControlTextColor, systemLabelColor and
+systemDisabledControlTextColor, systemLabelColor, and
 systemControlAccentColor.  All of these except the last two were
 present in OSX 10.0 (and those two are simulated in systems where they
 do not exist).  The change in 10.14 was that the RGB color value of
@@ -311,7 +311,9 @@ these colors became dynamic, meaning that the color value can change
 when the application appearance changes.  In particular, when a user
 selects Dark Mode in the system preferences these colors change
 appearance.  For example systemTextColor is dark in Aqua and light in
-DarkAqua.
+DarkAqua.  One additional color, systemSelectedTabTextColor, does not
+exist in macOS but is used by Tk to match the different colors used
+for Notebook tab text in different OS versions.
 
 The default background and foreground colors of most of the Tk widgets
 have been set to semantic colors, which means that the widgets will change
