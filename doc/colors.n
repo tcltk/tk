@@ -901,6 +901,7 @@ systemScrollBarDelimiterActive
 systemScrollBarDelimiterInactive
 systemSecondaryGroupBoxBackground
 systemSecondaryHighlightColor
+systemSelectedTabTextColor
 systemSheetBackground
 systemSheetBackgroundOpaque
 systemSheetBackgroundTransparent
