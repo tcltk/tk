@@ -265,9 +265,9 @@ GetEntryFromPixelCode(
  */
 
 static NSColorSpace* deviceRGB = NULL;
-static CGFloat blueAccentRGBA[4] = {0, 122.0/255, 1.0, 1.0};
-static CGFloat graphiteAccentRGBA[4] = {152.0/255, 152.0/255, 152.0/255, 1.0};
-static CGFloat windowBackground[4] = {236.0/255, 236.0/255, 236.0/255, 1.0};
+static CGFloat blueAccentRGBA[4] = {0, 122.0 / 255, 1.0, 1.0};
+static CGFloat windowBackground[4] = 
+    {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
 static OSStatus
 SetCGColorComponents(
@@ -278,7 +278,11 @@ SetCGColorComponents(
     OSStatus err = noErr;
     NSColor *bgColor, *color;
     CGFloat rgba[4] = {0, 0, 0, 1};
-    NSInteger colorVariant = 1;
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101400
+    NSInteger colorVariant; 
+    static CGFloat graphiteAccentRGBA[4] =
+	{152.0 / 255, 152.0 / 255, 152.0 / 255, 1.0};
+#endif
 
     if (!deviceRGB) {
 	deviceRGB = [NSColorSpace deviceRGBColorSpace];
@@ -318,11 +322,11 @@ SetCGColorComponents(
 	}
 	if (rgba[0] + rgba[1] + rgba[2] < 1.5) {
 	    for (int i=0; i<3; i++) {
-		rgba[i] += entry.value*8.0/255.0;
+		rgba[i] += entry.value*8.0 / 255.0;
 	    }
 	} else {
 	    for (int i=0; i<3; i++) {
-		rgba[i] -= entry.value*8.0/255.0;
+		rgba[i] -= entry.value*8.0 / 255.0;
 	    }
 	}
 	break;
@@ -335,7 +339,7 @@ SetCGColorComponents(
 	    color = [[NSColor selectedTextColor] colorUsingColorSpace: deviceRGB];
 	    break;
 	case 2:
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 101000
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 	    color = [[NSColor labelColor] colorUsingColorSpace: deviceRGB];
 #else
 	    color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
@@ -367,31 +371,28 @@ SetCGColorComponents(
 			  deviceRGB];
 	    break;
 	case 8:
-	    if ([NSApp macMinorVersion] >= 14) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
-		if (@available(macOS 10.14, *)) {
-		    color = [[NSColor controlAccentColor] colorUsingColorSpace:
-							      deviceRGB];
-		    break;
-		} else {
-		    color = [NSColor colorWithColorSpace: deviceRGB
-					      components: blueAccentRGBA
-						   count: 4];
-		}
-#endif
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	    if (@available(macOS 10.14, *)) {
+		color = [[NSColor controlAccentColor] colorUsingColorSpace:
+							  deviceRGB];
 	    } else {
-		colorVariant = [[NSUserDefaults standardUserDefaults]
-				       integerForKey:@"AppleAquaColorVariant"];
-		if (colorVariant == 6) {
-		    color = [NSColor colorWithColorSpace: deviceRGB
-					      components: graphiteAccentRGBA
-						   count: 4];
-		} else {
-		    color = [NSColor colorWithColorSpace: deviceRGB
-					      components: blueAccentRGBA
-						   count: 4];
-		}
+		color = [NSColor colorWithColorSpace: deviceRGB
+				 components: blueAccentRGBA
+				 count: 4];
 	    }
+#else
+	    colorVariant = [[NSUserDefaults standardUserDefaults]
+			       integerForKey:@"AppleAquaColorVariant"];
+	    if (colorVariant == 6) {
+		color = [NSColor colorWithColorSpace: deviceRGB
+				 components: graphiteAccentRGBA
+				 count: 4];
+	    } else {
+		color = [NSColor colorWithColorSpace: deviceRGB
+				 components: blueAccentRGBA
+				 count: 4];
+	    }
+#endif
 	    break;
 	default:
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
@@ -674,7 +675,7 @@ TkMacOSXSetColorInContext(
     struct SystemColorMapEntry entry;
     CGRect rect;
     int code = (pixel >> 24) & 0xff;
-    HIThemeBackgroundDrawInfo info = { 0, kThemeStateActive, entry.value };
+    HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};;
     static CGColorSpaceRef deviceRGBSpace = NULL;
 
     if (!deviceRGBSpace) {
@@ -698,6 +699,7 @@ TkMacOSXSetColorInContext(
 		    kHIThemeOrientationNormal);
 	    break;
 	case HIBackground:
+	    info.kind = entry.value; 
 	    rect = CGContextGetClipBoundingBox(context);
 	    err = ChkErr(HIThemeApplyBackground, &rect, &info,
 		    context, kHIThemeOrientationNormal);
