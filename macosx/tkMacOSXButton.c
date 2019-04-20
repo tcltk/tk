@@ -185,7 +185,10 @@ TkpDisplayButton(
     Pixmap pixmap;
     DrawParams* dpPtr = &macButtonPtr->drawParams;
     int needhighlight = 0;
-
+    
+    if (butPtr->flags & BUTTON_DELETED) {
+	return;
+    }
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
