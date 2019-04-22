@@ -1651,6 +1651,13 @@ static int EntryXViewCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
+
+    /*
+     * Ensure that the scroll info is up-to-date before a scrolling command.
+     */
+
+    EntryDoLayout(recordPtr);
+
     if (objc == 3) {
 	int newFirst;
 	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {
