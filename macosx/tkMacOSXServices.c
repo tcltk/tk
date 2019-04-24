@@ -10,37 +10,33 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-
-
-#include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
-#define Cursor FooFoo
-#include <Carbon/Carbon.h>
-#undef Cursor
-#include <tcl.h>
-#include <tk.h>
 #include <tkInt.h>
 #include <tkMacOSXInt.h>
-#include <Cocoa/Cocoa.h>
-#include <stdio.h>
-#include <string.h>
 
 static Tcl_Interp *ServicesInterp;
 
+/*
+ * These two assist with asynchronous Tcl proc calling.
+ */
 
-/* These two assist with asynchronous Tcl proc calling. */
 typedef struct Services_Event {
-  Tcl_Event header;
-  char script[50000];
+    Tcl_Event header;
+    char script[50000];
 } Services_Event;
 
-int ServicesEventProc(Tcl_Event *event, int flags) {
-  Tcl_GlobalEval(ServicesInterp, ((Services_Event *)event)->script);
-  return 1;
+int ServicesEventProc(
+    Tcl_Event *event,
+    int flags)
+{
+    Tcl_GlobalEval(ServicesInterp, ((Services_Event *)event)->script);
+    return 1;
 }
 
+/*
+ * Class declarations for TkService class.
+ */
 
-/* Class declarations for TkService class. */
 @interface TkService : NSView {
 
 }
@@ -52,145 +48,197 @@ int ServicesEventProc(Tcl_Event *event, int flags) {
 
 @end
 
-/* Class methods. */
+/*
+ * Class methods.
+ */
+
 @implementation TkService
 
 + (void) initialize {
-  
-  NSArray *sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
-  [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:nil];
-  NSUpdateDynamicServices();
-  return;
-}
+    NSArray *sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
 
-
-- (id)validRequestorForSendType:(NSString *)sendType returnType:(NSString *)returnType { 
-
-  if ([sendType isEqual:NSStringPboardType]) {
-    return self; 
-  } 
-  return [super validRequestorForSendType:sendType returnType:returnType]; 
-} 
-
-/* Make sure the view accepts events. */
-- (BOOL)acceptsFirstResponder {
-  return YES;
-}
-- (BOOL)becomeFirstResponder {
-  return YES;
-}
-
-/*Get selected text, copy to pasteboard.*/
-- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard  types:(NSArray *)types { 
-  NSArray *typesDeclared; 
-  if ([types containsObject:NSStringPboardType] == NO) { 
-    return NO; 
-  } 
-
-  Tcl_Eval(ServicesInterp,"clipboard get");
-  char *copystring;
-  copystring = Tcl_GetString(Tcl_GetObjResult(ServicesInterp));
-
-  NSString *writestring = [NSString stringWithUTF8String:copystring];
-  typesDeclared = [NSArray arrayWithObject:NSStringPboardType]; 
-  [pboard declareTypes:typesDeclared owner:nil]; 
-  return [pboard setString:writestring forType:NSStringPboardType]; 
-} 
-
-
-/* This is the method that actually calls the Tk service; this is the method that must be defined in info.plist */
-
-- (void)provideService:(NSPasteboard *)pboard userData:(NSString *)data error:(NSString **)error {
-
-  NSString *pboardString;
-  NSArray *types = [pboard types];
-  Services_Event *event;
-
-  /* Get string from private pasteboard, write to general pasteboard to make available to Tcl service. */
-  if ([types containsObject:NSStringPboardType] &&
-      (pboardString = [pboard stringForType:NSStringPboardType])) { 
-    
-    NSPasteboard *generalpasteboard = [NSPasteboard generalPasteboard];
-    [generalpasteboard declareTypes:[NSArray arrayWithObjects:NSStringPboardType, nil] owner:nil];
-    [generalpasteboard setString:pboardString forType:NSStringPboardType];   
-    event = (Services_Event *)ckalloc(sizeof(Services_Event));
-    event->header.proc = ServicesEventProc;
-    strcpy(event->script, "::tk::mac::PerformService");
-    Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
-  } else {
+    [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:nil];
+    NSUpdateDynamicServices();
     return;
-  }
-  return;
+}
+
+
+- (id)validRequestorForSendType:(NSString *)sendType
+		     returnType:(NSString *)returnType
+{
+    if ([sendType isEqual:NSStringPboardType]) {
+	return self;
+    }
+    return [super validRequestorForSendType:sendType returnType:returnType];
+}
+
+/*
+ * Make sure the view accepts events.
+ */
+
+- (BOOL)acceptsFirstResponder
+{
+    return YES;
+}
+- (BOOL)becomeFirstResponder
+{
+    return YES;
+}
+
+/*
+ * Get selected text, copy to pasteboard.
+ */
+
+- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard
+			     types:(NSArray *)types
+{
+    NSArray *typesDeclared;
+    if ([types containsObject:NSStringPboardType] == NO) {
+	return NO;
+    }
+
+    Tcl_Eval(ServicesInterp,"clipboard get");
+    char *copystring;
+    copystring = Tcl_GetString(Tcl_GetObjResult(ServicesInterp));
+
+    NSString *writestring = [NSString stringWithUTF8String:copystring];
+    typesDeclared = [NSArray arrayWithObject:NSStringPboardType];
+    [pboard declareTypes:typesDeclared owner:nil];
+    return [pboard setString:writestring forType:NSStringPboardType];
+}
+
+
+/*
+ * This is the method that actually calls the Tk service; this is the method
+ * that must be defined in info.plist
+ */
+
+- (void)provideService:(NSPasteboard *)pboard
+	      userData:(NSString *)data
+		 error:(NSString **)error
+{
+    NSString *pboardString;
+    NSArray *types = [pboard types];
+    Services_Event *event;
+
+    /*
+     * Get string from private pasteboard, write to general pasteboard to make
+     * available to Tcl service.
+     */
+
+    if ([types containsObject:NSStringPboardType] &&
+	(pboardString = [pboard stringForType:NSStringPboardType])) {
+
+	NSPasteboard *generalpasteboard = [NSPasteboard generalPasteboard];
+	[generalpasteboard declareTypes:[NSArray
+	     arrayWithObjects:NSStringPboardType, nil] owner:nil];
+	[generalpasteboard setString:pboardString forType:NSStringPboardType];
+	event = (Services_Event *)ckalloc(sizeof(Services_Event));
+	event->header.proc = ServicesEventProc;
+	strcpy(event->script, "::tk::mac::PerformService");
+	Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
+    } else {
+	return;
+    }
+    return;
 }
 
 @end
 
 
-/* Register a specific widget to access the Services menu. */
-int TkMacOSXRegisterServiceWidgetObjCmd (ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+/*
+ * Register a specific widget to access the Services menu.
+ */
 
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+int TkMacOSXRegisterServiceWidgetObjCmd (
+					 ClientData cd,
+					 Tcl_Interp *ip,
+					 int objc,
+					 Tcl_Obj *CONST objv[])
+{
 
-  /* Need proper number of args. */	    
-  if(objc != 2) {        
-    Tcl_WrongNumArgs(ip, 1, objv, "path?");        
-    return TCL_ERROR;    
-  }
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-  /* Get the object that holds this Tk Window... */
-  Rect bounds;
-  NSRect frame;
-  Tk_Window path;
-  path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
-  if (path == NULL) {
-    return TCL_ERROR;
-  }
+    /*
+     * Need proper number of args.
+     */
 
-  Tk_MakeWindowExist(path);
-  Tk_MapWindow(path);
-  Drawable d = Tk_WindowId(path);
+    if(objc != 2) {
+	Tcl_WrongNumArgs(ip, 1, objv, "path?");
+	return TCL_ERROR;
+    }
 
-  /* Get NSView from Tk window and add subview. */
-  TkService *serviceview = [[TkService alloc] init];
-  NSView *view = TkMacOSXGetRootControl(d);
-  if ([serviceview superview] != view) {
-    [view addSubview:serviceview];
-  }
+    /*
+     * Get the object that holds this Tk Window...
+     */
 
-  TkMacOSXWinBounds((TkWindow*)path, &bounds);
+    Rect bounds;
+    NSRect frame;
+    Tk_Window path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]),
+				     Tk_MainWindow(ip));
 
-  /* Hack to make sure subview is set to take up entire geometry of window. */
-  frame = NSMakeRect(bounds.left, bounds.top, 100000, 100000);
-  frame.origin.y = 0;
+    if (path == NULL) {
+	return TCL_ERROR;
+    }
 
-  if (!NSEqualRects(frame, [serviceview frame])) {
-    [serviceview setFrame:frame];
-  }
+    Tk_MakeWindowExist(path);
+    Tk_MapWindow(path);
+    Drawable d = Tk_WindowId(path);
 
-  [serviceview release];
-  [pool release];
+    /*
+     * Get NSView from Tk window and add subview.
+     */
 
-  return TCL_OK;
+    TkService *serviceview = [[TkService alloc] init];
+    NSView *view = TkMacOSXGetRootControl(d);
+    if ([serviceview superview] != view) {
+	[view addSubview:serviceview];
+    }
+    TkMacOSXWinBounds((TkWindow*)path, &bounds);
 
+    /*
+     * Hack to make sure subview is set to take up entire geometry of window.
+     */
+
+    frame = NSMakeRect(bounds.left, bounds.top, 100000, 100000);
+    frame.origin.y = 0;
+    if (!NSEqualRects(frame, [serviceview frame])) {
+	[serviceview setFrame:frame];
+    }
+    [serviceview release];
+    [pool release];
+    return TCL_OK;
 }
 
+/*
+ * Initalize the package in the tcl interpreter, create tcl commands.
+ */
 
-/*Initalize the package in the tcl interpreter, create tcl commands.*/
-int Tk_MacOSXServices_Init (Tcl_Interp *interp) {
+int Tk_MacOSXServices_Init(
+    Tcl_Interp *interp)
+{
+    /*
+     * Set up an autorelease pool.
+     */
 
-  /* Set up an autorelease pool. */
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-  /* Initialize instance of TclServices to provide service functionality. */
-  TkService *service = [[TkService alloc] init];
-  ServicesInterp = interp;
-  [NSApp setServicesProvider:service];
+    /*
+     * Initialize instance of TclServices to provide service functionality.
+     */
 
-  [pool drain];
-      
-  return TCL_OK;
-	
+    TkService *service = [[TkService alloc] init];
+    ServicesInterp = interp;
+    [NSApp setServicesProvider:service];
+    [pool drain];
+    return TCL_OK;
 }
-
-
-
+
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */

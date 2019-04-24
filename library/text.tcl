@@ -44,7 +44,7 @@ bind Text <1> {
     tk::TextButton1 %W %x %y
     %W tag remove sel 0.0 end
     if {[tk windowingsystem] eq "aqua"} {
-	::tk::RegisterServiceWidget %W
+    	::tk::RegisterServiceWidget %W
     }
 }
 bind Text <B1-Motion> {
@@ -85,7 +85,13 @@ bind Text <B1-Enter> {
 }
 bind Text <ButtonRelease-1> {
     tk::CancelRepeat
+    if {[tk windowingsystem] eq "aqua"} {
+	clipboard clear
+	catch { set selected [%W get sel.first sel.last]}
+	catch {clipboard append $selected}
+    }
 }
+
 bind Text <Control-1> {
     %W mark set insert @%x,%y
     # An operation that moves the insert mark without making it
@@ -398,11 +404,6 @@ bind Text <Control-v> {
     tk::TextScrollPages %W 1
 }
 
-bind Text <<Selection>> {
-    clipboard clear
-    catch { set selected [%W get sel.first sel.last]}
-    catch {clipboard append $selected}
-}
 # End of Mac only bindings
 }
 
