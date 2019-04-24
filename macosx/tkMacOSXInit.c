@@ -45,7 +45,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 @implementation TKApplication(TKInit)
 - (void) _resetAutoreleasePool
 {
-    if([self poolLock] == 0) {
+    if ([self poolLock] == 0) {
 	[_mainPool drain];
 	_mainPool = [NSAutoreleasePool new];
     } else {
@@ -118,16 +118,15 @@ static char scriptPath[PATH_MAX + 1] = "";
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
     /*
-     * It is not safe to force activation of the NSApp until this
-     * method is called.  Activating too early can cause the menu
-     * bar to be unresponsive.
+     * It is not safe to force activation of the NSApp until this method is
+     * called. Activating too early can cause the menu bar to be unresponsive.
      */
 
     [NSApp activateIgnoringOtherApps: YES];
 
     /*
-     * Process events to ensure that the root window is fully
-     * initialized. See ticket 56a1823c73.
+     * Process events to ensure that the root window is fully initialized. See
+     * ticket 56a1823c73.
      */
     
     [NSApp _lockAutoreleasePool];
@@ -152,7 +151,7 @@ static char scriptPath[PATH_MAX + 1] = "";
      * Record the OS version we are running on.
      */
     int minorVersion;
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
     Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
 #else
     NSOperatingSystemVersion systemVersion;
@@ -311,8 +310,8 @@ TkpInit(
 	}
 
 	/*
-	 * Instantiate our NSApplication object. This needs to be
-	 * done before we check whether to open a console window.
+	 * Instantiate our NSApplication object. This needs to be done before
+	 * we check whether to open a console window.
 	 */
 
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
@@ -343,8 +342,8 @@ TkpInit(
 	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
 
 	    /*
-	     * Only show the console if we don't have a startup script
-	     * and tcl_interactive hasn't been set already.
+	     * Only show the console if we don't have a startup script and
+	     * tcl_interactive hasn't been set already.
 	     */
 
 	    if (Tcl_GetStartupScript(NULL) == NULL) {
