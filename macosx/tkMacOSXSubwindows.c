@@ -130,6 +130,8 @@ XMapWindow(
     Window window)		/* Window. */
 {
     MacDrawable *macWin = (MacDrawable *) window;
+    TkWindow *winPtr = macWin->winPtr;
+    NSWindow *win = TkMacOSXDrawableWindow(window);
     XEvent event;
 
     /*
@@ -145,10 +147,9 @@ XMapWindow(
     }
 
     display->request++;
-    macWin->winPtr->flags |= TK_MAPPED;
-    if (Tk_IsTopLevel(macWin->winPtr)) {
-	if (!Tk_IsEmbedded(macWin->winPtr)) {
-	    NSWindow *win = TkMacOSXDrawableWindow(window);
+    winPtr->flags |= TK_MAPPED;
+    if (Tk_IsTopLevel(winPtr)) {
+	if (!Tk_IsEmbedded(winPtr)) {
 
 	    /*
 	     * We want to activate Tk when a toplevel is mapped but we must not
@@ -158,7 +159,7 @@ XMapWindow(
 	     * bar unresponsive.
 	     */
 
-	    TkMacOSXApplyWindowAttributes(macWin->winPtr, win);
+	    TkMacOSXApplyWindowAttributes(winPtr, win);
 	    [win setExcludedFromWindowsMenu:NO];
 	    [NSApp activateIgnoringOtherApps:NO];
 	    [[win contentView] setNeedsDisplay:YES];
@@ -177,18 +178,18 @@ XMapWindow(
 	    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
 	    [NSApp _unlockAutoreleasePool];
 	} else {
+	    TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
 
 	    /*
 	     * Rebuild the container's clipping region and display
 	     * the window.
 	     */
 
-	    TkWindow *contWinPtr = TkpGetOtherWindow(macWin->winPtr);
-
 	    TkMacOSXInvalClipRgns((Tk_Window) contWinPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
-	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr);
+
+	TkMacOSXInvalClipRgns((Tk_Window) winPtr);
 
 	/*
 	 * We only need to send the MapNotify event for toplevel windows.
@@ -201,15 +202,21 @@ XMapWindow(
 	event.xmap.window = window;
 	event.xmap.type = MapNotify;
 	event.xmap.event = window;
-	event.xmap.override_redirect = macWin->winPtr->atts.override_redirect;
+	event.xmap.override_redirect = winPtr->atts.override_redirect;
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     } else {
+
 	/*
-	 * Rebuild the parent's clipping region and display the window.
+	 * For non-toplevel windows, rebuild the parent's clipping region
+	 * and redisplay the window.
 	 */
 
-	TkMacOSXInvalClipRgns((Tk_Window) macWin->winPtr->parentPtr);
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
+	if ([NSApp isDrawing]) {
+	    [[win contentView] setNeedsRedisplay:YES];
+	} else {
+	    [[win contentView] setNeedsDisplay:YES];
+	}
     }
 
     /*
@@ -220,13 +227,7 @@ XMapWindow(
     event.xany.display = display;
     event.xvisibility.type = VisibilityNotify;
     event.xvisibility.state = VisibilityUnobscured;
-    NotifyVisibility(macWin->winPtr, &event);
-
-    /*
-     * This seems to be needed to ensure that all subwindows get displayed.
-     */
-
-    GenerateConfigureNotify(macWin->winPtr, 1);
+    NotifyVisibility(winPtr, &event);
 }
 
 /*
