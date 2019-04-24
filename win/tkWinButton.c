@@ -405,7 +405,10 @@ TkpDisplayButton(
      * Compute width of default ring and offset for pushed buttons.
      */
 
-    if (butPtr->type == TYPE_BUTTON) {
+    if (butPtr->type == TYPE_LABEL) {
+	defaultWidth = butPtr->highlightWidth;
+        offset = 0;
+    } else if (butPtr->type == TYPE_BUTTON) {
 	defaultWidth = ((butPtr->defaultState == DEFAULT_ACTIVE)
 		? butPtr->highlightWidth : 0);
 	offset = 1;
@@ -759,17 +762,24 @@ TkpDisplayButton(
 		butPtr->borderWidth, relief);
     }
     if (defaultWidth != 0) {
+        int highlightColor;
+
 	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
+        if (butPtr->type == TYPE_LABEL) {
+            highlightColor = (int) Tk_3DBorderColor(butPtr->highlightBorder)->pixel;
+        } else {
+            highlightColor = (int) butPtr->highlightColorPtr->pixel;
+        }
 	TkWinFillRect(dc, 0, 0, Tk_Width(tkwin), defaultWidth,
-		(int) butPtr->highlightColorPtr->pixel);
+		highlightColor);
 	TkWinFillRect(dc, 0, 0, defaultWidth, Tk_Height(tkwin),
-		(int) butPtr->highlightColorPtr->pixel);
+		highlightColor);
 	TkWinFillRect(dc, 0, Tk_Height(tkwin) - defaultWidth,
 		Tk_Width(tkwin), defaultWidth,
-		(int) butPtr->highlightColorPtr->pixel);
+		highlightColor);
 	TkWinFillRect(dc, Tk_Width(tkwin) - defaultWidth, 0,
 		defaultWidth, Tk_Height(tkwin),
-		(int) butPtr->highlightColorPtr->pixel);
+		highlightColor);
 	TkWinReleaseDrawableDC(pixmap, dc, &state);
     }
 
