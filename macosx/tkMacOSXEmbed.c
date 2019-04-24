@@ -334,15 +334,15 @@ TkpUseWindow(
 
     macWin->flags |= TK_EMBEDDED;
     macWin->xOff = parent->winPtr->privatePtr->xOff +
-	parent->winPtr->changes.border_width +
-	winPtr->changes.x;
+	    parent->winPtr->changes.border_width +
+	    winPtr->changes.x;
     macWin->yOff = parent->winPtr->privatePtr->yOff +
-	parent->winPtr->changes.border_width +
-	winPtr->changes.y;
+	    parent->winPtr->changes.border_width +
+	    winPtr->changes.y;
 
     /*
-     * Finish filling up the container structure with the embedded
-     * window's information.
+     * Finish filling up the container structure with the embedded window's
+     * information.
      */
 
     containerPtr->embedded = (Window) macWin;
@@ -353,8 +353,8 @@ TkpUseWindow(
      * tkwin is eventually deleted.
      */
 
-    Tk_CreateEventHandler(tkwin, StructureNotifyMask, EmbeddedEventProc,
-			  winPtr);
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
+	    EmbeddedEventProc, winPtr);
 
     return TCL_OK;
 }
@@ -588,7 +588,11 @@ TkpTestembedCmd(
 	    continue;
 	}
 	Tcl_DStringStartSublist(&dString);
-	/* Parent id */
+
+	/*
+	 * Parent id
+	 */
+
 	if (containerPtr->parent == None) {
 	    Tcl_DStringAppendElement(&dString, "");
 	} else if (all) {
@@ -597,7 +601,11 @@ TkpTestembedCmd(
 	} else {
 	    Tcl_DStringAppendElement(&dString, "XXX");
 	}
-	/* Parent pathName */
+
+	/*
+	 * Parent pathName
+	 */
+
 	if (containerPtr->parentPtr == NULL ||
 	    parentInterp != interp) {
 	    Tcl_DStringAppendElement(&dString, "");
@@ -605,11 +613,17 @@ TkpTestembedCmd(
 	    Tcl_DStringAppendElement(&dString,
 		    containerPtr->parentPtr->pathName);
 	}
+
 	/*
 	 * On X11 embedded is a wrapper, which does not exist on macOS.
 	 */
+
 	Tcl_DStringAppendElement(&dString, "");
-	/* Embedded window pathName */
+
+	/*
+	 * Embedded window pathName
+	 */
+
 	if (containerPtr->embeddedPtr == NULL ||
 	    embeddedInterp != interp) {
 	    Tcl_DStringAppendElement(&dString, "");
@@ -768,6 +782,7 @@ ContainerEventProc(
 	/*
 	 * When the interpreter is being dismantled this can be nil.
 	 */
+
 	return;
     }
 
@@ -920,6 +935,7 @@ EmbedActivateProc(
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = clientData;
+
     if (containerPtr->embeddedPtr != NULL) {
 	if (eventPtr->type == ActivateNotify) {
 	    TkGenerateActivateEvents(containerPtr->embeddedPtr,1);
@@ -1024,11 +1040,10 @@ EmbedGeometryRequest(
     /*
      * Forward the requested size into our geometry management hierarchy via
      * the container window. We need to send a Configure event back to the
-     * embedded application if we decide not to honor its request; to make
-     * this happen, process all idle event handlers synchronously here (so
-     * that the geometry managers have had a chance to do whatever they want
-     * to do), and if the window's size didn't change then generate a
-     * configure event.
+     * embedded application if we decide not to honor its request; to make this
+     * happen, process all idle event handlers synchronously here (so that the
+     * geometry managers have had a chance to do whatever they want to do), and
+     * if the window's size didn't change then generate a configure event.
      */
 
     Tk_GeometryRequest((Tk_Window) winPtr, width, height);
@@ -1050,8 +1065,8 @@ EmbedGeometryRequest(
  *	application of its current size and location. This procedure is called
  *	when the embedded application made a geometry request that we did not
  *	grant, so that the embedded application knows that its geometry didn't
- *	change after all. It is a response to ConfigureRequest events, which
- *	we do not currently synthesize on the Mac
+ *	change after all. It is a response to ConfigureRequest events, which we
+ *	do not currently synthesize on the Mac
  *
  * Results:
  *	None.
@@ -1111,8 +1126,8 @@ EmbedWindowDeleted(
 		    containerPtr->parentPtr->flags & TK_BOTH_HALVES) {
 		XEvent event;
 
-		event.xany.serial =
-			LastKnownRequestProcessed(Tk_Display(containerPtr->parentPtr));
+		event.xany.serial = LastKnownRequestProcessed(
+			Tk_Display(containerPtr->parentPtr));
 		event.xany.send_event = False;
 		event.xany.display = Tk_Display(containerPtr->parentPtr);
 
