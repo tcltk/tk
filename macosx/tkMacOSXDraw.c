@@ -1054,6 +1054,54 @@ XFillRectangles(
 /*
  *----------------------------------------------------------------------
  *
+ * TkMacOSXDrawSolidBorder --
+ *
+ *	Draws a border rectangle of specified thickness inside the bounding
+ *      rectangle of a Tk Window.  The border rectangle can be inset within the
+ *      bounding rectangle.  For a highlight border the inset should be 0, but
+ *      for a solid border around the actual window the inset should equal the
+ *      thickness of the highlight border.  The color of the border rectangle
+ *      is the foreground color of the graphics context passed to the function.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws a rectangular border inside the bounding rectangle of a window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkMacOSXDrawSolidBorder(
+    Tk_Window tkwin,
+    GC gc,
+    int inset,
+    int thickness)
+{
+    Drawable d = Tk_WindowId(tkwin);
+    TkMacOSXDrawingContext dc;
+    CGRect outerRect, innerRect;
+
+    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
+	return;
+    }
+    if (dc.context) {
+	outerRect = CGRectMake(Tk_X(tkwin), Tk_Y(tkwin),
+			       Tk_Width(tkwin), Tk_Height(tkwin));
+	outerRect = CGRectInset(outerRect, inset, inset);
+	innerRect = CGRectInset(outerRect, thickness, thickness);
+	CGContextBeginPath(dc.context);
+	CGContextAddRect(dc.context, outerRect);
+	CGContextAddRect(dc.context, innerRect);
+	CGContextEOFillPath(dc.context);
+    }
+    TkMacOSXRestoreDrawingContext(&dc);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * XDrawArc --
  *
  *	Draw an arc.
