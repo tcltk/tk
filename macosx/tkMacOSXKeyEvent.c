@@ -257,6 +257,14 @@ unsigned short releaseCode;
 
 
 @implementation TKContentView
+
+-(id)init {
+    if (self = [super init]) {
+        _needsRedisplay = NO;
+    }
+    return self;
+}
+
 /* <NSTextInput> implementation (called through interpretKeyEvents:]). */
 
 /* <NSTextInput>: called when done composing;
@@ -449,6 +457,8 @@ unsigned short releaseCode;
     return str;
 }
 /* End <NSTextInput> impl. */
+
+@synthesize needsRedisplay = _needsRedisplay;
 @end
 
 
