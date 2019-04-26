@@ -70,23 +70,23 @@ typedef struct {
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		ButtonBackgroundDrawCB(const HIRect *btnbounds,
-			    MacButton *ptr, SInt16 depth, Boolean isColorDev);
-static void		ButtonContentDrawCB(const HIRect *bounds,
-			    ThemeButtonKind kind,
-			    const HIThemeButtonDrawInfo *info, MacButton *ptr,
-			    SInt16 depth, Boolean isColorDev);
-static void		ButtonEventProc(ClientData clientData,
-			    XEvent *eventPtr);
-static void		TkMacOSXComputeButtonParams(TkButton *butPtr,
-			    ThemeButtonKind *btnkind,
-			    HIThemeButtonDrawInfo *drawinfo);
-static int		TkMacOSXComputeButtonDrawParams(TkButton *butPtr,
-			    DrawParams * dpPtr);
-static void		TkMacOSXDrawButton(MacButton *butPtr, GC gc,
-			    Pixmap pixmap);
-static void		DrawButtonImageAndText(TkButton *butPtr);
-static void		PulseDefaultButtonProc(ClientData clientData);
+static void	ButtonBackgroundDrawCB(const HIRect *btnbounds,
+		    MacButton *ptr, SInt16 depth, Boolean isColorDev);
+static void	ButtonContentDrawCB(const HIRect *bounds,
+		    ThemeButtonKind kind,
+		    const HIThemeButtonDrawInfo *info, MacButton *ptr,
+		    SInt16 depth, Boolean isColorDev);
+static void	ButtonEventProc(ClientData clientData,
+		    XEvent *eventPtr);
+static void	TkMacOSXComputeButtonParams(TkButton *butPtr,
+		    ThemeButtonKind *btnkind,
+		    HIThemeButtonDrawInfo *drawinfo);
+static int	TkMacOSXComputeButtonDrawParams(TkButton *butPtr,
+		    DrawParams * dpPtr);
+static void	TkMacOSXDrawButton(MacButton *butPtr, GC gc,
+		    Pixmap pixmap);
+static void	DrawButtonImageAndText(TkButton *butPtr);
+static void	PulseDefaultButtonProc(ClientData clientData);
 
 /*
  * The class procedure table for the button widgets.
@@ -185,12 +185,21 @@ TkpDisplayButton(
     Pixmap pixmap;
     DrawParams* dpPtr = &macButtonPtr->drawParams;
     int needhighlight = 0;
-
+    
+    if (butPtr->flags & BUTTON_DELETED) {
+	return;
+    }
     butPtr->flags &= ~REDRAW_PENDING;
     if ((butPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
     }
     pixmap = (Pixmap) Tk_WindowId(tkwin);
+
+    /*
+     * Set up clipping region. Make sure the we are using the port
+     * for this button, or we will set the wrong window's clip.
+     */
+    
     TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     if (TkMacOSXComputeButtonDrawParams(butPtr, dpPtr)) {
@@ -198,12 +207,6 @@ TkpDisplayButton(
     } else {
 	macButtonPtr->useTkText = 1;
     }
-
-    /*
-     * Set up clipping region. Make sure the we are using the port for this
-     * button, or we will set the wrong window's clip.
-     */
-
     if (macButtonPtr->useTkText) {
 	if (butPtr->type == TYPE_BUTTON) {
 	    Tk_Fill3DRectangle(tkwin, pixmap, butPtr->highlightBorder, 0, 0,
@@ -236,13 +239,19 @@ TkpDisplayButton(
     }
 
     /*
-     * Draw highlight border.
+     * Draw highlight border, if needed.
      */
 
-    if (needhighlight && (butPtr->flags & GOT_FOCUS)) {
-	Tk_Draw3DRectangle(tkwin, pixmap, butPtr->normalBorder, 0, 0,
-                Tk_Width(tkwin), Tk_Height(tkwin),
-                butPtr->highlightWidth, TK_RELIEF_SOLID);
+    if (needhighlight) {
+	GC gc = NULL;
+        if ((butPtr->flags & GOT_FOCUS) && butPtr->highlightColorPtr) {
+	    gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
+	} else if (butPtr->type == TYPE_LABEL) {
+	    gc = Tk_GCForColor(Tk_3DBorderColor(butPtr->highlightBorder), pixmap);
+	}
+	if (gc) {
+	    TkMacOSXDrawSolidBorder(tkwin, gc, 0, butPtr->highlightWidth);
+	}
     }
 }
 

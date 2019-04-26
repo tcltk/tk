@@ -101,10 +101,9 @@ static CGFloat darkSelectedGradient[8] = {
  * When building on systems earlier than 10.8 there is no reasonable way to
  * convert an NSColor to a CGColor.  We do run-time checking of the OS version,
  * and never need the CGColor property on older systems, so we can use this
- * CGCOLOR macro, which evaluates to NULL without raising compiler
- * warnings. designed to.  Similarly, we never draw rounded rectangles on older
- * systems which did not have CGPathCreateWithRoundedRect, so we just redefine
- * it to
+ * CGCOLOR macro, which evaluates to NULL without raising compiler warnings.
+ * Similarly, we never draw rounded rectangles on older systems which did not
+ * have CGPathCreateWithRoundedRect, so we just redefine it to return NULL.
  */
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
@@ -215,10 +214,10 @@ static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
 /*----------------------------------------------------------------------
  * GetBackgroundColor --
  *
- *      Fills the array rgba with the color coordinates for a background
- *      color.  Start with the background color of a window's geometry master,
- *      or the standard ttk window background if not. If the contrast
- *      parameter is nonzero modify this color to be darker, for the aqua
+ *      Fills the array rgba with the color coordinates for a background color.
+ *      Start with the background color of a window's geometry master, or the
+ *      standard ttk window background if there is no master. If the contrast
+ *      parameter is nonzero, modify this color to be darker, for the aqua
  *      appearance, or lighter for the DarkAqua appearance.  This is primarily
  *      used by the Fill and Background elements.
  */
@@ -358,7 +357,7 @@ static void DrawUpDownArrows(
  * +++ FillButtonBackground --
  *
  *      Fills a rounded rectangle with a transparent black gradient.
- *      This is a no-op if not building on 10.9 or higher.
+ *      This is a no-op if building on 10.8 or older.
  */
 
 static void FillButtonBackground(
@@ -419,7 +418,8 @@ static void HighlightButtonBorder(
  * DrawGroupBox --
  *
  *      This is a standalone drawing procedure which draws the contrasting
- *      rounded rectangular box for LabelFrames and Notebook panes.
+ *      rounded rectangular box for LabelFrames and Notebook panes used in
+ *      more recent versions of macOS.
  */
 
 static void DrawGroupBox(
@@ -1225,8 +1225,7 @@ static void ButtonElementMinSize(
         /*
          * The minwidth must be 0 to force the generic ttk code to compute the
          * correct text layout.  For example, a non-zero value will cause the
-         * text to be left justified, no matter what -anchor setting is used
-         *in
+         * text to be left justified, no matter what -anchor setting is used in
          * the style.
          */
 
@@ -2300,16 +2299,16 @@ static void ThumbElementDraw(
 
     /*
      * In order to make ttk scrollbars work correctly it is necessary to be
-     * able to display the thumb element at the size and location which the
-     * ttk scrollbar widget requests.  The algorithm that HIToolbox uses to
+     * able to display the thumb element at the size and location which the ttk
+     * scrollbar widget requests.  The algorithm that HIToolbox uses to
      * determine the thumb geometry from the input values of min, max, value
-     * and viewSizeis, of course, undocumented.  And this turns out to be a
+     * and viewSize is, of course, undocumented.  And this turns out to be a
      * hard reverse engineering problem.  A seemingly natural algorithm is
      * implemented below, but it does not correctly compute the same thumb
      * geometry as HITools (which also apparently does not agree with
      * NSScrollbar).  This code uses that algorithm for older OS versions,
-     * because using HITools also handles drawing the buttons and 3D thumb
-     * used on those systems.  The incorrect geometry is annoying but not
+     * because using HITools also handles drawing the buttons and 3D thumb used
+     * on those systems.  The incorrect geometry is annoying but not completely
      * unusable.  For newer systems the cleanest approach is to just draw the
      * thumb directly.
      */
@@ -2554,7 +2553,7 @@ static Ttk_ElementSpec SizegripElementSpec = {
  *      inside a rectangle with rounded corners that has a color which
  *      contrasts with the dialog background color.  Moreover, although the
  *      Apple human interface guidelines recommend against doing so, there are
- *      times when one wants to nest these widgets, for example having a
+ *      times when one wants to nest these widgets, for example placing a
  *      GroupBox inside of a TabbedPane.  To have the right contrast, each
  *      level of nesting requires a different color.
  *
@@ -2699,6 +2698,7 @@ static Ttk_ElementOptionSpec FieldElementOptions[] = {
      Tk_Offset(FieldElement, backgroundObj), "white"},
     {NULL, 0, 0, NULL}
 };
+
 static void FieldElementDraw(
     void *clientData,
     void *elementRecord,
@@ -2727,7 +2727,9 @@ static Ttk_ElementSpec FieldElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Treeview headers --
  *
- *    Redefine the header to use a kThemeListHeaderButton.
+ *    On systems older than 10.9 The header is a kThemeListHeaderButton drawn
+ *    by HIToolbox.  On newer systems those buttons do not match the Apple
+ *    buttons, so we draw them from scratch.
  */
 
 static Ttk_StateTable TreeHeaderValueTable[] = {
@@ -2735,6 +2737,7 @@ static Ttk_StateTable TreeHeaderValueTable[] = {
     {kThemeButtonOn, TTK_STATE_SELECTED},
     {kThemeButtonOff, 0}
 };
+
 static Ttk_StateTable TreeHeaderAdornmentTable[] = {
     {kThemeAdornmentHeaderButtonSortUp,
      TTK_STATE_ALTERNATE | TTK_TREEVIEW_STATE_SORTARROW},
@@ -2745,6 +2748,7 @@ static Ttk_StateTable TreeHeaderAdornmentTable[] = {
     {kThemeAdornmentFocus, TTK_STATE_FOCUS},
     {kThemeAdornmentNone, 0}
 };
+
 static void TreeAreaElementSize (
     void *clientData,
     void *elementRecord,
