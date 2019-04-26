@@ -1651,14 +1651,13 @@ static int EntryXViewCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = recordPtr;
-    WidgetCore *corePtr = recordPtr;
 
     /*
      * Ensure that the scroll info is up-to-date before a scrolling command.
      */
 
-    if (corePtr->flags & REDISPLAY_PENDING) {
-        EntryDoLayout(recordPtr);
+    if (entryPtr->core.flags & REDISPLAY_PENDING) {
+        EntryDoLayout(entryPtr);
     }
 
     if (objc == 3) {
