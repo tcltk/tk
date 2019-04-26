@@ -195,10 +195,11 @@ TkpDisplayMenuButton(
      * Draw highlight border, if needed.
      */
 
-    if ((butPtr->highlightWidth < 3) && (butPtr->flags & GOT_FOCUS)) {
-	Tk_Draw3DRectangle(tkwin, pixmap, butPtr->normalBorder, 0, 0,
-                Tk_Width(tkwin), Tk_Height(tkwin),
-                butPtr->highlightWidth, TK_RELIEF_SOLID);
+    if (butPtr->highlightWidth < 3) {
+        if (butPtr->flags & GOT_FOCUS) {
+	    GC gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
+	    TkMacOSXDrawSolidBorder(tkwin, gc, 0, butPtr->highlightWidth);
+	}
     }
 }
 

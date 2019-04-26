@@ -856,7 +856,10 @@ Tk_MacOSXIsAppInFront(void)
  *
  */
 
-/*Restrict event processing to Expose events.*/
+/*
+ * Restrict event processing to Expose events.
+ */
+
 static Tk_RestrictAction
 ExposeRestrictProc(
     ClientData arg,
@@ -866,13 +869,40 @@ ExposeRestrictProc(
 	    ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
 }
 
-/*Restrict event processing to ConfigureNotify events.*/
+/*
+ * Restrict event processing to ConfigureNotify events.
+ */
+
 static Tk_RestrictAction
 ConfigureRestrictProc(
     ClientData arg,
     XEvent *eventPtr)
 {
     return (eventPtr->type==ConfigureNotify ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
+}
+
+/*
+ * If a window gets mapped inside the drawRect method, this will be run as an
+ * idle task, after drawRect returns, to clean up the mess.
+ */
+
+static void
+RedisplayView(
+    ClientData clientdata)
+{
+    NSView *view = (NSView *) clientdata;
+
+    /*
+     * Make sure that we are not trying to displaying a view that no longer
+     * exists.
+     */
+    
+    for (NSWindow *w in [NSApp orderedWindows]) {
+	if ([w contentView] == view) {
+	    [view setNeedsDisplay:YES];
+	    break;
+	}
+    }
 }
 
 @implementation TKContentView(TKWindowEvent)
@@ -920,6 +950,11 @@ ConfigureRestrictProc(
     [self generateExposeEvents:(HIShapeRef)drawShape];
     CFRelease(drawShape);
     [NSApp setIsDrawing: NO];
+
+    if ([self needsRedisplay]) {
+	[self setNeedsRedisplay:NO];
+	Tcl_DoWhenIdle(RedisplayView, self);
+    }
 
 #ifdef TK_MAC_DEBUG_DRAWING
     fprintf(stderr, "drawRect: done.\n");
