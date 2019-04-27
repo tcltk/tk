@@ -206,7 +206,7 @@ int TtkScrollviewCommand(
             h->corePtr->widgetSpec->layoutProc(h->corePtr);
         }
 
-        result[0] = Tcl_NewDoubleObj((double)s->first / s->total);
+	result[0] = Tcl_NewDoubleObj((double)s->first / s->total);
 	result[1] = Tcl_NewDoubleObj((double)s->last / s->total);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, result));
 	return TCL_OK;
