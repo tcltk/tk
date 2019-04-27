@@ -1652,14 +1652,6 @@ static int EntryXViewCommand(
 {
     Entry *entryPtr = recordPtr;
 
-    /*
-     * Ensure that the scroll info is up-to-date before a scrolling command.
-     */
-
-    if (entryPtr->core.flags & REDISPLAY_PENDING) {
-        EntryDoLayout(entryPtr);
-    }
-
     if (objc == 3) {
 	int newFirst;
 	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {

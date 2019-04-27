@@ -197,7 +197,16 @@ int TtkScrollviewCommand(
 
     if (objc == 2) {
 	Tcl_Obj *result[2];
-	result[0] = Tcl_NewDoubleObj((double)s->first / s->total);
+
+        /*
+         * Update the scroll info (first, last, total) if needed.
+         */
+
+        if (h->corePtr->flags & REDISPLAY_PENDING) {
+            h->corePtr->widgetSpec->layoutProc(h->corePtr);
+        }
+
+        result[0] = Tcl_NewDoubleObj((double)s->first / s->total);
 	result[1] = Tcl_NewDoubleObj((double)s->last / s->total);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, result));
 	return TCL_OK;
@@ -234,6 +243,14 @@ int TtkScrollviewCommand(
 void TtkScrollTo(ScrollHandle h, int newFirst)
 {
     Scrollable *s = h->scrollPtr;
+
+    /*
+     * Update the scroll info (first, last, total) if needed.
+     */
+
+    if (h->corePtr->flags & REDISPLAY_PENDING) {
+        h->corePtr->widgetSpec->layoutProc(h->corePtr);
+    }
 
     if (newFirst >= s->total)
 	newFirst = s->total - 1;
