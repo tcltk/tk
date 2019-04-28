@@ -257,7 +257,7 @@ Adjusts the view in the window so that the item \fIfraction\fR of the
 way through the content appears at the top edge of the window.
 \fIFraction\fR must be a fraction between 0 and 1.
 .TP
-\fIpathName \fBxview scroll \fInumber what\fR
+\fIpathName \fByview scroll \fInumber what\fR
 This command shifts the view in the window up or down according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer.
