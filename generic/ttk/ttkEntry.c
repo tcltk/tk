@@ -1656,7 +1656,7 @@ static int EntryXViewCommand(
 	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst);
+	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst, 1);
 	return TCL_OK;
     }
     return TtkScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);
