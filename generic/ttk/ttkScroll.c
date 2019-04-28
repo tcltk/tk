@@ -181,6 +181,19 @@ void TtkScrollbarUpdateRequired(ScrollHandle h)
     h->flags |= SCROLL_UPDATE_REQUIRED;
 }
 
+/* TtkUpdateScrollInfo --
+ * 	Call the layoutProc to update the scroll info first, last, and total.
+ * 	Do it only if needed, that is when a redisplay is pending (which
+ * 	indicates scroll info are possibly out of date).
+ */
+
+void TtkUpdateScrollInfo(ScrollHandle h)
+{
+    if (h->corePtr->flags & REDISPLAY_PENDING) {
+        h->corePtr->widgetSpec->layoutProc(h->corePtr);
+    }
+}
+
 /* TtkScrollviewCommand --
  * 	Widget [xy]view command implementation.
  *
@@ -193,19 +206,13 @@ int TtkScrollviewCommand(
     Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle h)
 {
     Scrollable *s = h->scrollPtr;
-    int newFirst = s->first;
+    int newFirst;
+
+    TtkUpdateScrollInfo(h);
+    newFirst = s->first;
 
     if (objc == 2) {
 	Tcl_Obj *result[2];
-
-        /*
-         * Update the scroll info (first, last, total) if needed.
-         */
-
-        if (h->corePtr->flags & REDISPLAY_PENDING) {
-            h->corePtr->widgetSpec->layoutProc(h->corePtr);
-        }
-
 	result[0] = Tcl_NewDoubleObj((double)s->first / s->total);
 	result[1] = Tcl_NewDoubleObj((double)s->last / s->total);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, result));
@@ -217,14 +224,6 @@ int TtkScrollviewCommand(
     } else {
 	double fraction;
 	int count;
-
-        /*
-         * Update the scroll info (first, last, total) if needed.
-         */
-
-        if (h->corePtr->flags & REDISPLAY_PENDING) {
-            h->corePtr->widgetSpec->layoutProc(h->corePtr);
-        }
 
 	switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
 	    case TK_SCROLL_ERROR:
@@ -243,21 +242,17 @@ int TtkScrollviewCommand(
 	}
     }
 
-    TtkScrollTo(h, newFirst);
+    TtkScrollTo(h, newFirst, 0);
 
     return TCL_OK;
 }
 
-void TtkScrollTo(ScrollHandle h, int newFirst)
+void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
 {
     Scrollable *s = h->scrollPtr;
 
-    /*
-     * Update the scroll info (first, last, total) if needed.
-     */
-
-    if (h->corePtr->flags & REDISPLAY_PENDING) {
-        h->corePtr->widgetSpec->layoutProc(h->corePtr);
+    if (updateScrollInfo) {
+        TtkUpdateScrollInfo(h);
     }
 
     if (newFirst >= s->total)
