@@ -218,6 +218,14 @@ int TtkScrollviewCommand(
 	double fraction;
 	int count;
 
+        /*
+         * Update the scroll info (first, last, total) if needed.
+         */
+
+        if (h->corePtr->flags & REDISPLAY_PENDING) {
+            h->corePtr->widgetSpec->layoutProc(h->corePtr);
+        }
+
 	switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
 	    case TK_SCROLL_ERROR:
 		return TCL_ERROR;
