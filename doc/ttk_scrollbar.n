@@ -76,7 +76,7 @@ Modify or query the widget state; see \fIttk::widget(n)\fR.
 .SH "INTERNAL COMMANDS"
 .PP
 The following widget commands are used internally
-by the TScrollbar widget class bindings.
+by the \fBTScrollbar\fP widget class bindings.
 .TP
 \fIpathName \fBdelta \fIdeltaX deltaY\fR
 Returns a real number indicating the fractional change in
@@ -153,6 +153,7 @@ grid $f.vsb \-row 0 \-column 1 \-sticky nsew
 grid $f.hsb \-row 1 \-column 0 \-sticky nsew
 grid columnconfigure $f 0 \-weight 1
 grid rowconfigure $f 0 \-weight 1
+pack $f
 .CE
 .SH "STYLING OPTIONS"
 .PP
@@ -160,8 +161,8 @@ The class name for a \fBttk::scrollbar\fP is \fBTScrollbar\fP.
 .PP
 Dynamic states: \fBactive\fP, \fBdisabled\fP.
 .PP
-\fBTScrollbar\fP styling options configurable with \fBttk::style\fP
-are:
+\fBVertical.TScrollbar\fP and \fBHorizontal.TScrollbar\fP styling options
+that are configurable with \fBttk::style\fP are:
 .PP
 \fB\-arrowcolor\fP \fIcolor\fP
 .br
