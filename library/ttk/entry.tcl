@@ -58,6 +58,13 @@ option add *TEntry.cursor [ttk::cursor text] widgetDefault
 #	and I'll put it back.
 #
 
+##Bindings to register with macOS Services API.
+bind T.Entry <Map> {
+    if {[tk windowingsystem] eq "aqua"} {
+    	::tk::RegisterServiceWidget %W
+    }
+}
+
 ## Clipboard events:
 #
 bind TEntry <<Cut>> 			{ ttk::entry::Cut %W }
@@ -348,9 +355,6 @@ proc ttk::entry::Press {w x} {
     set State(x) $x
     set State(selectMode) char
     set State(anchor) [$w index insert]
-    if {[tk windowingsystem] eq "aqua"} {
-	::tk::RegisterServiceWidget $w
-    }
 }
 
 ## Shift-Press -- Shift-ButtonPress-1 binding.
@@ -430,9 +434,6 @@ proc ttk::entry::Release {w} {
     variable State
     set State(selectMode) none
     ttk::CancelRepeat 	;# suspend autoscroll
-    if {[tk windowingsystem] eq "aqua"} {
-	catch {::ttk::CheckEntrySelection $w}
-    }	
 }
 
 ## AutoScroll
@@ -609,22 +610,5 @@ proc ttk::entry::Delete {w} {
 	$w delete insert
     }
 }
-
-if {[tk windowingsystem] eq "aqua"} {
-    # ::ttk::CheckEntrySelection --
-    #
-    # Writes selected text to the clipboard on macOS.
-    #
-    # Arguments:
-    # w -         The entry window from which the text to get
-
-    proc ::ttk::CheckEntrySelection {w} {
-	if {[$w selection present]} {
-	    clipboard clear
-	    clipboard append [::ttk::entry::EntrySelection $w]
-	}
-    }
-}
-
 
 #*EOF*
