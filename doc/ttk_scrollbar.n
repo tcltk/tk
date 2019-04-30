@@ -161,8 +161,9 @@ The class name for a \fBttk::scrollbar\fP is \fBTScrollbar\fP.
 .PP
 Dynamic states: \fBactive\fP, \fBdisabled\fP.
 .PP
-\fBVertical.TScrollbar\fP and \fBHorizontal.TScrollbar\fP styling options
-that are configurable with \fBttk::style\fP are:
+\fBTScrollbar\fP (or more specifically \fBVertical.TScrollbar\fP and
+\fBHorizontal.TScrollbar\fP) styling options that are configurable with
+\fBttk::style\fP are:
 .PP
 \fB\-arrowcolor\fP \fIcolor\fP
 .br
