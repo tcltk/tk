@@ -97,7 +97,7 @@ int ServicesEventProc(
 	return NO;
     }
 
-    Tcl_Eval(ServicesInterp,"clipboard get");
+    Tcl_Eval(ServicesInterp,"selection get");
     char *copystring;
     copystring = Tcl_GetString(Tcl_GetObjResult(ServicesInterp));
 
