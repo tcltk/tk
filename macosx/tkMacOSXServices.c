@@ -50,7 +50,7 @@ int ServicesEventProc(
 @implementation TkService
 
 + (void) initialize {
-    NSArray *sendTypes = [NSArray arrayWithObjects:NSStringPboardType, nil];
+    NSArray *sendTypes = [NSArray arrayWithObjects:NSPasteboardTypeString, nil];
 
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:nil];
     NSUpdateDynamicServices();
@@ -99,7 +99,7 @@ int ServicesEventProc(
     NSString *writestring = [NSString stringWithUTF8String:copystring];
     typesDeclared = [NSArray arrayWithObject:NSStringPboardType];
     [pboard declareTypes:typesDeclared owner:nil];
-    return [pboard setString:writestring forType:NSStringPboardType];
+    return [pboard setString:writestring forType:NSPasteboardTypeString];
 }
 
 
@@ -127,7 +127,7 @@ int ServicesEventProc(
 	NSPasteboard *generalpasteboard = [NSPasteboard generalPasteboard];
 	[generalpasteboard declareTypes:[NSArray
 	     arrayWithObjects:NSStringPboardType, nil] owner:nil];
-	[generalpasteboard setString:pboardString forType:NSStringPboardType];
+	[generalpasteboard setString:pboardString forType: NSPasteboardTypeString];
 	event = ckalloc(sizeof(Tcl_Event));
 	event->proc = ServicesEventProc;
 	Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
