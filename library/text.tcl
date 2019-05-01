@@ -90,9 +90,6 @@ bind Text <B1-Enter> {
 }
 bind Text <ButtonRelease-1> {
     tk::CancelRepeat
-      if {[tk windowingsystem] eq "aqua"} {
-    	::tk::RegisterServiceWidget %W
-    }
 }
 
 bind Text <Control-1> {
