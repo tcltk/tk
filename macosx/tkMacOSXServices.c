@@ -17,19 +17,14 @@
 static Tcl_Interp *ServicesInterp;
 
 /*
- * These two assist with asynchronous Tcl proc calling.
+ * Event proc which calls the PerformService procedure
  */
-
-typedef struct Services_Event {
-    Tcl_Event header;
-    char script[50000];
-} Services_Event;
 
 int ServicesEventProc(
     Tcl_Event *event,
     int flags)
 {
-    Tcl_GlobalEval(ServicesInterp, ((Services_Event *)event)->script);
+    Tcl_GlobalEval(ServicesInterp, "::tk::mac::PerformService");
     return 1;
 }
 
@@ -110,7 +105,7 @@ int ServicesEventProc(
 
 /*
  * This is the method that actually calls the Tk service; this is the method
- * that must be defined in info.plist
+ * that must be defined in info.plist.
  */
 
 - (void)provideService:(NSPasteboard *)pboard
@@ -119,7 +114,7 @@ int ServicesEventProc(
 {
     NSString *pboardString;
     NSArray *types = [pboard types];
-    Services_Event *event;
+    Tcl_Event *event;
 
     /*
      * Get string from private pasteboard, write to general pasteboard to make
@@ -133,14 +128,10 @@ int ServicesEventProc(
 	[generalpasteboard declareTypes:[NSArray
 	     arrayWithObjects:NSStringPboardType, nil] owner:nil];
 	[generalpasteboard setString:pboardString forType:NSStringPboardType];
-	event = (Services_Event *)ckalloc(sizeof(Services_Event));
-	event->header.proc = ServicesEventProc;
-	strcpy(event->script, "::tk::mac::PerformService");
+	event = ckalloc(sizeof(Tcl_Event));
+	event->proc = ServicesEventProc;
 	Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
-    } else {
-	return;
     }
-    return;
 }
 
 @end
@@ -203,7 +194,7 @@ int TkMacOSXRegisterServiceWidgetObjCmd (
     frame = NSMakeRect(bounds.left, bounds.top, 100000, 100000);
     frame.origin.y = 0;
     if (!NSEqualRects(frame, [serviceview frame])) {
-	[serviceview setFrame:frame];
+    	[serviceview setFrame:frame];
     }
     [serviceview release];
     [pool release];
