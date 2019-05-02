@@ -13,6 +13,7 @@
 #include <CoreServices/CoreServices.h>
 #include <tkInt.h>
 #include <tkMacOSXInt.h>
+#include <tkMacOSXConstants.h>
 
 static Tcl_Interp *ServicesInterp;
 
