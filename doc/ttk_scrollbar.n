@@ -173,15 +173,13 @@ Dynamic states: \fBactive\fP, \fBdisabled\fP.
 .br
 \fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB\-darkcolor\fP \fIcolor\fP (color of the dark 3d relief)
+\fB\-darkcolor\fP \fIcolor\fP (color of the dark part of the 3D relief)
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
 \fB\-gripcount\fP \fIcount\fP (number of lines on the thumb)
 .br
-\fB\-lightcolor\fP \fIcolor\fP (color of the light 3d relief)
-.br
-\fB\-sliderlength\fP \fIamount\fP (depreciated, no effect)
+\fB\-lightcolor\fP \fIcolor\fP (color of the light part of the 3D relief)
 .br
 \fB\-troughcolor\fP \fIcolor\fP
 .PP
