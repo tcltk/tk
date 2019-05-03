@@ -181,7 +181,7 @@ Dynamic states: \fBactive\fP, \fBdisabled\fP.
 .br
 \fB\-lightcolor\fP \fIcolor\fP (color of the light 3d relief)
 .br
-\fB\-sliderlength\fP \fIamount\fP (minimum length of the thumb)
+\fB\-sliderlength\fP \fIamount\fP (depreciated, no effect)
 .br
 \fB\-troughcolor\fP \fIcolor\fP
 .PP
