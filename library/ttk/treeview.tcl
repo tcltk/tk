@@ -106,12 +106,7 @@ proc ttk::treeview::Motion {w x y} {
     set activeHeading {}
 
     switch -- [$w identify region $x $y] {
-	separator {
-                   if {[ttk::treeview::LastDisplayColumn $w] ne 
-                           [$w identify column $x $y]} {
-                       set cursor hresize
-                   }
-	          }
+	separator { set cursor hresize }
 	heading { set activeHeading [$w identify column $x $y] }
     }
 
@@ -206,9 +201,7 @@ proc ttk::treeview::resize.press {w x y} {
 
 proc ttk::treeview::resize.drag {w x} {
     variable State
-    if {[ttk::treeview::LastDisplayColumn $w] ne $State(resizeColumn)} {
-        $w drag $State(resizeColumn) $x
-    }
+    $w drag $State(resizeColumn) $x
 }
 
 proc ttk::treeview::resize.release {w x} {
@@ -365,18 +358,6 @@ proc ttk::treeview::BrowseTo {w item} {
     $w see $item
     $w focus $item
     $w selection set [list $item]
-}
-
-## LastDisplayColumn -- return the data column identifier of the column
-#                       displayed rightmost, in the form #n
-#
-proc ttk::treeview::LastDisplayColumn {w} {
-    set dc [$w cget -displaycolumns]
-    if {$dc eq "#all"} {
-        return #[llength [$w cget -columns]]
-    } else {
-        return #[llength $dc]
-    }
 }
 
 #*EOF*
