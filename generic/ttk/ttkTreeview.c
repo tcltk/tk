@@ -2913,6 +2913,20 @@ static int TreeviewDragCommand(
     return TCL_ERROR;
 }
 
+static int TreeviewDropCommand(
+    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = recordPtr;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "drop");
+	return TCL_ERROR;
+    }
+    ResizeColumns(tv, TreeWidth(tv));
+    TtkRedisplayWidget(&tv->core);
+    return TCL_OK;
+}
+
 /*------------------------------------------------------------------------
  * +++ Widget commands -- focus and selection
  */
@@ -3262,6 +3276,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "delete", 	TreeviewDeleteCommand,0 },
     { "detach", 	TreeviewDetachCommand,0 },
     { "drag",   	TreeviewDragCommand,0 },
+    { "drop",   	TreeviewDropCommand,0 },
     { "exists", 	TreeviewExistsCommand,0 },
     { "focus", 		TreeviewFocusCommand,0 },
     { "heading", 	TreeviewHeadingCommand,0 },

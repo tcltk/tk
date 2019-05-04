@@ -212,7 +212,7 @@ proc ttk::treeview::resize.drag {w x} {
 }
 
 proc ttk::treeview::resize.release {w x} {
-    # no-op
+    $w drop
 }
 
 ### Heading activation.
