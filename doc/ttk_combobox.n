@@ -124,6 +124,8 @@ are:
 .PP
 \fB\-arrowcolor\fP \fIcolor\fP
 .br
+\fB\-arrowsize\fP \fIamount\fP
+.br
 \fB\-background\fP \fIcolor\fP
 .br
 \fB\-bordercolor\fP \fIcolor\fP
