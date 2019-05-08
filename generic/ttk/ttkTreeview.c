@@ -282,7 +282,7 @@ static Tk_OptionSpec ColumnOptionSpecs[] = {
 	0,0,0 },
     {TK_OPTION_BOOLEAN, "-stretch", "stretch", "Stretch",
 	"1", -1, Tk_Offset(TreeColumn,stretch),
-	0,0,0 },
+	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	"w", Tk_Offset(TreeColumn,anchorObj), -1,	/* <<NOTE-ANCHOR>> */
 	0,0,0 },
@@ -1234,6 +1234,7 @@ static int ConfigureColumn(
 	    TtkResizeWidget(&tv->core);
 	}
 	RecomputeSlack(tv);
+        ResizeColumns(tv, TreeWidth(tv));
     }
     TtkRedisplayWidget(&tv->core);
 
