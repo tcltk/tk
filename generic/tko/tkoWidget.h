@@ -164,14 +164,16 @@ extern "C" {
         const char *dbname;    /* Option DB name or synonym option if dbclass is NULL */
         const char *dbclass;   /* Option DB class name or NULL for synonym options. */
         const char *defvalue;  /* Default value. */
+        int flags;             /* bit array of TKO_OPTION_* values to configure option behaviour */
+		Tcl_Obj *optionPtr;    /* tko internally used, always init with NULL! */
         const char *proc;      /* If not NULL it is the body of the newly created -option method */
         Tcl_MethodCallProc *method;     /* If not NULL it is the function name of the -option method */
-        int flags;             /* if TKO_WIDGETOPTIONREADONLY then option is only setable at creation time */
         tkoWidgetOptionType type;       /* if greater 0 then option type used in common option set method */
         Tcl_ObjectMetadataType *meta;   /* meta data address used in common option set method */
         int offset;            /* offset in meta data struct */
     } tkoWidgetOptionDefine;
-#define TKO_WIDGETOPTIONREADONLY 0x1    /* option is only setable at creation time */
+#define TKO_OPTION_READONLY 0x1 /* option is only setable at creation time */
+#define TKO_OPTION_HIDE     0x2 /* option is hidden in configure method */      
 
 /* tkoFrame.c */
     MODULE_SCOPE int Tko_FrameInit(
@@ -208,7 +210,7 @@ extern "C" {
         Tcl_Class clazz,
         Tcl_Obj * classname,
         const Tcl_MethodType * methods,
-        const tkoWidgetOptionDefine * options);
+        tkoWidgetOptionDefine * options);
 
 /*
  * end block for C++

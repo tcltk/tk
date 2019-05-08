@@ -166,6 +166,12 @@ static int FrameMethod_tko_configure(
     Tcl_ObjectContext context,
     int objc,
     Tcl_Obj * const objv[]);
+static int FrameMethod_tko_option(
+	ClientData clientData,
+	Tcl_Interp * interp,
+	Tcl_ObjectContext context,
+	int objc,
+	Tcl_Obj * const objv[]);
 static int FrameMethod_labelanchor(
     ClientData clientData,
     Tcl_Interp * interp,
@@ -269,130 +275,93 @@ static const Tk_GeomMgr frameGeomType = {
 
 /* Common options for all defined widgets. */
 #define FRAME_COMMONDEFINE \
-	{ "-background" , "background", "Background",\
-		DEF_FRAME_BG_COLOR, NULL, NULL, 0,\
-		TKO_SET_3DBORDER, &frameMeta, offsetof(tkoFrame, border)}, \
-	{ "-bg" , "-background", NULL, NULL, NULL, NULL, 0,0,NULL,0}, \
-	{ "-bd" , "-borderwidth", NULL, NULL, NULL, NULL, 0,0,NULL,0}, \
-	{ "-cursor" , "cursor", "Cursor", \
-		DEF_FRAME_CURSOR, NULL, NULL, 0, \
-		TKO_SET_CURSOR, &frameMeta, offsetof(tkoFrame, cursor)}, \
-	{ "-height" , "height", "Height", \
-		DEF_FRAME_HEIGHT, NULL, NULL, 0,\
-		TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, height)}, \
-	{ "-highlightbackground", "highlightbackground", "highlightBackground", \
-		DEF_FRAME_HIGHLIGHT_BG, NULL, NULL, 0,\
-		TKO_SET_XCOLOR, &frameMeta, offsetof(tkoFrame, highlightBgColorPtr)}, \
-	{ "-highlightcolor", "highlightColor", "HighlightColor", \
-		DEF_FRAME_HIGHLIGHT, NULL, NULL, 0,\
-		TKO_SET_XCOLOR, &frameMeta, offsetof(tkoFrame, highlightColorPtr)}, \
-	{ "-highlightthickness" , "highlightThickness", "HighlightThickness", \
-		DEF_FRAME_HIGHLIGHT_WIDTH, NULL, NULL, 0,\
-		TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, highlightWidth)}, \
-	{ "-padx" , "padX", "Pad",\
-		DEF_FRAME_PADX, NULL, NULL, 0,\
-		TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, padX)}, \
-	{ "-pady" , "padY", "Pad", \
-		DEF_FRAME_PADY, NULL, NULL, 0,\
-		TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, padY)}, \
-	{ "-takefocus" , "takeFocus", "TakeFocus", \
-		DEF_FRAME_TAKE_FOCUS, NULL, NULL, 0,\
-		TKO_SET_STRING, NULL, 0}, \
-	{ "-width" , "width", "Width", \
-		DEF_FRAME_WIDTH, NULL, NULL, 0,\
-		TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, width)}, \
-	{ NULL,NULL,NULL,NULL,NULL,NULL,0,\
-		0,NULL,0}
+	{ "-background" , "background", "Background", DEF_FRAME_BG_COLOR, 0, NULL, \
+        NULL, NULL,	TKO_SET_3DBORDER, &frameMeta, offsetof(tkoFrame, border)}, \
+	{ "-bg" , "-background", NULL, NULL, 0, NULL, NULL, NULL,0,NULL,0}, \
+	{ "-bd" , "-borderwidth", NULL, NULL, 0, NULL, NULL, NULL,0,NULL,0}, \
+	{ "-cursor" , "cursor", "Cursor", DEF_FRAME_CURSOR, 0, NULL, \
+		NULL, NULL, TKO_SET_CURSOR, &frameMeta, offsetof(tkoFrame, cursor)}, \
+	{ "-height" , "height", "Height", DEF_FRAME_HEIGHT, 0, NULL, \
+		NULL, NULL, TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, height)}, \
+	{ "-highlightbackground", "highlightbackground", "highlightBackground", DEF_FRAME_HIGHLIGHT_BG, 0, NULL, \
+		NULL, NULL, TKO_SET_XCOLOR, &frameMeta, offsetof(tkoFrame, highlightBgColorPtr)}, \
+	{ "-highlightcolor", "highlightColor", "HighlightColor", DEF_FRAME_HIGHLIGHT, 0,NULL, \
+		NULL, NULL, TKO_SET_XCOLOR, &frameMeta, offsetof(tkoFrame, highlightColorPtr)}, \
+	{ "-highlightthickness" , "highlightThickness", "HighlightThickness", DEF_FRAME_HIGHLIGHT_WIDTH,  0,NULL, \
+		NULL, NULL, TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, highlightWidth)}, \
+	{ "-padx" , "padX", "Pad", DEF_FRAME_PADX, 0,NULL, \
+		NULL, NULL, TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, padX)}, \
+	{ "-pady" , "padY", "Pad", DEF_FRAME_PADY, 0,NULL, \
+		NULL, NULL, TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, padY)}, \
+	{ "-takefocus" , "takeFocus", "TakeFocus", DEF_FRAME_TAKE_FOCUS,  0,NULL, \
+		NULL, NULL, TKO_SET_STRING, NULL, 0}, \
+	{ "-width" , "width", "Width", DEF_FRAME_WIDTH,  0,NULL, \
+		NULL, NULL, TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, width)}, \
+	{ NULL,NULL,NULL,NULL,0,NULL, NULL,NULL,0,NULL,0}
 
 /* tko::frame options */
 static tkoWidgetOptionDefine frameOptions[] = {
-    {"-class", "class", "Class", "TkoFrame",
-            NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_CLASS, NULL, 0},
-    {"-visual", "visual", "Visual",
-            DEF_FRAME_VISUAL, NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_VISUAL, NULL, 0},
-    {"-colormap", "colormap", "Colormap",
-            DEF_FRAME_COLORMAP, NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_COLORMAP, NULL, 0},
-    {"-container", "container", "Container",
-            DEF_FRAME_CONTAINER, NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_CONTAINER, &frameMeta, offsetof(tkoFrame, isContainer)},
-    {"-borderwidth", "borderWidth", "BorderWidth",
-            DEF_FRAME_BORDER_WIDTH, NULL, NULL, 0,
-        TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, borderWidth)},
-    {"-relief", "relief", "Relief",
-            DEF_FRAME_RELIEF, NULL, NULL, 0,
-        TKO_SET_RELIEF, &frameMeta, offsetof(tkoFrame, relief)},
+    {"-class", "class", "Class", "TkoFrame", TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_CLASS, NULL, 0},
+    {"-visual", "visual", "Visual", DEF_FRAME_VISUAL, TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_VISUAL, NULL, 0},
+    {"-colormap", "colormap", "Colormap", DEF_FRAME_COLORMAP, TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_COLORMAP, NULL, 0},
+    {"-container", "container", "Container", DEF_FRAME_CONTAINER, TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_CONTAINER, &frameMeta, offsetof(tkoFrame, isContainer)},
+    {"-borderwidth", "borderWidth", "BorderWidth", DEF_FRAME_BORDER_WIDTH, 0,NULL,
+	NULL, NULL, TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, borderWidth)},
+    {"-relief", "relief", "Relief", DEF_FRAME_RELIEF, 0,NULL,
+	NULL, NULL, TKO_SET_RELIEF, &frameMeta, offsetof(tkoFrame, relief)},
     FRAME_COMMONDEFINE
 };
 
 /* tko::toplevel options */
 static tkoWidgetOptionDefine toplevelOptions[] = {
-    {"-screen", "screen", "Screen",
-            "", NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_STRING, NULL, 0},
-    {"-class", "class", "Class",
-            "TkoToplevel", NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_CLASS, NULL, 0},
-    {"-container", "container", "Container",
-            DEF_FRAME_CONTAINER, NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_CONTAINER, &frameMeta, offsetof(tkoFrame, isContainer)},
-    {"-use", "use", "Use",
-            DEF_TOPLEVEL_USE, NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_USENULL, &frameMeta, offsetof(tkoFrame, useThis)},
-    {"-visual", "visual", "Visual",
-            DEF_FRAME_VISUAL, NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_VISUAL, NULL, 0},
-    {"-colormap", "colormap", "Colormap",
-            DEF_FRAME_COLORMAP, NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_COLORMAP, NULL, 0},
-    {"-borderwidth", "borderWidth", "BorderWidth",
-            DEF_FRAME_BORDER_WIDTH, NULL, NULL, 0,
-        TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, borderWidth)},
-    {"-menu", "menu", "Menu",
-            DEF_TOPLEVEL_MENU, NULL, NULL, 0,
-        TKO_SET_STRINGNULL, &frameMeta, offsetof(tkoFrame, menuName)},
-    {"-relief", "relief", "Relief",
-            DEF_FRAME_RELIEF, NULL, NULL, 0,
-        TKO_SET_RELIEF, &frameMeta, offsetof(tkoFrame, relief)},
+    {"-screen", "screen", "Screen", "", TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_STRING, NULL, 0},
+    {"-class", "class", "Class", "TkoToplevel", TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_CLASS, NULL, 0},
+    {"-container", "container", "Container", DEF_FRAME_CONTAINER, TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_CONTAINER, &frameMeta, offsetof(tkoFrame, isContainer)},
+    {"-use", "use", "Use", DEF_TOPLEVEL_USE, TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_USENULL, &frameMeta, offsetof(tkoFrame, useThis)},
+    {"-visual", "visual", "Visual", DEF_FRAME_VISUAL, TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_VISUAL, NULL, 0},
+    {"-colormap", "colormap", "Colormap", DEF_FRAME_COLORMAP, TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_COLORMAP, NULL, 0},
+    {"-borderwidth", "borderWidth", "BorderWidth", DEF_FRAME_BORDER_WIDTH, 0,NULL,
+	NULL, NULL, TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, borderWidth)},
+    {"-menu", "menu", "Menu", DEF_TOPLEVEL_MENU, 0,NULL,
+	NULL, NULL, TKO_SET_STRINGNULL, &frameMeta, offsetof(tkoFrame, menuName)},
+    {"-relief", "relief", "Relief", DEF_FRAME_RELIEF, 0,NULL,
+	NULL, NULL, TKO_SET_RELIEF, &frameMeta, offsetof(tkoFrame, relief)},
     FRAME_COMMONDEFINE
 };
 
 /* tko::labelframe options */
 static tkoWidgetOptionDefine labelframeOptions[] = {
-    {"-class", "class", "Class",
-            "TkoLabelframe", NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_CLASS, NULL, 0},
-    {"-visual", "visual", "Visual",
-            DEF_FRAME_VISUAL, NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_VISUAL, NULL, 0},
-    {"-colormap", "colormap", "Colormap",
-            DEF_FRAME_COLORMAP, NULL, NULL, TKO_WIDGETOPTIONREADONLY,
-        TKO_SET_COLORMAP, NULL, 0},
-    {"-borderwidth", "borderWidth", "BorderWidth",
-            DEF_LABELFRAME_BORDER_WIDTH, NULL, NULL, 0,
-        TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, borderWidth)},
-    {"-fg", "-foreground", NULL, NULL, NULL, NULL, 0,
-        0, NULL, 0},
-    {"-font", "font", "Font",
-            DEF_LABELFRAME_FONT, NULL, NULL, 0,
-        TKO_SET_FONT, &frameMeta, offsetof(tkoLabelframe, tkfont)},
-    {"-foreground", "foreground", "Foreground",
-            DEF_LABELFRAME_FG, NULL, NULL, 0,
-        TKO_SET_XCOLOR, &frameMeta, offsetof(tkoLabelframe, textColorPtr)},
-    {"-labelanchor", "labelAnchor", "LabelAnchor",
-            DEF_LABELFRAME_LABELANCHOR, NULL, FrameMethod_labelanchor, 0,
-        0, NULL, 0},
-    {"-labelwidget", "labelWidget", "LabelWidget",
-            "", NULL, FrameMethod_labelwidget, 0,
-        0, NULL, 0},
-    {"-relief", "relief", "Relief",
-            DEF_LABELFRAME_RELIEF, NULL, NULL, 0,
-        TKO_SET_RELIEF, &frameMeta, offsetof(tkoFrame, relief)},
-    {"-text", "text", "Text",
-            DEF_LABELFRAME_TEXT, NULL, NULL, 0,
-        TKO_SET_TCLOBJ, &frameMeta, offsetof(tkoLabelframe, textPtr)},
+    {"-class", "class", "Class", "TkoLabelframe", TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_CLASS, NULL, 0},
+    {"-visual", "visual", "Visual", DEF_FRAME_VISUAL, TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_VISUAL, NULL, 0},
+    {"-colormap", "colormap", "Colormap", DEF_FRAME_COLORMAP, TKO_OPTION_READONLY,NULL,
+	NULL, NULL, TKO_SET_COLORMAP, NULL, 0},
+    {"-borderwidth", "borderWidth", "BorderWidth", DEF_LABELFRAME_BORDER_WIDTH, 0,NULL,
+	NULL, NULL, TKO_SET_PIXEL, &frameMeta, offsetof(tkoFrame, borderWidth)},
+    {"-fg", "-foreground", NULL, NULL, 0, NULL, NULL, NULL, 0, NULL, 0},
+    {"-font", "font", "Font", DEF_LABELFRAME_FONT, 0,NULL,
+	NULL, NULL, TKO_SET_FONT, &frameMeta, offsetof(tkoLabelframe, tkfont)},
+	{"-foreground", "foreground", "Foreground", DEF_LABELFRAME_FG, 0, NULL,
+	NULL, NULL, TKO_SET_XCOLOR, &frameMeta, offsetof(tkoLabelframe, textColorPtr)},
+    {"-labelanchor", "labelAnchor", "LabelAnchor", DEF_LABELFRAME_LABELANCHOR, 0, NULL,
+	NULL, FrameMethod_labelanchor, 0, NULL, 0},
+    {"-labelwidget", "labelWidget", "LabelWidget", "",0, NULL,
+	NULL, FrameMethod_labelwidget, 0, NULL, 0},
+    {"-relief", "relief", "Relief", DEF_LABELFRAME_RELIEF, 0, NULL,
+	NULL, NULL, TKO_SET_RELIEF, &frameMeta, offsetof(tkoFrame, relief)},
+    {"-text", "text", "Text", DEF_LABELFRAME_TEXT, 0, NULL,
+	NULL, NULL, TKO_SET_TCLOBJ, &frameMeta, offsetof(tkoLabelframe, textPtr)},
     FRAME_COMMONDEFINE
 };
 
