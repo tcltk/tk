@@ -1238,8 +1238,6 @@ static int ConfigureColumn(
     }
     TtkRedisplayWidget(&tv->core);
 
-    /* ASSERT: SLACKINVARIANT */
-
     Tk_FreeSavedOptions(&savedOptions);
     return TCL_OK;
 
@@ -1616,13 +1614,10 @@ static void TreeviewDoLayout(void *clientData)
     Treeview *tv = clientData;
     int visibleRows;
 
-    /* ASSERT: SLACKINVARIANT */
-
     Ttk_PlaceLayout(tv->core.layout,tv->core.state,Ttk_WinBox(tv->core.tkwin));
     tv->tree.treeArea = Ttk_ClientRegion(tv->core.layout, "treearea");
 
     ResizeColumns(tv, tv->tree.treeArea.width);
-    /* ASSERT: SLACKINVARIANT */
 
     TtkScrolled(tv->tree.xscrollHandle,
 	    tv->tree.xscroll.first,
@@ -2900,7 +2895,6 @@ static int TreeviewDragCommand(
             }
             if (newx <= newxRightLimit) {
 	        DragColumn(tv, i, newx - right);
-	        /* ASSERT: SLACKINVARIANT */
 	        TtkRedisplayWidget(&tv->core);
             }
 	    return TCL_OK;
