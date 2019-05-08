@@ -471,6 +471,18 @@ test treeview-9.0 "scroll callback - empty tree" -body {
     set ::scrolldata
 } -result [list 0.0 1.0]
 
+test treeview-9.1 "scrolling" -setup {
+    pack [ttk::treeview .tree -show tree] -fill y
+    for {set i 1} {$i < 100} {incr i} {
+        .tree insert {} end -text $i
+    }
+} -body {
+    .tree yview scroll 5 units
+    .tree identify item 2 2
+} -cleanup {
+    destroy .tree
+} -result {I006}
+
 ### identify tests:
 #
 proc identify* {tv comps args} {
