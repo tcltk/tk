@@ -388,12 +388,13 @@ If \fIitems\fR is omitted, removes \fItag\fR from each item in the tree.
 If \fItag\fR is not present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
 .RE
-.TP
-\fIpathName \fBxview \fIargs\fR
-Standard command for horizontal scrolling; see \fIwidget(n)\fR.
-.TP
-\fIpathName \fByview \fIargs\fR
-Standard command for vertical scrolling; see \fIttk::widget(n)\fR.
+.PP
+The treeview widget also supports the following generic \fBttk::widget\fR
+widget subcommands (see \fIttk::widget(n)\fR for details):
+.DS
+.ta 5.5c 11c
+\fBxview\fR	\fByview\fR
+.DE
 .SH "ITEM OPTIONS"
 .PP
 The following item options may be specified for items
