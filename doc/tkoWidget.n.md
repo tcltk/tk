@@ -7,6 +7,7 @@
 *   [DESCRIPTION](#DESCRIPTION)  
 *   [WIDGET METHODS](#WIDGET-METHODS)  
 *   [WIDGET OPTIONS](#WIDGET-OPTIONS)  
+*   [EXAMPLES](#EXAMPLES)  
 *   [SEE ALSO](#SEE-ALSO)  
 *   [KEYWORDS](#KEYWORDS)  
 *   [COPYRIGHT](#COPYRIGHT)  
@@ -14,10 +15,20 @@
 <a name="SYNOPSIS"></a>
 ## SYNOPSIS
 
-    oo::class create "widgetClass" {
+    oo::class create myWidget {
       {*}$::tko::unknown    ;# define unknown method to support common tk widget style
       superclass "tkoClass" ;# one of the provided tko widget class's
       variable tko          ;# array with options *$tko(-option)* and widget path *$tko(.)*
+      method -myoption {...};# deal with option when set
+      ...
+      constructor {optionlist arglist} {
+        next [concat {
+          {-myoption myOption MyOption value}
+          ...
+        } $optionlist] $arglist
+        ...
+      }
+      destructor {next}
     }
 
 The command creates a new Tcl class whose name is *widgetClass*. This command may be used to create new widgets. Each new widget class has as a *tkoClass* as superclass. The common functionality is in the **tko::widget** class. Currently the following *tkoClass* superclasses are provided:
@@ -139,6 +150,14 @@ The **tko::widget** class provides the following methods.
 
 > > Delete the given option and unset the entry in the tko array variable. The created *-option* method's are not deleted. This is the task of the caller.
 
+> **configure optionhide** *?-option? ..*
+
+> > If no *-option* is given return a list of all not configure'able options. Otherwise hide all of the given options.
+
+> **configure optionshow** *?-option? ..*
+
+> > If no *-option* is given return a list of all configure'able options. Otherwise make all of the given options configure'able.
+
 > **configure optionvar**
 
 > > The method return the global varname of the tko array variable holding all option values.
@@ -151,37 +170,50 @@ The **tko::widget** class provides the following methods.
 <a name="WIDGET-OPTIONS"></a>
 ### WIDGET OPTIONS
 
+Widget option values are saved in an option array. The option name is the field name in the array. Additionally is an field "**.**" containing the tk widget path name of the widget. The name of the option array variable can be retrieved using the following code:
+    set myVar [.w configure optionvar]
+    parray $myVar
+
 Widget options can be dynamically added and removed at class or object level.
+It is possible to hide and unhide options.
 
-Add options at class level:
+<a name="EXAMPLES"></a>
+### EXAMPLES
 
-    oo::class create myWidget {
+    # Add options at class creation:
+    oo::class create ::myWidget {
       {*}$::tko::unknown
       superclass ::tko::frame
       variable tko
       method -myoption {} {puts $tko(-myoption)}
       method -myreadonly {} {puts $tko(-myreadonly)}
       constructor {optionlist arglist} {
-        next [concat $optionlist {
+        next [concat {
           {-myoption myOption MyOption value}
           {-myreadonly myReadonly MyReadonly value 1}
-        }] $arglist
+        } $optionlist] $arglist
       }
     }
-
-Deal with optons at object level. This is the raw part. May be we should add some sugar to it.
-
-    myWidget .w
-    oo::objdefine .w method -o1 {} {puts $tko(-o1)}
-    oo::objdefine .w method -o2 {} {puts $tko(-o2)}
-    .w configure optionadd -o1 o1 O1 v1 1
+    proc output {} {
+      puts "config: [.w configure]"
+      puts "normal: [.w configure optionhide]"
+      puts "hidden: [.w configure optionshow]"
+    }
+    # Add options at object level:
+    ::myWidget .w
+    oo::objdefine .w method -o1 {} {my variable tko; puts $tko(-o1)}
+    oo::objdefine .w method -o2 {} {my variable tko; puts $tko(-o2)}
+    .w configure optionadd -o1 o1 O1 v1 1 ;#->
     .w configure optionadd -o2 o2 O2 v2
-    ...
-    .w optiondel -o1
+    output
+    # Remove one and hide rest
+    .w configure optiondel -o2
+    .w configure optionhide {*}[.w configure optionshow]
+    output
+    # Reverse state
+    .w configure optionshow {*}[.w configure optionhide]
+    output
 
-Widget option values are saved in an option array. The option name is the field name in the array. Additionally is an field "**.**" containing the tk widget path name of the widget. The name of the option array variable can be retrieved using the following code:
-    set myVar [.w configure optionvar]
-    parray $myVar
 
 <a name="SEE-ALSO"></a>
 ## SEE ALSO

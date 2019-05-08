@@ -1717,7 +1717,7 @@ test frame-20.3 {configure optionadd missing command} -setup {
     .f configure optionadd -option option Option value
 } -cleanup {
     deleteWindows
-} -returnCodes error -match glob -result {can't set*unknown method*}
+} -returnCodes error -match glob -result {unknown method "-option": must be*}
 
 test frame-20.4 {configure optionadd} -setup {
     deleteWindows
@@ -1730,7 +1730,18 @@ test frame-20.4 {configure optionadd} -setup {
     deleteWindows
 } -result {value}
 
-test frame-20.5 {configure optiondel} -setup {
+test frame-20.5 {configure optionadd modify} -setup {
+    deleteWindows
+} -body {
+    ::tko::frame .f
+    ::oo::objdefine .f method -option {} {my variable tko; set tko(-option) new}
+    .f configure optionadd -option option Option value
+    .f cget -option
+} -cleanup {
+    deleteWindows
+} -result {new}
+
+test frame-20.6 {configure optiondel} -setup {
     deleteWindows
 } -body {
     ::tko::frame .f
@@ -1739,7 +1750,7 @@ test frame-20.5 {configure optiondel} -setup {
     deleteWindows
 } -returnCodes error -match glob -result {unknown option "-notexist"}
 
-test frame-20.6 {configure optionadd} -setup {
+test frame-20.7 {configure optionaddand optiondel} -setup {
     deleteWindows
 } -body {
     ::tko::frame .f
@@ -1754,7 +1765,7 @@ test frame-20.6 {configure optionadd} -setup {
     deleteWindows
 } -result {18 19 18}
 
-test frame-20.7 {configure optionadd readonly} -setup {
+test frame-20.8 {configure optionadd readonly} -setup {
     deleteWindows
 } -body {
     ::tko::frame .f
@@ -1767,7 +1778,7 @@ test frame-20.7 {configure optionadd readonly} -setup {
     deleteWindows
 } -returnCodes error -match glob -result {* is readonly}
 
-test frame-20.8 {configure optionvar get} -setup {
+test frame-20.9 {configure optionvar get} -setup {
     deleteWindows
 } -body {
     ::tko::frame .f
@@ -1778,7 +1789,7 @@ test frame-20.8 {configure optionvar get} -setup {
     deleteWindows
 } -result {value}
 
-test frame-20.9 {configure optionvar set} -setup {
+test frame-20.10 {configure optionvar set} -setup {
     deleteWindows
 } -body {
     ::tko::frame .f
