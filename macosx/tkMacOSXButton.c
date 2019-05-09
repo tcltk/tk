@@ -185,7 +185,7 @@ TkpDisplayButton(
     Pixmap pixmap;
     DrawParams* dpPtr = &macButtonPtr->drawParams;
     int needhighlight = 0;
-    
+
     if (butPtr->flags & BUTTON_DELETED) {
 	return;
     }
@@ -199,7 +199,7 @@ TkpDisplayButton(
      * Set up clipping region. Make sure the we are using the port
      * for this button, or we will set the wrong window's clip.
      */
-    
+
     TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     if (TkMacOSXComputeButtonDrawParams(butPtr, dpPtr)) {
@@ -1164,6 +1164,7 @@ TkMacOSXComputeButtonDrawParams(
  *
  *--------------------------------------------------------------
  */
+
 static void
 PulseDefaultButtonProc(ClientData clientData)
 {
