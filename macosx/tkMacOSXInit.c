@@ -101,7 +101,6 @@ static char scriptPath[PATH_MAX + 1] = "";
      */
     _defaultMainMenu = nil;
     [self _setupMenus];
-
     /*
      * Initialize event processing.
      */
@@ -127,7 +126,7 @@ static char scriptPath[PATH_MAX + 1] = "";
      * Process events to ensure that the root window is fully initialized. See
      * ticket 56a1823c73.
      */
-    
+
     [NSApp _lockAutoreleasePool];
     while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];

@@ -10317,7 +10317,7 @@ FireWidgetViewSyncEvent(
      * like a mouse click is received.  But that extra drawing corrupts the
      * data that the test suite is trying to collect.
      */
-    
+
     if (!tkTextDebug) {
 	FORCE_DISPLAY(textPtr->tkwin);
     }

@@ -2832,7 +2832,7 @@ static void nsvg__content(void* ud, const char* s)
 	if (p->styleFlag) {
 
 		int state = 0;
-		const char* start = NULL;		
+		const char* start = NULL;
 		while (*s) {
 			char c = *s;
 			if (nsvg__isspace(c) || c == '{') {
@@ -2844,7 +2844,7 @@ static void nsvg__content(void* ud, const char* s)
 					p->styles->name = nsvg__strndup(start, (size_t)(s - start));
 					start = s + 1;
 					state = 2;
-				}				
+				}
 			} else if (state == 2 && c == '}') {
 				p->styles->description = nsvg__strndup(start, (size_t)(s - start));
 				state = 0;
@@ -2852,7 +2852,7 @@ static void nsvg__content(void* ud, const char* s)
 			else if (state == 0) {
 				start = s;
 				state = 1;
-			}  
+			}
 			s++;
 		/*
 			if (*s == '{' && state == NSVG_XML_CONTENT) {

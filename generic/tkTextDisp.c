@@ -2118,7 +2118,7 @@ MakeStyle(
 	    if (borderPrio == -1) {
 		if (textPtr->selAttrs.border)  { styleValues.border = textPtr->selAttrs.border; }
 		if (textPtr->selAttrs.fgColor) { styleValues.fgColor = textPtr->selAttrs.fgColor; }
-	    
+
 		if (!haveFocus) {
 		    if (textPtr->selAttrs.inactiveBorder) {
 			styleValues.border = textPtr->selAttrs.inactiveBorder;
@@ -2128,7 +2128,7 @@ MakeStyle(
 		    }
 		}
 	    }
-	    
+
 	    if (!styleValues.fgColor) {
 		styleValues.fgColor = textPtr->selAttrs.fgColor;
 		if (!haveFocus && textPtr->selAttrs.inactiveFgColor) {
@@ -3561,7 +3561,7 @@ LayoutChars(
 	 * Only compute layout until decimal point, otherwise we cannot determine
 	 * the correct line break position.
 	 */
-	
+
 	const char *p = base;
 	unsigned i;
 
@@ -7219,7 +7219,7 @@ TkTextUpdateLineMetrics(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     const TkRange *range;
     unsigned totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
-    int fullUpdateRequested = (lineNum == 0 && endLine == totalLines); 
+    int fullUpdateRequested = (lineNum == 0 && endLine == totalLines);
 
     assert(lineNum <= endLine);
     assert((int) endLine <= totalLines);

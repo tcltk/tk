@@ -1567,7 +1567,7 @@ EmbWinLayoutProc(
 	chunkPtr->breakIndex = (wrapMode == TEXT_WRAPMODE_NONE) ? -1 : 1;
 	chunkPtr->clientData = ewPtr;
     }
-    
+
     if (client) {
 	client->chunkCount += 1;
 

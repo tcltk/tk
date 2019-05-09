@@ -348,7 +348,7 @@ TkpComputeMenuButtonGeometry(butPtr)
             }
         }
     }
-    
+
     butPtr->inset = highlightWidth + butPtr->borderWidth;
     width += LEFT_INSET + RIGHT_INSET + 2*butPtr->inset;
     height += 2*butPtr->inset;

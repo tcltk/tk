@@ -1551,7 +1551,7 @@ UndoDeletePerform(
 	/*
 	 * We have to delete the surrogate newline.
 	 */
-	
+
 	TkTextIndexClear2(&index1, NULL, sharedTextPtr->tree);
 	TkTextIndexSetSegment(&index1, surrogatePtr);
 	TkTextIndexForwBytes(NULL, &index1, surrogatePtr->size - 1, &index1);
@@ -2894,7 +2894,7 @@ TkBTreeResetDisplayLineCounts(
 	    assert(numLines == 1);
 	    break;
 	}
-	
+
 	if (nodePtr != linePtr->parentPtr) {
 	    PropagateDispLineChange(nodePtr, pixelReference, changeToDispLines, changeToPixels);
 	    changeToDispLines = 0;
@@ -7506,7 +7506,7 @@ DeleteRange(
 	/*
 	 * We have to insert a surrogate newline.
 	 */
-	
+
 	if (beforeSurrogate) {
 	    TkTextIndexClear2(&index, NULL, sharedTextPtr->tree);
 	    TkTextIndexSetSegment(&index, beforeSurrogate);
