@@ -122,7 +122,7 @@ static Tcl_Config const cfg[] = {
 #endif
 #ifdef CFG_RUNTIME_DEMODIR
     {"demodir,runtime",		CFG_RUNTIME_DEMODIR},
-#endif 
+#endif
 
     /* Installation paths to various stuff */
 

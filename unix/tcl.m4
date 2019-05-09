@@ -494,7 +494,7 @@ AC_DEFUN([SC_TCL_FIND_SOURCES],[
 	set tclh $candidate/generic/tcl.h
 
 	if {![file exists $tclh]} {
-	    return {} 
+	    return {}
 	}
 
 	set version [tclhversion [cat $tclh]]
@@ -506,7 +506,7 @@ AC_DEFUN([SC_TCL_FIND_SOURCES],[
 	    }
 	}
 
-	return {} 
+	return {}
     }
 
     proc tclhversion data {
@@ -559,7 +559,7 @@ AC_DEFUN([SC_TCL_LINDEX],
 	EOF
     `
     ]]
-    
+
 )
 
 #------------------------------------------------------------------------

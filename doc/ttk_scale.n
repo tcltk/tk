@@ -93,7 +93,7 @@ corresponding to the current value of the \fB\-value\fR option if \fIvalue\fR
 is omitted.
 .SH "STYLING OPTIONS"
 .PP
-The class name for a \fBttk::scale\fP is \fBTProgressbar\fP.
+The class name for a \fBttk::scale\fP is \fBTScale\fP.
 .PP
 Dynamic states: \fBactive\fP.
 .PP

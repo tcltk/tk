@@ -42,7 +42,7 @@ wm deiconify .
 # This update is needed on MacOS to make sure that the window is mapped
 # when the tests begin.
 
-update 
+update
 
 set bw [.t cget -borderwidth]
 set px [.t cget -padx]

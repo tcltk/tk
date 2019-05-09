@@ -211,7 +211,6 @@ proc ttk::entry::ClosestGap {w x} {
 ## See $index -- Make sure that the character at $index is visible.
 #
 proc ttk::entry::See {w {index insert}} {
-    update idletasks	;# ensure scroll data up-to-date
     set c [$w index $index]
     # @@@ OR: check [$w index left] / [$w index right]
     if {$c < [$w index @0] || $c >= [$w index @[winfo width $w]]} {

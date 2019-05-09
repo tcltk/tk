@@ -1659,7 +1659,7 @@ The widget option \fB\-hyphenrules\fR contains rule \fIRULE\fR, and no tag
 .SH "INSERTING TEXT WITH SOFT HYPHENS"
 .PP
 When spelling changes are involved it might be convenient to use the helper
-functions \%\fBtk_textInsert\fR and \%\fBtk_textReplace\fR. 
+functions \%\fBtk_textInsert\fR and \%\fBtk_textReplace\fR.
 These functions are providing a simple way to insert hyphenated text
 regarding the spelling changes based on rules. Example:
 .PP
@@ -3209,7 +3209,7 @@ result. Per default the selection will be discarded when inspecting the content.
 .
 When inspecting widget or tag option values normally system colors (like
 .QW SystemHighlight ,
-or 
+or
 .QW systemHighlight )
 will be discarded, except if option \fB\-includesyscolors\fR is specified.
 .TP
