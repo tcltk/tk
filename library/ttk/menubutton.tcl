@@ -97,7 +97,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	    }
 	    below {
 		set entry ""
-		incr y $bh 
+		incr y $bh
 	    }
 	    left {
 		incr y $menuPad
@@ -105,7 +105,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	    }
 	    right {
 		incr y $menuPad
-		incr x $bw 
+		incr x $bw
 	    }
 	    default {
 		incr y $bbh
