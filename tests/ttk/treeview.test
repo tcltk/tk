@@ -650,7 +650,7 @@ test treeview-3085489-2 "tag remove, no -tags" -setup {
 
 test treeview-368fa4561e "indicators cannot be clicked on leafs" -setup {
     pack [ttk::treeview .tv]
-    .tv insert {} end -id foo -text "<-- (1) Click the blank space to my left" 
+    .tv insert {} end -id foo -text "<-- (1) Click the blank space to my left"
     update
 } -body {
     foreach {x y w h} [.tv bbox foo #0] {}
