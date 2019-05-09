@@ -244,7 +244,7 @@ enum {
 	/*
 	 * For scroll wheel events we need to send the XEvent here.
 	 */
-	
+
 	CGFloat delta;
 	int coarseDelta;
 	XEvent xEvent;
@@ -685,7 +685,6 @@ TkMacOSXGetCapture(void)
     return captureWinPtr;
 }
 
-
 /*
  * Local Variables:
  * mode: objc
