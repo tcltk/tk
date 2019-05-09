@@ -753,7 +753,7 @@ proc ::tk::CheckLeave {w} {
 
     if {![$w cget -indicatoron] && [info exist Priv($w,selectcolor)]} {
         if {[$w cget -selectcolor] eq $Priv($w,selectcolor)
-                || ([info exist Priv($w,aselectcolor)] && 
+                || ([info exist Priv($w,aselectcolor)] &&
                     [$w cget -selectcolor] eq $Priv($w,aselectcolor))} {
 	    $w configure -selectcolor $Priv($w,selectcolor)
 	}

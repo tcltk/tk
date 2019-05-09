@@ -266,7 +266,7 @@ GetEntryFromPixelCode(
 
 static NSColorSpace* deviceRGB = NULL;
 static CGFloat blueAccentRGBA[4] = {0, 122.0 / 255, 1.0, 1.0};
-static CGFloat windowBackground[4] = 
+static CGFloat windowBackground[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
 static OSStatus
@@ -279,7 +279,7 @@ SetCGColorComponents(
     NSColor *bgColor, *color;
     CGFloat rgba[4] = {0, 0, 0, 1};
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101400
-    NSInteger colorVariant; 
+    NSInteger colorVariant;
     static CGFloat graphiteAccentRGBA[4] =
 	{152.0 / 255, 152.0 / 255, 152.0 / 255, 1.0};
 #endif
@@ -360,7 +360,7 @@ SetCGColorComponents(
 	    } else {
 		color = [[NSColor blackColor] colorUsingColorSpace:
 						  deviceRGB];
-	    }		
+	    }
 	    break;
 	case 6:
 	    color = [[NSColor textBackgroundColor] colorUsingColorSpace:
@@ -699,7 +699,7 @@ TkMacOSXSetColorInContext(
 		    kHIThemeOrientationNormal);
 	    break;
 	case HIBackground:
-	    info.kind = entry.value; 
+	    info.kind = entry.value;
 	    rect = CGContextGetClipBoundingBox(context);
 	    err = ChkErr(HIThemeApplyBackground, &rect, &info,
 		    context, kHIThemeOrientationNormal);
