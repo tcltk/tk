@@ -896,7 +896,7 @@ RedisplayView(
      * Make sure that we are not trying to displaying a view that no longer
      * exists.
      */
-    
+
     for (NSWindow *w in [NSApp orderedWindows]) {
 	if ([w contentView] == view) {
 	    [view setNeedsDisplay:YES];

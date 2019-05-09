@@ -168,7 +168,7 @@ XMapWindow(
 	    } else {
 		[win orderFrontRegardless];
 	    }
-	    
+
 	    /*
 	     * In some cases the toplevel will not be drawn unless we process
 	     * all pending events now.  See ticket 56a1823c73.

@@ -478,7 +478,7 @@ ConfigureArc(
      */
 
     ComputeArcParametersFromHeight(arcPtr);
-    
+
     ComputeArcBbox(canvas, arcPtr);
 
     i = (int) (arcPtr->start/360.0);
