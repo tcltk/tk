@@ -139,7 +139,8 @@ test imgListFormat-3.4 {StringMatchDef: base64 data is not parsed as valid \
     } -format default
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {couldn't recognize image data}
+} -returnCodes error -result {couldn't recognize image data
+invalid color name "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCA"}
 test imgListFormat-3.5 {StringMatchDef: valid data} -setup {
     image create photo photo1
 } -body {
