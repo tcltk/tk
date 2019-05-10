@@ -2883,11 +2883,23 @@ ForwBack(
 
 	    forward = (count < 0) == (*string == '-');
 	    count = abs(count);
-	    if (!forward) {
-		count = -count;
-	    }
 
-	    TkTextFindDisplayIndex(textPtr, indexPtr, count, &xOffset);
+            if (forward) {
+                TkTextFindDisplayIndex(textPtr, indexPtr, count, &xOffset);
+            } else {
+                TkTextIndex indexPtr2 = *indexPtr;
+
+                /*
+                 * Check crossing of the start of text boundary. If crossed, adjust
+                 * xOffset so that the returned index will refer to the start of line.
+                 */
+
+                TkTextFindDisplayIndex(textPtr, &indexPtr2, -(count - 1), NULL);
+                TkTextFindDisplayIndex(textPtr, indexPtr, -count, &xOffset);
+                if (!TkTextIndexCompare(indexPtr, &indexPtr2)) {
+                    xOffset = 0;
+                }
+            }
 
 	    /*
 	     * This call assumes indexPtr is the beginning of a display line
