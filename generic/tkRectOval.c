@@ -148,6 +148,8 @@ static int		RectToArea(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double *areaPtr);
 static double		RectToPoint(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double *pointPtr);
+static void		RotateRectOval(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleRectOval(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double originX, double originY,
 			    double scaleX, double scaleY);
@@ -180,7 +182,8 @@ Tk_ItemType tkRectangleType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateRectOval,		/* rotateProc */
+    0, NULL, NULL
 };
 
 Tk_ItemType tkOvalType = {
@@ -204,7 +207,8 @@ Tk_ItemType tkOvalType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateRectOval,		/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -1280,6 +1284,57 @@ OvalToArea(
 	}
     }
     return result;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateRectOval --
+ *
+ *	This function is invoked to rotate a rectangle or oval item's
+ *	coordinates. It works by rotating a computed point in the centre of
+ *	the bounding box, NOT by rotating the corners of the bounding box.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the rectangle or oval is rotated by angleRad about
+ *	(originX, originY), and the bounding box is updated in the generic
+ *	part of the item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateRectOval(
+    Tk_Canvas canvas,		/* Canvas containing rectangle. */
+    Tk_Item *itemPtr,		/* Rectangle to be scaled. */
+    double originX, double originY,
+				/* Origin about which to rotate rect. */
+    double angleRad)		/* Amount to scale in X direction. */
+{
+    RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
+    double newX, newY, oldX, oldY;
+
+    /*
+     * Compute the centre of the box, then rotate that about the origin.
+     */
+
+    newX = oldX = (rectOvalPtr->bbox[0] + rectOvalPtr->bbox[2]) / 2.0;
+    newY = oldY = (rectOvalPtr->bbox[1] + rectOvalPtr->bbox[3]) / 2.0;
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &newX, &newY);
+
+    /*
+     * Apply the translation to the box.
+     */
+
+    rectOvalPtr->bbox[0] += newX - oldX;
+    rectOvalPtr->bbox[1] += newY - oldY;
+    rectOvalPtr->bbox[2] += newX - oldX;
+    rectOvalPtr->bbox[3] += newY - oldY;
+    ComputeRectOvalBbox(canvas, rectOvalPtr);
 }
 
 /*

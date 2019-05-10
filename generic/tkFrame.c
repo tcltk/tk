@@ -489,7 +489,7 @@ CreateFrame(
     const char *className, *screenName, *visualName, *colormapName;
     const char *arg, *useOption;
     int i, depth;
-    size_t length;
+    TkSizeT length;
     unsigned int mask;
     Colormap colormap;
     Visual *visual;
@@ -745,7 +745,7 @@ FrameWidgetObjCmd(
     register Frame *framePtr = clientData;
     int result = TCL_OK, index;
     int c, i;
-    size_t length;
+    TkSizeT length;
     Tcl_Obj *objPtr;
 
     if (objc < 2) {

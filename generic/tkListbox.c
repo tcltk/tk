@@ -1103,7 +1103,7 @@ ListboxBboxSubCmd(
 	Tcl_Obj *el, *results[4];
 	const char *stringRep;
 	int pixelWidth, x, y, result;
-	size_t stringLen;
+	TkSizeT stringLen;
 	Tk_FontMetrics fm;
 
 	/*
@@ -1842,7 +1842,7 @@ DisplayListbox(
     register Tk_Window tkwin = listPtr->tkwin;
     GC gc;
     int i, limit, x, y, prevSelected, freeGC;
-    size_t stringLen;
+    TkSizeT stringLen;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
@@ -2239,7 +2239,7 @@ ListboxComputeGeometry(
 				 * window. */
 {
     int width, height, pixelWidth, pixelHeight, i, result;
-    size_t textLength;
+    TkSizeT textLength;
     Tk_FontMetrics fm;
     Tcl_Obj *element;
     const char *text;
@@ -2327,7 +2327,7 @@ ListboxInsertSubCmd(
     Tcl_Obj *const objv[])	/* New elements (one per entry). */
 {
     int i, oldMaxWidth, pixelWidth, result;
-    size_t length;
+    TkSizeT length;
     Tcl_Obj *newListObj;
     const char *stringRep;
 
@@ -2442,7 +2442,7 @@ ListboxDeleteSubCmd(
     int last)			/* Index of last element to delete. */
 {
     int count, i, widthChanged, result, pixelWidth;
-    size_t length;
+    TkSizeT length;
     Tcl_Obj *newListObj, *element;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -3128,7 +3128,7 @@ ListboxFetchSelection(
     register Listbox *listPtr = clientData;
     Tcl_DString selection;
     int count, needNewline, i;
-    size_t length, stringLen;
+    TkSizeT length, stringLen;
     Tcl_Obj *curElement;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -3166,7 +3166,7 @@ ListboxFetchSelection(
      * Copy the requested portion of the selection to the buffer.
      */
 
-    if (length <= (size_t)offset) {
+    if (length <= (TkSizeT)offset) {
 	count = 0;
     } else {
 	count = length - offset;

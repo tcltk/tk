@@ -1108,7 +1108,7 @@ FindTag(
     Tcl_Obj *tagName)		/* Name of desired tag. */
 {
     Tcl_HashEntry *hPtr;
-    size_t len;
+    TkSizeT len;
     const char *str;
 
     str = TkGetStringFromObj(tagName, &len);

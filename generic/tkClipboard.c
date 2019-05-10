@@ -450,7 +450,7 @@ Tk_ClipboardObjCmd(
 	};
 	enum appendOptions { APPEND_DISPLAYOF, APPEND_FORMAT, APPEND_TYPE };
 	int subIndex;
-	size_t length;
+	TkSizeT length;
 
 	for (i = 2; i < objc - 1; i++) {
 	    string = TkGetStringFromObj(objv[i], &length);

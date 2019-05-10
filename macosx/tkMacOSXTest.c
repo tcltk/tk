@@ -18,8 +18,11 @@
  * Forward declarations of procedures defined later in this file:
  */
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
 static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+					int objc, Tcl_Obj *const objv[]);
+#endif
+
 
 /*
  *----------------------------------------------------------------------
@@ -46,8 +49,10 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
     Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd,
 	    (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+#endif
 
     return TCL_OK;
 }
@@ -57,7 +62,8 @@ TkplatformtestInit(
  *
  * DebuggerObjCmd --
  *
- *	This procedure simply calls the low level debugger.
+ *	This procedure simply calls the low level debugger, which was
+ *      deprecated in OSX 10.8.
  *
  * Results:
  *	A standard Tcl result.
@@ -68,6 +74,7 @@ TkplatformtestInit(
  *----------------------------------------------------------------------
  */
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
 static int
 DebuggerObjCmd(
     ClientData clientData,		/* Not used. */
@@ -78,6 +85,7 @@ DebuggerObjCmd(
     Debugger();
     return TCL_OK;
 }
+#endif
 
 /*
  *----------------------------------------------------------------------

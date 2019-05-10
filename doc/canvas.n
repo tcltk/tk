@@ -220,8 +220,12 @@ for scrolling.
 Canvases do not support scaling or rotation of the canvas coordinate
 system relative to the window coordinate system.
 .PP
-Individual items may be moved or scaled using widget commands
-described below, but they may not be rotated.
+Individual items may be moved, scaled
+.VS "8.7, TIP164"
+or rotated
+.VE "8.7, TIP164"
+using widget commands
+described below.
 .PP
 Note that the default origin of the canvas's visible area is
 coincident with the origin for the whole window as that makes bindings
@@ -674,13 +678,12 @@ mapped.
 This command returns an empty string.
 .TP
 \fIpathName \fBimove \fItagOrId index x y\fR
-.VS 8.6
+.
 This command causes the \fIindex\fR'th coordinate of each of the items
 indicated by \fItagOrId\fR to be relocated to the location (\fIx\fR,\fIy\fR).
 Each item interprets \fIindex\fR independently according to the rules
 described in \fBINDICES\fR above. Out of the standard set of items, only line
 and polygon items may have their coordinates relocated this way.
-.VE 8.6
 .TP
 \fIpathName \fBindex \fItagOrId index\fR
 .
@@ -766,7 +769,7 @@ each point associated with the item.
 This command returns an empty string.
 .TP
 \fIpathName \fBmoveto \fItagOrId xPos yPos\fR
-.VS 8.6
+.
 Move the items given by \fItagOrId\fR in the canvas coordinate
 space so that the first coordinate pair of the bottommost item with
 tag \fItagOrId\fR is located at
@@ -775,7 +778,6 @@ the empty string, in which case the corresponding coordinate
 will be unchanged. All items matching
 \fItagOrId\fR remain in the same positions relative to each other.
 This command returns an empty string.
-.VE 8.6
 .TP
 \fIpathName \fBpostscript \fR?\fIoption value option value ...\fR?
 .
@@ -961,7 +963,7 @@ determined by the \fBraise\fR command and \fBlower\fR command, not the
 .RE
 .TP
 \fIpathName \fBrchars \fItagOrId first last string\fR
-.VS 8.6
+.
 This command causes the text or coordinates between \fIfirst\fR and \fIlast\fR
 for each of the items indicated by \fItagOrId\fR to be replaced by
 \fIstring\fR. Each item interprets \fIfirst\fR and \fIlast\fR independently
@@ -970,7 +972,27 @@ set of items, text items support this operation by altering their text as
 directed, and line and polygon items support this operation by altering their
 coordinate list (in which case \fIstring\fR should be a list of coordinates to
 use as a replacement). The other items ignore this operation.
-.VE 8.6
+.TP
+\fIpathName \fBrotate \fItagOrId xOrigin yOrigin angle\fR
+.VS "8.7, TIP164"
+Rotate the coordinates of all of the items given by \fItagOrId\fR in canvas
+coordinate space.
+\fIXOrigin\fR and \fIyOrigin\fR identify the origin for the rotation
+operation and \fIangle\fR identifies the amount to rotate the coordinates
+anticlockwise, in degrees. (Negative values rotate clockwise.)
+This command returns an empty string.
+.RS
+.PP
+Implementation note: not all item types work the same with rotations. In
+particular,\fB bitmap\fR,\fB image\fR,\fB text\fR and\fB window\fR items only
+rotate their anchor points and do not rotate the items themselves about those
+points, and the \fBarc\fR, \fBoval\fR and \fBrectangle\fR types rotate about a
+computed center point instead of moving the bounding box coordinates directly.
+.PP
+Some items (currently \fBarc\R and\fB text\fR) have angles in their options;
+this command \fIdoes not\fR affect those options.
+.RE
+.VE "8.7, TIP164"
 .TP
 \fIpathName \fBscale \fItagOrId xOrigin yOrigin xScale yScale\fR
 .
@@ -1834,13 +1856,12 @@ The following standard options are supported by text items:
 The following extra options are supported for text items:
 .TP
 \fB\-angle \fIrotationDegrees\fR
-.VS 8.6
+.
 \fIRotationDegrees\fR tells how many degrees to rotate the text anticlockwise
 about the positioning point for the text; it may have any floating-point value
 from 0.0 to 360.0. For example, if \fIrotationDegrees\fR is \fB90\fR, then the
 text will be drawn vertically from bottom to top.
 This option defaults to \fB0.0\fR.
-.VE 8.6
 .TP
 \fB\-font \fIfontName\fR
 Specifies the font to use for the text item.

@@ -2071,7 +2071,7 @@ TkGetDisplayOf(
 				 * present. */
 {
     const char *string;
-    size_t length;
+    TkSizeT length;
 
     if (objc < 1) {
 	return 0;

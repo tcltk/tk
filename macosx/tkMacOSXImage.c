@@ -23,7 +23,7 @@ _XInitImageFuncPtrs(
 {
     return 0;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -81,14 +81,15 @@ TkMacOSXCreateCGImageWithXImage(
 	    data = memcpy(ckalloc(len), image->data + image->xoffset, len);
 	}
 	if (data) {
-	    provider = CGDataProviderCreateWithData(data, data, len, releaseData);
+	    provider = CGDataProviderCreateWithData(data, data, len,
+		    releaseData);
 	}
 	if (provider) {
-	    img = CGImageMaskCreate(image->width, image->height, bitsPerComponent,
-				    bitsPerPixel, image->bytes_per_line, provider, decode, 0);
+	    img = CGImageMaskCreate(image->width, image->height,
+		    bitsPerComponent, bitsPerPixel, image->bytes_per_line,
+		    provider, decode, 0);
 	}
-    } else if (image->format == ZPixmap && image->bits_per_pixel == 32) {
-
+    } else if ((image->format == ZPixmap) && (image->bits_per_pixel == 32)) {
 	/*
 	 * Color image
 	 */
@@ -96,7 +97,6 @@ TkMacOSXCreateCGImageWithXImage(
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 
 	if (image->width == 0 && image->height == 0) {
-
 	    /*
 	     * CGCreateImage complains on early macOS releases.
 	     */
@@ -106,11 +106,12 @@ TkMacOSXCreateCGImageWithXImage(
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
 	bitmapInfo = (image->byte_order == MSBFirst ?
-		      kCGBitmapByteOrder32Little : kCGBitmapByteOrder32Big);
+		kCGBitmapByteOrder32Little : kCGBitmapByteOrder32Big);
 	bitmapInfo |= kCGImageAlphaLast;
 	data = memcpy(ckalloc(len), image->data + image->xoffset, len);
 	if (data) {
-	    provider = CGDataProviderCreateWithData(data, data, len, releaseData);
+	    provider = CGDataProviderCreateWithData(data, data, len,
+		    releaseData);
 	}
 	if (provider) {
 	    img = CGImageCreate(image->width, image->height, bitsPerComponent,
@@ -127,7 +128,6 @@ TkMacOSXCreateCGImageWithXImage(
     return img;
 }
 
-
 /*
  *----------------------------------------------------------------------
  *
@@ -179,15 +179,14 @@ XGetImage(
 
     if (win && has_retina == unknown) {
 #ifdef __clang__
-	has_retina = [win respondsToSelector:@selector(backingScaleFactor)]?
-	    yes : no;
+	has_retina = [win respondsToSelector:@selector(backingScaleFactor)] ?
+		yes : no;
 #else
 	has_retina = no;
 #endif
     }
 
     if (has_retina == yes) {
-
 	/*
 	 * We only allow scale factors 1 or 2, as Apple currently does.
 	 */
@@ -205,7 +204,7 @@ XGetImage(
 	}
 
 	bitmap_rep = TkMacOSXBitmapRepFromDrawableRect(drawable,
-			  x, y, width, height);
+		x, y, width, height);
 	if (!bitmap_rep) {
 	    TkMacOSXDbgMsg("XGetImage: Failed to construct NSBitmapRep");
 	    return NULL;
@@ -214,12 +213,12 @@ XGetImage(
 	size = [bitmap_rep bytesPerPlane];
 	bytes_per_row = [bitmap_rep bytesPerRow];
 	bitmap = ckalloc(size);
-	if (!bitmap                              ||
-	    (bitmap_fmt != 0 && bitmap_fmt != 1) ||
-	    [bitmap_rep samplesPerPixel] != 4    ||
-	    [bitmap_rep isPlanar] != 0           ||
-	    bytes_per_row < 4 * scaled_width    ||
-	    size != bytes_per_row*scaled_height  ) {
+	if (!bitmap
+		|| (bitmap_fmt != 0 && bitmap_fmt != 1)
+		|| [bitmap_rep samplesPerPixel] != 4
+		|| [bitmap_rep isPlanar] != 0
+		|| bytes_per_row < 4 * scaled_width
+		|| size != bytes_per_row * scaled_height) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
 	    CFRelease(bitmap_rep);
 	    return NULL;
@@ -228,8 +227,8 @@ XGetImage(
 	CFRelease(bitmap_rep);
 
 	/*
-	 * When Apple extracts a bitmap from an NSView, it may be in
-	 * either BGRA or ABGR format.  For an XImage we need RGBA.
+	 * When Apple extracts a bitmap from an NSView, it may be in either
+	 * BGRA or ABGR format.  For an XImage we need RGBA.
 	 */
 
 	struct pixel_fmt pixel = bitmap_fmt == 0 ? bgra : abgr;
@@ -248,16 +247,16 @@ XGetImage(
 	    }
 	}
 	imagePtr = XCreateImage(display, NULL, depth, format, offset,
-				(char*)bitmap, scaled_width, scaled_height,
-				bitmap_pad, bytes_per_row);
+		(char*) bitmap, scaled_width, scaled_height,
+		bitmap_pad, bytes_per_row);
 	if (scalefactor == 2) {
 	    imagePtr->pixelpower = 1;
 	}
     } else {
 	/*
-	 * There are some calls to XGetImage in the generic Tk
-	 * code which pass an XYPixmap rather than a ZPixmap.
-	 * XYPixmaps should be handled here.
+	 * There are some calls to XGetImage in the generic Tk code which pass
+	 * an XYPixmap rather than a ZPixmap.  XYPixmaps should be handled
+	 * here.
 	 */
 	TkMacOSXDbgMsg("XGetImage does not handle XYPixmaps at the moment.");
     }
@@ -323,40 +322,40 @@ ImageGetPixel(
 		+ (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
 
 	switch (image->bits_per_pixel) {
-	    case 32: {
-		r = (*((unsigned int*) srcPtr) >> 16) & 0xff;
-		g = (*((unsigned int*) srcPtr) >>  8) & 0xff;
-		b = (*((unsigned int*) srcPtr)      ) & 0xff;
-		/*if (image->byte_order == LSBFirst) {
-		    r = srcPtr[2]; g = srcPtr[1]; b = srcPtr[0];
-		} else {
-		    r = srcPtr[1]; g = srcPtr[2]; b = srcPtr[3];
-		}*/
-		break;
-	    }
-	    case 16:
-		r = (*((unsigned short*) srcPtr) >> 7) & 0xf8;
-		g = (*((unsigned short*) srcPtr) >> 2) & 0xf8;
-		b = (*((unsigned short*) srcPtr) << 3) & 0xf8;
-		break;
-	    case 8:
-		r = (*srcPtr << 2) & 0xc0;
-		g = (*srcPtr << 4) & 0xc0;
-		b = (*srcPtr << 6) & 0xc0;
-		r |= r >> 2 | r >> 4 | r >> 6;
-		g |= g >> 2 | g >> 4 | g >> 6;
-		b |= b >> 2 | b >> 4 | b >> 6;
-		break;
-	    case 4: {
-		unsigned char c = (x % 2) ? *srcPtr : (*srcPtr >> 4);
-		r = (c & 0x04) ? 0xff : 0;
-		g = (c & 0x02) ? 0xff : 0;
-		b = (c & 0x01) ? 0xff : 0;
-		break;
-		}
-	    case 1:
-		r = g = b = ((*srcPtr) & (0x80 >> (x % 8))) ? 0xff : 0;
-		break;
+	case 32:
+	    r = (*((unsigned int*) srcPtr) >> 16) & 0xff;
+	    g = (*((unsigned int*) srcPtr) >>  8) & 0xff;
+	    b = (*((unsigned int*) srcPtr)      ) & 0xff;
+	    /*if (image->byte_order == LSBFirst) {
+		r = srcPtr[2]; g = srcPtr[1]; b = srcPtr[0];
+	    } else {
+		r = srcPtr[1]; g = srcPtr[2]; b = srcPtr[3];
+	    }*/
+	    break;
+	case 16:
+	    r = (*((unsigned short*) srcPtr) >> 7) & 0xf8;
+	    g = (*((unsigned short*) srcPtr) >> 2) & 0xf8;
+	    b = (*((unsigned short*) srcPtr) << 3) & 0xf8;
+	    break;
+	case 8:
+	    r = (*srcPtr << 2) & 0xc0;
+	    g = (*srcPtr << 4) & 0xc0;
+	    b = (*srcPtr << 6) & 0xc0;
+	    r |= r >> 2 | r >> 4 | r >> 6;
+	    g |= g >> 2 | g >> 4 | g >> 6;
+	    b |= b >> 2 | b >> 4 | b >> 6;
+	    break;
+	case 4: {
+	    unsigned char c = (x % 2) ? *srcPtr : (*srcPtr >> 4);
+
+	    r = (c & 0x04) ? 0xff : 0;
+	    g = (c & 0x02) ? 0xff : 0;
+	    b = (c & 0x01) ? 0xff : 0;
+	    break;
+	}
+	case 1:
+	    r = g = b = ((*srcPtr) & (0x80 >> (x % 8))) ? 0xff : 0;
+	    break;
 	}
     }
     return (PIXEL_MAGIC << 24) | (r << 16) | (g << 8) | b;
@@ -389,6 +388,7 @@ ImagePutPixel(
 	unsigned char *dstPtr = ((unsigned char*) image->data)
 		+ (y * image->bytes_per_line)
 		+ (((image->xoffset + x) * image->bits_per_pixel) / NBBY);
+
 	if (image->bits_per_pixel == 32) {
 	    *((unsigned int*) dstPtr) = pixel;
 	} else {
@@ -420,7 +420,7 @@ ImagePutPixel(
     }
     return 0;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -451,6 +451,7 @@ XCreateImage(
     int bytes_per_line)
 {
     XImage *ximage;
+
     display->request++;
     ximage = ckalloc(sizeof(XImage));
 
@@ -461,9 +462,12 @@ XCreateImage(
     ximage->format = format;
     ximage->data = data;
     ximage->obdata = NULL;
-    /* The default pixelpower is 0.  This must be explicitly set to 1 in the
+
+    /*
+     * The default pixelpower is 0.  This must be explicitly set to 1 in the
      * case of an XImage extracted from a Retina display.
      */
+
     ximage->pixelpower = 0;
 
     if (format == ZPixmap) {
@@ -476,7 +480,10 @@ XCreateImage(
     if (bitmap_pad) {
 	ximage->bitmap_pad = bitmap_pad;
     } else {
-	/* Use 16 byte alignment for best Quartz perfomance */
+	/*
+	 * Use 16 byte alignment for best Quartz perfomance.
+	 */
+
 	ximage->bitmap_pad = 128;
     }
     if (bytes_per_line) {
@@ -511,9 +518,9 @@ XCreateImage(
  *
  * TkPutImage --
  *
- *	Copies a rectangular subimage of an XImage into a drawable.
- *      Currently this is only called by TkImgPhotoDisplay, using
- *      a Window as the drawable.
+ *	Copies a rectangular subimage of an XImage into a drawable.  Currently
+ *      this is only called by TkImgPhotoDisplay, using a Window as the
+ *      drawable.
  *
  * Results:
  *	None.
@@ -559,13 +566,15 @@ TkPutImage(
 	}
 	if (img) {
 
-	    /* If the XImage has big pixels, the source is rescaled to reflect
+	    /*
+	     * If the XImage has big pixels, the source is rescaled to reflect
 	     * the actual pixel dimensions.  This is not currently used, but
 	     * could arise if the image were copied from a retina monitor and
 	     * redrawn on an ordinary monitor.
 	     */
 
 	    int pp = image->pixelpower;
+
 	    bounds = CGRectMake(0, 0, image->width, image->height);
 	    srcRect = CGRectMake(src_x<<pp, src_y<<pp, width<<pp, height<<pp);
 	    dstRect = CGRectMake(dest_x, dest_y, width, height);

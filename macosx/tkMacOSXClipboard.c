@@ -123,8 +123,9 @@ TkSelGetSelection(
 {
     int result = TCL_ERROR;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+    int haveExternalClip =
+	    ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
 
-    int haveExternalClip = ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
     if (dispPtr && (haveExternalClip || dispPtr->clipboardActive)
 	        && selection == dispPtr->clipboardAtom
 	        && (target == XA_STRING || target == dispPtr->utf8Atom)) {
@@ -177,6 +178,7 @@ XSetSelectionOwner(
 	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
 	if (!dispPtr->clipboardActive) {
 	    NSPasteboard *pb = [NSPasteboard generalPasteboard];
+
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
@@ -188,8 +190,8 @@ XSetSelectionOwner(
  *
  * TkMacOSXSelDeadWindow --
  *
- *	This function is invoked just before a TkWindow is deleted. It
- *	performs selection-related cleanup.
+ *	This function is invoked just before a TkWindow is deleted. It performs
+ *	selection-related cleanup.
  *
  * Results:
  *	None.

@@ -315,7 +315,7 @@ static char *EntryDisplayString(const char *showChar, int numChars)
  */
 static void EntryUpdateTextLayout(Entry *entryPtr)
 {
-    size_t length;
+    TkSizeT length;
     char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
     if ((entryPtr->entry.numChars != 0) || (entryPtr->entry.placeholderObj == NULL)) {
@@ -1001,7 +1001,7 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Ttk_TraceHandle *vt = 0;
 
     if (mask & TEXTVAR_CHANGED) {
-	if (textVarName && *Tcl_GetString(textVarName)) {
+	if (textVarName && *Tcl_GetString(textVarName) != '\0') {
 	    vt = Ttk_TraceVariable(interp,
 		    textVarName,EntryTextVariableTrace,entryPtr);
 	    if (!vt) return TCL_ERROR;
@@ -1362,7 +1362,7 @@ EntryIndex(
     int *indexPtr)		/* Return value */
 {
 #   define EntryWidth(e) (Tk_Width(entryPtr->core.tkwin)) /* Not Right */
-    size_t length;
+    TkSizeT length;
     const char *string = TkGetStringFromObj(indexObj, &length);
 
     if (strncmp(string, "end", length) == 0) {
@@ -1403,6 +1403,7 @@ EntryIndex(
 	*indexPtr = Tk_PointToChar(entryPtr->entry.textLayout,
 		x - entryPtr->entry.layoutX, 0);
 
+        TtkUpdateScrollInfo(entryPtr->entry.xscrollHandle);
 	if (*indexPtr < entryPtr->entry.xscroll.first) {
 	    *indexPtr = entryPtr->entry.xscroll.first;
 	}
@@ -1697,7 +1698,7 @@ static int EntryXViewCommand(
 	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst);
+	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst, 1);
 	return TCL_OK;
     }
     return TtkScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);

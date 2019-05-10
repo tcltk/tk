@@ -2843,10 +2843,10 @@ static int TreeviewSeeCommand(
      */
     rowNumber = RowNumber(tv, item);
     if (rowNumber < tv->tree.yscroll.first) {
-	TtkScrollTo(tv->tree.yscrollHandle, rowNumber);
+	TtkScrollTo(tv->tree.yscrollHandle, rowNumber, 1);
     } else if (rowNumber >= tv->tree.yscroll.last) {
 	TtkScrollTo(tv->tree.yscrollHandle,
-	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last));
+	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last), 1);
     }
 
     return TCL_OK;

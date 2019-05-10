@@ -1182,7 +1182,7 @@ PackAfter(
 	packPtr->flags |= OLD_STYLE;
 	for (index = 0 ; index < optionCount; index++) {
 	    Tcl_Obj *curOptPtr = options[index];
-	    size_t length;
+	    TkSizeT length;
 	    const char *curOpt = TkGetStringFromObj(curOptPtr, &length);
 
 	    c = curOpt[0];
@@ -1240,7 +1240,7 @@ PackAfter(
 		packPtr->iPadY = 0;
 		index++;
 	    } else if ((c == 'f') && (length > 1)
-		    && (strncmp(curOpt, "frame", (size_t) length) == 0)) {
+		    && (strncmp(curOpt, "frame", length) == 0)) {
 		if (optionCount < (index+2)) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "wrong # args: \"frame\""
@@ -1540,6 +1540,7 @@ ConfigureSlaves(
 {
     Packer *masterPtr, *slavePtr, *prevPtr, *otherPtr;
     Tk_Window other, slave, parent, ancestor;
+    TkWindow *master;
     int i, j, numWindows, tmp, positionGiven;
     const char *string;
     static const char *const optionStrings[] = {
@@ -1814,6 +1815,24 @@ ConfigureSlaves(
 		    "can't pack %s inside itself", Tcl_GetString(objv[j])));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
 	    return TCL_ERROR;
+	}
+
+	/*
+	 * Check for management loops.
+	 */
+
+	for (master = (TkWindow *)masterPtr->tkwin; master != NULL;
+	     master = (TkWindow *)TkGetGeomMaster(master)) {
+	    if (master == (TkWindow *)slave) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't put %s inside %s, would cause management loop",
+	            Tcl_GetString(objv[j]), Tk_PathName(masterPtr->tkwin)));
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
+		return TCL_ERROR;
+	    }
+	}
+	if (masterPtr->tkwin != Tk_Parent(slave)) {
+	    ((TkWindow *)slave)->maintainerPtr = (TkWindow *)masterPtr->tkwin;
 	}
 
 	/*
