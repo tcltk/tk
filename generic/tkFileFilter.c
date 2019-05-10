@@ -262,7 +262,7 @@ AddClause(
 	 */
 
 	for (i=0; i<ostypeCount; i++) {
-	    size_t len;
+	    TkSizeT len;
 	    const char *strType = TkGetStringFromObj(ostypeList[i], &len);
 
 	    /*
@@ -322,7 +322,7 @@ AddClause(
     if (globCount > 0 && globList != NULL) {
 	for (i=0; i<globCount; i++) {
 	    GlobPattern *globPtr = ckalloc(sizeof(GlobPattern));
-	    size_t len;
+	    TkSizeT len;
 	    const char *str = TkGetStringFromObj(globList[i], &len);
 
 	    len = (len + 1) * sizeof(char);
@@ -375,7 +375,7 @@ AddClause(
 	}
 	for (i=0; i<ostypeCount; i++) {
 	    Tcl_DString osTypeDS;
-	    size_t len;
+	    TkSizeT len;
 	    MacFileType *mfPtr = ckalloc(sizeof(MacFileType));
 	    const char *strType = TkGetStringFromObj(ostypeList[i], &len);
 	    char *string;

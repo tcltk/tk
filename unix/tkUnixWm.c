@@ -3005,7 +3005,7 @@ WmProtocolCmd(
     register ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
     const char *cmd;
-    size_t cmdLength;
+    TkSizeT cmdLength;
 
     if ((objc < 3) || (objc > 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name? ?command?");
@@ -5456,7 +5456,7 @@ SetNetWmType(
 
     for (n = 0; n < objc; ++n) {
 	Tcl_DString ds, dsName;
-	size_t len;
+	TkSizeT len;
 	char *name = TkGetStringFromObj(objv[n], &len);
 
 	Tcl_UtfToUpper(name);

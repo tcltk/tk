@@ -170,6 +170,8 @@ static double		TextToPoint(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *pointPtr);
 static int		TextToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
+static void		RotateText(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		TranslateText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double deltaX, double deltaY);
 
@@ -199,7 +201,8 @@ Tk_ItemType tkTextType = {
     TextInsert,			/* insertProc */
     TextDeleteChars,		/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateText,			/* rotateProc */
+    0, NULL, NULL
 };
 
 #define ROUND(d) ((int) floor((d) + 0.5))
@@ -1007,7 +1010,7 @@ TextInsert(
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int byteIndex, charsAdded;
-    size_t byteCount;
+    TkSizeT byteCount;
     char *newStr, *text;
     const char *string;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
@@ -1029,7 +1032,7 @@ TextInsert(
     }
 
     newStr = ckalloc(textPtr->numBytes + byteCount + 1);
-    memcpy(newStr, text, (size_t) byteIndex);
+    memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, string);
     strcpy(newStr + byteIndex + byteCount, text + byteIndex);
 
@@ -1110,7 +1113,7 @@ TextDeleteChars(
 	- (text + byteIndex);
 
     newStr = ckalloc(textPtr->numBytes + 1 - byteCount);
-    memcpy(newStr, text, (size_t) byteIndex);
+    memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, text + byteIndex + byteCount);
 
     ckfree(text);
@@ -1250,6 +1253,39 @@ TextToArea(
 /*
  *--------------------------------------------------------------
  *
+ * RotateText --
+ *
+ *	This function is called to rotate a text item by a given amount about a
+ *	point. Note that this does *not* rotate the text of the item.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the text anchor is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateText(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being rotated. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    TextItem *textPtr = (TextItem *) itemPtr;
+
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &textPtr->x, &textPtr->y);
+    ComputeTextBbox(canvas, textPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * ScaleText --
  *
  *	This function is invoked to rescale a text item.
@@ -1344,7 +1380,7 @@ GetTextIndex(
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    size_t length;
+    TkSizeT length;
     int c;
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
@@ -1505,7 +1541,7 @@ GetSelText(
     if (byteCount <= 0) {
 	return 0;
     }
-    memcpy(buffer, selStart + offset, (size_t) byteCount);
+    memcpy(buffer, selStart + offset, byteCount);
     buffer[byteCount] = '\0';
     return byteCount;
 }

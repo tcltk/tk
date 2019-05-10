@@ -27,16 +27,16 @@
 static Tk_Window keyboardGrabWinPtr = NULL;
 				/* Current keyboard grab window. */
 static NSWindow *keyboardGrabNSWindow = nil;
-                               /* NSWindow for the current keyboard grab window. */
+				/* NSWindow for the current keyboard grab
+				 * window. */
 static NSModalSession modalSession = nil;
-
 static BOOL processingCompose = NO;
 static BOOL finishedCompose = NO;
-
 static int caret_x = 0, caret_y = 0, caret_height = 0;
 
-static void setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state);
-static unsigned isFunctionKey(unsigned int code);
+static void		setupXEvent(XEvent *xEvent, NSWindow *w,
+			    unsigned int state);
+static unsigned		isFunctionKey(unsigned int code);
 
 unsigned short releaseCode;
 
@@ -50,22 +50,21 @@ unsigned short releaseCode;
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
-    NSWindow*	    w;
-    NSEventType	    type = [theEvent type];
+    NSWindow *w;
+    NSEventType type = [theEvent type];
     NSUInteger modifiers = ([theEvent modifierFlags] &
 			    NSDeviceIndependentModifierFlagsMask);
-    NSUInteger	    len = 0;
-    BOOL	    repeat = NO;
-    unsigned short  keyCode = [theEvent keyCode];
-    NSString	    *characters = nil, *charactersIgnoringModifiers = nil;
+    NSUInteger len = 0;
+    BOOL repeat = NO;
+    unsigned short keyCode = [theEvent keyCode];
+    NSString *characters = nil, *charactersIgnoringModifiers = nil;
     static NSUInteger savedModifiers = 0;
     static NSMutableArray *nsEvArray;
 
-    if (nsEvArray == nil)
-      {
+    if (nsEvArray == nil) {
         nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
         processingCompose = NO;
-      }
+    }
 
     w = [theEvent window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -109,37 +108,39 @@ unsigned short releaseCode;
 	return theEvent; /* Unrecognized key event. */
     }
 
-    /* Create an Xevent to add to the Tk queue. */
+    /*
+     * Create an Xevent to add to the Tk queue.
+     */
+
     if (!processingCompose) {
         unsigned int state = 0;
 
         if (modifiers & NSAlphaShiftKeyMask) {
-          state |= LockMask;
+	    state |= LockMask;
         }
         if (modifiers & NSShiftKeyMask) {
-          state |= ShiftMask;
+	    state |= ShiftMask;
         }
         if (modifiers & NSControlKeyMask) {
-          state |= ControlMask;
+	    state |= ControlMask;
         }
         if (modifiers & NSCommandKeyMask) {
-          state |= Mod1Mask;		/* command key */
+	    state |= Mod1Mask;		/* command key */
         }
         if (modifiers & NSAlternateKeyMask) {
-          state |= Mod2Mask;		/* option key */
+	    state |= Mod2Mask;		/* option key */
         }
         if (modifiers & NSNumericPadKeyMask) {
-          state |= Mod3Mask;
+	    state |= Mod3Mask;
         }
         if (modifiers & NSFunctionKeyMask) {
-          state |= Mod4Mask;
+	    state |= Mod4Mask;
         }
 
         /*
-         * Events are only received for the front Window on the Macintosh.
-	 * So to build an XEvent we look up the Tk window associated to the
-	 * Front window. If a different window has a local grab we ignore
-	 * the event.
+         * Events are only received for the front Window on the Macintosh. So
+	 * to build an XEvent we look up the Tk window associated to the Front
+	 * window. If a different window has a local grab we ignore the event.
          */
 
         TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -147,113 +148,123 @@ unsigned short releaseCode;
 
 	if (tkwin) {
 	    TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
-	    if (grabWinPtr &&
-		grabWinPtr != winPtr &&
-		!winPtr->dispPtr->grabFlags && /* this means the grab is local. */
-		grabWinPtr->mainPtr == winPtr->mainPtr) {
+
+	    if (grabWinPtr
+		    && grabWinPtr != winPtr
+		    && !winPtr->dispPtr->grabFlags /* this means the grab is local. */
+		    && grabWinPtr->mainPtr == winPtr->mainPtr) {
 		return theEvent;
 	    }
 	} else {
 	    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
 	}
         if (!tkwin) {
-          TkMacOSXDbgMsg("tkwin == NULL");
-          return theEvent;  /* Give up. No window for this event. */
+	    TkMacOSXDbgMsg("tkwin == NULL");
+	    return theEvent;  /* Give up. No window for this event. */
         }
 
         /*
-         * If it's a function key, or we have modifiers other than Shift or Alt,
-         * pass it straight to Tk.  Otherwise we'll send for input processing.
+         * If it's a function key, or we have modifiers other than Shift or
+         * Alt, pass it straight to Tk.  Otherwise we'll send for input
+         * processing.
          */
 
-        int code = (len == 0) ?
-          0 : [charactersIgnoringModifiers characterAtIndex: 0];
+        int code = (len == 0) ? 0 :
+		[charactersIgnoringModifiers characterAtIndex: 0];
         if (type != NSKeyDown || isFunctionKey(code)
-            || (len > 0 && state & (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask))) {
-
+		|| (len > 0 && state & (ControlMask | Mod1Mask | Mod3Mask | Mod4Mask))) {
             XEvent xEvent;
+
             setupXEvent(&xEvent, w, state);
-
             if (type == NSFlagsChanged) {
-              if (savedModifiers > modifiers) {
-                xEvent.xany.type = KeyRelease;
-              } else {
-                xEvent.xany.type = KeyPress;
-              }
+		if (savedModifiers > modifiers) {
+		    xEvent.xany.type = KeyRelease;
+		} else {
+		    xEvent.xany.type = KeyPress;
+		}
 
-              /*
-               * Use special '-1' to signify a special keycode to our platform
-               * specific code in tkMacOSXKeyboard.c. This is rather like what
-               * happens on Windows.
-               */
+		/*
+		 * Use special '-1' to signify a special keycode to our
+		 * platform specific code in tkMacOSXKeyboard.c. This is rather
+		 * like what happens on Windows.
+		 */
 
-              xEvent.xany.send_event = -1;
+		xEvent.xany.send_event = -1;
 
-              /*
-               * Set keycode (which was zero) to the changed modifier
-               */
+		/*
+		 * Set keycode (which was zero) to the changed modifier
+		 */
 
-              xEvent.xkey.keycode = (modifiers ^ savedModifiers);
+		xEvent.xkey.keycode = (modifiers ^ savedModifiers);
             } else {
-              if (type == NSKeyUp || repeat) {
-		  xEvent.xany.type = KeyRelease;
-              } else {
-                xEvent.xany.type = KeyPress;
-              }
+		if (type == NSKeyUp || repeat) {
+		    xEvent.xany.type = KeyRelease;
+		} else {
+		    xEvent.xany.type = KeyPress;
+		}
 
-              /* For command key, take input manager's word so things
-                 like dvorak / qwerty layout work. */
-              if ((modifiers & NSCommandKeyMask) == NSCommandKeyMask
-                  && (modifiers & NSAlternateKeyMask) != NSAlternateKeyMask
-                  && len > 0 && !isFunctionKey(code)) {
-                // head off keycode-based translation in tkMacOSXKeyboard.c
-                xEvent.xkey.nbytes = [characters length]; //len
-              }
+		/*
+		 * For command key, take input manager's word so things like
+		 * dvorak / qwerty layout work.
+		 */
 
-              if ([characters length] > 0) {
-                xEvent.xkey.keycode =
-                  (keyCode << 16) | (UInt16) [characters characterAtIndex:0];
-                if (![characters getCString:xEvent.xkey.trans_chars
-                                  maxLength:XMaxTransChars encoding:NSUTF8StringEncoding]) {
-                  /* prevent SF bug 2907388 (crash on some composite chars) */
-                  //PENDING: we might not need this anymore
-                  TkMacOSXDbgMsg("characters too long");
-                  return theEvent;
-                }
-              }
+		if ((modifiers & NSCommandKeyMask) == NSCommandKeyMask
+			&& (modifiers & NSAlternateKeyMask) != NSAlternateKeyMask
+			&& len > 0 && !isFunctionKey(code)) {
+		    // head off keycode-based translation in tkMacOSXKeyboard.c
+		    xEvent.xkey.nbytes = [characters length]; //len
+		}
 
-              if (repeat) {
-                Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-                xEvent.xany.type = KeyPress;
-                xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-              }
+		if ([characters length] > 0) {
+		    xEvent.xkey.keycode = (keyCode << 16) |
+			    (UInt16) [characters characterAtIndex:0];
+		    if (![characters getCString:xEvent.xkey.trans_chars
+			    maxLength:XMaxTransChars encoding:NSUTF8StringEncoding]) {
+			/* prevent SF bug 2907388 (crash on some composite chars) */
+			//PENDING: we might not need this anymore
+			TkMacOSXDbgMsg("characters too long");
+			return theEvent;
+		    }
+		}
+
+		if (repeat) {
+		    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+		    xEvent.xany.type = KeyPress;
+		    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		}
             }
             Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
             savedModifiers = modifiers;
             return theEvent;
-          }  /* if send straight to TK */
-
-      }  /* if not processing compose */
+	}  /* if send straight to TK */
+    }  /* if not processing compose */
 
     if (type == NSKeyDown) {
-        if (NS_KEYLOG)
-          fprintf (stderr, "keyDown: %s compose sequence.\n",
-                   processingCompose == YES ? "Continue" : "Begin");
+        if (NS_KEYLOG) {
+	    TKLog(@"keyDown: %s compose sequence.\n",
+		    processingCompose == YES ? "Continue" : "Begin");
+	}
         processingCompose = YES;
         [nsEvArray addObject: theEvent];
         [[w contentView] interpretKeyEvents: nsEvArray];
         [nsEvArray removeObject: theEvent];
-      }
+    }
 
     savedModifiers = modifiers;
-
     return theEvent;
 }
 @end
-
 
 
 @implementation TKContentView
+
+-(id)init {
+    if (self = [super init]) {
+        _needsRedisplay = NO;
+    }
+    return self;
+}
+
 /* <NSTextInput> implementation (called through interpretKeyEvents:]). */
 
 /* <NSTextInput>: called when done composing;
@@ -261,165 +272,193 @@ unsigned short releaseCode;
          by doCommandBySelector: deleteBackward: */
 - (void)insertText: (id)aString
 {
-  int i, len = [(NSString *)aString length];
-  XEvent xEvent;
+    int i, len = [(NSString *) aString length];
+    XEvent xEvent;
 
-  if (NS_KEYLOG)
-    TKLog (@"insertText '%@'\tlen = %d", aString, len);
-  processingCompose = NO;
-  finishedCompose = YES;
+    if (NS_KEYLOG) {
+	TKLog(@"insertText '%@'\tlen = %d", aString, len);
+    }
+    processingCompose = NO;
+    finishedCompose = YES;
 
-  /* first, clear any working text */
-  if (privateWorkingText != nil)
-    [self deleteWorkingText];
+    /*
+     * First, clear any working text.
+     */
 
-  /* now insert the string as keystrokes */
-  setupXEvent(&xEvent, [self window], 0);
-  xEvent.xany.type = KeyPress;
+    if (privateWorkingText != nil) {
+	[self deleteWorkingText];
+    }
 
-  for (i =0; i<len; i++)
-      {
-	  xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
-	  [[aString substringWithRange: NSMakeRange(i,1)]
+    /*
+     * Now insert the string as keystrokes.
+     */
+
+    setupXEvent(&xEvent, [self window], 0);
+    xEvent.xany.type = KeyPress;
+
+    for (i =0; i<len; i++) {
+	xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
+	[[aString substringWithRange: NSMakeRange(i,1)]
 	      getCString: xEvent.xkey.trans_chars
 	       maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
-	  xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
-	  xEvent.xany.type = KeyPress;
-	  releaseCode =  (UInt16) [aString characterAtIndex: 0];
-	  Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-      }
-  releaseCode =  (UInt16) [aString characterAtIndex: 0];
+	xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
+	xEvent.xany.type = KeyPress;
+	releaseCode = (UInt16) [aString characterAtIndex: 0];
+	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+    }
+    releaseCode = (UInt16) [aString characterAtIndex: 0];
 }
 
 
 /* <NSTextInput>: inserts display of composing characters */
 - (void)setMarkedText: (id)aString selectedRange: (NSRange)selRange
 {
-  NSString *str = [aString respondsToSelector: @selector (string)] ?
-    [aString string] : aString;
-  if (NS_KEYLOG)
-    TKLog (@"setMarkedText '%@' len =%lu range %lu from %lu", str,
-	   (unsigned long) [str length], (unsigned long) selRange.length,
-	   (unsigned long) selRange.location);
+    NSString *str = [aString respondsToSelector: @selector (string)] ?
+	[aString string] : aString;
+    if (NS_KEYLOG) {
+	TKLog(@"setMarkedText '%@' len =%lu range %lu from %lu", str,
+	      (unsigned long) [str length], (unsigned long) selRange.length,
+	      (unsigned long) selRange.location);
+    }
 
-  if (privateWorkingText != nil)
-    [self deleteWorkingText];
-  if ([str length] == 0)
-    return;
+    if (privateWorkingText != nil) {
+	[self deleteWorkingText];
+    }
+    if ([str length] == 0) {
+	return;
+    }
 
-  processingCompose = YES;
-  privateWorkingText = [str copy];
+    processingCompose = YES;
+    privateWorkingText = [str copy];
 
-  //PENDING: insert workingText underlined
+    //PENDING: insert workingText underlined
 }
 
 
 - (BOOL)hasMarkedText
 {
-  return privateWorkingText != nil;
+    return privateWorkingText != nil;
 }
 
 
 - (NSRange)markedRange
 {
-  NSRange rng = privateWorkingText != nil
-    ? NSMakeRange (0, [privateWorkingText length]) : NSMakeRange (NSNotFound, 0);
-  if (NS_KEYLOG)
-    TKLog (@"markedRange request");
-  return rng;
+    NSRange rng = privateWorkingText != nil
+	? NSMakeRange(0, [privateWorkingText length])
+	: NSMakeRange(NSNotFound, 0);
+
+    if (NS_KEYLOG) {
+	TKLog(@"markedRange request");
+    }
+    return rng;
 }
 
 
 - (void)unmarkText
 {
-  if (NS_KEYLOG)
-    TKLog (@"unmark (accept) text");
-  [self deleteWorkingText];
-  processingCompose = NO;
+    if (NS_KEYLOG) {
+	TKLog(@"unmark (accept) text");
+    }
+    [self deleteWorkingText];
+    processingCompose = NO;
 }
 
 
 /* used to position char selection windows, etc. */
 - (NSRect)firstRectForCharacterRange: (NSRange)theRange
 {
-  NSRect rect;
-  NSPoint pt;
+    NSRect rect;
+    NSPoint pt;
 
-  pt.x = caret_x;
-  pt.y = caret_y;
+    pt.x = caret_x;
+    pt.y = caret_y;
 
-  pt = [self convertPoint: pt toView: nil];
-  pt = [[self window] tkConvertPointToScreen: pt];
-  pt.y -= caret_height;
+    pt = [self convertPoint: pt toView: nil];
+    pt = [[self window] tkConvertPointToScreen: pt];
+    pt.y -= caret_height;
 
-  rect.origin = pt;
-  rect.size.width = caret_height;
-  rect.size.height = caret_height;
-  return rect;
+    rect.origin = pt;
+    rect.size.width = caret_height;
+    rect.size.height = caret_height;
+    return rect;
 }
 
 
 - (NSInteger)conversationIdentifier
 {
-  return (NSInteger)self;
+    return (NSInteger) self;
 }
 
 
 - (void)doCommandBySelector: (SEL)aSelector
 {
-  if (NS_KEYLOG)
-    TKLog (@"doCommandBySelector: %@", NSStringFromSelector (aSelector));
-  processingCompose = NO;
-  if (aSelector == @selector (deleteBackward:))
-    {
-      /* happens when user backspaces over an ongoing composition:
-         throw a 'delete' into the event queue */
-      XEvent xEvent;
-      setupXEvent(&xEvent, [self window], 0);
-      xEvent.xany.type = KeyPress;
-      xEvent.xkey.nbytes = 1;
-      xEvent.xkey.keycode = (0x33 << 16) | 0x7F;
-      xEvent.xkey.trans_chars[0] = 0x7F;
-      xEvent.xkey.trans_chars[1] = 0x0;
-      Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+    if (NS_KEYLOG) {
+	TKLog(@"doCommandBySelector: %@", NSStringFromSelector(aSelector));
+    }
+    processingCompose = NO;
+    if (aSelector == @selector (deleteBackward:)) {
+	/*
+	 * Happens when user backspaces over an ongoing composition:
+	 * throw a 'delete' into the event queue.
+	 */
+
+	XEvent xEvent;
+
+	setupXEvent(&xEvent, [self window], 0);
+	xEvent.xany.type = KeyPress;
+	xEvent.xkey.nbytes = 1;
+	xEvent.xkey.keycode = (0x33 << 16) | 0x7F;
+	xEvent.xkey.trans_chars[0] = 0x7F;
+	xEvent.xkey.trans_chars[1] = 0x0;
+	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
 }
 
 
 - (NSArray *)validAttributesForMarkedText
 {
-  static NSArray *arr = nil;
-  if (arr == nil) arr = [NSArray new];
- /* [[NSArray arrayWithObject: NSUnderlineStyleAttributeName] retain]; */
-  return arr;
+    static NSArray *arr = nil;
+
+    if (arr == nil) {
+	arr = [NSArray new];
+    }
+    /* [[NSArray arrayWithObject: NSUnderlineStyleAttributeName] retain]; */
+    return arr;
 }
 
 
 - (NSRange)selectedRange
 {
-  if (NS_KEYLOG)
-    TKLog (@"selectedRange request");
-  return NSMakeRange (NSNotFound, 0);
+    if (NS_KEYLOG) {
+	TKLog(@"selectedRange request");
+    }
+    return NSMakeRange(NSNotFound, 0);
 }
 
 
 - (NSUInteger)characterIndexForPoint: (NSPoint)thePoint
 {
-  if (NS_KEYLOG)
-    TKLog (@"characterIndexForPoint request");
-  return 0;
+    if (NS_KEYLOG) {
+	TKLog(@"characterIndexForPoint request");
+    }
+    return 0;
 }
 
 
 - (NSAttributedString *)attributedSubstringFromRange: (NSRange)theRange
 {
-  static NSAttributedString *str = nil;
-  if (str == nil) str = [NSAttributedString new];
-  if (NS_KEYLOG)
-    TKLog (@"attributedSubstringFromRange request");
-  return str;
+    static NSAttributedString *str = nil;
+    if (str == nil) {
+	str = [NSAttributedString new];
+    }
+    if (NS_KEYLOG) {
+	TKLog(@"attributedSubstringFromRange request");
+    }
+    return str;
 }
 /* End <NSTextInput> impl. */
+
+@synthesize needsRedisplay = _needsRedisplay;
 @end
 
 
@@ -427,29 +466,30 @@ unsigned short releaseCode;
 /* delete display of composing characters [not in <NSTextInput>] */
 - (void)deleteWorkingText
 {
-  if (privateWorkingText == nil)
-    return;
-  if (NS_KEYLOG)
-    TKLog(@"deleteWorkingText len = %lu\n",
-	    (unsigned long)[privateWorkingText length]);
-  [privateWorkingText release];
-  privateWorkingText = nil;
-  processingCompose = NO;
+    if (privateWorkingText == nil) {
+	return;
+    }
+    if (NS_KEYLOG) {
+	TKLog(@"deleteWorkingText len = %lu\n",
+	      (unsigned long)[privateWorkingText length]);
+    }
+    [privateWorkingText release];
+    privateWorkingText = nil;
+    processingCompose = NO;
 
-  //PENDING: delete working text
+    //PENDING: delete working text
 }
 @end
 
-
-
 /*
- *  Set up basic fields in xevent for keyboard input.
+ * Set up basic fields in xevent for keyboard input.
  */
 static void
 setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state)
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window) winPtr;
+
     if (!winPtr) {
 	return;
     }
@@ -497,12 +537,13 @@ XGrabKeyboard(
     Time time)
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
-    TkWindow *captureWinPtr = (TkWindow *)TkMacOSXGetCapture(); 
+    TkWindow *captureWinPtr = (TkWindow *) TkMacOSXGetCapture();
+
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
 	MacDrawable *macWin = (MacDrawable *) grab_window;
 
-	if (w && macWin->toplevel->winPtr == (TkWindow*) captureWinPtr) {
+	if (w && macWin->toplevel->winPtr == (TkWindow *) captureWinPtr) {
 	    if (modalSession) {
 		Tcl_Panic("XGrabKeyboard: already grabbed");
 	    }
@@ -621,7 +662,10 @@ Tk_SetCaretPos(
 	}
     }
 
-    /* But adjust for fact that NS uses flipped view. */
+    /*
+     * But adjust for fact that NS uses flipped view.
+     */
+
     y = Tk_Height(tkwin) - y;
 
     caret_x = x;
@@ -632,75 +676,80 @@ Tk_SetCaretPos(
 
 static unsigned convert_ns_to_X_keysym[] =
 {
-  NSHomeFunctionKey,            0x50,
-  NSLeftArrowFunctionKey,       0x51,
-  NSUpArrowFunctionKey,         0x52,
-  NSRightArrowFunctionKey,      0x53,
-  NSDownArrowFunctionKey,       0x54,
-  NSPageUpFunctionKey,          0x55,
-  NSPageDownFunctionKey,        0x56,
-  NSEndFunctionKey,             0x57,
-  NSBeginFunctionKey,           0x58,
-  NSSelectFunctionKey,          0x60,
-  NSPrintFunctionKey,           0x61,
-  NSExecuteFunctionKey,         0x62,
-  NSInsertFunctionKey,          0x63,
-  NSUndoFunctionKey,            0x65,
-  NSRedoFunctionKey,            0x66,
-  NSMenuFunctionKey,            0x67,
-  NSFindFunctionKey,            0x68,
-  NSHelpFunctionKey,            0x6A,
-  NSBreakFunctionKey,           0x6B,
+    NSHomeFunctionKey,		0x50,
+    NSLeftArrowFunctionKey,	0x51,
+    NSUpArrowFunctionKey,	0x52,
+    NSRightArrowFunctionKey,	0x53,
+    NSDownArrowFunctionKey,	0x54,
+    NSPageUpFunctionKey,	0x55,
+    NSPageDownFunctionKey,	0x56,
+    NSEndFunctionKey,		0x57,
+    NSBeginFunctionKey,		0x58,
+    NSSelectFunctionKey,	0x60,
+    NSPrintFunctionKey,		0x61,
+    NSExecuteFunctionKey,	0x62,
+    NSInsertFunctionKey,	0x63,
+    NSUndoFunctionKey,		0x65,
+    NSRedoFunctionKey,		0x66,
+    NSMenuFunctionKey,		0x67,
+    NSFindFunctionKey,		0x68,
+    NSHelpFunctionKey,		0x6A,
+    NSBreakFunctionKey,		0x6B,
 
-  NSF1FunctionKey,              0xBE,
-  NSF2FunctionKey,              0xBF,
-  NSF3FunctionKey,              0xC0,
-  NSF4FunctionKey,              0xC1,
-  NSF5FunctionKey,              0xC2,
-  NSF6FunctionKey,              0xC3,
-  NSF7FunctionKey,              0xC4,
-  NSF8FunctionKey,              0xC5,
-  NSF9FunctionKey,              0xC6,
-  NSF10FunctionKey,             0xC7,
-  NSF11FunctionKey,             0xC8,
-  NSF12FunctionKey,             0xC9,
-  NSF13FunctionKey,             0xCA,
-  NSF14FunctionKey,             0xCB,
-  NSF15FunctionKey,             0xCC,
-  NSF16FunctionKey,             0xCD,
-  NSF17FunctionKey,             0xCE,
-  NSF18FunctionKey,             0xCF,
-  NSF19FunctionKey,             0xD0,
-  NSF20FunctionKey,             0xD1,
-  NSF21FunctionKey,             0xD2,
-  NSF22FunctionKey,             0xD3,
-  NSF23FunctionKey,             0xD4,
-  NSF24FunctionKey,             0xD5,
+    NSF1FunctionKey,		0xBE,
+    NSF2FunctionKey,		0xBF,
+    NSF3FunctionKey,		0xC0,
+    NSF4FunctionKey,		0xC1,
+    NSF5FunctionKey,		0xC2,
+    NSF6FunctionKey,		0xC3,
+    NSF7FunctionKey,		0xC4,
+    NSF8FunctionKey,		0xC5,
+    NSF9FunctionKey,		0xC6,
+    NSF10FunctionKey,		0xC7,
+    NSF11FunctionKey,		0xC8,
+    NSF12FunctionKey,		0xC9,
+    NSF13FunctionKey,		0xCA,
+    NSF14FunctionKey,		0xCB,
+    NSF15FunctionKey,		0xCC,
+    NSF16FunctionKey,		0xCD,
+    NSF17FunctionKey,		0xCE,
+    NSF18FunctionKey,		0xCF,
+    NSF19FunctionKey,		0xD0,
+    NSF20FunctionKey,		0xD1,
+    NSF21FunctionKey,		0xD2,
+    NSF22FunctionKey,		0xD3,
+    NSF23FunctionKey,		0xD4,
+    NSF24FunctionKey,		0xD5,
 
-  NSBackspaceCharacter,         0x08,  /* 8: Not on some KBs. */
-  NSDeleteCharacter,            0xFF,  /* 127: Big 'delete' key upper right. */
-  NSDeleteFunctionKey,          0x9F,  /* 63272: Del forw key off main array. */
+    NSBackspaceCharacter,	0x08,  /* 8: Not on some KBs. */
+    NSDeleteCharacter,		0xFF,  /* 127: Big 'delete' key upper right. */
+    NSDeleteFunctionKey,	0x9F,  /* 63272: Del forw key off main array. */
 
-  NSTabCharacter,		0x09,
-  0x19,				0x09,  /* left tab->regular since pass shift */
-  NSCarriageReturnCharacter,	0x0D,
-  NSNewlineCharacter,		0x0D,
-  NSEnterCharacter,		0x8D,
+    NSTabCharacter,		0x09,
+    0x19,			0x09,  /* left tab->regular since pass shift */
+    NSCarriageReturnCharacter,	0x0D,
+    NSNewlineCharacter,		0x0D,
+    NSEnterCharacter,		0x8D,
 
-  0x1B,				0x1B   /* escape */
+    0x1B,			0x1B   /* escape */
 };
 
 
-static unsigned isFunctionKey(unsigned code)
+static unsigned
+isFunctionKey(
+    unsigned code)
 {
-    const unsigned last_keysym = (sizeof (convert_ns_to_X_keysym)
-                                / sizeof (convert_ns_to_X_keysym[0]));
-  unsigned keysym;
-  for (keysym = 0; keysym < last_keysym; keysym += 2)
-    if (code == convert_ns_to_X_keysym[keysym])
-      return 0xFF00 | convert_ns_to_X_keysym[keysym+1];
-  return 0;
- }
+    const unsigned last_keysym = (sizeof(convert_ns_to_X_keysym)
+                                / sizeof(convert_ns_to_X_keysym[0]));
+    unsigned keysym;
+
+    for (keysym = 0; keysym < last_keysym; keysym += 2) {
+	if (code == convert_ns_to_X_keysym[keysym]) {
+	    return 0xFF00 | convert_ns_to_X_keysym[keysym + 1];
+	}
+    }
+    return 0;
+}
 
 /*
  * Local Variables:

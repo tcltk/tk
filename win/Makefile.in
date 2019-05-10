@@ -322,6 +322,7 @@ TK_OBJS = \
 	tkImgGIF.$(OBJEXT) \
 	tkImgPNG.$(OBJEXT) \
 	tkImgPPM.$(OBJEXT) \
+	tkImgSVGnano.$(OBJEXT) \
 	tkImgPhoto.$(OBJEXT) \
 	tkImgPhInstance.$(OBJEXT) \
 	tkImgUtil.$(OBJEXT) \
@@ -338,6 +339,7 @@ TK_OBJS = \
 	tkOldConfig.$(OBJEXT) \
 	tkOption.$(OBJEXT) \
 	tkPack.$(OBJEXT) \
+	tkPkgConfig.$(OBJEXT) \
 	tkPlace.$(OBJEXT) \
 	tkPointer.$(OBJEXT) \
 	tkRectOval.$(OBJEXT) \

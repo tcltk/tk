@@ -227,7 +227,7 @@ ScrollbarWidgetObjCmd(
 {
     register TkScrollbar *scrollPtr = clientData;
     int result = TCL_OK, cmdIndex;
-    size_t length;
+    TkSizeT length;
     static const char *const commandNames[] = {
         "activate", "cget", "configure", "delta", "fraction",
         "get", "identify", "set", NULL

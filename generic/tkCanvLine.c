@@ -117,6 +117,8 @@ static int		ParseArrowShape(ClientData clientData,
 static const char * PrintArrowShape(ClientData clientData,
 			    Tk_Window tkwin, char *recordPtr, int offset,
 			    Tcl_FreeProc **freeProcPtr);
+static void		RotateLine(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleLine(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -239,7 +241,8 @@ Tk_ItemType tkLineType = {
     LineInsert,				/* insertProc */
     LineDeleteCoords,			/* dTextProc */
     NULL,				/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateLine,				/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -1848,6 +1851,56 @@ TranslateLine(
 		i++, coordPtr += 2) {
 	    coordPtr[0] += deltaX;
 	    coordPtr[1] += deltaY;
+	}
+    }
+    ComputeLineBbox(canvas, linePtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateLine --
+ *
+ *	This function is called to rotate a line by a given amount about a
+ *	point.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the line is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateLine(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being moved. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    LineItem *linePtr = (LineItem *) itemPtr;
+    double *coordPtr;
+    int i;
+    double s = sin(angleRad), c = cos(angleRad);
+
+    for (i = 0, coordPtr = linePtr->coordPtr; i < linePtr->numPoints;
+	    i++, coordPtr += 2) {
+	TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+    }
+    if (linePtr->firstArrowPtr != NULL) {
+	for (i = 0, coordPtr = linePtr->firstArrowPtr; i < PTS_IN_ARROW;
+		i++, coordPtr += 2) {
+	    TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+	}
+    }
+    if (linePtr->lastArrowPtr != NULL) {
+	for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
+		i++, coordPtr += 2) {
+	    TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
 	}
     }
     ComputeLineBbox(canvas, linePtr);
