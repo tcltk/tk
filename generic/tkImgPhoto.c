@@ -2644,8 +2644,13 @@ MatchStringFormat(
 		    formatString, NULL);
 	    return TCL_ERROR;
 	} else {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "couldn't recognize image data", -1));
+            Tcl_Obj *obj = Tcl_NewStringObj("couldn't recognize image data", -1);
+
+            if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
+                Tcl_AppendObjToObj(obj, Tcl_NewStringObj("\n", -1));
+                Tcl_AppendObjToObj(obj, Tcl_GetObjResult(interp));
+            }
+            Tcl_SetObjResult(interp, obj);
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
 		    "UNRECOGNIZED_DATA", NULL);
 	    return TCL_ERROR;
