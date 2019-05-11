@@ -2644,15 +2644,19 @@ MatchStringFormat(
 		    formatString, NULL);
 	    return TCL_ERROR;
 	} else {
-            Tcl_Obj *obj = Tcl_NewStringObj("couldn't recognize image data", -1);
 
-            if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
-                Tcl_AppendObjToObj(obj, Tcl_NewStringObj("\n", -1));
-                Tcl_AppendObjToObj(obj, Tcl_GetObjResult(interp));
+            /*
+             * Some lower level routine (stringMatchProc) may have already set
+             * a specific error message, so just return this. Otherwise return
+             * a generic image data error.
+             */
+
+            if (Tcl_GetString(Tcl_GetObjResult(interp))[0] == '\0') {
+                Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                        "couldn't recognize image data", -1));
+	        Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		        "UNRECOGNIZED_DATA", NULL);
             }
-            Tcl_SetObjResult(interp, obj);
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-		    "UNRECOGNIZED_DATA", NULL);
 	    return TCL_ERROR;
 	}
     }

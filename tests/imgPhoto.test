@@ -542,16 +542,14 @@ test imgPhoto-4.27 {ImgPhotoCmd procedure: put option} -setup {
     photo1 put {{white} {white white}}
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {couldn't recognize image data
-invalid row # 1: all rows must have the same number of elements}
+} -result {invalid row # 1: all rows must have the same number of elements}
 test imgPhoto-4.28 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
     photo1 put {{blahgle}}
 } -cleanup {
     image delete photo1
-} -returnCodes error -result {couldn't recognize image data
-invalid color name "blahgle"}
+} -returnCodes error -result {invalid color name "blahgle"}
 test imgPhoto-4.29 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
@@ -1151,8 +1149,7 @@ test imgPhoto-4.95 {ImgPhotoCmd put: default fmt, invalid data} -setup {
     #"
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {couldn't recognize image data
-unmatched open quote in list}
+} -returnCodes error -result {unmatched open quote in list}
 test imgPhoto-4.96 {ImgPhotoCmd put: "default" handler is selected} -setup {
     image create photo photo1
     image create photo photo2
@@ -1935,16 +1932,14 @@ test imgPhoto-19.6 {MatchStringFormat: invalid data for default} -setup {
     photo1 put bogus
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {couldn't recognize image data
-invalid color name "bogus"}
+} -returnCodes error -result {invalid color name "bogus"}
 test imgPhoto-19.7 {MatchStringFormat: invalid data for default} -setup {
     image create photo photo1
 } -body {
     photo1 put bogus -format dEFault
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {couldn't recognize image data
-invalid color name "bogus"}
+} -returnCodes error -result {invalid color name "bogus"}
 test imgPhoto-19.8 {MatchStirngFormat: invalid data for gif} -setup {
     image create photo photo1
 } -body {
