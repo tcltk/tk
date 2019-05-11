@@ -912,6 +912,10 @@ proc ::tk::TextUpDownLine {w n} {
     set new [$w index \
 	    "$Priv(textPosOrig) + [expr {$lines + $n}] displaylines"]
     set Priv(prevPos) $new
+    if {[$w compare $new == "end display lineend"] \
+            || [$w compare $new == "insert display linestart"]} {
+        set Priv(textPosOrig) $new
+    }
     return $new
 }
 
