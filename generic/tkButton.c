@@ -1709,7 +1709,34 @@ ButtonTextVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+	if (!Tcl_InterpDeleted(interp) && butPtr->textVarNamePtr != NULL) {
+
+	    /*
+	     * An unset trace on some variable brought us here, but is it
+	     * the variable we have stored in butPtr->textVarNamePtr ? 
+	     */
+
+	    ClientData probe = NULL;
+
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			Tcl_GetString(butPtr->textVarNamePtr),
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			ButtonTextVarProc, probe);
+		if (probe == (ClientData)butPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/* 
+		 * We were able to fetch the unset trace for our
+		 * textVarNamePtr, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former textvariable must be, and we should ignore it.
+		 */
+		return NULL;
+	    }
+
 	    Tcl_ObjSetVar2(interp, butPtr->textVarNamePtr, NULL,
 		    butPtr->textPtr, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->textVarNamePtr),

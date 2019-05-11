@@ -3978,7 +3978,7 @@ test button-15.2 {Bug [5d991b822e]} {
 	.b configure -textvariable new
     }}}
     pack .b
-    bind .b <Configure> {unset var}
+    bind .b <Configure> {unset -nocomplain var}
     update
     destroy .b
     unset new
