@@ -1299,7 +1299,7 @@ ForwBack(
 		TkTextFindDisplayLineEnd(textPtr, indexPtr, 1, &xOffset);
 		while (count-- > 0) {
 
-                    /*
+		    /*
 		     * Go to the end of the line, then forward one char/byte
 		     * to get to the beginning of the next line.
 		     */
