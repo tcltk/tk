@@ -77,9 +77,16 @@ test imgSVGnano-2.1 {reading a bad image} -body {
     image create photo foo -format svg -data $data(bad)
 } -returnCodes error -result {couldn't recognize image data}
 test imgSVGnano-2.2 {using bad option} -body {
-    image create photo -data $data(plus) -format {svg -scale 0}
+    image create photo foo -data $data(plus) -format {svg -scale 0}
 } -returnCodes error -result {couldn't recognize image data
 -scale value must be positive}
+test imgSVGnano-2.3 {using bad option} -body {
+    image create photo foo -data $data(plus)
+    foo configure -format {svg 1.0}
+} -cleanup {
+    rename foo ""
+} -returnCodes error -result {couldn't recognize image data
+bad option "1.0": must be -dpi, -scale, or -unit}
 
 };# end of namespace svgnano
 
