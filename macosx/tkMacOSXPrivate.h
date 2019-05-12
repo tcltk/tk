@@ -343,6 +343,7 @@ VISIBILITY_HIDDEN
     Bool _needsRedisplay;
 #endif
 }
+@property Bool needsRedisplay;
 @end
 
 @interface TKContentView(TKKeyEvent)
