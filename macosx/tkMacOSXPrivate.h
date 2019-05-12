@@ -338,6 +338,10 @@ VISIBILITY_HIDDEN
 @interface TKContentView : NSView <NSTextInput>
 {
     NSString *privateWorkingText;
+    #ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Bool _needsRedisplay;
+#endif
 }
 @end
 
