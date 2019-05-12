@@ -1,4 +1,3 @@
-<<<<<<< BEGIN MERGE CONFLICT: local copy shown first <<<<<<<<<<<<<<<
 /*
  * tkMacOSXPrivate.h --
  *
