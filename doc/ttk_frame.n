@@ -58,6 +58,10 @@ Some options are only available for specific themes.
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.
+.SH BINDINGS
+.PP
+When a new \fBttk::frame\fR is created, it has no default event bindings;
+\fBttk::frame\fRs are not intended to be interactive.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::labelframe(n), frame(n)
 .SH "KEYWORDS"

@@ -617,6 +617,7 @@ ConfigureSlave(
     int mask;
     Slave *slavePtr;
     Tk_Window masterWin = (Tk_Window) NULL;
+    TkWindow *master;
 
     if (Tk_TopWinHierarchy(tkwin)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -694,6 +695,25 @@ ConfigureSlave(
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 	    goto error;
 	}
+
+	/*
+	 * Check for management loops.
+	 */
+
+	for (master = (TkWindow *)tkwin; master != NULL;
+	     master = (TkWindow *)TkGetGeomMaster(master)) {
+	    if (master == (TkWindow *)slavePtr->tkwin) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "can't put %s inside %s, would cause management loop",
+	            Tk_PathName(slavePtr->tkwin), Tk_PathName(tkwin)));
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
+		goto error;
+	    }
+	}
+	if (tkwin != Tk_Parent(slavePtr->tkwin)) {
+	    ((TkWindow *)slavePtr->tkwin)->maintainerPtr = (TkWindow *)tkwin;
+	}
+
 	if ((slavePtr->masterPtr != NULL)
 		&& (slavePtr->masterPtr->tkwin == tkwin)) {
 	    /*

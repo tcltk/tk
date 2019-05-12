@@ -676,7 +676,7 @@ typedef struct {
 				 * request. */
     Display *display;		/* Display the event was read from. */
     Window event;		/* Window on which event was requested. */
-    Window root;		/* Root window that the event occured on. */
+    Window root;		/* Root window that the event occurred on. */
     Window subwindow;		/* Child window. */
     Time time;			/* Milliseconds. */
     int x, y;			/* Pointer x, y coordinates in event
@@ -813,10 +813,11 @@ typedef struct Tk_FakeWin {
     int internalBorderBottom;
     int minReqWidth;
     int minReqHeight;
-    char *dummy20;		/* geometryMaster */
 #ifdef TK_USE_INPUT_METHODS
-    int dummy21;
+    int dummy20;
 #endif /* TK_USE_INPUT_METHODS */
+    char *dummy21;		/* geomMgrName */
+    Tk_Window dummy22;		/* maintainerPtr */
 } Tk_FakeWin;
 
 /*
