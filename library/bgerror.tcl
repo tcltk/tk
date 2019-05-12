@@ -97,7 +97,7 @@ proc ::tk::dialog::error::ReturnInDetails w {
 # Arguments:
 #	err - The error message.
 #
-proc ::tk::dialog::error::bgerror err {
+proc ::tk::dialog::error::bgerror {err {flag 1}} {
     global errorInfo
     variable button
 
@@ -106,15 +106,20 @@ proc ::tk::dialog::error::bgerror err {
     set ret [catch {::tkerror $err} msg];
     if {$ret != 1} {return -code $ret $msg}
 
-    # Ok the application's tkerror either failed or was not found
-    # we use the default dialog then :
+    # The application's tkerror either failed or was not found
+    # so we use the default dialog.  But on Aqua we cannot display
+    # the dialog if the background error occurs in an idle task
+    # being processed inside of [NSView drawRect].  In that case
+    # we post the dialog as an after task instead.
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
-	set ok [mc Ok]
-    } else {
-	set ok [mc OK]
+	if $flag {
+	    after 500 [list bgerror "$err" 0]
+	    return
+	}
     }
 
+    set ok [mc OK]
     # Truncate the message if it is too wide (>maxLine characters) or
     # too tall (>4 lines).  Truncation occurs at the first point at
     # which one of those conditions is met.

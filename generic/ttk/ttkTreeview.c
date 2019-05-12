@@ -2233,7 +2233,9 @@ static int TreeviewHorribleIdentify(
 	    Ttk_Element element;
 
 	    BoundingBox(tv, item, NULL, &itemBox);
-	    PrepareItem(tv, item, &displayItem); /*@@@ FIX: -text, etc*/
+	    PrepareItem(tv, item, &displayItem);
+            if (item->textObj) { displayItem.textObj = item->textObj; }
+            if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), itemBox);
 	    element = Ttk_IdentifyElement(layout, x, y);
@@ -2345,7 +2347,9 @@ static int TreeviewIdentifyCommand(
 		return TCL_OK;
 	    }
 
-	    PrepareItem(tv, item, &displayItem); /*@@@ FIX: fill in -text,etc */
+	    PrepareItem(tv, item, &displayItem);
+            if (item->textObj) { displayItem.textObj = item->textObj; }
+            if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
 	    Ttk_PlaceLayout(layout, ItemState(tv,item), bbox);
 	    element = Ttk_IdentifyElement(layout, x, y);
@@ -2841,10 +2845,10 @@ static int TreeviewSeeCommand(
      */
     rowNumber = RowNumber(tv, item);
     if (rowNumber < tv->tree.yscroll.first) {
-	TtkScrollTo(tv->tree.yscrollHandle, rowNumber);
+	TtkScrollTo(tv->tree.yscrollHandle, rowNumber, 1);
     } else if (rowNumber >= tv->tree.yscroll.last) {
 	TtkScrollTo(tv->tree.yscrollHandle,
-	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last));
+	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last), 1);
     }
 
     return TCL_OK;

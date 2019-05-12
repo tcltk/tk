@@ -73,8 +73,10 @@ typedef struct TkScale {
 				 * values. 0 means we get to choose the number
 				 * based on resolution and/or the range of the
 				 * scale. */
-    char format[16];		/* Sprintf conversion specifier computed from
+    char valueFormat[16];	/* Sprintf conversion specifier computed from
 				 * digits and other information. */
+    char tickFormat[16];	/* Sprintf conversion specifier computed from
+				 * tick interval. */
     double bigIncrement;	/* Amount to use for large increments to scale
 				 * value. (0 means we pick a value). */
     char *command;		/* Command prefix to use when invoking Tcl
@@ -213,6 +215,14 @@ typedef struct TkScale {
  */
 
 #define SPACING 2
+
+/*
+ * The tick values are all displayed with the same number of decimal places.
+ * This number of decimal places is such that the displayed values are all
+ * accurate to within the following proportion of a tick interval.
+ */
+
+#define TICK_VALUES_DISPLAY_ACCURACY 0.2
 
 /*
  * Declaration of procedures used in the implementation of the scale widget.
