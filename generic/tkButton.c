@@ -1617,7 +1617,27 @@ ButtonVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
 	butPtr->flags &= ~(SELECTED | TRISTATED);
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+	if (!Tcl_InterpDeleted(interp)) {
+	    ClientData probe = NULL;
+
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			Tcl_GetString(butPtr->selVarNamePtr),
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			ButtonVarProc, probe);
+		if (probe == (ClientData)butPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/* 
+		 * We were able to fetch the unset trace for our
+		 * selVarNamePtr, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
+		goto redisplay;
+	    }
 	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->selVarNamePtr),
 		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ButtonVarProc, clientData);

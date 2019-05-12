@@ -3983,6 +3983,18 @@ test button-15.2 {Bug [5d991b822e]} {
     destroy .b
     unset new
 } {}
+test button-15.3 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    checkbutton .b -variable var
+    trace add variable var unset {apply {args {
+	.b configure -variable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+} {}
 
 
 imageFinish
