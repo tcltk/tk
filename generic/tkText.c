@@ -2780,7 +2780,7 @@ TextPushUndoAction(
     int canUndo, canRedo;
     char lMarkName[20] = "tk::undoMarkL";
     char rMarkName[20] = "tk::undoMarkR";
-    char stringUndoMarkId[7] = "";
+    char stringUndoMarkId[16] = "";
 
     /*
      * Create the helpers.
