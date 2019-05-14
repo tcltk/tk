@@ -468,17 +468,21 @@ test treeview-8.6 "Selection - <<TreeviewSelect>> on selection add" -body {
     set res
 } -result {1}
 
-test treeview-8.7 "<<TreeviewSelect>> on item deletion" -body {
+test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
     .tv selection set {}
-    .tv insert "" end -id doomed -text DeadItem
-    .tv selection add doomed
+    .tv insert "" end -id selectedDoomed -text DeadItem
+    .tv insert "" end -id doomed -text AlsoDead
+    .tv selection add selectedDoomed
     update
-    bind .tv <<TreeviewSelect>> {set res 1}
+    bind .tv <<TreeviewSelect>> {lappend res 1}
     set res 0
     .tv delete doomed
     update
+    set res [expr {$res == 0}]
+    .tv delete selectedDoomed
+    update
     set res
-} -result {1}
+} -result {1 1}
 
 ### NEED: more tests for see/yview/scrolling
 
