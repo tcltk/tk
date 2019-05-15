@@ -32,8 +32,6 @@ LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 #--------------------------------------------------------------------
 # Find and load the tclConfig.sh file
 #--------------------------------------------------------------------
-SC_PROG_TCLSH
-SC_BUILD_TCLSH
 
 SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
@@ -49,6 +47,8 @@ Found config for Tcl ${TCL_VERSION}])
 fi
 fi
 
+SC_PROG_TCLSH
+SC_BUILD_TCLSH
 
 #------------------------------------------------------------------------
 # Handle the --prefix=... option
