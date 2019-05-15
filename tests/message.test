@@ -472,6 +472,7 @@ test message-3.7 {MessageWidgetObjCmd procedure, "configure"} -setup {
 
 test message-4.1 {Bug [5d991b822e]} {
     # Want this not to segfault, or write to variable with empty name
+    unset -nocomplain {}
     set var INIT
     message .b -textvariable var
     trace add variable var unset {apply {args {
