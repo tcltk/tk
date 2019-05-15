@@ -753,6 +753,7 @@ test menubutton-8.1 {menubutton vs hidden commands} -body {
 
 test menubutton-9.1 {Bug [5d991b822e]} {
     # Want this not to segfault, or write to variable with empty name
+    unset -nocomplain {}
     set var INIT
     menubutton .b -textvariable var
     trace add variable var unset {apply {args {
