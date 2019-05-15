@@ -887,7 +887,27 @@ MenuButtonTextVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+        if (!Tcl_InterpDeleted(interp) && mbPtr->textVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        mbPtr->textVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        MenuButtonTextVarProc, probe);
+                if (probe == (ClientData)mbPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * textVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2(interp, mbPtr->textVarName, NULL, mbPtr->text,
 		    TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, mbPtr->textVarName, NULL,
