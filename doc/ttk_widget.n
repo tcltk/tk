@@ -192,6 +192,84 @@ will restore \fIpathName\fR to the original state.
 If \fIstateSpec\fR is not specified,
 returns a list of the currently-enabled state flags.
 .RE
+.TP
+\fIpathName \fBxview \fIargs\fR
+This command is used to query and change the horizontal position of the
+content in the widget's window.  It can take any of the following
+forms:
+.RS
+.TP
+\fIpathName \fBxview\fR
+Returns a list containing two elements.
+Each element is a real fraction between 0 and 1; together they describe
+the horizontal span that is visible in the window.
+For example, if the first element is .2 and the second element is .6,
+20% of the widget's content is off-screen to the left, the middle 40% is visible
+in the window, and 40% of the content is off-screen to the right.
+These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
+option.
+.TP
+\fIpathName \fBxview\fR \fIindex\fR
+Adjusts the view in the window so that the content given by \fIindex\fR
+is displayed at the left edge of the window.
+.TP
+\fIpathName \fBxview moveto\fI fraction\fR
+Adjusts the view in the window so that the character \fIfraction\fR of the
+way through the content appears at the left edge of the window.
+\fIFraction\fR must be a fraction between 0 and 1.
+.TP
+\fIpathName \fBxview scroll \fInumber what\fR
+This command shifts the view in the window left or right according to
+\fInumber\fR and \fIwhat\fR.
+\fINumber\fR must be an integer.
+\fIWhat\fR must be either \fBunits\fR or \fBpages\fR.
+'\" or an abbreviation of one of these, but we don't document that.
+If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
+\fInumber\fR average-width characters on the display;  if it is
+\fBpages\fR then the view adjusts by \fInumber\fR screenfuls.
+If \fInumber\fR is negative then characters farther to the left
+become visible;  if it is positive then characters farther to the right
+become visible.
+.RE
+.TP
+\fIpathName \fByview \fIargs\fR
+This command is used to query and change the vertical position of the
+content in the widget's window.  It can take any of the following
+forms:
+.RS
+.TP
+\fIpathName \fByview\fR
+Returns a list containing two elements.
+Each element is a real fraction between 0 and 1; together they describe
+the vertical span that is visible in the window.
+For example, if the first element is .2 and the second element is .6,
+20% of the widget's content is off-screen to the top, the middle 40% is visible
+in the window, and 40% of the content is off-screen to the bottom.
+These are the same values passed to scrollbars via the \fB\-yscrollcommand\fR
+option.
+.TP
+\fIpathName \fByview\fR \fIindex\fR
+Adjusts the view in the window so that the content given by \fIindex\fR
+is displayed at the top edge of the window.
+.TP
+\fIpathName \fByview moveto\fI fraction\fR
+Adjusts the view in the window so that the item \fIfraction\fR of the
+way through the content appears at the top edge of the window.
+\fIFraction\fR must be a fraction between 0 and 1.
+.TP
+\fIpathName \fByview scroll \fInumber what\fR
+This command shifts the view in the window up or down according to
+\fInumber\fR and \fIwhat\fR.
+\fINumber\fR must be an integer.
+\fIWhat\fR must be either \fBunits\fR or \fBpages\fR.
+'\" or an abbreviation of one of these, but we don't document that.
+If \fIwhat\fR is \fBunits\fR, the view adjusts up or down by
+\fInumber\fR average-width characters on the display;  if it is
+\fBpages\fR then the view adjusts by \fInumber\fR screenfuls.
+If \fInumber\fR is negative then items farther to the top
+become visible;  if it is positive then items farther to the bottom
+become visible.
+.RE
 .SH "WIDGET STATES"
 The widget state is a bitmap of independent state flags.
 Widget state flags include:
