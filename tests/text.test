@@ -8456,14 +8456,14 @@ test text-39.2 "Bug 5cfd9dfe0d60f6a78fbdb07e1a0d385216160bd6 \
 } -result {}
 test text-39.3 "Bug ef14e354f51328157e9c553a731af5199cba2bee \
                 Segfaults in revised_text - Case 1 (early measurements)" -setup {
-    set message {    When wish is built with "--enable-symbols", this demo 
+    set message {    When wish is built with "--enable-symbols", this demo
                      causes wish to fail an assertion, and to segfault, at startup.
 
-      The code tries to measure the text widget before it has been drawn.  
-      This may be unwise, but <Configure> bindings often use measurement code 
-      like this, and it is better if the widget returns default results than 
-      if it fails: then the first <Configure> event after Tk draws the window 
-      will do the calculation correctly.  The "traditional" text widget appears 
+      The code tries to measure the text widget before it has been drawn.
+      This may be unwise, but <Configure> bindings often use measurement code
+      like this, and it is better if the widget returns default results than
+      if it fails: then the first <Configure> event after Tk draws the window
+      will do the calculation correctly.  The "traditional" text widget appears
       to work this way.
     }
     # This procedure measures things that may not be defined before
