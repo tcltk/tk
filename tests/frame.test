@@ -668,6 +668,12 @@ test frame-3.9 {TkCreateFrame procedure, -use option} -constraints {
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
 	    [winfo width .t] [winfo height .t]
 } -cleanup {
+# This call to update idletasks was added to prevent a crash that was
+# observed on OSX 10.12 (Sierra) only.  Any change, such as using the
+# Development version to make debugging symbols available, adding a print
+# statement, or calling update idletasks here, would make the test pass
+# with no segfault.
+    update idletasks
     deleteWindows
 } -result {0 0 140 300}
 test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
@@ -678,8 +684,10 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
     option add *x.use [winfo id .t]
+    update
     toplevel .x -width 140 -height 300 -bg green
     tkwait visibility .x
+    update
     list [expr {[winfo rootx .x] - [winfo rootx .t]}] \
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
 	    [winfo width .t] [winfo height .t]
