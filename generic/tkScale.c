@@ -1198,7 +1198,6 @@ ScaleVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-
         if (!Tcl_InterpDeleted(interp) && scalePtr->varNamePtr) {
             ClientData probe = NULL;
 
