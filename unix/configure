@@ -709,8 +709,6 @@ LDFLAGS
 CFLAGS
 CC
 MAN_FLAGS
-BUILD_TCLSH
-TCLSH_PROG
 TCL_STUB_LIB_SPEC
 TCL_STUB_LIB_FLAG
 TCL_STUB_LIB_FILE
@@ -721,6 +719,11 @@ TCL_SRC_DIR
 TCL_BIN_DIR
 TCL_PATCH_LEVEL
 TCL_VERSION
+TCL_ACTUAL_SRC_DIR
+TCL_SOURCE_MINOR_VERSION
+TCL_SOURCE_MAJOR_VERSION
+BUILD_TCLSH
+TCLSH_PROG
 target_alias
 host_alias
 build_alias
@@ -2305,6 +2308,47 @@ LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 # Find and load the tclConfig.sh file
 #--------------------------------------------------------------------
 
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for tclsh" >&5
+$as_echo_n "checking for tclsh... " >&6; }
+    if ${ac_cv_path_tclsh+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+	search_path=`echo ${PATH} | sed -e 's/:/ /g'`
+	for dir in $search_path ; do
+	    for j in `ls -r $dir/tclsh[8-9]* 2> /dev/null` \
+		    `ls -r $dir/tclsh* 2> /dev/null` ; do
+		if test x"$ac_cv_path_tclsh" = x ; then
+		    if test -f "$j" ; then
+			ac_cv_path_tclsh=$j
+			break
+		    fi
+		fi
+	    done
+	done
+
+fi
+
+
+    if test -f "$ac_cv_path_tclsh" ; then
+	TCLSH_PROG="$ac_cv_path_tclsh"
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $TCLSH_PROG" >&5
+$as_echo "$TCLSH_PROG" >&6; }
+    else
+	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: No tclsh avaliable" >&5
+$as_echo "No tclsh avaliable" >&6; }
+    fi
+
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for tclsh in Tcl build directory" >&5
+$as_echo_n "checking for tclsh in Tcl build directory... " >&6; }
+    BUILD_TCLSH="${TCL_BIN_DIR}"/tclsh
+    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $BUILD_TCLSH" >&5
+$as_echo "$BUILD_TCLSH" >&6; }
+
+
+
 
     #
     # Ok, lets find the tcl configuration
@@ -2486,6 +2530,144 @@ $as_echo "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
     eval "TCL_STUB_LIB_SPEC=\"${TCL_STUB_LIB_SPEC}\""
 
 
+    TCL_ACTUAL_SRC_DIR=` <<-'EOF' "$TCLSH_PROG" - "$srcdir" "$TCL_SRC_DIR" \
+	"$TCL_MAJOR_VERSION" "$TCL_MINOR_VERSION"
+
+    proc cat fname {
+	set chan [open $fname]
+	try {
+	    read $chan
+	} finally {
+	    close $chan
+	}
+    }
+
+    proc main {argv0 argv} {
+	try {
+	    lassign $argv -> srcdir tcl_src_dir majortarget minortarget
+	    lappend candidates $tcl_src_dir
+	    set srcdir [file dirname [file normalize $srcdir/...]]
+	    set topsrcdir [file dirname $srcdir]
+	    set sources [file dirname $topsrcdir]
+	    foreach dirname [glob -nocomplain -directory $sources *] {
+		if {$dirname ni $candidates} {
+		    lappend candidates $dirname
+		}
+	    }
+	    foreach candidate $candidates {
+		set res [check $candidate $majortarget $minortarget]
+		if {$res eq {}} continue else {
+		    puts -nonewline $res
+		    break
+		}
+	    }
+	    set status 0
+	} on error {tres topts} {
+	    puts stderr [dict get $topts -errorinfo]
+	    set status 1
+	}
+	exit $status
+    }
+
+    proc check {candidate majortarget minortarget} {
+	set tclh $candidate/generic/tcl.h
+
+	if {![file exists $tclh]} {
+	    return {}
+	}
+
+	set version [tclhversion [cat $tclh]]
+	if {[llength $version]} {
+	    lassign $version major minor
+	    if {[package vcompare $major.$minor \
+		$majortarget.$minortarget] >= 0} {
+		return [list $candidate $major $minor]
+	    }
+	}
+
+	return {}
+    }
+
+    proc tclhversion data {
+	if {[regexp -line {^#define\s+_TCL} $data]} {
+	    if {[
+		regexp -line {^#define\s+TCL_VERSION\s+\"([^.])+\.([^.\"]+)} \
+		    $data -> major minor
+	    ]} {
+		return [list $major $minor]
+	    }
+	}
+	return {}
+    }
+    main $argv0 $argv
+    EOF
+
+    `
+
+    if test "x${TCL_ACTUAL_SRC_DIR}" = x; then
+	as_fn_error $? "could not find Tcl sources" "$LINENO" 5
+    else
+	TCL_SOURCE_MAJOR_VERSION=` <<-'EOF' "$TCLSH_PROG" - "$TCL_ACTUAL_SRC_DIR " "1"
+	proc main {argv0 argv} {
+	    try {
+		lassign $argv -> list index
+		puts -nonewline [lindex $list $index]
+		set status 0
+	    } on error {tres topts} {
+		puts stderr [dict get $topts -errorinfo]
+		set status 1
+	    }
+	    exit $status
+	}
+	main $argv0 $argv
+	EOF
+    `
+
+
+
+
+	TCL_SOURCE_MINOR_VERSION=` <<-'EOF' "$TCLSH_PROG" - "$TCL_ACTUAL_SRC_DIR " "2"
+	proc main {argv0 argv} {
+	    try {
+		lassign $argv -> list index
+		puts -nonewline [lindex $list $index]
+		set status 0
+	    } on error {tres topts} {
+		puts stderr [dict get $topts -errorinfo]
+		set status 1
+	    }
+	    exit $status
+	}
+	main $argv0 $argv
+	EOF
+    `
+
+
+
+
+	TCL_ACTUAL_SRC_DIR=` <<-'EOF' "$TCLSH_PROG" - "$TCL_ACTUAL_SRC_DIR " "0"
+	proc main {argv0 argv} {
+	    try {
+		lassign $argv -> list index
+		puts -nonewline [lindex $list $index]
+		set status 0
+	    } on error {tres topts} {
+		puts stderr [dict get $topts -errorinfo]
+		set status 1
+	    }
+	    exit $status
+	}
+	main $argv0 $argv
+	EOF
+    `
+
+
+
+
+    fi
+
+
+
 
 
 
@@ -2509,49 +2691,6 @@ if test "${TCL_MINOR_VERSION}" -lt 6 ; then
 Found config for Tcl ${TCL_VERSION}" "$LINENO" 5
 fi
 fi
-
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for tclsh" >&5
-$as_echo_n "checking for tclsh... " >&6; }
-    if ${ac_cv_path_tclsh+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-	search_path=`echo ${PATH} | sed -e 's/:/ /g'`
-	for dir in $search_path ; do
-	    for j in `ls -r $dir/tclsh[8-9]* 2> /dev/null` \
-		    `ls -r $dir/tclsh* 2> /dev/null` ; do
-		if test x"$ac_cv_path_tclsh" = x ; then
-		    if test -f "$j" ; then
-			ac_cv_path_tclsh=$j
-			break
-		    fi
-		fi
-	    done
-	done
-
-fi
-
-
-    if test -f "$ac_cv_path_tclsh" ; then
-	TCLSH_PROG="$ac_cv_path_tclsh"
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $TCLSH_PROG" >&5
-$as_echo "$TCLSH_PROG" >&6; }
-    else
-	# It is not an error if an installed version of Tcl can't be located.
-	TCLSH_PROG=""
-	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: No tclsh found on PATH" >&5
-$as_echo "No tclsh found on PATH" >&6; }
-    fi
-
-
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for tclsh in Tcl build directory" >&5
-$as_echo_n "checking for tclsh in Tcl build directory... " >&6; }
-    BUILD_TCLSH="${TCL_BIN_DIR}"/tclsh
-    { $as_echo "$as_me:${as_lineno-$LINENO}: result: $BUILD_TCLSH" >&5
-$as_echo "$BUILD_TCLSH" >&6; }
-
 
 
 #------------------------------------------------------------------------
