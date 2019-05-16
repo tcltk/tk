@@ -340,6 +340,7 @@ CreateTopLevelWindow(
 	Tk_CreatePhotoImageFormat(&tkImgFmtGIF);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPNG);
 	Tk_CreatePhotoImageFormat(&tkImgFmtPPM);
+	Tk_CreatePhotoImageFormat(&tkImgFmtSVGnano);
     }
 
     if ((parent != NULL) && (screenName != NULL) && (screenName[0] == '\0')) {
@@ -3064,6 +3065,12 @@ Initialize(
     if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	return TCL_ERROR;
     }
+
+    /*
+     * TIP #59: Make embedded configuration information available.
+     */
+
+    TkInitEmbeddedConfigurationInformation(interp);
 
     /*
      * Ensure that our obj-types are registered with the Tcl runtime.

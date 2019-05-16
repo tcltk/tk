@@ -7,7 +7,7 @@ namespace eval ttk::theme::aqua {
 
 	ttk::style configure . \
 	    -font TkDefaultFont \
-	    -background systemTtkBackground \
+	    -background systemWindowBackgroundColor \
 	    -foreground systemLabelColor \
 	    -selectbackground systemHighlight \
 	    -selectforeground systemLabelColor \
@@ -16,42 +16,25 @@ namespace eval ttk::theme::aqua {
 
 	ttk::style map . \
 	    -foreground {
-		disabled systemLabelColor
+		disabled systemDisabledControlTextColor
 		background systemLabelColor} \
 	    -selectbackground {
-		background systemHighlight
-		!focus systemHighlightSecondary} \
+		background systemSelectedTextBackgroundColor
+		!focus systemSelectedTextBackgroundColor} \
 	    -selectforeground {
-		background systemLabelColor
-		!focus systemDialogActiveText}
+		background systemSelectedTextColor
+		!focus systemSelectedTextColor}
 
 	# Button
 	ttk::style configure TButton -anchor center -width -6\
 	    -foreground systemControlTextColor
-	ttk::style map TButton \
-	    -foreground {
-		disabled systemDisabledControlTextColor}
-	ttk::style map TCheckbutton \
-	    -foreground {
-		disabled systemDisabledControlTextColor}
-	ttk::style map TRadiobutton \
-	    -foreground {
-		disabled systemDisabledControlTextColor}
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
 	ttk::style configure Toolbutton -anchor center
-	ttk::style map Toolbutton \
-	    -foreground {
-		disabled systemDisabledControlTextColor
-	    }
 
 	# Entry
 	ttk::style configure TEntry \
 	    -foreground systemTextColor \
 	    -background systemTextBackgroundColor \
-	    -selectforeground systemSelectedTextColor
-	ttk::style map TEntry \
-	    -foreground {
-		disabled systemDisabledControlTextColor}
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
@@ -62,13 +45,12 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook -tabmargins {10 0} -tabposition n
 	ttk::style configure TNotebook -padding {18 8 18 17}
 	ttk::style configure TNotebook.Tab -padding {12 3 12 2}
-	ttk::style configure TNotebook.Tab -foreground white
+	ttk::style configure TNotebook.Tab -foreground systemControlTextColor
 	ttk::style map TNotebook.Tab \
 	    -foreground {
-		{background !disabled !selected} systemControlTextColor
-		{background selected} systemTextBackgroundColor
+		background systemControlTextColor
 		disabled systemDisabledControlTextColor
-		!selected systemControlTextColor}
+		selected systemSelectedTabTextColor}
 
 	# Combobox:
 	ttk::style configure TCombobox \
@@ -107,12 +89,12 @@ namespace eval ttk::theme::aqua {
 		!focus systemTextBackgroundColor
 		focus systemSelectedTextBackgroundColor
 	    }
-	
+
 	# Treeview:
 	ttk::style configure Heading \
 	    -font TkHeadingFont \
 	    -foreground systemTextColor \
-	    -background systemTtkBackground
+	    -background systemWindowBackgroundColor
 	ttk::style configure Treeview -rowheight 18 \
 	    -background systemTextBackgroundColor \
 	    -foreground systemTextColor \

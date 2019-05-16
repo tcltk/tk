@@ -986,6 +986,7 @@ MODULE_SCOPE void		(*tkHandleEventProc) (XEvent* eventPtr);
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtDefault;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPNG;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPPM;
+MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtSVGnano;
 MODULE_SCOPE TkMainInfo		*tkMainWindowList;
 MODULE_SCOPE Tk_ImageType	tkPhotoImageType;
 MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
@@ -1261,11 +1262,16 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
+MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
+			    Tcl_Interp *interp);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
+MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
+			    double sine, double cosine, double *xPtr,
+			    double *yPtr);
 
 #ifdef _WIN32
 #define TkParseColor XParseColor

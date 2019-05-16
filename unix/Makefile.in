@@ -95,16 +95,16 @@ HTML_INSTALL_DIR	= $(INSTALL_ROOT)$(HTML_DIR)
 CONFIG_INSTALL_DIR	= $(INSTALL_ROOT)$(libdir)
 
 # Directory in which to install the demo files:
-DEMO_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)/demos
+DEMO_INSTALL_DIR	= $(INSTALL_ROOT)@DEMO_DIR@
 
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
-TCL_GENERIC_DIR		= @TCL_ACTUAL_SRC_DIR@/generic
+TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
 
 # The directory containing the platform specific Tcl sources and headers
 # appropriate for this version of Tk:
-TCL_PLATFORM_DIR	= @TCL_ACTUAL_SRC_DIR@/unix
+TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/unix
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:
@@ -310,7 +310,7 @@ GENERIC_DIR		= $(TOP_DIR)/generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
 UNIX_DIR		= $(TOP_DIR)/unix
 BMAP_DIR		= $(TOP_DIR)/bitmaps
-TOOL_DIR		= @TCL_ACTUAL_SRC_DIR@/tools
+TOOL_DIR		= @TCL_SRC_DIR@/tools
 TEST_DIR		= $(TOP_DIR)/tests
 MAC_OSX_DIR		= $(TOP_DIR)/macosx
 XLIB_DIR		= $(TOP_DIR)/xlib
@@ -356,7 +356,7 @@ CANV_OBJS = tkCanvas.o tkCanvArc.o tkCanvBmap.o tkCanvImg.o \
 	tkCanvUtil.o tkCanvWind.o tkRectOval.o tkTrig.o
 
 IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPNG.o tkImgPPM.o \
-	tkImgPhoto.o tkImgPhInstance.o tkImgListFormat.o
+	tkImgPhoto.o tkImgPhInstance.o tkImgListFormat.o tkImgSVGnano.o
 
 TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 	tkTextMark.o tkTextTag.o tkTextWind.o
@@ -369,8 +369,9 @@ GENERIC_OBJS = tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
 	tkClipboard.o \
 	tkCmds.o tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o \
 	tkEvent.o tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o \
-	tkGrid.o tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o tkPlace.o \
-	tkSelect.o tkStyle.o tkUndo.o tkUtil.o tkVisual.o tkWindow.o
+	tkGrid.o tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o \
+	tkPkgConfig.o tkPlace.o	tkSelect.o tkStyle.o tkUndo.o tkUtil.o \
+	tkVisual.o tkWindow.o
 
 TTK_OBJS = \
 	ttkBlink.o ttkButton.o ttkCache.o ttkClamTheme.o ttkClassicTheme.o \
@@ -431,6 +432,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkGrid.c $(GENERIC_DIR)/tkConsole.c \
 	$(GENERIC_DIR)/tkMain.c $(GENERIC_DIR)/tkOption.c \
 	$(GENERIC_DIR)/tkPack.c $(GENERIC_DIR)/tkPlace.c \
+	$(GENERIC_DIR)/tkPkgConfig.c \
 	$(GENERIC_DIR)/tkSelect.c $(GENERIC_DIR)/tkStyle.c \
 	$(GENERIC_DIR)/tkUndo.c $(GENERIC_DIR)/tkUtil.c \
 	$(GENERIC_DIR)/tkVisual.c $(GENERIC_DIR)/tkWindow.c \
@@ -449,6 +451,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkTrig.c $(GENERIC_DIR)/tkImage.c \
 	$(GENERIC_DIR)/tkImgBmap.c $(GENERIC_DIR)/tkImgGIF.c \
 	$(GENERIC_DIR)/tkImgPNG.c $(GENERIC_DIR)/tkImgPPM.c \
+	$(GENERIC_DIR)/tkImgSVGnano.c $(GENERIC_DIR)/tkImgSVGnano.c \
 	$(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhInstance.c \
 	$(GENERIC_DIR)/tkImgListFormat.c $(GENERIC_DIR)/tkText.c \
 	$(GENERIC_DIR)/tkTextBTree.c $(GENERIC_DIR)/tkTextDisp.c \
@@ -566,7 +569,7 @@ DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
 SHELL_ENV = \
 	@LD_LIBRARY_PATH_VAR@="`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}"; \
 	export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_ACTUAL_SRC_DIR@/library; export TCL_LIBRARY; \
+	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY;
 
 all: binaries libraries doc
@@ -576,7 +579,7 @@ binaries: ${LIB_FILE} ${WISH_EXE}
 libraries:
 
 $(TOP_DIR)/doc/man.macros:
-	$(INSTALL_DATA) $(TCLDIR)/doc/man.macros $(TOP_DIR)/doc/man.macros
+	$(INSTALL_DATA) @TCL_SRC_DIR@/doc/man.macros $(TOP_DIR)/doc/man.macros
 
 doc: $(TOP_DIR)/doc/man.macros
 
@@ -682,7 +685,7 @@ demo:
 # This target can be used to run wish inside either gdb or insight
 gdb: ${WISH_EXE}
 	@echo "set env @LD_LIBRARY_PATH_VAR@=\"`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}\"" > gdb.run
-	@echo "set env TCL_LIBRARY=@TCL_ACTUAL_SRC_DIR@/library" >> gdb.run
+	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
 	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
 	gdb ./${WISH_EXE} --command=gdb.run
 	rm gdb.run
@@ -1010,6 +1013,32 @@ tkOption.o: $(GENERIC_DIR)/tkOption.c
 tkPack.o: $(GENERIC_DIR)/tkPack.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPack.c
 
+# TIP #59, embedding of configuration information into the binary library.
+#
+# Part of Tk's configuration information are the paths where it was installed
+# and where it will look for its libraries (which can be different). We derive
+# this information from the variables which can be overridden by the user. As
+# every path can be configured separately we do not remember one general
+# prefix/exec_prefix but all the different paths individually.
+
+tkPkgConfig.o: $(GENERIC_DIR)/tkPkgConfig.c
+	$(CC) -c $(CC_SWITCHES)					\
+		-DCFG_INSTALL_LIBDIR="\"$(LIB_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_BINDIR="\"$(BIN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_SCRDIR="\"$(SCRIPT_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_INCDIR="\"$(INCLUDE_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DOCDIR="\"$(MAN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		\
+		-DCFG_RUNTIME_LIBDIR="\"$(libdir)\"" \
+		-DCFG_RUNTIME_BINDIR="\"$(bindir)\"" \
+		-DCFG_RUNTIME_SCRDIR="\"$(TK_LIBRARY)\"" \
+		-DCFG_RUNTIME_INCDIR="\"$(includedir)\"" \
+		-DCFG_RUNTIME_DOCDIR="\"$(mandir)\"" \
+		-DCFG_RUNTIME_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		\
+		$(GENERIC_DIR)/tkPkgConfig.c
+
 tkPlace.o: $(GENERIC_DIR)/tkPlace.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPlace.c
 
@@ -1117,6 +1146,9 @@ tkImgPNG.o: $(GENERIC_DIR)/tkImgPNG.c
 
 tkImgPPM.o: $(GENERIC_DIR)/tkImgPPM.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPPM.c
+
+tkImgSVGnano.o: $(GENERIC_DIR)/tkImgSVGnano.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgSVGnano.c
 
 tkImgPhoto.o: $(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhoto.h
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPhoto.c
@@ -1534,7 +1566,7 @@ DISTROOT = /tmp/dist
 DISTNAME = tk${VERSION}${PATCH_LEVEL}
 ZIPNAME	 = tk${MAJOR_VERSION}${MINOR_VERSION}${PATCH_LEVEL}-src.zip
 DISTDIR	 = $(DISTROOT)/$(DISTNAME)
-TCLDIR   = @TCL_ACTUAL_SRC_DIR@
+TCLDIR   = @TCL_SRC_DIR@
 DIST_INSTALL_DATA   = CPPROG='cp -p' $(INSTALL) -m 644
 DIST_INSTALL_SCRIPT = CPPROG='cp -p' $(INSTALL) -m 755
 
@@ -1691,7 +1723,7 @@ BUILD_HTML = \
 	$(SHELL_ENV) TCLSH="$(BUILD_TCLSH)"; else \
 	TCLSH="$(TCL_EXE)"; fi ;\
 	"$${TCLSH}" $(TOOL_DIR)/tcltk-man2html.tcl --htmldir="$(HTML_INSTALL_DIR)" \
-		--tk --srcdir=$(TOP_DIR) $(BUILD_HTML_FLAGS)
+		--srcdir=$(TOP_DIR)/.. $(BUILD_HTML_FLAGS)
 
 #
 # The list of all the targets that do not correspond to real files. This stops
