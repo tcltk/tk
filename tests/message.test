@@ -470,5 +470,33 @@ test message-3.7 {MessageWidgetObjCmd procedure, "configure"} -setup {
     destroy .m
 } -result {4}
 
+test message-4.1 {Bug [5d991b822e]} {
+    # Want this not to segfault, or write to variable with empty name
+    unset -nocomplain {}
+    set var INIT
+    message .b -textvariable var
+    trace add variable var unset {apply {args {
+        .b configure -textvariable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+    info exists {}
+} 0
+test message-4.2 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    message .b -textvariable var
+    trace add variable var unset {apply {args {
+        .b configure -textvariable new
+    }}}
+    pack .b
+    bind .b <Configure> {unset -nocomplain var}
+    update
+    destroy .b
+    unset new
+} {}
+
 cleanupTests
 return
