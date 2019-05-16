@@ -3177,6 +3177,33 @@ test listbox-31.2 {<<ListboxSelect>> event on lost selection} -setup {
     destroy .l
 } -result {{.l 0} {{} {}}}
 
+test listbox-32.1 {Bug [5d991b822e]} {
+    # Want this not to segfault, or write to variable with empty name
+    set var INIT
+    listbox .b -listvariable var
+    trace add variable var unset {apply {args {
+        .b configure -listvariable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+    info exists {}
+} 0
+test listbox-32.2 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    listbox .b -listvariable var
+    trace add variable var unset {apply {args {
+        .b configure -listvariable new
+    }}}
+    pack .b
+    bind .b <Configure> {unset -nocomplain var}
+    update
+    destroy .b
+    unset new
+} {}
+
 resetGridInfo
 deleteWindows
 option clear

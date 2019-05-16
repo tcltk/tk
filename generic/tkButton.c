@@ -1175,7 +1175,7 @@ ConfigureButton(
 		 */
 
  		if ((butPtr->type == TYPE_RADIO_BUTTON) &&
-			(*Tcl_GetString(butPtr->onValuePtr) == 0)) {
+			(*Tcl_GetString(butPtr->onValuePtr) == '\0')) {
 		    butPtr->flags |= SELECTED;
 		}
 	    }
@@ -1617,26 +1617,33 @@ ButtonVarProc(
     Tcl_Obj *valuePtr;
 
     /*
-     * See ticket [5d991b82].
-     */
-
-    if (butPtr->selVarNamePtr == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    ButtonVarProc, clientData);
-	}
-	return NULL;
-    }
-
-    /*
      * If the variable is being unset, then just re-establish the trace unless
      * the whole interpreter is going away.
      */
 
     if (flags & TCL_TRACE_UNSETS) {
 	butPtr->flags &= ~(SELECTED | TRISTATED);
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+	if (!Tcl_InterpDeleted(interp)) {
+	    ClientData probe = NULL;
+
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			Tcl_GetString(butPtr->selVarNamePtr),
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			ButtonVarProc, probe);
+		if (probe == (ClientData)butPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * selVarNamePtr, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
+		goto redisplay;
+	    }
 	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->selVarNamePtr),
 		    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    ButtonVarProc, clientData);
@@ -1711,8 +1718,8 @@ static char *
 ButtonTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Not used. */
+    const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
     TkButton *butPtr = clientData;
@@ -1723,25 +1730,39 @@ ButtonTextVarProc(
     }
 
     /*
-     * See ticket [5d991b82].
-     */
-
-    if (butPtr->textVarNamePtr == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    ButtonTextVarProc, clientData);
-	}
- 	return NULL;
-     }
-
-    /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+	if (!Tcl_InterpDeleted(interp) && butPtr->textVarNamePtr != NULL) {
+
+	    /*
+	     * An unset trace on some variable brought us here, but is it
+	     * the variable we have stored in butPtr->textVarNamePtr ?
+	     */
+
+	    ClientData probe = NULL;
+
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			Tcl_GetString(butPtr->textVarNamePtr),
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			ButtonTextVarProc, probe);
+		if (probe == (ClientData)butPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * textVarNamePtr, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former textvariable must be, and we should ignore it.
+		 */
+		return NULL;
+	    }
+
 	    Tcl_ObjSetVar2(interp, butPtr->textVarNamePtr, NULL,
 		    butPtr->textPtr, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, Tcl_GetString(butPtr->textVarNamePtr),

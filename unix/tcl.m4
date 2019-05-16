@@ -336,8 +336,6 @@ AC_DEFUN([SC_LOAD_TCLCONFIG], [
     eval "TCL_STUB_LIB_FLAG=\"${TCL_STUB_LIB_FLAG}\""
     eval "TCL_STUB_LIB_SPEC=\"${TCL_STUB_LIB_SPEC}\""
 
-	SC_TCL_FIND_SOURCES()
-
     AC_SUBST(TCL_VERSION)
     AC_SUBST(TCL_PATCH_LEVEL)
     AC_SUBST(TCL_BIN_DIR)
@@ -434,134 +432,6 @@ AC_DEFUN([SC_LOAD_TKCONFIG], [
     AC_SUBST(TK_STUB_LIB_SPEC)
 ])
 
-
-#------------------------------------------------------------------------
-# SC_TCL_FIND_SOURCES
-#	Find a directory containing Tcl sources that match the version required by
-#	tclConfig.sh.  The sources indicated by tclConfig.sh are preferred.
-#
-# Arguments:
-#	none
-#
-# Results:
-#	Substitutes the following vars:
-#		TCL_SOURCE_MAJOR_VERSION
-#		TCL_SOURCE_MINOR_VERSION
-#		TCL_ACTUAL_SRC_DIR
-#------------------------------------------------------------------------
-
-AC_DEFUN([SC_TCL_FIND_SOURCES],[
-    [TCL_ACTUAL_SRC_DIR=` <<-'EOF' "$TCLSH_PROG" - "$srcdir" "$TCL_SRC_DIR" \
-	"$TCL_MAJOR_VERSION" "$TCL_MINOR_VERSION"
-
-    proc cat fname {
-	set chan [open $fname]
-	try {
-	    read $chan
-	} finally {
-	    close $chan
-	}
-    }
-
-    proc main {argv0 argv} {
-	try {
-	    lassign $argv -> srcdir tcl_src_dir majortarget minortarget
-	    lappend candidates $tcl_src_dir
-	    set srcdir [file dirname [file normalize $srcdir/...]]
-	    set topsrcdir [file dirname $srcdir]
-	    set sources [file dirname $topsrcdir]
-	    foreach dirname [glob -nocomplain -directory $sources *] {
-		if {$dirname ni $candidates} {
-		    lappend candidates $dirname
-		}
-	    }
-	    foreach candidate $candidates {
-		set res [check $candidate $majortarget $minortarget]
-		if {$res eq {}} continue else {
-		    puts -nonewline $res
-		    break
-		}
-	    }
-	    set status 0
-	} on error {tres topts} {
-	    puts stderr [dict get $topts -errorinfo]
-	    set status 1
-	}
-	exit $status
-    }
-
-    proc check {candidate majortarget minortarget} {
-	set tclh $candidate/generic/tcl.h
-
-	if {![file exists $tclh]} {
-	    return {} 
-	}
-
-	set version [tclhversion [cat $tclh]]
-	if {[llength $version]} {
-	    lassign $version major minor
-	    if {[package vcompare $major.$minor \
-		$majortarget.$minortarget] >= 0} {
-		return [list $candidate $major $minor]
-	    }
-	}
-
-	return {} 
-    }
-
-    proc tclhversion data {
-	if {[regexp -line {^#define\s+_TCL} $data]} {
-	    if {[
-		regexp -line {^#define\s+TCL_VERSION\s+\"([^.])+\.([^.\"]+)} \
-		    $data -> major minor
-	    ]} {
-		return [list $major $minor]
-	    }
-	}
-	return {}
-    }
-    main $argv0 $argv
-    EOF
-    ]
-    `
-
-    if test "x${TCL_ACTUAL_SRC_DIR}" = x; then
-	AC_MSG_ERROR([could not find Tcl sources])
-    else
-	TCL_SOURCE_MAJOR_VERSION=SC_TCL_LINDEX([$TCL_ACTUAL_SRC_DIR] ,1)
-	AC_SUBST(TCL_SOURCE_MAJOR_VERSION)
-	TCL_SOURCE_MINOR_VERSION=SC_TCL_LINDEX([$TCL_ACTUAL_SRC_DIR] ,2)
-	AC_SUBST(TCL_SOURCE_MINOR_VERSION)
-	TCL_ACTUAL_SRC_DIR=SC_TCL_LINDEX([$TCL_ACTUAL_SRC_DIR] ,0)
-	AC_SUBST(TCL_ACTUAL_SRC_DIR)
-    fi
-])
-
-
-#------------------------------------------------------------------------
-# SC_TCL_LINDEX
-#------------------------------------------------------------------------
-
-AC_DEFUN([SC_TCL_LINDEX],
-    [[` <<-'EOF' "$TCLSH_PROG" - "$1" "$2"
-	proc main {argv0 argv} {
-	    try {
-		lassign $argv -> list index
-		puts -nonewline [lindex $list $index]
-		set status 0
-	    } on error {tres topts} {
-		puts stderr [dict get $topts -errorinfo]
-		set status 1
-	    }
-	    exit $status
-	}
-	main $argv0 $argv
-	EOF
-    `
-    ]]
-    
-)
-
 #------------------------------------------------------------------------
 # SC_PROG_TCLSH
 #	Locate a tclsh shell installed on the system path. This macro
@@ -603,7 +473,9 @@ AC_DEFUN([SC_PROG_TCLSH], [
 	TCLSH_PROG="$ac_cv_path_tclsh"
 	AC_MSG_RESULT([$TCLSH_PROG])
     else
-	AC_MSG_RESULT([No tclsh avaliable])
+	# It is not an error if an installed version of Tcl can't be located.
+	TCLSH_PROG=""
+	AC_MSG_RESULT([No tclsh found on PATH])
     fi
     AC_SUBST(TCLSH_PROG)
 ])
@@ -1587,10 +1459,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    SHLIB_SUFFIX=".dylib"
 	    DL_OBJS="tclLoadDyld.o"
 	    DL_LIBS=""
-	    # Don't use -prebind when building for Mac OS X 10.4 or later only:
-	    AS_IF([test "`echo "${MACOSX_DEPLOYMENT_TARGET}" | awk -F '10\\.' '{print int([$]2)}'`" -lt 4 -a \
-		"`echo "${CPPFLAGS}" | awk -F '-mmacosx-version-min=10\\.' '{print int([$]2)}'`" -lt 4], [
-		LDFLAGS="$LDFLAGS -prebind"])
 	    LDFLAGS="$LDFLAGS -headerpad_max_install_names"
 	    AC_CACHE_CHECK([if ld accepts -search_paths_first flag],
 		    tcl_cv_ld_search_paths_first, [
@@ -3142,7 +3010,7 @@ AC_DEFUN([SC_ZIPFS_SUPPORT], [
         ZIP_PROG="$ac_cv_path_zip"
         AC_MSG_RESULT([$ZIP_PROG])
         ZIP_PROG_OPTIONS="-rq"
-        ZIP_PROG_VFSSEARCH="."
+        ZIP_PROG_VFSSEARCH="*"
         AC_MSG_RESULT([Found INFO Zip in environment])
         # Use standard arguments for zip
     else
@@ -3150,7 +3018,7 @@ AC_DEFUN([SC_ZIPFS_SUPPORT], [
         # We can use the locally distributed minizip instead
         ZIP_PROG="./minizip${EXEEXT_FOR_BUILD}"
         ZIP_PROG_OPTIONS="-o -r"
-        ZIP_PROG_VFSSEARCH="."
+        ZIP_PROG_VFSSEARCH="*"
         ZIP_INSTALL_OBJS="minizip${EXEEXT_FOR_BUILD}"
         AC_MSG_RESULT([No zip found on PATH. Building minizip])
     fi

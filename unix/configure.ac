@@ -32,8 +32,6 @@ LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 #--------------------------------------------------------------------
 # Find and load the tclConfig.sh file
 #--------------------------------------------------------------------
-SC_PROG_TCLSH
-SC_BUILD_TCLSH
 
 SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
@@ -49,6 +47,8 @@ Found config for Tcl ${TCL_VERSION}])
 fi
 fi
 
+SC_PROG_TCLSH
+SC_BUILD_TCLSH
 
 #------------------------------------------------------------------------
 # Handle the --prefix=... option
@@ -111,6 +111,12 @@ if test -z "$no_pipe" && test -n "$GCC"; then
 	CFLAGS="$CFLAGS -pipe"
     fi
 fi
+
+#------------------------------------------------------------------------
+# Embedded configuration information, encoding to use for the values, TIP #59
+#------------------------------------------------------------------------
+
+SC_TCL_CFG_ENCODING
 
 SC_ENABLE_SHARED
 
@@ -771,6 +777,16 @@ TK_STUB_LIB_PATH="${TK_STUB_LIB_DIR}/${TK_STUB_LIB_FILE}"
 
 # Install time header dir can be set via --includedir
 eval "TK_INCLUDE_SPEC=\"-I${includedir}\""
+
+#------------------------------------------------------------------------
+# Demo dir
+#------------------------------------------------------------------------
+
+AS_IF([test x"${DEMO_DIR}" = x], [DEMO_DIR='$(TK_LIBRARY)/demos'])
+eval "TK_DEMO_DIR=\"`echo ${DEMO_DIR} | tr '()' '{}'`\""
+eval "TK_DEMO_DIR=\"`echo ${TK_DEMO_DIR} | tr '()' '{}'`\""
+AC_SUBST(DEMO_DIR)
+AC_SUBST(TK_DEMO_DIR)
 
 #------------------------------------------------------------------------
 # tkConfig.sh refers to this by a different name

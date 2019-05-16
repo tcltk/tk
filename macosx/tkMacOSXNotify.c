@@ -33,7 +33,7 @@ static void TkMacOSXEventsSetupProc(ClientData clientData, int flags);
 static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
 
 #ifdef TK_MAC_DEBUG_EVENTS
-static char* Tk_EventName[39] = {
+static const char *Tk_EventName[39] = {
     "",
     "",
     "KeyPress",		/*2*/
@@ -136,8 +136,8 @@ void DebugPrintQueue(void)
 
 /*
  * Since the contentView is the first responder for a Tk Window, it is
- * responsible for sending events up the responder chain.  We also check
- * the pasteboard here.
+ * responsible for sending events up the responder chain.  We also check the
+ * pasteboard here.
  */
 - (void) sendEvent: (NSEvent *) theEvent
 {
@@ -190,8 +190,8 @@ GetRunLoopMode(NSModalSession modalSession)
  *
  * Tk_MacOSXSetupTkNotifier --
  *
- *	This procedure is called during Tk initialization to create
- *	the event source for TkAqua events.
+ *	This procedure is called during Tk initialization to create the event
+ *	source for TkAqua events.
  *
  * Results:
  *	None.
@@ -224,8 +224,7 @@ Tk_MacOSXSetupTkNotifier(void)
 		    "first [load] of TkAqua has to occur in the main thread!");
 	    }
 	    Tcl_CreateEventSource(TkMacOSXEventsSetupProc,
-				  TkMacOSXEventsCheckProc,
-				  NULL);
+		    TkMacOSXEventsCheckProc, NULL);
 	    TkCreateExitHandler(TkMacOSXNotifyExitHandler, NULL);
 	    Tcl_SetServiceMode(TCL_SERVICE_ALL);
 	    TclMacOSXNotifierAddRunLoopMode(NSEventTrackingRunLoopMode);
@@ -258,8 +257,7 @@ TkMacOSXNotifyExitHandler(
     TSD_INIT();
 
     Tcl_DeleteEventSource(TkMacOSXEventsSetupProc,
-			  TkMacOSXEventsCheckProc,
-			  NULL);
+	    TkMacOSXEventsCheckProc, NULL);
     tsdPtr->initialized = 0;
 }
 
@@ -268,19 +266,19 @@ TkMacOSXNotifyExitHandler(
  *
  * TkMacOSXEventsSetupProc --
  *
- *	This procedure implements the setup part of the MacOSX event
- *	source. It is invoked by Tcl_DoOneEvent before calling
- *      TkMacOSXEventsProc to process all queued NSEvents.  In our
- *      case, all we need to do is to set the Tcl MaxBlockTime to
- *      0 before starting the loop to process all queued NSEvents.
+ *	This procedure implements the setup part of the MacOSX event source. It
+ *	is invoked by Tcl_DoOneEvent before calling TkMacOSXEventsProc to
+ *	process all queued NSEvents.  In our case, all we need to do is to set
+ *	the Tcl MaxBlockTime to 0 before starting the loop to process all
+ *	queued NSEvents.
  *
  * Results:
  *	None.
  *
  * Side effects:
  *
- *	If NSEvents are queued, then the maximum block time will be set
- *	to 0 to ensure that control returns immediately to Tcl.
+ *	If NSEvents are queued, then the maximum block time will be set to 0 to
+ *	ensure that control returns immediately to Tcl.
  *
  *----------------------------------------------------------------------
  */
@@ -291,15 +289,24 @@ TkMacOSXEventsSetupProc(
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
-    /* runloopMode will be nil if we are in a Tcl event loop. */
+
+    /*
+     * runloopMode will be nil if we are in a Tcl event loop.
+     */
+
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
 	static const Tcl_Time zeroBlockTime = { 0, 0 };
 	[NSApp _resetAutoreleasePool];
-	/* Call this with dequeue=NO -- just checking if the queue is empty. */
-	NSEvent *currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-				       untilDate:[NSDate distantPast]
-				       inMode:GetRunLoopMode(TkMacOSXGetModalSession())
-				       dequeue:NO];
+
+	/*
+	 * Call this with dequeue=NO -- just checking if the queue is empty.
+	 */
+
+	NSEvent *currentEvent =
+	        [NSApp nextEventMatchingMask:NSAnyEventMask
+			untilDate:[NSDate distantPast]
+			inMode:GetRunLoopMode(TkMacOSXGetModalSession())
+			dequeue:NO];
 	if (currentEvent) {
 	    if (currentEvent.type > 0) {
 		Tcl_SetMaxBlockTime(&zeroBlockTime);
@@ -313,15 +320,15 @@ TkMacOSXEventsSetupProc(
  *
  * TkMacOSXEventsCheckProc --
  *
- *	This procedure loops through all NSEvents waiting in the
- *      TKApplication event queue, generating X events from them.
+ *	This procedure loops through all NSEvents waiting in the TKApplication
+ *      event queue, generating X events from them.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	NSevents are used to generate X events, which are added to the
- *      Tcl event queue.
+ *	NSevents are used to generate X events, which are added to the Tcl
+ *      event queue.
  *
  *----------------------------------------------------------------------
  */
@@ -331,34 +338,48 @@ TkMacOSXEventsCheckProc(
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
-    /* runloopMode will be nil if we are in a Tcl event loop. */
+
+    /*
+     * runloopMode will be nil if we are in a Tcl event loop.
+     */
+
     if (flags & TCL_WINDOW_EVENTS && !runloopMode) {
 	NSEvent *currentEvent = nil;
 	NSEvent *testEvent = nil;
 	NSModalSession modalSession;
-	/* It is possible for the SetupProc to be called before this function
+
+	/*
+	 * It is possible for the SetupProc to be called before this function
 	 * returns.  This happens, for example, when we process an event which
 	 * opens a modal window.  To prevent premature release of our
 	 * application-wide autorelease pool by a nested call to the SetupProc,
 	 * we must lock it here.
 	 */
+
 	[NSApp _lockAutoreleasePool];
 	do {
 	    modalSession = TkMacOSXGetModalSession();
-	    	    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-					      untilDate:[NSDate distantPast]
-						 inMode:GetRunLoopMode(modalSession)
-						dequeue:NO];
-	    /* We must not steal any events during LiveResize. */
+	    testEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+		    untilDate:[NSDate distantPast]
+		    inMode:GetRunLoopMode(modalSession)
+		    dequeue:NO];
+
+	    /*
+	     * We must not steal any events during LiveResize.
+	     */
+
 	    if (testEvent && [[testEvent window] inLiveResize]) {
 		break;
 	    }
 	    currentEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
-					      untilDate:[NSDate distantPast]
-						 inMode:GetRunLoopMode(modalSession)
-						dequeue:YES];
+		    untilDate:[NSDate distantPast]
+		    inMode:GetRunLoopMode(modalSession)
+		    dequeue:YES];
 	    if (currentEvent) {
-		/* Generate Xevents. */
+		/*
+		 * Generate Xevents.
+		 */
+
 		int oldServiceMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
 		NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
 		Tcl_SetServiceMode(oldServiceMode);
@@ -372,16 +393,18 @@ TkMacOSXEventsCheckProc(
 			[NSApp sendEvent:currentEvent];
 		    }
 		}
-
 	    } else {
 		break;
 	    }
 	} while (1);
-	/* Now we can unlock the pool. */
+
+	/*
+	 * Now we can unlock the pool.
+	 */
+
 	[NSApp _unlockAutoreleasePool];
     }
 }
-
 
 /*
  * Local Variables:

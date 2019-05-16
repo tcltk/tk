@@ -189,25 +189,32 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "ListViewWindowHeaderBackground",	    HIBackground, kThemeBackgroundListViewWindowHeader },	    /* 163 */
     { "SecondaryGroupBoxBackground",	    HIBackground, kThemeBackgroundSecondaryGroupBox },		    /* 164 */
     { "MetalBackground",		    HIBackground, kThemeBackgroundMetal },			    /* 165 */
-    { "TtkBackground",			    ttkBackground, 0 },	    					    /* 166 */
-    { "TtkBackground1",			    ttkBackground, 1 },						    /* 167 */
-    { "TtkBackground2",			    ttkBackground, 2 },						    /* 168 */
-    { "TtkBackground3",			    ttkBackground, 3 },						    /* 169 */
-    { "TtkBackground4",			    ttkBackground, 4 },						    /* 170 */
-    { "TtkBackground5",			    ttkBackground, 5 },						    /* 171 */
-    { "TtkBackground6",			    ttkBackground, 6 },						    /* 172 */
-    { "TtkBackground7",			    ttkBackground, 7 },						    /* 173 */
+
+    /*
+     * Colors based on "semantic" NSColors.
+     */
+
+    { "WindowBackgroundColor",		    ttkBackground, 0 },	    					    /* 166 */
+    { "WindowBackgroundColor1",		    ttkBackground, 1 },						    /* 167 */
+    { "WindowBackgroundColor2",		    ttkBackground, 2 },						    /* 168 */
+    { "WindowBackgroundColor3",		    ttkBackground, 3 },						    /* 169 */
+    { "WindowBackgroundColor4",		    ttkBackground, 4 },						    /* 170 */
+    { "WindowBackgroundColor5",		    ttkBackground, 5 },						    /* 171 */
+    { "WindowBackgroundColor6",		    ttkBackground, 6 },						    /* 172 */
+    { "WindowBackgroundColor7",		    ttkBackground, 7 },						    /* 173 */
     { "TextColor",			    semantic, 0 },						    /* 174 */
     { "SelectedTextColor",		    semantic, 1 },						    /* 175 */
     { "LabelColor",			    semantic, 2 },						    /* 176 */
     { "ControlTextColor",      		    semantic, 3 },						    /* 177 */
     { "DisabledControlTextColor",	    semantic, 4 },						    /* 178 */
-    { "TextBackgroundColor",		    semantic, 5 },						    /* 179 */
-    { "SelectedTextBackgroundColor",	    semantic, 6 },						    /* 180 */
+    { "SelectedTabTextColor",		    semantic, 5 },						    /* 179 */
+    { "TextBackgroundColor",		    semantic, 6 },						    /* 180 */
+    { "SelectedTextBackgroundColor",	    semantic, 7 },						    /* 181 */
+    { "ControlAccentColor",		    semantic, 8 },						    /* 182 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 180
+#define MAX_PIXELCODE 182
 
 /*
  *----------------------------------------------------------------------
@@ -258,6 +265,9 @@ GetEntryFromPixelCode(
  */
 
 static NSColorSpace* deviceRGB = NULL;
+static CGFloat blueAccentRGBA[4] = {0, 122.0 / 255, 1.0, 1.0};
+static CGFloat windowBackground[4] =
+    {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
 static OSStatus
 SetCGColorComponents(
@@ -268,13 +278,19 @@ SetCGColorComponents(
     OSStatus err = noErr;
     NSColor *bgColor, *color;
     CGFloat rgba[4] = {0, 0, 0, 1};
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101400
+    NSInteger colorVariant;
+    static CGFloat graphiteAccentRGBA[4] =
+	{152.0 / 255, 152.0 / 255, 152.0 / 255, 1.0};
+#endif
+
     if (!deviceRGB) {
 	deviceRGB = [NSColorSpace deviceRGBColorSpace];
     }
 
     /*
-     *  This function is called before our autorelease pool is set up,
-     *  so it needs its own pool.
+     * This function is called before our autorelease pool is set up,
+     * so it needs its own pool.
      */
 
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
@@ -289,30 +305,44 @@ SetCGColorComponents(
 	rgba[2] = ((pixel      ) & 0xff) / 255.0;
 	break;
     case ttkBackground:
-	bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
-			   deviceRGB];
-	[bgColor getComponents: rgba];
-	for (int i=0; i<3; i++) {
-	    rgba[i] -= entry.value*(8.0/255.0);
+
+	/*
+	 * Prior to OSX 10.14, getComponents returns black when applied to
+	 * windowBackGroundColor.
+	 */
+
+	if ([NSApp macMinorVersion] < 14) {
+	    for (int i=0; i<3; i++) {
+		rgba[i] = windowBackground[i];
+	    }
+	} else {
+	    bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
+			    deviceRGB];
+	    [bgColor getComponents: rgba];
+	}
+	if (rgba[0] + rgba[1] + rgba[2] < 1.5) {
+	    for (int i=0; i<3; i++) {
+		rgba[i] += entry.value*8.0 / 255.0;
+	    }
+	} else {
+	    for (int i=0; i<3; i++) {
+		rgba[i] -= entry.value*8.0 / 255.0;
+	    }
 	}
 	break;
     case semantic:
 	switch (entry.value) {
 	case 0:
-	    color = [[NSColor textColor] colorUsingColorSpace:
-			  deviceRGB];
+	    color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
 	    break;
 	case 1:
-	    color = [[NSColor selectedTextColor] colorUsingColorSpace:
-			  deviceRGB];
+	    color = [[NSColor selectedTextColor] colorUsingColorSpace: deviceRGB];
 	    break;
 	case 2:
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 101000
-	    color = [[NSColor labelColor] colorUsingColorSpace:
-			  deviceRGB];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+	    color = [[NSColor labelColor] colorUsingColorSpace: deviceRGB];
 #else
-	    color = [[NSColor textColor] colorUsingColorSpace:
-			  deviceRGB];
+	    color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
 #endif
 	    break;
 	case 3:
@@ -324,24 +354,56 @@ SetCGColorComponents(
 			  deviceRGB];
 	    break;
 	case 5:
+	    if ([NSApp macMinorVersion] > 6) {
+		color = [[NSColor whiteColor] colorUsingColorSpace:
+						  deviceRGB];
+	    } else {
+		color = [[NSColor blackColor] colorUsingColorSpace:
+						  deviceRGB];
+	    }
+	    break;
+	case 6:
 	    color = [[NSColor textBackgroundColor] colorUsingColorSpace:
 			  deviceRGB];
 	    break;
-	case 6:
+	case 7:
 	    color = [[NSColor selectedTextBackgroundColor] colorUsingColorSpace:
 			  deviceRGB];
 	    break;
-	default:
-	    if ([NSApp macMinorVersion] < 10) {
-	    color = [[NSColor textColor] colorUsingColorSpace:
-			  deviceRGB];
+	case 8:
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	    if (@available(macOS 10.14, *)) {
+		color = [[NSColor controlAccentColor] colorUsingColorSpace:
+							  deviceRGB];
 	    } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
+		color = [NSColor colorWithColorSpace: deviceRGB
+				 components: blueAccentRGBA
+				 count: 4];
+	    }
+#else
+	    colorVariant = [[NSUserDefaults standardUserDefaults]
+			       integerForKey:@"AppleAquaColorVariant"];
+	    if (colorVariant == 6) {
+		color = [NSColor colorWithColorSpace: deviceRGB
+				 components: graphiteAccentRGBA
+				 count: 4];
+	    } else {
+		color = [NSColor colorWithColorSpace: deviceRGB
+				 components: blueAccentRGBA
+				 count: 4];
+	    }
+#endif
+	    break;
+	default:
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+	    if ([NSApp macMinorVersion] >= 10) {
 		color = [[NSColor labelColor] colorUsingColorSpace:
 			      deviceRGB];
-#endif
 		break;
 	    }
+#endif
+	    color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
+	    break;
 	}
 	[color getComponents: rgba];
 	break;
@@ -360,7 +422,7 @@ SetCGColorComponents(
     default:
 	break;
     }
-    *c = CGColorCreate(deviceRGB.CGColorSpace, rgba );
+    *c = CGColorCreate(deviceRGB.CGColorSpace, rgba);
     [pool drain];
     return err;
 }
@@ -382,21 +444,21 @@ SetCGColorComponents(
  */
 
 MODULE_SCOPE Bool
-TkMacOSXInDarkMode(Tk_Window tkwin) {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
-    return false;
-#else
-    static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
-    TkWindow *winPtr = (TkWindow*)tkwin;
-    NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
-    if (view && [view.effectiveAppearance.name isEqualToString:darkAqua]) {
-	return True;
-    } else {
-	return false;
+TkMacOSXInDarkMode(Tk_Window tkwin)
+{
+    int result = false;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    if ([NSApp macMinorVersion] >= 14) {
+        static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
+        TkWindow *winPtr = (TkWindow*) tkwin;
+        NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
+        result = (view &&
+                  [view.effectiveAppearance.name isEqualToString:darkAqua]);
     }
 #endif
+    return result;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -427,6 +489,7 @@ TkSetMacColor(
     CGColorRef *color = (CGColorRef*)macColor;
     OSStatus err = -1;
     struct SystemColorMapEntry entry;
+
     if (GetEntryFromPixelCode((pixel >> 24) & 0xff, &entry)) {
 	err = ChkErr(SetCGColorComponents, entry, pixel, color);
     }
@@ -572,6 +635,7 @@ TkMacOSXGetNSColor(
     if (cgColor) {
 	NSColorSpace *colorSpace = [[NSColorSpace alloc]
 		initWithCGColorSpace:CGColorGetColorSpace(cgColor)];
+
 	nsColor = [NSColor colorWithColorSpace:colorSpace
 		components:CGColorGetComponents(cgColor)
 		count:CGColorGetNumberOfComponents(cgColor)];
@@ -611,8 +675,9 @@ TkMacOSXSetColorInContext(
     struct SystemColorMapEntry entry;
     CGRect rect;
     int code = (pixel >> 24) & 0xff;
-    HIThemeBackgroundDrawInfo info = { 0, kThemeStateActive, entry.value };
+    HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};;
     static CGColorSpaceRef deviceRGBSpace = NULL;
+
     if (!deviceRGBSpace) {
 	deviceRGBSpace = CGColorSpaceCreateDeviceRGB();
     }
@@ -634,6 +699,7 @@ TkMacOSXSetColorInContext(
 		    kHIThemeOrientationNormal);
 	    break;
 	case HIBackground:
+	    info.kind = entry.value;
 	    rect = CGContextGetClipBoundingBox(context);
 	    err = ChkErr(HIThemeApplyBackground, &rect, &info,
 		    context, kHIThemeOrientationNormal);
@@ -693,14 +759,16 @@ TkpGetColor(
     if (strncasecmp(name, "system", 6) == 0) {
 	Tcl_Obj *strPtr = Tcl_NewStringObj(name+6, -1);
 	int idx, result;
+
 	result = Tcl_GetIndexFromObjStruct(NULL, strPtr, systemColorMap,
-		    sizeof(struct SystemColorMapEntry), NULL, TCL_EXACT, &idx);
+		sizeof(struct SystemColorMapEntry), NULL, TCL_EXACT, &idx);
 	Tcl_DecrRefCount(strPtr);
 	if (result == TCL_OK) {
 	    OSStatus err;
 	    CGColorRef c;
 	    unsigned char pixelCode = idx + MIN_PIXELCODE;
 	    struct SystemColorMapEntry entry = systemColorMap[idx];
+
 	    err = ChkErr(SetCGColorComponents, entry, 0, &c);
 	    if (err == noErr) {
 		const size_t n = CGColorGetNumberOfComponents(c);
@@ -716,12 +784,12 @@ TkpGetColor(
 		    color.red = color.green = color.blue = rgba[0] * 65535.0;
 		    break;
 		default:
-		  Tcl_Panic("CGColor with %d components", (int) n);
+		    Tcl_Panic("CGColor with %d components", (int) n);
 		}
 		color.pixel = ((((((pixelCode << 8)
-		    | ((color.red   >> 8) & 0xff)) << 8)
-		    | ((color.green >> 8) & 0xff)) << 8)
-		    | ((color.blue  >> 8) & 0xff));
+			| ((color.red   >> 8) & 0xff)) << 8)
+			| ((color.green >> 8) & 0xff)) << 8)
+			| ((color.blue  >> 8) & 0xff));
 		CGColorRelease(c);
 		goto validXColor;
 	    }

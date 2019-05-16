@@ -18,8 +18,8 @@ test scrollbar-swapout-1 "Don't use core scrollbars on OSX..." \
 } -body {
     ttk::scrollbar .sb -command "yadda"
     list [winfo class .sb] [.sb cget -command]
-} -result [list TScrollbar yadda] -cleanup { 
-    destroy .sb 
+} -result [list TScrollbar yadda] -cleanup {
+    destroy .sb
 }
 
 test scrollbar-swapout-2 "... regardless of whether -style ..." \
