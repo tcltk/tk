@@ -1371,7 +1371,7 @@ ScaleVarProc(
                 }
             } while (probe);
             if (probe) {
-                /* 
+                /*
                  * We were able to fetch the unset trace for our
                  * varNamePtr, which means it is not unset and not
                  * the cause of this unset trace. Instead some outdated
