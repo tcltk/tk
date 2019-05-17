@@ -233,6 +233,9 @@ MODULE_SCOPE int	TkMacOSXStandardAboutPanelObjCmd(ClientData clientData,
 MODULE_SCOPE int	TkMacOSXIconBitmapObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
+			    int inset, int thickness);
+MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -337,8 +340,9 @@ VISIBILITY_HIDDEN
 VISIBILITY_HIDDEN
 @interface TKContentView : NSView <NSTextInput>
 {
+@private
     NSString *privateWorkingText;
-    #ifdef __i386__
+#ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     Bool _needsRedisplay;
 #endif
