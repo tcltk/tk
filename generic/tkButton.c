@@ -1636,7 +1636,7 @@ ButtonVarProc(
 		}
 	    } while (probe);
 	    if (probe) {
-		/* 
+		/*
 		 * We were able to fetch the unset trace for our
 		 * selVarNamePtr, which means it is not unset and not
 		 * the cause of this unset trace. Instead some outdated
@@ -1739,7 +1739,7 @@ ButtonTextVarProc(
 
 	    /*
 	     * An unset trace on some variable brought us here, but is it
-	     * the variable we have stored in butPtr->textVarNamePtr ? 
+	     * the variable we have stored in butPtr->textVarNamePtr ?
 	     */
 
 	    ClientData probe = NULL;
@@ -1754,7 +1754,7 @@ ButtonTextVarProc(
 		}
 	    } while (probe);
 	    if (probe) {
-		/* 
+		/*
 		 * We were able to fetch the unset trace for our
 		 * textVarNamePtr, which means it is not unset and not
 		 * the cause of this unset trace. Instead some outdated
