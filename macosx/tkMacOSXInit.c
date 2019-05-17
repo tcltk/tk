@@ -116,6 +116,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
+
     /*
      * It is not safe to force activation of the NSApp until this method is
      * called. Activating too early can cause the menu bar to be unresponsive.
@@ -131,8 +132,8 @@ static char scriptPath[PATH_MAX + 1] = "";
     [NSApp _lockAutoreleasePool];
     while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];
-
-    Tk_MacOSXServices_Init(_eventInterp);
+    
+    TkMacOSXServices_Init(_eventInterp);
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -449,7 +450,7 @@ int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST o
   CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
  
   /* Convert the string reference into a C string. */
-  char *path = CFStringGetCStringPtr(appPath, encodingMethod);
+  char *path = (char *) CFStringGetCStringPtr(appPath, encodingMethod);
 
   Tcl_SetResult(ip, path, NULL);
 

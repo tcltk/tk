@@ -50,9 +50,9 @@ int ServicesEventProc(
 @implementation TkService
 
 + (void) initialize {
-    NSArray *sendTypes = [NSArray arrayWithObjects:NSPasteboardTypeString, nil];
-
-    [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:nil];
+    NSArray *sendTypes = [NSArray arrayWithObjects:@"NSStringPboardType",
+				  @"NSPasteboardTypeString", nil];
+    [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:sendTypes];
     NSUpdateDynamicServices();
     return;
 }
@@ -61,7 +61,8 @@ int ServicesEventProc(
 - (id)validRequestorForSendType:(NSString *)sendType
 		     returnType:(NSString *)returnType
 {
-    if ([sendType isEqual:NSStringPboardType]) {
+    if ([sendType isEqualToString:@"NSStringPboardType"] ||
+	[sendType isEqualToString:@"NSPasteboardTypeString"]) {
 	return self;
     }
     return [super validRequestorForSendType:sendType returnType:returnType];
@@ -87,19 +88,26 @@ int ServicesEventProc(
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard
 			     types:(NSArray *)types
 {
-    NSArray *typesDeclared;
-    if ([types containsObject:NSStringPboardType] == NO) {
+    NSArray *typesDeclared = nil;
+    NSString *pboardType = nil;
+    for (NSString *typeString in types) {
+	if ([typeString isEqualToString:@"NSStringPboardType"] ||
+	    [typeString isEqualToString:@"NSPasteboardTypeString"]) {
+	    typesDeclared = [NSArray arrayWithObject:typeString];
+	    pboardType = typeString;
+	    break;
+	}
+    }
+    if (!typesDeclared) {
 	return NO;
     }
-
     Tcl_Eval(ServicesInterp,"selection get");
     char *copystring;
     copystring = Tcl_GetString(Tcl_GetObjResult(ServicesInterp));
 
     NSString *writestring = [NSString stringWithUTF8String:copystring];
-    typesDeclared = [NSArray arrayWithObject:NSStringPboardType];
     [pboard declareTypes:typesDeclared owner:nil];
-    return [pboard setString:writestring forType:NSPasteboardTypeString];
+    return [pboard setString:writestring forType:pboardType];
 }
 
 
@@ -112,7 +120,7 @@ int ServicesEventProc(
 	      userData:(NSString *)data
 		 error:(NSString **)error
 {
-    NSString *pboardString;
+    NSString *pboardString, *pboardType;
     NSArray *types = [pboard types];
     Tcl_Event *event;
 
@@ -121,19 +129,24 @@ int ServicesEventProc(
      * available to Tcl service.
      */
 
-    if ([types containsObject:NSStringPboardType] &&
-	(pboardString = [pboard stringForType:NSStringPboardType])) {
-
+    for (NSString *typeString in types) {
+	if ([typeString isEqualToString:@"NSStringPboardType"] ||
+	    [typeString isEqualToString:@"NSPasteboardTypeString"]) {
+	    pboardString = [pboard stringForType:typeString];
+	    pboardType = typeString;
+	    break;
+	}
+    }
+    if (pboardString) {
 	NSPasteboard *generalpasteboard = [NSPasteboard generalPasteboard];
-	[generalpasteboard declareTypes:[NSArray
-	     arrayWithObjects:NSStringPboardType, nil] owner:nil];
-	[generalpasteboard setString:pboardString forType: NSPasteboardTypeString];
+	[generalpasteboard declareTypes:[NSArray arrayWithObjects:pboardType, nil]
+				  owner:nil];
+	[generalpasteboard setString:pboardString forType:pboardType];
 	event = ckalloc(sizeof(Tcl_Event));
 	event->proc = ServicesEventProc;
 	Tcl_QueueEvent((Tcl_Event *)event, TCL_QUEUE_TAIL);
     }
 }
-
 @end
 
 
@@ -205,7 +218,7 @@ int TkMacOSXRegisterServiceWidgetObjCmd (
  * Initalize the package in the tcl interpreter, create tcl commands.
  */
 
-int Tk_MacOSXServices_Init(
+int TkMacOSXServices_Init(
     Tcl_Interp *interp)
 {
     /*
