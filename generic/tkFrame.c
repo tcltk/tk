@@ -101,6 +101,9 @@ typedef struct {
 				 * Tk_GetImage, or NULL if bgimgPtr is
 				 * NULL. */
     int tile;			/* Whether to tile the bgimg. */
+#ifndef TK_NO_DOUBLE_BUFFERING
+    GC copyGC;			/* GC for copying when double-buffering. */
+#endif /* TK_NO_DOUBLE_BUFFERING */
 } Frame;
 
 /*
@@ -332,7 +335,7 @@ static int		CreateFrame(ClientData clientData, Tcl_Interp *interp,
 static void		DestroyFrame(void *memPtr);
 static void		DestroyFramePartly(Frame *framePtr);
 static void		DisplayFrame(ClientData clientData);
-static void		DrawFrameBackground(Tk_Window tkwin,
+static void		DrawFrameBackground(Tk_Window tkwin, Pixmap pixmap,
 			    int highlightWidth, int borderWidth,
 			    Tk_Image bgimg, int bgtile);
 static void		FrameBgImageProc(ClientData clientData,
@@ -897,6 +900,11 @@ DestroyFrame(
 	    Tk_FreeGC(framePtr->display, labelframePtr->textGC);
 	}
     }
+#ifndef TK_NO_DOUBLE_BUFFERING
+    if (framePtr->copyGC != NULL) {
+	Tk_FreeGC(framePtr->display, framePtr->copyGC);
+    }
+#endif /* TK_NO_DOUBLE_BUFFERING */
     if (framePtr->colormap != None) {
 	Tk_FreeColormap(framePtr->display, framePtr->colormap);
     }
@@ -1155,6 +1163,15 @@ FrameWorldChanged(
 	    (labelframePtr->labelWin == NULL);
     anyWindowLabel = (framePtr->type == TYPE_LABELFRAME) &&
 	    (labelframePtr->labelWin != NULL);
+
+#ifndef TK_NO_DOUBLE_BUFFERING
+    gcValues.graphics_exposures = False;
+    gc = Tk_GetGC(tkwin, GCGraphicsExposures, &gcValues);
+    if (framePtr->copyGC != NULL) {
+	Tk_FreeGC(framePtr->display, framePtr->copyGC);
+    }
+    framePtr->copyGC = gc;
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	/*
@@ -1500,6 +1517,20 @@ DisplayFrame(
 	return;
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
+    /*
+     * In order to avoid screen flashes, this function redraws the frame into
+     * off-screen memory, then copies it back on-screen in a single operation.
+     * This means there's no point in time where the on-screen image has been
+     * cleared.
+     */
+
+    pixmap = Tk_GetPixmap(framePtr->display, Tk_WindowId(tkwin),
+	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+#else
+    pixmap = Tk_WindowId(tkwin);
+#endif /* TK_NO_DOUBLE_BUFFERING */
+
     if (framePtr->type != TYPE_LABELFRAME) {
 	/*
 	 * Pass to platform specific draw function. In general, it just draws
@@ -1507,10 +1538,10 @@ DisplayFrame(
 	 */
 
     noLabel:
-	TkpDrawFrame(tkwin, framePtr->border, hlWidth,
+	TkpDrawFrameEx(tkwin, pixmap, framePtr->border, hlWidth,
 		framePtr->borderWidth, framePtr->relief);
 	if (framePtr->bgimg) {
-	    DrawFrameBackground(tkwin, hlWidth, framePtr->borderWidth,
+	    DrawFrameBackground(tkwin, pixmap, hlWidth, framePtr->borderWidth,
 		    framePtr->bgimg, framePtr->tile);
 	}
     } else {
@@ -1520,20 +1551,6 @@ DisplayFrame(
 		(labelframePtr->labelWin == NULL)) {
 	    goto noLabel;
 	}
-
-#ifndef TK_NO_DOUBLE_BUFFERING
-	/*
-	 * In order to avoid screen flashes, this function redraws the frame
-	 * into off-screen memory, then copies it back on-screen in a single
-	 * operation. This means there's no point in time where the on-screen
-	 * image has been cleared.
-	 */
-
-	pixmap = Tk_GetPixmap(framePtr->display, Tk_WindowId(tkwin),
-		Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
-#else
-	pixmap = Tk_WindowId(tkwin);
-#endif /* TK_NO_DOUBLE_BUFFERING */
 
 	/*
 	 * Clear the pixmap.
@@ -1646,22 +1663,52 @@ DisplayFrame(
 			labelframePtr->labelBox.height);
 	    }
 	}
-
-#ifndef TK_NO_DOUBLE_BUFFERING
-	/*
-	 * Everything's been redisplayed; now copy the pixmap onto the screen
-	 * and free up the pixmap.
-	 */
-
-	XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
-		labelframePtr->textGC, hlWidth, hlWidth,
-		(unsigned) (Tk_Width(tkwin) - 2 * hlWidth),
-		(unsigned) (Tk_Height(tkwin) - 2 * hlWidth),
-		hlWidth, hlWidth);
-	Tk_FreePixmap(framePtr->display, pixmap);
-#endif /* TK_NO_DOUBLE_BUFFERING */
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
+    /*
+     * Everything's been redisplayed; now copy the pixmap onto the screen and
+     * free up the pixmap.
+     */
+
+    XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin), framePtr->copyGC,
+	    0, 0, (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin),
+	    0, 0);
+    Tk_FreePixmap(framePtr->display, pixmap);
+#endif /* TK_NO_DOUBLE_BUFFERING */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDrawFrame --
+ *
+ *	This procedure draws the rectangular frame area.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws inside the tkwin area.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpDrawFrame(
+    Tk_Window tkwin,
+    Tk_3DBorder border,
+    int highlightWidth,
+    int borderWidth,
+    int relief)
+{
+    /*
+     * Legacy shim to allow for external callers. Internal ones use
+     * non-exposed TkpDrawFrameEx directly so they can use double-buffering.
+     */
+
+    TkpDrawFrameEx(tkwin, Tk_WindowId(tkwin), border,
+	    highlightWidth, borderWidth, relief);
 }
 
 /*
@@ -2139,6 +2186,7 @@ FrameBgImageProc(
 static void
 DrawFrameBackground(
     Tk_Window tkwin,
+    Pixmap pixmap,
     int highlightWidth,
     int borderWidth,
     Tk_Image bgimg,
@@ -2169,7 +2217,7 @@ DrawFrameBackground(
 		if (y - bw + imageHeight > height) {
 		    h = (height + bw) - y;
 		}
-		Tk_RedrawImage(bgimg, 0, 0, w, h, Tk_WindowId(tkwin), x, y);
+		Tk_RedrawImage(bgimg, 0, 0, w, h, pixmap, x, y);
 	    }
 	}
     } else {
@@ -2197,7 +2245,7 @@ DrawFrameBackground(
 	    yOff = bw;
 	    h = height;
 	}
-	Tk_RedrawImage(bgimg, x, y, w, h, Tk_WindowId(tkwin), xOff, yOff);
+	Tk_RedrawImage(bgimg, x, y, w, h, pixmap, xOff, yOff);
     }
 }
 
