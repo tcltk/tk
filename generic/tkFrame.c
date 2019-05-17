@@ -1671,9 +1671,11 @@ DisplayFrame(
      * free up the pixmap.
      */
 
-    XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin), framePtr->copyGC,
-	    0, 0, (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin),
-	    0, 0);
+    XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
+	    framePtr->copyGC, hlWidth, hlWidth,
+	    (unsigned) (Tk_Width(tkwin) - 2 * hlWidth),
+	    (unsigned) (Tk_Height(tkwin) - 2 * hlWidth),
+	    hlWidth, hlWidth);
     Tk_FreePixmap(framePtr->display, pixmap);
 #endif /* TK_NO_DOUBLE_BUFFERING */
 }
