@@ -72,12 +72,15 @@ XDestroyWindow(
 	}
 	if (macWin->visRgn) {
 	    CFRelease(macWin->visRgn);
+            macWin->visRgn = NULL;
 	}
 	if (macWin->aboveVisRgn) {
 	    CFRelease(macWin->aboveVisRgn);
+            macWin->aboveVisRgn = NULL;
 	}
 	if (macWin->drawRgn) {
 	    CFRelease(macWin->drawRgn);
+            macWin->drawRgn = NULL;
 	}
 
 	if (macWin->toplevel->referenceCount == 0) {
@@ -88,12 +91,15 @@ XDestroyWindow(
     }
     if (macWin->visRgn) {
 	CFRelease(macWin->visRgn);
+        macWin->visRgn = NULL;
     }
     if (macWin->aboveVisRgn) {
 	CFRelease(macWin->aboveVisRgn);
+        macWin->aboveVisRgn = NULL;
     }
     if (macWin->drawRgn) {
 	CFRelease(macWin->drawRgn);
+        macWin->drawRgn = NULL;
     }
     macWin->view = nil;
 
