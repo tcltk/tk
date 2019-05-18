@@ -215,7 +215,7 @@ int TkMacOSXRegisterServiceWidgetObjCmd (
 }
 
 /*
- * Initalize the package in the tcl interpreter, create tcl commands.
+ * Initalize the package in the Tcl interpreter, create Tcl commands.
  */
 
 int TkMacOSXServices_Init(

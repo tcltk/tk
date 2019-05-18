@@ -132,8 +132,6 @@ static char scriptPath[PATH_MAX + 1] = "";
     [NSApp _lockAutoreleasePool];
     while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];
-    
-    TkMacOSXServices_Init(_eventInterp);
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -328,6 +326,17 @@ TkpInit(
 	[pool drain];
 	[NSApp _setup:interp];
 	[NSApp finishLaunching];
+	Tk_MacOSXSetupTkNotifier();
+
+	/*
+	 * If the root window is mapped before the App has finished launching
+	 * it will open off screen (see ticket 56a1823c73).  To avoid this we
+	 * ask Tk to process an event with no wait.  We expect Tcl_DoOneEvent
+	 * to wait until the Mac event loop has been created and then return
+	 * immediately since the queue is empty.
+	 */
+
+	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
 
 	/*
 	 * If we don't have a TTY and stdin is a special character file of
@@ -364,8 +373,6 @@ TkpInit(
 
     }
 
-    Tk_MacOSXSetupTkNotifier();
-
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
@@ -382,6 +389,14 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+
+    /*
+     * Initialize the NSServices object here. Apple's docs say to do this
+     * in applicationDidFinishLaunching, but the Tcl interpreter is not 
+     * initialized until this function call. 
+     */
+    
+    TkMacOSXServices_Init(interp);
 
     return TCL_OK;
 }
@@ -437,19 +452,33 @@ TkpGetAppName(
  *	None.
  *
  *----------------------------------------------------------------------
- *//*Tcl function to get path to app bundle.*/
-int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]) {
+ */
+int TkMacOSXGetAppPath(
+		       ClientData cd,
+		       Tcl_Interp *ip,
+		       int objc,
+		       Tcl_Obj *CONST objv[])
+{
 
   CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
 
   
-  /* Convert the URL reference into a string reference. */
+  /* 
+   * Convert the URL reference into a string reference. 
+   */
+  
   CFStringRef appPath = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
  
-  /* Get the system encoding method. */
+  /* 
+   * Get the system encoding method. 
+   */
+  
   CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
  
-  /* Convert the string reference into a C string. */
+  /* 
+   * Convert the string reference into a C string. 
+   */
+  
   char *path = (char *) CFStringGetCStringPtr(appPath, encodingMethod);
 
   Tcl_SetResult(ip, path, NULL);
@@ -459,7 +488,7 @@ int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST o
   return TCL_OK;
 
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
