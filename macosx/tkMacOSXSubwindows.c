@@ -168,15 +168,6 @@ XMapWindow(
 	    } else {
 		[win orderFrontRegardless];
 	    }
-
-	    /*
-	     * In some cases the toplevel will not be drawn unless we process
-	     * all pending events now.  See ticket 56a1823c73.
-	     */
-
-	    [NSApp _lockAutoreleasePool];
-	    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
-	    [NSApp _unlockAutoreleasePool];
 	} else {
 	    TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
 
