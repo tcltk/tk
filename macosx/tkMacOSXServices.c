@@ -161,8 +161,6 @@ int TkMacOSXRegisterServiceWidgetObjCmd (
 					 Tcl_Obj *CONST objv[])
 {
 
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-
     /*
      * Need proper number of args.
      */
@@ -210,7 +208,6 @@ int TkMacOSXRegisterServiceWidgetObjCmd (
     	[serviceview setFrame:frame];
     }
     [serviceview release];
-    [pool release];
     return TCL_OK;
 }
 
@@ -221,11 +218,6 @@ int TkMacOSXRegisterServiceWidgetObjCmd (
 int TkMacOSXServices_Init(
     Tcl_Interp *interp)
 {
-    /*
-     * Set up an autorelease pool.
-     */
-
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
     /*
      * Initialize instance of TclServices to provide service functionality.
@@ -234,7 +226,6 @@ int TkMacOSXServices_Init(
     TkService *service = [[TkService alloc] init];
     ServicesInterp = interp;
     [NSApp setServicesProvider:service];
-    [pool drain];
     return TCL_OK;
 }
 
