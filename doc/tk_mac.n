@@ -156,9 +156,8 @@ menu in the Application menu item. The
 menu item allows for inter-application communication; data from one
 application, such as selected text, can be sent to another application
 for processing, for example to Safari as a search item for Google, or
-to TextEdit to be appended to a file. Tk includes a stub version of
-this command that displays a dialog with the data sent. This proc
-should be rewritten in an application script for customization: 
+to TextEdit to be appended to a file. An example of the proc is below,
+and should be rewritten in an application script for customization: 
 .RS
 .PP
 .CS
