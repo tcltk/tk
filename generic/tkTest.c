@@ -1562,7 +1562,7 @@ ImageDisplay(
 {
     TImageInstance *instPtr = clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
-
+    
     /*
      * The purpose of the test image type is to track the calls to an image
      * display proc and record the parameters passed in each call.  On macOS
@@ -1574,10 +1574,11 @@ ImageDisplay(
      * needing display, and will be redrawn during a future asynchronous call
      * to drawRect.  This will generate an other call to this display proc,
      * and the recorded data will show extra calls, causing the test to fail.
-     * To avoid this, we can set the [NSApp simulateDrawing] flag, which will
-     * cause all low level drawing routines to return immediately and not
-     * schedule the window for drawing later.  This flag is cleared by the
-     * next call to XSync, which is called by the update command.
+     * To avoid this, we only log the call when the call occurs outside of the
+     * drawRect method.  We expect this to happen the first time the display
+     * proc is called and the second time, when the actual drawing occurs nothing
+     * will be logged.  (In fact, this second call may be after the test has
+     * finished.)
      */
 
     sprintf(buffer, "%s display %d %d %d %d",
