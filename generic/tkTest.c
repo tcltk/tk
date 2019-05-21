@@ -31,9 +31,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define APP_IS_DRAWING TkTestAppIsDrawing()
+#define LOG_DISPLAY TkTestLogDisplay()
 #else
-#define APP_IS_DRAWING 1
+#define LOG_DISPLAY 1
 #endif
 
 #ifdef __UNIX__
@@ -1581,7 +1581,7 @@ ImageDisplay(
      * not just the changed portion.  Tests must account for this.
      */
 
-    if (APP_IS_DRAWING) {
+    if (LOG_DISPLAY) {
 	sprintf(buffer, "%s display %d %d %d %d",
 		instPtr->masterPtr->imageName, imageX, imageY, width, height);
 	Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName,
