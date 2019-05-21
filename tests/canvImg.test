@@ -721,8 +721,8 @@ test canvImg-9.1 {DisplayImage procedure} -constraints testImageType -setup {
 	image delete foo
 } -result {75 150 105 165}
 
-if {[tk windowingsystem] == "aqua"} {
-    # Aqua will redraw the entire image if the redraw occurs in drawRect.
+if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
+    # Aqua >= 10.14 will redraw the entire image.
     set result_10_1 {{foo display 0 0 30 15}}
 } else {
     set result_10_1 {{foo display 2 4 6 8}} 
@@ -773,8 +773,8 @@ test canvImg-11.2 {ImageChangedProc procedure} -constraints {
 	.c delete all
 	image delete foo
 } -result {30 75 70 125}
-if {[tk windowingsystem] == "aqua"} {
-    # Aqua will redraw the entire image if the redraw occurs in drawRect.
+if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
+    # Aqua >= 10.14 will redraw the entire image.
     set result_11_3 {{foo2 display 0 0 80 60}}
 } else {
     set result_11_3 {{foo2 display 0 0 20 40}} 
