@@ -166,9 +166,11 @@ test canvImg-4.2 {ConfigureImage procedure} -constraints testImageType -setup {
     update
     set x {}
     set y {}
+    set timer [after 3000 {set y "timed out"}]
     .c itemconfigure i1 -image foo2
     update idletasks
-    update
+    vwait y
+    after cancel timer
     list $x $y [.c bbox i1]
 } -cleanup {
 	.c delete all
