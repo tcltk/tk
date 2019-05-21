@@ -12,24 +12,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-#
-# This procedure is used to make sure that a test image has
-# actually been displayed from inside the [NSView drawRect] method.
-if {[tk windowingsystem] == "aqua"} {
-    proc imageWait {} {
-	# Allow the display proc to fail and trigger drawRect.
-	update idletasks;
-	# Wait a bit for drawRect to actually be run.
-	set timeout 0;
-	after 200 {set timeout 1};
-	vwait timeout
-    }
-} else {
-    proc imageWait {} {
-	update;
-    }
-}
-
 imageInit
 
 # Canvas used in some tests in the whole file
@@ -80,8 +62,11 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     .c create image 100 150 -image myimage
     update
     set x {}
+    set timer [after 3000 {set x "timed out"}]
     image create test myimage -variable x
-    imageWait
+    update idletasks
+    vwait x
+    after cancel timer
     return $x
 } -cleanup {
     imageCleanup
@@ -378,8 +363,11 @@ test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c create image 50 50 -image foo
     update
     set x {}
+    set timer [after 3000 {set x "timed out"}]
     foo changed 5 6 7 8 30 15
-    imageWait
+    update idletasks
+    vwait x
+    after cancel timer
     return $x
 } -cleanup {
     .c delete all
