@@ -61,11 +61,6 @@ test imgSVGnano-1.4 {image options} -setup {
 } -body {
     image create photo foo -data $data(plus)
     foo configure -format {svg -scale 2}
-    foo configure -format {svg -unit pt}
-    foo configure -format {svg -unit mm}
-    foo configure -format {svg -unit cm}
-    foo configure -format {svg -unit in}
-    foo configure -format {svg -unit px}
     foo configure -format {svg -dpi 600}
     list [image width foo] [image height foo]
 } -cleanup {
@@ -84,7 +79,7 @@ test imgSVGnano-2.3 {using bad option} -body {
     foo configure -format {svg 1.0}
 } -cleanup {
     rename foo ""
-} -returnCodes error -result {bad option "1.0": must be -dpi, -scale, or -unit}
+} -returnCodes error -result {bad option "1.0": must be -dpi or -scale}
 
 };# end of namespace svgnano
 
