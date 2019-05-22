@@ -30,8 +30,6 @@
 /* Additional parameters to nsvgRasterize() */
 
 typedef struct {
-    double x;
-    double y;
     double scale;
 } RastOpts;
 
@@ -324,14 +322,13 @@ ParseSVGWithOptions(
     Tcl_Obj **objv = NULL;
     int objc = 0;
     double dpi = 96.0;
-    char unit[3], *p;
     char *inputCopy = NULL;
     NSVGimage *nsvgImage;
     static const char *const fmtOptions[] = {
-        "-dpi", "-scale", "-unit", NULL
+        "-dpi", "-scale", NULL
     };
     enum fmtOptions {
-	OPT_DPI, OPT_SCALE, OPT_UNIT
+	OPT_DPI, OPT_SCALE
     };
 
     /*
@@ -352,8 +349,6 @@ ParseSVGWithOptions(
      * Process elements of format specification as a list.
      */
 
-    strcpy(unit, "px");
-    ropts->x = ropts->y = 0.0;
     ropts->scale = 1.0;
     if ((formatObj != NULL) &&
 	    Tcl_ListObjGetElements(interp, formatObj, &objc, &objv) != TCL_OK) {
@@ -411,17 +406,10 @@ ParseSVGWithOptions(
 		goto error;
 	    }
 	    break;
-	case OPT_UNIT:
-	    p = Tcl_GetString(objv[0]);
-	    if ((p != NULL) && (p[0])) {
-	        strncpy(unit, p, 3);
-		unit[2] = '\0';
-	    }
-	    break;
 	}
     }
 
-    nsvgImage = nsvgParse(inputCopy, unit, (float) dpi);
+    nsvgImage = nsvgParse(inputCopy, "px", (float) dpi);
     if (nsvgImage == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot parse SVG image", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "PARSE_ERROR", NULL);
@@ -486,7 +474,7 @@ RasterizeSVG(
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
 	goto cleanRAST;
     }
-    nsvgRasterize(rast, nsvgImage, (float) ropts->x, (float) ropts->y,
+    nsvgRasterize(rast, nsvgImage, 0, 0,
 	    (float) ropts->scale, imgData, w, h, w * 4);
     /* transfer the data to a photo block */
     svgblock.pixelPtr = imgData;
