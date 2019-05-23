@@ -166,10 +166,14 @@ test canvImg-4.2 {ConfigureImage procedure} -constraints testImageType -setup {
     update
     set x {}
     set y {}
-    set timer [after 3000 {set y "timed out"}]
+    set timer [after 300 {lappend y "timeout"}]
     .c itemconfigure i1 -image foo2
     update idletasks
-    vwait y
+    update
+    # On MacOS we need to wait for the test image display procedure to run.
+    while {"timeout" ni $y && [lindex $y end 1] ne "display"} {
+        vwait y
+    }
     after cancel timer
     list $x $y [.c bbox i1]
 } -cleanup {
