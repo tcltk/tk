@@ -156,18 +156,25 @@ test canvImg-4.1 {ConfiugreImage procedure} -constraints testImageType -setup {
 	.c delete all
 	image delete foo
 } -result {{{foo free}} {}}
-test canvImg-4.2 {ConfiugreImage procedure} -constraints testImageType -setup {
+test canvImg-4.2 {ConfigureImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     image create test foo2 -variable y
     foo2 changed 0 0 0 0 80 60
     .c create image 50 100 -image foo -tags i1 -anchor nw
     update
     set x {}
     set y {}
+    set timer [after 300 {lappend y "timeout"}]
     .c itemconfigure i1 -image foo2
+    update idletasks
     update
+    # On MacOS we need to wait for the test image display procedure to run.
+    while {"timeout" ni $y && [lindex $y end 1] ne "display"} {
+        vwait y
+    }
+    after cancel timer
     list $x $y [.c bbox i1]
 } -cleanup {
 	.c delete all
@@ -720,6 +727,12 @@ test canvImg-9.1 {DisplayImage procedure} -constraints testImageType -setup {
 	image delete foo
 } -result {75 150 105 165}
 
+if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
+    # Aqua >= 10.14 will redraw the entire image.
+    set result_10_1 {{foo display 0 0 30 15}}
+} else {
+    set result_10_1 {{foo display 2 4 6 8}} 
+}
 test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
     update
@@ -734,7 +747,7 @@ test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo
-} -result {{foo display 2 4 6 8}}
+} -result $result_10_1
 
 test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
@@ -766,6 +779,12 @@ test canvImg-11.2 {ImageChangedProc procedure} -constraints {
 	.c delete all
 	image delete foo
 } -result {30 75 70 125}
+if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
+    # Aqua >= 10.14 will redraw the entire image.
+    set result_11_3 {{foo2 display 0 0 80 60}}
+} else {
+    set result_11_3 {{foo2 display 0 0 20 40}} 
+}
 test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 	testImageType 
 } -setup {
@@ -773,7 +792,7 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
     update
 } -body {
     image create test foo -variable x
-	image create test foo2 -variable y
+    image create test foo2 -variable y
     foo changed 0 0 0 0 40 50
     foo2 changed 0 0 0 0 80 60
 
@@ -787,7 +806,7 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 } -cleanup {
 	.c delete all
 	image delete foo foo2
-} -result {{foo2 display 0 0 20 40}}
+} -result $result_11_3
 
 # cleanup
 imageFinish
