@@ -71,6 +71,9 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
         vwait x
     }
     after cancel timer
+    if {[lindex $x end] eq "timeout"} {
+       return [lreplace $x end end]
+    }
     return $x
 } -cleanup {
     imageCleanup
