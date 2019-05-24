@@ -1583,8 +1583,6 @@ test frame-15.6 {TIP 262: frame background images} -setup {
     image create test gorp -variable result
     pack [frame .f -width 100 -height 100 -bgimg gorp]
     update idletasks; update
-    raise [winfo parent .f];	# Try to make sure the frame fully repaints
-    update idletasks; update
     return [uniq $result]
 } -cleanup {
     deleteWindows
@@ -1598,7 +1596,13 @@ test frame-15.6a {TIP 262: frame background images (offsets)} -setup {
     image create test gorp -variable result
     pack [frame .f -width 10 -height 10 -bgimg gorp]
     update idletasks; update
-    raise [winfo parent .f];	# Try to make sure the frame fully repaints
+    # On MacOS must wait for the test image display procedure to run.
+    set timer [after 300 {lappend result "timedout"}]
+    while {"timedout" ni $result &&
+	   "gorp display 10 2 10 10" ni $result} {
+       vwait result
+    }
+    after cancel $timer
     update idletasks; update
     return [uniq $result]
 } -cleanup {
@@ -1613,8 +1617,16 @@ test frame-15.7 {TIP 262: frame background images} -setup {
     image create test gorp -variable result
     pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1]
     update idletasks; update
-    raise [winfo parent .f];	# Try to make sure the frame fully repaints
-    update idletasks; update
+    # On MacOS must wait for the test image display procedure to run.
+    set timer [after 300 {lappend result "timedout"}]
+    while {"timedout" ni $result &&
+	   "gorp display 0 0 20 10" ni $result} {
+	vwait result
+    }
+    after cancel $timer
+    if {[lindex $result end] eq "timedout"} {
+	return [lreplace $result end end]
+    }
     return [uniq $result]
 } -cleanup {
     deleteWindows
@@ -1628,8 +1640,13 @@ test frame-15.7a {TIP 262: frame background images (offsets)} -setup {
     image create test gorp -variable result
     pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1 -highlightthick 1]
     update idletasks; update
-    raise [winfo parent .f];	# Try to make sure the frame fully repaints
-    update idletasks; update
+    # On MacOS must wait for the test image display procedure to run.
+    set timer [after 300 {lappend result "timedout"}]
+    while {"timedout" ni $result &&
+	   "gorp display 0 0 18 8" ni $result} {
+	vwait result
+   }
+    after cancel $timer
     return [uniq $result]
 } -cleanup {
     deleteWindows
@@ -1643,8 +1660,6 @@ test frame-15.7b {TIP 262: frame background images (offsets)} -setup {
     image create test gorp -variable result
     pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1 -bd 2]
     update idletasks; update
-    raise [winfo parent .f];	# Try to make sure the frame fully repaints
-    update idletasks; update
     return [uniq $result]
 } -cleanup {
     deleteWindows
@@ -1657,8 +1672,6 @@ test frame-15.7c {TIP 262: frame background images (offsets)} -setup {
 } -constraints testImageType -body {
     image create test gorp -variable result
     pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1 -bd 2 -highlightthick 1]
-    update idletasks; update
-    raise [winfo parent .f];	# Try to make sure the frame fully repaints
     update idletasks; update
     return [uniq $result]
 } -cleanup {
@@ -1744,8 +1757,6 @@ test frame-15.13 {TIP 262: toplevel background images} -setup {
     toplevel .t -width 100 -height 100 -bgimg gorp
     wm overrideredirect .t 1;	# Reduce trouble from window managers
     update idletasks; update
-    raise .t;			# Try to make sure the toplevel fully repaints
-    update idletasks; update
     return [uniq $result]
 } -cleanup {
     deleteWindows
@@ -1759,8 +1770,13 @@ test frame-15.14 {TIP 262: toplevel background images} -setup {
     toplevel .t -width 50 -height 25 -bgimg gorp -tile 1
     wm overrideredirect .t 1;	# Reduce trouble from window managers
     update idletasks; update
-    raise .t;			# Try to make sure the toplevel fully repaints
-    update idletasks; update
+    # On MacOS must wait for the test image display procedure to run.
+    set timer [after 300 {lappend result "timedout"}]
+    while {"timedout" ni $result &&
+	   "gorp display 0 0 20 10" ni $result} {
+	vwait result
+   }
+    after cancel $timer
     return [uniq $result]
 } -cleanup {
     deleteWindows
