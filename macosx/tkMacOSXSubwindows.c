@@ -209,11 +209,12 @@ XMapWindow(
 	 */
 
 	TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
-	if ([NSApp isDrawing]) {
-	    [[win contentView] setNeedsRedisplay:YES];
-	} else {
-	    [[win contentView] setNeedsDisplay:YES];
-	}
+    }
+
+    if ([NSApp isDrawing]) {
+	[[win contentView] setNeedsRedisplay:YES];
+    } else {
+	[[win contentView] setNeedsDisplay:YES];
     }
 
     /*
@@ -286,14 +287,13 @@ XUnmapWindow(
     MacDrawable *macWin = (MacDrawable *) window;
     TkWindow *winPtr = macWin->winPtr;
     TkWindow *parentPtr = winPtr->parentPtr;
+    NSWindow *win = TkMacOSXDrawableWindow(window);
     XEvent event;
 
     display->request++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
 		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
-	    NSWindow *win = TkMacOSXDrawableWindow(window);
-
 	    [win orderOut:nil];
 	}
 	TkMacOSXInvalClipRgns((Tk_Window) winPtr);
@@ -314,7 +314,8 @@ XUnmapWindow(
     } else {
 	/*
 	 * Rebuild the visRgn clip region for the parent so it will be allowed
-	 * to draw in the space from which this subwindow was removed.
+	 * to draw in the space from which this subwindow was removed and then
+	 * redraw the window.
 	 */
 
 	if (parentPtr && parentPtr->privatePtr->visRgn) {
@@ -326,6 +327,11 @@ XUnmapWindow(
 	TkMacOSXUpdateClipRgn(parentPtr);
     }
     winPtr->flags &= ~TK_MAPPED;
+    if ([NSApp isDrawing]) {
+	[[win contentView] setNeedsRedisplay:YES];
+    } else {
+	[[win contentView] setNeedsDisplay:YES];
+    }
 }
 
 /*

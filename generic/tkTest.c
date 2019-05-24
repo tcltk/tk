@@ -31,9 +31,9 @@
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
-#define APP_IS_DRAWING TkTestAppIsDrawing()
+#define LOG_DISPLAY TkTestLogDisplay()
 #else
-#define APP_IS_DRAWING 0
+#define LOG_DISPLAY 1
 #endif
 
 #ifdef __UNIX__
@@ -1562,29 +1562,40 @@ ImageDisplay(
 {
     TImageInstance *instPtr = clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
-
+    
     /*
      * The purpose of the test image type is to track the calls to an image
      * display proc and record the parameters passed in each call.  On macOS
-     * these tests will fail because of the asynchronous drawing.  The low
-     * level graphics calls below which are supposed to draw a rectangle will
-     * not draw anything to the screen because the idle task will not be
-     * processed inside of the drawRect method and hence will not be able to
-     * obtain a valid graphics context. Instead, the window will be marked as
-     * needing display, and will be redrawn during a future asynchronous call
-     * to drawRect.  This will generate an other call to this display proc,
-     * and the recorded data will show extra calls, causing the test to fail.
-     * To avoid this, we can set the [NSApp simulateDrawing] flag, which will
-     * cause all low level drawing routines to return immediately and not
-     * schedule the window for drawing later.  This flag is cleared by the
-     * next call to XSync, which is called by the update command.
+     * a display proc must be run inside of the drawRect method of an NSView
+     * in order for the graphics operations to have any effect.  To deal with
+     * this, whenever a display proc is called outside of any drawRect method
+     * it schedules a redraw of the NSView by calling [view setNeedsDisplay:YES].
+     * This will trigger a later call to the view's drawRect method which will
+     * run the display proc a second time.
+     *
+     * This complicates testing, since it can result in more calls to the display
+     * proc than are expected by the test.  It can also result in an inconsistent
+     * number of calls unless the test waits until the call to drawRect actually
+     * occurs before validating its results.
+     *
+     * In an attempt to work around this, this display proc only logs those
+     * calls which occur within a drawRect method.  This means that tests must
+     * be written so as to ensure that the drawRect method is run before
+     * results are validated.  In practice it usually suffices to run update
+     * idletasks (to run the display proc the first time) followed by update
+     * (to run the display proc in drawRect).
+     *
+     * This also has the consequence that the image changed command will log
+     * different results on Aqua than on other systems, because when the image
+     * is redisplayed in the drawRect method the entire image will be drawn,
+     * not just the changed portion.  Tests must account for this.
      */
 
-    sprintf(buffer, "%s display %d %d %d %d",
-	    instPtr->masterPtr->imageName, imageX, imageY, width, height);
-    if (!APP_IS_DRAWING) {
+    if (LOG_DISPLAY) {
+	sprintf(buffer, "%s display %d %d %d %d",
+		instPtr->masterPtr->imageName, imageX, imageY, width, height);
 	Tcl_SetVar2(instPtr->masterPtr->interp, instPtr->masterPtr->varName,
-	    NULL, buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
+		    NULL, buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     }
     if (width > (instPtr->masterPtr->width - imageX)) {
 	width = instPtr->masterPtr->width - imageX;
