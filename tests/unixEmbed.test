@@ -983,8 +983,10 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
 	deleteWindows
     bind . <KeyPress> {}
 } -result {{{key a 1}} {}}
+# TkpRedirectKeyEvent is not implemented in win or aqua.  If someone
+# implements it they should change the constraints for this test.
 test unixEmbed-7.1a {TkpRedirectKeyEvent procedure, forward keystroke} -constraints {
-    unix
+    unix notAqua
 } -setup {
     deleteWindows
     catch {interp delete slave}
