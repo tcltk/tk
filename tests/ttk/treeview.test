@@ -459,6 +459,31 @@ test treeview-8.5 "Selection - bad operation" -body {
     .tv selection badop foo
 } -returnCodes 1 -match glob -result {bad selection operation "badop": must be *}
 
+test treeview-8.6 "Selection - <<TreeviewSelect>> on selection add" -body {
+    .tv selection set {}
+    bind .tv <<TreeviewSelect>> {set res 1}
+    set res 0
+    .tv selection add newnode.n1
+    update
+    set res
+} -result {1}
+
+test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
+    .tv selection set {}
+    .tv insert "" end -id selectedDoomed -text DeadItem
+    .tv insert "" end -id doomed -text AlsoDead
+    .tv selection add selectedDoomed
+    update
+    bind .tv <<TreeviewSelect>> {lappend res 1}
+    set res 0
+    .tv delete doomed
+    update
+    set res [expr {$res == 0}]
+    .tv delete selectedDoomed
+    update
+    set res
+} -result {1 1}
+
 ### NEED: more tests for see/yview/scrolling
 
 proc scrollcallback {args} {

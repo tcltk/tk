@@ -2682,7 +2682,7 @@ static int TreeviewDeleteCommand(
 {
     Treeview *tv = recordPtr;
     TreeItem **items, *delq;
-    int i;
+    int i, selItemDeleted = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -2709,6 +2709,9 @@ static int TreeviewDeleteCommand(
      */
     delq = 0;
     for (i=0; items[i]; ++i) {
+        if (items[i]->state & TTK_STATE_SELECTED) {
+            selItemDeleted = 1;
+        }
 	delq = DeleteItems(items[i], delq);
     }
 
@@ -2725,6 +2728,9 @@ static int TreeviewDeleteCommand(
     }
 
     ckfree(items);
+    if (selItemDeleted) {
+        TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+    }
     TtkRedisplayWidget(&tv->core);
     return TCL_OK;
 }
