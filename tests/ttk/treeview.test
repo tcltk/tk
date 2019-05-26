@@ -688,6 +688,8 @@ test treeview-368fa4561e "indicators cannot be clicked on leafs" -setup {
     lappend res [.tv item foo -open]
     .tv insert foo end -text "sub"
     lappend res [.tv item foo -open]
+} -cleanup {
+    destroy .tv
 } -result {0 0 0}
 
 test treeview-ce470f20fd-1 "dragging further than the right edge of the treeview is forbidden" -setup {
