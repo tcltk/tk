@@ -41,7 +41,15 @@ catch {destroy .f .t}
 frame .f -width 100 -height 20
 pack .f -side left
 
-set fixedFont {"Courier New" -12}
+# On macOS the font "Courier New" has different metrics than "Courier",
+# and this causes tests 20.1 - 20.5 to fail.  So we use "Courier" as the
+# fixed font for testing on Aqua.
+
+if {[tk windowingsystem] eq "aqua"} {
+   set fixedFont {Courier -12}
+} else {
+  set fixedFont {"Courier New" -12}
+}
 # 15 on XP, 13 on Solaris 8
 set fixedHeight [font metrics $fixedFont -linespace]
 # 7 on all platforms
