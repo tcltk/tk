@@ -1745,7 +1745,7 @@ WmCommandCmd(
 	}
 	return TCL_OK;
     }
-    if (Tcl_GetString(objv[3])[0] == 0) {
+    if (*Tcl_GetString(objv[3]) == '\0') {
 	if (wmPtr->commandObj != NULL) {
 	    Tcl_DecrRefCount(wmPtr->commandObj);
 	    wmPtr->commandObj = NULL;
@@ -3608,7 +3608,7 @@ WmTransientCmd(
 	}
 	return TCL_OK;
     }
-    if (Tcl_GetString(objv[3])[0] == '\0') {
+    if (*Tcl_GetString(objv[3]) == '\0') {
 	RemoveTransient(winPtr);
     } else {
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {

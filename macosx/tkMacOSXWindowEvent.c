@@ -405,7 +405,7 @@ GenerateUpdates(
 {
     TkWindow *childPtr;
     XEvent event;
-    CGRect bounds, damageBounds, insetBounds;
+    CGRect bounds, damageBounds;
     HIShapeRef boundsRgn, damageRgn;
 
     TkMacOSXWinCGBounds(winPtr, &bounds);

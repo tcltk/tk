@@ -690,7 +690,7 @@ TkpConfigureMenuEntry(
 		[submenu setTitle:title];
 
     		if ([menuItem isEnabled]) {
-		    
+
 		    /*
 		     * This menuItem might have been previously disabled (XXX:
 		     * track this), which would have disabled entries; we must
@@ -816,7 +816,7 @@ TkpPostMenu(
     if (itemIndex >= 0) {
 	item = [menu itemAtIndex:itemIndex];
     }
-    
+
     /*
      * The post commands could have deleted the menu, which means we are dead
      * and should go away.
@@ -1010,8 +1010,8 @@ TkpSetMainMenubar(
 	Tk_Window menubar = NULL;
 
 	if (winPtr->wmInfoPtr &&
-	    winPtr->wmInfoPtr->menuPtr &&
-	    winPtr->wmInfoPtr->menuPtr->masterMenuPtr) {
+		winPtr->wmInfoPtr->menuPtr &&
+		winPtr->wmInfoPtr->menuPtr->masterMenuPtr) {
 	    menubar = winPtr->wmInfoPtr->menuPtr->masterMenuPtr->tkwin;
 	}
 
@@ -1037,7 +1037,7 @@ TkpSetMainMenubar(
      * If we couldn't find a menu, do nothing unless the window belongs to a
      * different application.  In that case, install the default menubar.
      */
-    
+
     if (menu || interp != currentInterp) {
 	[NSApp tkSetMainMenu:menu];
     }
@@ -1246,7 +1246,7 @@ TkpComputeStandardMenuGeometry(
     if (menuPtr->tkwin == NULL || menuPtr->masterMenuPtr != menuPtr) {
 	return;
     }
-    
+
     menuSize = [(NSMenu *) menuPtr->platformData size];
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
 	    &borderWidth);
