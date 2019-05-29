@@ -276,7 +276,7 @@ static void GetBackgroundColor(
 /*----------------------------------------------------------------------
  * +++ Single Arrow Buttons --
  *
- * Used in ListHeaders and Comboboxes. 
+ * Used in ListHeaders and Comboboxes.
  */
 
 static void DrawDownArrow(
@@ -326,7 +326,7 @@ static void DrawUpArrow(
 /*----------------------------------------------------------------------
  * +++ Double Arrow Buttons --
  *
- * Used in MenuButtons and SpinButtons. 
+ * Used in MenuButtons and SpinButtons.
  */
 
 static void DrawUpDownArrows(
@@ -966,7 +966,7 @@ static void DrawDarkTab(
 	    CGContextRestoreGState(context);
 	}
     } else {
-	
+
         /*
          * This is the selected tab; paint it blue.  If it is first, cover up
          * the separator line drawn by the second one.  (The selected tab is
@@ -1144,7 +1144,7 @@ static Ttk_StateTable ButtonValueTable[] = {
     {kThemeButtonOn, TTK_STATE_SELECTED, 0},
     {kThemeButtonOff, 0, 0}
 
-    /* 
+    /*
      * Others: kThemeDisclosureRight, kThemeDisclosureDown,
      * kThemeDisclosureLeft
      */

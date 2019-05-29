@@ -394,6 +394,13 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
     deleteWindows
 } -result {rootx 1 rooty 1}
 
+# Windows does not destroy the container when an embedded window is
+# destroyed.  Unix and macOS do destroy it.  See ticket [67384bce7d].
+if {[tk windowingsystem] == "win32"} {
+   set result_13_2 {embedded 0 container 1}
+} else {
+   set result_13_2 {embedded 0 container 0}
+}
 test winfo-13.2 {destroying embedded toplevel} -setup {
     deleteWindows
 } -body {
@@ -409,7 +416,7 @@ test winfo-13.2 {destroying embedded toplevel} -setup {
     list embedded [winfo exists .emb.b] container [winfo exists .con]
 } -cleanup {
     deleteWindows
-} -result {embedded 0 container 1}
+} -result $result_13_2
 
 test winfo-13.3 {destroying container window} -setup {
     deleteWindows

@@ -42,7 +42,7 @@ typedef struct {
     NSMutableArray *fileTypeExtensions;	/* Array of allowed extensions per
 					 * name, e.g. "txt", "doc". */
     NSMutableArray *fileTypeLabels;	/* Displayed string, e.g. "Text
-					 * document (.txt, .doc)". */ 
+					 * document (.txt, .doc)". */
     NSMutableArray *fileTypeAllowsAll;	/* Boolean if the all pattern (*.*) is
 					 * included. */
     NSMutableArray *allowedExtensions;	/* Set of all allowed extensions. */
@@ -2080,7 +2080,7 @@ FontchooserParentEventHandler(
     if (eventPtr->type == DestroyNotify) {
 	Tk_DeleteEventHandler(fcdPtr->parent, StructureNotifyMask,
 		FontchooserParentEventHandler, fcdPtr);
-	fcdPtr->parent = None;
+	fcdPtr->parent = NULL;
 	FontchooserHideCmd(NULL, NULL, 0, NULL);
     }
 }

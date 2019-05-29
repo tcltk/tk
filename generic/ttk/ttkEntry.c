@@ -975,7 +975,7 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     Ttk_TraceHandle *vt = 0;
 
     if (mask & TEXTVAR_CHANGED) {
-	if (textVarName && *Tcl_GetString(textVarName)) {
+	if (textVarName && *Tcl_GetString(textVarName) != '\0') {
 	    vt = Ttk_TraceVariable(interp,
 		    textVarName,EntryTextVariableTrace,entryPtr);
 	    if (!vt) return TCL_ERROR;
@@ -1362,6 +1362,7 @@ EntryIndex(
 	*indexPtr = Tk_PointToChar(entryPtr->entry.textLayout,
 		x - entryPtr->entry.layoutX, 0);
 
+        TtkUpdateScrollInfo(entryPtr->entry.xscrollHandle);
 	if (*indexPtr < entryPtr->entry.xscroll.first) {
 	    *indexPtr = entryPtr->entry.xscroll.first;
 	}
@@ -1656,7 +1657,7 @@ static int EntryXViewCommand(
 	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst);
+	TtkScrollTo(entryPtr->entry.xscrollHandle, newFirst, 1);
 	return TCL_OK;
     }
     return TtkScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);
@@ -1697,6 +1698,16 @@ static WidgetSpec EntryWidgetSpec = {
     TtkWidgetSize, 		/* sizeProc */
     EntryDoLayout,		/* layoutProc */
     EntryDisplay		/* displayProc */
+};
+
+/*------------------------------------------------------------------------
+ * Named indices for the combobox "current" command
+ */
+static const char *const comboboxCurrentIndexNames[] = {
+    "end", NULL
+};
+enum comboboxCurrentIndices {
+    INDEX_END
 };
 
 /*------------------------------------------------------------------------
@@ -1800,15 +1811,42 @@ static int ComboboxCurrentCommand(
 	Tcl_SetObjResult(interp, Tcl_NewIntObj(currentIndex));
 	return TCL_OK;
     } else if (objc == 3) {
-	if (Tcl_GetIntFromObj(interp, objv[2], &currentIndex) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	if (currentIndex < 0 || currentIndex >= nValues) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "Index %s out of range", Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
-	    return TCL_ERROR;
-	}
+        int result, index;
+
+        result = Tcl_GetIndexFromObj(NULL, objv[2], comboboxCurrentIndexNames,
+                "", 0, &index);
+        if (result == TCL_OK) {
+
+            /*
+             * The index is one of the named indices.
+             */
+
+	    switch (index) {
+	    case INDEX_END:
+	        /* "end" index */
+                currentIndex = nValues - 1;
+                break;
+	    }
+        } else {
+
+            /*
+             * The index should be just an integer.
+             */
+
+	    if (Tcl_GetIntFromObj(NULL, objv[2], &currentIndex) != TCL_OK) {
+	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		        "Incorrect index %s", Tcl_GetString(objv[2])));
+	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_VALUE", NULL);
+	        return TCL_ERROR;
+	    }
+
+	    if (currentIndex < 0 || currentIndex >= nValues) {
+	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		        "Index %s out of range", Tcl_GetString(objv[2])));
+	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
+	        return TCL_ERROR;
+	    }
+        }
 
 	cbPtr->combobox.currentIndex = currentIndex;
 
