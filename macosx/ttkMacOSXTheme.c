@@ -75,6 +75,15 @@ static CGFloat darkDisabledButtonFace[4] = {
 static CGFloat darkInactiveSelectedTab[4] = {
     159.0 / 255, 160.0 / 255, 161.0 / 255, 1.0
 };
+static CGFloat darkFocusRing[4] = {
+    38.0 / 255, 113.0 / 255, 159.0 / 255, 1.0
+};
+static CGFloat darkFocusRingTop[4] = {
+    50.0 / 255, 124.0 / 255, 171.0 / 255, 1.0 
+};
+static CGFloat darkFocusRingBottom[4] = {
+    57.0 / 255, 130.0 / 255, 176.0 / 255, 1.0 
+};
 static CGFloat darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
 static CGFloat darkTrack[4] = {1.0, 1.0, 1.0, 0.25};
 static CGFloat darkFrameTop[4] = {1.0, 1.0, 1.0, 0.0625};
@@ -1012,6 +1021,54 @@ static void DrawDarkSeparator(
 }
 
 /*----------------------------------------------------------------------
+ * +++ DrawDarkFocusRing --
+ *
+ *      This is a standalone drawing procedure which draws a focus ring around
+ *      an Entry widget in Dark Mode.
+ */
+
+static void DrawDarkFocusRing(
+    CGRect bounds,
+    CGContextRef context)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *strokeColor;
+    NSColor *fillColor = [NSColor colorWithColorSpace:deviceRGB
+					   components:darkFocusRing
+						count:4];
+    CGFloat x = bounds.origin.x, y = bounds.origin.y;
+    CGFloat w = bounds.size.width, h = bounds.size.height;
+    CGPoint topPart[4] = {
+	{x, y + h}, {x, y + 1}, {x + w - 1, y + 1}, {x + w - 1, y + h}
+    };
+    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
+    CGRect outerRect = CGRectInset(bounds, -3, -3);
+    
+    CGContextSaveGState(context);
+    CGContextSetShouldAntialias(context, false);
+    CGContextBeginPath(context);
+    strokeColor = [NSColor colorWithColorSpace: deviceRGB
+				    components: darkFocusRingTop
+					 count: 4];
+    CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
+    CGContextAddLines(context, topPart, 4);
+    CGContextStrokePath(context);
+    strokeColor = [NSColor colorWithColorSpace: deviceRGB
+				    components: darkFocusRingBottom
+					 count: 4];
+    CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
+    CGContextAddLines(context, bottom, 2);
+    CGContextStrokePath(context);
+    CGContextSetShouldAntialias(context, true);
+    CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
+    CGPathRef path = CGPathCreateWithRoundedRect(outerRect, 4, 4, NULL);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextAddRect(context, bounds);
+    CGContextEOFillPath(context);
+    CGContextRestoreGState(context);
+}
+/*----------------------------------------------------------------------
  * +++ DrawDarkFrame --
  *
  *      This is a standalone drawing procedure which draws various
@@ -1030,7 +1087,7 @@ static void DrawDarkFrame(
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint topPart[4] = {
-	{x, y + h - 1}, {x, y}, {x + w, y}, {x + w, y + h - 1}
+	{x, y + h - 1}, {x, y + 1}, {x + w, y + 1}, {x + w, y + h - 1}
     };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
     CGPoint accent[2] = {{x, y + 1}, {x + w, y + 1}};
@@ -1613,7 +1670,7 @@ static void EntryElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    *paddingPtr = Ttk_UniformPadding(5);
+    *paddingPtr = Ttk_MakePadding(7, 5, 7, 6);
 }
 
 static void EntryElementDraw(
@@ -1636,12 +1693,24 @@ static void EntryElementDraw(
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	CGFloat fill[4];
 	GetBackgroundColor(dc.context, tkwin, 1, fill);
+	
+	/*
+	 * Lighten the background to provide contrast.
+	 */
+	
+	for (int i = 0; i < 3; i++) {
+		fill[i] += 9.0 / 255.0;
+	    }
 	background = [NSColor colorWithColorSpace: deviceRGB
 	    components: fill
 	    count: 4];
 	CGContextSetFillColorWithColor(dc.context, CGCOLOR(background));
 	CGContextFillRect(dc.context, bounds);
-	DrawDarkFrame(bounds, dc.context, kHIThemeFrameTextFieldSquare);
+	if (state & TTK_STATE_FOCUS) {
+	    DrawDarkFocusRing(bounds, dc.context);
+	} else {
+	    DrawDarkFrame(bounds, dc.context, kHIThemeFrameTextFieldSquare);
+	}
 	END_DRAWING
     } else {
 	const HIThemeFrameDrawInfo info = {
