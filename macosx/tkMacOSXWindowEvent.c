@@ -198,10 +198,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
     if (winPtr) {
 	TkGenWMDestroyEvent((Tk_Window) winPtr);
-	if (_windowWithMouse == w) {
-	    _windowWithMouse = nil;
-	    [w release];
-	}
     }
 
     /*
