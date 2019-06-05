@@ -849,7 +849,9 @@ ContainerEventProc(
 		eventPtr->xmaprequest.window);
     } else if (eventPtr->type == DestroyNotify) {
 	/*
-	 * The embedded application is gone. Destroy the container window.
+	 * It is not clear whether the container should be destroyed
+	 * when an embedded window is destroyed.  See ticket [67384bce7d].
+	 * Here we are following unix, by destroying the container.
 	 */
 
 	Tk_DestroyWindow((Tk_Window) winPtr);

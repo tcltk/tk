@@ -101,6 +101,7 @@ static char scriptPath[PATH_MAX + 1] = "";
      */
     _defaultMainMenu = nil;
     [self _setupMenus];
+
     /*
      * Initialize event processing.
      */
@@ -324,6 +325,17 @@ TkpInit(
 	[pool drain];
 	[NSApp _setup:interp];
 	[NSApp finishLaunching];
+	Tk_MacOSXSetupTkNotifier();
+
+	/*
+	 * If the root window is mapped before the App has finished launching
+	 * it will open off screen (see ticket 56a1823c73).  To avoid this we
+	 * ask Tk to process an event with no wait.  We expect Tcl_DoOneEvent
+	 * to wait until the Mac event loop has been created and then return
+	 * immediately since the queue is empty.
+	 */
+
+	Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT);
 
 	/*
 	 * If we don't have a TTY and stdin is a special character file of
@@ -360,8 +372,6 @@ TkpInit(
 
     }
 
-    Tk_MacOSXSetupTkNotifier();
-
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
@@ -375,14 +385,6 @@ TkpInit(
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-
-    /*
-     * Workaround for 3efbe4a397; console not accepting keyboard input on 10.14
-     * if displayed before main window. This places console in background and it
-     * accepts input after being raised.
-     */
-
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 
     return TCL_OK;
 }

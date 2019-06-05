@@ -72,12 +72,15 @@ XDestroyWindow(
 	}
 	if (macWin->visRgn) {
 	    CFRelease(macWin->visRgn);
+            macWin->visRgn = NULL;
 	}
 	if (macWin->aboveVisRgn) {
 	    CFRelease(macWin->aboveVisRgn);
+            macWin->aboveVisRgn = NULL;
 	}
 	if (macWin->drawRgn) {
 	    CFRelease(macWin->drawRgn);
+            macWin->drawRgn = NULL;
 	}
 
 	if (macWin->toplevel->referenceCount == 0) {
@@ -88,12 +91,15 @@ XDestroyWindow(
     }
     if (macWin->visRgn) {
 	CFRelease(macWin->visRgn);
+        macWin->visRgn = NULL;
     }
     if (macWin->aboveVisRgn) {
 	CFRelease(macWin->aboveVisRgn);
+        macWin->aboveVisRgn = NULL;
     }
     if (macWin->drawRgn) {
 	CFRelease(macWin->drawRgn);
+        macWin->drawRgn = NULL;
     }
     macWin->view = nil;
 
@@ -168,15 +174,6 @@ XMapWindow(
 	    } else {
 		[win orderFrontRegardless];
 	    }
-
-	    /*
-	     * In some cases the toplevel will not be drawn unless we process
-	     * all pending events now.  See ticket 56a1823c73.
-	     */
-
-	    [NSApp _lockAutoreleasePool];
-	    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
-	    [NSApp _unlockAutoreleasePool];
 	} else {
 	    TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
 
@@ -212,11 +209,12 @@ XMapWindow(
 	 */
 
 	TkMacOSXInvalClipRgns((Tk_Window) winPtr->parentPtr);
-	if ([NSApp isDrawing]) {
-	    [[win contentView] setNeedsRedisplay:YES];
-	} else {
-	    [[win contentView] setNeedsDisplay:YES];
-	}
+    }
+
+    if ([NSApp isDrawing]) {
+	[[win contentView] setNeedsRedisplay:YES];
+    } else {
+	[[win contentView] setNeedsDisplay:YES];
     }
 
     /*
@@ -289,14 +287,13 @@ XUnmapWindow(
     MacDrawable *macWin = (MacDrawable *) window;
     TkWindow *winPtr = macWin->winPtr;
     TkWindow *parentPtr = winPtr->parentPtr;
+    NSWindow *win = TkMacOSXDrawableWindow(window);
     XEvent event;
 
     display->request++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
 		winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
-	    NSWindow *win = TkMacOSXDrawableWindow(window);
-
 	    [win orderOut:nil];
 	}
 	TkMacOSXInvalClipRgns((Tk_Window) winPtr);
@@ -317,7 +314,8 @@ XUnmapWindow(
     } else {
 	/*
 	 * Rebuild the visRgn clip region for the parent so it will be allowed
-	 * to draw in the space from which this subwindow was removed.
+	 * to draw in the space from which this subwindow was removed and then
+	 * redraw the window.
 	 */
 
 	if (parentPtr && parentPtr->privatePtr->visRgn) {
@@ -329,6 +327,11 @@ XUnmapWindow(
 	TkMacOSXUpdateClipRgn(parentPtr);
     }
     winPtr->flags &= ~TK_MAPPED;
+    if ([NSApp isDrawing]) {
+	[[win contentView] setNeedsRedisplay:YES];
+    } else {
+	[[win contentView] setNeedsDisplay:YES];
+    }
 }
 
 /*
