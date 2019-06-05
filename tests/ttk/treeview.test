@@ -683,8 +683,8 @@ test treeview-368fa4561e "indicators cannot be clicked on leafs" -setup {
     # using $h even for x computation is intentional here in order to simulate
     # a mouse click on the (invisible since we're on a leaf) indicator
     event generate .tv <ButtonPress-1> \
-            -x [expr ($x + $h / 2)] \
-            -y [expr ($y + $h / 2)]
+            -x [expr {$x + $h / 2}] \
+            -y [expr {$y + $h / 2}]
     lappend res [.tv item foo -open]
     .tv insert foo end -text "sub"
     lappend res [.tv item foo -open]
