@@ -53,6 +53,7 @@ enum {
     NSEventType eventType = [theEvent type];
     TkWindow *winPtr, *grabWinPtr;
     Tk_Window tkwin;
+    NSPoint local, global;
 #if 0
     NSTrackingArea *trackingArea = nil;
     NSInteger eventNumber, clickCount, buttonNumber;
@@ -84,61 +85,54 @@ enum {
     }
 
     /*
-     * Remember the window in case we need it next time.
-     */
-
-    if (eventWindow && eventWindow != _windowWithMouse) {
-	if (_windowWithMouse) {
-	    [_windowWithMouse release];
-	}
-	_windowWithMouse = eventWindow;
-	[_windowWithMouse retain];
-    }
-
-    /*
      * Compute the mouse position in Tk screen coordinates (global) and in the
-     * Tk coordinates of its containing Tk Window.
+     * Tk coordinates of its containing Tk Window (local). If a grab is in effect,
+     * the local coordinates should be relative to the grab window.
      */
 
-    NSPoint global, local = [theEvent locationInWindow];
-
-    /*
-     * If the event has no NSWindow, try using the cached NSWindow from the
-     * last mouse event.
-     */
-
-    if (eventWindow == NULL) {
-	eventWindow = _windowWithMouse;
-    }
     if (eventWindow) {
-	/*
-	 * Set the local mouse position to its NSWindow flipped coordinates,
-	 * with the origin at top left, and the global mouse position to the
-	 * flipped screen coordinates.
-	 */
-
+	local = [theEvent locationInWindow];
 	global = [eventWindow tkConvertPointToScreen: local];
+	tkwin = TkMacOSXGetCapture();
+	if (tkwin) {
+	    winPtr = (TkWindow *) tkwin;
+	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
+	    if (eventWindow) {
+		local = [eventWindow tkConvertPointFromScreen: global];
+	    } else {
+		return theEvent;
+	    }
+	}
 	local.y = [eventWindow frame].size.height - local.y;
 	global.y = tkMacOSXZeroScreenHeight - global.y;
     } else {
+
 	/*
-	 * As a last resort, with no NSWindow to work with, set both local and
-	 * global to the screen coordinates.
+	 * If the event has no NSWindow, the location is in screen coordinates.
 	 */
 
-	local.y = tkMacOSXZeroScreenHeight - local.y;
-	global = local;
+	global = [theEvent locationInWindow];
+	tkwin = TkMacOSXGetCapture();
+	if (tkwin) {
+	    winPtr = (TkWindow *) tkwin;
+	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
+	} else {
+	    eventWindow = [NSApp mainWindow];
+	}
+	if (!eventWindow) {
+	    return theEvent;
+	}
+	local = [eventWindow tkConvertPointFromScreen: global];
+	local.y = [eventWindow frame].size.height - local.y;
+	global.y = tkMacOSXZeroScreenHeight - global.y;
     }
 
     /*
-     * Find the toplevel which corresponds to the event NSWindow.
+     * Make sure tkwin is the toplevel which should receive the event.
      */
 
-    winPtr = TkMacOSXGetTkWindow(eventWindow);
-    if (winPtr == NULL) {
-	tkwin = TkMacOSXGetCapture();
-	winPtr = (TkWindow *) tkwin;
-    } else {
+    if (!tkwin) {
+	winPtr = TkMacOSXGetTkWindow(eventWindow);
 	tkwin = (Tk_Window) winPtr;
     }
     if (!tkwin) {
