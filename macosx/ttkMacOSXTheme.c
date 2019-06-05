@@ -79,10 +79,10 @@ static CGFloat darkFocusRing[4] = {
     38.0 / 255, 113.0 / 255, 159.0 / 255, 1.0
 };
 static CGFloat darkFocusRingTop[4] = {
-    50.0 / 255, 124.0 / 255, 171.0 / 255, 1.0 
+    50.0 / 255, 124.0 / 255, 171.0 / 255, 1.0
 };
 static CGFloat darkFocusRingBottom[4] = {
-    57.0 / 255, 130.0 / 255, 176.0 / 255, 1.0 
+    57.0 / 255, 130.0 / 255, 176.0 / 255, 1.0
 };
 static CGFloat darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
 static CGFloat darkTrack[4] = {1.0, 1.0, 1.0, 0.25};
@@ -1043,7 +1043,7 @@ static void DrawDarkFocusRing(
     };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
     CGRect outerRect = CGRectInset(bounds, -3, -3);
-    
+
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
     CGContextBeginPath(context);
@@ -1693,11 +1693,11 @@ static void EntryElementDraw(
 	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	CGFloat fill[4];
 	GetBackgroundColor(dc.context, tkwin, 1, fill);
-	
+
 	/*
 	 * Lighten the background to provide contrast.
 	 */
-	
+
 	for (int i = 0; i < 3; i++) {
 		fill[i] += 9.0 / 255.0;
 	    }
