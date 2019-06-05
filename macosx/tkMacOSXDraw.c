@@ -2052,7 +2052,7 @@ TkpDrawHighlightBorder (
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawFrame --
+ * TkpDrawFrameEx --
  *
  *	This procedure draws the rectangular frame area. If the user has
  *	requested themeing, it draws with the background theme.
@@ -2067,8 +2067,9 @@ TkpDrawHighlightBorder (
  */
 
 void
-TkpDrawFrame(
+TkpDrawFrameEx(
     Tk_Window tkwin,
+    Drawable drawable,
     Tk_3DBorder border,
     int highlightWidth,
     int borderWidth,
@@ -2086,11 +2087,9 @@ TkpDrawFrame(
 	}
     }
 
-    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
-	    border, highlightWidth, highlightWidth,
-	    Tk_Width(tkwin) - 2 * highlightWidth,
-	    Tk_Height(tkwin) - 2 * highlightWidth,
-	    borderWidth, relief);
+    Tk_Fill3DRectangle(tkwin, drawable, border, highlightWidth,
+	    highlightWidth, Tk_Width(tkwin) - 2 * highlightWidth,
+	    Tk_Height(tkwin) - 2 * highlightWidth, borderWidth, relief);
 }
 
 /*

@@ -94,6 +94,16 @@ typedef struct {
 				 * pixels of extra space to leave above and
 				 * below child area. */
     int padY;			/* Integer value corresponding to padYPtr. */
+    Tcl_Obj *bgimgPtr;		/* Value of -backgroundimage option: specifies
+				 * image to display on window's background, or
+				 * NULL if none. */
+    Tk_Image bgimg;		/* Derived from bgimgPtr by calling
+				 * Tk_GetImage, or NULL if bgimgPtr is
+				 * NULL. */
+    int tile;			/* Whether to tile the bgimg. */
+#ifndef TK_NO_DOUBLE_BUFFERING
+    GC copyGC;			/* GC for copying when double-buffering. */
+#endif /* TK_NO_DOUBLE_BUFFERING */
 } Frame;
 
 /*
@@ -219,21 +229,33 @@ static const Tk_OptionSpec commonOptSpec[] = {
 };
 
 static const Tk_OptionSpec frameOptSpec[] = {
+    {TK_OPTION_STRING, "-backgroundimage", "backgroundImage", "BackgroundImage",
+	DEF_FRAME_BG_IMAGE, Tk_Offset(Frame, bgimgPtr), -1,
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, -1, 0, "-borderwidth", 0},
+    {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
+	NULL, 0, -1, 0, "-backgroundimage", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_FRAME_BORDER_WIDTH, -1, Tk_Offset(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
 	DEF_FRAME_CLASS, -1, Tk_Offset(Frame, className), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_FRAME_RELIEF, -1, Tk_Offset(Frame, relief), 0, 0, 0},
+    {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
+	DEF_FRAME_BG_TILE, -1, Tk_Offset(Frame, tile), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
 	NULL, 0, 0, 0, commonOptSpec, 0}
 };
 
 static const Tk_OptionSpec toplevelOptSpec[] = {
+    {TK_OPTION_STRING, "-backgroundimage", "backgroundImage", "BackgroundImage",
+	DEF_FRAME_BG_IMAGE, Tk_Offset(Frame, bgimgPtr), -1,
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, -1, 0, "-borderwidth", 0},
+    {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
+	NULL, 0, -1, 0, "-backgroundimage", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_FRAME_BORDER_WIDTH, -1, Tk_Offset(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
@@ -246,6 +268,8 @@ static const Tk_OptionSpec toplevelOptSpec[] = {
     {TK_OPTION_STRING, "-screen", "screen", "Screen",
 	DEF_TOPLEVEL_SCREEN, -1, Tk_Offset(Frame, screenName),
 	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
+	DEF_FRAME_BG_TILE, -1, Tk_Offset(Frame, tile), 0, 0, 0},
     {TK_OPTION_STRING, "-use", "use", "Use",
 	DEF_TOPLEVEL_USE, -1, Tk_Offset(Frame, useThis),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -311,6 +335,12 @@ static int		CreateFrame(ClientData clientData, Tcl_Interp *interp,
 static void		DestroyFrame(void *memPtr);
 static void		DestroyFramePartly(Frame *framePtr);
 static void		DisplayFrame(ClientData clientData);
+static void		DrawFrameBackground(Tk_Window tkwin, Pixmap pixmap,
+			    int highlightWidth, int borderWidth,
+			    Tk_Image bgimg, int bgtile);
+static void		FrameBgImageProc(ClientData clientData,
+			    int x, int y, int width, int height,
+			    int imgWidth, int imgHeight);
 static void		FrameCmdDeletedProc(ClientData clientData);
 static void		FrameEventProc(ClientData clientData,
 			    XEvent *eventPtr);
@@ -870,8 +900,16 @@ DestroyFrame(
 	    Tk_FreeGC(framePtr->display, labelframePtr->textGC);
 	}
     }
+#ifndef TK_NO_DOUBLE_BUFFERING
+    if (framePtr->copyGC != NULL) {
+	Tk_FreeGC(framePtr->display, framePtr->copyGC);
+    }
+#endif /* TK_NO_DOUBLE_BUFFERING */
     if (framePtr->colormap != None) {
 	Tk_FreeColormap(framePtr->display, framePtr->colormap);
+    }
+    if (framePtr->bgimg) {
+	Tk_FreeImage(framePtr->bgimg);
     }
     ckfree(framePtr);
 }
@@ -947,6 +985,7 @@ ConfigureFrame(
     char *oldMenuName;
     Tk_Window oldWindow = NULL;
     Labelframe *labelframePtr = (Labelframe *) framePtr;
+    Tk_Image image = NULL;
 
     /*
      * Need the old menubar name for the menu code to delete it.
@@ -970,6 +1009,20 @@ ConfigureFrame(
 	}
 	return TCL_ERROR;
     }
+
+    if (framePtr->bgimgPtr) {
+	image = Tk_GetImage(interp, framePtr->tkwin,
+		Tcl_GetString(framePtr->bgimgPtr), FrameBgImageProc, framePtr);
+	if (image == NULL) {
+	    Tk_RestoreSavedOptions(&savedOptions);
+	    return TCL_ERROR;
+	}
+    }
+    if (framePtr->bgimg) {
+	Tk_FreeImage(framePtr->bgimg);
+    }
+    framePtr->bgimg = image;
+
     Tk_FreeSavedOptions(&savedOptions);
 
     /*
@@ -1110,6 +1163,15 @@ FrameWorldChanged(
 	    (labelframePtr->labelWin == NULL);
     anyWindowLabel = (framePtr->type == TYPE_LABELFRAME) &&
 	    (labelframePtr->labelWin != NULL);
+
+#ifndef TK_NO_DOUBLE_BUFFERING
+    gcValues.graphics_exposures = False;
+    gc = Tk_GetGC(tkwin, GCGraphicsExposures, &gcValues);
+    if (framePtr->copyGC != NULL) {
+	Tk_FreeGC(framePtr->display, framePtr->copyGC);
+    }
+    framePtr->copyGC = gc;
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	/*
@@ -1455,6 +1517,20 @@ DisplayFrame(
 	return;
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
+    /*
+     * In order to avoid screen flashes, this function redraws the frame into
+     * off-screen memory, then copies it back on-screen in a single operation.
+     * This means there's no point in time where the on-screen image has been
+     * cleared.
+     */
+
+    pixmap = Tk_GetPixmap(framePtr->display, Tk_WindowId(tkwin),
+	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
+#else
+    pixmap = Tk_WindowId(tkwin);
+#endif /* TK_NO_DOUBLE_BUFFERING */
+
     if (framePtr->type != TYPE_LABELFRAME) {
 	/*
 	 * Pass to platform specific draw function. In general, it just draws
@@ -1462,8 +1538,12 @@ DisplayFrame(
 	 */
 
     noLabel:
-	TkpDrawFrame(tkwin, framePtr->border, hlWidth,
+	TkpDrawFrameEx(tkwin, pixmap, framePtr->border, hlWidth,
 		framePtr->borderWidth, framePtr->relief);
+	if (framePtr->bgimg) {
+	    DrawFrameBackground(tkwin, pixmap, hlWidth, framePtr->borderWidth,
+		    framePtr->bgimg, framePtr->tile);
+	}
     } else {
 	Labelframe *labelframePtr = (Labelframe *) framePtr;
 
@@ -1471,20 +1551,6 @@ DisplayFrame(
 		(labelframePtr->labelWin == NULL)) {
 	    goto noLabel;
 	}
-
-#ifndef TK_NO_DOUBLE_BUFFERING
-	/*
-	 * In order to avoid screen flashes, this function redraws the frame
-	 * into off-screen memory, then copies it back on-screen in a single
-	 * operation. This means there's no point in time where the on-screen
-	 * image has been cleared.
-	 */
-
-	pixmap = Tk_GetPixmap(framePtr->display, Tk_WindowId(tkwin),
-		Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
-#else
-	pixmap = Tk_WindowId(tkwin);
-#endif /* TK_NO_DOUBLE_BUFFERING */
 
 	/*
 	 * Clear the pixmap.
@@ -1597,22 +1663,54 @@ DisplayFrame(
 			labelframePtr->labelBox.height);
 	    }
 	}
-
-#ifndef TK_NO_DOUBLE_BUFFERING
-	/*
-	 * Everything's been redisplayed; now copy the pixmap onto the screen
-	 * and free up the pixmap.
-	 */
-
-	XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
-		labelframePtr->textGC, hlWidth, hlWidth,
-		(unsigned) (Tk_Width(tkwin) - 2 * hlWidth),
-		(unsigned) (Tk_Height(tkwin) - 2 * hlWidth),
-		hlWidth, hlWidth);
-	Tk_FreePixmap(framePtr->display, pixmap);
-#endif /* TK_NO_DOUBLE_BUFFERING */
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
+    /*
+     * Everything's been redisplayed; now copy the pixmap onto the screen and
+     * free up the pixmap.
+     */
+
+    XCopyArea(framePtr->display, pixmap, Tk_WindowId(tkwin),
+	    framePtr->copyGC, hlWidth, hlWidth,
+	    (unsigned) (Tk_Width(tkwin) - 2 * hlWidth),
+	    (unsigned) (Tk_Height(tkwin) - 2 * hlWidth),
+	    hlWidth, hlWidth);
+    Tk_FreePixmap(framePtr->display, pixmap);
+#endif /* TK_NO_DOUBLE_BUFFERING */
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDrawFrame --
+ *
+ *	This procedure draws the rectangular frame area.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws inside the tkwin area.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpDrawFrame(
+    Tk_Window tkwin,
+    Tk_3DBorder border,
+    int highlightWidth,
+    int borderWidth,
+    int relief)
+{
+    /*
+     * Legacy shim to allow for external callers. Internal ones use
+     * non-exposed TkpDrawFrameEx directly so they can use double-buffering.
+     */
+
+    TkpDrawFrameEx(tkwin, Tk_WindowId(tkwin), border,
+	    highlightWidth, borderWidth, relief);
 }
 
 /*
@@ -2029,6 +2127,128 @@ TkToplevelWindowForCommand(
 	return NULL;
     }
     return framePtr->tkwin;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * FrameBgImageProc --
+ *
+ *	This function is invoked by the image code whenever the manager for an
+ *	image does something that affects the size or contents of an image
+ *	displayed on a frame's background.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Arranges for the button to get redisplayed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+FrameBgImageProc(
+    ClientData clientData,	/* Pointer to widget record. */
+    int x, int y,		/* Upper left pixel (within image) that must
+				 * be redisplayed. */
+    int width, int height,	/* Dimensions of area to redisplay (might be
+				 * <= 0). */
+    int imgWidth, int imgHeight)/* New dimensions of image. */
+{
+    register Frame *framePtr = clientData;
+
+    /*
+     * Changing the background image never alters the dimensions of the frame.
+     */
+
+    if (framePtr->tkwin && Tk_IsMapped(framePtr->tkwin) &&
+	    !(framePtr->flags & REDRAW_PENDING)) {
+	Tcl_DoWhenIdle(DisplayFrame, framePtr);
+	framePtr->flags |= REDRAW_PENDING;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DrawFrameBackground --
+ *
+ *	This function draws the background image of a rectangular frame area.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Draws inside the tkwin area.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+DrawFrameBackground(
+    Tk_Window tkwin,
+    Pixmap pixmap,
+    int highlightWidth,
+    int borderWidth,
+    Tk_Image bgimg,
+    int bgtile)
+{
+    int width, height;			/* Area to paint on. */
+    int imageWidth, imageHeight;	/* Dimensions of image. */
+    const int bw = highlightWidth + borderWidth;
+
+    Tk_SizeOfImage(bgimg, &imageWidth, &imageHeight);
+    width = Tk_Width(tkwin) - 2*bw;
+    height = Tk_Height(tkwin) - 2*bw;
+
+    if (bgtile) {
+	/*
+	 * Draw the image tiled in the widget (inside the border).
+	 */
+
+	int x, y;
+
+	for (x = bw; x - bw < width; x += imageWidth) {
+	    int w = imageWidth;
+	    if (x - bw + imageWidth > width) {
+		w = (width + bw) - x;
+	    }
+	    for (y = bw; y < height + bw; y += imageHeight) {
+		int h = imageHeight;
+		if (y - bw + imageHeight > height) {
+		    h = (height + bw) - y;
+		}
+		Tk_RedrawImage(bgimg, 0, 0, w, h, pixmap, x, y);
+	    }
+	}
+    } else {
+	/*
+	 * Draw the image centred in the widget (inside the border).
+	 */
+
+	int x, y, xOff, yOff, w, h;
+
+	if (width > imageWidth) {
+	    x = 0;
+	    xOff = (Tk_Width(tkwin) - imageWidth) / 2;
+	    w = imageWidth;
+	} else {
+	    x = (imageWidth - width) / 2;
+	    xOff = bw;
+	    w = width;
+	}
+	if (height > imageHeight) {
+	    y = 0;
+	    yOff = (Tk_Height(tkwin) - imageHeight) / 2;
+	    h = imageHeight;
+	} else {
+	    y = (imageHeight - height) / 2;
+	    yOff = bw;
+	    h = height;
+	}
+	Tk_RedrawImage(bgimg, x, y, w, h, pixmap, xOff, yOff);
+    }
 }
 
 /*
