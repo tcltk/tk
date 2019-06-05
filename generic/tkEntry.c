@@ -3219,8 +3219,8 @@ static char *
 EntryTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Not used. */
+    const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
     Entry *entryPtr = clientData;
@@ -3234,32 +3234,39 @@ EntryTextVarProc(
     }
 
     /*
-     * See ticket [5d991b82].
-     */
-
-    if (entryPtr->textVarName == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    EntryTextVarProc, clientData);
-	}
- 	return NULL;
-     }
-
-    /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+        if (!Tcl_InterpDeleted(interp) && entryPtr->textVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        entryPtr->textVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        EntryTextVarProc, probe);
+                if (probe == (ClientData)entryPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * textVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2(interp, entryPtr->textVarName, NULL,
 		    entryPtr->string, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, entryPtr->textVarName, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    EntryTextVarProc, clientData);
 	    entryPtr->flags |= ENTRY_VAR_TRACED;
-	}
+        }
 	return NULL;
     }
 

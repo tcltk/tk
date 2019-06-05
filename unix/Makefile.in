@@ -100,11 +100,11 @@ DEMO_INSTALL_DIR	= $(INSTALL_ROOT)@DEMO_DIR@
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
-TCL_GENERIC_DIR		= @TCL_ACTUAL_SRC_DIR@/generic
+TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
 
 # The directory containing the platform specific Tcl sources and headers
 # appropriate for this version of Tk:
-TCL_PLATFORM_DIR	= @TCL_ACTUAL_SRC_DIR@/unix
+TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/unix
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:
@@ -310,7 +310,7 @@ GENERIC_DIR		= $(TOP_DIR)/generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
 UNIX_DIR		= $(TOP_DIR)/unix
 BMAP_DIR		= $(TOP_DIR)/bitmaps
-TOOL_DIR		= @TCL_ACTUAL_SRC_DIR@/tools
+TOOL_DIR		= @TCL_SRC_DIR@/tools
 TEST_DIR		= $(TOP_DIR)/tests
 MAC_OSX_DIR		= $(TOP_DIR)/macosx
 XLIB_DIR		= $(TOP_DIR)/xlib
@@ -569,7 +569,7 @@ DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
 SHELL_ENV = \
 	@LD_LIBRARY_PATH_VAR@="`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}"; \
 	export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_ACTUAL_SRC_DIR@/library; export TCL_LIBRARY; \
+	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY;
 
 all: binaries libraries doc
@@ -579,7 +579,7 @@ binaries: ${LIB_FILE} ${WISH_EXE}
 libraries:
 
 $(TOP_DIR)/doc/man.macros:
-	$(INSTALL_DATA) $(TCLDIR)/doc/man.macros $(TOP_DIR)/doc/man.macros
+	$(INSTALL_DATA) @TCL_SRC_DIR@/doc/man.macros $(TOP_DIR)/doc/man.macros
 
 doc: $(TOP_DIR)/doc/man.macros
 
@@ -685,7 +685,7 @@ demo:
 # This target can be used to run wish inside either gdb or insight
 gdb: ${WISH_EXE}
 	@echo "set env @LD_LIBRARY_PATH_VAR@=\"`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}\"" > gdb.run
-	@echo "set env TCL_LIBRARY=@TCL_ACTUAL_SRC_DIR@/library" >> gdb.run
+	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
 	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
 	gdb ./${WISH_EXE} --command=gdb.run
 	rm gdb.run
@@ -1566,7 +1566,7 @@ DISTROOT = /tmp/dist
 DISTNAME = tk${VERSION}${PATCH_LEVEL}
 ZIPNAME	 = tk${MAJOR_VERSION}${MINOR_VERSION}${PATCH_LEVEL}-src.zip
 DISTDIR	 = $(DISTROOT)/$(DISTNAME)
-TCLDIR   = @TCL_ACTUAL_SRC_DIR@
+TCLDIR   = @TCL_SRC_DIR@
 DIST_INSTALL_DATA   = CPPROG='cp -p' $(INSTALL) -m 644
 DIST_INSTALL_SCRIPT = CPPROG='cp -p' $(INSTALL) -m 755
 
@@ -1601,7 +1601,7 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/*.decls $(DISTDIR)/generic
 	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/README $(DISTDIR)/generic
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/changes $(TOP_DIR)/ChangeLog \
-		$(TOP_DIR)/ChangeLog.2??? $(TOP_DIR)/README \
+		$(TOP_DIR)/ChangeLog.2??? $(TOP_DIR)/README.md \
 		$(TOP_DIR)/license.terms $(DISTDIR)
 	rm -f $(DISTDIR)/generic/blt*.[ch]
 	$(INSTALL_DATA_DIR) $(DISTDIR)/generic/ttk
@@ -1723,7 +1723,7 @@ BUILD_HTML = \
 	$(SHELL_ENV) TCLSH="$(BUILD_TCLSH)"; else \
 	TCLSH="$(TCL_EXE)"; fi ;\
 	"$${TCLSH}" $(TOOL_DIR)/tcltk-man2html.tcl --htmldir="$(HTML_INSTALL_DIR)" \
-		--tk --srcdir=$(TOP_DIR) $(BUILD_HTML_FLAGS)
+		--srcdir=$(TOP_DIR)/.. $(BUILD_HTML_FLAGS)
 
 #
 # The list of all the targets that do not correspond to real files. This stops

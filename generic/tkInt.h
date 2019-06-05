@@ -1243,6 +1243,9 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    int firstByte, int lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    int c, struct TkFontAttributes *faPtr);
+MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
+			    Tk_3DBorder border, int highlightWidth,
+			    int borderWidth, int relief);
 MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);

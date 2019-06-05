@@ -26,6 +26,15 @@
 #include <zmouse.h>
 
 /*
+ * WM_MOUSEHWHEEL is normally defined by Winuser.h for Vista/2008 or later,
+ * but is also usable on 2000/XP if IntelliPoint drivers are installed.
+ */
+
+#ifndef WM_MOUSEHWHEEL
+#define WM_MOUSEHWHEEL 0x020E
+#endif
+
+/*
  * imm.h is needed by HandleIMEComposition
  */
 
@@ -71,8 +80,10 @@ typedef struct ThreadSpecificData {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
-    DWORD wheelTickPrev;	/* For high resolution wheels. */
-    short wheelAcc;		/* For high resolution wheels. */
+    DWORD vWheelTickPrev;	/* For high resolution wheels (vertical). */
+    DWORD hWheelTickPrev;	/* For high resolution wheels (horizontal). */
+    short vWheelAcc;		/* For high resolution wheels (vertical). */
+    short hWheelAcc;		/* For high resolution wheels (horizontal). */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -509,6 +520,7 @@ TkpOpenDisplay(
     Display *display;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    DWORD initialWheelTick;
 
     if (tsdPtr->winDisplay != NULL) {
 	if (!strcmp(tsdPtr->winDisplay->display->display_name, display_name)) {
@@ -564,8 +576,11 @@ TkpOpenDisplay(
     ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
-    tsdPtr->wheelTickPrev = GetTickCount();
-    tsdPtr->wheelAcc = 0;
+    initialWheelTick = GetTickCount();
+    tsdPtr->vWheelTickPrev = initialWheelTick;
+    tsdPtr->hWheelTickPrev = initialWheelTick;
+    tsdPtr->vWheelAcc = 0;
+    tsdPtr->hWheelAcc = 0;
 
     /*
      * Key map info must be available immediately, because of "send event".
@@ -896,6 +911,7 @@ Tk_TranslateWinEvent(
     case WM_SYSKEYUP:
     case WM_KEYUP:
     case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
 	GenerateXEvent(hwnd, message, wParam, lParam);
 	return 1;
     case WM_MENUCHAR:
@@ -940,7 +956,7 @@ GenerateXEvent(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (message == WM_MOUSEWHEEL) {
+    if ((message == WM_MOUSEWHEEL) || (message == WM_MOUSEHWHEEL)) {
 	union {LPARAM lParam; POINTS point;} root;
 	POINT pos;
 	root.lParam = lParam;
@@ -1055,6 +1071,7 @@ GenerateXEvent(
 	break;
 
     case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
     case WM_CHAR:
     case WM_UNICHAR:
     case WM_SYSKEYDOWN:
@@ -1096,18 +1113,18 @@ GenerateXEvent(
 	switch (message) {
 	case WM_MOUSEWHEEL: {
 	    /*
-	     * Support for high resolution wheels.
+	     * Support for high resolution wheels (vertical).
 	     */
 
 	    DWORD wheelTick = GetTickCount();
 
-	    if (wheelTick - tsdPtr->wheelTickPrev < 1500) {
-		tsdPtr->wheelAcc += (short) HIWORD(wParam);
+	    if (wheelTick - tsdPtr->vWheelTickPrev < 1500) {
+		tsdPtr->vWheelAcc += (short) HIWORD(wParam);
 	    } else {
-		tsdPtr->wheelAcc = (short) HIWORD(wParam);
+		tsdPtr->vWheelAcc = (short) HIWORD(wParam);
 	    }
-	    tsdPtr->wheelTickPrev = wheelTick;
-	    if (abs(tsdPtr->wheelAcc) < WHEEL_DELTA) {
+	    tsdPtr->vWheelTickPrev = wheelTick;
+	    if (abs(tsdPtr->vWheelAcc) < WHEEL_DELTA) {
 		return;
 	    }
 
@@ -1122,8 +1139,41 @@ GenerateXEvent(
 	    event.type = MouseWheelEvent;
 	    event.xany.send_event = -1;
 	    event.xkey.nbytes = 0;
-	    event.xkey.keycode = tsdPtr->wheelAcc / WHEEL_DELTA * WHEEL_DELTA;
-	    tsdPtr->wheelAcc = tsdPtr->wheelAcc % WHEEL_DELTA;
+	    event.xkey.keycode = tsdPtr->vWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    tsdPtr->vWheelAcc = tsdPtr->vWheelAcc % WHEEL_DELTA;
+	    break;
+	}
+	case WM_MOUSEHWHEEL: {
+	    /*
+	     * Support for high resolution wheels (horizontal).
+	     */
+
+	    DWORD wheelTick = GetTickCount();
+
+	    if (wheelTick - tsdPtr->hWheelTickPrev < 1500) {
+		tsdPtr->hWheelAcc -= (short) HIWORD(wParam);
+	    } else {
+		tsdPtr->hWheelAcc = -((short) HIWORD(wParam));
+	    }
+	    tsdPtr->hWheelTickPrev = wheelTick;
+	    if (abs(tsdPtr->hWheelAcc) < WHEEL_DELTA) {
+		return;
+	    }
+
+	    /*
+	     * We have invented a new X event type to handle this event. It
+	     * still uses the KeyPress struct. However, the keycode field has
+	     * been overloaded to hold the zDelta of the wheel. Set nbytes to
+	     * 0 to prevent conversion of the keycode to a keysym in
+	     * TkpGetString. [Bug 1118340].
+	     */
+
+	    event.type = MouseWheelEvent;
+	    event.xany.send_event = -1;
+	    event.xkey.nbytes = 0;
+	    event.xkey.state |= ShiftMask;
+	    event.xkey.keycode = tsdPtr->hWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    tsdPtr->hWheelAcc = tsdPtr->hWheelAcc % WHEEL_DELTA;
 	    break;
 	}
 	case WM_SYSKEYDOWN:

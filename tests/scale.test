@@ -1559,6 +1559,32 @@ test scale-21.2 {Bug [55b95f578a] again - Bignum value for -from/-to with scale 
     destroy .s
 } -result {}
 
+test scale-22.1 {Bug [5d991b822e]} {
+    # Want this not to crash
+    set var INIT
+    scale .b -variable var
+    trace add variable var unset {apply {args {
+        .b configure -variable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+} {}
+test scale-22.2 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    scale .b -variable var
+    trace add variable var unset {apply {args {
+        .b configure -variable new
+    }}}
+    pack .b
+    bind .b <Configure> {unset -nocomplain var}
+    update
+    destroy .b
+    unset new
+} {}
+
 option clear
 
 # cleanup

@@ -20,34 +20,34 @@ proc getTroughSize {w} {
     if {[testConstraint testmetrics]} {
         # Only Windows has [testmetrics]
 	if [string match v* [$w cget -orient]] {
-	    return [expr [winfo height $w] - 2*[testmetrics cyvscroll $w]]
+	    return [expr {[winfo height $w] - 2*[testmetrics cyvscroll $w]}]
 	} else {
-	    return [expr [winfo width $w] - 2*[testmetrics cxhscroll $w]]
+	    return [expr {[winfo width $w] - 2*[testmetrics cxhscroll $w]}]
 	}
     } else {
         if {[tk windowingsystem] eq "x11"} {
             # Calculations here assume that the arrow area is a square.
 	    if [string match v* [$w cget -orient]] {
-	        return [expr [winfo height $w] \
+	        return [expr {[winfo height $w] \
 		        - ([winfo width $w] \
 			    - [$w cget -highlightthickness] \
-			    - [$w cget -bd] + 1)*2]
+			    - [$w cget -bd] + 1)*2}]
 	    } else {
-	        return [expr [winfo width $w] \
+	        return [expr {[winfo width $w] \
 		        - ([winfo height $w] \
 			    - [$w cget -highlightthickness] \
-			    - [$w cget -bd] + 1)*2]
+			    - [$w cget -bd] + 1)*2}]
 	    }
         } else {
             # macOS aqua
 	    if [string match v* [$w cget -orient]] {
-	        return [expr [winfo height $w] \
+	        return [expr {[winfo height $w] \
 			- ([$w cget -highlightthickness] \
-			  +[$w cget -bd])*2]
+			  +[$w cget -bd])*2}]
 	    } else {
-	        return [expr [winfo width $w] \
+	        return [expr {[winfo width $w] \
 			- ([$w cget -highlightthickness] \
-			  +[$w cget -bd])*2]
+			  +[$w cget -bd])*2}]
 	    }
         }
     }
@@ -58,8 +58,8 @@ proc getTroughSize {w} {
 # as you fix bugs and add features.
 
 foreach {width height} [wm minsize .] {
-    set height [expr ($height < 200) ? 200 : $height]
-    set width [expr ($width < 1) ? 1 : $width]
+    set height [expr {($height < 200) ? 200 : $height}]
+    set width [expr {($width < 1) ? 1 : $width}]
 }
 
 frame .f -height $height -width $width
@@ -233,10 +233,10 @@ test scrollbar-3.25 {ScrollbarWidgetCmd procedure, "delta" option} {
 } {0}
 test scrollbar-3.26 {ScrollbarWidgetCmd procedure, "delta" option} {
     format {%.6g} [.s delta 0 20]
-} [format %.6g [expr 20.0/([getTroughSize .s]-1)]]
+} [format %.6g [expr {20.0/([getTroughSize .s]-1)}]]
 test scrollbar-3.27 {ScrollbarWidgetCmd procedure, "delta" option} {
     format {%.6g} [.s delta 0 -20]
-} [format %.6g [expr -20.0/([getTroughSize .s]-1)]]
+} [format %.6g [expr {-20.0/([getTroughSize .s]-1)}]]
 test scrollbar-3.28 {ScrollbarWidgetCmd procedure, "delta" option} {
     toplevel .t -width 250 -height 100
     wm geom .t +0+0
@@ -244,7 +244,7 @@ test scrollbar-3.28 {ScrollbarWidgetCmd procedure, "delta" option} {
     place .t.s -width 201
     update
     set result [list [format {%.6g} [.t.s delta 0 20]] \
-	    [format {%.6g} [.t.s delta [expr [getTroughSize .t.s] - 1] 0]]]
+	    [format {%.6g} [.t.s delta [expr {[getTroughSize .t.s] - 1}] 0]]]
     destroy .t
     set result
 } {0 1}
@@ -268,22 +268,22 @@ test scrollbar-3.34 {ScrollbarWidgetCmd procedure, "fraction" option} {
 } {1}
 test scrollbar-3.35 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 21]
-} [format %.6g [expr (21.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
-       /([getTroughSize .s] - 1)]]
+} [format %.6g [expr {(21.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
+       /([getTroughSize .s] - 1)}]]
 test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} x11 {
     format {%.6g} [.s fraction 4 179]
 } {1}
 test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics} {
-    format {%.6g} [.s fraction 4 [expr 200 - [testmetrics cyvscroll .s]]]
+    format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s]}]]
 } {1}
 test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} x11 {
     format {%.6g} [.s fraction 4 178]
 } {0.993711}
 test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics win} {
-    expr \
-    [format {%.6g} [.s fraction 4 [expr 200 - [testmetrics cyvscroll .s] - 2]]] \
-	== [format %g [expr (200.0 - [testmetrics cyvscroll .s]*2 - 2) \
-			   / ($height - 1 - [testmetrics cyvscroll .s]*2)]]
+    expr {
+    [format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s] - 2}]]]
+	== [format %g [expr {(200.0 - [testmetrics cyvscroll .s]*2 - 2)
+			   / ($height - 1 - [testmetrics cyvscroll .s]*2)}]]}
 } 1
 
 toplevel .t -width 250 -height 100
@@ -297,13 +297,13 @@ test scrollbar-3.41 {ScrollbarWidgetCmd procedure, "fraction" option} {
 } {0.5}
 if {[testConstraint testmetrics]} {
     # Only Windows has [testmetrics]
-    place configure .t.s -width [expr 2*[testmetrics cxhscroll .t.s]+1]
+    place configure .t.s -width [expr {2*[testmetrics cxhscroll .t.s]+1}]
 } else {
     if {[tk windowingsystem] eq "x11"} {
-        place configure .t.s -width [expr [winfo height .t.s] - 2*([.t.s cget -highlightthickness] + [.t.s cget -bd] + 1)]
+        place configure .t.s -width [expr {[winfo height .t.s] - 2*([.t.s cget -highlightthickness] + [.t.s cget -bd] + 1)}]
     } else {
         # macOS aqua
-        place configure .t.s -width [expr 2*([.t.s cget -highlightthickness] + [.t.s cget -bd])]
+        place configure .t.s -width [expr {2*([.t.s cget -highlightthickness] + [.t.s cget -bd])}]
     }
 }
 update
@@ -473,16 +473,16 @@ test scrollbar-6.6 {ScrollbarPosition procedure} unix {
     .s identify 19 100
 } {}
 test scrollbar-6.7 {ScrollbarPosition procedure} {
-    .s identify [expr [winfo width .s] / 2] -1
+    .s identify [expr {[winfo width .s] / 2}] -1
 } {}
 test scrollbar-6.8 {ScrollbarPosition procedure} {
-    .s identify [expr [winfo width .s] / 2] [expr [winfo height .s]]
+    .s identify [expr {[winfo width .s] / 2}] [winfo height .s]
 } {}
 test scrollbar-6.9 {ScrollbarPosition procedure} {
-    .s identify -1 [expr [winfo height .s] / 2]
+    .s identify -1 [expr {[winfo height .s] / 2}]
 } {}
 test scrollbar-6.10 {ScrollbarPosition procedure} {
-    .s identify [winfo width .s] [expr [winfo height .s] / 2]
+    .s identify [winfo width .s] [expr {[winfo height .s] / 2}]
 } {}
 test scrollbar-6.11.1 {ScrollbarPosition procedure} x11 {
     .s identify 8 4
@@ -499,10 +499,10 @@ test scrollbar-6.12.2 {ScrollbarPosition procedure} aqua {
     .s identify 8 19
 } {trough1}
 test scrollbar-6.14 {ScrollbarPosition procedure} win {
-    .s identify [expr [winfo width .s] / 2] 0
+    .s identify [expr {[winfo width .s] / 2}] 0
 } {arrow1}
 test scrollbar-6.15 {ScrollbarPosition procedure} {testmetrics win} {
-    .s identify [expr [winfo width .s] / 2] [expr [testmetrics cyvscroll .s] - 1]
+    .s identify [expr {[winfo width .s] / 2}] [expr {[testmetrics cyvscroll .s] - 1}]
 } {arrow1}
 test scrollbar-6.16 {ScrollbarPosition procedure} unix {
     .s identify 8 20
@@ -513,11 +513,11 @@ test scrollbar-6.17 {ScrollbarPosition procedure} {unix nonPortable} {
     .s identify 8 51
 } {trough1}
 test scrollbar-6.18 {ScrollbarPosition procedure} {testmetrics win} {
-    .s identify [expr [winfo width .s] / 2] [testmetrics cyvscroll .s]
+    .s identify [expr {[winfo width .s] / 2}] [testmetrics cyvscroll .s]
 } {trough1}
 test scrollbar-6.19 {ScrollbarPosition procedure} {testmetrics win} {
-    .s identify [expr [winfo width .s] / 2] [expr int(.2 / [.s delta 0 1]) \
-						+ [testmetrics cyvscroll .s] - 1]
+    .s identify [expr {[winfo width .s] / 2}] [expr {int(.2 / [.s delta 0 1])
+						+ [testmetrics cyvscroll .s] - 1}]
 } {trough1}
 test scrollbar-6.20 {ScrollbarPosition procedure} unix {
     .s identify 8 52
@@ -528,12 +528,12 @@ test scrollbar-6.21 {ScrollbarPosition procedure} {unix nonPortable} {
     .s identify 8 83
 } {slider}
 test scrollbar-6.22 {ScrollbarPosition procedure} {testmetrics win} {
-    .s identify [expr [winfo width .s] / 2] \
-	[expr int(.2 / [.s delta 0 1] + 0.5) + [testmetrics cyvscroll .s]]
+    .s identify [expr {[winfo width .s] / 2}] \
+	[expr {int(.2 / [.s delta 0 1] + 0.5) + [testmetrics cyvscroll .s]}]
 } {slider}
 test scrollbar-6.23 {ScrollbarPosition procedure} {testmetrics win} {
-    .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \
-						 + [testmetrics cyvscroll .s] - 1]
+    .s identify [expr {[winfo width .s] / 2}] [expr {int(.4 / [.s delta 0 1])
+						 + [testmetrics cyvscroll .s] - 1}]
 } {slider}
 test scrollbar-6.24 {ScrollbarPosition procedure} unix {
     .s identify 8 84
@@ -542,12 +542,12 @@ test scrollbar-6.25 {ScrollbarPosition procedure} unix {
     .s identify 8 179
 } {trough2}
 test scrollbar-6.27 {ScrollbarPosition procedure} {testmetrics win} {
-    .s identify [expr [winfo width .s] / 2] [expr int(.4 / [.s delta 0 1]) \
-						 + [testmetrics cyvscroll .s]]
+    .s identify [expr {[winfo width .s] / 2}] [expr {int(.4 / [.s delta 0 1])
+						 + [testmetrics cyvscroll .s]}]
 } {trough2}
 test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics win} {
-    .s identify [expr [winfo width .s] / 2] [expr [winfo height .s] \
-						 - [testmetrics cyvscroll .s] - 1]
+    .s identify [expr {[winfo width .s] / 2}] [expr {[winfo height .s]
+						 - [testmetrics cyvscroll .s] - 1}]
 } {trough2}
 test scrollbar-6.29.1 {ScrollbarPosition procedure} x11 {
     .s identify 8 180
@@ -564,11 +564,11 @@ test scrollbar-6.30.2 {ScrollbarPosition procedure} aqua {
     .s identify 8 195
 } {trough2}
 test scrollbar-6.32 {ScrollbarPosition procedure} {testmetrics win} {
-    .s identify [expr [winfo width .s] / 2]  [expr [winfo height .s] \
-						  - [testmetrics cyvscroll .s]]
+    .s identify [expr {[winfo width .s] / 2}]  [expr {[winfo height .s]
+						  - [testmetrics cyvscroll .s]}]
 } {arrow2}
 test scrollbar-6.33 {ScrollbarPosition procedure} win {
-    .s identify [expr [winfo width .s] / 2] [expr [winfo height .s] - 1]
+    .s identify [expr {[winfo width .s] / 2}] [expr {[winfo height .s] - 1}]
 } {arrow2}
 test scrollbar-6.34 {ScrollbarPosition procedure} unix {
     .s identify 4 100
@@ -580,7 +580,7 @@ test scrollbar-6.37 {ScrollbarPosition procedure} win {
     .s identify 0 100
 } {trough2}
 test scrollbar-6.38 {ScrollbarPosition procedure} win {
-    .s identify [expr [winfo width .s] - 1] 100
+    .s identify [expr {[winfo width .s] - 1}] 100
 } {trough2}
 
 catch {destroy .t}
@@ -599,7 +599,7 @@ test scrollbar-6.39.2 {ScrollbarPosition procedure} aqua {
     .t.s identify 4 8
 } {trough1}
 test scrollbar-6.40 {ScrollbarPosition procedure} win {
-    .t.s identify 0 [expr [winfo height .t.s] / 2]
+    .t.s identify 0 [expr {[winfo height .t.s] / 2}]
 } {arrow1}
 test scrollbar-6.41.1 {ScrollbarPosition procedure} x11 {
     .t.s identify 82 8
@@ -609,14 +609,14 @@ test scrollbar-6.41.2 {ScrollbarPosition procedure} aqua {
     .t.s identify 82 8
 } {trough2}
 test scrollbar-6.43 {ScrollbarPosition procedure} {testmetrics win} {
-    .t.s identify [expr int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll .t.s] \
-		       - 1] [expr [winfo height .t.s] / 2]
+    .t.s identify [expr {int(.4 / [.t.s delta 1 0]) + [testmetrics cxhscroll .t.s]
+		       - 1}] [expr {[winfo height .t.s] / 2}]
 } {slider}
 test scrollbar-6.44 {ScrollbarPosition procedure} unix {
     .t.s identify 100 18
 } {trough2}
 test scrollbar-6.46 {ScrollbarPosition procedure} win {
-    .t.s identify 100 [expr [winfo height .t.s] - 1]
+    .t.s identify 100 [expr {[winfo height .t.s] - 1}]
 } {trough2}
 
 test scrollbar-7.1 {EventuallyRedraw} {
@@ -645,7 +645,7 @@ test scrollbar-8.1 {TkScrollbarEventProc: recursive deletion} notAqua {
     .t.f.s set 0 .5
     update
     set result [winfo exists .t.f.s]
-    event generate .t.f.s <ButtonPress> -button 1 -x [expr [winfo width .t.f.s] / 2] -y 5
+    event generate .t.f.s <ButtonPress> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
     event generate .t <ButtonRelease> -button 1
     update
     lappend result [winfo exists .t.f.s] [winfo exists .t.f]
@@ -666,7 +666,7 @@ test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} notAqua {
     .t.f.s set 0 .5
     update
     set result [winfo exists .t.f.s]
-    event generate .t.f.s <ButtonPress> -button 1 -x [expr [winfo width .t.f.s] / 2] -y 5
+    event generate .t.f.s <ButtonPress> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
     event generate .t.f <ButtonRelease> -button 1
     update
     lappend result [winfo exists .t.f.s] [winfo exists .t.f]
