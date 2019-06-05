@@ -180,7 +180,7 @@ test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -constraints {
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*10] -text "00000000"
+    .t.l config -wrap [expr {$ax*10}] -text "00000000"
     list [expr {[winfo reqwidth .t.l] eq 8*$ax}] \
         [expr {[winfo reqheight .t.l] eq $ay}]
 } -cleanup {
@@ -199,7 +199,7 @@ test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -constraints {
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*6] -text "00000000"
+    .t.l config -wrap [expr {$ax*6}] -text "00000000"
     list [expr {[winfo reqwidth .t.l] eq 6*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -218,7 +218,7 @@ test winfont-5.5 {Tk_MeasureChars procedure: include last partial char} -constra
 
     .t.c dchars $t 0 end
     .t.c insert $t 0 "0000"
-    .t.c index $t @[expr int($cx*2.5)],1
+    .t.c index $t @[expr {int($cx*2.5)}],1
 } -cleanup {
     destroy .t.c
 } -result {2}
@@ -254,7 +254,7 @@ test winfont-5.7 {Tk_MeasureChars procedure: whole words} -constraints {
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*8] -text "000000 0000"
+    .t.l config -wrap [expr {$ax*8}] -text "000000 0000"
     list [expr {[winfo reqwidth .t.l] eq 6*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -273,7 +273,7 @@ test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -constra
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*12] -text "000000    0000000"
+    .t.l config -wrap [expr {$ax*12}] -text "000000    0000000"
     list [expr {[winfo reqwidth .t.l] eq 7*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -292,7 +292,7 @@ test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -const
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*12] -text "000  00   00000"
+    .t.l config -wrap [expr {$ax*12}] -text "000  00   00000"
     list [expr {[winfo reqwidth .t.l] eq 7*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -311,7 +311,7 @@ test winfont-5.10 {Tk_MeasureChars procedure: make first part of word fit} -cons
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*12] -text "0000000000000000"
+    .t.l config -wrap [expr {$ax*12}] -text "0000000000000000"
     list [expr {[winfo reqwidth .t.l] eq 12*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -334,7 +334,7 @@ test winfont-5.11 {Tk_MeasureChars procedure: check for kerning} -constraints {
     .t.l config -text "XaYoYaKaWx"
     set x [lindex [getsize] 0]
     .t.l config -font $font
-    expr $x < ($width*10)
+    expr {$x < ($width*10)}
 } -cleanup {
     destroy .t.l
 } -result {1}

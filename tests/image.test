@@ -47,7 +47,7 @@ test image-1.6 {Tk_ImageCmd procedure, "create" option} -constraints {
     scan [image create test] image%d first
     image create test myimage
     scan [image create test -variable x] image%d second
-    expr $second-$first
+    expr {$second-$first}
 } -cleanup {
     imageCleanup
 } -result {1}
@@ -62,8 +62,18 @@ test image-1.7 {Tk_ImageCmd procedure, "create" option} -constraints {
     .c create image 100 150 -image myimage
     update
     set x {}
+    set timer [after 500 {lappend x "timeout"}]
     image create test myimage -variable x
+    update idletasks
     update
+    # On MacOS we need to wait for the test image display procedure to run.
+    while {"timeout" ni $x && [lindex $x end 1] ne "display"} {
+        vwait x
+    }
+    after cancel timer
+    if {[lindex $x end] eq "timeout"} {
+       return [lreplace $x end end]
+    }
     return $x
 } -cleanup {
     imageCleanup
@@ -345,7 +355,12 @@ test image-8.1 {Tk_ImageCmd procedure, "inuse" option} -constraints {
     catch {destroy .b}
 } -result [list 0 1]
 
-
+if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
+    # Aqua >= 10.14 will redraw the entire image in drawRect.
+    set result_9_1 {{foo display 0 0 30 15}}
+} else {
+    set result_9_1 {{foo display 5 6 7 8}}
+}
 test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c delete all
     imageCleanup
@@ -355,13 +370,26 @@ test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c create image 50 50 -image foo
     update
     set x {}
+    set timer [after 500 {lappend x "timeout"}]
     foo changed 5 6 7 8 30 15
+    update idletasks
     update
+    # On MacOS we need to wait for the test image display procedure to run.
+    while {"timeout" ni $x && [lindex $x end 1] ne "display"} {
+        vwait x
+    }
+    after cancel timer
     return $x
 } -cleanup {
     .c delete all
     imageCleanup
-} -result {{foo display 5 6 7 8}}
+} -result $result_9_1
+if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
+    # Aqua >= 10.14 will redraw the entire image.
+    set result_9_2 {{foo display 0 0 30 15} {foo display 0 0 30 15}}
+} else {
+    set result_9_2 {{foo display 5 6 25 9} {foo display 0 0 12 14}}
+}
 test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     .c delete all
     imageCleanup
@@ -378,8 +406,7 @@ test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
 } -cleanup {
     .c delete all
     imageCleanup
-} -result {{foo display 5 6 25 9} {foo display 0 0 12 14}}
-
+} -result $result_9_2
 
 test image-10.1 {Tk_GetImage procedure} -setup {
     imageCleanup

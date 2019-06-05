@@ -580,6 +580,17 @@ TkMacOSXDrawMenuButton(
             hiinfo.animation.time.start = hiinfo.animation.time.current;
         }
 
+	/*
+	 * To avoid menubuttons with white text on a white background, we
+	 * always set the state to inactive in Dark Mode.  It isn't perfect but
+	 * it is usable.  Using a ttk::menubutton would be a better choice,
+	 * however.
+	 */
+
+	if (TkMacOSXInDarkMode(butPtr->tkwin)) {
+	    hiinfo.state = kThemeStateInactive;
+	}
+
         HIThemeDrawButton(&cntrRect, &hiinfo, dc.context,
 		kHIThemeOrientationNormal, &contHIRec);
 	TkMacOSXRestoreDrawingContext(&dc);

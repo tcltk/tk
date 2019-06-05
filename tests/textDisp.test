@@ -41,7 +41,15 @@ catch {destroy .f .t}
 frame .f -width 100 -height 20
 pack .f -side left
 
-set fixedFont {"Courier New" -12}
+# On macOS the font "Courier New" has different metrics than "Courier",
+# and this causes tests 20.1 - 20.5 to fail.  So we use "Courier" as the
+# fixed font for testing on Aqua.
+
+if {[tk windowingsystem] eq "aqua"} {
+   set fixedFont {Courier -12}
+} else {
+  set fixedFont {"Courier New" -12}
+}
 # 15 on XP, 13 on Solaris 8
 set fixedHeight [font metrics $fixedFont -linespace]
 # 7 on all platforms
@@ -230,7 +238,7 @@ test textDisp-2.1 {LayoutDLine, basics} {
     .t delete 1.0 end
     .t insert 1.0 "This is some sample text for testing."
     list [.t bbox 1.19] [.t bbox 1.20]
-} [list [list [expr 5 + $fixedWidth * 19] 5 $fixedWidth $fixedHeight] [list 5 [expr 5 + $fixedHeight] $fixedWidth $fixedHeight]]
+} [list [list [expr {5 + $fixedWidth * 19}] 5 $fixedWidth $fixedHeight] [list 5 [expr {5 + $fixedHeight}] $fixedWidth $fixedHeight]]
 test textDisp-2.2 {LayoutDLine, basics} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
@@ -274,7 +282,7 @@ foreach m [.t mark names] {
 }
 scan [wm geom .] %dx%d width height
 test textDisp-2.8 {LayoutDLine, extra chunk at end of dline} {textfonts} {
-    wm geom . [expr $width+1]x$height
+    wm geom . [expr {$width+1}]x$height
     update
     .t configure -wrap char
     .t delete 1.0 end
@@ -414,22 +422,22 @@ test textDisp-2.22 {LayoutDLine, spacing options} {textfonts} {
     .t insert end "to wrap around a couple of times"
     .t insert end "\nLine 3\nLine 4"
     set i [.t dlineinfo 1.0]
-    set b1 [expr [lindex $i 1] + [lindex $i 4]]
+    set b1 [expr {[lindex $i 1] + [lindex $i 4]}]
     set i [.t dlineinfo 2.0]
-    set b2 [expr [lindex $i 1] + [lindex $i 4]]
+    set b2 [expr {[lindex $i 1] + [lindex $i 4]}]
     set i [.t dlineinfo 2.end]
-    set b3 [expr [lindex $i 1] + [lindex $i 4]]
+    set b3 [expr {[lindex $i 1] + [lindex $i 4]}]
     set i [.t dlineinfo 3.0]
-    set b4 [expr [lindex $i 1] + [lindex $i 4]]
+    set b4 [expr {[lindex $i 1] + [lindex $i 4]}]
     .t configure -spacing1 2 -spacing2 1 -spacing3 3
     set i [.t dlineinfo 1.0]
-    set b1 [expr [lindex $i 1] + [lindex $i 4] - $b1]
+    set b1 [expr {[lindex $i 1] + [lindex $i 4] - $b1}]
     set i [.t dlineinfo 2.0]
-    set b2 [expr [lindex $i 1] + [lindex $i 4] - $b2]
+    set b2 [expr {[lindex $i 1] + [lindex $i 4] - $b2}]
     set i [.t dlineinfo 2.end]
-    set b3 [expr [lindex $i 1] + [lindex $i 4] - $b3]
+    set b3 [expr {[lindex $i 1] + [lindex $i 4] - $b3}]
     set i [.t dlineinfo 3.0]
-    set b4 [expr [lindex $i 1] + [lindex $i 4] - $b4]
+    set b4 [expr {[lindex $i 1] + [lindex $i 4] - $b4}]
     list $b1 $b2 $b3 $b4
 } [list 2 7 10 15]
 .t configure -spacing1 0 -spacing2 0 -spacing3 0
@@ -441,13 +449,13 @@ test textDisp-2.23 {LayoutDLine, spacing options} {textfonts} {
     .t insert end "to wrap around a couple of times"
     .t insert end "\nLine 3\nLine 4"
     set i [.t dlineinfo 1.0]
-    set b1 [expr [lindex $i 1] + [lindex $i 4]]
+    set b1 [expr {[lindex $i 1] + [lindex $i 4]}]
     set i [.t dlineinfo 2.0]
-    set b2 [expr [lindex $i 1] + [lindex $i 4]]
+    set b2 [expr {[lindex $i 1] + [lindex $i 4]}]
     set i [.t dlineinfo 2.end]
-    set b3 [expr [lindex $i 1] + [lindex $i 4]]
+    set b3 [expr {[lindex $i 1] + [lindex $i 4]}]
     set i [.t dlineinfo 3.0]
-    set b4 [expr [lindex $i 1] + [lindex $i 4]]
+    set b4 [expr {[lindex $i 1] + [lindex $i 4]}]
     .t configure -spacing1 4 -spacing2 4 -spacing3 4
     .t tag configure x -spacing1 1 -spacing2 2 -spacing3 3
     .t tag add x 1.0 end
@@ -455,13 +463,13 @@ test textDisp-2.23 {LayoutDLine, spacing options} {textfonts} {
     .t tag add y 2.19 end
     .t tag raise y
     set i [.t dlineinfo 1.0]
-    set b1 [expr [lindex $i 1] + [lindex $i 4] - $b1]
+    set b1 [expr {[lindex $i 1] + [lindex $i 4] - $b1}]
     set i [.t dlineinfo 2.0]
-    set b2 [expr [lindex $i 1] + [lindex $i 4] - $b2]
+    set b2 [expr {[lindex $i 1] + [lindex $i 4] - $b2}]
     set i [.t dlineinfo 2.end]
-    set b3 [expr [lindex $i 1] + [lindex $i 4] - $b3]
+    set b3 [expr {[lindex $i 1] + [lindex $i 4] - $b3}]
     set i [.t dlineinfo 3.0]
-    set b4 [expr [lindex $i 1] + [lindex $i 4] - $b4]
+    set b4 [expr {[lindex $i 1] + [lindex $i 4] - $b4}]
     list $b1 $b2 $b3 $b4
 } [list 1 5 13 16]
 .t configure -spacing1 0 -spacing2 0 -spacing3 0
@@ -1343,7 +1351,7 @@ test textDisp-9.13 {TkTextRedrawTag} {
     .t configure -wrap none
     .t delete 1.0 end
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i - This is Line [format %c [expr 64+$i]]\n"
+        .t insert end "Line $i - This is Line [format %c [expr {64+$i}]]\n"
     }
     .t tag add hidden 2.8 2.17
     .t tag add hidden 6.8 7.17
@@ -1514,7 +1522,7 @@ test textDisp-11.13 {TkTestSetYView, partially visible last line} {
     }
     update
     scan [wm geometry .top] "%dx%d" w2 h2
-    wm geometry .top ${w2}x[expr $h2-2]
+    wm geometry .top ${w2}x[expr {$h2-2}]
     update
     .top.t yview 1.0
     update
@@ -1745,7 +1753,7 @@ test textDisp-13.8 {TkTextSeeCmd procedure} {textfonts} {
     lappend x [.t bbox 30.90]
 } [list [list 73 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight] [list 136 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight] [list 73 [expr {9*$fixedDiff/2 + 64}] 7 $fixedHeight]]
 test textDisp-13.9 {TkTextSeeCmd procedure} {textfonts} {
-    wm geom . [expr $width-2]x$height
+    wm geom . [expr {$width-2}]x$height
     .t xview moveto 0
     .t yview moveto 0
     .t tag add sel 30.20
@@ -2136,7 +2144,7 @@ test textDisp-16.28 {TkTextYviewCmd procedure, "scroll" option, forward pages} {
     .t yview 98.0
     update
     .t yview scroll 1 page
-    set res [expr int([.t index @0,0])]
+    set res [expr {int([.t index @0,0])}]
     if {$fixedDiff > 1} {
 	incr res -1
     }
@@ -2292,7 +2300,7 @@ test textDisp-16.44 {TkTextYviewCmd procedure, scroll down, with elided lines} {
     }
     .t tag configure hidden -elide true ; # 5 hidden lines
     update
-    .t see [expr {5 + [winfo height .t] / $fixedHeight} + 1].0
+    .t see [expr {5 + [winfo height .t] / $fixedHeight + 1}].0
     update
     .t index @0,0
 } {2.0}
@@ -2743,7 +2751,7 @@ test textDisp-19.12 {GetYView procedure, partially visible last line} {
     # Need to wait for asychronous calculations to complete.
     update ; after 10
     scan [wm geom .top] %dx%d twidth theight
-    wm geom .top ${twidth}x[expr $theight - 3]
+    wm geom .top ${twidth}x[expr {$theight - 3}]
     update
     .top.t yview
 } [list 0.0 [expr {(5.0 * $fixedHeight - 3.0)/ (5.0 * $fixedHeight)}]]
@@ -2757,7 +2765,7 @@ test textDisp-19.13 {GetYView procedure, partially visible last line} {textfonts
     # Need to wait for asychronous calculations to complete.
     update ; after 10
     scan [wm geom .top] %dx%d twidth theight
-    wm geom .top ${twidth}x[expr $theight - 3]
+    wm geom .top ${twidth}x[expr {$theight - 3}]
     update
     .top.t yview
 } [list 0.0 [expr {(5.0 * $fixedHeight - 3.0)/ (5.0 * $fixedHeight)}]]
@@ -2992,21 +3000,21 @@ test textDisp-22.2 {TkTextCharBbox} {textfonts} {
 test textDisp-22.3 {TkTextCharBbox, cut-off lines} {textfonts} {
     .t config -wrap char
     .t yview 10.0
-    wm geom . ${width}x[expr $height-1]
+    wm geom . ${width}x[expr {$height-1}]
     update
     list [.t bbox 19.1] [.t bbox 20.1]
 } [list [list 10 [expr {3+9*$fixedHeight}] 7 $fixedHeight] [list 10 [expr {3+10*$fixedHeight}] 7 3]]
 test textDisp-22.4 {TkTextCharBbox, cut-off lines} {textfonts} {
     .t config -wrap char
     .t yview 10.0
-    wm geom . ${width}x[expr $height+1]
+    wm geom . ${width}x[expr {$height+1}]
     update
     list [.t bbox 19.1] [.t bbox 20.1]
 } [list [list 10 [expr {3+9*$fixedHeight}] 7 $fixedHeight] [list 10 [expr {3+10*$fixedHeight}] 7 5]]
 test textDisp-22.5 {TkTextCharBbox, cut-off char} {textfonts} {
     .t config -wrap none
     .t yview 10.0
-    wm geom . [expr $width-95]x$height
+    wm geom . [expr {$width-95}]x$height
     update
     .t bbox 15.6
 } [list 45 [expr {3+5*$fixedHeight}] 7 $fixedHeight]
@@ -3014,7 +3022,7 @@ test textDisp-22.6 {TkTextCharBbox, line visible but not char} {textfonts} {
     .t config -wrap char
     .t yview 10.0
     .t tag add big 20.2 20.5
-    wm geom . ${width}x[expr $height+3]
+    wm geom . ${width}x[expr {$height+3}]
     update
     list [.t bbox 19.1] [.t bbox 20.1] [.t bbox 20.2]
 } [list [list 10 [expr {3+9*$fixedHeight}] 7 $fixedHeight] {} [list 17 [expr {3+10*$fixedHeight}] 14 7]]
@@ -3060,7 +3068,7 @@ test textDisp-22.10 {TkTextCharBbox, handling of elided lines} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i - Line [format %c [expr 64+$i]]\n"
+        .t insert end "Line $i - Line [format %c [expr {64+$i}]]\n"
     }
     .t tag add hidden 2.8 2.13
     .t tag add hidden 6.8 7.13
@@ -3083,7 +3091,7 @@ test textDisp-22.11 {TkTextCharBbox, handling of wrapped elided lines} {textfont
     .t configure -wrap char
     .t delete 1.0 end
     for {set i 1} {$i < 10} {incr i} {
-        .t insert end "Line $i - Line _$i - Lines .$i - Line [format %c [expr 64+$i]]\n"
+        .t insert end "Line $i - Line _$i - Lines .$i - Line [format %c [expr {64+$i}]]\n"
     }
     .t tag add hidden 1.30 2.5
     .t tag configure hidden -elide true
@@ -3124,14 +3132,14 @@ test textDisp-23.3 {TkTextDLineInfo} {textfonts} {
 test textDisp-23.4 {TkTextDLineInfo, cut-off lines} {textfonts} {
     .t config -wrap char
     .t yview 10.0
-    wm geom . ${width}x[expr $height-1]
+    wm geom . ${width}x[expr {$height-1}]
     update
     list [.t dlineinfo 19.0] [.t dlineinfo 20.0]
 } [list [list 3 [expr {9*$fixedDiff + 120}] 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {10*$fixedDiff + 133}] 49 3 [expr {$fixedDiff + 10}]]]
 test textDisp-23.5 {TkTextDLineInfo, cut-off lines} {textfonts} {
     .t config -wrap char
     .t yview 10.0
-    wm geom . ${width}x[expr $height+1]
+    wm geom . ${width}x[expr {$height+1}]
     update
     list [.t dlineinfo 19.0] [.t dlineinfo 20.0]
 } [list [list 3 [expr {9*$fixedDiff + 120}] 49 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {10*$fixedDiff + 133}] 49 5 [expr {$fixedDiff + 10}]]]
@@ -3172,7 +3180,7 @@ test textDisp-24.2 {TkTextCharLayoutProc} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
-    wm geom . [expr $width+1]x$height
+    wm geom . [expr {$width+1}]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 12 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
@@ -3180,7 +3188,7 @@ test textDisp-24.3 {TkTextCharLayoutProc} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
-    wm geom . [expr $width-1]x$height
+    wm geom . [expr {$width-1}]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 10 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
@@ -3212,7 +3220,7 @@ test textDisp-24.7 {TkTextCharLayoutProc, line ends with space} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
-    wm geom . [expr $width+1]x$height
+    wm geom . [expr {$width+1}]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 12 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
@@ -3220,7 +3228,7 @@ test textDisp-24.8 {TkTextCharLayoutProc, line ends with space} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
-    wm geom . [expr $width-1]x$height
+    wm geom . [expr {$width-1}]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 10 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
@@ -3228,7 +3236,7 @@ test textDisp-24.9 {TkTextCharLayoutProc, line ends with space} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
-    wm geom . [expr $width-6]x$height
+    wm geom . [expr {$width-6}]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 5 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
@@ -3236,7 +3244,7 @@ test textDisp-24.10 {TkTextCharLayoutProc, line ends with space} {textfonts} {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "a b c d e f g h i j k l m n o p"
-    wm geom . [expr $width-7]x$height
+    wm geom . [expr {$width-7}]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 4 $fixedHeight] [list 3 [expr {$fixedDiff + 16}] 7 $fixedHeight]]
@@ -3244,7 +3252,7 @@ test textDisp-24.11 {TkTextCharLayoutProc, line ends with space that doesn't qui
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "01234567890123456789 \nabcdefg"
-    wm geom . [expr $width-2]x$height
+    wm geom . [expr {$width-2}]x$height
     update
     set result {}
     lappend result [.t bbox 1.21] [.t bbox 2.0]
@@ -3271,7 +3279,7 @@ test textDisp-24.14 {TkTextCharLayoutProc, -wrap none} {textfonts} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
-    wm geom . [expr $width+1]x$height
+    wm geom . [expr {$width+1}]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 7 $fixedHeight] [list 143 3 5 $fixedHeight]]
@@ -3279,7 +3287,7 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {textfonts} {
     .t configure -wrap none
     .t delete 1.0 end
     .t insert 1.0 "abcdefghijklmnopqrstuvwxyz"
-    wm geom . [expr $width-1]x$height
+    wm geom . [expr {$width-1}]x$height
     update
     list [.t bbox 1.19] [.t bbox 1.20]
 } [list [list 136 3 7 $fixedHeight] [list 143 3 3 $fixedHeight]]
@@ -3428,9 +3436,9 @@ test textDisp-26.3 {AdjustForTab procedure, not enough tabs specified} {
     .t tag configure x -tabs {40 70 right}
     .t tag add x 1.0 end
     list [lindex [.t bbox 1.2] 0] \
-	    [expr [lindex [.t bbox 1.4] 0] + [lindex [.t bbox 1.4] 2]] \
-	    [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]] \
-	    [expr [lindex [.t bbox 1.8] 0] + [lindex [.t bbox 1.8] 2]]
+	    [expr {[lindex [.t bbox 1.4] 0] + [lindex [.t bbox 1.4] 2]}] \
+	    [expr {[lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]}] \
+	    [expr {[lindex [.t bbox 1.8] 0] + [lindex [.t bbox 1.8] 2]}]
 } [list 40 70 100 130]
 test textDisp-26.4 {AdjustForTab procedure, different alignments} {
     .t delete 1.0 end
