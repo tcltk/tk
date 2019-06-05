@@ -1562,7 +1562,7 @@ ImageDisplay(
 {
     TImageInstance *instPtr = clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
-    
+
     /*
      * The purpose of the test image type is to track the calls to an image
      * display proc and record the parameters passed in each call.  On macOS

@@ -47,7 +47,7 @@ test image-1.6 {Tk_ImageCmd procedure, "create" option} -constraints {
     scan [image create test] image%d first
     image create test myimage
     scan [image create test -variable x] image%d second
-    expr $second-$first
+    expr {$second-$first}
 } -cleanup {
     imageCleanup
 } -result {1}

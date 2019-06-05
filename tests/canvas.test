@@ -356,9 +356,9 @@ test canvas-9.1 {canvas id creation and deletion} -setup {
     for {set i 0} {$i < $size} {incr i} {
 	set x [expr {-10 + 3*$i}]
 	for {set j 0; set y -10} {$j < 10} {incr j; incr y 3} {
-	    .c create rect ${x}c ${y}c [expr $x+2]c [expr $y+2]c \
+	    .c create rect ${x}c ${y}c [expr {$x+2}]c [expr {$y+2}]c \
 		    -outline black -fill blue -tags rect
-	    .c create text [expr $x+1]c [expr $y+1]c -text "$i,$j" \
+	    .c create text [expr {$x+1}]c [expr {$y+1}]c -text "$i,$j" \
 		    -anchor center -tags text
 	}
     }

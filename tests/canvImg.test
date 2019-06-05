@@ -731,7 +731,7 @@ if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
     # Aqua >= 10.14 will redraw the entire image.
     set result_10_1 {{foo display 0 0 30 15}}
 } else {
-    set result_10_1 {{foo display 2 4 6 8}} 
+    set result_10_1 {{foo display 2 4 6 8}}
 }
 test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
@@ -783,7 +783,7 @@ if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
     # Aqua >= 10.14 will redraw the entire image.
     set result_11_3 {{foo2 display 0 0 80 60}}
 } else {
-    set result_11_3 {{foo2 display 0 0 20 40}} 
+    set result_11_3 {{foo2 display 0 0 20 40}}
 }
 test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 	testImageType
