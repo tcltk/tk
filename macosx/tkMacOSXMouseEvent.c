@@ -106,7 +106,7 @@ enum {
 	local.y = [eventWindow frame].size.height - local.y;
 	global.y = tkMacOSXZeroScreenHeight - global.y;
     } else {
-	
+
 	/*
 	 * If the event has no NSWindow, the location is in screen coordinates.
 	 */
