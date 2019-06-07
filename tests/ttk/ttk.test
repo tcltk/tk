@@ -269,7 +269,7 @@ test ttk-3.4 "SF#2009213" -body {
 test ttk-4.0 "Setup" -body {
     catch { destroy .t }
     pack [ttk::label .t -text "Button 1"]
-    testConstraint fontOption [expr ![catch { set prevFont [.t cget -font] }]]
+    testConstraint fontOption [expr {![catch { set prevFont [.t cget -font] }]}]
     ok
 }
 

@@ -1495,7 +1495,7 @@ TkpDrawHighlightBorder(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawFrame --
+ * TkpDrawFrameEx --
  *
  *	This function draws the rectangular frame area.
  *
@@ -1509,14 +1509,15 @@ TkpDrawHighlightBorder(
  */
 
 void
-TkpDrawFrame(
+TkpDrawFrameEx(
     Tk_Window tkwin,
+    Drawable drawable,
     Tk_3DBorder border,
     int highlightWidth,
     int borderWidth,
     int relief)
 {
-    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, highlightWidth,
+    Tk_Fill3DRectangle(tkwin, drawable, border, highlightWidth,
 	    highlightWidth, Tk_Width(tkwin) - 2 * highlightWidth,
 	    Tk_Height(tkwin) - 2 * highlightWidth, borderWidth, relief);
 }
