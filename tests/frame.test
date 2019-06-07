@@ -52,6 +52,30 @@ proc colorsFree {w {red 31} {green 245} {blue 192}} {
     lassign [winfo rgb $w [format "#%02x%02x%02x" $red $green $blue]] r g b
     expr {($r/256 == $red) && ($g/256 == $green) && ($b/256 == $blue)}
 }
+
+# uniq --
+#
+# Returns the unique items of a list in the order they first appear.
+#
+# Arguments:
+# list -		The list to uniq-ify.
+proc uniq {list} {
+    set d {}
+    foreach item $list {
+	dict set d $item {}
+    }
+    return [dict keys $d]
+}
+
+# optnames --
+#
+# Returns the option names out of a list of option details.
+#
+# Arguments:
+# options -		The option detail list.
+proc optnames {options} {
+    lsort [lmap desc $options {lindex $desc 0}]
+}
 
 test frame-1.1 {frame configuration options} -setup {
     deleteWindows
@@ -469,7 +493,7 @@ update
 test frame-2.20 {toplevel configuration options} -body {
     .t configure -background #ff0000
     lindex [.t configure -background] 4
-} -result {#ff0000}
+} -result "#ff0000"
 test frame-2.21 {toplevel configuration options} -body {
     .t configure -background non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
@@ -483,7 +507,7 @@ test frame-2.23 {toplevel configuration options} -body {
 test frame-2.24 {toplevel configuration options} -body {
     .t configure -bg #00ff00
     lindex [.t configure -bg] 4
-} -result {#00ff00}
+} -result "#00ff00"
 test frame-2.25 {toplevel configuration options} -body {
     .t configure -bg non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
@@ -511,7 +535,7 @@ test frame-2.31 {toplevel configuration options} -body {
 test frame-2.32 {toplevel configuration options} -body {
     .t configure -highlightcolor #123456
     lindex [.t configure -highlightcolor] 4
-} -result {#123456}
+} -result "#123456"
 test frame-2.33 {toplevel configuration options} -body {
     .t configure -highlightcolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
@@ -584,7 +608,6 @@ test frame-3.4 {TkCreateFrame procedure} -setup {
 } -cleanup {
     deleteWindows
 } -result {350 black 90}
-
 # Be sure that the -class, -colormap, and -visual options are processed
 # before configuring the widget.
 test frame-3.5 {TkCreateFrame procedure} -setup {
@@ -669,7 +692,6 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
     destroy .t
     option clear
 } -result {0 0 140 300}
-
 # The tests below require specific display characteristics (i.e. that they are
 # run on a pseudocolor display of depth 8).  Even so, they are non-portable:
 # some machines don't seem to ever run out of colors.
@@ -825,7 +847,6 @@ test frame-3.21 {TkCreateFrame procedure} -constraints {
 if {[testConstraint defaultPseudocolor8]} {
     destroy .t1
 }
-
 test frame-3.22 {TkCreateFrame procedure, default dimensions} -setup {
     deleteWindows
 } -body {
@@ -894,8 +915,8 @@ test frame-5.7 {FrameWidgetCommand procedure, cget option} -setup {
     destroy .t
 } -returnCodes ok -match glob -result *
 test frame-5.8 {FrameWidgetCommand procedure, configure option} -body {
-    llength [.f configure]
-} -result {18}
+    optnames [.f configure]
+} -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -padx -pady -relief -takefocus -tile -visual -width}
 test frame-5.9 {FrameWidgetCommand procedure, configure option} -body {
     .f configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}
@@ -909,8 +930,8 @@ test frame-5.12 {FrameWidgetCommand procedure} -body {
     .f swizzle
 } -returnCodes error -result {bad option "swizzle": must be cget or configure}
 test frame-5.13 {FrameWidgetCommand procedure, configure option} -body {
-    llength [. configure]
-} -result {21}
+    optnames [. configure]
+} -result {-background -backgroundimage -bd -bg -bgimg -borderwidth -class -colormap -container -cursor -height -highlightbackground -highlightcolor -highlightthickness -menu -padx -pady -relief -screen -takefocus -tile -use -visual -width}
 destroy .f
 
 test frame-6.1 {ConfigureFrame procedure} -setup {
@@ -1093,13 +1114,10 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
     set font {helvetica 12}
     labelframe .f -highlightthickness 1 -bd 3 -padx 1 -pady 2 -font $font \
             -text "Mupp"
-    set fh [expr {[font metrics $font -linespace] + 2 - 3}]
-    set fw [expr {[font measure $font "Mupp"] + 2 - 3}]
-    if {$fw < 0} {set fw 0}
-    if {$fh < 0} {set fh 0}
+    set fh [expr {max([font metrics $font -linespace] + 2 - 3, 0)}]
+    set fw [expr {max([font measure $font "Mupp"] + 2 - 3, 0)}]
     place .f -x 0 -y 0 -width 100 -height 100
     pack [frame .f.f] -fill both -expand 1
-
     set result {}
     foreach lp {nw n ne en e es se s sw ws w wn} {
         .f configure -labelanchor $lp
@@ -1211,7 +1229,6 @@ test frame-13.9 {labelframe configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {can't modify -container option after widget is created}
-
 destroy .f
 labelframe .f
 test frame-13.10 {labelframe configuration options} -body {
@@ -1483,12 +1500,295 @@ test frame-14.6 {labelframe labelwidget option} -setup {
 } -cleanup {
     deleteWindows
 } -result {}
-
-deleteWindows
-rename eatColors {}
-rename colorsFree {}
 
+test frame-15.1 {TIP 262: frame background images} -setup {
+    deleteWindows
+    image create photo gorp -width 10 -height 10
+    gorp put black -to 2 2 7 7
+} -body {
+    frame .f -width 100 -height 100
+    pack .f
+    list [image inuse gorp] [.f configure -backgroundimage gorp;update] \
+	[image inuse gorp] [winfo width .f] [winfo height .f]
+} -cleanup {
+    image delete gorp
+    deleteWindows
+} -result {0 {} 1 100 100}
+test frame-15.2 {TIP 262: frame background images} -setup {
+    deleteWindows
+    catch {rename gorp ""}
+} -body {
+    frame .f -width 100 -height 100
+    pack .f
+    update
+    .f configure -backgroundimage gorp
+} -returnCodes error -cleanup {
+    deleteWindows
+} -result {image "gorp" doesn't exist}
+test frame-15.3 {TIP 262: frame background images} -setup {
+    deleteWindows
+    image create photo gorp -width 10 -height 10
+    gorp put black -to 2 2 7 7
+} -body {
+    frame .f -width 100 -height 100 -backgroundimage gorp
+    pack .f
+    .f configure -tile yes
+    update
+    list [.f cget -bgimg] [.f cget -tile]
+} -cleanup {
+    image delete gorp
+    deleteWindows
+} -result {gorp 1}
+test frame-15.4 {TIP 262: frame background images} -setup {
+    deleteWindows
+    image create photo gorp -width 10 -height 10
+    gorp put black -to 2 2 7 7
+} -body {
+    frame .f -width 100 -height 100 -backgroundimage gorp
+    pack .f
+    .f configure -tile yes
+    update
+    gorp put red -to 15 15 20 20
+    update
+    list [.f cget -bgimg] [.f cget -tile]
+} -cleanup {
+    image delete gorp
+    deleteWindows
+} -result {gorp 1}
+test frame-15.5 {TIP 262: frame background images} -setup {
+    deleteWindows
+    image create photo gorp -width 10 -height 10
+    gorp put black -to 2 2 7 7
+    set result {}
+} -body {
+    frame .f -width 100 -height 100 -backgroundimage gorp
+    pack .f
+    .f configure -tile yes
+    update
+    image delete gorp
+    update
+    set result [list [.f cget -bgimg] [.f cget -tile]]
+    image create photo gorp -width 250 -height 250
+    update
+    lappend result [.f cget -backgroundimage]
+} -cleanup {
+    catch {image delete gorp}
+    deleteWindows
+} -result {gorp 1 gorp}
+test frame-15.6 {TIP 262: frame background images} -setup {
+    deleteWindows
+    set result {}
+    . configure -width 200 -height 200
+} -constraints testImageType -body {
+    image create test gorp -variable result
+    pack [frame .f -width 100 -height 100 -bgimg gorp]
+    update idletasks; update
+    return [uniq $result]
+} -cleanup {
+    deleteWindows
+    catch {image delete gorp}
+} -result {{gorp get} {gorp display 0 0 30 15}}
+test frame-15.6a {TIP 262: frame background images (offsets)} -setup {
+    deleteWindows
+    set result {}
+    . configure -width 200 -height 200
+} -constraints testImageType -body {
+    image create test gorp -variable result
+    pack [frame .f -width 10 -height 10 -bgimg gorp]
+    update idletasks; update
+    # On MacOS must wait for the test image display procedure to run.
+    set timer [after 300 {lappend result "timedout"}]
+    while {"timedout" ni $result &&
+	   "gorp display 10 2 10 10" ni $result} {
+       vwait result
+    }
+    after cancel $timer
+    update idletasks; update
+    return [uniq $result]
+} -cleanup {
+    deleteWindows
+    catch {image delete gorp}
+} -result {{gorp get} {gorp display 10 2 10 10}}
+test frame-15.7 {TIP 262: frame background images} -setup {
+    deleteWindows
+    set result {}
+    . configure -width 200 -height 200
+} -constraints testImageType -body {
+    image create test gorp -variable result
+    pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1]
+    update idletasks; update
+    # On MacOS must wait for the test image display procedure to run.
+    set timer [after 300 {lappend result "timedout"}]
+    while {"timedout" ni $result &&
+	   "gorp display 0 0 20 10" ni $result} {
+	vwait result
+    }
+    after cancel $timer
+    if {[lindex $result end] eq "timedout"} {
+	return [lreplace $result end end]
+    }
+    return [uniq $result]
+} -cleanup {
+    deleteWindows
+    catch {image delete gorp}
+} -result {{gorp get} {gorp display 0 0 30 15} {gorp display 0 0 30 10} {gorp display 0 0 20 15} {gorp display 0 0 20 10}}
+test frame-15.7a {TIP 262: frame background images (offsets)} -setup {
+    deleteWindows
+    set result {}
+    . configure -width 200 -height 200
+} -constraints testImageType -body {
+    image create test gorp -variable result
+    pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1 -highlightthick 1]
+    update idletasks; update
+    # On MacOS must wait for the test image display procedure to run.
+    set timer [after 300 {lappend result "timedout"}]
+    while {"timedout" ni $result &&
+	   "gorp display 0 0 18 8" ni $result} {
+	vwait result
+   }
+    after cancel $timer
+    return [uniq $result]
+} -cleanup {
+    deleteWindows
+    catch {image delete gorp}
+} -result {{gorp get} {gorp display 0 0 30 15} {gorp display 0 0 30 8} {gorp display 0 0 18 15} {gorp display 0 0 18 8}}
+test frame-15.7b {TIP 262: frame background images (offsets)} -setup {
+    deleteWindows
+    set result {}
+    . configure -width 200 -height 200
+} -constraints testImageType -body {
+    image create test gorp -variable result
+    pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1 -bd 2]
+    update idletasks; update
+    return [uniq $result]
+} -cleanup {
+    deleteWindows
+    catch {image delete gorp}
+} -result {{gorp get} {gorp display 0 0 30 15} {gorp display 0 0 30 6} {gorp display 0 0 16 15} {gorp display 0 0 16 6}}
+test frame-15.7c {TIP 262: frame background images (offsets)} -setup {
+    deleteWindows
+    set result {}
+    . configure -width 200 -height 200
+} -constraints testImageType -body {
+    image create test gorp -variable result
+    pack [frame .f -width 50 -height 25 -bgimg gorp -tile 1 -bd 2 -highlightthick 1]
+    update idletasks; update
+    return [uniq $result]
+} -cleanup {
+    deleteWindows
+    catch {image delete gorp}
+} -result {{gorp get} {gorp display 0 0 30 15} {gorp display 0 0 30 4} {gorp display 0 0 14 15} {gorp display 0 0 14 4}}
+test frame-15.8 {TIP 262: toplevel background images} -setup {
+    deleteWindows
+    image create photo gorp -width 10 -height 10
+    gorp put black -to 2 2 7 7
+} -body {
+    toplevel .t -width 100 -height 100
+    update
+    # Used to verify that setting a background image doesn't change the widget size
+    set w [winfo width .t]
+    set h [winfo height .t]
+    list [image inuse gorp] [.t configure -backgroundimage gorp;update] \
+	[image inuse gorp] \
+	[expr {$w-[winfo width .t]}] [expr {$h-[winfo height .t]}]
+} -cleanup {
+    image delete gorp
+    deleteWindows
+} -result {0 {} 1 0 0}
+test frame-15.9 {TIP 262: toplevel background images} -setup {
+    deleteWindows
+    catch {rename gorp ""}
+} -body {
+    toplevel .t -width 100 -height 100
+    update
+    .t configure -backgroundimage gorp
+} -returnCodes error -cleanup {
+    deleteWindows
+} -result {image "gorp" doesn't exist}
+test frame-15.10 {TIP 262: toplevel background images} -setup {
+    deleteWindows
+    image create photo gorp -width 10 -height 10
+    gorp put black -to 2 2 7 7
+} -body {
+    toplevel .t -width 100 -height 100 -backgroundimage gorp -tile yes
+    update
+    list [.t cget -bgimg] [.t cget -tile]
+} -cleanup {
+    image delete gorp
+    deleteWindows
+} -result {gorp 1}
+test frame-15.11 {TIP 262: toplevel background images} -setup {
+    deleteWindows
+    image create photo gorp -width 10 -height 10
+    gorp put black -to 2 2 7 7
+} -body {
+    toplevel .t -width 100 -height 100 -backgroundimage gorp -tile yes
+    update
+    gorp put red -to 15 15 20 20
+    update
+    list [.t cget -bgimg] [.t cget -tile]
+} -cleanup {
+    image delete gorp
+    deleteWindows
+} -result {gorp 1}
+test frame-15.12 {TIP 262: toplevel background images} -setup {
+    deleteWindows
+    image create photo gorp -width 10 -height 10
+    gorp put black -to 2 2 7 7
+    set result {}
+} -body {
+    toplevel .t -width 100 -height 100 -backgroundimage gorp -tile yes
+    update
+    image delete gorp
+    update
+    set result [list [.t cget -bgimg] [.t cget -tile]]
+    image create photo gorp -width 250 -height 250
+    update
+    lappend result [.t cget -backgroundimage]
+} -cleanup {
+    catch {image delete gorp}
+    deleteWindows
+} -result {gorp 1 gorp}
+test frame-15.13 {TIP 262: toplevel background images} -setup {
+    deleteWindows
+    set result {}
+} -constraints testImageType -body {
+    image create test gorp -variable result
+    toplevel .t -width 100 -height 100 -bgimg gorp
+    wm overrideredirect .t 1;	# Reduce trouble from window managers
+    update idletasks; update
+    return [uniq $result]
+} -cleanup {
+    deleteWindows
+    catch {image delete gorp}
+} -result {{gorp get} {gorp display 0 0 30 15}}
+test frame-15.14 {TIP 262: toplevel background images} -setup {
+    deleteWindows
+    set result {}
+} -constraints testImageType -body {
+    image create test gorp -variable result
+    toplevel .t -width 50 -height 25 -bgimg gorp -tile 1
+    wm overrideredirect .t 1;	# Reduce trouble from window managers
+    update idletasks; update
+    # On MacOS must wait for the test image display procedure to run.
+    set timer [after 300 {lappend result "timedout"}]
+    while {"timedout" ni $result &&
+	   "gorp display 0 0 20 10" ni $result} {
+	vwait result
+   }
+    after cancel $timer
+    return [uniq $result]
+} -cleanup {
+    deleteWindows
+    catch {image delete gorp}
+} -result {{gorp get} {gorp display 0 0 30 15} {gorp display 0 0 30 10} {gorp display 0 0 20 15} {gorp display 0 0 20 10}}
+
 # cleanup
+deleteWindows
+apply {cmds {foreach cmd $cmds {rename $cmd {}}}} {
+    eatColors colorsFree uniq optnames
+}
+
 cleanupTests
 return
 
