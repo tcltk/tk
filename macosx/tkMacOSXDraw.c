@@ -2,7 +2,7 @@
  * tkMacOSXDraw.c --
  *
  *	This file contains functions that perform drawing to Xlib windows. Most
- *	of the functions simple emulate Xlib functions.
+ *	of the functions simply emulate Xlib functions.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
