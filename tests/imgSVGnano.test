@@ -79,7 +79,62 @@ test imgSVGnano-2.3 {using bad option} -body {
     foo configure -format {svg 1.0}
 } -cleanup {
     rename foo ""
-} -returnCodes error -result {bad option "1.0": must be -dpi or -scale}
+} -returnCodes error -result {bad option "1.0": must be -dpi, -scale, -scaletoheight, or -scaletowidth}
+
+# -scaletoheight and -scaletowidth options
+test imgSVGnano-3.1 {multiple scale options} -body {
+    image create photo foo -format "svg -scale 1 -scaletowidth 20"\
+	    -data $data(bad)
+} -returnCodes error -result {only one of -scale, -scaletoheight, -scaletowidth may be given}
+
+test imgSVGnano-3.2 {no number parameter to -scaletowidth} -body {
+    image create photo foo -format "svg -scaletowidth invalid"\
+	    -data $data(plus)
+} -returnCodes error -result {expected integer but got "invalid"}
+
+test imgSVGnano-3.3 {no number parameter to -scaletoheight} -body {
+    image create photo foo -format "svg -scaletoheight invalid"\
+	    -data $data(plus)
+} -returnCodes error -result {expected integer but got "invalid"}
+
+test imgSVGnano-3.4 {zero parameter to -scaletowidth} -body {
+    image create photo foo -format "svg -scaletowidth 0"\
+	    -data $data(plus)
+} -returnCodes error -result {-scaletowidth value must be positive}
+
+test imgSVGnano-3.5 {zero parameter to -scaletowidth} -body {
+    image create photo foo -format "svg -scaletoheight 0"\
+	    -data $data(plus)
+} -returnCodes error -result {-scaletoheight value must be positive}
+
+test imgSVGnano-3.6 {no number parameter to -scaletoheight} -body {
+    image create photo foo -format "svg -scale 1 -scaletoheight invalid"\
+	    -data $data(plus)
+} -returnCodes error -result {only one of -scale, -scaletoheight, -scaletowidth may be given}
+
+test imgSVGnano-3.7 {Option -scaletowidth} -body {
+    image create photo foo -format "svg -scaletowidth 20"\
+	    -data $data(plus)
+    image width foo
+} -cleanup {
+    rename foo ""
+} -result {20}
+
+test imgSVGnano-3.8 {Option -scaletoheight} -body {
+    image create photo foo -format "svg -scaletoheight 20"\
+	    -data $data(plus)
+    image height foo
+} -cleanup {
+    rename foo ""
+} -result {20}
+
+test imgSVGnano-3.9 {Very small scale gives 1x1 image} -body {
+    image create photo foo -format "svg -scale 0.000001"\
+	    -data $data(plus)
+    image height foo
+} -cleanup {
+    rename foo ""
+} -result {1}
 
 };# end of namespace svgnano
 
