@@ -772,7 +772,7 @@ ParseColor(
     unsigned char *alphaPtr)
 {
     const char *specString;
-    size_t charCount;
+    TkSizeT charCount;
 
     /*
      * Find out which color format we have

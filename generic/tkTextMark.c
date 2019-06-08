@@ -126,7 +126,7 @@ TkTextMarkCmd(
     switch ((enum markOptions) optionIndex) {
     case MARK_GRAVITY: {
 	char c;
-	size_t length;
+	TkSizeT length;
 	const char *str;
 
 	if (objc < 4 || objc > 5) {

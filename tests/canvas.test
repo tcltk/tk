@@ -356,9 +356,9 @@ test canvas-9.1 {canvas id creation and deletion} -setup {
     for {set i 0} {$i < $size} {incr i} {
 	set x [expr {-10 + 3*$i}]
 	for {set j 0; set y -10} {$j < 10} {incr j; incr y 3} {
-	    .c create rect ${x}c ${y}c [expr $x+2]c [expr $y+2]c \
+	    .c create rect ${x}c ${y}c [expr {$x+2}]c [expr {$y+2}]c \
 		    -outline black -fill blue -tags rect
-	    .c create text [expr $x+1]c [expr $y+1]c -text "$i,$j" \
+	    .c create text [expr {$x+1}]c [expr {$y+1}]c -text "$i,$j" \
 		    -anchor center -tags text
 	}
     }
@@ -1040,6 +1040,207 @@ test canvas-20.3 {canvas image with subsample and zoom} -setup {
     image delete testimage
 } -result 1
 
+test canvas-21.1 {canvas very small arc} -setup {
+    catch {destroy .c}
+    canvas .c
+} -body {
+    # no Inf or NaN must be generated even for very small arcs
+    .c create arc 0 100 0 100 -height 100 -style arc -outline "" -tags arc1
+    set arcBox [.c bbox arc1]
+    .c create arc 0 100 0 100 -height 100 -style arc -outline blue -tags arc2
+    set outlinedArcBox [.c bbox arc2]
+    set coords [.c coords arc1]
+    set start [.c itemcget arc1 -start]
+    set extent [.c itemcget arc1 -extent]
+    set width [.c itemcget arc1 -width]
+    set height [.c itemcget arc1 -height]
+    list $arcBox $outlinedArcBox $coords $start $extent $width $height
+} -result {{-1 99 1 101} {-2 98 2 102} {0.0 100.0 0.0 100.0} 0.0 0.0 1.0 0.0}
+
+
+destroy .c
+test canvas-21.1 {canvas rotate} -setup {
+    pack [canvas .c]
+} -body {
+    .c create line 50 50 50 100 100 100
+    .c rotate all 75 75 90
+    lmap c [.c coords all] {format %.2f $c}
+} -cleanup {
+    destroy .c
+} -result {50.00 100.00 100.00 100.00 100.00 50.00}
+test canvas-21.2 {canvas rotate} -setup {
+    pack [canvas .c]
+} -body {
+    .c create line 50 50 50 100 100 100
+    .c rotate all 75 75 -10
+    lmap c [.c coords all] {format %.2f $c}
+} -cleanup {
+    destroy .c
+} -result {54.72 46.04 46.04 95.28 95.28 103.96}
+test canvas-21.3 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 75 75
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {wrong # args: should be ".c rotate tagOrId x y angle"}
+test canvas-21.4 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 75 75 123 123
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {wrong # args: should be ".c rotate tagOrId x y angle"}
+test canvas-21.5 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate {!} 1 1 1
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {missing tag in tag search expression}
+test canvas-21.6 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all x 1 1
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {bad screen distance "x"}
+test canvas-21.7 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 1 x 1
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {bad screen distance "x"}
+test canvas-21.8 {canvas rotate: syntax} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 1 1 x
+} -returnCodes error -cleanup {
+    destroy .c
+} -result {expected floating-point number but got "x"}
+test canvas-21.9 {canvas rotate: nothing to rotate} -setup {
+    pack [canvas .c]
+} -body {
+    .c rotate all 75 75 10
+} -cleanup {
+    destroy .c
+} -result {}
+test canvas-21.10 {canvas rotate: multiple things to rotate} -setup {
+    pack [canvas .c]
+} -body {
+    .c create line 50 50 50 100 -tag a
+    .c create line 50 50 100 50 -tag b
+    .c rotate all 75 75 45
+    list [lmap c [.c coords a] {format %.2f $c}] [lmap c [.c coords b] {format %.2f $c}]
+} -cleanup {
+    destroy .c
+} -result {{39.64 75.00 75.00 110.36} {39.64 75.00 75.00 39.64}}
+
+test canvas-22.1 {canvas rotate: arc item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create arc 50 50 75 75 -start 45 -extent 90
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {-start -extent} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 125.00 75.00 150.00} {45.0 90.0} {52 123 73 140}}
+test canvas-22.2 {canvas rotate: bitmap item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create bitmap 50 50 -bitmap info -anchor se
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {-bitmap -anchor} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00} {info se} {42 129 50 150}}
+test canvas-22.3 {canvas rotate: image item rotation behaviour} -setup {
+    pack [canvas .c]
+    image create photo dummy -width 50 -height 50
+} -body {
+    .c create image 50 50 -image dummy -anchor se
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {-image -anchor} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+    image delete dummy
+} -result {{50.00 150.00} {dummy se} {0 100 50 150}}
+test canvas-22.4 {canvas rotate: line item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create line 50 50 75 50 50 75 75 75
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00 50.00 125.00 75.00 150.00 75.00 125.00} {} {48 123 77 152}}
+test canvas-22.5 {canvas rotate: oval item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create oval 50 50 65 85
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{60.00 125.00 75.00 160.00} {} {59 124 76 161}}
+test canvas-22.6 {canvas rotate: polygon item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create polygon 50 50 75 50 50 75 75 75
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00 50.00 125.00 75.00 150.00 75.00 125.00} {} {49 124 76 151}}
+test canvas-22.7 {canvas rotate: rectangle item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create rectangle 50 50 75 75
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 125.00 75.00 150.00} {} {49 124 76 151}}
+test canvas-22.8 {canvas rotate: text item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create text 50 50 -text foo -angle 45
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {-text -angle} {.c itemcget all $o}]
+    # [.c bbox all]
+    # No testing of text bounding box; fonts too variable!
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00} {foo 45.0}}
+test canvas-22.9 {canvas rotate: window item rotation behaviour} -setup {
+    pack [canvas .c]
+} -body {
+    .c create window 50 50 -window [frame .c.f -width 25 -height 25] \
+	-anchor se
+    .c rotate all 100 100 90
+    list [lmap c [.c coords all] {format %.2f $c}] \
+	[lmap o {} {.c itemcget all $o}] \
+	[.c bbox all]
+} -cleanup {
+    destroy .c
+} -result {{50.00 150.00} {} {25 125 50 150}}
+
 # cleanup
 imageCleanup
 cleanupTests

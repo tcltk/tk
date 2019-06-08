@@ -344,6 +344,9 @@ typedef struct TkDisplay {
 				 * by that master. */
     int geomInit;
 
+#define TkGetGeomMaster(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
+    ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
+
     /*
      * Information used by tkGet.c only:
      */
@@ -837,10 +840,14 @@ typedef struct TkWindow {
 
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
-    char *geometryMaster;
 #ifdef TK_USE_INPUT_METHODS
     int ximGeneration;          /* Used to invalidate XIC */
 #endif /* TK_USE_INPUT_METHODS */
+    char *geomMgrName;          /* Records the name of the geometry manager. */
+    struct TkWindow *maintainerPtr;
+				/* The geometry master for this window. The
+				 * value is NULL if the window has no master or
+				 * if its master is its parent. */
 } TkWindow;
 
 /*
@@ -979,6 +986,7 @@ MODULE_SCOPE void		(*tkHandleEventProc) (XEvent* eventPtr);
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtDefault;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPNG;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPPM;
+MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtSVGnano;
 MODULE_SCOPE TkMainInfo		*tkMainWindowList;
 MODULE_SCOPE Tk_ImageType	tkPhotoImageType;
 MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
@@ -1235,6 +1243,9 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    int firstByte, int lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    int c, struct TkFontAttributes *faPtr);
+MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
+			    Tk_3DBorder border, int highlightWidth,
+			    int borderWidth, int relief);
 MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
@@ -1254,11 +1265,16 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
+MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
+			    Tcl_Interp *interp);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
+MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
+			    double sine, double cosine, double *xPtr,
+			    double *yPtr);
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
@@ -1279,12 +1295,17 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
     MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
 #endif
 
+#if TCL_MAJOR_VERSION > 8
 #define TkGetStringFromObj(objPtr, lenPtr) \
 	(((objPtr)->bytes ? 0 : Tcl_GetString(objPtr)), \
 	*(lenPtr) = (objPtr)->length, (objPtr)->bytes)
-
 MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
 	size_t *lengthPtr);
+#else
+#define TkGetStringFromObj Tcl_GetStringFromObj
+#define TkGetByteArrayFromObj Tcl_GetByteArrayFromObj
+#endif
+
 
 /*
  * Unsupported commands.

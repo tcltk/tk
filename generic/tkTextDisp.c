@@ -3077,7 +3077,7 @@ AsyncUpdateLineMetrics(
                     TCL_EVAL_GLOBAL);
 	    if (code == TCL_ERROR) {
                 Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
-                Tcl_BackgroundError(textPtr->interp);
+                Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
 	    }
             Tcl_Release((ClientData) textPtr->interp);
             Tcl_DecrRefCount(textPtr->afterSyncCmd);
@@ -6153,7 +6153,7 @@ TkTextYviewCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace, type;
     int pixels, count;
-    size_t switchLength;
+    TkSizeT switchLength;
     double fraction;
     TkTextIndex index;
 
@@ -6172,7 +6172,7 @@ TkTextYviewCmd(
 
     pickPlace = 0;
     if (Tcl_GetString(objv[2])[0] == '-') {
-	register const char *switchStr =
+	const char *switchStr =
 		TkGetStringFromObj(objv[2], &switchLength);
 
 	if ((switchLength >= 2) && (strncmp(switchStr, "-pickplace",

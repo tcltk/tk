@@ -43,7 +43,7 @@ typedef struct ProtocolHandler {
 typedef struct Transient {
     TkWindow *winPtr;
     int flags;
-    struct Transient *nextPtr;    
+    struct Transient *nextPtr;
 } Transient;
 
 #define WITHDRAWN_BY_MASTER 0x1
@@ -65,7 +65,7 @@ typedef struct TkWmInfo {
     Tk_Uid titleUid;		/* Title to display in window caption. If NULL,
 				 * use name of widget. */
     char *iconName;		/* Name to display in icon. */
-    Window master;		/* Master window for TRANSIENT_FOR property, or
+    Tk_Window master;		/* Master window for TRANSIENT_FOR property, or
 				 * None. */
     XWMHints hints;		/* Various pieces of information for window
 				 * manager. */
@@ -73,10 +73,6 @@ typedef struct TkWmInfo {
 				 * (corresponds to hints.window_group).
 				 * Malloc-ed. Note: this field doesn't get
 				 * updated if leader is destroyed. */
-    char *masterWindowName;	/* Path name of window specified as master in
-				 * "wm transient" command, or NULL. Malloc-ed.
-				 * Note: this field doesn't get updated if
-				 * masterWindowName is destroyed. */
     Tk_Window icon;		/* Window to use as icon for this window, or
 				 * NULL. */
     Tk_Window iconFor;		/* Window for which this window is icon, or

@@ -2698,7 +2698,7 @@ test text-9.2.45 {TextWidgetCmd procedure, "count" option} -setup {
     set res {}
 } -body {
     for {set i 1} {$i < 5} {incr i} {
-      .t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
+      .t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr {64+$i}]]\n"
     }
     .t tag configure hidden -elide true
     .t tag add hidden 2.15 3.10
@@ -2720,7 +2720,7 @@ test text-9.2.46 {TextWidgetCmd procedure, "count" option} -setup {
     for {set i 1} {$i < 5} {incr i} {
       #                    0          1          2          3          4
       #                    012345 678901234 567890123 456789012 34567890123456789
-      .mytop.t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr 64+$i]]\n"
+      .mytop.t insert end "Line $i+++Line $i---Line $i///Line $i - This is Line [format %c [expr {64+$i}]]\n"
     }
     .mytop.t tag configure hidden -elide true
     .mytop.t tag add hidden 2.30 3.10
@@ -3486,6 +3486,12 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # minimum size and it was interfering with the size requested by the -setgrid.
 # The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
 # to the appropriate size.
+# On macOS, however, there is no way to make the window overlap the menubar.
+if {[tk windowingsystem] == "aqua"} {
+    set minY 23
+} else {
+    set minY 0
+}
 test text-14.19 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -3493,16 +3499,17 @@ test text-14.19 {ConfigureText procedure} -setup {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
     pack .top.t
-    wm geometry .top +0+0
+    wm geometry .top +0+$minY
     update
     wm geometry .top
 } -cleanup {
     destroy .top
-} -result {20x10+0+0}
+} -result "20x10+0+$minY"
 # This test was failing on Windows because the title bar on .t was a certain
 # minimum size and it was interfering with the size requested by the -setgrid.
 # The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
 # to the appropriate size.
+# On macOS we again use minY as a workaround.
 test text-14.20 {ConfigureText procedure} -setup {
     toplevel .top
     text .top.t -font {Courier -12} -borderwidth 2 -highlightthickness 2
@@ -3510,7 +3517,7 @@ test text-14.20 {ConfigureText procedure} -setup {
     .top.t configure -width 20 -height 10 -setgrid 1
     wm overrideredirect .top 1
     pack .top.t
-    wm geometry .top +0+0
+    wm geometry .top +0+$minY
     update
     set result [wm geometry .top]
     wm geometry .top 15x8
@@ -3521,7 +3528,7 @@ test text-14.20 {ConfigureText procedure} -setup {
     lappend result [wm geometry .top]
 } -cleanup {
     destroy .top
-} -result {20x10+0+0 15x8+0+0 15x8+0+0}
+} -result "20x10+0+$minY 15x8+0+$minY 15x8+0+$minY"
 
 
 test text-15.1 {TextWorldChanged procedure, spacing options} -constraints {
@@ -6138,9 +6145,9 @@ test text-23.4 {TkTextGetTabs procedure} -setup {
     .t insert end "1\t2\t3\t4\t55.5"
     .t configure -tabs {100 right 200 left 300 center 400 numeric}
     update idletasks
-    list [expr [lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]] \
+    list [expr {[lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]}] \
 	    [lindex [.t bbox 1.4] 0] \
-	    [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
+	    [expr {[lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2}] \
 	    [lindex [.t bbox 1.10] 0]
 } -cleanup {
     destroy .t
@@ -6152,9 +6159,9 @@ test text-23.5 {TkTextGetTabs procedure} -setup {
     .t insert end "1\t2\t3\t4\t55.5"
     .t configure -tabs {105 r 205 l 305 c 405 n}
     update idletasks
-    list [expr [lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]] \
+    list [expr {[lindex [.t bbox 1.2] 0] + [lindex [.t bbox 1.2] 2]}] \
 	    [lindex [.t bbox 1.4] 0] \
-	    [expr [lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2] \
+	    [expr {[lindex [.t bbox 1.6] 0] + [lindex [.t bbox 1.6] 2]/2}] \
 	    [lindex [.t bbox 1.10] 0]
 } -cleanup {
     destroy .t

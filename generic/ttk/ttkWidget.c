@@ -334,7 +334,7 @@ static void WidgetWorldChanged(ClientData clientData)
     TtkRedisplayWidget(corePtr);
 }
 
-static Tk_ClassProcs widgetClassProcs = {
+static const Tk_ClassProcs widgetClassProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     WidgetWorldChanged,	/* worldChangedProc */
     NULL,					/* createProc */
@@ -738,7 +738,7 @@ int TtkWidgetInstateCommand(
 
     if (objc == 3) {
 	Tcl_SetObjResult(interp,
-	    Tcl_NewBooleanObj(Ttk_StateMatches(state,&spec)));
+	    Tcl_NewWideIntObj(Ttk_StateMatches(state,&spec)));
     } else if (objc == 4) {
 	if (Ttk_StateMatches(state,&spec)) {
 	    status = Tcl_EvalObjEx(interp, objv[3], 0);

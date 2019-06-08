@@ -1011,7 +1011,7 @@ ConfigureSlaves(
 
     i = sizeof(Slave *) * (pwPtr->numSlaves + numNewSlaves);
     newSlaves = ckalloc(i);
-    memset(newSlaves, 0, (size_t) i);
+    memset(newSlaves, 0, i);
     if (index == -1) {
 	/*
 	 * If none of the existing slaves have to be moved, just copy the old
@@ -1132,8 +1132,8 @@ PanedWindowSashCommand(
 	}
 	slavePtr = pwPtr->slaves[sash];
 
-	coords[0] = Tcl_NewIntObj(slavePtr->sashx);
-	coords[1] = Tcl_NewIntObj(slavePtr->sashy);
+	coords[0] = Tcl_NewWideIntObj(slavePtr->sashx);
+	coords[1] = Tcl_NewWideIntObj(slavePtr->sashy);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	break;
 
@@ -1166,8 +1166,8 @@ PanedWindowSashCommand(
 	    pwPtr->slaves[sash]->markx = x;
 	    pwPtr->slaves[sash]->marky = y;
 	} else {
-	    coords[0] = Tcl_NewIntObj(pwPtr->slaves[sash]->markx);
-	    coords[1] = Tcl_NewIntObj(pwPtr->slaves[sash]->marky);
+	    coords[0] = Tcl_NewWideIntObj(pwPtr->slaves[sash]->markx);
+	    coords[1] = Tcl_NewWideIntObj(pwPtr->slaves[sash]->marky);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	}
 	break;
@@ -2877,8 +2877,8 @@ PanedWindowProxyCommand(
 	    return TCL_ERROR;
 	}
 
-	coords[0] = Tcl_NewIntObj(pwPtr->proxyx);
-	coords[1] = Tcl_NewIntObj(pwPtr->proxyy);
+	coords[0] = Tcl_NewWideIntObj(pwPtr->proxyx);
+	coords[1] = Tcl_NewWideIntObj(pwPtr->proxyy);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	break;
 
@@ -3142,7 +3142,7 @@ PanedWindowIdentifyCoords(
     if (found != -1) {
 	Tcl_Obj *list[2];
 
-	list[0] = Tcl_NewIntObj(found);
+	list[0] = Tcl_NewWideIntObj(found);
 	list[1] = Tcl_NewStringObj((isHandle ? "handle" : "sash"), -1);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, list));
     }

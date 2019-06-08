@@ -187,8 +187,8 @@ TkMacOSXIsEmptyRegion(
  *	Xwindow documentation for more details.
  *
  * Results:
- *	Returns RectanglePart or RectangleOut. Note that this is not a
- *	complete implementation since it doesn't test for RectangleIn.
+ *	Returns RectanglePart or RectangleOut. Note that this is not a complete
+ *	implementation since it doesn't test for RectangleIn.
  *
  * Side effects:
  *	None.
@@ -204,13 +204,13 @@ TkRectInRegion(
     unsigned int width,
     unsigned int height)
 {
-    if ( TkMacOSXIsEmptyRegion(region) ) {
-	    return RectangleOut;
-	}
-    else {
+    if (TkMacOSXIsEmptyRegion(region)) {
+	return RectangleOut;
+    } else {
 	const CGRect r = CGRectMake(x, y, width, height);
+
 	return HIShapeIntersectsRect((HIShapeRef) region, &r) ?
-	    RectanglePart : RectangleOut;
+		RectanglePart : RectangleOut;
     }
 }
 
@@ -234,7 +234,7 @@ TkRectInRegion(
 void
 TkClipBox(
     TkRegion r,
-    XRectangle* rect_return)
+    XRectangle *rect_return)
 {
     CGRect rect;
 

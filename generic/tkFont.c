@@ -712,7 +712,7 @@ Tk_FontObjCmd(
     case FONT_MEASURE: {
 	const char *string;
 	Tk_Font tkfont;
-	size_t length = 0;
+	TkSizeT length = 0;
 	int skip = 0;
 
 	if (objc > 4) {
@@ -731,7 +731,7 @@ Tk_FontObjCmd(
 	    return TCL_ERROR;
 	}
 	string = TkGetStringFromObj(objv[3 + skip], &length);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
 		Tk_TextWidth(tkfont, string, length)));
 	Tk_FreeFont(tkfont);
 	break;
@@ -778,7 +778,7 @@ Tk_FontObjCmd(
 	    case 2: i = fmPtr->ascent + fmPtr->descent;	break;
 	    case 3: i = fmPtr->fixed;			break;
 	    }
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(i));
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(i));
 	}
 	Tk_FreeFont(tkfont);
 	break;
@@ -3245,7 +3245,7 @@ Tk_TextLayoutToPostscript(
     int baseline = chunkPtr->y;
     Tcl_Obj *psObj = Tcl_NewObj();
     int i, j;
-    size_t len;
+    TkSizeT len;
     const char *p, *glyphname;
     char uindex[5], c, *ps;
     int ch;
@@ -3494,9 +3494,9 @@ GetAttributeInfoObj(
 
 	case FONT_SIZE:
 	    if (faPtr->size >= 0.0) {
-		valuePtr = Tcl_NewIntObj((int)(faPtr->size + 0.5));
+		valuePtr = Tcl_NewWideIntObj((Tcl_WideInt)(faPtr->size + 0.5));
 	    } else {
-		valuePtr = Tcl_NewIntObj(-(int)(-faPtr->size + 0.5));
+		valuePtr = Tcl_NewWideIntObj(-(Tcl_WideInt)(-faPtr->size + 0.5));
 	    }
 	    break;
 
@@ -4250,7 +4250,7 @@ TkFontGetFirstTextLayout(
     }
     chunkPtr = layoutPtr->chunks;
     numBytesInChunk = chunkPtr->numBytes;
-    strncpy(dst, chunkPtr->start, (size_t) numBytesInChunk);
+    strncpy(dst, chunkPtr->start, numBytesInChunk);
     *font = layoutPtr->tkfont;
     return numBytesInChunk;
 }

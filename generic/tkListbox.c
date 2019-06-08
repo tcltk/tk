@@ -728,7 +728,7 @@ ListboxWidgetObjCmd(
 	objPtr = Tcl_NewObj();
 	for (i = 0; i < listPtr->nElements; i++) {
 	    if (Tcl_FindHashEntry(listPtr->selection, KEY(i))) {
-		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewIntObj(i));
+		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewWideIntObj(i));
 	    }
 	}
 	Tcl_SetObjResult(interp, objPtr);
@@ -841,7 +841,7 @@ ListboxWidgetObjCmd(
 	if (result != TCL_OK) {
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	result = TCL_OK;
 	break;
 
@@ -956,7 +956,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 	index = NearestListboxElement(listPtr, y);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	result = TCL_OK;
 	break;
     }
@@ -1044,7 +1044,7 @@ ListboxWidgetObjCmd(
 	    result = TCL_ERROR;
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(listPtr->nElements));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(listPtr->nElements));
 	result = TCL_OK;
 	break;
     case COMMAND_XVIEW:
@@ -1103,7 +1103,7 @@ ListboxBboxSubCmd(
 	Tcl_Obj *el, *results[4];
 	const char *stringRep;
 	int pixelWidth, x, y, result;
-	size_t stringLen;
+	TkSizeT stringLen;
 	Tk_FontMetrics fm;
 
 	/*
@@ -1130,10 +1130,10 @@ ListboxBboxSubCmd(
         }
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
 		+ listPtr->inset + listPtr->selBorderWidth;
-	results[0] = Tcl_NewIntObj(x);
-	results[1] = Tcl_NewIntObj(y);
-	results[2] = Tcl_NewIntObj(pixelWidth);
-	results[3] = Tcl_NewIntObj(fm.linespace);
+	results[0] = Tcl_NewWideIntObj(x);
+	results[1] = Tcl_NewWideIntObj(y);
+	results[2] = Tcl_NewWideIntObj(pixelWidth);
+	results[3] = Tcl_NewWideIntObj(fm.linespace);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(4, results));
     }
     return TCL_OK;
@@ -1842,7 +1842,7 @@ DisplayListbox(
     register Tk_Window tkwin = listPtr->tkwin;
     GC gc;
     int i, limit, x, y, prevSelected, freeGC;
-    size_t stringLen;
+    TkSizeT stringLen;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
@@ -2239,7 +2239,7 @@ ListboxComputeGeometry(
 				 * window. */
 {
     int width, height, pixelWidth, pixelHeight, i, result;
-    size_t textLength;
+    TkSizeT textLength;
     Tk_FontMetrics fm;
     Tcl_Obj *element;
     const char *text;
@@ -2327,7 +2327,7 @@ ListboxInsertSubCmd(
     Tcl_Obj *const objv[])	/* New elements (one per entry). */
 {
     int i, oldMaxWidth, pixelWidth, result;
-    size_t length;
+    TkSizeT length;
     Tcl_Obj *newListObj;
     const char *stringRep;
 
@@ -2442,7 +2442,7 @@ ListboxDeleteSubCmd(
     int last)			/* Index of last element to delete. */
 {
     int count, i, widthChanged, result, pixelWidth;
-    size_t length;
+    TkSizeT length;
     Tcl_Obj *newListObj, *element;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -3128,7 +3128,7 @@ ListboxFetchSelection(
     register Listbox *listPtr = clientData;
     Tcl_DString selection;
     int count, needNewline, i;
-    size_t length, stringLen;
+    TkSizeT length, stringLen;
     Tcl_Obj *curElement;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -3166,7 +3166,7 @@ ListboxFetchSelection(
      * Copy the requested portion of the selection to the buffer.
      */
 
-    if (length <= (size_t)offset) {
+    if (length <= (TkSizeT)offset) {
 	count = 0;
     } else {
 	count = length - offset;
@@ -3437,8 +3437,8 @@ static char *
 ListboxListVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Not used. */
+    const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
     Listbox *listPtr = clientData;
@@ -3447,24 +3447,32 @@ ListboxListVarProc(
     Tcl_HashEntry *entry;
 
     /*
-     * See ticket [5d991b82].
-     */
-
-    if (listPtr->listVarName == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    ListboxListVarProc, clientData);
-	}
-	return NULL;
-    }
-
-    /*
      * Bwah hahahaha! Puny mortal, you can't unset a -listvar'd variable!
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+
+        if (!Tcl_InterpDeleted(interp) && listPtr->listVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        listPtr->listVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        ListboxListVarProc, probe);
+                if (probe == (ClientData)listPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * listVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
 		    listPtr->listObj, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, listPtr->listVarName,

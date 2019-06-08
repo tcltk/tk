@@ -3529,6 +3529,34 @@ test entry-24.1 {textvariable lives in a non-existing namespace} -setup {
   destroy .e
 } -result {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
 
+test entry-25.1 {Bug [5d991b822e]} {
+    # Want this not to segfault, or write to variable with empty name
+    set var INIT
+    entry .b -textvariable var
+    trace add variable var unset {apply {args {
+        .b configure -textvariable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+    info exists {}
+} 0
+test entry-25.2 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    entry .b -textvariable var
+    trace add variable var unset {apply {args {
+        .b configure -textvariable new
+    }}}
+    pack .b
+    bind .b <Configure> {unset -nocomplain var}
+    update
+    destroy .b
+    unset new
+} {}
+
+
 # Gathered comments about lacks
 # XXX Still need to write tests for EntryBlinkProc, EntryFocusProc,
 # and EntryTextVarProc.

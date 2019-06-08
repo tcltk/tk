@@ -410,7 +410,7 @@ ImgPhotoCmd(
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
     Tk_PhotoImageFormat *imageFormat;
-    size_t length;
+    TkSizeT length;
     int imageWidth, imageHeight, matched, oldformat = 0;
     Tcl_Channel chan;
     Tk_PhotoHandle srcHandle;
@@ -849,10 +849,10 @@ ImgPhotoCmd(
 	 */
 
 	pixelPtr = masterPtr->pix32 + (y * masterPtr->width + x) * 4;
-	channels[0] = Tcl_NewIntObj(pixelPtr[0]);
-	channels[1] = Tcl_NewIntObj(pixelPtr[1]);
-	channels[2] = Tcl_NewIntObj(pixelPtr[2]);
-	channels[3] = Tcl_NewIntObj(pixelPtr[3]);
+	channels[0] = Tcl_NewWideIntObj(pixelPtr[0]);
+	channels[1] = Tcl_NewWideIntObj(pixelPtr[1]);
+	channels[2] = Tcl_NewWideIntObj(pixelPtr[2]);
+	channels[3] = Tcl_NewWideIntObj(pixelPtr[3]);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(channelCount, channels));
 	return TCL_OK;
     }
@@ -1141,7 +1141,7 @@ ImgPhotoCmd(
 	    if (boolMode) {
 		Tcl_SetObjResult(interp, Tcl_NewBooleanObj( ! pixelPtr[3]));
 	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewIntObj(pixelPtr[3]));
+		Tcl_SetObjResult(interp, Tcl_NewWideIntObj(pixelPtr[3]));
 	    }
 	    return TCL_OK;
 	}
@@ -1476,7 +1476,7 @@ ParseSubcommandOptions(
 				 * TK_PHOTO_COMPOSITE_* constants. */
 	NULL
     };
-    size_t length;
+    TkSizeT length;
     int index, c, bit, currentBit;
     int values[4], numValues, maxValues, argIndex;
     const char *option, *expandedOption, *needed;
@@ -1758,7 +1758,7 @@ ImgPhotoConfigureMaster(
     const char *oldFileString, *oldPaletteString;
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL;
     Tcl_Obj *tempdata, *tempformat;
-    size_t length;
+    TkSizeT length;
     int i, j, result, imageWidth, imageHeight, oldformat;
     double oldGamma;
     Tcl_Channel chan;
@@ -1846,7 +1846,7 @@ ImgPhotoConfigureMaster(
 	 * Force into ByteArray format, which most (all) image handlers will
 	 * use anyway. Empty length means ignore the -data option.
 	 */
-	size_t bytesize;
+	TkSizeT bytesize;
 
 	(void) TkGetByteArrayFromObj(data, &bytesize);
 	if (bytesize) {
@@ -2644,10 +2644,19 @@ MatchStringFormat(
 		    formatString, NULL);
 	    return TCL_ERROR;
 	} else {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "couldn't recognize image data", -1));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-		    "UNRECOGNIZED_DATA", NULL);
+
+            /*
+             * Some lower level routine (stringMatchProc) may have already set
+             * a specific error message, so just return this. Otherwise return
+             * a generic image data error.
+             */
+
+            if (Tcl_GetString(Tcl_GetObjResult(interp))[0] == '\0') {
+                Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                        "couldn't recognize image data", -1));
+	        Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
+		        "UNRECOGNIZED_DATA", NULL);
+            }
 	    return TCL_ERROR;
 	}
     }
