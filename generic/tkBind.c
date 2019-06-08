@@ -44,18 +44,6 @@
 #define SIZE_OF_ARRAY(arr) (sizeof(arr)/sizeof(arr[0]))
 
 /*
- * Simple boolean type support.
- */
-
-#ifdef bool
-# undef bool /* needed for Mac */
-#endif
-#define bool int
-#ifndef MAC_OSX_TK /* Mac provides 'true' and 'false' */
-enum { true = (bool) 1, false = (bool) 0 };
-#endif
-
-/*
  * File structure:
  *
  * Structure definitions and static variables.
@@ -170,7 +158,7 @@ typedef struct PSEntry {
     				 * Only needed if pattern sequence is not single (more than one
 				 * pattern), and if one of these patterns contains a non-zero
 				 * modifier mask. */
-    unsigned count:30;		/* Only promote to next level if this count has reached count of
+    unsigned count;		/* Only promote to next level if this count has reached count of
     				 * pattern. */
     unsigned expired:1;		/* Whether this entry is expired, this means it has to be removed
     				 * from promotion list. */
@@ -402,7 +390,7 @@ typedef struct TkBindInfo_ {
 				/* The virtual events that exist in this interpreter. */
     ScreenInfo screenInfo;	/* Keeps track of the current display and screen, so it can be
     				 * restored after a binding has executed. */
-    bool deleted;		/* True if the application has been deleted but the structure has been
+    int deleted;		/* 1 if the application has been deleted but the structure has been
     				 * preserved. */
     Time lastEventTime;		/* Needed for time measurement. */
     Time lastCurrentTime;	/* Needed for time measurement. */
@@ -711,7 +699,7 @@ DEBUG(static int countSeqItems = 0);
  */
 
 static void		ChangeScreen(Tcl_Interp *interp, char *dispName, int screenIndex);
-static bool		CreateVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
+static int		CreateVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
 			    char *virtString, const char *eventString);
 static int		DeleteVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
 			    char *virtString, const char *eventString);
@@ -719,8 +707,8 @@ static void		DeleteVirtualEventTable(VirtualEventTable *vetPtr);
 static void		ExpandPercents(TkWindow *winPtr, const char *before, Event *eventPtr,
 			    unsigned scriptCount, Tcl_DString *dsPtr);
 static PatSeq *		FindSequence(Tcl_Interp *interp, LookupTables *lookupTables,
-			    ClientData object, const char *eventString, bool create,
-			    bool allowVirtual, EventMask *maskPtr);
+			    ClientData object, const char *eventString, int create,
+			    int allowVirtual, EventMask *maskPtr);
 static void		GetAllVirtualEvents(Tcl_Interp *interp, VirtualEventTable *vetPtr);
 static const char *	GetField(const char *p, char *copy, unsigned size);
 static Tcl_Obj *	GetPatternObj(const PatSeq *psPtr);
@@ -733,16 +721,16 @@ static void		InitVirtualEventTable(VirtualEventTable *vetPtr);
 static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSList *psList,
 			    PSList *psSuccList, unsigned patIndex, const Event *eventPtr,
 			    ClientData object, PatSeq **physPtrPtr);
-static bool		NameToWindow(Tcl_Interp *interp, Tk_Window main,
+static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
 			    TkPattern *patPtr, EventMask *eventMaskPtr);
 static void		DoWarp(ClientData clientData);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
-			    Tcl_Obj *object, bool onlyConsiderDetailedEvents);
+			    Tcl_Obj *object, int onlyConsiderDetailedEvents);
 static void		ClearLookupTable(LookupTables *lookupTables, ClientData object);
 static void		ClearPromotionLists(Tk_BindingTable bindPtr, ClientData object);
-static PSEntry *	MakeListEntry(PSList *pool, PatSeq *psPtr, bool needModMasks);
+static PSEntry *	MakeListEntry(PSList *pool, PatSeq *psPtr, int needModMasks);
 static void		RemovePatSeqFromLookup(LookupTables *lookupTables, PatSeq *psPtr);
 static void		RemovePatSeqFromPromotionLists(Tk_BindingTable bindPtr, PatSeq *psPtr);
 static PatSeq *		DeletePatSeq(PatSeq *psPtr);
@@ -761,12 +749,12 @@ static int BindCount = 0;
 
 static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
-static bool IsOdd(int n) { return n & 1; }
+static int IsOdd(int n) { return n & 1; }
 
-static bool TestNearbyTime(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_MS; }
-static bool TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_PIXELS; }
+static int TestNearbyTime(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_MS; }
+static int TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_PIXELS; }
 
-static bool
+static int
 IsSubsetOf(
     ModMask lhsMask,	/* this is a subset */
     ModMask rhsMask)	/* of this bit field? */
@@ -855,7 +843,7 @@ CountSpecialized(
     return sndCount - fstCount;
 }
 
-static bool
+static int
 MatchEventNearby(
     const XEvent *lhs,	/* previous button event */
     const XEvent *rhs)	/* current button event */
@@ -872,7 +860,7 @@ MatchEventNearby(
 	    && TestNearbyCoords(rhs->xbutton.y_root, lhs->xbutton.y_root);
 }
 
-static bool
+static int
 MatchEventRepeat(
     const XEvent *lhs,	/* previous key event */
     const XEvent *rhs)	/* current key event */
@@ -1043,7 +1031,7 @@ static PSEntry *
 MakeListEntry(
     PSList *pool,
     PatSeq *psPtr,
-    bool needModMasks)
+    int needModMasks)
 {
     PSEntry *newEntry = NULL;
 
@@ -1072,10 +1060,10 @@ MakeListEntry(
 
     newEntry->psPtr = psPtr;
     newEntry->window = None;
-    newEntry->expired = false;
-    newEntry->keepIt = true;
+    newEntry->expired = 0;
+    newEntry->keepIt = 1;
     newEntry->count = 1;
-    DEBUG(psPtr->owned = false);
+    DEBUG(psPtr->owned = 0);
 
     return newEntry;
 }
@@ -1101,7 +1089,7 @@ GetLookupForEvent(
     LookupTables* lookupTables,
     const Event *eventPtr,
     Tcl_Obj *object,
-    bool onlyConsiderDetailedEvents)
+    int onlyConsiderDetailedEvents)
 {
     PatternTableKey key;
     Tcl_HashEntry *hPtr;
@@ -1244,7 +1232,7 @@ ClearPromotionLists(
  * otherwise this should belong to function TkBindInit().
  */
 TCL_DECLARE_MUTEX(bindMutex);
-static bool initialized = false;
+static int initialized = 0;
 
 void
 TkBindInit(
@@ -1263,9 +1251,6 @@ TkBindInit(
 
     /* ensure that our matching algorithm is working (when testing detail) */
     assert(sizeof(Detail) == sizeof(Tk_Uid));
-
-    /* test boolean support for safety, because used for 1 bit fields */
-    assert(false == 0 && true == 1);
 
     /* test that constant NO_NUMBER is indeed out of integer range */
     assert(sizeof(NO_NUMBER) > sizeof(int));
@@ -1344,7 +1329,7 @@ TkBindInit(
 	    Tcl_HashEntry *hPtr;
 	    const ModInfo *modPtr;
 	    const EventInfo *eiPtr;
-	    bool newEntry;
+	    int newEntry;
 	    unsigned i;
 #ifdef REDO_KEYSYM_LOOKUP
 	    const KeySymInfo *kPtr;
@@ -1385,7 +1370,7 @@ TkBindInit(
 		Tcl_SetHashValue(hPtr, eiPtr);
 	    }
 
-	    initialized = true;
+	    initialized = 1;
 	}
 	Tcl_MutexUnlock(&bindMutex);
     }
@@ -1397,7 +1382,7 @@ TkBindInit(
     bindInfoPtr->screenInfo.curDispPtr = NULL;
     bindInfoPtr->screenInfo.curScreenIndex = -1;
     bindInfoPtr->screenInfo.bindingDepth = 0;
-    bindInfoPtr->deleted = false;
+    bindInfoPtr->deleted = 0;
     bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
     bindInfoPtr->lastEventTime = 0;
     mainPtr->bindInfo = bindInfoPtr;
@@ -1435,7 +1420,7 @@ TkBindFree(
     mainPtr->bindingTable = NULL;
     bindInfoPtr = mainPtr->bindInfo;
     DeleteVirtualEventTable(&bindInfoPtr->virtualEventTable);
-    bindInfoPtr->deleted = true;
+    bindInfoPtr->deleted = 1;
     Tcl_EventuallyFree(bindInfoPtr, TCL_DYNAMIC);
     mainPtr->bindInfo = NULL;
 
@@ -1586,7 +1571,7 @@ InsertPatSeq(
     if (!(psPtr->added)) {
 	PatternTableKey key;
 	Tcl_HashEntry *hPtr;
-	bool isNew;
+	int isNew;
 	PSList *psList;
 	PSEntry *psEntry;
 
@@ -1602,9 +1587,9 @@ InsertPatSeq(
 	    psList = Tcl_GetHashValue(hPtr);
 	}
 
-	psEntry = MakeListEntry(&lookupTables->entryPool, psPtr, false);
+	psEntry = MakeListEntry(&lookupTables->entryPool, psPtr, 0);
 	PSList_Append(psList, psEntry);
-	psPtr->added = true;
+	psPtr->added = 1;
     }
 }
 /*
@@ -1638,8 +1623,8 @@ Tk_CreateBinding(
     ClientData object,		/* Token for object with which binding is associated. */
     const char *eventString,	/* String describing event sequence that triggers binding. */
     const char *script,		/* Contains Tcl script to execute when binding triggers. */
-    bool append)		/* False means replace any existing binding for eventString;
-    				 * True means append to that binding. If the existing binding is
+    int append)			/* 0 means replace any existing binding for eventString;
+    				 * 1 means append to that binding. If the existing binding is
 				 * for a callback function and not a Tcl command string, the
 				 * existing binding will always be replaced. */
 {
@@ -1654,7 +1639,7 @@ Tk_CreateBinding(
     assert(script);
 
     psPtr = FindSequence(interp, &bindPtr->lookupTables, object, eventString,
-	    !!*script, true, &eventMask);
+	    !!*script, 1, &eventMask);
 
     if (!*script) {
 	assert(!psPtr || psPtr->added);
@@ -1678,7 +1663,7 @@ Tk_CreateBinding(
 
     if (!psPtr->script) {
 	Tcl_HashEntry *hPtr;
-	bool isNew;
+	int isNew;
 
 	/*
 	 * This pattern sequence was just created. Link the pattern into the
@@ -1743,7 +1728,7 @@ Tk_DeleteBinding(
     assert(object);
     assert(eventString);
 
-    psPtr = FindSequence(interp, &bindPtr->lookupTables, object, eventString, false, true, NULL);
+    psPtr = FindSequence(interp, &bindPtr->lookupTables, object, eventString, 0, 1, NULL);
     if (!psPtr) {
 	Tcl_ResetResult(interp);
     } else {
@@ -1816,7 +1801,7 @@ Tk_GetBinding(
     assert(object);
     assert(eventString);
 
-    psPtr = FindSequence(interp, &bindPtr->lookupTables, object, eventString, false, true, NULL);
+    psPtr = FindSequence(interp, &bindPtr->lookupTables, object, eventString, 0, 1, NULL);
     assert(!psPtr || TEST_PSENTRY(psPtr));
     return psPtr ? psPtr->script : NULL;
 }
@@ -1904,7 +1889,7 @@ RemovePatSeqFromLookup(
 
 	TK_DLIST_FOREACH(psEntry, psList) {
 	    if (psEntry->psPtr == psPtr) {
-		psPtr->added = false;
+		psPtr->added = 0;
 		RemoveListEntry(&lookupTables->entryPool, psEntry);
 		return;
 	    }
@@ -2056,7 +2041,7 @@ Tk_DeleteAllBindings(
 
     for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
 	assert(TEST_PSENTRY(psPtr));
-	DEBUG(psPtr->added = false);
+	DEBUG(psPtr->added = 0);
 	nextPtr = DeletePatSeq(psPtr);
     }
 
@@ -2108,19 +2093,19 @@ ResetCounters(
 }
 
 /* helper function */
-static bool
+static int
 IsBetterMatch(
     const PatSeq *fstMatchPtr,
     const PatSeq *sndMatchPtr)	/* this is a better match? */
 {
     int diff;
 
-    if (!sndMatchPtr) { return false; }
-    if (!fstMatchPtr) { return true; }
+    if (!sndMatchPtr) { return 0; }
+    if (!fstMatchPtr) { return 1; }
     
     diff = CountSpecialized(fstMatchPtr, sndMatchPtr);
-    if (diff > 0) { return true; }
-    if (diff < 0) { return false; }
+    if (diff > 0) { return 1; }
+    if (diff < 0) { return 0; }
 
 #if PREFER_MOST_SPECIALIZED_EVENT
     {	/* local scope */
@@ -2147,8 +2132,8 @@ IsBetterMatch(
 	    assert(GetCount(sndMatchPtr, i) < SIZE_OF_ARRAY(weight));
 	    sndCount += weight[GetCount(sndMatchPtr, i)];
 	}
-	if (sndCount > fstCount) { return true; }
-	if (sndCount < fstCount) { return false; }
+	if (sndCount > fstCount) { return 1; }
+	if (sndCount < fstCount) { return 0; }
     }
 #endif
 
@@ -2251,7 +2236,7 @@ Tk_BindEvent(
 	break;
     case KeyPress:
     case KeyRelease: {
-	bool reset = true;
+	int reset = 1;
 
 	if (eventPtr->xkey.time) {
 	    bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
@@ -2260,7 +2245,7 @@ Tk_BindEvent(
 	/* modifier keys should not influence button events */
 	for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
-		reset = false;
+		reset = 0;
 	    }
 	}
 	if (reset) {
@@ -2420,8 +2405,8 @@ Tk_BindEvent(
 	PSList *psSuccList = PromArr_First(bindPtr->promArr);
 	PatSeq *bestPtr;
 
-	psl[0] = GetLookupForEvent(physTables, curEvent, objArr[k], true);
-	psl[1] = GetLookupForEvent(physTables, curEvent, objArr[k], false);
+	psl[0] = GetLookupForEvent(physTables, curEvent, objArr[k], 1);
+	psl[1] = GetLookupForEvent(physTables, curEvent, objArr[k], 0);
 
 	assert(psl[0] == NULL || psl[0] != psl[1]);
 
@@ -2465,8 +2450,8 @@ Tk_BindEvent(
 		 * Note that virtual events cannot promote.
 		 */
 
-		psl[0] = GetLookupForEvent(virtTables, curEvent, NULL, true);
-		psl[1] = GetLookupForEvent(virtTables, curEvent, NULL, false);
+		psl[0] = GetLookupForEvent(virtTables, curEvent, NULL, 1);
+		psl[1] = GetLookupForEvent(virtTables, curEvent, NULL, 0);
 
 		assert(psl[0] == NULL || psl[0] != psl[1]);
 
@@ -2521,7 +2506,7 @@ Tk_BindEvent(
 
 	    if (psEntry->keepIt) {
 		assert(!psEntry->expired);
-		psEntry->keepIt = false;
+		psEntry->keepIt = 0;
 	    } else if (psEntry->expired
 		    || psEntry->window != curEvent->xev.xany.window
 		    || (patPtr->info
@@ -2668,7 +2653,7 @@ Tk_BindEvent(
  */
 
 /* helper function */
-static bool
+static int
 VirtPatIsBound(
     Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
     PatSeq *psPtr,		/* Test this pattern. */
@@ -2691,7 +2676,7 @@ VirtPatIsBound(
 
 	if (physPatPtr->info || !virtPatPtr->info) {
 	    if (IsSubsetOf(virtPatPtr->modMask, physPatPtr->modMask)) {
-		return false; /* we cannot surpass this match */
+		return 0; /* we cannot surpass this match */
 	    }
 	}
     }
@@ -2711,11 +2696,11 @@ VirtPatIsBound(
 	if ((hPtr = Tcl_FindHashEntry(&bindPtr->lookupTables.patternTable, (char *) &key))) {
 	    /* The physical event matches this virtual event's definition. */
 	    *physPtrPtr = (PatSeq *) Tcl_GetHashValue(hPtr);
-	    return true;
+	    return 1;
 	}
     }
 
-    return false;
+    return 0;
 }
 
 /* helper function */
@@ -2733,7 +2718,7 @@ Compare(
 }
 
 /* helper function */
-static bool
+static int
 CompareModMasks(
     const PSModMaskArr *fstModMaskArr,
     const PSModMaskArr *sndModMaskArr,
@@ -2797,7 +2782,7 @@ MatchPatterns(
     PatSeq *bestPtr;
     PatSeq *bestPhysPtr;
     ModMask bestModMask;
-    const PSModMaskArr *bestModMaskArr;
+    const PSModMaskArr *bestModMaskArr = NULL;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -2822,7 +2807,7 @@ MatchPatterns(
 	    assert(psPtr->numPats > patIndex);
 
 	    if (psPtr->object
-		    ? psPtr->object == object 
+		    ? psPtr->object == object
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
 
@@ -2839,7 +2824,7 @@ MatchPatterns(
 		    ModMask modMask = ResolveModifiers(dispPtr, patPtr->modMask);
 		    ModMask curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
-		    psEntry->expired = true; /* remove it from promotion list */
+		    psEntry->expired = 1; /* remove it from promotion list */
 
 		    if ((modMask & ~curModMask) == 0) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
@@ -2876,8 +2861,8 @@ MatchPatterns(
 				    }
 				}
 			    } else {
-				DEBUG(psEntry->expired = false);
-				psEntry->keepIt = true; /* don't remove it from promotion list */
+				DEBUG(psEntry->expired = 0);
+				psEntry->keepIt = 1; /* don't remove it from promotion list */
 			    }
 			} else if (psSuccList) {
 			    /*
@@ -2899,9 +2884,9 @@ MatchPatterns(
 				psNewEntry->window = window; /* bind to current window */
 			    } else {
 				assert(psEntry->count < patPtr->count);
-				DEBUG(psEntry->expired = false);
+				DEBUG(psEntry->expired = 0);
 				psEntry->count += 1;
-				psEntry->keepIt = true; /* don't remove it from promotion list */
+				psEntry->keepIt = 1; /* don't remove it from promotion list */
 			    }
 			}
 		    }
@@ -2957,7 +2942,7 @@ ExpandPercents(
     evPtr = &eventPtr->xev;
     flags = (evPtr->type < TK_LASTEVENT) ? flagArray[evPtr->type] : 0;
 
-    while (true) {
+    while (1) {
 	char numStorage[TCL_INTEGER_SPACE];
 	const char *string;
 	Tcl_WideInt number;
@@ -3466,7 +3451,7 @@ DeleteVirtualEventTable(
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
 	    assert(TEST_PSENTRY(psPtr));
 	    nextPtr = psPtr->nextSeqPtr;
-	    DEBUG(psPtr->owned = false);
+	    DEBUG(psPtr->owned = 0);
 	    FreePatSeq(psPtr);
 	}
     }
@@ -3504,7 +3489,7 @@ DeleteVirtualEventTable(
  *----------------------------------------------------------------------
  */
 
-static bool
+static int
 CreateVirtualEvent(
     Tcl_Interp *interp,		/* Used for error reporting. */
     VirtualEventTable *vetPtr,	/* Table in which to augment virtual event. */
@@ -3522,15 +3507,15 @@ CreateVirtualEvent(
     assert(eventString);
 
     if (!(virtUid = GetVirtualEventUid(interp, virtString))) {
-	return false;
+	return 0;
     }
 
     /*
      * Find/create physical event
      */
 
-    if (!(psPtr = FindSequence(interp, &vetPtr->lookupTables, NULL, eventString, true, false, NULL))) {
-	return false;
+    if (!(psPtr = FindSequence(interp, &vetPtr->lookupTables, NULL, eventString, 1, 0, NULL))) {
+	return 0;
     }
     assert(TEST_PSENTRY(psPtr));
 
@@ -3549,13 +3534,13 @@ CreateVirtualEvent(
     if (!PhysOwned_Contains(owned, psPtr)) {
 	PhysOwned_Append(&owned, psPtr);
 	Tcl_SetHashValue(vhPtr, owned);
-	DEBUG(psPtr->owned = true);
+	DEBUG(psPtr->owned = 1);
 	InsertPatSeq(&vetPtr->lookupTables, psPtr);
 	/* Make physical event so it can trigger the virtual event. */
 	VirtOwners_Append(&psPtr->ptr.owners, vhPtr);
     }
 
-    return true;
+    return 1;
 }
 
 /*
@@ -3618,7 +3603,7 @@ DeleteVirtualEvent(
 	 * event doesn't own that physical event, return w/o doing anything.
 	 */
 
-	eventPSPtr = FindSequence(interp, lookupTables, NULL, eventString, false, false, NULL);
+	eventPSPtr = FindSequence(interp, lookupTables, NULL, eventString, 0, 0, NULL);
 	if (!eventPSPtr) {
 	    const char *string = Tcl_GetString(Tcl_GetObjResult(interp));
 	    return string[0] ? TCL_ERROR : TCL_OK;
@@ -3655,7 +3640,7 @@ DeleteVirtualEvent(
 		 * Removed last reference to this physical event, so remove it
 		 * from lookup table.
 		 */
-		DEBUG(psPtr->owned = false);
+		DEBUG(psPtr->owned = 0);
 		RemovePatSeqFromLookup(&vetPtr->lookupTables, psPtr);
 		DeletePatSeq(psPtr);
 	    }
@@ -3839,8 +3824,8 @@ HandleEventGenerate(
     TkWindow *mainPtr;
     EventMask eventMask;
     Tcl_Obj *userDataObj;
-    bool synch;
-    bool warp;
+    int synch;
+    int warp;
     unsigned count;
     unsigned flags;
     int number;
@@ -3907,7 +3892,7 @@ HandleEventGenerate(
     memset(&event, 0, sizeof(event));
     event.general.xany.type = pat.eventType;
     event.general.xany.serial = NextRequest(Tk_Display(tkwin));
-    event.general.xany.send_event = False;
+    event.general.xany.send_event = 0;
     if (windowName[0]) {
 	event.general.xany.window = Tk_WindowId(tkwin);
     } else {
@@ -3950,13 +3935,13 @@ HandleEventGenerate(
      * Process the remaining arguments to fill in additional fields of the event.
      */
 
-    synch = true;
+    synch = 1;
     warp = 0;
     pos = TCL_QUEUE_TAIL;
 
     for (i = 2; i < (unsigned) objc; i += 2) {
 	Tcl_Obj *optionPtr, *valuePtr;
-	bool badOpt = false;
+	int badOpt = 0;
 	int index;
 
 	optionPtr = objv[i];
@@ -3986,7 +3971,7 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (!(flags & KEY_BUTTON_MOTION_VIRTUAL)) {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_WHEN:
@@ -4003,7 +3988,7 @@ HandleEventGenerate(
 	    if (flags & CONFIG) {
 		event.general.xconfigure.above = Tk_WindowId(tkwin2);
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_BORDER:
@@ -4013,7 +3998,7 @@ HandleEventGenerate(
 	    if (flags & (CREATE|CONFIG)) {
 		event.general.xcreatewindow.border_width = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_BUTTON:
@@ -4023,7 +4008,7 @@ HandleEventGenerate(
 	    if (flags & BUTTON) {
 		event.general.xbutton.button = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_COUNT:
@@ -4033,7 +4018,7 @@ HandleEventGenerate(
 	    if (flags & EXPOSE) {
 		event.general.xexpose.count = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_DATA:
@@ -4045,7 +4030,7 @@ HandleEventGenerate(
 		 */
 		userDataObj = valuePtr;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_DELTA:
@@ -4055,7 +4040,7 @@ HandleEventGenerate(
 	    if ((flags & KEY) && event.general.xkey.type == MouseWheelEvent) {
 		event.general.xkey.keycode = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_DETAIL:
@@ -4068,7 +4053,7 @@ HandleEventGenerate(
 	    } else if (flags & CROSSING) {
 		event.general.xcrossing.detail = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_FOCUS:
@@ -4078,7 +4063,7 @@ HandleEventGenerate(
 	    if (flags & CROSSING) {
 		event.general.xcrossing.focus = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_HEIGHT:
@@ -4090,7 +4075,7 @@ HandleEventGenerate(
 	    } else if (flags & CONFIG) {
 		event.general.xconfigure.height = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_KEYCODE:
@@ -4100,7 +4085,7 @@ HandleEventGenerate(
 	    if ((flags & KEY) && event.general.xkey.type != MouseWheelEvent) {
 		event.general.xkey.keycode = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_KEYSYM: {
@@ -4122,7 +4107,7 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (!(flags & KEY) || (event.general.xkey.type == MouseWheelEvent)) {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	}
@@ -4135,7 +4120,7 @@ HandleEventGenerate(
 	    } else if (flags & FOCUS) {
 		event.general.xfocus.mode = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_OVERRIDE:
@@ -4151,7 +4136,7 @@ HandleEventGenerate(
 	    } else if (flags & CONFIG) {
 		event.general.xconfigure.override_redirect = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_PLACE:
@@ -4161,7 +4146,7 @@ HandleEventGenerate(
 	    if (flags & CIRC) {
 		event.general.xcirculate.place = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_ROOT:
@@ -4171,7 +4156,7 @@ HandleEventGenerate(
 	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.general.xkey.root = Tk_WindowId(tkwin2);
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_ROOTX:
@@ -4181,7 +4166,7 @@ HandleEventGenerate(
 	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.general.xkey.x_root = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_ROOTY:
@@ -4191,7 +4176,7 @@ HandleEventGenerate(
 	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.general.xkey.y_root = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_SEND: {
@@ -4208,11 +4193,11 @@ HandleEventGenerate(
 		}
 		if (number) {
 		    /*
-		     * send_event only expects True or False. We cannot allow arbitrary non-zero
+		     * send_event only expects 1 or 0. We cannot allow arbitrary non-zero
 		     * values, otherwise the thing with GENERATED_FOCUS_EVENT_MAGIC will not
 		     * work.
 		     */
-		    number = True;
+		    number = 1;
 		}
 	    } else if (Tcl_GetBooleanFromObj(interp, valuePtr, &number) != TCL_OK) {
 		return TCL_ERROR;
@@ -4242,7 +4227,7 @@ HandleEventGenerate(
 		}
 		event.general.xvisibility.state = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_SUBWINDOW:
@@ -4252,7 +4237,7 @@ HandleEventGenerate(
 	    if (flags & KEY_BUTTON_MOTION_CROSSING) {
 		event.general.xkey.subwindow = Tk_WindowId(tkwin2);
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_TIME: {
@@ -4268,7 +4253,7 @@ HandleEventGenerate(
 	    } else if (flags & PROP) {
 		event.general.xproperty.time = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	}
@@ -4281,7 +4266,7 @@ HandleEventGenerate(
 	    } else if (flags & (CREATE|CONFIG)) {
 		event.general.xcreatewindow.width = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_WINDOW:
@@ -4291,7 +4276,7 @@ HandleEventGenerate(
 	    if (flags & (CREATE|UNMAP|MAP|REPARENT|CONFIG|GRAVITY|CIRC)) {
 		event.general.xcreatewindow.window = Tk_WindowId(tkwin2);
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_X:
@@ -4318,7 +4303,7 @@ HandleEventGenerate(
 	    } else if (flags & REPARENT) {
 		event.general.xreparent.x = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	case EVENT_Y:
@@ -4345,7 +4330,7 @@ HandleEventGenerate(
 	    } else if (flags & REPARENT) {
 		event.general.xreparent.y = number;
 	    } else {
-		badOpt = true;
+		badOpt = 1;
 	    }
 	    break;
 	}
@@ -4434,7 +4419,7 @@ HandleEventGenerate(
  *---------------------------------------------------------------------------
  */
 
-static bool
+static int
 NameToWindow(
     Tcl_Interp *interp,		/* Interp for error return and name lookup. */
     Tk_Window mainWin,		/* Main window of application. */
@@ -4452,7 +4437,7 @@ NameToWindow(
 
     if (name[0] == '.') {
 	if (!(tkwin = Tk_NameToWindow(interp, name, mainWin))) {
-	    return false;
+	    return 0;
 	}
     } else {
 	Window id;
@@ -4471,13 +4456,13 @@ NameToWindow(
 	if (!tkwin) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad window name/identifier \"%s\"", name));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, NULL);
-	    return false;
+	    return 0;
 	}
     }
 
     assert(tkwin);
     *tkwinPtr = tkwin;
-    return true;
+    return 1;
 }
 
 /*
@@ -4605,22 +4590,22 @@ FindSequence(
     				 * associated. For virtual event table, NULL. */
     const char *eventString,	/* String description of pattern to match on. See user
     				 * documentation for details. */
-    bool create,		/* False means don't create the entry if it doesn't already exist.
-    				 * True means create. */
-    bool allowVirtual,		/* False means that virtual events are not allowed in the sequence.
-    				 * True otherwise. */
+    int create,			/* 0 means don't create the entry if it doesn't already exist.
+    				 * 1 means create. */
+    int allowVirtual,		/* 0 means that virtual events are not allowed in the sequence.
+    				 * 1 otherwise. */
     EventMask *maskPtr)		/* *maskPtr is filled in with the event types on which this
     				 * pattern sequence depends. */
 {
     unsigned patsBufSize = 1;
     unsigned numPats;
     unsigned totalCount = 0;
-    bool virtualFound = false;
+    int virtualFound = 0;
     const char *p = eventString;
     TkPattern *patPtr;
     PatSeq *psPtr;
     Tcl_HashEntry *hPtr;
-    bool isNew;
+    int isNew;
     unsigned count;
     unsigned maxCount = 0;
     EventMask eventMask = 0;
@@ -4660,7 +4645,7 @@ FindSequence(
 		ckfree(psPtr);
 		return NULL;
 	    }
-	    virtualFound = true;
+	    virtualFound = 1;
 	}
 
 	if (count > 1u) {
@@ -4735,14 +4720,14 @@ FindSequence(
     psPtr->numPats = numPats;
     psPtr->count = totalCount;
     psPtr->number = lookupTables->number++;
-    psPtr->added = false;
+    psPtr->added = 0;
     psPtr->modMaskUsed = (modMask != 0);
     psPtr->script = NULL;
     psPtr->nextSeqPtr = Tcl_GetHashValue(hPtr);
     psPtr->hPtr = hPtr;
     psPtr->ptr.nextObj = NULL;
     assert(psPtr->ptr.owners == NULL);
-    DEBUG(psPtr->owned = false);
+    DEBUG(psPtr->owned = 0);
     Tcl_SetHashValue(hPtr, psPtr);
 
     if (maskPtr) {
@@ -4896,7 +4881,7 @@ ParseEventDescription(
 	    char field[512];
 	    Tcl_HashEntry *hPtr;
 
-	    while (true) {
+	    while (1) {
 		ModInfo *modPtr;
 
 		p = GetField(p, field, sizeof(field));
