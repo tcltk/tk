@@ -1477,14 +1477,14 @@ test textTag-14.4 {SortTags} -constraints haveCourier12 -setup {
 
 
 set c [.t bbox 2.1]
-set x1 [expr [lindex $c 0] + [lindex $c 2]/2]
-set y1 [expr [lindex $c 1] + [lindex $c 3]/2]
+set x1 [expr {[lindex $c 0] + [lindex $c 2]/2}]
+set y1 [expr {[lindex $c 1] + [lindex $c 3]/2}]
 set c [.t bbox 3.2]
-set x2 [expr [lindex $c 0] + [lindex $c 2]/2]
-set y2 [expr [lindex $c 1] + [lindex $c 3]/2]
+set x2 [expr {[lindex $c 0] + [lindex $c 2]/2}]
+set y2 [expr {[lindex $c 1] + [lindex $c 3]/2}]
 set c [.t bbox 4.3]
-set x3 [expr [lindex $c 0] + [lindex $c 2]/2]
-set y3 [expr [lindex $c 1] + [lindex $c 3]/2]
+set x3 [expr {[lindex $c 0] + [lindex $c 2]/2}]
+set y3 [expr {[lindex $c 1] + [lindex $c 3]/2}]
 
 test textTag-15.1 {TkTextBindProc} -constraints haveCourier12 -setup {
     .t tag delete x y
