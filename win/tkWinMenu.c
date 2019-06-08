@@ -781,7 +781,7 @@ TkpPostMenu(
 	return result;
     }
 
-    if (index >= menuPtr->numEntries) {
+    if (index >= (int)menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -877,7 +877,7 @@ TkpPostTearoffMenu(
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    if (index >= menuPtr->numEntries) {
+    if (index >= (int)menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -1247,9 +1247,11 @@ TkWinHandleMenuEvent(
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
 		*plParam);
 	if (hashEntryPtr != NULL) {
-	    int i, len, underline;
+	    TkSizeT i, len, underline;
 	    Tcl_Obj *labelPtr;
-	    Tcl_UniChar *wlabel, menuChar;
+	    WCHAR *wlabel;
+	    int menuChar;
+	    Tcl_DString ds;
 
 	    *plResult = 0;
 	    menuPtr = Tcl_GetHashValue(hashEntryPtr);
@@ -1257,17 +1259,21 @@ TkWinHandleMenuEvent(
 	     * Assume we have something directly convertable to Tcl_UniChar.
 	     * True at least for wide systems.
 	     */
-	    menuChar = Tcl_UniCharToUpper((Tcl_UniChar) LOWORD(*pwParam));
+	    menuChar = Tcl_UniCharToUpper(LOWORD(*pwParam));
 
+	    Tcl_DStringInit(&ds);
 	    for (i = 0; i < menuPtr->numEntries; i++) {
 		underline = menuPtr->entries[i]->underline;
 		labelPtr = menuPtr->entries[i]->labelPtr;
-		if ((underline >= 0) && (labelPtr != NULL)) {
+		if ((underline != TCL_AUTO_LENGTH) && (labelPtr != NULL)) {
 		    /*
 		     * Ensure we don't exceed the label length, then check
 		     */
-		    wlabel = Tcl_GetUnicodeFromObj(labelPtr, &len);
-		    if ((underline < len) && (menuChar ==
+		    const char *src = TkGetStringFromObj(labelPtr, &len);
+
+		    Tcl_DStringFree(&ds);
+		    wlabel = (WCHAR *) Tcl_WinUtfToTChar(src, len, &ds);
+		    if ((underline + 1 < len + 1) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
 			returnResult = 1;
@@ -1275,6 +1281,7 @@ TkWinHandleMenuEvent(
 		    }
 		}
 	    }
+	    Tcl_DStringFree(&ds);
 	}
 	break;
     }
@@ -1403,7 +1410,7 @@ TkWinHandleMenuEvent(
                 }
                 mePtr = NULL;
 		if (flags != 0xFFFF) {
-		    if ((flags&MF_POPUP) && (entryIndex<menuPtr->numEntries)) {
+		    if ((flags&MF_POPUP) && (entryIndex < (int)menuPtr->numEntries)) {
 			mePtr = menuPtr->entries[entryIndex];
 		    } else {
 			hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
@@ -1417,7 +1424,7 @@ TkWinHandleMenuEvent(
 		if ((mePtr == NULL) || (mePtr->state == ENTRY_DISABLED)) {
 		    TkActivateMenuEntry(menuPtr, -1);
 		} else {
-		    if (mePtr->index >= menuPtr->numEntries) {
+		    if (mePtr->index >= (int)menuPtr->numEntries) {
 			Tcl_Panic("Trying to activate an entry which doesn't exist");
 		    }
 		    TkActivateMenuEntry(menuPtr, mePtr->index);
@@ -1454,7 +1461,7 @@ void
 RecursivelyClearActiveMenu(
     TkMenu *menuPtr)		/* The menu to reset. */
 {
-    int i;
+    TkSizeT i;
     TkMenuEntry *mePtr;
 
     TkActivateMenuEntry(menuPtr, -1);
@@ -2070,8 +2077,7 @@ DrawMenuUnderline(
     if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
 	int len;
 
-	/* do the unicode call just to prevent overruns */
-	Tcl_GetUnicodeFromObj(mePtr->labelPtr, &len);
+	len = Tcl_GetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len) {
 	    const char *label, *start, *end;
 
@@ -2466,7 +2472,7 @@ DrawMenuEntryLabel(
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledGC, x, y,
 		    (unsigned) width, (unsigned) height);
 	} else if ((mePtr->image != NULL)
-		&& (menuPtr->disabledImageGC != NULL)) {
+		&& menuPtr->disabledImageGC) {
 	    XFillRectangle(menuPtr->display, d, menuPtr->disabledImageGC,
 		    leftEdge + imageXOffset,
 		    (int) (y + (mePtr->height - imageHeight)/2 + imageYOffset),
@@ -2978,7 +2984,7 @@ TkpComputeStandardMenuGeometry(
     Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
 	    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int)menuPtr->numEntries; i++) {
 	if (menuPtr->entries[i]->fontPtr == NULL) {
 	    tkfont = menuFont;
 	    fmPtr = &menuMetrics;
@@ -3062,7 +3068,7 @@ TkpComputeStandardMenuGeometry(
     if (accelWidth != 0) {
 	labelWidth += accelSpace;
     }
-    for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
+    for (j = lastColumnBreak; j < (int)menuPtr->numEntries; j++) {
 	menuPtr->entries[j]->indicatorSpace = indicatorSpace;
 	menuPtr->entries[j]->labelWidth = labelWidth;
 	menuPtr->entries[j]->width = indicatorSpace + labelWidth
@@ -3288,7 +3294,7 @@ TkWinGetMenuSystemDefault(
 
     if ((strcmp(dbName, "activeBorderWidth") == 0) ||
 	    (strcmp(dbName, "borderWidth") == 0)) {
-	valuePtr = Tcl_NewIntObj(defaultBorderWidth);
+	valuePtr = Tcl_NewWideIntObj(defaultBorderWidth);
     } else if (strcmp(dbName, "font") == 0) {
 	valuePtr = Tcl_NewStringObj(Tcl_DStringValue(&menuFontDString), -1);
     }

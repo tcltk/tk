@@ -94,6 +94,8 @@ static void		DeleteImage(Tk_Canvas canvas,
 static void		DisplayImage(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
+static void		RotateImage(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleImage(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -126,7 +128,8 @@ Tk_ItemType tkImageType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateImage,		/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -756,6 +759,40 @@ ImageToPostscript(
 
     return Tk_PostscriptImage(image, interp, canvasWin,
 	    ((TkCanvas *) canvas)->psInfo, 0, 0, width, height, prepass);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateImage --
+ *
+ *	This function is called to rotate an image's origin by a given amount.
+ *	This does *not* rotate the contents of the image.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the image anchor is rotated by angleRad radians about
+ *	(originX, originY), and the bounding box is updated in the generic
+ *	part of the item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateImage(
+    Tk_Canvas canvas,
+    Tk_Item *itemPtr,
+    double originX,
+    double originY,
+    double angleRad)
+{
+    ImageItem *imgPtr = (ImageItem *) itemPtr;
+
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &imgPtr->x, &imgPtr->y);
+    ComputeImageBbox(canvas, imgPtr);
 }
 
 /*

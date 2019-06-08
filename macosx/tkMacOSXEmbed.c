@@ -334,15 +334,15 @@ TkpUseWindow(
 
     macWin->flags |= TK_EMBEDDED;
     macWin->xOff = parent->winPtr->privatePtr->xOff +
-	parent->winPtr->changes.border_width +
-	winPtr->changes.x;
+	    parent->winPtr->changes.border_width +
+	    winPtr->changes.x;
     macWin->yOff = parent->winPtr->privatePtr->yOff +
-	parent->winPtr->changes.border_width +
-	winPtr->changes.y;
+	    parent->winPtr->changes.border_width +
+	    winPtr->changes.y;
 
     /*
-     * Finish filling up the container structure with the embedded
-     * window's information.
+     * Finish filling up the container structure with the embedded window's
+     * information.
      */
 
     containerPtr->embedded = (Window) macWin;
@@ -353,8 +353,8 @@ TkpUseWindow(
      * tkwin is eventually deleted.
      */
 
-    Tk_CreateEventHandler(tkwin, StructureNotifyMask, EmbeddedEventProc,
-			  winPtr);
+    Tk_CreateEventHandler(tkwin, StructureNotifyMask,
+	    EmbeddedEventProc, winPtr);
 
     return TCL_OK;
 }
@@ -498,9 +498,7 @@ TkMacOSXGetHostToplevel(
  * TkpClaimFocus --
  *
  *	This procedure is invoked when someone asks for the input focus to be
- *	put on a window in an embedded application, but the application
- *	doesn't currently have the focus. It requests the input focus from the
- *	container application.
+ *	put on a window in an embedded application.
  *
  * Results:
  *	None.
@@ -539,7 +537,7 @@ TkpClaimFocus(
     event.xfocus.window = containerPtr->parent;
     event.xfocus.mode = EMBEDDED_APP_WANTS_FOCUS;
     event.xfocus.detail = force;
-    Tk_QueueWindowEvent(&event,TCL_QUEUE_TAIL);
+    Tk_HandleEvent(&event);
 }
 
 /*
@@ -590,16 +588,25 @@ TkpTestembedCmd(
 	    continue;
 	}
 	Tcl_DStringStartSublist(&dString);
-	/* Parent id */
+
+	/*
+	 * Parent id
+	 */
+
 	if (containerPtr->parent == None) {
 	    Tcl_DStringAppendElement(&dString, "");
 	} else if (all) {
-	    sprintf(buffer, "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->parent);
+	    sprintf(buffer, "0x%" TCL_Z_MODIFIER "x",
+		    (size_t) containerPtr->parent);
 	    Tcl_DStringAppendElement(&dString, buffer);
 	} else {
 	    Tcl_DStringAppendElement(&dString, "XXX");
 	}
-	/* Parent pathName */
+
+	/*
+	 * Parent pathName
+	 */
+
 	if (containerPtr->parentPtr == NULL ||
 	    parentInterp != interp) {
 	    Tcl_DStringAppendElement(&dString, "");
@@ -607,11 +614,17 @@ TkpTestembedCmd(
 	    Tcl_DStringAppendElement(&dString,
 		    containerPtr->parentPtr->pathName);
 	}
+
 	/*
 	 * On X11 embedded is a wrapper, which does not exist on macOS.
 	 */
+
 	Tcl_DStringAppendElement(&dString, "");
-	/* Embedded window pathName */
+
+	/*
+	 * Embedded window pathName
+	 */
+
 	if (containerPtr->embeddedPtr == NULL ||
 	    embeddedInterp != interp) {
 	    Tcl_DStringAppendElement(&dString, "");
@@ -770,6 +783,7 @@ ContainerEventProc(
 	/*
 	 * When the interpreter is being dismantled this can be nil.
 	 */
+
 	return;
     }
 
@@ -835,7 +849,9 @@ ContainerEventProc(
 		eventPtr->xmaprequest.window);
     } else if (eventPtr->type == DestroyNotify) {
 	/*
-	 * The embedded application is gone. Destroy the container window.
+	 * It is not clear whether the container should be destroyed
+	 * when an embedded window is destroyed.  See ticket [67384bce7d].
+	 * Here we are following unix, by destroying the container.
 	 */
 
 	Tk_DestroyWindow((Tk_Window) winPtr);
@@ -871,6 +887,14 @@ EmbedStructureProc(
     Tk_ErrorHandler errHandler;
 
     if (eventPtr->type == ConfigureNotify) {
+
+	/*
+         * Send a ConfigureNotify  to the embedded application.
+         */
+
+        if (containerPtr->embeddedPtr != None) {
+            TkDoConfigureNotify(containerPtr->embeddedPtr);
+        }
 	if (containerPtr->embedded != None) {
 	    /*
 	     * Ignore errors, since the embedded application could have
@@ -1019,11 +1043,10 @@ EmbedGeometryRequest(
     /*
      * Forward the requested size into our geometry management hierarchy via
      * the container window. We need to send a Configure event back to the
-     * embedded application if we decide not to honor its request; to make
-     * this happen, process all idle event handlers synchronously here (so
-     * that the geometry managers have had a chance to do whatever they want
-     * to do), and if the window's size didn't change then generate a
-     * configure event.
+     * embedded application if we decide not to honor its request; to make this
+     * happen, process all idle event handlers synchronously here (so that the
+     * geometry managers have had a chance to do whatever they want to do), and
+     * if the window's size didn't change then generate a configure event.
      */
 
     Tk_GeometryRequest((Tk_Window) winPtr, width, height);
@@ -1045,8 +1068,8 @@ EmbedGeometryRequest(
  *	application of its current size and location. This procedure is called
  *	when the embedded application made a geometry request that we did not
  *	grant, so that the embedded application knows that its geometry didn't
- *	change after all. It is a response to ConfigureRequest events, which
- *	we do not currently synthesize on the Mac
+ *	change after all. It is a response to ConfigureRequest events, which we
+ *	do not currently synthesize on the Mac
  *
  * Results:
  *	None.
@@ -1106,8 +1129,8 @@ EmbedWindowDeleted(
 		    containerPtr->parentPtr->flags & TK_BOTH_HALVES) {
 		XEvent event;
 
-		event.xany.serial =
-			LastKnownRequestProcessed(Tk_Display(containerPtr->parentPtr));
+		event.xany.serial = LastKnownRequestProcessed(
+			Tk_Display(containerPtr->parentPtr));
 		event.xany.send_event = False;
 		event.xany.display = Tk_Display(containerPtr->parentPtr);
 

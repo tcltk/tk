@@ -133,25 +133,29 @@ The column name.  This is a read-only option.
 For example, [\fI$pathname \fBcolumn #\fIn \fB\-id\fR]
 returns the data column associated with display column #\fIn\fR.
 .TP
-\fB\-anchor\fR
+\fB\-anchor \fIanchor\fR
 Specifies how the text in this column should be aligned
-with respect to the cell. One of
+with respect to the cell. \fIAnchor\fR is one of
 \fBn\fR, \fBne\fR, \fBe\fR, \fBse\fR,
 \fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, or \fBcenter\fR.
 .TP
-\fB\-minwidth\fR
+\fB\-minwidth \fIminwidth\fR
 The minimum width of the column in pixels.
 The treeview widget will not make the column any smaller than
 \fB\-minwidth\fR when the widget is resized or the user drags a
+column separator.  Default is 20 pixels.
+.TP
+\fB\-stretch \fIboolean\fR
+Specifies whether or not the column width should be adjusted
+when the widget is resized or the user drags a column separator.
+\fIBoolean\fR may have any of the forms accepted by \fBTcl_GetBoolean\fR.
+By default columns are stretchable.
+.TP
+\fB\-width \fIwidth\fR
+The width of the column in pixels.  Default is 200 pixels. The specified
+column width may be changed by Tk in order to honor \fB\-stretch\fR
+and/or \fB\-minwidth\fR, or when the widget is resized or the user drags a
 column separator.
-.TP
-\fB\-stretch\fR
-Specifies whether or not the column's width should be adjusted
-when the widget is resized.
-.TP
-\fB\-width \fIw\fR
-The width of the column in pixels.  Default is something reasonable,
-probably 200 or so.
 .PP
 Use \fIpathname column #0\fR to configure the tree column.
 .RE
@@ -388,12 +392,13 @@ If \fIitems\fR is omitted, removes \fItag\fR from each item in the tree.
 If \fItag\fR is not present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
 .RE
-.TP
-\fIpathName \fBxview \fIargs\fR
-Standard command for horizontal scrolling; see \fIwidget(n)\fR.
-.TP
-\fIpathName \fByview \fIargs\fR
-Standard command for vertical scrolling; see \fIttk::widget(n)\fR.
+.PP
+The treeview widget also supports the following generic \fBttk::widget\fR
+widget subcommands (see \fIttk::widget(n)\fR for details):
+.DS
+.ta 5.5c 11c
+\fBxview\fR	\fByview\fR
+.DE
 .SH "ITEM OPTIONS"
 .PP
 The following item options may be specified for items

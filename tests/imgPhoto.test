@@ -542,14 +542,14 @@ test imgPhoto-4.27 {ImgPhotoCmd procedure: put option} -setup {
     photo1 put {{white} {white white}}
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {couldn't recognize image data}
+} -result {invalid row # 1: all rows must have the same number of elements}
 test imgPhoto-4.28 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
     photo1 put {{blahgle}}
 } -cleanup {
     image delete photo1
-} -returnCodes error -result {couldn't recognize image data}
+} -returnCodes error -result {invalid color name "blahgle"}
 test imgPhoto-4.29 {ImgPhotoCmd procedure: put option} -setup {
     image create photo photo1
 } -body {
@@ -1149,7 +1149,7 @@ test imgPhoto-4.95 {ImgPhotoCmd put: default fmt, invalid data} -setup {
     #"
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {couldn't recognize image data}
+} -returnCodes error -result {unmatched open quote in list}
 test imgPhoto-4.96 {ImgPhotoCmd put: "default" handler is selected} -setup {
     image create photo photo1
     image create photo photo2
@@ -1754,6 +1754,39 @@ test imgPhoto-14.5 {Bug [fbaed1f66b] - GIF decoder with deferred clear code} -se
     image create photo -file $fileName -format "gif -index 2"
 } -returnCodes error -result {no image data for this index}
 
+test imgPhoto-14.6 {Access Subimage after Subimage with buffer overflow. Ticket 4da2191b} -setup {
+    set data {
+	R0lGODlhYwA5APcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgAysnGy8hKzM
+	hASs3MTcjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+	AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDAwP8AAAD/
+	AP//AAAA//8A/wD//////ywAAAAAYwA5AAAI/wAZCBxIsKDBgwgTKlzIsKHD
+	hxAjSpxIsaLFixgzatzIsaPHjyBDihxJsqTJkyhTqlzJsqXLlzBjypxJs6bN
+	mzhz6tzJs6fPn0CDCh1KtKhRiwoSKEXAtGlTpUqPGkyagOmCq1edNsWalWkC
+	BUSXIuDqFepBqFWtZv3KU+zYrkrBSqT6dgECtjOTbu16NwFHvV3lshRLti/J
+	qlgRCE6ZuO9ik4Dt+k0ZVyZiyVIvXr77ODPEy5g9T4zMWfTEzXdNz1VbWvXn
+	uqldP1TAOrbshqBb314Y2W7n3Qdpv7UNPCHpycUVbv6dnODy5sqzQldIe8H0
+	hciva9/Ovbv37+BzBgE7ACH5BAFkAAMALAAAAAAEAAQAAAMEKLrckgA7
+    }
+} -body {
+    image create photo photo1 -data $data -format "GIF -index 1"
+} -cleanup {
+    catch {image delete photo1}
+} -result photo1
+
 test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} -constraints {
     nonPortable
 } -body {
@@ -1899,14 +1932,14 @@ test imgPhoto-19.6 {MatchStringFormat: invalid data for default} -setup {
     photo1 put bogus
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {couldn't recognize image data}
+} -returnCodes error -result {invalid color name "bogus"}
 test imgPhoto-19.7 {MatchStringFormat: invalid data for default} -setup {
     image create photo photo1
 } -body {
     photo1 put bogus -format dEFault
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {couldn't recognize image data}
+} -returnCodes error -result {invalid color name "bogus"}
 test imgPhoto-19.8 {MatchStirngFormat: invalid data for gif} -setup {
     image create photo photo1
 } -body {

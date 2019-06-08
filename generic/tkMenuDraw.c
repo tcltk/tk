@@ -298,7 +298,7 @@ TkMenuConfigureDrawOptions(
 int
 TkMenuConfigureEntryDrawOptions(
     TkMenuEntry *mePtr,
-    int index)
+    TkSizeT index)
 {
     XGCValues gcValues;
     GC newGC, newActiveGC, newDisabledGC, newIndicatorGC;
@@ -475,7 +475,7 @@ TkRecomputeMenu(
  *	None.
  *
  * Side effects:
- *	A when-idle hander is scheduled to do the redisplay, if there isn't
+ *	A when-idle handler is scheduled to do the redisplay, if there isn't
  *	one already scheduled.
  *
  *----------------------------------------------------------------------
@@ -487,7 +487,7 @@ TkEventuallyRedrawMenu(
     register TkMenuEntry *mePtr)/* Entry to redraw. NULL means redraw all the
 				 * entries in the menu. */
 {
-    int i;
+    TkSizeT i;
 
     if (menuPtr->tkwin == NULL) {
 	return;
@@ -618,7 +618,8 @@ DisplayMenu(
     register TkMenu *menuPtr = clientData;
     register TkMenuEntry *mePtr;
     register Tk_Window tkwin = menuPtr->tkwin;
-    int index, strictMotif;
+    TkSizeT index;
+    int strictMotif;
     Tk_Font tkfont;
     Tk_FontMetrics menuMetrics;
     int width;
@@ -911,8 +912,8 @@ TkPostSubmenu(
 	menuPtr->postedCascade = mePtr;
 	subary[0] = mePtr->namePtr;
 	subary[1] = Tcl_NewStringObj("post", -1);
-	subary[2] = Tcl_NewIntObj(x);
-	subary[3] = Tcl_NewIntObj(y);
+	subary[2] = Tcl_NewWideIntObj(x);
+	subary[3] = Tcl_NewWideIntObj(y);
 	Tcl_IncrRefCount(subary[1]);
 	Tcl_IncrRefCount(subary[2]);
 	Tcl_IncrRefCount(subary[3]);

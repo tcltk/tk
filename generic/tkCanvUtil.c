@@ -1265,7 +1265,6 @@ Tk_ChangeOutlineGC(
     }
     return 0;
 }
-
 
 /*
  *--------------------------------------------------------------
@@ -1862,6 +1861,43 @@ TkCanvTranslatePath(
 	ckfree(tempArr);
     }
     return numOutput;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * TkRotatePoint --
+ *
+ *	Rotate a point about another point. The angle should be converted into
+ *	its sine and cosine before calling this function.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	The point in (*xPtr,*yPtr) is updated to be rotated about
+ *	(originX,originY) by the amount given by the sine and cosine of the
+ *	angle to rotate.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+TkRotatePoint(
+    double originX, double originY,	/* The point about which to rotate. */
+    double sine, double cosine,		/* How much to rotate? */
+    double *xPtr, double *yPtr)		/* The point to be rotated. (INOUT) */
+{
+    double x = *xPtr - originX;
+    double y = *yPtr - originY;
+
+    /*
+     * Beware! The canvas coordinate space is flipped vertically, so rotations
+     * go the "wrong" way with respect to mathematics.
+     */
+
+    *xPtr = originX + x * cosine + y * sine;
+    *yPtr = originY - x * sine + y * cosine;
 }
 
 /*

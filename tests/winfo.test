@@ -27,9 +27,9 @@ proc eatColors {w {options ""}} {
     pack $w.c
     for {set y 0} {$y < 8} {incr y} {
         for {set x 0} {$x < 40} {incr x} {
-            set color [format #%02x%02x%02x [expr $x*6] [expr $y*30] 0]
-            $w.c create rectangle [expr 10*$x] [expr 20*$y] \
-                [expr 10*$x + 10] [expr 20*$y + 20] -outline {} \
+            set color [format #%02x%02x%02x [expr {$x*6}] [expr {$y*30}] 0]
+            $w.c create rectangle [expr {10*$x}] [expr {20*$y}] \
+                [expr {10*$x + 10}] [expr {20*$y + 20}] -outline {} \
                 -fill $color
         }
     }
@@ -156,7 +156,7 @@ test winfo-4.6 {"winfo containing" command} -constraints {
     wm geom .t +0+0
     update
 
-    winfo containing [expr [winfo rootx .t.f]-1] [expr [winfo rooty .t.f]-1]
+    winfo containing [expr {[winfo rootx .t.f]-1}] [expr {[winfo rooty .t.f]-1}]
 } -cleanup {
     destroy .t
 } -result .t
@@ -169,8 +169,8 @@ test winfo-4.7 {"winfo containing" command} -setup {
     wm geom .t +0+0
     update
 
-    set x [winfo containing -display .t.f [expr [winfo rootx .t]+600] \
-        [expr [winfo rooty .t.f]+450]]
+    set x [winfo containing -display .t.f [expr {[winfo rootx .t]+600}] \
+        [expr {[winfo rooty .t.f]+450}]]
     expr {($x == ".") || ($x == "")}
 } -cleanup {
     destroy .t
@@ -364,7 +364,7 @@ test winfo-11.5 {"winfo visualid" command} -body {
 } -result {3}
 test winfo-11.6 {"winfo visualid" command} -body {
     set x [lindex [lindex [winfo visualsa . includeids] 0] 2]
-    expr $x + 2 - $x
+    expr {$x + 2 - $x}
 } -result {2}
 
 
@@ -394,6 +394,13 @@ test winfo-13.1 {root coordinates of embedded toplevel} -setup {
     deleteWindows
 } -result {rootx 1 rooty 1}
 
+# Windows does not destroy the container when an embedded window is
+# destroyed.  Unix and macOS do destroy it.  See ticket [67384bce7d].
+if {[tk windowingsystem] == "win32"} {
+   set result_13_2 {embedded 0 container 1}
+} else {
+   set result_13_2 {embedded 0 container 0}
+}
 test winfo-13.2 {destroying embedded toplevel} -setup {
     deleteWindows
 } -body {
@@ -409,7 +416,7 @@ test winfo-13.2 {destroying embedded toplevel} -setup {
     list embedded [winfo exists .emb.b] container [winfo exists .con]
 } -cleanup {
     deleteWindows
-} -result {embedded 0 container 1}
+} -result $result_13_2
 
 test winfo-13.3 {destroying container window} -setup {
     deleteWindows

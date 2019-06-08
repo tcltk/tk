@@ -45,7 +45,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 @implementation TKApplication(TKInit)
 - (void) _resetAutoreleasePool
 {
-    if([self poolLock] == 0) {
+    if ([self poolLock] == 0) {
 	[_mainPool drain];
 	_mainPool = [NSAutoreleasePool new];
     } else {
@@ -117,11 +117,20 @@ static char scriptPath[PATH_MAX + 1] = "";
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
     /*
-     * It is not safe to force activation of the NSApp until this
-     * method is called.  Activating too early can cause the menu
-     * bar to be unresponsive.
+     * It is not safe to force activation of the NSApp until this method is
+     * called. Activating too early can cause the menu bar to be unresponsive.
      */
+
     [NSApp activateIgnoringOtherApps: YES];
+
+    /*
+     * Process events to ensure that the root window is fully initialized. See
+     * ticket 56a1823c73.
+     */
+
+    [NSApp _lockAutoreleasePool];
+    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
+    [NSApp _unlockAutoreleasePool];
 }
 
 - (void) _setup: (Tcl_Interp *) interp
@@ -141,7 +150,7 @@ static char scriptPath[PATH_MAX + 1] = "";
      * Record the OS version we are running on.
      */
     int minorVersion;
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
     Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
 #else
     NSOperatingSystemVersion systemVersion;
@@ -300,8 +309,8 @@ TkpInit(
 	}
 
 	/*
-	 * Instantiate our NSApplication object. This needs to be
-	 * done before we check whether to open a console window.
+	 * Instantiate our NSApplication object. This needs to be done before
+	 * we check whether to open a console window.
 	 */
 
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
@@ -316,6 +325,17 @@ TkpInit(
 	[pool drain];
 	[NSApp _setup:interp];
 	[NSApp finishLaunching];
+	Tk_MacOSXSetupTkNotifier();
+
+	/*
+	 * If the root window is mapped before the App has finished launching
+	 * it will open off screen (see ticket 56a1823c73).  To avoid this we
+	 * ask Tk to process an event with no wait.  We expect Tcl_DoOneEvent
+	 * to wait until the Mac event loop has been created and then return
+	 * immediately since the queue is empty.
+	 */
+
+	Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT);
 
 	/*
 	 * If we don't have a TTY and stdin is a special character file of
@@ -332,8 +352,8 @@ TkpInit(
 	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
 
 	    /*
-	     * Only show the console if we don't have a startup script
-	     * and tcl_interactive hasn't been set already.
+	     * Only show the console if we don't have a startup script and
+	     * tcl_interactive hasn't been set already.
 	     */
 
 	    if (Tcl_GetStartupScript(NULL) == NULL) {
@@ -352,8 +372,6 @@ TkpInit(
 
     }
 
-    Tk_MacOSXSetupTkNotifier();
-
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
@@ -367,14 +385,6 @@ TkpInit(
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-
-    /*
-     * Workaround for 3efbe4a397; console not accepting keyboard input on 10.14
-     * if displayed before main window. This places console in background and it
-     * accepts input after being raised.
-     */
-
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 
     return TCL_OK;
 }

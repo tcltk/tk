@@ -449,7 +449,7 @@ TkSelPropProc(
 		if (srcLen > 4) {
 		    Tcl_Panic("selection conversion left too many bytes unconverted");
 		}
-		memcpy(incrPtr->converts[i].buffer, src, (size_t) srcLen+1);
+		memcpy(incrPtr->converts[i].buffer, src, srcLen + 1);
 		Tcl_DStringFree(&ds);
 	    } else {
 		/*

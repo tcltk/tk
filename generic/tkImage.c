@@ -474,7 +474,7 @@ Tk_ImageObjCmd(
 
 	switch ((enum options) index) {
 	case IMAGE_HEIGHT:
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(masterPtr->height));
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(masterPtr->height));
 	    break;
 	case IMAGE_INUSE:
 	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
@@ -487,7 +487,7 @@ Tk_ImageObjCmd(
 	    }
 	    break;
 	case IMAGE_WIDTH:
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(masterPtr->width));
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(masterPtr->width));
 	    break;
 	default:
 	    Tcl_Panic("can't happen");

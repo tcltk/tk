@@ -3170,6 +3170,34 @@ test menu-17.5 {MenuVarProc} -setup {
 } -cleanup {
 	deleteWindows
 } -result {{} goodbye {}}
+test menu-17.6 {MenuVarProc [5d991b822e]} -setup {
+	deleteWindows
+} -body {
+    # Want this not to crash
+    menu .b
+    set var INIT
+    .b add checkbutton -variable var
+    trace add variable var unset {apply {args {
+        .b entryconfigure 1 -variable {}
+    }}}
+    unset var
+} -cleanup {
+	deleteWindows
+} -result {}
+test menu-17.7 {MenuVarProc [5d991b822e]} -setup {
+	deleteWindows
+} -body {
+    # Want this not to duplicate traces
+    menu .b
+    set var INIT
+    .b add checkbutton -variable var
+    trace add variable var unset {apply {args {
+        .b entryconfigure 1 -variable new
+    }}}
+    unset var
+} -cleanup {
+	deleteWindows
+} -result {}
 
 
 test menu-18.1 {TkActivateMenuEntry} -setup {

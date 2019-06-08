@@ -656,7 +656,7 @@ DoObjConfig(
     case TK_OPTION_STRING: {
 	char *newStr;
 	const char *value;
-	size_t length;
+	TkSizeT length;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
@@ -1874,10 +1874,10 @@ GetObjectForOption(
     objPtr = NULL;
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_BOOLEAN:
-	objPtr = Tcl_NewIntObj(*((int *) internalPtr));
+	objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
 	break;
     case TK_OPTION_INT:
-	objPtr = Tcl_NewIntObj(*((int *) internalPtr));
+	objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
 	break;
     case TK_OPTION_DOUBLE:
 	objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
@@ -1951,7 +1951,7 @@ GetObjectForOption(
 		*((Tk_Anchor *) internalPtr)), -1);
 	break;
     case TK_OPTION_PIXELS:
-	objPtr = Tcl_NewIntObj(*((int *) internalPtr));
+	objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
 	break;
     case TK_OPTION_WINDOW: {
 	Tk_Window tkwin = *((Tk_Window *) internalPtr);

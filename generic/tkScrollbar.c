@@ -227,7 +227,7 @@ ScrollbarWidgetObjCmd(
 {
     register TkScrollbar *scrollPtr = clientData;
     int result = TCL_OK, cmdIndex;
-    size_t length;
+    TkSizeT length;
     static const char *const commandNames[] = {
         "activate", "cget", "configure", "delta", "fraction",
         "get", "identify", "set", NULL
@@ -381,10 +381,10 @@ ScrollbarWidgetObjCmd(
 	}
 #ifndef TK_NO_DEPRECATED
 	if (scrollPtr->flags & OLD_STYLE_COMMANDS) {
-	    resObjs[0] = Tcl_NewIntObj(scrollPtr->totalUnits);
-	    resObjs[1] = Tcl_NewIntObj(scrollPtr->windowUnits);
-	    resObjs[2] = Tcl_NewIntObj(scrollPtr->firstUnit);
-	    resObjs[3] = Tcl_NewIntObj(scrollPtr->lastUnit);
+	    resObjs[0] = Tcl_NewWideIntObj(scrollPtr->totalUnits);
+	    resObjs[1] = Tcl_NewWideIntObj(scrollPtr->windowUnits);
+	    resObjs[2] = Tcl_NewWideIntObj(scrollPtr->firstUnit);
+	    resObjs[3] = Tcl_NewWideIntObj(scrollPtr->lastUnit);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, resObjs));
 	    break;
 	}

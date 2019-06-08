@@ -233,6 +233,8 @@ MODULE_SCOPE int	TkMacOSXStandardAboutPanelObjCmd(ClientData clientData,
 MODULE_SCOPE int	TkMacOSXIconBitmapObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
+						int inset, int thickness);
 
 #pragma mark Private Objective-C Classes
 
@@ -261,7 +263,6 @@ VISIBILITY_HIDDEN
     TKMenu *_defaultMainMenu, *_defaultApplicationMenu;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems;
-    NSWindow *_windowWithMouse;
     NSAutoreleasePool *_mainPool;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
@@ -332,8 +333,14 @@ VISIBILITY_HIDDEN
 VISIBILITY_HIDDEN
 @interface TKContentView : NSView <NSTextInput>
 {
+@private
     NSString *privateWorkingText;
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Bool _needsRedisplay;
+#endif
 }
+@property Bool needsRedisplay;
 @end
 
 @interface TKContentView(TKKeyEvent)

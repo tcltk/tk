@@ -184,10 +184,27 @@ Note that not all attributes are valid for all window classes.  Support for the
 support for some legacy Carbon-specific classes and attributes was removed
 (they are still accepted by the command but no longer have any effect).
 
-- Another command available in the tk::unsupported::MacWindowStyle namespace is
-tk::unsupported::MacWindowStyle tabbingid window ?newId?  which can be used to
-get or set the tabbingIdentifier for the NSWindow associated with a Tk Window.
-See section 3 for details.
+- Another command available in the tk::unsupported::MacWindowStyle namespace is:
+  tk::unsupported::MacWindowStyle tabbingid window ?newId?
+which can be used to get or set the tabbingIdentifier for the NSWindow
+associated with a Tk Window.  See section 3 for details.
+
+- The command:
+  tk::unsupported::MacWindowStyle appearance window ?newAppearance?
+is available when Tk is built and run on macOS 10.14 (Mojave) or later.  In
+that case the Ttk widgets all support the "Dark Mode" appearance which was
+introduced in 10.14. The command accepts the following values for the optional
+newAppearance option: "aqua", "darkaqua", or "auto".  If the appearance is set
+to aqua or darkaqua then the window will be displayed with the corresponding
+appearance independent of any preferences settings.  If it is set to "auto"
+the appearance will be determined by the preferences.  This command can be
+used to opt out of Dark Mode on a per-window basis.
+
+- To determine the current appearance of a window in macOS 10.14 (Mojave) and
+higher, one can use the command:
+  tk::unsupported::MacWindowStyle isdark
+The boolean return value is true if the window is currently displayed with the
+dark appearance.
 
 - If you want to use Remote Debugging with Xcode, you need to set the
 environment variable XCNOSTDIN to 1 in the Executable editor for Wish. That will
@@ -275,8 +292,48 @@ ensure that we maintain consistency, changing the tabbingIdentifier of a window
 which is already displayed as a tab will also cause it to become a separate
 window.
 
+4. Ttk, Dark Mode and semantic colors
+---------------------------------------
 
-4. Building Tcl/Tk on macOS
+With the release of OSX 10.14 (Mojave), Apple introduced the DarkAqua
+appearance.  Part of the implementation of the Dark Mode was to make
+some of the named NSColors have dynamic values.  Apple calls these
+"semantic colors" because the name does not specify a specific color,
+but rather refers to the context in which the color should be used.
+Tk now provides the following semantic colors as system colors:
+systemTextColor, systemTextBackgroundColor, systemSelectedTextColor,
+systemSelectedTextBackgroundColor, systemControlTextColor,
+systemDisabledControlTextColor, systemLabelColor, and
+systemControlAccentColor.  All of these except the last two were
+present in OSX 10.0 (and those two are simulated in systems where they
+do not exist).  The change in 10.14 was that the RGB color value of
+these colors became dynamic, meaning that the color value can change
+when the application appearance changes.  In particular, when a user
+selects Dark Mode in the system preferences these colors change
+appearance.  For example systemTextColor is dark in Aqua and light in
+DarkAqua.  One additional color, systemSelectedTabTextColor, does not
+exist in macOS but is used by Tk to match the different colors used
+for Notebook tab text in different OS versions.
+
+The default background and foreground colors of most of the Tk widgets
+have been set to semantic colors, which means that the widgets will change
+appearance, and remain usable, when Dark Mode is selected in the system
+preferences.  However, to get a close match to the native Dark Mode style it
+is recommended to use Ttk widgets when possible.
+
+Apple's tab view and GroupBox objects delimit their content by
+displaying it within a rounded rectangle with a background color that
+contrasts with the background of the containing object.  This means
+that the background color of a Ttk widget depends on how deeply it is
+nested inside of other widgets that use contrasting backgrounds.  To
+support this, there are 8 contrasting system colors named
+systemWindowBackgroundColor, and systemWindowBackgroundColor1 - 7.
+The systemWindowBackgroundColor is the standard background for a
+dialog window and the others match the contrasting background colors
+used in ttk::notebooks and ttk::labelframes which are nested to the
+corresponding depth.
+
+5. Building Tcl/Tk on macOS
 ------------------------------
 
 - At least macOS 10.3 is required to build Tcl and TkX11, and macOS 10.6
