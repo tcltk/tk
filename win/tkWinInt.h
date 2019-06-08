@@ -37,6 +37,10 @@
 #define SPI_SETKEYBOARDCUES 0x100B
 #endif
 
+#ifndef CS_DROPSHADOW
+#define CS_DROPSHADOW		0x00020000
+#endif
+
 /*
  * The TkWinDCState is used to save the state of a device context so that it
  * can be restored later.
@@ -118,6 +122,7 @@ typedef struct {
  */
 
 #define TK_WIN_TOPLEVEL_CLASS_NAME TEXT("TkTopLevel")
+#define TK_WIN_TOPLEVEL_SHADOW_CLASS_NAME TEXT("TkTopLevelShadow")
 #define TK_WIN_CHILD_CLASS_NAME TEXT("TkChild")
 
 /*

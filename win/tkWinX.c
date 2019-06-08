@@ -703,6 +703,61 @@ XBell(
 /*
  *----------------------------------------------------------------------
  *
+ * HelpEvent --
+ *
+ *	Generates a "Help" virtual event. This can be used to do
+ *	context-sensitive help.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Places a virtual event on the event queue.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+HelpEvent(
+    HWND hwnd,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+    XVirtualEvent event;
+    POINTS rootPoint;
+    POINT clientPoint;
+    DWORD msgPos;
+
+    event.type = VirtualEvent;
+    event.serial = winPtr->display->request;
+    event.send_event = 0;
+    event.display = winPtr->display;
+    event.event = Tk_WindowId(winPtr);
+    event.root = XRootWindow(winPtr->display, 0);
+    event.subwindow = None;
+    event.time = TkpGetMS();
+
+    msgPos = GetMessagePos();
+    rootPoint = MAKEPOINTS(msgPos);
+    clientPoint.x = rootPoint.x;
+    clientPoint.y = rootPoint.y;
+    ScreenToClient(hwnd, &clientPoint);
+    event.x = clientPoint.x;
+    event.y = clientPoint.y;
+    event.x_root = rootPoint.x;
+    event.y_root = rootPoint.y;
+    event.state = TkWinGetModifierState();
+    event.same_screen = 1;
+    event.name = Tk_GetUid("Help");
+    event.user_data = NULL;
+    Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkWinChildProc --
  *
  *	Callback from Windows whenever an event occurs on a child window.
@@ -726,6 +781,13 @@ TkWinChildProc(
     LRESULT result;
 
     switch (message) {
+    case WM_HELP:
+	Tk_UpdatePointer(NULL, 0, 0,
+		TkWinGetModifierState() | NOBUTTONEVENTS_MASK);
+	HelpEvent(hwnd, message, wParam, lParam);
+	result = DefWindowProc(hwnd, message, wParam, lParam);
+	break;
+
     case WM_INPUTLANGCHANGE:
 	UpdateInputLanguage((int) wParam);
 	result = 1;

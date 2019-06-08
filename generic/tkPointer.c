@@ -233,13 +233,28 @@ Tk_UpdatePointer(
 {
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    TkWindow *winPtr = (TkWindow *)tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *targetWinPtr;
     XPoint pos;
     XEvent event;
-    int changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
-    int type, b, mask;
+    int no_cursor = (state & NOCURSOR_MASK);
+    int no_button_events = (state & NOBUTTONEVENTS_MASK);
+    int changes, type, b, mask;
 
+    if (state & ALL_BUTTONS) {
+	tsdPtr->lastState &= ~NOCURSOR_MASK;
+    }
+    state &= ~NOCURSOR_MASK & ~NOBUTTONEVENTS_MASK;
+    if (no_cursor) {
+	tsdPtr->lastState &= ~ALL_BUTTONS;
+	tsdPtr->lastState |= (state & ALL_BUTTONS) | NOCURSOR_MASK;
+	return;
+    } else if (tsdPtr->lastState & NOCURSOR_MASK) {
+	tsdPtr->lastState &= ~(NOCURSOR_MASK | ALL_BUTTONS);
+	tsdPtr->lastState |= state & ALL_BUTTONS;
+	return;
+    }
+    changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
     pos.x = x;
     pos.y = y;
 
@@ -250,6 +265,10 @@ Tk_UpdatePointer(
 
     tsdPtr->lastState = (state & ~ALL_BUTTONS) | (tsdPtr->lastState
 	    & ALL_BUTTONS);
+
+    if (no_button_events) {
+	return;
+    }
 
     /*
      * Generate Enter/Leave events. If the pointer has crossed window

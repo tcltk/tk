@@ -249,6 +249,10 @@ void
 TkpSetCursor(
     TkpCursor cursor)
 {
+    static HCURSOR hcursor_idc_help = NULL;
+				/* the hcursor_idc_help test is necessary for
+				 * the CONTEXT HELP to work by using [wm
+				 * attributes $window -contexthelp]. */
     HCURSOR hcursor;
     TkWinCursor *winCursor = (TkWinCursor *) cursor;
 
@@ -258,6 +262,12 @@ TkpSetCursor(
 	hcursor = winCursor->winCursor;
     }
 
+    if (hcursor_idc_help == NULL) {
+	hcursor_idc_help = LoadCursor(NULL, IDC_HELP);
+    }
+    if (GetCursor() == hcursor_idc_help) {
+	return;
+    }
     if (hcursor != NULL) {
 	SetCursor(hcursor);
     }
