@@ -669,20 +669,6 @@ static void LoadShellProcs()
  * 	processing functions are used to cope with keyboard navigation of
  * 	controls.)
  *
- * 	Here is one solution. After returning, we flush all mouse events
- *      for 1/4 second. In 8.6.5 and earlier, the code used to
- *      poll the message queue consuming WM_LBUTTONUP messages.
- * 	On seeing a WM_LBUTTONDOWN message, it would exit early, since the user
- * 	must be doing something new. However this early exit does not work
- *      on Vista and later because the Windows sends both BUTTONDOWN and
- *      BUTTONUP after the DBLCLICK instead of just BUTTONUP as on XP.
- *      Rather than try and figure out version specific sequences, we
- *      ignore all mouse events in that interval.
- *
- *      This fix only works for the current application, so the problem will
- * 	still occur if the open dialog happens to be over another applications
- * 	button. However this is a fairly rare occurrance.
- *
  * Results:
  *	None.
  *
@@ -695,12 +681,9 @@ static void LoadShellProcs()
 static void
 EatSpuriousMessageBugFix(void)
 {
-    MSG msg;
-    DWORD nTime = GetTickCount() + 250;
+    int state = TkWinGetModifierState();
 
-    while (GetTickCount() < nTime) {
-	PeekMessage(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE);
-    }
+    Tk_UpdatePointer(NULL, 0, 0, state | NOBUTTONEVENTS_MASK);
 }
 
 /*

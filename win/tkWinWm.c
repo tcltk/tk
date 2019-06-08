@@ -335,6 +335,7 @@ typedef struct TkWmInfo {
 #define WM_HEIGHT_NOT_RESIZABLE		(1<<11)
 #define WM_WITHDRAWN			(1<<12)
 #define WM_FULLSCREEN			(1<<13)
+#define WM_DROPSHADOW			(1<<14)
 
 /*
  * Window styles for various types of toplevel windows.
@@ -901,6 +902,13 @@ InitWindowClass(
 
 	    if (!RegisterClass(&class)) {
 		Tcl_Panic("Unable to register TkTopLevel class");
+	    }
+
+	    class.style = CS_HREDRAW | CS_VREDRAW | CS_DROPSHADOW;
+	    class.lpszClassName = TK_WIN_TOPLEVEL_SHADOW_CLASS_NAME;
+
+	    if (!RegisterClass(&class)) {
+		Tcl_Panic("Unable to register TkTopLevelShadow class");
 	    }
 	}
 	Tcl_MutexUnlock(&winWmMutex);
@@ -1887,6 +1895,7 @@ TkWinWmCleanup(
     tsdPtr->initialized = 0;
 
     UnregisterClass(TK_WIN_TOPLEVEL_CLASS_NAME, hInstance);
+    Unregisterclass(TK_WIN_TOPLEVEL_SHADOW_CLASS_NAME, hInstance);
 }
 
 /*
@@ -2130,7 +2139,9 @@ UpdateWrapper(
 		wmPtr->title : winPtr->nameUid), -1, &titleString);
 
 	wmPtr->wrapper = CreateWindowEx(wmPtr->exStyle,
-		TK_WIN_TOPLEVEL_CLASS_NAME,
+		(wmPtr->flags & WM_DROPSHADOW
+			? TK_WIN_TOPLEVEL_SHADOW_CLASS_NAME
+			: TK_WIN_TOPLEVEL_CLASS_NAME),
 		(LPCTSTR) Tcl_DStringValue(&titleString),
 		wmPtr->style, x, y, width, height,
 		parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
@@ -3031,19 +3042,22 @@ WmAttributesCmd(
     const char *string;
     int i, boolean;
     size_t length;
-    int config_fullscreen = 0, updatewrapper = 0;
+    int config_fullscreen = 0, config_shadow = 0, updatewrapper = 0;
     int fullscreen_attr_changed = 0, fullscreen_attr = 0;
+    int shadow_attr_changed = 0, shadow_attr = 0;
 
     if ((objc < 3) || ((objc > 5) && ((objc%2) == 0))) {
     configArgs:
 	Tcl_WrongNumArgs(interp, 2, objv,
 		"window"
 		" ?-alpha ?double??"
-		" ?-transparentcolor ?color??"
+		" ?-contexthelp ?bool??"
 		" ?-disabled ?bool??"
 		" ?-fullscreen ?bool??"
+		" ?-shadow ?bool??"
 		" ?-toolwindow ?bool??"
-		" ?-topmost ?bool??");
+		" ?-topmost ?bool??"
+		" ?-transparentcolor ?color??");
 	return TCL_ERROR;
     }
     exStyle = wmPtr->exStyleConfig;
@@ -3073,6 +3087,14 @@ WmAttributesCmd(
 		Tcl_NewStringObj("-topmost", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewWideIntObj((exStyle & WS_EX_TOPMOST) != 0));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-contexthelp", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewBooleanObj((style & WS_EX_CONTEXTHELP) != 0));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-shadow", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewBooleanObj((wmPtr->flags & WM_DROPSHADOW) != 0));
 	Tcl_SetObjResult(interp, objPtr);
 	return TCL_OK;
     }
@@ -3093,6 +3115,12 @@ WmAttributesCmd(
 	} else if (strncmp(string, "-fullscreen", length) == 0) {
 	    config_fullscreen = 1;
 	    styleBit = 0;
+	} else if (strncmp(string, "-shadow", (unsigned) length) == 0) {
+	    config_shadow = 1;
+	    styleBit = 0;
+	} else if (strncmp(string,"-contexthelp", length) == 0) {
+	    stylePtr = &exStyle;
+	    styleBit = WS_EX_CONTEXTHELP;
 	} else if ((length > 3)
 		&& (strncmp(string, "-toolwindow", length) == 0)) {
 	    stylePtr = &exStyle;
@@ -3217,6 +3245,15 @@ WmAttributesCmd(
 		    fullscreen_attr = boolean;
 		}
 		config_fullscreen = 0;
+	    } else if (config_shadow) {
+		if (objc == 4) {
+		    Tcl_SetBooleanObj(Tcl_GetObjResult(interp),
+			    (wmPtr->flags & WM_DROPSHADOW) != 0);
+		} else {
+		    shadow_attr_changed = 1;
+		    shadow_attr = boolean;
+		}
+		config_shadow = 0;
 	    } else if (objc == 4) {
 		Tcl_SetObjResult(interp,
 			Tcl_NewWideIntObj((*stylePtr & styleBit) != 0));
@@ -3294,6 +3331,16 @@ WmAttributesCmd(
 	}
 
 	TkpWmSetFullScreen(winPtr, fullscreen_attr);
+    }
+    if (shadow_attr_changed) {
+	if (shadow_attr) {
+	    wmPtr->flags |= WM_DROPSHADOW;
+	} else {
+	    wmPtr->flags &= ~WM_DROPSHADOW;
+	}
+	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
+	    UpdateWrapper(winPtr);
+	}
     }
 
     return TCL_OK;
@@ -7863,6 +7910,8 @@ WmProc(
 				 * one level deep. */
     LRESULT result = 0;
     TkWindow *winPtr = NULL;
+    POINT point;
+    int state;
 
     switch (message) {
     case WM_KILLFOCUS:
@@ -7999,6 +8048,19 @@ WmProc(
 	}
 	break;
     }
+
+    case WM_NCLBUTTONDOWN:
+    case WM_NCLBUTTONDBLCLK:
+    case WM_NCLBUTTONUP:
+    case WM_NCMBUTTONDOWN:
+    case WM_NCMBUTTONDBLCLK:
+    case WM_NCMBUTTONUP:
+    case WM_NCRBUTTONDOWN:
+    case WM_NCRBUTTONDBLCLK:
+    case WM_NCRBUTTONUP: 
+	Tk_UpdatePointer(NULL, 0, 0, TkWinGetModifierState() | NOCURSOR_MASK);
+	result = (*tkWinProcs->defWindowProc)(hwnd, message, wParam, lParam);
+	goto done;
 
     case WM_MOUSEACTIVATE: {
 	winPtr = GetTopLevel((HWND) wParam);

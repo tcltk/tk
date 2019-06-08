@@ -962,6 +962,15 @@ typedef struct TkpClipMask {
 #define EXTENDED_MASK	(AnyModifier<<3)
 
 /*
+ * The following special modifiers are passed to Tk_UpdatePointer to specify
+ * respectively that the cursor should not be changed, and to say to update
+ * the current position but not to generate button events.
+ */
+
+#define NOCURSOR_MASK	(AnyModifier<<4)
+#define NOBUTTONEVENTS_MASK	(AnyModifier<<5)
+
+/*
  * Object types not declared in tkObj.c need to be mentioned here so they can
  * be properly registered with Tcl:
  */
