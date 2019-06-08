@@ -340,18 +340,12 @@ static void             RemoveTransient(TkWindow *winPtr);
 #else
 - (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
+    NSRect pointrect = {point, {0,0}};
     return [self convertRectToScreen:pointrect].origin;
 }
 - (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
+    NSRect pointrect = {point, {0,0}};
     return [self convertRectFromScreen:pointrect].origin;
 }
 #endif
