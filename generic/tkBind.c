@@ -2175,7 +2175,7 @@ Tk_BindEvent(
     assert(bindPtr);
     assert(eventPtr);
     assert(tkwin);
-    assert(numObjects > 0);
+    assert(numObjects >= 0);
 
     /*
      * Ignore events on windows that don't have names: these are windows like
