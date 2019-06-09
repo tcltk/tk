@@ -139,18 +139,26 @@ FileMatchSVG(
     data = Tcl_GetStringFromObj(dataObj, &length);
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     Tcl_DecrRefCount(dataObj);
-    if (nsvgImage != NULL) {
-	GetScaleFromParameters(
-		nsvgImage,
-		&ropts,
-		widthPtr,
-		heightPtr);
-	if (!CacheSVG(interp, chan, formatObj, nsvgImage, &ropts)) {
-	    nsvgDelete(nsvgImage);
-	}
-	return 1;
+    if (nsvgImage == NULL) {
+	return 0;
     }
-    return 0;
+    /*
+     * Width and Height equal zero is an svgnano error case and must be errored
+     * out. Valid png images give width and height 0 as result
+     */
+    if ((nsvgImage->width <= 0.0) || (nsvgImage->height <= 0.0)) {
+	nsvgDelete(nsvgImage);
+	return 0;
+    }
+    GetScaleFromParameters(
+	nsvgImage,
+	&ropts,
+	widthPtr,
+	heightPtr);
+    if (!CacheSVG(interp, chan, formatObj, nsvgImage, &ropts)) {
+	nsvgDelete(nsvgImage);
+    }
+    return 1;
 }
 
 /*
@@ -243,18 +251,26 @@ StringMatchSVG(
     CleanCache(interp);
     data = Tcl_GetStringFromObj(dataObj, &length);
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
-    if (nsvgImage != NULL) {
-	GetScaleFromParameters(
-		nsvgImage,
-		&ropts,
-		widthPtr,
-		heightPtr);
-	if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
-	    nsvgDelete(nsvgImage);
-	}
-	return 1;
+    if (nsvgImage == NULL) {
+	return 0;
     }
-    return 0;
+    /*
+     * Width and Height equal zero is an svgnano error case and must be errored
+     * out. Valid png images give width and height 0 as result
+     */
+    if ((nsvgImage->width <= 0.0) || (nsvgImage->height <= 0.0)) {
+	nsvgDelete(nsvgImage);
+	return 0;
+    }
+    GetScaleFromParameters(
+	    nsvgImage,
+	    &ropts,
+	    widthPtr,
+	    heightPtr);
+    if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
+	nsvgDelete(nsvgImage);
+    }
+    return 1;
 }
 
 /*
@@ -599,19 +615,10 @@ GetScaleFromParameters(
     double scale;
     int width, height;
     /*
-     * To avoid division by 0, check for positive image size
+     * nsvgImage->width  and nsvgImage->height are greater than 0.
+     * Equal to 0 is an svgnano error case.
      */
-    if ((nsvgImage->width == 0.0) || (nsvgImage->height == 0.0)) {
-	/*
-	 * Image width or height is zero.
-	 * This might be due to a small image with a very high dpi value.
-	 * Set image size to 1x1 pixel, which is the minimum
-	 * This is more sensible than throwing an error.
-	 */
-	width = 1;
-	height = 1;
-	scale = 1.0;
-    } else if (ropts->scaleToHeight > 0) {
+    if (ropts->scaleToHeight > 0) {
 	/*
 	 * Fix height
 	 */
