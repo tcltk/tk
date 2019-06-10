@@ -609,7 +609,8 @@ ReconfigureWindowsMenu(
 	itemText = GetEntryText(menuPtr, mePtr);
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
-	    Tcl_WinUtfToTChar(itemText, -1, &translatedText);
+		Tcl_DStringInit(&translatedText);
+		Tcl_UtfToUniCharDString(itemText, -1, &translatedText);
 	    lpNewItem = (const TCHAR *) Tcl_DStringValue(&translatedText);
 	    flags |= MF_STRING;
 	} else {
@@ -1272,7 +1273,8 @@ TkWinHandleMenuEvent(
 		    const char *src = TkGetStringFromObj(labelPtr, &len);
 
 		    Tcl_DStringFree(&ds);
-		    wlabel = (WCHAR *) Tcl_WinUtfToTChar(src, len, &ds);
+		    Tcl_DStringInit(&ds);
+		    wlabel = (WCHAR *) Tcl_UtfToUniCharDString(src, len, &ds);
 		    if ((underline + 1 < len + 1) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;

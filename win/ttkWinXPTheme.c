@@ -833,7 +833,8 @@ static void TextElementSize(
 	return;
 
     src = TkGetStringFromObj(element->textObj, &len);
-    Tcl_WinUtfToTChar(src, len, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToUniCharDString(src, len, &ds);
     hr = elementData->procs->GetThemeTextExtent(
 	    elementData->hTheme,
 	    elementData->hDC,
@@ -872,7 +873,8 @@ static void TextElementDraw(
 	return;
 
     src = TkGetStringFromObj(element->textObj, &len);
-    Tcl_WinUtfToTChar(src, len, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToUniCharDString(src, len, &ds);
     hr = elementData->procs->DrawThemeText(
 	    elementData->hTheme,
 	    elementData->hDC,
@@ -1139,7 +1141,8 @@ Ttk_CreateVsapiElement(
 	return TCL_ERROR;
     }
     name = TkGetStringFromObj(objv[0], &length);
-    className = (WCHAR *) Tcl_WinUtfToTChar(name, length, &classBuf);
+    Tcl_DStringInit(&classBuf);
+    className = (WCHAR *) Tcl_UtfToUniCharDString(name, length, &classBuf);
 
     /* flags or padding */
     if (objc > 3) {
