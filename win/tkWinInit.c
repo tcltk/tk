@@ -199,7 +199,8 @@ TkWin32ErrorObj(
     }
 
 #ifdef _UNICODE
-    Tcl_WinTCharToUtf(lpBuffer, wcslen(lpBuffer) * sizeof (WCHAR), &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_UniCharToUtfDString(lpBuffer, wcslen(lpBuffer), &ds);
     errPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
 #else

@@ -79,7 +79,8 @@ TkSelGetSelection(
 	    goto error;
 	}
 	data = GlobalLock(handle);
-	Tcl_WinTCharToUtf((TCHAR *)data, -1, &ds);
+	Tcl_DStringInit(&ds)
+	Tcl_UniCharToUtfDString((TCHAR *)data, wcslen((TCHAR *)data), &ds);
 	GlobalUnlock(handle);
     } else if (IsClipboardFormatAvailable(CF_TEXT)) {
 	/*
@@ -157,7 +158,8 @@ TkSelGetSelection(
 		    Tcl_DStringAppend(&ds, "\n", 1);
 		}
 		len = wcslen(fname);
-		Tcl_WinTCharToUtf(fname, len * sizeof(WCHAR), &dsTmp);
+		Tcl_DStringInit(&dsTmp);
+		Tcl_UniCharToUtfDString(fname, len, &dsTmp);
 		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
 			Tcl_DStringLength(&dsTmp));
 		Tcl_DStringFree(&dsTmp);
@@ -334,7 +336,7 @@ TkWinClipboardRender(
 
 #ifdef UNICODE
 	Tcl_DStringInit(&ds);
-	Tcl_WinUtfToTChar(rawText, -1, &ds);
+	Tcl_UtfToUniCharDString(rawText, -1, &ds);
 	ckfree(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
 		(unsigned) Tcl_DStringLength(&ds) + 2);

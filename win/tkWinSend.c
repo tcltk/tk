@@ -254,7 +254,8 @@ TkGetInterpNames(
 			    if (*p) {
 				Tcl_DString ds;
 
-				Tcl_WinTCharToUtf(p + 1, -1, &ds);
+				Tcl_DStringInit(&ds);
+				Tcl_UniCharToUtfDString(p + 1, wcslen(p + 1), &ds);
 				result = Tcl_ListObjAppendElement(interp,
 					objList,
 					Tcl_NewStringObj(Tcl_DStringValue(&ds),
@@ -619,7 +620,8 @@ BuildMoniker(
 	LPMONIKER pmkItem = NULL;
 	Tcl_DString dString;
 
-	Tcl_WinUtfToTChar(name, -1, &dString);
+	Tcl_DStringInit(&dString);
+	Tcl_UtfToUniCharDString(name, -1, &dString);
 	hr = CreateFileMoniker((LPOLESTR)Tcl_DStringValue(&dString), &pmkItem);
 	Tcl_DStringFree(&dString);
 	if (SUCCEEDED(hr)) {
@@ -761,7 +763,8 @@ Send(
 
     vCmd.vt = VT_BSTR;
     src = Tcl_GetString(cmd);
-    Tcl_WinUtfToTChar(src, cmd->length, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToUniCharDString(src, cmd->length, &ds);
     vCmd.bstrVal = SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
 
@@ -784,8 +787,8 @@ Send(
 
     ehr = VariantChangeType(&vResult, &vResult, 0, VT_BSTR);
     if (SUCCEEDED(ehr)) {
-	Tcl_WinTCharToUtf(vResult.bstrVal, (int) SysStringLen(vResult.bstrVal) *
-		sizeof (WCHAR), &ds);
+	Tcl_DStringInit(&ds);
+	Tcl_UniCharToUtfDString(vResult.bstrVal, SysStringLen(vResult.bstrVal), &ds);
 	Tcl_DStringResult(interp, &ds);
     }
 
@@ -797,8 +800,9 @@ Send(
 
     if (hr == DISP_E_EXCEPTION && ei.bstrSource != NULL) {
 	Tcl_Obj *opError, *opErrorCode, *opErrorInfo;
-	Tcl_WinTCharToUtf(ei.bstrSource, (int) SysStringLen(ei.bstrSource) *
-		sizeof (WCHAR), &ds);
+
+	Tcl_DStringInit(&ds);
+	Tcl_UniCharToUtfDString(ei.bstrSource, SysStringLen(ei.bstrSource), &ds);
 	opError = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds));
 	Tcl_DStringFree(&ds);
@@ -869,12 +873,14 @@ TkWinSend_SetExcepInfo(
     /* TODO: Handle failure to append */
 
     src = Tcl_GetString(opError);
-    Tcl_WinUtfToTChar(src, opError->length, &ds);
+    Tcl_DStringInit(&ds)
+    Tcl_UtfToUniCharDString(src, opError->length, &ds);
     pExcepInfo->bstrDescription =
 	    SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
     src = Tcl_GetString(opErrorCode);
-    Tcl_WinUtfToTChar(src, opErrorCode->length, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToUniCharDString(src, opErrorCode->length, &ds);
     pExcepInfo->bstrSource =
 	    SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
