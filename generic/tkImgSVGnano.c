@@ -262,11 +262,7 @@ StringMatchSVG(
 	nsvgDelete(nsvgImage);
 	return 0;
     }
-    GetScaleFromParameters(
-	    nsvgImage,
-	    &ropts,
-	    widthPtr,
-	    heightPtr);
+    GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
     if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
 	nsvgDelete(nsvgImage);
     }
@@ -531,11 +527,7 @@ RasterizeSVG(
     Tk_PhotoImageBlock svgblock;
     double scale;
 
-    scale = GetScaleFromParameters(
-	    nsvgImage,
-	    ropts,
-	    &w,
-	    &h);
+    scale = GetScaleFromParameters(nsvgImage, ropts, &w, &h);
 
     rast = nsvgCreateRasterizer();
     if (rast == NULL) {
@@ -594,13 +586,13 @@ cleanAST:
  *	-scaletoheight and -scaletowidth.
  *
  *	The image width and height is also returned.
- *	Both are greater or equal to 1.
+ *	Both are greater than or equal to 1.
  *
  * Results:
- *	The evaluated or configured scale value or 0.0 on failure
+ *	The evaluated or configured scale value, or 0.0 on failure
  *
  * Side effects:
- *	height and width is set to heightPtr and widthPtr.
+ *	heightPtr and widthPtr are set to height and width of the image.
  *
  *----------------------------------------------------------------------
  */
@@ -620,14 +612,14 @@ GetScaleFromParameters(
      */
     if (ropts->scaleToHeight > 0) {
 	/*
-	 * Fix height
+	 * Fixed height
 	 */
 	height = ropts->scaleToHeight;
 	scale = height / nsvgImage->height;
 	width = (int) ceil(nsvgImage->width * scale);
     } else if (ropts->scaleToWidth > 0) {
 	/*
-	 * Fix width
+	 * Fixed width
 	 */
 	width = ropts->scaleToWidth;
 	scale = width / nsvgImage->width;
