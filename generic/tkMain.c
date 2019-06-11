@@ -85,6 +85,9 @@ NewNativeObj(
     Tcl_DString ds;
 
 #ifdef UNICODE
+    if (length < 0) {
+	length = wcslen(string);
+    }
     Tcl_DStringInit(&ds);
     Tcl_UniCharToUtfDString(string, length, &ds);
 #else
