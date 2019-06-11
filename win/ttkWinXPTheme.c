@@ -95,7 +95,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
      * if we are running at least on Windows XP.
      */
     HINSTANCE handle;
-    *phlib = handle = LoadLibrary(TEXT("uxtheme.dll"));
+    *phlib = handle = LoadLibrary(L"uxtheme.dll");
     if (handle != 0)
     {
 	/*

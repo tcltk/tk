@@ -106,7 +106,7 @@ Tk_GetPixmap(
 		    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		    (LPTSTR)&lpMsgBuf, 0, NULL)) {
 		MessageBox(NULL, (LPTSTR) lpMsgBuf,
-			TEXT("Tk_GetPixmap: Error from CreateDIBSection"),
+			L"Tk_GetPixmap: Error from CreateDIBSection",
 			MB_OK | MB_ICONINFORMATION);
 		LocalFree(lpMsgBuf);
 	    }

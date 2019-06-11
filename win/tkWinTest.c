@@ -435,7 +435,7 @@ TestfindwindowObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    const TCHAR  *title = NULL, *class = NULL;
+    const WCHAR  *title = NULL, *class = NULL;
     Tcl_DString titleString, classString;
     HWND hwnd = NULL;
     int r = TCL_OK;
@@ -515,7 +515,7 @@ TestgetwindowinfoObjCmd(
     Tcl_WideInt hwnd;
     Tcl_Obj *dictObj = NULL, *classObj = NULL, *textObj = NULL;
     Tcl_Obj *childrenObj = NULL;
-    TCHAR buf[512];
+    WCHAR buf[512];
     int cch, cchBuf = 256;
     Tcl_DString ds;
 

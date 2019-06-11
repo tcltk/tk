@@ -179,7 +179,7 @@ TkWin32ErrorObj(
     HRESULT hrError)
 {
     LPTSTR lpBuffer = NULL, p = NULL;
-    TCHAR  sBuffer[30];
+    WCHAR  sBuffer[30];
     Tcl_Obj* errPtr = NULL;
 #ifdef _UNICODE
     Tcl_DString ds;
@@ -191,11 +191,11 @@ TkWin32ErrorObj(
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;
-	wsprintf(sBuffer, TEXT("Error Code: %08lX"), hrError);
+	wsprintf(sBuffer, L"Error Code: %08lX", hrError);
     }
 
-    if ((p = _tcsrchr(lpBuffer, TEXT('\r'))) != NULL) {
-	*p = TEXT('\0');
+    if ((p = wcsrchr(lpBuffer, L'\r')) != NULL) {
+	*p = L'\0';
     }
 
 #ifdef _UNICODE

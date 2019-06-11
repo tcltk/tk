@@ -50,11 +50,11 @@ typedef struct FontFamily {
     int isSymbolFont;		/* Non-zero if this is a symbol font. */
     int isWideFont;		/* 1 if this is a double-byte font, 0
 				 * otherwise. */
-    BOOL (WINAPI *textOutProc)(HDC hdc, int x, int y, TCHAR *str, int len);
+    BOOL (WINAPI *textOutProc)(HDC hdc, int x, int y, WCHAR *str, int len);
 				/* The procedure to use to draw text after it
 				 * has been converted from UTF-8 to the
 				 * encoding of this font. */
-    BOOL (WINAPI *getTextExtentPoint32Proc)(HDC, TCHAR *, int, LPSIZE);
+    BOOL (WINAPI *getTextExtentPoint32Proc)(HDC, WCHAR *, int, LPSIZE);
 				/* The procedure to use to measure text after
 				 * it has been converted from UTF-8 to the
 				 * encoding of this font. */
@@ -179,12 +179,6 @@ typedef struct ThreadSpecificData {
 static Tcl_ThreadDataKey dataKey;
 
 /*
- * Information cached about the system at startup time.
- */
-
-static Tcl_Encoding systemEncoding;
-
-/*
  * Procedures used only in this file.
  */
 
@@ -262,7 +256,6 @@ void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    systemEncoding = TkWinGetUnicodeEncoding();
     TkWinSetupSystemFonts(mainPtr);
 }
 
@@ -446,7 +439,7 @@ TkWinSetupSystemFonts(
     {
 	LOGFONT lfFixed = {
 	    0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-	    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, TEXT("")
+	    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L""
 	};
 	long pointSize, dpi;
 	HDC hdc = GetDC(NULL);
@@ -664,11 +657,12 @@ WinFontFamilyEnumProc(
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
 {
-    char *faceName = (char *) lfPtr->elfLogFont.lfFaceName;
+    WCHAR *faceName = (WCHAR *) lfPtr->elfLogFont.lfFaceName;
     Tcl_Obj *resultObj = (Tcl_Obj *) lParam;
     Tcl_DString faceString;
 
-    Tcl_ExternalToUtfDString(systemEncoding, faceName, -1, &faceString);
+    Tcl_DStringInit(&faceString);
+    Tcl_UniCharToUtfDString(faceName, wcslen(faceName), &faceString);
     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
 	    Tcl_DStringValue(&faceString), Tcl_DStringLength(&faceString)));
     Tcl_DStringFree(&faceString);
@@ -858,7 +852,7 @@ Tk_MeasureChars(
 		    (int) (p - start), &runString);
 	    size.cx = 0;
 	    familyPtr->getTextExtentPoint32Proc(hdc,
-		    (TCHAR *)Tcl_DStringValue(&runString),
+		    (WCHAR *)Tcl_DStringValue(&runString),
 		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		    &size);
 	    Tcl_DStringFree(&runString);
@@ -885,7 +879,7 @@ Tk_MeasureChars(
 	Tcl_UtfToExternalDString(familyPtr->encoding, start,
 		(int) (p - start), &runString);
 	size.cx = 0;
-	familyPtr->getTextExtentPoint32Proc(hdc, (TCHAR *) Tcl_DStringValue(&runString),
+	familyPtr->getTextExtentPoint32Proc(hdc, (WCHAR *) Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		&size);
 	Tcl_DStringFree(&runString);
@@ -919,7 +913,7 @@ Tk_MeasureChars(
 	    Tcl_DStringAppend(&runString,buf,dstWrote);
 	    size.cx = 0;
 	    familyPtr->getTextExtentPoint32Proc(hdc,
-		    (TCHAR *) Tcl_DStringValue(&runString),
+		    (WCHAR *) Tcl_DStringValue(&runString),
 		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		    &size);
 	    if ((curX+size.cx) > maxLength) {
@@ -1469,10 +1463,10 @@ MultiFontTextOut(
  		Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			(int) (p - source), &runString);
 		familyPtr->textOutProc(hdc, x-(tm.tmOverhang/2), y,
-			(TCHAR *)Tcl_DStringValue(&runString),
+			(WCHAR *)Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString)>>familyPtr->isWideFont);
 		familyPtr->getTextExtentPoint32Proc(hdc,
-			(TCHAR *)Tcl_DStringValue(&runString),
+			(WCHAR *)Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 			&size);
 		x += size.cx;
@@ -1490,7 +1484,7 @@ MultiFontTextOut(
  	Tcl_UtfToExternalDString(familyPtr->encoding, source,
 		(int) (p - source), &runString);
 	familyPtr->textOutProc(hdc, x-(tm.tmOverhang/2), y,
-		(TCHAR *)Tcl_DStringValue(&runString),
+		(WCHAR *)Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);
     }
@@ -1565,7 +1559,7 @@ InitFont(
     Tcl_Encoding encoding;
     Tcl_DString faceString;
     TkFontAttributes *faPtr;
-    TCHAR buf[LF_FACESIZE];
+    WCHAR buf[LF_FACESIZE];
 
     window = Tk_WindowId(tkwin);
     hwnd = (window == None) ? NULL : TkWinGetHWND(window);
@@ -1590,7 +1584,8 @@ InitFont(
      */
 
     GetTextFace(hdc, LF_FACESIZE, buf);
-    Tcl_ExternalToUtfDString(systemEncoding, (char *) buf, -1, &faceString);
+    Tcl_DStringInit(&faceString);
+    Tcl_UniCharToUtfDString(buf, wcslen(buf), &faceString);
 
     fontPtr->font.fid	= (Font) fontPtr;
     fontPtr->hwnd	= hwnd;
@@ -1761,13 +1756,14 @@ AllocFontFamily(
     FontFamily *familyPtr;
     Tcl_DString faceString;
     Tcl_Encoding encoding;
-    TCHAR buf[LF_FACESIZE];
+    WCHAR buf[LF_FACESIZE];
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hFont = SelectObject(hdc, hFont);
     GetTextFace(hdc, LF_FACESIZE, buf);
-    Tcl_ExternalToUtfDString(systemEncoding, (char *) buf, -1, &faceString);
+    Tcl_DStringInit(&faceString);
+    Tcl_UniCharToUtfDString(buf, wcslen(buf), &faceString);
     faceName = Tk_GetUid(Tcl_DStringValue(&faceString));
     Tcl_DStringFree(&faceString);
     hFont = SelectObject(hdc, hFont);
@@ -1825,15 +1821,15 @@ AllocFontFamily(
     if (encoding == NULL) {
 	encoding = Tcl_GetEncoding(NULL, "unicode");
 	familyPtr->textOutProc =
-	    (BOOL (WINAPI *)(HDC, int, int, TCHAR *, int)) TextOutW;
+	    (BOOL (WINAPI *)(HDC, int, int, WCHAR *, int)) TextOutW;
 	familyPtr->getTextExtentPoint32Proc =
-	    (BOOL (WINAPI *)(HDC, TCHAR *, int, LPSIZE)) GetTextExtentPoint32W;
+	    (BOOL (WINAPI *)(HDC, WCHAR *, int, LPSIZE)) GetTextExtentPoint32W;
 	familyPtr->isWideFont = 1;
     } else {
 	familyPtr->textOutProc =
-	    (BOOL (WINAPI *)(HDC, int, int, TCHAR *, int)) TextOutA;
+	    (BOOL (WINAPI *)(HDC, int, int, WCHAR *, int)) TextOutA;
 	familyPtr->getTextExtentPoint32Proc =
-	    (BOOL (WINAPI *)(HDC, TCHAR *, int, LPSIZE)) GetTextExtentPoint32A;
+	    (BOOL (WINAPI *)(HDC, WCHAR *, int, LPSIZE)) GetTextExtentPoint32A;
 	familyPtr->isWideFont = 0;
     }
 
@@ -2070,8 +2066,9 @@ WinFontCanUseProc(
     fontPtr	    = canUsePtr->fontPtr;
     nameTriedPtr    = canUsePtr->nameTriedPtr;
 
-    fallbackName = (char *) lfPtr->elfLogFont.lfFaceName;
-    Tcl_ExternalToUtfDString(systemEncoding, fallbackName, -1, &faceString);
+    fallbackName = (char *)lfPtr->elfLogFont.lfFaceName;
+    Tcl_DStringInit(&faceString);
+    Tcl_UniCharToUtfDString((WCHAR *)fallbackName, wcslen((WCHAR *)fallbackName), &faceString);
     fallbackName = Tcl_DStringValue(&faceString);
 
     if (SeenName(fallbackName, nameTriedPtr) == 0) {
@@ -2493,8 +2490,9 @@ GetScreenFont(
     lf.lfQuality	= DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
-    Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &ds);
-    _tcsncpy(lf.lfFaceName, (TCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToUniCharDString(faceName, -1, &ds);
+    wcsncpy(lf.lfFaceName, (WCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
     Tcl_DStringFree(&ds);
     lf.lfFaceName[LF_FACESIZE-1] = 0;
     hFont = CreateFontIndirect(&lf);
@@ -2528,7 +2526,7 @@ FamilyExists(
     int result;
     Tcl_DString faceString;
 
-    Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &faceString);
+    Tcl_UtfToUniCharDString(faceName, -1, &faceString);
 
     /*
      * If the family exists, WinFontExistProc() will be called and
@@ -2537,7 +2535,7 @@ FamilyExists(
      * non-zero value.
      */
 
-    result = EnumFontFamilies(hdc, (TCHAR*) Tcl_DStringValue(&faceString),
+    result = EnumFontFamilies(hdc, (WCHAR*) Tcl_DStringValue(&faceString),
 	    (FONTENUMPROC) WinFontExistProc, 0);
     Tcl_DStringFree(&faceString);
     return (result == 0);
