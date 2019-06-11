@@ -245,7 +245,7 @@ static unsigned		RankAttributes(FontAttributes *wantPtr,
 			    FontAttributes *gotPtr);
 static void		ReleaseFont(UnixFont *fontPtr);
 static void		ReleaseSubFont(Display *display, SubFont *subFontPtr);
-static int		SeenName(const WCHAR *name, Tcl_DString *dsPtr);
+static int		SeenName(const char *name, Tcl_DString *dsPtr);
 #ifndef WORDS_BIGENDIAN
 static int		Ucs2beToUtfProc(ClientData clientData, const char*src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
