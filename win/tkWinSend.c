@@ -873,7 +873,7 @@ TkWinSend_SetExcepInfo(
     /* TODO: Handle failure to append */
 
     src = Tcl_GetString(opError);
-    Tcl_DStringInit(&ds)
+    Tcl_DStringInit(&ds);
     Tcl_UtfToUniCharDString(src, opError->length, &ds);
     pExcepInfo->bstrDescription =
 	    SysAllocString((WCHAR *) Tcl_DStringValue(&ds));

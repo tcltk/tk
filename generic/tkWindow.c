@@ -2851,16 +2851,16 @@ TkCygwinMainEx(
 				 * but before starting to execute commands. */
     Tcl_Interp *interp)
 {
-    TCHAR name[MAX_PATH];
+    WCHAR name[MAX_PATH];
     size_t len;
     void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
     /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
     len = GetModuleFileNameW(Tk_GetHINSTANCE(), name, MAX_PATH);
-    name[len-2] = TEXT('.');
+    name[len-2] = L'.';
     name[len-1] = name[len-5];
-    _tcscpy(name+len, TEXT(".dll"));
-    memcpy(name+len-8, TEXT("libtk8"), 6 * sizeof(TCHAR));
+    wcscpy(name+len, L".dll");
+    memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
 
     tkcygwindll = LoadLibrary(name);
     if (!tkcygwindll) {

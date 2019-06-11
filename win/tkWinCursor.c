@@ -41,7 +41,7 @@ typedef struct {
 
 static struct CursorName {
     const char *name;
-    LPCTSTR id;
+    LPCWSTR id;
 } cursorNames[] = {
     {"starting",		IDC_APPSTARTING},
     {"arrow",			IDC_ARROW},

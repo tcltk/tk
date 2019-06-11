@@ -303,10 +303,10 @@ TkpUseWindow(
 	 * order to avoid bug 1096074 in future.
 	 */
 
-	TCHAR msg[256];
+	WCHAR msg[256];
 
-	wsprintf(msg, TEXT("Unable to get information of window \"%.40hs\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching."), string);
-	if (IDCANCEL == MessageBox(hwnd, msg, TEXT("Tk Warning"),
+	wsprintf(msg, L"Unable to get information of window \"%.40hs\".  Attach to this\nwindow may have unpredictable results if it is not a valid container.\n\nPress Ok to proceed or Cancel to abort attaching.", string);
+	if (IDCANCEL == MessageBox(hwnd, msg, L"Tk Warning",
 		MB_OKCANCEL | MB_ICONWARNING)) {
     	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "Operation has been canceled", -1));

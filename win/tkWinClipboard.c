@@ -79,8 +79,8 @@ TkSelGetSelection(
 	    goto error;
 	}
 	data = GlobalLock(handle);
-	Tcl_DStringInit(&ds)
-	Tcl_UniCharToUtfDString((TCHAR *)data, wcslen((TCHAR *)data), &ds);
+	Tcl_DStringInit(&ds);
+	Tcl_UniCharToUtfDString((WCHAR *)data, wcslen((WCHAR *)data), &ds);
 	GlobalUnlock(handle);
     } else if (IsClipboardFormatAvailable(CF_TEXT)) {
 	/*
