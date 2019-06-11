@@ -117,8 +117,8 @@ typedef struct {
  * The following macros define the class names for Tk Window types.
  */
 
-#define TK_WIN_TOPLEVEL_CLASS_NAME TEXT("TkTopLevel")
-#define TK_WIN_CHILD_CLASS_NAME TEXT("TkChild")
+#define TK_WIN_TOPLEVEL_CLASS_NAME L"TkTopLevel"
+#define TK_WIN_CHILD_CLASS_NAME L"TkChild"
 
 /*
  * The following variable is a translation table between X gc functions and
