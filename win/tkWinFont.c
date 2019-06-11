@@ -2526,6 +2526,7 @@ FamilyExists(
     int result;
     Tcl_DString faceString;
 
+    Tcl_DStringInit(&faceString);
     Tcl_UtfToUniCharDString(faceName, -1, &faceString);
 
     /*
