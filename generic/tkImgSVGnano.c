@@ -139,26 +139,18 @@ FileMatchSVG(
     data = Tcl_GetStringFromObj(dataObj, &length);
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     Tcl_DecrRefCount(dataObj);
-    if (nsvgImage == NULL) {
-	return 0;
+    if (nsvgImage != NULL) {
+        GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
+        if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
+	    nsvgDelete(nsvgImage);
+	    return 0;
+        }
+        if (!CacheSVG(interp, chan, formatObj, nsvgImage, &ropts)) {
+	    nsvgDelete(nsvgImage);
+        }
+        return 1;
     }
-    /*
-     * Width and Height equal zero is an svgnano error case and must be errored
-     * out. Valid png images give width and height 0 as result
-     */
-    if ((nsvgImage->width <= 0.0) || (nsvgImage->height <= 0.0)) {
-	nsvgDelete(nsvgImage);
-	return 0;
-    }
-    GetScaleFromParameters(
-	nsvgImage,
-	&ropts,
-	widthPtr,
-	heightPtr);
-    if (!CacheSVG(interp, chan, formatObj, nsvgImage, &ropts)) {
-	nsvgDelete(nsvgImage);
-    }
-    return 1;
+    return 0;
 }
 
 /*
@@ -251,22 +243,18 @@ StringMatchSVG(
     CleanCache(interp);
     data = Tcl_GetStringFromObj(dataObj, &length);
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
-    if (nsvgImage == NULL) {
-	return 0;
+    if (nsvgImage != NULL) {
+        GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
+        if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
+	    nsvgDelete(nsvgImage);
+	    return 0;
+        }
+        if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
+	    nsvgDelete(nsvgImage);
+        }
+        return 1;
     }
-    /*
-     * Width and Height equal zero is an svgnano error case and must be errored
-     * out. Valid png images give width and height 0 as result
-     */
-    if ((nsvgImage->width <= 0.0) || (nsvgImage->height <= 0.0)) {
-	nsvgDelete(nsvgImage);
-	return 0;
-    }
-    GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
-    if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
-	nsvgDelete(nsvgImage);
-    }
-    return 1;
+    return 0;
 }
 
 /*
@@ -586,7 +574,6 @@ cleanAST:
  *	-scaletoheight and -scaletowidth.
  *
  *	The image width and height is also returned.
- *	Both are greater than or equal to 1.
  *
  * Results:
  *	The evaluated or configured scale value, or 0.0 on failure
@@ -606,11 +593,11 @@ GetScaleFromParameters(
 {
     double scale;
     int width, height;
-    /*
-     * nsvgImage->width  and nsvgImage->height are greater than 0.
-     * Equal to 0 is an svgnano error case.
-     */
-    if (ropts->scaleToHeight > 0) {
+
+    if ((nsvgImage->width == 0.0) || (nsvgImage->height == 0.0)) {
+        width = height = 0;
+        scale = 1.0;
+    } else if (ropts->scaleToHeight > 0) {
 	/*
 	 * Fixed height
 	 */
@@ -632,21 +619,7 @@ GetScaleFromParameters(
 	width = (int) ceil(nsvgImage->width * scale);
 	height = (int) ceil(nsvgImage->height * scale);
     }
-    /*
-     * Set width or height to minimum 1 pixel.
-     * This is the minimum.
-     * It is more sensible to scale to the minimum than output an
-     * error on very small scales.
-     */
-    if (width <= 0) {
-	width = 1;
-    }
-    if (height <= 0) {
-	height = 1;
-    }
-    /*
-     * Output the found values
-     */
+
     *heightPtr = height;
     *widthPtr = width;
     return scale;
