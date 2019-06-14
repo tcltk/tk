@@ -27,6 +27,9 @@ namespace eval svgnano {
 ">
 </svg>}
 
+    tcltest::makeFile $data(plus) plus.svg
+    set data(plusFilePath) [file join [tcltest::configure -tmpdir] plus.svg]
+
 test imgSVGnano-1.1 {reading simple image} -setup {
     catch {rename foo ""}
 } -body {
@@ -66,7 +69,6 @@ test imgSVGnano-1.4 {image options} -setup {
 } -cleanup {
     rename foo ""
 } -result {100 100}
-
 
 test imgSVGnano-2.1 {reading a bad image} -body {
     image create photo foo -format svg -data $data(bad)
@@ -135,6 +137,63 @@ test imgSVGnano-3.9 {Very small scale gives 1x1 image} -body {
 } -cleanup {
     rename foo ""
 } -result {1 1}
+
+test imgSVGnano-3.10 {change from -scaletoheight to -scale} -body {
+    set res {}
+    image create photo foo -format "svg -scaletoheight 16"\
+	    -data $data(plus)
+    lappend res [image width foo] [image height foo]
+    foo configure -format "svg -scale 2"
+    lappend res [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+    unset res
+} -result {16 16 200 200}
+
+# svg file access
+test imgSVGnano-4.1 {reading simple image from file} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -file $data(plusFilePath)
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {100 100}
+
+test imgSVGnano-4.2 {simple image with options} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -file $data(plusFilePath) -format {svg -dpi 100 -scale 3}
+    list [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+} -result {300 300}
+
+test imgSVGnano-4.3 {reread file on configure -scale} -setup {
+    catch {rename foo ""}
+    set res {}
+} -body {
+    image create photo foo -file $data(plusFilePath)
+    lappend res [image width foo] [image height foo]
+    foo configure -format "svg -scale 2"
+    lappend res [image width foo] [image height foo]
+} -cleanup {
+    rename foo ""
+    unset res
+} -result {100 100 200 200}
+
+
+test imgSVGnano-4.4 {error on file not accessible on reread due to configure} -setup {
+    catch {rename foo ""}
+    tcltest::makeFile $data(plus) tmpplus.svg
+    image create photo foo -file [file join [tcltest::configure -tmpdir] tmpplus.svg]
+    tcltest::removeFile tmpplus.svg
+} -body {
+    foo configure -format "svg -scale 2"
+} -cleanup {
+    rename foo ""
+    tcltest::removeFile tmpplus.svg
+} -returnCodes error -match glob -result {couldn't open "*/tmpplus.svg": no such file or directory}
 
 };# end of namespace svgnano
 
