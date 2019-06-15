@@ -38,7 +38,15 @@
 # The code below creates the default class bindings for text widgets.
 #-------------------------------------------------------------------------
 
+
+
 # Standard Motif bindings:
+
+bind Text <Map> {
+    if {[tk windowingsystem] eq "aqua"} {
+    	::tk::RegisterServiceWidget %W
+    }
+}
 
 bind Text <1> {
     tk::TextButton1 %W %x %y
@@ -83,6 +91,7 @@ bind Text <B1-Enter> {
 bind Text <ButtonRelease-1> {
     tk::CancelRepeat
 }
+
 bind Text <Control-1> {
     %W mark set insert @%x,%y
     # An operation that moves the insert mark without making it
@@ -1203,7 +1212,7 @@ proc ::tk::TextScanDrag {w x y} {
     }
     if {[info exists Priv(mouseMoved)] && $Priv(mouseMoved)} {
 	$w scan dragto $x $y
-    }
+    }  
 }
 
 # ::tk::TextUndoRedoProcessMarks --
@@ -1274,29 +1283,23 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
                 # -> further second ranges do not need to be considered
                 #    because ranges were sorted by increasing first index
                 set j $nUndoMarks
-
             } else {
                 if {[$w compare $ir2 > $ir1]} {
                     # second range overlaps first range
                     # -> merge them into a single range
                     set indices [lreplace $indices end-1 end]
                     lappend indices $il1 $ir2
-
                 } else {
                     # second range is fully included in first range
                     # -> ignore it
-
                 }
                 # in both cases above, the second range shall be
                 # trimmed out from the list of ranges
                 set ind [lreplace $ind $j [expr {$j + 1}]]
                 incr j -2
                 incr nUndoMarks -2
-
             }
-
         }
-
     }
 
     return $indices

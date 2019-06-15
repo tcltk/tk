@@ -190,7 +190,7 @@ Tk_CreateSelHandler(
 		     * should make a copy for this selPtr.
 		     */
 
-		    size_t cmdInfoLen = Tk_Offset(CommandInfo, command) + 1 +
+		    size_t cmdInfoLen = offsetof(CommandInfo, command) + 1 +
 			    ((CommandInfo *)clientData)->cmdLength;
 
 		    selPtr->clientData = ckalloc(cmdInfoLen);
@@ -904,7 +904,7 @@ Tk_SelectionObjCmd(
 	if (cmdLength == 0) {
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {
-	    cmdInfoPtr = ckalloc(Tk_Offset(CommandInfo, command)
+	    cmdInfoPtr = ckalloc(offsetof(CommandInfo, command)
 		    + 1 + cmdLength);
 	    cmdInfoPtr->interp = interp;
 	    cmdInfoPtr->charOffset = 0;

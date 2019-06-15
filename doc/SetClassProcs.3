@@ -33,7 +33,7 @@ are used as callbacks in different places.
 The structure pointed to by \fIprocs\fR contains the following:
 .CS
 typedef struct Tk_ClassProcs {
-    unsigned int \fIsize\fR;
+    size_t \fIsize\fR;
     Tk_ClassWorldChangedProc *\fIworldChangedProc\fR;
     Tk_ClassCreateProc *\fIcreateProc\fR;
     Tk_ClassModalProc *\fImodalProc\fR;

@@ -18,7 +18,7 @@
  */
 
 #define EI_SEG_SIZE \
-	(Tk_Offset(TkTextSegment, body) + sizeof(TkTextEmbImage))
+	(offsetof(TkTextSegment, body) + sizeof(TkTextEmbImage))
 
 /*
  * Prototypes for functions defined in this file:
@@ -83,17 +83,17 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", -1, Tk_Offset(TkTextEmbImage, align),
+	"center", -1, offsetof(TkTextEmbImage, align),
 	0, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", -1, Tk_Offset(TkTextEmbImage, padX), 0, 0, 0},
+	"0", -1, offsetof(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", -1, Tk_Offset(TkTextEmbImage, padY), 0, 0, 0},
+	"0", -1, offsetof(TkTextEmbImage, padY), 0, 0, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextEmbImage, imageString),
+	NULL, -1, offsetof(TkTextEmbImage, imageString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextEmbImage, imageName),
+	NULL, -1, offsetof(TkTextEmbImage, imageName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };

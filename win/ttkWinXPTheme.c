@@ -811,9 +811,9 @@ typedef struct
 static Ttk_ElementOptionSpec TextElementOptions[] =
 {
     { "-text", TK_OPTION_STRING,
-	Tk_Offset(TextElement,textObj), "" },
+	offsetof(TextElement,textObj), "" },
     { "-font", TK_OPTION_FONT,
-	Tk_Offset(TextElement,fontObj), DEFAULT_FONT },
+	offsetof(TextElement,fontObj), DEFAULT_FONT },
     { NULL }
 };
 

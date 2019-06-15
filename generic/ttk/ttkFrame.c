@@ -28,19 +28,19 @@ typedef struct {
 
 static Tk_OptionSpec FrameOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth", NULL,
-	Tk_Offset(Frame,frame.borderWidthObj), -1,
+	offsetof(Frame,frame.borderWidthObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad", NULL,
-	Tk_Offset(Frame,frame.paddingObj), -1,
+	offsetof(Frame,frame.paddingObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief", NULL,
-	Tk_Offset(Frame,frame.reliefObj), -1,
+	offsetof(Frame,frame.reliefObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_PIXELS, "-width", "width", "Width", "0",
-	Tk_Offset(Frame,frame.widthObj), -1,
+	offsetof(Frame,frame.widthObj), -1,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-height", "height", "Height", "0",
-	Tk_Offset(Frame,frame.heightObj), -1,
+	offsetof(Frame,frame.heightObj), -1,
 	0,0,GEOMETRY_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -249,16 +249,16 @@ typedef struct {
 
 static Tk_OptionSpec LabelframeOptionSpecs[] = {
     {TK_OPTION_STRING, "-labelanchor", "labelAnchor", "LabelAnchor",
-	"nw", Tk_Offset(Labelframe, label.labelAnchorObj),-1,
+	"nw", offsetof(Labelframe, label.labelAnchorObj),-1,
         0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-text", "text", "Text", "",
-	Tk_Offset(Labelframe,label.textObj), -1,
+	offsetof(Labelframe,label.textObj), -1,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline",
-	"-1", Tk_Offset(Labelframe,label.underlineObj), -1,
+	"-1", offsetof(Labelframe,label.underlineObj), -1,
 	0,0,0 },
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget", NULL,
-	-1, Tk_Offset(Labelframe,label.labelWidget),
+	-1, offsetof(Labelframe,label.labelWidget),
 	TK_OPTION_NULL_OK,0,LABELWIDGET_CHANGED|GEOMETRY_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(FrameOptionSpecs)

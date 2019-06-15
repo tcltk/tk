@@ -19,7 +19,7 @@
  * Macro that determines the size of a mark segment:
  */
 
-#define MSEG_SIZE (Tk_Offset(TkTextSegment, body) \
+#define MSEG_SIZE (offsetof(TkTextSegment, body) \
 	+ sizeof(TkTextMark))
 
 /*
