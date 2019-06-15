@@ -684,6 +684,14 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
+#register to send data to macOS Services
+if {[tk windowingsystem] eq "aqua"} {
+proc ::tk::RegisterServiceWidget {w} {
+    ::tk::mac::registerServiceWidget $w
+  }
+}
+
+
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source $::ttk::library/ttk.tcl]
