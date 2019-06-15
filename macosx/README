@@ -59,11 +59,6 @@ $pkg/Resources/Scripts/pkgIndex.tcl as well as the usual $pkg/pkgIndex.tcl.
 This allows building extensions as frameworks with all script files contained in
 the Resources/Scripts directory of the framework.
 
-- [load]able binary extensions can linked as either ordinary shared libraries
-(.dylib) or as MachO bundles (since 8.4.10/8.5a3); bundles have the advantage
-that they are [load]ed more efficiently from a tcl VFS (no temporary copy to the
-native filesystem required).
-
 - The 'deploy' target of macosx/GNUmakefile installs the html manpages into the
 standard documentation location in the Tcl/Tk frameworks:
 	Tcl.framework/Resources/Documentation/Reference/Tcl
@@ -86,28 +81,6 @@ LaunchServices) than when it (or tclsh) is invoked from the Terminal, in
 particular PATH may not be what you expect. (Wish started by LaunchServices
 inherits loginwindow's environment variables, which are essentially those set in
 $HOME/.MacOSX/environment.plist, and are unrelated to those set in your shell).
-
-- TkAqua drawing is antialiased by default, but (outline) linewidth can be used
-to control whether a line/shape is drawn antialiased. The antialiasing threshold
-is 0 by default (i.e. antialias everything), it can be changed by setting
-	set tk::mac::CGAntialiasLimit <limit>
-in your script before drawing, in which case lines (or shapes with outlines)
-thinner than <limit> pixels will not be antialiased.
-
-- Text antialiasing by default uses the standard OS antialising settings.
-Setting the global variable '::tk::mac::antialiasedtext' allows to control text
-antialiasing from Tcl: a value of 1 enables AA, 0 disables AA and -1 restores
-the default behaviour of respecting the OS settings.
-
-- Scrollbars: There are two scrollbar variants in Aqua, normal & small. The
-normal scrollbar has a small dimension of 15, the small variant 11.
-Access to the small variant was added in Tk 8.4.2.
-
-- The default metrics of native buttons, radiobuttons, checkboxes and
-menubuttons in the Cocoa-based Tk 8.5.7 and later preserve compatibility with
-the older Carbon-based implementation, you can turn off the compatibility
-metrics to get more native-looking spacing by setting:
-	set tk::mac::useCompatibilityMetrics 0
 
 - TkAqua provides access to native OS X images via the Tk native bitmap facility
 (including any image file readable by NSImage). A native bitmap name is
@@ -336,9 +309,7 @@ corresponding depth.
 5. Building Tcl/Tk on macOS
 ------------------------------
 
-- At least macOS 10.3 is required to build Tcl and TkX11, and macOS 10.6
-is required to build TkAqua.  The XCode application provides everything
-needed to build Tk, but it is not necessary to install the full XCode.
+- macOS 10.6 is required to build TkAqua and TkX11.  The XCode application provides everything needed to build Tk, but it is not necessary to install the full XCode.
 It suffices to install the Command Line Tools package, which can be done
 by running the command:
 xcode-select --install
@@ -396,17 +367,6 @@ directories are named differently, e.g. '../../tcl8.6' and '../../tk8.6', you
 need to manually change the TCL_SRCROOT and TK_SRCROOT settings by editing your
 ${USER}.pbxuser file (located inside the Tk.xcodeproj bundle directory) with a
 text editor.
-
-- To build universal binaries outside of the Xcode IDE, set CFLAGS as follows:
-	export CFLAGS="-arch i386 -arch x86_64 -arch ppc"
-This requires macOS 10.4 and Xcode 2.4 (or Xcode 2.2 if -arch x86_64 is
-omitted, but _not_ Xcode 2.1) and will work on any architecture (on PowerPC
-Tiger you need to add "-isysroot /Developer/SDKs/MacOSX10.4u.sdk").
-Note that configure requires CFLAGS to contain a least one architecture that can
-be run on the build machine (i.e. ppc on G3/G4, ppc or ppc64 on G5, ppc or i386
-on Core and ppc, i386 or x86_64 on Core2/Xeon).
-Universal builds of Tcl TEA extensions are also possible with CFLAGS set as
-above, they will be [load]able by universal as well as thin binaries of Tcl.
 
 - To enable weak-linking, set the MACOSX_DEPLOYMENT_TARGET environment variable
 to the minimal OS version the binaries should be able to run on, e.g:
@@ -713,3 +673,54 @@ take on the appropriate appearance when the system appearance is changed.
 Because the window content itself is drawn by Tk, it will not change when
 the system mode changes.
 
+
+7.0 Mac Services
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With 8.6.10, Tk supports the Mac's NSServices API, documented at
+https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/SysServices/introduction.html#//apple_ref/doc/uid/10000101-SW1
+and in TIP 536 and Tk's man page. Tk presents a simple,
+straightforward API to implement the Services functionality.
+
+The Tk implementation of the NSServices API is intended for standalone
+applications, such as one wrapped by the standalone version of Wish
+and re-named into a different application.  In particular such an
+application would specify its own unique CFBundleIdentifier in its
+Info.plist file.  During development, however, if Wish itself is being
+used as the receiver, it may be necessary to take some care to ensure
+that the correct version of Wish.app is available as a receiver of
+NSServices data.
+
+When one macOS app uses NSServices to send data to another app that is
+not running, LaunchServices will launch the receiver.  LaunchServices
+assumes that the CFBundleIdentifier uniquely identifies an app among
+all of the apps installed on a system.  But this may not be the case
+for Wish.app if, for example, you have compiled Tk from source at some
+time in the past.  In that case the Tk build directory will contain
+its own copy of Wish.app that will be visible to LaunchServices.  It
+may be necessary when testing your app to take some steps to ensure
+that LaunchServices is launching the correct Wish.app.  Instructions
+for doing this are provided below.
+
+The command line tool which manages the LaunchServices database has
+an amazingly unwieldy path name.  So, first, run this command: 
+
+alias lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
+
+Then you can reset the LaunchServices database like this:
+
+$ lsregister -kill
+$ lsregister -seed
+
+To find out which versions of Wish.app have been located by
+LaunchServices, run:
+
+$ lsregister -dump | grep path | grep Wish
+
+If more than one version of Wish is showing up in this list, eliminate
+all of the unintended targets by running
+
+lsregister -u /path/to/bad/Wish.app
+
+Continue this until only the correct version of Wish shows up in the
+list.
