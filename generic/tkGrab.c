@@ -881,8 +881,9 @@ TkPointerEvent(
 		return 1;
 	    }
 	} else {
-	    if ((eventPtr->xbutton.state & ALL_BUTTONS)
-		    == buttonStates[eventPtr->xbutton.button - Button1]) {
+	    if (eventPtr->xbutton.button != AnyButton &&
+		    ((eventPtr->xbutton.state & ALL_BUTTONS)
+		    == buttonStates[eventPtr->xbutton.button - Button1])) {
 		ReleaseButtonGrab(dispPtr);			/* Note 4. */
 	    }
 	}
