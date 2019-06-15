@@ -66,7 +66,7 @@ typedef struct ProtocolHandler {
 } ProtocolHandler;
 
 #define HANDLER_SIZE(cmdLength) \
-    (Tk_Offset(ProtocolHandler, command) + 1 + cmdLength)
+    (offsetof(ProtocolHandler, command) + 1 + cmdLength)
 
 /*
  * Helper type passed via lParam to TkWmStackorderToplevelEnumProc
