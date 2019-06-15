@@ -396,10 +396,11 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
 	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXImage.o \
-	tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o tkMacOSXMenu.o \
+	tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
+	tkMacOSXMenu.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
 	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
-	tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
+	tkMacOSXServices.o tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
 	tkMacOSXWm.o tkMacOSXXStubs.o \
 	tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o tkUnixScale.o \
 	xcolors.o xdraw.o xgc.o ximage.o xutil.o \
@@ -524,10 +525,12 @@ AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXFont.c $(MAC_OSX_DIR)/tkMacOSXHLEvents.c \
 	$(MAC_OSX_DIR)/tkMacOSXImage.c \
 	$(MAC_OSX_DIR)/tkMacOSXInit.c $(MAC_OSX_DIR)/tkMacOSXKeyboard.c \
-	$(MAC_OSX_DIR)/tkMacOSXKeyEvent.c $(MAC_OSX_DIR)/tkMacOSXMenu.c \
+	$(MAC_OSX_DIR)/tkMacOSXKeyEvent.c \
+	$(MAC_OSX_DIR)/tkMacOSXMenu.c \
 	$(MAC_OSX_DIR)/tkMacOSXMenubutton.c $(MAC_OSX_DIR)/tkMacOSXMenus.c \
 	$(MAC_OSX_DIR)/tkMacOSXMouseEvent.c $(MAC_OSX_DIR)/tkMacOSXNotify.c \
 	$(MAC_OSX_DIR)/tkMacOSXRegion.c $(MAC_OSX_DIR)/tkMacOSXScrlbr.c \
+	$(MAC_OSX_DIR)/tkMacOSXServices.c \
 	$(MAC_OSX_DIR)/tkMacOSXSend.c $(MAC_OSX_DIR)/tkMacOSXSubwindows.c \
 	$(MAC_OSX_DIR)/tkMacOSXTest.c $(MAC_OSX_DIR)/tkMacOSXWindowEvent.c \
 	$(MAC_OSX_DIR)/tkMacOSXWm.c $(MAC_OSX_DIR)/tkMacOSXXStubs.c \
@@ -1347,6 +1350,9 @@ tkMacOSXScrlbr.o: $(MAC_OSX_DIR)/tkMacOSXScrlbr.c
 
 tkMacOSXSend.o: $(MAC_OSX_DIR)/tkMacOSXSend.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXSend.c
+
+tkMacOSXServices.o: $(MAC_OSX_DIR)/tkMacOSXServices.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXServices.c
 
 tkMacOSXSubwindows.o: $(MAC_OSX_DIR)/tkMacOSXSubwindows.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXSubwindows.c

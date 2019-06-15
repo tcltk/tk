@@ -2781,8 +2781,6 @@ WmManageCmd(
 		Tk_MakeWindowExist((Tk_Window) winPtr);
 		macWin = (MacDrawable *) winPtr->window;
 	    }
-	    TkWmMapWindow(winPtr);
-	    Tk_UnmapWindow(frameWin);
 	}
 	wmPtr = winPtr->wmInfoPtr;
 	winPtr->flags &= ~TK_MAPPED;
@@ -2793,6 +2791,7 @@ WmManageCmd(
 	winPtr->flags |=
 		(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	TkMapTopFrame(frameWin);
+	TkWmMapWindow(winPtr);
     } else if (Tk_IsTopLevel(frameWin)) {
 	/* Already managed by wm - ignore it */
     }
