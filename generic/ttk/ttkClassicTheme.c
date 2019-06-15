@@ -23,9 +23,9 @@ typedef struct {
 
 static Ttk_ElementOptionSpec HighlightElementOptions[] = {
     { "-highlightcolor",TK_OPTION_COLOR,
-	Tk_Offset(HighlightElement,highlightColorObj), DEFAULT_BACKGROUND },
+	offsetof(HighlightElement,highlightColorObj), DEFAULT_BACKGROUND },
     { "-highlightthickness",TK_OPTION_PIXELS,
-	Tk_Offset(HighlightElement,highlightThicknessObj), "0" },
+	offsetof(HighlightElement,highlightThicknessObj), "0" },
     { NULL, 0, 0, NULL }
 };
 
@@ -84,13 +84,13 @@ typedef struct {
 static Ttk_ElementOptionSpec ButtonBorderElementOptions[] =
 {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(ButtonBorderElement,borderObj), DEFAULT_BACKGROUND },
+	offsetof(ButtonBorderElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(ButtonBorderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+	offsetof(ButtonBorderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF,
-	Tk_Offset(ButtonBorderElement,reliefObj), "flat" },
+	offsetof(ButtonBorderElement,reliefObj), "flat" },
     { "-default", TK_OPTION_ANY,
-	Tk_Offset(ButtonBorderElement,defaultStateObj), "disabled" },
+	offsetof(ButtonBorderElement,defaultStateObj), "disabled" },
     { NULL, 0, 0, NULL }
 };
 
@@ -197,13 +197,13 @@ typedef struct
 
 static Ttk_ElementOptionSpec ArrowElementOptions[] =
 {
-    { "-arrowsize", TK_OPTION_PIXELS, Tk_Offset(ArrowElement,sizeObj),
+    { "-arrowsize", TK_OPTION_PIXELS, offsetof(ArrowElement,sizeObj),
 	DEFAULT_ARROW_SIZE },
-    { "-background", TK_OPTION_BORDER, Tk_Offset(ArrowElement,borderObj),
+    { "-background", TK_OPTION_BORDER, offsetof(ArrowElement,borderObj),
     	DEFAULT_BACKGROUND },
-    { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(ArrowElement,borderWidthObj),
+    { "-borderwidth", TK_OPTION_PIXELS, offsetof(ArrowElement,borderWidthObj),
     	DEFAULT_BORDERWIDTH },
-    { "-relief", TK_OPTION_RELIEF, Tk_Offset(ArrowElement,reliefObj),"raised" },
+    { "-relief", TK_OPTION_RELIEF, offsetof(ArrowElement,reliefObj),"raised" },
     { NULL, 0, 0, NULL }
 };
 
@@ -305,17 +305,17 @@ typedef struct {
 
 static Ttk_ElementOptionSpec SashOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(SashElement,borderObj), DEFAULT_BACKGROUND },
+	offsetof(SashElement,borderObj), DEFAULT_BACKGROUND },
     { "-sashrelief", TK_OPTION_RELIEF,
-	Tk_Offset(SashElement,sashReliefObj), "sunken" },
+	offsetof(SashElement,sashReliefObj), "sunken" },
     { "-sashthickness", TK_OPTION_PIXELS,
-	Tk_Offset(SashElement,sashThicknessObj), "6" },
+	offsetof(SashElement,sashThicknessObj), "6" },
     { "-sashpad", TK_OPTION_PIXELS,
-	Tk_Offset(SashElement,sashPadObj), "2" },
+	offsetof(SashElement,sashPadObj), "2" },
     { "-handlesize", TK_OPTION_PIXELS,
-	Tk_Offset(SashElement,handleSizeObj), "8" },
+	offsetof(SashElement,handleSizeObj), "8" },
     { "-handlepad", TK_OPTION_PIXELS,
-	Tk_Offset(SashElement,handlePadObj), "8" },
+	offsetof(SashElement,handlePadObj), "8" },
     { NULL, 0, 0, NULL }
 };
 

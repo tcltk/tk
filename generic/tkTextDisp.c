@@ -696,7 +696,7 @@ typedef enum {
  * Macro that determines how much space to allocate for TkTextDispLineInfo:
  */
 
-#define TEXT_DISPLINEINFO_SIZE(numDispLines) (Tk_Offset(TkTextDispLineInfo, entry) + \
+#define TEXT_DISPLINEINFO_SIZE(numDispLines) (offsetof(TkTextDispLineInfo, entry) + \
 	(numDispLines)*sizeof(((TkTextDispLineInfo *) 0)->entry[0]))
 
 /*

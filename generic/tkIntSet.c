@@ -40,7 +40,7 @@
 
 #define TestIfEqual TkIntSetIsEqual__
 
-#define SET_SIZE(size) ((unsigned) (Tk_Offset(TkIntSet, buf) + (size)*sizeof(TkIntSetType)))
+#define SET_SIZE(size) (offsetof(TkIntSet, buf) + (size)*sizeof(TkIntSetType))
 
 
 DEBUG_ALLOC(unsigned tkIntSetCountNew = 0);

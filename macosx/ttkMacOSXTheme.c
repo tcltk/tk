@@ -1656,9 +1656,9 @@ typedef struct {
 
 static Ttk_ElementOptionSpec EntryElementOptions[] = {
     {"-background", TK_OPTION_BORDER,
-     Tk_Offset(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
+     offsetof(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {"-fieldbackground", TK_OPTION_BORDER,
-     Tk_Offset(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
+     offsetof(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {0}
 };
 
@@ -2016,10 +2016,10 @@ typedef struct {
 } TrackElement;
 
 static Ttk_ElementOptionSpec TrackElementOptions[] = {
-    {"-from", TK_OPTION_DOUBLE, Tk_Offset(TrackElement, fromObj)},
-    {"-to", TK_OPTION_DOUBLE, Tk_Offset(TrackElement, toObj)},
-    {"-value", TK_OPTION_DOUBLE, Tk_Offset(TrackElement, valueObj)},
-    {"-orient", TK_OPTION_STRING, Tk_Offset(TrackElement, orientObj)},
+    {"-from", TK_OPTION_DOUBLE, offsetof(TrackElement, fromObj)},
+    {"-to", TK_OPTION_DOUBLE, offsetof(TrackElement, toObj)},
+    {"-value", TK_OPTION_DOUBLE, offsetof(TrackElement, valueObj)},
+    {"-orient", TK_OPTION_STRING, offsetof(TrackElement, orientObj)},
     {0, 0, 0}
 };
 static void TrackElementSize(
@@ -2151,15 +2151,15 @@ typedef struct {
 
 static Ttk_ElementOptionSpec PbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
-     Tk_Offset(PbarElement, orientObj), "horizontal"},
+     offsetof(PbarElement, orientObj), "horizontal"},
     {"-value", TK_OPTION_DOUBLE,
-     Tk_Offset(PbarElement, valueObj), "0"},
+     offsetof(PbarElement, valueObj), "0"},
     {"-maximum", TK_OPTION_DOUBLE,
-     Tk_Offset(PbarElement, maximumObj), "100"},
+     offsetof(PbarElement, maximumObj), "100"},
     {"-phase", TK_OPTION_INT,
-     Tk_Offset(PbarElement, phaseObj), "0"},
+     offsetof(PbarElement, phaseObj), "0"},
     {"-mode", TK_OPTION_STRING,
-     Tk_Offset(PbarElement, modeObj), "determinate"},
+     offsetof(PbarElement, modeObj), "determinate"},
     {0, 0, 0, 0}
 };
 static void PbarElementSize(
@@ -2248,7 +2248,7 @@ typedef struct
 
 static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
-     Tk_Offset(ScrollbarElement, orientObj), "horizontal"},
+     offsetof(ScrollbarElement, orientObj), "horizontal"},
     {0, 0, 0, 0}
 };
 static void TroughElementSize(
@@ -2764,7 +2764,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     {"-fieldbackground", TK_OPTION_BORDER,
-     Tk_Offset(FieldElement, backgroundObj), "white"},
+     offsetof(FieldElement, backgroundObj), "white"},
     {NULL, 0, 0, NULL}
 };
 

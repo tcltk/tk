@@ -465,7 +465,7 @@ typedef struct TkTextSegment {
  * Macro that determines how much space to allocate for a specific segment:
  */
 
-#define SEG_SIZE(bodyType) ((unsigned) (Tk_Offset(TkTextSegment, body) + sizeof(bodyType)))
+#define SEG_SIZE(bodyType) (offsetof(TkTextSegment, body) + sizeof(bodyType))
 
 /*
  * The data structure below defines sections of text segments. Each section
