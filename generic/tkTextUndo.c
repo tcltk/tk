@@ -64,8 +64,8 @@ typedef TkTextUndoMyAtom MyUndoAtom;
  */
 
 
-#define ATOM_SIZE(n) (Tk_Offset(TkTextUndoMyAtom, data) \
-	+ Tk_Offset(TkTextUndoAtom, array) + (n)*sizeof(TkTextUndoSubAtom))
+#define ATOM_SIZE(n) (offsetof(TkTextUndoMyAtom, data) \
+	+ offsetof(TkTextUndoAtom, array) + (n)*sizeof(TkTextUndoSubAtom))
 
 
 enum { InitialCapacity = 20 };

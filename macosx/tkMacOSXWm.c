@@ -340,18 +340,12 @@ static void             RemoveTransient(TkWindow *winPtr);
 #else
 - (NSPoint) tkConvertPointToScreen: (NSPoint) point
 {
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
+    NSRect pointrect = {point, {0,0}};
     return [self convertRectToScreen:pointrect].origin;
 }
 - (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
+    NSRect pointrect = {point, {0,0}};
     return [self convertRectFromScreen:pointrect].origin;
 }
 #endif
@@ -2787,8 +2781,6 @@ WmManageCmd(
 		Tk_MakeWindowExist((Tk_Window) winPtr);
 		macWin = (MacDrawable *) winPtr->window;
 	    }
-	    TkWmMapWindow(winPtr);
-	    Tk_UnmapWindow(frameWin);
 	}
 	wmPtr = winPtr->wmInfoPtr;
 	winPtr->flags &= ~TK_MAPPED;
@@ -2799,6 +2791,7 @@ WmManageCmd(
 	winPtr->flags |=
 		(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	TkMapTopFrame(frameWin);
+	TkWmMapWindow(winPtr);
     } else if (Tk_IsTopLevel(frameWin)) {
 	/* Already managed by wm - ignore it */
     }

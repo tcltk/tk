@@ -147,7 +147,7 @@ int tkBTreeDebug = false;
 
 /* Computer math magic: (k/8)*8 == k & -8 */
 #define CSEG_CAPACITY(chars) ((int) (chars + 8) & -8)
-#define CSEG_SIZE(capacity) (Tk_Offset(TkTextSegment, body) + capacity)
+#define CSEG_SIZE(capacity) (offsetof(TkTextSegment, body) + capacity)
 
 /*
  * Helper struct for SplitSeg.

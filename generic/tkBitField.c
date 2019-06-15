@@ -41,7 +41,7 @@
 
 #define NBYTES(words)	((words)*sizeof(TkBitWord))
 #define BYTE_SIZE(size)	NBYTES(NWORDS(size))
-#define BF_SIZE(size)	((unsigned) (Tk_Offset(TkBitField, bits) + BYTE_SIZE(size)))
+#define BF_SIZE(size)	(offsetof(TkBitField, bits) + BYTE_SIZE(size))
 #define BIT_SPAN(f,t)	((~((TkBitWord) 0) << (f)) & (~((TkBitWord) 0) >> ((NBITS - 1) - (t))))
 
 

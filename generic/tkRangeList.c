@@ -35,7 +35,7 @@
 #endif
 
 
-#define MEM_SIZE(size) ((unsigned) (Tk_Offset(TkRangeList, items) + (size)*sizeof(TkRange)))
+#define MEM_SIZE(size) (offsetof(TkRangeList, items) + (size)*sizeof(TkRange))
 
 
 DEBUG_ALLOC(unsigned tkRangeListCountNew = 0);
