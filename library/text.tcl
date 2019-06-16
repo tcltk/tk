@@ -38,7 +38,15 @@
 # The code below creates the default class bindings for text widgets.
 #-------------------------------------------------------------------------
 
+
+
 # Standard Motif bindings:
+
+bind Text <Map> {
+    if {[tk windowingsystem] eq "aqua"} {
+    	::tk::RegisterServiceWidget %W
+    }
+}
 
 bind Text <1> {
     tk::TextButton1 %W %x %y
@@ -83,6 +91,7 @@ bind Text <B1-Enter> {
 bind Text <ButtonRelease-1> {
     tk::CancelRepeat
 }
+
 bind Text <Control-1> {
     %W mark set insert @%x,%y
     # An operation that moves the insert mark without making it
@@ -1203,5 +1212,6 @@ proc ::tk::TextScanDrag {w x y} {
     }
     if {[info exists Priv(mouseMoved)] && $Priv(mouseMoved)} {
 	$w scan dragto $x $y
-    }
+    }  
 }
+

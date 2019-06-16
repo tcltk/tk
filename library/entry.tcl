@@ -74,6 +74,11 @@ bind Entry <<TraverseIn>> {
 
 # Standard Motif bindings:
 
+bind Entry <Map> {
+    if {[tk windowingsystem] eq "aqua"} {
+    	::tk::RegisterServiceWidget %W
+    }
+}
 bind Entry <1> {
     tk::EntryButton1 %W %x
     %W selection clear
@@ -652,3 +657,12 @@ proc ::tk::EntryGetSelection {w} {
     }
     return $entryString
 }
+
+
+
+
+
+
+
+
+

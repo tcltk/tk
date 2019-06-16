@@ -234,7 +234,11 @@ MODULE_SCOPE int	TkMacOSXIconBitmapObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
-						int inset, int thickness);
+			    int inset, int thickness);
+MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 
 #pragma mark Private Objective-C Classes
 
@@ -328,6 +332,8 @@ VISIBILITY_HIDDEN
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 - (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+- (void)handleURLEvent:                (NSAppleEventDescriptor*)event
+	           withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
 @end
 
 VISIBILITY_HIDDEN
@@ -424,6 +430,8 @@ VISIBILITY_HIDDEN
 @end
 
 #endif /* _TKMACPRIV */
+
+int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]);
 
 /*
  * Local Variables:
