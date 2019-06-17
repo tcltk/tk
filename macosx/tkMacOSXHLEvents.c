@@ -113,7 +113,7 @@ static void		RunSimpleTclCommand(Tcl_Interp *interp,
     Tcl_DStringInit(&print);
     if (Tcl_FindCommand(_eventInterp, "::tk::mac::PrintDocument", NULL, 0)) {
 	Tcl_DStringAppend(&print, "::tk::mac::PrintDocument", -1);
-    } 
+    }
     Tcl_DStringAppendElement(&print, printFile);
     int tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&print),
 	    Tcl_DStringLength(&print), TCL_EVAL_GLOBAL);
@@ -264,7 +264,7 @@ static void		RunSimpleTclCommand(Tcl_Interp *interp,
     Tcl_DStringInit(&launch);
     if (Tcl_FindCommand(_eventInterp, "::tk::mac::LaunchURL", NULL, 0)) {
 	Tcl_DStringAppend(&launch, "::tk::mac::LaunchURL", -1);
-    } 
+    }
     Tcl_DStringAppendElement(&launch, cURL);
     int tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&launch),
 	    Tcl_DStringLength(&launch), TCL_EVAL_GLOBAL);
@@ -467,7 +467,7 @@ TkMacOSXInitAppleEvents(
 	[aeManager setEventHandler:NSApp
 	    andSelector:@selector(handleURLEvent:withReplyEvent:)
 	    forEventClass:kInternetEventClass andEventID:kAEGetURL];
-	
+
     }
 }
 
