@@ -175,12 +175,10 @@ AppendSystemError(
 	}
 	msg = msgBuf;
     } else {
-	Tcl_Encoding encoding;
 	char *msgPtr;
 
-	encoding = Tcl_GetEncoding(NULL, "unicode");
-	Tcl_ExternalToUtfDString(encoding, (char *) wMsgPtr, -1, &ds);
-	Tcl_FreeEncoding(encoding);
+	Tcl_DStringInit(&ds);
+	Tcl_UniCharToUtfDString(wMsgPtr, wcslen(wMsgPtr), &ds);
 	LocalFree(wMsgPtr);
 
 	msgPtr = Tcl_DStringValue(&ds);

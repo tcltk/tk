@@ -676,7 +676,7 @@ proc ::tk::mcmaxamp {args} {
     return $maxlen
 }
 
-# For now, turn off the custom mdef proc for the mac:
+# For now, turn off the custom mdef proc for the Mac:
 
 if {[tk windowingsystem] eq "aqua"} {
     namespace eval ::tk::mac {
@@ -690,7 +690,6 @@ proc ::tk::RegisterServiceWidget {w} {
     ::tk::mac::registerServiceWidget $w
   }
 }
-
 
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {

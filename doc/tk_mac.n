@@ -149,15 +149,15 @@ set).
 .TP
 \fB::tk::mac::PerformService\fR
 .
-Executes a Tcl procedure called from the macOS 
-.QW Services 
+Executes a Tcl procedure called from the macOS
+.QW Services
 menu in the Application menu item. The
 .QW Services
 menu item allows for inter-application communication; data from one
 application, such as selected text, can be sent to another application
 for processing, for example to Safari as a search item for Google, or
 to TextEdit to be appended to a file. An example of the proc is below,
-and should be rewritten in an application script for customization: 
+and should be rewritten in an application script for customization:
 .RS
 .PP
 .CS
@@ -168,7 +168,7 @@ proc ::tk::mac::PerformService {} {
 .CE
 .RE
 Note that the mechanism for retrieving the data is from the clipboard;
-there is no other supported way to obtain the data.  If the Services 
+there is no other supported way to obtain the data.  If the Services
 process is not desired, the NSServices keys can be deleted from
 the application's Info.plist file. The underlying code supporting this
 command also allows the text, entry and ttk::entry widgets to access
@@ -187,7 +187,7 @@ URL, although it can defined as such. Wish includes a stub URL scheme
 of
 .QW foo://
 in the CFBundleURLSchemes key of its Info.plist file; this should be customized for the specific URL
-scheme the developer wants to support. 
+scheme the developer wants to support.
 .TP
 \fB::tk::mac::GetAppPath\fR
 .
