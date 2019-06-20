@@ -181,9 +181,7 @@ TkWin32ErrorObj(
     LPTSTR lpBuffer = NULL, p = NULL;
     WCHAR  sBuffer[30];
     Tcl_Obj* errPtr = NULL;
-#ifdef _UNICODE
     Tcl_DString ds;
-#endif
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, (DWORD)hrError,
@@ -194,18 +192,14 @@ TkWin32ErrorObj(
 	wsprintf(sBuffer, L"Error Code: %08lX", hrError);
     }
 
-    if ((p = wcsrchr(lpBuffer, L'\r')) != NULL) {
-	*p = L'\0';
+    if ((p = wcsrchr(lpBuffer, '\r')) != NULL) {
+	*p = '\0';
     }
 
-#ifdef _UNICODE
     Tcl_DStringInit(&ds);
     Tcl_UniCharToUtfDString(lpBuffer, wcslen(lpBuffer), &ds);
     errPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
-#else
-    errPtr = Tcl_NewStringObj(lpBuffer, (int)strlen(lpBuffer));
-#endif /* _UNICODE */
 
     if (lpBuffer != sBuffer) {
 	LocalFree((HLOCAL)lpBuffer);
@@ -213,7 +207,6 @@ TkWin32ErrorObj(
 
     return errPtr;
 }
-
 
 /*
  * Local Variables:

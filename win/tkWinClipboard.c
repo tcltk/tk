@@ -334,7 +334,6 @@ TkWinClipboardRender(
      * encoding before placing it on the clipboard.
      */
 
-#ifdef UNICODE
 	Tcl_DStringInit(&ds);
 	Tcl_UtfToUniCharDString(rawText, -1, &ds);
 	ckfree(rawText);
@@ -350,22 +349,6 @@ TkWinClipboardRender(
 	GlobalUnlock(handle);
 	Tcl_DStringFree(&ds);
 	SetClipboardData(CF_UNICODETEXT, handle);
-#else
-	Tcl_UtfToExternalDString(NULL, rawText, -1, &ds);
-	ckfree(rawText);
-	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
-		(unsigned) Tcl_DStringLength(&ds) + 1);
-	if (!handle) {
-	    Tcl_DStringFree(&ds);
-	    return;
-	}
-	buffer = GlobalLock(handle);
-	memcpy(buffer, Tcl_DStringValue(&ds),
-		(unsigned) Tcl_DStringLength(&ds) + 1);
-	GlobalUnlock(handle);
-	Tcl_DStringFree(&ds);
-	SetClipboardData(CF_TEXT, handle);
-#endif
 }
 
 /*

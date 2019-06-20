@@ -41,11 +41,7 @@
 #endif
 
 #ifndef BFFM_VALIDATEFAILED
-#ifdef UNICODE
 #define BFFM_VALIDATEFAILED 4
-#else
-#define BFFM_VALIDATEFAILED 3
-#endif
 #endif /* BFFM_VALIDATEFAILED */
 
 typedef struct ThreadSpecificData {

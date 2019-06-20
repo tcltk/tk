@@ -1826,7 +1826,7 @@ AllocFontFamily(
     }
 
     if (encoding == NULL) {
-	encoding = Tcl_GetEncoding(NULL, "unicode");
+	encoding = TkWinGetUnicodeEncoding();
 	familyPtr->textOutProc =
 	    (BOOL (WINAPI *)(HDC, int, int, WCHAR *, int)) TextOutW;
 	familyPtr->getTextExtentPoint32Proc =
