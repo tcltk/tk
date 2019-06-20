@@ -177,7 +177,7 @@ AppendSystemError(
     } else {
 	char *msgPtr;
 
-	Tcl_WinTCharToUtf(wMsgPtr, wcslen(wMsgPtr), &ds);
+	Tcl_WinTCharToUtf(wMsgPtr, -1, &ds);
 	LocalFree(wMsgPtr);
 
 	msgPtr = Tcl_DStringValue(&ds);
