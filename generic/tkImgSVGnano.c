@@ -62,7 +62,7 @@ static int		StringReadSVG(Tcl_Interp *interp, Tcl_Obj *dataObj,
 			    int destX, int destY, int width, int height,
 			    int srcX, int srcY);
 static NSVGimage *	ParseSVGWithOptions(Tcl_Interp *interp,
-			    const char *input, int length, Tcl_Obj *format,
+			    const char *input, size_t length, Tcl_Obj *format,
 			    RastOpts *ropts);
 static int		RasterizeSVG(Tcl_Interp *interp,
 			    Tk_PhotoHandle imageHandle, NSVGimage *nsvgImage,
@@ -118,19 +118,19 @@ FileMatchSVG(
     int *widthPtr, int *heightPtr,
     Tcl_Interp *interp)
 {
-    int length;
+    size_t length;
     Tcl_Obj *dataObj = Tcl_NewObj();
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage;
 
     CleanCache(interp);
-    if (Tcl_ReadChars(chan, dataObj, -1, 0) == -1) {
+    if (Tcl_ReadChars(chan, dataObj, -1, 0) == TCL_IO_FAILURE) {
 	/* in case of an error reading the file */
 	Tcl_DecrRefCount(dataObj);
 	return 0;
     }
-    data = Tcl_GetStringFromObj(dataObj, &length);
+    data = TkGetStringFromObj(dataObj, &length);
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     Tcl_DecrRefCount(dataObj);
     if (nsvgImage != NULL) {
@@ -178,7 +178,7 @@ FileReadSVG(
     int width, int height,
     int srcX, int srcY)
 {
-    int length;
+    size_t length;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage = GetCachedSVG(interp, chan, formatObj, &ropts);
@@ -186,14 +186,14 @@ FileReadSVG(
     if (nsvgImage == NULL) {
         Tcl_Obj *dataObj = Tcl_NewObj();
 
-	if (Tcl_ReadChars(chan, dataObj, -1, 0) == -1) {
+	if (Tcl_ReadChars(chan, dataObj, -1, 0) == TCL_IO_FAILURE) {
 	    /* in case of an error reading the file */
 	    Tcl_DecrRefCount(dataObj);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("read error", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "READ_ERROR", NULL);
 	    return TCL_ERROR;
 	}
-        data = Tcl_GetStringFromObj(dataObj, &length);
+	data = TkGetStringFromObj(dataObj, &length);
 	nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj,
 			    &ropts);
 	Tcl_DecrRefCount(dataObj);
@@ -230,13 +230,13 @@ StringMatchSVG(
     int *widthPtr, int *heightPtr,
     Tcl_Interp *interp)
 {
-    int length;
+    size_t length;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage;
 
     CleanCache(interp);
-    data = Tcl_GetStringFromObj(dataObj, &length);
+    data = TkGetStringFromObj(dataObj, &length);
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     if (nsvgImage != NULL) {
 	*widthPtr = (int) ceil(nsvgImage->width * ropts.scale);
@@ -281,13 +281,13 @@ StringReadSVG(
     int width, int height,
     int srcX, int srcY)
 {
-    int length;
+    size_t length;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage = GetCachedSVG(interp, dataObj, formatObj, &ropts);
 
     if (nsvgImage == NULL) {
-        data = Tcl_GetStringFromObj(dataObj, &length);
+        data = TkGetStringFromObj(dataObj, &length);
 	nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj,
 			    &ropts);
     }
@@ -317,7 +317,7 @@ static NSVGimage *
 ParseSVGWithOptions(
     Tcl_Interp *interp,
     const char *input,
-    int length,
+    size_t length,
     Tcl_Obj *formatObj,
     RastOpts *ropts)
 {
@@ -576,14 +576,14 @@ CacheSVG(
     NSVGimage *nsvgImage,
     RastOpts *ropts)
 {
-    int length;
+    size_t length;
     const char *data;
     NSVGcache *cachePtr = GetCachePtr(interp);
 
     if (cachePtr != NULL) {
         cachePtr->dataOrChan = dataOrChan;
 	if (formatObj != NULL) {
-	    data = Tcl_GetStringFromObj(formatObj, &length);
+	    data = TkGetStringFromObj(formatObj, &length);
 	    Tcl_DStringAppend(&cachePtr->formatString, data, length);
 	}
 	cachePtr->nsvgImage = nsvgImage;
@@ -616,7 +616,7 @@ GetCachedSVG(
     Tcl_Obj *formatObj,
     RastOpts *ropts)
 {
-    int length;
+    size_t length;
     const char *data;
     NSVGcache *cachePtr = GetCachePtr(interp);
     NSVGimage *nsvgImage = NULL;
@@ -624,7 +624,7 @@ GetCachedSVG(
     if ((cachePtr != NULL) && (cachePtr->nsvgImage != NULL) &&
 	(cachePtr->dataOrChan == dataOrChan)) {
         if (formatObj != NULL) {
-	    data = Tcl_GetStringFromObj(formatObj, &length);
+	    data = TkGetStringFromObj(formatObj, &length);
 	    if (strcmp(data, Tcl_DStringValue(&cachePtr->formatString)) == 0) {
 	        nsvgImage = cachePtr->nsvgImage;
 		*ropts = cachePtr->ropts;
