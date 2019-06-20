@@ -880,6 +880,10 @@ typedef struct {
 #ifndef TCL_IO_FAILURE
 #   define TCL_IO_FAILURE (-1)
 #endif
+/* See TIP #537 */
+#ifndef TCL_INDEX_NONE
+#   define TCL_INDEX_NONE (-1)
+#endif
 
 /*
  * The following structure is used with TkMakeEnsemble to create ensemble
