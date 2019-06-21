@@ -118,7 +118,7 @@ FileMatchSVG(
     int *widthPtr, int *heightPtr,
     Tcl_Interp *interp)
 {
-    size_t length;
+    int length;
     Tcl_Obj *dataObj = Tcl_NewObj();
     const char *data;
     RastOpts ropts;
@@ -178,7 +178,7 @@ FileReadSVG(
     int width, int height,
     int srcX, int srcY)
 {
-    size_t length;
+    int length;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage = GetCachedSVG(interp, chan, formatObj, &ropts);
@@ -230,7 +230,7 @@ StringMatchSVG(
     int *widthPtr, int *heightPtr,
     Tcl_Interp *interp)
 {
-    size_t length;
+    int length;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage;
@@ -281,7 +281,7 @@ StringReadSVG(
     int width, int height,
     int srcX, int srcY)
 {
-    size_t length;
+    int length;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage = GetCachedSVG(interp, dataObj, formatObj, &ropts);
@@ -576,7 +576,7 @@ CacheSVG(
     NSVGimage *nsvgImage,
     RastOpts *ropts)
 {
-    size_t length;
+    int length;
     const char *data;
     NSVGcache *cachePtr = GetCachePtr(interp);
 
@@ -616,7 +616,7 @@ GetCachedSVG(
     Tcl_Obj *formatObj,
     RastOpts *ropts)
 {
-    size_t length;
+    int length;
     const char *data;
     NSVGcache *cachePtr = GetCachePtr(interp);
     NSVGimage *nsvgImage = NULL;
