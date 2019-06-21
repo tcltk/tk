@@ -6031,7 +6031,7 @@ SearchCore(
 		     */
 
 		    p = startOfLine + lastOffset - firstNewLine - 1;
-		    if (strncmp(p, pattern, (unsigned) firstNewLine + 1)) {
+		    if (strncmp(p, pattern, firstNewLine + 1)) {
 			/*
 			 * No match.
 			 */

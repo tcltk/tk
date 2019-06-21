@@ -1508,7 +1508,7 @@ TkSelDefaultSelection(
 	    Tcl_DStringFree(&ds);
 	    return -1;
 	}
-	memcpy(buffer, Tcl_DStringValue(&ds), (unsigned) (1+length));
+	memcpy(buffer, Tcl_DStringValue(&ds), length + 1);
 	Tcl_DStringFree(&ds);
 	*typePtr = XA_ATOM;
 	return length;
