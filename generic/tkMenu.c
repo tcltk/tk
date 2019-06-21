@@ -346,9 +346,9 @@ static void		DestroyMenuHashTable(ClientData clientData,
 			    Tcl_Interp *interp);
 static void		DestroyMenuInstance(TkMenu *menuPtr);
 static void		DestroyMenuEntry(void *memPtr);
-static int		GetIndexFromCoords(Tcl_Interp *interp,
+static TkSizeT	GetIndexFromCoords(Tcl_Interp *interp,
 			    TkMenu *menuPtr, const char *string,
-			    int *indexPtr);
+			    TkSizeT *indexPtr);
 static int		MenuDoYPosition(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *objPtr);
 static int		MenuDoXPosition(Tcl_Interp *interp,
@@ -457,7 +457,7 @@ Tk_MenuObjCmd(
     menuPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(menuPtr->tkwin), MenuWidgetObjCmd, menuPtr,
 	    MenuCmdDeletedProc);
-    menuPtr->active = (TkSizeT)-1;
+    menuPtr->active = TCL_INDEX_NONE;
     menuPtr->cursorPtr = NULL;
     menuPtr->masterMenuPtr = menuPtr;
     menuPtr->menuType = UNKNOWN_TYPE;
@@ -639,7 +639,7 @@ MenuWidgetObjCmd(
 
     switch ((enum options) option) {
     case MENU_ACTIVATE: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -648,12 +648,12 @@ MenuWidgetObjCmd(
 	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if ((int)menuPtr->active == index) {
+	if (menuPtr->active == index) {
 	    goto done;
 	}
-	if ((index >= 0) && ((menuPtr->entries[index]->type==SEPARATOR_ENTRY)
+	if ((index != TCL_INDEX_NONE) && ((menuPtr->entries[index]->type==SEPARATOR_ENTRY)
 		|| (menuPtr->entries[index]->state == ENTRY_DISABLED))) {
-	    index = -1;
+	    index = TCL_INDEX_NONE;
 	}
 	result = TkActivateMenuEntry(menuPtr, index);
 	break;
@@ -723,7 +723,8 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_DELETE: {
-	int first, last;
+	TkSizeT first, last;
+	Tcl_WideInt w;
 
 	if ((objc != 3) && (objc != 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "first ?last?");
@@ -736,8 +737,9 @@ MenuWidgetObjCmd(
 	 */
 
 	if (isdigit(UCHAR(Tcl_GetString(objv[2])[0]))
-		&& Tcl_GetIntFromObj(NULL, objv[2], &first) == TCL_OK) {
-	    if (first >= (int)menuPtr->numEntries) {
+		&& Tcl_GetWideIntFromObj(NULL, objv[2], &w) == TCL_OK) {
+	    first = w;
+	    if (first >= menuPtr->numEntries) {
 		goto done;
 	    }
 	} else if (TkGetMenuIndex(interp,menuPtr,objv[2],0,&first) != TCL_OK){
@@ -764,7 +766,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_ENTRYCGET: {
-	int index;
+	TkSizeT index;
 	Tcl_Obj *resultPtr;
 
 	if (objc != 4) {
@@ -774,7 +776,7 @@ MenuWidgetObjCmd(
 	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index < 0) {
+	if (index == TCL_INDEX_NONE) {
 	    goto done;
 	}
 	mePtr = menuPtr->entries[index];
@@ -789,7 +791,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_ENTRYCONFIGURE: {
-	int index;
+	TkSizeT index;
 	Tcl_Obj *resultPtr;
 
 	if (objc < 3) {
@@ -799,7 +801,7 @@ MenuWidgetObjCmd(
 	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index < 0) {
+	if (index == TCL_INDEX_NONE) {
 	    goto done;
 	}
 	mePtr = menuPtr->entries[index];
@@ -830,7 +832,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_INDEX: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
@@ -839,7 +841,7 @@ MenuWidgetObjCmd(
 	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index == -1) {
+	if (index == TCL_INDEX_NONE) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
@@ -857,7 +859,7 @@ MenuWidgetObjCmd(
 	}
 	break;
     case MENU_INVOKE: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -866,14 +868,15 @@ MenuWidgetObjCmd(
 	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index < 0) {
+	if (index == TCL_INDEX_NONE) {
 	    goto done;
 	}
 	result = TkInvokeMenu(interp, menuPtr, index);
 	break;
     }
     case MENU_POST: {
-	int x, y, index = -1;
+	int x, y;
+	TkSizeT index = TCL_INDEX_NONE;
 
 	if (objc != 4 && objc != 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "x y ?index?");
@@ -908,7 +911,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_POSTCASCADE: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -918,7 +921,7 @@ MenuWidgetObjCmd(
 	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if ((index < 0) || (menuPtr->entries[index]->type != CASCADE_ENTRY)) {
+	if ((index == TCL_INDEX_NONE) || (menuPtr->entries[index]->type != CASCADE_ENTRY)) {
 	    result = TkPostSubmenu(interp, menuPtr, NULL);
 	} else {
 	    result = TkPostSubmenu(interp, menuPtr, menuPtr->entries[index]);
@@ -926,7 +929,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_TYPE: {
-	int index;
+	TkSizeT index;
 	const char *typeStr;
 
 	if (objc != 3) {
@@ -936,7 +939,7 @@ MenuWidgetObjCmd(
 	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index < 0) {
+	if (index == TCL_INDEX_NONE) {
 	    goto done;
 	}
 	if (menuPtr->entries[index]->type == TEAROFF_ENTRY) {
@@ -1001,13 +1004,13 @@ int
 TkInvokeMenu(
     Tcl_Interp *interp,		/* The interp that the menu lives in. */
     TkMenu *menuPtr,		/* The menu we are invoking. */
-    int index)			/* The zero based index of the item we are
+    TkSizeT index)			/* The zero based index of the item we are
     				 * invoking. */
 {
     int result = TCL_OK;
     TkMenuEntry *mePtr;
 
-    if (index < 0) {
+    if (index == TCL_INDEX_NONE) {
     	goto done;
     }
     mePtr = menuPtr->entries[index];
@@ -2117,7 +2120,7 @@ TkGetMenuIndex(
 				 * manual entry for valid .*/
     int lastOK,			/* Non-zero means its OK to return index just
 				 * *after* last entry. */
-    int *indexPtr)		/* Where to store converted index. */
+    TkSizeT *indexPtr)		/* Where to store converted index. */
 {
     int i;
     const char *string = Tcl_GetString(objPtr);
@@ -2134,7 +2137,7 @@ TkGetMenuIndex(
     }
 
     if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
-	*indexPtr = -1;
+	*indexPtr = TCL_INDEX_NONE;
 	goto success;
     }
 
@@ -2348,7 +2351,8 @@ MenuAddOrInsert(
     Tcl_Obj *const objv[])	/* Arguments to command: first arg is type of
 				 * entry, others are config options. */
 {
-    int type, index;
+    int type;
+    TkSizeT index;
     TkMenuEntry *mePtr;
     TkMenu *menuListPtr;
 
@@ -2359,7 +2363,7 @@ MenuAddOrInsert(
     } else {
 	index = menuPtr->numEntries;
     }
-    if (index < 0) {
+    if (index == TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\"", Tcl_GetString(indexPtr)));
 	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
@@ -2599,7 +2603,7 @@ TkActivateMenuEntry(
     register TkMenuEntry *mePtr;
     int result = TCL_OK;
 
-    if (menuPtr->active != (TkSizeT)-1) {
+    if (menuPtr->active != TCL_INDEX_NONE) {
 	mePtr = menuPtr->entries[menuPtr->active];
 
 	/*
@@ -2613,7 +2617,7 @@ TkActivateMenuEntry(
 	TkEventuallyRedrawMenu(menuPtr, menuPtr->entries[menuPtr->active]);
     }
     menuPtr->active = index;
-    if (index != (TkSizeT)-1) {
+    if (index != TCL_INDEX_NONE) {
 	mePtr = menuPtr->entries[index];
 	mePtr->state = ENTRY_ACTIVE;
 	TkEventuallyRedrawMenu(menuPtr, mePtr);
@@ -2868,14 +2872,14 @@ MenuDoXPosition(
     TkMenu *menuPtr,
     Tcl_Obj *objPtr)
 {
-    int index;
+    TkSizeT index;
 
     TkRecomputeMenu(menuPtr);
     if (TkGetMenuIndex(interp, menuPtr, objPtr, 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_ResetResult(interp);
-    if (index == -1) {
+    if (index == TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(0));
     } else {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(menuPtr->entries[index]->x));
@@ -2905,14 +2909,14 @@ MenuDoYPosition(
     TkMenu *menuPtr,
     Tcl_Obj *objPtr)
 {
-    int index;
+    TkSizeT index;
 
     TkRecomputeMenu(menuPtr);
     if (TkGetMenuIndex(interp, menuPtr, objPtr, 0, &index) != TCL_OK) {
 	goto error;
     }
     Tcl_ResetResult(interp);
-    if (index == -1) {
+    if (index == TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(0));
     } else {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(menuPtr->entries[index]->y));
@@ -2943,12 +2947,12 @@ MenuDoYPosition(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 GetIndexFromCoords(
     Tcl_Interp *interp,		/* Interpreter of menu. */
     TkMenu *menuPtr,		/* The menu we are searching. */
     const char *string,		/* The @string we are parsing. */
-    int *indexPtr)		/* The index of the item that matches. */
+    TkSizeT *indexPtr)		/* The index of the item that matches. */
 {
     int x, y, i;
     const char *p;
