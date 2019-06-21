@@ -2107,13 +2107,12 @@ MakeFilter(
 	*p = '\0';
 
     } else {
-	size_t len;
+	TkSizeT len;
 
 	if (valuePtr == NULL) {
 	    len = 0;
 	} else {
-	    (void) Tcl_GetString(valuePtr);
-	    len = valuePtr->length;
+	    (void) TkGetStringFromObj(valuePtr, &len);
 	}
 
 	/*
