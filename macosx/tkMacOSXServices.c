@@ -1,6 +1,6 @@
 /*
  * tkMacOSXServices.c --
- *
+ *\
  *	This file allows the integration of Tk and the Cocoa NSServices API.
  *
  * Copyright (c) 2010-2019 Kevin Walzer/WordTech Communications LLC.
@@ -54,7 +54,6 @@ ServicesEventProc(
     NSArray *sendTypes = [NSArray arrayWithObjects:@"NSStringPboardType",
 				  @"NSPasteboardTypeString", nil];
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:sendTypes];
-    NSUpdateDynamicServices();
     return;
 }
 
