@@ -158,7 +158,7 @@ TkMacOSXRegisterServiceWidgetObjCmd(
     ClientData cd,
     Tcl_Interp *ip,
     int objc,
-    Tcl_Obj *CONST objv[])
+    Tcl_Obj *const objv[])
 {
     /*
      * Need proper number of args.
