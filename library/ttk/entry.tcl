@@ -58,6 +58,13 @@ option add *TEntry.cursor [ttk::cursor text] widgetDefault
 #	and I'll put it back.
 #
 
+##Bindings to register with macOS Services API.
+bind T.Entry <Map> {
+    if {[tk windowingsystem] eq "aqua"} {
+    	::tk::RegisterServiceWidget %W
+    }
+}
+
 ## Clipboard events:
 #
 bind TEntry <<Cut>> 			{ ttk::entry::Cut %W }
