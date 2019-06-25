@@ -4971,7 +4971,7 @@ DumpLine(
 		TkTextEmbWindow *ewPtr = &segPtr->body.ew;
 		const char *pathname;
 
-		if (ewPtr->tkwin == (Tk_Window) NULL) {
+		if (ewPtr->tkwin == NULL) {
 		    pathname = "";
 		} else {
 		    pathname = Tk_PathName(ewPtr->tkwin);
