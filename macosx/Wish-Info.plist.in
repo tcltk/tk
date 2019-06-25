@@ -36,6 +36,19 @@
 			<string>Viewer</string>
 		</dict>
 	</array>
+ <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+     <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>foo</string>
+        </array>
+        <key>CFBundleURLName</key>
+        <string>Get Foo</string>
+    </dict>
+  </array>
 	<key>CFBundleExecutable</key>
 	<string>Wish</string>
 	<key>CFBundleGetInfoString</key>
@@ -78,5 +91,26 @@
 	<string>Wish.sdef</string>
 	<key>NSHighResolutionCapable</key>
 	<string>True</string>
+	 <key>NSServices</key>
+	 <array>
+	   <dict>
+            <key>NSMenuItem</key>
+            <dict>
+                <key>default</key>
+                <string>Wish: Display Test Data</string>
+            </dict>
+            <key>NSMessage</key>
+            <string>provideService</string>
+            <key>NSPortName</key>
+            <string>Wish</string>
+
+            <key>NSSendTypes</key>
+            <array>
+                <string>NSStringPboardType</string>
+                <string>NSPasteboardTypeString</string>
+            </array>
+        </dict>
+    </array>
+
 </dict>
 </plist>
