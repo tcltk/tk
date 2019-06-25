@@ -4257,7 +4257,7 @@ WmIconnameCmd(
 	if (wmPtr->iconName != NULL) {
 	    ckfree(wmPtr->iconName);
 	}
-	argv3 = Tcl_GetStringFromObj(objv[3], &length);
+	argv3 = TkGetStringFromObj(objv[3], &length);
 	wmPtr->iconName = ckalloc(length + 1);
 	memcpy(wmPtr->iconName, argv3, length + 1);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
