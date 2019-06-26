@@ -2682,7 +2682,7 @@ proc bgerror msg {
     global x errorInfo
     set x [list $msg $errorInfo]
 }
-test bind-30.1 {Tk_BackgroundError procedure} {
+test bind-30.1 {Tcl_BackgroundError procedure} {
     setup
     bind .b.f <Button> {error "This is a test"}
     set x none
@@ -2694,7 +2694,7 @@ test bind-30.1 {Tk_BackgroundError procedure} {
     while executing
 "error "This is a test""
     (command bound to event)}}
-test bind-30.2 {Tk_BackgroundError procedure} {
+test bind-30.2 {Tcl_BackgroundError procedure} {
     proc do {} {
 	event gen .b.f <Button>
 	event gen .b.f <ButtonRelease>
