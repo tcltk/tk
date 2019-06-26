@@ -877,7 +877,7 @@ ConfigureRestrictProc(
 	TkGenWMConfigureEvent(tkwin, Tk_X(tkwin), Tk_Y(tkwin), width, height,
 			      TK_SIZE_CHANGED | TK_MACOSX_HANDLE_EVENT_IMMEDIATELY);
     	oldProc = Tk_RestrictEvents(ConfigureRestrictProc, NULL, &oldArg);
-	while (Tk_DoOneEvent(TK_X_EVENTS|TK_DONT_WAIT)) {}
+	while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/* Now that Tk has configured all subwindows we can create the clip regions. */
@@ -889,7 +889,7 @@ ConfigureRestrictProc(
 	HIRect bounds = NSRectToCGRect([self bounds]);
 	HIShapeRef shape = HIShapeCreateWithRect(&bounds);
 	[self generateExposeEvents: shape];
-	while (Tk_DoOneEvent(TK_ALL_EVENTS|TK_DONT_WAIT)) {}
+	while (Tcl_DoOneEvent(TCL_ALL_EVENTS|TCL_DONT_WAIT)) {}
 	[w enableFlushWindow];
 	[w flushWindowIfNeeded];
 	NSEnableScreenUpdates();
