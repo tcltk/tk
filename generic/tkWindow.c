@@ -852,7 +852,7 @@ TkCreateMainWindow(
      * Create the basic TkWindow structure.
      */
 
-    tkwin = CreateTopLevelWindow(interp, (Tk_Window) NULL, baseName,
+    tkwin = CreateTopLevelWindow(interp, NULL, baseName,
 	    screenName, /* flags */ 0);
     if (tkwin == NULL) {
 	return NULL;
