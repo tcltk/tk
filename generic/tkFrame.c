@@ -826,17 +826,17 @@ FrameWidgetObjCmd(
 		}
 		c = arg[1];
 		if (((c == 'c') && (length >= 2)
-			&& (strncmp(arg, "-class", (unsigned)length) == 0))
+			&& (strncmp(arg, "-class", length) == 0))
 		    || ((c == 'c') && (length >= 3)
-			&& (strncmp(arg, "-colormap", (unsigned)length) == 0))
+			&& (strncmp(arg, "-colormap", length) == 0))
 		    || ((c == 'c') && (length >= 3)
-			&& (strncmp(arg, "-container", (unsigned)length) == 0))
+			&& (strncmp(arg, "-container", length) == 0))
 		    || ((c == 's') && (framePtr->type == TYPE_TOPLEVEL)
-			&& (strncmp(arg, "-screen", (unsigned)length) == 0))
+			&& (strncmp(arg, "-screen", length) == 0))
 		    || ((c == 'u') && (framePtr->type == TYPE_TOPLEVEL)
-			&& (strncmp(arg, "-use", (unsigned)length) == 0))
+			&& (strncmp(arg, "-use", length) == 0))
 		    || ((c == 'v')
-			&& (strncmp(arg, "-visual", (unsigned)length) == 0))) {
+			&& (strncmp(arg, "-visual", length) == 0))) {
 
 #ifdef SUPPORT_CONFIG_EMBEDDED
 		    if (c == 'u') {
