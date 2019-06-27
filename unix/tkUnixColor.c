@@ -157,7 +157,7 @@ TkpGetColor(
 	}
 	if (strlen(name) > 99) {
 	/* Don't bother to parse this. [Bug 2809525]*/
-	return (TkColor *) NULL;
+	return NULL;
     } else if (XAllocNamedColor(display, colormap, name, &screen, &color) != 0) {
 	    DeleteStressedCmap(display, colormap);
 	} else {

@@ -744,7 +744,7 @@ Tk_CanvasObjCmd(
     canvasPtr->textInfo.cursorOn = 0;
     canvasPtr->insertOnTime = 0;
     canvasPtr->insertOffTime = 0;
-    canvasPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+    canvasPtr->insertBlinkHandler = NULL;
     canvasPtr->xOrigin = canvasPtr->yOrigin = 0;
     canvasPtr->drawableXOrigin = canvasPtr->drawableYOrigin = 0;
     canvasPtr->bindingTable = NULL;
@@ -5599,7 +5599,7 @@ CanvasFocusProc(
     } else {
 	canvasPtr->textInfo.gotFocus = 0;
 	canvasPtr->textInfo.cursorOn = 0;
-	canvasPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+	canvasPtr->insertBlinkHandler = NULL;
     }
     EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.focusItemPtr);
     if (canvasPtr->highlightWidth > 0) {
