@@ -381,7 +381,7 @@ TkCanvPostscriptCmd(
 	 */
 
 	psInfo.chan = Tcl_GetChannel(interp, psInfo.channelName, &mode);
-	if (psInfo.chan == (Tcl_Channel) NULL) {
+	if (psInfo.chan == NULL) {
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
