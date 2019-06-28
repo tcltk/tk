@@ -388,14 +388,14 @@ TkpInit(
 	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath,(ClientData)NULL, (Tcl_CmdDeleteProc *)NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
 
     /*
      * Initialize the NSServices object here. Apple's docs say to do this
-     * in applicationDidFinishLaunching, but the Tcl interpreter is not 
-     * initialized until this function call. 
+     * in applicationDidFinishLaunching, but the Tcl interpreter is not
+     * initialized until this function call.
      */
-    
+
     TkMacOSXServices_Init(interp);
 
     return TCL_OK;
@@ -457,28 +457,28 @@ int TkMacOSXGetAppPath(
 		       ClientData cd,
 		       Tcl_Interp *ip,
 		       int objc,
-		       Tcl_Obj *CONST objv[])
+		       Tcl_Obj *const objv[])
 {
 
   CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
 
-  
-  /* 
-   * Convert the URL reference into a string reference. 
+
+  /*
+   * Convert the URL reference into a string reference.
    */
-  
+
   CFStringRef appPath = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
- 
-  /* 
-   * Get the system encoding method. 
+
+  /*
+   * Get the system encoding method.
    */
-  
+
   CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
- 
-  /* 
-   * Convert the string reference into a C string. 
+
+  /*
+   * Convert the string reference into a C string.
    */
-  
+
   char *path = (char *) CFStringGetCStringPtr(appPath, encodingMethod);
 
   Tcl_SetResult(ip, path, NULL);
