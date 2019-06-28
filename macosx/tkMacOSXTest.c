@@ -50,8 +50,7 @@ TkplatformtestInit(
      */
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-    Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd,
-	    (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
 #endif
 
     return TCL_OK;

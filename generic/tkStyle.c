@@ -1360,7 +1360,7 @@ Tk_GetStyle(
 		    "style \"%s\" doesn't exist", name));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, NULL);
 	}
-	return (Tk_Style) NULL;
+	return NULL;
     }
     stylePtr = Tcl_GetHashValue(entryPtr);
 

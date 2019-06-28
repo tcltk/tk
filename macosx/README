@@ -702,7 +702,7 @@ that LaunchServices is launching the correct Wish.app.  Instructions
 for doing this are provided below.
 
 The command line tool which manages the LaunchServices database has
-an amazingly unwieldy path name.  So, first, run this command: 
+an amazingly unwieldy path name.  So, first, run this command:
 
 alias lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
 
