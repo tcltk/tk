@@ -181,7 +181,7 @@ static void drawMacScrollbar(
     if (scrollPtr->vertical) {
 	thumbBounds.origin.x = troughBounds.origin.x + MIN_GAP;
 	thumbBounds.origin.y = troughBounds.origin.y + scrollPtr->sliderFirst;
-	thumbBounds.size.width = troughBounds.size.width - 2*MIN_GAP;
+	thumbBounds.size.width = troughBounds.size.width - 2*MIN_GAP + 1;
 	thumbBounds.size.height = scrollPtr->sliderLast - scrollPtr->sliderFirst;
 	inner[0] = troughBounds.origin;
 	inner[1] = CGPointMake(inner[0].x, inner[0].y + troughBounds.size.height);
