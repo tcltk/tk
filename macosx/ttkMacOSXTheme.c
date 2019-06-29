@@ -1042,7 +1042,6 @@ static void DrawDarkFocusRing(
 	{x, y + h}, {x, y + 1}, {x + w - 1, y + 1}, {x + w - 1, y + h}
     };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
-    CGRect outerRect = CGRectInset(bounds, -3, -3);
 
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
@@ -1061,7 +1060,8 @@ static void DrawDarkFocusRing(
     CGContextStrokePath(context);
     CGContextSetShouldAntialias(context, true);
     CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
-    CGPathRef path = CGPathCreateWithRoundedRect(outerRect, 4, 4, NULL);
+    CGPathRef path = CGPathCreateWithRoundedRect(CGRectInset(bounds, -3, -3),
+						 4, 4, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextAddRect(context, bounds);
@@ -1091,6 +1091,7 @@ static void DrawDarkFrame(
     };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
     CGPoint accent[2] = {{x, y + 1}, {x + w, y + 1}};
+
     switch (kind) {
     case kHIThemeFrameTextFieldSquare:
 	CGContextSaveGState(context);

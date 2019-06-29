@@ -51,7 +51,7 @@ enum {
 {
     NSWindow *eventWindow = [theEvent window];
     NSEventType eventType = [theEvent type];
-    TkWindow *winPtr, *grabWinPtr;
+    TkWindow *winPtr = NULL, *grabWinPtr;
     Tk_Window tkwin;
     NSPoint local, global;
 #if 0

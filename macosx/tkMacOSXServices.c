@@ -120,7 +120,7 @@ ServicesEventProc(
 	      userData:(NSString *)data
 		 error:(NSString **)error
 {
-    NSString *pboardString, *pboardType;
+    NSString *pboardString = nil, *pboardType = nil;
     NSArray *types = [pboard types];
     Tcl_Event *event;
 
