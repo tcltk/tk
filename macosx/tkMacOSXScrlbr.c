@@ -25,7 +25,7 @@
  * always easy to grab with the mouse).
  */
 
-#define MIN_SLIDER_LENGTH	8
+#define MIN_SLIDER_LENGTH	18
 #define MIN_GAP			4
 
 /*
@@ -161,7 +161,14 @@ TkpCreateScrollbar(
  *--------------------------------------------------------------
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
+
+/*
+ * This stand-alone drawing function is used on macOS 10.9 and newer because
+ * the HIToolbox does not draw the scrollbar thumb at the expected size on
+ * those systems.  The thumb is drawn too large, causing a mouse click on the
+ * thumb to be interpreted as a mouse click in the trough.
+ */
 
 static void drawMacScrollbar(
     TkScrollbar *scrollPtr,
@@ -170,11 +177,8 @@ static void drawMacScrollbar(
 {
     MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
     NSView *view = TkMacOSXDrawableView(macWin);
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     CGPathRef path;
     CGPoint inner[2], outer[2];
-    NSColor *troughColor, *thumbColor;
-    CGFloat *rgba;
     CGRect troughBounds = msPtr->info.bounds, thumbBounds;
     troughBounds.origin.y = [view bounds].size.height -
 	(troughBounds.origin.y + troughBounds.size.height);
@@ -296,7 +300,7 @@ TkpDisplayScrollbar(
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationNormal);
     } else {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
 
 	/*
 	 * Switch back to NSView coordinates and draw a modern scrollbar.

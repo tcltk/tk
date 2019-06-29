@@ -2347,7 +2347,8 @@ static void ThumbElementSize(
     int orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
-    *minHeight = *minWidth = 8;
+    *minHeight = 18;
+    *minWidth = 8;
 }
 
 static void ThumbElementDraw(
