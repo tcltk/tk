@@ -89,7 +89,8 @@ typedef struct ScrollbarMetrics {
 } ScrollbarMetrics;
 
 static ScrollbarMetrics metrics = {
-    15, 54, 26, 14, 14, kControlSizeNormal /* kThemeScrollBarMedium */
+    /* kThemeScrollBarMedium */
+    15, MIN_SLIDER_LENGTH, 26, 14, 14, kControlSizeNormal
 };
 
 /*
@@ -182,25 +183,6 @@ static void drawMacScrollbar(
     CGRect troughBounds = msPtr->info.bounds, thumbBounds;
     troughBounds.origin.y = [view bounds].size.height -
 	(troughBounds.origin.y + troughBounds.size.height);
-    if (scrollPtr->vertical) {
-	thumbBounds.origin.x = troughBounds.origin.x + MIN_GAP;
-	thumbBounds.origin.y = troughBounds.origin.y + scrollPtr->sliderFirst;
-	thumbBounds.size.width = troughBounds.size.width - 2*MIN_GAP + 1;
-	thumbBounds.size.height = scrollPtr->sliderLast - scrollPtr->sliderFirst;
-	inner[0] = troughBounds.origin;
-	inner[1] = CGPointMake(inner[0].x, inner[0].y + troughBounds.size.height);
-	outer[0] = CGPointMake(inner[0].x + troughBounds.size.width - 1, inner[0].y);
-	outer[1] = CGPointMake(outer[0].x, inner[1].y);
-    } else {
-	thumbBounds.origin.x = troughBounds.origin.x + scrollPtr->sliderFirst + MIN_GAP;
-	thumbBounds.origin.y = troughBounds.origin.x + MIN_GAP;
-	thumbBounds.size.width = scrollPtr->sliderLast - scrollPtr->sliderFirst;
-	thumbBounds.size.height -= troughBounds.size.height - 2*MIN_GAP;
-	inner[0] = troughBounds.origin;
-	inner[1] = CGPointMake(inner[0].x + troughBounds.size.width, inner[0].y);
-	outer[0] = CGPointMake(inner[0].x, inner[0].y + troughBounds.size.height);
-	outer[1] = CGPointMake(inner[1].x, outer[0].y);
-    }
     CGContextSetShouldAntialias(context, false);
     CGContextSetGrayFillColor(context, 250.0 / 255, 1.0);
     CGContextFillRect(context, troughBounds);
@@ -208,17 +190,43 @@ static void drawMacScrollbar(
     CGContextStrokeLineSegments(context, inner, 2);
     CGContextSetGrayStrokeColor(context, 238.0 / 255, 1.0);
     CGContextStrokeLineSegments(context, outer, 2);
-    path = CGPathCreateWithRoundedRect(thumbBounds, 4, 4, NULL);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    if (msPtr->info.trackInfo.scrollbar.pressState != 0) {
-	CGContextSetGrayFillColor(context, 133.0 / 255, 1.0);
-    } else {
-	CGContextSetGrayFillColor(context, 200.0 / 255, 1.0);
+
+    /*
+     * Do not display the thumb unless scrolling is possible.
+     */
+    
+    if (scrollPtr->firstFraction > 0.0 || scrollPtr->lastFraction < 1.0) {
+	if (scrollPtr->vertical) {
+	    thumbBounds.origin.x = troughBounds.origin.x + MIN_GAP;
+	    thumbBounds.origin.y = troughBounds.origin.y + scrollPtr->sliderFirst;
+	    thumbBounds.size.width = troughBounds.size.width - 2*MIN_GAP + 1;
+	    thumbBounds.size.height = scrollPtr->sliderLast - scrollPtr->sliderFirst;
+	    inner[0] = troughBounds.origin;
+	    inner[1] = CGPointMake(inner[0].x, inner[0].y + troughBounds.size.height);
+	    outer[0] = CGPointMake(inner[0].x + troughBounds.size.width - 1, inner[0].y);
+	    outer[1] = CGPointMake(outer[0].x, inner[1].y);
+	} else {
+	    thumbBounds.origin.x = troughBounds.origin.x + scrollPtr->sliderFirst + MIN_GAP;
+	    thumbBounds.origin.y = troughBounds.origin.y + MIN_GAP;
+	    thumbBounds.size.width = scrollPtr->sliderLast - scrollPtr->sliderFirst;
+	    thumbBounds.size.height = troughBounds.size.height - 2*MIN_GAP + 1;
+	    inner[0] = troughBounds.origin;
+	    inner[1] = CGPointMake(inner[0].x + troughBounds.size.width, inner[0].y);
+	    outer[0] = CGPointMake(inner[0].x, inner[0].y + troughBounds.size.height);
+	    outer[1] = CGPointMake(inner[1].x, outer[0].y);
+	}
+	path = CGPathCreateWithRoundedRect(thumbBounds, 4, 4, NULL);
+	CGContextBeginPath(context);
+	CGContextAddPath(context, path);
+	if (msPtr->info.trackInfo.scrollbar.pressState != 0) {
+	    CGContextSetGrayFillColor(context, 133.0 / 255, 1.0);
+	} else {
+	    CGContextSetGrayFillColor(context, 200.0 / 255, 1.0);
+	}
+	CGContextSetShouldAntialias(context, true);
+	CGContextFillPath(context);
+	CFRelease(path);
     }
-    CGContextSetShouldAntialias(context, true);
-    CGContextFillPath(context);
-    CFRelease(path);
 }
 #endif
 	       
