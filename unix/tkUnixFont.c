@@ -316,6 +316,7 @@ TkpFontPkgInit(
     Tcl_Encoding ucs2;
 
     if (tsdPtr->controlFamily.encoding == NULL) {
+	Tcl_EncodingType type;
 	type.encodingName = "X11ControlChars";
 	type.toUtfProc = ControlUtfProc;
 	type.fromUtfProc = ControlUtfProc;
