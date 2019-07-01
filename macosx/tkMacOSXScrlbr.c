@@ -179,10 +179,34 @@ static void drawMacScrollbar(
     MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
     NSView *view = TkMacOSXDrawableView(macWin);
     CGPathRef path;
-    CGPoint inner[2], outer[2];
-    CGRect troughBounds = msPtr->info.bounds, thumbBounds;
+    CGPoint inner[2], outer[2], thumbOrigin;
+    CGSize thumbSize;
+    CGRect troughBounds = msPtr->info.bounds;
     troughBounds.origin.y = [view bounds].size.height -
 	(troughBounds.origin.y + troughBounds.size.height);
+    if (scrollPtr->vertical) {
+	thumbOrigin.x = troughBounds.origin.x + MIN_GAP;
+	thumbOrigin.y = troughBounds.origin.y + scrollPtr->sliderFirst;
+	thumbSize.width = troughBounds.size.width - 2*MIN_GAP + 1;
+	thumbSize.height = scrollPtr->sliderLast - scrollPtr->sliderFirst;
+	inner[0] = troughBounds.origin;
+	inner[1] = CGPointMake(inner[0].x,
+			       inner[0].y + troughBounds.size.height);
+	outer[0] = CGPointMake(inner[0].x + troughBounds.size.width - 1,
+			       inner[0].y);
+	outer[1] = CGPointMake(outer[0].x, inner[1].y);
+    } else {
+	thumbOrigin.x = troughBounds.origin.x + scrollPtr->sliderFirst;
+	thumbOrigin.y = troughBounds.origin.y + MIN_GAP;
+	thumbSize.width = scrollPtr->sliderLast - scrollPtr->sliderFirst;
+	thumbSize.height = troughBounds.size.height - 2*MIN_GAP + 1;
+	inner[0] = troughBounds.origin;
+	inner[1] = CGPointMake(inner[0].x + troughBounds.size.width,
+			       inner[0].y + 1);
+	outer[0] = CGPointMake(inner[0].x,
+			       inner[0].y + troughBounds.size.height);
+	outer[1] = CGPointMake(inner[1].x, outer[0].y);
+    }
     CGContextSetShouldAntialias(context, false);
     CGContextSetGrayFillColor(context, 250.0 / 255, 1.0);
     CGContextFillRect(context, troughBounds);
@@ -196,25 +220,7 @@ static void drawMacScrollbar(
      */
     
     if (scrollPtr->firstFraction > 0.0 || scrollPtr->lastFraction < 1.0) {
-	if (scrollPtr->vertical) {
-	    thumbBounds.origin.x = troughBounds.origin.x + MIN_GAP;
-	    thumbBounds.origin.y = troughBounds.origin.y + scrollPtr->sliderFirst;
-	    thumbBounds.size.width = troughBounds.size.width - 2*MIN_GAP + 1;
-	    thumbBounds.size.height = scrollPtr->sliderLast - scrollPtr->sliderFirst;
-	    inner[0] = troughBounds.origin;
-	    inner[1] = CGPointMake(inner[0].x, inner[0].y + troughBounds.size.height);
-	    outer[0] = CGPointMake(inner[0].x + troughBounds.size.width - 1, inner[0].y);
-	    outer[1] = CGPointMake(outer[0].x, inner[1].y);
-	} else {
-	    thumbBounds.origin.x = troughBounds.origin.x + scrollPtr->sliderFirst + MIN_GAP;
-	    thumbBounds.origin.y = troughBounds.origin.y + MIN_GAP;
-	    thumbBounds.size.width = scrollPtr->sliderLast - scrollPtr->sliderFirst;
-	    thumbBounds.size.height = troughBounds.size.height - 2*MIN_GAP + 1;
-	    inner[0] = troughBounds.origin;
-	    inner[1] = CGPointMake(inner[0].x + troughBounds.size.width, inner[0].y);
-	    outer[0] = CGPointMake(inner[0].x, inner[0].y + troughBounds.size.height);
-	    outer[1] = CGPointMake(inner[1].x, outer[0].y);
-	}
+	CGRect thumbBounds = {thumbOrigin, thumbSize};
 	path = CGPathCreateWithRoundedRect(thumbBounds, 4, 4, NULL);
 	CGContextBeginPath(context);
 	CGContextAddPath(context, path);
