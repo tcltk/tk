@@ -259,7 +259,8 @@ unsigned short releaseCode;
 @implementation TKContentView
 
 -(id)init {
-    if (self = [super init]) {
+    self = [super init];
+    if (self) {
         _needsRedisplay = NO;
     }
     return self;

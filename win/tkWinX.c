@@ -1548,7 +1548,10 @@ Tcl_Encoding
 TkWinGetUnicodeEncoding(void)
 {
     if (unicodeEncoding == NULL) {
-	unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
+	unicodeEncoding = Tcl_GetEncoding(NULL, "utf-16");
+	if (unicodeEncoding == NULL) {
+	    unicodeEncoding = Tcl_GetEncoding(NULL, "unicode");
+	}
     }
     return unicodeEncoding;
 }
