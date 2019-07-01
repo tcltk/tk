@@ -13,6 +13,8 @@
 tk::mac \- Access Mac-Specific Functionality on OS X from Tk
 .SH SYNOPSIS
 .nf
+\fB::tk::mac::DoScriptFile\fR
+\fB::tk::mac::DoScriptText\fR
 \fB::tk::mac::ShowPreferences\fR
 \fB::tk::mac::OpenApplication\fR
 \fB::tk::mac::ReopenApplication\fR
@@ -43,6 +45,20 @@ The Aqua/Mac OS X application environment defines a number of additional
 events that applications should respond to. These events are mapped by Tk to
 calls to commands in the \fB::tk::mac\fR namespace; unless otherwise noted, if
 the command is absent, no action will be taken.
+.TP
+\fB::tk::mac::DoScriptFile\fR
+.
+The default Apple Event handler for AEDoScriptHandler. This command,
+if defined, executes a Tcl file when an AppleScript sends a
+.QW "do script"
+command to Wish with a file path as a parameter. 
+.TP
+\fB::tk::mac::DoScriptText\fR
+.
+The default Apple Event handler for AEDoScriptHandler. This command,
+if defined, executes Tcl code when an AppleScript sends a
+.QW "do script"
+command to Wish with Tcl code or a Tcl procedure as a parameter.
 .TP
 \fB::tk::mac::ShowPreferences\fR
 .
