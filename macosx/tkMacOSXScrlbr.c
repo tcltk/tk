@@ -18,8 +18,6 @@
 #include "tkScrollbar.h"
 #include "tkMacOSXPrivate.h"
 
-#define MIN_SCROLLBAR_VALUE		0
-
 /*
  * Minimum slider length, in pixels (designed to make sure that the slider is
  * always easy to grab with the mouse).
@@ -601,7 +599,7 @@ UpdateControlValues(
     msPtr->info.bounds = contrlRect;
 
     width = contrlRect.size.width;
-    height = contrlRect.size.height;
+    height = contrlRect.size.height - scrollPtr->arrowLength;
 
     /*
      * Ensure we set scrollbar control bounds only once all size adjustments
@@ -625,10 +623,9 @@ UpdateControlValues(
      * the view area.
      */
 
-    double maximum = 100, factor = RangeToFactor(maximum);
-
+    double factor = RangeToFactor(100.0);
     dViewSize = (scrollPtr->lastFraction - scrollPtr->firstFraction) * factor;
-    msPtr->info.max = MIN_SCROLLBAR_VALUE + factor - dViewSize;
+    msPtr->info.max = factor - dViewSize;
     msPtr->info.trackInfo.scrollbar.viewsize = dViewSize;
     if (scrollPtr->vertical) {
 	if (SNOW_LEOPARD_STYLE) {
@@ -638,8 +635,7 @@ UpdateControlValues(
 		    factor * scrollPtr->firstFraction;
 	}
     } else {
-	msPtr->info.value = MIN_SCROLLBAR_VALUE +
-		factor * scrollPtr->firstFraction;
+	msPtr->info.value = factor * scrollPtr->firstFraction;
     }
 
     if ((scrollPtr->firstFraction <= 0.0 && scrollPtr->lastFraction >= 1.0)
