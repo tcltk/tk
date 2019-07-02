@@ -96,7 +96,7 @@ static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 /*
  * The following structure defines the implementation of the "pixel" Tcl
  * object, used for measuring distances. The pixel object remembers its
- * initial display-independant settings.
+ * initial display-independent settings.
  */
 
 static const Tcl_ObjType pixelObjType = {
@@ -110,7 +110,7 @@ static const Tcl_ObjType pixelObjType = {
 /*
  * The following structure defines the implementation of the "pixel" Tcl
  * object, used for measuring distances. The pixel object remembers its
- * initial display-independant settings.
+ * initial display-independent settings.
  */
 
 static const Tcl_ObjType mmObjType = {
