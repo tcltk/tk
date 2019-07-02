@@ -567,7 +567,7 @@ If a virtual-root window manager is being used then the substituted
 values are the corresponding x-coordinate and y-coordinate in the virtual root.
 Valid only for
 \fBButtonPress\fR, \fBButtonRelease\fR, \fBKeyPress\fR, \fBKeyRelease\fR,
-and \fBMotion\fR events.
+\fBMotion\fR, \fBEnter\fR and \fBLeave\fR events.
 Same meaning as \fB%x\fR and \fB%y\fR, except relative to the (virtual) root
 window.
 .LP
