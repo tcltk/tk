@@ -4371,7 +4371,7 @@ WmIconphotoCmd(
 	iconInfo.fIcon = TRUE;
 
 	/*
-	 * Create device-independant color bitmap.
+	 * Create device-independent color bitmap.
 	 */
 
 	ZeroMemory(&bmInfo, sizeof bmInfo);

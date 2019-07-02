@@ -1,7 +1,7 @@
 /*
  * tkWinFont.c --
  *
- *	Contains the Windows implementation of the platform-independant font
+ *	Contains the Windows implementation of the platform-independent font
  *	package interface.
  *
  * Copyright (c) 1994 Software Research Associates, Inc.
