@@ -316,14 +316,8 @@ TkpFontPkgInit(
     Tcl_Encoding ucs2;
 
     if (tsdPtr->controlFamily.encoding == NULL) {
-	Tcl_EncodingType type;
-	type.encodingName = "X11ControlChars";
-	type.toUtfProc = ControlUtfProc;
-	type.fromUtfProc = ControlUtfProc;
-	type.freeProc = NULL;
-	type.clientData = NULL;
-	type.nullSize = 0;
 
+	Tcl_EncodingType type = {"X11ControlChars", ControlUtfProc, ControlUtfProc, NULL, NULL, 0};
 	tsdPtr->controlFamily.refCount = 2;
 	tsdPtr->controlFamily.encoding = Tcl_CreateEncoding(&type);
 	tsdPtr->controlFamily.isTwoByteFont = 0;
@@ -342,8 +336,8 @@ TkpFontPkgInit(
 
 	ucs2 = Tcl_GetEncoding(NULL, "ucs-2be");
 	if (ucs2 == NULL) {
-	    Tcl_EncodingType type = {"ucs-2be", Ucs2beToUtfProc, UtfToUcs2beProc, NULL, NULL, 2};
-	    Tcl_CreateEncoding(&type);
+	    Tcl_EncodingType ucs2type = {"ucs-2be", Ucs2beToUtfProc, UtfToUcs2beProc, NULL, NULL, 2};
+	    Tcl_CreateEncoding(&ucs2type);
 	} else {
 	    Tcl_FreeEncoding(ucs2);
 	}
