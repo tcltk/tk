@@ -13,7 +13,7 @@
 #include "tkWinInt.h"
 #include "tkBusy.h"
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int initialized;		/* 0 means table below needs initializing. */
     Tcl_HashTable windowTable;  /* The windowTable maps from HWND to Tk_Window
 				 * handles. */
