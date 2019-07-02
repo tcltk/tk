@@ -35,7 +35,7 @@ static const unsigned int buttonMasks[] = {
 };
 #define ButtonMask(b) (buttonMasks[(b)-Button1])
 
-typedef struct ThreadSpecificData {
+typedef struct {
     TkWindow *grabWinPtr;	/* Window that defines the top of the grab
 				 * tree in a global grab. */
     int lastState;		/* Last known state flags. */

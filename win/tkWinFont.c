@@ -168,7 +168,7 @@ static const TkStateMap systemMap[] = {
     {-1,		    NULL}
 };
 
-typedef struct ThreadSpecificData {
+typedef struct {
     FontFamily *fontFamilyList; /* The list of font families that are
 				 * currently loaded. As screen fonts are
 				 * loaded, this list grows to hold information
