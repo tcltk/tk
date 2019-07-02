@@ -44,7 +44,7 @@
 #define BFFM_VALIDATEFAILED 4
 #endif /* BFFM_VALIDATEFAILED */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int debugFlag;		/* Flags whether we should output debugging
 				 * information while displaying a builtin
 				 * dialog. */

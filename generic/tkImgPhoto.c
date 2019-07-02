@@ -131,7 +131,7 @@ Tk_ImageType tkPhotoImageType = {
     NULL
 };
 
-typedef struct ThreadSpecificData {
+typedef struct {
     Tk_PhotoImageFormat *formatList;
 				/* Pointer to the first in the list of known
 				 * photo image formats.*/

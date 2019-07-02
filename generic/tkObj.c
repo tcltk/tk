@@ -47,7 +47,7 @@ typedef struct PixelRep {
  * thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     const Tcl_ObjType *doubleTypePtr;
     const Tcl_ObjType *intTypePtr;
 } ThreadSpecificData;
