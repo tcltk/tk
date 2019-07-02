@@ -1912,7 +1912,7 @@ ResolveConstraints(
     GridLayout *layoutPtr;	/* Temporary layout structure. */
     int requiredSize;		/* The natural size of the grid (pixels).
 				 * This is the minimum size needed to
-				 * accomodate all of the slaves at their
+				 * accommodate all of the slaves at their
 				 * requested sizes. */
     int offset;			/* The pixel offset of the right edge of the
 				 * current slot from the beginning of the
@@ -2485,7 +2485,7 @@ GetGrid(
  * Side effects:
  *	The width and height arguments are filled in the master data
  *	structure. Additional space is allocated for the constraints to
- *	accomodate the offsets.
+ *	accommodate the offsets.
  *
  *----------------------------------------------------------------------
  */
