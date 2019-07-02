@@ -31,7 +31,7 @@
  * the option tables that have been created for a thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int initialized;		/* 0 means table below needs initializing. */
     Tcl_HashTable hashTable;
 } ThreadSpecificData;

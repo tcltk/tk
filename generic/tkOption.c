@@ -176,7 +176,7 @@ typedef struct StackLevel {
 				 * of a level. */
 } StackLevel;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int initialized;		/* 0 means the ThreadSpecific Data structure
 				 * for the current thread needs to be
 				 * initialized. */

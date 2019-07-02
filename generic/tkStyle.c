@@ -98,7 +98,7 @@ typedef struct Element {
  * Thread-local data.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int nbInit;			/* Number of calls to the init proc. */
     Tcl_HashTable engineTable;	/* Map a name to a style engine. Keys are
 				 * strings, values are Tk_StyleEngine

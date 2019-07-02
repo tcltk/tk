@@ -1015,7 +1015,7 @@ TkWmDeadWindow(
 	 */
 
 	if (winPtr->parentPtr) {
-	    while (Tcl_DoOneEvent(TK_WINDOW_EVENTS|TK_DONT_WAIT)) {}
+	    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
 	}
 	[NSApp _resetAutoreleasePool];
 #if DEBUG_ZOMBIES > 0
