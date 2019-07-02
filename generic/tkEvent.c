@@ -139,7 +139,7 @@ typedef struct ExitHandler {
  * storage for the current thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int handlersActive;		/* The following variable has a non-zero value
 				 * when a handler is active. */
     InProgress *pendingPtr;	/* Topmost search in progress, or NULL if

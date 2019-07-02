@@ -367,7 +367,7 @@ static const Tk_GeomMgr wmMgrType = {
     NULL,			/* lostSlaveProc */
 };
 
-typedef struct ThreadSpecificData {
+typedef struct {
     HPALETTE systemPalette;	/* System palette; refers to the currently
 				 * installed foreground logical palette. */
     TkWindow *createWindow;	/* Window that is being constructed. This

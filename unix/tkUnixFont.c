@@ -153,7 +153,7 @@ typedef struct FontAttributes {
     TkXLFDAttributes xa;
 } FontAttributes;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     FontFamily *fontFamilyList; /* The list of font families that are
 				 * currently loaded. As screen fonts are
 				 * loaded, this list grows to hold information
