@@ -4971,7 +4971,7 @@ DumpLine(
 		TkTextEmbWindow *ewPtr = &segPtr->body.ew;
 		const char *pathname;
 
-		if (ewPtr->tkwin == (Tk_Window) NULL) {
+		if (ewPtr->tkwin == NULL) {
 		    pathname = "";
 		} else {
 		    pathname = Tk_PathName(ewPtr->tkwin);
@@ -6031,7 +6031,7 @@ SearchCore(
 		     */
 
 		    p = startOfLine + lastOffset - firstNewLine - 1;
-		    if (strncmp(p, pattern, (unsigned) firstNewLine + 1)) {
+		    if (strncmp(p, pattern, firstNewLine + 1)) {
 			/*
 			 * No match.
 			 */

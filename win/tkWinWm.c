@@ -367,7 +367,7 @@ static const Tk_GeomMgr wmMgrType = {
     NULL,			/* lostSlaveProc */
 };
 
-typedef struct ThreadSpecificData {
+typedef struct {
     HPALETTE systemPalette;	/* System palette; refers to the currently
 				 * installed foreground logical palette. */
     TkWindow *createWindow;	/* Window that is being constructed. This
@@ -2803,7 +2803,7 @@ Tk_WmObjCmd(
 	WMOPT_WITHDRAW
     };
     int index;
-    size_t length;
+    TkSizeT length;
     const char *argv1;
     TkWindow *winPtr, **winPtrPtr = &winPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -2814,8 +2814,7 @@ Tk_WmObjCmd(
 	return TCL_ERROR;
     }
 
-    argv1 = Tcl_GetString(objv[1]);
-    length = objv[1]->length;
+    argv1 = TkGetStringFromObj(objv[1], &length);
     if ((argv1[0] == 't') && !strncmp(argv1, "tracing", length)
 	    && (length >= 3)) {
 	int wmTracing;
@@ -3032,7 +3031,7 @@ WmAttributesCmd(
     LONG style, exStyle, styleBit, *stylePtr = NULL;
     const char *string;
     int i, boolean;
-    size_t length;
+    TkSizeT length;
     int config_fullscreen = 0, updatewrapper = 0;
     int fullscreen_attr_changed = 0, fullscreen_attr = 0;
 
@@ -3079,8 +3078,7 @@ WmAttributesCmd(
 	return TCL_OK;
     }
     for (i = 3; i < objc; i += 2) {
-	string = Tcl_GetString(objv[i]);
-	length = objv[i]->length;
+	string = TkGetStringFromObj(objv[i], &length);
 	if ((length < 2) || (string[0] != '-')) {
 	    goto configArgs;
 	}
@@ -3148,9 +3146,8 @@ WmAttributesCmd(
 		    }
 		    wmPtr->alpha = dval;
 		} else {			/* -transparentcolor */
-		    const char *crefstr = Tcl_GetString(objv[i+1]);
+		    const char *crefstr = TkGetStringFromObj(objv[i+1], &length);
 
-		    length = objv[i+1]->length;
 		    if (length == 0) {
 			/* reset to no transparent color */
 			if (wmPtr->crefObj) {
@@ -3328,7 +3325,7 @@ WmClientCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    size_t length;
+    TkSizeT length;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name?");
@@ -3341,8 +3338,7 @@ WmClientCmd(
 	}
 	return TCL_OK;
     }
-    argv3 = Tcl_GetString(objv[3]);
-    length = objv[3]->length;
+    argv3 = TkGetStringFromObj(objv[3], &length);
     if (argv3[0] == 0) {
 	if (wmPtr->clientMachine != NULL) {
 	    ckfree(wmPtr->clientMachine);
@@ -3928,7 +3924,7 @@ WmGroupCmd(
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window tkwin2;
     const char *argv3;
-    size_t length;
+    TkSizeT length;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?pathName?");
@@ -3940,8 +3936,7 @@ WmGroupCmd(
 	}
 	return TCL_OK;
     }
-    argv3 = Tcl_GetString(objv[3]);
-    length = objv[3]->length;
+    argv3 = TkGetStringFromObj(objv[3], &length);
     if (*argv3 == '\0') {
 	wmPtr->hints.flags &= ~WindowGroupHint;
 	if (wmPtr->leaderName != NULL) {
@@ -4250,7 +4245,7 @@ WmIconnameCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    size_t length;
+    TkSizeT length;
 
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newName?");
@@ -4264,8 +4259,7 @@ WmIconnameCmd(
 	if (wmPtr->iconName != NULL) {
 	    ckfree(wmPtr->iconName);
 	}
-	argv3 = Tcl_GetString(objv[3]);
-	length = objv[3]->length;
+	argv3 = TkGetStringFromObj(objv[3], &length);
 	wmPtr->iconName = ckalloc(length + 1);
 	memcpy(wmPtr->iconName, argv3, length + 1);
 	if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -4373,7 +4367,7 @@ WmIconphotoCmd(
 	iconInfo.fIcon = TRUE;
 
 	/*
-	 * Create device-independant color bitmap.
+	 * Create device-independent color bitmap.
 	 */
 
 	ZeroMemory(&bmInfo, sizeof bmInfo);
@@ -4959,7 +4953,7 @@ WmProtocolCmd(
     register ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
     const char *cmd;
-    size_t cmdLength;
+    TkSizeT cmdLength;
     Tcl_Obj *resultObj;
 
     if ((objc < 3) || (objc > 5)) {
@@ -5014,8 +5008,7 @@ WmProtocolCmd(
 	    break;
 	}
     }
-    cmd = Tcl_GetString(objv[4]);
-    cmdLength = objv[4]->length;
+    cmd = TkGetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
 	protPtr = ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
@@ -5453,7 +5446,7 @@ WmTitleCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    size_t length;
+    TkSizeT length;
     HWND wrapper;
 
     if (objc > 4) {
@@ -5487,8 +5480,7 @@ WmTitleCmd(
 	if (wmPtr->title != NULL) {
 	    ckfree(wmPtr->title);
 	}
-	argv3 = Tcl_GetString(objv[3]);
-	length = objv[3]->length;
+	argv3 = TkGetStringFromObj(objv[3], &length);
 	wmPtr->title = ckalloc(length + 1);
 	memcpy(wmPtr->title, argv3, length + 1);
 

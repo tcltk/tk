@@ -1388,13 +1388,13 @@ GetTextIndex(
 
     c = string[0];
 
-    if ((c == 'e') && (strncmp(string, "end", (unsigned) length) == 0)) {
+    if ((c == 'e') && (strncmp(string, "end", length) == 0)) {
 	*indexPtr = textPtr->numChars;
     } else if ((c == 'i')
-	    && (strncmp(string, "insert", (unsigned) length) == 0)) {
+	    && (strncmp(string, "insert", length) == 0)) {
 	*indexPtr = textPtr->insertPos;
     } else if ((c == 's') && (length >= 5)
-	    && (strncmp(string, "sel.first", (unsigned) length) == 0)) {
+	    && (strncmp(string, "sel.first", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", -1));
@@ -1403,7 +1403,7 @@ GetTextIndex(
 	}
 	*indexPtr = textInfoPtr->selectFirst;
     } else if ((c == 's') && (length >= 5)
-	    && (strncmp(string, "sel.last", (unsigned) length) == 0)) {
+	    && (strncmp(string, "sel.last", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", -1));

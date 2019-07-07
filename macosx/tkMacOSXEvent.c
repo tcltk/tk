@@ -34,7 +34,7 @@ enum {
     NSInteger	    subtype;
 
     switch ((NSInteger)type) {
-    case NSAppKitDefined:
+    case NSEventTypeAppKitDefined:
         subtype = [theEvent subtype];
 
 	switch (subtype) {

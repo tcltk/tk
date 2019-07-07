@@ -85,7 +85,7 @@ static int indicatorDimensions[2];
 
 static BOOL showMenuAccelerators;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int inPostMenu;		/* We cannot be re-entrant like X Windows. */
     WORD lastCommandID;		/* The last command ID we allocated. */
     HWND menuHWND;		/* A window to service popup-menu messages

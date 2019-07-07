@@ -115,9 +115,10 @@
  * Macro abstracting use of TkMacOSXGetNamedSymbol to init named symbols.
  */
 
+#define UNINITIALISED_SYMBOL	((void*)(-1L))
 #define TkMacOSXInitNamedSymbol(module, ret, symbol, ...) \
-    static ret (* symbol)(__VA_ARGS__) = (void*)(-1L); \
-    if (symbol == (void*)(-1L)) { \
+    static ret (* symbol)(__VA_ARGS__) = UNINITIALISED_SYMBOL; \
+    if (symbol == UNINITIALISED_SYMBOL) { \
 	symbol = TkMacOSXGetNamedSymbol(STRINGIFY(module), \
 		STRINGIFY(symbol)); \
     }
@@ -341,10 +342,7 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
     Bool _needsRedisplay;
-#endif
 }
 @property Bool needsRedisplay;
 @end
@@ -430,9 +428,7 @@ VISIBILITY_HIDDEN
 @end
 
 #endif /* _TKMACPRIV */
-
-int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]);
-
+
 /*
  * Local Variables:
  * mode: objc

@@ -50,7 +50,7 @@ typedef struct {
  * the information isn't retrievable from the GC.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     Region clipRegion;		/* The clipping region, or None. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;

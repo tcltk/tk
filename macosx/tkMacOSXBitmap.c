@@ -334,7 +334,7 @@ TkpGetNativeAppBitmap(
 		CGContextConcatCTM(dc.context, t);
 		[NSGraphicsContext saveGraphicsState];
 		[NSGraphicsContext setCurrentContext:[NSGraphicsContext
-			graphicsContextWithGraphicsPort:dc.context flipped:NO]];
+			graphicsContextWithCGContext:dc.context flipped:NO]];
 		[image drawAtPoint:NSZeroPoint fromRect:NSZeroRect
 			operation:NSCompositeCopy fraction:1.0];
 		[NSGraphicsContext restoreGraphicsState];

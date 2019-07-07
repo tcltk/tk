@@ -63,7 +63,7 @@ enum {
  * widget classes.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     BITMAPINFOHEADER *boxesPtr;	/* Information about the bitmap. */
     DWORD *boxesPalette;	/* Pointer to color palette. */
     LPSTR boxesBits;		/* Pointer to bitmap data. */

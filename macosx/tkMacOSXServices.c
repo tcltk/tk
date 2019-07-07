@@ -1,6 +1,6 @@
 /*
  * tkMacOSXServices.c --
- *
+ *\
  *	This file allows the integration of Tk and the Cocoa NSServices API.
  *
  * Copyright (c) 2010-2019 Kevin Walzer/WordTech Communications LLC.
@@ -54,7 +54,6 @@ ServicesEventProc(
     NSArray *sendTypes = [NSArray arrayWithObjects:@"NSStringPboardType",
 				  @"NSPasteboardTypeString", nil];
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:sendTypes];
-    NSUpdateDynamicServices();
     return;
 }
 
@@ -121,7 +120,7 @@ ServicesEventProc(
 	      userData:(NSString *)data
 		 error:(NSString **)error
 {
-    NSString *pboardString, *pboardType;
+    NSString *pboardString = nil, *pboardType = nil;
     NSArray *types = [pboard types];
     Tcl_Event *event;
 
@@ -157,16 +156,16 @@ ServicesEventProc(
 int
 TkMacOSXRegisterServiceWidgetObjCmd(
     ClientData cd,
-    Tcl_Interp *ip,
+    Tcl_Interp *interp,
     int objc,
-    Tcl_Obj *CONST objv[])
+    Tcl_Obj *const objv[])
 {
     /*
      * Need proper number of args.
      */
 
     if (objc != 2) {
-	Tcl_WrongNumArgs(ip, 1, objv, "path?");
+	Tcl_WrongNumArgs(interp, 1, objv, "path?");
 	return TCL_ERROR;
     }
 
@@ -176,8 +175,8 @@ TkMacOSXRegisterServiceWidgetObjCmd(
 
     Rect bounds;
     NSRect frame;
-    Tk_Window path =
-	    Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+    Tk_Window path = Tk_NameToWindow(interp,
+	    Tcl_GetString(objv[1]), Tk_MainWindow(interp));
 
     if (path == NULL) {
 	return TCL_ERROR;

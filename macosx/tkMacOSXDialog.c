@@ -16,13 +16,6 @@
 #include "tkFileFilter.h"
 #include "tkMacOSXConstants.h"
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
-#define modalOK     NSOKButton
-#define modalCancel NSCancelButton
-#else
-#define modalOK     NSModalResponseOK
-#define modalCancel NSModalResponseCancel
-#endif // MAC_OS_X_VERSION_MIN_REQUIRED < 1090
 #define modalOther  -1
 #define modalError  -2
 
@@ -202,7 +195,7 @@ getFileURL(
 {
     FilePanelCallbackInfo *callbackInfo = contextInfo;
 
-    if (returnCode == modalOK) {
+    if (returnCode == NSModalResponseOK) {
 	Tcl_Obj *resultObj;
 
 	if (callbackInfo->multiple) {
@@ -230,7 +223,7 @@ getFileURL(
 	} else {
 	    Tcl_SetObjResult(callbackInfo->interp, resultObj);
 	}
-    } else if (returnCode == modalCancel) {
+    } else if (returnCode == NSModalResponseCancel) {
 	Tcl_ResetResult(callbackInfo->interp);
     }
     if (panel == [NSApp modalWindow]) {
@@ -411,7 +404,7 @@ Tk_ChooseColorObjCmd(
 	[colorPanel setColor:initialColor];
     }
     returnCode = [NSApp runModalForWindow:colorPanel];
-    if (returnCode == modalOK) {
+    if (returnCode == NSModalResponseOK) {
 	color = [[colorPanel color] colorUsingColorSpace:
 		[NSColorSpace deviceRGBColorSpace]];
 	numberOfComponents = [color numberOfComponents];
@@ -810,7 +803,7 @@ Tk_GetOpenFileObjCmd(
 	[parent makeKeyWindow];
     }
 
-    if ((typeVariablePtr && (modalReturnCode == NSOKButton))
+    if ((typeVariablePtr && (modalReturnCode == NSModalResponseOK))
 	    && filterInfo.doFileTypes) {
 	/*
 	 * The -typevariable must be set to the selected file type, if the
@@ -1122,7 +1115,7 @@ Tk_GetSaveFileObjCmd(
 	[parent makeKeyWindow];
     }
 
-    if (typeVariablePtr && (modalReturnCode == NSOKButton)
+    if (typeVariablePtr && (modalReturnCode == NSModalResponseOK)
 	    && filterInfo.doFileTypes) {
 	/*
 	 * The -typevariable must be set to the selected file type, if the
