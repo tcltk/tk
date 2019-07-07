@@ -25,21 +25,23 @@
  * of constants.
  */
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
-#define kCTFontDefaultOrientation kCTFontOrientationDefault
-#define kCTFontVerticalOrientation kCTFontOrientationVertical
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
+#define kCTFontOrientationDefault kCTFontDefaultOrientation
+#define kCTFontOrientationVertical kCTFontVerticalOrientation
+#define NSModalResponseCancel NSCancelButton
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
-#define NSOKButton NSModalResponseOK
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
+#define NSModalResponseOK NSOKButton
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101100
-#define kCTFontUserFixedPitchFontType kCTFontUIFontUserFixedPitch
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101100
+#define kCTFontUIFontUserFixedPitch kCTFontUserFixedPitchFontType
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101200
-#define NSAppKitDefined NSEventTypeAppKitDefined
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101200
+#define NSEventTypeAppKitDefined NSAppKitDefined
+#else
 #define NSApplicationDefined NSEventTypeApplicationDefined
 #define NSApplicationActivatedEventType NSEventSubtypeApplicationActivated
 #define NSApplicationDeactivatedEventType NSEventSubtypeApplicationDeactivated
@@ -79,22 +81,8 @@
 #define NSInformationalAlertStyle NSAlertStyleInformational
 #define NSCriticalAlertStyle NSAlertStyleCritical
 #define NSCenterTextAlignment NSTextAlignmentCenter
-#define NSDeviceIndependentModifierFlagsMask NSEventModifierFlagDeviceIndependentFlagsMask
-#define NSCommandKeyMask NSEventModifierFlagCommand
-#define NSShiftKeyMask NSEventModifierFlagShift
-#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
-#define NSAlternateKeyMask NSEventModifierFlagOption
-#define NSControlKeyMask NSEventModifierFlagControl
-#define NSNumericPadKeyMask NSEventModifierFlagNumericPad
-#define NSFunctionKeyMask NSEventModifierFlagFunction
-#define NSKeyUp NSEventTypeKeyUp
-#define NSKeyDown NSEventTypeKeyDown
-#define NSFlagsChanged NSEventTypeFlagsChanged
-#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
-#define NSShiftKeyMask NSEventModifierFlagShift
 #define NSAnyEventMask NSEventMaskAny
 #define NSApplicationDefinedMask NSEventMaskApplicationDefined
-#define NSTexturedBackgroundWindowMask NSWindowStyleMaskTexturedBackground
 #define NSUtilityWindowMask NSWindowStyleMaskUtilityWindow
 #define NSNonactivatingPanelMask NSWindowStyleMaskNonactivatingPanel
 #define NSDocModalWindowMask NSWindowStyleMaskDocModalWindow
@@ -108,12 +96,12 @@
 #define NSFullScreenWindowMask NSWindowStyleMaskFullScreen
 #endif
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
-#define NSStringPboardType NSPasteboardTypeString
-#define NSOnState NSControlStateValueOn
-#define NSOffState NSControlStateValueOff
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
+#define NSControlStateValueOn NSOnState
+#define NSControlStateValueOff NSOffState
+#define NSPasteboardTypeString NSStringPboardType
 // Now we are also changing names of methods!
-#define graphicsContextWithGraphicsPort graphicsContextWithCGContext
+#define graphicsContextWithCGContext graphicsContextWithGraphicsPort
 #endif
 
 

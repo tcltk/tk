@@ -1,7 +1,7 @@
 /*
  * tkMacOSXFont.c --
  *
- *	Contains the Macintosh implementation of the platform-independant font
+ *	Contains the Macintosh implementation of the platform-independent font
  *	package interface.
  *
  * Copyright 2002-2004 Benjamin Riefenstahl, Benjamin.Riefenstahl@epost.de
@@ -15,10 +15,6 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXFont.h"
 #include "tkMacOSXConstants.h"
-
-#define defaultOrientation kCTFontDefaultOrientation
-#define verticalOrientation kCTFontVerticalOrientation
-#define fixedPitch kCTFontUserFixedPitchFontType
 
 /*
 #ifdef TK_MAC_DEBUG
@@ -277,7 +273,7 @@ InitFont(
 	fmPtr->fixed = [nsFont advancementForGlyph:glyphs[0]].width ==
 		[nsFont advancementForGlyph:glyphs[1]].width;
 	bounds = NSRectFromCGRect(CTFontGetBoundingRectsForGlyphs((CTFontRef)
-		nsFont, defaultOrientation, ch, boundingRects, nCh));
+		nsFont, kCTFontOrientationDefault, ch, boundingRects, nCh));
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
@@ -394,7 +390,7 @@ TkpFontPkgInit(
 	systemFont++;
     }
     TkInitFontAttributes(&fa);
-    nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
+    nsFont = (NSFont*) CTFontCreateUIFontForLanguage(kCTFontUIFontUserFixedPitch, 11, NULL);
     if (nsFont) {
 	GetTkFontAttributesForNSFont(nsFont, &fa);
 	CFRelease(nsFont);
@@ -1109,7 +1105,7 @@ DrawCharsInContext(
     [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
     CFRelease(fg);
     nsFont = [attributes objectForKey:NSFontAttributeName];
-    [nsFont setInContext:[NSGraphicsContext graphicsContextWithGraphicsPort:
+    [nsFont setInContext:[NSGraphicsContext graphicsContextWithCGContext:
 	    context flipped:NO]];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
     attributedString = [[NSAttributedString alloc] initWithString:string
