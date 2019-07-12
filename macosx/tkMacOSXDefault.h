@@ -35,9 +35,10 @@
 
 #define BLACK			"Black"
 #define WHITE			"White"
-#define NORMAL_BG		"systemTextBackgroundColor"
+#define NORMAL_BG		"systemWindowBackgroundColor"
+#define TEXT_BG                 "systemTextBackgroundColor"
 #define NORMAL_FG		"systemTextColor"
-#define ACTIVE_BG		"systemTextBackgroundColor"
+#define ACTIVE_BG		"systemWindowBackgroundColor"
 #define ACTIVE_FG		"systemTextColor"
 #define SELECT_BG		"systemSelectedTextBackgroundColor"
 #define SELECT_FG		"systemSelectedTextColor"
@@ -171,7 +172,7 @@
 #define MAC_OSX_ENTRY_RELIEF		TK_RELIEF_SUNKEN
 #define MAC_OSX_ENTRY_SELECT_RELIEF	TK_RELIEF_FLAT
 
-#define DEF_ENTRY_BG_COLOR		NORMAL_BG
+#define DEF_ENTRY_BG_COLOR		TEXT_BG
 #define DEF_ENTRY_BG_MONO		WHITE
 #define DEF_ENTRY_BORDER_WIDTH		"2"
 #define DEF_ENTRY_CURSOR		"xterm"
@@ -246,7 +247,7 @@
  */
 
 #define DEF_LISTBOX_ACTIVE_STYLE	"dotbox"
-#define DEF_LISTBOX_BG_COLOR		NORMAL_BG
+#define DEF_LISTBOX_BG_COLOR		TEXT_BG
 #define DEF_LISTBOX_BG_MONO		WHITE
 #define DEF_LISTBOX_BORDER_WIDTH	"1"
 #define DEF_LISTBOX_CURSOR		""
@@ -499,7 +500,7 @@
  */
 
 #define DEF_TEXT_AUTO_SEPARATORS	"1"
-#define DEF_TEXT_BG_COLOR		NORMAL_BG
+#define DEF_TEXT_BG_COLOR		TEXT_BG
 #define DEF_TEXT_BG_MONO		WHITE
 #define DEF_TEXT_BLOCK_CURSOR		"0"
 #define DEF_TEXT_BORDER_WIDTH		"0"
