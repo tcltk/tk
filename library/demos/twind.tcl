@@ -9,7 +9,7 @@ if {![info exists widgetDemo]} {
 
 package require Tk
 
-# On Aqua, this makes a button's fill color match its parent's background
+# Make an Aqua button's fill color match its parent's background
 proc blend {bt} {
     if {[tk windowingsystem] eq "aqua"} {
 	$bt configure -highlightbackground [[winfo parent $bt] cget -background]
@@ -141,7 +141,7 @@ foreach color {AntiqueWhite3 Bisque1 Bisque2 Bisque3 Bisque4
 	DarkSlateGray1 Aquamarine2 DarkSeaGreen2 SeaGreen1
 	Yellow1 IndianRed1 IndianRed2 Tan1 Tan4} {
     button $t.color$i -text $color -cursor top_left_arrow -command \
-	    "$t configure -bg $color"
+	    "changeBg $t $color"
     $t window create end -window [blend $t.color$i] -padx 3 -pady 2
     incr i
 }
@@ -201,7 +201,6 @@ proc textWindSmallH w {
 proc textWindSmallP w {
     $w configure -padx $::text_normal(pad) -pady $::text_normal(pad)
 }
-
 
 proc textWindOn w {
     catch {destroy $w.scroll2}
@@ -303,8 +302,20 @@ proc textWindDel t {
     }
 }
 
+proc changeBg {t c} {
+    $t configure -background $c
+    if {[tk windowingsystem] eq "aqua"} {
+	foreach b [$t window names] {
+	    if {[winfo class $b] eq "Button"} {
+		$b configure -highlightbackground $c
+	    }
+	}
+    }
+}
+
 proc embDefBg t {
-    $t configure -background [lindex [$t configure -background] 3]
+    set bg [lindex [$t configure -background] 3]
+    changeBg $t $bg 
 }
 
 proc textMakePeer {parent} {
