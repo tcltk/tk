@@ -44,7 +44,7 @@
 #define BFFM_VALIDATEFAILED 4
 #endif /* BFFM_VALIDATEFAILED */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int debugFlag;		/* Flags whether we should output debugging
 				 * information while displaying a builtin
 				 * dialog. */
@@ -1707,7 +1707,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     /*
      * We now allow FNERR_BUFFERTOOSMALL when multiselection is enabled. The
      * filename buffer has been dynamically allocated by the OFN dialog
-     * procedure to accomodate all selected files.
+     * procedure to accommodate all selected files.
      */
 
     if ((winCode != 0)
@@ -2708,7 +2708,7 @@ ChooseDirectoryValidateProc(
 
     case BFFM_INITIALIZED: {
 	/*
-	 * Directory browser intializing - tell it where to start from, user
+	 * Directory browser initializing - tell it where to start from, user
 	 * specified parameter.
 	 */
 

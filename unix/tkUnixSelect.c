@@ -68,7 +68,7 @@ typedef struct IncrInfo {
 				 * currently pending. */
 } IncrInfo;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     IncrInfo *pendingIncrs;	/* List of all incr structures currently
 				 * active. */
 } ThreadSpecificData;
