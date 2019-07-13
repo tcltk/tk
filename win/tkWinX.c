@@ -86,7 +86,7 @@ static Tcl_Encoding unicodeEncoding = NULL;
  * specific date for threads.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     TkDisplay *winDisplay;	/* TkDisplay structure that represents Windows
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */

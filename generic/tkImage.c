@@ -66,7 +66,7 @@ typedef struct ImageMaster {
 				 * when the world is falling apart.) */
 } ImageMaster;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     Tk_ImageType *imageTypeList;/* First in a list of all known image
 				 * types. */
     Tk_ImageType *oldImageTypeList;

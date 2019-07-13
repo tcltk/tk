@@ -1236,12 +1236,13 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
 
     SInt32 HIThemeState;
 
+    HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
     switch (params->kind) {
     case kThemePushButton:
-	HIThemeState = kThemeStateActive;
+	HIThemeState &= ~kThemeStateInactive;
+	HIThemeState |= kThemeStateActive;
 	break;
     default:
-	HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
 	break;
     }
 

@@ -77,7 +77,7 @@
 
 #define MENU_HASH_KEY "tkMenus"
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int menusInitialized;	/* Flag indicates whether thread-specific
 				 * elements of the Windows Menu module have
 				 * been initialized. */
@@ -90,7 +90,7 @@ static Tcl_ThreadDataKey dataKey;
 
 /*
  * The following flag indicates whether the process-wide state for the Menu
- * module has been intialized. The Mutex protects access to that flag.
+ * module has been initialized. The Mutex protects access to that flag.
  */
 
 static int menusInitialized;

@@ -5580,8 +5580,7 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	if ((objc < 3) || (objc > 4)) {
-	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "appearance window ?appearancename?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?appearancename?");
 	    return TCL_ERROR;
 	}
 	if (objc == 4 && [NSApp macMinorVersion] < 14) {
