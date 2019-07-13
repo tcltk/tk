@@ -37,7 +37,7 @@ typedef struct TkHalfdeadWindow {
     struct TkHalfdeadWindow *nextPtr;
 } TkHalfdeadWindow;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int numMainWindows;		/* Count of numver of main windows currently
 				 * open in this thread. */
     TkMainInfo *mainWindowList;

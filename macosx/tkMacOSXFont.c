@@ -1,7 +1,7 @@
 /*
  * tkMacOSXFont.c --
  *
- *	Contains the Macintosh implementation of the platform-independant font
+ *	Contains the Macintosh implementation of the platform-independent font
  *	package interface.
  *
  * Copyright 2002-2004 Benjamin Riefenstahl, Benjamin.Riefenstahl@epost.de
