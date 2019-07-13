@@ -81,7 +81,7 @@ proc ::tk::mac::ShowPreferences {} {
 \fB::tk::mac::OpenApplication\fR
 .
 If a proc of this name is defined, this proc fill fire when your application
-is intially opened. It is the default Apple Event handler for
+is initially opened. It is the default Apple Event handler for
 kAEOpenApplication,
 .QW oapp .
 .TP
