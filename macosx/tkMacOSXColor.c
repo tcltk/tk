@@ -339,11 +339,11 @@ SetCGColorComponents(
 	    color = [[NSColor selectedTextColor] colorUsingColorSpace: deviceRGB];
 	    break;
 	case 2:
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
-	    color = [[NSColor labelColor] colorUsingColorSpace: deviceRGB];
-#else
-	    color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
-#endif
+	    if ([NSApp macMinorVersion] > 9) {
+		color = [[NSColor labelColor] colorUsingColorSpace: deviceRGB];
+	    } else {
+		color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
+	    }
 	    break;
 	case 3:
 	    color = [[NSColor controlTextColor] colorUsingColorSpace:
