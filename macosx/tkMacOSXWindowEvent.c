@@ -292,6 +292,22 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     [NSApp tkCheckPasteboard];
+
+    /*
+     * When the application is activated with Command-Tab it will create a
+     * zombie window for every Tk window which has been withdrawn.  So iterate
+     * through the list of windows and order out any withdrawn window.
+     */
+
+    for (NSWindow *win in [NSApp windows]) {
+	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
+	if (!winPtr || !winPtr->wmInfoPtr) {
+	    continue;
+	}
+	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
+	    [win orderOut:nil];
+	}
+    }
 }
 
 - (void) applicationDeactivate: (NSNotification *) notification
