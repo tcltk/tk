@@ -884,9 +884,12 @@ Tk_TranslateWinEvent(
     case WM_MBUTTONDBLCLK:
     case WM_RBUTTONDOWN:
     case WM_RBUTTONDBLCLK:
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONDBLCLK:
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
+    case WM_XBUTTONUP:
     case WM_MOUSEMOVE:
 	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
@@ -1713,6 +1716,14 @@ TkWinResendEvent(
 	msg = WM_RBUTTONDOWN;
 	wparam = MK_RBUTTON;
 	break;
+    case Button8:
+	msg = WM_XBUTTONDOWN;
+	wparam = MAKEWPARAM(MK_XBUTTON1, XBUTTON1);
+	break;
+    case Button9:
+	msg = WM_XBUTTONDOWN;
+	wparam = MAKEWPARAM(MK_XBUTTON2, XBUTTON2);
+	break;
     default:
 	return 0;
     }
@@ -1725,6 +1736,12 @@ TkWinResendEvent(
     }
     if (eventPtr->xbutton.state & Button3Mask) {
 	wparam |= MK_RBUTTON;
+    }
+    if (eventPtr->xbutton.state & Button8Mask) {
+	wparam |= MK_XBUTTON1;
+    }
+    if (eventPtr->xbutton.state & Button9Mask) {
+	wparam |= MK_XBUTTON2;
     }
     if (eventPtr->xbutton.state & ShiftMask) {
 	wparam |= MK_SHIFT;

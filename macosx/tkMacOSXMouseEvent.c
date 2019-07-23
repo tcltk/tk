@@ -178,22 +178,26 @@ enum {
      */
 
     unsigned int state = 0;
-    NSInteger button = [theEvent buttonNumber];
+    int button = [theEvent buttonNumber];
+    if (++button > 3) {
+	button += 4; /* Map buttons 4/5 to 8/9 */
+    }
     EventRef eventRef = (EventRef)[theEvent eventRef];
     UInt32 buttons;
     OSStatus err = GetEventParameter(eventRef, kEventParamMouseChord,
 	    typeUInt32, NULL, sizeof(UInt32), NULL, &buttons);
 
     if (err == noErr) {
-    	state |= (buttons & ((1<<5) - 1)) << 8;
-    } else if (button < 5) {
+    	state |= (buttons & 0x07) << 8;
+    	state |= (buttons & 0x18) << 12;
+    } else if (button <= 9) {
 	switch (eventType) {
 	case NSLeftMouseDown:
 	case NSRightMouseDown:
 	case NSLeftMouseDragged:
 	case NSRightMouseDragged:
 	case NSOtherMouseDown:
-	    state |= 1 << (button + 8);
+	    state |= TkGetButtonMask(button);
 	    break;
 	default:
 	    break;
@@ -361,10 +365,11 @@ ButtonModifiers2State(
     unsigned int state;
 
     /*
-     * Tk supports at most 5 buttons.
+     * Tk on OSX supports at most 5 buttons.
      */
 
-    state = (buttonState & ((1<<5) - 1)) << 8;
+    state = (buttonState & 0x07) * Button1Mask;
+    state |= (buttonState & 0x18) * (Button8Mask >> 3);
 
     if (keyModifiers & alphaLock) {
 	state |= LockMask;
