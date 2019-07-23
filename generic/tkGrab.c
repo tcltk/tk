@@ -135,17 +135,6 @@ typedef struct NewGrabWinEvent {
 #define GENERATED_GRAB_EVENT_MAGIC ((Bool) 0x147321ac)
 
 /*
- * Mask that selects any of the state bits corresponding to buttons, plus
- * masks that select individual buttons' bits:
- */
-
-#define ALL_BUTTONS \
-	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
-static const unsigned int buttonStates[] = {
-    Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask
-};
-
-/*
  * Forward declarations for functions declared later in this file:
  */
 
@@ -883,7 +872,7 @@ TkPointerEvent(
 	} else {
 	    if (eventPtr->xbutton.button != AnyButton &&
 		    ((eventPtr->xbutton.state & ALL_BUTTONS)
-		    == buttonStates[eventPtr->xbutton.button - Button1])) {
+		    == (unsigned int)TkGetButtonMask(eventPtr->xbutton.button))) {
 		ReleaseButtonGrab(dispPtr);			/* Note 4. */
 	    }
 	}

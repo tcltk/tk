@@ -4760,26 +4760,7 @@ CanvasBindProc(
     switch (eventPtr->type) {
     case ButtonPress:
     case ButtonRelease:
-	switch (eventPtr->xbutton.button) {
-	case Button1:
-	    mask = Button1Mask;
-	    break;
-	case Button2:
-	    mask = Button2Mask;
-	    break;
-	case Button3:
-	    mask = Button3Mask;
-	    break;
-	case Button4:
-	    mask = Button4Mask;
-	    break;
-	case Button5:
-	    mask = Button5Mask;
-	    break;
-	default:
-	    mask = 0;
-	    break;
-	}
+	mask = TkGetButtonMask(eventPtr->xbutton.button);
 
 	/*
 	 * For button press events, repick the current item using the button
@@ -4862,7 +4843,7 @@ PickCurrentItem(
 				 * ButtonRelease, or MotionNotify. */
 {
     double coords[2];
-    int buttonDown;
+    unsigned int buttonDown;
     Tk_Item *prevItemPtr;
 #ifndef USE_OLD_TAG_SEARCH
     SearchUids *searchUids = GetStaticUids();
@@ -4875,8 +4856,7 @@ PickCurrentItem(
      * for windows.
      */
 
-    buttonDown = canvasPtr->state
-	    & (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask);
+    buttonDown = canvasPtr->state & ALL_BUTTONS;
 
     /*
      * Save information about this event in the canvas. The event in the
