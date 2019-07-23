@@ -178,8 +178,8 @@ enum {
      */
 
     unsigned int state = 0;
-    int button = [theEvent buttonNumber];
-    if (++button > 3) {
+    int button = [theEvent buttonNumber] + Button1;
+    if (button >= Button4) {
 	button += 4; /* Map buttons 4/5 to 8/9 */
     }
     EventRef eventRef = (EventRef)[theEvent eventRef];
