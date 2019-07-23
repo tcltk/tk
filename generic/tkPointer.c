@@ -254,7 +254,7 @@ Tk_UpdatePointer(
      * between the current button state and the last known button state.
      */
 
-    for (b = Button1; b <= Button5; b++) {
+    for (b = Button1; b <= Button9; b++) {
 	mask = TkGetButtonMask(b);
 	if (changes & mask) {
 	    if (state & mask) {
