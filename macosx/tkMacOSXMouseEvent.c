@@ -188,8 +188,8 @@ enum {
 	    typeUInt32, NULL, sizeof(UInt32), NULL, &buttons);
 
     if (err == noErr) {
-    	state |= (buttons & 0x07) << 8;
-    	state |= (buttons & 0x18) << 12;
+	state |= (buttons & 0x07) * Button1Mask;
+	state |= (buttons & 0x18) * (Button8Mask >> 3);
     } else if (button <= 9) {
 	switch (eventType) {
 	case NSLeftMouseDown:
