@@ -1987,7 +1987,7 @@ ExpandPercents(
 	case 'b':
 	    if (flags & BUTTON) {
 		number = eventPtr->xbutton.button;
-		if (eventPtr->xbutton.button >= Button8) {
+		if (number >= Button8) {
 		    number += (Button4 - Button8);
 		}
 		goto doNumber;
