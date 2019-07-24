@@ -1737,10 +1737,10 @@ TkWinResendEvent(
     if (eventPtr->xbutton.state & Button3Mask) {
 	wparam |= MK_RBUTTON;
     }
-    if (eventPtr->xbutton.state & Button8Mask) {
+    if (eventPtr->xbutton.state & Button4Mask) {
 	wparam |= MK_XBUTTON1;
     }
-    if (eventPtr->xbutton.state & Button9Mask) {
+    if (eventPtr->xbutton.state & Button5Mask) {
 	wparam |= MK_XBUTTON2;
     }
     if (eventPtr->xbutton.state & ShiftMask) {
