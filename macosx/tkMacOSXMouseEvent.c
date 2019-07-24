@@ -188,8 +188,7 @@ enum {
 	    typeUInt32, NULL, sizeof(UInt32), NULL, &buttons);
 
     if (err == noErr) {
-	state |= (buttons & 0x07) * Button1Mask;
-	state |= (buttons & 0x18) * (Button8Mask >> 3);
+	state |= (buttons & 0x1F) * Button1Mask;
     } else if (button <= 9) {
 	switch (eventType) {
 	case NSLeftMouseDown:
@@ -368,8 +367,7 @@ ButtonModifiers2State(
      * Tk on OSX supports at most 5 buttons.
      */
 
-    state = (buttonState & 0x07) * Button1Mask;
-    state |= (buttonState & 0x18) * (Button8Mask >> 3);
+    state = (buttonState & 0x1F) * Button1Mask;
 
     if (keyModifiers & alphaLock) {
 	state |= LockMask;

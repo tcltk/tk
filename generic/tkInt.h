@@ -965,30 +965,16 @@ typedef struct TkpClipMask {
 #define ALT_MASK	(AnyModifier<<2)
 #define EXTENDED_MASK	(AnyModifier<<3)
 
-#ifndef Button6
-# define Button6 6
-#endif
-#ifndef Button7
-# define Button7 7
-#endif
+/*
+ * Buttons 8 and 9 are the Xbuttons (left and right side-buttons). On Windows/Mac, those
+ * are known as Buttons 4 and 5. At script level, they also get the numbers 4 and 5.
+ */
+
 #ifndef Button8
 # define Button8 8
 #endif
 #ifndef Button9
 # define Button9 9
-#endif
-
-#ifndef Button6Mask
-# define Button6Mask		(AnyModifier<<4)
-#endif
-#ifndef Button7Mask
-# define Button7Mask		(AnyModifier<<5)
-#endif
-#ifndef Button8Mask
-# define Button8Mask		(AnyModifier<<6)
-#endif
-#ifndef Button9Mask
-# define Button9Mask		(AnyModifier<<7)
 #endif
 
 /*
@@ -997,7 +983,7 @@ typedef struct TkpClipMask {
  */
 
 #define ALL_BUTTONS \
-	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
+	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
 
 
 MODULE_SCOPE int TkGetButtonMask(unsigned int);

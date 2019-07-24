@@ -525,7 +525,10 @@ RefreshKeyboardMappingIfNeeded(
  *
  * TkGetButtonMask --
  *
- *	Return the proper Button${n}Mask for the button.
+ *	Return the proper Button${n}Mask for the button. Don't care about
+ *	Button4 - Button7, because those are not actually buttons: Those
+ *	are used for the horizontal or vertical mouse wheels. The
+ *	Button4Mask/Button5Mask's are actually used for Button 8 and 9.
  *
  * Results:
  *	A button mask.
@@ -537,7 +540,7 @@ RefreshKeyboardMappingIfNeeded(
  */
 
 static const int buttonMasks[] = {
-    0, Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask, Button6Mask, Button7Mask, Button8Mask, Button9Mask
+    0, Button1Mask, Button2Mask, Button3Mask, 0, 0, 0, 0, Button4Mask, Button5Mask
 };
 
 int
@@ -580,7 +583,7 @@ UpdateButtonEventState(
 	dispPtr->mouseButtonWindow = eventPtr->xbutton.window;
 	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
 
-	if ((eventPtr->xbutton.button >= Button4) && (eventPtr->xbutton.button <= Button7)) {
+	if ((eventPtr->xbutton.button >= Button4) && (eventPtr->xbutton.button < Button8)) {
 	    /*
 	     * Turn the event into a mouse wheel event and queue it
 	     * Note: modelled after the code in tkWinX.c
@@ -589,7 +592,7 @@ UpdateButtonEventState(
 	    eventPtr->xany.send_event = -1;
 	    eventPtr->xkey.nbytes = 0;
 	    eventPtr->xkey.keycode = (eventPtr->xbutton.button & 1) ? 1 : -1;
-	    if (eventPtr->xkey.keycode >= Button6) {
+	    if (eventPtr->xkey.keycode > Button5) {
 		eventPtr->xkey.state |= ShiftMask;
 	    }
 	    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_TAIL);
