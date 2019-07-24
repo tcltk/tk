@@ -189,7 +189,7 @@ enum {
 
     if (err == noErr) {
 	state |= (buttons & 0x1F) * Button1Mask;
-    } else if (button <= 9) {
+    } else if (button <= Button9) {
 	switch (eventType) {
 	case NSLeftMouseDown:
 	case NSRightMouseDown:

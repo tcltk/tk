@@ -590,7 +590,9 @@ UpdateButtonEventState(
 	     */
 	    eventPtr->type = MouseWheelEvent;
 	    eventPtr->xany.send_event = -1;
+#if defined(_WIN32) || defined(MAC_OSX_TK)
 	    eventPtr->xkey.nbytes = 0;
+#endif
 	    eventPtr->xkey.keycode = (eventPtr->xbutton.button & 1) ? 1 : -1;
 	    if (eventPtr->xkey.keycode > Button5) {
 		eventPtr->xkey.state |= ShiftMask;
