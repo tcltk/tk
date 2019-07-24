@@ -83,7 +83,7 @@ typedef union {
  * Apple NSEvent object.
  */
 
-#ifndef TK_MAC_OSX
+#ifdef MAC_OSX_TK
   #define EVENT_BUFFER_SIZE 90
 #else
   #define EVENT_BUFFER_SIZE 30
