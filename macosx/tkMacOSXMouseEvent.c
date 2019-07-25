@@ -180,7 +180,11 @@ enum {
     unsigned int state = 0;
     int button = [theEvent buttonNumber] + Button1;
     if (button >= Button4) {
-	button += 4; /* Map buttons 4/5 to 8/9 */
+	button += 4; /* Map buttons 4/9 to 8/13 */
+    } else if (button == Button2) {
+	button = Button3;
+    } else if (button == Button3) {
+	button = Button2;
     }
     EventRef eventRef = (EventRef)[theEvent eventRef];
     UInt32 buttons;
@@ -188,8 +192,16 @@ enum {
 	    typeUInt32, NULL, sizeof(UInt32), NULL, &buttons);
 
     if (err == noErr) {
-	state |= (buttons & 0x1F) * Button1Mask;
-    } else if (button <= Button9) {
+	state |= (buttons & 0x079) * Button1Mask;
+	/* Handle swapped buttons 2/3 */
+	if (buttons & 0x02) {
+	    state |= Button3Mask;
+	}
+	if (buttons & 0x04) {
+	    state |= Button2Mask;
+	}
+	state |= (buttons & 0x180) * (Button8Mask >> 7);
+    } else if (button <= 13) {
 	switch (eventType) {
 	case NSLeftMouseDown:
 	case NSRightMouseDown:
@@ -255,19 +267,19 @@ enum {
 	xEvent.xany.display = Tk_Display(tkwin);
 	xEvent.xany.window = Tk_WindowId(tkwin);
 
-	delta = [theEvent deltaY];
+	delta = [theEvent deltaY] * 40;
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
-		    (signbit(delta) ? -1 : 1) : lround(delta);
+	    coarseDelta = (delta > -40.0 && delta < 40.0) ?
+		    (signbit(delta) ? -40 : 40 : lround(delta);
 	    xEvent.xbutton.state = state;
 	    xEvent.xkey.keycode = coarseDelta;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
-	delta = [theEvent deltaX];
+	delta = [theEvent deltaX] * 40;
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -1.0 && delta < 1.0) ?
-		    (signbit(delta) ? -1 : 1) : lround(delta);
+	    coarseDelta = (delta > -40.0 && delta < 40.0) ?
+		    (signbit(delta) ? -40 : 40) : lround(delta);
 	    xEvent.xbutton.state = state | ShiftMask;
 	    xEvent.xkey.keycode = coarseDelta;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
@@ -364,10 +376,19 @@ ButtonModifiers2State(
     unsigned int state;
 
     /*
-     * Tk on OSX supports at most 5 buttons.
+     * Tk on OSX supports at most 9 buttons.
      */
 
-    state = (buttonState & 0x1F) * Button1Mask;
+    state = (buttonState & 0x079) * Button1Mask;
+	/* Handle swapped buttons 2/3 */
+	if (buttonState & 0x02) {
+	    state |= Button3Mask;
+	}
+	if (buttonState & 0x04) {
+	    state |= Button2Mask;
+	}
+	/* Handle buttons 8/9 */
+    state |= (buttonState & 0x180) * (Button8Mask >> 7);
 
     if (keyModifiers & alphaLock) {
 	state |= LockMask;

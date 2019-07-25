@@ -176,58 +176,19 @@ bind Listbox <B2-Motion> {
     %W scan dragto %x %y
 }
 
-# The MouseWheel will typically only fire on Windows and Mac OS X.
-# However, someone could use the "event generate" command to produce
-# one on other platforms.
-
-if {[tk windowingsystem] eq "aqua"} {
-    bind Listbox <MouseWheel> {
-        %W yview scroll [expr {- (%D)}] units
-    }
-    bind Listbox <Option-MouseWheel> {
-        %W yview scroll [expr {-10 * (%D)}] units
-    }
-    bind Listbox <Shift-MouseWheel> {
-        %W xview scroll [expr {- (%D)}] units
-    }
-    bind Listbox <Shift-Option-MouseWheel> {
-        %W xview scroll [expr {-10 * (%D)}] units
-    }
-} else {
-    bind Listbox <MouseWheel> {
-        %W yview scroll [expr {- (%D / 120) * 4}] units
-    }
-    bind Listbox <Shift-MouseWheel> {
-        %W xview scroll [expr {- (%D / 120) * 4}] units
-    }
+bind Listbox <MouseWheel> {
+    %W yview scroll [expr {-(%D / 40)}] units
+}
+bind Listbox <Option-MouseWheel> {
+    %W yview scroll [expr {-(%D / 4)}] units
+}
+bind Listbox <Shift-MouseWheel> {
+    %W xview scroll [expr {-(%D / 40)}] units
+}
+bind Listbox <Shift-Option-MouseWheel> {
+    %W xview scroll [expr {-(%D / 4)}] units
 }
 
-if {"x11" eq [tk windowingsystem]} {
-    # Support for mousewheels on Linux/Unix commonly comes through mapping
-    # the wheel to the extended buttons.  If you have a mousewheel, find
-    # Linux configuration info at:
-    #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind Listbox <4> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll -5 units
-	}
-    }
-    bind Listbox <Shift-4> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -5 units
-	}
-    }
-    bind Listbox <5> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll 5 units
-	}
-    }
-    bind Listbox <Shift-5> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 5 units
-	}
-    }
-}
 
 # ::tk::ListboxBeginSelect --
 #

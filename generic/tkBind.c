@@ -388,6 +388,14 @@ static const ModInfo modArray[] = {
     {"Button4",		Button4Mask,	0},
     {"B5",		Button5Mask,	0},
     {"Button5",		Button5Mask,	0},
+    {"B6",		Button6Mask,	0},
+    {"Button6",		Button6Mask,	0},
+    {"B7",		Button7Mask,	0},
+    {"Button7",		Button7Mask,	0},
+    {"B8",		Button8Mask,	0},
+    {"Button8",		Button8Mask,	0},
+    {"B9",		Button9Mask,	0},
+    {"Button9",		Button9Mask,	0},
     {"Mod1",		Mod1Mask,	0},
     {"M1",		Mod1Mask,	0},
     {"Command",		Mod1Mask,	0},
@@ -3995,7 +4003,7 @@ ParseEventDescription(
 	p = GetField(p, field, FIELD_SIZE);
     }
     if (*field != '\0') {
-	if ((*field >= '1') && (*field <= '5') && (field[1] == '\0')) {
+	if ((*field >= '1') && (*field <= '9') && (field[1] == '\0')) {
 	    if (eventFlags == 0) {
 		patPtr->eventType = ButtonPress;
 		eventMask = ButtonPressMask;
