@@ -273,21 +273,6 @@ proc ttk::copyBindings {from to} {
 #
 # Platform inconsistencies:
 #
-# On X11, the server typically maps the mouse wheel to Button4 and Button5.
-#
-# On OSX, Tk generates sensible values for the %D field in <MouseWheel> events.
-#
-# On Windows, %D must be scaled by a factor of 120.
-# In addition, Tk redirects mousewheel events to the window with
-# keyboard focus instead of sending them to the window under the pointer.
-# We do not attempt to fix that here, see also TIP#171.
-#
-# OSX conventionally uses Shift+MouseWheel for horizontal scrolling,
-# and Option+MouseWheel for accelerated scrolling.
-#
-# The Shift+MouseWheel behavior is not conventional on Windows or most
-# X11 toolkits, but it's useful.
-#
 # MouseWheel scrolling is accelerated on X11, which is conventional
 # for Tk and appears to be conventional for other toolkits (although
 # Gtk+ and Qt do not appear to use as large a factor).
@@ -300,18 +285,7 @@ proc ttk::copyBindings {from to} {
 #
 
 proc ttk::bindMouseWheel {bindtag callback} {
-    switch -- [tk windowingsystem] {
-	x11 {
-	    bind $bindtag <ButtonPress-4> "$callback -1"
-	    bind $bindtag <ButtonPress-5> "$callback +1"
-	}
-	win32 {
-	    bind $bindtag <MouseWheel> [append callback { [expr {-(%D/120)}]}]
-	}
-	aqua {
-	    bind $bindtag <MouseWheel> [append callback { [expr {-(%D)}]} ]
-	}
-    }
+    bind $bindtag <MouseWheel> [append callback { [expr {-(%D/40)}]}]
 }
 
 ## Mousewheel bindings for standard scrollable widgets.

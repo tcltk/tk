@@ -1142,7 +1142,7 @@ GenerateXEvent(
 	    event.type = MouseWheelEvent;
 	    event.xany.send_event = -1;
 	    event.xkey.nbytes = 0;
-	    event.xkey.keycode = tsdPtr->vWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    event.xkey.keycode = tsdPtr->vWheelAcc / WHEEL_DELTA * WHEEL_DELTA / 3;
 	    tsdPtr->vWheelAcc = tsdPtr->vWheelAcc % WHEEL_DELTA;
 	    break;
 	}
@@ -1175,7 +1175,7 @@ GenerateXEvent(
 	    event.xany.send_event = -1;
 	    event.xkey.nbytes = 0;
 	    event.xkey.state |= ShiftMask;
-	    event.xkey.keycode = tsdPtr->hWheelAcc / WHEEL_DELTA * WHEEL_DELTA;
+	    event.xkey.keycode = tsdPtr->hWheelAcc / WHEEL_DELTA * WHEEL_DELTA / 3;
 	    tsdPtr->hWheelAcc = tsdPtr->hWheelAcc % WHEEL_DELTA;
 	    break;
 	}

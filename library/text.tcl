@@ -427,72 +427,17 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
-# The MouseWheel will typically only fire on Windows and MacOS X.
-# However, someone could use the "event generate" command to produce one
-# on other platforms.  We must be careful not to round -ve values of %D
-# down to zero.
-
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <MouseWheel> {
-        %W yview scroll [expr {-15 * (%D)}] pixels
-    }
-    bind Text <Option-MouseWheel> {
-        %W yview scroll [expr {-150 * (%D)}] pixels
-    }
-    bind Text <Shift-MouseWheel> {
-        %W xview scroll [expr {-15 * (%D)}] pixels
-    }
-    bind Text <Shift-Option-MouseWheel> {
-        %W xview scroll [expr {-150 * (%D)}] pixels
-    }
-} else {
-    # We must make sure that positive and negative movements are rounded
-    # equally to integers, avoiding the problem that
-    #     (int)1/3 = 0,
-    # but
-    #     (int)-1/3 = -1
-    # The following code ensure equal +/- behaviour.
-    bind Text <MouseWheel> {
-	if {%D >= 0} {
-	    %W yview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W yview scroll [expr {(2-%D)/3}] pixels
-	}
-    }
-    bind Text <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    %W xview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W xview scroll [expr {(2-%D)/3}] pixels
-	}
-    }
+bind Text <MouseWheel> {
+    %W yview scroll [expr {-(%D)}] pixels
 }
-
-if {"x11" eq [tk windowingsystem]} {
-    # Support for mousewheels on Linux/Unix commonly comes through mapping
-    # the wheel to the extended buttons.  If you have a mousewheel, find
-    # Linux configuration info at:
-    #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind Text <4> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll -50 pixels
-	}
-    }
-    bind Text <5> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll 50 pixels
-	}
-    }
-    bind Text <Shift-4> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -50 pixels
-	}
-    }
-    bind Text <Shift-5> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 50 pixels
-	}
-    }
+bind Text <Option-MouseWheel> {
+    %W yview scroll [expr {-10 * (%D)}] pixels
+}
+bind Text <Shift-MouseWheel> {
+    %W xview scroll [expr {-(%D)}] pixels
+}
+bind Text <Shift-Option-MouseWheel> {
+    %W xview scroll [expr {-10 * (%D)}] pixels
 }
 
 # ::tk::TextClosestGap --

@@ -128,42 +128,20 @@ bind Scrollbar <<LineEnd>> {
     tk::ScrollToPos %W 1
 }
 }
-switch [tk windowingsystem] {
-    "aqua" {
-	bind Scrollbar <MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {- (%D)}]
-	}
-	bind Scrollbar <Option-MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {-10 * (%D)}]
-	}
-	bind Scrollbar <Shift-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {- (%D)}]
-	}
-	bind Scrollbar <Shift-Option-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {-10 * (%D)}]
-	}
-    }
-    "win32" {
-	bind Scrollbar <MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {- (%D / 120) * 4}]
-	}
-	bind Scrollbar <Shift-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {- (%D / 120) * 4}]
-	}
-    }
-    "x11" {
-	bind Scrollbar <MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {- (%D /120 ) * 4}]
-	}
-	bind Scrollbar <Shift-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {- (%D /120 ) * 4}]
-	}
-	bind Scrollbar <4> {tk::ScrollByUnits %W v -5}
-	bind Scrollbar <5> {tk::ScrollByUnits %W v 5}
-	bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}
-	bind Scrollbar <Shift-5> {tk::ScrollByUnits %W h 5}
-    }
+
+bind Scrollbar <MouseWheel> {
+    tk::ScrollByUnits %W v [expr {-(%D / 40)}]
 }
+bind Scrollbar <Option-MouseWheel> {
+    tk::ScrollByUnits %W v [expr {-(%D / 4)}]
+}
+bind Scrollbar <Shift-MouseWheel> {
+    tk::ScrollByUnits %W h [expr {-(%D / 40)}]
+}
+bind Scrollbar <Shift-Option-MouseWheel> {
+    tk::ScrollByUnits %W h [expr {-(%D / 4)}]
+}
+
 # tk::ScrollButtonDown --
 # This procedure is invoked when a button is pressed in a scrollbar.
 # It changes the way the scrollbar is displayed and takes actions

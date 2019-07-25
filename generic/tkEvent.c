@@ -527,8 +527,8 @@ RefreshKeyboardMappingIfNeeded(
  *
  *	Return the proper Button${n}Mask for the button. Don't care about
  *	Button4 - Button7, because those are not actually buttons: Those
- *	are used for the horizontal or vertical mouse wheels. The
- *	Button4Mask/Button5Mask's are actually used for Button 8 and 9.
+ *	are used for the horizontal or vertical mouse wheels. Button4Mask
+ *	and higher is actually used for Button 8 and higher.
  *
  * Results:
  *	A button mask.
@@ -539,11 +539,12 @@ RefreshKeyboardMappingIfNeeded(
  *----------------------------------------------------------------------
  */
 
-static const int buttonMasks[] = {
-    0, Button1Mask, Button2Mask, Button3Mask, 0, 0, 0, 0, Button4Mask, Button5Mask
+static const unsigned int buttonMasks[] = {
+    0, Button1Mask, Button2Mask, Button3Mask, 0, 0, 0, 0, Button4Mask, \
+	    Button5Mask, Button6Mask, Button7Mask, Button8Mask, Button9Mask
 };
 
-int
+unsigned int
 TkGetButtonMask(
     unsigned int button)
 {
@@ -593,7 +594,7 @@ UpdateButtonEventState(
 #if defined(_WIN32) || defined(MAC_OSX_TK)
 	    eventPtr->xkey.nbytes = 0;
 #endif
-	    eventPtr->xkey.keycode = (eventPtr->xbutton.button & 1) ? 1 : -1;
+	    eventPtr->xkey.keycode = (eventPtr->xbutton.button & 1) ? 40 : -40;
 	    if (eventPtr->xkey.keycode > Button5) {
 		eventPtr->xkey.state |= ShiftMask;
 	    }

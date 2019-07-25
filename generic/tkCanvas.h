@@ -147,7 +147,7 @@ typedef struct TkCanvas {
 				 * currentItem is based. Must be saved so that
 				 * if the currentItem is deleted, can pick
 				 * another. */
-    int state;			/* Last known modifier state. Used to defer
+    unsigned int state;		/* Last known modifier state. Used to defer
 				 * picking a new current object while buttons
 				 * are down. */
 

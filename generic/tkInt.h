@@ -977,16 +977,29 @@ typedef struct TkpClipMask {
 # define Button9 9
 #endif
 
+#ifndef Button6Mask
+# define Button6Mask (1<<13)
+#endif
+#ifndef Button7Mask
+# define Button7Mask (1<<13)
+#endif
+#ifndef Button8Mask
+# define Button8Mask (AnyModifier<<4)
+#endif
+#ifndef Button9Mask
+# define Button9Mask (AnyModifier<<5)
+#endif
+
 /*
  * Mask that selects any of the state bits corresponding to buttons, plus
  * masks that select individual buttons' bits:
  */
 
 #define ALL_BUTTONS \
-	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
+	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 
 
-MODULE_SCOPE int TkGetButtonMask(unsigned int);
+MODULE_SCOPE unsigned int TkGetButtonMask(unsigned int);
 
 /*
  * Object types not declared in tkObj.c need to be mentioned here so they can
