@@ -177,16 +177,16 @@ bind Listbox <B2-Motion> {
 }
 
 bind Listbox <MouseWheel> {
-    %W yview scroll [expr {-((%D+60) / 120)}] units
+    %W yview scroll [expr {-((%D+15) / 30)}] units
 }
 bind Listbox <Option-MouseWheel> {
-    %W yview scroll [expr {-((%D+6) / 12)}] units
+    %W yview scroll [expr {-((%D+1) / 3)}] units
 }
 bind Listbox <Shift-MouseWheel> {
-    %W xview scroll [expr {-((%D+60) / 120)}] units
+    %W xview scroll [expr {-((%D+15) / 30)}] units
 }
 bind Listbox <Shift-Option-MouseWheel> {
-    %W xview scroll [expr {-((%D+6) / 12)}] units
+    %W xview scroll [expr {-((%D+1) / 3)}] units
 }
 
 
