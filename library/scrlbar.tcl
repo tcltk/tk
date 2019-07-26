@@ -130,16 +130,16 @@ bind Scrollbar <<LineEnd>> {
 }
 
 bind Scrollbar <MouseWheel> {
-    tk::ScrollByUnits %W v [expr {-(%D / 40)}]
+    tk::ScrollByUnits %W v [expr {-((%D+60) / 120)}]
 }
 bind Scrollbar <Option-MouseWheel> {
-    tk::ScrollByUnits %W v [expr {-(%D / 4)}]
+    tk::ScrollByUnits %W v [expr {-((%D+6) / 12)}]
 }
 bind Scrollbar <Shift-MouseWheel> {
-    tk::ScrollByUnits %W h [expr {-(%D / 40)}]
+    tk::ScrollByUnits %W h [expr {-((%D+60) / 120)}]
 }
 bind Scrollbar <Shift-Option-MouseWheel> {
-    tk::ScrollByUnits %W h [expr {-(%D / 4)}]
+    tk::ScrollByUnits %W h [expr {-((%D+6) / 12)}]
 }
 
 # tk::ScrollButtonDown --

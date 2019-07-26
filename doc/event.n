@@ -119,8 +119,8 @@ for the event.  Only valid for virtual events.  Corresponds to the
 for the \fBMouseWheel\fR event.  The \fIdelta\fR refers to the
 direction and magnitude the mouse wheel was rotated.  Note the value
 is not a screen distance but are units of motion in the mouse wheel.
-Typically these values are multiples of 40.  For example, 40 should
-scroll the text widget up 4 lines and \-80 would scroll the text
+Typically these values are multiples of 120.  For example, 120 should
+scroll the text widget up 4 lines and \-240 would scroll the text
 widget down 8 lines.  Of course, other widgets may define different
 behaviors for mouse wheel motion.  This field corresponds to the
 \fB%D\fR substitution for binding scripts.

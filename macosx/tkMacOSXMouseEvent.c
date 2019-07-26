@@ -267,21 +267,23 @@ enum {
 	xEvent.xany.display = Tk_Display(tkwin);
 	xEvent.xany.window = Tk_WindowId(tkwin);
 
-	delta = [theEvent deltaY] * 40;
+	delta = [theEvent deltaY] * 120;
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -40.0 && delta < 40.0) ?
-		    (signbit(delta) ? -40 : 40 : lround(delta);
+	    coarseDelta = (delta > -120.0 && delta < 120.0) ?
+		    (signbit(delta) ? -120 : 120 : lround(delta);
 	    xEvent.xbutton.state = state;
 	    xEvent.xkey.keycode = coarseDelta;
+	    xEvent.xkey.nbytes = 0;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
-	delta = [theEvent deltaX] * 40;
+	delta = [theEvent deltaX] * 120;
 	if (delta != 0.0) {
-	    coarseDelta = (delta > -40.0 && delta < 40.0) ?
-		    (signbit(delta) ? -40 : 40) : lround(delta);
+	    coarseDelta = (delta > -120.0 && delta < 120.0) ?
+		    (signbit(delta) ? -120 : 120) : lround(delta);
 	    xEvent.xbutton.state = state | ShiftMask;
 	    xEvent.xkey.keycode = coarseDelta;
+	    xEvent.xkey.nbytes = 0;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}

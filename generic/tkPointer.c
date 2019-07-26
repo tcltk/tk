@@ -226,8 +226,7 @@ Tk_UpdatePointer(
     XPoint pos;
     XEvent event;
     int changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
-    int type, b;
-    int mask;
+    int type, b, mask;
 
     pos.x = x;
     pos.y = y;

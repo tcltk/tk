@@ -59,16 +59,16 @@ $c bind all <1> "scrollButton $c"
 bind $c <2> "$c scan mark %x %y"
 bind $c <B2-Motion> "$c scan dragto %x %y"
 bind $c <MouseWheel> {
-    %W yview scroll [expr {-(%D / 40)}] units
+    %W yview scroll [expr {-((%D+60) / 120)}] units
 }
 bind $c <Option-MouseWheel> {
-    %W yview scroll [expr {-(%D / 4)}] units
+    %W yview scroll [expr {-((%D+6) / 12)}] units
 }
 bind $c <Shift-MouseWheel> {
-    %W xview scroll [expr {-(%D / 40)}] units
+    %W xview scroll [expr {-((%D+60) / 120)}] units
 }
 bind $c <Shift-Option-MouseWheel> {
-    %W xview scroll [expr {-(%D / 4)}] units
+    %W xview scroll [expr {-((%D+6) / 12)}] units
 }
 
 proc scrollEnter canvas {
