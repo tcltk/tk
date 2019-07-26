@@ -1996,7 +1996,7 @@ ExpandPercents(
 	    if (flags & BUTTON) {
 		number = eventPtr->xbutton.button;
 		if (number >= Button8) {
-		    number += (Button4 - Button8);
+		    number -= (Button8 - Button4);
 		}
 		goto doNumber;
 	    }
@@ -4239,7 +4239,7 @@ GetPatternObj(
 	    } else {
 		int button =  patPtr->detail.button;
 		if (button >= Button8) {
-			button += (Button4 - Button8);
+			button -= (Button8 - Button4);
 		}
 		Tcl_AppendPrintfToObj(patternObj, "%d", button);
 	    }

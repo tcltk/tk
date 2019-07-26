@@ -285,7 +285,8 @@ proc ttk::copyBindings {from to} {
 #
 
 proc ttk::bindMouseWheel {bindtag callback} {
-    bind $bindtag <MouseWheel> [append callback { [expr {-(%D/40)}]}]
+    bind $bindtag <MouseWheel> [append callback { [expr {-((%D+60)/120)}]}]
+    bind $bindtag <Option-MouseWheel> [append callback { [expr {-((%D+6)/12)}]}]
 }
 
 ## Mousewheel bindings for standard scrollable widgets.
@@ -296,29 +297,13 @@ proc ttk::bindMouseWheel {bindtag callback} {
 # standard scrollbar protocol.
 #
 
-switch -- [tk windowingsystem] {
-    x11 {
-	bind TtkScrollable <ButtonPress-4>       { %W yview scroll -5 units }
-	bind TtkScrollable <ButtonPress-5>       { %W yview scroll  5 units }
-	bind TtkScrollable <Shift-ButtonPress-4> { %W xview scroll -5 units }
-	bind TtkScrollable <Shift-ButtonPress-5> { %W xview scroll  5 units }
-    }
-    win32 {
-	bind TtkScrollable <MouseWheel> \
-	    { %W yview scroll [expr {-(%D/120)}] units }
-	bind TtkScrollable <Shift-MouseWheel> \
-	    { %W xview scroll [expr {-(%D/120)}] units }
-    }
-    aqua {
-	bind TtkScrollable <MouseWheel> \
-	    { %W yview scroll [expr {-(%D)}] units }
-	bind TtkScrollable <Shift-MouseWheel> \
-	    { %W xview scroll [expr {-(%D)}] units }
-	bind TtkScrollable <Option-MouseWheel> \
-	    { %W yview scroll  [expr {-10*(%D)}] units }
-	bind TtkScrollable <Shift-Option-MouseWheel> \
-	    { %W xview scroll [expr {-10*(%D)}] units }
-    }
-}
+bind TtkScrollable <MouseWheel> \
+{ %W yview scroll [expr {-((%D+60)/120)}] units }
+bind TtkScrollable <Option-MouseWheel> \
+{ %W yview scroll [expr {-((%D+6)/12)}] units }
+bind TtkScrollable <Shift-MouseWheel> \
+{ %W xview scroll [expr {-((%D+60)/120)}] units }
+bind TtkScrollable <Shift-Option-MouseWheel> \
+{ %W xview scroll [expr {-((%D+6)/12)}] units }
 
 #*EOF*
