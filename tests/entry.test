@@ -1435,7 +1435,7 @@ test entry-3.71 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll 24
 } -cleanup {
     destroy .e
-} -returnCodes error -result {wrong # args: should be ".e xview scroll number units|pages"}
+} -returnCodes error -result {wrong # args: should be ".e xview scroll number pages|units"}
 test entry-3.72 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1512,7 +1512,7 @@ test entry-3.77 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll 23 foobars
 } -cleanup {
     destroy .e
-} -returnCodes error -result {bad argument "foobars": must be units or pages}
+} -returnCodes error -result {bad argument "foobars": must be pages or units}
 test entry-3.78 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
