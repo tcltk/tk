@@ -668,7 +668,7 @@ Tk_GetScrollInfo(
 	if (argc != 5) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
-		    argv[0], argv[1], "scroll number units|pages"));
+		    argv[0], argv[1], "scroll number pages|units"));
 	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	    return TK_SCROLL_ERROR;
 	}
@@ -746,7 +746,7 @@ Tk_GetScrollInfoObj(
 	return TK_SCROLL_MOVETO;
     } else if (ArgPfxEq("scroll")) {
 	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number units|pages");
+	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number pages|units");
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
@@ -761,7 +761,7 @@ Tk_GetScrollInfoObj(
 	}
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad argument \"%s\": must be units or pages", arg));
+		"bad argument \"%s\": must be pages or units", arg));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
 	return TK_SCROLL_ERROR;
     }

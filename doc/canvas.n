@@ -1147,16 +1147,16 @@ total width of the canvas is off-screen to the left.
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer.
-\fIWhat\fR must be either \fBunits\fR or \fBpages\fR or an abbreviation
+\fIWhat\fR must be either \fBpages\fR or \fBunits\fR or an abbreviation
 of one of these.
-If \fIwhat\fR is \fBunits\fR, the view adjusts left or right in units
-of the \fBxScrollIncrement\fR option, if it is greater than zero,
-or in units of one-tenth the window's width otherwise.
 If \fIwhat is \fBpages\fR then the view
 adjusts in units of nine-tenths the window's width.
 If \fInumber\fR is negative then information farther to the left
 becomes visible; if it is positive then information farther to the right
 becomes visible.
+If \fIwhat\fR is \fBunits\fR, the view adjusts left or right in units
+of the \fBxScrollIncrement\fR option, if it is greater than zero,
+or in units of one-tenth the window's width otherwise.
 .RE
 .TP
 \fIpathName \fByview \fI?args\fR?
@@ -1188,15 +1188,15 @@ area is off-screen to the top.
 This command adjusts the view in the window up or down according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer.
-\fIWhat\fR must be either \fBunits\fR or \fBpages\fR.
-If \fIwhat\fR is \fBunits\fR, the view adjusts up or down in units
-of the \fByScrollIncrement\fR option, if it is greater than zero,
-or in units of one-tenth the window's height otherwise.
+\fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
 If \fIwhat\fR is \fBpages\fR then
 the view adjusts in units of nine-tenths the window's height.
 If \fInumber\fR is negative then higher information becomes
 visible; if it is positive then lower information
 becomes visible.
+If \fIwhat\fR is \fBunits\fR, the view adjusts up or down in units
+of the \fByScrollIncrement\fR option, if it is greater than zero,
+or in units of one-tenth the window's height otherwise.
 .RE
 .SH "OVERVIEW OF ITEM TYPES"
 .PP
