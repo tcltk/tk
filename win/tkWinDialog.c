@@ -1372,7 +1372,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 
         src = Tcl_GetString(optsPtr->extObj);
         wstr = (LPWSTR) Tcl_WinUtfToTChar(src, optsPtr->extObj->length, &ds);
-        if (wstr[0] == L'.')
+        if (wstr[0] == '.')
             ++wstr;
         hr = fdlgIf->lpVtbl->SetDefaultExtension(fdlgIf, wstr);
         Tcl_DStringFree(&ds);
