@@ -613,7 +613,7 @@ DefaultRotateImplementation(
     if (ItemCoords(canvasPtr, itemPtr, 0, NULL) == TCL_OK &&
 	    Tcl_ListObjGetElements(NULL, Tcl_GetObjResult(interp),
 		    &objc, &objv) == TCL_OK) {
-	coordv = (double *) Tcl_Alloc(sizeof(double) * objc);
+	coordv = (double *) ckalloc(sizeof(double) * objc);
 	for (i=0 ; i<objc ; i++) {
 	    if (Tcl_GetDoubleFromObj(NULL, objv[i], &coordv[i]) != TCL_OK) {
 		ok = 0;
@@ -639,7 +639,7 @@ DefaultRotateImplementation(
 	     * Write the coordinates back into the item.
 	     */
 
-	    newObjv = (Tcl_Obj **) Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
+	    newObjv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) * objc);
 	    for (i=0 ; i<objc ; i++) {
 		newObjv[i] = Tcl_NewDoubleObj(coordv[i]);
 		Tcl_IncrRefCount(newObjv[i]);
@@ -648,9 +648,9 @@ DefaultRotateImplementation(
 	    for (i=0 ; i<objc ; i++) {
 		Tcl_DecrRefCount(newObjv[i]);
 	    }
-	    Tcl_Free((char *) newObjv);
+	    ckfree((char *) newObjv);
 	}
-	Tcl_Free((char *) coordv);
+	ckfree((char *) coordv);
     }
 
     /*
