@@ -134,7 +134,7 @@ PixmapFromImage(
 {
     TkMacOSXDrawingContext dc;
     Pixmap pixmap;
-    
+
     pixmap = Tk_GetPixmap(display, None, size.width, size.height, 0);
     if (TkMacOSXSetupDrawingContext(pixmap, NULL, 1, &dc)) {
 	if (dc.context) {
