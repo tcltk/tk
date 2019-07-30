@@ -81,6 +81,12 @@ TkWinGetModifierState(void)
     if (GetKeyState(VK_RBUTTON) & 0x8000) {
 	state |= Button3Mask;
     }
+    if (GetKeyState(VK_XBUTTON1) & 0x8000) {
+	state |= Button4Mask;
+    }
+    if (GetKeyState(VK_XBUTTON2) & 0x8000) {
+	state |= Button5Mask;
+    }
     return state;
 }
 

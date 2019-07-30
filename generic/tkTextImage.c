@@ -25,18 +25,6 @@
 #endif
 
 /*
- * Support of tk8.5.
- */
-#ifdef CONST
-# undef CONST
-#endif
-#if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 5
-# define CONST
-#else
-# define CONST const
-#endif
-
-/*
  * Prototypes for functions defined in this file:
  */
 
@@ -133,7 +121,7 @@ const Tk_SegType tkTextEmbImageType = {
  * Definitions for alignment values:
  */
 
-static const char *CONST alignStrings[] = {
+static const char *const alignStrings[] = {
     "baseline", "bottom", "center", "top", NULL
 };
 
@@ -378,7 +366,7 @@ TkTextImageCmd(
     TkTextSegment *eiPtr;
     TkSharedText *sharedTextPtr;
     TkTextIndex index;
-    static const char *CONST optionStrings[] = {
+    static const char *const optionStrings[] = {
 	"cget", "configure", "create", "names", NULL
     };
     enum opts {

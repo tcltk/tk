@@ -218,7 +218,7 @@ static int              TestPhotoStringMatchCmd(ClientData dummy,
  *
  * Tktest_Init --
  *
- *	This function performs intialization for the Tk test suite exensions.
+ *	This function performs initialization for the Tk test suite extensions.
  *
  * Results:
  *	Returns a standard Tcl completion code, and leaves an error message in

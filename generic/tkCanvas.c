@@ -2891,10 +2891,21 @@ DrawCanvas(
              * colours and place them in the photo block. Perhaps we could
              * just not bother with the alpha byte because we are using
              * TK_PHOTO_COMPOSITE_SET later?
+             * ***Windows: We have to swap the red and blue values. The
+             * XImage storage is B - G - R - A which becomes a 32bit ARGB
+             * quad. However the visual mask is a 32bit ABGR quad. And
+             * Tk_PhotoPutBlock() wants R-G-B-A which is a 32bit ABGR quad.
+             * If the visual mask was correct there would be no need to
+             * swap anything here.
              */
 
+#ifdef _WIN32
+#define   R_OFFSET 2
+#define   B_OFFSET 0
+#else
 #define   R_OFFSET 0
 #define   B_OFFSET 2
+#endif
             blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + R_OFFSET] =
                     (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
             blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +1] =
@@ -5068,7 +5079,7 @@ CanvasBindProc(
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkCanvas *canvasPtr = clientData;
-    int mask;
+    unsigned int mask;
 
     Tcl_Preserve(canvasPtr);
 
@@ -5081,26 +5092,7 @@ CanvasBindProc(
     switch (eventPtr->type) {
     case ButtonPress:
     case ButtonRelease:
-	switch (eventPtr->xbutton.button) {
-	case Button1:
-	    mask = Button1Mask;
-	    break;
-	case Button2:
-	    mask = Button2Mask;
-	    break;
-	case Button3:
-	    mask = Button3Mask;
-	    break;
-	case Button4:
-	    mask = Button4Mask;
-	    break;
-	case Button5:
-	    mask = Button5Mask;
-	    break;
-	default:
-	    mask = 0;
-	    break;
-	}
+	mask = TkGetButtonMask(eventPtr->xbutton.button);
 
 	/*
 	 * For button press events, repick the current item using the button
@@ -5183,7 +5175,7 @@ PickCurrentItem(
 				 * ButtonRelease, or MotionNotify. */
 {
     double coords[2];
-    int buttonDown;
+    unsigned int buttonDown;
     Tk_Item *prevItemPtr;
     SearchUids *searchUids = GetStaticUids();
 
@@ -5194,8 +5186,7 @@ PickCurrentItem(
      * for windows.
      */
 
-    buttonDown = canvasPtr->state
-	    & (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask);
+    buttonDown = canvasPtr->state & ALL_BUTTONS;
 
     /*
      * Save information about this event in the canvas. The event in the
