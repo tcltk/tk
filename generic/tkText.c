@@ -817,7 +817,7 @@ SendVirtualEvent(
  *--------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 GetByteLength(
     Tcl_Obj *objPtr)
 {
@@ -6069,7 +6069,7 @@ TextFetchSelection(
 	TextGetText(textPtr, &textPtr->selIndex, &searchPtr->curIndex, &textPtr->selIndex,
 		selTextPtr, maxBytes - GetByteLength(selTextPtr), true, false);
 
-	if (GetByteLength(selTextPtr) == maxBytes) {
+	if (GetByteLength(selTextPtr) == (TkSizeT)maxBytes) {
 	    break;
 	}
 
@@ -10978,7 +10978,7 @@ SearchCore(
 
 		if (!match
 			|| (info.extendStart == info.matches[0].start
-			    && info.matches[0].end == lastOffset - firstOffset)) {
+			    && info.matches[0].end == (TkSizeT)(lastOffset - firstOffset))) {
 		    int extraLines = 0;
 		    int prevFullLine;
 
@@ -10995,7 +10995,7 @@ SearchCore(
 			lastNonOverlap = lastTotal;
 		    }
 
-		    if (info.extendStart < 0) {
+		    if (info.extendStart == TCL_INDEX_NONE) {
 			/*
 			 * No multi-line match is possible.
 			 */
@@ -11087,9 +11087,9 @@ SearchCore(
 			 * circumstances.
 			 */
 
-			if ((match  && firstOffset + info.matches[0].end != lastTotal
-				    && firstOffset + info.matches[0].end < prevFullLine)
-				|| info.extendStart < 0) {
+			if ((match  && info.matches[0].end != (TkSizeT)(lastTotal - firstOffset)
+				    && (info.matches[0].end + 1) < (TkSizeT)(prevFullLine - firstOffset + 1))
+				|| info.extendStart == TCL_INDEX_NONE) {
 			    break;
 			}
 
@@ -11100,10 +11100,10 @@ SearchCore(
 			 * that line.
 			 */
 
-			if (match && info.matches[0].start >= lastOffset) {
+			if (match && info.matches[0].start + 1 >= (TkSizeT)(lastOffset + 1)) {
 			    break;
 			}
-			if (match && firstOffset + info.matches[0].end >= prevFullLine) {
+			if (match && (info.matches[0].end + 1) >= (TkSizeT)(prevFullLine - firstOffset + 1)) {
 			    if (extraLines > 0) {
 				extraLinesSearched = extraLines - 1;
 			    }
@@ -11237,8 +11237,8 @@ SearchCore(
 		if (matchOffset == -1 ||
 			((searchSpecPtr->all || searchSpecPtr->backwards)
 			    && (firstOffset < matchOffset
-				|| firstOffset + info.matches[0].end - info.matches[0].start
-				    > matchOffset + matchLength))) {
+				|| (info.matches[0].end - info.matches[0].start + 1)
+				    > (TkSizeT)(matchOffset + matchLength - firstOffset + 1)))) {
 
 		    matchOffset = firstOffset;
 		    matchLength = info.matches[0].end - info.matches[0].start;
