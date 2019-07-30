@@ -315,7 +315,7 @@ proc changeBg {t c} {
 
 proc embDefBg t {
     set bg [lindex [$t configure -background] 3]
-    changeBg $t $bg 
+    changeBg $t $bg
 }
 
 proc textMakePeer {parent} {

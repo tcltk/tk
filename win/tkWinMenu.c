@@ -19,8 +19,8 @@
  * The class of the window for popup menus.
  */
 
-#define MENU_CLASS_NAME			TEXT("MenuWindowClass")
-#define EMBEDDED_MENU_CLASS_NAME	TEXT("EmbeddedMenuWindowClass")
+#define MENU_CLASS_NAME			L"MenuWindowClass"
+#define EMBEDDED_MENU_CLASS_NAME	L"EmbeddedMenuWindowClass"
 
 /*
  * Used to align a windows bitmap inside a rectangle
@@ -573,7 +573,7 @@ ReconfigureWindowsMenu(
     TkMenuEntry *mePtr;
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
     char *itemText = NULL;
-    const TCHAR *lpNewItem;
+    const WCHAR *lpNewItem;
     UINT flags;
     UINT itemID;
     int i, count, systemMenu = 0, base;
@@ -610,10 +610,10 @@ ReconfigureWindowsMenu(
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 	    Tcl_WinUtfToTChar(itemText, -1, &translatedText);
-	    lpNewItem = (const TCHAR *) Tcl_DStringValue(&translatedText);
+	    lpNewItem = (const WCHAR *) Tcl_DStringValue(&translatedText);
 	    flags |= MF_STRING;
 	} else {
-	    lpNewItem = (LPCTSTR) mePtr;
+	    lpNewItem = (LPCWSTR) mePtr;
 	    flags |= MF_OWNERDRAW;
 	}
 
@@ -3492,7 +3492,7 @@ TkpMenuThreadInit(void)
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    tsdPtr->menuHWND = CreateWindow(MENU_CLASS_NAME, TEXT("MenuWindow"), WS_POPUP,
+    tsdPtr->menuHWND = CreateWindow(MENU_CLASS_NAME, L"MenuWindow", WS_POPUP,
 	    0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
     if (!tsdPtr->menuHWND) {
@@ -3500,7 +3500,7 @@ TkpMenuThreadInit(void)
     }
 
     tsdPtr->embeddedMenuHWND =
-	    CreateWindow(EMBEDDED_MENU_CLASS_NAME, TEXT("EmbeddedMenuWindow"),
+	    CreateWindow(EMBEDDED_MENU_CLASS_NAME, L"EmbeddedMenuWindow",
 	    WS_POPUP, 0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
     if (!tsdPtr->embeddedMenuHWND) {
