@@ -875,13 +875,14 @@ TkTextGetIndexFromObj(
     TkTextIndex *indexPtr)	/* Store the result here. */
 {
     TkSizeT length;
+    const char *str;
 
     assert(textPtr);
     assert(objPtr);
 
-    TkGetStringFromObj(objPtr, &length);
+    str = TkGetStringFromObj(objPtr, &length);
     return TkpTextGetIndex(interp, textPtr->sharedTextPtr, textPtr,
-	    TkGetStringFromObj(objPtr, &length), length, indexPtr);
+	    str, length, indexPtr);
 }
 
 /*

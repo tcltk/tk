@@ -83,19 +83,6 @@ fi
 AC_PROG_CC
 AC_C_INLINE
 
-#--------------------------------------------------------------------
-# Supply a substitute for stdlib.h if it doesn't define strtol,
-# strtoul, or strtod (which it doesn't in some versions of SunOS).
-#--------------------------------------------------------------------
-
-AC_CHECK_HEADER(stdlib.h, tk_ok=1, tk_ok=0)
-AC_EGREP_HEADER(strtol, stdlib.h, , tk_ok=0)
-AC_EGREP_HEADER(strtoul, stdlib.h, , tk_ok=0)
-AC_EGREP_HEADER(strtod, stdlib.h, , tk_ok=0)
-if test $tk_ok = 0; then
-    AC_DEFINE(NO_STDLIB_H, 1, [Do we have <stdlib.h>?])
-fi
-
 #------------------------------------------------------------------------
 # If we're using GCC, see if the compiler understands -pipe.  If so, use it.
 # It makes compiling go faster.  (This is only a performance feature.)

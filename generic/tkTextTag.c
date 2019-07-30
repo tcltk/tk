@@ -34,25 +34,13 @@
 #endif
 
 /*
- * Support of tk8.5.
- */
-#ifdef CONST
-# undef CONST
-#endif
-#if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 5
-# define CONST
-#else
-# define CONST const
-#endif
-
-/*
  * The 'TkWrapMode' enum in tkText.h is used to define a type for the -wrap
  * option of tags in a Text widget. These values are used as indices into the
  * string table below. Tags are allowed an empty wrap value, but the widget as
  * a whole is not.
  */
 
-static const char *CONST wrapStrings[] = {
+static const char *const wrapStrings[] = {
     "char", "none", "word", "codepoint", NULL
 };
 
@@ -63,7 +51,7 @@ static const char *CONST wrapStrings[] = {
  * widget as a whole is not.
  */
 
-static const char *CONST tabStyleStrings[] = {
+static const char *const tabStyleStrings[] = {
     "tabular", "wordprocessor", "", NULL
 };
 
@@ -2883,13 +2871,11 @@ TkTextBindProc(
     ClientData clientData,	/* Pointer to canvas structure. */
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
-    enum { AnyButtonMask = Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask };
-
     TkText *textPtr = clientData;
     bool dontRepick = textPtr->dontRepick;
     bool repick = false;
 
-    textPtr->refCount += 1;
+    textPtr->refCount++;
 
     /*
      * This code simulates grabs for mouse buttons by keeping track of whether
@@ -2900,24 +2886,19 @@ TkTextBindProc(
     if (eventPtr->type == ButtonPress) {
 	textPtr->flags |= BUTTON_DOWN;
     } else if (eventPtr->type == ButtonRelease) {
-	unsigned mask = 0;
+	unsigned int mask;
 
-	switch (eventPtr->xbutton.button) {
-	    case Button1: mask = Button1Mask; break;
-	    case Button2: mask = Button2Mask; break;
-	    case Button3: mask = Button3Mask; break;
-	    case Button4: mask = Button4Mask; break;
-	    case Button5: mask = Button5Mask; break;
-	}
-	if ((eventPtr->xbutton.state & AnyButtonMask) == mask) {
+	mask = TkGetButtonMask(eventPtr->xbutton.button);
+	if ((eventPtr->xbutton.state & ALL_BUTTONS) == mask) {
 	    textPtr->flags &= ~BUTTON_DOWN;
 	    repick = true;
 	    if (eventPtr->xbutton.state & (Button1|Button2|Button3)) {
 		textPtr->dontRepick = false; /* in case of button clicks we must repick */
 	    }
 	}
-    } else if (eventPtr->type == EnterNotify || eventPtr->type == LeaveNotify) {
-	if (eventPtr->xcrossing.state & AnyButtonMask) {
+    } else if ((eventPtr->type == EnterNotify)
+	    || (eventPtr->type == LeaveNotify)) {
+	if (eventPtr->xcrossing.state & ALL_BUTTONS) {
 	    textPtr->flags |= BUTTON_DOWN;
 	} else {
 	    textPtr->flags &= ~BUTTON_DOWN;
@@ -2925,7 +2906,7 @@ TkTextBindProc(
 	TkTextPickCurrent(textPtr, eventPtr);
 	goto done;
     } else if (eventPtr->type == MotionNotify) {
-	if (eventPtr->xmotion.state & AnyButtonMask) {
+	if (eventPtr->xmotion.state & ALL_BUTTONS) {
 	    textPtr->flags |= BUTTON_DOWN;
 	} else {
 	    textPtr->flags &= ~BUTTON_DOWN;
@@ -2944,10 +2925,10 @@ TkTextBindProc(
 	}
     }
     if (repick) {
-	unsigned oldState = eventPtr->xbutton.state;
+	unsigned int oldState;
 
 	oldState = eventPtr->xbutton.state;
-	eventPtr->xbutton.state &= ~(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask);
+	eventPtr->xbutton.state &= ~ALL_BUTTONS;
 	if (!(textPtr->flags & DESTROYED)) {
 	    TkTextPickCurrent(textPtr, eventPtr);
 	}
@@ -2965,20 +2946,19 @@ TkTextBindProc(
  * TkTextPickCurrent --
  *
  *	Find the character containing the coordinates in an event and place
- *	the "current" mark on that character (but the real update of the
- *	segment will be postponed). If the "current" mark has moved then
- *	generate a fake leave event on the old current character and a fake
- *	enter event on the new current character.
+ *	the "current" mark on that character. If the "current" mark has moved
+ *	then generate a fake leave event on the old current character and a
+ *	fake enter event on the new current character.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The index of the current mark for textPtr may change. If it does,
- *	then the commands associated with character entry and leave could
- *	do just about anything. For example, the text widget might be deleted.
- *	It is up to the caller to protect itself by incrementing the refCount
- *	of the text widget.
+ *	The current mark for textPtr may change. If it does, then the commands
+ *	associated with character entry and leave could do just about
+ *	anything. For example, the text widget might be deleted. It is up to
+ *	the caller to protect itself by incrementing the refCount of the text
+ *	widget.
  *
  *--------------------------------------------------------------
  */

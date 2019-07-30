@@ -59,18 +59,6 @@
 #endif
 
 /*
- * Support of tk8.5.
- */
-#ifdef CONST
-# undef CONST
-#endif
-#if TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 5
-# define CONST
-#else
-# define CONST const
-#endif
-
-/*
  * Support of tk8.6/8.5.
  */
 #ifndef DEF_TEXT_INACTIVE_SELECT_FG_COLOR
@@ -113,7 +101,7 @@
  * table below.
  */
 
-static const char *CONST stateStrings[] = {
+static const char *const stateStrings[] = {
     "disabled", "normal", "readonly", NULL
 };
 
@@ -122,7 +110,7 @@ static const char *CONST stateStrings[] = {
  * option of the Text widget. These values are used as indices into the string table below.
  */
 
-static const char *CONST taggingStrings[] = {
+static const char *const taggingStrings[] = {
     "within", "gravity", "none", NULL
 };
 
@@ -131,7 +119,7 @@ static const char *CONST taggingStrings[] = {
  * the Text widget. These values are used as indices into the string table below.
  */
 
-static const char *CONST justifyStrings[] = {
+static const char *const justifyStrings[] = {
     "left", "right", "full", "center", NULL
 };
 
@@ -141,7 +129,7 @@ static const char *CONST justifyStrings[] = {
  * table below.
  */
 
-static const char *CONST wrapStrings[] = {
+static const char *const wrapStrings[] = {
     "char", "none", "word", "codepoint", NULL
 };
 
@@ -151,7 +139,7 @@ static const char *CONST wrapStrings[] = {
  * table below.
  */
 
-static const char *CONST spaceModeStrings[] = {
+static const char *const spaceModeStrings[] = {
     "none", "exact", "trim", NULL
 };
 
@@ -161,7 +149,7 @@ static const char *CONST spaceModeStrings[] = {
  * the string table below.
  */
 
-static const char *CONST tabStyleStrings[] = {
+static const char *const tabStyleStrings[] = {
     "tabular", "wordprocessor", NULL
 };
 
@@ -171,7 +159,7 @@ static const char *CONST tabStyleStrings[] = {
  * indice into the string table below.
  */
 
-static const char *CONST insertUnfocussedStrings[] = {
+static const char *const insertUnfocussedStrings[] = {
     "hollow", "none", "solid", NULL
 };
 
@@ -210,7 +198,7 @@ static Tcl_Obj *	GetLineStartEnd(ClientData clientData, Tk_Window tkwin, char *r
 static void		RestoreLineStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
 
-static CONST Tk_ObjCustomOption lineOption = {
+static const Tk_ObjCustomOption lineOption = {
     "line",			/* name */
     SetLineStartEnd,		/* setProc */
     GetLineStartEnd,		/* getProc */
@@ -236,7 +224,7 @@ static void		RestoreTextStartEnd(ClientData clientData, Tk_Window tkwin, char *i
 			    char *oldInternalPtr);
 static void		FreeTextStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr);
 
-static CONST Tk_ObjCustomOption startEndMarkOption = {
+static const Tk_ObjCustomOption startEndMarkOption = {
     "index",			/* name */
     SetTextStartEnd,		/* setProc */
     GetTextStartEnd,		/* getProc */
@@ -628,7 +616,7 @@ static SearchLineIndexProc	TextSearchGetLineIndex;
  * can be invoked from generic window code.
  */
 
-static CONST Tk_ClassProcs textClass = {
+static const Tk_ClassProcs textClass = {
     sizeof(Tk_ClassProcs),	/* size */
     TextWorldChangedCallback,	/* worldChangedProc */
     NULL,			/* createProc */
