@@ -2857,7 +2857,7 @@ TkCygwinMainEx(
 
     /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
     len = GetModuleFileNameW(Tk_GetHINSTANCE(), name, MAX_PATH);
-    name[len-2] = L'.';
+    name[len-2] = '.';
     name[len-1] = name[len-5];
     wcscpy(name+len, L".dll");
     memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
