@@ -178,14 +178,14 @@ Tcl_Obj*
 TkWin32ErrorObj(
     HRESULT hrError)
 {
-    LPTSTR lpBuffer = NULL, p = NULL;
-    TCHAR  sBuffer[30];
+    LPWSTR lpBuffer = NULL, p = NULL;
+    WCHAR  sBuffer[30];
     Tcl_Obj* errPtr = NULL;
     Tcl_DString ds;
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, (DWORD)hrError,
-	    LANG_NEUTRAL, (LPTSTR)&lpBuffer, 0, NULL);
+	    LANG_NEUTRAL, (LPWSTR)&lpBuffer, 0, NULL);
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;

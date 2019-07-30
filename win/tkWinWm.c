@@ -883,7 +883,7 @@ InitWindowClass(
 	    class.lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
 	    class.lpfnWndProc = WmProc;
 	    if (titlebaricon == NULL) {
-		class.hIcon = LoadIcon(Tk_GetHINSTANCE(), TEXT("tk"));
+		class.hIcon = LoadIcon(Tk_GetHINSTANCE(), L"tk");
 	    } else {
 		class.hIcon = GetIcon(titlebaricon, ICON_BIG);
 		if (class.hIcon == NULL) {
@@ -1248,7 +1248,7 @@ ReadIconFromFile(
 	}
 	Tcl_WinUtfToTChar(file, -1, &ds2);
 	Tcl_DStringFree(&ds);
-	res = (DWORD *)SHGetFileInfo((TCHAR *)Tcl_DStringValue(&ds2), 0, &sfiSM,
+	res = (DWORD *)SHGetFileInfo((WCHAR *)Tcl_DStringValue(&ds2), 0, &sfiSM,
 		sizeof(SHFILEINFO), SHGFI_SMALLICON|SHGFI_ICON);
 
 	if (res != 0) {
@@ -1256,7 +1256,7 @@ ReadIconFromFile(
 	    unsigned size;
 
 	    Tcl_ResetResult(interp);
-	    res = (DWORD *)SHGetFileInfo((TCHAR *)Tcl_DStringValue(&ds2), 0, &sfi,
+	    res = (DWORD *)SHGetFileInfo((WCHAR *)Tcl_DStringValue(&ds2), 0, &sfi,
 		    sizeof(SHFILEINFO), SHGFI_ICON);
 
 	    /*
@@ -2131,7 +2131,7 @@ UpdateWrapper(
 
 	wmPtr->wrapper = CreateWindowEx(wmPtr->exStyle,
 		TK_WIN_TOPLEVEL_CLASS_NAME,
-		(LPCTSTR) Tcl_DStringValue(&titleString),
+		(LPCWSTR) Tcl_DStringValue(&titleString),
 		wmPtr->style, x, y, width, height,
 		parentHWND, NULL, Tk_GetHINSTANCE(), NULL);
 	Tcl_DStringFree(&titleString);
@@ -5459,7 +5459,7 @@ WmTitleCmd(
     }
     if (objc == 3) {
 	if (wrapper) {
-	    TCHAR buf[256];
+	    WCHAR buf[256];
 	    Tcl_DString titleString;
 	    int size = 256;
 
@@ -5485,7 +5485,7 @@ WmTitleCmd(
 	    Tcl_DString titleString;
 
 	    Tcl_WinUtfToTChar(wmPtr->title, -1, &titleString);
-	    SetWindowText(wrapper, (LPCTSTR) Tcl_DStringValue(&titleString));
+	    SetWindowText(wrapper, (LPCWSTR) Tcl_DStringValue(&titleString));
 	    Tcl_DStringFree(&titleString);
 	}
     }
