@@ -684,7 +684,7 @@ Tk_GetScrollInfo(
 	}
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad argument \"%s\": must be units or pages", argv[4]));
+		"bad argument \"%s\": must be pages or units", argv[4]));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
 	return TK_SCROLL_ERROR;
     }

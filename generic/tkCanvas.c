@@ -5079,7 +5079,7 @@ CanvasBindProc(
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkCanvas *canvasPtr = clientData;
-    int mask;
+    unsigned int mask;
 
     Tcl_Preserve(canvasPtr);
 

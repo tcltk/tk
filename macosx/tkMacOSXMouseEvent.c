@@ -361,10 +361,12 @@ ButtonModifiers2State(
     unsigned int state;
 
     /*
-     * Tk on OSX supports at most 5 buttons.
+     * Tk on OSX supports at most 9 buttons.
      */
 
-    state = (buttonState & 0x1F) * Button1Mask;
+    state = (buttonState & 0x7F) * Button1Mask;
+    /* Handle buttons 8/9 */
+    state |= (buttonState & 0x180) * (Button8Mask >> 7);
 
     if (keyModifiers & alphaLock) {
 	state |= LockMask;
