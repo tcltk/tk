@@ -662,7 +662,7 @@ TkpConfigureMenuEntry(
     [menuItem setEnabled:!(mePtr->state == ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
-	    (mePtr->entryFlags & ENTRY_SELECTED) ? NSControlStateValueOn : NSControlStateValueOff)];
+	    (mePtr->entryFlags & ENTRY_SELECTED) ? NSOnState : NSOffState)];
     if (mePtr->type != CASCADE_ENTRY && mePtr->accelPtr && mePtr->accelLength) {
 	keyEquivalent = ParseAccelerator(Tcl_GetString(mePtr->accelPtr),
 		&modifierMask);

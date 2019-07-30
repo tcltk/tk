@@ -16,6 +16,10 @@
 #include "tkMacOSXFont.h"
 #include "tkMacOSXConstants.h"
 
+#define defaultOrientation kCTFontDefaultOrientation
+#define verticalOrientation kCTFontVerticalOrientation
+#define fixedPitch kCTFontUserFixedPitchFontType
+
 /*
 #ifdef TK_MAC_DEBUG
 #define TK_MAC_DEBUG_FONTS
@@ -273,7 +277,7 @@ InitFont(
 	fmPtr->fixed = [nsFont advancementForGlyph:glyphs[0]].width ==
 		[nsFont advancementForGlyph:glyphs[1]].width;
 	bounds = NSRectFromCGRect(CTFontGetBoundingRectsForGlyphs((CTFontRef)
-		nsFont, kCTFontOrientationDefault, ch, boundingRects, nCh));
+		nsFont, defaultOrientation, ch, boundingRects, nCh));
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
@@ -390,7 +394,7 @@ TkpFontPkgInit(
 	systemFont++;
     }
     TkInitFontAttributes(&fa);
-    nsFont = (NSFont*) CTFontCreateUIFontForLanguage(kCTFontUIFontUserFixedPitch, 11, NULL);
+    nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
     if (nsFont) {
 	GetTkFontAttributesForNSFont(nsFont, &fa);
 	CFRelease(nsFont);
@@ -1105,7 +1109,7 @@ DrawCharsInContext(
     [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
     CFRelease(fg);
     nsFont = [attributes objectForKey:NSFontAttributeName];
-    [nsFont setInContext:[NSGraphicsContext graphicsContextWithCGContext:
+    [nsFont setInContext:[NSGraphicsContext graphicsContextWithGraphicsPort:
 	    context flipped:NO]];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
     attributedString = [[NSAttributedString alloc] initWithString:string
