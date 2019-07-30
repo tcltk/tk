@@ -72,8 +72,8 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
 {
     WNDCLASSEX wc;
     HWND       hwnd = NULL;
-    TCHAR      title[32] = TEXT("TtkMonitorWindow");
-    TCHAR      name[32] = TEXT("TtkMonitorClass");
+    WCHAR      title[32] = L"TtkMonitorWindow";
+    WCHAR      name[32] = L"TtkMonitorClass";
 
     wc.cbSize        = sizeof(WNDCLASSEX);
     wc.style         = CS_HREDRAW | CS_VREDRAW;
