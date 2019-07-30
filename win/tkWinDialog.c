@@ -790,7 +790,7 @@ Tk_ChooseColorObjCmd(
     chooseColor.Flags		= CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     chooseColor.lCustData	= (LPARAM) NULL;
     chooseColor.lpfnHook	= (LPOFNHOOKPROC) ColorDlgHookProc;
-    chooseColor.lpTemplateName	= (LPTSTR) interp;
+    chooseColor.lpTemplateName	= (LPWSTR) interp;
 
     for (i = 1; i < objc; i += 2) {
 	int index;
@@ -2504,7 +2504,7 @@ Tk_ChooseDirectoryObjCmd(
     if (ofnOpts.titleObj != NULL) {
 	Tcl_DStringInit(&titleString);
 	Tcl_UtfToUniCharDString(Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
-	bInfo.lpszTitle = (LPTSTR) Tcl_DStringValue(&titleString);
+	bInfo.lpszTitle = (LPWSTR) Tcl_DStringValue(&titleString);
     } else {
 	bInfo.lpszTitle = L"Please choose a directory, then select OK.";
     }

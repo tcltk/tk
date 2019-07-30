@@ -5958,7 +5958,7 @@ SearchCore(
 	 * begin.
 	 */
 
-	matchOffset = -1;
+	matchOffset = TCL_INDEX_NONE;
 
 	if (searchSpecPtr->exact) {
 	    int maxExtraLines = 0;
@@ -6230,7 +6230,7 @@ SearchCore(
 
 		if (!match ||
 			((info.extendStart == info.matches[0].start)
-			&& ((TkSizeT) info.matches[0].end == (TkSizeT) lastOffset - firstOffset))) {
+			&& (info.matches[0].end == (TkSizeT) (lastOffset - firstOffset)))) {
 		    int extraLines = 0;
 		    TkSizeT prevFullLine;
 
@@ -6248,7 +6248,7 @@ SearchCore(
 			lastNonOverlap = lastTotal;
 		    }
 
-		    if ((TkSizeT) info.extendStart == TCL_AUTO_LENGTH) {
+		    if (info.extendStart == TCL_INDEX_NONE) {
 			/*
 			 * No multi-line match is possible.
 			 */
@@ -6345,9 +6345,9 @@ SearchCore(
 			 */
 
 			if ((match &&
-				firstOffset + (TkSizeT) info.matches[0].end != (TkSizeT) lastTotal &&
-				firstOffset + (TkSizeT) info.matches[0].end + 1 < prevFullLine + 1)
-				|| (TkSizeT) info.extendStart == TCL_AUTO_LENGTH) {
+				firstOffset + info.matches[0].end != (TkSizeT) lastTotal &&
+				firstOffset + info.matches[0].end + 1 < prevFullLine + 1)
+				|| info.extendStart == TCL_INDEX_NONE) {
 			    break;
 			}
 
@@ -6358,10 +6358,10 @@ SearchCore(
 			 * that line.
 			 */
 
-			if (match && ((TkSizeT) info.matches[0].start + 1 >= (TkSizeT) lastOffset + 1)) {
+			if (match && (info.matches[0].start + 1 >= (TkSizeT) lastOffset + 1)) {
 			    break;
 			}
-			if (match && ((firstOffset + (TkSizeT) info.matches[0].end)
+			if (match && ((firstOffset + info.matches[0].end)
 				>= prevFullLine)) {
 			    if (extraLines > 0) {
 				extraLinesSearched = extraLines - 1;
@@ -6497,11 +6497,11 @@ SearchCore(
 		 * previous match.
 		 */
 
-		if (matchOffset == TCL_AUTO_LENGTH ||
+		if (matchOffset == TCL_INDEX_NONE ||
 			((searchSpecPtr->all || searchSpecPtr->backwards)
-			&& (((TkSizeT)firstOffset + 1< matchOffset + 1)
-			|| ((firstOffset + (TkSizeT) info.matches[0].end
-				- (TkSizeT) info.matches[0].start)
+			&& (((TkSizeT)firstOffset + 1 < matchOffset + 1)
+			|| ((firstOffset + info.matches[0].end
+				- info.matches[0].start)
 				> matchOffset + matchLength)))) {
 
 		    matchOffset = firstOffset;
@@ -6665,7 +6665,7 @@ SearchCore(
 	 * we are done.
 	 */
 
-	if ((lastBackwardsLineMatch == -1) && (matchOffset != TCL_AUTO_LENGTH)
+	if ((lastBackwardsLineMatch == -1) && (matchOffset != TCL_INDEX_NONE)
 		&& !searchSpecPtr->all) {
 	    searchSpecPtr->foundMatchProc(lineNum, searchSpecPtr, lineInfo,
 		    theLine, matchOffset, matchLength);

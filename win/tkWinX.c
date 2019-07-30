@@ -258,7 +258,7 @@ TkWinXInit(
 
     if (GetLocaleInfo(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
 	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
-	       (LPTSTR) &lpCP, sizeof(lpCP)/sizeof(WCHAR))
+	       (LPWSTR) &lpCP, sizeof(lpCP)/sizeof(WCHAR))
 	    && TranslateCharsetInfo(INT2PTR(lpCP), &lpCs, TCI_SRCCODEPAGE)) {
 	UpdateInputLanguage((int) lpCs.ciCharset);
     }
@@ -468,21 +468,21 @@ TkWinDisplayChanged(
     } else if (screen->root_depth == 12) {
 	screen->root_visual->class = TrueColor;
 	screen->root_visual->map_entries = 32;
-	screen->root_visual->red_mask = 0xf00000;
+	screen->root_visual->red_mask = 0xf0;
 	screen->root_visual->green_mask = 0xf000;
-	screen->root_visual->blue_mask = 0xf0;
+	screen->root_visual->blue_mask = 0xf00000;
     } else if (screen->root_depth == 16) {
 	screen->root_visual->class = TrueColor;
 	screen->root_visual->map_entries = 64;
-	screen->root_visual->red_mask = 0xf80000;
+	screen->root_visual->red_mask = 0xf8;
 	screen->root_visual->green_mask = 0xfc00;
-	screen->root_visual->blue_mask = 0xf8;
+	screen->root_visual->blue_mask = 0xf80000;
     } else if (screen->root_depth >= 24) {
 	screen->root_visual->class = TrueColor;
 	screen->root_visual->map_entries = 256;
-	screen->root_visual->red_mask = 0xff0000;
+	screen->root_visual->red_mask = 0xff;
 	screen->root_visual->green_mask = 0xff00;
-	screen->root_visual->blue_mask = 0xff;
+	screen->root_visual->blue_mask = 0xff0000;
     }
     screen->root_visual->bits_per_rgb = screen->root_depth;
     ReleaseDC(NULL, dc);
@@ -884,9 +884,12 @@ Tk_TranslateWinEvent(
     case WM_MBUTTONDBLCLK:
     case WM_RBUTTONDOWN:
     case WM_RBUTTONDBLCLK:
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONDBLCLK:
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
+    case WM_XBUTTONUP:
     case WM_MOUSEMOVE:
 	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
@@ -1675,7 +1678,7 @@ HandleIMEComposition(
  * TkWinResendEvent --
  *
  *	This function converts an X event into a Windows event and invokes the
- *	specified windo function.
+ *	specified window function.
  *
  * Results:
  *	A standard Windows result.
@@ -1713,6 +1716,14 @@ TkWinResendEvent(
 	msg = WM_RBUTTONDOWN;
 	wparam = MK_RBUTTON;
 	break;
+    case Button4:
+	msg = WM_XBUTTONDOWN;
+	wparam = MAKEWPARAM(MK_XBUTTON1, XBUTTON1);
+	break;
+    case Button5:
+	msg = WM_XBUTTONDOWN;
+	wparam = MAKEWPARAM(MK_XBUTTON2, XBUTTON2);
+	break;
     default:
 	return 0;
     }
@@ -1725,6 +1736,12 @@ TkWinResendEvent(
     }
     if (eventPtr->xbutton.state & Button3Mask) {
 	wparam |= MK_RBUTTON;
+    }
+    if (eventPtr->xbutton.state & Button4Mask) {
+	wparam |= MK_XBUTTON1;
+    }
+    if (eventPtr->xbutton.state & Button5Mask) {
+	wparam |= MK_XBUTTON2;
     }
     if (eventPtr->xbutton.state & ShiftMask) {
 	wparam |= MK_SHIFT;

@@ -28,7 +28,7 @@ static Tk_Window clipboardOwner = NULL;
     NSMutableString *string = [NSMutableString new];
 
     if (dispPtr && dispPtr->clipboardActive &&
-	    [type isEqualToString:NSPasteboardTypeString]) {
+	    [type isEqualToString:NSStringPboardType]) {
 	for (TkClipboardTarget *targetPtr = dispPtr->clipTargetPtr; targetPtr;
 		targetPtr = targetPtr->nextPtr) {
 	    if (targetPtr->type == XA_STRING ||
@@ -55,7 +55,7 @@ static Tk_Window clipboardOwner = NULL;
     if (dispPtr && dispPtr->clipboardActive) {
 	[self tkProvidePasteboard:dispPtr
 		pasteboard:[NSPasteboard generalPasteboard]
-		provideDataForType:NSPasteboardTypeString];
+		provideDataForType:NSStringPboardType];
     }
 }
 
@@ -132,7 +132,7 @@ TkSelGetSelection(
 	NSString *string = nil;
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
 	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
-		NSPasteboardTypeString]];
+		NSStringPboardType]];
 
 	if (type) {
 	    string = [pb stringForType:type];
@@ -236,7 +236,7 @@ TkSelUpdateClipboard(
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
 
-    changeCount = [pb addTypes:[NSArray arrayWithObject:NSPasteboardTypeString]
+    changeCount = [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
 	    owner:NSApp];
 }
 
