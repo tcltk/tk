@@ -872,7 +872,7 @@ TkPointerEvent(
 	} else {
 	    if (eventPtr->xbutton.button != AnyButton &&
 		    ((eventPtr->xbutton.state & ALL_BUTTONS)
-		    == (unsigned int)TkGetButtonMask(eventPtr->xbutton.button))) {
+		    == TkGetButtonMask(eventPtr->xbutton.button))) {
 		ReleaseButtonGrab(dispPtr);			/* Note 4. */
 	    }
 	}
