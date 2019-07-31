@@ -2354,7 +2354,7 @@ static void ThumbElementSize(
     } else {
 	*minHeight = 8;
 	*minWidth = 18;
-    }	
+    }
 }
 
 static void ThumbElementDraw(
