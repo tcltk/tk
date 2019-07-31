@@ -216,7 +216,7 @@ static void drawMacScrollbar(
     /*
      * Do not display the thumb unless scrolling is possible.
      */
-    
+
     if (scrollPtr->firstFraction > 0.0 || scrollPtr->lastFraction < 1.0) {
 	CGRect thumbBounds = {thumbOrigin, thumbSize};
 	path = CGPathCreateWithRoundedRect(thumbBounds, 4, 4, NULL);
@@ -233,7 +233,7 @@ static void drawMacScrollbar(
     }
 }
 #endif
-	       
+
 void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
@@ -317,7 +317,7 @@ TkpDisplayScrollbar(
 	/*
 	 * Switch back to NSView coordinates and draw a modern scrollbar.
 	 */
-	
+
 	CGContextConcatCTM(dc.context, t);
 	drawMacScrollbar(scrollPtr, msPtr, dc.context);
 #endif
