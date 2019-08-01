@@ -1015,7 +1015,7 @@ TkWmDeadWindow(
 	 */
 
 	if (winPtr->parentPtr) {
-	    while (Tk_DoOneEvent(TK_WINDOW_EVENTS|TK_DONT_WAIT)) {}
+	    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
 	}
 	[NSApp _resetAutoreleasePool];
 #if DEBUG_ZOMBIES > 0
@@ -5580,8 +5580,7 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	if ((objc < 3) || (objc > 4)) {
-	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "appearance window ?appearancename?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?appearancename?");
 	    return TCL_ERROR;
 	}
 	if (objc == 4 && [NSApp macMinorVersion] < 14) {
@@ -6877,10 +6876,11 @@ ApplyWindowAttributeFlagChanges(
 		     * height. This causes the window manager to refuse to
 		     * allow the window to be resized when it is a split
 		     * window. To work around this we make the max size equal
-		     * to the screen size.
+		     * to the screen size.  (For 10.11 and up, only)
 		     */
-
-		    [macWindow setMaxFullScreenContentSize:screenSize];
+		    if ([NSApp macMinorVersion] > 10) {
+			[macWindow setMaxFullScreenContentSize:screenSize];
+		    }
 		}
 	    }
 #endif

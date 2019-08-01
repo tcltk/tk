@@ -1042,7 +1042,6 @@ static void DrawDarkFocusRing(
 	{x, y + h}, {x, y + 1}, {x + w - 1, y + 1}, {x + w - 1, y + h}
     };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
-    CGRect outerRect = CGRectInset(bounds, -3, -3);
 
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
@@ -1061,7 +1060,8 @@ static void DrawDarkFocusRing(
     CGContextStrokePath(context);
     CGContextSetShouldAntialias(context, true);
     CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
-    CGPathRef path = CGPathCreateWithRoundedRect(outerRect, 4, 4, NULL);
+    CGPathRef path = CGPathCreateWithRoundedRect(CGRectInset(bounds, -3, -3),
+						 4, 4, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextAddRect(context, bounds);
@@ -1091,6 +1091,7 @@ static void DrawDarkFrame(
     };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
     CGPoint accent[2] = {{x, y + 1}, {x + w, y + 1}};
+
     switch (kind) {
     case kHIThemeFrameTextFieldSquare:
 	CGContextSaveGState(context);
@@ -1235,12 +1236,13 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
 
     SInt32 HIThemeState;
 
+    HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
     switch (params->kind) {
     case kThemePushButton:
-	HIThemeState = kThemeStateActive;
+	HIThemeState &= ~kThemeStateInactive;
+	HIThemeState |= kThemeStateActive;
 	break;
     default:
-	HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
 	break;
     }
 
@@ -2346,10 +2348,12 @@ static void ThumbElementSize(
     int orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
-    if (orientation == TTK_ORIENT_HORIZONTAL) {
-	*minHeight = 8;
-    } else {
+    if (orientation == TTK_ORIENT_VERTICAL) {
+	*minHeight = 18;
 	*minWidth = 8;
+    } else {
+	*minHeight = 8;
+	*minWidth = 18;
     }
 }
 
@@ -2371,15 +2375,11 @@ static void ThumbElementDraw(
      * able to display the thumb element at the size and location which the ttk
      * scrollbar widget requests.  The algorithm that HIToolbox uses to
      * determine the thumb geometry from the input values of min, max, value
-     * and viewSize is, of course, undocumented.  And this turns out to be a
-     * hard reverse engineering problem.  A seemingly natural algorithm is
-     * implemented below, but it does not correctly compute the same thumb
-     * geometry as HITools (which also apparently does not agree with
-     * NSScrollbar).  This code uses that algorithm for older OS versions,
+     * and viewSize is undocumented.  A seemingly natural algorithm is
+     * implemented below.  This code uses that algorithm for older OS versions,
      * because using HITools also handles drawing the buttons and 3D thumb used
-     * on those systems.  The incorrect geometry is annoying but not completely
-     * unusable.  For newer systems the cleanest approach is to just draw the
-     * thumb directly.
+     * on those systems.  For newer systems the cleanest approach is to just
+     * draw the thumb directly.
      */
 
     if ([NSApp macMinorVersion] > 8) {
@@ -2407,7 +2407,7 @@ static void ThumbElementDraw(
 	SolidFillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
 	END_DRAWING
     } else {
-	double thumbSize, trackSize, visibleSize, viewSize;
+	double thumbSize, trackSize, visibleSize, factor, fraction;
 	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
 	CGRect troughBounds = {{macWin->xOff, macWin->yOff},
 			       {Tk_Width(tkwin), Tk_Height(tkwin)}};
@@ -2421,7 +2421,6 @@ static void ThumbElementDraw(
          * largest int.
          */
 
-	viewSize = RangeToFactor(100.0);
 	HIThemeTrackDrawInfo info = {
 	    .version = 0,
 	    .bounds = troughBounds,
@@ -2430,19 +2429,24 @@ static void ThumbElementDraw(
 		kThemeTrackThumbRgnIsNotGhost,
 	    .enableState = kThemeTrackActive
 	};
-	info.trackInfo.scrollbar.viewsize = viewSize * .8;
+	factor = RangeToFactor(100.0);
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
 	    trackSize = troughBounds.size.width;
 	    thumbSize = b.width;
-	    visibleSize = (thumbSize / trackSize) * viewSize;
-	    info.max = viewSize - visibleSize;
-	    info.value = info.max * (b.x / (trackSize - thumbSize));
+	    fraction = b.x / trackSize;
 	} else {
-	    thumbSize = b.height;
 	    trackSize = troughBounds.size.height;
-	    visibleSize = (thumbSize / trackSize) * viewSize;
-	    info.max = viewSize - visibleSize;
-	    info.value = info.max * (b.y / (trackSize - thumbSize));
+	    thumbSize = b.height;
+	    fraction = b.y / trackSize;
+	}
+	visibleSize = (thumbSize / trackSize) * factor;
+	info.max = factor - visibleSize;
+	info.trackInfo.scrollbar.viewsize = visibleSize;
+	if ([NSApp macMinorVersion] < 8 ||
+	    orientation == TTK_ORIENT_HORIZONTAL) {
+	    info.value = factor * fraction;
+	} else {
+	    info.value = info.max - factor * fraction;
 	}
 	if ((state & TTK_STATE_PRESSED) ||
 	    (state & TTK_STATE_HOVER)) {
@@ -3120,8 +3124,7 @@ static int AquaTheme_Init(
 
     /*
      * <<NOTE-TRACKS>>
-     * In some themes the Layouts for a progress bar has a trough element and
-     *a
+     * In some themes the Layouts for a progress bar has a trough element and a
      * pbar element.  But in our case the appearance manager draws both parts
      * of the progress bar, so we just have a single element called ".track".
      */

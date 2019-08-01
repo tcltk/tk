@@ -48,7 +48,7 @@
 #endif
 #endif /* BFFM_VALIDATEFAILED */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int debugFlag;		/* Flags whether we should output debugging
 				 * information while displaying a builtin
 				 * dialog. */
@@ -1714,7 +1714,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     /*
      * We now allow FNERR_BUFFERTOOSMALL when multiselection is enabled. The
      * filename buffer has been dynamically allocated by the OFN dialog
-     * procedure to accomodate all selected files.
+     * procedure to accommodate all selected files.
      */
 
     if ((winCode != 0)
@@ -2295,54 +2295,56 @@ static int MakeFilterVista(
     for (i = 0, filterPtr = flist.filters;
          filterPtr;
          filterPtr = filterPtr->next, ++i) {
-        const char *sep;
-        FileFilterClause *clausePtr;
-        int nbytes;
+	const char *sep;
+	FileFilterClause *clausePtr;
+	int nbytes;
 
-        /* Check if this entry should be shown as the default */
-        if (initial && strcmp(initial, filterPtr->name) == 0)
+	/* Check if this entry should be shown as the default */
+	if (initial && strcmp(initial, filterPtr->name) == 0)
             initialIndex = i+1; /* Windows filter indices are 1-based */
 
-        /* First stash away the text description of the pattern */
+	/* First stash away the text description of the pattern */
 	Tcl_WinUtfToTChar(filterPtr->name, -1, &ds);
-        nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
-        nbytes += sizeof(WCHAR);         /* Terminating \0 */
-        dlgFilterPtr[i].pszName = ckalloc(nbytes);
-        memmove((void *) dlgFilterPtr[i].pszName, Tcl_DStringValue(&ds), nbytes);
-        Tcl_DStringFree(&ds);
+	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
+	nbytes += sizeof(WCHAR);         /* Terminating \0 */
+	dlgFilterPtr[i].pszName = ckalloc(nbytes);
+	memmove((void *) dlgFilterPtr[i].pszName, Tcl_DStringValue(&ds), nbytes);
+	Tcl_DStringFree(&ds);
 
-        /*
-         * Loop through and join patterns with a ";" Each "clause"
-         * corresponds to a single textual description (called typename)
-         * in the tk_getOpenFile docs. Each such typename may occur
-         * multiple times and all these form a single filter entry
-         * with one clause per occurence. Further each clause may specify
-         * multiple patterns. Hence the nested loop here.
-         */
-        sep = "";
-        for (clausePtr=filterPtr->clauses ; clausePtr;
-             clausePtr=clausePtr->next) {
-            GlobPattern *globPtr;
-            for (globPtr = clausePtr->patterns; globPtr;
-                 globPtr = globPtr->next) {
-                Tcl_DStringAppend(&patterns, sep, -1);
-                Tcl_DStringAppend(&patterns, globPtr->pattern, -1);
-                sep = ";";
-            }
-        }
+	/*
+	 * Loop through and join patterns with a ";" Each "clause"
+	 * corresponds to a single textual description (called typename)
+	 * in the tk_getOpenFile docs. Each such typename may occur
+	 * multiple times and all these form a single filter entry
+	 * with one clause per occurence. Further each clause may specify
+	 * multiple patterns. Hence the nested loop here.
+	 */
+	sep = "";
+	for (clausePtr=filterPtr->clauses ; clausePtr;
+	     clausePtr=clausePtr->next) {
+	    GlobPattern *globPtr;
+	    for (globPtr = clausePtr->patterns; globPtr;
+		    globPtr = globPtr->next) {
+		Tcl_DStringAppend(&patterns, sep, -1);
+		Tcl_DStringAppend(&patterns, globPtr->pattern, -1);
+		sep = ";";
+	    }
+	}
 
-        /* Again we need a Unicode form of the string */
+	/* Again we need a Unicode form of the string */
 	Tcl_WinUtfToTChar(Tcl_DStringValue(&patterns), -1, &ds);
-        nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
-        nbytes += sizeof(WCHAR);         /* Terminating \0 */
-        dlgFilterPtr[i].pszSpec = ckalloc(nbytes);
-        memmove((void *)dlgFilterPtr[i].pszSpec, Tcl_DStringValue(&ds), nbytes);
-        Tcl_DStringFree(&ds);
-        Tcl_DStringFree(&patterns);
+	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
+	nbytes += sizeof(WCHAR);         /* Terminating \0 */
+	dlgFilterPtr[i].pszSpec = ckalloc(nbytes);
+	memmove((void *)dlgFilterPtr[i].pszSpec, Tcl_DStringValue(&ds), nbytes);
+	Tcl_DStringFree(&ds);
+	Tcl_DStringSetLength(&patterns, 0);
     }
+    Tcl_DStringFree(&patterns);
 
-    if (initialIndex == 0)
-        initialIndex = 1;       /* If no default, show first entry */
+    if (initialIndex == 0) {
+	initialIndex = 1;       /* If no default, show first entry */
+    }
     *initialIndexPtr = initialIndex;
     *dlgFilterPtrPtr = dlgFilterPtr;
     *countPtr = flist.numFilters;
@@ -2716,7 +2718,7 @@ ChooseDirectoryValidateProc(
 
     case BFFM_INITIALIZED: {
 	/*
-	 * Directory browser intializing - tell it where to start from, user
+	 * Directory browser initializing - tell it where to start from, user
 	 * specified parameter.
 	 */
 

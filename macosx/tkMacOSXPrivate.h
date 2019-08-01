@@ -341,10 +341,7 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
     Bool _needsRedisplay;
-#endif
 }
 @property Bool needsRedisplay;
 @end
@@ -431,7 +428,7 @@ VISIBILITY_HIDDEN
 
 #endif /* _TKMACPRIV */
 
-int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *CONST objv[]);
+int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 
 /*
  * Local Variables:

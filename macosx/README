@@ -26,7 +26,7 @@ before asking on the list, many questions have already been answered).
 ---------------------------
 
 - There are two versions of Tk available on macOS: TkAqua using the native
-aqua widgets and look&feel, and TkX11 using the traditional unix X11 wigets.
+aqua widgets and look&feel, and TkX11 using the traditional unix X11 widgets.
 TkX11 requires an X11 server to be installed, such as Apple's X11 (which is
 available as an optional or default install on recent macOS).
 TkAqua and TkX11 can be distinguished at runtime via [tk windowingsystem].
@@ -490,7 +490,7 @@ The macOS Tk application does not call the [NSApp run] method at
 all.  Instead it uses the event loop built in to Tk.  So the
 application must take care to replicate the important features of the
 method ourselves.  The way that autorelease pools are handled is
-discussed in 4.2 below.  Here we discuss the event handling itself.
+discussed in 5.2 below.  Here we discuss the event handling itself.
 
 The Tcl event loop simply consists of repeated calls to TclDoOneEvent.
 Each call to TclDoOneEvent begins by collecting all pending events from
@@ -523,7 +523,7 @@ event to the Tcl queue.
 
 In order to carry out the job of managing autorelease pools, which
 would normally be handled by the [NSApp run] method, a private
-NSAUtoreleasePool* property is added to the TkApplication subclass of
+NSAutoreleasePool* property is added to the TkApplication subclass of
 NSApplication. The TkpInit function calls [NSApp _setup] which
 initializes this property by creating an NSAutoreleasePool prior to
 calling [NSApp finishLaunching].  This mimics the behavior of the
@@ -548,7 +548,7 @@ in nested calls to CheckProc.
 One additional minor caveat for developers is that there are several
 steps of the Tk initialization which precede the call to TkpInit.
 Notably, the font package is initialized first.  Since there is no
-NSAUtoreleasePool in scope prior to calling TkpInit, the functions
+NSAutoreleasePool in scope prior to calling TkpInit, the functions
 called in these preliminary stages need to create and drain their own
 NSAutoreleasePools whenever they call methods of Appkit objects
 (e.g. NSFont).
@@ -568,7 +568,7 @@ window. (Normally, the clipping rectangle is the same as the bounding
 rectangle, but drawing can be clipped to a smaller rectangle by
 calling TkpClipDrawableToRect.) The aboveVisRgn is the intersection of
 the window's bounding rectangle with the bounding rectangle of the
-parent window.  Much of the code in tkMacOSXSubindows.c is devoted to
+parent window.  Much of the code in tkMacOSXSubwindows.c is devoted to
 rebuilding these clipping regions whenever something changes in the
 layout of the windows.  This turns out to be a tricky thing to do and
 it is extremely prone to errors which can be difficult to trace.
@@ -702,7 +702,7 @@ that LaunchServices is launching the correct Wish.app.  Instructions
 for doing this are provided below.
 
 The command line tool which manages the LaunchServices database has
-an amazingly unwieldy path name.  So, first, run this command: 
+an amazingly unwieldy path name.  So, first, run this command:
 
 alias lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
 

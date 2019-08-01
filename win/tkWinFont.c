@@ -1,7 +1,7 @@
 /*
  * tkWinFont.c --
  *
- *	Contains the Windows implementation of the platform-independant font
+ *	Contains the Windows implementation of the platform-independent font
  *	package interface.
  *
  * Copyright (c) 1994 Software Research Associates, Inc.
@@ -168,7 +168,7 @@ static const TkStateMap systemMap[] = {
     {-1,		    NULL}
 };
 
-typedef struct ThreadSpecificData {
+typedef struct {
     FontFamily *fontFamilyList; /* The list of font families that are
 				 * currently loaded. As screen fonts are
 				 * loaded, this list grows to hold information
@@ -1823,7 +1823,7 @@ AllocFontFamily(
     }
 
     if (encoding == NULL) {
-	encoding = Tcl_GetEncoding(NULL, "unicode");
+	encoding = TkWinGetUnicodeEncoding();
 	familyPtr->textOutProc =
 	    (BOOL (WINAPI *)(HDC, int, int, TCHAR *, int)) TextOutW;
 	familyPtr->getTextExtentPoint32Proc =

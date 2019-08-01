@@ -1,6 +1,6 @@
 /*
  * tkMacOSXServices.c --
- *
+ *\
  *	This file allows the integration of Tk and the Cocoa NSServices API.
  *
  * Copyright (c) 2010-2019 Kevin Walzer/WordTech Communications LLC.
@@ -54,7 +54,6 @@ ServicesEventProc(
     NSArray *sendTypes = [NSArray arrayWithObjects:@"NSStringPboardType",
 				  @"NSPasteboardTypeString", nil];
     [NSApp registerServicesMenuSendTypes:sendTypes returnTypes:sendTypes];
-    NSUpdateDynamicServices();
     return;
 }
 
@@ -121,7 +120,7 @@ ServicesEventProc(
 	      userData:(NSString *)data
 		 error:(NSString **)error
 {
-    NSString *pboardString, *pboardType;
+    NSString *pboardString = nil, *pboardType = nil;
     NSArray *types = [pboard types];
     Tcl_Event *event;
 
@@ -159,7 +158,7 @@ TkMacOSXRegisterServiceWidgetObjCmd(
     ClientData cd,
     Tcl_Interp *ip,
     int objc,
-    Tcl_Obj *CONST objv[])
+    Tcl_Obj *const objv[])
 {
     /*
      * Need proper number of args.
