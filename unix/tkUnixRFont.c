@@ -50,7 +50,7 @@ typedef struct {
  * the information isn't retrievable from the GC.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     Region clipRegion;		/* The clipping region, or None. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
@@ -69,7 +69,7 @@ void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    static Tcl_Config cfg[] = {
+    static const Tcl_Config cfg[] = {
 	{ "fontsystem", "xft" },
 	{ 0,0 }
     };

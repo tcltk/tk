@@ -932,6 +932,17 @@ typedef struct TkpClipMask {
 #define EXTENDED_MASK	(AnyModifier<<3)
 
 /*
+ * Mask that selects any of the state bits corresponding to buttons, plus
+ * masks that select individual buttons' bits:
+ */
+
+#define ALL_BUTTONS \
+	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
+
+
+MODULE_SCOPE int TkGetButtonMask(unsigned int);
+
+/*
  * Object types not declared in tkObj.c need to be mentioned here so they can
  * be properly registered with Tcl:
  */

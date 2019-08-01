@@ -5920,7 +5920,7 @@ test bind-28.8 {keysym names} -setup {
 } -result {X x {keysym X}}
 
 
-test bind-29.1 {Tk_BackgroundError procedure} -setup {
+test bind-29.1 {Tcl_BackgroundError procedure} -setup {
     proc bgerror msg {
         global x errorInfo
         set x [list $msg $errorInfo]
@@ -5944,7 +5944,7 @@ test bind-29.1 {Tk_BackgroundError procedure} -setup {
 "error "This is a test""
     (command bound to event)}}
     
-test bind-29.2 {Tk_BackgroundError procedure} -setup {
+test bind-29.2 {Tcl_BackgroundError procedure} -setup {
     proc do {} {
         event generate .t.f <Button>
         event generate .t.f <ButtonRelease>

@@ -1212,6 +1212,6 @@ proc ::tk::TextScanDrag {w x y} {
     }
     if {[info exists Priv(mouseMoved)] && $Priv(mouseMoved)} {
 	$w scan dragto $x $y
-    }  
+    }
 }
 

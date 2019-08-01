@@ -139,7 +139,7 @@ typedef struct ExitHandler {
  * storage for the current thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int handlersActive;		/* The following variable has a non-zero value
 				 * when a handler is active. */
     InProgress *pendingPtr;	/* Topmost search in progress, or NULL if
@@ -193,7 +193,6 @@ TCL_DECLARE_MUTEX(exitMutex)
 
 static void		CleanUpTkEvent(XEvent *eventPtr);
 static void		DelayedMotionProc(ClientData clientData);
-static int		GetButtonMask(unsigned int Button);
 static unsigned long    GetEventMaskFromXEvent(XEvent *eventPtr);
 static TkWindow *	GetTkWindowFromXEvent(XEvent *eventPtr);
 static void		InvokeClientMessageHandlers(ThreadSpecificData *tsdPtr,
@@ -524,7 +523,7 @@ RefreshKeyboardMappingIfNeeded(
 /*
  *----------------------------------------------------------------------
  *
- * GetButtonMask --
+ * TkGetButtonMask --
  *
  *	Return the proper Button${n}Mask for the button.
  *
@@ -537,23 +536,15 @@ RefreshKeyboardMappingIfNeeded(
  *----------------------------------------------------------------------
  */
 
-static int
-GetButtonMask(
+static const int buttonMasks[] = {
+    0, Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask
+};
+
+int
+TkGetButtonMask(
     unsigned int button)
 {
-    switch (button) {
-    case 1:
-	return Button1Mask;
-    case 2:
-	return Button2Mask;
-    case 3:
-	return Button3Mask;
-    case 4:
-	return Button4Mask;
-    case 5:
-	return Button5Mask;
-    }
-    return 0;
+    return (button > Button5) ? 0 : buttonMasks[button];
 }
 
 /*

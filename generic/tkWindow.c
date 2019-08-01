@@ -37,7 +37,7 @@ typedef struct TkHalfdeadWindow {
     struct TkHalfdeadWindow *nextPtr;
 } TkHalfdeadWindow;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int numMainWindows;		/* Count of numver of main windows currently
 				 * open in this thread. */
     TkMainInfo *mainWindowList;
@@ -852,7 +852,7 @@ TkCreateMainWindow(
      * Create the basic TkWindow structure.
      */
 
-    tkwin = CreateTopLevelWindow(interp, (Tk_Window) NULL, baseName,
+    tkwin = CreateTopLevelWindow(interp, NULL, baseName,
 	    screenName, /* flags */ 0);
     if (tkwin == NULL) {
 	return NULL;

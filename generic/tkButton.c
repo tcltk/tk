@@ -16,7 +16,7 @@
 #include "tkButton.h"
 #include "default.h"
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int defaultsInitialized;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;

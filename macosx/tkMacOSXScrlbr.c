@@ -8,7 +8,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2015 Kevin Walzer/WordTech Commununications LLC.
- * Copyright (c) 2018 Marc Culler
+ * Copyright (c) 2018-2019 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -18,14 +18,13 @@
 #include "tkScrollbar.h"
 #include "tkMacOSXPrivate.h"
 
-#define MIN_SCROLLBAR_VALUE		0
-
 /*
  * Minimum slider length, in pixels (designed to make sure that the slider is
  * always easy to grab with the mouse).
  */
 
-#define MIN_SLIDER_LENGTH	5
+#define MIN_SLIDER_LENGTH	18
+#define MIN_GAP			4
 
 /*
  * Borrowed from ttkMacOSXTheme.c to provide appropriate scaling.
@@ -88,7 +87,8 @@ typedef struct ScrollbarMetrics {
 } ScrollbarMetrics;
 
 static ScrollbarMetrics metrics = {
-    15, 54, 26, 14, 14, kControlSizeNormal /* kThemeScrollBarMedium */
+    /* kThemeScrollBarMedium */
+    15, MIN_SLIDER_LENGTH, 26, 14, 14, kControlSizeNormal
 };
 
 /*
@@ -160,6 +160,80 @@ TkpCreateScrollbar(
  *--------------------------------------------------------------
  */
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
+
+/*
+ * This stand-alone drawing function is used on macOS 10.9 and newer because
+ * the HIToolbox does not draw the scrollbar thumb at the expected size on
+ * those systems.  The thumb is drawn too large, causing a mouse click on the
+ * thumb to be interpreted as a mouse click in the trough.
+ */
+
+static void drawMacScrollbar(
+    TkScrollbar *scrollPtr,
+    MacScrollbar *msPtr,
+    CGContextRef context)
+{
+    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
+    NSView *view = TkMacOSXDrawableView(macWin);
+    CGPathRef path;
+    CGPoint inner[2], outer[2], thumbOrigin;
+    CGSize thumbSize;
+    CGRect troughBounds = msPtr->info.bounds;
+    troughBounds.origin.y = [view bounds].size.height -
+	(troughBounds.origin.y + troughBounds.size.height);
+    if (scrollPtr->vertical) {
+	thumbOrigin.x = troughBounds.origin.x + MIN_GAP;
+	thumbOrigin.y = troughBounds.origin.y + scrollPtr->sliderFirst;
+	thumbSize.width = troughBounds.size.width - 2*MIN_GAP + 1;
+	thumbSize.height = scrollPtr->sliderLast - scrollPtr->sliderFirst;
+	inner[0] = troughBounds.origin;
+	inner[1] = CGPointMake(inner[0].x,
+			       inner[0].y + troughBounds.size.height);
+	outer[0] = CGPointMake(inner[0].x + troughBounds.size.width - 1,
+			       inner[0].y);
+	outer[1] = CGPointMake(outer[0].x, inner[1].y);
+    } else {
+	thumbOrigin.x = troughBounds.origin.x + scrollPtr->sliderFirst;
+	thumbOrigin.y = troughBounds.origin.y + MIN_GAP;
+	thumbSize.width = scrollPtr->sliderLast - scrollPtr->sliderFirst;
+	thumbSize.height = troughBounds.size.height - 2*MIN_GAP + 1;
+	inner[0] = troughBounds.origin;
+	inner[1] = CGPointMake(inner[0].x + troughBounds.size.width,
+			       inner[0].y + 1);
+	outer[0] = CGPointMake(inner[0].x,
+			       inner[0].y + troughBounds.size.height);
+	outer[1] = CGPointMake(inner[1].x, outer[0].y);
+    }
+    CGContextSetShouldAntialias(context, false);
+    CGContextSetGrayFillColor(context, 250.0 / 255, 1.0);
+    CGContextFillRect(context, troughBounds);
+    CGContextSetGrayStrokeColor(context, 232.0 / 255, 1.0);
+    CGContextStrokeLineSegments(context, inner, 2);
+    CGContextSetGrayStrokeColor(context, 238.0 / 255, 1.0);
+    CGContextStrokeLineSegments(context, outer, 2);
+
+    /*
+     * Do not display the thumb unless scrolling is possible.
+     */
+
+    if (scrollPtr->firstFraction > 0.0 || scrollPtr->lastFraction < 1.0) {
+	CGRect thumbBounds = {thumbOrigin, thumbSize};
+	path = CGPathCreateWithRoundedRect(thumbBounds, 4, 4, NULL);
+	CGContextBeginPath(context);
+	CGContextAddPath(context, path);
+	if (msPtr->info.trackInfo.scrollbar.pressState != 0) {
+	    CGContextSetGrayFillColor(context, 133.0 / 255, 1.0);
+	} else {
+	    CGContextSetGrayFillColor(context, 200.0 / 255, 1.0);
+	}
+	CGContextSetShouldAntialias(context, true);
+	CGContextFillPath(context);
+	CFRelease(path);
+    }
+}
+#endif
+
 void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
@@ -184,6 +258,10 @@ TkpDisplayScrollbar(
 	    || !TkMacOSXSetupDrawingContext((Drawable) macWin, NULL, 1, &dc)) {
 	return;
     }
+
+    /*
+     * Transform NSView coordinates to CoreGraphics coordinates.
+     */
 
     CGFloat viewHeight = [view bounds].size.height;
     CGAffineTransform t = {
@@ -229,13 +307,22 @@ TkpDisplayScrollbar(
 
     if (SNOW_LEOPARD_STYLE) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
-		kHIThemeOrientationInverted);
-    } else {
+			 kHIThemeOrientationInverted);
+    } else if ([NSApp macMinorVersion] <= 8) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
-		kHIThemeOrientationNormal);
+			 kHIThemeOrientationNormal);
+    } else {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1080
+
+	/*
+	 * Switch back to NSView coordinates and draw a modern scrollbar.
+	 */
+
+	CGContextConcatCTM(dc.context, t);
+	drawMacScrollbar(scrollPtr, msPtr, dc.context);
+#endif
     }
     TkMacOSXRestoreDrawingContext(&dc);
-
     scrollPtr->flags &= ~REDRAW_PENDING;
 }
 
@@ -297,22 +384,23 @@ TkpComputeScrollbarGeometry(
     scrollPtr->sliderLast = fieldLength*scrollPtr->lastFraction;
 
     /*
-     * Adjust the slider so that some piece of it is always displayed in the
-     * scrollbar and so that it has at least a minimal width (so it can be
-     * grabbed with the mouse).
+     * Adjust the slider so that it has at least a minimal size and so there
+     * is a small gap on either end which can be used to scroll by one page.
      */
 
+    if (scrollPtr->sliderFirst < MIN_GAP) {
+	scrollPtr->sliderFirst = MIN_GAP;
+	scrollPtr->sliderLast += MIN_GAP;
+    }
+    if (scrollPtr->sliderLast > fieldLength - MIN_GAP) {
+	scrollPtr->sliderLast = fieldLength - MIN_GAP;
+	scrollPtr->sliderFirst -= MIN_GAP;
+    }
     if (scrollPtr->sliderFirst > fieldLength - MIN_SLIDER_LENGTH) {
 	scrollPtr->sliderFirst = fieldLength - MIN_SLIDER_LENGTH;
     }
-    if (scrollPtr->sliderFirst < 0) {
-	scrollPtr->sliderFirst = 0;
-    }
     if (scrollPtr->sliderLast < scrollPtr->sliderFirst + MIN_SLIDER_LENGTH) {
 	scrollPtr->sliderLast = scrollPtr->sliderFirst + MIN_SLIDER_LENGTH;
-    }
-    if (scrollPtr->sliderLast > fieldLength) {
-	scrollPtr->sliderLast = fieldLength;
     }
     scrollPtr->sliderFirst += -scrollPtr->arrowLength + scrollPtr->inset;
     scrollPtr->sliderLast += scrollPtr->inset;
@@ -511,7 +599,7 @@ UpdateControlValues(
     msPtr->info.bounds = contrlRect;
 
     width = contrlRect.size.width;
-    height = contrlRect.size.height;
+    height = contrlRect.size.height - scrollPtr->arrowLength;
 
     /*
      * Ensure we set scrollbar control bounds only once all size adjustments
@@ -535,10 +623,9 @@ UpdateControlValues(
      * the view area.
      */
 
-    double maximum = 100, factor = RangeToFactor(maximum);
-
+    double factor = RangeToFactor(100.0);
     dViewSize = (scrollPtr->lastFraction - scrollPtr->firstFraction) * factor;
-    msPtr->info.max = MIN_SCROLLBAR_VALUE + factor - dViewSize;
+    msPtr->info.max = factor - dViewSize;
     msPtr->info.trackInfo.scrollbar.viewsize = dViewSize;
     if (scrollPtr->vertical) {
 	if (SNOW_LEOPARD_STYLE) {
@@ -548,8 +635,7 @@ UpdateControlValues(
 		    factor * scrollPtr->firstFraction;
 	}
     } else {
-	msPtr->info.value = MIN_SCROLLBAR_VALUE +
-		factor * scrollPtr->firstFraction;
+	msPtr->info.value = factor * scrollPtr->firstFraction;
     }
 
     if ((scrollPtr->firstFraction <= 0.0 && scrollPtr->lastFraction >= 1.0)
@@ -616,6 +702,7 @@ ScrollbarEvent(
 		    kThemeBottomTrackPressed;
 	    break;
 	case TOP_ARROW:
+
 	    /*
 	     * This looks wrong and the docs say it is wrong but it works.
 	     */
@@ -647,6 +734,7 @@ ScrollbarEvent(
 	    msPtr->info.trackInfo.scrollbar.pressState = 0;
 	}
     }
+    TkScrollbarEventuallyRedraw(scrollPtr);
     return TCL_OK;
 }
 
