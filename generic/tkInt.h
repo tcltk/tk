@@ -492,7 +492,7 @@ typedef struct TkDisplay {
      */
 
     int mouseButtonState;	/* Current mouse button state for this
-				 * display. */
+				 * display. NOT USED as of 8.6.10 */
     Window mouseButtonWindow;	/* Window the button state was set in, added
 				 * in Tk 8.4. */
     Tk_Window warpWindow;
