@@ -79,7 +79,7 @@ TkSelGetSelection(
 	    goto error;
 	}
 	data = GlobalLock(handle);
-	Tcl_WinTCharToUtf((TCHAR *)data, -1, &ds);
+	Tcl_WinTCharToUtf((WCHAR *)data, -1, &ds);
 	GlobalUnlock(handle);
     } else if (IsClipboardFormatAvailable(CF_TEXT)) {
 	/*

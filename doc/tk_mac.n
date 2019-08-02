@@ -51,7 +51,7 @@ the command is absent, no action will be taken.
 The default Apple Event handler for AEDoScriptHandler. This command,
 if defined, executes a Tcl file when an AppleScript sends a
 .QW "do script"
-command to Wish with a file path as a parameter. 
+command to Wish with a file path as a parameter.
 .TP
 \fB::tk::mac::DoScriptText\fR
 .
