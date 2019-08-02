@@ -207,7 +207,6 @@ static Window		ParentXId(Display *display, Window w);
 static int		RefreshKeyboardMappingIfNeeded(XEvent *eventPtr);
 static int		TkXErrorHandler(ClientData clientData,
 			    XErrorEvent *errEventPtr);
-static void		UpdateButtonEventState(XEvent *eventPtr);
 static int		WindowEventProc(Tcl_Event *evPtr, int flags);
 #ifdef TK_USE_INPUT_METHODS
 static void		CreateXIC(TkWindow *winPtr);
