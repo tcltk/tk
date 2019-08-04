@@ -42,8 +42,7 @@
 #ifndef TK_DLIST_DEFINED
 #define TK_DLIST_DEFINED
 
-#include <stddef.h>
-#include <assert.h>
+#include "tkInt.h"
 
 /*
  * List definitions.
