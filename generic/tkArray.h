@@ -161,9 +161,7 @@
 #ifndef TK_ARRAY_DEFINED
 #define TK_ARRAY_DEFINED
 
-#include <stddef.h>
-#include <string.h>
-#include <assert.h>
+#include "tkInt.h"
 
 #if defined(__GNUC__) || defined(__clang__)
 # define __TK_ARRAY_UNUSED __attribute__((unused))
