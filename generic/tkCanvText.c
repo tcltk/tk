@@ -95,38 +95,38 @@ static const Tk_CustomOption offsetOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, activeStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, activeStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"center", offsetof(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_DOUBLE, "-angle", NULL, NULL,
-	"0.0", Tk_Offset(TextItem, angle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0.0", offsetof(TextItem, angle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(TextItem, disabledColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, disabledStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, disabledStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(TextItem, color), TK_CONFIG_NULL_OK, NULL},
+	"black", offsetof(TextItem, color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_FONT, "-font", NULL, NULL,
-	DEF_CANVTEXT_FONT, Tk_Offset(TextItem, tkfont), 0, NULL},
+	DEF_CANVTEXT_FONT, offsetof(TextItem, tkfont), 0, NULL},
     {TK_CONFIG_JUSTIFY, "-justify", NULL, NULL,
-	"left", Tk_Offset(TextItem, justify), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"left", offsetof(TextItem, justify), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
-	"0,0", Tk_Offset(TextItem, tsoffset),
+	"0,0", offsetof(TextItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, stipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_STRING, "-text", NULL, NULL,
-	"", Tk_Offset(TextItem, text), 0, NULL},
+	"", offsetof(TextItem, text), 0, NULL},
     {TK_CONFIG_INT, "-underline", NULL, NULL,
-	"-1", Tk_Offset(TextItem, underline), 0, NULL},
+	"-1", offsetof(TextItem, underline), 0, NULL},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"0", Tk_Offset(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -1388,13 +1388,13 @@ GetTextIndex(
 
     c = string[0];
 
-    if ((c == 'e') && (strncmp(string, "end", (unsigned) length) == 0)) {
+    if ((c == 'e') && (strncmp(string, "end", length) == 0)) {
 	*indexPtr = textPtr->numChars;
     } else if ((c == 'i')
-	    && (strncmp(string, "insert", (unsigned) length) == 0)) {
+	    && (strncmp(string, "insert", length) == 0)) {
 	*indexPtr = textPtr->insertPos;
     } else if ((c == 's') && (length >= 5)
-	    && (strncmp(string, "sel.first", (unsigned) length) == 0)) {
+	    && (strncmp(string, "sel.first", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", -1));
@@ -1403,7 +1403,7 @@ GetTextIndex(
 	}
 	*indexPtr = textInfoPtr->selectFirst;
     } else if ((c == 's') && (length >= 5)
-	    && (strncmp(string, "sel.last", (unsigned) length) == 0)) {
+	    && (strncmp(string, "sel.last", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", -1));

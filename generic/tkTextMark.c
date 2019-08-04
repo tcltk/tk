@@ -19,7 +19,7 @@
  * Macro that determines the size of a mark segment:
  */
 
-#define MSEG_SIZE (Tk_Offset(TkTextSegment, body) \
+#define MSEG_SIZE (offsetof(TkTextSegment, body) \
 	+ sizeof(TkTextMark))
 
 /*
@@ -162,10 +162,10 @@ TkTextMarkCmd(
 	}
 	str = TkGetStringFromObj(objv[4],&length);
 	c = str[0];
-	if ((c == 'l') && (strncmp(str, "left", (unsigned) length) == 0)) {
+	if ((c == 'l') && (strncmp(str, "left", length) == 0)) {
 	    newTypePtr = &tkTextLeftMarkType;
 	} else if ((c == 'r') &&
-		(strncmp(str, "right", (unsigned) length) == 0)) {
+		(strncmp(str, "right", length) == 0)) {
 	    newTypePtr = &tkTextRightMarkType;
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(

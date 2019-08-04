@@ -68,7 +68,7 @@ typedef struct IncrInfo {
 				 * currently pending. */
 } IncrInfo;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     IncrInfo *pendingIncrs;	/* List of all incr structures currently
 				 * active. */
 } ThreadSpecificData;
@@ -919,7 +919,7 @@ ConvertSelection(
 	    /*
 	     * Nobody seems to know about this kind of request. If it's of a
 	     * sort that we can handle without any help, do it. Otherwise mark
-	     * the request as an errror.
+	     * the request as an error.
 	     */
 
 	    numItems = TkSelDefaultSelection(infoPtr, target, (char *) buffer,

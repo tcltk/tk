@@ -41,14 +41,10 @@
 #endif
 
 #ifndef BFFM_VALIDATEFAILED
-#ifdef UNICODE
 #define BFFM_VALIDATEFAILED 4
-#else
-#define BFFM_VALIDATEFAILED 3
-#endif
 #endif /* BFFM_VALIDATEFAILED */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int debugFlag;		/* Flags whether we should output debugging
 				 * information while displaying a builtin
 				 * dialog. */
@@ -143,8 +139,8 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
  */
 
 typedef struct {
-   TCHAR initDir[MAX_PATH];	/* Initial folder to use */
-   TCHAR retDir[MAX_PATH];	/* Returned folder to use */
+   WCHAR initDir[MAX_PATH];	/* Initial folder to use */
+   WCHAR retDir[MAX_PATH];	/* Returned folder to use */
    Tcl_Interp *interp;
    int mustExist;		/* True if file must exist to return from
 				 * callback */
@@ -161,7 +157,7 @@ typedef struct OFNData {
     int dynFileBufferSize;	/* Dynamic filename buffer size, stored to
 				 * avoid shrinking and expanding the buffer
 				 * when selection changes */
-    TCHAR *dynFileBuffer;	/* Dynamic filename buffer */
+    WCHAR *dynFileBuffer;	/* Dynamic filename buffer */
 } OFNData;
 
 /*
@@ -180,12 +176,9 @@ typedef struct OFNOpts {
     int confirmOverwrite;       /* Confirm before overwriting */
     int mustExist;              /* Used only for  */
     int forceXPStyle;          /* XXX - Force XP style even on newer systems */
-    TCHAR file[TK_MULTI_MAX_PATH]; /* File name
+    WCHAR file[TK_MULTI_MAX_PATH]; /* File name
                                       XXX - fixed size because it was so
                                       historically. Why not malloc'ed ?
-                                      XXX - also, TCHAR should really be WCHAR
-                                      because TkWinGetUnicodeEncoding is always
-                                      UCS2.
                                    */
 } OFNOpts;
 
@@ -596,7 +589,7 @@ static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 static void		SetTkDialog(ClientData clientData);
-static const char *ConvertExternalFilename(TCHAR *filename,
+static const char *ConvertExternalFilename(WCHAR *filename,
 			    Tcl_DString *dsPtr);
 static void             LoadShellProcs(void);
 
@@ -644,7 +637,7 @@ static void LoadShellProcs()
     if (shell32_handle != NULL)
         return; /* We have already been through here. */
 
-    shell32_handle = GetModuleHandle(TEXT("shell32.dll"));
+    shell32_handle = GetModuleHandle(L"shell32.dll");
     if (shell32_handle == NULL) /* Should never happen but check anyways. */
         return;
 
@@ -797,7 +790,7 @@ Tk_ChooseColorObjCmd(
     chooseColor.Flags		= CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     chooseColor.lCustData	= (LPARAM) NULL;
     chooseColor.lpfnHook	= (LPOFNHOOKPROC) ColorDlgHookProc;
-    chooseColor.lpTemplateName	= (LPTSTR) interp;
+    chooseColor.lpTemplateName	= (LPWSTR) interp;
 
     for (i = 1; i < objc; i += 2) {
 	int index;
@@ -1379,7 +1372,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 
         src = Tcl_GetString(optsPtr->extObj);
         wstr = (LPWSTR) Tcl_WinUtfToTChar(src, optsPtr->extObj->length, &ds);
-        if (wstr[0] == L'.')
+        if (wstr[0] == '.')
             ++wstr;
         hr = fdlgIf->lpVtbl->SetDefaultExtension(fdlgIf, wstr);
         Tcl_DStringFree(&ds);
@@ -1625,7 +1618,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	 */
 
 	ofnData.dynFileBufferSize = 512;
-	ofnData.dynFileBuffer = ckalloc(512 * sizeof(TCHAR));
+	ofnData.dynFileBuffer = ckalloc(512 * sizeof(WCHAR));
     }
 
     if (optsPtr->extObj != NULL) {
@@ -1633,12 +1626,12 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
         if (str[0] == '.')
             ++str;
 	Tcl_WinUtfToTChar(str, -1, &extString);
-	ofn.lpstrDefExt = (TCHAR *) Tcl_DStringValue(&extString);
+	ofn.lpstrDefExt = (WCHAR *) Tcl_DStringValue(&extString);
     }
 
     Tcl_WinUtfToTChar(Tcl_DStringValue(&utfFilterString),
 	    Tcl_DStringLength(&utfFilterString), &filterString);
-    ofn.lpstrFilter = (TCHAR *) Tcl_DStringValue(&filterString);
+    ofn.lpstrFilter = (WCHAR *) Tcl_DStringValue(&filterString);
     ofn.nFilterIndex = filterIndex;
 
     if (Tcl_DStringValue(&optsPtr->utfDirString)[0] != '\0') {
@@ -1663,11 +1656,11 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	}
 	Tcl_DStringFree(&cwd);
     }
-    ofn.lpstrInitialDir = (TCHAR *) Tcl_DStringValue(&dirString);
+    ofn.lpstrInitialDir = (WCHAR *) Tcl_DStringValue(&dirString);
 
     if (optsPtr->titleObj != NULL) {
 	Tcl_WinUtfToTChar(Tcl_GetString(optsPtr->titleObj), -1, &titleString);
-	ofn.lpstrTitle = (TCHAR *) Tcl_DStringValue(&titleString);
+	ofn.lpstrTitle = (WCHAR *) Tcl_DStringValue(&titleString);
     }
 
     /*
@@ -1714,7 +1707,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     /*
      * We now allow FNERR_BUFFERTOOSMALL when multiselection is enabled. The
      * filename buffer has been dynamically allocated by the OFN dialog
-     * procedure to accomodate all selected files.
+     * procedure to accommodate all selected files.
      */
 
     if ((winCode != 0)
@@ -1732,7 +1725,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	     * first element is the directory path.
 	     */
 
-	    TCHAR *files = ofnData.dynFileBuffer;
+	    WCHAR *files = ofnData.dynFileBuffer;
 	    Tcl_Obj *returnList = Tcl_NewObj();
 	    int count = 0;
 
@@ -1944,7 +1937,7 @@ OFNHookProc(
 	if (notifyPtr->hdr.code == CDN_FILEOK ||
 		notifyPtr->hdr.code == CDN_SELCHANGE) {
 	    int dirsize, selsize;
-	    TCHAR *buffer;
+	    WCHAR *buffer;
 	    int buffersize;
 
 	    /*
@@ -1968,7 +1961,7 @@ OFNHookProc(
 
 	    if ((selsize > 1) && (dirsize > 0)) {
 		if (ofnData->dynFileBufferSize < buffersize) {
-		    buffer = ckrealloc(buffer, buffersize * sizeof(TCHAR));
+		    buffer = ckrealloc(buffer, buffersize * sizeof(WCHAR));
 		    ofnData->dynFileBufferSize = buffersize;
 		    ofnData->dynFileBuffer = buffer;
 		}
@@ -1985,7 +1978,7 @@ OFNHookProc(
 
 		if (buffer[0] == '"') {
 		    BOOL findquote = TRUE;
-		    TCHAR *tmp = buffer;
+		    WCHAR *tmp = buffer;
 
 		    while (*buffer != '\0') {
 			if (findquote) {
@@ -2014,7 +2007,7 @@ OFNHookProc(
 		    if (TCL_PATH_ABSOLUTE ==
 			    Tcl_GetPathType(Tcl_DStringValue(&tmpfile))) {
 			/* re-get the full path to the start of the buffer */
-			buffer = (TCHAR *) ofnData->dynFileBuffer;
+			buffer = (WCHAR *) ofnData->dynFileBuffer;
 			SendMessage(hdlg, CDM_GETSPEC, selsize, (LPARAM) buffer);
 		    } else {
 			*(buffer-1) = '\\';
@@ -2114,13 +2107,12 @@ MakeFilter(
 	*p = '\0';
 
     } else {
-	size_t len;
+	TkSizeT len;
 
 	if (valuePtr == NULL) {
 	    len = 0;
 	} else {
-	    (void) Tcl_GetString(valuePtr);
-	    len = valuePtr->length;
+	    (void) TkGetStringFromObj(valuePtr, &len);
 	}
 
 	/*
@@ -2295,54 +2287,56 @@ static int MakeFilterVista(
     for (i = 0, filterPtr = flist.filters;
          filterPtr;
          filterPtr = filterPtr->next, ++i) {
-        const char *sep;
-        FileFilterClause *clausePtr;
-        int nbytes;
+	const char *sep;
+	FileFilterClause *clausePtr;
+	int nbytes;
 
-        /* Check if this entry should be shown as the default */
-        if (initial && strcmp(initial, filterPtr->name) == 0)
+	/* Check if this entry should be shown as the default */
+	if (initial && strcmp(initial, filterPtr->name) == 0)
             initialIndex = i+1; /* Windows filter indices are 1-based */
 
-        /* First stash away the text description of the pattern */
+	/* First stash away the text description of the pattern */
 	Tcl_WinUtfToTChar(filterPtr->name, -1, &ds);
-        nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
-        nbytes += sizeof(WCHAR);         /* Terminating \0 */
-        dlgFilterPtr[i].pszName = ckalloc(nbytes);
-        memmove((void *) dlgFilterPtr[i].pszName, Tcl_DStringValue(&ds), nbytes);
-        Tcl_DStringFree(&ds);
+	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
+	nbytes += sizeof(WCHAR);         /* Terminating \0 */
+	dlgFilterPtr[i].pszName = ckalloc(nbytes);
+	memmove((void *) dlgFilterPtr[i].pszName, Tcl_DStringValue(&ds), nbytes);
+	Tcl_DStringFree(&ds);
 
-        /*
-         * Loop through and join patterns with a ";" Each "clause"
-         * corresponds to a single textual description (called typename)
-         * in the tk_getOpenFile docs. Each such typename may occur
-         * multiple times and all these form a single filter entry
-         * with one clause per occurence. Further each clause may specify
-         * multiple patterns. Hence the nested loop here.
-         */
-        sep = "";
-        for (clausePtr=filterPtr->clauses ; clausePtr;
-             clausePtr=clausePtr->next) {
-            GlobPattern *globPtr;
-            for (globPtr = clausePtr->patterns; globPtr;
-                 globPtr = globPtr->next) {
-                Tcl_DStringAppend(&patterns, sep, -1);
-                Tcl_DStringAppend(&patterns, globPtr->pattern, -1);
-                sep = ";";
-            }
-        }
+	/*
+	 * Loop through and join patterns with a ";" Each "clause"
+	 * corresponds to a single textual description (called typename)
+	 * in the tk_getOpenFile docs. Each such typename may occur
+	 * multiple times and all these form a single filter entry
+	 * with one clause per occurence. Further each clause may specify
+	 * multiple patterns. Hence the nested loop here.
+	 */
+	sep = "";
+	for (clausePtr=filterPtr->clauses ; clausePtr;
+	     clausePtr=clausePtr->next) {
+	    GlobPattern *globPtr;
+	    for (globPtr = clausePtr->patterns; globPtr;
+		    globPtr = globPtr->next) {
+		Tcl_DStringAppend(&patterns, sep, -1);
+		Tcl_DStringAppend(&patterns, globPtr->pattern, -1);
+		sep = ";";
+	    }
+	}
 
-        /* Again we need a Unicode form of the string */
+	/* Again we need a Unicode form of the string */
 	Tcl_WinUtfToTChar(Tcl_DStringValue(&patterns), -1, &ds);
-        nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
-        nbytes += sizeof(WCHAR);         /* Terminating \0 */
-        dlgFilterPtr[i].pszSpec = ckalloc(nbytes);
-        memmove((void *)dlgFilterPtr[i].pszSpec, Tcl_DStringValue(&ds), nbytes);
-        Tcl_DStringFree(&ds);
-        Tcl_DStringFree(&patterns);
+	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
+	nbytes += sizeof(WCHAR);         /* Terminating \0 */
+	dlgFilterPtr[i].pszSpec = ckalloc(nbytes);
+	memmove((void *)dlgFilterPtr[i].pszSpec, Tcl_DStringValue(&ds), nbytes);
+	Tcl_DStringFree(&ds);
+	Tcl_DStringSetLength(&patterns, 0);
     }
+    Tcl_DStringFree(&patterns);
 
-    if (initialIndex == 0)
-        initialIndex = 1;       /* If no default, show first entry */
+    if (initialIndex == 0) {
+	initialIndex = 1;       /* If no default, show first entry */
+    }
     *initialIndexPtr = initialIndex;
     *dlgFilterPtrPtr = dlgFilterPtr;
     *countPtr = flist.numFilters;
@@ -2429,14 +2423,14 @@ Tk_ChooseDirectoryObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    TCHAR path[MAX_PATH];
+    WCHAR path[MAX_PATH];
     int oldMode, result;
     LPCITEMIDLIST pidl;		/* Returned by browser */
     BROWSEINFO bInfo;		/* Used by browser */
     ChooseDir cdCBData;	    /* Structure to pass back and forth */
     LPMALLOC pMalloc;		/* Used by shell */
     HWND hWnd;
-    TCHAR saveDir[MAX_PATH];
+    WCHAR saveDir[MAX_PATH];
     Tcl_DString titleString;	/* Title */
     Tcl_DString tempString;	/* temporary */
     Tcl_Obj *objPtr;
@@ -2464,16 +2458,16 @@ Tk_ChooseDirectoryObjCmd(
 
     utfDir = Tcl_DStringValue(&ofnOpts.utfDirString);
     if (utfDir[0] != '\0') {
-	const TCHAR *uniStr;
+	const WCHAR *uniStr;
 
         Tcl_WinUtfToTChar(Tcl_DStringValue(&ofnOpts.utfDirString), -1,
                           &tempString);
-        uniStr = (TCHAR *) Tcl_DStringValue(&tempString);
+        uniStr = (WCHAR *) Tcl_DStringValue(&tempString);
 
         /* Convert possible relative path to full path to keep dialog happy. */
 
         GetFullPathName(uniStr, MAX_PATH, saveDir, NULL);
-        _tcsncpy(cdCBData.initDir, saveDir, MAX_PATH);
+        wcsncpy(cdCBData.initDir, saveDir, MAX_PATH);
     }
 
     /* XXX - rest of this (original) code has no error checks at all. */
@@ -2492,16 +2486,16 @@ Tk_ChooseDirectoryObjCmd(
     bInfo.hwndOwner = hWnd;
     bInfo.pszDisplayName = path;
     bInfo.pidlRoot = NULL;
-    if (_tcslen(cdCBData.initDir) == 0) {
+    if (wcslen(cdCBData.initDir) == 0) {
 	GetCurrentDirectory(MAX_PATH, cdCBData.initDir);
     }
     bInfo.lParam = (LPARAM) &cdCBData;
 
     if (ofnOpts.titleObj != NULL) {
 	Tcl_WinUtfToTChar(Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
-	bInfo.lpszTitle = (LPTSTR) Tcl_DStringValue(&titleString);
+	bInfo.lpszTitle = (LPWSTR) Tcl_DStringValue(&titleString);
     } else {
-	bInfo.lpszTitle = TEXT("Please choose a directory, then select OK.");
+	bInfo.lpszTitle = L"Please choose a directory, then select OK.";
     }
 
     /*
@@ -2561,8 +2555,8 @@ Tk_ChooseDirectoryObjCmd(
 		Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "PSEUDO", NULL);
 	    }
 	    pMalloc->lpVtbl->Free(pMalloc, (void *) pidl);
-	} else if (_tcslen(cdCBData.retDir) > 0) {
-	    _tcscpy(path, cdCBData.retDir);
+	} else if (wcslen(cdCBData.retDir) > 0) {
+	    wcscpy(path, cdCBData.retDir);
 	}
 	pMalloc->lpVtbl->Release(pMalloc);
     }
@@ -2618,11 +2612,11 @@ ChooseDirectoryValidateProc(
     LPARAM lParam,
     LPARAM lpData)
 {
-    TCHAR selDir[MAX_PATH];
+    WCHAR selDir[MAX_PATH];
     ChooseDir *chooseDirSharedData = (ChooseDir *) lpData;
     Tcl_DString tempString;
     Tcl_DString initDirString;
-    TCHAR string[MAX_PATH];
+    WCHAR string[MAX_PATH];
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -2642,7 +2636,7 @@ ChooseDirectoryValidateProc(
 	 * like ~ are converted correctly.
 	 */
 
-	Tcl_WinTCharToUtf((TCHAR *) lParam, -1, &initDirString);
+	Tcl_WinTCharToUtf((WCHAR *) lParam, -1, &initDirString);
 	if (Tcl_TranslateFileName(chooseDirSharedData->interp,
 		Tcl_DStringValue(&initDirString), &tempString) == NULL) {
 	    /*
@@ -2656,7 +2650,7 @@ ChooseDirectoryValidateProc(
 	Tcl_DStringFree(&initDirString);
 	Tcl_WinUtfToTChar(Tcl_DStringValue(&tempString), -1, &initDirString);
 	Tcl_DStringFree(&tempString);
-	_tcsncpy(string, (TCHAR *) Tcl_DStringValue(&initDirString),
+	wcsncpy(string, (WCHAR *) Tcl_DStringValue(&initDirString),
 		MAX_PATH);
 	Tcl_DStringFree(&initDirString);
 
@@ -2675,8 +2669,8 @@ ChooseDirectoryValidateProc(
 		 * User HAS to select a valid directory.
 		 */
 
-		wsprintf(selDir, TEXT("Directory '%s' does not exist,\n")
-		        TEXT("please select or enter an existing directory."),
+		wsprintf(selDir, L"Directory '%s' does not exist,\n"
+		        L"please select or enter an existing directory.",
 			chooseDirSharedData->retDir);
 		MessageBox(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
 		chooseDirSharedData->retDir[0] = '\0';
@@ -2716,11 +2710,11 @@ ChooseDirectoryValidateProc(
 
     case BFFM_INITIALIZED: {
 	/*
-	 * Directory browser intializing - tell it where to start from, user
+	 * Directory browser initializing - tell it where to start from, user
 	 * specified parameter.
 	 */
 
-	TCHAR *initDir = chooseDirSharedData->initDir;
+	WCHAR *initDir = chooseDirSharedData->initDir;
 
 	SetCurrentDirectory(initDir);
 
@@ -2739,7 +2733,7 @@ ChooseDirectoryValidateProc(
 		    ULONG ulCount, ulAttr;
 
 		    if (SUCCEEDED(psfFolder->lpVtbl->ParseDisplayName(
-			    psfFolder, hwnd, NULL, (TCHAR *)
+			    psfFolder, hwnd, NULL, (WCHAR *)
 			    initDir, &ulCount,&pidlMain,&ulAttr))
 			    && (pidlMain != NULL)) {
 			SendMessage(hwnd, BFFM_SETSELECTION, FALSE,
@@ -3029,7 +3023,7 @@ SetTkDialog(
 
 static const char *
 ConvertExternalFilename(
-    TCHAR *filename,
+    WCHAR *filename,
     Tcl_DString *dsPtr)
 {
     char *p;
@@ -3159,7 +3153,7 @@ HookProc(
 
 	    Tcl_WinUtfToTChar(Tcl_GetString(phd->titleObj), -1, &title);
 	    if (Tcl_DStringLength(&title) > 0) {
-		SetWindowText(hwndDlg, (LPCTSTR) Tcl_DStringValue(&title));
+		SetWindowText(hwndDlg, (LPCWSTR) Tcl_DStringValue(&title));
 	    }
 	    Tcl_DStringFree(&title);
 	}
@@ -3475,7 +3469,7 @@ FontchooserShowCmd(
 	fontPtr = (TkFont *) f;
 	cf.Flags |= CF_INITTOLOGFONTSTRUCT;
 	Tcl_WinUtfToTChar(fontPtr->fa.family, -1, &ds);
-	_tcsncpy(lf.lfFaceName, (TCHAR *)Tcl_DStringValue(&ds),
+	wcsncpy(lf.lfFaceName, (WCHAR *)Tcl_DStringValue(&ds),
 		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);
 	lf.lfFaceName[LF_FACESIZE-1] = 0;
