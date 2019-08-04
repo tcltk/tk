@@ -25,8 +25,6 @@
 #include "tkUnixInt.h"
 #endif
 
-#include <assert.h>
-
 #if NDEBUG
 # define DEBUG(expr)
 #else
