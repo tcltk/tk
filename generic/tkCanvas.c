@@ -91,92 +91,92 @@ static const Tk_CustomOption offsetOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_BORDER, "-background", "background", "Background",
-	DEF_CANVAS_BG_COLOR, Tk_Offset(TkCanvas, bgBorder),
+	DEF_CANVAS_BG_COLOR, offsetof(TkCanvas, bgBorder),
 	TK_CONFIG_COLOR_ONLY, NULL},
     {TK_CONFIG_BORDER, "-background", "background", "Background",
-	DEF_CANVAS_BG_MONO, Tk_Offset(TkCanvas, bgBorder),
+	DEF_CANVAS_BG_MONO, offsetof(TkCanvas, bgBorder),
 	TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_SYNONYM, "-bd", "borderWidth", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_SYNONYM, "-bg", "background", NULL, NULL, 0, 0, NULL},
     {TK_CONFIG_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_CANVAS_BORDER_WIDTH, Tk_Offset(TkCanvas, borderWidth), 0, NULL},
+	DEF_CANVAS_BORDER_WIDTH, offsetof(TkCanvas, borderWidth), 0, NULL},
     {TK_CONFIG_DOUBLE, "-closeenough", "closeEnough", "CloseEnough",
-	DEF_CANVAS_CLOSE_ENOUGH, Tk_Offset(TkCanvas, closeEnough), 0, NULL},
+	DEF_CANVAS_CLOSE_ENOUGH, offsetof(TkCanvas, closeEnough), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-confine", "confine", "Confine",
-	DEF_CANVAS_CONFINE, Tk_Offset(TkCanvas, confine), 0, NULL},
+	DEF_CANVAS_CONFINE, offsetof(TkCanvas, confine), 0, NULL},
     {TK_CONFIG_ACTIVE_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_CANVAS_CURSOR, Tk_Offset(TkCanvas, cursor), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVAS_CURSOR, offsetof(TkCanvas, cursor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-height", "height", "Height",
-	DEF_CANVAS_HEIGHT, Tk_Offset(TkCanvas, height), 0, NULL},
+	DEF_CANVAS_HEIGHT, offsetof(TkCanvas, height), 0, NULL},
     {TK_CONFIG_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_CANVAS_HIGHLIGHT_BG,
-	Tk_Offset(TkCanvas, highlightBgColorPtr), 0, NULL},
+	offsetof(TkCanvas, highlightBgColorPtr), 0, NULL},
     {TK_CONFIG_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	DEF_CANVAS_HIGHLIGHT, Tk_Offset(TkCanvas, highlightColorPtr), 0, NULL},
+	DEF_CANVAS_HIGHLIGHT, offsetof(TkCanvas, highlightColorPtr), 0, NULL},
     {TK_CONFIG_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness",
-	DEF_CANVAS_HIGHLIGHT_WIDTH, Tk_Offset(TkCanvas, highlightWidth), 0, NULL},
+	DEF_CANVAS_HIGHLIGHT_WIDTH, offsetof(TkCanvas, highlightWidth), 0, NULL},
     {TK_CONFIG_BORDER, "-insertbackground", "insertBackground", "Foreground",
-	DEF_CANVAS_INSERT_BG, Tk_Offset(TkCanvas, textInfo.insertBorder), 0, NULL},
+	DEF_CANVAS_INSERT_BG, offsetof(TkCanvas, textInfo.insertBorder), 0, NULL},
     {TK_CONFIG_PIXELS, "-insertborderwidth", "insertBorderWidth", "BorderWidth",
 	DEF_CANVAS_INSERT_BD_COLOR,
-	Tk_Offset(TkCanvas, textInfo.insertBorderWidth), TK_CONFIG_COLOR_ONLY, NULL},
+	offsetof(TkCanvas, textInfo.insertBorderWidth), TK_CONFIG_COLOR_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-insertborderwidth", "insertBorderWidth", "BorderWidth",
 	DEF_CANVAS_INSERT_BD_MONO,
-	Tk_Offset(TkCanvas, textInfo.insertBorderWidth), TK_CONFIG_MONO_ONLY, NULL},
+	offsetof(TkCanvas, textInfo.insertBorderWidth), TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_INT, "-insertofftime", "insertOffTime", "OffTime",
-	DEF_CANVAS_INSERT_OFF_TIME, Tk_Offset(TkCanvas, insertOffTime), 0, NULL},
+	DEF_CANVAS_INSERT_OFF_TIME, offsetof(TkCanvas, insertOffTime), 0, NULL},
     {TK_CONFIG_INT, "-insertontime", "insertOnTime", "OnTime",
-	DEF_CANVAS_INSERT_ON_TIME, Tk_Offset(TkCanvas, insertOnTime), 0, NULL},
+	DEF_CANVAS_INSERT_ON_TIME, offsetof(TkCanvas, insertOnTime), 0, NULL},
     {TK_CONFIG_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_CANVAS_INSERT_WIDTH, Tk_Offset(TkCanvas, textInfo.insertWidth), 0, NULL},
+	DEF_CANVAS_INSERT_WIDTH, offsetof(TkCanvas, textInfo.insertWidth), 0, NULL},
     {TK_CONFIG_CUSTOM, "-offset", "offset", "Offset", "0,0",
-	Tk_Offset(TkCanvas, tsoffset),TK_CONFIG_DONT_SET_DEFAULT,
+	offsetof(TkCanvas, tsoffset),TK_CONFIG_DONT_SET_DEFAULT,
 	&offsetOption},
     {TK_CONFIG_RELIEF, "-relief", "relief", "Relief",
-	DEF_CANVAS_RELIEF, Tk_Offset(TkCanvas, relief), 0, NULL},
+	DEF_CANVAS_RELIEF, offsetof(TkCanvas, relief), 0, NULL},
     {TK_CONFIG_STRING, "-scrollregion", "scrollRegion", "ScrollRegion",
-	DEF_CANVAS_SCROLL_REGION, Tk_Offset(TkCanvas, regionString),
+	DEF_CANVAS_SCROLL_REGION, offsetof(TkCanvas, regionString),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BORDER, "-selectbackground", "selectBackground", "Foreground",
-	DEF_CANVAS_SELECT_COLOR, Tk_Offset(TkCanvas, textInfo.selBorder),
+	DEF_CANVAS_SELECT_COLOR, offsetof(TkCanvas, textInfo.selBorder),
 	TK_CONFIG_COLOR_ONLY, NULL},
     {TK_CONFIG_BORDER, "-selectbackground", "selectBackground", "Foreground",
-	DEF_CANVAS_SELECT_MONO, Tk_Offset(TkCanvas, textInfo.selBorder),
+	DEF_CANVAS_SELECT_MONO, offsetof(TkCanvas, textInfo.selBorder),
 	TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
 	DEF_CANVAS_SELECT_BD_COLOR,
-	Tk_Offset(TkCanvas, textInfo.selBorderWidth), TK_CONFIG_COLOR_ONLY, NULL},
+	offsetof(TkCanvas, textInfo.selBorderWidth), TK_CONFIG_COLOR_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
-	DEF_CANVAS_SELECT_BD_MONO, Tk_Offset(TkCanvas, textInfo.selBorderWidth),
+	DEF_CANVAS_SELECT_BD_MONO, offsetof(TkCanvas, textInfo.selBorderWidth),
 	TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_COLOR, "-selectforeground", "selectForeground", "Background",
-	DEF_CANVAS_SELECT_FG_COLOR, Tk_Offset(TkCanvas, textInfo.selFgColorPtr),
+	DEF_CANVAS_SELECT_FG_COLOR, offsetof(TkCanvas, textInfo.selFgColorPtr),
 	TK_CONFIG_COLOR_ONLY|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-selectforeground", "selectForeground", "Background",
-	DEF_CANVAS_SELECT_FG_MONO, Tk_Offset(TkCanvas, textInfo.selFgColorPtr),
+	DEF_CANVAS_SELECT_FG_MONO, offsetof(TkCanvas, textInfo.selFgColorPtr),
 	TK_CONFIG_MONO_ONLY|TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-state", "state", "State",
-	"normal", Tk_Offset(TkCanvas, canvas_state), TK_CONFIG_DONT_SET_DEFAULT,
+	"normal", offsetof(TkCanvas, canvas_state), TK_CONFIG_DONT_SET_DEFAULT,
 	&stateOption},
     {TK_CONFIG_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_CANVAS_TAKE_FOCUS, Tk_Offset(TkCanvas, takeFocus),
+	DEF_CANVAS_TAKE_FOCUS, offsetof(TkCanvas, takeFocus),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-width", "width", "Width",
-	DEF_CANVAS_WIDTH, Tk_Offset(TkCanvas, width), 0, NULL},
+	DEF_CANVAS_WIDTH, offsetof(TkCanvas, width), 0, NULL},
     {TK_CONFIG_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	DEF_CANVAS_X_SCROLL_CMD, Tk_Offset(TkCanvas, xScrollCmd),
+	DEF_CANVAS_X_SCROLL_CMD, offsetof(TkCanvas, xScrollCmd),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-xscrollincrement", "xScrollIncrement",
 	"ScrollIncrement",
-	DEF_CANVAS_X_SCROLL_INCREMENT, Tk_Offset(TkCanvas, xScrollIncrement),
+	DEF_CANVAS_X_SCROLL_INCREMENT, offsetof(TkCanvas, xScrollIncrement),
 	0, NULL},
     {TK_CONFIG_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
-	DEF_CANVAS_Y_SCROLL_CMD, Tk_Offset(TkCanvas, yScrollCmd),
+	DEF_CANVAS_Y_SCROLL_CMD, offsetof(TkCanvas, yScrollCmd),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-yscrollincrement", "yScrollIncrement",
 	"ScrollIncrement",
-	DEF_CANVAS_Y_SCROLL_INCREMENT, Tk_Offset(TkCanvas, yScrollIncrement),
+	DEF_CANVAS_Y_SCROLL_INCREMENT, offsetof(TkCanvas, yScrollIncrement),
 	0, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
@@ -613,7 +613,7 @@ DefaultRotateImplementation(
     if (ItemCoords(canvasPtr, itemPtr, 0, NULL) == TCL_OK &&
 	    Tcl_ListObjGetElements(NULL, Tcl_GetObjResult(interp),
 		    &objc, &objv) == TCL_OK) {
-	coordv = (double *) Tcl_Alloc(sizeof(double) * objc);
+	coordv = (double *) ckalloc(sizeof(double) * objc);
 	for (i=0 ; i<objc ; i++) {
 	    if (Tcl_GetDoubleFromObj(NULL, objv[i], &coordv[i]) != TCL_OK) {
 		ok = 0;
@@ -639,7 +639,7 @@ DefaultRotateImplementation(
 	     * Write the coordinates back into the item.
 	     */
 
-	    newObjv = (Tcl_Obj **) Tcl_Alloc(sizeof(Tcl_Obj *) * objc);
+	    newObjv = (Tcl_Obj **) ckalloc(sizeof(Tcl_Obj *) * objc);
 	    for (i=0 ; i<objc ; i++) {
 		newObjv[i] = Tcl_NewDoubleObj(coordv[i]);
 		Tcl_IncrRefCount(newObjv[i]);
@@ -648,9 +648,9 @@ DefaultRotateImplementation(
 	    for (i=0 ; i<objc ; i++) {
 		Tcl_DecrRefCount(newObjv[i]);
 	    }
-	    Tcl_Free((char *) newObjv);
+	    ckfree((char *) newObjv);
 	}
-	Tcl_Free((char *) coordv);
+	ckfree((char *) coordv);
     }
 
     /*
@@ -744,7 +744,7 @@ Tk_CanvasObjCmd(
     canvasPtr->textInfo.cursorOn = 0;
     canvasPtr->insertOnTime = 0;
     canvasPtr->insertOffTime = 0;
-    canvasPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+    canvasPtr->insertBlinkHandler = NULL;
     canvasPtr->xOrigin = canvasPtr->yOrigin = 0;
     canvasPtr->drawableXOrigin = canvasPtr->drawableYOrigin = 0;
     canvasPtr->bindingTable = NULL;
@@ -2891,10 +2891,21 @@ DrawCanvas(
              * colours and place them in the photo block. Perhaps we could
              * just not bother with the alpha byte because we are using
              * TK_PHOTO_COMPOSITE_SET later?
+             * ***Windows: We have to swap the red and blue values. The
+             * XImage storage is B - G - R - A which becomes a 32bit ARGB
+             * quad. However the visual mask is a 32bit ABGR quad. And
+             * Tk_PhotoPutBlock() wants R-G-B-A which is a 32bit ABGR quad.
+             * If the visual mask was correct there would be no need to
+             * swap anything here.
              */
 
+#ifdef _WIN32
+#define   R_OFFSET 2
+#define   B_OFFSET 0
+#else
 #define   R_OFFSET 0
 #define   B_OFFSET 2
+#endif
             blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x + R_OFFSET] =
                     (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
             blockPtr.pixelPtr[blockPtr.pitch * y + blockPtr.pixelSize * x +1] =
@@ -5081,26 +5092,7 @@ CanvasBindProc(
     switch (eventPtr->type) {
     case ButtonPress:
     case ButtonRelease:
-	switch (eventPtr->xbutton.button) {
-	case Button1:
-	    mask = Button1Mask;
-	    break;
-	case Button2:
-	    mask = Button2Mask;
-	    break;
-	case Button3:
-	    mask = Button3Mask;
-	    break;
-	case Button4:
-	    mask = Button4Mask;
-	    break;
-	case Button5:
-	    mask = Button5Mask;
-	    break;
-	default:
-	    mask = 0;
-	    break;
-	}
+	mask = TkGetButtonMask(eventPtr->xbutton.button);
 
 	/*
 	 * For button press events, repick the current item using the button
@@ -5183,7 +5175,7 @@ PickCurrentItem(
 				 * ButtonRelease, or MotionNotify. */
 {
     double coords[2];
-    int buttonDown;
+    unsigned int buttonDown;
     Tk_Item *prevItemPtr;
     SearchUids *searchUids = GetStaticUids();
 
@@ -5194,8 +5186,7 @@ PickCurrentItem(
      * for windows.
      */
 
-    buttonDown = canvasPtr->state
-	    & (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask);
+    buttonDown = canvasPtr->state & ALL_BUTTONS;
 
     /*
      * Save information about this event in the canvas. The event in the
@@ -5599,7 +5590,7 @@ CanvasFocusProc(
     } else {
 	canvasPtr->textInfo.gotFocus = 0;
 	canvasPtr->textInfo.cursorOn = 0;
-	canvasPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+	canvasPtr->insertBlinkHandler = NULL;
     }
     EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.focusItemPtr);
     if (canvasPtr->highlightWidth > 0) {

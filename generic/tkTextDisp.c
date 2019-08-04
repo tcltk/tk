@@ -7757,7 +7757,7 @@ TkTextCharLayoutProc(
     chunkPtr->breakIndex = -1;
 
 #if !TK_LAYOUT_WITH_BASE_CHUNKS
-    ciPtr = ckalloc(Tk_Offset(CharInfo, chars) + 1 + bytesThatFit);
+    ciPtr = ckalloc(offsetof(CharInfo, chars) + 1 + bytesThatFit);
     chunkPtr->clientData = ciPtr;
     memcpy(ciPtr->chars, p, bytesThatFit);
 #endif /* TK_LAYOUT_WITH_BASE_CHUNKS */
@@ -8770,10 +8770,10 @@ TextGetScrollInfoObj(
 	VIEW_MOVETO, VIEW_SCROLL
     };
     static const char *const units[] = {
-	"units", "pages", "pixels", NULL
+	"pages", "pixels", "units", NULL
     };
     enum viewUnits {
-	VIEW_SCROLL_UNITS, VIEW_SCROLL_PAGES, VIEW_SCROLL_PIXELS
+	VIEW_SCROLL_PAGES, VIEW_SCROLL_PIXELS, VIEW_SCROLL_UNITS
     };
     int index;
 
@@ -8794,7 +8794,7 @@ TextGetScrollInfoObj(
 	return TKTEXT_SCROLL_MOVETO;
     case VIEW_SCROLL:
 	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "number units|pages|pixels");
+	    Tcl_WrongNumArgs(interp, 3, objv, "number pages|pixels|units");
 	    return TKTEXT_SCROLL_ERROR;
 	}
 	if (Tcl_GetIndexFromObjStruct(interp, objv[4], units,

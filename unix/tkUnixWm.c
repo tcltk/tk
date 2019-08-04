@@ -36,7 +36,7 @@ typedef struct ProtocolHandler {
 } ProtocolHandler;
 
 #define HANDLER_SIZE(cmdLength) \
-    (Tk_Offset(ProtocolHandler, command) + 1 + cmdLength)
+    (offsetof(ProtocolHandler, command) + 1 + cmdLength)
 
 /*
  * Data for [wm attributes] command:
@@ -2441,7 +2441,7 @@ WmIconphotoCmd(
     for (i = 3 + isDefault; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	if (photo == NULL) {
-	    Tcl_Free((char *) iconPropertyData);
+	    ckfree((char *) iconPropertyData);
 	    return TCL_ERROR;
 	}
 	Tk_PhotoGetSize(photo, &width, &height);

@@ -95,7 +95,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
      * if we are running at least on Windows XP.
      */
     HINSTANCE handle;
-    *phlib = handle = LoadLibrary(TEXT("uxtheme.dll"));
+    *phlib = handle = LoadLibrary(L"uxtheme.dll");
     if (handle != 0)
     {
 	/*
@@ -811,9 +811,9 @@ typedef struct
 static Ttk_ElementOptionSpec TextElementOptions[] =
 {
     { "-text", TK_OPTION_STRING,
-	Tk_Offset(TextElement,textObj), "" },
+	offsetof(TextElement,textObj), "" },
     { "-font", TK_OPTION_FONT,
-	Tk_Offset(TextElement,fontObj), DEFAULT_FONT },
+	offsetof(TextElement,fontObj), DEFAULT_FONT },
     { NULL }
 };
 

@@ -115,9 +115,10 @@
  * Macro abstracting use of TkMacOSXGetNamedSymbol to init named symbols.
  */
 
+#define UNINITIALISED_SYMBOL	((void*)(-1L))
 #define TkMacOSXInitNamedSymbol(module, ret, symbol, ...) \
-    static ret (* symbol)(__VA_ARGS__) = (void*)(-1L); \
-    if (symbol == (void*)(-1L)) { \
+    static ret (* symbol)(__VA_ARGS__) = UNINITIALISED_SYMBOL; \
+    if (symbol == UNINITIALISED_SYMBOL) { \
 	symbol = TkMacOSXGetNamedSymbol(STRINGIFY(module), \
 		STRINGIFY(symbol)); \
     }
@@ -234,7 +235,11 @@ MODULE_SCOPE int	TkMacOSXIconBitmapObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
-						int inset, int thickness);
+			    int inset, int thickness);
+MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 
 #pragma mark Private Objective-C Classes
 
@@ -328,6 +333,8 @@ VISIBILITY_HIDDEN
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 - (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+- (void)handleURLEvent:                (NSAppleEventDescriptor*)event
+	           withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
 @end
 
 VISIBILITY_HIDDEN
@@ -335,10 +342,7 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
     Bool _needsRedisplay;
-#endif
 }
 @property Bool needsRedisplay;
 @end
@@ -424,7 +428,7 @@ VISIBILITY_HIDDEN
 @end
 
 #endif /* _TKMACPRIV */
-
+
 /*
  * Local Variables:
  * mode: objc

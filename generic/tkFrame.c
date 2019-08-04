@@ -184,94 +184,94 @@ static const char *const labelAnchorStrings[] = {
 
 static const Tk_OptionSpec commonOptSpec[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	DEF_FRAME_BG_COLOR, -1, Tk_Offset(Frame, border),
+	DEF_FRAME_BG_COLOR, -1, offsetof(Frame, border),
 	TK_OPTION_NULL_OK, DEF_FRAME_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_STRING, "-colormap", "colormap", "Colormap",
-	DEF_FRAME_COLORMAP, -1, Tk_Offset(Frame, colormapName),
+	DEF_FRAME_COLORMAP, -1, offsetof(Frame, colormapName),
 	TK_OPTION_NULL_OK, 0, 0},
     /*
      * Having -container is useless in a labelframe since a container has
      * no border. It should be deprecated.
      */
     {TK_OPTION_BOOLEAN, "-container", "container", "Container",
-	DEF_FRAME_CONTAINER, -1, Tk_Offset(Frame, isContainer), 0, 0, 0},
+	DEF_FRAME_CONTAINER, -1, offsetof(Frame, isContainer), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_FRAME_CURSOR, -1, Tk_Offset(Frame, cursor),
+	DEF_FRAME_CURSOR, -1, offsetof(Frame, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-	DEF_FRAME_HEIGHT, -1, Tk_Offset(Frame, height), 0, 0, 0},
+	DEF_FRAME_HEIGHT, -1, offsetof(Frame, height), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_FRAME_HIGHLIGHT_BG, -1,
-	Tk_Offset(Frame, highlightBgColorPtr), 0, 0, 0},
+	offsetof(Frame, highlightBgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	DEF_FRAME_HIGHLIGHT, -1, Tk_Offset(Frame, highlightColorPtr),
+	DEF_FRAME_HIGHLIGHT, -1, offsetof(Frame, highlightColorPtr),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", DEF_FRAME_HIGHLIGHT_WIDTH, -1,
-	Tk_Offset(Frame, highlightWidth), 0, 0, 0},
+	offsetof(Frame, highlightWidth), 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	DEF_FRAME_PADX, Tk_Offset(Frame, padXPtr),
-	Tk_Offset(Frame, padX), 0, 0, 0},
+	DEF_FRAME_PADX, offsetof(Frame, padXPtr),
+	offsetof(Frame, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	DEF_FRAME_PADY, Tk_Offset(Frame, padYPtr),
-	Tk_Offset(Frame, padY), 0, 0, 0},
+	DEF_FRAME_PADY, offsetof(Frame, padYPtr),
+	offsetof(Frame, padY), 0, 0, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_FRAME_TAKE_FOCUS, -1, Tk_Offset(Frame, takeFocus),
+	DEF_FRAME_TAKE_FOCUS, -1, offsetof(Frame, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-visual", "visual", "Visual",
-	DEF_FRAME_VISUAL, -1, Tk_Offset(Frame, visualName),
+	DEF_FRAME_VISUAL, -1, offsetof(Frame, visualName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_FRAME_WIDTH, -1, Tk_Offset(Frame, width), 0, 0, 0},
+	DEF_FRAME_WIDTH, -1, offsetof(Frame, width), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_STRING, "-backgroundimage", "backgroundImage", "BackgroundImage",
-	DEF_FRAME_BG_IMAGE, Tk_Offset(Frame, bgimgPtr), -1,
+	DEF_FRAME_BG_IMAGE, offsetof(Frame, bgimgPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
 	NULL, 0, -1, 0, "-backgroundimage", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_FRAME_BORDER_WIDTH, -1, Tk_Offset(Frame, borderWidth), 0, 0, 0},
+	DEF_FRAME_BORDER_WIDTH, -1, offsetof(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
-	DEF_FRAME_CLASS, -1, Tk_Offset(Frame, className), 0, 0, 0},
+	DEF_FRAME_CLASS, -1, offsetof(Frame, className), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_FRAME_RELIEF, -1, Tk_Offset(Frame, relief), 0, 0, 0},
+	DEF_FRAME_RELIEF, -1, offsetof(Frame, relief), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
-	DEF_FRAME_BG_TILE, -1, Tk_Offset(Frame, tile), 0, 0, 0},
+	DEF_FRAME_BG_TILE, -1, offsetof(Frame, tile), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
 	NULL, 0, 0, 0, commonOptSpec, 0}
 };
 
 static const Tk_OptionSpec toplevelOptSpec[] = {
     {TK_OPTION_STRING, "-backgroundimage", "backgroundImage", "BackgroundImage",
-	DEF_FRAME_BG_IMAGE, Tk_Offset(Frame, bgimgPtr), -1,
+	DEF_FRAME_BG_IMAGE, offsetof(Frame, bgimgPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
 	NULL, 0, -1, 0, "-backgroundimage", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_FRAME_BORDER_WIDTH, -1, Tk_Offset(Frame, borderWidth), 0, 0, 0},
+	DEF_FRAME_BORDER_WIDTH, -1, offsetof(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
-	DEF_TOPLEVEL_CLASS, -1, Tk_Offset(Frame, className), 0, 0, 0},
+	DEF_TOPLEVEL_CLASS, -1, offsetof(Frame, className), 0, 0, 0},
     {TK_OPTION_STRING, "-menu", "menu", "Menu",
-	DEF_TOPLEVEL_MENU, -1, Tk_Offset(Frame, menuName),
+	DEF_TOPLEVEL_MENU, -1, offsetof(Frame, menuName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_FRAME_RELIEF, -1, Tk_Offset(Frame, relief), 0, 0, 0},
+	DEF_FRAME_RELIEF, -1, offsetof(Frame, relief), 0, 0, 0},
     {TK_OPTION_STRING, "-screen", "screen", "Screen",
-	DEF_TOPLEVEL_SCREEN, -1, Tk_Offset(Frame, screenName),
+	DEF_TOPLEVEL_SCREEN, -1, offsetof(Frame, screenName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
-	DEF_FRAME_BG_TILE, -1, Tk_Offset(Frame, tile), 0, 0, 0},
+	DEF_FRAME_BG_TILE, -1, offsetof(Frame, tile), 0, 0, 0},
     {TK_OPTION_STRING, "-use", "use", "Use",
-	DEF_TOPLEVEL_USE, -1, Tk_Offset(Frame, useThis),
+	DEF_TOPLEVEL_USE, -1, offsetof(Frame, useThis),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
 	NULL, 0, 0, 0, commonOptSpec, 0}
@@ -281,25 +281,25 @@ static const Tk_OptionSpec labelframeOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_LABELFRAME_BORDER_WIDTH, -1, Tk_Offset(Frame, borderWidth),
+	DEF_LABELFRAME_BORDER_WIDTH, -1, offsetof(Frame, borderWidth),
 	0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
-	DEF_LABELFRAME_CLASS, -1, Tk_Offset(Frame, className), 0, 0, 0},
+	DEF_LABELFRAME_CLASS, -1, offsetof(Frame, className), 0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_LABELFRAME_FONT, -1, Tk_Offset(Labelframe, tkfont), 0, 0, 0},
+	DEF_LABELFRAME_FONT, -1, offsetof(Labelframe, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_LABELFRAME_FG, -1, Tk_Offset(Labelframe, textColorPtr), 0, 0, 0},
+	DEF_LABELFRAME_FG, -1, offsetof(Labelframe, textColorPtr), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-labelanchor", "labelAnchor", "LabelAnchor",
-	DEF_LABELFRAME_LABELANCHOR, -1, Tk_Offset(Labelframe, labelAnchor),
+	DEF_LABELFRAME_LABELANCHOR, -1, offsetof(Labelframe, labelAnchor),
 	0, labelAnchorStrings, 0},
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget",
-	NULL, -1, Tk_Offset(Labelframe, labelWin), TK_OPTION_NULL_OK, 0, 0},
+	NULL, -1, offsetof(Labelframe, labelWin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_LABELFRAME_RELIEF, -1, Tk_Offset(Frame, relief), 0, 0, 0},
+	DEF_LABELFRAME_RELIEF, -1, offsetof(Frame, relief), 0, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
-	DEF_LABELFRAME_TEXT, Tk_Offset(Labelframe, textPtr), -1,
+	DEF_LABELFRAME_TEXT, offsetof(Labelframe, textPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
 	NULL, 0, 0, 0, commonOptSpec, 0}
@@ -826,17 +826,17 @@ FrameWidgetObjCmd(
 		}
 		c = arg[1];
 		if (((c == 'c') && (length >= 2)
-			&& (strncmp(arg, "-class", (unsigned)length) == 0))
+			&& (strncmp(arg, "-class", length) == 0))
 		    || ((c == 'c') && (length >= 3)
-			&& (strncmp(arg, "-colormap", (unsigned)length) == 0))
+			&& (strncmp(arg, "-colormap", length) == 0))
 		    || ((c == 'c') && (length >= 3)
-			&& (strncmp(arg, "-container", (unsigned)length) == 0))
+			&& (strncmp(arg, "-container", length) == 0))
 		    || ((c == 's') && (framePtr->type == TYPE_TOPLEVEL)
-			&& (strncmp(arg, "-screen", (unsigned)length) == 0))
+			&& (strncmp(arg, "-screen", length) == 0))
 		    || ((c == 'u') && (framePtr->type == TYPE_TOPLEVEL)
-			&& (strncmp(arg, "-use", (unsigned)length) == 0))
+			&& (strncmp(arg, "-use", length) == 0))
 		    || ((c == 'v')
-			&& (strncmp(arg, "-visual", (unsigned)length) == 0))) {
+			&& (strncmp(arg, "-visual", length) == 0))) {
 
 #ifdef SUPPORT_CONFIG_EMBEDDED
 		    if (c == 'u') {

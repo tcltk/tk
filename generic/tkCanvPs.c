@@ -94,37 +94,37 @@ typedef struct TkPostscriptInfo {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-colormap", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, colorVar), 0, NULL},
+	"", offsetof(TkPostscriptInfo, colorVar), 0, NULL},
     {TK_CONFIG_STRING, "-colormode", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, colorMode), 0, NULL},
+	"", offsetof(TkPostscriptInfo, colorMode), 0, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, fileName), 0, NULL},
+	"", offsetof(TkPostscriptInfo, fileName), 0, NULL},
     {TK_CONFIG_STRING, "-channel", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, channelName), 0, NULL},
+	"", offsetof(TkPostscriptInfo, channelName), 0, NULL},
     {TK_CONFIG_STRING, "-fontmap", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, fontVar), 0, NULL},
+	"", offsetof(TkPostscriptInfo, fontVar), 0, NULL},
     {TK_CONFIG_PIXELS, "-height", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, height), 0, NULL},
+	"", offsetof(TkPostscriptInfo, height), 0, NULL},
     {TK_CONFIG_ANCHOR, "-pageanchor", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageAnchor), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageAnchor), 0, NULL},
     {TK_CONFIG_STRING, "-pageheight", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageHeightString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageHeightString), 0, NULL},
     {TK_CONFIG_STRING, "-pagewidth", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageWidthString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageWidthString), 0, NULL},
     {TK_CONFIG_STRING, "-pagex", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageXString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageXString), 0, NULL},
     {TK_CONFIG_STRING, "-pagey", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageYString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageYString), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-prolog", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, prolog), 0, NULL},
+	"", offsetof(TkPostscriptInfo, prolog), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-rotate", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, rotate), 0, NULL},
+	"", offsetof(TkPostscriptInfo, rotate), 0, NULL},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, width), 0, NULL},
+	"", offsetof(TkPostscriptInfo, width), 0, NULL},
     {TK_CONFIG_PIXELS, "-x", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, x), 0, NULL},
+	"", offsetof(TkPostscriptInfo, x), 0, NULL},
     {TK_CONFIG_PIXELS, "-y", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, y), 0, NULL},
+	"", offsetof(TkPostscriptInfo, y), 0, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -381,7 +381,7 @@ TkCanvPostscriptCmd(
 	 */
 
 	psInfo.chan = Tcl_GetChannel(interp, psInfo.channelName, &mode);
-	if (psInfo.chan == (Tcl_Channel) NULL) {
+	if (psInfo.chan == NULL) {
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}

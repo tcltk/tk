@@ -1015,7 +1015,7 @@ TkWmDeadWindow(
 	 */
 
 	if (winPtr->parentPtr) {
-	    while (Tk_DoOneEvent(TK_WINDOW_EVENTS|TK_DONT_WAIT)) {}
+	    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
 	}
 	[NSApp _resetAutoreleasePool];
 #if DEBUG_ZOMBIES > 0
@@ -2781,8 +2781,6 @@ WmManageCmd(
 		Tk_MakeWindowExist((Tk_Window) winPtr);
 		macWin = (MacDrawable *) winPtr->window;
 	    }
-	    TkWmMapWindow(winPtr);
-	    Tk_UnmapWindow(frameWin);
 	}
 	wmPtr = winPtr->wmInfoPtr;
 	winPtr->flags &= ~TK_MAPPED;
@@ -2793,6 +2791,7 @@ WmManageCmd(
 	winPtr->flags |=
 		(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	TkMapTopFrame(frameWin);
+	TkWmMapWindow(winPtr);
     } else if (Tk_IsTopLevel(frameWin)) {
 	/* Already managed by wm - ignore it */
     }
@@ -5583,8 +5582,7 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	if ((objc < 3) || (objc > 4)) {
-	    Tcl_WrongNumArgs(interp, 2, objv,
-		    "appearance window ?appearancename?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?appearancename?");
 	    return TCL_ERROR;
 	}
 	if (objc == 4 && [NSApp macMinorVersion] < 14) {
@@ -6880,10 +6878,11 @@ ApplyWindowAttributeFlagChanges(
 		     * height. This causes the window manager to refuse to
 		     * allow the window to be resized when it is a split
 		     * window. To work around this we make the max size equal
-		     * to the screen size.
+		     * to the screen size.  (For 10.11 and up, only)
 		     */
-
-		    [macWindow setMaxFullScreenContentSize:screenSize];
+		    if ([NSApp macMinorVersion] > 10) {
+			[macWindow setMaxFullScreenContentSize:screenSize];
+		    }
 		}
 	    }
 #endif

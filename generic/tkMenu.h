@@ -120,7 +120,7 @@ typedef struct TkMenuEntry {
 				 * always 0 for tearoff and separator
 				 * entries. */
     int hideMargin;		/* If this is 0, then the item has enough
-    				 * margin to accomodate a standard check mark
+    				 * margin to accommodate a standard check mark
     				 * and a default right margin. If this is 1,
     				 * then the item has no such margins, and
     				 * checkbuttons and radiobuttons with this set
@@ -496,11 +496,11 @@ MODULE_SCOPE TkMenuReferences*TkFindMenuReferencesObj(Tcl_Interp *interp,
 MODULE_SCOPE int	TkFreeMenuReferences(TkMenuReferences *menuRefPtr);
 MODULE_SCOPE Tcl_HashTable *TkGetMenuHashTable(Tcl_Interp *interp);
 MODULE_SCOPE int	TkGetMenuIndex(Tcl_Interp *interp, TkMenu *menuPtr,
-			    Tcl_Obj *objPtr, int lastOK, int *indexPtr);
+			    Tcl_Obj *objPtr, int lastOK, TkSizeT *indexPtr);
 MODULE_SCOPE void	TkMenuInitializeDrawingFields(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuInitializeEntryDrawingFields(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkInvokeMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int index);
+			    TkSizeT index);
 MODULE_SCOPE void	TkMenuConfigureDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE int	TkMenuConfigureEntryDrawOptions(
 			    TkMenuEntry *mePtr, TkSizeT index);
