@@ -64,7 +64,6 @@
     typedef _TCHAR TCHAR;
 #endif
 
-#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
