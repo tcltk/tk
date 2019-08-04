@@ -42,7 +42,7 @@ update
 event generate .top <Button-1> -warp 1
 update
 destroy .top
-
+
 test bind-1.1 {bind command} -body {
     bind
 } -returnCodes error -result {wrong # args: should be "bind window ?pattern? ?command?"}
@@ -6597,30 +6597,7 @@ test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
     # must be preferred.
 } -result {last}
 
-test bind-34.1 {canary for problems with leaking binding tests} -setup {
-    unset -nocomplain ::x
-    set ::x {}
-} -body {
-    proc kill_canvas {} {
-	destroy .c
-	pack [canvas .c -height 200 -width 200] -fill both -expand yes
-	update idle
-	.c create rectangle 80 80 120 120 -fill blue -tags blue
-	# bind a button press to re-build the canvas
-	.c bind blue <ButtonRelease-1> {kill_canvas; append ::x ok}
-    }
-    kill_canvas
-    # do this many times to improve chances of triggering the crash
-    for {set i 0} {$i < 3} {incr i} {
-	event generate .c <1> -x 100 -y 100
-	event generate .c <ButtonRelease-1> -x 100 -y 100
-    }
-    return $::x
-} -cleanup {
-    destroy .c
-    catch {rename kill_canvas {}}
-} -result okokok
-
+
 # cleanup
 cleanupTests
 return
