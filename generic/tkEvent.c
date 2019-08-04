@@ -559,71 +559,6 @@ GetButtonMask(
 /*
  *----------------------------------------------------------------------
  *
- * UpdateButtonEventState --
- *
- *	Update the button event state in our TkDisplay using the XEvent
- *	passed. We also may modify the the XEvent passed to fit some aspects
- *	of our TkDisplay.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The TkDisplay's private button state may be modified. The eventPtr's
- *	state may be updated to reflect masks stored in our TkDisplay that the
- *	event doesn't contain. The eventPtr may also be modified to not
- *	contain a button state for the window in which it was not pressed in.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-UpdateButtonEventState(
-    XEvent *eventPtr)
-{
-    TkDisplay *dispPtr;
-    int allButtonsMask = Button1Mask | Button2Mask | Button3Mask
-	    | Button4Mask | Button5Mask;
-
-    switch (eventPtr->type) {
-    case ButtonPress:
-	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
-	dispPtr->mouseButtonWindow = eventPtr->xbutton.window;
-	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
-
-	dispPtr->mouseButtonState |= GetButtonMask(eventPtr->xbutton.button);
-	break;
-
-    case ButtonRelease:
-	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
-	dispPtr->mouseButtonWindow = None;
-	dispPtr->mouseButtonState &= ~GetButtonMask(eventPtr->xbutton.button);
-	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
-	break;
-
-    case MotionNotify:
-	dispPtr = TkGetDisplay(eventPtr->xmotion.display);
-	if (dispPtr->mouseButtonState & allButtonsMask) {
-	    if (eventPtr->xbutton.window != dispPtr->mouseButtonWindow) {
-		/*
-		 * This motion event should not be interpreted as a button
-		 * press + motion event since this is not the same window the
-		 * button was pressed down in.
-		 */
-
-		dispPtr->mouseButtonState &= ~allButtonsMask;
-		dispPtr->mouseButtonWindow = None;
-	    } else {
-		eventPtr->xmotion.state |= dispPtr->mouseButtonState;
-	    }
-	}
-	break;
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * InvokeClientMessageHandlers --
  *
  *	Iterate the list of handlers and invoke the function pointer for each.
@@ -1219,8 +1154,6 @@ Tk_HandleEvent(
     Tcl_Interp *interp = NULL;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    UpdateButtonEventState(eventPtr);
 
     /*
      * If the generic handler processed this event we are done and can return.
