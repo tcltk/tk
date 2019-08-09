@@ -1513,17 +1513,15 @@ EntryWorldChanged(
  *
  * TkpDrawEntryBorderAndFocus --
  *
- *	This function redraws the border of an entry widget. It overrides the
- *	generic border drawing code if the entry widget parameters are such
- *	that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native entry borders.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1542,17 +1540,15 @@ TkpDrawEntryBorderAndFocus(
  *
  * TkpDrawSpinboxButtons --
  *
- *	This function redraws the buttons of an spinbox widget. It overrides
- *	the generic button drawing code if the spinbox widget parameters are
- *	such that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native spinbox buttons.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
