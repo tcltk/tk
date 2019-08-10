@@ -341,7 +341,7 @@ test unixEmbed-2.4 {EmbeddedEventProc procedure} -constraints {
 
 
 test unixEmbed-3.1 {ContainerEventProc procedure, detect creation} -constraints {
-    unix testembed notPortable
+    unix testembed nonPortable
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1

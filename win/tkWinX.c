@@ -127,7 +127,7 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = GetModuleHandle(TEXT("NTDLL"));
+	HANDLE handle = GetModuleHandle(L"NTDLL");
 	int(__stdcall *getversion)(void *) =
 		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
@@ -258,7 +258,7 @@ TkWinXInit(
 
     if (GetLocaleInfo(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
 	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
-	       (LPTSTR) &lpCP, sizeof(lpCP)/sizeof(TCHAR))
+	       (LPWSTR) &lpCP, sizeof(lpCP)/sizeof(WCHAR))
 	    && TranslateCharsetInfo(INT2PTR(lpCP), &lpCs, TCI_SRCCODEPAGE)) {
 	UpdateInputLanguage((int) lpCs.ciCharset);
     }
@@ -346,8 +346,8 @@ TkWinGetPlatformTheme(void)
 
 	if ((os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
 	    HKEY hKey;
-	    LPCTSTR szSubKey = TEXT("Control Panel\\Appearance");
-	    LPCTSTR szCurrent = TEXT("Current");
+	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
+	    LPCWSTR szCurrent = L"Current";
 	    DWORD dwSize = 200;
 	    char pBuffer[200];
 
@@ -884,9 +884,12 @@ Tk_TranslateWinEvent(
     case WM_MBUTTONDBLCLK:
     case WM_RBUTTONDOWN:
     case WM_RBUTTONDBLCLK:
+    case WM_XBUTTONDOWN:
+    case WM_XBUTTONDBLCLK:
     case WM_LBUTTONUP:
     case WM_MBUTTONUP:
     case WM_RBUTTONUP:
+    case WM_XBUTTONUP:
     case WM_MOUSEMOVE:
 	Tk_PointerEvent(hwnd, (short) LOWORD(lParam), (short) HIWORD(lParam));
 	return 1;
@@ -1675,7 +1678,7 @@ HandleIMEComposition(
  * TkWinResendEvent --
  *
  *	This function converts an X event into a Windows event and invokes the
- *	specified windo function.
+ *	specified window function.
  *
  * Results:
  *	A standard Windows result.
@@ -1713,6 +1716,14 @@ TkWinResendEvent(
 	msg = WM_RBUTTONDOWN;
 	wparam = MK_RBUTTON;
 	break;
+    case Button4:
+	msg = WM_XBUTTONDOWN;
+	wparam = MAKEWPARAM(MK_XBUTTON1, XBUTTON1);
+	break;
+    case Button5:
+	msg = WM_XBUTTONDOWN;
+	wparam = MAKEWPARAM(MK_XBUTTON2, XBUTTON2);
+	break;
     default:
 	return 0;
     }
@@ -1725,6 +1736,12 @@ TkWinResendEvent(
     }
     if (eventPtr->xbutton.state & Button3Mask) {
 	wparam |= MK_RBUTTON;
+    }
+    if (eventPtr->xbutton.state & Button4Mask) {
+	wparam |= MK_XBUTTON1;
+    }
+    if (eventPtr->xbutton.state & Button5Mask) {
+	wparam |= MK_XBUTTON2;
     }
     if (eventPtr->xbutton.state & ShiftMask) {
 	wparam |= MK_SHIFT;

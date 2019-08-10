@@ -137,21 +137,21 @@ TkpDisplayWarning(
 
     len = MultiByteToWideChar(CP_UTF8, 0, title, -1, titleString, TK_MAX_WARN_LEN);
     msgString = &titleString[len + 1];
-    titleString[TK_MAX_WARN_LEN - 1] = L'\0';
+    titleString[TK_MAX_WARN_LEN - 1] = '\0';
     MultiByteToWideChar(CP_UTF8, 0, msg, -1, msgString, (TK_MAX_WARN_LEN - 1) - len);
     /*
      * Truncate MessageBox string if it is too long to not overflow the screen
      * and cause possible oversized window error.
      */
-    if (titleString[TK_MAX_WARN_LEN - 1] != L'\0') {
+    if (titleString[TK_MAX_WARN_LEN - 1] != '\0') {
 	memcpy(titleString + (TK_MAX_WARN_LEN - 5), L" ...", 5 * sizeof(WCHAR));
     }
     if (IsDebuggerPresent()) {
-	titleString[len - 1] = L':';
-	titleString[len] = L' ';
+	titleString[len - 1] = ':';
+	titleString[len] = ' ';
 	OutputDebugStringW(titleString);
     } else {
-	titleString[len - 1] = L'\0';
+	titleString[len - 1] = '\0';
 	MessageBoxW(NULL, msgString, titleString,
 		MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL
 		| MB_SETFOREGROUND | MB_TOPMOST);
@@ -178,14 +178,14 @@ Tcl_Obj*
 TkWin32ErrorObj(
     HRESULT hrError)
 {
-    LPTSTR lpBuffer = NULL, p = NULL;
-    TCHAR  sBuffer[30];
+    LPWSTR lpBuffer = NULL, p = NULL;
+    WCHAR  sBuffer[30];
     Tcl_Obj* errPtr = NULL;
     Tcl_DString ds;
 
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, (DWORD)hrError,
-	    LANG_NEUTRAL, (LPTSTR)&lpBuffer, 0, NULL);
+	    LANG_NEUTRAL, (LPWSTR)&lpBuffer, 0, NULL);
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;
