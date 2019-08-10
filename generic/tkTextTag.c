@@ -1446,9 +1446,6 @@ TkTextBindProc(
     TkText *textPtr = clientData;
     int repick = 0;
 
-# define AnyButtonMask \
-	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
-
     textPtr->refCount++;
 
     /*
@@ -1460,35 +1457,16 @@ TkTextBindProc(
     if (eventPtr->type == ButtonPress) {
 	textPtr->flags |= BUTTON_DOWN;
     } else if (eventPtr->type == ButtonRelease) {
-	int mask;
+	unsigned int mask;
 
-	switch (eventPtr->xbutton.button) {
-	case Button1:
-	    mask = Button1Mask;
-	    break;
-	case Button2:
-	    mask = Button2Mask;
-	    break;
-	case Button3:
-	    mask = Button3Mask;
-	    break;
-	case Button4:
-	    mask = Button4Mask;
-	    break;
-	case Button5:
-	    mask = Button5Mask;
-	    break;
-	default:
-	    mask = 0;
-	    break;
-	}
-	if ((eventPtr->xbutton.state & AnyButtonMask) == (unsigned) mask) {
+	mask = TkGetButtonMask(eventPtr->xbutton.button);
+	if ((eventPtr->xbutton.state & ALL_BUTTONS) == mask) {
 	    textPtr->flags &= ~BUTTON_DOWN;
 	    repick = 1;
 	}
     } else if ((eventPtr->type == EnterNotify)
 	    || (eventPtr->type == LeaveNotify)) {
-	if (eventPtr->xcrossing.state & AnyButtonMask) {
+	if (eventPtr->xcrossing.state & ALL_BUTTONS) {
 	    textPtr->flags |= BUTTON_DOWN;
 	} else {
 	    textPtr->flags &= ~BUTTON_DOWN;
@@ -1496,7 +1474,7 @@ TkTextBindProc(
 	TkTextPickCurrent(textPtr, eventPtr);
 	goto done;
     } else if (eventPtr->type == MotionNotify) {
-	if (eventPtr->xmotion.state & AnyButtonMask) {
+	if (eventPtr->xmotion.state & ALL_BUTTONS) {
 	    textPtr->flags |= BUTTON_DOWN;
 	} else {
 	    textPtr->flags &= ~BUTTON_DOWN;
@@ -1513,8 +1491,7 @@ TkTextBindProc(
 	unsigned int oldState;
 
 	oldState = eventPtr->xbutton.state;
-	eventPtr->xbutton.state &= ~(Button1Mask|Button2Mask
-		|Button3Mask|Button4Mask|Button5Mask);
+	eventPtr->xbutton.state &= ~ALL_BUTTONS;
 	if (!(textPtr->flags & DESTROYED)) {
 	    TkTextPickCurrent(textPtr, eventPtr);
 	}
