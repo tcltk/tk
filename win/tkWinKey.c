@@ -186,7 +186,7 @@ KeycodeToKeysym(
 {
     BYTE keys[256];
     int result, deadkey, shift;
-    TCHAR buf[4];
+    WCHAR buf[4];
     unsigned int scancode = MapVirtualKey(keycode, 0);
 
     /*
@@ -572,7 +572,7 @@ TkpSetKeycodeAndState(
 	}
     }
     if (keySym >= 0x20) {
-	result = VkKeyScan((TCHAR) keySym);
+	result = VkKeyScan((WCHAR) keySym);
 	if (result != -1) {
 	    shift = result >> 8;
 	    if (shift & 1)
@@ -625,7 +625,7 @@ XKeysymToKeycode(
 	}
     }
     if (keysym >= 0x20) {
-	result = VkKeyScan((TCHAR) keysym);
+	result = VkKeyScan((WCHAR) keysym);
 	if (result != -1) {
 	    return (KeyCode) (result & 0xff);
 	}
