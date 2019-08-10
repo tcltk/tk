@@ -1066,7 +1066,7 @@ static void TreeviewCleanup(void *recordPtr)
     TreeviewFreeColumns(tv);
 
     if (tv->tree.displayColumns)
-	Tcl_Free((ClientData)tv->tree.displayColumns);
+	ckfree((ClientData)tv->tree.displayColumns);
 
     foreachHashEntry(&tv->tree.items, FreeItemCB);
     Tcl_DeleteHashTable(&tv->tree.items);
