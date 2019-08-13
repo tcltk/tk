@@ -5175,7 +5175,7 @@ PickCurrentItem(
 				 * ButtonRelease, or MotionNotify. */
 {
     double coords[2];
-    unsigned int buttonDown;
+    unsigned long buttonDown;
     Tk_Item *prevItemPtr;
     SearchUids *searchUids = GetStaticUids();
 
