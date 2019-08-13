@@ -963,8 +963,7 @@ ButtonNumberFromState(
     if (state & Button2Mask) { return 2; }
     if (state & Button3Mask) { return 3; }
     if (state & Button4Mask) { return 4; }
-    if (state & Button5Mask) { return 5; }
-    return 6;
+    return 5;
 }
 
 static void
