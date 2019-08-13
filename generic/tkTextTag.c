@@ -1491,7 +1491,7 @@ TkTextBindProc(
 	unsigned int oldState;
 
 	oldState = eventPtr->xbutton.state;
-	eventPtr->xbutton.state &= ~ALL_BUTTONS;
+	eventPtr->xbutton.state &= ~(unsigned long)ALL_BUTTONS;
 	if (!(textPtr->flags & DESTROYED)) {
 	    TkTextPickCurrent(textPtr, eventPtr);
 	}
