@@ -540,7 +540,7 @@ static const int buttonMasks[] = {
     0, Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask
 };
 
-int
+unsigned long
 TkGetButtonMask(
     unsigned int button)
 {

@@ -292,7 +292,7 @@ TkTextTagCmd(
 	    if (mask == 0) {
 		return TCL_ERROR;
 	    }
-	    if (mask & (unsigned) ~(ButtonMotionMask|Button1MotionMask
+	    if (mask & ~(unsigned long)(ButtonMotionMask|Button1MotionMask
 		    |Button2MotionMask|Button3MotionMask|Button4MotionMask
 		    |Button5MotionMask|ButtonPressMask|ButtonReleaseMask
 		    |EnterWindowMask|LeaveWindowMask|KeyPressMask
