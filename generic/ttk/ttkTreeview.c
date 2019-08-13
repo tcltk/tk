@@ -923,7 +923,7 @@ static void DragColumn(Treeview *tv, int i, int delta)
 
 static TreeItem *IdentifyItem(Treeview *tv, int y); /*forward*/
 
-static const unsigned int TreeviewBindEventMask =
+static const unsigned long TreeviewBindEventMask =
       KeyPressMask|KeyReleaseMask
     | ButtonPressMask|ButtonReleaseMask
     | PointerMotionMask|ButtonMotionMask
