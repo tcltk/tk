@@ -344,12 +344,6 @@ typedef struct PatSeq {
 #define NEARBY_MS	500
 
 /*
- * Constant for any (non-zero) button.
- */
-
-#define ALL_BUTTONS_MASK (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
-
-/*
  * Needed as "no-number" constant for integers. The value of this constant is
  * outside of integer range (type "int"). (Unfortunatly current version of
  * Tcl/Tk does not provide C99 integer support.)
@@ -428,7 +422,7 @@ static Tcl_HashTable nameTable;		/* keyArray hashed by keysym name. */
 
 typedef struct {
     const char *name;	/* Name of modifier. */
-    unsigned mask;	/* Button/modifier mask value, such as Button1Mask. */
+    ModMask mask;	/* Button/modifier mask value, such as Button1Mask. */
     unsigned flags;	/* Various flags; see below for definitions. */
 } ModInfo;
 
@@ -946,13 +940,13 @@ ResolveModifiers(
 
     if (dispPtr->metaModMask) {
 	if (modMask & META_MASK) {
-	    modMask &= ~META_MASK;
+	    modMask &= ~(ModMask)META_MASK;
 	    modMask |= dispPtr->metaModMask;
 	}
     }
     if (dispPtr->altModMask) {
 	if (modMask & ALT_MASK) {
-	    modMask &= ~ALT_MASK;
+	    modMask &= ~(ModMask)ALT_MASK;
 	    modMask |= dispPtr->altModMask;
 	}
     }
@@ -960,27 +954,21 @@ ResolveModifiers(
     return modMask;
 }
 
-static unsigned
+static int
 ButtonNumberFromState(
-    unsigned state)
+    ModMask state)
 {
-    if (!(state & ALL_BUTTONS_MASK)) { return 0; }
+    if (!(state & ALL_BUTTONS)) { return 0; }
     if (state & Button1Mask) { return 1; }
     if (state & Button2Mask) { return 2; }
     if (state & Button3Mask) { return 3; }
     if (state & Button4Mask) { return 4; }
-    return 5;
+    if (state & Button5Mask) { return 5; }
+    if (state & Button6Mask) { return 6; }
+    if (state & Button7Mask) { return 7; }
+    if (state & Button8Mask) { return 8; }
+    return 9;
 }
-
-#if SUPPORT_ADDITIONAL_MOTION_SYNTAX
-static unsigned
-ButtonNumberToMask(
-    unsigned button)
-{
-    assert(button > 0);
-    return Button1Mask << (button - 1);
-}
-#endif
 
 static void
 SetupPatternKey(
@@ -4957,7 +4945,7 @@ ParseEventDescription(
 				"NON_BUTTON");
 		    }
 #if SUPPORT_ADDITIONAL_MOTION_SYNTAX
-		    patPtr->modMask |= ButtonNumberToMask(button);
+		    patPtr->modMask |= TkGetButtonMask(button);
 		    p = SkipFieldDelims(p);
 		    while (*p && *p != '>') {
 			p = SkipFieldDelims(GetField(p, field, sizeof(field)));
@@ -4967,7 +4955,7 @@ ParseEventDescription(
 				    patPtr, 0,
 				    Tcl_ObjPrintf("bad button number \"%s\"", field), "BUTTON");
 			}
-			patPtr->modMask |= ButtonNumberToMask(button);
+			patPtr->modMask |= TkGetButtonMask(button);
 		    }
 		    patPtr->info = ButtonNumberFromState(patPtr->modMask);
 #endif
@@ -5097,7 +5085,7 @@ GetPatternObj(
 	    assert(patPtr->name);
 	    Tcl_AppendPrintfToObj(patternObj, "<<%s>>", patPtr->name);
 	} else {
-	    unsigned modMask;
+	    ModMask modMask;
 	    const ModInfo *modPtr;
 
 	    /*
@@ -5117,7 +5105,7 @@ GetPatternObj(
 	    modMask = patPtr->modMask;
 #if PRINT_SHORT_MOTION_SYNTAX
 	    if (patPtr->eventType == MotionNotify) {
-		modMask &= ~ALL_BUTTONS_MASK;
+		modMask &= ~(ModMask)ALL_BUTTONS;
 	    }
 #endif
 
@@ -5145,16 +5133,16 @@ GetPatternObj(
 		}
 		case ButtonPress:
 		case ButtonRelease:
-		    assert(patPtr->info <= Button5);
+		    assert(patPtr->info <= Button9);
 		    Tcl_AppendPrintfToObj(patternObj, "-%d", (int) patPtr->info);
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {
-		    unsigned mask = patPtr->modMask;
-		    while (mask & ALL_BUTTONS_MASK) {
-			unsigned button = ButtonNumberFromState(mask);
-			Tcl_AppendPrintfToObj(patternObj, "-%u", button);
-			mask &= ~ButtonNumberToMask(button);
+		    ModMask mask = patPtr->modMask;
+		    while (mask & ALL_BUTTONS) {
+			int button = ButtonNumberFromState(mask);
+			Tcl_AppendPrintfToObj(patternObj, "-%d", button);
+			mask &= ~TkGetButtonMask(button);
 		    }
 		    break;
 		}
