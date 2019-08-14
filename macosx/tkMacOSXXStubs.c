@@ -833,7 +833,7 @@ XStringListToTextProperty(
     XTextProperty *text_prop_return)
 {
     Debugger();
-    return (Status) 0;
+    return Success;
 }
 
 void

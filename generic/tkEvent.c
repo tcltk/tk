@@ -209,9 +209,7 @@ static int		TkXErrorHandler(ClientData clientData,
 			    XErrorEvent *errEventPtr);
 static void		UpdateButtonEventState(XEvent *eventPtr);
 static int		WindowEventProc(Tcl_Event *evPtr, int flags);
-#ifdef TK_USE_INPUT_METHODS
 static void		CreateXIC(TkWindow *winPtr);
-#endif /* TK_USE_INPUT_METHODS */
 
 /*
  *----------------------------------------------------------------------
@@ -319,7 +317,6 @@ InvokeMouseHandlers(
  *----------------------------------------------------------------------
  */
 
-#ifdef TK_USE_INPUT_METHODS
 static void
 CreateXIC(
     TkWindow *winPtr)
@@ -366,7 +363,6 @@ CreateXIC(
 	XSelectInput(winPtr->display, winPtr->window, winPtr->atts.event_mask);
     }
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1278,7 +1274,6 @@ Tk_HandleEvent(
      * ever active for X11.
      */
 
-#ifdef TK_USE_INPUT_METHODS
     /*
      * If the XIC has been invalidated, it must be recreated.
      */
@@ -1300,7 +1295,6 @@ Tk_HandleEvent(
 	    XSetICFocus(winPtr->inputContext);
 	}
     }
-#endif /*TK_USE_INPUT_METHODS*/
 
     /*
      * For events where it hasn't already been done, update the current time
