@@ -344,17 +344,17 @@ static NSInteger showOpenSavePanel(
     NSInteger modalReturnCode;
 
     if (parent && ![parent attachedSheet] && [NSApp macMinorVersion] < 15) {
-	[openpanel beginSheetModalForWindow:parent
+	[panel beginSheetModalForWindow:parent
 	       completionHandler:^(NSInteger returnCode) {
-	    [NSApp tkFilePanelDidEnd:openpanel
+	    [NSApp tkFilePanelDidEnd:panel
 		       returnCode:returnCode
 		       contextInfo:callbackInfo ];
 	    }];
 	modalReturnCode = callbackInfo->cmdObj ? modalOther :
-	    [NSApp runModalForWindow:openpanel];
+	    [NSApp runModalForWindow:panel];
     } else {
-	modalReturnCode = [openpanel runModal];
-	[NSApp tkFilePanelDidEnd:openpanel returnCode:modalReturnCode
+	modalReturnCode = [panel runModal];
+	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
 		     contextInfo:callbackInfo];
     }
     return modalReturnCode;
@@ -1077,12 +1077,12 @@ Tk_GetSaveFileObjCmd(
     [savepanel setExtensionHidden:NO];
 
     if (cmdObj) {
-	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
+    callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
@@ -1108,7 +1108,7 @@ Tk_GetSaveFileObjCmd(
 	parent = nil;
 	parentIsKey = False;
     }
-    modalReturnCode = showOpenSavePanel(openpanel, parent, callbackInfo);
+    modalReturnCode = showOpenSavePanel(savepanel, parent, callbackInfo);
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
     if (parentIsKey) {
 	[parent makeKeyWindow];
@@ -1228,12 +1228,12 @@ Tk_ChooseDirectoryObjCmd(
     [panel setCanChooseDirectories:YES];
     [panel setCanCreateDirectories:!mustexist];
     if (cmdObj) {
-	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
+    callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
@@ -1255,7 +1255,7 @@ Tk_ChooseDirectoryObjCmd(
 	parent = nil;
 	parentIsKey = False;
     }
-    modalReturnCode = showOpenSavePanel(openpanel, parent, callbackInfo);
+    modalReturnCode = showOpenSavePanel(panel, parent, callbackInfo);
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
     if (parentIsKey) {
 	[parent makeKeyWindow];
@@ -1524,12 +1524,12 @@ Tk_MessageBoxObjCmd(
     [[buttons objectAtIndex: defaultNativeButtonIndex-1]
 	    setKeyEquivalent: @"\r"];
     if (cmdObj) {
-	callbackInfo = ckalloc(sizeof(AlertCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
+    callbackInfo = ckalloc(sizeof(AlertCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->typeIndex = typeIndex;
