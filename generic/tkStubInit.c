@@ -904,9 +904,9 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 127 */
     0, /* 128 */
     0, /* 129 */
-    0, /* 130 */
-    0, /* 131 */
-    0, /* 132 */
+    XFillArcs, /* 130 */
+    XDrawArcs, /* 131 */
+    XDrawRectangles, /* 132 */
     0, /* 133 */
     0, /* 134 */
     0, /* 135 */
@@ -918,6 +918,9 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetICValues, /* 141 */
     XGetICValues, /* 142 */
     XSetICFocus, /* 143 */
+    XDestroyIC, /* 144 */
+    XCreatePixmapCursor, /* 145 */
+    XCreateGlyphCursor, /* 146 */
 #endif /* AQUA */
 };
 

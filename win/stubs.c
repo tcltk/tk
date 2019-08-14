@@ -50,36 +50,10 @@ XChangeProperty(
     return Success;
 }
 
-Cursor
-XCreateGlyphCursor(
-    Display *display,
-    Font source_font,
-    Font mask_font,
-    unsigned int source_char,
-    unsigned int mask_char,
-    XColor _Xconst *foreground_color,
-    XColor _Xconst *background_color)
-{
-    return 1;
-}
-
 XIC
 XCreateIC(XIM xim, ...)
 {
     return NULL;
-}
-
-Cursor
-XCreatePixmapCursor(
-    Display *display,
-    Pixmap source,
-    Pixmap mask,
-    XColor *foreground_color,
-    XColor *background_color,
-    unsigned int x,
-    unsigned int y)
-{
-    return (Cursor) NULL;
 }
 
 int
@@ -89,12 +63,6 @@ XDeleteProperty(
     Atom property)
 {
     return Success;
-}
-
-void
-XDestroyIC(
-    XIC ic)
-{
 }
 
 Bool

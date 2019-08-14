@@ -641,22 +641,6 @@ XReparentWindow(
 }
 
 void
-XRotateBuffers(
-    Display *display,
-    int rotate)
-{
-}
-
-void
-XStoreBuffer(
-    Display *display,
-    _Xconst char *bytes,
-    int nbytes,
-    int buffer)
-{
-}
-
-void
 XUndefineCursor(
     Display *display,
     Window w)
@@ -744,6 +728,38 @@ XOffsetRegion(
 	return 0;
 }
 
+void
+XDestroyIC(
+    XIC ic)
+{
+}
+
+Cursor
+XCreatePixmapCursor(
+    Display *display,
+    Pixmap source,
+    Pixmap mask,
+    XColor *foreground_color,
+    XColor *background_color,
+    unsigned int x,
+    unsigned int y)
+{
+    return (Cursor) NULL;
+}
+
+Cursor
+XCreateGlyphCursor(
+    Display *display,
+    Font source_font,
+    Font mask_font,
+    unsigned int source_char,
+    unsigned int mask_char,
+    XColor _Xconst *foreground_color,
+    XColor _Xconst *background_color)
+{
+    return 1;
+}
+
 /*
  * Local Variables:
  * mode: c
