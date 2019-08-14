@@ -1129,13 +1129,6 @@ typedef struct {
     XFontSet        font_set;
 } XmbTextItem;
 
-typedef struct {
-    wchar_t        *chars;
-    int             nchars;
-    int             delta;
-    XFontSet        font_set;
-} XwcTextItem;
-
 #define XNRequiredCharSet "requiredCharSet"
 #define XNQueryOrientation "queryOrientation"
 #define XNBaseFontName "baseFontName"
@@ -1322,7 +1315,6 @@ typedef struct _XIMStringConversionText {
     Bool encoding_is_wchar;
     union {
 	char *mbs;
-	wchar_t *wcs;
     } string;
 } XIMStringConversionText;
 

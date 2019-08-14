@@ -906,7 +906,7 @@ XFillPolygon(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawRectangle(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -920,12 +920,12 @@ XDrawRectangle(
     int lw = gc->line_width;
 
     if (width == 0 || height == 0) {
-	return;
+	return BadMatch;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -937,9 +937,24 @@ XDrawRectangle(
 	CGContextStrokeRect(dc.context, rect);
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
-
-#ifdef TK_MACOSXDRAW_UNUSED
+
+int
+XPutImage(
+    Display *display,
+    Drawable d,			/* Destination drawable. */
+    GC gc,
+    XImage *image,		/* Source image. */
+    int src_x, int src_y,	/* Offset of subimage. */
+    int dest_x, int dest_y,	/* Position of subimage origin in drawable. */
+    unsigned int width, unsigned int height)
+				/* Dimensions of subimage. */
+{
+    return TkPutImage(NULL, 0, display, d, gc, image,
+		src_x, src_y, dest_x, dest_y, width, height);
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -964,7 +979,7 @@ XDrawRectangle(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawRectangles(
     Display *display,
     Drawable drawable,
@@ -978,8 +993,8 @@ XDrawRectangles(
     int i, lw = gc->line_width;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -997,8 +1012,8 @@ XDrawRectangles(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1168,7 +1183,6 @@ XDrawArc(
     TkMacOSXRestoreDrawingContext(&dc);
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -1191,7 +1205,7 @@ XDrawArc(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawArcs(
     Display *display,
     Drawable d,
@@ -1206,7 +1220,7 @@ XDrawArcs(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1247,8 +1261,8 @@ XDrawArcs(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1266,7 +1280,7 @@ XDrawArcs(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillArc(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -1282,12 +1296,12 @@ XFillArc(
     int lw = gc->line_width;
 
     if (width == 0 || height == 0 || angle2 == 0) {
-	return;
+	return BadMatch;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1326,9 +1340,9 @@ XFillArc(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -1345,7 +1359,7 @@ XFillArc(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillArcs(
     Display *display,
     Drawable d,
@@ -1360,7 +1374,7 @@ XFillArcs(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1408,25 +1422,8 @@ XFillArcs(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
-#endif
-
-#ifdef TK_MACOSXDRAW_UNUSED
-/*
- *----------------------------------------------------------------------
- *
- * XMaxRequestSize --
- *
- *----------------------------------------------------------------------
- */
-
-long
-XMaxRequestSize(
-    Display *display)
-{
-    return (SHRT_MAX / 4);
-}
-#endif
 
 /*
  *----------------------------------------------------------------------

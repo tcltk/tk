@@ -754,24 +754,12 @@ extern int XmbTextListToTextProperty(
     XTextProperty*	text_prop_return
 );
 
-extern int XwcTextListToTextProperty(
-    Display*		display,
-    wchar_t**		list,
-    int			count,
-    XICCEncodingStyle	style,
-    XTextProperty*	text_prop_return
-);
-
 extern int Xutf8TextListToTextProperty(
     Display*		display,
     char**		list,
     int			count,
     XICCEncodingStyle	style,
     XTextProperty*	text_prop_return
-);
-
-extern void XwcFreeStringList(
-    wchar_t**		list
 );
 
 extern Status XTextPropertyToStringList(
@@ -784,13 +772,6 @@ extern int XmbTextPropertyToTextList(
     Display*		display,
     const XTextProperty* text_prop,
     char***		list_return,
-    int*		count_return
-);
-
-extern int XwcTextPropertyToTextList(
-    Display*		display,
-    const XTextProperty* text_prop,
-    wchar_t***		list_return,
     int*		count_return
 );
 
