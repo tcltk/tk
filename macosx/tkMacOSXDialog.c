@@ -15,6 +15,7 @@
 #include "tkMacOSXPrivate.h"
 #include "tkFileFilter.h"
 #include "tkMacOSXConstants.h"
+#import <Carbon/Carbon.h>
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
 #define modalOK     NSOKButton
@@ -410,28 +411,41 @@ Tk_ChooseColorObjCmd(
     if (initialColor) {
 	[colorPanel setColor:initialColor];
     }
-    returnCode = [NSApp runModalForWindow:colorPanel];
-    if (returnCode == modalOK) {
-	color = [[colorPanel color] colorUsingColorSpace:
-		[NSColorSpace deviceRGBColorSpace]];
-	numberOfComponents = [color numberOfComponents];
-    }
-    if (color && numberOfComponents >= 3 && numberOfComponents <= 4) {
-	CGFloat components[4];
-	char colorstr[8];
 
-	[color getComponents:components];
-	snprintf(colorstr, 8, "#%02x%02x%02x",
-		(short)(components[0] * 255),
-		(short)(components[1] * 255),
-		(short)(components[2] * 255));
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(colorstr, 7));
-    } else {
-	Tcl_ResetResult(interp);
-    }
+
+    /*Re-work API for color dialogs to remove deprecated API calls on Catalina.*/
+    NSModalSession session = [NSApp beginModalSessionForWindow:colorPanel];
+    for (;;) 
+	{
+	    if ([NSApp runModalSession:session] == NSModalResponseCancel) {
+		break;
+	    }
+                
+	    if ([NSApp runModalSession:session] ==   NSModalResponseOK) {
+		color = [[colorPanel color] colorUsingColorSpace:
+						[NSColorSpace deviceRGBColorSpace]];
+		numberOfComponents = [color numberOfComponents];
+		if (color && numberOfComponents >= 3 && numberOfComponents <= 4) {
+		    CGFloat components[4];
+		    char colorstr[8];
+
+		    [color getComponents:components];
+		    snprintf(colorstr, 8, "#%02x%02x%02x",
+			     (short)(components[0] * 255),
+			     (short)(components[1] * 255),
+			     (short)(components[2] * 255));
+		    Tcl_SetObjResult(interp, Tcl_NewStringObj(colorstr, 7));
+		}  else {
+		    Tcl_ResetResult(interp);
+		}
+		break;
+	    }
+	}
+    [NSApp endModalSession:session];
+ 
     result = TCL_OK;
 
-end:
+ end:
     return result;
 }
 
@@ -793,7 +807,7 @@ Tk_GetOpenFileObjCmd(
 		       contextInfo:callbackInfo ];
 	}];
 	modalReturnCode = cmdObj ? modalOther :
-		[NSApp runModalForWindow:openpanel];
+		[openpanel runModal];
     } else {
 	if (directory || filename) {
 	    NSURL *fileURL = getFileURL(directory, filename);
@@ -1097,7 +1111,7 @@ Tk_GetSaveFileObjCmd(
 		       contextInfo:callbackInfo];
 	}];
 	modalReturnCode = cmdObj ? modalOther :
-		[NSApp runModalForWindow:savepanel];
+	    [savepanel runModal];
     } else {
 	if (directory) {
 	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
@@ -1262,7 +1276,7 @@ Tk_ChooseDirectoryObjCmd(
 		    returnCode:returnCode
 		    contextInfo:callbackInfo];
 	}];
-	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:panel];
+	modalReturnCode = cmdObj ? modalOther : [panel runModal];
     } else {
 	[panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
 	modalReturnCode = [panel runModal];
@@ -1563,7 +1577,7 @@ Tk_MessageBoxObjCmd(
 	       contextInfo:callbackInfo];
 #endif
 	modalReturnCode = cmdObj ? 0 :
-	    [NSApp runModalForWindow:[alert window]];
+	    [alert runModal];
     } else {
 	modalReturnCode = [alert runModal];
 	[NSApp tkAlertDidEnd:alert returnCode:modalReturnCode
