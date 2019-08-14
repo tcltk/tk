@@ -425,6 +425,14 @@ EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 EXTERN Region		XPolygonRegion(XPoint *pts, int n, int rule);
 /* 139 */
 EXTERN int		XPointInRegion(Region rgn, int x, int y);
+/* 140 */
+EXTERN XVaNestedList	XVaCreateNestedList(int dummy, ...);
+/* 141 */
+EXTERN char *		XSetICValues(XIC xic, ...);
+/* 142 */
+EXTERN char *		XGetICValues(XIC xic, ...);
+/* 143 */
+EXTERN void		XSetICFocus(XIC xic);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -689,6 +697,69 @@ EXTERN Status		XQueryTree(Display *d, Window w1, Window *w2,
 				Window *w3, Window **w4, unsigned int *ui);
 /* 91 */
 EXTERN int		XSync(Display *display, Bool flag);
+/* Slot 92 is reserved */
+/* Slot 93 is reserved */
+/* Slot 94 is reserved */
+/* Slot 95 is reserved */
+/* Slot 96 is reserved */
+/* Slot 97 is reserved */
+/* Slot 98 is reserved */
+/* Slot 99 is reserved */
+/* Slot 100 is reserved */
+/* Slot 101 is reserved */
+/* Slot 102 is reserved */
+/* Slot 103 is reserved */
+/* Slot 104 is reserved */
+/* Slot 105 is reserved */
+/* Slot 106 is reserved */
+/* Slot 107 is reserved */
+/* Slot 108 is reserved */
+/* Slot 109 is reserved */
+/* Slot 110 is reserved */
+/* Slot 111 is reserved */
+/* Slot 112 is reserved */
+/* Slot 113 is reserved */
+/* Slot 114 is reserved */
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+/* Slot 120 is reserved */
+/* Slot 121 is reserved */
+/* Slot 122 is reserved */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
+/* Slot 132 is reserved */
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
+/* Slot 135 is reserved */
+/* 136 */
+EXTERN int		XReparentWindow(Display *d, Window w, Window p,
+				int x, int y);
+/* 137 */
+EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+				int sx, int sy, int dx, int dy,
+				unsigned int w, unsigned int h);
+/* 138 */
+EXTERN Region		XPolygonRegion(XPoint *pts, int n, int rule);
+/* 139 */
+EXTERN int		XPointInRegion(Region rgn, int x, int y);
+/* 140 */
+EXTERN XVaNestedList	XVaCreateNestedList(int unused, ...);
+/* 141 */
+EXTERN char *		XSetICValues(XIC xic, ...);
+/* 142 */
+EXTERN char *		XGetICValues(XIC xic, ...);
+/* 143 */
+EXTERN void		XSetICFocus(XIC xic);
 #endif /* AQUA */
 
 typedef struct TkIntXlibStubs {
@@ -836,6 +907,10 @@ typedef struct TkIntXlibStubs {
     int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
     Region (*xPolygonRegion) (XPoint *pts, int n, int rule); /* 138 */
     int (*xPointInRegion) (Region rgn, int x, int y); /* 139 */
+    XVaNestedList (*xVaCreateNestedList) (int dummy, ...); /* 140 */
+    char * (*xSetICValues) (XIC xic, ...); /* 141 */
+    char * (*xGetICValues) (XIC xic, ...); /* 142 */
+    void (*xSetICFocus) (XIC xic); /* 143 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -930,6 +1005,58 @@ typedef struct TkIntXlibStubs {
     void (*xQueryColors) (Display *display, Colormap colormap, XColor *defs_in_out, int ncolors); /* 89 */
     Status (*xQueryTree) (Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui); /* 90 */
     int (*xSync) (Display *display, Bool flag); /* 91 */
+    void (*reserved92)(void);
+    void (*reserved93)(void);
+    void (*reserved94)(void);
+    void (*reserved95)(void);
+    void (*reserved96)(void);
+    void (*reserved97)(void);
+    void (*reserved98)(void);
+    void (*reserved99)(void);
+    void (*reserved100)(void);
+    void (*reserved101)(void);
+    void (*reserved102)(void);
+    void (*reserved103)(void);
+    void (*reserved104)(void);
+    void (*reserved105)(void);
+    void (*reserved106)(void);
+    void (*reserved107)(void);
+    void (*reserved108)(void);
+    void (*reserved109)(void);
+    void (*reserved110)(void);
+    void (*reserved111)(void);
+    void (*reserved112)(void);
+    void (*reserved113)(void);
+    void (*reserved114)(void);
+    void (*reserved115)(void);
+    void (*reserved116)(void);
+    void (*reserved117)(void);
+    void (*reserved118)(void);
+    void (*reserved119)(void);
+    void (*reserved120)(void);
+    void (*reserved121)(void);
+    void (*reserved122)(void);
+    void (*reserved123)(void);
+    void (*reserved124)(void);
+    void (*reserved125)(void);
+    void (*reserved126)(void);
+    void (*reserved127)(void);
+    void (*reserved128)(void);
+    void (*reserved129)(void);
+    void (*reserved130)(void);
+    void (*reserved131)(void);
+    void (*reserved132)(void);
+    void (*reserved133)(void);
+    void (*reserved134)(void);
+    void (*reserved135)(void);
+    int (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
+    int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
+    Region (*xPolygonRegion) (XPoint *pts, int n, int rule); /* 138 */
+    int (*xPointInRegion) (Region rgn, int x, int y); /* 139 */
+    XVaNestedList (*xVaCreateNestedList) (int unused, ...); /* 140 */
+    char * (*xSetICValues) (XIC xic, ...); /* 141 */
+    char * (*xGetICValues) (XIC xic, ...); /* 142 */
+    void (*xSetICFocus) (XIC xic); /* 143 */
 #endif /* AQUA */
 } TkIntXlibStubs;
 
@@ -1214,6 +1341,14 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xPolygonRegion) /* 138 */
 #define XPointInRegion \
 	(tkIntXlibStubsPtr->xPointInRegion) /* 139 */
+#define XVaCreateNestedList \
+	(tkIntXlibStubsPtr->xVaCreateNestedList) /* 140 */
+#define XSetICValues \
+	(tkIntXlibStubsPtr->xSetICValues) /* 141 */
+#define XGetICValues \
+	(tkIntXlibStubsPtr->xGetICValues) /* 142 */
+#define XSetICFocus \
+	(tkIntXlibStubsPtr->xSetICFocus) /* 143 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define XSetDashes \
@@ -1400,6 +1535,66 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xQueryTree) /* 90 */
 #define XSync \
 	(tkIntXlibStubsPtr->xSync) /* 91 */
+/* Slot 92 is reserved */
+/* Slot 93 is reserved */
+/* Slot 94 is reserved */
+/* Slot 95 is reserved */
+/* Slot 96 is reserved */
+/* Slot 97 is reserved */
+/* Slot 98 is reserved */
+/* Slot 99 is reserved */
+/* Slot 100 is reserved */
+/* Slot 101 is reserved */
+/* Slot 102 is reserved */
+/* Slot 103 is reserved */
+/* Slot 104 is reserved */
+/* Slot 105 is reserved */
+/* Slot 106 is reserved */
+/* Slot 107 is reserved */
+/* Slot 108 is reserved */
+/* Slot 109 is reserved */
+/* Slot 110 is reserved */
+/* Slot 111 is reserved */
+/* Slot 112 is reserved */
+/* Slot 113 is reserved */
+/* Slot 114 is reserved */
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+/* Slot 120 is reserved */
+/* Slot 121 is reserved */
+/* Slot 122 is reserved */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
+/* Slot 132 is reserved */
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
+/* Slot 135 is reserved */
+#define XReparentWindow \
+	(tkIntXlibStubsPtr->xReparentWindow) /* 136 */
+#define XPutImage \
+	(tkIntXlibStubsPtr->xPutImage) /* 137 */
+#define XPolygonRegion \
+	(tkIntXlibStubsPtr->xPolygonRegion) /* 138 */
+#define XPointInRegion \
+	(tkIntXlibStubsPtr->xPointInRegion) /* 139 */
+#define XVaCreateNestedList \
+	(tkIntXlibStubsPtr->xVaCreateNestedList) /* 140 */
+#define XSetICValues \
+	(tkIntXlibStubsPtr->xSetICValues) /* 141 */
+#define XGetICValues \
+	(tkIntXlibStubsPtr->xGetICValues) /* 142 */
+#define XSetICFocus \
+	(tkIntXlibStubsPtr->xSetICFocus) /* 143 */
 #endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) */

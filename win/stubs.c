@@ -29,7 +29,7 @@ XStringListToTextProperty(
     int count,
     XTextProperty *text_prop_return)
 {
-    return (Status) 0;
+    return Success;
 }
 
 /*
@@ -152,7 +152,7 @@ XGetWMColormapWindows(
     Window **windows_return,
     int *count_return)
 {
-    return (Status) 0;
+    return Success;
 }
 
 int

@@ -875,11 +875,6 @@ UseinputmethodsCmd(
     }
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
     if ((objc - skip) == 2) {
-	/*
-	 * In the case where TK_USE_INPUT_METHODS is not defined, this
-	 * will be ignored and we will always return 0. That will indicate
-	 * to the user that input methods are just not available.
-	 */
 
 	int boolVal;
 
@@ -887,13 +882,11 @@ UseinputmethodsCmd(
 		&boolVal) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-#ifdef TK_USE_INPUT_METHODS
 	if (boolVal) {
 	    dispPtr->flags |= TK_DISPLAY_USE_IM;
 	} else {
 	    dispPtr->flags &= ~TK_DISPLAY_USE_IM;
 	}
-#endif /* TK_USE_INPUT_METHODS */
     } else if ((objc - skip) != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"?-displayof window? ?boolean?");

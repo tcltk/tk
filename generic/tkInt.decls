@@ -1506,6 +1506,20 @@ declare 138 win {
 declare 139 win {
     int XPointInRegion(Region rgn, int x, int y)
 }
+# For XIM
+declare 140 win {
+    XVaNestedList XVaCreateNestedList(int dummy, ...)
+}
+declare 141 win {
+    char *XSetICValues(XIC xic, ...)
+}
+declare 142 win {
+    char *XGetICValues(XIC xic, ...)
+}
+declare 143 win {
+    void XSetICFocus(XIC xic)
+}
+
 
 ################################
 # X functions for Aqua
@@ -1828,6 +1842,32 @@ declare 90 aqua {
 }
 declare 91 aqua {
     int XSync(Display *display, Bool flag)
+}
+declare 136 aqua {
+    int XReparentWindow(Display *d, Window w, Window p, int x, int y)
+}
+declare 137 aqua {
+    int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+	    int sx, int sy, int dx, int dy,
+	    unsigned int w, unsigned int h)
+}
+declare 138 aqua {
+    Region XPolygonRegion(XPoint *pts, int n, int rule)
+}
+declare 139 aqua {
+    int XPointInRegion(Region rgn, int x, int y)
+}
+declare 140 aqua {
+    XVaNestedList XVaCreateNestedList(int unused, ...)
+}
+declare 141 aqua {
+    char *XSetICValues(XIC xic, ...)
+}
+declare 142 aqua {
+    char *XGetICValues(XIC xic, ...)
+}
+declare 143 aqua {
+    void XSetICFocus(XIC xic)
 }
 
 # Local Variables:
