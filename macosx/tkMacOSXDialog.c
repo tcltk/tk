@@ -15,7 +15,6 @@
 #include "tkMacOSXPrivate.h"
 #include "tkFileFilter.h"
 #include "tkMacOSXConstants.h"
-#import <Carbon/Carbon.h>
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
 #define modalOK     NSOKButton
