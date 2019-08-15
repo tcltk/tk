@@ -628,6 +628,10 @@ TkpConfigureMenuEntry(
 		&imageHeight);
 	image = TkMacOSXGetNSImageWithBitmap(mePtr->menuPtr->display, bitmap,
 		gc, imageWidth, imageHeight);
+	if (gc->foreground == defaultFg) {
+	    // Use a semantic foreground color by default
+	    [image setTemplate:YES];
+	}
     }
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
