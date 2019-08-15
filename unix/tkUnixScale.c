@@ -256,7 +256,7 @@ DisplayVerticalScale(
 
 static void
 DisplayVerticalValue(
-    register TkScale *scalePtr,	/* Information about widget in which to
+    TkScale *scalePtr,	/* Information about widget in which to
 				 * display value. */
     Drawable drawable,		/* Pixmap or window in which to draw the
 				 * value. */
@@ -267,7 +267,7 @@ DisplayVerticalValue(
 				 * specified in pixels. */
     const char *format)		/* Format string to use for the value */
 {
-    register Tk_Window tkwin = scalePtr->tkwin;
+    Tk_Window tkwin = scalePtr->tkwin;
     int y, width, length;
     char valueString[TCL_DOUBLE_SPACE];
     Tk_FontMetrics fm;
@@ -325,7 +325,7 @@ DisplayHorizontalScale(
 				 * to reflect the part of the window that was
 				 * redrawn. */
 {
-    register Tk_Window tkwin = scalePtr->tkwin;
+    Tk_Window tkwin = scalePtr->tkwin;
     int x, y, width, height, shadowWidth;
     double tickInterval = scalePtr->tickInterval;
     Tk_3DBorder sliderBorder;
@@ -479,7 +479,7 @@ DisplayHorizontalScale(
 
 static void
 DisplayHorizontalValue(
-    register TkScale *scalePtr,	/* Information about widget in which to
+    TkScale *scalePtr,	/* Information about widget in which to
 				 * display value. */
     Drawable drawable,		/* Pixmap or window in which to draw the
 				 * value. */
@@ -490,7 +490,7 @@ DisplayHorizontalValue(
 				 * in pixels. */
     const char *format)		/* Format string to use for the value */
 {
-    register Tk_Window tkwin = scalePtr->tkwin;
+    Tk_Window tkwin = scalePtr->tkwin;
     int x, y, length, width;
     char valueString[TCL_DOUBLE_SPACE];
     Tk_FontMetrics fm;
