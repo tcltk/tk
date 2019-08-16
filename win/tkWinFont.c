@@ -2177,7 +2177,7 @@ FontMapInsert(
  *	None.
  *
  * Side effects:
- *	Mempry allocated.
+ *	Memory allocated.
  *
  *-------------------------------------------------------------------------
  */
