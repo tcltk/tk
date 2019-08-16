@@ -1036,7 +1036,7 @@ CanvasWidgetCmd(
 		result = TCL_ERROR;
 		goto done;
 	    }
-	    if (mask & (unsigned) ~(ButtonMotionMask|Button1MotionMask
+	    if (mask & ~(unsigned long)(ButtonMotionMask|Button1MotionMask
 		    |Button2MotionMask|Button3MotionMask|Button4MotionMask
 		    |Button5MotionMask|ButtonPressMask|ButtonReleaseMask
 		    |EnterWindowMask|LeaveWindowMask|KeyPressMask
@@ -5079,7 +5079,7 @@ CanvasBindProc(
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkCanvas *canvasPtr = clientData;
-    unsigned int mask;
+    unsigned long mask;
 
     Tcl_Preserve(canvasPtr);
 
@@ -5175,7 +5175,7 @@ PickCurrentItem(
 				 * ButtonRelease, or MotionNotify. */
 {
     double coords[2];
-    unsigned int buttonDown;
+    unsigned long buttonDown;
     Tk_Item *prevItemPtr;
     SearchUids *searchUids = GetStaticUids();
 
