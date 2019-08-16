@@ -292,6 +292,8 @@ VISIBILITY_HIDDEN
 @interface TKApplication(TKWindowEvent) <NSApplicationDelegate>
 - (void) _setupWindowNotifications;
 @end
+@interface TKApplication(TKDialog) <NSOpenSavePanelDelegate>
+@end
 @interface TKApplication(TKMenu)
 - (void)tkSetMainMenu:(TKMenu *)menu;
 @end
