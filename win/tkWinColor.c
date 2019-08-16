@@ -274,7 +274,7 @@ int
 TkWinIndexOfColor(
     XColor *colorPtr)
 {
-    register WinColor *winColPtr = (WinColor *) colorPtr;
+    WinColor *winColPtr = (WinColor *) colorPtr;
     if (winColPtr->info.magic == COLOR_MAGIC) {
 	return winColPtr->index;
     }
