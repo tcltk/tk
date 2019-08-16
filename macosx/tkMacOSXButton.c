@@ -638,7 +638,7 @@ DrawButtonImageAndText(
 		butPtr->textHeight, &x, &y);
 	x += butPtr->indicatorSpace;
 	y += 1; /* Tweak to match native buttons */
-	Tk_DrawTextLayout(butPtr->display, pixmap, textGC butPtr->textLayout,
+	Tk_DrawTextLayout(butPtr->display, pixmap, textGC, butPtr->textLayout,
 			  x, y, 0, -1);
     }
 
