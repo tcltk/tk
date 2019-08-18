@@ -435,7 +435,7 @@ XGetGeometry(
     return 1;
 }
 
-void
+int
 XChangeProperty(
     Display* display,
     Window w,
@@ -447,6 +447,7 @@ XChangeProperty(
     int nelements)
 {
     Debugger();
+    return Success;
 }
 
 void
@@ -776,13 +777,14 @@ TkGetServerInfo(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XChangeWindowAttributes(
     Display *display,
     Window w,
     unsigned long value_mask,
     XSetWindowAttributes *attributes)
 {
+    return Success;
 }
 
 void
@@ -854,7 +856,7 @@ XSetWMClientMachine(
 }
 
 XIC
-XCreateIC(void)
+XCreateIC(XIM xim, ...)
 {
     Debugger();
     return (XIC) 0;

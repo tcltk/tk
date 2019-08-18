@@ -394,7 +394,7 @@ XResizeWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMoveResizeWindow(
     Display *display,		/* Display. */
     Window window,		/* Window. */
@@ -430,6 +430,7 @@ XMoveResizeWindow(
     } else {
 	MoveResizeWindow(macWin);
     }
+    return Success;
 }
 
 /*
@@ -448,7 +449,7 @@ XMoveResizeWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMoveWindow(
     Display *display,		/* Display. */
     Window window,		/* Window. */
@@ -467,6 +468,7 @@ XMoveWindow(
     } else {
 	MoveResizeWindow(macWin);
     }
+    return Success;
 }
 
 /*
@@ -661,7 +663,7 @@ XLowerWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XConfigureWindow(
     Display *display,		/* Display. */
     Window w,			/* Window. */
@@ -708,6 +710,7 @@ XConfigureWindow(
     TkGenWMMoveRequestEvent(macWin->winPtr,
 	    macWin->winPtr->changes.x, macWin->winPtr->changes.y);
 #endif
+    return Success;
 }
 
 /*

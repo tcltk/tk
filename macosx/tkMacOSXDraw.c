@@ -906,7 +906,7 @@ XFillPolygon(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawRectangle(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -920,12 +920,12 @@ XDrawRectangle(
     int lw = gc->line_width;
 
     if (width == 0 || height == 0) {
-	return;
+	return BadDrawable;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -937,6 +937,7 @@ XDrawRectangle(
 	CGContextStrokeRect(dc.context, rect);
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 #ifdef TK_MACOSXDRAW_UNUSED
@@ -1266,7 +1267,7 @@ XDrawArcs(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillArc(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -1282,12 +1283,12 @@ XFillArc(
     int lw = gc->line_width;
 
     if (width == 0 || height == 0 || angle2 == 0) {
-	return;
+	return BadDrawable;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
