@@ -468,7 +468,7 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
-if {"x11" eq [tk windowingsystem]} {
+if {[tk windowingsystem] eq "x11"} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
@@ -489,6 +489,16 @@ if {"x11" eq [tk windowingsystem]} {
 	}
     }
     bind Text <Shift-5> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll 50 pixels
+	}
+    }
+    bind Text <6> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll -50 pixels
+	}
+    }
+    bind Text <7> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll 50 pixels
 	}
