@@ -493,6 +493,15 @@ if {[tk windowingsystem] eq "x11"} {
 	    %W xview scroll 50 pixels
 	}
     }
+    bind Text <ButtonPress> {
+	if {!$tk_strictMotif} {
+	    if {%b eq 6} {
+		%W xview scroll -50 pixels
+	    } elif {%b eq 7} {
+		%W xview scroll -50 pixels
+	    }
+	}
+    }
 }
 
 # ::tk::TextClosestGap --
