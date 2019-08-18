@@ -105,6 +105,10 @@ static CGFloat darkSelectedGradient[8] = {
     23.0 / 255, 111.0 / 255, 232.0 / 255, 1.0,
     20.0 / 255, 94.0 / 255,  206.0 / 255, 1.0
 };
+static CGFloat pressedPushButtonGradient[8] = {
+    35.0 / 255, 123.0 / 255, 244.0 / 255, 1.0,
+    30.0 / 255, 114.0 / 255, 235.0 / 255, 1.0
+};
 
 /*
  * When building on systems earlier than 10.8 there is no reasonable way to
@@ -152,6 +156,7 @@ static inline CGRect BoxToRect(
  */
 
 static Ttk_StateTable ThemeStateTable[] = {
+    {kThemeStateActive, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
     {kThemeStateUnavailable, TTK_STATE_DISABLED, 0},
     {kThemeStatePressed, TTK_STATE_PRESSED, 0},
     {kThemeStateInactive, TTK_STATE_BACKGROUND, 0},
@@ -646,6 +651,11 @@ static void DrawDarkButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (kind == kThemePushButton && (state & TTK_STATE_PRESSED)) {
+	GradientFillRoundedRectangle(context, bounds, 4,
+	    pressedPushButtonGradient, 2);
+    } else if (kind == kThemePushButton &&
+	       (state & TTK_STATE_ALTERNATE) &&
+	       !(state & TTK_STATE_BACKGROUND)) {
 	GradientFillRoundedRectangle(context, bounds, 4,
 	    darkSelectedGradient, 2);
     } else {
@@ -1198,6 +1208,7 @@ static ThemeButtonParams
     ListHeaderParams =
 {kThemeListHeaderButton, kThemeMetricListHeaderHeight};
 static Ttk_StateTable ButtonValueTable[] = {
+    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
     {kThemeButtonMixed, TTK_STATE_ALTERNATE, 0},
     {kThemeButtonOn, TTK_STATE_SELECTED, 0},
     {kThemeButtonOff, 0, 0}
@@ -1209,11 +1220,11 @@ static Ttk_StateTable ButtonValueTable[] = {
 
 };
 static Ttk_StateTable ButtonAdornmentTable[] = {
+    {kThemeAdornmentNone, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeAdornmentDefault | kThemeAdornmentFocus,
      TTK_STATE_ALTERNATE | TTK_STATE_FOCUS, 0},
-    {kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0},
-    {kThemeAdornmentNone, TTK_STATE_ALTERNATE, 0},
     {kThemeAdornmentFocus, TTK_STATE_FOCUS, 0},
+    {kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0},
     {kThemeAdornmentNone, 0, 0}
 };
 
@@ -1372,6 +1383,11 @@ static void ButtonElementDraw(
 	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context,
 		HIOrientation, NULL);
 	}
+    } else if (info.kind == kThemePushButton &&
+	       (state & TTK_STATE_PRESSED)) {
+	bounds.size.height += 2;
+	GradientFillRoundedRectangle(dc.context, bounds, 4,
+	    pressedPushButtonGradient, 2);
     } else {
 
         /*
