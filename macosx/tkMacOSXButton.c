@@ -458,7 +458,6 @@ DrawButtonImageAndText(
     int width = 0, height = 0;
     int fullWidth = 0, fullHeight = 0;
     DrawParams *dpPtr = &mbPtr->drawParams;
-    GC textGC = dpPtr->gc;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;
@@ -479,19 +478,6 @@ DrawButtonImageAndText(
 
     if (mbPtr->drawinfo.state == kThemeStatePressed) {
         pressed = 1;
-
-	/*
-	 * Unlike NSButton, HIToolbox does not change the color of a "-default
-	 * active" button when it is pressed, so there is no visual
-	 * acknowledgement.  As a workaround we revert to the inactive (black)
-	 * text while the button is pressed.  This does not match native
-	 * behavior, but it does give the user some feedback.
-	 */
-
-	if (mbPtr->drawinfo.adornment & kThemeAdornmentDefault) {
-	    //	    !TkMacOSXInDarkMode(butPtr->tkwin)) {
-	    textGC = butPtr->normalTextGC;
-	}
     }
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
@@ -589,9 +575,9 @@ DrawButtonImageAndText(
 	    XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
         }
 	y += 1; /* Tweak to match native buttons. */
-        Tk_DrawTextLayout(butPtr->display, pixmap, textGC, butPtr->textLayout,
+        Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
 			  x + textXOffset, y + textYOffset, 0, -1);
-        Tk_UnderlineTextLayout(butPtr->display, pixmap, textGC,
+        Tk_UnderlineTextLayout(butPtr->display, pixmap, dpPtr->gc,
                 butPtr->textLayout,
                 x + textXOffset, y + textYOffset,
                 butPtr->underline);
@@ -638,7 +624,7 @@ DrawButtonImageAndText(
 		butPtr->textHeight, &x, &y);
 	x += butPtr->indicatorSpace;
 	y += 1; /* Tweak to match native buttons */
-	Tk_DrawTextLayout(butPtr->display, pixmap, textGC, butPtr->textLayout,
+	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
 			  x, y, 0, -1);
     }
 
@@ -1058,7 +1044,9 @@ TkMacOSXComputeButtonParams(
 
     drawinfo->adornment = kThemeAdornmentNone;
     if (butPtr->defaultState == DEFAULT_ACTIVE) {
-        drawinfo->adornment |= kThemeAdornmentDefault;
+	if (drawinfo->state != kThemeStatePressed) {
+	    drawinfo->adornment |= kThemeAdornmentDefault;
+	}
         if (!mbPtr->defaultPulseHandler) {
             mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
                     PULSE_TIMER_MSECS, PulseDefaultButtonProc, butPtr);
