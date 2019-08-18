@@ -1327,6 +1327,7 @@ XFillArc(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 #ifdef TK_MACOSXDRAW_UNUSED
