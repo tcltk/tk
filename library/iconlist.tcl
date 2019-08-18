@@ -455,6 +455,13 @@ package require Tk 8.6
 	if {[tk windowingsystem] eq "x11"} {
 	    bind $canvas <Shift-4>	[namespace code {my MouseWheel 120}]
 	    bind $canvas <Shift-5>	[namespace code {my MouseWheel -120}]
+	    bind $canvas <ButtonPress>	[namespace code {
+		if {%b eq 6} {
+		    my MouseWheel 120
+		} elif {%b eq 7} {
+		    my MouseWheel -120
+		}
+	    }]
 	}
 
 	bind $canvas <<PrevLine>>	[namespace code {my UpDown -1}]

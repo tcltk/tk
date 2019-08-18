@@ -227,6 +227,15 @@ if {[tk windowingsystem] eq "x11"} {
 	    %W xview scroll 5 units
 	}
     }
+    bind Listbox <ButtonPress> {
+	if {!$tk_strictMotif} {
+	    if {%b eq 6} {
+		%W xview scroll -5 units
+	    } elif {%b eq 7} {
+		%W xview scroll 5 units
+	    }
+	}
+    }
 }
 
 # ::tk::ListboxBeginSelect --
