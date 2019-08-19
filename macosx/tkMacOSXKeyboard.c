@@ -358,10 +358,10 @@ KeycodeToUnicode(
 KeySym
 XKeycodeToKeysym(
     Display* display,
-    KeyCode keycode,
+    unsigned int keycode,
     int index)
 {
-    register Tcl_HashEntry *hPtr;
+    Tcl_HashEntry *hPtr;
     int newKeycode;
     UniChar newChar;
 

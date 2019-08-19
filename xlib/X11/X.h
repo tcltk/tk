@@ -86,7 +86,7 @@ typedef unsigned long VisualID;
 
 typedef unsigned long Time;
 
-typedef unsigned long KeyCode;	/* In order to use IME, the Macintosh needs
+typedef unsigned int KeyCode;	/* In order to use IME, the Macintosh needs
 				 * to pack 3 bytes into the keyCode field in
 				 * the XEvent.  In the real X.h, a KeyCode is
 				 * defined as a short, which wouldn't be big

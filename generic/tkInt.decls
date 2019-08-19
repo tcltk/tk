@@ -1552,8 +1552,9 @@ declare 6 aqua {
 declare 7 aqua {
     GContext XGContextFromGC(GC g)
 }
+# second parameter was of type KeyCode
 declare 8 aqua {
-    KeySym XKeycodeToKeysym(Display *d, KeyCode k, int i)
+    KeySym XKeycodeToKeysym(Display *d, unsigned int k, int i)
 }
 declare 9 aqua {
     KeySym XStringToKeysym(_Xconst char *c)
