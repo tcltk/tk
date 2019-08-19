@@ -6516,7 +6516,7 @@ TkpGetMS(void)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetInputFocus(
     Display* display,
     Window focus,
@@ -6526,6 +6526,7 @@ XSetInputFocus(
     /*
      * Don't need to do a thing. Tk manages the focus for us.
      */
+    return Success;
 }
 
 /*

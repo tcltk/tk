@@ -1556,11 +1556,11 @@ declare 16 aqua {
 	    XWindowChanges *x)
 }
 declare 17 aqua {
-    void XCopyArea(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
+    int XCopyArea(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
 	    int i2, unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 18 aqua {
-    void XCopyPlane(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
+    int XCopyPlane(Display *d, Drawable dr1, Drawable dr2, GC g, int i1,
 	    int i2, unsigned int ui1,
 	    unsigned int ui2, int i3, int i4, unsigned long ul)
 }
@@ -1572,10 +1572,10 @@ declare 20 aqua {
     int XDefineCursor(Display *d, Window w, Cursor c)
 }
 declare 21 aqua {
-    void XDestroyWindow(Display *d, Window w)
+    int XDestroyWindow(Display *d, Window w)
 }
 declare 22 aqua {
-    void XDrawArc(Display *d, Drawable dr, GC g, int i1, int i2,
+    int XDrawArc(Display *d, Drawable dr, GC g, int i1, int i2,
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 23 aqua {
@@ -1590,7 +1590,7 @@ declare 25 aqua {
 	    unsigned int ui1, unsigned int ui2, int i3, int i4)
 }
 declare 26 aqua {
-    void XFillPolygon(Display *d, Drawable dr, GC g, XPoint *x,
+    int XFillPolygon(Display *d, Drawable dr, GC g, XPoint *x,
 	    int i1, int i2, int i3)
 }
 declare 27 aqua {
@@ -1627,7 +1627,7 @@ declare 35 aqua {
     KeyCode XKeysymToKeycode(Display *d, KeySym k)
 }
 declare 36 aqua {
-    void XMapWindow(Display *d, Window w)
+    int XMapWindow(Display *d, Window w)
 }
 declare 37 aqua {
     int XMoveResizeWindow(Display *d, Window w, int i1, int i2,
@@ -1641,56 +1641,56 @@ declare 39 aqua {
 	    int *i1, int *i2, int *i3, int *i4, unsigned int *ui)
 }
 declare 40 aqua {
-    void XRaiseWindow(Display *d, Window w)
+    int XRaiseWindow(Display *d, Window w)
 }
 declare 41 aqua {
-    void XRefreshKeyboardMapping(XMappingEvent *x)
+    int XRefreshKeyboardMapping(XMappingEvent *x)
 }
 declare 42 aqua {
-    void XResizeWindow(Display *d, Window w, unsigned int ui1,
+    int XResizeWindow(Display *d, Window w, unsigned int ui1,
 	    unsigned int ui2)
 }
 declare 43 aqua {
-    void XSelectInput(Display *d, Window w, long l)
+    int XSelectInput(Display *d, Window w, long l)
 }
 declare 44 aqua {
     Status XSendEvent(Display *d, Window w, Bool b, long l, XEvent *x)
 }
 declare 45 aqua {
-    void XSetIconName(Display *d, Window w, _Xconst char *c)
+    int XSetIconName(Display *d, Window w, _Xconst char *c)
 }
 declare 46 aqua {
-    void XSetInputFocus(Display *d, Window w, int i, Time t)
+    int XSetInputFocus(Display *d, Window w, int i, Time t)
 }
 declare 47 aqua {
     int XSetSelectionOwner(Display *d, Atom a, Window w, Time t)
 }
 declare 48 aqua {
-    void XSetWindowBackground(Display *d, Window w, unsigned long ul)
+    int XSetWindowBackground(Display *d, Window w, unsigned long ul)
 }
 declare 49 aqua {
-    void XSetWindowBackgroundPixmap(Display *d, Window w, Pixmap p)
+    int XSetWindowBackgroundPixmap(Display *d, Window w, Pixmap p)
 }
 declare 50 aqua {
-    void XSetWindowBorder(Display *d, Window w, unsigned long ul)
+    int XSetWindowBorder(Display *d, Window w, unsigned long ul)
 }
 declare 51 aqua {
-    void XSetWindowBorderPixmap(Display *d, Window w, Pixmap p)
+    int XSetWindowBorderPixmap(Display *d, Window w, Pixmap p)
 }
 declare 52 aqua {
-    void XSetWindowBorderWidth(Display *d, Window w, unsigned int ui)
+    int XSetWindowBorderWidth(Display *d, Window w, unsigned int ui)
 }
 declare 53 aqua {
-    void XSetWindowColormap(Display *d, Window w, Colormap c)
+    int XSetWindowColormap(Display *d, Window w, Colormap c)
 }
 declare 54 aqua {
-    void XUngrabKeyboard(Display *d, Time t)
+    int XUngrabKeyboard(Display *d, Time t)
 }
 declare 55 aqua {
     int XUngrabPointer(Display *d, Time t)
 }
 declare 56 aqua {
-    void XUnmapWindow(Display *d, Window w)
+    int XUnmapWindow(Display *d, Window w)
 }
 declare 57 aqua {
     int TkPutImage(unsigned long *colors, int ncolors, Display *display,
@@ -1777,7 +1777,7 @@ declare 80 aqua {
 	    XSegment *segments, int nsegments)
 }
 declare 81 aqua {
-    void XForceScreenSaver(Display *display, int mode)
+    int XForceScreenSaver(Display *display, int mode)
 }
 declare 82 aqua {
     int XDrawLine(Display *d, Drawable dr, GC g, int x1, int y1,
@@ -1788,7 +1788,7 @@ declare 83 aqua {
 	    int x, int y, unsigned int width, unsigned int height)
 }
 declare 84 aqua {
-    void XClearWindow(Display *d, Window w)
+    int XClearWindow(Display *d, Window w)
 }
 declare 85 aqua {
     int XDrawPoint(Display *display, Drawable d, GC gc, int x, int y)
@@ -1803,10 +1803,10 @@ declare 87 aqua {
 	    unsigned int src_height, int dest_x, int dest_y)
 }
 declare 88 aqua {
-    void XQueryColor(Display *display, Colormap colormap, XColor *def_in_out)
+    int XQueryColor(Display *display, Colormap colormap, XColor *def_in_out)
 }
 declare 89 aqua {
-    void XQueryColors(Display *display, Colormap colormap,
+    int XQueryColors(Display *display, Colormap colormap,
 	    XColor *defs_in_out, int ncolors)
 }
 declare 90 aqua {
