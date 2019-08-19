@@ -2584,7 +2584,7 @@ CanUseFallback(
 	memcpy(newPtr, fontPtr->subFontArray,
 		fontPtr->numSubFonts * sizeof(SubFont));
 	if (fixSubFontPtrPtr != NULL) {
-	    register SubFont *fixSubFontPtr = *fixSubFontPtrPtr;
+	    SubFont *fixSubFontPtr = *fixSubFontPtrPtr;
 
 	    if (fixSubFontPtr != &fontPtr->controlSubFont) {
 		*fixSubFontPtrPtr =

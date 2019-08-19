@@ -473,7 +473,7 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
-if {"x11" eq [tk windowingsystem]} {
+if {[tk windowingsystem] eq "x11"} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
@@ -482,13 +482,25 @@ if {"x11" eq [tk windowingsystem]} {
 	if {!$tk_strictMotif} { %W yview scroll -50 pixels }
     }
     bind Text <5> {
-	if {!$tk_strictMotif} { %W yview scroll +50 pixels }
+	if {!$tk_strictMotif} { %W yview scroll 50 pixels }
     }
     bind Text <Shift-4> {
 	if {!$tk_strictMotif} { %W xview scroll -50 pixels }
     }
     bind Text <Shift-5> {
-	if {!$tk_strictMotif} { %W xview scroll +50 pixels }
+	if {!$tk_strictMotif} {
+	    %W xview scroll 50 pixels
+	}
+    }
+    bind Text <6> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll -50 pixels
+	}
+    }
+    bind Text <7> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll 50 pixels
+	}
     }
 }
 
@@ -1348,7 +1360,7 @@ proc tk_textRebindMouseWheel {w args} {
 		bind $ew <$ev> [list event generate $w <$ev> -delta %D]
 	    }
 	}
-	foreach ev {4 5 Shift-4 Shift-5} {
+	foreach ev {4 5 Shift-4 Shift-5 6 7} {
 	    if {[string length [bind $w <$ev>]] || [string length [bind $cls <$ev>]]} {
 		bind $ew <$ev> [list event generate $w <$ev>]
 	    }
