@@ -246,7 +246,7 @@ TkpDestroyMenuButton(
 
 void
 TkpComputeMenuButtonGeometry(butPtr)
-    register TkMenuButton *butPtr;	/* Widget record for menu button. */
+    TkMenuButton *butPtr;	/* Widget record for menu button. */
 {
     int width, height, avgWidth, haveImage = 0, haveText = 0;
     int txtWidth, txtHeight;
