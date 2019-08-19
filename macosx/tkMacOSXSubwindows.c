@@ -49,7 +49,7 @@ static void		NotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDestroyWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -87,7 +87,7 @@ XDestroyWindow(
 	    ckfree(macWin->toplevel);
 	}
 	ckfree(macWin);
-	return;
+	return Success;
     }
     if (macWin->visRgn) {
 	CFRelease(macWin->visRgn);
@@ -111,6 +111,7 @@ XDestroyWindow(
     if (macWin->toplevel->referenceCount == 0) {
 	ckfree(macWin->toplevel);
     }
+    return Success;
 }
 
 /*
@@ -130,7 +131,7 @@ XDestroyWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMapWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -226,6 +227,7 @@ XMapWindow(
     event.xvisibility.type = VisibilityNotify;
     event.xvisibility.state = VisibilityUnobscured;
     NotifyVisibility(winPtr, &event);
+    return Success;
 }
 
 /*
@@ -279,7 +281,7 @@ NotifyVisibility(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XUnmapWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -332,6 +334,7 @@ XUnmapWindow(
     } else {
 	[[win contentView] setNeedsDisplay:YES];
     }
+    return Success;
 }
 
 /*
@@ -351,7 +354,7 @@ XUnmapWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XResizeWindow(
     Display *display,		/* Display. */
     Window window,		/* Window. */
@@ -375,6 +378,7 @@ XResizeWindow(
     } else {
 	MoveResizeWindow(macWin);
     }
+    return Success;
 }
 
 /*
@@ -593,7 +597,7 @@ GenerateConfigureNotify(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XRaiseWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -608,6 +612,7 @@ XRaiseWindow(
 	 * TODO: this should generate damage
 	 */
     }
+    return Success;
 }
 
 #if 0
