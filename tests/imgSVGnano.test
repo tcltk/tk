@@ -119,7 +119,7 @@ test imgSVGnano-2.3 {using bad option} -body {
 test imgSVGnano-2.4 {reading a bad image from file} -body {
     image create photo foo -format svg -file $data(badFilePath)
 } -returnCodes error -match glob\
-    -result {couldn't recognize data in image file "*/win/bad.svg"}
+    -result {couldn't recognize data in image file "*/bad.svg"}
 
 # -scaletoheight and -scaletowidth options
 test imgSVGnano-3.1 {multiple scale options} -body {
