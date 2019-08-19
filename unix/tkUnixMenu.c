@@ -199,7 +199,7 @@ TkpDestroyMenuEntry(
 
 int
 TkpConfigureMenuEntry(
-    register TkMenuEntry *mePtr)/* Information about menu entry; may or may
+    TkMenuEntry *mePtr)/* Information about menu entry; may or may
 				 * not already have values for some fields. */
 {
     /*

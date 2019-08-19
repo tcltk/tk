@@ -920,7 +920,7 @@ XDrawRectangle(
     int lw = gc->line_width;
 
     if (width == 0 || height == 0) {
-	return BadMatch;
+	return BadDrawable;
     }
 
     display->request++;
@@ -1296,7 +1296,7 @@ XFillArc(
     int lw = gc->line_width;
 
     if (width == 0 || height == 0 || angle2 == 0) {
-	return BadMatch;
+	return BadDrawable;
     }
 
     display->request++;

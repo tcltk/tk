@@ -463,7 +463,7 @@ EXTERN Colormap		XCreateColormap(Display *d, Window w, Visual *v,
 /* 7 */
 EXTERN GContext		XGContextFromGC(GC g);
 /* 8 */
-EXTERN KeySym		XKeycodeToKeysym(Display *d, KeyCode k, int i);
+EXTERN KeySym		XKeycodeToKeysym(Display *d, unsigned int k, int i);
 /* 9 */
 EXTERN KeySym		XStringToKeysym(_Xconst char *c);
 /* 10 */
@@ -764,7 +764,7 @@ EXTERN Region		XPolygonRegion(XPoint *pts, int n, int rule);
 /* 139 */
 EXTERN int		XPointInRegion(Region rgn, int x, int y);
 /* 140 */
-EXTERN XVaNestedList	XVaCreateNestedList(int unused, ...);
+EXTERN XVaNestedList	XVaCreateNestedList(int dummy, ...);
 /* 141 */
 EXTERN char *		XSetICValues(XIC xic, ...);
 /* 142 */
@@ -942,7 +942,7 @@ typedef struct TkIntXlibStubs {
     char * (*xKeysymToString) (KeySym k); /* 5 */
     Colormap (*xCreateColormap) (Display *d, Window w, Visual *v, int i); /* 6 */
     GContext (*xGContextFromGC) (GC g); /* 7 */
-    KeySym (*xKeycodeToKeysym) (Display *d, KeyCode k, int i); /* 8 */
+    KeySym (*xKeycodeToKeysym) (Display *d, unsigned int k, int i); /* 8 */
     KeySym (*xStringToKeysym) (_Xconst char *c); /* 9 */
     Window (*xRootWindow) (Display *d, int i); /* 10 */
     XErrorHandler (*xSetErrorHandler) (XErrorHandler x); /* 11 */
@@ -1074,7 +1074,7 @@ typedef struct TkIntXlibStubs {
     int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
     Region (*xPolygonRegion) (XPoint *pts, int n, int rule); /* 138 */
     int (*xPointInRegion) (Region rgn, int x, int y); /* 139 */
-    XVaNestedList (*xVaCreateNestedList) (int unused, ...); /* 140 */
+    XVaNestedList (*xVaCreateNestedList) (int dummy, ...); /* 140 */
     char * (*xSetICValues) (XIC xic, ...); /* 141 */
     char * (*xGetICValues) (XIC xic, ...); /* 142 */
     void (*xSetICFocus) (XIC xic); /* 143 */
