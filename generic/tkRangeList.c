@@ -12,8 +12,6 @@
 #include "tkRangeList.h"
 #include "tkAlloc.h"
 
-#include <tk.h>
-#include <string.h>
 #include <assert.h>
 
 #ifndef TK_C99_INLINE_SUPPORT

@@ -14,10 +14,6 @@
 #ifndef _TKTEXT
 #define _TKTEXT
 
-#ifndef _TK
-# include "tk.h"
-#endif
-
 #ifndef _TKINT
 # include "tkInt.h"
 #endif

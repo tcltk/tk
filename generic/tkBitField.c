@@ -12,7 +12,6 @@
 #include "tkBitField.h"
 #include "tkIntSet.h"
 #include "tkAlloc.h"
-#include <string.h>
 #include <assert.h>
 
 #ifndef TK_C99_INLINE_SUPPORT

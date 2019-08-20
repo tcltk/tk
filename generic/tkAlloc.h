@@ -20,10 +20,6 @@
 #define _TK_ALLOC
 
 #include <tcl.h>
-#include <tclDecls.h> /* needed for the Tcl_Alloc macros */
-#include <stdlib.h>
-#include <string.h>
-
 
 #if TK_VALGRIND /* ===========================================================*/
 
