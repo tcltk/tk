@@ -101,22 +101,23 @@ TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/win
 
 TCL_TOOL_DIR		= @TCL_SRC_DIR@/tools
 
+SRC_DIR			= @srcdir@
+ROOT_DIR		= @srcdir@/..
+TOP_DIR			= $(shell cd @srcdir@/..; pwd -W 2>/dev/null || pwd -P)
+WIN_DIR			= $(TOP_DIR)/win
+UNIX_DIR		= $(TOP_DIR)/unix
+GENERIC_DIR		= $(TOP_DIR)/generic
+TTK_DIR			= $(GENERIC_DIR)/ttk
+BITMAP_DIR		= $(TOP_DIR)/bitmaps
+XLIB_DIR		= $(TOP_DIR)/xlib
+RC_DIR			= $(WIN_DIR)/rc
+
 # Converts a POSIX path to a Windows native path.
 CYGPATH			= @CYGPATH@
 
 # The name of the Tcl library.
 TCL_LIB_FILE	  = "$(shell $(CYGPATH) '@TCL_BIN_DIR@/@TCL_LIB_FILE@')"
 TCL_STUB_LIB_FILE = "$(shell $(CYGPATH) '@TCL_BIN_DIR@/@TCL_STUB_LIB_FILE@')"
-
-SRC_DIR			= @srcdir@
-ROOT_DIR		= $(SRC_DIR)/..
-WIN_DIR			= $(SRC_DIR)
-UNIX_DIR		= $(SRC_DIR)/../unix
-GENERIC_DIR		= $(SRC_DIR)/../generic
-TTK_DIR			= $(GENERIC_DIR)/ttk
-BITMAP_DIR		= $(ROOT_DIR)/bitmaps
-XLIB_DIR		= $(ROOT_DIR)/xlib
-RC_DIR			= $(WIN_DIR)/rc
 
 ROOT_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(ROOT_DIR)' | sed 's!\\!/!g')
 WIN_DIR_NATIVE	   	= $(shell $(CYGPATH) '$(WIN_DIR)' | sed 's!\\!/!g')
