@@ -12,7 +12,6 @@
 #ifndef _TKBITFIELD
 #define _TKBITFIELD
 
-#include "tk.h"
 #include "tkInt.h" /* needed for inline support and 64 bit support */
 #include "tkBool.h"
 

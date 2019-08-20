@@ -21,7 +21,6 @@
 # include "tkIntSetPriv.h"
 #endif
 
-#include <string.h>
 #include <assert.h>
 
 #ifndef MIN

@@ -12,10 +12,6 @@
 #ifndef _TKINTSET
 #define _TKINTSET
 
-#ifndef _TK
-#include "tk.h"
-#endif
-
 #include "tkInt.h" /* required for inline support */
 #include "tkBool.h"
 

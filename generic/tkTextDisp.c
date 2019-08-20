@@ -19,11 +19,11 @@
 #pragma warning (disable : 4305)
 #endif
 
+#include "tkInt.h"
 #include "tkText.h"
 #include "tkTextTagSet.h"
 #include "tkRangeList.h"
 #include "tkAlloc.h"
-#include "tkInt.h"
 
 #ifdef _WIN32
 # include "tkWinInt.h"
