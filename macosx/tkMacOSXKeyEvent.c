@@ -572,7 +572,7 @@ XGrabKeyboard(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XUngrabKeyboard(
     Display* display,
     Time time)
@@ -586,6 +586,7 @@ XUngrabKeyboard(
 	keyboardGrabNSWindow = nil;
     }
     keyboardGrabWinPtr = NULL;
+    return Success;
 }
 
 /*

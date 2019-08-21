@@ -462,7 +462,8 @@ switch -exact -- [tk windowingsystem] {
 	# Official bindings
 	# See http://support.apple.com/kb/HT1343
 	event add <<SelectAll>>		<Command-Key-a>
-	event add <<SelectNone>>	<Option-Command-Key-a>
+	#Attach function keys not otherwise assigned to this event so they no-op - workaround for bug 0e6930dfe7
+	event add <<SelectNone>>	<Option-Command-Key-a> <Key-F5> <Key-F1> <Key-F5> <Key-F6> <Key-F7> <Key-F8> <Key-F9> <Key-F10> <Key-F11> <Key-F12> 
 	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
 	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
 	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
@@ -475,7 +476,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectPrevWord>>	<Shift-Option-Left>
 	event add <<LineStart>>		<Home> <Command-Left> <Control-Key-a> <Control-Lock-Key-A>
 	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left> <Shift-Control-Key-A> <Shift-Control-Lock-Key-A>
-	event add <<LineEnd>>		<End> <Command-Right> <Control-Key-e> <Control-Lock-Key-E>
+	event add <<LineEnd>>		<End> <Command-Right> <Control-Key-e> <Control-Lock-Key-E> 
 	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right> <Shift-Control-Key-E> <Shift-Control-Lock-Key-E>
 	event add <<PrevLine>>		<Up> <Control-Key-p> <Control-Lock-Key-P>
 	event add <<SelectPrevLine>>	<Shift-Up> <Shift-Control-Key-P> <Shift-Control-Lock-Key-P>
