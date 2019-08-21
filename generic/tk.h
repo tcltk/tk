@@ -98,7 +98,8 @@ extern "C" {
 #	include <X11/X.h>
 #   endif
 #endif
-#ifdef __STDC__
+#if defined(STDC_HEADERS) || defined(__STDC__) || defined(__C99__FUNC__) \
+     || defined(__cplusplus) || defined(_MSC_VER) || defined(__ICC)
 #   include <stddef.h>
 #endif
 
