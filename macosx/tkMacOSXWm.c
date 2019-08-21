@@ -5910,6 +5910,7 @@ WmWinAppearance(
 #else
     NSString *appearance;
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
+ 
     const char *resultString = "unrecognized";
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
     if (win) {
@@ -5928,7 +5929,9 @@ WmWinAppearance(
 	result = Tcl_NewStringObj(resultString, strlen(resultString));
     }
     if (result == NULL) {
-	Tcl_Panic("Failed to read appearance name.");
+	NSLog(@"Failed to read appearance name; try calling update before setting the appearance of the window.");
+	return TCL_OK;
+	      //	Tcl_Panic("Failed to read appearance name.");
     }
     if (objc == 4) {
 	int index;

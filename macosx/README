@@ -172,10 +172,11 @@ to aqua or darkaqua then the window will be displayed with the corresponding
 appearance independent of any preferences settings.  If it is set to "auto"
 the appearance will be determined by the preferences.  This command can be
 used to opt out of Dark Mode on a per-window basis.
+  
 
 - To determine the current appearance of a window in macOS 10.14 (Mojave) and
 higher, one can use the command:
-  tk::unsupported::MacWindowStyle isdark
+  tk::unsupported::MacWindowStyle isdark window?
 The boolean return value is true if the window is currently displayed with the
 dark appearance.
 
