@@ -5931,7 +5931,6 @@ WmWinAppearance(
     if (result == NULL) {
 	NSLog(@"Failed to read appearance name; try calling update before setting the appearance of the window.");
 	return TCL_OK;
-	      //	Tcl_Panic("Failed to read appearance name.");
     }
     if (objc == 4) {
 	int index;
