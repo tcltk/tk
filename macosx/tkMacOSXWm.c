@@ -5930,7 +5930,8 @@ WmWinAppearance(
 	result = Tcl_NewStringObj(resultString, strlen(resultString));
     }
     if (result == NULL) {
-	Tcl_Panic("Failed to read appearance name.");
+	NSLog(@"Failed to read appearance name; try calling update before setting the appearance of the window.");
+	return TCL_OK;
     }
     if (objc == 4) {
 	int index;
@@ -6518,7 +6519,7 @@ TkpGetMS(void)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetInputFocus(
     Display* display,
     Window focus,
@@ -6528,6 +6529,7 @@ XSetInputFocus(
     /*
      * Don't need to do a thing. Tk manages the focus for us.
      */
+    return Success;
 }
 
 /*
