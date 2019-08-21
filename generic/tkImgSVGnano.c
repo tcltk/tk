@@ -404,6 +404,9 @@ ParseSVGWithOptions(
 		goto error;
 	    }
 	    parameterScaleSeen = 1;
+	    break;
+	default:
+	    break;
 	}
 
 	/*
