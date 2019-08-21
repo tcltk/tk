@@ -5912,6 +5912,7 @@ WmWinAppearance(
 #else
     NSString *appearance;
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
+
     const char *resultString = "unrecognized";
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
     if (win) {
