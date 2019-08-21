@@ -124,10 +124,10 @@ bind Text <<SelectNextChar>> {
     tk::TextKeySelect %W [%W index {insert + 1displaychars}]
 }
 bind Text <<SelectPrevLine>> {
-    tk::TextKeySelect %W [tk::TextUpDownLine %W -1 yes]
+    tk::TextKeySelect %W [tk::TextUpDownLine %W -1]
 }
 bind Text <<SelectNextLine>> {
-    tk::TextKeySelect %W [tk::TextUpDownLine %W 1 yes]
+    tk::TextKeySelect %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<PrevWord>> {
     tk::TextSetCursor %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
@@ -939,19 +939,17 @@ proc ::tk::TextInsert {w s} {
 
 # ::tk::TextUpDownLine --
 # Returns the index of the character one display line above or below the
-# insertion cursor.  There are two tricky things here.  First, we want to
-# maintain the original x position across repeated operations, even though
-# some lines that will get passed through don't have enough characters to
-# cover the original column.  Second, don't try to scroll past the
-# beginning or end of the text if we don't select.
+# insertion cursor.  There is a tricky thing here: we want to maintain the
+# original x position across repeated operations, even though some lines
+# that will get passed through don't have enough characters to cover the
+# original column.
 #
 # Arguments:
 # w -		The text window in which the cursor is to move.
 # n -		The number of display lines to move: -1 for up one line,
 #		+1 for down one line.
-# sel		Boolean value whether we are selecting text.
 
-proc ::tk::TextUpDownLine {w n {sel no}} {
+proc ::tk::TextUpDownLine {w n} {
     variable Priv
 
     set i [$w index insert]
@@ -960,10 +958,11 @@ proc ::tk::TextUpDownLine {w n {sel no}} {
     }
     set lines [$w count -displaylines $Priv(textPosOrig) $i]
     set new [$w index "$Priv(textPosOrig) + [expr {$lines + $n}] displaylines"]
-    if {!$sel && ([$w compare $new == end] || [$w compare $new == "insert display linestart"])} {
-	set new $i
-    }
     set Priv(prevPos) $new
+    if {[$w compare $new == "end display lineend"] \
+            || [$w compare $new == "insert display linestart"]} {
+        set Priv(textPosOrig) $new
+    }
     return $new
 }
 
