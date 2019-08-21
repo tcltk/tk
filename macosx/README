@@ -171,7 +171,7 @@ newAppearance option: "aqua", "darkaqua", or "auto".  If the appearance is set
 to aqua or darkaqua then the window will be displayed with the corresponding
 appearance independent of any preferences settings.  If it is set to "auto"
 the appearance will be determined by the preferences.  This command can be
-used to opt out of Dark Mode on a per-window basis.
+used to opt out of Dark Mode on a per-window basis. It may be best to run the "update" command before setting the appearance property, to allow the event loop to run.
   
 
 - To determine the current appearance of a window in macOS 10.14 (Mojave) and
