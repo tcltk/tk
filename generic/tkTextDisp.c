@@ -7815,7 +7815,6 @@ TkTextFindDisplayIndex(
 		FreeDLines(textPtr, info.dLinePtr, NULL, DLINE_FREE_TEMP);
 		ComputeDisplayLineInfo(textPtr, indexPtr, &info);
 		ComputeMissingMetric(textPtr, &info, THRESHOLD_LINE_OFFSET, displayLineOffset);
-		assert(info.displayLineNo == 0);
 	    }
 	} else if (displayLineOffset < 0) {
 	    info.numDispLines = info.displayLineNo + 1;
@@ -7852,7 +7851,7 @@ TkTextFindDisplayIndex(
 		}
 		displayLineOffset += info.numDispLines;
 		if (!(prevLine = TkBTreePrevLine(textPtr, linePtr))) {
-		    byteOffset = info.entry[0].byteOffset;
+		    byteOffset = 0;
 		    break;
 		}
 		TkTextIndexSetToLastChar2(indexPtr, linePtr = prevLine);

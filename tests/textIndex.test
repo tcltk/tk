@@ -832,7 +832,7 @@ test textIndex-19.12.1 {Display lines} {
 } {1.0}
 
 test textIndex-19.12.2 {Display lines} {
-    .t compare [.t index "2.50 + 100 displaylines"] == end
+    .t compare [.t index "2.50 + 1000 displaylines"] == end
 } {1}
 
 test textIndex-19.13 {Display lines} {
