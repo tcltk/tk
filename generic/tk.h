@@ -92,13 +92,14 @@ extern "C" {
 
 #ifndef RC_INVOKED
 
-#ifndef _XLIB_H
+#if !defined(_XLIB_H) && !defined(_X11_XLIB_H_)
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>
 #   endif
 #endif
-#ifdef __STDC__
+#if defined(STDC_HEADERS) || defined(__STDC__) || defined(__C99__FUNC__) \
+     || defined(__cplusplus) || defined(_MSC_VER) || defined(__ICC)
 #   include <stddef.h>
 #endif
 

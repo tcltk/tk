@@ -578,23 +578,14 @@ UpdateButtonEventState(
     case ButtonPress:
 	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
 	dispPtr->mouseButtonWindow = eventPtr->xbutton.window;
-
-	if ((eventPtr->xbutton.button >= 6) && (eventPtr->xbutton.button <= 7)) {
-	    /* In case of X11, translate mouse buttons 6/7 to Shift-4/5 */
-	    eventPtr->xbutton.button -= 2;
-		eventPtr->xbutton.state |= ShiftMask;
-	}
 	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
+
 	dispPtr->mouseButtonState |= TkGetButtonMask(eventPtr->xbutton.button);
 	break;
 
     case ButtonRelease:
 	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
 	dispPtr->mouseButtonWindow = None;
-	if ((eventPtr->xbutton.button >= 6) && (eventPtr->xbutton.button <= 7)) {
-	    /* In case of X11, translate mouse buttons 6/7 to Shift-4/5 */
-	    eventPtr->xbutton.button -= 2;
-	}
 	dispPtr->mouseButtonState &= ~TkGetButtonMask(eventPtr->xbutton.button);
 	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
 	break;
@@ -1217,6 +1208,14 @@ Tk_HandleEvent(
     Tcl_Interp *interp = NULL;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+#if !defined(MAC_OSX_TK) && !defined(_WIN32)
+    if (((eventPtr->type == ButtonPress) || (eventPtr->type == ButtonRelease))
+	    && ((eventPtr->xbutton.button - 6) < 2)) {
+	eventPtr->xbutton.button -= 2;
+	eventPtr->xbutton.state |= ShiftMask;
+    }
+#endif
 
     UpdateButtonEventState(eventPtr);
 
