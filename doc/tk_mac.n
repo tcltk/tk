@@ -124,6 +124,7 @@ proc ::tk::mac::OpenDocument {args} {
 }
 .CE
 .RE
+Note: the application must be running for this command to work. 
 .TP
 \fB::tk::mac::PrintDocument \fIfile...\fR
 .
@@ -131,7 +132,7 @@ If a proc of this name is defined it is the default Apple Event handler for
 kAEPrintDocuments,
 .QW pdoc ,
 the Apple Event sent when your application is asked to print a
-document.  It takes a single absolute file path as an argument.
+document.  It takes a single absolute file path as an argument. Note: the application must be running for this command to work. 
 .TP
 \fB::tk::mac::Quit\fR
 .
