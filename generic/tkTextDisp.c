@@ -8776,6 +8776,7 @@ TextGetScrollInfoObj(
 	VIEW_SCROLL_PAGES, VIEW_SCROLL_PIXELS, VIEW_SCROLL_UNITS
     };
     int index;
+    double d;
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], subcommands,
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
@@ -8814,8 +8815,16 @@ TextGetScrollInfoObj(
 	    }
 	    return TKTEXT_SCROLL_PIXELS;
 	case VIEW_SCROLL_UNITS:
-	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
+	    if (Tcl_GetDoubleFromObj(interp, objv[3], &d) != TCL_OK) {
 		return TKTEXT_SCROLL_ERROR;
+	    }
+	    if (d > 0) {
+		*intPtr = ceil(d);
+	    } else {
+		*intPtr = floor(d);
+	    }
+	    if (dblPtr) {
+		*dblPtr = d;
 	    }
 	    return TKTEXT_SCROLL_UNITS;
 	}

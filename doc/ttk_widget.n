@@ -253,7 +253,8 @@ way through the content appears at the left edge of the window.
 \fIpathName \fBxview scroll \fInumber what\fR
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
+\fINumber\fR must be an integer or a float, but if it is a float then
+it is converted to an integer, rounded away from 0.
 \fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
 '\" or an abbreviation of one of these, but we don't document that.
 If \fIwhat\fR is

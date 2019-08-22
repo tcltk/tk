@@ -1930,8 +1930,8 @@ and 1.
 \fIpathName \fBxview scroll \fInumber what\fR
 .
 This command shifts the view in the window left or right according to
-\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBmouseunits\fR, \fBpages\fR,
-\fBpixels\fR, or \fBunits\fR. If \fIwhat\fR is \fBmouseunits\fR, \fBpages\fR or
+\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBpages\fR,
+\fBpixels\fR, or \fBunits\fR. If \fIwhat\fR is \fBpages\fR or
 \fBunits\fR then \fInumber\fR must be an integer, otherwise number may be
 specified in any of the forms acceptable to \fBTk_GetPixels\fR, such as
 .QW 2.0c
@@ -1943,9 +1943,7 @@ pixels are assumed). If \fIwhat\fR is \fBpages\fR then the view adjusts by
 \fInumber\fR pixels; if it is \fBunits\fR, the view adjusts left or
 right by \fInumber\fR average-width characters on the display. If \fInumber\fR is
 negative then characters farther to the left become visible; if it is positive
-then characters farther to the right become visible. If \fIwhat\fR is
-\fBmouseunits\fR then the view adjusts about -\fInumber\fR/3 pixels, since
-mouse units work in the other direction than pixels.
+then characters farther to the right become visible.
 .RE
 .TP
 \fIpathName \fByview \fR?\fIargs\fR?
@@ -1980,7 +1978,7 @@ the bottom of the window, and some other pixel is at the top.
 \fIpathName \fByview scroll \fInumber what\fR
 .
 This command adjust the view in the window up or down according to
-\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBmouseunits\fR, \fBpages\fR,
+\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBpages\fR,
 \fBpixels\fR, or \fBunits\fR. If \fIwhat\fR is \fBunits\fR or \fBpages\fR then
 \fInumber\fR must be an integer, otherwise number may be specified in any of
 the forms acceptable to \fBTk_GetPixels\fR, such as
@@ -1993,9 +1991,7 @@ by \fInumber\fR lines on the display; if it is \fBpages\fR then the view
 adjusts by \fInumber\fR screenfuls; if it is \fBpixels\fR then the view
 adjusts by \fInumber\fR pixels. If \fInumber\fR is negative then earlier
 positions in the text become visible; if it is positive then later positions
-in the text become visible. If \fIwhat\fR is \fBmouseunits\fR then the view
-adjusts about -\fInumber\fR/3 pixels, since mouse units work in the other
-direction than pixels.
+in the text become visible.
 .TP
 \fIpathName \fByview \fR?\fB\-pickplace\fR? \fIindex\fR
 .
