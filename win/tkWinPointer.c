@@ -352,7 +352,7 @@ XQueryPointer(
 
 /*
  * TkSetCursorPos is a helper function replacing SetCursorPos since this
- * latter Windows function appears the have been broken by Microsoft
+ * latter Windows function appears to have been broken by Microsoft
  * since Win10 Falls Creator Update - See ticket [69b48f427e] along with
  * several other Internet reports about this breakage.
  */
@@ -364,8 +364,8 @@ void TkSetCursorPos(
     INPUT input;
 
     input.type = INPUT_MOUSE;
-    input.mi.dx = x * (65536.0 / GetSystemMetrics(SM_CXSCREEN));
-    input.mi.dy = y * (65536.0 / GetSystemMetrics(SM_CYSCREEN));
+    input.mi.dx = x * (65535.0 / (GetSystemMetrics(SM_CXSCREEN) - 1));
+    input.mi.dy = y * (65535.0 / (GetSystemMetrics(SM_CYSCREEN) - 1));
     input.mi.mouseData = 0;
     input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
     input.mi.time = 0;
