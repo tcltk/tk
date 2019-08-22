@@ -58,7 +58,20 @@ $c bind all <Any-Leave> "scrollLeave $c"
 $c bind all <1> "scrollButton $c"
 bind $c <2> "$c scan mark %x %y"
 bind $c <B2-Motion> "$c scan dragto %x %y"
-if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide Tk] 8.7-]} {
+if {[package vsatisfies [package provide Tk] 8.7-]} {
+    bind $c <MouseWheel> {
+	%W yview scroll [expr {%D/-30.0}] units
+    }
+    bind $c <Option-MouseWheel> {
+	%W yview scroll [expr {%D/-3.0}] units
+    }
+    bind $c <Shift-MouseWheel> {
+	%W xview scroll [expr {%D/-30.0}] units
+    }
+    bind $c <Shift-Option-MouseWheel> {
+	%W xview scroll [expr {%D/-3.0}] units
+    }
+} elseif {[tk windowingsystem] eq "aqua"} {
     bind $c <MouseWheel> {
 	%W yview scroll [expr {-(%D)}] units
     }
