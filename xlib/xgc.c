@@ -591,11 +591,12 @@ XListProperties(
     return (Atom *) 0;
 }
 
-void
+int
 XMapRaised(
     Display *display,
     Window w)
 {
+   return Success;
 }
 
 #if 0
@@ -616,7 +617,7 @@ XPutImage(
 }
 #endif
 
-void
+int
 XQueryTextExtents(
     Display *display,
     XID font_ID,
@@ -627,6 +628,7 @@ XQueryTextExtents(
     int *font_descent_return,
     XCharStruct *overall_return)
 {
+    return Success;
 }
 
 int
@@ -640,11 +642,12 @@ XReparentWindow(
     return BadWindow;
 }
 
-void
+int
 XUndefineCursor(
     Display *display,
     Window w)
 {
+    return Success;
 }
 
 XVaNestedList
