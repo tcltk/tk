@@ -745,12 +745,21 @@ Tk_GetScrollInfoObj(
 	}
 	return TK_SCROLL_MOVETO;
     } else if (ArgPfxEq("scroll")) {
+	double d;
 	if (objc != 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number pages|units");
 	    return TK_SCROLL_ERROR;
 	}
-	if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
+	if (Tcl_GetDoubleFromObj(interp, objv[3], &d) != TCL_OK) {
 	    return TK_SCROLL_ERROR;
+	}
+	if (d >= 0) {
+		*intPtr = ceil(d);
+	} else {
+		*intPtr = floor(d);
+	}
+	if (dblPtr) {
+	    *dblPtr = d;
 	}
 
 	arg = TkGetStringFromObj(objv[4], &length);
