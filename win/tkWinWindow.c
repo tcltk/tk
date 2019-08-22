@@ -765,33 +765,6 @@ XChangeWindowAttributes(
 /*
  *----------------------------------------------------------------------
  *
- * XReparentWindow --
- *
- *	TODO: currently placeholder to satisfy Xlib stubs.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	TODO.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XReparentWindow(
-    Display *display,
-    Window w,
-    Window parent,
-    int x,
-    int y)
-{
-    return BadWindow;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWinSetWindowPos --
  *
  *	Adjust the stacking order of a window relative to a second window (or
