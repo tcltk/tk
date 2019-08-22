@@ -1298,6 +1298,7 @@ ForwBack(
 	    if (forward) {
 		TkTextFindDisplayLineEnd(textPtr, indexPtr, 1, &xOffset);
 		while (count-- > 0) {
+
 		    /*
 		     * Go to the end of the line, then forward one char/byte
 		     * to get to the beginning of the next line.
@@ -1310,17 +1311,31 @@ ForwBack(
 	    } else {
 		TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, &xOffset);
 		while (count-- > 0) {
+                    TkTextIndex indexPtr2;
+
 		    /*
 		     * Go to the beginning of the line, then backward one
 		     * char/byte to get to the end of the previous line.
 		     */
 
 		    TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
-		    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr,
+		    TkTextIndexBackChars(textPtr, indexPtr, 1, &indexPtr2,
 			    COUNT_DISPLAY_INDICES);
+
+                    /*
+                     * If we couldn't go to the previous line, then we wanted
+                       to go before the start of the text: arrange for returning
+                       the first index of the first display line.
+                     */
+
+                    if (!TkTextIndexCmp(indexPtr, &indexPtr2)) {
+                        xOffset = 0;
+                        break;
+                    }
+                    *indexPtr = indexPtr2;
 		}
-		TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
 	    }
+            TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
 
 	    /*
 	     * This call assumes indexPtr is the beginning of a display line
