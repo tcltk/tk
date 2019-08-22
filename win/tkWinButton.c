@@ -316,14 +316,14 @@ TkpDisplayButton(
 {
     TkWinDCState state;
     HDC dc;
-    register TkButton *butPtr = clientData;
+    TkButton *butPtr = clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
     int x = 0;			/* Initialization only needed to stop compiler
 				 * warning. */
     int y, relief;
-    register Tk_Window tkwin = butPtr->tkwin;
+    Tk_Window tkwin = butPtr->tkwin;
     int width = 0, height = 0, haveImage = 0, haveText = 0, drawRing = 0;
     RECT rect;
     int defaultWidth;		/* Width of default ring. */
@@ -818,7 +818,7 @@ TkpDisplayButton(
 
 void
 TkpComputeButtonGeometry(
-    register TkButton *butPtr)	/* Button whose geometry may have changed. */
+    TkButton *butPtr)	/* Button whose geometry may have changed. */
 {
     int txtWidth, txtHeight;	/* Width and height of text */
     int imgWidth, imgHeight;	/* Width and height of image */

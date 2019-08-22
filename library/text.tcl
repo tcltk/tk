@@ -427,17 +427,36 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
+# The MouseWheel will typically only fire on Windows and MacOS X.
+# However, someone could use the "event generate" command to produce one
+# on other platforms.  We must be careful not to round -ve values of %D
+# down to zero.
+
+# We must make sure that positive and negative movements are rounded
+# equally to integers, avoiding the problem that
+#     (int)1/3 = 0,
+# but
+#     (int)-1/3 = -1
+# The following code ensure equal +/- behaviour.
 bind Text <MouseWheel> {
-    %W yview scroll %D mouseunits
+    if {%D >= 0} {
+	%W yview scroll [expr {-%D/3}] pixels
+    } else {
+	%W yview scroll [expr {(2-%D)/3}] pixels
+    }
 }
 bind Text <Option-MouseWheel> {
-    %W yview scroll [expr {10 * (%D)}] mouseunits
+    %W yview scroll [expr {-3*%D}] pixels
 }
 bind Text <Shift-MouseWheel> {
-    %W xview scroll %D mouseunits
+    if {%D >= 0} {
+	%W xview scroll [expr {-%D/3}] pixels
+    } else {
+	%W xview scroll [expr {(2-%D)/3}] pixels
+    }
 }
 bind Text <Shift-Option-MouseWheel> {
-    %W xview scroll [expr {10 * (%D)}] mouseunits
+    %W xview scroll [expr {-3*%D}] pixels
 }
 
 # ::tk::TextClosestGap --
@@ -845,11 +864,10 @@ proc ::tk::TextInsert {w s} {
 
 # ::tk::TextUpDownLine --
 # Returns the index of the character one display line above or below the
-# insertion cursor.  There are two tricky things here.  First, we want to
-# maintain the original x position across repeated operations, even though
-# some lines that will get passed through don't have enough characters to
-# cover the original column.  Second, don't try to scroll past the
-# beginning or end of the text.
+# insertion cursor.  There is a tricky thing here: we want to maintain the
+# original x position across repeated operations, even though some lines
+# that will get passed through don't have enough characters to cover the
+# original column.
 #
 # Arguments:
 # w -		The text window in which the cursor is to move.
@@ -866,11 +884,11 @@ proc ::tk::TextUpDownLine {w n} {
     set lines [$w count -displaylines $Priv(textPosOrig) $i]
     set new [$w index \
 	    "$Priv(textPosOrig) + [expr {$lines + $n}] displaylines"]
-    if {[$w compare $new == end] \
-	    || [$w compare $new == "insert display linestart"]} {
-	set new $i
-    }
     set Priv(prevPos) $new
+    if {[$w compare $new == "end display lineend"] \
+            || [$w compare $new == "insert display linestart"]} {
+        set Priv(textPosOrig) $new
+    }
     return $new
 }
 

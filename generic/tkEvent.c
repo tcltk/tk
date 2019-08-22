@@ -539,12 +539,12 @@ RefreshKeyboardMappingIfNeeded(
  *----------------------------------------------------------------------
  */
 
-static const unsigned int buttonMasks[] = {
+static const unsigned long buttonMasks[] = {
     0, Button1Mask, Button2Mask, Button3Mask, 0, 0, 0, 0, Button4Mask, \
 	    Button5Mask, Button6Mask, Button7Mask, Button8Mask, Button9Mask
 };
 
-unsigned int
+unsigned long
 TkGetButtonMask(
     unsigned int button)
 {
@@ -584,24 +584,7 @@ UpdateButtonEventState(
 	dispPtr->mouseButtonWindow = eventPtr->xbutton.window;
 	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
 
-	if ((eventPtr->xbutton.button >= Button4) && (eventPtr->xbutton.button < Button8)) {
-	    /*
-	     * Turn the event into a mouse wheel event and queue it
-	     * Note: modelled after the code in tkWinX.c
-	     */
-	    eventPtr->type = MouseWheelEvent;
-	    eventPtr->xany.send_event = -1;
-#if defined(_WIN32) || defined(MAC_OSX_TK)
-	    eventPtr->xkey.nbytes = 0;
-#endif
-	    eventPtr->xkey.keycode = (eventPtr->xbutton.button & 1) ? 120 : -120;
-	    if (eventPtr->xkey.keycode > Button5) {
-		eventPtr->xkey.state |= ShiftMask;
-	    }
-	    Tk_QueueWindowEvent(eventPtr, TCL_QUEUE_TAIL);
-	} else {
-	    dispPtr->mouseButtonState |= TkGetButtonMask(eventPtr->xbutton.button);
-	}
+	dispPtr->mouseButtonState |= TkGetButtonMask(eventPtr->xbutton.button);
 	break;
 
     case ButtonRelease:
@@ -1229,6 +1212,22 @@ Tk_HandleEvent(
     Tcl_Interp *interp = NULL;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+    if ((eventPtr->xbutton.button >= Button4) && (eventPtr->xbutton.button < Button8)) {
+	if (eventPtr->type == ButtonRelease) {
+	    return;
+	} else if (eventPtr->type == ButtonPress) {
+	    eventPtr->type = MouseWheelEvent;
+	    eventPtr->xany.send_event = -1;
+	    eventPtr->xkey.keycode = (eventPtr->xbutton.button & 1) ? 120 : -120;
+	    if (eventPtr->xkey.keycode > Button5) {
+		eventPtr->xkey.state ^= ShiftMask;
+	    }
+	}
+    }
+#endif
 
     UpdateButtonEventState(eventPtr);
 

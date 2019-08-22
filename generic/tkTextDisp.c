@@ -631,7 +631,6 @@ static int              IsStartOfNotMergedLine(TkText *textPtr,
 #define TKTEXT_SCROLL_UNITS	3
 #define TKTEXT_SCROLL_ERROR	4
 #define TKTEXT_SCROLL_PIXELS	5
-#define TKTEXT_SCROLL_MOUSE	6
 
 /*
  *----------------------------------------------------------------------
@@ -5894,10 +5893,6 @@ TkTextXviewCmd(
     case TKTEXT_SCROLL_PIXELS:
 	dInfoPtr->newXPixelOffset += count;
 	break;
-    case TKTEXT_SCROLL_MOUSE:
-	if (count < 0) count -= 2;
-	dInfoPtr->newXPixelOffset += (-count)/3;
-	break;
     }
 
     dInfoPtr->flags |= DINFO_OUT_OF_DATE;
@@ -6301,10 +6296,6 @@ TkTextYviewCmd(
     }
     case TKTEXT_SCROLL_PIXELS:
 	YScrollByPixels(textPtr, count);
-	break;
-    case TKTEXT_SCROLL_MOUSE:
-	if (count < 0) count -= 2;
-	YScrollByPixels(textPtr, (-count)/3);
 	break;
     case TKTEXT_SCROLL_UNITS:
 	YScrollByLines(textPtr, count);
@@ -8779,10 +8770,10 @@ TextGetScrollInfoObj(
 	VIEW_MOVETO, VIEW_SCROLL
     };
     static const char *const units[] = {
-	"mouseunits", "pages", "pixels", "units", NULL
+	"pages", "pixels", "units", NULL
     };
     enum viewUnits {
-	VIEW_SCROLL_MOUSE, VIEW_SCROLL_PAGES, VIEW_SCROLL_PIXELS, VIEW_SCROLL_UNITS
+	VIEW_SCROLL_PAGES, VIEW_SCROLL_PIXELS, VIEW_SCROLL_UNITS
     };
     int index;
 
@@ -8803,7 +8794,7 @@ TextGetScrollInfoObj(
 	return TKTEXT_SCROLL_MOVETO;
     case VIEW_SCROLL:
 	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 3, objv, "number mouseunits|pages|pixels|units");
+	    Tcl_WrongNumArgs(interp, 3, objv, "number pages|pixels|units");
 	    return TKTEXT_SCROLL_ERROR;
 	}
 	if (Tcl_GetIndexFromObjStruct(interp, objv[4], units,
@@ -8811,11 +8802,6 @@ TextGetScrollInfoObj(
 	    return TKTEXT_SCROLL_ERROR;
 	}
 	switch ((enum viewUnits) index) {
-	case VIEW_SCROLL_MOUSE:
-	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
-		return TKTEXT_SCROLL_ERROR;
-	    }
-	    return TKTEXT_SCROLL_MOUSE;
 	case VIEW_SCROLL_PAGES:
 	    if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
 		return TKTEXT_SCROLL_ERROR;

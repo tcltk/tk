@@ -58,18 +58,61 @@ $c bind all <Any-Leave> "scrollLeave $c"
 $c bind all <1> "scrollButton $c"
 bind $c <2> "$c scan mark %x %y"
 bind $c <B2-Motion> "$c scan dragto %x %y"
-bind $c <MouseWheel> {
-    %W yview scroll [expr {-((%D+60) / 120)}] units
+if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide Tk] 8.7-]} {
+    bind $c <MouseWheel> {
+	%W yview scroll [expr {-(%D)}] units
+    }
+    bind $c <Option-MouseWheel> {
+	%W yview scroll [expr {-10 * (%D)}] units
+    }
+    bind $c <Shift-MouseWheel> {
+	%W xview scroll [expr {-(%D)}] units
+    }
+    bind $c <Shift-Option-MouseWheel> {
+	%W xview scroll [expr {-10 * (%D)}] units
+    }
+} else {
+    bind $c <MouseWheel> {
+	%W yview scroll [expr {-(%D / 30)}] units
+    }
+    bind $c <Option-MouseWheel> {
+	%W yview scroll [expr {-(%D / 3)}] units
+    }
+    bind $c <Shift-MouseWheel> {
+	%W xview scroll [expr {-(%D / 30)}] units
+    }
+    bind $c <Shift-Option-MouseWheel> {
+	%W xview scroll [expr {-(%D / 3)}] units
+    }
 }
-bind $c <Option-MouseWheel> {
-    %W yview scroll [expr {-((%D+6) / 12)}] units
+
+if {[tk windowingsystem] eq "x11" && ![package vsatisfies [package provide Tk] 8.7-]} {
+    # Support for mousewheels on Linux/Unix commonly comes through mapping
+    # the wheel to the extended buttons.  If you have a mousewheel, find
+    # Linux configuration info at:
+    #	http://linuxreviews.org/howtos/xfree/mouse/
+    bind $c <4> {
+	if {!$tk_strictMotif} {
+	    %W yview scroll -5 units
+	}
+    }
+    bind $c <Shift-4> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll -5 units
+	}
+    }
+    bind $c <5> {
+	if {!$tk_strictMotif} {
+	    %W yview scroll 5 units
+	}
+    }
+    bind $c <Shift-5> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll 5 units
+	}
+    }
 }
-bind $c <Shift-MouseWheel> {
-    %W xview scroll [expr {-((%D+60) / 120)}] units
-}
-bind $c <Shift-Option-MouseWheel> {
-    %W xview scroll [expr {-((%D+6) / 12)}] units
-}
+
 
 proc scrollEnter canvas {
     global oldFill
