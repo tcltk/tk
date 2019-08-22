@@ -509,11 +509,7 @@ package require Tk 8.6
 	if {$noScroll || $::tk_strictMotif} {
 	    return
 	}
-	if {$amount > 0} {
-	    $canvas xview scroll [expr {(-119-$amount) / 120}] units
-	} else {
-	    $canvas xview scroll [expr {-($amount / 120)}] units
-	}
+	$canvas xview scroll [expr {$amount/-120.0}] units
     }
     method Btn1 {x y} {
 	focus $canvas
