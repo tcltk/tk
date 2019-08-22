@@ -1446,7 +1446,7 @@ test entry-3.72 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll gorp units
 } -cleanup {
     destroy .e
-} -returnCodes error -result {expected integer but got "gorp"}
+} -returnCodes error -result {expected floating-point number but got "gorp"}
 test entry-3.73 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e

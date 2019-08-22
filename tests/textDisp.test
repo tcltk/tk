@@ -1873,7 +1873,7 @@ test textDisp-14.11 {TkTextXviewCmd procedure} {
 } {1 {wrong # args: should be ".t xview scroll number pages|pixels|units"}}
 test textDisp-14.12 {TkTextXviewCmd procedure} {
     list [catch {.t xview scroll gorp units} msg] $msg
-} {1 {expected integer but got "gorp"}}
+} {1 {expected floating-point number but got "gorp"}}
 test textDisp-14.13 {TkTextXviewCmd procedure} {
     .t delete 1.0 end
     .t insert end xxxxxxxxx\n
@@ -2091,11 +2091,11 @@ test textDisp-16.20 {TkTextYviewCmd procedure, "scroll" option} {
     list [catch {.t yview scroll a b c} msg] $msg
 } {1 {wrong # args: should be ".t yview scroll number pages|pixels|units"}}
 test textDisp-16.21 {TkTextYviewCmd procedure, "scroll" option} {
-    list [catch {.t yview scroll badInt bogus} msg] $msg
+    list [catch {.t yview scroll bogus bogus} msg] $msg
 } {1 {bad argument "bogus": must be pages, pixels, or units}}
 test textDisp-16.21.2 {TkTextYviewCmd procedure, "scroll" option} {
-    list [catch {.t yview scroll badInt units} msg] $msg
-} {1 {expected integer but got "badInt"}}
+    list [catch {.t yview scroll bogus units} msg] $msg
+} {1 {expected floating-point number but got "bogus"}}
 test textDisp-16.22 {TkTextYviewCmd procedure, "scroll" option, back pages} {
     .t yview 50.0
     update
