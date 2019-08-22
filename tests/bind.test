@@ -6126,7 +6126,7 @@ test bind-31.7 {virtual event user_data field - unshared, asynch} -setup {
     destroy .t.f
 } -result {{} {} {TestUserData >b<}}
 
-test bind-32 {-warp, window was destroyed before the idle callback DoWarp} -setup {
+test bind-32.1 {-warp, window was destroyed before the idle callback DoWarp} -setup {
     frame .t.f
     pack .t.f
     focus -force .t.f
@@ -6138,6 +6138,46 @@ test bind-32 {-warp, window was destroyed before the idle callback DoWarp} -setu
     update  ;  # shall simply not crash
 } -cleanup {
 } -result {}
+test bind-32.2 {-warp works relatively to a window} -setup {
+    toplevel .top
+} -body {
+    # In order to avoid platform-dependent coordinate results due to
+    # decorations and borders, this test warps the pointer twice 
+    # relatively to a window that moved in the meantime, and checks
+    # how much the pointer moved
+    wm geometry .top +200+200
+    update
+    event generate .top <Motion> -x 20 -y 20 -warp 1
+    update idletasks ; # DoWarp is an idle callback
+    set pointerPos1 [winfo pointerxy .t]
+    wm geometry .top +600+600
+    update
+    event generate .top <Motion> -x 20 -y 20 -warp 1
+    update idletasks ; # DoWarp is an idle callback
+    set pointerPos2 [winfo pointerxy .t]
+    # from the first warped position to the second one, the mouse
+    # pointer should have moved the same amount as the window moved
+    set res 1
+    foreach pos1 $pointerPos1 pos2 $pointerPos2 {
+        if {$pos1 != [expr {$pos2 - 400}]} {
+            set res 0
+        }
+    }
+    set res
+} -cleanup {
+    destroy .top
+} -result {1}
+test bind-32.3 {-warp works relatively to the screen} -setup {
+} -body {
+    # Contrary to bind-32.2, we're directly checking screen coordinates
+    event generate {} <Motion> -x 20 -y 20 -warp 1
+    update idletasks ; # DoWarp is an idle callback
+    set res [winfo pointerxy .]
+    event generate {} <Motion> -x 200 -y 200 -warp 1
+    update idletasks ; # DoWarp is an idle callback
+    lappend res {*}[winfo pointerxy .]
+} -cleanup {
+} -result {20 20 200 200}
 
 
 # cleanup
