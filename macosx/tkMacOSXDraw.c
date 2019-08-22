@@ -1335,8 +1335,7 @@ XFillArc(
     return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
-/*
+#/*
  *----------------------------------------------------------------------
  *
  * XFillArcs --
@@ -1352,7 +1351,7 @@ XFillArc(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillArcs(
     Display *display,
     Drawable d,
@@ -1367,7 +1366,7 @@ XFillArcs(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1415,8 +1414,8 @@ XFillArcs(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
-#endif
 
 #ifdef TK_MACOSXDRAW_UNUSED
 /*
