@@ -943,7 +943,6 @@ XDrawRectangle(
     return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -968,7 +967,7 @@ XDrawRectangle(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawRectangles(
     Display *display,
     Drawable drawable,
@@ -982,8 +981,8 @@ XDrawRectangles(
     int i, lw = gc->line_width;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1001,8 +1000,8 @@ XDrawRectangles(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1173,7 +1172,6 @@ XDrawArc(
     return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -1254,7 +1252,6 @@ XDrawArcs(
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1335,7 +1332,7 @@ XFillArc(
     return Success;
 }
 
-#/*
+/*
  *----------------------------------------------------------------------
  *
  * XFillArcs --
@@ -1416,23 +1413,6 @@ XFillArcs(
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
 }
-
-#ifdef TK_MACOSXDRAW_UNUSED
-/*
- *----------------------------------------------------------------------
- *
- * XMaxRequestSize --
- *
- *----------------------------------------------------------------------
- */
-
-long
-XMaxRequestSize(
-    Display *display)
-{
-    return (SHRT_MAX / 4);
-}
-#endif
 
 /*
  *----------------------------------------------------------------------

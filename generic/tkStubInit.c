@@ -901,8 +901,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 128 */
     0, /* 129 */
     XFillArcs, /* 130 */
-    0, /* 131 */
-    0, /* 132 */
+    XDrawArcs, /* 131 */
+    XDrawRectangles, /* 132 */
     0, /* 133 */
     0, /* 134 */
     0, /* 135 */

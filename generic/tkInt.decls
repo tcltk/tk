@@ -1845,6 +1845,12 @@ declare 122 aqua {
 declare 130 aqua {
     int XFillArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
 }
+declare 131 aqua {
+    int XDrawArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
+}
+declare 132 aqua {
+    int XDrawRectangles(Display *d, Drawable dr, GC gc, XRectangle *r, int n)
+}
 declare 136 aqua {
     int XReparentWindow(Display *d, Window w, Window p, int x, int y)
 }
