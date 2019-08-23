@@ -1319,7 +1319,7 @@ declare 76 win {
     int XWindowEvent(Display *d, Window w, long l, XEvent *x)
 }
 declare 77 win {
-    void XDestroyIC(XIC xic)
+    void XDestroyIC(XIC x)
 }
 declare 78 win {
     Bool XFilterEvent(XEvent *x, Window w)
@@ -1519,7 +1519,6 @@ declare 142 win {
 declare 143 win {
     void XSetICFocus(XIC xic)
 }
-
 
 ################################
 # X functions for Aqua
@@ -1844,6 +1843,19 @@ declare 90 aqua {
 declare 91 aqua {
     int XSync(Display *display, Bool flag)
 }
+declare 120 aqua {
+    int XOffsetRegion(Region rgn, int dx, int dy)
+}
+declare 121 aqua {
+    int XUnionRegion(Region srca, Region srcb, Region dr_return)
+}
+declare 122 aqua {
+    Window XCreateWindow(Display *display, Window parent, int x, int y,
+	    unsigned int width, unsigned int height,
+	    unsigned int border_width, int depth, unsigned int clazz,
+	    Visual *visual, unsigned long value_mask,
+	    XSetWindowAttributes *attributes)
+}
 declare 130 aqua {
     int XFillArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
 }
@@ -1891,7 +1903,7 @@ declare 146 aqua {
 	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
 	    XColor _Xconst *x2)
 }
-
+
 # Local Variables:
 # mode: tcl
 # End:
