@@ -564,7 +564,6 @@ XDrawSegments(
 }
 #endif
 
-#if 0
 char *
 XFetchBuffer(
     Display *display,
@@ -580,7 +579,7 @@ XFetchName(
     Window w,
     char **window_name_return)
 {
-    return (Status) 0;
+    return Success;
 }
 
 Atom *
@@ -592,14 +591,16 @@ XListProperties(
     return (Atom *) 0;
 }
 
-void
+int
 XMapRaised(
     Display *display,
     Window w)
 {
+   return Success;
 }
 
-void
+#if 0
+int
 XPutImage(
     Display *display,
     Drawable d,
@@ -612,9 +613,11 @@ XPutImage(
     unsigned int width,
     unsigned int height)
 {
+    return 0;
 }
+#endif
 
-void
+int
 XQueryTextExtents(
     Display *display,
     XID font_ID,
@@ -625,9 +628,10 @@ XQueryTextExtents(
     int *font_descent_return,
     XCharStruct *overall_return)
 {
+    return Success;
 }
 
-void
+int
 XReparentWindow(
     Display *display,
     Window w,
@@ -635,32 +639,72 @@ XReparentWindow(
     int x,
     int y)
 {
+    return BadWindow;
 }
 
-void
-XRotateBuffers(
-    Display *display,
-    int rotate)
-{
-}
-
-void
-XStoreBuffer(
-    Display *display,
-    _Xconst char *bytes,
-    int nbytes,
-    int buffer)
-{
-}
-
-void
+int
 XUndefineCursor(
     Display *display,
     Window w)
 {
+    return Success;
 }
-#endif
+
+Window
+XCreateWindow(
+    Display *display,
+	Window parent,
+	int x,
+	int y,
+    unsigned int width,
+	unsigned int height,
+    unsigned int border_width,
+	int depth,
+	unsigned int clazz,
+    Visual *visual,
+	unsigned long value_mask,
+    XSetWindowAttributes *attributes)
+{
+	return 0;
+}
+
+int
+XPointInRegion(
+    Region rgn,
+	int x,
+	int y)
+{
+	return 0;
+}
+
+int
+XUnionRegion(
+    Region srca,
+	Region srcb,
+	Region dr_return)
+{
+	return 0;
+}
+
+Region
+XPolygonRegion(
+    XPoint *pts,
+	int n,
+	int rule)
+{
+    return 0;
+}
+
+int
+XOffsetRegion(
+    Region rgn,
+	int dx,
+	int dy)
+{
+	return 0;
+}
 
+
 /*
  * Local Variables:
  * mode: c
@@ -668,3 +712,4 @@ XUndefineCursor(
  * fill-column: 78
  * End:
  */
+

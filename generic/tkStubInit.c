@@ -99,11 +99,6 @@ TkCreateXEventSource(void)
 #   define TkUnixContainerId 0
 #   define TkUnixDoOneXEvent 0
 #   define TkUnixSetMenubar 0
-#   define XCreateWindow 0
-#   define XOffsetRegion 0
-#   define XUnionRegion 0
-#   define XPolygonRegion 0
-#   define XPointInRegion 0
 #   define TkWmCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkSendCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkpTestsendCmd 0
@@ -867,6 +862,54 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XQueryColors, /* 89 */
     XQueryTree, /* 90 */
     XSync, /* 91 */
+    0, /* 92 */
+    0, /* 93 */
+    0, /* 94 */
+    0, /* 95 */
+    0, /* 96 */
+    0, /* 97 */
+    0, /* 98 */
+    0, /* 99 */
+    0, /* 100 */
+    0, /* 101 */
+    0, /* 102 */
+    0, /* 103 */
+    0, /* 104 */
+    0, /* 105 */
+    0, /* 106 */
+    0, /* 107 */
+    0, /* 108 */
+    0, /* 109 */
+    0, /* 110 */
+    0, /* 111 */
+    0, /* 112 */
+    0, /* 113 */
+    0, /* 114 */
+    0, /* 115 */
+    0, /* 116 */
+    0, /* 117 */
+    0, /* 118 */
+    0, /* 119 */
+    XOffsetRegion, /* 120 */
+    XUnionRegion, /* 121 */
+    XCreateWindow, /* 122 */
+    0, /* 123 */
+    0, /* 124 */
+    0, /* 125 */
+    0, /* 126 */
+    0, /* 127 */
+    0, /* 128 */
+    0, /* 129 */
+    XFillArcs, /* 130 */
+    XDrawArcs, /* 131 */
+    XDrawRectangles, /* 132 */
+    0, /* 133 */
+    0, /* 134 */
+    0, /* 135 */
+    XReparentWindow, /* 136 */
+    XPutImage, /* 137 */
+    XPolygonRegion, /* 138 */
+    XPointInRegion, /* 139 */
 #endif /* AQUA */
 };
 
