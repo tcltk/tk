@@ -276,7 +276,7 @@ EXTERN int		XUnmapWindow(Display *d, Window w);
 /* 76 */
 EXTERN int		XWindowEvent(Display *d, Window w, long l, XEvent *x);
 /* 77 */
-EXTERN void		XDestroyIC(XIC xic);
+EXTERN void		XDestroyIC(XIC x);
 /* 78 */
 EXTERN Bool		XFilterEvent(XEvent *x, Window w);
 /* 79 */
@@ -730,9 +730,19 @@ EXTERN int		XSync(Display *display, Bool flag);
 /* Slot 117 is reserved */
 /* Slot 118 is reserved */
 /* Slot 119 is reserved */
-/* Slot 120 is reserved */
-/* Slot 121 is reserved */
-/* Slot 122 is reserved */
+/* 120 */
+EXTERN int		XOffsetRegion(Region rgn, int dx, int dy);
+/* 121 */
+EXTERN int		XUnionRegion(Region srca, Region srcb,
+				Region dr_return);
+/* 122 */
+EXTERN Window		XCreateWindow(Display *display, Window parent, int x,
+				int y, unsigned int width,
+				unsigned int height,
+				unsigned int border_width, int depth,
+				unsigned int clazz, Visual *visual,
+				unsigned long value_mask,
+				XSetWindowAttributes *attributes);
 /* Slot 123 is reserved */
 /* Slot 124 is reserved */
 /* Slot 125 is reserved */
@@ -865,7 +875,7 @@ typedef struct TkIntXlibStubs {
     int (*xUngrabPointer) (Display *d, Time t); /* 74 */
     int (*xUnmapWindow) (Display *d, Window w); /* 75 */
     int (*xWindowEvent) (Display *d, Window w, long l, XEvent *x); /* 76 */
-    void (*xDestroyIC) (XIC xic); /* 77 */
+    void (*xDestroyIC) (XIC x); /* 77 */
     Bool (*xFilterEvent) (XEvent *x, Window w); /* 78 */
     int (*xmbLookupString) (XIC xi, XKeyPressedEvent *xk, char *c, int i, KeySym *k, Status *s); /* 79 */
     int (*tkPutImage) (unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height); /* 80 */
@@ -1054,9 +1064,9 @@ typedef struct TkIntXlibStubs {
     void (*reserved117)(void);
     void (*reserved118)(void);
     void (*reserved119)(void);
-    void (*reserved120)(void);
-    void (*reserved121)(void);
-    void (*reserved122)(void);
+    int (*xOffsetRegion) (Region rgn, int dx, int dy); /* 120 */
+    int (*xUnionRegion) (Region srca, Region srcb, Region dr_return); /* 121 */
+    Window (*xCreateWindow) (Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int clazz, Visual *visual, unsigned long value_mask, XSetWindowAttributes *attributes); /* 122 */
     void (*reserved123)(void);
     void (*reserved124)(void);
     void (*reserved125)(void);
@@ -1587,9 +1597,12 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 117 is reserved */
 /* Slot 118 is reserved */
 /* Slot 119 is reserved */
-/* Slot 120 is reserved */
-/* Slot 121 is reserved */
-/* Slot 122 is reserved */
+#define XOffsetRegion \
+	(tkIntXlibStubsPtr->xOffsetRegion) /* 120 */
+#define XUnionRegion \
+	(tkIntXlibStubsPtr->xUnionRegion) /* 121 */
+#define XCreateWindow \
+	(tkIntXlibStubsPtr->xCreateWindow) /* 122 */
 /* Slot 123 is reserved */
 /* Slot 124 is reserved */
 /* Slot 125 is reserved */

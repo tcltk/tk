@@ -894,9 +894,9 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 117 */
     0, /* 118 */
     0, /* 119 */
-    0, /* 120 */
-    0, /* 121 */
-    0, /* 122 */
+    XOffsetRegion, /* 120 */
+    XUnionRegion, /* 121 */
+    XCreateWindow, /* 122 */
     0, /* 123 */
     0, /* 124 */
     0, /* 125 */
