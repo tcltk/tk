@@ -907,7 +907,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 134 */
     0, /* 135 */
     XReparentWindow, /* 136 */
-    0, /* 137 */
+    XPutImage, /* 137 */
     XPolygonRegion, /* 138 */
     XPointInRegion, /* 139 */
 #endif /* AQUA */

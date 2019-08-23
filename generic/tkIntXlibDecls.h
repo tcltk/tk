@@ -753,7 +753,10 @@ EXTERN int		XFillArcs(Display *d, Drawable dr, GC gc, XArc *a,
 /* 136 */
 EXTERN int		XReparentWindow(Display *d, Window w, Window p,
 				int x, int y);
-/* Slot 137 is reserved */
+/* 137 */
+EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+				int sx, int sy, int dx, int dy,
+				unsigned int w, unsigned int h);
 /* 138 */
 EXTERN Region		XPolygonRegion(XPoint *pts, int n, int rule);
 /* 139 */
@@ -1044,7 +1047,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved134)(void);
     void (*reserved135)(void);
     int (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
-    void (*reserved137)(void);
+    int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
     Region (*xPolygonRegion) (XPoint *pts, int n, int rule); /* 138 */
     int (*xPointInRegion) (Region rgn, int x, int y); /* 139 */
 #endif /* AQUA */
@@ -1567,7 +1570,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 135 is reserved */
 #define XReparentWindow \
 	(tkIntXlibStubsPtr->xReparentWindow) /* 136 */
-/* Slot 137 is reserved */
+#define XPutImage \
+	(tkIntXlibStubsPtr->xPutImage) /* 137 */
 #define XPolygonRegion \
 	(tkIntXlibStubsPtr->xPolygonRegion) /* 138 */
 #define XPointInRegion \

@@ -1848,13 +1848,18 @@ declare 130 aqua {
 declare 136 aqua {
     int XReparentWindow(Display *d, Window w, Window p, int x, int y)
 }
+declare 137 aqua {
+    int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+	    int sx, int sy, int dx, int dy,
+	    unsigned int w, unsigned int h)
+}
 declare 138 aqua {
     Region XPolygonRegion(XPoint *pts, int n, int rule)
 }
 declare 139 aqua {
     int XPointInRegion(Region rgn, int x, int y)
 }
-
+
 # Local Variables:
 # mode: tcl
 # End:
