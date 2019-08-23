@@ -5457,7 +5457,7 @@ test bind-25.49 {modifier names} -setup {
     destroy .t.f
 } -result <Extended-Key-Return>
 
-test bind-25.33 {modifier names} -setup {
+test bind-25.50 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
 } -body {
     bind .t.f <Button6-a> foo
@@ -5466,7 +5466,7 @@ test bind-25.33 {modifier names} -setup {
     destroy .t.f
 } -result <B6-Key-a>
 
-test bind-25.33 {modifier names} -setup {
+test bind-25.51 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
 } -body {
     bind .t.f <Button7-a> foo
@@ -5475,7 +5475,7 @@ test bind-25.33 {modifier names} -setup {
     destroy .t.f
 } -result <B7-Key-a>
 
-test bind-25.33 {modifier names} -setup {
+test bind-25.52 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
 } -body {
     bind .t.f <Button8-a> foo
@@ -5484,7 +5484,7 @@ test bind-25.33 {modifier names} -setup {
     destroy .t.f
 } -result <B8-Key-a>
 
-test bind-25.33 {modifier names} -setup {
+test bind-25.53 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
 } -body {
     bind .t.f <Button9-a> foo
