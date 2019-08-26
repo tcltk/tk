@@ -190,7 +190,7 @@ testConstraint nonUnixUserInteraction [expr {
     [testConstraint userInteraction] ||
     ([testConstraint unix] && [testConstraint notAqua])
 }]
-testConstraint haveDISPLAY [info exists env(DISPLAY)]
+testConstraint haveDISPLAY [expr {[info exists env(DISPLAY)] && [testConstraint x11]}]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {
     ![testConstraint unix] || [catch {font actual "\{xyz"}]

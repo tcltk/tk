@@ -441,7 +441,7 @@ widths:
 .PP
 .CS
 button .b \-text "Foo"
-entry .e \-variable foo
+entry .e \-textvariable foo ; set foo "Hello World!"
 label .l \-text "This is a fairly long piece of text"
 
 \fBgrid\fR .b .e .l \-sticky ew
