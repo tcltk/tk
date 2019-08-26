@@ -505,6 +505,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkWmCleanup, /* 43 */
     TkSendCleanup, /* 44 */
     TkpTestsendCmd, /* 45 */
+    TkpGetCapture, /* 46 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     TkGenerateActivateEvents, /* 0 */
