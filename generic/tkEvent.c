@@ -1209,6 +1209,14 @@ Tk_HandleEvent(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+#if !defined(MAC_OSX_TK) && !defined(_WIN32)
+    if (((eventPtr->type == ButtonPress) || (eventPtr->type == ButtonRelease))
+	    && ((eventPtr->xbutton.button - 6) < 2)) {
+	eventPtr->xbutton.button -= 2;
+	eventPtr->xbutton.state ^= ShiftMask;
+    }
+#endif
+
     UpdateButtonEventState(eventPtr);
 
     /*
