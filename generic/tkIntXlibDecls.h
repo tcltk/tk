@@ -35,6 +35,11 @@
 #undef XOffsetRegion
 #undef XUnionRegion
 
+#if defined(MAC_OSX_TK)
+#   define Cursor XCursor
+#   define Region XRegion
+#endif
+
 #ifdef BUILD_tk
 #  undef TCL_STORAGE_CLASS
 #  define TCL_STORAGE_CLASS DLLEXPORT
@@ -689,6 +694,77 @@ EXTERN Status		XQueryTree(Display *d, Window w1, Window *w2,
 				Window *w3, Window **w4, unsigned int *ui);
 /* 91 */
 EXTERN int		XSync(Display *display, Bool flag);
+/* Slot 92 is reserved */
+/* Slot 93 is reserved */
+/* Slot 94 is reserved */
+/* Slot 95 is reserved */
+/* Slot 96 is reserved */
+/* Slot 97 is reserved */
+/* Slot 98 is reserved */
+/* Slot 99 is reserved */
+/* Slot 100 is reserved */
+/* Slot 101 is reserved */
+/* Slot 102 is reserved */
+/* Slot 103 is reserved */
+/* Slot 104 is reserved */
+/* Slot 105 is reserved */
+/* Slot 106 is reserved */
+/* Slot 107 is reserved */
+/* Slot 108 is reserved */
+/* Slot 109 is reserved */
+/* Slot 110 is reserved */
+/* Slot 111 is reserved */
+/* Slot 112 is reserved */
+/* Slot 113 is reserved */
+/* Slot 114 is reserved */
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+/* 120 */
+EXTERN int		XOffsetRegion(Region rgn, int dx, int dy);
+/* 121 */
+EXTERN int		XUnionRegion(Region srca, Region srcb,
+				Region dr_return);
+/* 122 */
+EXTERN Window		XCreateWindow(Display *display, Window parent, int x,
+				int y, unsigned int width,
+				unsigned int height,
+				unsigned int border_width, int depth,
+				unsigned int clazz, Visual *visual,
+				unsigned long value_mask,
+				XSetWindowAttributes *attributes);
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+/* 130 */
+EXTERN int		XFillArcs(Display *d, Drawable dr, GC gc, XArc *a,
+				int n);
+/* 131 */
+EXTERN int		XDrawArcs(Display *d, Drawable dr, GC gc, XArc *a,
+				int n);
+/* 132 */
+EXTERN int		XDrawRectangles(Display *d, Drawable dr, GC gc,
+				XRectangle *r, int n);
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
+/* Slot 135 is reserved */
+/* 136 */
+EXTERN int		XReparentWindow(Display *d, Window w, Window p,
+				int x, int y);
+/* 137 */
+EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+				int sx, int sy, int dx, int dy,
+				unsigned int w, unsigned int h);
+/* 138 */
+EXTERN Region		XPolygonRegion(XPoint *pts, int n, int rule);
+/* 139 */
+EXTERN int		XPointInRegion(Region rgn, int x, int y);
 #endif /* AQUA */
 
 typedef struct TkIntXlibStubs {
@@ -930,6 +1006,54 @@ typedef struct TkIntXlibStubs {
     int (*xQueryColors) (Display *display, Colormap colormap, XColor *defs_in_out, int ncolors); /* 89 */
     Status (*xQueryTree) (Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui); /* 90 */
     int (*xSync) (Display *display, Bool flag); /* 91 */
+    void (*reserved92)(void);
+    void (*reserved93)(void);
+    void (*reserved94)(void);
+    void (*reserved95)(void);
+    void (*reserved96)(void);
+    void (*reserved97)(void);
+    void (*reserved98)(void);
+    void (*reserved99)(void);
+    void (*reserved100)(void);
+    void (*reserved101)(void);
+    void (*reserved102)(void);
+    void (*reserved103)(void);
+    void (*reserved104)(void);
+    void (*reserved105)(void);
+    void (*reserved106)(void);
+    void (*reserved107)(void);
+    void (*reserved108)(void);
+    void (*reserved109)(void);
+    void (*reserved110)(void);
+    void (*reserved111)(void);
+    void (*reserved112)(void);
+    void (*reserved113)(void);
+    void (*reserved114)(void);
+    void (*reserved115)(void);
+    void (*reserved116)(void);
+    void (*reserved117)(void);
+    void (*reserved118)(void);
+    void (*reserved119)(void);
+    int (*xOffsetRegion) (Region rgn, int dx, int dy); /* 120 */
+    int (*xUnionRegion) (Region srca, Region srcb, Region dr_return); /* 121 */
+    Window (*xCreateWindow) (Display *display, Window parent, int x, int y, unsigned int width, unsigned int height, unsigned int border_width, int depth, unsigned int clazz, Visual *visual, unsigned long value_mask, XSetWindowAttributes *attributes); /* 122 */
+    void (*reserved123)(void);
+    void (*reserved124)(void);
+    void (*reserved125)(void);
+    void (*reserved126)(void);
+    void (*reserved127)(void);
+    void (*reserved128)(void);
+    void (*reserved129)(void);
+    int (*xFillArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 130 */
+    int (*xDrawArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 131 */
+    int (*xDrawRectangles) (Display *d, Drawable dr, GC gc, XRectangle *r, int n); /* 132 */
+    void (*reserved133)(void);
+    void (*reserved134)(void);
+    void (*reserved135)(void);
+    int (*xReparentWindow) (Display *d, Window w, Window p, int x, int y); /* 136 */
+    int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
+    Region (*xPolygonRegion) (XPoint *pts, int n, int rule); /* 138 */
+    int (*xPointInRegion) (Region rgn, int x, int y); /* 139 */
 #endif /* AQUA */
 } TkIntXlibStubs;
 
@@ -1400,11 +1524,74 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xQueryTree) /* 90 */
 #define XSync \
 	(tkIntXlibStubsPtr->xSync) /* 91 */
+/* Slot 92 is reserved */
+/* Slot 93 is reserved */
+/* Slot 94 is reserved */
+/* Slot 95 is reserved */
+/* Slot 96 is reserved */
+/* Slot 97 is reserved */
+/* Slot 98 is reserved */
+/* Slot 99 is reserved */
+/* Slot 100 is reserved */
+/* Slot 101 is reserved */
+/* Slot 102 is reserved */
+/* Slot 103 is reserved */
+/* Slot 104 is reserved */
+/* Slot 105 is reserved */
+/* Slot 106 is reserved */
+/* Slot 107 is reserved */
+/* Slot 108 is reserved */
+/* Slot 109 is reserved */
+/* Slot 110 is reserved */
+/* Slot 111 is reserved */
+/* Slot 112 is reserved */
+/* Slot 113 is reserved */
+/* Slot 114 is reserved */
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+#define XOffsetRegion \
+	(tkIntXlibStubsPtr->xOffsetRegion) /* 120 */
+#define XUnionRegion \
+	(tkIntXlibStubsPtr->xUnionRegion) /* 121 */
+#define XCreateWindow \
+	(tkIntXlibStubsPtr->xCreateWindow) /* 122 */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+#define XFillArcs \
+	(tkIntXlibStubsPtr->xFillArcs) /* 130 */
+#define XDrawArcs \
+	(tkIntXlibStubsPtr->xDrawArcs) /* 131 */
+#define XDrawRectangles \
+	(tkIntXlibStubsPtr->xDrawRectangles) /* 132 */
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
+/* Slot 135 is reserved */
+#define XReparentWindow \
+	(tkIntXlibStubsPtr->xReparentWindow) /* 136 */
+#define XPutImage \
+	(tkIntXlibStubsPtr->xPutImage) /* 137 */
+#define XPolygonRegion \
+	(tkIntXlibStubsPtr->xPolygonRegion) /* 138 */
+#define XPointInRegion \
+	(tkIntXlibStubsPtr->xPointInRegion) /* 139 */
 #endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) */
 
 /* !END!: Do not edit above this line. */
+
+#if defined(MAC_OSX_TK)
+#   undef Cursor
+#   undef Region
+#endif
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
