@@ -1009,7 +1009,7 @@ declare 46 aqua {
     int TkpIsWindowFloating(void *window)
 }
 declare 47 aqua {
-    Tk_Window TkMacOSXGetCapture(void)
+    TkWindow *TkpGetCapture(void)
 }
 declare 49 aqua {
     Tk_Window TkGetTransientMaster(TkWindow *winPtr)
