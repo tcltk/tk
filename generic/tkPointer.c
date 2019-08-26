@@ -503,7 +503,15 @@ TkPointerDeadWindow(
 	tsdPtr->restrictWinPtr = NULL;
     }
     if (!(tsdPtr->restrictWinPtr || tsdPtr->grabWinPtr)) {
-	TkpSetCapture(NULL);
+
+        /*
+         * Release mouse capture only if the dead window is the capturing
+         * window.
+         */
+
+        if (winPtr == TkpGetCapture()) {
+	    TkpSetCapture(NULL);
+        }
     }
 }
 

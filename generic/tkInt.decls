@@ -844,6 +844,9 @@ declare 45 win {
     int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
+declare 46 win {
+    TkWindow *TkpGetCapture(void)
+}
 
 ################################
 # Aqua specific functions

@@ -544,6 +544,29 @@ TkpSetCapture(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpGetCapture --
+ *
+ *	This function requests which window is capturing the mouse.
+ *
+ * Results:
+ *	The return value is a pointer to the capture window, if there is
+ *      one, otherwise it is NULL.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+TkWindow *
+TkpGetCapture(void)
+{
+    return (TkWindow *) Tk_HWNDToWindow(GetCapture());
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
