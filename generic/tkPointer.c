@@ -509,7 +509,7 @@ TkPointerDeadWindow(
          * window.
          */
 
-        if (winPtr == TkpGetCapture()) {
+        if (winPtr == (TkWindow *)TkpGetCapture()) {
 	    TkpSetCapture(NULL);
         }
     }

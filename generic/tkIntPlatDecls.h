@@ -142,8 +142,9 @@ EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 EXTERN int		TkpTestsendCmd(ClientData clientData,
 				Tcl_Interp *interp, int objc,
 				Tcl_Obj *const objv[]);
-/* 46 */
-EXTERN TkWindow *	TkpGetCapture(void);
+/* Slot 46 is reserved */
+/* 47 */
+EXTERN Tk_Window	TkpGetCapture(void);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -242,7 +243,7 @@ EXTERN void		TkMacOSXPreprocessMenu(void);
 /* 46 */
 EXTERN int		TkpIsWindowFloating(void *window);
 /* 47 */
-EXTERN TkWindow *	TkpGetCapture(void);
+EXTERN Tk_Window	TkMacOSXGetCapture(void);
 /* Slot 48 is reserved */
 /* 49 */
 EXTERN Tk_Window	TkGetTransientMaster(TkWindow *winPtr);
@@ -343,7 +344,8 @@ typedef struct TkIntPlatStubs {
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
     int (*tkpTestsendCmd) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
-    TkWindow * (*tkpGetCapture) (void); /* 46 */
+    void (*reserved46)(void);
+    Tk_Window (*tkpGetCapture) (void); /* 47 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 0 */
@@ -393,7 +395,7 @@ typedef struct TkIntPlatStubs {
     MacDrawable * (*tkMacOSXGetHostToplevel) (TkWindow *winPtr); /* 44 */
     void (*tkMacOSXPreprocessMenu) (void); /* 45 */
     int (*tkpIsWindowFloating) (void *window); /* 46 */
-    TkWindow * (*tkpGetCapture) (void); /* 47 */
+    Tk_Window (*tkMacOSXGetCapture) (void); /* 47 */
     void (*reserved48)(void);
     Tk_Window (*tkGetTransientMaster) (TkWindow *winPtr); /* 49 */
     int (*tkGenerateButtonEvent) (int x, int y, Window window, unsigned int state); /* 50 */
@@ -525,8 +527,9 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkSendCleanup) /* 44 */
 #define TkpTestsendCmd \
 	(tkIntPlatStubsPtr->tkpTestsendCmd) /* 45 */
+/* Slot 46 is reserved */
 #define TkpGetCapture \
-	(tkIntPlatStubsPtr->tkpGetCapture) /* 46 */
+	(tkIntPlatStubsPtr->tkpGetCapture) /* 47 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define TkGenerateActivateEvents \
@@ -616,8 +619,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkMacOSXPreprocessMenu) /* 45 */
 #define TkpIsWindowFloating \
 	(tkIntPlatStubsPtr->tkpIsWindowFloating) /* 46 */
-#define TkpGetCapture \
-	(tkIntPlatStubsPtr->tkpGetCapture) /* 47 */
+#define TkMacOSXGetCapture \
+	(tkIntPlatStubsPtr->tkMacOSXGetCapture) /* 47 */
 /* Slot 48 is reserved */
 #define TkGetTransientMaster \
 	(tkIntPlatStubsPtr->tkGetTransientMaster) /* 49 */

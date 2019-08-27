@@ -127,6 +127,7 @@
 #define TkSetPixmapColormap(p,c) {}
 #define TkpSync(display)
 
+#define TkpGetCapture TkMacOSXGetCapture
 /*
  * This macro stores a representation of the window handle in a string.
  */
