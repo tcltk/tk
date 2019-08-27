@@ -28,6 +28,13 @@ static char tkLibPath[PATH_MAX + 1] = "";
 
 static char scriptPath[PATH_MAX + 1] = "";
 
+/*
+ * Forward declarations...
+ */
+
+static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
+			    int objc, Tcl_Obj *const objv[]);
+
 #pragma mark TKApplication(TKInit)
 
 @implementation TKApplication
@@ -388,7 +395,8 @@ TkpInit(
 	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
+	    TkMacOSXGetAppPathCmd, NULL, NULL);
 
     /*
      * Initialize the NSServices object here. Apple's docs say to do this
@@ -437,11 +445,11 @@ TkpGetAppName(
     }
     Tcl_DStringAppend(namePtr, name, -1);
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetAppPath --
+ * TkMacOSXGetAppPathCmd --
  *
  *	Returns the path of the Wish application bundle.
  *
@@ -453,42 +461,39 @@ TkpGetAppName(
  *
  *----------------------------------------------------------------------
  */
-int TkMacOSXGetAppPath(
-		       ClientData cd,
-		       Tcl_Interp *ip,
-		       int objc,
-		       Tcl_Obj *const objv[])
+
+static int
+TkMacOSXGetAppPathCmd(
+    ClientData ignored,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
 
-  CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    /*
+     * Get the application path URL and convert it to a string path reference.
+     */
 
+    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFStringRef appPath =
+	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
 
-  /*
-   * Convert the URL reference into a string reference.
-   */
+    /*
+     * Convert (and copy) the string reference into a Tcl result.
+     */
 
-  CFStringRef appPath = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
 
-  /*
-   * Get the system encoding method.
-   */
-
-  CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
-
-  /*
-   * Convert the string reference into a C string.
-   */
-
-  char *path = (char *) CFStringGetCStringPtr(appPath, encodingMethod);
-
-  Tcl_SetResult(ip, path, NULL);
-
-  CFRelease(mainBundleURL);
-  CFRelease(appPath);
-  return TCL_OK;
-
+    CFRelease(mainBundleURL);
+    CFRelease(appPath);
+    return TCL_OK;
 }
-
+
 /*
  *----------------------------------------------------------------------
  *
@@ -555,7 +560,7 @@ TkMacOSXDefaultStartupScript(void)
 	    CFURLRef scriptFldrURL;
 	    char startupScript[PATH_MAX + 1];
 
-	    if (CFURLGetFileSystemRepresentation (appMainURL, true,
+	    if (CFURLGetFileSystemRepresentation(appMainURL, true,
 		    (unsigned char *) startupScript, PATH_MAX)) {
 		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript,-1), NULL);
 		scriptFldrURL = CFURLCreateCopyDeletingLastPathComponent(NULL,

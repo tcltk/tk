@@ -322,7 +322,7 @@ test canvImg-6.9 {ComputeImageBbox procedure} -constraints testImageType -setup 
     imageCleanup
 } -result {5 15 35 30}
 test canvImg-6.10 {ComputeImageBbox procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     image create test foo
     .c delete all
@@ -335,7 +335,7 @@ test canvImg-6.10 {ComputeImageBbox procedure} -constraints {
     image delete foo
 } -result {20 15 50 30}
 test canvImg-6.11 {ComputeImageBbox procedure} -constraints {
-    testImageType 
+    testImageType
 } -setup {
     image create test foo
     .c delete all
@@ -348,7 +348,7 @@ test canvImg-6.11 {ComputeImageBbox procedure} -constraints {
     image delete foo
 } -result {20 23 50 38}
 test canvImg-6.12 {ComputeImageBbox procedure} -constraints {
-	testImageType 
+	testImageType
 } -setup {
     image create test foo
     .c delete all
@@ -731,7 +731,7 @@ if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
     # Aqua >= 10.14 will redraw the entire image.
     set result_10_1 {{foo display 0 0 30 15}}
 } else {
-    set result_10_1 {{foo display 2 4 6 8}} 
+    set result_10_1 {{foo display 2 4 6 8}}
 }
 test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
@@ -765,7 +765,7 @@ test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
 	image delete foo
 } -result {{foo display 0 0 40 50}}
 test canvImg-11.2 {ImageChangedProc procedure} -constraints {
-	testImageType 
+	testImageType
 } -setup {
     .c delete all
 } -body {
@@ -783,10 +783,10 @@ if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
     # Aqua >= 10.14 will redraw the entire image.
     set result_11_3 {{foo2 display 0 0 80 60}}
 } else {
-    set result_11_3 {{foo2 display 0 0 20 40}} 
+    set result_11_3 {{foo2 display 0 0 20 40}}
 }
 test canvImg-11.3 {ImageChangedProc procedure} -constraints {
-	testImageType 
+	testImageType
 } -setup {
     .c delete all
     update

@@ -4,8 +4,7 @@
  * Ttk package: initialization routine and miscellaneous utilities.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -62,7 +61,7 @@ int Ttk_GetOrientFromObj(
  * Recognized values for the -state compatibility option.
  * Other options are accepted and interpreted as synonyms for "normal".
  */
-static const char *ttkStateStrings[] = {
+static const char *const ttkStateStrings[] = {
     "normal", "readonly", "disabled", "active", NULL
 };
 enum {
@@ -179,11 +178,11 @@ int TtkGetOptionValue(
 Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
-	Tk_Offset(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
+	offsetof(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-style", "style", "Style", "",
-	Tk_Offset(WidgetCore,styleObj), -1, 0,0,STYLE_CHANGED},
+	offsetof(WidgetCore,styleObj), -1, 0,0,STYLE_CHANGED},
     {TK_OPTION_STRING, "-class", "", "", NULL,
-	Tk_Offset(WidgetCore,classObj), -1, 0,0,READONLY_OPTION},
+	offsetof(WidgetCore,classObj), -1, 0,0,READONLY_OPTION},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 

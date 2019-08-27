@@ -6,8 +6,7 @@
  * TODO: track active/pressed sash.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkManager.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
@@ -77,13 +76,13 @@ typedef struct {
  */
 static Tk_OptionSpec PanedOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
-	Tk_Offset(Paned,paned.orientObj), Tk_Offset(Paned,paned.orient),
+	offsetof(Paned,paned.orientObj), offsetof(Paned,paned.orient),
 	0,(ClientData)ttkOrientStrings,READONLY_OPTION|STYLE_CHANGED },
     {TK_OPTION_INT, "-width", "width", "Width", "0",
-	-1,Tk_Offset(Paned,paned.width),
+	-1, offsetof(Paned,paned.width),
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-height", "height", "Height", "0",
-	-1,Tk_Offset(Paned,paned.height),
+	-1, offsetof(Paned,paned.height),
 	0,0,GEOMETRY_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -101,7 +100,7 @@ typedef struct {
 
 static Tk_OptionSpec PaneOptionSpecs[] = {
     {TK_OPTION_INT, "-weight", "weight", "Weight", "0",
-	-1,Tk_Offset(Pane,weight), 0,0,GEOMETRY_CHANGED },
+	-1, offsetof(Pane,weight), 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, 0,0,0, NULL, -1,-1, 0,0,0}
 };
 
@@ -148,7 +147,7 @@ static int ConfigurePane(
     Tk_SavedOptions savedOptions;
     int mask = 0;
 
-    if (Tk_SetOptions(interp, (void*)pane, pw->paned.paneOptionTable,
+    if (Tk_SetOptions(interp, pane, pw->paned.paneOptionTable,
 	    objc, objv, slaveWindow, &savedOptions, &mask) != TCL_OK)
     {
 	return TCL_ERROR;
@@ -715,7 +714,7 @@ static int PanedForgetCommand(
 static int PanedIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    static const char *whatTable[] = { "element", "sash", NULL };
+    static const char *const whatTable[] = { "element", "sash", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_SASH };
     int what = IDENTIFY_SASH;
     Paned *pw = recordPtr;
@@ -923,7 +922,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec SashElementOptions[] = {
     { "-sashthickness", TK_OPTION_INT,
-	    Tk_Offset(SashElement,thicknessObj), "5" },
+	    offsetof(SashElement,thicknessObj), "5" },
     { NULL, 0, 0, NULL }
 };
 

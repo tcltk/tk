@@ -110,7 +110,7 @@ TkpGetString(
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
 {
-    int len;
+    TkSizeT len;
     Tcl_DString buf;
     TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 
@@ -121,7 +121,7 @@ TkpGetString(
     if (kePtr->charValuePtr != NULL) {
 	Tcl_DStringSetLength(dsPtr, kePtr->charValueLen);
 	memcpy(Tcl_DStringValue(dsPtr), kePtr->charValuePtr,
-		(unsigned) kePtr->charValueLen+1);
+		kePtr->charValueLen+1);
 	return Tcl_DStringValue(dsPtr);
     }
 
@@ -231,7 +231,7 @@ TkpGetString(
 done:
     kePtr->charValuePtr = ckalloc(len + 1);
     kePtr->charValueLen = len;
-    memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), (unsigned) len + 1);
+    memcpy(kePtr->charValuePtr, Tcl_DStringValue(dsPtr), len + 1);
     return Tcl_DStringValue(dsPtr);
 }
 

@@ -60,62 +60,62 @@ static const Tk_CustomOption pixelOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-activedash", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, outline.activeDash),
+	NULL, offsetof(RectOvalItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, activeFillColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(RectOvalItem, activeFillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-activeoutline", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(RectOvalItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activeoutlinestipple", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, outline.activeStipple),
+	NULL, offsetof(RectOvalItem, outline.activeStipple),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, activeFillStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(RectOvalItem, activeFillStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-activewidth", NULL, NULL,
-	"0.0", Tk_Offset(RectOvalItem, outline.activeWidth),
+	"0.0", offsetof(RectOvalItem, outline.activeWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, outline.dash),
+	NULL, offsetof(RectOvalItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", Tk_Offset(RectOvalItem, outline.offset),
+	"0", offsetof(RectOvalItem, outline.offset),
 	TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, outline.disabledDash),
+	NULL, offsetof(RectOvalItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, disabledFillColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(RectOvalItem, disabledFillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-disabledoutline", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, outline.disabledColor),
+	NULL, offsetof(RectOvalItem, outline.disabledColor),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledoutlinestipple", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, outline.disabledStipple),
+	NULL, offsetof(RectOvalItem, outline.disabledStipple),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, disabledFillStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(RectOvalItem, disabledFillStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-disabledwidth", NULL, NULL,
-	"0.0", Tk_Offset(RectOvalItem, outline.disabledWidth),
+	"0.0", offsetof(RectOvalItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, fillColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(RectOvalItem, fillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
-	"0,0", Tk_Offset(RectOvalItem, tsoffset),
+	"0,0", offsetof(RectOvalItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_COLOR, "-outline", NULL, NULL,
-	"black", Tk_Offset(RectOvalItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+	"black", offsetof(RectOvalItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-outlineoffset", NULL, NULL,
-	"0,0", Tk_Offset(RectOvalItem, outline.tsoffset),
+	"0,0", offsetof(RectOvalItem, outline.tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_BITMAP, "-outlinestipple", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(RectOvalItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state),TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state),TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(RectOvalItem, fillStipple),TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(RectOvalItem, fillStipple),TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_CUSTOM, "-width", NULL, NULL,
-	"1.0", Tk_Offset(RectOvalItem, outline.width),
+	"1.0", offsetof(RectOvalItem, outline.width),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
@@ -148,6 +148,8 @@ static int		RectToArea(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double *areaPtr);
 static double		RectToPoint(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double *pointPtr);
+static void		RotateRectOval(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleRectOval(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double originX, double originY,
 			    double scaleX, double scaleY);
@@ -180,7 +182,8 @@ Tk_ItemType tkRectangleType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateRectOval,		/* rotateProc */
+    0, NULL, NULL
 };
 
 Tk_ItemType tkOvalType = {
@@ -204,7 +207,8 @@ Tk_ItemType tkOvalType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateRectOval,		/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -1280,6 +1284,57 @@ OvalToArea(
 	}
     }
     return result;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateRectOval --
+ *
+ *	This function is invoked to rotate a rectangle or oval item's
+ *	coordinates. It works by rotating a computed point in the centre of
+ *	the bounding box, NOT by rotating the corners of the bounding box.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the rectangle or oval is rotated by angleRad about
+ *	(originX, originY), and the bounding box is updated in the generic
+ *	part of the item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateRectOval(
+    Tk_Canvas canvas,		/* Canvas containing rectangle. */
+    Tk_Item *itemPtr,		/* Rectangle to be scaled. */
+    double originX, double originY,
+				/* Origin about which to rotate rect. */
+    double angleRad)		/* Amount to scale in X direction. */
+{
+    RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
+    double newX, newY, oldX, oldY;
+
+    /*
+     * Compute the centre of the box, then rotate that about the origin.
+     */
+
+    newX = oldX = (rectOvalPtr->bbox[0] + rectOvalPtr->bbox[2]) / 2.0;
+    newY = oldY = (rectOvalPtr->bbox[1] + rectOvalPtr->bbox[3]) / 2.0;
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &newX, &newY);
+
+    /*
+     * Apply the translation to the box.
+     */
+
+    rectOvalPtr->bbox[0] += newX - oldX;
+    rectOvalPtr->bbox[1] += newY - oldY;
+    rectOvalPtr->bbox[2] += newX - oldX;
+    rectOvalPtr->bbox[3] += newY - oldY;
+    ComputeRectOvalBbox(canvas, rectOvalPtr);
 }
 
 /*

@@ -1256,8 +1256,8 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 		NSStrikethroughStyleAttributeName];
 
 	objv[i++] = Tcl_NewStringObj(familyName, -1);
-	objv[i++] = Tcl_NewIntObj([nsFont pointSize]);
-#define S(s)    Tcl_NewStringObj(STRINGIFY(s),(int)(sizeof(STRINGIFY(s))-1))
+	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize]);
+#define S(s)    Tcl_NewStringObj(STRINGIFY(s), (int)(sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);
 	if ([underline respondsToSelector:@selector(intValue)] &&

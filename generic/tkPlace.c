@@ -82,29 +82,29 @@ typedef struct Slave {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", -1,
-	 Tk_Offset(Slave, anchor), 0, 0, 0},
+	 offsetof(Slave, anchor), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", -1,
-	 Tk_Offset(Slave, borderMode), 0, borderModeStrings, 0},
-    {TK_OPTION_PIXELS, "-height", NULL, NULL, "", Tk_Offset(Slave, heightPtr),
-	 Tk_Offset(Slave, height), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_WINDOW, "-in", NULL, NULL, "", -1, Tk_Offset(Slave, inTkwin),
+	 offsetof(Slave, borderMode), 0, borderModeStrings, 0},
+    {TK_OPTION_PIXELS, "-height", NULL, NULL, "", offsetof(Slave, heightPtr),
+	 offsetof(Slave, height), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_WINDOW, "-in", NULL, NULL, "", -1, offsetof(Slave, inTkwin),
 	 0, 0, IN_MASK},
     {TK_OPTION_DOUBLE, "-relheight", NULL, NULL, "",
-	 Tk_Offset(Slave, relHeightPtr), Tk_Offset(Slave, relHeight),
+	 offsetof(Slave, relHeightPtr), offsetof(Slave, relHeight),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-relwidth", NULL, NULL, "",
-	 Tk_Offset(Slave, relWidthPtr), Tk_Offset(Slave, relWidth),
+	 offsetof(Slave, relWidthPtr), offsetof(Slave, relWidth),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-relx", NULL, NULL, "0", -1,
-	 Tk_Offset(Slave, relX), 0, 0, 0},
+	 offsetof(Slave, relX), 0, 0, 0},
     {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0", -1,
-	 Tk_Offset(Slave, relY), 0, 0, 0},
-    {TK_OPTION_PIXELS, "-width", NULL, NULL, "", Tk_Offset(Slave, widthPtr),
-	 Tk_Offset(Slave, width), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", Tk_Offset(Slave, xPtr),
-	 Tk_Offset(Slave, x), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", Tk_Offset(Slave, yPtr),
-	 Tk_Offset(Slave, y), TK_OPTION_NULL_OK, 0, 0},
+	 offsetof(Slave, relY), 0, 0, 0},
+    {TK_OPTION_PIXELS, "-width", NULL, NULL, "", offsetof(Slave, widthPtr),
+	 offsetof(Slave, width), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", offsetof(Slave, xPtr),
+	 offsetof(Slave, x), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Slave, yPtr),
+	 offsetof(Slave, y), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
 };
 
@@ -290,7 +290,7 @@ Tk_PlaceObjCmd(
 	    if (slavePtr == NULL) {
 		return TCL_OK;
 	    }
-	    objPtr = Tk_GetOptionInfo(interp, (char *) slavePtr, optionTable,
+	    objPtr = Tk_GetOptionInfo(interp, slavePtr, optionTable,
 		    (objc == 4) ? objv[3] : NULL, tkwin);
 	    if (objPtr == NULL) {
 		return TCL_ERROR;
@@ -315,7 +315,7 @@ Tk_PlaceObjCmd(
 	}
 	UnlinkSlave(slavePtr);
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
-		(char *) tkwin));
+		tkwin));
 	Tk_DeleteEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
 		slavePtr);
 	Tk_ManageGeometry(tkwin, NULL, NULL);
@@ -455,7 +455,7 @@ FindSlave(
     register Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_FindHashEntry(&dispPtr->slaveTable, (char *) tkwin);
+    hPtr = Tcl_FindHashEntry(&dispPtr->slaveTable, tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
@@ -578,7 +578,7 @@ FindMaster(
     register Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    hPtr = Tcl_FindHashEntry(&dispPtr->masterTable, (char *) tkwin);
+    hPtr = Tcl_FindHashEntry(&dispPtr->masterTable, tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
@@ -629,7 +629,7 @@ ConfigureSlave(
 
     slavePtr = CreateSlave(tkwin, table);
 
-    if (Tk_SetOptions(interp, (char *) slavePtr, table, objc, objv,
+    if (Tk_SetOptions(interp, slavePtr, table, objc, objv,
 	    slavePtr->tkwin, &savedOptions, &mask) != TCL_OK) {
 	goto error;
     }
@@ -1104,7 +1104,7 @@ MasterStructureProc(
 	    slavePtr->nextPtr = NULL;
 	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->masterTable,
-		(char *) masterPtr->tkwin));
+		masterPtr->tkwin));
 	if (masterPtr->flags & PARENT_RECONFIG_PENDING) {
 	    Tcl_CancelIdleCall(RecomputePlacement, masterPtr);
 	}
@@ -1171,7 +1171,7 @@ SlaveStructureProc(
 	    UnlinkSlave(slavePtr);
 	}
 	Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
-		(char *) slavePtr->tkwin));
+		slavePtr->tkwin));
 	FreeSlave(slavePtr);
     }
 }
@@ -1256,7 +1256,7 @@ PlaceLostSlaveProc(
     Tk_UnmapWindow(tkwin);
     UnlinkSlave(slavePtr);
     Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->slaveTable,
-	    (char *) tkwin));
+	    tkwin));
     Tk_DeleteEventHandler(tkwin, StructureNotifyMask, SlaveStructureProc,
 	    slavePtr);
     FreeSlave(slavePtr);

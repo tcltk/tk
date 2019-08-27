@@ -668,7 +668,7 @@ Tk_GetScrollInfo(
 	if (argc != 5) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
-		    argv[0], argv[1], "scroll number units|pages"));
+		    argv[0], argv[1], "scroll number pages|units"));
 	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	    return TK_SCROLL_ERROR;
 	}
@@ -684,7 +684,7 @@ Tk_GetScrollInfo(
 	}
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad argument \"%s\": must be units or pages", argv[4]));
+		"bad argument \"%s\": must be pages or units", argv[4]));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
 	return TK_SCROLL_ERROR;
     }
@@ -729,8 +729,8 @@ Tk_GetScrollInfoObj(
     int *intPtr)		/* Filled in with number of pages or lines to
 				 * scroll, if any. */
 {
-    const char *arg = Tcl_GetString(objv[2]);
-    size_t length = objv[2]->length;
+    TkSizeT length;
+    const char *arg = TkGetStringFromObj(objv[2], &length);
 
 #define ArgPfxEq(str) \
 	((arg[0] == str[0]) && !strncmp(arg, str, length))
@@ -746,15 +746,14 @@ Tk_GetScrollInfoObj(
 	return TK_SCROLL_MOVETO;
     } else if (ArgPfxEq("scroll")) {
 	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number units|pages");
+	    Tcl_WrongNumArgs(interp, 2, objv, "scroll number pages|units");
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, objv[3], intPtr) != TCL_OK) {
 	    return TK_SCROLL_ERROR;
 	}
 
-	arg = Tcl_GetString(objv[4]);
-	length = objv[4]->length;
+	arg = TkGetStringFromObj(objv[4], &length);
 	if (ArgPfxEq("pages")) {
 	    return TK_SCROLL_PAGES;
 	} else if (ArgPfxEq("units")) {
@@ -762,7 +761,7 @@ Tk_GetScrollInfoObj(
 	}
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad argument \"%s\": must be units or pages", arg));
+		"bad argument \"%s\": must be pages or units", arg));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
 	return TK_SCROLL_ERROR;
     }
@@ -1187,7 +1186,7 @@ TkSendVirtualEvent(
     event.general.xany.display = Tk_Display(target);
     event.virtual.name = Tk_GetUid(eventName);
     if (detail != NULL) {
-        event.virtual.user_data = detail;
+	event.virtual.user_data = detail;
     }
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
@@ -1213,7 +1212,7 @@ TkSendVirtualEvent(
  *---------------------------------------------------------------------------
  */
 
-int
+size_t
 TkUtfToUniChar(
     const char *src,	/* The UTF-8 string. */
     int *chPtr)		/* Filled with the Tcl_UniChar represented by
@@ -1221,12 +1220,12 @@ TkUtfToUniChar(
 {
     Tcl_UniChar uniChar = 0;
 
-    int len = Tcl_UtfToUniChar(src, &uniChar);
+    size_t len = Tcl_UtfToUniChar(src, &uniChar);
     if ((uniChar & 0xfc00) == 0xd800) {
 	Tcl_UniChar high = uniChar;
 	/* This can only happen if Tcl is compiled with TCL_UTF_MAX=4,
 	 * or when a high surrogate character is detected in UTF-8 form */
-	int len2 = Tcl_UtfToUniChar(src+len, &uniChar);
+	size_t len2 = Tcl_UtfToUniChar(src+len, &uniChar);
 	if ((uniChar & 0xfc00) == 0xdc00) {
 	    *chPtr = (((high & 0x3ff) << 10) | (uniChar & 0x3ff)) + 0x10000;
 	    len += len2;
@@ -1257,9 +1256,9 @@ TkUtfToUniChar(
  *---------------------------------------------------------------------------
  */
 
-int TkUniCharToUtf(int ch, char *buf)
+size_t TkUniCharToUtf(int ch, char *buf)
 {
-    int size = Tcl_UniCharToUtf(ch, buf);
+    size_t size = Tcl_UniCharToUtf(ch, buf);
     if ((((unsigned)(ch - 0x10000) <= 0xFFFFF)) && (size < 4)) {
 	/* Hey, this is wrong, we must be running TCL_UTF_MAX==3
 	 * The best thing we can do is spit out 2 surrogates */
@@ -1272,6 +1271,19 @@ int TkUniCharToUtf(int ch, char *buf)
 
 
 #endif
+
+#if TCL_MAJOR_VERSION > 8
+unsigned char *
+TkGetByteArrayFromObj(
+	Tcl_Obj *objPtr,
+	size_t *lengthPtr
+) {
+    unsigned char *result = Tcl_GetByteArrayFromObj(objPtr, NULL);
+    *lengthPtr = *(size_t *) objPtr->internalRep.twoPtrValue.ptr1;
+    return result;
+}
+#endif /* TCL_MAJOR_VERSION > 8 */
+
 /*
  * Local Variables:
  * mode: c

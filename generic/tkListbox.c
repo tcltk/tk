@@ -12,8 +12,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -239,78 +239,78 @@ static const char *const activeStyleStrings[] = {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-activestyle", "activeStyle", "ActiveStyle",
-	DEF_LISTBOX_ACTIVE_STYLE, -1, Tk_Offset(Listbox, activeStyle),
+	DEF_LISTBOX_ACTIVE_STYLE, -1, offsetof(Listbox, activeStyle),
 	0, activeStyleStrings, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	 DEF_LISTBOX_BG_COLOR, -1, Tk_Offset(Listbox, normalBorder),
+	 DEF_LISTBOX_BG_COLOR, -1, offsetof(Listbox, normalBorder),
 	 0, DEF_LISTBOX_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	 NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	 NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	 DEF_LISTBOX_BORDER_WIDTH, -1, Tk_Offset(Listbox, borderWidth),
+	 DEF_LISTBOX_BORDER_WIDTH, -1, offsetof(Listbox, borderWidth),
 	 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	 DEF_LISTBOX_CURSOR, -1, Tk_Offset(Listbox, cursor),
+	 DEF_LISTBOX_CURSOR, -1, offsetof(Listbox, cursor),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	 "DisabledForeground", DEF_LISTBOX_DISABLED_FG, -1,
-	 Tk_Offset(Listbox, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
+	 offsetof(Listbox, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
 	 "ExportSelection", DEF_LISTBOX_EXPORT_SELECTION, -1,
-	 Tk_Offset(Listbox, exportSelection), 0, 0, 0},
+	 offsetof(Listbox, exportSelection), 0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	 NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	 DEF_LISTBOX_FONT, -1, Tk_Offset(Listbox, tkfont), 0, 0, 0},
+	 DEF_LISTBOX_FONT, -1, offsetof(Listbox, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	 DEF_LISTBOX_FG, -1, Tk_Offset(Listbox, fgColorPtr), 0, 0, 0},
+	 DEF_LISTBOX_FG, -1, offsetof(Listbox, fgColorPtr), 0, 0, 0},
     {TK_OPTION_INT, "-height", "height", "Height",
-	 DEF_LISTBOX_HEIGHT, -1, Tk_Offset(Listbox, height), 0, 0, 0},
+	 DEF_LISTBOX_HEIGHT, -1, offsetof(Listbox, height), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	 "HighlightBackground", DEF_LISTBOX_HIGHLIGHT_BG, -1,
-	 Tk_Offset(Listbox, highlightBgColorPtr), 0, 0, 0},
+	 offsetof(Listbox, highlightBgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	 DEF_LISTBOX_HIGHLIGHT, -1, Tk_Offset(Listbox, highlightColorPtr),
+	 DEF_LISTBOX_HIGHLIGHT, -1, offsetof(Listbox, highlightColorPtr),
 	 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	 "HighlightThickness", DEF_LISTBOX_HIGHLIGHT_WIDTH, -1,
-	 Tk_Offset(Listbox, highlightWidth), 0, 0, 0},
+	 offsetof(Listbox, highlightWidth), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_LISTBOX_JUSTIFY, -1, Tk_Offset(Listbox, justify), 0, 0, 0},
+	DEF_LISTBOX_JUSTIFY, -1, offsetof(Listbox, justify), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	 DEF_LISTBOX_RELIEF, -1, Tk_Offset(Listbox, relief), 0, 0, 0},
+	 DEF_LISTBOX_RELIEF, -1, offsetof(Listbox, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
-	 DEF_LISTBOX_SELECT_COLOR, -1, Tk_Offset(Listbox, selBorder),
+	 DEF_LISTBOX_SELECT_COLOR, -1, offsetof(Listbox, selBorder),
 	 0, DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	 "BorderWidth", DEF_LISTBOX_SELECT_BD, -1,
-	 Tk_Offset(Listbox, selBorderWidth), 0, 0, 0},
+	 offsetof(Listbox, selBorderWidth), 0, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
-	 DEF_LISTBOX_SELECT_FG_COLOR, -1, Tk_Offset(Listbox, selFgColorPtr),
+	 DEF_LISTBOX_SELECT_FG_COLOR, -1, offsetof(Listbox, selFgColorPtr),
 	 TK_OPTION_NULL_OK, DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_STRING, "-selectmode", "selectMode", "SelectMode",
-	 DEF_LISTBOX_SELECT_MODE, -1, Tk_Offset(Listbox, selectMode),
+	 DEF_LISTBOX_SELECT_MODE, -1, offsetof(Listbox, selectMode),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
-	 DEF_LISTBOX_SET_GRID, -1, Tk_Offset(Listbox, setGrid), 0, 0, 0},
+	 DEF_LISTBOX_SET_GRID, -1, offsetof(Listbox, setGrid), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
-	DEF_LISTBOX_STATE, -1, Tk_Offset(Listbox, state),
+	DEF_LISTBOX_STATE, -1, offsetof(Listbox, state),
 	0, stateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	 DEF_LISTBOX_TAKE_FOCUS, -1, Tk_Offset(Listbox, takeFocus),
+	 DEF_LISTBOX_TAKE_FOCUS, -1, offsetof(Listbox, takeFocus),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_INT, "-width", "width", "Width",
-	 DEF_LISTBOX_WIDTH, -1, Tk_Offset(Listbox, width), 0, 0, 0},
+	 DEF_LISTBOX_WIDTH, -1, offsetof(Listbox, width), 0, 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	 DEF_LISTBOX_SCROLL_COMMAND, -1, Tk_Offset(Listbox, xScrollCmd),
+	 DEF_LISTBOX_SCROLL_COMMAND, -1, offsetof(Listbox, xScrollCmd),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
-	 DEF_LISTBOX_SCROLL_COMMAND, -1, Tk_Offset(Listbox, yScrollCmd),
+	 DEF_LISTBOX_SCROLL_COMMAND, -1, offsetof(Listbox, yScrollCmd),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-listvariable", "listVariable", "Variable",
-	 DEF_LISTBOX_LIST_VARIABLE, -1, Tk_Offset(Listbox, listVarName),
+	 DEF_LISTBOX_LIST_VARIABLE, -1, offsetof(Listbox, listVarName),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
 };
@@ -322,7 +322,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 static const Tk_OptionSpec itemAttrOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
-     NULL, -1, Tk_Offset(ItemAttr, border),
+     NULL, -1, offsetof(ItemAttr, border),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      DEF_LISTBOX_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
@@ -330,14 +330,14 @@ static const Tk_OptionSpec itemAttrOptionSpecs[] = {
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
      NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-     NULL, -1, Tk_Offset(ItemAttr, fgColor),
+     NULL, -1, offsetof(ItemAttr, fgColor),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
-     NULL, -1, Tk_Offset(ItemAttr, selBorder),
+     NULL, -1, offsetof(ItemAttr, selBorder),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
-     NULL, -1, Tk_Offset(ItemAttr, selFgColor),
+     NULL, -1, offsetof(ItemAttr, selFgColor),
      TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
      DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
@@ -567,7 +567,7 @@ Tk_ListboxObjCmd(
 	    ListboxEventProc, listPtr);
     Tk_CreateSelHandler(listPtr->tkwin, XA_PRIMARY, XA_STRING,
 	    ListboxFetchSelection, listPtr, XA_STRING);
-    if (Tk_InitOptions(interp, (char *)listPtr,
+    if (Tk_InitOptions(interp, listPtr,
 	    optionTables->listboxOptionTable, tkwin) != TCL_OK) {
 	Tk_DestroyWindow(listPtr->tkwin);
 	return TCL_ERROR;
@@ -682,7 +682,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 
-	objPtr = Tk_GetOptionValue(interp, (char *) listPtr,
+	objPtr = Tk_GetOptionValue(interp, listPtr,
 		listPtr->optionTable, objv[2], listPtr->tkwin);
 	if (objPtr == NULL) {
 	    result = TCL_ERROR;
@@ -694,7 +694,7 @@ ListboxWidgetObjCmd(
 
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) listPtr,
+	    objPtr = Tk_GetOptionInfo(interp, listPtr,
 		    listPtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL, listPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -728,7 +728,7 @@ ListboxWidgetObjCmd(
 	objPtr = Tcl_NewObj();
 	for (i = 0; i < listPtr->nElements; i++) {
 	    if (Tcl_FindHashEntry(listPtr->selection, KEY(i))) {
-		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewIntObj(i));
+		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewWideIntObj(i));
 	    }
 	}
 	Tcl_SetObjResult(interp, objPtr);
@@ -841,7 +841,7 @@ ListboxWidgetObjCmd(
 	if (result != TCL_OK) {
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	result = TCL_OK;
 	break;
 
@@ -926,7 +926,7 @@ ListboxWidgetObjCmd(
 
 	attrPtr = ListboxGetItemAttributes(interp, listPtr, index);
 	if (objc <= 4) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) attrPtr,
+	    objPtr = Tk_GetOptionInfo(interp, attrPtr,
 		    listPtr->itemAttrOptionTable,
 		    (objc == 4) ? objv[3] : NULL, listPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -956,7 +956,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 	index = NearestListboxElement(listPtr, y);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 	result = TCL_OK;
 	break;
     }
@@ -1044,7 +1044,7 @@ ListboxWidgetObjCmd(
 	    result = TCL_ERROR;
 	    break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(listPtr->nElements));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(listPtr->nElements));
 	result = TCL_OK;
 	break;
     case COMMAND_XVIEW:
@@ -1102,7 +1102,8 @@ ListboxBboxSubCmd(
     if ((listPtr->topIndex <= index) && (index < lastVisibleIndex)) {
 	Tcl_Obj *el, *results[4];
 	const char *stringRep;
-	int pixelWidth, stringLen, x, y, result;
+	int pixelWidth, x, y, result;
+	TkSizeT stringLen;
 	Tk_FontMetrics fm;
 
 	/*
@@ -1114,7 +1115,7 @@ ListboxBboxSubCmd(
 	    return result;
 	}
 
-	stringRep = Tcl_GetStringFromObj(el, &stringLen);
+	stringRep = TkGetStringFromObj(el, &stringLen);
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
@@ -1129,10 +1130,10 @@ ListboxBboxSubCmd(
         }
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
 		+ listPtr->inset + listPtr->selBorderWidth;
-	results[0] = Tcl_NewIntObj(x);
-	results[1] = Tcl_NewIntObj(y);
-	results[2] = Tcl_NewIntObj(pixelWidth);
-	results[3] = Tcl_NewIntObj(fm.linespace);
+	results[0] = Tcl_NewWideIntObj(x);
+	results[1] = Tcl_NewWideIntObj(y);
+	results[2] = Tcl_NewWideIntObj(pixelWidth);
+	results[3] = Tcl_NewWideIntObj(fm.linespace);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(4, results));
     }
     return TCL_OK;
@@ -1415,7 +1416,7 @@ ListboxGetItemAttributes(
 	attrs->selBorder = NULL;
 	attrs->fgColor = NULL;
 	attrs->selFgColor = NULL;
-	Tk_InitOptions(interp, (char *)attrs, listPtr->itemAttrOptionTable,
+	Tk_InitOptions(interp, attrs, listPtr->itemAttrOptionTable,
 		listPtr->tkwin);
 	Tcl_SetHashValue(entry, attrs);
     } else {
@@ -1578,7 +1579,7 @@ ConfigureListbox(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) listPtr,
+	    if (Tk_SetOptions(interp, listPtr,
 		    listPtr->optionTable, objc, objv,
 		    listPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -1724,7 +1725,7 @@ ConfigureListboxItem(
 {
     Tk_SavedOptions savedOptions;
 
-    if (Tk_SetOptions(interp, (char *)attrs,
+    if (Tk_SetOptions(interp, attrs,
 	    listPtr->itemAttrOptionTable, objc, objv, listPtr->tkwin,
 	    &savedOptions, NULL) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
@@ -1840,7 +1841,8 @@ DisplayListbox(
     register Listbox *listPtr = clientData;
     register Tk_Window tkwin = listPtr->tkwin;
     GC gc;
-    int i, limit, x, y, prevSelected, freeGC, stringLen;
+    int i, limit, x, y, prevSelected, freeGC;
+    TkSizeT stringLen;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
@@ -2074,7 +2076,7 @@ DisplayListbox(
 	 */
 
         Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
-        stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+        stringRep = TkGetStringFromObj(curElement, &stringLen);
         textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
@@ -2236,7 +2238,8 @@ ListboxComputeGeometry(
 				 * Tk_UnsetGrid to update gridding for the
 				 * window. */
 {
-    int width, height, pixelWidth, pixelHeight, textLength, i, result;
+    int width, height, pixelWidth, pixelHeight, i, result;
+    TkSizeT textLength;
     Tk_FontMetrics fm;
     Tcl_Obj *element;
     const char *text;
@@ -2257,7 +2260,7 @@ ListboxComputeGeometry(
 	    if (result != TCL_OK) {
 		continue;
 	    }
-	    text = Tcl_GetStringFromObj(element, &textLength);
+	    text = TkGetStringFromObj(element, &textLength);
 	    Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, text, textLength);
 	    if (pixelWidth > listPtr->maxWidth) {
@@ -2323,7 +2326,8 @@ ListboxInsertSubCmd(
     int objc,			/* Number of new elements to add. */
     Tcl_Obj *const objv[])	/* New elements (one per entry). */
 {
-    int i, oldMaxWidth, pixelWidth, result, length;
+    int i, oldMaxWidth, pixelWidth, result;
+    TkSizeT length;
     Tcl_Obj *newListObj;
     const char *stringRep;
 
@@ -2334,7 +2338,7 @@ ListboxInsertSubCmd(
 	 * if so, update our notion of "widest."
 	 */
 
-	stringRep = Tcl_GetStringFromObj(objv[i], &length);
+	stringRep = TkGetStringFromObj(objv[i], &length);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	if (pixelWidth > listPtr->maxWidth) {
 	    listPtr->maxWidth = pixelWidth;
@@ -2437,7 +2441,8 @@ ListboxDeleteSubCmd(
     int first,			/* Index of first element to delete. */
     int last)			/* Index of last element to delete. */
 {
-    int count, i, widthChanged, length, result, pixelWidth;
+    int count, i, widthChanged, result, pixelWidth;
+    TkSizeT length;
     Tcl_Obj *newListObj, *element;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -2492,7 +2497,7 @@ ListboxDeleteSubCmd(
 
 	if (widthChanged == 0) {
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &element);
-	    stringRep = Tcl_GetStringFromObj(element, &length);
+	    stringRep = TkGetStringFromObj(element, &length);
 	    pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, length);
 	    if (pixelWidth == listPtr->maxWidth) {
 		widthChanged = 1;
@@ -3122,7 +3127,8 @@ ListboxFetchSelection(
 {
     register Listbox *listPtr = clientData;
     Tcl_DString selection;
-    int length, count, needNewline, stringLen, i;
+    int count, needNewline, i;
+    TkSizeT length, stringLen;
     Tcl_Obj *curElement;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -3145,7 +3151,7 @@ ListboxFetchSelection(
 	    }
 	    Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i,
 		    &curElement);
-	    stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+	    stringRep = TkGetStringFromObj(curElement, &stringLen);
 	    Tcl_DStringAppend(&selection, stringRep, stringLen);
 	    needNewline = 1;
 	}
@@ -3160,14 +3166,14 @@ ListboxFetchSelection(
      * Copy the requested portion of the selection to the buffer.
      */
 
-    count = length - offset;
-    if (count <= 0) {
+    if (length <= (TkSizeT)offset) {
 	count = 0;
     } else {
+	count = length - offset;
 	if (count > maxBytes) {
 	    count = maxBytes;
 	}
-	memcpy(buffer, Tcl_DStringValue(&selection) + offset, (size_t) count);
+	memcpy(buffer, Tcl_DStringValue(&selection) + offset, count);
     }
     buffer[count] = '\0';
     Tcl_DStringFree(&selection);

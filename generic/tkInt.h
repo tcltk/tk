@@ -25,7 +25,6 @@
  * Darwin (where configure runs only once for multiple architectures).
  */
 
-#include <stdio.h>
 #ifdef HAVE_SYS_TYPES_H
 #    include <sys/types.h>
 #endif
@@ -59,6 +58,14 @@
 #   endif
 #endif
 
+#ifndef TkSizeT
+#   if TCL_MAJOR_VERSION > 8
+#	define TkSizeT size_t
+#   else
+#	define TkSizeT int
+#   endif
+#endif
+
 /*
  * Macros used to cast between pointers and integers (e.g. when storing an int
  * in ClientData), on 64-bit architectures they avoid gcc warning about "cast
@@ -68,21 +75,35 @@
 #if !defined(INT2PTR) && !defined(PTR2INT)
 #   if defined(HAVE_INTPTR_T) || defined(intptr_t)
 #	define INT2PTR(p) ((void*)(intptr_t)(p))
-#	define PTR2INT(p) ((int)(intptr_t)(p))
+#	define PTR2INT(p) ((intptr_t)(p))
 #   else
 #	define INT2PTR(p) ((void*)(p))
-#	define PTR2INT(p) ((int)(p))
+#	define PTR2INT(p) ((long)(p))
 #   endif
 #endif
 #if !defined(UINT2PTR) && !defined(PTR2UINT)
 #   if defined(HAVE_UINTPTR_T) || defined(uintptr_t)
 #	define UINT2PTR(p) ((void*)(uintptr_t)(p))
-#	define PTR2UINT(p) ((unsigned int)(uintptr_t)(p))
+#	define PTR2UINT(p) ((uintptr_t)(p))
 #   else
 #	define UINT2PTR(p) ((void*)(p))
-#	define PTR2UINT(p) ((unsigned int)(p))
+#	define PTR2UINT(p) ((unsigned long)(p))
 #   endif
 #endif
+
+#ifndef TCL_AUTO_LENGTH
+#   define TCL_AUTO_LENGTH (-1)
+#endif
+
+#ifndef TCL_Z_MODIFIER
+#   if defined(_WIN64)
+#	define TCL_Z_MODIFIER	"I"
+#   elif defined(__GNUC__) && !defined(_WIN32)
+#	define TCL_Z_MODIFIER	"z"
+#   else
+#	define TCL_Z_MODIFIER	""
+#   endif
+#endif /* !TCL_Z_MODIFIER */
 
 /*
  * Opaque type declarations:
@@ -107,7 +128,7 @@ typedef struct TkCursor {
     Tk_Cursor cursor;		/* System specific identifier for cursor. */
     Display *display;		/* Display containing cursor. Needed for
 				 * disposal and retrieval of cursors. */
-    int resourceRefCount;	/* Number of active uses of this cursor (each
+    TkSizeT resourceRefCount;	/* Number of active uses of this cursor (each
 				 * active use corresponds to a call to
 				 * Tk_AllocPreserveFromObj or Tk_Preserve). If
 				 * this count is 0, then this structure is no
@@ -116,7 +137,7 @@ typedef struct TkCursor {
 				 * there are objects referring to it. The
 				 * structure is freed when resourceRefCount
 				 * and objRefCount are both 0. */
-    int objRefCount;		/* Number of Tcl objects that reference this
+    TkSizeT objRefCount;		/* Number of Tcl objects that reference this
 				 * structure.. */
     Tcl_HashTable *otherTable;	/* Second table (other than idTable) used to
 				 * index this entry. */
@@ -266,7 +287,7 @@ typedef struct TkDisplay {
 				/* First in list of error handlers for this
 				 * display. NULL means no handlers exist at
 				 * present. */
-    int deleteCount;		/* Counts # of handlers deleted since last
+    TkSizeT deleteCount;		/* Counts # of handlers deleted since last
 				 * time inactive handlers were garbage-
 				 * collected. When this number gets big,
 				 * handlers get cleaned up. */
@@ -482,7 +503,7 @@ typedef struct TkDisplay {
 #endif /* TK_USE_INPUT_METHODS */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
-    int refCount;		/* Reference count of how many Tk applications
+    TkSizeT refCount;		/* Reference count of how many Tk applications
 				 * are using this display. Used to clean up
 				 * the display when we no longer have any Tk
 				 * applications using it. */
@@ -586,7 +607,7 @@ typedef struct TkEventHandler {
  */
 
 typedef struct TkMainInfo {
-    int refCount;		/* Number of windows whose "mainPtr" fields
+    TkSizeT refCount;		/* Number of windows whose "mainPtr" fields
 				 * point here. When this becomes zero, can
 				 * free up the structure (the reference count
 				 * is zero because windows can get deleted in
@@ -597,7 +618,11 @@ typedef struct TkMainInfo {
     Tcl_HashTable nameTable;	/* Hash table mapping path names to TkWindow
 				 * structs for all windows related to this
 				 * main window. Managed by tkWindow.c. */
-    long deletionEpoch;		/* Incremented by window deletions. */
+#if TCL_MAJOR_VERSION > 8
+    size_t deletionEpoch;		/* Incremented by window deletions. */
+#else
+    long deletionEpoch;
+#endif
     Tk_BindingTable bindingTable;
 				/* Used in conjunction with "bind" command to
 				 * bind events to Tcl commands. */
@@ -831,13 +856,13 @@ typedef struct TkWindow {
  */
 
 typedef struct {
-    XKeyEvent keyEvent;		/* The real event from X11. */
-    char *charValuePtr;		/* A pointer to a string that holds the key's
+    XKeyEvent keyEvent;	/* The real event from X11. */
+    char *charValuePtr;	/* A pointer to a string that holds the key's
 				 * %A substitution text (before backslash
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
 				 * allocated with ckalloc(). */
-    int charValueLen;		/* Length of string in charValuePtr when that
+    TkSizeT charValueLen;	/* Length of string in charValuePtr when that
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
@@ -850,6 +875,15 @@ typedef struct {
 #define TK_MAKE_MENU_TEAROFF	0	/* Only non-transient case. */
 #define TK_MAKE_MENU_POPUP	1
 #define TK_MAKE_MENU_DROPDOWN	2
+
+/* See TIP #494 */
+#ifndef TCL_IO_FAILURE
+#   define TCL_IO_FAILURE (-1)
+#endif
+/* See TIP #537 */
+#ifndef TCL_INDEX_NONE
+#   define TCL_INDEX_NONE (-1)
+#endif
 
 /*
  * The following structure is used with TkMakeEnsemble to create ensemble
@@ -931,13 +965,34 @@ typedef struct TkpClipMask {
 #define ALT_MASK	(AnyModifier<<2)
 #define EXTENDED_MASK	(AnyModifier<<3)
 
+#ifndef Button8
+# define Button8 8
+#endif
+#ifndef Button9
+# define Button9 9
+#endif
+
+#ifndef Button6Mask
+# define Button6Mask (1<<13)
+#endif
+#ifndef Button7Mask
+# define Button7Mask (1<<14)
+#endif
+#ifndef Button8Mask
+# define Button8Mask (AnyModifier<<4)
+#endif
+#ifndef Button9Mask
+# define Button9Mask (AnyModifier<<5)
+#endif
+
 /*
  * Mask that selects any of the state bits corresponding to buttons, plus
  * masks that select individual buttons' bits:
  */
 
 #define ALL_BUTTONS \
-	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask)
+	(Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask \
+		|Button6Mask|Button7Mask|Button8Mask|Button9Mask)
 
 
 MODULE_SCOPE unsigned long TkGetButtonMask(unsigned int);
@@ -964,8 +1019,10 @@ MODULE_SCOPE const Tk_SmoothMethod tkBezierSmoothMethod;
 MODULE_SCOPE Tk_ImageType	tkBitmapImageType;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtGIF;
 MODULE_SCOPE void		(*tkHandleEventProc) (XEvent* eventPtr);
+MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtDefault;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPNG;
 MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtPPM;
+MODULE_SCOPE Tk_PhotoImageFormat tkImgFmtSVGnano;
 MODULE_SCOPE TkMainInfo		*tkMainWindowList;
 MODULE_SCOPE Tk_ImageType	tkPhotoImageType;
 MODULE_SCOPE Tcl_HashTable	tkPredefBitmapTable;
@@ -1222,6 +1279,9 @@ MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    int firstByte, int lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    int c, struct TkFontAttributes *faPtr);
+MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
+			    Tk_3DBorder border, int highlightWidth,
+			    int borderWidth, int relief);
 MODULE_SCOPE Tcl_Obj *	TkNewWindowObj(Tk_Window tkwin);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
@@ -1241,11 +1301,16 @@ MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    ClientData clientData);
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
 			    ClientData clientData);
+MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
+			    Tcl_Interp *interp);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
+MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
+			    double sine, double cosine, double *xPtr,
+			    double *yPtr);
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
@@ -1259,12 +1324,24 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #endif
 
 #if TCL_UTF_MAX > 4
-#   define TkUtfToUniChar Tcl_UtfToUniChar
-#   define TkUniCharToUtf Tcl_UniCharToUtf
+#   define TkUtfToUniChar (size_t)Tcl_UtfToUniChar
+#   define TkUniCharToUtf (size_t)Tcl_UniCharToUtf
 #else
-    MODULE_SCOPE int TkUtfToUniChar(const char *, int *);
-    MODULE_SCOPE int TkUniCharToUtf(int, char *);
+    MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
+    MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
 #endif
+
+#if TCL_MAJOR_VERSION > 8
+#define TkGetStringFromObj(objPtr, lenPtr) \
+	(((objPtr)->bytes ? 0 : Tcl_GetString(objPtr)), \
+	*(lenPtr) = (objPtr)->length, (objPtr)->bytes)
+MODULE_SCOPE unsigned char *TkGetByteArrayFromObj(Tcl_Obj *objPtr,
+	size_t *lengthPtr);
+#else
+#define TkGetStringFromObj Tcl_GetStringFromObj
+#define TkGetByteArrayFromObj Tcl_GetByteArrayFromObj
+#endif
+
 
 /*
  * Unsupported commands.

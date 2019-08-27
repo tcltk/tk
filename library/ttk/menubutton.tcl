@@ -10,7 +10,7 @@
 # (In addition, when menu system is active, "dropdown" -- menu posts
 # on mouse-over.  Ttk menubuttons don't implement this).
 #
-# For keyboard and popdown mode, we hand off to tk_popup and let 
+# For keyboard and popdown mode, we hand off to tk_popup and let
 # the built-in Tk bindings handle the rest of the interaction.
 #
 # ON X11:
@@ -22,13 +22,13 @@
 # rely on the passive grab that occurs on <ButtonPress> events,
 # and transition to popdown mode when the mouse is released
 # or dragged outside the menubutton.
-# 
+#
 # ON WINDOWS:
 #
-# I'm not sure what the hell is going on here.  [$menu post] apparently 
+# I'm not sure what the hell is going on here.  [$menu post] apparently
 # sets up some kind of internal grab for native menus.
 # On this platform, just use [tk_popup] for all menu actions.
-# 
+#
 # ON MACOS:
 #
 # Same probably applies here.
@@ -97,7 +97,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	    }
 	    below {
 		set entry ""
-		incr y $bh 
+		incr y $bh
 	    }
 	    left {
 		incr y $menuPad
@@ -105,7 +105,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	    }
 	    right {
 		incr y $menuPad
-		incr x $bw 
+		incr x $bw
 	    }
 	    default {
 		incr y $bbh
@@ -182,7 +182,7 @@ proc ttk::menubutton::Popdown {mb} {
 
 # Pulldown (X11 only) --
 #	Called when Button1 is pressed on a menubutton.
-#	Posts the menu; a subsequent ButtonRelease 
+#	Posts the menu; a subsequent ButtonRelease
 #	or Leave event will set a grab on the menu.
 #
 proc ttk::menubutton::Pulldown {mb} {

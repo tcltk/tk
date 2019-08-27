@@ -3,7 +3,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH grid n 8.5 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -177,7 +177,7 @@ If a slave's cell is larger than its requested dimensions, this
 option may be used to position (or stretch) the slave within its cell.
 \fIStyle\fR  is a string that contains zero or more of the characters
 \fBn\fR, \fBs\fR, \fBe\fR or \fBw\fR.
-The string can optionally contains spaces or
+The string can optionally contain spaces or
 commas, but they are ignored.  Each letter refers to a side (north, south,
 east, or west) that the slave will
 .QW stick
@@ -202,6 +202,14 @@ The slaves will no longer be managed by the grid geometry manager.
 The configuration options for that window are forgotten, so that if the
 slave is managed once more by the grid geometry manager, the initial
 default settings are used.
+.RS
+.PP
+.VS TIP518
+If the last slave of the master becomes unmanaged, this will also send
+the virtual event \fB<<NoManagedChild>>\fR to the master; the master
+may choose to resize itself (or otherwise respond) to such a change.
+.VE TIP518
+.RE
 .TP
 \fBgrid info \fIslave\fR
 .
@@ -278,6 +286,14 @@ However, the configuration options for that window are remembered,
 so that if the
 slave is managed once more by the grid geometry manager, the previous
 values are retained.
+.RS
+.PP
+.VS TIP518
+If the last slave of the master becomes unmanaged, this will also send
+the virtual event \fB<<NoManagedChild>>\fR to the master; the master
+may choose to resize itself (or otherwise respond) to such a change.
+.VE TIP518
+.RE
 .TP
 \fBgrid size \fImaster\fR
 .

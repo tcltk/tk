@@ -537,14 +537,15 @@ RefreshKeyboardMappingIfNeeded(
  */
 
 static const unsigned long buttonMasks[] = {
-    0, Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask
+    0, Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask,
+    Button6Mask, Button7Mask, Button8Mask, Button9Mask
 };
 
 unsigned long
 TkGetButtonMask(
     unsigned int button)
 {
-    return (button > Button5) ? 0 : buttonMasks[button];
+    return (button > Button9) ? 0 : buttonMasks[button];
 }
 
 /*
@@ -1208,14 +1209,6 @@ Tk_HandleEvent(
     Tcl_Interp *interp = NULL;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-#if !defined(MAC_OSX_TK) && !defined(_WIN32)
-    if (((eventPtr->type == ButtonPress) || (eventPtr->type == ButtonRelease))
-	    && ((eventPtr->xbutton.button - 6) < 2)) {
-	eventPtr->xbutton.button -= 2;
-	eventPtr->xbutton.state ^= ShiftMask;
-    }
-#endif
 
     UpdateButtonEventState(eventPtr);
 

@@ -105,6 +105,18 @@ if {[tk windowingsystem] eq "x11"} {
 	    %W xview scroll 5 units
 	}
     }
+    if {[package vsatisfies [package provide Tk] 8.7]} {
+	bind $c <6> {
+	    if {!$tk_strictMotif} {
+		%W xview scroll -5 units
+	    }
+	}
+	bind $c <7> {
+	    if {!$tk_strictMotif} {
+		%W xview scroll 5 units
+	    }
+	}
+    }
 }
 
 

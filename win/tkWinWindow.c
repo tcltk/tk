@@ -71,7 +71,7 @@ Tk_AttachHWND(
 	twdPtr->window.winPtr = (TkWindow *) tkwin;
     } else if (twdPtr->window.handle != NULL) {
 	entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable,
-		(char *)twdPtr->window.handle);
+		twdPtr->window.handle);
 	Tcl_DeleteHashEntry(entryPtr);
     }
 
@@ -115,7 +115,7 @@ Tk_HWNDToWindow(
 	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
 	tsdPtr->initialized = 1;
     }
-    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char *) hwnd);
+    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, hwnd);
     if (entryPtr != NULL) {
 	return (Tk_Window) Tcl_GetHashValue(entryPtr);
     }
@@ -323,7 +323,7 @@ XDestroyWindow(
 
     TkPointerDeadWindow(winPtr);
 
-    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char*)hwnd);
+    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, hwnd);
     if (entryPtr != NULL) {
 	Tcl_DeleteHashEntry(entryPtr);
     }
@@ -760,33 +760,6 @@ XChangeWindowAttributes(
 	XDefineCursor(display, w, attributes->cursor);
     }
     return Success;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * XReparentWindow --
- *
- *	TODO: currently placeholder to satisfy Xlib stubs.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	TODO.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XReparentWindow(
-    Display *display,
-    Window w,
-    Window parent,
-    int x,
-    int y)
-{
-    return BadWindow;
 }
 
 /*

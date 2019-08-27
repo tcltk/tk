@@ -185,8 +185,10 @@ enum {
 	    typeUInt32, NULL, sizeof(UInt32), NULL, &buttons);
 
     if (err == noErr) {
-	state |= (buttons & 0x1F) * Button1Mask;
-    } else if (button <= Button5) {
+	state |= (buttons & 0x7F) * Button1Mask;
+	/* Handle buttons 8/9 */
+	state |= (buttons & 0x180) * (Button8Mask >> 7);
+    } else if (button <= Button9) {
 	switch (eventType) {
 	case NSLeftMouseDown:
 	case NSRightMouseDown:
@@ -361,10 +363,12 @@ ButtonModifiers2State(
     unsigned int state;
 
     /*
-     * Tk on OSX supports at most 5 buttons.
+     * Tk on OSX supports at most 9 buttons.
      */
 
-    state = (buttonState & 0x1F) * Button1Mask;
+    state = (buttonState & 0x7F) * Button1Mask;
+    /* Handle buttons 8/9 */
+    state |= (buttonState & 0x180) * (Button8Mask >> 7);
 
     if (keyModifiers & alphaLock) {
 	state |= LockMask;

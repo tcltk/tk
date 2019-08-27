@@ -179,7 +179,7 @@ Tk_GrabObjCmd(
     TkDisplay *dispPtr;
     const char *arg;
     int index;
-    int len;
+    TkSizeT len;
     static const char *const optionStrings[] = {
 	"current", "release", "set", "status", NULL
     };
@@ -216,7 +216,7 @@ Tk_GrabObjCmd(
      * First check for a window name or "-global" as the first argument.
      */
 
-    arg = Tcl_GetStringFromObj(objv[1], &len);
+    arg = TkGetStringFromObj(objv[1], &len);
     if (arg[0] == '.') {
 	/* [grab window] */
 	if (objc != 2) {
@@ -872,7 +872,7 @@ TkPointerEvent(
 	} else {
 	    if (eventPtr->xbutton.button != AnyButton &&
 		    ((eventPtr->xbutton.state & ALL_BUTTONS)
-		    == (unsigned int)TkGetButtonMask(eventPtr->xbutton.button))) {
+		    == TkGetButtonMask(eventPtr->xbutton.button))) {
 		ReleaseButtonGrab(dispPtr);			/* Note 4. */
 	    }
 	}

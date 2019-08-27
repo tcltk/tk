@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH tk::mac n 8.6 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -51,7 +51,7 @@ the command is absent, no action will be taken.
 The default Apple Event handler for AEDoScriptHandler. This command,
 if defined, executes a Tcl file when an AppleScript sends a
 .QW "do script"
-command to Wish with a file path as a parameter. 
+command to Wish with a file path as a parameter.
 .TP
 \fB::tk::mac::DoScriptText\fR
 .
@@ -124,7 +124,8 @@ proc ::tk::mac::OpenDocument {args} {
 }
 .CE
 .RE
-Note: the application must be running for this command to work. 
+Note: the application must be running for this command to work.
+
 .TP
 \fB::tk::mac::PrintDocument \fIfile...\fR
 .
@@ -132,7 +133,7 @@ If a proc of this name is defined it is the default Apple Event handler for
 kAEPrintDocuments,
 .QW pdoc ,
 the Apple Event sent when your application is asked to print a
-document.  It takes a single absolute file path as an argument. Note: the application must be running for this command to work. 
+document.  It takes a single absolute file path as an argument. Note: the application must be running for this command to work.
 .TP
 \fB::tk::mac::Quit\fR
 .
@@ -166,15 +167,15 @@ set).
 .TP
 \fB::tk::mac::PerformService\fR
 .
-Executes a Tcl procedure called from the macOS 
-.QW Services 
+Executes a Tcl procedure called from the macOS
+.QW Services
 menu in the Application menu item. The
 .QW Services
 menu item allows for inter-application communication; data from one
 application, such as selected text, can be sent to another application
 for processing, for example to Safari as a search item for Google, or
 to TextEdit to be appended to a file. An example of the proc is below,
-and should be rewritten in an application script for customization: 
+and should be rewritten in an application script for customization:
 .RS
 .PP
 .CS
@@ -185,7 +186,7 @@ proc ::tk::mac::PerformService {} {
 .CE
 .RE
 Note that the mechanism for retrieving the data is from the clipboard;
-there is no other supported way to obtain the data.  If the Services 
+there is no other supported way to obtain the data.  If the Services
 process is not desired, the NSServices keys can be deleted from
 the application's Info.plist file. The underlying code supporting this
 command also allows the text, entry and ttk::entry widgets to access
@@ -204,7 +205,7 @@ URL, although it can defined as such. Wish includes a stub URL scheme
 of
 .QW foo://
 in the CFBundleURLSchemes key of its Info.plist file; this should be customized for the specific URL
-scheme the developer wants to support. 
+scheme the developer wants to support.
 .TP
 \fB::tk::mac::GetAppPath\fR
 .

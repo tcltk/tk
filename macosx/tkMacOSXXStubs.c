@@ -685,14 +685,6 @@ XForceScreenSaver(
     return Success;
 }
 
-void
-Tk_FreeXId(
-    Display *display,
-    XID xid)
-{
-    /* no-op function needed for stubs implementation. */
-}
-
 int
 XSync(
     Display *display,

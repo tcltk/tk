@@ -13,8 +13,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * Flag values for "sticky"ness. The 16 combinations subsume the packer's
@@ -236,7 +236,7 @@ static void		AdjustForSticky(int sticky, int cavityWidth,
 			    int *slaveWidthPtr, int *slaveHeightPtr);
 static void		MoveSash(PanedWindow *pwPtr, int sash, int diff);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
-static char *		ComputeSlotAddress(char *recordPtr, int offset);
+static void *	ComputeSlotAddress(void *recordPtr, size_t offset);
 static int		PanedWindowIdentifyCoords(PanedWindow *pwPtr,
 			    Tcl_Interp *interp, int x, int y);
 
@@ -275,92 +275,92 @@ static const Tk_ObjCustomOption stickyOption = {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	 DEF_PANEDWINDOW_BG_COLOR, -1, Tk_Offset(PanedWindow, background), 0,
+	 DEF_PANEDWINDOW_BG_COLOR, -1, offsetof(PanedWindow, background), 0,
 	 DEF_PANEDWINDOW_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	 NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	 NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	 DEF_PANEDWINDOW_BORDERWIDTH, -1, Tk_Offset(PanedWindow, borderWidth),
+	 DEF_PANEDWINDOW_BORDERWIDTH, -1, offsetof(PanedWindow, borderWidth),
 	 0, 0, GEOMETRY},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	 DEF_PANEDWINDOW_CURSOR, -1, Tk_Offset(PanedWindow, cursor),
+	 DEF_PANEDWINDOW_CURSOR, -1, offsetof(PanedWindow, cursor),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-handlepad", "handlePad", "HandlePad",
-	 DEF_PANEDWINDOW_HANDLEPAD, -1, Tk_Offset(PanedWindow, handlePad),
+	 DEF_PANEDWINDOW_HANDLEPAD, -1, offsetof(PanedWindow, handlePad),
 	 0, 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-handlesize", "handleSize", "HandleSize",
-	 DEF_PANEDWINDOW_HANDLESIZE, Tk_Offset(PanedWindow, handleSizePtr),
-	 Tk_Offset(PanedWindow, handleSize), 0, 0, GEOMETRY},
+	 DEF_PANEDWINDOW_HANDLESIZE, offsetof(PanedWindow, handleSizePtr),
+	 offsetof(PanedWindow, handleSize), 0, 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-	 DEF_PANEDWINDOW_HEIGHT, Tk_Offset(PanedWindow, heightPtr),
-	 Tk_Offset(PanedWindow, height), TK_OPTION_NULL_OK, 0, GEOMETRY},
+	 DEF_PANEDWINDOW_HEIGHT, offsetof(PanedWindow, heightPtr),
+	 offsetof(PanedWindow, height), TK_OPTION_NULL_OK, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-opaqueresize", "opaqueResize", "OpaqueResize",
 	 DEF_PANEDWINDOW_OPAQUERESIZE, -1,
-	 Tk_Offset(PanedWindow, resizeOpaque), 0, 0, 0},
+	 offsetof(PanedWindow, resizeOpaque), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
-	 DEF_PANEDWINDOW_ORIENT, -1, Tk_Offset(PanedWindow, orient),
+	 DEF_PANEDWINDOW_ORIENT, -1, offsetof(PanedWindow, orient),
 	 0, orientStrings, GEOMETRY},
     {TK_OPTION_BORDER, "-proxybackground", "proxyBackground", "ProxyBackground",
-	 0, -1, Tk_Offset(PanedWindow, proxyBackground), TK_OPTION_NULL_OK,
+	 0, -1, offsetof(PanedWindow, proxyBackground), TK_OPTION_NULL_OK,
 	 (ClientData) DEF_PANEDWINDOW_BG_MONO},
     {TK_OPTION_PIXELS, "-proxyborderwidth", "proxyBorderWidth", "ProxyBorderWidth",
-	 DEF_PANEDWINDOW_PROXYBORDER, Tk_Offset(PanedWindow, proxyBorderWidthPtr),
-	 Tk_Offset(PanedWindow, proxyBorderWidth), 0, 0, GEOMETRY},
+	 DEF_PANEDWINDOW_PROXYBORDER, offsetof(PanedWindow, proxyBorderWidthPtr),
+	 offsetof(PanedWindow, proxyBorderWidth), 0, 0, GEOMETRY},
     {TK_OPTION_RELIEF, "-proxyrelief", "proxyRelief", "Relief",
-	 0, -1, Tk_Offset(PanedWindow, proxyRelief),
+	 0, -1, offsetof(PanedWindow, proxyRelief),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	 DEF_PANEDWINDOW_RELIEF, -1, Tk_Offset(PanedWindow, relief), 0, 0, 0},
+	 DEF_PANEDWINDOW_RELIEF, -1, offsetof(PanedWindow, relief), 0, 0, 0},
     {TK_OPTION_CURSOR, "-sashcursor", "sashCursor", "Cursor",
-	 DEF_PANEDWINDOW_SASHCURSOR, -1, Tk_Offset(PanedWindow, sashCursor),
+	 DEF_PANEDWINDOW_SASHCURSOR, -1, offsetof(PanedWindow, sashCursor),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-sashpad", "sashPad", "SashPad",
-	 DEF_PANEDWINDOW_SASHPAD, -1, Tk_Offset(PanedWindow, sashPad),
+	 DEF_PANEDWINDOW_SASHPAD, -1, offsetof(PanedWindow, sashPad),
 	 0, 0, GEOMETRY},
     {TK_OPTION_RELIEF, "-sashrelief", "sashRelief", "Relief",
-	 DEF_PANEDWINDOW_SASHRELIEF, -1, Tk_Offset(PanedWindow, sashRelief),
+	 DEF_PANEDWINDOW_SASHRELIEF, -1, offsetof(PanedWindow, sashRelief),
 	 0, 0, 0},
     {TK_OPTION_PIXELS, "-sashwidth", "sashWidth", "Width",
-	 DEF_PANEDWINDOW_SASHWIDTH, Tk_Offset(PanedWindow, sashWidthPtr),
-	 Tk_Offset(PanedWindow, sashWidth), 0, 0, GEOMETRY},
+	 DEF_PANEDWINDOW_SASHWIDTH, offsetof(PanedWindow, sashWidthPtr),
+	 offsetof(PanedWindow, sashWidth), 0, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-showhandle", "showHandle", "ShowHandle",
-	 DEF_PANEDWINDOW_SHOWHANDLE, -1, Tk_Offset(PanedWindow, showHandle),
+	 DEF_PANEDWINDOW_SHOWHANDLE, -1, offsetof(PanedWindow, showHandle),
 	 0, 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	 DEF_PANEDWINDOW_WIDTH, Tk_Offset(PanedWindow, widthPtr),
-	 Tk_Offset(PanedWindow, width), TK_OPTION_NULL_OK, 0, GEOMETRY},
+	 DEF_PANEDWINDOW_WIDTH, offsetof(PanedWindow, widthPtr),
+	 offsetof(PanedWindow, width), TK_OPTION_NULL_OK, 0, GEOMETRY},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
 static const Tk_OptionSpec slaveOptionSpecs[] = {
     {TK_OPTION_WINDOW, "-after", NULL, NULL,
-	 DEF_PANEDWINDOW_PANE_AFTER, -1, Tk_Offset(Slave, after),
+	 DEF_PANEDWINDOW_PANE_AFTER, -1, offsetof(Slave, after),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_WINDOW, "-before", NULL, NULL,
-	 DEF_PANEDWINDOW_PANE_BEFORE, -1, Tk_Offset(Slave, before),
+	 DEF_PANEDWINDOW_PANE_BEFORE, -1, offsetof(Slave, before),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-height", NULL, NULL,
-	 DEF_PANEDWINDOW_PANE_HEIGHT, Tk_Offset(Slave, heightPtr),
-	 Tk_Offset(Slave, height), TK_OPTION_NULL_OK, 0, 0},
+	 DEF_PANEDWINDOW_PANE_HEIGHT, offsetof(Slave, heightPtr),
+	 offsetof(Slave, height), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-hide", "hide", "Hide",
-	 DEF_PANEDWINDOW_PANE_HIDE, -1, Tk_Offset(Slave, hide), 0,0,GEOMETRY},
+	 DEF_PANEDWINDOW_PANE_HIDE, -1, offsetof(Slave, hide), 0,0,GEOMETRY},
     {TK_OPTION_PIXELS, "-minsize", NULL, NULL,
-	 DEF_PANEDWINDOW_PANE_MINSIZE, -1, Tk_Offset(Slave, minSize), 0, 0, 0},
+	 DEF_PANEDWINDOW_PANE_MINSIZE, -1, offsetof(Slave, minSize), 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	 DEF_PANEDWINDOW_PANE_PADX, -1, Tk_Offset(Slave, padx), 0, 0, 0},
+	 DEF_PANEDWINDOW_PANE_PADX, -1, offsetof(Slave, padx), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	 DEF_PANEDWINDOW_PANE_PADY, -1, Tk_Offset(Slave, pady), 0, 0, 0},
+	 DEF_PANEDWINDOW_PANE_PADY, -1, offsetof(Slave, pady), 0, 0, 0},
     {TK_OPTION_CUSTOM, "-sticky", NULL, NULL,
-	 DEF_PANEDWINDOW_PANE_STICKY, -1, Tk_Offset(Slave, sticky), 0,
+	 DEF_PANEDWINDOW_PANE_STICKY, -1, offsetof(Slave, sticky), 0,
 	 &stickyOption, 0},
     {TK_OPTION_STRING_TABLE, "-stretch", "stretch", "Stretch",
-	DEF_PANEDWINDOW_PANE_STRETCH, -1, Tk_Offset(Slave, stretch), 0,
+	DEF_PANEDWINDOW_PANE_STRETCH, -1, offsetof(Slave, stretch), 0,
 	(ClientData) stretchStrings, 0},
     {TK_OPTION_PIXELS, "-width", NULL, NULL,
-	 DEF_PANEDWINDOW_PANE_WIDTH, Tk_Offset(Slave, widthPtr),
-	 Tk_Offset(Slave, width), TK_OPTION_NULL_OK, 0, 0},
+	 DEF_PANEDWINDOW_PANE_WIDTH, offsetof(Slave, widthPtr),
+	 offsetof(Slave, width), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -459,7 +459,7 @@ Tk_PanedWindowObjCmd(
 
     Tcl_Preserve(pwPtr->tkwin);
 
-    if (Tk_InitOptions(interp, (char *) pwPtr, pwOpts->pwOptions,
+    if (Tk_InitOptions(interp, pwPtr, pwOpts->pwOptions,
 	    tkwin) != TCL_OK) {
 	Tk_DestroyWindow(pwPtr->tkwin);
 	return TCL_ERROR;
@@ -578,7 +578,7 @@ PanedWindowWidgetObjCmd(
 	    result = TCL_ERROR;
 	    break;
 	}
-	resultObj = Tk_GetOptionValue(interp, (char *) pwPtr,
+	resultObj = Tk_GetOptionValue(interp, pwPtr,
 		pwPtr->optionTable, objv[2], pwPtr->tkwin);
 	if (resultObj == NULL) {
 	    result = TCL_ERROR;
@@ -590,7 +590,7 @@ PanedWindowWidgetObjCmd(
     case PW_CONFIGURE:
 	resultObj = NULL;
 	if (objc <= 3) {
-	    resultObj = Tk_GetOptionInfo(interp, (char *) pwPtr,
+	    resultObj = Tk_GetOptionInfo(interp, pwPtr,
 		    pwPtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL, pwPtr->tkwin);
 	    if (resultObj == NULL) {
@@ -669,7 +669,7 @@ PanedWindowWidgetObjCmd(
 	for (i = 0; i < pwPtr->numSlaves; i++) {
 	    if (pwPtr->slaves[i]->tkwin == tkwin) {
 		resultObj = Tk_GetOptionValue(interp,
-			(char *) pwPtr->slaves[i], pwPtr->slaveOpts,
+			pwPtr->slaves[i], pwPtr->slaveOpts,
 			objv[3], tkwin);
 	    }
 	}
@@ -709,7 +709,7 @@ PanedWindowWidgetObjCmd(
 	    for (i = 0; i < pwPtr->numSlaves; i++) {
 		if (pwPtr->slaves[i]->tkwin == tkwin) {
 		    resultObj = Tk_GetOptionInfo(interp,
-			    (char *) pwPtr->slaves[i], pwPtr->slaveOpts,
+			    pwPtr->slaves[i], pwPtr->slaveOpts,
 			    (objc == 4) ? objv[3] : NULL,
 			    pwPtr->tkwin);
 		    if (resultObj == NULL) {
@@ -848,7 +848,7 @@ ConfigureSlaves(
      */
 
     memset((void *)&options, 0, sizeof(Slave));
-    if (Tk_SetOptions(interp, (char *) &options, pwPtr->slaveOpts,
+    if (Tk_SetOptions(interp, &options, pwPtr->slaveOpts,
 	    objc - firstOptionArg, objv + firstOptionArg,
 	    pwPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;
@@ -925,7 +925,7 @@ ConfigureSlaves(
 	found = 0;
 	for (j = 0; j < pwPtr->numSlaves; j++) {
 	    if (pwPtr->slaves[j] != NULL && pwPtr->slaves[j]->tkwin == tkwin) {
-		Tk_SetOptions(interp, (char *) pwPtr->slaves[j],
+		Tk_SetOptions(interp, pwPtr->slaves[j],
 			pwPtr->slaveOpts, objc - firstOptionArg,
 			objv + firstOptionArg, pwPtr->tkwin, NULL, NULL);
 		if (pwPtr->slaves[j]->minSize < 0) {
@@ -972,9 +972,9 @@ ConfigureSlaves(
 
 	slavePtr = ckalloc(sizeof(Slave));
 	memset(slavePtr, 0, sizeof(Slave));
-	Tk_InitOptions(interp, (char *)slavePtr, pwPtr->slaveOpts,
+	Tk_InitOptions(interp, slavePtr, pwPtr->slaveOpts,
 		pwPtr->tkwin);
-	Tk_SetOptions(interp, (char *)slavePtr, pwPtr->slaveOpts,
+	Tk_SetOptions(interp, slavePtr, pwPtr->slaveOpts,
 		objc - firstOptionArg, objv + firstOptionArg,
 		pwPtr->tkwin, NULL, NULL);
 	slavePtr->tkwin = tkwin;
@@ -1011,7 +1011,7 @@ ConfigureSlaves(
 
     i = sizeof(Slave *) * (pwPtr->numSlaves + numNewSlaves);
     newSlaves = ckalloc(i);
-    memset(newSlaves, 0, (size_t) i);
+    memset(newSlaves, 0, i);
     if (index == -1) {
 	/*
 	 * If none of the existing slaves have to be moved, just copy the old
@@ -1132,8 +1132,8 @@ PanedWindowSashCommand(
 	}
 	slavePtr = pwPtr->slaves[sash];
 
-	coords[0] = Tcl_NewIntObj(slavePtr->sashx);
-	coords[1] = Tcl_NewIntObj(slavePtr->sashy);
+	coords[0] = Tcl_NewWideIntObj(slavePtr->sashx);
+	coords[1] = Tcl_NewWideIntObj(slavePtr->sashy);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	break;
 
@@ -1166,8 +1166,8 @@ PanedWindowSashCommand(
 	    pwPtr->slaves[sash]->markx = x;
 	    pwPtr->slaves[sash]->marky = y;
 	} else {
-	    coords[0] = Tcl_NewIntObj(pwPtr->slaves[sash]->markx);
-	    coords[1] = Tcl_NewIntObj(pwPtr->slaves[sash]->marky);
+	    coords[0] = Tcl_NewWideIntObj(pwPtr->slaves[sash]->markx);
+	    coords[1] = Tcl_NewWideIntObj(pwPtr->slaves[sash]->marky);
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	}
 	break;
@@ -1249,7 +1249,7 @@ ConfigurePanedWindow(
     Tk_SavedOptions savedOptions;
     int typemask = 0;
 
-    if (Tk_SetOptions(interp, (char *) pwPtr, pwPtr->optionTable, objc, objv,
+    if (Tk_SetOptions(interp, pwPtr, pwPtr->optionTable, objc, objv,
 	    pwPtr->tkwin, &savedOptions, &typemask) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	return TCL_ERROR;
@@ -1484,10 +1484,10 @@ DisplayPanedWindow(
      */
 
     if (horizontal) {
-	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderWidth(tkwin));
+	sashHeight = Tk_Height(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
 	sashWidth = pwPtr->sashWidth;
     } else {
-	sashWidth = Tk_Width(tkwin) - (2 * Tk_InternalBorderWidth(tkwin));
+	sashWidth = Tk_Width(tkwin) - (2 * Tk_InternalBorderLeft(tkwin));
 	sashHeight = pwPtr->sashWidth;
     }
 
@@ -1754,7 +1754,7 @@ ArrangePanes(
      */
 
     paneDynSize = paneDynMinSize = 0;
-    internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
+    internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
     pwHeight = Tk_Height(pwPtr->tkwin) - (2 * internalBW);
     pwWidth = Tk_Width(pwPtr->tkwin) - (2 * internalBW);
     x = y = internalBW;
@@ -2200,7 +2200,7 @@ ComputeGeometry(
 
     pwPtr->flags |= REQUESTED_RELAYOUT;
 
-    x = y = internalBw = Tk_InternalBorderWidth(pwPtr->tkwin);
+    x = y = internalBw = Tk_InternalBorderLeft(pwPtr->tkwin);
     reqWidth = reqHeight = 0;
 
     /*
@@ -2455,7 +2455,8 @@ SetSticky(
     int flags)			/* Flags for the option, set Tk_SetOptions. */
 {
     int sticky = 0;
-    char c, *internalPtr;
+    char c;
+    void *internalPtr;
     const char *string;
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
@@ -2876,8 +2877,8 @@ PanedWindowProxyCommand(
 	    return TCL_ERROR;
 	}
 
-	coords[0] = Tcl_NewIntObj(pwPtr->proxyx);
-	coords[1] = Tcl_NewIntObj(pwPtr->proxyy);
+	coords[0] = Tcl_NewWideIntObj(pwPtr->proxyx);
+	coords[1] = Tcl_NewWideIntObj(pwPtr->proxyy);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	break;
 
@@ -2906,7 +2907,7 @@ PanedWindowProxyCommand(
 	    return TCL_ERROR;
 	}
 
-        internalBW = Tk_InternalBorderWidth(pwPtr->tkwin);
+        internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	    if (x < 0) {
 		x = 0;
@@ -2915,10 +2916,10 @@ PanedWindowProxyCommand(
             if (x > pwWidth) {
                 x = pwWidth;
             }
-            y = Tk_InternalBorderWidth(pwPtr->tkwin);
+            y = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashWidth = pwPtr->sashWidth;
 	    sashHeight = Tk_Height(pwPtr->tkwin) -
-		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
+		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	} else {
 	    if (y < 0) {
 		y = 0;
@@ -2927,10 +2928,10 @@ PanedWindowProxyCommand(
             if (y > pwHeight) {
                 y = pwHeight;
             }
-	    x = Tk_InternalBorderWidth(pwPtr->tkwin);
+	    x = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashHeight = pwPtr->sashWidth;
 	    sashWidth = Tk_Width(pwPtr->tkwin) -
-		    (2 * Tk_InternalBorderWidth(pwPtr->tkwin));
+		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
 	}
 
 	if (sashWidth < 1) {
@@ -3019,13 +3020,13 @@ ObjectIsEmpty(
  *----------------------------------------------------------------------
  */
 
-static char *
+static void *
 ComputeSlotAddress(
-    char *recordPtr,	/* Pointer to the start of a record. */
-    int offset)		/* Offset of a slot within that record; may be < 0. */
+    void *recordPtr,	/* Pointer to the start of a record. */
+    size_t offset)		/* Offset of a slot within that record; may be -1. */
 {
-    if (offset >= 0) {
-	return recordPtr + offset;
+    if (offset != (size_t)-1) {
+	return (char *)recordPtr + offset;
     } else {
 	return NULL;
     }
@@ -3066,7 +3067,7 @@ PanedWindowIdentifyCoords(
 	} else {
 	    sashHeight = Tk_ReqHeight(pwPtr->tkwin);
 	}
-	sashHeight -= 2 * Tk_InternalBorderWidth(pwPtr->tkwin);
+	sashHeight -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->showHandle && pwPtr->handleSize > pwPtr->sashWidth) {
 	    sashWidth = pwPtr->handleSize;
 	    lpad = (pwPtr->handleSize - pwPtr->sashWidth) / 2;
@@ -3094,7 +3095,7 @@ PanedWindowIdentifyCoords(
 	} else {
 	    sashWidth = Tk_ReqWidth(pwPtr->tkwin);
 	}
-	sashWidth -= 2 * Tk_InternalBorderWidth(pwPtr->tkwin);
+	sashWidth -= 2 * Tk_InternalBorderLeft(pwPtr->tkwin);
 	lpad = rpad = 0;
     }
 
@@ -3141,7 +3142,7 @@ PanedWindowIdentifyCoords(
     if (found != -1) {
 	Tcl_Obj *list[2];
 
-	list[0] = Tcl_NewIntObj(found);
+	list[0] = Tcl_NewWideIntObj(found);
 	list[1] = Tcl_NewStringObj((isHandle ? "handle" : "sash"), -1);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, list));
     }

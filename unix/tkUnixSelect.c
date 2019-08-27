@@ -21,7 +21,7 @@ typedef struct ConvertInfo {
 				 * offset of the next chunk of data to
 				 * transfer. */
     Tcl_EncodingState state;	/* The encoding state needed across chunks. */
-    char buffer[TCL_UTF_MAX];	/* A buffer to hold part of a UTF character
+    char buffer[4];		/* A buffer to hold part of a UTF character
 				 * that is split across chunks.*/
 } ConvertInfo;
 
@@ -240,10 +240,10 @@ TkSelGetSelection(
 
 void
 TkSelPropProc(
-    register XEvent *eventPtr)	/* X PropertyChange event. */
+    XEvent *eventPtr)	/* X PropertyChange event. */
 {
-    register IncrInfo *incrPtr;
-    register TkSelHandler *selPtr;
+    IncrInfo *incrPtr;
+    TkSelHandler *selPtr;
     int length, numItems;
     unsigned long i;
     Atom target, formatType;
@@ -446,10 +446,10 @@ TkSelPropProc(
 		 * Preserve any left-over bytes.
 		 */
 
-		if (srcLen > TCL_UTF_MAX) {
+		if (srcLen > 4) {
 		    Tcl_Panic("selection conversion left too many bytes unconverted");
 		}
-		memcpy(incrPtr->converts[i].buffer, src, (size_t) srcLen+1);
+		memcpy(incrPtr->converts[i].buffer, src, srcLen + 1);
 		Tcl_DStringFree(&ds);
 	    } else {
 		/*
@@ -519,10 +519,10 @@ TkSelPropProc(
 void
 TkSelEventProc(
     Tk_Window tkwin,		/* Window for which event was targeted. */
-    register XEvent *eventPtr)	/* X event: either SelectionClear,
+    XEvent *eventPtr)	/* X event: either SelectionClear,
 				 * SelectionRequest, or SelectionNotify. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     Tcl_Interp *interp;
 
@@ -540,7 +540,7 @@ TkSelEventProc(
      */
 
     if (eventPtr->type == SelectionNotify) {
-	register TkSelRetrievalInfo *retrPtr;
+	TkSelRetrievalInfo *retrPtr;
 	char *propInfo, **propInfoPtr = &propInfo;
 	Atom type;
 	int format, result;
@@ -742,7 +742,7 @@ static void
 SelTimeoutProc(
     ClientData clientData)	/* Information about retrieval in progress. */
 {
-    register TkSelRetrievalInfo *retrPtr = clientData;
+    TkSelRetrievalInfo *retrPtr = clientData;
 
     /*
      * Make sure that the retrieval is still in progress. Then see how long
@@ -766,7 +766,7 @@ SelTimeoutProc(
 	retrPtr->result = TCL_ERROR;
     } else {
 	retrPtr->timeout = Tcl_CreateTimerHandler(1000, SelTimeoutProc,
-		(ClientData) retrPtr);
+		retrPtr);
     }
 }
 
@@ -796,7 +796,7 @@ ConvertSelection(
 				 * request; may not be selection's current
 				 * owner, be we set it to the current
 				 * owner. */
-    register XSelectionRequestEvent *eventPtr)
+    XSelectionRequestEvent *eventPtr)
 				/* Event describing request. */
 {
 	union {
@@ -898,7 +898,7 @@ ConvertSelection(
     for (i = 0; i < incr.numConversions; i++) {
 	Atom target, property, type;
 	long buffer[TK_SEL_WORDS_AT_ONCE];
-	register TkSelHandler *selPtr;
+	TkSelHandler *selPtr;
 	int numItems, format;
 	char *propPtr;
 
@@ -919,7 +919,7 @@ ConvertSelection(
 	    /*
 	     * Nobody seems to know about this kind of request. If it's of a
 	     * sort that we can handle without any help, do it. Otherwise mark
-	     * the request as an errror.
+	     * the request as an error.
 	     */
 
 	    numItems = TkSelDefaultSelection(infoPtr, target, (char *) buffer,
@@ -1124,9 +1124,9 @@ ConvertSelection(
 static void
 SelRcvIncrProc(
     ClientData clientData,	/* Information about retrieval. */
-    register XEvent *eventPtr)	/* X PropertyChange event. */
+    XEvent *eventPtr)	/* X PropertyChange event. */
 {
-    register TkSelRetrievalInfo *retrPtr = clientData;
+    TkSelRetrievalInfo *retrPtr = clientData;
     char *propInfo, **propInfoPtr = &propInfo;
     Atom type;
     int format, result;
@@ -1374,7 +1374,7 @@ IncrTimeoutProc(
 				 * retrieval for which we are selection
 				 * owner. */
 {
-    register IncrInfo *incrPtr = clientData;
+    IncrInfo *incrPtr = clientData;
 
     incrPtr->idleTime++;
     if (incrPtr->idleTime >= 5) {
@@ -1487,7 +1487,7 @@ SelCvtToX(
 
 static void
 SelCvtFromX32(
-    register long *propPtr,	/* Property value from X. */
+    long *propPtr,	/* Property value from X. */
     int numValues,		/* Number of 32-bit values in property. */
     Atom type,			/* Type of property Should not be XA_STRING
 				 * (if so, don't bother calling this function
@@ -1520,7 +1520,7 @@ SelCvtFromX32(
 
 static void
 SelCvtFromX8(
-    register char *propPtr,	/* Property value from X. */
+    char *propPtr,	/* Property value from X. */
     int numValues,		/* Number of 8-bit values in property. */
     Atom type,			/* Type of property Should not be XA_STRING
 				 * (if so, don't bother calling this function

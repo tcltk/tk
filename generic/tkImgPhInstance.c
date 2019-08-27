@@ -115,7 +115,7 @@ TkImgPhotoConfigureInstance(
 	 */
 
 	if (colorTablePtr != NULL) {
-	    colorTablePtr->liveRefCount -= 1;
+	    colorTablePtr->liveRefCount--;
 	    FreeColorTable(colorTablePtr, 0);
 	}
 	GetColorTable(instancePtr);
@@ -745,7 +745,7 @@ TkImgPhotoFree(
 
     colorPtr = instancePtr->colorTablePtr;
     if (colorPtr != NULL) {
-	colorPtr->liveRefCount -= 1;
+	colorPtr->liveRefCount--;
     }
 
     Tcl_DoWhenIdle(TkImgDisposeInstance, instancePtr);
@@ -867,8 +867,8 @@ TkImgPhotoInstanceSetSize(
 	    if (masterPtr->width == instancePtr->width) {
 		offset = validBox.y * masterPtr->width * 3;
 		memcpy(newError + offset, instancePtr->error + offset,
-			(size_t) (validBox.height
-			* masterPtr->width * 3 * sizeof(schar)));
+			(size_t) validBox.height
+			* masterPtr->width * 3 * sizeof(schar));
 
 	    } else if (validBox.width > 0 && validBox.height > 0) {
 		errDestPtr = newError +
@@ -1128,8 +1128,7 @@ FreeColorTable(
 				 * longer required by an instance. */
     int force)			/* Force free to happen immediately. */
 {
-    colorPtr->refCount--;
-    if (colorPtr->refCount > 0) {
+    if (colorPtr->refCount-- > 1) {
 	return;
     }
 
@@ -1462,7 +1461,7 @@ DisposeColorTable(
 	ckfree(colorPtr->pixelMap);
     }
 
-    entry = Tcl_FindHashEntry(&imgPhotoColorHash, (char *) &colorPtr->id);
+    entry = Tcl_FindHashEntry(&imgPhotoColorHash, &colorPtr->id);
     if (entry == NULL) {
 	Tcl_Panic("DisposeColorTable couldn't find hash entry");
     }
@@ -1983,8 +1982,8 @@ TkImgResetDither(
 {
     if (instancePtr->error) {
 	memset(instancePtr->error, 0,
-	       /*(size_t)*/ (instancePtr->masterPtr->width
-		* instancePtr->masterPtr->height * 3 * sizeof(schar)));
+		(size_t) instancePtr->masterPtr->width
+		* instancePtr->masterPtr->height * 3 * sizeof(schar));
     }
 }
 

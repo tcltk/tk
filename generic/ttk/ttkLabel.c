@@ -48,23 +48,23 @@ typedef struct {
  */
 static Ttk_ElementOptionSpec TextElementOptions[] = {
     { "-text", TK_OPTION_STRING,
-	Tk_Offset(TextElement,textObj), "" },
+	offsetof(TextElement,textObj), "" },
     { "-font", TK_OPTION_FONT,
-	Tk_Offset(TextElement,fontObj), DEFAULT_FONT },
+	offsetof(TextElement,fontObj), DEFAULT_FONT },
     { "-foreground", TK_OPTION_COLOR,
-	Tk_Offset(TextElement,foregroundObj), "black" },
+	offsetof(TextElement,foregroundObj), "black" },
     { "-underline", TK_OPTION_INT,
-	Tk_Offset(TextElement,underlineObj), "-1"},
+	offsetof(TextElement,underlineObj), "-1"},
     { "-width", TK_OPTION_INT,
-	Tk_Offset(TextElement,widthObj), "-1"},
+	offsetof(TextElement,widthObj), "-1"},
     { "-anchor", TK_OPTION_ANCHOR,
-	Tk_Offset(TextElement,anchorObj), "w"},
+	offsetof(TextElement,anchorObj), "w"},
     { "-justify", TK_OPTION_JUSTIFY,
-	Tk_Offset(TextElement,justifyObj), "left" },
+	offsetof(TextElement,justifyObj), "left" },
     { "-wraplength", TK_OPTION_PIXELS,
-	Tk_Offset(TextElement,wrapLengthObj), "0" },
+	offsetof(TextElement,wrapLengthObj), "0" },
     { "-embossed", TK_OPTION_INT,
-	Tk_Offset(TextElement,embossedObj), "0"},
+	offsetof(TextElement,embossedObj), "0"},
     { NULL, 0, 0, NULL }
 };
 
@@ -138,7 +138,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     gcValues.foreground = WhitePixelOfScreen(Tk_Screen(tkwin));
     gc2 = Tk_GetGC(tkwin, GCFont | GCForeground, &gcValues);
 
-    /* 
+    /*
      * Place text according to -anchor:
      */
     Tk_GetAnchorFromObj(NULL, text->anchorObj, &anchor);
@@ -248,11 +248,11 @@ typedef struct {
  */
 static Ttk_ElementOptionSpec ImageElementOptions[] = {
     { "-image", TK_OPTION_STRING,
-	Tk_Offset(ImageElement,imageObj), "" },
+	offsetof(ImageElement,imageObj), "" },
     { "-stipple", TK_OPTION_STRING, 	/* Really: TK_OPTION_BITMAP */
-	Tk_Offset(ImageElement,stippleObj), "gray50" },
+	offsetof(ImageElement,stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
-	Tk_Offset(ImageElement,backgroundObj), DEFAULT_BACKGROUND },
+	offsetof(ImageElement,backgroundObj), DEFAULT_BACKGROUND },
     { NULL, 0, 0, NULL }
 };
 
@@ -341,15 +341,15 @@ static void ImageDraw(
 
     Tk_RedrawImage(image->tkimg, 0,0, width, height, d, b.x, b.y);
 
-    /* If we're disabled there's no state-specific 'disabled' image, 
+    /* If we're disabled there's no state-specific 'disabled' image,
      * stipple the image.
      * @@@ Possibly: Don't do disabled-stippling at all;
      * @@@ it's ugly and out of fashion.
-     * Do not stipple at all under Aqua, just draw the image: it shows up 
+     * Do not stipple at all under Aqua, just draw the image: it shows up
      * as a white rectangle otherwise.
      */
 
-    
+
     if (state & TTK_STATE_DISABLED) {
 	if (TtkSelectImage(image->imageSpec, 0ul) == image->tkimg) {
 #ifndef MAC_OSX_TK
@@ -442,41 +442,41 @@ typedef struct {
 
 static Ttk_ElementOptionSpec LabelElementOptions[] = {
     { "-compound", TK_OPTION_ANY,
-	Tk_Offset(LabelElement,compoundObj), "none" },
+	offsetof(LabelElement,compoundObj), "none" },
     { "-space", TK_OPTION_PIXELS,
-	Tk_Offset(LabelElement,spaceObj), "4" },
+	offsetof(LabelElement,spaceObj), "4" },
 
     /* Text element part:
      * NB: Keep in sync with TextElementOptions.
      */
     { "-text", TK_OPTION_STRING,
-	Tk_Offset(LabelElement,text.textObj), "" },
+	offsetof(LabelElement,text.textObj), "" },
     { "-font", TK_OPTION_FONT,
-	Tk_Offset(LabelElement,text.fontObj), DEFAULT_FONT },
+	offsetof(LabelElement,text.fontObj), DEFAULT_FONT },
     { "-foreground", TK_OPTION_COLOR,
-	Tk_Offset(LabelElement,text.foregroundObj), "black" },
+	offsetof(LabelElement,text.foregroundObj), "black" },
     { "-underline", TK_OPTION_INT,
-	Tk_Offset(LabelElement,text.underlineObj), "-1"},
+	offsetof(LabelElement,text.underlineObj), "-1"},
     { "-width", TK_OPTION_INT,
-	Tk_Offset(LabelElement,text.widthObj), ""},
+	offsetof(LabelElement,text.widthObj), ""},
     { "-anchor", TK_OPTION_ANCHOR,
-	Tk_Offset(LabelElement,text.anchorObj), "w"},
+	offsetof(LabelElement,text.anchorObj), "w"},
     { "-justify", TK_OPTION_JUSTIFY,
-	Tk_Offset(LabelElement,text.justifyObj), "left" },
+	offsetof(LabelElement,text.justifyObj), "left" },
     { "-wraplength", TK_OPTION_PIXELS,
-	Tk_Offset(LabelElement,text.wrapLengthObj), "0" },
+	offsetof(LabelElement,text.wrapLengthObj), "0" },
     { "-embossed", TK_OPTION_INT,
-	Tk_Offset(LabelElement,text.embossedObj), "0"},
+	offsetof(LabelElement,text.embossedObj), "0"},
 
     /* Image element part:
      * NB: Keep in sync with ImageElementOptions.
      */
     { "-image", TK_OPTION_STRING,
-	Tk_Offset(LabelElement,image.imageObj), "" },
+	offsetof(LabelElement,image.imageObj), "" },
     { "-stipple", TK_OPTION_STRING, 	/* Really: TK_OPTION_BITMAP */
-	Tk_Offset(LabelElement,image.stippleObj), "gray50" },
+	offsetof(LabelElement,image.stippleObj), "gray50" },
     { "-background", TK_OPTION_COLOR,
-	Tk_Offset(LabelElement,image.backgroundObj), DEFAULT_BACKGROUND },
+	offsetof(LabelElement,image.backgroundObj), DEFAULT_BACKGROUND },
     { NULL, 0, 0, NULL }
 };
 
@@ -576,7 +576,7 @@ static void LabelElementSize(
     if (label->compound != TTK_COMPOUND_IMAGE)
 	textReqWidth = TextReqWidth(&label->text);
 
-    switch (label->compound) 
+    switch (label->compound)
     {
 	case TTK_COMPOUND_TEXT:
 	    *widthPtr = textReqWidth;
@@ -587,11 +587,11 @@ static void LabelElementSize(
 	case TTK_COMPOUND_TOP:
 	case TTK_COMPOUND_BOTTOM:
 	case TTK_COMPOUND_CENTER:
-	    *widthPtr = MAX(label->image.width, textReqWidth); 
+	    *widthPtr = MAX(label->image.width, textReqWidth);
 	    break;
 	case TTK_COMPOUND_LEFT:
 	case TTK_COMPOUND_RIGHT:
-	    *widthPtr = label->image.width + textReqWidth + label->space; 
+	    *widthPtr = label->image.width + textReqWidth + label->space;
 	    break;
 	case TTK_COMPOUND_NONE:
 	    break; /* Can't happen */

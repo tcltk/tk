@@ -3,7 +3,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH Tk_SetClassProcs 3 8.4 Tk "Tk Library Procedures"
 .so man.macros
 .BS
@@ -33,7 +33,7 @@ are used as callbacks in different places.
 The structure pointed to by \fIprocs\fR contains the following:
 .CS
 typedef struct Tk_ClassProcs {
-    unsigned int \fIsize\fR;
+    size_t \fIsize\fR;
     Tk_ClassWorldChangedProc *\fIworldChangedProc\fR;
     Tk_ClassCreateProc *\fIcreateProc\fR;
     Tk_ClassModalProc *\fImodalProc\fR;

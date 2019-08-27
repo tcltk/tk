@@ -49,30 +49,30 @@ static const Tk_CustomOption tagsOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-activebackground", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, activeBgColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, activeBgColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activebitmap", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, activeBitmap), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, activeBitmap), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-activeforeground", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, activeFgColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, activeFgColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(BitmapItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"center", offsetof(BitmapItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-background", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, bgColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, bgColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-bitmap", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, bitmap), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, bitmap), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-disabledbackground", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, disabledBgColor),
+	NULL, offsetof(BitmapItem, disabledBgColor),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledbitmap", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, disabledBitmap),
+	NULL, offsetof(BitmapItem, disabledBitmap),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-disabledforeground", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, disabledFgColor),
+	NULL, offsetof(BitmapItem, disabledFgColor),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-foreground", NULL, NULL,
-	"black", Tk_Offset(BitmapItem, fgColor), 0, NULL},
+	"black", offsetof(BitmapItem, fgColor), 0, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK,
 	&stateOption},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
@@ -105,6 +105,8 @@ static void		DeleteBitmap(Tk_Canvas canvas,
 static void		DisplayBitmap(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
+static void		RotateBitmap(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleBitmap(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -137,7 +139,8 @@ Tk_ItemType tkBitmapType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateBitmap,		/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -784,6 +787,39 @@ ScaleBitmap(
 
     bmapPtr->x = originX + scaleX*(bmapPtr->x - originX);
     bmapPtr->y = originY + scaleY*(bmapPtr->y - originY);
+    ComputeBitmapBbox(canvas, bmapPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateBitmap --
+ *
+ *	This function is called to rotate a bitmap's origin by a given amount.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the bitmap is rotated by angleRad radians about
+ *	(originX, originY), and the bounding box is updated in the generic
+ *	part of the item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateBitmap(
+    Tk_Canvas canvas,
+    Tk_Item *itemPtr,
+    double originX,
+    double originY,
+    double angleRad)
+{
+    BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &bmapPtr->x, &bmapPtr->y);
     ComputeBitmapBbox(canvas, bmapPtr);
 }
 

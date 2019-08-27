@@ -18,7 +18,7 @@
  */
 
 #define EI_SEG_SIZE \
-	((unsigned) (Tk_Offset(TkTextSegment, body) + sizeof(TkTextEmbImage)))
+	(offsetof(TkTextSegment, body) + sizeof(TkTextEmbImage))
 
 /*
  * Prototypes for functions defined in this file:
@@ -83,17 +83,17 @@ typedef enum {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
-	"center", -1, Tk_Offset(TkTextEmbImage, align),
+	"center", -1, offsetof(TkTextEmbImage, align),
 	0, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", -1, Tk_Offset(TkTextEmbImage, padX), 0, 0, 0},
+	"0", -1, offsetof(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", -1, Tk_Offset(TkTextEmbImage, padY), 0, 0, 0},
+	"0", -1, offsetof(TkTextEmbImage, padY), 0, 0, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextEmbImage, imageString),
+	NULL, -1, offsetof(TkTextEmbImage, imageString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-name", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextEmbImage, imageName),
+	NULL, -1, offsetof(TkTextEmbImage, imageName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
@@ -161,7 +161,7 @@ TkTextImageCmd(
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_IMAGE", NULL);
 	    return TCL_ERROR;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) &eiPtr->body.ei,
+	objPtr = Tk_GetOptionValue(interp, &eiPtr->body.ei,
 		eiPtr->body.ei.optionTable, objv[4], textPtr->tkwin);
 	if (objPtr == NULL) {
 	    return TCL_ERROR;
@@ -188,7 +188,7 @@ TkTextImageCmd(
 	}
 	if (objc <= 5) {
 	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp,
-		    (char *) &eiPtr->body.ei, eiPtr->body.ei.optionTable,
+		    &eiPtr->body.ei, eiPtr->body.ei.optionTable,
 		    (objc == 5) ? objv[4] : NULL, textPtr->tkwin);
 
 	    if (objPtr == NULL) {
@@ -337,7 +337,7 @@ EmbImageConfigure(
     int conflict = 0;		/* True if we have a name conflict */
     size_t len;			/* length of image name */
 
-    if (Tk_SetOptions(textPtr->interp, (char *) &eiPtr->body.ei,
+    if (Tk_SetOptions(textPtr->interp, &eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,
 	    objc, objv, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 	return TCL_ERROR;

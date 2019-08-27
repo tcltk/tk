@@ -104,7 +104,7 @@ test focus-1.7 {Tk_FocusCmd procedure} -constraints unix -body {
     focus .gorp a
 } -returnCodes error -result {bad option ".gorp": must be -displayof, -force, or -lastfor}
 test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -constraints {
-	unix 
+	unix
 } -setup {
     destroy .t2
 } -body {
@@ -130,29 +130,29 @@ test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -constraints {
     destroy .t2
 } -result {.t2.f2 .t2 .t2}
 test focus-1.9 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix 
+	unix
 } -body {
     focus -displayof
 } -returnCodes error -result {wrong # args: should be "focus -displayof window"}
 test focus-1.10 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix 
+	unix
 } -body {
     focus -displayof a b
 } -returnCodes error -result {wrong # args: should be "focus -displayof window"}
 test focus-1.11 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix 
+	unix
 } -body {
     focus -displayof .lousy
 } -returnCodes error -result {bad window path name ".lousy"}
 test focus-1.12 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix 
+	unix
 } -body {
     focusClear
     focus .t
     focus -displayof .t.b3
 }  -result {}
 test focus-1.13 {Tk_FocusCmd procedure, -displayof option} -constraints {
-	unix 
+	unix
 } -body {
     focusClear
     focus -force .t
@@ -185,22 +185,22 @@ test focus-1.19 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
     lappend x [focus]
 } -result {{} .t.b1}
 test focus-1.20 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix 
+    unix
 } -body {
     focus -lastfor
 } -returnCodes error -result {wrong # args: should be "focus -lastfor window"}
 test focus-1.21 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix 
+    unix
 } -body {
     focus -lastfor 1 2
 } -returnCodes error -result {wrong # args: should be "focus -lastfor window"}
 test focus-1.22 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix 
+    unix
 } -body {
     focus -lastfor who_knows?
 } -returnCodes error -result {bad window path name "who_knows?"}
 test focus-1.23 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix 
+    unix
 } -body {
     focusClear
     focusSetup
@@ -209,7 +209,7 @@ test focus-1.23 {Tk_FocusCmd procedure, -lastfor option} -constraints {
     list [focus -lastfor .] [focus -lastfor .t.b3]
 } -result {.b .t.b1}
 test focus-1.24 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix 
+    unix
 } -body {
     focusClear
     focusSetup

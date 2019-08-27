@@ -156,7 +156,7 @@ ServicesEventProc(
 int
 TkMacOSXRegisterServiceWidgetObjCmd(
     ClientData cd,
-    Tcl_Interp *ip,
+    Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
@@ -165,7 +165,7 @@ TkMacOSXRegisterServiceWidgetObjCmd(
      */
 
     if (objc != 2) {
-	Tcl_WrongNumArgs(ip, 1, objv, "path?");
+	Tcl_WrongNumArgs(interp, 1, objv, "path?");
 	return TCL_ERROR;
     }
 
@@ -175,8 +175,8 @@ TkMacOSXRegisterServiceWidgetObjCmd(
 
     Rect bounds;
     NSRect frame;
-    Tk_Window path =
-	    Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+    Tk_Window path = Tk_NameToWindow(interp,
+	    Tcl_GetString(objv[1]), Tk_MainWindow(interp));
 
     if (path == NULL) {
 	return TCL_ERROR;

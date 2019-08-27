@@ -13,16 +13,6 @@
 
 #include "tkWinInt.h"
 
-/*
- * The w32api 1.1 package (included in Mingw 1.1) does not define _WIN32_IE by
- * default. Define it here to gain access to the InitCommonControlsEx API in
- * commctrl.h.
- */
-
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0550 /* IE 5.5 */
-#endif
-
 #include <commctrl.h>
 #ifdef _MSC_VER
 #   pragma comment (lib, "comctl32.lib")
@@ -70,7 +60,6 @@ static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
 static WNDCLASS childClass;		/* Window class for child windows. */
-static int tkPlatformId = 0;		/* version of Windows platform */
 static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;
 					/* The current character encoding for
@@ -138,7 +127,7 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = GetModuleHandle(TEXT("NTDLL"));
+	HANDLE handle = GetModuleHandle(L"NTDLL");
 	int(__stdcall *getversion)(void *) =
 		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
@@ -269,7 +258,7 @@ TkWinXInit(
 
     if (GetLocaleInfo(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
 	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
-	       (LPTSTR) &lpCP, sizeof(lpCP)/sizeof(TCHAR))
+	       (LPWSTR) &lpCP, sizeof(lpCP)/sizeof(WCHAR))
 	    && TranslateCharsetInfo(INT2PTR(lpCP), &lpCs, TCI_SRCCODEPAGE)) {
 	UpdateInputLanguage((int) lpCs.ciCharset);
     }
@@ -278,7 +267,7 @@ TkWinXInit(
      * Make sure we cleanup on finalize.
      */
 
-    TkCreateExitHandler(TkWinXCleanup, (ClientData) hInstance);
+    TkCreateExitHandler(TkWinXCleanup, hInstance);
 }
 
 /*
@@ -301,7 +290,7 @@ void
 TkWinXCleanup(
     ClientData clientData)
 {
-    HINSTANCE hInstance = (HINSTANCE) clientData;
+    HINSTANCE hInstance = clientData;
 
     /*
      * Clean up our own class.
@@ -328,33 +317,26 @@ TkWinXCleanup(
 /*
  *----------------------------------------------------------------------
  *
- * TkWinGetPlatformId --
+ * TkWinGetPlatformTheme --
  *
- *	Determines whether running under NT, 95, or Win32s, to allow runtime
- *	conditional code. Win32s is no longer supported.
+ *	Return the Windows drawing style we should be using.
  *
  * Results:
  *	The return value is one of:
- *		VER_PLATFORM_WIN32s	   Win32s on Windows 3.1 (not supported)
- *		VER_PLATFORM_WIN32_WINDOWS Win32 on Windows 95, 98, ME (not supported)
- *		VER_PLATFORM_WIN32_NT	Win32 on Windows XP, Vista, Windows 7, Windows 8
- *		VER_PLATFORM_WIN32_CE	Win32 on Windows CE
- *
- * Side effects:
- *	None.
+ *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
+ *	    TK_THEME_WIN_XP		XP not in classic mode
  *
  *----------------------------------------------------------------------
  */
 
 int
-TkWinGetPlatformId(void)
+TkWinGetPlatformTheme(void)
 {
-    if (tkPlatformId == 0) {
+    if (tkWinTheme == 0) {
 	OSVERSIONINFOW os;
 
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	GetVersionExW(&os);
-	tkPlatformId = os.dwPlatformId;
 
 	/*
 	 * Set tkWinTheme to be TK_THEME_WIN_XP or TK_THEME_WIN_CLASSIC. The
@@ -362,11 +344,10 @@ TkWinGetPlatformId(void)
 	 * windows classic theme was selected.
 	 */
 
-	if ((os.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
-		(os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
+	if ((os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
 	    HKEY hKey;
-	    LPCTSTR szSubKey = TEXT("Control Panel\\Appearance");
-	    LPCTSTR szCurrent = TEXT("Current");
+	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
+	    LPCWSTR szCurrent = L"Current";
 	    DWORD dwSize = 200;
 	    char pBuffer[200];
 
@@ -386,33 +367,6 @@ TkWinGetPlatformId(void)
 	} else {
 	    tkWinTheme = TK_THEME_WIN_CLASSIC;
 	}
-    }
-    return tkPlatformId;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkWinGetPlatformTheme --
- *
- *	Return the Windows drawing style we should be using.
- *
- * Results:
- *	The return value is one of:
- *	    TK_THEME_WIN_CLASSIC	95/98/NT or XP in classic mode
- *	    TK_THEME_WIN_XP		XP not in classic mode
- *
- * Side effects:
- *	Could invoke TkWinGetPlatformId.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkWinGetPlatformTheme(void)
-{
-    if (tkPlatformId == 0) {
-	TkWinGetPlatformId();
     }
     return tkWinTheme;
 }
@@ -676,7 +630,7 @@ TkpCloseDisplay(
 	    ckfree(display->screens->root_visual);
 	}
 	if (display->screens->root != None) {
-	    ckfree(display->screens->root);
+	    ckfree((char *)display->screens->root);
 	}
 	if (display->screens->cmap != None) {
 	    XFreeColormap(display, display->screens->cmap);
@@ -716,7 +670,7 @@ TkClipCleanup(
 		dispPtr->windowAtom);
 
 	Tk_DestroyWindow(dispPtr->clipWindow);
-	Tcl_Release((ClientData) dispPtr->clipWindow);
+	Tcl_Release(dispPtr->clipWindow);
 	dispPtr->clipWindow = NULL;
     }
 }
@@ -1360,7 +1314,7 @@ GenerateXEvent(
  * GetState --
  *
  *	This function constructs a state mask for the mouse buttons and
- *	modifier keys as they were before the event occured.
+ *	modifier keys as they were before the event occurred.
  *
  * Results:
  *	Returns a composite value of all the modifier and button state flags
@@ -1721,30 +1675,6 @@ HandleIMEComposition(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_FreeXId --
- *
- *	This interface is not needed under Windows.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_FreeXId(
-    Display *display,
-    XID xid)
-{
-    /* Do nothing */
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWinResendEvent --
  *
  *	This function converts an X event into a Windows event and invokes the
@@ -1982,8 +1912,8 @@ Tk_SetCaretPos(
  *	Return the number of milliseconds the user was inactive.
  *
  * Results:
- *	Milliseconds of user inactive time or -1 if the user32.dll doesn't
- *	have the symbol GetLastInputInfo or GetLastInputInfo returns an error.
+ *	Milliseconds of user inactive time or -1 if GetLastInputInfo
+ *	returns an error.
  *
  * Side effects:
  *	None.
@@ -1998,7 +1928,7 @@ Tk_GetUserInactiveTime(
     LASTINPUTINFO li;
 
     li.cbSize = sizeof(li);
-    if (!(BOOL)GetLastInputInfo(&li)) {
+    if (!GetLastInputInfo(&li)) {
 	return -1;
     }
 
@@ -2020,7 +1950,7 @@ Tk_GetUserInactiveTime(
  *	none
  *
  * Side effects:
- *	The user inactivity timer of the underlaying windowing system is reset
+ *	The user inactivity timer of the underlying windowing system is reset
  *	to zero.
  *
  *----------------------------------------------------------------------

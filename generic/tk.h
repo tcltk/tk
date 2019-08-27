@@ -17,17 +17,10 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION != 8) || (TCL_MINOR_VERSION < 6)
-#	error Tk 8.6 must be compiled with tcl.h from Tcl 8.6 or better
+#if (TCL_MAJOR_VERSION < 8) || (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
+#	error Tk 8.7 must be compiled with tcl.h from Tcl 8.6 or better
 #endif
 
-#ifndef CONST84
-#   define CONST84 const
-#   define CONST84_RETURN const
-#endif
-#ifndef CONST86
-#   define CONST86 CONST84
-#endif
 #ifndef EXTERN
 #   define EXTERN extern TCL_STORAGE_CLASS
 #endif
@@ -59,8 +52,8 @@ extern "C" {
  * and update the version numbers:
  *
  * library/tk.tcl	(1 LOC patch)
- * unix/configure.in	(2 LOC Major, 2 LOC minor, 1 LOC patch)
- * win/configure.in	(as above)
+ * unix/configure.ac	(2 LOC Major, 2 LOC minor, 1 LOC patch)
+ * win/configure.ac	(as above)
  * README		(sections 0 and 1)
  * macosx/Tk-Common.xcconfig (not patchlevel) 1 LOC
  * win/README		(not patchlevel)
@@ -73,12 +66,12 @@ extern "C" {
  */
 
 #define TK_MAJOR_VERSION	8
-#define TK_MINOR_VERSION	6
-#define TK_RELEASE_LEVEL	TCL_FINAL_RELEASE
-#define TK_RELEASE_SERIAL	9
+#define TK_MINOR_VERSION	7
+#define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
+#define TK_RELEASE_SERIAL	2
 
-#define TK_VERSION		"8.6"
-#define TK_PATCH_LEVEL		"8.6.9"
+#define TK_VERSION		"8.7"
+#define TK_PATCH_LEVEL		"8.7a2"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -106,6 +99,10 @@ extern "C" {
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS	DLLEXPORT
+#else
+# ifndef TCL_STORAGE_CLASS
+#   define TCL_STORAGE_CLASS DLLIMPORT
+# endif
 #endif
 
 /*
@@ -191,20 +188,25 @@ typedef struct Tk_OptionSpec {
     const char *defValue;	/* Default value for option if not specified
 				 * in command line, the option database, or
 				 * the system. */
-    int objOffset;		/* Where in record to store a Tcl_Obj * that
+#if TCL_MAJOR_VERSION > 8
+    size_t objOffset;		/* Where in record to store a Tcl_Obj * that
 				 * holds the value of this option, specified
 				 * as an offset in bytes from the start of the
-				 * record. Use the Tk_Offset macro to generate
+				 * record. Use the offsetof macro to generate
 				 * values for this. -1 means don't store the
 				 * Tcl_Obj in the record. */
-    int internalOffset;		/* Where in record to store the internal
+    size_t internalOffset;		/* Where in record to store the internal
 				 * representation of the value of this option,
 				 * such as an int or XColor *. This field is
 				 * specified as an offset in bytes from the
-				 * start of the record. Use the Tk_Offset
+				 * start of the record. Use the offsetof
 				 * macro to generate values for it. -1 means
 				 * don't store the internal representation in
 				 * the record. */
+#else
+    int objOffset;
+    int internalOffset;
+#endif
     int flags;			/* Any combination of the values defined
 				 * below. */
     const void *clientData;	/* An alternate place to put option-specific
@@ -267,7 +269,9 @@ typedef struct Tk_ObjCustomOption {
  * Computes number of bytes from beginning of structure to a given field.
  */
 
-#define Tk_Offset(type, field) ((int) offsetof(type, field))
+#ifndef TK_NO_DEPRECATED
+#   define Tk_Offset(type, field) ((int) offsetof(type, field))
+#endif
 /* Workaround for platforms missing offsetof(), e.g. VC++ 6.0 */
 #ifndef offsetof
 #   define offsetof(type, field) ((size_t) ((char *) &((type *) 0)->field))
@@ -291,7 +295,7 @@ typedef struct Tk_SavedOption {
     double internalForm;	/* The old value of the option, in some
 				 * internal representation such as an int or
 				 * (XColor *). Valid only if the field
-				 * optionPtr->specPtr->objOffset is < 0. The
+				 * optionPtr->specPtr->objOffset is -1. The
 				 * space must be large enough to accommodate a
 				 * double, a long, or a pointer; right now it
 				 * looks like a double (i.e., 8 bytes) is big
@@ -307,11 +311,15 @@ typedef struct Tk_SavedOption {
 #endif
 
 typedef struct Tk_SavedOptions {
-    char *recordPtr;		/* The data structure in which to restore
+    void *recordPtr;		/* The data structure in which to restore
 				 * configuration options. */
     Tk_Window tkwin;		/* Window associated with recordPtr; needed to
 				 * restore certain options. */
-    int numItems;		/* The number of valid items in items field. */
+#if TCL_MAJOR_VERSION > 8
+    size_t numItems;		/* The number of valid items in items field. */
+#else
+    int numItems;
+#endif
     Tk_SavedOption items[TK_NUM_SAVED_OPTIONS];
 				/* Items used to hold old values. */
     struct Tk_SavedOptions *nextPtr;
@@ -336,8 +344,8 @@ typedef struct Tk_SavedOptions {
 #ifndef __NO_OLD_CONFIG
 
 typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
-	Tk_Window tkwin, CONST84 char *value, char *widgRec, int offset);
-typedef CONST86 char *(Tk_OptionPrintProc) (ClientData clientData,
+	Tk_Window tkwin, const char *value, char *widgRec, int offset);
+typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
 	Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
 
 typedef struct Tk_CustomOption {
@@ -363,19 +371,23 @@ typedef struct Tk_ConfigSpec {
     int type;			/* Type of option, such as TK_CONFIG_COLOR;
 				 * see definitions below. Last option in table
 				 * must have type TK_CONFIG_END. */
-    CONST86 char *argvName;	/* Switch used to specify option in argv. NULL
+    const char *argvName;	/* Switch used to specify option in argv. NULL
 				 * means this spec is part of a group. */
     Tk_Uid dbName;		/* Name for option in option database. */
     Tk_Uid dbClass;		/* Class for option in database. */
     Tk_Uid defValue;		/* Default value for option if not specified
 				 * in command line or database. */
-    int offset;			/* Where in widget record to store value; use
-				 * Tk_Offset macro to generate values for
+#if TCL_MAJOR_VERSION > 8
+    size_t offset;			/* Where in widget record to store value; use
+				 * offsetof macro to generate values for
 				 * this. */
+#else
+    int offset;
+#endif
     int specFlags;		/* Any combination of the values defined
 				 * below; other bits are used internally by
 				 * tkConfig.c. */
-    CONST86 Tk_CustomOption *customPtr;
+    const Tk_CustomOption *customPtr;
 				/* If type is TK_CONFIG_CUSTOM then this is a
 				 * pointer to info about how to parse and
 				 * print the option. Otherwise it is
@@ -415,7 +427,9 @@ typedef enum {
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
-#define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
+#ifndef TK_NO_DEPRECATED
+#  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
+#endif /* !TK_NO_DEPRECATED */
 #define TK_CONFIG_USER_BIT		0x100
 #endif /* __NO_OLD_CONFIG */
 
@@ -424,14 +438,14 @@ typedef enum {
  */
 
 typedef struct {
-    CONST86 char *key;		/* The key string that flags the option in the
+    const char *key;		/* The key string that flags the option in the
 				 * argv array. */
     int type;			/* Indicates option type; see below. */
-    char *src;			/* Value to be used in setting dst; usage
+    void *src;			/* Value to be used in setting dst; usage
 				 * depends on type. */
-    char *dst;			/* Address of value to be modified; usage
+    void *dst;			/* Address of value to be modified; usage
 				 * depends on type. */
-    CONST86 char *help;		/* Documentation message describing this
+    const char *help;		/* Documentation message describing this
 				 * option. */
 } Tk_ArgvInfo;
 
@@ -576,7 +590,11 @@ typedef void (Tk_ClassWorldChangedProc) (ClientData instanceData);
 typedef void (Tk_ClassModalProc) (Tk_Window tkwin, XEvent *eventPtr);
 
 typedef struct Tk_ClassProcs {
+#if TCL_MAJOR_VERSION > 8
+    size_t size;
+#else
     unsigned int size;
+#endif
     Tk_ClassWorldChangedProc *worldChangedProc;
 				/* Procedure to invoke when the widget needs
 				 * to respond in some way to a change in the
@@ -601,12 +619,12 @@ typedef struct Tk_ClassProcs {
  *
  *	#define Tk_GetField(name, who, which) \
  *	    (((who) == NULL) ? NULL :
- *	    (((who)->size <= Tk_Offset(name, which)) ? NULL :(name)->which))
+ *	    (((who)->size <= offsetof(name, which)) ? NULL :(name)->which))
  */
 
 #define Tk_GetClassProc(procs, which) \
     (((procs) == NULL) ? NULL : \
-    (((procs)->size <= Tk_Offset(Tk_ClassProcs, which)) ? NULL:(procs)->which))
+    (((procs)->size <= offsetof(Tk_ClassProcs, which)) ? NULL:(procs)->which))
 
 /*
  * Each geometry manager (the packer, the placer, etc.) is represented by a
@@ -747,9 +765,10 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
     (((Tk_FakeWin *) (tkwin))->flags & TK_WM_MANAGEABLE)
 #define Tk_ReqWidth(tkwin)	(((Tk_FakeWin *) (tkwin))->reqWidth)
 #define Tk_ReqHeight(tkwin)	(((Tk_FakeWin *) (tkwin))->reqHeight)
-/* Tk_InternalBorderWidth is deprecated */
+#ifndef TK_NO_DEPRECATED
 #define Tk_InternalBorderWidth(tkwin) \
     (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
+#endif /* !TK_NO_DEPRECATED */
 #define Tk_InternalBorderLeft(tkwin) \
     (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
 #define Tk_InternalBorderRight(tkwin) \
@@ -920,7 +939,7 @@ typedef enum {
 } Tk_State;
 
 typedef struct Tk_SmoothMethod {
-    CONST86 char *name;
+    const char *name;
     int (*coordProc) (Tk_Canvas canvas, double *pointPtr, int numPoints,
 	    int numSteps, XPoint xPoints[], double dblPoints[]);
     void (*postscriptProc) (Tcl_Interp *interp, Tk_Canvas canvas,
@@ -1019,6 +1038,8 @@ typedef int	(Tk_ItemAreaProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double *rectPtr);
 typedef int	(Tk_ItemPostscriptProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, int prepass);
+typedef void	(Tk_ItemRotateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+		    double originX, double originY, double angleRadians);
 typedef void	(Tk_ItemScaleProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double originX, double originY, double scaleX,
 		    double scaleY);
@@ -1048,14 +1069,18 @@ typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 #ifndef __NO_OLD_CONFIG
 
 typedef struct Tk_ItemType {
-    CONST86 char *name;		/* The name of this type of item, such as
+    const char *name;		/* The name of this type of item, such as
 				 * "line". */
-    int itemSize;		/* Total amount of space needed for item's
+#if TCL_MAJOR_VERSION > 8
+    size_t itemSize;		/* Total amount of space needed for item's
 				 * record. */
+#else
+    int itemSize;
+#endif
     Tk_ItemCreateProc *createProc;
 				/* Procedure to create a new item of this
 				 * type. */
-    CONST86 Tk_ConfigSpec *configSpecs; /* Pointer to array of configuration specs for
+    const Tk_ConfigSpec *configSpecs; /* Pointer to array of configuration specs for
 				 * this type. Used for returning configuration
 				 * info. */
     Tk_ItemConfigureProc *configProc;
@@ -1098,7 +1123,9 @@ typedef struct Tk_ItemType {
 				/* Procedure to delete characters from an
 				 * item. */
     struct Tk_ItemType *nextPtr;/* Used to link types together into a list. */
-    char *reserved1;		/* Reserved for future extension. */
+    Tk_ItemRotateProc *rotateProc;
+				/* Procedure to rotate an item's coordinates
+				 * about a point. */
     int reserved2;		/* Carefully compatible with */
     char *reserved3;		/* Jan Nijtmans dash patch */
     char *reserved4;
@@ -1225,8 +1252,8 @@ typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
 	char **argv, Tk_ImageType *typePtr, Tk_ImageMaster master,
 	ClientData *masterDataPtr);
 #else
-typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, CONST86 char *name, int objc,
-	Tcl_Obj *const objv[], CONST86 Tk_ImageType *typePtr, Tk_ImageMaster master,
+typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, const char *name, int objc,
+	Tcl_Obj *const objv[], const Tk_ImageType *typePtr, Tk_ImageMaster master,
 	ClientData *masterDataPtr);
 #endif /* USE_OLD_IMAGE */
 typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData masterData);
@@ -1250,7 +1277,7 @@ typedef int (Tk_ImagePostscriptProc) (ClientData clientData,
  */
 
 struct Tk_ImageType {
-    CONST86 char *name;		/* Name of image type. */
+    const char *name;		/* Name of image type. */
     Tk_ImageCreateProc *createProc;
 				/* Procedure to call to create a new image of
 				 * this type. */
@@ -1362,7 +1389,7 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
  */
 
 struct Tk_PhotoImageFormat {
-    CONST86 char *name;		/* Name of image file format */
+    const char *name;		/* Name of image file format */
     Tk_ImageFileMatchProc *fileMatchProc;
 				/* Procedure to call to determine whether an
 				 * image file matches this format. */
@@ -1466,6 +1493,7 @@ typedef struct Tk_ElementSpec {
  *----------------------------------------------------------------------
  */
 
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #define TK_READABLE		TCL_READABLE
 #define TK_WRITABLE		TCL_WRITABLE
 #define TK_EXCEPTION		TCL_EXCEPTION
@@ -1499,6 +1527,7 @@ typedef struct Tk_ElementSpec {
 #define Tk_FreeProc		Tcl_FreeProc
 #define Tk_Preserve		Tcl_Preserve
 #define Tk_Release		Tcl_Release
+#endif
 
 /* Removed Tk_Main, use macro instead */
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -1533,7 +1562,7 @@ typedef void (Tk_EventProc) (ClientData clientData, XEvent *eventPtr);
 typedef int (Tk_GenericProc) (ClientData clientData, XEvent *eventPtr);
 typedef int (Tk_ClientMessageProc) (Tk_Window tkwin, XEvent *eventPtr);
 typedef int (Tk_GetSelProc) (ClientData clientData, Tcl_Interp *interp,
-	CONST86 char *portion);
+	const char *portion);
 typedef void (Tk_LostSelProc) (ClientData clientData);
 typedef Tk_RestrictAction (Tk_RestrictProc) (ClientData clientData,
 	XEvent *eventPtr);
@@ -1561,12 +1590,13 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
  *----------------------------------------------------------------------
  *
  * Allow users to say that they don't want to alter their source to add extra
- * arguments to Tk_PhotoPutBlock() et al; DO NOT DEFINE THIS WHEN BUILDING TK.
+ * arguments to Tk_PhotoPutBlock() et al.
  *
  * This goes after the inclusion of the stubbed-decls so that the declarations
  * of what is actually there can be correct.
  */
 
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #ifdef USE_COMPOSITELESS_PHOTO_PUT_BLOCK
 #   ifdef Tk_PhotoPutBlock
 #	undef Tk_PhotoPutBlock
@@ -1599,6 +1629,7 @@ typedef int (Tk_SelectionProc) (ClientData clientData, int offset,
 #   endif
 #   define Tk_PhotoSetSize		Tk_PhotoSetSize_Panic
 #endif /* USE_PANIC_ON_PHOTO_ALLOC_FAILURE */
+#endif /* !TK_NO_DEPRECATED */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
