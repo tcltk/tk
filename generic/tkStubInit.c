@@ -178,6 +178,7 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkAlignImageData 0
 #	define TkGenerateActivateEvents 0
 #	define TkpGetMS 0
+#	define TkpGetCapture 0
 #	define TkPointerDeadWindow 0
 #	define TkpSetCapture 0
 #	define TkpSetCursor 0
