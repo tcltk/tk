@@ -30,14 +30,6 @@
 #endif
 
 #include "tkInt.h"
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#ifdef NO_STDLIB_H
-#   include "../compat/stdlib.h"
-#else
-#   include <stdlib.h>
-#endif
 
 extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
@@ -205,7 +197,7 @@ Tk_MainEx(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
 	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
 	    abort();
 	} else {
@@ -244,7 +236,7 @@ Tk_MainEx(
     is.gotPartial = 0;
     Tcl_Preserve(interp);
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#if defined(_WIN32)
 #if !defined(STATIC_BUILD)
     /* If compiled for Win32 but running on Cygwin, don't use console */
     if (!tclStubsPtr->reserved9)
@@ -306,7 +298,7 @@ Tk_MainEx(
     argc--;
     argv++;
 
-    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewIntObj(argc), TCL_GLOBAL_ONLY);
+    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj(argc), TCL_GLOBAL_ONLY);
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
@@ -333,7 +325,7 @@ Tk_MainEx(
     }
 #endif
     Tcl_SetVar2Ex(interp, "tcl_interactive", NULL,
-	    Tcl_NewIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
+	    Tcl_NewWideIntObj(!path && (is.tty || nullStdin)), TCL_GLOBAL_ONLY);
 
     /*
      * Invoke application-specific initialization.
@@ -433,14 +425,15 @@ StdinProc(
     int mask)			/* Not used. */
 {
     char *cmd;
-    int code, count;
+    int code;
+    size_t count;
     InteractiveState *isPtr = clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
 
     count = Tcl_Gets(chan, &isPtr->line);
 
-    if (count < 0 && !isPtr->gotPartial) {
+    if (count == (size_t)-1 && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {

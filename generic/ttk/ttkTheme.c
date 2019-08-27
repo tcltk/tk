@@ -149,7 +149,7 @@ static const Tk_OptionSpec *TTKGetOptionSpec(
 
     /* Make sure widget option has a Tcl_Obj* entry:
      */
-    if (optionSpec->objOffset < 0) {
+    if (optionSpec->objOffset == TCL_AUTO_LENGTH) {
 	return 0;
     }
 
@@ -978,12 +978,12 @@ static
 int InitializeElementRecord(
     Ttk_ElementClass *eclass,	/* Element instance to initialize */
     Ttk_Style style,		/* Style table */
-    char *widgetRecord,		/* Source of widget option values */
+    void *widgetRecord,		/* Source of widget option values */
     Tk_OptionTable optionTable,	/* Option table describing widget record */
     Tk_Window tkwin,		/* Corresponding window */
     Ttk_State state)	/* Widget or element state */
 {
-    char *elementRecord = eclass->elementRecord;
+    void *elementRecord = eclass->elementRecord;
     OptionMap optionMap = GetOptionMap(eclass,optionTable);
     int nResources = eclass->nResources;
     Ttk_ResourceCache cache = style->cache;
@@ -992,7 +992,7 @@ int InitializeElementRecord(
     int i;
     for (i=0; i<nResources; ++i, ++elementOption) {
 	Tcl_Obj **dest = (Tcl_Obj **)
-	    (elementRecord + elementOption->offset);
+	    ((char *)elementRecord + elementOption->offset);
 	const char *optionName = elementOption->optionName;
 	Tcl_Obj *dynamicSetting = Ttk_StyleMap(style, optionName, state);
 	Tcl_Obj *widgetValue = 0;
@@ -1000,7 +1000,7 @@ int InitializeElementRecord(
 
 	if (optionMap[i]) {
 	    widgetValue = *(Tcl_Obj **)
-		(widgetRecord + optionMap[i]->objOffset);
+		((char *)widgetRecord + optionMap[i]->objOffset);
 	}
 
 	if (widgetValue) {
@@ -1072,7 +1072,7 @@ void
 Ttk_ElementSize(
     Ttk_ElementClass *eclass,		/* Element to query */
     Ttk_Style style,			/* Style settings */
-    char *recordPtr,			/* The widget record. */
+    void *recordPtr,			/* The widget record. */
     Tk_OptionTable optionTable,		/* Description of widget record */
     Tk_Window tkwin,			/* The widget window. */
     Ttk_State state,			/* Current widget state */
@@ -1102,7 +1102,7 @@ void
 Ttk_DrawElement(
     Ttk_ElementClass *eclass,		/* Element instance */
     Ttk_Style style,			/* Style settings */
-    char *recordPtr,			/* The widget record. */
+    void *recordPtr,			/* The widget record. */
     Tk_OptionTable optionTable,		/* Description of option table */
     Tk_Window tkwin,			/* The widget window. */
     Drawable d,				/* Where to draw element. */
@@ -1382,7 +1382,7 @@ static int StyleThemeCreateCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = clientData;
-    static const char *optStrings[] =
+    static const char *const optStrings[] =
     	 { "-parent", "-settings", NULL };
     enum { OP_PARENT, OP_SETTINGS };
     Ttk_Theme parentTheme = pkgPtr->defaultTheme, newTheme;

@@ -274,7 +274,7 @@ int
 TkWinIndexOfColor(
     XColor *colorPtr)
 {
-    register WinColor *winColPtr = (WinColor *) colorPtr;
+    WinColor *winColPtr = (WinColor *) colorPtr;
     if (winColPtr->info.magic == COLOR_MAGIC) {
 	return winColPtr->index;
     }
@@ -364,7 +364,7 @@ XAllocColor(
 	} else {
 	    refCount = (size_t)Tcl_GetHashValue(entryPtr) + 1;
 	}
-	Tcl_SetHashValue(entryPtr, (void *)refCount);
+	Tcl_SetHashValue(entryPtr, INT2PTR(refCount));
     } else {
 	/*
 	 * Determine what color will actually be used on non-colormap systems.
@@ -446,7 +446,7 @@ XFreeColors(
 		}
 		Tcl_DeleteHashEntry(entryPtr);
 	    } else {
-		Tcl_SetHashValue(entryPtr, (size_t)refCount);
+		Tcl_SetHashValue(entryPtr, INT2PTR(refCount));
 	    }
 	}
     }

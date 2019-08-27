@@ -1787,8 +1787,8 @@ FontchooserCget(
 	}
 	break;
     case FontchooserVisible:
-	resObj = Tcl_NewBooleanObj([[[NSFontManager sharedFontManager]
-		fontPanel:NO] isVisible]);
+	resObj = Tcl_NewWideIntObj([[[NSFontManager sharedFontManager]
+		fontPanel:NO] isVisible] != 0);
 	break;
     default:
 	resObj = Tcl_NewObj();

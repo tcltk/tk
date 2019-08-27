@@ -15,13 +15,11 @@
  *  	shellcc/platform/commctls/userex/refentry.asp >
  */
 
+#include <tkWinInt.h>
 #ifndef HAVE_UXTHEME_H
 /* Stub for platforms that lack the XP theme API headers: */
-#include <tkWinInt.h>
 int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
-
-#define WINVER 0x0501	/* Requires Windows XP APIs */
 
 #include <windows.h>
 #include <uxtheme.h>
@@ -30,8 +28,6 @@ int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
 #   include <tmschema.h>
 #endif
-
-#include <tkWinInt.h>
 
 #include "ttk/ttkTheme.h"
 
@@ -99,7 +95,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
      * if we are running at least on Windows XP.
      */
     HINSTANCE handle;
-    *phlib = handle = LoadLibrary(TEXT("uxtheme.dll"));
+    *phlib = handle = LoadLibrary(L"uxtheme.dll");
     if (handle != 0)
     {
 	/*
@@ -432,8 +428,8 @@ static void DestroyElementData(void *clientData)
     ElementData *elementData = clientData;
     if (elementData->info->flags & HEAP_ELEMENT) {
 	ckfree(elementData->info->statemap);
-	ckfree(elementData->info->className);
-	ckfree(elementData->info->elementName);
+	ckfree((char *)elementData->info->className);
+	ckfree((char *)elementData->info->elementName);
 	ckfree(elementData->info);
     }
     ckfree(clientData);
@@ -815,9 +811,9 @@ typedef struct
 static Ttk_ElementOptionSpec TextElementOptions[] =
 {
     { "-text", TK_OPTION_STRING,
-	Tk_Offset(TextElement,textObj), "" },
+	offsetof(TextElement,textObj), "" },
     { "-font", TK_OPTION_FONT,
-	Tk_Offset(TextElement,fontObj), DEFAULT_FONT },
+	offsetof(TextElement,fontObj), DEFAULT_FONT },
     { NULL }
 };
 
@@ -830,13 +826,13 @@ static void TextElementSize(
     RECT rc = {0, 0};
     HRESULT hr = S_OK;
     const char *src;
-    int len;
+    TkSizeT len;
     Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
 
-    src = Tcl_GetStringFromObj(element->textObj, &len);
+    src = TkGetStringFromObj(element->textObj, &len);
     Tcl_WinUtfToTChar(src, len, &ds);
     hr = elementData->procs->GetThemeTextExtent(
 	    elementData->hTheme,
@@ -869,13 +865,13 @@ static void TextElementDraw(
     RECT rc = BoxToRect(b);
     HRESULT hr = S_OK;
     const char *src;
-    int len;
+    TkSizeT len;
     Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, d))
 	return;
 
-    src = Tcl_GetStringFromObj(element->textObj, &len);
+    src = TkGetStringFromObj(element->textObj, &len);
     Tcl_WinUtfToTChar(src, len, &ds);
     hr = elementData->procs->DrawThemeText(
 	    elementData->hTheme,
@@ -1120,13 +1116,13 @@ Ttk_CreateVsapiElement(
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
     int flags = 0;
-    int length = 0;
+    TkSizeT length = 0;
     char *name;
     LPWSTR wname;
     Ttk_ElementSpec *elementSpec = &GenericElementSpec;
     Tcl_DString classBuf;
 
-    static const char *optionStrings[] =
+    static const char *const optionStrings[] =
 	{ "-padding","-width","-height","-margins", "-syssize",
 	  "-halfheight", "-halfwidth", NULL };
     enum { O_PADDING, O_WIDTH, O_HEIGHT, O_MARGINS, O_SYSSIZE,
@@ -1142,7 +1138,7 @@ Ttk_CreateVsapiElement(
     if (Tcl_GetIntFromObj(interp, objv[1], &partId) != TCL_OK) {
 	return TCL_ERROR;
     }
-    name = Tcl_GetStringFromObj(objv[0], &length);
+    name = TkGetStringFromObj(objv[0], &length);
     className = (WCHAR *) Tcl_WinUtfToTChar(name, length, &classBuf);
 
     /* flags or padding */

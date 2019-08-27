@@ -13,8 +13,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * A data structure of the following type is kept for each message widget
@@ -109,11 +109,11 @@ typedef struct {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", DEF_MESSAGE_ANCHOR,
-	 -1, Tk_Offset(Message, anchor), 0, 0, 0},
+	 -1, offsetof(Message, anchor), 0, 0, 0},
     {TK_OPTION_INT, "-aspect", "aspect", "Aspect", DEF_MESSAGE_ASPECT,
-	 -1, Tk_Offset(Message, aspect), 0, 0, 0},
+	 -1, offsetof(Message, aspect), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	 DEF_MESSAGE_BG_COLOR, -1, Tk_Offset(Message, border), 0,
+	 DEF_MESSAGE_BG_COLOR, -1, offsetof(Message, border), 0,
 	 DEF_MESSAGE_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL,
 	 0, -1, 0, "-borderwidth", 0},
@@ -121,45 +121,45 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	 DEF_MESSAGE_BORDER_WIDTH, -1,
-	 Tk_Offset(Message, borderWidth), 0, 0, 0},
+	 offsetof(Message, borderWidth), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	 DEF_MESSAGE_CURSOR, -1, Tk_Offset(Message, cursor),
+	 DEF_MESSAGE_CURSOR, -1, offsetof(Message, cursor),
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL,
 	 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_MESSAGE_FONT, -1, Tk_Offset(Message, tkfont), 0, 0, 0},
+	DEF_MESSAGE_FONT, -1, offsetof(Message, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_MESSAGE_FG, -1, Tk_Offset(Message, fgColorPtr), 0, 0, 0},
+	DEF_MESSAGE_FG, -1, offsetof(Message, fgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	 "HighlightBackground", DEF_MESSAGE_HIGHLIGHT_BG, -1,
-	 Tk_Offset(Message, highlightBgColorPtr), 0, 0, 0},
+	 offsetof(Message, highlightBgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	 DEF_MESSAGE_HIGHLIGHT, -1, Tk_Offset(Message, highlightColorPtr),
+	 DEF_MESSAGE_HIGHLIGHT, -1, offsetof(Message, highlightColorPtr),
 	 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", DEF_MESSAGE_HIGHLIGHT_WIDTH, -1,
-	 Tk_Offset(Message, highlightWidth), 0, 0, 0},
+	 offsetof(Message, highlightWidth), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_MESSAGE_JUSTIFY, -1, Tk_Offset(Message, justify), 0, 0, 0},
+	DEF_MESSAGE_JUSTIFY, -1, offsetof(Message, justify), 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	 DEF_MESSAGE_PADX, Tk_Offset(Message, padXPtr),
-	 Tk_Offset(Message, padX), 0, 0, 0},
+	 DEF_MESSAGE_PADX, offsetof(Message, padXPtr),
+	 offsetof(Message, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	 DEF_MESSAGE_PADY, Tk_Offset(Message, padYPtr),
-	 Tk_Offset(Message, padY), 0, 0, 0},
+	 DEF_MESSAGE_PADY, offsetof(Message, padYPtr),
+	 offsetof(Message, padY), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_MESSAGE_RELIEF, -1, Tk_Offset(Message, relief), 0, 0, 0},
+	DEF_MESSAGE_RELIEF, -1, offsetof(Message, relief), 0, 0, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_MESSAGE_TAKE_FOCUS, -1, Tk_Offset(Message, takeFocus),
+	DEF_MESSAGE_TAKE_FOCUS, -1, offsetof(Message, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
-	DEF_MESSAGE_TEXT, -1, Tk_Offset(Message, string), 0, 0, 0},
+	DEF_MESSAGE_TEXT, -1, offsetof(Message, string), 0, 0, 0},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
-	DEF_MESSAGE_TEXT_VARIABLE, -1, Tk_Offset(Message, textVarName),
+	DEF_MESSAGE_TEXT_VARIABLE, -1, offsetof(Message, textVarName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_MESSAGE_WIDTH, -1, Tk_Offset(Message, width), 0, 0 ,0},
+	DEF_MESSAGE_WIDTH, -1, offsetof(Message, width), 0, 0 ,0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -242,7 +242,7 @@ Tk_MessageObjCmd(
     optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
     msgPtr = ckalloc(sizeof(Message));
-    memset(msgPtr, 0, (size_t) sizeof(Message));
+    memset(msgPtr, 0, sizeof(Message));
 
     /*
      * Set values for those fields that don't take a 0 or NULL value.
@@ -267,7 +267,7 @@ Tk_MessageObjCmd(
     Tk_CreateEventHandler(msgPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    MessageEventProc, msgPtr);
-    if (Tk_InitOptions(interp, (char *)msgPtr, optionTable, tkwin) != TCL_OK) {
+    if (Tk_InitOptions(interp, msgPtr, optionTable, tkwin) != TCL_OK) {
 	Tk_DestroyWindow(msgPtr->tkwin);
 	return TCL_ERROR;
     }
@@ -331,7 +331,7 @@ MessageWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    result = TCL_ERROR;
 	} else {
-	    objPtr = Tk_GetOptionValue(interp, (char *) msgPtr,
+	    objPtr = Tk_GetOptionValue(interp, msgPtr,
 		    msgPtr->optionTable, objv[2], msgPtr->tkwin);
 	    if (objPtr == NULL) {
 		result = TCL_ERROR;
@@ -343,7 +343,7 @@ MessageWidgetObjCmd(
 	break;
     case MESSAGE_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) msgPtr,
+	    objPtr = Tk_GetOptionInfo(interp, msgPtr,
 		    msgPtr->optionTable, (objc == 3) ? objv[2] : NULL,
 		    msgPtr->tkwin);
 	    if (objPtr == NULL) {
@@ -455,7 +455,7 @@ ConfigureMessage(
 		MessageTextVarProc, msgPtr);
     }
 
-    if (Tk_SetOptions(interp, (char *) msgPtr, msgPtr->optionTable, objc, objv,
+    if (Tk_SetOptions(interp, msgPtr, msgPtr->optionTable, objc, objv,
 	    msgPtr->tkwin, &savedOptions, NULL) != TCL_OK) {
 	Tk_RestoreSavedOptions(&savedOptions);
 	return TCL_ERROR;

@@ -28,19 +28,39 @@ namespace import -force tcltest::test
 # This probably means that tk wasn't installed properly.
 
 ## it indicates that something went wrong sourcing tk.tcl.
-## Ensure that any changes that occured to tk.tcl will work or are properly
+## Ensure that any changes that occurred to tk.tcl will work or are properly
 ## prevented in a safe interpreter.  -- hobbs
 
 # The set of hidden commands is platform dependent:
 
-set hidden_cmds {bell cd clipboard encoding exec exit fconfigure glob grab load menu open pwd selection socket source tcl:encoding:dirs toplevel unload wm}
+set hidden_cmds {bell cd clipboard encoding exec exit fconfigure}
 lappend hidden_cmds {*}[apply {{} {
+    if {[package vsatisfies [package provide Tcl] 8.7-]} {
+	lappend result file
+    }
+    lappend result glob grab load menu open pwd selection socket source tcl:encoding:dirs
+    if {[package vsatisfies [package provide Tcl] 8.7-]} {
+	lappend result tcl:encoding:system
+    }
+    lappend result toplevel unload wm
     foreach cmd {
 	atime attributes copy delete dirname executable exists extension
 	isdirectory isfile link lstat mkdir mtime nativename normalize owned
-	readable readlink rename rootname size stat tail tempfile type
+	readable readlink rename rootname size stat tail tempdir tempfile type
 	volumes writable
-    } {lappend result tcl:file:$cmd}; return $result
+    } {lappend result tcl:file:$cmd}
+    if {[package vsatisfies [package provide Tcl] 8.7-]} {
+	foreach cmd {
+	    cmdtype nameofexecutable
+	} {lappend result tcl:info:$cmd}
+	foreach cmd {
+	    autopurge list purge status
+	} {lappend result tcl:process:$cmd}
+	foreach cmd {
+	    lmkimg lmkzip mkimg mkkey mkzip mount  mount_data unmount
+	} {lappend result tcl:zipfs:$cmd}
+    }
+    return $result
 }}]
 if {[tk windowingsystem] ne "x11"} {
     lappend hidden_cmds tk_chooseColor tk_chooseDirectory tk_getOpenFile \

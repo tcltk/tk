@@ -117,6 +117,8 @@ static int		ParseArrowShape(ClientData clientData,
 static const char * PrintArrowShape(ClientData clientData,
 			    Tk_Window tkwin, char *recordPtr, int offset,
 			    Tcl_FreeProc **freeProcPtr);
+static void		RotateLine(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleLine(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -157,58 +159,58 @@ static const Tk_CustomOption pixelOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-activedash", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.activeDash),
+	NULL, offsetof(LineItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.activeStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.activeStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-activewidth", NULL, NULL,
-	"0.0", Tk_Offset(LineItem, outline.activeWidth),
+	"0.0", offsetof(LineItem, outline.activeWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_CUSTOM, "-arrow", NULL, NULL,
-	"none", Tk_Offset(LineItem, arrow),
+	"none", offsetof(LineItem, arrow),
 	TK_CONFIG_DONT_SET_DEFAULT, &arrowOption},
     {TK_CONFIG_CUSTOM, "-arrowshape", NULL, NULL,
-	"8 10 3", Tk_Offset(LineItem, arrowShapeA),
+	"8 10 3", offsetof(LineItem, arrowShapeA),
 	TK_CONFIG_DONT_SET_DEFAULT, &arrowShapeOption},
     {TK_CONFIG_CAP_STYLE, "-capstyle", NULL, NULL,
-	"butt", Tk_Offset(LineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"butt", offsetof(LineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+	"black", offsetof(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.dash),
+	NULL, offsetof(LineItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", Tk_Offset(LineItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(LineItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.disabledDash),
+	NULL, offsetof(LineItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.disabledColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.disabledStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.disabledStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
-	"0.0", Tk_Offset(LineItem, outline.disabledWidth),
+	"0.0", offsetof(LineItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", NULL, NULL,
-	"round", Tk_Offset(LineItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"round", offsetof(LineItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
-	"0,0", Tk_Offset(LineItem, outline.tsoffset),
+	"0,0", offsetof(LineItem, outline.tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_CUSTOM, "-smooth", NULL, NULL,
-	"0", Tk_Offset(LineItem, smooth),
+	"0", offsetof(LineItem, smooth),
 	TK_CONFIG_DONT_SET_DEFAULT, &smoothOption},
     {TK_CONFIG_INT, "-splinesteps", NULL, NULL,
-	"12", Tk_Offset(LineItem, splineSteps), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"12", offsetof(LineItem, splineSteps), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_CUSTOM, "-width", NULL, NULL,
-	"1.0", Tk_Offset(LineItem, outline.width),
+	"1.0", offsetof(LineItem, outline.width),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
@@ -239,7 +241,8 @@ Tk_ItemType tkLineType = {
     LineInsert,				/* insertProc */
     LineDeleteCoords,			/* dTextProc */
     NULL,				/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateLine,				/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -1856,6 +1859,56 @@ TranslateLine(
 /*
  *--------------------------------------------------------------
  *
+ * RotateLine --
+ *
+ *	This function is called to rotate a line by a given amount about a
+ *	point.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the line is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateLine(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being moved. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    LineItem *linePtr = (LineItem *) itemPtr;
+    double *coordPtr;
+    int i;
+    double s = sin(angleRad), c = cos(angleRad);
+
+    for (i = 0, coordPtr = linePtr->coordPtr; i < linePtr->numPoints;
+	    i++, coordPtr += 2) {
+	TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+    }
+    if (linePtr->firstArrowPtr != NULL) {
+	for (i = 0, coordPtr = linePtr->firstArrowPtr; i < PTS_IN_ARROW;
+		i++, coordPtr += 2) {
+	    TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+	}
+    }
+    if (linePtr->lastArrowPtr != NULL) {
+	for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
+		i++, coordPtr += 2) {
+	    TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+	}
+    }
+    ComputeLineBbox(canvas, linePtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * ParseArrowShape --
  *
  *	This function is called back during option parsing to parse arrow
@@ -1889,7 +1942,7 @@ ParseArrowShape(
     int argc;
     const char **argv = NULL;
 
-    if (offset != Tk_Offset(LineItem, arrowShapeA)) {
+    if ((size_t)offset != offsetof(LineItem, arrowShapeA)) {
 	Tcl_Panic("ParseArrowShape received bogus offset");
     }
 

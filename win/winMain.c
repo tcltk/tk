@@ -145,6 +145,9 @@ _tWinMain(
 
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
+#elif defined(UNICODE) && ((TCL_MAJOR_VERSION > 8) || (TCL_MINOR_VERSION > 6))
+    /* This doesn't work on Windows without UNICODE, neither does it work with Tcl 8.6 */
+    TclZipfs_AppHook(&argc, &argv);
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);

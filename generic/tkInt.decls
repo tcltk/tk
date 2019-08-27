@@ -99,7 +99,7 @@ declare 21 {
 	    const TkStateMap *mapPtr, const char *strKey)
 }
 declare 22 {
-    CONST86 char *TkFindStateString(const TkStateMap *mapPtr, int numKey)
+    const char *TkFindStateString(const TkStateMap *mapPtr, int numKey)
 }
 declare 23 {
     void TkFocusDeadWindow(TkWindow *winPtr)
@@ -182,7 +182,7 @@ declare 45 {
     void TkInstallFrameMenu(Tk_Window tkwin)
 }
 declare 46 {
-    CONST86 char *TkKeysymToString(KeySym keysym)
+    const char *TkKeysymToString(KeySym keysym)
 }
 declare 47 {
     int TkLineToArea(double end1Ptr[], double end2Ptr[], double rectPtr[])
@@ -389,7 +389,7 @@ declare 108 {
 	    Tcl_Obj *objPtr, Tk_Window *windowPtr)
 }
 declare 109 {
-    CONST86 char *TkpGetString(TkWindow *winPtr, XEvent *eventPtr, Tcl_DString *dsPtr)
+    const char *TkpGetString(TkWindow *winPtr, XEvent *eventPtr, Tcl_DString *dsPtr)
 }
 declare 110 {
     void TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
@@ -570,7 +570,7 @@ declare 169 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 170 {
-    CONST86 char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
+    const char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 171 {
@@ -578,7 +578,7 @@ declare 171 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 172 {
-    CONST86 char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
+    const char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 173 {
@@ -586,7 +586,7 @@ declare 173 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 174 {
-    CONST86 char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
+    const char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 175 {
@@ -594,7 +594,7 @@ declare 175 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 176 {
-    CONST86 char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
+    const char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 177 {
@@ -602,7 +602,7 @@ declare 177 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 178 {
-    CONST86 char *TkOrientPrintProc(ClientData clientData, Tk_Window tkwin,
+    const char *TkOrientPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 179 {
@@ -610,7 +610,7 @@ declare 179 {
 	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
 }
 declare 180 {
-    CONST86 char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
+    const char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
 	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
 }
 
@@ -634,6 +634,13 @@ declare 184 {
 	    Tk_Font tkfont, const char *source, int numBytes, double x,
 	    double y, double angle)
 }
+
+# Debugging / testing functions for photo images
+declare 185 {
+    int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
+            Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
+}
+
 
 ##############################################################################
 
@@ -1496,6 +1503,12 @@ declare 137 win {
 	    int sx, int sy, int dx, int dy,
 	    unsigned int w, unsigned int h)
 }
+declare 138 win {
+    Region XPolygonRegion(XPoint *pts, int n, int rule)
+}
+declare 139 win {
+    int XPointInRegion(Region rgn, int x, int y)
+}
 
 ################################
 # X functions for Aqua
@@ -1818,6 +1831,42 @@ declare 90 aqua {
 }
 declare 91 aqua {
     int XSync(Display *display, Bool flag)
+}
+declare 120 aqua {
+    int XOffsetRegion(Region rgn, int dx, int dy)
+}
+declare 121 aqua {
+    int XUnionRegion(Region srca, Region srcb, Region dr_return)
+}
+declare 122 aqua {
+    Window XCreateWindow(Display *display, Window parent, int x, int y,
+	    unsigned int width, unsigned int height,
+	    unsigned int border_width, int depth, unsigned int clazz,
+	    Visual *visual, unsigned long value_mask,
+	    XSetWindowAttributes *attributes)
+}
+declare 130 aqua {
+    int XFillArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
+}
+declare 131 aqua {
+    int XDrawArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
+}
+declare 132 aqua {
+    int XDrawRectangles(Display *d, Drawable dr, GC gc, XRectangle *r, int n)
+}
+declare 136 aqua {
+    int XReparentWindow(Display *d, Window w, Window p, int x, int y)
+}
+declare 137 aqua {
+    int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+	    int sx, int sy, int dx, int dy,
+	    unsigned int w, unsigned int h)
+}
+declare 138 aqua {
+    Region XPolygonRegion(XPoint *pts, int n, int rule)
+}
+declare 139 aqua {
+    int XPointInRegion(Region rgn, int x, int y)
 }
 
 # Local Variables:

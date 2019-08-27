@@ -3,11 +3,11 @@
  *
  * Simplified interface to Tcl_TraceVariable.
  *
- * PROBLEM: Can't distinguish "variable does not exist" (which is OK) 
+ * PROBLEM: Can't distinguish "variable does not exist" (which is OK)
  * from other errors (which are not).
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 

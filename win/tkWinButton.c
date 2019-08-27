@@ -131,7 +131,7 @@ InitBoxes(void)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    hrsrc = FindResource(module, TEXT("buttons"), RT_BITMAP);
+    hrsrc = FindResource(module, L"buttons", RT_BITMAP);
     if (hrsrc == NULL) {
 	Tcl_Panic("FindResource() failed for buttons bitmap resource, "
             "resources in tk_base.rc must be linked into Tk dll or static executable");
@@ -242,15 +242,15 @@ CreateProc(
 {
     Window window;
     HWND parent;
-    const TCHAR *class;
+    const WCHAR *class;
     WinButton *butPtr = (WinButton *)instanceData;
 
     parent = Tk_GetHWND(parentWin);
     if (butPtr->info.type == TYPE_LABEL) {
-	class = TEXT("STATIC");
+	class = L"STATIC";
 	butPtr->style = SS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     } else {
-	class = TEXT("BUTTON");
+	class = L"BUTTON";
 	butPtr->style = BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     }
     butPtr->hwnd = CreateWindow(class, NULL, butPtr->style,
@@ -316,14 +316,14 @@ TkpDisplayButton(
 {
     TkWinDCState state;
     HDC dc;
-    register TkButton *butPtr = (TkButton *) clientData;
+    TkButton *butPtr = clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
     int x = 0;			/* Initialization only needed to stop compiler
 				 * warning. */
     int y, relief;
-    register Tk_Window tkwin = butPtr->tkwin;
+    Tk_Window tkwin = butPtr->tkwin;
     int width = 0, height = 0, haveImage = 0, haveText = 0, drawRing = 0;
     RECT rect;
     int defaultWidth;		/* Width of default ring. */
@@ -818,7 +818,7 @@ TkpDisplayButton(
 
 void
 TkpComputeButtonGeometry(
-    register TkButton *butPtr)	/* Button whose geometry may have changed. */
+    TkButton *butPtr)	/* Button whose geometry may have changed. */
 {
     int txtWidth, txtHeight;	/* Width and height of text */
     int imgWidth, imgHeight;	/* Width and height of image */
@@ -1264,7 +1264,7 @@ ButtonProc(
 	PAINTSTRUCT ps;
 	BeginPaint(hwnd, &ps);
 	EndPaint(hwnd, &ps);
-	TkpDisplayButton((ClientData)butPtr);
+	TkpDisplayButton(butPtr);
 
 	/*
 	 * Special note: must cancel any existing idle handler for
@@ -1272,7 +1272,7 @@ ButtonProc(
 	 * cleared the REDRAW_PENDING flag.
 	 */
 
-	Tcl_CancelIdleCall(TkpDisplayButton, (ClientData)butPtr);
+	Tcl_CancelIdleCall(TkpDisplayButton, butPtr);
 	return 0;
     }
     case BN_CLICKED: {
@@ -1287,14 +1287,14 @@ ButtonProc(
 	    Tcl_Interp *interp = butPtr->info.interp;
 
 	    if (butPtr->info.state != STATE_DISABLED) {
-		Tcl_Preserve((ClientData)interp);
+		Tcl_Preserve(interp);
 		code = TkInvokeButton((TkButton*)butPtr);
 		if (code != TCL_OK && code != TCL_CONTINUE
 			&& code != TCL_BREAK) {
 		    Tcl_AddErrorInfo(interp, "\n    (button invoke)");
 		    Tcl_BackgroundException(interp, code);
 		}
-		Tcl_Release((ClientData)interp);
+		Tcl_Release(interp);
 	    }
 	    Tcl_ServiceAll();
 	    return 0;

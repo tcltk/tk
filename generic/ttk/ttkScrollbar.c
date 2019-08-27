@@ -4,8 +4,7 @@
  * ttk::scrollbar widget.
  */
 
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -22,7 +21,7 @@ typedef struct
     double	first;			/* top fraction */
     double	last;			/* bottom fraction */
 
-    Ttk_Box	troughBox;		/* trough parcel */ 
+    Ttk_Box	troughBox;		/* trough parcel */
     int 	minSize;		/* minimum size of thumb */
 } ScrollbarPart;
 
@@ -35,11 +34,11 @@ typedef struct
 static Tk_OptionSpec ScrollbarOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	Tk_Offset(Scrollbar,scrollbar.commandObj), -1, 0,0,0},
+	offsetof(Scrollbar,scrollbar.commandObj), -1, 0,0,0},
 
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
-	Tk_Offset(Scrollbar,scrollbar.orientObj),
-	Tk_Offset(Scrollbar,scrollbar.orient),
+	offsetof(Scrollbar,scrollbar.orientObj),
+	offsetof(Scrollbar,scrollbar.orient),
 	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -50,7 +49,7 @@ static Tk_OptionSpec ScrollbarOptionSpecs[] =
  * +++ Widget hooks.
  */
 
-static void 
+static void
 ScrollbarInitialize(Tcl_Interp *interp, void *recordPtr)
 {
     Scrollbar *sb = recordPtr;
@@ -241,7 +240,7 @@ ScrollbarDeltaCommand(
 
 /* $sb fraction $x $y --
  * 	Returns a real number between 0 and 1 indicating  where  the
- * 	point given by x and y lies in the trough area of the scrollbar. 
+ * 	point given by x and y lies in the trough area of the scrollbar.
  */
 static int
 ScrollbarFractionCommand(

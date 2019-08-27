@@ -2,11 +2,7 @@
  * Copyright (c) 2004, Joe English
  */
 
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"
@@ -62,26 +58,26 @@ typedef struct
 static Tk_OptionSpec TabOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-state", "", "",
-	"normal", -1,Tk_Offset(Tab,state),
+	"normal", -1, offsetof(Tab,state),
 	0,(ClientData)TabStateStrings,0 },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
-	Tk_Offset(Tab,textObj), -1, 0,0,GEOMETRY_CHANGED },
+	offsetof(Tab,textObj), -1, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-image", "image", "Image", NULL/*default*/,
-	Tk_Offset(Tab,imageObj), -1, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	offsetof(Tab,imageObj), -1, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	"none", Tk_Offset(Tab,compoundObj), -1,
+	"none", offsetof(Tab,compoundObj), -1,
 	0,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
-	Tk_Offset(Tab,underlineObj), -1, 0,0,GEOMETRY_CHANGED },
+	offsetof(Tab,underlineObj), -1, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
 static Tk_OptionSpec PaneOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-padding", "padding", "Padding", "0",
-	Tk_Offset(Tab,paddingObj), -1, 0,0,GEOMETRY_CHANGED },
+	offsetof(Tab,paddingObj), -1, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-sticky", "sticky", "Sticky", "nsew",
-	Tk_Offset(Tab,stickyObj), -1, 0,0,GEOMETRY_CHANGED },
+	offsetof(Tab,stickyObj), -1, 0,0,GEOMETRY_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(TabOptionSpecs)
 };
@@ -114,13 +110,13 @@ typedef struct
 static Tk_OptionSpec NotebookOptionSpecs[] =
 {
     {TK_OPTION_INT, "-width", "width", "Width", "0",
-	Tk_Offset(Notebook,notebook.widthObj),-1,
+	offsetof(Notebook,notebook.widthObj),-1,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-height", "height", "Height", "0",
-	Tk_Offset(Notebook,notebook.heightObj),-1,
+	offsetof(Notebook,notebook.heightObj),-1,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Padding", NULL,
-	Tk_Offset(Notebook,notebook.paddingObj),-1,
+	offsetof(Notebook,notebook.paddingObj),-1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -221,7 +217,7 @@ static int ConfigureTab(
     Tk_SavedOptions savedOptions;
     int mask = 0;
 
-    if (Tk_SetOptions(interp, (ClientData)tab, nb->notebook.paneOptionTable,
+    if (Tk_SetOptions(interp, tab, nb->notebook.paneOptionTable,
 	    objc, objv, slaveWindow, &savedOptions, &mask) != TCL_OK)
     {
 	return TCL_ERROR;
@@ -1053,7 +1049,7 @@ static int NotebookHideCommand(
 static int NotebookIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    static const char *whatTable[] = { "element", "tab", NULL };
+    static const char *const whatTable[] = { "element", "tab", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_TAB };
     int what = IDENTIFY_ELEMENT;
     Notebook *nb = recordPtr;

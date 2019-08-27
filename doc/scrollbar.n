@@ -4,7 +4,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH scrollbar n 4.1 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -215,15 +215,6 @@ document.  1.0 refers to the end of the document, 0.333
 refers to a point one-third of the way through the document,
 and so on.
 .TP
-\fIprefix \fBscroll \fInumber \fBunits\fR
-.
-The widget should adjust its view by \fInumber\fR units.
-The units are defined in whatever way makes sense for the widget,
-such as characters or lines in a text widget.
-\fINumber\fR is either 1, which means one unit should scroll off
-the top or left of the window, or \-1, which means that one unit
-should scroll off the bottom or right of the window.
-.TP
 \fIprefix \fBscroll \fInumber \fBpages\fR
 .
 The widget should adjust its view by \fInumber\fR pages.
@@ -233,6 +224,15 @@ is a slight overlap between the old and new views.
 \fINumber\fR is either 1, which means the next page should
 become visible, or \-1, which means that the previous page should
 become visible.
+.TP
+\fIprefix \fBscroll \fInumber \fBunits\fR
+.
+The widget should adjust its view by \fInumber\fR units.
+The units are defined in whatever way makes sense for the widget,
+such as characters or lines in a text widget.
+\fINumber\fR is either 1, which means one unit should scroll off
+the top or left of the window, or \-1, which means that one unit
+should scroll off the bottom or right of the window.
 .SH "OLD COMMAND SYNTAX"
 .PP
 In versions of Tk before 4.0, the \fBset\fR and \fBget\fR widget

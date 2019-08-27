@@ -111,16 +111,16 @@ MODULE_SCOPE int TtkWidgetConstructorObjCmd(
 
 /* WIDGET_TAKEFOCUS_TRUE --
  * WIDGET_TAKEFOCUS_FALSE --
- *	Add one or the other of these to each OptionSpecs table 
- *	to indicate whether the widget should take focus 
+ *	Add one or the other of these to each OptionSpecs table
+ *	to indicate whether the widget should take focus
  *	during keyboard traversal.
  */
 #define WIDGET_TAKEFOCUS_TRUE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"ttk::takefocus", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 }
+	"ttk::takefocus", offsetof(WidgetCore, takeFocusPtr), -1, 0,0,0 }
 #define WIDGET_TAKEFOCUS_FALSE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 }
+	"", offsetof(WidgetCore, takeFocusPtr), -1, 0,0,0 }
 
 /* WIDGET_INHERIT_OPTIONS(baseOptionSpecs) --
  * Add this at the end of an OptionSpecs table to inherit

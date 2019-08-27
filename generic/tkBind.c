@@ -388,6 +388,14 @@ static const ModInfo modArray[] = {
     {"Button4",		Button4Mask,	0},
     {"B5",		Button5Mask,	0},
     {"Button5",		Button5Mask,	0},
+    {"B6",		Button6Mask,	0},
+    {"Button6",		Button6Mask,	0},
+    {"B7",		Button7Mask,	0},
+    {"Button7",		Button7Mask,	0},
+    {"B8",		Button8Mask,	0},
+    {"Button8",		Button8Mask,	0},
+    {"B9",		Button9Mask,	0},
+    {"Button9",		Button9Mask,	0},
     {"Mod1",		Mod1Mask,	0},
     {"M1",		Mod1Mask,	0},
     {"Command",		Mod1Mask,	0},
@@ -700,11 +708,11 @@ TkBindInit(
 	    Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
 	    for (kPtr = keyArray; kPtr->name != NULL; kPtr++) {
 		hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &newEntry);
-		Tcl_SetHashValue(hPtr, kPtr->value);
-		hPtr = Tcl_CreateHashEntry(&nameTable, (char *) kPtr->value,
+		Tcl_SetHashValue(hPtr, INT2PTR(kPtr->value));
+		hPtr = Tcl_CreateHashEntry(&nameTable, INT2PTR(kPtr->value),
 			&newEntry);
 		if (newEntry) {
-		    Tcl_SetHashValue(hPtr, kPtr->name);
+		    Tcl_SetHashValue(hPtr, (char *) kPtr->name);
 		}
 	    }
 #endif /* REDO_KEYSYM_LOOKUP */
@@ -712,13 +720,13 @@ TkBindInit(
 	    Tcl_InitHashTable(&modTable, TCL_STRING_KEYS);
 	    for (modPtr = modArray; modPtr->name != NULL; modPtr++) {
 		hPtr = Tcl_CreateHashEntry(&modTable, modPtr->name, &newEntry);
-		Tcl_SetHashValue(hPtr, modPtr);
+		Tcl_SetHashValue(hPtr, (ModInfo *) modPtr);
 	    }
 
 	    Tcl_InitHashTable(&eventTable, TCL_STRING_KEYS);
 	    for (eiPtr = eventArray; eiPtr->name != NULL; eiPtr++) {
 		hPtr = Tcl_CreateHashEntry(&eventTable, eiPtr->name, &newEntry);
-		Tcl_SetHashValue(hPtr, eiPtr);
+		Tcl_SetHashValue(hPtr, (EventInfo *) eiPtr);
 	    }
 	    initialized = 1;
 	}
@@ -997,7 +1005,7 @@ Tk_DeleteBinding(
      * its pattern.
      */
 
-    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object);
+    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, object);
     if (hPtr == NULL) {
 	Tcl_Panic("Tk_DeleteBinding couldn't find object table entry");
     }
@@ -1110,7 +1118,7 @@ Tk_GetAllBindings(
     Tcl_HashEntry *hPtr;
     Tcl_Obj *resultObj;
 
-    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object);
+    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, object);
     if (hPtr == NULL) {
 	return;
     }
@@ -1154,7 +1162,7 @@ Tk_DeleteAllBindings(
     PatSeq *nextPtr;
     Tcl_HashEntry *hPtr;
 
-    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, (char *) object);
+    hPtr = Tcl_FindHashEntry(&bindPtr->objectTable, object);
     if (hPtr == NULL) {
 	return;
     }
@@ -1376,14 +1384,14 @@ Tk_BindEvent(
 	key.type = ringPtr->type;
 	key.detail = detail;
 
-	hPtr = Tcl_FindHashEntry(veptPtr, (char *) &key);
+	hPtr = Tcl_FindHashEntry(veptPtr, &key);
 	if (hPtr != NULL) {
 	    vMatchDetailList = Tcl_GetHashValue(hPtr);
 	}
 
 	if (key.detail.clientData != 0) {
 	    key.detail.clientData = 0;
-	    hPtr = Tcl_FindHashEntry(veptPtr, (char *) &key);
+	    hPtr = Tcl_FindHashEntry(veptPtr, &key);
 	    if (hPtr != NULL) {
 		vMatchNoDetailList = Tcl_GetHashValue(hPtr);
 	    }
@@ -1415,7 +1423,7 @@ Tk_BindEvent(
 	key.object = *objectPtr;
 	key.type = ringPtr->type;
 	key.detail = detail;
-	hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, (char *) &key);
+	hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, &key);
 	if (hPtr != NULL) {
 	    matchPtr = MatchPatterns(dispPtr, bindPtr, Tcl_GetHashValue(hPtr),
 		    matchPtr, NULL, &sourcePtr);
@@ -1433,7 +1441,7 @@ Tk_BindEvent(
 
 	if ((detail.clientData != 0) && (matchPtr == NULL)) {
 	    key.detail.clientData = 0;
-	    hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, (char *) &key);
+	    hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, &key);
 	    if (hPtr != NULL) {
 		matchPtr = MatchPatterns(dispPtr, bindPtr,
 			Tcl_GetHashValue(hPtr), matchPtr, NULL, &sourcePtr);
@@ -1806,8 +1814,7 @@ MatchPatterns(
 
 		key.detail.name = (Tk_Uid) Tcl_GetHashKey(hPtr->tablePtr,
 			hPtr);
-		hPtr = Tcl_FindHashEntry(&bindPtr->patternTable,
-			(char *) &key);
+		hPtr = Tcl_FindHashEntry(&bindPtr->patternTable, &key);
 		if (hPtr != NULL) {
 		    /*
 		     * This tag is interested in this virtual event and its
@@ -1935,7 +1942,8 @@ ExpandPercents(
     Tcl_DString *dsPtr)		/* Dynamic string in which to append new
 				 * command. */
 {
-    int spaceNeeded, cvtFlags;	/* Used to substitute string as proper Tcl
+    size_t spaceNeeded;
+    int cvtFlags;	/* Used to substitute string as proper Tcl
 				 * list element. */
     int number, flags, length;
 #define NUM_SIZE 40
@@ -2517,7 +2525,7 @@ DeleteVirtualEventTable(
  *	already defined, the new definition augments those that already exist.
  *
  * Results:
- *	The return value is TCL_ERROR if an error occured while creating the
+ *	The return value is TCL_ERROR if an error occurred while creating the
  *	virtual binding. In this case, an error message will be left in the
  *	interp's result. If all went well then the return value is TCL_OK.
  *
@@ -3989,7 +3997,7 @@ ParseEventDescription(
 	p = GetField(p, field, FIELD_SIZE);
     }
     if (*field != '\0') {
-	if ((*field >= '1') && (*field <= '5') && (field[1] == '\0')) {
+	if ((*field >= '1') && (*field <= '9') && (field[1] == '\0')) {
 	    if (eventFlags == 0) {
 		patPtr->eventType = ButtonPress;
 		eventMask = ButtonPressMask;
@@ -4290,7 +4298,7 @@ TkKeysymToString(
     KeySym keysym)
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&nameTable, (char *)keysym);
+    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&nameTable, keysym);
 
     if (hPtr != NULL) {
 	return Tcl_GetHashValue(hPtr);

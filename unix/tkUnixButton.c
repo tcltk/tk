@@ -396,7 +396,7 @@ void
 TkpDisplayButton(
     ClientData clientData)	/* Information about widget. */
 {
-    register TkButton *butPtr = (TkButton *) clientData;
+    TkButton *butPtr = clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
@@ -860,7 +860,7 @@ TkpDisplayButton(
 
 void
 TkpComputeButtonGeometry(
-    register TkButton *butPtr)	/* Button whose geometry may have changed. */
+    TkButton *butPtr)	/* Button whose geometry may have changed. */
 {
     int width, height, avgWidth, txtWidth, txtHeight;
     int haveImage = 0, haveText = 0;

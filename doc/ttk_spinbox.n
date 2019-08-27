@@ -22,7 +22,7 @@ of the \fBttk::entry\fR widget including support of the
 to a Tcl variable.
 .SO ttk_widget
 \-class	\-cursor	\-state	\-style
-\-takefocus	\-xscrollcommand
+\-takefocus	\-xscrollcommand	\-placeholder
 .SE
 .SO ttk_entry
 \-validate	\-validatecommand

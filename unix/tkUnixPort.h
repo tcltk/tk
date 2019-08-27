@@ -23,11 +23,7 @@
 #include <limits.h>
 #include <math.h>
 #include <pwd.h>
-#ifdef NO_STDLIB_H
-#   include "../compat/stdlib.h"
-#else
-#   include <stdlib.h>
-#endif
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -51,11 +47,7 @@
 #if HAVE_INTTYPES_H
 #    include <inttypes.h>
 #endif
-#ifndef NO_UNISTD_H
-#   include <unistd.h>
-#else
-#   include "../compat/unistd.h"
-#endif
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>

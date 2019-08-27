@@ -66,29 +66,29 @@ typedef struct {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	    "#d9d9d9", Tk_Offset(Square, bgBorderPtr), -1, 0,
+	    "#d9d9d9", offsetof(Square, bgBorderPtr), -1, 0,
 	    "white", 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, -1, 0,
 	    "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, -1, 0,
 	    "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	    "2", Tk_Offset(Square, borderWidthPtr), -1, 0, NULL, 0},
+	    "2", offsetof(Square, borderWidthPtr), -1, 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-dbl", "doubleBuffer", "DoubleBuffer",
-	    "1", Tk_Offset(Square, doubleBufferPtr), -1, 0 , NULL, 0},
+	    "1", offsetof(Square, doubleBufferPtr), -1, 0 , NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL, 0, -1, 0,
 	    "-foreground", 0},
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
-	    "#b03060", Tk_Offset(Square, fgBorderPtr), -1, 0,
+	    "#b03060", offsetof(Square, fgBorderPtr), -1, 0,
 	    "black", 0},
     {TK_OPTION_PIXELS, "-posx", "posx", "PosX", "0",
-	    Tk_Offset(Square, xPtr), -1, 0, NULL, 0},
+	    offsetof(Square, xPtr), -1, 0, NULL, 0},
     {TK_OPTION_PIXELS, "-posy", "posy", "PosY", "0",
-	    Tk_Offset(Square, yPtr), -1, 0, NULL, 0},
+	    offsetof(Square, yPtr), -1, 0, NULL, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	    "raised", Tk_Offset(Square, reliefPtr), -1, 0, NULL, 0},
+	    "raised", offsetof(Square, reliefPtr), -1, 0, NULL, 0},
     {TK_OPTION_PIXELS, "-size", "size", "Size", "20",
-	    Tk_Offset(Square, sizeObjPtr), -1, 0, NULL, 0},
+	    offsetof(Square, sizeObjPtr), -1, 0, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 };
 
@@ -172,7 +172,7 @@ SquareObjCmd(
     squarePtr->gc = NULL;
     squarePtr->optionTable = optionTable;
 
-    if (Tk_InitOptions(interp, (char *) squarePtr, optionTable, tkwin)
+    if (Tk_InitOptions(interp, squarePtr, optionTable, tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(squarePtr->tkwin);
 	ckfree(squarePtr);
@@ -181,7 +181,7 @@ SquareObjCmd(
 
     Tk_CreateEventHandler(squarePtr->tkwin, ExposureMask|StructureNotifyMask,
 	    SquareObjEventProc, squarePtr);
-    if (Tk_SetOptions(interp, (char *) squarePtr, optionTable, objc - 2,
+    if (Tk_SetOptions(interp, squarePtr, optionTable, objc - 2,
 	    objv + 2, tkwin, NULL, NULL) != TCL_OK) {
 	goto error;
     }
@@ -250,7 +250,7 @@ SquareWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    goto error;
 	}
-	resultObjPtr = Tk_GetOptionValue(interp, (char *) squarePtr,
+	resultObjPtr = Tk_GetOptionValue(interp, squarePtr,
 		squarePtr->optionTable, objv[2], squarePtr->tkwin);
 	if (resultObjPtr == NULL) {
 	    result = TCL_ERROR;
@@ -261,19 +261,19 @@ SquareWidgetObjCmd(
     case SQUARE_CONFIGURE:
 	resultObjPtr = NULL;
 	if (objc == 2) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
+	    resultObjPtr = Tk_GetOptionInfo(interp, squarePtr,
 		    squarePtr->optionTable, NULL, squarePtr->tkwin);
 	    if (resultObjPtr == NULL) {
 		result = TCL_ERROR;
 	    }
 	} else if (objc == 3) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
+	    resultObjPtr = Tk_GetOptionInfo(interp, squarePtr,
 		    squarePtr->optionTable, objv[2], squarePtr->tkwin);
 	    if (resultObjPtr == NULL) {
 		result = TCL_ERROR;
 	    }
 	} else {
-	    result = Tk_SetOptions(interp, (char *) squarePtr,
+	    result = Tk_SetOptions(interp, squarePtr,
 		    squarePtr->optionTable, objc - 2, objv + 2,
 		    squarePtr->tkwin, NULL, NULL);
 	    if (result == TCL_OK) {

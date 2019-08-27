@@ -156,6 +156,8 @@ if {[tk windowingsystem] eq "x11"} {
     bind Scrollbar <5> {tk::ScrollByUnits %W v 5}
     bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}
     bind Scrollbar <Shift-5> {tk::ScrollByUnits %W h 5}
+    bind Scrollbar <6> {tk::ScrollByUnits %W h -5}
+    bind Scrollbar <7> {tk::ScrollByUnits %W h 5}
 }
 
 # tk::ScrollButtonDown --

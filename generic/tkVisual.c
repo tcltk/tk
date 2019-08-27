@@ -21,9 +21,9 @@
 
 typedef struct VisualDictionary {
     const char *name;		/* Textual name of class. */
-    int minLength;		/* Minimum # characters that must be specified
+    unsigned short minLength;		/* Minimum # characters that must be specified
 				 * for an unambiguous match. */
-    int class;			/* X symbol for class. */
+    short class;			/* X symbol for class. */
 } VisualDictionary;
 static const VisualDictionary visualNames[] = {
     {"best",		1,	0},
@@ -46,7 +46,7 @@ static const VisualDictionary visualNames[] = {
 struct TkColormap {
     Colormap colormap;		/* X's identifier for the colormap. */
     Visual *visual;		/* Visual for which colormap was allocated. */
-    int refCount;		/* How many uses of the colormap are still
+    size_t refCount;		/* How many uses of the colormap are still
 				 * outstanding (calls to Tk_GetColormap minus
 				 * calls to Tk_FreeColormap). */
     int shareable;		/* 0 means this colormap was allocated by a
@@ -99,7 +99,7 @@ Tk_GetVisual(
     XVisualInfo template, *visInfoList, *bestPtr;
     long mask;
     Visual *visual;
-    ptrdiff_t length;
+    size_t length;
     int c, numVisuals, prio, bestPrio, i;
     const char *p;
     const VisualDictionary *dictPtr;
@@ -137,7 +137,7 @@ Tk_GetVisual(
 		for (cmapPtr = dispPtr->cmapPtr; cmapPtr != NULL;
 			cmapPtr = cmapPtr->nextPtr) {
 		    if (cmapPtr->colormap == *colormapPtr) {
-			cmapPtr->refCount += 1;
+			cmapPtr->refCount++;
 			break;
 		    }
 		}
@@ -195,8 +195,7 @@ Tk_GetVisual(
 	template.class = -1;
 	for (dictPtr = visualNames; dictPtr->name != NULL; dictPtr++) {
 	    if ((dictPtr->name[0] == c) && (length >= dictPtr->minLength)
-		    && (strncmp(string, dictPtr->name,
-		    (size_t) length) == 0)) {
+		    && (strncmp(string, dictPtr->name, length) == 0)) {
 		template.class = dictPtr->class;
 		break;
 	    }
@@ -324,7 +323,7 @@ Tk_GetVisual(
 		    cmapPtr = cmapPtr->nextPtr) {
 		if (cmapPtr->shareable && (cmapPtr->visual == visual)) {
 		    *colormapPtr = cmapPtr->colormap;
-		    cmapPtr->refCount += 1;
+		    cmapPtr->refCount++;
 		    goto done;
 		}
 	    }
@@ -427,7 +426,7 @@ Tk_GetColormap(
     for (cmapPtr = dispPtr->cmapPtr; cmapPtr != NULL;
 	    cmapPtr = cmapPtr->nextPtr) {
 	if (cmapPtr->colormap == colormap) {
-	    cmapPtr->refCount += 1;
+	    cmapPtr->refCount++;
 	}
     }
     return colormap;
@@ -476,8 +475,7 @@ Tk_FreeColormap(
     for (prevPtr = NULL, cmapPtr = dispPtr->cmapPtr; cmapPtr != NULL;
 	    prevPtr = cmapPtr, cmapPtr = cmapPtr->nextPtr) {
 	if (cmapPtr->colormap == colormap) {
-	    cmapPtr->refCount -= 1;
-	    if (cmapPtr->refCount == 0) {
+	    if (cmapPtr->refCount-- <= 1) {
 		XFreeColormap(display, colormap);
 		if (prevPtr == NULL) {
 		    dispPtr->cmapPtr = cmapPtr->nextPtr;
@@ -534,7 +532,7 @@ Tk_PreserveColormap(
     for (cmapPtr = dispPtr->cmapPtr; cmapPtr != NULL;
 	    cmapPtr = cmapPtr->nextPtr) {
 	if (cmapPtr->colormap == colormap) {
-	    cmapPtr->refCount += 1;
+	    cmapPtr->refCount++;
 	    return;
 	}
     }

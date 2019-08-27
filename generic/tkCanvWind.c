@@ -46,17 +46,17 @@ static const Tk_CustomOption tagsOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(WindowItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"center", offsetof(WindowItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_PIXELS, "-height", NULL, NULL,
-	"0", Tk_Offset(WindowItem, height), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(WindowItem, height), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"0", Tk_Offset(WindowItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(WindowItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_WINDOW, "-window", NULL, NULL,
-	NULL, Tk_Offset(WindowItem, tkwin), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(WindowItem, tkwin), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -77,6 +77,8 @@ static void		DeleteWinItem(Tk_Canvas canvas,
 static void		DisplayWinItem(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
+static void		RotateWinItem(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleWinItem(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -130,7 +132,8 @@ Tk_ItemType tkWindowType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateWinItem,		/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -910,6 +913,40 @@ CanvasPsWindow(
     }
     Tcl_DecrRefCount(psObj);
     return result;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateWinItem --
+ *
+ *	This function is called to rotate a window item by a given amount
+ *	about a point. Note that this does *not* rotate the window of the
+ *	item.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the window anchor is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateWinItem(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being rotated. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    WindowItem *winItemPtr = (WindowItem *) itemPtr;
+
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &winItemPtr->x, &winItemPtr->y);
+    ComputeWindowBbox(canvas, winItemPtr);
 }
 
 /*

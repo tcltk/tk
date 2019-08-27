@@ -95,38 +95,38 @@ static const Tk_CustomOption offsetOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, activeStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, activeStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"center", offsetof(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_DOUBLE, "-angle", NULL, NULL,
-	"0.0", Tk_Offset(TextItem, angle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0.0", offsetof(TextItem, angle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(TextItem, disabledColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, disabledStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, disabledStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(TextItem, color), TK_CONFIG_NULL_OK, NULL},
+	"black", offsetof(TextItem, color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_FONT, "-font", NULL, NULL,
-	DEF_CANVTEXT_FONT, Tk_Offset(TextItem, tkfont), 0, NULL},
+	DEF_CANVTEXT_FONT, offsetof(TextItem, tkfont), 0, NULL},
     {TK_CONFIG_JUSTIFY, "-justify", NULL, NULL,
-	"left", Tk_Offset(TextItem, justify), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"left", offsetof(TextItem, justify), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
-	"0,0", Tk_Offset(TextItem, tsoffset),
+	"0,0", offsetof(TextItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, stipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_STRING, "-text", NULL, NULL,
-	"", Tk_Offset(TextItem, text), 0, NULL},
+	"", offsetof(TextItem, text), 0, NULL},
     {TK_CONFIG_INT, "-underline", NULL, NULL,
-	"-1", Tk_Offset(TextItem, underline), 0, NULL},
+	"-1", offsetof(TextItem, underline), 0, NULL},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"0", Tk_Offset(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -170,6 +170,8 @@ static double		TextToPoint(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *pointPtr);
 static int		TextToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
+static void		RotateText(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		TranslateText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double deltaX, double deltaY);
 
@@ -199,7 +201,8 @@ Tk_ItemType tkTextType = {
     TextInsert,			/* insertProc */
     TextDeleteChars,		/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateText,			/* rotateProc */
+    0, NULL, NULL
 };
 
 #define ROUND(d) ((int) floor((d) + 0.5))
@@ -1006,12 +1009,13 @@ TextInsert(
     Tcl_Obj *obj)		/* New characters to be inserted. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteIndex, byteCount, charsAdded;
+    int byteIndex, charsAdded;
+    TkSizeT byteCount;
     char *newStr, *text;
     const char *string;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
-    string = Tcl_GetStringFromObj(obj, &byteCount);
+    string = TkGetStringFromObj(obj, &byteCount);
 
     text = textPtr->text;
 
@@ -1028,7 +1032,7 @@ TextInsert(
     }
 
     newStr = ckalloc(textPtr->numBytes + byteCount + 1);
-    memcpy(newStr, text, (size_t) byteIndex);
+    memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, string);
     strcpy(newStr + byteIndex + byteCount, text + byteIndex);
 
@@ -1109,7 +1113,7 @@ TextDeleteChars(
 	- (text + byteIndex);
 
     newStr = ckalloc(textPtr->numBytes + 1 - byteCount);
-    memcpy(newStr, text, (size_t) byteIndex);
+    memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, text + byteIndex + byteCount);
 
     ckfree(text);
@@ -1249,6 +1253,39 @@ TextToArea(
 /*
  *--------------------------------------------------------------
  *
+ * RotateText --
+ *
+ *	This function is called to rotate a text item by a given amount about a
+ *	point. Note that this does *not* rotate the text of the item.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the text anchor is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateText(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being rotated. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    TextItem *textPtr = (TextItem *) itemPtr;
+
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &textPtr->x, &textPtr->y);
+    ComputeTextBbox(canvas, textPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * ScaleText --
  *
  *	This function is invoked to rescale a text item.
@@ -1343,21 +1380,21 @@ GetTextIndex(
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int length;
+    TkSizeT length;
     int c;
     TkCanvas *canvasPtr = (TkCanvas *) canvas;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
-    const char *string = Tcl_GetStringFromObj(obj, &length);
+    const char *string = TkGetStringFromObj(obj, &length);
 
     c = string[0];
 
-    if ((c == 'e') && (strncmp(string, "end", (unsigned) length) == 0)) {
+    if ((c == 'e') && (strncmp(string, "end", length) == 0)) {
 	*indexPtr = textPtr->numChars;
     } else if ((c == 'i')
-	    && (strncmp(string, "insert", (unsigned) length) == 0)) {
+	    && (strncmp(string, "insert", length) == 0)) {
 	*indexPtr = textPtr->insertPos;
     } else if ((c == 's') && (length >= 5)
-	    && (strncmp(string, "sel.first", (unsigned) length) == 0)) {
+	    && (strncmp(string, "sel.first", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", -1));
@@ -1366,7 +1403,7 @@ GetTextIndex(
 	}
 	*indexPtr = textInfoPtr->selectFirst;
     } else if ((c == 's') && (length >= 5)
-	    && (strncmp(string, "sel.last", (unsigned) length) == 0)) {
+	    && (strncmp(string, "sel.last", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", -1));
@@ -1504,7 +1541,7 @@ GetSelText(
     if (byteCount <= 0) {
 	return 0;
     }
-    memcpy(buffer, selStart + offset, (size_t) byteCount);
+    memcpy(buffer, selStart + offset, byteCount);
     buffer[byteCount] = '\0';
     return byteCount;
 }

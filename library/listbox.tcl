@@ -227,6 +227,16 @@ if {[tk windowingsystem] eq "x11"} {
 	    %W xview scroll 5 units
 	}
     }
+    bind Listbox <6> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll -5 units
+	}
+    }
+    bind Listbox <7> {
+	if {!$tk_strictMotif} {
+	    %W xview scroll 5 units
+	}
+    }
 }
 
 # ::tk::ListboxBeginSelect --

@@ -102,7 +102,7 @@ PROJECT			:= tk
 PRODUCT_NAME		:= Tk
 
 UNIX_DIR		:= ${CURDIR}/../unix
-VERSION			:= $(shell awk -F= '/^TK_VERSION/ {print $$2; nextfile}' ${UNIX_DIR}/configure.in)
+VERSION			:= $(shell awk -F= '/^TK_VERSION/ {print $$2; nextfile}' ${UNIX_DIR}/configure.ac)
 TCL_VERSION		:= ${VERSION}
 wish			:= wish
 WISH			= wish${VERSION}
@@ -180,7 +180,7 @@ ${objdir}/Makefile: ${UNIX_DIR}/Makefile.in ${UNIX_DIR}/configure \
 	mkdir -p "${OBJ_DIR}" && cd "${OBJ_DIR}" && \
 	if [ ${UNIX_DIR}/configure -nt config.status ]; then ${UNIX_DIR}/configure -C \
 	--prefix="${PREFIX}" --bindir="${BINDIR}" --libdir="${LIBDIR}" \
-	--mandir="${MANDIR}" --enable-threads --enable-framework \
+	--mandir="${MANDIR}" --enable-framework \
 	--with-tcl="${TCL_DIR}" \
 	${CONFIGURE_ARGS} ${EXTRA_CONFIGURE_ARGS}; else ./config.status; fi
 ifneq (${VERSION},${TCL_VERSION})

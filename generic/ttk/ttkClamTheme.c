@@ -4,11 +4,11 @@
  * "clam" theme; inspired by the XFCE family of Gnome themes.
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 
-/* 
- * Under windows, the Tk-provided XDrawLine and XDrawArc have an 
+/*
+ * Under windows, the Tk-provided XDrawLine and XDrawArc have an
  * off-by-one error in the end point. This is especially apparent with this
  * theme. Defining this macro as true handles this case.
  */
@@ -108,23 +108,23 @@ typedef struct {
 
 static Ttk_ElementOptionSpec BorderElementOptions[] = {
     { "-bordercolor", TK_OPTION_COLOR,
-	Tk_Offset(BorderElement,borderColorObj), DARKEST_COLOR },
+	offsetof(BorderElement,borderColorObj), DARKEST_COLOR },
     { "-lightcolor", TK_OPTION_COLOR,
-	Tk_Offset(BorderElement,lightColorObj), LIGHT_COLOR },
+	offsetof(BorderElement,lightColorObj), LIGHT_COLOR },
     { "-darkcolor", TK_OPTION_COLOR,
-	Tk_Offset(BorderElement,darkColorObj), DARK_COLOR },
+	offsetof(BorderElement,darkColorObj), DARK_COLOR },
     { "-relief", TK_OPTION_RELIEF,
-	Tk_Offset(BorderElement,reliefObj), "flat" },
+	offsetof(BorderElement,reliefObj), "flat" },
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(BorderElement,borderWidthObj), "2" },
+	offsetof(BorderElement,borderWidthObj), "2" },
     { NULL, 0, 0, NULL }
 };
 
 /*
  * <<NOTE-BORDERWIDTH>>: -borderwidth is only partially supported:
  * in this theme, borders are always exactly 2 pixels thick.
- * With -borderwidth 0, border is not drawn at all; 
- * otherwise a 2-pixel border is used.  For -borderwidth > 2, 
+ * With -borderwidth 0, border is not drawn at all;
+ * otherwise a 2-pixel border is used.  For -borderwidth > 2,
  * the excess is used as padding.
  */
 
@@ -198,13 +198,13 @@ typedef struct {
 
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     { "-bordercolor", TK_OPTION_COLOR,
-	Tk_Offset(FieldElement,borderColorObj), DARKEST_COLOR },
+	offsetof(FieldElement,borderColorObj), DARKEST_COLOR },
     { "-lightcolor", TK_OPTION_COLOR,
-	Tk_Offset(FieldElement,lightColorObj), LIGHT_COLOR },
+	offsetof(FieldElement,lightColorObj), LIGHT_COLOR },
     { "-darkcolor", TK_OPTION_COLOR,
-	Tk_Offset(FieldElement,darkColorObj), DARK_COLOR },
+	offsetof(FieldElement,darkColorObj), DARK_COLOR },
     { "-fieldbackground", TK_OPTION_BORDER,
-	Tk_Offset(FieldElement,backgroundObj), "white" },
+	offsetof(FieldElement,backgroundObj), "white" },
     { NULL, 0, 0, NULL }
 };
 
@@ -280,17 +280,17 @@ typedef struct {
 
 static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-indicatorsize", TK_OPTION_PIXELS,
-	Tk_Offset(IndicatorElement,sizeObj), "10" },
+	offsetof(IndicatorElement,sizeObj), "10" },
     { "-indicatormargin", TK_OPTION_STRING,
-	Tk_Offset(IndicatorElement,marginObj), "1" },
+	offsetof(IndicatorElement,marginObj), "1" },
     { "-indicatorbackground", TK_OPTION_COLOR,
-	Tk_Offset(IndicatorElement,backgroundObj), "white" },
+	offsetof(IndicatorElement,backgroundObj), "white" },
     { "-indicatorforeground", TK_OPTION_COLOR,
-	Tk_Offset(IndicatorElement,foregroundObj), "black" },
+	offsetof(IndicatorElement,foregroundObj), "black" },
     { "-upperbordercolor", TK_OPTION_COLOR,
-	Tk_Offset(IndicatorElement,upperColorObj), DARKEST_COLOR },
+	offsetof(IndicatorElement,upperColorObj), DARKEST_COLOR },
     { "-lowerbordercolor", TK_OPTION_COLOR,
-	Tk_Offset(IndicatorElement,lowerColorObj), DARK_COLOR },
+	offsetof(IndicatorElement,lowerColorObj), DARK_COLOR },
     { NULL, 0, 0, NULL }
 };
 
@@ -402,13 +402,13 @@ typedef struct {
 static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] =
 {
     { "-arrowsize", TK_OPTION_PIXELS,
-	Tk_Offset(MenuIndicatorElement,sizeObj), 
+	offsetof(MenuIndicatorElement,sizeObj),
 	STR(MENUBUTTON_ARROW_SIZE)},
     { "-arrowcolor",TK_OPTION_COLOR,
-	Tk_Offset(MenuIndicatorElement,colorObj),
+	offsetof(MenuIndicatorElement,colorObj),
 	"black" },
     { "-arrowpadding",TK_OPTION_STRING,
-	Tk_Offset(MenuIndicatorElement,paddingObj),
+	offsetof(MenuIndicatorElement,paddingObj),
 	"3" },
     { NULL, 0, 0, NULL }
 };
@@ -471,11 +471,11 @@ typedef struct {
 
 static Ttk_ElementOptionSpec GripElementOptions[] = {
     { "-lightcolor", TK_OPTION_COLOR,
-	Tk_Offset(GripElement,lightColorObj), LIGHT_COLOR },
+	offsetof(GripElement,lightColorObj), LIGHT_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
-	Tk_Offset(GripElement,borderColorObj), DARKEST_COLOR },
+	offsetof(GripElement,borderColorObj), DARKEST_COLOR },
     { "-gripcount", TK_OPTION_INT,
-	Tk_Offset(GripElement,gripCountObj), "5" },
+	offsetof(GripElement,gripCountObj), "5" },
     { NULL, 0, 0, NULL }
 };
 
@@ -556,25 +556,25 @@ typedef struct { /* Common element record for scrollbar elements */
 
 static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     { "-orient", TK_OPTION_ANY,
-	Tk_Offset(ScrollbarElement, orientObj), "horizontal" },
+	offsetof(ScrollbarElement, orientObj), "horizontal" },
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(ScrollbarElement,backgroundObj), FRAME_COLOR },
+	offsetof(ScrollbarElement,backgroundObj), FRAME_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
-	Tk_Offset(ScrollbarElement,borderColorObj), DARKEST_COLOR },
+	offsetof(ScrollbarElement,borderColorObj), DARKEST_COLOR },
     { "-troughcolor", TK_OPTION_COLOR,
-	Tk_Offset(ScrollbarElement,troughColorObj), DARKER_COLOR },
+	offsetof(ScrollbarElement,troughColorObj), DARKER_COLOR },
     { "-lightcolor", TK_OPTION_COLOR,
-	Tk_Offset(ScrollbarElement,lightColorObj), LIGHT_COLOR },
+	offsetof(ScrollbarElement,lightColorObj), LIGHT_COLOR },
     { "-darkcolor", TK_OPTION_COLOR,
-	Tk_Offset(ScrollbarElement,darkColorObj), DARK_COLOR },
+	offsetof(ScrollbarElement,darkColorObj), DARK_COLOR },
     { "-arrowcolor", TK_OPTION_COLOR,
-	Tk_Offset(ScrollbarElement,arrowColorObj), "#000000" },
+	offsetof(ScrollbarElement,arrowColorObj), "#000000" },
     { "-arrowsize", TK_OPTION_PIXELS,
-	Tk_Offset(ScrollbarElement,arrowSizeObj), STR(SCROLLBAR_THICKNESS) },
+	offsetof(ScrollbarElement,arrowSizeObj), STR(SCROLLBAR_THICKNESS) },
     { "-gripcount", TK_OPTION_INT,
-	Tk_Offset(ScrollbarElement,gripCountObj), "5" },
+	offsetof(ScrollbarElement,gripCountObj), "5" },
     { "-sliderlength", TK_OPTION_INT,
-	Tk_Offset(ScrollbarElement,sliderlengthObj), "30" },
+	offsetof(ScrollbarElement,sliderlengthObj), "30" },
     { NULL, 0, 0, NULL }
 };
 
@@ -630,7 +630,7 @@ static void ThumbElementDraw(
     Tcl_GetIntFromObj(NULL, sb->gripCountObj, &gripCount);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
-    
+
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	dx = 1; dy = 0;
 	x1 = x2 = b.x + b.width / 2 - gripCount;
@@ -710,12 +710,12 @@ static void PbarElementDraw(
     Drawable d, Ttk_Box b, unsigned state)
 {
     ScrollbarElement *sb = elementRecord;
-    
+
     b = Ttk_PadBox(b, Ttk_UniformPadding(2));
     if (b.width > 4 && b.height > 4) {
 	DrawSmoothBorder(tkwin, d, b,
 	    sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
-	XFillRectangle(Tk_Display(tkwin), d, 
+	XFillRectangle(Tk_Display(tkwin), d,
 	    BackgroundGC(tkwin, sb->backgroundObj),
 	    b.x+2, b.y+2, b.width-4, b.height-4);
     }
@@ -780,8 +780,8 @@ static Ttk_ElementSpec ArrowElementSpec = {
 
 /*------------------------------------------------------------------------
  * +++ Notebook elements.
- * 	
- * Note: Tabs, except for the rightmost, overlap the neighbor to 
+ *
+ * Note: Tabs, except for the rightmost, overlap the neighbor to
  * their right by one pixel.
  */
 
@@ -794,13 +794,13 @@ typedef struct {
 
 static Ttk_ElementOptionSpec NotebookElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
-	Tk_Offset(NotebookElement,backgroundObj), FRAME_COLOR },
+	offsetof(NotebookElement,backgroundObj), FRAME_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
-	Tk_Offset(NotebookElement,borderColorObj), DARKEST_COLOR },
+	offsetof(NotebookElement,borderColorObj), DARKEST_COLOR },
     { "-lightcolor", TK_OPTION_COLOR,
-	Tk_Offset(NotebookElement,lightColorObj), LIGHT_COLOR },
+	offsetof(NotebookElement,lightColorObj), LIGHT_COLOR },
     { "-darkcolor", TK_OPTION_COLOR,
-	Tk_Offset(NotebookElement,darkColorObj), DARK_COLOR },
+	offsetof(NotebookElement,darkColorObj), DARK_COLOR },
     { NULL, 0, 0, NULL }
 };
 

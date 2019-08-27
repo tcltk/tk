@@ -17,9 +17,9 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
 #include "tkScale.h"
+#include "default.h"
 
 #if defined(_WIN32)
 #define snprintf _snprintf
@@ -45,96 +45,96 @@ static const char *const stateStrings[] = {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
-	DEF_SCALE_ACTIVE_BG_COLOR, -1, Tk_Offset(TkScale, activeBorder),
+	DEF_SCALE_ACTIVE_BG_COLOR, -1, offsetof(TkScale, activeBorder),
 	0, DEF_SCALE_ACTIVE_BG_MONO, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	DEF_SCALE_BG_COLOR, -1, Tk_Offset(TkScale, bgBorder),
+	DEF_SCALE_BG_COLOR, -1, offsetof(TkScale, bgBorder),
 	0, DEF_SCALE_BG_MONO, 0},
     {TK_OPTION_DOUBLE, "-bigincrement", "bigIncrement", "BigIncrement",
-	DEF_SCALE_BIG_INCREMENT, -1, Tk_Offset(TkScale, bigIncrement),
+	DEF_SCALE_BIG_INCREMENT, -1, offsetof(TkScale, bigIncrement),
 	0, 0, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, -1, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_SCALE_BORDER_WIDTH, -1, Tk_Offset(TkScale, borderWidth),
+	DEF_SCALE_BORDER_WIDTH, -1, offsetof(TkScale, borderWidth),
 	0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
-	DEF_SCALE_COMMAND, -1, Tk_Offset(TkScale, command),
+	DEF_SCALE_COMMAND, -1, offsetof(TkScale, command),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_SCALE_CURSOR, -1, Tk_Offset(TkScale, cursor),
+	DEF_SCALE_CURSOR, -1, offsetof(TkScale, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_INT, "-digits", "digits", "Digits",
-	DEF_SCALE_DIGITS, -1, Tk_Offset(TkScale, digits),
+	DEF_SCALE_DIGITS, -1, offsetof(TkScale, digits),
 	0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_SCALE_FONT, -1, Tk_Offset(TkScale, tkfont), 0, 0, 0},
+	DEF_SCALE_FONT, -1, offsetof(TkScale, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_SCALE_FG_COLOR, -1, Tk_Offset(TkScale, textColorPtr), 0,
+	DEF_SCALE_FG_COLOR, -1, offsetof(TkScale, textColorPtr), 0,
 	(ClientData) DEF_SCALE_FG_MONO, 0},
     {TK_OPTION_DOUBLE, "-from", "from", "From", DEF_SCALE_FROM, -1,
-	Tk_Offset(TkScale, fromValue), 0, 0, 0},
+	offsetof(TkScale, fromValue), 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_SCALE_HIGHLIGHT_BG_COLOR,
-	-1, Tk_Offset(TkScale, highlightBorder),
+	-1, offsetof(TkScale, highlightBorder),
 	0, DEF_SCALE_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	DEF_SCALE_HIGHLIGHT, -1, Tk_Offset(TkScale, highlightColorPtr),
+	DEF_SCALE_HIGHLIGHT, -1, offsetof(TkScale, highlightColorPtr),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", DEF_SCALE_HIGHLIGHT_WIDTH, -1,
-	Tk_Offset(TkScale, highlightWidth), 0, 0, 0},
+	offsetof(TkScale, highlightWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-label", "label", "Label",
-	DEF_SCALE_LABEL, -1, Tk_Offset(TkScale, label),
+	DEF_SCALE_LABEL, -1, offsetof(TkScale, label),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-length", "length", "Length",
-	DEF_SCALE_LENGTH, -1, Tk_Offset(TkScale, length), 0, 0, 0},
+	DEF_SCALE_LENGTH, -1, offsetof(TkScale, length), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
-	DEF_SCALE_ORIENT, -1, Tk_Offset(TkScale, orient),
+	DEF_SCALE_ORIENT, -1, offsetof(TkScale, orient),
 	0, orientStrings, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_SCALE_RELIEF, -1, Tk_Offset(TkScale, relief), 0, 0, 0},
+	DEF_SCALE_RELIEF, -1, offsetof(TkScale, relief), 0, 0, 0},
     {TK_OPTION_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
-	DEF_SCALE_REPEAT_DELAY, -1, Tk_Offset(TkScale, repeatDelay),
+	DEF_SCALE_REPEAT_DELAY, -1, offsetof(TkScale, repeatDelay),
 	0, 0, 0},
     {TK_OPTION_INT, "-repeatinterval", "repeatInterval", "RepeatInterval",
-	DEF_SCALE_REPEAT_INTERVAL, -1, Tk_Offset(TkScale, repeatInterval),
+	DEF_SCALE_REPEAT_INTERVAL, -1, offsetof(TkScale, repeatInterval),
 	0, 0, 0},
     {TK_OPTION_DOUBLE, "-resolution", "resolution", "Resolution",
-	DEF_SCALE_RESOLUTION, -1, Tk_Offset(TkScale, resolution),
+	DEF_SCALE_RESOLUTION, -1, offsetof(TkScale, resolution),
 	0, 0, 0},
     {TK_OPTION_BOOLEAN, "-showvalue", "showValue", "ShowValue",
-	DEF_SCALE_SHOW_VALUE, -1, Tk_Offset(TkScale, showValue),
+	DEF_SCALE_SHOW_VALUE, -1, offsetof(TkScale, showValue),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-sliderlength", "sliderLength", "SliderLength",
-	DEF_SCALE_SLIDER_LENGTH, -1, Tk_Offset(TkScale, sliderLength),
+	DEF_SCALE_SLIDER_LENGTH, -1, offsetof(TkScale, sliderLength),
 	0, 0, 0},
     {TK_OPTION_RELIEF, "-sliderrelief", "sliderRelief", "SliderRelief",
-	DEF_SCALE_SLIDER_RELIEF, -1, Tk_Offset(TkScale, sliderRelief),
+	DEF_SCALE_SLIDER_RELIEF, -1, offsetof(TkScale, sliderRelief),
 	0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
-	DEF_SCALE_STATE, -1, Tk_Offset(TkScale, state),
+	DEF_SCALE_STATE, -1, offsetof(TkScale, state),
 	0, stateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_SCALE_TAKE_FOCUS, Tk_Offset(TkScale, takeFocusPtr), -1,
+	DEF_SCALE_TAKE_FOCUS, offsetof(TkScale, takeFocusPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-tickinterval", "tickInterval", "TickInterval",
-	DEF_SCALE_TICK_INTERVAL, -1, Tk_Offset(TkScale, tickInterval),
+	DEF_SCALE_TICK_INTERVAL, -1, offsetof(TkScale, tickInterval),
 	0, 0, 0},
     {TK_OPTION_DOUBLE, "-to", "to", "To",
-	DEF_SCALE_TO, -1, Tk_Offset(TkScale, toValue), 0, 0, 0},
+	DEF_SCALE_TO, -1, offsetof(TkScale, toValue), 0, 0, 0},
     {TK_OPTION_COLOR, "-troughcolor", "troughColor", "Background",
-	DEF_SCALE_TROUGH_COLOR, -1, Tk_Offset(TkScale, troughColorPtr),
+	DEF_SCALE_TROUGH_COLOR, -1, offsetof(TkScale, troughColorPtr),
 	0, DEF_SCALE_TROUGH_MONO, 0},
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
-	DEF_SCALE_VARIABLE, Tk_Offset(TkScale, varNamePtr), -1,
+	DEF_SCALE_VARIABLE, offsetof(TkScale, varNamePtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_SCALE_WIDTH, -1, Tk_Offset(TkScale, width), 0, 0, 0},
+	DEF_SCALE_WIDTH, -1, offsetof(TkScale, width), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
 };
 
@@ -343,7 +343,7 @@ Tk_ScaleObjCmd(
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
 	    ScaleEventProc, scalePtr);
 
-    if ((Tk_InitOptions(interp, (char *) scalePtr, optionTable, tkwin)
+    if ((Tk_InitOptions(interp, scalePtr, optionTable, tkwin)
 	    != TCL_OK) ||
 	    (ConfigureScale(interp, scalePtr, objc - 2, objv + 2) != TCL_OK)) {
 	Tk_DestroyWindow(scalePtr->tkwin);
@@ -406,7 +406,7 @@ ScaleWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 1, objv, "cget option");
 	    goto error;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *) scalePtr,
+	objPtr = Tk_GetOptionValue(interp, scalePtr,
 		scalePtr->optionTable, objv[2], scalePtr->tkwin);
 	if (objPtr == NULL) {
 	    goto error;
@@ -415,7 +415,7 @@ ScaleWidgetObjCmd(
 	break;
     case COMMAND_CONFIGURE:
 	if (objc <= 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *) scalePtr,
+	    objPtr = Tk_GetOptionInfo(interp, scalePtr,
 		    scalePtr->optionTable,
 		    (objc == 3) ? objv[2] : NULL, scalePtr->tkwin);
 	    if (objPtr == NULL) {
@@ -451,8 +451,8 @@ ScaleWidgetObjCmd(
 	    y = scalePtr->horizTroughY + scalePtr->width/2
 		    + scalePtr->borderWidth;
 	}
-	coords[0] = Tcl_NewIntObj(x);
-	coords[1] = Tcl_NewIntObj(y);
+	coords[0] = Tcl_NewWideIntObj(x);
+	coords[1] = Tcl_NewWideIntObj(y);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, coords));
 	break;
     }
@@ -625,7 +625,7 @@ ConfigureScale(
 	     * First pass: set options to new values.
 	     */
 
-	    if (Tk_SetOptions(interp, (char *) scalePtr,
+	    if (Tk_SetOptions(interp, scalePtr,
 		    scalePtr->optionTable, objc, objv, scalePtr->tkwin,
 		    &savedOptions, NULL) != TCL_OK) {
 		continue;
@@ -682,7 +682,7 @@ ConfigureScale(
 	ComputeFormat(scalePtr, 0);
 	ComputeFormat(scalePtr, 1);
 
-	scalePtr->labelLength = scalePtr->label ? (int)strlen(scalePtr->label) : 0;
+	scalePtr->labelLength = scalePtr->label ? strlen(scalePtr->label) : 0;
 
 	Tk_SetBackgroundFromBorder(scalePtr->tkwin, scalePtr->bgBorder);
 

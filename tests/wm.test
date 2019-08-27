@@ -1519,7 +1519,7 @@ test wm-stackorder-5.1 {a menu is not a toplevel} -body {
 test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
     overrideredirect toplevel on unix} -constraints x11 -body {
     toplevel .t
-    tkwait visibility .t	    
+    tkwait visibility .t
     wm overrideredirect .t 1
     raise .
     update
@@ -1531,7 +1531,7 @@ test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
 test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
     overrideredirect toplevel on macOS or win} -constraints aquaOrWin32 -body {
     toplevel .t
-    tkwait visibility .t	    
+    tkwait visibility .t
     wm overrideredirect .t 1
     raise .
     update
@@ -1543,7 +1543,7 @@ test wm-stackorder-5.2.1 {A normal toplevel can be raised above an \
 test wm-stackorder-5.3 {An overrideredirect window\
         can be explicitly lowered} -body {
     toplevel .t
-    tkwait visibility .t	    
+    tkwait visibility .t
     wm overrideredirect .t 1
     lower .t
     update

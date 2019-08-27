@@ -427,7 +427,7 @@ Send(
     HRESULT hr = S_OK;
     int result = TCL_OK;
     VARIANT v;
-    register Tcl_Interp *interp = obj->interp;
+    Tcl_Interp *interp = obj->interp;
     Tcl_Obj *scriptPtr;
     Tcl_DString ds;
 

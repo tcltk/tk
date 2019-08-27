@@ -67,15 +67,15 @@ TkplatformtestInit(
      */
 
     Tcl_CreateObjCommand(interp, "testclipboard", TestclipboardObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwinevent", TestwineventObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testfindwindow", TestfindwindowObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testgetwindowinfo", TestgetwindowinfoObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwinlocale", TestwinlocaleObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
+	    Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }
 
@@ -241,7 +241,7 @@ TestclipboardObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    Tk_Window tkwin = (Tk_Window) clientData;
+    Tk_Window tkwin = clientData;
 
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
@@ -287,6 +287,16 @@ TestwineventObjCmd(
     static const TkStateMap messageMap[] = {
 	{WM_LBUTTONDOWN,	"WM_LBUTTONDOWN"},
 	{WM_LBUTTONUP,		"WM_LBUTTONUP"},
+	{WM_LBUTTONDBLCLK,		"WM_LBUTTONDBLCLK"},
+	{WM_MBUTTONDOWN,	"WM_MBUTTONDOWN"},
+	{WM_MBUTTONUP,		"WM_MBUTTONUP"},
+	{WM_MBUTTONDBLCLK,		"WM_MBUTTONDBLCLK"},
+	{WM_RBUTTONDOWN,	"WM_RBUTTONDOWN"},
+	{WM_RBUTTONUP,		"WM_RBUTTONUP"},
+	{WM_RBUTTONDBLCLK,		"WM_RBUTTONDBLCLK"},
+	{WM_XBUTTONDOWN,	"WM_XBUTTONDOWN"},
+	{WM_XBUTTONUP,		"WM_XBUTTONUP"},
+	{WM_XBUTTONDBLCLK,		"WM_XBUTTONDBLCLK"},
 	{WM_CHAR,		"WM_CHAR"},
 	{WM_GETTEXT,		"WM_GETTEXT"},
 	{WM_SETTEXT,		"WM_SETTEXT"},
@@ -432,7 +442,7 @@ TestfindwindowObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    const TCHAR  *title = NULL, *class = NULL;
+    const WCHAR  *title = NULL, *class = NULL;
     Tcl_DString titleString, classString;
     HWND hwnd = NULL;
     int r = TCL_OK;
@@ -480,7 +490,7 @@ TestfindwindowObjCmd(
 	AppendSystemError(interp, GetLastError());
 	r = TCL_ERROR;
     } else {
-        Tcl_SetObjResult(interp, Tcl_NewLongObj(PTR2INT(hwnd)));
+        Tcl_SetObjResult(interp, Tcl_NewWideIntObj(PTR2INT(hwnd)));
     }
 
     Tcl_DStringFree(&titleString);
@@ -496,7 +506,7 @@ EnumChildrenProc(
 {
     Tcl_Obj *listObj = (Tcl_Obj *) lParam;
 
-    Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewLongObj(PTR2INT(hwnd)));
+    Tcl_ListObjAppendElement(NULL, listObj, Tcl_NewWideIntObj(PTR2INT(hwnd)));
     return TRUE;
 }
 
@@ -507,10 +517,10 @@ TestgetwindowinfoObjCmd(
     int objc,
     Tcl_Obj *const objv[])
 {
-    long hwnd;
+    Tcl_WideInt hwnd;
     Tcl_Obj *dictObj = NULL, *classObj = NULL, *textObj = NULL;
     Tcl_Obj *childrenObj = NULL;
-    TCHAR buf[512];
+    WCHAR buf[512];
     int cch, cchBuf = 256;
     Tcl_DString ds;
 
@@ -519,10 +529,10 @@ TestgetwindowinfoObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetLongFromObj(interp, objv[1], &hwnd) != TCL_OK)
+    if (Tcl_GetWideIntFromObj(interp, objv[1], &hwnd) != TCL_OK)
 	return TCL_ERROR;
 
-    cch = GetClassName(INT2PTR(hwnd), buf, cchBuf);
+    cch = GetClassName((HWND)(size_t)hwnd, buf, cchBuf);
     if (cch == 0) {
     	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to get class name: ", -1));
     	AppendSystemError(interp, GetLastError());
@@ -537,19 +547,19 @@ TestgetwindowinfoObjCmd(
     dictObj = Tcl_NewDictObj();
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("class", 5), classObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
-	Tcl_NewLongObj(GetWindowLongA(INT2PTR(hwnd), GWL_ID)));
+	Tcl_NewWideIntObj(GetWindowLongPtr((HWND)(size_t)hwnd, GWL_ID)));
 
-    cch = GetWindowText(INT2PTR(hwnd), (LPTSTR)buf, cchBuf);
+    cch = GetWindowText((HWND)(size_t)hwnd, buf, cchBuf);
     Tcl_WinTCharToUtf(buf, cch * sizeof (WCHAR), &ds);
     textObj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
 
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
-	Tcl_NewLongObj(PTR2INT(GetParent((INT2PTR(hwnd))))));
+	Tcl_NewWideIntObj(PTR2INT(GetParent((HWND)(size_t)hwnd))));
 
     childrenObj = Tcl_NewListObj(0, NULL);
-    EnumChildWindows(INT2PTR(hwnd), EnumChildrenProc, (LPARAM)childrenObj);
+    EnumChildWindows((HWND)(size_t)hwnd, EnumChildrenProc, (LPARAM)childrenObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("children", -1), childrenObj);
 
     Tcl_SetObjResult(interp, dictObj);
@@ -567,7 +577,7 @@ TestwinlocaleObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-    Tcl_SetObjResult(interp, Tcl_NewIntObj((int)GetThreadLocale()));
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(GetThreadLocale()));
     return TCL_OK;
 }
 

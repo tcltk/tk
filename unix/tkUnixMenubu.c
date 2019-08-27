@@ -58,14 +58,14 @@ void
 TkpDisplayMenuButton(
     ClientData clientData)	/* Information about widget. */
 {
-    register TkMenuButton *mbPtr = (TkMenuButton *) clientData;
+    TkMenuButton *mbPtr = clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
     int x = 0;			/* Initialization needed only to stop compiler
 				 * warning. */
     int y = 0;
-    register Tk_Window tkwin = mbPtr->tkwin;
+    Tk_Window tkwin = mbPtr->tkwin;
     int fullWidth, fullHeight;
     int textXOffset, textYOffset;
     int imageWidth, imageHeight;

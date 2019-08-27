@@ -97,8 +97,8 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    register TkScrollbar *scrollPtr = (TkScrollbar *) clientData;
-    register Tk_Window tkwin = scrollPtr->tkwin;
+    TkScrollbar *scrollPtr = clientData;
+    Tk_Window tkwin = scrollPtr->tkwin;
     XPoint points[7];
     Tk_3DBorder border;
     int relief, width, elementBorderWidth;
@@ -277,7 +277,7 @@ TkpDisplayScrollbar(
 
 extern void
 TkpComputeScrollbarGeometry(
-    register TkScrollbar *scrollPtr)
+    TkScrollbar *scrollPtr)
 				/* Scrollbar whose geometry may have
 				 * changed. */
 {
@@ -394,7 +394,7 @@ TkpDestroyScrollbar(
 
 void
 TkpConfigureScrollbar(
-    register TkScrollbar *scrollPtr)
+    TkScrollbar *scrollPtr)
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
 {
@@ -437,12 +437,12 @@ TkpConfigureScrollbar(
 
 int
 TkpScrollbarPosition(
-    register TkScrollbar *scrollPtr,
+    TkScrollbar *scrollPtr,
 				/* Scrollbar widget record. */
     int x, int y)		/* Coordinates within scrollPtr's window. */
 {
     int length, width, tmp;
-    register const int inset = scrollPtr->inset;
+    const int inset = scrollPtr->inset;
 
     if (scrollPtr->vertical) {
 	length = Tk_Height(scrollPtr->tkwin);
