@@ -538,7 +538,7 @@ XGrabKeyboard(
     Time time)
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
-    TkWindow *captureWinPtr = TkpGetCapture();
+    TkWindow *captureWinPtr = (TkWindow *) TkMacOSXGetCapture();
 
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXDrawableWindow(grab_window);

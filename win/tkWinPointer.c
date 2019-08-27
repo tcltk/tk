@@ -560,10 +560,10 @@ TkpSetCapture(
  *----------------------------------------------------------------------
  */
 
-TkWindow *
+Tk_Window
 TkpGetCapture(void)
 {
-    return (TkWindow *) Tk_HWNDToWindow(GetCapture());
+    return Tk_HWNDToWindow(GetCapture());
 }
 
 /*

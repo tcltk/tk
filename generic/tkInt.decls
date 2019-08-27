@@ -844,8 +844,8 @@ declare 45 win {
     int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
-declare 46 win {
-    TkWindow *TkpGetCapture(void)
+declare 47 win {
+    Tk_Window TkpGetCapture(void)
 }
 
 ################################
@@ -1009,7 +1009,7 @@ declare 46 aqua {
     int TkpIsWindowFloating(void *window)
 }
 declare 47 aqua {
-    TkWindow *TkpGetCapture(void)
+    Tk_Window TkMacOSXGetCapture(void)
 }
 declare 49 aqua {
     Tk_Window TkGetTransientMaster(TkWindow *winPtr)
