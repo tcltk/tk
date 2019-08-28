@@ -42,6 +42,8 @@ Specifies a real value corresponding to the right or bottom end of the scale.
 This value may be either less than or greater than the \fB\-from\fR option.
 .OP \-value value Value
 Specifies the current floating-point value of the variable.
+If \fB\-variable\fR is set to an existing variable, specifying \fB\-value\fR
+has no effect (the variable value takes precedence).
 .OP \-variable variable Variable
 Specifies the name of a global variable to link to the scale. Whenever the
 value of the variable changes, the scale will update to reflect this value.
