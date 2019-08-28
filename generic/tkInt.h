@@ -512,10 +512,17 @@ typedef struct TkDisplay {
      * The following field were all added for Tk8.3
      */
 
+#if TCL_MAJOR_VERSION < 9
+#if !defined(TK_NO_DEPRECATED)
     int mouseButtonState;	/* Current mouse button state for this
-				 * display. */
+				 * display. NOT USED as of 8.6.10 */
     Window mouseButtonWindow;	/* Window the button state was set in, added
 				 * in Tk 8.4. */
+#else
+    int notused1;
+    XID notused2;
+#endif /* !TK_NO_DEPRECATED */
+#endif
     Tk_Window warpWindow;
     Tk_Window warpMainwin;	/* For finding the root window for warping
 				 * purposes. */
@@ -1052,7 +1059,6 @@ MODULE_SCOPE const char *const tkWebColors[20];
 void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
 #endif
 #if !defined(CLANG_ASSERT)
-#include <assert.h>
 #define CLANG_ASSERT(x) assert(x)
 #endif
 #elif !defined(CLANG_ASSERT)
