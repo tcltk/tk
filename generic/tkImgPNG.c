@@ -10,7 +10,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "assert.h"
 #include "tkInt.h"
 
 #define	PNG_INT32(a,b,c,d)	\

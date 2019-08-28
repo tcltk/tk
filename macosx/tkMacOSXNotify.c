@@ -173,7 +173,7 @@ GetRunLoopMode(NSModalSession modalSession)
 
     if (modalSession) {
 	runLoopMode = NSModalPanelRunLoopMode;
-    } else if (TkMacOSXGetCapture()) {
+    } else if (TkpGetCapture()) {
 	runLoopMode = NSEventTrackingRunLoopMode;
     }
     if (!runLoopMode) {
