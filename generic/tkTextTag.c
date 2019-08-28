@@ -1457,7 +1457,7 @@ TkTextBindProc(
     if (eventPtr->type == ButtonPress) {
 	textPtr->flags |= BUTTON_DOWN;
     } else if (eventPtr->type == ButtonRelease) {
-	unsigned int mask;
+	unsigned long mask;
 
 	mask = TkGetButtonMask(eventPtr->xbutton.button);
 	if ((eventPtr->xbutton.state & ALL_BUTTONS) == mask) {
