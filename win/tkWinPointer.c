@@ -336,10 +336,10 @@ XQueryPointer(
 /*
  *----------------------------------------------------------------------
  *
- * XWarpPointer --
+ * XWarpPointer, TkpWarpPointer --
  *
- *	Move pointer to new location. This is not a complete implementation of
- *	this function.
+ *	Move pointer to new location. Note that implementation of XWarpPointer
+ *	is incomplete.
  *
  * Results:
  *	None.
@@ -349,6 +349,29 @@ XQueryPointer(
  *
  *----------------------------------------------------------------------
  */
+
+/*
+ * TkSetCursorPos is a helper function replacing SetCursorPos since this
+ * latter Windows function appears to have been broken by Microsoft
+ * since Win10 Falls Creator Update - See ticket [69b48f427e] along with
+ * several other Internet reports about this breakage.
+ */
+
+void TkSetCursorPos(
+    int x,
+    int y)
+{
+    INPUT input;
+
+    input.type = INPUT_MOUSE;
+    input.mi.dx = x * (65535.0 / (GetSystemMetrics(SM_CXSCREEN) - 1));
+    input.mi.dy = y * (65535.0 / (GetSystemMetrics(SM_CYSCREEN) - 1));
+    input.mi.mouseData = 0;
+    input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+    input.mi.time = 0;
+    input.mi.dwExtraInfo = 0;
+    SendInput(1, &input, sizeof(input));
+}
 
 int
 XWarpPointer(
@@ -365,7 +388,7 @@ XWarpPointer(
     RECT r;
 
     GetWindowRect(Tk_GetHWND(dest_w), &r);
-    SetCursorPos(r.left+dest_x, r.top+dest_y);
+    TkSetCursorPos(r.left+dest_x, r.top+dest_y);
     return Success;
 }
 
@@ -377,9 +400,9 @@ TkpWarpPointer(
 	RECT r;
 
 	GetWindowRect(Tk_GetHWND(Tk_WindowId(dispPtr->warpWindow)), &r);
-	SetCursorPos(r.left + dispPtr->warpX, r.top + dispPtr->warpY);
+	TkSetCursorPos(r.left + dispPtr->warpX, r.top + dispPtr->warpY);
     } else {
-	SetCursorPos(dispPtr->warpX, dispPtr->warpY);
+	TkSetCursorPos(dispPtr->warpX, dispPtr->warpY);
     }
 }
 
