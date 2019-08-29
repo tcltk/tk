@@ -5880,7 +5880,7 @@ test bind-27.7 {button names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {<Button-5> {button 5}}
-test bind-27.7 {button names} -setup {
+test bind-27.8 {button names} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
@@ -5894,7 +5894,7 @@ test bind-27.7 {button names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {<Button-6> {button 6}}
-test bind-27.7 {button names} -setup {
+test bind-27.9 {button names} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
@@ -5908,7 +5908,7 @@ test bind-27.7 {button names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {<Button-7> {button 7}}
-test bind-27.7 {button names} -setup {
+test bind-27.10 {button names} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
@@ -5922,7 +5922,7 @@ test bind-27.7 {button names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {<Button-8> {button 8}}
-test bind-27.7 {button names} -setup {
+test bind-27.11 {button names} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
