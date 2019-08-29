@@ -201,6 +201,12 @@ MODULE_SCOPE void		TkpWinToplevelDetachWindow(TkWindow *winPtr);
 MODULE_SCOPE int		TkpWmGetState(TkWindow *winPtr);
 
 /*
+ * The following is implemented in tkWinPointer.c and also used in tkWinWindow.c
+ */
+
+MODULE_SCOPE void		TkSetCursorPos(int x, int y);
+
+/*
  * Common routines used in Windows implementation
  */
 MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);

@@ -99,11 +99,6 @@ TkCreateXEventSource(void)
 #   define TkUnixContainerId 0
 #   define TkUnixDoOneXEvent 0
 #   define TkUnixSetMenubar 0
-#   define XCreateWindow 0
-#   define XOffsetRegion 0
-#   define XUnionRegion 0
-#   define XPolygonRegion 0
-#   define XPointInRegion 0
 #   define TkWmCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkSendCleanup (void (*)(TkDisplay *)) TkpSync
 #   define TkpTestsendCmd 0
@@ -217,6 +212,7 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkAlignImageData 0
 #	define TkGenerateActivateEvents 0
 #	define TkpGetMS 0
+#	define TkpGetCapture 0
 #	define TkPointerDeadWindow 0
 #	define TkpSetCapture 0
 #	define TkpSetCursor 0
@@ -552,6 +548,8 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkWmCleanup, /* 43 */
     TkSendCleanup, /* 44 */
     TkpTestsendCmd, /* 45 */
+    0, /* 46 */
+    TkpGetCapture, /* 47 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     TkGenerateActivateEvents, /* 0 */
@@ -601,7 +599,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXGetHostToplevel, /* 44 */
     TkMacOSXPreprocessMenu, /* 45 */
     TkpIsWindowFloating, /* 46 */
-    TkMacOSXGetCapture, /* 47 */
+    TkpGetCapture, /* 47 */
     0, /* 48 */
     TkGetTransientMaster, /* 49 */
     TkGenerateButtonEvent, /* 50 */
@@ -867,6 +865,54 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XQueryColors, /* 89 */
     XQueryTree, /* 90 */
     XSync, /* 91 */
+    0, /* 92 */
+    0, /* 93 */
+    0, /* 94 */
+    0, /* 95 */
+    0, /* 96 */
+    0, /* 97 */
+    0, /* 98 */
+    0, /* 99 */
+    0, /* 100 */
+    0, /* 101 */
+    0, /* 102 */
+    0, /* 103 */
+    0, /* 104 */
+    0, /* 105 */
+    0, /* 106 */
+    0, /* 107 */
+    0, /* 108 */
+    0, /* 109 */
+    0, /* 110 */
+    0, /* 111 */
+    0, /* 112 */
+    0, /* 113 */
+    0, /* 114 */
+    0, /* 115 */
+    0, /* 116 */
+    0, /* 117 */
+    0, /* 118 */
+    0, /* 119 */
+    XOffsetRegion, /* 120 */
+    XUnionRegion, /* 121 */
+    XCreateWindow, /* 122 */
+    0, /* 123 */
+    0, /* 124 */
+    0, /* 125 */
+    0, /* 126 */
+    0, /* 127 */
+    0, /* 128 */
+    0, /* 129 */
+    XFillArcs, /* 130 */
+    XDrawArcs, /* 131 */
+    XDrawRectangles, /* 132 */
+    0, /* 133 */
+    0, /* 134 */
+    0, /* 135 */
+    XReparentWindow, /* 136 */
+    XPutImage, /* 137 */
+    XPolygonRegion, /* 138 */
+    XPointInRegion, /* 139 */
 #endif /* AQUA */
 };
 
