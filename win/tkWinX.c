@@ -587,6 +587,11 @@ TkpOpenDisplay(
      */
     TkpInitKeymapInfo(tsdPtr->winDisplay);
 
+    /*
+     * Key map info must be available immediately, because of "send event".
+     */
+    TkpInitKeymapInfo(tsdPtr->winDisplay);
+
     return tsdPtr->winDisplay;
 }
 

@@ -633,8 +633,9 @@ several matching sequences is more specific:
 an event pattern that specifies a specific button or key is more specific
 than one that does not;
 .IP (b)
-a longer sequence (in terms of number
-of events matched) is more specific than a shorter sequence;
+a sequence with the most highest-ordered patterns (in term of highest
+repetition count) is more specific than a sequence with less
+highest-ordered patterns;
 .IP (c)
 if the modifiers specified in one pattern are a subset of the
 modifiers in another pattern, then the pattern with more modifiers

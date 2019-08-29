@@ -851,6 +851,9 @@ declare 45 win {
     int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
+declare 47 win {
+    Tk_Window TkpGetCapture(void)
+}
 
 ################################
 # Aqua specific functions
@@ -1013,7 +1016,7 @@ declare 46 aqua {
     int TkpIsWindowFloating(void *window)
 }
 declare 47 aqua {
-    Tk_Window TkMacOSXGetCapture(void)
+    Tk_Window TkpGetCapture(void)
 }
 declare 49 aqua {
     Tk_Window TkGetTransientMaster(TkWindow *winPtr)
@@ -1828,6 +1831,42 @@ declare 90 aqua {
 }
 declare 91 aqua {
     int XSync(Display *display, Bool flag)
+}
+declare 120 aqua {
+    int XOffsetRegion(Region rgn, int dx, int dy)
+}
+declare 121 aqua {
+    int XUnionRegion(Region srca, Region srcb, Region dr_return)
+}
+declare 122 aqua {
+    Window XCreateWindow(Display *display, Window parent, int x, int y,
+	    unsigned int width, unsigned int height,
+	    unsigned int border_width, int depth, unsigned int clazz,
+	    Visual *visual, unsigned long value_mask,
+	    XSetWindowAttributes *attributes)
+}
+declare 130 aqua {
+    int XFillArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
+}
+declare 131 aqua {
+    int XDrawArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
+}
+declare 132 aqua {
+    int XDrawRectangles(Display *d, Drawable dr, GC gc, XRectangle *r, int n)
+}
+declare 136 aqua {
+    int XReparentWindow(Display *d, Window w, Window p, int x, int y)
+}
+declare 137 aqua {
+    int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+	    int sx, int sy, int dx, int dy,
+	    unsigned int w, unsigned int h)
+}
+declare 138 aqua {
+    Region XPolygonRegion(XPoint *pts, int n, int rule)
+}
+declare 139 aqua {
+    int XPointInRegion(Region rgn, int x, int y)
 }
 
 # Local Variables:

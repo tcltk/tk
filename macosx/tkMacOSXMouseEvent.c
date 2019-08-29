@@ -93,7 +93,7 @@ enum {
     if (eventWindow) {
 	local = [theEvent locationInWindow];
 	global = [eventWindow tkConvertPointToScreen: local];
-	tkwin = TkMacOSXGetCapture();
+	tkwin = TkpGetCapture();
 	if (tkwin) {
 	    winPtr = (TkWindow *) tkwin;
 	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
@@ -112,7 +112,7 @@ enum {
 	 */
 
 	global = [theEvent locationInWindow];
-	tkwin = TkMacOSXGetCapture();
+	tkwin = TkpGetCapture();
 	if (tkwin) {
 	    winPtr = (TkWindow *) tkwin;
 	    eventWindow = TkMacOSXDrawableWindow(winPtr->window);
@@ -609,7 +609,7 @@ GenerateButtonEvent(
     if ((medPtr->activeNonFloating == NULL)
 	    || ((!(TkpIsWindowFloating(medPtr->whichWin))
 	    && (medPtr->activeNonFloating != medPtr->whichWin))
-	    && TkMacOSXGetCapture() == NULL)) {
+	    && TkpGetCapture() == NULL)) {
 	return false;
     }
 #endif
@@ -688,7 +688,7 @@ TkpSetCapture(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetCapture --
+ * TkpGetCapture --
  *
  * Results:
  *	Returns the current grab window
@@ -700,7 +700,7 @@ TkpSetCapture(
  */
 
 Tk_Window
-TkMacOSXGetCapture(void)
+TkpGetCapture(void)
 {
     return captureWinPtr;
 }

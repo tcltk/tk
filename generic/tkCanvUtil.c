@@ -12,7 +12,6 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
-#include <assert.h>
 
 /*
  * Structures defined only in this file.
