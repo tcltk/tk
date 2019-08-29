@@ -509,6 +509,12 @@ package require Tk 8.6
 	if {$noScroll || $::tk_strictMotif} {
 	    return
 	}
+	# We must make sure that positive and negative movements are rounded
+	# equally to integers, avoiding the problem that
+	#     (int)1/120 = 0,
+	# but
+	#     (int)-1/120 = -1
+	# The following code ensure equal +/- behaviour.
 	if {$amount > 0} {
 	    $canvas xview scroll [expr {(-119-$amount) / 120}] units
 	} else {
