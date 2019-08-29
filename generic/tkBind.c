@@ -788,7 +788,7 @@ GetButtonNumber(
     const char *field)
 {
     assert(field);
-    return (field[0] >= '1' && field[0] <= '5' && field[1] == '\0') ? field[0] - '0' : 0;
+    return (field[0] >= '1' && field[0] <= '9' && field[1] == '\0') ? field[0] - '0' : 0;
 }
 
 static Time
