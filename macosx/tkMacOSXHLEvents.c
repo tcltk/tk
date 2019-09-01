@@ -260,11 +260,11 @@ static char* scriptTextProc = "::tk::mac::DoScriptText";
     }
     if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
 			       NULL, 0, &actual)) {
+	/*
+	 * The descriptor can be coerced to UTF8 text.  Evaluate as Tcl, 	 * or pass the text as a string argument to ::tk::mac::DoScriptText
+	 * if that procedure exists.
+	 */
 	if (actual > 0) {
-	    /*
-	     * The descriptor can be coerced to UTF8 text.  Evaluate as Tcl, 	     * or pass the text as a string argument to ::tk::mac::DoScriptText
-	     * if that procedure exists.
-	     */
 	    char *data = ckalloc(actual + 1);
 
 	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject,
@@ -272,52 +272,49 @@ static char* scriptTextProc = "::tk::mac::DoScriptText";
 				       data, actual, NULL)) {
 		Tcl_DString *textScriptCommand = &staticAEInfo.command;
 		Tcl_DStringInit(textScriptCommand);
-		if (Tcl_FindCommand(_eventInterp, scriptTextProc, NULL, 0)) {
-		    Tcl_DStringAppend(textScriptCommand, scriptTextProc, -1);
-		} else {
-		    Tcl_DStringAppend(textScriptCommand, "eval", -1);
-		}
-			    NSLog(@"data is %s", data);
+		Tcl_DStringAppend(textScriptCommand, scriptTextProc, -1);
 		Tcl_DStringAppendElement(textScriptCommand, data);
-		int tclErr = Tcl_EvalEx(_eventInterp,Tcl_DStringValue(textScriptCommand),Tcl_DStringLength(textScriptCommand), TCL_EVAL_GLOBAL);
-		if (tclErr!= TCL_OK) {
-		    Tcl_BackgroundException(_eventInterp, tclErr);
+		if (Tcl_FindCommand(_eventInterp, scriptTextProc, NULL, 0)) {
+		    tclErr = Tcl_EvalEx(_eventInterp,Tcl_DStringValue(textScriptCommand),Tcl_DStringLength(textScriptCommand), TCL_EVAL_GLOBAL);
+		    if (tclErr!= TCL_OK) {
+			Tcl_BackgroundException(_eventInterp, tclErr);
+		    }
+		    Tcl_DStringFree(textScriptCommand);
+		    ckfree(data);
+		} else {
+		    /*
+		     * The DoScript procedure may not be defined because
+		     * the Apple Event is being processed before Tk has 
+		     * been fully initialized.  So try
+		     * to run the procedure as an idle task.
+		     */
+		    staticAEInfo.interp = _eventInterp;
+		    staticAEInfo.procedure = scriptTextProc;
+		    Tcl_DoWhenIdle(ProcessAppleEventEventually, (ClientData)&staticAEInfo);
 		}
-		Tcl_DStringFree(textScriptCommand);
-		ckfree(data);
-	    } else {
-		/*
-		 * The DoScript procedure may not be defined because
-		 * the Apple Event is being processed before Tk has 
-		 * been fully initialized.  So try
-		 * to run the procedure as an idle task.
-		 */
-		staticAEInfo.interp = _eventInterp;
-		staticAEInfo.procedure = scriptTextProc;
-		Tcl_DoWhenIdle(ProcessAppleEventEventually, (ClientData)&staticAEInfo);
 	    }
-	}
   
-	/*
-	 * If we ran some Tcl code, put the result in the reply.
-	 */
-	if (tclErr >= 0) {
-	    int reslen;
-	    const char *result =
-		Tcl_GetStringFromObj(Tcl_GetObjResult(_eventInterp), &reslen);
-	    if (tclErr == TCL_OK) {
-		AEPutParamPtr((AppleEvent*)[replyEvent aeDesc],
-			      keyDirectObject, typeChar,result, reslen);
-	    } else {
-		AEPutParamPtr((AppleEvent*)[replyEvent aeDesc],
-			      keyErrorString, typeChar,
-			      result, reslen);
-		AEPutParamPtr((AppleEvent*)[replyEvent aeDesc],
-			      keyErrorNumber, typeSInt32,
-			      (Ptr) &tclErr,sizeof(int));
+	    /*
+	     * If we ran some Tcl code, put the result in the reply.
+	     */
+	    if (tclErr >= 0) {
+		int reslen;
+		const char *result =
+		    Tcl_GetStringFromObj(Tcl_GetObjResult(_eventInterp), &reslen);
+		if (tclErr == TCL_OK) {
+		    AEPutParamPtr((AppleEvent*)[replyEvent aeDesc],
+				  keyDirectObject, typeChar,result, reslen);
+		} else {
+		    AEPutParamPtr((AppleEvent*)[replyEvent aeDesc],
+				  keyErrorString, typeChar,
+				  result, reslen);
+		    AEPutParamPtr((AppleEvent*)[replyEvent aeDesc],
+				  keyErrorNumber, typeSInt32,
+				  (Ptr) &tclErr,sizeof(int));
+		}
 	    }
+	    return;
 	}
-	return;
     }
 }
 
