@@ -733,6 +733,7 @@ proc tk::mac::LaunchURL {url} {
 
 proc saymyname {} {
 
-    puts "my name is [exec whoami]"
+   # tk_messageBox -message "my name is kevin"
+    exec say "My name is [exec whoami]"
 
 }
