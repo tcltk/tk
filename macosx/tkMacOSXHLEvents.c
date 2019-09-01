@@ -229,7 +229,7 @@ static char* scriptTextProc = "::tk::mac::DoScriptText";
 	 */
 	err = AEGetParamPtr(theDesc, keyDirectObject, typeFileURL, &type,
 			    (Ptr) URLBuffer, URL_MAX_LENGTH, &actual);
-	if (err == noErr && actual > 0){
+	if (err == noErr && actual > 0) {
 	    URLBuffer[actual] = '\0';
 	    NSString *urlString = [NSString stringWithUTF8String:(char*)URLBuffer];
 	    NSURL *fileURL = [NSURL URLWithString:urlString];
@@ -266,19 +266,24 @@ static char* scriptTextProc = "::tk::mac::DoScriptText";
 	     * if that procedure exists.
 	     */
 	    char *data = ckalloc(actual + 1);
+
 	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject,
 				       typeUTF8Text, &type,
 				       data, actual, NULL)) {
 		Tcl_DString *textScriptCommand = &staticAEInfo.command;
 		Tcl_DStringInit(textScriptCommand);
-		if (Tcl_FindCommand(_eventInterp, scriptTextProc, NULL, 0)){
+		if (Tcl_FindCommand(_eventInterp, scriptTextProc, NULL, 0)) {
 		    Tcl_DStringAppend(textScriptCommand, scriptTextProc, -1);
 		} else {
 		    Tcl_DStringAppend(textScriptCommand, "eval", -1);
 		}
+			    NSLog(@"data is %s", data);
 		Tcl_DStringAppendElement(textScriptCommand, data);
-		NSLog(@"data is %s", data);
-		tclErr = Tcl_EvalEx(_eventInterp,Tcl_DStringValue(textScriptCommand),Tcl_DStringLength(textScriptCommand), TCL_EVAL_GLOBAL);
+		int tclErr = Tcl_EvalEx(_eventInterp,Tcl_DStringValue(textScriptCommand),Tcl_DStringLength(textScriptCommand), TCL_EVAL_GLOBAL);
+		if (tclErr!= TCL_OK) {
+		    Tcl_BackgroundException(_eventInterp, tclErr);
+		}
+		Tcl_DStringFree(textScriptCommand);
 		ckfree(data);
 	    } else {
 		/*
@@ -291,7 +296,6 @@ static char* scriptTextProc = "::tk::mac::DoScriptText";
 		staticAEInfo.procedure = scriptTextProc;
 		Tcl_DoWhenIdle(ProcessAppleEventEventually, (ClientData)&staticAEInfo);
 	    }
-   
 	}
   
 	/*
