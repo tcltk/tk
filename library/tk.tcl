@@ -701,3 +701,27 @@ if {$::ttk::library ne ""} {
 # mode: tcl
 # fill-column: 78
 # End:
+
+proc tk::mac::OpenDocument {args} {
+    if {$args != {}} {
+	foreach item $args {
+	  tk_messageBox -message $item
+	}
+    }
+}
+
+
+proc tk::mac::PrintDocument {doc} {
+   tk_messageBox -message "printing $doc"
+}
+
+
+proc tk::mac::LaunchURL {url} {
+   tk_messageBox -message "url : $url"
+}
+
+proc saymyname {} {
+
+    exec say "my name is [exec whoami]"
+
+}
