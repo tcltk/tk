@@ -8,6 +8,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2015 Marc Culler
+ * Copyright (c) 2019 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -30,15 +31,42 @@ typedef struct KillEvent {
 } KillEvent;
 
 /*
+ * When processing an AppleEvent as an idle task, a pointer to one
+ * of these structs is passed as the clientData.
+ */
+
+typedef struct AppleEventInfo {
+    Tcl_Interp *interp;
+    const char *procedure;
+    Tcl_DString command;
+} AppleEventInfo;
+
+/*
+ * We can get by with one static AppleEventInfo struct.
+ */
+
+AppleEventInfo staticAEInfo = {0};
+
+/*
  * Static functions used only in this file.
  */
 
 static void tkMacOSXProcessFiles(NSAppleEventDescriptor* event,
 				 NSAppleEventDescriptor* replyEvent,
-				 Tcl_Interp *interp,
-				 const char* procedure);
+				 Tcl_Interp *interp);
 static int  MissedAnyParameters(const AppleEvent *theEvent);
 static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
+static void ProcessAppleEventEventually(ClientData clientData);
+
+/*
+ * Names of procedures which can be used to process AppleEvents as idle tasks.
+ */
+
+static char* openDocumentProc = "::tk::mac::OpenDocument";
+static char* launchURLProc = "::tk::mac::LaunchURL";
+static char* printDocProc = "::tk::mac::PrintDocument";
+static char* scriptFileProc = "::tk::mac::DoScriptFile";
+static char* scriptTextProc = "::tk::mac::DoScriptText";
 
 #pragma mark TKApplication(TKHLEvents)
 
@@ -120,32 +148,43 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 - (void) handleOpenDocumentsEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
-    tkMacOSXProcessFiles(event, replyEvent, _eventInterp, "::tk::mac::OpenDocument");
+    tkMacOSXProcessFiles(event, replyEvent, _eventInterp);
 }
 
 - (void) handlePrintDocumentsEvent: (NSAppleEventDescriptor *)event
-    withReplyEvent: (NSAppleEventDescriptor *)replyEvent
+		    withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
 
     NSString* file = [[event paramDescriptorForKeyword:keyDirectObject]
 			 stringValue];
     const char *printFile=[file UTF8String];
-    Tcl_DString print;
-    Tcl_DStringInit(&print);
-    if (Tcl_FindCommand(_eventInterp, "::tk::mac::PrintDocument", NULL, 0)) {
-	Tcl_DStringAppend(&print, "::tk::mac::PrintDocument", -1);
-    }
-    Tcl_DStringAppendElement(&print, printFile);
-    int  tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&print),
-			     Tcl_DStringLength(&print), TCL_EVAL_GLOBAL);
-    if (tclErr!= TCL_OK) {
-	Tcl_BackgroundException(_eventInterp, tclErr);
+    Tcl_DString *printCommand = &staticAEInfo.command;
+    Tcl_DStringInit(printCommand);
+    Tcl_DStringAppend(printCommand, printDocProc, -1);
+    Tcl_DStringAppendElement(printCommand, printFile);
+    if (Tcl_FindCommand(_eventInterp, printDocProc, NULL, 0)) {
+        int  tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(printCommand),
+                                 Tcl_DStringLength(printCommand), TCL_EVAL_GLOBAL);
+        if (tclErr!= TCL_OK) {
+            Tcl_BackgroundException(_eventInterp, tclErr);
+        }
+        Tcl_DStringFree(printCommand);
+    } else {
+
+        /*
+         * The PrintDocument procedure may not be defined because the 
+         * Apple Event is being processed before Tk has been fully 
+	 * initialized.  So try to run the procedure as an idle task.
+         */
+
+        staticAEInfo.interp = _eventInterp;
+        staticAEInfo.procedure = printDocProc;
+        Tcl_DoWhenIdle(ProcessAppleEventEventually, (ClientData)&staticAEInfo);
     }
 }
 
-
 - (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event
-    withReplyEvent: (NSAppleEventDescriptor *)replyEvent
+	      withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
     OSStatus err;
     const AEDesc *theDesc = nil;
@@ -170,15 +209,15 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 			NULL, 0, NULL);
     if (err != noErr) {
 	sprintf(errString, "AEDoScriptHandler: GetParamDesc error %d", (int)err);
-	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString, typeChar,
-		      errString, strlen(errString));
+	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString,
+		      typeChar, errString, strlen(errString));
 	return;
     }
 
     if (MissedAnyParameters((AppleEvent*)theDesc)) {
     	sprintf(errString, "AEDoScriptHandler: extra parameters");
-    	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString, typeChar,
-    		      errString, strlen(errString));
+    	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString,
+		      typeChar,errString, strlen(errString));
     	return;
     }
 
@@ -194,73 +233,91 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
 	    URLBuffer[actual] = '\0';
 	    NSString *urlString = [NSString stringWithUTF8String:(char*)URLBuffer];
 	    NSURL *fileURL = [NSURL URLWithString:urlString];
-	    Tcl_DString command;
-	    Tcl_DStringInit(&command);
-	    if (Tcl_FindCommand(_eventInterp, "::tk::mac::DoScriptFile", NULL, 0)){
-		Tcl_DStringAppend(&command, "::tk::mac::DoScriptFile", -1);
+	    Tcl_DString *fileScriptCommand = &staticAEInfo.command;
+	    Tcl_DStringInit(fileScriptCommand);
+	    if (Tcl_FindCommand(_eventInterp, scriptFileProc, NULL, 0)){
+		Tcl_DStringAppend(fileScriptCommand, scriptFileProc, -1);
 	    } else {
-		Tcl_DStringAppend(&command, "source", -1);
+		Tcl_DStringAppend(fileScriptCommand, "source", -1);
 	    }
-	    Tcl_DStringAppendElement(&command, [[fileURL path] UTF8String]);
-	    tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&command),
-				 Tcl_DStringLength(&command), TCL_EVAL_GLOBAL);
+	    Tcl_DStringAppendElement(fileScriptCommand, [[fileURL path] UTF8String]);
+	    int  tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(fileScriptCommand), Tcl_DStringLength(fileScriptCommand), TCL_EVAL_GLOBAL);
+	    if (tclErr!= TCL_OK) {
+		Tcl_BackgroundException(_eventInterp, tclErr);
+	    }
+	    Tcl_DStringFree(fileScriptCommand);
+	} else {
+	    /*
+	     * The DoScriptFile procedure may not be defined because 
+	     * the Apple Event is being processed before Tk has been 
+	     * fully initialized.  So try
+	     * to run the procedure as an idle task.
+	     */
+	    staticAEInfo.interp = _eventInterp;
+	    staticAEInfo.procedure = scriptFileProc;
+	    Tcl_DoWhenIdle(ProcessAppleEventEventually, (ClientData)&staticAEInfo);
 	}
-    } else if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
-			   NULL, 0, &actual)) {
+    }
+    if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
+			       NULL, 0, &actual)) {
 	if (actual > 0) {
 	    /*
-	     * The descriptor can be coerced to UTF8 text.  Evaluate as Tcl, or
-	     * or pass the text as a string argument to ::tk::mac::DoScriptText
+	     * The descriptor can be coerced to UTF8 text.  Evaluate as Tcl, 	     * or pass the text as a string argument to ::tk::mac::DoScriptText
 	     * if that procedure exists.
 	     */
 	    char *data = ckalloc(actual + 1);
-	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
-			    data, actual, NULL)) {
-		if (Tcl_FindCommand(_eventInterp, "::tk::mac::DoScriptText", NULL, 0)){
-		    Tcl_DString command;
-		    Tcl_DStringInit(&command);
-		    Tcl_DStringAppend(&command, "::tk::mac::DoScriptText", -1);
-		    Tcl_DStringAppendElement(&command, data);
-		    tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&command),
-				 Tcl_DStringLength(&command), TCL_EVAL_GLOBAL);
+	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject,
+				       typeUTF8Text, &type,
+				       data, actual, NULL)) {
+		Tcl_DString *textScriptCommand = &staticAEInfo.command;
+		Tcl_DStringInit(textScriptCommand);
+		if (Tcl_FindCommand(_eventInterp, scriptTextProc, NULL, 0)){
+		    Tcl_DStringAppend(textScriptCommand, scriptTextProc, -1);
 		} else {
-		    tclErr = Tcl_EvalEx(_eventInterp, data, actual, TCL_EVAL_GLOBAL);
+		    Tcl_DStringAppend(textScriptCommand, "eval", -1);
 		}
+		Tcl_DStringAppendElement(textScriptCommand, data);
+		NSLog(@"data is %s", data);
+		tclErr = Tcl_EvalEx(_eventInterp,Tcl_DStringValue(textScriptCommand),Tcl_DStringLength(textScriptCommand), TCL_EVAL_GLOBAL);
+		ckfree(data);
+	    } else {
+		/*
+		 * The DoScript procedure may not be defined because
+		 * the Apple Event is being processed before Tk has 
+		 * been fully initialized.  So try
+		 * to run the procedure as an idle task.
+		 */
+		staticAEInfo.interp = _eventInterp;
+		staticAEInfo.procedure = scriptTextProc;
+		Tcl_DoWhenIdle(ProcessAppleEventEventually, (ClientData)&staticAEInfo);
 	    }
-	    ckfree(data);
+   
 	}
-    } else {
+  
 	/*
-	 * The descriptor can not be coerced to a fileURL or UTF8 text.
+	 * If we ran some Tcl code, put the result in the reply.
 	 */
-	for (int i = 0; i < 4; i++) {
-	    typeString[i] = ((char*)&initialType)[3-i];
+	if (tclErr >= 0) {
+	    int reslen;
+	    const char *result =
+		Tcl_GetStringFromObj(Tcl_GetObjResult(_eventInterp), &reslen);
+	    if (tclErr == TCL_OK) {
+		AEPutParamPtr((AppleEvent*)[replyEvent aeDesc],
+			      keyDirectObject, typeChar,result, reslen);
+	    } else {
+		AEPutParamPtr((AppleEvent*)[replyEvent aeDesc],
+			      keyErrorString, typeChar,
+			      result, reslen);
+		AEPutParamPtr((AppleEvent*)[replyEvent aeDesc],
+			      keyErrorNumber, typeSInt32,
+			      (Ptr) &tclErr,sizeof(int));
+	    }
 	}
-	typeString[4] = '\0';
-	sprintf(errString, "AEDoScriptHandler: invalid script type '%s', "
-		"must be coercable to 'furl' or 'utf8'", typeString);
-	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString, typeChar, errString,
-		      strlen(errString));
+	return;
     }
-    /*
-     * If we ran some Tcl code, put the result in the reply.
-     */
-    if (tclErr >= 0) {
-	int reslen;
-	const char *result =
-	    Tcl_GetStringFromObj(Tcl_GetObjResult(_eventInterp), &reslen);
-	if (tclErr == TCL_OK) {
-	    AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyDirectObject, typeChar,
-			  result, reslen);
-	} else {
-	    AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString, typeChar,
-			  result, reslen);
-	    AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorNumber, typeSInt32,
-			  (Ptr) &tclErr,sizeof(int));
-	}
-    }
-    return;
 }
+
+   
 
 - (void)handleURLEvent:(NSAppleEventDescriptor*)event
         withReplyEvent:(NSAppleEventDescriptor*)replyEvent
@@ -268,36 +325,73 @@ static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
     NSString* url = [[event paramDescriptorForKeyword:keyDirectObject]
                         stringValue];
     const char *cURL=[url UTF8String];
-    Tcl_DString launch;
-    Tcl_DStringInit(&launch);
-    if (Tcl_FindCommand(_eventInterp, "::tk::mac::LaunchURL", NULL, 0)) {
-	Tcl_DStringAppend(&launch, "::tk::mac::LaunchURL", -1);
+    Tcl_DString *launchCommand = &staticAEInfo.command;
+    Tcl_DStringInit(launchCommand);
+    Tcl_DStringAppend(launchCommand, launchURLProc, -1);
+    Tcl_DStringAppendElement(launchCommand, cURL);
+    if (Tcl_FindCommand(_eventInterp, launchURLProc, NULL, 0)) {
+        int  tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(launchCommand),
+                                 Tcl_DStringLength(launchCommand), TCL_EVAL_GLOBAL);
+        if (tclErr!= TCL_OK) {
+            Tcl_BackgroundException(_eventInterp, tclErr);
+        }
+        Tcl_DStringFree(launchCommand);
+    } else {
+
+        /*
+         * The LaunchURL procedure may not be defined because the AppleEvent
+         * is being processed before Tk has been fully initialized.  So try
+         * to run the procedure as an idle task.
+         */
+
+        staticAEInfo.interp = _eventInterp;
+        staticAEInfo.procedure = launchURLProc;
+        Tcl_DoWhenIdle(ProcessAppleEventEventually, (ClientData)&staticAEInfo);
     }
-    Tcl_DStringAppendElement(&launch, cURL);
-    int  tclErr = Tcl_EvalEx(_eventInterp, Tcl_DStringValue(&launch),
-			     Tcl_DStringLength(&launch), TCL_EVAL_GLOBAL);
-    if (tclErr!= TCL_OK) {
-	Tcl_BackgroundException(_eventInterp, tclErr);
-         }
-    }
+}
 
 @end
 
 #pragma mark -
 
 /*
+ * Idle handler used to process an AppleEvent in case the event
+ * is delivered before the Tcl event handling procedure has been
+ * defined.
+ */
+
+static void ProcessAppleEventEventually(
+    ClientData clientData)
+{
+    int code;
+    AppleEventInfo *event = (AppleEventInfo*) clientData;
+    if (!event->interp ||
+        !Tcl_FindCommand(event->interp, event->procedure, NULL, 0)) {
+	return;
+    }
+    code = Tcl_EvalEx(event->interp, Tcl_DStringValue(&event->command),
+	    Tcl_DStringLength(&event->command), TCL_EVAL_GLOBAL);
+    if (code != TCL_OK) {
+	Tcl_BackgroundException(event->interp, code);
+    }
+    Tcl_DStringFree(&event->command);
+    event->interp = NULL;
+    event->procedure = NULL; /* Not freed - should be global. */
+}
+
+/*
  *----------------------------------------------------------------------
  *
  * TkMacOSXProcessFiles --
  *
- *	Extract a list of fileURLs from an AppleEvent and call the specified
- *      procedure with the file paths as arguments.
+ *	Extract a list of fileURLs from an AppleEvent and call
+ *      ::tk::mac::OpenDocument with the file paths as arguments.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The event is handled by running the procedure.
+ *	The event is handled by running ::tk::mac::OpenDocument.
  *
  *----------------------------------------------------------------------
  */
@@ -306,8 +400,7 @@ static void
 tkMacOSXProcessFiles(
     NSAppleEventDescriptor* event,
     NSAppleEventDescriptor* replyEvent,
-    Tcl_Interp *interp,
-    const char* procedure)
+    Tcl_Interp *interp)
 {
     Tcl_Encoding utf8;
     const AEDesc *fileSpecDesc = nil;
@@ -318,14 +411,14 @@ tkMacOSXProcessFiles(
     Size actual;
     long count, index;
     AEKeyword keyword;
-    Tcl_DString command, pathName;
+    Tcl_DString pathName, *command=&staticAEInfo.command;
     int code;
 
     /*
-     * Do nothing if we don't have an interpreter or the procedure doesn't exist.
+     * Do nothing if we don't have an interpreter.
      */
 
-    if (!interp || !Tcl_FindCommand(interp, procedure, NULL, 0)) {
+    if (!interp) {
 	return;
     }
 
@@ -355,12 +448,13 @@ tkMacOSXProcessFiles(
     }
 
     /*
-     * Construct a Tcl command which calls the procedure, passing the
-     * paths contained in the AppleEvent as arguments.
+     * Construct a Tcl command which calls the procedure
+     * ::tk::mac::OpenDocuent, passing the paths contained in the AppleEvent as
+     * arguments.
      */
 
-    Tcl_DStringInit(&command);
-    Tcl_DStringAppend(&command, procedure, -1);
+    Tcl_DStringInit(command);
+    Tcl_DStringAppend(command, openDocumentProc, -1);
     utf8 = Tcl_GetEncoding(NULL, "utf-8");
 
     for (index = 1; index <= count; index++) {
@@ -377,7 +471,7 @@ tkMacOSXProcessFiles(
 	    continue;
 	}
 	Tcl_ExternalToUtfDString(utf8, [[fileURL path] UTF8String], -1, &pathName);
-	Tcl_DStringAppendElement(&command, Tcl_DStringValue(&pathName));
+	Tcl_DStringAppendElement(command, Tcl_DStringValue(&pathName));
 	Tcl_DStringFree(&pathName);
     }
 
@@ -386,14 +480,22 @@ tkMacOSXProcessFiles(
 
     /*
      * Handle the event by evaluating the Tcl expression we constructed.
+     * If the procedure has not been defined yet it might mean that the
+     * AppleEvent is being processed before Tk has been initialized. So
+     * try to evaluate the expression in an idle task.
      */
-
-    code = Tcl_EvalEx(interp, Tcl_DStringValue(&command),
-	    Tcl_DStringLength(&command), TCL_EVAL_GLOBAL);
-    if (code != TCL_OK) {
-	Tcl_BackgroundException(interp, code);
+    if (Tcl_FindCommand(interp, openDocumentProc, NULL, 0)) {
+        code = Tcl_EvalEx(interp, Tcl_DStringValue(command),
+                          Tcl_DStringLength(command), TCL_EVAL_GLOBAL);
+        if (code != TCL_OK) {
+            Tcl_BackgroundException(interp, code);
+        }
+        Tcl_DStringFree(command);
+    } else {
+        staticAEInfo.interp = interp;
+        staticAEInfo.procedure = openDocumentProc;
+        Tcl_DoWhenIdle(ProcessAppleEventEventually, (ClientData)&staticAEInfo);
     }
-    Tcl_DStringFree(&command);
 }
 
 /*
