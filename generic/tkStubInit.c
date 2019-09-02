@@ -212,6 +212,7 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkAlignImageData 0
 #	define TkGenerateActivateEvents 0
 #	define TkpGetMS 0
+#	define TkpGetCapture 0
 #	define TkPointerDeadWindow 0
 #	define TkpSetCapture 0
 #	define TkpSetCursor 0
@@ -547,6 +548,8 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkWmCleanup, /* 43 */
     TkSendCleanup, /* 44 */
     TkpTestsendCmd, /* 45 */
+    0, /* 46 */
+    TkpGetCapture, /* 47 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     TkGenerateActivateEvents, /* 0 */
@@ -596,7 +599,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXGetHostToplevel, /* 44 */
     TkMacOSXPreprocessMenu, /* 45 */
     TkpIsWindowFloating, /* 46 */
-    TkMacOSXGetCapture, /* 47 */
+    TkpGetCapture, /* 47 */
     0, /* 48 */
     TkGetTransientMaster, /* 49 */
     TkGenerateButtonEvent, /* 50 */

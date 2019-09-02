@@ -793,14 +793,29 @@ TkpPostMenu(
     int index)
 {
     int result;
-    Tk_Window root = Tk_MainWindow(interp);
+    Tk_Window realWin = menuPtr->tkwin;
+    TkWindow *realWinPtr;
+    NSView *realWinView;
 
-    if (root == NULL) {
-	return TCL_ERROR;
+    while (1) {
+	if (realWin == NULL) {
+	    return TCL_ERROR;
+	}
+	/*
+	 * Fix for bug 07cfc9f03e: use the view for the parent real (non-menu)
+	 * toplevel window, rather than always using the root window.
+	 * This allows menus to appear on a separate monitor than the root
+	 * window, and to use the appearance of their parent real window
+	 * rather than the appearance of the root window.
+	 */
+	realWinPtr = (TkWindow*) realWin;
+	realWinView = TkMacOSXDrawableView(realWinPtr->privatePtr);
+	if (realWinView != nil) {
+	    break;
+	}
+	realWin = Tk_Parent(realWin);
     }
-    Drawable d = Tk_WindowId(root);
-    NSView *rootview = TkMacOSXGetRootControl(d);
-    NSWindow *win = [rootview window];
+    NSWindow *win = [realWinView window];
     NSView *view = [win contentView];
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSInteger itemIndex = index;
