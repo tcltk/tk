@@ -142,6 +142,9 @@ EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 EXTERN int		TkpTestsendCmd(ClientData clientData,
 				Tcl_Interp *interp, int objc,
 				Tcl_Obj *const objv[]);
+/* Slot 46 is reserved */
+/* 47 */
+EXTERN Tk_Window	TkpGetCapture(void);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 0 */
@@ -341,6 +344,8 @@ typedef struct TkIntPlatStubs {
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
     int (*tkpTestsendCmd) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
+    void (*reserved46)(void);
+    Tk_Window (*tkpGetCapture) (void); /* 47 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*tkGenerateActivateEvents) (TkWindow *winPtr, int active); /* 0 */
@@ -522,6 +527,9 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkSendCleanup) /* 44 */
 #define TkpTestsendCmd \
 	(tkIntPlatStubsPtr->tkpTestsendCmd) /* 45 */
+/* Slot 46 is reserved */
+#define TkpGetCapture \
+	(tkIntPlatStubsPtr->tkpGetCapture) /* 47 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 #define TkGenerateActivateEvents \
