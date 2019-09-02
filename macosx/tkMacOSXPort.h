@@ -23,6 +23,7 @@
 #include <math.h>
 #include <pwd.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -126,6 +127,17 @@
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}
 #define TkpSync(display)
+
+/*
+ * TkMacOSXGetCapture is a legacy function used on the Mac. When fixing
+ * [943d5ebe51], TkpGetCapture was added to the Windows port. Both
+ * are actually the same feature and should bear the same name. However,
+ * in order to avoid potential backwards incompatibilities, renaming
+ * TkMacOSXGetCapture into TkpGetCapture in *PlatDecls.h shall not be
+ * done in a patch release, therefore use a define here.
+ */
+
+#define TkpGetCapture TkMacOSXGetCapture
 
 /*
  * This macro stores a representation of the window handle in a string.

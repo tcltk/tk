@@ -207,7 +207,6 @@ static Window		ParentXId(Display *display, Window w);
 static int		RefreshKeyboardMappingIfNeeded(XEvent *eventPtr);
 static int		TkXErrorHandler(ClientData clientData,
 			    XErrorEvent *errEventPtr);
-static void		UpdateButtonEventState(XEvent *eventPtr);
 static int		WindowEventProc(Tcl_Event *evPtr, int flags);
 #ifdef TK_USE_INPUT_METHODS
 static void		CreateXIC(TkWindow *winPtr);
@@ -545,69 +544,6 @@ TkGetButtonMask(
     unsigned int button)
 {
     return (button > Button5) ? 0 : buttonMasks[button];
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * UpdateButtonEventState --
- *
- *	Update the button event state in our TkDisplay using the XEvent
- *	passed. We also may modify the the XEvent passed to fit some aspects
- *	of our TkDisplay.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	The TkDisplay's private button state may be modified. The eventPtr's
- *	state may be updated to reflect masks stored in our TkDisplay that the
- *	event doesn't contain. The eventPtr may also be modified to not
- *	contain a button state for the window in which it was not pressed in.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-UpdateButtonEventState(
-    XEvent *eventPtr)
-{
-    TkDisplay *dispPtr;
-
-    switch (eventPtr->type) {
-    case ButtonPress:
-	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
-	dispPtr->mouseButtonWindow = eventPtr->xbutton.window;
-	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
-
-	dispPtr->mouseButtonState |= TkGetButtonMask(eventPtr->xbutton.button);
-	break;
-
-    case ButtonRelease:
-	dispPtr = TkGetDisplay(eventPtr->xbutton.display);
-	dispPtr->mouseButtonWindow = None;
-	dispPtr->mouseButtonState &= ~TkGetButtonMask(eventPtr->xbutton.button);
-	eventPtr->xbutton.state |= dispPtr->mouseButtonState;
-	break;
-
-    case MotionNotify:
-	dispPtr = TkGetDisplay(eventPtr->xmotion.display);
-	if (dispPtr->mouseButtonState & ALL_BUTTONS) {
-	    if (eventPtr->xbutton.window != dispPtr->mouseButtonWindow) {
-		/*
-		 * This motion event should not be interpreted as a button
-		 * press + motion event since this is not the same window the
-		 * button was pressed down in.
-		 */
-
-		dispPtr->mouseButtonState &= ~ALL_BUTTONS;
-		dispPtr->mouseButtonWindow = None;
-	    } else {
-		eventPtr->xmotion.state |= dispPtr->mouseButtonState;
-	    }
-	}
-	break;
-    }
 }
 
 /*
@@ -1216,8 +1152,6 @@ Tk_HandleEvent(
 	eventPtr->xbutton.state ^= ShiftMask;
     }
 #endif
-
-    UpdateButtonEventState(eventPtr);
 
     /*
      * If the generic handler processed this event we are done and can return.

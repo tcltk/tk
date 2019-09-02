@@ -24,6 +24,7 @@
 #include <wchar.h>
 #include <io.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <malloc.h>
