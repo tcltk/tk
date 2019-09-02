@@ -855,7 +855,7 @@ TkpShowBusyWindow(
      */
 
     GetCursorPos(&point);
-    SetCursorPos(point.x, point.y);
+    TkSetCursorPos(point.x, point.y);
 }
 
 /*
@@ -897,7 +897,7 @@ TkpHideBusyWindow(
      */
 
     GetCursorPos(&point);
-    SetCursorPos(point.x, point.y);
+    TkSetCursorPos(point.x, point.y);
 }
 
 /*
