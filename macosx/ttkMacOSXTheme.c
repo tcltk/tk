@@ -245,13 +245,13 @@ static void GetBackgroundColor(
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
 
-    while (masterPtr != NULL) {
+    while (masterPtr && masterPtr->privatePtr) {
 	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
 	masterPtr = (TkWindow *) TkGetGeomMaster(masterPtr);
     }
-    if (masterPtr) {
+    if (masterPtr && masterPtr->privatePtr) {
 	for (int i = 0; i < 4; i++) {
 	    rgba[i] = masterPtr->privatePtr->fillRGBA[i];
 	}
@@ -279,10 +279,12 @@ static void GetBackgroundColor(
 		rgba[i] -= 8.0 / 255.0;
 	    }
 	}
-	winPtr->privatePtr->flags |= TTK_HAS_CONTRASTING_BG;
-	for (int i = 0; i < 4; i++) {
-	    winPtr->privatePtr->fillRGBA[i] = rgba[i];
-	}
+        if (winPtr->privatePtr) {
+            winPtr->privatePtr->flags |= TTK_HAS_CONTRASTING_BG;
+            for (int i = 0; i < 4; i++) {
+                winPtr->privatePtr->fillRGBA[i] = rgba[i];
+            }
+        }
     }
 }
 
