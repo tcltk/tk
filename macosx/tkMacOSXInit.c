@@ -96,11 +96,11 @@ static char scriptPath[PATH_MAX + 1] = "";
     [self _setupWindowNotifications];
     [self _setupApplicationNotifications];
 
-    /*
-     * Construct the menu bar.
-     */
-    _defaultMainMenu = nil;
-    [self _setupMenus];
+    // /*
+    //  * Construct the menu bar.
+    //  */
+    // _defaultMainMenu = nil;
+    // [self _setupMenus];
 
     /*
      * Initialize event processing.
@@ -116,6 +116,12 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
+
+      /*
+     * Construct the menu bar.
+     */
+    _defaultMainMenu = nil;
+    [self _setupMenus];
 
     /*
      * It is not safe to force activation of the NSApp until this method is
