@@ -30,9 +30,9 @@
 /* Additional parameters to nsvgRasterize() */
 
 typedef struct {
-    double x;
-    double y;
     double scale;
+    int scaleToHeight;
+    int scaleToWidth;
 } RastOpts;
 
 /*
@@ -42,6 +42,10 @@ typedef struct {
  */
 
 typedef struct {
+    /* A poiner to remember if it is the same svn image (data)
+     * It is a Tcl_Channel if image created by -file option
+     * or a Tcl_Obj, if image is created with the -data option
+     */
     ClientData dataOrChan;
     Tcl_DString formatString;
     NSVGimage *nsvgImage;
@@ -68,6 +72,8 @@ static int		RasterizeSVG(Tcl_Interp *interp,
 			    Tk_PhotoHandle imageHandle, NSVGimage *nsvgImage,
 			    int destX, int destY, int width, int height,
 			    int srcX, int srcY, RastOpts *ropts);
+static double		GetScaleFromParameters(NSVGimage *nsvgImage,
+			    RastOpts *ropts, int *widthPtr, int *heightPtr);
 static NSVGcache *	GetCachePtr(Tcl_Interp *interp);
 static int		CacheSVG(Tcl_Interp *interp, ClientData dataOrChan,
 			    Tcl_Obj *formatObj, NSVGimage *nsvgImage,
@@ -134,16 +140,15 @@ FileMatchSVG(
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     Tcl_DecrRefCount(dataObj);
     if (nsvgImage != NULL) {
-	*widthPtr = (int) ceil(nsvgImage->width * ropts.scale);
-	*heightPtr = (int) ceil(nsvgImage->height * ropts.scale);
-        if ((*widthPtr <= 0) || (*heightPtr <= 0)) {
-            nsvgDelete(nsvgImage);
-            return 0;
-        }
-	if (!CacheSVG(interp, chan, formatObj, nsvgImage, &ropts)) {
+        GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
+        if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
 	    nsvgDelete(nsvgImage);
-	}
-	return 1;
+	    return 0;
+        }
+        if (!CacheSVG(interp, chan, formatObj, nsvgImage, &ropts)) {
+	    nsvgDelete(nsvgImage);
+        }
+        return 1;
     }
     return 0;
 }
@@ -239,16 +244,15 @@ StringMatchSVG(
     data = TkGetStringFromObj(dataObj, &length);
     nsvgImage = ParseSVGWithOptions(interp, data, length, formatObj, &ropts);
     if (nsvgImage != NULL) {
-	*widthPtr = (int) ceil(nsvgImage->width * ropts.scale);
-	*heightPtr = (int) ceil(nsvgImage->height * ropts.scale);
-        if ((*widthPtr <= 0) || (*heightPtr <= 0)) {
-            nsvgDelete(nsvgImage);
-            return 0;
-        }
-	if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
+        GetScaleFromParameters(nsvgImage, &ropts, widthPtr, heightPtr);
+        if ((*widthPtr <= 0.0) || (*heightPtr <= 0.0)) {
 	    nsvgDelete(nsvgImage);
-	}
-	return 1;
+	    return 0;
+        }
+        if (!CacheSVG(interp, dataObj, formatObj, nsvgImage, &ropts)) {
+	    nsvgDelete(nsvgImage);
+        }
+        return 1;
     }
     return 0;
 }
@@ -324,14 +328,14 @@ ParseSVGWithOptions(
     Tcl_Obj **objv = NULL;
     int objc = 0;
     double dpi = 96.0;
-    char unit[3], *p;
     char *inputCopy = NULL;
     NSVGimage *nsvgImage;
+    int parameterScaleSeen = 0;
     static const char *const fmtOptions[] = {
-        "-dpi", "-scale", "-unit", NULL
+        "-dpi", "-scale", "-scaletoheight", "-scaletowidth", NULL
     };
     enum fmtOptions {
-	OPT_DPI, OPT_SCALE, OPT_UNIT
+	OPT_DPI, OPT_SCALE, OPT_SCALE_TO_HEIGHT, OPT_SCALE_TO_WIDTH
     };
 
     /*
@@ -352,9 +356,9 @@ ParseSVGWithOptions(
      * Process elements of format specification as a list.
      */
 
-    strcpy(unit, "px");
-    ropts->x = ropts->y = 0.0;
     ropts->scale = 1.0;
+    ropts->scaleToHeight = 0;
+    ropts->scaleToWidth = 0;
     if ((formatObj != NULL) &&
 	    Tcl_ListObjGetElements(interp, formatObj, &objc, &objv) != TCL_OK) {
         goto error;
@@ -385,6 +389,29 @@ ParseSVGWithOptions(
 	objc--;
 	objv++;
 
+	/*
+	 * check that only one scale option is given
+	 */
+	switch ((enum fmtOptions) optIndex) {
+	case OPT_SCALE:
+	case OPT_SCALE_TO_HEIGHT:
+	case OPT_SCALE_TO_WIDTH:
+	    if ( parameterScaleSeen ) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"only one of -scale, -scaletoheight, -scaletowidth may be given", -1));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
+			NULL);
+		goto error;
+	    }
+	    parameterScaleSeen = 1;
+	    break;
+	default:
+	    break;
+	}
+
+	/*
+	 * Decode parameters
+	 */
 	switch ((enum fmtOptions) optIndex) {
 	case OPT_DPI:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0], &dpi) == TCL_ERROR) {
@@ -411,17 +438,36 @@ ParseSVGWithOptions(
 		goto error;
 	    }
 	    break;
-	case OPT_UNIT:
-	    p = Tcl_GetString(objv[0]);
-	    if ((p != NULL) && (p[0])) {
-	        strncpy(unit, p, 3);
-		unit[2] = '\0';
+	case OPT_SCALE_TO_HEIGHT:
+	    if (Tcl_GetIntFromObj(interp, objv[0], &ropts->scaleToHeight) ==
+		TCL_ERROR) {
+	        goto error;
+	    }
+	    if (ropts->scaleToHeight <= 0) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"-scaletoheight value must be positive", -1));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
+			NULL);
+		goto error;
+	    }
+	    break;
+	case OPT_SCALE_TO_WIDTH:
+	    if (Tcl_GetIntFromObj(interp, objv[0], &ropts->scaleToWidth) ==
+		TCL_ERROR) {
+	        goto error;
+	    }
+	    if (ropts->scaleToWidth <= 0) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"-scaletowidth value must be positive", -1));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
+			NULL);
+		goto error;
 	    }
 	    break;
 	}
     }
 
-    nsvgImage = nsvgParse(inputCopy, unit, (float) dpi);
+    nsvgImage = nsvgParse(inputCopy, "px", (float) dpi);
     if (nsvgImage == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot parse SVG image", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "PARSE_ERROR", NULL);
@@ -470,9 +516,10 @@ RasterizeSVG(
     NSVGrasterizer *rast;
     unsigned char *imgData;
     Tk_PhotoImageBlock svgblock;
+    double scale;
 
-    w = (int) ceil(nsvgImage->width * ropts->scale);
-    h = (int) ceil(nsvgImage->height * ropts->scale);
+    scale = GetScaleFromParameters(nsvgImage, ropts, &w, &h);
+
     rast = nsvgCreateRasterizer();
     if (rast == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot initialize rasterizer", -1));
@@ -486,8 +533,8 @@ RasterizeSVG(
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
 	goto cleanRAST;
     }
-    nsvgRasterize(rast, nsvgImage, (float) ropts->x, (float) ropts->y,
-	    (float) ropts->scale, imgData, w, h, w * 4);
+    nsvgRasterize(rast, nsvgImage, 0, 0,
+	    (float) scale, imgData, w, h, w * 4);
     /* transfer the data to a photo block */
     svgblock.pixelPtr = imgData;
     svgblock.width = w;
@@ -519,6 +566,66 @@ cleanRAST:
 cleanAST:
     nsvgDelete(nsvgImage);
     return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetScaleFromParameters --
+ *
+ *	Get the scale value from the already parsed parameters -scale,
+ *	-scaletoheight and -scaletowidth.
+ *
+ *	The image width and height is also returned.
+ *
+ * Results:
+ *	The evaluated or configured scale value, or 0.0 on failure
+ *
+ * Side effects:
+ *	heightPtr and widthPtr are set to height and width of the image.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static double
+GetScaleFromParameters(
+    NSVGimage *nsvgImage,
+    RastOpts *ropts,
+    int *widthPtr,
+    int *heightPtr)
+{
+    double scale;
+    int width, height;
+
+    if ((nsvgImage->width == 0.0) || (nsvgImage->height == 0.0)) {
+        width = height = 0;
+        scale = 1.0;
+    } else if (ropts->scaleToHeight > 0) {
+	/*
+	 * Fixed height
+	 */
+	height = ropts->scaleToHeight;
+	scale = height / nsvgImage->height;
+	width = (int) ceil(nsvgImage->width * scale);
+    } else if (ropts->scaleToWidth > 0) {
+	/*
+	 * Fixed width
+	 */
+	width = ropts->scaleToWidth;
+	scale = width / nsvgImage->width;
+	height = (int) ceil(nsvgImage->height * scale);
+    } else {
+	/*
+	 * Scale factor
+	 */
+	scale = ropts->scale;
+	width = (int) ceil(nsvgImage->width * scale);
+	height = (int) ceil(nsvgImage->height * scale);
+    }
+
+    *heightPtr = height;
+    *widthPtr = width;
+    return scale;
 }
 
 /*

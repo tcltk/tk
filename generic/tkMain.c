@@ -89,7 +89,7 @@ NewNativeObj(
 	length = wcslen(string);
     }
     Tcl_DStringInit(&ds);
-    Tcl_UniCharToUtfDString(string, length, &ds);
+    Tcl_WCharToUtfDString(string, length, &ds);
 #else
     Tcl_ExternalToUtfDString(NULL, (char *) string, length, &ds);
 #endif

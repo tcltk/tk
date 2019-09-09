@@ -386,7 +386,7 @@ Async(
 	Tcl_Obj *scriptPtr;
 
 	Tcl_DStringInit(&ds);
-	Tcl_UniCharToUtfDString(vCmd.bstrVal, SysStringLen(vCmd.bstrVal), &ds);
+	Tcl_WCharToUtfDString(vCmd.bstrVal, SysStringLen(vCmd.bstrVal), &ds);
 	scriptPtr =
 		Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
 	Tcl_DStringFree(&ds);
@@ -427,7 +427,7 @@ Send(
     HRESULT hr = S_OK;
     int result = TCL_OK;
     VARIANT v;
-    register Tcl_Interp *interp = obj->interp;
+    Tcl_Interp *interp = obj->interp;
     Tcl_Obj *scriptPtr;
     Tcl_DString ds;
 
@@ -441,7 +441,7 @@ Send(
     }
 
     Tcl_DStringInit(&ds);
-    Tcl_UniCharToUtfDString(v.bstrVal, SysStringLen(v.bstrVal), &ds);
+    Tcl_WCharToUtfDString(v.bstrVal, SysStringLen(v.bstrVal), &ds);
     scriptPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
     Tcl_Preserve(interp);
@@ -458,7 +458,7 @@ Send(
 	obj = Tcl_GetObjResult(interp);
 	src = Tcl_GetString(obj);
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToUniCharDString(src, obj->length, &ds);
+	Tcl_UtfToWCharDString(src, obj->length, &ds);
 	pvResult->bstrVal = SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
     }

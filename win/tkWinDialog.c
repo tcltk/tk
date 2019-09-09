@@ -923,7 +923,7 @@ ColorDlgHookProc(
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    SetWindowText(hDlg, Tcl_UtfToUniCharDString(title, -1, &ds));
+	    SetWindowText(hDlg, Tcl_UtfToWCharDString(title, -1, &ds));
 	    Tcl_DStringFree(&ds);
 	}
 	if (tsdPtr->debugFlag) {
@@ -1373,7 +1373,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 
         src = Tcl_GetString(optsPtr->extObj);
         Tcl_DStringInit(&ds);
-        wstr = (LPWSTR) Tcl_UtfToUniCharDString(src, optsPtr->extObj->length, &ds);
+        wstr = (LPWSTR) Tcl_UtfToWCharDString(src, optsPtr->extObj->length, &ds);
         if (wstr[0] == '.')
             ++wstr;
         hr = fdlgIf->lpVtbl->SetDefaultExtension(fdlgIf, wstr);
@@ -1388,7 +1388,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 
         src = Tcl_GetString(optsPtr->titleObj);
         Tcl_DStringInit(&ds);
-        wstr = (LPWSTR) Tcl_UtfToUniCharDString(src, optsPtr->titleObj->length, &ds);
+        wstr = (LPWSTR) Tcl_UtfToWCharDString(src, optsPtr->titleObj->length, &ds);
         hr = fdlgIf->lpVtbl->SetTitle(fdlgIf, wstr);
         Tcl_DStringFree(&ds);
         if (FAILED(hr))
@@ -1515,7 +1515,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                         Tcl_Obj *ftobj;
 
                         Tcl_DStringInit(&ftds);
-                        Tcl_UniCharToUtfDString(filterPtr[ftix-1].pszName, wcslen(filterPtr[ftix-1].pszName), &ftds);
+                        Tcl_WCharToUtfDString(filterPtr[ftix-1].pszName, wcslen(filterPtr[ftix-1].pszName), &ftds);
                         ftobj = Tcl_NewStringObj(Tcl_DStringValue(&ftds),
                                 Tcl_DStringLength(&ftds));
                         Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
@@ -1630,19 +1630,19 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	if (str[0] == '.')
 	    ++str;
 	Tcl_DStringInit(&extString);
-	Tcl_UtfToUniCharDString(str, -1, &extString);
+	Tcl_UtfToWCharDString(str, -1, &extString);
 	ofn.lpstrDefExt = (WCHAR *) Tcl_DStringValue(&extString);
     }
 
     Tcl_DStringInit(&filterString);
-    Tcl_UtfToUniCharDString(Tcl_DStringValue(&utfFilterString),
+    Tcl_UtfToWCharDString(Tcl_DStringValue(&utfFilterString),
 	    Tcl_DStringLength(&utfFilterString), &filterString);
     ofn.lpstrFilter = (WCHAR *) Tcl_DStringValue(&filterString);
     ofn.nFilterIndex = filterIndex;
 
     if (Tcl_DStringValue(&optsPtr->utfDirString)[0] != '\0') {
 	Tcl_DStringInit(&dirString);
-	Tcl_UtfToUniCharDString(Tcl_DStringValue(&optsPtr->utfDirString),
+	Tcl_UtfToWCharDString(Tcl_DStringValue(&optsPtr->utfDirString),
 		Tcl_DStringLength(&optsPtr->utfDirString), &dirString);
     } else {
 	/*
@@ -1659,7 +1659,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	    Tcl_ResetResult(interp);
 	} else {
 		Tcl_DStringInit(&dirString);
-		Tcl_UtfToUniCharDString(Tcl_DStringValue(&cwd),
+		Tcl_UtfToWCharDString(Tcl_DStringValue(&cwd),
 		    Tcl_DStringLength(&cwd), &dirString);
 	}
 	Tcl_DStringFree(&cwd);
@@ -1668,7 +1668,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 
     if (optsPtr->titleObj != NULL) {
 	Tcl_DStringInit(&titleString);
-	Tcl_UtfToUniCharDString(Tcl_GetString(optsPtr->titleObj), -1, &titleString);
+	Tcl_UtfToWCharDString(Tcl_GetString(optsPtr->titleObj), -1, &titleString);
 	ofn.lpstrTitle = (WCHAR *) Tcl_DStringValue(&titleString);
     }
 
@@ -2306,7 +2306,7 @@ static int MakeFilterVista(
 
 	/* First stash away the text description of the pattern */
         Tcl_DStringInit(&ds);
-        Tcl_UtfToUniCharDString(filterPtr->name, -1, &ds);
+        Tcl_UtfToWCharDString(filterPtr->name, -1, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
 	dlgFilterPtr[i].pszName = ckalloc(nbytes);
@@ -2335,7 +2335,7 @@ static int MakeFilterVista(
 
 	/* Again we need a Unicode form of the string */
         Tcl_DStringInit(&ds);
-        Tcl_UtfToUniCharDString(Tcl_DStringValue(&patterns), -1, &ds);
+        Tcl_UtfToWCharDString(Tcl_DStringValue(&patterns), -1, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
 	dlgFilterPtr[i].pszSpec = ckalloc(nbytes);
@@ -2472,7 +2472,7 @@ Tk_ChooseDirectoryObjCmd(
 	const WCHAR *uniStr;
 
 	Tcl_DStringInit(&tempString);
-	Tcl_UtfToUniCharDString(Tcl_DStringValue(&ofnOpts.utfDirString), -1,
+	Tcl_UtfToWCharDString(Tcl_DStringValue(&ofnOpts.utfDirString), -1,
                           &tempString);
         uniStr = (WCHAR *) Tcl_DStringValue(&tempString);
 
@@ -2505,7 +2505,7 @@ Tk_ChooseDirectoryObjCmd(
 
     if (ofnOpts.titleObj != NULL) {
 	Tcl_DStringInit(&titleString);
-	Tcl_UtfToUniCharDString(Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
+	Tcl_UtfToWCharDString(Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
 	bInfo.lpszTitle = (LPWSTR) Tcl_DStringValue(&titleString);
     } else {
 	bInfo.lpszTitle = L"Please choose a directory, then select OK.";
@@ -2650,7 +2650,7 @@ ChooseDirectoryValidateProc(
 	 */
 
 	Tcl_DStringInit(&initDirString);
-	Tcl_UniCharToUtfDString((WCHAR *) lParam, wcslen((WCHAR *) lParam), &initDirString);
+	Tcl_WCharToUtfDString((WCHAR *) lParam, wcslen((WCHAR *) lParam), &initDirString);
 	if (Tcl_TranslateFileName(chooseDirSharedData->interp,
 		Tcl_DStringValue(&initDirString), &tempString) == NULL) {
 	    /*
@@ -2663,7 +2663,7 @@ ChooseDirectoryValidateProc(
 	}
 	Tcl_DStringFree(&initDirString);
 	Tcl_DStringInit(&initDirString);
-	Tcl_UtfToUniCharDString(Tcl_DStringValue(&tempString), -1, &initDirString);
+	Tcl_UtfToWCharDString(Tcl_DStringValue(&tempString), -1, &initDirString);
 	Tcl_DStringFree(&tempString);
 	wcsncpy(string, (WCHAR *) Tcl_DStringValue(&initDirString),
 		MAX_PATH);
@@ -2944,11 +2944,11 @@ Tk_MessageBoxObjCmd(
 	    GetCurrentThreadId());
     src = Tcl_GetString(tmpObj);
     Tcl_DStringInit(&tmpBuf);
-    tmpPtr = Tcl_UtfToUniCharDString(src, tmpObj->length, &tmpBuf);
+    tmpPtr = Tcl_UtfToWCharDString(src, tmpObj->length, &tmpBuf);
     if (titleObj != NULL) {
 	src = Tcl_GetString(titleObj);
 	Tcl_DStringInit(&titleBuf);
-	titlePtr = Tcl_UtfToUniCharDString(src, titleObj->length, &titleBuf);
+	titlePtr = Tcl_UtfToWCharDString(src, titleObj->length, &titleBuf);
     } else {
 	titlePtr = L"";
 	Tcl_DStringInit(&titleBuf);
@@ -3046,7 +3046,7 @@ ConvertExternalFilename(
     char *p;
 
     Tcl_DStringInit(dsPtr);
-    Tcl_UniCharToUtfDString(filename, wcslen(filename), dsPtr);
+    Tcl_WCharToUtfDString(filename, wcslen(filename), dsPtr);
     for (p = Tcl_DStringValue(dsPtr); *p != '\0'; p++) {
 	/*
 	 * Change the pathname to the Tcl "normalized" pathname, where back
@@ -3084,7 +3084,7 @@ GetFontObj(
 
     resObj = Tcl_NewListObj(0, NULL);
     Tcl_DStringInit(&ds);
-    Tcl_UniCharToUtfDString(plf->lfFaceName, wcslen(plf->lfFaceName), &ds);
+    Tcl_WCharToUtfDString(plf->lfFaceName, wcslen(plf->lfFaceName), &ds);
     Tcl_ListObjAppendElement(NULL, resObj,
 	    Tcl_NewStringObj(Tcl_DStringValue(&ds), -1));
     Tcl_DStringFree(&ds);
@@ -3171,7 +3171,7 @@ HookProc(
 	    Tcl_DString title;
 
 	    Tcl_DStringInit(&title);
-	    Tcl_UtfToUniCharDString(Tcl_GetString(phd->titleObj), -1, &title);
+	    Tcl_UtfToWCharDString(Tcl_GetString(phd->titleObj), -1, &title);
 	    if (Tcl_DStringLength(&title) > 0) {
 		SetWindowText(hwndDlg, (LPCWSTR) Tcl_DStringValue(&title));
 	    }
@@ -3489,7 +3489,7 @@ FontchooserShowCmd(
 	fontPtr = (TkFont *) f;
 	cf.Flags |= CF_INITTOLOGFONTSTRUCT;
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToUniCharDString(fontPtr->fa.family, -1, &ds);
+	Tcl_UtfToWCharDString(fontPtr->fa.family, -1, &ds);
 	wcsncpy(lf.lfFaceName, (WCHAR *)Tcl_DStringValue(&ds),
 		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);

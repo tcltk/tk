@@ -197,7 +197,7 @@ TkWin32ErrorObj(
     }
 
     Tcl_DStringInit(&ds);
-    Tcl_UniCharToUtfDString(lpBuffer, wcslen(lpBuffer), &ds);
+    Tcl_WCharToUtfDString(lpBuffer, wcslen(lpBuffer), &ds);
     errPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
 

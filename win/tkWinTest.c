@@ -178,7 +178,7 @@ AppendSystemError(
 	char *msgPtr;
 
 	Tcl_DStringInit(&ds);
-	Tcl_UniCharToUtfDString(wMsgPtr, wcslen(wMsgPtr), &ds);
+	Tcl_WCharToUtfDString(wMsgPtr, wcslen(wMsgPtr), &ds);
 	LocalFree(wMsgPtr);
 
 	msgPtr = Tcl_DStringValue(&ds);
@@ -459,10 +459,10 @@ TestfindwindowObjCmd(
     }
 
     Tcl_DStringInit(&titleString);
-    title = Tcl_UtfToUniCharDString(Tcl_GetString(objv[1]), -1, &titleString);
+    title = Tcl_UtfToWCharDString(Tcl_GetString(objv[1]), -1, &titleString);
     if (objc == 3) {
 	Tcl_DStringInit(&classString);
-	class = Tcl_UtfToUniCharDString(Tcl_GetString(objv[2]), -1, &classString);
+	class = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), -1, &classString);
     }
     if (title[0] == 0)
         title = NULL;
@@ -543,7 +543,7 @@ TestgetwindowinfoObjCmd(
     	return TCL_ERROR;
     } else {
 	Tcl_DStringInit(&ds);
-	Tcl_UniCharToUtfDString(buf, wcslen(buf), &ds);
+	Tcl_WCharToUtfDString(buf, wcslen(buf), &ds);
 	classObj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
 	Tcl_DStringFree(&ds);
     }
@@ -555,7 +555,7 @@ TestgetwindowinfoObjCmd(
 
     cch = GetWindowText((HWND)(size_t)hwnd, buf, cchBuf);
 	Tcl_DStringInit(&ds);
-    Tcl_UniCharToUtfDString(buf, cch, &ds);
+    Tcl_WCharToUtfDString(buf, cch, &ds);
     textObj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
 

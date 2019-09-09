@@ -292,7 +292,7 @@ TkTextTagCmd(
 	    if (mask == 0) {
 		return TCL_ERROR;
 	    }
-	    if (mask & (unsigned) ~(ButtonMotionMask|Button1MotionMask
+	    if (mask & ~(unsigned long)(ButtonMotionMask|Button1MotionMask
 		    |Button2MotionMask|Button3MotionMask|Button4MotionMask
 		    |Button5MotionMask|ButtonPressMask|ButtonReleaseMask
 		    |EnterWindowMask|LeaveWindowMask|KeyPressMask
@@ -1457,7 +1457,7 @@ TkTextBindProc(
     if (eventPtr->type == ButtonPress) {
 	textPtr->flags |= BUTTON_DOWN;
     } else if (eventPtr->type == ButtonRelease) {
-	unsigned int mask;
+	unsigned long mask;
 
 	mask = TkGetButtonMask(eventPtr->xbutton.button);
 	if ((eventPtr->xbutton.state & ALL_BUTTONS) == mask) {
@@ -1491,7 +1491,7 @@ TkTextBindProc(
 	unsigned int oldState;
 
 	oldState = eventPtr->xbutton.state;
-	eventPtr->xbutton.state &= ~ALL_BUTTONS;
+	eventPtr->xbutton.state &= ~(unsigned long)ALL_BUTTONS;
 	if (!(textPtr->flags & DESTROYED)) {
 	    TkTextPickCurrent(textPtr, eventPtr);
 	}

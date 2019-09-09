@@ -435,7 +435,7 @@ XGetGeometry(
     return 1;
 }
 
-void
+int
 XChangeProperty(
     Display* display,
     Window w,
@@ -447,15 +447,17 @@ XChangeProperty(
     int nelements)
 {
     Debugger();
+    return Success;
 }
 
-void
+int
 XSelectInput(
     Display* display,
     Window w,
     long event_mask)
 {
     Debugger();
+    return Success;
 }
 
 int
@@ -514,11 +516,12 @@ XSendEvent(
     return 0;
 }
 
-void
+int
 XClearWindow(
     Display* display,
     Window w)
 {
+    return Success;
 }
 
 /*
@@ -530,6 +533,7 @@ XDrawPoint(
     int x,
     int y)
 {
+    return Success;
 }
 
 int
@@ -541,6 +545,7 @@ XDrawPoints(
     int npoints,
     int mode)
 {
+    return Success;
 }
 */
 
@@ -559,7 +564,7 @@ XWarpPointer(
     return Success;
 }
 
-void
+int
 XQueryColor(
     Display* display,
     Colormap colormap,
@@ -578,9 +583,10 @@ XQueryColor(
     d->blue	= (b << 8) | b;
     d->flags	= DoRed|DoGreen|DoBlue;
     d->pad	= 0;
+    return Success;
 }
 
-void
+int
 XQueryColors(
     Display* display,
     Colormap colormap,
@@ -603,6 +609,7 @@ XQueryColors(
 	d->flags	= DoRed|DoGreen|DoBlue;
 	d->pad		= 0;
     }
+    return Success;
 }
 
 int
@@ -641,15 +648,16 @@ XGetWindowProperty(
     return 0;
 }
 
-void
+int
 XRefreshKeyboardMapping(
     XMappingEvent *x)
 {
     /* used by tkXEvent.c */
     Debugger();
+    return Success;
 }
 
-void
+int
 XSetIconName(
     Display* display,
     Window w,
@@ -659,9 +667,10 @@ XSetIconName(
      * This is a no-op, no icon name for Macs.
      */
     display->request++;
+    return Success;
 }
 
-void
+int
 XForceScreenSaver(
     Display* display,
     int mode)
@@ -673,6 +682,7 @@ XForceScreenSaver(
      */
 
     display->request++;
+    return Success;
 }
 
 int
@@ -768,62 +778,69 @@ TkGetServerInfo(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XChangeWindowAttributes(
     Display *display,
     Window w,
     unsigned long value_mask,
     XSetWindowAttributes *attributes)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBackground(
     Display *display,
     Window window,
     unsigned long value)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBackgroundPixmap(
     Display *display,
     Window w,
     Pixmap background_pixmap)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBorder(
     Display *display,
     Window w,
     unsigned long border_pixel)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBorderPixmap(
     Display *display,
     Window w,
     Pixmap border_pixmap)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBorderWidth(
     Display *display,
     Window w,
     unsigned int width)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowColormap(
     Display *display,
     Window w,
     Colormap colormap)
 {
     Debugger();
+    return Success;
 }
 
 Status
@@ -846,7 +863,7 @@ XSetWMClientMachine(
 }
 
 XIC
-XCreateIC(void)
+XCreateIC(XIM xim, ...)
 {
     Debugger();
     return (XIC) 0;

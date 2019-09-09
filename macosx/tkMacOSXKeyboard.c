@@ -361,7 +361,7 @@ XKeycodeToKeysym(
     KeyCode keycode,
     int index)
 {
-    register Tcl_HashEntry *hPtr;
+    Tcl_HashEntry *hPtr;
     int newKeycode;
     UniChar newChar;
 

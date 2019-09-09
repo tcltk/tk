@@ -80,7 +80,7 @@ TkSelGetSelection(
 	}
 	data = GlobalLock(handle);
 	Tcl_DStringInit(&ds);
-	Tcl_UniCharToUtfDString((WCHAR *)data, wcslen((WCHAR *)data), &ds);
+	Tcl_WCharToUtfDString((WCHAR *)data, wcslen((WCHAR *)data), &ds);
 	GlobalUnlock(handle);
     } else if (IsClipboardFormatAvailable(CF_TEXT)) {
 	/*
@@ -159,7 +159,7 @@ TkSelGetSelection(
 		}
 		len = wcslen(fname);
 		Tcl_DStringInit(&dsTmp);
-		Tcl_UniCharToUtfDString(fname, len, &dsTmp);
+		Tcl_WCharToUtfDString(fname, len, &dsTmp);
 		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
 			Tcl_DStringLength(&dsTmp));
 		Tcl_DStringFree(&dsTmp);
@@ -335,7 +335,7 @@ TkWinClipboardRender(
      */
 
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToUniCharDString(rawText, -1, &ds);
+	Tcl_UtfToWCharDString(rawText, -1, &ds);
 	ckfree(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
 		(unsigned) Tcl_DStringLength(&ds) + 2);
@@ -426,7 +426,7 @@ UpdateClipboard(
 void
 TkSelEventProc(
     Tk_Window tkwin,		/* Window for which event was targeted. */
-    register XEvent *eventPtr)	/* X event: either SelectionClear,
+    XEvent *eventPtr)	/* X event: either SelectionClear,
 				 * SelectionRequest, or SelectionNotify. */
 {
     if (eventPtr->type == SelectionClear) {
@@ -453,7 +453,7 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    register XEvent *eventPtr)	/* X PropertyChange event. */
+    XEvent *eventPtr)	/* X PropertyChange event. */
 {
 }
 
