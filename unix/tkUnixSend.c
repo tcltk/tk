@@ -958,7 +958,7 @@ Tk_SendObjCmd(
     TkWindow *winPtr;
     Window commWindow;
     PendingCommand pending;
-    register RegisteredInterp *riPtr;
+    RegisteredInterp *riPtr;
     const char *destName;
     int result, index, async, i, firstArg;
     Tk_RestrictProc *prevProc;
@@ -1781,7 +1781,7 @@ AppendErrorProc(
     XErrorEvent *errorPtr)	/* Information about error. */
 {
     PendingCommand *pendingPtr = clientData;
-    register PendingCommand *pcPtr;
+    PendingCommand *pcPtr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -1830,7 +1830,7 @@ DeleteProc(
 				 * ClientData. */
 {
     RegisteredInterp *riPtr = clientData;
-    register RegisteredInterp *riPtr2;
+    RegisteredInterp *riPtr2;
     NameRegistry *regPtr;
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1878,7 +1878,7 @@ DeleteProc(
 static Tk_RestrictAction
 SendRestrictProc(
     ClientData clientData,		/* Not used. */
-    register XEvent *eventPtr)		/* Event that just arrived. */
+    XEvent *eventPtr)		/* Event that just arrived. */
 {
     TkDisplay *dispPtr;
 

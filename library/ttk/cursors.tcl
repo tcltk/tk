@@ -99,23 +99,20 @@ namespace eval ttk {
 	}
 
 	"aqua" {
-	    if {[package vsatisfies [package provide Tk] 8.5]} {
-		# appeared 2007-04-23, Tk 8.5a6
-		array set Cursors {
-		    standard	arrow
-		    text 	ibeam
-		    link	pointinghand
-		    crosshair	crosshair
-		    busy	watch
-		    forbidden	notallowed
+	    array set Cursors {
+		standard	arrow
+		text 	ibeam
+		link	pointinghand
+		crosshair	crosshair
+		busy	watch
+		forbidden	notallowed
 
-		    hresize 	resizeleftright
-		    vresize 	resizeupdown
-		    nresize	resizeup
-		    sresize	resizedown
-		    wresize	resizeleft
-		    eresize	resizeright
-		}
+		hresize 	resizeleftright
+		vresize 	resizeupdown
+		nresize	resizeup
+		sresize	resizedown
+		wresize	resizeleft
+		eresize	resizeright
 	    }
 	}
     }

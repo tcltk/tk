@@ -26,8 +26,12 @@ namespace eval ttk::theme::aqua {
 		!focus systemSelectedTextColor}
 
 	# Button
-	ttk::style configure TButton -anchor center -width -6\
+	ttk::style configure TButton -anchor center -width -6 \
 	    -foreground systemControlTextColor
+	ttk::style map TButton \
+	    -foreground {
+		pressed white
+	        {alternate !pressed !background} white}
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
 	ttk::style configure Toolbutton -anchor center
 

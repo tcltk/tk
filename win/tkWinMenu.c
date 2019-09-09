@@ -610,7 +610,7 @@ ReconfigureWindowsMenu(
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 		Tcl_DStringInit(&translatedText);
-		Tcl_UtfToUniCharDString(itemText, -1, &translatedText);
+		Tcl_UtfToWCharDString(itemText, -1, &translatedText);
 	    lpNewItem = (const WCHAR *) Tcl_DStringValue(&translatedText);
 	    flags |= MF_STRING;
 	} else {
@@ -1274,7 +1274,7 @@ TkWinHandleMenuEvent(
 
 		    Tcl_DStringFree(&ds);
 		    Tcl_DStringInit(&ds);
-		    wlabel = (WCHAR *) Tcl_UtfToUniCharDString(src, len, &ds);
+		    wlabel = (WCHAR *) Tcl_UtfToWCharDString(src, len, &ds);
 		    if ((underline + 1 < len + 1) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
@@ -2581,7 +2581,7 @@ DrawTearoffEntry(
 
 int
 TkpConfigureMenuEntry(
-    register TkMenuEntry *mePtr)/* Information about menu entry; may or may
+    TkMenuEntry *mePtr)/* Information about menu entry; may or may
 				 * not already have values for some fields. */
 {
     ScheduleMenuReconfigure(mePtr->menuPtr);

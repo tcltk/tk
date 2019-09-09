@@ -239,7 +239,8 @@ Similar to \fB%S\fR substitution for binding scripts.
 .TP
 \fB\-time\fI integer\fR
 \fIInteger\fR must be an integer value;  it specifies the \fItime\fR field
-for the event.
+for the event. Additonally the special value \fBcurrent\fR is allowed,
+this value will be substituted by the current event time.
 Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, \fBMotion\fR,
 and \fBProperty\fR events.

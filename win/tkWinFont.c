@@ -669,7 +669,7 @@ WinFontFamilyEnumProc(
     Tcl_DString faceString;
 
     Tcl_DStringInit(&faceString);
-    Tcl_UniCharToUtfDString(faceName, wcslen(faceName), &faceString);
+    Tcl_WCharToUtfDString(faceName, wcslen(faceName), &faceString);
     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
 	    Tcl_DStringValue(&faceString), Tcl_DStringLength(&faceString)));
     Tcl_DStringFree(&faceString);
@@ -1592,7 +1592,7 @@ InitFont(
 
     GetTextFace(hdc, LF_FACESIZE, buf);
     Tcl_DStringInit(&faceString);
-    Tcl_UniCharToUtfDString(buf, wcslen(buf), &faceString);
+    Tcl_WCharToUtfDString(buf, wcslen(buf), &faceString);
 
     fontPtr->font.fid	= (Font) fontPtr;
     fontPtr->hwnd	= hwnd;
@@ -1770,7 +1770,7 @@ AllocFontFamily(
     hFont = SelectObject(hdc, hFont);
     GetTextFace(hdc, LF_FACESIZE, buf);
     Tcl_DStringInit(&faceString);
-    Tcl_UniCharToUtfDString(buf, wcslen(buf), &faceString);
+    Tcl_WCharToUtfDString(buf, wcslen(buf), &faceString);
     faceName = Tk_GetUid(Tcl_DStringValue(&faceString));
     Tcl_DStringFree(&faceString);
     hFont = SelectObject(hdc, hFont);
@@ -2075,7 +2075,7 @@ WinFontCanUseProc(
 
     fallbackName = (char *) lfPtr->elfLogFont.lfFaceName;
     Tcl_DStringInit(&faceString);
-    Tcl_UniCharToUtfDString((WCHAR *)fallbackName, wcslen((WCHAR *)fallbackName), &faceString);
+    Tcl_WCharToUtfDString((WCHAR *)fallbackName, wcslen((WCHAR *)fallbackName), &faceString);
     fallbackName = Tcl_DStringValue(&faceString);
 
     if (SeenName(fallbackName, nameTriedPtr) == 0) {
@@ -2181,7 +2181,7 @@ FontMapInsert(
  *	None.
  *
  * Side effects:
- *	Mempry allocated.
+ *	Memory allocated.
  *
  *-------------------------------------------------------------------------
  */
