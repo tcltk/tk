@@ -2889,7 +2889,7 @@ EventuallyRedrawItem(
     Tk_Item *itemPtr)		/* Item to be redrawn. May be NULL, in which
 				 * case nothing happens. */
 {
-    if (itemPtr == NULL) {
+    if (itemPtr == NULL || canvasPtr->tkwin == NULL) {
 	return;
     }
     if ((itemPtr->x1 >= itemPtr->x2) || (itemPtr->y1 >= itemPtr->y2) ||
