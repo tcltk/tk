@@ -33,8 +33,8 @@ mandir			= @mandir@
 # INSTALL_ROOT is prepended to $prefix and $exec_prefix when installing files.
 INSTALL_ROOT	=
 
-# Directory from which applications will reference the library of Tcl scripts
-# (note: you can set the TCL_LIBRARY environment variable at run-time to
+# Directory from which applications will reference the library of Tk scripts
+# (note: you can set the TK_LIBRARY environment variable at run-time to
 # override this value):
 TK_LIBRARY	= $(prefix)/lib/tk$(VERSION)
 
@@ -66,7 +66,7 @@ MAN1_INSTALL_DIR = $(MAN_INSTALL_DIR)/man1
 # procedures:
 MAN3_INSTALL_DIR = $(MAN_INSTALL_DIR)/man3
 
-# Directory in which to install manual entries for the built-in Tcl commands:
+# Directory in which to install manual entries for the built-in Tk commands:
 MANN_INSTALL_DIR = $(MAN_INSTALL_DIR)/mann
 
 # Libraries built with optimization switches have this additional extension
