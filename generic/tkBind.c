@@ -2096,7 +2096,7 @@ IsBetterMatch(
 
     if (!sndMatchPtr) { return 0; }
     if (!fstMatchPtr) { return 1; }
-    
+
     diff = CountSpecialized(fstMatchPtr, sndMatchPtr);
     if (diff > 0) { return 1; }
     if (diff < 0) { return 0; }
