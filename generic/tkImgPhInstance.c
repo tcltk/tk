@@ -382,6 +382,68 @@ TkImgPhotoGet(
     return instancePtr;
 }
 
+#ifndef TKPUTIMAGE_CAN_BLEND
+/*
+ *----------------------------------------------------------------------
+ *
+ * DecomposeMaskToShiftAndBits --
+ *
+ *      Given a 32 bit pixel mask, we find the position of the lowest bit and the
+ *      width of the mask bits.
+ *	(Copied from tkCanvas.c)
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+*       None.
+ *
+ *----------------------------------------------------------------------
+ */
+static void
+DecomposeMaskToShiftAndBits(
+    unsigned long mask,     /* The pixel mask to examine */
+    int *shift,             /* Where to put the shift count (position of lowest bit) */
+    int *bits)              /* Where to put the bit count (width of the pixel mask) */
+{
+    int i;
+
+    *shift = 0;
+    *bits = 0;
+
+    /*
+     * Find the lowest '1' bit in the mask.
+     */
+
+    for (i = 0; i < 32; ++i) {
+        if (mask & 1 << i)
+            break;
+    }
+    if (i < 32) {
+        *shift = i;
+
+        /*
+        * Now find the next '0' bit and the width of the mask.
+        */
+
+        for ( ; i < 32; ++i) {
+            if ((mask & 1 << i) == 0)
+                break;
+            else
+                ++*bits;
+        }
+
+        /*
+        * Limit to the top 8 bits if the mask was wider than 8.
+        */
+
+        if (*bits > 8) {
+            *shift += *bits - 8;
+            *bits = 8;
+        }
+    }
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -414,20 +476,6 @@ TkImgPhotoGet(
  *
  *----------------------------------------------------------------------
  */
-#ifndef TKPUTIMAGE_CAN_BLEND
-#ifndef _WIN32
-#define GetRValue(rgb)	(UCHAR(((rgb) & red_mask) >> red_shift))
-#define GetGValue(rgb)	(UCHAR(((rgb) & green_mask) >> green_shift))
-#define GetBValue(rgb)	(UCHAR(((rgb) & blue_mask) >> blue_shift))
-#define RGB(r, g, b)	((unsigned)( \
-	(UCHAR(r) << red_shift)   | \
-	(UCHAR(g) << green_shift) | \
-	(UCHAR(b) << blue_shift)  ))
-#define RGB15(r, g, b)	((unsigned)( \
-	(((r) * red_mask / 255)   & red_mask)   | \
-	(((g) * green_mask / 255) & green_mask) | \
-	(((b) * blue_mask / 255)  & blue_mask)  ))
-#endif /* !_WIN32 */
 
 static void
 BlendComplexAlpha(
@@ -441,6 +489,17 @@ BlendComplexAlpha(
     unsigned long pixel;
     unsigned char r, g, b, alpha, unalpha, *masterPtr;
     unsigned char *alphaAr = iPtr->masterPtr->pix32;
+    int rshift, gshift, bshift, rbits, gbits, bbits;
+    unsigned long rmask, gmask, bmask;
+
+#define GetRedFromPixel(p)	(((p) & rmask) >> rshift)
+#define GetGreenFromPixel(p)	(((p) & gmask) >> gshift)
+#define GetBlueFromPixel(p)	(((p) & bmask) >> bshift)
+#define ColoursToRGB(r,g,b)	((r) << rshift | (g) << gshift | (b) << bshift)
+#define ColoursToRGB15(r,g,b)	((unsigned)( \
+	(((r) * rmask / 255)   & rmask)   | \
+	(((g) * gmask / 255) & gmask) | \
+	(((b) * bmask / 255)  & bmask)  ))
 
     /*
      * This blending is an integer version of the Source-Over compositing rule
@@ -456,32 +515,13 @@ BlendComplexAlpha(
 	((bgPix * unalpha + imgPix * alpha) / 255)
 
     /*
-     * We have to get the mask and shift info from the visual on non-Win32 so
-     * that the macros Get*Value(), RGB() and RGB15() work correctly. This
-     * might be cached for better performance.
+     * We have to get the mask and shift info from the visual on all systems.
+     * Previously this was only on non-Win32 systems, and on Win32 the
+     * GetxValue() and RGB() macros from windows.h were used.
      */
-
-#ifndef _WIN32
-    unsigned long red_mask, green_mask, blue_mask;
-    unsigned long red_shift, green_shift, blue_shift;
-    Visual *visual = iPtr->visualInfo.visual;
-
-    red_mask = visual->red_mask;
-    green_mask = visual->green_mask;
-    blue_mask = visual->blue_mask;
-    red_shift = 0;
-    green_shift = 0;
-    blue_shift = 0;
-    while ((0x0001 & (red_mask >> red_shift)) == 0) {
-	red_shift++;
-    }
-    while ((0x0001 & (green_mask >> green_shift)) == 0) {
-	green_shift++;
-    }
-    while ((0x0001 & (blue_mask >> blue_shift)) == 0) {
-	blue_shift++;
-    }
-#endif /* !_WIN32 */
+    DecomposeMaskToShiftAndBits(rmask = iPtr->visualInfo.visual->red_mask,&rshift,&rbits);
+    DecomposeMaskToShiftAndBits(gmask = iPtr->visualInfo.visual->green_mask,&gshift,&gbits);
+    DecomposeMaskToShiftAndBits(bmask = iPtr->visualInfo.visual->blue_mask,&bshift,&bbits);
 
     /*
      * Only UNIX requires the special case for <24bpp. It varies with 3 extra
@@ -493,9 +533,9 @@ BlendComplexAlpha(
     if (bgImg->depth < 24) {
 	unsigned char red_mlen, green_mlen, blue_mlen;
 
-	red_mlen = 8 - CountBits(red_mask >> red_shift);
-	green_mlen = 8 - CountBits(green_mask >> green_shift);
-	blue_mlen = 8 - CountBits(blue_mask >> blue_shift);
+	red_mlen = 8 - CountBits(rmask >> rshift);
+	green_mlen = 8 - CountBits(gmask >> gshift);
+	blue_mlen = 8 - CountBits(bmask >> bshift);
 	for (y = 0; y < height; y++) {
 	    line = (y + yOffset) * iPtr->masterPtr->width;
 	    for (x = 0; x < width; x++) {
@@ -523,15 +563,15 @@ BlendComplexAlpha(
 			unsigned char ra, ga, ba;
 
 			pixel = XGetPixel(bgImg, x, y);
-			ra = GetRValue(pixel) << red_mlen;
-			ga = GetGValue(pixel) << green_mlen;
-			ba = GetBValue(pixel) << blue_mlen;
+			ra = GetRedFromPixel(pixel) << red_mlen;
+			ga = GetGreenFromPixel(pixel) << green_mlen;
+			ba = GetBlueFromPixel(pixel) << blue_mlen;
 			unalpha = 255 - alpha;	/* Calculate once. */
 			r = ALPHA_BLEND(ra, r, alpha, unalpha);
 			g = ALPHA_BLEND(ga, g, alpha, unalpha);
 			b = ALPHA_BLEND(ba, b, alpha, unalpha);
 		    }
-		    XPutPixel(bgImg, x, y, RGB15(r, g, b));
+		    XPutPixel(bgImg, x, y, ColoursToRGB15(r, g, b));
 		}
 	    }
 	}
@@ -566,15 +606,15 @@ BlendComplexAlpha(
 		    unsigned char ra, ga, ba;
 
 		    pixel = XGetPixel(bgImg, x, y);
-		    ra = GetRValue(pixel);
-		    ga = GetGValue(pixel);
-		    ba = GetBValue(pixel);
+		    ra = GetRedFromPixel(pixel);
+		    ga = GetGreenFromPixel(pixel);
+		    ba = GetBlueFromPixel(pixel);
 		    unalpha = 255 - alpha;	/* Calculate once. */
 		    r = ALPHA_BLEND(ra, r, alpha, unalpha);
 		    g = ALPHA_BLEND(ga, g, alpha, unalpha);
 		    b = ALPHA_BLEND(ba, b, alpha, unalpha);
 		}
-		XPutPixel(bgImg, x, y, RGB(r, g, b));
+		XPutPixel(bgImg, x, y, ColoursToRGB(r, g, b));
 	    }
 	}
     }
