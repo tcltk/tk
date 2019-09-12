@@ -528,7 +528,7 @@ install-pdbs:
 # Special case object file targets
 #---------------------------------------------------------------------
 
-$(TMP_DIR)\testMain.obj: $(WINDIR)\winMain.c
+$(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) -DTK_TEST \
 	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
 	    -Fo$@ $?
@@ -539,13 +539,13 @@ $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 $(TMP_DIR)\tkOldTest.obj: $(GENERICDIR)\tkOldTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
-$(TMP_DIR)\tkWinTest.obj: $(WINDIR)\tkWinTest.c
+$(TMP_DIR)\tkWinTest.obj: $(WIN_DIR)\tkWinTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
 $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
-$(TMP_DIR)\winMain.obj: $(WINDIR)\winMain.c
+$(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) \
 	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
 	    -Fo$@ $?
@@ -561,7 +561,7 @@ $(TMP_DIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
 	$(cc32) $(stubscflags) -Fo$@ $?
 
 
-$(TMP_DIR)\wish.exe.manifest: $(WINDIR)\wish.exe.manifest.in
+$(TMP_DIR)\wish.exe.manifest: $(WIN_DIR)\wish.exe.manifest.in
 	@nmakehlp -s << $** >$@
 @MACHINE@	  $(MACHINE:IX86=X86)
 @TK_WIN_VERSION@  $(DOTVERSION).0.0
@@ -582,7 +582,7 @@ depend:
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(TCLTOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
 		-passthru:"-DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
-		$(WINDIR),$$(WINDIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
+		$(WIN_DIR),$$(WIN_DIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
 		$(BITMAPDIR),$$(BITMAPDIR) @<<
 $(TKOBJS)
 <<
