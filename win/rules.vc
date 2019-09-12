@@ -215,10 +215,8 @@ DEMODIR		= $(LIBDIR)\demos
 DEMODIR		= $(ROOT)\demos
 !endif
 !endif # ifndef DEMODIR
-# Do NOT enclose WIN_DIR in a !ifndef because Windows always defines
-# WIN_DIR env var to point to c:\windows!
-# TBD - This is a potentially dangerous conflict, rename WIN_DIR to
-# something else
+# Do NOT use WINDIR because it is Windows internal environment
+# variable to point to c:\windows!
 WIN_DIR		= $(ROOT)\win
 
 !ifndef RCDIR
