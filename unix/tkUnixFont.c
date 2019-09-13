@@ -171,7 +171,7 @@ static Tcl_ThreadDataKey dataKey;
  * encodings into the names expected by the Tcl encoding package.
  */
 
-static EncodingAlias encodingAliases[] = {
+static const EncodingAlias encodingAliases[] = {
     {"gb2312-raw",	"gb2312*"},
     {"big5",		"big5*"},
     {"cns11643-1",	"cns11643*-1"},
@@ -572,7 +572,11 @@ UtfToUcs2beProc(
 {
     const char *srcStart, *srcEnd, *srcClose, *dstStart, *dstEnd;
     int result, numChars;
-    Tcl_UniChar ch;
+    Tcl_UniChar *chPtr = (Tcl_UniChar *)statePtr;
+
+    if (flags & TCL_ENCODING_START) {
+	*statePtr = 0;
+    }
 
     srcStart = src;
     srcEnd = src + srcLen;
@@ -591,15 +595,14 @@ UtfToUcs2beProc(
 	     * If there is more string to follow, this will ensure that the
 	     * last UTF-8 character in the source buffer hasn't been cut off.
 	     */
-
 	    result = TCL_CONVERT_MULTIBYTE;
 	    break;
 	}
 	if (dst > dstEnd) {
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
-        }
-	src += Tcl_UtfToUniChar(src, &ch);
+	}
+	src += Tcl_UtfToUniChar(src, chPtr);
 
 	/*
 	 * Ensure big-endianness (store big bits first).
@@ -607,8 +610,9 @@ UtfToUcs2beProc(
 	 * sure to work in char* for Tcl_UtfToUniChar alignment. [Bug 1122671]
 	 */
 
-	*dst++ = (ch >> 8);
-	*dst++ = (ch & 0xFF);
+
+	*dst++ = (char)(*chPtr >> 8);
+	*dst++ = (char)*chPtr;
     }
     *srcReadPtr = src - srcStart;
     *dstWrotePtr = dst - dstStart;
@@ -2997,10 +3001,10 @@ static const char *
 GetEncodingAlias(
     const char *name)		/* The name to look up. */
 {
-    EncodingAlias *aliasPtr;
+    const EncodingAlias *aliasPtr;
 
     for (aliasPtr = encodingAliases; aliasPtr->aliasPattern != NULL; ) {
-	if (Tcl_StringMatch(name, aliasPtr->aliasPattern)) {
+	if (Tcl_StringCaseMatch(name, aliasPtr->aliasPattern, 0)) {
 	    return aliasPtr->realName;
 	}
 	aliasPtr++;
