@@ -28,8 +28,8 @@
 
 #define FONTMAP_SHIFT	    10
 
-#define FONTMAP_PAGES	    	(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
+#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -1943,8 +1943,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-
-    if ((ch < BASE_CHARS) || (ch >= 0x10000)) {
+    if ((ch < BASE_CHARS) || (ch >= 0x30000)) {
 	return &fontPtr->subFontArray[0];
     }
 

@@ -37,8 +37,8 @@ static const char *const encodingList[] = {
 
 #define FONTMAP_SHIFT		10
 
-#define FONTMAP_PAGES		(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
+#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -1972,11 +1972,11 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if (FontMapLookup(&fontPtr->subFontArray[0], ch)) {
-	return &fontPtr->subFontArray[0];
+    if (ch > 0x30000) {
+	ch = 0xfffd;
     }
 
-    for (i = 1; i < fontPtr->numSubFonts; i++) {
+    for (i = 0; i < fontPtr->numSubFonts; i++) {
 	if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
 	    return &fontPtr->subFontArray[i];
 	}
