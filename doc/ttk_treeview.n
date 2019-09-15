@@ -87,6 +87,8 @@ which elements of the tree to display.
 Display tree labels in column #0.
 .IP \fBheadings\fR
 Display the heading row.
+.IP \fBseparators\fR
+Display column separators in the cell area.
 .PP
 The default is \fBtree headings\fR, i.e., show all elements.
 .PP

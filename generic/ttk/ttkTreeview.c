@@ -322,11 +322,12 @@ static Tk_OptionSpec HeadingOptionSpecs[] = {
 
 #define SHOW_TREE 	(0x1) 	/* Show tree column? */
 #define SHOW_HEADINGS	(0x2)	/* Show heading row? */
+#define SHOW_SEPARATORS	(0x4)	/* Show vertical separators? */
 
 #define DEFAULT_SHOW	"tree headings"
 
 static const char *const showStrings[] = {
-    "tree", "headings", NULL
+    "tree", "headings", "separators", NULL
 };
 
 static int GetEnumSetFromObj(
@@ -1739,6 +1740,38 @@ static void DrawHeadings(Treeview *tv, Drawable d)
     }
 }
 
+/* + DrawSeparators --
+ *	Draw separators between columns
+ */
+static void DrawSeparators(Treeview *tv, Drawable d)
+{
+    const int y0 = tv->tree.treeArea.y;
+    const int h0 = tv->tree.treeArea.height;
+    DisplayItem displayItem;
+    Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
+    int x = tv->tree.treeArea.x;
+    int i;
+
+    // TODO, use a proper layout for drawing?
+    // This was just whipped up to get something drawn at all
+    Ttk_TagSetValues(tv->tree.tagTable, tv->tree.root->tagset, &displayItem);
+    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, TTK_STATE_SELECTED, &displayItem);
+
+    for (i = FirstColumn(tv); i < tv->tree.nDisplayColumns; ++i) {
+	TreeColumn *column = tv->tree.displayColumns[i];
+	Ttk_Box parcel;
+	int xDraw = x + column->width;
+	x += column->width;
+	if (i >= tv->tree.nTitleColumns) {
+	    xDraw -= tv->tree.xscroll.first;
+	    if (xDraw < tv->tree.titleWidth) continue;
+	}
+
+	parcel = Ttk_MakeBox(xDraw-1, y0, 1, h0);
+	DisplayLayout(tv->tree.rowLayout, &displayItem, 0, parcel, d);
+    }
+}
+
 /* + PrepareItem --
  * 	Fill in a displayItem record.
  */
@@ -1941,6 +1974,9 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 	DrawHeadings(tv, d);
     }
     DrawForest(tv, tv->tree.root->children, d, 0,0);
+    if (tv->tree.showFlags & SHOW_SEPARATORS) {
+	DrawSeparators(tv, d);
+    }
 }
 
 /*------------------------------------------------------------------------
