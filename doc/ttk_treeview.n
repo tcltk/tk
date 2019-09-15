@@ -90,6 +90,11 @@ The default is \fBtree headings\fR, i.e., show all elements.
 \fBNOTE:\fR Column #0 always refers to the tree column,
 even if \fB\-show tree\fR is not specified.
 .RE
+.OP \-striped striped Striped
+Boolean specifying zebra striped row coloring.
+Note:
+Striped rows gets the "alternate" state and it is up to the theme to display this.
+If not supported by the current theme, it will not show.
 .SH "WIDGET COMMAND"
 .PP
 .TP
@@ -489,7 +494,7 @@ The treeview header class name is \fBHeading\fP.
 The treeview item class name is \fBItem\fP.
 The treeview cell class name is \fBCell\fP.
 .PP
-Dynamic states: \fBdisabled\fP, \fBselected\fP.
+Dynamic states: \fBalternate\fP, \fBdisabled\fP, \fBselected\fP.
 .PP
 \fBTreeview\fP styling options configurable with \fBttk::style\fP
 are:

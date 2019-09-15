@@ -132,7 +132,8 @@ namespace eval ttk::theme::clam {
 	ttk::style configure Treeview -background $colors(-window)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
+				selected $colors(-selectbg) \
+                                alternate $colors(-lighter)] \
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 

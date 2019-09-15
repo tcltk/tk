@@ -8,6 +8,7 @@ namespace eval ttk::theme::alt {
     array set colors {
 	-frame 		"#d9d9d9"
 	-window		"#ffffff"
+        -alternate	"#f0f0f0"
 	-darker 	"#c3c3c3"
 	-border		"#414141"
 	-activebg 	"#ececec"
@@ -96,7 +97,8 @@ namespace eval ttk::theme::alt {
 	ttk::style configure Treeview -background $colors(-window)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
+				selected $colors(-selectbg) \
+                                alternate $colors(-alternate)] \
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 
