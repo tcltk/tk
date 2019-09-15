@@ -9,6 +9,7 @@
 #include "ttkWidget.h"
 
 #define DEF_TREE_ROWS		"10"
+#define DEF_TITLECOLUMNS	"0"
 #define DEF_STRIPED		"0"
 #define DEF_COLWIDTH		"200"
 #define DEF_MINWIDTH		"20"
@@ -400,6 +401,7 @@ typedef struct {
 
     Tcl_Obj *heightObj;		/* height (rows) */
     Tcl_Obj *paddingObj;	/* internal padding */
+    int nTitleColumns;		/* -titlecolumns */
     int striped;		/* -striped option */
 
     Tcl_Obj *showObj;		/* -show list */
@@ -418,6 +420,7 @@ typedef struct {
 
     TreeColumn **displayColumns; /* List of columns for display (incl tree) */
     int nDisplayColumns;	/* #display columns */
+    int titleWidth;
     Ttk_Box headingArea;	/* Display area for column headings */
     Ttk_Box treeArea;   	/* Display area for tree */
     int slack;			/* Slack space (see Resizing section) */
@@ -458,6 +461,9 @@ static Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Treeview,tree.paddingObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+    {TK_OPTION_INT, "-titlecolumns", "titlecolumns", "Titlecolumns",
+	DEF_TITLECOLUMNS, -1, offsetof(Treeview,tree.nTitleColumns),
+	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_BOOLEAN, "-striped", "striped", "Striped",
 	DEF_STRIPED, -1, offsetof(Treeview,tree.striped),
 	0,0,GEOMETRY_CHANGED},
@@ -772,6 +778,9 @@ static int TreeWidth(Treeview *tv)
     int width = 0;
 
     while (i < tv->tree.nDisplayColumns) {
+	if (i == tv->tree.nTitleColumns) {
+	    tv->tree.titleWidth = width;
+	}
 	width += tv->tree.displayColumns[i++]->width;
     }
     return width;
@@ -1015,6 +1024,8 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 
     Tcl_InitHashTable(&tv->tree.columnNames, TCL_STRING_KEYS);
     tv->tree.nColumns = tv->tree.nDisplayColumns = 0;
+    tv->tree.nTitleColumns = 0;
+    tv->tree.titleWidth = 0;
     tv->tree.striped = 0;
     tv->tree.columns = NULL;
     tv->tree.displayColumns = NULL;
@@ -1684,13 +1695,32 @@ static Ttk_State ItemState(Treeview *tv, TreeItem *item)
  */
 static void DrawHeadings(Treeview *tv, Drawable d)
 {
-    const int x0 = tv->tree.headingArea.x - tv->tree.xscroll.first;
+    int x0 = tv->tree.headingArea.x - tv->tree.xscroll.first;
     const int y0 = tv->tree.headingArea.y;
     const int h0 = tv->tree.headingArea.height;
     int i = FirstColumn(tv);
     int x = 0;
 
+    if (tv->tree.nTitleColumns > i) {
+	x = tv->tree.titleWidth;
+	i = tv->tree.nTitleColumns;
+    }
+
     while (i < tv->tree.nDisplayColumns) {
+	TreeColumn *column = tv->tree.displayColumns[i];
+	Ttk_Box parcel = Ttk_MakeBox(x0+x, y0, column->width, h0);
+	if (x0+x+column->width > tv->tree.titleWidth) {
+	    DisplayLayout(tv->tree.headingLayout,
+		    column, column->headingState, parcel, d);
+	}
+	x += column->width;
+	++i;
+    }
+
+    x0 = tv->tree.headingArea.x;
+    i = FirstColumn(tv);
+    x = 0;
+    while (i < tv->tree.nTitleColumns) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_MakeBox(x0+x, y0, column->width, h0);
 	DisplayLayout(tv->tree.headingLayout,
@@ -1717,7 +1747,7 @@ static void PrepareItem(
  */
 static void DrawCells(
     Treeview *tv, TreeItem *item, DisplayItem *displayItem,
-    Drawable d, int x, int y)
+    Drawable d, int x, int y, int title)
 {
     Ttk_Layout layout = tv->tree.cellLayout;
     Ttk_State state = ItemState(tv, item);
@@ -1740,12 +1770,15 @@ static void DrawCells(
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_PadBox(
 	    Ttk_MakeBox(x, y, column->width, rowHeight), cellPadding);
+	x += column->width;
+	if (title  && i >= tv->tree.nTitleColumns) break;
+	if (!title && i <  tv->tree.nTitleColumns) continue;
+	if (!title && x <  tv->tree.titleWidth) continue;
 
 	displayItem->textObj = column->data;
 	displayItem->anchorObj = column->anchorObj;	/* <<NOTE-ANCHOR>> */
 
 	DisplayLayout(layout, displayItem, state, parcel, d);
-	x += column->width;
     }
 }
 
@@ -1759,6 +1792,7 @@ static void DrawItem(
     DisplayItem displayItem;
     int rowHeight = tv->tree.rowHeight;
     int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
+    int xTitle = tv->tree.treeArea.x;
     int y = tv->tree.treeArea.y + rowHeight * (row - tv->tree.yscroll.first);
 
     if (row % 2 && tv->tree.striped) state |= TTK_STATE_ALTERNATE;
@@ -1772,23 +1806,45 @@ static void DrawItem(
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
-    /* Draw tree label:
+    /* Make room for tree label:
      */
     if (tv->tree.showFlags & SHOW_TREE) {
-	int indent = depth * tv->tree.indent;
-	int colwidth = tv->tree.column0.width;
-	Ttk_Box parcel = Ttk_MakeBox(
-		x+indent, y, colwidth-indent, rowHeight);
-	if (item->textObj) { displayItem.textObj = item->textObj; }
-	if (item->imageObj) { displayItem.imageObj = item->imageObj; }
-	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
-	DisplayLayout(tv->tree.itemLayout, &displayItem, state, parcel, d);
-	x += colwidth;
+	x += tv->tree.column0.width;
     }
 
     /* Draw data cells:
      */
-    DrawCells(tv, item, &displayItem, d, x, y);
+    DrawCells(tv, item, &displayItem, d, x, y, 0);
+
+    /* Draw row background for non-scrolled area:
+     */
+    if (tv->tree.nTitleColumns >= 1) {
+	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y,
+		tv->tree.titleWidth, rowHeight);
+	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
+    }
+
+    /* Draw tree label:
+     */
+    x = tv->tree.treeArea.x - tv->tree.xscroll.first;
+    if (tv->tree.showFlags & SHOW_TREE) {
+	int indent = depth * tv->tree.indent;
+	int colwidth = tv->tree.column0.width;
+	int xTree = tv->tree.nTitleColumns >= 1 ? xTitle : x;
+	Ttk_Box parcel = Ttk_MakeBox(
+		xTree+indent, y, colwidth-indent, rowHeight);
+	if (item->textObj) { displayItem.textObj = item->textObj; }
+	if (item->imageObj) { displayItem.imageObj = item->imageObj; }
+	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
+	DisplayLayout(tv->tree.itemLayout, &displayItem, state, parcel, d);
+	xTitle += colwidth;
+    }
+
+    /* Draw non-scrolled data cells:
+     */
+    if (tv->tree.nTitleColumns > 1) {
+	DrawCells(tv, item, &displayItem, d, xTitle, y, 1);
+    }
 }
 
 /* + DrawSubtree --
