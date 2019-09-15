@@ -76,6 +76,9 @@ If \fBnone\fR, the selection will not be changed.
 Note that application code and tag bindings can set the selection
 however they wish, regardless of the value of \fB\-selectmode\fR.
 .RE
+.OP \-selecttype selectType SelectType
+Controls how the built-in class bindings manage the selection.
+One of \frow\fR, or \fBcell\fR.
 .OP \-show show Show
 A list containing zero or more of the following values, specifying
 which elements of the tree to display.
@@ -110,6 +113,30 @@ If \fIcolumn\fR is specified, returns the bounding box of that cell.
 If the \fIitem\fR is not visible
 (i.e., if it is a descendant of a closed item or is scrolled offscreen),
 returns the empty list.
+.TP
+\fIpathname \fBcellselection\fR ?\fIselop cellList\fR?
+Mangages cell selection. Cell selection is independent of item selection
+handled by the \fBselection\fR command. A cell is given by a list of two
+elements, row and column.
+If \fIselop\fR is not specified, returns the list of selected cells.
+Otherwise, \fIselop\fR is one of the following:
+.RS
+.TP
+\fIpathname \fBcellselection set \fIcellList\fR
+\fIcellList\fR becomes the new cell selection.
+.TP
+\fIpathname \fBcellselection set \fIfirstCell\fR \fIlastCell\fR
+The rectangle defined becomes the new cell selection.
+.TP
+\fIpathname \fBcellselection add \fIcellList\fR
+Add \fIcellList\fR to the cell selection
+.TP
+\fIpathname \fBcellselection remove \fIcellList\fR
+Remove \fIcellList\fR from the cell selection
+.TP
+\fIpathname \fBcellselection toggle \fIcellList\fR
+Toggle the cell selection state of each item in \fIcellList\fR.
+.RE
 .TP
 \fIpathname \fBcget \fIoption\fR
 Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
