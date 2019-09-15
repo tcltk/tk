@@ -9,6 +9,7 @@
 #include "ttkWidget.h"
 
 #define DEF_TREE_ROWS		"10"
+#define DEF_STRIPED		"0"
 #define DEF_COLWIDTH		"200"
 #define DEF_MINWIDTH		"20"
 
@@ -399,6 +400,7 @@ typedef struct {
 
     Tcl_Obj *heightObj;		/* height (rows) */
     Tcl_Obj *paddingObj;	/* internal padding */
+    int striped;		/* -striped option */
 
     Tcl_Obj *showObj;		/* -show list */
     Tcl_Obj *selectModeObj;	/* -selectmode option */
@@ -456,6 +458,9 @@ static Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Treeview,tree.paddingObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+    {TK_OPTION_BOOLEAN, "-striped", "striped", "Striped",
+	DEF_STRIPED, -1, offsetof(Treeview,tree.striped),
+	0,0,GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	NULL, -1, offsetof(Treeview, tree.xscroll.scrollCmd),
@@ -1010,6 +1015,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 
     Tcl_InitHashTable(&tv->tree.columnNames, TCL_STRING_KEYS);
     tv->tree.nColumns = tv->tree.nDisplayColumns = 0;
+    tv->tree.striped = 0;
     tv->tree.columns = NULL;
     tv->tree.displayColumns = NULL;
     tv->tree.showFlags = ~0;
@@ -1698,10 +1704,9 @@ static void DrawHeadings(Treeview *tv, Drawable d)
  * 	Fill in a displayItem record.
  */
 static void PrepareItem(
-    Treeview *tv, TreeItem *item, DisplayItem *displayItem)
+    Treeview *tv, TreeItem *item, DisplayItem *displayItem, Ttk_State state)
 {
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
-    Ttk_State state = ItemState(tv, item);
 
     Ttk_TagSetValues(tv->tree.tagTable, item->tagset, displayItem);
     Ttk_TagSetApplyStyle(tv->tree.tagTable, style, state, displayItem);
@@ -1756,9 +1761,9 @@ static void DrawItem(
     int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     int y = tv->tree.treeArea.y + rowHeight * (row - tv->tree.yscroll.first);
 
-    if (row % 2) state |= TTK_STATE_ALTERNATE;
+    if (row % 2 && tv->tree.striped) state |= TTK_STATE_ALTERNATE;
 
-    PrepareItem(tv, item, &displayItem);
+    PrepareItem(tv, item, &displayItem, state);
 
     /* Draw row background:
      */
@@ -2225,13 +2230,14 @@ static int TreeviewHorribleIdentify(
 	    Ttk_Box itemBox;
 	    DisplayItem displayItem;
 	    Ttk_Element element;
+	    Ttk_State state = ItemState(tv, item);
 
 	    BoundingBox(tv, item, NULL, &itemBox);
-	    PrepareItem(tv, item, &displayItem);
+	    PrepareItem(tv, item, &displayItem, state);
             if (item->textObj) { displayItem.textObj = item->textObj; }
             if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
-	    Ttk_PlaceLayout(layout, ItemState(tv,item), itemBox);
+	    Ttk_PlaceLayout(layout, state, itemBox);
 	    element = Ttk_IdentifyElement(layout, x, y);
 
 	    if (element) {
@@ -2320,6 +2326,7 @@ static int TreeviewIdentifyCommand(
 	    Ttk_Layout layout = 0;
 	    DisplayItem displayItem;
 	    Ttk_Element element;
+	    Ttk_State state = ItemState(tv, item);
 
 	    switch (region) {
 		case REGION_NOTHING:
@@ -2341,11 +2348,11 @@ static int TreeviewIdentifyCommand(
 		return TCL_OK;
 	    }
 
-	    PrepareItem(tv, item, &displayItem);
+	    PrepareItem(tv, item, &displayItem, state);
             if (item->textObj) { displayItem.textObj = item->textObj; }
             if (item->imageObj) { displayItem.imageObj = item->imageObj; }
 	    Ttk_RebindSublayout(layout, &displayItem);
-	    Ttk_PlaceLayout(layout, ItemState(tv,item), bbox);
+	    Ttk_PlaceLayout(layout, state, bbox);
 	    element = Ttk_IdentifyElement(layout, x, y);
 
 	    if (element) {

@@ -9,6 +9,7 @@ namespace eval ttk::theme::classic {
     variable colors; array set colors {
 	-frame		"#d9d9d9"
 	-window		"#ffffff"
+	-alternate	"#f0f0f0"
 	-activebg	"#ececec"
 	-troughbg	"#c3c3c3"
 	-selectbg	"#c3c3c3"
@@ -99,7 +100,8 @@ namespace eval ttk::theme::classic {
 	ttk::style configure Treeview -background $colors(-window)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
+				selected $colors(-selectbg) \
+                                alternate $colors(-alternate)] \
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 

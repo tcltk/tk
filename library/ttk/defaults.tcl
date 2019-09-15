@@ -8,6 +8,7 @@ namespace eval ttk::theme::default {
 	-frame			"#d9d9d9"
 	-foreground		"#000000"
 	-window			"#ffffff"
+	-alternate		"#f0f0f0"
 	-text   		"#000000"
 	-activebg		"#ececec"
 	-selectbg		"#4a6984"
@@ -111,7 +112,8 @@ namespace eval ttk::theme::default {
 	    -foreground $colors(-text) ;
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-				selected $colors(-selectbg)] \
+                                selected $colors(-selectbg) \
+                                alternate $colors(-alternate)] \
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 
