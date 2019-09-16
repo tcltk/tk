@@ -266,7 +266,7 @@ Tk_MainEx(
 
 	if ((argc > 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
 		&& (TEXT('-') != argv[3][0])) {
-		Tcl_Obj *value = NewNativeObj(argv[2]);
+	    Tcl_Obj *value = NewNativeObj(argv[2]);
 	    Tcl_SetStartupScript(NewNativeObj(argv[3]), Tcl_GetString(value));
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
@@ -427,7 +427,7 @@ StdinProc(
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
 
-    count = Tcl_Gets(chan, &isPtr->line);
+    count = (size_t)Tcl_Gets(chan, &isPtr->line);
 
     if (count == (size_t)-1 && !isPtr->gotPartial) {
 	if (isPtr->tty) {
