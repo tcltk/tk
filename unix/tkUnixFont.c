@@ -391,7 +391,7 @@ ControlUtfProc(
     const char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
     int ch, result;
-    static char hexChars[] = "0123456789abcdef";
+    static char hexChars[] = "0123456789ABCDEF";
     static char mapChars[] = {
 	0, 0, 0, 0, 0, 0, 0,
 	'a', 'b', 't', 'n', 'v', 'f', 'r'
@@ -412,15 +412,15 @@ ControlUtfProc(
 	}
 	src += TkUtfToUniChar(src, &ch);
 	dst[0] = '\\';
-	if (((size_t) ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
+	if (((size_t)ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
 	    dst[1] = mapChars[ch];
 	    dst += 2;
-	} else if (ch < 256) {
+	} else if ((size_t)ch < 256) {
 	    dst[1] = 'x';
 	    dst[2] = hexChars[(ch >> 4) & 0xf];
 	    dst[3] = hexChars[ch & 0xf];
 	    dst += 4;
-	} else if (ch < 0x10000) {
+	} else if ((size_t)ch < 0x10000) {
 	    dst[1] = 'u';
 	    dst[2] = hexChars[(ch >> 12) & 0xf];
 	    dst[3] = hexChars[(ch >> 8) & 0xf];
@@ -430,10 +430,10 @@ ControlUtfProc(
 	} else {
 	    /* TODO we can do better here */
 	    dst[1] = 'u';
-	    dst[2] = 'f';
-	    dst[3] = 'f';
-	    dst[4] = 'f';
-	    dst[5] = 'd';
+	    dst[2] = 'F';
+	    dst[3] = 'F';
+	    dst[4] = 'F';
+	    dst[5] = 'D';
 	    dst += 6;
 	}
     }
@@ -1972,7 +1972,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if (ch > 0x30000) {
+    if (ch < 0 || ch > 0x30000) {
 	ch = 0xfffd;
     }
 
@@ -2126,6 +2126,9 @@ FontMapLookup(
 {
     int row, bitOffset;
 
+    if (ch < 0 ||  ch >= 0x30000) {
+	return 0;
+    }
     row = ch >> FONTMAP_SHIFT;
     if (subFontPtr->fontMap[row] == NULL) {
 	FontMapLoadPage(subFontPtr, row);
@@ -2166,12 +2169,14 @@ FontMapInsert(
 {
     int row, bitOffset;
 
-    row = ch >> FONTMAP_SHIFT;
-    if (subFontPtr->fontMap[row] == NULL) {
-	FontMapLoadPage(subFontPtr, row);
+    if (ch >= 0 &&  ch < 0x30000) {
+	row = ch >> FONTMAP_SHIFT;
+	if (subFontPtr->fontMap[row] == NULL) {
+	    FontMapLoadPage(subFontPtr, row);
+	}
+	bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
+	subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
     }
-    bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
-    subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
 }
 
 /*
