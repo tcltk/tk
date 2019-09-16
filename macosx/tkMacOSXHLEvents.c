@@ -328,7 +328,7 @@ static char* scriptTextProc = "::tk::mac::DoScriptText";
 	}
     }
 }
-   
+
 - (void)handleURLEvent:(NSAppleEventDescriptor*)event
         withReplyEvent:(NSAppleEventDescriptor*)replyEvent
 {
