@@ -391,7 +391,7 @@ ControlUtfProc(
     const char *srcStart, *srcEnd;
     char *dstStart, *dstEnd;
     int ch, result;
-    static char hexChars[] = "0123456789ABCDEF";
+    static char hexChars[] = "0123456789abcdef";
     static char mapChars[] = {
 	0, 0, 0, 0, 0, 0, 0,
 	'a', 'b', 't', 'n', 'v', 'f', 'r'
@@ -430,10 +430,10 @@ ControlUtfProc(
 	} else {
 	    /* TODO we can do better here */
 	    dst[1] = 'u';
-	    dst[2] = 'F';
-	    dst[3] = 'F';
-	    dst[4] = 'F';
-	    dst[5] = 'D';
+	    dst[2] = 'f';
+	    dst[3] = 'f';
+	    dst[4] = 'f';
+	    dst[5] = 'd';
 	    dst += 6;
 	}
     }
@@ -449,7 +449,6 @@ ControlUtfProc(
  * Ucs2beToUtfProc --
  *
  *	Convert from UCS-2BE (big-endian 16-bit Unicode) to UTF-8.
- *	This is only defined on LE machines.
  *
  * Results:
  *	Returns TCL_OK if conversion was successful.
@@ -497,6 +496,11 @@ Ucs2beToUtfProc(
     if ((srcLen % 2) != 0) {
 	result = TCL_CONVERT_MULTIBYTE;
 	srcLen--;
+    }
+    /* If last code point is a high surrogate, we cannot handle that yet */
+    if ((srcLen >= 2) && ((src[srcLen - 2] & 0xFC) == 0xD8)) {
+	result = TCL_CONVERT_MULTIBYTE;
+	srcLen -= 2;
     }
 
     srcStart = src;
