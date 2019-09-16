@@ -553,7 +553,7 @@ TestgetwindowinfoObjCmd(
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
 	Tcl_NewWideIntObj(GetWindowLongPtr((HWND)(size_t)hwnd, GWL_ID)));
 
-    cch = GetWindowText((HWND)(size_t)hwnd, buf, cchBuf);
+    cch = GetWindowText(INT2PTR(hwnd), (LPWSTR)buf, cchBuf);
 	Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(buf, cch, &ds);
     textObj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
