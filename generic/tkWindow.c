@@ -2849,7 +2849,7 @@ TkCygwinMainEx(
 				 * but before starting to execute commands. */
     Tcl_Interp *interp)
 {
-    TCHAR name[MAX_PATH];
+    WCHAR name[MAX_PATH];
     int len;
     void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
@@ -2858,7 +2858,7 @@ TkCygwinMainEx(
     name[len-2] = '.';
     name[len-1] = name[len-5];
     wcscpy(name+len, L".dll");
-    memcpy(name+len-8, L"libtk8", 6 * sizeof(TCHAR));
+    memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
 
     tkcygwindll = LoadLibrary(name);
     if (!tkcygwindll) {
