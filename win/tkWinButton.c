@@ -131,7 +131,7 @@ InitBoxes(void)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    hrsrc = FindResource(module, TEXT("buttons"), RT_BITMAP);
+    hrsrc = FindResource(module, L"buttons", RT_BITMAP);
     if (hrsrc == NULL) {
 	Tcl_Panic("FindResource() failed for buttons bitmap resource, "
             "resources in tk_base.rc must be linked into Tk dll or static executable");
@@ -242,15 +242,15 @@ CreateProc(
 {
     Window window;
     HWND parent;
-    const TCHAR *class;
+    const WCHAR *class;
     WinButton *butPtr = (WinButton *)instanceData;
 
     parent = Tk_GetHWND(parentWin);
     if (butPtr->info.type == TYPE_LABEL) {
-	class = TEXT("STATIC");
+	class = L"STATIC";
 	butPtr->style = SS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     } else {
-	class = TEXT("BUTTON");
+	class = L"BUTTON";
 	butPtr->style = BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     }
     butPtr->hwnd = CreateWindow(class, NULL, butPtr->style,
