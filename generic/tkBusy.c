@@ -896,7 +896,7 @@ Tk_BusyObjCmd(
 		hPtr = Tcl_NextHashEntry(&cursor)) {
 	    busyPtr = Tcl_GetHashValue(hPtr);
 	    if (pattern == NULL ||
-		    Tcl_StringMatch(Tk_PathName(busyPtr->tkRef), pattern)) {
+		    Tcl_StringCaseMatch(Tk_PathName(busyPtr->tkRef), pattern, 0)) {
 		Tcl_ListObjAppendElement(interp, objPtr,
 			TkNewWindowObj(busyPtr->tkRef));
 	    }
