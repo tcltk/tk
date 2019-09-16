@@ -138,7 +138,7 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = GetModuleHandle(TEXT("NTDLL"));
+	HANDLE handle = GetModuleHandle(L"NTDLL");
 	int(__stdcall *getversion)(void *) =
 		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
@@ -269,7 +269,7 @@ TkWinXInit(
 
     if (GetLocaleInfo(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
 	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
-	       (LPTSTR) &lpCP, sizeof(lpCP)/sizeof(TCHAR))
+	       (LPWSTR) &lpCP, sizeof(lpCP)/sizeof(WCHAR))
 	    && TranslateCharsetInfo(INT2PTR(lpCP), &lpCs, TCI_SRCCODEPAGE)) {
 	UpdateInputLanguage((int) lpCs.ciCharset);
     }
@@ -365,8 +365,8 @@ TkWinGetPlatformId(void)
 	if ((os.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
 		(os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
 	    HKEY hKey;
-	    LPCTSTR szSubKey = TEXT("Control Panel\\Appearance");
-	    LPCTSTR szCurrent = TEXT("Current");
+	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
+	    LPCWSTR szCurrent = L"Current";
 	    DWORD dwSize = 200;
 	    char pBuffer[200];
 
