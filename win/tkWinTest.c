@@ -432,7 +432,7 @@ TestfindwindowObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    const TCHAR  *title = NULL, *class = NULL;
+    const WCHAR  *title = NULL, *class = NULL;
     Tcl_DString titleString, classString;
     HWND hwnd = NULL;
     int r = TCL_OK;
@@ -510,7 +510,7 @@ TestgetwindowinfoObjCmd(
     long hwnd;
     Tcl_Obj *dictObj = NULL, *classObj = NULL, *textObj = NULL;
     Tcl_Obj *childrenObj = NULL;
-    TCHAR buf[512];
+    WCHAR buf[512];
     int cch, cchBuf = 256;
     Tcl_DString ds;
 
@@ -539,7 +539,7 @@ TestgetwindowinfoObjCmd(
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
 	Tcl_NewLongObj(GetWindowLongA(INT2PTR(hwnd), GWL_ID)));
 
-    cch = GetWindowText(INT2PTR(hwnd), (LPTSTR)buf, cchBuf);
+    cch = GetWindowText(INT2PTR(hwnd), (LPWSTR)buf, cchBuf);
     Tcl_WinTCharToUtf(buf, cch * sizeof (WCHAR), &ds);
     textObj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
