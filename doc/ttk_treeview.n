@@ -119,7 +119,7 @@ returns the empty list.
 \fIpathname \fBcellselection\fR ?\fIselop cellList\fR?
 Mangages cell selection. Cell selection is independent of item selection
 handled by the \fBselection\fR command. A cell is given by a list of two
-elements, row and column.
+elements, item and column.
 If \fIselop\fR is not specified, returns the list of selected cells.
 Otherwise, \fIselop\fR is one of the following:
 .RS
@@ -275,6 +275,10 @@ Returns the item ID of the item at position \fIy\fR.
 \fIpathname \fBidentify column \fIx y\fR
 Returns the data column identifier of the cell at position \fIx\fR.
 The tree column has ID \fB#0\fR.
+.TP
+\fIpathname \fBidentify cell \fIx y\fR
+Returns the cell identifier of the cell at position \fIx y\fR.
+A cell identifier is a list of item ID and column ID.
 .TP
 \fIpathname \fBidentify element \fIx y\fR
 The element at position \fIx,y\fR.

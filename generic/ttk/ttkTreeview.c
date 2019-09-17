@@ -2406,8 +2406,8 @@ static int TreeviewIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     static const char *const submethodStrings[] =
-	 { "region", "item", "column", "row", "element", NULL };
-    enum { I_REGION, I_ITEM, I_COLUMN, I_ROW, I_ELEMENT };
+	 { "region", "item", "column", "row", "element", "cell", NULL };
+    enum { I_REGION, I_ITEM, I_COLUMN, I_ROW, I_ELEMENT, I_CELL };
 
     Treeview *tv = recordPtr;
     int submethod;
@@ -2455,6 +2455,15 @@ static int TreeviewIdentifyCommand(
 	case I_COLUMN :
 	    if (colno >= 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%d", colno));
+	    }
+	    break;
+
+	case I_CELL :
+	    if (item && colno >= 0) {
+		Tcl_Obj *elem[2];
+		elem[0] = ItemID(tv, item);
+		elem[1] = Tcl_ObjPrintf("#%d", colno);
+		Tcl_SetObjResult(interp, Tcl_NewListObj(2, elem));
 	    }
 	    break;
 
