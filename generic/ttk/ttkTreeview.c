@@ -446,7 +446,7 @@ typedef struct {
 #define SHOW_CHANGED 		(USER_MASK<<3)
 
 static const char *const SelectModeStrings[] = { "none", "browse", "extended", NULL };
-static const char *const SelectTypeStrings[] = { "row", "cell", NULL };
+static const char *const SelectTypeStrings[] = { "item", "cell", NULL };
 
 static Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-columns", "columns", "Columns",
@@ -463,7 +463,7 @@ static Tk_OptionSpec TreeviewOptionSpecs[] = {
 	"extended", offsetof(Treeview,tree.selectModeObj), -1,
 	0,(ClientData)SelectModeStrings,0 },
     {TK_OPTION_STRING_TABLE, "-selecttype", "selectType", "SelectType",
-	"row", offsetof(Treeview,tree.selectTypeObj), -1,
+	"item", offsetof(Treeview,tree.selectTypeObj), -1,
 	0,(ClientData)SelectTypeStrings,0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
