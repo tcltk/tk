@@ -78,7 +78,7 @@ however they wish, regardless of the value of \fB\-selectmode\fR.
 .RE
 .OP \-selecttype selectType SelectType
 Controls how the built-in class bindings manage the selection.
-One of \frow\fR, or \fBcell\fR.
+One of \fitem\fR, or \fBcell\fR.
 .OP \-show show Show
 A list containing zero or more of the following values, specifying
 which elements of the tree to display.
