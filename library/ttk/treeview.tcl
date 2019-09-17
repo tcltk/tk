@@ -138,11 +138,7 @@ proc ttk::treeview::ActivateHeading {w heading} {
 proc ttk::treeview::IdentifyCell {w x y} {
     set cell {}
     if {[$w cget -selecttype] eq "cell"} {
-        set item [$w identify item $x $y]
-        set column [$w identify column $x $y]
-        if {$item ne "" && $column ne ""} {
-            set cell [list $item $column]
-        }
+        set cell [$w identify cell $x $y]
     }
     return $cell
 }
