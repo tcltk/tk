@@ -46,6 +46,8 @@ namespace eval ttk::theme::vista {
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont
 	ttk::style configure Treeview -background SystemWindow
+	ttk::style configure Treeview.Separator \
+                -background System3dLight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
                                 selected SystemHighlight \

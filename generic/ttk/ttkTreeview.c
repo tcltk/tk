@@ -382,6 +382,7 @@ typedef struct {
     Ttk_Layout cellLayout;
     Ttk_Layout headingLayout;
     Ttk_Layout rowLayout;
+    Ttk_Layout separatorLayout;
 
     int headingHeight;		/* Space for headings */
     int rowHeight;		/* Height of each item */
@@ -1028,6 +1029,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 	= tv->tree.cellLayout
 	= tv->tree.headingLayout
 	= tv->tree.rowLayout
+	= tv->tree.separatorLayout
 	= 0;
     tv->tree.headingHeight = tv->tree.rowHeight = DEFAULT_ROWHEIGHT;
     tv->tree.indent = DEFAULT_INDENT;
@@ -1087,6 +1089,7 @@ static void TreeviewCleanup(void *recordPtr)
     if (tv->tree.cellLayout) Ttk_FreeLayout(tv->tree.cellLayout);
     if (tv->tree.headingLayout) Ttk_FreeLayout(tv->tree.headingLayout);
     if (tv->tree.rowLayout) Ttk_FreeLayout(tv->tree.rowLayout);
+    if (tv->tree.separatorLayout) Ttk_FreeLayout(tv->tree.separatorLayout);
 
     TreeviewFreeColumns(tv);
 
@@ -1602,6 +1605,8 @@ static Ttk_Layout TreeviewGetLayout(
 	    tv->tree.headingOptionTable, &tv->tree.headingLayout)
      && GetSublayout(interp, themePtr, treeLayout, ".Row",
 	    tv->tree.tagOptionTable, &tv->tree.rowLayout)
+     && GetSublayout(interp, themePtr, treeLayout, ".Separator",
+	    tv->tree.tagOptionTable, &tv->tree.separatorLayout)
     )) {
 	return 0;
     }
@@ -1748,14 +1753,12 @@ static void DrawSeparators(Treeview *tv, Drawable d)
     const int y0 = tv->tree.treeArea.y;
     const int h0 = tv->tree.treeArea.height;
     DisplayItem displayItem;
-    Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
+    Ttk_Style style = Ttk_LayoutStyle(tv->tree.separatorLayout);
     int x = tv->tree.treeArea.x;
     int i;
 
-    // TODO, use a proper layout for drawing?
-    // This was just whipped up to get something drawn at all
     Ttk_TagSetValues(tv->tree.tagTable, tv->tree.root->tagset, &displayItem);
-    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, TTK_STATE_SELECTED, &displayItem);
+    Ttk_TagSetApplyStyle(tv->tree.tagTable, style, 0, &displayItem);
 
     for (i = FirstColumn(tv); i < tv->tree.nDisplayColumns; ++i) {
 	TreeColumn *column = tv->tree.displayColumns[i];
@@ -1768,7 +1771,7 @@ static void DrawSeparators(Treeview *tv, Drawable d)
 	}
 
 	parcel = Ttk_MakeBox(xDraw-1, y0, 1, h0);
-	DisplayLayout(tv->tree.rowLayout, &displayItem, 0, parcel, d);
+	DisplayLayout(tv->tree.separatorLayout, &displayItem, 0, parcel, d);
     }
 }
 
@@ -3740,6 +3743,9 @@ TTK_LAYOUT("Heading",
 TTK_LAYOUT("Row",
     TTK_NODE("Treeitem.row", TTK_FILL_BOTH))
 
+TTK_LAYOUT("Separator",
+    TTK_NODE("Treeitem.separator", TTK_FILL_BOTH))
+
 TTK_END_LAYOUT_TABLE
 
 /*------------------------------------------------------------------------
@@ -3862,6 +3868,7 @@ void TtkTreeview_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "Treeitem.indicator",
 	    &TreeitemIndicatorElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeitem.row", &RowElementSpec, 0);
+    Ttk_RegisterElement(interp, theme, "Treeitem.separator", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "Treeheading.cell", &RowElementSpec, 0);
     Ttk_RegisterElement(interp, theme, "treearea", &ttkNullElementSpec, 0);
 
