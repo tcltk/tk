@@ -26,10 +26,10 @@
  * Under Windows, a "font family" is uniquely identified by its face name.
  */
 
-#define FONTMAP_SHIFT	    12
+#define FONTMAP_SHIFT	    10
 
-#define FONTMAP_PAGES	    	(1 << (21 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
+#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -1943,7 +1943,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if (ch < BASE_CHARS) {
+    if ((ch < BASE_CHARS) || (ch >= 0x30000)) {
 	return &fontPtr->subFontArray[0];
     }
 
@@ -2115,6 +2115,10 @@ FontMapLookup(
 {
     int row, bitOffset;
 
+    if (ch < 0 || ch >= 0x30000) {
+	return 0;
+    }
+
     row = ch >> FONTMAP_SHIFT;
     if (subFontPtr->fontMap[row] == NULL) {
 	FontMapLoadPage(subFontPtr, row);
@@ -2155,12 +2159,14 @@ FontMapInsert(
 {
     int row, bitOffset;
 
-    row = ch >> FONTMAP_SHIFT;
-    if (subFontPtr->fontMap[row] == NULL) {
-	FontMapLoadPage(subFontPtr, row);
+    if (ch >= 0 && ch < 0x30000) {
+	row = ch >> FONTMAP_SHIFT;
+	if (subFontPtr->fontMap[row] == NULL) {
+	    FontMapLoadPage(subFontPtr, row);
+	}
+	bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
+	subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
     }
-    bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
-    subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
 }
 
 /*
@@ -2527,6 +2533,22 @@ FamilyExists(
 {
     int result;
     Tcl_DString faceString;
+
+    /*
+     * Just immediately rule out the following fonts, because they look so
+     * ugly on windows. The caller's fallback mechanism will cause the
+     * corresponding appropriate TrueType fonts to be selected.
+     */
+
+    if (strcasecmp(faceName, "Courier") == 0) {
+	return 0;
+    }
+    if (strcasecmp(faceName, "Times") == 0) {
+	return 0;
+    }
+    if (strcasecmp(faceName, "Helvetica") == 0) {
+	return 0;
+    }
 
     Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &faceString);
 
