@@ -37,8 +37,8 @@ static const char *const encodingList[] = {
 
 #define FONTMAP_SHIFT		10
 
-#define FONTMAP_PAGES		(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
+#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -171,7 +171,7 @@ static Tcl_ThreadDataKey dataKey;
  * encodings into the names expected by the Tcl encoding package.
  */
 
-static EncodingAlias encodingAliases[] = {
+static const EncodingAlias encodingAliases[] = {
     {"gb2312-raw",	"gb2312*"},
     {"big5",		"big5*"},
     {"cns11643-1",	"cns11643*-1"},
@@ -412,15 +412,15 @@ ControlUtfProc(
 	}
 	src += TkUtfToUniChar(src, &ch);
 	dst[0] = '\\';
-	if (((size_t) ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
+	if (((size_t)ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
 	    dst[1] = mapChars[ch];
 	    dst += 2;
-	} else if (ch < 256) {
+	} else if ((size_t)ch < 256) {
 	    dst[1] = 'x';
 	    dst[2] = hexChars[(ch >> 4) & 0xf];
 	    dst[3] = hexChars[ch & 0xf];
 	    dst += 4;
-	} else if (ch < 0x10000) {
+	} else if ((size_t)ch < 0x10000) {
 	    dst[1] = 'u';
 	    dst[2] = hexChars[(ch >> 12) & 0xf];
 	    dst[3] = hexChars[(ch >> 8) & 0xf];
@@ -449,7 +449,6 @@ ControlUtfProc(
  * Ucs2beToUtfProc --
  *
  *	Convert from UCS-2BE (big-endian 16-bit Unicode) to UTF-8.
- *	This is only defined on LE machines.
  *
  * Results:
  *	Returns TCL_OK if conversion was successful.
@@ -497,6 +496,11 @@ Ucs2beToUtfProc(
     if ((srcLen % 2) != 0) {
 	result = TCL_CONVERT_MULTIBYTE;
 	srcLen--;
+    }
+    /* If last code point is a high surrogate, we cannot handle that yet */
+    if ((srcLen >= 2) && ((src[srcLen - 2] & 0xFC) == 0xD8)) {
+	result = TCL_CONVERT_MULTIBYTE;
+	srcLen -= 2;
     }
 
     srcStart = src;
@@ -572,7 +576,11 @@ UtfToUcs2beProc(
 {
     const char *srcStart, *srcEnd, *srcClose, *dstStart, *dstEnd;
     int result, numChars;
-    Tcl_UniChar ch;
+    Tcl_UniChar *chPtr = (Tcl_UniChar *)statePtr;
+
+    if (flags & TCL_ENCODING_START) {
+	*statePtr = 0;
+    }
 
     srcStart = src;
     srcEnd = src + srcLen;
@@ -591,15 +599,14 @@ UtfToUcs2beProc(
 	     * If there is more string to follow, this will ensure that the
 	     * last UTF-8 character in the source buffer hasn't been cut off.
 	     */
-
 	    result = TCL_CONVERT_MULTIBYTE;
 	    break;
 	}
 	if (dst > dstEnd) {
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
-        }
-	src += Tcl_UtfToUniChar(src, &ch);
+	}
+	src += Tcl_UtfToUniChar(src, chPtr);
 
 	/*
 	 * Ensure big-endianness (store big bits first).
@@ -607,8 +614,9 @@ UtfToUcs2beProc(
 	 * sure to work in char* for Tcl_UtfToUniChar alignment. [Bug 1122671]
 	 */
 
-	*dst++ = (ch >> 8);
-	*dst++ = (ch & 0xFF);
+
+	*dst++ = (char)(*chPtr >> 8);
+	*dst++ = (char)*chPtr;
     }
     *srcReadPtr = src - srcStart;
     *dstWrotePtr = dst - dstStart;
@@ -1968,11 +1976,11 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if (FontMapLookup(&fontPtr->subFontArray[0], ch)) {
-	return &fontPtr->subFontArray[0];
+    if (ch < 0 || ch > 0x30000) {
+	ch = 0xfffd;
     }
 
-    for (i = 1; i < fontPtr->numSubFonts; i++) {
+    for (i = 0; i < fontPtr->numSubFonts; i++) {
 	if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
 	    return &fontPtr->subFontArray[i];
 	}
@@ -2122,6 +2130,9 @@ FontMapLookup(
 {
     int row, bitOffset;
 
+    if (ch < 0 ||  ch >= 0x30000) {
+	return 0;
+    }
     row = ch >> FONTMAP_SHIFT;
     if (subFontPtr->fontMap[row] == NULL) {
 	FontMapLoadPage(subFontPtr, row);
@@ -2162,12 +2173,14 @@ FontMapInsert(
 {
     int row, bitOffset;
 
-    row = ch >> FONTMAP_SHIFT;
-    if (subFontPtr->fontMap[row] == NULL) {
-	FontMapLoadPage(subFontPtr, row);
+    if (ch >= 0 &&  ch < 0x30000) {
+	row = ch >> FONTMAP_SHIFT;
+	if (subFontPtr->fontMap[row] == NULL) {
+	    FontMapLoadPage(subFontPtr, row);
+	}
+	bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
+	subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
     }
-    bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
-    subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
 }
 
 /*
@@ -2997,7 +3010,7 @@ static const char *
 GetEncodingAlias(
     const char *name)		/* The name to look up. */
 {
-    EncodingAlias *aliasPtr;
+    const EncodingAlias *aliasPtr;
 
     for (aliasPtr = encodingAliases; aliasPtr->aliasPattern != NULL; ) {
 	if (Tcl_StringCaseMatch(name, aliasPtr->aliasPattern, 0)) {
