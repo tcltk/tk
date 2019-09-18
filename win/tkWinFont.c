@@ -28,8 +28,8 @@
 
 #define FONTMAP_SHIFT	    10
 
-#define FONTMAP_PAGES	    	(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
+#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -1943,8 +1943,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-
-    if ((ch < BASE_CHARS) || (ch >= 0x10000)) {
+    if ((ch < BASE_CHARS) || (ch >= 0x30000)) {
 	return &fontPtr->subFontArray[0];
     }
 
@@ -2116,6 +2115,10 @@ FontMapLookup(
 {
     int row, bitOffset;
 
+    if (ch < 0 || ch >= 0x30000) {
+	return 0;
+    }
+
     row = ch >> FONTMAP_SHIFT;
     if (subFontPtr->fontMap[row] == NULL) {
 	FontMapLoadPage(subFontPtr, row);
@@ -2156,12 +2159,14 @@ FontMapInsert(
 {
     int row, bitOffset;
 
-    row = ch >> FONTMAP_SHIFT;
-    if (subFontPtr->fontMap[row] == NULL) {
-	FontMapLoadPage(subFontPtr, row);
+    if (ch >= 0 && ch < 0x30000) {
+	row = ch >> FONTMAP_SHIFT;
+	if (subFontPtr->fontMap[row] == NULL) {
+	    FontMapLoadPage(subFontPtr, row);
+	}
+	bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
+	subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
     }
-    bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
-    subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
 }
 
 /*
