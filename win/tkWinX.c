@@ -69,7 +69,7 @@
 static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
-static WNDCLASS childClass;		/* Window class for child windows. */
+static WNDCLASSW childClass;		/* Window class for child windows. */
 static int tkPlatformId = 0;		/* version of Windows platform */
 static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;
@@ -138,7 +138,7 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = GetModuleHandle(L"NTDLL");
+	HANDLE handle = GetModuleHandleW(L"NTDLL");
 	int(__stdcall *getversion)(void *) =
 		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
@@ -179,7 +179,7 @@ HINSTANCE
 Tk_GetHINSTANCE(void)
 {
     if (tkInstance == NULL) {
-	tkInstance = GetModuleHandle(NULL);
+	tkInstance = GetModuleHandleW(NULL);
     }
     return tkInstance;
 }
@@ -259,7 +259,7 @@ TkWinXInit(
     childClass.hIcon = NULL;
     childClass.hCursor = NULL;
 
-    if (!RegisterClass(&childClass)) {
+    if (!RegisterClassW(&childClass)) {
 	Tcl_Panic("Unable to register TkChild class");
     }
 
@@ -267,7 +267,7 @@ TkWinXInit(
      * Initialize input language info
      */
 
-    if (GetLocaleInfo(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
+    if (GetLocaleInfoW(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
 	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
 	       (LPWSTR) &lpCP, sizeof(lpCP)/sizeof(WCHAR))
 	    && TranslateCharsetInfo(INT2PTR(lpCP), &lpCs, TCI_SRCCODEPAGE)) {
@@ -309,7 +309,7 @@ TkWinXCleanup(
 
     if (childClassInitialized) {
 	childClassInitialized = 0;
-	UnregisterClass(TK_WIN_CHILD_CLASS_NAME, hInstance);
+	UnregisterClassW(TK_WIN_CHILD_CLASS_NAME, hInstance);
     }
 
     if (unicodeEncoding != NULL) {
@@ -371,11 +371,11 @@ TkWinGetPlatformId(void)
 	    char pBuffer[200];
 
 	    memset(pBuffer, 0, dwSize);
-	    if (RegOpenKeyEx(HKEY_CURRENT_USER, szSubKey, 0L,
+	    if (RegOpenKeyExW(HKEY_CURRENT_USER, szSubKey, 0L,
 		    KEY_READ, &hKey) != ERROR_SUCCESS) {
 		tkWinTheme = TK_THEME_WIN_XP;
 	    } else {
-		RegQueryValueEx(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
+		RegQueryValueExW(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
 		RegCloseKey(hKey);
 		if (strcmp(pBuffer, "Windows Standard") == 0) {
 		    tkWinTheme = TK_THEME_WIN_CLASSIC;

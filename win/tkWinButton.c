@@ -131,9 +131,9 @@ InitBoxes(void)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    hrsrc = FindResource(module, L"buttons", RT_BITMAP);
+    hrsrc = FindResourceW(module, L"buttons", RT_BITMAP);
     if (hrsrc == NULL) {
-	Tcl_Panic("FindResource() failed for buttons bitmap resource, "
+	Tcl_Panic("FindResourceW() failed for buttons bitmap resource, "
             "resources in tk_base.rc must be linked into Tk dll or static executable");
     } else {
 	hblk = LoadResource(module, hrsrc);
@@ -253,7 +253,7 @@ CreateProc(
 	class = L"BUTTON";
 	butPtr->style = BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     }
-    butPtr->hwnd = CreateWindow(class, NULL, butPtr->style,
+    butPtr->hwnd = CreateWindowW(class, NULL, butPtr->style,
 	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
 	    parent, NULL, Tk_GetHINSTANCE(), NULL);
     SetWindowPos(butPtr->hwnd, HWND_TOP, 0, 0, 0, 0,
@@ -1300,7 +1300,7 @@ ButtonProc(
 	    return 0;
 	}
     }
-
+    /* FALLTHRU */
     default:
 	if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    return result;

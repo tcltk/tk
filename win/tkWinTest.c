@@ -147,7 +147,7 @@ AppendSystemError(
     if (Tcl_IsShared(resultPtr)) {
 	resultPtr = Tcl_DuplicateObj(resultPtr);
     }
-    length = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM
+    length = FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS
 	    | FORMAT_MESSAGE_ALLOCATE_BUFFER, NULL, error,
 	    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (WCHAR *) wMsgPtrPtr,
@@ -452,15 +452,12 @@ TestfindwindowObjCmd(
     }
     if (title[0] == 0)
         title = NULL;
-#if 0
-    hwnd  = FindWindow(class, title);
-#else
     /* We want find a window the belongs to us and not some other process */
     hwnd = NULL;
     myPid = GetCurrentProcessId();
     while (1) {
         DWORD pid, tid;
-        hwnd = FindWindowEx(NULL, hwnd, class, title);
+        hwnd = FindWindowExW(NULL, hwnd, class, title);
         if (hwnd == NULL)
             break;
         tid = GetWindowThreadProcessId(hwnd, &pid);
@@ -472,8 +469,6 @@ TestfindwindowObjCmd(
         if (pid == myPid)
             break;              /* Found it */
     }
-
-#endif
 
     if (hwnd == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to find window: ", -1));
@@ -507,7 +502,7 @@ TestgetwindowinfoObjCmd(
     int objc,
     Tcl_Obj *const objv[])
 {
-    long hwnd;
+    Tcl_WideInt hwnd;
     Tcl_Obj *dictObj = NULL, *classObj = NULL, *textObj = NULL;
     Tcl_Obj *childrenObj = NULL;
     WCHAR buf[512];
@@ -519,10 +514,10 @@ TestgetwindowinfoObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetLongFromObj(interp, objv[1], &hwnd) != TCL_OK)
+    if (Tcl_GetWideIntFromObj(interp, objv[1], &hwnd) != TCL_OK)
 	return TCL_ERROR;
 
-    cch = GetClassName(INT2PTR(hwnd), buf, cchBuf);
+    cch = GetClassNameW(INT2PTR(hwnd), buf, cchBuf);
     if (cch == 0) {
     	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to get class name: ", -1));
     	AppendSystemError(interp, GetLastError());
@@ -539,7 +534,7 @@ TestgetwindowinfoObjCmd(
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
 	Tcl_NewLongObj(GetWindowLongA(INT2PTR(hwnd), GWL_ID)));
 
-    cch = GetWindowText(INT2PTR(hwnd), (LPWSTR)buf, cchBuf);
+    cch = GetWindowTextW(INT2PTR(hwnd), (LPWSTR)buf, cchBuf);
     Tcl_WinTCharToUtf(buf, cch * sizeof (WCHAR), &ds);
     textObj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);

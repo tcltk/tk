@@ -181,30 +181,24 @@ TkWin32ErrorObj(
     LPWSTR lpBuffer = NULL, p = NULL;
     WCHAR  sBuffer[30];
     Tcl_Obj* errPtr = NULL;
-#ifdef _UNICODE
     Tcl_DString ds;
-#endif
 
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, (DWORD)hrError,
 	    LANG_NEUTRAL, (LPWSTR)&lpBuffer, 0, NULL);
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;
-	wsprintf(sBuffer, L"Error Code: %08lX", hrError);
+	wsprintfW(sBuffer, L"Error Code: %08lX", hrError);
     }
 
     if ((p = wcsrchr(lpBuffer, '\r')) != NULL) {
 	*p = '\0';
     }
 
-#ifdef _UNICODE
     Tcl_WinTCharToUtf(lpBuffer, -1, &ds);
     errPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
-#else
-    errPtr = Tcl_NewStringObj(lpBuffer, (int)strlen(lpBuffer));
-#endif /* _UNICODE */
 
     if (lpBuffer != sBuffer) {
 	LocalFree((HLOCAL)lpBuffer);
