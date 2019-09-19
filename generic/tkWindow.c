@@ -2862,7 +2862,7 @@ TkCygwinMainEx(
     wcscpy(name+len, L".dll");
     memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
 
-    tkcygwindll = LoadLibrary(name);
+    tkcygwindll = LoadLibraryW(name);
     if (!tkcygwindll) {
 	/* dll is not present */
 	return 0;
