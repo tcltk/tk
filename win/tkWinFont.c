@@ -26,10 +26,10 @@
  * Under Windows, a "font family" is uniquely identified by its face name.
  */
 
-#define FONTMAP_SHIFT	    12
+#define FONTMAP_SHIFT	    10
 
-#define FONTMAP_PAGES	    	(1 << (21 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
+#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -213,7 +213,7 @@ static inline void	InitSubFont(HDC hdc, HFONT hFont, int base,
 			    SubFont *subFontPtr);
 static int		CreateNamedSystemLogFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char* name,
-			    LOGFONT* logFontPtr);
+			    LOGFONTW* logFontPtr);
 static int		CreateNamedSystemFont(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char* name, HFONT hFont);
 static int		LoadFontRanges(HDC hdc, HFONT hFont,
@@ -229,13 +229,13 @@ static inline HFONT	SelectFont(HDC hdc, WinFont *fontPtr,
 			    SubFont *subFontPtr, double angle);
 static inline void	SwapLong(PULONG p);
 static inline void	SwapShort(USHORT *p);
-static int CALLBACK	WinFontCanUseProc(ENUMLOGFONT *lfPtr,
+static int CALLBACK	WinFontCanUseProc(ENUMLOGFONTW *lfPtr,
 			    NEWTEXTMETRIC *tmPtr, int fontType,
 			    LPARAM lParam);
-static int CALLBACK	WinFontExistProc(ENUMLOGFONT *lfPtr,
+static int CALLBACK	WinFontExistProc(ENUMLOGFONTW *lfPtr,
 			    NEWTEXTMETRIC *tmPtr, int fontType,
 			    LPARAM lParam);
-static int CALLBACK	WinFontFamilyEnumProc(ENUMLOGFONT *lfPtr,
+static int CALLBACK	WinFontFamilyEnumProc(ENUMLOGFONTW *lfPtr,
 			    NEWTEXTMETRIC *tmPtr, int fontType,
 			    LPARAM lParam);
 
@@ -331,12 +331,12 @@ CreateNamedSystemLogFont(
     Tcl_Interp *interp,
     Tk_Window tkwin,
     const char* name,
-    LOGFONT* logFontPtr)
+    LOGFONTW* logFontPtr)
 {
     HFONT hFont;
     int r;
 
-    hFont = CreateFontIndirect(logFontPtr);
+    hFont = CreateFontIndirectW(logFontPtr);
     r = CreateNamedSystemFont(interp, tkwin, name, hFont);
     DeleteObject((HGDIOBJ)hFont);
     return r;
@@ -392,8 +392,8 @@ TkWinSetupSystemFonts(
     Tcl_Interp *interp;
     Tk_Window tkwin;
     const TkStateMap *mapPtr;
-    NONCLIENTMETRICS ncMetrics;
-    ICONMETRICS iconMetrics;
+    NONCLIENTMETRICSW ncMetrics;
+    ICONMETRICSW iconMetrics;
     HFONT hFont;
 
     interp = (Tcl_Interp *) mainPtr->interp;
@@ -444,7 +444,7 @@ TkWinSetupSystemFonts(
      */
 
     {
-	LOGFONT lfFixed = {
+	LOGFONTW lfFixed = {
 	    0, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
 	    0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L""
 	};
@@ -651,7 +651,7 @@ TkpGetFontFamilies(
      * because it only exists under NT.
      */
 
-    EnumFontFamilies(hdc, NULL, (FONTENUMPROC) WinFontFamilyEnumProc,
+    EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontFamilyEnumProc,
 	    (LPARAM) resultObj);
     ReleaseDC(hwnd, hdc);
     Tcl_SetObjResult(interp, resultObj);
@@ -659,7 +659,7 @@ TkpGetFontFamilies(
 
 static int CALLBACK
 WinFontFamilyEnumProc(
-    ENUMLOGFONT *lfPtr,		/* Logical-font data. */
+    ENUMLOGFONTW *lfPtr,		/* Logical-font data. */
     NEWTEXTMETRIC *tmPtr,	/* Physical-font data (not used). */
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
@@ -1575,22 +1575,7 @@ InitFont(
 
     GetTextMetrics(hdc, &tm);
 
-    /*
-     * On any version NT, there may fonts with international names. Use the
-     * NT-only Unicode version of GetTextFace to get the font's name. If we
-     * used the ANSI version on a non-internationalized version of NT, we
-     * would get a font name with '?' replacing all the international
-     * characters.
-     *
-     * On a non-internationalized verson of 95, fonts with international names
-     * are not allowed, so the ANSI version of GetTextFace will work. On an
-     * internationalized version of 95, there may be fonts with international
-     * names; the ANSI version will work, fetching the name in the
-     * international system code page. Can't use the Unicode version of
-     * GetTextFace because it only exists under NT.
-     */
-
-    GetTextFace(hdc, LF_FACESIZE, buf);
+    GetTextFaceW(hdc, LF_FACESIZE, buf);
     Tcl_DStringInit(&faceString);
     Tcl_WCharToUtfDString(buf, wcslen(buf), &faceString);
 
@@ -1768,7 +1753,7 @@ AllocFontFamily(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     hFont = SelectObject(hdc, hFont);
-    GetTextFace(hdc, LF_FACESIZE, buf);
+    GetTextFaceW(hdc, LF_FACESIZE, buf);
     Tcl_DStringInit(&faceString);
     Tcl_WCharToUtfDString(buf, wcslen(buf), &faceString);
     faceName = Tk_GetUid(Tcl_DStringValue(&faceString));
@@ -1946,7 +1931,7 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if (ch < BASE_CHARS) {
+    if ((ch < BASE_CHARS) || (ch >= 0x30000)) {
 	return &fontPtr->subFontArray[0];
     }
 
@@ -2031,7 +2016,7 @@ FindSubFontForChar(
     canUse.ch = ch;
     canUse.subFontPtr = NULL;
     canUse.subFontPtrPtr = subFontPtrPtr;
-    EnumFontFamilies(hdc, NULL, (FONTENUMPROC) WinFontCanUseProc,
+    EnumFontFamiliesW(hdc, NULL, (FONTENUMPROCW) WinFontCanUseProc,
 	    (LPARAM) &canUse);
     subFontPtr = canUse.subFontPtr;
 
@@ -2053,7 +2038,7 @@ FindSubFontForChar(
 
 static int CALLBACK
 WinFontCanUseProc(
-    ENUMLOGFONT *lfPtr,		/* Logical-font data. */
+    ENUMLOGFONTW *lfPtr,		/* Logical-font data. */
     NEWTEXTMETRIC *tmPtr,	/* Physical-font data (not used). */
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
@@ -2119,6 +2104,10 @@ FontMapLookup(
 {
     int row, bitOffset;
 
+    if (ch < 0 || ch >= 0x30000) {
+	return 0;
+    }
+
     row = ch >> FONTMAP_SHIFT;
     if (subFontPtr->fontMap[row] == NULL) {
 	FontMapLoadPage(subFontPtr, row);
@@ -2159,12 +2148,14 @@ FontMapInsert(
 {
     int row, bitOffset;
 
-    row = ch >> FONTMAP_SHIFT;
-    if (subFontPtr->fontMap[row] == NULL) {
-	FontMapLoadPage(subFontPtr, row);
+    if (ch >= 0 && ch < 0x30000) {
+	row = ch >> FONTMAP_SHIFT;
+	if (subFontPtr->fontMap[row] == NULL) {
+	    FontMapLoadPage(subFontPtr, row);
+	}
+	bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
+	subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
     }
-    bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
-    subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
 }
 
 /*
@@ -2480,7 +2471,7 @@ GetScreenFont(
 {
     Tcl_DString ds;
     HFONT hFont;
-    LOGFONT lf;
+    LOGFONTW lf;
 
     memset(&lf, 0, sizeof(lf));
     lf.lfHeight		= -pixelSize;
@@ -2501,7 +2492,7 @@ GetScreenFont(
     wcsncpy(lf.lfFaceName, (WCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
     Tcl_DStringFree(&ds);
     lf.lfFaceName[LF_FACESIZE-1] = 0;
-    hFont = CreateFontIndirect(&lf);
+    hFont = CreateFontIndirectW(&lf);
     return hFont;
 }
 
@@ -2532,6 +2523,22 @@ FamilyExists(
     int result;
     Tcl_DString faceString;
 
+    /*
+     * Just immediately rule out the following fonts, because they look so
+     * ugly on windows. The caller's fallback mechanism will cause the
+     * corresponding appropriate TrueType fonts to be selected.
+     */
+
+    if (strcasecmp(faceName, "Courier") == 0) {
+	return 0;
+    }
+    if (strcasecmp(faceName, "Times") == 0) {
+	return 0;
+    }
+    if (strcasecmp(faceName, "Helvetica") == 0) {
+	return 0;
+    }
+
     Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &faceString);
 
     /*
@@ -2541,8 +2548,8 @@ FamilyExists(
      * non-zero value.
      */
 
-    result = EnumFontFamilies(hdc, (WCHAR*) Tcl_DStringValue(&faceString),
-	    (FONTENUMPROC) WinFontExistProc, 0);
+    result = EnumFontFamiliesW(hdc, (WCHAR*) Tcl_DStringValue(&faceString),
+	    (FONTENUMPROCW) WinFontExistProc, 0);
     Tcl_DStringFree(&faceString);
     return (result == 0);
 }
@@ -2571,7 +2578,7 @@ FamilyOrAliasExists(
 
 static int CALLBACK
 WinFontExistProc(
-    ENUMLOGFONT *lfPtr,		/* Logical-font data. */
+    ENUMLOGFONTW *lfPtr,		/* Logical-font data. */
     NEWTEXTMETRIC *tmPtr,	/* Physical-font data (not used). */
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* EnumFontData to hold result. */

@@ -70,26 +70,26 @@ static void RegisterSystemColors(Tcl_Interp *interp)
 static HWND
 CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
 {
-    WNDCLASSEX wc;
+    WNDCLASSEXW wc;
     HWND       hwnd = NULL;
     WCHAR      title[32] = L"TtkMonitorWindow";
     WCHAR      name[32] = L"TtkMonitorClass";
 
-    wc.cbSize        = sizeof(WNDCLASSEX);
+    wc.cbSize        = sizeof(WNDCLASSEXW);
     wc.style         = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc   = (WNDPROC)WndProc;
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = hinst;
-    wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
-    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+    wc.hIcon         = LoadIconW(NULL, IDI_APPLICATION);
+    wc.hIconSm       = LoadIconW(NULL, IDI_APPLICATION);
+    wc.hCursor       = LoadCursorW(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
     wc.lpszMenuName  = name;
     wc.lpszClassName = name;
 
-    if (RegisterClassEx(&wc)) {
-	hwnd = CreateWindow( name, title, WS_OVERLAPPEDWINDOW,
+    if (RegisterClassExW(&wc)) {
+	hwnd = CreateWindowW( name, title, WS_OVERLAPPEDWINDOW,
 	    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 	    NULL, NULL, hinst, NULL );
 	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) interp);

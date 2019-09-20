@@ -637,7 +637,7 @@ static void LoadShellProcs()
     if (shell32_handle != NULL)
         return; /* We have already been through here. */
 
-    shell32_handle = GetModuleHandle(L"shell32.dll");
+    shell32_handle = GetModuleHandleW(L"shell32.dll");
     if (shell32_handle == NULL) /* Should never happen but check anyways. */
         return;
 
@@ -754,7 +754,7 @@ Tk_ChooseColorObjCmd(
     Tk_Window tkwin = clientData, parent;
     HWND hWnd;
     int i, oldMode, winCode, result;
-    CHOOSECOLOR chooseColor;
+    CHOOSECOLORW chooseColor;
     static int inited = 0;
     static COLORREF dwCustColors[16];
     static long oldColor;		/* the color selected last time */
@@ -842,7 +842,7 @@ Tk_ChooseColorObjCmd(
     chooseColor.hwndOwner = hWnd;
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-    winCode = ChooseColor(&chooseColor);
+    winCode = ChooseColorW(&chooseColor);
     (void) Tcl_SetServiceMode(oldMode);
 
     /*
@@ -923,7 +923,7 @@ ColorDlgHookProc(
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    SetWindowText(hDlg, Tcl_UtfToWCharDString(title, -1, &ds));
+	    SetWindowTextW(hDlg, Tcl_UtfToWCharDString(title, -1, &ds));
 	    Tcl_DStringFree(&ds);
 	}
 	if (tsdPtr->debugFlag) {
@@ -1569,7 +1569,7 @@ vamoose: /* (hr != 0) => error */
  */
 static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper)
 {
-    OPENFILENAME ofn;
+    OPENFILENAMEW ofn;
     OFNData ofnData;
     int cdlgerr;
     int filterIndex = 0, result = TCL_ERROR, winCode, oldMode;
@@ -1678,9 +1678,9 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
     if (oper != OFN_FILE_SAVE) {
-	winCode = GetOpenFileName(&ofn);
+	winCode = GetOpenFileNameW(&ofn);
     } else {
-	winCode = GetSaveFileName(&ofn);
+	winCode = GetSaveFileNameW(&ofn);
     }
     Tcl_SetServiceMode(oldMode);
     EatSpuriousMessageBugFix();
@@ -2437,7 +2437,7 @@ Tk_ChooseDirectoryObjCmd(
     WCHAR path[MAX_PATH];
     int oldMode, result;
     LPCITEMIDLIST pidl;		/* Returned by browser */
-    BROWSEINFO bInfo;		/* Used by browser */
+    BROWSEINFOW bInfo;		/* Used by browser */
     ChooseDir cdCBData;	    /* Structure to pass back and forth */
     LPMALLOC pMalloc;		/* Used by shell */
     HWND hWnd;
@@ -2478,7 +2478,7 @@ Tk_ChooseDirectoryObjCmd(
 
         /* Convert possible relative path to full path to keep dialog happy. */
 
-        GetFullPathName(uniStr, MAX_PATH, saveDir, NULL);
+        GetFullPathNameW(uniStr, MAX_PATH, saveDir, NULL);
         wcsncpy(cdCBData.initDir, saveDir, MAX_PATH);
     }
 
@@ -2499,7 +2499,7 @@ Tk_ChooseDirectoryObjCmd(
     bInfo.pszDisplayName = path;
     bInfo.pidlRoot = NULL;
     if (wcslen(cdCBData.initDir) == 0) {
-	GetCurrentDirectory(MAX_PATH, cdCBData.initDir);
+	GetCurrentDirectoryW(MAX_PATH, cdCBData.initDir);
     }
     bInfo.lParam = (LPARAM) &cdCBData;
 
@@ -2541,13 +2541,13 @@ Tk_ChooseDirectoryObjCmd(
      */
 
     oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-    GetCurrentDirectory(MAX_PATH, saveDir);
+    GetCurrentDirectoryW(MAX_PATH, saveDir);
     if (SHGetMalloc(&pMalloc) == NOERROR) {
         /*
          * XXX - MSDN says CoInitialize must have been called before
          * SHBrowseForFolder can be used but don't see that called anywhere.
          */
-	pidl = SHBrowseForFolder(&bInfo);
+	pidl = SHBrowseForFolderW(&bInfo);
 
 	/*
 	 * This is a fix for Windows 2000, which seems to modify the folder
@@ -2562,7 +2562,7 @@ Tk_ChooseDirectoryObjCmd(
 	 */
 
 	if (pidl != NULL) {
-	    if (!SHGetPathFromIDList(pidl, path)) {
+	    if (!SHGetPathFromIDListW(pidl, path)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"error: not a file system folder", -1));
 		Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "PSEUDO", NULL);
@@ -2573,7 +2573,7 @@ Tk_ChooseDirectoryObjCmd(
 	}
 	pMalloc->lpVtbl->Release(pMalloc);
     }
-    SetCurrentDirectory(saveDir);
+    SetCurrentDirectoryW(saveDir);
     Tcl_SetServiceMode(oldMode);
 
     /*
@@ -2669,7 +2669,7 @@ ChooseDirectoryValidateProc(
 		MAX_PATH);
 	Tcl_DStringFree(&initDirString);
 
-	if (SetCurrentDirectory(string) == 0) {
+	if (SetCurrentDirectoryW(string) == 0) {
 
 	    /*
 	     * Get the full path name to the user entry, at this point it does
@@ -2677,17 +2677,17 @@ ChooseDirectoryValidateProc(
 	     * it.
 	     */
 
-	    GetFullPathName(string, MAX_PATH,
+	    GetFullPathNameW(string, MAX_PATH,
 		    chooseDirSharedData->retDir, NULL);
 	    if (chooseDirSharedData->mustExist) {
 		/*
 		 * User HAS to select a valid directory.
 		 */
 
-		wsprintf(selDir, L"Directory '%s' does not exist,\n"
+		wsprintfW(selDir, L"Directory '%s' does not exist,\n"
 		        L"please select or enter an existing directory.",
 			chooseDirSharedData->retDir);
-		MessageBox(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
+		MessageBoxW(NULL, selDir, NULL, MB_ICONEXCLAMATION|MB_OK);
 		chooseDirSharedData->retDir[0] = '\0';
 		return 1;
 	    }
@@ -2697,7 +2697,7 @@ ChooseDirectoryValidateProc(
 	     * directory in utfRetDir.
 	     */
 
-	    GetCurrentDirectory(MAX_PATH, chooseDirSharedData->retDir);
+	    GetCurrentDirectoryW(MAX_PATH, chooseDirSharedData->retDir);
 	    return 0;
 	}
 	return 0;
@@ -2712,7 +2712,7 @@ ChooseDirectoryValidateProc(
 	 * Not called when user changes edit box directly.
 	 */
 
-	if (SHGetPathFromIDList((LPITEMIDLIST) lParam, selDir)) {
+	if (SHGetPathFromIDListW((LPITEMIDLIST) lParam, selDir)) {
 	    SendMessage(hwnd, BFFM_SETSTATUSTEXT, 0, (LPARAM) selDir);
 	    // enable the OK button
 	    SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
@@ -2731,7 +2731,7 @@ ChooseDirectoryValidateProc(
 
 	WCHAR *initDir = chooseDirSharedData->initDir;
 
-	SetCurrentDirectory(initDir);
+	SetCurrentDirectoryW(initDir);
 
 	if (*initDir == '\\') {
 	    /*
@@ -2953,7 +2953,7 @@ Tk_MessageBoxObjCmd(
 	titlePtr = L"";
 	Tcl_DStringInit(&titleBuf);
     }
-    winCode = MessageBox(hWnd, tmpPtr, titlePtr, flags);
+    winCode = MessageBoxW(hWnd, tmpPtr, titlePtr, flags);
     Tcl_DStringFree(&titleBuf);
     Tcl_DStringFree(&tmpBuf);
     UnhookWindowsHookEx(tsdPtr->hMsgBoxHook);
@@ -3076,7 +3076,7 @@ ConvertExternalFilename(
 static Tcl_Obj *
 GetFontObj(
     HDC hdc,
-    LOGFONT *plf)
+    LOGFONTW *plf)
 {
     Tcl_DString ds;
     Tcl_Obj *resObj;
@@ -3113,7 +3113,7 @@ ApplyLogfont(
     Tcl_Interp *interp,
     Tcl_Obj *cmdObj,
     HDC hdc,
-    LOGFONT *logfontPtr)
+    LOGFONTW *logfontPtr)
 {
     int objc;
     Tcl_Obj **objv, **tmpv;
@@ -3173,7 +3173,7 @@ HookProc(
 	    Tcl_DStringInit(&title);
 	    Tcl_UtfToWCharDString(Tcl_GetString(phd->titleObj), -1, &title);
 	    if (Tcl_DStringLength(&title) > 0) {
-		SetWindowText(hwndDlg, (LPCWSTR) Tcl_DStringValue(&title));
+		SetWindowTextW(hwndDlg, (LPCWSTR) Tcl_DStringValue(&title));
 	    }
 	    Tcl_DStringFree(&title);
 	}
@@ -3206,7 +3206,7 @@ HookProc(
      */
 
     if (WM_COMMAND == msg && LOWORD(wParam) == 1026) {
-	LOGFONT lf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0, 0}};
+	LOGFONTW lf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0, 0}};
 	HDC hdc = GetDC(hwndDlg);
 
 	SendMessage(hwndDlg, WM_CHOOSEFONT_GETLOGFONT, 0, (LPARAM) &lf);
@@ -3445,8 +3445,8 @@ FontchooserShowCmd(
 {
     Tcl_DString ds;
     Tk_Window tkwin = clientData, parent;
-    CHOOSEFONT cf;
-    LOGFONT lf;
+    CHOOSEFONTW cf;
+    LOGFONTW lf;
     HDC hdc;
     HookData *hdPtr;
     int r = TCL_OK, oldMode = 0;
@@ -3522,7 +3522,7 @@ FontchooserShowCmd(
 
     if (TCL_OK == r) {
 	oldMode = Tcl_SetServiceMode(TCL_SERVICE_ALL);
-	if (ChooseFont(&cf)) {
+	if (ChooseFontW(&cf)) {
 	    if (hdPtr->cmdObj) {
 		ApplyLogfont(hdPtr->interp, hdPtr->cmdObj, hdc, &lf);
 	    }
