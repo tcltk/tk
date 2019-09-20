@@ -1232,9 +1232,10 @@ static int ConfigureColumn(
     if (mask & GEOMETRY_CHANGED) {
 	if (!Tk_IsMapped(tv->core.tkwin)) {
 	    TtkResizeWidget(&tv->core);
-	}
-	RecomputeSlack(tv);
-        ResizeColumns(tv, TreeWidth(tv));
+        } else {
+	    RecomputeSlack(tv);
+	    ResizeColumns(tv, TreeWidth(tv));
+        }
     }
     TtkRedisplayWidget(&tv->core);
 
