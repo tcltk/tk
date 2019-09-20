@@ -81,9 +81,9 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = hinst;
-    wc.hIcon         = LoadIconW(NULL, IDI_APPLICATION);
-    wc.hIconSm       = LoadIconW(NULL, IDI_APPLICATION);
-    wc.hCursor       = LoadCursorW(NULL, IDC_ARROW);
+    wc.hIcon         = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+    wc.hIconSm       = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+    wc.hCursor       = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
     wc.lpszMenuName  = name;
     wc.lpszClassName = name;

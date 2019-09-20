@@ -131,7 +131,7 @@ InitBoxes(void)
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    hrsrc = FindResourceW(module, L"buttons", RT_BITMAP);
+    hrsrc = FindResourceW(module, L"buttons", (LPWSTR) RT_BITMAP);
     if (hrsrc == NULL) {
 	Tcl_Panic("FindResourceW() failed for buttons bitmap resource, "
             "resources in tk_base.rc must be linked into Tk dll or static executable");
