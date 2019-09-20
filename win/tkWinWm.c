@@ -867,23 +867,18 @@ InitWindowClass(
     if (!initialized) {
 	Tcl_MutexLock(&winWmMutex);
 	if (!initialized) {
-	    WNDCLASS class;
+	    WNDCLASSW class;
 
 	    initialized = 1;
 
-	    /*
-	     * The only difference between WNDCLASSW and WNDCLASSA are in
-	     * pointers, so we can use the generic structure WNDCLASS.
-	     */
-
-	    ZeroMemory(&class, sizeof(WNDCLASS));
+	    ZeroMemory(&class, sizeof(WNDCLASSW));
 
 	    class.style = CS_HREDRAW | CS_VREDRAW;
 	    class.hInstance = Tk_GetHINSTANCE();
 	    class.lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
 	    class.lpfnWndProc = WmProc;
 	    if (titlebaricon == NULL) {
-		class.hIcon = LoadIcon(Tk_GetHINSTANCE(), L"tk");
+		class.hIcon = LoadIconW(Tk_GetHINSTANCE(), L"tk");
 	    } else {
 		class.hIcon = GetIcon(titlebaricon, ICON_BIG);
 		if (class.hIcon == NULL) {
@@ -897,9 +892,9 @@ InitWindowClass(
 
 		tsdPtr->iconPtr = titlebaricon;
 	    }
-	    class.hCursor = LoadCursor(NULL, IDC_ARROW);
+	    class.hCursor = LoadCursorW(NULL, IDC_ARROW);
 
-	    if (!RegisterClass(&class)) {
+	    if (!RegisterClassW(&class)) {
 		Tcl_Panic("Unable to register TkTopLevel class");
 	    }
 	}
@@ -1237,7 +1232,7 @@ ReadIconFromFile(
      */
 
     if (lpIR == NULL) {
-	SHFILEINFO sfiSM;
+	SHFILEINFOW sfiSM;
 	Tcl_DString ds, ds2;
 	DWORD *res;
 	const char *file;
@@ -1249,15 +1244,15 @@ ReadIconFromFile(
 	Tcl_DStringInit(&ds2);
 	Tcl_UtfToWCharDString(file, -1, &ds2);
 	Tcl_DStringFree(&ds);
-	res = (DWORD *)SHGetFileInfo((WCHAR *)Tcl_DStringValue(&ds2), 0, &sfiSM,
+	res = (DWORD *)SHGetFileInfoW((WCHAR *)Tcl_DStringValue(&ds2), 0, &sfiSM,
 		sizeof(SHFILEINFO), SHGFI_SMALLICON|SHGFI_ICON);
 
 	if (res != 0) {
-	    SHFILEINFO sfi;
+	    SHFILEINFOW sfi;
 	    unsigned size;
 
 	    Tcl_ResetResult(interp);
-	    res = (DWORD *)SHGetFileInfo((WCHAR *)Tcl_DStringValue(&ds2), 0, &sfi,
+	    res = (DWORD *)SHGetFileInfoW((WCHAR *)Tcl_DStringValue(&ds2), 0, &sfi,
 		    sizeof(SHFILEINFO), SHGFI_ICON);
 
 	    /*
@@ -1887,7 +1882,7 @@ TkWinWmCleanup(
     }
     tsdPtr->initialized = 0;
 
-    UnregisterClass(TK_WIN_TOPLEVEL_CLASS_NAME, hInstance);
+    UnregisterClassW(TK_WIN_TOPLEVEL_CLASS_NAME, hInstance);
 }
 
 /*
@@ -2131,7 +2126,7 @@ UpdateWrapper(
 	Tcl_UtfToWCharDString(((wmPtr->title != NULL) ?
 		wmPtr->title : winPtr->nameUid), -1, &titleString);
 
-	wmPtr->wrapper = CreateWindowEx(wmPtr->exStyle,
+	wmPtr->wrapper = CreateWindowExW(wmPtr->exStyle,
 		TK_WIN_TOPLEVEL_CLASS_NAME,
 		(LPCWSTR) Tcl_DStringValue(&titleString),
 		wmPtr->style, x, y, width, height,
@@ -5465,7 +5460,7 @@ WmTitleCmd(
 	    Tcl_DString titleString;
 	    int size = 256;
 
-	    GetWindowText(wrapper, buf, size);
+	    GetWindowTextW(wrapper, buf, size);
 	    Tcl_DStringInit(&titleString);
 	    Tcl_WCharToUtfDString(buf, wcslen(buf), &titleString);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -5489,7 +5484,7 @@ WmTitleCmd(
 
 	    Tcl_DStringInit(&titleString);
 	    Tcl_UtfToWCharDString(wmPtr->title, -1, &titleString);
-	    SetWindowText(wrapper, (LPCWSTR) Tcl_DStringValue(&titleString));
+	    SetWindowTextW(wrapper, (LPCWSTR) Tcl_DStringValue(&titleString));
 	    Tcl_DStringFree(&titleString);
 	}
     }

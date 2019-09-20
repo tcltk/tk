@@ -183,13 +183,13 @@ TkWin32ErrorObj(
     Tcl_Obj* errPtr = NULL;
     Tcl_DString ds;
 
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, (DWORD)hrError,
 	    LANG_NEUTRAL, (LPWSTR)&lpBuffer, 0, NULL);
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;
-	wsprintf(sBuffer, L"Error Code: %08lX", hrError);
+	wsprintfW(sBuffer, L"Error Code: %08lX", hrError);
     }
 
     if ((p = wcsrchr(lpBuffer, '\r')) != NULL) {

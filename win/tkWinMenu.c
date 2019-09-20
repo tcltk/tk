@@ -717,7 +717,7 @@ ReconfigureWindowsMenu(
 	    }
 	}
 	if (!systemMenu) {
-	    InsertMenu(winMenuHdl, 0xFFFFFFFF, flags, itemID, lpNewItem);
+	    InsertMenuW(winMenuHdl, 0xFFFFFFFF, flags, itemID, lpNewItem);
 	}
 	Tcl_DStringFree(&translatedText);
 	if (itemText != NULL) {
@@ -1101,7 +1101,7 @@ TkWinEmbeddedMenuProc(
 	if (lResult || (GetCapture() != hwnd)) {
 	    break;
 	}
-
+	/* FALLTHRU */
     default:
 	lResult = DefWindowProc(hwnd, message, wParam, lParam);
 	break;
@@ -3230,8 +3230,8 @@ static void
 MenuExitHandler(
     ClientData clientData)	    /* Not used */
 {
-    UnregisterClass(MENU_CLASS_NAME, Tk_GetHINSTANCE());
-    UnregisterClass(EMBEDDED_MENU_CLASS_NAME, Tk_GetHINSTANCE());
+    UnregisterClassW(MENU_CLASS_NAME, Tk_GetHINSTANCE());
+    UnregisterClassW(EMBEDDED_MENU_CLASS_NAME, Tk_GetHINSTANCE());
 }
 
 /*
@@ -3335,7 +3335,7 @@ SetDefaults(
     int pointSize;
     HFONT menuFont;
     /* See: [Bug #3239768] tk8.4.19 (and later) WIN32 menu font support */
-    NONCLIENTMETRICS metrics;
+    NONCLIENTMETRICSW metrics;
     OSVERSIONINFOW os;
 
     /*
@@ -3364,7 +3364,7 @@ SetDefaults(
 
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, metrics.cbSize,
 	    &metrics, 0);
-    menuFont = CreateFontIndirect(&metrics.lfMenuFont);
+    menuFont = CreateFontIndirectW(&metrics.lfMenuFont);
     SelectObject(scratchDC, menuFont);
     GetTextMetrics(scratchDC, &tm);
     GetTextFaceA(scratchDC, LF_FACESIZE, faceName);
@@ -3445,7 +3445,7 @@ SetDefaults(
 void
 TkpMenuInit(void)
 {
-    WNDCLASS wndClass;
+    WNDCLASSW wndClass;
 
     wndClass.style = CS_OWNDC;
     wndClass.lpfnWndProc = TkWinMenuProc;
@@ -3457,13 +3457,13 @@ TkpMenuInit(void)
     wndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wndClass.lpszMenuName = NULL;
     wndClass.lpszClassName = MENU_CLASS_NAME;
-    if (!RegisterClass(&wndClass)) {
+    if (!RegisterClassW(&wndClass)) {
 	Tcl_Panic("Failed to register menu window class");
     }
 
     wndClass.lpfnWndProc = TkWinEmbeddedMenuProc;
     wndClass.lpszClassName = EMBEDDED_MENU_CLASS_NAME;
-    if (!RegisterClass(&wndClass)) {
+    if (!RegisterClassW(&wndClass)) {
 	Tcl_Panic("Failed to register embedded menu window class");
     }
 
@@ -3494,7 +3494,7 @@ TkpMenuThreadInit(void)
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    tsdPtr->menuHWND = CreateWindow(MENU_CLASS_NAME, L"MenuWindow", WS_POPUP,
+    tsdPtr->menuHWND = CreateWindowW(MENU_CLASS_NAME, L"MenuWindow", WS_POPUP,
 	    0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
     if (!tsdPtr->menuHWND) {
@@ -3502,7 +3502,7 @@ TkpMenuThreadInit(void)
     }
 
     tsdPtr->embeddedMenuHWND =
-	    CreateWindow(EMBEDDED_MENU_CLASS_NAME, L"EmbeddedMenuWindow",
+	    CreateWindowW(EMBEDDED_MENU_CLASS_NAME, L"EmbeddedMenuWindow",
 	    WS_POPUP, 0, 0, 10, 10, NULL, NULL, Tk_GetHINSTANCE(), NULL);
 
     if (!tsdPtr->embeddedMenuHWND) {
