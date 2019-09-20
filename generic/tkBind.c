@@ -788,7 +788,7 @@ GetButtonNumber(
     const char *field)
 {
     assert(field);
-    return (field[0] >= '1' && field[0] <= '5' && field[1] == '\0') ? field[0] - '0' : 0;
+    return (field[0] >= '1' && field[0] <= '9' && field[1] == '\0') ? field[0] - '0' : 0;
 }
 
 static Time
@@ -2096,7 +2096,7 @@ IsBetterMatch(
 
     if (!sndMatchPtr) { return 0; }
     if (!fstMatchPtr) { return 1; }
-    
+
     diff = CountSpecialized(fstMatchPtr, sndMatchPtr);
     if (diff > 0) { return 1; }
     if (diff < 0) { return 0; }
