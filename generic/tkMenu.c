@@ -754,7 +754,7 @@ MenuWidgetObjCmd(
 
 	    first = 1;
 	}
-	if ((first == TCL_INDEX_NONE) || (last < first)) {
+	if ((first == -1) || (last < first)) {
 	    goto done;
 	}
 	DeleteMenuCloneEntries(menuPtr, first, last);
