@@ -41,7 +41,7 @@ typedef struct {
 
 static struct CursorName {
     const char *name;
-    LPCWSTR id;
+    LPCSTR id;
 } cursorNames[] = {
     {"starting",		IDC_APPSTARTING},
     {"arrow",			IDC_ARROW},
@@ -71,7 +71,7 @@ static struct CursorName {
  * The default cursor is used whenever no other cursor has been specified.
  */
 
-#define TK_DEFAULT_CURSOR	IDC_ARROW
+#define TK_DEFAULT_CURSOR	(LPCWSTR)IDC_ARROW
 
 /*
  *----------------------------------------------------------------------
@@ -145,7 +145,7 @@ TkGetCursorByName(
 
 	for (namePtr = cursorNames; namePtr->name != NULL; namePtr++) {
 	    if (strcmp(namePtr->name, argv[0]) == 0) {
-		cursorPtr->winCursor = LoadCursorW(NULL, namePtr->id);
+		cursorPtr->winCursor = LoadCursorW(NULL, (LPCWSTR) namePtr->id);
 		break;
 	    }
 	}
