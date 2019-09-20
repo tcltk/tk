@@ -95,7 +95,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
      * if we are running at least on Windows XP.
      */
     HINSTANCE handle;
-    *phlib = handle = LoadLibrary(L"uxtheme.dll");
+    *phlib = handle = LoadLibraryW(L"uxtheme.dll");
     if (handle != 0)
     {
 	/*
@@ -833,7 +833,8 @@ static void TextElementSize(
 	return;
 
     src = TkGetStringFromObj(element->textObj, &len);
-    Tcl_WinUtfToTChar(src, len, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToWCharDString(src, len, &ds);
     hr = elementData->procs->GetThemeTextExtent(
 	    elementData->hTheme,
 	    elementData->hDC,
@@ -872,7 +873,8 @@ static void TextElementDraw(
 	return;
 
     src = TkGetStringFromObj(element->textObj, &len);
-    Tcl_WinUtfToTChar(src, len, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToWCharDString(src, len, &ds);
     hr = elementData->procs->DrawThemeText(
 	    elementData->hTheme,
 	    elementData->hDC,
@@ -1139,7 +1141,8 @@ Ttk_CreateVsapiElement(
 	return TCL_ERROR;
     }
     name = TkGetStringFromObj(objv[0], &length);
-    className = (WCHAR *) Tcl_WinUtfToTChar(name, length, &classBuf);
+    Tcl_DStringInit(&classBuf);
+    className = Tcl_UtfToWCharDString(name, length, &classBuf);
 
     /* flags or padding */
     if (objc > 3) {
