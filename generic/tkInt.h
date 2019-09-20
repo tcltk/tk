@@ -66,6 +66,11 @@
 #   endif
 #endif
 
+#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
+# define Tcl_WCharToUtfDString Tcl_UniCharToUtfDString
+# define Tcl_UtfToWCharDString Tcl_UtfToUniCharDString
+#endif
+
 /*
  * Macros used to cast between pointers and integers (e.g. when storing an int
  * in ClientData), on 64-bit architectures they avoid gcc warning about "cast
