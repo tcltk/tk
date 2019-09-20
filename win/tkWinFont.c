@@ -179,12 +179,6 @@ typedef struct {
 static Tcl_ThreadDataKey dataKey;
 
 /*
- * Information cached about the system at startup time.
- */
-
-static Tcl_Encoding systemEncoding;
-
-/*
  * Procedures used only in this file.
  */
 
@@ -262,7 +256,6 @@ void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    systemEncoding = TkWinGetUnicodeEncoding();
     TkWinSetupSystemFonts(mainPtr);
 }
 
@@ -2488,7 +2481,7 @@ GetScreenFont(
     lf.lfQuality	= DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
-    Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &ds);
+    Tcl_WinUtfToTChar(faceName, -1, &ds);
     wcsncpy(lf.lfFaceName, (WCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
     Tcl_DStringFree(&ds);
     lf.lfFaceName[LF_FACESIZE-1] = 0;
@@ -2539,7 +2532,7 @@ FamilyExists(
 	return 0;
     }
 
-    Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &faceString);
+    Tcl_WinUtfToTChar(faceName, -1, &faceString);
 
     /*
      * If the family exists, WinFontExistProc() will be called and
