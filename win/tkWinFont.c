@@ -664,11 +664,12 @@ WinFontFamilyEnumProc(
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
 {
-    char *faceName = (char *) lfPtr->elfLogFont.lfFaceName;
+    WCHAR *faceName = lfPtr->elfLogFont.lfFaceName;
     Tcl_Obj *resultObj = (Tcl_Obj *) lParam;
     Tcl_DString faceString;
 
-    Tcl_ExternalToUtfDString(systemEncoding, faceName, -1, &faceString);
+    Tcl_DStringInit(&faceString);
+    Tcl_WCharToUtfDString(faceName, wcslen(faceName), &faceString);
     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
 	    Tcl_DStringValue(&faceString), Tcl_DStringLength(&faceString)));
     Tcl_DStringFree(&faceString);
@@ -1575,7 +1576,8 @@ InitFont(
     GetTextMetrics(hdc, &tm);
 
     GetTextFaceW(hdc, LF_FACESIZE, buf);
-    Tcl_ExternalToUtfDString(systemEncoding, (char *) buf, -1, &faceString);
+    Tcl_DStringInit(&faceString);
+    Tcl_WCharToUtfDString(buf, wcslen(buf), &faceString);
 
     fontPtr->font.fid	= (Font) fontPtr;
     fontPtr->hwnd	= hwnd;
@@ -1752,7 +1754,8 @@ AllocFontFamily(
 
     hFont = SelectObject(hdc, hFont);
     GetTextFaceW(hdc, LF_FACESIZE, buf);
-    Tcl_ExternalToUtfDString(systemEncoding, (char *) buf, -1, &faceString);
+    Tcl_DStringInit(&faceString);
+    Tcl_WCharToUtfDString(buf, wcslen(buf), &faceString);
     faceName = Tk_GetUid(Tcl_DStringValue(&faceString));
     Tcl_DStringFree(&faceString);
     hFont = SelectObject(hdc, hFont);
@@ -2056,7 +2059,8 @@ WinFontCanUseProc(
     nameTriedPtr    = canUsePtr->nameTriedPtr;
 
     fallbackName = (char *) lfPtr->elfLogFont.lfFaceName;
-    Tcl_ExternalToUtfDString(systemEncoding, fallbackName, -1, &faceString);
+    Tcl_DStringInit(&faceString);
+    Tcl_WCharToUtfDString((WCHAR *)fallbackName, wcslen((WCHAR *)fallbackName), &faceString);
     fallbackName = Tcl_DStringValue(&faceString);
 
     if (SeenName(fallbackName, nameTriedPtr) == 0) {
