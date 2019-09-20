@@ -892,7 +892,7 @@ InitWindowClass(
 
 		tsdPtr->iconPtr = titlebaricon;
 	    }
-	    class.hCursor = LoadCursorW(NULL, IDC_ARROW);
+	    class.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
 
 	    if (!RegisterClassW(&class)) {
 		Tcl_Panic("Unable to register TkTopLevel class");
