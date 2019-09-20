@@ -84,7 +84,8 @@ NewNativeObj(
     Tcl_DString ds;
 
 #ifdef UNICODE
-    Tcl_WinTCharToUtf(string, -1, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_WCharToUtfDString(string, wcslen(string), &ds);
 #else
     Tcl_ExternalToUtfDString(NULL, (char *) string, -1, &ds);
 #endif

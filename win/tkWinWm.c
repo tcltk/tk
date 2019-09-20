@@ -1241,7 +1241,8 @@ ReadIconFromFile(
 	if (file == NULL) {
 	    return NULL;
 	}
-	Tcl_WinUtfToTChar(file, -1, &ds2);
+	Tcl_DStringInit(&ds2);
+	Tcl_UtfToWCharDString(file, -1, &ds2);
 	Tcl_DStringFree(&ds);
 	res = (DWORD *)SHGetFileInfoW((WCHAR *)Tcl_DStringValue(&ds2), 0, &sfiSM,
 		sizeof(SHFILEINFO), SHGFI_SMALLICON|SHGFI_ICON);
@@ -2121,7 +2122,8 @@ UpdateWrapper(
 	 */
 
 	tsdPtr->createWindow = winPtr;
-	Tcl_WinUtfToTChar(((wmPtr->title != NULL) ?
+	Tcl_DStringInit(&titleString);
+	Tcl_UtfToWCharDString(((wmPtr->title != NULL) ?
 		wmPtr->title : winPtr->nameUid), -1, &titleString);
 
 	wmPtr->wrapper = CreateWindowExW(wmPtr->exStyle,
@@ -5459,7 +5461,8 @@ WmTitleCmd(
 	    int size = 256;
 
 	    GetWindowTextW(wrapper, buf, size);
-	    Tcl_WinTCharToUtf(buf, -1, &titleString);
+	    Tcl_DStringInit(&titleString);
+	    Tcl_WCharToUtfDString(buf, wcslen(buf), &titleString);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    Tcl_DStringValue(&titleString),
 		    Tcl_DStringLength(&titleString)));
@@ -5479,7 +5482,8 @@ WmTitleCmd(
 	if (!(wmPtr->flags & WM_NEVER_MAPPED) && wmPtr->wrapper != NULL) {
 	    Tcl_DString titleString;
 
-	    Tcl_WinUtfToTChar(wmPtr->title, -1, &titleString);
+	    Tcl_DStringInit(&titleString);
+	    Tcl_UtfToWCharDString(wmPtr->title, -1, &titleString);
 	    SetWindowTextW(wrapper, (LPCWSTR) Tcl_DStringValue(&titleString));
 	    Tcl_DStringFree(&titleString);
 	}
