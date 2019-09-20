@@ -179,12 +179,6 @@ typedef struct {
 static Tcl_ThreadDataKey dataKey;
 
 /*
- * Information cached about the system at startup time.
- */
-
-static Tcl_Encoding systemEncoding;
-
-/*
  * Procedures used only in this file.
  */
 
@@ -262,7 +256,6 @@ void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    systemEncoding = TkWinGetUnicodeEncoding();
     TkWinSetupSystemFonts(mainPtr);
 }
 
@@ -664,11 +657,10 @@ WinFontFamilyEnumProc(
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* Result object to hold result. */
 {
-    char *faceName = (char *) lfPtr->elfLogFont.lfFaceName;
     Tcl_Obj *resultObj = (Tcl_Obj *) lParam;
     Tcl_DString faceString;
 
-    Tcl_ExternalToUtfDString(systemEncoding, faceName, -1, &faceString);
+    Tcl_WinTCharToUtf(lfPtr->elfLogFont.lfFaceName, -1, &faceString);
     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
 	    Tcl_DStringValue(&faceString), Tcl_DStringLength(&faceString)));
     Tcl_DStringFree(&faceString);
@@ -1575,7 +1567,7 @@ InitFont(
     GetTextMetrics(hdc, &tm);
 
     GetTextFaceW(hdc, LF_FACESIZE, buf);
-    Tcl_ExternalToUtfDString(systemEncoding, (char *) buf, -1, &faceString);
+    Tcl_WinTCharToUtf(buf, -1, &faceString);
 
     fontPtr->font.fid	= (Font) fontPtr;
     fontPtr->hwnd	= hwnd;
@@ -1752,7 +1744,7 @@ AllocFontFamily(
 
     hFont = SelectObject(hdc, hFont);
     GetTextFaceW(hdc, LF_FACESIZE, buf);
-    Tcl_ExternalToUtfDString(systemEncoding, (char *) buf, -1, &faceString);
+    Tcl_WinTCharToUtf(buf, -1, &faceString);
     faceName = Tk_GetUid(Tcl_DStringValue(&faceString));
     Tcl_DStringFree(&faceString);
     hFont = SelectObject(hdc, hFont);
@@ -2055,9 +2047,7 @@ WinFontCanUseProc(
     fontPtr	    = canUsePtr->fontPtr;
     nameTriedPtr    = canUsePtr->nameTriedPtr;
 
-    fallbackName = (char *) lfPtr->elfLogFont.lfFaceName;
-    Tcl_ExternalToUtfDString(systemEncoding, fallbackName, -1, &faceString);
-    fallbackName = Tcl_DStringValue(&faceString);
+    fallbackName = Tcl_WinTCharToUtf(lfPtr->elfLogFont.lfFaceName, -1, &faceString);
 
     if (SeenName(fallbackName, nameTriedPtr) == 0) {
 	subFontPtr = CanUseFallback(hdc, fontPtr, fallbackName, ch,
@@ -2484,7 +2474,7 @@ GetScreenFont(
     lf.lfQuality	= DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
-    Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &ds);
+    Tcl_WinUtfToTChar(faceName, -1, &ds);
     wcsncpy(lf.lfFaceName, (WCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
     Tcl_DStringFree(&ds);
     lf.lfFaceName[LF_FACESIZE-1] = 0;
@@ -2535,7 +2525,7 @@ FamilyExists(
 	return 0;
     }
 
-    Tcl_UtfToExternalDString(systemEncoding, faceName, -1, &faceString);
+    Tcl_WinUtfToTChar(faceName, -1, &faceString);
 
     /*
      * If the family exists, WinFontExistProc() will be called and
