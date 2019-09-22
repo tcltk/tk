@@ -16,7 +16,8 @@
 
 static const int DEFAULT_ROWHEIGHT 	= 20;
 static const int DEFAULT_INDENT 	= 20;
-static const int HALO   		= 4;	/* separator */
+static const int HALO   		= 4;	/* heading separator */
+static const int COLUMN_SEPARATOR       = 1;    /* column separator width */
 
 #define TTK_STATE_OPEN TTK_STATE_USER1
 #define TTK_STATE_LEAF TTK_STATE_USER2
@@ -1770,7 +1771,7 @@ static void DrawSeparators(Treeview *tv, Drawable d)
 	    if (xDraw < tv->tree.titleWidth) continue;
 	}
 
-	parcel = Ttk_MakeBox(xDraw-1, y0, 1, h0);
+	parcel = Ttk_MakeBox(xDraw - COLUMN_SEPARATOR, y0, COLUMN_SEPARATOR, h0);
 	DisplayLayout(tv->tree.separatorLayout, &displayItem, 0, parcel, d);
     }
 }
@@ -1899,7 +1900,8 @@ static void DrawItem(
     x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     if (tv->tree.showFlags & SHOW_TREE) {
 	int indent = depth * tv->tree.indent;
-	int colwidth = tv->tree.column0.width;
+	int colwidth = tv->tree.column0.width -
+		(tv->tree.showFlags & SHOW_SEPARATORS ? COLUMN_SEPARATOR : 0);
 	int xTree = tv->tree.nTitleColumns >= 1 ? xTitle : x;
 	Ttk_Box parcel = Ttk_MakeBox(
 		xTree+indent, y, colwidth-indent, rowHeight);
