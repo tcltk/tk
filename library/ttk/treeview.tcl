@@ -58,9 +58,20 @@ ttk::copyBindings TtkScrollable Treeview
 # @@@ TODO: verify/rewrite up and down code.
 #
 proc ttk::treeview::Keynav {w dir} {
+    variable State
     set focus [$w focus]
     if {$focus eq ""} { return }
 
+    set cells [expr {[$w cget -selecttype] eq "cell"}]
+
+    if {$cells} {
+        lassign $State(cellAnchor) _ colAnchor
+        # Just in case, give it a valid value
+        if {$colAnchor eq ""} {
+            set colAnchor "#1"
+        }
+    }
+   
     switch -- $dir {
 	up {
 	    if {[set up [$w prev $focus]] eq ""} {
@@ -84,19 +95,45 @@ proc ttk::treeview::Keynav {w dir} {
 	    }
 	}
 	left {
-	    if {[$w item $focus -open] && [llength [$w children $focus]]} {
+            if {$cells} {
+                set colNo [string range $colAnchor 1 end]
+                set firstCol [expr {"tree" ni [$w cget -show]}]
+                if {$colNo >  $firstCol} {
+                    incr colNo -1
+                    set colAnchor "#$colNo"
+                }
+            } elseif {[$w item $focus -open] && [llength [$w children $focus]]} {
 	    	CloseItem $w $focus
 	    } else {
 	    	set focus [$w parent $focus]
 	    }
 	}
 	right {
-	    OpenItem $w $focus
+            if {$cells} {
+                set colNo [string range $colAnchor 1 end]
+                set dispCol [$w cget -displaycolumns]
+                if {$dispCol eq "#all"} {
+                    set lastCol [llength [$w cget -columns]]
+                } else {
+                    set lastCol [llength $dispCol]
+                }
+                if {$colNo < ($lastCol - 1)} {
+                    incr colNo
+                    set colAnchor "#$colNo"
+                }
+            } else {
+                OpenItem $w $focus
+            }
 	}
     }
 
     if {$focus != {}} {
-	SelectOp $w $focus "" choose
+        if {$cells} {
+            set cell [list $focus $colAnchor]
+            SelectOp $w $focus $cell choose
+        } else {
+            SelectOp $w $focus "" choose
+        }
     }
 }
 
@@ -134,7 +171,8 @@ proc ttk::treeview::ActivateHeading {w heading} {
 }
 
 ## IndentifyCell -- Locate the cell at coordinate
-#	Only active when -selecttype is "cell".
+#	Only active when -selecttype is "cell", and leaves cell empty otherwise.
+#       Down the call chain it is enough to check cell to know the selecttype.
 proc ttk::treeview::IdentifyCell {w x y} {
     set cell {}
     if {[$w cget -selecttype] eq "cell"} {
