@@ -52,6 +52,7 @@ struct TreeItemRec {
     Tcl_Obj	*openObj;
     Tcl_Obj	*tagsObj;
     Tcl_Obj     *selObj;
+    Tk_Anchor   imageAnchor;
 
     /*
      * Derived resources:
@@ -70,6 +71,9 @@ static Tk_OptionSpec ItemOptionSpecs[] = {
     {TK_OPTION_STRING, "-image", "image", "Image",
 	NULL, offsetof(TreeItem,imageObj), -1,
 	TK_OPTION_NULL_OK,0,ITEM_OPTION_IMAGE_CHANGED },
+    {TK_OPTION_ANCHOR, "-imageanchor", "imageAnchor", "ImageAnchor",
+	"w", -1, offsetof(TreeItem,imageAnchor),
+	0,0,0 },
     {TK_OPTION_STRING, "-values", "values", "Values",
 	NULL, offsetof(TreeItem,valuesObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
@@ -93,7 +97,7 @@ static TreeItem *NewItem(void)
     item->entryPtr = 0;
     item->parent = item->children = item->next = item->prev = NULL;
 
-    item->state = 0ul;
+    item->state = 0ul; 
     item->textObj = NULL;
     item->imageObj = NULL;
     item->valuesObj = NULL;
@@ -528,6 +532,39 @@ static void DisplayLayout(
     Ttk_Layout layout, void *recordPtr, Ttk_State state, Ttk_Box b, Drawable d)
 {
     Ttk_RebindSublayout(layout, recordPtr);
+    Ttk_PlaceLayout(layout, state, b);
+    Ttk_DrawLayout(layout, state, d);
+}
+static Ttk_PositionSpec AnchorToPosition(
+    Tk_Anchor anchor)
+{
+    switch (anchor)
+    {
+	case TK_ANCHOR_N:	return TTK_PACK_TOP;
+	case TK_ANCHOR_S:	return TTK_PACK_BOTTOM;
+	case TK_ANCHOR_NE:	return TTK_PACK_RIGHT|TTK_STICK_N;
+	case TK_ANCHOR_SE:	return TTK_PACK_RIGHT|TTK_STICK_S;
+	case TK_ANCHOR_E:	return TTK_PACK_RIGHT;
+	case TK_ANCHOR_NW:	return TTK_PACK_LEFT|TTK_STICK_N;
+	case TK_ANCHOR_SW:	return TTK_PACK_LEFT|TTK_STICK_S;
+	default:		return TTK_PACK_LEFT;
+    }
+    return TTK_PACK_LEFT;
+}
+/* Ugly hack to be able to change flags. TODO: better way */
+struct Ttk_LayoutNode_
+{
+    unsigned	flags;
+};
+static void DisplayLayoutTree(
+    Tk_Anchor imageAnchor,
+    Ttk_Layout layout, void *recordPtr, Ttk_State state, Ttk_Box b, Drawable d)
+{
+    Ttk_Element imageNode;
+
+    Ttk_RebindSublayout(layout, recordPtr);
+    imageNode = Ttk_FindElement(layout, "image");
+    imageNode->flags = AnchorToPosition(imageAnchor);
     Ttk_PlaceLayout(layout, state, b);
     Ttk_DrawLayout(layout, state, d);
 }
@@ -1911,11 +1948,11 @@ static void DrawItem(
 	    if (item->textObj) { displayItemSel.textObj = item->textObj; }
 	    if (item->imageObj) { displayItemSel.imageObj = item->imageObj; }
 	    DisplayLayout(tv->tree.rowLayout, &displayItemSel, state, parcelBg, d);
-	    DisplayLayout(tv->tree.itemLayout, &displayItemSel, state, parcel, d);
+	    DisplayLayoutTree(item->imageAnchor, tv->tree.itemLayout, &displayItemSel, state, parcel, d);
 	} else {
 	    if (item->textObj) { displayItem.textObj = item->textObj; }
 	    if (item->imageObj) { displayItem.imageObj = item->imageObj; }
-	    DisplayLayout(tv->tree.itemLayout, &displayItem, state, parcel, d);
+	    DisplayLayoutTree(item->imageAnchor, tv->tree.itemLayout, &displayItem, state, parcel, d);
 	}
 	xTitle += colwidth;
     }
