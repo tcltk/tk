@@ -445,25 +445,28 @@ widget subcommands (see \fIttk::widget(n)\fR for details):
 .PP
 The following item options may be specified for items
 in the \fBinsert\fR and \fBitem\fR widget commands.
-.OP \-text text Text
+.IP \fB\-text\fR
 The textual label to display for the item.
-.OP \-image image Image
-A Tk image, displayed to the left of the label.
-.OP \-values values Values
+.IP \fB\-image\fR
+A Tk image, displayed next to the label, placed according to \fB-imageanchor\fR.
+.IP \fB\-imageanchor\fR
+Specifies how the \fB-image\fR is displayed relative to the text. Default is \fBw\fR.
+One of the standard Tk anchor values.
+.IP \fB\-values\fR
 The list of values associated with the item.
 .RS
 .PP
 Each item should have the same number of values as
-the \fB\-columns\fR widget option.
+the \fB\-columns\fR
 If there are fewer values than columns,
 the remaining values are assumed empty.
 If there are more values than columns,
 the extra values are ignored.
 .RE
-.OP \-open open Open
+.IP \fB\-open\fR
 A boolean value indicating whether the item's children
 should be displayed (\fB\-open true\fR) or hidden (\fB\-open false\fR).
-.OP \-tags tags Tags
+.IP \fB\-tags\fR
 A list of tags associated with this item.
 .SH "TAG OPTIONS"
 .PP
