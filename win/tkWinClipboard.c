@@ -329,11 +329,6 @@ TkWinClipboardRender(
     }
     *buffer = '\0';
 
-    /*
-     * Depending on the platform, turn the data into Unicode or the system
-     * encoding before placing it on the clipboard.
-     */
-
 	Tcl_DStringInit(&ds);
 	Tcl_UtfToWCharDString(rawText, -1, &ds);
 	ckfree(rawText);
