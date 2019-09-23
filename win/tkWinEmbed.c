@@ -160,7 +160,7 @@ void Tk_MapEmbeddedWindow(
 {
     if(!(winPtr->flags & TK_ALREADY_DEAD)) {
 	HWND hwnd = (HWND)winPtr->privatePtr;
-	int state = SendMessage(hwnd, TK_STATE, -1, -1) - 1;
+	int state = SendMessageW(hwnd, TK_STATE, -1, -1) - 1;
 
 	if (state < 0 || state > 3) {
 	    state = NormalState;
@@ -283,9 +283,9 @@ TkpUseWindow(
 	return TCL_ERROR;
     }
 
-    id = SendMessage(hwnd, TK_INFO, TK_CONTAINER_VERIFY, 0);
+    id = SendMessageW(hwnd, TK_INFO, TK_CONTAINER_VERIFY, 0);
     if (id == PTR2INT(hwnd)) {
-	if (!SendMessage(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
+	if (!SendMessageW(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
     	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "The container is already in use", -1));
 	    Tcl_SetErrorCode(interp, "TK", "EMBED", "IN_USE", NULL);
@@ -1018,7 +1018,7 @@ TkpClaimFocus(
 				 * it. */
 {
     HWND hwnd = GetParent(Tk_GetHWND(topLevelPtr->window));
-    SendMessage(hwnd, TK_CLAIMFOCUS, (WPARAM) force, 0);
+    SendMessageW(hwnd, TK_CLAIMFOCUS, (WPARAM) force, 0);
 }
 
 /*
@@ -1096,7 +1096,7 @@ EmbedWindowDeleted(
 	    break;
 	}
 	if (containerPtr->parentPtr == winPtr) {
-	    SendMessage(containerPtr->embeddedHWnd, WM_CLOSE, 0, 0);
+	    SendMessageW(containerPtr->embeddedHWnd, WM_CLOSE, 0, 0);
 	    containerPtr->parentPtr = NULL;
 	    containerPtr->embeddedPtr = NULL;
 	    break;
