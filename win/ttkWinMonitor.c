@@ -92,7 +92,7 @@ CreateThemeMonitorWindow(HINSTANCE hinst, Tcl_Interp *interp)
 	hwnd = CreateWindowW( name, title, WS_OVERLAPPEDWINDOW,
 	    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 	    NULL, NULL, hinst, NULL );
-	SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR) interp);
+	SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR) interp);
 	ShowWindow(hwnd, SW_HIDE);
 	UpdateWindow(hwnd);
     }
@@ -109,7 +109,7 @@ DestroyThemeMonitorWindow(void *clientData)
 static LRESULT WINAPI
 WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-    Tcl_Interp *interp = (Tcl_Interp *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    Tcl_Interp *interp = (Tcl_Interp *)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     Ttk_Theme theme;
 
     switch (msg) {
@@ -137,7 +137,7 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 	}
 	break;
     }
-    return DefWindowProc(hwnd, msg, wp, lp);
+    return DefWindowProcW(hwnd, msg, wp, lp);
 }
 
 /*

@@ -1448,7 +1448,7 @@ TkWinFillRect(
     rect.bottom = y + height;
     oldColor = SetBkColor(dc, (COLORREF)pixel);
     SetBkMode(dc, OPAQUE);
-    ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
+    ExtTextOutW(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
     SetBkColor(dc, oldColor);
 }
 
