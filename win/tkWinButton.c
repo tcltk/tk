@@ -242,7 +242,7 @@ CreateProc(
 {
     Window window;
     HWND parent;
-    const WCHAR *class;
+    LPCWSTR class;
     WinButton *butPtr = (WinButton *)instanceData;
 
     parent = Tk_GetHWND(parentWin);
@@ -258,7 +258,7 @@ CreateProc(
 	    parent, NULL, Tk_GetHINSTANCE(), NULL);
     SetWindowPos(butPtr->hwnd, HWND_TOP, 0, 0, 0, 0,
 		    SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-    butPtr->oldProc = (WNDPROC)SetWindowLongPtr(butPtr->hwnd, GWLP_WNDPROC,
+    butPtr->oldProc = (WNDPROC)SetWindowLongPtrW(butPtr->hwnd, GWLP_WNDPROC,
 	    (LONG_PTR) ButtonProc);
 
     window = Tk_AttachHWND(tkwin, butPtr->hwnd);
@@ -289,7 +289,7 @@ TkpDestroyButton(
     HWND hwnd = winButPtr->hwnd;
 
     if (hwnd) {
-	SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR) winButPtr->oldProc);
+	SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR) winButPtr->oldProc);
     }
 }
 
@@ -1306,7 +1306,7 @@ ButtonProc(
 	    return result;
 	}
     }
-    return DefWindowProc(hwnd, message, wParam, lParam);
+    return DefWindowProcW(hwnd, message, wParam, lParam);
 }
 
 /*
