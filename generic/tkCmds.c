@@ -134,7 +134,7 @@ Tk_BellObjCmd(
     if (!nice) {
 	XForceScreenSaver(Tk_Display(tkwin), ScreenSaverReset);
     }
-    XFlush(Tk_Display(tkwin));
+    (void)XFlush(Tk_Display(tkwin));
     Tk_DeleteErrorHandler(handler);
     return TCL_OK;
 }

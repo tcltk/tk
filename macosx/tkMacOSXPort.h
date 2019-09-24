@@ -111,12 +111,19 @@
  * no-op functions on the Macintosh.
  */
 
-#define XFlush(display)
-#define XFree(data) {if ((data) != NULL) ckfree(data);}
-#define XGrabServer(display)
-#define XNoOp(display) {display->request++;}
-#define XUngrabServer(display)
-#define XSynchronize(display, bool) {display->request++;}
+#undef XFlush
+#define XFlush(display) (0)
+#undef XFree
+#define XFree(data) (((data) != NULL) ? (ckfree(data),0) : 0)
+#undef XGrabServer
+#define XGrabServer(display) (0)
+#undef XNoOp
+#define XNoOp(display) (display->request++,0)
+#undef XUngrabServer
+#define XUngrabServer(display) (0)
+#undef XSynchronize
+#define XSynchronize(display, onoff) (display->request++,NULL)
+#undef XVisualIDFromVisual
 #define XVisualIDFromVisual(visual) (visual->visualid)
 
 /*
