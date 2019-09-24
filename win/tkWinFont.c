@@ -660,7 +660,7 @@ WinFontFamilyEnumProc(
     Tcl_Obj *resultObj = (Tcl_Obj *) lParam;
     Tcl_DString faceString;
 
-    Tcl_WinTCharToUtf(lfPtr->elfLogFont.lfFaceName, -1, &faceString);
+    Tcl_WinTCharToUtf((LPCTSTR)lfPtr->elfLogFont.lfFaceName, -1, &faceString);
     Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
 	    Tcl_DStringValue(&faceString), Tcl_DStringLength(&faceString)));
     Tcl_DStringFree(&faceString);
@@ -1567,7 +1567,7 @@ InitFont(
     GetTextMetricsW(hdc, &tm);
 
     GetTextFaceW(hdc, LF_FACESIZE, buf);
-    Tcl_WinTCharToUtf(buf, -1, &faceString);
+    Tcl_WinTCharToUtf((LPCTSTR)buf, -1, &faceString);
 
     fontPtr->font.fid	= (Font) fontPtr;
     fontPtr->hwnd	= hwnd;
@@ -1744,7 +1744,7 @@ AllocFontFamily(
 
     hFont = SelectObject(hdc, hFont);
     GetTextFaceW(hdc, LF_FACESIZE, buf);
-    Tcl_WinTCharToUtf(buf, -1, &faceString);
+    Tcl_WinTCharToUtf((LPCTSTR)buf, -1, &faceString);
     faceName = Tk_GetUid(Tcl_DStringValue(&faceString));
     Tcl_DStringFree(&faceString);
     hFont = SelectObject(hdc, hFont);
@@ -2047,7 +2047,7 @@ WinFontCanUseProc(
     fontPtr	    = canUsePtr->fontPtr;
     nameTriedPtr    = canUsePtr->nameTriedPtr;
 
-    fallbackName = Tcl_WinTCharToUtf(lfPtr->elfLogFont.lfFaceName, -1, &faceString);
+    fallbackName = Tcl_WinTCharToUtf((LPCTSTR)lfPtr->elfLogFont.lfFaceName, -1, &faceString);
 
     if (SeenName(fallbackName, nameTriedPtr) == 0) {
 	subFontPtr = CanUseFallback(hdc, fontPtr, fallbackName, ch,
