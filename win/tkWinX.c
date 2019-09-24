@@ -1495,7 +1495,7 @@ UpdateInputLanguage(
 	return;
     }
 
-    wsprintfA(codepage, "cp%d", charsetInfo.ciACP);
+    sprintf(codepage, "cp%d", charsetInfo.ciACP);
 
     if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {
 	/*

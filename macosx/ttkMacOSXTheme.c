@@ -1064,7 +1064,7 @@ static void DrawDarkFocusRing(
 {
     CGRect insetBounds = CGRectInset(bounds, -3, -3);
     CHECK_RADIUS(4, insetBounds)
-    
+
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *strokeColor;
     NSColor *fillColor = [NSColor colorWithColorSpace:deviceRGB
