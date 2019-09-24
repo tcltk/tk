@@ -385,7 +385,7 @@ Async(
     if (SUCCEEDED(hr) && obj->interp) {
 	Tcl_Obj *scriptPtr;
 
-	Tcl_WinTCharToUtf(vCmd.bstrVal, (int) SysStringLen(vCmd.bstrVal) *
+	Tcl_WinTCharToUtf((LPCTSTR)vCmd.bstrVal, SysStringLen(vCmd.bstrVal) *
 		sizeof (WCHAR), &ds);
 	scriptPtr =
 		Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
@@ -440,8 +440,8 @@ Send(
 	return hr;
     }
 
-    Tcl_WinTCharToUtf(v.bstrVal, (int) SysStringLen(v.bstrVal) *
-	    sizeof (WCHAR), &ds);
+    Tcl_WinTCharToUtf((LPCTSTR)v.bstrVal, SysStringLen(v.bstrVal) *
+	    sizeof(WCHAR), &ds);
     scriptPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
     Tcl_Preserve(interp);

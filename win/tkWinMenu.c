@@ -573,7 +573,7 @@ ReconfigureWindowsMenu(
     TkMenuEntry *mePtr;
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
     char *itemText = NULL;
-    const WCHAR *lpNewItem;
+    LPCWSTR lpNewItem;
     UINT flags;
     UINT itemID;
     int i, count, systemMenu = 0, base;
@@ -610,7 +610,7 @@ ReconfigureWindowsMenu(
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 	    Tcl_WinUtfToTChar(itemText, -1, &translatedText);
-	    lpNewItem = (const WCHAR *) Tcl_DStringValue(&translatedText);
+	    lpNewItem = (LPCWSTR) Tcl_DStringValue(&translatedText);
 	    flags |= MF_STRING;
 	} else {
 	    lpNewItem = (LPCWSTR) mePtr;
@@ -1003,7 +1003,7 @@ TkWinMenuProc(
     LRESULT lResult;
 
     if (!TkWinHandleMenuEvent(&hwnd, &message, &wParam, &lParam, &lResult)) {
-	lResult = DefWindowProc(hwnd, message, wParam, lParam);
+	lResult = DefWindowProcW(hwnd, message, wParam, lParam);
     }
     return lResult;
 }
@@ -1102,7 +1102,7 @@ TkWinEmbeddedMenuProc(
 	}
 	/* FALLTHRU */
     default:
-	lResult = DefWindowProc(hwnd, message, wParam, lParam);
+	lResult = DefWindowProcW(hwnd, message, wParam, lParam);
 	break;
     }
     return lResult;
@@ -1249,7 +1249,7 @@ TkWinHandleMenuEvent(
 	if (hashEntryPtr != NULL) {
 	    int i, len, underline;
 	    Tcl_Obj *labelPtr;
-	    WCHAR *wlabel;
+	    LPCWSTR wlabel;
 	    int menuChar;
 	    Tcl_DString ds;
 
@@ -1272,7 +1272,7 @@ TkWinHandleMenuEvent(
 		    const char *src = Tcl_GetStringFromObj(labelPtr, &len);
 
 		    Tcl_DStringFree(&ds);
-		    wlabel = (WCHAR *) Tcl_WinUtfToTChar(src, len, &ds);
+		    wlabel = (LPCWSTR) Tcl_WinUtfToTChar(src, len, &ds);
 		    if ((underline < len) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
@@ -1746,7 +1746,7 @@ DrawWindowsSystemBitmap(
     SetTextColor(hdc, gc->foreground);
 
     scratchDC = CreateCompatibleDC(hdc);
-    bitmap = LoadBitmap(NULL, MAKEINTRESOURCE(bitmapID));
+    bitmap = LoadBitmapW(NULL, (LPCWSTR)MAKEINTRESOURCE(bitmapID));
 
     SelectObject(scratchDC, bitmap);
     SetMapMode(scratchDC, GetMapMode(hdc));
@@ -2099,7 +2099,7 @@ DrawMenuUnderline(
  *
  *	This function is invoked when keys related to pulling down menus is
  *	pressed. The corresponding Windows events are generated and passed to
- *	DefWindowProc if appropriate. This cmd is registered as tk::WinMenuKey
+ *	DefWindowProcW if appropriate. This cmd is registered as tk::WinMenuKey
  *	in the interp.
  *
  * Results:
@@ -2154,33 +2154,33 @@ TkWinMenuKeyObjCmd(
     if (eventPtr->type == KeyPress) {
 	switch (keySym) {
 	case XK_Alt_L:
-	    scanCode = MapVirtualKey(VK_LMENU, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyW(VK_LMENU, 0);
+	    CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_MENU,
 		    (int) (scanCode << 16) | (1 << 29));
 	    break;
 	case XK_Alt_R:
-	    scanCode = MapVirtualKey(VK_RMENU, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyW(VK_RMENU, 0);
+	    CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_MENU,
 		    (int) (scanCode << 16) | (1 << 29) | (1 << 24));
 	    break;
 	case XK_F10:
-	    scanCode = MapVirtualKey(VK_F10, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyW(VK_F10, 0);
+	    CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYDOWN, VK_F10, (int) (scanCode << 16));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
-	    scanCode = MapVirtualKey(virtualKey, 0);
+	    scanCode = MapVirtualKeyW(virtualKey, 0);
 	    if (0 != scanCode) {
 		XKeyEvent xkey = eventPtr->xkey;
-		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+		CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYDOWN, virtualKey,
 			(int) ((scanCode << 16) | (1 << 29)));
 		if (xkey.nbytes > 0) {
 		    for (i = 0; i < xkey.nbytes; i++) {
-			CallWindowProc(DefWindowProc,
+			CallWindowProcW(DefWindowProcW,
 				Tk_GetHWND(Tk_WindowId(tkwin)), WM_SYSCHAR,
 				xkey.trans_chars[i],
 				(int) ((scanCode << 16) | (1 << 29)));
@@ -2191,28 +2191,28 @@ TkWinMenuKeyObjCmd(
     } else if (eventPtr->type == KeyRelease) {
 	switch (keySym) {
 	case XK_Alt_L:
-	    scanCode = MapVirtualKey(VK_LMENU, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyW(VK_LMENU, 0);
+	    CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16)
 		    | (1 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_Alt_R:
-	    scanCode = MapVirtualKey(VK_RMENU, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyW(VK_RMENU, 0);
+	    CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_MENU, (int) (scanCode << 16) | (1 << 24)
 		    | (1 << 29) | (1 << 30) | (1 << 31));
 	    break;
 	case XK_F10:
-	    scanCode = MapVirtualKey(VK_F10, 0);
-	    CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+	    scanCode = MapVirtualKeyW(VK_F10, 0);
+	    CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 		    WM_SYSKEYUP, VK_F10,
 		    (int) (scanCode << 16) | (1 << 30) | (1 << 31));
 	    break;
 	default:
 	    virtualKey = XKeysymToKeycode(winPtr->display, keySym);
-	    scanCode = MapVirtualKey(virtualKey, 0);
+	    scanCode = MapVirtualKeyW(virtualKey, 0);
 	    if (0 != scanCode) {
-		CallWindowProc(DefWindowProc, Tk_GetHWND(Tk_WindowId(tkwin)),
+		CallWindowProcW(DefWindowProcW, Tk_GetHWND(Tk_WindowId(tkwin)),
 			WM_SYSKEYUP, virtualKey, (int) ((scanCode << 16)
 			| (1 << 29) | (1 << 30) | (1 << 31)));
 	    }
@@ -3314,7 +3314,7 @@ SetDefaults(
     HDC scratchDC;
     int bold = 0;
     int italic = 0;
-    TEXTMETRIC tm;
+    TEXTMETRICW tm;
     int pointSize;
     HFONT menuFont;
     /* See: [Bug #3239768] tk8.4.19 (and later) WIN32 menu font support */
@@ -3336,7 +3336,7 @@ SetDefaults(
 	defaultBorderWidth = GetSystemMetrics(SM_CYBORDER);
     }
 
-    scratchDC = CreateDCA("DISPLAY", NULL, NULL, NULL);
+    scratchDC = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
     if (!firstTime) {
 	Tcl_DStringFree(&menuFontDString);
     }
@@ -3350,11 +3350,11 @@ SetDefaults(
 	nc.metrics.cbSize -= sizeof(int);
     }
 
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, nc.metrics.cbSize,
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, nc.metrics.cbSize,
 	    &nc.metrics, 0);
     menuFont = CreateFontIndirectW(&nc.metrics.lfMenuFont);
     SelectObject(scratchDC, menuFont);
-    GetTextMetrics(scratchDC, &tm);
+    GetTextMetricsW(scratchDC, &tm);
     GetTextFaceA(scratchDC, LF_FACESIZE, faceName);
     pointSize = MulDiv(tm.tmHeight - tm.tmInternalLeading,
 	    72, GetDeviceCaps(scratchDC, LOGPIXELSY));
@@ -3411,7 +3411,7 @@ SetDefaults(
      */
 
     showMenuAccelerators = TRUE;
-    SystemParametersInfo(SPI_GETKEYBOARDCUES, 0, &showMenuAccelerators, 0);
+    SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &showMenuAccelerators, 0);
 }
 
 /*

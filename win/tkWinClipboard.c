@@ -79,7 +79,7 @@ TkSelGetSelection(
 	    goto error;
 	}
 	data = GlobalLock(handle);
-	Tcl_WinTCharToUtf((WCHAR *)data, -1, &ds);
+	Tcl_WinTCharToUtf((LPCTSTR)data, -1, &ds);
 	GlobalUnlock(handle);
     } else if (IsClipboardFormatAvailable(CF_TEXT)) {
 	/*
@@ -157,7 +157,7 @@ TkSelGetSelection(
 		    Tcl_DStringAppend(&ds, "\n", 1);
 		}
 		len = wcslen(fname);
-		Tcl_WinTCharToUtf(fname, len * sizeof(WCHAR), &dsTmp);
+		Tcl_WinTCharToUtf((LPCTSTR)fname, len * sizeof(WCHAR), &dsTmp);
 		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
 			Tcl_DStringLength(&dsTmp));
 		Tcl_DStringFree(&dsTmp);
@@ -327,43 +327,21 @@ TkWinClipboardRender(
     }
     *buffer = '\0';
 
-    /*
-     * Depending on the platform, turn the data into Unicode or the system
-     * encoding before placing it on the clipboard.
-     */
-
-#ifdef UNICODE
-	Tcl_DStringInit(&ds);
-	Tcl_WinUtfToTChar(rawText, -1, &ds);
-	ckfree(rawText);
-	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
-		(unsigned) Tcl_DStringLength(&ds) + 2);
-	if (!handle) {
-	    Tcl_DStringFree(&ds);
-	    return;
-	}
-	buffer = GlobalLock(handle);
-	memcpy(buffer, Tcl_DStringValue(&ds),
-		(unsigned) Tcl_DStringLength(&ds) + 2);
-	GlobalUnlock(handle);
+    Tcl_DStringInit(&ds);
+    Tcl_WinUtfToTChar(rawText, -1, &ds);
+    ckfree(rawText);
+    handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
+	    Tcl_DStringLength(&ds) + 2);
+    if (!handle) {
 	Tcl_DStringFree(&ds);
-	SetClipboardData(CF_UNICODETEXT, handle);
-#else
-	Tcl_UtfToExternalDString(NULL, rawText, -1, &ds);
-	ckfree(rawText);
-	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
-		(unsigned) Tcl_DStringLength(&ds) + 1);
-	if (!handle) {
-	    Tcl_DStringFree(&ds);
-	    return;
-	}
-	buffer = GlobalLock(handle);
-	memcpy(buffer, Tcl_DStringValue(&ds),
-		(unsigned) Tcl_DStringLength(&ds) + 1);
-	GlobalUnlock(handle);
-	Tcl_DStringFree(&ds);
-	SetClipboardData(CF_TEXT, handle);
-#endif
+	return;
+    }
+    buffer = GlobalLock(handle);
+    memcpy(buffer, Tcl_DStringValue(&ds),
+	    Tcl_DStringLength(&ds) + 2);
+    GlobalUnlock(handle);
+    Tcl_DStringFree(&ds);
+    SetClipboardData(CF_UNICODETEXT, handle);
 }
 
 /*
