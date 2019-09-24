@@ -444,7 +444,7 @@ TestfindwindowObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    const WCHAR  *title = NULL, *class = NULL;
+	LPCWSTR title = NULL, windowClass = NULL;
     Tcl_DString titleString, classString;
     HWND hwnd = NULL;
     int r = TCL_OK;
@@ -462,7 +462,7 @@ TestfindwindowObjCmd(
     title = Tcl_UtfToWCharDString(Tcl_GetString(objv[1]), -1, &titleString);
     if (objc == 3) {
 	Tcl_DStringInit(&classString);
-	class = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), -1, &classString);
+	windowClass = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), -1, &classString);
     }
     if (title[0] == 0)
         title = NULL;
@@ -471,7 +471,7 @@ TestfindwindowObjCmd(
     myPid = GetCurrentProcessId();
     while (1) {
         DWORD pid, tid;
-        hwnd = FindWindowExW(NULL, hwnd, class, title);
+        hwnd = FindWindowExW(NULL, hwnd, windowClass, title);
         if (hwnd == NULL)
             break;
         tid = GetWindowThreadProcessId(hwnd, &pid);
@@ -548,7 +548,7 @@ TestgetwindowinfoObjCmd(
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
 	Tcl_NewWideIntObj(GetWindowLongPtr((HWND)(size_t)hwnd, GWL_ID)));
 
-    cch = GetWindowTextW(INT2PTR(hwnd), (LPWSTR)buf, cchBuf);
+    cch = GetWindowTextW(INT2PTR(hwnd), buf, cchBuf);
 	Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(buf, cch, &ds);
     textObj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));

@@ -309,7 +309,7 @@ TkImgPhotoGet(
     nGreen = nBlue = 0;
     mono = 1;
     instancePtr->visualInfo = *visInfoPtr;
-    switch (visInfoPtr->class) {
+    switch (visInfoPtr->c_class) {
     case DirectColor:
     case TrueColor:
 	nRed = 1 << CountBits(visInfoPtr->red_mask);
@@ -645,7 +645,7 @@ TkImgPhotoDisplay(
 
     if ((instancePtr->masterPtr->flags & COMPLEX_ALPHA)
 	    && visInfo.depth >= 15
-	    && (visInfo.class == DirectColor || visInfo.class == TrueColor)) {
+	    && (visInfo.c_class == DirectColor || visInfo.c_class == TrueColor)) {
 	Tk_ErrorHandler handler;
 	XImage *bgImg = NULL;
 
@@ -948,7 +948,7 @@ IsValidPalette(
 	mono = 0;
     }
 
-    switch (instancePtr->visualInfo.class) {
+    switch (instancePtr->visualInfo.c_class) {
     case DirectColor:
     case TrueColor:
 	if ((nRed > (1 << CountBits(instancePtr->visualInfo.red_mask)))
@@ -1212,8 +1212,8 @@ AllocateColors(
 	 * store them in *colors.
 	 */
 
-	if ((colorPtr->visualInfo.class == DirectColor)
-		|| (colorPtr->visualInfo.class == TrueColor)) {
+	if ((colorPtr->visualInfo.c_class == DirectColor)
+		|| (colorPtr->visualInfo.c_class == TrueColor)) {
 
 	    /*
 	     * Direct/True Color: allocate shades of red, green, blue
@@ -1367,8 +1367,8 @@ AllocateColors(
 	 */
 
 #ifndef _WIN32
-	if ((colorPtr->visualInfo.class != DirectColor)
-		&& (colorPtr->visualInfo.class != TrueColor)) {
+	if ((colorPtr->visualInfo.c_class != DirectColor)
+		&& (colorPtr->visualInfo.c_class != TrueColor)) {
 	    colorPtr->flags |= MAP_COLORS;
 	}
 #endif /* _WIN32 */
@@ -1394,8 +1394,8 @@ AllocateColors(
 	} else {
 	    g = (i * (nGreen - 1) + 127) / 255;
 	    b = (i * (nBlue - 1) + 127) / 255;
-	    if ((colorPtr->visualInfo.class == DirectColor)
-		    || (colorPtr->visualInfo.class == TrueColor)) {
+	    if ((colorPtr->visualInfo.c_class == DirectColor)
+		    || (colorPtr->visualInfo.c_class == TrueColor)) {
 		colorPtr->redValues[i] =
 			colors[r].pixel & colorPtr->visualInfo.red_mask;
 		colorPtr->greenValues[i] =
@@ -1653,8 +1653,8 @@ TkImgDitherInstance(
      * DirectColor with many colors).
      */
 
-    if ((colorPtr->visualInfo.class == DirectColor)
-	    || (colorPtr->visualInfo.class == TrueColor)) {
+    if ((colorPtr->visualInfo.c_class == DirectColor)
+	    || (colorPtr->visualInfo.c_class == TrueColor)) {
 	int nRed, nGreen, nBlue, result;
 
 	result = sscanf(colorPtr->id.palette, "%d/%d/%d", &nRed,
