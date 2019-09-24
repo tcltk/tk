@@ -13,6 +13,7 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
+#include "default.h"
 
 /*
  * The structure below defines the record for each line item.
@@ -175,7 +176,7 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CAP_STYLE, "-capstyle", NULL, NULL,
 	"butt", Tk_Offset(LineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVLINE_FILL, Tk_Offset(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
 	NULL, Tk_Offset(LineItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
