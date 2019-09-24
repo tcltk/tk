@@ -40,13 +40,9 @@
 #define BIF_NEWDIALOGSTYLE 0x0040
 #endif
 
-#ifndef BFFM_VALIDATEFAILED
-#ifdef UNICODE
-#define BFFM_VALIDATEFAILED 4
-#else
-#define BFFM_VALIDATEFAILED 3
-#endif
-#endif /* BFFM_VALIDATEFAILED */
+#ifndef BFFM_VALIDATEFAILEDW
+#define BFFM_VALIDATEFAILEDW 4
+#endif /* BFFM_VALIDATEFAILEDW */
 
 typedef struct {
     int debugFlag;		/* Flags whether we should output debugging
@@ -120,11 +116,11 @@ static const struct {int type; int btnIds[3];} allowedTypes[] = {
  */
 
 #define TkWinGetHInstance(from) \
-	((HINSTANCE) GetWindowLongPtr((from), GWLP_HINSTANCE))
+	((HINSTANCE) GetWindowLongPtrW((from), GWLP_HINSTANCE))
 #define TkWinGetUserData(from) \
-	GetWindowLongPtr((from), GWLP_USERDATA)
+	GetWindowLongPtrW((from), GWLP_USERDATA)
 #define TkWinSetUserData(to,what) \
-	SetWindowLongPtr((to), GWLP_USERDATA, (LPARAM)(what))
+	SetWindowLongPtrW((to), GWLP_USERDATA, (LPARAM)(what))
 
 /*
  * The value of TK_MULTI_MAX_PATH dictates how many files can be retrieved
@@ -696,7 +692,7 @@ EatSpuriousMessageBugFix(void)
     DWORD nTime = GetTickCount() + 250;
 
     while (GetTickCount() < nTime) {
-	PeekMessage(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE);
+	PeekMessageW(&msg, 0, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE);
     }
 }
 
@@ -926,7 +922,7 @@ ColorDlgHookProc(
 	if ((title != NULL) && (title[0] != '\0')) {
 	    Tcl_DString ds;
 
-	    SetWindowTextW(hDlg, Tcl_WinUtfToTChar(title,-1,&ds));
+	    SetWindowTextW(hDlg, (LPCWSTR)Tcl_WinUtfToTChar(title,-1,&ds));
 	    Tcl_DStringFree(&ds);
 	}
 	if (tsdPtr->debugFlag) {
@@ -1409,7 +1405,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
         normPath = Tcl_FSGetNormalizedPath(interp, iniDirPath);
         /* XXX - Note on failures do not raise error, simply ignore ini dir */
         if (normPath) {
-            const WCHAR *nativePath;
+            LPCWSTR nativePath;
             Tcl_IncrRefCount(normPath);
             nativePath = Tcl_FSGetNativePath(normPath); /* Points INTO normPath*/
             if (nativePath) {
@@ -1515,7 +1511,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                         Tcl_DString ftds;
                         Tcl_Obj *ftobj;
 
-                        Tcl_WinTCharToUtf(filterPtr[ftix-1].pszName, -1, &ftds);
+                        Tcl_WinTCharToUtf((LPCTSTR)filterPtr[ftix-1].pszName, -1, &ftds);
                         ftobj = Tcl_NewStringObj(Tcl_DStringValue(&ftds),
                                 Tcl_DStringLength(&ftds));
                         Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
@@ -1954,8 +1950,8 @@ OFNHookProc(
 	    buffer = ofnData->dynFileBuffer;
 	    hdlg = GetParent(hdlg);
 
-	    selsize = (int) SendMessage(hdlg, CDM_GETSPEC, 0, 0);
-	    dirsize = (int) SendMessage(hdlg, CDM_GETFOLDERPATH, 0, 0);
+	    selsize = (int) SendMessageW(hdlg, CDM_GETSPEC, 0, 0);
+	    dirsize = (int) SendMessageW(hdlg, CDM_GETFOLDERPATH, 0, 0);
 	    buffersize = (selsize + dirsize + 1);
 
 	    /*
@@ -1970,10 +1966,10 @@ OFNHookProc(
 		    ofnData->dynFileBuffer = buffer;
 		}
 
-		SendMessage(hdlg, CDM_GETFOLDERPATH, dirsize, (LPARAM) buffer);
+		SendMessageW(hdlg, CDM_GETFOLDERPATH, dirsize, (LPARAM) buffer);
 		buffer += dirsize;
 
-		SendMessage(hdlg, CDM_GETSPEC, selsize, (LPARAM) buffer);
+		SendMessageW(hdlg, CDM_GETSPEC, selsize, (LPARAM) buffer);
 
 		/*
 		 * If there are multiple files, delete the quotes and change
@@ -2012,7 +2008,7 @@ OFNHookProc(
 			    Tcl_GetPathType(Tcl_DStringValue(&tmpfile))) {
 			/* re-get the full path to the start of the buffer */
 			buffer = (WCHAR *) ofnData->dynFileBuffer;
-			SendMessage(hdlg, CDM_GETSPEC, selsize, (LPARAM) buffer);
+			SendMessageW(hdlg, CDM_GETSPEC, selsize, (LPARAM) buffer);
 		    } else {
 			*(buffer-1) = '\\';
 		    }
@@ -2463,7 +2459,7 @@ Tk_ChooseDirectoryObjCmd(
 
     utfDir = Tcl_DStringValue(&ofnOpts.utfDirString);
     if (utfDir[0] != '\0') {
-	const WCHAR *uniStr;
+	LPCWSTR uniStr;
 
         Tcl_WinUtfToTChar(Tcl_DStringValue(&ofnOpts.utfDirString), -1,
                           &tempString);
@@ -2497,8 +2493,8 @@ Tk_ChooseDirectoryObjCmd(
     bInfo.lParam = (LPARAM) &cdCBData;
 
     if (ofnOpts.titleObj != NULL) {
-	Tcl_WinUtfToTChar(Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
-	bInfo.lpszTitle = (LPWSTR) Tcl_DStringValue(&titleString);
+	bInfo.lpszTitle = (LPCWSTR)Tcl_WinUtfToTChar(
+		Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
     } else {
 	bInfo.lpszTitle = L"Please choose a directory, then select OK.";
     }
@@ -2631,7 +2627,7 @@ ChooseDirectoryValidateProc(
     }
     chooseDirSharedData->retDir[0] = '\0';
     switch (message) {
-    case BFFM_VALIDATEFAILED:
+    case BFFM_VALIDATEFAILEDW:
 	/*
 	 * First save and check to see if it is a valid path name, if so then
 	 * make that path the one shown in the window. Otherwise, it failed
@@ -2641,7 +2637,7 @@ ChooseDirectoryValidateProc(
 	 * like ~ are converted correctly.
 	 */
 
-	Tcl_WinTCharToUtf((WCHAR *) lParam, -1, &initDirString);
+	Tcl_WinTCharToUtf((LPCTSTR) lParam, -1, &initDirString);
 	if (Tcl_TranslateFileName(chooseDirSharedData->interp,
 		Tcl_DStringValue(&initDirString), &tempString) == NULL) {
 	    /*
@@ -2703,12 +2699,12 @@ ChooseDirectoryValidateProc(
 	 */
 
 	if (SHGetPathFromIDListW((LPITEMIDLIST) lParam, selDir)) {
-	    SendMessage(hwnd, BFFM_SETSTATUSTEXT, 0, (LPARAM) selDir);
+	    SendMessageW(hwnd, BFFM_SETSTATUSTEXTW, 0, (LPARAM) selDir);
 	    // enable the OK button
-	    SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
+	    SendMessageW(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
 	} else {
 	    // disable the OK button
-	    SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 0);
+	    SendMessageW(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 0);
 	}
 	UpdateWindow(hwnd);
 	return 1;
@@ -2725,7 +2721,7 @@ ChooseDirectoryValidateProc(
 
 	if (*initDir == '\\') {
 	    /*
-	     * BFFM_SETSELECTION only understands UNC paths as pidls, so
+	     * BFFM_SETSELECTIONW only understands UNC paths as pidls, so
 	     * convert path to pidl using IShellFolder interface.
 	     */
 
@@ -2741,7 +2737,7 @@ ChooseDirectoryValidateProc(
 			    psfFolder, hwnd, NULL, (WCHAR *)
 			    initDir, &ulCount,&pidlMain,&ulAttr))
 			    && (pidlMain != NULL)) {
-			SendMessage(hwnd, BFFM_SETSELECTION, FALSE,
+			SendMessageW(hwnd, BFFM_SETSELECTIONW, FALSE,
 				(LPARAM) pidlMain);
 			pMalloc->lpVtbl->Free(pMalloc, pidlMain);
 		    }
@@ -2750,9 +2746,9 @@ ChooseDirectoryValidateProc(
 		pMalloc->lpVtbl->Release(pMalloc);
 	    }
 	} else {
-	    SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM) initDir);
+	    SendMessageW(hwnd, BFFM_SETSELECTIONW, TRUE, (LPARAM) initDir);
 	}
-	SendMessage(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
+	SendMessageW(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
 	break;
     }
 
@@ -2802,7 +2798,7 @@ Tk_MessageBoxObjCmd(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_DString titleBuf, tmpBuf;
-    const WCHAR *titlePtr, *tmpPtr;
+    LPCWSTR titlePtr, tmpPtr;
     const char *src;
 
     defaultBtn = -1;
@@ -2930,13 +2926,13 @@ Tk_MessageBoxObjCmd(
 
     tsdPtr->hSmallIcon = TkWinGetIcon(parent, ICON_SMALL);
     tsdPtr->hBigIcon   = TkWinGetIcon(parent, ICON_BIG);
-    tsdPtr->hMsgBoxHook = SetWindowsHookEx(WH_CBT, MsgBoxCBTProc, NULL,
+    tsdPtr->hMsgBoxHook = SetWindowsHookExW(WH_CBT, MsgBoxCBTProc, NULL,
 	    GetCurrentThreadId());
     src = Tcl_GetString(tmpObj);
-    tmpPtr = Tcl_WinUtfToTChar(src, tmpObj->length, &tmpBuf);
+    tmpPtr = (LPCWSTR)Tcl_WinUtfToTChar(src, tmpObj->length, &tmpBuf);
     if (titleObj != NULL) {
 	src = Tcl_GetString(titleObj);
-	titlePtr = Tcl_WinUtfToTChar(src, titleObj->length, &titleBuf);
+	titlePtr = (LPCWSTR)Tcl_WinUtfToTChar(src, titleObj->length, &titleBuf);
     } else {
 	titlePtr = L"";
 	Tcl_DStringInit(&titleBuf);
@@ -2984,9 +2980,9 @@ MsgBoxCBTProc(
 	if (WC_DIALOG == lpcbtcreate->lpcs->lpszClass) {
 	    HWND hwnd = (HWND) wParam;
 
-	    SendMessage(hwnd, WM_SETICON, ICON_SMALL,
+	    SendMessageW(hwnd, WM_SETICON, ICON_SMALL,
 		    (LPARAM) tsdPtr->hSmallIcon);
-	    SendMessage(hwnd, WM_SETICON, ICON_BIG, (LPARAM) tsdPtr->hBigIcon);
+	    SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM) tsdPtr->hBigIcon);
 	}
     }
 
@@ -3033,7 +3029,7 @@ ConvertExternalFilename(
 {
     char *p;
 
-    Tcl_WinTCharToUtf(filename, -1, dsPtr);
+    Tcl_WinTCharToUtf((LPCTSTR)filename, -1, dsPtr);
     for (p = Tcl_DStringValue(dsPtr); *p != '\0'; p++) {
 	/*
 	 * Change the pathname to the Tcl "normalized" pathname, where back
@@ -3070,7 +3066,7 @@ GetFontObj(
     int pt = 0;
 
     resObj = Tcl_NewListObj(0, NULL);
-    Tcl_WinTCharToUtf(plf->lfFaceName, -1, &ds);
+    Tcl_WinTCharToUtf((LPCTSTR)plf->lfFaceName, -1, &ds);
     Tcl_ListObjAppendElement(NULL, resObj,
 	    Tcl_NewStringObj(Tcl_DStringValue(&ds), -1));
     Tcl_DStringFree(&ds);
@@ -3194,7 +3190,7 @@ HookProc(
 	LOGFONTW lf = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {0, 0}};
 	HDC hdc = GetDC(hwndDlg);
 
-	SendMessage(hwndDlg, WM_CHOOSEFONT_GETLOGFONT, 0, (LPARAM) &lf);
+	SendMessageW(hwndDlg, WM_CHOOSEFONT_GETLOGFONT, 0, (LPARAM) &lf);
 	if (phd && phd->cmdObj) {
 	    ApplyLogfont(phd->interp, phd->cmdObj, hdc, &lf);
 	}
