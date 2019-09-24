@@ -1817,9 +1817,30 @@ declare 90 aqua {
 	    Window **w4, unsigned int *ui)
 }
 declare 91 aqua {
-    int XSync(Display *display, Bool flag)
+    int XSync(Display *display, Bool discard)
 }
-
+declare 107 aqua {
+    int XFlush(Display *display)
+}
+declare 108 aqua {
+    int XGrabServer(Display *display)
+}
+declare 109 aqua {
+    int XUngrabServer(Display *display)
+}
+declare 110 aqua {
+    int XFree(void *data)
+}
+declare 111 aqua {
+    int XNoOp(Display *display)
+}
+declare 112 aqua {
+    XAfterFunction XSynchronize(Display *display, Bool onoff)
+}
+declare 114 aqua {
+    VisualID XVisualIDFromVisual(Visual *visual)
+}
+
 # Local Variables:
 # mode: tcl
 # End:
