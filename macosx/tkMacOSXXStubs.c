@@ -688,7 +688,7 @@ XForceScreenSaver(
 int
 XSync(
     Display *display,
-    Bool flag)
+    Bool discard)
 {
     TkMacOSXFlushWindows();
     display->request++;
@@ -869,6 +869,61 @@ XCreateIC(XIM xim, ...)
     return (XIC) 0;
 }
 
+VisualID
+XVisualIDFromVisual(
+    Visual *visual)
+{
+    return visual->visualid;
+}
+
+XAfterFunction
+XSynchronize(
+    Display *display,
+    Bool onoff)
+{
+	display->request++;
+    return NULL;
+}
+
+int
+XUngrabServer(
+    Display *display)
+{
+    return 0;
+}
+
+int
+XNoOp(
+    Display *display)
+{
+	display->request++;
+    return 0;
+}
+
+int
+XGrabServer(
+    Display *display)
+{
+    return 0;
+}
+
+int
+XFree(
+    void *data)
+{
+	if ((data) != NULL) {
+		ckfree(data);
+	}
+    return 0;
+}
+
+int
+XFlush(
+    Display *display)
+{
+    return 0;
+}
+
 /*
  *----------------------------------------------------------------------
  *
