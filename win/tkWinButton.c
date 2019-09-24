@@ -242,18 +242,18 @@ CreateProc(
 {
     Window window;
     HWND parent;
-    LPCWSTR class;
+    LPCWSTR windowClass;
     WinButton *butPtr = (WinButton *)instanceData;
 
     parent = Tk_GetHWND(parentWin);
     if (butPtr->info.type == TYPE_LABEL) {
-	class = L"STATIC";
+	windowClass = L"STATIC";
 	butPtr->style = SS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     } else {
-	class = L"BUTTON";
+	windowClass = L"BUTTON";
 	butPtr->style = BS_OWNERDRAW | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
     }
-    butPtr->hwnd = CreateWindowW(class, NULL, butPtr->style,
+    butPtr->hwnd = CreateWindowW(windowClass, NULL, butPtr->style,
 	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
 	    parent, NULL, Tk_GetHINSTANCE(), NULL);
     SetWindowPos(butPtr->hwnd, HWND_TOP, 0, 0, 0, 0,
