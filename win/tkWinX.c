@@ -739,7 +739,7 @@ TkWinChildProc(
     case WM_IME_COMPOSITION:
 	result = 0;
 	if (HandleIMEComposition(hwnd, lParam) == 0) {
-	    result = DefWindowProc(hwnd, message, wParam, lParam);
+	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}
 	break;
 
@@ -759,7 +759,7 @@ TkWinChildProc(
 
     case WM_PAINT:
 	GenerateXEvent(hwnd, message, wParam, lParam);
-	result = DefWindowProc(hwnd, message, wParam, lParam);
+	result = DefWindowProcW(hwnd, message, wParam, lParam);
 	break;
 
     case TK_CLAIMFOCUS:
@@ -796,7 +796,7 @@ TkWinChildProc(
 
     default:
 	if (!Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
-	    result = DefWindowProc(hwnd, message, wParam, lParam);
+	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}
 	break;
     }
@@ -877,7 +877,7 @@ Tk_TranslateWinEvent(
 		? ((NMHDR*)lParam)->hwndFrom : (HWND) lParam;
 
 	if (target && target != hwnd) {
-	    *resultPtr = SendMessage(target, message, wParam, lParam);
+	    *resultPtr = SendMessageW(target, message, wParam, lParam);
 	    return 1;
 	}
 	break;
@@ -1270,10 +1270,10 @@ GenerateXEvent(
 		if (IsDBCSLeadByte((BYTE) wParam)) {
 		    MSG msg;
 
-		    if ((PeekMessage(&msg, NULL, WM_CHAR, WM_CHAR,
+		    if ((PeekMessageW(&msg, NULL, WM_CHAR, WM_CHAR,
 		            PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
-			GetMessage(&msg, NULL, WM_CHAR, WM_CHAR);
+			GetMessageW(&msg, NULL, WM_CHAR, WM_CHAR);
 			event.xkey.nbytes = 2;
 			event.xkey.trans_chars[1] = (char) msg.wParam;
 		   }
@@ -1495,7 +1495,7 @@ UpdateInputLanguage(
 	return;
     }
 
-    wsprintfA(codepage, "cp%d", charsetInfo.ciACP);
+    sprintf(codepage, "cp%d", charsetInfo.ciACP);
 
     if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {
 	/*
@@ -1575,7 +1575,7 @@ TkWinGetUnicodeEncoding(void)
  *
  *	When an Input Method Editor (IME) is ready to send input characters to
  *	an application, it sends a WM_IME_COMPOSITION message with the
- *	GCS_RESULTSTR. However, The DefWindowProc() on English Windows 2000
+ *	GCS_RESULTSTR. However, The DefWindowProcW() on English Windows 2000
  *	arbitrarily converts all non-Latin-1 characters in the composition to
  *	"?".
  *
@@ -1614,7 +1614,7 @@ HandleIMEComposition(
 	return 0;
     }
 
-    n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
+    n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
 	WCHAR *buff = (WCHAR *) ckalloc(n);
@@ -1622,7 +1622,7 @@ HandleIMEComposition(
 	XEvent event;
 	int i;
 
-	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n) / 2;
+	n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, buff, (unsigned) n) / 2;
 
 	/*
 	 * Set up the fields pertinent to key event.
@@ -1756,7 +1756,7 @@ TkWinResendEvent(
     }
     lparam = MAKELPARAM((short) eventPtr->xbutton.x,
 	    (short) eventPtr->xbutton.y);
-    return CallWindowProc(wndproc, hwnd, msg, wparam, lparam);
+    return CallWindowProcW(wndproc, hwnd, msg, wparam, lparam);
 }
 
 /*
