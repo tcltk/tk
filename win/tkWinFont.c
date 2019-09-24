@@ -406,7 +406,7 @@ TkWinSetupSystemFonts(
 
     ZeroMemory(&ncMetrics, sizeof(ncMetrics));
     ncMetrics.cbSize = sizeof(ncMetrics);
-    if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS,
+    if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
 	    sizeof(ncMetrics), &ncMetrics, 0)) {
 	CreateNamedSystemLogFont(interp, tkwin, "TkDefaultFont",
 		&ncMetrics.lfMessageFont);
@@ -425,7 +425,7 @@ TkWinSetupSystemFonts(
     }
 
     iconMetrics.cbSize = sizeof(iconMetrics);
-    if (SystemParametersInfo(SPI_GETICONMETRICS, sizeof(iconMetrics),
+    if (SystemParametersInfoW(SPI_GETICONMETRICS, sizeof(iconMetrics),
 	    &iconMetrics, 0)) {
 	CreateNamedSystemLogFont(interp, tkwin, "TkIconFont",
 		&iconMetrics.lfFont);
@@ -745,14 +745,14 @@ TkpGetFontAttrsForChar(
 				 * character */
     FontFamily *familyPtr = thisSubFontPtr->familyPtr;
     HFONT oldfont;		/* Saved font from the device context */
-    TEXTMETRIC tm;		/* Font metrics of the selected subfont */
+    TEXTMETRICW tm;		/* Font metrics of the selected subfont */
 
     /*
      * Get the font attributes.
      */
 
     oldfont = SelectObject(hdc, thisSubFontPtr->hFont0);
-    GetTextMetrics(hdc, &tm);
+    GetTextMetricsW(hdc, &tm);
     SelectObject(hdc, oldfont);
     ReleaseDC(fontPtr->hwnd, hdc);
     faPtr->family = familyPtr->faceName;
@@ -1103,7 +1103,7 @@ Tk_DrawChars(
 	HBRUSH oldBrush, stipple;
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
-	TEXTMETRIC tm;
+	TEXTMETRICW tm;
 	SIZE size;
 
 	if (twdPtr->type != TWD_BITMAP) {
@@ -1130,7 +1130,7 @@ Tk_DrawChars(
 	 */
 
 	GetTextExtentPointA(dcMem, source, numBytes, &size);
-	GetTextMetrics(dcMem, &tm);
+	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = SelectObject(dcMem, bitmap);
@@ -1169,7 +1169,7 @@ Tk_DrawChars(
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
-	TEXTMETRIC tm;
+	TEXTMETRICW tm;
 	SIZE size;
 
 	dcMem = CreateCompatibleDC(dc);
@@ -1184,7 +1184,7 @@ Tk_DrawChars(
 	 */
 
 	GetTextExtentPointA(dcMem, source, numBytes, &size);
-	GetTextMetrics(dcMem, &tm);
+	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = SelectObject(dcMem, bitmap);
@@ -1251,7 +1251,7 @@ TkDrawAngledChars(
 	HBRUSH oldBrush, stipple;
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
-	TEXTMETRIC tm;
+	TEXTMETRICW tm;
 	SIZE size;
 
 	if (twdPtr->type != TWD_BITMAP) {
@@ -1278,7 +1278,7 @@ TkDrawAngledChars(
 	 */
 
 	GetTextExtentPointA(dcMem, source, numBytes, &size);
-	GetTextMetrics(dcMem, &tm);
+	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = SelectObject(dcMem, bitmap);
@@ -1317,7 +1317,7 @@ TkDrawAngledChars(
     } else {
 	HBITMAP oldBitmap, bitmap;
 	HDC dcMem;
-	TEXTMETRIC tm;
+	TEXTMETRICW tm;
 	SIZE size;
 
 	dcMem = CreateCompatibleDC(dc);
@@ -1332,7 +1332,7 @@ TkDrawAngledChars(
 	 */
 
 	GetTextExtentPointA(dcMem, source, numBytes, &size);
-	GetTextMetrics(dcMem, &tm);
+	GetTextMetricsW(dcMem, &tm);
 	size.cx -= tm.tmOverhang;
 	bitmap = CreateCompatibleBitmap(dc, size.cx, size.cy);
 	oldBitmap = SelectObject(dcMem, bitmap);
@@ -1439,11 +1439,11 @@ MultiFontTextOut(
     Tcl_DString runString;
     const char *p, *end, *next;
     SubFont *lastSubFontPtr, *thisSubFontPtr;
-    TEXTMETRIC tm;
+    TEXTMETRICW tm;
 
     lastSubFontPtr = &fontPtr->subFontArray[0];
     oldFont = SelectFont(hdc, fontPtr, lastSubFontPtr, angle);
-    GetTextMetrics(hdc, &tm);
+    GetTextMetricsW(hdc, &tm);
 
     end = source + numBytes;
     for (p = source; p < end; ) {
@@ -1475,7 +1475,7 @@ MultiFontTextOut(
 	    lastSubFontPtr = thisSubFontPtr;
 	    source = p;
 	    SelectFont(hdc, fontPtr, lastSubFontPtr, angle);
-	    GetTextMetrics(hdc, &tm);
+	    GetTextMetricsW(hdc, &tm);
 	}
 	p = next;
     }
@@ -1545,7 +1545,7 @@ InitFont(
     HFONT hFont,		/* Windows token for font. */
     int overstrike,		/* The overstrike attribute of logfont used to
 				 * allocate this font. For some reason, the
-				 * TEXTMETRICs may contain incorrect info in
+				 * TEXTMETRICWs may contain incorrect info in
 				 * the tmStruckOut field. */
     WinFont *fontPtr)		/* Filled with information constructed from
 				 * the above arguments. */
@@ -1553,7 +1553,7 @@ InitFont(
     HDC hdc;
     HWND hwnd;
     HFONT oldFont;
-    TEXTMETRIC tm;
+    TEXTMETRICW tm;
     Window window;
     TkFontMetrics *fmPtr;
     Tcl_Encoding encoding;
@@ -1566,7 +1566,7 @@ InitFont(
     hdc = GetDC(hwnd);
     oldFont = SelectObject(hdc, hFont);
 
-    GetTextMetrics(hdc, &tm);
+    GetTextMetricsW(hdc, &tm);
 
     GetTextFaceW(hdc, LF_FACESIZE, buf);
     Tcl_DStringInit(&faceString);
@@ -1599,7 +1599,7 @@ InitFont(
 
     encoding = fontPtr->subFontArray[0].familyPtr->encoding;
     if (encoding == TkWinGetUnicodeEncoding()) {
-	GetCharWidth(hdc, 0, BASE_CHARS - 1, fontPtr->widths);
+	GetCharWidthW(hdc, 0, BASE_CHARS - 1, fontPtr->widths);
     } else {
 	GetCharWidthA(hdc, 0, BASE_CHARS - 1, fontPtr->widths);
     }

@@ -1984,6 +1984,7 @@ WmFrameCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Window window;
+    char buf[TCL_INTEGER_SPACE];
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -1993,7 +1994,8 @@ WmFrameCmd(
     if (window == None) {
 	window = Tk_WindowId((Tk_Window) winPtr);
     }
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%x", (unsigned) window));
+    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     return TCL_OK;
 }
 
