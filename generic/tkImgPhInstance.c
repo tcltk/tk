@@ -700,7 +700,7 @@ TkImgPhotoDisplay(
 	XSetClipMask(display, instancePtr->gc, None);
 	XSetClipOrigin(display, instancePtr->gc, 0, 0);
     }
-    XFlush(display);
+    (void)XFlush(display);
 #endif
 }
 
