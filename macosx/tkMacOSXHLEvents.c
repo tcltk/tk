@@ -147,7 +147,6 @@ static char* scriptTextProc = "::tk::mac::DoScriptText";
     long count, index;
     AEKeyword keyword;
     Tcl_DString pathName;
-    int code;
 
     /*
      * Do nothing if we don't have an interpreter.
