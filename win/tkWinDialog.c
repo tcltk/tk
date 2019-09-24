@@ -922,7 +922,7 @@ ColorDlgHookProc(
 	if ((title != NULL) && (title[0] != '\0')) {
 	    Tcl_DString ds;
 
-	    SetWindowTextW(hDlg, Tcl_WinUtfToTChar(title,-1,&ds));
+	    SetWindowTextW(hDlg, (LPCWSTR)Tcl_WinUtfToTChar(title,-1,&ds));
 	    Tcl_DStringFree(&ds);
 	}
 	if (tsdPtr->debugFlag) {
@@ -1511,7 +1511,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                         Tcl_DString ftds;
                         Tcl_Obj *ftobj;
 
-                        Tcl_WinTCharToUtf(filterPtr[ftix-1].pszName, -1, &ftds);
+                        Tcl_WinTCharToUtf((LPCTSTR)filterPtr[ftix-1].pszName, -1, &ftds);
                         ftobj = Tcl_NewStringObj(Tcl_DStringValue(&ftds),
                                 Tcl_DStringLength(&ftds));
                         Tcl_ObjSetVar2(interp, optsPtr->typeVariableObj, NULL,
@@ -2493,7 +2493,7 @@ Tk_ChooseDirectoryObjCmd(
     bInfo.lParam = (LPARAM) &cdCBData;
 
     if (ofnOpts.titleObj != NULL) {
-	bInfo.lpszTitle = (LPCWSTR) Tcl_WinUtfToTChar(
+	bInfo.lpszTitle = (LPCWSTR)Tcl_WinUtfToTChar(
 		Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
     } else {
 	bInfo.lpszTitle = L"Please choose a directory, then select OK.";
@@ -2637,7 +2637,7 @@ ChooseDirectoryValidateProc(
 	 * like ~ are converted correctly.
 	 */
 
-	Tcl_WinTCharToUtf((WCHAR *) lParam, -1, &initDirString);
+	Tcl_WinTCharToUtf((LPCTSTR) lParam, -1, &initDirString);
 	if (Tcl_TranslateFileName(chooseDirSharedData->interp,
 		Tcl_DStringValue(&initDirString), &tempString) == NULL) {
 	    /*
@@ -2929,10 +2929,10 @@ Tk_MessageBoxObjCmd(
     tsdPtr->hMsgBoxHook = SetWindowsHookExW(WH_CBT, MsgBoxCBTProc, NULL,
 	    GetCurrentThreadId());
     src = Tcl_GetString(tmpObj);
-    tmpPtr = Tcl_WinUtfToTChar(src, tmpObj->length, &tmpBuf);
+    tmpPtr = (LPCWSTR)Tcl_WinUtfToTChar(src, tmpObj->length, &tmpBuf);
     if (titleObj != NULL) {
 	src = Tcl_GetString(titleObj);
-	titlePtr = Tcl_WinUtfToTChar(src, titleObj->length, &titleBuf);
+	titlePtr = (LPCWSTR)Tcl_WinUtfToTChar(src, titleObj->length, &titleBuf);
     } else {
 	titlePtr = L"";
 	Tcl_DStringInit(&titleBuf);
@@ -3029,7 +3029,7 @@ ConvertExternalFilename(
 {
     char *p;
 
-    Tcl_WinTCharToUtf(filename, -1, dsPtr);
+    Tcl_WinTCharToUtf((LPCTSTR)filename, -1, dsPtr);
     for (p = Tcl_DStringValue(dsPtr); *p != '\0'; p++) {
 	/*
 	 * Change the pathname to the Tcl "normalized" pathname, where back
@@ -3066,7 +3066,7 @@ GetFontObj(
     int pt = 0;
 
     resObj = Tcl_NewListObj(0, NULL);
-    Tcl_WinTCharToUtf(plf->lfFaceName, -1, &ds);
+    Tcl_WinTCharToUtf((LPCTSTR)plf->lfFaceName, -1, &ds);
     Tcl_ListObjAppendElement(NULL, resObj,
 	    Tcl_NewStringObj(Tcl_DStringValue(&ds), -1));
     Tcl_DStringFree(&ds);

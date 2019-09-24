@@ -196,7 +196,7 @@ TkWin32ErrorObj(
 	*p = '\0';
     }
 
-    Tcl_WinTCharToUtf(lpBuffer, -1, &ds);
+    Tcl_WinTCharToUtf((LPCTSTR)lpBuffer, -1, &ds);
     errPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
 

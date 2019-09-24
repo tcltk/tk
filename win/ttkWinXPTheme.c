@@ -1115,7 +1115,7 @@ Ttk_CreateVsapiElement(
     XPThemeData *themeData = clientData;
     ElementInfo *elementPtr = NULL;
     ClientData elementData;
-    WCHAR *className;
+    LPCWSTR className;
     int partId = 0;
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
@@ -1143,7 +1143,7 @@ Ttk_CreateVsapiElement(
 	return TCL_ERROR;
     }
     name = Tcl_GetStringFromObj(objv[0], &length);
-    className = (WCHAR *) Tcl_WinUtfToTChar(name, length, &classBuf);
+    className = (LPCWSTR) Tcl_WinUtfToTChar(name, length, &classBuf);
 
     /* flags or padding */
     if (objc > 3) {

@@ -79,7 +79,7 @@ TkSelGetSelection(
 	    goto error;
 	}
 	data = GlobalLock(handle);
-	Tcl_WinTCharToUtf((WCHAR *)data, -1, &ds);
+	Tcl_WinTCharToUtf((LPCTSTR)data, -1, &ds);
 	GlobalUnlock(handle);
     } else if (IsClipboardFormatAvailable(CF_TEXT)) {
 	/*
@@ -157,7 +157,7 @@ TkSelGetSelection(
 		    Tcl_DStringAppend(&ds, "\n", 1);
 		}
 		len = wcslen(fname);
-		Tcl_WinTCharToUtf(fname, len * sizeof(WCHAR), &dsTmp);
+		Tcl_WinTCharToUtf((LPCTSTR)fname, len * sizeof(WCHAR), &dsTmp);
 		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
 			Tcl_DStringLength(&dsTmp));
 		Tcl_DStringFree(&dsTmp);
