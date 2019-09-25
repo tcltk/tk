@@ -1267,6 +1267,10 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #endif
 
+#if !defined(__cplusplus) && !defined(c_plusplus)
+# define c_class class
+#endif
+
 #if TCL_UTF_MAX > 4
 #   define TkUtfToUniChar Tcl_UtfToUniChar
 #   define TkUniCharToUtf Tcl_UniCharToUtf

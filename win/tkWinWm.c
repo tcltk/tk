@@ -867,21 +867,21 @@ InitWindowClass(
     if (!initialized) {
 	Tcl_MutexLock(&winWmMutex);
 	if (!initialized) {
-	    WNDCLASSW class;
+	    WNDCLASSW windowClass;
 
 	    initialized = 1;
 
-	    ZeroMemory(&class, sizeof(WNDCLASSW));
+	    ZeroMemory(&windowClass, sizeof(WNDCLASSW));
 
-	    class.style = CS_HREDRAW | CS_VREDRAW;
-	    class.hInstance = Tk_GetHINSTANCE();
-	    class.lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
-	    class.lpfnWndProc = WmProc;
+	    windowClass.style = CS_HREDRAW | CS_VREDRAW;
+	    windowClass.hInstance = Tk_GetHINSTANCE();
+	    windowClass.lpszClassName = TK_WIN_TOPLEVEL_CLASS_NAME;
+	    windowClass.lpfnWndProc = WmProc;
 	    if (titlebaricon == NULL) {
-		class.hIcon = LoadIconW(Tk_GetHINSTANCE(), L"tk");
+		windowClass.hIcon = LoadIconW(Tk_GetHINSTANCE(), L"tk");
 	    } else {
-		class.hIcon = GetIcon(titlebaricon, ICON_BIG);
-		if (class.hIcon == NULL) {
+		windowClass.hIcon = GetIcon(titlebaricon, ICON_BIG);
+		if (windowClass.hIcon == NULL) {
 		    return TCL_ERROR;
 		}
 
@@ -892,9 +892,9 @@ InitWindowClass(
 
 		tsdPtr->iconPtr = titlebaricon;
 	    }
-	    class.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
+	    windowClass.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
 
-	    if (!RegisterClassW(&class)) {
+	    if (!RegisterClassW(&windowClass)) {
 		Tcl_Panic("Unable to register TkTopLevel class");
 	    }
 	}
