@@ -85,7 +85,7 @@ TkpFreeColor(
      */
 
     visual = tkColPtr->visual;
-    if ((visual->class != StaticGray) && (visual->class != StaticColor)
+    if ((visual->c_class != StaticGray) && (visual->c_class != StaticColor)
 	    && (tkColPtr->color.pixel != BlackPixelOfScreen(screen))
 	    && (tkColPtr->color.pixel != WhitePixelOfScreen(screen))) {
 	Tk_ErrorHandler handler;
