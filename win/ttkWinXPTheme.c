@@ -834,13 +834,12 @@ static void TextElementSize(
 
     src = TkGetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
-    Tcl_UtfToWCharDString(src, len, &ds);
     hr = elementData->procs->GetThemeTextExtent(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
 	    Ttk_StateTableLookup(elementData->info->statemap, 0),
-	    (WCHAR *) Tcl_DStringValue(&ds),
+	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
 	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
 	    NULL,
@@ -874,13 +873,12 @@ static void TextElementDraw(
 
     src = TkGetStringFromObj(element->textObj, &len);
     Tcl_DStringInit(&ds);
-    Tcl_UtfToWCharDString(src, len, &ds);
     hr = elementData->procs->DrawThemeText(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
 	    Ttk_StateTableLookup(elementData->info->statemap, state),
-	    (WCHAR *) Tcl_DStringValue(&ds),
+	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
 	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
 	    (state & TTK_STATE_DISABLED) ? DTT_GRAYED : 0,
@@ -1113,7 +1111,7 @@ Ttk_CreateVsapiElement(
     XPThemeData *themeData = clientData;
     ElementInfo *elementPtr = NULL;
     ClientData elementData;
-    WCHAR *className;
+    LPCWSTR className;
     int partId = 0;
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};

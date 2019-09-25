@@ -2481,8 +2481,8 @@ GetScreenFont(
     lf.lfQuality	= DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
-    Tcl_WinUtfToTChar(faceName, -1, &ds);
-    wcsncpy(lf.lfFaceName, (WCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
+    Tcl_DStringInit(&ds);
+    wcsncpy(lf.lfFaceName, Tcl_UtfToWCharDString(faceName, -1, &ds), LF_FACESIZE-1);
     Tcl_DStringFree(&ds);
     lf.lfFaceName[LF_FACESIZE-1] = 0;
     hFont = CreateFontIndirectW(&lf);
@@ -2516,8 +2516,6 @@ FamilyExists(
     int result;
     Tcl_DString faceString;
 
-    Tcl_WinUtfToTChar(faceName, -1, &faceString);
-
     /*
      * If the family exists, WinFontExistProc() will be called and
      * EnumFontFamilies() will return whatever WinFontExistProc() returns. If
@@ -2525,7 +2523,8 @@ FamilyExists(
      * non-zero value.
      */
 
-    result = EnumFontFamiliesW(hdc, (WCHAR*) Tcl_DStringValue(&faceString),
+    Tcl_DStringInit(&faceString);
+    result = EnumFontFamiliesW(hdc, Tcl_UtfToWCharDString(faceName, -1, &faceString),
 	    (FONTENUMPROCW) WinFontExistProc, 0);
     Tcl_DStringFree(&faceString);
     return (result == 0);

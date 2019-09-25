@@ -1242,10 +1242,9 @@ ReadIconFromFile(
 	    return NULL;
 	}
 	Tcl_DStringInit(&ds2);
-	Tcl_UtfToWCharDString(file, -1, &ds2);
-	Tcl_DStringFree(&ds);
-	res = (DWORD *)SHGetFileInfoW((WCHAR *)Tcl_DStringValue(&ds2), 0, &sfiSM,
+	res = (DWORD *)SHGetFileInfoW(Tcl_UtfToWCharDString(file, -1, &ds2), 0, &sfiSM,
 		sizeof(SHFILEINFO), SHGFI_SMALLICON|SHGFI_ICON);
+	Tcl_DStringFree(&ds);
 
 	if (res != 0) {
 	    SHFILEINFOW sfi;
