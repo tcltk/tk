@@ -851,6 +851,9 @@ declare 45 win {
     int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
+declare 47 win {
+    Tk_Window TkpGetCapture(void)
+}
 
 ################################
 # Aqua specific functions
@@ -1013,7 +1016,7 @@ declare 46 aqua {
     int TkpIsWindowFloating(void *window)
 }
 declare 47 aqua {
-    Tk_Window TkMacOSXGetCapture(void)
+    Tk_Window TkpGetCapture(void)
 }
 declare 49 aqua {
     Tk_Window TkGetTransientMaster(TkWindow *winPtr)
@@ -1841,7 +1844,28 @@ declare 90 aqua {
 	    Window **w4, unsigned int *ui)
 }
 declare 91 aqua {
-    int XSync(Display *display, Bool flag)
+    int XSync(Display *display, Bool discard)
+}
+declare 107 aqua {
+    int XFlush(Display *display)
+}
+declare 108 aqua {
+    int XGrabServer(Display *display)
+}
+declare 109 aqua {
+    int XUngrabServer(Display *display)
+}
+declare 110 aqua {
+    int XFree(void *data)
+}
+declare 111 aqua {
+    int XNoOp(Display *display)
+}
+declare 112 aqua {
+    XAfterFunction XSynchronize(Display *display, Bool onoff)
+}
+declare 114 aqua {
+    VisualID XVisualIDFromVisual(Visual *visual)
 }
 declare 120 aqua {
     int XOffsetRegion(Region rgn, int dx, int dy)

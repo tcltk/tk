@@ -72,11 +72,25 @@ if {[tk windowingsystem] eq "aqua"} {
 	%W xview scroll [expr {-10 * (%D)}] units
     }
 } else {
+    # We must make sure that positive and negative movements are rounded
+    # equally to integers, avoiding the problem that
+    #     (int)1/30 = 0,
+    # but
+    #     (int)-1/30 = -1
+    # The following code ensure equal +/- behaviour.
     bind $c <MouseWheel> {
-	%W yview scroll [expr {-(%D / 30)}] units
+	if {%D >= 0} {
+	    %W yview scroll [expr {-%D/30}] units
+	} else {
+	    %W yview scroll [expr {(29-%D)/30}] units
+	}
     }
     bind $c <Shift-MouseWheel> {
-	%W xview scroll [expr {-(%D / 30)}] units
+	if {%D >= 0} {
+	    %W xview scroll [expr {-%D/30}] units
+	} else {
+	    %W xview scroll [expr {(29-%D)/30}] units
+	}
     }
 }
 

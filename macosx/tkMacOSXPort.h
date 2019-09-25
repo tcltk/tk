@@ -23,6 +23,7 @@
 #include <math.h>
 #include <pwd.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -104,19 +105,6 @@
  */
 
 #define REDO_KEYSYM_LOOKUP
-
-/*
- * Defines for X functions that are used by Tk but are treated as
- * no-op functions on the Macintosh.
- */
-
-#define XFlush(display)
-#define XFree(data) {if ((data) != NULL) ckfree(data);}
-#define XGrabServer(display)
-#define XNoOp(display) {display->request++;}
-#define XUngrabServer(display)
-#define XSynchronize(display, bool) {display->request++;}
-#define XVisualIDFromVisual(visual) (visual->visualid)
 
 /*
  * The following functions are not used on the Mac, so we stub them out.

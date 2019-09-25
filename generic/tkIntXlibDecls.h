@@ -701,7 +701,7 @@ EXTERN int		XQueryColors(Display *display, Colormap colormap,
 EXTERN Status		XQueryTree(Display *d, Window w1, Window *w2,
 				Window *w3, Window **w4, unsigned int *ui);
 /* 91 */
-EXTERN int		XSync(Display *display, Bool flag);
+EXTERN int		XSync(Display *display, Bool discard);
 /* Slot 92 is reserved */
 /* Slot 93 is reserved */
 /* Slot 94 is reserved */
@@ -717,14 +717,21 @@ EXTERN int		XSync(Display *display, Bool flag);
 /* Slot 104 is reserved */
 /* Slot 105 is reserved */
 /* Slot 106 is reserved */
-/* Slot 107 is reserved */
-/* Slot 108 is reserved */
-/* Slot 109 is reserved */
-/* Slot 110 is reserved */
-/* Slot 111 is reserved */
-/* Slot 112 is reserved */
+/* 107 */
+EXTERN int		XFlush(Display *display);
+/* 108 */
+EXTERN int		XGrabServer(Display *display);
+/* 109 */
+EXTERN int		XUngrabServer(Display *display);
+/* 110 */
+EXTERN int		XFree(void *data);
+/* 111 */
+EXTERN int		XNoOp(Display *display);
+/* 112 */
+EXTERN XAfterFunction	XSynchronize(Display *display, Bool onoff);
 /* Slot 113 is reserved */
-/* Slot 114 is reserved */
+/* 114 */
+EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
 /* Slot 115 is reserved */
 /* Slot 116 is reserved */
 /* Slot 117 is reserved */
@@ -1035,7 +1042,7 @@ typedef struct TkIntXlibStubs {
     int (*xQueryColor) (Display *display, Colormap colormap, XColor *def_in_out); /* 88 */
     int (*xQueryColors) (Display *display, Colormap colormap, XColor *defs_in_out, int ncolors); /* 89 */
     Status (*xQueryTree) (Display *d, Window w1, Window *w2, Window *w3, Window **w4, unsigned int *ui); /* 90 */
-    int (*xSync) (Display *display, Bool flag); /* 91 */
+    int (*xSync) (Display *display, Bool discard); /* 91 */
     void (*reserved92)(void);
     void (*reserved93)(void);
     void (*reserved94)(void);
@@ -1051,14 +1058,14 @@ typedef struct TkIntXlibStubs {
     void (*reserved104)(void);
     void (*reserved105)(void);
     void (*reserved106)(void);
-    void (*reserved107)(void);
-    void (*reserved108)(void);
-    void (*reserved109)(void);
-    void (*reserved110)(void);
-    void (*reserved111)(void);
-    void (*reserved112)(void);
+    int (*xFlush) (Display *display); /* 107 */
+    int (*xGrabServer) (Display *display); /* 108 */
+    int (*xUngrabServer) (Display *display); /* 109 */
+    int (*xFree) (void *data); /* 110 */
+    int (*xNoOp) (Display *display); /* 111 */
+    XAfterFunction (*xSynchronize) (Display *display, Bool onoff); /* 112 */
     void (*reserved113)(void);
-    void (*reserved114)(void);
+    VisualID (*xVisualIDFromVisual) (Visual *visual); /* 114 */
     void (*reserved115)(void);
     void (*reserved116)(void);
     void (*reserved117)(void);
@@ -1584,14 +1591,21 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 104 is reserved */
 /* Slot 105 is reserved */
 /* Slot 106 is reserved */
-/* Slot 107 is reserved */
-/* Slot 108 is reserved */
-/* Slot 109 is reserved */
-/* Slot 110 is reserved */
-/* Slot 111 is reserved */
-/* Slot 112 is reserved */
+#define XFlush \
+	(tkIntXlibStubsPtr->xFlush) /* 107 */
+#define XGrabServer \
+	(tkIntXlibStubsPtr->xGrabServer) /* 108 */
+#define XUngrabServer \
+	(tkIntXlibStubsPtr->xUngrabServer) /* 109 */
+#define XFree \
+	(tkIntXlibStubsPtr->xFree) /* 110 */
+#define XNoOp \
+	(tkIntXlibStubsPtr->xNoOp) /* 111 */
+#define XSynchronize \
+	(tkIntXlibStubsPtr->xSynchronize) /* 112 */
 /* Slot 113 is reserved */
-/* Slot 114 is reserved */
+#define XVisualIDFromVisual \
+	(tkIntXlibStubsPtr->xVisualIDFromVisual) /* 114 */
 /* Slot 115 is reserved */
 /* Slot 116 is reserved */
 /* Slot 117 is reserved */

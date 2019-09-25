@@ -201,6 +201,12 @@ MODULE_SCOPE void		TkpWinToplevelDetachWindow(TkWindow *winPtr);
 MODULE_SCOPE int		TkpWmGetState(TkWindow *winPtr);
 
 /*
+ * The following is implemented in tkWinPointer.c and also used in tkWinWindow.c
+ */
+
+MODULE_SCOPE void		TkSetCursorPos(int x, int y);
+
+/*
  * Common routines used in Windows implementation
  */
 MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
@@ -213,12 +219,8 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
  */
 
 #ifndef GetClassLongPtr
-#   define GetClassLongPtrA	GetClassLongA
 #   define GetClassLongPtrW	GetClassLongW
-#   define SetClassLongPtrA	SetClassLongA
 #   define SetClassLongPtrW	SetClassLongW
-#	define GetClassLongPtr	GetClassLongPtrW
-#	define SetClassLongPtr	SetClassLongPtrW
 #endif /* !GetClassLongPtr */
 #ifndef GCLP_HICON
 #   define GCLP_HICON		GCL_HICON
@@ -228,12 +230,8 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
 #endif /* !GCLP_HICONSM */
 
 #ifndef GetWindowLongPtr
-#   define GetWindowLongPtrA	GetWindowLongA
 #   define GetWindowLongPtrW	GetWindowLongW
-#   define SetWindowLongPtrA	SetWindowLongA
 #   define SetWindowLongPtrW	SetWindowLongW
-#	define GetWindowLongPtr	GetWindowLongPtrW
-#	define SetWindowLongPtr	SetWindowLongPtrW
 #endif /* !GetWindowLongPtr */
 #ifndef GWLP_WNDPROC
 #define GWLP_WNDPROC		GWL_WNDPROC

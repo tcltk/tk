@@ -279,8 +279,8 @@ TkFocusFilterEvent(
      * pass the event through to Tk bindings.
      */
 
-    if (eventPtr->xfocus.send_event == GENERATED_FOCUS_EVENT_MAGIC) {
-	eventPtr->xfocus.send_event = 0;
+    if ((eventPtr->xfocus.send_event & GENERATED_FOCUS_EVENT_MAGIC) == GENERATED_FOCUS_EVENT_MAGIC) {
+	eventPtr->xfocus.send_event &= ~GENERATED_FOCUS_EVENT_MAGIC;
 	return 1;
     }
 
