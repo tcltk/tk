@@ -3261,7 +3261,7 @@ Initialize(
     }
     Tcl_ResetResult(interp);
     if (sync) {
-	XSynchronize(Tk_Display(Tk_MainWindow(interp)), True);
+	(void)XSynchronize(Tk_Display(Tk_MainWindow(interp)), True);
     }
 
     /*

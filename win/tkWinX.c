@@ -501,30 +501,30 @@ TkWinDisplayChanged(
     screen->root_visual->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 	screen->root_visual->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
-	screen->root_visual->class = PseudoColor;
+	screen->root_visual->c_class = PseudoColor;
 	screen->root_visual->red_mask = 0x0;
 	screen->root_visual->green_mask = 0x0;
 	screen->root_visual->blue_mask = 0x0;
     } else if (screen->root_depth == 4) {
-	screen->root_visual->class = StaticColor;
+	screen->root_visual->c_class = StaticColor;
 	screen->root_visual->map_entries = 16;
     } else if (screen->root_depth == 8) {
-	screen->root_visual->class = StaticColor;
+	screen->root_visual->c_class = StaticColor;
 	screen->root_visual->map_entries = 256;
     } else if (screen->root_depth == 12) {
-	screen->root_visual->class = TrueColor;
+	screen->root_visual->c_class = TrueColor;
 	screen->root_visual->map_entries = 32;
 	screen->root_visual->red_mask = 0xf0;
 	screen->root_visual->green_mask = 0xf000;
 	screen->root_visual->blue_mask = 0xf00000;
     } else if (screen->root_depth == 16) {
-	screen->root_visual->class = TrueColor;
+	screen->root_visual->c_class = TrueColor;
 	screen->root_visual->map_entries = 64;
 	screen->root_visual->red_mask = 0xf8;
 	screen->root_visual->green_mask = 0xfc00;
 	screen->root_visual->blue_mask = 0xf80000;
     } else if (screen->root_depth >= 24) {
-	screen->root_visual->class = TrueColor;
+	screen->root_visual->c_class = TrueColor;
 	screen->root_visual->map_entries = 256;
 	screen->root_visual->red_mask = 0xff;
 	screen->root_visual->green_mask = 0xff00;

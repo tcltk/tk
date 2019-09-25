@@ -980,18 +980,18 @@ TkWmSetClass(
 
     if (winPtr->classUid != NULL) {
 	XClassHint *classPtr;
-	Tcl_DString name, class;
+	Tcl_DString name, ds;
 
 	Tcl_UtfToExternalDString(NULL, winPtr->nameUid, -1, &name);
-	Tcl_UtfToExternalDString(NULL, winPtr->classUid, -1, &class);
+	Tcl_UtfToExternalDString(NULL, winPtr->classUid, -1, &ds);
 	classPtr = XAllocClassHint();
 	classPtr->res_name = Tcl_DStringValue(&name);
-	classPtr->res_class = Tcl_DStringValue(&class);
+	classPtr->res_class = Tcl_DStringValue(&ds);
 	XSetClassHint(winPtr->display, winPtr->wmInfoPtr->wrapperPtr->window,
 		classPtr);
 	XFree((char *) classPtr);
 	Tcl_DStringFree(&name);
-	Tcl_DStringFree(&class);
+	Tcl_DStringFree(&ds);
     }
 }
 
