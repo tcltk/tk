@@ -2815,8 +2815,8 @@ static int TreeviewInsertCommand(
     return TCL_OK;
 }
 
-/* + $tv detach $item --
- * 	Unlink $item from the tree.
+/* + $tv detach $items --
+ * 	Unlink each item in $items from the tree.
  */
 static int TreeviewDetachCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
@@ -2897,7 +2897,7 @@ static int TreeviewDeleteCommand(
      */
     delq = 0;
     for (i=0; items[i]; ++i) {
-        if (items[i]->state & TTK_STATE_SELECTED) {
+        if (items[i]->state & TTK_STATE_SELECTED || items[i]->selObj != NULL) {
             selItemDeleted = 1;
         }
 	delq = DeleteItems(items[i], delq);
@@ -3368,9 +3368,17 @@ static int TreeviewCellSelectionCommand(
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
 	for (item = tv->tree.root->children; item; item=NextPreorder(item)) {
 	    if (item->selObj != NULL) {
-		/* TODO: do this properly */
-		Tcl_ListObjAppendElement(NULL, result, ItemID(tv, item));
-		Tcl_ListObjAppendElement(NULL, result, item->selObj);
+		int elemc;
+		Tcl_Obj **elemv;
+
+		Tcl_ListObjGetElements(interp, item->selObj, &elemc, &elemv);
+		for (i = 0; i < elemc; ++i) {
+		    Tcl_Obj *elem[2];
+		    elem[0] = ItemID(tv, item);
+		    /* TODO: Normalize to #%d format?? */
+		    elem[1] = elemv[i]; 
+		    Tcl_ListObjAppendElement(NULL, result, Tcl_NewListObj(2, elem));
+		}
 	    }
 	}
 	Tcl_SetObjResult(interp, result);
@@ -3383,7 +3391,7 @@ static int TreeviewCellSelectionCommand(
     }
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], selopStrings,
-	    sizeof(char *), "selection operation", 0, &selop) != TCL_OK) {
+	    sizeof(char *), "cellselection operation", 0, &selop) != TCL_OK) {
 	return TCL_ERROR;
     }
 
