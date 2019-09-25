@@ -304,7 +304,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 0, orientStrings, GEOMETRY},
     {TK_OPTION_BORDER, "-proxybackground", "proxyBackground", "ProxyBackground",
 	 0, -1, offsetof(PanedWindow, proxyBackground), TK_OPTION_NULL_OK,
-	 (ClientData) DEF_PANEDWINDOW_BG_MONO},
+	 (ClientData) DEF_PANEDWINDOW_BG_MONO, 0},
     {TK_OPTION_PIXELS, "-proxyborderwidth", "proxyBorderWidth", "ProxyBorderWidth",
 	 DEF_PANEDWINDOW_PROXYBORDER, offsetof(PanedWindow, proxyBorderWidthPtr),
 	 offsetof(PanedWindow, proxyBorderWidth), 0, 0, GEOMETRY},
