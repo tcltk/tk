@@ -439,7 +439,7 @@ EXTERN char *		XGetICValues(XIC xic, ...);
 /* 143 */
 EXTERN void		XSetICFocus(XIC xic);
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#ifdef MAC_OSX_TCL /* MACOSX */
 /* 0 */
 EXTERN int		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
@@ -798,7 +798,7 @@ EXTERN Cursor		XCreatePixmapCursor(Display *d, Pixmap p1, Pixmap p2,
 EXTERN Cursor		XCreateGlyphCursor(Display *d, Font f1, Font f2,
 				unsigned int ui1, unsigned int ui2,
 				XColor _Xconst *x1, XColor _Xconst *x2);
-#endif /* AQUA */
+#endif /* MACOSX */
 
 typedef struct TkIntXlibStubs {
     int magic;
@@ -950,7 +950,7 @@ typedef struct TkIntXlibStubs {
     char * (*xGetICValues) (XIC xic, ...); /* 142 */
     void (*xSetICFocus) (XIC xic); /* 143 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#ifdef MAC_OSX_TCL /* MACOSX */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
@@ -1098,7 +1098,7 @@ typedef struct TkIntXlibStubs {
     void (*xDestroyIC) (XIC xic); /* 144 */
     Cursor (*xCreatePixmapCursor) (Display *d, Pixmap p1, Pixmap p2, XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2); /* 145 */
     Cursor (*xCreateGlyphCursor) (Display *d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor _Xconst *x1, XColor _Xconst *x2); /* 146 */
-#endif /* AQUA */
+#endif /* MACOSX */
 } TkIntXlibStubs;
 
 extern const TkIntXlibStubs *tkIntXlibStubsPtr;
@@ -1391,7 +1391,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 #define XSetICFocus \
 	(tkIntXlibStubsPtr->xSetICFocus) /* 143 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#ifdef MAC_OSX_TCL /* MACOSX */
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
 #define XGetModifierMapping \
@@ -1655,7 +1655,7 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xCreatePixmapCursor) /* 145 */
 #define XCreateGlyphCursor \
 	(tkIntXlibStubsPtr->xCreateGlyphCursor) /* 146 */
-#endif /* AQUA */
+#endif /* MACOSX */
 
 #endif /* defined(USE_TK_STUBS) */
 
