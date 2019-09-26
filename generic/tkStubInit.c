@@ -143,7 +143,7 @@ TkpPrintWindowId(
 				 * the hex representation of a pointer. */
     Window window)		/* Window to be printed into buffer. */
 {
-    sprintf(buf, "%#08lx", (unsigned long) (window));
+    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
 }
 
 int
