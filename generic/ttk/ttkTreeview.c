@@ -510,6 +510,17 @@ static void foreachHashEntry(Tcl_HashTable *ht, HashEntryIterator func)
     }
 }
 
+static void CellSelectionClear(Treeview *tv)
+{
+    TreeItem *item;
+    for (item=tv->tree.root; item; item=NextPreorder(item)) {
+	if (item->selObj != NULL) {
+	    Tcl_DecrRefCount(item->selObj);
+	    item->selObj = NULL;
+	}
+    }
+}
+
 /* + unshareObj(objPtr) --
  * 	Ensure that a Tcl_Obj * has refcount 1 -- either return objPtr
  * 	itself,	or a duplicated copy.
@@ -1162,6 +1173,10 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	if (TreeviewInitDisplayColumns(interp, tv) != TCL_OK)
 	    return TCL_ERROR;
     }
+    if (mask & (COLUMNS_CHANGED | DCOLUMNS_CHANGED)) {
+	CellSelectionClear(tv);
+    }
+
     if (mask & SCROLLCMD_CHANGED) {
 	TtkScrollbarUpdateRequired(tv->tree.xscrollHandle);
 	TtkScrollbarUpdateRequired(tv->tree.yscrollHandle);
@@ -3229,13 +3244,14 @@ static int TreeviewSelectionCommand(
  * 	Change an element in a cell selection list.
  */
 static void SelObjChangeElement(
-	Treeview *tv, Tcl_Obj *listPtr, Tcl_Obj *elemPtr,
-	int add, int remove, int toggle)
+    Treeview *tv, Tcl_Obj *listPtr, Tcl_Obj *elemPtr,
+    int add, int remove, int toggle)
 {
     int i, nElements;
     TreeColumn *column, *elemColumn;
     Tcl_Obj **elements;
 
+    /* TODO: Should a non-display column be blocked from selection? */
     elemColumn = FindColumn(NULL, tv, elemPtr);
     Tcl_ListObjGetElements(NULL, listPtr, &nElements, &elements);
     for (i = 0; i < nElements; i++) {
@@ -3257,8 +3273,8 @@ static void SelObjChangeElement(
  * 	Get Row and Column from a cell ID.
  */
 static int GetCellFromObj(
-	Tcl_Interp *interp, Treeview *tv, Tcl_Obj *obj,
-	TreeItem **item, TreeColumn **column)
+    Tcl_Interp *interp, Treeview *tv, Tcl_Obj *obj,
+    TreeItem **item, TreeColumn **column)
 {
     int nElements;
     Tcl_Obj **elements;
@@ -3284,15 +3300,17 @@ static int GetCellFromObj(
     return TCL_OK;
 }
 
-/* + $tree cellselection set $from $to
+/* + $tree cellselection add $from $to
+ * + $tree cellselection set $from $to
  */
 static int CellSelectionRange(
-	Tcl_Interp *interp, Treeview *tv, Tcl_Obj *fromCell, Tcl_Obj *toCell)
+    Tcl_Interp *interp, Treeview *tv, Tcl_Obj *fromCell, Tcl_Obj *toCell,
+    int add)
 {
     TreeItem *itemFrom, *itemTo, *item;
     TreeColumn *columnFrom, *columnTo;
-    Tcl_Obj *columns;
-    int seen, doit, colno;
+    Tcl_Obj *columns, **elements;
+    int seen, doit, colno, nElements, i;
 
     if (GetCellFromObj(interp, tv, fromCell, &itemFrom, &columnFrom) != TCL_OK) {
 	return TCL_ERROR;
@@ -3301,6 +3319,10 @@ static int CellSelectionRange(
 	return TCL_ERROR;
     }
 
+    /* TODO: What if columnFrom or columnTo is non-display? */
+    
+    /* Make a list of columns in this rectangle.
+     */
     columns = Tcl_NewListObj(0, 0);
     Tcl_IncrRefCount(columns);
     seen = 0;
@@ -3319,6 +3341,8 @@ static int CellSelectionRange(
 	}
     }
 
+    /* Go through all items in this rectangle.
+     */
     seen = 0;
     for (item = tv->tree.root->children; item; item=NextPreorder(item)) {
 	doit = 0;
@@ -3331,11 +3355,26 @@ static int CellSelectionRange(
 	    doit = 1;
 	}
 	if (seen == 1 || doit) {
+	    if (item->selObj != NULL && add) {
+		item->selObj = unshareObj(item->selObj);
+
+		Tcl_ListObjGetElements(NULL, columns, &nElements, &elements);
+		for (i = 0; i < nElements; ++i) {
+		    SelObjChangeElement(tv, item->selObj, elements[i], 1, 0, 0);
+		}
+	    } else {
+		if (item->selObj != NULL) {
+		    Tcl_DecrRefCount(item->selObj);
+		}
+
+		item->selObj = columns;
+		Tcl_IncrRefCount(item->selObj);
+	    }
+	} else if (!add) {
 	    if (item->selObj != NULL) {
 		Tcl_DecrRefCount(item->selObj);
+		item->selObj = NULL;
 	    }
-	    item->selObj = columns;
-	    Tcl_IncrRefCount(item->selObj);
 	}
     }
     
@@ -3396,7 +3435,11 @@ static int TreeviewCellSelectionCommand(
     }
 
     if (selop == SELECTION_SET && objc == 5) {
-	return CellSelectionRange(interp, tv, objv[3], objv[4]);
+	return CellSelectionRange(interp, tv, objv[3], objv[4], 0);
+    }
+
+    if (selop == SELECTION_ADD && objc == 5) {
+	return CellSelectionRange(interp, tv, objv[3], objv[4], 1);
     }
     
     if (objc > 4) {
@@ -3417,12 +3460,7 @@ static int TreeviewCellSelectionCommand(
     switch (selop)
     {
 	case SELECTION_SET:
-	    for (item=tv->tree.root; item; item=NextPreorder(item)) {
-		if (item->selObj != NULL) {
-		    Tcl_DecrRefCount(item->selObj);
-		    item->selObj = NULL;
-		}
-	    }
+	    CellSelectionClear(tv);
 	    /*FALLTHRU*/
 	case SELECTION_ADD:
 	    for (i = 0; i < nCells; i++) {

@@ -22,6 +22,7 @@ namespace eval ttk::treeview {
     set State(heading)  	{}
 
     set State(cellAnchor) {}
+    set State(cellAnchorOp) "set"
 }
 
 ### Widget bindings.
@@ -320,8 +321,11 @@ proc ttk::treeview::select.choose.extended {w item cell} {
     BrowseTo $w $item $cell
 }
 proc ttk::treeview::select.toggle.extended {w item cell} {
+    variable State
     if {$cell ne ""} {
         $w cellselection toggle [list $cell]
+        set State(cellAnchor) $cell
+        set State(cellAnchorOp) add
     } else {
         $w selection toggle [list $item]
     }
@@ -330,7 +334,7 @@ proc ttk::treeview::select.extend.extended {w item cell} {
     variable State
     if {$cell ne ""} {
         if {$State(cellAnchor) ne ""} {
-            $w cellselection set $State(cellAnchor) $cell
+            $w cellselection $State(cellAnchorOp) $State(cellAnchor) $cell
         } else {
             BrowseTo $w $item $cell
         }
@@ -432,6 +436,7 @@ proc ttk::treeview::BrowseTo {w item cell} {
     $w see $item
     $w focus $item
     set State(cellAnchor) $cell
+    set State(cellAnchorOp) set
     if {$cell ne ""} {
         $w cellselection set [list $cell]
     } else {
