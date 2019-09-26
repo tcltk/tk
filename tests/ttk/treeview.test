@@ -508,31 +508,46 @@ test treeview-9.1 "scrolling" -setup {
     destroy .tree
 } -result {I006}
 
-test treeview-11.0 "Cellselection set" -body {
+test treeview-11.0 "Cellselection set rectangle" -setup {
+    # Setup common for all 11.* tests
     .tv delete [.tv children {}]
-    .tv insert {} end -id newnode
-    .tv insert newnode end -id newnode.n1
-    .tv insert newnode end -id newnode.n2
-    .tv insert newnode end -id newnode.n3
-    .tv insert {} end -id newnode2
-    .tv cellselection set [list "newnode.n1 a" "newnode.n2 a" "newnode.n3 b" "newnode.n2 c"]
+    .tv configure -columns {a b c}
+    .tv configure -displaycolumns #all
+    .tv insert {} end -id nn
+    .tv insert nn end -id nn.n1
+    .tv insert nn end -id nn.n2
+    .tv insert nn end -id nn.n3
+    .tv insert {} end -id nn2
+} -body {
+    .tv cellselection set "nn.n1 a" "nn.n3 b"
     .tv cellselection
-} -result [list "newnode.n1 a" "newnode.n2 a" "newnode.n2 c" "newnode.n3 b"]
+    # Internal processing of rectangle selection translates cols to #N
+} -result [list "nn.n1 #1" "nn.n1 #2" "nn.n2 #1" "nn.n2 #2" "nn.n3 #1" "nn.n3 #2"]
+
+test treeview-11.0b "Cellselection set" -body {
+    .tv cellselection set [list "nn.n1 a" "nn.n2 a" "nn.n3 b" "nn.n2 c"]
+    .tv cellselection
+} -result [list "nn.n1 a" "nn.n2 a" "nn.n2 c" "nn.n3 b"]
 
 test treeview-11.1 "Cellselection add" -body {
-    .tv cellselection add [list "newnode b"]
+    .tv cellselection add [list "nn b"]
     .tv cellselection
-} -result [list "newnode b" "newnode.n1 a" "newnode.n2 a" "newnode.n2 c" "newnode.n3 b"]
+} -result [list "nn b" "nn.n1 a" "nn.n2 a" "nn.n2 c" "nn.n3 b"]
 
 test treeview-11.2 "Cellselection toggle" -body {
-    .tv cellselection toggle [list "newnode.n2 a" "newnode2 b"]
+    .tv cellselection toggle [list "nn.n2 a" "nn2 b"]
     .tv cellselection
-} -result [list "newnode b" "newnode.n1 a" "newnode.n2 c" "newnode.n3 b" "newnode2 b"]
+} -result [list "nn b" "nn.n1 a" "nn.n2 c" "nn.n3 b" "nn2 b"]
 
 test treeview-11.3 "Cellselection remove" -body {
-    .tv cellselection remove [list "newnode.n2 c" "newnode b"]
+    .tv cellselection remove [list "nn.n2 c" "nn b"]
     .tv cellselection
-} -result [list "newnode.n1 a" "newnode.n3 b" "newnode2 b"]
+} -result [list "nn.n1 a" "nn.n3 b" "nn2 b"]
+
+test treeview-11.3.1 "Cellselection add rectangle" -body {
+    .tv cellselection add "nn a" "nn.n1 c"
+    .tv cellselection
+} -result [list "nn #1" "nn #2" "nn #3" "nn.n1 a" "nn.n1 #2" "nn.n1 #3" "nn.n3 b" "nn2 b"]
 
 test treeview-11.4 "Cellselection - clear" -body {
     .tv cellselection set {}
@@ -547,7 +562,7 @@ test treeview-11.6 "Cellselection - <<TreeviewSelect>> on cellselection add" -bo
     .tv cellselection set {}
     bind .tv <<TreeviewSelect>> {set res 1}
     set res 0
-    .tv cellselection add {"newnode.n1 b"}
+    .tv cellselection add {"nn.n1 b"}
     update
     set res
 } -result {1}
@@ -779,6 +794,7 @@ test treeview-ce470f20fd-2 "changing -stretch resizes columns" -setup {
     }
     nostretch .tv
     .tv column colA -width 50 ; .tv column colB -width 50 ; # slack created
+    wm geometry . {}
     update idletasks ; # redisplay treeview
 } -body {
     # when no column is stretchable and one of them becomes stretchable

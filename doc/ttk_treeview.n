@@ -133,6 +133,9 @@ The rectangle defined becomes the new cell selection.
 \fIpathname \fBcellselection add \fIcellList\fR
 Add \fIcellList\fR to the cell selection
 .TP
+\fIpathname \fBcellselection add \fIfirstCell\fR \fIlastCell\fR
+The rectangle defined is added to the cell selection.
+.TP
 \fIpathname \fBcellselection remove \fIcellList\fR
 Remove \fIcellList\fR from the cell selection
 .TP
