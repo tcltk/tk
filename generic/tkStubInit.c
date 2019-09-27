@@ -116,7 +116,7 @@ TkpPrintWindowId(
 				 * the hex representation of a pointer. */
     Window window)		/* Window to be printed into buffer. */
 {
-    sprintf(buf, "%#08lx", (unsigned long) (window));
+    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
 }
 
 int
@@ -851,6 +851,29 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSynchronize, /* 112 */
     0, /* 113 */
     XVisualIDFromVisual, /* 114 */
+    0, /* 115 */
+    0, /* 116 */
+    0, /* 117 */
+    0, /* 118 */
+    0, /* 119 */
+    0, /* 120 */
+    0, /* 121 */
+    0, /* 122 */
+    0, /* 123 */
+    0, /* 124 */
+    0, /* 125 */
+    0, /* 126 */
+    0, /* 127 */
+    0, /* 128 */
+    0, /* 129 */
+    0, /* 130 */
+    0, /* 131 */
+    0, /* 132 */
+    0, /* 133 */
+    0, /* 134 */
+    0, /* 135 */
+    0, /* 136 */
+    XPutImage, /* 137 */
 #endif /* AQUA */
 };
 

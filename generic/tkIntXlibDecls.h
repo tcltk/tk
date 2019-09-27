@@ -707,6 +707,32 @@ EXTERN XAfterFunction	XSynchronize(Display *display, Bool onoff);
 /* Slot 113 is reserved */
 /* 114 */
 EXTERN VisualID		XVisualIDFromVisual(Visual *visual);
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+/* Slot 120 is reserved */
+/* Slot 121 is reserved */
+/* Slot 122 is reserved */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
+/* Slot 132 is reserved */
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
+/* Slot 135 is reserved */
+/* Slot 136 is reserved */
+/* 137 */
+EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+				int sx, int sy, int dx, int dy,
+				unsigned int w, unsigned int h);
 #endif /* AQUA */
 
 typedef struct TkIntXlibStubs {
@@ -969,6 +995,29 @@ typedef struct TkIntXlibStubs {
     XAfterFunction (*xSynchronize) (Display *display, Bool onoff); /* 112 */
     void (*reserved113)(void);
     VisualID (*xVisualIDFromVisual) (Visual *visual); /* 114 */
+    void (*reserved115)(void);
+    void (*reserved116)(void);
+    void (*reserved117)(void);
+    void (*reserved118)(void);
+    void (*reserved119)(void);
+    void (*reserved120)(void);
+    void (*reserved121)(void);
+    void (*reserved122)(void);
+    void (*reserved123)(void);
+    void (*reserved124)(void);
+    void (*reserved125)(void);
+    void (*reserved126)(void);
+    void (*reserved127)(void);
+    void (*reserved128)(void);
+    void (*reserved129)(void);
+    void (*reserved130)(void);
+    void (*reserved131)(void);
+    void (*reserved132)(void);
+    void (*reserved133)(void);
+    void (*reserved134)(void);
+    void (*reserved135)(void);
+    void (*reserved136)(void);
+    int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
 #endif /* AQUA */
 } TkIntXlibStubs;
 
@@ -1465,6 +1514,30 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 113 is reserved */
 #define XVisualIDFromVisual \
 	(tkIntXlibStubsPtr->xVisualIDFromVisual) /* 114 */
+/* Slot 115 is reserved */
+/* Slot 116 is reserved */
+/* Slot 117 is reserved */
+/* Slot 118 is reserved */
+/* Slot 119 is reserved */
+/* Slot 120 is reserved */
+/* Slot 121 is reserved */
+/* Slot 122 is reserved */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
+/* Slot 127 is reserved */
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
+/* Slot 132 is reserved */
+/* Slot 133 is reserved */
+/* Slot 134 is reserved */
+/* Slot 135 is reserved */
+/* Slot 136 is reserved */
+#define XPutImage \
+	(tkIntXlibStubsPtr->xPutImage) /* 137 */
 #endif /* AQUA */
 
 #endif /* defined(USE_TK_STUBS) */
