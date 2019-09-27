@@ -1840,7 +1840,12 @@ declare 112 aqua {
 declare 114 aqua {
     VisualID XVisualIDFromVisual(Visual *visual)
 }
-
+declare 137 aqua {
+    int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+	    int sx, int sy, int dx, int dy,
+	    unsigned int w, unsigned int h)
+}
+
 # Local Variables:
 # mode: tcl
 # End:
