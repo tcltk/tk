@@ -1717,7 +1717,6 @@ extern XHostAddress *XListHosts(
     int*		/* nhosts_return */,
     Bool*		/* state_return */
 );
-_X_DEPRECATED
 extern KeySym XKeycodeToKeysym(
     Display*		/* display */,
 #if NeedWidePrototypes

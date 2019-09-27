@@ -43,6 +43,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef Tk_GetStyleFromObj
 #undef TkWinGetPlatformId
 #undef TkPutImage
+#undef XPutImage
 
 #if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #define Tk_MainEx 0
@@ -144,7 +145,7 @@ TkpPrintWindowId(
 				 * the hex representation of a pointer. */
     Window window)		/* Window to be printed into buffer. */
 {
-    sprintf(buf, "%#08lx", (unsigned long) (window));
+    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
 }
 
 int
