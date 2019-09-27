@@ -650,6 +650,33 @@ XUndefineCursor(
     return Success;
 }
 
+XVaNestedList
+XVaCreateNestedList(
+    int unused, ...)
+{
+    return NULL;
+}
+
+char *
+XSetICValues(
+    XIC xic, ...)
+{
+    return NULL;
+}
+
+char *
+XGetICValues(
+    XIC xic, ...)
+{
+    return NULL;
+}
+
+void
+XSetICFocus(
+    XIC xic)
+{
+}
+
 Window
 XCreateWindow(
     Display *display,
@@ -704,6 +731,37 @@ XOffsetRegion(
 	return 0;
 }
 
+void
+XDestroyIC(
+    XIC ic)
+{
+}
+
+Cursor
+XCreatePixmapCursor(
+    Display *display,
+    Pixmap source,
+    Pixmap mask,
+    XColor *foreground_color,
+    XColor *background_color,
+    unsigned int x,
+    unsigned int y)
+{
+    return (Cursor) NULL;
+}
+
+Cursor
+XCreateGlyphCursor(
+    Display *display,
+    Font source_font,
+    Font mask_font,
+    unsigned int source_char,
+    unsigned int mask_char,
+    XColor _Xconst *foreground_color,
+    XColor _Xconst *background_color)
+{
+    return 1;
+}
 
 /*
  * Local Variables:
@@ -712,4 +770,3 @@ XOffsetRegion(
  * fill-column: 78
  * End:
  */
-

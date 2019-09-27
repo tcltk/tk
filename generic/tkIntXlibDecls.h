@@ -430,8 +430,16 @@ EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 EXTERN Region		XPolygonRegion(XPoint *pts, int n, int rule);
 /* 139 */
 EXTERN int		XPointInRegion(Region rgn, int x, int y);
+/* 140 */
+EXTERN XVaNestedList	XVaCreateNestedList(int dummy, ...);
+/* 141 */
+EXTERN char *		XSetICValues(XIC xic, ...);
+/* 142 */
+EXTERN char *		XGetICValues(XIC xic, ...);
+/* 143 */
+EXTERN void		XSetICFocus(XIC xic);
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#ifdef MAC_OSX_TCL /* MACOSX */
 /* 0 */
 EXTERN int		XSetDashes(Display *display, GC gc, int dash_offset,
 				_Xconst char *dash_list, int n);
@@ -455,7 +463,7 @@ EXTERN Colormap		XCreateColormap(Display *d, Window w, Visual *v,
 /* 7 */
 EXTERN GContext		XGContextFromGC(GC g);
 /* 8 */
-EXTERN KeySym		XKeycodeToKeysym(Display *d, KeyCode k, int i);
+EXTERN KeySym		XKeycodeToKeysym(Display *d, unsigned int k, int i);
 /* 9 */
 EXTERN KeySym		XStringToKeysym(_Xconst char *c);
 /* 10 */
@@ -772,7 +780,25 @@ EXTERN int		XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 EXTERN Region		XPolygonRegion(XPoint *pts, int n, int rule);
 /* 139 */
 EXTERN int		XPointInRegion(Region rgn, int x, int y);
-#endif /* AQUA */
+/* 140 */
+EXTERN XVaNestedList	XVaCreateNestedList(int dummy, ...);
+/* 141 */
+EXTERN char *		XSetICValues(XIC xic, ...);
+/* 142 */
+EXTERN char *		XGetICValues(XIC xic, ...);
+/* 143 */
+EXTERN void		XSetICFocus(XIC xic);
+/* 144 */
+EXTERN void		XDestroyIC(XIC xic);
+/* 145 */
+EXTERN Cursor		XCreatePixmapCursor(Display *d, Pixmap p1, Pixmap p2,
+				XColor *x1, XColor *x2, unsigned int ui1,
+				unsigned int ui2);
+/* 146 */
+EXTERN Cursor		XCreateGlyphCursor(Display *d, Font f1, Font f2,
+				unsigned int ui1, unsigned int ui2,
+				XColor _Xconst *x1, XColor _Xconst *x2);
+#endif /* MACOSX */
 
 typedef struct TkIntXlibStubs {
     int magic;
@@ -919,8 +945,12 @@ typedef struct TkIntXlibStubs {
     int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
     Region (*xPolygonRegion) (XPoint *pts, int n, int rule); /* 138 */
     int (*xPointInRegion) (Region rgn, int x, int y); /* 139 */
+    XVaNestedList (*xVaCreateNestedList) (int dummy, ...); /* 140 */
+    char * (*xSetICValues) (XIC xic, ...); /* 141 */
+    char * (*xGetICValues) (XIC xic, ...); /* 142 */
+    void (*xSetICFocus) (XIC xic); /* 143 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#ifdef MAC_OSX_TCL /* MACOSX */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
     XModifierKeymap * (*xGetModifierMapping) (Display *d); /* 1 */
     XImage * (*xCreateImage) (Display *d, Visual *v, unsigned int ui1, int i1, int i2, char *cp, unsigned int ui2, unsigned int ui3, int i3, int i4); /* 2 */
@@ -929,7 +959,7 @@ typedef struct TkIntXlibStubs {
     char * (*xKeysymToString) (KeySym k); /* 5 */
     Colormap (*xCreateColormap) (Display *d, Window w, Visual *v, int i); /* 6 */
     GContext (*xGContextFromGC) (GC g); /* 7 */
-    KeySym (*xKeycodeToKeysym) (Display *d, KeyCode k, int i); /* 8 */
+    KeySym (*xKeycodeToKeysym) (Display *d, unsigned int k, int i); /* 8 */
     KeySym (*xStringToKeysym) (_Xconst char *c); /* 9 */
     Window (*xRootWindow) (Display *d, int i); /* 10 */
     XErrorHandler (*xSetErrorHandler) (XErrorHandler x); /* 11 */
@@ -1061,7 +1091,14 @@ typedef struct TkIntXlibStubs {
     int (*xPutImage) (Display *d, Drawable dr, GC gc, XImage *im, int sx, int sy, int dx, int dy, unsigned int w, unsigned int h); /* 137 */
     Region (*xPolygonRegion) (XPoint *pts, int n, int rule); /* 138 */
     int (*xPointInRegion) (Region rgn, int x, int y); /* 139 */
-#endif /* AQUA */
+    XVaNestedList (*xVaCreateNestedList) (int dummy, ...); /* 140 */
+    char * (*xSetICValues) (XIC xic, ...); /* 141 */
+    char * (*xGetICValues) (XIC xic, ...); /* 142 */
+    void (*xSetICFocus) (XIC xic); /* 143 */
+    void (*xDestroyIC) (XIC xic); /* 144 */
+    Cursor (*xCreatePixmapCursor) (Display *d, Pixmap p1, Pixmap p2, XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2); /* 145 */
+    Cursor (*xCreateGlyphCursor) (Display *d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor _Xconst *x1, XColor _Xconst *x2); /* 146 */
+#endif /* MACOSX */
 } TkIntXlibStubs;
 
 extern const TkIntXlibStubs *tkIntXlibStubsPtr;
@@ -1345,8 +1382,16 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xPolygonRegion) /* 138 */
 #define XPointInRegion \
 	(tkIntXlibStubsPtr->xPointInRegion) /* 139 */
+#define XVaCreateNestedList \
+	(tkIntXlibStubsPtr->xVaCreateNestedList) /* 140 */
+#define XSetICValues \
+	(tkIntXlibStubsPtr->xSetICValues) /* 141 */
+#define XGetICValues \
+	(tkIntXlibStubsPtr->xGetICValues) /* 142 */
+#define XSetICFocus \
+	(tkIntXlibStubsPtr->xSetICFocus) /* 143 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
+#ifdef MAC_OSX_TCL /* MACOSX */
 #define XSetDashes \
 	(tkIntXlibStubsPtr->xSetDashes) /* 0 */
 #define XGetModifierMapping \
@@ -1596,11 +1641,35 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xPolygonRegion) /* 138 */
 #define XPointInRegion \
 	(tkIntXlibStubsPtr->xPointInRegion) /* 139 */
-#endif /* AQUA */
+#define XVaCreateNestedList \
+	(tkIntXlibStubsPtr->xVaCreateNestedList) /* 140 */
+#define XSetICValues \
+	(tkIntXlibStubsPtr->xSetICValues) /* 141 */
+#define XGetICValues \
+	(tkIntXlibStubsPtr->xGetICValues) /* 142 */
+#define XSetICFocus \
+	(tkIntXlibStubsPtr->xSetICFocus) /* 143 */
+#define XDestroyIC \
+	(tkIntXlibStubsPtr->xDestroyIC) /* 144 */
+#define XCreatePixmapCursor \
+	(tkIntXlibStubsPtr->xCreatePixmapCursor) /* 145 */
+#define XCreateGlyphCursor \
+	(tkIntXlibStubsPtr->xCreateGlyphCursor) /* 146 */
+#endif /* MACOSX */
 
 #endif /* defined(USE_TK_STUBS) */
 
 /* !END!: Do not edit above this line. */
+
+#if !defined(_WIN32) && !defined(__CYGWIN__) /* UNIX and MacOSX */
+#undef TkPutImage
+#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
+#else
+#undef XPutImage
+#define XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	TkPutImage(NULL, 0, display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
+#endif
 
 #if defined(MAC_OSX_TK)
 #   undef Cursor
