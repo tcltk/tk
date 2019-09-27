@@ -170,16 +170,7 @@ TkpPrintWindowId(
 {
     HWND hwnd = (window) ? Tk_GetHWND(window) : 0;
 
-    /*
-     * Use pointer representation, because Win64 is P64 (*not* LP64). Windows
-     * doesn't print the 0x for %p, so we do it.
-     * Bug 2026405: cygwin does output 0x for %p so test and recover.
-     */
-
-    sprintf(buf, "0x%p", hwnd);
-    if (buf[2] == '0' && buf[3] == 'x') {
-	sprintf(buf, "%p", hwnd);
-    }
+    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)hwnd);
 }
 
 /*
