@@ -1330,11 +1330,6 @@ MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
 
-#if !defined(_WIN32) && !defined(__CYGWIN__) /* UNIX and MacOSX */
-#undef TkPutImage
-#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
-	XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
-#endif
 #ifdef _WIN32
 #define TkParseColor XParseColor
 #else
