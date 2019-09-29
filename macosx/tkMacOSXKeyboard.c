@@ -358,7 +358,7 @@ KeycodeToUnicode(
 KeySym
 XKeycodeToKeysym(
     Display* display,
-    KeyCode keycode,
+    unsigned int keycode,
     int index)
 {
     Tcl_HashEntry *hPtr;
