@@ -95,13 +95,13 @@ $c create line 12c 6c 13.5c 4.5c 16.5c 7.5c 18c 6c \
 $c create text 25c .2c -text Polygons -anchor n
 $c create polygon 21c 1.0c 22.5c 1.75c 24c 1.0c 23.25c 2.5c \
 	24c 4.0c 22.5c 3.25c 21c 4.0c 21.75c 2.5c -fill $green \
-	-outline black -width 4 -tags item
+	-width 4 -tags item
 $c create polygon 25c 4c 25c 4c 25c 1c 26c 1c 27c 4c 28c 1c \
-	29c 1c 29c 4c 29c 4c -fill $red -smooth on -tags item
+	29c 1c 29c 4c 29c 4c -fill $red -outline {} -smooth on -tags item
 $c create polygon 22c 4.5c 25c 4.5c 25c 6.75c 28c 6.75c \
 	28c 5.25c 24c 5.25c 24c 6.0c 26c 6c 26c 7.5c 22c 7.5c \
 	-stipple @[file join $tk_demoDirectory images gray25.xbm] \
-	-outline black -tags item
+	-fill $blue -tags item
 
 $c create text 5c 8.2c -text Rectangles -anchor n
 $c create rectangle 1c 9.5c 4c 12.5c -outline $red -width 3m -tags item
