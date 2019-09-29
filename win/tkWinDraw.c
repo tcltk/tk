@@ -600,6 +600,7 @@ TkPutImage(
     return Success;
 }
 
+#undef XPutImage
 int
 XPutImage(
     Display *display,
