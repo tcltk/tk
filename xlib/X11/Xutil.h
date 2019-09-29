@@ -198,13 +198,15 @@ typedef struct {
 #ifndef EXTERN
 #   define EXTERN extern TCL_STORAGE_CLASS
 #endif
-#if defined(BUILD_tk) && defined(_WIN32)
-#undef TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS __declspec(dllexport)
-#else
+#if defined(STATIC_BUILD) || !defined(_WIN32)
 # ifndef TCL_STORAGE_CLASS
 #   define TCL_STORAGE_CLASS
 # endif
+#elif defined(BUILD_tk)
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS __declspec(dllexport)
+#elif !defined(TCL_STORAGE_CLASS)
+# define TCL_STORAGE_CLASS __declspec(dllimport)
 #endif
 
 #ifdef XUTIL_DEFINE_FUNCTIONS
