@@ -1337,6 +1337,16 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 				Colormap map, const char* spec,
 				XColor * colorPtr);
 #endif
+#if !defined(_WIN32) && !defined(__CYGWIN__) /* UNIX and MacOSX */
+#undef TkPutImage
+#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
+#else
+#undef XPutImage
+#define XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	TkPutImage(NULL, 0, display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
+#endif
+
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #endif
