@@ -71,7 +71,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	NULL, offsetof(BitmapItem, disabledFgColor),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-foreground", NULL, NULL,
-	DEF_CANVBMAP_FG, Tk_Offset(BitmapItem, fgColor), 0, NULL},
+	DEF_CANVBMAP_FG, offsetof(BitmapItem, fgColor), 0, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
 	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK,
 	&stateOption},
