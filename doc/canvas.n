@@ -1233,8 +1233,8 @@ For the text item, it specifies the foreground color of the text.
 This option specifies the color that should be used to draw the
 outline of the item in its normal, active and disabled states.
 \fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
-This option defaults to \fBblack\fR. If \fIcolor\fR is specified
-as an empty string then no outline is drawn for the item.
+If \fIcolor\fR is specified as an empty string then no outline is drawn
+for the item.
 .TP
 \fB\-offset \fIoffset\fR
 .
@@ -1442,8 +1442,7 @@ disabled states.
 Specifies the color to use for each of the bitmap's
 .QW 1
 valued pixels in its normal, active and disabled states.
-\fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR and
-defaults to \fBblack\fR.
+\fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
 .SS "IMAGE ITEMS"
 .PP
 Items of type \fBimage\fR are used to display images on a
