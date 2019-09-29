@@ -560,7 +560,7 @@ $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
 $(TMP_DIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
 	$(cc32) $(stubscflags) -Fo$@ $?
 
-$(TMP_DIR)\ttkStubLib.obj : $(GENERICDIR)\ttkStubLib.c
+$(TMP_DIR)\ttkStubLib.obj : $(TTKDIR)\ttkStubLib.c
 	$(cc32) $(stubscflags) -Fo$@ $?
 
 $(TMP_DIR)\wish.exe.manifest: $(WIN_DIR)\wish.exe.manifest.in
