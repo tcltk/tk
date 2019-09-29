@@ -113,7 +113,7 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
 	"0.0", offsetof(PolygonItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
-    {TK_CONFIG_COLOR, "-fill", NULL, NULL, offsetof(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
+    {TK_CONFIG_COLOR, "-fill", NULL, NULL, NULL, offsetof(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", NULL, NULL,
 	"round", offsetof(PolygonItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
