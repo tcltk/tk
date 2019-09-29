@@ -195,21 +195,33 @@ typedef struct {
 	char *res_class;
 } XClassHint;
 
+#ifndef EXTERN
+#   define EXTERN extern TCL_STORAGE_CLASS
+#endif
+#if defined(BUILD_tk) && defined(_WIN32)
+#undef TCL_STORAGE_CLASS
+#define TCL_STORAGE_CLASS __declspec(dllexport)
+#else
+# ifndef TCL_STORAGE_CLASS
+#   define TCL_STORAGE_CLASS
+# endif
+#endif
+
 #ifdef XUTIL_DEFINE_FUNCTIONS
-extern int XDestroyImage(
+EXTERN int XDestroyImage(
         XImage *ximage);
-extern unsigned long XGetPixel(
+EXTERN unsigned long XGetPixel(
         XImage *ximage,
         int x, int y);
-extern int XPutPixel(
+EXTERN int XPutPixel(
         XImage *ximage,
         int x, int y,
         unsigned long pixel);
-extern XImage *XSubImage(
+EXTERN XImage *XSubImage(
         XImage *ximage,
         int x, int y,
         unsigned int width, unsigned int height);
-extern int XAddPixel(
+EXTERN int XAddPixel(
         XImage *ximage,
         long value);
 #else
@@ -367,83 +379,83 @@ _XFUNCPROTOBEGIN
 
 /* The following declarations are alphabetized. */
 
-extern XClassHint *XAllocClassHint (
+EXTERN XClassHint *XAllocClassHint (
     void
 );
 
-extern XIconSize *XAllocIconSize (
+EXTERN XIconSize *XAllocIconSize (
     void
 );
 
-extern XSizeHints *XAllocSizeHints (
+EXTERN XSizeHints *XAllocSizeHints (
     void
 );
 
-extern XStandardColormap *XAllocStandardColormap (
+EXTERN XStandardColormap *XAllocStandardColormap (
     void
 );
 
-extern XWMHints *XAllocWMHints (
+EXTERN XWMHints *XAllocWMHints (
     void
 );
 
-extern int XClipBox(
+EXTERN int XClipBox(
     Region		/* r */,
     XRectangle*		/* rect_return */
 );
 
-extern Region XCreateRegion(
+EXTERN Region XCreateRegion(
     void
 );
 
-extern const char *XDefaultString (void);
+EXTERN const char *XDefaultString (void);
 
-extern int XDeleteContext(
+EXTERN int XDeleteContext(
     Display*		/* display */,
     XID			/* rid */,
     XContext		/* context */
 );
 
-extern int XDestroyRegion(
+EXTERN int XDestroyRegion(
     Region		/* r */
 );
 
-extern int XEmptyRegion(
+EXTERN int XEmptyRegion(
     Region		/* r */
 );
 
-extern int XEqualRegion(
+EXTERN int XEqualRegion(
     Region		/* r1 */,
     Region		/* r2 */
 );
 
-extern int XFindContext(
+EXTERN int XFindContext(
     Display*		/* display */,
     XID			/* rid */,
     XContext		/* context */,
     XPointer*		/* data_return */
 );
 
-extern Status XGetClassHint(
+EXTERN Status XGetClassHint(
     Display*		/* display */,
     Window		/* w */,
     XClassHint*		/* class_hints_return */
 );
 
-extern Status XGetIconSizes(
+EXTERN Status XGetIconSizes(
     Display*		/* display */,
     Window		/* w */,
     XIconSize**		/* size_list_return */,
     int*		/* count_return */
 );
 
-extern Status XGetNormalHints(
+EXTERN Status XGetNormalHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints_return */
 );
 
-extern Status XGetRGBColormaps(
+EXTERN Status XGetRGBColormaps(
     Display*		/* display */,
     Window		/* w */,
     XStandardColormap** /* stdcmap_return */,
@@ -451,65 +463,65 @@ extern Status XGetRGBColormaps(
     Atom		/* property */
 );
 
-extern Status XGetSizeHints(
+EXTERN Status XGetSizeHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints_return */,
     Atom		/* property */
 );
 
-extern Status XGetStandardColormap(
+EXTERN Status XGetStandardColormap(
     Display*		/* display */,
     Window		/* w */,
     XStandardColormap*	/* colormap_return */,
     Atom		/* property */
 );
 
-extern Status XGetTextProperty(
+EXTERN Status XGetTextProperty(
     Display*		/* display */,
     Window		/* window */,
     XTextProperty*	/* text_prop_return */,
     Atom		/* property */
 );
 
-extern XVisualInfo *XGetVisualInfo(
+EXTERN XVisualInfo *XGetVisualInfo(
     Display*		/* display */,
     long		/* vinfo_mask */,
     XVisualInfo*	/* vinfo_template */,
     int*		/* nitems_return */
 );
 
-extern Status XGetWMClientMachine(
+EXTERN Status XGetWMClientMachine(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop_return */
 );
 
-extern XWMHints *XGetWMHints(
+EXTERN XWMHints *XGetWMHints(
     Display*		/* display */,
     Window		/* w */
 );
 
-extern Status XGetWMIconName(
+EXTERN Status XGetWMIconName(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop_return */
 );
 
-extern Status XGetWMName(
+EXTERN Status XGetWMName(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop_return */
 );
 
-extern Status XGetWMNormalHints(
+EXTERN Status XGetWMNormalHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints_return */,
     long*		/* supplied_return */
 );
 
-extern Status XGetWMSizeHints(
+EXTERN Status XGetWMSizeHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints_return */,
@@ -517,25 +529,25 @@ extern Status XGetWMSizeHints(
     Atom		/* property */
 );
 
-extern Status XGetZoomHints(
+EXTERN Status XGetZoomHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* zhints_return */
 );
 
-extern int XIntersectRegion(
+EXTERN int XIntersectRegion(
     Region		/* sra */,
     Region		/* srb */,
     Region		/* dr_return */
 );
 
-extern void XConvertCase(
+EXTERN void XConvertCase(
     KeySym		/* sym */,
     KeySym*		/* lower */,
     KeySym*		/* upper */
 );
 
-extern int XLookupString(
+EXTERN int XLookupString(
     XKeyEvent*		/* event_struct */,
     char*		/* buffer_return */,
     int			/* bytes_buffer */,
@@ -543,7 +555,7 @@ extern int XLookupString(
     XComposeStatus*	/* status_in_out */
 );
 
-extern Status XMatchVisualInfo(
+EXTERN Status XMatchVisualInfo(
     Display*		/* display */,
     int			/* screen */,
     int			/* depth */,
@@ -551,25 +563,25 @@ extern Status XMatchVisualInfo(
     XVisualInfo*	/* vinfo_return */
 );
 
-extern int XOffsetRegion(
+EXTERN int XOffsetRegion(
     Region		/* r */,
     int			/* dx */,
     int			/* dy */
 );
 
-extern Bool XPointInRegion(
+EXTERN Bool XPointInRegion(
     Region		/* r */,
     int			/* x */,
     int			/* y */
 );
 
-extern Region XPolygonRegion(
+EXTERN Region XPolygonRegion(
     XPoint*		/* points */,
     int			/* n */,
     int			/* fill_rule */
 );
 
-extern int XRectInRegion(
+EXTERN int XRectInRegion(
     Region		/* r */,
     int			/* x */,
     int			/* y */,
@@ -577,33 +589,33 @@ extern int XRectInRegion(
     unsigned int	/* height */
 );
 
-extern int XSaveContext(
+EXTERN int XSaveContext(
     Display*		/* display */,
     XID			/* rid */,
     XContext		/* context */,
     _Xconst char*	/* data */
 );
 
-extern int XSetClassHint(
+EXTERN int XSetClassHint(
     Display*		/* display */,
     Window		/* w */,
     XClassHint*		/* class_hints */
 );
 
-extern int XSetIconSizes(
+EXTERN int XSetIconSizes(
     Display*		/* display */,
     Window		/* w */,
     XIconSize*		/* size_list */,
     int			/* count */
 );
 
-extern int XSetNormalHints(
+EXTERN int XSetNormalHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints */
 );
 
-extern void XSetRGBColormaps(
+EXTERN void XSetRGBColormaps(
     Display*		/* display */,
     Window		/* w */,
     XStandardColormap*	/* stdcmaps */,
@@ -611,14 +623,14 @@ extern void XSetRGBColormaps(
     Atom		/* property */
 );
 
-extern int XSetSizeHints(
+EXTERN int XSetSizeHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints */,
     Atom		/* property */
 );
 
-extern int XSetStandardProperties(
+EXTERN int XSetStandardProperties(
     Display*		/* display */,
     Window		/* w */,
     _Xconst char*	/* window_name */,
@@ -629,44 +641,44 @@ extern int XSetStandardProperties(
     XSizeHints*		/* hints */
 );
 
-extern void XSetTextProperty(
+EXTERN void XSetTextProperty(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop */,
     Atom		/* property */
 );
 
-extern void XSetWMClientMachine(
+EXTERN void XSetWMClientMachine(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop */
 );
 
-extern int XSetWMHints(
+EXTERN int XSetWMHints(
     Display*		/* display */,
     Window		/* w */,
     XWMHints*		/* wm_hints */
 );
 
-extern void XSetWMIconName(
+EXTERN void XSetWMIconName(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop */
 );
 
-extern void XSetWMName(
+EXTERN void XSetWMName(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop */
 );
 
-extern void XSetWMNormalHints(
+EXTERN void XSetWMNormalHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints */
 );
 
-extern void XSetWMProperties(
+EXTERN void XSetWMProperties(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* window_name */,
@@ -678,7 +690,7 @@ extern void XSetWMProperties(
     XClassHint*		/* class_hints */
 );
 
-extern void XmbSetWMProperties(
+EXTERN void XmbSetWMProperties(
     Display*		/* display */,
     Window		/* w */,
     _Xconst char*	/* window_name */,
@@ -690,7 +702,7 @@ extern void XmbSetWMProperties(
     XClassHint*		/* class_hints */
 );
 
-extern void Xutf8SetWMProperties(
+EXTERN void Xutf8SetWMProperties(
     Display*		/* display */,
     Window		/* w */,
     _Xconst char*	/* window_name */,
@@ -702,51 +714,51 @@ extern void Xutf8SetWMProperties(
     XClassHint*		/* class_hints */
 );
 
-extern void XSetWMSizeHints(
+EXTERN void XSetWMSizeHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints */,
     Atom		/* property */
 );
 
-extern int XSetRegion(
+EXTERN int XSetRegion(
     Display*		/* display */,
     GC			/* gc */,
     Region		/* r */
 );
 
-extern void XSetStandardColormap(
+EXTERN void XSetStandardColormap(
     Display*		/* display */,
     Window		/* w */,
     XStandardColormap*	/* colormap */,
     Atom		/* property */
 );
 
-extern int XSetZoomHints(
+EXTERN int XSetZoomHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* zhints */
 );
 
-extern int XShrinkRegion(
+EXTERN int XShrinkRegion(
     Region		/* r */,
     int			/* dx */,
     int			/* dy */
 );
 
-extern Status XStringListToTextProperty(
+EXTERN Status XStringListToTextProperty(
     char**		/* list */,
     int			/* count */,
     XTextProperty*	/* text_prop_return */
 );
 
-extern int XSubtractRegion(
+EXTERN int XSubtractRegion(
     Region		/* sra */,
     Region		/* srb */,
     Region		/* dr_return */
 );
 
-extern int XmbTextListToTextProperty(
+EXTERN int XmbTextListToTextProperty(
     Display*		display,
     char**		list,
     int			count,
@@ -754,7 +766,7 @@ extern int XmbTextListToTextProperty(
     XTextProperty*	text_prop_return
 );
 
-extern int Xutf8TextListToTextProperty(
+EXTERN int Xutf8TextListToTextProperty(
     Display*		display,
     char**		list,
     int			count,
@@ -762,39 +774,39 @@ extern int Xutf8TextListToTextProperty(
     XTextProperty*	text_prop_return
 );
 
-extern Status XTextPropertyToStringList(
+EXTERN Status XTextPropertyToStringList(
     XTextProperty*	/* text_prop */,
     char***		/* list_return */,
     int*		/* count_return */
 );
 
-extern int XmbTextPropertyToTextList(
+EXTERN int XmbTextPropertyToTextList(
     Display*		display,
     const XTextProperty* text_prop,
     char***		list_return,
     int*		count_return
 );
 
-extern int Xutf8TextPropertyToTextList(
+EXTERN int Xutf8TextPropertyToTextList(
     Display*		display,
     const XTextProperty* text_prop,
     char***		list_return,
     int*		count_return
 );
 
-extern int XUnionRectWithRegion(
+EXTERN int XUnionRectWithRegion(
     XRectangle*		/* rectangle */,
     Region		/* src_region */,
     Region		/* dest_region_return */
 );
 
-extern int XUnionRegion(
+EXTERN int XUnionRegion(
     Region		/* sra */,
     Region		/* srb */,
     Region		/* dr_return */
 );
 
-extern int XWMGeometry(
+EXTERN int XWMGeometry(
     Display*		/* display */,
     int			/* screen_number */,
     _Xconst char*	/* user_geometry */,
@@ -808,11 +820,13 @@ extern int XWMGeometry(
     int*		/* gravity_return */
 );
 
-extern int XXorRegion(
+EXTERN int XXorRegion(
     Region		/* sra */,
     Region		/* srb */,
     Region		/* dr_return */
 );
+
+#include "tkIntXlibDecls.h"
 
 #ifdef __clang__
 #pragma clang diagnostic pop
