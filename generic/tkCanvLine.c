@@ -178,7 +178,7 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CAP_STYLE, "-capstyle", NULL, NULL,
 	"butt", offsetof(LineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	DEF_CANVLINE_FILL, Tk_Offset(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVLINE_FILL, offsetof(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
 	NULL, offsetof(LineItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},

@@ -155,7 +155,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	"0,0", offsetof(ArcItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_COLOR, "-outline", NULL, NULL,
-	DEF_CANVITEM_OUTLINE, Tk_Offset(ArcItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVITEM_OUTLINE, offsetof(ArcItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-outlineoffset", NULL, NULL,
 	"0,0", offsetof(ArcItem, outline.tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
