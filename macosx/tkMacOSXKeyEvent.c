@@ -307,7 +307,7 @@ unsigned short releaseCode;
 	releaseCode = (UInt16) [aString characterAtIndex: 0];
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+
     releaseCode = (UInt16) [aString characterAtIndex: 0];
 }
 
@@ -539,7 +539,7 @@ XGrabKeyboard(
     Time time)
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
-    TkWindow *captureWinPtr = (TkWindow *) TkpGetCapture();
+    TkWindow *captureWinPtr = (TkWindow *) TkMacOSXGetCapture();
 
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
