@@ -307,7 +307,7 @@ unsigned short releaseCode;
 	releaseCode = (UInt16) [aString characterAtIndex: 0];
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+
     releaseCode = (UInt16) [aString characterAtIndex: 0];
 }
 
