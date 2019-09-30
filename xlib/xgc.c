@@ -24,8 +24,6 @@
 #   include <tkMacOSXInt.h>
 #   include <X11/Xlib.h>
 #   include <X11/X.h>
-#   define Cursor XCursor
-#   define Region XRegion
 #   define gcCacheSize sizeof(TkpGCCache)
 #endif
 
@@ -462,7 +460,7 @@ void
 TkSetRegion(
     Display *display,
     GC gc,
-    TkRegion r)
+    Region r)
 {
     if (r == NULL) {
 	Tcl_Panic("must not pass NULL to TkSetRegion for compatibility with X11; use XSetClipMask instead");
@@ -722,15 +720,6 @@ XPolygonRegion(
     return 0;
 }
 
-int
-XOffsetRegion(
-    Region rgn,
-	int dx,
-	int dy)
-{
-	return 0;
-}
-
 void
 XDestroyIC(
     XIC ic)

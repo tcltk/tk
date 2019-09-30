@@ -856,7 +856,7 @@ TkMacOSXUpdateClipRgn(
 		    ChkErr(HIShapeIntersect,
 			    win2Ptr->privatePtr->aboveVisRgn, rgn, rgn);
 		} else if (tkMacOSXEmbedHandler != NULL) {
-		    TkRegion r = TkCreateRegion();
+		    Region r = TkCreateRegion();
 		    HIShapeRef visRgn;
 
 		    tkMacOSXEmbedHandler->getClipProc((Tk_Window) winPtr, r);
@@ -958,14 +958,14 @@ TkMacOSXUpdateClipRgn(
  *----------------------------------------------------------------------
  */
 
-TkRegion
+Region
 TkMacOSXVisableClipRgn(
     TkWindow *winPtr)
 {
     if (winPtr->privatePtr->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(winPtr);
     }
-    return (TkRegion) HIShapeCreateMutableCopy(winPtr->privatePtr->visRgn);
+    return (Region) HIShapeCreateMutableCopy(winPtr->privatePtr->visRgn);
 }
 
 /*

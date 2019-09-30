@@ -130,7 +130,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
-    TkRegion clipRegion = NULL;
+    Region clipRegion = NULL;
 
     gcValues.font = Tk_FontId(text->tkfont);
     gcValues.foreground = color->pixel;

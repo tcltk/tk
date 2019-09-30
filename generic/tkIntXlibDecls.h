@@ -27,18 +27,7 @@
 #   define EXTERN extern TCL_STORAGE_CLASS
 #endif
 
-/* Some (older) versions of X11/Xutil.h have a wrong signature of those
-   two functions, so move them out of the way temporarly. */
-#define XOffsetRegion _XOffsetRegion
-#define XUnionRegion _XUnionRegion
 #include "X11/Xutil.h"
-#undef XOffsetRegion
-#undef XUnionRegion
-
-#if defined(MAC_OSX_TK)
-#   define Cursor XCursor
-#   define Region XRegion
-#endif
 
 #ifdef BUILD_tk
 #  undef TCL_STORAGE_CLASS
@@ -1660,11 +1649,6 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 #endif /* defined(USE_TK_STUBS) */
 
 /* !END!: Do not edit above this line. */
-
-#if defined(MAC_OSX_TK)
-#   undef Cursor
-#   undef Region
-#endif
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

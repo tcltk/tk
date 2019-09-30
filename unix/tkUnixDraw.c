@@ -24,7 +24,7 @@ typedef struct ScrollInfo {
     int done;			/* Flag is 0 until filtering is done. */
     Display *display;		/* Display to filter. */
     Window window;		/* Window to filter. */
-    TkRegion region;		/* Region into which damage is accumulated. */
+    Region region;		/* Region into which damage is accumulated. */
     int dx, dy;			/* Amount by which window was shifted. */
 } ScrollInfo;
 
@@ -61,7 +61,7 @@ TkScrollWindow(
     int x, int y, int width, int height,
 				/* Position rectangle to be scrolled. */
     int dx, int dy,		/* Distance rectangle should be moved. */
-    TkRegion damageRgn)		/* Region to accumulate damage in. */
+    Region damageRgn)		/* Region to accumulate damage in. */
 {
     Tk_RestrictProc *prevProc;
     ClientData prevArg;

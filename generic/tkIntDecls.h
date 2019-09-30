@@ -15,6 +15,8 @@
 #ifndef _TKINTDECLS
 #define _TKINTDECLS
 
+#include "X11/Xutil.h"
+
 #ifdef BUILD_tk
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLEXPORT
@@ -254,7 +256,7 @@ EXTERN int		TkReadBitmapFile(Display *display, Drawable d,
 /* 79 */
 EXTERN int		TkScrollWindow(Tk_Window tkwin, GC gc, int x, int y,
 				int width, int height, int dx, int dy,
-				TkRegion damageRgn);
+				Region damageRgn);
 /* 80 */
 EXTERN void		TkSelDeadWindow(TkWindow *winPtr);
 /* 81 */
@@ -334,22 +336,22 @@ EXTERN Tcl_Obj *	TkpGetSystemDefault(Tk_Window tkwin,
 /* 112 */
 EXTERN void		TkpMenuThreadInit(void);
 /* 113 */
-EXTERN void		TkClipBox(TkRegion rgn, XRectangle *rect_return);
+EXTERN void		TkClipBox(Region rgn, XRectangle *rect_return);
 /* 114 */
-EXTERN TkRegion		TkCreateRegion(void);
+EXTERN Region		TkCreateRegion(void);
 /* 115 */
-EXTERN void		TkDestroyRegion(TkRegion rgn);
+EXTERN void		TkDestroyRegion(Region rgn);
 /* 116 */
-EXTERN void		TkIntersectRegion(TkRegion sra, TkRegion srcb,
-				TkRegion dr_return);
+EXTERN void		TkIntersectRegion(Region sra, Region srcb,
+				Region dr_return);
 /* 117 */
-EXTERN int		TkRectInRegion(TkRegion rgn, int x, int y,
+EXTERN int		TkRectInRegion(Region rgn, int x, int y,
 				unsigned int width, unsigned int height);
 /* 118 */
-EXTERN void		TkSetRegion(Display *display, GC gc, TkRegion rgn);
+EXTERN void		TkSetRegion(Display *display, GC gc, Region rgn);
 /* 119 */
-EXTERN void		TkUnionRectWithRegion(XRectangle *rect, TkRegion src,
-				TkRegion dr_return);
+EXTERN void		TkUnionRectWithRegion(XRectangle *rect, Region src,
+				Region dr_return);
 /* Slot 120 is reserved */
 #ifdef MAC_OSX_TK /* AQUA */
 /* 121 */
@@ -390,7 +392,7 @@ EXTERN KeySym		TkpGetKeySym(TkDisplay *dispPtr, XEvent *eventPtr);
 /* 139 */
 EXTERN void		TkpInitKeymapInfo(TkDisplay *dispPtr);
 /* 140 */
-EXTERN TkRegion		TkPhotoGetValidRegion(Tk_PhotoHandle handle);
+EXTERN Region		TkPhotoGetValidRegion(Tk_PhotoHandle handle);
 /* 141 */
 EXTERN TkWindow **	TkWmStackorderToplevel(TkWindow *parentPtr);
 /* 142 */
@@ -400,8 +402,8 @@ EXTERN void		TkClipCleanup(TkDisplay *dispPtr);
 /* 144 */
 EXTERN void		TkGCCleanup(TkDisplay *dispPtr);
 /* 145 */
-EXTERN void		TkSubtractRegion(TkRegion sra, TkRegion srcb,
-				TkRegion dr_return);
+EXTERN void		TkSubtractRegion(Region sra, Region srcb,
+				Region dr_return);
 /* 146 */
 EXTERN void		TkStylePkgInit(TkMainInfo *mainPtr);
 /* 147 */
@@ -638,7 +640,7 @@ typedef struct TkIntStubs {
     void (*reserved76)(void);
     void (*tkQueueEventForAllChildren) (TkWindow *winPtr, XEvent *eventPtr); /* 77 */
     int (*tkReadBitmapFile) (Display *display, Drawable d, const char *filename, unsigned int *width_return, unsigned int *height_return, Pixmap *bitmap_return, int *x_hot_return, int *y_hot_return); /* 78 */
-    int (*tkScrollWindow) (Tk_Window tkwin, GC gc, int x, int y, int width, int height, int dx, int dy, TkRegion damageRgn); /* 79 */
+    int (*tkScrollWindow) (Tk_Window tkwin, GC gc, int x, int y, int width, int height, int dx, int dy, Region damageRgn); /* 79 */
     void (*tkSelDeadWindow) (TkWindow *winPtr); /* 80 */
     void (*tkSelEventProc) (Tk_Window tkwin, XEvent *eventPtr); /* 81 */
     void (*tkSelInit) (Tk_Window tkwin); /* 82 */
@@ -672,13 +674,13 @@ typedef struct TkIntStubs {
     void (*tkpGetSubFonts) (Tcl_Interp *interp, Tk_Font tkfont); /* 110 */
     Tcl_Obj * (*tkpGetSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 111 */
     void (*tkpMenuThreadInit) (void); /* 112 */
-    void (*tkClipBox) (TkRegion rgn, XRectangle *rect_return); /* 113 */
-    TkRegion (*tkCreateRegion) (void); /* 114 */
-    void (*tkDestroyRegion) (TkRegion rgn); /* 115 */
-    void (*tkIntersectRegion) (TkRegion sra, TkRegion srcb, TkRegion dr_return); /* 116 */
-    int (*tkRectInRegion) (TkRegion rgn, int x, int y, unsigned int width, unsigned int height); /* 117 */
-    void (*tkSetRegion) (Display *display, GC gc, TkRegion rgn); /* 118 */
-    void (*tkUnionRectWithRegion) (XRectangle *rect, TkRegion src, TkRegion dr_return); /* 119 */
+    void (*tkClipBox) (Region rgn, XRectangle *rect_return); /* 113 */
+    Region (*tkCreateRegion) (void); /* 114 */
+    void (*tkDestroyRegion) (Region rgn); /* 115 */
+    void (*tkIntersectRegion) (Region sra, Region srcb, Region dr_return); /* 116 */
+    int (*tkRectInRegion) (Region rgn, int x, int y, unsigned int width, unsigned int height); /* 117 */
+    void (*tkSetRegion) (Display *display, GC gc, Region rgn); /* 118 */
+    void (*tkUnionRectWithRegion) (XRectangle *rect, Region src, Region dr_return); /* 119 */
     void (*reserved120)(void);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     void (*reserved121)(void);
@@ -726,12 +728,12 @@ typedef struct TkIntStubs {
     void (*tkpSetKeycodeAndState) (Tk_Window tkwin, KeySym keySym, XEvent *eventPtr); /* 137 */
     KeySym (*tkpGetKeySym) (TkDisplay *dispPtr, XEvent *eventPtr); /* 138 */
     void (*tkpInitKeymapInfo) (TkDisplay *dispPtr); /* 139 */
-    TkRegion (*tkPhotoGetValidRegion) (Tk_PhotoHandle handle); /* 140 */
+    Region (*tkPhotoGetValidRegion) (Tk_PhotoHandle handle); /* 140 */
     TkWindow ** (*tkWmStackorderToplevel) (TkWindow *parentPtr); /* 141 */
     void (*tkFocusFree) (TkMainInfo *mainPtr); /* 142 */
     void (*tkClipCleanup) (TkDisplay *dispPtr); /* 143 */
     void (*tkGCCleanup) (TkDisplay *dispPtr); /* 144 */
-    void (*tkSubtractRegion) (TkRegion sra, TkRegion srcb, TkRegion dr_return); /* 145 */
+    void (*tkSubtractRegion) (Region sra, Region srcb, Region dr_return); /* 145 */
     void (*tkStylePkgInit) (TkMainInfo *mainPtr); /* 146 */
     void (*tkStylePkgFree) (TkMainInfo *mainPtr); /* 147 */
     Tk_Window (*tkToplevelWindowForCommand) (Tcl_Interp *interp, const char *cmdName); /* 148 */
@@ -1168,17 +1170,15 @@ extern const TkIntStubs *tkIntStubsPtr;
 #undef TkSubtractRegion
 #undef TkUnionRectWithRegion
 
-#define TkClipBox(rgn, rect) XClipBox((Region) rgn, rect)
-#define TkCreateRegion() (TkRegion) XCreateRegion()
-#define TkDestroyRegion(rgn) XDestroyRegion((Region) rgn)
-#define TkIntersectRegion(a, b, r) XIntersectRegion((Region) a, \
-	(Region) b, (Region) r)
-#define TkRectInRegion(r, x, y, w, h) XRectInRegion((Region) r, x, y, w, h)
-#define TkSetRegion(d, gc, rgn) XSetRegion(d, gc, (Region) rgn)
-#define TkSubtractRegion(a, b, r) XSubtractRegion((Region) a, \
-	(Region) b, (Region) r)
+#define TkClipBox(rgn, rect) XClipBox(rgn, rect)
+#define TkCreateRegion() XCreateRegion()
+#define TkDestroyRegion(rgn) XDestroyRegion(rgn)
+#define TkIntersectRegion(a, b, r) XIntersectRegion(a, b, r)
+#define TkRectInRegion(r, x, y, w, h) XRectInRegion(r, x, y, w, h)
+#define TkSetRegion(d, gc, rgn) XSetRegion(d, gc, rgn)
+#define TkSubtractRegion(a, b, r) XSubtractRegion(a, b, r)
 #define TkUnionRectWithRegion(rect, src, ret) XUnionRectWithRegion(rect, \
-	(Region) src, (Region) ret)
+	src, ret)
 
 #endif /* UNIX */
 

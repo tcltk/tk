@@ -53,11 +53,6 @@ SOFTWARE.
 #define X_PROTOCOL	11		/* current protocol version */
 #define X_PROTOCOL_REVISION 0		/* current minor version */
 
-#if defined(MAC_OSX_TK)
-#   define Cursor XCursor
-#   define Region XRegion
-#endif
-
 /* Resources */
 
 #ifdef _WIN64
@@ -699,10 +694,5 @@ enum _Bug9e31fd9449 { None = 0, ControlMask = (1<<2) };
 
 #define LSBFirst		0
 #define MSBFirst		1
-
-#if defined(MAC_OSX_TK)
-#   undef Cursor
-#   undef Region
-#endif
 
 #endif /* X_H */
