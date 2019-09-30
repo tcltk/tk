@@ -31,10 +31,10 @@
  *----------------------------------------------------------------------
  */
 
-TkRegion
+Region
 TkCreateRegion(void)
 {
-    return (TkRegion) HIShapeCreateMutable();
+    return (Region) HIShapeCreateMutable();
 }
 
 /*
@@ -56,7 +56,7 @@ TkCreateRegion(void)
 
 void
 TkDestroyRegion(
-    TkRegion r)
+    Region r)
 {
     if (r) {
 	CFRelease(r);
@@ -82,9 +82,9 @@ TkDestroyRegion(
 
 void
 TkIntersectRegion(
-    TkRegion sra,
-    TkRegion srb,
-    TkRegion dr_return)
+    Region sra,
+    Region srb,
+    Region dr_return)
 {
     ChkErr(HIShapeIntersect, (HIShapeRef) sra, (HIShapeRef) srb,
 	   (HIMutableShapeRef) dr_return);
@@ -109,9 +109,9 @@ TkIntersectRegion(
 
 void
 TkSubtractRegion(
-    TkRegion sra,
-    TkRegion srb,
-    TkRegion dr_return)
+    Region sra,
+    Region srb,
+    Region dr_return)
 {
     ChkErr(HIShapeDifference, (HIShapeRef) sra, (HIShapeRef) srb,
 	   (HIMutableShapeRef) dr_return);
@@ -137,8 +137,8 @@ TkSubtractRegion(
 void
 TkUnionRectWithRegion(
     XRectangle* rectangle,
-    TkRegion src_region,
-    TkRegion dest_region_return)
+    Region src_region,
+    Region dest_region_return)
 {
     const CGRect r = CGRectMake(rectangle->x, rectangle->y,
 	    rectangle->width, rectangle->height);
@@ -173,7 +173,7 @@ TkUnionRectWithRegion(
 
 int
 TkMacOSXIsEmptyRegion(
-    TkRegion r)
+    Region r)
 {
     return HIShapeIsEmpty((HIMutableShapeRef) r) ? 1 : 0;
 }
@@ -198,7 +198,7 @@ TkMacOSXIsEmptyRegion(
 
 int
 TkRectInRegion(
-    TkRegion region,
+    Region region,
     int x,
     int y,
     unsigned int width,
@@ -233,7 +233,7 @@ TkRectInRegion(
 
 void
 TkClipBox(
-    TkRegion r,
+    Region r,
     XRectangle *rect_return)
 {
     CGRect rect;
@@ -264,7 +264,7 @@ TkClipBox(
 
 void
 TkpBuildRegionFromAlphaData(
-    TkRegion region,			/* Region to update. */
+    Region region,			/* Region to update. */
     unsigned int x,			/* Where in region to update. */
     unsigned int y,			/* Where in region to update. */
     unsigned int width,			/* Size of rectangle to update. */
@@ -330,7 +330,7 @@ TkpBuildRegionFromAlphaData(
 
 void
 TkpRetainRegion(
-    TkRegion r)
+    Region r)
 {
     CFRetain(r);
 }
@@ -353,7 +353,7 @@ TkpRetainRegion(
 
 void
 TkpReleaseRegion(
-    TkRegion r)
+    Region r)
 {
     CFRelease(r);
 }
@@ -376,7 +376,7 @@ TkpReleaseRegion(
 
 void
 TkMacOSXSetEmptyRegion(
-    TkRegion r)
+    Region r)
 {
     ChkErr(HIShapeSetEmpty, (HIMutableShapeRef) r);
 }
@@ -399,7 +399,7 @@ TkMacOSXSetEmptyRegion(
 
 HIShapeRef
 TkMacOSXGetNativeRegion(
-    TkRegion r)
+    Region r)
 {
     return (HIShapeRef) CFRetain(r);
 }
@@ -422,7 +422,7 @@ TkMacOSXGetNativeRegion(
 
 void
 TkMacOSXSetWithNativeRegion(
-    TkRegion r,
+    Region r,
     HIShapeRef rgn)
 {
     ChkErr(TkMacOSXHIShapeSetWithShape, (HIMutableShapeRef) r, rgn);
@@ -431,7 +431,7 @@ TkMacOSXSetWithNativeRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXOffsetRegion --
+ * XOffsetRegion --
  *
  *	Offsets region by given distances.
  *
@@ -444,13 +444,14 @@ TkMacOSXSetWithNativeRegion(
  *----------------------------------------------------------------------
  */
 
-void
-TkMacOSXOffsetRegion(
-    TkRegion r,
-    short dx,
-    short dy)
+int
+XOffsetRegion(
+    Region r,
+    int dx,
+    int dy)
 {
     ChkErr(HIShapeOffset, (HIMutableShapeRef) r, dx, dy);
+    return Success;
 }
 
 /*

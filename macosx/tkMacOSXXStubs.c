@@ -706,7 +706,7 @@ XSetClipRectangles(
     int n,
     int ordering)
 {
-    TkRegion clipRgn = TkCreateRegion();
+    Region clipRgn = TkCreateRegion();
 
     while (n--) {
 	XRectangle rect = *rectangles;

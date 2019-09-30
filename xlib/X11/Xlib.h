@@ -42,10 +42,6 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 #include <X11/X.h>
-#ifdef MAC_OSX_TK
-#   define Cursor XCursor
-#   define Region XRegion
-#endif
 
 /* applications should not depend on these two headers being included! */
 #include <X11/Xfuncproto.h>
@@ -4059,10 +4055,5 @@ EXTERN void XFreeEventData(
 #endif
 
 _XFUNCPROTOEND
-
-#if defined(MAC_OSX_TK)
-#   undef Cursor
-#   undef Region
-#endif
 
 #endif /* _X11_XLIB_H_ */

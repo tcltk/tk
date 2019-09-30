@@ -599,7 +599,7 @@ static int		SizeOfTab(TkText *textPtr, int tabStyle,
 static void		TextChanged(TkText *textPtr,
 			    const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
-static void		TextInvalidateRegion(TkText *textPtr, TkRegion region);
+static void		TextInvalidateRegion(TkText *textPtr, Region region);
 static void		TextRedrawTag(TkText *textPtr,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
 			    TkTextTag *tagPtr, int withTag);
@@ -4248,7 +4248,7 @@ DisplayText(
     for (dlPtr = dInfoPtr->dLinePtr; dlPtr != NULL; dlPtr = dlPtr->nextPtr) {
 	register DLine *dlPtr2;
 	int offset, height, y, oldY;
-	TkRegion damageRgn;
+	Region damageRgn;
 
 	/*
 	 * These tests are, in order:
@@ -4707,7 +4707,7 @@ TkTextRedrawRegion(
     int width, int height)	/* Width and height of area to be redrawn. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
-    TkRegion damageRgn = TkCreateRegion();
+    Region damageRgn = TkCreateRegion();
     XRectangle rect;
 
     rect.x = x;
@@ -4744,7 +4744,7 @@ TkTextRedrawRegion(
 static void
 TextInvalidateRegion(
     TkText *textPtr,		/* Widget record for text widget. */
-    TkRegion region)		/* Region of area to redraw. */
+    Region region)		/* Region of area to redraw. */
 {
     register DLine *dlPtr;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;

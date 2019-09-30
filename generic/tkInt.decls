@@ -288,7 +288,7 @@ declare 78 {
 }
 declare 79 {
     int TkScrollWindow(Tk_Window tkwin, GC gc, int x, int y,
-	    int width, int height, int dx, int dy, TkRegion damageRgn)
+	    int width, int height, int dx, int dy, Region damageRgn)
 }
 declare 80 {
     void TkSelDeadWindow(TkWindow *winPtr)
@@ -402,27 +402,27 @@ declare 112 {
     void TkpMenuThreadInit(void)
 }
 declare 113 {
-    void TkClipBox(TkRegion rgn, XRectangle *rect_return)
+    void TkClipBox(Region rgn, XRectangle *rect_return)
 }
 declare 114 {
-    TkRegion TkCreateRegion(void)
+    Region TkCreateRegion(void)
 }
 declare 115 {
-    void TkDestroyRegion(TkRegion rgn)
+    void TkDestroyRegion(Region rgn)
 }
 declare 116 {
-    void TkIntersectRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
+    void TkIntersectRegion(Region sra, Region srcb, Region dr_return)
 }
 declare 117 {
-    int TkRectInRegion(TkRegion rgn, int x, int y, unsigned int width,
+    int TkRectInRegion(Region rgn, int x, int y, unsigned int width,
 	    unsigned int height)
 }
 declare 118 {
-    void TkSetRegion(Display *display, GC gc, TkRegion rgn)
+    void TkSetRegion(Display *display, GC gc, Region rgn)
 }
 declare 119 {
     void TkUnionRectWithRegion(XRectangle *rect,
-	    TkRegion src, TkRegion dr_return)
+	    Region src, Region dr_return)
 }
 declare 121 aqua {
     Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
@@ -452,7 +452,7 @@ declare 139 {
     void TkpInitKeymapInfo(TkDisplay *dispPtr)
 }
 declare 140 {
-    TkRegion TkPhotoGetValidRegion(Tk_PhotoHandle handle)
+    Region TkPhotoGetValidRegion(Tk_PhotoHandle handle)
 }
 declare 141 {
     TkWindow **TkWmStackorderToplevel(TkWindow *parentPtr)
@@ -467,7 +467,7 @@ declare 144 {
     void TkGCCleanup(TkDisplay *dispPtr)
 }
 declare 145 {
-    void TkSubtractRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
+    void TkSubtractRegion(Region sra, Region srcb, Region dr_return)
 }
 declare 146 {
     void TkStylePkgInit(TkMainInfo *mainPtr)
@@ -979,7 +979,7 @@ declare 34 aqua {
     int TkMacOSXUseMenuID(short macID)
 }
 declare 35 aqua {
-    TkRegion TkMacOSXVisableClipRgn(TkWindow *winPtr)
+    Region TkMacOSXVisableClipRgn(TkWindow *winPtr)
 }
 declare 36 aqua {
     void TkMacOSXWinBounds(TkWindow *winPtr, void *geometry)
