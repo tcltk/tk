@@ -1928,7 +1928,7 @@ ClipToGC(
 	int yOffset = ((MacDrawable *) d)->yOff + gc->clip_y_origin;
 	HIShapeRef clipRgn = *clipRgnPtr, gcClipRgn;
 
-	XOffsetRegion((Region)gcClip, xOffset, yOffset);
+	XOffsetRegion(gcClip, xOffset, yOffset);
 	gcClipRgn = TkMacOSXGetNativeRegion(gcClip);
 	if (clipRgn) {
 	    *clipRgnPtr = HIShapeCreateIntersection(gcClipRgn, clipRgn);
@@ -1937,7 +1937,7 @@ ClipToGC(
 	    *clipRgnPtr = HIShapeCreateCopy(gcClipRgn);
 	}
 	CFRelease(gcClipRgn);
-	XOffsetRegion((Region)gcClip, -xOffset, -yOffset);
+	XOffsetRegion(gcClip, -xOffset, -yOffset);
     }
 }
 

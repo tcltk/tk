@@ -90,7 +90,7 @@ TkScrollWindow(
     }
     Tk_RestrictEvents(prevProc, prevArg, &prevArg);
 
-    if (XEmptyRegion((Region) damageRgn)) {
+    if (XEmptyRegion(damageRgn)) {
 	return 0;
     } else {
 	return 1;
@@ -141,8 +141,8 @@ ScrollRestrictProc(
 	rect.y = eventPtr->xgraphicsexpose.y;
 	rect.width = eventPtr->xgraphicsexpose.width;
 	rect.height = eventPtr->xgraphicsexpose.height;
-	XUnionRectWithRegion(&rect, (Region) info->region,
-		(Region) info->region);
+	XUnionRectWithRegion(&rect, info->region,
+		info->region);
 
 	if (eventPtr->xgraphicsexpose.count == 0) {
 	    info->done = 1;
@@ -160,12 +160,12 @@ ScrollRestrictProc(
 	rect.y = eventPtr->xexpose.y;
 	rect.width = eventPtr->xexpose.width;
 	rect.height = eventPtr->xexpose.height;
-	XUnionRectWithRegion(&rect, (Region) info->region,
-		(Region) info->region);
+	XUnionRectWithRegion(&rect, info->region,
+		info->region);
 	rect.x += info->dx;
 	rect.y += info->dy;
-	XUnionRectWithRegion(&rect, (Region) info->region,
-		(Region) info->region);
+	XUnionRectWithRegion(&rect, info->region,
+		info->region);
     } else {
 	return TK_DEFER_EVENT;
     }
