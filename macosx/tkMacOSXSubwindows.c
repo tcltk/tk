@@ -856,7 +856,7 @@ TkMacOSXUpdateClipRgn(
 		    ChkErr(HIShapeIntersect,
 			    win2Ptr->privatePtr->aboveVisRgn, rgn, rgn);
 		} else if (tkMacOSXEmbedHandler != NULL) {
-		    Region r = TkCreateRegion();
+		    Region r = XCreateRegion();
 		    HIShapeRef visRgn;
 
 		    tkMacOSXEmbedHandler->getClipProc((Tk_Window) winPtr, r);
@@ -947,7 +947,7 @@ TkMacOSXUpdateClipRgn(
  *
  *	This function returns the Macintosh clipping region for the given
  *	window. The caller is responsible for disposing of the returned region
- *	via TkDestroyRegion().
+ *	via XDestroyRegion().
  *
  * Results:
  *	The region.

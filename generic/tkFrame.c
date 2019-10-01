@@ -1480,7 +1480,7 @@ DisplayFrame(
     register Tk_Window tkwin = framePtr->tkwin;
     int bdX1, bdY1, bdX2, bdY2, hlWidth;
     Pixmap pixmap;
-    Region clipRegion = NULL;
+    TkRegion clipRegion = NULL;
 
     framePtr->flags &= ~REDRAW_PENDING;
     if ((framePtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {

@@ -1347,6 +1347,18 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 	TkPutImage(NULL, 0, display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
 #endif
 
+/*
+ * These macros are just wrappers for the equivalent X Region calls.
+ */
+#define TkClipBox XClipBox
+#define TkCreateRegion XCreateRegion
+#define TkDestroyRegion XDestroyRegion
+#define TkIntersectRegion XIntersectRegion
+#define TkRectInRegion XRectInRegion
+#define TkSetRegion XSetRegion
+#define TkSubtractRegion XSubtractRegion
+#define TkUnionRectWithRegion XUnionRectWithRegion
+
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
