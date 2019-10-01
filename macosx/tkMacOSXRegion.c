@@ -17,7 +17,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * TkCreateRegion --
+ * XCreateRegion --
  *
  *	Implements the equivelent of the X window function XCreateRegion. See
  *	Xwindow documentation for more details.
@@ -32,7 +32,7 @@
  */
 
 Region
-TkCreateRegion(void)
+XCreateRegion(void)
 {
     return (Region) HIShapeCreateMutable();
 }
@@ -40,7 +40,7 @@ TkCreateRegion(void)
 /*
  *----------------------------------------------------------------------
  *
- * TkDestroyRegion --
+ * XDestroyRegion --
  *
  *	Implements the equivelent of the X window function XDestroyRegion. See
  *	Xwindow documentation for more details.
@@ -54,19 +54,20 @@ TkCreateRegion(void)
  *----------------------------------------------------------------------
  */
 
-void
-TkDestroyRegion(
+int
+XDestroyRegion(
     Region r)
 {
     if (r) {
 	CFRelease(r);
     }
+    return Success;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkIntersectRegion --
+ * XIntersectRegion --
  *
  *	Implements the equivalent of the X window function XIntersectRegion.
  *	See Xwindow documentation for more details.
@@ -80,20 +81,21 @@ TkDestroyRegion(
  *----------------------------------------------------------------------
  */
 
-void
-TkIntersectRegion(
+int
+XIntersectRegion(
     Region sra,
     Region srb,
     Region dr_return)
 {
     ChkErr(HIShapeIntersect, (HIShapeRef) sra, (HIShapeRef) srb,
 	   (HIMutableShapeRef) dr_return);
+    return Success;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkSubtractRegion --
+ * XSubtractRegion --
  *
  *	Implements the equivalent of the X window function XSubtractRegion.
  *	See X window documentation for more details.
@@ -107,20 +109,21 @@ TkIntersectRegion(
  *----------------------------------------------------------------------
  */
 
-void
-TkSubtractRegion(
+int
+XSubtractRegion(
     Region sra,
     Region srb,
     Region dr_return)
 {
     ChkErr(HIShapeDifference, (HIShapeRef) sra, (HIShapeRef) srb,
 	   (HIMutableShapeRef) dr_return);
+    return Success;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkUnionRectWithRegion --
+ * XUnionRectWithRegion --
  *
  *	Implements the equivelent of the X window function
  *	XUnionRectWithRegion. See Xwindow documentation for more details.
@@ -134,8 +137,8 @@ TkSubtractRegion(
  *----------------------------------------------------------------------
  */
 
-void
-TkUnionRectWithRegion(
+int
+XUnionRectWithRegion(
     XRectangle* rectangle,
     Region src_region,
     Region dest_region_return)
@@ -153,6 +156,7 @@ TkUnionRectWithRegion(
 		(HIMutableShapeRef) dest_region_return);
 	CFRelease(rectRgn);
     }
+    return Success;
 }
 
 /*
@@ -181,7 +185,7 @@ TkMacOSXIsEmptyRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkRectInRegion --
+ * XRectInRegion --
  *
  *	Implements the equivelent of the X window function XRectInRegion. See
  *	Xwindow documentation for more details.
@@ -197,7 +201,7 @@ TkMacOSXIsEmptyRegion(
  */
 
 int
-TkRectInRegion(
+XRectInRegion(
     Region region,
     int x,
     int y,
@@ -217,7 +221,7 @@ TkRectInRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkClipBox --
+ * XClipBox --
  *
  *	Implements the equivelent of the X window function XClipBox. See
  *	Xwindow documentation for more details.
@@ -231,8 +235,8 @@ TkRectInRegion(
  *----------------------------------------------------------------------
  */
 
-void
-TkClipBox(
+int
+XClipBox(
     Region r,
     XRectangle *rect_return)
 {
@@ -243,6 +247,7 @@ TkClipBox(
     rect_return->y = rect.origin.y;
     rect_return->width = rect.size.width;
     rect_return->height = rect.size.height;
+    return Success;
 }
 
 /*
@@ -305,7 +310,7 @@ TkpBuildRegionFromAlphaData(
 		rect.y = y + y1;
 		rect.width = end - x1;
 		rect.height = 1;
-		TkUnionRectWithRegion(&rect, region, region);
+		XUnionRectWithRegion(&rect, region, region);
 	    }
 	}
 	dataPtr += lineStride;

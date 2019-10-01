@@ -336,21 +336,21 @@ EXTERN Tcl_Obj *	TkpGetSystemDefault(Tk_Window tkwin,
 /* 112 */
 EXTERN void		TkpMenuThreadInit(void);
 /* 113 */
-EXTERN void		TkClipBox(Region rgn, XRectangle *rect_return);
+EXTERN int		XClipBox(Region rgn, XRectangle *rect_return);
 /* 114 */
-EXTERN Region		TkCreateRegion(void);
+EXTERN Region		XCreateRegion(void);
 /* 115 */
-EXTERN void		TkDestroyRegion(Region rgn);
+EXTERN int		XDestroyRegion(Region rgn);
 /* 116 */
-EXTERN void		TkIntersectRegion(Region sra, Region srcb,
+EXTERN int		XIntersectRegion(Region sra, Region srcb,
 				Region dr_return);
 /* 117 */
-EXTERN int		TkRectInRegion(Region rgn, int x, int y,
+EXTERN int		XRectInRegion(Region rgn, int x, int y,
 				unsigned int width, unsigned int height);
 /* 118 */
-EXTERN void		TkSetRegion(Display *display, GC gc, Region rgn);
+EXTERN int		XSetRegion(Display *display, GC gc, Region rgn);
 /* 119 */
-EXTERN void		TkUnionRectWithRegion(XRectangle *rect, Region src,
+EXTERN int		XUnionRectWithRegion(XRectangle *rect, Region src,
 				Region dr_return);
 /* Slot 120 is reserved */
 #ifdef MAC_OSX_TK /* AQUA */
@@ -402,7 +402,7 @@ EXTERN void		TkClipCleanup(TkDisplay *dispPtr);
 /* 144 */
 EXTERN void		TkGCCleanup(TkDisplay *dispPtr);
 /* 145 */
-EXTERN void		TkSubtractRegion(Region sra, Region srcb,
+EXTERN int		XSubtractRegion(Region sra, Region srcb,
 				Region dr_return);
 /* 146 */
 EXTERN void		TkStylePkgInit(TkMainInfo *mainPtr);
@@ -674,13 +674,13 @@ typedef struct TkIntStubs {
     void (*tkpGetSubFonts) (Tcl_Interp *interp, Tk_Font tkfont); /* 110 */
     Tcl_Obj * (*tkpGetSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 111 */
     void (*tkpMenuThreadInit) (void); /* 112 */
-    void (*tkClipBox) (Region rgn, XRectangle *rect_return); /* 113 */
-    Region (*tkCreateRegion) (void); /* 114 */
-    void (*tkDestroyRegion) (Region rgn); /* 115 */
-    void (*tkIntersectRegion) (Region sra, Region srcb, Region dr_return); /* 116 */
-    int (*tkRectInRegion) (Region rgn, int x, int y, unsigned int width, unsigned int height); /* 117 */
-    void (*tkSetRegion) (Display *display, GC gc, Region rgn); /* 118 */
-    void (*tkUnionRectWithRegion) (XRectangle *rect, Region src, Region dr_return); /* 119 */
+    int (*xClipBox) (Region rgn, XRectangle *rect_return); /* 113 */
+    Region (*xCreateRegion) (void); /* 114 */
+    int (*xDestroyRegion) (Region rgn); /* 115 */
+    int (*xIntersectRegion) (Region sra, Region srcb, Region dr_return); /* 116 */
+    int (*xRectInRegion) (Region rgn, int x, int y, unsigned int width, unsigned int height); /* 117 */
+    int (*xSetRegion) (Display *display, GC gc, Region rgn); /* 118 */
+    int (*xUnionRectWithRegion) (XRectangle *rect, Region src, Region dr_return); /* 119 */
     void (*reserved120)(void);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     void (*reserved121)(void);
@@ -733,7 +733,7 @@ typedef struct TkIntStubs {
     void (*tkFocusFree) (TkMainInfo *mainPtr); /* 142 */
     void (*tkClipCleanup) (TkDisplay *dispPtr); /* 143 */
     void (*tkGCCleanup) (TkDisplay *dispPtr); /* 144 */
-    void (*tkSubtractRegion) (Region sra, Region srcb, Region dr_return); /* 145 */
+    int (*xSubtractRegion) (Region sra, Region srcb, Region dr_return); /* 145 */
     void (*tkStylePkgInit) (TkMainInfo *mainPtr); /* 146 */
     void (*tkStylePkgFree) (TkMainInfo *mainPtr); /* 147 */
     Tk_Window (*tkToplevelWindowForCommand) (Tcl_Interp *interp, const char *cmdName); /* 148 */
@@ -1009,20 +1009,20 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkpGetSystemDefault) /* 111 */
 #define TkpMenuThreadInit \
 	(tkIntStubsPtr->tkpMenuThreadInit) /* 112 */
-#define TkClipBox \
-	(tkIntStubsPtr->tkClipBox) /* 113 */
-#define TkCreateRegion \
-	(tkIntStubsPtr->tkCreateRegion) /* 114 */
-#define TkDestroyRegion \
-	(tkIntStubsPtr->tkDestroyRegion) /* 115 */
-#define TkIntersectRegion \
-	(tkIntStubsPtr->tkIntersectRegion) /* 116 */
-#define TkRectInRegion \
-	(tkIntStubsPtr->tkRectInRegion) /* 117 */
-#define TkSetRegion \
-	(tkIntStubsPtr->tkSetRegion) /* 118 */
-#define TkUnionRectWithRegion \
-	(tkIntStubsPtr->tkUnionRectWithRegion) /* 119 */
+#define XClipBox \
+	(tkIntStubsPtr->xClipBox) /* 113 */
+#define XCreateRegion \
+	(tkIntStubsPtr->xCreateRegion) /* 114 */
+#define XDestroyRegion \
+	(tkIntStubsPtr->xDestroyRegion) /* 115 */
+#define XIntersectRegion \
+	(tkIntStubsPtr->xIntersectRegion) /* 116 */
+#define XRectInRegion \
+	(tkIntStubsPtr->xRectInRegion) /* 117 */
+#define XSetRegion \
+	(tkIntStubsPtr->xSetRegion) /* 118 */
+#define XUnionRectWithRegion \
+	(tkIntStubsPtr->xUnionRectWithRegion) /* 119 */
 /* Slot 120 is reserved */
 #ifdef MAC_OSX_TK /* AQUA */
 #define TkpCreateNativeBitmap \
@@ -1067,8 +1067,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkClipCleanup) /* 143 */
 #define TkGCCleanup \
 	(tkIntStubsPtr->tkGCCleanup) /* 144 */
-#define TkSubtractRegion \
-	(tkIntStubsPtr->tkSubtractRegion) /* 145 */
+#define XSubtractRegion \
+	(tkIntStubsPtr->xSubtractRegion) /* 145 */
 #define TkStylePkgInit \
 	(tkIntStubsPtr->tkStylePkgInit) /* 146 */
 #define TkStylePkgFree \
@@ -1155,32 +1155,6 @@ extern const TkIntStubs *tkIntStubsPtr;
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
-
-/*
- * On X11, these macros are just wrappers for the equivalent X Region calls.
- */
-#if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
-
-#undef TkClipBox
-#undef TkCreateRegion
-#undef TkDestroyRegion
-#undef TkIntersectRegion
-#undef TkRectInRegion
-#undef TkSetRegion
-#undef TkSubtractRegion
-#undef TkUnionRectWithRegion
-
-#define TkClipBox(rgn, rect) XClipBox(rgn, rect)
-#define TkCreateRegion() XCreateRegion()
-#define TkDestroyRegion(rgn) XDestroyRegion(rgn)
-#define TkIntersectRegion(a, b, r) XIntersectRegion(a, b, r)
-#define TkRectInRegion(r, x, y, w, h) XRectInRegion(r, x, y, w, h)
-#define TkSetRegion(d, gc, rgn) XSetRegion(d, gc, rgn)
-#define TkSubtractRegion(a, b, r) XSubtractRegion(a, b, r)
-#define TkUnionRectWithRegion(rect, src, ret) XUnionRectWithRegion(rect, \
-	src, ret)
-
-#endif /* UNIX */
 
 #endif /* _TKINTDECLS */
 

@@ -132,7 +132,7 @@ Tk_UpdatePointer(
 
 void
 TkpBuildRegionFromAlphaData(
-    Region region,		/* Region to be updated. */
+    TkRegion region,		/* Region to be updated. */
     unsigned x, unsigned y,	/* Where in region to update. */
     unsigned width, unsigned height,
 				/* Size of rectangle to update. */

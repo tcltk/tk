@@ -1149,7 +1149,7 @@ ImgPhotoCmd(
 	case PHOTO_TRANS_SET: {
 	    int newVal, boolMode;
 	    XRectangle setBox;
-	    Region modRegion;
+	    TkRegion modRegion;
 
 	    /*
 	     * Parse args and option, check for valid values
@@ -2193,7 +2193,7 @@ ImgPhotoSetSize(
     int h, offset, pitch;
     unsigned char *srcPtr, *destPtr;
     XRectangle validBox, clipBox;
-    Region clipRegion;
+    TkRegion clipRegion;
     PhotoInstance *instancePtr;
 
     if (masterPtr->userWidth > 0) {
@@ -3034,7 +3034,7 @@ Tk_PhotoPutBlock(
 	 */
 
 	if (compRule != TK_PHOTO_COMPOSITE_OVERLAY) {
-	    Region workRgn;
+	    TkRegion workRgn;
 
 	    /*
 	     * Don't need this when using the OVERLAY compositing rule, which
@@ -3397,7 +3397,7 @@ Tk_PhotoPutZoomedBlock(
 	     * always strictly increases the valid region.
 	     */
 
-	    Region workRgn = TkCreateRegion();
+	    TkRegion workRgn = TkCreateRegion();
 
 	    rect.x = x;
 	    rect.y = y;
@@ -3745,7 +3745,7 @@ Tk_PhotoSetSize(
  *	transparent.
  *
  * Results:
- *	A Region value that indicates the current area of the photo that is
+ *	A TkRegion value that indicates the current area of the photo that is
  *	valid. This value should not be used after any modification to the
  *	photo image.
  *
@@ -3755,7 +3755,7 @@ Tk_PhotoSetSize(
  *----------------------------------------------------------------------
  */
 
-Region
+TkRegion
 TkPhotoGetValidRegion(
     Tk_PhotoHandle handle)	/* Handle for the image whose valid region is
 				 * to obtained. */

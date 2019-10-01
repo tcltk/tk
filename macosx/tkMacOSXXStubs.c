@@ -706,18 +706,18 @@ XSetClipRectangles(
     int n,
     int ordering)
 {
-    Region clipRgn = TkCreateRegion();
+    Region clipRgn = XCreateRegion();
 
     while (n--) {
 	XRectangle rect = *rectangles;
 
 	rect.x += clip_x_origin;
 	rect.y += clip_y_origin;
-	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
+	XUnionRectWithRegion(&rect, clipRgn, clipRgn);
 	rectangles++;
     }
-    TkSetRegion(d, gc, clipRgn);
-    TkDestroyRegion(clipRgn);
+    XSetRegion(d, gc, clipRgn);
+    XDestroyRegion(clipRgn);
     return 1;
 }
 #endif

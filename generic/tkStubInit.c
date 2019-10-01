@@ -165,46 +165,6 @@ TkPutImage(
     return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
 
-Region TkCreateRegion()
-{
-    return XCreateRegion();
-}
-
-void TkDestroyRegion(Region r)
-{
-    XDestroyRegion(r);
-}
-
-void TkSetRegion(Display *d, GC g, Region r)
-{
-    XSetRegion(d, g, r);
-}
-
-void TkUnionRectWithRegion(XRectangle *a, Region b, Region c)
-{
-    XUnionRectWithRegion(a, b, c);
-}
-
-void TkClipBox(Region a, XRectangle *b)
-{
-    XClipBox(a, b);
-}
-
-void TkIntersectRegion(Region a, Region b, Region c)
-{
-    XIntersectRegion(a, b, c);
-}
-
-int TkRectInRegion (Region r, int a, int b, unsigned int c, unsigned int d)
-{
-    return XRectInRegion(r, a, b, c, d);
-}
-
-void TkSubtractRegion (Region a, Region b, Region c)
-{
-    XSubtractRegion(a, b, c);
-}
-
 	/* TODO: To be implemented for Cygwin */
 #	define Tk_AttachHWND 0
 #	define Tk_GetHWND 0
@@ -244,25 +204,6 @@ void TkSubtractRegion (Region a, Region b, Region c)
 #	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
 
-#   elif !defined(MAC_OSX_TK) /* UNIX */
-
-#	undef TkClipBox
-#	undef TkCreateRegion
-#	undef TkDestroyRegion
-#	undef TkIntersectRegion
-#	undef TkRectInRegion
-#	undef TkSetRegion
-#	undef TkUnionRectWithRegion
-#	undef TkSubtractRegion
-
-#	define TkClipBox (void (*) (Region, XRectangle *)) XClipBox
-#	define TkCreateRegion (Region (*) ()) XCreateRegion
-#	define TkDestroyRegion (void (*) (Region)) XDestroyRegion
-#	define TkIntersectRegion (void (*) (Region, Region, Region)) XIntersectRegion
-#	define TkRectInRegion (int (*) (Region, int, int, unsigned int, unsigned int)) XRectInRegion
-#	define TkSetRegion (void (*) (Display *, GC, Region)) XSetRegion
-#	define TkUnionRectWithRegion (void (*) (XRectangle *, Region, Region)) XUnionRectWithRegion
-#	define TkSubtractRegion (void (*) (Region, Region, Region)) XSubtractRegion
 #   endif
 #endif /* !_WIN32 */
 
@@ -419,13 +360,13 @@ static const TkIntStubs tkIntStubs = {
     TkpGetSubFonts, /* 110 */
     TkpGetSystemDefault, /* 111 */
     TkpMenuThreadInit, /* 112 */
-    TkClipBox, /* 113 */
-    TkCreateRegion, /* 114 */
-    TkDestroyRegion, /* 115 */
-    TkIntersectRegion, /* 116 */
-    TkRectInRegion, /* 117 */
-    TkSetRegion, /* 118 */
-    TkUnionRectWithRegion, /* 119 */
+    XClipBox, /* 113 */
+    XCreateRegion, /* 114 */
+    XDestroyRegion, /* 115 */
+    XIntersectRegion, /* 116 */
+    XRectInRegion, /* 117 */
+    XSetRegion, /* 118 */
+    XUnionRectWithRegion, /* 119 */
     0, /* 120 */
 #if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     0, /* 121 */
@@ -478,7 +419,7 @@ static const TkIntStubs tkIntStubs = {
     TkFocusFree, /* 142 */
     TkClipCleanup, /* 143 */
     TkGCCleanup, /* 144 */
-    TkSubtractRegion, /* 145 */
+    XSubtractRegion, /* 145 */
     TkStylePkgInit, /* 146 */
     TkStylePkgFree, /* 147 */
     TkToplevelWindowForCommand, /* 148 */
