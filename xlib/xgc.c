@@ -24,8 +24,6 @@
 #   include <tkMacOSXInt.h>
 #   include <X11/Xlib.h>
 #   include <X11/X.h>
-#   define Cursor XCursor
-#   define Region XRegion
 #   define gcCacheSize sizeof(TkpGCCache)
 #endif
 
