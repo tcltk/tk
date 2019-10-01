@@ -597,24 +597,6 @@ XMapRaised(
    return Success;
 }
 
-#if 0
-int
-XPutImage(
-    Display *display,
-    Drawable d,
-    GC gc,
-    XImage *image,
-    int src_x,
-    int src_y,
-    int dest_x,
-    int dest_y,
-    unsigned int width,
-    unsigned int height)
-{
-    return 0;
-}
-#endif
-
 int
 XQueryTextExtents(
     Display *display,
