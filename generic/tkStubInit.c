@@ -170,29 +170,29 @@ TkRegion TkCreateRegion()
     return (TkRegion) XCreateRegion();
 }
 
-void TkDestroyRegion(TkRegion r)
+int TkDestroyRegion(TkRegion r)
 {
-    XDestroyRegion((Region)r);
+	return XDestroyRegion((Region)r);
 }
 
-void TkSetRegion(Display *d, GC g, TkRegion r)
+int TkSetRegion(Display *d, GC g, TkRegion r)
 {
-    XSetRegion(d, g, (Region)r);
+	return XSetRegion(d, g, (Region)r);
 }
 
-void TkUnionRectWithRegion(XRectangle *a, TkRegion b, TkRegion c)
+int TkUnionRectWithRegion(XRectangle *a, TkRegion b, TkRegion c)
 {
-    XUnionRectWithRegion(a, (Region) b, (Region) c);
+	return XUnionRectWithRegion(a, (Region) b, (Region) c);
 }
 
-void TkClipBox(TkRegion a, XRectangle *b)
+int TkClipBox(TkRegion a, XRectangle *b)
 {
-    XClipBox((Region) a, b);
+	return XClipBox((Region) a, b);
 }
 
-void TkIntersectRegion(TkRegion a, TkRegion b, TkRegion c)
+int TkIntersectRegion(TkRegion a, TkRegion b, TkRegion c)
 {
-    XIntersectRegion((Region) a, (Region) b, (Region) c);
+	return XIntersectRegion((Region) a, (Region) b, (Region) c);
 }
 
 int TkRectInRegion (TkRegion r, int a, int b, unsigned int c, unsigned int d)
@@ -200,9 +200,9 @@ int TkRectInRegion (TkRegion r, int a, int b, unsigned int c, unsigned int d)
     return XRectInRegion((Region) r, a, b, c, d);
 }
 
-void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
+int TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 {
-    XSubtractRegion((Region) a, (Region) b, (Region) c);
+    return XSubtractRegion((Region) a, (Region) b, (Region) c);
 }
 
 	/* TODO: To be implemented for Cygwin */
@@ -255,14 +255,14 @@ void TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	undef TkUnionRectWithRegion
 #	undef TkSubtractRegion
 
-#	define TkClipBox (void (*) (TkRegion, XRectangle *)) XClipBox
+#	define TkClipBox (int (*) (TkRegion, XRectangle *)) XClipBox
 #	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
-#	define TkDestroyRegion (void (*) (TkRegion)) XDestroyRegion
-#	define TkIntersectRegion (void (*) (TkRegion, TkRegion, TkRegion)) XIntersectRegion
+#	define TkDestroyRegion (int (*) (TkRegion)) XDestroyRegion
+#	define TkIntersectRegion (int (*) (TkRegion, TkRegion, TkRegion)) XIntersectRegion
 #	define TkRectInRegion (int (*) (TkRegion, int, int, unsigned int, unsigned int)) XRectInRegion
-#	define TkSetRegion (void (*) (Display *, GC, TkRegion)) XSetRegion
-#	define TkUnionRectWithRegion (void (*) (XRectangle *, TkRegion, TkRegion)) XUnionRectWithRegion
-#	define TkSubtractRegion (void (*) (TkRegion, TkRegion, TkRegion)) XSubtractRegion
+#	define TkSetRegion (int (*) (Display *, GC, TkRegion)) XSetRegion
+#	define TkUnionRectWithRegion (int (*) (XRectangle *, TkRegion, TkRegion)) XUnionRectWithRegion
+#	define TkSubtractRegion (int (*) (TkRegion, TkRegion, TkRegion)) XSubtractRegion
 #   endif
 #endif /* !_WIN32 */
 

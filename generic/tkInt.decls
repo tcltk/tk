@@ -402,26 +402,26 @@ declare 112 {
     void TkpMenuThreadInit(void)
 }
 declare 113 {
-    void TkClipBox(TkRegion rgn, XRectangle *rect_return)
+    int TkClipBox(TkRegion rgn, XRectangle *rect_return)
 }
 declare 114 {
     TkRegion TkCreateRegion(void)
 }
 declare 115 {
-    void TkDestroyRegion(TkRegion rgn)
+    int TkDestroyRegion(TkRegion rgn)
 }
 declare 116 {
-    void TkIntersectRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
+    int TkIntersectRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
 declare 117 {
     int TkRectInRegion(TkRegion rgn, int x, int y, unsigned int width,
 	    unsigned int height)
 }
 declare 118 {
-    void TkSetRegion(Display *display, GC gc, TkRegion rgn)
+    int TkSetRegion(Display *display, GC gc, TkRegion rgn)
 }
 declare 119 {
-    void TkUnionRectWithRegion(XRectangle *rect,
+    int TkUnionRectWithRegion(XRectangle *rect,
 	    TkRegion src, TkRegion dr_return)
 }
 declare 121 aqua {
@@ -467,7 +467,7 @@ declare 144 {
     void TkGCCleanup(TkDisplay *dispPtr)
 }
 declare 145 {
-    void TkSubtractRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
+    int TkSubtractRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
 declare 146 {
     void TkStylePkgInit(TkMainInfo *mainPtr)
