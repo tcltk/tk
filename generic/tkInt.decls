@@ -1880,6 +1880,9 @@ declare 122 macosx {
 	    Visual *visual, unsigned long value_mask,
 	    XSetWindowAttributes *attributes)
 }
+declare 129 macosx {
+    int XLowerWindow(Display *d, Window w)
+}
 declare 130 macosx {
     int XFillArcs(Display *d, Drawable dr, GC gc, XArc *a, int n)
 }

@@ -615,7 +615,6 @@ XRaiseWindow(
     return Success;
 }
 
-#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -632,7 +631,7 @@ XRaiseWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XLowerWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -643,12 +642,12 @@ XLowerWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Below, NULL);
     } else {
-        /*
+	/*
 	 * TODO: this should generate damage
 	 */
     }
+    return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
