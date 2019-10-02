@@ -882,7 +882,7 @@ UseinputmethodsCmd(
 		&boolVal) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (boolVal) {
+	if (boolVal && (dispPtr->inputMethod != NULL)) {
 	    dispPtr->flags |= TK_DISPLAY_USE_IM;
 	} else {
 	    dispPtr->flags &= ~TK_DISPLAY_USE_IM;
