@@ -24,12 +24,9 @@
 #   include <tkMacOSXInt.h>
 #   include <X11/Xlib.h>
 #   include <X11/X.h>
-#   define Cursor XCursor
-#   define Region XRegion
 #   define gcCacheSize sizeof(TkpGCCache)
 #endif
 
-#undef TkSetRegion
 
 /*
  *----------------------------------------------------------------------
@@ -600,24 +597,6 @@ XMapRaised(
    return Success;
 }
 
-#if 0
-int
-XPutImage(
-    Display *display,
-    Drawable d,
-    GC gc,
-    XImage *image,
-    int src_x,
-    int src_y,
-    int dest_x,
-    int dest_y,
-    unsigned int width,
-    unsigned int height)
-{
-    return 0;
-}
-#endif
-
 int
 XQueryTextExtents(
     Display *display,
@@ -722,15 +701,6 @@ XPolygonRegion(
 {
     return 0;
 }
-
-int
-XOffsetRegion(
-    Region rgn,
-	int dx,
-	int dy)
-{
-	return 0;
-}
 
 void
 XDestroyIC(
@@ -763,6 +733,92 @@ XCreateGlyphCursor(
 {
     return 1;
 }
+
+XFontSet
+XCreateFontSet(
+    Display *display		/* display */,
+    _Xconst char *base_font_name_list	/* base_font_name_list */,
+    char ***missing_charset_list		/* missing_charset_list */,
+    int *missing_charset_count		/* missing_charset_count */,
+    char **def_string		/* def_string */
+) {
+    return (XFontSet)0;
+}
+
+void
+XFreeFontSet(
+    Display *display,		/* display */
+    XFontSet fontset		/* font_set */
+) {
+}
+
+void
+XFreeStringList(
+    char **list		/* list */
+) {
+}
+
+Status
+XCloseIM(
+    XIM im /* im */
+) {
+    return Success;
+}
+
+Bool
+XRegisterIMInstantiateCallback(
+    Display *dpy			/* dpy */,
+    struct _XrmHashBucketRec *rdb	/* rdb */,
+    char *res_name			/* res_name */,
+    char *res_class			/* res_class */,
+    XIDProc callback			/* callback */,
+    XPointer client_data			/* client_data */
+) {
+    return False;
+}
+
+Bool
+XUnregisterIMInstantiateCallback(
+    Display *dpy			/* dpy */,
+    struct _XrmHashBucketRec *rdb	/* rdb */,
+    char *res_name			/* res_name */,
+    char *res_class			/* res_class */,
+    XIDProc callback			/* callback */,
+    XPointer client_data			/* client_data */
+) {
+    return False;
+}
+
+char *
+XSetLocaleModifiers(
+    const char *modifier_list		/* modifier_list */
+) {
+    return NULL;
+}
+
+XIM XOpenIM(
+    Display *dpy			/* dpy */,
+    struct _XrmHashBucketRec *rdb	/* rdb */,
+    char *res_name			/* res_name */,
+    char *res_class			/* res_class */
+) {
+    return NULL;
+}
+
+char *
+XGetIMValues(
+    XIM im /* im */, ...
+) {
+    return NULL;
+}
+
+char *
+XSetIMValues(
+    XIM im /* im */, ...
+) {
+    return NULL;
+}
+
 
 /*
  * Local Variables:

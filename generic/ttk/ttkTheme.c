@@ -16,8 +16,7 @@
 #define PKG_ASSOC_KEY "Ttk"
 
 #ifdef MAC_OSX_TK
-    extern void TkMacOSXFlushWindows(void);
-    #define UPDATE_WINDOWS() TkMacOSXFlushWindows()
+    #define UPDATE_WINDOWS() XSync(NULL, False)
 #else
     #define UPDATE_WINDOWS()
 #endif

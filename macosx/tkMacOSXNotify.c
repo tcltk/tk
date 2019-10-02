@@ -14,7 +14,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
 #include <tclInt.h>
 #import <objc/objc-auto.h>
