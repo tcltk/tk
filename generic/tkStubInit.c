@@ -739,6 +739,19 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetICValues, /* 141 */
     XGetICValues, /* 142 */
     XSetICFocus, /* 143 */
+    0, /* 144 */
+    0, /* 145 */
+    0, /* 146 */
+    XFreeFontSet, /* 147 */
+    XCloseIM, /* 148 */
+    XRegisterIMInstantiateCallback, /* 149 */
+    XUnregisterIMInstantiateCallback, /* 150 */
+    XSetLocaleModifiers, /* 151 */
+    XOpenIM, /* 152 */
+    XGetIMValues, /* 153 */
+    XSetIMValues, /* 154 */
+    XCreateFontSet, /* 155 */
+    XFreeStringList, /* 156 */
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
     XSetDashes, /* 0 */
@@ -888,6 +901,16 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XDestroyIC, /* 144 */
     XCreatePixmapCursor, /* 145 */
     XCreateGlyphCursor, /* 146 */
+    XFreeFontSet, /* 147 */
+    XCloseIM, /* 148 */
+    XRegisterIMInstantiateCallback, /* 149 */
+    XUnregisterIMInstantiateCallback, /* 150 */
+    XSetLocaleModifiers, /* 151 */
+    XOpenIM, /* 152 */
+    XGetIMValues, /* 153 */
+    XSetIMValues, /* 154 */
+    XCreateFontSet, /* 155 */
+    XFreeStringList, /* 156 */
 #endif /* MACOSX */
 };
 

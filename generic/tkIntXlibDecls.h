@@ -427,6 +427,40 @@ EXTERN char *		XSetICValues(XIC xic, ...);
 EXTERN char *		XGetICValues(XIC xic, ...);
 /* 143 */
 EXTERN void		XSetICFocus(XIC xic);
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* 147 */
+EXTERN void		XFreeFontSet(Display *display, XFontSet fontset);
+/* 148 */
+EXTERN int		XCloseIM(XIM im);
+/* 149 */
+EXTERN Bool		XRegisterIMInstantiateCallback(Display *dpy,
+				struct _XrmHashBucketRec *rbd,
+				char *res_name, char *res_class,
+				XIDProc callback, XPointer client_data);
+/* 150 */
+EXTERN Bool		XUnregisterIMInstantiateCallback(Display *dpy,
+				struct _XrmHashBucketRec *rbd,
+				char *res_name, char *res_class,
+				XIDProc callback, XPointer client_data);
+/* 151 */
+EXTERN char *		XSetLocaleModifiers(const char *modifier_list);
+/* 152 */
+EXTERN XIM		XOpenIM(Display *dpy, struct _XrmHashBucketRec *rdb,
+				char *res_name, char *res_class);
+/* 153 */
+EXTERN char *		XGetIMValues(XIM im, ...);
+/* 154 */
+EXTERN char *		XSetIMValues(XIM im, ...);
+/* 155 */
+EXTERN XFontSet		XCreateFontSet(Display *display,
+				_Xconst char *base_font_name_list,
+				char ***missing_charset_list,
+				int *missing_charset_count,
+				char **def_string);
+/* 156 */
+EXTERN void		XFreeStringList(char **list);
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
 /* 0 */
@@ -788,6 +822,37 @@ EXTERN Cursor		XCreatePixmapCursor(Display *d, Pixmap p1, Pixmap p2,
 EXTERN Cursor		XCreateGlyphCursor(Display *d, Font f1, Font f2,
 				unsigned int ui1, unsigned int ui2,
 				XColor _Xconst *x1, XColor _Xconst *x2);
+/* 147 */
+EXTERN void		XFreeFontSet(Display *display, XFontSet fontset);
+/* 148 */
+EXTERN void		XCloseIM(XIM im);
+/* 149 */
+EXTERN Bool		XRegisterIMInstantiateCallback(Display *dpy,
+				struct _XrmHashBucketRec *rbd,
+				char *res_name, char *res_class,
+				XIDProc callback, XPointer client_data);
+/* 150 */
+EXTERN Bool		XUnregisterIMInstantiateCallback(Display *dpy,
+				struct _XrmHashBucketRec *rbd,
+				char *res_name, char *res_class,
+				XIDProc callback, XPointer client_data);
+/* 151 */
+EXTERN char *		XSetLocaleModifiers(const char *modifier_list);
+/* 152 */
+EXTERN XIM		XOpenIM(Display *dpy, struct _XrmHashBucketRec *rdb,
+				char *res_name, char *res_class);
+/* 153 */
+EXTERN char *		XGetIMValues(XIM im, ...);
+/* 154 */
+EXTERN char *		XSetIMValues(XIM im, ...);
+/* 155 */
+EXTERN XFontSet		XCreateFontSet(Display *display,
+				_Xconst char *base_font_name_list,
+				char ***missing_charset_list,
+				int *missing_charset_count,
+				char **def_string);
+/* 156 */
+EXTERN void		XFreeStringList(char **list);
 #endif /* MACOSX */
 
 typedef struct TkIntXlibStubs {
@@ -939,6 +1004,19 @@ typedef struct TkIntXlibStubs {
     char * (*xSetICValues) (XIC xic, ...); /* 141 */
     char * (*xGetICValues) (XIC xic, ...); /* 142 */
     void (*xSetICFocus) (XIC xic); /* 143 */
+    void (*reserved144)(void);
+    void (*reserved145)(void);
+    void (*reserved146)(void);
+    void (*xFreeFontSet) (Display *display, XFontSet fontset); /* 147 */
+    int (*xCloseIM) (XIM im); /* 148 */
+    Bool (*xRegisterIMInstantiateCallback) (Display *dpy, struct _XrmHashBucketRec *rbd, char *res_name, char *res_class, XIDProc callback, XPointer client_data); /* 149 */
+    Bool (*xUnregisterIMInstantiateCallback) (Display *dpy, struct _XrmHashBucketRec *rbd, char *res_name, char *res_class, XIDProc callback, XPointer client_data); /* 150 */
+    char * (*xSetLocaleModifiers) (const char *modifier_list); /* 151 */
+    XIM (*xOpenIM) (Display *dpy, struct _XrmHashBucketRec *rdb, char *res_name, char *res_class); /* 152 */
+    char * (*xGetIMValues) (XIM im, ...); /* 153 */
+    char * (*xSetIMValues) (XIM im, ...); /* 154 */
+    XFontSet (*xCreateFontSet) (Display *display, _Xconst char *base_font_name_list, char ***missing_charset_list, int *missing_charset_count, char **def_string); /* 155 */
+    void (*xFreeStringList) (char **list); /* 156 */
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
     int (*xSetDashes) (Display *display, GC gc, int dash_offset, _Xconst char *dash_list, int n); /* 0 */
@@ -1088,6 +1166,16 @@ typedef struct TkIntXlibStubs {
     void (*xDestroyIC) (XIC xic); /* 144 */
     Cursor (*xCreatePixmapCursor) (Display *d, Pixmap p1, Pixmap p2, XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2); /* 145 */
     Cursor (*xCreateGlyphCursor) (Display *d, Font f1, Font f2, unsigned int ui1, unsigned int ui2, XColor _Xconst *x1, XColor _Xconst *x2); /* 146 */
+    void (*xFreeFontSet) (Display *display, XFontSet fontset); /* 147 */
+    void (*xCloseIM) (XIM im); /* 148 */
+    Bool (*xRegisterIMInstantiateCallback) (Display *dpy, struct _XrmHashBucketRec *rbd, char *res_name, char *res_class, XIDProc callback, XPointer client_data); /* 149 */
+    Bool (*xUnregisterIMInstantiateCallback) (Display *dpy, struct _XrmHashBucketRec *rbd, char *res_name, char *res_class, XIDProc callback, XPointer client_data); /* 150 */
+    char * (*xSetLocaleModifiers) (const char *modifier_list); /* 151 */
+    XIM (*xOpenIM) (Display *dpy, struct _XrmHashBucketRec *rdb, char *res_name, char *res_class); /* 152 */
+    char * (*xGetIMValues) (XIM im, ...); /* 153 */
+    char * (*xSetIMValues) (XIM im, ...); /* 154 */
+    XFontSet (*xCreateFontSet) (Display *display, _Xconst char *base_font_name_list, char ***missing_charset_list, int *missing_charset_count, char **def_string); /* 155 */
+    void (*xFreeStringList) (char **list); /* 156 */
 #endif /* MACOSX */
 } TkIntXlibStubs;
 
@@ -1380,6 +1468,29 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xGetICValues) /* 142 */
 #define XSetICFocus \
 	(tkIntXlibStubsPtr->xSetICFocus) /* 143 */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+#define XFreeFontSet \
+	(tkIntXlibStubsPtr->xFreeFontSet) /* 147 */
+#define XCloseIM \
+	(tkIntXlibStubsPtr->xCloseIM) /* 148 */
+#define XRegisterIMInstantiateCallback \
+	(tkIntXlibStubsPtr->xRegisterIMInstantiateCallback) /* 149 */
+#define XUnregisterIMInstantiateCallback \
+	(tkIntXlibStubsPtr->xUnregisterIMInstantiateCallback) /* 150 */
+#define XSetLocaleModifiers \
+	(tkIntXlibStubsPtr->xSetLocaleModifiers) /* 151 */
+#define XOpenIM \
+	(tkIntXlibStubsPtr->xOpenIM) /* 152 */
+#define XGetIMValues \
+	(tkIntXlibStubsPtr->xGetIMValues) /* 153 */
+#define XSetIMValues \
+	(tkIntXlibStubsPtr->xSetIMValues) /* 154 */
+#define XCreateFontSet \
+	(tkIntXlibStubsPtr->xCreateFontSet) /* 155 */
+#define XFreeStringList \
+	(tkIntXlibStubsPtr->xFreeStringList) /* 156 */
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
 #define XSetDashes \
@@ -1646,6 +1757,26 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xCreatePixmapCursor) /* 145 */
 #define XCreateGlyphCursor \
 	(tkIntXlibStubsPtr->xCreateGlyphCursor) /* 146 */
+#define XFreeFontSet \
+	(tkIntXlibStubsPtr->xFreeFontSet) /* 147 */
+#define XCloseIM \
+	(tkIntXlibStubsPtr->xCloseIM) /* 148 */
+#define XRegisterIMInstantiateCallback \
+	(tkIntXlibStubsPtr->xRegisterIMInstantiateCallback) /* 149 */
+#define XUnregisterIMInstantiateCallback \
+	(tkIntXlibStubsPtr->xUnregisterIMInstantiateCallback) /* 150 */
+#define XSetLocaleModifiers \
+	(tkIntXlibStubsPtr->xSetLocaleModifiers) /* 151 */
+#define XOpenIM \
+	(tkIntXlibStubsPtr->xOpenIM) /* 152 */
+#define XGetIMValues \
+	(tkIntXlibStubsPtr->xGetIMValues) /* 153 */
+#define XSetIMValues \
+	(tkIntXlibStubsPtr->xSetIMValues) /* 154 */
+#define XCreateFontSet \
+	(tkIntXlibStubsPtr->xCreateFontSet) /* 155 */
+#define XFreeStringList \
+	(tkIntXlibStubsPtr->xFreeStringList) /* 156 */
 #endif /* MACOSX */
 
 #endif /* defined(USE_TK_STUBS) */

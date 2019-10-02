@@ -1522,6 +1522,42 @@ declare 142 win {
 declare 143 win {
     void XSetICFocus(XIC xic)
 }
+declare 147 win {
+    void XFreeFontSet(Display *display, XFontSet fontset)
+}
+declare 148 win {
+    int XCloseIM(XIM im)
+}
+declare 149 win {
+    Bool XRegisterIMInstantiateCallback(Display *dpy, struct _XrmHashBucketRec *rbd,
+	    char *res_name, char *res_class, XIDProc callback, XPointer client_data)
+}
+declare 150 win {
+    Bool XUnregisterIMInstantiateCallback(Display *dpy, struct _XrmHashBucketRec *rbd,
+	    char *res_name, char *res_class, XIDProc callback, XPointer client_data)
+}
+declare 151 win {
+    char *XSetLocaleModifiers(const char *modifier_list)
+}
+declare 152 win {
+    XIM XOpenIM(Display *dpy, struct _XrmHashBucketRec *rdb, char *res_name,
+	    char *res_class)
+}
+declare 153 win {
+    char *XGetIMValues(XIM im, ...)
+}
+declare 154 win {
+    char *XSetIMValues(XIM im, ...)
+}
+declare 155 win {
+    XFontSet XCreateFontSet(Display *display, _Xconst char *base_font_name_list,
+	    char ***missing_charset_list, int *missing_charset_count, char **def_string)
+}
+declare 156 win {
+    void XFreeStringList(char **list)
+}
+
+
 
 ################################
 # X functions for MacOSX
@@ -1929,6 +1965,40 @@ declare 146 macosx {
     Cursor XCreateGlyphCursor(Display *d, Font f1, Font f2,
 	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
 	    XColor _Xconst *x2)
+}
+declare 147 macosx {
+    void XFreeFontSet(Display *display, XFontSet fontset)
+}
+declare 148 macosx {
+    void XCloseIM(XIM im)
+}
+declare 149 macosx {
+    Bool XRegisterIMInstantiateCallback(Display *dpy, struct _XrmHashBucketRec *rbd,
+	    char *res_name, char *res_class, XIDProc callback, XPointer client_data)
+}
+declare 150 macosx {
+    Bool XUnregisterIMInstantiateCallback(Display *dpy, struct _XrmHashBucketRec *rbd,
+	    char *res_name, char *res_class, XIDProc callback, XPointer client_data)
+}
+declare 151 macosx {
+    char *XSetLocaleModifiers(const char *modifier_list)
+}
+declare 152 macosx {
+    XIM XOpenIM(Display *dpy, struct _XrmHashBucketRec *rdb, char *res_name,
+	    char *res_class)
+}
+declare 153 macosx {
+    char *XGetIMValues(XIM im, ...)
+}
+declare 154 macosx {
+    char *XSetIMValues(XIM im, ...)
+}
+declare 155 macosx {
+    XFontSet XCreateFontSet(Display *display, _Xconst char *base_font_name_list,
+	    char ***missing_charset_list, int *missing_charset_count, char **def_string)
+}
+declare 156 macosx {
+    void XFreeStringList(char **list)
 }
 
 # Local Variables:
