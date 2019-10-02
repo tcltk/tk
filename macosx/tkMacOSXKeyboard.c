@@ -12,7 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
 /*
  * A couple of simple definitions to make code a bit more self-explaining.

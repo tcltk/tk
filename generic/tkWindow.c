@@ -2068,11 +2068,7 @@ Tk_DefineCursor(
 {
     register TkWindow *winPtr = (TkWindow *) tkwin;
 
-#if defined(MAC_OSX_TK)
-    winPtr->atts.cursor = (XCursor) cursor;
-#else
     winPtr->atts.cursor = (Cursor) cursor;
-#endif
 
     if (winPtr->window != None) {
 	XDefineCursor(winPtr->display, winPtr->window, winPtr->atts.cursor);

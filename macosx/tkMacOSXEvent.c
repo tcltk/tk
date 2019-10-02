@@ -12,7 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXConstants.h"
 
@@ -110,9 +110,9 @@ enum {
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXFlushWindows --
+ * XSync --
  *
- *	This routine is a stub called by XSync, which is called during the Tk
+ *	This routine is a stub called XSync, which is called during the Tk
  *      update command.  The language specification does not require that the
  *      update command be synchronous but many of the tests implicitly assume
  *      that it is.  It is definitely asynchronous on macOS since many idle
@@ -128,18 +128,22 @@ enum {
  *----------------------------------------------------------------------
  */
 
-MODULE_SCOPE void
-TkMacOSXFlushWindows(void)
+int
+XSync(
+    Display *display,
+    Bool discard)
 {
-    if (Tk_GetNumMainWindows() == 0) {
-	return;
+    if (display) {
+	display->request++;
     }
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-    for (NSWindow *w in [NSApp orderedWindows]) {
-	[w display];
+    if (Tk_GetNumMainWindows() != 0) {
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+	for (NSWindow *w in [NSApp orderedWindows]) {
+	    [w display];
+	}
     }
+    return Success;
 }
-
 
 /*
  * Local Variables:

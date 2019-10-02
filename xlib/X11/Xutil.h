@@ -53,10 +53,6 @@ SOFTWARE.
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 
-#if defined(MAC_OSX_TK)
-#   define Region XRegion
-#endif
-
 /* The Xlib structs are full of implicit padding to properly align members.
    We can't clean that up without breaking ABI, so tell clang not to bother
    complaining about it. */
@@ -828,16 +824,10 @@ EXTERN int XXorRegion(
     Region		/* dr_return */
 );
 
-#include "tkIntXlibDecls.h"
-
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
 
 _XFUNCPROTOEND
-
-#if defined(MAC_OSX_TK)
-#   undef Region
-#endif
 
 #endif /* _X11_XUTIL_H_ */

@@ -440,3 +440,12 @@ XVisualIDFromVisual(
 {
     return visual->visualid;
 }
+
+int
+XOffsetRegion(
+    Region rgn,
+	int dx,
+	int dy)
+{
+	return 0;
+}
