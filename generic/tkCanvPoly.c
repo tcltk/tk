@@ -121,7 +121,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	"0,0", offsetof(PolygonItem, tsoffset),
 	TK_CONFIG_NULL_OK, &offsetOption},
     {TK_CONFIG_COLOR, "-outline", NULL, NULL,
-	DEF_CANVITEM_OUTLINE, offsetof(PolygonItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-outlineoffset", NULL, NULL,
 	"0,0", offsetof(PolygonItem, outline.tsoffset),
 	TK_CONFIG_NULL_OK, &offsetOption},
