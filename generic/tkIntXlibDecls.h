@@ -745,7 +745,8 @@ EXTERN Window		XCreateWindow(Display *display, Window parent, int x,
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
 /* Slot 128 is reserved */
-/* Slot 129 is reserved */
+/* 129 */
+EXTERN int		XLowerWindow(Display *d, Window w);
 /* 130 */
 EXTERN int		XFillArcs(Display *d, Drawable dr, GC gc, XArc *a,
 				int n);
@@ -1069,7 +1070,7 @@ typedef struct TkIntXlibStubs {
     void (*reserved126)(void);
     void (*reserved127)(void);
     void (*reserved128)(void);
-    void (*reserved129)(void);
+    int (*xLowerWindow) (Display *d, Window w); /* 129 */
     int (*xFillArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 130 */
     int (*xDrawArcs) (Display *d, Drawable dr, GC gc, XArc *a, int n); /* 131 */
     int (*xDrawRectangles) (Display *d, Drawable dr, GC gc, XRectangle *r, int n); /* 132 */
@@ -1612,7 +1613,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
 /* Slot 128 is reserved */
-/* Slot 129 is reserved */
+#define XLowerWindow \
+	(tkIntXlibStubsPtr->xLowerWindow) /* 129 */
 #define XFillArcs \
 	(tkIntXlibStubsPtr->xFillArcs) /* 130 */
 #define XDrawArcs \
