@@ -1661,16 +1661,6 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
-#if !defined(_WIN32) && !defined(__CYGWIN__) /* UNIX and MacOSX */
-#undef TkPutImage
-#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
-	XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
-#else
-#undef XPutImage
-#define XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
-	TkPutImage(NULL, 0, display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
-#endif
-
 #if defined(MAC_OSX_TK)
 #   undef Cursor
 #   undef Region
