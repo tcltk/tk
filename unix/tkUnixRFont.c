@@ -1267,12 +1267,12 @@ TkDrawAngledChars(
 
 void
 TkUnixSetXftClipRegion(
-    TkRegion clipRegion)	/* The clipping region to install. */
+    Region clipRegion)	/* The clipping region to install. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    tsdPtr->clipRegion = (Region) clipRegion;
+    tsdPtr->clipRegion = clipRegion;
 }
 
 /*

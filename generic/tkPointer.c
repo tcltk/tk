@@ -20,7 +20,6 @@
 
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
-#define Cursor XCursor
 #endif
 
 typedef struct {

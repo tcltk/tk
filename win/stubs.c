@@ -29,7 +29,7 @@ XStringListToTextProperty(
     int count,
     XTextProperty *text_prop_return)
 {
-    return (Status) 0;
+    return Success;
 }
 
 /*
@@ -50,36 +50,10 @@ XChangeProperty(
     return Success;
 }
 
-Cursor
-XCreateGlyphCursor(
-    Display *display,
-    Font source_font,
-    Font mask_font,
-    unsigned int source_char,
-    unsigned int mask_char,
-    XColor _Xconst *foreground_color,
-    XColor _Xconst *background_color)
-{
-    return 1;
-}
-
 XIC
 XCreateIC(XIM xim, ...)
 {
     return NULL;
-}
-
-Cursor
-XCreatePixmapCursor(
-    Display *display,
-    Pixmap source,
-    Pixmap mask,
-    XColor *foreground_color,
-    XColor *background_color,
-    unsigned int x,
-    unsigned int y)
-{
-    return (Cursor) NULL;
 }
 
 int
@@ -89,12 +63,6 @@ XDeleteProperty(
     Atom property)
 {
     return Success;
-}
-
-void
-XDestroyIC(
-    XIC ic)
-{
 }
 
 Bool
@@ -152,7 +120,7 @@ XGetWMColormapWindows(
     Window **windows_return,
     int *count_return)
 {
-    return (Status) 0;
+    return Success;
 }
 
 int
@@ -444,25 +412,25 @@ int
 XNoOp(
     Display *display)
 {
-	display->request++;
+    display->request++;
     return 0;
 }
 
 XAfterFunction
 XSynchronize(
     Display *display,
-    Bool bool)
+    Bool onoff)
 {
-	display->request++;
+    display->request++;
     return NULL;
 }
 
 int
 XSync(
     Display *display,
-    Bool bool)
+    Bool discard)
 {
-	display->request++;
+    display->request++;
     return 0;
 }
 
@@ -471,4 +439,13 @@ XVisualIDFromVisual(
     Visual *visual)
 {
     return visual->visualid;
+}
+
+int
+XOffsetRegion(
+    Region rgn,
+	int dx,
+	int dy)
+{
+	return 0;
 }

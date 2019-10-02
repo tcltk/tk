@@ -458,8 +458,7 @@ Send(
 	obj = Tcl_GetObjResult(interp);
 	src = Tcl_GetString(obj);
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToWCharDString(src, obj->length, &ds);
-	pvResult->bstrVal = SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
+	pvResult->bstrVal = SysAllocString(Tcl_UtfToWCharDString(src, obj->length, &ds));
 	Tcl_DStringFree(&ds);
     }
     if (result == TCL_ERROR) {

@@ -181,7 +181,7 @@ typedef struct TkColormap TkColormap;
 typedef struct TkFontAttributes TkFontAttributes;
 typedef struct TkGrabEvent TkGrabEvent;
 typedef struct TkpCursor_ *TkpCursor;
-typedef struct TkRegion_ *TkRegion;
+#define TkRegion Region
 typedef struct TkStressedCmap TkStressedCmap;
 typedef struct TkBindInfo_ *TkBindInfo;
 typedef struct Busy *TkBusy;
@@ -564,7 +564,7 @@ typedef struct TkDisplay {
      * Miscellaneous information:
      */
 
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIM inputMethod;		/* Input method for this display. */
     XIMStyle inputStyle;	/* Input style selected for this display. */
     XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
@@ -608,8 +608,11 @@ typedef struct TkDisplay {
 
     int iconDataSize;		/* Size of default iconphoto image data. */
     unsigned char *iconDataPtr;	/* Default iconphoto image data, if set. */
-#ifdef TK_USE_INPUT_METHODS
     int ximGeneration;          /* Used to invalidate XIC */
+#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
+    XIM inputMethod;		/* Input method for this display. */
+    XIMStyle inputStyle;	/* Input style selected for this display. */
+    XFontSet inputXfs;		/* XFontSet cached for over-the-spot XIM. */
 #endif /* TK_USE_INPUT_METHODS */
 } TkDisplay;
 
@@ -834,7 +837,7 @@ typedef struct TkWindow {
 
     TkEventHandler *handlerList;/* First in list of event handlers declared
 				 * for this window, or NULL if none. */
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIC inputContext;		/* XIM input context. */
 #endif /* TK_USE_INPUT_METHODS */
 
@@ -915,7 +918,7 @@ typedef struct TkWindow {
 
     int minReqWidth;		/* Minimum requested width. */
     int minReqHeight;		/* Minimum requested height. */
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     int ximGeneration;          /* Used to invalidate XIC */
 #endif /* TK_USE_INPUT_METHODS */
     char *geomMgrName;          /* Records the name of the geometry manager. */
@@ -923,6 +926,10 @@ typedef struct TkWindow {
 				/* The geometry master for this window. The
 				 * value is NULL if the window has no master or
 				 * if its master is its parent. */
+#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
+    XIC inputContext;		/* XIM input context. */
+    int ximGeneration;          /* Used to invalidate XIC */
+#endif /* TK_USE_INPUT_METHODS */
 } TkWindow;
 
 /*
@@ -991,7 +998,7 @@ typedef struct TkpClipMask {
     int type;			/* TKP_CLIP_PIXMAP or TKP_CLIP_REGION. */
     union {
 	Pixmap pixmap;
-	TkRegion region;
+	Region region;
     } value;
 } TkpClipMask;
 
@@ -1326,7 +1333,7 @@ MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
 			    ClientData clientData);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;
 MODULE_SCOPE Tcl_ExitProc	TkFinalizeThread;
-MODULE_SCOPE void	TkpBuildRegionFromAlphaData(TkRegion region,
+MODULE_SCOPE void	TkpBuildRegionFromAlphaData(Region region,
 			    unsigned x, unsigned y, unsigned width,
 			    unsigned height, unsigned char *dataPtr,
 			    unsigned pixelStride, unsigned lineStride);
@@ -1397,8 +1404,30 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 				Colormap map, const char* spec,
 				XColor * colorPtr);
 #endif
+#if !defined(_WIN32) && !defined(__CYGWIN__) /* UNIX and MacOSX */
+#undef TkPutImage
+#define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
+#else
+#undef XPutImage
+#define XPutImage(display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
+	TkPutImage(NULL, 0, display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
+#endif
+
+/*
+ * These macros are just wrappers for the equivalent X Region calls.
+ */
+#define TkClipBox XClipBox
+#define TkCreateRegion XCreateRegion
+#define TkDestroyRegion XDestroyRegion
+#define TkIntersectRegion XIntersectRegion
+#define TkRectInRegion XRectInRegion
+#define TkSetRegion XSetRegion
+#define TkSubtractRegion XSubtractRegion
+#define TkUnionRectWithRegion XUnionRectWithRegion
+
 #ifdef HAVE_XFT
-MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
+MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
 #if !defined(__cplusplus) && !defined(c_plusplus)

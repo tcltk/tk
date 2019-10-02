@@ -134,7 +134,7 @@ Tk_BellObjCmd(
     if (!nice) {
 	XForceScreenSaver(Tk_Display(tkwin), ScreenSaverReset);
     }
-    XFlush(Tk_Display(tkwin));
+    (void)XFlush(Tk_Display(tkwin));
     Tk_DeleteErrorHandler(handler);
     return TCL_OK;
 }
@@ -875,11 +875,6 @@ UseinputmethodsCmd(
     }
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
     if ((objc - skip) == 2) {
-	/*
-	 * In the case where TK_USE_INPUT_METHODS is not defined, this
-	 * will be ignored and we will always return 0. That will indicate
-	 * to the user that input methods are just not available.
-	 */
 
 	int boolVal;
 
@@ -887,13 +882,11 @@ UseinputmethodsCmd(
 		&boolVal) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-#ifdef TK_USE_INPUT_METHODS
-	if (boolVal) {
+	if (boolVal && (dispPtr->inputMethod != NULL)) {
 	    dispPtr->flags |= TK_DISPLAY_USE_IM;
 	} else {
 	    dispPtr->flags &= ~TK_DISPLAY_USE_IM;
 	}
-#endif /* TK_USE_INPUT_METHODS */
     } else if ((objc - skip) != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"?-displayof window? ?boolean?");
@@ -1812,224 +1805,7 @@ Tk_WinfoObjCmd(
     return TCL_OK;
 }
 
-#if 0
-/*
- *----------------------------------------------------------------------
- *
- * Tk_WmObjCmd --
- *
- *	This function is invoked to process the "wm" Tcl command. See the user
- *	documentation for details on what it does.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	See the user documentation.
- *
- *----------------------------------------------------------------------
- */
 
-	/* ARGSUSED */
-int
-Tk_WmObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])	/* Argument objects. */
-{
-    Tk_Window tkwin;
-    TkWindow *winPtr;
-
-    static const char *const optionStrings[] = {
-	"aspect",	"client",	"command",	"deiconify",
-	"focusmodel",	"frame",	"geometry",	"grid",
-	"group",	"iconbitmap",	"iconify",	"iconmask",
-	"iconname",	"iconposition",	"iconwindow",	"maxsize",
-	"minsize",	"overrideredirect",	"positionfrom",	"protocol",
-	"resizable",	"sizefrom",	"state",	"title",
-	"tracing",	"transient",	"withdraw",	NULL
-    };
-    enum options {
-	TKWM_ASPECT,	TKWM_CLIENT,	TKWM_COMMAND,	TKWM_DEICONIFY,
-	TKWM_FOCUSMOD,	TKWM_FRAME,	TKWM_GEOMETRY,	TKWM_GRID,
-	TKWM_GROUP,	TKWM_ICONBMP,	TKWM_ICONIFY,	TKWM_ICONMASK,
-	TKWM_ICONNAME,	TKWM_ICONPOS,	TKWM_ICONWIN,	TKWM_MAXSIZE,
-	TKWM_MINSIZE,	TKWM_OVERRIDE,	TKWM_POSFROM,	TKWM_PROTOCOL,
-	TKWM_RESIZABLE,	TKWM_SIZEFROM,	TKWM_STATE,	TKWM_TITLE,
-	TKWM_TRACING,	TKWM_TRANSIENT,	TKWM_WITHDRAW
-    };
-
-    tkwin = clientData;
-
-    if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option window ?arg?");
-	return TCL_ERROR;
-    }
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
-	return TCL_ERROR;
-    }
-
-    if (index == TKWM_TRACING) {
-	int wmTracing;
-	TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
-
-	if ((objc != 2) && (objc != 3)) {
-	    Tcl_WrongNumArgs(interp, 1, objv, "tracing ?boolean?");
-	    return TCL_ERROR;
-	}
-	if (objc == 2) {
-	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		    dispPtr->flags & TK_DISPLAY_WM_TRACING));
-	    return TCL_OK;
-	}
-	if (Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	if (wmTracing) {
-	    dispPtr->flags |= TK_DISPLAY_WM_TRACING;
-	} else {
-	    dispPtr->flags &= ~TK_DISPLAY_WM_TRACING;
-	}
-	return TCL_OK;
-    }
-
-    if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "window ?arg?");
-	return TCL_ERROR;
-    }
-
-    winPtr = (TkWindow *) Tk_NameToWindow(interp,
-	    Tcl_GetString(objv[2]), tkwin);
-    if (winPtr == NULL) {
-	return TCL_ERROR;
-    }
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"window \"%s\" isn't a top-level window", winPtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
-		NULL);
-	return TCL_ERROR;
-    }
-
-    switch ((enum options) index) {
-    case TKWM_ASPECT:
-	TkpWmAspectCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_CLIENT:
-	TkpWmClientCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_COMMAND:
-	TkpWmCommandCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_DEICONIFY:
-	TkpWmDeiconifyCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_FOCUSMOD:
-	TkpWmFocusmodCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_FRAME:
-	TkpWmFrameCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_GEOMETRY:
-	TkpWmGeometryCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_GRID:
-	TkpWmGridCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_GROUP:
-	TkpWmGroupCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONBMP:
-	TkpWmIconbitmapCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONIFY:
-	TkpWmIconifyCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONMASK:
-	TkpWmIconmaskCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONNAME:
-	/*
-	 * Slight Unix variation.
-	 */
-	TkpWmIconnameCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONPOS:
-	/*
-	 * nearly same - 1 line more on Unix.
-	 */
-	TkpWmIconpositionCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONWIN:
-	TkpWmIconwindowCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_MAXSIZE:
-	/*
-	 * Nearly same, win diffs.
-	 */
-	TkpWmMaxsizeCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_MINSIZE:
-	/*
-	 * Nearly same, win diffs
-	 */
-	TkpWmMinsizeCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_OVERRIDE:
-	/*
-	 * Almost same.
-	 */
-	TkpWmOverrideCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_POSFROM:
-	/*
-	 * Equal across platforms
-	 */
-	TkpWmPositionfromCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_PROTOCOL:
-	/*
-	 * Equal across platforms
-	 */
-	TkpWmProtocolCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_RESIZABLE:
-	/*
-	 * Almost same
-	 */
-	TkpWmResizableCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_SIZEFROM:
-	/*
-	 * Equal across platforms
-	 */
-	TkpWmSizefromCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_STATE:
-	TkpWmStateCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_TITLE:
-	TkpWmTitleCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_TRANSIENT:
-	TkpWmTransientCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_WITHDRAW:
-	TkpWmWithdrawCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    }
-
-  updateGeom:
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
-	wmPtr->flags |= WM_UPDATE_PENDING;
-    }
-    return TCL_OK;
-}
-#endif
-
 /*
  *----------------------------------------------------------------------
  *

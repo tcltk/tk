@@ -600,6 +600,7 @@ TkPutImage(
     return Success;
 }
 
+#undef XPutImage
 int
 XPutImage(
     Display *display,
@@ -1402,7 +1403,7 @@ TkScrollWindow(
     int x, int y, int width, int height,
 				/* Position rectangle to be scrolled. */
     int dx, int dy,		/* Distance rectangle should be moved. */
-    TkRegion damageRgn)		/* Region to accumulate damage in. */
+    Region damageRgn)		/* Region to accumulate damage in. */
 {
     HWND hwnd = TkWinGetHWND(Tk_WindowId(tkwin));
     RECT scrollRect;

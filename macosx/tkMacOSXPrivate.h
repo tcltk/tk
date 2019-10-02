@@ -147,13 +147,12 @@ MODULE_SCOPE long tkMacOSXMacOSXVersion;
  */
 
 #if 0
-MODULE_SCOPE void	TkMacOSXEmtpyRegion(TkRegion r);
-MODULE_SCOPE int	TkMacOSXIsEmptyRegion(TkRegion r);
+MODULE_SCOPE void	TkMacOSXEmtpyRegion(Region r);
+MODULE_SCOPE int	TkMacOSXIsEmptyRegion(Region r);
 #endif
-MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(TkRegion r);
-MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(TkRegion r,
+MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(Region r);
+MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r,
 			    HIShapeRef rgn);
-MODULE_SCOPE void	TkMacOSXOffsetRegion(TkRegion r, short dx, short dy);
 MODULE_SCOPE HIShapeRef	TkMacOSXHIShapeCreateEmpty(void);
 MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
 			    const CGRect *inRect);
