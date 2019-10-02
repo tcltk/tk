@@ -13,6 +13,7 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
+#include "default.h"
 
 /*
  * The structure below defines the record for each polygon item.
@@ -113,7 +114,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	"0.0", offsetof(PolygonItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", offsetof(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", NULL, NULL,
 	"round", offsetof(PolygonItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
@@ -204,10 +205,10 @@ Tk_ItemType tkPolygonType = {
     PolygonToPostscript,		/* postscriptProc */
     ScalePolygon,			/* scaleProc */
     TranslatePolygon,			/* translateProc */
-    GetPolygonIndex,			/* indexProc */
+    GetPolygonIndex,	/* indexProc */
     NULL,				/* icursorProc */
     NULL,				/* selectionProc */
-    PolygonInsert,			/* insertProc */
+    PolygonInsert,		/* insertProc */
     PolygonDeleteCoords,		/* dTextProc */
     NULL,				/* nextPtr */
     RotatePolygon,			/* rotateProc */

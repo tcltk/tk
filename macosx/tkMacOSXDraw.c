@@ -1464,7 +1464,7 @@ TkScrollWindow(
     int x, int y,		/* Position rectangle to be scrolled. */
     int width, int height,
     int dx, int dy,		/* Distance rectangle should be moved. */
-    TkRegion damageRgn)		/* Region to accumulate damage in. */
+    Region damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
@@ -1948,12 +1948,12 @@ ClipToGC(
 {
     if (gc && gc->clip_mask &&
 	    ((TkpClipMask *) gc->clip_mask)->type == TKP_CLIP_REGION) {
-	TkRegion gcClip = ((TkpClipMask *) gc->clip_mask)->value.region;
+	Region gcClip = ((TkpClipMask *) gc->clip_mask)->value.region;
 	int xOffset = ((MacDrawable *) d)->xOff + gc->clip_x_origin;
 	int yOffset = ((MacDrawable *) d)->yOff + gc->clip_y_origin;
 	HIShapeRef clipRgn = *clipRgnPtr, gcClipRgn;
 
-	TkMacOSXOffsetRegion(gcClip, xOffset, yOffset);
+	XOffsetRegion(gcClip, xOffset, yOffset);
 	gcClipRgn = TkMacOSXGetNativeRegion(gcClip);
 	if (clipRgn) {
 	    *clipRgnPtr = HIShapeCreateIntersection(gcClipRgn, clipRgn);
@@ -1962,7 +1962,7 @@ ClipToGC(
 	    *clipRgnPtr = HIShapeCreateCopy(gcClipRgn);
 	}
 	CFRelease(gcClipRgn);
-	TkMacOSXOffsetRegion(gcClip, -xOffset, -yOffset);
+	XOffsetRegion(gcClip, -xOffset, -yOffset);
     }
 }
 

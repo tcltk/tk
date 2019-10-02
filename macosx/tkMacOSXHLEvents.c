@@ -53,11 +53,11 @@ static void ProcessAppleEvent(ClientData clientData);
  * Names of the procedures which can be used to process AppleEvents.
  */
 
-static char* openDocumentProc = "::tk::mac::OpenDocument";
-static char* launchURLProc = "::tk::mac::LaunchURL";
-static char* printDocProc = "::tk::mac::PrintDocument";
-static char* scriptFileProc = "::tk::mac::DoScriptFile";
-static char* scriptTextProc = "::tk::mac::DoScriptText";
+static const char* openDocumentProc = "::tk::mac::OpenDocument";
+static const char* launchURLProc = "::tk::mac::LaunchURL";
+static const char* printDocProc = "::tk::mac::PrintDocument";
+static const char* scriptFileProc = "::tk::mac::DoScriptFile";
+static const char* scriptTextProc = "::tk::mac::DoScriptText";
 
 #pragma mark TKApplication(TKHLEvents)
 

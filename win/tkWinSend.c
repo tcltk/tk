@@ -150,7 +150,7 @@ Tk_SetAppName(
 	    return "";
 	}
 	tsdPtr->initialized = 1;
-	TRACE("Initialized COM library for interp 0x%08X\n", (long)interp);
+	TRACE("Initialized COM library for interp 0x%" TCL_Z_MODIFIER "x\n", (size_t)interp);
     }
 
     /*
@@ -764,8 +764,7 @@ Send(
     vCmd.vt = VT_BSTR;
     src = Tcl_GetString(cmd);
     Tcl_DStringInit(&ds);
-    Tcl_UtfToWCharDString(src, cmd->length, &ds);
-    vCmd.bstrVal = SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
+    vCmd.bstrVal = SysAllocString(Tcl_UtfToWCharDString(src, cmd->length, &ds));
     Tcl_DStringFree(&ds);
 
     dp.cArgs = 1;
@@ -874,15 +873,13 @@ TkWinSend_SetExcepInfo(
 
     src = Tcl_GetString(opError);
     Tcl_DStringInit(&ds);
-    Tcl_UtfToWCharDString(src, opError->length, &ds);
     pExcepInfo->bstrDescription =
-	    SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
+	    SysAllocString(Tcl_UtfToWCharDString(src, opError->length, &ds));
     Tcl_DStringFree(&ds);
     src = Tcl_GetString(opErrorCode);
     Tcl_DStringInit(&ds);
-    Tcl_UtfToWCharDString(src, opErrorCode->length, &ds);
     pExcepInfo->bstrSource =
-	    SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
+	    SysAllocString(Tcl_UtfToWCharDString(src, opErrorCode->length, &ds));
     Tcl_DStringFree(&ds);
     Tcl_DecrRefCount(opErrorCode);
     pExcepInfo->scode = E_FAIL;
