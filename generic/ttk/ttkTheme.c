@@ -15,12 +15,6 @@
 
 #define PKG_ASSOC_KEY "Ttk"
 
-#ifdef MAC_OSX_TK
-    #define UPDATE_WINDOWS() XSync(NULL, False)
-#else
-    #define UPDATE_WINDOWS()
-#endif
-
 /*------------------------------------------------------------------------
  * +++ Styles.
  *
@@ -516,7 +510,9 @@ static void ThemeChangedProc(ClientData clientData)
 	Tcl_BackgroundException(pkgPtr->interp, code);
     }
     pkgPtr->themeChangePending = 0;
-    UPDATE_WINDOWS();
+#ifdef MAC_OSX_TK
+    XSync(NULL, False);
+#endif
 }
 
 /*
