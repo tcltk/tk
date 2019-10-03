@@ -3274,6 +3274,7 @@ static void SelObjChangeElement(
  */
 static int GetCellFromObj(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *obj,
+    int displayColumnOnly,
     TreeItem **item, TreeColumn **column)
 {
     int nElements;
@@ -3297,6 +3298,21 @@ static int GetCellFromObj(
     if (!*column) {
 	return TCL_ERROR;
     }
+    if (displayColumnOnly) {
+	int i = FirstColumn(tv);
+	while (i < tv->tree.nDisplayColumns) {
+	    if (tv->tree.displayColumns[i] == *column) {
+		break;
+	    }
+	    ++i;
+	}
+	if (i == tv->tree.nDisplayColumns) { /* specified column unviewable */
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "Cell id must be in a visible column", -1));
+	    Tcl_SetErrorCode(interp, "TTK", "TREE", "CELL", NULL);
+	    return TCL_ERROR;
+	}
+    }
     return TCL_OK;
 }
 
@@ -3312,15 +3328,13 @@ static int CellSelectionRange(
     Tcl_Obj *columns, **elements;
     int seen, doit, colno, nElements, i;
 
-    if (GetCellFromObj(interp, tv, fromCell, &itemFrom, &columnFrom) != TCL_OK) {
+    if (GetCellFromObj(interp, tv, fromCell, 1, &itemFrom, &columnFrom) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (GetCellFromObj(interp, tv, toCell, &itemTo, &columnTo) != TCL_OK) {
+    if (GetCellFromObj(interp, tv, toCell, 1, &itemTo, &columnTo) != TCL_OK) {
 	return TCL_ERROR;
     }
 
-    /* TODO: What if columnFrom or columnTo is non-display? */
-    
     /* Make a list of columns in this rectangle.
      */
     columns = Tcl_NewListObj(0, 0);
@@ -3452,7 +3466,7 @@ static int TreeviewCellSelectionCommand(
     }
 
     for (i = 0; i < nCells; i++) {
-	if (GetCellFromObj(interp, tv, cells[i], &item, &column) != TCL_OK) {
+	if (GetCellFromObj(interp, tv, cells[i], 1, &item, &column) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
