@@ -1204,7 +1204,7 @@ test canvas-22.6 {canvas rotate: polygon item rotation behaviour} -setup {
 	[.c bbox all]
 } -cleanup {
     destroy .c
-} -result {{50.00 150.00 50.00 125.00 75.00 150.00 75.00 125.00} {} {49 124 76 151}}
+} -result {{50.00 150.00 50.00 125.00 75.00 150.00 75.00 125.00} {} {48 123 77 152}}
 test canvas-22.7 {canvas rotate: rectangle item rotation behaviour} -setup {
     pack [canvas .c]
 } -body {
