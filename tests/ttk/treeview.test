@@ -511,8 +511,8 @@ test treeview-9.1 "scrolling" -setup {
 test treeview-11.0 "Cellselection set rectangle" -setup {
     # Setup common for all 11.* tests
     .tv delete [.tv children {}]
-    .tv configure -columns {a b c}
-    .tv configure -displaycolumns #all
+    .tv configure -columns {a b c d}
+    .tv configure -displaycolumns {a b c}
     .tv insert {} end -id nn
     .tv insert nn end -id nn.n1
     .tv insert nn end -id nn.n2
@@ -582,6 +582,18 @@ test treeview-11.7 "<<TreeviewSelect>> on selected cell deletion" -body {
     update
     set res
 } -result {1 1}
+
+test treeview-11.8 "Cellselection - error" -body {
+    .tv cellselection set [list "apa a"]
+} -returnCodes 1 -match glob -result {Item apa not found}
+
+test treeview-11.9 "Cellselection - error" -body {
+    .tv cellselection set [list "nn xx "]
+} -returnCodes 1 -match glob -result {Invalid column index xx}
+
+test treeview-11.10 "Cellselection - error" -body {
+    .tv cellselection set [list "nn d"]
+} -returnCodes 1 -match glob -result {Cell id must be in a visible column}
 
 ### identify tests:
 #
