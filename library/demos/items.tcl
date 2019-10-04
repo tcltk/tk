@@ -94,7 +94,7 @@ $c create line 12c 6c 13.5c 4.5c 16.5c 7.5c 18c 6c \
 
 $c create text 25c .2c -text Polygons -anchor n
 $c create polygon 21c 1.0c 22.5c 1.75c 24c 1.0c 23.25c 2.5c \
-	24c 4.0c 22.5c 3.25c 21c 4.0c 21.75c 2.5c -fill $green \
+	24c 4.0c 22.5c 3.25c 21c 4.0c 21.75c 2.5c -outline $green \
 	-width 4 -tags item
 $c create polygon 25c 4c 25c 4c 25c 1c 26c 1c 27c 4c 28c 1c \
 	29c 1c 29c 4c 29c 4c -fill $red -outline {} -smooth on -tags item
