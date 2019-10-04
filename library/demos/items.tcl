@@ -126,8 +126,10 @@ $c create text 25.5c 11c -anchor w -font $font1 -fill $blue \
 	-text "Several lines,\n each centered\nindividually,\nand all anchored\nat the left edge." \
 	-justify center -tags item
 $c create rectangle 24.9c 13.9c 25.1c 14.1c
+catch {
 $c create text 25c 14c -font $font2 -anchor c -fill $red -angle 15 \
 	-text "Angled characters" -tags item
+}
 
 $c create text 5c 16.2c -text Arcs -anchor n
 $c create arc 0.5c 17c 7c 20c -fill $green -outline black \
@@ -140,13 +142,15 @@ $c create arc 0.5c 20c 9.5c 24c -width 4m -style pieslice \
 $c create arc 5.5c 20.5c 9.5c 23.5c -width 4m -style chord \
 	-fill $blue -outline {} -start 45 -extent 270  -tags item
 
+$c create text 15c 16.2c -text "Bitmaps and Images" -anchor n
+catch {
 image create photo items.ousterhout \
     -file [file join $tk_demoDirectory images ouster.png]
 image create photo items.ousterhout.active -format "png -alpha 0.5" \
     -file [file join $tk_demoDirectory images ouster.png]
-$c create text 15c 16.2c -text "Bitmaps and Images" -anchor n
 $c create image 13c 20c -tags item -image items.ousterhout \
     -activeimage items.ousterhout.active
+}
 $c create bitmap 17c 18.5c -tags item \
 	-bitmap @[file join $tk_demoDirectory images noletter.xbm]
 $c create bitmap 17c 21.5c -tags item \
