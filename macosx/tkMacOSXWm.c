@@ -5600,7 +5600,8 @@ TkUnsupported1ObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "window");
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(TkMacOSXInDarkMode(tkwin)));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		TkMacOSXInDarkMode((Tk_Window) winPtr)));
 	return TCL_OK;
     default:
 	return TCL_ERROR;
