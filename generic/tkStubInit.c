@@ -165,46 +165,6 @@ TkPutImage(
     return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
 
-TkRegion TkCreateRegion()
-{
-    return (TkRegion) XCreateRegion();
-}
-
-int TkDestroyRegion(TkRegion r)
-{
-	return XDestroyRegion((Region)r);
-}
-
-int TkSetRegion(Display *d, GC g, TkRegion r)
-{
-	return XSetRegion(d, g, (Region)r);
-}
-
-int TkUnionRectWithRegion(XRectangle *a, TkRegion b, TkRegion c)
-{
-	return XUnionRectWithRegion(a, (Region) b, (Region) c);
-}
-
-int TkClipBox(TkRegion a, XRectangle *b)
-{
-	return XClipBox((Region) a, b);
-}
-
-int TkIntersectRegion(TkRegion a, TkRegion b, TkRegion c)
-{
-	return XIntersectRegion((Region) a, (Region) b, (Region) c);
-}
-
-int TkRectInRegion (TkRegion r, int a, int b, unsigned int c, unsigned int d)
-{
-    return XRectInRegion((Region) r, a, b, c, d);
-}
-
-int TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
-{
-    return XSubtractRegion((Region) a, (Region) b, (Region) c);
-}
-
 	/* TODO: To be implemented for Cygwin */
 #	define Tk_AttachHWND 0
 #	define Tk_GetHWND 0
@@ -244,25 +204,6 @@ int TkSubtractRegion (TkRegion a, TkRegion b, TkRegion c)
 #	define TkWinGetPlatformTheme 0
 #	define TkWinChildProc 0
 
-#   elif !defined(MAC_OSX_TK) /* UNIX */
-
-#	undef TkClipBox
-#	undef TkCreateRegion
-#	undef TkDestroyRegion
-#	undef TkIntersectRegion
-#	undef TkRectInRegion
-#	undef TkSetRegion
-#	undef TkUnionRectWithRegion
-#	undef TkSubtractRegion
-
-#	define TkClipBox (int (*) (TkRegion, XRectangle *)) XClipBox
-#	define TkCreateRegion (TkRegion (*) ()) XCreateRegion
-#	define TkDestroyRegion (int (*) (TkRegion)) XDestroyRegion
-#	define TkIntersectRegion (int (*) (TkRegion, TkRegion, TkRegion)) XIntersectRegion
-#	define TkRectInRegion (int (*) (TkRegion, int, int, unsigned int, unsigned int)) XRectInRegion
-#	define TkSetRegion (int (*) (Display *, GC, TkRegion)) XSetRegion
-#	define TkUnionRectWithRegion (int (*) (XRectangle *, TkRegion, TkRegion)) XUnionRectWithRegion
-#	define TkSubtractRegion (int (*) (TkRegion, TkRegion, TkRegion)) XSubtractRegion
 #   endif
 #endif /* !_WIN32 */
 
@@ -419,13 +360,13 @@ static const TkIntStubs tkIntStubs = {
     TkpGetSubFonts, /* 110 */
     TkpGetSystemDefault, /* 111 */
     TkpMenuThreadInit, /* 112 */
-    TkClipBox, /* 113 */
-    TkCreateRegion, /* 114 */
-    TkDestroyRegion, /* 115 */
-    TkIntersectRegion, /* 116 */
-    TkRectInRegion, /* 117 */
-    TkSetRegion, /* 118 */
-    TkUnionRectWithRegion, /* 119 */
+    XClipBox, /* 113 */
+    XCreateRegion, /* 114 */
+    XDestroyRegion, /* 115 */
+    XIntersectRegion, /* 116 */
+    XRectInRegion, /* 117 */
+    XSetRegion, /* 118 */
+    XUnionRectWithRegion, /* 119 */
     0, /* 120 */
 #if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
     0, /* 121 */
@@ -478,7 +419,7 @@ static const TkIntStubs tkIntStubs = {
     TkFocusFree, /* 142 */
     TkClipCleanup, /* 143 */
     TkGCCleanup, /* 144 */
-    TkSubtractRegion, /* 145 */
+    XSubtractRegion, /* 145 */
     TkStylePkgInit, /* 146 */
     TkStylePkgFree, /* 147 */
     TkToplevelWindowForCommand, /* 148 */
@@ -798,6 +739,19 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetICValues, /* 141 */
     XGetICValues, /* 142 */
     XSetICFocus, /* 143 */
+    0, /* 144 */
+    0, /* 145 */
+    0, /* 146 */
+    XFreeFontSet, /* 147 */
+    XCloseIM, /* 148 */
+    XRegisterIMInstantiateCallback, /* 149 */
+    XUnregisterIMInstantiateCallback, /* 150 */
+    XSetLocaleModifiers, /* 151 */
+    XOpenIM, /* 152 */
+    XGetIMValues, /* 153 */
+    XSetIMValues, /* 154 */
+    XCreateFontSet, /* 155 */
+    XFreeStringList, /* 156 */
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
     XSetDashes, /* 0 */
@@ -892,20 +846,20 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XQueryColors, /* 89 */
     XQueryTree, /* 90 */
     XSync, /* 91 */
-    0, /* 92 */
-    0, /* 93 */
-    0, /* 94 */
-    0, /* 95 */
-    0, /* 96 */
-    0, /* 97 */
-    0, /* 98 */
-    0, /* 99 */
-    0, /* 100 */
-    0, /* 101 */
-    0, /* 102 */
-    0, /* 103 */
-    0, /* 104 */
-    0, /* 105 */
+    XTranslateCoordinates, /* 92 */
+    XDeleteProperty, /* 93 */
+    XFreeCursor, /* 94 */
+    XGetInputFocus, /* 95 */
+    XmbLookupString, /* 96 */
+    XNextEvent, /* 97 */
+    XPutBackEvent, /* 98 */
+    XSetCommand, /* 99 */
+    XWindowEvent, /* 100 */
+    XGetWindowAttributes, /* 101 */
+    XGetWMColormapWindows, /* 102 */
+    XIconifyWindow, /* 103 */
+    XWithdrawWindow, /* 104 */
+    XListHosts, /* 105 */
     0, /* 106 */
     XFlush, /* 107 */
     XGrabServer, /* 108 */
@@ -913,7 +867,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XFree, /* 110 */
     XNoOp, /* 111 */
     XSynchronize, /* 112 */
-    0, /* 113 */
+    XLookupColor, /* 113 */
     XVisualIDFromVisual, /* 114 */
     0, /* 115 */
     0, /* 116 */
@@ -929,7 +883,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 126 */
     0, /* 127 */
     0, /* 128 */
-    0, /* 129 */
+    XLowerWindow, /* 129 */
     XFillArcs, /* 130 */
     XDrawArcs, /* 131 */
     XDrawRectangles, /* 132 */
@@ -947,6 +901,16 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XDestroyIC, /* 144 */
     XCreatePixmapCursor, /* 145 */
     XCreateGlyphCursor, /* 146 */
+    XFreeFontSet, /* 147 */
+    XCloseIM, /* 148 */
+    XRegisterIMInstantiateCallback, /* 149 */
+    XUnregisterIMInstantiateCallback, /* 150 */
+    XSetLocaleModifiers, /* 151 */
+    XOpenIM, /* 152 */
+    XGetIMValues, /* 153 */
+    XSetIMValues, /* 154 */
+    XCreateFontSet, /* 155 */
+    XFreeStringList, /* 156 */
 #endif /* MACOSX */
 };
 

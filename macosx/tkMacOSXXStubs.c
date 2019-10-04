@@ -16,7 +16,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 
 #include <IOKit/IOKitLib.h>
 #include <IOKit/hidsystem/IOHIDShared.h>
@@ -586,6 +586,94 @@ XQueryColor(
     return Success;
 }
 
+Bool
+XTranslateCoordinates(
+    Display *display,
+    Window src_w,
+    Window dest_w,
+    int src_x,
+    int src_y,
+    int *dest_x_return,
+    int *dest_y_return,
+    Window *child_return)
+{
+    return 0;
+}
+
+int
+XSetCommand(
+    Display *display,
+    Window w,
+    char **argv,
+    int argc)
+{
+    return Success;
+}
+
+int
+XGetWindowAttributes(
+    Display *display,
+    Window w,
+    XWindowAttributes *window_attributes_return)
+{
+    return Success;
+}
+
+Status
+XGetWMColormapWindows(
+    Display *display,
+    Window w,
+    Window **windows_return,
+    int *count_return)
+{
+    return Success;
+}
+
+int
+XIconifyWindow(
+    Display *display,
+    Window w,
+    int screen_number)
+{
+    return Success;
+}
+
+XHostAddress *
+XListHosts(
+    Display *display,
+    int *nhosts_return,
+    Bool *state_return)
+{
+    return NULL;
+}
+
+int
+XLookupColor(
+    Display *display,
+    Colormap colormap,
+    _Xconst char *color_name,
+    XColor *exact_def_return,
+    XColor *screen_def_return)
+{
+    return Success;
+}
+
+int
+XNextEvent(
+    Display *display,
+    XEvent *event_return)
+{
+    return Success;
+}
+
+int
+XPutBackEvent(
+    Display *display,
+    XEvent *event)
+{
+    return Success;
+}
+
 int
 XQueryColors(
     Display* display,
@@ -649,6 +737,37 @@ XGetWindowProperty(
 }
 
 int
+XWindowEvent(
+    Display *display,
+    Window w,
+    long event_mask,
+    XEvent *event_return)
+{
+    return Success;
+}
+
+int
+XWithdrawWindow(
+    Display *display,
+    Window w,
+    int screen_number)
+{
+    return Success;
+}
+
+int
+XmbLookupString(
+    XIC ic,
+    XKeyPressedEvent *event,
+    char *buffer_return,
+    int bytes_buffer,
+    KeySym *keysym_return,
+    Status *status_return)
+{
+    return Success;
+}
+
+int
 XRefreshKeyboardMapping(
     XMappingEvent *x)
 {
@@ -685,16 +804,6 @@ XForceScreenSaver(
     return Success;
 }
 
-int
-XSync(
-    Display *display,
-    Bool discard)
-{
-    TkMacOSXFlushWindows();
-    display->request++;
-    return 0;
-}
-
 #if 0
 int
 XSetClipRectangles(
@@ -706,18 +815,18 @@ XSetClipRectangles(
     int n,
     int ordering)
 {
-    TkRegion clipRgn = TkCreateRegion();
+    Region clipRgn = XCreateRegion();
 
     while (n--) {
 	XRectangle rect = *rectangles;
 
 	rect.x += clip_x_origin;
 	rect.y += clip_y_origin;
-	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
+	XUnionRectWithRegion(&rect, clipRgn, clipRgn);
 	rectangles++;
     }
-    TkSetRegion(d, gc, clipRgn);
-    TkDestroyRegion(clipRgn);
+    XSetRegion(d, gc, clipRgn);
+    XDestroyRegion(clipRgn);
     return 1;
 }
 #endif
@@ -869,6 +978,25 @@ XCreateIC(XIM xim, ...)
     return (XIC) 0;
 }
 
+int
+XDeleteProperty(
+    Display *display,
+    Window w,
+    Atom property)
+{
+    return Success;
+}
+
+int
+XGetInputFocus(
+    Display *display,
+    Window *focus_return,
+    int *revert_to_return)
+{
+    display->request++;
+    return Success;
+}
+
 VisualID
 XVisualIDFromVisual(
     Visual *visual)
@@ -890,6 +1018,14 @@ XUngrabServer(
     Display *display)
 {
     return 0;
+}
+
+int
+XFreeCursor(
+    Display *display,
+    Cursor cursor)
+{
+    return Success;
 }
 
 int

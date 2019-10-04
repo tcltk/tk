@@ -1043,7 +1043,6 @@
 		F966BBD208F27A3B005CB29B /* tkMacOSXEmbed.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXEmbed.c; sourceTree = "<group>"; };
 		F966BBD308F27A3B005CB29B /* tkMacOSXEntry.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXEntry.c; sourceTree = "<group>"; };
 		F966BBD408F27A3B005CB29B /* tkMacOSXEvent.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXEvent.c; sourceTree = "<group>"; };
-		F966BBD508F27A3B005CB29B /* tkMacOSXEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkMacOSXEvent.h; sourceTree = "<group>"; };
 		F966BBD608F27A3B005CB29B /* tkMacOSXFont.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXFont.c; sourceTree = "<group>"; };
 		F966BBD708F27A3B005CB29B /* tkMacOSXHLEvents.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXHLEvents.c; sourceTree = "<group>"; };
 		F966BBD808F27A3B005CB29B /* tkMacOSXInit.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.objc; fileEncoding = 4; path = tkMacOSXInit.c; sourceTree = "<group>"; };
@@ -2584,7 +2583,6 @@
 				F966BBD208F27A3B005CB29B /* tkMacOSXEmbed.c */,
 				F966BBD308F27A3B005CB29B /* tkMacOSXEntry.c */,
 				F966BBD408F27A3B005CB29B /* tkMacOSXEvent.c */,
-				F966BBD508F27A3B005CB29B /* tkMacOSXEvent.h */,
 				F966BBD608F27A3B005CB29B /* tkMacOSXFont.c */,
 				F93E5EFD09CF8711008FA367 /* tkMacOSXFont.h */,
 				F966BBD708F27A3B005CB29B /* tkMacOSXHLEvents.c */,
