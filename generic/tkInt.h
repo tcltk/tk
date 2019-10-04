@@ -118,7 +118,7 @@ typedef struct TkColormap TkColormap;
 typedef struct TkFontAttributes TkFontAttributes;
 typedef struct TkGrabEvent TkGrabEvent;
 typedef struct TkpCursor_ *TkpCursor;
-typedef struct TkRegion_ *TkRegion;
+#define TkRegion Region
 typedef struct TkStressedCmap TkStressedCmap;
 typedef struct TkBindInfo_ *TkBindInfo;
 typedef struct Busy *TkBusy;
@@ -935,7 +935,7 @@ typedef struct TkpClipMask {
     int type;			/* TKP_CLIP_PIXMAP or TKP_CLIP_REGION. */
     union {
 	Pixmap pixmap;
-	TkRegion region;
+	Region region;
     } value;
 } TkpClipMask;
 
@@ -1271,7 +1271,7 @@ MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
 			    ClientData clientData);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;
 MODULE_SCOPE Tcl_ExitProc	TkFinalizeThread;
-MODULE_SCOPE void	TkpBuildRegionFromAlphaData(TkRegion region,
+MODULE_SCOPE void	TkpBuildRegionFromAlphaData(Region region,
 			    unsigned x, unsigned y, unsigned width,
 			    unsigned height, unsigned char *dataPtr,
 			    unsigned pixelStride, unsigned lineStride);
@@ -1347,8 +1347,20 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 	TkPutImage(NULL, 0, display, pixels, gc, image, srcx, srcy, destx, desty, width, height);
 #endif
 
+/*
+ * These macros are just wrappers for the equivalent X Region calls.
+ */
+#define TkClipBox XClipBox
+#define TkCreateRegion XCreateRegion
+#define TkDestroyRegion XDestroyRegion
+#define TkIntersectRegion XIntersectRegion
+#define TkRectInRegion XRectInRegion
+#define TkSetRegion XSetRegion
+#define TkSubtractRegion XSubtractRegion
+#define TkUnionRectWithRegion XUnionRectWithRegion
+
 #ifdef HAVE_XFT
-MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
+MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
 #if !defined(__cplusplus) && !defined(c_plusplus)

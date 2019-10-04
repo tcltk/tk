@@ -91,12 +91,16 @@ extern "C" {
 #define cosf(a) (float)cos(a)
 #define sinf(a) (float)sin(a)
 #define sqrtf(a) (float)sqrt(a)
-#define fabsf(a) (float)abs(a)
+#define fabsf(a) (float)fabs(a)
 #define acosf(a) (float)acos(a)
 #define atan2f(a,b) (float)atan2(a,b)
 #define ceilf(a) (float)ceil(a)
 #define fmodf(a,b) (float)fmod(a,b)
 #define floorf(a) (float)floor(a)
+#endif
+// float emulation for MS VC8++ compiler
+#if (_MSC_VER == 1400)
+#define fabsf(a) (float)fabs(a)
 #endif
 
 enum NSVGpaintType {
