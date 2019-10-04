@@ -1219,10 +1219,10 @@ in the \fBCOORDINATES\fR section above.
 Specifies the color to be used to fill item's area.
 in its normal, active, and disabled states,
 \fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
-If \fIcolor\fR is an empty string (the default),
-then the item will not be filled.
 For the line item, it specifies the color of the line drawn.
 For the text item, it specifies the foreground color of the text.
+If \fIcolor\fR is an empty string (the default for all canvas items
+except line and text), then the item will not be filled.
 .TP
 \fB\-outline \fIcolor\fR
 .TP
