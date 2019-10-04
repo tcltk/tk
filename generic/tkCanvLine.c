@@ -162,8 +162,11 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-activedash", NULL, NULL,
 	NULL, offsetof(LineItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},
-    {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, offsetof(LineItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
+#ifndef TK_NO_DEPRECATED
+    {TK_CONFIG_SYNONYM, "-activefill", "-activeoutline", NULL, NULL, 0, 0, NULL},
+#endif
+    {TK_CONFIG_COLOR, "-activeoutline", NULL, NULL,
+	NULL, offsetof(LineItem, outline.activeColor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
 	NULL, offsetof(LineItem, outline.activeStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-activewidth", NULL, NULL,
@@ -177,8 +180,11 @@ static const Tk_ConfigSpec configSpecs[] = {
 	TK_CONFIG_DONT_SET_DEFAULT, &arrowShapeOption},
     {TK_CONFIG_CAP_STYLE, "-capstyle", NULL, NULL,
 	"butt", offsetof(LineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
-    {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	DEF_CANVLINE_FILL, offsetof(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+#ifndef TK_NO_DEPRECATED
+    {TK_CONFIG_SYNONYM, "-fill", "-outline", NULL, NULL, 0, 0, NULL},
+#endif
+    {TK_CONFIG_COLOR, "-outline", NULL, NULL,
+	DEF_CANVITEM_OUTLINE, offsetof(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
 	NULL, offsetof(LineItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
@@ -187,7 +193,10 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
 	NULL, offsetof(LineItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
-    {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
+#ifndef TK_NO_DEPRECATED
+    {TK_CONFIG_SYNONYM, "-disabledfill", "-disabledoutline", NULL, NULL, 0, 0, NULL},
+#endif
+    {TK_CONFIG_COLOR, "-disabledoutline", NULL, NULL,
 	NULL, offsetof(LineItem, outline.disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
 	NULL, offsetof(LineItem, outline.disabledStipple), TK_CONFIG_NULL_OK, NULL},

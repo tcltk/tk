@@ -25,16 +25,16 @@ test canvText-1.1 {configuration options: good value for "anchor"} -body {
 test canvasText-1.2 {configuration options: bad value for "anchor"} -body {
     .c itemconfigure test -anchor xyz
 } -returnCodes error -result {bad anchor position "xyz": must be n, ne, e, se, s, sw, w, nw, or center}
-test canvText-1.3 {configuration options: good value for "fill"} -body {
-    .c itemconfigure test -fill #ff0000
-    list [lindex [.c itemconfigure test -fill] 4] [.c itemcget test -fill]
+test canvText-1.3 {configuration options: good value for "outline"} -body {
+    .c itemconfigure test -outline #ff0000
+    list [lindex [.c itemconfigure test -outline] 4] [.c itemcget test -outline]
 } -result {{#ff0000} #ff0000}
-test canvasText-1.4 {configuration options: bad value for "fill"} -body {
-    .c itemconfigure test -fill xyz
+test canvasText-1.4 {configuration options: bad value for "outline"} -body {
+    .c itemconfigure test -outline xyz
 } -returnCodes error -result {unknown color name "xyz"}
-test canvText-1.5 {configuration options: good value for "fill"} -body {
-    .c itemconfigure test -fill {}
-    list [lindex [.c itemconfigure test -fill] 4] [.c itemcget test -fill]
+test canvText-1.5 {configuration options: good value for "outline"} -body {
+    .c itemconfigure test -outline {}
+    list [lindex [.c itemconfigure test -outline] 4] [.c itemcget test -outline]
 } -result {{} {}}
 test canvText-1.6 {configuration options: good value for "font"} -body {
     .c itemconfigure test -font {Times 40}
@@ -172,23 +172,23 @@ test canvText-3.6 {TextCoords procedure} -setup {
 test canvText-4.1 {ConfigureText procedure} -setup {
     .c create text 20 20 -tag test
 } -body {
-    .c itemconfig test -fill xyz
+    .c itemconfig test -outline xyz
 } -cleanup {
     .c delete test
 } -returnCodes {error} -result {unknown color name "xyz"}
 test canvText-4.2 {ConfigureText procedure} -setup {
     .c create text 20 20 -tag test
 } -body {
-    .c itemconfig test -fill blue
-    .c itemcget test -fill
+    .c itemconfig test -outline blue
+    .c itemcget test -outline
 } -cleanup {
     .c delete test
 } -result {blue}
 test canvText-4.3 {ConfigureText procedure: construct font gcs} -setup {
     .c create text 20 20 -tag test
 } -body {
-    .c itemconfig test -font "times 20" -fill black -stipple gray50
-    list [.c itemcget test -font] [.c itemcget test -fill] [.c itemcget test -stipple]
+    .c itemconfig test -font "times 20" -outline black -stipple gray50
+    list [.c itemcget test -font] [.c itemcget test -outline] [.c itemcget test -stipple]
 } -cleanup {
     .c delete test
 } -result {{times 20} black gray50}
@@ -254,7 +254,7 @@ test canvText-4.6 {ConfigureText procedure: adjust cursor} -setup {
 
 
 test canvText-5.1 {ConfigureText procedure: adjust cursor} -body {
-    .c create text 10 10 -tag x -fill blue -font "times 40" -stipple gray50 \
+    .c create text 10 10 -tag x -outline blue -font "times 40" -stipple gray50 \
 	-text "xyz"
     .c delete x
 } -result {}
@@ -854,7 +854,7 @@ end
     update
     .c create text 100 100 -tags test
     .c itemconfig test -font $font -text "00000000" -width [expr 3*$ax]
-    .c itemconfig test -anchor n -fill black
+    .c itemconfig test -anchor n -outline black
     set x [.c postscript]
     set x [string range $x [string first "findfont " $x] end]
     expr {$x eq [subst $result] ? "ok" : $x}
@@ -889,7 +889,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     $c create text 21 18 \
         -font $f \
         -text $s1 \
-        -fill white \
+        -outline white \
         -width 922 \
         -anchor nw \
         -tags tbox1
@@ -897,7 +897,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     $c create text 21 160 \
         -font $f \
         -text $s2 \
-        -fill white \
+        -outline white \
         -width 922 \
         -anchor nw \
         -tags tbox2

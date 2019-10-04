@@ -94,7 +94,10 @@ static const Tk_CustomOption offsetOption = {
 };
 
 static const Tk_ConfigSpec configSpecs[] = {
-    {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
+#ifndef TK_NO_DEPRECATED
+    {TK_CONFIG_SYNONYM, "-activefill", "-activeoutline", NULL, NULL, 0, 0, NULL},
+#endif
+    {TK_CONFIG_COLOR, "-activeoutline", NULL, NULL,
 	NULL, offsetof(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
 	NULL, offsetof(TextItem, activeStipple), TK_CONFIG_NULL_OK, NULL},
@@ -102,12 +105,18 @@ static const Tk_ConfigSpec configSpecs[] = {
 	"center", offsetof(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_DOUBLE, "-angle", NULL, NULL,
 	"0.0", offsetof(TextItem, angle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
-    {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
+#ifndef TK_NO_DEPRECATED
+    {TK_CONFIG_SYNONYM, "-disabledfill", "-disabledoutline", NULL, NULL, 0, 0, NULL},
+#endif
+    {TK_CONFIG_COLOR, "-disabledoutline", NULL, NULL,
 	NULL, offsetof(TextItem, disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
 	NULL, offsetof(TextItem, disabledStipple), TK_CONFIG_NULL_OK, NULL},
-    {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	DEF_CANVTEXT_FILL, offsetof(TextItem, color), TK_CONFIG_NULL_OK, NULL},
+#ifndef TK_NO_DEPRECATED
+    {TK_CONFIG_SYNONYM, "-fill", "-outline", NULL, NULL, 0, 0, NULL},
+#endif
+    {TK_CONFIG_COLOR, "-outline", NULL, NULL,
+	DEF_CANVITEM_OUTLINE, offsetof(TextItem, color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_FONT, "-font", NULL, NULL,
 	DEF_CANVTEXT_FONT, offsetof(TextItem, tkfont), 0, NULL},
     {TK_CONFIG_JUSTIFY, "-justify", NULL, NULL,
