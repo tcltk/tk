@@ -256,7 +256,7 @@ test winDialog-5.5 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} -constraints {
         Click cancel
     }]
     # Note this also tests fix for
-    # http://core.tcl.tk/tk/tktview/4a0451f5291b3c9168cc560747dae9264e1d2ef6
+    # https://core.tcl-lang.org/tk/tktview/4a0451f5291b3c9168cc560747dae9264e1d2ef6
     # $x is expected to be empty
     append x $y
 } -result {0}
