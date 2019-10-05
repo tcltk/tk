@@ -9,7 +9,7 @@ Release:       2
 License:       BSD
 Group:         Development/Languages
 Source:        http://prdownloads.sourceforge.net/tcl/tk%{version}-src.tar.gz
-URL:           http://www.tcl.tk/
+URL:           https://www.tcl-lang.org/
 Buildroot:     /var/tmp/%{name}%{version}
 Buildrequires: XFree86-devel tcl >= 8.6.0
 Requires:      tcl >= 8.6.0
