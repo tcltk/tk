@@ -7568,7 +7568,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-11-04 (bug)[6b22d4] [treeview] binding fix (ohagan)
 
-- Released 8.6.9, November 16, 2018 - http://core.tcl-lang.org/tk/ for details -
+- Released 8.6.9, November 16, 2018 - https://core.tcl-lang.org/tk/ for details -
 
 Changes to 8.7a1 include all changes to the 8.6 line through 8.6.7,
 plus the following, which focuses on the high-level feature changes
