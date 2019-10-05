@@ -396,32 +396,31 @@ TkpInit(
 	    }
 	}
 
-    }
+        if (tkLibPath[0] != '\0') {
+	    Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
+        }
 
-    if (tkLibPath[0] != '\0') {
-	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
-    }
+        if (scriptPath[0] != '\0') {
+	    Tcl_SetVar2(interp, "auto_path", NULL, scriptPath,
+    		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
+	}
 
-    if (scriptPath[0] != '\0') {
-	Tcl_SetVar2(interp, "auto_path", NULL, scriptPath,
-		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
-    }
-
-    Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
+        Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
+        Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
 	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
+        Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
+        Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
 
-    /*
-     * Initialize the NSServices object here. Apple's docs say to do this
-     * in applicationDidFinishLaunching, but the Tcl interpreter is not
-     * initialized until this function call.
-     */
+	/*
+	 * Initialize the NSServices object here. Apple's docs say to do this
+	 * in applicationDidFinishLaunching, but the Tcl interpreter is not
+	 * initialized until this function call.
+	 */
 
-    TkMacOSXServices_Init(interp);
+	TkMacOSXServices_Init(interp);
+    }
 
     return TCL_OK;
 }
