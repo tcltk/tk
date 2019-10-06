@@ -1279,6 +1279,8 @@ MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
+MODULE_SCOPE void	TkDecomposeMaskToShiftAndBits(unsigned long mask,
+			    int *shift, int *bits);
 
 #ifdef _WIN32
 #define TkParseColor XParseColor

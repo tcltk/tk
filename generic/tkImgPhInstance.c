@@ -386,67 +386,6 @@ TkImgPhotoGet(
 /*
  *----------------------------------------------------------------------
  *
- * DecomposeMaskToShiftAndBits --
- *
- *      Given a 32 bit pixel mask, we find the position of the lowest bit and the
- *      width of the mask bits.
- *	(Copied from tkCanvas.c)
- *
- * Results:
- *	None.
- *
- * Side effects:
-*       None.
- *
- *----------------------------------------------------------------------
- */
-static void
-DecomposeMaskToShiftAndBits(
-    unsigned long mask,     /* The pixel mask to examine */
-    int *shift,             /* Where to put the shift count (position of lowest bit) */
-    int *bits)              /* Where to put the bit count (width of the pixel mask) */
-{
-    int i;
-
-    *shift = 0;
-    *bits = 0;
-
-    /*
-     * Find the lowest '1' bit in the mask.
-     */
-
-    for (i = 0; i < 32; ++i) {
-        if (mask & 1 << i)
-            break;
-    }
-    if (i < 32) {
-        *shift = i;
-
-        /*
-        * Now find the next '0' bit and the width of the mask.
-        */
-
-        for ( ; i < 32; ++i) {
-            if ((mask & 1 << i) == 0)
-                break;
-            else
-                ++*bits;
-        }
-
-        /*
-        * Limit to the top 8 bits if the mask was wider than 8.
-        */
-
-        if (*bits > 8) {
-            *shift += *bits - 8;
-            *bits = 8;
-        }
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * BlendComplexAlpha --
  *
  *	This function is called when an image with partially transparent
@@ -519,9 +458,9 @@ BlendComplexAlpha(
      * Previously this was only on non-Win32 systems, and on Win32 the
      * GetxValue() and RGB() macros from windows.h were used.
      */
-    DecomposeMaskToShiftAndBits(rmask = iPtr->visualInfo.visual->red_mask,&rshift,&rbits);
-    DecomposeMaskToShiftAndBits(gmask = iPtr->visualInfo.visual->green_mask,&gshift,&gbits);
-    DecomposeMaskToShiftAndBits(bmask = iPtr->visualInfo.visual->blue_mask,&bshift,&bbits);
+    TkDecomposeMaskToShiftAndBits(rmask = iPtr->visualInfo.visual->red_mask,&rshift,&rbits);
+    TkDecomposeMaskToShiftAndBits(gmask = iPtr->visualInfo.visual->green_mask,&gshift,&gbits);
+    TkDecomposeMaskToShiftAndBits(bmask = iPtr->visualInfo.visual->blue_mask,&bshift,&bbits);
 
     /*
      * Only UNIX requires the special case for <24bpp. It varies with 3 extra

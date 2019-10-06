@@ -2485,7 +2485,7 @@ CanvasWorldChanged(
 /*
  *----------------------------------------------------------------------
  *
- * DecomposeMaskToShiftAndBits --
+ * TkDecomposeMaskToShiftAndBits --
  *
  *      Given a 32 bit pixel mask, we find the position of the lowest bit and the
  *      width of the mask bits.
@@ -2498,8 +2498,8 @@ CanvasWorldChanged(
  *
  *----------------------------------------------------------------------
  */
-static void
-DecomposeMaskToShiftAndBits(
+void
+TkDecomposeMaskToShiftAndBits(
     unsigned long mask,     /* The pixel mask to examine */
     int *shift,             /* Where to put the shift count (position of lowest bit) */
     int *bits)              /* Where to put the bit count (width of the pixel mask) */
@@ -2818,9 +2818,9 @@ DrawCanvas(
      * format suitable for Tk_PhotoPutBlock().
      */
 
-    DecomposeMaskToShiftAndBits(visualPtr->red_mask,&rshift,&rbits);
-    DecomposeMaskToShiftAndBits(visualPtr->green_mask,&gshift,&gbits);
-    DecomposeMaskToShiftAndBits(visualPtr->blue_mask,&bshift,&bbits);
+    TkDecomposeMaskToShiftAndBits(visualPtr->red_mask,&rshift,&rbits);
+    TkDecomposeMaskToShiftAndBits(visualPtr->green_mask,&gshift,&gbits);
+    TkDecomposeMaskToShiftAndBits(visualPtr->blue_mask,&bshift,&bbits);
 
 #ifdef DEBUG_DRAWCANVAS
     sprintf(buffer,"%d",rshift); Tcl_AppendResult(interp, "\nbits { rshift ", buffer, NULL);
