@@ -16,19 +16,17 @@ before asking on the list, many questions have already been answered).
 	http://groups.google.com/group/comp.lang.tcl/
 
 - The Tcl'ers Wiki also has many pages dealing with Tcl & Tk on macOS, see
-	http://wiki.tcl.tk/_/ref?N=3753
-	http://wiki.tcl.tk/_/ref?N=8361
+	https://wiki.tcl-lang.org/page/MacOS
 
 - Please report bugs with Tk on macOS to the tracker:
-	http://core.tcl.tk/tk/reportlist
+	https://core.tcl-lang.org/tk/reportlist
 
 2. Using Tcl/Tk on macOS
 ---------------------------
 
 - There are two versions of Tk available on macOS: TkAqua using the native
 aqua widgets and look&feel, and TkX11 using the traditional unix X11 widgets.
-TkX11 requires an X11 server to be installed, such as Apple's X11 (which is
-available as an optional or default install on recent macOS).
+TkX11 requires an X11 server to be installed, such as XQuartz (available from www.xquartz.org).
 TkAqua and TkX11 can be distinguished at runtime via [tk windowingsystem].
 
 - At a minimum, macOS 10.3 is required to run Tcl and TkX11.
