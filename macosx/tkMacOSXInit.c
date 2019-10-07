@@ -411,8 +411,6 @@ TkpInit(
 	 * is allowed to provide services.
 	 */
 
-	Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
-	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
 	TkMacOSXServices_Init(interp);
     }
 
@@ -431,6 +429,8 @@ TkpInit(
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathCmd, NULL, NULL);
+	Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
+	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
 
     return TCL_OK;
 }
