@@ -2462,7 +2462,6 @@ GetScreenFont(
     double angle)		/* What is the desired orientation of the
 				 * font. */
 {
-    Tcl_DString ds;
     HFONT hFont;
     LOGFONTW lf;
 
@@ -2481,10 +2480,7 @@ GetScreenFont(
     lf.lfQuality	= DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
-    Tcl_DStringInit(&ds);
-    Tcl_UtfToWCharDString(faceName, -1, &ds);
-    wcsncpy(lf.lfFaceName, (WCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
-    Tcl_DStringFree(&ds);
+    MultiByteToWideChar(CP_UTF8, 0, faceName, -1, lf.lfFaceName, LF_FACESIZE);
     lf.lfFaceName[LF_FACESIZE-1] = 0;
     hFont = CreateFontIndirectW(&lf);
     return hFont;

@@ -107,7 +107,7 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
 	NULL, offsetof(TextItem, disabledStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	DEF_CANVTEXT_FILL, offsetof(TextItem, color), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVITEM_OUTLINE, offsetof(TextItem, color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_FONT, "-font", NULL, NULL,
 	DEF_CANVTEXT_FONT, offsetof(TextItem, tkfont), 0, NULL},
     {TK_CONFIG_JUSTIFY, "-justify", NULL, NULL,
