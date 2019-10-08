@@ -1671,7 +1671,7 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    update
+    vwait scrollInfo
     .e configure -width 5
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -1916,7 +1916,7 @@ test entry-7.1 {InsertChars procedure} -setup {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
     .e insert 2 XXX
-    update
+    vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -1931,7 +1931,7 @@ test entry-7.2 {InsertChars procedure} -setup {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
     .e insert 500 XXX
-    update
+    vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -2927,7 +2927,7 @@ test entry-17.1 {EntryUpdateScrollbar procedure} -body {
     pack .e
     .e delete 0 end
     .e insert 0 123
-    update
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -2937,7 +2937,7 @@ test entry-17.2 {EntryUpdateScrollbar procedure} -body {
     pack .e
     .e insert 0 0123456789abcdef
     .e xview 3
-    update
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -2947,7 +2947,7 @@ test entry-17.3 {EntryUpdateScrollbar procedure} -body {
     pack .e
     .e insert 0 abcdefghijklmnopqrs
     .e xview 6
-    update
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -2960,7 +2960,7 @@ test entry-17.4 {EntryUpdateScrollbar procedure} -setup {
 } -body {
     entry .e -width 5 -xscrollcommand thisisnotacommand
     pack .e
-    update
+    vwait x
     list $x $errorInfo
 } -cleanup {
     destroy .e

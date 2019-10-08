@@ -1478,7 +1478,7 @@ test scale-20.4 {Bug [2262543fff] - Scale widget unexpectedly fires command call
     scale .s -from 1 -to 50 -command {set commandedVar}
     .s set 10
     pack .s
-    update  ; # -command callback shall fire
+    vwait commandedVar  ; # -command callback shall fire
     set res [list [.s get] $commandedVar]
 } -cleanup {
     destroy .s
@@ -1506,7 +1506,7 @@ test scale-20.6 {Bug [2262543fff] - Scale widget unexpectedly fires command call
     pack .s
     .s configure -command {set commandedVar}
     .s set 10
-    update  ; # -command callback shall fire
+    vwait commandedVar  ; # -command callback shall fire
     set res [list [.s get] $commandedVar]
 } -cleanup {
     destroy .s
@@ -1519,7 +1519,7 @@ test scale-20.7 {Bug [2262543fff] - Scale widget unexpectedly fires command call
     scale .s -from 1 -to 50 -command {set commandedVar}
     pack .s
     .s set 10
-    update  ; # -command callback shall fire
+    vwait commandedVar  ; # -command callback shall fire
     set res [list [.s get] $commandedVar]
 } -cleanup {
     destroy .s
@@ -1533,7 +1533,7 @@ test scale-20.8 {Bug [2262543fff] - Scale widget unexpectedly fires command call
     scale .s -from 1 -to 50 -variable scaleVar -command {set commandedVar}
     pack .s
     .s set 10
-    update  ; # -command callback shall fire
+    vwait commandedVar  ; # -command callback shall fire
     set res [list [.s get] $commandedVar]
 } -cleanup {
     destroy .s
