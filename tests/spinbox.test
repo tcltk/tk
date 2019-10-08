@@ -2013,7 +2013,7 @@ test spinbox-5.7 {ConfigureSpinbox procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    update
+    vwait scrollInfo
     .e configure -width 5
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
@@ -3173,7 +3173,7 @@ test spinbox-17.2 {SpinboxUpdateScrollbar procedure} -body {
     pack .e
     .e insert 0 0123456789abcdef
     .e xview 3
-    update
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -3183,7 +3183,7 @@ test spinbox-17.3 {SpinboxUpdateScrollbar procedure} -body {
     pack .e
     .e insert 0 abcdefghijklmnopqrs
     .e xview 6
-    update
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
