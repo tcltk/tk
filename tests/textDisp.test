@@ -1361,7 +1361,7 @@ test textDisp-9.14 {TkTextRedrawTag} {
     }
     .tnocrash tag configure mytag1 -relief raised
     .tnocrash tag configure mytag2 -relief solid
-    update
+    update idletasks
     proc doit {} {
         .tnocrash tag add mytag1 4.0 5.0
         .tnocrash tag add mytag2 4.0 5.0
@@ -2916,6 +2916,7 @@ test textDisp-20.4 {FindDLine} {
     list [.t dlineinfo 50.0] [.t dlineinfo 50.24] [.t dlineinfo 50.40]
 } [list [list 3 [expr {8*$fixedDiff + 107}] 140 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] [list 3 [expr {9*$fixedDiff + 120}] 133 [expr {$fixedDiff + 13}] [expr {$fixedDiff + 10}]] {}]
 .t config -wrap none
+update idletasks
 test textDisp-20.5 {FindDLine} {
     .t yview 100.0
     .t yview 48.0
@@ -2963,6 +2964,7 @@ pack [text .tt.u] -side right
 .tt.u mark set insert 3.10
 tkwait visibility .tt.u
 set res [.tt.u count -displaylines 3.10 2.173]
+update
 destroy .tt
 unset message
 set res

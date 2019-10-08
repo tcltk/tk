@@ -11,6 +11,9 @@
 
 package require Tk ;# This is the Tk test suite; fail early if no Tk!
 package require tcltest 2.2
+# Without this hook macOS 10.15 (Catalina) segfaults due to passing a freed
+# clientdata pointer to TkpDisplayButton.
+proc tcltest::cleanupTestsHook {} {update idletasks}
 tcltest::configure {*}$argv
 tcltest::configure -testdir [file normalize [file dirname [info script]]]
 tcltest::configure -loadfile \

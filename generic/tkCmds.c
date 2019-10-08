@@ -1214,6 +1214,16 @@ Tk_UpdateObjCmd(
      */
 
     while (1) {
+	
+	/*
+	 * On macOS 10.15 (Catalina) the event loop below can fail to exit if
+	 * the idle tasks are not processed before the timer events.  This
+	 * appears to be related to the Text widget sync events.
+	 */
+
+	if (objc == 1) {
+	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS) != 0) {}
+	}
 	while (Tcl_DoOneEvent(flags) != 0) {
 	    if (Tcl_Canceled(interp, TCL_LEAVE_ERR_MSG) == TCL_ERROR) {
 		code = TCL_ERROR;
