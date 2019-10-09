@@ -3214,7 +3214,9 @@ test spinbox-17.4 {SpinboxUpdateScrollbar procedure} -setup {
 } -body {
     spinbox .e -width 5 -xscrollcommand thisisnotacommand
     pack .e
-    update
+    vwait errorInfo
+#    update idletasks
+#    after 100
     list $x $errorInfo
 } -cleanup {
     destroy .e
