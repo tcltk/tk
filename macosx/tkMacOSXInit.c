@@ -412,6 +412,7 @@ TkpInit(
 	 */
 
 	TkMacOSXServices_Init(interp);
+
     }
 
     if (tkLibPath[0] != '\0') {
@@ -430,6 +431,8 @@ TkpInit(
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathCmd, NULL, NULL);
 	Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
+	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
 	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
 
     return TCL_OK;
