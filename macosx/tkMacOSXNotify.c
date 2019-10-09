@@ -325,7 +325,7 @@ TkMacOSXEventsSetupProc(
 	     */
 
 	    havePeriodicEvents = YES;
-	    [NSEvent startPeriodicEventsAfterDelay:0.0 withPeriod:0.25];
+	    [NSEvent startPeriodicEventsAfterDelay:0.0 withPeriod:0.1];
 	}
     }
 }
