@@ -84,6 +84,16 @@
 #   endif
 #endif
 
+#ifndef TCL_Z_MODIFIER
+#   if defined(_WIN64)
+#	define TCL_Z_MODIFIER	"I"
+#   elif defined(__GNUC__) && !defined(_WIN32)
+#	define TCL_Z_MODIFIER	"z"
+#   else
+#	define TCL_Z_MODIFIER	""
+#   endif
+#endif /* !TCL_Z_MODIFIER */
+
 /*
  * Opaque type declarations:
  */
@@ -492,7 +502,7 @@ typedef struct TkDisplay {
      */
 
     int mouseButtonState;	/* Current mouse button state for this
-				 * display. */
+				 * display. NOT USED as of 8.6.10 */
     Window mouseButtonWindow;	/* Window the button state was set in, added
 				 * in Tk 8.4. */
     Tk_Window warpWindow;
@@ -995,7 +1005,6 @@ MODULE_SCOPE const char *const tkWebColors[20];
 void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
 #endif
 #if !defined(CLANG_ASSERT)
-#include <assert.h>
 #define CLANG_ASSERT(x) assert(x)
 #endif
 #elif !defined(CLANG_ASSERT)
@@ -1256,6 +1265,10 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #endif
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
+#endif
+
+#if !defined(__cplusplus) && !defined(c_plusplus)
+# define c_class class
 #endif
 
 #if TCL_UTF_MAX > 4

@@ -623,16 +623,6 @@ test frame-3.5 {TkCreateFrame procedure} -setup {
     deleteWindows
     option clear
 } -result {#123456}
-test frame-3.6 {TkCreateFrame procedure} -setup {
-	deleteWindows
-} -body {
-    option add *NewFrame.background #123456
-    frame .f -class NewFrame
-    lindex [.f configure -background] 4
-} -cleanup {
-    deleteWindows
-    option clear
-} -result {#123456}
 test frame-3.7 {TkCreateFrame procedure} -setup {
 	deleteWindows
 } -body {

@@ -69,7 +69,7 @@
 static const char winScreenName[] = ":0"; /* Default name of windows display. */
 static HINSTANCE tkInstance = NULL;	/* Application instance handle. */
 static int childClassInitialized;	/* Registered child class? */
-static WNDCLASS childClass;		/* Window class for child windows. */
+static WNDCLASSW childClass;		/* Window class for child windows. */
 static int tkPlatformId = 0;		/* version of Windows platform */
 static int tkWinTheme = 0;		/* See TkWinGetPlatformTheme */
 static Tcl_Encoding keyInputEncoding = NULL;
@@ -138,7 +138,7 @@ TkGetServerInfo(
     OSVERSIONINFOW os;
 
     if (!buffer[0]) {
-	HANDLE handle = GetModuleHandle(TEXT("NTDLL"));
+	HANDLE handle = GetModuleHandleW(L"NTDLL");
 	int(__stdcall *getversion)(void *) =
 		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
@@ -179,7 +179,7 @@ HINSTANCE
 Tk_GetHINSTANCE(void)
 {
     if (tkInstance == NULL) {
-	tkInstance = GetModuleHandle(NULL);
+	tkInstance = GetModuleHandleW(NULL);
     }
     return tkInstance;
 }
@@ -259,7 +259,7 @@ TkWinXInit(
     childClass.hIcon = NULL;
     childClass.hCursor = NULL;
 
-    if (!RegisterClass(&childClass)) {
+    if (!RegisterClassW(&childClass)) {
 	Tcl_Panic("Unable to register TkChild class");
     }
 
@@ -267,9 +267,9 @@ TkWinXInit(
      * Initialize input language info
      */
 
-    if (GetLocaleInfo(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
+    if (GetLocaleInfoW(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
 	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
-	       (LPTSTR) &lpCP, sizeof(lpCP)/sizeof(TCHAR))
+	       (LPWSTR) &lpCP, sizeof(lpCP)/sizeof(WCHAR))
 	    && TranslateCharsetInfo(INT2PTR(lpCP), &lpCs, TCI_SRCCODEPAGE)) {
 	UpdateInputLanguage((int) lpCs.ciCharset);
     }
@@ -309,7 +309,7 @@ TkWinXCleanup(
 
     if (childClassInitialized) {
 	childClassInitialized = 0;
-	UnregisterClass(TK_WIN_CHILD_CLASS_NAME, hInstance);
+	UnregisterClassW(TK_WIN_CHILD_CLASS_NAME, hInstance);
     }
 
     if (unicodeEncoding != NULL) {
@@ -365,17 +365,17 @@ TkWinGetPlatformId(void)
 	if ((os.dwPlatformId == VER_PLATFORM_WIN32_NT) &&
 		(os.dwMajorVersion == 5 && os.dwMinorVersion == 1)) {
 	    HKEY hKey;
-	    LPCTSTR szSubKey = TEXT("Control Panel\\Appearance");
-	    LPCTSTR szCurrent = TEXT("Current");
+	    LPCWSTR szSubKey = L"Control Panel\\Appearance";
+	    LPCWSTR szCurrent = L"Current";
 	    DWORD dwSize = 200;
 	    char pBuffer[200];
 
 	    memset(pBuffer, 0, dwSize);
-	    if (RegOpenKeyEx(HKEY_CURRENT_USER, szSubKey, 0L,
+	    if (RegOpenKeyExW(HKEY_CURRENT_USER, szSubKey, 0L,
 		    KEY_READ, &hKey) != ERROR_SUCCESS) {
 		tkWinTheme = TK_THEME_WIN_XP;
 	    } else {
-		RegQueryValueEx(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
+		RegQueryValueExW(hKey, szCurrent, NULL, NULL, (LPBYTE) pBuffer, &dwSize);
 		RegCloseKey(hKey);
 		if (strcmp(pBuffer, "Windows Standard") == 0) {
 		    tkWinTheme = TK_THEME_WIN_CLASSIC;
@@ -501,30 +501,30 @@ TkWinDisplayChanged(
     screen->root_visual->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 	screen->root_visual->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
-	screen->root_visual->class = PseudoColor;
+	screen->root_visual->c_class = PseudoColor;
 	screen->root_visual->red_mask = 0x0;
 	screen->root_visual->green_mask = 0x0;
 	screen->root_visual->blue_mask = 0x0;
     } else if (screen->root_depth == 4) {
-	screen->root_visual->class = StaticColor;
+	screen->root_visual->c_class = StaticColor;
 	screen->root_visual->map_entries = 16;
     } else if (screen->root_depth == 8) {
-	screen->root_visual->class = StaticColor;
+	screen->root_visual->c_class = StaticColor;
 	screen->root_visual->map_entries = 256;
     } else if (screen->root_depth == 12) {
-	screen->root_visual->class = TrueColor;
+	screen->root_visual->c_class = TrueColor;
 	screen->root_visual->map_entries = 32;
 	screen->root_visual->red_mask = 0xf0;
 	screen->root_visual->green_mask = 0xf000;
 	screen->root_visual->blue_mask = 0xf00000;
     } else if (screen->root_depth == 16) {
-	screen->root_visual->class = TrueColor;
+	screen->root_visual->c_class = TrueColor;
 	screen->root_visual->map_entries = 64;
 	screen->root_visual->red_mask = 0xf8;
 	screen->root_visual->green_mask = 0xfc00;
 	screen->root_visual->blue_mask = 0xf80000;
     } else if (screen->root_depth >= 24) {
-	screen->root_visual->class = TrueColor;
+	screen->root_visual->c_class = TrueColor;
 	screen->root_visual->map_entries = 256;
 	screen->root_visual->red_mask = 0xff;
 	screen->root_visual->green_mask = 0xff00;
@@ -780,7 +780,7 @@ TkWinChildProc(
     case WM_IME_COMPOSITION:
 	result = 0;
 	if (HandleIMEComposition(hwnd, lParam) == 0) {
-	    result = DefWindowProc(hwnd, message, wParam, lParam);
+	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}
 	break;
 
@@ -800,7 +800,7 @@ TkWinChildProc(
 
     case WM_PAINT:
 	GenerateXEvent(hwnd, message, wParam, lParam);
-	result = DefWindowProc(hwnd, message, wParam, lParam);
+	result = DefWindowProcW(hwnd, message, wParam, lParam);
 	break;
 
     case TK_CLAIMFOCUS:
@@ -837,7 +837,7 @@ TkWinChildProc(
 
     default:
 	if (!Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
-	    result = DefWindowProc(hwnd, message, wParam, lParam);
+	    result = DefWindowProcW(hwnd, message, wParam, lParam);
 	}
 	break;
     }
@@ -918,7 +918,7 @@ Tk_TranslateWinEvent(
 		? ((NMHDR*)lParam)->hwndFrom : (HWND) lParam;
 
 	if (target && target != hwnd) {
-	    *resultPtr = SendMessage(target, message, wParam, lParam);
+	    *resultPtr = SendMessageW(target, message, wParam, lParam);
 	    return 1;
 	}
 	break;
@@ -1311,10 +1311,10 @@ GenerateXEvent(
 		if (IsDBCSLeadByte((BYTE) wParam)) {
 		    MSG msg;
 
-		    if ((PeekMessage(&msg, NULL, WM_CHAR, WM_CHAR,
+		    if ((PeekMessageW(&msg, NULL, WM_CHAR, WM_CHAR,
 		            PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
-			GetMessage(&msg, NULL, WM_CHAR, WM_CHAR);
+			GetMessageW(&msg, NULL, WM_CHAR, WM_CHAR);
 			event.xkey.nbytes = 2;
 			event.xkey.trans_chars[1] = (char) msg.wParam;
 		   }
@@ -1536,7 +1536,7 @@ UpdateInputLanguage(
 	return;
     }
 
-    wsprintfA(codepage, "cp%d", charsetInfo.ciACP);
+    sprintf(codepage, "cp%d", charsetInfo.ciACP);
 
     if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {
 	/*
@@ -1616,7 +1616,7 @@ TkWinGetUnicodeEncoding(void)
  *
  *	When an Input Method Editor (IME) is ready to send input characters to
  *	an application, it sends a WM_IME_COMPOSITION message with the
- *	GCS_RESULTSTR. However, The DefWindowProc() on English Windows 2000
+ *	GCS_RESULTSTR. However, The DefWindowProcW() on English Windows 2000
  *	arbitrarily converts all non-Latin-1 characters in the composition to
  *	"?".
  *
@@ -1655,7 +1655,7 @@ HandleIMEComposition(
 	return 0;
     }
 
-    n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, NULL, 0);
+    n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
 
     if (n > 0) {
 	WCHAR *buff = (WCHAR *) ckalloc(n);
@@ -1663,7 +1663,7 @@ HandleIMEComposition(
 	XEvent event;
 	int i;
 
-	n = ImmGetCompositionString(hIMC, GCS_RESULTSTR, buff, (unsigned) n) / 2;
+	n = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, buff, (unsigned) n) / 2;
 
 	/*
 	 * Set up the fields pertinent to key event.
@@ -1821,7 +1821,7 @@ TkWinResendEvent(
     }
     lparam = MAKELPARAM((short) eventPtr->xbutton.x,
 	    (short) eventPtr->xbutton.y);
-    return CallWindowProc(wndproc, hwnd, msg, wparam, lparam);
+    return CallWindowProcW(wndproc, hwnd, msg, wparam, lparam);
 }
 
 /*

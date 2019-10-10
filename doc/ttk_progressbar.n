@@ -49,9 +49,11 @@ In \fIindeterminate\fR mode, it is interpreted modulo \fB\-maximum\fR;
 that is, the progress bar completes one
 .QW cycle
 when the \fB\-value\fR increases by \fB\-maximum\fR.
+If \fB\-variable\fR is set to an existing variable, specifying \fB\-value\fR
+has no effect (the variable value takes precedence).
 .OP \-variable variable Variable
 The name of a global Tcl variable which is linked to the \fB\-value\fR.
-If specified, the \fB\-value\fR of the progress bar is
+If specified to an existing variable, the \fB\-value\fR of the progress bar is
 automatically set to the value of the variable whenever
 the latter is modified.
 .SH "WIDGET COMMAND"

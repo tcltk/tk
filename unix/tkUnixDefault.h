@@ -514,6 +514,14 @@
 #define DEF_CANVTEXT_FONT		"TkDefaultFont"
 
 /*
+ * Defaults for canvas items
+ * (arcs, bitmaps, lines, polygons, rectangles, and ovals):
+ */
+
+#define DEF_CANVBMAP_FG			BLACK
+#define DEF_CANVITEM_OUTLINE		BLACK
+
+/*
  * Defaults for toplevels (most of the defaults for frames also apply
  * to toplevels):
  */

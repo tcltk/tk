@@ -202,7 +202,7 @@ TkpOpenDisplay(
 
     screen->root_visual = ckalloc(sizeof(Visual));
     screen->root_visual->visualid     = 0;
-    screen->root_visual->class	      = TrueColor;
+    screen->root_visual->c_class      = TrueColor;
     screen->root_visual->red_mask     = 0x00FF0000;
     screen->root_visual->green_mask   = 0x0000FF00;
     screen->root_visual->blue_mask    = 0x000000FF;
@@ -696,7 +696,7 @@ Tk_FreeXId(
 int
 XSync(
     Display *display,
-    Bool flag)
+    Bool discard)
 {
     TkMacOSXFlushWindows();
     display->request++;
@@ -877,6 +877,67 @@ XCreateIC(XIM xim, ...)
     return (XIC) 0;
 }
 
+#undef XVisualIDFromVisual
+VisualID
+XVisualIDFromVisual(
+    Visual *visual)
+{
+    return visual->visualid;
+}
+
+#undef XSynchronize
+XAfterFunction
+XSynchronize(
+    Display *display,
+    Bool onoff)
+{
+	display->request++;
+    return NULL;
+}
+
+#undef XUngrabServer
+int
+XUngrabServer(
+    Display *display)
+{
+    return 0;
+}
+
+#undef XNoOp
+int
+XNoOp(
+    Display *display)
+{
+	display->request++;
+    return 0;
+}
+
+#undef XGrabServer
+int
+XGrabServer(
+    Display *display)
+{
+    return 0;
+}
+
+#undef XFree
+int
+XFree(
+    void *data)
+{
+	if ((data) != NULL) {
+		ckfree(data);
+	}
+    return 0;
+}
+#undef XFlush
+int
+XFlush(
+    Display *display)
+{
+    return 0;
+}
+
 /*
  *----------------------------------------------------------------------
  *
