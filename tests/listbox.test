@@ -2209,12 +2209,13 @@ test listbox-11.5 {ChangeListboxView procedure} -setup {
 } -body {
     listbox .l -height 5 -yscrollcommand "record y"
     pack .l
+    update idletasks
     .l insert 0 a b c d e f g h i j
     .l yview 3
-    update
+    update idletasks
     set log {}
     .l yview 3
-    update
+    update idletasks
     list [format {%.6g %.6g} {*}[.l yview]] $log
 } -cleanup {
     destroy .l
@@ -2662,10 +2663,10 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
     destroy .l
 } -body {
     catch {unset x}
-    set log {}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
+    set log {}
     pack .l
-    update
+    vwait log
     lappend x "0000000000"
     update
     lappend x "00000000000000000000"
@@ -2678,16 +2679,16 @@ test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setu
     destroy .l
 } -body {
     catch {unset x}
-    set log {}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
+    set log {}
     pack .l
-    update
+    vwait log
     lappend x "0000000000"
-    update
+    update idletasks
     lappend x "00000000000000000000"
-    update
+    update idletasks
     set x [list "0000000000"]
-    update
+    update idletasks
     set log
 } -cleanup {
     destroy .l
@@ -2755,12 +2756,14 @@ test listbox-21.15 {ListboxListVarProc, update vertical scrollbar} -setup {
     destroy .l
 } -body {
     catch {unset x}
+    listbox .l -font $fixed -height 3 -yscrollcommand "record y" -listvar x
+    update idletasks
     set log {}
-    listbox .l -listvar x -yscrollcommand "record y" -font fixed -height 3
     pack .l
-    update
+    vwait log
+    update idletasks
     lappend x a b c d e f
-    update
+    vwait log
     set log
 } -cleanup {
     destroy .l
@@ -2771,16 +2774,15 @@ test listbox-21.16 {ListboxListVarProc, update vertical scrollbar} -setup {
     catch {unset x}
     listbox .l -listvar x -height 3
     pack .l
-    update
     set x [list 0 1 2 3 4 5]
     .l yview scroll 3 units
-    update
+    update idletasks
     set result {}
     lappend result [format {%.6g %.6g} {*}[.l yview]]
     set x [lreplace $x 3 3]
     set x [lreplace $x 3 3]
     set x [lreplace $x 3 3]
-    update
+    update idletasks
     lappend result [format {%.6g %.6g} {*}[.l yview]]
     set result
 } -cleanup {
@@ -2792,14 +2794,14 @@ test listbox-21.16 {ListboxListVarProc, update vertical scrollbar} -setup {
 test listbox-22.1 {UpdateHScrollbar} -setup {
     destroy .l
 } -body {
-    set log {}
     listbox .l -font $fixed -width 10 -xscrollcommand "record x"
+    set log {}
     pack .l
-    update
+    vwait log
     .l insert end "0000000000"
-    update
+    update idletasks
     .l insert end "00000000000000000000"
-    update
+    vwait log
     set log
 } -cleanup {
     destroy .l

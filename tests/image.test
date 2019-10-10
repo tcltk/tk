@@ -88,10 +88,12 @@ test image-1.8 {Tk_ImageCmd procedure, "create" option} -constraints {
     .c create image 100 50 -image myimage
     .c create image 100 150 -image myimage
     image delete myimage
-    update
+    update idletasks
     set x {}
     image create test myimage -variable x
-    update
+    # macOS Catalina needs a delay here.
+    after 20
+    update idletasks
     return $x
 } -cleanup {
     .c delete all
@@ -398,10 +400,13 @@ test image-9.2 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     image create test foo -variable x
     .c create image 50 50 -image foo
     .c create image 90 100 -image foo
-    update
+    update idletasks
     set x {}
     foo changed 5 6 7 8 30 15
-    update
+    image create test myimage -variable x
+    # macOS Catalina needs a delay here.
+    after 20
+    update idletasks
     return $x
 } -cleanup {
     .c delete all
@@ -437,11 +442,13 @@ test image-11.1 {Tk_FreeImage procedure} -constraints testImageType -setup {
     .c create image 50 50 -image foo -tags i1
     .c create image 90 100 -image foo -tags i2
     pack forget .c
-    update
+    update idletasks
     set x {}
     .c delete i1
     pack .c
-    update
+    update idletasks
+    # macOS Catalina needs a delay here.
+    after 20
     list [imageNames] $x
 } -cleanup {
     .c delete all
