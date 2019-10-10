@@ -1984,6 +1984,7 @@ WmFrameCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Window window;
+    char buf[TCL_INTEGER_SPACE];
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -1993,7 +1994,8 @@ WmFrameCmd(
     if (window == None) {
 	window = Tk_WindowId((Tk_Window) winPtr);
     }
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%x", (unsigned) window));
+    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     return TCL_OK;
 }
 
@@ -5499,7 +5501,7 @@ TkMacOSXZoomToplevel(
 /*
  *----------------------------------------------------------------------
  *
- * TkUnsupported1Cmd --
+ * TkUnsupported1ObjCmd --
  *
  *	This procedure is invoked to process the
  *	"::tk::unsupported::MacWindowStyle" Tcl command. This command allows
@@ -5568,7 +5570,7 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	if ((objc < 3) || (objc > 4)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "tabbingid window ?newid?");
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?newid?");
 	    return TCL_ERROR;
 	}
 	return WmWinTabbingId(interp, winPtr, objc, objv);
@@ -5593,10 +5595,11 @@ TkUnsupported1ObjCmd(
 	return WmWinAppearance(interp, winPtr, objc, objv);
     case TKMWS_ISDARK:
 	if ((objc != 3)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "isdark window");
+	    Tcl_WrongNumArgs(interp, 2, objv, "window");
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(TkMacOSXInDarkMode(tkwin)));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		TkMacOSXInDarkMode((Tk_Window) winPtr)));
 	return TCL_OK;
     default:
 	return TCL_ERROR;
@@ -5807,8 +5810,8 @@ WmWinStyle(
  *	Windows may only be grouped together as tabs if they all have the same
  *      tabbingIdentifier.  In particular, by giving a window a unique
  *      tabbingIdentifier one can prevent it from becoming a tab in any other
- *      window.  Note, however, that changing the tabbingIdentifier of a window
- *      which is already a tab does not cause it to become a separate window.
+ *      window.  Changing the tabbingIdentifier of a window which is already
+ *      a tab causes it to become a separate window.
  *
  *----------------------------------------------------------------------
  */
@@ -5829,7 +5832,8 @@ WmWinTabbingId(
 	result = Tcl_NewStringObj(idString.UTF8String, [idString length]);
     }
     if (result == NULL) {
-	Tcl_Panic("Failed to read tabbing identifier.");
+	NSLog(@"Failed to read tabbing identifier; try calling update idletasks before getting/setting the tabbing identifier of the window.");
+	return TCL_OK;
     }
     Tcl_SetObjResult(interp, result);
     if (objc == 3) {
@@ -5910,7 +5914,7 @@ WmWinAppearance(
 #else
     NSString *appearance;
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
- 
+
     const char *resultString = "unrecognized";
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
     if (win) {
@@ -5929,7 +5933,7 @@ WmWinAppearance(
 	result = Tcl_NewStringObj(resultString, strlen(resultString));
     }
     if (result == NULL) {
-	NSLog(@"Failed to read appearance name; try calling update before setting the appearance of the window.");
+	NSLog(@"Failed to read appearance name; try calling update idletasks before getting/setting the appearance of the window.");
 	return TCL_OK;
     }
     if (objc == 4) {

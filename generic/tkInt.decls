@@ -402,26 +402,26 @@ declare 112 {
     void TkpMenuThreadInit(void)
 }
 declare 113 {
-    void TkClipBox(TkRegion rgn, XRectangle *rect_return)
+    int TkClipBox(TkRegion rgn, XRectangle *rect_return)
 }
 declare 114 {
     TkRegion TkCreateRegion(void)
 }
 declare 115 {
-    void TkDestroyRegion(TkRegion rgn)
+    int TkDestroyRegion(TkRegion rgn)
 }
 declare 116 {
-    void TkIntersectRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
+    int TkIntersectRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
 declare 117 {
     int TkRectInRegion(TkRegion rgn, int x, int y, unsigned int width,
 	    unsigned int height)
 }
 declare 118 {
-    void TkSetRegion(Display *display, GC gc, TkRegion rgn)
+    int TkSetRegion(Display *display, GC gc, TkRegion rgn)
 }
 declare 119 {
-    void TkUnionRectWithRegion(XRectangle *rect,
+    int TkUnionRectWithRegion(XRectangle *rect,
 	    TkRegion src, TkRegion dr_return)
 }
 declare 121 aqua {
@@ -467,7 +467,7 @@ declare 144 {
     void TkGCCleanup(TkDisplay *dispPtr)
 }
 declare 145 {
-    void TkSubtractRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
+    int TkSubtractRegion(TkRegion sra, TkRegion srcb, TkRegion dr_return)
 }
 declare 146 {
     void TkStylePkgInit(TkMainInfo *mainPtr)
@@ -843,6 +843,9 @@ declare 44 win {
 declare 45 win {
     int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
+}
+declare 47 win {
+    Tk_Window TkpGetCapture(void)
 }
 
 ################################
@@ -1814,7 +1817,33 @@ declare 90 aqua {
 	    Window **w4, unsigned int *ui)
 }
 declare 91 aqua {
-    int XSync(Display *display, Bool flag)
+    int XSync(Display *display, Bool discard)
+}
+declare 107 aqua {
+    int XFlush(Display *display)
+}
+declare 108 aqua {
+    int XGrabServer(Display *display)
+}
+declare 109 aqua {
+    int XUngrabServer(Display *display)
+}
+declare 110 aqua {
+    int XFree(void *data)
+}
+declare 111 aqua {
+    int XNoOp(Display *display)
+}
+declare 112 aqua {
+    XAfterFunction XSynchronize(Display *display, Bool onoff)
+}
+declare 114 aqua {
+    VisualID XVisualIDFromVisual(Visual *visual)
+}
+declare 137 aqua {
+    int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
+	    int sx, int sy, int dx, int dy,
+	    unsigned int w, unsigned int h)
 }
 
 # Local Variables:

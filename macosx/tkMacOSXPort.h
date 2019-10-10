@@ -23,6 +23,7 @@
 #include <math.h>
 #include <pwd.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -110,12 +111,19 @@
  * no-op functions on the Macintosh.
  */
 
-#define XFlush(display)
-#define XFree(data) {if ((data) != NULL) ckfree(data);}
-#define XGrabServer(display)
-#define XNoOp(display) {display->request++;}
-#define XUngrabServer(display)
-#define XSynchronize(display, bool) {display->request++;}
+#undef XFlush
+#define XFlush(display) (0)
+#undef XFree
+#define XFree(data) (((data) != NULL) ? (ckfree(data),0) : 0)
+#undef XGrabServer
+#define XGrabServer(display) (0)
+#undef XNoOp
+#define XNoOp(display) (display->request++,0)
+#undef XUngrabServer
+#define XUngrabServer(display) (0)
+#undef XSynchronize
+#define XSynchronize(display, onoff) (display->request++,NULL)
+#undef XVisualIDFromVisual
 #define XVisualIDFromVisual(visual) (visual->visualid)
 
 /*
@@ -126,6 +134,17 @@
 #define TkpFreeColor(tkColPtr)
 #define TkSetPixmapColormap(p,c) {}
 #define TkpSync(display)
+
+/*
+ * TkMacOSXGetCapture is a legacy function used on the Mac. When fixing
+ * [943d5ebe51], TkpGetCapture was added to the Windows port. Both
+ * are actually the same feature and should bear the same name. However,
+ * in order to avoid potential backwards incompatibilities, renaming
+ * TkMacOSXGetCapture into TkpGetCapture in *PlatDecls.h shall not be
+ * done in a patch release, therefore use a define here.
+ */
+
+#define TkpGetCapture TkMacOSXGetCapture
 
 /*
  * This macro stores a representation of the window handle in a string.

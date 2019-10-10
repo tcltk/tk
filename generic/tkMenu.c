@@ -754,7 +754,7 @@ MenuWidgetObjCmd(
 
 	    first = 1;
 	}
-	if ((first < 0) || (last < first)) {
+	if ((first == -1) || (last < first)) {
 	    goto done;
 	}
 	DeleteMenuCloneEntries(menuPtr, first, last);
@@ -2164,7 +2164,7 @@ TkGetMenuIndex(
 	Tcl_Obj *labelPtr = menuPtr->entries[i]->labelPtr;
 	const char *label = (labelPtr == NULL) ? NULL : Tcl_GetString(labelPtr);
 
-	if ((label != NULL) && (Tcl_StringMatch(label, string))) {
+	if ((label != NULL) && (Tcl_StringCaseMatch(label, string, 0))) {
 	    *indexPtr = i;
 	    goto success;
 	}

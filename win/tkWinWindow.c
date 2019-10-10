@@ -170,16 +170,7 @@ TkpPrintWindowId(
 {
     HWND hwnd = (window) ? Tk_GetHWND(window) : 0;
 
-    /*
-     * Use pointer representation, because Win64 is P64 (*not* LP64). Windows
-     * doesn't print the 0x for %p, so we do it.
-     * Bug 2026405: cygwin does output 0x for %p so test and recover.
-     */
-
-    sprintf(buf, "0x%p", hwnd);
-    if (buf[2] == '0' && buf[3] == 'x') {
-	sprintf(buf, "%p", hwnd);
-    }
+    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)hwnd);
 }
 
 /*
@@ -277,7 +268,7 @@ TkpMakeWindow(
      * order.
      */
 
-    hwnd = CreateWindowEx(WS_EX_NOPARENTNOTIFY, TK_WIN_CHILD_CLASS_NAME, NULL,
+    hwnd = CreateWindowExW(WS_EX_NOPARENTNOTIFY, TK_WIN_CHILD_CLASS_NAME, NULL,
 	    (DWORD) style, Tk_X(winPtr), Tk_Y(winPtr), Tk_Width(winPtr),
 	    Tk_Height(winPtr), parentWin, NULL, Tk_GetHINSTANCE(), NULL);
     SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0,
@@ -953,7 +944,7 @@ TkpMakeTransparentWindowExist(
     int style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     DWORD exStyle = WS_EX_TRANSPARENT | WS_EX_TOPMOST;
 
-    hWnd = CreateWindowEx(exStyle, TK_WIN_CHILD_CLASS_NAME, NULL, style,
+    hWnd = CreateWindowExW(exStyle, TK_WIN_CHILD_CLASS_NAME, NULL, style,
 	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
 	    hParent, NULL, Tk_GetHINSTANCE(), NULL);
     winPtr->window = Tk_AttachHWND(tkwin, hWnd);

@@ -150,7 +150,7 @@ Tk_SetAppName(
 	    return "";
 	}
 	tsdPtr->initialized = 1;
-	TRACE("Initialized COM library for interp 0x%08X\n", (long)interp);
+	TRACE("Initialized COM library for interp 0x%" TCL_Z_MODIFIER "x\n", (size_t)interp);
     }
 
     /*
@@ -254,7 +254,7 @@ TkGetInterpNames(
 			    if (*p) {
 				Tcl_DString ds;
 
-				Tcl_WinTCharToUtf(p + 1, -1, &ds);
+				Tcl_WinTCharToUtf((LPCTSTR)(p + 1), -1, &ds);
 				result = Tcl_ListObjAppendElement(interp,
 					objList,
 					Tcl_NewStringObj(Tcl_DStringValue(&ds),
@@ -784,7 +784,7 @@ Send(
 
     ehr = VariantChangeType(&vResult, &vResult, 0, VT_BSTR);
     if (SUCCEEDED(ehr)) {
-	Tcl_WinTCharToUtf(vResult.bstrVal, (int) SysStringLen(vResult.bstrVal) *
+	Tcl_WinTCharToUtf((LPCTSTR)vResult.bstrVal, SysStringLen(vResult.bstrVal) *
 		sizeof (WCHAR), &ds);
 	Tcl_DStringResult(interp, &ds);
     }
@@ -797,7 +797,7 @@ Send(
 
     if (hr == DISP_E_EXCEPTION && ei.bstrSource != NULL) {
 	Tcl_Obj *opError, *opErrorCode, *opErrorInfo;
-	Tcl_WinTCharToUtf(ei.bstrSource, (int) SysStringLen(ei.bstrSource) *
+	Tcl_WinTCharToUtf((LPCTSTR)ei.bstrSource, SysStringLen(ei.bstrSource) *
 		sizeof (WCHAR), &ds);
 	opError = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds));
