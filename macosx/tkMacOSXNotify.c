@@ -318,7 +318,7 @@ TkMacOSXEventsSetupProc(
 	    }
 	} else if (!havePeriodicEvents){
 
-	    /* 
+	    /*
 	     * When the user is not generating events we schedule a "hearbeat"
 	     * event to fire every 0.1 seconds.  This helps to make the vwait
 	     * command more responsive when there is no user input.
