@@ -288,6 +288,7 @@ TkMacOSXEventsSetupProc(
     ClientData clientData,
     int flags)
 {
+    static Bool havePeriodicEvents = NO;
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
 
     /*
@@ -310,7 +311,21 @@ TkMacOSXEventsSetupProc(
 	if (currentEvent) {
 	    if (currentEvent.type > 0) {
 		Tcl_SetMaxBlockTime(&zeroBlockTime);
+		if (havePeriodicEvents) {
+		    [NSEvent stopPeriodicEvents];
+		    havePeriodicEvents = NO;
+		}
 	    }
+	} else if (!havePeriodicEvents){
+
+	    /*
+	     * When the user is not generating events we schedule a "hearbeat"
+	     * event to fire every 0.1 seconds.  This helps to make the vwait
+	     * command more responsive when there is no user input.
+	     */
+
+	    havePeriodicEvents = YES;
+	    [NSEvent startPeriodicEventsAfterDelay:0.0 withPeriod:0.1];
 	}
     }
 }

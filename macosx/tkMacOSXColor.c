@@ -276,7 +276,7 @@ SetCGColorComponents(
     CGColorRef *c)
 {
     OSStatus err = noErr;
-    NSColor *bgColor, *color;
+    NSColor *bgColor, *color = nil;
     CGFloat rgba[4] = {0, 0, 0, 1};
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 101400
     NSInteger colorVariant;
@@ -340,7 +340,9 @@ SetCGColorComponents(
 	    break;
 	case 2:
 	    if ([NSApp macMinorVersion] > 9) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
 		color = [[NSColor labelColor] colorUsingColorSpace: deviceRGB];
+#endif
 	    } else {
 		color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
 	    }
