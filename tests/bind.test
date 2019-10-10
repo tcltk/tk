@@ -6010,6 +6010,13 @@ test bind-28.8 {keysym names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {X x {keysym X}}
+test bind-28.9 {keysym names, deprecated X11 names (e.g. "Eth") are translated into non-deprecated version (like "ETH")} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <Eth> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result {<Key-ETH>}
 
 
 test bind-29.1 {Tcl_BackgroundError procedure} -setup {
