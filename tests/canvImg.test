@@ -737,11 +737,13 @@ test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
     update
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
     foo changed 2 4 6 8 30 15
+    # macOS Catalina needs a delay here.
+    after 20
     update
     return $x
 } -cleanup {
@@ -753,11 +755,13 @@ test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
     update
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
     foo changed 2 4 6 8 40 50
+    # macOS Catalina needs a delay here.
+    after 20
     update
     return $x
 } -cleanup {
@@ -801,6 +805,8 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
     update
     set y {}
     image create test foo -variable x
+    # macOS Catalina needs a delay here.
+    after 20
     update
     return $y
 } -cleanup {

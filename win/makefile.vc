@@ -17,7 +17,7 @@
 # General usage:
 #   nmake [-nologo] -f makefile.vc [TARGET|MACRODEF [TARGET|MACRODEF] [...]]
 #
-# For MACRODEF, see TIP 477 (https://core.tcl.tk/tips/doc/trunk/tip/477.md)
+# For MACRODEF, see TIP 477 (https://core.tcl-lang.org/tips/doc/trunk/tip/477.md)
 # or examine Sections 6-8 in rules.vc. This makefile has the following
 # values for the OPTS macro in addition to the ones described there.
 #	noxp     = If you do not have the uxtheme.h header then you
@@ -83,6 +83,8 @@ DEFAULT_BUILD_TARGET = release
 
 # We have a custom resource file
 RCFILE = tk.rc
+
+USE_WIDECHAR_API  = 0
 
 # The rules.vc file does much of the hard work in terms of defining
 # the build configuration, macros, output directories etc.
@@ -302,18 +304,18 @@ BITMAPDIR	= $(ROOT)\bitmaps
 # defined in rules.vc
 PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 
-CONFIG_DEFS     =-DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 \
-		 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 \
-		 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 \
-		 -DSUPPORT_CONFIG_EMBEDDED \
+CONFIG_DEFS     =/DSTDC_HEADERS=1 /DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
+		 /DHAVE_STDLIB_H=1 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
+		 /DHAVE_STRINGS_H=1 /DHAVE_INTTYPES_H=1 /DHAVE_STDINT_H=1 \
+		 /DSUPPORT_CONFIG_EMBEDDED /DUNICODE /D_UNICODE \
 !if $(HAVE_UXTHEME_H)
-		 -DHAVE_UXTHEME_H=1 \
+		 /DHAVE_UXTHEME_H=1 \
 !endif
 !if $(TTK_SQUARE_WIDGET)
-		 -DTTK_SQUARE_WIDGET=1 \
+		 /DTTK_SQUARE_WIDGET=1 \
 !endif
 
-PRJ_DEFINES	= -DBUILD_ttk $(CONFIG_DEFS) -Dinline=__inline -D _CRT_SECURE_NO_DEPRECATE -D _CRT_NONSTDC_NO_DEPRECATE
+PRJ_DEFINES	= /DBUILD_ttk $(CONFIG_DEFS) /Dinline=__inline /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
 PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib
@@ -453,8 +455,8 @@ $(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 
 
 $(CAT32): $(_TCLDIR)\win\cat.c
-	$(cc32) $(cflags) $(crt) -D_CRT_NONSTDC_NO_DEPRECATE -DCONSOLE -Fo$(TMP_DIR)\ $?
-	$(CONEXECMD) -DCONSOLE -stack:16384 $(TMP_DIR)\cat.obj
+	$(cc32) $(cflags) $(crt) /D_CRT_NONSTDC_NO_DEPRECATE /DCONSOLE -Fo$(TMP_DIR)\ $?
+	$(CONEXECMD) /DCONSOLE -stack:16384 $(TMP_DIR)\cat.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
@@ -529,8 +531,8 @@ install-pdbs:
 #---------------------------------------------------------------------
 
 $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
-	$(cc32) $(appcflags_nostubs) -DTK_TEST \
-	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
+	$(cc32) $(appcflags_nostubs) /DTK_TEST \
+	    /DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
@@ -547,11 +549,11 @@ $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 
 $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) \
-	    -DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
+	    /DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
-	$(cc32) $(pkgcflags) -DTK_ASCII_MAIN -Fo$@ $?
+	$(cc32) $(pkgcflags) /DTK_ASCII_MAIN -Fo$@ $?
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
@@ -560,6 +562,8 @@ $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
 $(TMP_DIR)\tkStubLib.obj : $(GENERICDIR)\tkStubLib.c
 	$(cc32) $(stubscflags) -Fo$@ $?
 
+$(TMP_DIR)\ttkStubLib.obj : $(TTKDIR)\ttkStubLib.c
+	$(cc32) $(stubscflags) -Fo$@ $?
 
 $(TMP_DIR)\wish.exe.manifest: $(WIN_DIR)\wish.exe.manifest.in
 	@nmakehlp -s << $** >$@
@@ -581,7 +585,7 @@ depend:
 !else
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(TCLTOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
-		-passthru:"-DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
+		-passthru:"/DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
 		$(WIN_DIR),$$(WIN_DIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
 		$(BITMAPDIR),$$(BITMAPDIR) @<<
 $(TKOBJS)

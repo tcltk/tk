@@ -13,6 +13,7 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
+#include "default.h"
 
 /*
  * The structure below defines the record for each polygon item.
@@ -112,8 +113,9 @@ static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
 	"0.0", Tk_Offset(PolygonItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
+    /* Remark: Default for -fill should be NULL, see [2860519]. Will be fixed in Tk 8.7 */
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
+ 	DEF_CANVITEM_OUTLINE, Tk_Offset(PolygonItem, fillColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", NULL, NULL,
 	"round", Tk_Offset(PolygonItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,

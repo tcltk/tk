@@ -458,7 +458,7 @@ XSetClipOrigin(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkSetRegion(
     Display *display,
     GC gc,
@@ -475,6 +475,7 @@ TkSetRegion(
 	TkpRetainRegion(r);
 #endif
     }
+    return Success;
 }
 
 int

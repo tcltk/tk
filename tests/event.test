@@ -245,6 +245,8 @@ test event-2.2(keypress) {type into entry widget and then delete some text} -set
     set e [entry $t.e]
     pack $e
     tkwait visibility $e
+    # Avoid a hang when macOS puts the mouse pointer on the green button 
+    wm geometry .t +200+100
     _keypress_string $e MELLO
     _keypress $e BackSpace
     _keypress $e BackSpace
