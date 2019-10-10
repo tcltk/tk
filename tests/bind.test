@@ -6699,7 +6699,7 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     set res 1
     foreach pos1 $pointerPos1 pos2 $pointerPos2 {
         if {$pos1 != [expr {$pos2 - 400}]} {
-            set res 0
+            set res [list $pointerPos1 $pointerPos2]
         }
     }
     set res
