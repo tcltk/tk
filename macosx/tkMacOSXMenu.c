@@ -1561,7 +1561,10 @@ TkMacOSXClearMenubarActive(void)
     if (mainMenu && [mainMenu isKindOfClass:[TKMenu class]]) {
 	TkMenu *menuPtr = [(TKMenu *) mainMenu tkMenu];
 
-	if (menuPtr && menuPtr->numEntries && menuPtr->entries) {
+	if (menuPtr &&
+	    !(menuPtr->menuFlags & MENU_DELETION_PENDING) &&
+	    menuPtr->numEntries > 0 &&
+	    menuPtr->entries != NULL) {
 	    RecursivelyClearActiveMenu(menuPtr);
 	}
     }
