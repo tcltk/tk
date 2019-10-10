@@ -2209,13 +2209,13 @@ test listbox-11.5 {ChangeListboxView procedure} -setup {
 } -body {
     listbox .l -height 5 -yscrollcommand "record y"
     pack .l
-    update idletasks
+    update
     .l insert 0 a b c d e f g h i j
     .l yview 3
-    update idletasks
+    update
     set log {}
     .l yview 3
-    update idletasks
+    update
     list [format {%.6g %.6g} {*}[.l yview]] $log
 } -cleanup {
     destroy .l
@@ -2666,6 +2666,7 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
     set log {}
     pack .l
+    set timeout [after 500 {set log timeout}] 
     vwait log
     lappend x "0000000000"
     update
@@ -2674,6 +2675,7 @@ test listbox-21.9 {ListboxListVarProc, test hscrollbar after listvar mod} -setup
     set log
 } -cleanup {
     destroy .l
+    after cancel $timeout
 } -result [list {x 0 1} {x 0 1} {x 0 0.5}]
 test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setup {
     destroy .l
@@ -2682,16 +2684,18 @@ test listbox-21.10 {ListboxListVarProc, test hscrollbar after listvar mod} -setu
     listbox .l -font $fixed -width 10 -xscrollcommand "record x" -listvar x
     set log {}
     pack .l
+    set timeout [after 500 {set log timeout}] 
     vwait log
     lappend x "0000000000"
-    update idletasks
+    update
     lappend x "00000000000000000000"
-    update idletasks
+    update
     set x [list "0000000000"]
-    update idletasks
+    update
     set log
 } -cleanup {
     destroy .l
+    after cancel timeout
 } -result [list {x 0 1} {x 0 1} {x 0 0.5} {x 0 1}]
 test listbox-21.11 {ListboxListVarProc, bad list} -setup {
     destroy .l
@@ -2757,16 +2761,18 @@ test listbox-21.15 {ListboxListVarProc, update vertical scrollbar} -setup {
 } -body {
     catch {unset x}
     listbox .l -font $fixed -height 3 -yscrollcommand "record y" -listvar x
-    update idletasks
+    update
     set log {}
     pack .l
+    set timeout [after 500 {set log timeout}] 
     vwait log
-    update idletasks
+    update
     lappend x a b c d e f
     vwait log
     set log
 } -cleanup {
     destroy .l
+    after cancel $timeout
 } -result [list {y 0 1} {y 0 0.5}]
 test listbox-21.16 {ListboxListVarProc, update vertical scrollbar} -setup {
     destroy .l
@@ -2776,13 +2782,13 @@ test listbox-21.16 {ListboxListVarProc, update vertical scrollbar} -setup {
     pack .l
     set x [list 0 1 2 3 4 5]
     .l yview scroll 3 units
-    update idletasks
+    update
     set result {}
     lappend result [format {%.6g %.6g} {*}[.l yview]]
     set x [lreplace $x 3 3]
     set x [lreplace $x 3 3]
     set x [lreplace $x 3 3]
-    update idletasks
+    update
     lappend result [format {%.6g %.6g} {*}[.l yview]]
     set result
 } -cleanup {
@@ -2797,14 +2803,16 @@ test listbox-22.1 {UpdateHScrollbar} -setup {
     listbox .l -font $fixed -width 10 -xscrollcommand "record x"
     set log {}
     pack .l
+    set timeout [after 500 {set log timeout}] 
     vwait log
     .l insert end "0000000000"
-    update idletasks
+    update
     .l insert end "00000000000000000000"
     vwait log
     set log
 } -cleanup {
     destroy .l
+    after cancel $timeout
 } -result [list {x 0 1} {x 0 1} {x 0 0.5}]
 
 
