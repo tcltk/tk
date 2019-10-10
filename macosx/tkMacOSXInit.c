@@ -396,6 +396,16 @@ TkpInit(
 	    }
 	}
 
+
+	/*
+	 * Initialize the NSServices object here. Apple's docs say to do this
+	 * in applicationDidFinishLaunching, but the Tcl interpreter is not
+	 * initialized until this function call.  Only the main interpreter
+	 * is allowed to provide services.
+	 */
+
+	TkMacOSXServices_Init(interp);
+
     }
 
     if (tkLibPath[0] != '\0') {
@@ -409,19 +419,11 @@ TkpInit(
 
     Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
-	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
-
-    /*
-     * Initialize the NSServices object here. Apple's docs say to do this
-     * in applicationDidFinishLaunching, but the Tcl interpreter is not
-     * initialized until this function call.
-     */
-
-    TkMacOSXServices_Init(interp);
+    Tcl_CreateObjCommand(interp, "::tk::mac::registerServiceWidget",
+	    TkMacOSXRegisterServiceWidgetObjCmd, NULL, NULL);
 
     return TCL_OK;
 }

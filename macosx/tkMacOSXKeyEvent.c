@@ -33,7 +33,6 @@ static NSModalSession modalSession = nil;
 static BOOL processingCompose = NO;
 static BOOL finishedCompose = NO;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
-
 static void		setupXEvent(XEvent *xEvent, NSWindow *w,
 			    unsigned int state);
 static unsigned		isFunctionKey(unsigned int code);
@@ -279,6 +278,7 @@ unsigned short releaseCode;
     if (NS_KEYLOG) {
 	TKLog(@"insertText '%@'\tlen = %d", aString, len);
     }
+
     processingCompose = NO;
     finishedCompose = YES;
 
@@ -287,7 +287,7 @@ unsigned short releaseCode;
      */
 
     if (privateWorkingText != nil) {
-	[self deleteWorkingText];
+    	[self deleteWorkingText];
     }
 
     /*
@@ -307,6 +307,7 @@ unsigned short releaseCode;
 	releaseCode = (UInt16) [aString characterAtIndex: 0];
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
+
     releaseCode = (UInt16) [aString characterAtIndex: 0];
 }
 

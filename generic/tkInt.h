@@ -84,6 +84,16 @@
 #   endif
 #endif
 
+#ifndef TCL_Z_MODIFIER
+#   if defined(_WIN64)
+#	define TCL_Z_MODIFIER	"I"
+#   elif defined(__GNUC__) && !defined(_WIN32)
+#	define TCL_Z_MODIFIER	"z"
+#   else
+#	define TCL_Z_MODIFIER	""
+#   endif
+#endif /* !TCL_Z_MODIFIER */
+
 /*
  * Opaque type declarations:
  */
@@ -1255,6 +1265,10 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #endif
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
+#endif
+
+#if !defined(__cplusplus) && !defined(c_plusplus)
+# define c_class class
 #endif
 
 #if TCL_UTF_MAX > 4

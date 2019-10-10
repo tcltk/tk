@@ -54,13 +54,14 @@ TkCreateRegion(void)
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkDestroyRegion(
     TkRegion r)
 {
     if (r) {
 	CFRelease(r);
     }
+    return Success;
 }
 
 /*
@@ -80,7 +81,7 @@ TkDestroyRegion(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkIntersectRegion(
     TkRegion sra,
     TkRegion srb,
@@ -88,6 +89,7 @@ TkIntersectRegion(
 {
     ChkErr(HIShapeIntersect, (HIShapeRef) sra, (HIShapeRef) srb,
 	   (HIMutableShapeRef) dr_return);
+    return Success;
 }
 
 /*
@@ -107,7 +109,7 @@ TkIntersectRegion(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkSubtractRegion(
     TkRegion sra,
     TkRegion srb,
@@ -115,6 +117,7 @@ TkSubtractRegion(
 {
     ChkErr(HIShapeDifference, (HIShapeRef) sra, (HIShapeRef) srb,
 	   (HIMutableShapeRef) dr_return);
+    return Success;
 }
 
 /*
@@ -134,7 +137,7 @@ TkSubtractRegion(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkUnionRectWithRegion(
     XRectangle* rectangle,
     TkRegion src_region,
@@ -153,6 +156,7 @@ TkUnionRectWithRegion(
 		(HIMutableShapeRef) dest_region_return);
 	CFRelease(rectRgn);
     }
+    return Success;
 }
 
 /*
@@ -231,7 +235,7 @@ TkRectInRegion(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkClipBox(
     TkRegion r,
     XRectangle *rect_return)
@@ -243,6 +247,7 @@ TkClipBox(
     rect_return->y = rect.origin.y;
     rect_return->width = rect.size.width;
     rect_return->height = rect.size.height;
+    return Success;
 }
 
 /*
