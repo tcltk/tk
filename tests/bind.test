@@ -6708,7 +6708,7 @@ test bind-34.1 {-warp works relatively to a window} -setup {
 } -result {1}
 test bind-34.2 {-warp works relatively to the screen} -setup {
 } -body {
-    # Contrary to bind-32.2, we're directly checking screen coordinates
+    # Contrary to bind-34.1, we're directly checking screen coordinates
     event generate {} <Motion> -x 20 -y 20 -warp 1
     update idletasks ; # DoWarp is an idle callback
     set res [winfo pointerxy .]
