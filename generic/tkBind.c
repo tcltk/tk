@@ -1334,7 +1334,9 @@ TkBindInit(
 		hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &newEntry);
 		Tcl_SetHashValue(hPtr, kPtr->value);
 		hPtr = Tcl_CreateHashEntry(&nameTable, (char *) kPtr->value, &newEntry);
-		Tcl_SetHashValue(hPtr, kPtr->name);
+		if (newEntry) {
+		    Tcl_SetHashValue(hPtr, kPtr->name);
+		}
 	    }
 #endif /* REDO_KEYSYM_LOOKUP */
 
