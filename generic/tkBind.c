@@ -5221,7 +5221,9 @@ TkKeysymToString(
 	return Tcl_GetHashValue(hPtr);
     }
 #endif /* REDO_KEYSYM_LOOKUP */
-
+    if (keysym > (KeySym)0x10FFFF) {
+	return NULL;
+    }
     return XKeysymToString(keysym);
 }
 
