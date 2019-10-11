@@ -166,12 +166,12 @@ test canvImg-4.2 {ConfigureImage procedure} -constraints testImageType -setup {
     update
     set x {}
     set y {}
-    set timer [after 300 {lappend y "timeout"}]
+    set timer [after 300 {lappend y "timed out"}]
     .c itemconfigure i1 -image foo2
     update idletasks
     update
     # On MacOS we need to wait for the test image display procedure to run.
-    while {"timeout" ni $y && [lindex $y end 1] ne "display"} {
+    while {"timed out" ni $y && [lindex $y end 1] ne "display"} {
         vwait y
     }
     after cancel timer
@@ -741,9 +741,10 @@ test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
+    set timer [after 500 {lappend x "timed out"}]
     foo changed 2 4 6 8 30 15
-    # macOS Catalina needs a delay here.
-    after 20
+    vwait x
+    after cancel $timer
     update
     return $x
 } -cleanup {
@@ -759,9 +760,10 @@ test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
+    set timer [after 500 {lappend x "timed out"}]
     foo changed 2 4 6 8 40 50
-    # macOS Catalina needs a delay here.
-    after 20
+        vwait x
+    after cancel $timer
     update
     return $x
 } -cleanup {
@@ -799,14 +801,14 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
     image create test foo2 -variable y
     foo changed 0 0 0 0 40 50
     foo2 changed 0 0 0 0 80 60
-
     .c create image 50 100 -image foo -tags image -anchor nw
     .c create image 70 110 -image foo2 -anchor nw
     update
     set y {}
+    set timer [after 500 {lappend y "timed out"}]
     image create test foo -variable x
-    # macOS Catalina needs a delay here.
-    after 20
+    vwait x
+    after cancel $timer
     update
     return $y
 } -cleanup {
