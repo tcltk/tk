@@ -362,10 +362,12 @@ void TkSetCursorPos(
     int y)
 {
     INPUT input;
+    unsigned xscreen = (GetSystemMetrics(SM_CXSCREEN) - 1);
+    unsigned yscreen = (GetSystemMetrics(SM_CYSCREEN) - 1);
 
     input.type = INPUT_MOUSE;
-    input.mi.dx = (LONG)(x * (65535.0 / (GetSystemMetrics(SM_CXSCREEN) - 1)) + 0.5);
-    input.mi.dy = (LONG)(y * (65535.0 / (GetSystemMetrics(SM_CYSCREEN) - 1)) + 0.5);
+    input.mi.dx = (x * 65535 + xscreen/2) / xscreen;
+    input.mi.dy = (y * 65535 + yscreen/2) / yscreen;
     input.mi.mouseData = 0;
     input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
     input.mi.time = 0;
