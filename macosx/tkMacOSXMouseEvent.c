@@ -58,6 +58,7 @@ enum {
     NSTrackingArea *trackingArea = nil;
     NSInteger eventNumber, clickCount, buttonNumber;
 #endif
+    [NSEvent stopPeriodicEvents];
 
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
@@ -660,6 +661,7 @@ TkpSetCapture(
     while (winPtr && !Tk_IsTopLevel(winPtr)) {
 	winPtr = winPtr->parentPtr;
     }
+    [NSEvent stopPeriodicEvents];
     captureWinPtr = (Tk_Window) winPtr;
 }
 
