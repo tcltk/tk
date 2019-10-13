@@ -648,6 +648,9 @@
 { "lcedilla", 0x3B6 },
 { "emacron", 0x3BA },
 { "gcedilla", 0x3BB },
+#ifndef TK_NO_DEPRECATED
+{ "gacute", 0x3BB },
+#endif
 { "tslash", 0x3BC },
 { "ENG", 0x3BD },
 { "eng", 0x3BF },
