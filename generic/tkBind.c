@@ -5189,17 +5189,21 @@ TkStringToKeysym(
     const char *name)		/* Name of a keysym. */
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&keySymTable, name);
+    Tcl_HashEntry *hPtr;
 #endif /* REDO_KEYSYM_LOOKUP */
 
     if (name[0] & 0x80) {
 	int keysym;
 	size_t len = TkUtfToUniChar(name, &keysym);
 	if (name[len] == '\0') {
+	    if ((keysym >= 0xA1) && (keysym <= 0xFF)) {
+		return keysym;
+	    }
 	    return keysym + 0x1000000;
 	}
     }
 #ifdef REDO_KEYSYM_LOOKUP
+    hPtr = Tcl_FindHashEntry(&keySymTable, name);
     if (hPtr) {
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
@@ -5241,6 +5245,9 @@ TkKeysymToString(
     int newEntry;
     char *value;
 
+    if ((keysym >= 0xA1) && (keysym <= 0xFF)) {
+	keysym += 0x1000000;
+    }
     if ((keysym >= 0x1000000) && (keysym <= 0x110FFFF)) {
 	hPtr = Tcl_CreateHashEntry(&nameTable, INT2PTR(keysym), &newEntry);
 	value = (char *)&Tcl_GetHashValue(hPtr);
@@ -5259,7 +5266,7 @@ TkKeysymToString(
     }
 #endif /* REDO_KEYSYM_LOOKUP */
 
-    if (keysym > 0x1008FFFF) {
+    if (keysym > XK_XF86AudioNext) {
 	return NULL;
     }
     return XKeysymToString(keysym);

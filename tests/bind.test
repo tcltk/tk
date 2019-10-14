@@ -384,13 +384,13 @@ test bind-10.2 {Tk_GetBinding procedure} -body {
 
 test bind-11.1 {Tk_GetAllBindings procedure} -body {
     frame .t.f
-    foreach i "! a \\\{ ~ <Delete> <space> <<Paste>> <Tab> <Linefeed> <less> <Meta-a> <Acircumflex>" {
+    foreach i "! a \\\{ ~ <Delete> <space> <<Paste>> <Tab> <Linefeed> <less> <Meta-a> <\uC2>" {
         bind .t.f $i Test
     }
     lsort [bind .t.f]
 } -cleanup {
     destroy .t.f
-} -result {! <<Paste>> <Key-Acircumflex> <Key-Delete> <Key-Linefeed> <Key-Tab> <Key-less> <Key-space> <Meta-Key-a> a \{ ~}
+} -result "! <<Paste>> <Key-Delete> <Key-Linefeed> <Key-Tab> <Key-less> <Key-space> <Key-\uC2> <Meta-Key-a> a \\\{ ~"
 test bind-11.2 {Tk_GetAllBindings procedure} -body {
     frame .t.f
     foreach i "<Double-1> <Triple-1> <Meta-Control-a> <Double-Alt-Enter> <1>" {
@@ -6010,34 +6010,34 @@ test bind-28.8 {keysym names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {X x {keysym X}}
-test bind-28.9 {keysym names, Eth -> ETH} -body {
+test bind-28.9 {keysym names, \uD0} -body {
     frame .t.f -class Test -width 150 -height 100
-    bind .t.f <Eth> foo
+    bind .t.f <\uD0> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result {<Key-ETH>}
-test bind-28.10 {keysym names, Ooblique -> Oslash} -body {
+} -result <Key-\uD0>
+test bind-28.10 {keysym names, \uD8} -body {
     frame .t.f -class Test -width 150 -height 100
-    bind .t.f <Ooblique> foo
+    bind .t.f <\uD8> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result {<Key-Oslash>}
+} -result <Key-\uD8>
 test bind-28.11 {keysym names, gcedilla} -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <gcedilla> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result {<Key-gcedilla>}
+} -result <Key-gcedilla>
 test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <Greek_IOTAdiaeresis> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
-} -result {<Key-Greek_IOTAdieresis>}
+} -result <Key-Greek_IOTAdieresis>
 test bind-28.13 {keysym names, Unicode} -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <\u20AC> foo
