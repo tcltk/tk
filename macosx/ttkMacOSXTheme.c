@@ -1386,6 +1386,16 @@ static void ButtonElementDraw(
 
     bounds = NormalizeButtonBounds(params->heightMetric, bounds);
 
+    /*
+     * If the height of the button content is too large for it to fit inside a
+     * macOS Push Button we assume that this is a macOS image button, and so do
+     * not draw the button at all.
+     */
+
+    if (Tk_Height(tkwin) > bounds.size.height) {
+	return;
+    }
+
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 	switch (info.kind) {
