@@ -27,13 +27,22 @@ namespace eval ttk::theme::aqua {
 
 	# Button
 	ttk::style configure TButton -anchor center -width -6 \
-	    -foreground systemControlTextColor
+	    -foreground systemControlTextColor -compound top
 	ttk::style map TButton \
 	    -foreground {
 		pressed white
 	        {alternate !pressed !background} white}
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
 	ttk::style configure Toolbutton -anchor center
+
+	# Image Button
+	ttk::style configure Image.TButton \
+	    -anchor center -width 1 -padding {-26 -6}
+
+	ttk::style map Image.TButton \
+	    -foreground {
+		pressed systemLabelColor
+	    }
 
 	# Entry
 	ttk::style configure TEntry \
