@@ -6038,6 +6038,20 @@ test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -body 
 } -cleanup {
     destroy .t.f
 } -result {<Key-Greek_IOTAdieresis>}
+test bind-28.13 {keysym names, Unicode} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <\u20AC> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result "<Key-\u20AC>"
+test bind-28.14 {keysym names, Emoji} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <\U1F44D> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result "<Key-\U1F44D>"
 
 
 test bind-29.1 {Tcl_BackgroundError procedure} -setup {

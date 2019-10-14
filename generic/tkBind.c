@@ -410,8 +410,8 @@ static const KeySymInfo keyArray[] = {
     {NULL, 0}
 };
 static Tcl_HashTable keySymTable;	/* keyArray hashed by keysym value. */
-static Tcl_HashTable nameTable;		/* keyArray hashed by keysym name. */
 #endif /* REDO_KEYSYM_LOOKUP */
+static Tcl_HashTable nameTable;		/* keyArray hashed by keysym name. */
 
 /*
  * A hash table is kept to map from the string names of event modifiers to
@@ -1327,9 +1327,11 @@ TkBindInit(
 	    unsigned i;
 #ifdef REDO_KEYSYM_LOOKUP
 	    const KeySymInfo *kPtr;
+#endif /* REDO_KEYSYM_LOOKUP */
 
-	    Tcl_InitHashTable(&keySymTable, TCL_STRING_KEYS);
 	    Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
+#ifdef REDO_KEYSYM_LOOKUP
+	    Tcl_InitHashTable(&keySymTable, TCL_STRING_KEYS);
 	    for (kPtr = keyArray; kPtr->name; ++kPtr) {
 		hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &newEntry);
 		Tcl_SetHashValue(hPtr, kPtr->value);
@@ -5188,7 +5190,16 @@ TkStringToKeysym(
 {
 #ifdef REDO_KEYSYM_LOOKUP
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&keySymTable, name);
+#endif /* REDO_KEYSYM_LOOKUP */
 
+    if (name[0] & 0x80) {
+	int keysym;
+	size_t len = TkUtfToUniChar(name, &keysym);
+	if (name[len] == '\0') {
+	    return keysym + 0x1000000;
+	}
+    }
+#ifdef REDO_KEYSYM_LOOKUP
     if (hPtr) {
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
@@ -5226,15 +5237,29 @@ const char *
 TkKeysymToString(
     KeySym keysym)
 {
+    Tcl_HashEntry *hPtr;
+    int newEntry;
+    char *value;
+
+    if ((keysym >= 0x1000000) && (keysym <= 0x110FFFF)) {
+	hPtr = Tcl_CreateHashEntry(&nameTable, INT2PTR(keysym), &newEntry);
+	value = (char *)&Tcl_GetHashValue(hPtr);
+	if (newEntry) {
+		Tcl_SetHashValue(hPtr, NULL);
+	    TkUniCharToUtf(keysym - 0x1000000, value);
+	}
+    return value;
+    }
+
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&nameTable, (char *)keysym);
+    hPtr = Tcl_FindHashEntry(&nameTable, INT2PTR(keysym));
 
     if (hPtr) {
 	return Tcl_GetHashValue(hPtr);
     }
 #endif /* REDO_KEYSYM_LOOKUP */
 
-    if (keysym > (KeySym)0x1008FFFF) {
+    if (keysym > 0x1008FFFF) {
 	return NULL;
     }
     return XKeysymToString(keysym);
