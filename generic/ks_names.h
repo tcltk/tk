@@ -457,6 +457,7 @@
 { "braceright", 0x7D },
 { "asciitilde", 0x7E },
 { "nobreakspace", 0xA0 },
+#ifndef TK_NO_DEPRECATED
 { "exclamdown", 0xA1 },
 { "cent", 0xA2 },
 { "sterling", 0xA3 },
@@ -556,6 +557,7 @@
 { "yacute", 0xFD },
 { "thorn", 0xFE },
 { "ydiaeresis", 0xFF },
+#endif /* TK_NO_DEPRECATED */
 { "Aogonek", 0x1A1 },
 { "breve", 0x1A2 },
 { "Lstroke", 0x1A3 },
