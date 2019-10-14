@@ -827,7 +827,7 @@ Escape                           65307     0xFF1B
 Multi_key                        65312     0xFF20
 Kanji                            65313     0xFF21
 Muhenkan                         65314     0xFF22
-Henkan_Mode Henkan               65315     0xFF23
+Henkan_Mode                      65315     0xFF23
 Romaji                           65316     0xFF24
 Hiragana                         65317     0xFF25
 Katakana                         65318     0xFF26
