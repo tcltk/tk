@@ -343,7 +343,7 @@ CreateNamedSystemFont(
  *
  *	This procedure is called when an application is created. It
  *	initializes all the structures that are used by the
- *	platform-dependant code on a per application basis.
+ *	platform-dependent code on a per application basis.
  *	Note that this is called before TkpInit() !
  *
  * Results:
