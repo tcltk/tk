@@ -15,7 +15,7 @@ namespace eval ttk::theme::aqua {
 	    -insertwidth 1
 
 	ttk::style map . \
-	    -foreground { 
+	    -foreground {
 		disabled systemDisabledControlTextColor
 		background systemLabelColor} \
 	    -selectbackground {
@@ -37,7 +37,7 @@ namespace eval ttk::theme::aqua {
 
 	# Image Button
 	ttk::style configure Image.TButton \
-	    -anchor center -width 1 -padding {-26 -6}
+	    -anchor center -width 1 -padding {-26 -6} -compound top
 
 	ttk::style map Image.TButton \
 	    -foreground {
@@ -102,7 +102,7 @@ namespace eval ttk::theme::aqua {
 		!focus systemTextBackgroundColor
 		focus systemSelectedTextBackgroundColor
 	    }
-	
+
 	# Treeview:
 	ttk::style configure Heading \
 	    -font TkHeadingFont \

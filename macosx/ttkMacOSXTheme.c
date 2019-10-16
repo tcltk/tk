@@ -1390,7 +1390,7 @@ static void ButtonElementDraw(
      * not draw the button at all.
      */
 
-    if (info.kind == kThemePushButton && Tk_Height(tkwin) > bounds.size.height) {
+    if (info.kind == kThemePushButton && Tk_Height(tkwin) > 28) {
 	return;
     }
 
