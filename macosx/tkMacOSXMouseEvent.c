@@ -143,16 +143,28 @@ enum {
 	return theEvent;	/* Give up.  No window for this event. */
     }
 
+
     /*
-     * If another toplevel has a grab, we ignore the event.
+     * Ignore the event if a local grab is in effect and the Tk event window is
+     * not in the grabber's subtree.
      */
 
     grabWinPtr = winPtr->dispPtr->grabWinPtr;
-    if (grabWinPtr &&
-	    grabWinPtr != winPtr &&
-	    !winPtr->dispPtr->grabFlags && /* this means the grab is local. */
-	    grabWinPtr->mainPtr == winPtr->mainPtr) {
-	return theEvent;
+    if (grabWinPtr && /* There is a grab in effect ... */
+	!winPtr->dispPtr->grabFlags && /* and it is a local grab ... */
+	grabWinPtr->mainPtr == winPtr->mainPtr){ /* in the same application. */
+	Tk_Window w, tkEventWindow = Tk_CoordsToWindow(global.x, global.y, tkwin);
+	if (!tkEventWindow) {
+	    return theEvent;
+	}
+	for (w = tkEventWindow ; !Tk_IsTopLevel(w) ; w = Tk_Parent(w)) {
+	    if (w == grabWinPtr) {
+		break;
+	    }
+	}
+	if (w != grabWinPtr) {
+	    return theEvent;
+	}
     }
 
     /*
