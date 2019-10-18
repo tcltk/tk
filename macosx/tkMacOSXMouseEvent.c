@@ -640,14 +640,12 @@ TkpWarpPointer(
 	loc.y = tkMacOSXZeroScreenHeight - pt.y;
     }
 
-#if 0
     /*
      * Generate an NSEvent of type NSMouseMoved.
      *
-     * This used to use CGEventCreateMouseEvent, which had stopped generating
-     * events by 10.15.  The code below does generate a mouse event.  But it is
-     * not clear that is necessary.  So, for now at least, we are not
-     * generating the NSEvent.
+     * It is not clear why this is necessary.  For example, calling
+     *     event generate $w <Motion> -warp 1 -x $X -y $Y
+     * will cause two <Motion> events to be added to the Tcl queue.
      */
 
     CGWarpMouseCursorPosition(pt);
@@ -661,7 +659,6 @@ TkpWarpPointer(
 	clickCount:1 
 	pressure:0.0];
     [NSApp postEvent:warpEvent atStart:NO];
-#endif
 }
 
 /*
