@@ -143,7 +143,6 @@ enum {
 	return theEvent;	/* Give up.  No window for this event. */
     }
 
-
     /*
      * Ignore the event if a local grab is in effect and the Tk event window is
      * not in the grabber's subtree.
@@ -153,16 +152,18 @@ enum {
     if (grabWinPtr && /* There is a grab in effect ... */
 	!winPtr->dispPtr->grabFlags && /* and it is a local grab ... */
 	grabWinPtr->mainPtr == winPtr->mainPtr){ /* in the same application. */
-	Tk_Window w, tkEventWindow = Tk_CoordsToWindow(global.x, global.y, tkwin);
+	Tk_Window tkwin2, tkEventWindow = Tk_CoordsToWindow(global.x, global.y, tkwin);
 	if (!tkEventWindow) {
 	    return theEvent;
 	}
-	for (w = tkEventWindow ; !Tk_IsTopLevel(w) ; w = Tk_Parent(w)) {
-	    if (w == grabWinPtr) {
+	for (tkwin2 = tkEventWindow;
+	     !Tk_IsTopLevel(tkwin2);
+	     tkwin2 = Tk_Parent(tkwin2)) {
+	    if (tkwin2 == (Tk_Window) grabWinPtr) {
 		break;
 	    }
 	}
-	if (w != grabWinPtr) {
+	if (tkwin2 != (Tk_Window) grabWinPtr) {
 	    return theEvent;
 	}
     }
@@ -512,7 +513,7 @@ TkGenerateButtonEventForXPointer(
  * TkGenerateButtonEvent --
  *
  *	Given a global x & y position and the button key status this procedure
- *	generates the appropiate X button event. It also handles the state
+ *	generates the appropriate X button event. It also handles the state
  *	changes needed to implement implicit grabs.
  *
  * Results:
@@ -618,30 +619,49 @@ TkpWarpPointer(
     TkDisplay *dispPtr)
 {
     CGPoint pt;
-    UInt32 buttonState;
+    NSPoint loc;
+    int wNum;
 
     if (dispPtr->warpWindow) {
 	int x, y;
-
+	TkWindow *winPtr = (TkWindow *) dispPtr->warpWindow;
+	TkWindow *topPtr = winPtr->privatePtr->toplevel->winPtr;
+	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
+	wNum = [w windowNumber];
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	pt.x = x + dispPtr->warpX;
 	pt.y = y + dispPtr->warpY;
+	loc.x = dispPtr->warpX;
+	loc.y = Tk_Height(topPtr) - dispPtr->warpY;
     } else {
-	pt.x = dispPtr->warpX;
+	wNum = 0;
+	pt.x = loc.x = dispPtr->warpX;
 	pt.y = dispPtr->warpY;
+	loc.y = tkMacOSXZeroScreenHeight - pt.y;
     }
 
+#if 0
     /*
-     * Tell the OSX core to generate the events to make it happen.
+     * Generate an NSEvent of type NSMouseMoved.
+     *
+     * This used to use CGEventCreateMouseEvent, which had stopped generating
+     * events by 10.15.  The code below does generate a mouse event.  But it is
+     * not clear that is necessary.  So, for now at least, we are not
+     * generating the NSEvent.
      */
 
-    buttonState = [NSEvent pressedMouseButtons];
-    CGEventType type = kCGEventMouseMoved;
-    CGEventRef theEvent = CGEventCreateMouseEvent(NULL, type, pt,
-	    buttonState);
     CGWarpMouseCursorPosition(pt);
-    CGEventPost(kCGHIDEventTap, theEvent);
-    CFRelease(theEvent);
+    NSEvent *warpEvent = [NSEvent mouseEventWithType:NSMouseMoved 
+	location:loc
+	modifierFlags:0 
+	timestamp:GetCurrentEventTime() 
+	windowNumber:wNum
+	context:nil 
+	eventNumber:0
+	clickCount:1 
+	pressure:0.0];
+    [NSApp postEvent:warpEvent atStart:NO];
+#endif
 }
 
 /*
