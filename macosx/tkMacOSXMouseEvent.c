@@ -36,6 +36,7 @@ static unsigned int	ButtonModifiers2State(UInt32 buttonState,
 enum {
     NSWindowWillMoveEventType = 20
 };
+
 /*
  * In OS X 10.6 an NSEvent of type NSMouseMoved would always have a non-Nil
  * window attribute pointing to the active window.  As of 10.8 this behavior
@@ -239,6 +240,7 @@ enum {
     }
 
     if (eventType != NSScrollWheel) {
+
 	/*
 	 * For normal mouse events, Tk_UpdatePointer will send the XEvent.
 	 */
@@ -249,6 +251,7 @@ enum {
 #endif
 	Tk_UpdatePointer(tkwin, global.x, global.y, state);
     } else {
+
 	/*
 	 * For scroll wheel events we need to send the XEvent here.
 	 */
@@ -587,6 +590,7 @@ GenerateButtonEvent(
     TkDisplay *dispPtr;
 
 #if UNUSED
+
     /*
      * ButtonDown events will always occur in the front window. ButtonUp
      * events, however, may occur anywhere on the screen. ButtonUp events
@@ -649,14 +653,14 @@ TkpWarpPointer(
      */
 
     CGWarpMouseCursorPosition(pt);
-    NSEvent *warpEvent = [NSEvent mouseEventWithType:NSMouseMoved 
+    NSEvent *warpEvent = [NSEvent mouseEventWithType:NSMouseMoved
 	location:loc
-	modifierFlags:0 
-	timestamp:GetCurrentEventTime() 
+	modifierFlags:0
+	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil 
+	context:nil
 	eventNumber:0
-	clickCount:1 
+	clickCount:1
 	pressure:0.0];
     [NSApp postEvent:warpEvent atStart:NO];
 }
