@@ -2220,6 +2220,19 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     bind all <Key> $savedBind(All)
     unset savedBind
 } -result {0 1 2}
+test bind-16.16 {ExpandPercents procedure} -setup {
+    frame .t.f -class Test -width 150 -height 100
+    pack .t.f
+    focus -force .t.f
+    update
+} -body {
+    bind .t.f <Key> {set x "%K"}
+    set x none
+    event generate .t.f <Key> -keysym U000020AC
+    set x
+} -cleanup {
+    destroy .t.f
+} -result \u20AC
 
 test bind-17.1 {event command} -body {
     event

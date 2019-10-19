@@ -4075,10 +4075,10 @@ HandleEventGenerate(
 	    }
 	    break;
 	case EVENT_KEYCODE:
-	    if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
-		return TCL_ERROR;
-	    }
 	    if ((flags & KEY) && event.general.xkey.type != MouseWheelEvent) {
+		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
+		    return TCL_ERROR;
+		}
 		event.general.xkey.keycode = number;
 	    } else {
 		badOpt = 1;
@@ -5191,27 +5191,34 @@ TkStringToKeysym(
 #ifdef REDO_KEYSYM_LOOKUP
     Tcl_HashEntry *hPtr;
 #endif /* REDO_KEYSYM_LOOKUP */
+    int keysym;
 
     if (name[0] & 0x80) {
-	int keysym;
 	size_t len = TkUtfToUniChar(name, &keysym);
 	if (name[len] == '\0') {
 	    if (keysym == 0x20AC) {
 		return 0x20AC;
 	    }
-	    if ((keysym >= 0xA1) && (keysym <= 0xFF)) {
+	    if ((unsigned)(keysym - 0xA1) <= 0x5E) {
 		return keysym;
 	    }
 	    return keysym + 0x1000000;
 	}
+#ifdef REDO_KEYSYM_LOOKUP
+    } else if ((name[0] == 'U') && ((unsigned)(name[1] - '0') <= 9)) {
+	char *p = (char *)name + 1;
+	keysym = strtol(p, &p, 16);
+	if ((p >= name + 5) && (p <= name + 9) && !*p) {
+		return keysym;
+	}
+#endif
     }
 #ifdef REDO_KEYSYM_LOOKUP
     hPtr = Tcl_FindHashEntry(&keySymTable, name);
     if (hPtr) {
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
-    assert(name);
-    if (strlen(name) == 1u) {
+    if (((unsigned)(name[0]-1) < 0x7F) && !name[1]) {
 	KeySym keysym = (KeySym) (unsigned char) name[0];
 
 	if (TkKeysymToString(keysym)) {
@@ -5246,35 +5253,30 @@ TkKeysymToString(
 {
     Tcl_HashEntry *hPtr;
     int newEntry;
-    char *value;
+    const char *value;
 
-    if ((keysym >= 0xA1) && (keysym <= 0xFF)) {
+    if ((unsigned)(keysym - 0xA1) <= 0x5E) {
 	keysym += 0x1000000;
     } else if (keysym == 0x20AC) {
 	keysym += 0x1000000;
     }
     if ((keysym >= 0x1000000) && (keysym <= 0x110FFFF)) {
+	char buf[10];
 	hPtr = Tcl_CreateHashEntry(&nameTable, INT2PTR(keysym), &newEntry);
-	if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
-	    value = (char *)&Tcl_GetHashValue(hPtr);
-	    if (newEntry) {
-		Tcl_SetHashValue(hPtr, NULL);
-		TkUniCharToUtf(keysym - 0x1000000, value);
+	if (newEntry) {
+	    if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
+		buf[TkUniCharToUtf(keysym - 0x1000000, buf)] = '\0';
+	    } else if (keysym >= 0x1010000) {
+		sprintf(buf, "U%08X", (int)(keysym - 0x1000000));
+	    } else {
+		sprintf(buf, "U%04X", (int)(keysym - 0x1000000));
 	    }
-	    return value;
+	    value = Tk_GetUid(buf);
+	    Tcl_SetHashValue(hPtr, value);
 	} else {
-	    if (newEntry) {
-		char *buf = ckalloc(10);
-		if (keysym >= 0x1010000) {
-			sprintf(buf, "U%08X", (int)(keysym - 0x1000000));
-		} else {
-		    sprintf(buf, "U%04X", (int)(keysym - 0x1000000));
-		}
-		Tcl_SetHashValue(hPtr, buf);
-		return buf;
-	    }
-	    return Tcl_GetHashValue(hPtr);
+	    value = Tcl_GetHashValue(hPtr);
 	}
+	return value;
     }
 
 #ifdef REDO_KEYSYM_LOOKUP
@@ -5285,9 +5287,6 @@ TkKeysymToString(
     }
 #endif /* REDO_KEYSYM_LOOKUP */
 
-    if (keysym > (KeySym)0x1008FFFF) {
-	return NULL;
-    }
     return XKeysymToString(keysym);
 }
 
