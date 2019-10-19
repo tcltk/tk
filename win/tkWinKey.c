@@ -59,8 +59,8 @@ static const KeySym keymap[] = {
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*155 0x9b*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*160 0xa0*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*165 0xa5*/
-    NoSymbol, NoSymbol, NoSymbol, XK_XF86AudioMute, XK_XF86AudioLowerVolume, /*170 0xaa*/
-    XK_XF86AudioRaiseVolume, XK_XF86AudioNext, XK_XF86AudioPrev, XK_XF86AudioStop, XK_XF86AudioPlay  /*175 0xaf*/
+    NoSymbol, NoSymbol, NoSymbol, XF86XK_AudioMute, XF86XK_AudioLowerVolume, /*170 0xaa*/
+    XF86XK_AudioRaiseVolume, XF86XK_AudioNext, XF86XK_AudioPrev, XF86XK_AudioStop, XF86XK_AudioPlay  /*175 0xaf*/
 };
 
 /*
