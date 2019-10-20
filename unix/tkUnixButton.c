@@ -969,7 +969,9 @@ TkpComputeButtonGeometry(
 	    if (butPtr->height > 0) {
 		height = butPtr->height;
 	    }
-
+	    /* See ticket [b79c310541].*/
+	    width += 2*butPtr->padX;
+	    height += 2*butPtr->padY;
 	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 		butPtr->indicatorSpace = height;
 		if (butPtr->type == TYPE_CHECK_BUTTON) {

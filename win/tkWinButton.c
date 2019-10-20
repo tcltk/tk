@@ -1111,6 +1111,9 @@ TkpComputeButtonGeometry(
 	} else {
 	    height = imgHeight;
 	}
+	/* See ticket [b79c310541].*/
+	width += 2*butPtr->padX;
+	height += 2*butPtr->padY;
     } else {
 	/*
 	 * No image. May or may not be text. May or may not be compound.
