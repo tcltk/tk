@@ -265,8 +265,9 @@ VISIBILITY_HIDDEN
     Tcl_Interp *_eventInterp;
     NSMenu *_servicesMenu;
     TKMenu *_defaultMainMenu, *_defaultApplicationMenu;
+    NSMenuItem *_demoMenuItem;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
-    NSArray *_defaultHelpMenuItems;
+    NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
