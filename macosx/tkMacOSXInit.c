@@ -123,12 +123,18 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
-
     /*
      * It is not safe to force activation of the NSApp until this method is
      * called. Activating too early can cause the menu bar to be unresponsive.
+     * The call to activateIgnoringOtherApps was moved here to avoid this.
+     * However, with the release of macOS 10.15 (Catalina) this was no longer
+     * sufficient.  (See ticket bf93d098d7.)  Apparently apps were being
+     * activated automatically, and this was sometimes being done too early.
+     * As a workaround we deactivate and then reactivate the app, even though
+     * Apple says that "Normally, you shouldn’t invoke this method".
      */
 
+    [NSApp deactivate];
     [NSApp activateIgnoringOtherApps: YES];
 
     /*
@@ -189,6 +195,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
      * If no icon has been set from an Info.plist file, use the Wish icon from
      * the Tk framework.
      */
+
     NSString *iconFile = [[NSBundle mainBundle] objectForInfoDictionaryKey:
 						    @"CFBundleIconFile"];
     if (!iconFile) {
@@ -403,7 +410,6 @@ TkpInit(
 	    }
 	}
 
-
 	/*
 	 * Initialize the NSServices object here. Apple's docs say to do this
 	 * in applicationDidFinishLaunching, but the Tcl interpreter is not
@@ -412,7 +418,6 @@ TkpInit(
 	 */
 
 	TkMacOSXServices_Init(interp);
-
     }
 
     if (tkLibPath[0] != '\0') {
