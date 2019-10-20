@@ -367,6 +367,9 @@ TkpComputeButtonGeometry(
     } else if (haveImage) { /* Image only */
 	width = butPtr->width > 0 ? butPtr->width : width + butPtr->indicatorSpace;
 	height = butPtr->height > 0 ? butPtr->height : height;
+	/* See ticket [b79c310541].*/
+	width += 2*butPtr->padX;
+	height += 2*butPtr->padY;
 	if (butPtr->type == TYPE_BUTTON) {
 	    /*
 	     * Allow room to shift the image.
