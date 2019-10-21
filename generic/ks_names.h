@@ -360,6 +360,7 @@
 { "3270_PrintScreen", 0xFD1D },
 { "3270_Enter", 0xFD1E },
 { "space", 0x20 },
+#ifndef TK_NO_DEPRECATED
 { "exclam", 0x21 },
 { "quotedbl", 0x22 },
 { "numbersign", 0x23 },
@@ -373,7 +374,9 @@
 { "asterisk", 0x2A },
 { "plus", 0x2B },
 { "comma", 0x2C },
+#endif
 { "minus", 0x2D },
+#ifndef TK_NO_DEPRECATED
 { "period", 0x2E },
 { "slash", 0x2F },
 { "0", 0x30 },
@@ -390,7 +393,9 @@
 { "semicolon", 0x3B },
 { "less", 0x3C },
 { "equal", 0x3D },
+#endif
 { "greater", 0x3E },
+#ifndef TK_NO_DEPRECATED
 { "question", 0x3F },
 { "at", 0x40 },
 { "A", 0x41 },
@@ -456,6 +461,7 @@
 { "bar", 0x7C },
 { "braceright", 0x7D },
 { "asciitilde", 0x7E },
+#endif
 { "nobreakspace", 0xA0 },
 #ifndef TK_NO_DEPRECATED
 { "exclamdown", 0xA1 },

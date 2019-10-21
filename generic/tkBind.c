@@ -5196,11 +5196,12 @@ TkStringToKeysym(
     if (name[0] & 0x80) {
 	size_t len = TkUtfToUniChar(name, &keysym);
 	if (name[len] == '\0') {
-	    if (keysym == 0x20AC) {
-		return 0x20AC;
-	    }
-	    if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+	    if ((unsigned)(keysym - 0x21) <= 0x5D) {
 		return keysym;
+	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+		return keysym;
+	    } else if (keysym == 0x20AC) {
+		return 0x20AC;
 	    }
 	    return keysym + 0x1000000;
 	}
@@ -5208,8 +5209,16 @@ TkStringToKeysym(
     } else if ((name[0] == 'U') && ((unsigned)(name[1] - '0') <= 9)) {
 	char *p = (char *)name + 1;
 	keysym = strtol(p, &p, 16);
-	if ((p >= name + 5) && (p <= name + 9) && !*p) {
+	if ((p >= name + 5) && (p <= name + 9) && !*p && (keysym >= 0x20)
+		&& ((unsigned)(keysym - 0x7F) > 0x20)) {
+	    if ((unsigned)(keysym - 0x21) <= 0x5D) {
 		return keysym;
+	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+		return keysym;
+	    } else if (keysym == 0x20AC) {
+		return keysym;
+	    }
+	    return keysym + 0x1000000;
 	}
 #endif
     }
@@ -5255,12 +5264,15 @@ TkKeysymToString(
     int newEntry;
     const char *value;
 
-    if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+    if ((unsigned)(keysym - 0x21) <= 0x5D) {
+	keysym += 0x1000000;
+    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
 	keysym += 0x1000000;
     } else if (keysym == 0x20AC) {
 	keysym += 0x1000000;
     }
-    if ((keysym >= 0x1000000) && (keysym <= 0x110FFFF)) {
+    if ((keysym >= 0x1000020) && (keysym <= 0x110FFFF)
+	    && ((unsigned)(keysym - 0x100007F) > 0x20)) {
 	char buf[10];
 	hPtr = Tcl_CreateHashEntry(&nameTable, INT2PTR(keysym), &newEntry);
 	if (newEntry) {
