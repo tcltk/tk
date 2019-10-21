@@ -562,11 +562,11 @@ In \fBextended\fR mode, the Escape key cancels the most recent
 selection and restores all the elements in the selected range
 to their previous selection state.
 .IP [17]
-Control-slash selects everything in the widget, except in
+Control-/ selects everything in the widget, except in
 \fBsingle\fR and \fBbrowse\fR modes, in which case it selects
 the active element and deselects everything else.
 .IP [18]
-Control-backslash deselects everything in the widget, except in
+Control-\\ deselects everything in the widget, except in
 \fBbrowse\fR mode where it has no effect.
 .IP [19]
 The F16 key (labelled Copy on many Sun workstations) or Meta-w

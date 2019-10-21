@@ -41,10 +41,10 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 if {"win32" eq [tk windowingsystem]} {
-    bind Checkbutton <equal> {
+    bind Checkbutton <=> {
 	tk::CheckRadioInvoke %W select
     }
-    bind Checkbutton <plus> {
+    bind Checkbutton <+> {
 	tk::CheckRadioInvoke %W select
     }
     bind Checkbutton <minus> {

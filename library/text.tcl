@@ -376,7 +376,7 @@ bind Text <Meta-f> {
 	tk::TextSetCursor %W [tk::TextNextWord %W insert]
     }
 }
-bind Text <Meta-less> {
+bind Text <Meta-<> {
     if {!$tk_strictMotif} {
 	tk::TextSetCursor %W 1.0
     }

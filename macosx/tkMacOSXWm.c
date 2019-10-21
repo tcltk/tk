@@ -607,7 +607,7 @@ FrontWindowAtPoint(
     int x,
     int y)
 {
-    NSPoint p = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
+    NSPoint p = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
     NSArray *windows = [NSApp orderedWindows];
     TkWindow *winPtr = NULL;
 
@@ -5232,7 +5232,7 @@ InitialWindowBounds(
 	cascadePoint = [macWindow cascadeTopLeftFromPoint:cascadePoint];
 	frame = [macWindow frame];
 	wmPtr->x = frame.origin.x;
-	wmPtr->y = tkMacOSXZeroScreenHeight - (frame.origin.y +
+	wmPtr->y = TkMacOSXZeroScreenHeight() - (frame.origin.y +
 		frame.size.height);
     }
     return NSMakeRect(wmPtr->x, wmPtr->y, winPtr->changes.width,
@@ -6104,7 +6104,7 @@ TkMacOSXMakeRealWindowExist(
     NSRect structureRect = [winClass frameRectForContentRect:NSZeroRect
 	    styleMask:styleMask];
     NSRect contentRect = NSMakeRect(5 - structureRect.origin.x,
-	    tkMacOSXZeroScreenHeight - (tkMacOSXZeroScreenTop + 5 +
+	    TkMacOSXZeroScreenHeight() - (TkMacOSXZeroScreenTop() + 5 +
 	    structureRect.origin.y + structureRect.size.height + 200), 200, 200);
     NSWindow *window = [[winClass alloc] initWithContentRect:contentRect
 	    styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
@@ -6136,7 +6136,7 @@ TkMacOSXMakeRealWindowExist(
     NSRect geometry = InitialWindowBounds(winPtr, window);
     geometry.size.width += structureRect.size.width;
     geometry.size.height += structureRect.size.height;
-    geometry.origin.y = tkMacOSXZeroScreenHeight - (geometry.origin.y +
+    geometry.origin.y = TkMacOSXZeroScreenHeight() - (geometry.origin.y +
 	    geometry.size.height);
     [window setFrame:geometry display:YES];
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
