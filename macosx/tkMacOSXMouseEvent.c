@@ -106,7 +106,7 @@ enum {
 	    }
 	}
 	local.y = [eventWindow frame].size.height - local.y;
-	global.y = tkMacOSXZeroScreenHeight - global.y;
+	global.y = TkMacOSXZeroScreenHeight() - global.y;
     } else {
 
 	/*
@@ -126,7 +126,7 @@ enum {
 	}
 	local = [eventWindow tkConvertPointFromScreen: global];
 	local.y = [eventWindow frame].size.height - local.y;
-	global.y = tkMacOSXZeroScreenHeight - global.y;
+	global.y = TkMacOSXZeroScreenHeight() - global.y;
     }
 
     /*
@@ -468,7 +468,7 @@ XQueryPointer(
 	}
 	if (getGlobal) {
 	    *root_x_return = global.x;
-	    *root_y_return = tkMacOSXZeroScreenHeight - global.y;
+	    *root_y_return = TkMacOSXZeroScreenHeight() - global.y;
 	}
     }
     if (mask_return) {
@@ -552,7 +552,7 @@ TkGenerateButtonEvent(
     med.local = med.global;
 
     if (win) {
-	NSPoint local = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
+	NSPoint local = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
 	local = [win tkConvertPointFromScreen:local];
 	local.y = [win frame].size.height - local.y;
@@ -561,7 +561,7 @@ TkGenerateButtonEvent(
 	    local.y -= macWin->winPtr->wmInfoPtr->yInParent;
 	}
 	med.local.h = local.x;
-	med.local.v = tkMacOSXZeroScreenHeight - local.y;
+	med.local.v = TkMacOSXZeroScreenHeight() - local.y;
     }
 
     return GenerateButtonEvent(&med);
@@ -645,7 +645,7 @@ TkpWarpPointer(
 	wNum = 0;
 	pt.x = loc.x = dispPtr->warpX;
 	pt.y = dispPtr->warpY;
-	loc.y = tkMacOSXZeroScreenHeight - pt.y;
+	loc.y = TkMacOSXZeroScreenHeight() - pt.y;
     }
 
     /*
