@@ -138,8 +138,6 @@ typedef struct TkMacOSXDrawingContext {
  * Variables internal to TkAqua.
  */
 
-MODULE_SCOPE CGFloat tkMacOSXZeroScreenHeight;
-MODULE_SCOPE CGFloat tkMacOSXZeroScreenTop;
 MODULE_SCOPE long tkMacOSXMacOSXVersion;
 
 /*
@@ -177,6 +175,8 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 MODULE_SCOPE void *	TkMacOSXGetNamedSymbol(const char *module,
 			    const char *symbol);
 MODULE_SCOPE void	TkMacOSXDisplayChanged(Display *display);
+MODULE_SCOPE CGFloat	TkMacOSXZeroScreenHeight();
+MODULE_SCOPE CGFloat	TkMacOSXZeroScreenTop();
 MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
 			    int enable);
 MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
@@ -265,8 +265,9 @@ VISIBILITY_HIDDEN
     Tcl_Interp *_eventInterp;
     NSMenu *_servicesMenu;
     TKMenu *_defaultMainMenu, *_defaultApplicationMenu;
+    NSMenuItem *_demoMenuItem;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
-    NSArray *_defaultHelpMenuItems;
+    NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
