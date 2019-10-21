@@ -5222,6 +5222,9 @@ TkKeysymToString(
     }
 #endif /* REDO_KEYSYM_LOOKUP */
 
+    if (keysym > (KeySym)0x1008FFFF) {
+	return NULL;
+    }
     return XKeysymToString(keysym);
 }
 

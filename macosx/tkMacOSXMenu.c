@@ -821,7 +821,7 @@ TkpPostMenu(
     NSInteger itemIndex = index;
     NSInteger numItems = [menu numberOfItems];
     NSMenuItem *item = nil;
-    NSPoint location = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
+    NSPoint location = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
     inPostMenu = 1;
     result = TkPreprocessMenu(menuPtr);
@@ -1561,7 +1561,10 @@ TkMacOSXClearMenubarActive(void)
     if (mainMenu && [mainMenu isKindOfClass:[TKMenu class]]) {
 	TkMenu *menuPtr = [(TKMenu *) mainMenu tkMenu];
 
-	if (menuPtr && menuPtr->numEntries && menuPtr->entries) {
+	if (menuPtr &&
+	    !(menuPtr->menuFlags & MENU_DELETION_PENDING) &&
+	    menuPtr->numEntries > 0 &&
+	    menuPtr->entries != NULL) {
 	    RecursivelyClearActiveMenu(menuPtr);
 	}
     }
