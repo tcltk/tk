@@ -5918,6 +5918,34 @@ test bind-28.8 {keysym names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {X x {keysym X}}
+test bind-28.9 {keysym names, Eth -> ETH} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <Eth> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result {<Key-ETH>}
+test bind-28.10 {keysym names, Ooblique -> Oslash} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <Ooblique> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result {<Key-Oslash>}
+test bind-28.11 {keysym names, gcedilla} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <gcedilla> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result {<Key-gcedilla>}
+test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <Greek_IOTAdiaeresis> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result {<Key-Greek_IOTAdieresis>}
 
 
 test bind-29.1 {Tcl_BackgroundError procedure} -setup {
@@ -6619,7 +6647,7 @@ test bind-34.1 {-warp works relatively to a window} -setup {
     set res 1
     foreach pos1 $pointerPos1 pos2 $pointerPos2 {
         if {$pos1 != [expr {$pos2 - 400}]} {
-            set res 0
+            set res [list $pointerPos1 $pointerPos2]
         }
     }
     set res
@@ -6628,7 +6656,7 @@ test bind-34.1 {-warp works relatively to a window} -setup {
 } -result {1}
 test bind-34.2 {-warp works relatively to the screen} -setup {
 } -body {
-    # Contrary to bind-32.2, we're directly checking screen coordinates
+    # Contrary to bind-34.1, we're directly checking screen coordinates
     event generate {} <Motion> -x 20 -y 20 -warp 1
     update idletasks ; # DoWarp is an idle callback
     set res [winfo pointerxy .]
