@@ -5,7 +5,7 @@
 #
 # Pulldown: Press menubutton, drag over menu, release to activate menu entry
 # Popdown: Click menubutton to post menu
-# Keyboard: <Key-space> or accelerator key to post menu
+# Keyboard: <space> or accelerator key to post menu
 #
 # (In addition, when menu system is active, "dropdown" -- menu posts
 # on mouse-over.  Ttk menubuttons don't implement this).
@@ -46,7 +46,7 @@ namespace eval ttk {
 
 bind TMenubutton <Enter>	{ %W instate !disabled {%W state active } }
 bind TMenubutton <Leave>	{ %W state !active }
-bind TMenubutton <Key-space> 	{ ttk::menubutton::Popdown %W }
+bind TMenubutton <space> 	{ ttk::menubutton::Popdown %W }
 bind TMenubutton <<Invoke>> 	{ ttk::menubutton::Popdown %W }
 
 if {[tk windowingsystem] eq "x11"} {

@@ -12,7 +12,7 @@ keysyms \- keysyms recognized by Tk
 .SH DESCRIPTION
 .PP
 Tk recognizes many keysyms when specifying key bindings (e.g.,
-.QW "\fBbind\fR \fB. <Key-\fR\fIkeysym\fR\fB>\fR" ).
+.QW "\fBbind\fR \fB. <\fR\fIkeysym\fR\fB>\fR" ).
 The following list enumerates the
 keysyms that will be recognized by Tk.  Note that not all keysyms will
 be valid on all platforms, and some keysyms are also available on

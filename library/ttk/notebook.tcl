@@ -7,10 +7,10 @@ namespace eval ttk::notebook {
 }
 
 bind TNotebook <ButtonPress-1>		{ ttk::notebook::Press %W %x %y }
-bind TNotebook <Key-Right>		{ ttk::notebook::CycleTab %W  1; break }
-bind TNotebook <Key-Left>		{ ttk::notebook::CycleTab %W -1; break }
-bind TNotebook <Control-Key-Tab>	{ ttk::notebook::CycleTab %W  1; break }
-bind TNotebook <Control-Shift-Key-Tab>	{ ttk::notebook::CycleTab %W -1; break }
+bind TNotebook <Right>		{ ttk::notebook::CycleTab %W  1; break }
+bind TNotebook <Left>		{ ttk::notebook::CycleTab %W -1; break }
+bind TNotebook <Control-Tab>	{ ttk::notebook::CycleTab %W  1; break }
+bind TNotebook <Control-Shift-Tab>	{ ttk::notebook::CycleTab %W -1; break }
 catch {
 bind TNotebook <Control-ISO_Left_Tab>	{ ttk::notebook::CycleTab %W -1; break }
 }
@@ -105,12 +105,12 @@ proc ttk::notebook::enableTraversal {nb} {
     if {![info exists TLNotebooks($top)]} {
 	# Augment $top bindings:
 	#
-	bind $top <Control-Key-Next>         {+ttk::notebook::TLCycleTab %W  1}
-	bind $top <Control-Key-Prior>        {+ttk::notebook::TLCycleTab %W -1}
-	bind $top <Control-Key-Tab> 	     {+ttk::notebook::TLCycleTab %W  1}
-	bind $top <Control-Shift-Key-Tab>    {+ttk::notebook::TLCycleTab %W -1}
+	bind $top <Control-Next>         {+ttk::notebook::TLCycleTab %W  1}
+	bind $top <Control-Prior>        {+ttk::notebook::TLCycleTab %W -1}
+	bind $top <Control-Tab> 	     {+ttk::notebook::TLCycleTab %W  1}
+	bind $top <Control-Shift-Tab>    {+ttk::notebook::TLCycleTab %W -1}
 	catch {
-	bind $top <Control-Key-ISO_Left_Tab> {+ttk::notebook::TLCycleTab %W -1}
+	bind $top <Control-ISO_Left_Tab> {+ttk::notebook::TLCycleTab %W -1}
 	}
 	if {[tk windowingsystem] eq "aqua"} {
 	    bind $top <Option-KeyPress> \

@@ -436,9 +436,9 @@ test bind-13.1 {Tk_BindEvent procedure} -setup {
     bind all  _ {lappend x "%W %K all _"}
     bind .t.f : {lappend x "%W %K .t.f :"}
 
-    event generate .t.f <Key-:>
-    event generate .t.f <Key-+>
-    event generate .t.f <Key-_>
+    event generate .t.f <:>
+    event generate .t.f <+>
+    event generate .t.f <_>
     return $x
 } -cleanup {
     destroy .t.f
@@ -459,7 +459,7 @@ test bind-13.2 {Tk_BindEvent procedure} -setup {
     bind all <KeyPress> {continue; lappend x "%W %K all press any"}
     bind .t.f : {lappend x "%W %K .t.f pressed colon"}
 
-    event generate .t.f <Key-:>
+    event generate .t.f <:>
     return $x
 } -cleanup {
     destroy .t.f
@@ -477,7 +477,7 @@ test bind-13.3 {Tk_BindEvent procedure} -setup {
 } -body {
     bind Test <KeyPress> {lappend x "%W %K Test press any"; error Test}
     bind .t.f : {lappend x "%W %K .t.f pressed colon"}
-    event generate .t.f <Key-:>
+    event generate .t.f <:>
     update
     list $x $errorInfo
 } -cleanup {
@@ -491,7 +491,7 @@ test bind-13.3 {Tk_BindEvent procedure} -setup {
 test bind-13.4 {Tk_BindEvent procedure} -setup {
     proc foo {} {
         set x 44
-        event generate .t.f <Key-:>
+        event generate .t.f <:>
     }
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -534,7 +534,7 @@ test bind-13.7 {Tk_BindEvent procedure} -setup {
     bind .t.f : {lappend x "%W (.t.f binding)"}
     bind Test : {lappend x "%W (Test binding)"}
     bind all : {bind .t.f : {}; lappend x "%W (all binding)"}
-    event generate .t.f <Key-:>
+    event generate .t.f <:>
     return $x
 } -cleanup {
     bind Test : {}
@@ -551,7 +551,7 @@ test bind-13.8 {Tk_BindEvent procedure} -setup {
     bind .t.f : {lappend x "%W (.t.f binding)"}
     bind Test : {lappend x "%W (Test binding)"}
     bind all : {destroy .t.f; lappend x "%W (all binding)"}
-    event generate .t.f <Key-:>
+    event generate .t.f <:>
     return $x
 } -cleanup {
     bind Test : {}
@@ -616,9 +616,9 @@ test bind-13.12 {Tk_BindEvent procedure: collapse repeating modifiers} -setup {
 } -body {
     bind .t.f <Key> "lappend x %K%#"
     bind .t.f <KeyRelease> "lappend x %K%#"
-    event generate .t.f <Key-Shift_L> -serial 100 -when tail
+    event generate .t.f <Shift_L> -serial 100 -when tail
     event generate .t.f <KeyRelease-Shift_L> -serial 101 -when tail
-    event generate .t.f <Key-Shift_L> -serial 102 -when tail
+    event generate .t.f <Shift_L> -serial 102 -when tail
     event generate .t.f <KeyRelease-Shift_L> -serial 103 -when tail
     update
 } -cleanup {
@@ -1129,7 +1129,7 @@ test bind-15.6 {MatchPatterns procedure, ignoring type mismatches} -setup {
     bind .t.f <Double-1> {set x 1}
     set x 0
     event generate .t.f <Button-1>
-    event generate .t.f <Key-a>
+    event generate .t.f <a>
     event generate .t.f <ButtonRelease-1>
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -1146,7 +1146,7 @@ test bind-15.7 {MatchPatterns procedure, ignoring type mismatches} -setup {
     bind .t.f <Double-1> {set x 1}
     set x 0
     event generate .t.f <Button-1>
-    event generate .t.f <Key-Shift_L>
+    event generate .t.f <Shift_L>
     event generate .t.f <ButtonRelease-1>
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -1162,9 +1162,9 @@ test bind-15.8 {MatchPatterns procedure, ignoring type mismatches} -setup {
 } -body {
     bind .t.f ab {set x 1}
     set x 0
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-c>
-    event generate .t.f <Key-b>
+    event generate .t.f <a>
+    event generate .t.f <c>
+    event generate .t.f <b>
     return $x
 } -cleanup {
     destroy .t.f
@@ -1177,7 +1177,7 @@ test bind-15.9 {MatchPatterns procedure, modifier checks} -setup {
 } -body {
     bind .t.f <M1-M2-Key> {set x 1}
     set x 0
-    event generate .t.f <Key-a> -state 0x18
+    event generate .t.f <a> -state 0x18
     return $x
 } -cleanup {
     destroy .t.f
@@ -1190,7 +1190,7 @@ test bind-15.10 {MatchPatterns procedure, modifier checks} -setup {
 } -body {
     bind .t.f <M1-M2-Key> {set x 1}
     set x 0
-    event generate .t.f <Key-a> -state 0xfc
+    event generate .t.f <a> -state 0xfc
     return $x
 } -cleanup {
     destroy .t.f
@@ -1203,7 +1203,7 @@ test bind-15.11 {MatchPatterns procedure, modifier checks} -setup {
 } -body {
     bind .t.f <M1-M2-Key> {set x 1}
     set x 0
-    event generate .t.f <Key-a> -state 0x8
+    event generate .t.f <a> -state 0x8
     return $x
 } -cleanup {
     destroy .t.f
@@ -1220,9 +1220,9 @@ test bind-15.12 {MatchPatterns procedure, ignore modifier presses and releases} 
     # differently on some platforms.
     bind .t.f aB {set x 1}
     set x 0
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-Shift_L>
-    event generate .t.f <Key-b> -state 1
+    event generate .t.f <a>
+    event generate .t.f <Shift_L>
+    event generate .t.f <b> -state 1
     return $x
 } -cleanup {
     destroy .t.f
@@ -1235,8 +1235,8 @@ test bind-15.13 {MatchPatterns procedure, checking detail} -setup {
 } -body {
     bind .t.f ab {set x 1}
     set x 0
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-c>
+    event generate .t.f <a>
+    event generate .t.f <c>
     return $x
 } -cleanup {
     destroy .t.f
@@ -1535,7 +1535,7 @@ test bind-15.31 {MatchPatterns procedure, conflict resolution} -setup {
 } -body {
     bind .t.f <M1-Key> {set x 0}
     bind .t.f <M2-Key> {set x 1}
-    event generate .t.f <Key-a> -state 0x18
+    event generate .t.f <a> -state 0x18
     return $x
 } -cleanup {
     destroy .t.f
@@ -1549,7 +1549,7 @@ test bind-15.32 {MatchPatterns procedure, conflict resolution} -setup {
     bind .t.f <M2-Key> {set x 0}
     bind .t.f <M1-Key> {set x 1}
     set x none
-    event generate .t.f <Key-a> -state 0x18
+    event generate .t.f <a> -state 0x18
     return $x
 } -cleanup {
     destroy .t.f
@@ -2033,18 +2033,18 @@ test bind-16.35 {ExpandPercents procedure} -constraints {
     set x {}
 } -body {
     bind .t.f <Key> {lappend x "%A"}
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-A> -state 1
-    event generate .t.f <Key-Tab>
-    event generate .t.f <Key-Return>
-    event generate .t.f <Key-F1>
-    event generate .t.f <Key-Shift_L>
-    event generate .t.f <Key-space>
-    event generate .t.f <Key-dollar> -state 1
-    event generate .t.f <Key-braceleft> -state 1
-    event generate .t.f <Key-Multi_key>
-    event generate .t.f <Key-e>
-    event generate .t.f <Key-apostrophe>
+    event generate .t.f <a>
+    event generate .t.f <A> -state 1
+    event generate .t.f <Tab>
+    event generate .t.f <Return>
+    event generate .t.f <F1>
+    event generate .t.f <Shift_L>
+    event generate .t.f <space>
+    event generate .t.f <dollar> -state 1
+    event generate .t.f <braceleft> -state 1
+    event generate .t.f <Multi_key>
+    event generate .t.f <e>
+    event generate .t.f <apostrophe>
     set x
 } -cleanup {
     destroy .t.f
@@ -2085,14 +2085,14 @@ test bind-16.38 {ExpandPercents procedure} -constraints {
     set x {}
 } -body {
     bind .t.f <Key> {lappend x %K}
-    event generate .t.f <Key-a>
-    event generate .t.f <Key-A> -state 1
-    event generate .t.f <Key-Tab>
-    event generate .t.f <Key-F1>
-    event generate .t.f <Key-Shift_L>
-    event generate .t.f <Key-space>
-    event generate .t.f <Key-dollar> -state 1
-    event generate .t.f <Key-braceleft> -state 1
+    event generate .t.f <a>
+    event generate .t.f <A> -state 1
+    event generate .t.f <Tab>
+    event generate .t.f <F1>
+    event generate .t.f <Shift_L>
+    event generate .t.f <space>
+    event generate .t.f <dollar> -state 1
+    event generate .t.f <braceleft> -state 1
     set x
 } -cleanup {
     destroy .t.f
@@ -2105,7 +2105,7 @@ test bind-16.39 {ExpandPercents procedure} -setup {
 } -body {
     bind .t.f <Key> {set x "%N"}
     set x none
-    event generate .t.f <Key-space>
+    event generate .t.f <space>
     set x
 } -cleanup {
     destroy .t.f
@@ -2118,7 +2118,7 @@ test bind-16.40 {ExpandPercents procedure} -setup {
 } -body {
     bind .t.f <Key> {set x "%S"}
     set x none
-    event generate .t.f <Key-space> -subwindow .t
+    event generate .t.f <space> -subwindow .t
     set x
 } -cleanup {
     destroy .t.f
@@ -2191,7 +2191,7 @@ test bind-16.45 {ExpandPercents procedure} -setup {
     bind Entry <Key> {set y "%M"}
     bind all <Key> {set z "%M"}
     set x none; set y none; set z none
-    event gen .t.e <Key-a>
+    event gen .t.e <a>
     list $x $y $z
 } -cleanup {
     destroy .t.e
@@ -2212,7 +2212,7 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     bind Entry <Key> {set y "%M"}
     bind .t.e <Key> {set x "%M"}
     set x none; set y none; set z none
-    event gen .t.e <Key-a>
+    event gen .t.e <a>
     list $x $y $z
 } -cleanup {
     destroy .t.e
@@ -2697,7 +2697,7 @@ test bind-20.2 {GetVirtualEvent procedure: non-existent event} -body {
 test bind-20.3 {GetVirtualEvent procedure: owns 1} -setup {
     event delete <<xyz>>
 } -body {
-    event add <<xyz>> <Control-Key-v>
+    event add <<xyz>> <Control-v>
     event info <<xyz>>
 } -cleanup {
     event delete <<xyz>>
@@ -2728,7 +2728,7 @@ test bind-21.3 {GetAllVirtualEvents procedure: many events} -body {
     event add <<xyz>> <Control-v>
     event add <<xyz>> <Button-2>
     event add <<abc>> <Control-v>
-    event add <<def>> <Key-F6>
+    event add <<def>> <F6>
     lsort [event info]
 } -cleanup {
     event delete <<xyz>>
@@ -2797,7 +2797,7 @@ test bind-22.10 {HandleEventGenerate} -setup {
     set x {}
 } -body {
     bind .t.f <Key> {set x "%s %K"}
-    event generate .t.f <Control-Key-space>
+    event generate .t.f <Control-space>
     set x
 } -cleanup {
     destroy .t.f
@@ -5957,7 +5957,7 @@ test bind-28.2 {keysym names} -body {
     bind .t <Gorp> foo
 } -returnCodes error -result {bad event type or keysym "Gorp"}
 test bind-28.3 {keysym names} -body {
-    bind .t <Key-Stupid> foo
+    bind .t <Stupid> foo
 } -returnCodes error -result {bad event type or keysym "Stupid"}
 test bind-28.4 {keysym names} -body {
     frame .t.f -class Test -width 150 -height 100
@@ -5973,10 +5973,10 @@ test bind-28.5 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Key-:> "lappend x \"keysym received\""
-    bind .t.f <Key-_> "lappend x {bad binding match}"
+    bind .t.f <:> "lappend x \"keysym received\""
+    bind .t.f <_> "lappend x {bad binding match}"
     set x [lsort [bind .t.f]]
-    event generate .t.f <Key-:> ;# -state 0
+    event generate .t.f <:> ;# -state 0
     set x
 } -cleanup {
     destroy .t.f
@@ -5987,10 +5987,10 @@ test bind-28.6 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Key-Return> "lappend x \"keysym Return\""
-    bind .t.f <Key-x> "lappend x {bad binding match}"
+    bind .t.f <Return> "lappend x \"keysym Return\""
+    bind .t.f <x> "lappend x {bad binding match}"
     set x [lsort [bind .t.f]]
-    event generate .t.f <Key-Return> -state 0
+    event generate .t.f <Return> -state 0
     set x
 } -cleanup {
     destroy .t.f
@@ -6001,10 +6001,10 @@ test bind-28.7 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Key-X> "lappend x \"keysym X\""
-    bind .t.f <Key-x> "lappend x {bad binding match}"
+    bind .t.f <X> "lappend x \"keysym X\""
+    bind .t.f <x> "lappend x {bad binding match}"
     set x [lsort [bind .t.f]]
-    event generate .t.f <Key-X> -state 1
+    event generate .t.f <X> -state 1
     set x
 } -cleanup {
     destroy .t.f
@@ -6015,10 +6015,10 @@ test bind-28.8 {keysym names} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Key-X> "lappend x \"keysym X\""
-    bind .t.f <Key-x> "lappend x {bad binding match}"
+    bind .t.f <X> "lappend x \"keysym X\""
+    bind .t.f <x> "lappend x {bad binding match}"
     set x [lsort [bind .t.f]]
-    event generate .t.f <Key-X> -state 1
+    event generate .t.f <X> -state 1
     set x
 } -cleanup {
     destroy .t.f
@@ -6294,10 +6294,10 @@ test bind-32.3 {should trigger best match of modifier states} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Alt-Control-Key-A> { lappend x "Alt-Control" }
-    bind .t.f <Shift-Control-Key-A> { lappend x "Shift-Control" }
+    bind .t.f <Alt-Control-A> { lappend x "Alt-Control" }
+    bind .t.f <Shift-Control-A> { lappend x "Shift-Control" }
     bind .t.f <Shift-Key-A> { lappend x "Shift" }
-    event generate .t.f <Alt-Control-Key-A>
+    event generate .t.f <Alt-Control-A>
     set x
 } -cleanup {
     destroy .t.f

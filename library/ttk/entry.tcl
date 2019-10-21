@@ -40,20 +40,20 @@ option add *TEntry.cursor [ttk::cursor text] widgetDefault
 #
 # Removed the following standard Tk bindings:
 #
-# <Control-Key-space>, <Control-Shift-Key-space>,
-# <Key-Select>,  <Shift-Key-Select>:
+# <Control-space>, <Control-Shift-space>,
+# <Select>,  <Shift-Select>:
 #	Ttk entry widget doesn't use selection anchor.
-# <Key-Insert>:
+# <Insert>:
 #	Inserts PRIMARY selection (on non-Windows platforms).
 #	This is inconsistent with typical platform bindings.
 # <Double-Shift-ButtonPress-1>, <Triple-Shift-ButtonPress-1>:
 #	These don't do the right thing to start with.
-# <Meta-Key-b>, <Meta-Key-d>, <Meta-Key-f>,
-# <Meta-Key-BackSpace>, <Meta-Key-Delete>:
+# <Meta-b>, <Meta-d>, <Meta-f>,
+# <Meta-BackSpace>, <Meta-Delete>:
 #	Judgment call.  If <Meta> happens to be assigned to the Alt key,
 #	these could conflict with application accelerators.
 #	(Plus, who has a Meta key these days?)
-# <Control-Key-t>:
+# <Control-t>:
 #	Another judgment call.  If anyone misses this, let me know
 #	and I'll put it back.
 #
@@ -122,8 +122,8 @@ bind TEntry <<TraverseIn>> 	{ %W selection range 0 end; %W icursor end }
 ## Edit bindings:
 #
 bind TEntry <KeyPress> 			{ ttk::entry::Insert %W %A }
-bind TEntry <Key-Delete>		{ ttk::entry::Delete %W }
-bind TEntry <Key-BackSpace> 		{ ttk::entry::Backspace %W }
+bind TEntry <Delete>			{ ttk::entry::Delete %W }
+bind TEntry <BackSpace> 		{ ttk::entry::Backspace %W }
 
 # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
 # Otherwise, the <KeyPress> class binding will fire and insert the character.
@@ -132,10 +132,10 @@ bind TEntry <Key-BackSpace> 		{ ttk::entry::Backspace %W }
 bind TEntry <Alt-KeyPress>		{# nothing}
 bind TEntry <Meta-KeyPress>		{# nothing}
 bind TEntry <Control-KeyPress> 		{# nothing}
-bind TEntry <Key-Escape> 		{# nothing}
-bind TEntry <Key-Return> 		{# nothing}
-bind TEntry <Key-KP_Enter> 		{# nothing}
-bind TEntry <Key-Tab> 			{# nothing}
+bind TEntry <Escape> 		{# nothing}
+bind TEntry <Return> 		{# nothing}
+bind TEntry <KP_Enter> 		{# nothing}
+bind TEntry <Tab> 			{# nothing}
 
 # Argh.  Apparently on Windows, the NumLock modifier is interpreted
 # as a Command modifier.
@@ -148,9 +148,9 @@ bind TEntry <<NextLine>>		{# nothing}
 
 ## Additional emacs-like bindings:
 #
-bind TEntry <Control-Key-d>		{ ttk::entry::Delete %W }
-bind TEntry <Control-Key-h>		{ ttk::entry::Backspace %W }
-bind TEntry <Control-Key-k>		{ %W delete insert end }
+bind TEntry <Control-d>		{ ttk::entry::Delete %W }
+bind TEntry <Control-h>		{ ttk::entry::Backspace %W }
+bind TEntry <Control-k>		{ %W delete insert end }
 
 ### Clipboard procedures.
 #
