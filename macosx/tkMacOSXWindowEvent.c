@@ -78,7 +78,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	int x, y, width = -1, height = -1, flags = 0;
 
 	x = bounds.origin.x;
-	y = tkMacOSXZeroScreenHeight - (bounds.origin.y + bounds.size.height);
+	y = TkMacOSXZeroScreenHeight() - (bounds.origin.y + bounds.size.height);
 	if (winPtr->changes.x != x || winPtr->changes.y != y) {
 	    flags |= TK_LOCATION_CHANGED;
 	} else {
