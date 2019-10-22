@@ -340,7 +340,12 @@ VISIBILITY_HIDDEN
 @end
 
 VISIBILITY_HIDDEN
-@interface TKContentView : NSView <NSTextInput>
+/*
+ * Subclass TKContentView from NSTextInputClient to enable composition and
+ * input from the Character Palette.
+ */
+
+@interface TKContentView : NSView <NSTextInputClient>
 {
 @private
     NSString *privateWorkingText;

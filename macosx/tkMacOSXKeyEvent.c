@@ -31,13 +31,11 @@ static NSWindow *keyboardGrabNSWindow = nil;
 				 * window. */
 static NSModalSession modalSession = nil;
 static BOOL processingCompose = NO;
-static BOOL finishedCompose = NO;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
-static void		setupXEvent(XEvent *xEvent, NSWindow *w,
-			    unsigned int state);
-static unsigned		isFunctionKey(unsigned int code);
+static unsigned short releaseCode;
 
-unsigned short releaseCode;
+static void setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state);
+static unsigned	isFunctionKey(unsigned int code);
 
 
 #pragma mark TKApplication(TKKeyEvent)
@@ -203,15 +201,19 @@ unsigned short releaseCode;
 		}
 
 		/*
-		 * For command key, take input manager's word so things like
-		 * dvorak / qwerty layout work.
+		 * For the command key, take the input manager's word so things
+		 * like dvorak / qwerty layout work.
 		 */
 
 		if ((modifiers & NSCommandKeyMask) == NSCommandKeyMask
 			&& (modifiers & NSAlternateKeyMask) != NSAlternateKeyMask
 			&& len > 0 && !isFunctionKey(code)) {
-		    // head off keycode-based translation in tkMacOSXKeyboard.c
-		    xEvent.xkey.nbytes = [characters length]; //len
+
+		    /*
+		     * Prevent keycode-based translation in tkMacOSXKeyboard.c
+		     */
+
+		    xEvent.xkey.nbytes = [characters length];
 		}
 
 		if ([characters length] > 0) {
@@ -235,7 +237,7 @@ unsigned short releaseCode;
             Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
             savedModifiers = modifiers;
             return theEvent;
-	}  /* if send straight to TK */
+	}  /* if this is a function key or has modifiers */
     }  /* if not processing compose */
 
     if (type == NSKeyDown) {
@@ -243,12 +245,29 @@ unsigned short releaseCode;
 	    TKLog(@"keyDown: %s compose sequence.\n",
 		    processingCompose == YES ? "Continue" : "Begin");
 	}
-        processingCompose = YES;
-        [nsEvArray addObject: theEvent];
-        [[w contentView] interpretKeyEvents: nsEvArray];
-        [nsEvArray removeObject: theEvent];
-    }
 
+	/*
+	 * Call the interpretKeyEvents method to interpret composition key
+	 * strokes.  When it detects a complete composition sequence it will
+	 * call our implementation of insertText: replacementRange, which
+	 * generates a key down XEvent with the appropriate character.  In IME
+	 * when multiple characters have the same composition sequence and the
+	 * chosen character is not the default it may be necessary to hit the
+	 * enter key multiple times before the character is accepted and
+	 * rendered. We send enter key events until inputText has cleared
+	 * the processingCompose flag.
+	 */
+
+	processingCompose = YES;
+	while(processingCompose) {
+	    [nsEvArray addObject: theEvent];
+	    [[w contentView] interpretKeyEvents: nsEvArray];
+	    [nsEvArray removeObject: theEvent];
+	    if ([theEvent keyCode] != 36) {
+		break;
+	    }
+	}
+    }
     savedModifiers = modifiers;
     return theEvent;
 }
@@ -265,58 +284,108 @@ unsigned short releaseCode;
     return self;
 }
 
-/* <NSTextInput> implementation (called through interpretKeyEvents:]). */
+/* 
+ * Implementation of the NSTextInputClient protocol.
+ */
 
-/* <NSTextInput>: called when done composing;
-   NOTE: also called when we delete over working text, followed immed.
-         by doCommandBySelector: deleteBackward: */
+/* [NSTextInputClient inputText: replacementRange:] is called by
+ * interpretKeyEvents when a composition sequence is complete.  It is also
+ * called when we delete over working text.  In that case the call is followed
+ * immediately by doCommandBySelector: deleteBackward:
+ */
 - (void)insertText: (id)aString
+  replacementRange: (NSRange)repRange
 {
     int i, len = [(NSString *) aString length];
     XEvent xEvent;
-
+    
     if (NS_KEYLOG) {
 	TKLog(@"insertText '%@'\tlen = %d", aString, len);
     }
 
     processingCompose = NO;
-    finishedCompose = YES;
 
     /*
-     * First, clear any working text.
+     * Insert the string as a sequence of keystrokes.
+     */
+
+    setupXEvent(&xEvent, [self window], 0);
+    xEvent.xany.type = KeyPress;
+
+    /*
+     * NSString represents a non-BMP character as a string of length 2 where
+     * the first character is the high surrogate and the second character is
+     * the low surrogate.  We could record this in the XEvent by setting the
+     * keycode to the unicode code point and setting the trans_chars to the
+     * 4-byte UTF-8 string.  However, that will not help as long as TCL_UTF_MAX
+     * is set to 3.  Until that changes, we just replace non-BMP characters by
+     * the "replacement character" U+FFFD.
+     */
+
+    for (i = 0; i < len; i++) {
+	UniChar nextChar = [aString characterAtIndex: i];
+	if (CFStringIsSurrogateHighCharacter(nextChar)) {
+#if 0
+	    UniChar lowChar = [aString characterAtIndex: ++i];
+	    xEvent.xkey.keycode = CFStringGetLongCharacterForSurrogatePair(
+		nextChar, lowChar);
+	    xEvent.xkey.nbytes = TkUniCharToUtf(xEvent.xkey.keycode,
+						&xEvent.xkey.trans_chars);
+#else
+	    i++;
+	    xEvent.xkey.keycode = 0xfffd;
+	    strcpy(xEvent.xkey.trans_chars, "\xef\xbf\xbd");
+	    xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
+#endif
+	} else {
+	    xEvent.xkey.keycode = (int) nextChar;
+	    [[aString substringWithRange: NSMakeRange(i,1)]
+	        getCString: xEvent.xkey.trans_chars
+		maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
+	    xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
+	}
+	xEvent.xany.type = KeyPress;
+	releaseCode = (UInt16) nextChar;
+	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+    }
+
+    /*
+     * Clear any working text.
      */
 
     if (privateWorkingText != nil) {
     	[self deleteWorkingText];
     }
 
-    /*
-     * Now insert the string as keystrokes.
-     */
-
-    setupXEvent(&xEvent, [self window], 0);
-    xEvent.xany.type = KeyPress;
-
-    for (i =0; i<len; i++) {
-	xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
-	[[aString substringWithRange: NSMakeRange(i,1)]
-	      getCString: xEvent.xkey.trans_chars
-	       maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
-	xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
-	xEvent.xany.type = KeyPress;
-	releaseCode = (UInt16) [aString characterAtIndex: 0];
-	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-    }
-
     releaseCode = (UInt16) [aString characterAtIndex: 0];
 }
 
+/*
+ * This required method is allowed to return nil.
+ */
 
-/* <NSTextInput>: inserts display of composing characters */
-- (void)setMarkedText: (id)aString selectedRange: (NSRange)selRange
+- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)theRange 
+      actualRange:(NSRangePointer)thePointer
 {
-    NSString *str = [aString respondsToSelector: @selector (string)] ?
+    return nil;
+}
+
+/* 
+ * This method is supposed to insert (or replace selected text with) the string
+ * argument. If the argument is an NSString, it should be displayed with a
+ * distinguishing appearance, e.g underlined.
+ */
+
+- (void)setMarkedText: (id)aString
+	selectedRange: (NSRange)selRange
+     replacementRange: (NSRange)repRange
+{
+    Tk_Window tkwin = (Tk_Window) TkMacOSXGetTkWindow([self window]);
+    NSString *temp;
+    NSString *str = [aString respondsToSelector:@selector (string)] ?
 	[aString string] : aString;
+    printf("Setting marked text for %s to %s\n", Tk_PathName(tkwin),
+	   [str length] ? str.UTF8String : "None");
     if (NS_KEYLOG) {
 	TKLog(@"setMarkedText '%@' len =%lu range %lu from %lu", str,
 	      (unsigned long) [str length], (unsigned long) selRange.length,
@@ -324,16 +393,30 @@ unsigned short releaseCode;
     }
 
     if (privateWorkingText != nil) {
+	unsigned long length = [privateWorkingText length];
 	[self deleteWorkingText];
+	
     }
     if ([str length] == 0) {
 	return;
     }
 
-    processingCompose = YES;
-    privateWorkingText = [str copy];
+    /*
+     * Warn the widget that we are going to insert the marked text
+     * so it can erase the old marked text and display the new.
+     */
+    
+    TkSendVirtualEvent(tkwin, "TkStartIMEMarkedText", NULL);
 
-    //PENDING: insert workingText underlined
+    /*
+     * Use our insertText method to display the marked text.
+     */
+    
+    temp = [str copy];
+    [self insertText: temp replacementRange:repRange];
+    privateWorkingText = temp;
+    processingCompose = YES;
+    TkSendVirtualEvent(tkwin, "TkEndIMEMarkedText", NULL);
 }
 
 
@@ -366,12 +449,15 @@ unsigned short releaseCode;
 }
 
 
-/* used to position char selection windows, etc. */
+/*
+ * Called by the system to get a position for popup character selection windows
+ * such as a Character Palette, or a selection menu for IME.
+ */
 - (NSRect)firstRectForCharacterRange: (NSRange)theRange
+			 actualRange: (NSRangePointer)thePointer
 {
     NSRect rect;
     NSPoint pt;
-
     pt.x = caret_x;
     pt.y = caret_y;
 
@@ -380,7 +466,7 @@ unsigned short releaseCode;
     pt.y -= caret_height;
 
     rect.origin = pt;
-    rect.size.width = caret_height;
+    rect.size.width = 0;
     rect.size.height = caret_height;
     return rect;
 }
@@ -390,7 +476,6 @@ unsigned short releaseCode;
 {
     return (NSInteger) self;
 }
-
 
 - (void)doCommandBySelector: (SEL)aSelector
 {
@@ -416,7 +501,6 @@ unsigned short releaseCode;
     }
 }
 
-
 - (NSArray *)validAttributesForMarkedText
 {
     static NSArray *arr = nil;
@@ -428,7 +512,6 @@ unsigned short releaseCode;
     return arr;
 }
 
-
 - (NSRange)selectedRange
 {
     if (NS_KEYLOG) {
@@ -437,7 +520,6 @@ unsigned short releaseCode;
     return NSMakeRange(NSNotFound, 0);
 }
 
-
 - (NSUInteger)characterIndexForPoint: (NSPoint)thePoint
 {
     if (NS_KEYLOG) {
@@ -445,7 +527,6 @@ unsigned short releaseCode;
     }
     return 0;
 }
-
 
 - (NSAttributedString *)attributedSubstringFromRange: (NSRange)theRange
 {
@@ -458,7 +539,7 @@ unsigned short releaseCode;
     }
     return str;
 }
-/* End <NSTextInput> impl. */
+/* End of NSTextInputClient implementation. */
 
 @synthesize needsRedisplay = _needsRedisplay;
 @end
@@ -469,12 +550,15 @@ unsigned short releaseCode;
 - (void)deleteWorkingText
 {
     if (privateWorkingText == nil) {
+	printf("No working text to delete\n");
 	return;
     }
     if (NS_KEYLOG) {
 	TKLog(@"deleteWorkingText len = %lu\n",
 	      (unsigned long)[privateWorkingText length]);
     }
+    printf("deleteWorkingText %s\n", [privateWorkingText length] ?
+	   privateWorkingText.UTF8String : "none");
     [privateWorkingText release];
     privateWorkingText = nil;
     processingCompose = NO;
