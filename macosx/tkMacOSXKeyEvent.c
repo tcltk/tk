@@ -306,6 +306,14 @@ static unsigned	isFunctionKey(unsigned int code);
     processingCompose = NO;
 
     /*
+     * Clear any working text.
+     */
+
+    if (privateWorkingText != nil) {
+    	[self deleteWorkingText];
+    }
+
+    /*
      * Insert the string as a sequence of keystrokes.
      */
 
@@ -349,14 +357,6 @@ static unsigned	isFunctionKey(unsigned int code);
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
 
-    /*
-     * Clear any working text.
-     */
-
-    if (privateWorkingText != nil) {
-    	[self deleteWorkingText];
-    }
-
     releaseCode = (UInt16) [aString characterAtIndex: 0];
 }
 
@@ -380,12 +380,13 @@ static unsigned	isFunctionKey(unsigned int code);
 	selectedRange: (NSRange)selRange
      replacementRange: (NSRange)repRange
 {
-    Tk_Window tkwin = (Tk_Window) TkMacOSXGetTkWindow([self window]);
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str = [aString respondsToSelector:@selector (string)] ?
 	[aString string] : aString;
-    printf("Setting marked text for %s to %s\n", Tk_PathName(tkwin),
-	   [str length] ? str.UTF8String : "None");
+
     if (NS_KEYLOG) {
 	TKLog(@"setMarkedText '%@' len =%lu range %lu from %lu", str,
 	      (unsigned long) [str length], (unsigned long) selRange.length,
@@ -393,30 +394,23 @@ static unsigned	isFunctionKey(unsigned int code);
     }
 
     if (privateWorkingText != nil) {
-	unsigned long length = [privateWorkingText length];
 	[self deleteWorkingText];
-	
     }
+
     if ([str length] == 0) {
 	return;
     }
 
     /*
-     * Warn the widget that we are going to insert the marked text
-     * so it can erase the old marked text and display the new.
-     */
-    
-    TkSendVirtualEvent(tkwin, "TkStartIMEMarkedText", NULL);
-
-    /*
      * Use our insertText method to display the marked text.
      */
     
+    TkSendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
     privateWorkingText = temp;
     processingCompose = YES;
-    TkSendVirtualEvent(tkwin, "TkEndIMEMarkedText", NULL);
+    TkSendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 }
 
 
@@ -550,20 +544,21 @@ static unsigned	isFunctionKey(unsigned int code);
 - (void)deleteWorkingText
 {
     if (privateWorkingText == nil) {
-	printf("No working text to delete\n");
 	return;
-    }
-    if (NS_KEYLOG) {
-	TKLog(@"deleteWorkingText len = %lu\n",
-	      (unsigned long)[privateWorkingText length]);
-    }
-    printf("deleteWorkingText %s\n", [privateWorkingText length] ?
-	   privateWorkingText.UTF8String : "none");
-    [privateWorkingText release];
-    privateWorkingText = nil;
-    processingCompose = NO;
+    } else {
+	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
 
-    //PENDING: delete working text
+	if (NS_KEYLOG) {
+	    TKLog(@"deleteWorkingText len = %lu\n",
+		  (unsigned long)[privateWorkingText length]);
+	}
+
+	[privateWorkingText release];
+	privateWorkingText = nil;
+	processingCompose = NO;
+	TkSendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+    }
 }
 @end
 
