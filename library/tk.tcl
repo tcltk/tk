@@ -701,7 +701,10 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
+# Create a dictionary to store the starting index of the IME marked
+# text in an Entry or Text widget.
 
+set ::tk::Priv(IMETextMark) [dict create]
 
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {

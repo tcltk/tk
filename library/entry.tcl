@@ -277,6 +277,18 @@ bind Entry <Meta-Delete> {
     }
 }
 
+# Bindings for IME text input.
+
+bind Entry <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind Entry <<TkEndIMEMarkedText>> {
+    %W selection range [dict get $::tk::Priv(IMETextMark) "%W"] insert
+}
+bind Entry <<TkClearIMEMarkedText>> {
+    %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
+}
+
 # A few additional bindings of my own.
 
 bind Entry <2> {
