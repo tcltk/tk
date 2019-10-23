@@ -152,6 +152,18 @@ bind TEntry <Control-Key-d>		{ ttk::entry::Delete %W }
 bind TEntry <Control-Key-h>		{ ttk::entry::Backspace %W }
 bind TEntry <Control-Key-k>		{ %W delete insert end }
 
+# Bindings for IME text input.
+
+bind TEntry <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind TEntry <<TkEndIMEMarkedText>> {
+    %W selection range [dict get $::tk::Priv(IMETextMark) "%W"] insert
+}
+bind TEntry <<TkClearIMEMarkedText>> {
+    %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
+}
+
 ### Clipboard procedures.
 #
 
