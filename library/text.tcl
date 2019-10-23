@@ -403,11 +403,13 @@ bind Text <<TkStartIMEMarkedText>> {
     dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
 }
 bind Text <<TkEndIMEMarkedText>> {
-    %W tag add IMEmarkedtext [dict get $::tk::Priv(IMETextMark) "%W"] insert 
+    %W tag add IMEmarkedtext [dict get $::tk::Priv(IMETextMark) "%W"] insert
     %W tag configure IMEmarkedtext -underline on
+    update idletasks
 }
 bind Text <<TkClearIMEMarkedText>> {
-    %W delete IMEmarkedtext.first IMEmarkedtext.last    
+    %W delete IMEmarkedtext.first IMEmarkedtext.last
+    update idletasks
 }
 
 # Macintosh only bindings:
@@ -1226,4 +1228,3 @@ proc ::tk::TextScanDrag {w x y} {
 	$w scan dragto $x $y
     }
 }
-
