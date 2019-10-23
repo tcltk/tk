@@ -1186,11 +1186,21 @@ RedisplayView(
     return YES;
 }
 
-- (void) keyDown: (NSEvent *) theEvent
+/*
+ * When the services menu is opened this is called for each Responder in
+ * the Responder chain until a service provider is found.  The TkContentView
+ * should be the first (and generally only) Responder in the chain.  We
+ * return the TkServices object that was created in TkpInit.
+ */
+
+- (id)validRequestorForSendType:(NSString *)sendType
+		     returnType:(NSString *)returnType
 {
-#ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
-#endif
+    if ([sendType isEqualToString:@"NSStringPboardType"] ||
+	[sendType isEqualToString:@"NSPasteboardTypeString"]) {
+	return [NSApp servicesProvider];
+    }
+    return [super validRequestorForSendType:sendType returnType:returnType];
 }
 
 @end

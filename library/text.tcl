@@ -42,12 +42,6 @@
 
 # Standard Motif bindings:
 
-bind Text <Map> {
-    if {[tk windowingsystem] eq "aqua"} {
-    	::tk::RegisterServiceWidget %W
-    }
-}
-
 bind Text <1> {
     tk::TextButton1 %W %x %y
     %W tag remove sel 0.0 end
