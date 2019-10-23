@@ -157,8 +157,8 @@ TkSelGetSelection(
 	    }
 	    clean = (NSString *)CFStringCreateWithCharacters(NULL, buffer, i);
 	    ckfree(buffer);
+	    result = proc(clientData, interp, [clean UTF8String]);
 	}
-	result = proc(clientData, interp, [clean UTF8String]);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"%s selection doesn't exist or form \"%s\" not defined",
