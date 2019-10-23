@@ -803,6 +803,7 @@ test canvImg-11.3 {ImageChangedProc procedure} -constraints {
     foo2 changed 0 0 0 0 80 60
     .c create image 50 100 -image foo -tags image -anchor nw
     .c create image 70 110 -image foo2 -anchor nw
+    update
     set z {}
     set timer [after 500 {lappend z "timed out"}]
     image create test foo -variable x
