@@ -7568,4 +7568,32 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-11-04 (bug)[6b22d4] [treeview] binding fix (ohagan)
 
-- Released 8.6.9, November 16, 2018 - https://core.tcl-lang.org/tk/ for details -
+- Released 8.6.9, November 16, 2018 - https://core.tcl-lang.org/tk/ for details
+
+2018-11-19 (bug)[0a9c91] crash in text-11a.22 (vogel)
+
+2018-11-20 (bug)[9705d1] crash activating "Alt" theme (culler) 
+
+2018-11-24 (bug)[e3b954] cursor offset at full screen display (culler) 
+
+2019-01-04 (bug)[18a4ba] cross-platform [winfo containing] (culler)
+
+2019-01-08 (feature) local grab on Mac OSX (culler)
+
+2019-01-10 (build) 'None', 'ControlMask' symbol conflicts (nijtmans)
+
+2019-01-20 (bug)[509caf] [treeview tag configure] regression (mcdonald,vogel)
+
+2019-01-26 (bug)[3003895] [scale] res rounds and -from (tischler,pieper,vogel)
+
+2019-02-02 (new)[TIP 533] [$mb post x y idx] (culler,vogel)
+
+2019-02-08 (bug)[1529659] embed toplevel blocks outer menu (culler)
+
+2019-02-10 (bug)[8814bd] crash in [NSMenu size] (culler)
+
+
+
+
+
+- Released 8.6.10, October 25, 2019 - https://core.tcl-lang.org/tk/ for details
