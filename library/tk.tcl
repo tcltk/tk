@@ -687,11 +687,6 @@ if {[tk windowingsystem] eq "aqua"} {
 
 
 if {[tk windowingsystem] eq "aqua"} {
-    #register to send data to macOS Services
-    proc ::tk::RegisterServiceWidget {w} {
-	::tk::mac::registerServiceWidget $w
-    }
-
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
     	source $file

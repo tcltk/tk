@@ -381,7 +381,6 @@ static unsigned	isFunctionKey(unsigned int code);
      replacementRange: (NSRange)repRange
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window tkwin = (Tk_Window) winPtr;
     Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str = [aString respondsToSelector:@selector (string)] ?
