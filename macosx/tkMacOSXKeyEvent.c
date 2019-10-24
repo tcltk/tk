@@ -285,7 +285,7 @@ static unsigned	isFunctionKey(unsigned int code);
     return self;
 }
 
-/* 
+/*
  * Implementation of the NSTextInputClient protocol.
  */
 
@@ -297,9 +297,14 @@ static unsigned	isFunctionKey(unsigned int code);
 - (void)insertText: (id)aString
   replacementRange: (NSRange)repRange
 {
-    int i, len = [(NSString *) aString length];
+    int i, len;
     XEvent xEvent;
-    
+    NSString *str;
+
+    str = ([aString isKindOfClass: [NSAttributedString class]]) ?
+        str = [aString string] : aString;
+    len = [str length];
+
     if (NS_KEYLOG) {
 	TKLog(@"insertText '%@'\tlen = %d", aString, len);
     }
@@ -322,6 +327,19 @@ static unsigned	isFunctionKey(unsigned int code);
     xEvent.xany.type = KeyPress;
 
     /*
+     * Apple evidently sets location to 0 to signal that an accented letter has
+     * been selected from the accent menu.  An unaccented letter has already
+     * been displayed and we need to erase it before displaying the accented
+     * letter.
+     */
+
+    if (repRange.location == 0) {
+	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+    }
+
+    /*
      * NSString represents a non-BMP character as a string of length 2 where
      * the first character is the high surrogate and the second character is
      * the low surrogate.  We could record this in the XEvent by setting the
@@ -332,10 +350,10 @@ static unsigned	isFunctionKey(unsigned int code);
      */
 
     for (i = 0; i < len; i++) {
-	UniChar nextChar = [aString characterAtIndex: i];
+	UniChar nextChar = [str characterAtIndex: i];
 	if (CFStringIsSurrogateHighCharacter(nextChar)) {
 #if 0
-	    UniChar lowChar = [aString characterAtIndex: ++i];
+	    UniChar lowChar = [str characterAtIndex: ++i];
 	    xEvent.xkey.keycode = CFStringGetLongCharacterForSurrogatePair(
 		nextChar, lowChar);
 	    xEvent.xkey.nbytes = TkUniCharToUtf(xEvent.xkey.keycode,
@@ -348,7 +366,7 @@ static unsigned	isFunctionKey(unsigned int code);
 #endif
 	} else {
 	    xEvent.xkey.keycode = (int) nextChar;
-	    [[aString substringWithRange: NSMakeRange(i,1)]
+	    [[str substringWithRange: NSMakeRange(i,1)]
 	        getCString: xEvent.xkey.trans_chars
 		maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
 	    xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
@@ -358,20 +376,20 @@ static unsigned	isFunctionKey(unsigned int code);
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
 
-    releaseCode = (UInt16) [aString characterAtIndex: 0];
+    releaseCode = (UInt16) [str characterAtIndex: 0];
 }
 
 /*
  * This required method is allowed to return nil.
  */
 
-- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)theRange 
+- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)theRange
       actualRange:(NSRangePointer)thePointer
 {
     return nil;
 }
 
-/* 
+/*
  * This method is supposed to insert (or replace selected text with) the string
  * argument. If the argument is an NSString, it should be displayed with a
  * distinguishing appearance, e.g underlined.
@@ -384,11 +402,13 @@ static unsigned	isFunctionKey(unsigned int code);
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
     NSString *temp;
-    NSString *str = [aString respondsToSelector:@selector (string)] ?
-	[aString string] : aString;
+    NSString *str;
+
+    str = ([aString isKindOfClass: [NSAttributedString class]]) ?
+        str = [aString string] : aString;
 
     if (focusWin) {
-	
+
 	/*
 	 * Remember the widget where the composition is happening, in case it
 	 * gets defocussed during the composition.
@@ -415,7 +435,7 @@ static unsigned	isFunctionKey(unsigned int code);
     /*
      * Use our insertText method to display the marked text.
      */
-    
+
     TkSendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
@@ -423,7 +443,6 @@ static unsigned	isFunctionKey(unsigned int code);
     processingCompose = YES;
     TkSendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 }
-
 
 - (BOOL)hasMarkedText
 {
@@ -443,11 +462,19 @@ static unsigned	isFunctionKey(unsigned int code);
     return rng;
 }
 
+- (void)cancelComposingText
+{
+    if (NS_KEYLOG) {
+	TKLog(@"cancelComposingText");
+    }
+    [self deleteWorkingText];
+    processingCompose = NO;
+}
 
 - (void)unmarkText
 {
     if (NS_KEYLOG) {
-	TKLog(@"unmark (accept) text");
+	TKLog(@"unmarkText");
     }
     [self deleteWorkingText];
     processingCompose = NO;
@@ -489,31 +516,22 @@ static unsigned	isFunctionKey(unsigned int code);
     }
     processingCompose = NO;
     if (aSelector == @selector (deleteBackward:)) {
-	/*
-	 * Happens when user backspaces over an ongoing composition:
-	 * throw a 'delete' into the event queue.
-	 */
-
-	XEvent xEvent;
-
-	setupXEvent(&xEvent, [self window], 0);
-	xEvent.xany.type = KeyPress;
-	xEvent.xkey.nbytes = 1;
-	xEvent.xkey.keycode = (0x33 << 16) | 0x7F;
-	xEvent.xkey.trans_chars[0] = 0x7F;
-	xEvent.xkey.trans_chars[1] = 0x0;
-	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 }
 
 - (NSArray *)validAttributesForMarkedText
 {
     static NSArray *arr = nil;
-
     if (arr == nil) {
-	arr = [NSArray new];
+	arr = [[NSArray alloc] initWithObjects:
+	    NSUnderlineStyleAttributeName,
+	    NSUnderlineColorAttributeName,
+	    nil];
+	[arr retain];
     }
-    /* [[NSArray arrayWithObject: NSUnderlineStyleAttributeName] retain]; */
     return arr;
 }
 
@@ -522,7 +540,7 @@ static unsigned	isFunctionKey(unsigned int code);
     if (NS_KEYLOG) {
 	TKLog(@"selectedRange request");
     }
-    return NSMakeRange(NSNotFound, 0);
+    return NSMakeRange(0, 0);
 }
 
 - (NSUInteger)characterIndexForPoint: (NSPoint)thePoint
@@ -530,7 +548,7 @@ static unsigned	isFunctionKey(unsigned int code);
     if (NS_KEYLOG) {
 	TKLog(@"characterIndexForPoint request");
     }
-    return 0;
+    return NSNotFound;
 }
 
 - (NSAttributedString *)attributedSubstringFromRange: (NSRange)theRange

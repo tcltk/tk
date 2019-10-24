@@ -156,6 +156,9 @@ bind TEntry <<TkEndIMEMarkedText>> {
 bind TEntry <<TkClearIMEMarkedText>> {
     %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
 }
+bind Entry <<TkAccentBackspace>> {
+    tk::EntryBackspace %W
+}
 
 ### Clipboard procedures.
 #
