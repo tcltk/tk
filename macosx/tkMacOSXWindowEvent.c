@@ -1187,6 +1187,18 @@ RedisplayView(
 }
 
 /*
+ * This keyDown method does nothing, which is a huge improvement over the
+ * default keyDown method which beeps every time a key is pressed.
+ */
+
+- (void) keyDown: (NSEvent *) theEvent
+{
+#ifdef TK_MAC_DEBUG_EVENTS
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+#endif
+}
+
+/*
  * When the services menu is opened this is called for each Responder in
  * the Responder chain until a service provider is found.  The TkContentView
  * should be the first (and generally only) Responder in the chain.  We
