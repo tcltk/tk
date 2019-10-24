@@ -4,6 +4,7 @@
  *	This file allows the integration of Tk and the Cocoa NSServices API.
  *
  * Copyright (c) 2010-2019 Kevin Walzer/WordTech Communications LLC.
+ * Copyright (c) 2019 Marc Culler.
  * Copyright (c) 2010 Adrian Robert.
  *
  * See the file "license.terms" for information on usage and redistribution
@@ -39,8 +40,11 @@ ServicesEventProc(
 }
 
 + (void) initialize;
-- (void) provideService:(NSPasteboard *)pboard userData:(NSString *)data error:(NSString **)error;
-- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard  types:(NSArray *)types;
+- (void) provideService:(NSPasteboard *)pboard
+	       userData:(NSString *)data
+		  error:(NSString **)error;
+- (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard
+			     types:(NSArray *)types;
 
 @end
 
@@ -58,7 +62,7 @@ ServicesEventProc(
 }
 
 /*
- * Get the current selection and copy it to the sysstem pasteboard.
+ * Get the current Tk selection and copy it to the system pasteboard.
  */
 
 - (BOOL)writeSelectionToPasteboard:(NSPasteboard *)pboard
@@ -127,8 +131,8 @@ ServicesEventProc(
 @end
 
 /*
- * Instiantiate a TkService object and register it with the NSApplication.
- * This is called (once only) from TkpInit.
+ * Instantiate a TkService object and register it with the NSApplication.
+ * This is called exactly one time from TkpInit.
  */
 
 int
