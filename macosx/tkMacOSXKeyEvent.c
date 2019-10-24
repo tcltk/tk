@@ -7,7 +7,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2012 Adrian Robert.
- * Copyright 2015 Marc Culler.
+ * Copyright 2015-2019 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -31,6 +31,7 @@ static NSWindow *keyboardGrabNSWindow = nil;
 				 * window. */
 static NSModalSession modalSession = nil;
 static BOOL processingCompose = NO;
+static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
 static unsigned short releaseCode;
 
@@ -386,6 +387,17 @@ static unsigned	isFunctionKey(unsigned int code);
     NSString *str = [aString respondsToSelector:@selector (string)] ?
 	[aString string] : aString;
 
+    if (focusWin) {
+	
+	/*
+	 * Remember the widget where the composition is happening, in case it
+	 * gets defocussed during the composition.
+	 */
+
+	composeWin = focusWin;
+    } else {
+	return;
+    }
     if (NS_KEYLOG) {
 	TKLog(@"setMarkedText '%@' len =%lu range %lu from %lu", str,
 	      (unsigned long) [str length], (unsigned long) selRange.length,
@@ -539,14 +551,17 @@ static unsigned	isFunctionKey(unsigned int code);
 
 
 @implementation TKContentView(TKKeyEvent)
-/* delete display of composing characters [not in <NSTextInput>] */
+
+/*
+ * Tell the widget to erase the displayed composing characters.  This
+ * is not part of the NSTextInputClient protocol.
+ */
+
 - (void)deleteWorkingText
 {
     if (privateWorkingText == nil) {
 	return;
     } else {
-	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
 
 	if (NS_KEYLOG) {
 	    TKLog(@"deleteWorkingText len = %lu\n",
@@ -556,7 +571,9 @@ static unsigned	isFunctionKey(unsigned int code);
 	[privateWorkingText release];
 	privateWorkingText = nil;
 	processingCompose = NO;
-	TkSendVirtualEvent(focusWin, "TkClearIMEMarkedText", NULL);
+	if (composeWin) {
+	    TkSendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
+	}
     }
 }
 @end
