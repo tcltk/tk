@@ -403,6 +403,9 @@ bind Text <<TkEndIMEMarkedText>> {
 bind Text <<TkClearIMEMarkedText>> {
     %W delete IMEmarkedtext.first IMEmarkedtext.last
 }
+bind Text <<TkAccentBackspace>> {
+    %W delete insert-1c
+}
 
 # Macintosh only bindings:
 
