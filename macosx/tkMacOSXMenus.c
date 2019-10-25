@@ -70,7 +70,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    [NSMenuItem itemWithTitle:
 		    [NSString stringWithFormat:@"About %@", aboutName]
 		    action:@selector(orderFrontStandardAboutPanel:)] atIndex:0];
-    _defaultFileMenuItems = 
+    _defaultFileMenuItems =
 	    [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
 		   [NSString stringWithFormat:@"Source%C", 0x2026]
