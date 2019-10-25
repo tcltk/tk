@@ -7,7 +7,7 @@
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2012 Adrian Robert.
- * Copyright 2015 Marc Culler.
+ * Copyright 2015-2019 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -31,13 +31,12 @@ static NSWindow *keyboardGrabNSWindow = nil;
 				 * window. */
 static NSModalSession modalSession = nil;
 static BOOL processingCompose = NO;
-static BOOL finishedCompose = NO;
+static Tk_Window composeWin = NULL;
 static int caret_x = 0, caret_y = 0, caret_height = 0;
-static void		setupXEvent(XEvent *xEvent, NSWindow *w,
-			    unsigned int state);
-static unsigned		isFunctionKey(unsigned int code);
+static unsigned short releaseCode;
 
-unsigned short releaseCode;
+static void setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state);
+static unsigned	isFunctionKey(unsigned int code);
 
 
 #pragma mark TKApplication(TKKeyEvent)
@@ -210,15 +209,19 @@ unsigned short releaseCode;
 		}
 
 		/*
-		 * For command key, take input manager's word so things like
-		 * dvorak / qwerty layout work.
+		 * For the command key, take the input manager's word so things
+		 * like dvorak / qwerty layout work.
 		 */
 
 		if ((modifiers & NSCommandKeyMask) == NSCommandKeyMask
 			&& (modifiers & NSAlternateKeyMask) != NSAlternateKeyMask
 			&& len > 0 && !isFunctionKey(code)) {
-		    // head off keycode-based translation in tkMacOSXKeyboard.c
-		    xEvent.xkey.nbytes = [characters length]; //len
+
+		    /*
+		     * Prevent keycode-based translation in tkMacOSXKeyboard.c
+		     */
+
+		    xEvent.xkey.nbytes = [characters length];
 		}
 
 		if ([characters length] > 0) {
@@ -242,7 +245,7 @@ unsigned short releaseCode;
             Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
             savedModifiers = modifiers;
             return theEvent;
-	}  /* if send straight to TK */
+	}  /* if this is a function key or has modifiers */
     }  /* if not processing compose */
 
     if (type == NSKeyDown) {
@@ -250,12 +253,29 @@ unsigned short releaseCode;
 	    TKLog(@"keyDown: %s compose sequence.\n",
 		    processingCompose == YES ? "Continue" : "Begin");
 	}
-        processingCompose = YES;
-        [nsEvArray addObject: theEvent];
-        [[w contentView] interpretKeyEvents: nsEvArray];
-        [nsEvArray removeObject: theEvent];
-    }
 
+	/*
+	 * Call the interpretKeyEvents method to interpret composition key
+	 * strokes.  When it detects a complete composition sequence it will
+	 * call our implementation of insertText: replacementRange, which
+	 * generates a key down XEvent with the appropriate character.  In IME
+	 * when multiple characters have the same composition sequence and the
+	 * chosen character is not the default it may be necessary to hit the
+	 * enter key multiple times before the character is accepted and
+	 * rendered. We send enter key events until inputText has cleared
+	 * the processingCompose flag.
+	 */
+
+	processingCompose = YES;
+	while(processingCompose) {
+	    [nsEvArray addObject: theEvent];
+	    [[w contentView] interpretKeyEvents: nsEvArray];
+	    [nsEvArray removeObject: theEvent];
+	    if ([theEvent keyCode] != 36) {
+		break;
+	    }
+	}
+    }
     savedModifiers = modifiers;
     return theEvent;
 }
@@ -272,25 +292,34 @@ unsigned short releaseCode;
     return self;
 }
 
-/* <NSTextInput> implementation (called through interpretKeyEvents:]). */
+/*
+ * Implementation of the NSTextInputClient protocol.
+ */
 
-/* <NSTextInput>: called when done composing;
-   NOTE: also called when we delete over working text, followed immed.
-         by doCommandBySelector: deleteBackward: */
+/* [NSTextInputClient inputText: replacementRange:] is called by
+ * interpretKeyEvents when a composition sequence is complete.  It is also
+ * called when we delete over working text.  In that case the call is followed
+ * immediately by doCommandBySelector: deleteBackward:
+ */
 - (void)insertText: (id)aString
+  replacementRange: (NSRange)repRange
 {
-    int i, len = [(NSString *) aString length];
+    int i, len;
     XEvent xEvent;
+    NSString *str;
+
+    str = ([aString isKindOfClass: [NSAttributedString class]]) ?
+        str = [aString string] : aString;
+    len = [str length];
 
     if (NS_KEYLOG) {
 	TKLog(@"insertText '%@'\tlen = %d", aString, len);
     }
 
     processingCompose = NO;
-    finishedCompose = YES;
 
     /*
-     * First, clear any working text.
+     * Clear any working text.
      */
 
     if (privateWorkingText != nil) {
@@ -298,32 +327,104 @@ unsigned short releaseCode;
     }
 
     /*
-     * Now insert the string as keystrokes.
+     * Insert the string as a sequence of keystrokes.
      */
 
     setupXEvent(&xEvent, [self window], 0);
     xEvent.xany.type = KeyPress;
 
-    for (i =0; i<len; i++) {
-	xEvent.xkey.keycode = (UInt16) [aString characterAtIndex: i];
-	[[aString substringWithRange: NSMakeRange(i,1)]
-	      getCString: xEvent.xkey.trans_chars
-	       maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
-	xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
+    /*
+     * Apple evidently sets location to 0 to signal that an accented letter has
+     * been selected from the accent menu.  An unaccented letter has already
+     * been displayed and we need to erase it before displaying the accented
+     * letter.
+     */
+
+    if (repRange.location == 0) {
+	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+    }
+
+    /*
+     * NSString represents a non-BMP character as a string of length 2 where
+     * the first character is the high surrogate and the second character is
+     * the low surrogate.  We could record this in the XEvent by setting the
+     * keycode to the unicode code point and setting the trans_chars to the
+     * 4-byte UTF-8 string.  However, that will not help as long as TCL_UTF_MAX
+     * is set to 3.  Until that changes, we just replace non-BMP characters by
+     * the "replacement character" U+FFFD.
+     */
+
+    for (i = 0; i < len; i++) {
+	UniChar nextChar = [str characterAtIndex: i];
+	if (CFStringIsSurrogateHighCharacter(nextChar)) {
+#if 0
+	    UniChar lowChar = [str characterAtIndex: ++i];
+	    xEvent.xkey.keycode = CFStringGetLongCharacterForSurrogatePair(
+		nextChar, lowChar);
+	    xEvent.xkey.nbytes = TkUniCharToUtf(xEvent.xkey.keycode,
+						&xEvent.xkey.trans_chars);
+#else
+	    i++;
+	    xEvent.xkey.keycode = 0xfffd;
+	    strcpy(xEvent.xkey.trans_chars, "\xef\xbf\xbd");
+	    xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
+#endif
+	} else {
+	    xEvent.xkey.keycode = (int) nextChar;
+	    [[str substringWithRange: NSMakeRange(i,1)]
+	        getCString: xEvent.xkey.trans_chars
+		maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
+	    xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
+	}
 	xEvent.xany.type = KeyPress;
-	releaseCode = (UInt16) [aString characterAtIndex: 0];
+	releaseCode = (UInt16) nextChar;
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
 
-    releaseCode = (UInt16) [aString characterAtIndex: 0];
+    releaseCode = (UInt16) [str characterAtIndex: 0];
 }
 
+/*
+ * This required method is allowed to return nil.
+ */
 
-/* <NSTextInput>: inserts display of composing characters */
-- (void)setMarkedText: (id)aString selectedRange: (NSRange)selRange
+- (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)theRange
+      actualRange:(NSRangePointer)thePointer
 {
-    NSString *str = [aString respondsToSelector: @selector (string)] ?
-	[aString string] : aString;
+    return nil;
+}
+
+/*
+ * This method is supposed to insert (or replace selected text with) the string
+ * argument. If the argument is an NSString, it should be displayed with a
+ * distinguishing appearance, e.g underlined.
+ */
+
+- (void)setMarkedText: (id)aString
+	selectedRange: (NSRange)selRange
+     replacementRange: (NSRange)repRange
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    NSString *temp;
+    NSString *str;
+
+    str = ([aString isKindOfClass: [NSAttributedString class]]) ?
+        str = [aString string] : aString;
+
+    if (focusWin) {
+
+	/*
+	 * Remember the widget where the composition is happening, in case it
+	 * gets defocussed during the composition.
+	 */
+
+	composeWin = focusWin;
+    } else {
+	return;
+    }
     if (NS_KEYLOG) {
 	TKLog(@"setMarkedText '%@' len =%lu range %lu from %lu", str,
 	      (unsigned long) [str length], (unsigned long) selRange.length,
@@ -333,16 +434,22 @@ unsigned short releaseCode;
     if (privateWorkingText != nil) {
 	[self deleteWorkingText];
     }
+
     if ([str length] == 0) {
 	return;
     }
 
+    /*
+     * Use our insertText method to display the marked text.
+     */
+
+    TkSendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
+    temp = [str copy];
+    [self insertText: temp replacementRange:repRange];
+    privateWorkingText = temp;
     processingCompose = YES;
-    privateWorkingText = [str copy];
-
-    //PENDING: insert workingText underlined
+    TkSendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 }
-
 
 - (BOOL)hasMarkedText
 {
@@ -362,23 +469,34 @@ unsigned short releaseCode;
     return rng;
 }
 
+- (void)cancelComposingText
+{
+    if (NS_KEYLOG) {
+	TKLog(@"cancelComposingText");
+    }
+    [self deleteWorkingText];
+    processingCompose = NO;
+}
 
 - (void)unmarkText
 {
     if (NS_KEYLOG) {
-	TKLog(@"unmark (accept) text");
+	TKLog(@"unmarkText");
     }
     [self deleteWorkingText];
     processingCompose = NO;
 }
 
 
-/* used to position char selection windows, etc. */
+/*
+ * Called by the system to get a position for popup character selection windows
+ * such as a Character Palette, or a selection menu for IME.
+ */
 - (NSRect)firstRectForCharacterRange: (NSRange)theRange
+			 actualRange: (NSRangePointer)thePointer
 {
     NSRect rect;
     NSPoint pt;
-
     pt.x = caret_x;
     pt.y = caret_y;
 
@@ -387,7 +505,7 @@ unsigned short releaseCode;
     pt.y -= caret_height;
 
     rect.origin = pt;
-    rect.size.width = caret_height;
+    rect.size.width = 0;
     rect.size.height = caret_height;
     return rect;
 }
@@ -398,7 +516,6 @@ unsigned short releaseCode;
     return (NSInteger) self;
 }
 
-
 - (void)doCommandBySelector: (SEL)aSelector
 {
     if (NS_KEYLOG) {
@@ -406,53 +523,40 @@ unsigned short releaseCode;
     }
     processingCompose = NO;
     if (aSelector == @selector (deleteBackward:)) {
-	/*
-	 * Happens when user backspaces over an ongoing composition:
-	 * throw a 'delete' into the event queue.
-	 */
-
-	XEvent xEvent;
-
-	setupXEvent(&xEvent, [self window], 0);
-	xEvent.xany.type = KeyPress;
-	xEvent.xkey.nbytes = 1;
-	xEvent.xkey.keycode = (0x33 << 16) | 0x7F;
-	xEvent.xkey.trans_chars[0] = 0x7F;
-	xEvent.xkey.trans_chars[1] = 0x0;
-	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 }
-
 
 - (NSArray *)validAttributesForMarkedText
 {
     static NSArray *arr = nil;
-
     if (arr == nil) {
-	arr = [NSArray new];
+	arr = [[NSArray alloc] initWithObjects:
+	    NSUnderlineStyleAttributeName,
+	    NSUnderlineColorAttributeName,
+	    nil];
+	[arr retain];
     }
-    /* [[NSArray arrayWithObject: NSUnderlineStyleAttributeName] retain]; */
     return arr;
 }
-
 
 - (NSRange)selectedRange
 {
     if (NS_KEYLOG) {
 	TKLog(@"selectedRange request");
     }
-    return NSMakeRange(NSNotFound, 0);
+    return NSMakeRange(0, 0);
 }
-
 
 - (NSUInteger)characterIndexForPoint: (NSPoint)thePoint
 {
     if (NS_KEYLOG) {
 	TKLog(@"characterIndexForPoint request");
     }
-    return 0;
+    return NSNotFound;
 }
-
 
 - (NSAttributedString *)attributedSubstringFromRange: (NSRange)theRange
 {
@@ -465,28 +569,37 @@ unsigned short releaseCode;
     }
     return str;
 }
-/* End <NSTextInput> impl. */
+/* End of NSTextInputClient implementation. */
 
 @synthesize needsRedisplay = _needsRedisplay;
 @end
 
 
 @implementation TKContentView(TKKeyEvent)
-/* delete display of composing characters [not in <NSTextInput>] */
+
+/*
+ * Tell the widget to erase the displayed composing characters.  This
+ * is not part of the NSTextInputClient protocol.
+ */
+
 - (void)deleteWorkingText
 {
     if (privateWorkingText == nil) {
 	return;
-    }
-    if (NS_KEYLOG) {
-	TKLog(@"deleteWorkingText len = %lu\n",
-	      (unsigned long)[privateWorkingText length]);
-    }
-    [privateWorkingText release];
-    privateWorkingText = nil;
-    processingCompose = NO;
+    } else {
 
-    //PENDING: delete working text
+	if (NS_KEYLOG) {
+	    TKLog(@"deleteWorkingText len = %lu\n",
+		  (unsigned long)[privateWorkingText length]);
+	}
+
+	[privateWorkingText release];
+	privateWorkingText = nil;
+	processingCompose = NO;
+	if (composeWin) {
+	    TkSendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
+	}
+    }
 }
 @end
 

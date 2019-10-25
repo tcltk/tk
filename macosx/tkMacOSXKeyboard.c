@@ -803,7 +803,7 @@ TkpGetKeySym(
     /* If nbytes has been set, it's not a function key, but a regular key that
        has been translated in tkMacOSXKeyEvent.c; just use that. */
     if (eventPtr->xkey.nbytes) {
-      return eventPtr->xkey.keycode & 0xFFFF;
+      return eventPtr->xkey.keycode;
     }
 
     /*
