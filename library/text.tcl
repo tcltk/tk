@@ -397,8 +397,12 @@ bind Text <<TkStartIMEMarkedText>> {
     dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
 }
 bind Text <<TkEndIMEMarkedText>> {
-    %W tag add IMEmarkedtext [dict get $::tk::Priv(IMETextMark) "%W"] insert
-    %W tag configure IMEmarkedtext -underline on
+    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+	bell
+    } else {
+	%W tag add IMEmarkedtext $mark insert
+	%W tag configure IMEmarkedtext -underline on
+    }
 }
 bind Text <<TkClearIMEMarkedText>> {
     %W delete IMEmarkedtext.first IMEmarkedtext.last
