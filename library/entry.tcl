@@ -278,7 +278,11 @@ bind Entry <<TkStartIMEMarkedText>> {
     dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
 }
 bind Entry <<TkEndIMEMarkedText>> {
-    %W selection range [dict get $::tk::Priv(IMETextMark) "%W"] insert
+    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+	bell
+    } else {
+	%W selection range $mark insert
+    }
 }
 bind Entry <<TkClearIMEMarkedText>> {
     %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
