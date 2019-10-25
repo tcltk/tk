@@ -82,7 +82,8 @@ static Tk_OptionSpec BaseOptionSpecs[] =
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 "none", Tk_Offset(Base,base.compoundObj), -1,
-	 0,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
+	 TK_OPTION_DONT_SET_DEFAULT,(ClientData)ttkCompoundStrings,
+         GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, Tk_Offset(Base,base.paddingObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
