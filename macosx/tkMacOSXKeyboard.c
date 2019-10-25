@@ -443,8 +443,11 @@ TkpGetString(
 				 * result. */
 {
     (void) winPtr; /*unused*/
+    int ch;
+
     Tcl_DStringInit(dsPtr);
-    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars, -1);
+    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars,
+	    TkUtfToUniChar(eventPtr->xkey.trans_chars, &ch));
 }
 
 /*
