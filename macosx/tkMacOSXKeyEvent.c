@@ -137,9 +137,9 @@ unsigned short releaseCode;
         }
 
         /*
-         * Events are only received for the front Window on the Macintosh. So
+         * Key events are only received for the front Window on the Macintosh. So
 	 * to build an XEvent we look up the Tk window associated to the Front
-	 * window. If a different window has a local grab we ignore the event.
+	 * window.
          */
 
         TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -148,11 +148,18 @@ unsigned short releaseCode;
 	if (tkwin) {
 	    TkWindow *grabWinPtr = winPtr->dispPtr->grabWinPtr;
 
-	    if (grabWinPtr
-		    && grabWinPtr != winPtr
-		    && !winPtr->dispPtr->grabFlags /* this means the grab is local. */
-		    && grabWinPtr->mainPtr == winPtr->mainPtr) {
-		return theEvent;
+	    /*
+	     * If a local grab is in effect, key events for windows in the
+	     * grabber's application are redirected to the grabber.  Key events
+	     * for other applications are delivered normally.  If a global
+	     * grab is in effect all key events are redirected to the grabber.
+	     */
+
+	    if (grabWinPtr) {
+		if (winPtr->dispPtr->grabFlags ||  /* global grab */
+		    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same appl. */
+			tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+		    }
 	    }
 	} else {
 	    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
