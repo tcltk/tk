@@ -137,8 +137,6 @@ typedef struct TkMacOSXDrawingContext {
  * Variables internal to TkAqua.
  */
 
-MODULE_SCOPE CGFloat tkMacOSXZeroScreenHeight;
-MODULE_SCOPE CGFloat tkMacOSXZeroScreenTop;
 MODULE_SCOPE long tkMacOSXMacOSXVersion;
 
 /*
@@ -177,6 +175,8 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 MODULE_SCOPE void *	TkMacOSXGetNamedSymbol(const char *module,
 			    const char *symbol);
 MODULE_SCOPE void	TkMacOSXDisplayChanged(Display *display);
+MODULE_SCOPE CGFloat	TkMacOSXZeroScreenHeight();
+MODULE_SCOPE CGFloat	TkMacOSXZeroScreenTop();
 MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
 			    int enable);
 MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
@@ -265,8 +265,9 @@ VISIBILITY_HIDDEN
     Tcl_Interp *_eventInterp;
     NSMenu *_servicesMenu;
     TKMenu *_defaultMainMenu, *_defaultApplicationMenu;
+    NSMenuItem *_demoMenuItem;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
-    NSArray *_defaultHelpMenuItems;
+    NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
@@ -339,7 +340,12 @@ VISIBILITY_HIDDEN
 @end
 
 VISIBILITY_HIDDEN
-@interface TKContentView : NSView <NSTextInput>
+/*
+ * Subclass TKContentView from NSTextInputClient to enable composition and
+ * input from the Character Palette.
+ */
+
+@interface TKContentView : NSView <NSTextInputClient>
 {
 @private
     NSString *privateWorkingText;
@@ -353,13 +359,8 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
-- (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIShapeRef) shape;
 - (void) tkToolbarButton: (id) sender;
-- (BOOL) isOpaque;
-- (BOOL) wantsDefaultClipping;
-- (BOOL) acceptsFirstResponder;
-- (void) keyDown: (NSEvent *) theEvent;
 @end
 
 @interface NSWindow(TKWm)

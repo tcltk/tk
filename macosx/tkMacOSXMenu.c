@@ -821,7 +821,7 @@ TkpPostMenu(
     NSInteger itemIndex = index;
     NSInteger numItems = [menu numberOfItems];
     NSMenuItem *item = nil;
-    NSPoint location = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
+    NSPoint location = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
     inPostMenu = 1;
     result = TkPreprocessMenu(menuPtr);

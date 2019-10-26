@@ -2105,7 +2105,7 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
-    factor = RangeToFactor(to - from);
+    factor = RangeToFactor(to);
 
     HIThemeTrackDrawInfo info = {
 	.version = 0,

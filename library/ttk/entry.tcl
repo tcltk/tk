@@ -58,13 +58,6 @@ option add *TEntry.cursor [ttk::cursor text] widgetDefault
 #	and I'll put it back.
 #
 
-##Bindings to register with macOS Services API.
-bind T.Entry <Map> {
-    if {[tk windowingsystem] eq "aqua"} {
-    	::tk::RegisterServiceWidget %W
-    }
-}
-
 ## Clipboard events:
 #
 bind TEntry <<Cut>> 			{ ttk::entry::Cut %W }
@@ -151,6 +144,25 @@ bind TEntry <<NextLine>>		{# nothing}
 bind TEntry <Control-Key-d>		{ ttk::entry::Delete %W }
 bind TEntry <Control-Key-h>		{ ttk::entry::Backspace %W }
 bind TEntry <Control-Key-k>		{ %W delete insert end }
+
+# Bindings for IME text input.
+
+bind TEntry <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind TEntry <<TkEndIMEMarkedText>> {
+    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+	bell
+    } else {
+	%W selection range $mark insert
+    }
+}
+bind TEntry <<TkClearIMEMarkedText>> {
+    %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
+}
+bind Entry <<TkAccentBackspace>> {
+    tk::EntryBackspace %W
+}
 
 ### Clipboard procedures.
 #
