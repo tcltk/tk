@@ -1263,6 +1263,24 @@ test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
 	deleteWindows
 } -result {70x300+0+0}
 
+test unixEmbed-11.1 {focus -force works for embedded toplevels} -constraints {
+	unix
+} -setup {
+	deleteWindows
+} -body {
+    toplevel .t
+    pack [frame .t.f -container 1 -width 200 -height 200] -fill both
+    update idletasks
+    toplevel .embed -use [winfo id .t.f] -bg green
+    update idletasks
+    focus -force .t
+    focus -force .embed
+    focus
+ } -cleanup {
+         deleteWindows
+} -result .embed
+
+
 # cleanup
 deleteWindows
 cleanupbg
