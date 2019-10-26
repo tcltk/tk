@@ -36,6 +36,7 @@ static unsigned int	ButtonModifiers2State(UInt32 buttonState,
 enum {
     NSWindowWillMoveEventType = 20
 };
+
 /*
  * In OS X 10.6 an NSEvent of type NSMouseMoved would always have a non-Nil
  * window attribute pointing to the active window.  As of 10.8 this behavior
@@ -105,7 +106,7 @@ enum {
 	    }
 	}
 	local.y = [eventWindow frame].size.height - local.y;
-	global.y = tkMacOSXZeroScreenHeight - global.y;
+	global.y = TkMacOSXZeroScreenHeight() - global.y;
     } else {
 
 	/*
@@ -125,7 +126,7 @@ enum {
 	}
 	local = [eventWindow tkConvertPointFromScreen: global];
 	local.y = [eventWindow frame].size.height - local.y;
-	global.y = tkMacOSXZeroScreenHeight - global.y;
+	global.y = TkMacOSXZeroScreenHeight() - global.y;
     }
 
     /*
@@ -144,15 +145,28 @@ enum {
     }
 
     /*
-     * If another toplevel has a grab, we ignore the event.
+     * Ignore the event if a local grab is in effect and the Tk event window is
+     * not in the grabber's subtree.
      */
 
     grabWinPtr = winPtr->dispPtr->grabWinPtr;
-    if (grabWinPtr &&
-	    grabWinPtr != winPtr &&
-	    !winPtr->dispPtr->grabFlags && /* this means the grab is local. */
-	    grabWinPtr->mainPtr == winPtr->mainPtr) {
-	return theEvent;
+    if (grabWinPtr && /* There is a grab in effect ... */
+	!winPtr->dispPtr->grabFlags && /* and it is a local grab ... */
+	grabWinPtr->mainPtr == winPtr->mainPtr){ /* in the same application. */
+	Tk_Window tkwin2, tkEventWindow = Tk_CoordsToWindow(global.x, global.y, tkwin);
+	if (!tkEventWindow) {
+	    return theEvent;
+	}
+	for (tkwin2 = tkEventWindow;
+	     !Tk_IsTopLevel(tkwin2);
+	     tkwin2 = Tk_Parent(tkwin2)) {
+	    if (tkwin2 == (Tk_Window) grabWinPtr) {
+		break;
+	    }
+	}
+	if (tkwin2 != (Tk_Window) grabWinPtr) {
+	    return theEvent;
+	}
     }
 
     /*
@@ -226,6 +240,7 @@ enum {
     }
 
     if (eventType != NSScrollWheel) {
+
 	/*
 	 * For normal mouse events, Tk_UpdatePointer will send the XEvent.
 	 */
@@ -236,6 +251,7 @@ enum {
 #endif
 	Tk_UpdatePointer(tkwin, global.x, global.y, state);
     } else {
+
 	/*
 	 * For scroll wheel events we need to send the XEvent here.
 	 */
@@ -448,7 +464,7 @@ XQueryPointer(
 	}
 	if (getGlobal) {
 	    *root_x_return = global.x;
-	    *root_y_return = tkMacOSXZeroScreenHeight - global.y;
+	    *root_y_return = TkMacOSXZeroScreenHeight() - global.y;
 	}
     }
     if (mask_return) {
@@ -500,7 +516,7 @@ TkGenerateButtonEventForXPointer(
  * TkGenerateButtonEvent --
  *
  *	Given a global x & y position and the button key status this procedure
- *	generates the appropiate X button event. It also handles the state
+ *	generates the appropriate X button event. It also handles the state
  *	changes needed to implement implicit grabs.
  *
  * Results:
@@ -532,7 +548,7 @@ TkGenerateButtonEvent(
     med.local = med.global;
 
     if (win) {
-	NSPoint local = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
+	NSPoint local = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
 	local = [win tkConvertPointFromScreen:local];
 	local.y = [win frame].size.height - local.y;
@@ -541,7 +557,7 @@ TkGenerateButtonEvent(
 	    local.y -= macWin->winPtr->wmInfoPtr->yInParent;
 	}
 	med.local.h = local.x;
-	med.local.v = tkMacOSXZeroScreenHeight - local.y;
+	med.local.v = TkMacOSXZeroScreenHeight() - local.y;
     }
 
     return GenerateButtonEvent(&med);
@@ -574,6 +590,7 @@ GenerateButtonEvent(
     TkDisplay *dispPtr;
 
 #if UNUSED
+
     /*
      * ButtonDown events will always occur in the front window. ButtonUp
      * events, however, may occur anywhere on the screen. ButtonUp events
@@ -606,30 +623,46 @@ TkpWarpPointer(
     TkDisplay *dispPtr)
 {
     CGPoint pt;
-    UInt32 buttonState;
+    NSPoint loc;
+    int wNum;
 
     if (dispPtr->warpWindow) {
 	int x, y;
-
+	TkWindow *winPtr = (TkWindow *) dispPtr->warpWindow;
+	TkWindow *topPtr = winPtr->privatePtr->toplevel->winPtr;
+	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
+	wNum = [w windowNumber];
 	Tk_GetRootCoords(dispPtr->warpWindow, &x, &y);
 	pt.x = x + dispPtr->warpX;
 	pt.y = y + dispPtr->warpY;
+	loc.x = dispPtr->warpX;
+	loc.y = Tk_Height(topPtr) - dispPtr->warpY;
     } else {
-	pt.x = dispPtr->warpX;
+	wNum = 0;
+	pt.x = loc.x = dispPtr->warpX;
 	pt.y = dispPtr->warpY;
+	loc.y = TkMacOSXZeroScreenHeight() - pt.y;
     }
 
     /*
-     * Tell the OSX core to generate the events to make it happen.
+     * Generate an NSEvent of type NSMouseMoved.
+     *
+     * It is not clear why this is necessary.  For example, calling
+     *     event generate $w <Motion> -warp 1 -x $X -y $Y
+     * will cause two <Motion> events to be added to the Tcl queue.
      */
 
-    buttonState = [NSEvent pressedMouseButtons];
-    CGEventType type = kCGEventMouseMoved;
-    CGEventRef theEvent = CGEventCreateMouseEvent(NULL, type, pt,
-	    buttonState);
     CGWarpMouseCursorPosition(pt);
-    CGEventPost(kCGHIDEventTap, theEvent);
-    CFRelease(theEvent);
+    NSEvent *warpEvent = [NSEvent mouseEventWithType:NSMouseMoved
+	location:loc
+	modifierFlags:0
+	timestamp:GetCurrentEventTime()
+	windowNumber:wNum
+	context:nil
+	eventNumber:0
+	clickCount:1
+	pressure:0.0];
+    [NSApp postEvent:warpEvent atStart:NO];
 }
 
 /*

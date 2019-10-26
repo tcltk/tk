@@ -33,9 +33,6 @@
 
 #define ROOT_ID 10
 
-CGFloat tkMacOSXZeroScreenHeight = 0;
-CGFloat tkMacOSXZeroScreenTop = 0;
-
 /*
  * Declarations of static variables used in this file.
  */
@@ -90,12 +87,8 @@ TkMacOSXDisplayChanged(
     nsScreens = [NSScreen screens];
     if (nsScreens && [nsScreens count]) {
 	NSScreen *s = [nsScreens objectAtIndex:0];
-	NSRect bounds = [s frame], visible = [s visibleFrame];
+	NSRect bounds = [s frame];
 	NSRect maxBounds = NSZeroRect;
-
-	tkMacOSXZeroScreenHeight = bounds.size.height;
-	tkMacOSXZeroScreenTop = tkMacOSXZeroScreenHeight -
-		(visible.origin.y + visible.size.height);
 
 	screen->root_depth = NSBitsPerPixelFromDepth([s depth]);
 	screen->width = bounds.size.width;
@@ -108,6 +101,67 @@ TkMacOSXDisplayChanged(
 	}
 	*((NSRect *)screen->ext_data) = maxBounds;
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXZeroScreenHeight --
+ *
+ *	Replacement for the tkMacOSXZeroScreenHeight variable to avoid
+ *	caching values from NSScreen (fixes bug aea00be199).
+ *
+ * Results:
+ *	Returns the height of screen 0 (the screen assigned the menu bar
+ *	in System Preferences), or 0.0 if getting [NSScreen screens] fails.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+CGFloat
+TkMacOSXZeroScreenHeight()
+{
+    NSArray *nsScreens = [NSScreen screens];
+    if (nsScreens && [nsScreens count]) {
+	NSScreen *s = [nsScreens objectAtIndex:0];
+	NSRect bounds = [s frame];
+	return bounds.size.height;
+    }
+    return 0.0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXZeroScreenTop --
+ *
+ *	Replacement for the tkMacOSXZeroScreenTop variable to avoid
+ *	caching values from visibleFrame.
+ *
+ * Results:
+ *	Returns how far below the top of screen 0 to draw
+ *	(i.e. the height of the menu bar if it is always shown),
+ *	or 0.0 if getting [NSScreen screens] fails.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+CGFloat
+TkMacOSXZeroScreenTop()
+{
+    NSArray *nsScreens = [NSScreen screens];
+    if (nsScreens && [nsScreens count]) {
+	NSScreen *s = [nsScreens objectAtIndex:0];
+	NSRect bounds = [s frame], visible = [s visibleFrame];
+	return bounds.size.height - (visible.origin.y + visible.size.height);
+    }
+    return 0.0;
 }
 
 /*
