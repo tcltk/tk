@@ -336,6 +336,12 @@ proc ttk::treeview::CloseItem {w item} {
 ## Toggle -- toggle opened/closed state of item
 #
 proc ttk::treeview::Toggle {w item} {
+    # don't allow toggling on indicators that
+    # are not present in front of leaf items
+    if {[$w children $item] == {}} {
+        return
+    }
+    # not a leaf, toggle!
     if {[$w item $item -open]} {
 	CloseItem $w $item
     } else {

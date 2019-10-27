@@ -76,7 +76,7 @@ Modify or query the widget state; see \fIttk::widget(n)\fR.
 .SH "INTERNAL COMMANDS"
 .PP
 The following widget commands are used internally
-by the TScrollbar widget class bindings.
+by the \fBTScrollbar\fP widget class bindings.
 .TP
 \fIpathName \fBdelta \fIdeltaX deltaY\fR
 Returns a real number indicating the fractional change in
@@ -153,6 +153,7 @@ grid $f.vsb \-row 0 \-column 1 \-sticky nsew
 grid $f.hsb \-row 1 \-column 0 \-sticky nsew
 grid columnconfigure $f 0 \-weight 1
 grid rowconfigure $f 0 \-weight 1
+pack $f
 .CE
 .SH "STYLING OPTIONS"
 .PP
@@ -160,20 +161,25 @@ The class name for a \fBttk::scrollbar\fP is \fBTScrollbar\fP.
 .PP
 Dynamic states: \fBactive\fP, \fBdisabled\fP.
 .PP
-\fBTScrollbar\fP styling options configurable with \fBttk::style\fP
-are:
+\fBTScrollbar\fP (or more specifically \fBVertical.TScrollbar\fP and
+\fBHorizontal.TScrollbar\fP) styling options that are configurable with
+\fBttk::style\fP are:
 .PP
 \fB\-arrowcolor\fP \fIcolor\fP
+.br
+\fB\-arrowsize\fP \fIamount\fP
 .br
 \fB\-background\fP \fIcolor\fP
 .br
 \fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB\-darkcolor\fP \fIcolor\fP
+\fB\-darkcolor\fP \fIcolor\fP (color of the dark part of the 3D relief)
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
-\fB\-lightcolor\fP \fIcolor\fP
+\fB\-gripcount\fP \fIcount\fP (number of lines on the thumb)
+.br
+\fB\-lightcolor\fP \fIcolor\fP (color of the light part of the 3D relief)
 .br
 \fB\-troughcolor\fP \fIcolor\fP
 .PP

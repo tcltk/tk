@@ -7072,7 +7072,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2013-08-25 (bug fix)[3016181] Cocoa: [destroy $scrollbar] => crash (goddard)
 
---- Released 8.6.1, September 19, 2013 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.1, September 19, 2013 --- https://core.tcl-lang.org/tk/ for details
 
 2013-10-27 (bug fix) OSX drawing lags (deily,steffen,walzer)
 
@@ -7120,7 +7120,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2014-08-01 (bug fix) OSX font config crash (rob@bitkeeper)
 
---- Released 8.6.2, August 27, 2014 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.2, August 27, 2014 --- https://core.tcl-lang.org/tk/ for details
 
 2014-08-27 (bug) Cocoa: Crash after [$button destroy] (walzer)
 
@@ -7144,7 +7144,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2014-11-07 (bug)[3529885] [scale] handling of negative resolution (vogel)
 
---- Released 8.6.3, November 12, 2014 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.3, November 12, 2014 --- https://core.tcl-lang.org/tk/ for details
 
 2014-11-14 (bug)[d43a10] shimmer-related crash in [tk_getOpenFile] (nadkarni)
 
@@ -7166,7 +7166,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
         *** POTENTIAL INCOMPATIBILITY ***
 
---- Released 8.6.4, March 12, 2015 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.4, March 12, 2015 --- https://core.tcl-lang.org/tk/ for details
 
 2015-03-10 (bug) Cocoa: premature image free crash (walzer)
 
@@ -7265,7 +7265,7 @@ Tk Cocoa 2.0: App Store enabled (walzer,culler,desmera,owen,nyberg,reincke)
 
 Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
---- Released 8.6.5, February 29, 2016 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.5, February 29, 2016 --- https://core.tcl-lang.org/tk/ for details
 
 2016-03-07 (bug)[3137232] spinbox teardown hygiene (vogel)
 
@@ -7312,7 +7312,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2016-07-21 (bug)[450bb0] Aqua: memory corruption from [tk busy] (porter)
 
---- Released 8.6.6, July 27, 2016 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.6, July 27, 2016 --- https://core.tcl-lang.org/tk/ for details
 
 2016-08-23 (bug)[a2abc4] Wrong warp cursor position on 2nd display (vogel)
 
@@ -7414,7 +7414,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-08-08 (bug)[4966ca] Scidb race in notebook tab selection (cramer)
 
---- Released 8.6.7, August 9, 2017 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.7, August 9, 2017 --- https://core.tcl-lang.org/tk/ for details
 
 2017-08-24 (bug)[f1a3ca] Memory leak in [text] B-tree (edhume3)
 
@@ -7494,7 +7494,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2017-12-18 (bug)[b77626] Make [tk busy -cursor] silent no-op on macOS (vogel)
 
---- Released 8.6.8, December 22, 2017 --- http://core.tcl.tk/tk/ for details
+--- Released 8.6.8, December 22, 2017 --- https://core.tcl-lang.org/tk/ for details
 
 2017-12-31 (bug)[aa7679] crash using window after master destroyed (vogel)
 
@@ -7568,4 +7568,4 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-11-04 (bug)[6b22d4] [treeview] binding fix (ohagan)
 
-- Released 8.6.9, November 16, 2018 - http://core.tcl-lang.org/tk/ for details -
+- Released 8.6.9, November 16, 2018 - https://core.tcl-lang.org/tk/ for details -

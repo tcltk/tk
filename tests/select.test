@@ -36,7 +36,7 @@ proc handler {type offset count} {
     if {$numBytes <= 0} {
 	return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes+$offset}]
 }
 
 proc errIncrHandler {type offset count} {
@@ -55,7 +55,7 @@ proc errIncrHandler {type offset count} {
     if {$numBytes <= 0} {
 	return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes+$offset}]
 }
 
 proc errHandler args {
@@ -70,7 +70,7 @@ proc badHandler {path type offset count} {
     if {$numBytes <= 0} {
 	return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes+$offset}]
 }
 proc reallyBadHandler {path type offset count} {
     global selValue selInfo pass
@@ -86,7 +86,7 @@ proc reallyBadHandler {path type offset count} {
     if {$numBytes <= 0} {
 	return ""
     }
-    string range $selValue $offset [expr $numBytes+$offset]
+    string range $selValue $offset [expr {$numBytes+$offset}]
 }
 
 # Eliminate any existing selection on the screen.  This is needed in case
@@ -1147,7 +1147,7 @@ test select-13.1 {SelectionSize procedure, handler deleted} -constraints {
 	if {$numBytes <= 0} {
 	    return ""
 	}
-	string range $selValue $offset [expr $numBytes+$offset]
+	string range $selValue $offset [expr {$numBytes+$offset}]
     }
     set selValue $longValue
     set selInfo ""

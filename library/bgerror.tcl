@@ -21,7 +21,8 @@ namespace eval ::tk::dialog::error {
     if {[tk windowingsystem] eq "aqua"} {
 	option add *ErrorDialog*background systemAlertBackgroundActive \
 		widgetDefault
-	option add *ErrorDialog*info.text.background white widgetDefault
+	option add *ErrorDialog*info.text.background \
+	        systemTextBackgroundColor widgetDefault
 	option add *ErrorDialog*Button.highlightBackground \
 		systemAlertBackgroundActive widgetDefault
     }
@@ -114,6 +115,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
 	if $flag {
+	    set errorInfo $info
 	    after 500 [list bgerror "$err" 0]
 	    return
 	}

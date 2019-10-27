@@ -1178,15 +1178,6 @@ if {[tk windowingsystem] eq "aqua"} {
 		set entry 0
 	    }
 	}
-	if {$entry ne ""} {
-	    if {$entry == [$menu index last]} {
-		set entryHeight [expr {[winfo reqheight $menu] \
-				       - [$menu yposition $entry]}]
-	    } else {
-		set entryHeight [expr {[$menu yposition [expr {$entry+1}]] \
-					- [$menu yposition $entry]}]
-	    }
-	}
 	set x [winfo rootx $button]
 	set y [winfo rooty $button]
 	switch [$button cget -direction] {

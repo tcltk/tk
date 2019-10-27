@@ -91,7 +91,7 @@ static int              ImageObjCmd(ClientData dummy,
  *
  * TkOldTestInit --
  *
- *	This function performs intialization for the Tk test suite
+ *	This function performs initialization for the Tk test suite
  *	extensions for testing support for legacy interfaces.
  *
  * Results:

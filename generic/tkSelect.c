@@ -48,7 +48,7 @@ typedef struct LostCommand {
  * The structure below is used to keep each thread's pending list separate.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     TkSelInProgress *pendingPtr;
 				/* Topmost search in progress, or NULL if
 				 * none. */

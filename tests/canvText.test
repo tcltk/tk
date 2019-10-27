@@ -269,7 +269,7 @@ test canvText-6.1 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor n; .c bbox test] \
-	      eq "[expr -$ax/2-1] 0 [expr $ax/2+1] $ay"}
+	      eq "[expr {-$ax/2-1}] 0 [expr {$ax/2+1}] $ay"}
 } -cleanup {
     .c delete test
 } -result 1
@@ -282,7 +282,7 @@ test canvText-6.2 {ComputeTextBbox procedure} -constraints fonts -setup {
     .c create text 0 0 -tag test
     .c itemconfig test -font $font -text 0
     expr {[.c itemconfig test -anchor nw; .c bbox test] \
-	      eq "-1 0 [expr $ax+1] $ay"}
+	      eq "-1 0 [expr {$ax+1}] $ay"}
 } -cleanup {
     .c delete test
 } -result 1

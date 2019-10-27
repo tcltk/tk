@@ -251,30 +251,16 @@ proc ttk::combobox::UnmapPopdown {w} {
     ttk::releaseGrab $w
 }
 
-###
-#
-
-namespace eval ::ttk::combobox {
-    # @@@ Until we have a proper native scrollbar on Aqua, use
-    # @@@ the regular Tk one.  Use ttk::scrollbar on other platforms.
-    variable scrollbar ttk::scrollbar
-    if {[tk windowingsystem] eq "aqua"} {
-	set scrollbar ::scrollbar
-    }
-}
-
 ## PopdownWindow --
 #	Returns the popdown widget associated with a combobox,
 #	creating it if necessary.
 #
 proc ttk::combobox::PopdownWindow {cb} {
-    variable scrollbar
-
     if {![winfo exists $cb.popdown]} {
 	set poplevel [PopdownToplevel $cb.popdown]
 	set popdown [ttk::frame $poplevel.f -style ComboboxPopdownFrame]
 
-	$scrollbar $popdown.sb \
+	ttk::scrollbar $popdown.sb \
 	    -orient vertical -command [list $popdown.l yview]
 	listbox $popdown.l \
 	    -listvariable ttk::combobox::Values($cb) \

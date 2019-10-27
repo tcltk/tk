@@ -117,7 +117,7 @@ XCreateGC(
     /*
      * In order to have room for a dash list, MAX_DASH_LIST_SIZE extra chars
      * are defined, which is invisible from the outside. The list is assumed
-     * to end with a 0-char, so this must be set explicitely during
+     * to end with a 0-char, so this must be set explicitly during
      * initialization.
      */
 
@@ -453,12 +453,12 @@ XSetClipOrigin(
  *	None.
  *
  * Side effects:
- *	Allocates or dealloates a TkpClipMask.
+ *	Allocates or deallocates a TkpClipMask.
  *
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkSetRegion(
     Display *display,
     GC gc,
@@ -475,6 +475,7 @@ TkSetRegion(
 	TkpRetainRegion(r);
 #endif
     }
+    return Success;
 }
 
 int

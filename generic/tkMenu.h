@@ -120,7 +120,7 @@ typedef struct TkMenuEntry {
 				 * always 0 for tearoff and separator
 				 * entries. */
     int hideMargin;		/* If this is 0, then the item has enough
-    				 * margin to accomodate a standard check mark
+    				 * margin to accommodate a standard check mark
     				 * and a default right margin. If this is 1,
     				 * then the item has no such margins, and
     				 * checkbuttons and radiobuttons with this set

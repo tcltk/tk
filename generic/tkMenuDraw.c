@@ -475,7 +475,7 @@ TkRecomputeMenu(
  *	None.
  *
  * Side effects:
- *	A when-idle hander is scheduled to do the redisplay, if there isn't
+ *	A when-idle handler is scheduled to do the redisplay, if there isn't
  *	one already scheduled.
  *
  *----------------------------------------------------------------------
