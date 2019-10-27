@@ -196,9 +196,9 @@ enum {
     }
 
     /*
-     * Find the containing Tk window, and convert local into the coordinates
-     * of the Tk window.  (The converted local coordinates are only needed
-     * for scrollwheel events.)
+     * Use the toplevel coordinates to find the containing Tk window.  Then
+     * convert local into the coordinates of that window.  (The converted
+     * local coordinates are only needed for scrollwheel events.)
      */
 
     int win_x, win_y;
