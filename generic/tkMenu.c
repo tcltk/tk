@@ -77,7 +77,7 @@
 
 #define MENU_HASH_KEY "tkMenus"
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int menusInitialized;	/* Flag indicates whether thread-specific
 				 * elements of the Windows Menu module have
 				 * been initialized. */
@@ -90,7 +90,7 @@ static Tcl_ThreadDataKey dataKey;
 
 /*
  * The following flag indicates whether the process-wide state for the Menu
- * module has been intialized. The Mutex protects access to that flag.
+ * module has been initialized. The Mutex protects access to that flag.
  */
 
 static int menusInitialized;
@@ -754,7 +754,7 @@ MenuWidgetObjCmd(
 
 	    first = 1;
 	}
-	if ((first < 0) || (last < first)) {
+	if ((first == -1) || (last < first)) {
 	    goto done;
 	}
 	DeleteMenuCloneEntries(menuPtr, first, last);
@@ -2164,7 +2164,7 @@ TkGetMenuIndex(
 	Tcl_Obj *labelPtr = menuPtr->entries[i]->labelPtr;
 	const char *label = (labelPtr == NULL) ? NULL : Tcl_GetString(labelPtr);
 
-	if ((label != NULL) && (Tcl_StringMatch(label, string))) {
+	if ((label != NULL) && (Tcl_StringCaseMatch(label, string, 0))) {
 	    *indexPtr = i;
 	    goto success;
 	}
@@ -2491,9 +2491,10 @@ MenuVarProc(
     const char *value;
     const char *name, *onValue;
 
-    if (flags & TCL_INTERP_DESTROYED) {
+    if (Tcl_InterpDeleted(interp) || (mePtr->namePtr == NULL)) {
 	/*
-	 * Do nothing if the interpreter is going away.
+	 * Do nothing if the interpreter is going away or we have
+	 * no variable name.
 	 */
 
     	return NULL;
@@ -2505,17 +2506,6 @@ MenuVarProc(
     	return NULL;
     }
 
-    /*
-     * See ticket [5d991b82].
-     */
-
-    if (mePtr->namePtr == NULL) {
-	Tcl_UntraceVar2(interp, name1, name2,
-		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		MenuVarProc, clientData);
-	return NULL;
-     }
-
     name = Tcl_GetString(mePtr->namePtr);
 
     /*
@@ -2523,12 +2513,29 @@ MenuVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
+        ClientData probe = NULL;
 	mePtr->entryFlags &= ~ENTRY_SELECTED;
-	if (flags & TCL_TRACE_DESTROYED) {
-	    Tcl_TraceVar2(interp, name, NULL,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    MenuVarProc, clientData);
-	}
+
+        do {
+                probe = Tcl_VarTraceInfo(interp, name,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        MenuVarProc, probe);
+                if (probe == (ClientData)mePtr) {
+                    break;
+                }
+        } while (probe);
+        if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * namePtr, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+		return NULL;
+        }
+	Tcl_TraceVar2(interp, name, NULL,
+		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		MenuVarProc, clientData);
 	TkpConfigureMenuEntry(mePtr);
 	TkEventuallyRedrawMenu(menuPtr, NULL);
 	return NULL;

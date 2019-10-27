@@ -180,13 +180,13 @@ InitKeyMaps(void)
     for (kPtr = keyArray; kPtr->keycode != 0; kPtr++) {
 	hPtr = Tcl_CreateHashEntry(&keycodeTable, INT2PTR(kPtr->keycode),
 		&dummy);
-	Tcl_SetHashValue(hPtr, kPtr->keysym);
+	Tcl_SetHashValue(hPtr, INT2PTR(kPtr->keysym));
     }
     Tcl_InitHashTable(&vkeyTable, TCL_ONE_WORD_KEYS);
     for (kPtr = virtualkeyArray; kPtr->keycode != 0; kPtr++) {
 	hPtr = Tcl_CreateHashEntry(&vkeyTable, INT2PTR(kPtr->keycode),
 		&dummy);
-	Tcl_SetHashValue(hPtr, kPtr->keysym);
+	Tcl_SetHashValue(hPtr, INT2PTR(kPtr->keysym));
     }
     initialized = 1;
 }
@@ -443,8 +443,11 @@ TkpGetString(
 				 * result. */
 {
     (void) winPtr; /*unused*/
+    int ch;
+
     Tcl_DStringInit(dsPtr);
-    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars, -1);
+    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars,
+	    TkUtfToUniChar(eventPtr->xkey.trans_chars, &ch));
 }
 
 /*
@@ -803,7 +806,7 @@ TkpGetKeySym(
     /* If nbytes has been set, it's not a function key, but a regular key that
        has been translated in tkMacOSXKeyEvent.c; just use that. */
     if (eventPtr->xkey.nbytes) {
-      return eventPtr->xkey.keycode & 0xFFFF;
+      return eventPtr->xkey.keycode;
     }
 
     /*

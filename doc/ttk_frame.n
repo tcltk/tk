@@ -23,6 +23,7 @@ together.
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-borderwidth borderWidth BorderWidth
 The desired width of the widget border.  Defaults to 0.
+May be ignored depending on the theme used.
 .OP \-relief relief Relief
 One of the standard Tk border styles:
 \fBflat\fR, \fBgroove\fR, \fBraised\fR, \fBridge\fR,
@@ -53,11 +54,17 @@ The class name for a \fBttk::frame\fP is \fBTFrame\fP.
 are:
 .PP
 \fB\-background\fP \fIcolor\fP
+.br
+\fB\-relief\fP \fIrelief\fP
 .PP
 Some options are only available for specific themes.
 .PP
 See the \fBttk::style\fP manual page for information on how to configure
 ttk styles.
+.SH BINDINGS
+.PP
+When a new \fBttk::frame\fR is created, it has no default event bindings;
+\fBttk::frame\fRs are not intended to be interactive.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::labelframe(n), frame(n)
 .SH "KEYWORDS"

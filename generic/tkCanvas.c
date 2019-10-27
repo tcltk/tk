@@ -698,7 +698,7 @@ Tk_CanvasObjCmd(
     canvasPtr->textInfo.cursorOn = 0;
     canvasPtr->insertOnTime = 0;
     canvasPtr->insertOffTime = 0;
-    canvasPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+    canvasPtr->insertBlinkHandler = NULL;
     canvasPtr->xOrigin = canvasPtr->yOrigin = 0;
     canvasPtr->drawableXOrigin = canvasPtr->drawableYOrigin = 0;
     canvasPtr->bindingTable = NULL;
@@ -1027,7 +1027,7 @@ CanvasWidgetCmd(
 		result = TCL_ERROR;
 		goto done;
 	    }
-	    if (mask & (unsigned) ~(ButtonMotionMask|Button1MotionMask
+	    if (mask & ~(unsigned long)(ButtonMotionMask|Button1MotionMask
 		    |Button2MotionMask|Button3MotionMask|Button4MotionMask
 		    |Button5MotionMask|ButtonPressMask|ButtonReleaseMask
 		    |EnterWindowMask|LeaveWindowMask|KeyPressMask
@@ -2889,7 +2889,7 @@ EventuallyRedrawItem(
     Tk_Item *itemPtr)		/* Item to be redrawn. May be NULL, in which
 				 * case nothing happens. */
 {
-    if (itemPtr == NULL) {
+    if (itemPtr == NULL || canvasPtr->tkwin == NULL) {
 	return;
     }
     if ((itemPtr->x1 >= itemPtr->x2) || (itemPtr->y1 >= itemPtr->y2) ||
@@ -4747,7 +4747,7 @@ CanvasBindProc(
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkCanvas *canvasPtr = clientData;
-    int mask;
+    unsigned long mask;
 
     Tcl_Preserve(canvasPtr);
 
@@ -4760,26 +4760,7 @@ CanvasBindProc(
     switch (eventPtr->type) {
     case ButtonPress:
     case ButtonRelease:
-	switch (eventPtr->xbutton.button) {
-	case Button1:
-	    mask = Button1Mask;
-	    break;
-	case Button2:
-	    mask = Button2Mask;
-	    break;
-	case Button3:
-	    mask = Button3Mask;
-	    break;
-	case Button4:
-	    mask = Button4Mask;
-	    break;
-	case Button5:
-	    mask = Button5Mask;
-	    break;
-	default:
-	    mask = 0;
-	    break;
-	}
+	mask = TkGetButtonMask(eventPtr->xbutton.button);
 
 	/*
 	 * For button press events, repick the current item using the button
@@ -4862,7 +4843,7 @@ PickCurrentItem(
 				 * ButtonRelease, or MotionNotify. */
 {
     double coords[2];
-    int buttonDown;
+    unsigned long buttonDown;
     Tk_Item *prevItemPtr;
 #ifndef USE_OLD_TAG_SEARCH
     SearchUids *searchUids = GetStaticUids();
@@ -4875,8 +4856,7 @@ PickCurrentItem(
      * for windows.
      */
 
-    buttonDown = canvasPtr->state
-	    & (Button1Mask|Button2Mask|Button3Mask|Button4Mask|Button5Mask);
+    buttonDown = canvasPtr->state & ALL_BUTTONS;
 
     /*
      * Save information about this event in the canvas. The event in the
@@ -5307,7 +5287,7 @@ CanvasFocusProc(
     } else {
 	canvasPtr->textInfo.gotFocus = 0;
 	canvasPtr->textInfo.cursorOn = 0;
-	canvasPtr->insertBlinkHandler = (Tcl_TimerToken) NULL;
+	canvasPtr->insertBlinkHandler = NULL;
     }
     EventuallyRedrawItem(canvasPtr, canvasPtr->textInfo.focusItemPtr);
     if (canvasPtr->highlightWidth > 0) {

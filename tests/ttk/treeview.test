@@ -459,6 +459,31 @@ test treeview-8.5 "Selection - bad operation" -body {
     .tv selection badop foo
 } -returnCodes 1 -match glob -result {bad selection operation "badop": must be *}
 
+test treeview-8.6 "Selection - <<TreeviewSelect>> on selection add" -body {
+    .tv selection set {}
+    bind .tv <<TreeviewSelect>> {set res 1}
+    set res 0
+    .tv selection add newnode.n1
+    update
+    set res
+} -result {1}
+
+test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
+    .tv selection set {}
+    .tv insert "" end -id selectedDoomed -text DeadItem
+    .tv insert "" end -id doomed -text AlsoDead
+    .tv selection add selectedDoomed
+    update
+    bind .tv <<TreeviewSelect>> {lappend res 1}
+    set res 0
+    .tv delete doomed
+    update
+    set res [expr {$res == 0}]
+    .tv delete selectedDoomed
+    update
+    set res
+} -result {1 1}
+
 ### NEED: more tests for see/yview/scrolling
 
 proc scrollcallback {args} {
@@ -470,6 +495,18 @@ test treeview-9.0 "scroll callback - empty tree" -body {
     update
     set ::scrolldata
 } -result [list 0.0 1.0]
+
+test treeview-9.1 "scrolling" -setup {
+    pack [ttk::treeview .tree -show tree] -fill y
+    for {set i 1} {$i < 100} {incr i} {
+        .tree insert {} end -text $i
+    }
+} -body {
+    .tree yview scroll 5 units
+    .tree identify item 2 2
+} -cleanup {
+    destroy .tree
+} -result {I006}
 
 ### identify tests:
 #
@@ -635,6 +672,25 @@ test treeview-3085489-2 "tag remove, no -tags" -setup {
 } -cleanup {
     destroy .tv
 } -result [list]
+
+test treeview-368fa4561e "indicators cannot be clicked on leafs" -setup {
+    pack [ttk::treeview .tv]
+    .tv insert {} end -id foo -text "<-- (1) Click the blank space to my left" 
+    update
+} -body {
+    foreach {x y w h} [.tv bbox foo #0] {}
+    set res [.tv item foo -open]
+    # using $h even for x computation is intentional here in order to simulate
+    # a mouse click on the (invisible since we're on a leaf) indicator
+    event generate .tv <ButtonPress-1> \
+            -x [expr {$x + $h / 2}] \
+            -y [expr {$y + $h / 2}]
+    lappend res [.tv item foo -open]
+    .tv insert foo end -text "sub"
+    lappend res [.tv item foo -open]
+} -cleanup {
+    destroy .tv
+} -result {0 0 0}
 
 test treeview-ce470f20fd-1 "dragging further than the right edge of the treeview is forbidden" -setup {
     pack [ttk::treeview .tv]

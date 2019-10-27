@@ -923,7 +923,7 @@ static void DragColumn(Treeview *tv, int i, int delta)
 
 static TreeItem *IdentifyItem(Treeview *tv, int y); /*forward*/
 
-static const unsigned int TreeviewBindEventMask =
+static const unsigned long TreeviewBindEventMask =
       KeyPressMask|KeyReleaseMask
     | ButtonPressMask|ButtonReleaseMask
     | PointerMotionMask|ButtonMotionMask
@@ -1066,7 +1066,7 @@ static void TreeviewCleanup(void *recordPtr)
     TreeviewFreeColumns(tv);
 
     if (tv->tree.displayColumns)
-	Tcl_Free((ClientData)tv->tree.displayColumns);
+	ckfree((ClientData)tv->tree.displayColumns);
 
     foreachHashEntry(&tv->tree.items, FreeItemCB);
     Tcl_DeleteHashTable(&tv->tree.items);
@@ -2681,7 +2681,7 @@ static int TreeviewDeleteCommand(
 {
     Treeview *tv = recordPtr;
     TreeItem **items, *delq;
-    int i;
+    int i, selItemDeleted = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -2708,6 +2708,9 @@ static int TreeviewDeleteCommand(
      */
     delq = 0;
     for (i=0; items[i]; ++i) {
+        if (items[i]->state & TTK_STATE_SELECTED) {
+            selItemDeleted = 1;
+        }
 	delq = DeleteItems(items[i], delq);
     }
 
@@ -2724,6 +2727,9 @@ static int TreeviewDeleteCommand(
     }
 
     ckfree(items);
+    if (selItemDeleted) {
+        TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+    }
     TtkRedisplayWidget(&tv->core);
     return TCL_OK;
 }
@@ -2842,10 +2848,10 @@ static int TreeviewSeeCommand(
      */
     rowNumber = RowNumber(tv, item);
     if (rowNumber < tv->tree.yscroll.first) {
-	TtkScrollTo(tv->tree.yscrollHandle, rowNumber);
+	TtkScrollTo(tv->tree.yscrollHandle, rowNumber, 1);
     } else if (rowNumber >= tv->tree.yscroll.last) {
 	TtkScrollTo(tv->tree.yscrollHandle,
-	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last));
+	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last), 1);
     }
 
     return TCL_OK;

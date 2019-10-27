@@ -123,12 +123,14 @@ TkSelGetSelection(
 {
     int result = TCL_ERROR;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
+    int haveExternalClip =
+	    ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
 
-    int haveExternalClip = ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
     if (dispPtr && (haveExternalClip || dispPtr->clipboardActive)
 	        && selection == dispPtr->clipboardAtom
 	        && (target == XA_STRING || target == dispPtr->utf8Atom)) {
 	NSString *string = nil;
+	NSString *clean;
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
 	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
 		NSStringPboardType]];
@@ -136,7 +138,27 @@ TkSelGetSelection(
 	if (type) {
 	    string = [pb stringForType:type];
 	}
-	result = proc(clientData, interp, string ? [string UTF8String] : "");
+	if (string) {
+	    /*
+	     * Replace all non-BMP characters by the replacement character 0xfffd.
+	     * This is a workaround until Tcl supports TCL_UTF_MAX > 3.
+	     */
+	    int i, j, len = [string length];
+	    CFRange all = CFRangeMake(0, len);
+	    UniChar *buffer = ckalloc(len*sizeof(UniChar));
+	    CFStringGetCharacters((CFStringRef) string, all, buffer);
+	    for (i = 0, j = 0 ; j < len ; i++, j++) {
+		if (CFStringIsSurrogateHighCharacter(buffer[j])) {
+		    buffer[i] = 0xfffd;
+		    j++;
+		} else {
+		    buffer[i] = buffer[j];
+		}
+	    }
+	    clean = (NSString *)CFStringCreateWithCharacters(NULL, buffer, i);
+	    ckfree(buffer);
+	    result = proc(clientData, interp, [clean UTF8String]);
+	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"%s selection doesn't exist or form \"%s\" not defined",
@@ -177,6 +199,7 @@ XSetSelectionOwner(
 	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
 	if (!dispPtr->clipboardActive) {
 	    NSPasteboard *pb = [NSPasteboard generalPasteboard];
+
 	    changeCount = [pb declareTypes:[NSArray array] owner:NSApp];
 	}
     }
@@ -188,8 +211,8 @@ XSetSelectionOwner(
  *
  * TkMacOSXSelDeadWindow --
  *
- *	This function is invoked just before a TkWindow is deleted. It
- *	performs selection-related cleanup.
+ *	This function is invoked just before a TkWindow is deleted. It performs
+ *	selection-related cleanup.
  *
  * Results:
  *	None.

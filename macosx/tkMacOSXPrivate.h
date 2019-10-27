@@ -137,8 +137,6 @@ typedef struct TkMacOSXDrawingContext {
  * Variables internal to TkAqua.
  */
 
-MODULE_SCOPE CGFloat tkMacOSXZeroScreenHeight;
-MODULE_SCOPE CGFloat tkMacOSXZeroScreenTop;
 MODULE_SCOPE long tkMacOSXMacOSXVersion;
 
 /*
@@ -177,6 +175,8 @@ MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 MODULE_SCOPE void *	TkMacOSXGetNamedSymbol(const char *module,
 			    const char *symbol);
 MODULE_SCOPE void	TkMacOSXDisplayChanged(Display *display);
+MODULE_SCOPE CGFloat	TkMacOSXZeroScreenHeight();
+MODULE_SCOPE CGFloat	TkMacOSXZeroScreenTop();
 MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
 			    int enable);
 MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
@@ -233,6 +233,12 @@ MODULE_SCOPE int	TkMacOSXStandardAboutPanelObjCmd(ClientData clientData,
 MODULE_SCOPE int	TkMacOSXIconBitmapObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
+			    int inset, int thickness);
+MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
+MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 
 #pragma mark Private Objective-C Classes
 
@@ -259,9 +265,9 @@ VISIBILITY_HIDDEN
     Tcl_Interp *_eventInterp;
     NSMenu *_servicesMenu;
     TKMenu *_defaultMainMenu, *_defaultApplicationMenu;
+    NSMenuItem *_demoMenuItem;
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
-    NSArray *_defaultHelpMenuItems;
-    NSWindow *_windowWithMouse;
+    NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
@@ -286,6 +292,8 @@ VISIBILITY_HIDDEN
 @end
 @interface TKApplication(TKWindowEvent) <NSApplicationDelegate>
 - (void) _setupWindowNotifications;
+@end
+@interface TKApplication(TKDialog) <NSOpenSavePanelDelegate>
 @end
 @interface TKApplication(TKMenu)
 - (void)tkSetMainMenu:(TKMenu *)menu;
@@ -327,13 +335,23 @@ VISIBILITY_HIDDEN
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 - (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
+- (void)handleURLEvent:                (NSAppleEventDescriptor*)event
+	           withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
 @end
 
 VISIBILITY_HIDDEN
-@interface TKContentView : NSView <NSTextInput>
+/*
+ * Subclass TKContentView from NSTextInputClient to enable composition and
+ * input from the Character Palette.
+ */
+
+@interface TKContentView : NSView <NSTextInputClient>
 {
+@private
     NSString *privateWorkingText;
+    Bool _needsRedisplay;
 }
+@property Bool needsRedisplay;
 @end
 
 @interface TKContentView(TKKeyEvent)
@@ -341,13 +359,8 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
-- (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIShapeRef) shape;
 - (void) tkToolbarButton: (id) sender;
-- (BOOL) isOpaque;
-- (BOOL) wantsDefaultClipping;
-- (BOOL) acceptsFirstResponder;
-- (void) keyDown: (NSEvent *) theEvent;
 @end
 
 @interface NSWindow(TKWm)
@@ -417,6 +430,8 @@ VISIBILITY_HIDDEN
 @end
 
 #endif /* _TKMACPRIV */
+
+int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
 
 /*
  * Local Variables:

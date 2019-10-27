@@ -99,7 +99,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
      * if we are running at least on Windows XP.
      */
     HINSTANCE handle;
-    *phlib = handle = LoadLibrary(TEXT("uxtheme.dll"));
+    *phlib = handle = LoadLibraryW(L"uxtheme.dll");
     if (handle != 0)
     {
 	/*
@@ -1062,7 +1062,7 @@ GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
 	"SM_CXBORDER", "SM_CYBORDER", "SM_CXVSCROLL", "SM_CYVSCROLL",
 	"SM_CXHSCROLL", "SM_CYHSCROLL", "SM_CXMENUCHECK", "SM_CYMENUCHECK",
 	"SM_CXMENUSIZE", "SM_CYMENUSIZE", "SM_CXSIZE", "SM_CYSIZE", "SM_CXSMSIZE",
-	"SM_CYSMSIZE"
+	"SM_CYSMSIZE", NULL
     };
     int flags[] = {
 	SM_CXBORDER, SM_CYBORDER, SM_CXVSCROLL, SM_CYVSCROLL,
@@ -1115,7 +1115,7 @@ Ttk_CreateVsapiElement(
     XPThemeData *themeData = clientData;
     ElementInfo *elementPtr = NULL;
     ClientData elementData;
-    WCHAR *className;
+    LPCWSTR className;
     int partId = 0;
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
@@ -1143,7 +1143,7 @@ Ttk_CreateVsapiElement(
 	return TCL_ERROR;
     }
     name = Tcl_GetStringFromObj(objv[0], &length);
-    className = (WCHAR *) Tcl_WinUtfToTChar(name, length, &classBuf);
+    className = (LPCWSTR) Tcl_WinUtfToTChar(name, length, &classBuf);
 
     /* flags or padding */
     if (objc > 3) {

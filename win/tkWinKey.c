@@ -186,8 +186,8 @@ KeycodeToKeysym(
 {
     BYTE keys[256];
     int result, deadkey, shift;
-    TCHAR buf[4];
-    unsigned int scancode = MapVirtualKey(keycode, 0);
+    WCHAR buf[4];
+    unsigned int scancode = MapVirtualKeyW(keycode, 0);
 
     /*
      * Do not run keycodes of lock keys through ToUnicode(). One of ToUnicode()'s
@@ -201,10 +201,10 @@ KeycodeToKeysym(
     }
 
     /*
-     * Use MapVirtualKey() to detect some dead keys.
+     * Use MapVirtualKeyW() to detect some dead keys.
      */
 
-    if (MapVirtualKey(keycode, 2) > 0x7fffUL) {
+    if (MapVirtualKeyW(keycode, 2) > 0x7fffUL) {
 	return XK_Multi_key;
     }
 
@@ -261,10 +261,10 @@ KeycodeToKeysym(
 	 * Get information about the old char
 	 */
 
-	deadkey = VkKeyScan(buf[0]);
+	deadkey = VkKeyScanW(buf[0]);
 	shift = deadkey >> 8;
 	deadkey &= 255;
-	scancode = MapVirtualKey(deadkey, 0);
+	scancode = MapVirtualKeyW(deadkey, 0);
 
 	/*
 	 * Set up a keyboard with proper modifier keys
@@ -572,7 +572,7 @@ TkpSetKeycodeAndState(
 	}
     }
     if (keySym >= 0x20) {
-	result = VkKeyScan((TCHAR) keySym);
+	result = VkKeyScanW((WCHAR) keySym);
 	if (result != -1) {
 	    shift = result >> 8;
 	    if (shift & 1)
@@ -625,7 +625,7 @@ XKeysymToKeycode(
 	}
     }
     if (keysym >= 0x20) {
-	result = VkKeyScan((TCHAR) keysym);
+	result = VkKeyScanW((WCHAR) keysym);
 	if (result != -1) {
 	    return (KeyCode) (result & 0xff);
 	}

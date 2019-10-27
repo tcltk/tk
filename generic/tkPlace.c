@@ -616,7 +616,7 @@ ConfigureSlave(
     Tk_SavedOptions savedOptions;
     int mask;
     Slave *slavePtr;
-    Tk_Window masterWin = (Tk_Window) NULL;
+    Tk_Window masterWin = NULL;
     TkWindow *master;
 
     if (Tk_TopWinHierarchy(tkwin)) {
@@ -695,7 +695,7 @@ ConfigureSlave(
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 	    goto error;
 	}
-	
+
 	/*
 	 * Check for management loops.
 	 */

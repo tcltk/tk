@@ -1513,17 +1513,15 @@ EntryWorldChanged(
  *
  * TkpDrawEntryBorderAndFocus --
  *
- *	This function redraws the border of an entry widget. It overrides the
- *	generic border drawing code if the entry widget parameters are such
- *	that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native entry borders.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1542,17 +1540,15 @@ TkpDrawEntryBorderAndFocus(
  *
  * TkpDrawSpinboxButtons --
  *
- *	This function redraws the buttons of an spinbox widget. It overrides
- *	the generic button drawing code if the spinbox widget parameters are
- *	such that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native spinbox buttons.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -3135,8 +3131,8 @@ static char *
 EntryTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Not used. */
+    const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
     Entry *entryPtr = clientData;
@@ -3150,32 +3146,39 @@ EntryTextVarProc(
     }
 
     /*
-     * See ticket [5d991b82].
-     */
-
-    if (entryPtr->textVarName == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    EntryTextVarProc, clientData);
-	}
- 	return NULL;
-     }
-
-    /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+        if (!Tcl_InterpDeleted(interp) && entryPtr->textVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        entryPtr->textVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        EntryTextVarProc, probe);
+                if (probe == (ClientData)entryPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * textVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2(interp, entryPtr->textVarName, NULL,
 		    entryPtr->string, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, entryPtr->textVarName, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    EntryTextVarProc, clientData);
 	    entryPtr->flags |= ENTRY_VAR_TRACED;
-	}
+        }
 	return NULL;
     }
 

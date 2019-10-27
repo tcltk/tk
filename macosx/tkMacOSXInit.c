@@ -45,7 +45,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 @implementation TKApplication(TKInit)
 - (void) _resetAutoreleasePool
 {
-    if([self poolLock] == 0) {
+    if ([self poolLock] == 0) {
 	[_mainPool drain];
 	_mainPool = [NSAutoreleasePool new];
     } else {
@@ -102,7 +102,6 @@ static char scriptPath[PATH_MAX + 1] = "";
     _defaultMainMenu = nil;
     [self _setupMenus];
 
-
     /*
      * Initialize event processing.
      */
@@ -118,18 +117,24 @@ static char scriptPath[PATH_MAX + 1] = "";
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
     /*
-     * It is not safe to force activation of the NSApp until this
-     * method is called.  Activating too early can cause the menu
-     * bar to be unresponsive.
+     * It is not safe to force activation of the NSApp until this method is
+     * called. Activating too early can cause the menu bar to be unresponsive.
+     * The call to activateIgnoringOtherApps was moved here to avoid this.
+     * However, with the release of macOS 10.15 (Catalina) this was no longer
+     * sufficient.  (See ticket bf93d098d7.)  Apparently apps were being
+     * activated automatically, and this was sometimes being done too early.
+     * As a workaround we deactivate and then reactivate the app, even though
+     * Apple says that "Normally, you shouldn’t invoke this method".
      */
 
+    [NSApp deactivate];
     [NSApp activateIgnoringOtherApps: YES];
 
     /*
-     * Process events to ensure that the root window is fully
-     * initialized. See ticket 56a1823c73.
+     * Process events to ensure that the root window is fully initialized. See
+     * ticket 56a1823c73.
      */
-    
+
     [NSApp _lockAutoreleasePool];
     while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS| TCL_DONT_WAIT)) {}
     [NSApp _unlockAutoreleasePool];
@@ -152,7 +157,7 @@ static char scriptPath[PATH_MAX + 1] = "";
      * Record the OS version we are running on.
      */
     int minorVersion;
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 101000
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
     Gestalt(gestaltSystemVersionMinor, (SInt32*)&minorVersion);
 #else
     NSOperatingSystemVersion systemVersion;
@@ -183,6 +188,7 @@ static char scriptPath[PATH_MAX + 1] = "";
      * If no icon has been set from an Info.plist file, use the Wish icon from
      * the Tk framework.
      */
+
     NSString *iconFile = [[NSBundle mainBundle] objectForInfoDictionaryKey:
 						    @"CFBundleIconFile"];
     if (!iconFile) {
@@ -311,8 +317,8 @@ TkpInit(
 	}
 
 	/*
-	 * Instantiate our NSApplication object. This needs to be
-	 * done before we check whether to open a console window.
+	 * Instantiate our NSApplication object. This needs to be done before
+	 * we check whether to open a console window.
 	 */
 
 	NSAutoreleasePool *pool = [NSAutoreleasePool new];
@@ -326,7 +332,43 @@ TkpInit(
 	[TKApplication sharedApplication];
 	[pool drain];
 	[NSApp _setup:interp];
+
+        /*
+         * WARNING: The finishLaunching method runs asynchronously, apparently
+         * in a separate thread.  This creates a race between the
+         * initialization of the NSApplication and the initialization of Tk.
+         * If Tk wins the race bad things happen with the root window (see
+         * below).  If the NSApplication wins then an AppleEvent created during
+         * launch, e.g. by dropping a file icon on the application icon, will
+         * be delivered before the procedure meant to to handle the AppleEvent
+         * has been defined.  This is now handled by processing the AppleEvent
+         * as an idle task.  See tkMacOSXHLEvents.c.
+         */
+
 	[NSApp finishLaunching];
+
+        /*
+         * Create a Tk event source based on the Appkit event queue.
+         */
+
+	Tk_MacOSXSetupTkNotifier();
+
+	/*
+	 * If Tk initialization wins the race, the root window is mapped before
+         * the NSApplication is initialized.  This can cause bad things to
+         * happen.  The root window can open off screen with no way to make it
+         * appear on screen until the app icon is clicked.  This will happen if
+         * a Tk application opens a modal window in its startup script (see
+         * ticket 56a1823c73).  In other cases, an empty root window can open
+         * on screen and remain visible for a noticeable amount of time while
+         * the Tk initialization finishes (see ticket d1989fb7cf).  The call
+         * below forces Tk to block until the Appkit event queue has been
+         * created.  This seems to be sufficient to ensure that the
+         * NSApplication initialization wins the race, avoiding these bad
+         * window behaviors.
+	 */
+
+	Tcl_DoOneEvent(TCL_WINDOW_EVENTS | TCL_DONT_WAIT);
 
 	/*
 	 * If we don't have a TTY and stdin is a special character file of
@@ -343,8 +385,8 @@ TkpInit(
 	    Tcl_RegisterChannel(interp, Tcl_GetStdChannel(TCL_STDERR));
 
 	    /*
-	     * Only show the console if we don't have a startup script
-	     * and tcl_interactive hasn't been set already.
+	     * Only show the console if we don't have a startup script and
+	     * tcl_interactive hasn't been set already.
 	     */
 
 	    if (Tcl_GetStartupScript(NULL) == NULL) {
@@ -361,9 +403,14 @@ TkpInit(
 	    }
 	}
 
-    }
+	/*
+	 * Initialize the NSServices object here. Apple's docs say to do this
+	 * in applicationDidFinishLaunching, but the Tcl interpreter is not
+	 * initialized until this function call.
+	 */
 
-    Tk_MacOSXSetupTkNotifier();
+	TkMacOSXServices_Init(interp);
+    }
 
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
@@ -378,15 +425,7 @@ TkpInit(
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-
-    /*
-     * Workaround for 3efbe4a397; console not accepting keyboard input on 10.14
-     * if displayed before main window. This places console in background and it
-     * accepts input after being raised.
-     */
-
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
-
+    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath", TkMacOSXGetAppPath, NULL, NULL);
     return TCL_OK;
 }
 
@@ -426,7 +465,58 @@ TkpGetAppName(
     }
     Tcl_DStringAppend(namePtr, name, -1);
 }
-
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetAppPath --
+ *
+ *	Returns the path of the Wish application bundle.
+ *
+ * Results:
+ *	Returns the application path.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+int TkMacOSXGetAppPath(
+		       ClientData cd,
+		       Tcl_Interp *ip,
+		       int objc,
+		       Tcl_Obj *const objv[])
+{
+
+  CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+
+
+  /*
+   * Convert the URL reference into a string reference.
+   */
+
+  CFStringRef appPath = CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+
+  /*
+   * Get the system encoding method.
+   */
+
+  CFStringEncoding encodingMethod = CFStringGetSystemEncoding();
+
+  /*
+   * Convert the string reference into a C string.
+   */
+
+  char *path = (char *) CFStringGetCStringPtr(appPath, encodingMethod);
+
+  Tcl_SetResult(ip, path, NULL);
+
+  CFRelease(mainBundleURL);
+  CFRelease(appPath);
+  return TCL_OK;
+
+}
+
 /*
  *----------------------------------------------------------------------
  *
