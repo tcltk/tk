@@ -443,8 +443,11 @@ TkpGetString(
 				 * result. */
 {
     (void) winPtr; /*unused*/
+    int ch;
+
     Tcl_DStringInit(dsPtr);
-    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars, -1);
+    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars,
+	    TkUtfToUniChar(eventPtr->xkey.trans_chars, &ch));
 }
 
 /*
@@ -803,7 +806,7 @@ TkpGetKeySym(
     /* If nbytes has been set, it's not a function key, but a regular key that
        has been translated in tkMacOSXKeyEvent.c; just use that. */
     if (eventPtr->xkey.nbytes) {
-      return eventPtr->xkey.keycode & 0xFFFF;
+      return eventPtr->xkey.keycode;
     }
 
     /*
