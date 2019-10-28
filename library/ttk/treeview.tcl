@@ -120,7 +120,8 @@ proc ttk::treeview::ActivateHeading {w heading} {
     variable State
 
     if {$w != $State(activeWidget) || $heading != $State(activeHeading)} {
-	if {[winfo exists $State(activeWidget)] && $State(activeHeading) != {}} {
+	if {[winfo exists $State(activeWidget)] && $State(activeHeading) != {}
+	        && $State(activeHeading) in [$State(activeWidget) cget -displaycolumns]} {
 	    $State(activeWidget) heading $State(activeHeading) state !active
 	}
 	if {$heading != {}} {
@@ -205,7 +206,7 @@ proc ttk::treeview::resize.drag {w x} {
 }
 
 proc ttk::treeview::resize.release {w x} {
-    # no-op
+    $w drop
 }
 
 ### Heading activation.
