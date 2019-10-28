@@ -208,22 +208,6 @@ static unsigned	isFunctionKey(unsigned int code);
 		    xEvent.xany.type = KeyPress;
 		}
 
-		/*
-		 * For the command key, take the input manager's word so things
-		 * like dvorak / qwerty layout work.
-		 */
-
-		if ((modifiers & NSCommandKeyMask) == NSCommandKeyMask
-			&& (modifiers & NSAlternateKeyMask) != NSAlternateKeyMask
-			&& len > 0 && !isFunctionKey(code)) {
-
-		    /*
-		     * Prevent keycode-based translation in tkMacOSXKeyboard.c
-		     */
-
-		    xEvent.xkey.nbytes = [characters length];
-		}
-
 		if ([characters length] > 0) {
 		    xEvent.xkey.keycode = (keyCode << 16) |
 			    (UInt16) [characters characterAtIndex:0];
@@ -492,6 +476,7 @@ static unsigned	isFunctionKey(unsigned int code);
  * Called by the system to get a position for popup character selection windows
  * such as a Character Palette, or a selection menu for IME.
  */
+
 - (NSRect)firstRectForCharacterRange: (NSRange)theRange
 			 actualRange: (NSRangePointer)thePointer
 {
@@ -509,7 +494,6 @@ static unsigned	isFunctionKey(unsigned int code);
     rect.size.height = caret_height;
     return rect;
 }
-
 
 - (NSInteger)conversationIdentifier
 {
@@ -606,6 +590,7 @@ static unsigned	isFunctionKey(unsigned int code);
 /*
  * Set up basic fields in xevent for keyboard input.
  */
+
 static void
 setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state)
 {
