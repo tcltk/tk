@@ -214,11 +214,15 @@ static void drawMacScrollbar(
     CGContextStrokeLineSegments(context, outer, 2);
 
     /*
-     * Do not display the thumb unless scrolling is possible.
+     * Do not display the thumb unless scrolling is possible and the
+     * widget is large enough to accommodate the 4-pixel radius.
      */
 
     if (scrollPtr->firstFraction > 0.0 || scrollPtr->lastFraction < 1.0) {
 	CGRect thumbBounds = {thumbOrigin, thumbSize};
+	if (thumbBounds.size.width < 8 || thumbBounds.size.height < 8) {
+	    return;
+	}
 	path = CGPathCreateWithRoundedRect(thumbBounds, 4, 4, NULL);
 	CGContextBeginPath(context);
 	CGContextAddPath(context, path);
