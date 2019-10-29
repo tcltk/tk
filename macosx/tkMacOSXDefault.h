@@ -496,12 +496,6 @@
 #define DEF_SCROLLBAR_WIDTH		"15"
 
 /*
- * Integer value to be used as the minWidth of our scrollbar.
- */
-
-#define MIN_SCROLLBAR_WIDTH		15
-
-/*
  * Defaults for texts:
  */
 
