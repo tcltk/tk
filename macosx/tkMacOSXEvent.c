@@ -134,6 +134,9 @@ TkMacOSXFlushWindows(void)
     if (Tk_GetNumMainWindows() == 0) {
 	return;
     }
+    if ([NSApp isDrawing]) {
+	return;
+    }
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
     for (NSWindow *w in [NSApp orderedWindows]) {
 	[w display];

@@ -1637,7 +1637,7 @@ TkMacOSXSetupDrawingContext(
 	 * get drawn in a later call to drawRect.
 	 */
 
-	if (![NSApp isDrawing] || ![NSView focusView]) {
+	if (![NSView focusView]) {
 	    [view setNeedsDisplay:YES];
 	    canDraw = false;
 	    goto end;
