@@ -494,7 +494,12 @@
 #define DEF_SCROLLBAR_TROUGH_COLOR	TROUGH
 #define DEF_SCROLLBAR_TROUGH_MONO	WHITE
 #define DEF_SCROLLBAR_WIDTH		"15"
-#define MIN_SCROLLBAR_WIDTH		"15"
+
+/*
+ * Integer value to be used as the minWidth of our scrollbar.
+ */
+
+#define MIN_SCROLLBAR_WIDTH		15
 
 /*
  * Defaults for texts:
