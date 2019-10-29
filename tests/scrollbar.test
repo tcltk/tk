@@ -780,6 +780,18 @@ test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
     destroy .top.s .top
 } -result {} 
 
+test scrollbar-12.1 {Minimum scrollbar width} -constraints {aqua} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -yscrollcommand {.s set}] -side left
+    pack [scrollbar .s -command {.t yview}] -fill y -expand 1 -side right
+    update idletasks
+    .s configure -width 10
+     winfo width .s
+} -cleanup {
+    destroy .t .s
+} -result {15}
+
 catch {destroy .s}
 catch {destroy .t}
 

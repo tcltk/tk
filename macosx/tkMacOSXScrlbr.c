@@ -369,6 +369,15 @@ TkpComputeScrollbarGeometry(
 
     int fieldLength;
 
+    /*
+     * Override width settings less than 15 pixels since they will cause the
+     * thumb to not be displayed.
+     */
+    
+    if (scrollPtr->width < 15) {
+	scrollPtr->width = 15;
+    }
+
     if (scrollPtr->highlightWidth < 0) {
 	scrollPtr->highlightWidth = 0;
     }
@@ -467,7 +476,8 @@ TkpDestroyScrollbar(
  *
  *	This procedure is called after the generic code has finished processing
  *	configuration options, in order to configure platform specific options.
- *	There are no such option on the Mac, however.
+ *	The only one that we have is that the width of a scrollbar must never
+ *      be less than 15 pixels since that would cause the thumb not to be drawn.
  *
  * Results:
  *	None.
@@ -480,9 +490,9 @@ TkpDestroyScrollbar(
 
 void
 TkpConfigureScrollbar(
-    register TkScrollbar *scrollPtr)
+    TkScrollbar *scrollPtr)
 {
-    /* empty */
+    Tk_MinReqWidth(scrollPtr->tkwin) = 15;
 }
 
 /*

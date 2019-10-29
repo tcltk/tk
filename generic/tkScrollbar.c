@@ -141,10 +141,6 @@ Tk_ScrollbarObjCmd(
 	return TCL_ERROR;
     }
 
-#ifdef MIN_SCROLLBAR_WIDTH
-    Tk_MinReqWidth(tkwin) = MIN_SCROLLBAR_WIDTH;
-#endif
-
     Tk_SetClass(newWin, "Scrollbar");
     scrollPtr = TkpCreateScrollbar(newWin);
 
