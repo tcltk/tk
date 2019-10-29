@@ -26,9 +26,6 @@ static const Tk_CustomOption orientOption = {
 
 /* non-const space for "-width" default value for scrollbars */
 char tkDefScrollbarWidth[TCL_INTEGER_SPACE] = DEF_SCROLLBAR_WIDTH;
-#ifdef MIN_SCROLLBAR_WIDTH
-char tkMinScrollbarWidth[TCL_INTEGER_SPACE] = MIN_SCROLLBAR_WIDTH;
-#endif
 
 /*
  * Information used for argv parsing.
@@ -92,10 +89,6 @@ static const Tk_ConfigSpec configSpecs[] = {
 	TK_CONFIG_MONO_ONLY, NULL},
     {TK_CONFIG_PIXELS, "-width", "width", "Width",
 	tkDefScrollbarWidth, Tk_Offset(TkScrollbar, width), 0, NULL},
-#ifdef MIN_SCROLLBAR_WIDTH
-    {TK_CONFIG_PIXELS, "-minwidth", "minWidth", "Width",
-	tkMinScrollbarWidth, Tk_Offset(TkScrollbar, width), 0, NULL},
-#endif
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -147,6 +140,10 @@ Tk_ScrollbarObjCmd(
     if (newWin == NULL) {
 	return TCL_ERROR;
     }
+
+#ifdef MIN_SCROLLBAR_WIDTH
+    Tk_MinReqWidth(tkwin) = MIN_SCROLLBAR_WIDTH;
+#endif
 
     Tk_SetClass(newWin, "Scrollbar");
     scrollPtr = TkpCreateScrollbar(newWin);
