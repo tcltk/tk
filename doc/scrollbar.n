@@ -50,6 +50,7 @@ not including 3-D border, if any.  For vertical
 scrollbars this will be the width and for horizontal scrollbars
 this will be the height.
 The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
+Some platforms prevent this value from becoming too small.
 .BE
 .SH DESCRIPTION
 .PP
