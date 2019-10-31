@@ -456,8 +456,8 @@ if test $tk_aqua = no; then
 	XFT_LIBS=`xft-config --libs 2>/dev/null` || found_xft="no"
 	if test "$found_xft" = "no" ; then
 	    found_xft=yes
-	    XFT_CFLAGS=`pkg-config --cflags xft 2>/dev/null` || found_xft="no"
-	    XFT_LIBS=`pkg-config --libs xft 2>/dev/null` || found_xft="no"
+	    XFT_CFLAGS=`pkg-config --cflags xft fontconfig 2>/dev/null` || found_xft="no"
+	    XFT_LIBS=`pkg-config --libs xft fontconfig 2>/dev/null` || found_xft="no"
 	fi
 	AC_MSG_RESULT([$found_xft])
 	dnl make sure that compiling against Xft header file doesn't bomb
@@ -649,7 +649,7 @@ if test "${SHARED_BUILD}" = "1" -a "${SHLIB_SUFFIX}" != ""; then
     TCL_STUB_FLAGS="-DUSE_TCL_STUBS"
 fi
 
-TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
+test -z "$TK_LIBRARY" && TK_LIBRARY='$(prefix)/lib/tk$(VERSION)'
 PRIVATE_INCLUDE_DIR='$(includedir)'
 HTML_DIR='$(DISTDIR)/html'
 TK_PKG_DIR='tk$(VERSION)'
