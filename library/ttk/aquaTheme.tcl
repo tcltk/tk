@@ -49,7 +49,7 @@ namespace eval ttk::theme::aqua {
 	    -selectbackground {
 		background systemTextBackgroundColor
 	    }
-	    
+
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
