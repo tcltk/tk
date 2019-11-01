@@ -603,17 +603,15 @@ setupXEvent(XEvent *xEvent, NSWindow *w, unsigned int state)
 
     memset(xEvent, 0, sizeof(XEvent));
     xEvent->xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-    xEvent->xany.send_event = false;
     xEvent->xany.display = Tk_Display(tkwin);
     xEvent->xany.window = Tk_WindowId(tkwin);
 
     xEvent->xkey.root = XRootWindow(Tk_Display(tkwin), 0);
-    xEvent->xkey.subwindow = None;
     xEvent->xkey.time = TkpGetMS();
     xEvent->xkey.state = state;
     xEvent->xkey.same_screen = true;
-    xEvent->xkey.trans_chars[0] = 0;
-    xEvent->xkey.nbytes = 0;
+    /* No need to initialize other fields implicitly here,
+     * because of the memset() above. */
 }
 
 #pragma mark -
