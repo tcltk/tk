@@ -161,7 +161,7 @@ PressButtonObjCmd(
     if (screens && [screens count]) {
 	ScreenHeight = [[screens objectAtIndex:0] frame].size.height;
     }
-    
+
     if (objc != 3) {
         Tcl_WrongNumArgs(interp, 1, objv, "x y");
         return TCL_ERROR;
@@ -186,34 +186,34 @@ PressButtonObjCmd(
     loc.y = ScreenHeight - y;
     wNum = 0;
     CGWarpMouseCursorPosition(pt);
-    motion = [NSEvent mouseEventWithType:NSMouseMoved 
+    motion = [NSEvent mouseEventWithType:NSMouseMoved
 	location:loc
-	modifierFlags:0 
-	timestamp:GetCurrentEventTime() 
+	modifierFlags:0
+	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil 
+	context:nil
 	eventNumber:0
-	clickCount:1 
+	clickCount:1
 	pressure:0.0];
     [NSApp postEvent:motion atStart:NO];
-    press = [NSEvent mouseEventWithType:NSLeftMouseDown 
+    press = [NSEvent mouseEventWithType:NSLeftMouseDown
 	location:loc
-	modifierFlags:0 
-	timestamp:GetCurrentEventTime() 
+	modifierFlags:0
+	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil 
+	context:nil
 	eventNumber:1
-	clickCount:1 
+	clickCount:1
 	pressure:0.0];
     [NSApp postEvent:press atStart:NO];
     release = [NSEvent mouseEventWithType:NSLeftMouseUp
 	location:loc
-	modifierFlags:0 
-	timestamp:GetCurrentEventTime() 
+	modifierFlags:0
+	timestamp:GetCurrentEventTime()
 	windowNumber:wNum
-	context:nil 
+	context:nil
 	eventNumber:2
-	clickCount:1 
+	clickCount:1
 	pressure:0.0];
     [NSApp postEvent:release atStart:NO];
     return TCL_OK;

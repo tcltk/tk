@@ -443,8 +443,11 @@ TkpGetString(
 				 * result. */
 {
     (void) winPtr; /*unused*/
+    int ch;
+
     Tcl_DStringInit(dsPtr);
-    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars, -1);
+    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars,
+	    TkUtfToUniChar(eventPtr->xkey.trans_chars, &ch));
 }
 
 /*
@@ -717,7 +720,7 @@ TkpSetKeycodeAndState(
 	}
 
 	if (keysym <= LATIN1_MAX) {
-	    int done = Tcl_UniCharToUtf(keysym, eventPtr->xkey.trans_chars);
+	    int done = TkUniCharToUtf(keysym, eventPtr->xkey.trans_chars);
 
 	    eventPtr->xkey.trans_chars[done] = 0;
 	} else {
