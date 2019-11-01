@@ -75,6 +75,7 @@
 #define NSCursorUpdate NSEventTypeCursorUpdate
 #define NSTexturedBackgroundWindowMask NSWindowStyleMaskTexturedBackground
 #define NSCompositeCopy NSCompositingOperationCopy
+#define NSCompositeSourceOver NSCompositingOperationSourceOver
 #define NSWarningAlertStyle NSAlertStyleWarning
 #define NSInformationalAlertStyle NSAlertStyleInformational
 #define NSCriticalAlertStyle NSAlertStyleCritical

@@ -13,6 +13,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include "xbytes.h"
 
 #pragma mark XImage handling
@@ -607,6 +608,516 @@ TkPutImage(
     return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
 
+
+/* ---------------------------------------------------------------------------*/
+
+/*
+ * Implementation of a system image type to provide access to named NSImages
+ * provided by macOS for use in buttons etc.
+ */
+
+/*
+ * Forward declarations.
+ */
+
+typedef struct SystemImageInstance SystemImageInstance;
+typedef struct SystemImageMaster SystemImageMaster;
+
+/*
+ * The following data structure represents a particular use of a particular
+ * system image.
+ */
+
+struct SystemImageInstance {
+    SystemImageMaster *masterPtr; /* Pointer to the master for the image. */
+    NSImage *image;		  /* Pointer to a named NSImage.*/
+    SystemImageInstance *nextPtr; /* First in the list of instances associated
+				   * with this master. */
+};
+
+/*
+ * The following data structure represents the master for a system image:
+ */
+
+struct SystemImageMaster {
+    Tk_ImageMaster tkMaster;	      /* Tk's token for image master. */
+    Tcl_Interp *interp;		      /* Interpreter for application. */
+    int width, height;		      /* Dimensions of the image. */
+    char *imageName ;                 /* Malloc'ed image name. */
+    char *systemName;       	      /* Malloc'ed name of the NSimage. */
+    int	flags;			      /* Sundry flags, defined below. */
+    SystemImageInstance *instancePtr; /* First in the list of instances associated
+				       * with this master. */
+    NSImage *image;                   /* The underlying NSImage object. */
+};
+
+/*
+ * Bit definitions for the flags field of a SystemImageMaster.
+ * TEMPLATE:			1 means that this is a Template image
+ * IMAGE_CHANGED:		1 means that the instances of this image need
+ *				to be redisplayed.
+ */
+
+#define TEMPLATE		1
+#define IMAGE_CHANGED		2
+
+/*
+ * The type record for system images:
+ */
+
+static int		SystemImageCreate(Tcl_Interp *interp,
+			    const char *name, int argc, Tcl_Obj *const objv[],
+			    const Tk_ImageType *typePtr, Tk_ImageMaster master,
+			    ClientData *clientDataPtr);
+static ClientData	SystemImageGet(Tk_Window tkwin, ClientData clientData);
+static void		SystemImageDisplay(ClientData clientData,
+			    Display *display, Drawable drawable,
+			    int imageX, int imageY, int width,
+			    int height, int drawableX,
+			    int drawableY);
+static void		SystemImageFree(ClientData clientData, Display *display);
+static void		SystemImageDelete(ClientData clientData);
+
+static Tk_ImageType SystemImageType = {
+    "system",			/* name */
+    SystemImageCreate,		/* createProc */
+    SystemImageGet,		/* getProc */
+    SystemImageDisplay,		/* displayProc */
+    SystemImageFree,		/* freeProc */
+    SystemImageDelete,		/* deleteProc */
+    NULL,			/* postscriptPtr */
+    NULL,			/* nextPtr */
+    NULL
+};
+
+/*
+ * Information used for parsing configuration specifications:
+ */
+#define DEF_NAME    ""
+#define DEF_HEIGHT  "32"
+#define DEF_WIDTH   "32"
+
+static const Tk_OptionSpec systemImageOptions[] = {
+    {TK_OPTION_STRING, "-systemname", NULL, NULL, DEF_NAME,
+     -1, Tk_Offset(SystemImageMaster, systemName), 0, NULL, 0},
+    {TK_OPTION_INT, "-width", NULL, NULL, DEF_WIDTH,
+     -1, Tk_Offset(SystemImageMaster, width), 0, NULL, 0},
+    {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
+     -1, Tk_Offset(SystemImageMaster, height), 0, 0, 0},
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
+};
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SystemImageConfigureMaster --
+ *
+ *	This function is called when a system image is created or reconfigured.
+ *	It processes configuration options and resets any instances of the
+ *	image.
+ *
+ * Results:
+ *	A standard Tcl return value. If TCL_ERROR is returned then an error
+ *	message is left in the masterPtr->interp's result.
+ *
+ * Side effects:
+ *	Existing instances of the image will be redisplayed to match the new
+ *	configuration options.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+SystemImageConfigureMaster(
+    Tcl_Interp *interp,		   /* Interpreter to use for reporting errors. */
+    SystemImageMaster *masterPtr,  /* Pointer to data structure describing
+				    * overall photo image to (re)configure. */
+    int objc,			   /* Number of entries in objv. */
+    Tcl_Obj *const objv[])	   /* Pairs of configuration options for image. */
+{
+    Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
+    SystemImageInstance *instancePtr;
+    
+    if (Tk_SetOptions(interp, (char *) masterPtr, optionTable, objc, objv,
+		      NULL, NULL, NULL) != TCL_OK){
+	goto errorExit;
+    }
+
+    if (masterPtr->systemName == NULL || masterPtr->systemName[0] == '0') {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("-systemname is required.", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM",
+			 "BAD_VALUE", NULL);
+	goto errorExit;
+    }
+    NSString *name = [[NSString alloc] initWithUTF8String: masterPtr->systemName];
+    masterPtr->image = [NSImage imageNamed:(NSImageName)name];
+    [name release];
+    if (masterPtr->image) {
+	NSSize size = NSMakeSize(masterPtr->width, masterPtr->height);
+	[masterPtr->image setSize:size];
+    } else {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("Unknown system image name.\n"
+	    "Try omitting ImageName, e.g. use NSCaution for NSImageNameCaution.", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM",
+			 "BAD_VALUE", NULL);
+	goto errorExit;
+    }
+
+    /*
+     * Cycle through all of the instances of this image, regenerating the
+     * information for each instance. Then force the image to be redisplayed
+     * everywhere that it is used.
+     */
+
+    for (instancePtr = masterPtr->instancePtr; instancePtr != NULL;
+	    instancePtr = instancePtr->nextPtr) {
+	// Photo images do this.  What do we need to do here?
+    }
+
+    /*
+     * Inform the generic image code that the image has (potentially) changed.
+     */
+
+    Tk_ImageChanged(masterPtr->tkMaster, 0, 0, masterPtr->width,
+	    masterPtr->height, masterPtr->width, masterPtr->height);
+    masterPtr->flags &= ~IMAGE_CHANGED;
+
+    return TCL_OK;
+
+  errorExit:
+    return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SystemImageObjCmd --
+ *
+ *	This function implements the configure and cget commands for a 
+ *	system image.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	The image may be reconfigured.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+SystemImageObjCmd(
+    ClientData clientData,	/* Information about the image master. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    SystemImageMaster *masterPtr = clientData;
+    Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
+    static const char *const options[] = {"cget", "configure", NULL};
+    enum {CGET, CONFIGURE};
+    Tcl_Obj *objPtr;
+    int index;
+
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    Tcl_Preserve(masterPtr);
+    switch (index) {
+    case CGET:
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "option");
+	    return TCL_ERROR;
+	}
+	objPtr = Tk_GetOptionValue(interp, (char *)masterPtr, optionTable,
+		objv[2], NULL);
+	if (objPtr == NULL) {
+            goto error;
+        }
+        Tcl_SetObjResult(interp, objPtr);
+	break;
+    case CONFIGURE:
+	if (objc == 2) {
+	    objPtr = Tk_GetOptionInfo(interp, (char *)masterPtr, optionTable,
+				     NULL, NULL);
+	    if (objPtr == NULL) {
+		goto error;
+	    }
+	    Tcl_SetObjResult(interp, objPtr);
+	    break;
+	} else if (objc == 3) {
+	    objPtr = Tk_GetOptionInfo(interp, (char *)masterPtr, optionTable,
+				     objv[2], NULL);
+	    if (objPtr == NULL) {
+		goto error;
+	    }
+	    Tcl_SetObjResult(interp, objPtr);
+	    break;
+	} else {
+	    SystemImageConfigureMaster(interp, masterPtr, objc - 2, objv + 2);
+	    break;
+	}
+    default:
+	break;
+    }
+
+    Tcl_Release(masterPtr);
+    return TCL_OK;
+
+ error:
+    Tcl_Release(masterPtr);
+    return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SystemImageCreate --
+ *
+ *	This function is called by the Tk image code to create system images.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	The data structure for a new image is allocated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+SystemImageCreate(
+    Tcl_Interp *interp,		 /* Interpreter for application using image. */
+    const char *name,		 /* Name to use for image. */
+    int objc,			 /* Number of arguments. */
+    Tcl_Obj *const objv[],	 /* Argument strings for options (doesn't
+				  * include image name or type). */
+    const Tk_ImageType *typePtr, /* Pointer to our type record (not used). */
+    Tk_ImageMaster master,	 /* Token for image, to be used in callbacks. */
+    ClientData *clientDataPtr)	 /* Store manager's token for image here; it
+				  * will be returned in later callbacks. */
+{
+    SystemImageMaster *masterPtr;
+
+    masterPtr = ckalloc(sizeof(SystemImageMaster));
+    masterPtr->tkMaster = master;
+    masterPtr->interp = interp;
+    masterPtr->width = 32;
+    masterPtr->height = 32;
+    masterPtr->imageName = ckalloc(strlen(name) + 1);
+    strcpy(masterPtr->imageName, name);
+    masterPtr->systemName = NULL;
+    masterPtr->flags = 0;
+    masterPtr->instancePtr = NULL;
+    masterPtr->image = NULL;
+    Tcl_CreateObjCommand(interp, name, SystemImageObjCmd, masterPtr, NULL);
+    *clientDataPtr = masterPtr;
+
+    /*
+     * Process configuration options given in the image create command.
+     */
+
+    if (SystemImageConfigureMaster(interp, masterPtr, objc, objv) != TCL_OK) {
+	SystemImageDelete(masterPtr);
+	return TCL_ERROR;
+    }
+
+    
+    *clientDataPtr = masterPtr;
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SystemImageGet --
+ *
+ *	This function is called by Tk when it is preparing to use a system
+ *	image in a particular widget.
+ *
+ * Results:
+ *	The return value is a token for the image instance, which is used in
+ *	future callbacks to ImageDisplay and ImageFree.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static ClientData
+SystemImageGet(
+    Tk_Window tkwin,		/* Token for window in which image will be
+				 * used. */
+    ClientData clientData)	/* Pointer to SystemImageMaster for image. */
+{
+    SystemImageMaster *masterPtr = (SystemImageMaster *) clientData;
+    SystemImageInstance *instPtr;
+
+    instPtr = ckalloc(sizeof(SystemImageInstance));
+    instPtr->masterPtr = masterPtr;
+    return instPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SystemImageDisplay --
+ *
+ *	This function is invoked to redisplay part or all of an image in a
+ *	given drawable.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The image gets partially redrawn, as an "X" that shows the exact
+ *	redraw area.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+SystemImageDisplay(
+    ClientData clientData,	/* Pointer to SystemImageInstance for image. */
+    Display *display,		/* Display to use for drawing. */
+    Drawable drawable,		/* Where to draw or redraw image. */
+    int imageX, int imageY,	/* Origin of area to redraw, relative to
+				 * origin of image. */
+    int width, int height,	/* Dimensions of area to redraw. */
+    int drawableX, int drawableY)
+				/* Coordinates in drawable corresponding to
+				 * imageX and imageY. */
+{
+    MacDrawable *macWin = (MacDrawable *) drawable;
+    SystemImageInstance *instPtr = (SystemImageInstance *) clientData;
+    SystemImageMaster *masterPtr = instPtr->masterPtr; 
+    TkMacOSXDrawingContext dc;
+    NSImage *image = instPtr->masterPtr->image;
+    NSRect dstRect = NSMakeRect(macWin->xOff + drawableX,
+				 macWin->yOff + drawableY, width, height);
+    NSRect srcRect = NSMakeRect(imageX, imageY, width, height);
+
+    if (TkMacOSXSetupDrawingContext(drawable, NULL, 1, &dc)) {
+	if (dc.context) {
+
+	    /*
+	     * There is only one global instance of each named NSImage, which
+	     * may be shared by many SystemImageMasters.  So we need to set the
+	     * size of the image to the size of the master before drawing.
+	     * Changing the size of an image invalidates all of the cached
+	     * representations.  It may be slightly more efficient to not
+	     * change the size if the current size is correct.
+	     */
+
+	    NSSize savedSize = [masterPtr->image size];
+	    NSSize size = NSMakeSize(masterPtr->width, masterPtr->height);
+	    int sizeChanged = (savedSize.width != size.width ||
+	    		       savedSize.height != size.height);
+	    NSGraphicsContext *savedContext = NSGraphicsContext.currentContext;
+	    NSGraphicsContext.currentContext = [NSGraphicsContext
+		graphicsContextWithCGContext:dc.context flipped: YES];
+	    if (sizeChanged) {
+		[masterPtr->image setSize:size];
+	    }
+	    [image drawInRect:dstRect
+		     fromRect:srcRect
+		    operation:NSCompositeSourceOver
+		     fraction:1.0
+	       respectFlipped:YES
+			hints:nil];
+	    NSGraphicsContext.currentContext = savedContext;
+	}
+	TkMacOSXRestoreDrawingContext(&dc);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SystemImageFree --
+ *
+ *	This function is called when an instance of an image is no longer
+ *	used.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Information related to the instance is freed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+SystemImageFree(
+    ClientData clientData,	/* Pointer to SystemImageInstance for instance. */
+    Display *display)		/* Display where image was to be drawn. */
+{
+    SystemImageInstance *instPtr = (SystemImageInstance *) clientData;
+    ckfree(instPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * SystemImageDelete --
+ *
+ *	This function is called to clean up a test image when an application
+ *	goes away.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Information about the image is deleted.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+SystemImageDelete(
+    ClientData clientData)	/* Pointer to SystemImageMaster for image. When
+				 * this function is called, no more instances
+				 * exist. */
+{
+    SystemImageMaster *masterPtr = (SystemImageMaster *) clientData;
+
+    Tcl_DeleteCommand(masterPtr->interp, masterPtr->imageName);
+    ckfree(masterPtr->imageName);
+    ckfree(masterPtr->systemName);
+    ckfree(masterPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXSystemImage_Init --
+ *
+ *	Adds the SystemImage type to Tk.
+ *
+ * Results:
+ *	Returns a standard Tcl completion code, and leaves an error message in
+ *	the interp's result if an error occurs.
+ *
+ * Side effects:
+ *	Creates the command: image create system -systemname -width -height
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkMacOSXSystemImage_Init(
+    Tcl_Interp *interp)		/* Interpreter for application. */
+{
+    Tk_CreateImageType(&SystemImageType);
+    return 1;
+}
 /*
  * Local Variables:
  * mode: objc
