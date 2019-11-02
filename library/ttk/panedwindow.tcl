@@ -62,13 +62,32 @@ proc ttk::panedwindow::Release {w x y} {
 #
 proc ttk::panedwindow::ResetCursor {w} {
     variable State
+
+    if {![info exists State(userConfCursor)]} {
+        set State(userConfCursor) [$w cget -cursor]
+    }
+    # the user could have changed the configured cursor
+    if {[$w cget -cursor] ni [list [ttk::cursor hresize] [ttk::cursor vresize]]} {
+        set State(userConfCursor) [$w cget -cursor]
+    }
+
     if {!$State(pressed)} {
-	ttk::setCursor $w {}
+	ttk::setCursor $w $State(userConfCursor)
     }
 }
 
 proc ttk::panedwindow::SetCursor {w x y} {
-    set cursor ""
+    variable State
+
+    if {![info exists State(userConfCursor)]} {
+        set State(userConfCursor) [$w cget -cursor]
+    }
+    # the user could have changed the configured cursor
+    if {[$w cget -cursor] ni [list [ttk::cursor hresize] [ttk::cursor vresize]]} {
+        set State(userConfCursor) [$w cget -cursor]
+    }
+
+    set cursor $State(userConfCursor)
     if {[llength [$w identify $x $y]]} {
     	# Assume we're over a sash.
 	switch -- [$w cget -orient] {
