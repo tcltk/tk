@@ -36,12 +36,14 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure Toolbutton -anchor center
 
 	# Image Button
-	ttk::style configure Image.TButton \
-	    -anchor center -width 1 -padding {-26 -6} -compound top
-
-	ttk::style map Image.TButton \
+	ttk::style configure ImageButton -anchor center -width 1 \
+	    -compound top -font IBNormal
+	ttk::style map ImageButton \
 	    -foreground {
 		pressed systemLabelColor
+	    } \
+	    -font {
+		pressed TkCaptionFont
 	    }
 
 	# Entry
@@ -58,7 +60,7 @@ namespace eval ttk::theme::aqua {
 	    -selectbackground {
 		background systemTextBackgroundColor
 	    }
-	    
+
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in

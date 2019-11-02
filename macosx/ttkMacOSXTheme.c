@@ -776,6 +776,49 @@ static void DrawDarkIncDecButton(
     HighlightButtonBorder(context, bounds);
 }
 
+static void DrawDarkArrowButton(
+    CGRect bounds,
+    ThemeDrawState drawState,
+    Ttk_State state,
+    CGContextRef context)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *faceColor;
+    NSRect arrowBounds;
+
+    bounds = CGRectInset(bounds, 0, -1);
+    CGContextClipToRect(context, bounds);
+    FillButtonBackground(context, bounds, 6);
+
+    /*
+     * Fill the button face with the appropriate color.
+     */
+
+    bounds = CGRectInset(bounds, 1, 1);
+    if (state & TTK_STATE_DISABLED) {
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+	    components: darkDisabledButtonFace
+	    count: 4];
+    } else {
+	faceColor = [NSColor colorWithColorSpace: deviceRGB
+	    components: darkButtonFace
+	    count: 4];
+    }
+    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
+
+    /*
+     * If pressed, paint the appropriate half blue.
+     */
+    arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
+    arrowBounds.size.width = 16;
+    if (state & TTK_STATE_SELECTED) {
+	DrawUpArrow(context, arrowBounds, 3, 8, whiteRGBA);
+    } else {
+	DrawDownArrow(context, arrowBounds, 3, 8, whiteRGBA);
+    }
+    HighlightButtonBorder(context, bounds);
+}
+
 /*----------------------------------------------------------------------
  * +++ DrawDarkBevelButton --
  *
@@ -1156,7 +1199,7 @@ static void DrawDarkFrame(
 }
 
 /*----------------------------------------------------------------------
- * +++ DrawListHeader --
+ * +++ DrawDarkListHeader --
  *
  *      This is a standalone drawing procedure which draws column
  *      headers for a Treeview in the Dark Mode.
@@ -1207,6 +1250,51 @@ static void DrawDarkListHeader(
 }
 
 /*----------------------------------------------------------------------
+ * +++ DrawGradientButton --
+ *
+ *      This is a standalone drawing procedure which draws a
+ *      a Gradient Button.
+ */
+
+static void DrawGradientBorder(
+    CGRect bounds,
+    CGContextRef context,
+    Tk_Window tkwin,
+    Ttk_State state)
+{
+    static CGFloat lightBorder[4] = {180.0/255, 180.0/255, 180.0/255, 1.0};
+    static CGFloat darkBorder[4] = {118.0/255, 120.0/255, 121.0/255, 1.0};
+    static CGFloat lightFace[4] = {246.0/255, 246.0/255, 246.0/255, 1.0};
+    static CGFloat darkFace[4] = {83.0/255, 84.0/255, 85.0/255, 1.0};
+    static CGFloat lightPressed[4] = {174.0/255, 174.0/255, 175.0/255, 1.0};
+    static CGFloat darkPressed[4] = {101.0/255, 103.0/255, 106.0/255, 1.0};
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    NSColor *faceColor, *borderColor;
+    CGFloat *faceRGBA, *borderRGBA;
+    CGRect inside = CGRectInset(bounds, 1, 1);
+
+    if (TkMacOSXInDarkMode(tkwin)) {
+	faceRGBA = state & TTK_STATE_PRESSED ? darkPressed : darkFace;
+	borderRGBA = darkBorder;
+    } else {
+	faceRGBA = state & TTK_STATE_PRESSED ? lightPressed : lightFace;
+	borderRGBA = lightBorder;
+    }
+    faceColor = [NSColor colorWithColorSpace: deviceRGB
+				  components: faceRGBA
+				       count: 4];
+    borderColor = [NSColor colorWithColorSpace: deviceRGB
+				    components: borderRGBA
+					 count: 4];
+    CGContextSetFillColorWithColor(context, faceColor.CGColor);
+    CGContextFillRect(context, inside);
+    CGContextSetFillColorWithColor(context, borderColor.CGColor);
+    CGContextAddRect(context, bounds);
+    CGContextAddRect(context, inside);
+    CGContextEOFillPath(context);
+}
+
+/*----------------------------------------------------------------------
  * +++ Button element: Used for elements drawn with DrawThemeButton.
  */
 
@@ -1214,6 +1302,8 @@ static void DrawDarkListHeader(
  * When Ttk draws the various types of buttons, a pointer to one of these
  * is passed as the clientData.
  */
+
+#define TkGradientButton 0x8001
 
 typedef struct {
     ThemeButtonKind kind;
@@ -1225,23 +1315,23 @@ static ThemeButtonParams
     RadioButtonParams = {kThemeRadioButton, kThemeMetricRadioButtonHeight},
     BevelButtonParams = {kThemeRoundedBevelButton, NoThemeMetric},
     PopupButtonParams = {kThemePopupButton, kThemeMetricPopupButtonHeight},
-    DisclosureParams =  {
-    kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight
-},
-    ListHeaderParams =
-{kThemeListHeaderButton, kThemeMetricListHeaderHeight};
+    DisclosureParams =  {kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight},
+    DisclosureButtonParams =  {kThemeArrowButton, kThemeMetricDisclosureButtonHeight},
+    ListHeaderParams = {kThemeListHeaderButton, kThemeMetricListHeaderHeight},
+    GradientButtonParams = {TkGradientButton, NoThemeMetric};
+
 static Ttk_StateTable ButtonValueTable[] = {
-    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
+    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeButtonMixed, TTK_STATE_ALTERNATE, 0},
     {kThemeButtonOn, TTK_STATE_SELECTED, 0},
     {kThemeButtonOff, 0, 0}
+};
 
     /*
      * Others: kThemeDisclosureRight, kThemeDisclosureDown,
      * kThemeDisclosureLeft
      */
 
-};
 static Ttk_StateTable ButtonAdornmentTable[] = {
     {kThemeAdornmentNone, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeAdornmentDefault | kThemeAdornmentFocus,
@@ -1262,7 +1352,6 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
     Ttk_State state,
     Tk_Window tkwin)
 {
-
     /*
      * See ButtonElementDraw for the explanation of why we always draw
      * PushButtons in the active state.
@@ -1275,6 +1364,9 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
     case kThemePushButton:
 	HIThemeState &= ~kThemeStateInactive;
 	HIThemeState |= kThemeStateActive;
+	break;
+    case kThemeArrowButton:
+	HIThemeState = 2;
 	break;
     default:
 	break;
@@ -1341,6 +1433,21 @@ static void ButtonElementSize(
     CGRect contentBounds, backgroundBounds;
     int verticalPad;
 
+    switch (info.kind) {
+    case kThemeArrowButton:
+	ChkErr(GetThemeMetric, kThemeMetricDisclosureButtonWidth, minWidth);
+	ChkErr(GetThemeMetric, kThemeMetricDisclosureButtonHeight, minHeight);
+	*minWidth += 2;
+	*minHeight += 2;
+	return;
+    case TkGradientButton:
+	paddingPtr->left = paddingPtr->right = 1;
+	paddingPtr->top = paddingPtr->bottom = 1;
+	return;
+    default:
+	break;
+    }
+
     ButtonElementMinSize(clientData, elementRecord, tkwin,
 	minWidth, minHeight, paddingPtr);
 
@@ -1383,18 +1490,28 @@ static void ButtonElementDraw(
     ThemeButtonParams *params = clientData;
     CGRect bounds = BoxToRect(d, b);
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state, tkwin);
+    int width, height;
 
-    /*
-     * If the height of the button contents is too large for it to fit inside a
-     * macOS Push Button we assume that this is a macOS image button, and so do
-     * not draw the button at all.
-     */
-
-    if (info.kind == kThemePushButton && Tk_Height(tkwin) > 28) {
+    switch (info.kind) {
+    case kThemeArrowButton:
+	ChkErr(GetThemeMetric, kThemeMetricDisclosureButtonWidth, &width);
+	ChkErr(GetThemeMetric, kThemeMetricDisclosureButtonHeight, &height);
+	bounds.size = CGSizeMake(width, height);
+	info.adornment = kThemeAdornmentDrawIndicatorOnly;
+	if (state & TTK_STATE_SELECTED) {
+	    info.adornment |= kThemeAdornmentArrowUpArrow;
+	}
+	info.state = kThemeStateActive;
+	break;
+    case TkGradientButton:
+	BEGIN_DRAWING(d)
+	    DrawGradientBorder(bounds, dc.context, tkwin, state);
+	END_DRAWING
 	return;
+    default:
+	bounds = NormalizeButtonBounds(params->heightMetric, bounds);
+	break;
     }
-
-    bounds = NormalizeButtonBounds(params->heightMetric, bounds);
 
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
@@ -1402,6 +1519,9 @@ static void ButtonElementDraw(
 	case kThemePushButton:
 	case kThemePopupButton:
 	    DrawDarkButton(bounds, info.kind, state, dc.context);
+	    break;
+	case kThemeArrowButton:
+	    DrawDarkArrowButton(bounds, info.kind, state, dc.context);
 	    break;
 	case kThemeCheckBox:
 	    DrawDarkCheckBox(bounds, state, dc.context);
@@ -3055,6 +3175,21 @@ TTK_LAYOUT("TCombobox",
     TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
     TTK_NODE("Combobox.textarea", TTK_FILL_BOTH))))
 
+/* Image Button - no button */
+TTK_LAYOUT("ImageButton",
+    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
+    TTK_NODE("Button.label", TTK_FILL_BOTH)))
+
+/* Gradient Button */
+TTK_LAYOUT("GradientButton",
+    TTK_GROUP("GradientButton.button", TTK_FILL_BOTH,
+    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
+    TTK_NODE("Button.label", TTK_FILL_BOTH))))
+
+/* DisclosureButton (not a triangle) No label, no border*/
+TTK_LAYOUT("DisclosureButton",
+    TTK_NODE("DisclosureButton.button", TTK_FILL_BOTH))
+
 /* Notebook tabs -- no focus ring */
 TTK_LAYOUT("Tab",
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
@@ -3144,6 +3279,10 @@ static int AquaTheme_Init(
 	&ButtonElementSpec, &BevelButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
 	&ButtonElementSpec, &PopupButtonParams);
+    Ttk_RegisterElementSpec(themePtr, "DisclosureButton.button",
+	&ButtonElementSpec, &DisclosureButtonParams);
+    Ttk_RegisterElementSpec(themePtr, "GradientButton.button",
+	&ButtonElementSpec, &GradientButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Spinbox.uparrow",
 	&SpinButtonUpElementSpec, 0);
     Ttk_RegisterElementSpec(themePtr, "Spinbox.downarrow",

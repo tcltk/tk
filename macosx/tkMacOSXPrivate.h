@@ -239,6 +239,7 @@ MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE int 	TkMacOSXSystemImage_Init(Tcl_Interp *interp);
 
 #pragma mark Private Objective-C Classes
 
