@@ -214,12 +214,20 @@ static void drawMacScrollbar(
     CGContextStrokeLineSegments(context, outer, 2);
 
     /*
-     * Do not display the thumb unless scrolling is possible.
+     * Do not display the thumb unless scrolling is possible, in accordance
+     * with macOS behavior.
+     *
+     * Native scrollbars and Ttk scrollbars are always 15 pixels wide, but we
+     * allow Tk scrollbars to have any width, even if it looks bad. To prevent
+     * sporadic assertion errors when drawing skinny thumbs we must make sure
+     * the radius is at most half the width.
      */
 
     if (scrollPtr->firstFraction > 0.0 || scrollPtr->lastFraction < 1.0) {
 	CGRect thumbBounds = {thumbOrigin, thumbSize};
-	path = CGPathCreateWithRoundedRect(thumbBounds, 4, 4, NULL);
+	int width = scrollPtr->vertical ? thumbSize.width : thumbSize.height;
+	int radius = width >= 8 ? 4 : width >> 1;
+	path = CGPathCreateWithRoundedRect(thumbBounds, radius, radius, NULL);
 	CGContextBeginPath(context);
 	CGContextAddPath(context, path);
 	if (msPtr->info.trackInfo.scrollbar.pressState != 0) {
