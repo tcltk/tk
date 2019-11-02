@@ -149,12 +149,20 @@ proc ttk::combobox::Drag {w x}  {
 #	Set cursor.
 #
 proc ttk::combobox::Motion {w x y} {
+    variable State
+    if {![info exists State(userConfCursor)]} {
+        set State(userConfCursor) [$w cget -cursor]
+    }
+    # the user could have changed the configured cursor
+    if {[$w cget -cursor] ne [ttk::cursor text]} {
+        set State(userConfCursor) [$w cget -cursor]
+    }
     if {   [$w identify $x $y] eq "textarea"
         && [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
-	ttk::setCursor $w ""
+	ttk::setCursor $w $State(userConfCursor)
     }
 }
 
