@@ -140,8 +140,13 @@ proc ttk::cursor {name} {
 
 proc ttk::setCursor {w name} {
     variable Cursors
-    if {[$w cget -cursor] ne $Cursors($name)} {
-	$w configure -cursor $Cursors($name)
+    if {[info exists Cursors($name)]} {
+        set cursorname $Cursors($name)
+    }  else {
+        set cursorname $name
+    }
+    if {[$w cget -cursor] ne $cursorname} {
+        $w configure -cursor $cursorname
     }
 }
 
