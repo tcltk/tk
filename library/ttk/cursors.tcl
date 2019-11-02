@@ -150,6 +150,23 @@ proc ttk::setCursor {w name} {
     }
 }
 
+## ttk::saveCursor $w $saveVar $excludeList --
+#       Set variable $saveVar to the -cursor value from widget $w,
+#       if either:
+#       a. $saveVar does not yet exist
+#       b. the currently user-specified cursor for $w is not in
+#          $excludeList
+
+proc ttk::saveCursor {w saveVar excludeList} {
+    upvar $saveVar sv
+    if {![info exists sv]} {
+        set sv [$w cget -cursor]
+    }
+    if {[$w cget -cursor] ni $excludeList} {
+        set sv [$w cget -cursor]
+    }
+}
+
 ## Interactive test harness:
 #
 proc ttk::CursorSampler {f} {

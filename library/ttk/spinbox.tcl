@@ -30,13 +30,7 @@ ttk::bindMouseWheel TSpinbox 		[list ttk::spinbox::MouseWheel %W]
 #
 proc ttk::spinbox::Motion {w x y} {
     variable State
-    if {![info exists State(userConfCursor)]} {
-        set State(userConfCursor) [$w cget -cursor]
-    }
-    # the user could have changed the configured cursor
-    if {[$w cget -cursor] ne [ttk::cursor text]} {
-        set State(userConfCursor) [$w cget -cursor]
-    }
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor text]
     if {   [$w identify $x $y] eq "textarea"
         && [$w instate {!readonly !disabled}]
     } {
