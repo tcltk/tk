@@ -643,23 +643,24 @@ struct SystemImageMaster {
     Tk_ImageMaster tkMaster;	      /* Tk's token for image master. */
     Tcl_Interp *interp;		      /* Interpreter for application. */
     int width, height;		      /* Dimensions of the image. */
+    double alpha;                     /* Transparency, between 0.0 and 1.0*/
+    bool pressed;                     /* Image is for use in a pressed button.*/
     char *imageName ;                 /* Malloc'ed image name. */
     char *systemName;       	      /* Malloc'ed name of the NSimage. */
     int	flags;			      /* Sundry flags, defined below. */
     SystemImageInstance *instancePtr; /* First in the list of instances associated
 				       * with this master. */
     NSImage *image;                   /* The underlying NSImage object. */
+    NSImage *darkModeImage;           /* A modified image to use in Dark Mode. */
 };
 
 /*
  * Bit definitions for the flags field of a SystemImageMaster.
- * TEMPLATE:			1 means that this is a Template image
  * IMAGE_CHANGED:		1 means that the instances of this image need
  *				to be redisplayed.
  */
 
-#define TEMPLATE		1
-#define IMAGE_CHANGED		2
+#define IMAGE_CHANGED		1
 
 /*
  * The type record for system images:
@@ -696,6 +697,8 @@ static Tk_ImageType SystemImageType = {
 #define DEF_NAME    ""
 #define DEF_HEIGHT  "32"
 #define DEF_WIDTH   "32"
+#define DEF_ALPHA   "1.0"
+#define DEF_PRESSED "0"
 
 static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_STRING, "-systemname", NULL, NULL, DEF_NAME,
@@ -703,9 +706,57 @@ static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_INT, "-width", NULL, NULL, DEF_WIDTH,
      -1, Tk_Offset(SystemImageMaster, width), 0, NULL, 0},
     {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
-     -1, Tk_Offset(SystemImageMaster, height), 0, 0, 0},
+     -1, Tk_Offset(SystemImageMaster, height), 0, NULL, 0},
+    {TK_OPTION_DOUBLE, "-alpha", NULL, NULL, DEF_ALPHA,
+     -1, Tk_Offset(SystemImageMaster, alpha), 0, NULL, 0},
+    {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
+     -1, Tk_Offset(SystemImageMaster, pressed), 0, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
 };
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TintImage --
+ *
+ *      Modify an NSImage by blending it with a color.  The transparent part of
+ *      the image remains transparent.  The opaque part of the image is painted
+ *      with the color, using the specified alpha value for the transparency of
+ *      the color.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The appearance of the NSImage changes.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void TintImage(
+    NSImage *image,
+    NSColor *color,
+    double alpha)
+{
+    NSSize size = [image size];
+    NSRect rect = {NSZeroPoint, size};
+    NSImage *mask = [[[NSImage alloc] initWithSize:size] retain];
+    [mask lockFocus];
+    [color set];
+    NSRectFillUsingOperation(rect, NSCompositeCopy);
+    [image drawInRect:rect
+	     fromRect:rect
+	    operation:NSCompositeDestinationIn
+	     fraction:1.0];
+    [mask unlockFocus];
+    [image lockFocus];
+    [mask drawInRect:rect
+	    fromRect:rect
+	   operation:NSCompositeSourceOver
+	    fraction:alpha];
+    [image unlockFocus];
+    [mask release];
+}
 
 /*
  *----------------------------------------------------------------------
@@ -736,8 +787,8 @@ SystemImageConfigureMaster(
     Tcl_Obj *const objv[])	   /* Pairs of configuration options for image. */
 {
     Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
-    SystemImageInstance *instancePtr;
-    
+    NSImage *newImage;
+
     if (Tk_SetOptions(interp, (char *) masterPtr, optionTable, objc, objv,
 		      NULL, NULL, NULL) != TCL_OK){
 	goto errorExit;
@@ -750,28 +801,42 @@ SystemImageConfigureMaster(
 	goto errorExit;
     }
     NSString *name = [[NSString alloc] initWithUTF8String: masterPtr->systemName];
-    masterPtr->image = [NSImage imageNamed:(NSImageName)name];
+    newImage = [[NSImage imageNamed:(NSImageName)name] copy];
     [name release];
-    if (masterPtr->image) {
+    if (newImage) {
 	NSSize size = NSMakeSize(masterPtr->width, masterPtr->height);
-	[masterPtr->image setSize:size];
+	[newImage setSize:size];
+	[masterPtr->image release];
+	[masterPtr->darkModeImage release];
+	masterPtr->image = [newImage retain];
+	masterPtr->darkModeImage = [[masterPtr->image copy] retain];
+	if ([masterPtr->darkModeImage isTemplate]) {
+
+	    /*
+	     * For a template image the Dark Mode version should be white.
+	     */
+
+	    NSRect rect = {NSZeroPoint, size};
+	    [masterPtr->darkModeImage lockFocus];
+	    [[NSColor whiteColor] set];
+	    NSRectFillUsingOperation(rect, NSCompositeSourceAtop);
+	    [masterPtr->darkModeImage unlockFocus];
+	} else if (masterPtr->pressed) {
+
+	    /*
+	     * Non-template pressed images are darker in Light Mode and lighter
+	     * in Dark Mode.
+	     */
+
+	    TintImage(masterPtr->image, [NSColor blackColor], 0.2);
+	    TintImage(masterPtr->darkModeImage, [NSColor whiteColor], 0.5);
+	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("Unknown system image name.\n"
-	    "Try omitting ImageName, e.g. use NSCaution for NSImageNameCaution.", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM",
-			 "BAD_VALUE", NULL);
+	    "Try omitting ImageName, "
+	    "e.g. use NSCaution for NSImageNameCaution.", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	goto errorExit;
-    }
-
-    /*
-     * Cycle through all of the instances of this image, regenerating the
-     * information for each instance. Then force the image to be redisplayed
-     * everywhere that it is used.
-     */
-
-    for (instancePtr = masterPtr->instancePtr; instancePtr != NULL;
-	    instancePtr = instancePtr->nextPtr) {
-	// Photo images do this.  What do we need to do here?
     }
 
     /*
@@ -793,8 +858,8 @@ SystemImageConfigureMaster(
  *
  * SystemImageObjCmd --
  *
- *	This function implements the configure and cget commands for a 
- *	system image.
+ *	This function implements the configure and cget commands for a
+ *	system image instance.
  *
  * Results:
  *	A standard Tcl result.
@@ -879,7 +944,7 @@ SystemImageObjCmd(
  *
  * SystemImageCreate --
  *
- *	This function is called by the Tk image code to create system images.
+ *	Allocate and initialize a system image master.
  *
  * Results:
  *	A standard Tcl result.
@@ -912,9 +977,12 @@ SystemImageCreate(
     masterPtr->imageName = ckalloc(strlen(name) + 1);
     strcpy(masterPtr->imageName, name);
     masterPtr->systemName = NULL;
+    masterPtr->alpha = 1.0;
+    masterPtr->pressed = 0;
     masterPtr->flags = 0;
     masterPtr->instancePtr = NULL;
     masterPtr->image = NULL;
+    masterPtr->darkModeImage = NULL;
     Tcl_CreateObjCommand(interp, name, SystemImageObjCmd, masterPtr, NULL);
     *clientDataPtr = masterPtr;
 
@@ -927,7 +995,7 @@ SystemImageCreate(
 	return TCL_ERROR;
     }
 
-    
+
     *clientDataPtr = masterPtr;
     return TCL_OK;
 }
@@ -937,15 +1005,14 @@ SystemImageCreate(
  *
  * SystemImageGet --
  *
- *	This function is called by Tk when it is preparing to use a system
- *	image in a particular widget.
+ *	Allocate and initialize a system image instance.
  *
  * Results:
  *	The return value is a token for the image instance, which is used in
  *	future callbacks to ImageDisplay and ImageFree.
  *
  * Side effects:
- *	None.
+ *	A new new system image instance is created.
  *
  *----------------------------------------------------------------------
  */
@@ -969,15 +1036,13 @@ SystemImageGet(
  *
  * SystemImageDisplay --
  *
- *	This function is invoked to redisplay part or all of an image in a
- *	given drawable.
+ *	Display or redisplay a system image in the given drawable.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The image gets partially redrawn, as an "X" that shows the exact
- *	redraw area.
+ *	The image gets drawn.
  *
  *----------------------------------------------------------------------
  */
@@ -995,40 +1060,25 @@ SystemImageDisplay(
 				 * imageX and imageY. */
 {
     MacDrawable *macWin = (MacDrawable *) drawable;
+    Tk_Window tkwin = (Tk_Window) macWin->winPtr;
     SystemImageInstance *instPtr = (SystemImageInstance *) clientData;
-    SystemImageMaster *masterPtr = instPtr->masterPtr; 
+    SystemImageMaster *masterPtr = instPtr->masterPtr;
     TkMacOSXDrawingContext dc;
-    NSImage *image = instPtr->masterPtr->image;
     NSRect dstRect = NSMakeRect(macWin->xOff + drawableX,
 				 macWin->yOff + drawableY, width, height);
     NSRect srcRect = NSMakeRect(imageX, imageY, width, height);
+    NSImage *image = TkMacOSXInDarkMode(tkwin) ? masterPtr->darkModeImage :
+	masterPtr->image;
 
     if (TkMacOSXSetupDrawingContext(drawable, NULL, 1, &dc)) {
 	if (dc.context) {
-
-	    /*
-	     * There is only one global instance of each named NSImage, which
-	     * may be shared by many SystemImageMasters.  So we need to set the
-	     * size of the image to the size of the master before drawing.
-	     * Changing the size of an image invalidates all of the cached
-	     * representations.  It may be slightly more efficient to not
-	     * change the size if the current size is correct.
-	     */
-
-	    NSSize savedSize = [masterPtr->image size];
-	    NSSize size = NSMakeSize(masterPtr->width, masterPtr->height);
-	    int sizeChanged = (savedSize.width != size.width ||
-	    		       savedSize.height != size.height);
 	    NSGraphicsContext *savedContext = NSGraphicsContext.currentContext;
 	    NSGraphicsContext.currentContext = [NSGraphicsContext
 		graphicsContextWithCGContext:dc.context flipped: YES];
-	    if (sizeChanged) {
-		[masterPtr->image setSize:size];
-	    }
 	    [image drawInRect:dstRect
 		     fromRect:srcRect
 		    operation:NSCompositeSourceOver
-		     fraction:1.0
+		     fraction:masterPtr->alpha
 	       respectFlipped:YES
 			hints:nil];
 	    NSGraphicsContext.currentContext = savedContext;
@@ -1042,8 +1092,7 @@ SystemImageDisplay(
  *
  * SystemImageFree --
  *
- *	This function is called when an instance of an image is no longer
- *	used.
+ *	Deallocate an instance of a system image.
  *
  * Results:
  *	None.
@@ -1068,14 +1117,13 @@ SystemImageFree(
  *
  * SystemImageDelete --
  *
- *	This function is called to clean up a test image when an application
- *	goes away.
+ *	Deallocate a system image master.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Information about the image is deleted.
+ *	 NSImages are released and memory is freed.
  *
  *----------------------------------------------------------------------
  */
@@ -1091,6 +1139,8 @@ SystemImageDelete(
     Tcl_DeleteCommand(masterPtr->interp, masterPtr->imageName);
     ckfree(masterPtr->imageName);
     ckfree(masterPtr->systemName);
+    [masterPtr->image release];
+    [masterPtr->darkModeImage release];
     ckfree(masterPtr);
 }
 
@@ -1106,7 +1156,8 @@ SystemImageDelete(
  *	the interp's result if an error occurs.
  *
  * Side effects:
- *	Creates the command: image create system -systemname -width -height
+ *	Creates the command:
+ *      image create system -systemname ?-width? ?-height? ?-alpha? ?-pressed?
  *
  *----------------------------------------------------------------------
  */
