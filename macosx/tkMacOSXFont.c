@@ -128,20 +128,7 @@ GetTkFontAttributesForNSFont(
 {
     NSFontTraitMask traits = [[NSFontManager sharedFontManager]
 	    traitsOfFont:nsFont];
-    char *family = [[nsFont familyName] UTF8String];
-    
-    /* 
-     * Workaround for a bug in Catalina 15.1.  The familyName method can prefix
-     * the font name with ".SF " and the font manager will refuse to accept
-     * that name when searching for the font.  As a workaround, if the name
-     * starts with ".SF " we remove that prefix.
-     */
-
-    if (strncmp(family, ".SF ", 4) == 0) {
-	faPtr->family = Tk_GetUid(family + 4);
-    } else {
-	faPtr->family = Tk_GetUid([[nsFont familyName] UTF8String]);
-    }
+    faPtr->family = Tk_GetUid([[nsFont familyName] UTF8String]);
     faPtr->size = [nsFont pointSize];
     faPtr->weight = (traits & NSBoldFontMask ? TK_FW_BOLD : TK_FW_NORMAL);
     faPtr->slant = (traits & NSItalicFontMask ? TK_FS_ITALIC : TK_FS_ROMAN);
@@ -407,7 +394,17 @@ TkpFontPkgInit(
 	systemFont++;
     }
     TkInitFontAttributes(&fa);
+#if 0
+    /*
+     * In macOS 10.15.1 a bug was introduced which caused the call below to
+     * return a font with the invalid familyName ".SF NS Mono" instead of the
+     * valid familyName "NS Mono". Calling [NSFont userFixedPitchFontOfSize:11]
+     * returns a font in the "Menlo" family which has a valid familyName.
+     */  
     nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
+#else
+    nsFont = [NSFont userFixedPitchFontOfSize:11];
+#endif
     if (nsFont) {
 	GetTkFontAttributesForNSFont(nsFont, &fa);
 	CFRelease(nsFont);
