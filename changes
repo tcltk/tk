@@ -7623,9 +7623,61 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2019-04-19 (bug)[368fa4] Prevent toggle of hidden treeview indicators (ulfalizer,vogel)
 
+2019-04-24 (bug)[4d2e8d] Aqua: notebook pane redraws (culler)
 
+2019-04-24 (bug)[928652] Apply TIP 533 for ttk::menubutton (culler,vogel)
 
+2019-04-24 (bug)[1001070] X-platform rework of label options -highlight* (seal,culler,vogel)
 
+2019-04-28 (bug)[6286fd] checkbutton handling of -selectcolor (ralfixx)
+
+2019-04-30 (bug)[4f9a99] Win: crash in [style element create] (oehlman,vogel)
+
+2019-05-08 (bug) Ttk scrolling bugs, see tests treeview-9.1, entry-3.[3-6] (vogel)
+
+2019-05-08 (bug)[51b4b1] Aqua: combobox use native ttk scrollbar (bll,vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-05-18 (new)[eb2996] Win: support for horizontal scrolling (chavez,vogel)
+
+2019-05-26 (new)[TIP 541] [combobox current] support "end" index (vogel)
+
+2019-05-26 (bug)[2a6c62] <<TreeviewSelect>> trigger on item delete (vogel)
+
+2019-06-05 (bug)[9cbc6f] Aqua: fix incorrect reports of mouse coords (chavez, culler)
+
+2019-06-14 (bug)[436ad6] Corrected Aqua regressions in [wm manage] (walzer, culler)
+
+2019-06-15 (bug)[75b8fb] Crash with some [event generate]d <ButtonRelease> (leunissen,vogel)
+
+2019-06-15 (new)[TIP 536] New tk::mac::* commands for IPC on Mac OSX (walzer)
+
+2019-07-13 (bug)[4566e2] Aqua: Make default background color of Tk and Ttk agree (walzer,culler)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-07-16 (bug)[5ddcca] Stop app switching exposing withdrawn windows as zombies (culler)
+
+2019-07-25 (new)[1fb7af] Win support for buttons 4 and 5 (chavez,vogel,nijtmans)
+
+2019-08-18 (new) Refactor all MouseWheel bindings (nijtmans)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-08-21 (bug)[c8ccd1] up array key in [text] takes to index 1.0 (ulfalizer,vogel)
+
+2019-08-28 (new)[TIP 532] Tk event loop rewrite to prevent ring overflow (cramer)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-08-28 (bug)[943d5e] Win: embedded widget destruction cancels window resize (nemethi,vogel,nijtmans)
+
+2019-09-12 (bug)[2834776] Stop disabled spinbox from generating <<Increment>> & <<Decrement>> (vogel)
+
+2019-09-24 (bug)[96bce5] Aqua: Prevent crash drawing 1x1 rounded rectangles (bll,culler)
+
+2019-10-03 (bug)[3cd5b6] Win: root window position with highlightthickness>0 (leunissem,vogel,nijtmans)
+
+2019-10-09 (bug)[a01b6f] Workaround XWayland bug reporting screen width (werner,nijtmans)
+
+2019-10-10 (bug) Aqua: Prevent crash deactivating menu during menu deletion (culler)
 
 
 
