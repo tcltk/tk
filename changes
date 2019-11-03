@@ -7592,8 +7592,44 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2019-02-10 (bug)[8814bd] crash in [NSMenu size] (culler)
 
+2019-02-13 (bug)[b389df] Aqua: mouse position on dual screen (culler)
+
+2019-02-23 (bug)[56a182] Aqua: [tk_getOpenFile] causes off-screen toplevels (culler,walzer)
+
+2019-02-23 (bug)[9771ae] Aqua: workaround incompatible transient window models (culler,walzer)
+
+2019-03-01 (bug)[1951ab] Prevent transient window cycles (crashed on Aqua) (culler,vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-03-04 (bug)[4da219] Incomplete read of multi-image GIF (oehlmann)
+
+2019-03-14 (bug)[609e00] Aqua: wrong coords from MouseWheel binding (vogel,culler)
+
+2019-03-25 (bug)[48c394] Aqua: recompute text layout for empty string (culler)
+
+2019-03-31 (new)[TIP 535] Precision of ::scale widget tick mark values (vogel)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-03-31 (bug)[da3914] [$treeview identify element] failure (ulfalizer,vogel)
+
+2019-04-06 (bug)[897ffe] Prevent cross-manager loops of geom management (culler,vogel)
+
+2019-04-11 (new) Apple Dark Mode support (culler)
+
+2019-04-14 (new) Aqua: Use color names consistent with NSColor (culler)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2019-04-14 (new) Aqua: [tk::unsupported::MacWindowStyle isdark] (culler)
+
+2019-04-19 (bug)[368fa4] Prevent toggle of hidden treeview indicators (ulfalizer,vogel)
 
 
 
 
-- Released 8.6.10, October 25, 2019 - https://core.tcl-lang.org/tk/ for details
+
+
+
+
+
+
+- Released 8.6.10, November 7, 2019 - https://core.tcl-lang.org/tk/ for details
