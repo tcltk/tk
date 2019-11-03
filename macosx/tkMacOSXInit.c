@@ -415,7 +415,7 @@ TkpInit(
 	 * Add the system image type for named NSImages.
 	 */
 	
-	TkMacOSXSystemImage_Init(interp);
+	TkMacOSXNSImage_Init(interp);
     }
 
     if (tkLibPath[0] != '\0') {
