@@ -7679,9 +7679,10 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2019-10-10 (bug) Aqua: Prevent crash deactivating menu during menu deletion (culler)
 
+2019-10-21 (bug)[aea00b] Aqua: Better handling of resolution changes (chavez, culler)
 
+2019-10-25 (bug)[b82bd4] Fix [style configure -compound] (culler,vogel)
 
-
-
+2019-10-27 (bug)[f7a475] Aqua: embedded toplevel, forced focus and mouse coords (naaus,culler)
 
 - Released 8.6.10, November 7, 2019 - https://core.tcl-lang.org/tk/ for details
