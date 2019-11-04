@@ -1308,17 +1308,22 @@ static void DrawGradientBorder(
 typedef struct {
     ThemeButtonKind kind;
     ThemeMetric heightMetric;
+    ThemeMetric widthMetric;
 } ThemeButtonParams;
 static ThemeButtonParams
-    PushButtonParams =  {kThemePushButton, kThemeMetricPushButtonHeight},
-    CheckBoxParams =    {kThemeCheckBox, kThemeMetricCheckBoxHeight},
-    RadioButtonParams = {kThemeRadioButton, kThemeMetricRadioButtonHeight},
-    BevelButtonParams = {kThemeRoundedBevelButton, NoThemeMetric},
-    PopupButtonParams = {kThemePopupButton, kThemeMetricPopupButtonHeight},
-    DisclosureParams =  {kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight},
-    DisclosureButtonParams =  {kThemeArrowButton, kThemeMetricDisclosureButtonHeight},
-    ListHeaderParams = {kThemeListHeaderButton, kThemeMetricListHeaderHeight},
-    GradientButtonParams = {TkGradientButton, NoThemeMetric};
+    PushButtonParams =  {kThemePushButton, kThemeMetricPushButtonHeight, NoThemeMetric},
+    CheckBoxParams =    {kThemeCheckBox, kThemeMetricCheckBoxHeight, NoThemeMetric},
+    RadioButtonParams = {kThemeRadioButton, kThemeMetricRadioButtonHeight, NoThemeMetric},
+    BevelButtonParams = {kThemeRoundedBevelButton, NoThemeMetric, NoThemeMetric},
+    PopupButtonParams = {kThemePopupButton, kThemeMetricPopupButtonHeight, NoThemeMetric},
+    DisclosureParams =  {kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight,
+			 kThemeMetricDisclosureTriangleWidth},
+    DisclosureButtonParams = {kThemeArrowButton, kThemeMetricSmallDisclosureButtonHeight,
+			      kThemeMetricSmallDisclosureButtonWidth},
+    HelpButtonParams = {kThemeRoundButtonHelp, kThemeMetricRoundButtonSize,
+			kThemeMetricRoundButtonSize},
+    ListHeaderParams = {kThemeListHeaderButton, kThemeMetricListHeaderHeight, NoThemeMetric},
+    GradientButtonParams = {TkGradientButton, NoThemeMetric, NoThemeMetric};
 
 static Ttk_StateTable ButtonValueTable[] = {
     {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
@@ -1358,20 +1363,37 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
      */
 
     SInt32 HIThemeState;
+    int adornment = 0;
 
     HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
+
+    /*
+     * HITheme uses the adornment to decide the direction of the
+     * arrow on a Disclosure Button.  Also HITheme draws inactive
+     * (TTK_STATE_BACKGROUND) buttons in a gray color but macOS
+     * no longer does that.  So we adjust the HIThemeState.
+     */
+
     switch (params->kind) {
+    case kThemeArrowButton:
+	adornment = kThemeAdornmentDrawIndicatorOnly;
+	if (state & TTK_STATE_SELECTED) {
+	    adornment |= kThemeAdornmentArrowUpArrow;
+	}
+	/* Fall through. */
     case kThemeRadioButton:
+	/*
+	 * The gray color is better than the blue color for a
+	 * background selected Radio Button.
+	 */
+
 	if (state & TTK_STATE_SELECTED) {
 	    break;
 	}
-    case kThemePushButton:
-    case kThemePopupButton:
-    case kThemeCheckBox:
-	HIThemeState &= ~kThemeStateInactive;
-	HIThemeState |= kThemeStateActive;
-	break;
     default:
+	if (state & TTK_STATE_BACKGROUND) {
+	    HIThemeState |= kThemeStateActive;
+	}
 	break;
     }
 
@@ -1380,7 +1402,7 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
 	.state = HIThemeState,
 	.kind = params ? params->kind : 0,
 	.value = Ttk_StateTableLookup(ButtonValueTable, state),
-	.adornment = Ttk_StateTableLookup(ButtonAdornmentTable, state),
+	.adornment = Ttk_StateTableLookup(ButtonAdornmentTable, state) | adornment,
     };
     return info;
 }
@@ -1411,13 +1433,19 @@ static void ButtonElementMinSize(
 	*minHeight += 2;
 
         /*
-         * The minwidth must be 0 to force the generic ttk code to compute the
+         * For buttons with labels the minwidth must be 0 to force the
          * correct text layout.  For example, a non-zero value will cause the
          * text to be left justified, no matter what -anchor setting is used in
          * the style.
          */
 
-	*minWidth = 0;
+	if (params->widthMetric != NoThemeMetric) {
+	    ChkErr(GetThemeMetric, params->widthMetric, minWidth);
+	    *minWidth += 2;
+	    *minHeight += 2;
+	} else {
+	    *minWidth = 0;
+	}
     }
 }
 
@@ -1436,23 +1464,20 @@ static void ButtonElementSize(
     CGRect contentBounds, backgroundBounds;
     int verticalPad;
 
-    switch (info.kind) {
-    case kThemeArrowButton:
-	ChkErr(GetThemeMetric, kThemeMetricDisclosureButtonWidth, minWidth);
-	ChkErr(GetThemeMetric, kThemeMetricDisclosureButtonHeight, minHeight);
-	*minWidth += 2;
-	*minHeight += 2;
-	return;
-    case TkGradientButton:
-	paddingPtr->left = paddingPtr->right = 1;
-	paddingPtr->top = paddingPtr->bottom = 1;
-	return;
-    default:
-	break;
-    }
-
     ButtonElementMinSize(clientData, elementRecord, tkwin,
 	minWidth, minHeight, paddingPtr);
+
+    switch (info.kind) {
+    case TkGradientButton:
+        paddingPtr->left = paddingPtr->right = 1;
+        paddingPtr->top = paddingPtr->bottom = 1;
+        /* Fall through. */
+    case kThemeArrowButton:
+    case kThemeRoundButtonHelp:
+        return;
+    default:
+        break;
+    }
 
     /*
      * Given a hypothetical bounding rectangle for a button, HIToolbox will
@@ -1493,31 +1518,44 @@ static void ButtonElementDraw(
     ThemeButtonParams *params = clientData;
     CGRect bounds = BoxToRect(d, b);
     HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state, tkwin);
-    int width, height;
 
     switch (info.kind) {
-    case kThemeArrowButton:
-	ChkErr(GetThemeMetric, kThemeMetricDisclosureButtonWidth, &width);
-	ChkErr(GetThemeMetric, kThemeMetricDisclosureButtonHeight, &height);
-	bounds.size = CGSizeMake(width, height);
-	info.adornment = kThemeAdornmentDrawIndicatorOnly;
-	if (state & TTK_STATE_SELECTED) {
-	    info.adornment |= kThemeAdornmentArrowUpArrow;
-	}
-	break;
-    case kThemeCheckBox:
-    	break;
+
+    /*
+     * A Gradient Button should have an image and no text.  The size is set to
+     * that of the image.  All we need to do is draw a 1-pixel border.
+     */
+
     case TkGradientButton:
 	BEGIN_DRAWING(d)
 	    DrawGradientBorder(bounds, dc.context, tkwin, state);
 	END_DRAWING
 	return;
-    case kThemePopupButton:
-	bounds = NormalizeButtonBounds(params->heightMetric, bounds);
-	bounds.origin.y -= 1;
+    /*
+     * Buttons with no height restrictions are ready to draw.
+     */
+
+    case kThemeArrowButton:
+    case kThemeRoundButtonHelp:
+    case kThemeCheckBox:
+    case kThemeRadioButton:
+    	break;
+
+    /*
+     * Other buttons have a maximum height.   We have to deal with that.
+     */
+
     default:
 	bounds = NormalizeButtonBounds(params->heightMetric, bounds);
 	break;
+    }
+
+    /*
+     * Tweak for PopupButtons to vertically center the text.
+     */
+
+    if (info.kind == kThemePopupButton) {
+	bounds.origin.y -= 1;
     }
 
     BEGIN_DRAWING(d)
@@ -1539,6 +1577,8 @@ static void ButtonElementDraw(
 	case kThemeRoundedBevelButton:
 	    DrawDarkBevelButton(bounds, state, dc.context);
 	    break;
+	case kThemeRoundButtonHelp:
+	    /* TO DO: draw a help button for Dark Mode. */
 	default:
 	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context,
 		HIOrientation, NULL);
@@ -3193,9 +3233,13 @@ TTK_LAYOUT("GradientButton",
     TTK_GROUP("Button.padding", TTK_FILL_BOTH,
     TTK_NODE("Button.label", TTK_FILL_BOTH))))
 
-/* DisclosureButton (not a triangle) No label, no border*/
+/* DisclosureButton (not a triangle) -- No label, no border*/
 TTK_LAYOUT("DisclosureButton",
     TTK_NODE("DisclosureButton.button", TTK_FILL_BOTH))
+
+/* HelpButton -- No label, no border*/
+TTK_LAYOUT("HelpButton",
+    TTK_NODE("HelpButton.button", TTK_FILL_BOTH))
 
 /* Notebook tabs -- no focus ring */
 TTK_LAYOUT("Tab",
@@ -3288,6 +3332,8 @@ static int AquaTheme_Init(
 	&ButtonElementSpec, &PopupButtonParams);
     Ttk_RegisterElementSpec(themePtr, "DisclosureButton.button",
 	&ButtonElementSpec, &DisclosureButtonParams);
+    Ttk_RegisterElementSpec(themePtr, "HelpButton.button",
+	&ButtonElementSpec, &HelpButtonParams);
     Ttk_RegisterElementSpec(themePtr, "GradientButton.button",
 	&ButtonElementSpec, &GradientButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Spinbox.uparrow",
