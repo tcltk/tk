@@ -128,11 +128,11 @@ GetTkFontAttributesForNSFont(
 {
     NSFontTraitMask traits = [[NSFontManager sharedFontManager]
 	    traitsOfFont:nsFont];
-
     faPtr->family = Tk_GetUid([[nsFont familyName] UTF8String]);
     faPtr->size = [nsFont pointSize];
     faPtr->weight = (traits & NSBoldFontMask ? TK_FW_BOLD : TK_FW_NORMAL);
     faPtr->slant = (traits & NSItalicFontMask ? TK_FS_ITALIC : TK_FS_ROMAN);
+
 }
 
 /*
@@ -394,10 +394,22 @@ TkpFontPkgInit(
 	systemFont++;
     }
     TkInitFontAttributes(&fa);
+#if 0
+    /*
+     * In macOS 10.15.1 a bug was introduced which caused the call below to
+     * return a font with the invalid familyName ".SF NS Mono" instead of the
+     * valid familyName "NS Mono". Calling [NSFont userFixedPitchFontOfSize:11]
+     * returns a font in the "Menlo" family which has a valid familyName.
+     */  
     nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
+#else
+    nsFont = [NSFont userFixedPitchFontOfSize:11];
+#endif
     if (nsFont) {
 	GetTkFontAttributesForNSFont(nsFont, &fa);
+#if 0
 	CFRelease(nsFont);
+#endif
     } else {
 	fa.family = Tk_GetUid("Monaco");
 	fa.size = 11;
