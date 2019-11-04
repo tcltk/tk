@@ -37,13 +37,11 @@ namespace eval ttk::theme::aqua {
 
 	# Image Button
 	ttk::style configure ImageButton -anchor center -width 1 \
-	    -compound top -font IBNormal
+	    -compound top
 	ttk::style map ImageButton \
 	    -foreground {
 		pressed systemLabelColor
-	    } \
-	    -font {
-		pressed TkCaptionFont
+		!pressed systemSecondaryLabelColor
 	    }
 
 	# Entry
