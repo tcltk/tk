@@ -407,7 +407,9 @@ TkpFontPkgInit(
 #endif
     if (nsFont) {
 	GetTkFontAttributesForNSFont(nsFont, &fa);
+#if 0
 	CFRelease(nsFont);
+#endif
     } else {
 	fa.family = Tk_GetUid("Monaco");
 	fa.size = 11;
