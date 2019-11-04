@@ -1354,19 +1354,22 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
 {
     /*
      * See ButtonElementDraw for the explanation of why we always draw
-     * PushButtons in the active state.
+     * some buttons in the active state.
      */
 
     SInt32 HIThemeState;
 
     HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
     switch (params->kind) {
+    case kThemeRadioButton:
+	if (state & TTK_STATE_SELECTED) {
+	    break;
+	}
     case kThemePushButton:
+    case kThemePopupButton:
+    case kThemeCheckBox:
 	HIThemeState &= ~kThemeStateInactive;
 	HIThemeState |= kThemeStateActive;
-	break;
-    case kThemeArrowButton:
-	HIThemeState = 2;
 	break;
     default:
 	break;
@@ -1501,13 +1504,17 @@ static void ButtonElementDraw(
 	if (state & TTK_STATE_SELECTED) {
 	    info.adornment |= kThemeAdornmentArrowUpArrow;
 	}
-	info.state = kThemeStateActive;
 	break;
+    case kThemeCheckBox:
+    	break;
     case TkGradientButton:
 	BEGIN_DRAWING(d)
 	    DrawGradientBorder(bounds, dc.context, tkwin, state);
 	END_DRAWING
 	return;
+    case kThemePopupButton:
+	bounds = NormalizeButtonBounds(params->heightMetric, bounds);
+	bounds.origin.y -= 1;
     default:
 	bounds = NormalizeButtonBounds(params->heightMetric, bounds);
 	break;
@@ -1536,7 +1543,7 @@ static void ButtonElementDraw(
 	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context,
 		HIOrientation, NULL);
 	}
-    } else if (info.kind == kThemePushButton &&
+    } else if ((info.kind == kThemePushButton) &&
 	       (state & TTK_STATE_PRESSED)) {
 	bounds.size.height += 2;
 	GradientFillRoundedRectangle(dc.context, bounds, 4,
@@ -1555,7 +1562,7 @@ static void ButtonElementDraw(
          * active state.
          */
 
-	if (info.kind == kThemePopupButton &&
+	if (info.kind == kThemePopupButton  &&
 	    (state & TTK_STATE_BACKGROUND)) {
 	    CGRect innerBounds = CGRectInset(bounds, 1, 1);
 	    NSColor *whiteRGBA = [NSColor whiteColor];
