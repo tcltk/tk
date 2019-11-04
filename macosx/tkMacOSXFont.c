@@ -396,9 +396,9 @@ TkpFontPkgInit(
     TkInitFontAttributes(&fa);
 #if 0
     /*
-     * In macOS 10.15.1 a bug was introduced which caused the call below to
-     * return a font with the invalid familyName ".SF NS Mono" instead of the
-     * valid familyName "NS Mono". Calling [NSFont userFixedPitchFontOfSize:11]
+     * In macOS 10.15.1 Apple introduced a bug which caused the call below to
+     * return a font with the invalid familyName ".SF NSMono" instead of the
+     * valid familyName "NSMono". Calling [NSFont userFixedPitchFontOfSize:11]
      * returns a font in the "Menlo" family which has a valid familyName.
      */  
     nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
