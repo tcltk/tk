@@ -7592,3 +7592,7 @@ in this changeset (new minor version) rather than bug fixes:
 2017-08-28 (TIP 166) Extended color notation for alpha channel (bachmann)
 
 --- Released 8.7a1, September 8, 2017 --- http://core.tcl.tk/tk/ for details
+
+
+
+--- Released 8.7a3, November 21, 2019 --- http://core.tcl.tk/tk/ for details
