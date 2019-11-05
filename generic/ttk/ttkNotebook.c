@@ -65,8 +65,8 @@ static Tk_OptionSpec TabOptionSpecs[] =
     {TK_OPTION_STRING, "-image", "image", "Image", NULL/*default*/,
 	offsetof(Tab,imageObj), -1, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	"none", offsetof(Tab,compoundObj), -1,
-	0,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
+	NULL, offsetof(Tab,compoundObj), -1,
+	TK_OPTION_NULL_OK,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
 	offsetof(Tab,underlineObj), -1, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
