@@ -837,6 +837,7 @@ static int TreeWidth(Treeview *tv)
     int i = FirstColumn(tv);
     int width = 0;
 
+    tv->tree.titleWidth = 0;
     while (i < tv->tree.nDisplayColumns) {
 	if (i == tv->tree.nTitleColumns) {
 	    tv->tree.titleWidth = width;
@@ -1432,7 +1433,11 @@ static TreeItem *IdentifyItem(Treeview *tv, int y)
 static int IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
 {
     int colno = FirstColumn(tv);
-    int xpos = tv->tree.treeArea.x - tv->tree.xscroll.first;
+    int xpos = tv->tree.treeArea.x;
+
+    if (tv->tree.nTitleColumns <= colno) {
+	xpos -= tv->tree.xscroll.first;
+    }
 
     while (colno < tv->tree.nDisplayColumns) {
 	TreeColumn *column = tv->tree.displayColumns[colno];
@@ -1443,6 +1448,9 @@ static int IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
 	}
 	++colno;
 	xpos = next_xpos;
+	if (tv->tree.nTitleColumns == colno) {
+	    xpos -= tv->tree.xscroll.first;
+	}
     }
 
     return -1;
@@ -1559,6 +1567,10 @@ static int BoundingBox(
 	}
 	bbox.x += xpos;
 	bbox.width = column->width;
+
+	if (i <= tv->tree.nTitleColumns) {
+	    bbox.x += tv->tree.xscroll.first;
+	}
 
 	/* Account for indentation in tree column:
 	 */
@@ -1696,16 +1708,17 @@ static void TreeviewDoLayout(void *clientData)
 {
     Treeview *tv = clientData;
     int visibleRows;
+    int first, last, total;
 
     Ttk_PlaceLayout(tv->core.layout,tv->core.state,Ttk_WinBox(tv->core.tkwin));
     tv->tree.treeArea = Ttk_ClientRegion(tv->core.layout, "treearea");
 
     ResizeColumns(tv, tv->tree.treeArea.width);
 
-    TtkScrolled(tv->tree.xscrollHandle,
-	    tv->tree.xscroll.first,
-	    tv->tree.xscroll.first + tv->tree.treeArea.width,
-	    TreeWidth(tv));
+    first = tv->tree.xscroll.first;
+    last = tv->tree.xscroll.first + tv->tree.treeArea.width - tv->tree.titleWidth;
+    total = TreeWidth(tv) - tv->tree.titleWidth;
+    TtkScrolled(tv->tree.xscrollHandle, first, last, total);
 
     if (tv->tree.showFlags & SHOW_HEADINGS) {
 	tv->tree.headingArea = Ttk_PackBox(

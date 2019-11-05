@@ -699,6 +699,7 @@ test treeview-identify-9 "identify works when horizontally scrolled" -setup {
     foreach column {#0 A B C} {
 	.tv column $column -stretch 0 -width 50
     }
+    # Scrollable area is 200, visible is 100
     place .tv -x 0 -y 0 -width 100
 } -body {
     set result [list]
@@ -711,6 +712,50 @@ test treeview-identify-9 "identify works when horizontally scrolled" -setup {
 	[list heading #0 heading #1] \
 	[list heading #1 heading #2] \
 	[list heading #2 heading #3] ]
+
+test treeview-identify-10 "identify works when horizontally scrolled" -setup {
+    .tv configure -show {tree headings}
+    .tv configure -titlecolumns 1
+    foreach column {"#0" A B C} {
+	.tv column $column -stretch 0 -width 50
+    }
+    # Scrollable area is 150, visible is 100
+    place .tv -x 0 -y 0 -width 150
+} -body {
+    set result [list]
+    foreach xoffs {0 25 50} {
+	.tv xview $xoffs ; update
+	lappend result [identify* .tv {region column} 10 10 60 10]
+	lappend result [identify* .tv {region column} 10 50 60 50]
+    }
+    set result
+} -result [list \
+	[list heading #0 heading #1] [list tree #0 cell #1] \
+	[list heading #0 heading #1] [list tree #0 cell #1] \
+	[list heading #0 heading #2] [list tree #0 cell #2] ]
+
+# Hijack the setup above to check bbox too
+test treeview-identify-10b "bbox works when horizontally scrolled" -body {
+    # Establish a point of reference
+    .tv configure -titlecolumns -1
+    .tv xview 0 ; update
+    set base [lindex [.tv bbox branch "#0"] 0]
+    set result [list]
+    foreach tc {-1 0 1 2} {
+        .tv configure -titlecolumns $tc
+        foreach xoffs {0 25 50} {
+            .tv xview $xoffs ; update
+            lappend result [expr {[lindex [.tv bbox branch "#0"] 0] - $base}]
+            lappend result [expr {[lindex [.tv bbox branch A   ] 0] - $base}]
+            lappend result [expr {[lindex [.tv bbox branch B   ] 0] - $base}]
+            lappend result [expr {[lindex [.tv bbox branch C   ] 0] - $base}]
+        }
+    }
+    set result
+} -result [list 0 50 100 150  -25 25  75 125   -50  0  50 100 \
+                0 50 100 150    0 25  75 125     0  0  50 100 \
+                0 50 100 150    0 50  75 125     0 50  50 100 \
+                0 50 100 150    0 50 100 125     0 50 100 100]
 
 test treeview-identify-cleanup "identify - cleanup" -body {
     destroy .tv
