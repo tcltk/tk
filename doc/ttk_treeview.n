@@ -117,7 +117,7 @@ If the \fIitem\fR is not visible
 returns the empty list.
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop cellList\fR?
-Mangages cell selection. Cell selection is independent of item selection
+Manages cell selection. Cell selection is independent of item selection
 handled by the \fBselection\fR command. A cell is given by a list of two
 elements, item and column.
 If \fIselop\fR is not specified, returns the list of selected cells.
@@ -460,7 +460,7 @@ The list of values associated with the item.
 .RS
 .PP
 Each item should have the same number of values as
-the \fB\-columns\fR
+the \fB\-columns\fR widget option.
 If there are fewer values than columns,
 the remaining values are assumed empty.
 If there are more values than columns,
