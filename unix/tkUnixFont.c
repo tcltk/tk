@@ -520,7 +520,7 @@ Ucs2beToUtfProc(
 	 * UCS-2BE. We know this is an LE->BE swap.
 	 */
 
-	dst += Tcl_UniCharToUtf(htons(*((short *)src)), dst);
+	dst += TkUniCharToUtf(htons(*((short *)src)), dst);
 	src += 2 /* sizeof(UCS-2) */;
     }
 

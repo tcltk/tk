@@ -1611,16 +1611,27 @@ TkMacOSXSetupDrawingContext(
 	 * a view's drawRect or setFrame methods.  The isDrawing attribute
 	 * tells us whether we are being called from one of those methods.
 	 *
-	 * If the CGContext is not valid, or belongs to a different View, then
-	 * we mark our view as needing display and return failure. It should
-	 * get drawn in a later call to drawRect.
+	 * If the CGContext is not valid then we mark our view as needing
+	 * display in the bounding rectangle of the clipping region and
+	 * return failure.  That rectangle should get drawn in a later call
+	 * to drawRect.
 	 */
-
-	if (view != [NSView focusView]) {
-	    [view setNeedsDisplay:YES];
+ 
+	if (![NSApp isDrawing] || view != [NSView focusView]) {
+	    NSRect bounds = [view bounds];
+	    NSRect dirtyNS = bounds;
+	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
+				    .ty = dirtyNS.size.height};
+	    if (dc.clipRgn) {
+		CGRect dirtyCG = NSRectToCGRect(dirtyNS);
+		HIShapeGetBounds(dc.clipRgn, &dirtyCG);
+		dirtyNS = NSRectToCGRect(CGRectApplyAffineTransform(dirtyCG, t));
+	    }
+	    [view setNeedsDisplayInRect:dirtyNS];
 	    canDraw = false;
 	    goto end;
 	}
+ 
 	dc.view = view;
 	dc.context = GET_CGCONTEXT;
 	dc.portBounds = NSRectToCGRect([view bounds]);
