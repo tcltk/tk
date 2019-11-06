@@ -414,7 +414,7 @@ TkpInit(
 	/*
 	 * Add the system image type for named NSImages.
 	 */
-	
+
 	TkMacOSXNSImage_Init(interp);
     }
 
