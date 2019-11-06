@@ -1637,7 +1637,7 @@ TkMacOSXSetupDrawingContext(
 	 * return failure.  That rectangle should get drawn in a later call
 	 * to drawRect.
 	 */
- 
+
 	if (![NSApp isDrawing] || view != [NSView focusView]) {
 	    NSRect bounds = [view bounds];
 	    NSRect dirtyNS = bounds;
@@ -1652,7 +1652,7 @@ TkMacOSXSetupDrawingContext(
 	    canDraw = false;
 	    goto end;
 	}
- 
+
 	dc.view = view;
 	dc.context = GET_CGCONTEXT;
 	dc.portBounds = NSRectToCGRect([view bounds]);
