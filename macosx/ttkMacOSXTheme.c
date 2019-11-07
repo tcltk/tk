@@ -63,7 +63,7 @@
 static CGFloat darkButtonFace[4] = {
     112.0 / 255, 113.0 / 255, 115.0 / 255, 1.0
 };
-static CGFloat darkPressedBevelFace[4] = {
+static CGFloat darkPressedButtonFace[4] = {
     135.0 / 255, 136.0 / 255, 138.0 / 255, 1.0
 };
 static CGFloat darkSelectedBevelFace[4] = {
@@ -113,18 +113,31 @@ static CGFloat pressedPushButtonGradient[8] = {
 /*
  * When building on systems earlier than 10.8 there is no reasonable way to
  * convert an NSColor to a CGColor.  We do run-time checking of the OS version,
- * and never need the CGColor property on older systems, so we can use this
- * CGCOLOR macro, which evaluates to NULL without raising compiler warnings.
- * Similarly, we never draw rounded rectangles on older systems which did not
- * have CGPathCreateWithRoundedRect, so we just redefine it to return NULL.
+ * and never need the CGColor property on older systems, so we can just define
+ * a macro CGColorFromRGBA which evaluates to NULL without raising compiler
+ * warnings.  Similarly, we never draw rounded rectangles on older systems
+ * which did not have CGPathCreateWithRoundedRect, so we just redefine it to
+ * return NULL.
  */
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
+static CGColorRef
+CGColorFromRGBA(
+    CGFloat *rgba)
+{
+    NSColorSpace *colorSpace = [NSColorSpace deviceRGBColorSpace];
+    NSColor *nscolor = [NSColor colorWithColorSpace: colorSpace
+					 components: rgba
+					      count: 4];
+    return nscolor.CGColor;
+}
 #define CGCOLOR(nscolor) nscolor.CGColor
 #else
-#define CGCOLOR(nscolor) (0 ? (CGColorRef) nscolor : NULL)
+#define CGCOLOR nil
+#define CGColorFromRGBA(rgba) NULL
 #define CGPathCreateWithRoundedRect(w, x, y, z) NULL
 #endif
+
 
 /*
  * If we try to draw a rounded rectangle with too large of a radius
@@ -460,26 +473,19 @@ static void DrawGroupBox(
     CHECK_RADIUS(4, bounds)
 
     CGPathRef path;
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *borderColor, *bgColor;
-    static CGFloat border[4] = {1.0, 1.0, 1.0, 0.25};
+    CGColorRef bgColor;
+    static CGFloat bd[4] = {1.0, 1.0, 1.0, 0.20};
     CGFloat fill[4];
 
     GetBackgroundColor(context, tkwin, 1, fill);
-    bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
-	count: 4];
-    CGContextSetFillColorSpace(context, deviceRGB.CGColorSpace);
-    CGContextSetFillColorWithColor(context, CGCOLOR(bgColor));
+    bgColor = CGColorFromRGBA(fill);
+    CGContextSetFillColorWithColor(context, bgColor);
     path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
     CGContextClipToRect(context, bounds);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextFillPath(context);
-    borderColor = [NSColor colorWithColorSpace: deviceRGB components: border
-	count: 4];
-    CGContextSetFillColorWithColor(context, CGCOLOR(borderColor));
-    [borderColor getComponents: fill];
-    CGContextSetRGBFillColor(context, fill[0], fill[1], fill[2], fill[3]);
+    CGContextSetRGBFillColor(context, bd[0], bd[1], bd[2], bd[3]);
 
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
@@ -498,12 +504,12 @@ static void SolidFillRoundedRectangle(
     CGContextRef context,
     CGRect bounds,
     CGFloat radius,
-    NSColor *color)
+    CGColorRef color)
 {
     CGPathRef path;
     CHECK_RADIUS(radius, bounds)
 
-    CGContextSetFillColorWithColor(context, CGCOLOR(color));
+    CGContextSetFillColorWithColor(context, color);
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
@@ -526,8 +532,6 @@ static void DrawListHeader(
     Tk_Window tkwin,
     int state)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *strokeColor, *bgColor;
     static CGFloat borderRGBA[4] = {
 	200.0 / 255, 200.0 / 255, 200.0 / 255, 1.0
     };
@@ -549,33 +553,27 @@ static void DrawListHeader(
 
     NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
     CGFloat *bgRGBA = [win isKeyWindow] ? activeBgRGBA : inactiveBgRGBA;
+    CGColorRef strokeColor, bgColor = CGColorFromRGBA(bgRGBA);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint top[2] = {{x, y + 1}, {x + w, y + 1}};
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
     CGPoint separator[2] = {{x + w - 1, y + 3}, {x + w - 1, y + h - 3}};
 
-    bgColor = [NSColor colorWithColorSpace: deviceRGB
-	components: bgRGBA
-	count: 4];
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
-    CGContextSetFillColorSpace(context, deviceRGB.CGColorSpace);
-    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
+    //    CGContextSetFillColorSpace(context, deviceRGB.CGColorSpace);
+    //    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGContextBeginPath(context);
-    CGContextSetFillColorWithColor(context, CGCOLOR(bgColor));
+    CGContextSetFillColorWithColor(context, bgColor);
     CGContextAddRect(context, bounds);
     CGContextFillPath(context);
-    strokeColor = [NSColor colorWithColorSpace: deviceRGB
-	components: separatorRGBA
-	count: 4];
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
+    strokeColor = CGColorFromRGBA(separatorRGBA);
+    CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, separator, 2);
     CGContextStrokePath(context);
-    strokeColor = [NSColor colorWithColorSpace: deviceRGB
-	components: borderRGBA
-	count: 4];
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
+    strokeColor = CGColorFromRGBA(borderRGBA);
+    CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, top, 2);
     CGContextStrokePath(context);
     CGContextAddLines(context, bottom, 2);
@@ -653,8 +651,7 @@ static void DrawDarkButton(
     Ttk_State state,
     CGContextRef context)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *faceColor;
+    CGColorRef faceColor;
 
     /*
      * To match the appearance of Apple's buttons we need to increase the
@@ -681,13 +678,9 @@ static void DrawDarkButton(
 	    darkSelectedGradient, 2);
     } else {
 	if (state & TTK_STATE_DISABLED) {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkDisabledButtonFace
-		count: 4];
+	    faceColor = CGColorFromRGBA(darkDisabledButtonFace);
 	} else {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkButtonFace
-		count: 4];
+	    faceColor = CGColorFromRGBA(darkButtonFace);
 	}
 	SolidFillRoundedRectangle(context, bounds, 4, faceColor);
     }
@@ -733,8 +726,7 @@ static void DrawDarkIncDecButton(
     Ttk_State state,
     CGContextRef context)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *faceColor;
+    CGColorRef faceColor;
 
     bounds = CGRectInset(bounds, 0, -1);
     CGContextClipToRect(context, bounds);
@@ -746,13 +738,9 @@ static void DrawDarkIncDecButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (state & TTK_STATE_DISABLED) {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkDisabledButtonFace
-	    count: 4];
+	faceColor = CGColorFromRGBA(darkDisabledButtonFace);
     } else {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkButtonFace
-	    count: 4];
+	faceColor = CGColorFromRGBA(darkButtonFace);
     }
     SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 
@@ -782,11 +770,11 @@ static void DrawDarkArrowButton(
     Ttk_State state,
     CGContextRef context)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *faceColor;
+    CGColorRef faceColor;
     NSRect arrowBounds;
 
-    bounds = CGRectInset(bounds, 0, -1);
+    bounds.origin.x -= 1;
+    bounds.size.width += 1;
     CGContextClipToRect(context, bounds);
     FillButtonBackground(context, bounds, 6);
 
@@ -796,20 +784,18 @@ static void DrawDarkArrowButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (state & TTK_STATE_DISABLED) {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkDisabledButtonFace
-	    count: 4];
+	faceColor = CGColorFromRGBA(darkDisabledButtonFace);
+    } else if (state & TTK_STATE_PRESSED) {
+	faceColor = CGColorFromRGBA(darkPressedButtonFace);
     } else {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkButtonFace
-	    count: 4];
+	faceColor = CGColorFromRGBA(darkButtonFace);
     }
     SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 
     /*
      * If pressed, paint the appropriate half blue.
      */
-    arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
+    arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 17;
     arrowBounds.size.width = 16;
     if (state & TTK_STATE_SELECTED) {
 	DrawUpArrow(context, arrowBounds, 3, 8, whiteRGBA);
@@ -831,8 +817,7 @@ static void DrawDarkBevelButton(
     Ttk_State state,
     CGContextRef context)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *faceColor;
+    CGColorRef faceColor;
 
     CGContextClipToRect(context, bounds);
     FillButtonBackground(context, bounds, 5);
@@ -843,22 +828,14 @@ static void DrawDarkBevelButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (state & TTK_STATE_PRESSED) {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkPressedBevelFace
-	    count: 4];
+	faceColor = CGColorFromRGBA(darkPressedButtonFace);
     } else if ((state & TTK_STATE_DISABLED) ||
 	(state & TTK_STATE_ALTERNATE)) {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkDisabledButtonFace
-	    count: 4];
+	faceColor = CGColorFromRGBA(darkDisabledButtonFace);
     } else if (state & TTK_STATE_SELECTED) {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkSelectedBevelFace
-	    count: 4];
+	faceColor = CGColorFromRGBA(darkSelectedBevelFace);
     } else {
-	faceColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkButtonFace
-	    count: 4];
+	faceColor = CGColorFromRGBA(darkButtonFace);
     }
     SolidFillRoundedRectangle(context, bounds, 4, faceColor);
     HighlightButtonBorder(context, bounds);
@@ -988,8 +965,7 @@ static void DrawDarkTab(
     Ttk_State state,
     CGContextRef context)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *faceColor, *stroke;
+    CGColorRef faceColor, strokeColor;
     CGRect originalBounds = bounds;
 
     CGContextSetLineWidth(context, 1.0);
@@ -1018,13 +994,9 @@ static void DrawDarkTab(
     bounds = CGRectInset(bounds, 1, 1);
     if (!(state & TTK_STATE_SELECTED)) {
 	if (state & TTK_STATE_DISABLED) {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkDisabledButtonFace
-		count: 4];
+	    faceColor = CGColorFromRGBA(darkDisabledButtonFace);
 	} else {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkButtonFace
-		count: 4];
+	    faceColor = CGColorFromRGBA(darkButtonFace);
 	}
 	SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 
@@ -1036,10 +1008,8 @@ static void DrawDarkTab(
 	if (!(state & TTK_STATE_FIRST_TAB)) {
 	    CGContextSaveGState(context);
 	    CGContextSetShouldAntialias(context, false);
-	    stroke = [NSColor colorWithColorSpace: deviceRGB
-		components: darkTabSeparator
-		count: 4];
-	    CGContextSetStrokeColorWithColor(context, CGCOLOR(stroke));
+	    strokeColor = CGColorFromRGBA(darkTabSeparator);
+	    CGContextSetStrokeColorWithColor(context, strokeColor);
 	    CGContextBeginPath(context);
 	    CGContextMoveToPoint(context, originalBounds.origin.x,
 		originalBounds.origin.y + 1);
@@ -1063,9 +1033,7 @@ static void DrawDarkTab(
 	    GradientFillRoundedRectangle(context, bounds, 4,
 		darkSelectedGradient, 2);
 	} else {
-	    faceColor = [NSColor colorWithColorSpace: deviceRGB
-		components: darkInactiveSelectedTab
-		count: 4];
+	    faceColor = CGColorFromRGBA(darkInactiveSelectedTab);
 	    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 	}
 	HighlightButtonBorder(context, bounds);
@@ -1084,13 +1052,10 @@ static void DrawDarkSeparator(
     CGContextRef context,
     Tk_Window tkwin)
 {
-    static CGFloat fill[4] = {1.0, 1.0, 1.0, 0.3};
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *fillColor = [NSColor colorWithColorSpace: deviceRGB
-	components: fill
-	count:4];
+    static CGFloat rgba[4] = {1.0, 1.0, 1.0, 0.3};
+    CGColorRef sepColor = CGColorFromRGBA(rgba);
 
-    CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
+    CGContextSetFillColorWithColor(context, sepColor);
     CGContextFillRect(context, bounds);
 }
 
@@ -1108,11 +1073,7 @@ static void DrawDarkFocusRing(
     CGRect insetBounds = CGRectInset(bounds, -3, -3);
     CHECK_RADIUS(4, insetBounds)
 
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *strokeColor;
-    NSColor *fillColor = [NSColor colorWithColorSpace:deviceRGB
-					   components:darkFocusRing
-						count:4];
+	CGColorRef strokeColor, fillColor = CGColorFromRGBA(darkFocusRing);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint topPart[4] = {
@@ -1123,20 +1084,16 @@ static void DrawDarkFocusRing(
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
     CGContextBeginPath(context);
-    strokeColor = [NSColor colorWithColorSpace: deviceRGB
-				    components: darkFocusRingTop
-					 count: 4];
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
+    strokeColor = CGColorFromRGBA(darkFocusRingTop);
+    CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, topPart, 4);
     CGContextStrokePath(context);
-    strokeColor = [NSColor colorWithColorSpace: deviceRGB
-				    components: darkFocusRingBottom
-					 count: 4];
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
+    strokeColor = CGColorFromRGBA(darkFocusRingBottom);
+    CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, bottom, 2);
     CGContextStrokePath(context);
     CGContextSetShouldAntialias(context, true);
-    CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
+    CGContextSetFillColorWithColor(context, fillColor);
     CGPathRef path = CGPathCreateWithRoundedRect(insetBounds, 4, 4, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
@@ -1156,10 +1113,7 @@ static void DrawDarkFrame(
     CGContextRef context,
     HIThemeFrameKind kind)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *stroke;
-
-    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
+    CGColorRef stroke;
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint topPart[4] = {
@@ -1173,22 +1127,16 @@ static void DrawDarkFrame(
 	CGContextSaveGState(context);
 	CGContextSetShouldAntialias(context, false);
 	CGContextBeginPath(context);
-	stroke = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkFrameTop
-	    count: 4];
-	CGContextSetStrokeColorWithColor(context, CGCOLOR(stroke));
+	stroke = CGColorFromRGBA(darkFrameTop);
+	CGContextSetStrokeColorWithColor(context, stroke);
 	CGContextAddLines(context, topPart, 4);
 	CGContextStrokePath(context);
-	stroke = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkFrameBottom
-	    count: 4];
-	CGContextSetStrokeColorWithColor(context, CGCOLOR(stroke));
+	stroke = CGColorFromRGBA(darkFrameBottom);
+	CGContextSetStrokeColorWithColor(context, stroke);
 	CGContextAddLines(context, bottom, 2);
 	CGContextStrokePath(context);
-	stroke = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkFrameAccent
-	    count: 4];
-	CGContextSetStrokeColorWithColor(context, CGCOLOR(stroke));
+	stroke = CGColorFromRGBA(darkFrameAccent);
+	CGContextSetStrokeColorWithColor(context, stroke);
 	CGContextAddLines(context, accent, 2);
 	CGContextStrokePath(context);
 	CGContextRestoreGState(context);
@@ -1211,10 +1159,7 @@ static void DrawDarkListHeader(
     Tk_Window tkwin,
     int state)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *stroke;
-
-    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
+    CGColorRef stroke;
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint top[2] = {{x, y}, {x + w, y}};
@@ -1223,10 +1168,8 @@ static void DrawDarkListHeader(
 
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
-    stroke = [NSColor colorWithColorSpace: deviceRGB
-	components: darkFrameBottom
-	count: 4];
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(stroke));
+    stroke = CGColorFromRGBA(darkFrameBottom);
+    CGContextSetStrokeColorWithColor(context, stroke);
     CGContextBeginPath(context);
     CGContextAddLines(context, top, 2);
     CGContextStrokePath(context);
@@ -1268,8 +1211,7 @@ static void DrawGradientBorder(
     static CGFloat darkFace[4] = {83.0/255, 84.0/255, 85.0/255, 1.0};
     static CGFloat lightPressed[4] = {174.0/255, 174.0/255, 175.0/255, 1.0};
     static CGFloat darkPressed[4] = {101.0/255, 103.0/255, 106.0/255, 1.0};
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *faceColor, *borderColor;
+    CGColorRef faceColor, borderColor;
     CGFloat *faceRGBA, *borderRGBA;
     CGRect inside = CGRectInset(bounds, 1, 1);
 
@@ -1280,15 +1222,11 @@ static void DrawGradientBorder(
 	faceRGBA = state & TTK_STATE_PRESSED ? lightPressed : lightFace;
 	borderRGBA = lightBorder;
     }
-    faceColor = [NSColor colorWithColorSpace: deviceRGB
-				  components: faceRGBA
-				       count: 4];
-    borderColor = [NSColor colorWithColorSpace: deviceRGB
-				    components: borderRGBA
-					 count: 4];
-    CGContextSetFillColorWithColor(context, faceColor.CGColor);
+    faceColor = CGColorFromRGBA(faceRGBA);
+    borderColor = CGColorFromRGBA(borderRGBA);
+    CGContextSetFillColorWithColor(context, faceColor);
     CGContextFillRect(context, inside);
-    CGContextSetFillColorWithColor(context, borderColor.CGColor);
+    CGContextSetFillColorWithColor(context, borderColor);
     CGContextAddRect(context, bounds);
     CGContextAddRect(context, inside);
     CGContextEOFillPath(context);
@@ -1605,8 +1543,8 @@ static void ButtonElementDraw(
 	if (info.kind == kThemePopupButton  &&
 	    (state & TTK_STATE_BACKGROUND)) {
 	    CGRect innerBounds = CGRectInset(bounds, 1, 1);
-	    NSColor *whiteRGBA = [NSColor whiteColor];
-	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, whiteRGBA);
+	    SolidFillRoundedRectangle(dc.context, innerBounds, 4,
+				      CGColorFromRGBA(whiteRGBA));
 	}
 
         /*
@@ -1902,13 +1840,12 @@ static void EntryElementDraw(
     EntryElement *e = elementRecord;
     Ttk_Box inner = Ttk_PadBox(b, Ttk_UniformPadding(3));
     CGRect bounds = BoxToRect(d, inner);
-    NSColor *background;
+    CGColorRef background;
     Tk_3DBorder backgroundPtr = NULL;
     static const char *defaultBG = ENTRY_DEFAULT_BACKGROUND;
 
     if (TkMacOSXInDarkMode(tkwin)) {
 	BEGIN_DRAWING(d)
-	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
 	CGFloat fill[4];
 	GetBackgroundColor(dc.context, tkwin, 1, fill);
 
@@ -1919,10 +1856,8 @@ static void EntryElementDraw(
 	for (int i = 0; i < 3; i++) {
 		fill[i] += 9.0 / 255.0;
 	    }
-	background = [NSColor colorWithColorSpace: deviceRGB
-	    components: fill
-	    count: 4];
-	CGContextSetFillColorWithColor(dc.context, CGCOLOR(background));
+	background = CGColorFromRGBA(fill);
+	CGContextSetFillColorWithColor(dc.context, background);
 	CGContextFillRect(dc.context, bounds);
 	if (state & TTK_STATE_FOCUS) {
 	    DrawDarkFocusRing(bounds, dc.context);
@@ -1961,8 +1896,8 @@ static void EntryElementDraw(
 	BEGIN_DRAWING(d)
 	if (backgroundPtr == NULL) {
 	    if ([NSApp macMinorVersion] > 8) {
-		background = [NSColor textBackgroundColor];
-		CGContextSetFillColorWithColor(dc.context, CGCOLOR(background));
+		background = CGCOLOR([NSColor textBackgroundColor]);
+		CGContextSetFillColorWithColor(dc.context, background);
 	    } else {
 		CGContextSetRGBFillColor(dc.context, 1.0, 1.0, 1.0, 1.0);
 	    }
@@ -2043,7 +1978,8 @@ static void ComboboxElementDraw(
 		!(state & TTK_STATE_DISABLED)) {
 	    NSColor *background = [NSColor textBackgroundColor];
 	    CGRect innerBounds = CGRectInset(bounds, 1, 2);
-	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
+	    SolidFillRoundedRectangle(dc.context, innerBounds, 4,
+				      CGCOLOR(background));
 	}
     ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 		NULL);
@@ -2300,10 +2236,7 @@ static void TrackElementDraw(
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 	CGRect bounds = BoxToRect(d, b);
-	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-	NSColor *trackColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkTrack
-	    count: 4];
+	CGColorRef trackColor = CGColorFromRGBA(darkTrack);
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
 	    bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 2);
 	} else {
@@ -2432,10 +2365,7 @@ static void PbarElementDraw(
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 	CGRect bounds = BoxToRect(d, b);
-	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-	NSColor *trackColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: darkTrack
-	    count: 4];
+	CGColorRef trackColor = CGColorFromRGBA(darkTrack);
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
 	    bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 3);
 	} else {
@@ -2521,8 +2451,7 @@ static void TroughElementDraw(
     ScrollbarElement *scrollbar = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     CGRect bounds = BoxToRect(d, b);
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    NSColor *troughColor;
+    CGColorRef troughColor;
     CGFloat *rgba = TkMacOSXInDarkMode(tkwin) ? darkTrough : lightTrough;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
@@ -2531,12 +2460,10 @@ static void TroughElementDraw(
     } else {
 	bounds = CGRectInset(bounds, 1, 0);
     }
-    troughColor = [NSColor colorWithColorSpace: deviceRGB
-	components: rgba
-	count: 4];
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
-	CGContextSetFillColorWithColor(dc.context, CGCOLOR(troughColor));
+	troughColor = CGColorFromRGBA(rgba);
+	CGContextSetFillColorWithColor(dc.context, troughColor);
     } else {
 	ChkErr(HIThemeSetFill, kThemeBrushDocumentWindowBackground, NULL,
 	    dc.context, HIOrientation);
@@ -2600,8 +2527,7 @@ static void ThumbElementDraw(
 
     if ([NSApp macMinorVersion] > 8) {
 	CGRect thumbBounds = BoxToRect(d, b);
-	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-	NSColor *thumbColor;
+	CGColorRef thumbColor;
 	CGFloat *rgba;
 	if ((orientation == TTK_ORIENT_HORIZONTAL &&
 	    thumbBounds.size.width >= Tk_Width(tkwin) - 8) ||
@@ -2616,9 +2542,7 @@ static void ThumbElementDraw(
 	} else {
 	    rgba = isDark ? darkInactiveThumb : lightInactiveThumb;
 	}
-	thumbColor = [NSColor colorWithColorSpace: deviceRGB
-	    components: rgba
-	    count: 4];
+	thumbColor = CGColorFromRGBA(rgba);
 	BEGIN_DRAWING(d)
 	SolidFillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
 	END_DRAWING
