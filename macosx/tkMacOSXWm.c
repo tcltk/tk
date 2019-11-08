@@ -6621,7 +6621,7 @@ WmStackorderToplevelWrapperMap(
     Tcl_HashEntry *hPtr;
     int newEntry;
 
-    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)
 	    && (winPtr->display == display)) {
 	hPtr = Tcl_CreateHashEntry(table,
 		(char*) TkMacOSXDrawableWindow(winPtr->window), &newEntry);
@@ -6642,8 +6642,8 @@ WmStackorderToplevelWrapperMap(
  *	This procedure returns the stack order of toplevel windows.
  *
  * Results:
- *	An array of pointers to tk window objects in stacking order or else
- *	NULL if there was an error.
+ *	A NULL terminated array of pointers to tk window objects in stacking
+ *	order or else NULL if there was an error.
  *
  * Side effects:
  *	None.
@@ -6658,52 +6658,22 @@ TkWmStackorderToplevel(
     TkWindow *childWinPtr, **windows, **windowPtr;
     Tcl_HashTable table;
     Tcl_HashEntry *hPtr;
-    Tcl_HashSearch search;
+    NSArray *macWindows = [NSApp orderedWindows];
+    NSArray* backToFront = [[macWindows reverseObjectEnumerator] allObjects];
+    NSInteger windowCount = [macWindows count];
 
-    /*
-     * Map mac windows to a TkWindow of the wrapped toplevel.
-     */
-
+    windows = windowPtr = ckalloc((windowCount + 1) * sizeof(TkWindow *));
     Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
     WmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
-    windows = ckalloc((table.numEntries+1) * sizeof(TkWindow *));
-
-    /*
-     * Special cases: If zero or one toplevels were mapped there is no need to
-     * enumerate Windows.
-     */
-
-    switch (table.numEntries) {
-    case 0:
-	windows[0] = NULL;
-	goto done;
-    case 1:
-	hPtr = Tcl_FirstHashEntry(&table, &search);
-	windows[0] = Tcl_GetHashValue(hPtr);
-	windows[1] = NULL;
-	goto done;
-    }
-
-    NSArray *macWindows = [NSApp orderedWindows];
-    NSInteger windowCount = [macWindows count];
-
-    if (!windowCount) {
-	ckfree(windows);
-	windows = NULL;
-    } else {
-	windowPtr = windows + table.numEntries;
-	*windowPtr-- = NULL;
-	for (NSWindow *w in macWindows) {
-	    hPtr = Tcl_FindHashEntry(&table, (char*) w);
-	    if (hPtr != NULL) {
-		childWinPtr = Tcl_GetHashValue(hPtr);
-		*windowPtr-- = childWinPtr;
-	    }
+    for (NSWindow *w in backToFront) {
+	hPtr = Tcl_FindHashEntry(&table, (char*) w);
+	if (hPtr != NULL) {
+	    childWinPtr = Tcl_GetHashValue(hPtr);
+	    *windowPtr++ = childWinPtr;
 	}
     }
-
-  done:
+    *windowPtr = NULL;
     Tcl_DeleteHashTable(&table);
     return windows;
 }
