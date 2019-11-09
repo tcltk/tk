@@ -2569,6 +2569,10 @@ WmIconphotoCmd(
 	    width, height);
     Tk_FreeImage(tk_icon);
     if (newIcon == NULL) {
+    	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	      "Failed to create an NSImage from \"%s\".",
+	      icon));
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "PHOTO", NULL);
 	return TCL_ERROR;
     }
     [NSApp setApplicationIconImage: newIcon];
