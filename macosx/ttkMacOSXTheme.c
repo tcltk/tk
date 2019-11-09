@@ -63,19 +63,44 @@
 #define RGBACOLOR static CGFloat
 #define RGBA256(r, g, b, a) {r / 255, g / 255, b / 255, a}
 
+/* Grays */
 RGBACOLOR darkButtonFace[4] = RGBA256(112.0, 113.0, 115.0, 1.0); 
 RGBACOLOR darkPressedButtonFace[4] = RGBA256(135.0, 136.0, 138.0, 1.0);
 RGBACOLOR darkDisabledButtonFace[4] = RGBA256(86.0, 87.0, 89.0, 1.0);
 RGBACOLOR darkSelectedButtonFace[4] = RGBA256(162.0, 163.0, 165.0, 1.0);
 RGBACOLOR darkInactiveSelectedTab[4] = RGBA256(159.0, 160.0, 161.0, 1.0);
-RGBACOLOR darkFocusRing[4] = RGBA256(38.0, 113.0, 159.0, 1.0);
-RGBACOLOR darkFocusRingTop[4] = RGBA256(50.0, 124.0, 171.0, 1.0);
-RGBACOLOR darkFocusRingBottom[4] = RGBA256(57.0, 130.0, 176.0, 1.0);
-RGBACOLOR darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
+RGBACOLOR darkGradientBorder[4] = RGBA256(118.0, 120.0, 121.0, 1.0);
+RGBACOLOR darkGradientNormal[4] = RGBA256(83.0, 84.0, 85.0, 1.0);
+RGBACOLOR darkGradientPressed[4] = RGBA256(101.0, 103.0, 106.0, 1.0);
+RGBACOLOR lightGradientBorder[4] = RGBA256(180.0, 180.0, 180.0, 1.0);
+RGBACOLOR lightGradientNormal[4] = RGBA256(246.0, 246.0, 246.0, 1.0);
+RGBACOLOR lightGradientPressed[4] = RGBA256(174.0, 174.0, 175.0, 1.0);
+RGBACOLOR lightTrough[4] = RGBA256(250.0, 250.0, 250.0, 1.0);
+RGBACOLOR darkTrough[4] = RGBA256(45.0, 46.0, 49.0, 1.0);
+RGBACOLOR lightInactiveThumb[4] = RGBA256(200.0, 200.0, 200.0, 1.0);
+RGBACOLOR lightActiveThumb[4] = RGBA256(133.0, 133.0, 133.0, 1.0);
+RGBACOLOR darkInactiveThumb[4] = RGBA256(116.0, 117.0, 118.0, 1.0);
+RGBACOLOR darkActiveThumb[4] = RGBA256(158.0, 158.0, 159.0, 1.0);
+RGBACOLOR listheaderBorder[4] = RGBA256(200.0, 200.0, 200.0, 1.0);
+RGBACOLOR listheaderSeparator[4] = RGBA256(220.0, 220.0, 220.0, 1.0);
+RGBACOLOR listheaderActiveBG[4] = RGBA256(238.0, 238.0, 238.0, 1.0);
+RGBACOLOR listheaderInactiveBG[4] = RGBA256(246.0, 246.0, 246.0, 1.0);
+
+/* Transparent whites */
+RGBACOLOR boxBorder[4] = {1.0, 1.0, 1.0, 0.20};
 RGBACOLOR darkTrack[4] = {1.0, 1.0, 1.0, 0.25};
 RGBACOLOR darkFrameTop[4] = {1.0, 1.0, 1.0, 0.0625};
 RGBACOLOR darkFrameBottom[4] = {1.0, 1.0, 1.0, 0.125};
+RGBACOLOR darkSeparator[4] = {1.0, 1.0, 1.0, 0.3};
+
+/* Tansparent blacks */
+RGBACOLOR darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
 RGBACOLOR darkFrameAccent[4] = {0.0, 0.0, 0.0, 0.0625};
+
+/* Focus rings */
+RGBACOLOR darkFocusRing[4] = RGBA256(38.0, 113.0, 159.0, 1.0);
+RGBACOLOR darkFocusRingTop[4] = RGBA256(50.0, 124.0, 171.0, 1.0);
+RGBACOLOR darkFocusRingBottom[4] = RGBA256(57.0, 130.0, 176.0, 1.0);
 
 #define GRAD256(r0, g0, b0, a0, r1, g1, b1, a1) { \
 	r0 / 255, g0 / 255, b0 / 255, a0, \
@@ -256,7 +281,7 @@ RGBACOLOR blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
  *      used by the Fill and Background elements.
  */
 
-static void GetBackgroundColor(
+static void GetBackgroundColorRGBA(
     CGContextRef context,
     Tk_Window tkwin,
     int contrast,
@@ -306,6 +331,16 @@ static void GetBackgroundColor(
             }
         }
     }
+}
+
+static CGColorRef GetBackgroundCGColor(
+    CGContextRef context,
+    Tk_Window tkwin,
+    int contrast)
+{
+    CGFloat rgba[4];
+    GetBackgroundColorRGBA(context, tkwin, contrast, rgba);
+    return CGColorFromRGBA(rgba);
 }
 
 /*----------------------------------------------------------------------
@@ -460,20 +495,17 @@ static void DrawGroupBox(
     CHECK_RADIUS(4, bounds)
 
     CGPathRef path;
-    CGColorRef bgColor;
-    static CGFloat bd[4] = {1.0, 1.0, 1.0, 0.20};
-    CGFloat fill[4];
-
-    GetBackgroundColor(context, tkwin, 1, fill);
-    bgColor = CGColorFromRGBA(fill);
-    CGContextSetFillColorWithColor(context, bgColor);
+    CGColorRef backgroundColor, borderColor;
+    
+    backgroundColor = GetBackgroundCGColor(context, tkwin, 1);
+    borderColor = CGColorFromRGBA(boxBorder);
+    CGContextSetFillColorWithColor(context, backgroundColor);
     path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
     CGContextClipToRect(context, bounds);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextFillPath(context);
-    CGContextSetRGBFillColor(context, bd[0], bd[1], bd[2], bd[3]);
-
+    CGContextSetFillColorWithColor(context, borderColor);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextReplacePathWithStrokedPath(context);
@@ -519,18 +551,6 @@ static void DrawListHeader(
     Tk_Window tkwin,
     int state)
 {
-    static CGFloat borderRGBA[4] = {
-	200.0 / 255, 200.0 / 255, 200.0 / 255, 1.0
-    };
-    static CGFloat separatorRGBA[4] = {
-	220.0 / 255, 220.0 / 255, 220.0 / 255, 1.0
-    };
-    static CGFloat activeBgRGBA[4] = {
-	238.0 / 255, 238.0 / 255, 238.0 / 255, 1.0
-    };
-    static CGFloat inactiveBgRGBA[4] = {
-	246.0 / 255, 246.0 / 255, 246.0 / 255, 1.0
-    };
 
     /*
      * Apple changes the background of a list header when the window is not
@@ -539,8 +559,9 @@ static void DrawListHeader(
      */
 
     NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
-    CGFloat *bgRGBA = [win isKeyWindow] ? activeBgRGBA : inactiveBgRGBA;
-    CGColorRef strokeColor, bgColor = CGColorFromRGBA(bgRGBA);
+    CGFloat *bgRGBA = [win isKeyWindow] ?
+	listheaderActiveBG : listheaderInactiveBG;
+    CGColorRef strokeColor, backgroundColor = CGColorFromRGBA(bgRGBA);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint top[2] = {{x, y + 1}, {x + w, y + 1}};
@@ -549,17 +570,15 @@ static void DrawListHeader(
 
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
-    //    CGContextSetFillColorSpace(context, deviceRGB.CGColorSpace);
-    //    CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGContextBeginPath(context);
-    CGContextSetFillColorWithColor(context, bgColor);
+    CGContextSetFillColorWithColor(context, backgroundColor);
     CGContextAddRect(context, bounds);
     CGContextFillPath(context);
-    strokeColor = CGColorFromRGBA(separatorRGBA);
+    strokeColor = CGColorFromRGBA(listheaderSeparator);
     CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, separator, 2);
     CGContextStrokePath(context);
-    strokeColor = CGColorFromRGBA(borderRGBA);
+    strokeColor = CGColorFromRGBA(listheaderBorder);
     CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, top, 2);
     CGContextStrokePath(context);
@@ -1037,8 +1056,7 @@ static void DrawDarkSeparator(
     CGContextRef context,
     Tk_Window tkwin)
 {
-    static CGFloat rgba[4] = {1.0, 1.0, 1.0, 0.3};
-    CGColorRef sepColor = CGColorFromRGBA(rgba);
+    CGColorRef sepColor = CGColorFromRGBA(darkSeparator);
 
     CGContextSetFillColorWithColor(context, sepColor);
     CGContextFillRect(context, bounds);
@@ -1190,22 +1208,18 @@ static void DrawGradientBorder(
     Tk_Window tkwin,
     Ttk_State state)
 {
-    static CGFloat lightBorder[4] = {180.0/255, 180.0/255, 180.0/255, 1.0};
-    static CGFloat darkBorder[4] = {118.0/255, 120.0/255, 121.0/255, 1.0};
-    static CGFloat lightFace[4] = {246.0/255, 246.0/255, 246.0/255, 1.0};
-    static CGFloat darkFace[4] = {83.0/255, 84.0/255, 85.0/255, 1.0};
-    static CGFloat lightPressed[4] = {174.0/255, 174.0/255, 175.0/255, 1.0};
-    static CGFloat darkPressed[4] = {101.0/255, 103.0/255, 106.0/255, 1.0};
     CGColorRef faceColor, borderColor;
     CGFloat *faceRGBA, *borderRGBA;
     CGRect inside = CGRectInset(bounds, 1, 1);
 
     if (TkMacOSXInDarkMode(tkwin)) {
-	faceRGBA = state & TTK_STATE_PRESSED ? darkPressed : darkFace;
-	borderRGBA = darkBorder;
+	faceRGBA = state & TTK_STATE_PRESSED ?
+	    darkGradientPressed : darkGradientNormal;
+	borderRGBA = darkGradientBorder;
     } else {
-	faceRGBA = state & TTK_STATE_PRESSED ? lightPressed : lightFace;
-	borderRGBA = lightBorder;
+	faceRGBA = state & TTK_STATE_PRESSED ?
+	    lightGradientPressed : lightGradientNormal;
+	borderRGBA = lightGradientBorder;
     }
     faceColor = CGColorFromRGBA(faceRGBA);
     borderColor = CGColorFromRGBA(borderRGBA);
@@ -1828,20 +1842,20 @@ static void EntryElementDraw(
     CGColorRef background;
     Tk_3DBorder backgroundPtr = NULL;
     static const char *defaultBG = ENTRY_DEFAULT_BACKGROUND;
+    CGFloat rgba[4];
 
     if (TkMacOSXInDarkMode(tkwin)) {
 	BEGIN_DRAWING(d)
-	CGFloat fill[4];
-	GetBackgroundColor(dc.context, tkwin, 1, fill);
+	GetBackgroundColorRGBA(dc.context, tkwin, 1, rgba);
 
 	/*
 	 * Lighten the background to provide contrast.
 	 */
 
 	for (int i = 0; i < 3; i++) {
-		fill[i] += 9.0 / 255.0;
+		rgba[i] += 9.0 / 255.0;
 	    }
-	background = CGColorFromRGBA(fill);
+	background = CGColorFromRGBA(rgba);
 	CGContextSetFillColorWithColor(dc.context, background);
 	CGContextFillRect(dc.context, bounds);
 	if (state & TTK_STATE_FOCUS) {
@@ -2411,20 +2425,6 @@ static void TroughElementSize(
     }
 }
 
-static CGFloat lightTrough[4] = {250.0 / 255, 250.0 / 255, 250.0 / 255, 1.0};
-static CGFloat darkTrough[4] = {45.0 / 255, 46.0 / 255, 49.0 / 255, 1.0};
-static CGFloat lightInactiveThumb[4] = {
-    200.0 / 255, 200.0 / 255, 200.0 / 255, 1.0
-};
-static CGFloat lightActiveThumb[4] = {
-    133.0 / 255, 133.0 / 255, 133.0 / 255, 1.0
-};
-static CGFloat darkInactiveThumb[4] = {
-    116.0 / 255, 117.0 / 255, 118.0 / 255, 1.0
-};
-static CGFloat darkActiveThumb[4] = {
-    158.0 / 255, 158.0 / 255, 159.0 / 255, 1.0
-};
 static void TroughElementDraw(
     void *clientData,
     void *elementRecord,
@@ -2790,15 +2790,10 @@ static void FillElementDraw(
     CGRect bounds = BoxToRect(d, b);
 
     if ([NSApp macMinorVersion] > 8) {
-	NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-	NSColor *bgColor;
-	CGFloat fill[4];
+	CGColorRef bgColor;
 	BEGIN_DRAWING(d)
-	GetBackgroundColor(dc.context, tkwin, 0, fill);
-	bgColor = [NSColor colorWithColorSpace: deviceRGB components: fill
-					 count: 4];
-	CGContextSetFillColorSpace(dc.context, deviceRGB.CGColorSpace);
-	CGContextSetFillColorWithColor(dc.context, CGCOLOR(bgColor));
+	bgColor = GetBackgroundCGColor(dc.context, tkwin, 0);
+	CGContextSetFillColorWithColor(dc.context, bgColor);
 	CGContextFillRect(dc.context, bounds);
 	END_DRAWING
     } else {
@@ -2807,7 +2802,6 @@ static void FillElementDraw(
 	    : kThemeBrushModelessDialogBackgroundActive;
 	BEGIN_DRAWING(d)
 	ChkErr(HIThemeSetFill, brush, NULL, dc.context, HIOrientation);
-	//QDSetPatternOrigin(PatternOrigin(tkwin, d));
 	CGContextFillRect(dc.context, bounds);
 	END_DRAWING
     }
