@@ -60,55 +60,37 @@
  * Colors and gradients used in Dark Mode.
  */
 
-static CGFloat darkButtonFace[4] = {
-    112.0 / 255, 113.0 / 255, 115.0 / 255, 1.0
-};
-static CGFloat darkPressedButtonFace[4] = {
-    135.0 / 255, 136.0 / 255, 138.0 / 255, 1.0
-};
-static CGFloat darkSelectedBevelFace[4] = {
-    162.0 / 255, 163.0 / 255, 165.0 / 255, 1.0
-};
-static CGFloat darkDisabledButtonFace[4] = {
-    86.0 / 255, 87.0 / 255, 89.0 / 255, 1.0
-};
-static CGFloat darkInactiveSelectedTab[4] = {
-    159.0 / 255, 160.0 / 255, 161.0 / 255, 1.0
-};
-static CGFloat darkFocusRing[4] = {
-    38.0 / 255, 113.0 / 255, 159.0 / 255, 1.0
-};
-static CGFloat darkFocusRingTop[4] = {
-    50.0 / 255, 124.0 / 255, 171.0 / 255, 1.0
-};
-static CGFloat darkFocusRingBottom[4] = {
-    57.0 / 255, 130.0 / 255, 176.0 / 255, 1.0
-};
-static CGFloat darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
-static CGFloat darkTrack[4] = {1.0, 1.0, 1.0, 0.25};
-static CGFloat darkFrameTop[4] = {1.0, 1.0, 1.0, 0.0625};
-static CGFloat darkFrameBottom[4] = {1.0, 1.0, 1.0, 0.125};
-static CGFloat darkFrameAccent[4] = {0.0, 0.0, 0.0, 0.0625};
-static CGFloat darkTopGradient[8] = {
-    1.0, 1.0, 1.0, 0.3,
-    1.0, 1.0, 1.0, 0.0
-};
-static CGFloat darkBackgroundGradient[8] = {
-    0.0, 0.0, 0.0, 0.1,
-    0.0, 0.0, 0.0, 0.25
-};
-static CGFloat darkInactiveGradient[8] = {
-    89.0 / 255, 90.0 / 255, 93.0 / 255, 1.0,
-    119.0 / 255, 120.0 / 255, 122.0 / 255, 1.0
-};
-static CGFloat darkSelectedGradient[8] = {
-    23.0 / 255, 111.0 / 255, 232.0 / 255, 1.0,
-    20.0 / 255, 94.0 / 255,  206.0 / 255, 1.0
-};
-static CGFloat pressedPushButtonGradient[8] = {
-    35.0 / 255, 123.0 / 255, 244.0 / 255, 1.0,
-    30.0 / 255, 114.0 / 255, 235.0 / 255, 1.0
-};
+#define RGBACOLOR static CGFloat
+#define RGBA256(r, g, b, a) {r / 255, g / 255, b / 255, a}
+
+RGBACOLOR darkButtonFace[4] = RGBA256(112.0, 113.0, 115.0, 1.0); 
+RGBACOLOR darkPressedButtonFace[4] = RGBA256(135.0, 136.0, 138.0, 1.0);
+RGBACOLOR darkDisabledButtonFace[4] = RGBA256(86.0, 87.0, 89.0, 1.0);
+RGBACOLOR darkSelectedButtonFace[4] = RGBA256(162.0, 163.0, 165.0, 1.0);
+RGBACOLOR darkInactiveSelectedTab[4] = RGBA256(159.0, 160.0, 161.0, 1.0);
+RGBACOLOR darkFocusRing[4] = RGBA256(38.0, 113.0, 159.0, 1.0);
+RGBACOLOR darkFocusRingTop[4] = RGBA256(50.0, 124.0, 171.0, 1.0);
+RGBACOLOR darkFocusRingBottom[4] = RGBA256(57.0, 130.0, 176.0, 1.0);
+RGBACOLOR darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
+RGBACOLOR darkTrack[4] = {1.0, 1.0, 1.0, 0.25};
+RGBACOLOR darkFrameTop[4] = {1.0, 1.0, 1.0, 0.0625};
+RGBACOLOR darkFrameBottom[4] = {1.0, 1.0, 1.0, 0.125};
+RGBACOLOR darkFrameAccent[4] = {0.0, 0.0, 0.0, 0.0625};
+
+#define GRAD256(r0, g0, b0, a0, r1, g1, b1, a1) { \
+	r0 / 255, g0 / 255, b0 / 255, a0, \
+	r1 / 255, g1 / 255, b1 / 255, a1 };	
+
+RGBACOLOR darkTopGradient[8] = {1.0, 1.0, 1.0, 0.3, \
+				     1.0, 1.0, 1.0, 0.0};
+RGBACOLOR darkBackgroundGradient[8] = {0.0, 0.0, 0.0, 0.1, \
+					    0.0, 0.0, 0.0, 0.25};
+RGBACOLOR darkInactiveGradient[8] = GRAD256(89.0, 90.0, 93.0, 1.0, \
+						 119.0, 120.0, 122.0, 1.0);
+RGBACOLOR darkSelectedGradient[8] = GRAD256(23.0, 111.0, 232.0, 1.0, \
+						  20.0, 94.0,  206.0, 1.0);
+RGBACOLOR pressedPushButtonGradient[8] = GRAD256(35.0, 123.0, 244.0, 1.0, \
+						       30.0, 114.0, 235.0, 1.0);
 
 /*
  * When building on systems earlier than 10.8 there is no reasonable way to
@@ -131,6 +113,20 @@ CGColorFromRGBA(
 					      count: 4];
     return nscolor.CGColor;
 }
+
+/*
+ * Returns a piecwise linear gradient.  Expects an array of size 4 * numColors
+ */
+static CGGradientRef
+CGGradientFromRGBA(
+    CGFloat *data,
+    int numColors)
+{
+    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    return CGGradientCreateWithColorComponents(deviceRGB.CGColorSpace,
+					       data, NULL, numColors);
+}
+
 #define CGCOLOR(nscolor) nscolor.CGColor
 #else
 #define CGCOLOR nil
@@ -158,8 +154,11 @@ CGColorFromRGBA(
 
 /*
  * BoxToRect --
- *    Convert a Ttk_Box in Tk coordinates relative to the given Drawable
- *    to a native Rect relative to the containing port.
+ *
+ *    Convert a Ttk_Box in Tk coordinates relative to the given Drawable to a
+ *    native CGRect relative to the containing NSView.  (The coordinate system
+ *    is the one used by CGContextRef, which has origin at the upper left
+ *    corner, and y increasing downward.)
  */
 
 static inline CGRect BoxToRect(
@@ -204,15 +203,12 @@ static Ttk_StateTable ThemeStateTable[] = {
 /*----------------------------------------------------------------------
  * NormalizeButtonBounds --
  *
- *      Apple's Human Interface Guidelines only allow three specific heights
- *      for most buttons: Regular, small and mini. We always use the regular
- *      size.  However, Ttk may provide an arbitrary bounding rectangle.  We
- *      always draw the button centered vertically on the rectangle, and
- *      having the same width as the rectangle.  This function returns the
- *      actual bounding rectangle that will be used in drawing the button.
- *
- *      The BevelButton is allowed to have arbitrary size, and also has
- *      external padding.  This is handled separately here.
+ *      Apple only allows three specific heights for most buttons: regular,
+ *      small and mini. We always use the regular size.  However, Ttk may
+ *      provide a bounding rectangle with arbitrary height.  We draw the Mac
+ *      button centered vertically in the Ttk rectangle, with the same width as
+ *      the rectangle.  This function returns the actual bounding rectangle
+ *      that will be used in drawing the button.
  */
 
 static CGRect NormalizeButtonBounds(
@@ -245,11 +241,9 @@ static CGRect NormalizeButtonBounds(
  * support Dark Mode anyway.
  */
 
-static CGFloat windowBackground[4] = {
-    235.0 / 255, 235.0 / 255, 235.0 / 255, 1.0
-};
-static CGFloat whiteRGBA[4] = {1.0, 1.0, 1.0, 1.0};
-static CGFloat blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
+RGBACOLOR windowBackground[4] = RGBA256(235.0, 235.0, 235.0, 1.0);
+RGBACOLOR whiteRGBA[4] = {1.0, 1.0, 1.0, 1.0};
+RGBACOLOR blackRGBA[4] = {0.0, 0.0, 0.0, 1.0};
 
 /*----------------------------------------------------------------------
  * GetBackgroundColor --
@@ -314,11 +308,10 @@ static void GetBackgroundColor(
     }
 }
 
-
 /*----------------------------------------------------------------------
  * +++ Single Arrow Buttons --
  *
- * Used in ListHeaders and Comboboxes.
+ * The chevrons used in ListHeaders, Comboboxes and Disclosure Buttons.
  */
 
 static void DrawDownArrow(
@@ -368,7 +361,7 @@ static void DrawUpArrow(
 /*----------------------------------------------------------------------
  * +++ Double Arrow Buttons --
  *
- * Used in MenuButtons and SpinButtons.
+ * Draws two chevrons, as used in MenuButtons and SpinButtons.
  */
 
 static void DrawUpDownArrows(
@@ -394,7 +387,6 @@ static void DrawUpDownArrows(
     CGContextStrokePath(context);
 }
 
-
 /*----------------------------------------------------------------------
  * +++ FillButtonBackground --
  *
@@ -410,13 +402,10 @@ static void FillButtonBackground(
     CHECK_RADIUS(radius, bounds)
 
     CGPathRef path;
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    CGGradientRef backgroundGradient = CGGradientCreateWithColorComponents(
-	deviceRGB.CGColorSpace, darkBackgroundGradient, NULL, 2);
-    CGPoint backgroundEnd = {
-	bounds.origin.x,
-	bounds.origin.y + bounds.size.height
-    };
+    CGGradientRef backgroundGradient = CGGradientFromRGBA(
+	darkBackgroundGradient, 2);
+    CGPoint backgroundEnd = CGPointMake(bounds.origin.x,
+	bounds.origin.y + bounds.size.height);
     CGContextBeginPath(context);
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextAddPath(context, path);
@@ -438,10 +427,8 @@ static void HighlightButtonBorder(
     CGContextRef context,
     CGRect bounds)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    CGPoint topEnd = {bounds.origin.x, bounds.origin.y + 3};
-    CGGradientRef topGradient = CGGradientCreateWithColorComponents(
-	deviceRGB.CGColorSpace, darkTopGradient, NULL, 2);
+    CGPoint topEnd = CGPointMake(bounds.origin.x, bounds.origin.y + 3);
+    CGGradientRef topGradient = CGGradientFromRGBA(darkTopGradient, 2);
 
     CGContextSaveGState(context);
     CGContextBeginPath(context);
@@ -618,16 +605,14 @@ static void GradientFillRoundedRectangle(
     CGFloat *colors,
     int numColors)
 {
-    NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
-    CGPathRef path;
     CHECK_RADIUS(radius, bounds)
 
+    CGPathRef path;
     CGPoint end = {
 	bounds.origin.x,
 	bounds.origin.y + bounds.size.height
     };
-    CGGradientRef gradient = CGGradientCreateWithColorComponents(
-	deviceRGB.CGColorSpace, colors, NULL, numColors);
+    CGGradientRef gradient = CGGradientFromRGBA(colors, numColors);
 
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextBeginPath(context);
@@ -833,7 +818,7 @@ static void DrawDarkBevelButton(
 	(state & TTK_STATE_ALTERNATE)) {
 	faceColor = CGColorFromRGBA(darkDisabledButtonFace);
     } else if (state & TTK_STATE_SELECTED) {
-	faceColor = CGColorFromRGBA(darkSelectedBevelFace);
+	faceColor = CGColorFromRGBA(darkSelectedButtonFace);
     } else {
 	faceColor = CGColorFromRGBA(darkButtonFace);
     }
