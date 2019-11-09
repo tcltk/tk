@@ -6663,18 +6663,19 @@ TkWmStackorderToplevel(
     NSInteger windowCount = [macWindows count];
 
     windows = windowPtr = ckalloc((windowCount + 1) * sizeof(TkWindow *));
-    Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
-    WmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
-
-    for (NSWindow *w in backToFront) {
-	hPtr = Tcl_FindHashEntry(&table, (char*) w);
-	if (hPtr != NULL) {
-	    childWinPtr = Tcl_GetHashValue(hPtr);
-	    *windowPtr++ = childWinPtr;
+    if (windows != NULL) {
+	Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
+	WmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
+	for (NSWindow *w in backToFront) {
+	    hPtr = Tcl_FindHashEntry(&table, (char*) w);
+	    if (hPtr != NULL) {
+		childWinPtr = Tcl_GetHashValue(hPtr);
+		*windowPtr++ = childWinPtr;
+	    }
 	}
+	*windowPtr = NULL;
+	Tcl_DeleteHashTable(&table);
     }
-    *windowPtr = NULL;
-    Tcl_DeleteHashTable(&table);
     return windows;
 }
 
