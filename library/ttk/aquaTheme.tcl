@@ -26,7 +26,7 @@ namespace eval ttk::theme::aqua {
 		!focus systemSelectedTextColor}
 
 	# Button
-	ttk::style configure TButton -anchor center -width -6 \
+	ttk::style configure TButton -anchor center -width {} -padding {-14 0 -14 0} \
 	    -foreground systemControlTextColor -compound top
 	ttk::style map TButton \
 	    -foreground {
@@ -72,7 +72,8 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook.Tab -foreground systemControlTextColor
 	ttk::style map TNotebook.Tab \
 	    -foreground {
-		background systemControlTextColor
+		{background !selected} systemControlTextColor
+		{background selected} black
 		disabled systemDisabledControlTextColor
 		selected systemSelectedTabTextColor}
 
