@@ -60,42 +60,50 @@
  * Colors and gradients used in Dark Mode.
  */
 
+typedef struct GrayColor {
+    CGFloat grayscale;
+    CGFloat alpha;
+} GrayColor;
+
 #define RGBACOLOR static CGFloat
-#define RGBA256(r, g, b, a) {r / 255, g / 255, b / 255, a}
+#define RGBA256(r, g, b, a) {r / 255.0, g / 255.0, b / 255.0, a}
+#define GRAYCOLOR static GrayColor
+#define GRAY256(grayscale) {grayscale / 255.0, 1.0}
 
-/* Grays */
-RGBACOLOR darkButtonFace[4] = RGBA256(112.0, 113.0, 115.0, 1.0); 
-RGBACOLOR darkPressedButtonFace[4] = RGBA256(135.0, 136.0, 138.0, 1.0);
-RGBACOLOR darkDisabledButtonFace[4] = RGBA256(86.0, 87.0, 89.0, 1.0);
-RGBACOLOR darkSelectedButtonFace[4] = RGBA256(162.0, 163.0, 165.0, 1.0);
-RGBACOLOR darkInactiveSelectedTab[4] = RGBA256(159.0, 160.0, 161.0, 1.0);
-RGBACOLOR darkGradientBorder[4] = RGBA256(118.0, 120.0, 121.0, 1.0);
-RGBACOLOR darkGradientNormal[4] = RGBA256(83.0, 84.0, 85.0, 1.0);
-RGBACOLOR darkGradientPressed[4] = RGBA256(101.0, 103.0, 106.0, 1.0);
-RGBACOLOR lightGradientBorder[4] = RGBA256(180.0, 180.0, 180.0, 1.0);
-RGBACOLOR lightGradientNormal[4] = RGBA256(246.0, 246.0, 246.0, 1.0);
-RGBACOLOR lightGradientPressed[4] = RGBA256(174.0, 174.0, 175.0, 1.0);
-RGBACOLOR lightTrough[4] = RGBA256(250.0, 250.0, 250.0, 1.0);
-RGBACOLOR darkTrough[4] = RGBA256(45.0, 46.0, 49.0, 1.0);
-RGBACOLOR lightInactiveThumb[4] = RGBA256(200.0, 200.0, 200.0, 1.0);
-RGBACOLOR lightActiveThumb[4] = RGBA256(133.0, 133.0, 133.0, 1.0);
-RGBACOLOR darkInactiveThumb[4] = RGBA256(116.0, 117.0, 118.0, 1.0);
-RGBACOLOR darkActiveThumb[4] = RGBA256(158.0, 158.0, 159.0, 1.0);
-RGBACOLOR listheaderBorder[4] = RGBA256(200.0, 200.0, 200.0, 1.0);
-RGBACOLOR listheaderSeparator[4] = RGBA256(220.0, 220.0, 220.0, 1.0);
-RGBACOLOR listheaderActiveBG[4] = RGBA256(238.0, 238.0, 238.0, 1.0);
-RGBACOLOR listheaderInactiveBG[4] = RGBA256(246.0, 246.0, 246.0, 1.0);
+/* Opaque Grays */
+GRAYCOLOR darkButtonFace = GRAY256(86.0);
+GRAYCOLOR darkDisabledButtonFace = GRAY256(86.0);
+GRAYCOLOR darkPressedButtonFace = GRAY256(115.0);
+GRAYCOLOR darkSelectedButtonFace = GRAY256(134.0);
+GRAYCOLOR darkInactiveSelectedTab = GRAY256(134.0);
 
-/* Transparent whites */
-RGBACOLOR boxBorder[4] = {1.0, 1.0, 1.0, 0.20};
-RGBACOLOR darkTrack[4] = {1.0, 1.0, 1.0, 0.25};
-RGBACOLOR darkFrameTop[4] = {1.0, 1.0, 1.0, 0.0625};
-RGBACOLOR darkFrameBottom[4] = {1.0, 1.0, 1.0, 0.125};
-RGBACOLOR darkSeparator[4] = {1.0, 1.0, 1.0, 0.3};
+GRAYCOLOR darkGradientNormal = GRAY256(62.0);
+GRAYCOLOR darkGradientPressed = GRAY256(92.0);
+GRAYCOLOR darkGradientBorder = GRAY256(80.0);
+GRAYCOLOR lightGradientNormal = GRAY256(244.0);
+GRAYCOLOR lightGradientPressed = GRAY256(175.0);
+GRAYCOLOR lightGradientBorder = GRAY256(165.0);
 
-/* Tansparent blacks */
-RGBACOLOR darkTabSeparator[4] = {0.0, 0.0, 0.0, 0.25};
-RGBACOLOR darkFrameAccent[4] = {0.0, 0.0, 0.0, 0.0625};
+GRAYCOLOR lightTrough = GRAY256(250.0);
+GRAYCOLOR darkTrough = GRAY256(47.0);
+GRAYCOLOR lightInactiveThumb = GRAY256(200.0);
+GRAYCOLOR lightActiveThumb = GRAY256(133.0);
+GRAYCOLOR darkInactiveThumb = GRAY256(117.0);
+GRAYCOLOR darkActiveThumb = GRAY256(158.0);
+
+GRAYCOLOR listheaderBorder = GRAY256(200.0);
+GRAYCOLOR listheaderSeparator = GRAY256(220.0);
+GRAYCOLOR listheaderActiveBG = GRAY256(238.0);
+GRAYCOLOR listheaderInactiveBG = GRAY256(246.0);
+
+/* Transparent Grays */
+GRAYCOLOR boxBorder = {1.0, 0.20};
+GRAYCOLOR darkTrack = {1.0, 0.25};
+GRAYCOLOR darkFrameTop = {1.0, 0.0625};
+GRAYCOLOR darkFrameBottom = {1.0, 0.125};
+GRAYCOLOR darkSeparator = {1.0, 0.3};
+GRAYCOLOR darkTabSeparator = {0.0, 0.25};
+GRAYCOLOR darkFrameAccent = {0.0, 0.0625};
 
 /* Focus rings */
 RGBACOLOR darkFocusRing[4] = RGBA256(38.0, 113.0, 159.0, 1.0);
@@ -104,7 +112,7 @@ RGBACOLOR darkFocusRingBottom[4] = RGBA256(57.0, 130.0, 176.0, 1.0);
 
 #define GRAD256(r0, g0, b0, a0, r1, g1, b1, a1) { \
 	r0 / 255, g0 / 255, b0 / 255, a0, \
-	r1 / 255, g1 / 255, b1 / 255, a1 };	
+	r1 / 255, g1 / 255, b1 / 255, a1 };
 
 RGBACOLOR darkTopGradient[8] = {1.0, 1.0, 1.0, 0.3, \
 				     1.0, 1.0, 1.0, 0.0};
@@ -139,6 +147,15 @@ CGColorFromRGBA(
     return nscolor.CGColor;
 }
 
+static CGColorRef
+CGColorFromGray(
+    GrayColor g)
+{
+    NSColor *nscolor = [NSColor colorWithCalibratedWhite: g.grayscale
+						   alpha: g.alpha];
+    return nscolor.CGColor;
+}
+
 /*
  * Returns a piecwise linear gradient.  Expects an array of size 4 * numColors
  */
@@ -156,6 +173,7 @@ CGGradientFromRGBA(
 #else
 #define CGCOLOR nil
 #define CGColorFromRGBA(rgba) NULL
+#define CGColorFromGray(gray) NULL
 #define CGPathCreateWithRoundedRect(w, x, y, z) NULL
 #endif
 
@@ -496,9 +514,9 @@ static void DrawGroupBox(
 
     CGPathRef path;
     CGColorRef backgroundColor, borderColor;
-    
+
     backgroundColor = GetBackgroundCGColor(context, tkwin, 1);
-    borderColor = CGColorFromRGBA(boxBorder);
+    borderColor = CGColorFromGray(boxBorder);
     CGContextSetFillColorWithColor(context, backgroundColor);
     path = CGPathCreateWithRoundedRect(bounds, 4, 4, NULL);
     CGContextClipToRect(context, bounds);
@@ -559,9 +577,9 @@ static void DrawListHeader(
      */
 
     NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
-    CGFloat *bgRGBA = [win isKeyWindow] ?
+    GrayColor bgGray = [win isKeyWindow] ?
 	listheaderActiveBG : listheaderInactiveBG;
-    CGColorRef strokeColor, backgroundColor = CGColorFromRGBA(bgRGBA);
+    CGColorRef strokeColor, backgroundColor = CGColorFromGray(bgGray);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint top[2] = {{x, y + 1}, {x + w, y + 1}};
@@ -574,11 +592,11 @@ static void DrawListHeader(
     CGContextSetFillColorWithColor(context, backgroundColor);
     CGContextAddRect(context, bounds);
     CGContextFillPath(context);
-    strokeColor = CGColorFromRGBA(listheaderSeparator);
+    strokeColor = CGColorFromGray(listheaderSeparator);
     CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, separator, 2);
     CGContextStrokePath(context);
-    strokeColor = CGColorFromRGBA(listheaderBorder);
+    strokeColor = CGColorFromGray(listheaderBorder);
     CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, top, 2);
     CGContextStrokePath(context);
@@ -682,9 +700,9 @@ static void DrawDarkButton(
 	    darkSelectedGradient, 2);
     } else {
 	if (state & TTK_STATE_DISABLED) {
-	    faceColor = CGColorFromRGBA(darkDisabledButtonFace);
+	    faceColor = CGColorFromGray(darkDisabledButtonFace);
 	} else {
-	    faceColor = CGColorFromRGBA(darkButtonFace);
+	    faceColor = CGColorFromGray(darkButtonFace);
 	}
 	SolidFillRoundedRectangle(context, bounds, 4, faceColor);
     }
@@ -742,9 +760,9 @@ static void DrawDarkIncDecButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (state & TTK_STATE_DISABLED) {
-	faceColor = CGColorFromRGBA(darkDisabledButtonFace);
+	faceColor = CGColorFromGray(darkDisabledButtonFace);
     } else {
-	faceColor = CGColorFromRGBA(darkButtonFace);
+	faceColor = CGColorFromGray(darkButtonFace);
     }
     SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 
@@ -788,11 +806,11 @@ static void DrawDarkArrowButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (state & TTK_STATE_DISABLED) {
-	faceColor = CGColorFromRGBA(darkDisabledButtonFace);
+	faceColor = CGColorFromGray(darkDisabledButtonFace);
     } else if (state & TTK_STATE_PRESSED) {
-	faceColor = CGColorFromRGBA(darkPressedButtonFace);
+	faceColor = CGColorFromGray(darkPressedButtonFace);
     } else {
-	faceColor = CGColorFromRGBA(darkButtonFace);
+	faceColor = CGColorFromGray(darkButtonFace);
     }
     SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 
@@ -832,14 +850,14 @@ static void DrawDarkBevelButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (state & TTK_STATE_PRESSED) {
-	faceColor = CGColorFromRGBA(darkPressedButtonFace);
+	faceColor = CGColorFromGray(darkPressedButtonFace);
     } else if ((state & TTK_STATE_DISABLED) ||
 	(state & TTK_STATE_ALTERNATE)) {
-	faceColor = CGColorFromRGBA(darkDisabledButtonFace);
+	faceColor = CGColorFromGray(darkDisabledButtonFace);
     } else if (state & TTK_STATE_SELECTED) {
-	faceColor = CGColorFromRGBA(darkSelectedButtonFace);
+	faceColor = CGColorFromGray(darkSelectedButtonFace);
     } else {
-	faceColor = CGColorFromRGBA(darkButtonFace);
+	faceColor = CGColorFromGray(darkButtonFace);
     }
     SolidFillRoundedRectangle(context, bounds, 4, faceColor);
     HighlightButtonBorder(context, bounds);
@@ -998,9 +1016,9 @@ static void DrawDarkTab(
     bounds = CGRectInset(bounds, 1, 1);
     if (!(state & TTK_STATE_SELECTED)) {
 	if (state & TTK_STATE_DISABLED) {
-	    faceColor = CGColorFromRGBA(darkDisabledButtonFace);
+	    faceColor = CGColorFromGray(darkDisabledButtonFace);
 	} else {
-	    faceColor = CGColorFromRGBA(darkButtonFace);
+	    faceColor = CGColorFromGray(darkButtonFace);
 	}
 	SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 
@@ -1012,7 +1030,7 @@ static void DrawDarkTab(
 	if (!(state & TTK_STATE_FIRST_TAB)) {
 	    CGContextSaveGState(context);
 	    CGContextSetShouldAntialias(context, false);
-	    strokeColor = CGColorFromRGBA(darkTabSeparator);
+	    strokeColor = CGColorFromGray(darkTabSeparator);
 	    CGContextSetStrokeColorWithColor(context, strokeColor);
 	    CGContextBeginPath(context);
 	    CGContextMoveToPoint(context, originalBounds.origin.x,
@@ -1037,7 +1055,7 @@ static void DrawDarkTab(
 	    GradientFillRoundedRectangle(context, bounds, 4,
 		darkSelectedGradient, 2);
 	} else {
-	    faceColor = CGColorFromRGBA(darkInactiveSelectedTab);
+	    faceColor = CGColorFromGray(darkInactiveSelectedTab);
 	    SolidFillRoundedRectangle(context, bounds, 4, faceColor);
 	}
 	HighlightButtonBorder(context, bounds);
@@ -1056,7 +1074,7 @@ static void DrawDarkSeparator(
     CGContextRef context,
     Tk_Window tkwin)
 {
-    CGColorRef sepColor = CGColorFromRGBA(darkSeparator);
+    CGColorRef sepColor = CGColorFromGray(darkSeparator);
 
     CGContextSetFillColorWithColor(context, sepColor);
     CGContextFillRect(context, bounds);
@@ -1130,15 +1148,15 @@ static void DrawDarkFrame(
 	CGContextSaveGState(context);
 	CGContextSetShouldAntialias(context, false);
 	CGContextBeginPath(context);
-	stroke = CGColorFromRGBA(darkFrameTop);
+	stroke = CGColorFromGray(darkFrameTop);
 	CGContextSetStrokeColorWithColor(context, stroke);
 	CGContextAddLines(context, topPart, 4);
 	CGContextStrokePath(context);
-	stroke = CGColorFromRGBA(darkFrameBottom);
+	stroke = CGColorFromGray(darkFrameBottom);
 	CGContextSetStrokeColorWithColor(context, stroke);
 	CGContextAddLines(context, bottom, 2);
 	CGContextStrokePath(context);
-	stroke = CGColorFromRGBA(darkFrameAccent);
+	stroke = CGColorFromGray(darkFrameAccent);
 	CGContextSetStrokeColorWithColor(context, stroke);
 	CGContextAddLines(context, accent, 2);
 	CGContextStrokePath(context);
@@ -1171,7 +1189,7 @@ static void DrawDarkListHeader(
 
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
-    stroke = CGColorFromRGBA(darkFrameBottom);
+    stroke = CGColorFromGray(darkFrameBottom);
     CGContextSetStrokeColorWithColor(context, stroke);
     CGContextBeginPath(context);
     CGContextAddLines(context, top, 2);
@@ -1209,20 +1227,20 @@ static void DrawGradientBorder(
     Ttk_State state)
 {
     CGColorRef faceColor, borderColor;
-    CGFloat *faceRGBA, *borderRGBA;
+    GrayColor faceGray, borderGray;
     CGRect inside = CGRectInset(bounds, 1, 1);
 
     if (TkMacOSXInDarkMode(tkwin)) {
-	faceRGBA = state & TTK_STATE_PRESSED ?
+	faceGray = state & TTK_STATE_PRESSED ?
 	    darkGradientPressed : darkGradientNormal;
-	borderRGBA = darkGradientBorder;
+	borderGray = darkGradientBorder;
     } else {
-	faceRGBA = state & TTK_STATE_PRESSED ?
+	faceGray = state & TTK_STATE_PRESSED ?
 	    lightGradientPressed : lightGradientNormal;
-	borderRGBA = lightGradientBorder;
+	borderGray = lightGradientBorder;
     }
-    faceColor = CGColorFromRGBA(faceRGBA);
-    borderColor = CGColorFromRGBA(borderRGBA);
+    faceColor = CGColorFromGray(faceGray);
+    borderColor = CGColorFromGray(borderGray);
     CGContextSetFillColorWithColor(context, faceColor);
     CGContextFillRect(context, inside);
     CGContextSetFillColorWithColor(context, borderColor);
@@ -2235,7 +2253,7 @@ static void TrackElementDraw(
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 	CGRect bounds = BoxToRect(d, b);
-	CGColorRef trackColor = CGColorFromRGBA(darkTrack);
+	CGColorRef trackColor = CGColorFromGray(darkTrack);
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
 	    bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 2);
 	} else {
@@ -2364,7 +2382,7 @@ static void PbarElementDraw(
     BEGIN_DRAWING(d)
     if (TkMacOSXInDarkMode(tkwin)) {
 	CGRect bounds = BoxToRect(d, b);
-	CGColorRef trackColor = CGColorFromRGBA(darkTrack);
+	CGColorRef trackColor = CGColorFromGray(darkTrack);
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
 	    bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 3);
 	} else {
@@ -2436,8 +2454,7 @@ static void TroughElementDraw(
     ScrollbarElement *scrollbar = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     CGRect bounds = BoxToRect(d, b);
-    CGColorRef troughColor;
-    CGFloat *rgba = TkMacOSXInDarkMode(tkwin) ? darkTrough : lightTrough;
+    GrayColor bgGray;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
@@ -2447,8 +2464,8 @@ static void TroughElementDraw(
     }
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
-	troughColor = CGColorFromRGBA(rgba);
-	CGContextSetFillColorWithColor(dc.context, troughColor);
+	bgGray = TkMacOSXInDarkMode(tkwin) ? darkTrough : lightTrough;
+	CGContextSetFillColorWithColor(dc.context, CGColorFromGray(bgGray));
     } else {
 	ChkErr(HIThemeSetFill, kThemeBrushDocumentWindowBackground, NULL,
 	    dc.context, HIOrientation);
@@ -2513,7 +2530,12 @@ static void ThumbElementDraw(
     if ([NSApp macMinorVersion] > 8) {
 	CGRect thumbBounds = BoxToRect(d, b);
 	CGColorRef thumbColor;
-	CGFloat *rgba;
+	GrayColor bgGray;
+
+	/*
+	 * Apple does not draw the thumb when scrolling is not possible.
+	 */
+
 	if ((orientation == TTK_ORIENT_HORIZONTAL &&
 	    thumbBounds.size.width >= Tk_Width(tkwin) - 8) ||
 	    (orientation == TTK_ORIENT_VERTICAL &&
@@ -2523,11 +2545,11 @@ static void ThumbElementDraw(
 	int isDark = TkMacOSXInDarkMode(tkwin);
 	if ((state & TTK_STATE_PRESSED) ||
 	    (state & TTK_STATE_HOVER)) {
-	    rgba = isDark ? darkActiveThumb : lightActiveThumb;
+	    bgGray = isDark ? darkActiveThumb : lightActiveThumb;
 	} else {
-	    rgba = isDark ? darkInactiveThumb : lightInactiveThumb;
+	    bgGray = isDark ? darkInactiveThumb : lightInactiveThumb;
 	}
-	thumbColor = CGColorFromRGBA(rgba);
+	thumbColor = CGColorFromGray(bgGray);
 	BEGIN_DRAWING(d)
 	SolidFillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
 	END_DRAWING
