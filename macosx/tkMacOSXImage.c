@@ -844,7 +844,7 @@ TkNSImageConfigureMaster(
     NSString *source = [[NSString alloc] initWithUTF8String: masterPtr->source];
     switch (sourceInterpretation) {
     case NAME_SOURCE:
-	newImage = [[NSImage imageNamed:(NSImageName)source] copy];
+	newImage = [[NSImage imageNamed:source] copy];
 	break;
     case FILE_SOURCE:
 	newImage = [[NSImage alloc] initWithContentsOfFile:source];
