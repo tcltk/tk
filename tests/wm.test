@@ -875,7 +875,7 @@ test wm-iconphoto-1.4 {usage} -returnCodes error -body {
 } -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
 test wm-iconphoto-1.5 {usage} -returnCodes error -body {
     wm iconphoto . -default [image create photo -file {}]
-} -result {failed to create an iconphoto with image "image1"}
+} -match {glob} -result {failed to create an iconphoto with image *}
 
 # All other iconphoto tests are platform specific
 
