@@ -1636,23 +1636,32 @@ TkMacOSXSetupDrawingContext(
 	 * display in the bounding rectangle of the clipping region and
 	 * return failure.  That rectangle should get drawn in a later call
 	 * to drawRect.
+	 *
+	 * As an exception to the above, if mouse buttons are pressed at the
+	 * moment when we fail to obtain a valid context we schedule the entire
+	 * view for a redraw rather than just the clipping region.  The purpose
+	 * of this is to make sure that scrollbars get updated correctly.
 	 */
- 
+
 	if (![NSApp isDrawing] || view != [NSView focusView]) {
 	    NSRect bounds = [view bounds];
 	    NSRect dirtyNS = bounds;
-	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
-				    .ty = dirtyNS.size.height};
-	    if (dc.clipRgn) {
-		CGRect dirtyCG = NSRectToCGRect(dirtyNS);
-		HIShapeGetBounds(dc.clipRgn, &dirtyCG);
-		dirtyNS = NSRectToCGRect(CGRectApplyAffineTransform(dirtyCG, t));
+	    if ([NSEvent pressedMouseButtons]) {
+		[view setNeedsDisplay:YES];
+	    } else {
+		CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
+					.ty = dirtyNS.size.height};
+		if (dc.clipRgn) {
+		    CGRect dirtyCG = NSRectToCGRect(dirtyNS);
+		    HIShapeGetBounds(dc.clipRgn, &dirtyCG);
+		    dirtyNS = NSRectToCGRect(CGRectApplyAffineTransform(dirtyCG, t));
+		}
+		[view setNeedsDisplayInRect:dirtyNS];
 	    }
-	    [view setNeedsDisplayInRect:dirtyNS];
 	    canDraw = false;
 	    goto end;
 	}
- 
+
 	dc.view = view;
 	dc.context = GET_CGCONTEXT;
 	dc.portBounds = NSRectToCGRect([view bounds]);
