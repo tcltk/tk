@@ -2518,6 +2518,7 @@ WmIconphotoCmd(
 {
     Tk_Image tk_icon;
     int width, height, isDefault = 0;
+    NSImage *newIcon = NULL;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -2563,10 +2564,11 @@ WmIconphotoCmd(
 	return TCL_ERROR;
     }
 
-    NSImage *newIcon;
     Tk_SizeOfImage(tk_icon, &width, &height);
-    newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon,
-	    width, height);
+    if (width != 0 && height != 0) {
+	newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon,
+						width, height);
+    }
     Tk_FreeImage(tk_icon);
     if (newIcon == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
