@@ -400,7 +400,7 @@ TkpFontPkgInit(
      * return a font with the invalid familyName ".SF NSMono" instead of the
      * valid familyName "NSMono". Calling [NSFont userFixedPitchFontOfSize:11]
      * returns a font in the "Menlo" family which has a valid familyName.
-     */  
+     */
     nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
 #else
     nsFont = [NSFont userFixedPitchFontOfSize:11];
