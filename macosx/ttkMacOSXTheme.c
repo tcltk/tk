@@ -2031,8 +2031,8 @@ static void ComboboxElementDraw(
 	    if ((state & TTK_STATE_BACKGROUND) &&
 		!(state & TTK_STATE_DISABLED)) {
 		NSColor *background = [NSColor textBackgroundColor];
-		//CGRect innerBounds = CGRectInset(bounds, 1, 2);
-		SolidFillRoundedRectangle(dc.context, bounds, 4,
+		CGRect innerBounds = CGRectInset(bounds, 1, 2);
+		SolidFillRoundedRectangle(dc.context, innerBounds, 4,
 					  CGCOLOR(background));
 	    }
 	}
