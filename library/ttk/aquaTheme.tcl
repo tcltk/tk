@@ -26,7 +26,7 @@ namespace eval ttk::theme::aqua {
 		!focus systemSelectedTextColor}
 
 	# Button
-	ttk::style configure TButton -anchor center -width {} -padding {-14 0 -14 0} \
+	ttk::style configure TButton -anchor center \
 	    -foreground systemControlTextColor -compound top
 	ttk::style map TButton \
 	    -foreground {
