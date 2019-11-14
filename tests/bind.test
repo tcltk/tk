@@ -5918,6 +5918,34 @@ test bind-28.8 {keysym names} -setup {
 } -cleanup {
     destroy .t.f
 } -result {X x {keysym X}}
+test bind-28.9 {keysym names, Eth -> ETH} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <Eth> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result {<Key-ETH>}
+test bind-28.10 {keysym names, Ooblique -> Oslash} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <Ooblique> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result {<Key-Oslash>}
+test bind-28.11 {keysym names, gcedilla} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <gcedilla> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result {<Key-gcedilla>}
+test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -body {
+    frame .t.f -class Test -width 150 -height 100
+    bind .t.f <Greek_IOTAdiaeresis> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result {<Key-Greek_IOTAdieresis>}
 
 
 test bind-29.1 {Tcl_BackgroundError procedure} -setup {
@@ -6641,6 +6669,25 @@ test bind-34.2 {-warp works relatively to the screen} -setup {
     lappend res {*}[winfo pointerxy .]
 } -cleanup {
 } -result {20 20 200 200}
+test bind-34.3 {-warp works with null or negative coordinates} -setup {
+} -body {
+    event generate {} <Motion> -x 0 -y 0 -warp 1
+    update idletasks ; # DoWarp is an idle callback
+    after 50         ; # Win specific - wait for SendInput to be executed
+    set res [winfo pointerxy .]
+    event generate {} <Motion> -x -1 -y -1 -warp 1
+    update idletasks ; # DoWarp is an idle callback
+    after 50         ; # Win specific - wait for SendInput to be executed
+    foreach dim [winfo pointerxy .] {
+        if {$dim <= 0} {
+            lappend res ok
+        } else {
+            lappend res $dim
+        }
+    }
+    set res
+} -cleanup {
+} -result {0 0 ok ok}
 
 # cleanup
 cleanupTests

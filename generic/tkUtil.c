@@ -1244,8 +1244,8 @@ TkUtfToUniChar(
  *
  * TkUniCharToUtf --
  *
- *	Almost the same as Tcl_UniCharToUtf but producing surrogates if
- *	TCL_UTF_MAX==3. So, up to 6 bytes might be produced.
+ *	Almost the same as Tcl_UniCharToUtf but producing 4-byte UTF-8
+ *	sequences even when TCL_UTF_MAX==3. So, up to 4 bytes might be produced.
  *
  * Results:
  *	*buf is filled with the UTF-8 string, and the return value is the
@@ -1262,10 +1262,12 @@ int TkUniCharToUtf(int ch, char *buf)
     int size = Tcl_UniCharToUtf(ch, buf);
     if ((((unsigned)(ch - 0x10000) <= 0xFFFFF)) && (size < 4)) {
 	/* Hey, this is wrong, we must be running TCL_UTF_MAX==3
-	 * The best thing we can do is spit out 2 surrogates */
-	ch -= 0x10000;
-	size = Tcl_UniCharToUtf(((ch >> 10) | 0xd800), buf);
-	size += Tcl_UniCharToUtf(((ch & 0x3ff) | 0xdc00), buf+size);
+	 * The best thing we can do is spit out a 4-byte UTF-8 character */
+	buf[3] = (char) ((ch | 0x80) & 0xBF);
+	buf[2] = (char) (((ch >> 6) | 0x80) & 0xBF);
+	buf[1] = (char) (((ch >> 12) | 0x80) & 0xBF);
+	buf[0] = (char) ((ch >> 18) | 0xF0);
+	size = 4;
     }
     return size;
 }
