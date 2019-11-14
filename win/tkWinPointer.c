@@ -362,8 +362,8 @@ void TkSetCursorPos(
     int y)
 {
     INPUT input;
-    unsigned xscreen = (GetSystemMetrics(SM_CXSCREEN) - 1);
-    unsigned yscreen = (GetSystemMetrics(SM_CYSCREEN) - 1);
+    int xscreen = (int)(GetSystemMetrics(SM_CXSCREEN) - 1);
+    int yscreen = (int)(GetSystemMetrics(SM_CYSCREEN) - 1);
 
     input.type = INPUT_MOUSE;
     input.mi.dx = (x * 65535 + xscreen/2) / xscreen;
