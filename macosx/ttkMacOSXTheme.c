@@ -531,7 +531,7 @@ static void ttkMacOSXDrawAccentedButton(
     /*
      * Prevent a mysterious crash in CFRelease when Wish starts up.
      */
-    
+
     static CGGradientRef gradient = nil;
     if (gradient != nil) {
 	CFRelease(gradient);
@@ -774,36 +774,36 @@ static void GradientFillRoundedRectangle(
 }
 
 /*----------------------------------------------------------------------
- * +++ DrawDarkButton --
+ * +++ DrawButton --
  *
- *      This is a standalone drawing procedure which draws PushButtons and
- *      PopupButtons in the Dark Mode style.
+ *      This is a standalone drawing procedure which draws most types of
+ *      macOS buttons.
  */
 
-static void DrawDarkButton(
+static void DrawButton(
     CGRect bounds,
     HIThemeButtonDrawInfo info,
     Ttk_State state,
     CGContextRef context,
     Tk_Window tkwin)
 {
-    CGRect arrowBounds = bounds = CGRectInset(bounds, 1, 1);
     ThemeButtonKind kind = info.kind;
     ThemeDrawState drawState = info.state;
-    CGFloat *arrowRGBA;
+    CGRect arrowBounds = bounds = CGRectInset(bounds, 1, 1);
     int isDark = TkMacOSXInDarkMode(tkwin);
+    CGFloat *arrowRGBA;
 
     if (kind == kThemePushButton && (state & TTK_STATE_PRESSED)) {
 	ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
     } else if (kind == kThemePushButton &&
 	       (state & TTK_STATE_ALTERNATE) &&
 	       !(state & TTK_STATE_BACKGROUND)) {
-	ttkMacOSXDrawGrayButton(context, bounds, selectedButtonInfo, tkwin); 
+	ttkMacOSXDrawGrayButton(context, bounds, selectedButtonInfo, tkwin);
     } else {
 	if (state & TTK_STATE_DISABLED) {
-	    ttkMacOSXDrawGrayButton(context, bounds, disabledButtonInfo, tkwin); 
+	    ttkMacOSXDrawGrayButton(context, bounds, disabledButtonInfo, tkwin);
 	} else {
-	    ttkMacOSXDrawGrayButton(context, bounds, buttonInfo, tkwin); 
+	    ttkMacOSXDrawGrayButton(context, bounds, buttonInfo, tkwin);
 	}
     }
     switch (kind) {
@@ -887,18 +887,28 @@ static void DrawDarkButton(
 }
 
 /*----------------------------------------------------------------------
- * +++ DrawDarkCheckBox --
+ * +++ DrawCheckBox --
  *
- *      This is a standalone drawing procedure which draws Checkboxes in the
- *      Dark Mode style.
+ *      This is a standalone drawing procedure which draws Checkboxes.
  */
 
-static void DrawDarkCheckBox(
+static void DrawCheckBox(
     CGRect bounds,
+    HIThemeButtonDrawInfo info,
     Ttk_State state,
-    CGContextRef context)
+    CGContextRef context,
+    Tk_Window tkwin)
 {
     CGRect checkbounds = {{0, bounds.size.height / 2 - 8}, {16, 16}};
+    static CGFloat inactive[12] = {1.0, 1.0, 1.0, 0.1,
+			      1.0, 1.0, 1.0, 0.2,
+			      1.0, 1.0, 1.0, 0.0};
+    static CGFloat selected[12] = {1.0, 1.0, 1.0, 0.1,
+			      1.0, 1.0, 1.0, 0.2,
+			      1.0, 1.0, 1.0, 0.0};
+    static CGFloat locations[3] = {0.0, 0.05, 1.0};
+    CGColorRef accentColor = [NSColor controlAccentColor].CGColor;
+    int isDark = TkMacOSXInDarkMode(tkwin);
     NSColor *stroke;
     CGFloat x, y;
 
@@ -911,17 +921,23 @@ static void DrawDarkCheckBox(
     if (!(state & TTK_STATE_BACKGROUND) &&
 	!(state & TTK_STATE_DISABLED) &&
 	((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
-	GradientFillRoundedRectangle(context, bounds, 3,
-	    darkSelectedGradient, 2);
+	SolidFillRoundedRectangle(context, bounds, 2, accentColor);
+	if (isDark) {
+	    GradientFillRoundedRectangle(context, bounds, 2, selected, 3);
+	}
     } else {
-	GradientFillRoundedRectangle(context, bounds, 3,
-	    darkInactiveGradient, 2);
+	if (isDark) {
+	    GradientFillRoundedRectangle(context, bounds, 2,
+					 darkInactiveGradient, 2);
+	} else {
+	    DrawButton(CGRectInset(bounds, -1, -1), info, state, context, tkwin);
+	}
     }
     if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
 	if (state & TTK_STATE_DISABLED) {
 	    stroke = [NSColor disabledControlTextColor];
 	} else {
-	    stroke = [NSColor controlTextColor];
+	    stroke = [NSColor whiteColor];
 	}
 	CGContextSetStrokeColorWithColor(context, CGCOLOR(stroke));
     }
@@ -973,7 +989,6 @@ static void DrawDarkRadioButton(
 	    darkInactiveGradient, 2);
     }
     if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
-	CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
 	if (state & TTK_STATE_DISABLED) {
 	    fill = [NSColor disabledControlTextColor];
 	} else {
@@ -1036,7 +1051,7 @@ DrawTab(
 	} else {
 	    ttkMacOSXDrawGrayButton(context, bounds, tabInfo, tkwin);
 	}
-			      
+
         /*
          * Draw a separator line on the left side of the tab if it
          * not first.
@@ -1528,7 +1543,10 @@ static void ButtonElementDraw(
 	case kThemePopupButton:
 	case kThemeArrowButton:
 	case kThemeRoundedBevelButton:
-	    DrawDarkButton(bounds, info, state, dc.context, tkwin);
+	    DrawButton(bounds, info, state, dc.context, tkwin);
+	    goto done;
+	case kThemeCheckBox:
+	    DrawCheckBox(bounds, info, state, dc.context, tkwin);
 	    goto done;
 	default:
 	    break;
@@ -1536,12 +1554,9 @@ static void ButtonElementDraw(
     }
 
     /* For these we still can only do our own drawing in dark mode */
-    
+
     if (TkMacOSXInDarkMode(tkwin)) {
 	switch (info.kind) {
-	case kThemeCheckBox:
-	    DrawDarkCheckBox(bounds, state, dc.context);
-	    goto done;
 	case kThemeRadioButton:
 	    DrawDarkRadioButton(bounds, state, dc.context);
 	    goto done;
@@ -2004,7 +2019,7 @@ static void ComboboxElementDraw(
 	int height = 23;
 	bounds.origin.y += (bounds.size.height - height) / 2;
 	bounds.size.height = height;
-	DrawDarkButton(bounds, info, state, dc.context, tkwin);
+	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
 	if ([NSApp macMinorVersion] > 8) {
 	    if ((state & TTK_STATE_BACKGROUND) &&
@@ -2094,7 +2109,7 @@ static void SpinButtonUpElementDraw(
     };
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
-	DrawDarkButton(bounds, info, state, dc.context, tkwin);
+	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 	       NULL);
@@ -2153,7 +2168,7 @@ static void SpinButtonDownElementDraw(
 
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
-	DrawDarkButton(bounds, info, state, dc.context, tkwin);
+	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 	       NULL);
