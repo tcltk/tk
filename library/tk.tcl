@@ -687,11 +687,6 @@ if {[tk windowingsystem] eq "aqua"} {
 
 
 if {[tk windowingsystem] eq "aqua"} {
-    #register to send data to macOS Services
-    proc ::tk::RegisterServiceWidget {w} {
-	::tk::mac::registerServiceWidget $w
-    }
-
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
     	source $file
@@ -701,7 +696,10 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 
+# Create a dictionary to store the starting index of the IME marked
+# text in an Entry or Text widget.
 
+set ::tk::Priv(IMETextMark) [dict create]
 
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {

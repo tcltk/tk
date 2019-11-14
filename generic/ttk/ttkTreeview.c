@@ -2888,28 +2888,8 @@ static int TreeviewDragCommand(
 	TreeColumn *c = tv->tree.displayColumns[i];
 	int right = left + c->width;
 	if (c == column) {
-            /* The limit not to exceed at the right is given by the tree width
-               minus the sum of the min widths of the columns at the right of
-               the one being resized (and don't forget possible x scrolling!).
-               For stretchable columns, this min width really is the minWidth,
-               for non-stretchable columns, this is the column width.
-             */
-            int newxRightLimit = tv->tree.treeArea.x - tv->tree.xscroll.first
-                                 + tv->tree.treeArea.width;
-            int j = i + 1;
-            while (j < tv->tree.nDisplayColumns) {
-                TreeColumn *cr = tv->tree.displayColumns[j];
-                if (cr->stretch) {
-                    newxRightLimit -= cr->minWidth;
-                } else {
-                    newxRightLimit -= cr->width;
-                }
-                ++j;
-            }
-            if (newx <= newxRightLimit) {
-	        DragColumn(tv, i, newx - right);
-	        TtkRedisplayWidget(&tv->core);
-            }
+	    DragColumn(tv, i, newx - right);
+	    TtkRedisplayWidget(&tv->core);
 	    return TCL_OK;
 	}
 	left = right;
