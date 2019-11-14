@@ -133,7 +133,11 @@ namespace eval ttk::theme::aqua {
 	# (ref: Apple Human Interface Guidelines / Controls / Grouping Controls)
 	#
 	ttk::style configure TLabelframe \
-		-labeloutside true -labelmargins {14 0 14 4}
+	    -labeloutside true \
+	    -labelmargins {14 0 14 2}
+
+	ttk::style configure TLabelframe.Label \
+	    -font TkSmallCaptionFont
 
 	# TODO: panedwindow sashes should be 9 pixels (HIG:Controls:Split Views)
     }
