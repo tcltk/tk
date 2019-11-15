@@ -704,10 +704,10 @@ static void nsvg__deleteStyles(NSVGstyles* style) {
 	while (style) {
 		NSVGstyles *next = style->next;
 		if (style->name!= NULL)
-			free(style->name);
+			NANOSVG_free(style->name);
 		if (style->description != NULL)
-			free(style->description);
-		free(style);
+			NANOSVG_free(style->description);
+		NANOSVG_free(style);
 		style = next;
 	}
 }
@@ -2843,7 +2843,7 @@ static void nsvg__content(void* ud, const char* s)
 				if (state == 1) {
 					NSVGstyles* next = p->styles;
 
-					p->styles = (NSVGstyles*)malloc(sizeof(NSVGstyles));
+					p->styles = (NSVGstyles*)NANOSVG_malloc(sizeof(NSVGstyles));
 					p->styles->next = next;
 					p->styles->name = nsvg__strndup(start, (size_t)(s - start));
 					start = s + 1;
