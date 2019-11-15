@@ -7685,4 +7685,8 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2019-10-27 (bug)[f7a4f7] Aqua: embedded toplevel, forced focus and mouse coords (naaus,culler)
 
+2019-11-13 (new) Win: keycodes Mail, AudioMedia, Launch0, Launch1 (nijtmans)
+
+2019-11-15 (bug)[69b48f] failing test textTag-18.1 (vogel)
+
 - Released 8.6.10, November 21, 2019 - https://core.tcl-lang.org/tk/ for details
