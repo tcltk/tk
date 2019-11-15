@@ -70,7 +70,10 @@ typedef struct GrayColor {
 #define GRAYCOLOR static GrayColor
 #define GRAY256(grayscale) {grayscale / 255.0, 1.0}
 
-/* Opaque Grays */
+/*
+ * Opaque Grays used for Gradient Buttons, Scrollbars and List Headers
+ */
+
 GRAYCOLOR darkGradientNormal = GRAY256(95.0);
 GRAYCOLOR darkGradientPressed = GRAY256(118.0);
 GRAYCOLOR darkGradientBorder = GRAY256(118.0);
@@ -118,13 +121,22 @@ RGBACOLOR darkSelectedGradient[8] = GRAD256(23.0, 111.0, 232.0, 1.0, \
 						  20.0, 94.0,  206.0, 1.0);
 
 /*
+ * When we draw simulated Apple widgets we use the Core Graphics framework.
+ * Core Graphics uses CGColorRefs, not NSColors.  A CGColorRef must be retained
+ * and released explicitly while an NSColor is autoreleased.  In version 10.8
+ * of macOS Apple introduced a CGColor property of an NSColor which is guaranteed
+ * to be a valid CGColorRef for (approximagely) the same color.
+ *
  * When building on systems earlier than 10.8 there is no reasonable way to
- * convert an NSColor to a CGColor.  We do run-time checking of the OS version,
- * and never need the CGColor property on older systems, so we can just define
- * a macro CGColorFromRGBA which evaluates to NULL without raising compiler
- * warnings.  Similarly, we never draw rounded rectangles on older systems
- * which did not have CGPathCreateWithRoundedRect, so we just redefine it to
- * return NULL.
+ * convert an NSColor to a CGColor. On the other hand, on those systems we use
+ * the HIToolbox to draw all widgets, so we never need to call Core Graphics
+ * drawing routines directly.  This means that the functions and macros below
+ * which construct CGColorRefs can be defined to return nil on systems before
+ * 10.8.
+ *
+ * Similarly, those older systems did not have CGPathCreateWithRoundedRect, but
+ * since we never need to draw rounded rectangles on those systems we can just
+ * define it to return nil.
  */
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
@@ -154,6 +166,7 @@ CGColorFromGray(
 /*
  * Returns a piecwise linear gradient.  Expects an array of size 4 * numColors
  */
+
 static CGGradientRef
 CGGradientFromRGBA(
     CGFloat *data,
@@ -165,20 +178,23 @@ CGGradientFromRGBA(
 }
 
 #define CGCOLOR(nscolor) nscolor.CGColor
+
 #else
-#define CGCOLOR nil
-#define CGColorFromRGBA(rgba) NULL
-#define CGColorFromGray(gray) NULL
-#define CGPathCreateWithRoundedRect(w, x, y, z) NULL
+
+#define CGCOLOR(nscolor)  nil
+#define CGColorFromRGBA(rgba) nil
+#define CGColorFromGray(gray) nil
+#define CGPathCreateWithRoundedRect(w, x, y, z) nil
+
 #endif
 
 
 /*
- * If we try to draw a rounded rectangle with too large of a radius
- * CoreGraphics will raise a fatal exception.  This macro returns if
- * the width or height is less than twice the radius.  Presumably this
- * only happens when a widget has not yet been configured and has size
- * 1x1.
+ * If we try to draw a rounded rectangle with too large of a radius Core
+ * Graphics will raise a fatal exception.  This macro calls return if the width
+ * or height is less than twice the radius.  Presumably this only happens when
+ * a widget has not yet been configured and has size 1x1, so there is nothing
+ * to draw anyway.
  */
 
 #define CHECK_RADIUS(radius, bounds)                                         \
@@ -237,7 +253,8 @@ static Ttk_StateTable ThemeStateTable[] = {
      * {kThemeStatePressedDown, 0, 0}
      */
 };
-#define POPUP_ARROWS (kThemeStatePressedUp | kThemeStatePressedDown)
+
+#define BOTH_ARROWS (kThemeStatePressedUp | kThemeStatePressedDown)
 
 /*----------------------------------------------------------------------
  * NormalizeButtonBounds --
@@ -413,7 +430,7 @@ static CGColorRef GetBackgroundCGColor(
 }
 
 /*----------------------------------------------------------------------
- * +++ Buttons
+ * +++ Button drawing primitives.
  */
 
 typedef struct ButtonInfo {
@@ -470,6 +487,20 @@ static ButtonInfo disabledCheckInfo = {
  .darkTopGray = 90.0,  .darkSideGray = 80.0,  .darkBottomGray = 49.0,
 };
 
+static ButtonInfo radioInfo = {
+ .radius = 8.0,
+ .lightFaceGray = 255.0, .darkFaceGray = 118.0,
+ .lightTopGray = 165.0, .lightSideGray = 184.0, .lightBottomGray = 184.0,
+ .darkTopGray = 132.0,  .darkSideGray = 118.0,  .darkBottomGray = 48.0,
+};
+
+static ButtonInfo disabledRadioInfo = {
+ .radius = 8.0,
+ .lightFaceGray = 246.0, .darkFaceGray = 80.0,
+ .lightTopGray = 236.0, .lightSideGray = 227.0, .lightBottomGray = 213.0,
+ .darkTopGray = 90.0,  .darkSideGray = 80.0,  .darkBottomGray = 49.0,
+};
+
 static ButtonInfo tabInfo = {
  .radius = 4.0,
  .lightFaceGray = 255.0, .darkFaceGray = 108.0,
@@ -500,6 +531,8 @@ static ButtonInfo disabledTabInfo = {
  *  are shaped as rounded rectangles have a 1-pixel border which is drawn in
  *  a 3-step gradient and a solid gray face.  This function handles drawing
  *  the rounded rectangular buttons when drawn in a grayscale color.
+ *
+ *  Note that this will produce a round button if length = width = 2*radius.
  */
 
 static void ttkMacOSXDrawGrayButton(
@@ -567,8 +600,10 @@ static void ttkMacOSXDrawAccentedButton(
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
     CGColorRef faceColor = [NSColor controlAccentColor].CGColor;
     CGPathRef path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    // This gradient should only be used for PushButtons and Tabs, and it needs
+    // to be lighter at the top.
     static CGFloat components[12] = {1.0, 1.0, 1.0, 0.05,
-					  1.0, 1.0, 1.0, 0.1,
+					  1.0, 1.0, 1.0, 0.2,
 					  1.0, 1.0, 1.0, 0.0};
     CGFloat locations[3] = {0.0, 0.05, 1.0};
 
@@ -583,8 +618,9 @@ static void ttkMacOSXDrawAccentedButton(
     gradient = CGGradientCreateWithColorComponents(sRGB.CGColorSpace,
 	components, locations, 4);
     CGPoint end;
-
-    bounds.size.height -= 1;
+    if (bounds.size.height > 2*radius) {
+	bounds.size.height -= 1;
+    }
     end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
     CGContextSaveGState(context);
     CGContextBeginPath(context);
@@ -613,6 +649,7 @@ static void ttkMacOSXDrawAccentedSegment(
     bounds.size.height += 1;
     ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
 }
+
 /*----------------------------------------------------------------------
  * +++ Chevrons, CheckMarks, etc. --
  */
@@ -694,7 +731,7 @@ static void ttkMacOSXDrawUpDownArrows(
 {
     CGFloat x, y;
     NSColor *topStrokeColor, *bottomStrokeColor;
-    if (drawState == POPUP_ARROWS) {
+    if (drawState == BOTH_ARROWS) {
 	topStrokeColor = bottomStrokeColor = [NSColor whiteColor];
     } else if (drawState == kThemeStatePressedDown) {
 	topStrokeColor = [NSColor controlTextColor];
@@ -724,7 +761,7 @@ static void ttkMacOSXDrawUpDownArrows(
     CGContextStrokePath(context);
 }
 
-static void ttkMacOSXDrawCheckMark(
+static void ttkMacOSXDrawCheckIndicator(
     CGContextRef context,
     CGRect bounds,
     int state)
@@ -735,7 +772,7 @@ static void ttkMacOSXDrawCheckMark(
 
     if (state & TTK_STATE_DISABLED) {
 	strokeColor = [NSColor disabledControlTextColor];
-    } else if ((state & TTK_STATE_SELECTED) &&
+    } else if ((state & TTK_STATE_SELECTED || state & TTK_STATE_ALTERNATE) &&
 	       !(state & TTK_STATE_BACKGROUND)) {
 	strokeColor = [NSColor whiteColor];
     } else {
@@ -755,6 +792,30 @@ static void ttkMacOSXDrawCheckMark(
 	CGPoint bar[2] = {{x + 3, y + 7}, {x + 11, y + 7}};
 	CGContextAddLines(context, bar, 2);
 	CGContextStrokePath(context);
+    }
+}
+
+static void ttkMacOSXDrawRadioIndicator(
+    CGContextRef context,
+    CGRect bounds,
+    int state)
+{
+    CGColorRef fillColor;
+    CGFloat x = bounds.origin.x, y = bounds.origin.y;
+    if (state & TTK_STATE_BACKGROUND) {
+	fillColor = CGCOLOR([NSColor controlTextColor]);
+    } else {
+	fillColor = CGCOLOR([NSColor whiteColor]);
+    }
+    CGContextSetFillColorWithColor(context, fillColor);
+    if (state & TTK_STATE_SELECTED) {
+	CGContextBeginPath(context);
+	CGRect dot = {{x + 5, y + 5}, {6, 6}};
+	CGContextAddEllipseInRect(context, dot);
+	CGContextFillPath(context);
+    } else if (state & TTK_STATE_ALTERNATE) {
+	CGRect bar = {{x + 4, y + 7}, {8, 2}};
+	CGContextFillRect(context, bar);
     }
 }
 
@@ -910,7 +971,7 @@ static void DrawButton(
 	if (!(state & TTK_STATE_BACKGROUND) &&
 	    !(state & TTK_STATE_DISABLED)) {
 	    ttkMacOSXDrawAccentedSegment(context, arrowBounds, 4.0, tkwin);
-	    drawState = POPUP_ARROWS;
+	    drawState = BOTH_ARROWS;
 	}
 	arrowBounds.origin.x += 2;
 	ttkMacOSXDrawUpDownArrows(context, arrowBounds, 3, 7, 2, state, drawState);
@@ -943,11 +1004,32 @@ static void DrawButton(
 		    ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
 		}
 	    }
+	    ttkMacOSXDrawCheckIndicator(context, bounds, state);
 	} else {
 	    ttkMacOSXDrawGrayButton(context, bounds, checkInfo, tkwin);
 	    break;
 	}
-	ttkMacOSXDrawCheckMark(context, bounds, state);
+	break;
+    case kThemeRadioButton:
+	bounds = CGRectOffset(CGRectMake(0, bounds.size.height / 2 - 9, 18, 18),
+					 bounds.origin.x, bounds.origin.y);
+	bounds = CGRectInset(bounds, 1, 1);
+	if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
+	    if (state & TTK_STATE_DISABLED) {
+		ttkMacOSXDrawGrayButton(context, bounds, disabledRadioInfo,
+					tkwin);
+	    } else{
+		if (state & TTK_STATE_BACKGROUND) {
+	    	    ttkMacOSXDrawGrayButton(context, bounds, radioInfo, tkwin);
+		} else {
+		    ttkMacOSXDrawAccentedButton(context, bounds, 8.0, tkwin);
+		}
+	    }
+	    ttkMacOSXDrawRadioIndicator(context, bounds, state);
+	} else {
+	    ttkMacOSXDrawGrayButton(context, bounds, radioInfo, tkwin);
+	    break;
+	}
 	break;
     case kThemeArrowButton:
 	if (state & TTK_STATE_DISABLED) {
@@ -1001,56 +1083,6 @@ static void DrawButton(
 	break;
     default:
 	break;
-    }
-}
-
-/*----------------------------------------------------------------------
- * +++ DrawDarkRadioButton --
- *
- *    This is a standalone drawing procedure which draws RadioButtons
- *    in the Dark Mode style.
- */
-
-static void DrawDarkRadioButton(
-    CGRect bounds,
-    Ttk_State state,
-    CGContextRef context)
-{
-    CGRect checkbounds = {{0, bounds.size.height / 2 - 9}, {18, 18}};
-    NSColor *fill;
-    CGFloat x, y;
-
-    bounds = CGRectOffset(checkbounds, bounds.origin.x, bounds.origin.y);
-    x = bounds.origin.x;
-    y = bounds.origin.y;
-
-    CGContextClipToRect(context, bounds);
-    bounds = CGRectInset(bounds, 1, 1);
-    if (!(state & TTK_STATE_BACKGROUND) &&
-	!(state & TTK_STATE_DISABLED) &&
-	((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE))) {
-	GradientFillRoundedRectangle(context, bounds, 8,
-	    darkSelectedGradient, 2);
-    } else {
-	GradientFillRoundedRectangle(context, bounds, 8,
-	    darkInactiveGradient, 2);
-    }
-    if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
-	if (state & TTK_STATE_DISABLED) {
-	    fill = [NSColor disabledControlTextColor];
-	} else {
-	    fill = [NSColor controlTextColor];
-	}
-	CGContextSetFillColorWithColor(context, CGCOLOR(fill));
-    }
-    if (state & TTK_STATE_SELECTED) {
-	CGContextBeginPath(context);
-	CGRect dot = {{x + 6, y + 6}, {6, 6}};
-	CGContextAddEllipseInRect(context, dot);
-	CGContextFillPath(context);
-    } else if (state & TTK_STATE_ALTERNATE) {
-	CGRect bar = {{x + 5, y + 8}, {8, 2}};
-	CGContextFillRect(context, bar);
     }
 }
 
@@ -1591,29 +1623,18 @@ static void ButtonElementDraw(
 	case kThemeArrowButton:
 	case kThemeRoundedBevelButton:
 	case kThemeCheckBox:
+	case kThemeRadioButton:
 	    DrawButton(bounds, info, state, dc.context, tkwin);
 	    goto done;
-	default:
-	    break;
-	}
-    }
-
-    /* For these we still can only do our own drawing in dark mode */
-
-    if (TkMacOSXInDarkMode(tkwin)) {
-	switch (info.kind) {
-	case kThemeRadioButton:
-	    DrawDarkRadioButton(bounds, state, dc.context);
-	    goto done;
 	case kThemeRoundButtonHelp:
-	    /* TO DO: draw a help button for Dark Mode. */
+	    /* TO DO: add Help Buttons to DrawButton. */
 	default:
 	    break;
 	}
     }
 
     /*
-     * If we get here we are using HIToolbox to draw the button.
+     * If we get here it means we should use HIToolbox to draw the button.
      */
 
     /*
@@ -3016,7 +3037,7 @@ static Ttk_ElementSpec FieldElementSpec = {
 /*----------------------------------------------------------------------
  * +++ Treeview headers --
  *
- *    On systems older than 10.9 The header is a kThemeListHeaderButton drawn
+ *    On systems older than 10.9 the header is a kThemeListHeaderButton drawn
  *    by HIToolbox.  On newer systems those buttons do not match the Apple
  *    buttons, so we draw them from scratch.
  */
