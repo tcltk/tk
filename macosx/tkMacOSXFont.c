@@ -1112,7 +1112,28 @@ DrawCharsInContext(
     string = [[NSString alloc] initWithBytesNoCopy:(void*)source
 		length:numBytes encoding:NSUTF8StringEncoding freeWhenDone:NO];
     if (!string) {
-	return;
+
+	/*
+	 * The decoding might have failed because we got a fake UTF-8 byte
+	 * array in which UTF-16 surrogates had been encoded using the UTF-8
+	 * algorithm, even though UTF-8 does not allow encoding surrogates.
+	 * (When Tcl is compiled with TCL_UTF_MAX = 3 Tk uses this encoding
+	 * internally.) We can attempt to decode the source using this
+	 * encoding and see if Apple accepts the result as UTF-16.
+	 */
+
+	const unichar *characters = ckalloc(numBytes*sizeof(unichar));
+	const char *in = source;
+	unichar *out = (unichar *) characters;
+	while (in < source + numBytes) {
+	    in += Tcl_UtfToUniChar(in, out++);
+	}
+	string = [[NSString alloc] initWithCharacters:characters
+		     length:(out - characters)];
+	ckfree(characters);
+	if (!string) {
+	    return;
+	}
     }
 
     context = drawingContext.context;
