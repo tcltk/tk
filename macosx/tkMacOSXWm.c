@@ -2518,6 +2518,7 @@ WmIconphotoCmd(
 {
     Tk_Image tk_icon;
     int width, height, isDefault = 0;
+    NSImage *newIcon = NULL;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -2563,12 +2564,16 @@ WmIconphotoCmd(
 	return TCL_ERROR;
     }
 
-    NSImage *newIcon;
     Tk_SizeOfImage(tk_icon, &width, &height);
-    newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon,
-	    width, height);
+    if (width != 0 && height != 0) {
+	newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon,
+						width, height);
+    }
     Tk_FreeImage(tk_icon);
     if (newIcon == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "failed to create an iconphoto with image \"%s\"", icon));
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "IMAGE", NULL);
 	return TCL_ERROR;
     }
     [NSApp setApplicationIconImage: newIcon];
