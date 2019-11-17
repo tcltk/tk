@@ -3268,6 +3268,8 @@ WmStackorderCmd(
 	    ckfree(windows);
 	    Tcl_SetObjResult(interp, resultObj);
 	    return TCL_OK;
+	} else {
+	    return TCL_ERROR;
 	}
     } else {
 	Tk_Window relWin;
@@ -6432,6 +6434,9 @@ TkWmStackorderToplevel(
     TkWmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
     window_ptr = windows = ckalloc((table.numEntries+1) * sizeof(TkWindow *));
+    if (windows == NULL) {
+	return NULL;
+    }
 
     /*
      * Special cases: If zero or one toplevels were mapped there is no need to
