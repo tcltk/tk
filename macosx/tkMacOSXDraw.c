@@ -501,9 +501,12 @@ TkMacOSXGetNSImageWithTkImage(
     int width,
     int height)
 {
-    Pixmap pixmap = Tk_GetPixmap(display, None, width, height, 0);
+    Pixmap pixmap;
     NSImage *nsImage;
-
+    if (width == 0 | height == 0) {
+	return nsImage = [[NSImage alloc] initWithSize:NSMakeSize(0,0)];
+    }
+    pixmap = Tk_GetPixmap(display, None, width, height, 0);
     Tk_RedrawImage(image, 0, 0, width, height, pixmap, 0, 0);
     nsImage = CreateNSImageWithPixmap(pixmap, width, height);
     Tk_FreePixmap(display, pixmap);
