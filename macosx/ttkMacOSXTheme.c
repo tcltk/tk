@@ -96,29 +96,9 @@ GRAYCOLOR listheaderInactiveBG = GRAY256(246.0);
 /* Transparent Grays */
 GRAYCOLOR boxBorder = {1.0, 0.20};
 GRAYCOLOR darkTrack = {1.0, 0.25};
-GRAYCOLOR darkFrameTop = {1.0, 0.0625};
-GRAYCOLOR darkFrameBottom = {1.0, 0.125};
 GRAYCOLOR darkSeparator = {1.0, 0.3};
 GRAYCOLOR darkTabSeparator = {0.0, 0.25};
-GRAYCOLOR darkFrameAccent = {0.0, 0.0625};
-
-/* Focus rings */
-RGBACOLOR darkFocusRing[4] = RGBA256(38.0, 113.0, 159.0, 1.0);
-RGBACOLOR darkFocusRingTop[4] = RGBA256(50.0, 124.0, 171.0, 1.0);
-RGBACOLOR darkFocusRingBottom[4] = RGBA256(57.0, 130.0, 176.0, 1.0);
-
-#define GRAD256(r0, g0, b0, a0, r1, g1, b1, a1) { \
-	r0 / 255, g0 / 255, b0 / 255, a0, \
-	r1 / 255, g1 / 255, b1 / 255, a1 };
-
-#define GRAYGRAD256(grayscale0, grayscale1) {	\
-	grayscale0 / 255, grayscale0 / 255, grayscale0 / 255, 1.0, \
-	grayscale1 / 255, grayscale1 / 255, grayscale1 / 255, 1.0 };
-
-RGBACOLOR darkInactiveGradient[8] = GRAD256(89.0, 90.0, 93.0, 1.0,	\
-						 119.0, 120.0, 122.0, 1.0);
-RGBACOLOR darkSelectedGradient[8] = GRAD256(23.0, 111.0, 232.0, 1.0, \
-						  20.0, 94.0,  206.0, 1.0);
+GRAYCOLOR darkFrameBottom = {1.0, 0.125};
 
 /*
  * When we draw simulated Apple widgets we use the Core Graphics framework.
@@ -161,20 +141,6 @@ CGColorFromGray(
 					 components: rgba
 					      count: 4];
     return nscolor.CGColor;
-}
-
-/*
- * Returns a piecwise linear gradient.  Expects an array of size 4 * numColors
- */
-
-static CGGradientRef
-CGGradientFromRGBA(
-    CGFloat *data,
-    int numColors)
-{
-    NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
-    return CGGradientCreateWithColorComponents(sRGB.CGColorSpace,
-					       data, NULL, numColors);
 }
 
 #define CGCOLOR(nscolor) nscolor.CGColor
@@ -254,7 +220,7 @@ static Ttk_StateTable ThemeStateTable[] = {
      */
 };
 
-#define BOTH_ARROWS (kThemeStatePressedUp | kThemeStatePressedDown)
+#define BOTH_ARROWS 1 << 30
 
 /*----------------------------------------------------------------------
  * NormalizeButtonBounds --
@@ -304,40 +270,6 @@ static void SolidFillRoundedRectangle(
     CGContextFillPath(context);
     CFRelease(path);
 }
-
-/*----------------------------------------------------------------------
- * GradientFillRoundedRectangle --
- *
- *      Fill a rounded rectangle with a specified gradient.  The drawing
- *      is clipped to specified rectangle, to allow cutting off some or
- *      all of the corners.
- */
-
-static void GradientFillRoundedRectangle(
-    CGContextRef context,
-    CGRect bounds,
-    CGFloat radius,
-    CGFloat *colors,
-    int numColors)
-{
-    CHECK_RADIUS(radius, bounds)
-
-    CGPathRef path;
-    CGPoint end = {
-	bounds.origin.x,
-	bounds.origin.y + bounds.size.height
-    };
-    CGGradientRef gradient = CGGradientFromRGBA(colors, numColors);
-
-    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextClip(context);
-    CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0);
-    CFRelease(path);
-    CFRelease(gradient);
-}
-
 /*----------------------------------------------------------------------
  * +++ Backgrounds
  *
@@ -651,6 +583,62 @@ static void ttkMacOSXDrawAccentedSegment(
 }
 
 /*----------------------------------------------------------------------
+ * +++ Entry boxes
+ */
+
+static void ttkMacOSXDrawEntry(
+    CGContextRef context,
+    CGRect bounds,
+    int state,
+    Tk_Window tkwin)
+{
+    Bool isDark =  TkMacOSXInDarkMode(tkwin);
+    CGColorRef backgroundColor, borderColor, highlightColor;
+    CGFloat bgRGBA[4], bdRGBA[4], highlight[4] = {1.0, 1.0, 1.0, 0.2};
+    if (isDark) {
+    	GetBackgroundColorRGBA(context, tkwin, 1, bgRGBA);
+
+	/*
+	 * Lighten the background to provide contrast.
+	 */
+
+	for (int i = 0; i < 3; i++) {
+		bgRGBA[i] += 12.0 / 255.0;
+		bdRGBA[i] += 17.0 / 255.0;
+	    }
+	backgroundColor = CGColorFromRGBA(bgRGBA);
+    } else {
+	backgroundColor = CGCOLOR([NSColor whiteColor]);
+    }
+    if (state & TTK_STATE_FOCUS) {
+	NSColor *accent = [NSColor controlAccentColor];
+	CGColorRef focusColor = CGCOLOR([accent colorWithAlphaComponent:0.6]);
+	SolidFillRoundedRectangle(context, bounds, 4, focusColor);
+	bounds = CGRectInset(bounds, 3, 3);
+	highlightColor = CGColorFromRGBA(highlight);
+	CGContextSetFillColorWithColor(context, highlightColor);
+	CGContextFillRect(context, bounds);
+    } else {
+    	bounds = CGRectInset(bounds, 3, 3);
+	if (isDark) {
+	    borderColor = CGColorFromRGBA(bdRGBA);
+	} else {
+	    GrayColor borderGray = {.grayscale = 187.0, .alpha = 1.0};
+	    borderColor = CGColorFromGray(borderGray);
+	}
+	CGContextSetFillColorWithColor(context, borderColor);
+	CGContextFillRect(context, bounds);
+	if (isDark) {
+	    // Stroke a line at the bottom.
+	}
+    }
+    bounds = CGRectInset(bounds, 1, 1);
+    CGContextSetFillColorWithColor(context, backgroundColor);
+    CGContextFillRect(context, bounds);
+}
+
+			       
+/*----------------------------------------------------------------------
  * +++ Chevrons, CheckMarks, etc. --
  */
 
@@ -668,10 +656,11 @@ static void ttkMacOSXDrawDownArrow(
     NSColor *strokeColor;
     CGFloat x, y;
 
-    if (state & TTK_STATE_SELECTED) {
-	strokeColor = [NSColor whiteColor];
-    } else if (state & TTK_STATE_DISABLED) {
+
+    if (state & TTK_STATE_DISABLED) {
 	strokeColor = [NSColor disabledControlTextColor];
+    } else if (state & TTK_STATE_USER2) {
+	strokeColor = [NSColor whiteColor];
     } else {
 	strokeColor = [NSColor controlTextColor];
     }
@@ -731,7 +720,7 @@ static void ttkMacOSXDrawUpDownArrows(
 {
     CGFloat x, y;
     NSColor *topStrokeColor, *bottomStrokeColor;
-    if (drawState == BOTH_ARROWS) {
+    if (drawState == BOTH_ARROWS && !(state & TTK_STATE_BACKGROUND)) {
 	topStrokeColor = bottomStrokeColor = [NSColor whiteColor];
     } else if (drawState == kThemeStatePressedDown) {
 	topStrokeColor = [NSColor controlTextColor];
@@ -988,7 +977,11 @@ static void DrawButton(
 	    !(state & TTK_STATE_DISABLED)) {
 	    ttkMacOSXDrawAccentedSegment(context, arrowBounds, 4.0, tkwin);
 	}
-	ttkMacOSXDrawDownArrow(context, arrowBounds, 4, 8, TTK_STATE_SELECTED);
+	if (state == 0) {
+	    state = TTK_STATE_USER2;
+	}
+	ttkMacOSXDrawDownArrow(context, arrowBounds, 4, 8, state);
+	break;
     case kThemeCheckBox:
 	bounds = CGRectOffset(CGRectMake(0, bounds.size.height / 2 - 8, 16, 16),
 			      bounds.origin.x, bounds.origin.y);
@@ -1059,15 +1052,16 @@ static void DrawButton(
 	    if (drawState == kThemeStatePressedDown) {
 		clip.origin.y += clip.size.height;
 		clip.size.height += 1;
-		bounds.origin.y += 1;
+		clip.size.width += 2;
+		clip.origin.x -= 2;
+		bounds.size.height += 1;
 	    }
 	    CGContextSaveGState(context);
 	    CGContextClipToRect(context, clip);
 	    ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
 	    CGContextRestoreGState(context);
 	}
-	bounds.origin.x += 1;
-	ttkMacOSXDrawUpDownArrows(context, bounds, 2, 5, 3, state, drawState);
+	ttkMacOSXDrawUpDownArrows(context, bounds, 4, 5, 3, state, drawState);
 	break;
     case kThemeRoundedBevelButton:
 	if (state & TTK_STATE_PRESSED) {
@@ -1183,93 +1177,6 @@ static void DrawDarkSeparator(
 
     CGContextSetFillColorWithColor(context, sepColor);
     CGContextFillRect(context, bounds);
-}
-
-/*----------------------------------------------------------------------
- * +++ DrawDarkFocusRing --
- *
- *      This is a standalone drawing procedure which draws a focus ring around
- *      an Entry widget in Dark Mode.
- */
-
-static void DrawDarkFocusRing(
-    CGRect bounds,
-    CGContextRef context)
-{
-    CGRect insetBounds = CGRectInset(bounds, -3, -3);
-    CHECK_RADIUS(4, insetBounds)
-
-	CGColorRef strokeColor, fillColor = CGColorFromRGBA(darkFocusRing);
-    CGFloat x = bounds.origin.x, y = bounds.origin.y;
-    CGFloat w = bounds.size.width, h = bounds.size.height;
-    CGPoint topPart[4] = {
-	{x, y + h}, {x, y + 1}, {x + w - 1, y + 1}, {x + w - 1, y + h}
-    };
-    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
-
-    CGContextSaveGState(context);
-    CGContextSetShouldAntialias(context, false);
-    CGContextBeginPath(context);
-    strokeColor = CGColorFromRGBA(darkFocusRingTop);
-    CGContextSetStrokeColorWithColor(context, strokeColor);
-    CGContextAddLines(context, topPart, 4);
-    CGContextStrokePath(context);
-    strokeColor = CGColorFromRGBA(darkFocusRingBottom);
-    CGContextSetStrokeColorWithColor(context, strokeColor);
-    CGContextAddLines(context, bottom, 2);
-    CGContextStrokePath(context);
-    CGContextSetShouldAntialias(context, true);
-    CGContextSetFillColorWithColor(context, fillColor);
-    CGPathRef path = CGPathCreateWithRoundedRect(insetBounds, 4, 4, NULL);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextAddRect(context, bounds);
-    CGContextEOFillPath(context);
-    CGContextRestoreGState(context);
-}
-/*----------------------------------------------------------------------
- * +++ DrawDarkFrame --
- *
- *      This is a standalone drawing procedure which draws various
- *      types of borders in Dark Mode.
- */
-
-static void DrawDarkFrame(
-    CGRect bounds,
-    CGContextRef context,
-    HIThemeFrameKind kind)
-{
-    CGColorRef stroke;
-    CGFloat x = bounds.origin.x, y = bounds.origin.y;
-    CGFloat w = bounds.size.width, h = bounds.size.height;
-    CGPoint topPart[4] = {
-	{x, y + h - 1}, {x, y + 1}, {x + w, y + 1}, {x + w, y + h - 1}
-    };
-    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
-    CGPoint accent[2] = {{x, y + 1}, {x + w, y + 1}};
-
-    switch (kind) {
-    case kHIThemeFrameTextFieldSquare:
-	CGContextSaveGState(context);
-	CGContextSetShouldAntialias(context, false);
-	CGContextBeginPath(context);
-	stroke = CGColorFromGray(darkFrameTop);
-	CGContextSetStrokeColorWithColor(context, stroke);
-	CGContextAddLines(context, topPart, 4);
-	CGContextStrokePath(context);
-	stroke = CGColorFromGray(darkFrameBottom);
-	CGContextSetStrokeColorWithColor(context, stroke);
-	CGContextAddLines(context, bottom, 2);
-	CGContextStrokePath(context);
-	stroke = CGColorFromGray(darkFrameAccent);
-	CGContextSetStrokeColorWithColor(context, stroke);
-	CGContextAddLines(context, accent, 2);
-	CGContextStrokePath(context);
-	CGContextRestoreGState(context);
-	break;
-    default:
-	break;
-    }
 }
 
 /*----------------------------------------------------------------------
@@ -1935,7 +1842,7 @@ static void EntryElementSize(
     int *minHeight,
     Ttk_Padding *paddingPtr)
 {
-    *paddingPtr = Ttk_MakePadding(7, 5, 7, 6);
+    *paddingPtr = Ttk_MakePadding(9, 8, 7, 9);
 }
 
 static void EntryElementDraw(
@@ -1952,27 +1859,9 @@ static void EntryElementDraw(
     CGColorRef background;
     Tk_3DBorder backgroundPtr = NULL;
     static const char *defaultBG = ENTRY_DEFAULT_BACKGROUND;
-    CGFloat rgba[4];
-
-    if (TkMacOSXInDarkMode(tkwin)) {
+    if ([NSApp macMinorVersion] > 8) {
 	BEGIN_DRAWING(d)
-	GetBackgroundColorRGBA(dc.context, tkwin, 1, rgba);
-
-	/*
-	 * Lighten the background to provide contrast.
-	 */
-
-	for (int i = 0; i < 3; i++) {
-		rgba[i] += 9.0 / 255.0;
-	    }
-	background = CGColorFromRGBA(rgba);
-	CGContextSetFillColorWithColor(dc.context, background);
-	CGContextFillRect(dc.context, bounds);
-	if (state & TTK_STATE_FOCUS) {
-	    DrawDarkFocusRing(bounds, dc.context);
-	} else {
-	    DrawDarkFrame(bounds, dc.context, kHIThemeFrameTextFieldSquare);
-	}
+	    ttkMacOSXDrawEntry(dc.context, bounds, state, tkwin);
 	END_DRAWING
     } else {
 	const HIThemeFrameDrawInfo info = {
@@ -2085,15 +1974,6 @@ static void ComboboxElementDraw(
 	bounds.size.height = height;
 	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
-	if ([NSApp macMinorVersion] > 8) {
-	    if ((state & TTK_STATE_BACKGROUND) &&
-		!(state & TTK_STATE_DISABLED)) {
-		NSColor *background = [NSColor textBackgroundColor];
-		CGRect innerBounds = CGRectInset(bounds, 1, 2);
-		SolidFillRoundedRectangle(dc.context, innerBounds, 4,
-					  CGCOLOR(background));
-	    }
-	}
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 	       NULL);
     }
@@ -2173,6 +2053,8 @@ static void SpinButtonUpElementDraw(
     };
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
+	bounds.origin.x -= 7;
+	bounds.size.width += 2;
 	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
@@ -2232,6 +2114,7 @@ static void SpinButtonDownElementDraw(
 
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
+	bounds.origin.x -= 5;
 	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
