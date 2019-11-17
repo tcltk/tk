@@ -1553,8 +1553,8 @@ test wm-stackorder-5.3 {An overrideredirect window\
     destroy .t
 } -result 1
 
-test wm-stackorder-6.1 {An embedded toplevel does not\
-        appear in the stacking order on unix or win} -constraints notAqua -body {
+test wm-stackorder-6.1 {An embedded toplevel does not appear in the \
+	stacking order} -body {
     toplevel .real -container 1
     toplevel .embd -bg blue -use [winfo id .real]
     update
@@ -1562,16 +1562,6 @@ test wm-stackorder-6.1 {An embedded toplevel does not\
 } -cleanup {
     deleteWindows
 } -result {. .real}
-test wm-stackorder-6.1.1 {An embedded toplevel does\
-        appear in the stacking order on macOS} -constraints aqua -body {
-    toplevel .real -container 1
-    toplevel .embd -bg blue -use [winfo id .real]
-    update
-    wm stackorder .
-} -cleanup {
-    deleteWindows
-} -result {. .embd}
-
 
 stdWindow
 
