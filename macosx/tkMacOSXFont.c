@@ -109,7 +109,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
  * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
  * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
  * encoding requires 4 bytes.
- * 
+ *
  * As a workaround, these versions of Tcl encode non-BMP characters as a string
  * of length 6 in which the high and low UTF-16 surrogates have been encoded
  * using the UTF-8 algorithm.  The UTF-8 encoding does not allow encoding
@@ -117,7 +117,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
  * NString class will refuse to instantiate an NSString from the 6-byte
  * encoding.  This function allows creating an NSString from a C-string which
  * has been encoded using this scheme.
- * 
+ *
  * Results:
  *	An NSString, which may be nil.
  *
@@ -302,7 +302,7 @@ FindNSFont(
 	size = [defaultFont pointSize];
     }
     nsFont = [fm fontWithFamily:family traits:traits weight:weight size:size];
-    
+
     /*
      * A second bug in NSFontManager that Apple created for the Catalina OS
      * causes requests as above to sometimes return fonts with additional
