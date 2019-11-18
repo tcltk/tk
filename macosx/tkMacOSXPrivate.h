@@ -239,6 +239,10 @@ MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE int        TclUniAtIndex(NSString *string, int index, char *uni,
+				      unsigned int *code);
+MODULE_SCOPE NSString*  TclUniToNSString(const char *source, int numBytes);
+MODULE_SCOPE char*      NSStringToTclUni(NSString *string, int *numBytes);
 
 #pragma mark Private Objective-C Classes
 
