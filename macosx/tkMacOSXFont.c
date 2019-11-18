@@ -104,7 +104,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 /*
  *---------------------------------------------------------------------------
  *
- * NSStringFromTclUTF --
+ * TclUniToNSString --
  *
  * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
  * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
@@ -163,8 +163,9 @@ TclUniToNSString(
  *	Returns the number of bytes written.
  *
  * Side effects:
- *	Bytes are written to the address uni and the unicode code point is written
- *      to the integer at address code.
+ *	Bytes are written to the char array referenced by the pointer uni and
+ *      the unicode code point is written to the integer referenced by the
+ *      pointer code.
  *
  */
 
@@ -199,14 +200,22 @@ TclUniAtIndex(
  *
  * NSStringToTclUni --
  *
- * Encodes the unicode string represented by an NSString object using the
- * special internal Tcl encoding used when TCL_UTF_MAX = 3.  This encoding
+ * Encodes the unicode string represented by an NSString object with the
+ * internal encoding that Tcl uses when TCL_UTF_MAX = 3.  This encoding
  * is similar to UTF-8 except that non-BMP characters are encoded as two
  * successive 3-byte sequences which are constructed from UTF-16 surrogates
  * by applying the UTF-8 algorithm.  Even though the UTF-8 encoding does not
  * allow encoding surrogates, the algorithm does produce a well-defined
  * 3-byte sequence.
  *
+ * Results:
+ *	Returns a pointer to a null-terminated byte array which encodes the
+ *	NSString.
+ *
+ * Side effects:
+ *      Memory is allocated to hold the byte array, which must be freed with
+ *      ckalloc.  If the pointer numBytes is not NULL the number of non-null
+ *      bytes written to the array is stored in the integer it references.
  */
 
 MODULE_SCOPE char*
@@ -215,16 +224,23 @@ NSStringToTclUni(
    int *numBytes)
 {
     unsigned int code;
-    int i, length = [string length];
-    char *ptr, *result = ckalloc(6*length + 1);
-    for (i = 0, ptr = result; i < length; i++) {
-	ptr += TclUniAtIndex(string, i, ptr, &code);
-	if (code > 0xffff){
-	    i++;
+    int i;
+    char *ptr, *bytes = ckalloc(6*[string length] + 1);
+
+    ptr = bytes;
+    if (ptr) {
+	for (i = 0; i < [string length]; i++) {
+	    ptr += TclUniAtIndex(string, i, ptr, &code);
+	    if (code > 0xffff){
+		i++;
+	    }
 	}
+	*ptr = '\0';
     }
-    *ptr = '\0';
-    return result;
+    if (numBytes) {
+	*numBytes = ptr - bytes;
+    }
+    return bytes;
 }
 
 #define GetNSFontTraitsFromTkFontAttributes(faPtr) \

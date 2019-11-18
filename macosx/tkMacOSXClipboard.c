@@ -135,19 +135,20 @@ TkSelGetSelection(
 	    string = [pb stringForType:type];
 	}
 	if (string) {
-	    int utfSize;
-	    char *tclUni = NSStringToTclUni(string, &utfSize);
 
 	    /*
-	     * Re-encode the string using the encoding which is used in Tcl
+	     * Encode the string using the encoding which is used in Tcl
 	     * when TCL_UTF_MAX = 3.  This replaces each UTF-16 surrogate with
 	     * a 3-byte sequence generated using the UTF-8 algorithm. (Even
 	     * though UTF-8 does not allow encoding surrogates, the algorithm
 	     * does produce a 3-byte sequence.)
 	     */
 
-	    result = proc(clientData, interp, tclUni);
-	    ckfree(tclUni);
+	    char *bytes = NSStringToTclUni(string, NULL);
+	    result = proc(clientData, interp, bytes);
+	    if (bytes) {
+		ckfree(bytes);
+	    }
 	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
