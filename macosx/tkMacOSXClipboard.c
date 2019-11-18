@@ -123,7 +123,6 @@ TkSelGetSelection(
     int haveExternalClip =
 	    ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
 
-    printf("TkSelGetSelection\n");
     if (dispPtr && (haveExternalClip || dispPtr->clipboardActive)
 	        && selection == dispPtr->clipboardAtom
 	        && (target == XA_STRING || target == dispPtr->utf8Atom)) {
@@ -138,7 +137,7 @@ TkSelGetSelection(
 	if (string) {
 	    int utfSize;
 	    char *tclUni = NSStringToTclUni(string, &utfSize);
-	    
+
 	    /*
 	     * Re-encode the string using the encoding which is used in Tcl
 	     * when TCL_UTF_MAX = 3.  This replaces each UTF-16 surrogate with
