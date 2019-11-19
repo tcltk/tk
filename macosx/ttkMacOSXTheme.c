@@ -93,10 +93,6 @@ GRAYCOLOR listheaderSeparator = GRAY256(220.0);
 GRAYCOLOR listheaderActiveBG = GRAY256(238.0);
 GRAYCOLOR listheaderInactiveBG = GRAY256(246.0);
 
-GRAYCOLOR entryBorder = GRAY256(187.0);
-
-//    CGFloat bdRGBA[4] = {187.0 / 255.0, 187.0 / 255.0, 187.0 / 255.0, 1.0}; 
-
 /* Transparent Grays */
 GRAYCOLOR boxBorder = {1.0, 0.20};
 GRAYCOLOR darkTrack = {1.0, 0.25};
@@ -109,7 +105,8 @@ GRAYCOLOR darkFrameBottom = {1.0, 0.125};
  * Core Graphics uses CGColorRefs, not NSColors.  A CGColorRef must be retained
  * and released explicitly while an NSColor is autoreleased.  In version 10.8
  * of macOS Apple introduced a CGColor property of an NSColor which is guaranteed
- * to be a valid CGColorRef for (approximagely) the same color.
+ * to be a valid CGColorRef for (approximagely) the same color and is released
+ * when the NSColor is autoreleased.
  *
  * When building on systems earlier than 10.8 there is no reasonable way to
  * convert an NSColor to a CGColor. On the other hand, on those systems we use
@@ -409,6 +406,20 @@ static ButtonInfo disabledButtonInfo = {
  .darkTopGray = 90.0,  .darkSideGray = 80.0,  .darkBottomGray = 49.0,
 };
 
+static ButtonInfo incDecInfo = {
+ .radius = 5.0,
+ .lightFaceGray = 255.0, .darkFaceGray = 118.0,
+ .lightTopGray = 198.0, .lightSideGray = 192.0, .lightBottomGray = 173.0,
+ .darkTopGray = 132.0,  .darkSideGray = 118.0,  .darkBottomGray = 48.0,
+};
+
+static ButtonInfo disabledIncDecInfo = {
+ .radius = 5.0,
+ .lightFaceGray = 246.0, .darkFaceGray = 80.0,
+ .lightTopGray = 236.0, .lightSideGray = 227.0, .lightBottomGray = 213.0,
+ .darkTopGray = 90.0,  .darkSideGray = 80.0,  .darkBottomGray = 49.0,
+};
+
 static ButtonInfo checkInfo = {
  .radius = 4.0,
  .lightFaceGray = 255.0, .darkFaceGray = 118.0,
@@ -462,7 +473,19 @@ static ButtonInfo disabledTabInfo = {
  .darkTopGray = 90.0,  .darkSideGray = 80.0,  .darkBottomGray = 49.0,
 };
 
-static void ttkMacOSXDrawGradientBorder(
+static ButtonInfo EntryInfo = {
+ .radius = 0.0,
+ .lightTopGray = 187.0, .lightSideGray = 187.0, .lightBottomGray = 187.0,
+ .darkTopGray = 85.0,  .darkSideGray = 85.0,  .darkBottomGray = 100.0,
+};
+
+static ButtonInfo SearchInfo = {
+ .radius = 3.5,
+ .lightTopGray = 187.0, .lightSideGray = 187.0, .lightBottomGray = 187.0,
+ .darkTopGray = 85.0,  .darkSideGray = 85.0,  .darkBottomGray = 100.0,
+};
+
+static void ttkMacOSXFillBoxBorder(
     CGContextRef context,
     CGRect bounds,
     ButtonInfo info,
@@ -470,7 +493,7 @@ static void ttkMacOSXDrawGradientBorder(
 {
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
     CGPoint end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
-    CGFloat corner = info.radius/bounds.size.height;
+    CGFloat corner = (info.radius > 0 ? info.radius : 2.0) / bounds.size.height;
     CGFloat locations[4] = {0.0, corner, 1.0 - corner, 1.0};
     CGFloat colors[16], top, side, bottom;
     CGPathRef path = CGPathCreateWithRoundedRect(bounds, info.radius,
@@ -526,7 +549,7 @@ static void ttkMacOSXDrawGrayButton(
     }
     GrayColor faceGray = {.grayscale = face, .alpha = 1.0};
     faceColor = CGColorFromGray(faceGray);
-    ttkMacOSXDrawGradientBorder(context, bounds, info, isDark);
+    ttkMacOSXFillBoxBorder(context, bounds, info, isDark);
     SolidFillRoundedRectangle(context, CGRectInset(bounds, 1, 1),
     			      info.radius - 1, faceColor);
 }
@@ -607,12 +630,12 @@ static void ttkMacOSXDrawAccentedSegment(
 static void ttkMacOSXDrawEntry(
     CGContextRef context,
     CGRect bounds,
-    CGFloat radius,
+    ButtonInfo info,
     int state,
     Tk_Window tkwin)
 {
     Bool isDark =  TkMacOSXInDarkMode(tkwin);
-    CGColorRef backgroundColor, borderColor, highlightColor;
+    CGColorRef backgroundColor, highlightColor;
     CGFloat bgRGBA[4], highlight[4] = {1.0, 1.0, 1.0, 0.2};
     if (isDark) {
     	GetBackgroundColorRGBA(context, tkwin, 1, bgRGBA);
@@ -638,25 +661,10 @@ static void ttkMacOSXDrawEntry(
 	CGContextFillRect(context, bounds);
     } else {
     	bounds = CGRectInset(bounds, 3, 3);
-	if (isDark) {
-	    //???
-	} else {
-	    borderColor = CGColorFromGray(entryBorder);
-	    if (radius == 0) {
-		CGContextSetFillColorWithColor(context, borderColor);
-		CGContextFillRect(context, bounds);
-	    } else {
-		SolidFillRoundedRectangle(context, bounds, radius, borderColor);
-	    }
-	}
+	ttkMacOSXFillBoxBorder(context, bounds, info, isDark);
     }
     bounds = CGRectInset(bounds, 1, 1);
-    if (radius == 0) {
-	CGContextSetFillColorWithColor(context, backgroundColor);
-	CGContextFillRect(context, bounds);
-    } else {
-	SolidFillRoundedRectangle(context, bounds, radius, backgroundColor);
-    }
+    SolidFillRoundedRectangle(context, bounds, info.radius, backgroundColor);
 }
 
 			       
@@ -757,7 +765,7 @@ static void ttkMacOSXDrawUpDownArrows(
     }
     CGContextSetLineWidth(context, 1.5);
     x = bounds.origin.x + inset;
-    y = bounds.origin.y + trunc(bounds.size.height / 2) - 1;
+    y = bounds.origin.y + trunc(bounds.size.height / 2);
     CGContextBeginPath(context);
     CGPoint bottomArrow[3] =
 	{{x, y + gap}, {x + size / 2, y + gap + size / 2}, {x + size, y + gap}};
@@ -1064,26 +1072,29 @@ static void DrawButton(
 	break;
     case kThemeIncDecButton:
 	if (state & TTK_STATE_DISABLED) {
-	    ttkMacOSXDrawGrayButton(context, bounds, disabledButtonInfo, tkwin);
+	    ttkMacOSXDrawGrayButton(context, bounds, disabledIncDecInfo, tkwin);
 	} else {
-	    ttkMacOSXDrawGrayButton(context, bounds, buttonInfo, tkwin);
+	    ttkMacOSXDrawGrayButton(context, bounds, incDecInfo, tkwin);
 	}
 	if (state & TTK_STATE_PRESSED) {
-	    CGRect clip = bounds;
-	    clip.size.height /= 2;
+	    CGRect clip;
 	    if (drawState == kThemeStatePressedDown) {
+		clip = bounds;
+		clip.size.height /= 2;
 		clip.origin.y += clip.size.height;
-		clip.size.height += 1;
-		clip.size.width += 2;
-		clip.origin.x -= 2;
 		bounds.size.height += 1;
+		clip.size.height += 1;
+	    } else {
+		clip = bounds;
+		clip.size.height /= 2;
 	    }
 	    CGContextSaveGState(context);
 	    CGContextClipToRect(context, clip);
 	    ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
 	    CGContextRestoreGState(context);
 	}
-	ttkMacOSXDrawUpDownArrows(context, bounds, 4, 5, 3, state, drawState);
+	CGFloat inset = (bounds.size.width - 5) / 2;
+	ttkMacOSXDrawUpDownArrows(context, bounds, inset, 5, 3, state, drawState);
 	break;
     case kThemeRoundedBevelButton:
 	if (state & TTK_STATE_PRESSED) {
@@ -1899,10 +1910,10 @@ static void EntryElementDraw(
 	BEGIN_DRAWING(d)
 	    switch(kind) {
 	    case kHIThemeFrameTextFieldRound:
-		ttkMacOSXDrawEntry(dc.context, bounds, 3.0, state, tkwin);
+		ttkMacOSXDrawEntry(dc.context, bounds, SearchInfo, state, tkwin);
 		break;
 	    case kHIThemeFrameTextFieldSquare:
-		ttkMacOSXDrawEntry(dc.context, bounds, 0, state, tkwin);
+		ttkMacOSXDrawEntry(dc.context, bounds, EntryInfo, state, tkwin);
 		break;
 	    default:
 		return;
@@ -2056,7 +2067,21 @@ static Ttk_ElementSpec ComboboxElementSpec = {
 
 static Ttk_Padding SpinbuttonMargins = {2, 0, 0, 0};
 
-static void SpinButtonUpElementSize(
+static void SpinButtonReBounds(
+    Tk_Window tkwin,
+    CGRect *bounds)
+{
+    if (TkMacOSXInDarkMode(tkwin)) {
+	bounds->origin.x -= 5;
+	bounds->origin.y += 1;
+	bounds->size.height -= 0.5;
+    } else {
+	bounds->origin.x -= 6;
+	bounds->size.width += 2;
+    }
+}
+			       
+static void SpinButtonElementSize(
     void *clientData,
     void *elementRecord,
     Tk_Window tkwin,
@@ -2083,6 +2108,7 @@ static void SpinButtonUpElementDraw(
     CGRect bounds = BoxToRect(d, Ttk_PadBox(b, SpinbuttonMargins));
     int infoState;
 
+    SpinButtonReBounds(tkwin, &bounds);
     bounds.size.height *= 2;
     if (state & TTK_STATE_PRESSED) {
 	infoState = kThemeStatePressedUp;
@@ -2098,8 +2124,6 @@ static void SpinButtonUpElementDraw(
     };
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
-	bounds.origin.x -= 7;
-	bounds.size.width += 2;
 	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
@@ -2112,24 +2136,9 @@ static Ttk_ElementSpec SpinButtonUpElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    SpinButtonUpElementSize,
+    SpinButtonElementSize,
     SpinButtonUpElementDraw
 };
-static void SpinButtonDownElementSize(
-    void *clientData,
-    void *elementRecord,
-    Tk_Window tkwin,
-    int *minWidth,
-    int *minHeight,
-    Ttk_Padding *paddingPtr)
-{
-    SInt32 s;
-
-    ChkErr(GetThemeMetric, kThemeMetricLittleArrowsWidth, &s);
-    *minWidth = 2 + s + Ttk_PaddingWidth(SpinbuttonMargins);
-    ChkErr(GetThemeMetric, kThemeMetricLittleArrowsHeight, &s);
-    *minHeight = 2 + (s + Ttk_PaddingHeight(SpinbuttonMargins)) / 2;
-}
 
 static void SpinButtonDownElementDraw(
     void *clientData,
@@ -2142,6 +2151,7 @@ static void SpinButtonDownElementDraw(
     CGRect bounds = BoxToRect(d, Ttk_PadBox(b, SpinbuttonMargins));
     int infoState = 0;
 
+    SpinButtonReBounds(tkwin, &bounds);
     bounds.origin.y -= bounds.size.height;
     bounds.size.height += bounds.size.height;
     if (state & TTK_STATE_PRESSED) {
@@ -2159,7 +2169,6 @@ static void SpinButtonDownElementDraw(
 
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
-	bounds.origin.x -= 5;
 	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
@@ -2172,7 +2181,7 @@ static Ttk_ElementSpec SpinButtonDownElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    SpinButtonDownElementSize,
+    SpinButtonElementSize,
     SpinButtonDownElementDraw
 };
 
