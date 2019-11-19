@@ -104,6 +104,8 @@ If not supported by the current theme, it will not show.
 Number of display columns that should not be scrolled. The tree column counts, even
 if \fB\-show tree\fR is not specified. Thus for value N of this option, column #N is
 the first one that is scrollable.
+.OP \-titlerows titleRows TitleRows
+Number of rows that should not be vertically scrolled.
 .SH "WIDGET COMMAND"
 .PP
 .TP
