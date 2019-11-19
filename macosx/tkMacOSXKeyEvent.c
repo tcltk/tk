@@ -14,7 +14,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
 
 /*
@@ -331,42 +331,30 @@ static unsigned	isFunctionKey(unsigned int code);
     }
 
     /*
-     * NSString represents a non-BMP character as a string of length 2 where
-     * the first character is the high surrogate and the second character is
-     * the low surrogate.  We could record this in the XEvent by setting the
-     * keycode to the unicode code point and setting the trans_chars to the
-     * 4-byte UTF-8 string.  However, that will not help as long as TCL_UTF_MAX
-     * is set to 3.  Until that changes, we just replace non-BMP characters by
-     * the "replacement character" U+FFFD.
+     * Next we generate an XEvent for each unicode character in our string.
+     *
+     * NSString uses UTF-16 internally, which means that a non-BMP character is
+     * represented by a sequence of two 16-bit "surrogates".  In principle we
+     * could record this in the XEvent by setting the keycode to the 32-bit
+     * unicode code point and setting the trans_chars string to the 4-byte
+     * UTF-8 string for the non-BMP character.  However, that will not work
+     * when TCL_UTF_MAX is set to 3, as is the case for Tcl 8.6.  A workaround
+     * used internally by Tcl 8.6 is to encode each surrogate as a 3-byte
+     * sequence using the UTF-8 algorithm (ignoring the fact that the UTF-8
+     * encoding specification does not allow encoding UTF-16 surrogates).
+     * This gives a 6-byte encoding of the non-BMP character which we write into
+     * the trans_chars field of the XEvent.
      */
 
     for (i = 0; i < len; i++) {
-	UniChar nextChar = [str characterAtIndex: i];
-	if (CFStringIsSurrogateHighCharacter(nextChar)) {
-#if 0
-	    UniChar lowChar = [str characterAtIndex: ++i];
-	    xEvent.xkey.keycode = CFStringGetLongCharacterForSurrogatePair(
-		nextChar, lowChar);
-	    xEvent.xkey.nbytes = TkUniCharToUtf(xEvent.xkey.keycode,
-						&xEvent.xkey.trans_chars);
-#else
+	xEvent.xkey.nbytes = TclUniAtIndex(str, i, xEvent.xkey.trans_chars,
+					   &xEvent.xkey.keycode);
+	if (xEvent.xkey.keycode > 0xffff){
 	    i++;
-	    xEvent.xkey.keycode = 0xfffd;
-	    strcpy(xEvent.xkey.trans_chars, "\xef\xbf\xbd");
-	    xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
-#endif
-	} else {
-	    xEvent.xkey.keycode = (int) nextChar;
-	    [[str substringWithRange: NSMakeRange(i,1)]
-	        getCString: xEvent.xkey.trans_chars
-		maxLength: XMaxTransChars encoding: NSUTF8StringEncoding];
-	    xEvent.xkey.nbytes = strlen(xEvent.xkey.trans_chars);
 	}
-	xEvent.xany.type = KeyPress;
-	releaseCode = (UInt16) nextChar;
-	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+    	xEvent.xany.type = KeyPress;
+    	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     }
-
     releaseCode = (UInt16) [str characterAtIndex: 0];
 }
 
@@ -642,7 +630,7 @@ XGrabKeyboard(
     Time time)
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
-    TkWindow *captureWinPtr = (TkWindow *) TkMacOSXGetCapture();
+    TkWindow *captureWinPtr = (TkWindow *) TkpGetCapture();
 
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
