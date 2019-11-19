@@ -131,7 +131,7 @@ addSample $w Japanese \
 addSample $w Korean "\uB300\uD55C\uBBFC\uAD6D\uC758 \uD55C\uAE00"
 addSample $w Russian \
 	"\u0420\u0443\u0441\u0441\u043A\u0438\u0439 \u044F\u0437\u044B\u043A"
-if {[tk windowingsystem] eq "win32"} {
+if {[tk windowingsystem] ne "x11"} {
     addSample $w Emoji \
 	    "\U1F600\U1F4A9\U1F44D\U1F1F3\U1F1F1"
 }
