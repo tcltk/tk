@@ -176,7 +176,7 @@ FindNSFont(
 	size = [defaultFont pointSize];
     }
     nsFont = [fm fontWithFamily:family traits:traits weight:weight size:size];
-    
+
     /*
      * A second bug in NSFontManager that Apple created for the Catalina OS
      * causes requests as above to sometimes return fonts with additional
