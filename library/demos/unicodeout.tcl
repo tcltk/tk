@@ -134,7 +134,7 @@ addSample $w Russian \
 if {[package vsatisfies [package provide Tcl] 8.7-]} {
     addSample $w Emoji \
 	    "\U1F600\U1F4A9\U1F44D\U1F1F3\U1F1F1"
-} elseif {[tk windowingsystem] ne "x11"} {
+} elseif {([tk windowingsystem] ne "x11") || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))} {
     addSample $w Emoji \
 	    "\uD83D\uDE00\uD83D\uDCA9\uD83D\uDC4D\uD83C\uDDF3\uD83C\uDDF1"
 }
