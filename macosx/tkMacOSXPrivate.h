@@ -243,6 +243,7 @@ MODULE_SCOPE NSString*  TclUniToNSString(const char *source, int numBytes);
 MODULE_SCOPE int        TclUniAtIndex(NSString *string, int index, char *uni,
 				      unsigned int *code);
 MODULE_SCOPE char*      NSStringToTclUni(NSString *string, int *numBytes);
+MODULE_SCOPE int 	TkMacOSXNSImage_Init(Tcl_Interp *interp);
 
 #pragma mark Private Objective-C Classes
 

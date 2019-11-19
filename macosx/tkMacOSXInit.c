@@ -410,6 +410,12 @@ TkpInit(
 	 */
 
 	TkMacOSXServices_Init(interp);
+
+	/*
+	 * Add the system image type for named NSImages.
+	 */
+	
+	TkMacOSXNSImage_Init(interp);
     }
 
     if (tkLibPath[0] != '\0') {
