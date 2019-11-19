@@ -10,6 +10,7 @@
 
 #define DEF_TREE_ROWS		"10"
 #define DEF_TITLECOLUMNS	"0"
+#define DEF_TITLEROWS		"0"
 #define DEF_STRIPED		"0"
 #define DEF_COLWIDTH		"200"
 #define DEF_MINWIDTH		"20"
@@ -413,6 +414,7 @@ typedef struct {
     Tcl_Obj *heightObj;		/* height (rows) */
     Tcl_Obj *paddingObj;	/* internal padding */
     int nTitleColumns;		/* -titlecolumns */
+    int nTitleRows;		/* -titlerows */
     int striped;		/* -striped option */
 
     Tcl_Obj *showObj;		/* -show list */
@@ -479,6 +481,9 @@ static Tk_OptionSpec TreeviewOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-titlecolumns", "titlecolumns", "Titlecolumns",
 	DEF_TITLECOLUMNS, -1, offsetof(Treeview,tree.nTitleColumns),
+	0,0,GEOMETRY_CHANGED},
+    {TK_OPTION_INT, "-titlerows", "titlerows", "Titlerows",
+	DEF_TITLEROWS, -1, offsetof(Treeview,tree.nTitleRows),
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_BOOLEAN, "-striped", "striped", "Striped",
 	DEF_STRIPED, -1, offsetof(Treeview,tree.striped),
@@ -1087,6 +1092,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
     Tcl_InitHashTable(&tv->tree.columnNames, TCL_STRING_KEYS);
     tv->tree.nColumns = tv->tree.nDisplayColumns = 0;
     tv->tree.nTitleColumns = 0;
+    tv->tree.nTitleRows = 0;
     tv->tree.titleWidth = 0;
     tv->tree.striped = 0;
     tv->tree.columns = NULL;
@@ -1422,7 +1428,10 @@ static TreeItem *IdentifyRow(
 static TreeItem *IdentifyItem(Treeview *tv, int y)
 {
     int rowHeight = tv->tree.rowHeight;
-    int ypos = tv->tree.treeArea.y - rowHeight * tv->tree.yscroll.first;
+    int ypos = tv->tree.treeArea.y;
+    if (y - tv->tree.treeArea.y >= tv->tree.nTitleRows * rowHeight) {
+	ypos -= rowHeight * tv->tree.yscroll.first;
+    }
     return IdentifyRow(tv, tv->tree.root->children, &ypos, y);
 }
 
@@ -1528,6 +1537,22 @@ static int ItemRow(Treeview *tv, TreeItem *p)
     }
 }
 
+/* + DisplayRow --
+ * 	Returns the position row has on screen, or -1 if off-screen.
+ */
+static int DisplayRow(int row, Treeview *tv)
+{
+    if (row < tv->tree.nTitleRows) {
+	return row;
+    }
+    row -= tv->tree.nTitleRows;
+    if (row < tv->tree.yscroll.first || row > tv->tree.yscroll.last) {
+	/* not viewable, or off-screen */
+	return -1;
+    }
+    return row - tv->tree.yscroll.first + tv->tree.nTitleRows;
+}
+
 /* + BoundingBox --
  * 	Compute the parcel of the specified column of the specified item,
  *	(or the entire item if column is NULL)
@@ -1540,14 +1565,16 @@ static int BoundingBox(
     Ttk_Box *bbox_rtn)		/* bounding box of item */
 {
     int row = ItemRow(tv, item);
+    int dispRow;
     Ttk_Box bbox = tv->tree.treeArea;
 
-    if (row < tv->tree.yscroll.first || row > tv->tree.yscroll.last) {
+    dispRow = DisplayRow(row, tv);
+    if (dispRow < 0) {
 	/* not viewable, or off-screen */
 	return 0;
     }
 
-    bbox.y += (row - tv->tree.yscroll.first) * tv->tree.rowHeight;
+    bbox.y += dispRow * tv->tree.rowHeight;
     bbox.height = tv->tree.rowHeight;
 
     bbox.x -= tv->tree.xscroll.first;
@@ -1729,10 +1756,10 @@ static void TreeviewDoLayout(void *clientData)
 
     visibleRows = tv->tree.treeArea.height / tv->tree.rowHeight;
     tv->tree.root->state |= TTK_STATE_OPEN;
-    TtkScrolled(tv->tree.yscrollHandle,
-	    tv->tree.yscroll.first,
-	    tv->tree.yscroll.first + visibleRows,
-	    CountRows(tv->tree.root) - 1);
+    first = tv->tree.yscroll.first;
+    last = tv->tree.yscroll.first + visibleRows - tv->tree.nTitleRows;
+    total = CountRows(tv->tree.root) - 1 - tv->tree.nTitleRows;
+    TtkScrolled(tv->tree.yscrollHandle, first, last, total);
 }
 
 /* + TreeviewSize --
@@ -1928,7 +1955,8 @@ static void DrawItem(
     int rowHeight = tv->tree.rowHeight;
     int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     int xTitle = tv->tree.treeArea.x;
-    int y = tv->tree.treeArea.y + rowHeight * (row - tv->tree.yscroll.first);
+    int dispRow = DisplayRow(row, tv);
+    int y = tv->tree.treeArea.y + rowHeight * dispRow;
 
     if (row % 2 && tv->tree.striped) state |= TTK_STATE_ALTERNATE;
 
@@ -2005,7 +2033,8 @@ static int DrawForest(	/* forward */
 static int DrawSubtree(
     Treeview *tv, TreeItem *item, Drawable d, int depth, int row)
 {
-    if (row >= tv->tree.yscroll.first) {
+    int dispRow = DisplayRow(row, tv);
+    if (dispRow >= 0) {
 	DrawItem(tv, item, d, depth, row);
     }
 
@@ -2025,7 +2054,8 @@ static int DrawSubtree(
 static int DrawForest(
     Treeview *tv, TreeItem *item, Drawable d, int depth, int row)
 {
-    while (item && row < tv->tree.yscroll.last) {
+    int dispRow = DisplayRow(row, tv);
+    while (item && dispRow < tv->tree.yscroll.last) {
         row = DrawSubtree(tv, item, d, depth, row);
 	item = item->next;
     }
@@ -3039,7 +3069,7 @@ static int TreeviewSeeCommand(
 {
     Treeview *tv = recordPtr;
     TreeItem *item, *parent;
-    int rowNumber;
+    int rowNumber, scrollRow;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item");
@@ -3059,16 +3089,19 @@ static int TreeviewSeeCommand(
 	    TtkRedisplayWidget(&tv->core);
 	}
     }
-    tv->tree.yscroll.total = CountRows(tv->tree.root) - 1;
+    tv->tree.yscroll.total = CountRows(tv->tree.root) - 1 - tv->tree.nTitleRows;
 
     /* Make sure item is visible:
      */
     rowNumber = RowNumber(tv, item);
-    if (rowNumber < tv->tree.yscroll.first) {
-	TtkScrollTo(tv->tree.yscrollHandle, rowNumber, 1);
-    } else if (rowNumber >= tv->tree.yscroll.last) {
+    scrollRow = rowNumber - tv->tree.nTitleRows;
+    if (scrollRow < 0) {
+	/* Nothing to do */
+    } else if (scrollRow < tv->tree.yscroll.first) {
+	TtkScrollTo(tv->tree.yscrollHandle, scrollRow, 1);
+    } else if (scrollRow >= tv->tree.yscroll.last) {
 	TtkScrollTo(tv->tree.yscrollHandle,
-	    tv->tree.yscroll.first + (1+rowNumber - tv->tree.yscroll.last), 1);
+	    tv->tree.yscroll.first + (1+scrollRow - tv->tree.yscroll.last), 1);
     }
 
     return TCL_OK;
