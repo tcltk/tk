@@ -15,7 +15,7 @@ namespace eval ttk::theme::aqua {
 	    -insertwidth 1
 
 	ttk::style map . \
-	    -foreground { 
+	    -foreground {
 		disabled systemDisabledControlTextColor
 		background systemLabelColor} \
 	    -selectbackground {
@@ -26,14 +26,23 @@ namespace eval ttk::theme::aqua {
 		!focus systemSelectedTextColor}
 
 	# Button
-	ttk::style configure TButton -anchor center -width -6 \
-	    -foreground systemControlTextColor
+	ttk::style configure TButton -anchor center \
+	    -foreground systemControlTextColor -compound top
 	ttk::style map TButton \
 	    -foreground {
 		pressed white
 	        {alternate !pressed !background} white}
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
 	ttk::style configure Toolbutton -anchor center
+
+	# Image Button
+	ttk::style configure ImageButton -anchor center -width 1 \
+	    -compound top
+	ttk::style map ImageButton \
+	    -foreground {
+		pressed systemLabelColor
+		!pressed systemSecondaryLabelColor
+	    }
 
 	# Entry
 	ttk::style configure TEntry \
@@ -49,7 +58,7 @@ namespace eval ttk::theme::aqua {
 	    -selectbackground {
 		background systemTextBackgroundColor
 	    }
-	    
+
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
@@ -63,9 +72,10 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook.Tab -foreground systemControlTextColor
 	ttk::style map TNotebook.Tab \
 	    -foreground {
-		background systemControlTextColor
-		disabled systemDisabledControlTextColor
-		selected systemSelectedTabTextColor}
+		{background !selected} systemControlTextColor
+		{background selected} black
+		{!background selected} systemSelectedTabTextColor
+		disabled systemDisabledControlTextColor}
 
 	# Combobox:
 	ttk::style configure TCombobox \
@@ -100,7 +110,7 @@ namespace eval ttk::theme::aqua {
 		!focus systemTextBackgroundColor
 		focus systemSelectedTextBackgroundColor
 	    }
-	
+
 	# Treeview:
 	ttk::style configure Heading \
 	    -font TkHeadingFont \
@@ -123,7 +133,11 @@ namespace eval ttk::theme::aqua {
 	# (ref: Apple Human Interface Guidelines / Controls / Grouping Controls)
 	#
 	ttk::style configure TLabelframe \
-		-labeloutside true -labelmargins {14 0 14 4}
+	    -labeloutside true \
+	    -labelmargins {14 0 14 2}
+
+	ttk::style configure TLabelframe.Label \
+	    -font TkSmallCaptionFont
 
 	# TODO: panedwindow sashes should be 9 pixels (HIG:Controls:Split Views)
     }

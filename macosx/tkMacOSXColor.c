@@ -211,10 +211,12 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "TextBackgroundColor",		    semantic, 6 },						    /* 180 */
     { "SelectedTextBackgroundColor",	    semantic, 7 },						    /* 181 */
     { "ControlAccentColor",		    semantic, 8 },						    /* 182 */
+    /* Apple's SecondaryLabelColor is the same as their LabelColor so we roll our own. */
+    { "SecondaryLabelColor",		    ttkBackground, 14 },					    /* 183 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 182
+#define MAX_PIXELCODE 183
 
 /*
  *----------------------------------------------------------------------
