@@ -7689,4 +7689,12 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2019-11-15 (bug)[69b48f] failing test textTag-18.1 (vogel)
 
-- Released 8.6.10, November 21, 2019 - https://core.tcl-lang.org/tk/ for details
+2019-11-17 (bug)[c4abd2] panic in stackorder command (culler)
+
+2019-11-17 (bug)[53d280] [wm iconphoto] crash on empty image (culler)
+
+2019-11-17 [90d555] workaround NSFontManager bad selections (culler)
+
+2019-11-19 (new) Partial Emoji support in text displays (nijtmans,culler)
+
+- Released 8.6.10, Nov 21, 2019 - https://core.tcl-lang.org/tk/ for details
