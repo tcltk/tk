@@ -93,6 +93,9 @@ GRAYCOLOR listheaderSeparator = GRAY256(220.0);
 GRAYCOLOR listheaderActiveBG = GRAY256(238.0);
 GRAYCOLOR listheaderInactiveBG = GRAY256(246.0);
 
+GRAYCOLOR lightComboSeparator = GRAY256(236.0);
+GRAYCOLOR darkComboSeparator = GRAY256(66.0);
+
 /* Transparent Grays */
 GRAYCOLOR boxBorder = {1.0, 0.20};
 GRAYCOLOR darkTrack = {1.0, 0.25};
@@ -469,18 +472,28 @@ static ButtonInfo selectedTabInfo = {
 
 static ButtonInfo disabledTabInfo = {
  .radius = 4.0,
+ .lightFaceGray = 229.0, .darkFaceGray = 163.0,
  .lightTopGray = 213.0, .lightSideGray = 242.0, .lightBottomGray = 200.0,
  .darkTopGray = 90.0,  .darkSideGray = 80.0,  .darkBottomGray = 49.0,
 };
 
-static ButtonInfo EntryInfo = {
+static ButtonInfo entryInfo = {
  .radius = 0.0,
+ .lightFaceGray = 229.0, .darkFaceGray = 163.0,
  .lightTopGray = 187.0, .lightSideGray = 187.0, .lightBottomGray = 187.0,
  .darkTopGray = 85.0,  .darkSideGray = 85.0,  .darkBottomGray = 100.0,
 };
 
-static ButtonInfo SearchInfo = {
+static ButtonInfo searchInfo = {
  .radius = 3.5,
+ .lightFaceGray = 229.0, .darkFaceGray = 163.0,
+ .lightTopGray = 187.0, .lightSideGray = 187.0, .lightBottomGray = 187.0,
+ .darkTopGray = 85.0,  .darkSideGray = 85.0,  .darkBottomGray = 100.0,
+};
+
+static ButtonInfo comboInfo = {
+ .radius = 4.0,
+ .lightFaceGray = 255.0, .darkFaceGray = 118.0,
  .lightTopGray = 187.0, .lightSideGray = 187.0, .lightBottomGray = 187.0,
  .darkTopGray = 85.0,  .darkSideGray = 85.0,  .darkBottomGray = 100.0,
 };
@@ -564,15 +577,33 @@ static void ttkMacOSXDrawGrayButton(
  *  the bottom.  This function draws a colored rounded rectangular button.
  */
 
+static void ttkMacOSXDrawFocusRing(
+    CGContextRef context,
+    CGRect bounds,
+    ButtonInfo info)
+{
+    CGColorRef highlightColor;
+    CGFloat highlight[4] = {1.0, 1.0, 1.0, 0.2};
+    NSColor *accent = [NSColor controlAccentColor];
+    CGColorRef focusColor = CGCOLOR([accent colorWithAlphaComponent:0.6]);
+
+    SolidFillRoundedRectangle(context, bounds, info.radius, focusColor);
+    bounds = CGRectInset(bounds, 3, 3);
+    highlightColor = CGColorFromRGBA(highlight);
+    CGContextSetFillColorWithColor(context, highlightColor);
+    CGContextFillRect(context, bounds);
+}
+
 static void ttkMacOSXDrawAccentedButton(
     CGContextRef context,
     CGRect bounds,
-    CGFloat radius,
+    ButtonInfo info,
     Tk_Window tkwin)
 {
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
     CGColorRef faceColor = [NSColor controlAccentColor].CGColor;
-    CGPathRef path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    CGPathRef path = CGPathCreateWithRoundedRect(bounds, info.radius, info.radius,
+						 NULL);
     // This gradient should only be used for PushButtons and Tabs, and it needs
     // to be lighter at the top.
     static CGFloat components[12] = {1.0, 1.0, 1.0, 0.05,
@@ -591,7 +622,7 @@ static void ttkMacOSXDrawAccentedButton(
     gradient = CGGradientCreateWithColorComponents(sRGB.CGColorSpace,
 	components, locations, 4);
     CGPoint end;
-    if (bounds.size.height > 2*radius) {
+    if (bounds.size.height > 2*info.radius) {
 	bounds.size.height -= 1;
     }
     end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
@@ -599,7 +630,7 @@ static void ttkMacOSXDrawAccentedButton(
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextClip(context);
-    SolidFillRoundedRectangle(context, bounds, radius, faceColor);
+    SolidFillRoundedRectangle(context, bounds, info.radius, faceColor);
     CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0.0);
     CGContextRestoreGState(context);
     CFRelease(path);
@@ -608,19 +639,54 @@ static void ttkMacOSXDrawAccentedButton(
 static void ttkMacOSXDrawAccentedSegment(
     CGContextRef context,
     CGRect bounds,
-    CGFloat radius,
+    ButtonInfo info,
+    int state,
     Tk_Window tkwin)
 {
     /*
      * Clip to the bounds and then draw an accented button which is extended so
-     * that the rounded corners on the left will be clipped off.
+     * that the rounded corners on the left will be clipped off.  This assumes
+     * that the bounds include room for the focus ring.
      */
 
-    CGContextClipToRect(context, bounds);
+    GrayColor sepGray = TkMacOSXInDarkMode(tkwin) ?
+	    darkComboSeparator : lightComboSeparator;
+    CGColorRef sepColor = CGColorFromGray(sepGray);
+    CGRect clip = bounds;
+    clip.size.height += 10;
     bounds.origin.x -= 10;
     bounds.size.width += 10;
-    bounds.size.height += 1;
-    ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
+    CGPoint separator[2] = {
+	CGPointMake(clip.origin.x - 1, bounds.origin.y + 5),
+	CGPointMake(clip.origin.x - 1,
+		    bounds.origin.y + bounds.size.height - 3)};
+    CGContextSaveGState(context);
+    CGContextSetStrokeColorWithColor(context, sepColor);
+    CGContextSetShouldAntialias(context, false);
+    CGContextSetLineWidth(context, 0.5);
+    CGContextAddLines(context, separator, 2);
+    CGContextStrokePath(context);
+    CGContextSetShouldAntialias(context, true);
+    if (state & TTK_STATE_FOCUS) {
+	CGRect focusClip = clip;
+	clip.size.width += 4;
+	CGContextClipToRect(context, focusClip);
+	bounds = CGRectInset(bounds, 0, 1);
+	ttkMacOSXDrawFocusRing(context, bounds, info);
+    }
+    bounds = CGRectInset(bounds, 4, 4);
+    if (state & TTK_STATE_BACKGROUND) {
+	bounds.size.height += 2;
+    } else {
+	bounds.size.height += 1;
+    }
+    CGContextClipToRect(context, clip);
+    if ((state & TTK_STATE_BACKGROUND) || (state & TTK_STATE_DISABLED)) {
+	ttkMacOSXDrawGrayButton(context, bounds, info, tkwin);
+    } else {
+	ttkMacOSXDrawAccentedButton(context, bounds, info, tkwin);
+    }
+    CGContextRestoreGState(context);
 }
 
 /*----------------------------------------------------------------------
@@ -635,8 +701,8 @@ static void ttkMacOSXDrawEntry(
     Tk_Window tkwin)
 {
     Bool isDark =  TkMacOSXInDarkMode(tkwin);
-    CGColorRef backgroundColor, highlightColor;
-    CGFloat bgRGBA[4], highlight[4] = {1.0, 1.0, 1.0, 0.2};
+    CGColorRef backgroundColor;
+    CGFloat bgRGBA[4];
     if (isDark) {
     	GetBackgroundColorRGBA(context, tkwin, 1, bgRGBA);
 
@@ -652,18 +718,11 @@ static void ttkMacOSXDrawEntry(
 	backgroundColor = CGCOLOR([NSColor whiteColor]);
     }
     if (state & TTK_STATE_FOCUS) {
-	NSColor *accent = [NSColor controlAccentColor];
-	CGColorRef focusColor = CGCOLOR([accent colorWithAlphaComponent:0.6]);
-	SolidFillRoundedRectangle(context, bounds, 4, focusColor);
-	bounds = CGRectInset(bounds, 3, 3);
-	highlightColor = CGColorFromRGBA(highlight);
-	CGContextSetFillColorWithColor(context, highlightColor);
-	CGContextFillRect(context, bounds);
+	ttkMacOSXDrawFocusRing(context, bounds, info);
     } else {
-    	bounds = CGRectInset(bounds, 3, 3);
-	ttkMacOSXFillBoxBorder(context, bounds, info, isDark);
+	ttkMacOSXFillBoxBorder(context, CGRectInset(bounds,3,3), info, isDark);
     }
-    bounds = CGRectInset(bounds, 1, 1);
+    bounds = CGRectInset(bounds, 4, 4);
     SolidFillRoundedRectangle(context, bounds, info.radius, backgroundColor);
 }
 
@@ -697,7 +756,7 @@ static void ttkMacOSXDrawDownArrow(
     CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
     CGContextSetLineWidth(context, 1.5);
     x = bounds.origin.x + inset;
-    y = bounds.origin.y + trunc(bounds.size.height / 2);
+    y = bounds.origin.y + trunc(bounds.size.height / 2) + 1;
     CGContextBeginPath(context);
     CGPoint arrow[3] = {
 	{x, y - size / 4}, {x + size / 2, y + size / 4},
@@ -969,7 +1028,7 @@ static void DrawButton(
     switch (kind) {
     case kThemePushButton:
 	if (state & TTK_STATE_PRESSED) {
-	    ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
+	    ttkMacOSXDrawAccentedButton(context, bounds, buttonInfo, tkwin);
 	} else if ((state & TTK_STATE_ALTERNATE) && !(state & TTK_STATE_BACKGROUND)) {
 	    ttkMacOSXDrawGrayButton(context, bounds, selectedButtonInfo, tkwin);
 	} else if (state & TTK_STATE_DISABLED) {
@@ -989,7 +1048,16 @@ static void DrawButton(
 	arrowBounds.origin.x += bounds.size.width - 17;
 	if (!(state & TTK_STATE_BACKGROUND) &&
 	    !(state & TTK_STATE_DISABLED)) {
-	    ttkMacOSXDrawAccentedSegment(context, arrowBounds, 4.0, tkwin);
+	    CGRect popupBounds = arrowBounds;
+
+	    /*
+	     * Allow room for nonexistent focus ring.
+	     */
+	    
+	    popupBounds.size.width += 4;
+	    popupBounds.origin.y -= 4;
+	    popupBounds.size.height += 8;
+	    ttkMacOSXDrawAccentedSegment(context, popupBounds, buttonInfo, state, tkwin);
 	    drawState = BOTH_ARROWS;
 	}
 	arrowBounds.origin.x += 2;
@@ -997,20 +1065,27 @@ static void DrawButton(
 	break;
     case kThemeComboBox:
 	if (state & TTK_STATE_DISABLED) {
-	    ttkMacOSXDrawGrayButton(context, bounds, disabledButtonInfo, tkwin);
+	    // Need disabled info.
+	    ttkMacOSXDrawEntry(context, bounds, entryInfo, state, tkwin);
 	} else {
-	    ttkMacOSXDrawGrayButton(context, bounds, buttonInfo, tkwin);
+	    ttkMacOSXDrawEntry(context, bounds, entryInfo, state, tkwin);
 	}
 	arrowBounds.size.width = 17;
-	arrowBounds.origin.x += bounds.size.width - 17;
-	if (!(state & TTK_STATE_BACKGROUND) &&
-	    !(state & TTK_STATE_DISABLED)) {
-	    ttkMacOSXDrawAccentedSegment(context, arrowBounds, 4.0, tkwin);
+	if (state & TTK_STATE_BACKGROUND) {
+	    arrowBounds.origin.x += bounds.size.width - 17;
+	    arrowBounds.size.width += 4;
+	    arrowBounds.origin.y -= 1;
+	} else {
+	    arrowBounds.origin.y -= 1;
+	    arrowBounds.origin.x += bounds.size.width - 17;
+	    arrowBounds.size.width += 4;
+	    arrowBounds.size.height += 2;
 	}
+	ttkMacOSXDrawAccentedSegment(context, arrowBounds, comboInfo, state, tkwin);
 	if (state == 0) {
 	    state = TTK_STATE_USER2;
 	}
-	ttkMacOSXDrawDownArrow(context, arrowBounds, 4, 8, state);
+	ttkMacOSXDrawDownArrow(context, arrowBounds, 6, 6, state);
 	break;
     case kThemeCheckBox:
 	bounds = CGRectOffset(CGRectMake(0, bounds.size.height / 2 - 8, 16, 16),
@@ -1024,7 +1099,7 @@ static void DrawButton(
 		if (state & TTK_STATE_BACKGROUND) {
 	    	    ttkMacOSXDrawGrayButton(context, bounds, checkInfo, tkwin);
 		} else {
-		    ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
+		    ttkMacOSXDrawAccentedButton(context, bounds, checkInfo, tkwin);
 		}
 	    }
 	    ttkMacOSXDrawCheckIndicator(context, bounds, state);
@@ -1045,7 +1120,7 @@ static void DrawButton(
 		if (state & TTK_STATE_BACKGROUND) {
 	    	    ttkMacOSXDrawGrayButton(context, bounds, radioInfo, tkwin);
 		} else {
-		    ttkMacOSXDrawAccentedButton(context, bounds, 8.0, tkwin);
+		    ttkMacOSXDrawAccentedButton(context, bounds, radioInfo, tkwin);
 		}
 	    }
 	    ttkMacOSXDrawRadioIndicator(context, bounds, state);
@@ -1064,10 +1139,11 @@ static void DrawButton(
 	}
 	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 17;
 	arrowBounds.size.width = 16;
+	arrowBounds.origin.y -= 1;
 	if (state & TTK_STATE_SELECTED) {
-	    ttkMacOSXDrawUpArrow(context, arrowBounds, 3, 8, state);
+	    ttkMacOSXDrawUpArrow(context, arrowBounds, 5, 6, state);
 	} else {
-	    ttkMacOSXDrawDownArrow(context, arrowBounds, 3, 8, state);
+	    ttkMacOSXDrawDownArrow(context, arrowBounds, 5, 6, state);
 	}
 	break;
     case kThemeIncDecButton:
@@ -1090,7 +1166,7 @@ static void DrawButton(
 	    }
 	    CGContextSaveGState(context);
 	    CGContextClipToRect(context, clip);
-	    ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
+	    ttkMacOSXDrawAccentedButton(context, bounds, incDecInfo, tkwin);
 	    CGContextRestoreGState(context);
 	}
 	CGFloat inset = (bounds.size.width - 5) / 2;
@@ -1187,7 +1263,7 @@ DrawTab(
 	    bounds.size.width += 1;
 	}
 	if (!(state & TTK_STATE_BACKGROUND)) {
-	    ttkMacOSXDrawAccentedButton(context, bounds, 4.0, tkwin);
+	    ttkMacOSXDrawAccentedButton(context, bounds, tabInfo, tkwin);
 	} else {
 	    ttkMacOSXDrawGrayButton(context, bounds, selectedTabInfo, tkwin);
 	}
@@ -1910,10 +1986,10 @@ static void EntryElementDraw(
 	BEGIN_DRAWING(d)
 	    switch(kind) {
 	    case kHIThemeFrameTextFieldRound:
-		ttkMacOSXDrawEntry(dc.context, bounds, SearchInfo, state, tkwin);
+		ttkMacOSXDrawEntry(dc.context, bounds, searchInfo, state, tkwin);
 		break;
 	    case kHIThemeFrameTextFieldSquare:
-		ttkMacOSXDrawEntry(dc.context, bounds, EntryInfo, state, tkwin);
+		ttkMacOSXDrawEntry(dc.context, bounds, entryInfo, state, tkwin);
 		break;
 	    default:
 		return;
@@ -1990,7 +2066,8 @@ static Ttk_ElementSpec EntryElementSpec = {
  *      1 pixel to account for the fact that the button is not centered.
  */
 
-static Ttk_Padding ComboboxPadding = {4, 0, 20, 0};
+// OS dependent ???
+static Ttk_Padding ComboboxPadding = {6, 8, 20, 8};
 
 static void ComboboxElementSize(
     void *clientData,
@@ -2001,7 +2078,7 @@ static void ComboboxElementSize(
     Ttk_Padding *paddingPtr)
 {
     *minWidth = 24;
-    *minHeight = 23;
+    *minHeight = 0;
     *paddingPtr = ComboboxPadding;
 }
 
@@ -2014,7 +2091,6 @@ static void ComboboxElementDraw(
     Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
-    bounds.origin.y += 1;
     const HIThemeButtonDrawInfo info = {
 	.version = 0,
 	.state = Ttk_StateTableLookup(ThemeStateTable, state),
@@ -2025,11 +2101,11 @@ static void ComboboxElementDraw(
 
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
-	int height = 23;
-	bounds.origin.y += (bounds.size.height - height) / 2;
-	bounds.size.height = height;
+	bounds = CGRectInset(bounds, 2, 2);
+	bounds.size.width -= 10;
 	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
+	bounds.origin.y += 1;
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 	       NULL);
     }
