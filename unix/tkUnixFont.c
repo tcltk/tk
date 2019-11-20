@@ -12,8 +12,6 @@
 
 #include "tkUnixInt.h"
 #include "tkFont.h"
-#include <netinet/in.h>		/* for htons() prototype */
-#include <arpa/inet.h>		/* inet_ntoa() */
 
 /*
  * The preferred font encodings.
@@ -186,7 +184,7 @@ static const EncodingAlias encodingAliases[] = {
     {"tis620",		"tis620*"},
     {"ksc5601",		"ksc5601*"},
     {"dingbats",	"*dingbats"},
-    {"ucs-2be",		"iso10646-1"},
+    {"utf-16be",	"iso10646-1"},
     {NULL,		NULL}
 };
 
@@ -239,11 +237,11 @@ static unsigned		RankAttributes(FontAttributes *wantPtr,
 static void		ReleaseFont(UnixFont *fontPtr);
 static void		ReleaseSubFont(Display *display, SubFont *subFontPtr);
 static int		SeenName(const char *name, Tcl_DString *dsPtr);
-static int		Ucs2beToUtfProc(ClientData clientData, const char*src,
+static int		Utf16beToUtfProc(ClientData clientData, const char*src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
-static int		UtfToUcs2beProc(ClientData clientData, const char*src,
+static int		UtfToUtf16beProc(ClientData clientData, const char*src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
@@ -313,7 +311,7 @@ TkpFontPkgInit(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     SubFont dummy;
     int i;
-    Tcl_Encoding ucs2;
+    Tcl_Encoding utf16;
 
     if (tsdPtr->controlFamily.encoding == NULL) {
 
@@ -330,16 +328,16 @@ TkpFontPkgInit(
 	}
 
 	/*
-	 * UCS-2BE is unicode (UCS-2) in big-endian format. Define this if
+	 * UTF-16BE is unicode (UTF-16) in big-endian format. Define this if
 	 * if it doesn't exist yet. It is used in iso10646 fonts.
 	 */
 
-	ucs2 = Tcl_GetEncoding(NULL, "ucs-2be");
-	if (ucs2 == NULL) {
-	    Tcl_EncodingType ucs2type = {"ucs-2be", Ucs2beToUtfProc, UtfToUcs2beProc, NULL, NULL, 2};
-	    Tcl_CreateEncoding(&ucs2type);
+	utf16 = Tcl_GetEncoding(NULL, "utf-16be");
+	if (utf16 == NULL) {
+	    Tcl_EncodingType utf16type = {"utf-16be", Utf16beToUtfProc, UtfToUtf16beProc, NULL, NULL, 2};
+	    Tcl_CreateEncoding(&utf16type);
 	} else {
-	    Tcl_FreeEncoding(ucs2);
+	    Tcl_FreeEncoding(utf16);
 	}
 	Tcl_CreateThreadExitHandler(FontPkgCleanup, NULL);
     }
@@ -446,9 +444,9 @@ ControlUtfProc(
 /*
  *-------------------------------------------------------------------------
  *
- * Ucs2beToUtfProc --
+ * Utf16beToUtfProc --
  *
- *	Convert from UCS-2BE (big-endian 16-bit Unicode) to UTF-8.
+ *	Convert from UTF-16BE (big-endian 16-bit Unicode) to UTF-8.
  *
  * Results:
  *	Returns TCL_OK if conversion was successful.
@@ -460,7 +458,7 @@ ControlUtfProc(
  */
 
 static int
-Ucs2beToUtfProc(
+Utf16beToUtfProc(
     ClientData clientData,	/* Not used. */
     const char *src,		/* Source string in Unicode. */
     int srcLen,			/* Source string length in bytes. */
@@ -487,12 +485,16 @@ Ucs2beToUtfProc(
 				 * output buffer. */
 {
     const char *srcStart, *srcEnd;
-    char *dstEnd, *dstStart;
-    int result, numChars;
+    const char *dstEnd, *dstStart;
+    int result, numChars, charLimit = INT_MAX;
+    unsigned short ch;
 
+    if (flags & TCL_ENCODING_CHAR_LIMIT) {
+	charLimit = *dstCharsPtr;
+    }
     result = TCL_OK;
 
-    /* check alignment with ucs-2 (2 == sizeof(UCS-2)) */
+    /* check alignment with UTF-16 (2 == sizeof(UTF-16)) */
     if ((srcLen % 2) != 0) {
 	result = TCL_CONVERT_MULTIBYTE;
 	srcLen--;
@@ -507,21 +509,26 @@ Ucs2beToUtfProc(
     srcEnd = src + srcLen;
 
     dstStart = dst;
-    dstEnd = dst + dstLen - TCL_UTF_MAX;
+    dstEnd = dst + dstLen - 4;
 
-    for (numChars = 0; src < srcEnd; numChars++) {
+    for (numChars = 0; src < srcEnd && numChars <= charLimit; numChars++) {
 	if (dst > dstEnd) {
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
 
-	/*
-	 * Need to swap byte-order on little-endian machines (x86) for
-	 * UCS-2BE. We know this is an LE->BE swap.
-	 */
+	ch = (src[0] & 0xFF) << 8 | (src[1] & 0xFF);
+	src += 2 /* sizeof(UTF-16) */;
 
-	dst += Tcl_UniCharToUtf(htons(*((short *)src)), dst);
-	src += 2 /* sizeof(UCS-2) */;
+	/*
+	 * Special case for 1-byte utf chars for speed. Make sure we work with
+	 * unsigned short-size data.
+	 */
+	if (ch && ch < 0x80) {
+	    *dst++ = (ch & 0xFF);
+	} else {
+	    dst += Tcl_UniCharToUtf(ch, dst);
+	}
     }
 
     *srcReadPtr = src - srcStart;
@@ -533,9 +540,9 @@ Ucs2beToUtfProc(
 /*
  *-------------------------------------------------------------------------
  *
- * UtfToUcs2beProc --
+ * UtfToUtf16beProc --
  *
- *	Convert from UTF-8 to UCS-2BE (fixed 2-byte encoding).
+ *	Convert from UTF-8 to UTF-16BE (fixed 2-byte encoding).
  *
  * Results:
  *	Returns TCL_OK if conversion was successful.
@@ -547,7 +554,7 @@ Ucs2beToUtfProc(
  */
 
 static int
-UtfToUcs2beProc(
+UtfToUtf16beProc(
     ClientData clientData,	/* TableEncodingData that specifies
 				 * encoding. */
     const char *src,		/* Source string in UTF-8. */
@@ -586,11 +593,11 @@ UtfToUcs2beProc(
     srcEnd = src + srcLen;
     srcClose = srcEnd;
     if (!(flags & TCL_ENCODING_END)) {
-	srcClose -= TCL_UTF_MAX;
+	srcClose -= 4;
     }
 
     dstStart = dst;
-    dstEnd = dst + dstLen - 2 /* sizeof(UCS-2) */;
+    dstEnd = dst + dstLen - sizeof(Tcl_UniChar);
 
     result = TCL_OK;
     for (numChars = 0; src < srcEnd; numChars++) {
@@ -615,8 +622,15 @@ UtfToUcs2beProc(
 	 */
 
 
-	*dst++ = (char)(*chPtr >> 8);
-	*dst++ = (char)*chPtr;
+	if ((sizeof(Tcl_UniChar) <= 2) || (*chPtr <= 0xFFFF)) {
+	    *dst++ = (char)(*chPtr >> 8);
+	    *dst++ = (char)*chPtr;
+	} else {
+	    *dst++ = (char)(((*chPtr & 0x3) >> 8) | 0xDC);
+	    *dst++ = (char)*chPtr;
+	    *dst++ = (char)((((*chPtr - 0x10000) >> 18) & 0x3) | 0xD8);
+	    *dst++ = (char)((((*chPtr - 0x10000) >> 10) & 0xFF));
+	}
     }
     *srcReadPtr = src - srcStart;
     *dstWrotePtr = dst - dstStart;
