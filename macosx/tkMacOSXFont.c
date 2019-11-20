@@ -101,6 +101,148 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 #pragma mark -
 #pragma mark Font Helpers:
 
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TclUniToNSString --
+ *
+ * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
+ * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
+ * encoding requires 4 bytes.
+ *
+ * As a workaround, these versions of Tcl encode non-BMP characters as a string
+ * of length 6 in which the high and low UTF-16 surrogates have been encoded
+ * using the UTF-8 algorithm.  The UTF-8 encoding does not allow encoding
+ * surrogates, so these 6-byte strings are not valid UTF-8, and hence Apple's
+ * NString class will refuse to instantiate an NSString from the 6-byte
+ * encoding.  This function allows creating an NSString from a C-string which
+ * has been encoded using this scheme.
+ *
+ * Results:
+ *	An NSString, which may be nil.
+ *
+ * Side effects:
+ *	None.
+ *---------------------------------------------------------------------------
+ */
+
+MODULE_SCOPE NSString*
+TclUniToNSString(
+   const char *source,
+   int numBytes)
+{
+    NSString *string = [[NSString alloc] initWithBytesNoCopy:(void *)source
+						      length:numBytes
+						    encoding:NSUTF8StringEncoding
+						freeWhenDone:NO];
+    if (!string) {
+	const unichar *characters = ckalloc(numBytes*sizeof(unichar));
+	const char *in = source;
+	unichar *out = (unichar *) characters;
+	while (in < source + numBytes) {
+	    in += Tcl_UtfToUniChar(in, out++);
+	}
+	string = [[NSString alloc] initWithCharacters:characters
+		     length:(out - characters)];
+	ckfree(characters);
+    }
+    return string;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TclUniAtIndex --
+ *
+ *  Write a sequence of bytes up to length 6 which is an encoding of a UTF-16
+ *  character in an NSString.  Also record the unicode code point of the character.
+ *  this may be a non-BMP character constructed by reading two surrogates from
+ *  the NSString.
+ *
+ * Results:
+ *	Returns the number of bytes written.
+ *
+ * Side effects:
+ *	Bytes are written to the char array referenced by the pointer uni and
+ *      the unicode code point is written to the integer referenced by the
+ *      pointer code.
+ *
+ */
+
+MODULE_SCOPE int
+TclUniAtIndex(
+    NSString *string,
+    int index,
+    char *uni,
+    unsigned int *code)
+{
+    char *ptr = uni;
+    UniChar uniChar = [string characterAtIndex: index];
+    if (CFStringIsSurrogateHighCharacter(uniChar)) {
+	UniChar lowChar = [string characterAtIndex: ++index];
+	*code = CFStringGetLongCharacterForSurrogatePair(
+	    uniChar, lowChar);
+	ptr += Tcl_UniCharToUtf(uniChar, ptr);
+        ptr += Tcl_UniCharToUtf(lowChar, ptr);
+	return ptr - uni;
+    } else {
+	*code = (int) uniChar;
+	[[string substringWithRange: NSMakeRange(index, 1)]
+     	        getCString: uni
+		 maxLength: XMaxTransChars
+		  encoding: NSUTF8StringEncoding];
+	return strlen(uni);
+    }
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * NSStringToTclUni --
+ *
+ * Encodes the unicode string represented by an NSString object with the
+ * internal encoding that Tcl uses when TCL_UTF_MAX = 3.  This encoding
+ * is similar to UTF-8 except that non-BMP characters are encoded as two
+ * successive 3-byte sequences which are constructed from UTF-16 surrogates
+ * by applying the UTF-8 algorithm.  Even though the UTF-8 encoding does not
+ * allow encoding surrogates, the algorithm does produce a well-defined
+ * 3-byte sequence.
+ *
+ * Results:
+ *	Returns a pointer to a null-terminated byte array which encodes the
+ *	NSString.
+ *
+ * Side effects:
+ *      Memory is allocated to hold the byte array, which must be freed with
+ *      ckalloc.  If the pointer numBytes is not NULL the number of non-null
+ *      bytes written to the array is stored in the integer it references.
+ */
+
+MODULE_SCOPE char*
+NSStringToTclUni(
+   NSString *string,
+   int *numBytes)
+{
+    unsigned int code;
+    int i;
+    char *ptr, *bytes = ckalloc(6*[string length] + 1);
+
+    ptr = bytes;
+    if (ptr) {
+	for (i = 0; i < [string length]; i++) {
+	    ptr += TclUniAtIndex(string, i, ptr, &code);
+	    if (code > 0xffff){
+		i++;
+	    }
+	}
+	*ptr = '\0';
+    }
+    if (numBytes) {
+	*numBytes = ptr - bytes;
+    }
+    return bytes;
+}
+
 #define GetNSFontTraitsFromTkFontAttributes(faPtr) \
 	((faPtr)->weight == TK_FW_BOLD ? NSBoldFontMask : NSUnboldFontMask) | \
 	((faPtr)->slant == TK_FS_ITALIC ? NSItalicFontMask : NSUnitalicFontMask)
@@ -176,6 +318,18 @@ FindNSFont(
 	size = [defaultFont pointSize];
     }
     nsFont = [fm fontWithFamily:family traits:traits weight:weight size:size];
+
+    /*
+     * A second bug in NSFontManager that Apple created for the Catalina OS
+     * causes requests as above to sometimes return fonts with additional
+     * traits that were not requested, even though fonts without those unwanted
+     * traits exist on the system.  See bug [90d555e088].  As a workaround
+     * we ask the font manager to remove any unrequested traits.
+     */
+
+    if (nsFont) {
+	nsFont = [fm convertFont:nsFont toNotHaveTrait:~traits];
+    }
     if (!nsFont) {
 	NSArray *availableFamilies = [fm availableFontFamilies];
 	NSString *caseFamily = nil;
@@ -395,12 +549,15 @@ TkpFontPkgInit(
     }
     TkInitFontAttributes(&fa);
 #if 0
+
     /*
-     * In macOS 10.15.1 Apple introduced a bug which caused the call below to
-     * return a font with the invalid familyName ".SF NSMono" instead of the
-     * valid familyName "NSMono". Calling [NSFont userFixedPitchFontOfSize:11]
-     * returns a font in the "Menlo" family which has a valid familyName.
+     * In macOS 10.15.1 Apple introduced a bug in NSFontManager which caused
+     * it to not recognize the familyName ".SF NSMono" which is the familyName
+     * of the default fixed pitch system fault on that system.  See bug [855049e799].
+     * As a workaround we call [NSFont userFixedPitchFontOfSize:11] instead.
+     * This returns a user font in the "Menlo" family.
      */
+
     nsFont = (NSFont*) CTFontCreateUIFontForLanguage(fixedPitch, 11, NULL);
 #else
     nsFont = [NSFont userFixedPitchFontOfSize:11];
@@ -829,8 +986,7 @@ TkpMeasureCharsInContext(
     if (maxLength > 32767) {
 	maxLength = 32767;
     }
-    string = [[NSString alloc] initWithBytesNoCopy:(void*)source
-		length:numBytes encoding:NSUTF8StringEncoding freeWhenDone:NO];
+    string = TclUniToNSString((const char *)source, numBytes);
     if (!string) {
 	length = 0;
 	fit = rangeLength;
@@ -1109,12 +1265,10 @@ DrawCharsInContext(
 	    !TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
 	return;
     }
-    string = [[NSString alloc] initWithBytesNoCopy:(void*)source
-		length:numBytes encoding:NSUTF8StringEncoding freeWhenDone:NO];
+    string = TclUniToNSString((const char *)source, numBytes);
     if (!string) {
 	return;
     }
-
     context = drawingContext.context;
     fg = TkMacOSXCreateCGColor(gc, gc->foreground);
     attributes = [fontPtr->nsAttributes mutableCopy];
