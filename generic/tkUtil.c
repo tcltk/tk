@@ -1228,7 +1228,7 @@ TkUtfToUniChar(
 	 * or when a high surrogate character is detected in UTF-8 form */
 	int len2 = Tcl_UtfToUniChar(src+len, &uniChar);
 	if ((uniChar & 0xFC00) == 0xDC00) {
-#if defined(__WIN32) || defined(MAC_OSX_TK) || defined(HAVE_XFT)
+#if defined(_WIN32) || defined(MAC_OSX_TK) || defined(HAVE_XFT)
 	    *chPtr = (((high & 0x3FF) << 10) | (uniChar & 0x3FF)) + 0x10000;
 #else
 	    *chPtr = 0xFFFD
