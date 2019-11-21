@@ -1478,8 +1478,7 @@ GetTranslatedKey(
 	if ((msg.message == WM_CHAR) && (msg.lParam & 0x20000000)) {
 	    xkey->state = 0;
 	}
-	xkey->trans_chars[xkey->nbytes] = (char) msg.wParam;
-	xkey->nbytes++;
+	xkey->trans_chars[xkey->nbytes++] = (char) msg.wParam;
 
 	if (((unsigned short) msg.wParam) > ((unsigned short) 0xff)) {
 	    /*

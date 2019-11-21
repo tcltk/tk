@@ -1923,7 +1923,7 @@ EntryComputeGeometry(
 
     if (entryPtr->showChar != NULL) {
 	int ch;
-	char buf[6];
+	char buf[4];
 	int size;
 
 	/*
