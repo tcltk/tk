@@ -63,7 +63,7 @@ typedef struct FontFamily {
 				/* Two-level sparse table used to determine
 				 * quickly if the specified character exists.
 				 * As characters are encountered, more pages
-				 * in this table are dynamically alloced. The
+				 * in this table are dynamically allocated. The
 				 * contents of each page is a bitmask
 				 * consisting of FONTMAP_BITSPERPAGE bits,
 				 * representing whether this font can be used

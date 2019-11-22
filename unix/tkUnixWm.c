@@ -2444,6 +2444,10 @@ WmIconphotoCmd(
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	if (photo == NULL) {
 	    ckfree((char *) iconPropertyData);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	        "failed to create an iconphoto with image \"%s\"",
+		Tcl_GetString(objv[i])));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "IMAGE", NULL);
 	    return TCL_ERROR;
 	}
 	Tk_PhotoGetSize(photo, &width, &height);
@@ -3265,6 +3269,8 @@ WmStackorderCmd(
 	    ckfree(windows);
 	    Tcl_SetObjResult(interp, resultObj);
 	    return TCL_OK;
+	} else {
+	    return TCL_ERROR;
 	}
     } else {
 	Tk_Window relWin;
@@ -6428,6 +6434,9 @@ TkWmStackorderToplevel(
     TkWmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
 
     window_ptr = windows = ckalloc((table.numEntries+1) * sizeof(TkWindow *));
+    if (windows == NULL) {
+	return NULL;
+    }
 
     /*
      * Special cases: If zero or one toplevels were mapped there is no need to
