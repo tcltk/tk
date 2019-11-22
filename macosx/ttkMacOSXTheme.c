@@ -1409,8 +1409,10 @@ static void ButtonElementDraw(
     } else if (info.kind == kThemePushButton &&
 	       (state & TTK_STATE_PRESSED)) {
 	bounds.size.height += 2;
-	GradientFillRoundedRectangle(dc.context, bounds, 4,
-	    pressedPushButtonGradient, 2);
+	if ([NSApp macMinorVersion] > 8) {
+	    GradientFillRoundedRectangle(dc.context, bounds, 4,
+					 pressedPushButtonGradient, 2);
+	}
     } else {
 
         /*
@@ -1859,18 +1861,17 @@ static void ComboboxElementDraw(
     BEGIN_DRAWING(d)
     bounds.origin.y += 1;
     if (TkMacOSXInDarkMode(tkwin)) {
-	    bounds.size.height += 1;
+	bounds.size.height += 1;
 	DrawDarkButton(bounds, info.kind, state, dc.context);
-	} else if ([NSApp macMinorVersion] > 8) {
-	    if ((state & TTK_STATE_BACKGROUND) &&
-		!(state & TTK_STATE_DISABLED)) {
+    } else if ([NSApp macMinorVersion] > 8) {
+	if ((state & TTK_STATE_BACKGROUND) &&
+	    !(state & TTK_STATE_DISABLED)) {
 	    NSColor *background = [NSColor textBackgroundColor];
 	    CGRect innerBounds = CGRectInset(bounds, 1, 2);
 	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
 	}
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
-		NULL);
     }
+    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
 }
 
@@ -2095,7 +2096,7 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
-    factor = RangeToFactor(to - from);
+    factor = RangeToFactor(to);
 
     HIThemeTrackDrawInfo info = {
 	.version = 0,

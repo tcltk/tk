@@ -521,7 +521,9 @@
 { "Odiaeresis", 0xD6 },
 { "multiply", 0xD7 },
 { "Oslash", 0xD8 },
+#ifndef TK_NO_DEPRECATED
 { "Ooblique", 0xD8 },
+#endif
 { "Ugrave", 0xD9 },
 { "Uacute", 0xDA },
 { "Ucircumflex", 0xDB },
@@ -555,7 +557,9 @@
 { "odiaeresis", 0xF6 },
 { "division", 0xF7 },
 { "oslash", 0xF8 },
+#ifndef TK_NO_DEPRECATED
 { "ooblique", 0xF8 },
+#endif
 { "ugrave", 0xF9 },
 { "uacute", 0xFA },
 { "ucircumflex", 0xFB },
@@ -960,9 +964,11 @@
 { "Greek_IOTAaccent", 0x7A4 },
 { "Greek_IOTAdieresis", 0x7A5 },
 { "Greek_IOTAdiaeresis", 0x7A5 },
+{ "Greek_IOTAaccentdiaeresis", 0x7A6 },
 { "Greek_OMICRONaccent", 0x7A7 },
 { "Greek_UPSILONaccent", 0x7A8 },
 { "Greek_UPSILONdieresis", 0x7A9 },
+{ "Greek_UPSILONaccentdieresis", 0x7AA },
 { "Greek_OMEGAaccent", 0x7AB },
 { "Greek_accentdieresis", 0x7AE },
 { "Greek_horizbar", 0x7AF },

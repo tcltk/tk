@@ -4379,9 +4379,9 @@ WmIconphotoCmd(
 	if (!iconInfo.hbmColor) {
 	    ckfree(lpIR);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "failed to create color bitmap for \"%s\"",
+		    "failed to create an iconphoto with image \"%s\"",
 		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "BITMAP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "IMAGE", NULL);
 	    return TCL_ERROR;
 	}
 
@@ -5189,18 +5189,18 @@ WmStackorderCmd(
 
     if (objc == 3) {
 	windows = TkWmStackorderToplevel(winPtr);
-	if (windows == NULL) {
-	    Tcl_Panic("TkWmStackorderToplevel failed");
+	if (windows != NULL) {
+	    resultObj = Tcl_NewObj();
+	    for (windowPtr = windows; *windowPtr ; windowPtr++) {
+		Tcl_ListObjAppendElement(NULL, resultObj,
+			TkNewWindowObj((Tk_Window) *windowPtr));
+	    }
+	    Tcl_SetObjResult(interp, resultObj);
+	    ckfree(windows);
+	    return TCL_OK;
+	} else {
+	    return TCL_ERROR;
 	}
-
-	resultObj = Tcl_NewObj();
-	for (windowPtr = windows; *windowPtr ; windowPtr++) {
-	    Tcl_ListObjAppendElement(NULL, resultObj,
-		    TkNewWindowObj((Tk_Window) *windowPtr));
-	}
-	Tcl_SetObjResult(interp, resultObj);
-	ckfree(windows);
-	return TCL_OK;
     } else {
 	TkWindow *winPtr2, **winPtr2Ptr = &winPtr2;
 	int index1 = -1, index2 = -1, result;
@@ -6807,8 +6807,6 @@ TkWmStackorderToplevel(
 	    (LPARAM) &pair) == 0) {
 	ckfree(windows);
 	windows = NULL;
-    } else if (pair.windowPtr != (windows-1)) {
-	Tcl_Panic("num matched toplevel windows does not equal num children");
     }
 
   done:

@@ -340,7 +340,12 @@ VISIBILITY_HIDDEN
 @end
 
 VISIBILITY_HIDDEN
-@interface TKContentView : NSView <NSTextInput>
+/*
+ * Subclass TKContentView from NSTextInputClient to enable composition and
+ * input from the Character Palette.
+ */
+
+@interface TKContentView : NSView <NSTextInputClient>
 {
 @private
     NSString *privateWorkingText;
@@ -354,13 +359,8 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
-- (void) drawRect: (NSRect) rect;
 - (void) generateExposeEvents: (HIShapeRef) shape;
 - (void) tkToolbarButton: (id) sender;
-- (BOOL) isOpaque;
-- (BOOL) wantsDefaultClipping;
-- (BOOL) acceptsFirstResponder;
-- (void) keyDown: (NSEvent *) theEvent;
 @end
 
 @interface NSWindow(TKWm)

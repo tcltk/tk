@@ -204,14 +204,14 @@ if {[tk windowingsystem] eq "aqua"} {
 	if {%D >= 0} {
 	    %W yview scroll [expr {-%D/30}] units
 	} else {
-	    %W yview scroll [expr {29-%D/30}] units
+	    %W yview scroll [expr {(29-%D)/30}] units
 	}
     }
     bind Listbox <Shift-MouseWheel> {
 	if {%D >= 0} {
 	    %W xview scroll [expr {-%D/30}] units
 	} else {
-	    %W xview scroll [expr {29-%D/30}] units
+	    %W xview scroll [expr {(29-%D)/30}] units
 	}
     }
 }

@@ -130,7 +130,8 @@ enum {
     }
 
     /*
-     * Make sure tkwin is the toplevel which should receive the event.
+     * If we still don't have a window, try using the toplevel that
+     * manages the NSWindow.
      */
 
     if (!tkwin) {
@@ -138,10 +139,15 @@ enum {
 	tkwin = (Tk_Window) winPtr;
     }
     if (!tkwin) {
+
+	/*
+	 * We can't find a window for this event.  We have to ignore it.
+	 */
+
 #ifdef TK_MAC_DEBUG_EVENTS
 	TkMacOSXDbgMsg("tkwin == NULL");
 #endif
-	return theEvent;	/* Give up.  No window for this event. */
+	return theEvent;
     }
 
     /*
@@ -174,13 +180,25 @@ enum {
      * coordinates.
      */
 
-    local.x -= winPtr->wmInfoPtr->xInParent;
-    local.y -= winPtr->wmInfoPtr->yInParent;
+    if (Tk_IsEmbedded(winPtr)) {
+	TkWindow *contPtr = TkpGetOtherWindow(winPtr);
+	if (Tk_IsTopLevel(contPtr)) {
+	    local.x -= contPtr->wmInfoPtr->xInParent;
+	    local.y -= contPtr->wmInfoPtr->yInParent;
+	} else {
+	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
+	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	}
+    } else {
+	local.x -= winPtr->wmInfoPtr->xInParent;
+	local.y -= winPtr->wmInfoPtr->yInParent;
+    }
 
     /*
-     * Find the containing Tk window, and convert local into the coordinates
-     * of the Tk window.  (The converted local coordinates are only needed
-     * for scrollwheel events.)
+     * Use the toplevel coordinates to find the containing Tk window.  Then
+     * convert local into the coordinates of that window.  (The converted
+     * local coordinates are only needed for scrollwheel events.)
      */
 
     int win_x, win_y;

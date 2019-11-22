@@ -84,8 +84,9 @@ static Tk_OptionSpec BaseOptionSpecs[] =
      * Compound base/image options
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	 "none", offsetof(Base,base.compoundObj), -1,
-	 0,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
+	 NULL, offsetof(Base,base.compoundObj), -1,
+	 TK_OPTION_NULL_OK,(ClientData)ttkCompoundStrings,
+         GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Base,base.paddingObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
