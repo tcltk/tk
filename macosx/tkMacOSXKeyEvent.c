@@ -293,7 +293,7 @@ static unsigned	isFunctionKey(unsigned int code);
     NSString *str;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
-        str = [aString string] : aString;
+        [aString string] : aString;
     len = [str length];
 
     if (NS_KEYLOG) {
@@ -396,7 +396,7 @@ static unsigned	isFunctionKey(unsigned int code);
     NSString *str;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
-        str = [aString string] : aString;
+        [aString string] : aString;
 
     if (focusWin) {
 
