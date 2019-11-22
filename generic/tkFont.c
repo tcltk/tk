@@ -881,7 +881,7 @@ TheWorldHasChanged(
      * [NSView drawRect] method is drawing. The best that we can do in
      * that situation is to abort the recomputation and hope for the best.
      */
-    
+
     if (TkpAppIsDrawing()) {
 	return;
     }

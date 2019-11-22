@@ -63,7 +63,7 @@ typedef struct FontFamily {
 				/* Two-level sparse table used to determine
 				 * quickly if the specified character exists.
 				 * As characters are encountered, more pages
-				 * in this table are dynamically alloced. The
+				 * in this table are dynamically allocated. The
 				 * contents of each page is a bitmask
 				 * consisting of FONTMAP_BITSPERPAGE bits,
 				 * representing whether this font can be used
@@ -520,7 +520,7 @@ Ucs2beToUtfProc(
 	 * UCS-2BE. We know this is an LE->BE swap.
 	 */
 
-	dst += TkUniCharToUtf(htons(*((short *)src)), dst);
+	dst += Tcl_UniCharToUtf(htons(*((short *)src)), dst);
 	src += 2 /* sizeof(UCS-2) */;
     }
 
