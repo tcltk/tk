@@ -54,6 +54,7 @@
 
 #define TTK_STATE_FIRST_TAB     TTK_STATE_USER1
 #define TTK_STATE_LAST_TAB      TTK_STATE_USER2
+#define TTK_STATE_IS_ACCENTED   TTK_STATE_USER2
 #define TTK_TREEVIEW_STATE_SORTARROW    TTK_STATE_USER1
 
 /*
@@ -752,7 +753,7 @@ static void ttkMacOSXDrawDownArrow(
 
     if (state & TTK_STATE_DISABLED) {
 	strokeColor = [NSColor disabledControlTextColor];
-    } else if (state & TTK_STATE_USER2) {
+    } else if (state & TTK_STATE_IS_ACCENTED) {
 	strokeColor = [NSColor whiteColor];
     } else {
 	strokeColor = [NSColor controlTextColor];
@@ -1234,18 +1235,18 @@ static void DrawButton(
 	}
 	arrowBounds.size.width = 17;
 	if (state & TTK_STATE_BACKGROUND) {
-	    arrowBounds.origin.x += bounds.size.width - 17;
+	    arrowBounds.origin.x += bounds.size.width - 20;
 	    arrowBounds.size.width += 4;
 	    arrowBounds.origin.y -= 1;
 	} else {
 	    arrowBounds.origin.y -= 1;
-	    arrowBounds.origin.x += bounds.size.width - 17;
+	    arrowBounds.origin.x += bounds.size.width - 20;
 	    arrowBounds.size.width += 4;
 	    arrowBounds.size.height += 2;
 	}
 	ttkMacOSXDrawAccentedSegment(context, arrowBounds, comboInfo, state, tkwin);
-	if (state == 0) {
-	    state = TTK_STATE_USER2;
+	if (!(state & TTK_STATE_BACKGROUND)) {
+	    state |= TTK_STATE_IS_ACCENTED;
 	}
 	ttkMacOSXDrawDownArrow(context, arrowBounds, 6, 6, state);
 	break;
@@ -2263,7 +2264,6 @@ static void ComboboxElementDraw(
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
 	bounds = CGRectInset(bounds, 2, 2);
-	bounds.size.width -= 10;
 	DrawButton(bounds, info, state, dc.context, tkwin);
     } else {
 	bounds.origin.y += 1;
