@@ -32,6 +32,9 @@ proc ttk::progressbar::start {pb {steptime 50} {stepsize 1}} {
     if {![info exists Timers($pb)]} {
 	Autoincrement $pb $steptime $stepsize
     }
+    if {[tk windowingsystem] eq "aqua"} {
+	$pb state selected
+    }
 }
 
 # ttk::progressbar::stop --
@@ -44,6 +47,9 @@ proc ttk::progressbar::stop {pb} {
 	unset Timers($pb)
     }
     $pb configure -value 0
+    if {[tk windowingsystem] eq "aqua"} {
+	$pb state !selected
+    }
 }
 
 

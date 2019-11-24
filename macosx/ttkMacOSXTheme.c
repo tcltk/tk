@@ -898,6 +898,111 @@ static void ttkMacOSXDrawRadioIndicator(
 }
 
 /*----------------------------------------------------------------------
+ * +++ Progress bars.
+ */
+
+static void ttkMacOSXDrawProgressBar(
+    CGContextRef context,
+    CGRect bounds,
+    HIThemeTrackDrawInfo info,
+    int state,
+    Tk_Window tkwin)
+{
+    CGRect clipBounds = bounds;
+    CGFloat rgba[4];
+    CGColorRef trackColor, highlightColor, fillColor;
+    NSColor *accent;
+    CGFloat ratio = (CGFloat) info.value / (CGFloat) info.max;
+    CGFloat locations[6] = {0.0, 0.5, 0.5, 0.5, 0.5, 1.0};
+    CGPoint end;
+    CGPathRef path;
+    CGGradientRef gradient;
+    static CGFloat colors[24] = {1.0, 1.0, 1.0, 0.0,
+				 1.0, 1.0, 1.0, 0.0,
+				 1.0, 1.0, 1.0, 0.5,
+				 1.0, 1.0, 1.0, 0.5,
+				 1.0, 1.0, 1.0, 0.0,
+				 1.0, 1.0, 1.0, 0.0};
+    
+    GetBackgroundColorRGBA(context, tkwin, 0, rgba);
+    if (info.attributes & kThemeTrackHorizontal) {
+	bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 3);
+	clipBounds.size.width = 5 + ratio*(bounds.size.width + 3);
+	clipBounds.origin.x -= 5;
+	end = CGPointMake(bounds.origin.x + bounds.size.width, bounds.origin.y);
+    } else {
+	bounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 1);
+	clipBounds.size.height = 5 + ratio*(bounds.size.height + 3); 
+	clipBounds.origin.y -= 5;
+	end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
+    }
+    if (TkMacOSXInDarkMode(tkwin)) {
+	for(int i=0; i < 3; i++) {
+	    rgba[i] += 30.0 / 255.0;
+	}
+	trackColor = CGColorFromRGBA(rgba);
+	for(int i=0; i < 3; i++) {
+	    rgba[i] -= 15.0 / 255.0;
+	}
+	highlightColor = CGColorFromRGBA(rgba);
+	SolidFillRoundedRectangle(context, bounds, 3, trackColor);
+    } else {
+	for(int i=0; i < 3; i++) {
+	    rgba[i] -= 14.0 / 255.0;
+	}
+	trackColor = CGColorFromRGBA(rgba);
+	for(int i=0; i < 3; i++) {
+	    rgba[i] -= 12.0 / 255.0;
+	}
+	highlightColor = CGColorFromRGBA(rgba);
+	bounds.size.height -= 1;
+	bounds = CGRectInset(bounds, 0, -1);
+    }
+    if (state & TTK_STATE_BACKGROUND) {
+	accent = [NSColor colorWithRed:0.72 green:0.72 blue:0.72 alpha:0.72];
+    } else {
+	accent = [NSColor controlAccentColor];
+    }
+    SolidFillRoundedRectangle(context, bounds, 3, trackColor);
+    bounds = CGRectInset(bounds, 0, 1);
+    SolidFillRoundedRectangle(context, bounds, 2, highlightColor);
+    bounds = CGRectInset(bounds, 1, 1);
+    SolidFillRoundedRectangle(context, bounds, 1, trackColor);
+    bounds = CGRectInset(bounds, -1, -2);
+    CGContextSaveGState(context);
+    if (info.kind == kThemeProgressBar) {
+	CGContextClipToRect(context, clipBounds);
+    }
+    fillColor = CGCOLOR([accent colorWithAlphaComponent:0.9]);
+    SolidFillRoundedRectangle(context, bounds, 3, fillColor);
+    bounds = CGRectInset(bounds, 0, 1);
+    fillColor = CGCOLOR([[NSColor blackColor] colorWithAlphaComponent:0.1]);
+    SolidFillRoundedRectangle(context, bounds, 2, fillColor);
+    bounds = CGRectInset(bounds, 1, 1);
+    fillColor = CGCOLOR([accent colorWithAlphaComponent:1.0]);
+    SolidFillRoundedRectangle(context, bounds, 1, fillColor);
+    CGContextRestoreGState(context);
+    if (info.kind == kThemeIndeterminateBar &&
+	(state & TTK_STATE_SELECTED)) {
+	NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
+	bounds = CGRectInset(bounds, 0, -2);
+	locations[1] = ratio < 0.2 ? 0.0 : ratio - 0.2;
+	locations[2] = ratio < 0.1 ? 0.0 : ratio - 0.1;
+	locations[3] = ratio > 0.9 ? 1.0 : ratio + 0.1;
+	locations[4] = ratio > 0.8 ? 1.0 : ratio + 0.2;
+	gradient = CGGradientCreateWithColorComponents(sRGB.CGColorSpace,
+						       colors, locations, 5);
+	CGContextSaveGState(context);
+	path = CGPathCreateWithRoundedRect(bounds, 3, 3, NULL);
+	CGContextBeginPath(context);
+	CGContextAddPath(context, path);
+	CGContextClip(context);
+	CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0.0);
+	CGContextRestoreGState(context);
+	CFRelease(path);
+    }
+}
+/*----------------------------------------------------------------------
  * +++ Drawing procedures for native widgets.
  *
  *      The HIToolbox does not support Dark Mode, and apparently never will.
@@ -1937,7 +2042,6 @@ static Ttk_ElementSpec GroupElementSpec = {
  *    2 pixels padding for EditTextFrame
  */
 
-/* This is a truncated struct EntryStyleData stolen from ttkEntry.c */
 typedef struct {
     Tcl_Obj     *backgroundObj;
     Tcl_Obj     *fieldbackgroundObj;
@@ -2334,6 +2438,7 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
+
     factor = RangeToFactor(to);
 
     HIThemeTrackDrawInfo info = {
@@ -2347,7 +2452,7 @@ static void TrackElementDraw(
 	    (orientation == TTK_ORIENT_HORIZONTAL ?
 	    kThemeTrackHorizontal : 0),
 	.enableState = Ttk_StateTableLookup(ThemeTrackEnableTable, state),
-	.trackInfo.progress.phase = 0,
+	.trackInfo.progress.phase = 0
     };
 
     if (info.kind == kThemeSlider) {
@@ -2462,21 +2567,25 @@ static void PbarElementDraw(
     Ttk_State state)
 {
     PbarElement *pbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL, phase = 0;
+    int orientation = TTK_ORIENT_HORIZONTAL, phase;
     double value = 0, maximum = 100, factor;
-
+    CGRect bounds = BoxToRect(d, b);
+    int isIndeterminate = !strcmp("indeterminate",
+				  Tcl_GetString(pbar->modeObj));
+    
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
-    factor = RangeToFactor(maximum);
 
+    if (isIndeterminate) {
+	double remainder = fmod(value, 2*maximum);
+	value = remainder > maximum ? 2*maximum - remainder : remainder;
+    }
+    factor = RangeToFactor(maximum);
     HIThemeTrackDrawInfo info = {
 	.version = 0,
-	.kind =
-	    (!strcmp("indeterminate",
-	    Tcl_GetString(pbar->modeObj)) && value) ?
-	    kThemeIndeterminateBar : kThemeProgressBar,
+	.kind = isIndeterminate? kThemeIndeterminateBar : kThemeProgressBar,
 	.bounds = BoxToRect(d, b),
 	.min = 0,
 	.max = maximum * factor,
@@ -2489,17 +2598,11 @@ static void PbarElementDraw(
     };
 
     BEGIN_DRAWING(d)
-    if (TkMacOSXInDarkMode(tkwin)) {
-	CGRect bounds = BoxToRect(d, b);
-	CGColorRef trackColor = CGColorFromGray(darkTrack);
-	if (orientation == TTK_ORIENT_HORIZONTAL) {
-	    bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 3);
-	} else {
-	    bounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 1);
-	}
-	SolidFillRoundedRectangle(dc.context, bounds, 3, trackColor);
+    if ([NSApp macMinorVersion] > 8) {
+	ttkMacOSXDrawProgressBar(dc.context, bounds, info, state, tkwin);
+    } else {
+	ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
     }
-    ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
     END_DRAWING
 }
 
