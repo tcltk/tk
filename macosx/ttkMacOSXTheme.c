@@ -96,9 +96,13 @@ GRAYCOLOR listheaderInactiveBG = GRAY256(246.0);
 GRAYCOLOR lightComboSeparator = GRAY256(236.0);
 GRAYCOLOR darkComboSeparator = GRAY256(66.0);
 
+GRAYCOLOR darkTrack = GRAY256(84.0);
+GRAYCOLOR darkInactiveTrack = GRAY256(107.0);
+GRAYCOLOR lightTrack = GRAY256(177.0);
+GRAYCOLOR lightInactiveTrack = GRAY256(139.0);
+
 /* Transparent Grays */
 GRAYCOLOR boxBorder = {1.0, 0.20};
-GRAYCOLOR darkTrack = {1.0, 0.25};
 GRAYCOLOR darkSeparator = {1.0, 0.3};
 GRAYCOLOR darkTabSeparator = {0.0, 0.25};
 GRAYCOLOR darkFrameBottom = {1.0, 0.125};
@@ -535,7 +539,7 @@ static void ttkMacOSXFillBoxBorder(
     CGContextRestoreGState(context);
     CFRelease(path);
     CFRelease(gradient);
-}   
+}
 
 /*
  *  Aqua buttons are normally drawn in a grayscale color.  The buttons which
@@ -554,7 +558,7 @@ static void ttkMacOSXDrawGrayButton(
 {
     CGColorRef faceColor;
     CGFloat face;
-    int isDark = TkMacOSXInDarkMode(tkwin); 
+    int isDark = TkMacOSXInDarkMode(tkwin);
     if (isDark) {
 	face = info.darkFaceGray / 255.0;
     } else {
@@ -726,7 +730,7 @@ static void ttkMacOSXDrawEntry(
     SolidFillRoundedRectangle(context, bounds, info.radius, backgroundColor);
 }
 
-			       
+
 /*----------------------------------------------------------------------
  * +++ Chevrons, CheckMarks, etc. --
  */
@@ -896,7 +900,7 @@ static void ttkMacOSXDrawRadioIndicator(
 	CGContextFillRect(context, bar);
     }
 }
-
+
 /*----------------------------------------------------------------------
  * +++ Progress bars.
  */
@@ -923,7 +927,7 @@ static void ttkMacOSXDrawProgressBar(
 				 1.0, 1.0, 1.0, 0.5,
 				 1.0, 1.0, 1.0, 0.0,
 				 1.0, 1.0, 1.0, 0.0};
-    
+
     GetBackgroundColorRGBA(context, tkwin, 0, rgba);
     if (info.attributes & kThemeTrackHorizontal) {
 	bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 3);
@@ -932,7 +936,7 @@ static void ttkMacOSXDrawProgressBar(
 	end = CGPointMake(bounds.origin.x + bounds.size.width, bounds.origin.y);
     } else {
 	bounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 1);
-	clipBounds.size.height = 5 + ratio*(bounds.size.height + 3); 
+	clipBounds.size.height = 5 + ratio*(bounds.size.height + 3);
 	clipBounds.origin.y -= 5;
 	end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
     }
@@ -1002,6 +1006,60 @@ static void ttkMacOSXDrawProgressBar(
 	CFRelease(path);
     }
 }
+
+/*----------------------------------------------------------------------
+ * +++ Sliders.
+ */
+
+static void ttkMacOSXDrawSlider(
+    CGContextRef context,
+    CGRect bounds,
+    HIThemeTrackDrawInfo info,
+    int state,
+    Tk_Window tkwin)
+{
+    CGColorRef trackColor;
+    CGRect clipBounds, trackBounds, thumbBounds;
+    CGPoint thumbPoint;
+    CGFloat position;
+    CGColorRef accentColor;
+    double from = info.min, to = info.max, value = info.value;
+    int isDark = TkMacOSXInDarkMode(tkwin);
+
+    if (info.attributes & kThemeTrackHorizontal) {
+	trackBounds = CGRectInset(bounds, 0, bounds.size.height / 2 - 3);
+	trackBounds.size.height = 3;
+	position = 8 + (value / (to - from)) * (trackBounds.size.width - 16);
+	clipBounds = trackBounds;
+	clipBounds.size.width = position;
+	thumbPoint = CGPointMake(clipBounds.origin.x + position,
+				 clipBounds.origin.y + 1);
+    } else {
+	trackBounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 0);
+	trackBounds.size.width = 3;
+	position = 8 + (value / (to - from)) * (trackBounds.size.height - 16);
+	clipBounds = trackBounds;
+	clipBounds.size.height = position;
+	thumbPoint = CGPointMake(clipBounds.origin.x + 1,
+				 clipBounds.origin.y + position);
+    }
+    trackColor = isDark ? CGColorFromGray(darkTrack):
+	CGColorFromGray(lightTrack);
+    thumbBounds = CGRectMake(thumbPoint.x - 8, thumbPoint.y - 8, 17, 17);
+    CGContextSaveGState(context);
+    SolidFillRoundedRectangle(context, trackBounds, 1.5, trackColor);
+    CGContextClipToRect(context, clipBounds);
+    if (state & TTK_STATE_BACKGROUND) {
+	accentColor = isDark ? CGColorFromGray(darkInactiveTrack) :
+	    CGColorFromGray(lightInactiveTrack);
+    } else {
+	accentColor = CGCOLOR([NSColor controlAccentColor]);
+    }
+    SolidFillRoundedRectangle(context, trackBounds, 1.5, accentColor);
+    CGContextRestoreGState(context);
+    ttkMacOSXDrawGrayButton(context, thumbBounds, radioInfo, tkwin);
+}
+
 /*----------------------------------------------------------------------
  * +++ Drawing procedures for native widgets.
  *
@@ -1049,7 +1107,6 @@ static void DrawGroupBox(
     CGContextFillPath(context);
     CFRelease(path);
 }
-
 /*----------------------------------------------------------------------
  * +++ DrawListHeader --
  *
@@ -1158,7 +1215,7 @@ static void DrawButton(
 	    /*
 	     * Allow room for nonexistent focus ring.
 	     */
-	    
+
 	    popupBounds.size.width += 4;
 	    popupBounds.origin.y -= 4;
 	    popupBounds.size.height += 8;
@@ -2260,7 +2317,7 @@ static void SpinButtonReBounds(
 	bounds->size.width += 2;
     }
 }
-			       
+
 static void SpinButtonElementSize(
     void *clientData,
     void *elementRecord,
@@ -2433,6 +2490,7 @@ static void TrackElementDraw(
     TrackElement *elem = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
     double from = 0, to = 100, value = 0, factor;
+    CGRect bounds = BoxToRect(d, b);
 
     Ttk_GetOrientFromObj(NULL, elem->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
@@ -2444,7 +2502,7 @@ static void TrackElementDraw(
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind = data->kind,
-	.bounds = BoxToRect(d, b),
+	.bounds = bounds,
 	.min = from * factor,
 	.max = to * factor,
 	.value = value * factor,
@@ -2465,17 +2523,11 @@ static void TrackElementDraw(
 	}
     }
     BEGIN_DRAWING(d)
-    if (TkMacOSXInDarkMode(tkwin)) {
-	CGRect bounds = BoxToRect(d, b);
-	CGColorRef trackColor = CGColorFromGray(darkTrack);
-	if (orientation == TTK_ORIENT_HORIZONTAL) {
-	    bounds = CGRectInset(bounds, 1, bounds.size.height / 2 - 2);
-	} else {
-	    bounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 2);
-	}
-	SolidFillRoundedRectangle(dc.context, bounds, 2, trackColor);
+    if ([NSApp macMinorVersion] > 8 && !(state & TTK_STATE_ALTERNATE)) {
+	ttkMacOSXDrawSlider(dc.context, bounds, info, state, tkwin);
+    } else {
+	ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
     }
-    ChkErr(HIThemeDrawTrack, &info, NULL, dc.context, HIOrientation);
     END_DRAWING
 }
 
@@ -2572,7 +2624,7 @@ static void PbarElementDraw(
     CGRect bounds = BoxToRect(d, b);
     int isIndeterminate = !strcmp("indeterminate",
 				  Tcl_GetString(pbar->modeObj));
-    
+
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
