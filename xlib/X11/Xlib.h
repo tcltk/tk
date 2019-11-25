@@ -956,7 +956,7 @@ typedef union _XEvent {
 	XMappingEvent xmapping;
 	XErrorEvent xerror;
 	XKeymapEvent xkeymap;
-	long pad[24];
+	XID pad[24];
 } XEvent;
 #endif
 
