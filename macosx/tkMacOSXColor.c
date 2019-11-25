@@ -453,14 +453,23 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
     int result = false;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
+
     if ([NSApp macMinorVersion] >= 14) {
-        static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
         TkWindow *winPtr = (TkWindow*) tkwin;
-        NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
-        result = (view &&
-                  [view.effectiveAppearance.name isEqualToString:darkAqua]);
+	NSView *view = nil;
+	if (winPtr && winPtr->privatePtr) {
+	    view = TkMacOSXDrawableView(winPtr->privatePtr);
+	}
+	if (view) {
+	    result = [view.effectiveAppearance.name isEqualToString:darkAqua];
+	} else {
+	    result = [[NSAppearance currentAppearance].name
+			 isEqualToString:darkAqua];
+	}
     }
 #endif
+
     return result;
 }
 
