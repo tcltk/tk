@@ -1048,7 +1048,7 @@ typedef union _XEvent {
 	XKeymapEvent xkeymap;
 	XGenericEvent xgeneric;
 	XGenericEventCookie xcookie;
-	long pad[24];
+	XID pad[24];
 } XEvent;
 #endif
 
