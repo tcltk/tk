@@ -873,6 +873,12 @@ test wm-iconphoto-1.4 {usage} -returnCodes error -body {
     # we currently have no return info
     wm iconphoto . -default
 } -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
+test wm-iconphoto-1.5.1 {usage} -constraints aquaOrWin32 -returnCodes error -body {
+    wm iconphoto . -default [image create photo -file {}]
+} -match {glob} -result {failed to create an iconphoto with image *}
+test wm-iconphoto-1.5.2 {usage} -constraints x11 -body {
+    wm iconphoto . -default [image create photo -file {}]
+} -result {}
 
 # All other iconphoto tests are platform specific
 
@@ -1553,8 +1559,8 @@ test wm-stackorder-5.3 {An overrideredirect window\
     destroy .t
 } -result 1
 
-test wm-stackorder-6.1 {An embedded toplevel does not\
-        appear in the stacking order on unix or win} -constraints notAqua -body {
+test wm-stackorder-6.1 {An embedded toplevel does not appear in the \
+	stacking order} -body {
     toplevel .real -container 1
     toplevel .embd -bg blue -use [winfo id .real]
     update
@@ -1562,16 +1568,6 @@ test wm-stackorder-6.1 {An embedded toplevel does not\
 } -cleanup {
     deleteWindows
 } -result {. .real}
-test wm-stackorder-6.1.1 {An embedded toplevel does\
-        appear in the stacking order on macOS} -constraints aqua -body {
-    toplevel .real -container 1
-    toplevel .embd -bg blue -use [winfo id .real]
-    update
-    wm stackorder .
-} -cleanup {
-    deleteWindows
-} -result {. .embd}
-
 
 stdWindow
 
