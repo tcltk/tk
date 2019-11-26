@@ -12,8 +12,6 @@
 
 #include "tkUnixInt.h"
 #include "tkFont.h"
-#include <netinet/in.h>		/* for htons() prototype */
-#include <arpa/inet.h>		/* inet_ntoa() */
 
 /*
  * The preferred font encodings.
@@ -487,9 +485,13 @@ Ucs2beToUtfProc(
 				 * output buffer. */
 {
     const char *srcStart, *srcEnd;
-    char *dstEnd, *dstStart;
-    int result, numChars;
+    const char *dstEnd, *dstStart;
+    int result, numChars, charLimit = INT_MAX;
+    unsigned short ch;
 
+    if (flags & TCL_ENCODING_CHAR_LIMIT) {
+	charLimit = *dstCharsPtr;
+    }
     result = TCL_OK;
 
     /* check alignment with ucs-2 (2 == sizeof(UCS-2)) */
@@ -507,21 +509,26 @@ Ucs2beToUtfProc(
     srcEnd = src + srcLen;
 
     dstStart = dst;
-    dstEnd = dst + dstLen - TCL_UTF_MAX;
+    dstEnd = dst + dstLen - 4;
 
-    for (numChars = 0; src < srcEnd; numChars++) {
+    for (numChars = 0; src < srcEnd && numChars <= charLimit; numChars++) {
 	if (dst > dstEnd) {
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
 
-	/*
-	 * Need to swap byte-order on little-endian machines (x86) for
-	 * UCS-2BE. We know this is an LE->BE swap.
-	 */
+	ch = (src[0] & 0xFF) << 8 | (src[1] & 0xFF);
+	src += 2 /* sizeof(UTF-16) */;
 
-	dst += Tcl_UniCharToUtf(htons(*((short *)src)), dst);
-	src += 2 /* sizeof(UCS-2) */;
+	/*
+	 * Special case for 1-byte utf chars for speed. Make sure we work with
+	 * unsigned short-size data.
+	 */
+	if (ch && ch < 0x80) {
+	    *dst++ = (ch & 0xFF);
+	} else {
+	    dst += Tcl_UniCharToUtf(ch, dst);
+	}
     }
 
     *srcReadPtr = src - srcStart;
@@ -576,17 +583,13 @@ UtfToUcs2beProc(
 {
     const char *srcStart, *srcEnd, *srcClose, *dstStart, *dstEnd;
     int result, numChars;
-    Tcl_UniChar *chPtr = (Tcl_UniChar *)statePtr;
-
-    if (flags & TCL_ENCODING_START) {
-	*statePtr = 0;
-    }
+    int ch;
 
     srcStart = src;
     srcEnd = src + srcLen;
     srcClose = srcEnd;
     if (!(flags & TCL_ENCODING_END)) {
-	srcClose -= TCL_UTF_MAX;
+	srcClose -= 6;
     }
 
     dstStart = dst;
@@ -606,17 +609,14 @@ UtfToUcs2beProc(
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
-	src += Tcl_UtfToUniChar(src, chPtr);
+	src += TkUtfToUniChar(src, &ch);
 
 	/*
 	 * Ensure big-endianness (store big bits first).
-	 * XXX: This hard-codes the assumed size of Tcl_UniChar as 2. Make
-	 * sure to work in char* for Tcl_UtfToUniChar alignment. [Bug 1122671]
 	 */
 
-
-	*dst++ = (char)(*chPtr >> 8);
-	*dst++ = (char)*chPtr;
+	*dst++ = (char)(ch >> 8);
+	*dst++ = (char)ch;
     }
     *srcReadPtr = src - srcStart;
     *dstWrotePtr = dst - dstStart;
