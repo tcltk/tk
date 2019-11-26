@@ -211,10 +211,12 @@ static const struct SystemColorMapEntry systemColorMap[] = {
     { "TextBackgroundColor",		    semantic, 6 },						    /* 180 */
     { "SelectedTextBackgroundColor",	    semantic, 7 },						    /* 181 */
     { "ControlAccentColor",		    semantic, 8 },						    /* 182 */
+    /* Apple's SecondaryLabelColor is the same as their LabelColor so we roll our own. */
+    { "SecondaryLabelColor",		    ttkBackground, 14 },					    /* 183 */
     { NULL,				    0, 0 }
 };
 #define FIRST_SEMANTIC_COLOR 166
-#define MAX_PIXELCODE 182
+#define MAX_PIXELCODE 183
 
 /*
  *----------------------------------------------------------------------
@@ -451,14 +453,23 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
     int result = false;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
+
     if ([NSApp macMinorVersion] >= 14) {
-        static NSAppearanceName darkAqua = @"NSAppearanceNameDarkAqua";
         TkWindow *winPtr = (TkWindow*) tkwin;
-        NSView *view = TkMacOSXDrawableView(winPtr->privatePtr);
-        result = (view &&
-                  [view.effectiveAppearance.name isEqualToString:darkAqua]);
+	NSView *view = nil;
+	if (winPtr && winPtr->privatePtr) {
+	    view = TkMacOSXDrawableView(winPtr->privatePtr);
+	}
+	if (view) {
+	    result = [view.effectiveAppearance.name isEqualToString:darkAqua];
+	} else {
+	    result = [[NSAppearance currentAppearance].name
+			 isEqualToString:darkAqua];
+	}
     }
 #endif
+
     return result;
 }
 
