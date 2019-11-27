@@ -1588,11 +1588,11 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    # this test works, since "uname -s" was non-standard in 3.2.4 and
 	    # below.
 	    AS_IF([test "$GCC" = yes], [
-	    	SHLIB_CFLAGS="-fPIC -melf"
-	    	LDFLAGS="$LDFLAGS -melf -Wl,-Bexport"
+		SHLIB_CFLAGS="-fPIC -melf"
+		LDFLAGS="$LDFLAGS -melf -Wl,-Bexport"
 	    ], [
-	    	SHLIB_CFLAGS="-Kpic -belf"
-	    	LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
+		SHLIB_CFLAGS="-Kpic -belf"
+		LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
 	    ])
 	    SHLIB_LD="ld -G"
 	    SHLIB_LD_LIBS=""
@@ -1873,8 +1873,6 @@ dnl # preprocessing tests use only CPPFLAGS.
 		    [Defined when compiler supports casting to union type.])
 	fi
 
-    AC_CHECK_HEADER(stdbool.h, [AC_DEFINE(HAVE_STDBOOL_H, 1, [Do we have <stdbool.h>?])],)
-
     # FIXME: This subst was left in only because the TCL_DL_LIBS
     # entry in tclConfig.sh uses it. It is not clear why someone
     # would use TCL_DL_LIBS instead of TCL_LIBS.
@@ -1986,6 +1984,7 @@ closedir(d);
 
     AC_CHECK_HEADER(sys/wait.h, , [AC_DEFINE(NO_SYS_WAIT_H, 1, [Do we have <sys/wait.h>?])])
     AC_CHECK_HEADER(dlfcn.h, , [AC_DEFINE(NO_DLFCN_H, 1, [Do we have <dlfcn.h>?])])
+    AC_CHECK_HEADER(stdbool.h, [AC_DEFINE(HAVE_STDBOOL_H, 1, [Do we have <stdbool.h>?])],)
 
     # OS/390 lacks sys/param.h (and doesn't need it, by chance).
     AC_HAVE_HEADERS(sys/param.h)
