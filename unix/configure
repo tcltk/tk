@@ -5439,13 +5439,13 @@ fi
 	    # below.
 	    if test "$GCC" = yes; then :
 
-	    	SHLIB_CFLAGS="-fPIC -melf"
-	    	LDFLAGS="$LDFLAGS -melf -Wl,-Bexport"
+		SHLIB_CFLAGS="-fPIC -melf"
+		LDFLAGS="$LDFLAGS -melf -Wl,-Bexport"
 
 else
 
-	    	SHLIB_CFLAGS="-Kpic -belf"
-	    	LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
+		SHLIB_CFLAGS="-Kpic -belf"
+		LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
 
 fi
 	    SHLIB_LD="ld -G"
@@ -5884,15 +5884,6 @@ $as_echo "$tcl_cv_cast_to_union" >&6; }
 $as_echo "#define HAVE_CAST_TO_UNION 1" >>confdefs.h
 
 	fi
-
-    ac_fn_c_check_header_mongrel "$LINENO" "stdbool.h" "ac_cv_header_stdbool_h" "$ac_includes_default"
-if test "x$ac_cv_header_stdbool_h" = xyes; then :
-
-$as_echo "#define HAVE_STDBOOL_H 1" >>confdefs.h
-
-fi
-
-
 
     # FIXME: This subst was left in only because the TCL_DL_LIBS
     # entry in tclConfig.sh uses it. It is not clear why someone
