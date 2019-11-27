@@ -274,6 +274,7 @@ VISIBILITY_HIDDEN
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
+    NSThread *_backgoundLoop;
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
@@ -309,6 +310,7 @@ VISIBILITY_HIDDEN
 @interface NSApplication(TKNotify)
 /* We need to declare this hidden method. */
 - (void) _modalSession: (NSModalSession) session sendEvent: (NSEvent *) event;
+- (void) _runBackgroundLoop;
 @end
 @interface TKApplication(TKEvent)
 - (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;

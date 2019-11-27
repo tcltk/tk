@@ -148,6 +148,11 @@ void DebugPrintQueue(void)
     DebugPrintQueue();
 #endif
 }
+
+- (void) _runBackgroundLoop
+{
+    while(Tcl_DoOneEvent(TCL_ALL_EVENTS | TCL_DONT_WAIT)){};
+}
 @end
 
 #pragma mark -
