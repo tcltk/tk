@@ -188,9 +188,14 @@ COMPILERFLAGS   = $(COMPILERFLAGS) -QIA64_Bx
 !endif
 !endif
 
+# Prevents "LNK1561: entry point must be defined" error compiling from VS-IDE:
+!ifndef LINKER_TESTFLAGS
+LINKER_TESTFLAGS = /DLL /NOENTRY /OUT:nmhlp-out.txt
+!endif
+
 !if "$(MACHINE)" == "IX86"
 ### test for -align:4096, when align:512 will do.
-!if [nmakehlp -l -opt:nowin98]
+!if [nmakehlp -l -opt:nowin98 $(LINKER_TESTFLAGS)]
 !message *** Linker has 'Win98 alignment problem'
 ALIGN98_HACK	= 1
 !else
@@ -203,7 +208,7 @@ ALIGN98_HACK	= 0
 
 LINKERFLAGS     =
 
-!if [nmakehlp -l -ltcg]
+!if [nmakehlp -l -ltcg $(LINKER_TESTFLAGS)]
 LINKERFLAGS     =-ltcg
 !endif
 
@@ -248,11 +253,15 @@ TCL_USE_STATIC_PACKAGES	= 0
 !endif
 !if [nmakehlp -f $(OPTS) "threads"]
 !message *** Doing threads
-TCL_THREADS	= 1
+TCL_THREADS = 1
 USE_THREAD_ALLOC = 1
 !else
-TCL_THREADS	= 0
+TCL_THREADS = 0
 USE_THREAD_ALLOC = 0
+!endif
+!if [nmakehlp -f $(OPTS) "time64bit"]
+!message *** Force 64-bit time_t
+_USE_64BIT_TIME_T = 1
 !endif
 !if [nmakehlp -f $(OPTS) "symbols"]
 !message *** Doing symbols
@@ -412,7 +421,7 @@ TCL_NO_DEPRECATED	    = 0
 !if [nmakehlp -f $(CHECKS) "fullwarn"]
 !message *** Doing full warnings check
 WARNINGS		    = -W4
-!if [nmakehlp -l -warn:3]
+!if [nmakehlp -l -warn:3 $(LINKER_TESTFLAGS)]
 LINKERFLAGS		    = $(LINKERFLAGS) -warn:3
 !endif
 !else
@@ -425,7 +434,7 @@ WARNINGS		    = $(WARNINGS) -Wp64
 !endif
 
 !if $(PGO) > 1
-!if [nmakehlp -l -ltcg:pgoptimize]
+!if [nmakehlp -l -ltcg:pgoptimize $(LINKER_TESTFLAGS)]
 LINKERFLAGS	= $(LINKERFLAGS:-ltcg=) -ltcg:pgoptimize
 !else
 MSG=^
@@ -433,7 +442,7 @@ This compiler does not support profile guided optimization.
 !error $(MSG)
 !endif
 !elseif $(PGO) > 0
-!if [nmakehlp -l -ltcg:pginstrument]
+!if [nmakehlp -l -ltcg:pginstrument $(LINKER_TESTFLAGS)]
 LINKERFLAGS	= $(LINKERFLAGS:-ltcg=) -ltcg:pginstrument
 !else
 MSG=^
@@ -446,41 +455,45 @@ This compiler does not support profile guided optimization.
 # Set our defines now armed with our options.
 #----------------------------------------------------------
 
-OPTDEFINES	= -DTCL_CFGVAL_ENCODING=$(CFG_ENCODING) -DSTDC_HEADERS
+OPTDEFINES	= /DTCL_CFGVAL_ENCODING=$(CFG_ENCODING) /DSTDC_HEADERS
 
 !if $(TCL_MEM_DEBUG)
-OPTDEFINES	= $(OPTDEFINES) -DTCL_MEM_DEBUG
+OPTDEFINES	= $(OPTDEFINES) /DTCL_MEM_DEBUG
 !endif
 !if $(TCL_COMPILE_DEBUG)
-OPTDEFINES	= $(OPTDEFINES) -DTCL_COMPILE_DEBUG -DTCL_COMPILE_STATS
+OPTDEFINES	= $(OPTDEFINES) /DTCL_COMPILE_DEBUG /DTCL_COMPILE_STATS
 !endif
 !if $(TCL_THREADS)
-OPTDEFINES	= $(OPTDEFINES) -DTCL_THREADS=1
+OPTDEFINES	= $(OPTDEFINES) /DTCL_THREADS=1
 !if $(USE_THREAD_ALLOC)
-OPTDEFINES	= $(OPTDEFINES) -DUSE_THREAD_ALLOC=1
+OPTDEFINES	= $(OPTDEFINES) /DUSE_THREAD_ALLOC=1
 !endif
 !endif
 !if $(STATIC_BUILD)
-OPTDEFINES	= $(OPTDEFINES) -DSTATIC_BUILD
+OPTDEFINES	= $(OPTDEFINES) /DSTATIC_BUILD
 !endif
 !if $(TCL_NO_DEPRECATED)
-OPTDEFINES	= $(OPTDEFINES) -DTCL_NO_DEPRECATED
+OPTDEFINES	= $(OPTDEFINES) /DTCL_NO_DEPRECATED
 !endif
 
 !if !$(DEBUG)
-OPTDEFINES	= $(OPTDEFINES) -DNDEBUG
+OPTDEFINES	= $(OPTDEFINES) /DNDEBUG
 !if $(OPTIMIZING)
-OPTDEFINES	= $(OPTDEFINES) -DTCL_CFG_OPTIMIZED
+OPTDEFINES	= $(OPTDEFINES) /DTCL_CFG_OPTIMIZED
 !endif
 !endif
 !if $(PROFILE)
-OPTDEFINES	= $(OPTDEFINES) -DTCL_CFG_PROFILED
+OPTDEFINES	= $(OPTDEFINES) /DTCL_CFG_PROFILED
 !endif
 !if "$(MACHINE)" == "IA64" || "$(MACHINE)" == "AMD64"
-OPTDEFINES	= $(OPTDEFINES) -DTCL_CFG_DO64BIT
+OPTDEFINES	= $(OPTDEFINES) /DTCL_CFG_DO64BIT
 !endif
 !if $(VCVERSION) < 1300
-OPTDEFINES	= $(OPTDEFINES) -DNO_STRTOI64
+OPTDEFINES	= $(OPTDEFINES) /DNO_STRTOI64
+!endif
+
+!if "$(_USE_64BIT_TIME_T)" == "1"
+OPTDEFINES	= $(OPTDEFINES) /D_USE_64BIT_TIME_T
 !endif
 
 #----------------------------------------------------------
@@ -579,33 +592,27 @@ TCL_VERSION	= $(TCL_MAJOR_VERSION)$(TCL_MINOR_VERSION)
 
 !if $(TCLINSTALL)
 TCLSH		= "$(_TCLDIR)\bin\tclsh$(TCL_VERSION)$(SUFX).exe"
-!if !exist($(TCLSH))
-TCLSH           = "$(_TCLDIR)\bin\tclsh$(TCL_VERSION)$(SUFX:x=).exe"
+!if !exist($(TCLSH)) && $(TCL_THREADS)
+TCLSH           = "$(_TCLDIR)\bin\tclsh$(TCL_VERSION)t$(SUFX).exe"
 !endif
 TCLSTUBLIB	= "$(_TCLDIR)\lib\tclstub$(TCL_VERSION).lib"
 TCLIMPLIB	= "$(_TCLDIR)\lib\tcl$(TCL_VERSION)$(SUFX).lib"
-!if !exist($(TCLIMPLIB))
-TCLIMPLIB	= "$(_TCLDIR)\lib\tcl$(TCL_VERSION)$(SUFX:x=).lib"
-!endif
 TCL_LIBRARY	= $(_TCLDIR)\lib
-TCLREGLIB	= "$(_TCLDIR)\lib\tclreg12$(SUFX:t=).lib"
-TCLDDELIB	= "$(_TCLDIR)\lib\tcldde13$(SUFX:t=).lib"
+TCLREGLIB	= "$(_TCLDIR)\lib\tclreg13$(SUFX:t=).lib"
+TCLDDELIB	= "$(_TCLDIR)\lib\tcldde14$(SUFX:t=).lib"
 COFFBASE	= \must\have\tcl\sources\to\build\this\target
 TCLTOOLSDIR	= \must\have\tcl\sources\to\build\this\target
 TCL_INCLUDES    = -I"$(_TCLDIR)\include"
 !else
 TCLSH		= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(TCL_VERSION)$(SUFX).exe"
-!if !exist($(TCLSH))
-TCLSH		= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(TCL_VERSION)$(SUFX:x=).exe"
+!if !exist($(TCLSH)) && $(TCL_THREADS)
+TCLSH		= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(TCL_VERSION)t$(SUFX).exe"
 !endif
 TCLSTUBLIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tclstub$(TCL_VERSION).lib"
 TCLIMPLIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tcl$(TCL_VERSION)$(SUFX).lib"
-!if !exist($(TCLIMPLIB))
-TCLIMPLIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tcl$(TCL_VERSION)$(SUFX:x=).lib"
-!endif
 TCL_LIBRARY	= $(_TCLDIR)\library
-TCLREGLIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tclreg12$(SUFX:t=).lib"
-TCLDDELIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tcldde13$(SUFX:t=).lib"
+TCLREGLIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tclreg13$(SUFX:t=).lib"
+TCLDDELIB	= "$(_TCLDIR)\win\$(BUILDDIRTOP)\tcldde14$(SUFX:t=).lib"
 COFFBASE	= "$(_TCLDIR)\win\coffbase.txt"
 TCLTOOLSDIR	= $(_TCLDIR)\tools
 TCL_INCLUDES	= -I"$(_TCLDIR)\generic" -I"$(_TCLDIR)\win"
@@ -675,25 +682,13 @@ TK_VERSION	= $(TK_MAJOR_VERSION)$(TK_MINOR_VERSION)
 !if "$(PROJECT)" != "tk"
 !if $(TKINSTALL)
 WISH		= "$(_TKDIR)\bin\wish$(TK_VERSION)$(SUFX).exe"
-!if !exist($(WISH))
-WISH		= "$(_TKDIR)\bin\wish$(TK_VERSION)$(SUFX:x=).exe"
-!endif
 TKSTUBLIB	= "$(_TKDIR)\lib\tkstub$(TK_VERSION).lib"
 TKIMPLIB	= "$(_TKDIR)\lib\tk$(TK_VERSION)$(SUFX).lib"
-!if !exist($(TKIMPLIB))
-TKIMPLIB	= "$(_TKDIR)\win\$(BUILDDIRTOP)\tk$(TCL_VERSION)$(SUFX:x=).lib"
-!endif
 TK_INCLUDES     = -I"$(_TKDIR)\include"
 !else
 WISH		= "$(_TKDIR)\win\$(BUILDDIRTOP)\wish$(TCL_VERSION)$(SUFX).exe"
-!if !exist($(WISH))
-WISH		= "$(_TKDIR)\win\$(BUILDDIRTOP)\wish$(TCL_VERSION)$(SUFX:x=).exe"
-!endif
 TKSTUBLIB	= "$(_TKDIR)\win\$(BUILDDIRTOP)\tkstub$(TCL_VERSION).lib"
 TKIMPLIB	= "$(_TKDIR)\win\$(BUILDDIRTOP)\tk$(TCL_VERSION)$(SUFX).lib"
-!if !exist($(TKIMPLIB))
-TKIMPLIB	= "$(_TKDIR)\win\$(BUILDDIRTOP)\tk$(TCL_VERSION)$(SUFX:x=).lib"
-!endif
 TK_INCLUDES     = -I"$(_TKDIR)\generic" -I"$(_TKDIR)\win" -I"$(_TKDIR)\xlib"
 !endif
 !endif
