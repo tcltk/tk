@@ -7595,9 +7595,9 @@ in this changeset (new minor version) rather than bug fixes:
 
 2018-11-19 (bug)[0a9c91] crash in text-11a.22 (vogel)
 
-2018-11-20 (bug)[9705d1] crash activating "Alt" theme (culler) 
+2018-11-20 (bug)[9705d1] crash activating "Alt" theme (culler)
 
-2018-11-24 (bug)[e3b954] cursor offset at full screen display (culler) 
+2018-11-24 (bug)[e3b954] cursor offset at full screen display (culler)
 
 2019-01-04 (bug)[18a4ba] cross-platform [winfo containing] (culler)
 
