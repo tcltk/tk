@@ -75,12 +75,19 @@ typedef struct GrayColor {
  * Opaque Grays used for Gradient Buttons, Scrollbars and List Headers
  */
 
+GRAYCOLOR darkDisabledIndicator = GRAY256(122.0);
+GRAYCOLOR lightDisabledIndicator = GRAY256(152.0);
+    
 GRAYCOLOR darkGradientNormal = GRAY256(95.0);
 GRAYCOLOR darkGradientPressed = GRAY256(118.0);
+GRAYCOLOR darkGradientDisabled = GRAY256(82.0);
 GRAYCOLOR darkGradientBorder = GRAY256(118.0);
+GRAYCOLOR darkGradientBorderDisabled = GRAY256(94.0);
 GRAYCOLOR lightGradientNormal = GRAY256(244.0);
 GRAYCOLOR lightGradientPressed = GRAY256(175.0);
+GRAYCOLOR lightGradientDisabled = GRAY256(235.0);
 GRAYCOLOR lightGradientBorder = GRAY256(165.0);
+GRAYCOLOR lightGradientBorderDisabled = GRAY256(204.0);
 
 GRAYCOLOR lightTrough = GRAY256(250.0);
 GRAYCOLOR darkTrough = GRAY256(47.0);
@@ -107,6 +114,8 @@ GRAYCOLOR boxBorder = {1.0, 0.20};
 GRAYCOLOR darkSeparator = {1.0, 0.3};
 GRAYCOLOR darkTabSeparator = {0.0, 0.25};
 GRAYCOLOR darkFrameBottom = {1.0, 0.125};
+
+#define CG_WHITE CGColorGetConstantColor(kCGColorWhite)
 
 /*
  * When we draw simulated Apple widgets we use the Core Graphics framework.
@@ -409,9 +418,9 @@ static ButtonInfo selectedButtonInfo = {
 
 static ButtonInfo disabledButtonInfo = {
  .radius = 4.0,
- .lightFaceGray = 246.0, .darkFaceGray = 80.0,
- .lightTopGray = 236.0, .lightSideGray = 227.0, .lightBottomGray = 213.0,
- .darkTopGray = 90.0,  .darkSideGray = 80.0,  .darkBottomGray = 49.0,
+ .lightFaceGray = 242.0, .darkFaceGray = 94.0,
+ .lightTopGray = 213.0, .lightSideGray = 210.0, .lightBottomGray = 200.0,
+ .darkTopGray = 98.0,  .darkSideGray = 94.0,  .darkBottomGray = 58.0,
 };
 
 static ButtonInfo incDecInfo = {
@@ -437,8 +446,8 @@ static ButtonInfo checkInfo = {
 
 static ButtonInfo disabledCheckInfo = {
  .radius = 4.0,
- .lightFaceGray = 246.0, .darkFaceGray = 80.0,
- .lightTopGray = 236.0, .lightSideGray = 227.0, .lightBottomGray = 213.0,
+ .lightFaceGray = 242.0, .darkFaceGray = 80.0,
+ .lightTopGray = 192.0, .lightSideGray = 199.0, .lightBottomGray = 199.0,
  .darkTopGray = 90.0,  .darkSideGray = 80.0,  .darkBottomGray = 49.0,
 };
 
@@ -451,9 +460,9 @@ static ButtonInfo radioInfo = {
 
 static ButtonInfo disabledRadioInfo = {
  .radius = 8.0,
- .lightFaceGray = 246.0, .darkFaceGray = 80.0,
- .lightTopGray = 236.0, .lightSideGray = 227.0, .lightBottomGray = 213.0,
- .darkTopGray = 90.0,  .darkSideGray = 80.0,  .darkBottomGray = 49.0,
+ .lightFaceGray = 242.0, .darkFaceGray = 80.0,
+ .lightTopGray = 189.0, .lightSideGray = 198.0, .lightBottomGray = 199.0,
+ .darkTopGray = 84.0,  .darkSideGray = 88.0,  .darkBottomGray = 60.0,
 };
 
 static ButtonInfo tabInfo = {
@@ -720,7 +729,7 @@ static void ttkMacOSXDrawEntry(
 	    }
 	backgroundColor = CGColorFromRGBA(bgRGBA);
     } else {
-	backgroundColor = CGCOLOR([NSColor whiteColor]);
+	backgroundColor = CG_WHITE;
     }
     if (state & TTK_STATE_FOCUS) {
 	ttkMacOSXDrawFocusRing(context, bounds, info);
@@ -747,18 +756,18 @@ static void ttkMacOSXDrawDownArrow(
     CGFloat size,
     int state)
 {
-    NSColor *strokeColor;
+    CGColorRef strokeColor;
     CGFloat x, y;
 
 
     if (state & TTK_STATE_DISABLED) {
-	strokeColor = [NSColor disabledControlTextColor];
+	strokeColor = CGCOLOR([NSColor disabledControlTextColor]);
     } else if (state & TTK_STATE_IS_ACCENTED) {
-	strokeColor = [NSColor whiteColor];
+	strokeColor = CG_WHITE;
     } else {
-	strokeColor = [NSColor controlTextColor];
+	strokeColor = CGCOLOR([NSColor controlTextColor]);
     }
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
+    CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextSetLineWidth(context, 1.5);
     x = bounds.origin.x + inset;
     y = bounds.origin.y + trunc(bounds.size.height / 2) + 1;
@@ -844,25 +853,32 @@ static void ttkMacOSXDrawUpDownArrows(
     CGContextStrokePath(context);
 }
 
+static CGColorRef ttkMacOSXIndicatorColor(
+   int state,
+   Tk_Window tkwin)
+{
+    if (state & TTK_STATE_DISABLED) {
+	return TkMacOSXInDarkMode(tkwin) ?
+	    CGColorFromGray(darkDisabledIndicator) :
+	    CGColorFromGray(lightDisabledIndicator);
+    } else if ((state & TTK_STATE_SELECTED || state & TTK_STATE_ALTERNATE) &&
+	       !(state & TTK_STATE_BACKGROUND)) { 
+	return CG_WHITE;
+    } else {
+	return CGCOLOR([NSColor controlTextColor]);
+    }
+}
+
 static void ttkMacOSXDrawCheckIndicator(
     CGContextRef context,
     CGRect bounds,
-    int state)
+    int state,
+    Tk_Window tkwin)
 {
-    CGFloat x = bounds.origin.x;
-    CGFloat y = bounds.origin.y;
-    NSColor *strokeColor;
+    CGFloat x = bounds.origin.x, y = bounds.origin.y;
+    CGColorRef strokeColor = ttkMacOSXIndicatorColor(state, tkwin);
 
-    if (state & TTK_STATE_DISABLED) {
-	strokeColor = [NSColor disabledControlTextColor];
-    } else if ((state & TTK_STATE_SELECTED || state & TTK_STATE_ALTERNATE) &&
-	       !(state & TTK_STATE_BACKGROUND)) {
-	strokeColor = [NSColor whiteColor];
-    } else {
-	strokeColor = [NSColor controlTextColor];
-    }
-
-    CGContextSetStrokeColorWithColor(context, CGCOLOR(strokeColor));
+    CGContextSetStrokeColorWithColor(context, strokeColor);
     if (state & TTK_STATE_SELECTED) {
 	CGContextSetLineWidth(context, 1.5);
 	CGContextBeginPath(context);
@@ -881,15 +897,21 @@ static void ttkMacOSXDrawCheckIndicator(
 static void ttkMacOSXDrawRadioIndicator(
     CGContextRef context,
     CGRect bounds,
-    int state)
+    int state,
+    Tk_Window tkwin)
 {
-    CGColorRef fillColor;
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
-    if (state & TTK_STATE_BACKGROUND) {
-	fillColor = CGCOLOR([NSColor controlTextColor]);
-    } else {
-	fillColor = CGCOLOR([NSColor whiteColor]);
-    }
+    CGColorRef fillColor = ttkMacOSXIndicatorColor(state, tkwin);
+    // if (state & TTK_STATE_BACKGROUND) {
+    // 	fillColor = CGCOLOR([NSColor controlTextColor]);
+    // } else if (state & TTK_STATE_DISABLED){
+    // 	fillColor = TkMacOSXInDarkMode(tkwin) ?
+    // 	    CGColorFromGray(darkDisabledIndicator) :
+    // 	    CGColorFromGray(lightDisabledIndicator);
+    // } else {
+    // 	fillColor = CG_WHITE;
+    // }
+
     CGContextSetFillColorWithColor(context, fillColor);
     if (state & TTK_STATE_SELECTED) {
 	CGContextBeginPath(context);
@@ -1254,42 +1276,34 @@ static void DrawButton(
 	bounds = CGRectOffset(CGRectMake(0, bounds.size.height / 2 - 8, 16, 16),
 			      bounds.origin.x, bounds.origin.y);
 	bounds = CGRectInset(bounds, 1, 1);
-	if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
-	    if (state & TTK_STATE_DISABLED) {
-		ttkMacOSXDrawGrayButton(context, bounds, disabledCheckInfo,
-					tkwin);
-	    } else{
-		if (state & TTK_STATE_BACKGROUND) {
-	    	    ttkMacOSXDrawGrayButton(context, bounds, checkInfo, tkwin);
-		} else {
-		    ttkMacOSXDrawAccentedButton(context, bounds, checkInfo, tkwin);
-		}
-	    }
-	    ttkMacOSXDrawCheckIndicator(context, bounds, state);
+	if (state & TTK_STATE_DISABLED) {
+	    ttkMacOSXDrawGrayButton(context, bounds, disabledCheckInfo,
+				    tkwin);
+	} else if ((state & TTK_STATE_SELECTED || state & TTK_STATE_ALTERNATE) &&
+		   !(state & TTK_STATE_BACKGROUND)) {
+	    ttkMacOSXDrawAccentedButton(context, bounds, checkInfo, tkwin);
 	} else {
 	    ttkMacOSXDrawGrayButton(context, bounds, checkInfo, tkwin);
-	    break;
+	}
+	if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
+	    ttkMacOSXDrawCheckIndicator(context, bounds, state, tkwin);
 	}
 	break;
     case kThemeRadioButton:
 	bounds = CGRectOffset(CGRectMake(0, bounds.size.height / 2 - 9, 18, 18),
 					 bounds.origin.x, bounds.origin.y);
 	bounds = CGRectInset(bounds, 1, 1);
-	if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
-	    if (state & TTK_STATE_DISABLED) {
-		ttkMacOSXDrawGrayButton(context, bounds, disabledRadioInfo,
-					tkwin);
-	    } else{
-		if (state & TTK_STATE_BACKGROUND) {
-	    	    ttkMacOSXDrawGrayButton(context, bounds, radioInfo, tkwin);
-		} else {
-		    ttkMacOSXDrawAccentedButton(context, bounds, radioInfo, tkwin);
-		}
-	    }
-	    ttkMacOSXDrawRadioIndicator(context, bounds, state);
+	if (state & TTK_STATE_DISABLED) {
+	    ttkMacOSXDrawGrayButton(context, bounds, disabledRadioInfo,
+				    tkwin);
+	} else if ((state & TTK_STATE_SELECTED || state & TTK_STATE_ALTERNATE) &&
+		   !(state & TTK_STATE_BACKGROUND)) {
+	    ttkMacOSXDrawAccentedButton(context, bounds, radioInfo, tkwin);
 	} else {
 	    ttkMacOSXDrawGrayButton(context, bounds, radioInfo, tkwin);
-	    break;
+	}
+	if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
+	    ttkMacOSXDrawRadioIndicator(context, bounds, state, tkwin);
 	}
 	break;
     case kThemeArrowButton:
@@ -1515,13 +1529,23 @@ static void DrawGradientBorder(
     CGRect inside = CGRectInset(bounds, 1, 1);
 
     if (TkMacOSXInDarkMode(tkwin)) {
-	faceGray = state & TTK_STATE_PRESSED ?
-	    darkGradientPressed : darkGradientNormal;
-	borderGray = darkGradientBorder;
+	if (state & TTK_STATE_DISABLED) {
+	    faceGray = darkGradientDisabled;
+	    borderGray = darkGradientBorderDisabled;
+	} else {
+	    faceGray = state & TTK_STATE_PRESSED ?
+		darkGradientPressed : darkGradientNormal;
+	    borderGray = darkGradientBorder;
+	}
     } else {
-	faceGray = state & TTK_STATE_PRESSED ?
-	    lightGradientPressed : lightGradientNormal;
-	borderGray = lightGradientBorder;
+	if (state & TTK_STATE_DISABLED) {
+	    faceGray = lightGradientDisabled;
+	    borderGray = lightGradientBorderDisabled;
+	} else {
+	    faceGray = state & TTK_STATE_PRESSED ?
+		lightGradientPressed : lightGradientNormal;
+	    borderGray = lightGradientBorder;
+	}
     }
     faceColor = CGColorFromGray(faceGray);
     borderColor = CGColorFromGray(borderGray);
@@ -1840,8 +1864,7 @@ static void ButtonElementDraw(
     if (info.kind == kThemePopupButton  &&
 	(state & TTK_STATE_BACKGROUND)) {
 	CGRect innerBounds = CGRectInset(bounds, 1, 1);
-	SolidFillRoundedRectangle(dc.context, innerBounds, 4,
-				  CGColorGetConstantColor(kCGColorWhite));
+	SolidFillRoundedRectangle(dc.context, innerBounds, 4, CG_WHITE);
     }
 
     /*

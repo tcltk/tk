@@ -31,7 +31,8 @@ namespace eval ttk::theme::aqua {
 	ttk::style map TButton \
 	    -foreground {
 		pressed white
-	        {alternate !pressed !background} white}
+	        {alternate !pressed !background} white
+	        disabled systemDisabledControlTextColor}
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
 	ttk::style configure Toolbutton -anchor center
 
