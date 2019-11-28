@@ -77,7 +77,7 @@ typedef struct GrayColor {
 
 GRAYCOLOR darkDisabledIndicator = GRAY256(122.0);
 GRAYCOLOR lightDisabledIndicator = GRAY256(152.0);
-    
+
 GRAYCOLOR darkGradientNormal = GRAY256(95.0);
 GRAYCOLOR darkGradientPressed = GRAY256(118.0);
 GRAYCOLOR darkGradientDisabled = GRAY256(82.0);
@@ -288,6 +288,7 @@ static void SolidFillRoundedRectangle(
     CGContextFillPath(context);
     CFRelease(path);
 }
+
 /*----------------------------------------------------------------------
  * +++ Backgrounds
  *
@@ -383,6 +384,9 @@ static CGColorRef GetBackgroundCGColor(
  * +++ Button drawing primitives.
  */
 
+#define TkGradientButton    0x8001
+#define TkRoundedRectButton 0x8002
+
 typedef struct ButtonInfo {
     CGFloat radius;
     CGFloat lightFaceGray;
@@ -421,6 +425,20 @@ static ButtonInfo disabledButtonInfo = {
  .lightFaceGray = 242.0, .darkFaceGray = 94.0,
  .lightTopGray = 213.0, .lightSideGray = 210.0, .lightBottomGray = 200.0,
  .darkTopGray = 98.0,  .darkSideGray = 94.0,  .darkBottomGray = 58.0,
+};
+
+static ButtonInfo roundedRectInfo = {
+ .radius = 3.0,
+ .lightFaceGray = 204.0, .darkFaceGray = 85.0,
+ .lightTopGray = 158.0, .lightSideGray = 158.0, .lightBottomGray = 158.0,
+ .darkTopGray = 115.0,  .darkSideGray = 115.0,  .darkBottomGray = 115.0,
+};
+
+static ButtonInfo disabledRoundedRectInfo = {
+ .radius = 3.0,
+ .lightFaceGray = 204.0, .darkFaceGray = 85.0,
+ .lightTopGray = 192.0, .lightSideGray = 192.0, .lightBottomGray = 192.0,
+ .darkTopGray = 86.0,  .darkSideGray = 86.0,  .darkBottomGray = 86.0,
 };
 
 static ButtonInfo incDecInfo = {
@@ -569,11 +587,7 @@ static void ttkMacOSXDrawGrayButton(
     CGColorRef faceColor;
     CGFloat face;
     int isDark = TkMacOSXInDarkMode(tkwin);
-    if (isDark) {
-	face = info.darkFaceGray / 255.0;
-    } else {
-	face = info.lightFaceGray / 255.0;
-    }
+    face = isDark ? info.darkFaceGray / 255.0 : info.lightFaceGray / 255.0;
     GrayColor faceGray = {.grayscale = face, .alpha = 1.0};
     faceColor = CGColorFromGray(faceGray);
     ttkMacOSXFillBoxBorder(context, bounds, info, isDark);
@@ -862,7 +876,7 @@ static CGColorRef ttkMacOSXIndicatorColor(
 	    CGColorFromGray(darkDisabledIndicator) :
 	    CGColorFromGray(lightDisabledIndicator);
     } else if ((state & TTK_STATE_SELECTED || state & TTK_STATE_ALTERNATE) &&
-	       !(state & TTK_STATE_BACKGROUND)) { 
+	       !(state & TTK_STATE_BACKGROUND)) {
 	return CG_WHITE;
     } else {
 	return CGCOLOR([NSColor controlTextColor]);
@@ -1222,6 +1236,22 @@ static void DrawButton(
 	    ttkMacOSXDrawGrayButton(context, bounds, buttonInfo, tkwin);
 	}
 	break;
+    case TkRoundedRectButton:
+	if (state & TTK_STATE_PRESSED) {
+	    ttkMacOSXDrawGrayButton(context, bounds, roundedRectInfo, tkwin);
+	} else if ((state & TTK_STATE_ALTERNATE) && !(state & TTK_STATE_BACKGROUND)) {
+	    ttkMacOSXDrawGrayButton(context, bounds, selectedButtonInfo, tkwin);
+	} else {
+	    CGFloat rgba[4];
+	    CGFloat gray;
+	    ButtonInfo info = state & TTK_STATE_DISABLED ?
+		disabledRoundedRectInfo : roundedRectInfo;
+	    GetBackgroundColorRGBA(context, tkwin, 0, rgba);
+	    gray = (rgba[0] + rgba[1] + rgba[2]) / 3.0;
+	    info.lightFaceGray = info.darkFaceGray = gray*255.0;
+	    ttkMacOSXDrawGrayButton(context, bounds, info, tkwin);
+	}
+	break;
     case kThemePopupButton:
 	drawState = 0;
 	if (state & TTK_STATE_DISABLED) {
@@ -1566,27 +1596,34 @@ static void DrawGradientBorder(
  * is passed as the clientData.
  */
 
-#define TkGradientButton 0x8001
-
 typedef struct {
     ThemeButtonKind kind;
     ThemeMetric heightMetric;
     ThemeMetric widthMetric;
 } ThemeButtonParams;
 static ThemeButtonParams
-    PushButtonParams =  {kThemePushButton, kThemeMetricPushButtonHeight, NoThemeMetric},
-    CheckBoxParams =    {kThemeCheckBox, kThemeMetricCheckBoxHeight, NoThemeMetric},
-    RadioButtonParams = {kThemeRadioButton, kThemeMetricRadioButtonHeight, NoThemeMetric},
+    PushButtonParams =  {kThemePushButton, kThemeMetricPushButtonHeight,
+			 NoThemeMetric},
+    CheckBoxParams =    {kThemeCheckBox, kThemeMetricCheckBoxHeight,
+			 NoThemeMetric},
+    RadioButtonParams = {kThemeRadioButton, kThemeMetricRadioButtonHeight,
+			 NoThemeMetric},
     BevelButtonParams = {kThemeRoundedBevelButton, NoThemeMetric, NoThemeMetric},
-    PopupButtonParams = {kThemePopupButton, kThemeMetricPopupButtonHeight, NoThemeMetric},
-    DisclosureParams =  {kThemeDisclosureButton, kThemeMetricDisclosureTriangleHeight,
+    PopupButtonParams = {kThemePopupButton, kThemeMetricPopupButtonHeight,
+			 NoThemeMetric},
+    DisclosureParams =  {kThemeDisclosureButton,
+			 kThemeMetricDisclosureTriangleHeight,
 			 kThemeMetricDisclosureTriangleWidth},
-    DisclosureButtonParams = {kThemeArrowButton, kThemeMetricSmallDisclosureButtonHeight,
+    DisclosureButtonParams = {kThemeArrowButton,
+			      kThemeMetricSmallDisclosureButtonHeight,
 			      kThemeMetricSmallDisclosureButtonWidth},
     HelpButtonParams = {kThemeRoundButtonHelp, kThemeMetricRoundButtonSize,
 			kThemeMetricRoundButtonSize},
-    ListHeaderParams = {kThemeListHeaderButton, kThemeMetricListHeaderHeight, NoThemeMetric},
-    GradientButtonParams = {TkGradientButton, NoThemeMetric, NoThemeMetric};
+    ListHeaderParams = {kThemeListHeaderButton, kThemeMetricListHeaderHeight,
+			NoThemeMetric},
+    GradientButtonParams = {TkGradientButton, NoThemeMetric, NoThemeMetric},
+    RoundedRectButtonParams = {TkRoundedRectButton, kThemeMetricPushButtonHeight,
+			       NoThemeMetric};
 
     /*
      * Others: kThemeDisclosureRight, kThemeDisclosureDown,
@@ -1730,7 +1767,7 @@ static void ButtonElementSize(
     Ttk_Padding *paddingPtr)
 {
     ThemeButtonParams *params = clientData;
-    const HIThemeButtonDrawInfo info =
+    HIThemeButtonDrawInfo info =
 	computeButtonDrawInfo(params, 0, tkwin);
     static const CGRect scratchBounds = {{0, 0}, {100, 100}};
     CGRect contentBounds, backgroundBounds;
@@ -1746,6 +1783,10 @@ static void ButtonElementSize(
     case kThemeArrowButton:
     case kThemeRoundButtonHelp:
         return;
+	/* Buttons sized like PushButtons but not known to HITheme. */
+    case TkRoundedRectButton:
+	info.kind = kThemePushButton;
+	break;
     default:
         break;
     }
@@ -1836,6 +1877,7 @@ static void ButtonElementDraw(
 	case kThemeRoundedBevelButton:
 	case kThemeCheckBox:
 	case kThemeRadioButton:
+	case TkRoundedRectButton:
 	    DrawButton(bounds, info, state, dc.context, tkwin);
 	    goto done;
 	case kThemeRoundButtonHelp:
@@ -1847,7 +1889,12 @@ static void ButtonElementDraw(
 
     /*
      * If we get here it means we should use HIToolbox to draw the button.
+     * Buttons that HIToolbox doesn't know are rendered as PushButtons.
      */
+
+    if (info.kind == TkRoundedRectButton) {
+	info.kind = kThemePushButton;
+    }
 
     /*
      * Apple's PushButton and PopupButton do not change their fill color
@@ -3439,6 +3486,12 @@ TTK_LAYOUT("ImageButton",
     TTK_GROUP("Button.padding", TTK_FILL_BOTH,
     TTK_NODE("Button.label", TTK_FILL_BOTH)))
 
+/* Rounded Rect Button -- transparent face */
+TTK_LAYOUT("RoundedRectButton",
+    TTK_GROUP("RoundedRectButton.button", TTK_FILL_BOTH,
+    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
+    TTK_NODE("Button.label", TTK_FILL_BOTH))))
+
 /* Gradient Button */
 TTK_LAYOUT("GradientButton",
     TTK_GROUP("GradientButton.button", TTK_FILL_BOTH,
@@ -3545,6 +3598,8 @@ static int AquaTheme_Init(
 
     Ttk_RegisterElementSpec(themePtr, "Button.button",
 	&ButtonElementSpec, &PushButtonParams);
+    Ttk_RegisterElementSpec(themePtr, "RoundedRectButton.button",
+	&ButtonElementSpec, &RoundedRectButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Checkbutton.button",
 	&ButtonElementSpec, &CheckBoxParams);
     Ttk_RegisterElementSpec(themePtr, "Radiobutton.button",
