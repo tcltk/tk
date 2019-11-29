@@ -399,9 +399,6 @@ static CGColorRef GetBackgroundCGColor(
  * +++ Button drawing primitives.
  */
 
-#define TkGradientButton    0x8001
-#define TkRoundedRectButton 0x8002
-
 typedef struct ButtonInfo {
     CGFloat radius;
     CGFloat lightFaceGray;
@@ -496,6 +493,27 @@ static ButtonInfo disabledRadioInfo = {
  .lightFaceGray = 242.0, .darkFaceGray = 80.0,
  .lightTopGray = 189.0, .lightSideGray = 198.0, .lightBottomGray = 199.0,
  .darkTopGray = 84.0,  .darkSideGray = 88.0,  .darkBottomGray = 60.0,
+};
+
+static ButtonInfo selectedRecessedInfo = {
+ .radius = 4.0,
+ .lightFaceGray = 145.0, .darkFaceGray = 166.0,
+ .lightTopGray = 145.0, .lightSideGray = 145.0, .lightBottomGray = 145.0,
+ .darkTopGray = 166.0,  .darkSideGray = 166.0,  .darkBottomGray = 66.0,
+};
+
+static ButtonInfo activeRecessedInfo = {
+ .radius = 4.0,
+ .lightFaceGray = 182.0, .darkFaceGray = 105.0,
+ .lightTopGray = 182.0, .lightSideGray = 182.0, .lightBottomGray = 182.0,
+ .darkTopGray = 105.0,  .darkSideGray = 105.0,  .darkBottomGray = 105.0,
+};
+
+static ButtonInfo pressedRecessedInfo = {
+ .radius = 4.0,
+ .lightFaceGray = 117.0, .darkFaceGray = 118.0,
+ .lightTopGray = 117.0, .lightSideGray = 117.0, .lightBottomGray = 117.0,
+ .darkTopGray = 129.0,  .darkSideGray = 129.0,  .darkBottomGray = 129.0,
 };
 
 static ButtonInfo tabInfo = {
@@ -1228,6 +1246,14 @@ static void DrawListHeader(
  *      macOS buttons for newer OS releases.
  */
 
+/*
+ * Identifiers for button styles non known to HIToolbox
+ */
+
+#define TkGradientButton    0x8001
+#define TkRoundedRectButton 0x8002
+#define TkRecessedButton    0x8003
+
 static void DrawButton(
     CGRect bounds,
     HIThemeButtonDrawInfo info,
@@ -1349,6 +1375,15 @@ static void DrawButton(
 	}
 	if ((state & TTK_STATE_SELECTED) || (state & TTK_STATE_ALTERNATE)) {
 	    ttkMacOSXDrawRadioIndicator(context, bounds, state, tkwin);
+	}
+	break;
+    case TkRecessedButton:
+	if (state & TTK_STATE_SELECTED) {
+	    ttkMacOSXDrawGrayButton(context, bounds, selectedRecessedInfo, tkwin);
+	} else if (state & TTK_STATE_PRESSED) {
+	    ttkMacOSXDrawGrayButton(context, bounds, pressedRecessedInfo, tkwin);
+	} else if (state & TTK_STATE_ACTIVE) {
+	    ttkMacOSXDrawGrayButton(context, bounds, activeRecessedInfo, tkwin);
 	}
 	break;
     case kThemeArrowButton:
@@ -1638,6 +1673,8 @@ static ThemeButtonParams
 			NoThemeMetric},
     GradientButtonParams = {TkGradientButton, NoThemeMetric, NoThemeMetric},
     RoundedRectButtonParams = {TkRoundedRectButton, kThemeMetricPushButtonHeight,
+			       NoThemeMetric},
+    RecessedButtonParams = {TkRecessedButton, kThemeMetricPushButtonHeight,
 			       NoThemeMetric};
 
     /*
@@ -1800,6 +1837,7 @@ static void ButtonElementSize(
         return;
 	/* Buttons sized like PushButtons but not known to HITheme. */
     case TkRoundedRectButton:
+    case TkRecessedButton:
 	info.kind = kThemePushButton;
 	break;
     default:
@@ -1893,6 +1931,7 @@ static void ButtonElementDraw(
 	case kThemeCheckBox:
 	case kThemeRadioButton:
 	case TkRoundedRectButton:
+	case TkRecessedButton:
 	    DrawButton(bounds, info, state, dc.context, tkwin);
 	    goto done;
 	case kThemeRoundButtonHelp:
@@ -1907,8 +1946,13 @@ static void ButtonElementDraw(
      * Buttons that HIToolbox doesn't know are rendered as PushButtons.
      */
 
-    if (info.kind == TkRoundedRectButton) {
+    switch (info.kind) {
+    case TkRoundedRectButton:
+    case TkRecessedButton:
 	info.kind = kThemePushButton;
+	break;
+    default:
+	break;
     }
 
     /*
@@ -3513,6 +3557,13 @@ TTK_LAYOUT("GradientButton",
     TTK_GROUP("Button.padding", TTK_FILL_BOTH,
     TTK_NODE("Button.label", TTK_FILL_BOTH))))
 
+/* Recessed Button - text only radio button */
+
+TTK_LAYOUT("RecessedButton",
+    TTK_GROUP("RecessedButton.button", TTK_FILL_BOTH,
+    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
+    TTK_NODE("Button.label", TTK_FILL_BOTH))))
+
 /* DisclosureButton (not a triangle) -- No label, no border*/
 TTK_LAYOUT("DisclosureButton",
     TTK_NODE("DisclosureButton.button", TTK_FILL_BOTH))
@@ -3619,6 +3670,8 @@ static int AquaTheme_Init(
 	&ButtonElementSpec, &CheckBoxParams);
     Ttk_RegisterElementSpec(themePtr, "Radiobutton.button",
 	&ButtonElementSpec, &RadioButtonParams);
+    Ttk_RegisterElementSpec(themePtr, "RecessedButton.button",
+	&ButtonElementSpec, &RecessedButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Toolbutton.border",
 	&ButtonElementSpec, &BevelButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",
