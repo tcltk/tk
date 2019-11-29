@@ -1227,7 +1227,7 @@ TkUtfToUniChar(
 	/* This can only happen if Tcl is compiled with TCL_UTF_MAX=4,
 	 * or when a high surrogate character is detected in UTF-8 form */
 	int len2 = Tcl_UtfToUniChar(src+len, &low);
-	if ((uniChar & 0xFC00) == 0xDC00) {
+	if ((low & 0xFC00) == 0xDC00) {
 	    *chPtr = (((uniChar & 0x3FF) << 10) | (low & 0x3FF)) + 0x10000;
 	    return len + len2;
 	}
