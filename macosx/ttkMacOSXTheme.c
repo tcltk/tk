@@ -172,6 +172,21 @@ CGColorFromGray(
 
 #endif
 
+/*
+ * Apple introduced the "semantic color" named controlAccentColor in OSX 10.14.
+ * Prior to that release there was a system preferences setting for the system
+ * "tint" which could be used to produce the accent color (blue or graphite
+ * only).
+ */
+
+static NSColor *controlAccentColor(void)
+{
+    if ([NSApp macMinorVersion] >= 14) {
+	return [NSColor controlAccentColor];
+    } else {
+	return [NSColor colorForControlTint:[NSColor currentControlTint]];
+    }
+}
 
 /*
  * If we try to draw a rounded rectangle with too large of a radius Core
@@ -612,7 +627,7 @@ static void ttkMacOSXDrawFocusRing(
 {
     CGColorRef highlightColor;
     CGFloat highlight[4] = {1.0, 1.0, 1.0, 0.2};
-    NSColor *accent = [NSColor controlAccentColor];
+    NSColor *accent = controlAccentColor();
     CGColorRef focusColor = CGCOLOR([accent colorWithAlphaComponent:0.6]);
 
     SolidFillRoundedRectangle(context, bounds, info.radius, focusColor);
@@ -629,7 +644,7 @@ static void ttkMacOSXDrawAccentedButton(
     Tk_Window tkwin)
 {
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
-    CGColorRef faceColor = [NSColor controlAccentColor].CGColor;
+    CGColorRef faceColor = CGCOLOR(controlAccentColor());
     CGPathRef path = CGPathCreateWithRoundedRect(bounds, info.radius, info.radius,
 						 NULL);
     // This gradient should only be used for PushButtons and Tabs, and it needs
@@ -1002,7 +1017,7 @@ static void ttkMacOSXDrawProgressBar(
     if (state & TTK_STATE_BACKGROUND) {
 	accent = [NSColor colorWithRed:0.72 green:0.72 blue:0.72 alpha:0.72];
     } else {
-	accent = [NSColor controlAccentColor];
+	accent = controlAccentColor();
     }
     SolidFillRoundedRectangle(context, bounds, 3, trackColor);
     bounds = CGRectInset(bounds, 0, 1);
@@ -1090,7 +1105,7 @@ static void ttkMacOSXDrawSlider(
 	accentColor = isDark ? CGColorFromGray(darkInactiveTrack) :
 	    CGColorFromGray(lightInactiveTrack);
     } else {
-	accentColor = CGCOLOR([NSColor controlAccentColor]);
+	accentColor = CGCOLOR(controlAccentColor());
     }
     SolidFillRoundedRectangle(context, trackBounds, 1.5, accentColor);
     CGContextRestoreGState(context);
