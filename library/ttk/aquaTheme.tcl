@@ -45,6 +45,19 @@ namespace eval ttk::theme::aqua {
 		!pressed systemSecondaryLabelColor
 	    }
 
+	# Recessed (radio) button
+	ttk::style configure RecessedButton \
+	    -foreground systemControlTextColor
+	ttk::style map RecessedButton \
+	    -foreground {
+		selected systemTextBackgroundColor
+		active systemTextBackgroundColor
+	    } \
+	    -font {
+		selected TkCaptionFont
+		active TkCaptionFont
+	    }
+
 	# Entry
 	ttk::style configure TEntry \
 	    -foreground systemTextColor \
