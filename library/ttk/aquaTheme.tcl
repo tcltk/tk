@@ -51,11 +51,13 @@ namespace eval ttk::theme::aqua {
 	ttk::style map RecessedButton \
 	    -foreground {
 		selected systemTextBackgroundColor
-		active systemTextBackgroundColor
+		active white
+		pressed white
 	    } \
 	    -font {
 		selected TkCaptionFont
 		active TkCaptionFont
+		pressed TkCaptionFont
 	    }
 
 	# Entry
