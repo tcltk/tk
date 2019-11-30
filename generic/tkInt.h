@@ -1098,6 +1098,12 @@ void Tcl_Panic(const char *, ...) __attribute__((analyzer_noreturn));
 MODULE_SCOPE int	Ttk_Init(Tcl_Interp *interp);
 
 /*
+ * Tko widget set init function:
+ */
+
+MODULE_SCOPE int	Tko_Init(Tcl_Interp *interp);
+
+/*
  * Internal functions shared among Tk modules but not exported to the outside
  * world:
  */
