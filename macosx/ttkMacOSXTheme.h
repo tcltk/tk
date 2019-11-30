@@ -1,4 +1,15 @@
 /*
+ * ttkMacOSXTheme.h --
+ *
+ *      Static data and macros used in ttkMacOSXTheme.c
+ *
+ * Copyright 2019 Marc Culler
+ *
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ */
+
+/*
  * Macros for handling drawing contexts.
  */
 
@@ -12,7 +23,7 @@
 #define NoThemeMetric 0xFFFFFFFF
 
 /*
- *  Scale factor used to map a range of non-negative doubles into
+ *  A scale factor used to map a range of non-negative doubles into
  *  a range of 32-bit integers without losing too much information.
  */
 
@@ -23,7 +34,7 @@
 #endif /* __LP64__ */
 
 /*
- * Ttk states represented by User1 and User2.
+ * Meanings of Ttk states represented by User1 and User2.
  */
 
 #define TTK_STATE_FIRST_TAB     TTK_STATE_USER1
@@ -70,7 +81,7 @@ GRAYCOLOR lightActiveThumb = GRAY256(133.0);
 GRAYCOLOR darkInactiveThumb = GRAY256(117.0);
 GRAYCOLOR darkActiveThumb = GRAY256(158.0);
 
-GRAYCOLOR listheaderBorder = GRAY256(200.0);
+GRAYCOLOR lightListheaderBorder = GRAY256(200.0);
 GRAYCOLOR listheaderSeparator = GRAY256(220.0);
 GRAYCOLOR listheaderActiveBG = GRAY256(238.0);
 GRAYCOLOR listheaderInactiveBG = GRAY256(246.0);
@@ -90,7 +101,7 @@ GRAYCOLOR lightInactiveTrack = GRAY256(139.0);
 GRAYCOLOR boxBorder = {1.0, 0.20};
 GRAYCOLOR darkSeparator = {1.0, 0.3};
 GRAYCOLOR darkTabSeparator = {0.0, 0.25};
-GRAYCOLOR darkFrameBottom = {1.0, 0.125};
+GRAYCOLOR darkListheaderBorder = {1.0, 0.125};
 
 #define CG_WHITE CGColorGetConstantColor(kCGColorWhite)
 
@@ -404,8 +415,24 @@ static Ttk_StateTable ThemeStateTable[] = {
  * Translation between Ttk and HIToolbox.
  */
 
+static Ttk_StateTable ButtonValueTable[] = {
+    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
+    {kThemeButtonMixed, TTK_STATE_ALTERNATE, 0},
+    {kThemeButtonOn, TTK_STATE_SELECTED, 0},
+    {kThemeButtonOff, 0, 0}
+};
+
+static Ttk_StateTable ButtonAdornmentTable[] = {
+    {kThemeAdornmentNone, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
+    {kThemeAdornmentDefault | kThemeAdornmentFocus,
+     TTK_STATE_ALTERNATE | TTK_STATE_FOCUS, 0},
+    {kThemeAdornmentFocus, TTK_STATE_FOCUS, 0},
+    {kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0},
+    {kThemeAdornmentNone, 0, 0}
+};
+
 /*
- * Identifiers for button styles non known to HIToolbox
+ * Our enums for button styles not known to HIToolbox.
  */
 
 #define TkGradientButton    0x8001
@@ -413,7 +440,7 @@ static Ttk_StateTable ThemeStateTable[] = {
 #define TkRecessedButton    0x8003
 
 /*
- * The clientData passed to Ttk sizing and drawing routines.
+ * The struct passed as clientData when drawing Ttk buttons.
  */
 
 typedef struct {
@@ -453,28 +480,39 @@ static ThemeButtonParams
      * kThemeDisclosureLeft
      */
 
+/*
+ *  The struct passed as clientData when drawing Ttk Entry widgets.
+ */
+
 typedef struct {
     HIThemeFrameKind kind;
     ThemeMetric heightMetric;
     ThemeMetric widthMetric;
 } ThemeFrameParams;
+
 static ThemeFrameParams
     EntryFieldParams = {kHIThemeFrameTextFieldSquare, NoThemeMetric, NoThemeMetric},
     SearchboxFieldParams = {kHIThemeFrameTextFieldRound, NoThemeMetric, NoThemeMetric};
 
-static Ttk_StateTable ButtonValueTable[] = {
-    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
-    {kThemeButtonMixed, TTK_STATE_ALTERNATE, 0},
-    {kThemeButtonOn, TTK_STATE_SELECTED, 0},
-    {kThemeButtonOff, 0, 0}
-};
+/*
+ * If we try to draw a rounded rectangle with too large of a radius, the Core
+ * Graphics library will sometimes raise a fatal exception.  This macro
+ * protects against this by returning if the width or height is less than
+ * twice the radius.  Presumably this only happens when a widget has not yet
+ * been configured and has size 1x1, so there is nothing to draw anyway.
+ */
 
-static Ttk_StateTable ButtonAdornmentTable[] = {
-    {kThemeAdornmentNone, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
-    {kThemeAdornmentDefault | kThemeAdornmentFocus,
-     TTK_STATE_ALTERNATE | TTK_STATE_FOCUS, 0},
-    {kThemeAdornmentFocus, TTK_STATE_FOCUS, 0},
-    {kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0},
-    {kThemeAdornmentNone, 0, 0}
-};
+#define CHECK_RADIUS(radius, bounds)                                         \
+    if (radius > bounds.size.width / 2 || radius > bounds.size.height / 2) { \
+        return;                                                              \
+    }
+
+/*
+ * The spinbox widget needs to draw the two arrows in different colors when
+ * one half or the other is being pressed, but the menubutton always draws
+ * them in the same color.  This constant is used to distinguish those two
+ * situations.
+ */
+
+#define BOTH_ARROWS 1 << 30
 
