@@ -31,91 +31,72 @@
 
 #include "tkMacOSXPrivate.h"
 #include "ttk/ttkTheme.h"
+#include "ttkMacOSXTheme.h"
 #include <math.h>
 
-/*
- * Macros for handling drawing contexts.
+/*----------------------------------------------------------------------
+ * +++ computeButtonDrawInfo --
+ *
+ *      Fill in an appearance manager HIThemeButtonDrawInfo record
+ *      from a Ttk state and the ThemeButtonParams used as the
+ *      clientData.
  */
 
-#define BEGIN_DRAWING(d) {	   \
-	TkMacOSXDrawingContext dc; \
-	if (!TkMacOSXSetupDrawingContext((d), NULL, 1, &dc)) {return;}
-#define END_DRAWING \
-    TkMacOSXRestoreDrawingContext(&dc);}
+static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
+    ThemeButtonParams *params,
+    Ttk_State state,
+    Tk_Window tkwin)
+{
+    /*
+     * See ButtonElementDraw for the explanation of why we always draw
+     * some buttons in the active state.
+     */
 
-#define HIOrientation kHIThemeOrientationNormal
-#define NoThemeMetric 0xFFFFFFFF
+    SInt32 HIThemeState;
+    int adornment = 0;
 
-#ifdef __LP64__
-#define RangeToFactor(maximum) (((double) (INT_MAX >> 1)) / (maximum))
-#else
-#define RangeToFactor(maximum) (((double) (LONG_MAX >> 1)) / (maximum))
-#endif /* __LP64__ */
+    HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
 
-#define TTK_STATE_FIRST_TAB     TTK_STATE_USER1
-#define TTK_STATE_LAST_TAB      TTK_STATE_USER2
-#define TTK_STATE_IS_ACCENTED   TTK_STATE_USER2
-#define TTK_TREEVIEW_STATE_SORTARROW    TTK_STATE_USER1
+    /*
+     * HITheme uses the adornment to decide the direction of the
+     * arrow on a Disclosure Button.  Also HITheme draws inactive
+     * (TTK_STATE_BACKGROUND) buttons in a gray color but macOS
+     * no longer does that.  So we adjust the HIThemeState.
+     */
 
-/*
- * Colors and gradients used when drawing buttons.
- */
+    switch (params->kind) {
+    case kThemeArrowButton:
+	adornment = kThemeAdornmentDrawIndicatorOnly;
+	if (state & TTK_STATE_SELECTED) {
+	    adornment |= kThemeAdornmentArrowUpArrow;
+	}
+	/* Fall through. */
+    case kThemeRadioButton:
+	/*
+	 * The gray color is better than the blue color for a
+	 * background selected Radio Button.
+	 */
 
-typedef struct GrayColor {
-    CGFloat grayscale;
-    CGFloat alpha;
-} GrayColor;
+	if (state & TTK_STATE_SELECTED) {
+	    break;
+	}
+    default:
+	if (state & TTK_STATE_BACKGROUND) {
+	    HIThemeState |= kThemeStateActive;
+	}
+	break;
+    }
 
-#define RGBACOLOR static CGFloat
-#define RGBA256(r, g, b, a) {r / 255.0, g / 255.0, b / 255.0, a}
-#define GRAYCOLOR static GrayColor
-#define GRAY256(grayscale) {grayscale / 255.0, 1.0}
+    const HIThemeButtonDrawInfo info = {
+	.version = 0,
+	.state = HIThemeState,
+	.kind = params ? params->kind : 0,
+	.value = Ttk_StateTableLookup(ButtonValueTable, state),
+	.adornment = Ttk_StateTableLookup(ButtonAdornmentTable, state) | adornment,
+    };
+    return info;
+}
 
-/*
- * Opaque Grays used for Gradient Buttons, Scrollbars and List Headers
- */
-
-GRAYCOLOR darkDisabledIndicator = GRAY256(122.0);
-GRAYCOLOR lightDisabledIndicator = GRAY256(152.0);
-
-GRAYCOLOR darkGradientNormal = GRAY256(95.0);
-GRAYCOLOR darkGradientPressed = GRAY256(118.0);
-GRAYCOLOR darkGradientDisabled = GRAY256(82.0);
-GRAYCOLOR darkGradientBorder = GRAY256(118.0);
-GRAYCOLOR darkGradientBorderDisabled = GRAY256(94.0);
-GRAYCOLOR lightGradientNormal = GRAY256(244.0);
-GRAYCOLOR lightGradientPressed = GRAY256(175.0);
-GRAYCOLOR lightGradientDisabled = GRAY256(235.0);
-GRAYCOLOR lightGradientBorder = GRAY256(165.0);
-GRAYCOLOR lightGradientBorderDisabled = GRAY256(204.0);
-
-GRAYCOLOR lightTrough = GRAY256(250.0);
-GRAYCOLOR darkTrough = GRAY256(47.0);
-GRAYCOLOR lightInactiveThumb = GRAY256(200.0);
-GRAYCOLOR lightActiveThumb = GRAY256(133.0);
-GRAYCOLOR darkInactiveThumb = GRAY256(117.0);
-GRAYCOLOR darkActiveThumb = GRAY256(158.0);
-
-GRAYCOLOR listheaderBorder = GRAY256(200.0);
-GRAYCOLOR listheaderSeparator = GRAY256(220.0);
-GRAYCOLOR listheaderActiveBG = GRAY256(238.0);
-GRAYCOLOR listheaderInactiveBG = GRAY256(246.0);
-
-GRAYCOLOR lightComboSeparator = GRAY256(236.0);
-GRAYCOLOR darkComboSeparator = GRAY256(66.0);
-
-GRAYCOLOR darkTrack = GRAY256(84.0);
-GRAYCOLOR darkInactiveTrack = GRAY256(107.0);
-GRAYCOLOR lightTrack = GRAY256(177.0);
-GRAYCOLOR lightInactiveTrack = GRAY256(139.0);
-
-/* Transparent Grays */
-GRAYCOLOR boxBorder = {1.0, 0.20};
-GRAYCOLOR darkSeparator = {1.0, 0.3};
-GRAYCOLOR darkTabSeparator = {0.0, 0.25};
-GRAYCOLOR darkFrameBottom = {1.0, 0.125};
-
-#define CG_WHITE CGColorGetConstantColor(kCGColorWhite)
 
 /*
  * When we draw simulated Apple widgets we use the Core Graphics framework.
@@ -229,29 +210,20 @@ static inline CGRect BoxToRect(
     return rect;
 }
 
-/*
- * Table mapping Tk states to Appearance manager ThemeStates
- */
 
-static Ttk_StateTable ThemeStateTable[] = {
-    {kThemeStateActive, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
-    {kThemeStateUnavailable, TTK_STATE_DISABLED, 0},
-    {kThemeStatePressed, TTK_STATE_PRESSED, 0},
-    {kThemeStateInactive, TTK_STATE_BACKGROUND, 0},
-    {kThemeStateUnavailableInactive, TTK_STATE_DISABLED | TTK_STATE_BACKGROUND, 0},
-    {kThemeStateActive, 0, 0}
-
-    /* Others:
-     * The kThemeStatePressedUp and kThemeStatePressedDown bits indicate
-     * which of the two segments of an IncDec button is being pressed.
-     * We don't use these. kThemeStateRollover roughly corresponds to
-     * TTK_STATE_ACTIVE, but does not do what we want with the help button.
-     *
-     * {kThemeStatePressedUp, 0, 0},
-     * {kThemeStatePressedDown, 0, 0}
-     * {kThemeStateRollover, TTK_STATE_ACTIVE, 0},
-     */
-};
+static GrayPalette LookupGrayPalette(
+    ButtonDesign *design,
+    unsigned int state,
+    int isDark)
+{
+    PaletteStateTable *entry = design->palettes;
+    while ((state & entry->onBits) != entry->onBits ||
+           (~state & entry->offBits) != entry->offBits)
+    {
+        ++entry;
+    }
+    return isDark ? entry->dark : entry->light;
+}
 
 #define BOTH_ARROWS 1 << 30
 
@@ -282,30 +254,7 @@ static CGRect NormalizeButtonBounds(
 }
 
 /*----------------------------------------------------------------------
- * FillRoundedRectangle --
- *
- *      Fill a rounded rectangle with a specified solid color.
- */
-
-static void FillRoundedRectangle(
-    CGContextRef context,
-    CGRect bounds,
-    CGFloat radius,
-    CGColorRef color)
-{
-    CGPathRef path;
-    CHECK_RADIUS(radius, bounds)
-
-    CGContextSetFillColorWithColor(context, color);
-    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
-    CGContextBeginPath(context);
-    CGContextAddPath(context, path);
-    CGContextFillPath(context);
-    CFRelease(path);
-}
-
-/*----------------------------------------------------------------------
- * +++ Backgrounds
+ * +++ Background Colors
  *
  * Support for contrasting background colors when GroupBoxes or Tabbed
  * panes are nested inside each other.  Early versions of macOS used ridged
@@ -396,287 +345,38 @@ static CGColorRef GetBackgroundCGColor(
 }
 
 /*----------------------------------------------------------------------
- * +++ Button drawing primitives.
+ * +++ Buttons
  */
 
-typedef struct GrayPalette {
-    CGFloat face;
-    CGFloat top;
-    CGFloat side;
-    CGFloat bottom;
-} GrayPalette;
+/*----------------------------------------------------------------------
+ * FillRoundedRectangle --
+ *
+ *      Fill a rounded rectangle with a specified solid color.
+ */
 
-typedef struct PaletteStateTable {
-    GrayPalette light;          /* Light palette to use if this entry matches */
-    GrayPalette dark;           /* dark palette to use if this entry matches */
-    unsigned int onBits;        /* Bits which must be set */
-    unsigned int offBits;       /* Bits which must be cleared */
-} PaletteStateTable;
-
-typedef struct ButtonDesign {
-    CGFloat radius;
-    PaletteStateTable palettes[];
-} ButtonDesign;
-
-static GrayPalette LookupGrayPalette(
-    ButtonDesign *design,
-    unsigned int state,
-    int isDark)
+static void FillRoundedRectangle(
+    CGContextRef context,
+    CGRect bounds,
+    CGFloat radius,
+    CGColorRef color)
 {
-    PaletteStateTable *entry = design->palettes;
-    while ((state & entry->onBits) != entry->onBits ||
-           (~state & entry->offBits) != entry->offBits)
-    {
-        ++entry;
-    }
-    return isDark ? entry->dark : entry->light;
+    CGPathRef path;
+    CHECK_RADIUS(radius, bounds)
+
+    CGContextSetFillColorWithColor(context, color);
+    path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
+    CGContextBeginPath(context);
+    CGContextAddPath(context, path);
+    CGContextFillPath(context);
+    CFRelease(path);
 }
 
-static ButtonDesign pushbuttonDesign = {
-    .radius = 4.0,
-    .palettes = {
-	{
-	    .light = {.face = 242.0, .top = 213.0, .side = 210.0, .bottom = 200.0},
-	    .dark =  {.face = 94.0,  .top = 98.0,  .side = 94.0,  .bottom = 58.0},
-	    .onBits = TTK_STATE_DISABLED, .offBits = 0
-	},
-	{
-	    .light = {.face = 205.0, .top = 215.0, .side = 211.0, .bottom = 173.0},
-	    .dark =  {.face = 140.0, .top = 150.0, .side = 140.0, .bottom = 42.0},
-	    .onBits = TTK_STATE_PRESSED, .offBits = 0
-	},
-	{
-	    .light = {.face = 255.0, .top = 198.0, .side = 192.0, .bottom = 173.0},
-	    .dark =  {.face = 118.0, .top = 132.0, .side = 118.0, .bottom = 48.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign roundedrectDesign = {
-    .radius = 3.0,
-    .palettes = {
-	{
-	    .light = {.face = 204.0, .top = 192.0, .side = 192.0, .bottom = 192.0},
-	    .dark =  {.face = 163.0, .top = 165.0, .side = 163.0, .bottom = 42.0},
-	    .onBits = TTK_STATE_DISABLED, .offBits = 0
-	},
-	{
-	    .light = {.face = 204.0, .top = 158.0, .side = 158.0, .bottom = 158.0},
-	    .dark =  {.face = 85.0,  .top = 115.0, .side = 115.0, .bottom = 115.0},
-	    .onBits = TTK_STATE_PRESSED, .offBits = 0
-	},
-	{
-	    .light = {.face = 205.0, .top = 215.0, .side = 211.0, .bottom = 173.0},
-	    .dark =  {.face = 140.0, .top = 150.0, .side = 140.0, .bottom = 42.0},
-	    .onBits = TTK_STATE_ALTERNATE, .offBits = TTK_STATE_BACKGROUND
-	},
-
-	/*
-	 * Gray values > 255 are replaced by the background color.
-	 */
-
-	{
-	    .light = {.face = 256.0, .top = 158.0, .side = 158.0, .bottom = 158.0},
-	    .dark =  {.face = 256.0, .top = 115.0, .side = 115.0, .bottom = 115.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign popupDesign = {
-    .radius = 4.0,
-    .palettes = {
-	{
-	    .light = {.face = 242.0, .top = 213.0, .side = 210.0, .bottom = 200.0},
-	    .dark =  {.face = 94.0,  .top = 98.0,  .side = 94.0,  .bottom = 58.0},
-	    .onBits = TTK_STATE_DISABLED, .offBits = 0
-	},
-	{
-	    .light = {.face = 255.0, .top = 198.0, .side = 192.0, .bottom = 173.0},
-	    .dark =  {.face = 118.0, .top = 132.0, .side = 118.0, .bottom = 48.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign checkDesign = {
-    .radius = 4.0,
-    .palettes = {
-	{
-	    .light = {.face = 242.0, .top = 192.0, .side = 199.0, .bottom = 199.0},
-	    .dark =  {.face = 80.0,  .top = 90.0,  .side = 80.0,  .bottom = 49.0},
-	    .onBits = TTK_STATE_DISABLED, .offBits = 0
-	},
-	{
-	    .light = {.face = 255.0, .top = 165.0, .side = 184.0, .bottom = 184.0},
-	    .dark =  {.face = 118.0, .top = 132.0, .side = 118.0, .bottom = 48.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign radioDesign = {
-    .radius = 8.0,
-    .palettes = {
-	{
-	    .light = {.face = 242.0, .top = 189.0, .side = 198.0, .bottom = 199.0},
-	    .dark =  {.face = 80.0,  .top = 84.0,  .side = 88.0,  .bottom = 60.0},
-	    .onBits = TTK_STATE_DISABLED, .offBits = 0
-	},
-	{
-	    .light = {.face = 255.0, .top = 165.0, .side = 184.0, .bottom = 184.0},
-	    .dark =  {.face = 118.0, .top = 132.0, .side = 118.0, .bottom = 48.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign recessedDesign = {
-    .radius = 4.0,
-    .palettes = {
-	{
-	    .light = {.face = 117.0, .top = 117.0, .side = 117.0, .bottom = 117.0},
-	    .dark =  {.face = 129.0, .top = 129.0, .side = 129.0, .bottom = 129.0},
-	    .onBits = TTK_STATE_PRESSED, .offBits = 0
-	},
-	{
-	    .light = {.face = 182.0, .top = 182.0, .side = 182.0, .bottom = 182.0},
-	    .dark =  {.face = 105.0,  .top = 105.0, .side = 105.0, .bottom = 105.0},
-	    .onBits = TTK_STATE_ACTIVE, .offBits = TTK_STATE_SELECTED
-	},
-	{
-	    .light = {.face = 145.0, .top = 145.0, .side = 145.0, .bottom = 145.0},
-	    .dark =  {.face = 166.0, .top = 166.0, .side = 166.0, .bottom = 166.0},
-	    .onBits = TTK_STATE_SELECTED, .offBits = 0
-	},
-	/* Not used */
-	{
-	    .light = {.face = 256.0, .top = 256.0, .side = 256.0, .bottom = 256.0},
-	    .dark =  {.face = 256.0, .top = 256.0, .side = 256.0, .bottom = 256.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign incdecDesign = {
-    .radius = 5.0,
-    .palettes = {
-	{
-	    .light = {.face = 246.0, .top = 236.0, .side = 227.0, .bottom = 213.0},
-	    .dark =  {.face = 80.0,  .top = 90.0,  .side = 80.0,  .bottom = 49.0},
-	    .onBits = TTK_STATE_DISABLED, .offBits = 0
-	},
-	{
-	    .light = {.face = 255.0, .top = 198.0, .side = 192.0, .bottom = 173.0},
-	    .dark =  {.face = 118.0, .top = 132.0, .side = 118.0, .bottom = 48.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign bevelDesign = {
-    .radius = 4.0,
-    .palettes = {
-	{
-	    .light = {.face = 242.0, .top = 213.0, .side = 210.0, .bottom = 200.0},
-	    .dark =  {.face = 94.0,  .top = 98.0,  .side = 94.0,  .bottom = 58.0},
-	    .onBits = TTK_STATE_DISABLED, .offBits = 0
-	},
-	{
-	    .light = {.face = 205.0, .top = 215.0, .side = 211.0, .bottom = 173.0},
-	    .dark =  {.face = 140.0, .top = 150.0, .side = 140.0, .bottom = 42.0},
-	    .onBits = TTK_STATE_PRESSED, .offBits = 0
-	},
-	{
-	    .light = {.face = 228.0, .top = 215.0, .side = 211.0, .bottom = 173.0},
-	    .dark =  {.face = 163.0, .top = 150.0, .side = 140.0, .bottom = 42.0},
-	    .onBits = TTK_STATE_SELECTED, .offBits = 0
-	},
-	{
-	    .light = {.face = 255.0, .top = 198.0, .side = 192.0, .bottom = 173.0},
-	    .dark =  {.face = 118.0, .top = 132.0, .side = 118.0, .bottom = 48.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign tabDesign = {
-    .radius = 4.0,
-    .palettes = {
-
-	/*
-	 * Apple does not have such a thing as a disabled tab.  If it is
-	 * disabled, it should be removed.  But we provide one based on the
-	 * disabled button.
-	 */
-
-	{
-	    .light = {.face = 229.0, .top = 213.0, .side = 242.0, .bottom = 200.0},
-	    .dark =  {.face = 163.0,  .top = 90.0,  .side = 80.0,  .bottom = 49.0},
-	    .onBits = TTK_STATE_DISABLED, .offBits = 0
-	},
-	{
-	    .light = {.face = 229.0, .top = 205.0, .side = 211.0, .bottom = 183.0},
-	    .dark =  {.face = 163.0, .top = 165.0, .side = 163.0, .bottom = 42.0},
-	    .onBits = TTK_STATE_SELECTED, .offBits = 0
-	},
-	{
-	    .light = {.face = 255.0, .top = 215.0, .side = 211.0, .bottom = 183.0},
-	    .dark =  {.face = 108.0, .top = 129.0, .side = 108.0, .bottom = 47.0},
-	    .onBits = 0, .offBits = 0
-	},
-    }
-};
-
-static ButtonDesign entryDesign = {
-    .radius = 0.0,
-    .palettes = {
-	{
-	    .light = {.face = 256.0, .top = 198.0, .side = 198.0, .bottom = 198.0},
-	    .dark =  {.face = 256.0,  .top = 66.0,  .side = 66.0,  .bottom = 84.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign searchDesign = {
-    .radius = 3.5,
-    .palettes = {
-	{
-	    .light = {.face = 256.0, .top = 198.0, .side = 198.0, .bottom = 198.0},
-	    .dark =  {.face = 256.0,  .top = 66.0,  .side = 66.0,  .bottom = 84.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign comboDesign = {
-    .radius = 4.0,
-    .palettes = {
-	{
-	    .light = {.face = 256.0, .top = 190.0, .side = 190.0, .bottom = 190.0},
-	    .dark =  {.face = 256.0,  .top = 66.0,  .side = 66.0,  .bottom = 90.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
-
-static ButtonDesign sliderDesign = {
-    .radius = 8.0,
-    .palettes = {
-	{
-	    .light = {.face = 242.0, .top = 189.0, .side = 198.0, .bottom = 199.0},
-	    .dark =  {.face = 80.0,  .top = 84.0,  .side = 88.0,  .bottom = 60.0},
-	    .onBits = TTK_STATE_DISABLED, .offBits = 0
-	},
-	{
-	    .light = {.face = 255.0, .top = 165.0, .side = 184.0, .bottom = 184.0},
-	    .dark =  {.face = 205.0, .top = 205.0, .side = 205.0, .bottom = 198.0},
-	    .onBits = 0, .offBits = 0
-	}
-    }
-};
+/*----------------------------------------------------------------------
+ * FillBorder --
+ *
+ *      Draw a 1-pixel border around a rounded rectangle using a 3-step
+ *      gradient of shades of gray.
+ */
 
 static void FillBorder(
     CGContextRef context,
@@ -707,6 +407,13 @@ static void FillBorder(
     CFRelease(gradient);
 }
 
+/*----------------------------------------------------------------------
+ * DrawFocusRing --
+ *
+ *      Draw a 4-pixel wide rounded focus ring enclosing a rounded
+ *      rectangle, using the current system accent color.
+ */
+
 static void DrawFocusRing(
     CGContextRef context,
     CGRect bounds,
@@ -724,13 +431,17 @@ static void DrawFocusRing(
     CGContextFillRect(context, bounds);
 }
 
-/*
- *  Aqua buttons are normally drawn in a grayscale color.  The buttons which
- *  are shaped as rounded rectangles have a 1-pixel border which is drawn in
- *  a 3-step gradient and a solid gray face.  This function handles drawing
- *  the rounded rectangular buttons when drawn in a grayscale color.
+/*----------------------------------------------------------------------
+ * DrawGrayButton --
  *
- *  Note that this will produce a round button if length = width = 2*radius.
+ *      Draw a button in normal gray colors.
+ *
+ *      Aqua buttons are normally drawn in a grayscale color.  The buttons,
+ *      which are shaped as rounded rectangles have a 1-pixel border which is
+ *      drawn in a 3-step gradient and a solid gray face.
+ *
+ *      Note that this will produce a round button if length = width =
+ *      2*radius.
  */
 
 static void DrawGrayButton(
@@ -762,14 +473,17 @@ static void DrawGrayButton(
 			 CGColorFromGray(faceGray));
 }
 
-/*
- *  Color is only used when drawing buttons in the active window.  Push Buttons
- *  and segmented Arrow Buttons are drawn in color when in the pressed state.
- *  Selected Check Buttons, Radio Buttons and notebook Tabs are also drawn in
- *  color.  The color is based on the user's current choice for the
- *  controlAccentColor, but is actually a linear gradient with a 1-pixel darker
- *  line at the top and otherwise changing from lighter at the top to darker at
- *  the bottom.  This function draws a colored rounded rectangular button.
+/*----------------------------------------------------------------------
+ * DrawAccentedButton --
+ *
+ *      The accent color is only used when drawing buttons in the active
+ *      window.  Push Buttons and segmented Arrow Buttons are drawn in color
+ *      when in the pressed state.  Selected Check Buttons, Radio Buttons and
+ *      notebook Tabs are also drawn in color.  The color is based on the
+ *      user's current choice for the controlAccentColor, but is actually a
+ *      linear gradient with a 1-pixel darker line at the top and otherwise
+ *      changing from lighter at the top to darker at the bottom.  This
+ *      function draws a colored rounded rectangular button.
  */
 
 static void DrawAccentedButton(
@@ -804,6 +518,12 @@ static void DrawAccentedButton(
     CFRelease(path);
     CFRelease(gradient);
 }
+
+/*----------------------------------------------------------------------
+ * DrawAccentedSegment --
+ *
+ *      Draw the colored ends of widgets like popup buttons and combo buttons.
+ */
 
 static void DrawAccentedSegment(
     CGContextRef context,
@@ -1686,137 +1406,6 @@ static void DrawGradientBorder(
     CGContextAddRect(context, bounds);
     CGContextAddRect(context, inside);
     CGContextEOFillPath(context);
-}
-
-/*----------------------------------------------------------------------
- * +++ Button element: Used for elements drawn with DrawThemeButton.
- */
-
-/*
- * When Ttk draws the various types of buttons, a pointer to one of these
- * is passed as the clientData.
- */
-
-typedef struct {
-    ThemeButtonKind kind;
-    ThemeMetric heightMetric;
-    ThemeMetric widthMetric;
-} ThemeButtonParams;
-static ThemeButtonParams
-    PushButtonParams =  {kThemePushButton, kThemeMetricPushButtonHeight,
-			 NoThemeMetric},
-    CheckBoxParams =    {kThemeCheckBox, kThemeMetricCheckBoxHeight,
-			 NoThemeMetric},
-    RadioButtonParams = {kThemeRadioButton, kThemeMetricRadioButtonHeight,
-			 NoThemeMetric},
-    BevelButtonParams = {kThemeRoundedBevelButton, NoThemeMetric, NoThemeMetric},
-    PopupButtonParams = {kThemePopupButton, kThemeMetricPopupButtonHeight,
-			 NoThemeMetric},
-    DisclosureParams =  {kThemeDisclosureButton,
-			 kThemeMetricDisclosureTriangleHeight,
-			 kThemeMetricDisclosureTriangleWidth},
-    DisclosureButtonParams = {kThemeArrowButton,
-			      kThemeMetricSmallDisclosureButtonHeight,
-			      kThemeMetricSmallDisclosureButtonWidth},
-    HelpButtonParams = {kThemeRoundButtonHelp, kThemeMetricRoundButtonSize,
-			kThemeMetricRoundButtonSize},
-    ListHeaderParams = {kThemeListHeaderButton, kThemeMetricListHeaderHeight,
-			NoThemeMetric},
-    GradientButtonParams = {TkGradientButton, NoThemeMetric, NoThemeMetric},
-    RoundedRectButtonParams = {TkRoundedRectButton, kThemeMetricPushButtonHeight,
-			       NoThemeMetric},
-    RecessedButtonParams = {TkRecessedButton, kThemeMetricPushButtonHeight,
-			       NoThemeMetric};
-
-    /*
-     * Others: kThemeDisclosureRight, kThemeDisclosureDown,
-     * kThemeDisclosureLeft
-     */
-
-typedef struct {
-    HIThemeFrameKind kind;
-    ThemeMetric heightMetric;
-    ThemeMetric widthMetric;
-} ThemeFrameParams;
-static ThemeFrameParams
-    EntryFieldParams = {kHIThemeFrameTextFieldSquare, NoThemeMetric, NoThemeMetric},
-    SearchboxFieldParams = {kHIThemeFrameTextFieldRound, NoThemeMetric, NoThemeMetric};
-
-static Ttk_StateTable ButtonValueTable[] = {
-    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
-    {kThemeButtonMixed, TTK_STATE_ALTERNATE, 0},
-    {kThemeButtonOn, TTK_STATE_SELECTED, 0},
-    {kThemeButtonOff, 0, 0}
-};
-
-static Ttk_StateTable ButtonAdornmentTable[] = {
-    {kThemeAdornmentNone, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
-    {kThemeAdornmentDefault | kThemeAdornmentFocus,
-     TTK_STATE_ALTERNATE | TTK_STATE_FOCUS, 0},
-    {kThemeAdornmentFocus, TTK_STATE_FOCUS, 0},
-    {kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0},
-    {kThemeAdornmentNone, 0, 0}
-};
-
-/*----------------------------------------------------------------------
- * +++ computeButtonDrawInfo --
- *
- *      Fill in an appearance manager HIThemeButtonDrawInfo record.
- */
-
-static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
-    ThemeButtonParams *params,
-    Ttk_State state,
-    Tk_Window tkwin)
-{
-    /*
-     * See ButtonElementDraw for the explanation of why we always draw
-     * some buttons in the active state.
-     */
-
-    SInt32 HIThemeState;
-    int adornment = 0;
-
-    HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
-
-    /*
-     * HITheme uses the adornment to decide the direction of the
-     * arrow on a Disclosure Button.  Also HITheme draws inactive
-     * (TTK_STATE_BACKGROUND) buttons in a gray color but macOS
-     * no longer does that.  So we adjust the HIThemeState.
-     */
-
-    switch (params->kind) {
-    case kThemeArrowButton:
-	adornment = kThemeAdornmentDrawIndicatorOnly;
-	if (state & TTK_STATE_SELECTED) {
-	    adornment |= kThemeAdornmentArrowUpArrow;
-	}
-	/* Fall through. */
-    case kThemeRadioButton:
-	/*
-	 * The gray color is better than the blue color for a
-	 * background selected Radio Button.
-	 */
-
-	if (state & TTK_STATE_SELECTED) {
-	    break;
-	}
-    default:
-	if (state & TTK_STATE_BACKGROUND) {
-	    HIThemeState |= kThemeStateActive;
-	}
-	break;
-    }
-
-    const HIThemeButtonDrawInfo info = {
-	.version = 0,
-	.state = HIThemeState,
-	.kind = params ? params->kind : 0,
-	.value = Ttk_StateTableLookup(ButtonValueTable, state),
-	.adornment = Ttk_StateTableLookup(ButtonAdornmentTable, state) | adornment,
-    };
-    return info;
 }
 
 /*----------------------------------------------------------------------
