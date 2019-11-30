@@ -169,24 +169,11 @@ static NSColor *controlAccentColor(void)
     }
 }
 
-/*
- * If we try to draw a rounded rectangle with too large of a radius Core
- * Graphics will raise a fatal exception.  This macro calls return if the width
- * or height is less than twice the radius.  Presumably this only happens when
- * a widget has not yet been configured and has size 1x1, so there is nothing
- * to draw anyway.
- */
-
-#define CHECK_RADIUS(radius, bounds)                                         \
-    if (radius > bounds.size.width / 2 || radius > bounds.size.height / 2) { \
-        return;                                                              \
-    }
-
 /*----------------------------------------------------------------------
  * +++ Utilities.
  */
 
-/*
+/*----------------------------------------------------------------------
  * BoxToRect --
  *
  *    Convert a Ttk_Box in Tk coordinates relative to the given Drawable to a
@@ -210,6 +197,13 @@ static inline CGRect BoxToRect(
     return rect;
 }
 
+/*----------------------------------------------------------------------
+ * LookupGrayPalette
+ * 
+ * Retrieves the palette of grayscale colors needed to draw a particular
+ * type of button, in a particular state, in light or dark mode.
+ *
+ */
 
 static GrayPalette LookupGrayPalette(
     ButtonDesign *design,
@@ -224,8 +218,6 @@ static GrayPalette LookupGrayPalette(
     }
     return isDark ? entry->dark : entry->light;
 }
-
-#define BOTH_ARROWS 1 << 30
 
 /*----------------------------------------------------------------------
  * NormalizeButtonBounds --
@@ -620,8 +612,11 @@ static void DrawEntry(
  * +++ Chevrons, CheckMarks, etc. --
  */
 
-/*
- * Single arrows for ListHeaders, Comboboxes and Disclosure Buttons.
+/*----------------------------------------------------------------------
+ * DrawDownArrow --
+ *
+ * Draws a single downward pointing arrow for ListHeaders, Comboboxes
+ * and Disclosure Buttons.
  */
 
 static void DrawDownArrow(
@@ -655,6 +650,12 @@ static void DrawDownArrow(
     CGContextStrokePath(context);
 }
 
+/*----------------------------------------------------------------------
+ * DrawUpArrow --
+ *
+ * Draws a single upward pointing arrow for ListHeaders and Disclosure Buttons.
+ */
+
 static void DrawUpArrow(
     CGContextRef context,
     CGRect bounds,
@@ -683,8 +684,10 @@ static void DrawUpArrow(
     CGContextStrokePath(context);
 }
 
-/*
- * Double arrows used in MenuButtons and SpinButtons.
+/*----------------------------------------------------------------------
+ * DrawUpDownArrows --
+ *
+ * Draws the double arrows used in menu buttons and spin buttons.
  */
 
 static void DrawUpDownArrows(
@@ -728,6 +731,13 @@ static void DrawUpDownArrows(
     CGContextStrokePath(context);
 }
 
+/*----------------------------------------------------------------------
+ * IndicatorColor --
+ *
+ * Returns a CGColorRef of the appropriate shade for a check button or
+ * radio button in a given state.
+ */
+
 static CGColorRef IndicatorColor(
    int state,
    Tk_Window tkwin)
@@ -743,6 +753,12 @@ static CGColorRef IndicatorColor(
 	return CGCOLOR([NSColor controlTextColor]);
     }
 }
+
+/*----------------------------------------------------------------------
+ * DrawCheckIndicator --
+ *
+ * Draws the checkmark or horizontal bar in a check box.
+ */
 
 static void DrawCheckIndicator(
     CGContextRef context,
@@ -769,6 +785,12 @@ static void DrawCheckIndicator(
     }
 }
 
+/*----------------------------------------------------------------------
+ * DrawRadioIndicator --
+ *
+ * Draws the dot in the middle of a selected radio button.
+ */
+
 static void DrawRadioIndicator(
     CGContextRef context,
     CGRect bounds,
@@ -792,6 +814,13 @@ static void DrawRadioIndicator(
 
 /*----------------------------------------------------------------------
  * +++ Progress bars.
+ */
+
+/*----------------------------------------------------------------------
+ * DrawProgressBar --
+ *
+ * Draws a progress bar, with parameters supplied by a HIThemeTrackDrawInfo
+ * struct.
  */
 
 static void DrawProgressBar(
@@ -900,6 +929,15 @@ static void DrawProgressBar(
  * +++ Sliders.
  */
 
+/*----------------------------------------------------------------------
+ * DrawSlider --
+ *
+ * Draws a slider track and round thumb for a Ttk scale widget.  The accent
+ * color is used on the part of the track that corresponds to lower values,
+ * so the value corresponds to the fraction of the track which is colored.
+ * 
+ */
+
 static void DrawSlider(
     CGContextRef context,
     CGRect bounds,
@@ -964,10 +1002,12 @@ static void DrawSlider(
  */
 
 /*----------------------------------------------------------------------
- * +++ DrawButton --
+ * DrawButton --
  *
- *      This is a standalone drawing procedure which draws most types of
- *      macOS buttons for newer OS releases.
+ * This is a standalone drawing procedure which draws most types of macOS
+ * buttons for newer OS releases.  The button style is specified in the
+ * "kind" field of a HIThemeButtonDrawInfo struct, although some of the
+ * identifiers are not recognized by HIToolbox.
  */
 
 static void DrawButton(
@@ -1120,9 +1160,9 @@ static void DrawButton(
 /*----------------------------------------------------------------------
  * DrawGroupBox --
  *
- *      This is a standalone drawing procedure which draws the contrasting
- *      rounded rectangular box for LabelFrames and Notebook panes used in
- *      more recent versions of macOS.
+ * This is a standalone drawing procedure which draws the contrasting rounded
+ * rectangular box for LabelFrames and Notebook panes used in more recent
+ * versions of macOS.
  */
 
 static void DrawGroupBox(
@@ -1152,12 +1192,12 @@ static void DrawGroupBox(
 }
 
 /*----------------------------------------------------------------------
- * +++ DrawListHeader --
+ * DrawListHeader --
  *
- *      This is a standalone drawing procedure which draws column headers for
- *      a Treeview in the Aqua appearance.  The HITheme headers have not
- *      matched the native ones since OSX 10.8.  Note that the header image is
- *      ignored, but we draw arrows according to the state.
+ * This is a standalone drawing procedure which draws column headers for a
+ * Treeview in the Aqua appearance.  (The HIToolbox headers have not matched the
+ * native ones since OSX 10.8)  Note that the header image is ignored, but we
+ * draw arrows according to the state.
  */
 
 static void DrawListHeader(
@@ -1166,34 +1206,43 @@ static void DrawListHeader(
     Tk_Window tkwin,
     int state)
 {
-
-    /*
-     * Apple changes the background of a list header when the window is not
-     * active.  But Ttk does not indicate that in the state of a TreeHeader.
-     * So we have to query the Apple window manager.
-     */
-
-    NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
-    GrayColor bgGray = [win isKeyWindow] ?
-	listheaderActiveBG : listheaderInactiveBG;
-    CGColorRef strokeColor, backgroundColor = CGColorFromGray(bgGray);
+    int isDark = TkMacOSXInDarkMode(tkwin);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
     CGFloat w = bounds.size.width, h = bounds.size.height;
     CGPoint top[2] = {{x, y + 1}, {x + w, y + 1}};
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
     CGPoint separator[2] = {{x + w - 1, y + 3}, {x + w - 1, y + h - 3}};
+    CGColorRef strokeColor, backgroundColor;
+    /*
+     * Apple changes the background color of a list header when the window is
+     * not active.  But Ttk does not indicate that in the state of a
+     * TreeHeader.  So we have to query the Apple window manager.
+     */
 
+    NSWindow *win = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    if (!isDark) {
+	GrayColor bgGray = [win isKeyWindow] ?
+	    listheaderActiveBG : listheaderInactiveBG;
+	backgroundColor = CGColorFromGray(bgGray);
+    }
+    
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
-    CGContextBeginPath(context);
-    CGContextSetFillColorWithColor(context, backgroundColor);
-    CGContextAddRect(context, bounds);
-    CGContextFillPath(context);
-    strokeColor = CGColorFromGray(listheaderSeparator);
+    if (!isDark) {
+	CGContextBeginPath(context);
+	CGContextSetFillColorWithColor(context, backgroundColor);
+	CGContextAddRect(context, bounds);
+	CGContextFillPath(context);
+    }
+    strokeColor = isDark ?
+	CGColorFromGray(darkListheaderBorder) :
+	CGColorFromGray(listheaderSeparator);
     CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, separator, 2);
     CGContextStrokePath(context);
-    strokeColor = CGColorFromGray(listheaderBorder);
+    strokeColor = isDark ?
+	CGColorFromGray(darkListheaderBorder) :
+	CGColorFromGray(lightListheaderBorder);
     CGContextSetStrokeColorWithColor(context, strokeColor);
     CGContextAddLines(context, top, 2);
     CGContextStrokePath(context);
@@ -1214,10 +1263,10 @@ static void DrawListHeader(
 }
 
 /*----------------------------------------------------------------------
- * +++ DrawTab --
+ * DrawTab --
  *
- *      This is a standalone drawing procedure which draws Tabbed Pane
- *      Tabs for the notebook widget.
+ * This is a standalone drawing procedure which draws Tabbed Pane Tabs for the
+ * notebook widget.
  */
 
 static void
@@ -1291,10 +1340,10 @@ DrawTab(
 }
 
 /*----------------------------------------------------------------------
- * +++ DrawDarkSeparator --
+ * DrawDarkSeparator --
  *
- *      This is a standalone drawing procedure which draws a separator widget
- *      in Dark Mode.
+ * This is a standalone drawing procedure which draws a separator widget
+ * in Dark Mode.  HIToolbox is used in light mode.
  */
 
 static void DrawDarkSeparator(
@@ -1306,52 +1355,6 @@ static void DrawDarkSeparator(
 
     CGContextSetFillColorWithColor(context, sepColor);
     CGContextFillRect(context, bounds);
-}
-
-/*----------------------------------------------------------------------
- * +++ DrawDarkListHeader --
- *
- *      This is a standalone drawing procedure which draws column
- *      headers for a Treeview in the Dark Mode.
- */
-
-static void DrawDarkListHeader(
-    CGRect bounds,
-    CGContextRef context,
-    Tk_Window tkwin,
-    int state)
-{
-    CGColorRef stroke;
-    CGFloat x = bounds.origin.x, y = bounds.origin.y;
-    CGFloat w = bounds.size.width, h = bounds.size.height;
-    CGPoint top[2] = {{x, y}, {x + w, y}};
-    CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
-    CGPoint separator[2] = {{x + w, y + 3}, {x + w, y + h - 3}};
-
-    CGContextSaveGState(context);
-    CGContextSetShouldAntialias(context, false);
-    stroke = CGColorFromGray(darkFrameBottom);
-    CGContextSetStrokeColorWithColor(context, stroke);
-    CGContextBeginPath(context);
-    CGContextAddLines(context, top, 2);
-    CGContextStrokePath(context);
-    CGContextAddLines(context, bottom, 2);
-    CGContextStrokePath(context);
-    CGContextAddLines(context, separator, 2);
-    CGContextStrokePath(context);
-    CGContextRestoreGState(context);
-
-    if (state & TTK_TREEVIEW_STATE_SORTARROW) {
-	CGRect arrowBounds = bounds;
-
-	arrowBounds.origin.x = bounds.origin.x + bounds.size.width - 16;
-	arrowBounds.size.width = 16;
-	if (state & TTK_STATE_ALTERNATE) {
-	    DrawUpArrow(context, arrowBounds, 3, 8, state);
-	} else if (state & TTK_STATE_SELECTED) {
-	    DrawDownArrow(context, arrowBounds, 3, 8, state);
-	}
-    }
 }
 
 /*----------------------------------------------------------------------
@@ -1483,7 +1486,7 @@ static void ButtonElementSize(
      * enough to contain the image of the button in any state, which might
      * include highlight borders, shadows, etc.  The content rectangle is not
      * centered vertically within the background rectangle, presumably because
-     * shadows only appear on the bottom.  Nonetheless, when HITools is asked
+     * shadows only appear on the bottom.  Nonetheless, when HIToolbox is asked
      * to draw a button with a certain bounding rectangle it draws the button
      * centered within the rectangle.
      *
@@ -2547,7 +2550,7 @@ static void ThumbElementDraw(
      * determine the thumb geometry from the input values of min, max, value
      * and viewSize is undocumented.  A seemingly natural algorithm is
      * implemented below.  This code uses that algorithm for older OS versions,
-     * because using HITools also handles drawing the buttons and 3D thumb used
+     * because using HIToolbox also handles drawing the buttons and 3D thumb used
      * on those systems.  For newer systems the cleanest approach is to just
      * draw the thumb directly.
      */
@@ -3057,11 +3060,7 @@ static void TreeHeaderElementDraw(
          */
 
 	bounds.origin.y -= 4;
-	if (TkMacOSXInDarkMode(tkwin)) {
-	    DrawDarkListHeader(bounds, dc.context, tkwin, state);
-	} else {
-	    DrawListHeader(bounds, dc.context, tkwin, state);
-	}
+	DrawListHeader(bounds, dc.context, tkwin, state);
     } else {
 	ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
 	    NULL);
