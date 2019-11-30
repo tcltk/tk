@@ -970,14 +970,6 @@ static void DrawSlider(
  *      macOS buttons for newer OS releases.
  */
 
-/*
- * Identifiers for button styles non known to HIToolbox
- */
-
-#define TkGradientButton    0x8001
-#define TkRoundedRectButton 0x8002
-#define TkRecessedButton    0x8003
-
 static void DrawButton(
     CGRect bounds,
     HIThemeButtonDrawInfo info,
