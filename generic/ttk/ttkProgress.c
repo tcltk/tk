@@ -30,6 +30,7 @@ typedef struct {
     Tcl_Obj 	*modeObj;
     Tcl_Obj 	*orientObj;
     Tcl_Obj 	*phaseObj;
+    Tcl_Obj 	*reverseObj;
     Tcl_Obj 	*textObj;
     Tcl_Obj 	*valueObj;
     Tcl_Obj 	*variableObj;
@@ -78,6 +79,9 @@ static Tk_OptionSpec ProgressbarOptionSpecs[] =
     {TK_OPTION_INT, "-phase", "phase", "Phase",
 	"0", offsetof(Progressbar,progress.phaseObj), -1,
 	0, 0, 0 },
+    {TK_OPTION_BOOLEAN, "-reverse", "reverse", "Reverse",
+	"0", offsetof(Progressbar,progress.reverseObj), -1,
+	0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Progressbar,progress.textObj), -1,
 	0,0,GEOMETRY_CHANGED },
@@ -317,16 +321,23 @@ static void ProgressbarDeterminateLayout(
     Ttk_Element pbar,
     Ttk_Box parcel,
     double fraction,
-    Ttk_Orient orient)
+    Ttk_Orient orient,
+    int reverse)
 {
     if (fraction < 0.0) fraction = 0.0;
     if (fraction > 1.0) fraction = 1.0;
 
     if (orient == TTK_ORIENT_HORIZONTAL) {
-	parcel.width = (int)(parcel.width * fraction);
+	int newWidth = (int)(parcel.width * fraction);
+        if (reverse == 1) {
+            parcel.x += (parcel.width - newWidth);
+        }
+        parcel.width = newWidth;
     } else {
 	int newHeight = (int)(parcel.height * fraction);
-	parcel.y += (parcel.height - newHeight);
+        if (reverse == 0) {
+	    parcel.y += (parcel.height - newHeight);
+        }
 	parcel.height = newHeight;
     }
     Ttk_PlaceElement(pb->core.layout, pbar, parcel);
@@ -361,6 +372,7 @@ static void ProgressbarDoLayout(void *recordPtr)
     Ttk_Element pbar = Ttk_FindElement(corePtr->layout, "pbar");
     double value = 0.0, maximum = 100.0;
     int orient = TTK_ORIENT_HORIZONTAL;
+    int reverse;
 
     Ttk_PlaceLayout(corePtr->layout,corePtr->state,Ttk_WinBox(corePtr->tkwin));
 
@@ -370,6 +382,7 @@ static void ProgressbarDoLayout(void *recordPtr)
     Tcl_GetDoubleFromObj(NULL, pb->progress.valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, pb->progress.maximumObj, &maximum);
     Ttk_GetOrientFromObj(NULL, pb->progress.orientObj, &orient);
+    Tcl_GetBooleanFromObj(NULL, pb->progress.reverseObj, &reverse);
 
     if (pbar) {
 	double fraction = value / maximum;
@@ -377,7 +390,7 @@ static void ProgressbarDoLayout(void *recordPtr)
 
 	if (pb->progress.mode == TTK_PROGRESSBAR_DETERMINATE) {
 	    ProgressbarDeterminateLayout(
-		pb, pbar, parcel, fraction, orient);
+		pb, pbar, parcel, fraction, orient, reverse);
 	} else {
 	    ProgressbarIndeterminateLayout(
 		pb, pbar, parcel, fraction, orient);
