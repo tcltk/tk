@@ -1111,7 +1111,7 @@ TkpComputeMenubarGeometry(
 
 	maxWindowWidth = Tk_Width(menuPtr->tkwin);
 	if (maxWindowWidth == 1) {
-	    maxWindowWidth = 0x7ffffff;
+	    maxWindowWidth = 0x7FFFFFF;
 	}
 	currentRowHeight = 0;
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
