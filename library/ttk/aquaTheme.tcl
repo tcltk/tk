@@ -27,14 +27,26 @@ namespace eval ttk::theme::aqua {
 
 	# Button
 	ttk::style configure TButton -anchor center \
-	    -foreground systemControlTextColor -compound top
+	    -foreground systemControlTextColor
 	ttk::style map TButton \
 	    -foreground {
 		pressed white
 	        {alternate !pressed !background} white
 	        disabled systemDisabledControlTextColor}
+
+	# Menubutton
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
+
+	# Toolbutton
 	ttk::style configure Toolbutton -anchor center
+
+	# Inline Button
+	ttk::style configure InlineButton -anchor center -font TkHeadingFont \
+	    -foreground systemTextBackgroundColor
+	ttk::style map InlineButton \
+	    -foreground {
+		disabled systemWindowBackgroundColor
+	    }
 
 	# Image Button
 	ttk::style configure ImageButton -anchor center -width 1 \
@@ -46,18 +58,21 @@ namespace eval ttk::theme::aqua {
 	    }
 
 	# Recessed (radio) button
+	font create RecessedFont -family EmphasizedSystem -size 11 -weight bold
 	ttk::style configure RecessedButton \
 	    -foreground systemControlTextColor
 	ttk::style map RecessedButton \
 	    -foreground {
+		{disabled selected} systemWindowBackgroundColor
+		{disabled !selected} systemDisabledControlTextColor
 		selected systemTextBackgroundColor
 		active white
 		pressed white
 	    } \
 	    -font {
-		selected TkCaptionFont
-		active TkCaptionFont
-		pressed TkCaptionFont
+		selected RecessedFont
+		active RecessedFont
+		pressed RecessedFont
 	    }
 
 	# Entry

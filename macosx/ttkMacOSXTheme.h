@@ -161,12 +161,32 @@ static ButtonDesign pushbuttonDesign = {
   }
 };
 
+static ButtonDesign inlineDesign = {
+  .radius = 8.0,
+  .palettes = {
+    {
+      .light = {.face = 170.0, .top = 170.0, .side = 170.0, .bottom = 170.0},
+      .dark =  {.face = 106.0,  .top = 106.0,  .side = 106.0,  .bottom = 106.0},
+      .onBits = TTK_STATE_DISABLED, .offBits = 0},
+    {
+      .light = {.face = 34.0, .top = 34.0, .side = 34.0, .bottom = 34.0},
+      .dark =  {.face = 225.0, .top = 225.0, .side = 225.0, .bottom = 225.0},
+      .onBits = TTK_STATE_PRESSED, .offBits = 0
+    },
+    {
+      .light = {.face = 113.0, .top = 113.0, .side = 113.0, .bottom = 113.0},
+      .dark =  {.face = 165.0, .top = 165.0, .side = 165.0, .bottom = 165.0},
+      .onBits = 0, .offBits = 0
+    }
+  }
+};
+
 static ButtonDesign roundedrectDesign = {
   .radius = 3.0,
   .palettes = {
     {
-      .light = {.face = 204.0, .top = 192.0, .side = 192.0, .bottom = 192.0},
-      .dark =  {.face = 163.0, .top = 165.0, .side = 163.0, .bottom = 42.0},
+      .light = {.face = 256.0, .top = 192.0, .side = 192.0, .bottom = 192.0},
+      .dark =  {.face = 256.0, .top = 165.0, .side = 163.0, .bottom = 42.0},
       .onBits = TTK_STATE_DISABLED, .offBits = 0
     },
     {
@@ -258,7 +278,6 @@ static ButtonDesign recessedDesign = {
       .dark =  {.face = 166.0, .top = 166.0, .side = 166.0, .bottom = 166.0},
       .onBits = TTK_STATE_SELECTED, .offBits = 0
     },
-    /* Not used */
     {
       .light = {.face = 256.0, .top = 256.0, .side = 256.0, .bottom = 256.0},
       .dark =  {.face = 256.0, .top = 256.0, .side = 256.0, .bottom = 256.0},
@@ -438,7 +457,7 @@ static Ttk_StateTable ButtonAdornmentTable[] = {
 #define TkGradientButton    0x8001
 #define TkRoundedRectButton 0x8002
 #define TkRecessedButton    0x8003
-
+#define TkInlineButton      0x8004
 /*
  * The struct passed as clientData when drawing Ttk buttons.
  */
@@ -473,7 +492,9 @@ static ThemeButtonParams
     RoundedRectButtonParams = {TkRoundedRectButton, kThemeMetricPushButtonHeight,
 			       NoThemeMetric},
     RecessedButtonParams = {TkRecessedButton, kThemeMetricPushButtonHeight,
-			       NoThemeMetric};
+ 			    NoThemeMetric},
+    InlineButtonParams = {TkInlineButton,  kThemeMetricPushButtonHeight,
+  			  NoThemeMetric};
 
     /*
      * Others: kThemeDisclosureRight, kThemeDisclosureDown,
@@ -516,3 +537,11 @@ static ThemeFrameParams
 
 #define BOTH_ARROWS 1 << 30
 
+/*
+ * Local Variables:
+ * mode: objc
+ * c-basic-offset: 4
+ * fill-column: 79
+ * coding: utf-8
+ * End:
+ */

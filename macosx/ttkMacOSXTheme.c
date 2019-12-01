@@ -35,14 +35,14 @@
 #include <math.h>
 
 /*----------------------------------------------------------------------
- * +++ computeButtonDrawInfo --
+ * +++ ComputeButtonDrawInfo --
  *
  *      Fill in an appearance manager HIThemeButtonDrawInfo record
  *      from a Ttk state and the ThemeButtonParams used as the
  *      clientData.
  */
 
-static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
+static inline HIThemeButtonDrawInfo ComputeButtonDrawInfo(
     ThemeButtonParams *params,
     Ttk_State state,
     Tk_Window tkwin)
@@ -226,8 +226,9 @@ static GrayPalette LookupGrayPalette(
  *      small and mini. We always use the regular size.  However, Ttk may
  *      provide a bounding rectangle with arbitrary height.  We draw the Mac
  *      button centered vertically in the Ttk rectangle, with the same width as
- *      the rectangle.  This function returns the actual bounding rectangle
- *      that will be used in drawing the button.
+ *      the rectangle.  (But we take care to produce an integer y coordinate, to
+ *      avoid unexpected anti-aliasing.)  This function returns the actual
+ *      bounding rectangle that will be used in drawing the button.
  */
 
 static CGRect NormalizeButtonBounds(
@@ -239,7 +240,7 @@ static CGRect NormalizeButtonBounds(
     if (heightMetric != (SInt32) NoThemeMetric) {
 	ChkErr(GetThemeMetric, heightMetric, &height);
 	height += 2;
-	bounds.origin.y += 1 + (bounds.size.height - height) / 2;
+	bounds.origin.y += round(1 + (bounds.size.height - height) / 2);
 	bounds.size.height = height;
     }
     return bounds;
@@ -446,7 +447,9 @@ static void DrawGrayButton(
     int isDark = TkMacOSXInDarkMode(tkwin);
     GrayPalette palette = LookupGrayPalette(design, state, isDark);
     GrayColor faceGray = {.grayscale = 0.0, .alpha = 1.0};
-    FillBorder(context, bounds, palette, design->radius);
+    if (palette.top <= 255.0) {
+	FillBorder(context, bounds, palette, design->radius);
+    }
     if (palette.face <= 255.0) {
 	faceGray.grayscale = palette.face / 255.0;
     } else {
@@ -1021,7 +1024,6 @@ static void DrawButton(
     ThemeDrawState drawState = info.state;
     CGRect arrowBounds = bounds = CGRectInset(bounds, 1, 1);
     int hasIndicator;
-
     switch (kind) {
     case kThemePushButton:
 	if (state & TTK_STATE_PRESSED) {
@@ -1031,7 +1033,14 @@ static void DrawButton(
 	}
 	break;
     case TkRoundedRectButton:
+	bounds.size.height -= 1;
 	DrawGrayButton(context, bounds, &roundedrectDesign, state, tkwin);
+	break;
+    case TkInlineButton:
+	bounds.size.height -= 4;
+	bounds.origin.y += 1;
+	DrawGrayButton(context, bounds, &inlineDesign,
+		       state, tkwin);
 	break;
     case kThemePopupButton:
 	drawState = 0;
@@ -1112,9 +1121,8 @@ static void DrawButton(
 	}
 	break;
     case TkRecessedButton:
-	if (state & ~TTK_STATE_BACKGROUND) {
-	    DrawGrayButton(context, bounds, &recessedDesign, state, tkwin);
-	}
+	bounds.size.height -= 2;
+	DrawGrayButton(context, bounds, &recessedDesign, state, tkwin);
 	break;
     case kThemeArrowButton:
 	DrawGrayButton(context, bounds, &pushbuttonDesign, state, tkwin);
@@ -1455,14 +1463,13 @@ static void ButtonElementSize(
 {
     ThemeButtonParams *params = clientData;
     HIThemeButtonDrawInfo info =
-	computeButtonDrawInfo(params, 0, tkwin);
+	ComputeButtonDrawInfo(params, 0, tkwin);
     static const CGRect scratchBounds = {{0, 0}, {100, 100}};
     CGRect contentBounds, backgroundBounds;
     int verticalPad;
 
     ButtonElementMinSize(clientData, elementRecord, tkwin,
 	minWidth, minHeight, paddingPtr);
-
     switch (info.kind) {
     case TkGradientButton:
 	*paddingPtr = Ttk_MakePadding(1, 1, 1, 1);
@@ -1470,9 +1477,10 @@ static void ButtonElementSize(
     case kThemeArrowButton:
     case kThemeRoundButtonHelp:
         return;
-	/* Buttons sized like PushButtons but not known to HITheme. */
+	/* Buttons which are sized like PushButtons but unknown to HITheme. */
     case TkRoundedRectButton:
     case TkRecessedButton:
+    case TkInlineButton:
 	info.kind = kThemePushButton;
 	break;
     default:
@@ -1521,7 +1529,7 @@ static void ButtonElementDraw(
 {
     ThemeButtonParams *params = clientData;
     CGRect bounds = BoxToRect(d, b);
-    HIThemeButtonDrawInfo info = computeButtonDrawInfo(params, state, tkwin);
+    HIThemeButtonDrawInfo info = ComputeButtonDrawInfo(params, state, tkwin);
 
     switch (info.kind) {
 
@@ -1559,20 +1567,11 @@ static void ButtonElementDraw(
     BEGIN_DRAWING(d)
     if ([NSApp macMinorVersion] > 8) {
 	switch (info.kind) {
-	case kThemePushButton:
-	case kThemePopupButton:
-	case kThemeArrowButton:
-	case kThemeRoundedBevelButton:
-	case kThemeCheckBox:
-	case kThemeRadioButton:
-	case TkRoundedRectButton:
-	case TkRecessedButton:
+	case kThemeRoundButtonHelp:
+	    break;
+	default:
 	    DrawButton(bounds, info, state, dc.context, tkwin);
 	    goto done;
-	case kThemeRoundButtonHelp:
-	    /* TO DO: add Help Buttons to DrawButton. */
-	default:
-	    break;
 	}
     }
 
@@ -3176,6 +3175,12 @@ TTK_LAYOUT("ImageButton",
     TTK_GROUP("Button.padding", TTK_FILL_BOTH,
     TTK_NODE("Button.label", TTK_FILL_BOTH)))
 
+/* Inline Button */
+TTK_LAYOUT("InlineButton",
+    TTK_GROUP("InlineButton.button", TTK_FILL_BOTH,
+    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
+    TTK_NODE("Button.label", TTK_FILL_BOTH))))
+
 /* Rounded Rect Button -- transparent face */
 TTK_LAYOUT("RoundedRectButton",
     TTK_GROUP("RoundedRectButton.button", TTK_FILL_BOTH,
@@ -3295,6 +3300,8 @@ static int AquaTheme_Init(
 
     Ttk_RegisterElementSpec(themePtr, "Button.button",
 	&ButtonElementSpec, &PushButtonParams);
+    Ttk_RegisterElementSpec(themePtr, "InlineButton.button",
+	&ButtonElementSpec, &InlineButtonParams);
     Ttk_RegisterElementSpec(themePtr, "RoundedRectButton.button",
 	&ButtonElementSpec, &RoundedRectButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Checkbutton.button",
