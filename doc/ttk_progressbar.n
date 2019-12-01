@@ -50,6 +50,12 @@ whenever the \fB\-value\fR is greater than 0 and,
 in \fIdeterminate\fR mode, less than \fB\-maximum\fR.
 This option may be used by the current theme
 to provide additional animation effects.
+.OP \-reverse reverse Reverse
+A boolean specifying the direction the progress bar grows when its \fB\-value\fR
+increases. If false, an horizontal progressbar grows from left to right and
+a vertical progressbar grows from bottom to top. If true, the progressbar
+grows in the reverse direction. This option defaults to false and is
+only taken into account in \fIdeterminate\fR mode.
 .OP \-value value Value
 The current value of the progress bar.
 In \fIdeterminate\fR mode, this represents the amount of work completed.
