@@ -434,7 +434,7 @@ typedef struct {
 
     TreeColumn **displayColumns; /* List of columns for display (incl tree) */
     int nDisplayColumns;	/* #display columns */
-    int titleWidth;
+    int titleWidth;		/* Width of non-scrolled columns */
     Ttk_Box headingArea;	/* Display area for column headings */
     Ttk_Box treeArea;   	/* Display area for tree */
     int slack;			/* Slack space (see Resizing section) */
