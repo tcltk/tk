@@ -1221,7 +1221,12 @@ TkUtfToUniChar(
     Tcl_UniChar uniChar = 0;
 
     size_t len = Tcl_UtfToUniChar(src, &uniChar);
-    if ((uniChar & 0xFC00) == 0xD800) {
+    if ((sizeof(Tcl_UniChar) == 2)
+	    && ((uniChar & 0xFC00) == 0xD800)
+#if TCL_MAJOR_VERSION > 8
+	    && len == 1;
+#endif
+	) {
 	Tcl_UniChar low = uniChar;
 	/* This can only happen if Tcl is compiled with TCL_UTF_MAX=4,
 	 * or when a high surrogate character is detected in UTF-8 form */
