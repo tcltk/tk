@@ -63,7 +63,7 @@ namespace eval ttk::theme::aqua {
 	    -foreground systemControlTextColor
 	ttk::style map RecessedButton \
 	    -foreground {
-		{disabled selected} systemWindowBackgroundColor
+		{disabled selected} systemWindowBackgroundColor3
 		{disabled !selected} systemDisabledControlTextColor
 		selected systemTextBackgroundColor
 		active white

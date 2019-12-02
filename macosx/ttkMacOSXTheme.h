@@ -161,6 +161,26 @@ static ButtonDesign pushbuttonDesign = {
   }
 };
 
+static ButtonDesign helpDesign = {
+  .radius = 11,
+  .palettes = {
+    {
+      .light = {.face = 241.0, .top = 218.0, .side = 217.0, .bottom = 206.0},
+      .dark =  {.face = 83.0,  .top = 89.0,  .side = 82.0,  .bottom = 82.0},
+      .onBits = TTK_STATE_DISABLED, .offBits = 0},
+    {
+      .light = {.face = 240.0, .top = 208.0, .side = 205.0, .bottom = 188.0},
+      .dark =  {.face = 129.0, .top = 121.0, .side = 106.0, .bottom = 106.0},
+      .onBits = TTK_STATE_PRESSED, .offBits = 0
+    },
+    {
+      .light = {.face = 255.0, .top = 208.0, .side = 205.0, .bottom = 188.0},
+      .dark =  {.face = 107.0, .top = 121.0, .side = 106.0, .bottom = 106.0},
+      .onBits = 0, .offBits = 0
+    }
+  }
+};
+
 static ButtonDesign inlineDesign = {
   .radius = 8.0,
   .palettes = {
