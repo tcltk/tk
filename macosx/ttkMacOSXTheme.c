@@ -514,7 +514,9 @@ static void DrawGrayButton(
 static void DrawAccentedButton(
     CGContextRef context,
     CGRect bounds,
-    ButtonDesign *design)
+    ButtonDesign *design,
+    int state,
+    int isDark)
 {
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
     CGColorRef faceColor = CGCOLOR(controlAccentColor());
@@ -539,6 +541,13 @@ static void DrawAccentedButton(
     CGContextClip(context);
     FillRoundedRectangle(context, bounds, radius, faceColor);
     CGContextDrawLinearGradient(context, gradient, bounds.origin, end, 0.0);
+    if (state & TTK_STATE_PRESSED &&
+	state & TTK_STATE_ALTERNATE) {
+	CGColorRef color = isDark ?
+	    CGColorFromGray(darkPressedDefaultButton) :
+	    CGColorFromGray(pressedDefaultButton);
+	FillRoundedRectangle(context, bounds, radius, color);
+    }
     CGContextRestoreGState(context);
     CFRelease(path);
     CFRelease(gradient);
@@ -597,7 +606,8 @@ static void DrawAccentedSegment(
     if ((state & TTK_STATE_BACKGROUND) || (state & TTK_STATE_DISABLED)) {
 	DrawGrayButton(context, bounds, design, state, tkwin);
     } else {
-	DrawAccentedButton(context, bounds, design);
+	DrawAccentedButton(context, bounds, design, state | TTK_STATE_ALTERNATE,
+			   isDark);
     }
     CGContextRestoreGState(context);
 }
@@ -1103,8 +1113,16 @@ static void DrawButton(
 	DrawGrayButton(context, bounds, &bevelDesign, state, tkwin);
 	break;
     case kThemePushButton:
-	if (state & TTK_STATE_PRESSED) {
-	    DrawAccentedButton(context, bounds, &pushbuttonDesign);
+
+	/*
+	 * The TTK_STATE_ALTERNATE bit means -default active.  Apple only
+	 * indicates the default state (which means that the key equivalent is
+	 * "\n") for Push Buttons.
+	 */
+
+	if ((state & TTK_STATE_PRESSED || state & TTK_STATE_ALTERNATE) &&
+	    !(state & TTK_STATE_BACKGROUND)) {
+	    DrawAccentedButton(context, bounds, &pushbuttonDesign, state, isDark);
 	} else {
 	    DrawGrayButton(context, bounds, &pushbuttonDesign, state, tkwin);
 	}
@@ -1167,7 +1185,7 @@ static void DrawButton(
 	if (hasIndicator &&
 	    !(state & TTK_STATE_BACKGROUND) &&
 	    !(state & TTK_STATE_DISABLED)) {
-	    DrawAccentedButton(context, bounds, &checkDesign);
+	    DrawAccentedButton(context, bounds, &checkDesign, 0, isDark);
 	} else {
 	    DrawGrayButton(context, bounds, &checkDesign, state, tkwin);
 	}
@@ -1183,7 +1201,7 @@ static void DrawButton(
 	if (hasIndicator &&
 	    !(state & TTK_STATE_BACKGROUND) &&
 	    !(state & TTK_STATE_DISABLED)) {
-	    DrawAccentedButton(context, bounds, &radioDesign);
+	    DrawAccentedButton(context, bounds, &radioDesign, 0, isDark);
 	} else {
 	    DrawGrayButton(context, bounds, &radioDesign, state, tkwin);
 	}
@@ -1218,7 +1236,7 @@ static void DrawButton(
 	    }
 	    CGContextSaveGState(context);
 	    CGContextClipToRect(context, clip);
-	    DrawAccentedButton(context, bounds, &incdecDesign);
+	    DrawAccentedButton(context, bounds, &incdecDesign, 0, isDark);
 	    CGContextRestoreGState(context);
 	}
 	CGFloat inset = (bounds.size.width - 5) / 2;
@@ -1404,7 +1422,7 @@ DrawTab(
 	    bounds.size.width += 1;
 	}
 	if (!(state & TTK_STATE_BACKGROUND)) {
-	    DrawAccentedButton(context, bounds, &tabDesign);
+	    DrawAccentedButton(context, bounds, &tabDesign, 0, 0);
 	} else {
 	    DrawGrayButton(context, bounds, &tabDesign, state, tkwin);
 	}
