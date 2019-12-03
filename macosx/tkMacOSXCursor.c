@@ -312,6 +312,7 @@ FindCursorByName(
 		if (bitmapImageRep) {
 		    image = [[NSImage alloc] initWithSize:NSMakeSize(pix, pix)];
 		    [image addRepresentation:bitmapImageRep];
+		    [image setTemplate:YES];
 		    [bitmapImageRep release];
 		}
 
