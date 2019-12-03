@@ -102,6 +102,8 @@ GRAYCOLOR boxBorder = {1.0, 0.20};
 GRAYCOLOR darkSeparator = {1.0, 0.3};
 GRAYCOLOR darkTabSeparator = {0.0, 0.25};
 GRAYCOLOR darkListheaderBorder = {1.0, 0.125};
+GRAYCOLOR pressedDefaultButton = {0.0, 0.1};
+GRAYCOLOR darkPressedDefaultButton = {1.0, 0.1};
 
 #define CG_WHITE CGColorGetConstantColor(kCGColorWhite)
 
