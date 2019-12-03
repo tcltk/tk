@@ -118,6 +118,10 @@ extern "C" {
 /* tkoFrame.c */
     MODULE_SCOPE int Tko_FrameInit(
         Tcl_Interp * interp);
+    MODULE_SCOPE int Tko_VectorInit(
+        Tcl_Interp * interp);
+    MODULE_SCOPE int Tko_GraphInit(
+        Tcl_Interp * interp);
 /* tkoWidget.c */
 	MODULE_SCOPE int Tko_WidgetClassDefine(
 		Tcl_Interp *interp,
