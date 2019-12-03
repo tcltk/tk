@@ -31,6 +31,8 @@
 
 **::tko initfrom** *?::superclass?*
 
+**::tko eventoption**
+
 **::tko optionadd** *::classname ?-option dbname dbclass value flags ?body?*
 
 **::tko optiondel** *::classname ?-option? ..* 
@@ -55,19 +57,8 @@
 
 **my \_tko optionvar**
 
-### Widget variables 
-
-**tko(.)**
-
-<a name="TKO-OPTIONS"></a>
-## TKO OPTIONS
-
-Widget option values are saved in an option array **tko**. The option name is the field name in the array. Additionally is an field "**.**" containing the tk widget path name of the widget.
-
-Widget options can be dynamically added and removed at class or object level.
-It is possible to hide and unhide options.
-
-The following two options have a special meaning.
+<a name="TKO-STANDARD-OPTIONS"></a>
+## TKO STANDARD OPTIONS
 
 <a name="-class"></a>
 Command-Line Name: **-class**  
@@ -86,6 +77,52 @@ Database Class: **Screen**
 <a name="DESCRIPTION"></a>
 ## DESCRIPTION
 
+### Function **::tko**
+
+**::tko initfrom** *?::superclass?*
+
+This function will provide the necessary initialization of an oo class as tko widget.
+If the *::classname* is given then these class will be the superclass of the current
+widget and all options of *::classname* will be added to our new class.
+The function should be called inside the "oo::class create" script.
+
+**::tko eventoption**
+
+This option will send an <<TkoEventChanged>> virtual event to all widgets.
+If a option value was set using the option database then the value of this option will updated with the current value of the option database.
+The option database can so be used as a style source.
+
+**::tko optionadd** *::classname -option dbname dbclass value flags ?body?*
+
+The function will add a new or replace an existing option. If *dbclass* is empty the an synonym option is created which is linked to *dbname*.
+*flags* can contain a combination of the following letters:
+
+  - "r" the option is readonly and can only be set on creation
+  - "h" The option is hidden from use in **cget** and **configure** methods.
+
+**::tko optiondel** *::classname ?-option? ..* 
+
+The function will remove the given options from the defined class options of the
+given *::classname*. If no option is given then all existing options will be removed.
+
+**::tko optionget** *::classname ?-option? ..*
+
+This function will return a list of *-option definition* pairs ready for use in the **::tko optionset** command.
+The list consist of the specified options or all options if there are no options given.
+THe option will be read from the fully qualified ?::classname? definitions.
+
+**::tko optionset** *::classname ?-option {dbname dbclass value flags}? ..*
+
+The function will change or add the given options to the defined class options of the given classname. The definition list has the same meaning as in the **::tko optionadd** command.
+
+**::tko optionhide** *::classname ?-option ..*
+
+Hide the given options from the use in **cget** and **configure** methods. If no options are given then return the list of all hidden options.
+
+**::tko optionshow** *::classname ?-option ..*
+
+Unhide the given options from the use in **cget** and **configure** methods. If no options are given then return the list of all useable options.
+
 <a name="tko-toplevel"></a>
 ### Widget **::tko::toplevel**
 
@@ -100,49 +137,6 @@ These class contain the functionality of the [frame][] widget command.
 ### Widget **::tko::labelframe**
 
 These class contain the functionality of the [labelframe][] widget command.
-
-### Function **::tko**
-
-**::tko initfrom** *?::superclass?*
-
-> This function will provide the necessary initialization of an oo class as tko widget and should be called inside the "oo::class create" script.
-
-> If the *::classname* is given then these class will be the superclass of the current widget and all options of *::classname* will be added to our new class.
-
-> The function is a shortcut for the following code:
-
-    unexport destroy; variable tko; {*}$::tko::_unknown
-    superclass ::superclass
-    set ::tko::_option([self]) [::tko optionget ::superclass]
-
-**::tko optionadd** *::classname -option dbname dbclass value flags ?body?*
-
-> The function will add a new or replace an existing option. If *dbclass* is empty the an synonym option is created which is linked to *dbname*.
-
-> *flags* can contain a combination of the following letters:
-
-  - "r" the option is readonly and can only be set on creation
-  - "h" The option is hidden from use in **cget** and **configure** methods.
-
-**::tko optiondel** *::classname ?-option? ..* 
-
-> The function will remove the given options from the defined class options of the given *::classname*. If no option is given then all existing options will be removed.
-
-**::tko optionget** *::classname ?-option? ..*
-
-> This function will return a list of *-option definition* pairs ready for use in the **::tko optionset** command. The list consist of the specified options or all options if there are no options given. The *-option definition* pairs will be read from the fully qualified ?::classname? definitions.
-
-**::tko optionset** *::classname ?-option {dbname dbclass value flags}? ..*
-
-> The function will change or add the given options to the defined class options of the given classname. The definition list has the same meaning as in the **::tko optionadd** command.
-
-**::tko optionhide** *::classname ?-option ..*
-
-> Hide the given options from the use in **cget** and **configure** methods. If no options are given then return the list of all hidden options.
-
-**::tko optionshow** *::classname ?-option ..*
-
-> Unhide the given options from the use in **cget** and **configure** methods. If no options are given then return the list of all useable options.
 
 <a name="WIDGET-METHODS"></a>
 ## WIDGET METHODS
@@ -191,16 +185,13 @@ Widget methods can be dynamically added and removed at class or object level.
 
 > This is an virtual method of the *tkoClass* widgets. This method will be called at the end of each **configure** *-option value ..* call. It can be implemented in each class to make necessary changes. If it is implemented it should also call **next** to notify underlying classes.
 
-<a name="WIDGET-VARIABLES"></a>
-## WIDGET VARIABLES
+<a name="WIDGET-OPTIONS"></a>
+## WIDGET OPTIONS
 
-**tko(.)**
+Widget option values are saved in an option array **tko**. The option name is the field name in the array. Additionally is an field "**.**" containing the tk widget path name of the widget.
 
-> This variable contain the name of the current widget pathname starting with a dot. The variable is readonly.
-
-**tko**(*-option*)
-
-> The **tko** array variable contain an entry for each used option. The variable can be used inside widget object methods. If an option is set with **configure** or "set **tko**(*-option*) .." the option setting method *-option* is called. In these method the variable **tko**(*-option*) contain the new value. The old option value can be get with "**my cget** *-option*".
+Widget options can be dynamically added and removed at class or object level.
+It is possible to hide and unhide options.
 
 <a name="EXAMPLES"></a>
 ## EXAMPLES
@@ -217,7 +208,7 @@ Widget methods can be dynamically added and removed at class or object level.
     ::tko optionhide ::myWidget {*}[::tko optionshow ::myWidget]
 
     # Add a new option
-    oo::define ::myWidget method -o1 {} {puts [my cget -o1]->$tko(-o1)}
+    oo::define ::myWidget method -o1 {} {puts $tko(-o1)}
     ::tko optionadd ::myWidget -o1 o1 O1 v1 {}
 
     # Add another option
@@ -229,6 +220,12 @@ Widget methods can be dynamically added and removed at class or object level.
 
     # Show all frame options again
     .w mycmd _tko optionshow {*}[.w mycmd _tko optionhide]
+
+    # Intercept options
+    oo::define ::myWidget method -width {} {
+        puts "[my cget -width]->$tko(-width)->[set tko(-width) 100]"
+    }
+    .w configure -width 1
 
 <a name="SEE-ALSO"></a>
 ## SEE ALSO

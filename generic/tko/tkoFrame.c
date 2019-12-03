@@ -575,13 +575,15 @@ FrameConstructor(
         return TCL_ERROR;
     }
     if (type == TYPE_FRAME) {
-        frame = ckalloc(sizeof(tkoFrame));
-        memset(frame, 0, sizeof(tkoFrame));
+		frame = ckalloc(sizeof(tkoFrame));
+		assert(frame);
+		memset(frame, 0, sizeof(tkoFrame));
     }
     else if (type == TYPE_LABELFRAME) {
         tkoLabelframe *labelframe;
-        labelframe = ckalloc(sizeof(tkoLabelframe));
-        memset(labelframe, 0, sizeof(tkoLabelframe));
+		labelframe = ckalloc(sizeof(tkoLabelframe));
+		assert(labelframe);
+		memset(labelframe, 0, sizeof(tkoLabelframe));
         frame = (tkoFrame *)labelframe;
         labelframe->textPtr = NULL;
         labelframe->tkfont = NULL;
@@ -598,7 +600,8 @@ FrameConstructor(
     }
     else if (type == TYPE_TOPLEVEL) {
         frame = ckalloc(sizeof(tkoFrame));
-        memset(frame, 0, sizeof(tkoFrame));
+		assert(frame);
+		memset(frame, 0, sizeof(tkoFrame));
 	}
     else {
         Tcl_WrongNumArgs(interp, 1, objv, "internal type error");
@@ -1056,6 +1059,7 @@ FrameMethod_menu(
 		if (frame->menuName) { ckfree(frame->menuName); }
 		if (length) {
 			frame->menuName = ckalloc(length + 1);
+			assert(frame->menuName);
 			strncpy(frame->menuName,newMenu,length);
 			frame->menuName[length] = '\0';
 		}
