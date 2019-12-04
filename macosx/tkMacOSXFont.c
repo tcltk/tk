@@ -135,7 +135,7 @@ TkUtfToNSString(
     Tcl_DString ds;
 
     Tcl_DStringInit(&ds);
-    Tcl_UtfToUniCharDString(source, numBytes, &ds);
+    Tcl_UtfToChar16DString(source, numBytes, &ds);
     string = [[NSString alloc] initWithCharacters:(const unichar *)Tcl_DStringValue(&ds)
 	    length:(Tcl_DStringLength(&ds)>>1)];
     Tcl_DStringFree(&ds);
