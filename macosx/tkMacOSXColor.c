@@ -266,8 +266,7 @@ GetEntryFromPixelCode(
  *----------------------------------------------------------------------
  */
 
-static NSColorSpace* deviceRGB = NULL;
-static CGFloat blueAccentRGBA[4] = {0, 122.0 / 255, 1.0, 1.0};
+static NSColorSpace* sRGB = NULL;
 static CGFloat windowBackground[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
@@ -286,8 +285,8 @@ SetCGColorComponents(
 	{152.0 / 255, 152.0 / 255, 152.0 / 255, 1.0};
 #endif
 
-    if (!deviceRGB) {
-	deviceRGB = [NSColorSpace deviceRGBColorSpace];
+    if (!sRGB) {
+	sRGB = [NSColorSpace sRGBColorSpace];
     }
 
     /*
@@ -318,8 +317,7 @@ SetCGColorComponents(
 		rgba[i] = windowBackground[i];
 	    }
 	} else {
-	    bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:
-			    deviceRGB];
+	    bgColor = [[NSColor windowBackgroundColor] colorUsingColorSpace:sRGB];
 	    [bgColor getComponents: rgba];
 	}
 	if (rgba[0] + rgba[1] + rgba[2] < 1.5) {
@@ -335,78 +333,61 @@ SetCGColorComponents(
     case semantic:
 	switch (entry.value) {
 	case 0:
-	    color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
+	    color = [[NSColor textColor] colorUsingColorSpace:sRGB];
 	    break;
 	case 1:
-	    color = [[NSColor selectedTextColor] colorUsingColorSpace: deviceRGB];
+	    color = [[NSColor selectedTextColor] colorUsingColorSpace:sRGB];
 	    break;
 	case 2:
 	    if ([NSApp macMinorVersion] > 9) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
-		color = [[NSColor labelColor] colorUsingColorSpace: deviceRGB];
+		color = [[NSColor labelColor] colorUsingColorSpace:sRGB];
 #endif
 	    } else {
-		color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
+		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
 	    }
 	    break;
 	case 3:
-	    color = [[NSColor controlTextColor] colorUsingColorSpace:
-			  deviceRGB];
+	    color = [[NSColor controlTextColor] colorUsingColorSpace:sRGB];
 	    break;
 	case 4:
-	    color = [[NSColor disabledControlTextColor] colorUsingColorSpace:
-			  deviceRGB];
+	    color = [[NSColor disabledControlTextColor]
+			colorUsingColorSpace:sRGB];
 	    break;
 	case 5:
 	    if ([NSApp macMinorVersion] > 6) {
-		color = [[NSColor whiteColor] colorUsingColorSpace:
-						  deviceRGB];
+		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    } else {
-		color = [[NSColor blackColor] colorUsingColorSpace:
-						  deviceRGB];
+		color = [[NSColor blackColor] colorUsingColorSpace:sRGB];
 	    }
 	    break;
 	case 6:
-	    color = [[NSColor textBackgroundColor] colorUsingColorSpace:
-			  deviceRGB];
+	    color = [[NSColor textBackgroundColor] colorUsingColorSpace:sRGB];
 	    break;
 	case 7:
-	    color = [[NSColor selectedTextBackgroundColor] colorUsingColorSpace:
-			  deviceRGB];
+	    color = [[NSColor selectedTextBackgroundColor]
+			colorUsingColorSpace:sRGB];
 	    break;
 	case 8:
+	    if ([NSApp macMinorVersion] >= 14) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	    if (@available(macOS 10.14, *)) {
-		color = [[NSColor controlAccentColor] colorUsingColorSpace:
-							  deviceRGB];
-	    } else {
-		color = [NSColor colorWithColorSpace: deviceRGB
-				 components: blueAccentRGBA
-				 count: 4];
-	    }
-#else
-	    colorVariant = [[NSUserDefaults standardUserDefaults]
-			       integerForKey:@"AppleAquaColorVariant"];
-	    if (colorVariant == 6) {
-		color = [NSColor colorWithColorSpace: deviceRGB
-				 components: graphiteAccentRGBA
-				 count: 4];
-	    } else {
-		color = [NSColor colorWithColorSpace: deviceRGB
-				 components: blueAccentRGBA
-				 count: 4];
-	    }
+		color = [[NSColor controlAccentColor]
+			    colorUsingColorSpace:sRGB];
 #endif
+	    } else {
+		color = [[NSColor
+			    colorForControlTint:[NSColor currentControlTint]]
+			        colorUsingColorSpace: sRGB];
+	    }
 	    break;
 	default:
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
 	    if ([NSApp macMinorVersion] >= 10) {
-		color = [[NSColor labelColor] colorUsingColorSpace:
-			      deviceRGB];
-		break;
-	    }
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101000
+		color = [[NSColor labelColor] colorUsingColorSpace:sRGB];
 #endif
-	    color = [[NSColor textColor] colorUsingColorSpace: deviceRGB];
+	    } else {
+		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
+	    }
 	    break;
 	}
 	[color getComponents: rgba];
@@ -426,7 +407,7 @@ SetCGColorComponents(
     default:
 	break;
     }
-    *c = CGColorCreate(deviceRGB.CGColorSpace, rgba);
+    *c = CGColorCreate(sRGB.CGColorSpace, rgba);
     [pool drain];
     return err;
 }
@@ -689,11 +670,7 @@ TkMacOSXSetColorInContext(
     CGRect rect;
     int code = (pixel >> 24) & 0xff;
     HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};;
-    static CGColorSpaceRef deviceRGBSpace = NULL;
 
-    if (!deviceRGBSpace) {
-	deviceRGBSpace = CGColorSpaceCreateDeviceRGB();
-    }
     if (code < FIRST_SEMANTIC_COLOR) {
 	cgColor = CopyCachedColor(gc, pixel);
     }
