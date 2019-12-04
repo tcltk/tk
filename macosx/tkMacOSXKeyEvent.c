@@ -347,7 +347,7 @@ static unsigned	isFunctionKey(unsigned int code);
      */
 
     for (i = 0; i < len; i++) {
-	xEvent.xkey.nbytes = TclUniAtIndex(str, i, xEvent.xkey.trans_chars,
+	xEvent.xkey.nbytes = TkUtfAtIndex(str, i, xEvent.xkey.trans_chars,
 					   &xEvent.xkey.keycode);
 	if (xEvent.xkey.keycode > 0xffff){
 	    i++;

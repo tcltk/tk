@@ -175,7 +175,7 @@ TkUnionRectWithRegion(
  *----------------------------------------------------------------------
  */
 
-int
+static int
 TkMacOSXIsEmptyRegion(
     TkRegion r)
 {
