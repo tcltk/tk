@@ -175,7 +175,7 @@ XUnionRectWithRegion(
  *----------------------------------------------------------------------
  */
 
-int
+static int
 TkMacOSXIsEmptyRegion(
     Region r)
 {
