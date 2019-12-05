@@ -70,9 +70,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    [NSMenuItem itemWithTitle:
 		    [NSString stringWithFormat:@"About %@", aboutName]
 		    action:@selector(orderFrontStandardAboutPanel:)] atIndex:0];
-
-    TKMenu *fileMenu = [TKMenu menuWithTitle:@"File" menuItems:
-	    [NSArray arrayWithObjects:
+    _defaultFileMenuItems =
+	    [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
 		   [NSString stringWithFormat:@"Source%C", 0x2026]
 		   action:@selector(tkSource:)],
@@ -80,7 +79,10 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 		   action:@selector(tkDemo:)],
 	    [NSMenuItem itemWithTitle:@"Close" action:@selector(performClose:)
 		   target:nil keyEquivalent:@"w"],
-	    nil]];
+	    nil] retain];
+    _demoMenuItem = [_defaultFileMenuItems objectAtIndex:1];
+    TKMenu *fileMenu = [TKMenu menuWithTitle:@"File"
+	    menuItems: _defaultFileMenuItems];
     TKMenu *editMenu = [TKMenu menuWithTitle:@"Edit" menuItems:
 	    [NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:@"Undo" action:@selector(undo:)
@@ -141,16 +143,13 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     [_defaultWindowsMenuItems retain];
     TKMenu *windowsMenu = [TKMenu menuWithTitle:@"Window" menuItems:
     				      _defaultWindowsMenuItems];
-
     _defaultHelpMenuItems = [[NSArray arrayWithObjects:
 	    [NSMenuItem itemWithTitle:
 		   [NSString stringWithFormat:@"%@ Help", applicationName]
 		   action:@selector(showHelp:) keyEquivalent:@"?"],
 	    nil] retain];
-
     TKMenu *helpMenu = [TKMenu menuWithTitle:@"Help" menuItems:
 	    _defaultHelpMenuItems];
-
     [self setServicesMenu:_servicesMenu];
     [self setWindowsMenu:windowsMenu];
     _defaultMainMenu = [[TKMenu menuWithTitle:@"" submenus:[NSArray
@@ -169,6 +168,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     [_defaultHelpMenuItems release];
     [_defaultWindowsMenuItems release];
     [_defaultApplicationMenuItems release];
+    [_defaultFileMenuItems release];
     [super dealloc];
 }
 
@@ -262,6 +262,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	if (path) {
 	    Tcl_IncrRefCount(path);
 
+	    [_demoMenuItem setHidden:YES];
 	    int code = Tcl_FSEvalFileEx(_eventInterp, path, NULL);
 
 	    if (code != TCL_OK) {

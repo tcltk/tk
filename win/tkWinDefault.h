@@ -522,7 +522,6 @@
  * Defaults for canvas text:
  */
 
-#define DEF_CANVTEXT_FILL		NORMAL_FG
 #define DEF_CANVTEXT_FONT		"TkDefaultFont"
 
 /*
@@ -532,7 +531,6 @@
 
 #define DEF_CANVBMAP_FG			NORMAL_FG
 #define DEF_CANVITEM_OUTLINE		NORMAL_FG
-#define DEF_CANVLINE_FILL		DEF_CANVITEM_OUTLINE
 
 /*
  * Defaults for toplevels (most of the defaults for frames also apply
