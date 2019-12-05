@@ -1440,7 +1440,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 
     /*
      * Clear interp result since it might have been set during the modal loop.
-     * http://core.tcl.tk/tk/tktview/4a0451f5291b3c9168cc560747dae9264e1d2ef6
+     * https://core.tcl-lang.org/tk/tktview/4a0451f5291b3c9168cc560747dae9264e1d2ef6
      */
     Tcl_ResetResult(interp);
 

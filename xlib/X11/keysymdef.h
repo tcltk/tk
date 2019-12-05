@@ -104,11 +104,11 @@ SOFTWARE.
  * When adding new keysyms to this file, do not forget to also update the
  * following as needed:
  *
- *   - the mappings in src/KeyBind.c in the repo
- *     git://anongit.freedesktop.org/xorg/lib/libX11.git
+ *   - the mappings in src/KeyBind.c in the libX11 repo
+ *     https://gitlab.freedesktop.org/xorg/lib/libx11
  *
- *   - the protocol specification in specs/keysyms.xml
- *     in the repo git://anongit.freedesktop.org/xorg/proto/x11proto.git
+ *   - the protocol specification in specs/keysyms.xml in this repo
+ *     https://gitlab.freedesktop.org/xorg/proto/xorgproto
  *
  */
 
@@ -1974,7 +1974,7 @@ SOFTWARE.
 #define XK_Ibreve                     0x100012c  /* U+012C LATIN CAPITAL LETTER I WITH BREVE */
 #define XK_Zstroke                    0x10001b5  /* U+01B5 LATIN CAPITAL LETTER Z WITH STROKE */
 #define XK_Gcaron                     0x10001e6  /* U+01E6 LATIN CAPITAL LETTER G WITH CARON */
-#define XK_Ocaron                     0x10001d1  /* U+01D2 LATIN CAPITAL LETTER O WITH CARON */
+#define XK_Ocaron                     0x10001d1  /* U+01D1 LATIN CAPITAL LETTER O WITH CARON */
 #define XK_Obarred                    0x100019f  /* U+019F LATIN CAPITAL LETTER O WITH MIDDLE TILDE */
 #define XK_xabovedot                  0x1001e8b  /* U+1E8B LATIN SMALL LETTER X WITH DOT ABOVE */
 #define XK_ibreve                     0x100012d  /* U+012D LATIN SMALL LETTER I WITH BREVE */
@@ -2505,6 +2505,7 @@ SOFTWARE.
  * /usr/include/pkg/libxkbcommon/xkbcommon/xkbcommon-keysyms.h
  */
 
+#ifndef TK_NO_DEPRECATED
 #define XK_XF86AudioLowerVolume	0x1008FF11   /* Volume control down        */
 #define XK_XF86AudioMute	0x1008FF12   /* Mute sound from the system */
 #define XK_XF86AudioRaiseVolume	0x1008FF13   /* Volume control up          */
@@ -2512,4 +2513,5 @@ SOFTWARE.
 #define XK_XF86AudioStop	0x1008FF15   /* Stop playing audio         */
 #define XK_XF86AudioPrev	0x1008FF16   /* Previous track             */
 #define XK_XF86AudioNext	0x1008FF17   /* Next track                 */
+#endif /* !TK_NO_DEPRECATED */
 

@@ -589,7 +589,7 @@ typedef struct _XDisplay {
 #endif
 #ifndef _XEVENT_
 
-#define XMaxTransChars 4
+#define XMaxTransChars 7
 
 /*
  * Definitions of specific events.
@@ -610,7 +610,7 @@ typedef struct {
 	Bool same_screen;	/* same screen flag */
 	char trans_chars[XMaxTransChars];
 				/* translated characters */
-	int nbytes;
+	unsigned char nbytes;
 } XKeyEvent;
 typedef XKeyEvent XKeyPressedEvent;
 typedef XKeyEvent XKeyReleasedEvent;
@@ -1048,7 +1048,7 @@ typedef union _XEvent {
 	XKeymapEvent xkeymap;
 	XGenericEvent xgeneric;
 	XGenericEventCookie xcookie;
-	long pad[24];
+	XID pad[24];
 } XEvent;
 #endif
 

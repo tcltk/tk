@@ -2179,9 +2179,9 @@ FontMapLoadPage(
 {
     FontFamily *familyPtr;
     Tcl_Encoding encoding;
-    char src[XMaxTransChars], buf[16];
-    USHORT *startCount, *endCount;
     int i, j, bitOffset, end, segCount;
+    USHORT *startCount, *endCount;
+    char buf[16], src[4];
 
     subFontPtr->fontMap[row] = ckalloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);
@@ -2232,7 +2232,7 @@ FontMapLoadPage(
 	end = (row + 1) << FONTMAP_SHIFT;
 	for (i = row << FONTMAP_SHIFT; i < end; i++) {
 	    if (Tcl_UtfToExternal(NULL, encoding, src,
-		    Tcl_UniCharToUtf(i, src), TCL_ENCODING_STOPONERROR, NULL,
+		    TkUniCharToUtf(i, src), TCL_ENCODING_STOPONERROR, NULL,
 		    buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK) {
 		continue;
 	    }
@@ -2462,7 +2462,6 @@ GetScreenFont(
     double angle)		/* What is the desired orientation of the
 				 * font. */
 {
-    Tcl_DString ds;
     HFONT hFont;
     LOGFONTW lf;
 
@@ -2481,10 +2480,7 @@ GetScreenFont(
     lf.lfQuality	= DEFAULT_QUALITY;
     lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
-    Tcl_DStringInit(&ds);
-    Tcl_UtfToWCharDString(faceName, -1, &ds);
-    wcsncpy(lf.lfFaceName, (WCHAR *)Tcl_DStringValue(&ds), LF_FACESIZE-1);
-    Tcl_DStringFree(&ds);
+    MultiByteToWideChar(CP_UTF8, 0, faceName, -1, lf.lfFaceName, LF_FACESIZE);
     lf.lfFaceName[LF_FACESIZE-1] = 0;
     hFont = CreateFontIndirectW(&lf);
     return hFont;

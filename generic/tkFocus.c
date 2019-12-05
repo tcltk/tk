@@ -629,7 +629,8 @@ TkSetFocusWin(
     }
     tlFocusPtr->focusWinPtr = winPtr;
 
-    if (topLevelPtr->flags & TK_EMBEDDED) {
+    if (topLevelPtr->flags & TK_EMBEDDED &&
+        (displayFocusPtr->focusWinPtr == NULL)) {
 
 	/*
 	 * We are assigning focus to an embedded toplevel.  The platform

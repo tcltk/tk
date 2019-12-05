@@ -410,6 +410,26 @@ bind Text <Meta-Delete> {
     }
 }
 
+# Bindings for IME text input.
+
+bind Text <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind Text <<TkEndIMEMarkedText>> {
+    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+	bell
+    } else {
+	%W tag add IMEmarkedtext $mark insert
+	%W tag configure IMEmarkedtext -underline on
+    }
+}
+bind Text <<TkClearIMEMarkedText>> {
+    %W delete IMEmarkedtext.first IMEmarkedtext.last
+}
+bind Text <<TkAccentBackspace>> {
+    %W delete insert-1c
+}
+
 # Macintosh only bindings:
 
 if {[tk windowingsystem] eq "aqua"} {
@@ -1266,7 +1286,6 @@ proc ::tk::TextScanDrag {w x y} {
 	$w scan dragto $x $y
     }
 }
-
 # ::tk::TextDelete --
 #
 # Delete the characters in given range.

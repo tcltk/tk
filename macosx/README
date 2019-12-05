@@ -16,19 +16,17 @@ before asking on the list, many questions have already been answered).
 	http://groups.google.com/group/comp.lang.tcl/
 
 - The Tcl'ers Wiki also has many pages dealing with Tcl & Tk on macOS, see
-	http://wiki.tcl.tk/_/ref?N=3753
-	http://wiki.tcl.tk/_/ref?N=8361
+	https://wiki.tcl-lang.org/page/MacOS
 
 - Please report bugs with Tk on macOS to the tracker:
-	http://core.tcl.tk/tk/reportlist
+	https://core.tcl-lang.org/tk/reportlist
 
 2. Using Tcl/Tk on macOS
 ---------------------------
 
 - There are two versions of Tk available on macOS: TkAqua using the native
 aqua widgets and look&feel, and TkX11 using the traditional unix X11 widgets.
-TkX11 requires an X11 server to be installed, such as Apple's X11 (which is
-available as an optional or default install on recent macOS).
+TkX11 requires an X11 server to be installed, such as XQuartz (available from www.xquartz.org).
 TkAqua and TkX11 can be distinguished at runtime via [tk windowingsystem].
 
 - At a minimum, macOS 10.3 is required to run Tcl and TkX11.
@@ -51,8 +49,8 @@ brings up the Tk console window at startup. This is the case when double
 clicking Wish in the Finder (or using 'open Wish.app' from the Terminal).
 
 - Tcl extensions can be installed in any of:
-	$HOME/Library/Tcl /Library/Tcl /System/Library/Tcl
-	$HOME/Library/Frameworks /Library/Frameworks /System/Library/Frameworks
+	$HOME/Library/Tcl /Library/Tcl
+	$HOME/Library/Frameworks /Library/Frameworks
 	(searched in that order).
 Given a potential package directory $pkg, Tcl on OSX checks for the file
 $pkg/Resources/Scripts/pkgIndex.tcl as well as the usual $pkg/pkgIndex.tcl.
@@ -67,7 +65,7 @@ No nroff manpages are installed by default by the GNUmakefile.
 
 - The Tcl and Tk frameworks can be installed in any of the system's standard
 framework directories:
-	$HOME/Library/Frameworks /Library/Frameworks /System/Library/Frameworks
+	$HOME/Library/Frameworks /Library/Frameworks
 
 - ${prefix}/bin/wish8.x is a script that calls a copy of 'Wish' contained in
 	Tk.framework/Resources
