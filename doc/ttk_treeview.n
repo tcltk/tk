@@ -101,11 +101,11 @@ Note:
 Striped rows gets the "alternate" state and it is up to the theme to display this.
 If not supported by the current theme, it will not show.
 .OP \-titlecolumns titleColumns TitleColumns
-Number of display columns that should not be scrolled. The tree column counts, even
+Number of display columns at the left that should not be scrolled. The tree column counts, even
 if \fB\-show tree\fR is not specified. Thus for value N of this option, column #N is
 the first one that is scrollable.
-.OP \-titlerows titleRows TitleRows
-Number of rows that should not be vertically scrolled.
+.OP \-titleitems titleItems TitleItems
+Number of items at the top that should not be vertically scrolled.
 .SH "WIDGET COMMAND"
 .PP
 .TP
@@ -452,6 +452,8 @@ The following item options may be specified for items
 in the \fBinsert\fR and \fBitem\fR widget commands.
 .IP \fB\-text\fR
 The textual label to display for the item.
+.IP \fB\-height\fR
+The height for the item, in multiples of \fB\-rowheight\fP.
 .IP \fB\-image\fR
 A Tk image, displayed next to the label, placed according to \fB-imageanchor\fR.
 .IP \fB\-imageanchor\fR
