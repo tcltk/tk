@@ -150,7 +150,7 @@ DllMain(
 	     * Call TkFinalize
 	     */
 
-	    "movq	$0x0,		0x0(%%esp)"		"\n\t"
+	    "movq	$0x0,		0x0(%%rsp)"		"\n\t"
 	    "call	TkFinalize"			"\n\t"
 
 	    /*
