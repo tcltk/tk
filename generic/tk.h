@@ -834,10 +834,6 @@ typedef struct Tk_FakeWin {
  *				making it exist a ConfigureNotify event needs
  *				to be generated.
  * TK_GRAB_FLAG:		Used to manage grabs. See tkGrab.c for details
- * TK_CHECKED_IC:		1 means we've already tried to get an input
- *				context for this window; if the ic field is
- *				NULL it means that there isn't a context for
- *				the field.
  * TK_DONT_DESTROY_WINDOW:	1 means that Tk_DestroyWindow should not
  *				invoke XDestroyWindow to destroy this widget's
  *				X window. The flag is set when the window has
@@ -891,7 +887,6 @@ typedef struct Tk_FakeWin {
 #define TK_ALREADY_DEAD		4
 #define TK_NEED_CONFIG_NOTIFY	8
 #define TK_GRAB_FLAG		0x10
-#define TK_CHECKED_IC		0x20
 #define TK_DONT_DESTROY_WINDOW	0x40
 #define TK_WM_COLORMAP_WINDOW	0x80
 #define TK_EMBEDDED		0x100

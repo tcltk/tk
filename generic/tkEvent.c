@@ -1224,22 +1224,21 @@ Tk_HandleEvent(
      * If the XIC has been invalidated, it must be recreated.
      */
     if (winPtr->dispPtr->ximGeneration != winPtr->ximGeneration) {
-	winPtr->flags &= ~TK_CHECKED_IC;
-	winPtr->inputContext = NULL;
+      winPtr->inputContext = NULL;
     }
 
-    if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)) {
-	if (!(winPtr->flags & (TK_CHECKED_IC|TK_ALREADY_DEAD))) {
-	    winPtr->flags |= TK_CHECKED_IC;
-	    if (winPtr->dispPtr->inputMethod != NULL) {
-		CreateXIC(winPtr);
-	    }
-	}
-	if ((eventPtr->type == FocusIn) &&
-		(winPtr->dispPtr->inputMethod != NULL) &&
-		(winPtr->inputContext != NULL)) {
-	    XSetICFocus(winPtr->inputContext);
-	}
+    if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM) &&
+          winPtr->dispPtr->inputMethod != NULL) {
+      if ((winPtr->flags & TK_TOP_LEVEL) &&
+          winPtr->inputContext == NULL) {
+        CreateXIC(winPtr);
+      }
+      if (eventPtr->type == FocusIn) {
+        if (winPtr->inputContext == NULL) {
+	  CreateXIC(winPtr);
+        }
+        XSetICFocus(winPtr->inputContext);
+      }
     }
 #endif /*TK_USE_INPUT_METHODS*/
 
