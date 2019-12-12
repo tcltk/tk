@@ -3444,6 +3444,8 @@ FontchooserShowCmd(
     HDC hdc;
     HookData *hdPtr;
     int r = TCL_OK, oldMode = 0;
+    (void)objc;
+    (void)objv;
 
     hdPtr = Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
 
@@ -3546,12 +3548,15 @@ FontchooserShowCmd(
 
 static int
 FontchooserHideCmd(
-    ClientData clientData,	/* Main window */
+    ClientData dummy,	/* Main window */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
-    HookData *hdPtr = Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
+    HookData *hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
+    (void)dummy;
+    (void)objc;
+    (void)objv;
 
     if (hdPtr->hwnd && IsWindow(hdPtr->hwnd)) {
 	EndDialog(hdPtr->hwnd, 0);
@@ -3571,9 +3576,10 @@ FontchooserHideCmd(
  */
 
 static void
-DeleteHookData(ClientData clientData, Tcl_Interp *interp)
+DeleteHookData(ClientData clientData, Tcl_Interp *dummy)
 {
-    HookData *hdPtr = clientData;
+    HookData *hdPtr = (HookData *)clientData;
+    (void)dummy;
 
     if (hdPtr->parentObj) {
 	Tcl_DecrRefCount(hdPtr->parentObj);
@@ -3610,9 +3616,10 @@ const TkEnsemble tkFontchooserEnsemble[] = {
 };
 
 int
-TkInitFontchooser(Tcl_Interp *interp, ClientData clientData)
+TkInitFontchooser(Tcl_Interp *interp, ClientData dummy)
 {
-    HookData *hdPtr = ckalloc(sizeof(HookData));
+    HookData *hdPtr = (HookData *)ckalloc(sizeof(HookData));
+    (void)dummy;
 
     memset(hdPtr, 0, sizeof(HookData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteHookData, hdPtr);

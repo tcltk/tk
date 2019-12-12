@@ -228,9 +228,9 @@ Tk_ParseArgv(
 	    break;
 	case TK_ARGV_FUNC: {
 	    typedef int (ArgvFunc)(char *, const char *, const char *);
-	    ArgvFunc *handlerProc = infoPtr->src;
+	    ArgvFunc *handlerProc = (ArgvFunc *)infoPtr->src;
 
-	    if (handlerProc(infoPtr->dst, infoPtr->key, argv[srcIndex])) {
+	    if (handlerProc((char *)infoPtr->dst, infoPtr->key, argv[srcIndex])) {
 		srcIndex++;
 		argc--;
 	    }
@@ -239,9 +239,9 @@ Tk_ParseArgv(
 	case TK_ARGV_GENFUNC: {
 	    typedef int (ArgvGenFunc)(char *, Tcl_Interp *, const char *, int,
 		    const char **);
-	    ArgvGenFunc *handlerProc = infoPtr->src;
+	    ArgvGenFunc *handlerProc = (ArgvGenFunc *)infoPtr->src;
 
-	    argc = handlerProc(infoPtr->dst, interp, infoPtr->key, argc,
+	    argc = handlerProc((char *)infoPtr->dst, interp, infoPtr->key, argc,
 		    argv+srcIndex);
 	    if (argc < 0) {
 		return TCL_ERROR;
@@ -253,14 +253,14 @@ Tk_ParseArgv(
 	    Tcl_SetErrorCode(interp, "TK", "ARG", "HELP", NULL);
 	    return TCL_ERROR;
 	case TK_ARGV_CONST_OPTION:
-	    Tk_AddOption(tkwin, infoPtr->dst, infoPtr->src,
+	    Tk_AddOption(tkwin, (char *)infoPtr->dst, (char *)infoPtr->src,
 		    TK_INTERACTIVE_PRIO);
 	    break;
 	case TK_ARGV_OPTION_VALUE:
 	    if (argc < 1) {
 		goto missingArg;
 	    }
-	    Tk_AddOption(tkwin, infoPtr->dst, argv[srcIndex],
+	    Tk_AddOption(tkwin, (char *)infoPtr->dst, argv[srcIndex],
 		    TK_INTERACTIVE_PRIO);
 	    srcIndex++;
 	    argc--;

@@ -36,6 +36,8 @@ XInternAtom(
     Bool only_if_exists)
 {
     static Atom atom = XA_LAST_PREDEFINED;
+    (void)atom_name;
+    (void)only_if_exists;
 
     display->request++;
     return ++atom;
@@ -64,7 +66,7 @@ XGetVisualInfo(
     XVisualInfo *vinfo_template,
     int *nitems_return)
 {
-    XVisualInfo *info = ckalloc(sizeof(XVisualInfo));
+    XVisualInfo *info = (XVisualInfo *)ckalloc(sizeof(XVisualInfo));
 
     info->visual = DefaultVisual(display, 0);
     info->visualid = info->visual->visualid;
