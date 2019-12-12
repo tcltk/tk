@@ -4681,7 +4681,7 @@ FindSequence(
 	unsigned sequenceSize = numPats*sizeof(TkPattern);
 	PatSeq *psPtr2;
 
-	for (psPtr2 = Tcl_GetHashValue(hPtr); psPtr2; psPtr2 = psPtr2->nextSeqPtr) {
+	for (psPtr2 = (PatSeq *)Tcl_GetHashValue(hPtr); psPtr2; psPtr2 = psPtr2->nextSeqPtr) {
 	    assert(TEST_PSENTRY(psPtr2));
 	    if (numPats == psPtr2->numPats && memcmp(patPtr, psPtr2->pats, sequenceSize) == 0) {
 		ckfree(psPtr);
@@ -4717,7 +4717,7 @@ FindSequence(
     psPtr->added = 0;
     psPtr->modMaskUsed = (modMask != 0);
     psPtr->script = NULL;
-    psPtr->nextSeqPtr = Tcl_GetHashValue(hPtr);
+    psPtr->nextSeqPtr = (PatSeq *)Tcl_GetHashValue(hPtr);
     psPtr->hPtr = hPtr;
     psPtr->ptr.nextObj = NULL;
     assert(psPtr->ptr.owners == NULL);
@@ -4859,7 +4859,7 @@ ParseEventDescription(
 
 	    size = p - field;
 	    if (size >= sizeof(buf)) {
-		bufPtr = ckalloc(size + 1);
+		bufPtr = (char *)ckalloc(size + 1);
 	    }
 	    strncpy(bufPtr, field, size);
 	    bufPtr[size] = '\0';
@@ -4891,7 +4891,7 @@ ParseEventDescription(
 		if (!(hPtr = Tcl_FindHashEntry(&modTable, field))) {
 		    break;
 		}
-		modPtr = Tcl_GetHashValue(hPtr);
+		modPtr = (ModInfo *)Tcl_GetHashValue(hPtr);
 		patPtr->modMask |= modPtr->mask;
 		if (modPtr->flags & MULT_CLICKS) {
 		    unsigned i = modPtr->flags & MULT_CLICKS;
@@ -4906,7 +4906,7 @@ ParseEventDescription(
 
 	    eventFlags = 0;
 	    if ((hPtr = Tcl_FindHashEntry(&eventTable, field))) {
-		const EventInfo *eiPtr = Tcl_GetHashValue(hPtr);
+		const EventInfo *eiPtr = (const EventInfo *)Tcl_GetHashValue(hPtr);
 
 		patPtr->eventType = eiPtr->type;
 		eventFlags = flagArray[eiPtr->type];

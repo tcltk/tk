@@ -36,10 +36,10 @@ TtkInitializeStubs(
     int exact = 0;
     const char *packageName = "Ttk";
     const char *errMsg = NULL;
-    ClientData pkgClientData = NULL;
+    void *pkgClientData = NULL;
     const char *actualVersion = Tcl_PkgRequireEx(
 	interp, packageName, version, exact, &pkgClientData);
-    const TtkStubs *stubsPtr = pkgClientData;
+    const TtkStubs *stubsPtr = (const TtkStubs *)pkgClientData;
 
     if (!actualVersion) {
 	return NULL;
