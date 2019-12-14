@@ -1029,7 +1029,7 @@ static ElementInfo ElementInfoTable[] = {
     { "Menubutton.dropdown", &GenericElementSpec, L"TOOLBAR",
     	TP_SPLITBUTTONDROPDOWN,toolbutton_statemap, NOPAD,0 },
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
-	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), 0 },
+	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
     	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
     { "Treeheading.border", &GenericElementSpec, L"HEADER",
