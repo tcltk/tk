@@ -102,7 +102,11 @@ proc ttk::treeview::Keynav {w dir} {
 #	Sets cursor, active element ...
 #
 proc ttk::treeview::Motion {w x y} {
-    set cursor {}
+    variable State
+
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor hresize]
+
+    set cursor $State(userConfCursor)
     set activeHeading {}
 
     switch -- [$w identify region $x $y] {
