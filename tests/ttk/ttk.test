@@ -507,6 +507,19 @@ test ttk-12.2 "-cursor option" -body {
     .b cget -cursor
 } -result arrow
 
+test ttk-12.2.1 "-cursor option, widget doesn't overwrite it" -setup {
+    ttk::treeview .tr
+    pack .tr
+    update
+} -body {
+    .tr configure -cursor X_cursor
+    event generate .tr <Motion>
+    update
+    .tr cget -cursor
+} -cleanup {
+    destroy .tr
+} -result {X_cursor}
+
 test ttk-12.3 "-borderwidth frame option" -body {
     destroy .t
     toplevel .t
