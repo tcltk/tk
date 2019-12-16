@@ -299,8 +299,8 @@ TkpGetNativeFont(
     }
 
     tkwin = (Tk_Window) ((TkWindow *) tkwin)->mainPtr->winPtr;
-    fontPtr = ckalloc(sizeof(WinFont));
-    InitFont(tkwin, GetStockObject(object), 0, fontPtr);
+    fontPtr = (WinFont *)ckalloc(sizeof(WinFont));
+    InitFont(tkwin, (HFONT)GetStockObject(object), 0, fontPtr);
 
     return (TkFont *) fontPtr;
 }
@@ -557,7 +557,7 @@ TkpGetFontFromAttributes(
     hFont = GetScreenFont(faPtr, faceName,
 	    (int)(TkFontGetPixels(tkwin, faPtr->size) + 0.5), 0.0);
     if (tkFontPtr == NULL) {
-	fontPtr = ckalloc(sizeof(WinFont));
+	fontPtr = (WinFont *)ckalloc(sizeof(WinFont));
     } else {
 	fontPtr = (WinFont *) tkFontPtr;
 	ReleaseFont(fontPtr);
@@ -660,6 +660,8 @@ WinFontFamilyEnumProc(
     WCHAR *faceName = lfPtr->elfLogFont.lfFaceName;
     Tcl_Obj *resultObj = (Tcl_Obj *) lParam;
     Tcl_DString faceString;
+    (void)tmPtr;
+    (void)fontType;
 
     Tcl_DStringInit(&faceString);
     Tcl_WCharToUtfDString(faceName, wcslen(faceName), &faceString);
@@ -1079,6 +1081,7 @@ Tk_DrawChars(
     HDC dc;
     WinFont *fontPtr;
     TkWinDCState state;
+    (void)tkfont;
 
     fontPtr = (WinFont *) gc->font;
     display->request++;
@@ -1227,6 +1230,7 @@ TkDrawAngledChars(
     HDC dc;
     WinFont *fontPtr;
     TkWinDCState state;
+    (void)tkfont;
 
     fontPtr = (WinFont *) gc->font;
     display->request++;
@@ -1744,6 +1748,7 @@ AllocFontFamily(
     WCHAR buf[LF_FACESIZE];
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)base;
 
     hFont = SelectObject(hdc, hFont);
     GetTextFaceW(hdc, LF_FACESIZE, buf);
@@ -2044,6 +2049,8 @@ WinFontCanUseProc(
     SubFont *subFontPtr;
     Tcl_DString faceString;
     Tcl_DString *nameTriedPtr;
+    (void)tmPtr;
+    (void)fontType;
 
     canUsePtr	    = (CanUse *) lParam;
     ch		    = canUsePtr->ch;
@@ -2558,6 +2565,11 @@ WinFontExistProc(
     int fontType,		/* Type of font (not used). */
     LPARAM lParam)		/* EnumFontData to hold result. */
 {
+    (void)lfPtr;
+    (void)tmPtr;
+    (void)fontType;
+    (void)lParam;
+
     return 0;
 }
 
@@ -2766,8 +2778,8 @@ LoadFontRanges(
 		segCount = subTable.segment.segCountX2 / 2;
 		cbData = segCount * sizeof(USHORT);
 
-		startCount = ckalloc(cbData);
-		endCount = ckalloc(cbData);
+		startCount = (USHORT *)ckalloc(cbData);
+		endCount = (USHORT *)ckalloc(cbData);
 
 		offset = encTable.offset + sizeof(subTable.segment);
 		GetFontData(hdc, cmapKey, (DWORD) offset, endCount, cbData);
@@ -2810,8 +2822,8 @@ LoadFontRanges(
 
 	segCount = 1;
 	cbData = segCount * sizeof(USHORT);
-	startCount = ckalloc(cbData);
-	endCount = ckalloc(cbData);
+	startCount = (USHORT *)ckalloc(cbData);
+	endCount = (USHORT *)ckalloc(cbData);
 	startCount[0] = 0x0000;
 	endCount[0] = 0x00ff;
     }
