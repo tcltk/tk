@@ -4249,12 +4249,7 @@ fi
     if test "$GCC" = yes; then :
 
 	CFLAGS_OPTIMIZE=-O2
-	CFLAGS_WARNING="-Wall -Wwrite-strings -Wsign-compare -Wpointer-arith"
-	case "${CC}" in
-	    *++)
-		CFLAGS_WARNING="${CFLAGS_WARNING} -Wunused-parameter"
-		;;
-	esac
+	CFLAGS_WARNING="-Wall -Wwrite-strings -Wsign-compare -Wpointer-arith -Wunused-parameter"
 
 else
 
@@ -6200,9 +6195,6 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 
     if test "${tcl_cv_type_64bit}" = none ; then
-
-$as_echo "#define MP_32BIT 1" >>confdefs.h
-
 
 $as_echo "#define TCL_WIDE_INT_IS_LONG 1" >>confdefs.h
 

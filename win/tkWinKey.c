@@ -99,6 +99,7 @@ TkpGetString(
     XKeyEvent *keyEv = &eventPtr->xkey;
     int len;
     char buf[4];
+    (void)winPtr;
 
     Tcl_DStringInit(dsPtr);
     if (keyEv->send_event == -1) {
@@ -155,6 +156,7 @@ XKeycodeToKeysym(
     int index)
 {
     int state = 0;
+    (void)display;
 
     if (index & 0x01) {
 	state |= ShiftMask;
@@ -504,7 +506,7 @@ TkpInitKeymapInfo(
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
+    dispPtr->modKeyCodes = (KeyCode *)ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -520,18 +522,18 @@ TkpInitKeymapInfo(
 	    }
 	}
 	if (dispPtr->numModKeyCodes >= arraySize) {
-	    KeyCode *new;
+	    KeyCode *newKey;
 
 	    /*
 	     * Ran out of space in the array; grow it.
 	     */
 
 	    arraySize *= 2;
-	    new = ckalloc(arraySize * sizeof(KeyCode));
-	    memcpy(new, dispPtr->modKeyCodes,
+	    newKey = (KeyCode *)ckalloc(arraySize * sizeof(KeyCode));
+	    memcpy(newKey, dispPtr->modKeyCodes,
 		    dispPtr->numModKeyCodes * sizeof(KeyCode));
 	    ckfree(dispPtr->modKeyCodes);
-	    dispPtr->modKeyCodes = new;
+	    dispPtr->modKeyCodes = newKey;
 	}
 	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
 	dispPtr->numModKeyCodes++;
@@ -555,6 +557,7 @@ TkpSetKeycodeAndState(
     int i;
     SHORT result;
     int shift;
+    (void)tkwin;
 
     eventPtr->xkey.keycode = 0;
     if (keySym == NoSymbol) {
@@ -611,6 +614,7 @@ XKeysymToKeycode(
 {
     int i;
     SHORT result;
+    (void)display;
 
     /*
      * We check our private map first for a virtual keycode, as VkKeyScan will
@@ -656,10 +660,11 @@ XModifierKeymap	*
 XGetModifierMapping(
     Display *display)
 {
-    XModifierKeymap *map = ckalloc(sizeof(XModifierKeymap));
+    XModifierKeymap *map = (XModifierKeymap *)ckalloc(sizeof(XModifierKeymap));
+    (void)display;
 
     map->max_keypermod = 1;
-    map->modifiermap = ckalloc(sizeof(KeyCode) * 8);
+    map->modifiermap = (KeyCode *)ckalloc(sizeof(KeyCode) * 8);
     map->modifiermap[ShiftMapIndex] = VK_SHIFT;
     map->modifiermap[LockMapIndex] = VK_CAPITAL;
     map->modifiermap[ControlMapIndex] = VK_CONTROL;
@@ -717,6 +722,8 @@ KeySym
 XStringToKeysym(
     _Xconst char *string)
 {
+    (void)string;
+
     return NoSymbol;
 }
 
@@ -740,6 +747,8 @@ char *
 XKeysymToString(
     KeySym keysym)
 {
+    (void)keysym;
+
     return NULL;
 }
 

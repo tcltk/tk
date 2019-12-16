@@ -233,13 +233,13 @@ GetNewID(
     TkMenuEntry *mePtr,		/* The menu we are working with. */
     WORD *menuIDPtr)		/* The resulting id. */
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     WORD curID = tsdPtr->lastCommandID;
 
     while (1) {
 	Tcl_HashEntry *commandEntryPtr;
-	int new;
+	int isNew;
 
 	/*
 	 * Try the next ID number, taking care to wrap rather than stray
@@ -255,8 +255,8 @@ GetNewID(
 	}
 
 	commandEntryPtr = Tcl_CreateHashEntry(&tsdPtr->commandTable,
-		INT2PTR(curID), &new);
-	if (new) {
+		INT2PTR(curID), &isNew);
+	if (isNew) {
 	    Tcl_SetHashValue(commandEntryPtr, mePtr);
 	    *menuIDPtr = curID;
 	    tsdPtr->lastCommandID = curID;
@@ -285,7 +285,7 @@ static void
 FreeID(
     WORD commandID)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -328,7 +328,7 @@ TkpNewMenu(
     HMENU winMenuHdl;
     Tcl_HashEntry *hashEntryPtr;
     int newEntry;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     winMenuHdl = CreatePopupMenu();
@@ -374,7 +374,7 @@ TkpDestroyMenu(
 {
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
     const char *searchName;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (menuPtr->menuFlags & MENU_RECONFIGURE_PENDING) {

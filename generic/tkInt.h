@@ -67,8 +67,8 @@
 #endif
 
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
-# define Tcl_WCharToUtfDString Tcl_UniCharToUtfDString
-# define Tcl_UtfToWCharDString Tcl_UtfToUniCharDString
+# define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
+# define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
 # define Tcl_Char16ToUtfDString Tcl_UniCharToUtfDString
 # define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
 #endif
