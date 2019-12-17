@@ -17,6 +17,28 @@ bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Jump %W %x %y }
 bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 
+if {[tk windowingsystem] eq "aqua"} {
+    bind TScrollbar <MouseWheel> {
+	ttk::scrollbar::Scroll %W [expr {-(%D)}] units
+    }
+    bind TScrollbar <Option-MouseWheel> {
+	ttk::scrollbar::Scroll %W [expr {-10 * (%D)}] units
+    }
+} else {
+    bind TScrollbar <MouseWheel> {
+	if {%D >= 0} {
+	    ttk::scrollbar::Scroll %W [expr {-%D/30}] units
+	} else {
+	    ttk::scrollbar::Scroll %W [expr {(29-%D)/30}] units
+	}
+    }
+}
+
+if {[tk windowingsystem] eq "x11"} {
+    bind TScrollbar <4> {ttk::scrollbar::Scroll %W -5 units}
+    bind TScrollbar <5> {ttk::scrollbar::Scroll %W 5 units}
+}
+
 proc ttk::scrollbar::Scroll {w n units} {
     set cmd [$w cget -command]
     if {$cmd ne ""} {
