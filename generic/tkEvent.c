@@ -1227,8 +1227,9 @@ Tk_HandleEvent(
       winPtr->inputContext = NULL;
     }
 
-    if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM) &&
-          winPtr->dispPtr->inputMethod != NULL) {
+    if (! (winPtr->flags & (TK_ALREADY_DEAD)) &&
+        (winPtr->dispPtr->flags & TK_DISPLAY_USE_IM) &&
+        winPtr->dispPtr->inputMethod != NULL) {
       if ((winPtr->flags & TK_TOP_LEVEL) &&
           winPtr->inputContext == NULL) {
         CreateXIC(winPtr);
