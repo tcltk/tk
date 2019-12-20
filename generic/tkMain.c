@@ -409,9 +409,10 @@ StdinProc(
     char *cmd;
     int code;
     size_t count;
-    InteractiveState *isPtr = clientData;
+    InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
+    (void)mask;
 
     count = (size_t)Tcl_Gets(chan, &isPtr->line);
 

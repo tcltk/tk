@@ -593,7 +593,7 @@ Tk_SetBackgroundFromBorder(
     Tk_Window tkwin,		/* Window whose background is to be set. */
     Tk_3DBorder border)		/* Token for border. */
 {
-    register TkBorder *borderPtr = (TkBorder *) border;
+    TkBorder *borderPtr = (TkBorder *) border;
 
     Tk_SetWindowBackground(tkwin, borderPtr->bgColorPtr->pixel);
 }
@@ -758,7 +758,7 @@ Tk_Draw3DPolygon(
 {
     XPoint poly[4], b1, b2, newB1, newB2;
     XPoint perp, c, shift1, shift2;	/* Used for handling parallel lines. */
-    register XPoint *p1Ptr, *p2Ptr;
+    XPoint *p1Ptr, *p2Ptr;
     TkBorder *borderPtr = (TkBorder *) border;
     GC gc;
     int i, lightOnLeft, dx, dy, parallel, pointsSeen;
@@ -955,7 +955,7 @@ Tk_Fill3DRectangle(
     int relief)			/* Indicates 3D effect: TK_RELIEF_FLAT,
 				 * TK_RELIEF_RAISED, or TK_RELIEF_SUNKEN. */
 {
-    register TkBorder *borderPtr = (TkBorder *) border;
+    TkBorder *borderPtr = (TkBorder *) border;
     int doubleBorder;
 
     /*
@@ -1026,7 +1026,7 @@ Tk_Fill3DPolygon(
 				 * TK_RELIEF_FLAT, TK_RELIEF_RAISED, or
 				 * TK_RELIEF_SUNKEN. */
 {
-    register TkBorder *borderPtr = (TkBorder *) border;
+    TkBorder *borderPtr = (TkBorder *) border;
 
     XFillPolygon(Tk_Display(tkwin), drawable, borderPtr->bgGC,
 	    pointPtr, numPoints, Complex, CoordModeOrigin);

@@ -202,6 +202,8 @@ TkpDrawHighlightBorder(
     int highlightWidth,
     Drawable drawable)
 {
+    (void)bgGC;
+
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
 

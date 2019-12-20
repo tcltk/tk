@@ -50,11 +50,11 @@ const char *ttkOrientStrings[] = {
 };
 
 int Ttk_GetOrientFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *resultPtr)
 {
     *resultPtr = TTK_ORIENT_HORIZONTAL;
     return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
-	    sizeof(char *), "orientation", 0, resultPtr);
+	    sizeof(char *), "orientation", 0, (int *)resultPtr);
 }
 
 /*
@@ -114,7 +114,7 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
  */
 void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
+    union {XEvent general; XVirtualEvent virt;} event;
 
     memset(&event, 0, sizeof(event));
     event.general.xany.type = VirtualEvent;
@@ -122,7 +122,7 @@ void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
     event.general.xany.send_event = False;
     event.general.xany.window = Tk_WindowId(tgtWin);
     event.general.xany.display = Tk_Display(tgtWin);
-    event.virtual.name = Tk_GetUid(eventName);
+    event.virt.name = Tk_GetUid(eventName);
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
@@ -148,7 +148,7 @@ int TtkEnumerateOptions(
 
 	if (specPtr->type == TK_OPTION_END && specPtr->clientData != NULL) {
 	    /* Chain to next option spec array: */
-	    specPtr = specPtr->clientData;
+	    specPtr = (const Tk_OptionSpec *)specPtr->clientData;
 	}
     }
     Tcl_SetObjResult(interp, result);

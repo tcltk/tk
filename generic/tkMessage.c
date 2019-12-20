@@ -180,7 +180,7 @@ static void		MessageWorldChanged(ClientData instanceData);
 static void		ComputeMessageGeometry(Message *msgPtr);
 static int		ConfigureMessage(Tcl_Interp *interp, Message *msgPtr,
 			    int objc, Tcl_Obj *const objv[], int flags);
-static void		DestroyMessage(char *memPtr);
+static void		DestroyMessage(void *memPtr);
 static void		DisplayMessage(ClientData clientData);
 
 /*
@@ -214,14 +214,15 @@ static const Tk_ClassProcs messageClass = {
 
 int
 Tk_MessageObjCmd(
-    ClientData clientData,	/* NULL. */
+    ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    register Message *msgPtr;
+    Message *msgPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
+    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -241,7 +242,7 @@ Tk_MessageObjCmd(
 
     optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
-    msgPtr = ckalloc(sizeof(Message));
+    msgPtr = (Message *)ckalloc(sizeof(Message));
     memset(msgPtr, 0, sizeof(Message));
 
     /*
@@ -306,7 +307,7 @@ MessageWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    register Message *msgPtr = clientData;
+    Message *msgPtr = (Message *)clientData;
     static const char *const optionStrings[] = { "cget", "configure", NULL };
     enum options { MESSAGE_CGET, MESSAGE_CONFIGURE };
     int index;
@@ -382,9 +383,9 @@ MessageWidgetObjCmd(
 
 static void
 DestroyMessage(
-    char *memPtr)		/* Info about message widget. */
+    void *memPtr)		/* Info about message widget. */
 {
-    register Message *msgPtr = (Message *) memPtr;
+    Message *msgPtr = (Message *) memPtr;
 
     msgPtr->flags |= MESSAGE_DELETED;
 
@@ -437,13 +438,14 @@ DestroyMessage(
 static int
 ConfigureMessage(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register Message *msgPtr,	/* Information about widget; may or may not
+    Message *msgPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],	/* Arguments. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
+    (void)flags;
 
     /*
      * Eliminate any existing trace on a variable monitored by the message.
@@ -478,7 +480,7 @@ ConfigureMessage(
 	    if (msgPtr->string != NULL) {
 		ckfree(msgPtr->string);
 	    }
-	    msgPtr->string = strcpy(ckalloc(strlen(value) + 1), value);
+	    msgPtr->string = strcpy((char *)ckalloc(strlen(value) + 1), value);
 	}
 	Tcl_TraceVar2(interp, msgPtr->textVarName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -527,7 +529,7 @@ MessageWorldChanged(
     XGCValues gcValues;
     GC gc = NULL;
     Tk_FontMetrics fm;
-    Message *msgPtr = instanceData;
+    Message *msgPtr = (Message *)instanceData;
 
     if (msgPtr->border != NULL) {
 	Tk_SetBackgroundFromBorder(msgPtr->tkwin, msgPtr->border);
@@ -582,7 +584,7 @@ MessageWorldChanged(
 
 static void
 ComputeMessageGeometry(
-    register Message *msgPtr)	/* Information about window. */
+    Message *msgPtr)	/* Information about window. */
 {
     int width, inc, height;
     int thisWidth, thisHeight, maxWidth;
@@ -666,8 +668,8 @@ static void
 DisplayMessage(
     ClientData clientData)	/* Information about window. */
 {
-    register Message *msgPtr = clientData;
-    register Tk_Window tkwin = msgPtr->tkwin;
+    Message *msgPtr = (Message *)clientData;
+    Tk_Window tkwin = msgPtr->tkwin;
     int x, y;
     int borderWidth = msgPtr->highlightWidth;
 
@@ -742,7 +744,7 @@ MessageEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    Message *msgPtr = clientData;
+    Message *msgPtr = (Message *)clientData;
 
     if (((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0))
 	    || (eventPtr->type == ConfigureNotify)) {
@@ -795,7 +797,7 @@ static void
 MessageCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    Message *msgPtr = clientData;
+    Message *msgPtr = (Message *)clientData;
 
     /*
      * This function could be invoked either because the window was destroyed
@@ -835,8 +837,10 @@ MessageTextVarProc(
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    register Message *msgPtr = clientData;
+    Message *msgPtr = (Message *)clientData;
     const char *value;
+    (void)name1;
+    (void)name2;
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -882,7 +886,7 @@ MessageTextVarProc(
 	ckfree(msgPtr->string);
     }
     msgPtr->numChars = Tcl_NumUtfChars(value, -1);
-    msgPtr->string = ckalloc(strlen(value) + 1);
+    msgPtr->string = (char *)ckalloc(strlen(value) + 1);
     strcpy(msgPtr->string, value);
     ComputeMessageGeometry(msgPtr);
 

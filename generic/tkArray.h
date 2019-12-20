@@ -273,7 +273,7 @@ AT##_Resize(AT **arrp, size_t newSize)						\
     } else {									\
 	int init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newSize - 1) + sizeof(AT);		\
-	*arrp = ckrealloc(*arrp, memSize);					\
+	*arrp = (AT *)ckrealloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
 	} else if (newSize < (*arrp)->size) {					\
@@ -484,7 +484,7 @@ AT##_Resize(AT **arrp, size_t newCapacity)					\
     } else {									\
 	int init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newCapacity - 1) + sizeof(AT);		\
-	*arrp = ckrealloc(*arrp, memSize);					\
+	*arrp = (AT *)ckrealloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
 	} else if (newCapacity < (*arrp)->size) {				\

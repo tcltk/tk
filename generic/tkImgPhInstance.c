@@ -212,7 +212,7 @@ TkImgPhotoGet(
     ClientData masterData)	/* Pointer to our master structure for the
 				 * image. */
 {
-    PhotoMaster *masterPtr = masterData;
+    PhotoMaster *masterPtr = (PhotoMaster *)masterData;
     PhotoInstance *instancePtr;
     Colormap colormap;
     int mono, nRed, nGreen, nBlue, numVisuals;
@@ -278,7 +278,7 @@ TkImgPhotoGet(
      * a new instance of the image.
      */
 
-    instancePtr = ckalloc(sizeof(PhotoInstance));
+    instancePtr = (PhotoInstance *)ckalloc(sizeof(PhotoInstance));
     instancePtr->masterPtr = masterPtr;
     instancePtr->display = Tk_Display(tkwin);
     instancePtr->colormap = Tk_Colormap(tkwin);
@@ -611,7 +611,7 @@ TkImgPhotoDisplay(
     int drawableX,int drawableY)/* Coordinates within drawable that correspond
 				 * to imageX and imageY. */
 {
-    PhotoInstance *instancePtr = clientData;
+    PhotoInstance *instancePtr = (PhotoInstance *)clientData;
 #ifndef TKPUTIMAGE_CAN_BLEND
     XVisualInfo visInfo = instancePtr->visualInfo;
 #endif
@@ -729,8 +729,9 @@ TkImgPhotoFree(
     Display *display)		/* Display containing window that used
 				 * image. */
 {
-    PhotoInstance *instancePtr = clientData;
+    PhotoInstance *instancePtr = (PhotoInstance *)clientData;
     ColorTable *colorPtr;
+    (void)display;
 
     if (instancePtr->refCount-- > 1) {
 	return;
@@ -829,7 +830,7 @@ TkImgPhotoInstanceSetSize(
 	     * such possibility.
 	     */
 
-	    newError = ckalloc(masterPtr->height * masterPtr->width
+	    newError = (schar *)ckalloc(masterPtr->height * masterPtr->width
 		    * 3 * sizeof(schar));
 
 	    /*
@@ -1058,13 +1059,13 @@ GetColorTable(
 	 * Re-use the existing entry.
 	 */
 
-	colorPtr = Tcl_GetHashValue(entry);
+	colorPtr = (ColorTable *)Tcl_GetHashValue(entry);
     } else {
 	/*
 	 * No color table currently available; need to make one.
 	 */
 
-	colorPtr = ckalloc(sizeof(ColorTable));
+	colorPtr = (ColorTable *)ckalloc(sizeof(ColorTable));
 
 	/*
 	 * The following line of code should not normally be needed due to the
@@ -1225,7 +1226,7 @@ AllocateColors(
 	    } else {
 		numColors = MAX(MAX(nRed, nGreen), nBlue);
 	    }
-	    colors = ckalloc(numColors * sizeof(XColor));
+	    colors = (XColor *)ckalloc(numColors * sizeof(XColor));
 
 	    for (i = 0; i < numColors; ++i) {
 		if (igam == 1.0) {
@@ -1245,7 +1246,7 @@ AllocateColors(
 	     */
 
 	    numColors = (mono) ? nRed: (nRed * nGreen * nBlue);
-	    colors = ckalloc(numColors * sizeof(XColor));
+	    colors = (XColor *)ckalloc(numColors * sizeof(XColor));
 
 	    if (!mono) {
 		/*
@@ -1289,7 +1290,7 @@ AllocateColors(
 	 * Now try to allocate the colors we've calculated.
 	 */
 
-	pixels = ckalloc(numColors * sizeof(unsigned long));
+	pixels = (unsigned long *)ckalloc(numColors * sizeof(unsigned long));
 	for (i = 0; i < numColors; ++i) {
 	    if (!XAllocColor(colorPtr->id.display, colorPtr->id.colormap,
 		    &colors[i])) {
@@ -1449,7 +1450,7 @@ DisposeColorTable(
     ClientData clientData)	/* Pointer to the ColorTable whose
 				 * colors are to be released. */
 {
-    ColorTable *colorPtr = clientData;
+    ColorTable *colorPtr = (ColorTable *)clientData;
     Tcl_HashEntry *entry;
 
     if (colorPtr->pixelMap != NULL) {
@@ -1509,7 +1510,7 @@ ReclaimColors(
 
     entry = Tcl_FirstHashEntry(&imgPhotoColorHash, &srch);
     while (entry != NULL) {
-	colorPtr = Tcl_GetHashValue(entry);
+	colorPtr = (ColorTable *)Tcl_GetHashValue(entry);
 	if ((colorPtr->id.display == id->display)
 		&& (colorPtr->id.colormap == id->colormap)
 		&& (colorPtr->liveRefCount == 0 )&& (colorPtr->numColors != 0)
@@ -1538,7 +1539,7 @@ ReclaimColors(
 
     entry = Tcl_FirstHashEntry(&imgPhotoColorHash, &srch);
     while ((entry != NULL) && (numColors > 0)) {
-	colorPtr = Tcl_GetHashValue(entry);
+	colorPtr = (ColorTable *)Tcl_GetHashValue(entry);
 	if ((colorPtr->id.display == id->display)
 		&& (colorPtr->id.colormap == id->colormap)
 		&& (colorPtr->liveRefCount == 0) && (colorPtr->numColors != 0)
@@ -1583,7 +1584,7 @@ TkImgDisposeInstance(
     ClientData clientData)	/* Pointer to the instance whose resources are
 				 * to be released. */
 {
-    PhotoInstance *instancePtr = clientData;
+    PhotoInstance *instancePtr = (PhotoInstance *)clientData;
     PhotoInstance *prevPtr;
 
     if (instancePtr->pixels != None) {
@@ -1693,7 +1694,7 @@ TkImgDitherInstance(
      * recovering from the failure.
      */
 
-    imagePtr->data = ckalloc(imagePtr->bytes_per_line * nLines);
+    imagePtr->data = (char *)ckalloc(imagePtr->bytes_per_line * nLines);
     bigEndian = imagePtr->bitmap_bit_order == MSBFirst;
     firstBit = bigEndian? (1 << (imagePtr->bitmap_unit - 1)): 1;
 

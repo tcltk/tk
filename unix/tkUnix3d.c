@@ -46,7 +46,7 @@ typedef struct {
 TkBorder *
 TkpGetBorder(void)
 {
-    UnixBorder *borderPtr = ckalloc(sizeof(UnixBorder));
+    UnixBorder *borderPtr = (UnixBorder *)ckalloc(sizeof(UnixBorder));
 
     borderPtr->solidGC = NULL;
     return (TkBorder *) borderPtr;

@@ -93,7 +93,7 @@ static void EndDrawing(Tk_Window tkwin, Drawable d) { }
  */
 static void DrawWidget(ClientData recordPtr)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
 
     corePtr->flags &= ~REDISPLAY_PENDING;
     if (Tk_IsMapped(corePtr->tkwin)) {
@@ -152,7 +152,7 @@ static int
 WidgetInstanceObjCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     const Ttk_Ensemble *commands = corePtr->widgetSpec->commands;
     int status;
 
@@ -187,7 +187,7 @@ WidgetInstanceObjCmd(
 static void
 WidgetInstanceObjCmdDeleted(ClientData clientData)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     corePtr->widgetCmd = NULL;
     if (corePtr->tkwin != NULL)
 	Tk_DestroyWindow(corePtr->tkwin);
@@ -262,7 +262,7 @@ static const unsigned CoreEventMask
 
 static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
 
     switch (eventPtr->type)
     {
@@ -329,7 +329,7 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
  */
 static void WidgetWorldChanged(ClientData clientData)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     SizeChanged(corePtr);
     TtkRedisplayWidget(corePtr);
 }
@@ -349,7 +349,7 @@ static const Tk_ClassProcs widgetClassProcs = {
 int TtkWidgetConstructorObjCmd(
     ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    WidgetSpec *widgetSpec = clientData;
+    WidgetSpec *widgetSpec = (WidgetSpec *)clientData;
     const char *className = widgetSpec->className;
     Tk_OptionTable optionTable =
 	Tk_CreateOptionTable(interp, widgetSpec->optionSpecs);
@@ -385,7 +385,7 @@ int TtkWidgetConstructorObjCmd(
      */
     recordPtr = ckalloc(widgetSpec->recordSize);
     memset(recordPtr, 0, widgetSpec->recordSize);
-    corePtr = recordPtr;
+    corePtr = (WidgetCore *)recordPtr;
 
     corePtr->tkwin	= tkwin;
     corePtr->interp 	= interp;
@@ -460,7 +460,7 @@ error:
 Ttk_Layout TtkWidgetGetLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     const char *styleName = 0;
 
     if (corePtr->styleObj)
@@ -482,10 +482,10 @@ Ttk_Layout TtkWidgetGetLayout(
 Ttk_Layout TtkWidgetGetOrientedLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr, Tcl_Obj *orientObj)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     const char *baseStyleName = 0;
     Tcl_DString styleName;
-    int orient = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orient = TTK_ORIENT_HORIZONTAL;
     Ttk_Layout layout;
 
     Tcl_DStringInit(&styleName);
@@ -522,6 +522,8 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
  */
 void TtkNullInitialize(Tcl_Interp *interp, void *recordPtr)
 {
+    (void)interp;
+    (void)recordPtr;
 }
 
 /* TtkNullPostConfigure --
@@ -529,6 +531,10 @@ void TtkNullInitialize(Tcl_Interp *interp, void *recordPtr)
  */
 int TtkNullPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
 {
+    (void)interp;
+    (void)clientData;
+    (void)mask;
+
     return TCL_OK;
 }
 
@@ -538,7 +544,7 @@ int TtkNullPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
  */
 int TtkCoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     int status = TCL_OK;
 
     if (mask & STYLE_CHANGED) {
@@ -553,6 +559,7 @@ int TtkCoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
  */
 void TtkNullCleanup(void *recordPtr)
 {
+    (void)recordPtr;
     return;
 }
 
@@ -561,7 +568,7 @@ void TtkNullCleanup(void *recordPtr)
  */
 void TtkWidgetDoLayout(void *clientData)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     Ttk_PlaceLayout(corePtr->layout,corePtr->state,Ttk_WinBox(corePtr->tkwin));
 }
 
@@ -570,7 +577,7 @@ void TtkWidgetDoLayout(void *clientData)
  */
 void TtkWidgetDisplay(void *recordPtr, Drawable d)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_DrawLayout(corePtr->layout, corePtr->state, d);
 }
 
@@ -579,7 +586,7 @@ void TtkWidgetDisplay(void *recordPtr, Drawable d)
  */
 int TtkWidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_LayoutSize(corePtr->layout, corePtr->state, widthPtr, heightPtr);
     return 1;
 }
@@ -593,7 +600,7 @@ int TtkWidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
 int TtkWidgetCgetCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Tcl_Obj *result;
 
     if (objc != 3) {
@@ -613,7 +620,7 @@ int TtkWidgetCgetCommand(
 int TtkWidgetConfigureCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Tcl_Obj *result;
 
     if (objc == 2) {
@@ -683,7 +690,7 @@ int TtkWidgetConfigureCommand(
 int TtkWidgetStateCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_StateSpec spec;
     int status;
     Ttk_State oldState, changed;
@@ -723,7 +730,7 @@ int TtkWidgetStateCommand(
 int TtkWidgetInstateCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_State state = corePtr->state;
     Ttk_StateSpec spec;
     int status = TCL_OK;
@@ -754,7 +761,7 @@ int TtkWidgetInstateCommand(
 int TtkWidgetIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    WidgetCore *corePtr = recordPtr;
+    WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_Element element;
     static const char *const whatTable[] = { "element", NULL };
     int x, y, what;

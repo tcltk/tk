@@ -144,7 +144,7 @@ declare 35 {
 # Utilities.
 #
 declare 40 {
-    int Ttk_GetOrientFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient)
+    int Ttk_GetOrientFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *orient)
 }
 
 

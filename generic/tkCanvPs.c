@@ -1194,6 +1194,8 @@ TkImageGetColor(
     double *red, double *green, double *blue)
 				/* Color data to return */
 {
+    (void)cdata;
+
     *red   = (double) GetRValue(pixel) / 255.0;
     *green = (double) GetGValue(pixel) / 255.0;
     *blue  = (double) GetBValue(pixel) / 255.0;
@@ -1262,6 +1264,7 @@ TkPostscriptImage(
     Visual *visual;
     TkColormapData cdata;
     Tcl_Obj *psObj;
+    (void)y;
 
     if (psInfoPtr->prepass) {
 	return TCL_OK;
@@ -1276,7 +1279,7 @@ TkPostscriptImage(
      */
 
     ncolors = visual->map_entries;
-    cdata.colors = ckalloc(sizeof(XColor) * ncolors);
+    cdata.colors = (XColor *)ckalloc(sizeof(XColor) * ncolors);
     cdata.ncolors = ncolors;
 
     if (visual->c_class == DirectColor || visual->c_class == TrueColor) {

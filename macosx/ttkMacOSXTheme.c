@@ -2089,7 +2089,7 @@ static void TrackElementDraw(
 {
     TrackElementData *data = clientData;
     TrackElement *elem = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     double from = 0, to = 100, value = 0, factor;
 
     Ttk_GetOrientFromObj(NULL, elem->orientObj, &orientation);
@@ -2227,7 +2227,7 @@ static void PbarElementDraw(
     Ttk_State state)
 {
     PbarElement *pbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL, phase = 0;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL, phase = 0;
     double value = 0, maximum = 100, factor;
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);
@@ -2302,7 +2302,7 @@ static void TroughElementSize(
     Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *scrollbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     SInt32 thickness = 15;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
@@ -2343,7 +2343,7 @@ static void TroughElementDraw(
     Ttk_State state)
 {
     ScrollbarElement *scrollbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     CGRect bounds = BoxToRect(d, b);
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *troughColor;
@@ -2385,7 +2385,7 @@ static void ThumbElementSize(
     Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *scrollbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_VERTICAL) {
@@ -2406,7 +2406,7 @@ static void ThumbElementDraw(
     Ttk_State state)
 {
     ScrollbarElement *scrollbar = elementRecord;
-    int orientation = TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
 
