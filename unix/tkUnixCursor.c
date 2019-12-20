@@ -338,7 +338,7 @@ TkGetCursorByName(
     }
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }
@@ -608,7 +608,7 @@ TkCreateCursorFromData(
     Tk_FreePixmap(display, maskPixmap);
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }

@@ -179,6 +179,8 @@ typedef struct TkCaret {
  * specific data, since each thread will have its own TkDisplay structure.
  */
 
+typedef enum TkLockUsage {LU_IGNORE, LU_CAPS, LU_SHIFT} TkLockUsage;
+
 typedef struct TkDisplay {
     Display *display;		/* Xlib's info about display. */
     struct TkDisplay *nextPtr;	/* Next in list of all displays. */
@@ -220,7 +222,7 @@ typedef struct TkDisplay {
     unsigned int altModMask;	/* Has one bit set to indicate the modifier
 				 * corresponding to the "Meta" key. If no such
 				 * modifier, then this is zero. */
-    enum {LU_IGNORE, LU_CAPS, LU_SHIFT} lockUsage;
+    TkLockUsage lockUsage;
 				/* Indicates how to interpret lock
 				 * modifier. */
     int numModKeyCodes;		/* Number of entries in modKeyCodes array

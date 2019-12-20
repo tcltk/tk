@@ -1746,7 +1746,7 @@ AllocFontFamily(
     Tcl_DString faceString;
     Tcl_Encoding encoding;
     WCHAR buf[LF_FACESIZE];
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     (void)base;
 
@@ -2421,7 +2421,7 @@ CanUseFallback(
     if (fontPtr->numSubFonts >= SUBFONT_SPACE) {
 	SubFont *newPtr;
 
-    	newPtr = ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
+    	newPtr = (SubFont *)ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
 	memcpy(newPtr, fontPtr->subFontArray,
 		fontPtr->numSubFonts * sizeof(SubFont));
 	if (fontPtr->subFontArray != fontPtr->staticSubFonts) {

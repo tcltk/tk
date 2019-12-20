@@ -378,7 +378,7 @@ PolygonCoords(
 	 * another point to close the polygon.
 	 */
 
-	polyPtr->coordPtr = ckalloc(sizeof(double) * (objc+2));
+	polyPtr->coordPtr = (double *)ckalloc(sizeof(double) * (objc+2));
 	polyPtr->pointsAllocated = numPoints+1;
     }
     for (i = objc-1; i >= 0; i--) {
@@ -571,6 +571,7 @@ DeletePolygon(
     Display *display)		/* Display containing window for canvas. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
+    (void)canvas;
 
     Tk_DeleteOutline(display, &polyPtr->outline);
     if (polyPtr->coordPtr != NULL) {
@@ -827,7 +828,7 @@ TkFillPolygon(
     if (numPoints <= MAX_STATIC_POINTS) {
 	pointPtr = staticPoints;
     } else {
-	pointPtr = ckalloc(numPoints * sizeof(XPoint));
+	pointPtr = (XPoint *)ckalloc(numPoints * sizeof(XPoint));
     }
 
     for (i=0, pPtr=pointPtr ; i<numPoints; i+=1, coordPtr+=2, pPtr++) {
@@ -884,6 +885,10 @@ DisplayPolygon(
     Tk_State state = itemPtr->state;
     Pixmap stipple = polyPtr->fillStipple;
     double linewidth = polyPtr->outline.width;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
 
     if (((polyPtr->fillGC == NULL) && (polyPtr->outline.gc == NULL)) ||
 	    (polyPtr->numPoints < 1) ||
@@ -973,7 +978,7 @@ DisplayPolygon(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    pointPtr = staticPoints;
 	} else {
-	    pointPtr = ckalloc(numPoints * sizeof(XPoint));
+	    pointPtr = (XPoint *)ckalloc(numPoints * sizeof(XPoint));
 	}
 	numPoints = polyPtr->smooth->coordProc(canvas, polyPtr->coordPtr,
 		polyPtr->numPoints, polyPtr->splineSteps, pointPtr, NULL);
@@ -1040,7 +1045,7 @@ PolygonInsert(
     while (beforeThis < 0) {
 	beforeThis += length;
     }
-    newCoordPtr = ckalloc(sizeof(double) * (length + 2 + objc));
+    newCoordPtr = (double *)ckalloc(sizeof(double) * (length + 2 + objc));
     for (i=0; i<beforeThis; i++) {
 	newCoordPtr[i] = polyPtr->coordPtr[i];
     }
@@ -1290,7 +1295,7 @@ PolygonToPoint(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    polyPoints = staticSpace;
 	} else {
-	    polyPoints = ckalloc(2 * numPoints * sizeof(double));
+	    polyPoints = (double *)ckalloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = polyPtr->smooth->coordProc(canvas, polyPtr->coordPtr,
 		polyPtr->numPoints, polyPtr->splineSteps, NULL, polyPoints);
@@ -1499,7 +1504,7 @@ PolygonToArea(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    polyPoints = staticSpace;
 	} else {
-	    polyPoints = ckalloc(2 * numPoints * sizeof(double));
+	    polyPoints = (double *)ckalloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = polyPtr->smooth->coordProc(canvas, polyPtr->coordPtr,
 		polyPtr->numPoints, polyPtr->splineSteps, NULL, polyPoints);
@@ -1678,6 +1683,7 @@ GetPolygonIndex(
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     const char *string = Tcl_GetString(obj);
+    (void)canvas;
 
     if (string[0] == 'e') {
 	if (strncmp(string, "end", obj->length) != 0) {
@@ -1851,6 +1857,7 @@ PolygonToPostscript(
     double width;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
+    (void)prepass;
 
     if (polyPtr->numPoints < 2 || polyPtr->coordPtr == NULL) {
 	return TCL_OK;

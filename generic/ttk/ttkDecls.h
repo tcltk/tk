@@ -131,7 +131,7 @@ TTKAPI Tcl_Obj *	Ttk_NewBoxObj(Ttk_Box box);
 /* Slot 39 is reserved */
 /* 40 */
 TTKAPI int		Ttk_GetOrientFromObj(Tcl_Interp *interp,
-				Tcl_Obj *objPtr, int *orient);
+				Tcl_Obj *objPtr, Ttk_Orient *orient);
 
 typedef struct TtkStubs {
     int magic;
@@ -179,7 +179,7 @@ typedef struct TtkStubs {
     void (*reserved37)(void);
     void (*reserved38)(void);
     void (*reserved39)(void);
-    int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient); /* 40 */
+    int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *orient); /* 40 */
 } TtkStubs;
 
 extern const TtkStubs *ttkStubsPtr;

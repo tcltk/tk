@@ -39,7 +39,7 @@ static Tk_OptionSpec SeparatorOptionSpecs[] = {
 static Ttk_Layout SeparatorGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
-    Separator *sep = recordPtr;
+    Separator *sep = (Separator *)recordPtr;
     return TtkWidgetGetOrientedLayout(
 	interp, theme, recordPtr, sep->separator.orientObj);
 }

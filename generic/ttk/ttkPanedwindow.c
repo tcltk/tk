@@ -111,7 +111,7 @@ static Pane *CreatePane(Tcl_Interp *interp, Paned *pw, Tk_Window slaveWindow)
 {
     Tk_OptionTable optionTable = pw->paned.paneOptionTable;
     void *record = ckalloc(sizeof(Pane));
-    Pane *pane = record;
+    Pane *pane = (Pane *)record;
 
     memset(record, 0, sizeof(Pane));
     if (Tk_InitOptions(interp, record, optionTable, slaveWindow) != TCL_OK) {
@@ -188,14 +188,14 @@ error:
 
 static int ShoveUp(Paned *pw, int i, int pos)
 {
-    Pane *pane = Ttk_SlaveData(pw->paned.mgr, i);
+    Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, i);
     int sashThickness = pw->paned.sashThickness;
 
     if (i == 0) {
 	if (pos < 0)
 	    pos = 0;
     } else {
-	Pane *prevPane = Ttk_SlaveData(pw->paned.mgr, i-1);
+	Pane *prevPane = (Pane *)Ttk_SlaveData(pw->paned.mgr, i-1);
 	if (pos < prevPane->sashPos + sashThickness)
 	    pos = ShoveUp(pw, i-1, pos - sashThickness) + sashThickness;
     }
@@ -208,13 +208,13 @@ static int ShoveUp(Paned *pw, int i, int pos)
  */
 static int ShoveDown(Paned *pw, int i, int pos)
 {
-    Pane *pane = Ttk_SlaveData(pw->paned.mgr,i);
+    Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr,i);
     int sashThickness = pw->paned.sashThickness;
 
     if (i == Ttk_NumberSlaves(pw->paned.mgr) - 1) {
 	pos = pane->sashPos; /* Sentinel value == master window size */
     } else {
-	Pane *nextPane = Ttk_SlaveData(pw->paned.mgr,i+1);
+	Pane *nextPane = (Pane *)Ttk_SlaveData(pw->paned.mgr,i+1);
 	if (pos + sashThickness > nextPane->sashPos)
 	    pos = ShoveDown(pw, i+1, pos + sashThickness) - sashThickness;
     }
@@ -229,7 +229,7 @@ static int ShoveDown(Paned *pw, int i, int pos)
  */
 static int PanedSize(void *recordPtr, int *widthPtr, int *heightPtr)
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     int nPanes = Ttk_NumberSlaves(pw->paned.mgr);
     int nSashes = nPanes - 1;
     int sashThickness = pw->paned.sashThickness;
@@ -238,7 +238,7 @@ static int PanedSize(void *recordPtr, int *widthPtr, int *heightPtr)
 
     if (pw->paned.orient == TTK_ORIENT_HORIZONTAL) {
 	for (index = 0; index < nPanes; ++index) {
-	    Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
+	    Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, index);
 	    Tk_Window slaveWindow = Ttk_SlaveWindow(pw->paned.mgr, index);
 
 	    if (height < Tk_ReqHeight(slaveWindow))
@@ -248,7 +248,7 @@ static int PanedSize(void *recordPtr, int *widthPtr, int *heightPtr)
 	width += nSashes * sashThickness;
     } else {
 	for (index = 0; index < nPanes; ++index) {
-	    Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
+	    Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, index);
 	    Tk_Window slaveWindow = Ttk_SlaveWindow(pw->paned.mgr, index);
 
 	    if (width < Tk_ReqWidth(slaveWindow))
@@ -278,7 +278,7 @@ static void AdjustPanes(Paned *pw)
     int index;
 
     for (index = 0; index < Ttk_NumberSlaves(pw->paned.mgr); ++index) {
-	Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
+	Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, index);
 	int size = pane->sashPos - pos;
 	pane->reqSize = size >= 0 ? size : 0;
 	pos = pane->sashPos + sashThickness;
@@ -316,7 +316,7 @@ static void PlaceSashes(Paned *pw, int width, int height)
     /* Compute total required size and total available weight:
      */
     for (i = 0; i < nPanes; ++i) {
-	Pane *pane = Ttk_SlaveData(mgr, i);
+	Pane *pane = (Pane *)Ttk_SlaveData(mgr, i);
 	reqSize += pane->reqSize;
 	totalWeight += pane->weight * (pane->reqSize != 0);
     }
@@ -340,7 +340,7 @@ static void PlaceSashes(Paned *pw, int width, int height)
      */
     pos = 0;
     for (i = 0; i < nPanes; ++i) {
-	Pane *pane = Ttk_SlaveData(mgr, i);
+	Pane *pane = (Pane *)Ttk_SlaveData(mgr, i);
 	int weight = pane->weight * (pane->reqSize != 0);
 	int size = pane->reqSize + delta * weight;
 
@@ -375,7 +375,7 @@ static void PlacePanes(Paned *pw)
     int index;
 
     for (index = 0; index < Ttk_NumberSlaves(pw->paned.mgr); ++index) {
-	Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
+	Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, index);
 	int size = pane->sashPos - pos;
 
 	if (size > 0) {
@@ -398,15 +398,15 @@ static void PlacePanes(Paned *pw)
 
 static void PanedPlaceSlaves(void *managerData)
 {
-    Paned *pw = managerData;
+    Paned *pw = (Paned *)managerData;
     PlaceSashes(pw, Tk_Width(pw->core.tkwin), Tk_Height(pw->core.tkwin));
     PlacePanes(pw);
 }
 
 static void PaneRemoved(void *managerData, int index)
 {
-    Paned *pw = managerData;
-    Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
+    Paned *pw = (Paned *)managerData;
+    Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, index);
     DestroyPane(pw, pane);
 }
 
@@ -447,8 +447,8 @@ static int AddPane(
  */
 static int PaneRequest(void *managerData, int index, int width, int height)
 {
-    Paned *pw = managerData;
-    Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
+    Paned *pw = (Paned *)managerData;
+    Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, index);
     Tk_Window slaveWindow = Ttk_SlaveWindow(pw->paned.mgr, index);
     int horizontal = pw->paned.orient == TTK_ORIENT_HORIZONTAL;
 
@@ -482,7 +482,7 @@ static Ttk_ManagerSpec PanedManagerSpec = {
 static const unsigned PanedEventMask = LeaveWindowMask;
 static void PanedEventProc(ClientData clientData, XEvent *eventPtr)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     if (   eventPtr->type == LeaveNotify
 	&& eventPtr->xcrossing.detail == NotifyInferior)
     {
@@ -496,7 +496,7 @@ static void PanedEventProc(ClientData clientData, XEvent *eventPtr)
 
 static void PanedInitialize(Tcl_Interp *interp, void *recordPtr)
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
 
     Tk_CreateEventHandler(pw->core.tkwin,
 	PanedEventMask, PanedEventProc, recordPtr);
@@ -508,7 +508,7 @@ static void PanedInitialize(Tcl_Interp *interp, void *recordPtr)
 
 static void PanedCleanup(void *recordPtr)
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
 
     if (pw->paned.sashLayout)
 	Ttk_FreeLayout(pw->paned.sashLayout);
@@ -519,9 +519,10 @@ static void PanedCleanup(void *recordPtr)
 
 /* Post-configuration hook.
  */
-static int PanedPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
+static int PanedPostConfigure(Tcl_Interp *dummy, void *clientData, int mask)
 {
-    Paned *pw = clientData;
+    Paned *pw = (Paned *)clientData;
+    (void)dummy;
 
     if (mask & GEOMETRY_CHANGED) {
 	/* User has changed -width or -height.
@@ -542,7 +543,7 @@ static int PanedPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
 static Ttk_Layout PanedGetLayout(
     Tcl_Interp *interp, Ttk_Theme themePtr, void *recordPtr)
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     Ttk_Layout panedLayout = TtkWidgetGetLayout(interp, themePtr, recordPtr);
 
     if (panedLayout) {
@@ -580,7 +581,7 @@ static Ttk_Layout PanedGetLayout(
  */
 static Ttk_Layout SashLayout(Paned *pw, int index)
 {
-    Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
+    Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, index);
     int thickness = pw->paned.sashThickness,
 	height = Tk_Height(pw->core.tkwin),
 	width = Tk_Width(pw->core.tkwin),
@@ -602,7 +603,7 @@ static void DrawSash(Paned *pw, int index, Drawable d)
 
 static void PanedDisplay(void *recordPtr, Drawable d)
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     int i, nSashes = Ttk_NumberSlaves(pw->paned.mgr) - 1;
 
     TtkWidgetDisplay(recordPtr, d);
@@ -620,7 +621,7 @@ static void PanedDisplay(void *recordPtr, Drawable d)
 static int PanedAddCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     Tk_Window slaveWindow;
 
     if (objc < 3) {
@@ -645,7 +646,7 @@ static int PanedAddCommand(
 static int PanedInsertCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     int nSlaves = Ttk_NumberSlaves(pw->paned.mgr);
     int srcIndex, destIndex;
     Tk_Window slaveWindow;
@@ -680,7 +681,7 @@ static int PanedInsertCommand(
 
     return objc == 4 ? TCL_OK :
 	ConfigurePane(interp, pw,
-		Ttk_SlaveData(pw->paned.mgr, destIndex),
+		(Pane *)Ttk_SlaveData(pw->paned.mgr, destIndex),
 		Ttk_SlaveWindow(pw->paned.mgr, destIndex),
 		objc-4,objv+4);
 }
@@ -690,7 +691,7 @@ static int PanedInsertCommand(
 static int PanedForgetCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     int paneIndex;
 
     if (objc != 3) {
@@ -717,7 +718,7 @@ static int PanedIdentifyCommand(
     static const char *const whatTable[] = { "element", "sash", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_SASH };
     int what = IDENTIFY_SASH;
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     int sashThickness = pw->paned.sashThickness;
     int nSashes = Ttk_NumberSlaves(pw->paned.mgr) - 1;
     int x, y, pos;
@@ -738,7 +739,7 @@ static int PanedIdentifyCommand(
 
     pos = pw->paned.orient == TTK_ORIENT_HORIZONTAL ? x : y;
     for (index = 0; index < nSashes; ++index) {
-	Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
+	Pane *pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, index);
 	if (pane->sashPos <= pos && pos <= pane->sashPos + sashThickness) {
 	    /* Found it. */
 	    switch (what) {
@@ -768,7 +769,7 @@ static int PanedIdentifyCommand(
 static int PanedPaneCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     int paneIndex;
     Tk_Window slaveWindow;
     Pane *pane;
@@ -784,7 +785,7 @@ static int PanedPaneCommand(
 	return TCL_ERROR;
     }
 
-    pane = Ttk_SlaveData(pw->paned.mgr, paneIndex);
+    pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, paneIndex);
     slaveWindow = Ttk_SlaveWindow(pw->paned.mgr, paneIndex);
 
     switch (objc) {
@@ -805,7 +806,7 @@ static int PanedPaneCommand(
 static int PanedPanesCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     Ttk_Manager *mgr = pw->paned.mgr;
     Tcl_Obj *panes;
     int i;
@@ -832,7 +833,7 @@ static int PanedPanesCommand(
 static int PanedSashposCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Paned *pw = recordPtr;
+    Paned *pw = (Paned *)recordPtr;
     int sashIndex, position = -1;
     Pane *pane;
 
@@ -850,7 +851,7 @@ static int PanedSashposCommand(
 	return TCL_ERROR;
     }
 
-    pane = Ttk_SlaveData(pw->paned.mgr, sashIndex);
+    pane = (Pane *)Ttk_SlaveData(pw->paned.mgr, sashIndex);
 
     if (objc == 3) {
 	Tcl_SetObjResult(interp, Tcl_NewIntObj(pane->sashPos));
@@ -923,15 +924,19 @@ typedef struct {
 static Ttk_ElementOptionSpec SashElementOptions[] = {
     { "-sashthickness", TK_OPTION_INT,
 	    offsetof(SashElement,thicknessObj), "5" },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void SashElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    SashElement *sash = elementRecord;
+    SashElement *sash = (SashElement *)elementRecord;
     int thickness = DEFAULT_SASH_THICKNESS;
+    (void)dummy;
+    (void)tkwin;
+    (void)paddingPtr;
+
     Tcl_GetIntFromObj(NULL, sash->thicknessObj, &thickness);
     *widthPtr = *heightPtr = thickness;
 }

@@ -137,7 +137,7 @@ static void		TagBindEvent(TkText *textPtr, XEvent *eventPtr,
 
 int
 TkTextTagCmd(
-    register TkText *textPtr,	/* Information about text widget. */
+    TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
@@ -154,7 +154,7 @@ TkTextTagCmd(
 	TAG_REMOVE
     };
     int optionIndex, i;
-    register TkTextTag *tagPtr;
+    TkTextTag *tagPtr;
     TkTextIndex index1, index2;
 
     if (objc < 3) {
@@ -584,7 +584,7 @@ TkTextTagCmd(
 
 		continue;
 	    }
-	    tagPtr = Tcl_GetHashValue(hPtr);
+	    tagPtr = (TkTextTag *)Tcl_GetHashValue(hPtr);
 	    if (tagPtr == textPtr->selTagPtr) {
 		continue;
 	    }
@@ -645,12 +645,12 @@ TkTextTagCmd(
 	    Tcl_HashSearch search;
 	    Tcl_HashEntry *hPtr;
 
-	    arrayPtr = ckalloc(textPtr->sharedTextPtr->numTags
+	    arrayPtr = (TkTextTag **)ckalloc(textPtr->sharedTextPtr->numTags
 		    * sizeof(TkTextTag *));
 	    for (i=0, hPtr = Tcl_FirstHashEntry(
 		    &textPtr->sharedTextPtr->tagTable, &search);
 		    hPtr != NULL; i++, hPtr = Tcl_NextHashEntry(&search)) {
-		arrayPtr[i] = Tcl_GetHashValue(hPtr);
+		arrayPtr[i] = (TkTextTag *)Tcl_GetHashValue(hPtr);
 	    }
 
 	    /*
@@ -986,7 +986,7 @@ TkTextCreateTag(
     int *newTag)		/* If non-NULL, then return 1 if new, or 0 if
 				 * already exists. */
 {
-    register TkTextTag *tagPtr;
+    TkTextTag *tagPtr;
     Tcl_HashEntry *hPtr = NULL;
     int isNew;
     const char *name;
@@ -1009,9 +1009,9 @@ TkTextCreateTag(
 	    *newTag = isNew;
 	}
 	if (!isNew) {
-	    return Tcl_GetHashValue(hPtr);
+	    return (TkTextTag *)Tcl_GetHashValue(hPtr);
 	}
-	name = Tcl_GetHashKey(&textPtr->sharedTextPtr->tagTable, hPtr);
+	name = (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->tagTable, hPtr);
     }
 
     /*
@@ -1019,7 +1019,7 @@ TkTextCreateTag(
      * to it to the hash table entry.
      */
 
-    tagPtr = ckalloc(sizeof(TkTextTag));
+    tagPtr = (TkTextTag *)ckalloc(sizeof(TkTextTag));
     tagPtr->name = name;
     tagPtr->textPtr = NULL;
     tagPtr->toggleCount = 0;
@@ -1118,7 +1118,7 @@ FindTag(
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->tagTable,
 	    Tcl_GetString(tagName));
     if (hPtr != NULL) {
-	return Tcl_GetHashValue(hPtr);
+	return (TkTextTag *)Tcl_GetHashValue(hPtr);
     }
     if (interp != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -1158,7 +1158,7 @@ FindTag(
 void
 TkTextDeleteTag(
     TkText *textPtr,		/* Info about overall widget. */
-    register TkTextTag *tagPtr)	/* Tag being deleted. */
+    TkTextTag *tagPtr)	/* Tag being deleted. */
 {
     TkTextIndex first, last;
 
@@ -1216,7 +1216,7 @@ TkTextDeleteTag(
 void
 TkTextFreeTag(
     TkText *textPtr,		/* Info about overall widget. */
-    register TkTextTag *tagPtr)	/* Tag being deleted. */
+    TkTextTag *tagPtr)	/* Tag being deleted. */
 {
     int i;
 
@@ -1295,7 +1295,7 @@ SortTags(
     TkTextTag **tagArrayPtr)	/* Pointer to array of pointers. */
 {
     int i, j, prio;
-    register TkTextTag **tagPtrPtr;
+    TkTextTag **tagPtrPtr;
     TkTextTag **maxPtrPtr, *tmp;
 
     if (numTags < 2) {
@@ -1379,7 +1379,7 @@ ChangeTagPriority(
     int prio)			/* New priority for tag. */
 {
     int low, high, delta;
-    register TkTextTag *tagPtr2;
+    TkTextTag *tagPtr2;
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
 
@@ -1412,7 +1412,7 @@ ChangeTagPriority(
     }
     for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->tagTable, &search);
 	    hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	tagPtr2 = Tcl_GetHashValue(hPtr);
+	tagPtr2 = (TkTextTag *)Tcl_GetHashValue(hPtr);
 	if ((tagPtr2->priority >= low) && (tagPtr2->priority <= high)) {
 	    tagPtr2->priority += delta;
 	}
@@ -1443,7 +1443,7 @@ TkTextBindProc(
     ClientData clientData,	/* Pointer to canvas structure. */
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
-    TkText *textPtr = clientData;
+    TkText *textPtr = (TkText *)clientData;
     int repick = 0;
 
     textPtr->refCount++;
@@ -1529,7 +1529,7 @@ TkTextBindProc(
 
 void
 TkTextPickCurrent(
-    register TkText *textPtr,	/* Text widget in which to select current
+    TkText *textPtr,	/* Text widget in which to select current
 				 * character. */
     XEvent *eventPtr)		/* Event describing location of mouse cursor.
 				 * Must be EnterWindow, LeaveWindow,
@@ -1633,7 +1633,7 @@ TkTextPickCurrent(
     SortTags(textPtr->numCurTags, textPtr->curTagArrayPtr);
     if (numNewTags > 0) {
 	size = numNewTags * sizeof(TkTextTag *);
-	copyArrayPtr = ckalloc(size);
+	copyArrayPtr = (TkTextTag **)ckalloc(size);
 	memcpy(copyArrayPtr, newArrayPtr, size);
 	for (i = 0; i < textPtr->numCurTags; i++) {
 	    for (j = 0; j < numNewTags; j++) {
@@ -1737,7 +1737,7 @@ TagBindEvent(
      */
 
     if (numTags > NUM_BIND_TAGS) {
-	nameArrPtr = ckalloc(numTags * sizeof(const char *));
+	nameArrPtr = (const char **)ckalloc(numTags * sizeof(const char *));
     } else {
 	nameArrPtr = nameArray;
     }

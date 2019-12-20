@@ -57,8 +57,8 @@ TkStateParseProc(
     int flags = PTR2INT(clientData);
     size_t length;
     Tcl_Obj *msgObj;
-
-    register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+    Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+    (void)tkwin;
 
     if (value == NULL || *value == 0) {
 	*statePtr = TK_STATE_NULL;
@@ -126,7 +126,7 @@ TkStateParseProc(
 
 const char *
 TkStatePrintProc(
-    ClientData clientData,	/* Ignored. */
+    ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
@@ -134,7 +134,10 @@ TkStatePrintProc(
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+    Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+    (void)dummy;
+    (void)tkwin;
+    (void)freeProcPtr;
 
     switch (*statePtr) {
     case TK_STATE_NORMAL:
@@ -170,7 +173,7 @@ TkStatePrintProc(
 
 int
 TkOrientParseProc(
-    ClientData clientData,	/* some flags.*/
+    ClientData dummy,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
@@ -179,8 +182,9 @@ TkOrientParseProc(
 {
     int c;
     size_t length;
-
-    register int *orientPtr = (int *) (widgRec + offset);
+    int *orientPtr = (int *) (widgRec + offset);
+    (void)dummy;
+    (void)tkwin;
 
     if (value == NULL || *value == 0) {
 	*orientPtr = 0;
@@ -229,7 +233,7 @@ TkOrientParseProc(
 
 const char *
 TkOrientPrintProc(
-    ClientData clientData,	/* Ignored. */
+    ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
@@ -237,7 +241,10 @@ TkOrientPrintProc(
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register int *statePtr = (int *) (widgRec + offset);
+    int *statePtr = (int *) (widgRec + offset);
+    (void)dummy;
+    (void)tkwin;
+    (void)freeProcPtr;
 
     if (*statePtr) {
 	return "vertical";
@@ -410,7 +417,7 @@ TkOffsetParseProc(
 
 const char *
 TkOffsetPrintProc(
-    ClientData clientData,	/* not used */
+    ClientData dummy,	/* not used */
     Tk_Window tkwin,		/* not used */
     char *widgRec,		/* Widget structure record */
     int offset,			/* Offset of tile in record */
@@ -418,12 +425,14 @@ TkOffsetPrintProc(
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *) (widgRec + offset);
     char *p, *q;
+    (void)dummy;
+    (void)tkwin;
 
     if (offsetPtr->flags & TK_OFFSET_INDEX) {
 	if (offsetPtr->flags >= INT_MAX) {
 	    return "end";
 	}
-	p = ckalloc(32);
+	p = (char *)ckalloc(32);
 	sprintf(p, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
@@ -453,7 +462,7 @@ TkOffsetPrintProc(
 	    return "se";
 	}
     }
-    q = p = ckalloc(32);
+    q = p = (char *)ckalloc(32);
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
@@ -511,14 +520,16 @@ TkPixelParseProc(
 
 const char *
 TkPixelPrintProc(
-    ClientData clientData,	/* not used */
+    ClientData dummy,	/* not used */
     Tk_Window tkwin,		/* not used */
     char *widgRec,		/* Widget structure record */
     int offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     double *doublePtr = (double *) (widgRec + offset);
-    char *p = ckalloc(24);
+    char *p = (char *)ckalloc(24);
+    (void)dummy;
+    (void)tkwin;
 
     Tcl_PrintDouble(NULL, *doublePtr, p);
     *freeProcPtr = TCL_DYNAMIC;
@@ -1086,7 +1097,7 @@ TkBackgroundEvalObjv(
 Tcl_Command
 TkMakeEnsemble(
     Tcl_Interp *interp,
-    const char *namespace,
+    const char *namesp,
     const char *name,
     ClientData clientData,
     const TkEnsemble map[])
@@ -1103,11 +1114,11 @@ TkMakeEnsemble(
 
     Tcl_DStringInit(&ds);
 
-    namespacePtr = Tcl_FindNamespace(interp, namespace, NULL, 0);
+    namespacePtr = Tcl_FindNamespace(interp, namesp, NULL, 0);
     if (namespacePtr == NULL) {
-	namespacePtr = Tcl_CreateNamespace(interp, namespace, NULL, NULL);
+	namespacePtr = Tcl_CreateNamespace(interp, namesp, NULL, NULL);
 	if (namespacePtr == NULL) {
-	    Tcl_Panic("failed to create namespace \"%s\"", namespace);
+	    Tcl_Panic("failed to create namespace \"%s\"", namesp);
 	}
     }
 
@@ -1123,8 +1134,8 @@ TkMakeEnsemble(
     }
 
     Tcl_DStringSetLength(&ds, 0);
-    Tcl_DStringAppend(&ds, namespace, -1);
-    if (!(strlen(namespace) == 2 && namespace[1] == ':')) {
+    Tcl_DStringAppend(&ds, namesp, -1);
+    if (!(strlen(namesp) == 2 && namesp[1] == ':')) {
 	Tcl_DStringAppend(&ds, "::", -1);
     }
     Tcl_DStringAppend(&ds, name, -1);
@@ -1176,7 +1187,7 @@ TkSendVirtualEvent(
     const char *eventName,
     Tcl_Obj *detail)
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
+    union {XEvent general; XVirtualEvent virt;} event;
 
     memset(&event, 0, sizeof(event));
     event.general.xany.type = VirtualEvent;
@@ -1184,9 +1195,9 @@ TkSendVirtualEvent(
     event.general.xany.send_event = False;
     event.general.xany.window = Tk_WindowId(target);
     event.general.xany.display = Tk_Display(target);
-    event.virtual.name = Tk_GetUid(eventName);
+    event.virt.name = Tk_GetUid(eventName);
     if (detail != NULL) {
-	event.virtual.user_data = detail;
+	event.virt.user_data = detail;
     }
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);

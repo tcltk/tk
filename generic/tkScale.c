@@ -161,7 +161,7 @@ static void		ComputeFormat(TkScale *scalePtr, int forTicks);
 static void		ComputeScaleGeometry(TkScale *scalePtr);
 static int		ConfigureScale(Tcl_Interp *interp, TkScale *scalePtr,
 			    int objc, Tcl_Obj *const objv[]);
-static void		DestroyScale(char *memPtr);
+static void		DestroyScale(void *memPtr);
 static double		MaxTickRoundingError(TkScale *scalePtr,
 			    double tickResolution);
 static void		ScaleCmdDeletedProc(ClientData clientData);
@@ -248,14 +248,15 @@ ScaleRound(
 
 int
 Tk_ScaleObjCmd(
-    ClientData clientData,	/* NULL. */
+    ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    register TkScale *scalePtr;
+    TkScale *scalePtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
+    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -385,7 +386,7 @@ ScaleWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
     Tcl_Obj *objPtr;
     int index, result;
 
@@ -540,9 +541,9 @@ ScaleWidgetObjCmd(
 
 static void
 DestroyScale(
-    char *memPtr)	/* Info about scale widget. */
+    void *memPtr)	/* Info about scale widget. */
 {
-    register TkScale *scalePtr = (TkScale *) memPtr;
+    TkScale *scalePtr = (TkScale *) memPtr;
 
     scalePtr->flags |= SCALE_DELETED;
 
@@ -599,7 +600,7 @@ DestroyScale(
 static int
 ConfigureScale(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register TkScale *scalePtr,	/* Information about widget; may or may not
+    TkScale *scalePtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in objv. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -769,7 +770,7 @@ ScaleWorldChanged(
 {
     XGCValues gcValues;
     GC gc;
-    TkScale *scalePtr = instanceData;
+    TkScale *scalePtr = (TkScale *)instanceData;
 
     gcValues.foreground = scalePtr->troughColorPtr->pixel;
     gc = Tk_GetGC(scalePtr->tkwin, GCForeground, &gcValues);
@@ -1019,7 +1020,7 @@ ComputeFormat(
 
 static void
 ComputeScaleGeometry(
-    register TkScale *scalePtr)	/* Information about widget. */
+    TkScale *scalePtr)	/* Information about widget. */
 {
     char valueString[TCL_DOUBLE_SPACE];
     int tmp, valuePixels, tickPixels, x, y, extraSpace;
@@ -1163,7 +1164,7 @@ ScaleEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
@@ -1211,7 +1212,7 @@ static void
 ScaleCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
     Tk_Window tkwin = scalePtr->tkwin;
 
     /*
@@ -1248,7 +1249,7 @@ ScaleCmdDeletedProc(
 
 void
 TkEventuallyRedrawScale(
-    register TkScale *scalePtr,	/* Information about widget. */
+    TkScale *scalePtr,	/* Information about widget. */
     int what)			/* What to redraw: REDRAW_SLIDER or
 				 * REDRAW_ALL. */
 {
@@ -1346,11 +1347,13 @@ ScaleVarProc(
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    register TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
     const char *resultStr;
     double value;
     Tcl_Obj *valuePtr;
     int result;
+    (void)name1;
+    (void)name2;
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -1441,7 +1444,7 @@ ScaleVarProc(
 
 void
 TkScaleSetValue(
-    register TkScale *scalePtr,	/* Info about widget. */
+    TkScale *scalePtr,	/* Info about widget. */
     double value,		/* New value for scale. Gets adjusted if it's
 				 * off the scale. */
     int setVar,			/* Non-zero means reflect new value through to
@@ -1499,7 +1502,7 @@ TkScaleSetValue(
 
 static void
 ScaleSetVariable(
-    register TkScale *scalePtr)	/* Info about widget. */
+    TkScale *scalePtr)	/* Info about widget. */
 {
     if (scalePtr->varNamePtr != NULL) {
 	char string[TCL_DOUBLE_SPACE];
@@ -1535,7 +1538,7 @@ ScaleSetVariable(
 
 double
 TkScalePixelToValue(
-    register TkScale *scalePtr,	/* Information about widget. */
+    TkScale *scalePtr,	/* Information about widget. */
     int x, int y)		/* Coordinates of point within window. */
 {
     double value, pixelRange;
@@ -1593,7 +1596,7 @@ TkScalePixelToValue(
 
 int
 TkScaleValueToPixel(
-    register TkScale *scalePtr,	/* Information about widget. */
+    TkScale *scalePtr,	/* Information about widget. */
     double value)		/* Reading of the widget. */
 {
     int y, pixelRange;

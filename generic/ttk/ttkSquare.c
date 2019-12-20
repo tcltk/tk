@@ -109,7 +109,7 @@ SquareDoLayout(void *clientData)
      */
 
     if (squareNode) {
-	Square *squarePtr = clientData;
+	Square *squarePtr = (Square *)clientData;
 	Tk_Anchor anchor = TK_ANCHOR_CENTER;
 	Ttk_Box b;
 
@@ -188,7 +188,7 @@ static Ttk_ElementOptionSpec SquareElementOptions[] =
     	"raised" },
     { "-width",  TK_OPTION_PIXELS, offsetof(SquareElement,widthObj), "20"},
     { "-height", TK_OPTION_PIXELS, offsetof(SquareElement,heightObj), "20"},
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 /*
@@ -198,11 +198,12 @@ static Ttk_ElementOptionSpec SquareElementOptions[] =
  */
 
 static void SquareElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    SquareElement *square = elementRecord;
+    SquareElement *square = (SquareElement *)elementRecord;
     int borderWidth = 0;
+    (void)dummy;
 
     Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
@@ -215,12 +216,14 @@ static void SquareElementSize(
  */
 
 static void SquareElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
+    void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    SquareElement *square = elementRecord;
+    SquareElement *square = (SquareElement *)elementRecord;
     Tk_3DBorder foreground = NULL;
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
+    (void)dummy;
+    (void)state;
 
     foreground = Tk_Get3DBorderFromObj(tkwin, square->foregroundObj);
     Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);

@@ -93,7 +93,7 @@ const Tk_SegType tkTextLeftMarkType = {
 
 int
 TkTextMarkCmd(
-    register TkText *textPtr,	/* Information about text widget. */
+    TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
@@ -147,7 +147,7 @@ TkTextMarkCmd(
 			NULL);
 		return TCL_ERROR;
 	    }
-	    markPtr = Tcl_GetHashValue(hPtr);
+	    markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 	}
 	if (objc == 4) {
 	    const char *typeStr;
@@ -194,7 +194,7 @@ TkTextMarkCmd(
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->markTable,
 		&search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		    Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
+		    (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
 		    -1));
 	}
 	Tcl_SetObjResult(interp, resultObj);
@@ -229,7 +229,7 @@ TkTextMarkCmd(
 	    hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable,
 		    Tcl_GetString(objv[i]));
 	    if (hPtr != NULL) {
-		markPtr = Tcl_GetHashValue(hPtr);
+		markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 
 		/*
 		 * Special case not needed with peer widgets.
@@ -290,7 +290,7 @@ TkTextSetMark(
 	widgetSpecific = 0;
 	hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->markTable, name,
 		&isNew);
-	markPtr = Tcl_GetHashValue(hPtr);
+	markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     }
     if (!isNew) {
 	/*
@@ -330,7 +330,7 @@ TkTextSetMark(
 	}
 	TkBTreeUnlinkSegment(markPtr, markPtr->body.mark.linePtr);
     } else {
-	markPtr = ckalloc(MSEG_SIZE);
+	markPtr = (TkTextSegment *)ckalloc(MSEG_SIZE);
 	markPtr->typePtr = &tkTextRightMarkType;
 	markPtr->size = 0;
 	markPtr->body.mark.textPtr = textPtr;
@@ -452,7 +452,7 @@ TkTextMarkNameToIndex(
 	if (hPtr == NULL) {
 	    return TCL_ERROR;
 	}
-	segPtr = Tcl_GetHashValue(hPtr);
+	segPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     }
     TkTextMarkSegToIndex(textPtr, segPtr, indexPtr);
 
@@ -508,6 +508,10 @@ MarkDeleteProc(
 				 * deleted, so everything must get cleaned
 				 * up. */
 {
+    (void)segPtr;
+    (void)linePtr;
+    (void)treeGone;
+
     return 1;
 }
 
@@ -570,11 +574,18 @@ MarkLayoutProc(
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this line yet. */
     TkWrapMode wrapMode,	/* Not used. */
-    register TkTextDispChunk *chunkPtr)
+    TkTextDispChunk *chunkPtr)
 				/* Structure to fill in with information about
 				 * this chunk. The x field has already been
 				 * set by the caller. */
 {
+    (void)indexPtr;
+    (void)offset;
+    (void)maxX;
+    (void)maxChars;
+    (void)noCharsYet;
+    (void)wrapMode;
+
     if (segPtr != textPtr->insertMarkPtr) {
 	return -1;
     }
@@ -641,6 +652,9 @@ TkTextInsertDisplayProc(
     int halfWidth = textPtr->insertWidth/2;
     int rightSideWidth;
     int ix = 0, iy = 0, iw = 0, ih = 0, charWidth = 0;
+    (void)chunkPtr;
+    (void)baseline;
+    (void)display;
 
     if (textPtr->insertCursorType) {
 	TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
@@ -727,6 +741,9 @@ InsertUndisplayProc(
     TkText *textPtr,		/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
+    (void)textPtr;
+    (void)chunkPtr;
+
     return;
 }
 
@@ -809,7 +826,7 @@ MarkFindNext(
 {
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
-    register TkTextSegment *segPtr;
+    TkTextSegment *segPtr;
     int offset;
     const char *string = Tcl_GetString(obj);
 
@@ -830,7 +847,7 @@ MarkFindNext(
 	     * position.
 	     */
 
-	    segPtr = Tcl_GetHashValue(hPtr);
+	    segPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 	    TkTextMarkSegToIndex(textPtr, segPtr, &index);
 	    segPtr = segPtr->nextPtr;
 	} else {
@@ -900,7 +917,7 @@ MarkFindPrev(
 {
     TkTextIndex index;
     Tcl_HashEntry *hPtr;
-    register TkTextSegment *segPtr, *seg2Ptr, *prevPtr;
+    TkTextSegment *segPtr, *seg2Ptr, *prevPtr;
     int offset;
     const char *string = Tcl_GetString(obj);
 
@@ -919,7 +936,7 @@ MarkFindPrev(
 	     * position.
 	     */
 
-	    segPtr = Tcl_GetHashValue(hPtr);
+	    segPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 	    TkTextMarkSegToIndex(textPtr, segPtr, &index);
 	} else {
 	    /*
@@ -1012,7 +1029,7 @@ GetMarkName(
 
 	return NULL;
     } else {
-	markName = Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable,
+	markName = (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable,
 		segPtr->body.mark.hPtr);
     }
     return Tcl_NewStringObj(markName, -1);

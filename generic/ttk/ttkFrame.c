@@ -90,7 +90,10 @@ static Ttk_Padding FrameMargins(Frame *framePtr)
  */
 static int FrameSize(void *recordPtr, int *widthPtr, int *heightPtr)
 {
-    Frame *framePtr = recordPtr;
+    Frame *framePtr = (Frame *)recordPtr;
+    (void)widthPtr;
+    (void)heightPtr;
+
     Ttk_SetMargins(framePtr->core.tkwin, FrameMargins(framePtr));
     return 0;
 }
@@ -111,7 +114,7 @@ static int FrameSize(void *recordPtr, int *widthPtr, int *heightPtr)
 
 static int FrameConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
-    Frame *framePtr = recordPtr;
+    Frame *framePtr = (Frame *)recordPtr;
     int width, height;
 
     /*
@@ -339,11 +342,13 @@ LabelframeLabelSize(Labelframe *lframePtr, int *widthPtr, int *heightPtr)
  */
 static int LabelframeSize(void *recordPtr, int *widthPtr, int *heightPtr)
 {
-    Labelframe *lframePtr = recordPtr;
+    Labelframe *lframePtr = (Labelframe *)recordPtr;
     WidgetCore *corePtr = &lframePtr->core;
     Ttk_Padding margins;
     LabelframeStyle style;
     int labelWidth, labelHeight;
+    (void)widthPtr;
+    (void)heightPtr;
 
     LabelframeStyleOptions(lframePtr, &style);
 
@@ -384,7 +389,7 @@ static int LabelframeSize(void *recordPtr, int *widthPtr, int *heightPtr)
 static Ttk_Layout LabelframeGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
-    Labelframe *lf = recordPtr;
+    Labelframe *lf = (Labelframe *)recordPtr;
     Ttk_Layout frameLayout = TtkWidgetGetLayout(interp, theme, recordPtr);
     Ttk_Layout labelLayout;
 
@@ -415,7 +420,7 @@ static Ttk_Layout LabelframeGetLayout(
 
 static void LabelframeDoLayout(void *recordPtr)
 {
-    Labelframe *lframePtr = recordPtr;
+    Labelframe *lframePtr = (Labelframe *)recordPtr;
     WidgetCore *corePtr = &lframePtr->core;
     int lw, lh;			/* Label width and height */
     LabelframeStyle style;
@@ -461,7 +466,7 @@ static void LabelframeDoLayout(void *recordPtr)
 
 static void LabelframeDisplay(void *recordPtr, Drawable d)
 {
-    Labelframe *lframePtr = recordPtr;
+    Labelframe *lframePtr = (Labelframe *)recordPtr;
     Ttk_DrawLayout(lframePtr->core.layout, lframePtr->core.state, d);
     if (lframePtr->label.labelLayout) {
 	Ttk_DrawLayout(lframePtr->label.labelLayout, lframePtr->core.state, d);
@@ -476,7 +481,7 @@ static void LabelframeDisplay(void *recordPtr, Drawable d)
  */
 static void LabelframePlaceSlaves(void *recordPtr)
 {
-    Labelframe *lframe = recordPtr;
+    Labelframe *lframe = (Labelframe *)recordPtr;
 
     if (Ttk_NumberSlaves(lframe->label.mgr) == 1) {
 	Ttk_Box b;
@@ -489,6 +494,11 @@ static void LabelframePlaceSlaves(void *recordPtr)
 
 static int LabelRequest(void *managerData, int index, int width, int height)
 {
+    (void)managerData;
+    (void)index;
+    (void)width;
+    (void)height;
+
     return 1;
 }
 
@@ -501,7 +511,9 @@ static int LabelRequest(void *managerData, int index, int width, int height)
  */
 static void LabelRemoved(void *managerData, int slaveIndex)
 {
-    Labelframe *lframe = managerData;
+    Labelframe *lframe = (Labelframe *)managerData;
+    (void)slaveIndex;
+
     lframe->label.labelWidget = 0;
 }
 
@@ -516,9 +528,10 @@ static Ttk_ManagerSpec LabelframeManagerSpec = {
 /* LabelframeInitialize --
  * 	Initialization hook.
  */
-static void LabelframeInitialize(Tcl_Interp *interp, void *recordPtr)
+static void LabelframeInitialize(Tcl_Interp *dummy, void *recordPtr)
 {
-    Labelframe *lframe = recordPtr;
+    Labelframe *lframe = (Labelframe *)recordPtr;
+    (void)dummy;
 
     lframe->label.mgr = Ttk_CreateManager(
 	&LabelframeManagerSpec, lframe, lframe->core.tkwin);
@@ -532,7 +545,7 @@ static void LabelframeInitialize(Tcl_Interp *interp, void *recordPtr)
  */
 static void LabelframeCleanup(void *recordPtr)
 {
-    Labelframe *lframe = recordPtr;
+    Labelframe *lframe = (Labelframe *)recordPtr;
     Ttk_DeleteManager(lframe->label.mgr);
     if (lframe->label.labelLayout) {
 	Ttk_FreeLayout(lframe->label.labelLayout);
@@ -563,7 +576,7 @@ static void RaiseLabelWidget(Labelframe *lframe)
  */
 static int LabelframeConfigure(Tcl_Interp *interp,void *recordPtr,int mask)
 {
-    Labelframe *lframePtr = recordPtr;
+    Labelframe *lframePtr = (Labelframe *)recordPtr;
     Tk_Window labelWidget = lframePtr->label.labelWidget;
     Ttk_PositionSpec unused;
 
