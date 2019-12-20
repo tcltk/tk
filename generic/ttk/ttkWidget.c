@@ -85,7 +85,7 @@ static void EndDrawing(Tk_Window tkwin, Drawable d)
 #else
 /* No double-buffering: draw directly into the window. */
 static Drawable BeginDrawing(Tk_Window tkwin) { return Tk_WindowId(tkwin); }
-static void EndDrawing(Tk_Window tkwin, Drawable d) { }
+static void EndDrawing(Tk_Window tkwin, Drawable d) { (void)tkwin; (void)d;}
 #endif
 
 /* DrawWidget --
