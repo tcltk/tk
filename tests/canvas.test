@@ -953,10 +953,12 @@ test canvas-19.11 {rchars method - errors} -setup {
 test canvas-20.1 {addtag/dtag - no shuffling of tag sequence} -setup {
     canvas .c
     .c create text 100 100 -text Hello
+} -body {
     for {set i 1} {$i < 5} {incr i} {
         .c addtag tag$i all
     }
-} -body {
+    # [.c addtags] only adds tags that are not already present
+    .c addtag tag1 all   ; # no effect
     set res [list [.c gettags 1]]
     .c dtag 1 tag2
     lappend res [.c gettags 1]
@@ -966,8 +968,10 @@ test canvas-20.1 {addtag/dtag - no shuffling of tag sequence} -setup {
 test canvas-20.2 {tag deletion - multiple tags with same name, no shuffling} -setup {
     canvas .c
     .c create text 100 100 -text Hello
-    .c itemconfigure 1 -tags {tagA tagB tagA tagA tagC tagA}
 } -body {
+    # [.c itemconfigure -tags] lets the user add duplicate tags
+    # this is not a problem although inconsistent with [.c addtags]
+    .c itemconfigure 1 -tags {tagA tagB tagA tagA tagC tagA}
     set res [list [.c gettags 1]]
     .c dtag 1 tagA
     lappend res [.c gettags 1]
@@ -977,8 +981,10 @@ test canvas-20.2 {tag deletion - multiple tags with same name, no shuffling} -se
 test canvas-20.3 {tag deletion - all tags match} -setup {
     canvas .c
     .c create text 100 100 -text Hello
-    .c itemconfigure 1 -tags {tagA tagA tagA tagA tagA tagA}
 } -body {
+    # [.c itemconfigure -tags] lets the user add duplicate tags
+    # this is not a problem although inconsistent with [.c addtags]
+    .c itemconfigure 1 -tags {tagA tagA tagA tagA tagA tagA}
     set res [list [.c gettags 1]]
     .c dtag 1 tagA
     lappend res [.c gettags 1]
