@@ -1449,7 +1449,7 @@ CanvasWidgetCmd(
 	    tag = Tk_GetUid(Tcl_GetString(objv[2]));
 	}
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
-            for (i = 0; i < itemPtr->numTags; i++) {
+            for (i = itemPtr->numTags-1; i >= 0; i--) {
                 if (itemPtr->tagPtr[i] == tag) {
 
                     /*
@@ -1460,13 +1460,6 @@ CanvasWidgetCmd(
                             (void *)(itemPtr->tagPtr + i + 1),
                             sizeof(Tk_Uid *) * (itemPtr->numTags - (i+1)));
                     itemPtr->numTags--;
-
-                    /*
-                     * Look at the same place again to deal with the case of
-                     * successive identical tags matching the tag to delete.
-                     */
-
-                    i--;
 
                     /*
                      * There must be no break here: all tags with the same name must
