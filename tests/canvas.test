@@ -950,6 +950,42 @@ test canvas-19.11 {rchars method - errors} -setup {
     destroy .c
 } -returnCodes error -result {bad index "foo"}
 
+test canvas-20.1 {addtag/dtag - no shuffling of tag sequence} -setup {
+    canvas .c
+    .c create text 100 100 -text Hello
+    for {set i 1} {$i < 5} {incr i} {
+        .c addtag tag$i all
+    }
+} -body {
+    set res [list [.c gettags 1]]
+    .c dtag 1 tag2
+    lappend res [.c gettags 1]
+} -cleanup {
+    destroy .c
+} -result {{tag1 tag2 tag3 tag4} {tag1 tag3 tag4}}
+test canvas-20.2 {tag deletion - multiple tags with same name, no shuffling} -setup {
+    canvas .c
+    .c create text 100 100 -text Hello
+    .c itemconfigure 1 -tags {tagA tagB tagA tagA tagC tagA}
+} -body {
+    set res [list [.c gettags 1]]
+    .c dtag 1 tagA
+    lappend res [.c gettags 1]
+} -cleanup {
+    destroy .c
+} -result {{tagA tagB tagA tagA tagC tagA} {tagB tagC}}
+test canvas-20.3 {tag deletion - all tags match} -setup {
+    canvas .c
+    .c create text 100 100 -text Hello
+    .c itemconfigure 1 -tags {tagA tagA tagA tagA tagA tagA}
+} -body {
+    set res [list [.c gettags 1]]
+    .c dtag 1 tagA
+    lappend res [.c gettags 1]
+} -cleanup {
+    destroy .c
+} -result {{tagA tagA tagA tagA tagA tagA} {}}
+
 # cleanup
 imageCleanup
 cleanupTests
