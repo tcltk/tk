@@ -4988,7 +4988,9 @@ PickCurrentItem(
 		if (itemPtr->tagPtr[i] == searchUids->currentUid)
 #endif /* USE_OLD_TAG_SEARCH */
 		    /* then */ {
-		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
+                    memmove((void *)(itemPtr->tagPtr + i),
+                            itemPtr->tagPtr + i + 1,
+                            (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
 		    itemPtr->numTags--;
 		    break;
 		}
