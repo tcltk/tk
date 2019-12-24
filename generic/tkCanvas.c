@@ -1449,8 +1449,8 @@ CanvasWidgetCmd(
 	    tag = Tk_GetUid(Tcl_GetString(objv[2]));
 	}
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
-            for (i = itemPtr->numTags-1; i >= 0; i--) {
-                if (itemPtr->tagPtr[i] == tag) {
+	    for (i = itemPtr->numTags-1; i >= 0; i--) {
+		if (itemPtr->tagPtr[i] == tag) {
 
                     /*
                      * Don't shuffle the tags sequence: memmove the tags.
@@ -1459,15 +1459,15 @@ CanvasWidgetCmd(
                     memmove((void *)(itemPtr->tagPtr + i),
                             (void *)(itemPtr->tagPtr + i + 1),
                             sizeof(Tk_Uid *) * (itemPtr->numTags - (i+1)));
-                    itemPtr->numTags--;
+		    itemPtr->numTags--;
 
                     /*
                      * There must be no break here: all tags with the same name must
                      * be deleted.
                      */
 
-                }
-            }
+ 		}
+	    }
 	}
 	break;
     }
