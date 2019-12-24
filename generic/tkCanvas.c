@@ -1436,7 +1436,7 @@ CanvasWidgetCmd(
     }
     case CANV_DTAG: {
 	Tk_Uid tag;
-	int i, j;
+	int i;
 
 	if ((objc != 3) && (objc != 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?tagToDelete?");
@@ -1451,12 +1451,28 @@ CanvasWidgetCmd(
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
             for (i = 0; i < itemPtr->numTags; i++) {
                 if (itemPtr->tagPtr[i] == tag) {
-                    for (j = i; j < itemPtr->numTags - 1; j++) {
-                        itemPtr->tagPtr[j] = itemPtr->tagPtr[j+1];
-                    }
+
+                    /*
+                     * Don't shuffle the tags sequence: memmove the tags.
+                     */
+
+                    memmove((void *)(itemPtr->tagPtr + i),
+                            (void *)(itemPtr->tagPtr + i + 1),
+                            sizeof(Tk_Uid *) * (itemPtr->numTags - (i+1)));
                     itemPtr->numTags--;
-                    i--;  /* deal with the case of successive identical tag to remove */
-                    /* No break here: all tags with the same name must be deleted */
+
+                    /*
+                     * Look at the same place again to deal with the case of
+                     * successive identical tags matching the tag to delete.
+                     */
+
+                    i--;
+
+                    /*
+                     * There must be no break here: all tags with the same name must
+                     * be deleted.
+                     */
+
                 }
             }
 	}
