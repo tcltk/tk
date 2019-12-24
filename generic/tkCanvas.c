@@ -1457,8 +1457,8 @@ CanvasWidgetCmd(
                      */
 
                     memmove((void *)(itemPtr->tagPtr + i),
-                            (void *)(itemPtr->tagPtr + i + 1),
-                            sizeof(Tk_Uid *) * (itemPtr->numTags - (i+1)));
+                            itemPtr->tagPtr + i + 1,
+                            (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
 		    itemPtr->numTags--;
 
                     /*
