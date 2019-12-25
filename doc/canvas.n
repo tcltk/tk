@@ -1523,6 +1523,12 @@ ends of the line.
 \fBlast\fR (for an arrowhead at the last point of the line), or
 \fBboth\fR (for arrowheads at both ends).
 This option defaults to \fBnone\fR.
+When requested to draw an arrowhead, Tk internally adjusts the corresponding
+line end point so that the rendered line ends at the neck of the arrowhead
+rather than at its tip so that the line doesn't extend past the edge of the
+arrowhead. This may trigger a \fBLeave\fR event if the mouse is hovering this
+line end. Conversely, when removing an arrowhead Tk adjusts the corresponding
+line point the other way round, which may trigger an \fBEnter\fR event.
 .TP
 \fB\-arrowshape \fIshape\fR
 This option indicates how to draw arrowheads.
