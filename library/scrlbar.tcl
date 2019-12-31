@@ -144,10 +144,18 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 } else {
     bind Scrollbar <MouseWheel> {
-	tk::ScrollByUnits %W v [expr {-(%D / 30)}]
+	if {%D >= 0} {
+	    tk::ScrollByUnits %W v [expr {-%D/30}]
+	} else {
+	    tk::ScrollByUnits %W v [expr {(29-%D)/30}]
+	}
     }
     bind Scrollbar <Shift-MouseWheel> {
-	tk::ScrollByUnits %W h [expr {-(%D / 30)}]
+	if {%D >= 0} {
+	    tk::ScrollByUnits %W h [expr {-%D/30}]
+	} else {
+	    tk::ScrollByUnits %W h [expr {(29-%D)/30}]
+	}
     }
 }
 

@@ -2172,9 +2172,9 @@ FontMapLoadPage(
 {
     FontFamily *familyPtr;
     Tcl_Encoding encoding;
-    char src[XMaxTransChars], buf[16];
-    USHORT *startCount, *endCount;
     int i, j, bitOffset, end, segCount;
+    USHORT *startCount, *endCount;
+    char buf[16], src[4];
 
     subFontPtr->fontMap[row] = ckalloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);
@@ -2225,7 +2225,7 @@ FontMapLoadPage(
 	end = (row + 1) << FONTMAP_SHIFT;
 	for (i = row << FONTMAP_SHIFT; i < end; i++) {
 	    if (Tcl_UtfToExternal(NULL, encoding, src,
-		    Tcl_UniCharToUtf(i, src), TCL_ENCODING_STOPONERROR, NULL,
+		    TkUniCharToUtf(i, src), TCL_ENCODING_STOPONERROR, NULL,
 		    buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK) {
 		continue;
 	    }

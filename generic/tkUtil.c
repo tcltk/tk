@@ -1216,26 +1216,23 @@ TkSendVirtualEvent(
 int
 TkUtfToUniChar(
     const char *src,	/* The UTF-8 string. */
-    int *chPtr)		/* Filled with the Tcl_UniChar represented by
+    int *chPtr)		/* Filled with the Unicode value represented by
 			 * the UTF-8 string. */
 {
     Tcl_UniChar uniChar = 0;
 
     int len = Tcl_UtfToUniChar(src, &uniChar);
-    if ((uniChar & 0xfc00) == 0xd800) {
-	Tcl_UniChar high = uniChar;
+    if ((sizeof(Tcl_UniChar) == 2) && ((uniChar & 0xFC00) == 0xD800)) {
+	Tcl_UniChar low = uniChar;
 	/* This can only happen if Tcl is compiled with TCL_UTF_MAX=4,
 	 * or when a high surrogate character is detected in UTF-8 form */
-	int len2 = Tcl_UtfToUniChar(src+len, &uniChar);
-	if ((uniChar & 0xfc00) == 0xdc00) {
-	    *chPtr = (((high & 0x3ff) << 10) | (uniChar & 0x3ff)) + 0x10000;
-	    len += len2;
-	} else {
-	    *chPtr = high;
+	int len2 = Tcl_UtfToUniChar(src+len, &low);
+	if ((low & 0xFC00) == 0xDC00) {
+	    *chPtr = (((uniChar & 0x3FF) << 10) | (low & 0x3FF)) + 0x10000;
+	    return len + len2;
 	}
-    } else {
-	*chPtr = uniChar;
     }
+    *chPtr = uniChar;
     return len;
 }
 
@@ -1259,17 +1256,16 @@ TkUtfToUniChar(
 
 int TkUniCharToUtf(int ch, char *buf)
 {
-    int size = Tcl_UniCharToUtf(ch, buf);
-    if ((((unsigned)(ch - 0x10000) <= 0xFFFFF)) && (size < 4)) {
-	/* Hey, this is wrong, we must be running TCL_UTF_MAX==3
-	 * The best thing we can do is spit out a 4-byte UTF-8 character */
-	buf[3] = (char) ((ch | 0x80) & 0xBF);
-	buf[2] = (char) (((ch >> 6) | 0x80) & 0xBF);
-	buf[1] = (char) (((ch >> 12) | 0x80) & 0xBF);
-	buf[0] = (char) ((ch >> 18) | 0xF0);
-	size = 4;
+    if (((unsigned)(ch - 0x10000) <= 0xFFFFF)) {
+	/* Spit out a 4-byte UTF-8 character */
+	*buf++ = (char) ((ch >> 18) | 0xF0);
+	*buf++ = (char) (((ch >> 12) | 0x80) & 0xBF);
+	*buf++ = (char) (((ch >> 6) | 0x80) & 0xBF);
+	*buf = (char) ((ch | 0x80) & 0xBF);
+	return 4;
+    } else {
+	return Tcl_UniCharToUtf(ch, buf);
     }
-    return size;
 }
 
 

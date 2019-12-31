@@ -6669,6 +6669,25 @@ test bind-34.2 {-warp works relatively to the screen} -setup {
     lappend res {*}[winfo pointerxy .]
 } -cleanup {
 } -result {20 20 200 200}
+test bind-34.3 {-warp works with null or negative coordinates} -setup {
+} -body {
+    event generate {} <Motion> -x 0 -y 0 -warp 1
+    update idletasks ; # DoWarp is an idle callback
+    after 50         ; # Win specific - wait for SendInput to be executed
+    set res [winfo pointerxy .]
+    event generate {} <Motion> -x -1 -y -1 -warp 1
+    update idletasks ; # DoWarp is an idle callback
+    after 50         ; # Win specific - wait for SendInput to be executed
+    foreach dim [winfo pointerxy .] {
+        if {$dim <= 0} {
+            lappend res ok
+        } else {
+            lappend res $dim
+        }
+    }
+    set res
+} -cleanup {
+} -result {0 0 ok ok}
 
 # cleanup
 cleanupTests

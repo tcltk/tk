@@ -195,10 +195,18 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 } else {
     bind Listbox <MouseWheel> {
-        %W yview scroll [expr {-(%D/30)}] units
+	if {%D >= 0} {
+	    %W yview scroll [expr {-%D/30}] units
+	} else {
+	    %W yview scroll [expr {(29-%D)/30}] units
+	}
     }
     bind Listbox <Shift-MouseWheel> {
-        %W xview scroll [expr {-(%D/30)}] units
+	if {%D >= 0} {
+	    %W xview scroll [expr {-%D/30}] units
+	} else {
+	    %W xview scroll [expr {(29-%D)/30}] units
+	}
     }
 }
 
