@@ -279,7 +279,7 @@ static char *EntryDisplayString(const char *showChar, int numChars)
     char *displayString, *p;
     int size;
     int ch;
-    char buf[6];
+    char buf[4];
 
     TkUtfToUniChar(showChar, &ch);
     size = TkUniCharToUtf(ch, buf);

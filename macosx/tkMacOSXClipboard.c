@@ -35,10 +35,7 @@ static Tk_Window clipboardOwner = NULL;
 		    targetPtr->type == dispPtr->utf8Atom) {
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = [[NSString alloc] initWithBytesNoCopy:
-			    cbPtr->buffer length:cbPtr->length
-			    encoding:NSUTF8StringEncoding freeWhenDone:NO];
-
+		    NSString *s = TkUtfToNSString(cbPtr->buffer, cbPtr->length);
 		    [string appendString:s];
 		    [s release];
 		}
@@ -130,7 +127,6 @@ TkSelGetSelection(
 	        && selection == dispPtr->clipboardAtom
 	        && (target == XA_STRING || target == dispPtr->utf8Atom)) {
 	NSString *string = nil;
-	NSString *clean;
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
 	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
 		NSStringPboardType]];
@@ -139,25 +135,20 @@ TkSelGetSelection(
 	    string = [pb stringForType:type];
 	}
 	if (string) {
+
 	    /*
-	     * Replace all non-BMP characters by the replacement character 0xfffd.
-	     * This is a workaround until Tcl supports TCL_UTF_MAX > 3.
+	     * Encode the string using the encoding which is used in Tcl
+	     * when TCL_UTF_MAX = 3.  This replaces each UTF-16 surrogate with
+	     * a 3-byte sequence generated using the UTF-8 algorithm. (Even
+	     * though UTF-8 does not allow encoding surrogates, the algorithm
+	     * does produce a 3-byte sequence.)
 	     */
-	    int i, j, len = [string length];
-	    CFRange all = CFRangeMake(0, len);
-	    UniChar *buffer = ckalloc(len*sizeof(UniChar));
-	    CFStringGetCharacters((CFStringRef) string, all, buffer);
-	    for (i = 0, j = 0 ; j < len ; i++, j++) {
-		if (CFStringIsSurrogateHighCharacter(buffer[j])) {
-		    buffer[i] = 0xfffd;
-		    j++;
-		} else {
-		    buffer[i] = buffer[j];
-		}
+
+	    char *bytes = TkNSStringToUtf(string, NULL);
+	    result = proc(clientData, interp, bytes);
+	    if (bytes) {
+		ckfree(bytes);
 	    }
-	    clean = (NSString *)CFStringCreateWithCharacters(NULL, buffer, i);
-	    ckfree(buffer);
-	    result = proc(clientData, interp, [clean UTF8String]);
 	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
