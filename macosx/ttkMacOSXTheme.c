@@ -405,6 +405,9 @@ static void FillBorder(
     GrayPalette palette,
     CGFloat radius)
 {
+    if (bounds.size.width < 2) {
+	return;
+    }    
     NSColorSpace *sRGB = [NSColorSpace sRGBColorSpace];
     CGPoint end = CGPointMake(bounds.origin.x, bounds.origin.y + bounds.size.height);
     CGFloat corner = (radius > 0 ? radius : 2.0) / bounds.size.height;
