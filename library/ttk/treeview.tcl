@@ -102,7 +102,11 @@ proc ttk::treeview::Keynav {w dir} {
 #	Sets cursor, active element ...
 #
 proc ttk::treeview::Motion {w x y} {
-    set cursor {}
+    variable State
+
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor hresize]
+
+    set cursor $State(userConfCursor)
     set activeHeading {}
 
     switch -- [$w identify region $x $y] {
@@ -127,7 +131,7 @@ proc ttk::treeview::ActivateHeading {w heading} {
 	    # triggers a <Leave> event. A proc checking if the display column
 	    # $State(activeHeading) is really still present or not could be
 	    # written but it would need to check several special cases:
-	    #   a. -displaycolumns "#all" or being an explicit columns list 
+	    #   a. -displaycolumns "#all" or being an explicit columns list
 	    #   b. column #0 display is not governed by the -displaycolumn
 	    #      list but by the value of the -show option
 	    # --> Let's rather catch the following line.

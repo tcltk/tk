@@ -14,21 +14,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/**
- * On Windows, this file needs to be compiled twice, once with
- * TK_ASCII_MAIN defined. This way both Tk_MainEx and Tk_MainExW
- * can be implemented, sharing the same source code.
- */
-#if defined(TK_ASCII_MAIN)
-#   ifdef UNICODE
-#	undef UNICODE
-#	undef _UNICODE
-#   else
-#	define UNICODE
-#	define _UNICODE
-#   endif
-#endif
-
 #include "tkInt.h"
 
 extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);

@@ -1385,7 +1385,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
 	    AS_IF([test $doRpath = yes], [
 		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
 		LD_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'])
@@ -1476,6 +1475,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    AS_IF([test "$tcl_cv_cc_visibility_hidden" != yes], [
 		AC_DEFINE(MODULE_SCOPE, [__private_extern__],
 		    [Compiler support for module scope symbols])
+		tcl_cv_cc_visibility_hidden=yes
 	    ])
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
@@ -1588,11 +1588,11 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    # this test works, since "uname -s" was non-standard in 3.2.4 and
 	    # below.
 	    AS_IF([test "$GCC" = yes], [
-	    	SHLIB_CFLAGS="-fPIC -melf"
-	    	LDFLAGS="$LDFLAGS -melf -Wl,-Bexport"
+		SHLIB_CFLAGS="-fPIC -melf"
+		LDFLAGS="$LDFLAGS -melf -Wl,-Bexport"
 	    ], [
-	    	SHLIB_CFLAGS="-Kpic -belf"
-	    	LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
+		SHLIB_CFLAGS="-Kpic -belf"
+		LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
 	    ])
 	    SHLIB_LD="ld -G"
 	    SHLIB_LD_LIBS=""
@@ -1935,7 +1935,6 @@ dnl # preprocessing tests use only CPPFLAGS.
 #		NO_SYS_WAIT_H
 #		NO_DLFCN_H
 #		HAVE_SYS_PARAM_H
-#		HAVE_STDBOOL_H
 #		HAVE_STRING_H ?
 #
 #--------------------------------------------------------------------
