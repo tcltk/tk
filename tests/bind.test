@@ -6689,6 +6689,39 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
 } -cleanup {
 } -result {0 0 ok ok}
 
+test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
+    proc twait {duration} {
+        set ::_twait 1; after $duration {unset ::_twait}
+        vwait ::_twait
+    }
+    toplevel .top
+    grab release .top
+    wm geometry .top 200x200+300+300
+    label .top.l -height 5 -width 20 -highlightthickness 2 \
+            -highlightbackground black -bg yellow -text "My label"
+    pack .top.l -side bottom
+    update
+    event generate {} <Motion> -warp 1 -x 0 -y 0
+    update idletasks ; # DoWarp is an idle callback
+    after 50         ; # Win specific - wait for SendInput to be executed
+} -body {
+    event generate .top.l <Motion> -warp 1 -x 10 -y 10
+    update idletasks ; after 50
+    foreach {x1 y1} [winfo pointerxy .top.l] {}
+    event generate {} <Motion> -warp 1 -x 0 -y 0
+    update idletasks ; after 50
+    grab .top
+    twait 1000
+    event generate .top.l <Motion> -warp 1 -x 10 -y 10
+    update idletasks ; after 50
+    foreach {x2 y2} [winfo pointerxy .top.l] {}
+    expr {$x1==$x2 && $y1==$y2}
+} -cleanup {
+    destroy .top
+    unset x1 y1 x2 y2
+    rename twait {}
+} -result {1}
+
 # cleanup
 cleanupTests
 return
