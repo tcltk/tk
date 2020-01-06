@@ -5041,7 +5041,6 @@ fi
 	    SHLIB_SUFFIX=".so"
 	    DL_OBJS="tclLoadDl.o"
 	    DL_LIBS=""
-	    LDFLAGS=""
 	    if test $doRpath = yes; then :
 
 		CC_SEARCH_FLAGS='-Wl,-rpath,${LIB_RUNTIME_DIR}'
@@ -5245,6 +5244,7 @@ fi
 
 $as_echo "#define MODULE_SCOPE __private_extern__" >>confdefs.h
 
+		tcl_cv_cc_visibility_hidden=yes
 
 fi
 	    CC_SEARCH_FLAGS=""
