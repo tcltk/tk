@@ -4361,11 +4361,6 @@ HandleEventGenerate(
 
 	    Tk_Window warpWindow = Tk_IdToWindow(dispPtr->display, event.general.xmotion.window);
 
-	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-		Tcl_DoWhenIdle(DoWarp, dispPtr);
-		dispPtr->flags |= TK_DISPLAY_IN_WARP;
-	    }
-
 	    if (warpWindow != dispPtr->warpWindow) {
 		if (warpWindow) {
 		    Tcl_Preserve(warpWindow);
@@ -4378,6 +4373,11 @@ HandleEventGenerate(
 	    dispPtr->warpMainwin = mainWin;
 	    dispPtr->warpX = event.general.xmotion.x;
 	    dispPtr->warpY = event.general.xmotion.y;
+
+	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
+		Tcl_DoWhenIdle(DoWarp, dispPtr);
+		dispPtr->flags |= TK_DISPLAY_IN_WARP;
+	    }
 	}
     }
 
