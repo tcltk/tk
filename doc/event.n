@@ -568,7 +568,7 @@ Starting from the preceding example, if the following code is executed:
 .PP
 .CS
 bind Entry <Control-y> {}
-\fBevent add\fR <<Paste>> <Key-F6>
+\fBevent add\fR <<Paste>> <F6>
 .CE
 .PP
 the behavior will change such in two ways.  First, the shadowed
