@@ -341,7 +341,7 @@ static Tk_OptionSpec HeadingOptionSpecs[] = {
 #define DEFAULT_SHOW	"tree headings"
 
 static const char *const showStrings[] = {
-    "tree", "headings", "separators", NULL
+    "tree", "headings", "columnseparators", NULL
 };
 
 static int GetEnumSetFromObj(
@@ -1470,7 +1470,7 @@ static TreeItem *IdentifyRow(
     return 0;
 }
 
-/* + IdentifyItem -- FIXA, use rowPos to simplify?
+/* + IdentifyItem -- TODO, use rowPos to simplify?
  * 	Locate the item at the specified y position, if any.
  */
 static TreeItem *IdentifyItem(Treeview *tv, int y)
