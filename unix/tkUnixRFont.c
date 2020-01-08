@@ -74,6 +74,15 @@ static Tcl_ThreadDataKey dataKey;
  *-------------------------------------------------------------------------
  */
 
+
+static int utf8ToUcs4(const char *source, FcChar32 *c, int numBytes)
+{
+    if (numBytes >= 6) {
+    	return TkUtfToUniChar(source, (int *)c);
+    }
+    return FcUtf8ToUcs4((const FcChar8 *)source, c, numBytes);
+}
+
 void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
@@ -827,7 +836,7 @@ LookUpColor(Display *display,      /* Display to lookup colors on */
     fontPtr->colors[last].color.color.red = xcolor.red;
     fontPtr->colors[last].color.color.green = xcolor.green;
     fontPtr->colors[last].color.color.blue = xcolor.blue;
-    fontPtr->colors[last].color.color.alpha = 0xffff;
+    fontPtr->colors[last].color.color.alpha = 0xFFFF;
     fontPtr->colors[last].color.pixel = pixel;
 
     /*
@@ -897,7 +906,7 @@ Tk_DrawChars(
 	XftFont *ftFont;
 	FcChar32 c;
 
-	clen = FcUtf8ToUcs4((FcChar8 *) source, &c, numBytes);
+	clen = utf8ToUcs4(source, &c, numBytes);
 	if (clen <= 0) {
 	    /*
 	     * This should not happen, but it can.
@@ -1037,7 +1046,7 @@ TkDrawAngledChars(
 	XftFont *ftFont;
 	FcChar32 c;
 
-	clen = FcUtf8ToUcs4((FcChar8 *) source, &c, numBytes);
+	clen = utf8ToUcs4(source, &c, numBytes);
 	if (clen <= 0) {
 	    /*
 	     * This should not happen, but it can.
@@ -1141,7 +1150,7 @@ TkDrawAngledChars(
 	XftFont *ftFont, *ft0Font;
 	FcChar32 c;
 
-	clen = FcUtf8ToUcs4((FcChar8 *) source, &c, numBytes);
+	clen = utf8ToUcs4(source, &c, numBytes);
 	if (clen <= 0) {
 	    /*
 	     * This should not happen, but it can.
@@ -1246,12 +1255,12 @@ TkDrawAngledChars(
 
 void
 TkUnixSetXftClipRegion(
-    TkRegion clipRegion)	/* The clipping region to install. */
+    Region clipRegion)	/* The clipping region to install. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    tsdPtr->clipRegion = (Region) clipRegion;
+    tsdPtr->clipRegion = clipRegion;
 }
 
 /*

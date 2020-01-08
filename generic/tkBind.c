@@ -25,7 +25,7 @@
 #include "tkUnixInt.h"
 #endif
 
-#if NDEBUG
+#ifdef NDEBUG
 # define DEBUG(expr)
 #else
 # define DEBUG(expr) expr
@@ -308,7 +308,7 @@ typedef struct PatSeq {
 				 * has the highest number. */
     unsigned added:1;		/* Is this pattern sequence already added to lookup table? */
     unsigned modMaskUsed:1;	/* Does at least one pattern contain a non-zero modifier mask? */
-    DEBUG(unsigned owned:1);	/* For debugging purposes. */
+    DEBUG(unsigned owned:1;)	/* For debugging purposes. */
     char *script;		/* Binding script to evaluate when sequence matches (ckalloc()ed) */
     Tcl_Obj* object;		/* Token for object with which binding is associated. For virtual
     				 * event table this is NULL. */
@@ -688,11 +688,11 @@ static const TkStateMap propNotify[] = {
     {-1, NULL}
 };
 
-DEBUG(static int countTableItems = 0);
-DEBUG(static int countEntryItems = 0);
-DEBUG(static int countListItems = 0);
-DEBUG(static int countBindItems = 0);
-DEBUG(static int countSeqItems = 0);
+DEBUG(static int countTableItems = 0;)
+DEBUG(static int countEntryItems = 0;)
+DEBUG(static int countListItems = 0;)
+DEBUG(static int countBindItems = 0;)
+DEBUG(static int countSeqItems = 0;)
 
 /*
  * Prototypes for local functions defined in this file:
@@ -880,13 +880,13 @@ FreePatSeq(
 {
     assert(psPtr);
     assert(!psPtr->owned);
-    DEBUG(MARK_PSENTRY(psPtr));
+    DEBUG(MARK_PSENTRY(psPtr);)
     ckfree(psPtr->script);
     if (!psPtr->object) {
 	VirtOwners_Free(&psPtr->ptr.owners);
     }
     ckfree(psPtr);
-    DEBUG(countSeqItems -= 1);
+    DEBUG(countSeqItems -= 1;)
 }
 
 static void
@@ -1037,7 +1037,7 @@ MakeListEntry(
     if (PSList_IsEmpty(pool)) {
 	newEntry = ckalloc(sizeof(PSEntry));
 	newEntry->lastModMaskArr = NULL;
-	DEBUG(countEntryItems += 1);
+	DEBUG(countEntryItems += 1;)
     } else {
 	newEntry = PSList_First(pool);
 	PSList_RemoveHead(pool);
@@ -1057,7 +1057,7 @@ MakeListEntry(
     newEntry->expired = 0;
     newEntry->keepIt = 1;
     newEntry->count = 1;
-    DEBUG(psPtr->owned = 0);
+    DEBUG(psPtr->owned = 0;)
 
     return newEntry;
 }
@@ -1160,7 +1160,7 @@ ClearLookupTable(
 	psList = Tcl_GetHashValue(hPtr);
 	PSList_Move(pool, psList);
 	ckfree(psList);
-	DEBUG(countListItems -= 1);
+	DEBUG(countListItems -= 1;)
     }
 }
 
@@ -1380,7 +1380,7 @@ TkBindInit(
     bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
     bindInfoPtr->lastEventTime = 0;
     mainPtr->bindInfo = bindInfoPtr;
-    DEBUG(countBindItems += 1);
+    DEBUG(countBindItems += 1;)
 
     TkpInitializeMenuBindings(mainPtr->interp, mainPtr->bindingTable);
 }
@@ -1418,7 +1418,7 @@ TkBindFree(
     Tcl_EventuallyFree(bindInfoPtr, TCL_DYNAMIC);
     mainPtr->bindInfo = NULL;
 
-    DEBUG(countBindItems -= 1);
+    DEBUG(countBindItems -= 1;)
     assert(countBindItems > 0 || countTableItems == 0);
     assert(countBindItems > 0 || countEntryItems == 0);
     assert(countBindItems > 0 || countListItems == 0);
@@ -1451,7 +1451,7 @@ Tk_CreateBindingTable(
     unsigned i;
 
     assert(interp);
-    DEBUG(countTableItems += 1);
+    DEBUG(countTableItems += 1;)
 
     /*
      * Create and initialize a new binding table.
@@ -1520,7 +1520,7 @@ Tk_DeleteBindingTable(
     ClearLookupTable(&bindPtr->lookupTables, NULL);
     ClearPromotionLists(bindPtr, NULL);
     PromArr_Free(&bindPtr->promArr);
-    DEBUG(countEntryItems -= PSList_Size(&bindPtr->lookupTables.entryPool));
+    DEBUG(countEntryItems -= PSList_Size(&bindPtr->lookupTables.entryPool);)
     PSList_Traverse(&bindPtr->lookupTables.entryPool, FreePatSeqEntry);
 
     /*
@@ -1532,7 +1532,7 @@ Tk_DeleteBindingTable(
     Tcl_DeleteHashTable(&bindPtr->objectTable);
 
     ckfree(bindPtr);
-    DEBUG(countTableItems -= 1);
+    DEBUG(countTableItems -= 1;)
 }
 
 /*
@@ -1576,7 +1576,7 @@ InsertPatSeq(
 	    psList = ckalloc(sizeof(PSList));
 	    PSList_Init(psList);
 	    Tcl_SetHashValue(hPtr, psList);
-	    DEBUG(countListItems += 1);
+	    DEBUG(countListItems += 1;)
 	} else {
 	    psList = Tcl_GetHashValue(hPtr);
 	}
@@ -2035,7 +2035,7 @@ Tk_DeleteAllBindings(
 
     for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
 	assert(TEST_PSENTRY(psPtr));
-	DEBUG(psPtr->added = 0);
+	DEBUG(psPtr->added = 0;)
 	nextPtr = DeletePatSeq(psPtr);
     }
 
@@ -2855,7 +2855,7 @@ MatchPatterns(
 				    }
 				}
 			    } else {
-				DEBUG(psEntry->expired = 0);
+				DEBUG(psEntry->expired = 0;)
 				psEntry->keepIt = 1; /* don't remove it from promotion list */
 			    }
 			} else if (psSuccList) {
@@ -2878,7 +2878,7 @@ MatchPatterns(
 				psNewEntry->window = window; /* bind to current window */
 			    } else {
 				assert(psEntry->count < patPtr->count);
-				DEBUG(psEntry->expired = 0);
+				DEBUG(psEntry->expired = 0;)
 				psEntry->count += 1;
 				psEntry->keepIt = 1; /* don't remove it from promotion list */
 			    }
@@ -3445,7 +3445,7 @@ DeleteVirtualEventTable(
 	for (psPtr = Tcl_GetHashValue(hPtr); psPtr; psPtr = nextPtr) {
 	    assert(TEST_PSENTRY(psPtr));
 	    nextPtr = psPtr->nextSeqPtr;
-	    DEBUG(psPtr->owned = 0);
+	    DEBUG(psPtr->owned = 0;)
 	    FreePatSeq(psPtr);
 	}
     }
@@ -3459,7 +3459,7 @@ DeleteVirtualEventTable(
     Tcl_DeleteHashTable(&vetPtr->lookupTables.listTable);
 
     ClearLookupTable(&vetPtr->lookupTables, NULL);
-    DEBUG(countEntryItems -= PSList_Size(&vetPtr->lookupTables.entryPool));
+    DEBUG(countEntryItems -= PSList_Size(&vetPtr->lookupTables.entryPool);)
     PSList_Traverse(&vetPtr->lookupTables.entryPool, FreePatSeqEntry);
 }
 
@@ -3528,7 +3528,7 @@ CreateVirtualEvent(
     if (!PhysOwned_Contains(owned, psPtr)) {
 	PhysOwned_Append(&owned, psPtr);
 	Tcl_SetHashValue(vhPtr, owned);
-	DEBUG(psPtr->owned = 1);
+	DEBUG(psPtr->owned = 1;)
 	InsertPatSeq(&vetPtr->lookupTables, psPtr);
 	/* Make physical event so it can trigger the virtual event. */
 	VirtOwners_Append(&psPtr->ptr.owners, vhPtr);
@@ -3634,7 +3634,7 @@ DeleteVirtualEvent(
 		 * Removed last reference to this physical event, so remove it
 		 * from lookup table.
 		 */
-		DEBUG(psPtr->owned = 0);
+		DEBUG(psPtr->owned = 0;)
 		RemovePatSeqFromLookup(&vetPtr->lookupTables, psPtr);
 		DeletePatSeq(psPtr);
 	    }
@@ -4709,7 +4709,7 @@ FindSequence(
 	return NULL;
     }
 
-    DEBUG(countSeqItems += 1);
+    DEBUG(countSeqItems += 1;)
 
     psPtr->numPats = numPats;
     psPtr->count = totalCount;
@@ -4721,7 +4721,7 @@ FindSequence(
     psPtr->hPtr = hPtr;
     psPtr->ptr.nextObj = NULL;
     assert(psPtr->ptr.owners == NULL);
-    DEBUG(psPtr->owned = 0);
+    DEBUG(psPtr->owned = 0;)
     Tcl_SetHashValue(hPtr, psPtr);
 
     if (maskPtr) {
@@ -5234,6 +5234,9 @@ TkKeysymToString(
     }
 #endif /* REDO_KEYSYM_LOOKUP */
 
+    if (keysym > (KeySym)0x1008FFFF) {
+	return NULL;
+    }
     return XKeysymToString(keysym);
 }
 

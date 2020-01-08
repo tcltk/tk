@@ -12,7 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
 /*
  * A couple of simple definitions to make code a bit more self-explaining.
@@ -358,7 +358,7 @@ KeycodeToUnicode(
 KeySym
 XKeycodeToKeysym(
     Display* display,
-    KeyCode keycode,
+    unsigned int keycode,
     int index)
 {
     Tcl_HashEntry *hPtr;
@@ -443,8 +443,11 @@ TkpGetString(
 				 * result. */
 {
     (void) winPtr; /*unused*/
+    int ch;
+
     Tcl_DStringInit(dsPtr);
-    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars, -1);
+    return Tcl_DStringAppend(dsPtr, eventPtr->xkey.trans_chars,
+	    TkUtfToUniChar(eventPtr->xkey.trans_chars, &ch));
 }
 
 /*
@@ -717,7 +720,7 @@ TkpSetKeycodeAndState(
 	}
 
 	if (keysym <= LATIN1_MAX) {
-	    int done = Tcl_UniCharToUtf(keysym, eventPtr->xkey.trans_chars);
+	    int done = TkUniCharToUtf(keysym, eventPtr->xkey.trans_chars);
 
 	    eventPtr->xkey.trans_chars[done] = 0;
 	} else {
@@ -803,7 +806,7 @@ TkpGetKeySym(
     /* If nbytes has been set, it's not a function key, but a regular key that
        has been translated in tkMacOSXKeyEvent.c; just use that. */
     if (eventPtr->xkey.nbytes) {
-      return eventPtr->xkey.keycode & 0xFFFF;
+      return eventPtr->xkey.keycode;
     }
 
     /*

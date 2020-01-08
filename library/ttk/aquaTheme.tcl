@@ -9,8 +9,8 @@ namespace eval ttk::theme::aqua {
 	    -font TkDefaultFont \
 	    -background systemWindowBackgroundColor \
 	    -foreground systemLabelColor \
-	    -selectbackground systemHighlight \
-	    -selectforeground systemLabelColor \
+	    -selectbackground systemSelectedTextBackgroundColor \
+	    -selectforeground systemSelectedTextColor \
 	    -selectborderwidth 0 \
 	    -insertwidth 1
 
@@ -38,7 +38,18 @@ namespace eval ttk::theme::aqua {
 	# Entry
 	ttk::style configure TEntry \
 	    -foreground systemTextColor \
-	    -background systemTextBackgroundColor \
+	    -background systemTextBackgroundColor
+	ttk::style map TEntry \
+	    -foreground {
+		disabled systemDisabledControlTextColor
+	    } \
+	    -selectforeground {
+		background systemTextColor
+	    } \
+	    -selectbackground {
+		background systemTextBackgroundColor
+	    }
+
 
 	# Workaround for #1100117:
 	# Actually, on Aqua we probably shouldn't stipple images in
@@ -59,20 +70,16 @@ namespace eval ttk::theme::aqua {
 	# Combobox:
 	ttk::style configure TCombobox \
 	    -foreground systemTextColor \
-	    -background systemTransparent \
-	    -selectforeground systemSelectedTextColor \
-	    -selectbackground systemSelectedTextBackgroundColor
+	    -background systemTransparent
 	ttk::style map TCombobox \
 	    -foreground {
 		disabled systemDisabledControlTextColor
 	    } \
 	    -selectforeground {
-		!active systemTextColor
+		background systemTextColor
 	    } \
 	    -selectbackground {
-		!active systemTextBackgroundColor
-		!focus systemTextBackgroundColor
-		focus systemSelectedTextBackgroundColor
+		background systemTransparent
 	    }
 
 	# Spinbox
