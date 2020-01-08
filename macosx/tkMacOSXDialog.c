@@ -1573,7 +1573,7 @@ Tk_MessageBoxObjCmd(
  *----------------------------------------------------------------------
  */
 
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXFont.h"
 
 typedef struct FontchooserData {

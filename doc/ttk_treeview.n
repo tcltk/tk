@@ -98,7 +98,7 @@ even if \fB\-show tree\fR is not specified.
 .OP \-striped striped Striped
 Boolean specifying zebra striped row coloring.
 Note:
-Striped rows gets the "alternate" state and it is up to the theme to display this.
+Striped items gets the "alternate" state and it is up to the theme to display this.
 If not supported by the current theme, it will not show.
 .OP \-titlecolumns titleColumns TitleColumns
 Number of display columns at the left that should not be scrolled. The tree column counts, even
@@ -278,7 +278,7 @@ A data cell.
 Returns the item ID of the item at position \fIy\fR.
 .TP
 \fIpathname \fBidentify column \fIx y\fR
-Returns the data column identifier of the cell at position \fIx\fR.
+Returns the display column identifier of the cell at position \fIx\fR.
 The tree column has ID \fB#0\fR.
 .TP
 \fIpathname \fBidentify cell \fIx y\fR

@@ -516,7 +516,7 @@ XCreateImage(
 /*
  *----------------------------------------------------------------------
  *
- * TkPutImage --
+ * XPutImage --
  *
  *	Copies a rectangular subimage of an XImage into a drawable.  Currently
  *      this is only called by TkImgPhotoDisplay, using a Window as the
@@ -532,9 +532,7 @@ XCreateImage(
  */
 
 int
-TkPutImage(
-    unsigned long *colors,	/* Unused on Macintosh. */
-    int ncolors,		/* Unused on Macintosh. */
+XPutImage(
     Display* display,		/* Display. */
     Drawable drawable,		/* Drawable to place image on. */
     GC gc,			/* GC to use. */
@@ -591,22 +589,6 @@ TkPutImage(
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
 }
-
-int
-XPutImage(
-    Display *display,
-    Drawable d,			/* Destination drawable. */
-    GC gc,
-    XImage *image,		/* Source image. */
-    int src_x, int src_y,	/* Offset of subimage. */
-    int dest_x, int dest_y,	/* Position of subimage origin in drawable. */
-    unsigned int width, unsigned int height)
-				/* Dimensions of subimage. */
-{
-    return TkPutImage(NULL, 0, display, d, gc, image,
-		src_x, src_y, dest_x, dest_y, width, height);
-}
-
 
 /*
  * Local Variables:

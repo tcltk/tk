@@ -68,10 +68,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	7
 #define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL	2
+#define TK_RELEASE_SERIAL	3
 
 #define TK_VERSION		"8.7"
-#define TK_PATCH_LEVEL		"8.7a2"
+#define TK_PATCH_LEVEL		"8.7a3"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -111,7 +111,7 @@ extern "C" {
  * Decide whether or not to use input methods.
  */
 
-#ifdef XNQueryInputStyle
+#if defined(XNQueryInputStyle) && !defined(_WIN32) && !defined(MAC_OSX_TK)
 #define TK_USE_INPUT_METHODS
 #endif
 
@@ -813,7 +813,7 @@ typedef struct Tk_FakeWin {
     unsigned long dummy7;	/* dirtyAtts */
     unsigned int flags;
     char *dummy8;		/* handlerList */
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIC dummy9;			/* inputContext */
 #endif /* TK_USE_INPUT_METHODS */
     ClientData *dummy10;	/* tagPtr */
@@ -833,11 +833,15 @@ typedef struct Tk_FakeWin {
     int internalBorderBottom;
     int minReqWidth;
     int minReqHeight;
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     int dummy20;
 #endif /* TK_USE_INPUT_METHODS */
     char *dummy21;		/* geomMgrName */
     Tk_Window dummy22;		/* maintainerPtr */
+#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
+    XIC dummy9;			/* inputContext */
+    int dummy20;
+#endif /* TK_USE_INPUT_METHODS */
 } Tk_FakeWin;
 
 /*

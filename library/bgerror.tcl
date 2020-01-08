@@ -115,6 +115,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
 	if $flag {
+	    set errorInfo $info
 	    after 500 [list bgerror "$err" 0]
 	    return
 	}

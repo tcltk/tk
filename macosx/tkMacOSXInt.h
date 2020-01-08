@@ -191,14 +191,10 @@ MODULE_SCOPE void TkpFreeGCCache(GC gc);
  */
 
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
-#if 0
-MODULE_SCOPE int XSetClipRectangles(Display *d, GC gc, int clip_x_origin,
-	int clip_y_origin, XRectangle* rectangles, int n, int ordering);
-#endif
 MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
 	int y, int width, int height);
-MODULE_SCOPE void TkpRetainRegion(TkRegion r);
-MODULE_SCOPE void TkpReleaseRegion(TkRegion r);
+MODULE_SCOPE void TkpRetainRegion(Region r);
+MODULE_SCOPE void TkpReleaseRegion(Region r);
 MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
 MODULE_SCOPE Bool TkpAppIsDrawing(void);
 MODULE_SCOPE void TkpDisplayWindow(Tk_Window tkwin);

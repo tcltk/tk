@@ -143,11 +143,25 @@ if {[tk windowingsystem] eq "aqua"} {
 	tk::ScrollByUnits %W h [expr {-10 * (%D)}]
     }
 } else {
+    # We must make sure that positive and negative movements are rounded
+    # equally to integers, avoiding the problem that
+    #     (int)1/30 = 0,
+    # but
+    #     (int)-1/30 = -1
+    # The following code ensure equal +/- behaviour.
     bind Scrollbar <MouseWheel> {
-	tk::ScrollByUnits %W v [expr {-(%D / 30)}]
+	if {%D >= 0} {
+	    tk::ScrollByUnits %W v [expr {-%D/30}]
+	} else {
+	    tk::ScrollByUnits %W v [expr {(29-%D)/30}]
+	}
     }
     bind Scrollbar <Shift-MouseWheel> {
-	tk::ScrollByUnits %W h [expr {-(%D / 30)}]
+	if {%D >= 0} {
+	    tk::ScrollByUnits %W h [expr {-%D/30}]
+	} else {
+	    tk::ScrollByUnits %W h [expr {(29-%D)/30}]
+	}
     }
 }
 

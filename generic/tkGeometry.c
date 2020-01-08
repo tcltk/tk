@@ -220,13 +220,12 @@ Tk_SetInternalBorderEx(
     /*
      * All the slaves for which this is the master window must now be
      * repositioned to take account of the new internal border width. To
-     * signal all the geometry managers to do this, just resize the window to
-     * its current size. The ConfigureNotify event will cause geometry
-     * managers to recompute everything.
+     * signal all the geometry managers to do this, trigger a ConfigureNotify
+     * event. This will cause geometry managers to recompute everything.
      */
 
     if (changed) {
-	Tk_ResizeWindow(tkwin, Tk_Width(tkwin), Tk_Height(tkwin));
+	TkDoConfigureNotify(winPtr);
     }
 }
 

@@ -79,7 +79,8 @@ TkSelGetSelection(
 	    goto error;
 	}
 	data = GlobalLock(handle);
-	Tcl_WinTCharToUtf((WCHAR *)data, -1, &ds);
+	Tcl_DStringInit(&ds);
+	Tcl_WCharToUtfDString((WCHAR *)data, wcslen((WCHAR *)data), &ds);
 	GlobalUnlock(handle);
     } else if (IsClipboardFormatAvailable(CF_TEXT)) {
 	/*
@@ -157,7 +158,8 @@ TkSelGetSelection(
 		    Tcl_DStringAppend(&ds, "\n", 1);
 		}
 		len = wcslen(fname);
-		Tcl_WinTCharToUtf(fname, len * sizeof(WCHAR), &dsTmp);
+		Tcl_DStringInit(&dsTmp);
+		Tcl_WCharToUtfDString(fname, len, &dsTmp);
 		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
 			Tcl_DStringLength(&dsTmp));
 		Tcl_DStringFree(&dsTmp);
@@ -327,13 +329,8 @@ TkWinClipboardRender(
     }
     *buffer = '\0';
 
-    /*
-     * Depending on the platform, turn the data into Unicode or the system
-     * encoding before placing it on the clipboard.
-     */
-
 	Tcl_DStringInit(&ds);
-	Tcl_WinUtfToTChar(rawText, -1, &ds);
+	Tcl_UtfToWCharDString(rawText, -1, &ds);
 	ckfree(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
 		(unsigned) Tcl_DStringLength(&ds) + 2);

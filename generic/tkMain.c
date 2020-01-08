@@ -14,21 +14,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/**
- * On Windows, this file needs to be compiled twice, once with
- * TK_ASCII_MAIN defined. This way both Tk_MainEx and Tk_MainExW
- * can be implemented, sharing the same source code.
- */
-#if defined(TK_ASCII_MAIN)
-#   ifdef UNICODE
-#	undef UNICODE
-#	undef _UNICODE
-#   else
-#	define UNICODE
-#	define _UNICODE
-#   endif
-#endif
-
 #include "tkInt.h"
 
 extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
@@ -84,7 +69,8 @@ NewNativeObj(
     Tcl_DString ds;
 
 #ifdef UNICODE
-    Tcl_WinTCharToUtf(string, -1, &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_WCharToUtfDString(string, wcslen(string), &ds);
 #else
     Tcl_ExternalToUtfDString(NULL, (char *) string, -1, &ds);
 #endif
@@ -266,7 +252,7 @@ Tk_MainEx(
 
 	if ((argc > 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
 		&& (TEXT('-') != argv[3][0])) {
-		Tcl_Obj *value = NewNativeObj(argv[2]);
+	    Tcl_Obj *value = NewNativeObj(argv[2]);
 	    Tcl_SetStartupScript(NewNativeObj(argv[3]), Tcl_GetString(value));
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
@@ -427,7 +413,7 @@ StdinProc(
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
 
-    count = Tcl_Gets(chan, &isPtr->line);
+    count = (size_t)Tcl_Gets(chan, &isPtr->line);
 
     if (count == (size_t)-1 && !isPtr->gotPartial) {
 	if (isPtr->tty) {

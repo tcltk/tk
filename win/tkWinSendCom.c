@@ -385,8 +385,8 @@ Async(
     if (SUCCEEDED(hr) && obj->interp) {
 	Tcl_Obj *scriptPtr;
 
-	Tcl_WinTCharToUtf(vCmd.bstrVal, (int) SysStringLen(vCmd.bstrVal) *
-		sizeof (WCHAR), &ds);
+	Tcl_DStringInit(&ds);
+	Tcl_WCharToUtfDString(vCmd.bstrVal, SysStringLen(vCmd.bstrVal), &ds);
 	scriptPtr =
 		Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
 	Tcl_DStringFree(&ds);
@@ -440,8 +440,8 @@ Send(
 	return hr;
     }
 
-    Tcl_WinTCharToUtf(v.bstrVal, (int) SysStringLen(v.bstrVal) *
-	    sizeof (WCHAR), &ds);
+    Tcl_DStringInit(&ds);
+    Tcl_WCharToUtfDString(v.bstrVal, SysStringLen(v.bstrVal), &ds);
     scriptPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
     Tcl_Preserve(interp);
@@ -457,8 +457,8 @@ Send(
 	pvResult->vt = VT_BSTR;
 	obj = Tcl_GetObjResult(interp);
 	src = Tcl_GetString(obj);
-	Tcl_WinUtfToTChar(src, obj->length, &ds);
-	pvResult->bstrVal = SysAllocString((WCHAR *) Tcl_DStringValue(&ds));
+	Tcl_DStringInit(&ds);
+	pvResult->bstrVal = SysAllocString(Tcl_UtfToWCharDString(src, obj->length, &ds));
 	Tcl_DStringFree(&ds);
     }
     if (result == TCL_ERROR) {

@@ -95,7 +95,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
      * if we are running at least on Windows XP.
      */
     HINSTANCE handle;
-    *phlib = handle = LoadLibrary(L"uxtheme.dll");
+    *phlib = handle = LoadLibraryW(L"uxtheme.dll");
     if (handle != 0)
     {
 	/*
@@ -833,13 +833,13 @@ static void TextElementSize(
 	return;
 
     src = TkGetStringFromObj(element->textObj, &len);
-    Tcl_WinUtfToTChar(src, len, &ds);
+    Tcl_DStringInit(&ds);
     hr = elementData->procs->GetThemeTextExtent(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
 	    Ttk_StateTableLookup(elementData->info->statemap, 0),
-	    (WCHAR *) Tcl_DStringValue(&ds),
+	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
 	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
 	    NULL,
@@ -872,13 +872,13 @@ static void TextElementDraw(
 	return;
 
     src = TkGetStringFromObj(element->textObj, &len);
-    Tcl_WinUtfToTChar(src, len, &ds);
+    Tcl_DStringInit(&ds);
     hr = elementData->procs->DrawThemeText(
 	    elementData->hTheme,
 	    elementData->hDC,
 	    elementData->info->partId,
 	    Ttk_StateTableLookup(elementData->info->statemap, state),
-	    (WCHAR *) Tcl_DStringValue(&ds),
+	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
 	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
 	    (state & TTK_STATE_DISABLED) ? DTT_GRAYED : 0,
@@ -1025,7 +1025,7 @@ static ElementInfo ElementInfoTable[] = {
     { "Menubutton.dropdown", &GenericElementSpec, L"TOOLBAR",
     	TP_SPLITBUTTONDROPDOWN,toolbutton_statemap, NOPAD,0 },
     { "Treeview.field", &GenericElementSpec, L"TREEVIEW",
-	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), 0 },
+	TVP_TREEITEM, treeview_statemap, PAD(1, 1, 1, 1), IGNORE_THEMESIZE },
     { "Treeitem.indicator", &TreeIndicatorElementSpec, L"TREEVIEW",
     	TVP_GLYPH, tvpglyph_statemap, PAD(1,1,6,0), PAD_MARGINS },
     { "Treeheading.border", &GenericElementSpec, L"HEADER",
@@ -1111,7 +1111,7 @@ Ttk_CreateVsapiElement(
     XPThemeData *themeData = clientData;
     ElementInfo *elementPtr = NULL;
     ClientData elementData;
-    WCHAR *className;
+    LPCWSTR className;
     int partId = 0;
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
@@ -1139,7 +1139,8 @@ Ttk_CreateVsapiElement(
 	return TCL_ERROR;
     }
     name = TkGetStringFromObj(objv[0], &length);
-    className = (WCHAR *) Tcl_WinUtfToTChar(name, length, &classBuf);
+    Tcl_DStringInit(&classBuf);
+    className = Tcl_UtfToWCharDString(name, length, &classBuf);
 
     /* flags or padding */
     if (objc > 3) {

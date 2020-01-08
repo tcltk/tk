@@ -29,12 +29,14 @@ ttk::bindMouseWheel TSpinbox 		[list ttk::spinbox::MouseWheel %W]
 #	Sets cursor.
 #
 proc ttk::spinbox::Motion {w x y} {
+    variable State
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor text]
     if {   [$w identify $x $y] eq "textarea"
         && [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
-	ttk::setCursor $w ""
+	ttk::setCursor $w $State(userConfCursor)
     }
 }
 

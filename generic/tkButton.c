@@ -878,7 +878,7 @@ ButtonWidgetObjCmd(
 		 */
 
 		Tcl_CancelIdleCall(TkpDisplayButton, butPtr);
-		XFlush(butPtr->display);
+		(void)XFlush(butPtr->display);
 		#ifndef MAC_OSX_TK
 		/*
 		 * On the mac you can not sleep in a display proc, and the

@@ -217,7 +217,7 @@ EXTERN void		TkMacOSXUnregisterMacWindow(void *portPtr);
 /* 34 */
 EXTERN int		TkMacOSXUseMenuID(short macID);
 /* 35 */
-EXTERN TkRegion		TkMacOSXVisableClipRgn(TkWindow *winPtr);
+EXTERN Region		TkMacOSXVisableClipRgn(TkWindow *winPtr);
 /* 36 */
 EXTERN void		TkMacOSXWinBounds(TkWindow *winPtr, void *geometry);
 /* 37 */
@@ -383,7 +383,7 @@ typedef struct TkIntPlatStubs {
     void (*tkMacOSXUpdateClipRgn) (TkWindow *winPtr); /* 32 */
     void (*tkMacOSXUnregisterMacWindow) (void *portPtr); /* 33 */
     int (*tkMacOSXUseMenuID) (short macID); /* 34 */
-    TkRegion (*tkMacOSXVisableClipRgn) (TkWindow *winPtr); /* 35 */
+    Region (*tkMacOSXVisableClipRgn) (TkWindow *winPtr); /* 35 */
     void (*tkMacOSXWinBounds) (TkWindow *winPtr, void *geometry); /* 36 */
     void (*tkMacOSXWindowOffset) (void *wRef, int *xOffset, int *yOffset); /* 37 */
     int (*tkSetMacColor) (unsigned long pixel, void *macColor); /* 38 */

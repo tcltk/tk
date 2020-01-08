@@ -126,6 +126,19 @@ static CGFloat pressedPushButtonGradient[8] = {
 #define CGPathCreateWithRoundedRect(w, x, y, z) NULL
 #endif
 
+/*
+ * If we try to draw a rounded rectangle with too large of a radius
+ * CoreGraphics will raise a fatal exception.  This macro returns if
+ * the width or height is less than twice the radius.  Presumably this
+ * only happens when a widget has not yet been configured and has size
+ * 1x1.
+ */
+
+#define CHECK_RADIUS(radius, bounds)                                         \
+    if (radius > bounds.size.width / 2 || radius > bounds.size.height / 2) { \
+        return;                                                              \
+    }
+
 /*----------------------------------------------------------------------
  * +++ Utilities.
  */
@@ -381,6 +394,8 @@ static void FillButtonBackground(
     CGRect bounds,
     CGFloat radius)
 {
+    CHECK_RADIUS(radius, bounds)
+
     CGPathRef path;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     CGGradientRef backgroundGradient = CGGradientCreateWithColorComponents(
@@ -389,7 +404,6 @@ static void FillButtonBackground(
 	bounds.origin.x,
 	bounds.origin.y + bounds.size.height
     };
-
     CGContextBeginPath(context);
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextAddPath(context, path);
@@ -443,6 +457,8 @@ static void DrawGroupBox(
     CGContextRef context,
     Tk_Window tkwin)
 {
+    CHECK_RADIUS(4, bounds)
+
     CGPathRef path;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *borderColor, *bgColor;
@@ -485,6 +501,7 @@ static void SolidFillRoundedRectangle(
     NSColor *color)
 {
     CGPathRef path;
+    CHECK_RADIUS(radius, bounds)
 
     CGContextSetFillColorWithColor(context, CGCOLOR(color));
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
@@ -605,6 +622,8 @@ static void GradientFillRoundedRectangle(
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     CGPathRef path;
+    CHECK_RADIUS(radius, bounds)
+
     CGPoint end = {
 	bounds.origin.x,
 	bounds.origin.y + bounds.size.height
@@ -1043,6 +1062,9 @@ static void DrawDarkFocusRing(
     CGRect bounds,
     CGContextRef context)
 {
+    CGRect insetBounds = CGRectInset(bounds, -3, -3);
+    CHECK_RADIUS(4, insetBounds)
+
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *strokeColor;
     NSColor *fillColor = [NSColor colorWithColorSpace:deviceRGB
@@ -1072,8 +1094,7 @@ static void DrawDarkFocusRing(
     CGContextStrokePath(context);
     CGContextSetShouldAntialias(context, true);
     CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
-    CGPathRef path = CGPathCreateWithRoundedRect(CGRectInset(bounds, -3, -3),
-						 4, 4, NULL);
+    CGPathRef path = CGPathCreateWithRoundedRect(insetBounds, 4, 4, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextAddRect(context, bounds);
@@ -1388,8 +1409,10 @@ static void ButtonElementDraw(
     } else if (info.kind == kThemePushButton &&
 	       (state & TTK_STATE_PRESSED)) {
 	bounds.size.height += 2;
-	GradientFillRoundedRectangle(dc.context, bounds, 4,
-	    pressedPushButtonGradient, 2);
+	if ([NSApp macMinorVersion] > 8) {
+	    GradientFillRoundedRectangle(dc.context, bounds, 4,
+					 pressedPushButtonGradient, 2);
+	}
     } else {
 
         /*
@@ -1838,18 +1861,17 @@ static void ComboboxElementDraw(
     BEGIN_DRAWING(d)
     bounds.origin.y += 1;
     if (TkMacOSXInDarkMode(tkwin)) {
-	    bounds.size.height += 1;
+	bounds.size.height += 1;
 	DrawDarkButton(bounds, info.kind, state, dc.context);
-	} else if ([NSApp macMinorVersion] > 8) {
-	    if ((state & TTK_STATE_BACKGROUND) &&
-		!(state & TTK_STATE_DISABLED)) {
+    } else if ([NSApp macMinorVersion] > 8) {
+	if ((state & TTK_STATE_BACKGROUND) &&
+	    !(state & TTK_STATE_DISABLED)) {
 	    NSColor *background = [NSColor textBackgroundColor];
 	    CGRect innerBounds = CGRectInset(bounds, 1, 2);
 	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
 	}
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
-		NULL);
     }
+    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
 }
 
@@ -2074,7 +2096,7 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
-    factor = RangeToFactor(to - from);
+    factor = RangeToFactor(to);
 
     HIThemeTrackDrawInfo info = {
 	.version = 0,

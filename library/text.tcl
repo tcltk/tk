@@ -42,12 +42,6 @@
 
 # Standard Motif bindings:
 
-bind Text <Map> {
-    if {[tk windowingsystem] eq "aqua"} {
-    	::tk::RegisterServiceWidget %W
-    }
-}
-
 bind Text <1> {
     tk::TextButton1 %W %x %y
     %W tag remove sel 0.0 end
@@ -395,6 +389,26 @@ bind Text <Meta-Delete> {
     if {!$tk_strictMotif} {
 	%W delete [tk::TextPrevPos %W insert tcl_startOfPreviousWord] insert
     }
+}
+
+# Bindings for IME text input.
+
+bind Text <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind Text <<TkEndIMEMarkedText>> {
+    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+	bell
+    } else {
+	%W tag add IMEmarkedtext $mark insert
+	%W tag configure IMEmarkedtext -underline on
+    }
+}
+bind Text <<TkClearIMEMarkedText>> {
+    %W delete IMEmarkedtext.first IMEmarkedtext.last
+}
+bind Text <<TkAccentBackspace>> {
+    %W delete insert-1c
 }
 
 # Macintosh only bindings:
@@ -1223,7 +1237,6 @@ proc ::tk::TextScanDrag {w x y} {
 	$w scan dragto $x $y
     }
 }
-
 # ::tk::TextUndoRedoProcessMarks --
 #
 # This proc is executed after an undo or redo action.

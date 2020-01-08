@@ -21,7 +21,7 @@ typedef struct ConvertInfo {
 				 * offset of the next chunk of data to
 				 * transfer. */
     Tcl_EncodingState state;	/* The encoding state needed across chunks. */
-    char buffer[4];		/* A buffer to hold part of a UTF character
+    char buffer[4];	/* A buffer to hold part of a UTF character
 				 * that is split across chunks.*/
 } ConvertInfo;
 
@@ -446,7 +446,7 @@ TkSelPropProc(
 		 * Preserve any left-over bytes.
 		 */
 
-		if (srcLen > 4) {
+		if (srcLen > 3) {
 		    Tcl_Panic("selection conversion left too many bytes unconverted");
 		}
 		memcpy(incrPtr->converts[i].buffer, src, srcLen + 1);

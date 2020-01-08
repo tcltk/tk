@@ -1688,11 +1688,13 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    update
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     .e configure -width 5
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
+    after cancel $timeout
 } -result {0.000000 0.363636}
 
 
@@ -1933,10 +1935,12 @@ test entry-7.1 {InsertChars procedure} -setup {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
     .e insert 2 XXX
-    update
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
+    after cancel $timeout
 } -result {abXXXcde abXXXcde {0.000000 1.000000}}
 
 test entry-7.2 {InsertChars procedure} -setup {
@@ -1948,10 +1952,12 @@ test entry-7.2 {InsertChars procedure} -setup {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
     .e insert 500 XXX
-    update
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
+    after cancel $timeout
 } -result {abcdeXXX abcdeXXX {0.000000 1.000000}}
 test entry-7.3 {InsertChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
@@ -2080,10 +2086,12 @@ test entry-8.1 {DeleteChars procedure} -setup {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
     .e delete 2 4
-    update
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
+    after cancel $timeout
 } -result {abe abe {0.000000 1.000000}}
 test entry-8.2 {DeleteChars procedure} -setup {
     unset -nocomplain contents
@@ -2094,10 +2102,12 @@ test entry-8.2 {DeleteChars procedure} -setup {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
     .e delete -2 2
-    update
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
+    after cancel $timeout
 } -result {cde cde {0.000000 1.000000}}
 test entry-8.3 {DeleteChars procedure} -setup {
     unset -nocomplain contents
@@ -2108,10 +2118,12 @@ test entry-8.3 {DeleteChars procedure} -setup {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
     .e delete 3 1000
-    update
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
+    after cancel $timeout
 } -result {abc abc {0.000000 1.000000}}
 test entry-8.4 {DeleteChars procedure} -setup {
     entry .e -width 10 -font {Courier -12} -highlightthickness 2 -bd 2
@@ -2954,30 +2966,36 @@ test entry-17.1 {EntryUpdateScrollbar procedure} -body {
     pack .e
     .e delete 0 end
     .e insert 0 123
-    update
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
+    after cancel $timeout
 } -result {0.000000 1.000000}
 test entry-17.2 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
     .e insert 0 0123456789abcdef
     .e xview 3
-    update
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
+    after cancel $timeout
 } -result {0.187500 0.812500}
 test entry-17.3 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
     .e insert 0 abcdefghijklmnopqrs
     .e xview 6
-    update
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
+    after cancel $timeout
 } -result {0.315789 0.842105}
 test entry-17.4 {EntryUpdateScrollbar procedure} -setup {
     proc bgerror msg {
@@ -2987,7 +3005,7 @@ test entry-17.4 {EntryUpdateScrollbar procedure} -setup {
 } -body {
     entry .e -width 5 -xscrollcommand thisisnotacommand
     pack .e
-    update
+    vwait x
     list $x $errorInfo
 } -cleanup {
     destroy .e
