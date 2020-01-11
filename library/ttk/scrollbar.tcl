@@ -17,6 +17,27 @@ bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Jump %W %x %y }
 bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 
+# Redirect scrollwheel bindings to the scrollbar widget
+#
+# The shift-bindings scroll left/right (not up/down)
+# if a widget has both possibilities
+set eventList [list <MouseWheel> <Shift-MouseWheel>]
+switch [tk windowingsystem] {
+    aqua {
+        lappend eventList <Option-MouseWheel> <Shift-Option-MouseWheel>
+    }
+    x11 {
+        lappend eventList <Button-4> <Button-5> \
+                <Shift-Button-4> <Shift-Button-5>
+        # For tk 8.7, the event list should be extended by
+        # <Button-6> <Button-7>
+    }
+}
+foreach event $eventList {
+    bind TScrollbar $event [bind Scrollbar $event]
+}
+unset eventList event
+
 proc ttk::scrollbar::Scroll {w n units} {
     set cmd [$w cget -command]
     if {$cmd ne ""} {
