@@ -6690,6 +6690,9 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
 } -result {0 0 ok ok}
 
 test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
+    event generate {} <Motion> -warp 1 -x 1 -y 1
+    update idletasks ; # DoWarp is an idle callback
+    after 50         ; # Win specific - wait for SendInput to be executed
     toplevel .top
     grab release .top
     wm geometry .top 200x200+300+300
@@ -6697,16 +6700,16 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
             -highlightbackground black -bg yellow -text "My label"
     pack .top.l -side bottom
     update
-    event generate {} <Motion> -warp 1 -x 0 -y 0
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
 } -body {
+    grab .top  ; # this will queue events
+    after 50
+    update
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     update idletasks ; after 50
     foreach {x1 y1} [winfo pointerxy .top.l] {}
-    event generate {} <Motion> -warp 1 -x 0 -y 0
+    event generate {} <Motion> -warp 1 -x 1 -y 1
     update idletasks ; after 50
-    grab .top  ; # this will queue events
+    grab release .top  ; # this will queue events
     after 50
     update
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
