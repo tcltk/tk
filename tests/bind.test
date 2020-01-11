@@ -6690,10 +6690,6 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
 } -result {0 0 ok ok}
 
 test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
-    proc twait {duration} {
-        set ::_twait 1; after $duration {unset ::_twait}
-        vwait ::_twait
-    }
     toplevel .top
     grab release .top
     wm geometry .top 200x200+300+300
@@ -6710,8 +6706,9 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
     foreach {x1 y1} [winfo pointerxy .top.l] {}
     event generate {} <Motion> -warp 1 -x 0 -y 0
     update idletasks ; after 50
-    grab .top
-    twait 1000
+    grab .top  ; # this will queue events
+    after 50
+    update
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     update idletasks ; after 50
     foreach {x2 y2} [winfo pointerxy .top.l] {}
@@ -6719,7 +6716,6 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
 } -cleanup {
     destroy .top
     unset x1 y1 x2 y2
-    rename twait {}
 } -result {1}
 
 # cleanup
