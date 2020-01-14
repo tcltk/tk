@@ -31,7 +31,7 @@
 # can put "break"s in their bindings to avoid the error, but this check
 # makes that unnecessary.
 
-bind Listbox <1> {
+bind Listbox <Button-1> {
     if {[winfo exists %W]} {
 	tk::ListboxBeginSelect %W [%W index @%x,%y] 1
     }
@@ -41,7 +41,7 @@ bind Listbox <1> {
 # Among other things, this prevents errors if the user deletes the
 # listbox on a double click.
 
-bind Listbox <Double-1> {
+bind Listbox <Double-Button-1> {
     # Empty script
 }
 
@@ -54,10 +54,10 @@ bind Listbox <ButtonRelease-1> {
     tk::CancelRepeat
     %W activate @%x,%y
 }
-bind Listbox <Shift-1> {
+bind Listbox <Shift-Button-1> {
     tk::ListboxBeginExtend %W [%W index @%x,%y]
 }
-bind Listbox <Control-1> {
+bind Listbox <Control-Button-1> {
     tk::ListboxBeginToggle %W [%W index @%x,%y]
 }
 bind Listbox <B1-Leave> {
@@ -169,7 +169,7 @@ bind Listbox <<SelectNone>> {
 
 # Additional Tk bindings that aren't part of the Motif look and feel:
 
-bind Listbox <2> {
+bind Listbox <Button-2> {
     %W scan mark %x %y
 }
 bind Listbox <B2-Motion> {
@@ -221,32 +221,32 @@ if {[tk windowingsystem] eq "x11"} {
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
     #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind Listbox <4> {
+    bind Listbox <Button-4> {
 	if {!$tk_strictMotif} {
 	    %W yview scroll -5 units
 	}
     }
-    bind Listbox <Shift-4> {
+    bind Listbox <Shift-Button-4> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll -5 units
 	}
     }
-    bind Listbox <5> {
+    bind Listbox <Button-5> {
 	if {!$tk_strictMotif} {
 	    %W yview scroll 5 units
 	}
     }
-    bind Listbox <Shift-5> {
+    bind Listbox <Shift-Button-5> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll 5 units
 	}
     }
-    bind Listbox <6> {
+    bind Listbox <Button-6> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll -5 units
 	}
     }
-    bind Listbox <7> {
+    bind Listbox <Button-7> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll 5 units
 	}

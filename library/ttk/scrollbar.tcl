@@ -9,11 +9,11 @@ namespace eval ttk::scrollbar {
     # State(first)	-- value of -first at start of drag.
 }
 
-bind TScrollbar <ButtonPress-1> 	{ ttk::scrollbar::Press %W %x %y }
+bind TScrollbar <Button-1> 		{ ttk::scrollbar::Press %W %x %y }
 bind TScrollbar <B1-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-1>	{ ttk::scrollbar::Release %W %x %y }
 
-bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Jump %W %x %y }
+bind TScrollbar <Button-2> 		{ ttk::scrollbar::Jump %W %x %y }
 bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 
@@ -29,8 +29,6 @@ switch [tk windowingsystem] {
     x11 {
         lappend eventList <Button-4> <Button-5> <Button-6> <Button-7>\
                 <Shift-Button-4> <Shift-Button-5>
-        # For tk 8.7, the event list should be extended by
-        # <Button-6> <Button-7>
     }
 }
 foreach event $eventList {
@@ -104,7 +102,7 @@ proc ttk::scrollbar::Release {w x y} {
     ttk::CancelRepeat
 }
 
-# scrollbar::Jump -- ButtonPress-2 binding for scrollbars.
+# scrollbar::Jump -- Button-2 binding for scrollbars.
 # 	Behaves exactly like scrollbar::Press, except that
 #	clicking in the trough jumps to the the selected position.
 #
