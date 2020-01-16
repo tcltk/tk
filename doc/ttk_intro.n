@@ -121,7 +121,7 @@ widget are:
 .CS
 bind TButton <Enter>		{ %W state active }
 bind TButton <Leave>		{ %W state !active }
-bind TButton <ButtonPress-1>	{ %W state pressed }
+bind TButton <Button-1>		{ %W state pressed }
 bind TButton <Button1-Leave>	{ %W state !pressed }
 bind TButton <Button1-Enter>	{ %W state pressed }
 bind TButton <ButtonRelease-1>	\e

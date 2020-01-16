@@ -470,7 +470,7 @@ defined for \fItagOrId\fR.
 .PP
 The only events for which bindings may be specified are those related to
 the mouse and keyboard (such as \fBEnter\fR, \fBLeave\fR,
-\fBButtonPress\fR, \fBMotion\fR, and \fBKeyPress\fR) or virtual events.
+\fBButton\fR, \fBMotion\fR, and \fBKey\fR) or virtual events.
 The handling of events in canvases uses the current item defined in
 \fBITEM IDS AND TAGS\fR above. \fBEnter\fR and \fBLeave\fR events
 trigger for an
