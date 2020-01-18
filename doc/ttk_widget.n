@@ -74,6 +74,9 @@ and other button-like widgets:
 .OP \-compound compound Compound
 Specifies how to display the image relative to the text,
 in the case both \fB\-text\fR and \fB\-image\fR are present.
+If set to the empty string (the default), the rules described in the
+"Elements" section of \fIttk::intro(n)\fR explain which value is actually
+used.
 Valid values are:
 .RS
 .IP text
@@ -88,7 +91,7 @@ Display text centered on top of image.
 .IP right
 Display image above, below, left of, or right of the text, respectively.
 .IP none
-The default; display the image if present, otherwise the text.
+Display the image if present, otherwise the text.
 .RE
 .OP \-image image Image
 Specifies an image to display.
