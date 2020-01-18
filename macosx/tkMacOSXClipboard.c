@@ -35,7 +35,7 @@ static Tk_Window clipboardOwner = NULL;
 		    targetPtr->type == dispPtr->utf8Atom) {
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = TclUniToNSString(cbPtr->buffer, cbPtr->length);
+		    NSString *s = TkUtfToNSString(cbPtr->buffer, cbPtr->length);
 		    [string appendString:s];
 		    [s release];
 		}
@@ -144,7 +144,7 @@ TkSelGetSelection(
 	     * does produce a 3-byte sequence.)
 	     */
 
-	    char *bytes = NSStringToTclUni(string, NULL);
+	    char *bytes = TkNSStringToUtf(string, NULL);
 	    result = proc(clientData, interp, bytes);
 	    if (bytes) {
 		ckfree(bytes);

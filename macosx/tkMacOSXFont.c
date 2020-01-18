@@ -104,7 +104,7 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
 /*
  *---------------------------------------------------------------------------
  *
- * TclUniToNSString --
+ * TkUtfToNSString --
  *
  * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
  * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
@@ -127,32 +127,25 @@ static void		DrawCharsInContext(Display *display, Drawable drawable,
  */
 
 MODULE_SCOPE NSString*
-TclUniToNSString(
+TkUtfToNSString(
    const char *source,
-   int numBytes)
+   size_t numBytes)
 {
-    NSString *string = [[NSString alloc] initWithBytesNoCopy:(void *)source
-						      length:numBytes
-						    encoding:NSUTF8StringEncoding
-						freeWhenDone:NO];
-    if (!string) {
-	const unichar *characters = ckalloc(numBytes*sizeof(unichar));
-	const char *in = source;
-	unichar *out = (unichar *) characters;
-	while (in < source + numBytes) {
-	    in += Tcl_UtfToUniChar(in, out++);
-	}
-	string = [[NSString alloc] initWithCharacters:characters
-		     length:(out - characters)];
-	ckfree(characters);
-    }
+    NSString *string;
+    Tcl_DString ds;
+
+    Tcl_DStringInit(&ds);
+    Tcl_UtfToUniCharDString(source, numBytes, &ds);
+    string = [[NSString alloc] initWithCharacters:(const unichar *)Tcl_DStringValue(&ds)
+	    length:(Tcl_DStringLength(&ds)>>1)];
+    Tcl_DStringFree(&ds);
     return string;
 }
 
 /*
  *---------------------------------------------------------------------------
  *
- * TclUniAtIndex --
+ * TkUtfAtIndex --
  *
  *  Write a sequence of bytes up to length 6 which is an encoding of a UTF-16
  *  character in an NSString.  Also record the unicode code point of the character.
@@ -170,7 +163,7 @@ TclUniToNSString(
  */
 
 MODULE_SCOPE int
-TclUniAtIndex(
+TkUtfAtIndex(
     NSString *string,
     int index,
     char *uni,
@@ -198,7 +191,7 @@ TclUniAtIndex(
 /*
  *---------------------------------------------------------------------------
  *
- * NSStringToTclUni --
+ * TkNSStringToUtf --
  *
  * Encodes the unicode string represented by an NSString object with the
  * internal encoding that Tcl uses when TCL_UTF_MAX = 3.  This encoding
@@ -219,7 +212,7 @@ TclUniAtIndex(
  */
 
 MODULE_SCOPE char*
-NSStringToTclUni(
+TkNSStringToUtf(
    NSString *string,
    int *numBytes)
 {
@@ -230,7 +223,7 @@ NSStringToTclUni(
     ptr = bytes;
     if (ptr) {
 	for (i = 0; i < [string length]; i++) {
-	    ptr += TclUniAtIndex(string, i, ptr, &code);
+	    ptr += TkUtfAtIndex(string, i, ptr, &code);
 	    if (code > 0xffff){
 		i++;
 	    }
@@ -986,7 +979,7 @@ TkpMeasureCharsInContext(
     if (maxLength > 32767) {
 	maxLength = 32767;
     }
-    string = TclUniToNSString((const char *)source, numBytes);
+    string = TkUtfToNSString((const char *)source, numBytes);
     if (!string) {
 	length = 0;
 	fit = rangeLength;
@@ -1265,7 +1258,7 @@ DrawCharsInContext(
 	    !TkMacOSXSetupDrawingContext(drawable, gc, 1, &drawingContext)) {
 	return;
     }
-    string = TclUniToNSString((const char *)source, numBytes);
+    string = TkUtfToNSString((const char *)source, numBytes);
     if (!string) {
 	return;
     }
