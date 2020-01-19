@@ -6702,6 +6702,7 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
     update
 } -body {
     grab .top  ; # this will queue events
+    update
     after 50
     update
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
