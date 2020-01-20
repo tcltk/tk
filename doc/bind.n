@@ -168,14 +168,14 @@ couple non-standard X event types that were added to better support
 the Macintosh and Windows platforms.  Below is a list of all the valid
 types; where two names appear together, they are synonyms.
 .DS
-.ta \w'\fBButtonPress, Button\0\0\0\fR'u +\w'\fBKeyPress, Key\0\0\0\fR'u
+.ta \w'\fBButton, ButtonPress\0\0\0\fR'u +\w'\fBKey, KeyPress\0\0\0\fR'u
 \fBActivate\fR	\fBDestroy\fR	\fBMap\fR
-\fBButtonPress\fR, \fBButton\fR	\fBEnter\fR	\fBMapRequest\fR
+\fBButton\fR, \fBButtonPress\fR	\fBEnter\fR	\fBMapRequest\fR
 \fBButtonRelease\fR	\fBExpose\fR	\fBMotion\fR
 \fBCirculate\fR	\fBFocusIn\fR	\fBMouseWheel\fR
 \fBCirculateRequest\fR	\fBFocusOut\fR	\fBProperty\fR
 \fBColormap\fR	\fBGravity\fR	\fBReparent\fR
-\fBConfigure\fR	\fBKeyPress\fR, \fBKey\fR	\fBResizeRequest\fR
+\fBConfigure\fR	\fBKey\fR, \fBKeyPress\fR	\fBResizeRequest\fR
 \fBConfigureRequest\fR	\fBKeyRelease\fR	\fBUnmap\fR
 \fBCreate\fR	\fBLeave\fR	\fBVisibility\fR
 \fBDeactivate\fR
