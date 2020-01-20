@@ -218,7 +218,7 @@ proc CreateGUI {} {
             -fill black -activefill "#600000"
     }
     $c moveto knight {*}[lrange [$c coords [expr {1 + int(rand() * 64)}]] 0 1]
-    $c bind knight <ButtonPress-1> [namespace code [list DragStart %W %x %y]]
+    $c bind knight <Button-1> [namespace code [list DragStart %W %x %y]]
     $c bind knight <Motion> [namespace code [list DragMotion %W %x %y]]
     $c bind knight <ButtonRelease-1> [namespace code [list DragEnd %W %x %y]]
 
