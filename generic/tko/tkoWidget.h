@@ -87,33 +87,33 @@ extern "C" {
         const char *dbclass;   /* Option DB class name or NULL for synonym options. */
         const char *defvalue;  /* Default value. */
         int flags;             /* bit array of TKO_OPTION_* values to configure option behaviour */
-        Tcl_MethodCallProc *method;	/* If not NULL it is the function name of the -option method */
+        Tcl_MethodCallProc *method;    /* If not NULL it is the function name of the -option method */
         Tko_WidgetOptionType type;  /* if greater 0 then option type used in common option set method */
         int offset;            /* offset in meta data struct */
     } Tko_WidgetOptionDefine;
 #define TKO_OPTION_READONLY 0x1 /* option is only setable at creation time */
 #define TKO_OPTION_HIDE     0x2 /* option is hidden in configure method */      
-#define TKO_OPTION_NULL  	0x4 /* empty values are saved as NULL */
+#define TKO_OPTION_NULL      0x4 /* empty values are saved as NULL */
 #define TKO_OPTION__USER    0x8 /* internally used */
 
-	/*
-	* Widget structure data used in objects.
-	*/
-	typedef struct Tko_Widget {
-		Tcl_Interp *interp;        /* Interpreter associated with widget. */
-		Tcl_Object object;         /* our own object */
-		Tk_Window tkWin;           /* Window that embodies the canvas. NULL means
-								   * that the window has been destroyed but the
-								   * data structures haven't yet been cleaned
-								   * up.*/
-		Display *display;		/* Display containing widget. Used, among
-								* other things, so that resources can be
-								* freed even after tkwin has gone away. */
-		Tcl_Obj *myCmd;            /* Objects "my" command. Needed to call internal methods. */
-		Tcl_Command widgetCmd;     /* Token for widget command. */
-		Tcl_Obj *optionsArray;     /* Name of option array variable */
-		Tcl_HashTable optionsTable; /* Hash table containing all used options */
-	} Tko_Widget;
+    /*
+    * Widget structure data used in objects.
+    */
+    typedef struct Tko_Widget {
+        Tcl_Interp *interp;        /* Interpreter associated with widget. */
+        Tcl_Object object;         /* our own object */
+        Tk_Window tkWin;           /* Window that embodies the widget. NULL means
+                                   * that the window has been destroyed but the
+                                   * data structures haven't yet been cleaned
+                                   * up.*/
+        Display *display;        /* Display containing widget. Used, among
+                                * other things, so that resources can be
+                                * freed even after tkwin has gone away. */
+        Tcl_Obj *myCmd;            /* Objects "my" command. Needed to call internal methods. */
+        Tcl_Command widgetCmd;     /* Token for widget command. */
+        Tcl_Obj *optionsArray;     /* Name of option array variable */
+        Tcl_HashTable optionsTable; /* Hash table containing all used options */
+    } Tko_Widget;
 
 /* tkoFrame.c */
     MODULE_SCOPE int Tko_FrameInit(
@@ -123,22 +123,22 @@ extern "C" {
     MODULE_SCOPE int Tko_GraphInit(
         Tcl_Interp * interp);
 /* tkoWidget.c */
-	MODULE_SCOPE int Tko_WidgetClassDefine(
-		Tcl_Interp *interp,
-		Tcl_Obj *classname,
-		const Tcl_MethodType *methods,
-		Tko_WidgetOptionDefine *options);
-	MODULE_SCOPE int Tko_WidgetCreate(
-		ClientData clientdata,
-		Tcl_Interp *interp,
-		Tcl_Object object,
-		int isToplevel,
-		Tcl_Obj *arglist);
-	MODULE_SCOPE void Tko_WidgetDestroy(
-		Tcl_ObjectContext context);
-	MODULE_SCOPE ClientData Tko_WidgetClientData(
-		Tcl_ObjectContext context);
-	MODULE_SCOPE Tcl_Obj *Tko_WidgetOptionGet(
+    MODULE_SCOPE int Tko_WidgetClassDefine(
+        Tcl_Interp *interp,
+        Tcl_Obj *classname,
+        const Tcl_MethodType *methods,
+        Tko_WidgetOptionDefine *options);
+    MODULE_SCOPE int Tko_WidgetCreate(
+        ClientData clientdata,
+        Tcl_Interp *interp,
+        Tcl_Object object,
+        int isToplevel,
+        Tcl_Obj *arglist);
+    MODULE_SCOPE void Tko_WidgetDestroy(
+        Tcl_ObjectContext context);
+    MODULE_SCOPE ClientData Tko_WidgetClientData(
+        Tcl_ObjectContext context);
+    MODULE_SCOPE Tcl_Obj *Tko_WidgetOptionGet(
         Tko_Widget *widget,
         Tcl_Obj *option);
     MODULE_SCOPE Tcl_Obj *Tko_WidgetOptionSet(

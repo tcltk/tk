@@ -29,7 +29,7 @@ enum FrameType {
  * frame that currently exists for this process:
  */
 typedef struct tkoFrame {
-	Tko_Widget widget;
+    Tko_Widget widget;
     char *menuName;            /* Textual description of menu to use for
                                 * menubar. Malloc-ed, may be NULL. */
     enum FrameType type;       /* Type of widget, such as TYPE_FRAME. */
@@ -70,7 +70,7 @@ typedef struct tkoFrame {
 #ifndef TK_NO_DOUBLE_BUFFERING
     GC copyGC;                 /* GC for copying when double-buffering. */
 #endif /* TK_NO_DOUBLE_BUFFERING */
-	Tk_Window tkWinCreate;
+    Tk_Window tkWinCreate;
 } tkoFrame;
 
 /*
@@ -195,11 +195,11 @@ static int FrameMethod_backgroundimage(
     int objc,
     Tcl_Obj * const objv[]);
 static int FrameMethod_menu(
-	ClientData clientData,
-	Tcl_Interp * interp,
-	Tcl_ObjectContext context,
-	int objc,
-	Tcl_Obj * const objv[]);
+    ClientData clientData,
+    Tcl_Interp * interp,
+    Tcl_ObjectContext context,
+    int objc,
+    Tcl_Obj * const objv[]);
 
 /*
  * Functions
@@ -448,16 +448,16 @@ int
 Tko_FrameInit(
     Tcl_Interp * interp)
 {              /* Tcl interpreter. */
-	Tcl_IncrRefCount((TkoObj_empty =
-		Tcl_NewStringObj("", -1)));
-	Tcl_IncrRefCount((TkoObj_tko_frame =
-		Tcl_NewStringObj("::tko::frame", -1)));
-	Tcl_IncrRefCount((TkoObj_tko_labelframe =
-		Tcl_NewStringObj("::tko::labelframe", -1)));
-	Tcl_IncrRefCount((TkoObj_tko_toplevel =
-		Tcl_NewStringObj("::tko::toplevel", -1)));
-	Tcl_IncrRefCount((TkoObj__labelwidget =
-		Tcl_NewStringObj("-labelwidget", -1)));
+    Tcl_IncrRefCount((TkoObj_empty =
+        Tcl_NewStringObj("", -1)));
+    Tcl_IncrRefCount((TkoObj_tko_frame =
+        Tcl_NewStringObj("::tko::frame", -1)));
+    Tcl_IncrRefCount((TkoObj_tko_labelframe =
+        Tcl_NewStringObj("::tko::labelframe", -1)));
+    Tcl_IncrRefCount((TkoObj_tko_toplevel =
+        Tcl_NewStringObj("::tko::toplevel", -1)));
+    Tcl_IncrRefCount((TkoObj__labelwidget =
+        Tcl_NewStringObj("-labelwidget", -1)));
 
     /*
      * ::tko::toplevel
@@ -575,15 +575,15 @@ FrameConstructor(
         return TCL_ERROR;
     }
     if (type == TYPE_FRAME) {
-		frame = ckalloc(sizeof(tkoFrame));
-		assert(frame);
-		memset(frame, 0, sizeof(tkoFrame));
+        frame = ckalloc(sizeof(tkoFrame));
+        assert(frame);
+        memset(frame, 0, sizeof(tkoFrame));
     }
     else if (type == TYPE_LABELFRAME) {
         tkoLabelframe *labelframe;
-		labelframe = ckalloc(sizeof(tkoLabelframe));
-		assert(labelframe);
-		memset(labelframe, 0, sizeof(tkoLabelframe));
+        labelframe = ckalloc(sizeof(tkoLabelframe));
+        assert(labelframe);
+        memset(labelframe, 0, sizeof(tkoLabelframe));
         frame = (tkoFrame *)labelframe;
         labelframe->textPtr = NULL;
         labelframe->tkfont = NULL;
@@ -600,14 +600,14 @@ FrameConstructor(
     }
     else if (type == TYPE_TOPLEVEL) {
         frame = ckalloc(sizeof(tkoFrame));
-		assert(frame);
-		memset(frame, 0, sizeof(tkoFrame));
-	}
+        assert(frame);
+        memset(frame, 0, sizeof(tkoFrame));
+    }
     else {
         Tcl_WrongNumArgs(interp, 1, objv, "internal type error");
         return TCL_ERROR;
     }
-	widget = (Tko_Widget *)frame;
+    widget = (Tko_Widget *)frame;
     frame->type = type;
     frame->menuName = NULL;
     frame->colormap = None;
@@ -636,14 +636,19 @@ FrameConstructor(
     }
 
     skip = Tcl_ObjectContextSkippedArgs(context);
-	myArglist = Tcl_NewListObj(objc - skip, &objv[skip]);
-	if (Tko_WidgetCreate(&(frame->widget), interp, object, (type == TYPE_TOPLEVEL),
-		myArglist) != TCL_OK) {
-		Tcl_DecrRefCount(myArglist);
-		return TCL_ERROR;
-	}
-	Tcl_DecrRefCount(myArglist);
-	frame->tkWinCreate = widget->tkWin;
+    if (objc - skip > 0) {
+        myArglist = Tcl_NewListObj(objc - skip, &objv[skip]);
+    }
+    else {
+        myArglist = Tcl_NewListObj(0, NULL);
+    }
+    if (Tko_WidgetCreate(&(frame->widget), interp, object, (type == TYPE_TOPLEVEL),
+        myArglist) != TCL_OK) {
+        Tcl_DecrRefCount(myArglist);
+        return TCL_ERROR;
+    }
+    Tcl_DecrRefCount(myArglist);
+    frame->tkWinCreate = widget->tkWin;
     if (frame->isContainer && frame->useThis != NULL) {
         Tcl_SetObjResult(interp,
             Tcl_NewStringObj
@@ -699,11 +704,11 @@ FrameDestructor(
     int objc,
     Tcl_Obj * const objv[])
 {
-	Tko_Widget *widget;
+    Tko_Widget *widget;
 
-	if((widget = (Tko_Widget *)Tko_WidgetClientData(context)) != NULL) {
-		tkoFrame *frame = (tkoFrame *)widget;
-		tkoLabelframe *labelframe = (tkoLabelframe *) widget;
+    if((widget = (Tko_Widget *)Tko_WidgetClientData(context)) != NULL) {
+        tkoFrame *frame = (tkoFrame *)widget;
+        tkoLabelframe *labelframe = (tkoLabelframe *) widget;
         Tcl_Preserve(widget);
 
         if(widget->tkWin) {
@@ -731,8 +736,8 @@ FrameDestructor(
 
         if(frame->menuName != NULL && frame->tkWinCreate) {
             TkSetWindowMenuBar(frame->widget.interp, frame->tkWinCreate, frame->menuName, NULL);
-			ckfree(frame->menuName);
-			frame->menuName = NULL;
+            ckfree(frame->menuName);
+            frame->menuName = NULL;
         }
         if(frame->type == TYPE_LABELFRAME && labelframe->labelWin) {
             Tk_ManageGeometry(labelframe->labelWin, NULL, NULL);
@@ -742,30 +747,30 @@ FrameDestructor(
             Tk_UnmapWindow(labelframe->labelWin);
             labelframe->labelWin = NULL;
         }
-		if (frame->useThis) {
-			Tcl_DecrRefCount(frame->useThis);
-		}
-		if (frame->type == TYPE_LABELFRAME) {
-			if (labelframe->textLayout) {
-				Tk_FreeTextLayout(labelframe->textLayout);
-			}
-			if (labelframe->textGC != NULL && widget->display != NULL) {
-				Tk_FreeGC(widget->display, labelframe->textGC);
-			}
-		}
-		if (frame->border) {
-			Tk_Free3DBorder(frame->border);
-		}
-		if (frame->colormap != None && widget->display != NULL) {
-			Tk_FreeColormap(widget->display, frame->colormap);
-		}
-		if (frame->highlightBgColorPtr != NULL) {
-			Tk_FreeColor(frame->highlightBgColorPtr);
-		}
-		if (frame->highlightColorPtr != NULL) {
-			Tk_FreeColor(frame->highlightColorPtr);
-		}
-		Tko_WidgetDestroy(context);
+        if (frame->useThis) {
+            Tcl_DecrRefCount(frame->useThis);
+        }
+        if (frame->type == TYPE_LABELFRAME) {
+            if (labelframe->textLayout) {
+                Tk_FreeTextLayout(labelframe->textLayout);
+            }
+            if (labelframe->textGC != NULL && widget->display != NULL) {
+                Tk_FreeGC(widget->display, labelframe->textGC);
+            }
+        }
+        if (frame->border) {
+            Tk_Free3DBorder(frame->border);
+        }
+        if (frame->colormap != None && widget->display != NULL) {
+            Tk_FreeColormap(widget->display, frame->colormap);
+        }
+        if (frame->highlightBgColorPtr != NULL) {
+            Tk_FreeColor(frame->highlightBgColorPtr);
+        }
+        if (frame->highlightColorPtr != NULL) {
+            Tk_FreeColor(frame->highlightColorPtr);
+        }
+        Tko_WidgetDestroy(context);
         Tcl_Release(frame);
     }
     return TCL_OK;
@@ -788,15 +793,14 @@ FrameMethod_tko_configure(
     int objc,
     Tcl_Obj * const objv[])
 {
-	Tko_Widget *widget;
+    Tko_Widget *widget;
     tkoFrame *frame;
-    Tk_Window oldWindow = NULL;
 
     if((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL
         || widget->tkWin == NULL) {
         return TCL_ERROR;
     }
-	frame = (tkoFrame *)widget;
+    frame = (tkoFrame *)widget;
 
     if(frame->border != NULL) {
         Tk_SetBackgroundFromBorder(widget->tkWin, frame->border);
@@ -852,7 +856,7 @@ FrameMethod_labelanchor(
             Tko_WidgetOptionGet(&frame->widget, objv[objc - 1])) == NULL) {
         return TCL_ERROR;
     }
-	labelframe = (tkoLabelframe *)frame;
+    labelframe = (tkoLabelframe *)frame;
     code =
         Tcl_GetIndexFromObj(interp, value, labelAnchorStrings, "labelanchor", 0,
         &index);
@@ -882,11 +886,10 @@ FrameMethod_labelwidget(
     int objc,
     Tcl_Obj * const objv[])
 {
-	Tko_Widget *widget;
+    Tko_Widget *widget;
     Tk_Window oldWindow = NULL;
     Tk_Window newWindow = NULL;
     Tk_Window ancestor, parent, sibling = NULL;
-    tkoFrame *frame;
     tkoLabelframe *labelframe;
     Tcl_Obj *value;
 
@@ -895,8 +898,7 @@ FrameMethod_labelwidget(
         || (value = Tko_WidgetOptionGet(widget, objv[objc - 1])) == NULL) {
         return TCL_ERROR;
     }
-	frame = (tkoFrame *)widget;
-	labelframe = (tkoLabelframe *)widget;
+    labelframe = (tkoLabelframe *)widget;
 
     if(value == NULL || Tcl_GetCharLength(value) == 0) {
         newWindow = NULL;
@@ -983,7 +985,7 @@ FrameMethod_backgroundimage(
     int objc,
     Tcl_Obj * const objv[])
 {
-	Tko_Widget *widget;
+    Tko_Widget *widget;
     tkoFrame *frame;
     Tcl_Obj *value;
     Tk_Image image;
@@ -993,7 +995,7 @@ FrameMethod_backgroundimage(
         || (value = Tko_WidgetOptionGet(widget, objv[objc - 1])) == NULL) {
         return TCL_ERROR;
     }
-	frame = (tkoFrame *)widget;
+    frame = (tkoFrame *)widget;
     /* check on widget destroyed */
     if(widget->tkWin == NULL)
         return TCL_OK;
@@ -1027,47 +1029,47 @@ FrameMethod_backgroundimage(
 */
 static int
 FrameMethod_menu(
-	ClientData clientData,
-	Tcl_Interp * interp,
-	Tcl_ObjectContext context,
-	int objc,
-	Tcl_Obj * const objv[])
+    ClientData clientData,
+    Tcl_Interp * interp,
+    Tcl_ObjectContext context,
+    int objc,
+    Tcl_Obj * const objv[])
 {
-	Tko_Widget *widget;
-	tkoFrame *frame;
-	Tcl_Obj *value;
-	char *newMenu;
-	int length;
+    Tko_Widget *widget;
+    tkoFrame *frame;
+    Tcl_Obj *value;
+    char *newMenu;
+    int length;
 
     if((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL
         || widget->tkWin == NULL
-		|| (value = Tko_WidgetOptionGet(widget, objv[objc - 1])) == NULL) {
+        || (value = Tko_WidgetOptionGet(widget, objv[objc - 1])) == NULL) {
         return TCL_ERROR;
     }
-	frame = (tkoFrame *)widget;
+    frame = (tkoFrame *)widget;
 
-	newMenu = Tcl_GetStringFromObj(value, &length);
-	if (length==0) {
-		newMenu = NULL;
-	}
-	if ((((newMenu == NULL) && (frame->menuName != NULL))
-		|| ((newMenu != NULL) && (frame->menuName == NULL))
-		|| ((newMenu != NULL) && (frame->menuName != NULL)
-			&& strcmp(newMenu, frame->menuName) != 0))
-		&& frame->type == TYPE_TOPLEVEL) {
-		TkSetWindowMenuBar(interp, widget->tkWin, frame->menuName, newMenu);
-		if (frame->menuName) { ckfree(frame->menuName); }
-		if (length) {
-			frame->menuName = ckalloc(length + 1);
-			assert(frame->menuName);
-			strncpy(frame->menuName,newMenu,length);
-			frame->menuName[length] = '\0';
-		}
-		else {
-			frame->menuName = NULL;
-		}
-	}
-	return TCL_OK;
+    newMenu = Tcl_GetStringFromObj(value, &length);
+    if (length==0) {
+        newMenu = NULL;
+    }
+    if ((((newMenu == NULL) && (frame->menuName != NULL))
+        || ((newMenu != NULL) && (frame->menuName == NULL))
+        || ((newMenu != NULL) && (frame->menuName != NULL)
+            && strcmp(newMenu, frame->menuName) != 0))
+        && frame->type == TYPE_TOPLEVEL) {
+        TkSetWindowMenuBar(interp, widget->tkWin, frame->menuName, newMenu);
+        if (frame->menuName) { ckfree(frame->menuName); }
+        if (length) {
+            frame->menuName = ckalloc(length + 1);
+            assert(frame->menuName);
+            strncpy(frame->menuName,newMenu,length);
+            frame->menuName[length] = '\0';
+        }
+        else {
+            frame->menuName = NULL;
+        }
+    }
+    return TCL_OK;
 }
 
 /*
@@ -1087,7 +1089,7 @@ static void
 FrameWorldChanged(
     ClientData clientData)
 {              /* Information about widget. */
-	Tko_Widget *widget = clientData;
+    Tko_Widget *widget = clientData;
     tkoFrame *frame = clientData;
     tkoLabelframe *labelframe = clientData;
     XGCValues gcValues;
@@ -1096,9 +1098,9 @@ FrameWorldChanged(
     int bWidthLeft, bWidthRight, bWidthTop, bWidthBottom;
     const char *labelText;
 
-	if (widget->tkWin == NULL) {
-		return;
-	}
+    if (widget->tkWin == NULL) {
+        return;
+    }
 
     anyTextLabel = (frame->type == TYPE_LABELFRAME) &&
         (labelframe->textPtr != NULL) && (labelframe->labelWin == NULL);
@@ -1266,15 +1268,15 @@ FrameComputeGeometry(
 {
     int otherWidth, otherHeight, otherWidthT, otherHeightT, padding;
     int maxWidth, maxHeight;
-	Tko_Widget *widget = (Tko_Widget *)frame;
+    Tko_Widget *widget = (Tko_Widget *)frame;
     tkoLabelframe *labelframe = (tkoLabelframe *) frame;
 
     /*
      * We have nothing to do here unless there is a label.
      */
-	if (widget->tkWin == NULL || frame->type != TYPE_LABELFRAME) {
-		return;
-	}
+    if (widget->tkWin == NULL || frame->type != TYPE_LABELFRAME) {
+        return;
+    }
 
     if(labelframe->textPtr == NULL && labelframe->labelWin == NULL) {
         return;
@@ -1404,15 +1406,15 @@ static void
 FrameDisplay(
     ClientData clientData /* Information about widget. */)
 {             
-	Tko_Widget *widget = clientData;
+    Tko_Widget *widget = clientData;
     tkoFrame *frame = clientData;
     int bdX1, bdY1, bdX2, bdY2, hlWidth;
     Pixmap pixmap;
     TkRegion clipRegion = NULL;
 
-	if (widget->tkWin == NULL) {
-		return;
-	}
+    if (widget->tkWin == NULL) {
+        return;
+    }
 
     frame->flags &= ~REDRAW_PENDING;
     if(!Tk_IsMapped(widget->tkWin)) {
@@ -1625,7 +1627,7 @@ FrameEventProc(
     ClientData clientData,     /* Information about window. */
     register XEvent * eventPtr)
 {              /* Information about event. */
-	Tko_Widget *widget = clientData;
+    Tko_Widget *widget = clientData;
     tkoFrame *frame = clientData;
     if(eventPtr->type == DestroyNotify || widget->tkWin == NULL
         || widget->tkWin == NULL)
@@ -1678,12 +1680,12 @@ static void
 FrameMap(
     ClientData clientData)
 {              /* Pointer to frame structure. */
-	Tko_Widget *widget = clientData;
-	tkoFrame *frame = clientData;
+    Tko_Widget *widget = clientData;
+    tkoFrame *frame = clientData;
 
-	if (widget->tkWin == NULL) {
-		return;
-	}
+    if (widget->tkWin == NULL) {
+        return;
+    }
 
     /*
      * Wait for all other background events to be processed before mapping
@@ -1847,7 +1849,7 @@ FrameBgImageProc(
                  * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-	Tko_Widget *widget = clientData;
+    Tko_Widget *widget = clientData;
     tkoFrame *frame = clientData;
 
     if(widget->tkWin == NULL) return;

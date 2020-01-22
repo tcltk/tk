@@ -25,37 +25,37 @@
 
 ### Tcl widget creation
 
-**::oo::class create** *widgetclass* { **::tko initfrom** *::tkoclass* }
+**::oo::class create** *widgetclass* { **::tko initfrom** *tkoclass* }
+
+**::oo::class create** *widgetclass* { **::tko initwrap** *widget readonlyoptionlist methodlist* }
 
 ### Class functions
 
-**::tko initfrom** *?::superclass?*
+**::tko initfrom** *?tkoclass?*
+
+**::tko initwrap** *widget readonlyoptionlist methodlist*
 
 **::tko eventoption**
 
-**::tko optionadd** *::classname ?-option dbname dbclass value flags ?body?*
+**::tko optiondef** *classname ?-option definitionlist? ..*
 
-**::tko optiondel** *::classname ?-option? ..* 
+**::tko optiondel** *classname ?-option? ..* 
 
-**::tko optionget** *::classname ?-option? ..*
+**::tko optionget** *classname ?-option? ..*
 
-**::tko optionset** *::classname ?-option {dbname dbclass value flags}? ..*
+**::tko optionhide** *classname ?-option? ..*
 
-**::tko optionhide** *::classname ?-option? ..*
-
-**::tko optionshow** *::classname ?-option? ..*
+**::tko optionshow** *classname ?-option? ..*
 
 ### Widget methods 
 
-**my \_tko optionadd** *-option dbname dbclass value flags ?body?*
+**my \_tko optionadd** *-option {*\**}definitionlist*
 
 **my \_tko optiondel** *-option* ..
 
 **my \_tko optionhide** *-option* ..
 
 **my \_tko optionshow** *-option* ..
-
-**my \_tko optionvar**
 
 <a name="TKO-STANDARD-OPTIONS"></a>
 ## TKO STANDARD OPTIONS
@@ -79,12 +79,20 @@ Database Class: **Screen**
 
 ### Function **::tko**
 
-**::tko initfrom** *?::superclass?*
+**::tko initfrom** *?tkoclass?*
 
 This function will provide the necessary initialization of an oo class as tko widget.
-If the *::classname* is given then these class will be the superclass of the current
-widget and all options of *::classname* will be added to our new class.
-The function should be called inside the "oo::class create" script.
+The argument *tkoclass* should be an **tko** widget class.
+If the *tkoclass* is given then these class will be the superclass of the current widget and all options of *tkoclass* will be added to our new class.
+The function should be called only once inside the "oo::class create" script.
+
+**::tko initwrap** *widget readonlyoptionlist methodlist*
+
+This function will wrap an existing normal tk widget as an tko widget class.
+The argumen *widget* is the name of the normal tk widget.
+The argument *readonlyoptionlist* is a list of all readonly options of the given *widget*.
+THe argument *methodlist* is a list of methods to link to the wrapped *widget*. Additionally the oo **cget** and **configure** methods will be provided.
+The function should be called only once inside the "oo::class create" script.
 
 **::tko eventoption**
 
@@ -92,13 +100,34 @@ This option will send an <<TkoEventChanged>> virtual event to all widgets.
 If a option value was set using the option database then the value of this option will updated with the current value of the option database.
 The option database can so be used as a style source.
 
-**::tko optionadd** *::classname -option dbname dbclass value flags ?body?*
+**::tko optiondef** *classname ?-option definitionlist? ..*
 
-The function will add a new or replace an existing option. If *dbclass* is empty the an synonym option is created which is linked to *dbname*.
-*flags* can contain a combination of the following letters:
+In the *definitionlist* description below an entry with name *flags* can contain a combination of the following letters:
 
   - "r" the option is readonly and can only be set on creation
   - "h" The option is hidden from use in **cget** and **configure** methods.
+
+The *definitionlist* can have one of the following forms:
+
+  - *-synonym*
+
+> Add or replace a synonym option. When *-option* is set then instead the provided *-synonym* option will be set.
+
+  - *-synonym flags*
+
+> Same as above but with use of the given *flags* value.
+
+  - *dbname dbclass value*
+
+> Add or replace a option. *dbname* and *dbclass* will be used to search for an default option value in the option database. *value* is the default value if no value can be found in the option database.
+
+  - *dbname dbclass value flags*
+
+> Same as above but with use of the given *flags* value.
+
+  - *dbname dbclass value flags body*
+
+> Same as above. Additionally the given *body* will be used to create the *-option* method in *classname*
 
 **::tko optiondel** *::classname ?-option? ..* 
 
@@ -107,13 +136,9 @@ given *::classname*. If no option is given then all existing options will be rem
 
 **::tko optionget** *::classname ?-option? ..*
 
-This function will return a list of *-option definition* pairs ready for use in the **::tko optionset** command.
+This function will return a list of *-option definitionlist* pairs ready for use in the **::tko optiondef** command.
 The list consist of the specified options or all options if there are no options given.
 THe option will be read from the fully qualified ?::classname? definitions.
-
-**::tko optionset** *::classname ?-option {dbname dbclass value flags}? ..*
-
-The function will change or add the given options to the defined class options of the given classname. The definition list has the same meaning as in the **::tko optionadd** command.
 
 **::tko optionhide** *::classname ?-option ..*
 
@@ -164,9 +189,9 @@ Widget methods can be dynamically added and removed at class or object level.
 > Use given *-option vlaue* pairs to set options.
 
 <a name="method-_tko"></a>
-**my \_tko optionadd** *-option dbname dbclass value flags ?body?*
+**my \_tko optionadd** *-option {*\**}definitionlist*
 
-> Add a new option in the current object. The meaning of the arguments is the same as in the **::tko optionadd** command.
+> Add a new option in the current object. The meaning of the *definitionlist* argument is the same as in the **::tko optionset** command. But the *definitionlist* should be provided as single values. 
 
 **my \_tko optiondel** *-option* ..
 
@@ -196,6 +221,12 @@ It is possible to hide and unhide options.
 <a name="EXAMPLES"></a>
 ## EXAMPLES
 
+    # Wrap an existing widget
+    oo::class create ::myFrame {
+      ::tko initwrap frame {-class -container -colormap -visual} {}
+    }
+    myFrame .f
+
     # Create a new widget class.
     oo::class create ::myWidget {
       ::tko initfrom ::tko::frame
@@ -209,7 +240,7 @@ It is possible to hide and unhide options.
 
     # Add a new option
     oo::define ::myWidget method -o1 {} {puts $tko(-o1)}
-    ::tko optionadd ::myWidget -o1 o1 O1 v1 {}
+    ::tko optionadd ::myWidget -o1 o1 O1 v1
 
     # Add another option
     ::tko optionadd ::myWidget -o2 o2 O2 v2 {} {puts $tko(-o2)}
