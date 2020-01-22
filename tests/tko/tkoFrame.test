@@ -1999,12 +1999,12 @@ test frame-20.2 {tko initfrom with optionget/optionset} -setup {
     C destroy
 } -match glob -result {21}
 
-test frame-20.3 {tko optionadd} -setup {
+test frame-20.3 {tko optiondef} -setup {
     deleteWindows
 } -body {
     oo::class create C {
         ::tko initfrom ::tko::frame
-        ::tko optionadd [self] -o1 o1 O1 v1 {} {set tko(-o1) x}
+        ::tko optiondef [self] -o1 {o1 O1 v1 {} {set tko(-o1) x}}
     }
     C .c
     .c configure -o1
@@ -2059,7 +2059,7 @@ test frame-20.6 {tko optionshow} -setup {
 #
 # Test "my _tko .."
 #
-test frame-21.1 {my _tko optionadd wrong args} -setup {
+test frame-21.1 {my _tko .. wrong args} -setup {
     deleteWindows
 } -body {
     oo::class create C {
@@ -2078,9 +2078,10 @@ test frame-21.2 {my _tko optionadd} -setup {
 } -body {
     oo::class create C {
         ::tko initfrom ::tko::frame
-        ::tko optionadd [self] -o1 o1 O1 v1 {} {set tko(-o1) x}
+        method mycmd {args} {my {*}$args}
     }
     C .c
+    .c mycmd _tko optionadd -o1 o1 O1 v1 {} {variable tko; set tko(-o1) x}
     .c configure -o1
 } -cleanup {
     deleteWindows
@@ -2092,9 +2093,10 @@ test frame-21.3 {my _tko optiondel} -setup {
 } -body {
     oo::class create C {
         ::tko initfrom ::tko::frame
-        ::tko optiondel [self] -bg -width
+        method mycmd {args} {my {*}$args}
     }
     C .c
+    .c mycmd _tko optiondel -bg -width
     llength [.c configure]
 } -cleanup {
     deleteWindows
@@ -2106,9 +2108,10 @@ test frame-21.4 {my _tko optionhide} -setup {
 } -body {
     oo::class create C {
         ::tko initfrom ::tko::frame
-        ::tko optionhide [self] -bg -width
+        method mycmd {args} {my {*}$args}
     }
     C .c
+    .c mycmd _tko optionhide -bg -width
     llength [.c configure]
 } -cleanup {
     deleteWindows
@@ -2120,10 +2123,11 @@ test frame-21.5 {my _tko optionshow} -setup {
 } -body {
     oo::class create C {
         ::tko initfrom ::tko::frame
-        ::tko optionhide [self] -background -width
-        ::tko optionshow [self] -bg
+        method mycmd {args} {my {*}$args}
     }
     C .c
+    .c mycmd _tko optionhide -background -width
+    .c mycmd _tko optionshow -bg
     llength [.c configure]
 } -cleanup {
     deleteWindows
@@ -2135,9 +2139,10 @@ test frame-21.6 {my_tko optionadd readonly} -setup {
 } -body {
     oo::class create C {
         ::tko initfrom ::tko::frame
-        ::tko optionadd [self] -o1 o1 O1 v1 r {set tko(-o1) x}
+        method mycmd {args} {my {*}$args}
     }
     C .c
+    .c mycmd _tko optionadd -o1 o1 O1 v1 r {variable tko; set tko(-o1) x}
     .c configure -o1 xx
 } -cleanup {
     deleteWindows
@@ -2147,6 +2152,8 @@ test frame-21.6 {my_tko optionadd readonly} -setup {
 test frame-30.1 {performance comparison} -setup {
     deleteWindows
 } -body {
+    oo::class create wrapframe {::tko initwrap frame {-class -colormap -container -visual} {}}
+    oo::class create wraplabelframe {::tko initwrap labelframe {-class -colormap -container -visual} {}}
     proc ::TEST::Do {cmd} {set i 0; format %7.1f [lindex [time $cmd 100] 0]}
     proc ::TEST::Test {wdg} {
         set ret [format %15s $wdg]
@@ -2160,12 +2167,16 @@ test frame-30.1 {performance comparison} -setup {
     puts [::TEST::Test frame]
     puts [::TEST::Test ttk::frame]
     puts [::TEST::Test tko::frame]
+    puts [::TEST::Test wrapframe]
     puts [::TEST::Test labelframe]
     puts [::TEST::Test ttk::labelframe]
     puts [::TEST::Test tko::labelframe]
+    puts [::TEST::Test wraplabelframe]
     puts [::TEST::Test toplevel]
     puts [::TEST::Test tko::toplevel]
 } -cleanup {
+    catch {wrapframe destroy}
+    catch {wraplabelframe destroy}
     deleteWindows
 } -result {}
 

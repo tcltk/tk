@@ -86,10 +86,13 @@ static Tcl_Obj *TkoObj_0; /* integer=0 */
 static Tcl_Obj *TkoObj_1; /* integer=1 */
 static Tcl_Obj *TkoObj_lsort; /* "::lsort" */
 static Tcl_Obj *TkoObj_point; /* "." */
+static Tcl_Obj *TkoObj_point2; /* ".." */
 static Tcl_Obj *TkoObj__screen; /* "-screen" */
 static Tcl_Obj *TkoObj_flags_r; /* "r" */
 static Tcl_Obj *TkoObj_flags_rh; /* "rh" */
 static Tcl_Obj *TkoObj_flags_h; /* "h" */
+static Tcl_Obj *TkoObj_rename; /* "rename" */
+static Tcl_Obj *TkoObj_tko__self; /* "::tko::_self" */
 
 /*
  * Methods
@@ -179,6 +182,31 @@ static int WidgetClientdataClone(
     Tcl_Interp *interp,
     ClientData clientdata,
     ClientData *newPtr);
+static int WidgetWrapDestructor(
+    ClientData clientData,
+    Tcl_Interp * interp,
+    Tcl_ObjectContext context,
+    int objc,
+    Tcl_Obj * const objv[]);
+static int WidgetWrapConstructor(
+    ClientData clientData,
+    Tcl_Interp * interp,
+    Tcl_ObjectContext context,
+    int objc,
+    Tcl_Obj * const objv[]);
+static void WidgetDeleteTkwin(
+    Tko_Widget *widget);
+
+/* List of all internally defined public and private methods. */
+#define TKO_1 TCL_OO_METHOD_VERSION_CURRENT
+static Tcl_MethodType tkoWidgetMethods[] = {
+    { TKO_1, NULL, WidgetWrapConstructor, NULL, NULL },
+    { TKO_1, NULL, WidgetWrapDestructor, NULL, NULL },
+    { TKO_1, "cget", WidgetMethod_cget, NULL, NULL },
+    { TKO_1, "configure", WidgetMethod_configure, NULL, NULL },
+    { TKO_1, "_tko_configure", WidgetMethod_tko_configure, NULL, NULL },
+    { TKO_1, "_tko", WidgetMethod_tko, NULL, NULL },
+}; 
 
 /*
  * tkoWidgetMeta --
@@ -211,19 +239,18 @@ Tko_TkoObjCmd(
     Tcl_Obj *const objv[])    /* Argument objects. */
 {
     static const char *const myOptions[] = {
-        "initfrom", "eventoption",
-        "optionadd", "optiondel","optionget",
-        "optionset","optionhide","optionshow",NULL
+        "initfrom", "initwrap", "eventoption",
+        "optiondef", "optiondel","optionget",
+        "optionhide","optionshow",NULL
     };
     enum options {
-        MY_INITFROM, MY_EVENTOPTION,
-        MY_OPTIONADD, MY_OPTIONDEL, MY_OPTIONGET,
-        MY_OPTIONSET, MY_OPTIONHIDE, MY_OPTIONSHOW
+        MY_INITFROM, MY_INITWRAP, MY_EVENTOPTION,
+        MY_OPTIONDEF, MY_OPTIONDEL, MY_OPTIONGET,
+        MY_OPTIONHIDE, MY_OPTIONSHOW
     };
     int index;
     static Tcl_Obj *initfrom = NULL;
     Tcl_Obj *dictPtr;
-    Tcl_Obj *tmpPtr;
     Tcl_Obj *namePtr;
     Tcl_Obj *listPtr;
     int ret;
@@ -234,16 +261,12 @@ Tko_TkoObjCmd(
     Tcl_Obj **argObjv;
     int done;
     Tcl_Obj *myCmd[6];
-    const char *ch;
+    const char *ch, *ch1;
     int length;
+    Tcl_Obj *tmpPtr;
+    Tcl_Class clazz;
+    Tcl_Object object;
 
-
-    /* initialize static objects */
-    if (initfrom == NULL) {
-        initfrom = Tcl_NewStringObj(
-            "unexport destroy; variable tko; {*}$::tko::_unknown", -1);
-        Tcl_IncrRefCount(initfrom);
-    }
 
     if (objc < 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
@@ -255,6 +278,11 @@ Tko_TkoObjCmd(
     }
     switch ((enum options) index) {
     case MY_INITFROM: /* Initialize new class */
+        if (initfrom == NULL) {
+            initfrom = Tcl_NewStringObj(
+                "unexport destroy; variable tko; {*}$::tko::_unknown", -1);
+            Tcl_IncrRefCount(initfrom);
+        }        
         if (objc > 3) {
             Tcl_WrongNumArgs(interp, 2, objv, "?superclass?");
             return TCL_ERROR;
@@ -284,11 +312,62 @@ Tko_TkoObjCmd(
             }
         }
         return TCL_OK;
+    case MY_INITWRAP: /* Wrap widget in new class */
+        if (objc != 5) {
+            Tcl_WrongNumArgs(interp, 2, objv, "widget readonlyoptionlist methodlist");
+            return TCL_ERROR;
+        }
+        /* Create fqn widgetname */
+        ch = Tcl_GetStringFromObj(objv[2], &length);
+        if (length < 2 || ch[0] != ':') {
+            namePtr = Tcl_ObjPrintf("::%s", Tcl_GetString(objv[2]));
+        }
+        else {
+            namePtr = objv[2];
+        }
+        Tcl_IncrRefCount(namePtr);
+        ch = Tcl_GetString(namePtr);
+        ch1 = Tcl_GetString(objv[3]);
+        tmpPtr = Tcl_ObjPrintf("::tko::_initwrap [self] %s {%s} {%s}\n"
+            "unexport destroy ; variable tko\n"
+            "self method unknown {pathName args} {\n"
+            " set a {}; foreach {o v} $args {if {$o in {%s}} {lappend a $o $v}}\n"
+            " rename [%s $pathName {*}$a] ::tko::$pathName\n"
+            " tailcall [[self] create ::$pathName {*}$args] configure .\n"
+            "}\n"
+            "self",
+            ch,ch1,Tcl_GetString(objv[4]),ch1,ch);
+        Tcl_IncrRefCount(tmpPtr);
+        ret = Tcl_Eval(interp, Tcl_GetString(tmpPtr));
+        Tcl_DecrRefCount(namePtr);
+        Tcl_DecrRefCount(tmpPtr);
+        if (ret != TCL_OK) {
+            return TCL_ERROR;
+        }
+        /* Get class object */
+        tmpPtr = Tcl_GetObjResult(interp);
+        if ((object = Tcl_GetObjectFromObj(interp, tmpPtr)) == NULL
+            || (clazz = Tcl_GetObjectAsClass(object)) == NULL) {
+            return TCL_ERROR;
+        }
+        /*
+        * Add methods
+        */
+        Tcl_ClassSetConstructor(interp, clazz,
+            Tcl_NewMethod(interp, clazz, NULL, 1, &tkoWidgetMethods[0], NULL));
+        Tcl_ClassSetDestructor(interp, clazz,
+            Tcl_NewMethod(interp, clazz, NULL, 1, &tkoWidgetMethods[1], NULL));
+        Tcl_NewMethod(interp, clazz, TkoObj_cget, 1, &tkoWidgetMethods[2], NULL);
+        Tcl_NewMethod(interp, clazz, TkoObj_configure, 1, &tkoWidgetMethods[3], NULL);
+        Tcl_NewMethod(interp, clazz, TkoObj__tko_configure, 0, &tkoWidgetMethods[4], NULL);
+        Tcl_NewMethod(interp, clazz, TkoObj__tko, 0, &tkoWidgetMethods[5], NULL);
+
+        return TCL_OK;
     case MY_EVENTOPTION: /* Call proc ::tko::_eventoption */
         return Tcl_EvalObjEx(interp, TkoObj_tko__eventoption, TCL_EVAL_GLOBAL);
-    case MY_OPTIONADD: /* Add or option definition and create method if given */
-        if (objc != 8 && objc != 9) {
-            Tcl_WrongNumArgs(interp, 2, objv, "classname -option dbname dbclass value flags ?body?");
+    case MY_OPTIONDEF: /* Add or replace option definitions and return new state */
+        if (objc < 3 || objc % 2 != 1) {
+            Tcl_WrongNumArgs(interp, 2, objv, "::classname ?-option definition? ..");
             return TCL_ERROR;
         }
         /* Create fqn classname */
@@ -296,7 +375,7 @@ Tko_TkoObjCmd(
         if (length < 2 || ch[0] != ':') {
             namePtr = Tcl_ObjPrintf("::%s", Tcl_GetString(objv[2]));
         }
-        else{
+        else {
             namePtr = objv[2];
         }
         Tcl_IncrRefCount(namePtr);
@@ -309,38 +388,75 @@ Tko_TkoObjCmd(
             dictPtr = Tcl_DuplicateObj(dictPtr);
         }
         Tcl_IncrRefCount(dictPtr);
-        /* Add or replace options */
-        if (WidgetOptionAdd(interp, NULL, objv[3], objv[4], objv[5], objv[6], objv[7], NULL, 0) != TCL_OK) {
+        /* if no options then return current state */
+        if (objc == 3) {
+            Tcl_SetObjResult(interp, dictPtr);
             Tcl_DecrRefCount(dictPtr);
             Tcl_DecrRefCount(namePtr);
-            return TCL_ERROR;
+            return TCL_OK;
         }
-        if (objc == 9) {
-            myCmd[0] = TkoObj_oo_define;
-            myCmd[1] = namePtr;
-            myCmd[2] = TkoObj_method;
-            myCmd[3] = objv[3];
-            myCmd[4] = TkoObj_empty;
-            myCmd[5] = objv[8];
-            if (Tcl_EvalObjv(interp, 6, myCmd, TCL_EVAL_GLOBAL) != TCL_OK) {
+        /* Add or replace options */
+        for (i = 3; i < objc; i = i + 2) {
+            /* check definition list */
+            if (Tcl_ListObjGetElements(interp, objv[i + 1], &argObjc, &argObjv) != TCL_OK) {
+                Tcl_SetObjResult(interp, Tcl_ObjPrintf("no definition list: %s {%s}",
+                    Tcl_GetString(objv[i]), Tcl_GetString(objv[i + 1])));
+                Tcl_DecrRefCount(dictPtr);
+                Tcl_DecrRefCount(namePtr);
+                return TCL_ERROR;
+            }
+            /* Check definition list */
+            switch (argObjc) {
+            case 1:
+                ret = WidgetOptionAdd(interp, NULL, objv[i], argObjv[0], NULL, NULL, NULL, NULL, 0);
+                if (ret == TCL_OK) {
+                    ret = Tcl_DictObjPut(interp, dictPtr, objv[i], objv[i + 1]);
+                }
+                break;
+            case 2:
+                ret = WidgetOptionAdd(interp, NULL, objv[i], argObjv[0], NULL, NULL, argObjv[1], NULL, 0);
+                if (ret == TCL_OK) {
+                    ret = Tcl_DictObjPut(interp, dictPtr, objv[i], objv[i + 1]);
+                }
+                break;
+            case 3:
+                ret = WidgetOptionAdd(interp, NULL, objv[i], argObjv[0], argObjv[1], argObjv[2], NULL, NULL, 0);
+                if (ret == TCL_OK) {
+                    ret = Tcl_DictObjPut(interp, dictPtr, objv[i], objv[i + 1]);
+                }
+                break;
+            case 4:
+                ret = WidgetOptionAdd(interp, NULL, objv[i], argObjv[0], argObjv[1], argObjv[2], argObjv[3], NULL, 0);
+                if (ret == TCL_OK) {
+                    ret = Tcl_DictObjPut(interp, dictPtr, objv[i], objv[i + 1]);
+                }
+                break;
+            case 5:
+                ret = WidgetOptionAdd(interp, NULL, objv[i], argObjv[0], argObjv[1], argObjv[2], argObjv[3], NULL, 0);
+                if (ret == TCL_OK) {
+                    myCmd[0] = TkoObj_oo_define;
+                    myCmd[1] = namePtr;
+                    myCmd[2] = TkoObj_method;
+                    myCmd[3] = objv[i];
+                    myCmd[4] = TkoObj_empty;
+                    myCmd[5] = argObjv[4];
+                    ret = Tcl_EvalObjv(interp, 6, myCmd, TCL_EVAL_GLOBAL);
+                }
+                if (ret == TCL_OK) {
+                    ret = Tcl_DictObjPut(interp, dictPtr, objv[i], Tcl_NewListObj(4,argObjv));
+                }
+                break;
+            default:
+                Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong definition: %s {%s}",
+                    Tcl_GetString(objv[i]), Tcl_GetString(objv[i + 1])));
+                ret = TCL_ERROR;
+            }
+            if (ret != TCL_OK) {
                 Tcl_DecrRefCount(dictPtr);
                 Tcl_DecrRefCount(namePtr);
                 return TCL_ERROR;
             }
         }
-        tmpPtr = Tcl_NewObj();
-        Tcl_IncrRefCount(tmpPtr);
-        Tcl_ListObjAppendElement(interp, tmpPtr, objv[4]);
-        Tcl_ListObjAppendElement(interp, tmpPtr, objv[5]);
-        Tcl_ListObjAppendElement(interp, tmpPtr, objv[6]);
-        Tcl_ListObjAppendElement(interp, tmpPtr, objv[7]);
-        if (Tcl_DictObjPut(interp, dictPtr, objv[3], tmpPtr) != TCL_OK) {
-            Tcl_DecrRefCount(tmpPtr);
-            Tcl_DecrRefCount(dictPtr);
-            Tcl_DecrRefCount(namePtr);
-            return TCL_ERROR;
-        }
-        Tcl_DecrRefCount(tmpPtr);
         tmpPtr = Tcl_ObjSetVar2(interp, TkoObj_tko__option, namePtr, dictPtr, TCL_GLOBAL_ONLY);
         Tcl_DecrRefCount(dictPtr);
         Tcl_DecrRefCount(namePtr);
@@ -428,6 +544,8 @@ Tko_TkoObjCmd(
         /* get with error checks */
         for (i = 3; i < objc; i++) {
             if (Tcl_DictObjGet(interp, dictPtr, objv[i], &tmpPtr) != TCL_OK) {
+                Tcl_SetObjResult(interp, Tcl_ObjPrintf("unknown option: %s",
+                    Tcl_GetString(objv[i])));
                 Tcl_DecrRefCount(listPtr);
                 return TCL_ERROR;
             }
@@ -436,65 +554,6 @@ Tko_TkoObjCmd(
         }
         Tcl_SetObjResult(interp, listPtr);
         Tcl_DecrRefCount(listPtr);
-        return TCL_OK;
-    case MY_OPTIONSET: /* Add or replace option definitions and return new state */
-        if (objc < 3 || objc % 2 != 1) {
-            Tcl_WrongNumArgs(interp, 2, objv, "::classname ?-option definition? ..");
-            return TCL_ERROR;
-        }
-        /* Create fqn classname */
-        ch = Tcl_GetStringFromObj(objv[2], &length);
-        if (length < 2 || ch[0] != ':') {
-            namePtr = Tcl_ObjPrintf("::%s", Tcl_GetString(objv[2]));
-        }
-        else {
-            namePtr = objv[2];
-        }
-        Tcl_IncrRefCount(namePtr);
-        /* get current value or create new one */
-        dictPtr = Tcl_ObjGetVar2(interp, TkoObj_tko__option, namePtr, TCL_GLOBAL_ONLY);
-        if (dictPtr == NULL) {
-            dictPtr = Tcl_NewObj();
-        }
-        else {
-            dictPtr = Tcl_DuplicateObj(dictPtr);
-        }
-        Tcl_IncrRefCount(dictPtr);
-        /* if no options then return current state */
-        if (objc == 3) {
-            Tcl_SetObjResult(interp, dictPtr);
-            Tcl_DecrRefCount(dictPtr);
-            Tcl_DecrRefCount(namePtr);
-            return TCL_OK;
-        }
-        /* Add or replace options */
-        for (i = 3; i < objc; i = i + 2) {
-            /* check definition list */
-            if (Tcl_ListObjGetElements(interp, objv[i+1], &argObjc, &argObjv) != TCL_OK
-                || argObjc != 4) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong definition: %s {%s}",objv[i], objv[i+1]));
-                Tcl_DecrRefCount(dictPtr);
-                Tcl_DecrRefCount(namePtr);
-                return TCL_ERROR;
-            }
-            if (WidgetOptionAdd(interp,NULL,objv[i],argObjv[0],argObjv[1],argObjv[2],argObjv[3],NULL,0)!=TCL_OK) {
-                Tcl_DecrRefCount(dictPtr);
-                Tcl_DecrRefCount(namePtr);
-                return TCL_ERROR;
-            }
-            if (Tcl_DictObjPut(interp, dictPtr, objv[i], objv[i + 1]) != TCL_OK) {
-                Tcl_DecrRefCount(dictPtr);
-                Tcl_DecrRefCount(namePtr);
-                return TCL_ERROR;
-            }
-        }
-        tmpPtr = Tcl_ObjSetVar2(interp, TkoObj_tko__option, namePtr, dictPtr, TCL_GLOBAL_ONLY);
-        Tcl_DecrRefCount(dictPtr);
-        Tcl_DecrRefCount(namePtr);
-        if (tmpPtr == NULL) {
-            return TCL_ERROR;
-        }
-        Tcl_SetObjResult(interp, tmpPtr);
         return TCL_OK;
     case MY_OPTIONHIDE: /* Hide given options or return all hide'able options */
         if (objc < 3) {
@@ -526,11 +585,23 @@ Tko_TkoObjCmd(
             listPtr = Tcl_NewListObj(0, NULL);
             for (; !done; Tcl_DictObjNext(&search, &key, &value, &done)) {
                 Tcl_ListObjGetElements(interp, value, &argObjc, &argObjv);
-                if (argObjc > 3) {
+                switch (argObjc) {
+                case 1:
+                case 3:
+                    Tcl_ListObjAppendElement(interp, listPtr, key);
+                    break;
+                case 2:
+                    if (WidgetFlagsHideGet(argObjv[1]) == 0) {
+                        Tcl_ListObjAppendElement(interp, listPtr, key);
+                    }
+                    break;
+                case 4:
                     if (WidgetFlagsHideGet(argObjv[3]) == 0) {
                         Tcl_ListObjAppendElement(interp, listPtr, key);
                     }
+                    break;
                 }
+                /* ignore internal error on wrong definition lists */
             }
             Tcl_DictObjDone(&search);
             Tcl_SetObjResult(interp, listPtr);
@@ -542,21 +613,42 @@ Tko_TkoObjCmd(
         Tcl_IncrRefCount(dictPtr);
         for (i = 3; i < objc; i++) {
             if (Tcl_DictObjGet(interp, dictPtr, objv[i], &listPtr) != TCL_OK) {
+                Tcl_SetObjResult(interp, Tcl_ObjPrintf("unknown option: %s",
+                    Tcl_GetString(objv[i])));
                 Tcl_DecrRefCount(dictPtr);
                 Tcl_DecrRefCount(namePtr);
                 return TCL_ERROR;
             }
             Tcl_ListObjGetElements(interp, listPtr, &argObjc, &argObjv);
-            if (argObjc != 4) {
-                Tcl_DecrRefCount(dictPtr);
-                Tcl_DecrRefCount(namePtr);
-                return TCL_ERROR;
+            listPtr = NULL;
+            switch (argObjc) {
+            case 1:
+                listPtr = Tcl_NewListObj(0, NULL);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[0]);
+                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_h);
+                break;
+            case 2:
+                listPtr = Tcl_NewListObj(0, NULL);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[0]);
+                Tcl_ListObjAppendElement(interp, listPtr, WidgetFlagsHideSet(argObjv[1]));
+                break;
+            case 3:
+                listPtr = Tcl_NewListObj(0, NULL);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[0]);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[1]);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[2]);
+                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_h);
+                break;
+            case 4:
+                listPtr = Tcl_NewListObj(0, NULL);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[0]);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[1]);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[2]);
+                Tcl_ListObjAppendElement(interp, listPtr, WidgetFlagsHideSet(argObjv[3]));
+                break;
+            default: /* ignore internal error */
+                continue;
             }
-            listPtr = Tcl_NewListObj(0, NULL);
-            Tcl_ListObjAppendElement(interp,listPtr,argObjv[0]);
-            Tcl_ListObjAppendElement(interp,listPtr,argObjv[1]);
-            Tcl_ListObjAppendElement(interp,listPtr,argObjv[2]);
-            Tcl_ListObjAppendElement(interp,listPtr, WidgetFlagsHideSet(argObjv[3]));
             if (Tcl_DictObjPut(interp, dictPtr, objv[i], listPtr) != TCL_OK) {
                 Tcl_DecrRefCount(dictPtr);
                 Tcl_DecrRefCount(namePtr);
@@ -600,7 +692,11 @@ Tko_TkoObjCmd(
             listPtr = Tcl_NewListObj(0, NULL);
             for (; !done; Tcl_DictObjNext(&search, &key, &value, &done)) {
                 Tcl_ListObjGetElements(interp, value, &argObjc, &argObjv);
-                if (argObjc > 3) {
+                if (argObjc == 2) {
+                    if (WidgetFlagsHideGet(argObjv[1]) == 1) {
+                        Tcl_ListObjAppendElement(interp, listPtr, key);
+                    }
+                } else if (argObjc == 4) {
                     if (WidgetFlagsHideGet(argObjv[3]) == 1) {
                         Tcl_ListObjAppendElement(interp, listPtr, key);
                     }
@@ -616,21 +712,32 @@ Tko_TkoObjCmd(
         Tcl_IncrRefCount(dictPtr);
         for (i = 3; i < objc; i++) {
             if (Tcl_DictObjGet(interp, dictPtr, objv[i], &listPtr) != TCL_OK) {
+                Tcl_SetObjResult(interp, Tcl_ObjPrintf("unknown option: %s",
+                    Tcl_GetString(objv[i])));
                 Tcl_DecrRefCount(dictPtr);
                 Tcl_DecrRefCount(namePtr);
                 return TCL_ERROR;
             }
             Tcl_ListObjGetElements(interp, listPtr, &argObjc, &argObjv);
-            if (argObjc != 4) {
-                Tcl_DecrRefCount(dictPtr);
-                Tcl_DecrRefCount(namePtr);
-                return TCL_ERROR;
+            switch (argObjc) {
+            case 1: /* already visible */
+                continue;
+            case 2:
+                listPtr = Tcl_NewListObj(0, NULL);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[0]);
+                Tcl_ListObjAppendElement(interp, listPtr, WidgetFlagsHideUnset(argObjv[1]));
+                break;
+            case 3: /* already visible */
+                continue;
+            case 4:
+                listPtr = Tcl_NewListObj(0, NULL);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[0]);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[1]);
+                Tcl_ListObjAppendElement(interp, listPtr, argObjv[2]);
+                Tcl_ListObjAppendElement(interp, listPtr, WidgetFlagsHideUnset(argObjv[3]));
+            default: /* ignore internal error */
+                continue;
             }
-            listPtr = Tcl_NewListObj(0, NULL);
-            Tcl_ListObjAppendElement(interp, listPtr, argObjv[0]);
-            Tcl_ListObjAppendElement(interp, listPtr, argObjv[1]);
-            Tcl_ListObjAppendElement(interp, listPtr, argObjv[2]);
-            Tcl_ListObjAppendElement(interp, listPtr, WidgetFlagsHideUnset(argObjv[3]));
             if (Tcl_DictObjPut(interp, dictPtr, objv[i], listPtr) != TCL_OK) {
                 Tcl_DecrRefCount(dictPtr);
                 Tcl_DecrRefCount(namePtr);
@@ -681,6 +788,7 @@ static int WidgetMethod_tko(
     Tcl_HashSearch search;
     WidgetOption *optionPtr;
     Tcl_Obj *myCmd[6];
+    Tcl_Object object;
 
     widget = (Tko_Widget *) Tko_WidgetClientData(context);
     if (widget == NULL || widget->tkWin == NULL) {
@@ -699,30 +807,37 @@ static int WidgetMethod_tko(
 
     switch ((enum options) index) {
     case MY_OPTIONADD:
-        if ((objc - skip) != 6 && (objc-skip) != 7) {
-            Tcl_WrongNumArgs(interp, skip + 1, objv,
-                "-option dbname dbclass value flags ?body?");
-            return TCL_ERROR;
-        }
-        /* First add the method if given. */
-        if ((objc - skip) == 7) {
-            Tcl_Object object = Tcl_ObjectContextObject(context);
+        switch (objc - skip) {
+        case 3:
+            return WidgetOptionAdd(interp, widget, objv[skip + 1], objv[skip + 2],
+                NULL, NULL, NULL, NULL, 0);
+        case 4:
+            return WidgetOptionAdd(interp, widget, objv[skip + 1], objv[skip + 2],
+                NULL, NULL, objv[skip+3], NULL, 0);
+        case 5:
+            return WidgetOptionAdd(interp, widget, objv[skip + 1], objv[skip + 2],
+                objv[skip + 3], objv[skip + 4], NULL, NULL, 0);
+        case 6:
+            return WidgetOptionAdd(interp, widget, objv[skip + 1], objv[skip + 2],
+                objv[skip + 3], objv[skip + 4], objv[skip + 5], NULL, 0);
+        case 7:
+            object = Tcl_ObjectContextObject(context);
             if (object == NULL) return TCL_ERROR;
             myCmd[0] = TkoObj_oo_objdefine;
-            myCmd[1] = Tcl_GetObjectName(interp,object);
+            myCmd[1] = Tcl_GetObjectName(interp, object);
             myCmd[2] = TkoObj_method;
-            myCmd[3] = objv[skip+1];
+            myCmd[3] = objv[skip + 1];
             myCmd[4] = TkoObj_empty;
-            myCmd[5] = objv[skip+6];
-            if (Tcl_EvalObjv(interp, 6,myCmd,TCL_EVAL_GLOBAL) != TCL_OK) {
+            myCmd[5] = objv[skip + 6];
+            if (Tcl_EvalObjv(interp, 6, myCmd, TCL_EVAL_GLOBAL) != TCL_OK) {
                 return TCL_ERROR;
             }
+            return WidgetOptionAdd(interp, widget, objv[skip + 1], objv[skip + 2],
+                objv[skip + 3], objv[skip + 4], objv[skip + 5], NULL, 0);
         }
-        if (WidgetOptionAdd(interp, widget, objv[skip + 1], objv[skip + 2],
-            objv[skip + 3], objv[skip + 4], objv[skip + 5], NULL, 0) != TCL_OK) {
-            return TCL_ERROR;
-        }
-        return TCL_OK;
+        Tcl_WrongNumArgs(interp, skip + 1, objv,
+            "-option {*}definitionlist");
+        return TCL_ERROR;
     case MY_OPTIONDEL: /* delete object options */
         for (i= skip+1; i<objc; i++) {
             entryPtr =
@@ -838,6 +953,24 @@ Tko_Init(
         "  }\n"
         "  set l $l1\n"
         " }\n"
+        "}\n"
+        "proc ::tko::_initwrap {class widget ro ml} {\n"
+        " catch {destroy .__tko__}\n"
+        " set myConf [[$widget .__tko__] configure]\n"
+        " destroy .__tko__\n"
+        " foreach myCmd $ml {\n"
+        "  if {$myCmd in {cget configure}} continue\n"
+        "  uplevel 1 [list method $myCmd args \"\\$tko(..) $myCmd {*}\\$args\"]\n"
+        " }\n"
+        " foreach myList $myConf {\n"
+        "  switch [llength $myList] {\n"
+        "   2 {::tko optiondef $class {*}$myList }\n"
+        "   5 {lassign $myList o n c d\n"
+        "    if {$o in $ro} {set f r} else {set f {}}\n"
+        "    ::tko optiondef $class $o [list $n $c $d $f \"\\$tko(..) configure $o \\$tko($o) ; set tko($o) \\[\\$tko(..) cget $o\\]\" ]\n"
+        "   }\n"
+        "  }\n"
+        " }\n"
         "}";
 
     /* Needed oo extension */
@@ -882,20 +1015,17 @@ Tko_Init(
     Tcl_IncrRefCount((TkoObj_1 = Tcl_NewIntObj(1)));
     Tcl_IncrRefCount((TkoObj_lsort = Tcl_NewStringObj("::lsort", -1)));
     Tcl_IncrRefCount((TkoObj_point = Tcl_NewStringObj(".", -1)));
+    Tcl_IncrRefCount((TkoObj_point2 = Tcl_NewStringObj("..", -1)));
     Tcl_IncrRefCount((TkoObj__screen = Tcl_NewStringObj("-screen", -1)));
     Tcl_IncrRefCount((TkoObj_flags_r = Tcl_NewStringObj("r", -1)));
     Tcl_IncrRefCount((TkoObj_flags_rh = Tcl_NewStringObj("rh", -1)));
     Tcl_IncrRefCount((TkoObj_flags_h = Tcl_NewStringObj("h", -1)));
+    Tcl_IncrRefCount((TkoObj_rename = Tcl_NewStringObj("rename", -1)));
+    Tcl_IncrRefCount((TkoObj_tko__self = Tcl_NewStringObj("::tko::_self", -1)));
     /* commands */
     Tcl_CreateObjCommand(interp, "::tko", Tko_TkoObjCmd, NULL, NULL);
 
     if (Tko_FrameInit(interp) != TCL_OK) {
-        return TCL_ERROR;
-    }
-    if (Tko_VectorInit(interp) != TCL_OK) {
-        return TCL_ERROR;
-    }
-    if (Tko_GraphInit(interp) != TCL_OK) {
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -927,16 +1057,6 @@ Tko_WidgetClassDefine(
     WidgetClientdata *clientdata;
 
     int i;
-    static Tcl_MethodType widgetMethods[] = {
-        { TCL_OO_METHOD_VERSION_CURRENT, "cget", WidgetMethod_cget, NULL, NULL },
-        { TCL_OO_METHOD_VERSION_CURRENT, "configure", WidgetMethod_configure, NULL,
-        NULL },
-        { TCL_OO_METHOD_VERSION_CURRENT, "_tko_configure",
-        WidgetMethod_tko_configure, NULL, NULL },
-        { TCL_OO_METHOD_VERSION_CURRENT, "_tko",
-        WidgetMethod_tko, NULL, NULL },
-    }; /* List of all used public and private methods. */
-
 
     if (classname == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("missing class name"));
@@ -974,10 +1094,10 @@ Tko_WidgetClassDefine(
                 Tcl_NewMethod(interp, clazz, NULL, 1, &methods[1], NULL));
         }
         /* our own methods */
-        Tcl_NewMethod(interp, clazz, TkoObj_cget, 1, &widgetMethods[0], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj_configure, 1, &widgetMethods[1], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj__tko_configure, 0, &widgetMethods[2], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj__tko, 0, &widgetMethods[3], NULL);
+        Tcl_NewMethod(interp, clazz, TkoObj_cget, 1, &tkoWidgetMethods[2], NULL);
+        Tcl_NewMethod(interp, clazz, TkoObj_configure, 1, &tkoWidgetMethods[3], NULL);
+        Tcl_NewMethod(interp, clazz, TkoObj__tko_configure, 0, &tkoWidgetMethods[4], NULL);
+        Tcl_NewMethod(interp, clazz, TkoObj__tko, 0, &tkoWidgetMethods[5], NULL);
         /* public */
         for(i = 2; methods[i].name != NULL; i++) {
             tmpObj = Tcl_NewStringObj(methods[i].name, -1);
@@ -1044,30 +1164,29 @@ Tko_WidgetClassDefine(
             listPtr = Tcl_NewListObj(0, NULL);
             Tcl_ListObjAppendElement(interp, listPtr,
                 Tcl_NewStringObj(options[i].dbname, -1));
-            if (options[i].dbclass == NULL) {
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_empty);
-            }
-            else {
+            /* only if not synonym option */
+            if (options[i].dbclass != NULL) {
                 Tcl_ListObjAppendElement(interp, listPtr,
                     Tcl_NewStringObj(options[i].dbclass, -1));
-            }
-            if (options[i].defvalue == NULL) {
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_empty);
-            }
-            else {
-                Tcl_ListObjAppendElement(interp, listPtr,
-                    Tcl_NewStringObj(options[i].defvalue, -1));
-            }
-            if (options[i].flags & TKO_OPTION_READONLY) {
-                if (options[i].flags & TKO_OPTION_HIDE) {
-                    Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_rh);
+                if (options[i].defvalue == NULL) {
+                    Tcl_ListObjAppendElement(interp, listPtr, TkoObj_empty);
                 }
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_r);
-            } else if (options[i].flags & TKO_OPTION_HIDE) {
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_h);
-            }
-            else {
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_empty);
+                else {
+                    Tcl_ListObjAppendElement(interp, listPtr,
+                        Tcl_NewStringObj(options[i].defvalue, -1));
+                }
+                if (options[i].flags & TKO_OPTION_READONLY) {
+                    if (options[i].flags & TKO_OPTION_HIDE) {
+                        Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_rh);
+                    }
+                    Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_r);
+                }
+                else if (options[i].flags & TKO_OPTION_HIDE) {
+                    Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_h);
+                }
+                else {
+                    Tcl_ListObjAppendElement(interp, listPtr, TkoObj_empty);
+                }
             }
             if (Tcl_DictObjPut(interp, dictPtr, optionPtr, listPtr) != TCL_OK) {
                 Tcl_DecrRefCount(optionPtr);
@@ -1116,6 +1235,119 @@ Tko_WidgetClassDefine(
 }
 
 /*
+* WidgetWrapDestructor --
+*
+* Results:
+*    A standard Tcl result.
+*
+* Side effects:
+*  Delete widget ressources.
+*/
+static int
+WidgetWrapDestructor(
+    ClientData clientData,
+    Tcl_Interp * interp,
+    Tcl_ObjectContext context,
+    int objc,
+    Tcl_Obj * const objv[])
+{
+    Tko_Widget *widget;
+
+    if ((widget = (Tko_Widget *)Tko_WidgetClientData(context)) != NULL) {
+        Tcl_Preserve(widget);
+        Tko_WidgetDestroy(context);
+        Tcl_Release(widget);
+    }
+    return TCL_OK;
+}
+
+/*
+* WidgetWrapConstructor --
+*    Create a new tko widget object with wrapping of the given widget command.
+*
+* Results:
+*    A standard Tcl result.
+*
+* Side effects:
+*    Create new object with methods and option defines.
+ */
+static int
+WidgetWrapConstructor(
+    ClientData clientData,
+    Tcl_Interp * interp,
+    Tcl_ObjectContext context,
+    int objc,
+    Tcl_Obj * const objv[])
+{
+    Tcl_Object object;
+    Tko_Widget *widget;
+    Tcl_Obj *myArglist;
+    int skip;
+    const char *ch;
+    int length;
+    Tk_Window tkWin;
+    Tk_Window tkWinTmp; /* tmp. created window to get Tk_Window from embedded window */
+    Tcl_Obj *tmpPtr; /* tmp. string for evaluating code */
+
+    /* Get current object. Should not fail? */
+    if ((object = Tcl_ObjectContextObject(context)) == NULL) {
+        return TCL_ERROR;
+    }
+    /* Check widget name on "::.*" */
+    ch = NULL;
+    if ((tmpPtr = Tcl_GetObjectName(interp, object)) == NULL
+        || (ch = TclGetStringFromObj(tmpPtr, &length)) == NULL
+        || length < 4 || ch[0] != ':' || ch[1] != ':' || ch[2] != '.') {
+        if (ch == NULL) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf("no pathName"));
+        }
+        else {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong pathName: %s", ch));
+        }
+        return TCL_ERROR;
+    }
+
+    /*
+     * Get real widget Tk_Window.
+     */
+    tmpPtr = Tcl_NewStringObj(&ch[2], length - 2);
+    Tcl_AppendToObj(tmpPtr, ".1", 2);
+    Tcl_IncrRefCount(tmpPtr);
+    tkWinTmp = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp), Tcl_GetString(tmpPtr), NULL);
+    Tcl_DecrRefCount(tmpPtr);
+    if (tkWinTmp == NULL) {
+        return TCL_ERROR;
+    }
+    tkWin = Tk_NameToWindow(interp, &ch[2], tkWinTmp);
+    Tk_DestroyWindow(tkWinTmp);
+    if (tkWin == NULL) {
+        return TCL_ERROR;
+    }
+
+    /* Create and initialize internal widget structure */
+    widget = ckalloc(sizeof(Tko_Widget));
+    assert(widget);
+    memset(widget, 0, sizeof(Tko_Widget));
+    widget->tkWin = tkWin;
+
+    skip = Tcl_ObjectContextSkippedArgs(context);
+    if (objc - skip > 0) {
+        myArglist = Tcl_NewListObj(objc - skip, &objv[skip]);
+    }
+    else {
+        myArglist = Tcl_NewListObj(0,NULL);
+    }
+    Tcl_IncrRefCount(myArglist);
+    if (Tko_WidgetCreate(widget, interp, object, 0,
+        myArglist) != TCL_OK) {
+        Tcl_DecrRefCount(myArglist);
+        return TCL_ERROR;
+    }
+    Tcl_DecrRefCount(myArglist);
+    return TCL_OK;
+}
+
+/*
  * Tko_WidgetCreate --
  *    Create new tko widget object.
  *  Tcl syntax is "class create path optiondefs optionargs".
@@ -1136,7 +1368,6 @@ Tko_WidgetCreate(
     Tcl_Obj *arglist) /* -value option .. list, used options will be removed */
 {
     Tko_Widget *widget;
-    Tk_Window tkWin;
     char *nsPtr;
     int argSize;
     Tcl_Obj *classObj;
@@ -1152,26 +1383,19 @@ Tko_WidgetCreate(
     Tcl_Obj *screen;
     char *ch;
     int length;
-    int classindex;
+    int initmode=1;/* 1=own widget 2=wrapped widget */
 
+    /* This would be an internal programming error */
     if (clientdata == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("no widget data"));
         return TCL_ERROR;
     }
-    /* Add widget to metadata */
-    Tcl_ObjectSetMetadata(object, &tkoWidgetMeta, clientdata);
-    widget = (Tko_Widget *)clientdata;
-    /* Create and initialize internal widget strucure. */
-    widget->interp = interp;
-    widget->object = object;
-    widget->tkWin = NULL;
-    widget->display = NULL;
-    widget->widgetCmd = NULL;
-    Tcl_InitHashTable(&widget->optionsTable, TCL_ONE_WORD_KEYS);
-    widget->optionsArray = NULL;
-    widget->myCmd = NULL;
-
-    /* Check widget name on "::.*" */
+    /*
+     * Check widget name on "::.*"
+     * It can not occur in wrapped widget because we have already
+     * created the hidden widget with this name
+     */
+    ch = NULL;
     if ((tmpObj = Tcl_GetObjectName(interp, object)) == NULL
         || (ch = TclGetStringFromObj(tmpObj, &length)) == NULL
         || length < 4 || ch[0] != ':' || ch[1] != ':' || ch[2] != '.') {
@@ -1181,12 +1405,54 @@ Tko_WidgetCreate(
         else {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong pathName: %s", ch));
         }
-        return TCL_ERROR;
+        goto error;
     }
-    /* Convert argumment list in dictionary */
+
+    /* Add widget to metadata */
+    Tcl_ObjectSetMetadata(object, &tkoWidgetMeta, clientdata);
+
+    /*
+     * Initialize internal widget strucure.
+     */
+    widget = (Tko_Widget *)clientdata;
+    widget->interp = interp;
+    widget->object = object;
+    Tcl_InitHashTable(&widget->optionsTable, TCL_ONE_WORD_KEYS);
+    widget->widgetCmd = Tcl_GetObjectCommand(object);
+    /* Create option array variable */
+    nsPtr = Tcl_GetObjectNamespace(object)->fullName;
+    widget->optionsArray = Tcl_ObjPrintf("%s::tko", nsPtr);
+    Tcl_IncrRefCount(widget->optionsArray);
+    /* Create my command */
+    widget->myCmd = Tcl_ObjPrintf("%s::my", nsPtr);
+    Tcl_IncrRefCount(widget->myCmd);
+
+    if (widget->tkWin) {
+        /* Set tko(..) to name of hidden widget */
+        tmpObj = Tcl_ObjPrintf("::tko::%s",&ch[2]);
+        Tcl_IncrRefCount(tmpObj);
+        if (Tcl_ObjSetVar2(interp, widget->optionsArray, TkoObj_point2,
+            tmpObj, TCL_GLOBAL_ONLY) == NULL) {
+            Tcl_DecrRefCount(tmpObj);
+            tmpObj = Tcl_ObjPrintf("rename ::tko::%s {}",&ch[2]);
+            Tcl_IncrRefCount(tmpObj);
+            Tcl_EvalObjEx(interp,tmpObj,TCL_GLOBAL_ONLY);
+            Tcl_DecrRefCount(tmpObj);
+            widget->tkWin = NULL;
+            goto error;
+        }
+        Tcl_DecrRefCount(tmpObj);
+    }
+    /* Set tko(.) to name of widget */
+    if (Tcl_ObjSetVar2(interp, widget->optionsArray, TkoObj_point,
+        Tcl_NewStringObj(&ch[2], length - 2), TCL_GLOBAL_ONLY) == NULL) {
+        goto error;
+    }
+
+    /* Convert argument list in dictionary */
     if (Tcl_DictObjSize(interp, arglist, &argSize) != TCL_OK) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("could not get arglist"));
-        return TCL_ERROR;
+        goto error;
     }
     /*
      * Get options from outermost class.
@@ -1194,37 +1460,38 @@ Tko_WidgetCreate(
     classObj = Widget_GetClassName(interp, object);
     if (classObj == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("no class name"));
-        return TCL_ERROR;
+        goto error;
     }
     optionList = Tcl_ObjGetVar2(interp, TkoObj_tko__option, classObj, TCL_GLOBAL_ONLY);
     if (optionList == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("no option definitions"));
-        return TCL_ERROR;
+        goto error;
     }
     if (Tcl_ListObjGetElements(interp, optionList, &optionObjc, &optionObjv) != TCL_OK
         || optionObjc%2 != 0) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong option definitions"));
-        return TCL_ERROR;
+        goto error;
     }
     if (optionObjc == 0) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("empty option definitions"));
-        return TCL_ERROR;
+        goto error;
     }
     /*
+     * Create new Tk_Window if no one is given.
      * The "-screen" option definition should be the first option in toplevels.
      */
-    if (isToplevel) {
+    if (widget->tkWin==NULL && isToplevel) {
         screen = NULL;
         /* -screen option should be first */
         if (strncmp("-screen",Tcl_GetString(optionObjv[0]),8)!=0) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf("missing -screen option"));
-            return TCL_ERROR;
+            goto error;
         }
         /* we only check argument number and assume readonly flag */
         if (Tcl_ListObjGetElements(interp, optionObjv[1], &argObjc, &argObjv) != TCL_OK
             || argObjc != 4) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong -screen option"));
-            return TCL_ERROR;
+            goto error;
         }
         /* Try to get value from command line or use default one. */
         Tcl_DictObjGet(interp, arglist, TkoObj__screen, &screen);
@@ -1235,68 +1502,65 @@ Tko_WidgetCreate(
             screen = argObjv[2];
         }
         Tcl_IncrRefCount(screen);
-        tkWin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp), &ch[2],
+        widget->tkWin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp), &ch[2],
             Tcl_GetString(screen));
-        i = classindex = 2;
-    } else {
-        i = classindex = 0;
-        tkWin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp), &ch[2],
+        if (widget->tkWin == NULL) {
+            goto error;
+        }
+    } else if (widget->tkWin==NULL) {
+        widget->tkWin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp), &ch[2],
             NULL);
+        if (widget->tkWin == NULL) {
+            goto error;
+        }
     }
-    if(tkWin == NULL) {
-        return TCL_ERROR;
+    else {
+        initmode = 2;
+        /* widget->tkWin already set */
     }
-    Tk_MakeWindowExist(tkWin);
-    /* Initialize internal widget strucure. */
-    widget->tkWin = tkWin;
-    widget->display = Tk_Display(tkWin);
-    if (widget->display== NULL) {
-        return TCL_ERROR;
-    }
-    widget->widgetCmd = Tcl_GetObjectCommand(object);
-    /* Create option array variable */
-    nsPtr = Tcl_GetObjectNamespace(object)->fullName;
-    widget->optionsArray = Tcl_ObjPrintf("%s::tko",nsPtr);
-    Tcl_IncrRefCount(widget->optionsArray);
-    /* Create my command */
-    widget->myCmd = Tcl_ObjPrintf("%s::my",nsPtr);
-    Tcl_IncrRefCount(widget->myCmd);
+    Tk_MakeWindowExist(widget->tkWin);
 
-    /* Set tko(.) to name of widget */
-    if (Tcl_ObjSetVar2(interp, widget->optionsArray, TkoObj_point,
-        Tcl_NewStringObj(&ch[2], length - 2), TCL_GLOBAL_ONLY) == NULL) {
+    /*
+     * Initialize internal widget strucure.
+     */
+    widget->display = Tk_Display(widget->tkWin);
+    if (widget->display== NULL) {
         goto error;
     }
     /*
-     * Add "-screen" option of toplevels.
+     * When not wrapping then check order of arguments here.
      */
-    if (isToplevel) {
-        ret = WidgetOptionAdd(interp, widget, optionObjv[0], argObjv[0],
-            argObjv[1], argObjv[2], argObjv[3], screen, 1);
-        Tcl_DecrRefCount(screen);
-        if (ret != TCL_OK) {
+    i = 0;
+    if (initmode != 2) {
+        /* Add "-screen" option of toplevels. */
+        if (isToplevel) {
+            ret = WidgetOptionAdd(interp, widget, optionObjv[0], argObjv[0],
+                argObjv[1], argObjv[2], argObjv[3], screen, initmode);
+            Tcl_DecrRefCount(screen);
+            if (ret != TCL_OK) {
+                goto error;
+            }
+            i = 2;
+        }
+        /*
+        * When not wrapping then "-class" option should be first option now.
+        * It's value is needed to get option informations from option database.
+        */
+        ch = Tcl_GetStringFromObj(optionObjv[i], &length);
+        if (strncmp(ch, "-class", length) != 0) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf("missing -class option"));
             goto error;
         }
     }
     /*
-     * Add options. "-class" option should be first option now.
+     * Add options.
      */
     for(; i < optionObjc; i=i+2) {
         if (Tcl_ListObjGetElements(interp, optionObjv[i+1], &argObjc, &argObjv) !=TCL_OK
-            || argObjc != 4) {
+            || argObjc < 1 || argObjc > 4) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong option def: %s {%s}",
-                    Tcl_GetString(optionObjv[i]),optionObjv[i+1]));
+                    Tcl_GetString(optionObjv[i]),Tcl_GetString(optionObjv[i+1])));
             goto error;
-        }
-        /* Option "-class" should be first option.
-         * It's value is needed to get option informations from option database.
-         */
-        if (i == classindex) {
-            ch = Tcl_GetStringFromObj(optionObjv[i], &length);
-            if (strncmp(ch, "-class", length) != 0) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf("missing -class option"));
-                goto error;
-            }
         }
         Tcl_DictObjGet(interp, arglist, optionObjv[i], &value);
         if(value) {
@@ -1304,10 +1568,28 @@ Tko_WidgetCreate(
             Tcl_DictObjRemove(interp, arglist, optionObjv[i]);
             argSize--;
         }
-        if(WidgetOptionAdd(interp, widget, optionObjv[i], argObjv[0],
-                argObjv[1], argObjv[2], argObjv[3], value, 1) != TCL_OK) {
-            goto error;
+        switch (argObjc) {
+        case 1:
+            ret = WidgetOptionAdd(interp, widget, optionObjv[i], argObjv[0],
+                NULL, NULL, NULL, value, initmode);
+            break;
+        case 2:
+            ret = WidgetOptionAdd(interp, widget, optionObjv[i], argObjv[0],
+                NULL, NULL, argObjv[1], value, initmode);
+            break;
+        case 3:
+            ret = WidgetOptionAdd(interp, widget, optionObjv[i], argObjv[0],
+                argObjv[1], argObjv[2], NULL, value, initmode);
+            break;
+        case 4:
+            ret = WidgetOptionAdd(interp, widget, optionObjv[i], argObjv[0],
+                argObjv[1], argObjv[2], argObjv[3], value, initmode);
+            break;
         }
+        if (value) {
+            Tcl_DecrRefCount(value);
+        }
+        if (ret != TCL_OK) goto error;
     }
     if(argSize) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("unknown options: %s",
@@ -1318,13 +1600,13 @@ Tko_WidgetCreate(
     Tcl_TraceVar2(interp, Tcl_GetString(widget->optionsArray), NULL,
         TCL_TRACE_WRITES | TCL_TRACE_RESULT_OBJECT, WidgetOptionTrace, widget);
 
-    Tk_CreateEventHandler(tkWin, StructureNotifyMask | VirtualEventMask,
+    Tk_CreateEventHandler(widget->tkWin, StructureNotifyMask | VirtualEventMask,
         WidgetEventProc, (ClientData) widget);
 
     return TCL_OK;
 
   error:
-    Tcl_DeleteCommandFromToken(interp, Tcl_GetObjectCommand(object));
+    Tcl_DeleteCommandFromToken(interp, widget->widgetCmd);
     return TCL_ERROR;
 }
 
@@ -1343,33 +1625,13 @@ Tko_WidgetDestroy(
     Tcl_ObjectContext context)
 {
     Tko_Widget *widget;
-    Tcl_HashSearch search;
-    Tcl_HashEntry *entryPtr;
 
     if ((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL) {
         return;
     }
     Tcl_Preserve(widget);
-    if(widget->tkWin) {
-        Tk_DeleteEventHandler(widget->tkWin, StructureNotifyMask|VirtualEventMask,
-            WidgetEventProc, (ClientData) widget);
-        Tk_DestroyWindow(widget->tkWin);
-        widget->tkWin = NULL;
-    }
-
-    entryPtr = Tcl_FirstHashEntry(&widget->optionsTable, &search);
-    while (entryPtr != NULL) {
-        WidgetOptionDelEntry(entryPtr);
-        entryPtr = Tcl_NextHashEntry(&search);
-    }
-    Tcl_DeleteHashTable(&widget->optionsTable);
-    if (widget->optionsArray != NULL) {
-        Tcl_DecrRefCount((widget->optionsArray));
-        widget->optionsArray = NULL;
-    }
-    if (widget->myCmd) {
-        Tcl_DecrRefCount(widget->myCmd);
-        widget->myCmd = NULL;
+    if (widget->tkWin) {
+        WidgetDeleteTkwin(widget);
     }
     Tcl_ObjectSetMetadata(widget->object, &tkoWidgetMeta, NULL);
     Tcl_Release(widget);
@@ -1414,20 +1676,50 @@ WidgetMetaDestroy(
     Tcl_HashEntry *entryPtr;
 
     entryPtr = Tcl_FirstHashEntry(&widget->optionsTable, &search);
-    while(entryPtr != NULL) {
+    while (entryPtr != NULL) {
         WidgetOptionDelEntry(entryPtr);
         entryPtr = Tcl_NextHashEntry(&search);
     }
     Tcl_DeleteHashTable(&widget->optionsTable);
-    if(widget->optionsArray != NULL) {
+    if (widget->optionsArray != NULL) {
         Tcl_DecrRefCount((widget->optionsArray));
         widget->optionsArray = NULL;
     }
-    if(widget->myCmd) {
+    if (widget->myCmd) {
         Tcl_DecrRefCount(widget->myCmd);
         widget->myCmd = NULL;
     }
     ckfree(widget);
+}
+
+/*
+* WidgetDeleteTkwin --
+*    Resets internal Tk_Window in widget structure.
+*
+* Results:
+*    None.
+*
+* Side effects:
+*    Delete event handler of widget.
+*    When the widget is wrappen then delete wrap widget command.
+*/
+static void WidgetDeleteTkwin(
+    Tko_Widget *widget)
+{
+    Tcl_Obj *tmpObj;
+    Tk_DeleteEventHandler(widget->tkWin, StructureNotifyMask | VirtualEventMask,
+        WidgetEventProc, widget);
+    tmpObj = Tcl_ObjGetVar2(widget->interp, widget->optionsArray, TkoObj_point2, TCL_GLOBAL_ONLY);
+    if (tmpObj) {
+        tmpObj = Tcl_ObjPrintf("rename %s {}", Tcl_GetString(tmpObj));
+        Tcl_IncrRefCount(tmpObj);
+        Tcl_EvalObjEx(widget->interp, tmpObj,TCL_GLOBAL_ONLY);
+        Tcl_DecrRefCount(tmpObj);
+    }
+    else {
+        Tk_DestroyWindow(widget->tkWin);
+    }
+    widget->tkWin = NULL;
 }
 
 /*
@@ -1451,10 +1743,7 @@ WidgetEventProc(
     switch (eventPtr->type) {
     case DestroyNotify:
         if (widget->tkWin) {
-            Tk_DeleteEventHandler(widget->tkWin, StructureNotifyMask,
-                WidgetEventProc, widget);
-            Tk_DestroyWindow(widget->tkWin);
-            widget->tkWin = NULL;
+            WidgetDeleteTkwin(widget);
             Tcl_DeleteCommandFromToken(widget->interp, widget->widgetCmd);
         }
         break;
@@ -1603,9 +1892,6 @@ WidgetMethod_configure(
     Tko_Widget *widget;         /* widget. */
     int skip;
     Tcl_Obj *myObjv[2];
-    Tcl_Obj *dbclass = NULL;
-    Tcl_Obj *defvalue = NULL;
-    Tcl_Obj *flags = NULL;
     Tcl_HashSearch search;
     Tcl_HashEntry *entryPtr;
     WidgetOption *optionPtr;
@@ -1776,15 +2062,15 @@ WidgetMethod_configure(
  */
 static int
 WidgetOptionAdd(
-    Tcl_Interp * interp,
-    Tko_Widget * widget,
-    Tcl_Obj * option,
-    Tcl_Obj * dbname,
-    Tcl_Obj * dbclass,
-    Tcl_Obj * defvalue,
-    Tcl_Obj * flags,
-    Tcl_Obj * value,
-    int initmode)
+    Tcl_Interp * interp, /* used interpreter */
+    Tko_Widget * widget, /* currrent widget or NULL if only checks should be done  */
+    Tcl_Obj * option, /* name of option, always given*/
+    Tcl_Obj * dbname, /* dbname or synonym, always given */
+    Tcl_Obj * dbclass, /* dbclass or NULL if synonym option */
+    Tcl_Obj * defvalue, /* value or NULL if synonym option */
+    Tcl_Obj * flags, /* value or NULL if synonym option */
+    Tcl_Obj * value, /* initialization value */
+    int initmode) /* 0 when adding to existing object, 1 when constructor, 2 when wrapped widget */
 {
     Tcl_HashEntry *entryPtr;
     WidgetOption *optionPtr;
@@ -1793,7 +2079,6 @@ WidgetOptionAdd(
     Tk_Uid optionUid;
     Tk_Uid dbnameUid;
     Tk_Uid dbclassUid;
-    int isSynonym;
     int intFlags;
     int readonly;
     Tcl_Obj *myObjv[2];
@@ -1806,16 +2091,12 @@ WidgetOptionAdd(
         return TCL_ERROR;
     }
     /* synonym option check */
-    if(Tcl_GetString(dbclass)[0] == '\0') {
+    if(dbclass == NULL) {
         if((ch=Tcl_GetString(dbname))[0] != '-' || ch[1]=='\0') {
             Tcl_SetObjResult(interp,
                 Tcl_ObjPrintf("wrong synonym: %s %s", opt, ch));
             return TCL_ERROR;
         }
-        isSynonym = 1;
-    }
-    else {
-        isSynonym = 0;
     }
     /* int flag */
     intFlags = 0;
@@ -1849,13 +2130,20 @@ WidgetOptionAdd(
     Tcl_IncrRefCount(optionPtr->option);
     optionPtr->dbname = dbname;
     Tcl_IncrRefCount(optionPtr->dbname);
-    optionPtr->defvalue = defvalue;
-    Tcl_IncrRefCount(optionPtr->defvalue);
-    optionPtr->flags = flags;
-    optionPtr->flagbits = intFlags;
     Tcl_SetHashValue(entryPtr, (char *)optionPtr);
-    /* synonym options can have init value */
-    if(isSynonym) {
+    if (flags) {
+        optionPtr->flags = flags;
+    }
+    else {
+        optionPtr->flags = TkoObj_empty;
+    }
+    Tcl_IncrRefCount(optionPtr->flags);
+    optionPtr->flagbits = intFlags;
+    /* synonym options can have flags.
+     * Need to check usage of init value! */
+    if(dbclass == NULL) {
+        optionPtr->dbclass = NULL;
+        optionPtr->defvalue = NULL;
         if(value) {
             optionPtr->value = value;
             Tcl_IncrRefCount(optionPtr->value);
@@ -1865,6 +2153,10 @@ WidgetOptionAdd(
         dbclassUid = Tk_GetUid(Tcl_GetString(dbclass));
         optionPtr->dbclass = dbclass;
         Tcl_IncrRefCount(optionPtr->dbclass);
+
+        optionPtr->defvalue = defvalue;
+        Tcl_IncrRefCount(optionPtr->defvalue);
+
         /*
          * If value is given use it.
          */
@@ -1928,19 +2220,21 @@ WidgetOptionAdd(
          * And we do it for options added with "configure optionadd ..".
          */
         if (readonly || initmode == 0) {
-            myObjv[0] = widget->myCmd;
-            myObjv[1] = option;
-            if (Tcl_EvalObjv(interp, 2, myObjv, TCL_EVAL_GLOBAL) != TCL_OK) {
-                goto error;
+            if (initmode != 2) {
+                myObjv[0] = widget->myCmd;
+                myObjv[1] = option;
+                if (Tcl_EvalObjv(interp, 2, myObjv, TCL_EVAL_GLOBAL) != TCL_OK) {
+                    goto error;
+                }
+                /*
+                * We set the value again because the -option method may have changed it.
+                */
+                if (optionPtr->value) {
+                    Tcl_DecrRefCount(optionPtr->value);
+                }
+                optionPtr->value = Tcl_ObjGetVar2(interp, widget->optionsArray, option, TCL_GLOBAL_ONLY);
+                Tcl_IncrRefCount(optionPtr->value);
             }
-            /*
-            * We set the value again because the -option method may have changed it.
-            */
-            if (optionPtr->value) {
-                Tcl_DecrRefCount(optionPtr->value);
-            }
-            optionPtr->value = Tcl_ObjGetVar2(interp, widget->optionsArray, option, TCL_GLOBAL_ONLY);
-            Tcl_IncrRefCount(optionPtr->value);
             /* Now we are ready to set the readonly bit */
             if (readonly) {
                 optionPtr->flagbits |= TKO_OPTION_READONLY;
@@ -2216,6 +2510,8 @@ WidgetOptionDelEntry(
         Tcl_DecrRefCount(optionPtr->dbname);
     if(optionPtr->dbclass)
         Tcl_DecrRefCount(optionPtr->dbclass);
+    if(optionPtr->flags)
+        Tcl_DecrRefCount(optionPtr->flags);
     if(optionPtr->defvalue)
         Tcl_DecrRefCount(optionPtr->defvalue);
     if(optionPtr->value)
@@ -2602,7 +2898,7 @@ WidgetMethod_(
             }
             else {
                 *(char **)address=ckalloc(length + 1);
-				assert(*(char **)address);
+                assert(*(char **)address);
                 memcpy(*(char **)address, str, length + 1);
             }
         }

@@ -23,12 +23,18 @@ Tko\_WidgetOptionSet,
 
 **#include "tkoWidget.h"**
 
-int **Tko\_WidgetClassDefine**(*interp,classname,methods,options*)  
-int **Tko\_WidgetCreate**(*clientdata,interp,object,isToplevel,arglist*)  
-void **Tko\_WidgetDestroy**(*context*)  
-ClientData **Tko\_WidgetClientData**(*context*)  
-Tcl\_Obj \* **Tko\_WidgetOptionGet**(*widget,option*)  
-int **Tko\_WidgetOptionSet**(*widget,option,value*)  
+int  
+**Tko\_WidgetClassDefine**(*interp,classname,methods,options*)  
+int  
+**Tko\_WidgetCreate**(*clientdata,interp,object,isToplevel,arglist*)  
+void
+**Tko\_WidgetDestroy**(*context*)  
+ClientData
+**Tko\_WidgetClientData**(*context*)  
+Tcl\_Obj \*  
+**Tko\_WidgetOptionGet**(*widget,option*)  
+int  
+**Tko\_WidgetOptionSet**(*widget,option,value*)  
 
 <a name="ARGUMENTS"></a>
 ## ARGUMENTS
@@ -129,8 +135,6 @@ Suported enum type in the **Tko\_WidgetOptionDefine** definition. As comment is 
 
 <a name="EXAMPLES"></a>
 ### EXAMPLES
-
-Definition of widget options:
 
     static Tko_WidgetOptionDefine myOptions[] = {
         /*
