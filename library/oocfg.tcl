@@ -7,8 +7,8 @@
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
-# TODO: Find out how to say 8.7 and 9.0
-package require Tcl 8.7
+# 8.7, or any 9.*
+package require Tcl 8.7-9.99
 
 namespace eval ::tk {
     namespace ensemble create -command ::tk::PropType
@@ -53,9 +53,70 @@ namespace eval ::tk {
 	forward Initialize my Initialise
     }
 
-    namespace eval PropertySupport {
-	proc property args {
+    namespace eval PropertyDefine {
+	namespace eval Support {
+	    proc DefineProperty {name options} {
+	    }
+
+	    proc DefineAlias {name otherName} {
+	    }
 	}
+
+	namespace export property
+	proc property {name args} {
+	    if {[llength $args] % 2} {
+		return -code error -errorcode {TCL WRONGARGS} \
+			[format {wrong # args: should be "%s"} \
+			    "property name ?-option value ...?"]
+	    }
+	    # TODO: validate actual property name
+	    dict set Opt type string
+	    dict set Opt class [string totitle $name]
+	    dict set Opt name [string tolower $name]
+	    dict set Opt init false
+	    set defFromType [::tk::PropType string default]
+	    foreach {option value} $args {
+		set option [tcl::prefix match {
+		    -alias -class -default -initonly -name -type
+		} $option]
+		if {$option eq "-alias"} {
+		    if {[llength $args] != 2} {
+			return -code error \
+			    "-alias may only ever be used on its own"
+		    }
+		    # TODO: check target exists
+		    tailcall Support::DefineAlias $name $value
+		}
+		switch $option {
+		    -class {
+			dict set Opt class $value
+			# TODO: warn or error if first char not uppercase?
+		    }
+		    -name {
+			dict set Opt name $value
+			# TODO: warn or error if first char not lowercase?
+		    }
+		    -default {
+			dict set Opt def $value
+		    }
+		    -initonly {
+			if {![string is boolean -strict $value]} {
+			    return -code error "bad boolean \"$value\""
+			}
+			dict set Opt init $value
+		    }
+		    -type {
+			dict set Opt type $value
+			set defFromType [::tk::PropType $value default]
+		    }
+		}
+	    }
+	    if {![dict exists $Opt def]} {
+		dict set Opt def $defFromType
+	    }
+	    tailcall Support::DefineProperty $name $Opt
+	}
+	namespace path :oo::define
     }
 
     ::oo::class create megawidget {
@@ -71,11 +132,15 @@ namespace eval ::tk {
 	}
 
 	method validate {value} {
-	    if {![{*}$test $value]} {
-		set type [namespace tail [self]]
-		return -code error "invalid $type value \"$value\""
+	    try {
+		if {![{*}$test $value]} {
+		    set type [namespace tail [self]]
+		    return -code error "invalid $type value \"$value\""
+		}
+		return [my Normalize $value]
+	    } on error msg {
+		return -code error $msg
 	    }
-	    return [my Normalize $value]
 	}
 
 	method Normalize {value} {
@@ -123,12 +188,55 @@ namespace eval ::tk {
 	}
     }
 
-    propertytype create string {apply {x {return 1}}} {}
-    propertytype create integer {string is entier -strict} 0
-    propertytype create zinteger {string is entier} {}
-    propertytype create float {string is double -strict} 0.0
-    propertytype create zfloat {string is double} {}
-    propertytype createtable justify {center left right} left
+    # Install the types: those with a boolean test
+    propertytype create integer {string is entier -strict} "0"
+    propertytype create zinteger {string is entier} ""
+    propertytype create float {string is double -strict} "0.0"
+    propertytype create zfloat {string is double} ""
+    propertytype create list {string is list} ""
+    propertytype create dict {string is dict} ""
+
+    # Install the types: those with an erroring test
+    oo::objdefine [propertytype create string {} {}] {
+	# Special case; everything valid
+	method validate value {return $value}
+    }
+    oo::objdefine [propertytype create distance {my Validate} "0px"] {
+	method Validate value {
+	    winfo fpixels . $value
+	    return 1
+	}
+    }
+    oo::objdefine [propertytype create image {my Validate} ""] {
+	method Validate value {
+	    if {$value ne ""} {image type $value}
+	    return 1
+	}
+    }
+    oo::objdefine [propertytype create color {my Validate} "black"] {
+	method Validate value {
+	    winfo rgb . $value
+	    return 1
+	}
+    }
+    oo::objdefine [propertytype create zcolor {my Validate} ""] {
+	method Validate value {
+	    if {$value ne ""} {winfo rgb . $value}
+	    return 1
+	}
+    }
+    oo::objdefine [propertytype create font {my Validate} "TkDefaultFont"] {
+	method Validate value {
+	    # Cheapest property to read
+	    font metrics $value -fixed
+	    return 1
+	}
+    }
+
+    # Install the types: those with an element table
+    propertytype createtable anchor {n ne e se e sw w nw center} "center"
+    propertytype createtable justify {center left right} "left"
+    propertytype createtable relief {flat groove raised ridge solid sunken} "flat"
 }
 
 # Local Variables:
