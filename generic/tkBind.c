@@ -4342,17 +4342,6 @@ HandleEventGenerate(
 	}
 
 	/*
-	 * Now we have constructed the event, inject it into the event handling
-	 * code.
-	 */
-
-	if (synch) {
-	    Tk_HandleEvent(&event.general);
-	} else {
-	    Tk_QueueWindowEvent(&event.general, pos);
-	}
-
-	/*
 	 * We only allow warping if the window is mapped.
 	 */
 
@@ -4378,6 +4367,17 @@ HandleEventGenerate(
 		Tcl_DoWhenIdle(DoWarp, dispPtr);
 		dispPtr->flags |= TK_DISPLAY_IN_WARP;
 	    }
+	}
+
+	/*
+	 * Now we have constructed the event, inject it into the event handling
+	 * code.
+	 */
+
+	if (synch) {
+	    Tk_HandleEvent(&event.general);
+	} else {
+	    Tk_QueueWindowEvent(&event.general, pos);
 	}
     }
 
