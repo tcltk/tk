@@ -662,25 +662,7 @@ TkpWarpPointer(
 	loc.y = TkMacOSXZeroScreenHeight() - pt.y;
     }
 
-    /*
-     * Generate an NSEvent of type NSMouseMoved.
-     *
-     * It is not clear why this is necessary.  For example, calling
-     *     event generate $w <Motion> -warp 1 -x $X -y $Y
-     * will cause two <Motion> events to be added to the Tcl queue.
-     */
-
     CGWarpMouseCursorPosition(pt);
-    NSEvent *warpEvent = [NSEvent mouseEventWithType:NSMouseMoved
-	location:loc
-	modifierFlags:0
-	timestamp:GetCurrentEventTime()
-	windowNumber:wNum
-	context:nil
-	eventNumber:0
-	clickCount:1
-	pressure:0.0];
-    [NSApp postEvent:warpEvent atStart:NO];
 }
 
 /*
