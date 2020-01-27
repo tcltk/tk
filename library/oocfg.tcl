@@ -17,59 +17,185 @@ namespace eval ::tk {
 	variable ""
 
 	private {
-	    method AllDescriptors {} {}
-	    method OneDescriptor option {}
-	    method UpdateState opts {}
+	    method GetRealOptionName {option} {
+		set props [info object properties [self] -all -readable]
+		try {
+		    return [::tcl::prefix match -message "option" \
+				 $props $option]
+		} on error msg {
+		    return -code error -errorcode \
+			[list TK LOOKUP OPTION $option] $msg
+		}
+	    }
+
+	    method AllDescriptors {} {
+		lmap opt [info object properties [self] -all -readable] {
+		    list $opt {*}[my <OptDescribe$opt>] $($opt)
+		}
+	    }
+
+	    method OneDescriptor {option} {
+		set opt [my GetRealOptionName $option]
+		list $opt {*}[my <OptDescribe$opt>] $($opt)
+	    }
+
+	    method UpdateState opts {
+		set props [info object properties [self] -all -writable]
+		set rprops [info object properties [self] -all -readable]
+		set stateChanged 0
+		set state [array get ""]
+		try {
+		    foreach {option value} $opts {
+			try {
+			    set opt [::tcl::prefix match -message "option" \
+					 $props $option]
+			} on error {msg} {
+			    try {
+				::tcl::prefix match $rprops $option
+			    } on error {} {
+				# Do nothing
+			    } on ok {optionName} {
+				set msg "read only option: $optionName"
+			    }
+			    return -code error -errorcode \
+				[list TK LOOKUP OPTION $option] $msg
+			}
+			set ($opt) [my <OptValidate$opt> $value]
+			set stateChanged 1
+		    }
+		    if {$stateChanged} {
+			my PostConfigure
+		    }
+		} on error {msg opt} {
+		    # Rollback on error
+		    array set "" $state
+		    return -options $opt $msg
+		}
+	    }
 	}
 
 	method configure args {
-	    if {[llength $args] == 0} {
-		return [my AllDescriptors]
-	    } elseif {[llength $args] == 1} {
-		return [my OneDescriptor [lindex $args 0]]
-	    } elseif {[llength $args] % 2 == 0} {
-		return [my UpdateState $args]
-	    } else {
-		# Don't like the genuine Tk errors; they're weird!
-		return -code error -errorcode {TCL WRONGARGS} \
-			[format {wrong # args: should be "%s"} \
-			    "[self] configure ?-option value ...?"]
+	    try {
+		if {[llength $args] == 0} {
+		    return [my AllDescriptors]
+		} elseif {[llength $args] == 1} {
+		    return [my OneDescriptor [lindex $args 0]]
+		} elseif {[llength $args] % 2 == 0} {
+		    return [my UpdateState $args]
+		}
+	    } on error {msg opt} {
+		# Hide the implementation details
+		dict unset opt -errorinfo
+		return -options $opt $msg
 	    }
+	    # Don't like the genuine Tk errors; they're weird!
+	    return -code error -errorcode {TCL WRONGARGS} \
+		[format {wrong # args: should be "%s"} \
+		     "[self] configure ?-option value ...?"]
 	}
 
-	method cget option {
-	    set props [info object properties [self] -all -readable]
+	method cget {option} {
 	    try {
-		set opt [::tk::prefix match -message "option" $props $option]
-	    } on error {msg} {
-		return -code error -errorcode [list TK LOOKUP OPTION $option] \
-		    $msg
+		return $([my GetRealOptionName $option])
+	    } on error {msg opt} {
+		# Hide the implementation details
+		dict unset opt -errorinfo
+		return -options $opt $msg
 	    }
-	    return [my <ReadOpt$opt>]
 	}
 
 	method PostConfigure {} {}
-	method Initialise {pathName args} {}
+
+	method Initialise {pathName args} {
+	    if {[llength $args] % 1} {
+		# TODO: generate a better error
+		return -code error "wrong # args"
+	    }
+	    set toSet {}
+	    set props [info object properties [self] -all -readable]
+	    try {
+		foreach opt $props {
+		    lassign [my <OptDescribe$opt>] nm cls def
+		    set val [option get $pathName $nm $cls]
+		    if {$val eq ""} {
+			set val $def
+		    }
+		    dict set toSet $opt $val
+		}
+		foreach {option value} $args {
+		    try {
+			set opt [::tcl::prefix match -message "option" \
+				     $props $option]
+		    } on error msg {
+			return -code error -errorcode \
+			    [list TK LOOKUP OPTION $option] $msg
+		    }
+		    dict set toSet $opt [my <OptValidate$opt> $value]
+		}
+	    } on error {msg opt} {
+		dict unset opt -errorinfo
+		return -options $opt $msg
+	    }
+	    array set "" $toSet
+	}
 	forward Initialize my Initialise
     }
 
     namespace eval PropertyDefine {
 	namespace eval Support {
-	    proc DefineProperty {name options} {
+	    proc DefineProperty {contextClass name options} {
+		set descriptor list
+		lappend descriptor [dict get $options name]
+		lappend descriptor [dict get $options class]
+		set type [dict get $options type]
+		if {[dict exists $options def]} {
+		    lappend descriptor [dict get $options def]
+		} else {
+		    lappend descriptor [::tk::PropType $type default]
+		}
+		set validator [list ::tk::PropType $type validate]
+
+		oo::define $contextClass method <OptDescribe-$name> $descriptor
+		oo::define $contextClass forward <OptValidate-$name> \
+		    {*}$validator
+		oo::define $contextClass \
+		    ::oo::configuresupport::readableproperties -append -$name
+		if {![dict get $options init]} {
+		    oo::define $contextClass \
+			::oo::configuresupport::writableproperties -append -$name		    
+		}
 	    }
 
-	    proc DefineAlias {name otherName} {
+	    proc DefineAlias {contextClass name otherName} {
+		set targets [info class methods $contextClass -private -all]
+		if {"<OptDescribe$otherName>" ni $targets} {
+		    error "no such option \"$otherName\""
+		}
+		if {"<OptValidate$otherName>" ni $targets} {
+		    error "no such option \"$otherName\""
+		}
+		oo::define $contextClass forward <OptDescribe-$name> \
+		    my <OptDescribe$otherName>
+		oo::define $contextClass forward <OptValidate-$name> \
+		    my <OptValidate$otherName>
+		oo::define $contextClass \
+		    ::oo::configuresupport::readableproperties -append -$name
 	    }
 	}
 
 	namespace export property
+
 	proc property {name args} {
+	    set contextClass [uplevel 1 self]
 	    if {[llength $args] % 2} {
 		return -code error -errorcode {TCL WRONGARGS} \
 			[format {wrong # args: should be "%s"} \
 			    "property name ?-option value ...?"]
 	    }
-	    # TODO: validate actual property name
+	    if {![regexp -nocase {^[[:alpha:]]\w*$} $name]} {
+		return -code error "bad property name \"$name\":\
+			must be alphanumeric starting with a letter"
+	    }
 	    dict set Opt type string
 	    dict set Opt class [string totitle $name]
 	    dict set Opt name [string tolower $name]
@@ -84,8 +210,13 @@ namespace eval ::tk {
 			return -code error \
 			    "-alias may only ever be used on its own"
 		    }
-		    # TODO: check target exists
-		    tailcall Support::DefineAlias $name $value
+		    try {
+			uplevel 1 [list \
+				Support::DefineAlias $contextClass $name $value]
+		    } on error {msg opt} {
+			dict unset opt -errorinfo
+			return -options $opt $msg
+		    }
 		}
 		switch $option {
 		    -class {
@@ -114,13 +245,29 @@ namespace eval ::tk {
 	    if {![dict exists $Opt def]} {
 		dict set Opt def $defFromType
 	    }
-	    tailcall Support::DefineProperty $name $Opt
+	    try {
+		uplevel 1 [list \
+			Support::DefineProperty $contextClass $name $Opt]
+	    } on error {msg opt} {
+		dict unset opt -errorinfo
+		return -options $opt $msg
+	    }
 	}
 	namespace path :oo::define
     }
 
+    ::oo::define configurable {
+	definitionnamespace -class ::tk::PropertyDefine
+	# Individual widgets do not support defining their own properties
+    }
     ::oo::class create megawidget {
 	superclass ::oo::class
+
+    	constructor {{definitionScript ""}} {
+	    next {mixin ::tk::configurable}
+	    next $definitionScript
+	}
+	definitionnamespace -class ::tk::PropertyDefine
     }
 
     ::oo::class create propertytype {
