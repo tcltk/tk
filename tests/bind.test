@@ -446,7 +446,7 @@ test bind-13.1 {Tk_BindEvent procedure} -setup {
     bind Test <Key> {}
     bind all _ {}
     bind Test : {}
-} -result {{.t.f : .t.f :} {.t.f : Test :} {.t.f : all KeyPress} {.t.f + Test KeyPress} {.t.f + all KeyPress} {.t.f _ Test KeyPress} {.t.f _ all _}}
+} -result {{.t.f : .t.f :} {.t.f : Test :} {.t.f : all Key} {.t.f + Test Key} {.t.f + all Key} {.t.f _ Test Key} {.t.f _ all _}}
 
 test bind-13.2 {Tk_BindEvent procedure} -setup {
     frame .t.f -class Test -width 150 -height 100
