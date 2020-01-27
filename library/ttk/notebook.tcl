@@ -6,10 +6,10 @@ namespace eval ttk::notebook {
     variable TLNotebooks ;# See enableTraversal
 }
 
-bind TNotebook <ButtonPress-1>		{ ttk::notebook::Press %W %x %y }
-bind TNotebook <Right>		{ ttk::notebook::CycleTab %W  1; break }
-bind TNotebook <Left>		{ ttk::notebook::CycleTab %W -1; break }
-bind TNotebook <Control-Tab>	{ ttk::notebook::CycleTab %W  1; break }
+bind TNotebook <Button-1>		{ ttk::notebook::Press %W %x %y }
+bind TNotebook <Right>			{ ttk::notebook::CycleTab %W  1; break }
+bind TNotebook <Left>			{ ttk::notebook::CycleTab %W -1; break }
+bind TNotebook <Control-Tab>		{ ttk::notebook::CycleTab %W  1; break }
 bind TNotebook <Control-Shift-Tab>	{ ttk::notebook::CycleTab %W -1; break }
 catch {
 bind TNotebook <Control-ISO_Left_Tab>	{ ttk::notebook::CycleTab %W -1; break }
@@ -43,7 +43,7 @@ proc ttk::notebook::ActivateTab {w tab} {
 }
 
 # Press $nb $x $y --
-#	ButtonPress-1 binding for notebook widgets.
+#	Button-1 binding for notebook widgets.
 #	Activate the tab under the mouse cursor, if any.
 #
 proc ttk::notebook::Press {w x y} {
@@ -105,18 +105,18 @@ proc ttk::notebook::enableTraversal {nb} {
     if {![info exists TLNotebooks($top)]} {
 	# Augment $top bindings:
 	#
-	bind $top <Control-Next>         {+ttk::notebook::TLCycleTab %W  1}
-	bind $top <Control-Prior>        {+ttk::notebook::TLCycleTab %W -1}
+	bind $top <Control-Next>             {+ttk::notebook::TLCycleTab %W  1}
+	bind $top <Control-Prior>            {+ttk::notebook::TLCycleTab %W -1}
 	bind $top <Control-Tab> 	     {+ttk::notebook::TLCycleTab %W  1}
-	bind $top <Control-Shift-Tab>    {+ttk::notebook::TLCycleTab %W -1}
+	bind $top <Control-Shift-Tab>        {+ttk::notebook::TLCycleTab %W -1}
 	catch {
-	bind $top <Control-ISO_Left_Tab> {+ttk::notebook::TLCycleTab %W -1}
+	bind $top <Control-ISO_Left_Tab>     {+ttk::notebook::TLCycleTab %W -1}
 	}
 	if {[tk windowingsystem] eq "aqua"} {
-	    bind $top <Option-KeyPress> \
+	    bind $top <Option-Key> \
 		+[list ttk::notebook::MnemonicActivation $top %K]
 	} else {
-	    bind $top <Alt-KeyPress> \
+	    bind $top <Alt-Key> \
 		+[list ttk::notebook::MnemonicActivation $top %K]
 	}
 	bind $top <Destroy> {+ttk::notebook::TLCleanup %W}
@@ -182,7 +182,7 @@ proc ttk::notebook::TLCycleTab {w dir} {
 }
 
 # MnemonicActivation $nb $key --
-#	Alt-KeyPress binding procedure for mnemonic activation.
+#	Alt-Key binding procedure for mnemonic activation.
 #	Scan all notebooks in specified toplevel for a tab with the
 #	the specified mnemonic.  If found, activate it and return TCL_BREAK.
 #

@@ -19,7 +19,7 @@
 # This won't work for Ttk menubuttons in pulldown mode,
 # since we need to process the final <ButtonRelease> event,
 # and this might be delivered to the menu.  So instead we
-# rely on the passive grab that occurs on <ButtonPress> events,
+# rely on the passive grab that occurs on <Button> events,
 # and transition to popdown mode when the mouse is released
 # or dragged outside the menubutton.
 #
@@ -46,15 +46,15 @@ namespace eval ttk {
 
 bind TMenubutton <Enter>	{ %W instate !disabled {%W state active } }
 bind TMenubutton <Leave>	{ %W state !active }
-bind TMenubutton <space> 	{ ttk::menubutton::Popdown %W }
+bind TMenubutton <space>	{ ttk::menubutton::Popdown %W }
 bind TMenubutton <<Invoke>> 	{ ttk::menubutton::Popdown %W }
 
 if {[tk windowingsystem] eq "x11"} {
-    bind TMenubutton <ButtonPress-1>  	{ ttk::menubutton::Pulldown %W }
+    bind TMenubutton <Button-1>  	{ ttk::menubutton::Pulldown %W }
     bind TMenubutton <ButtonRelease-1>	{ ttk::menubutton::TransferGrab %W }
     bind TMenubutton <B1-Leave> 	{ ttk::menubutton::TransferGrab %W }
 } else {
-    bind TMenubutton <ButtonPress-1>  \
+    bind TMenubutton <Button-1>  \
 	{ %W state pressed ; ttk::menubutton::Popdown %W }
     bind TMenubutton <ButtonRelease-1>  \
 	{ if {[winfo exists %W]} { %W state !pressed } }

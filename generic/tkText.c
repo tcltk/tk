@@ -5402,11 +5402,6 @@ TextEditCmd(
  *	appending several thousand lines, we could attempt to pre-allocate a
  *	larger space).
  *
- *	Also the result is built up as a utf-8 string, but, if we knew we
- *	wanted it as Unicode, we could potentially save a huge conversion by
- *	building it up as Unicode directly. This could be as simple as
- *	replacing Tcl_NewObj by Tcl_NewUnicodeObj.
- *
  * Results:
  *	Tcl_Obj of string type containing the specified text. If the
  *	visibleOnly flag is set to 1, then only those characters which are not

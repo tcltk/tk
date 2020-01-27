@@ -55,12 +55,6 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #include "tkMacOSXInt.h"
 #endif
 
-/*
- * Further on, in UNICODE mode we just use Tcl_NewUnicodeObj, otherwise
- * NewNativeObj is needed (which provides proper conversion from native
- * encoding to UTF-8).
- */
-
 static inline Tcl_Obj *
 NewNativeObj(
     TCHAR *string)

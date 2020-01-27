@@ -410,8 +410,8 @@ static const KeySymInfo keyArray[] = {
     {NULL, 0}
 };
 static Tcl_HashTable keySymTable;	/* keyArray hashed by keysym value. */
-#endif /* REDO_KEYSYM_LOOKUP */
 static Tcl_HashTable nameTable;		/* keyArray hashed by keysym name. */
+#endif /* REDO_KEYSYM_LOOKUP */
 
 /*
  * A hash table is kept to map from the string names of event modifiers to
@@ -1327,11 +1327,9 @@ TkBindInit(
 	    unsigned i;
 #ifdef REDO_KEYSYM_LOOKUP
 	    const KeySymInfo *kPtr;
-#endif /* REDO_KEYSYM_LOOKUP */
 
-	    Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
-#ifdef REDO_KEYSYM_LOOKUP
 	    Tcl_InitHashTable(&keySymTable, TCL_STRING_KEYS);
+	    Tcl_InitHashTable(&nameTable, TCL_ONE_WORD_KEYS);
 	    for (kPtr = keyArray; kPtr->name; ++kPtr) {
 		hPtr = Tcl_CreateHashEntry(&keySymTable, kPtr->name, &newEntry);
 		Tcl_SetHashValue(hPtr, kPtr->value);
@@ -4075,10 +4073,10 @@ HandleEventGenerate(
 	    }
 	    break;
 	case EVENT_KEYCODE:
+	    if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
+		return TCL_ERROR;
+	    }
 	    if ((flags & KEY) && event.general.xkey.type != MouseWheelEvent) {
-		if (Tcl_GetIntFromObj(interp, valuePtr, &number) != TCL_OK) {
-		    return TCL_ERROR;
-		}
 		event.general.xkey.keycode = number;
 	    } else {
 		badOpt = 1;
@@ -5260,9 +5258,9 @@ const char *
 TkKeysymToString(
     KeySym keysym)
 {
+#ifdef REDO_KEYSYM_LOOKUP
     Tcl_HashEntry *hPtr;
-    int newEntry;
-    const char *value;
+#endif
 
     if ((unsigned)(keysym - 0x21) <= 0x5D) {
 	keysym += 0x1000000;
@@ -5274,21 +5272,14 @@ TkKeysymToString(
     if ((keysym >= 0x1000020) && (keysym <= 0x110FFFF)
 	    && ((unsigned)(keysym - 0x100007F) > 0x20)) {
 	char buf[10];
-	hPtr = Tcl_CreateHashEntry(&nameTable, INT2PTR(keysym), &newEntry);
-	if (newEntry) {
-	    if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
-		buf[TkUniCharToUtf(keysym - 0x1000000, buf)] = '\0';
-	    } else if (keysym >= 0x1010000) {
-		sprintf(buf, "U%08X", (int)(keysym - 0x1000000));
-	    } else {
-		sprintf(buf, "U%04X", (int)(keysym - 0x1000000));
-	    }
-	    value = Tk_GetUid(buf);
-	    Tcl_SetHashValue(hPtr, value);
+	if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
+	    buf[TkUniCharToUtf(keysym - 0x1000000, buf)] = '\0';
+	} else if (keysym >= 0x1010000) {
+	    sprintf(buf, "U%08X", (int)(keysym - 0x1000000));
 	} else {
-	    value = Tcl_GetHashValue(hPtr);
+	    sprintf(buf, "U%04X", (int)(keysym - 0x1000000));
 	}
-	return value;
+	return Tk_GetUid(buf);
     }
 
 #ifdef REDO_KEYSYM_LOOKUP
