@@ -297,9 +297,9 @@ test bind-5.1 {Tk_CreateBindingTable procedure} -body {
 
 test bind-6.1 {Tk_DeleteBindTable procedure} -body {
     canvas .t.c
-    .t.c bind foo <1> {string 1}
+    .t.c bind foo <Button-1> {string 1}
     .t.c create rectangle 0 0 100 100
-    .t.c bind 1 <2> {string 2}
+    .t.c bind 1 <Button-2> {string 2}
     destroy .t.c
 } -cleanup {
     destroy .t.c
@@ -312,17 +312,17 @@ test bind-7.1 {Tk_CreateBinding procedure: bad binding} -body {
 } -returnCodes error -result {no event type or button # or keysym}
 test bind-7.3 {Tk_CreateBinding procedure: append} -body {
     canvas .t.c
-    .t.c bind foo <1> "button 1"
-    .t.c bind foo <1> "+more button 1"
-    .t.c bind foo <1>
+    .t.c bind foo <Button-1> "button 1"
+    .t.c bind foo <Button-1> "+more button 1"
+    .t.c bind foo <Button-1>
 } -cleanup {
     destroy .t.c
 } -result {button 1
 more button 1}
 test bind-7.4 {Tk_CreateBinding procedure: append to non-existing} -body {
     canvas .t.c
-    .t.c bind foo <1> "+button 1"
-    .t.c bind foo <1>
+    .t.c bind foo <Button-1> "+button 1"
+    .t.c bind foo <Button-1>
 } -cleanup {
     destroy .t.c
 } -result {button 1}
@@ -356,10 +356,10 @@ test bind-9.3 {Tk_DeleteBinding procedure} -setup {
     set result {}
 } -body {
     frame .t.f -class Test -width 150 -height 100
-    foreach i {<1> <Meta-1> <Control-1> <Double-Alt-1>} {
+    foreach i {<Button-1> <Meta-Button-1> <Control-Button-1> <Double-Alt-Button-1>} {
         bind .t.f $i "binding for $i"
     }
-    foreach i {<Control-1> <Double-Alt-1> <1> <Meta-1>} {
+    foreach i {<Control-Button-1> <Double-Alt-Button-1> <Button-1> <Meta-Button-1>} {
         bind .t.f $i {}
         lappend result [lsort [bind .t.f]]
     }
@@ -393,7 +393,7 @@ test bind-11.1 {Tk_GetAllBindings procedure} -body {
 } -result "! <<Paste>> <Key-<> <Key-Delete> <Key-Linefeed> <Key-Tab> <Key-space> <Key-\uC2> <Meta-Key-a> a \\\{ ~"
 test bind-11.2 {Tk_GetAllBindings procedure} -body {
     frame .t.f
-    foreach i "<Double-1> <Triple-1> <Meta-Control-a> <Double-Alt-Enter> <1>" {
+    foreach i "<Double-Button-1> <Triple-Button-1> <Meta-Control-a> <Double-Alt-Enter> <Button-1>" {
         bind .t.f $i Test
     }
     lsort [bind .t.f]
@@ -402,7 +402,7 @@ test bind-11.2 {Tk_GetAllBindings procedure} -body {
 } -result {<Button-1> <Control-Meta-Key-a> <Double-Alt-Enter> <Double-Button-1> <Triple-Button-1>}
 test bind-11.3 {Tk_GetAllBindings procedure} -body {
     frame .t.f
-    foreach i "<Double-Triple-1> abcd a<Leave>b" {
+    foreach i "<Double-Triple-Button-1> abcd a<Leave>b" {
         bind .t.f $i Test
     }
     lsort [bind .t.f]
@@ -417,7 +417,7 @@ test bind-12.1 {Tk_DeleteAllBindings procedure} -body {
 } -result {}
 test bind-12.2 {Tk_DeleteAllBindings procedure} -body {
     frame .t.f -class Test -width 150 -height 100
-    foreach i "a b c <Meta-1> <Alt-a> <Control-a>" {
+    foreach i "a b c <Meta-Button-1> <Alt-a> <Control-a>" {
         bind .t.f $i x
     }
     destroy .t.f
@@ -430,8 +430,8 @@ test bind-13.1 {Tk_BindEvent procedure} -setup {
     update
     set x {}
 } -body {
-    bind Test <KeyPress> {lappend x "%W %K Test KeyPress"}
-    bind all <KeyPress> {lappend x "%W %K all KeyPress"}
+    bind Test <Key> {lappend x "%W %K Test Key"}
+    bind all <Key> {lappend x "%W %K all Key"}
     bind Test : {lappend x "%W %K Test :"}
     bind all  _ {lappend x "%W %K all _"}
     bind .t.f : {lappend x "%W %K .t.f :"}
@@ -442,8 +442,8 @@ test bind-13.1 {Tk_BindEvent procedure} -setup {
     return $x
 } -cleanup {
     destroy .t.f
-    bind all <KeyPress> {}
-    bind Test <KeyPress> {}
+    bind all <Key> {}
+    bind Test <Key> {}
     bind all _ {}
     bind Test : {}
 } -result {{.t.f : .t.f :} {.t.f : Test :} {.t.f : all KeyPress} {.t.f + Test KeyPress} {.t.f + all KeyPress} {.t.f _ Test KeyPress} {.t.f _ all _}}
@@ -455,16 +455,16 @@ test bind-13.2 {Tk_BindEvent procedure} -setup {
     update
     set x {}
 } -body {
-    bind Test <KeyPress> {lappend x "%W %K Test press any"; break}
-    bind all <KeyPress> {continue; lappend x "%W %K all press any"}
+    bind Test <Key> {lappend x "%W %K Test press any"; break}
+    bind all <Key> {continue; lappend x "%W %K all press any"}
     bind .t.f : {lappend x "%W %K .t.f pressed colon"}
 
     event generate .t.f <:>
     return $x
 } -cleanup {
     destroy .t.f
-    bind all <KeyPress> {}
-    bind Test <KeyPress> {}
+    bind all <Key> {}
+    bind Test <Key> {}
 } -result {{.t.f : .t.f pressed colon} {.t.f : Test press any}}
 
 test bind-13.3 {Tk_BindEvent procedure} -setup {
@@ -475,14 +475,14 @@ test bind-13.3 {Tk_BindEvent procedure} -setup {
     update
     set x {}
 } -body {
-    bind Test <KeyPress> {lappend x "%W %K Test press any"; error Test}
+    bind Test <Key> {lappend x "%W %K Test press any"; error Test}
     bind .t.f : {lappend x "%W %K .t.f pressed colon"}
     event generate .t.f <:>
     update
     list $x $errorInfo
 } -cleanup {
     destroy .t.f
-    bind Test <KeyPress> {}
+    bind Test <Key> {}
     rename bgerror {}
 }  -result {{{.t.f : .t.f pressed colon} {.t.f : Test press any}} {Test
     while executing
@@ -566,14 +566,14 @@ test bind-13.9 {Tk_BindEvent procedure} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1> {lappend x "%W z (.t.f <1> binding)"}
-    bind .t.f <ButtonPress> {lappend x "%W z (.t.f <ButtonPress> binding)"}
+    bind .t.f <Button-1> {lappend x "%W z (.t.f <Button-1> binding)"}
+    bind .t.f <Button> {lappend x "%W z (.t.f <Button> binding)"}
     event generate .t.f <Button-1>
     event generate .t.f <Button-2>
     return $x
 } -cleanup {
     destroy .t.f
-} -result {{.t.f z (.t.f <1> binding)} {.t.f z (.t.f <ButtonPress> binding)}}
+} -result {{.t.f z (.t.f <Button-1> binding)} {.t.f z (.t.f <Button> binding)}}
 test bind-13.10 {Tk_BindEvent procedure: ignore NotifyInferior} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -936,12 +936,12 @@ test bind-13.33 {Tk_BindEvent procedure: many C bindings cause realloc} -setup {
 } -body {
     bindtags .t.f {a b c d e f g h i j k l m n o p}
     foreach p [bindtags .t.f] {
-        bind $p <1> "lappend x $p"
+        bind $p <Button-1> "lappend x $p"
     }
-    event generate .t.f <1>
+    event generate .t.f <Button-1>
     return $x
 } -cleanup {
-    foreach p [bindtags .t.f] {bind $p <1> {}}
+    foreach p [bindtags .t.f] {bind $p <Button-1> {}}
     destroy .t.f
 } -result {a b c d e f g h i j k l m n o p}
 test bind-13.34 {Tk_BindEvent procedure: multiple tags} -setup {
@@ -966,8 +966,8 @@ test bind-13.35 {Tk_BindEvent procedure: execute binding} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1> {lappend x 1}
-    event generate .t.f <1>
+    bind .t.f <Button-1> {lappend x 1}
+    event generate .t.f <Button-1>
     return $x
 } -cleanup {
     destroy .t.f
@@ -979,13 +979,13 @@ test bind-13.38 {Tk_BindEvent procedure: binding gets to run} -setup {
     update
     set x {}
 } -body {
-    bind Test <1> {lappend x Test}
-    bind .t.f <1> {lappend x .t.f}
-    event generate .t.f <1>
+    bind Test <Button-1> {lappend x Test}
+    bind .t.f <Button-1> {lappend x .t.f}
+    event generate .t.f <Button-1>
     return $x
 } -cleanup {
     destroy .t.f
-    bind Test <1> {}
+    bind Test <Button-1> {}
 } -result {.t.f Test}
 test bind-13.41 {Tk_BindEvent procedure: continue in script} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -1094,7 +1094,7 @@ test bind-15.4 {MatchPatterns procedure, ignoring type mismatches} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -1126,7 +1126,7 @@ test bind-15.6 {MatchPatterns procedure, ignoring type mismatches} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-1>
     event generate .t.f <a>
@@ -1143,7 +1143,7 @@ test bind-15.7 {MatchPatterns procedure, ignoring type mismatches} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-1>
     event generate .t.f <Shift_L>
@@ -1247,7 +1247,7 @@ test bind-15.14 {MatchPatterns procedure, checking "nearby"} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-2>
     event generate .t.f <ButtonRelease-2>
@@ -1264,7 +1264,7 @@ test bind-15.15 {MatchPatterns procedure, checking "nearby"} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-2>
     event generate .t.f <ButtonRelease-2>
@@ -1281,7 +1281,7 @@ test bind-15.16 {MatchPatterns procedure, checking "nearby"} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-2>
     event generate .t.f <ButtonRelease-2>
@@ -1298,7 +1298,7 @@ test bind-15.17 {MatchPatterns procedure, checking "nearby"} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-2>
     event generate .t.f <ButtonRelease-2>
@@ -1315,7 +1315,7 @@ test bind-15.18 {MatchPatterns procedure, checking "nearby"} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-2>
     event generate .t.f <ButtonRelease-2>
@@ -1332,7 +1332,7 @@ test bind-15.19 {MatchPatterns procedure, checking "nearby"} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-2>
     event generate .t.f <ButtonRelease-2>
@@ -1349,7 +1349,7 @@ test bind-15.20 {MatchPatterns procedure, checking "nearby"} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-2>
     event generate .t.f <ButtonRelease-2>
@@ -1366,7 +1366,7 @@ test bind-15.21 {MatchPatterns procedure, checking "nearby"} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-2>
     event generate .t.f <ButtonRelease-2>
@@ -1383,7 +1383,7 @@ test bind-15.22 {MatchPatterns procedure, time wrap-around} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-1> -time -100
     event generate .t.f <Button-1> -time 200
@@ -1398,7 +1398,7 @@ test bind-15.23 {MatchPatterns procedure, time wrap-around} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <Double-1> {set x 1}
+    bind .t.f <Double-Button-1> {set x 1}
     set x 0
     event generate .t.f <Button-1> -time -100
     event generate .t.f <Button-1> -time 500
@@ -1472,7 +1472,7 @@ test bind-15.27 {MatchPatterns procedure, conflict resolution} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <KeyPress> {set x 0}
+    bind .t.f <Key> {set x 0}
     bind .t.f 1 {set x 1}
     set x none
     event generate .t.f <Key-1>
@@ -1486,7 +1486,7 @@ test bind-15.28 {MatchPatterns procedure, conflict resolution} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <KeyPress> {set x 0}
+    bind .t.f <Key> {set x 0}
     bind .t.f 1 {set x 1}
     set x none
     event generate .t.f <Key-2>
@@ -1500,7 +1500,7 @@ test bind-15.29 {MatchPatterns procedure, conflict resolution} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <KeyPress> {lappend x 0}
+    bind .t.f <Key> {lappend x 0}
     bind .t.f 1 {lappend x 1}
     bind .t.f 21 {lappend x 2}
     set x none
@@ -1517,8 +1517,8 @@ test bind-15.30 {MatchPatterns procedure, conflict resolution} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <ButtonPress> {set x 0}
-    bind .t.f <1> {set x 1}
+    bind .t.f <Button> {set x 0}
+    bind .t.f <Button-1> {set x 1}
     set x none
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -1561,9 +1561,9 @@ test bind-15.33 {MatchPatterns procedure, conflict resolution} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1> {lappend x single}
-    bind Test <1> {lappend x single(Test)}
-    bind Test <Double-1> {lappend x double(Test)}
+    bind .t.f <Button-1> {lappend x single}
+    bind Test <Button-1> {lappend x single(Test)}
+    bind Test <Double-Button-1> {lappend x double(Test)}
     event generate .t.f <Button-1>
     event generate .t.f <Button-1>
     event generate .t.f <Button-1>
@@ -1571,8 +1571,8 @@ test bind-15.33 {MatchPatterns procedure, conflict resolution} -setup {
     set x
 } -cleanup {
     destroy .t.f
-    bind Test <1> {}
-    bind Test <Double-1> {}
+    bind Test <Button-1> {}
+    bind Test <Double-Button-1> {}
 } -result {single single(Test) single double(Test) single double(Test)}
 
 
@@ -1909,7 +1909,7 @@ test bind-16.26 {ExpandPercents procedure} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <1> {set x "%s"}
+    bind .t.f <Button-1> {set x "%s"}
     set x none
     event generate .t.f <Button-1> -state 1402
     event generate .t.f <ButtonRelease-1>
@@ -2259,13 +2259,13 @@ test bind-17.5 {event command: add 2} -body {
 } -result {<Button-2> <Control-Key-v>}
 
 test bind-17.6 {event command: add with error} -body {
-    event add <<Paste>> <Control-v> <Button-2> abc <xyz> <1>
+    event add <<Paste>> <Control-v> <Button-2> abc <xyz> <Button-1>
 } -cleanup {
     event delete <<Paste>>
 } -returnCodes error -result {bad event type or keysym "xyz"}
 test bind-17.7 {event command: add with error} -body {
     event delete <<Paste>>
-    catch {event add <<Paste>> <Control-v> <Button-2> abc <xyz> <1>}
+    catch {event add <<Paste>> <Control-v> <Button-2> abc <xyz> <Button-1>}
     lsort [event info <<Paste>>]
 } -cleanup {
     event delete <<Paste>>
@@ -2276,12 +2276,12 @@ test bind-17.8 {event command: delete} -body {
 } -returnCodes error -result {wrong # args: should be "event delete virtual ?sequence ...?"}
 test bind-17.9 {event command: delete many} -body {
     event delete <<Paste>>
-    event add <<Paste>> <3> <1> <2> t
-    event delete <<Paste>> <1> <2>
+    event add <<Paste>> <Button-3> <Button-1> <Button-2> t
+    event delete <<Paste>> <Button-1> <Button-2>
     lsort [event info <<Paste>>]
 } -cleanup {
     event delete <<Paste>>
-    event delete <<Paste>> <3> t
+    event delete <<Paste>> <Button-3> t
 } -result {<Button-3> t}
 test bind-17.10 {event command: delete all} -body {
     event add <<Paste>> a b
@@ -2329,8 +2329,8 @@ test bind-17.16 {event command: generate} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1> "lappend x 1"
-    event generate .t.f <1>
+    bind .t.f <Button-1> "lappend x 1"
+    event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -4941,10 +4941,10 @@ test bind-24.5 {FindSequence procedure, multiple bindings} -setup {
     focus -force .t.f
     update
 } -body {
-    bind .t.f <1> {lappend x single}
-    bind .t.f <Double-1> {lappend x double}
-    bind .t.f <Triple-1> {lappend x triple}
-    bind .t.f <Quadruple-1> {lappend x quadruple}
+    bind .t.f <Button-1> {lappend x single}
+    bind .t.f <Double-Button-1> {lappend x double}
+    bind .t.f <Triple-Button-1> {lappend x triple}
+    bind .t.f <Quadruple-Button-1> {lappend x quadruple}
     set x press
     event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
@@ -6274,7 +6274,7 @@ test bind-32.2 {detection of double click should not fail} -setup {
     update
     set x {}
 } -body {
-    event generate .t.f <ButtonPress-1>
+    event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
     # Simulate a lot of intervening exposure events. The old implementation
     # that used an event ring overflowed, and the double click was not detected.
@@ -6282,7 +6282,7 @@ test bind-32.2 {detection of double click should not fail} -setup {
     for {set i 0} {$i < 1000} {incr i} {
         event generate .t.f <Expose>
     }
-    event generate .t.f <ButtonPress-1>
+    event generate .t.f <Button-1>
     event generate .t.f <ButtonRelease-1>
     set x
 } -cleanup {
@@ -6296,7 +6296,7 @@ test bind-32.3 {should trigger best match of modifier states} -setup {
 } -body {
     bind .t.f <Alt-Control-A> { lappend x "Alt-Control" }
     bind .t.f <Shift-Control-A> { lappend x "Shift-Control" }
-    bind .t.f <Shift-Key-A> { lappend x "Shift" }
+    bind .t.f <Shift-A> { lappend x "Shift" }
     event generate .t.f <Alt-Control-A>
     set x
 } -cleanup {
@@ -6308,10 +6308,10 @@ test bind-32.4 {should not trigger Double-1} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Double-1> { set x "Double" }
-    event generate .t.f <1> -time current
+    bind .t.f <Double-Button-1> { set x "Double" }
+    event generate .t.f <Button-1> -time current
     after 1000
-    event generate .t.f <1> -time current
+    event generate .t.f <Button-1> -time current
     set x
 } -cleanup {
     destroy .t.f
@@ -6322,10 +6322,10 @@ test bind-32.5 {should trigger Quadruple-1} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Quadruple-1> { set x "Quadruple" }
-    bind .t.f <Triple-1> { set x "Triple" }
-    bind .t.f <Double-1> { set x "Double" }
-    bind .t.f <1> { set x "Single" }
+    bind .t.f <Quadruple-Button-1> { set x "Quadruple" }
+    bind .t.f <Triple-Button-1> { set x "Triple" }
+    bind .t.f <Double-Button-1> { set x "Double" }
+    bind .t.f <Button-1> { set x "Single" }
     # Old implementation triggered "Double", but new implementation
     # triggers "Quadruple", the latter behavior conforms to other toolkits.
     event generate .t.f <Button-1> -time 0
@@ -6355,10 +6355,10 @@ test bind-32.7 {test sequences} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Double-1> { lappend x "Double" }
-    bind .t.f <1><1><a> { lappend x "11" }
-    event generate .t.f <1>
-    event generate .t.f <1>
+    bind .t.f <Double-Button-1> { lappend x "Double" }
+    bind .t.f <Button-1><Button-1><a> { lappend x "11" }
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     event generate .t.f <a>
     set x
 } -cleanup {
@@ -6370,12 +6370,12 @@ test bind-32.8 {test sequences} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <a><1><Double-1><1><a> { lappend x "Double" }
+    bind .t.f <a><Button-1><Double-Button-1><Button-1><a> { lappend x "Double" }
     event generate .t.f <a>
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     event generate .t.f <a>
     set x
 } -cleanup {
@@ -6387,8 +6387,8 @@ test bind-32.9 {trigger events for modifier keys} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Any-Key> { set x "Key" }
-    event generate .t.f <KeyPress> -keysym Caps_Lock
+    bind .t.f <Key> { set x "Key" }
+    event generate .t.f <Key> -keysym Caps_Lock
     set x
 } -cleanup {
     destroy .t.f
@@ -6397,14 +6397,14 @@ test bind-32.10 {reset key state when destroying window} -setup {
     set x {}
 } -body {
     pack [frame .t.f]; update; focus -force .t.f
-    bind .t.f <Key-A> { set x "A" }
-    event generate .t.f <KeyPress-A>
-    event generate .t.f <KeyPress-A>
+    bind .t.f <A> { set x "A" }
+    event generate .t.f <A>
+    event generate .t.f <A>
     destroy .t.f; update
     pack [frame .t.f]; update; focus -force .t.f
-    bind .t.f <Key-A> { set x "A" }
-    bind .t.f <Double-Key-A> { set x "AA" }
-    event generate .t.f <KeyPress-A>
+    bind .t.f <A> { set x "A" }
+    bind .t.f <Double-A> { set x "AA" }
+    event generate .t.f <A>
     destroy .t.f
     set x
 } -result {A}
@@ -6418,7 +6418,7 @@ test bind-32.11 {match detailed virtual} -setup {
     bind Test <<TestControlButton1>> { set x "Control-Button-1" }
     bind Test <Button-1> { set x "Button-1" }
     bind .t.f <Button-1> { set x "Button-1" }
-    event generate .t.f <Control-ButtonPress-1>
+    event generate .t.f <Control-Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6434,9 +6434,9 @@ test bind-32.12 {don't detect repetition when window has changed} -setup {
 } -body {
     bind .t.f <Button-1> { set x "1" }
     bind .t.f <Double-Button-1> { set x "11" }
-    event generate .t.f <ButtonPress-1>
-    event generate .t.g <ButtonPress-1>
-    event generate .t.f <ButtonPress-1>
+    event generate .t.f <Button-1>
+    event generate .t.g <Button-1>
+    event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6448,11 +6448,11 @@ test bind-32.13 {don't detect repetition when window has changed} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Key-A> { set x "A" }
-    bind .t.f <Double-Key-A> { set x "AA" }
-    focus -force .t.f; event generate .t.f <KeyPress-A>
-    focus -force .t.g; event generate .t.g <KeyPress-A>
-    focus -force .t.f; event generate .t.f <KeyPress-A>
+    bind .t.f <A> { set x "A" }
+    bind .t.f <Double-A> { set x "AA" }
+    focus -force .t.f; event generate .t.f <A>
+    focus -force .t.g; event generate .t.g <A>
+    focus -force .t.f; event generate .t.f <A>
     set x
 } -cleanup {
     destroy .t.f
@@ -6464,11 +6464,11 @@ test bind-32.14 {don't detect repetition when window has changed} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <ButtonPress-1> { set x "1" }
-    bind .t.f <Double-ButtonPress-1> { set x "11" }
-    focus -force .t.f; event generate .t.f <ButtonPress-1>
-    focus -force .t.g; event generate .t.g <ButtonPress-1>
-    focus -force .t.f; event generate .t.f <ButtonPress-1>
+    bind .t.f <Button-1> { set x "1" }
+    bind .t.f <Double-Button-1> { set x "11" }
+    focus -force .t.f; event generate .t.f <Button-1>
+    focus -force .t.g; event generate .t.g <Button-1>
+    focus -force .t.f; event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6478,14 +6478,14 @@ test bind-32.15 {reset button state when destroying window} -setup {
     set x {}
 } -body {
     pack [frame .t.f]; update; focus -force .t.f
-    bind .t.f <ButtonPress-1> { set x "1" }
-    event generate .t.f <ButtonPress-1>
-    event generate .t.f <ButtonPress-1>
+    bind .t.f <Button-1> { set x "1" }
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     destroy .t.f; update
     pack [frame .t.f]; update; focus -force .t.f
-    bind .t.f <ButtonPress-1> { set x "1" }
-    bind .t.f <Double-ButtonPress-1> { set x "11" }
-    event generate .t.f <ButtonPress-1>
+    bind .t.f <Button-1> { set x "1" }
+    bind .t.f <Double-Button-1> { set x "11" }
+    event generate .t.f <Button-1>
     destroy .t.f
     set x
 } -result {1}
@@ -6496,11 +6496,11 @@ test bind-33.1 {prefer longest match} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <a><1><1> { lappend x "a11" }
-    bind .t.f <Double-1> { lappend x "Double" }
+    bind .t.f <a><Button-1><Button-1> { lappend x "a11" }
+    bind .t.f <Double-Button-1> { lappend x "Double" }
     event generate .t.f <a>
-    event generate .t.f <1>
-    event generate .t.f <1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6511,10 +6511,10 @@ test bind-33.2 {prefer most specific event} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Double-1> { lappend x "Double" }
-    bind .t.f <1><1> { lappend x "11" }
-    event generate .t.f <1>
-    event generate .t.f <1>
+    bind .t.f <Double-Button-1> { lappend x "Double" }
+    bind .t.f <Button-1><Button-1> { lappend x "11" }
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6525,11 +6525,11 @@ test bind-33.3 {prefer most specific event} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <a><Double-1><a> { lappend x "Double" }
-    bind .t.f <a><1><1><a> { lappend x "11" }
+    bind .t.f <a><Double-Button-1><a> { lappend x "Double" }
+    bind .t.f <a><Button-1><Button-1><a> { lappend x "11" }
     event generate .t.f <a>
-    event generate .t.f <1>
-    event generate .t.f <1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     event generate .t.f <a>
     set x
 } -cleanup {
@@ -6541,10 +6541,10 @@ test bind-33.4 {prefer most specific event} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1><1> { lappend x "11" }
-    bind .t.f <Double-1> { lappend x "Double" }
-    event generate .t.f <1> -time 0
-    event generate .t.f <1> -time 1000
+    bind .t.f <Button-1><Button-1> { lappend x "11" }
+    bind .t.f <Double-Button-1> { lappend x "Double" }
+    event generate .t.f <Button-1> -time 0
+    event generate .t.f <Button-1> -time 1000
     set x
 } -cleanup {
     destroy .t.f
@@ -6555,10 +6555,10 @@ test bind-33.5 {prefer most specific event} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1><1> { lappend x "11" }
-    bind .t.f <Double-ButtonPress> { lappend x "Double" }
-    event generate .t.f <1>
-    event generate .t.f <1>
+    bind .t.f <Button-1><Button-1> { lappend x "11" }
+    bind .t.f <Double-Button> { lappend x "Double" }
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6569,13 +6569,13 @@ test bind-33.6 {prefer most specific event} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <a><1><1><1><1><a> { lappend x "1111" }
-    bind .t.f <a><ButtonPress><Double-ButtonPress><ButtonPress><a> { lappend x "Any-Double-Any" }
+    bind .t.f <a><Button-1><Button-1><Button-1><Button-1><a> { lappend x "1111" }
+    bind .t.f <a><Button><Double-Button><Button><a> { lappend x "Any-Double-Any" }
     event generate .t.f <a>
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     event generate .t.f <a>
     set x
 } -cleanup {
@@ -6587,9 +6587,9 @@ test bind-33.7 {prefer most specific event} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <ButtonPress-1><a> { lappend x "1" }
-    bind .t.f <ButtonPress><a> { lappend x "Any" }
-    event generate .t.f <1>
+    bind .t.f <Button-1><a> { lappend x "1" }
+    bind .t.f <Button><a> { lappend x "Any" }
+    event generate .t.f <Button-1>
     event generate .t.f <a>
     set x
 } -cleanup {
@@ -6601,10 +6601,10 @@ test bind-33.8 {prefer most specific event} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Double-ButtonPress-1><a> { lappend x "1" }
-    bind .t.f <ButtonPress><ButtonPress><a> { lappend x "Any" }
-    event generate .t.f <1>
-    event generate .t.f <1>
+    bind .t.f <Double-Button-1><a> { lappend x "1" }
+    bind .t.f <Button><Button><a> { lappend x "Any" }
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     event generate .t.f <a>
     set x
 } -cleanup {
@@ -6616,13 +6616,13 @@ test bind-33.9 {prefer last in case of homogeneous equal patterns} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1><2><2><Double-1> { lappend x "first" }
-    bind .t.f <1><Double-2><1><1> { lappend x "last" }
-    event generate .t.f <1>
-    event generate .t.f <2>
-    event generate .t.f <2>
-    event generate .t.f <1>
-    event generate .t.f <1>
+    bind .t.f <Button-1><Button-2><Button-2><Double-Button-1> { lappend x "first" }
+    bind .t.f <Button-1><Double-Button-2><Button-1><Button-1> { lappend x "last" }
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-2>
+    event generate .t.f <Button-2>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6633,13 +6633,13 @@ test bind-33.10 {prefer last in case of homogeneous equal patterns} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1><Double-2><1><1> { lappend x "first" }
-    bind .t.f <1><2><2><Double-1> { lappend x "last" }
-    event generate .t.f <1>
-    event generate .t.f <2>
-    event generate .t.f <2>
-    event generate .t.f <1>
-    event generate .t.f <1>
+    bind .t.f <Button-1><Double-Button-2><Button-1><Button-1> { lappend x "first" }
+    bind .t.f <Button-1><Button-2><Button-2><Double-Button-1> { lappend x "last" }
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-2>
+    event generate .t.f <Button-2>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6650,17 +6650,17 @@ test bind-33.11 {should prefer most specific} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <2><Double-1><Double-2><Double-1><2><2> { lappend x "first" }
-    bind .t.f <2><1><1><2><2><Double-1><Double-2> { lappend x "last" }
-    event generate .t.f <2>
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <2>
-    event generate .t.f <2>
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <2>
-    event generate .t.f <2>
+    bind .t.f <Button-2><Double-Button-1><Double-Button-2><Double-Button-1><Button-2><Button-2> { lappend x "first" }
+    bind .t.f <Button-2><Button-1><Button-1><Button-2><Button-2><Double-Button-1><Double-Button-2> { lappend x "last" }
+    event generate .t.f <Button-2>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-2>
+    event generate .t.f <Button-2>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-2>
+    event generate .t.f <Button-2>
     set x
 } -cleanup {
     destroy .t.f
@@ -6671,10 +6671,10 @@ test bind-33.12 {prefer last in case of homogeneous equal patterns} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <Control-1><1> { lappend x "first" }
-    bind .t.f <1><Control-1> { lappend x "last" }
-    event generate .t.f <Control-1>
-    event generate .t.f <Control-1>
+    bind .t.f <Control-Button-1><Button-1> { lappend x "first" }
+    bind .t.f <Button-1><Control-Button-1> { lappend x "last" }
+    event generate .t.f <Control-Button-1>
+    event generate .t.f <Control-Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6685,10 +6685,10 @@ test bind-33.13 {prefer last in case of homogeneous equal patterns} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1><Control-1> { lappend x "first" }
-    bind .t.f <Control-1><1> { lappend x "last" }
-    event generate .t.f <Control-1>
-    event generate .t.f <Control-1>
+    bind .t.f <Button-1><Control-1> { lappend x "first" }
+    bind .t.f <Control-1><Button-1> { lappend x "last" }
+    event generate .t.f <Control-Button-1>
+    event generate .t.f <Control-Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6702,12 +6702,12 @@ test bind-33.14 {prefer last in case of homogeneous equal patterns} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <1><ButtonPress><1><ButtonPress> { lappend x "first" }
-    bind .t.f <ButtonPress><1><ButtonPress><1> { lappend x "last" }
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <1>
+    bind .t.f <Button-1><Button><Button-1><Button> { lappend x "first" }
+    bind .t.f <Button><Button-1><Button><Button-1> { lappend x "last" }
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6718,12 +6718,12 @@ test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
     update
     set x {}
 } -body {
-    bind .t.f <ButtonPress><1><ButtonPress><1> { lappend x "first" }
-    bind .t.f <1><ButtonPress><1><ButtonPress> { lappend x "last" }
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <1>
-    event generate .t.f <1>
+    bind .t.f <Button><Button-1><Button><Button-1> { lappend x "first" }
+    bind .t.f <Button-1><Button><Button-1><Button> { lappend x "last" }
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
+    event generate .t.f <Button-1>
     set x
 } -cleanup {
     destroy .t.f
@@ -6777,16 +6777,34 @@ test bind-34.2 {-warp works relatively to the screen} -setup {
 } -cleanup {
 } -result {20 20 200 200}
 test bind-34.3 {-warp works with null or negative coordinates} -setup {
+    # On some OS/WM, at least Linux with KDE, the "Screen edges" feature
+    # provides hot spots that can be associated with some action.
+    # When activated, the WM will not allow warping to happen on top of
+    # a hot spot (which would trigger the corresponding action as an
+    # unwanted effect) but will warp the pointer to the hot spot limit only.
+    if {[tk windowingsystem] eq "x11"} {
+        set halo 1
+    } else {
+        set halo 0
+    }
+    set res {}
 } -body {
     event generate {} <Motion> -x 0 -y 0 -warp 1
     update idletasks ; # DoWarp is an idle callback
     after 50         ; # Win specific - wait for SendInput to be executed
-    set res [winfo pointerxy .]
-    event generate {} <Motion> -x -1 -y -1 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
     foreach dim [winfo pointerxy .] {
-        if {$dim <= 0} {
+        if {$dim <= $halo} {
+            lappend res ok
+        } else {
+            lappend res $dim
+        }
+    }
+    event generate {} <Motion> -x 100 -y 100 -warp 1
+    update idletasks ; after 50
+    event generate {} <Motion> -x -1 -y -1 -warp 1
+    update idletasks ; after 50
+    foreach dim [winfo pointerxy .] {
+        if {$dim <= $halo} {
             lappend res ok
         } else {
             lappend res $dim
@@ -6794,7 +6812,7 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     }
     set res
 } -cleanup {
-} -result {0 0 ok ok}
+} -result {ok ok ok ok}
 
 # cleanup
 cleanupTests

@@ -970,20 +970,20 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
 	    toplevel .t1 -use $w1
     }
     focus -force .
-    bind . <KeyPress> {lappend x {key %A %E}}
+    bind . <Key> {lappend x {key %A %E}}
     set x {}
     set y [dobg {
 	    update
-	    bind .t1 <KeyPress> {lappend y {key %A}}
+	    bind .t1 <Key> {lappend y {key %A}}
 	    set y {}
-	    event generate .t1 <KeyPress> -keysym a
+	    event generate .t1 <Keys> -keysym a
 	    set y
     }]
     update
     list $x $y
 } -cleanup {
 	deleteWindows
-    bind . <KeyPress> {}
+    bind . <Key> {}
 } -result {{{key a 1}} {}}
 # TkpRedirectKeyEvent is not implemented in win or aqua.  If someone
 # implements it they should change the constraints for this test.
@@ -1004,13 +1004,13 @@ test unixEmbed-7.1a {TkpRedirectKeyEvent procedure, forward keystroke} -constrai
         toplevel .t1 -use [w1]
     }
     focus -force .
-    bind . <KeyPress> {lappend x {key %A %E}}
+    bind . <Key> {lappend x {key %A %E}}
     set x {}
     set y [slave eval {
         update
-        bind .t1 <KeyPress> {lappend y {key %A}}
+        bind .t1 <Key> {lappend y {key %A}}
         set y {}
-        event generate .t1 <KeyPress> -keysym a
+        event generate .t1 <Key> -keysym a
         set y
     }]
     update
@@ -1018,7 +1018,7 @@ test unixEmbed-7.1a {TkpRedirectKeyEvent procedure, forward keystroke} -constrai
 } -cleanup {
     interp delete slave
     deleteWindows
-    bind . <KeyPress> {}
+    bind . <Key> {}
 } -result {{{key a 1}} {}}
 test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width} -constraints {
 	unix notAqua
@@ -1035,20 +1035,20 @@ test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width
     update
     focus -force .f1
     update
-    bind . <KeyPress> {lappend x {key %A}}
+    bind . <Key> {lappend x {key %A}}
     set x {}
     set y [dobg {
 	    update
-	    bind .t1 <KeyPress> {lappend y {key %A}}
+	    bind .t1 <Key> {lappend y {key %A}}
 	    set y {}
-	    event generate .t1 <KeyPress> -keysym b
+	    event generate .t1 <Key> -keysym b
 	    set y
     }]
     update
     list $x $y
 } -cleanup {
 	deleteWindows
-    bind . <KeyPress> {}
+    bind . <Key> {}
 } -result {{} {{key b}}}
 test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke width} -constraints {
     unix
@@ -1068,13 +1068,13 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
     update
     focus -force .f1
     update
-    bind . <KeyPress> {lappend x {key %A}}
+    bind . <Key> {lappend x {key %A}}
     set x {}
     set y [slave eval {
         update
-        bind .t1 <KeyPress> {lappend y {key %A}}
+        bind .t1 <Key> {lappend y {key %A}}
         set y {}
-        event generate .t1 <KeyPress> -keysym b
+        event generate .t1 <Key> -keysym b
         set y
     }]
     update
@@ -1082,7 +1082,7 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
 } -cleanup {
     interp delete slave
     deleteWindows
-    bind . <KeyPress> {}
+    bind . <Key> {}
 } -result {{} {{key b}}}
 
 test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {
