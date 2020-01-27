@@ -38,10 +38,10 @@
 #define BIT_INDEX(n)	TK_BIT_INDEX(n)
 #define WORD_INDEX(n)	TK_BIT_WORD_INDEX(n)
 
-#define NBYTES(words)	((words)*sizeof(TkBitWord))
+#define NBYTES(words)	((words)*sizeof(size_t))
 #define BYTE_SIZE(size)	NBYTES(NWORDS(size))
 #define BF_SIZE(size)	(offsetof(TkBitField, bits) + BYTE_SIZE(size))
-#define BIT_SPAN(f,t)	((~((TkBitWord) 0) << (f)) & (~((TkBitWord) 0) >> ((NBITS - 1) - (t))))
+#define BIT_SPAN(f,t)	((~((size_t) 0) << (f)) & (~((size_t) 0) >> ((NBITS - 1) - (t))))
 
 
 DEBUG_ALLOC(unsigned tkBitCountNew = 0);
@@ -236,11 +236,11 @@ TkBitCheckAllocs()
 
 static bool
 IsEqual(
-    const TkBitWord *s,
-    const TkBitWord *t,
+    const size_t *s,
+    const size_t *t,
     unsigned numBytes)
 {
-    const TkBitWord *e = s + numBytes;
+    const size_t *e = s + numBytes;
 
     for ( ; s < e; ++s, ++t) {
 	if (*s != *t) {
@@ -601,8 +601,8 @@ TkBitJoinNonIntersection(
 	unsigned i, words = MIN(NWORDS(bf1->size), NWORDS(bf2->size));
 
 	for (i = 0; i < words; ++i) {
-	    TkBitWord bf1Bits = bf1->bits[i];
-	    TkBitWord bf2Bits = bf2->bits[i];
+	    size_t bf1Bits = bf1->bits[i];
+	    size_t bf2Bits = bf2->bits[i];
 
 	    dst->bits[i] |= (bf1Bits & ~bf2Bits) | (bf2Bits & ~bf1Bits);
 	}
@@ -636,14 +636,14 @@ TkBitJoin2ComplementToIntersection(
 	unsigned i;
 
 	for (i = 0; i < words; ++i) {
-	    TkBitWord bf1Bits = bf1->bits[i];
-	    TkBitWord bf2Bits = bf2->bits[i];
+	    size_t bf1Bits = bf1->bits[i];
+	    size_t bf2Bits = bf2->bits[i];
 
 	    dst->bits[i] |= add->bits[i] | ((bf1Bits | bf2Bits) & ~(bf1Bits & bf2Bits));
 	}
 	for ( ; i < words2; ++i) {
-	    TkBitWord bf1Bits = bf1->bits[i];
-	    TkBitWord bf2Bits = bf2->bits[i];
+	    size_t bf1Bits = bf1->bits[i];
+	    size_t bf2Bits = bf2->bits[i];
 
 	    dst->bits[i] |= (bf1Bits | bf2Bits) & ~(bf1Bits & bf2Bits);
 	}
@@ -673,8 +673,8 @@ TkBitJoinOfDifferences(
     words = MIN(words1, words2);
 
     for (i = 0; i < words; ++i) {
-	TkBitWord bf1Bits = bf1->bits[i];
-	TkBitWord bf2Bits = bf2->bits[i];
+	size_t bf1Bits = bf1->bits[i];
+	size_t bf2Bits = bf2->bits[i];
 
 	/* dst := (dst - bf1) + (bf1 - bf2) */
 	dst->bits[i] = (dst->bits[i] & ~bf1Bits) | (bf1Bits & ~bf2Bits);
@@ -698,7 +698,7 @@ TkBitClear(
 
 bool
 TkBitNone_(
-    const TkBitWord *bits,
+    const size_t *bits,
     unsigned words)
 {
     unsigned i;
@@ -749,7 +749,7 @@ TkBitComplete(
 	unsigned i, n = words - 1;
 
 	for (i = 0; i < n; ++i) {
-	    if (bf->bits[i] != ~((TkBitWord) 0)) {
+	    if (bf->bits[i] != ~((size_t) 0)) {
 		return false;
 	    }
 	}
@@ -818,7 +818,7 @@ TkBitContains(
     }
 
     for (i = 0; i < words2; ++i) {
-	TkBitWord bits2 = bf2->bits[i];
+	size_t bits2 = bf2->bits[i];
 
 	if (bits2 != (bf1->bits[i] & bits2)) {
 	    return false;
@@ -884,7 +884,7 @@ TkBitIntersectionIsEqual(
     words = MIN(words1, words2);
 
     for (i = 0; i < words; ++i) {
-	TkBitWord bits = del->bits[i];
+	size_t bits = del->bits[i];
 	if ((bf1->bits[i] & bits) != (bf2->bits[i] & bits)) {
 	    return false;
 	}
@@ -917,7 +917,7 @@ TkBitFindFirst(
     words = NWORDS(bf->size);
 
     for (i = 0; i < words; ++i) {
-	TkBitWord bits = bf->bits[i];
+	size_t bits = bf->bits[i];
 
 	if (bits) {
 	    return NBITS*i + LsbIndex(bits);
@@ -937,7 +937,7 @@ TkBitFindLast(
     assert(bf);
 
     for (i = NWORDS(bf->size) - 1; i >= 0; --i) {
-	TkBitWord bits = bf->bits[i];
+	size_t bits = bf->bits[i];
 
 	if (bits) {
 	    return NBITS*i + MsbIndex(bits);
@@ -960,9 +960,9 @@ TkBitFindFirstNot(
 	words = NWORDS(bf->size) - 1;
 
 	for (i = 0; i < words; ++i) {
-	    TkBitWord bits = bf->bits[i];
+	    size_t bits = bf->bits[i];
 
-	    if (bits != ~((TkBitWord) 0)) {
+	    if (bits != ~((size_t) 0)) {
 		return NBITS*i + LsbIndex(~bits);
 	    }
 	}
@@ -986,7 +986,7 @@ TkBitFindLastNot(
     assert(bf);
 
     if (bf->size > 0) {
-	TkBitWord bits,mask;
+	size_t bits,mask;
 	unsigned words;
 	int i;
 
@@ -999,7 +999,7 @@ TkBitFindLastNot(
 	}
 
 	for (i = words - 1; i >= 0; --i) {
-	    if ((bits = bf->bits[i]) != ~((TkBitWord) 0)) {
+	    if ((bits = bf->bits[i]) != ~((size_t) 0)) {
 		return NBITS*i + MsbIndex(~bits);
 	    }
 	}
@@ -1014,7 +1014,7 @@ TkBitFindNext(
     const TkBitField *bf,
     unsigned prev)
 {
-    TkBitWord bits;
+    size_t bits;
     unsigned i, words;
 
     assert(bf);
@@ -1044,7 +1044,7 @@ TkBitFindNextNot(
     const TkBitField *bf,
     unsigned prev)
 {
-    TkBitWord bits;
+    size_t bits;
     unsigned i, words;
 
     assert(bf);
@@ -1053,14 +1053,14 @@ TkBitFindNextNot(
     i = WORD_INDEX(prev);
     bits = bf->bits[i] & ~BIT_SPAN(0, BIT_INDEX(prev));
 
-    if (~bits != ~((TkBitWord) 0)) {
+    if (~bits != ~((size_t) 0)) {
 	return NBITS*i + LsbIndex(bits);
     }
 
     words = NWORDS(bf->size);
 
     for (++i; i < words; ++i) {
-	if (bits != ~((TkBitWord) 0)) {
+	if (bits != ~((size_t) 0)) {
 	    return NBITS*i + LsbIndex(~bits);
 	}
     }
@@ -1074,7 +1074,7 @@ TkBitFindPrev(
     const TkBitField *bf,
     unsigned next)
 {
-    TkBitWord bits;
+    size_t bits;
     int i;
 
     assert(bf);
@@ -1110,7 +1110,7 @@ TkBitFindFirstInIntersection(
     words = NWORDS(MIN(bf1->size, bf2->size));
 
     for (i = 0; i < words; ++i) {
-	TkBitWord bits = bf1->bits[i] & bf2->bits[i];
+	size_t bits = bf1->bits[i] & bf2->bits[i];
 
 	if (bits) {
 	    return LsbIndex(bits);
@@ -1126,8 +1126,8 @@ TkBitTestAndSet(
     TkBitField *bf,
     unsigned n)
 {
-    TkBitWord *word;
-    TkBitWord mask;
+    size_t *word;
+    size_t mask;
 
     assert(bf);
     assert(n < TkBitSize(bf));
@@ -1148,8 +1148,8 @@ TkBitTestAndUnset(
     TkBitField *bf,
     unsigned n)
 {
-    TkBitWord *word;
-    TkBitWord mask;
+    size_t *word;
+    size_t mask;
 
     assert(bf);
     assert(n < TkBitSize(bf));
@@ -1221,12 +1221,12 @@ TkBitInnerJoinDifference(
     words1 = MIN(words2, NWORDS(sub->size));
 
     for (i = 0; i < words1; ++i) {
-	TkBitWord addBits = add->bits[i];
+	size_t addBits = add->bits[i];
 	dst->bits[i] = (dst->bits[i] & addBits) | (addBits & ~sub->bits[i]);
     }
 
     for ( ; i < words2; ++i) {
-	TkBitWord addBits = add->bits[i];
+	size_t addBits = add->bits[i];
 	dst->bits[i] = (dst->bits[i] & addBits) | addBits;
     }
 }
@@ -1264,7 +1264,7 @@ TkBitInnerJoinDifferenceIsEmpty(
     words = MIN(bfWords, MIN(addWords, subWords));
 
     for (i = 0; i < words; ++i) {
-	TkBitWord addBits = add->bits[i];
+	size_t addBits = add->bits[i];
 	if ((bf->bits[i] & addBits) | (addBits & ~sub->bits[i])) {
 	    return false;
 	}
@@ -1378,7 +1378,7 @@ TkBitIsEqualToInnerJoin(
     words0 = MIN(words1, words2);
 
     for (i = 0; i < words0; ++i) {
-	TkBitWord bf2Bits = bf2->bits[i];
+	size_t bf2Bits = bf2->bits[i];
 	if (bf1->bits[i] != (bf2Bits | (add2->bits[i] & bf2Bits))) {
 	    return false;
 	}
@@ -1389,7 +1389,7 @@ TkBitIsEqualToInnerJoin(
     }
 
     for ( ; i < words2; ++i) {
-	TkBitWord bf2Bits = bf2->bits[i];
+	size_t bf2Bits = bf2->bits[i];
 	if (bf2Bits | (add2->bits[i] & bf2Bits)) {
 	    return false;
 	}
@@ -1427,7 +1427,7 @@ TkBitIsEqualToInnerJoinDifference(
     words0 = MIN(words1, words2);
 
     for (i = 0; i < words0; ++i) {
-	TkBitWord addBits = add2->bits[i];
+	size_t addBits = add2->bits[i];
 	if (bf1->bits[i] != ((bf2->bits[i] & addBits) | (addBits & ~sub2->bits[i]))) {
 	    return false;
 	}
@@ -1438,7 +1438,7 @@ TkBitIsEqualToInnerJoinDifference(
     }
 
     for ( ; i < words2; ++i) {
-	TkBitWord addBits = add2->bits[i];
+	size_t addBits = add2->bits[i];
 	if ((bf2->bits[i] & addBits) | (addBits & ~sub2->bits[i])) {
 	    return false;
 	}
@@ -1460,7 +1460,7 @@ IntersectionIsDisjunctive(
     assert(TkBitSize(bf1) == TkBitSize(del));
 
     for (i = 0; i < words; ++i) {
-	TkBitWord delBits = del->bits[i];
+	size_t delBits = del->bits[i];
 
 	if ((bf1->bits[i] & delBits) != (bf2->bits[i] & delBits)) {
 	    return false;
@@ -1507,8 +1507,8 @@ TkBitInnerJoinDifferenceIsEqual(
     words = NWORDS(bf1->size);
 
     for (i = 0; i < words; ++i) {
-	TkBitWord addBits = add->bits[i];
-	TkBitWord sumBits = addBits & ~sub->bits[i];
+	size_t addBits = add->bits[i];
+	size_t sumBits = addBits & ~sub->bits[i];
 
 	if (((bf1->bits[i] & addBits) | sumBits) != ((bf2->bits[i] & addBits) | sumBits)) {
 	    return false;
