@@ -14,14 +14,6 @@
 #include <X11/Xft/Xft.h>
 #include <ctype.h>
 
-/* needed for backport to 8.5 */
-#ifndef ROUND16
-# define ROUND16(x) ((short) floor((x) + 0.5))
-#endif
-#ifndef PI
-# define PI 3.14159265358979323846
-#endif
-
 #define MAX_CACHED_COLORS 16
 
 typedef struct {
@@ -634,24 +626,11 @@ TkpGetSubFonts(
  *----------------------------------------------------------------------
  */
 
-/* we need backward compatibility */
-#if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7
-# define UNICHAR Tcl_UniChar
-# define TkUtfToUniChar Tcl_UtfToUniChar
-#else /* if !(TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7) */
-# define UNICHAR int
-# if TCL_UTF_MAX > 4
-#  define TkUtfToUniChar Tcl_UtfToUniChar
-# else /* if TCL_UTF_MAX <= 4 */
-/*extern int TkUtfToUniChar(const char *src, int *chPtr);*/
-# endif /* TCL_UTF_MAX > 4 */
-#endif /* TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7 */
-
 void
 TkpGetFontAttrsForChar(
     Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,			/* Character of interest */
+    int c,         		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
 {
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
