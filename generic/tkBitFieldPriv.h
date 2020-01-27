@@ -17,7 +17,7 @@
 #ifndef _TKBITFIELDPRIV
 #define _TKBITFIELDPRIV
 
-MODULE_SCOPE bool TkBitNone_(const TkBitWord *buf, unsigned words);
+MODULE_SCOPE bool TkBitNone_(const size_t *buf, unsigned words);
 
 #endif /* _TKBITFIELDPRIV */
 
@@ -29,7 +29,7 @@ MODULE_SCOPE bool TkBitNone_(const TkBitWord *buf, unsigned words);
 
 #define TK_BIT_WORD_INDEX(n)	((n) >> ((TK_BIT_NBITS + 128) >> 5))
 #define TK_BIT_INDEX(n)		((n) & (TK_BIT_NBITS - 1))
-#define TK_BIT_MASK(n)		(((TkBitWord) 1) << (n))
+#define TK_BIT_MASK(n)		(((size_t) 1) << (n))
 #define TK_BIT_COUNT_WORDS(n)	((n + TK_BIT_NBITS - 1)/TK_BIT_NBITS)
 
 

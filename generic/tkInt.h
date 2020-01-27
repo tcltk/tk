@@ -106,7 +106,7 @@
  * Standard integer support (C99).
  */
 
-#if HAVE_STDINT_H
+#ifdef HAVE_STDINT_H
 #   include <stdint.h>
 #else
 /* work around for the support of ancient compilers */
@@ -120,7 +120,7 @@
  * case a 32 bit system is installed on a 64 bit architecture.
  */
 
-#if HAVE_STDINT_H
+#ifdef HAVE_STDINT_H
 #   if (UINTPTR_MAX == 0xffffffffu)
     /* This is quite likely a 32 bit architecture. */
 #	define TK_IS_32_BIT_ARCH

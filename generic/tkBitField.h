@@ -15,15 +15,7 @@
 #include "tkInt.h" /* needed for inline support and 64 bit support */
 #include "tkBool.h"
 
-#ifdef TK_IS_64_BIT_ARCH
-/* It is important to use 64 bit integers for performance resaons. */
-typedef uint64_t TkBitWord;
-#else
-/* On 32 bit platforms the use of 64 bit integers would slowing down. */
-typedef uint32_t TkBitWord;
-#endif
-
-#define TK_BIT_NBITS (sizeof(TkBitWord)*8) /* Number of bits in one word. */
+#define TK_BIT_NBITS (sizeof(size_t)*8) /* Number of bits in one word. */
 
 struct TkIntSet;
 
@@ -54,7 +46,7 @@ typedef struct TkBitField {
     struct TkBitField *prev;
     unsigned number;
 #endif
-    TkBitWord bits[1];
+    size_t bits[1];
 } TkBitField;
 
 
