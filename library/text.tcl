@@ -50,7 +50,7 @@
 
 # Standard Motif bindings:
 
-bind Text <1> {
+bind Text <Button-1> {
     tk::TextButton1 %W %x %y
     %W tag remove sel 1.0 end
 }
@@ -59,26 +59,26 @@ bind Text <B1-Motion> {
     set tk::Priv(y) %y
     tk::TextSelectTo %W %x %y
 }
-bind Text <Double-1> {
+bind Text <Double-Button-1> {
     set tk::Priv(selectMode) word
     tk::TextSelectTo %W %x %y
     catch {%W mark set insert sel.first}
 }
-bind Text <Triple-1> {
+bind Text <Triple-Button-1> {
     set tk::Priv(selectMode) line
     tk::TextSelectTo %W %x %y
     catch {%W mark set insert sel.first}
 }
-bind Text <Shift-1> {
+bind Text <Shift-Button-1> {
     tk::TextResetAnchor %W @%x,%y
     set tk::Priv(selectMode) char
     tk::TextSelectTo %W %x %y
 }
-bind Text <Double-Shift-1>	{
+bind Text <Double-Shift-Button-1>	{
     set tk::Priv(selectMode) word
     tk::TextSelectTo %W %x %y 1
 }
-bind Text <Triple-Shift-1>	{
+bind Text <Triple-Shift-Button-1>	{
     set tk::Priv(selectMode) line
     tk::TextSelectTo %W %x %y
 }
@@ -93,7 +93,7 @@ bind Text <B1-Enter> {
 bind Text <ButtonRelease-1> {
     tk::CancelRepeat
 }
-bind Text <Control-1> {
+bind Text <Control-Button-1> {
     %W mark set insert @%x,%y
     # An operation that moves the insert mark without making it
     # one end of the selection must insert an autoseparator
@@ -102,7 +102,7 @@ bind Text <Control-1> {
     }
 }
 # stop an accidental double click triggering <Double-Button-1>
-bind Text <Double-Control-1> { # nothing }
+bind Text <Double-Control-Button-1> { # nothing }
 # stop an accidental movement triggering <B1-Motion>
 bind Text <Control-B1-Motion> { # nothing }
 bind Text <<PrevChar>> {
@@ -310,22 +310,22 @@ bind Text <Insert> {
 	catch {tk::TextInsert %W [::tk::GetSelection %W PRIMARY]}
     }
 }
-bind Text <KeyPress> {
+bind Text <Key> {
     tk::TextInsert %W %A
 }
 
 # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
-# <KeyPress> class binding will also fire and insert the character,
+# <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for <Escape>.
 
-bind Text <Alt-KeyPress> {# nothing }
-bind Text <Meta-KeyPress> {# nothing}
-bind Text <Control-KeyPress> {# nothing}
+bind Text <Alt-Key> {# nothing }
+bind Text <Meta-Key> {# nothing}
+bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
 if {[tk windowingsystem] eq "aqua"} {
-    bind Text <Command-KeyPress> {# nothing}
+    bind Text <Command-Key> {# nothing}
 }
 
 # Additional emacs-like bindings:
@@ -450,7 +450,7 @@ bind Text <Control-h> {
 	%W see insert
     }
 }
-bind Text <2> {
+bind Text <Button-2> {
     if {!$tk_strictMotif} {
 	tk::TextScanMark %W %x %y
     }
@@ -498,26 +498,26 @@ if {[tk windowingsystem] eq "x11"} {
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
     #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind Text <4> {
+    bind Text <Button-4> {
 	if {!$tk_strictMotif} { %W yview scroll -50 pixels }
     }
-    bind Text <5> {
+    bind Text <Button-5> {
 	if {!$tk_strictMotif} { %W yview scroll 50 pixels }
     }
-    bind Text <Shift-4> {
+    bind Text <Shift-Button-4> {
 	if {!$tk_strictMotif} { %W xview scroll -50 pixels }
     }
-    bind Text <Shift-5> {
+    bind Text <Shift-Button-5> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll 50 pixels
 	}
     }
-    bind Text <6> {
+    bind Text <Button-6> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll -50 pixels
 	}
     }
-    bind Text <7> {
+    bind Text <Button-7> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll 50 pixels
 	}

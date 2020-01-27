@@ -28,20 +28,20 @@ namespace eval ttk::treeview {
 bind Treeview	<Motion> 		{ ttk::treeview::Motion %W %x %y }
 bind Treeview	<B1-Leave>		{ #nothing }
 bind Treeview	<Leave>			{ ttk::treeview::ActivateHeading {} {}}
-bind Treeview	<ButtonPress-1> 	{ ttk::treeview::Press %W %x %y }
-bind Treeview	<Double-ButtonPress-1> 	{ ttk::treeview::DoubleClick %W %x %y }
+bind Treeview	<Button-1> 		{ ttk::treeview::Press %W %x %y }
+bind Treeview	<Double-Button-1> 	{ ttk::treeview::DoubleClick %W %x %y }
 bind Treeview	<ButtonRelease-1> 	{ ttk::treeview::Release %W %x %y }
 bind Treeview	<B1-Motion> 		{ ttk::treeview::Drag %W %x %y }
-bind Treeview 	<KeyPress-Up>    	{ ttk::treeview::Keynav %W up }
-bind Treeview 	<KeyPress-Down>  	{ ttk::treeview::Keynav %W down }
-bind Treeview 	<KeyPress-Right> 	{ ttk::treeview::Keynav %W right }
-bind Treeview 	<KeyPress-Left>  	{ ttk::treeview::Keynav %W left }
-bind Treeview	<KeyPress-Prior>	{ %W yview scroll -1 pages }
-bind Treeview	<KeyPress-Next> 	{ %W yview scroll  1 pages }
-bind Treeview	<KeyPress-Return>	{ ttk::treeview::ToggleFocus %W }
-bind Treeview	<KeyPress-space>	{ ttk::treeview::ToggleFocus %W }
+bind Treeview 	<Up>    		{ ttk::treeview::Keynav %W up }
+bind Treeview 	<Down>  		{ ttk::treeview::Keynav %W down }
+bind Treeview 	<Right> 		{ ttk::treeview::Keynav %W right }
+bind Treeview 	<Left>  		{ ttk::treeview::Keynav %W left }
+bind Treeview	<Prior>			{ %W yview scroll -1 pages }
+bind Treeview	<Next> 			{ %W yview scroll  1 pages }
+bind Treeview	<Return>		{ ttk::treeview::ToggleFocus %W }
+bind Treeview	<space>			{ ttk::treeview::ToggleFocus %W }
 
-bind Treeview	<Shift-ButtonPress-1> \
+bind Treeview	<Shift-Button-1> \
 		{ ttk::treeview::Select %W %x %y extend }
 bind Treeview	<<ToggleSelection>> \
 		{ ttk::treeview::Select %W %x %y toggle }
@@ -102,7 +102,11 @@ proc ttk::treeview::Keynav {w dir} {
 #	Sets cursor, active element ...
 #
 proc ttk::treeview::Motion {w x y} {
-    set cursor {}
+    variable State
+
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor hresize]
+
+    set cursor $State(userConfCursor)
     set activeHeading {}
 
     switch -- [$w identify region $x $y] {
@@ -151,7 +155,7 @@ proc ttk::treeview::Select {w x y op} {
     }
 }
 
-## DoubleClick -- Double-ButtonPress-1 binding.
+## DoubleClick -- Double-Button-1 binding.
 #
 proc ttk::treeview::DoubleClick {w x y} {
     if {[set row [$w identify row $x $y]] ne ""} {
@@ -161,7 +165,7 @@ proc ttk::treeview::DoubleClick {w x y} {
     }
 }
 
-## Press -- ButtonPress binding.
+## Press -- Button binding.
 #
 proc ttk::treeview::Press {w x y} {
     focus $w

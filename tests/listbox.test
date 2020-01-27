@@ -3156,7 +3156,7 @@ test listbox-31.1 {<<ListboxSelect>> event} -setup {
     bind .l <<ListboxSelect>> {lappend res [%W curselection]}
     .l insert end a b c
     focus -force .l
-    event generate .l <1> -x 5 -y 5  ; # <<ListboxSelect>> fires
+    event generate .l <Button-1> -x 5 -y 5  ; # <<ListboxSelect>> fires
     .l configure -state disabled
     focus -force .l
     event generate .l <Control-Home> ; # <<ListboxSelect>> does NOT fire
@@ -3179,7 +3179,7 @@ test listbox-31.2 {<<ListboxSelect>> event on lost selection} -setup {
     bind .l <<ListboxSelect>> {lappend res [list [selection own] [%W curselection]]}
     .l insert end a b c
     focus -force .l
-    event generate .l <1> -x 5 -y 5  ; # <<ListboxSelect>> fires
+    event generate .l <Button-1> -x 5 -y 5  ; # <<ListboxSelect>> fires
     selection clear                  ; # <<ListboxSelect>> fires again
     update
     set res
