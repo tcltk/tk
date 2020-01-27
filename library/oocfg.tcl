@@ -57,8 +57,7 @@ namespace eval ::tk {
 			    } on ok {optionName} {
 				set msg "read only option: $optionName"
 			    }
-			    return -code error -errorcode \
-				[list TK LOOKUP OPTION $option] $msg
+			    error $msg $msg [list TK LOOKUP OPTION $option]
 			}
 			set ($opt) [my <OptValidate$opt> $value]
 			set stateChanged 1
@@ -81,7 +80,8 @@ namespace eval ::tk {
 		} elseif {[llength $args] == 1} {
 		    return [my OneDescriptor [lindex $args 0]]
 		} elseif {[llength $args] % 2 == 0} {
-		    return [my UpdateState $args]
+		    my UpdateState $args
+		    return
 		}
 	    } on error {msg opt} {
 		# Hide the implementation details
@@ -143,7 +143,7 @@ namespace eval ::tk {
 
     namespace eval PropertyDefine {
 	namespace eval Support {
-	    proc DefineProperty {contextClass name options} {
+	    proc DefineProperty {name options} {
 		set descriptor list
 		lappend descriptor [dict get $options name]
 		lappend descriptor [dict get $options class]
@@ -155,14 +155,15 @@ namespace eval ::tk {
 		}
 		set validator [list ::tk::PropType $type validate]
 
-		oo::define $contextClass method <OptDescribe-$name> $descriptor
-		oo::define $contextClass forward <OptValidate-$name> \
-		    {*}$validator
-		oo::define $contextClass \
-		    ::oo::configuresupport::readableproperties -append -$name
+		uplevel 1 [list \
+		    method <OptDescribe-$name> {} $descriptor]
+		uplevel 1 [list \
+		    forward <OptValidate-$name> {*}$validator]
+		uplevel 1 [list \
+		    ::oo::configuresupport::readableproperties -append -$name]
 		if {![dict get $options init]} {
-		    oo::define $contextClass \
-			::oo::configuresupport::writableproperties -append -$name		    
+		    uplevel 1 [list \
+			::oo::configuresupport::writableproperties -append -$name]
 		}
 	    }
 
@@ -174,12 +175,12 @@ namespace eval ::tk {
 		if {"<OptValidate$otherName>" ni $targets} {
 		    error "no such option \"$otherName\""
 		}
-		oo::define $contextClass forward <OptDescribe-$name> \
-		    my <OptDescribe$otherName>
-		oo::define $contextClass forward <OptValidate-$name> \
-		    my <OptValidate$otherName>
-		oo::define $contextClass \
-		    ::oo::configuresupport::readableproperties -append -$name
+		uplevel 1 [list \
+		    forward <OptDescribe-$name> my <OptDescribe$otherName>]
+		uplevel 1 [list \
+		    forward <OptValidate-$name> my <OptValidate$otherName>]
+		uplevel 1 [list \
+		    ::oo::configuresupport::readableproperties -append -$name]
 	    }
 	}
 
@@ -246,14 +247,13 @@ namespace eval ::tk {
 		dict set Opt def $defFromType
 	    }
 	    try {
-		uplevel 1 [list \
-			Support::DefineProperty $contextClass $name $Opt]
+		uplevel 1 [list Support::DefineProperty $name $Opt]
 	    } on error {msg opt} {
 		dict unset opt -errorinfo
 		return -options $opt $msg
 	    }
 	}
-	namespace path :oo::define
+	namespace path ::oo::define
     }
 
     ::oo::define configurable {
@@ -270,24 +270,15 @@ namespace eval ::tk {
 	definitionnamespace -class ::tk::PropertyDefine
     }
 
-    ::oo::class create propertytype {
-	private variable test def
+    ::oo::abstract create propertytype {
+	private variable def
 
-	constructor {testCommand default} {
-	    set test $testCommand
+	constructor {default} {
 	    set def $default
 	}
 
 	method validate {value} {
-	    try {
-		if {![{*}$test $value]} {
-		    set type [namespace tail [self]]
-		    return -code error "invalid $type value \"$value\""
-		}
-		return [my Normalize $value]
-	    } on error msg {
-		return -code error $msg
-	    }
+	    error "UNIMPLEMENTED" UNIMPLEMENTED
 	}
 
 	method Normalize {value} {
@@ -301,24 +292,73 @@ namespace eval ::tk {
 	self {
 	    unexport new
 
-	    method create {name testCommand default} {
-		set name [namespace tail $name]
-		set fullname [namespace current]::$name
-		set fullname [next $fullname $testCommand $default]
-		set map [namespace ensemble configure ::tk::PropType -map]
-		dict set map $name [list $fullname]
-		namespace ensemble configure ::tk::PropType -map $map
-		return $fullname
+	    method createbool {name default testCommand} {
+		::set name [::namespace tail $name]
+		::set fullname [::namespace current]::$name
+		::set fullname [::tk::BoolTestType create \
+				  $fullname $default $testCommand]
+		::set map [::namespace ensemble configure ::tk::PropType -map]
+		::dict set map $name [::list $fullname]
+		::namespace ensemble configure ::tk::PropType -map $map
+		::return $fullname
 	    }
 
-	    method createtable {name table default} {
-		set name [namespace tail $name]
-		set fullname [namespace current]::$name
-		set fullname [::tk::TableType create $fullname $table $default]
-		set map [namespace ensemble configure ::tk::PropType -map]
-		dict set map $name [list $fullname]
-		namespace ensemble configure ::tk::PropType -map $map
-		return $fullname
+	    method createthrow {name default testCommand} {
+		::set name [::namespace tail $name]
+		::set fullname [::namespace current]::$name
+		::set fullname [::tk::ThrowTestType create \
+				  $fullname $default $testCommand]
+		::set map [::namespace ensemble configure ::tk::PropType -map]
+		::dict set map $name [::list $fullname]
+		::namespace ensemble configure ::tk::PropType -map $map
+		::return $fullname
+	    }
+
+	    method createtable {name default table} {
+		::set name [::namespace tail $name]
+		::set fullname [::namespace current]::$name
+		::set fullname [::tk::TableType create $fullname $default $table]
+		::set map [::namespace ensemble configure ::tk::PropType -map]
+		::dict set map $name [::list $fullname]
+		::namespace ensemble configure ::tk::PropType -map $map
+		::return $fullname
+	    }
+	}
+    }
+
+    ::oo::class create BoolTestType {
+	superclass propertytype
+	constructor {default test} {
+	    next $default
+	    oo::objdefine [self] forward Validate {*}$test
+	}
+
+	method validate {value} {
+	    if {![my Validate $value]} {
+		set type [namespace tail [self]]
+		return -code error "invalid $type value \"$value\""
+	    }
+	    try {
+		return [my Normalize $value]
+	    } on error msg {
+		return -code error $msg
+	    }
+	}
+    }
+
+    ::oo::class create ThrowTestType {
+	superclass propertytype
+	constructor {default test} {
+	    next $default
+	    oo::objdefine [self] method Validate value $test
+	}
+
+	method validate {value} {
+	    try {
+		my Validate $value
+		return [my Normalize $value]
+	    } on error msg {
+		return -code error $msg
 	    }
 	}
     }
@@ -326,8 +366,8 @@ namespace eval ::tk {
     ::oo::class create TableType {
 	superclass propertytype
 	private variable Table
-	constructor {table default} {
-	    next {} $default
+	constructor {default table} {
+	    next $default
 	    set Table $table
 	}
 	method validate {value} {
@@ -336,54 +376,67 @@ namespace eval ::tk {
     }
 
     # Install the types: those with a boolean test
-    propertytype create integer {string is entier -strict} "0"
-    propertytype create zinteger {string is entier} ""
-    propertytype create float {string is double -strict} "0.0"
-    propertytype create zfloat {string is double} ""
-    propertytype create list {string is list} ""
-    propertytype create dict {string is dict} ""
+    propertytype createbool boolean "false" {
+	string is boolean -strict
+    }
+    propertytype createbool zboolean "" {
+	string is boolean
+    }
+    propertytype createbool integer "0" {
+	string is entier -strict
+    }
+    propertytype createbool zinteger "" {
+	string is entier
+    }
+    propertytype createbool float "0.0" {
+	string is double -strict
+    }
+    propertytype createbool zfloat "" {
+	string is double
+    }
+    propertytype createbool list "" {
+	string is list
+    }
+    propertytype createbool dict "" {
+	string is dict
+    }
 
     # Install the types: those with an erroring test
-    oo::objdefine [propertytype create string {} {}] {
+    oo::objdefine [propertytype createthrow string {} {}] {
 	# Special case; everything valid
 	method validate value {return $value}
     }
-    oo::objdefine [propertytype create distance {my Validate} "0px"] {
-	method Validate value {
-	    winfo fpixels . $value
-	    return 1
+    propertytype createthrow distance "0px" {
+	winfo fpixels . $value
+    }
+    propertytype createthrow image "" {
+	if {$value ne ""} {
+	    image type $value
 	}
     }
-    oo::objdefine [propertytype create image {my Validate} ""] {
-	method Validate value {
-	    if {$value ne ""} {image type $value}
-	    return 1
-	}
+    propertytype createthrow color "black" {
+	winfo rgb . $value
     }
-    oo::objdefine [propertytype create color {my Validate} "black"] {
-	method Validate value {
+    propertytype createthrow zcolor "" {
+	if {$value ne ""} {
 	    winfo rgb . $value
-	    return 1
 	}
     }
-    oo::objdefine [propertytype create zcolor {my Validate} ""] {
-	method Validate value {
-	    if {$value ne ""} {winfo rgb . $value}
-	    return 1
-	}
-    }
-    oo::objdefine [propertytype create font {my Validate} "TkDefaultFont"] {
-	method Validate value {
-	    # Cheapest property to read
-	    font metrics $value -fixed
-	    return 1
-	}
+    propertytype createthrow font "TkDefaultFont" {
+	# Cheapest property to read
+	font metrics $value -fixed
     }
 
     # Install the types: those with an element table
-    propertytype createtable anchor {n ne e se e sw w nw center} "center"
-    propertytype createtable justify {center left right} "left"
-    propertytype createtable relief {flat groove raised ridge solid sunken} "flat"
+    propertytype createtable anchor "center" {
+	n ne e se e sw w nw center
+    }
+    propertytype createtable justify "left" {
+	center left right
+    }
+    propertytype createtable relief "flat" {
+	flat groove raised ridge solid sunken
+    }
 }
 
 # Local Variables:

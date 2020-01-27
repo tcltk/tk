@@ -11,7 +11,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact Tk  8.7a3
+package require -exact Tk 8.7a3
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -705,6 +705,9 @@ set ::tk::Priv(IMETextMark) [dict create]
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source $::ttk::library/ttk.tcl]
 }
+
+# Add in our classes
+uplevel \#0 [list source [file join [file dirname [info script]] oocfg.tcl]]
 
 # Local Variables:
 # mode: tcl
