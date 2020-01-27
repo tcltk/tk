@@ -1290,11 +1290,11 @@ test textTag-15.2 {TkTextBindProc} -setup {
     event generate {} <Motion> -warp 1 -x -1 -y -1; update
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
-    .t tag bind x <ButtonPress> {lappend x x-down}
+    .t tag bind x <Button> {lappend x x-down}
     .t tag bind x <ButtonRelease> {lappend x x-up}
     .t tag bind x <Leave> {lappend x x-leave}
     .t tag bind y <Enter> {lappend x y-enter}
-    .t tag bind y <ButtonPress> {lappend x y-down}
+    .t tag bind y <Button> {lappend x y-down}
     .t tag bind y <ButtonRelease> {lappend x y-up}
     .t tag bind y <Leave> {lappend x y-leave}
     event gen .t <Motion> -x 0 -y 0
@@ -1318,12 +1318,12 @@ test textTag-15.3 {TkTextBindProc} -setup {
     event generate {} <Motion> -warp 1 -x -1 -y -1; update
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
-    .t tag bind x <Any-ButtonPress-1> {lappend x x-down}
-    .t tag bind x <Any-ButtonRelease-1> {lappend x x-up}
+    .t tag bind x <Button-1> {lappend x x-down}
+    .t tag bind x <ButtonRelease-1> {lappend x x-up}
     .t tag bind x <Leave> {lappend x x-leave}
     .t tag bind y <Enter> {lappend x y-enter}
-    .t tag bind y <Any-ButtonPress-1> {lappend x y-down}
-    .t tag bind y <Any-ButtonRelease-1> {lappend x y-up}
+    .t tag bind y <Button-1> {lappend x y-down}
+    .t tag bind y <ButtonRelease-1> {lappend x y-up}
     .t tag bind y <Leave> {lappend x y-leave}
     event gen .t <Motion> -x 0 -y 0
     set x {}

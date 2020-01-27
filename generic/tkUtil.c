@@ -1224,7 +1224,7 @@ TkUtfToUniChar(
     if ((sizeof(Tcl_UniChar) == 2)
 	    && ((uniChar & 0xFC00) == 0xD800)
 #if TCL_MAJOR_VERSION > 8
-	    && len == 1;
+	    && (len == 1)
 #endif
 	) {
 	Tcl_UniChar low = uniChar;
