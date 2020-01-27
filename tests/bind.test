@@ -5099,7 +5099,7 @@ test bind-25.2 {ParseEventDescription procedure: misinterpreted modifier} -setup
     button .b
 } -body {
     bind .b <Control-M> a
-    bind .b <M-M> b
+    bind .b <Meta-M> b
     lsort [bind .b]
 } -cleanup {
     destroy .b
@@ -5203,7 +5203,7 @@ test bind-25.21 {modifier names} -setup {
 test bind-25.22 {modifier names} -setup {
     frame .t.f -class Test -width 150 -height 100
 } -body {
-    bind .t.f <M-a> foo
+    bind .t.f <Meta-a> foo
     bind .t.f
 } -cleanup {
     destroy .t.f
@@ -5548,20 +5548,6 @@ test bind-26.5 {event names: Button} -setup {
     destroy .t.f
 } -result {{event Button} <Button>}
 
-test bind-26.6 {event names: ButtonPress} -setup {
-    frame .t.f -class Test -width 150 -height 100
-    pack .t.f
-    focus -force .t.f
-    update
-} -body {
-    bind .t.f <ButtonPress> "set x {event ButtonPress}"
-    set x xyzzy
-    event generate .t.f <ButtonPress>
-    list $x [bind .t.f]
-} -cleanup {
-    destroy .t.f
-} -result {{event ButtonPress} <Button>}
-
 test bind-26.7 {event names: ButtonRelease} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -5645,20 +5631,6 @@ test bind-26.12 {event names: Key} -setup {
 } -cleanup {
     destroy .t.f
 } -result {{event Key} <Key>}
-
-test bind-26.13 {event names: KeyPress} -setup {
-    frame .t.f -class Test -width 150 -height 100
-    pack .t.f
-    focus -force .t.f
-    update
-} -body {
-    bind .t.f <KeyPress> "set x {event KeyPress}"
-    set x xyzzy
-    event generate .t.f <KeyPress>
-    list $x [bind .t.f]
-} -cleanup {
-    destroy .t.f
-} -result {{event KeyPress} <Key>}
 
 test bind-26.14 {event names: KeyRelease} -setup {
     frame .t.f -class Test -width 150 -height 100

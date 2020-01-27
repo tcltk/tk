@@ -445,7 +445,9 @@ static const ModInfo modArray[] = {
     {"Shift",		ShiftMask,	0},
     {"Lock",		LockMask,	0},
     {"Meta",		META_MASK,	0},
+#ifndef TK_NO_DEPRECATED
     {"M",		META_MASK,	0},
+#endif
     {"Alt",		ALT_MASK,	0},
     {"Extended",	EXTENDED_MASK,	0},
     {"B1",		Button1Mask,	0},
@@ -507,10 +509,14 @@ typedef struct {
 
 static const EventInfo eventArray[] = {
     {"Key",		KeyPress,		KeyPressMask},
+#ifndef TK_NO_DEPRECATED
     {"KeyPress",	KeyPress,		KeyPressMask},
+#endif
     {"KeyRelease",	KeyRelease,		KeyPressMask|KeyReleaseMask},
     {"Button",		ButtonPress,		ButtonPressMask},
+#ifndef TK_NO_DEPRECATED
     {"ButtonPress",	ButtonPress,		ButtonPressMask},
+#endif
     {"ButtonRelease",	ButtonRelease,		ButtonPressMask|ButtonReleaseMask},
     {"Motion",		MotionNotify,		ButtonPressMask|PointerMotionMask},
     {"Enter",		EnterNotify,		EnterWindowMask},
