@@ -13,7 +13,6 @@
 #define _TKBITFIELD
 
 #include "tkInt.h" /* needed for inline support and 64 bit support */
-#include "tkBool.h"
 
 #define TK_BIT_NBITS (sizeof(size_t)*8) /* Number of bits in one word. */
 

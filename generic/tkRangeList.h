@@ -16,7 +16,6 @@
 #define _TKRANGELIST
 
 #include "tkInt.h" /* required for inline support */
-#include "tkBool.h"
 
 #if defined(__GNUC__) || defined(__clang__)
 # define __warn_unused__ __attribute__((warn_unused_result))

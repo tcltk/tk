@@ -31,7 +31,6 @@
 #define _TKTEXTUNDO
 
 #include "tkInt.h"
-#include "tkBool.h"
 
 /*
  * Our (private) stack type.

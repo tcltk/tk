@@ -17,7 +17,6 @@
 #include "tkInt.h"
 #include "tkBitField.h"
 #include "tkIntSet.h"
-#include "tkBool.h"
 
 #if defined(__GNUC__) || defined(__clang__)
 # define __warn_unused__ __attribute__((warn_unused_result))
