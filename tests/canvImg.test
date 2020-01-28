@@ -156,24 +156,31 @@ test canvImg-4.1 {ConfiugreImage procedure} -constraints testImageType -setup {
 	.c delete all
 	image delete foo
 } -result {{{foo free}} {}}
-test canvImg-4.2 {ConfiugreImage procedure} -constraints testImageType -setup {
+test canvImg-4.2 {ConfigureImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     image create test foo2 -variable y
     foo2 changed 0 0 0 0 80 60
     .c create image 50 100 -image foo -tags i1 -anchor nw
     update
     set x {}
     set y {}
+    set timer [after 300 {lappend y "timed out"}]
     .c itemconfigure i1 -image foo2
+    update idletasks
     update
+    # On MacOS we need to wait for the test image display procedure to run.
+    while {"timed out" ni $y && [lindex $y end 1] ne "display"} {
+        vwait y
+    }
+    after cancel timer
     list $x $y [.c bbox i1]
 } -cleanup {
-	.c delete all
-	image delete foo
-	image delete foo2
-} -result {{{foo free}} {{foo2 get} {foo2 display 0 0 80 60 30 30}} {50 100 130 160}}
+    .c delete all
+    image delete foo
+    image delete foo2
+} -result {{{foo free}} {{foo2 get} {foo2 display 0 0 80 60}} {50 100 130 160}}
 test canvImg-4.3 {ConfiugreImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
@@ -720,35 +727,49 @@ test canvImg-9.1 {DisplayImage procedure} -constraints testImageType -setup {
 	image delete foo
 } -result {75 150 105 165}
 
+if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
+    # Aqua >= 10.14 will redraw the entire image.
+    set result_10_1 {{foo display 0 0 30 15}}
+} else {
+    set result_10_1 {{foo display 2 4 6 8}} 
+}
 test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
+    update
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
+    set timer [after 500 {lappend x "timed out"}]
     foo changed 2 4 6 8 30 15
+    vwait x
+    after cancel $timer
     update
     return $x
 } -cleanup {
-	.c delete all
-	image delete foo
-} -result {{foo display 2 4 6 8 30 30}}
+    .c delete all
+    image delete foo
+} -result $result_10_1
 
 test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
+    update
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
+    set timer [after 500 {lappend x "timed out"}]
     foo changed 2 4 6 8 40 50
+        vwait x
+    after cancel $timer
     update
     return $x
 } -cleanup {
-	.c delete all
-	image delete foo
-} -result {{foo display 0 0 40 50 30 30}}
+    .c delete all
+    image delete foo
+} -result {{foo display 0 0 40 50}}
 test canvImg-11.2 {ImageChangedProc procedure} -constraints {
 	testImageType 
 } -setup {
@@ -764,27 +785,35 @@ test canvImg-11.2 {ImageChangedProc procedure} -constraints {
 	.c delete all
 	image delete foo
 } -result {30 75 70 125}
+if {[tk windowingsystem] == "aqua" && $tcl_platform(osVersion) > 18} {
+    # Aqua >= 10.14 will redraw the entire image.
+    set result_11_3 {{foo2 display 0 0 80 60}}
+} else {
+    set result_11_3 {{foo2 display 0 0 20 40}} 
+}
 test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 	testImageType 
 } -setup {
     .c delete all
+    update
 } -body {
     image create test foo -variable x
-	image create test foo2 -variable y
+    image create test foo2 -variable z
     foo changed 0 0 0 0 40 50
     foo2 changed 0 0 0 0 80 60
-
     .c create image 50 100 -image foo -tags image -anchor nw
     .c create image 70 110 -image foo2 -anchor nw
     update
-    set y {}
+    set z {}
+    set timer [after 500 {lappend z "timed out"}]
     image create test foo -variable x
-    update
-    return $y
+    vwait x
+    after cancel $timer
+    return $z
 } -cleanup {
-	.c delete all
-	image delete foo foo2
-} -result {{foo2 display 0 0 20 40 50 40}}
+    .c delete all
+    image delete foo foo2
+} -result $result_11_3
 
 # cleanup
 imageFinish

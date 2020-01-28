@@ -47,7 +47,7 @@ typedef struct PixelRep {
  * thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     const Tcl_ObjType *doubleTypePtr;
     const Tcl_ObjType *intTypePtr;
 } ThreadSpecificData;
@@ -96,7 +96,7 @@ static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 /*
  * The following structure defines the implementation of the "pixel" Tcl
  * object, used for measuring distances. The pixel object remembers its
- * initial display-independant settings.
+ * initial display-independent settings.
  */
 
 static const Tcl_ObjType pixelObjType = {
@@ -110,7 +110,7 @@ static const Tcl_ObjType pixelObjType = {
 /*
  * The following structure defines the implementation of the "pixel" Tcl
  * object, used for measuring distances. The pixel object remembers its
- * initial display-independant settings.
+ * initial display-independent settings.
  */
 
 static const Tcl_ObjType mmObjType = {
@@ -668,7 +668,7 @@ UpdateStringOfMM(
 {
     MMRep *mmPtr;
     char buffer[TCL_DOUBLE_SPACE];
-    register int len;
+    size_t len;
 
     mmPtr = objPtr->internalRep.twoPtrValue.ptr1;
     /* assert( mmPtr->units == -1 && objPtr->bytes == NULL ); */
@@ -677,7 +677,7 @@ UpdateStringOfMM(
     }
 
     Tcl_PrintDouble(NULL, mmPtr->value, buffer);
-    len = (int)strlen(buffer);
+    len = strlen(buffer);
 
     objPtr->bytes = ckalloc(len + 1);
     strcpy(objPtr->bytes, buffer);
@@ -892,7 +892,7 @@ SetWindowFromAny(
      * Free the old internalRep before setting the new one.
      */
 
-    (void)Tcl_GetString(objPtr);
+    Tcl_GetString(objPtr);
     typePtr = objPtr->typePtr;
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);

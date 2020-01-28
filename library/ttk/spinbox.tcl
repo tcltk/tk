@@ -29,12 +29,14 @@ ttk::bindMouseWheel TSpinbox 		[list ttk::spinbox::MouseWheel %W]
 #	Sets cursor.
 #
 proc ttk::spinbox::Motion {w x y} {
+    variable State
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor text]
     if {   [$w identify $x $y] eq "textarea"
         && [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
-	ttk::setCursor $w ""
+	ttk::setCursor $w $State(userConfCursor)
     }
 }
 
@@ -81,6 +83,7 @@ proc ttk::spinbox::Release {w} {
 # 	or <<Decrement> (+1, down) events.
 #
 proc ttk::spinbox::MouseWheel {w dir} {
+    if {[$w instate disabled]} { return }
     if {$dir < 0} {
 	event generate $w <<Increment>>
     } else {
@@ -132,6 +135,7 @@ proc ttk::spinbox::Adjust {w v min max} {
 #	-from, -to, and -increment.
 #
 proc ttk::spinbox::Spin {w dir} {
+    if {[$w instate disabled]} { return }
     set nvalues [llength [set values [$w cget -values]]]
     set value [$w get]
     if {$nvalues} {

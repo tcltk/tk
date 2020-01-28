@@ -22,31 +22,39 @@
 #else
 #define modalOK     NSModalResponseOK
 #define modalCancel NSModalResponseCancel
-#endif
+#endif // MAC_OS_X_VERSION_MIN_REQUIRED < 1090
 #define modalOther  -1
 #define modalError  -2
 
-/*Vars for filtering in "open file" and "save file" dialogs.*/
+/*
+ * Vars for filtering in "open file" and "save file" dialogs.
+ */
+
 typedef struct {
-    bool doFileTypes; // show the accessory view which displays the filter menu
-    bool preselectFilter; // a filter was selected by the typevariable
-    bool userHasSelectedFilter; // The user has changed the filter in the accessory view
-
-    NSMutableArray *fileTypeNames; // array of names, e.g. "Text document"
-    NSMutableArray *fileTypeExtensions; // array of allowed extensions per name, e.g. "txt", "doc"
-    NSMutableArray *fileTypeLabels; // displayed string, e.g. "Text document (.txt, .doc)"
-    NSMutableArray *fileTypeAllowsAll; // boolean if the all pattern (*.*) is included
-
-    NSMutableArray *allowedExtensions; // set of all allowed extensions
-    bool allowedExtensionsAllowAll; // set of all allowed extensions includes *.*
-
-    NSUInteger fileTypeIndex; // index of currently selected filter
+    bool doFileTypes;			/* Show the accessory view which
+					 * displays the filter menu */
+    bool preselectFilter;		/* A filter was selected by the
+					 * typevariable. */
+    bool userHasSelectedFilter;		/* The user has changed the filter in
+					 * the accessory view. */
+    NSMutableArray *fileTypeNames;	/* Array of names, e.g. "Text
+					 * document". */
+    NSMutableArray *fileTypeExtensions;	/* Array of allowed extensions per
+					 * name, e.g. "txt", "doc". */
+    NSMutableArray *fileTypeLabels;	/* Displayed string, e.g. "Text
+					 * document (.txt, .doc)". */
+    NSMutableArray *fileTypeAllowsAll;	/* Boolean if the all pattern (*.*) is
+					 * included. */
+    NSMutableArray *allowedExtensions;	/* Set of all allowed extensions. */
+    bool allowedExtensionsAllowAll;	/* Set of all allowed extensions
+					 * includes *.* */
+    NSUInteger fileTypeIndex;		/* Index of currently selected
+					 * filter. */
 } filepanelFilterInfo;
 
-filepanelFilterInfo filterInfo;
-
-NSOpenPanel *openpanel;
-NSSavePanel *savepanel;
+static filepanelFilterInfo filterInfo;
+static NSOpenPanel *openpanel;
+static NSSavePanel *savepanel;
 
 static const char *const colorOptionStrings[] = {
     "-initialcolor", "-parent", "-title", NULL
@@ -117,7 +125,7 @@ enum alertIconOptions {
     ICON_ERROR, ICON_INFO, ICON_QUESTION, ICON_WARNING
 };
 static const char *const alertButtonStrings[] = {
-    "abort", "retry", "ignore", "ok", "cancel", "yes", "no", NULL
+    "abort", "retry", "ignore", "ok", "cancel", "no", "yes", NULL
 };
 
 static const NSString *const alertButtonNames[][3] = {
@@ -147,8 +155,8 @@ static const short alertButtonIndexAndTypeToNativeButtonIndex[][7] = {
     [TYPE_OK] =			{0,    0,    0,    1,    0,    0,    0},
     [TYPE_OKCANCEL] =		{0,    0,    0,    1,    2,    0,    0},
     [TYPE_RETRYCANCEL] =	{0,    1,    0,    0,    2,    0,    0},
-    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    1,    2},
-    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    1,    2},
+    [TYPE_YESNO] =		{0,    0,    0,    0,    0,    2,    1},
+    [TYPE_YESNOCANCEL] =	{0,    0,    0,    0,    3,    2,    1},
 };
 
 /*
@@ -161,15 +169,20 @@ static const short alertNativeButtonIndexAndTypeToButtonIndex[][3] = {
     [TYPE_OK] =			{3, 0, 0},
     [TYPE_OKCANCEL] =		{3, 4, 0},
     [TYPE_RETRYCANCEL] =	{1, 4, 0},
-    [TYPE_YESNO] =		{5, 6, 0},
-    [TYPE_YESNOCANCEL] =	{5, 6, 4},
+    [TYPE_YESNO] =		{6, 5, 0},
+    [TYPE_YESNOCANCEL] =	{6, 5, 4},
 };
 
 /*
- * Construct a file URL from directory and filename.  Either may
- * be nil.  If both are nil, returns nil.
+ * Construct a file URL from directory and filename. Either may be nil. If both
+ * are nil, returns nil.
  */
-static NSURL *getFileURL(NSString *directory, NSString *filename) {
+
+static NSURL *
+getFileURL(
+    NSString *directory,
+    NSString *filename)
+{
     NSURL *url = nil;
     if (directory) {
 	url = [NSURL fileURLWithPath:directory isDirectory:YES];
@@ -182,11 +195,19 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 
 #pragma mark TKApplication(TKDialog)
 
-@interface NSColorPanel(TKDialog)
-- (void) _setUseModalAppearance: (BOOL) flag;
-@end
-
 @implementation TKApplication(TKDialog)
+
+- (BOOL)panel:(id)sender shouldEnableURL:(NSURL *)url {
+    return YES;
+}
+
+- (void)panel:(id)sender didChangeToDirectoryURL:(NSURL *)url {
+}
+
+- (BOOL)panel:(id)sender validateURL:(NSURL *)url error:(NSError **)outError {
+    *outError = nil;
+    return YES;
+}
 
 - (void) tkFilePanelDidEnd: (NSSavePanel *) panel
 	returnCode: (NSInteger) returnCode contextInfo: (void *) contextInfo
@@ -233,7 +254,6 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
     }
 }
 
-
 - (void) tkAlertDidEnd: (NSAlert *) alert returnCode: (NSInteger) returnCode
 	contextInfo: (void *) contextInfo
 {
@@ -276,12 +296,18 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 
     if ([[filterInfo.fileTypeAllowsAll objectAtIndex:filterInfo.fileTypeIndex] boolValue]) {
 	[openpanel setAllowsOtherFileTypes:YES];
-	/* setAllowsOtherFileTypes might have no effect; it's inherited from the
-	 * NSSavePanel, where it has the effect that it does not append an extension
-	 * Setting the allowed file types to nil allows selecting any file */
+
+	/*
+	 * setAllowsOtherFileTypes might have no effect; it's inherited from
+	 * the NSSavePanel, where it has the effect that it does not append an
+	 * extension. Setting the allowed file types to nil allows selecting
+	 * any file.
+	 */
+
 	[openpanel setAllowedFileTypes:nil];
     } else {
-	NSMutableArray *allowedtypes = [filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex];
+	NSMutableArray *allowedtypes =
+		[filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex];
 	[openpanel setAllowedFileTypes:allowedtypes];
 	[openpanel setAllowsOtherFileTypes:NO];
     }
@@ -297,7 +323,8 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 	[savepanel setAllowsOtherFileTypes:YES];
 	[savepanel setAllowedFileTypes:nil];
     } else {
-	NSMutableArray *allowedtypes = [filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex];
+	NSMutableArray *allowedtypes =
+		[filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex];
 	[savepanel setAllowedFileTypes:allowedtypes];
 	[savepanel setAllowsOtherFileTypes:NO];
     }
@@ -308,6 +335,30 @@ static NSURL *getFileURL(NSString *directory, NSString *filename) {
 @end
 
 #pragma mark -
+
+static NSInteger showOpenSavePanel(
+    NSSavePanel *panel,
+    NSWindow *parent,
+    FilePanelCallbackInfo *callbackInfo)
+{
+    NSInteger modalReturnCode;
+
+    if (parent && ![parent attachedSheet] && [NSApp macMinorVersion] < 15) {
+	[panel beginSheetModalForWindow:parent
+	       completionHandler:^(NSInteger returnCode) {
+	    [NSApp tkFilePanelDidEnd:panel
+		       returnCode:returnCode
+		       contextInfo:callbackInfo ];
+	    }];
+	modalReturnCode = callbackInfo->cmdObj ? modalOther :
+	    [NSApp runModalForWindow:panel];
+    } else {
+	modalReturnCode = [panel runModal];
+	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
+		     contextInfo:callbackInfo];
+    }
+    return modalReturnCode;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -388,6 +439,7 @@ Tk_ChooseColorObjCmd(
     [colorPanel _setUseModalAppearance:YES];
     if (title) {
 	NSString *s = [[NSString alloc] initWithUTF8String:title];
+
 	[colorPanel setTitle:s];
 	[s release];
     }
@@ -419,9 +471,17 @@ end:
     return result;
 }
 
-/* dissect the -filetype nested lists and store the information
- * in the filterInfo structure */
-int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVariablePtr) {
+/*
+ * Dissect the -filetype nested lists and store the information in the
+ * filterInfo structure.
+ */
+
+static int
+parseFileFilters(
+    Tcl_Interp *interp,
+    Tcl_Obj *fileTypesPtr,
+    Tcl_Obj *typeVariablePtr)
+{
 
     if (!fileTypesPtr) {
 	filterInfo.doFileTypes = false;
@@ -429,6 +489,7 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
     }
 
     FileFilterList fl;
+
     TkInitFileFilters(&fl);
     if (TkGetFileFilters(interp, &fl, fileTypesPtr, 0) != TCL_OK) {
 	TkFreeFileFilters(&fl);
@@ -449,11 +510,12 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
     if (filterInfo.doFileTypes) {
 	for (FileFilter *filterPtr = fl.filters; filterPtr;
 		filterPtr = filterPtr->next) {
-	    NSString * name = [[NSString alloc] initWithUTF8String: filterPtr -> name];
+	    NSString *name = [[NSString alloc] initWithUTF8String: filterPtr->name];
+
 	    [filterInfo.fileTypeNames addObject:name];
 	    [name release];
-	    NSMutableArray * clauseextensions = [NSMutableArray array];
-	    NSMutableArray * displayextensions = [NSMutableArray array];
+	    NSMutableArray *clauseextensions = [NSMutableArray array];
+	    NSMutableArray *displayextensions = [NSMutableArray array];
 	    bool allowsAll = NO;
 
 	    for (FileFilterClause *clausePtr = filterPtr->clauses; clausePtr;
@@ -464,7 +526,7 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
 		    const char *str = globPtr->pattern;
 		    while (*str && (*str == '*' || *str == '.')) {
 		    	str++;
-		     }
+		    }
 		    if (*str) {
 			NSString *extension = [[NSString alloc] initWithUTF8String:str];
 			if (![filterInfo.allowedExtensions containsObject:extension]) {
@@ -476,7 +538,10 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
 
 			[extension release];
 		    } else {
-			// it is the all pattern (*, .* or *.*)
+			/*
+			 * It is the all pattern (*, .* or *.*)
+			 */
+
 			allowsAll = YES;
 			filterInfo.allowedExtensionsAllowAll = YES;
 			[displayextensions addObject:@"*"];
@@ -486,27 +551,39 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
 	    [filterInfo.fileTypeExtensions addObject:clauseextensions];
 	    [filterInfo.fileTypeAllowsAll addObject:[NSNumber numberWithBool:allowsAll]];
 
-	    NSMutableString * label = [[NSMutableString alloc] initWithString:name];
+	    NSMutableString *label = [[NSMutableString alloc] initWithString:name];
 	    [label appendString:@" ("];
 	    [label appendString:[displayextensions componentsJoinedByString:@", "]];
 	    [label appendString:@")"];
 	    [filterInfo.fileTypeLabels addObject:label];
 	    [label release];
-
 	}
 
-	/* Check if the typevariable exists and matches one of the names */
+	/*
+	 * Check if the typevariable exists and matches one of the names.
+	 */
+
 	filterInfo.preselectFilter = false;
 	filterInfo.userHasSelectedFilter = false;
 	if (typeVariablePtr) {
-	    /* extract the variable content as a NSString */
-	    Tcl_Obj *selectedFileTypeObj = Tcl_ObjGetVar2(interp, typeVariablePtr, NULL, TCL_GLOBAL_ONLY);
+	    /*
+	     * Extract the variable content as a NSString.
+	     */
 
-	    /* check that the typevariable exists */
+	    Tcl_Obj *selectedFileTypeObj = Tcl_ObjGetVar2(interp,
+		    typeVariablePtr, NULL, TCL_GLOBAL_ONLY);
+
+	    /*
+	     * Check that the typevariable exists.
+	     */
+
 	    if (selectedFileTypeObj != NULL) {
-		const char *selectedFileType = Tcl_GetString(selectedFileTypeObj);
-		NSString *selectedFileTypeStr = [[NSString alloc] initWithUTF8String:selectedFileType];
-		NSUInteger index = [filterInfo.fileTypeNames indexOfObject:selectedFileTypeStr];
+		const char *selectedFileType =
+			Tcl_GetString(selectedFileTypeObj);
+		NSString *selectedFileTypeStr =
+			[[NSString alloc] initWithUTF8String:selectedFileType];
+		NSUInteger index =
+			[filterInfo.fileTypeNames indexOfObject:selectedFileTypeStr];
 
 		if (index != NSNotFound) {
 		    filterInfo.fileTypeIndex = index;
@@ -521,17 +598,24 @@ int parseFileFilters(Tcl_Interp *interp, Tcl_Obj *fileTypesPtr, Tcl_Obj *typeVar
     return TCL_OK;
 }
 
-bool filterCompatible(NSString *extension, int filterIndex) {
-    NSMutableArray *allowedExtensions = [filterInfo.fileTypeExtensions objectAtIndex: filterIndex];
+static bool
+filterCompatible(
+    NSString *extension,
+    int filterIndex)
+{
+    NSMutableArray *allowedExtensions =
+	    [filterInfo.fileTypeExtensions objectAtIndex: filterIndex];
 
-    /* If this contains the all pattern, accept any extension */
+    /*
+     * If this contains the all pattern, accept any extension.
+     */
+
     if ([[filterInfo.fileTypeAllowsAll objectAtIndex:filterIndex] boolValue]) {
 	return true;
     }
 
     return [allowedExtensions containsObject: extension];
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -569,6 +653,8 @@ Tk_GetOpenFileObjCmd(
     openpanel =  [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
+
+    [openpanel setDelegate:NSApp];
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], openOptionStrings,
@@ -631,22 +717,24 @@ Tk_GetOpenFileObjCmd(
 	    break;
 	}
     }
-
     if (title) {
 	[openpanel setTitle:title];
 
-	/* From OSX 10.11, the title string is silently ignored in the open panel.
-	 * Prepend the title to the message in this case
-	 * NOTE should be conditional on OSX version, but
-	 * -mmacosx-version-min does not revert this behaviour*/
+	/*
+	 * From OSX 10.11, the title string is silently ignored in the open
+	 * panel.  Prepend the title to the message in this case.
+	 */
 
-	if (message) {
-	    NSString *fullmessage = [[NSString alloc] initWithFormat:@"%@\n%@",title,message];
-	    [message release];
-	    [title release];
-	    message = fullmessage;
-	} else {
-	    message = title;
+	if ([NSApp macMinorVersion] > 10) {
+	    if (message) {
+		NSString *fullmessage =
+		    [[NSString alloc] initWithFormat:@"%@\n%@", title, message];
+		[message release];
+		[title release];
+		message = fullmessage;
+	    } else {
+		message = title;
+	    }
 	}
     }
 
@@ -662,117 +750,124 @@ Tk_GetOpenFileObjCmd(
     }
 
     if (filterInfo.doFileTypes) {
-	NSView  *accessoryView = [[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, 300, 32.0)];
-	NSTextField *label = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 60, 22)];
+	NSTextField *label = [[NSTextField alloc]
+		initWithFrame:NSMakeRect(0, 0, 60, 22)];
+	NSPopUpButton *popupButton = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(50.0, 2, 240, 22.0) pullsDown:NO];
+	NSView *accessoryView = [[NSView alloc]
+		initWithFrame:NSMakeRect(0.0, 0.0, 300, 32.0)];
+
 	[label setEditable:NO];
 	[label setStringValue:@"Filter:"];
 	[label setBordered:NO];
 	[label setBezeled:NO];
 	[label setDrawsBackground:NO];
-
-	NSPopUpButton *popupButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(50.0, 2, 240, 22.0) pullsDown:NO];
 	[popupButton addItemsWithTitles:filterInfo.fileTypeLabels];
 	[popupButton setAction:@selector(selectFormat:)];
-
 	[accessoryView addSubview:label];
 	[accessoryView addSubview:popupButton];
-
 	if (filterInfo.preselectFilter) {
-	    /* A specific filter was selected from the typevariable. Select it and
-	     * open the accessory view */
+
+	    /*
+	     * A specific filter was selected from the typevariable. Select it
+	     * and open the accessory view.
+	     */
+
 	    [popupButton selectItemAtIndex:filterInfo.fileTypeIndex];
-	    /* on OSX > 10.11, the optons are not visible by default. Ergo allow all file types
+
+	    /*
+	     * On OSX > 10.11, the options are not visible by default. Ergo
+	     * allow all file types
 	    [openpanel setAllowedFileTypes:filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex]];
 	    */
+
 	    [openpanel setAllowedFileTypes:filterInfo.allowedExtensions];
 	} else {
 	    [openpanel setAllowedFileTypes:filterInfo.allowedExtensions];
 	}
-
 	if (filterInfo.allowedExtensionsAllowAll) {
 	    [openpanel setAllowsOtherFileTypes:YES];
 	} else {
 	    [openpanel setAllowsOtherFileTypes:NO];
 	}
-
 	[openpanel setAccessoryView:accessoryView];
     } else {
-	/* No filters are given. Allow picking all files */
+	/*
+	 * No filters are given. Allow picking all files.
+	 */
+
 	[openpanel setAllowsOtherFileTypes:YES];
     }
-
     if (cmdObj) {
-	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-
+    callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = multiple;
-    parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
-    if (haveParentOption && parent && ![parent attachedSheet]) {
-	parentIsKey = [parent isKeyWindow];
-	if (directory || filename ) {
-	    NSURL * fileURL = getFileURL(directory, filename);
-	    [openpanel setDirectoryURL:fileURL];
-	}
+    if (directory || filename) {
+	NSURL *fileURL = getFileURL(directory, filename);
 
-	[openpanel beginSheetModalForWindow:parent
-	       completionHandler:^(NSInteger returnCode)
-	       { [NSApp tkFilePanelDidEnd:openpanel
-		       returnCode:returnCode
-		       contextInfo:callbackInfo ]; } ];
-	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:openpanel];
-    } else {
-	if (directory || filename ) {
-	    NSURL * fileURL = getFileURL(directory, filename);
-	    [openpanel setDirectoryURL:fileURL];
-	}
-
-	modalReturnCode = [openpanel runModal];
-	[NSApp tkFilePanelDidEnd:openpanel returnCode:modalReturnCode
-		contextInfo:callbackInfo];
+	[openpanel setDirectoryURL:fileURL];
     }
+    if (haveParentOption) {
+	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parentIsKey = parent && [parent isKeyWindow];
+    } else {
+	parent = nil;
+	parentIsKey = False;
+    }
+    modalReturnCode = showOpenSavePanel(openpanel, parent, callbackInfo);
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
     if (parentIsKey) {
 	[parent makeKeyWindow];
     }
-
-    if ((typeVariablePtr && (modalReturnCode == NSOKButton)) &&
-	filterInfo.doFileTypes) {
+    if ((typeVariablePtr && (modalReturnCode == NSOKButton))
+	    && filterInfo.doFileTypes) {
 	/*
-	 * The -typevariable must be set to the selected file type, if the dialog was not cancelled
+	 * The -typevariable must be set to the selected file type, if the
+	 * dialog was not cancelled.
 	 */
-	NSInteger selectedFilterIndex = filterInfo.fileTypeIndex;
+
+	NSUInteger selectedFilterIndex = filterInfo.fileTypeIndex;
 	NSString *selectedFilter = NULL;
+
 	if (filterInfo.userHasSelectedFilter) {
 	    selectedFilterIndex = filterInfo.fileTypeIndex;
 	    selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 	} else {
-	    /* Difficult case: the user has not touched the filter settings, but we must
-	     * return something in the typevariable. First check if the preselected type is compatible
-	     * with the selected file, otherwise choose the first compatible type from the list,
-	     * finally fall back to the empty string */
+	    /*
+	     * Difficult case: the user has not touched the filter settings,
+	     * but we must return something in the typevariable. First check if
+	     * the preselected type is compatible with the selected file,
+	     * otherwise choose the first compatible type from the list,
+	     * finally fall back to the empty string.
+	     */
+
 	    NSURL *selectedFile;
+	    NSString *extension;
 	    if (multiple) {
-		// Use the first file in the case of multiple selection
-		// Anyway it is not overly useful here
+		/*
+		 * Use the first file in the case of multiple selection.
+		 * Anyway it is not overly useful here.
+		 */
 		selectedFile = [[openpanel URLs] objectAtIndex:0];
 	    } else {
 		selectedFile = [openpanel URL];
 	    }
 
-	    NSString *extension = [selectedFile pathExtension];
+	    extension = [selectedFile pathExtension];
+
 	    if (filterInfo.preselectFilter &&
-		filterCompatible(extension, filterInfo.fileTypeIndex)) {
+		    filterCompatible(extension, filterInfo.fileTypeIndex)) {
 		selectedFilterIndex = filterInfo.fileTypeIndex;  // The preselection from the typevariable
 		selectedFilter = [filterInfo.fileTypeNames objectAtIndex:selectedFilterIndex];
 	    } else {
-		// scan the list
-		int i;
+		NSUInteger i;
+
 		for (i = 0; i < [filterInfo.fileTypeNames count]; i++) {
 		    if (filterCompatible(extension, i)) {
 			selectedFilterIndex = i;
@@ -784,19 +879,15 @@ Tk_GetOpenFileObjCmd(
 		} else {
 		    selectedFilter = @"";
 		}
-
 	    }
 	}
-
 	Tcl_ObjSetVar2(interp, typeVariablePtr, NULL,
-		Tcl_NewStringObj([selectedFilter UTF8String], -1), TCL_GLOBAL_ONLY);
+		Tcl_NewStringObj([selectedFilter UTF8String], -1),
+		TCL_GLOBAL_ONLY);
     }
-
-
-  end:
+ end:
     return result;
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -811,6 +902,7 @@ Tk_GetOpenFileObjCmd(
  *
  * Side effects:
  *	See user documentation.
+ *
  *----------------------------------------------------------------------
  */
 
@@ -832,9 +924,11 @@ Tk_GetSaveFileObjCmd(
     NSString *directory = nil, *filename = nil, *defaultType = nil;
     NSString *message = nil, *title = nil;
     NSWindow *parent;
-    savepanel =  [NSSavePanel savePanel];
+    savepanel = [NSSavePanel savePanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
+
+    [savepanel setDelegate:NSApp];
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], saveOptionStrings,
@@ -910,13 +1004,17 @@ Tk_GetSaveFileObjCmd(
     if (title) {
 	[savepanel setTitle:title];
 
-	/* From OSX 10.11, the title string is silently ignored, if the save panel is a sheet.
-	 * Prepend the title to the message in this case
-	 * NOTE should be conditional on OSX version, but
-	 * -mmacosx-version-min does not revert this behaviour*/
+	/*
+	 * From OSX 10.11, the title string is silently ignored, if the save
+	 * panel is a sheet.  Prepend the title to the message in this case.
+	 * NOTE: should be conditional on OSX version, but -mmacosx-version-min
+	 * does not revert this behaviour.
+	 */
+
 	if (haveParentOption) {
 	    if (message) {
-		NSString *fullmessage = [[NSString alloc] initWithFormat:@"%@\n%@",title,message];
+		NSString *fullmessage =
+		    [[NSString alloc] initWithFormat:@"%@\n%@",title,message];
 		[message release];
 		[title release];
 		message = fullmessage;
@@ -936,15 +1034,20 @@ Tk_GetSaveFileObjCmd(
     }
 
     if (filterInfo.doFileTypes) {
-	NSView  *accessoryView = [[NSView alloc] initWithFrame:NSMakeRect(0.0, 0.0, 300, 32.0)];
-	NSTextField *label = [[NSTextField alloc] initWithFrame:NSMakeRect(0, 0, 60, 22)];
+	NSView *accessoryView = [[NSView alloc]
+		initWithFrame:NSMakeRect(0.0, 0.0, 300, 32.0)];
+	NSTextField *label = [[NSTextField alloc]
+		initWithFrame:NSMakeRect(0, 0, 60, 22)];
+
 	[label setEditable:NO];
 	[label setStringValue:NSLocalizedString(@"Format:", nil)];
 	[label setBordered:NO];
 	[label setBezeled:NO];
 	[label setDrawsBackground:NO];
 
-	NSPopUpButton *popupButton = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(50.0, 2, 340, 22.0) pullsDown:NO];
+	NSPopUpButton *popupButton = [[NSPopUpButton alloc]
+		initWithFrame:NSMakeRect(50.0, 2, 340, 22.0) pullsDown:NO];
+
 	[popupButton addItemsWithTitles:filterInfo.fileTypeLabels];
 	[popupButton selectItemAtIndex:filterInfo.fileTypeIndex];
 	[popupButton setAction:@selector(saveFormat:)];
@@ -957,10 +1060,14 @@ Tk_GetSaveFileObjCmd(
 	[savepanel setAllowedFileTypes:[filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex]];
 	[savepanel setAllowsOtherFileTypes:filterInfo.allowedExtensionsAllowAll];
     } else if (defaultType) {
-	/* If no filetypes are given, defaultextension is an alternative way
-	 * to specify the attached extension. Just propose this extension,
-	 * but don't display an accessory view */
+	/*
+	 * If no filetypes are given, defaultextension is an alternative way to
+	 * specify the attached extension. Just propose this extension, but
+	 * don't display an accessory view.
+	 */
+
 	NSMutableArray *AllowedFileTypes = [NSMutableArray array];
+
 	[AllowedFileTypes addObject:defaultType];
 	[savepanel setAllowedFileTypes:AllowedFileTypes];
 	[savepanel setAllowsOtherFileTypes:YES];
@@ -970,62 +1077,56 @@ Tk_GetSaveFileObjCmd(
     [savepanel setExtensionHidden:NO];
 
     if (cmdObj) {
-	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
+    callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
 
-    parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
-    if (haveParentOption && parent && ![parent attachedSheet]) {
-       parentIsKey = [parent isKeyWindow];
-       if (directory) {
-	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
-	}
-	   /*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
-	if (filename) {
-	    [savepanel setNameFieldStringValue:filename];
-	} else {
-	    [savepanel setNameFieldStringValue:@""];
-	}
-	[savepanel beginSheetModalForWindow:parent
-	       completionHandler:^(NSInteger returnCode)
-	       { [NSApp tkFilePanelDidEnd:savepanel
-		       returnCode:returnCode
-		       contextInfo:callbackInfo ]; } ];
-	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:savepanel];
-    } else {
-	if (directory) {
-	    [savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
-	}
-	 /*check for file name, otherwise set to empty string; crashes with uncaught exception if set to nil*/
-	if (filename) {
-	    [savepanel setNameFieldStringValue:filename];
-	} else {
-	    [savepanel setNameFieldStringValue:@""];
-	}
-	modalReturnCode = [savepanel runModal];
-	[NSApp tkFilePanelDidEnd:savepanel returnCode:modalReturnCode
-		contextInfo:callbackInfo];
+    if (directory) {
+	[savepanel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
     }
+
+    /*
+     * Check for file name and set to the empty string if nil. This prevents a crash
+     * with an uncaught exception.
+     */
+
+    if (filename) {
+	[savepanel setNameFieldStringValue:filename];
+    } else {
+	[savepanel setNameFieldStringValue:@""];
+    }
+    if (haveParentOption) {
+	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parentIsKey = parent && [parent isKeyWindow];
+    } else {
+	parent = nil;
+	parentIsKey = False;
+    }
+    modalReturnCode = showOpenSavePanel(savepanel, parent, callbackInfo);
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
     if (parentIsKey) {
 	[parent makeKeyWindow];
     }
 
-    if ((typeVariablePtr && (modalReturnCode == NSOKButton)) && filterInfo.doFileTypes) {
+    if (typeVariablePtr && (modalReturnCode == NSOKButton)
+	    && filterInfo.doFileTypes) {
 	/*
-	 * The -typevariable must be set to the selected file type, if the dialog was not cancelled
+	 * The -typevariable must be set to the selected file type, if the
+	 * dialog was not cancelled.
 	 */
-	NSString * selectedFilter = [filterInfo.fileTypeNames objectAtIndex:filterInfo.fileTypeIndex];
-	Tcl_ObjSetVar2(interp, typeVariablePtr, NULL,
-		Tcl_NewStringObj([selectedFilter UTF8String], -1), TCL_GLOBAL_ONLY);
-    }
 
+	NSString *selectedFilter =
+	    [filterInfo.fileTypeNames objectAtIndex:filterInfo.fileTypeIndex];
+	Tcl_ObjSetVar2(interp, typeVariablePtr, NULL,
+		Tcl_NewStringObj([selectedFilter UTF8String], -1),
+		TCL_GLOBAL_ONLY);
+    }
 
   end:
     return result;
@@ -1069,6 +1170,8 @@ Tk_ChooseDirectoryObjCmd(
     NSOpenPanel *panel = [NSOpenPanel openPanel];
     NSInteger modalReturnCode = modalError;
     BOOL parentIsKey = NO;
+
+    [panel setDelegate:NSApp];
 
     for (i = 1; i < objc; i += 2) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], chooseOptionStrings,
@@ -1125,35 +1228,34 @@ Tk_ChooseDirectoryObjCmd(
     [panel setCanChooseDirectories:YES];
     [panel setCanCreateDirectories:!mustexist];
     if (cmdObj) {
-	callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
+    callbackInfo = ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
-    /*check for directory value, set to root if not specified; otherwise crashes with exception because of nil string parameter*/
+
+    /*
+     * Check for directory value, set to root if not specified; otherwise
+     * crashes with exception because of nil string parameter.
+     */
+
     if (!directory) {
 	directory = @"/";
     }
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
-    if (haveParentOption && parent && ![parent attachedSheet]) {
-	parentIsKey = [parent isKeyWindow];
-	[panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
-	[panel beginSheetModalForWindow:parent
-	       completionHandler:^(NSInteger returnCode)
-	       { [NSApp tkFilePanelDidEnd:panel
-		       returnCode:returnCode
-		       contextInfo:callbackInfo ]; } ];
-	modalReturnCode = cmdObj ? modalOther : [NSApp runModalForWindow:panel];
+    [panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
+    if (haveParentOption) {
+	parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
+	parentIsKey = parent && [parent isKeyWindow];
     } else {
-	[panel setDirectoryURL:[NSURL fileURLWithPath:directory isDirectory:YES]];
-	modalReturnCode = [panel runModal];
-	[NSApp tkFilePanelDidEnd:panel returnCode:modalReturnCode
-		contextInfo:callbackInfo];
+	parent = nil;
+	parentIsKey = False;
     }
+    modalReturnCode = showOpenSavePanel(panel, parent, callbackInfo);
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
     if (parentIsKey) {
 	[parent makeKeyWindow];
@@ -1199,35 +1301,44 @@ TkAboutDlg(void)
 
     [dateFormatter release];
 
-    NSMutableParagraphStyle *style =
-	    [[[NSParagraphStyle defaultParagraphStyle] mutableCopy]
-	    autorelease];
+    /*
+     * This replaces the old about dialog with a standard alert that displays
+     * correctly on 10.14.
+     */
 
-    [style setAlignment:NSCenterTextAlignment];
+    NSString *version =  @"Tcl " TCL_PATCH_LEVEL " & Tk " TCL_PATCH_LEVEL;
+    NSString *url = @"www.tcl-lang.org";
+    NSTextView *credits = [[NSTextView alloc] initWithFrame:NSMakeRect(0,0,300,300)];
+    NSFont *font = [NSFont systemFontOfSize:[NSFont systemFontSize]];
+    NSDictionary *textAttributes = [NSDictionary dictionaryWithObject:font
+					        forKey:NSFontAttributeName];
 
-    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
-	    @"Tcl & Tk", @"ApplicationName",
-	    @"Tcl " TCL_VERSION " & Tk " TK_VERSION, @"ApplicationVersion",
-	    @TK_PATCH_LEVEL, @"Version",
-	    image, @"ApplicationIcon",
-	    [NSString stringWithFormat:@"Copyright %1$C 1987-%2$@.", 0xA9,
-	    year], @"Copyright",
-	    [[[NSAttributedString alloc] initWithString:
-	    [NSString stringWithFormat:
-	    @"%1$C 1987-%2$@ Tcl Core Team." "\n\n"
-		"%1$C 1989-%2$@ Contributors." "\n\n"
-		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC." "\n\n"
-		"%1$C 2014-%2$@ Marc Culler." "\n\n"
-		"%1$C 2002-%2$@ Daniel A. Steffen." "\n\n"
-		"%1$C 2001-2009 Apple Inc." "\n\n"
-		"%1$C 2001-2002 Jim Ingham & Ian Reid" "\n\n"
-		"%1$C 1998-2000 Jim Ingham & Ray Johnson" "\n\n"
-		"%1$C 1998-2000 Scriptics Inc." "\n\n"
-		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year] attributes:
-	    [NSDictionary dictionaryWithObject:style
-	    forKey:NSParagraphStyleAttributeName]] autorelease], @"Credits",
-	    nil];
-    [NSApp orderFrontStandardAboutPanelWithOptions:options];
+    [credits insertText: [[NSAttributedString alloc]
+		 initWithString:[NSString stringWithFormat: @"\n"
+		"Tcl and Tk are distributed under a modified BSD license: "
+		"www.tcl.tk/software/tcltk/license.html\n\n"
+		"%1$C 1987-%2$@ Tcl Core Team and Contributers.\n\n"
+		"%1$C 2011-%2$@ Kevin Walzer/WordTech Communications LLC.\n\n"
+		"%1$C 2014-%2$@ Marc Culler.\n\n"
+		"%1$C 2002-2012 Daniel A. Steffen.\n\n"
+		"%1$C 2001-2009 Apple Inc.\n\n"
+		"%1$C 2001-2002 Jim Ingham & Ian Reid\n\n"
+		"%1$C 1998-2000 Jim Ingham & Ray Johnson\n\n"
+		"%1$C 1998-2000 Scriptics Inc.\n\n"
+		"%1$C 1996-1997 Sun Microsystems Inc.", 0xA9, year]
+	    attributes:textAttributes]
+            replacementRange:NSMakeRange(0,0)];
+    [credits setDrawsBackground:NO];
+    [credits setEditable:NO];
+
+    NSAlert *about = [[NSAlert alloc] init];
+
+    [[about window] setTitle:@"About Tcl & Tk"];
+    [about setMessageText: version];
+    [about setInformativeText:url];
+    about.accessoryView = credits;
+    [about runModal];
+    [about release];
 }
 
 /*
@@ -1257,7 +1368,7 @@ TkMacOSXStandardAboutPanelObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-    [NSApp orderFrontStandardAboutPanelWithOptions:[NSDictionary dictionary]];
+    TkAboutDlg();
     return TCL_OK;
 }
 
@@ -1330,7 +1441,7 @@ Tk_MessageBoxObjCmd(
 
 	case ALERT_ICON:
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertIconStrings,
-		    sizeof(char *), "value", TCL_EXACT, &iconIndex) != TCL_OK) {
+		    sizeof(char *), "-icon value", TCL_EXACT, &iconIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1360,7 +1471,7 @@ Tk_MessageBoxObjCmd(
 
 	case ALERT_TYPE:
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i + 1], alertTypeStrings,
-		    sizeof(char *), "value", TCL_EXACT, &typeIndex) != TCL_OK) {
+		    sizeof(char *), "-type value", TCL_EXACT, &typeIndex) != TCL_OK) {
 		goto end;
 	    }
 	    break;
@@ -1376,7 +1487,8 @@ Tk_MessageBoxObjCmd(
 	 */
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[indexDefaultOption + 1],
-		alertButtonStrings, sizeof(char *), "value", TCL_EXACT, &index) != TCL_OK) {
+		alertButtonStrings, sizeof(char *), "-default value",
+		TCL_EXACT, &index) != TCL_OK) {
 	    goto end;
 	}
 
@@ -1397,7 +1509,7 @@ Tk_MessageBoxObjCmd(
     [alert setAlertStyle:alertStyles[iconIndex]];
     i = 0;
     while (i < 3 && alertButtonNames[typeIndex][i]) {
-	[alert addButtonWithTitle:(NSString*)alertButtonNames[typeIndex][i++]];
+	[alert addButtonWithTitle:(NSString*) alertButtonNames[typeIndex][i++]];
     }
     buttons = [alert buttons];
     for (NSButton *b in buttons) {
@@ -1412,24 +1524,25 @@ Tk_MessageBoxObjCmd(
     [[buttons objectAtIndex: defaultNativeButtonIndex-1]
 	    setKeyEquivalent: @"\r"];
     if (cmdObj) {
-	callbackInfo = ckalloc(sizeof(AlertCallbackInfo));
 	if (Tcl_IsShared(cmdObj)) {
 	    cmdObj = Tcl_DuplicateObj(cmdObj);
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
+    callbackInfo = ckalloc(sizeof(AlertCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->typeIndex = typeIndex;
     parent = TkMacOSXDrawableWindow(((TkWindow *) tkwin)->window);
     if (haveParentOption && parent && ![parent attachedSheet]) {
 	parentIsKey = [parent isKeyWindow];
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 1090
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
  	[alert beginSheetModalForWindow:parent
-	       completionHandler:^(NSModalResponse returnCode)
-	       { [NSApp tkAlertDidEnd:alert
-			returnCode:returnCode
-			contextInfo:callbackInfo ]; } ];
+	       completionHandler:^(NSModalResponse returnCode) {
+	    [NSApp tkAlertDidEnd:alert
+		    returnCode:returnCode
+		    contextInfo:callbackInfo];
+	}];
 #else
 	[alert beginSheetModalForWindow:parent
 	       modalDelegate:NSApp
@@ -1437,7 +1550,7 @@ Tk_MessageBoxObjCmd(
 	       contextInfo:callbackInfo];
 #endif
 	modalReturnCode = cmdObj ? 0 :
-	    [NSApp runModalForWindow:[alert window]];
+	    [alert runModal];
     } else {
 	modalReturnCode = [alert runModal];
 	[NSApp tkAlertDidEnd:alert returnCode:modalReturnCode
@@ -1469,7 +1582,10 @@ typedef struct FontchooserData {
     Tk_Window parent;
 } FontchooserData;
 
-enum FontchooserEvent { FontchooserClosed, FontchooserSelection };
+enum FontchooserEvent {
+    FontchooserClosed,
+    FontchooserSelection
+};
 
 static void		FontchooserEvent(int kind);
 static Tcl_Obj *	FontchooserCget(FontchooserData *fcdPtr,
@@ -1561,8 +1677,8 @@ enum FontchooserOption {
  *
  * FontchooserEvent --
  *
- *	This processes events generated by user interaction with the
- *	font panel.
+ *	This processes events generated by user interaction with the font
+ *	panel.
  *
  * Results:
  *	None.
@@ -1621,9 +1737,8 @@ FontchooserEvent(
  *
  * FontchooserCget --
  *
- *	Helper for the FontchooserConfigure command to return the
- *	current value of any of the options (which may be NULL in
- *	the structure)
+ *	Helper for the FontchooserConfigure command to return the current value
+ *	of any of the options (which may be NULL in the structure).
  *
  * Results:
  *	Tcl object of option value.
@@ -1686,8 +1801,8 @@ FontchooserCget(
  *
  * FontchooserConfigureCmd --
  *
- *	Implementation of the 'tk fontchooser configure' ensemble command.
- *	See the user documentation for what it does.
+ *	Implementation of the 'tk fontchooser configure' ensemble command.  See
+ *	the user documentation for what it does.
  *
  * Results:
  *	See the user documentation.
@@ -1820,7 +1935,8 @@ FontchooserConfigureCmd(
 	    [fm setSelectedAttributes:fontPanelFontAttributes
 		    isMultiple:NO];
 	    if ([fp isVisible]) {
-		TkSendVirtualEvent(fcdPtr->parent, "TkFontchooserFontChanged", NULL);
+		TkSendVirtualEvent(fcdPtr->parent,
+			"TkFontchooserFontChanged", NULL);
 	    }
 	    break;
 	case FontchooserCmd:
@@ -1848,9 +1964,9 @@ FontchooserConfigureCmd(
  *
  * FontchooserShowCmd --
  *
- *	Implements the 'tk fontchooser show' ensemble command. The
- *	per-interp configuration data for the dialog is held in an interp
- *	associated structure.
+ *	Implements the 'tk fontchooser show' ensemble command. The per-interp
+ *	configuration data for the dialog is held in an interp associated
+ *	structure.
  *
  * Results:
  *	See the user documentation.
@@ -1876,8 +1992,10 @@ FontchooserShowCmd(
 	Tk_CreateEventHandler(fcdPtr->parent, StructureNotifyMask,
 		FontchooserParentEventHandler, fcdPtr);
     }
+
     NSFontManager *fm = [NSFontManager sharedFontManager];
     NSFontPanel *fp = [fm fontPanel:YES];
+
     if ([fp delegate] != NSApp) {
 	[fp setDelegate:NSApp];
     }
@@ -1895,8 +2013,8 @@ FontchooserShowCmd(
  *
  * FontchooserHideCmd --
  *
- *	Implementation of the 'tk fontchooser hide' ensemble. See the
- *	user documentation for details.
+ *	Implementation of the 'tk fontchooser hide' ensemble. See the user
+ *	documentation for details.
  *
  * Results:
  *	See the user documentation.
@@ -1915,6 +2033,7 @@ FontchooserHideCmd(
     Tcl_Obj *const objv[])
 {
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
+
     if ([fp isVisible]) {
 	[fp orderOut:NSApp];
     }
@@ -1948,7 +2067,7 @@ FontchooserParentEventHandler(
     if (eventPtr->type == DestroyNotify) {
 	Tk_DeleteEventHandler(fcdPtr->parent, StructureNotifyMask,
 		FontchooserParentEventHandler, fcdPtr);
-	fcdPtr->parent = None;
+	fcdPtr->parent = NULL;
 	FontchooserHideCmd(NULL, NULL, 0, NULL);
     }
 }
@@ -1995,8 +2114,8 @@ DeleteFontchooserData(
  *
  * TkInitFontchooser --
  *
- *	Associate the font chooser configuration data with the Tcl
- *	interpreter. There is one font chooser per interp.
+ *	Associate the font chooser configuration data with the Tcl interpreter.
+ *	There is one font chooser per interp.
  *
  * Results:
  *	None.

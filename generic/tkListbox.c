@@ -542,13 +542,13 @@ Tk_ListboxObjCmd(
     listPtr->itemAttrTable	 = ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(listPtr->itemAttrTable, TCL_ONE_WORD_KEYS);
     listPtr->relief		 = TK_RELIEF_RAISED;
-    listPtr->textGC		 = None;
-    listPtr->selFgColorPtr	 = None;
-    listPtr->selTextGC		 = None;
+    listPtr->textGC		 = NULL;
+    listPtr->selFgColorPtr	 = NULL;
+    listPtr->selTextGC		 = NULL;
     listPtr->fullLines		 = 1;
     listPtr->xScrollUnit	 = 1;
     listPtr->exportSelection	 = 1;
-    listPtr->cursor		 = None;
+    listPtr->cursor		 = NULL;
     listPtr->state		 = STATE_NORMAL;
     listPtr->gray		 = None;
     listPtr->justify             = TK_JUSTIFY_LEFT;
@@ -1488,10 +1488,10 @@ DestroyListbox(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-    if (listPtr->textGC != None) {
+    if (listPtr->textGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->textGC);
     }
-    if (listPtr->selTextGC != None) {
+    if (listPtr->selTextGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->selTextGC);
     }
     if (listPtr->gray != None) {
@@ -1791,7 +1791,7 @@ ListboxWorldChanged(
 
     gcValues.font = Tk_FontId(listPtr->tkfont);
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
-    if (listPtr->textGC != None) {
+    if (listPtr->textGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->textGC);
     }
     listPtr->textGC = gc;
@@ -1802,7 +1802,7 @@ ListboxWorldChanged(
     gcValues.font = Tk_FontId(listPtr->tkfont);
     mask = GCForeground | GCFont;
     gc = Tk_GetGC(listPtr->tkwin, mask, &gcValues);
-    if (listPtr->selTextGC != None) {
+    if (listPtr->selTextGC != NULL) {
 	Tk_FreeGC(listPtr->display, listPtr->selTextGC);
     }
     listPtr->selTextGC = gc;
@@ -3431,8 +3431,8 @@ static char *
 ListboxListVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Not used. */
+    const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
     Listbox *listPtr = clientData;
@@ -3441,24 +3441,32 @@ ListboxListVarProc(
     Tcl_HashEntry *entry;
 
     /*
-     * See ticket [5d991b82].
-     */
-
-    if (listPtr->listVarName == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    ListboxListVarProc, clientData);
-	}
-	return NULL;
-    }
-
-    /*
      * Bwah hahahaha! Puny mortal, you can't unset a -listvar'd variable!
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+
+        if (!Tcl_InterpDeleted(interp) && listPtr->listVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        listPtr->listVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        ListboxListVarProc, probe);
+                if (probe == (ClientData)listPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * listVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
 		    listPtr->listObj, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, listPtr->listVarName,

@@ -145,6 +145,25 @@ bind TEntry <Control-Key-d>		{ ttk::entry::Delete %W }
 bind TEntry <Control-Key-h>		{ ttk::entry::Backspace %W }
 bind TEntry <Control-Key-k>		{ %W delete insert end }
 
+# Bindings for IME text input.
+
+bind TEntry <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind TEntry <<TkEndIMEMarkedText>> {
+    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+	bell
+    } else {
+	%W selection range $mark insert
+    }
+}
+bind TEntry <<TkClearIMEMarkedText>> {
+    %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
+}
+bind TEntry <<TkAccentBackspace>> {
+    ttk::entry::Backspace %W
+}
+
 ### Clipboard procedures.
 #
 
@@ -211,7 +230,6 @@ proc ttk::entry::ClosestGap {w x} {
 ## See $index -- Make sure that the character at $index is visible.
 #
 proc ttk::entry::See {w {index insert}} {
-    update idletasks	;# ensure scroll data up-to-date
     set c [$w index $index]
     # @@@ OR: check [$w index left] / [$w index right]
     if {$c < [$w index @0] || $c >= [$w index @[winfo width $w]]} {

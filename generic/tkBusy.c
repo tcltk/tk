@@ -519,7 +519,8 @@ CreateBusy(
     Tk_Window tkRef)		/* Window hosting the busy window */
 {
     Busy *busyPtr;
-    int length, x, y;
+    size_t length;
+    int x, y;
     const char *fmt;
     char *name;
     Tk_Window tkBusy, tkChild, tkParent;
@@ -568,7 +569,7 @@ CreateBusy(
     busyPtr->height = Tk_Height(tkRef);
     busyPtr->x = Tk_X(tkRef);
     busyPtr->y = Tk_Y(tkRef);
-    busyPtr->cursor = None;
+    busyPtr->cursor = NULL;
     Tk_SetClass(tkBusy, "Busy");
     busyPtr->optionTable = Tk_CreateOptionTable(interp, busyOptionSpecs);
     if (Tk_InitOptions(interp, (char *) busyPtr, busyPtr->optionTable,
@@ -598,7 +599,7 @@ CreateBusy(
      */
 
     Tk_ManageGeometry(tkBusy, &busyMgrInfo, busyPtr);
-    if (busyPtr->cursor != None) {
+    if (busyPtr->cursor != NULL) {
 	Tk_DefineCursor(tkBusy, busyPtr->cursor);
     }
 
@@ -643,7 +644,7 @@ ConfigureBusy(
 	return TCL_ERROR;
     }
     if (busyPtr->cursor != oldCursor) {
-	if (busyPtr->cursor == None) {
+	if (busyPtr->cursor == NULL) {
 	    Tk_UndefineCursor(busyPtr->tkBusy);
 	} else {
 	    Tk_DefineCursor(busyPtr->tkBusy, busyPtr->cursor);
@@ -878,7 +879,7 @@ Tk_BusyObjCmd(
 		hPtr = Tcl_NextHashEntry(&cursor)) {
 	    busyPtr = Tcl_GetHashValue(hPtr);
 	    if (pattern == NULL ||
-		    Tcl_StringMatch(Tk_PathName(busyPtr->tkRef), pattern)) {
+		    Tcl_StringCaseMatch(Tk_PathName(busyPtr->tkRef), pattern, 0)) {
 		Tcl_ListObjAppendElement(interp, objPtr,
 			TkNewWindowObj(busyPtr->tkRef));
 	    }

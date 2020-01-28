@@ -208,7 +208,7 @@ TkpGetString(
 	Tcl_DStringValue(&buf)[len] = '\0';
 
 	if (len == 1) {
-	    len = Tcl_UniCharToUtf((unsigned char) Tcl_DStringValue(&buf)[0],
+	    len = TkUniCharToUtf((unsigned char) Tcl_DStringValue(&buf)[0],
 		    Tcl_DStringValue(dsPtr));
 	    Tcl_DStringSetLength(dsPtr, len);
 	} else {
@@ -279,9 +279,9 @@ TkpSetKeycodeAndState(
     mincode = 0;
     maxcode = -1;
     XDisplayKeycodes(dispPtr->display, &mincode, &maxcode);
-    if (keycode < mincode) {
+    if (keycode < (KeyCode)mincode) {
 	keycode = mincode;
-    } else if (keycode > maxcode) {
+    } else if (keycode > (KeyCode)maxcode) {
 	keycode = maxcode;
     }
 

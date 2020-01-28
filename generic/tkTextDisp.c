@@ -24,6 +24,11 @@
 
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
+#define OK_TO_LOG (!TkpAppIsDrawing())
+#define FORCE_DISPLAY(winPtr) TkpDisplayWindow(winPtr)
+#else
+#define OK_TO_LOG 1
+#define FORCE_DISPLAY(winPtr)
 #endif
 
 /*
@@ -203,12 +208,21 @@ typedef struct TextStyle {
     (fabs((double1)-(double2))*((scaleFactor)+1.0) < 0.3)
 
 /*
- * Macro to make debugging/testing logging a little easier.
+ * Macros to make debugging/testing logging a little easier.
+ *
+ * On OSX 10.14 Drawing procedures are sometimes run because the system has
+ * decided to redraw the window.  This can corrupt the data that a test is
+ * trying to collect.  So we don't write to the logging variables when the
+ * drawing procedure is being run that way.  Other systems can always log.
  */
 
-#define LOG(toVar,what) \
-    Tcl_SetVar2(textPtr->interp, toVar, NULL, (what), \
-	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
+#define LOG(toVar,what)							\
+    if (OK_TO_LOG)							\
+        Tcl_SetVar2(textPtr->interp, toVar, NULL, (what),		\
+		    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
+#define CLEAR(var)							\
+    if (OK_TO_LOG)							\
+	Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
 
 /*
  * The following structure describes one line of the display, which may be
@@ -483,13 +497,15 @@ static TkTextDispChunk *baseCharChunkPtr = NULL;
  *				different character might be under the mouse
  *				cursor now). Need to recompute the current
  *				character before the next redisplay.
+ * OUT_OF_SYNC                  1 means that the last <<WidgetViewSync>> event had
+ *                              value 0, indicating that the widget is out of sync.
  */
 
 #define DINFO_OUT_OF_DATE	1
 #define REDRAW_PENDING		2
 #define REDRAW_BORDERS		4
 #define REPICK_NEEDED		8
-
+#define OUT_OF_SYNC             16
 /*
  * Action values for FreeDLines:
  *
@@ -610,7 +626,7 @@ static void		AsyncUpdateLineMetrics(ClientData clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(ClientData clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
-                            CONST TkTextIndex *indexPtr);
+                            const TkTextIndex *indexPtr);
 
 /*
  * Result values returned by TextGetScrollInfoObj:
@@ -650,7 +666,7 @@ TkTextCreateDInfo(
     dInfoPtr = ckalloc(sizeof(TextDInfo));
     Tcl_InitHashTable(&dInfoPtr->styleTable, sizeof(StyleValues)/sizeof(int));
     dInfoPtr->dLinePtr = NULL;
-    dInfoPtr->copyGC = None;
+    dInfoPtr->copyGC = NULL;
     gcValues.graphics_exposures = True;
     dInfoPtr->scrollGC = Tk_GetGC(textPtr->tkwin, GCGraphicsExposures,
 	    &gcValues);
@@ -667,7 +683,7 @@ TkTextCreateDInfo(
     dInfoPtr->scanTotalYScroll = 0;
     dInfoPtr->scanMarkY = 0;
     dInfoPtr->dLinesInvalidated = 0;
-    dInfoPtr->flags = DINFO_OUT_OF_DATE;
+    dInfoPtr->flags = 0;
     dInfoPtr->topPixelOffset = 0;
     dInfoPtr->newTopPixelOffset = 0;
     dInfoPtr->currentMetricUpdateLine = -1;
@@ -714,7 +730,7 @@ TkTextFreeDInfo(
 
     FreeDLines(textPtr, dInfoPtr->dLinePtr, NULL, DLINE_UNLINK);
     Tcl_DeleteHashTable(&dInfoPtr->styleTable);
-    if (dInfoPtr->copyGC != None) {
+    if (dInfoPtr->copyGC != NULL) {
 	Tk_FreeGC(textPtr->display, dInfoPtr->copyGC);
     }
     Tk_FreeGC(textPtr->display, dInfoPtr->scrollGC);
@@ -846,7 +862,7 @@ GetStyle(
             border = tagPtr->selBorder;
         }
 
-        if ((tagPtr->selFgColor != None) && (isSelected)) {
+        if ((tagPtr->selFgColor != NULL) && isSelected) {
             fgColor = tagPtr->selFgColor;
         }
 
@@ -873,11 +889,11 @@ GetStyle(
 	    styleValues.bgStipple = tagPtr->bgStipple;
 	    bgStipplePrio = tagPtr->priority;
 	}
-	if ((fgColor != None) && (tagPtr->priority > fgPrio)) {
+	if ((fgColor != NULL) && (tagPtr->priority > fgPrio)) {
 	    styleValues.fgColor = fgColor;
 	    fgPrio = tagPtr->priority;
 	}
-	if ((tagPtr->tkfont != None) && (tagPtr->priority > fontPrio)) {
+	if ((tagPtr->tkfont != NULL) && (tagPtr->priority > fontPrio)) {
 	    styleValues.tkfont = tagPtr->tkfont;
 	    fontPrio = tagPtr->priority;
 	}
@@ -915,9 +931,9 @@ GetStyle(
 		&& (tagPtr->priority > overstrikePrio)) {
 	    styleValues.overstrike = tagPtr->overstrike;
 	    overstrikePrio = tagPtr->priority;
-            if (tagPtr->overstrikeColor != None) {
+            if (tagPtr->overstrikeColor != NULL) {
                  styleValues.overstrikeColor = tagPtr->overstrikeColor;
-            } else if (fgColor != None) {
+            } else if (fgColor != NULL) {
                  styleValues.overstrikeColor = fgColor;
             }
 	}
@@ -960,9 +976,9 @@ GetStyle(
 		&& (tagPtr->priority > underlinePrio)) {
 	    styleValues.underline = tagPtr->underline;
 	    underlinePrio = tagPtr->priority;
-            if (tagPtr->underlineColor != None) {
+            if (tagPtr->underlineColor != NULL) {
                  styleValues.underlineColor = tagPtr->underlineColor;
-            } else if (fgColor != None) {
+            } else if (fgColor != NULL) {
                  styleValues.underlineColor = fgColor;
             }
 	}
@@ -1009,7 +1025,7 @@ GetStyle(
 	}
 	stylePtr->bgGC = Tk_GetGC(textPtr->tkwin, mask, &gcValues);
     } else {
-	stylePtr->bgGC = None;
+	stylePtr->bgGC = NULL;
     }
     mask = GCFont;
     gcValues.font = Tk_FontId(styleValues.tkfont);
@@ -1060,16 +1076,16 @@ FreeStyle(
 {
     stylePtr->refCount--;
     if (stylePtr->refCount == 0) {
-	if (stylePtr->bgGC != None) {
+	if (stylePtr->bgGC != NULL) {
 	    Tk_FreeGC(textPtr->display, stylePtr->bgGC);
 	}
-	if (stylePtr->fgGC != None) {
+	if (stylePtr->fgGC != NULL) {
 	    Tk_FreeGC(textPtr->display, stylePtr->fgGC);
 	}
-	if (stylePtr->ulGC != None) {
+	if (stylePtr->ulGC != NULL) {
 	    Tk_FreeGC(textPtr->display, stylePtr->ulGC);
 	}
-	if (stylePtr->ovGC != None) {
+	if (stylePtr->ovGC != NULL) {
 	    Tk_FreeGC(textPtr->display, stylePtr->ovGC);
 	}
 	Tcl_DeleteHashEntry(stylePtr->hPtr);
@@ -2674,7 +2690,7 @@ DisplayLineBackground(
 	if ((chunkPtr->nextPtr == NULL) && (rightX < maxX)) {
 	    rightX = maxX;
 	}
-	if (chunkPtr->stylePtr->bgGC != None) {
+	if (chunkPtr->stylePtr->bgGC != NULL) {
 	    /*
 	     * Not visible - bail out now.
 	     */
@@ -3056,10 +3072,13 @@ AsyncUpdateLineMetrics(
 	 * We have looped over all lines, so we're done. We must release our
 	 * refCount on the widget (the timer token was already set to NULL
 	 * above). If there is a registered aftersync command, run that first.
+	 * Cancel any pending idle task which would try to run the command
+	 * after the afterSyncCmd pointer had been set to NULL.
 	 */
 
         if (textPtr->afterSyncCmd) {
             int code;
+	    Tcl_CancelIdleCall(TkTextRunAfterSyncCmd, textPtr);
             Tcl_Preserve((ClientData) textPtr->interp);
             code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd,
                     TCL_EVAL_GLOBAL);
@@ -3077,7 +3096,6 @@ AsyncUpdateLineMetrics(
          * with its internal data (actually it will be after the next trip
          * through the event loop, because the widget redraws at idle-time).
          */
-
         GenerateWidgetViewSyncEvent(textPtr, 1);
 
 	if (textPtr->refCount-- <= 1) {
@@ -3101,8 +3119,14 @@ AsyncUpdateLineMetrics(
  * GenerateWidgetViewSyncEvent --
  *
  *      Send the <<WidgetViewSync>> event related to the text widget
- *      line metrics asynchronous update.
- *      This is equivalent to:
+ *      line metrics asynchronous update.  These events should only
+ *      be sent when the sync status has changed.  So this function
+ *      compares the requested state with the state saved in the
+ *      TkText structure, and only generates the event if they are
+ *      different.  This means that it is safe to call this function
+ *      at any time when the state is known.
+ *
+ *      If an event is sent, the effect is equivalent to:
  *         event generate $textWidget <<WidgetViewSync>> -data $s
  *      where $s is the sync status: true (when the widget view is in
  *      sync with its internal data) or false (when it is not).
@@ -3118,11 +3142,33 @@ AsyncUpdateLineMetrics(
 
 static void
 GenerateWidgetViewSyncEvent(
-    TkText *textPtr,		/* Information about text widget. */
-    Bool InSync)                /* true if in sync, false otherwise */
+    TkText *textPtr,	  /* Information about text widget. */
+    Bool InSync)          /* true if becoming in sync, false otherwise */
 {
-    TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
-        Tcl_NewBooleanObj(InSync));
+    Bool NewSyncState = (InSync != 0); /* ensure 0 or 1 value */
+    Bool OldSyncState = !(textPtr->dInfoPtr->flags & OUT_OF_SYNC);
+
+    /*
+     * OSX 10.14 needs to be told to display the window when the Text Widget
+     * is in sync.  (That is, to run DisplayText inside of the drawRect
+     * method.)  Otherwise the screen might not get updated until an event
+     * like a mouse click is received.  But that extra drawing corrupts the
+     * data that the test suite is trying to collect.
+     */
+
+    if (!tkTextDebug) {
+	FORCE_DISPLAY(textPtr->tkwin);
+    }
+
+    if (NewSyncState != OldSyncState) {
+	if (NewSyncState) {
+	    textPtr->dInfoPtr->flags &= ~OUT_OF_SYNC;
+	} else {
+	    textPtr->dInfoPtr->flags |= OUT_OF_SYNC;
+	}
+        TkSendVirtualEvent(textPtr->tkwin, "WidgetViewSync",
+                           Tcl_NewBooleanObj(NewSyncState));
+    }
 }
 
 /*
@@ -3165,6 +3211,9 @@ TkTextUpdateLineMetrics(
     TkTextLine *linePtr = NULL;
     int count = 0;
     int totalLines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
+    int fullUpdateRequested = (lineNum == 0 &&
+                               endLine == totalLines &&
+                               doThisMuch == -1);
 
     if (totalLines == 0) {
 	/*
@@ -3175,6 +3224,7 @@ TkTextUpdateLineMetrics(
     }
 
     while (1) {
+
 	/*
 	 * Get a suitable line.
 	 */
@@ -3201,6 +3251,7 @@ TkTextUpdateLineMetrics(
 	     */
 
 	    if (textPtr->dInfoPtr->metricEpoch == -1 && lineNum == endLine) {
+
 		/*
 		 * We have looped over all lines, so we're done.
 		 */
@@ -3224,10 +3275,12 @@ TkTextUpdateLineMetrics(
 
 	    if (TkBTreeLinePixelEpoch(textPtr, linePtr)
 		    == textPtr->dInfoPtr->lineMetricUpdateEpoch) {
+
 		/*
 		 * This line is already up to date. That means there's nothing
 		 * to do here.
 		 */
+
 	    } else if (doThisMuch == -1) {
 		count += 8 * TkTextUpdateOneLine(textPtr, linePtr, 0,NULL,0);
 	    } else {
@@ -3249,6 +3302,7 @@ TkTextUpdateLineMetrics(
 		    indexPtr = &textPtr->dInfoPtr->metricIndex;
 		    pixelHeight = textPtr->dInfoPtr->metricPixelHeight;
 		} else {
+
 		    /*
 		     * We must reset the partial line height calculation data
 		     * here, so we don't use it when it is out of date.
@@ -3272,6 +3326,7 @@ TkTextUpdateLineMetrics(
 			pixelHeight, indexPtr, 1);
 
 		if (indexPtr->linePtr == linePtr) {
+
 		    /*
 		     * We didn't complete the logical line, because it
 		     * produced very many display lines, which must be because
@@ -3280,6 +3335,7 @@ TkTextUpdateLineMetrics(
 		     */
 
 		    if (pixelHeight == 0) {
+
 			/*
 			 * These have already been stored, unless we just
 			 * started the new line.
@@ -3301,6 +3357,7 @@ TkTextUpdateLineMetrics(
 		textPtr->dInfoPtr->metricEpoch = -1;
 	    }
 	} else {
+
 	    /*
 	     * We must never recalculate the height of the last artificial
 	     * line. It must stay at zero, and if we recalculate it, it will
@@ -3325,12 +3382,16 @@ TkTextUpdateLineMetrics(
 	}
     }
     if (doThisMuch == -1) {
+
 	/*
-	 * If we were requested to provide a full update, then also update the
-	 * scrollbar.
+	 * If we were requested to update the entire range, then also update
+	 * the scrollbar.
 	 */
 
 	GetYView(textPtr->interp, textPtr, 1);
+    }
+    if (fullUpdateRequested) {
+        GenerateWidgetViewSyncEvent(textPtr, 1);
     }
     return lineNum;
 }
@@ -3500,8 +3561,12 @@ TextInvalidateLineMetrics(
 	textPtr->refCount++;
 	dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		AsyncUpdateLineMetrics, textPtr);
-        GenerateWidgetViewSyncEvent(textPtr, 0);
     }
+
+    /*
+     * The widget is out of sync: send a <<WidgetViewSync>> event.
+     */
+    GenerateWidgetViewSyncEvent(textPtr, 0);
 }
 
 /*
@@ -4136,7 +4201,7 @@ DisplayText(
     Tcl_Preserve(interp);
 
     if (tkTextDebug) {
-	Tcl_SetVar2(interp, "tk_textRelayout", NULL, "", TCL_GLOBAL_ONLY);
+	CLEAR("tk_textRelayout");
     }
 
     if (!Tk_IsMapped(textPtr->tkwin) || (dInfoPtr->maxX <= dInfoPtr->x)
@@ -4147,7 +4212,7 @@ DisplayText(
     }
     numRedisplays++;
     if (tkTextDebug) {
-	Tcl_SetVar2(interp, "tk_textRedraw", NULL, "", TCL_GLOBAL_ONLY);
+	CLEAR("tk_textRedraw");
     }
 
     /*
@@ -4518,7 +4583,7 @@ DisplayText(
 			    dlPtr->spaceAbove,
 			    dlPtr->height-dlPtr->spaceAbove-dlPtr->spaceBelow,
 			    dlPtr->baseline - dlPtr->spaceAbove, NULL,
-			    (Drawable) None, dlPtr->y + dlPtr->spaceAbove);
+			    None, dlPtr->y + dlPtr->spaceAbove);
 		}
 	    }
 	}
@@ -5134,6 +5199,7 @@ TkTextRelayoutWindow(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     GC newGC;
     XGCValues gcValues;
+    Bool inSync = 1;
 
     /*
      * Schedule the window redisplay. See TkTextChanged for the reason why
@@ -5142,6 +5208,7 @@ TkTextRelayoutWindow(
 
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
 	Tcl_DoWhenIdle(DisplayText, textPtr);
+	inSync = 0;
     }
     dInfoPtr->flags |= REDRAW_PENDING|REDRAW_BORDERS|DINFO_OUT_OF_DATE
 	    |REPICK_NEEDED;
@@ -5152,7 +5219,7 @@ TkTextRelayoutWindow(
 
     gcValues.graphics_exposures = False;
     newGC = Tk_GetGC(textPtr->tkwin, GCGraphicsExposures, &gcValues);
-    if (dInfoPtr->copyGC != None) {
+    if (dInfoPtr->copyGC != NULL) {
 	Tk_FreeGC(textPtr->display, dInfoPtr->copyGC);
     }
     dInfoPtr->copyGC = newGC;
@@ -5213,6 +5280,7 @@ TkTextRelayoutWindow(
     dInfoPtr->yScrollFirst = dInfoPtr->yScrollLast = -1;
 
     if (mask & TK_TEXT_LINE_GEOMETRY) {
+
 	/*
 	 * Set up line metric recalculation.
 	 *
@@ -5237,8 +5305,10 @@ TkTextRelayoutWindow(
 	    textPtr->refCount++;
 	    dInfoPtr->lineUpdateTimer = Tcl_CreateTimerHandler(1,
 		    AsyncUpdateLineMetrics, textPtr);
-            GenerateWidgetViewSyncEvent(textPtr, 0);
+	    inSync = 0;
 	}
+
+        GenerateWidgetViewSyncEvent(textPtr, inSync);
     }
 }
 
@@ -6263,10 +6333,7 @@ TkTextPendingsync(
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
-    return (
-        ((dInfoPtr->metricEpoch == -1) &&
-         (dInfoPtr->lastMetricUpdateLine == dInfoPtr->currentMetricUpdateLine)) ?
-        0 : 1);
+    return ((dInfoPtr->flags & OUT_OF_SYNC) != 0);
 }
 
 /*
@@ -6921,7 +6988,7 @@ FindDLine(
 static int
 IsStartOfNotMergedLine(
       TkText *textPtr,              /* Widget record for text widget. */
-      CONST TkTextIndex *indexPtr)  /* Index to check. */
+      const TkTextIndex *indexPtr)  /* Index to check. */
 {
     TkTextIndex indexPtr2;
 
@@ -7960,7 +8027,7 @@ CharDisplayProc(
      */
 
     if (!sValuePtr->elide && (numBytes > offsetBytes)
-	    && (stylePtr->fgGC != None)) {
+	    && (stylePtr->fgGC != NULL)) {
 #if TK_DRAW_IN_CONTEXT
 	int start = ciPtr->baseOffset + offsetBytes;
 	int len = ciPtr->numBytes - offsetBytes;

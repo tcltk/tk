@@ -191,15 +191,15 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_ENTRY_BORDER_WIDTH, -1, Tk_Offset(Entry, borderWidth), 0, 0, 0},
-    {TK_OPTION_BORDER, "-buttonbackground", "Button.background", "Background",
+    {TK_OPTION_BORDER, "-buttonbackground", "buttonBackground", "Background",
 	DEF_BUTTON_BG_COLOR, -1, Tk_Offset(Spinbox, buttonBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
-    {TK_OPTION_CURSOR, "-buttoncursor", "Button.cursor", "Cursor",
+    {TK_OPTION_CURSOR, "-buttoncursor", "buttonCursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(Spinbox, bCursor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_RELIEF, "-buttondownrelief", "Button.relief", "Relief",
+    {TK_OPTION_RELIEF, "-buttondownrelief", "buttonDownRelief", "Relief",
 	DEF_BUTTON_RELIEF, -1, Tk_Offset(Spinbox, bdRelief), 0, 0, 0},
-    {TK_OPTION_RELIEF, "-buttonuprelief", "Button.relief", "Relief",
+    {TK_OPTION_RELIEF, "-buttonuprelief", "buttonUpRelief", "Relief",
 	DEF_BUTTON_RELIEF, -1, Tk_Offset(Spinbox, buRelief), 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_SPINBOX_CMD, -1, Tk_Offset(Spinbox, command),
@@ -524,16 +524,16 @@ Tk_EntryObjCmd(
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
 
-    entryPtr->cursor		= None;
+    entryPtr->cursor		= NULL;
     entryPtr->exportSelection	= 1;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
     entryPtr->displayString	= entryPtr->string;
     entryPtr->inset		= XPAD;
-    entryPtr->textGC		= None;
-    entryPtr->selTextGC		= None;
-    entryPtr->highlightGC	= None;
+    entryPtr->textGC		= NULL;
+    entryPtr->selTextGC		= NULL;
+    entryPtr->highlightGC	= NULL;
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
@@ -1033,10 +1033,10 @@ DestroyEntry(
 		EntryTextVarProc, entryPtr);
 	entryPtr->flags &= ~ENTRY_VAR_TRACED;
     }
-    if (entryPtr->textGC != None) {
+    if (entryPtr->textGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->textGC);
     }
-    if (entryPtr->selTextGC != None) {
+    if (entryPtr->selTextGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
     Tcl_DeleteTimerHandler(entryPtr->insertBlinkHandler);
@@ -1430,7 +1430,7 @@ EntryWorldChanged(
     ClientData instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
-    GC gc = None;
+    GC gc = NULL;
     unsigned long mask;
     Tk_3DBorder border;
     XColor *colorPtr;
@@ -1482,7 +1482,7 @@ EntryWorldChanged(
     gcValues.graphics_exposures = False;
     mask = GCForeground | GCFont | GCGraphicsExposures;
     gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
-    if (entryPtr->textGC != None) {
+    if (entryPtr->textGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->textGC);
     }
     entryPtr->textGC = gc;
@@ -1493,7 +1493,7 @@ EntryWorldChanged(
     gcValues.font = Tk_FontId(entryPtr->tkfont);
     mask = GCForeground | GCFont;
     gc = Tk_GetGC(entryPtr->tkwin, mask, &gcValues);
-    if (entryPtr->selTextGC != None) {
+    if (entryPtr->selTextGC != NULL) {
 	Tk_FreeGC(entryPtr->display, entryPtr->selTextGC);
     }
     entryPtr->selTextGC = gc;
@@ -1513,17 +1513,15 @@ EntryWorldChanged(
  *
  * TkpDrawEntryBorderAndFocus --
  *
- *	This function redraws the border of an entry widget. It overrides the
- *	generic border drawing code if the entry widget parameters are such
- *	that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native entry borders.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1542,17 +1540,15 @@ TkpDrawEntryBorderAndFocus(
  *
  * TkpDrawSpinboxButtons --
  *
- *	This function redraws the buttons of an spinbox widget. It overrides
- *	the generic button drawing code if the spinbox widget parameters are
- *	such that the native widget drawing is a good fit. This version just
- *	returns 0, so platforms that don't do special native drawing don't
- *	have to implement it.
+ *	Stub function for Tk on platforms other than Aqua
+ *	(Windows and X11), which do not draw native spinbox buttons.
+ *	See macosx/tkMacOSXEntry.c for function definition in Tk Aqua.
  *
  * Results:
- *	1 if it has drawn the border, 0 if not.
+ *	Returns 0.
  *
  * Side effects:
- *	May draw the entry border into pixmap.
+ *	None.
  *
  *--------------------------------------------------------------
  */
@@ -1927,7 +1923,7 @@ EntryComputeGeometry(
 
     if (entryPtr->showChar != NULL) {
 	int ch;
-	char buf[6];
+	char buf[4];
 	int size;
 
 	/*
@@ -2457,9 +2453,9 @@ EntryEventProc(
 	    } else if ((elem == SEL_BUTTONDOWN) || (elem == SEL_BUTTONUP)) {
 		cursor = sbPtr->bCursor;
 	    } else {
-		cursor = None;
+		cursor = NULL;
 	    }
-	    if (cursor != None) {
+	    if (cursor != NULL) {
 		Tk_DefineCursor(entryPtr->tkwin, cursor);
 	    } else {
 		Tk_UndefineCursor(entryPtr->tkwin);
@@ -3135,8 +3131,8 @@ static char *
 EntryTextVarProc(
     ClientData clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    const char *name1,		/* Not used. */
+    const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
     Entry *entryPtr = clientData;
@@ -3150,32 +3146,39 @@ EntryTextVarProc(
     }
 
     /*
-     * See ticket [5d991b82].
-     */
-
-    if (entryPtr->textVarName == NULL) {
-	if (!(flags & TCL_INTERP_DESTROYED)) {
-	    Tcl_UntraceVar2(interp, name1, name2,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    EntryTextVarProc, clientData);
-	}
- 	return NULL;
-     }
-
-    /*
      * If the variable is unset, then immediately recreate it unless the whole
      * interpreter is going away.
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-	if ((flags & TCL_TRACE_DESTROYED) && !(flags & TCL_INTERP_DESTROYED)) {
+        if (!Tcl_InterpDeleted(interp) && entryPtr->textVarName) {
+            ClientData probe = NULL;
+
+            do {
+                probe = Tcl_VarTraceInfo(interp,
+                        entryPtr->textVarName,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        EntryTextVarProc, probe);
+                if (probe == (ClientData)entryPtr) {
+                    break;
+                }
+            } while (probe);
+            if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * textVarName, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+                return NULL;
+            }
 	    Tcl_SetVar2(interp, entryPtr->textVarName, NULL,
 		    entryPtr->string, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, entryPtr->textVarName, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    EntryTextVarProc, clientData);
 	    entryPtr->flags |= ENTRY_VAR_TRACED;
-	}
+        }
 	return NULL;
     }
 
@@ -3220,7 +3223,7 @@ EntryValidate(
 				 * string). */
 {
     register Tcl_Interp *interp = entryPtr->interp;
-    int code, bool;
+    int code, isOK;
 
     code = Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
 
@@ -3242,7 +3245,7 @@ EntryValidate(
      */
 
     if (Tcl_GetBooleanFromObj(interp, Tcl_GetObjResult(interp),
-	    &bool) != TCL_OK) {
+	    &isOK) != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		 "\n    (invalid boolean result from validation command)");
 	Tcl_BackgroundException(interp, TCL_ERROR);
@@ -3251,7 +3254,7 @@ EntryValidate(
     }
 
     Tcl_ResetResult(interp);
-    return (bool ? TCL_OK : TCL_BREAK);
+    return (isOK ? TCL_OK : TCL_BREAK);
 }
 
 /*
@@ -3633,22 +3636,22 @@ Tk_SpinboxObjCmd(
     entryPtr->selectFirst	= -1;
     entryPtr->selectLast	= -1;
 
-    entryPtr->cursor		= None;
+    entryPtr->cursor		= NULL;
     entryPtr->exportSelection	= 1;
     entryPtr->justify		= TK_JUSTIFY_LEFT;
     entryPtr->relief		= TK_RELIEF_FLAT;
     entryPtr->state		= STATE_NORMAL;
     entryPtr->displayString	= entryPtr->string;
     entryPtr->inset		= XPAD;
-    entryPtr->textGC		= None;
-    entryPtr->selTextGC		= None;
-    entryPtr->highlightGC	= None;
+    entryPtr->textGC		= NULL;
+    entryPtr->selTextGC		= NULL;
+    entryPtr->highlightGC	= NULL;
     entryPtr->avgWidth		= 1;
     entryPtr->validate		= VALIDATE_NONE;
 
     sbPtr->selElement		= SEL_NONE;
     sbPtr->curElement		= SEL_NONE;
-    sbPtr->bCursor		= None;
+    sbPtr->bCursor		= NULL;
     sbPtr->repeatDelay		= 400;
     sbPtr->repeatInterval	= 100;
     sbPtr->fromValue		= 0.0;

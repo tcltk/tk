@@ -2,24 +2,6 @@
 # Bindings for TScrollbar widget
 #
 
-# Still don't have a working ttk::scrollbar under OSX -
-# Swap in a [tk::scrollbar] on that platform,
-# unless user specifies -class or -style.
-#
-if {[tk windowingsystem] eq "aqua"} {
-    rename ::ttk::scrollbar ::ttk::_scrollbar
-    proc ttk::scrollbar {w args} {
-	set constructor ::tk::scrollbar
-	foreach {option _} $args {
-	    if {$option eq "-class" || $option eq "-style"} {
-		set constructor ::ttk::_scrollbar
-		break
-	    }
-	}
-	return [$constructor $w {*}$args]
-    }
-}
-
 namespace eval ttk::scrollbar {
     variable State
     # State(xPress)	--
@@ -34,6 +16,27 @@ bind TScrollbar <ButtonRelease-1>	{ ttk::scrollbar::Release %W %x %y }
 bind TScrollbar <ButtonPress-2> 	{ ttk::scrollbar::Jump %W %x %y }
 bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
+
+# Redirect scrollwheel bindings to the scrollbar widget
+#
+# The shift-bindings scroll left/right (not up/down)
+# if a widget has both possibilities
+set eventList [list <MouseWheel> <Shift-MouseWheel>]
+switch [tk windowingsystem] {
+    aqua {
+        lappend eventList <Option-MouseWheel> <Shift-Option-MouseWheel>
+    }
+    x11 {
+        lappend eventList <Button-4> <Button-5> \
+                <Shift-Button-4> <Shift-Button-5>
+        # For tk 8.7, the event list should be extended by
+        # <Button-6> <Button-7>
+    }
+}
+foreach event $eventList {
+    bind TScrollbar $event [bind Scrollbar $event]
+}
+unset eventList event
 
 proc ttk::scrollbar::Scroll {w n units} {
     set cmd [$w cget -command]

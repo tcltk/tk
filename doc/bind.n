@@ -5,7 +5,7 @@
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-'\" 
+'\"
 .TH bind n 8.0 Tk "Tk Built-In Commands"
 .so man.macros
 .BS
@@ -566,8 +566,8 @@ The \fIx_root\fR and  \fIy_root\fR fields from the event.
 If a virtual-root window manager is being used then the substituted
 values are the corresponding x-coordinate and y-coordinate in the virtual root.
 Valid only for
-\fBButtonPress\fR, \fBButtonRelease\fR, \fBKeyPress\fR, \fBKeyRelease\fR,
-and \fBMotion\fR events.
+\fBButtonPress\fR, \fBButtonRelease\fR, \fBEnter\fR, \fBKeyPress\fR,
+\fBKeyRelease\fR, \fBLeave\fR and \fBMotion\fR events.
 Same meaning as \fB%x\fR and \fB%y\fR, except relative to the (virtual) root
 window.
 .LP
@@ -638,11 +638,11 @@ of events matched) is more specific than a shorter sequence;
 .IP (c)
 if the modifiers specified in one pattern are a subset of the
 modifiers in another pattern, then the pattern with more modifiers
-is more specific.
+is more specific;
 .IP (d)
 a virtual event whose physical pattern matches the sequence is less
 specific than the same physical pattern that is not associated with a
-virtual event.
+virtual event;
 .IP (e)
 given a sequence that matches two or more virtual events, one
 of the virtual events will be chosen, but the order is undefined.

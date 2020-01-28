@@ -97,7 +97,7 @@ typedef struct PendingCommand {
 				 * NULL means end of list. */
 } PendingCommand;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     PendingCommand *pendingCommands;
 				/* List of all commands currently being waited
 				 * for. */

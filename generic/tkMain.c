@@ -14,21 +14,6 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-/**
- * On Windows, this file needs to be compiled twice, once with
- * TK_ASCII_MAIN defined. This way both Tk_MainEx and Tk_MainExW
- * can be implemented, sharing the same source code.
- */
-#if defined(TK_ASCII_MAIN)
-#   ifdef UNICODE
-#	undef UNICODE
-#	undef _UNICODE
-#   else
-#	define UNICODE
-#	define _UNICODE
-#   endif
-#endif
-
 #include "tkInt.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -45,7 +30,7 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
  * The default prompt used when the user has not overridden it.
  */
 
-#define DEFAULT_PRIMARY_PROMPT	"% "
+static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
 
 /*
  * This file can be compiled on Windows in UNICODE mode, as well as
@@ -78,23 +63,22 @@ extern const TclIntPlatStubs *tclIntPlatStubsPtr;
 #include "tkMacOSXInt.h"
 #endif
 
-/*
- * Further on, in UNICODE mode, we need to use Tcl_NewUnicodeObj,
- * while otherwise NewNativeObj is needed (which provides proper
- * conversion from native encoding to UTF-8).
- */
+static inline Tcl_Obj *
+NewNativeObj(
+    TCHAR *string)
+{
+    Tcl_Obj *obj;
+    Tcl_DString ds;
+
 #ifdef UNICODE
-#   define NewNativeObj Tcl_NewUnicodeObj
-#else /* !UNICODE */
-    static Tcl_Obj *NewNativeObj(char *string, int length) {
-	Tcl_Obj *obj;
-	Tcl_DString ds;
-	Tcl_ExternalToUtfDString(NULL, string, length, &ds);
-	obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
-	Tcl_DStringFree(&ds);
-	return obj;
+    Tcl_WinTCharToUtf(string, -1, &ds);
+#else
+    Tcl_ExternalToUtfDString(NULL, (char *) string, -1, &ds);
+#endif
+    obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    Tcl_DStringFree(&ds);
+    return obj;
 }
-#endif /* !UNICODE */
 
 /*
  * Declarations for various library functions and variables (don't want to
@@ -235,7 +219,11 @@ Tk_MainEx(
     is.gotPartial = 0;
     Tcl_Preserve(interp);
 
-#if defined(_WIN32) && !defined(__CYGWIN__)
+#if defined(_WIN32)
+#if !defined(STATIC_BUILD)
+    /* If compiled for Win32 but running on Cygwin, don't use console */
+    if (!tclStubsPtr->reserved9)
+#endif
     Tk_InitConsoleChannels(interp);
 #endif
 
@@ -265,19 +253,19 @@ Tk_MainEx(
 
 	if ((argc > 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
 		&& (TEXT('-') != argv[3][0])) {
-		Tcl_Obj *value = NewNativeObj(argv[2], -1);
-	    Tcl_SetStartupScript(NewNativeObj(argv[3], -1), Tcl_GetString(value));
+	    Tcl_Obj *value = NewNativeObj(argv[2]);
+	    Tcl_SetStartupScript(NewNativeObj(argv[3]), Tcl_GetString(value));
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
 	    argv += 3;
 	} else if ((argc > 1) && (TEXT('-') != argv[1][0])) {
-	    Tcl_SetStartupScript(NewNativeObj(argv[1], -1), NULL);
+	    Tcl_SetStartupScript(NewNativeObj(argv[1]), NULL);
 	    argc--;
 	    argv++;
 	} else if ((argc > 2) && (length = _tcslen(argv[1]))
 		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
 		&& (TEXT('-') != argv[2][0])) {
-	    Tcl_SetStartupScript(NewNativeObj(argv[2], -1), NULL);
+	    Tcl_SetStartupScript(NewNativeObj(argv[2]), NULL);
 	    argc -= 2;
 	    argv += 2;
 	}
@@ -285,7 +273,7 @@ Tk_MainEx(
 
     path = Tcl_GetStartupScript(&encodingName);
     if (path == NULL) {
-	appName = NewNativeObj(argv[0], -1);
+	appName = NewNativeObj(argv[0]);
     } else {
 	appName = path;
     }
@@ -297,7 +285,7 @@ Tk_MainEx(
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
-	Tcl_ListObjAppendElement(NULL, argvPtr, NewNativeObj(*argv++, -1));
+	Tcl_ListObjAppendElement(NULL, argvPtr, NewNativeObj(*argv++));
     }
     Tcl_SetVar2Ex(interp, "argv", NULL, argvPtr, TCL_GLOBAL_ONLY);
 
@@ -427,7 +415,7 @@ StdinProc(
 
     count = Tcl_Gets(chan, &isPtr->line);
 
-    if (count < 0 && !isPtr->gotPartial) {
+    if (count == -1 && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
@@ -515,7 +503,7 @@ Prompt(
 	    chan = Tcl_GetStdChannel(TCL_STDOUT);
 	    if (chan != NULL) {
 		Tcl_WriteChars(chan, DEFAULT_PRIMARY_PROMPT,
-			strlen(DEFAULT_PRIMARY_PROMPT));
+			sizeof(DEFAULT_PRIMARY_PROMPT) - 1);
 	    }
 	}
     } else {

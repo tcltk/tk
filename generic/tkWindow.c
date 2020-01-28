@@ -37,7 +37,7 @@ typedef struct TkHalfdeadWindow {
     struct TkHalfdeadWindow *nextPtr;
 } TkHalfdeadWindow;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int numMainWindows;		/* Count of numver of main windows currently
 				 * open in this thread. */
     TkMainInfo *mainWindowList;
@@ -664,6 +664,8 @@ TkAllocWindow(
     winPtr->selHandlerList = NULL;
     winPtr->geomMgrPtr = NULL;
     winPtr->geomData = NULL;
+    winPtr->geomMgrName = NULL;
+    winPtr->maintainerPtr = NULL;
     winPtr->reqWidth = winPtr->reqHeight = 1;
     winPtr->internalBorderLeft = 0;
     winPtr->wmInfoPtr = NULL;
@@ -675,7 +677,6 @@ TkAllocWindow(
     winPtr->internalBorderBottom = 0;
     winPtr->minReqWidth = 0;
     winPtr->minReqHeight = 0;
-    winPtr->geometryMaster = NULL;
 
     return winPtr;
 }
@@ -851,7 +852,7 @@ TkCreateMainWindow(
      * Create the basic TkWindow structure.
      */
 
-    tkwin = CreateTopLevelWindow(interp, (Tk_Window) NULL, baseName,
+    tkwin = CreateTopLevelWindow(interp, NULL, baseName,
 	    screenName, /* flags */ 0);
     if (tkwin == NULL) {
 	return NULL;
@@ -1460,9 +1461,9 @@ Tk_DestroyWindow(
     TkOptionDeadWindow(winPtr);
     TkSelDeadWindow(winPtr);
     TkGrabDeadWindow(winPtr);
-    if (winPtr->geometryMaster != NULL) {
-	ckfree(winPtr->geometryMaster);
-	winPtr->geometryMaster = NULL;
+    if (winPtr->geomMgrName != NULL) {
+	ckfree(winPtr->geomMgrName);
+	winPtr->geomMgrName = NULL;
     }
     if (winPtr->mainPtr != NULL) {
 	if (winPtr->pathName != NULL) {
@@ -2088,7 +2089,7 @@ void
 Tk_UndefineCursor(
     Tk_Window tkwin)		/* Window to manipulate. */
 {
-    Tk_DefineCursor(tkwin, None);
+    Tk_DefineCursor(tkwin, NULL);
 }
 
 void
@@ -2786,6 +2787,18 @@ DeleteWindowsExitProc(
     }
 
     /*
+     * Let error handlers catch up before actual close of displays.
+     * Must be done before tsdPtr->displayList is cleared, otherwise
+     * ErrorProc() in tkError.c cannot associate the pending X errors
+     * to the remaining error handlers.
+     */
+
+    for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
+           dispPtr = dispPtr->nextPtr) {
+       XSync(dispPtr->display, False);
+    }
+
+    /*
      * Iterate destroying the displays until no more displays remain. It is
      * possible for displays to get recreated during exit by any code that
      * calls GetScreen, so we must destroy these new displays as well as the
@@ -2836,18 +2849,18 @@ TkCygwinMainEx(
 				 * but before starting to execute commands. */
     Tcl_Interp *interp)
 {
-    TCHAR name[MAX_PATH];
+    WCHAR name[MAX_PATH];
     int len;
     void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
     /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
     len = GetModuleFileNameW(Tk_GetHINSTANCE(), name, MAX_PATH);
-    name[len-2] = TEXT('.');
+    name[len-2] = '.';
     name[len-1] = name[len-5];
-    _tcscpy(name+len, TEXT(".dll"));
-    memcpy(name+len-8, TEXT("libtk8"), 6 * sizeof(TCHAR));
+    wcscpy(name+len, L".dll");
+    memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
 
-    tkcygwindll = LoadLibrary(name);
+    tkcygwindll = LoadLibraryW(name);
     if (!tkcygwindll) {
 	/* dll is not present */
 	return 0;
@@ -3248,7 +3261,7 @@ Initialize(
     }
     Tcl_ResetResult(interp);
     if (sync) {
-	XSynchronize(Tk_Display(Tk_MainWindow(interp)), True);
+	(void)XSynchronize(Tk_Display(Tk_MainWindow(interp)), True);
     }
 
     /*

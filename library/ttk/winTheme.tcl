@@ -10,6 +10,8 @@ namespace eval ttk::theme::winnative {
 	    -foreground SystemWindowText \
 	    -selectforeground SystemHighlightText \
 	    -selectbackground SystemHighlight \
+	    -fieldbackground SystemWindow \
+	    -insertcolor SystemWindowText \
 	    -troughcolor SystemScrollbar \
 	    -font TkDefaultFont \
 	    ;
@@ -72,10 +74,8 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure Treeview -background SystemWindow
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
-				{!disabled !selected} SystemWindow \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
-				{!disabled !selected} SystemWindowText \
 				selected SystemHighlightText]
 
         ttk::style configure TProgressbar \

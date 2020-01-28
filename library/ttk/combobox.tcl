@@ -149,12 +149,14 @@ proc ttk::combobox::Drag {w x}  {
 #	Set cursor.
 #
 proc ttk::combobox::Motion {w x y} {
+    variable State
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor text]
     if {   [$w identify $x $y] eq "textarea"
         && [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
-	ttk::setCursor $w ""
+	ttk::setCursor $w $State(userConfCursor)
     }
 }
 
@@ -251,30 +253,16 @@ proc ttk::combobox::UnmapPopdown {w} {
     ttk::releaseGrab $w
 }
 
-###
-#
-
-namespace eval ::ttk::combobox {
-    # @@@ Until we have a proper native scrollbar on Aqua, use
-    # @@@ the regular Tk one.  Use ttk::scrollbar on other platforms.
-    variable scrollbar ttk::scrollbar
-    if {[tk windowingsystem] eq "aqua"} {
-	set scrollbar ::scrollbar
-    }
-}
-
 ## PopdownWindow --
 #	Returns the popdown widget associated with a combobox,
 #	creating it if necessary.
 #
 proc ttk::combobox::PopdownWindow {cb} {
-    variable scrollbar
-
     if {![winfo exists $cb.popdown]} {
 	set poplevel [PopdownToplevel $cb.popdown]
 	set popdown [ttk::frame $poplevel.f -style ComboboxPopdownFrame]
 
-	$scrollbar $popdown.sb \
+	ttk::scrollbar $popdown.sb \
 	    -orient vertical -command [list $popdown.l yview]
 	listbox $popdown.l \
 	    -listvariable ttk::combobox::Values($cb) \
