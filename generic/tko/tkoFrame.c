@@ -26,13 +26,20 @@ enum FrameType {
  * tkoFrame --
  *
  * A data structure of the following type is kept for each
- * frame that currently exists for this process:
+ * frame that currently exists for this process.
+ *
+ * ATTENTION!!!
+ * tkWinWM.c will call TkInstallFromMenu() from file tkFrame.c for toplevels.
+ * Inside these function a struct Frame and memeber menuName will be used.
+ * We noe have to ensure that our structure has the same form as Frame.
+ * Therefore we place some dummy arguments in the structure.
  */
 typedef struct tkoFrame {
     Tko_Widget widget;
+    enum FrameType type;       /* Type of widget, such as TYPE_FRAME. */
+    char *dummy1;
     char *menuName;            /* Textual description of menu to use for
                                 * menubar. Malloc-ed, may be NULL. */
-    enum FrameType type;       /* Type of widget, such as TYPE_FRAME. */
     Colormap colormap;         /* If not None, identifies a colormap
                                 * allocated for this window, which must be
                                 * freed when the window is deleted. */
@@ -53,6 +60,8 @@ typedef struct tkoFrame {
     int height;                /* Height to request for window. <= 0 means
                                 * don't request any size. */
     Tk_Cursor cursor;          /* Current cursor for window, or None. */
+    Tk_Window tkWinCreate;
+    char *dummy2;
     int isContainer;           /* 1 means this window is a container, 0 means
                                 * that it isn't. */
     Tcl_Obj *useThis;          /* If the window is embedded, this points to
@@ -70,7 +79,6 @@ typedef struct tkoFrame {
 #ifndef TK_NO_DOUBLE_BUFFERING
     GC copyGC;                 /* GC for copying when double-buffering. */
 #endif /* TK_NO_DOUBLE_BUFFERING */
-    Tk_Window tkWinCreate;
 } tkoFrame;
 
 /*
@@ -569,6 +577,7 @@ FrameConstructor(
     tkoFrame *frame;
     Tcl_Obj *myArglist;
     int skip;
+    Tko_WidgetCreateMode createMode;
 
     /* Get current object. Should not fail? */
     if ((object = Tcl_ObjectContextObject(context)) == NULL) {
@@ -578,6 +587,7 @@ FrameConstructor(
         frame = ckalloc(sizeof(tkoFrame));
         assert(frame);
         memset(frame, 0, sizeof(tkoFrame));
+        createMode = TKO_CREATE_WIDGET;
     }
     else if (type == TYPE_LABELFRAME) {
         tkoLabelframe *labelframe;
@@ -597,11 +607,13 @@ FrameConstructor(
         labelframe->labelReqHeight = 0;
         labelframe->labelTextX = 0;
         labelframe->labelTextY = 0;
+        createMode = TKO_CREATE_WIDGET;
     }
     else if (type == TYPE_TOPLEVEL) {
         frame = ckalloc(sizeof(tkoFrame));
         assert(frame);
         memset(frame, 0, sizeof(tkoFrame));
+        createMode = TKO_CREATE_TOPLEVEL;
     }
     else {
         Tcl_WrongNumArgs(interp, 1, objv, "internal type error");
@@ -634,7 +646,6 @@ FrameConstructor(
     if (type == TYPE_TOPLEVEL) {
         frame->mask |= ActivateMask;
     }
-
     skip = Tcl_ObjectContextSkippedArgs(context);
     if (objc - skip > 0) {
         myArglist = Tcl_NewListObj(objc - skip, &objv[skip]);
@@ -642,7 +653,7 @@ FrameConstructor(
     else {
         myArglist = Tcl_NewListObj(0, NULL);
     }
-    if (Tko_WidgetCreate(&(frame->widget), interp, object, (type == TYPE_TOPLEVEL),
+    if (Tko_WidgetCreate(&(frame->widget), interp, object, createMode,
         myArglist) != TCL_OK) {
         Tcl_DecrRefCount(myArglist);
         return TCL_ERROR;
