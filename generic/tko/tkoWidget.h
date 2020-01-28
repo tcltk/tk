@@ -71,6 +71,18 @@ extern "C" {
     } Tko_WidgetOptionType;
 
 /*
+* Tko_CreateMode --
+*
+* Supported values in Tko_WdigetCreate() function call.
+*/
+    typedef enum Tko_WidgetCreateMode {
+        TKO_CREATE_WIDGET, /* Create new widget */
+        TKO_CREATE_TOPLEVEL, /* Create new toplevel widget */
+        TKO_CREATE_CLASS, /* See "tko initclass" */
+        TKO_CREATE_WRAP /* See "tko initwrap" */
+    } Tko_WidgetCreateMode;
+
+/*
  * Tko_WidgetOptionDefine --
  *
  * Widget definition data used in class.
@@ -78,8 +90,7 @@ extern "C" {
  * - "option"=NULL indicate the end of a list of option definitions.
  * - If "method" is given it will be used as option set method.
  * - If "type" is greater 0 a common option set method will be used.
- *   In this case "type", "meta" and "offset" are used as parameters for
- *   the Tko_WidgetOptionSet() function call.
+ *   In this case "offset" are used as offset in the widget structure.
  */
     typedef struct Tko_WidgetOptionDefine {
         const char *option;    /* Name of option. Starts with "-" minus sign */
@@ -98,21 +109,24 @@ extern "C" {
 
     /*
     * Widget structure data used in objects.
+    * These structure will be filled in the **Tko\_WidgetCreate** call
+    * and cleared in the **Tko\_WidgetDestroy** call.
+    * Widget methods should check the value of *tkWin* on NULL before using it.
     */
     typedef struct Tko_Widget {
-        Tcl_Interp *interp;        /* Interpreter associated with widget. */
-        Tcl_Object object;         /* our own object */
         Tk_Window tkWin;           /* Window that embodies the widget. NULL means
                                    * that the window has been destroyed but the
                                    * data structures haven't yet been cleaned
                                    * up.*/
         Display *display;        /* Display containing widget. Used, among
-                                * other things, so that resources can be
-                                * freed even after tkwin has gone away. */
+                                 * other things, so that resources can be
+                                 * freed even after tkwin has gone away. */
+        Tcl_Interp *interp;        /* Interpreter associated with widget. */
+        Tcl_Command widgetCmd;     /* Token for command. */
+        Tcl_Object object;         /* our own object */
         Tcl_Obj *myCmd;            /* Objects "my" command. Needed to call internal methods. */
-        Tcl_Command widgetCmd;     /* Token for widget command. */
         Tcl_Obj *optionsArray;     /* Name of option array variable */
-        Tcl_HashTable optionsTable; /* Hash table containing all used options */
+        Tcl_HashTable *optionsTable; /* Hash table containing all used options */
     } Tko_Widget;
 
 /* tkoFrame.c */
@@ -132,7 +146,7 @@ extern "C" {
         ClientData clientdata,
         Tcl_Interp *interp,
         Tcl_Object object,
-        int isToplevel,
+        Tko_WidgetCreateMode createmode,
         Tcl_Obj *arglist);
     MODULE_SCOPE void Tko_WidgetDestroy(
         Tcl_ObjectContext context);

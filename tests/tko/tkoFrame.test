@@ -2004,7 +2004,7 @@ test frame-20.3 {tko optiondef} -setup {
 } -body {
     oo::class create C {
         ::tko initfrom ::tko::frame
-        ::tko optiondef [self] -o1 {o1 O1 v1 {} {set tko(-o1) x}}
+        ::tko optiondef [self] -o1 {o1 O1 v1 {}} {set tko(-o1) x}
     }
     C .c
     .c configure -o1
@@ -2081,7 +2081,7 @@ test frame-21.2 {my _tko optionadd} -setup {
         method mycmd {args} {my {*}$args}
     }
     C .c
-    .c mycmd _tko optionadd -o1 o1 O1 v1 {} {variable tko; set tko(-o1) x}
+    .c mycmd _tko optionadd -o1 {o1 O1 v1 {}} {variable tko; set tko(-o1) x}
     .c configure -o1
 } -cleanup {
     deleteWindows
@@ -2137,23 +2137,43 @@ test frame-21.5 {my _tko optionshow} -setup {
 test frame-21.6 {my_tko optionadd readonly} -setup {
     deleteWindows
 } -body {
-    oo::class create C {
+    oo::class create ::C {
         ::tko initfrom ::tko::frame
         method mycmd {args} {my {*}$args}
     }
     C .c
-    .c mycmd _tko optionadd -o1 o1 O1 v1 r {variable tko; set tko(-o1) x}
+    .c mycmd _tko optionadd -o1 {o1 O1 v1 r} {variable tko; set tko(-o1) x}
     .c configure -o1 xx
 } -cleanup {
     deleteWindows
     C destroy
 } -returnCodes error -match glob -result {*option "-o1" is readonly}
 
+test frame-22.1 {tko initclass} -setup {
+    deleteWindows
+} -body {
+    oo::class create ::C {
+        ::tko initclass
+        method mycmd {args} {my {*}$args}
+    }
+    ::C create ::c
+    set myList [llength [c configure]]
+    ::tko optiondef ::C -o1 {o1 O1 v1 {}} {set tko(-o1) x}
+    lappend myList [llength [c configure]]
+    c destroy
+    ::C create ::c
+    lappend myList [llength [c configure]]
+    c mycmd _tko optionadd -o2 {o2 O2 v2 {}} {variable tko; set tko(-o2) x}
+    lappend myList [llength [c configure]]
+} -cleanup {
+    C destroy
+} -match glob -result {0 0 1 2}
+
 test frame-30.1 {performance comparison} -setup {
     deleteWindows
 } -body {
-    oo::class create wrapframe {::tko initwrap frame {-class -colormap -container -visual} {}}
-    oo::class create wraplabelframe {::tko initwrap labelframe {-class -colormap -container -visual} {}}
+    oo::class create ::wrapframe {::tko initwrap frame {-class -colormap -container -visual} {}}
+    oo::class create ::wraplabelframe {::tko initwrap labelframe {-class -colormap -container -visual} {}}
     proc ::TEST::Do {cmd} {set i 0; format %7.1f [lindex [time $cmd 100] 0]}
     proc ::TEST::Test {wdg} {
         set ret [format %15s $wdg]
@@ -2164,19 +2184,19 @@ test frame-30.1 {performance comparison} -setup {
         append ret [::TEST::Do {destroy .[incr i]}]
     }
     puts "        command create   cget config   list destroy"
-    puts [::TEST::Test frame]
-    puts [::TEST::Test ttk::frame]
-    puts [::TEST::Test tko::frame]
-    puts [::TEST::Test wrapframe]
-    puts [::TEST::Test labelframe]
-    puts [::TEST::Test ttk::labelframe]
-    puts [::TEST::Test tko::labelframe]
-    puts [::TEST::Test wraplabelframe]
-    puts [::TEST::Test toplevel]
-    puts [::TEST::Test tko::toplevel]
+    puts [::TEST::Test ::frame]
+    puts [::TEST::Test ::ttk::frame]
+    puts [::TEST::Test ::tko::frame]
+    puts [::TEST::Test ::wrapframe]
+    puts [::TEST::Test ::labelframe]
+    puts [::TEST::Test ::ttk::labelframe]
+    puts [::TEST::Test ::tko::labelframe]
+    puts [::TEST::Test ::wraplabelframe]
+    puts [::TEST::Test ::toplevel]
+    puts [::TEST::Test ::tko::toplevel]
 } -cleanup {
-    catch {wrapframe destroy}
-    catch {wraplabelframe destroy}
+    catch {::wrapframe destroy}
+    catch {::wraplabelframe destroy}
     deleteWindows
 } -result {}
 
