@@ -1459,9 +1459,22 @@ CanvasWidgetCmd(
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
 	    for (i = itemPtr->numTags-1; i >= 0; i--) {
 		if (itemPtr->tagPtr[i] == tag) {
-		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
+
+                    /*
+                     * Don't shuffle the tags sequence: memmove the tags.
+                     */
+
+                    memmove((void *)(itemPtr->tagPtr + i),
+                            itemPtr->tagPtr + i + 1,
+                            (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
 		    itemPtr->numTags--;
-		}
+
+                    /*
+                     * There must be no break here: all tags with the same name must
+                     * be deleted.
+                     */
+
+ 		}
 	    }
 	}
 	break;
@@ -2582,7 +2595,7 @@ DrawCanvas(
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
     Tk_Window tkwin;
     Display *displayPtr;
-    Tk_PhotoImageBlock blockPtr = {0};
+    Tk_PhotoImageBlock blockPtr = {0,0,0,0,0,0};
     Window wid;
     Tk_Item *itemPtr;
     Pixmap pixmap = 0;
@@ -5301,7 +5314,9 @@ PickCurrentItem(
 	    for (i = itemPtr->numTags-1; i >= 0; i--) {
 		if (itemPtr->tagPtr[i] == searchUids->currentUid)
 		    /* then */ {
-		    itemPtr->tagPtr[i] = itemPtr->tagPtr[itemPtr->numTags-1];
+                    memmove((void *)(itemPtr->tagPtr + i),
+                            itemPtr->tagPtr + i + 1,
+                            (itemPtr->numTags - (i+1)) * sizeof(Tk_Uid));
 		    itemPtr->numTags--;
 		    break;
 		}

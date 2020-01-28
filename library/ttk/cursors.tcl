@@ -198,7 +198,7 @@ proc ttk::CursorSampler {f} {
 if {[info exists argv0] && $argv0 eq [info script]} {
     wm title . "[array size ::ttk::Cursors] cursors"
     pack [ttk::CursorSampler .f] -expand true -fill both
-    bind . <KeyPress-Escape> [list destroy .]
+    bind . <Escape> [list destroy .]
     focus .f
 }
 

@@ -645,9 +645,9 @@ test treeview-10.1 "Root node properly initialized (#1541739)" -setup {
 test treeview-3006842 "Null bindings" -setup {
     ttk::treeview .tv -show tree
 } -body {
-    .tv tag bind empty <ButtonPress-1> {}
+    .tv tag bind empty <Button-1> {}
     .tv insert {} end -text "Click me" -tags empty
-    event generate .tv <ButtonPress-1> -x 10 -y 10
+    event generate .tv <Button-1> -x 10 -y 10
     .tv tag bind empty
 } -result {} -cleanup {
     destroy .tv
@@ -682,7 +682,7 @@ test treeview-368fa4561e "indicators cannot be clicked on leafs" -setup {
     set res [.tv item foo -open]
     # using $h even for x computation is intentional here in order to simulate
     # a mouse click on the (invisible since we're on a leaf) indicator
-    event generate .tv <ButtonPress-1> \
+    event generate .tv <Button-1> \
             -x [expr {$x + $h / 2}] \
             -y [expr {$y + $h / 2}]
     lappend res [.tv item foo -open]

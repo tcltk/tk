@@ -906,9 +906,9 @@ proc ::tk::MotifFDialog_CancelCmd {w} {
 }
 
 proc ::tk::ListBoxKeyAccel_Set {w} {
-    bind Listbox <Any-KeyPress> ""
+    bind Listbox <Key> ""
     bind $w <Destroy> [list tk::ListBoxKeyAccel_Unset $w]
-    bind $w <Any-KeyPress> [list tk::ListBoxKeyAccel_Key $w %A]
+    bind $w <Key> [list tk::ListBoxKeyAccel_Key $w %A]
 }
 
 proc ::tk::ListBoxKeyAccel_Unset {w} {

@@ -53,10 +53,10 @@ for {set i 0} {$i < 20} {incr i} {
     }
 }
 
-$c bind all <Any-Enter> "scrollEnter $c"
-$c bind all <Any-Leave> "scrollLeave $c"
-$c bind all <1> "scrollButton $c"
-bind $c <2> "$c scan mark %x %y"
+$c bind all <Enter> "scrollEnter $c"
+$c bind all <Leave> "scrollLeave $c"
+$c bind all <Button-1> "scrollButton $c"
+bind $c <Button-2> "$c scan mark %x %y"
 bind $c <B2-Motion> "$c scan dragto %x %y"
 if {[tk windowingsystem] eq "aqua"} {
     bind $c <MouseWheel> {
@@ -99,33 +99,33 @@ if {[tk windowingsystem] eq "x11"} {
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
     #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind $c <4> {
+    bind $c <Button-4> {
 	if {!$tk_strictMotif} {
 	    %W yview scroll -5 units
 	}
     }
-    bind $c <Shift-4> {
+    bind $c <Shift-Button-4> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll -5 units
 	}
     }
-    bind $c <5> {
+    bind $c <Button-5> {
 	if {!$tk_strictMotif} {
 	    %W yview scroll 5 units
 	}
     }
-    bind $c <Shift-5> {
+    bind $c <Shift-Button-5> {
 	if {!$tk_strictMotif} {
 	    %W xview scroll 5 units
 	}
     }
     if {[package vsatisfies [package provide Tk] 8.7]} {
-	bind $c <6> {
+	bind $c <Button-6> {
 	    if {!$tk_strictMotif} {
 		%W xview scroll -5 units
 	    }
 	}
-	bind $c <7> {
+	bind $c <Button-7> {
 	    if {!$tk_strictMotif} {
 		%W xview scroll 5 units
 	    }
