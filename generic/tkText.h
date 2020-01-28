@@ -22,7 +22,6 @@
 #define CATCH_ASSERTION_FAILED 0
 
 #include "tkTextUndo.h"
-#include "tkBool.h"
 
 #ifdef MAC_OSX_TK
 /* required for TK_LAYOUT_WITH_BASE_CHUNKS */
