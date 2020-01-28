@@ -25,7 +25,11 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
 
 #ifndef __cplusplus
 
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #define bool	_Bool
+#else
+#define bool	unsigned char
+#endif
 #define true	1
 #define false	0
 
