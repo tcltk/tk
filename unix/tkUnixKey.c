@@ -126,11 +126,11 @@ TkpGetString(
     }
 
     /*
-     * Only do this for KeyPress events, otherwise
+     * Only do this for KeyPress and KeyRelease events, otherwise
      * further Xlib function behavior might be undefined.
      */
 
-    if (eventPtr->type != KeyPress) {
+    if (event.type != KeyPress && event.type != KeyRelease)) {
 	len = 0;
 	Tcl_DStringSetLength(dsPtr, len);
 	goto done;
