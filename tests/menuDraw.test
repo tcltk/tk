@@ -20,7 +20,7 @@ test menuDraw-1.1 {TkMenuInitializeDrawingFields} -setup {
 } -result {.m1}
 
 
-test menuDraw-2.1 {TkIntializeMenuEntryDrawingFields} -setup {
+test menuDraw-2.1 {TkInitializeMenuEntryDrawingFields} -setup {
     deleteWindows
 } -body {
     menu .m1

@@ -1606,7 +1606,7 @@ test menu-3.47 {MenuWidgetCmd procedure, "post" option} -setup {
     .m1 post
 } -cleanup {
 	destroy .m1
-} -returnCodes error -result {wrong # args: should be ".m1 post x y"}
+} -returnCodes error -result {wrong # args: should be ".m1 post x y ?index?"}
 test menu-3.48 {MenuWidgetCmd procedure, "post" option} -setup {
 	destroy .m1
 } -body {
@@ -3162,6 +3162,34 @@ test menu-17.5 {MenuVarProc} -setup {
 } -cleanup {
 	deleteWindows
 } -result {{} goodbye {}}
+test menu-17.6 {MenuVarProc [5d991b822e]} -setup {
+	deleteWindows
+} -body {
+    # Want this not to crash
+    menu .b
+    set var INIT
+    .b add checkbutton -variable var
+    trace add variable var unset {apply {args {
+        .b entryconfigure 1 -variable {}
+    }}}
+    unset var
+} -cleanup {
+	deleteWindows
+} -result {}
+test menu-17.7 {MenuVarProc [5d991b822e]} -setup {
+	deleteWindows
+} -body {
+    # Want this not to duplicate traces
+    menu .b
+    set var INIT
+    .b add checkbutton -variable var
+    trace add variable var unset {apply {args {
+        .b entryconfigure 1 -variable new
+    }}}
+    unset var
+} -cleanup {
+	deleteWindows
+} -result {}
 
 
 test menu-18.1 {TkActivateMenuEntry} -setup {

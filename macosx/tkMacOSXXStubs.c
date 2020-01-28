@@ -3,7 +3,7 @@
  *
  *	This file contains most of the X calls called by Tk. Many of these
  *	calls are just stubs and either don't make sense on the Macintosh or
- *	their implamentation just doesn't do anything. Other calls will
+ *	their implementation just doesn't do anything. Other calls will
  *	eventually be moved into other files.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
@@ -32,9 +32,6 @@
 #endif
 
 #define ROOT_ID 10
-
-CGFloat tkMacOSXZeroScreenHeight = 0;
-CGFloat tkMacOSXZeroScreenTop = 0;
 
 /*
  * Declarations of static variables used in this file.
@@ -90,12 +87,8 @@ TkMacOSXDisplayChanged(
     nsScreens = [NSScreen screens];
     if (nsScreens && [nsScreens count]) {
 	NSScreen *s = [nsScreens objectAtIndex:0];
-	NSRect bounds = [s frame], visible = [s visibleFrame];
+	NSRect bounds = [s frame];
 	NSRect maxBounds = NSZeroRect;
-
-	tkMacOSXZeroScreenHeight = bounds.size.height;
-	tkMacOSXZeroScreenTop = tkMacOSXZeroScreenHeight -
-		(visible.origin.y + visible.size.height);
 
 	screen->root_depth = NSBitsPerPixelFromDepth([s depth]);
 	screen->width = bounds.size.width;
@@ -108,6 +101,67 @@ TkMacOSXDisplayChanged(
 	}
 	*((NSRect *)screen->ext_data) = maxBounds;
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXZeroScreenHeight --
+ *
+ *	Replacement for the tkMacOSXZeroScreenHeight variable to avoid
+ *	caching values from NSScreen (fixes bug aea00be199).
+ *
+ * Results:
+ *	Returns the height of screen 0 (the screen assigned the menu bar
+ *	in System Preferences), or 0.0 if getting [NSScreen screens] fails.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+CGFloat
+TkMacOSXZeroScreenHeight()
+{
+    NSArray *nsScreens = [NSScreen screens];
+    if (nsScreens && [nsScreens count]) {
+	NSScreen *s = [nsScreens objectAtIndex:0];
+	NSRect bounds = [s frame];
+	return bounds.size.height;
+    }
+    return 0.0;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXZeroScreenTop --
+ *
+ *	Replacement for the tkMacOSXZeroScreenTop variable to avoid
+ *	caching values from visibleFrame.
+ *
+ * Results:
+ *	Returns how far below the top of screen 0 to draw
+ *	(i.e. the height of the menu bar if it is always shown),
+ *	or 0.0 if getting [NSScreen screens] fails.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+CGFloat
+TkMacOSXZeroScreenTop()
+{
+    NSArray *nsScreens = [NSScreen screens];
+    if (nsScreens && [nsScreens count]) {
+	NSScreen *s = [nsScreens objectAtIndex:0];
+	NSRect bounds = [s frame], visible = [s visibleFrame];
+	return bounds.size.height - (visible.origin.y + visible.size.height);
+    }
+    return 0.0;
 }
 
 /*
@@ -178,7 +232,7 @@ TkpOpenDisplay(
     {
 	int major, minor, patch;
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101000
 	Gestalt(gestaltSystemVersionMajor, (SInt32*)&major);
 	Gestalt(gestaltSystemVersionMinor, (SInt32*)&minor);
 	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
@@ -202,8 +256,7 @@ TkpOpenDisplay(
 
     screen->root_visual = ckalloc(sizeof(Visual));
     screen->root_visual->visualid     = 0;
-    screen->root_visual->class	      = TrueColor;
-    screen->root_visual->alpha_mask   = 0xFF000000;
+    screen->root_visual->c_class      = TrueColor;
     screen->root_visual->red_mask     = 0x00FF0000;
     screen->root_visual->green_mask   = 0x0000FF00;
     screen->root_visual->blue_mask    = 0x000000FF;
@@ -226,6 +279,12 @@ TkpOpenDisplay(
     bzero(gMacDisplay, sizeof(TkDisplay));
     gMacDisplay->display = display;
     [pool drain];
+
+    /*
+     * Key map info must be available immediately, because of "send event".
+     */
+    TkpInitKeymapInfo(gMacDisplay);
+
     return gMacDisplay;
 }
 
@@ -430,7 +489,7 @@ XGetGeometry(
     return 1;
 }
 
-void
+int
 XChangeProperty(
     Display* display,
     Window w,
@@ -442,15 +501,17 @@ XChangeProperty(
     int nelements)
 {
     Debugger();
+    return Success;
 }
 
-void
+int
 XSelectInput(
     Display* display,
     Window w,
     long event_mask)
 {
     Debugger();
+    return Success;
 }
 
 int
@@ -509,11 +570,12 @@ XSendEvent(
     return 0;
 }
 
-void
+int
 XClearWindow(
     Display* display,
     Window w)
 {
+    return Success;
 }
 
 /*
@@ -525,6 +587,7 @@ XDrawPoint(
     int x,
     int y)
 {
+    return Success;
 }
 
 int
@@ -536,6 +599,7 @@ XDrawPoints(
     int npoints,
     int mode)
 {
+    return Success;
 }
 */
 
@@ -554,7 +618,7 @@ XWarpPointer(
     return Success;
 }
 
-void
+int
 XQueryColor(
     Display* display,
     Colormap colormap,
@@ -573,9 +637,10 @@ XQueryColor(
     d->blue	= (b << 8) | b;
     d->flags	= DoRed|DoGreen|DoBlue;
     d->pad	= 0;
+    return Success;
 }
 
-void
+int
 XQueryColors(
     Display* display,
     Colormap colormap,
@@ -598,6 +663,7 @@ XQueryColors(
 	d->flags	= DoRed|DoGreen|DoBlue;
 	d->pad		= 0;
     }
+    return Success;
 }
 
 int
@@ -636,15 +702,16 @@ XGetWindowProperty(
     return 0;
 }
 
-void
+int
 XRefreshKeyboardMapping(
     XMappingEvent *x)
 {
     /* used by tkXEvent.c */
     Debugger();
+    return Success;
 }
 
-void
+int
 XSetIconName(
     Display* display,
     Window w,
@@ -654,9 +721,10 @@ XSetIconName(
      * This is a no-op, no icon name for Macs.
      */
     display->request++;
+    return Success;
 }
 
-void
+int
 XForceScreenSaver(
     Display* display,
     int mode)
@@ -668,6 +736,7 @@ XForceScreenSaver(
      */
 
     display->request++;
+    return Success;
 }
 
 void
@@ -681,7 +750,7 @@ Tk_FreeXId(
 int
 XSync(
     Display *display,
-    Bool flag)
+    Bool discard)
 {
     TkMacOSXFlushWindows();
     display->request++;
@@ -771,62 +840,69 @@ TkGetServerInfo(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XChangeWindowAttributes(
     Display *display,
     Window w,
     unsigned long value_mask,
     XSetWindowAttributes *attributes)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBackground(
     Display *display,
     Window window,
     unsigned long value)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBackgroundPixmap(
     Display *display,
     Window w,
     Pixmap background_pixmap)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBorder(
     Display *display,
     Window w,
     unsigned long border_pixel)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBorderPixmap(
     Display *display,
     Window w,
     Pixmap border_pixmap)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowBorderWidth(
     Display *display,
     Window w,
     unsigned int width)
 {
+    return Success;
 }
 
-void
+int
 XSetWindowColormap(
     Display *display,
     Window w,
     Colormap colormap)
 {
     Debugger();
+    return Success;
 }
 
 Status
@@ -849,12 +925,73 @@ XSetWMClientMachine(
 }
 
 XIC
-XCreateIC(void)
+XCreateIC(XIM xim, ...)
 {
     Debugger();
     return (XIC) 0;
 }
 
+#undef XVisualIDFromVisual
+VisualID
+XVisualIDFromVisual(
+    Visual *visual)
+{
+    return visual->visualid;
+}
+
+#undef XSynchronize
+XAfterFunction
+XSynchronize(
+    Display *display,
+    Bool onoff)
+{
+	display->request++;
+    return NULL;
+}
+
+#undef XUngrabServer
+int
+XUngrabServer(
+    Display *display)
+{
+    return 0;
+}
+
+#undef XNoOp
+int
+XNoOp(
+    Display *display)
+{
+	display->request++;
+    return 0;
+}
+
+#undef XGrabServer
+int
+XGrabServer(
+    Display *display)
+{
+    return 0;
+}
+
+#undef XFree
+int
+XFree(
+    void *data)
+{
+	if ((data) != NULL) {
+		ckfree(data);
+	}
+    return 0;
+}
+#undef XFlush
+int
+XFlush(
+    Display *display)
+{
+    return 0;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -877,13 +1014,10 @@ TkGetDefaultScreenName(
     Tcl_Interp *interp,		/* Not used. */
     const char *screenName)		/* If NULL, use default string. */
 {
-#if 0
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = macScreenName;
     }
     return screenName;
-#endif
-    return macScreenName;
 }
 
 /*

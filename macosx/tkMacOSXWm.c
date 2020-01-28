@@ -3,14 +3,13 @@
  *
  *	This module takes care of the interactions between a Tk-based
  *	application and the window manager. Among other things, it implements
- *	the "wm" command and passes geometry information to the window
- *	manager.
+ *	the "wm" command and passes geometry information to the window manager.
  *
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  * Copyright 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2017 Marc Culler.
+ * Copyright (c) 2017-2019 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -54,7 +53,6 @@
 	| kWindowDoesNotCycleAttribute	    | tkWindowDoesNotHideAttribute \
 	| tkCanJoinAllSpacesAttribute	    | tkMoveToActiveSpaceAttribute \
 	| tkNonactivatingPanelAttribute	    | tkHUDWindowAttribute)
-
 
 static const struct {
     const UInt64 validAttrs, defaultAttrs, forceOnAttrs, forceOffAttrs;
@@ -152,13 +150,13 @@ static const struct {
 typedef enum {
     WMATT_ALPHA, WMATT_FULLSCREEN, WMATT_MODIFIED, WMATT_NOTIFY,
     WMATT_TITLEPATH, WMATT_TOPMOST, WMATT_TRANSPARENT,
-    _WMATT_LAST_ATTRIBUTE
+    WMATT_TYPE, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
     "-alpha", "-fullscreen", "-modified", "-notify",
     "-titlepath", "-topmost", "-transparent",
-    NULL
+    "-type", NULL
 };
 
 /*
@@ -194,47 +192,6 @@ static int tkMacOSXWmAttrNotifyVal = 0;
 
 static Tcl_HashTable windowTable;
 static int windowHashInit = false;
-
-
-#pragma mark NSWindow(TKWm)
-
-/*
- * Conversion of coordinates between window and screen.
- */
-
-@implementation NSWindow(TKWm)
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
-- (NSPoint) convertPointToScreen: (NSPoint) point
-{
-    return [self convertBaseToScreen:point];
-}
-- (NSPoint) convertPointFromScreen: (NSPoint)point
-{
-    return [self convertScreenToBase:point];
-}
-#else
-- (NSPoint) convertPointToScreen: (NSPoint) point
-{
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
-    return [self convertRectToScreen:pointrect].origin;
-}
-- (NSPoint) convertPointFromScreen: (NSPoint)point
-{
-    NSRect pointrect;
-    pointrect.origin = point;
-    pointrect.size.width = 0;
-    pointrect.size.height = 0;
-    return [self convertRectFromScreen:pointrect].origin;
-}
-#endif
-
-@end
-
-#pragma mark -
-
 
 /*
  * Forward declarations for procedures defined in this file:
@@ -350,6 +307,10 @@ static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 static int		WmWinStyle(Tcl_Interp *interp, TkWindow *winPtr,
 			    int objc, Tcl_Obj *const objv[]);
+static int		WmWinTabbingId(Tcl_Interp *interp, TkWindow *winPtr,
+			    int objc, Tcl_Obj *const objv[]);
+static int		WmWinAppearance(Tcl_Interp *interp, TkWindow *winPtr,
+			    int objc, Tcl_Obj *const objv[]);
 static void		ApplyWindowAttributeFlagChanges(TkWindow *winPtr,
 			    NSWindow *macWindow, UInt64 oldAttributes,
 			    int oldFlags, int create, int initial);
@@ -361,45 +322,122 @@ static void		GetMaxSize(TkWindow *winPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
 static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
+static void             RemoveTransient(TkWindow *winPtr);
+
+#pragma mark NSWindow(TKWm)
+
+@implementation NSWindow(TKWm)
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
+{
+    return [self convertBaseToScreen:point];
+}
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
+{
+    return [self convertScreenToBase:point];
+}
+#else
+- (NSPoint) tkConvertPointToScreen: (NSPoint) point
+{
+    NSRect pointrect = {point, {0,0}};
+    return [self convertRectToScreen:pointrect].origin;
+}
+- (NSPoint) tkConvertPointFromScreen: (NSPoint)point
+{
+    NSRect pointrect = {point, {0,0}};
+    return [self convertRectFromScreen:pointrect].origin;
+}
+#endif
+
+@end
+
+#pragma mark -
 
 #pragma mark TKWindow(TKWm)
 
-@interface NSDrawerWindow : NSWindow
-{
-    id _i1, _i2;
-}
-@end
-
-
 @implementation TKWindow: NSWindow
-#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_12
-/*
- * Override automatic fullscreen button on >10.12 because system fullscreen API
- * confuses Tk window geometry.
- */
-- (void)toggleFullScreen:(id)sender
-{
-    if ([self isZoomed]) {
-	TkMacOSXZoomToplevel(self, inZoomIn);
-    } else {
-	TkMacOSXZoomToplevel(self, inZoomOut);
-    }
-}
-#endif
+
 @end
 
 @implementation TKWindow(TKWm)
 
-- (BOOL) canBecomeKeyWindow
+/*
+ * This method synchronizes Tk's understanding of the bounds of a contentView
+ * with the window's.  It is needed because there are situations when the
+ * window manager can change the layout of an NSWindow without having been
+ * requested to do so by Tk.  Examples are when a window goes FullScreen or
+ * shows a tab bar.  NSWindow methods which involve such layout changes should
+ * be overridden or protected by methods which call this.
+ */
+
+- (void) tkLayoutChanged
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
 
-    return (winPtr && winPtr->wmInfoPtr && (winPtr->wmInfoPtr->macClass ==
-	    kHelpWindowClass || winPtr->wmInfoPtr->attributes &
-	    kWindowNoActivatesAttribute)) ? NO : YES;
+    if (winPtr) {
+	NSRect frameRect;
+
+	/*
+	 * This avoids including the title bar for full screen windows
+	 * but does include it for normal windows.
+	 */
+
+	if ([self styleMask] & NSFullScreenWindowMask) {
+ 	    frameRect = [NSWindow frameRectForContentRect:NSZeroRect
+		    styleMask:[self styleMask]];
+	} else {
+	    frameRect = [self frameRectForContentRect:NSZeroRect];
+	}
+
+	WmInfo *wmPtr = winPtr->wmInfoPtr;
+
+	wmPtr->xInParent = -frameRect.origin.x;
+	wmPtr->yInParent = frameRect.origin.y + frameRect.size.height;
+	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width;
+	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height;
+    }
 }
 
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+- (void)toggleTabBar:(id)sender
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    if (!winPtr) {
+	return;
+    }
+    [super toggleTabBar:sender];
+    [self tkLayoutChanged];
+}
+#endif
 
+- (NSSize)windowWillResize:(NSWindow *)sender
+                    toSize:(NSSize)frameSize
+{
+    NSRect currentFrame = [sender frame];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(sender);
+    if (winPtr) {
+	if (winPtr->wmInfoPtr->flags & WM_WIDTH_NOT_RESIZABLE) {
+	    frameSize.width = currentFrame.size.width;
+	}
+	if (winPtr->wmInfoPtr->flags & WM_HEIGHT_NOT_RESIZABLE) {
+	    frameSize.height = currentFrame.size.height;
+	}
+    }
+    return frameSize;
+}
+
+- (BOOL) canBecomeKeyWindow
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+    if (!winPtr) {
+	return NO;
+    }
+    return (winPtr->wmInfoPtr &&
+	    (winPtr->wmInfoPtr->macClass == kHelpWindowClass ||
+	     winPtr->wmInfoPtr->attributes & kWindowNoActivatesAttribute)
+	    ) ? NO : YES;
+}
 
 #if DEBUG_ZOMBIES
 - (id) retain
@@ -409,8 +447,9 @@ static void		RemapWindows(TkWindow *winPtr,
     if (title == nil) {
 	title = "unnamed window";
     }
-    if (DEBUG_ZOMBIES > 1){
-	printf("Retained <%s>. Count is: %lu\n", title, [self retainCount]);
+    if (DEBUG_ZOMBIES > 1) {
+	fprintf(stderr, "Retained <%s>. Count is: %lu\n",
+		title, [self retainCount]);
     }
     return result;
 }
@@ -422,8 +461,9 @@ static void		RemapWindows(TkWindow *winPtr,
     if (title == nil) {
 	title = "unnamed window";
     }
-    if (DEBUG_ZOMBIES > 1){
-	printf("Autoreleased <%s>. Count is %lu\n", title, [self retainCount]);
+    if (DEBUG_ZOMBIES > 1) {
+	fprintf(stderr, "Autoreleased <%s>. Count is %lu\n",
+		title, [self retainCount]);
     }
     return result;
 }
@@ -433,8 +473,9 @@ static void		RemapWindows(TkWindow *winPtr,
     if (title == nil) {
 	title = "unnamed window";
     }
-    if (DEBUG_ZOMBIES > 1){
-	printf("Releasing <%s>. Count is %lu\n", title, [self retainCount]);
+    if (DEBUG_ZOMBIES > 1) {
+	fprintf(stderr, "Releasing <%s>. Count is %lu\n",
+		title, [self retainCount]);
     }
     [super release];
 }
@@ -444,12 +485,12 @@ static void		RemapWindows(TkWindow *winPtr,
     if (title == nil) {
 	title = "unnamed window";
     }
-    if (DEBUG_ZOMBIES > 0){
-	printf(">>>> Freeing <%s>. Count is %lu\n", title, [self retainCount]);
+    if (DEBUG_ZOMBIES > 0) {
+	fprintf(stderr, ">>>> Freeing <%s>. Count is %lu\n",
+		title, [self retainCount]);
     }
     [super dealloc];
 }
-
 
 #endif
 @end
@@ -549,7 +590,8 @@ SetWindowSizeLimits(
  *
  * FrontWindowAtPoint --
  *
- *	Find frontmost toplevel window at a given screen location.
+ *	Find frontmost toplevel window at a given screen location which has the
+ *      specified mainPtr.  If the location is in the title bar, return NULL.
  *
  * Results:
  *	TkWindow*.
@@ -562,19 +604,38 @@ SetWindowSizeLimits(
 
 static TkWindow*
 FrontWindowAtPoint(
-    int x, int y)
+    int x,
+    int y)
 {
-    NSPoint p = NSMakePoint(x, tkMacOSXZeroScreenHeight - y);
+    NSPoint p = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
     NSArray *windows = [NSApp orderedWindows];
-    TkWindow *front = NULL;
+    TkWindow *winPtr = NULL;
 
     for (NSWindow *w in windows) {
-	    if (w && NSMouseInRect(p, [w frame], NO)) {
-		front = TkMacOSXGetTkWindow(w);
-		break;
+	winPtr = TkMacOSXGetTkWindow(w);
+	if (winPtr) {
+	    WmInfo *wmPtr = winPtr->wmInfoPtr;
+	    NSRect windowFrame = [w frame];
+	    NSRect contentFrame = [w frame];
+
+	    contentFrame.size.height = [[w contentView] frame].size.height;
+	    /*
+	     * For consistency with other platforms, points in the
+	     * title bar are not considered to be contained in the
+	     * window.
+	     */
+
+	    if ((wmPtr->hints.initial_state == NormalState ||
+		    wmPtr->hints.initial_state == ZoomState)) {
+		if (NSMouseInRect(p, contentFrame, NO)) {
+		    return winPtr;
+		} else if (NSMouseInRect(p, windowFrame, NO)) {
+		    return NULL;
+		}
 	    }
 	}
-    return front;
+    }
+    return NULL;
 }
 
 /*
@@ -604,7 +665,7 @@ TkWmNewWindow(
     wmPtr->reparent = None;
     wmPtr->titleUid = NULL;
     wmPtr->iconName = NULL;
-    wmPtr->master = None;
+    wmPtr->master = NULL;
     wmPtr->hints.flags = InputHint | StateHint;
     wmPtr->hints.input = True;
     wmPtr->hints.initial_state = NormalState;
@@ -614,9 +675,9 @@ TkWmNewWindow(
     wmPtr->hints.icon_mask = None;
     wmPtr->hints.window_group = None;
     wmPtr->leaderName = NULL;
-    wmPtr->masterWindowName = NULL;
     wmPtr->icon = NULL;
     wmPtr->iconFor = NULL;
+    wmPtr->transientPtr = NULL;
     wmPtr->sizeHintsFlags = 0;
     wmPtr->minWidth = wmPtr->minHeight = 1;
     wmPtr->maxWidth = 0;
@@ -702,7 +763,6 @@ TkWmMapWindow(
 				 * mapped. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-
     if (wmPtr->flags & WM_NEVER_MAPPED) {
 	/*
 	 * Create the underlying Mac window for this Tk window.
@@ -770,11 +830,6 @@ TkWmMapWindow(
      */
 
     XMapWindow(winPtr->display, winPtr->window);
-
-    /*Add window to Window menu.*/
-    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
-    [win setExcludedFromWindowsMenu:NO];
-
 }
 
 /*
@@ -828,6 +883,12 @@ TkWmDeadWindow(
     if (wmPtr == NULL) {
 	return;
     }
+
+    /*
+     *If the dead window is a transient, remove it from the master's list.
+     */
+
+    RemoveTransient(winPtr);
     Tk_ManageGeometry((Tk_Window) winPtr, NULL, NULL);
     Tk_DeleteEventHandler((Tk_Window) winPtr, StructureNotifyMask,
 	    TopLevelEventProc, winPtr);
@@ -843,9 +904,6 @@ TkWmDeadWindow(
     if (wmPtr->leaderName != NULL) {
 	ckfree(wmPtr->leaderName);
     }
-    if (wmPtr->masterWindowName != NULL) {
-	ckfree(wmPtr->masterWindowName);
-    }
     if (wmPtr->icon != NULL) {
 	wmPtr2 = ((TkWindow *) wmPtr->icon)->wmInfoPtr;
 	wmPtr2->iconFor = NULL;
@@ -857,7 +915,6 @@ TkWmDeadWindow(
     }
     while (wmPtr->protPtr != NULL) {
 	ProtocolHandler *protPtr = wmPtr->protPtr;
-
 	wmPtr->protPtr = protPtr->nextPtr;
 	Tcl_EventuallyFree(protPtr, TCL_DYNAMIC);
     }
@@ -872,6 +929,29 @@ TkWmDeadWindow(
     }
 
     /*
+     * If the dead window has a transient, remove references to it from
+     * the transient.
+     */
+
+    for (Transient *transientPtr = wmPtr->transientPtr;
+	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
+    	TkWindow *winPtr2 = transientPtr->winPtr;
+    	TkWindow *masterPtr = (TkWindow *) TkGetTransientMaster(winPtr2);
+
+    	if (masterPtr == winPtr) {
+    	    wmPtr2 = winPtr2->wmInfoPtr;
+    	    wmPtr2->master = NULL;
+    	}
+    }
+
+    while (wmPtr->transientPtr != NULL) {
+	Transient *transientPtr = wmPtr->transientPtr;
+
+	wmPtr->transientPtr = transientPtr->nextPtr;
+	ckfree(transientPtr);
+    }
+
+    /*
      * Delete the Mac window and remove it from the windowTable. The window
      * could be nil if the window was never mapped. However, we don't do this
      * for embedded windows, they don't go in the window list, and they do not
@@ -880,8 +960,9 @@ TkWmDeadWindow(
 
     NSWindow *window = wmPtr->window;
 
-    if (window && !Tk_IsEmbedded(winPtr) ) {
+    if (window && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [window parentWindow];
+
 	if (parent) {
 	    [parent removeChildWindow:window];
 	}
@@ -891,7 +972,8 @@ TkWmDeadWindow(
 	    if (title == nil) {
 		title = "unnamed window";
 	    }
-	    printf(">>>> Closing <%s>. Count is: %lu\n", title, [window retainCount]);
+	    fprintf(stderr, ">>>> Closing <%s>. Count is: %lu\n", title,
+		    [window retainCount]);
 	}
 #endif
 	[window close];
@@ -906,32 +988,36 @@ TkWmDeadWindow(
 	NSArray *windows = [NSApp orderedWindows];
 	for (id nswindow in windows) {
 	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(nswindow);
+
 	    if (winPtr2 && nswindow != window) {
 		WmInfo *wmPtr = winPtr2->wmInfoPtr;
-		BOOL minimized = (wmPtr->hints.initial_state == IconicState ||
-				  wmPtr->hints.initial_state == WithdrawnState);
+		BOOL minimized = (wmPtr->hints.initial_state == IconicState
+			|| wmPtr->hints.initial_state == WithdrawnState);
+
 		/*
-		 * If no windows are left on the screen and the next
-		 * window is iconified or withdrawn, we don't want to
-		 * make it be the KeyWindow because that would cause
-		 * it to be displayed on the screen.
+		 * If no windows are left on the screen and the next window is
+		 * iconified or withdrawn, we don't want to make it be the
+		 * KeyWindow because that would cause it to be displayed on the
+		 * screen.
 		 */
+
 		if ([nswindow canBecomeKeyWindow] && !minimized) {
 		    [nswindow makeKeyAndOrderFront:NSApp];
 		    break;
 		}
 	    }
 	}
+
 	/*
 	 * Process all window events immediately to force the closed window to
 	 * be deallocated.  But don't do this for the root window as that is
 	 * unnecessary and can lead to segfaults.
 	 */
+
 	if (winPtr->parentPtr) {
-	    while (Tk_DoOneEvent(TK_WINDOW_EVENTS|TK_DONT_WAIT)) {}
+	    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
 	}
 	[NSApp _resetAutoreleasePool];
-
 #if DEBUG_ZOMBIES > 0
 	fprintf(stderr, "================= Pool dump ===================\n");
 	[NSAutoreleasePool showPools];
@@ -1254,10 +1340,11 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolean != ((wmPtr->flags & WM_FULLSCREEN) != 0)) {
-	    if (TkMacOSXMakeFullscreen(winPtr, macWindow, boolean, interp)
-		    != TCL_OK) {
-		return TCL_ERROR;
-	    }
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+	    [macWindow toggleFullScreen:macWindow];
+#else
+	    TKLog(@"The fullscreen attribute is ignored on this system.");
+#endif
 	}
 	break;
     case WMATT_MODIFIED:
@@ -1334,6 +1421,9 @@ WmSetAttribute(
 		    TK_PARENT_WINDOW);
 	    }
 	break;
+    case WMATT_TYPE:
+	TKLog(@"The type attribute is ignored on macOS.");
+	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
 	return TCL_ERROR;
@@ -1383,6 +1473,9 @@ WmGetAttribute(
 	break;
     case WMATT_TRANSPARENT:
 	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
+	break;
+    case WMATT_TYPE:
+	result = Tcl_NewStringObj("unsupported", -1);
 	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
@@ -1437,7 +1530,7 @@ WmAttributesCmd(
 		    WmGetAttribute(winPtr, macWindow, attribute));
 	}
 	Tcl_SetObjResult(interp, result);
-    } else if (objc == 4)  {	/* wm attributes $win -attribute */
+    } else if (objc == 4) {	/* wm attributes $win -attribute */
 	if (Tcl_GetIndexFromObjStruct(interp, objv[3], WmAttributeNames,
 		sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
@@ -1646,7 +1739,7 @@ WmCommandCmd(
 	}
 	return TCL_OK;
     }
-    if (Tcl_GetString(objv[3])[0] == 0) {
+    if (*Tcl_GetString(objv[3]) == '\0') {
 	if (wmPtr->commandObj != NULL) {
 	    Tcl_DecrRefCount(wmPtr->commandObj);
 	    wmPtr->commandObj = NULL;
@@ -1691,6 +1784,7 @@ WmDeiconifyCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -1713,6 +1807,33 @@ WmDeiconifyCmd(
 
     TkpWmSetState(winPtr, TkMacOSXIsWindowZoomed(winPtr) ?
 	    ZoomState : NormalState);
+    [win setExcludedFromWindowsMenu:NO];
+    TkMacOSXApplyWindowAttributes(winPtr, win);
+    [win orderFront:nil];
+    if (wmPtr->icon) {
+	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
+    }
+
+    /*
+     * If this window has a transient, the transient must also be deiconified if
+     * it was withdrawn by the master.
+     */
+
+    for (Transient *transientPtr = wmPtr->transientPtr;
+	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
+	TkWindow *winPtr2 = transientPtr->winPtr;
+	WmInfo *wmPtr2 = winPtr2->wmInfoPtr;
+	TkWindow *masterPtr = (TkWindow *) TkGetTransientMaster(winPtr2);
+
+    	if (masterPtr == winPtr) {
+	    if ((wmPtr2->hints.initial_state == WithdrawnState) &&
+		    ((transientPtr->flags & WITHDRAWN_BY_MASTER) != 0)) {
+		TkpWmSetState(winPtr2, NormalState);
+		transientPtr->flags &= ~WITHDRAWN_BY_MASTER;
+	    }
+	}
+    }
+
     return TCL_OK;
 }
 
@@ -1863,6 +1984,7 @@ WmFrameCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Window window;
+    char buf[TCL_INTEGER_SPACE];
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window");
@@ -1872,7 +1994,8 @@ WmFrameCmd(
     if (window == None) {
 	window = Tk_WindowId((Tk_Window) winPtr);
     }
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%x", (unsigned) window));
+    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     return TCL_OK;
 }
 
@@ -1902,8 +2025,9 @@ WmGeometryCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
-    char xSign, ySign;
-    int width, height;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    char xSign = '+', ySign = '+';
+    int width, height, x = wmPtr->x, y= wmPtr->y;
     char *argv3;
 
     if ((objc != 3) && (objc != 4)) {
@@ -1911,8 +2035,6 @@ WmGeometryCmd(
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	xSign = (wmPtr->flags & WM_NEGATIVE_X) ? '-' : '+';
-	ySign = (wmPtr->flags & WM_NEGATIVE_Y) ? '-' : '+';
 	if (wmPtr->gridWin != NULL) {
 	    width = wmPtr->reqGridWidth + (winPtr->changes.width
 		    - winPtr->reqWidth)/wmPtr->widthInc;
@@ -1922,8 +2044,20 @@ WmGeometryCmd(
 	    width = winPtr->changes.width;
 	    height = winPtr->changes.height;
 	}
+	if (win) {
+	    if (wmPtr->flags & WM_NEGATIVE_X) {
+		xSign = '-';
+		x = wmPtr->vRootWidth - wmPtr->x
+		    - (width + (wmPtr->parentWidth - winPtr->changes.width));
+	    }
+	    if (wmPtr->flags & WM_NEGATIVE_Y) {
+		ySign = '-';
+		y = wmPtr->vRootHeight - wmPtr->y
+		    - (height + (wmPtr->parentHeight - winPtr->changes.height));
+	    }
+	}
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%dx%d%c%d%c%d",
-		width, height, xSign, wmPtr->x, ySign, wmPtr->y));
+		width, height, xSign, x, ySign, y));
 	return TCL_OK;
     }
     argv3 = Tcl_GetString(objv[3]);
@@ -2201,7 +2335,7 @@ WmIconifyCmd(
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "OVERRIDE_REDIRECT",
 		NULL);
 	return TCL_ERROR;
-    } else if (wmPtr->master != None) {
+    } else if (wmPtr->master != NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't iconify \"%s\": it is a transient", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "WM", "ICONIFY", "TRANSIENT", NULL);
@@ -2221,6 +2355,26 @@ WmIconifyCmd(
     }
 
     TkpWmSetState(winPtr, IconicState);
+    if (wmPtr->icon) {
+	Tk_MapWindow((Tk_Window)wmPtr->icon);
+    }
+
+    /*
+     * If this window has a transient the transient must be withdrawn when
+     * the master is iconified.
+     */
+
+    for (Transient *transientPtr = wmPtr->transientPtr;
+	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
+	TkWindow *winPtr2 = transientPtr->winPtr;
+	TkWindow *masterPtr = (TkWindow *) TkGetTransientMaster(winPtr2);
+    	if (masterPtr == winPtr &&
+		winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
+	    TkpWmSetState(winPtr2, WithdrawnState);
+	    transientPtr->flags |= WITHDRAWN_BY_MASTER;
+	}
+    }
+
     return TCL_OK;
 }
 
@@ -2364,6 +2518,7 @@ WmIconphotoCmd(
 {
     Tk_Image tk_icon;
     int width, height, isDefault = 0;
+    NSImage *newIcon = NULL;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
@@ -2371,7 +2526,10 @@ WmIconphotoCmd(
 	return TCL_ERROR;
     }
 
-    /*Parse args.*/
+    /*
+     * Parse args.
+     */
+
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	isDefault = 1;
 	if (objc == 4) {
@@ -2381,16 +2539,22 @@ WmIconphotoCmd(
 	}
     }
 
-    /*Get icon name. We only use the first icon name because macOS does not
-      support multiple images in Tk photos.*/
+    /*
+     * Get icon name. We only use the first icon name because macOS does not
+     * support multiple images in Tk photos.
+     */
+
     char *icon;
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
 	icon = Tcl_GetString(objv[4]);
-    }	else {
+    } else {
 	icon = Tcl_GetString(objv[3]);
     }
 
-    /*Get image and convert to NSImage that can be displayed as icon.*/
+    /*
+     * Get image and convert to NSImage that can be displayed as icon.
+     */
+
     tk_icon = Tk_GetImage(interp, tkwin, icon, NULL, NULL);
     if (tk_icon == NULL) {
     	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -2400,11 +2564,16 @@ WmIconphotoCmd(
 	return TCL_ERROR;
     }
 
-    NSImage *newIcon;
     Tk_SizeOfImage(tk_icon, &width, &height);
-    newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon, width, height);
+    if (width != 0 && height != 0) {
+	newIcon = TkMacOSXGetNSImageWithTkImage(winPtr->display, tk_icon,
+						width, height);
+    }
     Tk_FreeImage(tk_icon);
     if (newIcon == NULL) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "failed to create an iconphoto with image \"%s\"", icon));
+	Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "IMAGE", NULL);
 	return TCL_ERROR;
     }
     [NSApp setApplicationIconImage: newIcon];
@@ -2459,7 +2628,7 @@ WmIconpositionCmd(
 	wmPtr->hints.flags &= ~IconPositionHint;
     } else {
 	if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)){
+		|| (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)) {
 	    return TCL_ERROR;
 	}
 	wmPtr->hints.icon_x = x;
@@ -2539,8 +2708,17 @@ WmIconwindowCmd(
 	    return TCL_ERROR;
 	}
 	if (wmPtr->icon != NULL) {
-	    WmInfo *wmPtr3 = ((TkWindow *) wmPtr->icon)->wmInfoPtr;
+	    TkWindow *oldIcon = (TkWindow *)wmPtr->icon;
+	    WmInfo *wmPtr3 = oldIcon->wmInfoPtr;
+	    NSWindow *win = TkMacOSXDrawableWindow(oldIcon->window);
 
+	    /*
+	     * The old icon should be withdrawn.
+	     */
+
+	    TkpWmSetState(oldIcon, WithdrawnState);
+	    [win orderOut:nil];
+    	    [win setExcludedFromWindowsMenu:YES];
 	    wmPtr3->iconFor = NULL;
 	}
 	Tk_MakeWindowExist(tkwin2);
@@ -2550,10 +2728,14 @@ WmIconwindowCmd(
 	wmPtr2->iconFor = (Tk_Window) winPtr;
 	if (!(wmPtr2->flags & WM_NEVER_MAPPED)) {
 	    /*
-	     * Don't have iconwindows on the Mac. We just withdraw.
+	     * If the window is in normal or zoomed state, the icon should be
+	     * unmapped.
 	     */
 
-	    Tk_UnmapWindow(tkwin2);
+	    if (wmPtr->hints.initial_state == NormalState ||
+		    wmPtr->hints.initial_state == ZoomState) {
+		Tk_UnmapWindow(tkwin2);
+	    }
 	}
     }
     return TCL_OK;
@@ -2606,8 +2788,6 @@ WmManageCmd(
 		Tk_MakeWindowExist((Tk_Window) winPtr);
 		macWin = (MacDrawable *) winPtr->window;
 	    }
-	    TkWmMapWindow(winPtr);
-	    Tk_UnmapWindow(frameWin);
 	}
 	wmPtr = winPtr->wmInfoPtr;
 	winPtr->flags &= ~TK_MAPPED;
@@ -2618,6 +2798,7 @@ WmManageCmd(
 	winPtr->flags |=
 		(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	TkMapTopFrame(frameWin);
+	TkWmMapWindow(winPtr);
     } else if (Tk_IsTopLevel(frameWin)) {
 	/* Already managed by wm - ignore it */
     }
@@ -2757,8 +2938,9 @@ WmOverrideredirectCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int boolean;
+    int flag;
     XSetWindowAttributes atts;
+    TKWindow *win = (TKWindow *)TkMacOSXDrawableWindow(winPtr->window);
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?boolean?");
@@ -2771,12 +2953,12 @@ WmOverrideredirectCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolean) != TCL_OK) {
+    if (Tcl_GetBooleanFromObj(interp, objv[3], &flag) != TCL_OK) {
 	return TCL_ERROR;
     }
-    atts.override_redirect = (boolean) ? True : False;
+    atts.override_redirect = flag ? True : False;
     Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
-    ApplyMasterOverrideChanges(winPtr, NULL);
+    ApplyMasterOverrideChanges(winPtr, win);
     return TCL_OK;
 }
 
@@ -2921,7 +3103,7 @@ WmProtocolCmd(
      */
 
     for (protPtr = wmPtr->protPtr, prevPtr = NULL; protPtr != NULL;
-	prevPtr = protPtr, protPtr = protPtr->nextPtr) {
+	    prevPtr = protPtr, protPtr = protPtr->nextPtr) {
 	if (protPtr->protocol == protocol) {
 	    if (prevPtr == NULL) {
 		wmPtr->protPtr = protPtr->nextPtr;
@@ -3132,18 +3314,18 @@ WmStackorderCmd(
 
     if (objc == 3) {
 	windows = TkWmStackorderToplevel(winPtr);
-	if (windows == NULL) {
-	    Tcl_Panic("TkWmStackorderToplevel failed");
-	}
-
-	resultObj = Tcl_NewObj();
-	for (windowPtr = windows; *windowPtr ; windowPtr++) {
-	    Tcl_ListObjAppendElement(NULL, resultObj,
+	if (windows != NULL) {
+	    resultObj = Tcl_NewObj();
+	    for (windowPtr = windows; *windowPtr ; windowPtr++) {
+		Tcl_ListObjAppendElement(NULL, resultObj,
 		    TkNewWindowObj((Tk_Window) *windowPtr));
+	    }
+	    Tcl_SetObjResult(interp, resultObj);
+	    ckfree(windows);
+	    return TCL_OK;
+	} else {
+	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, resultObj);
-	ckfree(windows);
-	return TCL_OK;
     } else {
 	TkWindow *winPtr2;
 	int index1 = -1, index2 = -1, result;
@@ -3274,14 +3456,17 @@ WmStateCmd(
 	    return TCL_ERROR;
 	}
 
-	if (index == OPT_NORMAL) {
+	switch (index) {
+	case OPT_NORMAL:
 	    TkpWmSetState(winPtr, NormalState);
 
 	    /*
 	     * This varies from 'wm deiconify' because it does not force the
 	     * window to be raised and receive focus
 	     */
-	} else if (index == OPT_ICONIC) {
+
+	    break;
+	case OPT_ICONIC:
 	    if (Tk_Attributes((Tk_Window) winPtr)->override_redirect) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't iconify \"%s\": override-redirect flag is set",
@@ -3290,7 +3475,7 @@ WmStateCmd(
 			"OVERRIDE_REDIRECT", NULL);
 		return TCL_ERROR;
 	    }
-	    if (wmPtr->master != None) {
+	    if (wmPtr->master != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't iconify \"%s\": it is a transient",
 			winPtr->pathName));
@@ -3299,10 +3484,13 @@ WmStateCmd(
 		return TCL_ERROR;
 	    }
 	    TkpWmSetState(winPtr, IconicState);
-	} else if (index == OPT_WITHDRAWN) {
+	    break;
+	case OPT_WITHDRAWN:
 	    TkpWmSetState(winPtr, WithdrawnState);
-	} else { /* OPT_ZOOMED */
+	    break;
+	default: /* OPT_ZOOMED */
 	    TkpWmSetState(winPtr, ZoomState);
+	    break;
 	}
     } else if (wmPtr->iconFor != NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("icon", -1));
@@ -3405,32 +3593,36 @@ WmTransientCmd(
 {
     register WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window master;
+    TkWindow *masterPtr, *w;
     WmInfo *wmPtr2;
-    char *masterWindowName;
-    int length;
+    Transient *transient;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?master?");
 	return TCL_ERROR;
     }
     if (objc == 3) {
-	if (wmPtr->master != None) {
+	if (wmPtr->master != NULL) {
 	    Tcl_SetObjResult(interp,
-		    Tcl_NewStringObj(wmPtr->masterWindowName, -1));
+		Tcl_NewStringObj(Tk_PathName(wmPtr->master), -1));
 	}
 	return TCL_OK;
     }
-    if (Tcl_GetString(objv[3])[0] == '\0') {
-	wmPtr->master = None;
-	if (wmPtr->masterWindowName != NULL) {
-	    ckfree(wmPtr->masterWindowName);
-	}
-	wmPtr->masterWindowName = NULL;
+    if (*Tcl_GetString(objv[3]) == '\0') {
+	RemoveTransient(winPtr);
     } else {
 	if (TkGetWindowFromObj(interp, tkwin, objv[3], &master) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tk_MakeWindowExist(master);
+	masterPtr = (TkWindow*) master;
+	while (!Tk_TopWinHierarchy(masterPtr)) {
+            /*
+             * Ensure that the master window is actually a Tk toplevel.
+             */
+
+            masterPtr = masterPtr->parentPtr;
+        }
+	Tk_MakeWindowExist((Tk_Window)masterPtr);
 
 	if (wmPtr->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -3440,9 +3632,12 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	wmPtr2 = ((TkWindow *) master)->wmInfoPtr;
+	wmPtr2 = masterPtr->wmInfoPtr;
 
-	/* Under some circumstances, wmPtr2 is NULL here */
+	/*
+	 * Under some circumstances, wmPtr2 is NULL here.
+	 */
+
 	if (wmPtr2 != NULL && wmPtr2->iconFor != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't make \"%s\" a master: it is an icon for %s",
@@ -3451,23 +3646,104 @@ WmTransientCmd(
 	    return TCL_ERROR;
 	}
 
-	if ((TkWindow *) master == winPtr) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't make \"%s\" its own master", Tk_PathName(winPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
-	    return TCL_ERROR;
+	for (w = masterPtr; w != NULL && w->wmInfoPtr != NULL;
+		w = (TkWindow *)w->wmInfoPtr->master) {
+	    if (w == winPtr) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "setting \"%s\" as master creates a transient/master cycle",
+		    Tk_PathName(masterPtr)));
+		Tcl_SetErrorCode(interp, "TK", "WM", "TRANSIENT", "SELF", NULL);
+		return TCL_ERROR;
+	    }
 	}
 
-	wmPtr->master = Tk_WindowId(master);
-	masterWindowName = Tcl_GetStringFromObj(objv[3], &length);
-	if (wmPtr->masterWindowName != NULL) {
-	    ckfree(wmPtr->masterWindowName);
+	/*
+	 * Add the transient to the master's list, if it not already there.
+	 */
+
+	for (transient = wmPtr2->transientPtr;
+	     transient != NULL && transient->winPtr != winPtr;
+	     transient = transient->nextPtr) {}
+	if (transient == NULL) {
+	    transient = ckalloc(sizeof(Transient));
+	    transient->winPtr = winPtr;
+	    transient->flags = 0;
+	    transient->nextPtr = wmPtr2->transientPtr;
+	    wmPtr2->transientPtr = transient;
 	}
-	wmPtr->masterWindowName = ckalloc(length+1);
-	strcpy(wmPtr->masterWindowName, masterWindowName);
+
+	/*
+	 * If the master is withdrawn or iconic then withdraw the transient.
+	 */
+
+	if ((wmPtr2->hints.initial_state == WithdrawnState ||
+		wmPtr2->hints.initial_state == IconicState) &&
+		wmPtr->hints.initial_state != WithdrawnState) {
+	    TkpWmSetState(winPtr, WithdrawnState);
+	    transient->flags |= WITHDRAWN_BY_MASTER;
+	}
+
+	wmPtr->master = (Tk_Window) masterPtr;
     }
     ApplyMasterOverrideChanges(winPtr, NULL);
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * RemoveTransient --
+ *
+ *      Clears the transient's master record and removes the transient from the
+ *      master's list.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *      References to a master are removed from the transient's wmInfo
+ *	structure and references to the transient are removed from its master's
+ *	wmInfo.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+RemoveTransient(
+    TkWindow *winPtr)
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
+    TkWindow *masterPtr;
+    Transient *transPtr, *temp;
+
+    if (wmPtr == NULL || wmPtr->master == NULL) {
+	return;
+    }
+    masterPtr = (TkWindow*)wmPtr->master;
+    wmPtr2 = masterPtr->wmInfoPtr;
+    if (wmPtr2 == NULL) {
+	return;
+    }
+    wmPtr->master = NULL;
+    transPtr = wmPtr2->transientPtr;
+    while (transPtr != NULL) {
+	if (transPtr->winPtr != winPtr) {
+	    break;
+	}
+	temp = transPtr->nextPtr;
+	ckfree(transPtr);
+	transPtr = temp;
+    }
+    wmPtr2->transientPtr = transPtr;
+    while (transPtr != NULL) {
+	if (transPtr->nextPtr && transPtr->nextPtr->winPtr == winPtr) {
+	    temp = transPtr->nextPtr;
+	    transPtr->nextPtr = temp->nextPtr;
+	    ckfree(temp);
+	} else {
+	    transPtr = transPtr->nextPtr;
+	}
+    }
 }
 
 /*
@@ -3509,17 +3785,35 @@ WmWithdrawCmd(
 	Tcl_SetErrorCode(interp, "TK", "WM", "WITHDRAW", "ICON", NULL);
 	return TCL_ERROR;
     }
+
     TkpWmSetState(winPtr, WithdrawnState);
-    /*Remove window from Window menu.*/
+
     NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    [win orderOut:nil];
     [win setExcludedFromWindowsMenu:YES];
+
+    /*
+     * If this window has a transient, the transient must also be withdrawn.
+     */
+
+    for (Transient *transientPtr = wmPtr->transientPtr;
+	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
+	TkWindow *winPtr2 = transientPtr->winPtr;
+	TkWindow *masterPtr = (TkWindow *) TkGetTransientMaster(winPtr2);
+
+    	if (masterPtr == winPtr &&
+		winPtr2->wmInfoPtr->hints.initial_state != WithdrawnState) {
+	    TkpWmSetState(winPtr2, WithdrawnState);
+	    transientPtr->flags |= WITHDRAWN_BY_MASTER;
+	}
+    }
 
     return TCL_OK;
 }
-
+
 /*
- * Invoked by those wm subcommands that affect geometry.
- * Schedules a geometry update.
+ * Invoked by those wm subcommands that affect geometry.  Schedules a geometry
+ * update.
  */
 
 static void
@@ -3606,14 +3900,13 @@ Tk_SetGrid(
 
     /*
      * If gridding was previously off, then forget about any window size
-     * requests made by the user or via "wm geometry": these are in pixel
-     * units and there's no easy way to translate them to grid units since the
-     * new requested size of the top-level window in pixels may not yet have
-     * been registered yet (it may filter up the hierarchy in DoWhenIdle
-     * handlers). However, if the window has never been mapped yet then just
-     * leave the window size alone: assume that it is intended to be in grid
-     * units but just happened to have been specified before this procedure
-     * was called.
+     * requests made by the user or via "wm geometry": these are in pixel units
+     * and there's no easy way to translate them to grid units since the new
+     * requested size of the top-level window in pixels may not yet have been
+     * registered yet (it may filter up the hierarchy in DoWhenIdle handlers).
+     * However, if the window has never been mapped yet then just leave the
+     * window size alone: assume that it is intended to be in grid units but
+     * just happened to have been specified before this procedure was called.
      */
 
     if ((wmPtr->gridWin == NULL) && !(wmPtr->flags & WM_NEVER_MAPPED)) {
@@ -3894,27 +4187,8 @@ UpdateGeometryInfo(
     } else if ((max > 0) && (height > max)) {
 	height = max;
     }
-
-    /*
-     * Compute the new position for the upper-left pixel of the window's
-     * decorative frame. This is tricky, because we need to include the border
-     * widths supplied by a reparented parent in this calculation, but can't
-     * use the parent's current overall size since that may change as a result
-     * of this code.
-     */
-
-    if (wmPtr->flags & WM_NEGATIVE_X) {
-	x = wmPtr->vRootWidth - wmPtr->x
-	    - (width + (wmPtr->parentWidth - winPtr->changes.width));
-    } else {
-	x =  wmPtr->x;
-    }
-    if (wmPtr->flags & WM_NEGATIVE_Y) {
-	y = wmPtr->vRootHeight - wmPtr->y
-	    - (height + (wmPtr->parentHeight - winPtr->changes.height));
-    } else {
-	y =  wmPtr->y;
-    }
+    x = wmPtr->x;
+    y = wmPtr->y;
 
     /*
      * If the window's size is going to change and the window is supposed to
@@ -4075,8 +4349,8 @@ ParseGeometry(
 
     width = wmPtr->width;
     height = wmPtr->height;
-    x = wmPtr->x;
-    y = wmPtr->y;
+    x = -1;
+    y = -1;
     flags = wmPtr->flags;
     if (isdigit(UCHAR(*p))) {
 	width = strtoul(p, &end, 10);
@@ -4140,24 +4414,47 @@ ParseGeometry(
      * Everything was parsed OK. Update the fields of *wmPtr and arrange for
      * the appropriate information to be percolated out to the window manager
      * at the next idle moment.
+     *
+     * Computing the new position for the upper-left pixel of the window's
+     * decorative frame is tricky because we need to include the border
+     * widths supplied by a reparented parent in the calculation, but we can't
+     * use the parent's current overall size since that may change as a result
+     * of this code.
      */
 
     wmPtr->width = width;
     wmPtr->height = height;
-    if ((x != wmPtr->x) || (y != wmPtr->y)
-	    || ((flags & (WM_NEGATIVE_X|WM_NEGATIVE_Y))
-		    != (wmPtr->flags & (WM_NEGATIVE_X|WM_NEGATIVE_Y)))) {
-	if (wmPtr->flags & WM_FULLSCREEN) {
-	    wmPtr->configX = x;
-	    wmPtr->configY = y;
-	} else {
-	    wmPtr->x = x;
-	    wmPtr->y = y;
-	}
-	flags |= WM_MOVE_PENDING;
-    }
-    wmPtr->flags = flags;
+    if (flags & WM_NEGATIVE_X) {
+	int borderwidth = wmPtr->parentWidth - winPtr->changes.width;
+	int newWidth = width == -1 ? winPtr->changes.width : width;
 
+	x = (x == -1) ?
+		wmPtr->x + winPtr->changes.width - newWidth :
+		wmPtr->vRootWidth - x - newWidth - borderwidth;
+    }
+    if (x == -1) {
+	x = wmPtr->x;
+    }
+    if (flags & WM_NEGATIVE_Y) {
+	int borderheight = wmPtr->parentHeight - winPtr->changes.height;
+	int newHeight = height == -1 ? winPtr->changes.height : height;
+
+	y = (y == -1) ?
+		wmPtr->y + winPtr->changes.height - newHeight :
+		wmPtr->vRootHeight - y - newHeight - borderheight;
+    }
+    if (y == -1) {
+	y = wmPtr->y;
+    }
+    if (wmPtr->flags & WM_FULLSCREEN) {
+	wmPtr->configX = x;
+	wmPtr->configY = y;
+    } else {
+	wmPtr->x = x;
+	wmPtr->y = y;
+    }
+    flags |= WM_MOVE_PENDING;
+    wmPtr->flags = flags;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
 	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
@@ -4251,15 +4548,7 @@ Tk_GetRootCoords(
 	     */
 
 	    winPtr = otherPtr;
-
-	    /*
-	     * Remember to offset by the container window here, since at the
-	     * end of this if branch, we will pop out to the container's
-	     * parent...
-	     */
-
-	    x += winPtr->changes.x + winPtr->changes.border_width;
-	    y += winPtr->changes.y + winPtr->changes.border_width;
+            continue;
 	}
 	winPtr = winPtr->parentPtr;
     }
@@ -4279,8 +4568,7 @@ Tk_GetRootCoords(
  *
  * Results:
  *	The return result is either a token for the window corresponding to
- *	rootX and rootY, or else NULL to indicate that there is no such
- *	window.
+ *	rootX and rootY, or else NULL to indicate that there is no such window.
  *
  * Side effects:
  *	None.
@@ -4371,6 +4659,9 @@ Tk_CoordsToWindow(
 	    break;
 	}
 	winPtr = nextPtr;
+    }
+    if (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
+	return NULL;
     }
     return (Tk_Window) winPtr;
 }
@@ -4626,7 +4917,6 @@ Tk_MoveToplevelWindow(
     wmPtr->x = x;
     wmPtr->y = y;
     wmPtr->flags |= WM_MOVE_PENDING;
-    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
     if (!(wmPtr->sizeHintsFlags & (USPosition|PPosition))) {
 	wmPtr->sizeHintsFlags |= USPosition;
 	wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
@@ -4682,9 +4972,10 @@ TkWmRestackToplevel(
     /*
      * If the Tk windows has no drawable, or is withdrawn do nothing.
      */
+
     if (winPtr->window == None ||
-	wmPtr == NULL          ||
-	wmPtr->hints.initial_state == WithdrawnState) {
+	    wmPtr == NULL      ||
+	    wmPtr->hints.initial_state == WithdrawnState) {
 	return;
     }
     macWindow = TkMacOSXDrawableWindow(winPtr->window);
@@ -4693,30 +4984,33 @@ TkWmRestackToplevel(
     }
     if (otherPtr) {
 	/*
-	 * When otherPtr is non-NULL, if the other window has no
-	 * drawable or is withdrawn, do nothing.
+	 * When otherPtr is non-NULL, if the other window has no drawable or is
+	 * withdrawn, do nothing.
 	 */
+
 	WmInfo *otherWmPtr = otherPtr->wmInfoPtr;
 	if (winPtr->window == None ||
-	    otherWmPtr == NULL     ||
-	    otherWmPtr->hints.initial_state == WithdrawnState) {
-	return;
+		otherWmPtr == NULL ||
+		otherWmPtr->hints.initial_state == WithdrawnState) {
+	    return;
 	}
 	otherMacWindow = TkMacOSXDrawableWindow(otherPtr->window);
 	if (otherMacWindow == nil) {
 	    return;
-	} else {
-	    /*
-	     * If the other window is OK, get its number.
-	     */
-	    otherNumber = [otherMacWindow windowNumber];
 	}
+
+	/*
+	 * If the other window is OK, get its number.
+	 */
+
+	otherNumber = [otherMacWindow windowNumber];
     }
 
     /*
-     * Just let the Mac window manager deal with all the subtleties
-     * of keeping track of off-screen windows, etc.
+     * Just let the Mac window manager deal with all the subtleties of keeping
+     * track of off-screen windows, etc.
      */
+
     [macWindow orderWindow:macAboveBelow relativeTo:otherNumber];
 }
 
@@ -4915,8 +5209,8 @@ TkGetPointerCoords(
  *
  *	This function calculates the initial bounds for a new Mac toplevel
  *	window. Unless the geometry is specified by the user this code will
- *	auto place the windows in a cascade diagonially across the main
- *	monitor of the Mac.
+ *	auto place the windows in a cascade diagonially across the main monitor
+ *	of the Mac.
  *
  * Results:
  *	Window bounds.
@@ -4941,7 +5235,7 @@ InitialWindowBounds(
 	cascadePoint = [macWindow cascadeTopLeftFromPoint:cascadePoint];
 	frame = [macWindow frame];
 	wmPtr->x = frame.origin.x;
-	wmPtr->y = tkMacOSXZeroScreenHeight - (frame.origin.y +
+	wmPtr->y = TkMacOSXZeroScreenHeight() - (frame.origin.y +
 		frame.size.height);
     }
     return NSMakeRect(wmPtr->x, wmPtr->y, winPtr->changes.width,
@@ -5063,14 +5357,14 @@ TkSetWMName(
  *----------------------------------------------------------------------
  */
 
-Window
+Tk_Window
 TkGetTransientMaster(
     TkWindow *winPtr)
 {
     if (winPtr->wmInfoPtr != NULL) {
-	return winPtr->wmInfoPtr->master;
+	return (Tk_Window)winPtr->wmInfoPtr->master;
     }
-    return None;
+    return NULL;
 }
 
 /*
@@ -5154,9 +5448,9 @@ MODULE_SCOPE int
 TkMacOSXIsWindowZoomed(
     TkWindow *winPtr)
 {
-    return [TkMacOSXDrawableWindow(winPtr->window) isZoomed];
+    NSWindow *macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    return [macWindow isZoomed];
 }
-
 
 /*
  *----------------------------------------------------------------------
@@ -5199,20 +5493,20 @@ TkMacOSXZoomToplevel(
      * Do nothing if already in desired zoom state.
      */
 
-    if ((![window isZoomed] == (zoomPart == inZoomIn))) {
+    if (([window isZoomed] == (zoomPart == inZoomOut))) {
 	return false;
     }
-      [window zoom:NSApp];
+    [window zoom:NSApp];
 
-     wmPtr->hints.initial_state =
-    	    (zoomPart == inZoomIn ? NormalState : ZoomState);
+    wmPtr->hints.initial_state =
+	(zoomPart == inZoomIn ? NormalState : ZoomState);
     return true;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkUnsupported1Cmd --
+ * TkUnsupported1ObjCmd --
  *
  *	This procedure is invoked to process the
  *	"::tk::unsupported::MacWindowStyle" Tcl command. This command allows
@@ -5236,10 +5530,10 @@ TkUnsupported1ObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const subcmds[] = {
-	"style", NULL
+	"style", "tabbingid", "appearance", "isdark", NULL
     };
     enum SubCmds {
-	TKMWS_STYLE
+	TKMWS_STYLE, TKMWS_TABID, TKMWS_APPEARANCE, TKMWS_ISDARK
     };
     Tk_Window tkwin = clientData;
     TkWindow *winPtr;
@@ -5249,7 +5543,6 @@ TkUnsupported1ObjCmd(
 	Tcl_WrongNumArgs(interp, 1, objv, "option window ?arg ...?");
 	return TCL_ERROR;
     }
-
 
     winPtr = (TkWindow *)
 	    Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
@@ -5267,15 +5560,55 @@ TkUnsupported1ObjCmd(
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (((enum SubCmds) index) == TKMWS_STYLE) {
+    switch((enum SubCmds) index) {
+    case TKMWS_STYLE:
 	if ((objc < 3) || (objc > 5)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "window ?class attributes?");
 	    return TCL_ERROR;
 	}
 	return WmWinStyle(interp, winPtr, objc, objv);
+    case TKMWS_TABID:
+	if ([NSApp macMinorVersion] < 12) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                "Tabbing identifiers did not exist until OSX 10.12.", -1));
+	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "TABBINGID", NULL);
+	    return TCL_ERROR;
+	}
+	if ((objc < 3) || (objc > 4)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?newid?");
+	    return TCL_ERROR;
+	}
+	return WmWinTabbingId(interp, winPtr, objc, objv);
+    case TKMWS_APPEARANCE:
+	if ([NSApp macMinorVersion] < 9) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+                "Window appearances did not exist until OSX 10.9.", -1));
+	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "APPEARANCE", NULL);
+	    return TCL_ERROR;
+	}
+	if ((objc < 3) || (objc > 4)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window ?appearancename?");
+	    return TCL_ERROR;
+	}
+	if (objc == 4 && [NSApp macMinorVersion] < 14) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "Window appearances cannot be changed before OSX 10.14.",
+		    -1));
+	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "APPEARANCE", NULL);
+	    return TCL_ERROR;
+	}
+	return WmWinAppearance(interp, winPtr, objc, objv);
+    case TKMWS_ISDARK:
+	if ((objc != 3)) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window");
+	    return TCL_ERROR;
+	}
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		TkMacOSXInDarkMode((Tk_Window) winPtr)));
+	return TCL_OK;
+    default:
+	return TCL_ERROR;
     }
-    /* won't be reached */
-    return TCL_ERROR;
 }
 
 /*
@@ -5368,21 +5701,6 @@ WmWinStyle(
 	{ "moveToActiveSpace",	tkMoveToActiveSpaceAttribute		     },
 	{ "nonActivating",	tkNonactivatingPanelAttribute		     },
 	{ "hud",		tkHUDWindowAttribute			     },
-	{ "black",		0			                     },
-	{ "dark",		0			                     },
-	{ "light",		0			                     },
-	{ "gray",		0			                     },
-	{ "red",		0 			                     },
-	{ "green",		0                			     },
-	{ "blue",		0           			             },
-	{ "cyan",		0			                     },
-	{ "yellow",		0			                     },
-	{ "magenta",		0  			                     },
-	{ "orange",		0 			                     },
-	{ "purple",		0			                     },
-	{ "brown",		0			                     },
-	{ "clear",		0			                     },
-	{ "opacity",		0			                     },
 	{ NULL }
     };
 
@@ -5464,10 +5782,8 @@ WmWinStyle(
 		macClassAttrs[macClass].validAttrs);
 	wmPtr->flags |= macClassAttrs[macClass].flags;
 	wmPtr->macClass = macClass;
-
 	ApplyWindowAttributeFlagChanges(winPtr, NULL, oldAttributes, oldFlags,
 		0, 1);
-
 	return TCL_OK;
 
     badClassAttrs:
@@ -5476,6 +5792,183 @@ WmWinStyle(
     }
 
     return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmWinTabbingId --
+ *
+ *	This procedure is invoked to process the
+ *	"::tk::unsupported::MacWindowStyle tabbingid" subcommand. The command
+ *	allows you to get or set the tabbingIdentifier for the NSWindow
+ *	associated with a Tk Window.  The syntax is:
+ *
+ *	    tk::unsupported::MacWindowStyle tabbingid window ?newId?
+ *
+ * Results:
+ *	Returns the tabbingIdentifier of the window prior to calling this
+ *      function.  If the optional newId argument is omitted, the window's
+ *      tabbingIdentifier is not changed.
+ *
+ * Side effects:
+ *	Windows may only be grouped together as tabs if they all have the same
+ *      tabbingIdentifier.  In particular, by giving a window a unique
+ *      tabbingIdentifier one can prevent it from becoming a tab in any other
+ *      window.  Changing the tabbingIdentifier of a window which is already
+ *      a tab causes it to become a separate window.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmWinTabbingId(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    TkWindow *winPtr,		/* Window to be manipulated. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj * const objv[])	/* Argument objects. */
+{
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+    Tcl_Obj *result = NULL;
+    NSString *idString;
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    if (win) {
+	idString = win.tabbingIdentifier;
+	result = Tcl_NewStringObj(idString.UTF8String, [idString length]);
+    }
+    if (result == NULL) {
+	NSLog(@"Failed to read tabbing identifier; try calling update idletasks before getting/setting the tabbing identifier of the window.");
+	return TCL_OK;
+    }
+    Tcl_SetObjResult(interp, result);
+    if (objc == 3) {
+	return TCL_OK;
+    } else if (objc == 4) {
+	int len;
+	char *newId = Tcl_GetStringFromObj(objv[3], &len);
+	NSString *newIdString = [NSString stringWithUTF8String:newId];
+	[win setTabbingIdentifier: newIdString];
+
+	/*
+	 * If the tabbingIdentifier of a tab is changed we also turn it into a
+	 * separate window so we don't violate the rule that all tabs in the
+	 * same frame must have the same tabbingIdentifier.
+	 */
+
+	if ([idString compare:newIdString] != NSOrderedSame
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101200
+		&& [win tab]
+#endif
+		) {
+	    [win moveTabToNewWindow:nil];
+	}
+	return TCL_OK;
+    }
+#endif
+    return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmWinAppearance --
+ *
+ *	This procedure is invoked to process the
+ *	"::tk::unsupported::MacWindowStyle appearance" subcommand. The command
+ *	allows you to get or set the appearance for the NSWindow associated
+ *	with a Tk Window.  The syntax is:
+ *
+ *	    tk::unsupported::MacWindowStyle tabbingid window ?newAppearance?
+ *
+ *      Allowed appearance names are "aqua", "darkaqua", and "auto".
+ *
+ * Results:
+ *      Returns the appearance setting of the window prior to calling this
+ *	function.
+ *
+ * Side effects:
+ *      The underlying NSWindow's appearance property is set to the specified
+ *      value if the optional newAppearance argument is supplied. Otherwise the
+ *      window's appearance property is not changed.  If the appearance is set
+ *      to aqua or darkaqua then the window will use the associated
+ *      NSAppearance even if the user has selected a different appearance with
+ *      the system preferences.  If it is set to auto then the appearance
+ *      property is set to nil, meaning that the preferences will determine the
+ *      appearance.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmWinAppearance(
+    Tcl_Interp *interp,		/* Current interpreter. */
+    TkWindow *winPtr,		/* Window to be manipulated. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj * const objv[])	/* Argument objects. */
+{
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
+    static const char *const appearanceStrings[] = {
+	"aqua", "darkaqua", "auto", NULL
+    };
+    enum appearances {
+	APPEARANCE_AQUA, APPEARANCE_DARKAQUA, APPEARANCE_AUTO
+    };
+    Tcl_Obj *result = NULL;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
+    NSAppearanceName appearance;
+#else
+    NSString *appearance;
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
+
+    const char *resultString = "unrecognized";
+    NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+    if (win) {
+	appearance = win.appearance.name;
+	if (appearance == nil) {
+	    resultString = appearanceStrings[APPEARANCE_AUTO];
+	} else if (appearance == NSAppearanceNameAqua) {
+	    resultString = appearanceStrings[APPEARANCE_AQUA];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	} else if (@available(macOS 10.14, *)) {
+	    if (appearance == NSAppearanceNameDarkAqua) {
+		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
+	    }
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	}
+	result = Tcl_NewStringObj(resultString, strlen(resultString));
+    }
+    if (result == NULL) {
+	NSLog(@"Failed to read appearance name; try calling update idletasks before getting/setting the appearance of the window.");
+	return TCL_OK;
+    }
+    if (objc == 4) {
+	int index;
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], appearanceStrings,
+                sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
+            return TCL_ERROR;
+        }
+	switch ((enum appearances) index) {
+	case APPEARANCE_AQUA:
+	    win.appearance = [NSAppearance appearanceNamed:
+		NSAppearanceNameAqua];
+	    break;
+	case APPEARANCE_DARKAQUA:
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	    if (@available(macOS 10.14, *)) {
+		win.appearance = [NSAppearance appearanceNamed:
+		    NSAppearanceNameDarkAqua];
+	    }
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	    break;
+	default:
+	    win.appearance = nil;
+	}
+    }
+    Tcl_SetObjResult(interp, result);
+    return TCL_OK;
+#else // MAC_OS_X_VERSION_MAX_ALLOWED > 1090
+    return TCL_ERROR;
+#endif
 }
 
 /*
@@ -5539,6 +6032,8 @@ TkMacOSXMakeRealWindowExist(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     MacDrawable *macWin;
+    WindowClass macClass;
+    Bool overrideRedirect = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
 
     if (TkMacOSXHostToplevelExists(winPtr)) {
 	return;
@@ -5547,8 +6042,8 @@ TkMacOSXMakeRealWindowExist(
     macWin = (MacDrawable *) winPtr->window;
 
     /*
-     * If this is embedded, make sure its container's toplevel exists,
-     * then return...
+     * If this is embedded, make sure its container's toplevel exists, then
+     * return...
      */
 
     if (Tk_IsEmbedded(winPtr)) {
@@ -5575,7 +6070,16 @@ TkMacOSXMakeRealWindowExist(
 	 * TODO: Here we should handle out of process embedding.
 	 */
     }
-    WindowClass macClass = wmPtr->macClass;
+
+    /*
+     * If this is an override-redirect window, the NSWindow is created first as
+     * a document window then converted to a simple window.
+     */
+
+    if (overrideRedirect) {
+	wmPtr->macClass = kDocumentWindowClass;
+    }
+    macClass = wmPtr->macClass;
     wmPtr->attributes &= (tkAlwaysValidAttributes |
 	    macClassAttrs[macClass].validAttrs);
     wmPtr->flags |= macClassAttrs[macClass].flags |
@@ -5603,7 +6107,7 @@ TkMacOSXMakeRealWindowExist(
     NSRect structureRect = [winClass frameRectForContentRect:NSZeroRect
 	    styleMask:styleMask];
     NSRect contentRect = NSMakeRect(5 - structureRect.origin.x,
-	    tkMacOSXZeroScreenHeight - (tkMacOSXZeroScreenTop + 5 +
+	    TkMacOSXZeroScreenHeight() - (TkMacOSXZeroScreenTop() + 5 +
 	    structureRect.origin.y + structureRect.size.height + 200), 200, 200);
     NSWindow *window = [[winClass alloc] initWithContentRect:contentRect
 	    styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
@@ -5612,38 +6116,70 @@ TkMacOSXMakeRealWindowExist(
     }
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
-    [window setColorSpace:[NSColorSpace deviceRGBColorSpace]];
     [window setContentView:contentView];
     [contentView release];
     [window setDelegate:NSApp];
     [window setAcceptsMouseMovedEvents:YES];
     [window setReleasedWhenClosed:NO];
-    [window setAutodisplay:NO];
     if (styleMask & NSUtilityWindowMask) {
 	[(NSPanel*)window setFloatingPanel:YES];
     }
     if ((styleMask & (NSTexturedBackgroundWindowMask|NSHUDWindowMask)) &&
 	    !(styleMask & NSDocModalWindowMask)) {
         /*
-	 * Workaround for [Bug 2824538]: Texured windows are draggable
-	 *                               from opaque content.
+	 * Workaround for [Bug 2824538]: Textured windows are draggable from
+	 *                               opaque content.
 	 */
 	[window setMovableByWindowBackground:NO];
     }
-
     [window setDocumentEdited:NO];
     wmPtr->window = window;
     macWin->view = window.contentView;
     TkMacOSXApplyWindowAttributes(winPtr, window);
-
     NSRect geometry = InitialWindowBounds(winPtr, window);
-    geometry.size.width +=  structureRect.size.width;
+    geometry.size.width += structureRect.size.width;
     geometry.size.height += structureRect.size.height;
-    geometry.origin.y = tkMacOSXZeroScreenHeight - (geometry.origin.y +
+    geometry.origin.y = TkMacOSXZeroScreenHeight() - (geometry.origin.y +
 	    geometry.size.height);
-    [window setFrame:geometry display:NO];
+    [window setFrame:geometry display:YES];
     TkMacOSXRegisterOffScreenWindow((Window) macWin, window);
+
     macWin->flags |= TK_HOST_EXISTS;
+    if (overrideRedirect) {
+    	XSetWindowAttributes atts;
+
+    	atts.override_redirect = True;
+    	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect, &atts);
+    	ApplyMasterOverrideChanges(winPtr, NULL);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpDisplayWindow --
+ *
+ *      Mark the contentView of this window as needing display so the window
+ *      will be drawn by the window manager.  If this is called within the
+ *      drawRect method, do nothing.
+ *
+ * Results:
+ *      None.
+ *
+ * Side effects:
+ *      The window's contentView is marked as needing display.
+ *
+ *----------------------------------------------------------------------
+ */
+
+MODULE_SCOPE void
+TkpDisplayWindow(Tk_Window tkwin) {
+    if (![NSApp isDrawing]) {
+    	TkWindow *winPtr = (TkWindow *) tkwin;
+    	NSWindow *w = TkMacOSXDrawableWindow(winPtr->window);
+
+    	[[w contentView] setNeedsDisplay: YES];
+    }
 }
 
 /*
@@ -5651,8 +6187,8 @@ TkMacOSXMakeRealWindowExist(
  *
  * TkMacOSXRegisterOffScreenWindow --
  *
- *	This function adds the passed in Off Screen Port to the hash table
- *	that maps Mac windows to root X windows.
+ *	This function adds the passed in Off Screen Port to the hash table that
+ *	maps Mac windows to root X windows.
  *
  * Results:
  *	None.
@@ -5991,7 +6527,7 @@ TkpGetMS(void)
  *----------------------------------------------------------------------
  */
 
-void
+int
 XSetInputFocus(
     Display* display,
     Window focus,
@@ -6001,6 +6537,7 @@ XSetInputFocus(
     /*
      * Don't need to do a thing. Tk manages the focus for us.
      */
+    return Success;
 }
 
 /*
@@ -6008,8 +6545,10 @@ XSetInputFocus(
  *
  * TkpChangeFocus --
  *
- *	This procedure is a stub on the Mac because we always own the focus if
- *	we are a front most application.
+ *	This function is called when Tk moves focus from one window to another.
+ *      It should be passed a non-embedded TopLevel. That toplevel gets raised
+ *      to the top of the Tk stacking order and the associated NSWindow is
+ *      ordered Front.
  *
  * Results:
  *	The return value is the serial number of the command that changed the
@@ -6034,13 +6573,14 @@ TkpChangeFocus(
 	return 0;
     }
 
-    if (Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr) ){
+    if (Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)) {
     	NSWindow *win = TkMacOSXDrawableWindow(winPtr->window);
+
     	TkWmRestackToplevel(winPtr, Above, NULL);
-    	if (force ) {
+    	if (force) {
     	    [NSApp activateIgnoringOtherApps:YES];
     	}
-	if ( win && [win canBecomeKeyWindow] ) {
+	if (win && [win canBecomeKeyWindow]) {
 	    [win makeKeyAndOrderFront:NSApp];
 	}
     }
@@ -6086,7 +6626,7 @@ WmStackorderToplevelWrapperMap(
     Tcl_HashEntry *hPtr;
     int newEntry;
 
-    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr)
+    if (Tk_IsMapped(winPtr) && Tk_IsTopLevel(winPtr) && !Tk_IsEmbedded(winPtr)
 	    && (winPtr->display == display)) {
 	hPtr = Tcl_CreateHashEntry(table,
 		(char*) TkMacOSXDrawableWindow(winPtr->window), &newEntry);
@@ -6107,8 +6647,8 @@ WmStackorderToplevelWrapperMap(
  *	This procedure returns the stack order of toplevel windows.
  *
  * Results:
- *	An array of pointers to tk window objects in stacking order or else
- *	NULL if there was an error.
+ *	A NULL terminated array of pointers to tk window objects in stacking
+ *	order or else NULL if there was an error.
  *
  * Side effects:
  *	None.
@@ -6123,57 +6663,24 @@ TkWmStackorderToplevel(
     TkWindow *childWinPtr, **windows, **windowPtr;
     Tcl_HashTable table;
     Tcl_HashEntry *hPtr;
-    Tcl_HashSearch search;
-
-    /*
-     * Map mac windows to a TkWindow of the wrapped toplevel.
-     */
-
-    Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
-    WmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
-
-    windows = ckalloc((table.numEntries+1) * sizeof(TkWindow *));
-
-    /*
-     * Special cases: If zero or one toplevels were mapped there is no need to
-     * enumerate Windows.
-     */
-
-    switch (table.numEntries) {
-    case 0:
-	windows[0] = NULL;
-	goto done;
-    case 1:
-	hPtr = Tcl_FirstHashEntry(&table, &search);
-	windows[0] = Tcl_GetHashValue(hPtr);
-	windows[1] = NULL;
-	goto done;
-    }
-
     NSArray *macWindows = [NSApp orderedWindows];
+    NSArray* backToFront = [[macWindows reverseObjectEnumerator] allObjects];
     NSInteger windowCount = [macWindows count];
 
-    if (!windowCount) {
-	ckfree(windows);
-	windows = NULL;
-    } else {
-	windowPtr = windows + table.numEntries;
-	*windowPtr-- = NULL;
-	for (NSWindow *w in macWindows) {
+    windows = windowPtr = ckalloc((windowCount + 1) * sizeof(TkWindow *));
+    if (windows != NULL) {
+	Tcl_InitHashTable(&table, TCL_ONE_WORD_KEYS);
+	WmStackorderToplevelWrapperMap(parentPtr, parentPtr->display, &table);
+	for (NSWindow *w in backToFront) {
 	    hPtr = Tcl_FindHashEntry(&table, (char*) w);
 	    if (hPtr != NULL) {
 		childWinPtr = Tcl_GetHashValue(hPtr);
-		*windowPtr-- = childWinPtr;
+		*windowPtr++ = childWinPtr;
 	    }
 	}
-	if (windowPtr != windows-1) {
-	    Tcl_Panic("num matched toplevel windows does not equal num "
-		      "children");
-	}
+	*windowPtr = NULL;
+	Tcl_DeleteHashTable(&table);
     }
-
-  done:
-    Tcl_DeleteHashTable(&table);
     return windows;
 }
 
@@ -6199,8 +6706,9 @@ TkMacOSXApplyWindowAttributes(
     NSWindow *macWindow)
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
+
     ApplyWindowAttributeFlagChanges(winPtr, macWindow, 0, 0, 0, 1);
-    if (wmPtr->master != None || winPtr->atts.override_redirect) {
+    if (wmPtr->master != NULL || winPtr->atts.override_redirect) {
 	ApplyMasterOverrideChanges(winPtr, macWindow);
     }
 }
@@ -6238,18 +6746,16 @@ ApplyWindowAttributeFlagChanges(
     if (changedAttributes || wmPtr->flags != oldFlags || initial) {
 	if (!macWindow) {
 	    if (winPtr->window == None) {
-		if (create) {
-		    Tk_MakeWindowExist((Tk_Window) winPtr);
-		} else {
+		if (!create) {
 		    return;
 		}
+		Tk_MakeWindowExist((Tk_Window) winPtr);
 	    }
 	    if (!TkMacOSXHostToplevelExists(winPtr)) {
-		if (create) {
-		    TkMacOSXMakeRealWindowExist(winPtr);
-		} else {
+		if (!create) {
 		    return;
 		}
+		TkMacOSXMakeRealWindowExist(winPtr);
 	    }
 	    macWindow = TkMacOSXDrawableWindow(winPtr->window);
 	}
@@ -6268,12 +6774,15 @@ ApplyWindowAttributeFlagChanges(
 	    [[macWindow standardWindowButton:NSWindowZoomButton]
 		    setEnabled:(newAttributes & kWindowResizableAttribute) &&
 		    (newAttributes & kWindowFullZoomAttribute)];
-	    if (newAttributes & kWindowResizableAttribute) {
-		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+	    if (newAttributes & kWindowHorizontalZoomAttribute) {
+		wmPtr->flags &= ~(WM_WIDTH_NOT_RESIZABLE);
 	    } else {
-		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE |
-			WM_HEIGHT_NOT_RESIZABLE);
+		wmPtr->flags |= (WM_WIDTH_NOT_RESIZABLE);
+	    }
+	    if (newAttributes & kWindowVerticalZoomAttribute) {
+		wmPtr->flags &= ~(WM_HEIGHT_NOT_RESIZABLE);
+	    } else {
+		wmPtr->flags |= (WM_HEIGHT_NOT_RESIZABLE);
 	    }
 	    WmUpdateGeom(wmPtr, winPtr);
 	}
@@ -6283,6 +6792,7 @@ ApplyWindowAttributeFlagChanges(
 	    if ((newAttributes & kWindowToolbarButtonAttribute) &&
 		    ![macWindow toolbar]) {
 		NSToolbar *toolbar = [[NSToolbar alloc] initWithIdentifier:@""];
+
 		[toolbar setVisible:NO];
 		[macWindow setToolbar:toolbar];
 		[toolbar release];
@@ -6316,6 +6826,44 @@ ApplyWindowAttributeFlagChanges(
 		tkCanJoinAllSpacesAttribute | tkMoveToActiveSpaceAttribute)) ||
 		initial) {
 	    NSWindowCollectionBehavior b = NSWindowCollectionBehaviorDefault;
+
+	    /*
+	     * This behavior, which makes the green button expand a window to
+	     * full screen, was included in the default as of OSX 10.13.  For
+	     * uniformity we use the new default in all versions of the OS
+	     * after 10.10.
+	     */
+
+#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101000)
+	    if (!(macWindow.styleMask & NSUtilityWindowMask)) {
+		/*
+		 * Exclude overrideredirect, transient, and "help"-styled
+		 * windows from moving into their own fullscreen space.
+		 */
+
+		if ((winPtr->atts.override_redirect) ||
+			(wmPtr->master != NULL) ||
+			(winPtr->wmInfoPtr->macClass == kHelpWindowClass)) {
+		    b |= (NSWindowCollectionBehaviorCanJoinAllSpaces |
+			    NSWindowCollectionBehaviorFullScreenAuxiliary);
+		} else {
+		    NSSize screenSize = [[macWindow screen] frame].size;
+		    b |= NSWindowCollectionBehaviorFullScreenPrimary;
+
+		    /*
+		     * The default max size has height less than the screen
+		     * height. This causes the window manager to refuse to
+		     * allow the window to be resized when it is a split
+		     * window. To work around this we make the max size equal
+		     * to the screen size.  (For 10.11 and up, only)
+		     */
+		    if ([NSApp macMinorVersion] > 10) {
+			[macWindow setMaxFullScreenContentSize:screenSize];
+		    }
+		}
+	    }
+#endif
+
 	    if (newAttributes & tkCanJoinAllSpacesAttribute) {
 		b |= NSWindowCollectionBehaviorCanJoinAllSpaces;
 	    } else if (newAttributes & tkMoveToActiveSpaceAttribute) {
@@ -6337,10 +6885,11 @@ ApplyWindowAttributeFlagChanges(
 
 	/*
 	 * The change of window class/attributes might have changed the window
-	 * structure widths:
+	 * frame geometry:
 	 */
 
 	NSRect structureRect = [macWindow frameRectForContentRect:NSZeroRect];
+
 	wmPtr->xInParent = -structureRect.origin.x;
 	wmPtr->yInParent = structureRect.origin.y + structureRect.size.height;
 	wmPtr->parentWidth = winPtr->changes.width + structureRect.size.width;
@@ -6372,6 +6921,15 @@ ApplyMasterOverrideChanges(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     UInt64 oldAttributes = wmPtr->attributes;
     int oldFlags = wmPtr->flags;
+    unsigned long styleMask;
+    NSRect structureRect;
+    NSWindow *parentWindow;
+
+    if (!macWindow && winPtr->window != None &&
+	    TkMacOSXHostToplevelExists(winPtr)) {
+	macWindow = TkMacOSXDrawableWindow(winPtr->window);
+    }
+    styleMask = [macWindow styleMask];
 
     /*
      * FIX: We need an UpdateWrapper equivalent to make this 100% correct
@@ -6383,6 +6941,11 @@ ApplyMasterOverrideChanges(
 	    wmPtr->attributes = macClassAttrs[kSimpleWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes |= kWindowNoActivatesAttribute;
+	if ([NSApp macMinorVersion] == 6) {
+	    styleMask = 0;
+	} else {
+	    styleMask &= ~NSTitledWindowMask;
+	}
     } else {
 	if (wmPtr->macClass == kSimpleWindowClass &&
 		oldAttributes == kWindowNoActivatesAttribute) {
@@ -6391,144 +6954,95 @@ ApplyMasterOverrideChanges(
 		    macClassAttrs[kDocumentWindowClass].defaultAttrs;
 	}
 	wmPtr->attributes &= ~kWindowNoActivatesAttribute;
-    }
-    if (!macWindow && winPtr->window != None &&
-	    TkMacOSXHostToplevelExists(winPtr)) {
-	macWindow = TkMacOSXDrawableWindow(winPtr->window);
+	if ([NSApp macMinorVersion] == 6) {
+	    styleMask = NSTitledWindowMask         |
+		        NSClosableWindowMask       |
+		        NSMiniaturizableWindowMask |
+		        NSResizableWindowMask;
+	} else {
+	    styleMask |= NSTitledWindowMask;
+	}
     }
     if (macWindow) {
-	if (winPtr->atts.override_redirect && wmPtr->master != None) {
-	    wmPtr->flags |= WM_TOPMOST;
+	structureRect = [NSWindow frameRectForContentRect:NSZeroRect
+		styleMask:styleMask];
+
+	/*
+	 * Synchronize the wmInfoPtr to match the new window configuration
+	 * so windowBoundsChanged won't corrupt the window manager info.
+	 */
+
+	wmPtr->xInParent = -structureRect.origin.x;
+	wmPtr->yInParent = structureRect.origin.y + structureRect.size.height;
+	wmPtr->parentWidth = winPtr->changes.width + structureRect.size.width;
+	wmPtr->parentHeight = winPtr->changes.height + structureRect.size.height;
+	if (winPtr->atts.override_redirect) {
+	    [macWindow setExcludedFromWindowsMenu:YES];
+	    [macWindow setStyleMask:styleMask];
+	    if (wmPtr->hints.initial_state == NormalState) {
+		[macWindow orderFront:nil];
+	    }
+	    if (wmPtr->master != NULL) {
+		wmPtr->flags |= WM_TOPMOST;
+	    } else {
+		wmPtr->flags &= ~WM_TOPMOST;
+	    }
 	} else {
+	    const char *title = winPtr->wmInfoPtr->titleUid;
+
+	    if (!title) {
+		title = winPtr->nameUid;
+	    }
+	    [macWindow setStyleMask:styleMask];
+	    [macWindow setTitle:[NSString stringWithUTF8String:title]];
+	    [macWindow setExcludedFromWindowsMenu:NO];
 	    wmPtr->flags &= ~WM_TOPMOST;
 	}
-	NSWindow *parentWindow = [macWindow parentWindow];
 	if (wmPtr->master != None) {
-	    TkDisplay *dispPtr = TkGetDisplayList();
-	    TkWindow *masterWinPtr = (TkWindow *)
-		    Tk_IdToWindow(dispPtr->display, wmPtr->master);
+	    TkWindow *masterWinPtr = (TkWindow *) wmPtr->master;
 
-	    if (masterWinPtr && masterWinPtr->window != None &&
-		    TkMacOSXHostToplevelExists(masterWinPtr)) {
-		NSWindow *masterMacWin =
-			TkMacOSXDrawableWindow(masterWinPtr->window);
+	    if (masterWinPtr && (masterWinPtr->window != None)
+		    && TkMacOSXHostToplevelExists(masterWinPtr)) {
+		NSWindow *masterMacWin = TkMacOSXDrawableWindow(
+			masterWinPtr->window);
 
-		if (masterMacWin && masterMacWin != parentWindow &&
-			(winPtr->flags & TK_MAPPED)) {
-		    if (parentWindow) {
+		/*
+		 * Try to add the transient window as a child window of the
+		 * master. A child NSWindow retains its relative position with
+		 * respect to the parent when the parent is moved.  This is
+		 * pointless if the parent is offscreen, and adding a child to
+		 * an offscreen window causes the parent to be displayed as a
+		 * zombie.  So we only do this if the parent is visible.
+		 */
+
+		if (masterMacWin && [masterMacWin isVisible]
+			&& (winPtr->flags & TK_MAPPED)) {
+		    /*
+		     * If the transient is already a child of some other window,
+		     * remove it.
+		     */
+
+		    parentWindow = [macWindow parentWindow];
+		    if (parentWindow && parentWindow != masterMacWin) {
 			[parentWindow removeChildWindow:macWindow];
 		    }
+
 		    [masterMacWin addChildWindow:macWindow
-			    ordered:NSWindowAbove];
-		    if (wmPtr->flags & WM_TOPMOST) {
-			[macWindow setLevel:kCGUtilityWindowLevel];
-		    }
+					 ordered:NSWindowAbove];
 		}
 	    }
-	} else if (parentWindow) {
-	    [parentWindow removeChildWindow:macWindow];
+	} else {
+	    parentWindow = [macWindow parentWindow];
+	    if (parentWindow) {
+		[parentWindow removeChildWindow:macWindow];
+	    }
+	}
+	if (wmPtr->flags & WM_TOPMOST) {
+	    [macWindow setLevel:kCGUtilityWindowLevel];
 	}
 	ApplyWindowAttributeFlagChanges(winPtr, macWindow, oldAttributes,
 		oldFlags, 0, 0);
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXMakeFullscreen --
- *
- *	This procedure sets a fullscreen window to the size of the screen.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-int
-TkMacOSXMakeFullscreen(
-    TkWindow *winPtr,
-    NSWindow *window,
-    int fullscreen,
-    Tcl_Interp *interp)
-{
-    WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int result = TCL_OK, wasFullscreen = (wmPtr->flags & WM_FULLSCREEN);
-    static unsigned long prevMask = 0, prevPres = 0;
-
-    if (fullscreen) {
-	int screenWidth =  WidthOfScreen(Tk_Screen(winPtr));
-	int screenHeight = HeightOfScreen(Tk_Screen(winPtr));
-
-	/*
-	 * Check max width and height if set by the user.
-	 */
-
-	if ((wmPtr->maxWidth > 0 && wmPtr->maxWidth < screenWidth)
-		|| (wmPtr->maxHeight > 0 && wmPtr->maxHeight < screenHeight)) {
-	    if (interp) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't set fullscreen attribute for \"%s\": max"
-			" width/height is too small", winPtr->pathName));
-		Tcl_SetErrorCode(interp, "TK", "FULLSCREEN",
-			"CONSTRAINT_FAILURE", NULL);
-	    }
-	    result = TCL_ERROR;
-	    wmPtr->flags &= ~WM_FULLSCREEN;
-	} else {
-	    Tk_UnmapWindow((Tk_Window) winPtr);
-	    NSRect bounds = [window contentRectForFrameRect:[window frame]];
-	    NSRect screenBounds = NSMakeRect(0, 0, screenWidth, screenHeight);
-
-	    if (!NSEqualRects(bounds, screenBounds) && !wasFullscreen) {
-		wmPtr->configX = wmPtr->x;
-		wmPtr->configY = wmPtr->y;
-		wmPtr->configAttributes = wmPtr->attributes;
-		wmPtr->attributes &= ~kWindowResizableAttribute;
-		ApplyWindowAttributeFlagChanges(winPtr, window,
-			wmPtr->configAttributes, wmPtr->flags, 1, 0);
-		wmPtr->flags |= WM_SYNC_PENDING;
-		[window setFrame:[window frameRectForContentRect:
-			screenBounds] display:YES];
-		wmPtr->flags &= ~WM_SYNC_PENDING;
-	    }
-	    wmPtr->flags |= WM_FULLSCREEN;
-	}
-
-	prevMask = [window styleMask];
-	prevPres = [NSApp presentationOptions];
-	[window setStyleMask: NSBorderlessWindowMask];
-	[NSApp setPresentationOptions: NSApplicationPresentationAutoHideDock
-	                          | NSApplicationPresentationAutoHideMenuBar];
-	Tk_MapWindow((Tk_Window) winPtr);
-    } else {
-	wmPtr->flags &= ~WM_FULLSCREEN;
-	[NSApp setPresentationOptions: prevPres];
-	[window setStyleMask: prevMask];
-    }
-
-    if (wasFullscreen && !(wmPtr->flags & WM_FULLSCREEN)) {
-	Tk_UnmapWindow((Tk_Window) winPtr);
-	UInt64 oldAttributes = wmPtr->attributes;
-	NSRect bounds = NSMakeRect(wmPtr->configX, tkMacOSXZeroScreenHeight -
-		(wmPtr->configY + wmPtr->yInParent + wmPtr->configHeight),
-		wmPtr->xInParent + wmPtr->configWidth,
-		wmPtr->yInParent + wmPtr->configHeight);
-
-	wmPtr->attributes |= wmPtr->configAttributes &
-		kWindowResizableAttribute;
-	ApplyWindowAttributeFlagChanges(winPtr, window, oldAttributes,
-		wmPtr->flags, 1, 0);
-	wmPtr->flags |= WM_SYNC_PENDING;
-	[window setFrame:[window frameRectForContentRect:bounds] display:YES];
-	wmPtr->flags &= ~WM_SYNC_PENDING;
-       Tk_MapWindow((Tk_Window) winPtr);
-    }
-    return result;
 }
 
 /*
@@ -6706,6 +7220,7 @@ RemapWindows(
     MacDrawable *parentWin)
 {
     TkWindow *childPtr;
+
     /*
      * Remove the OS specific window. It will get rebuilt when the window gets
      * Mapped.
@@ -6723,7 +7238,10 @@ RemapWindows(
 #endif
     }
 
-    /* Repeat for all the children */
+    /*
+     * Repeat for all the children.
+     */
+
     for (childPtr = winPtr->childList; childPtr != NULL;
 	    childPtr = childPtr->nextPtr) {
 	RemapWindows(childPtr, (MacDrawable *) winPtr->window);

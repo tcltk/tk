@@ -12,8 +12,6 @@
 
 #include "tkUnixInt.h"
 #include "tkFont.h"
-#include <netinet/in.h>		/* for htons() prototype */
-#include <arpa/inet.h>		/* inet_ntoa() */
 
 /*
  * The preferred font encodings.
@@ -37,8 +35,8 @@ static const char *const encodingList[] = {
 
 #define FONTMAP_SHIFT		10
 
-#define FONTMAP_PAGES		(1 << (sizeof(Tcl_UniChar)*8 - FONTMAP_SHIFT))
 #define FONTMAP_BITSPERPAGE	(1 << FONTMAP_SHIFT)
+#define FONTMAP_PAGES		(0x30000 / FONTMAP_BITSPERPAGE)
 
 typedef struct FontFamily {
     struct FontFamily *nextPtr;	/* Next in list of all known font families. */
@@ -63,7 +61,7 @@ typedef struct FontFamily {
 				/* Two-level sparse table used to determine
 				 * quickly if the specified character exists.
 				 * As characters are encountered, more pages
-				 * in this table are dynamically alloced. The
+				 * in this table are dynamically allocated. The
 				 * contents of each page is a bitmask
 				 * consisting of FONTMAP_BITSPERPAGE bits,
 				 * representing whether this font can be used
@@ -153,7 +151,7 @@ typedef struct FontAttributes {
     TkXLFDAttributes xa;
 } FontAttributes;
 
-typedef struct ThreadSpecificData {
+typedef struct {
     FontFamily *fontFamilyList; /* The list of font families that are
 				 * currently loaded. As screen fonts are
 				 * loaded, this list grows to hold information
@@ -171,7 +169,7 @@ static Tcl_ThreadDataKey dataKey;
  * encodings into the names expected by the Tcl encoding package.
  */
 
-static EncodingAlias encodingAliases[] = {
+static const EncodingAlias encodingAliases[] = {
     {"gb2312-raw",	"gb2312*"},
     {"big5",		"big5*"},
     {"cns11643-1",	"cns11643*-1"},
@@ -186,14 +184,7 @@ static EncodingAlias encodingAliases[] = {
     {"tis620",		"tis620*"},
     {"ksc5601",		"ksc5601*"},
     {"dingbats",	"*dingbats"},
-#ifdef WORDS_BIGENDIAN
-    {"unicode",		"iso10646-1"},
-#else
-    /*
-     * ucs-2be is needed if native order isn't BE.
-     */
     {"ucs-2be",		"iso10646-1"},
-#endif
     {NULL,		NULL}
 };
 
@@ -246,7 +237,6 @@ static unsigned		RankAttributes(FontAttributes *wantPtr,
 static void		ReleaseFont(UnixFont *fontPtr);
 static void		ReleaseSubFont(Display *display, SubFont *subFontPtr);
 static int		SeenName(const char *name, Tcl_DString *dsPtr);
-#ifndef WORDS_BIGENDIAN
 static int		Ucs2beToUtfProc(ClientData clientData, const char*src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
@@ -255,7 +245,6 @@ static int		UtfToUcs2beProc(ClientData clientData, const char*src,
 			    int srcLen, int flags, Tcl_EncodingState*statePtr,
 			    char *dst, int dstLen, int *srcReadPtr,
 			    int *dstWrotePtr, int *dstCharsPtr);
-#endif
 
 /*
  *-------------------------------------------------------------------------
@@ -320,18 +309,13 @@ TkpFontPkgInit(
 {
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    Tcl_EncodingType type;
     SubFont dummy;
     int i;
+    Tcl_Encoding ucs2;
 
     if (tsdPtr->controlFamily.encoding == NULL) {
-	type.encodingName = "X11ControlChars";
-	type.toUtfProc = ControlUtfProc;
-	type.fromUtfProc = ControlUtfProc;
-	type.freeProc = NULL;
-	type.clientData = NULL;
-	type.nullSize = 0;
 
+	Tcl_EncodingType type = {"X11ControlChars", ControlUtfProc, ControlUtfProc, NULL, NULL, 0};
 	tsdPtr->controlFamily.refCount = 2;
 	tsdPtr->controlFamily.encoding = Tcl_CreateEncoding(&type);
 	tsdPtr->controlFamily.isTwoByteFont = 0;
@@ -343,20 +327,18 @@ TkpFontPkgInit(
 	    FontMapInsert(&dummy, i + 0x80);
 	}
 
-#ifndef WORDS_BIGENDIAN
 	/*
 	 * UCS-2BE is unicode (UCS-2) in big-endian format. Define this if
-	 * native order isn't BE. It is used in iso10646 fonts.
+	 * if it doesn't exist yet. It is used in iso10646 fonts.
 	 */
 
-	type.encodingName = "ucs-2be";
-	type.toUtfProc = Ucs2beToUtfProc;
-	type.fromUtfProc = UtfToUcs2beProc;
-	type.freeProc = NULL;
-	type.clientData = NULL;
-	type.nullSize = 2;
-	Tcl_CreateEncoding(&type);
-#endif
+	ucs2 = Tcl_GetEncoding(NULL, "ucs-2be");
+	if (ucs2 == NULL) {
+	    Tcl_EncodingType ucs2type = {"ucs-2be", Ucs2beToUtfProc, UtfToUcs2beProc, NULL, NULL, 2};
+	    Tcl_CreateEncoding(&ucs2type);
+	} else {
+	    Tcl_FreeEncoding(ucs2);
+	}
 	Tcl_CreateThreadExitHandler(FontPkgCleanup, NULL);
     }
 }
@@ -428,20 +410,20 @@ ControlUtfProc(
 	}
 	src += TkUtfToUniChar(src, &ch);
 	dst[0] = '\\';
-	if (((size_t) ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
+	if (((size_t)ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
 	    dst[1] = mapChars[ch];
 	    dst += 2;
-	} else if (ch < 256) {
+	} else if ((size_t)ch < 256) {
 	    dst[1] = 'x';
-	    dst[2] = hexChars[(ch >> 4) & 0xf];
-	    dst[3] = hexChars[ch & 0xf];
+	    dst[2] = hexChars[(ch >> 4) & 0xF];
+	    dst[3] = hexChars[ch & 0xF];
 	    dst += 4;
-	} else if (ch < 0x10000) {
+	} else if ((size_t)ch < 0x10000) {
 	    dst[1] = 'u';
-	    dst[2] = hexChars[(ch >> 12) & 0xf];
-	    dst[3] = hexChars[(ch >> 8) & 0xf];
-	    dst[4] = hexChars[(ch >> 4) & 0xf];
-	    dst[5] = hexChars[ch & 0xf];
+	    dst[2] = hexChars[(ch >> 12) & 0xF];
+	    dst[3] = hexChars[(ch >> 8) & 0xF];
+	    dst[4] = hexChars[(ch >> 4) & 0xF];
+	    dst[5] = hexChars[ch & 0xF];
 	    dst += 6;
 	} else {
 	    /* TODO we can do better here */
@@ -459,14 +441,12 @@ ControlUtfProc(
     return result;
 }
 
-#ifndef WORDS_BIGENDIAN
 /*
  *-------------------------------------------------------------------------
  *
  * Ucs2beToUtfProc --
  *
  *	Convert from UCS-2BE (big-endian 16-bit Unicode) to UTF-8.
- *	This is only defined on LE machines.
  *
  * Results:
  *	Returns TCL_OK if conversion was successful.
@@ -505,9 +485,13 @@ Ucs2beToUtfProc(
 				 * output buffer. */
 {
     const char *srcStart, *srcEnd;
-    char *dstEnd, *dstStart;
-    int result, numChars;
+    const char *dstEnd, *dstStart;
+    int result, numChars, charLimit = INT_MAX;
+    unsigned short ch;
 
+    if (flags & TCL_ENCODING_CHAR_LIMIT) {
+	charLimit = *dstCharsPtr;
+    }
     result = TCL_OK;
 
     /* check alignment with ucs-2 (2 == sizeof(UCS-2)) */
@@ -515,26 +499,36 @@ Ucs2beToUtfProc(
 	result = TCL_CONVERT_MULTIBYTE;
 	srcLen--;
     }
+    /* If last code point is a high surrogate, we cannot handle that yet */
+    if ((srcLen >= 2) && ((src[srcLen - 2] & 0xFC) == 0xD8)) {
+	result = TCL_CONVERT_MULTIBYTE;
+	srcLen -= 2;
+    }
 
     srcStart = src;
     srcEnd = src + srcLen;
 
     dstStart = dst;
-    dstEnd = dst + dstLen - TCL_UTF_MAX;
+    dstEnd = dst + dstLen - 4;
 
-    for (numChars = 0; src < srcEnd; numChars++) {
+    for (numChars = 0; src < srcEnd && numChars <= charLimit; numChars++) {
 	if (dst > dstEnd) {
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
 
-	/*
-	 * Need to swap byte-order on little-endian machines (x86) for
-	 * UCS-2BE. We know this is an LE->BE swap.
-	 */
+	ch = (src[0] & 0xFF) << 8 | (src[1] & 0xFF);
+	src += 2 /* sizeof(UTF-16) */;
 
-	dst += Tcl_UniCharToUtf(htons(*((short *)src)), dst);
-	src += 2 /* sizeof(UCS-2) */;
+	/*
+	 * Special case for 1-byte utf chars for speed. Make sure we work with
+	 * unsigned short-size data.
+	 */
+	if (ch && ch < 0x80) {
+	    *dst++ = (ch & 0xFF);
+	} else {
+	    dst += Tcl_UniCharToUtf(ch, dst);
+	}
     }
 
     *srcReadPtr = src - srcStart;
@@ -589,13 +583,13 @@ UtfToUcs2beProc(
 {
     const char *srcStart, *srcEnd, *srcClose, *dstStart, *dstEnd;
     int result, numChars;
-    Tcl_UniChar ch;
+    int ch;
 
     srcStart = src;
     srcEnd = src + srcLen;
     srcClose = srcEnd;
     if (!(flags & TCL_ENCODING_END)) {
-	srcClose -= TCL_UTF_MAX;
+	srcClose -= 6;
     }
 
     dstStart = dst;
@@ -608,31 +602,30 @@ UtfToUcs2beProc(
 	     * If there is more string to follow, this will ensure that the
 	     * last UTF-8 character in the source buffer hasn't been cut off.
 	     */
-
 	    result = TCL_CONVERT_MULTIBYTE;
 	    break;
 	}
 	if (dst > dstEnd) {
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
-        }
-	src += Tcl_UtfToUniChar(src, &ch);
+	}
+	src += TkUtfToUniChar(src, &ch);
+	if (ch > 0xFFFF) {
+	    ch = 0xFFFD;
+	}
 
 	/*
 	 * Ensure big-endianness (store big bits first).
-	 * XXX: This hard-codes the assumed size of Tcl_UniChar as 2. Make
-	 * sure to work in char* for Tcl_UtfToUniChar alignment. [Bug 1122671]
 	 */
 
-	*dst++ = (ch >> 8);
-	*dst++ = (ch & 0xFF);
+	*dst++ = (char)((ch >> 8) & 0xFF);
+	*dst++ = (char)(ch & 0xFF);
     }
     *srcReadPtr = src - srcStart;
     *dstWrotePtr = dst - dstStart;
     *dstCharsPtr = numChars;
     return result;
 }
-#endif /* WORDS_BIGENDIAN */
 
 /*
  *---------------------------------------------------------------------------
@@ -1986,11 +1979,11 @@ FindSubFontForChar(
     SubFont *subFontPtr;
     Tcl_DString ds;
 
-    if (FontMapLookup(&fontPtr->subFontArray[0], ch)) {
-	return &fontPtr->subFontArray[0];
+    if (ch < 0 || ch > 0x30000) {
+	ch = 0xFFFD;
     }
 
-    for (i = 1; i < fontPtr->numSubFonts; i++) {
+    for (i = 0; i < fontPtr->numSubFonts; i++) {
 	if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
 	    return &fontPtr->subFontArray[i];
 	}
@@ -2140,6 +2133,9 @@ FontMapLookup(
 {
     int row, bitOffset;
 
+    if (ch < 0 ||  ch >= 0x30000) {
+	return 0;
+    }
     row = ch >> FONTMAP_SHIFT;
     if (subFontPtr->fontMap[row] == NULL) {
 	FontMapLoadPage(subFontPtr, row);
@@ -2180,12 +2176,14 @@ FontMapInsert(
 {
     int row, bitOffset;
 
-    row = ch >> FONTMAP_SHIFT;
-    if (subFontPtr->fontMap[row] == NULL) {
-	FontMapLoadPage(subFontPtr, row);
+    if (ch >= 0 &&  ch < 0x30000) {
+	row = ch >> FONTMAP_SHIFT;
+	if (subFontPtr->fontMap[row] == NULL) {
+	    FontMapLoadPage(subFontPtr, row);
+	}
+	bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
+	subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
     }
-    bitOffset = ch & (FONTMAP_BITSPERPAGE - 1);
-    subFontPtr->fontMap[row][bitOffset >> 3] |= 1 << (bitOffset & 7);
 }
 
 /*
@@ -3015,10 +3013,10 @@ static const char *
 GetEncodingAlias(
     const char *name)		/* The name to look up. */
 {
-    EncodingAlias *aliasPtr;
+    const EncodingAlias *aliasPtr;
 
     for (aliasPtr = encodingAliases; aliasPtr->aliasPattern != NULL; ) {
-	if (Tcl_StringMatch(name, aliasPtr->aliasPattern)) {
+	if (Tcl_StringCaseMatch(name, aliasPtr->aliasPattern, 0)) {
 	    return aliasPtr->realName;
 	}
 	aliasPtr++;

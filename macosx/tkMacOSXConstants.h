@@ -15,18 +15,32 @@
 #ifndef _TKMACCONSTANTS
 #define _TKMACCONSTANTS
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
+#define NSFullScreenWindowMask (1 << 14)
+#endif
+
 /*
  * Let's raise a glass for the project manager who improves our lives by
  * generating deprecation warnings about pointless changes of the names
  * of constants.
  */
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
+#define kCTFontDefaultOrientation kCTFontOrientationDefault
+#define kCTFontVerticalOrientation kCTFontOrientationVertical
+#endif
+
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101000
 #define NSOKButton NSModalResponseOK
 #endif
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101100
+#define kCTFontUserFixedPitchFontType kCTFontUIFontUserFixedPitch
+#endif
+
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 101200
 #define NSAppKitDefined NSEventTypeAppKitDefined
+#define NSApplicationDefined NSEventTypeApplicationDefined
 #define NSApplicationActivatedEventType NSEventSubtypeApplicationActivated
 #define NSApplicationDeactivatedEventType NSEventSubtypeApplicationDeactivated
 #define NSWindowExposedEventType NSEventSubtypeWindowExposed
@@ -65,21 +79,8 @@
 #define NSInformationalAlertStyle NSAlertStyleInformational
 #define NSCriticalAlertStyle NSAlertStyleCritical
 #define NSCenterTextAlignment NSTextAlignmentCenter
-#define NSDeviceIndependentModifierFlagsMask NSEventModifierFlagDeviceIndependentFlagsMask
-#define NSCommandKeyMask NSEventModifierFlagCommand
-#define NSShiftKeyMask NSEventModifierFlagShift
-#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
-#define NSAlternateKeyMask NSEventModifierFlagOption
-#define NSControlKeyMask NSEventModifierFlagControl
-#define NSNumericPadKeyMask NSEventModifierFlagNumericPad
-#define NSFunctionKeyMask NSEventModifierFlagFunction
-#define NSKeyUp NSEventTypeKeyUp
-#define NSKeyDown NSEventTypeKeyDown
-#define NSFlagsChanged NSEventTypeFlagsChanged
-#define NSAlphaShiftKeyMask NSEventModifierFlagCapsLock
-#define NSShiftKeyMask NSEventModifierFlagShift
 #define NSAnyEventMask NSEventMaskAny
-#define NSTexturedBackgroundWindowMask NSWindowStyleMaskTexturedBackground
+#define NSApplicationDefinedMask NSEventMaskApplicationDefined
 #define NSUtilityWindowMask NSWindowStyleMaskUtilityWindow
 #define NSNonactivatingPanelMask NSWindowStyleMaskNonactivatingPanel
 #define NSDocModalWindowMask NSWindowStyleMaskDocModalWindow
@@ -90,6 +91,17 @@
 #define NSUnifiedTitleAndToolbarWindowMask NSWindowStyleMaskUnifiedTitleAndToolbar
 #define NSMiniaturizableWindowMask NSWindowStyleMaskMiniaturizable
 #define NSBorderlessWindowMask NSWindowStyleMaskBorderless
+#define NSFullScreenWindowMask NSWindowStyleMaskFullScreen
 #endif
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 101400
+#define NSStringPboardType NSPasteboardTypeString
+#define NSOnState NSControlStateValueOn
+#define NSOffState NSControlStateValueOff
+// Now we are also changing names of methods!
+#define graphicsContextWithGraphicsPort graphicsContextWithCGContext
 #endif
+
+
+#endif
+

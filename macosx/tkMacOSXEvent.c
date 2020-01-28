@@ -112,14 +112,18 @@ enum {
  *
  * TkMacOSXFlushWindows --
  *
- *	This routine flushes all the visible windows of the application. It is
- *	called by XSync().
+ *	This routine is a stub called by XSync, which is called during the Tk
+ *      update command.  The language specification does not require that the
+ *      update command be synchronous but many of the tests implicitly assume
+ *      that it is.  It is definitely asynchronous on macOS since many idle
+ *      tasks are run inside of the drawRect method of a window's contentView,
+ *      which will not be called until after this function returns.
  *
  * Results:
  *	None.
  *
- * Side effects:
- *	Flushes all visible Cocoa windows
+ * Side effects: Processes all pending idle events then calls the display
+ *	method of each visible window.
  *
  *----------------------------------------------------------------------
  */
@@ -127,12 +131,12 @@ enum {
 MODULE_SCOPE void
 TkMacOSXFlushWindows(void)
 {
-    NSArray *macWindows = [NSApp orderedWindows];
-
-    for (NSWindow *w in macWindows) {
-	if (TkMacOSXGetXWindow(w)) {
-	    [w flushWindow];
-	}
+    if (Tk_GetNumMainWindows() == 0) {
+	return;
+    }
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+    for (NSWindow *w in [NSApp orderedWindows]) {
+	[w display];
     }
 }
 

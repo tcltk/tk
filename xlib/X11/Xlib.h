@@ -203,9 +203,6 @@ typedef struct {
 	int class;		/* class of screen (monochrome, etc.) */
 #endif
 	unsigned long red_mask, green_mask, blue_mask;	/* mask values */
-#if defined(MAC_OSX_TK)
-        unsigned long alpha_mask;
-#endif
 	int bits_per_rgb;	/* log base 2 of distinct color values */
 	int map_entries;	/* color map entries */
 } Visual;
@@ -335,7 +332,6 @@ typedef struct _XImage {
     XPointer obdata;		/* hook for the object routines to hang on */
 #if defined(MAC_OSX_TK)
     int pixelpower;		/* n such that pixels are 2^n x 2^n blocks*/
-    unsigned long alpha_mask;
 #endif
     struct funcs {		/* image manipulation routines */
 	struct _XImage *(*create_image)();
@@ -534,7 +530,7 @@ typedef struct _XDisplay {
 #endif
 #ifndef _XEVENT_
 
-#define XMaxTransChars 4
+#define XMaxTransChars 7
 
 /*
  * Definitions of specific events.
@@ -553,9 +549,9 @@ typedef struct {
 	unsigned int state;	/* key or button mask */
 	unsigned int keycode;	/* detail */
 	Bool same_screen;	/* same screen flag */
-        char trans_chars[XMaxTransChars];
+	char trans_chars[XMaxTransChars];
 				/* translated characters */
-	int nbytes;
+	unsigned char nbytes;
 } XKeyEvent;
 typedef XKeyEvent XKeyPressedEvent;
 typedef XKeyEvent XKeyReleasedEvent;
@@ -963,7 +959,7 @@ typedef union _XEvent {
 	XMappingEvent xmapping;
 	XErrorEvent xerror;
 	XKeymapEvent xkeymap;
-	long pad[24];
+	XID pad[24];
 } XEvent;
 #endif
 
