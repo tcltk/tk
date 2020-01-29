@@ -1,12 +1,12 @@
 /*
-* tkoWidget.h --
-*
-*    This file contains the tko widget class.
-*TODO -synonym option hide/show
-*
-* Copyright (c) 2019 Rene Zaumseil
-*
-*/
+ * tkoWidget.c --
+ *
+ *    This file contains the tko widget class.
+ *TODO -synonym option hide/show
+ *
+ * Copyright (c) 2019 Rene Zaumseil
+ *
+ */
 #include "tcl.h"
 #include "tclOO.h"
 #include "tk.h"
@@ -16,16 +16,16 @@
 #include "tclOOInt.h" /*TODO needed for Widget_GetClassName() below */
 
 /*
-* Widget_GetClassName --
-*    Return class name of object.
-*    Should be OO core function.
-*
-* Results:
-*    Name of class or NULL on error.
-*
-* Side effects:
-*    Use internal OO structures!!!
-*/
+ * Widget_GetClassName --
+ *    Return class name of object.
+ *    Should be OO core function.
+ *
+ * Results:
+ *    Name of class or NULL on error.
+ *
+ * Side effects:
+ *    Use internal OO structures!!!
+ */
 Tcl_Obj *
 Widget_GetClassName(
     Tcl_Interp * interp,
@@ -229,6 +229,7 @@ Tcl_ObjectMetadataType tkoWidgetMeta = {
 
 /*
 * Tko_TkoObjCmd --
+*    Implementation of the "::tko" command.
 *    Initialization of new widgets.
 *    Configuration of widget class options.
 *
@@ -777,6 +778,7 @@ Tko_TkoObjCmd(
 
 /*
 * WidgetMethod_tko --
+*    Implementation of the "my _tko" method.
 *    Configuration of widget object options.
 *
 * Results:
@@ -1053,6 +1055,14 @@ Tko_Init(
     if (Tko_FrameInit(interp) != TCL_OK) {
         return TCL_ERROR;
     }
+#ifdef USE_RBC
+    if (Tko_GraphInit(interp) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    if (Tko_VectorInit(interp) != TCL_OK) {
+        return TCL_ERROR;
+    }
+#endif
     return TCL_OK;
 }
 
@@ -2288,25 +2298,27 @@ WidgetOptionAdd(
         if(value) {
             optionPtr->value = value;
             optionPtr->flagbits |= TKO_OPTION__USER;
-        } else if (searchdb < 2) {
-            /*
-             * Get value from option database
-             */
-            dbnameUid = Tk_GetUid(Tcl_GetString(dbname));
-            if(optionPtr->value == NULL) {
-                valueUid = Tk_GetOption(widget->tkWin, dbnameUid, dbclassUid);
-                if(valueUid != NULL) {
-                    optionPtr->value = Tcl_NewStringObj(valueUid, -1);
+        } else {
+            if (searchdb < 2 && widget->tkWin != NULL) {
+                /*
+                 * Get value from option database
+                 */
+                dbnameUid = Tk_GetUid(Tcl_GetString(dbname));
+                if (optionPtr->value == NULL) {
+                    valueUid = Tk_GetOption(widget->tkWin, dbnameUid, dbclassUid);
+                    if (valueUid != NULL) {
+                        optionPtr->value = Tcl_NewStringObj(valueUid, -1);
+                    }
                 }
-            }
-            /*
-             * Check for a system-specific default value.
-             * Do not for -class because Tcl_SetClass was not called.
-             * When -class is not first option (after -screen) we get a crash!
-             */
-            if(optionPtr->value == NULL && optionUid != TkoUid_class) {
-                optionPtr->value =
-                    TkpGetSystemDefault(widget->tkWin, dbnameUid, dbclassUid);
+                /*
+                 * Check for a system-specific default value.
+                 * Do not for -class because Tcl_SetClass was not called.
+                 * When -class is not first option (after -screen) we get a crash!
+                 */
+                if (optionPtr->value == NULL && optionUid != TkoUid_class) {
+                    optionPtr->value =
+                        TkpGetSystemDefault(widget->tkWin, dbnameUid, dbclassUid);
+                }
             }
             /*
              * Use default value.
