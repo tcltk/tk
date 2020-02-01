@@ -11,8 +11,6 @@
 package require Tcl 8.7-9.99
 
 namespace eval ::tk {
-    namespace ensemble create -command ::tk::OptionType
-
     # ----------------------------------------------------------------------
     #
     # tk::OptionDefine --
@@ -27,6 +25,7 @@ namespace eval ::tk {
 
     namespace eval OptionDefine {
 	namespace eval Support {
+	    namespace ensemble create -command ::tk::OptionType
 	    namespace path {::tcl ::tk ::oo::configuresupport}
 
 	    # --------------------------------------------------------------
