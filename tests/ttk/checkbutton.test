@@ -56,7 +56,7 @@ test checkbutton-1.7 "Button destroyed by click" -body {
     pack .top.mb
     focus -force .top.mb
     update
-    event generate .top.mb <1>
+    event generate .top.mb <Button-1>
     event generate .top.mb <ButtonRelease-1>
     update  ; # shall not trigger error  invalid command name ".top.b"
 } -result {}

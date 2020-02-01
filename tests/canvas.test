@@ -574,7 +574,7 @@ test canvas-13.1 {canvas delete during event, SF bug-228024} -body {
     set ::x {}
     # do this many times to improve chances of triggering the crash
     for {set i 0} {$i < 30} {incr i} {
-	event generate .c <1> -x 100 -y 100
+	event generate .c <Button-1> -x 100 -y 100
 	event generate .c <ButtonRelease-1> -x 100 -y 100
     }
     return $::x
