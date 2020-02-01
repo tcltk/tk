@@ -1,0 +1,110 @@
+# This file is a Tcl script to test entry widgets in Tk.  It is
+# organized in the standard fashion for Tcl tests.
+#
+# Copyright (c) 1994 The Regents of the University of California.
+# Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 by Scriptics Corporation.
+# All rights reserved.
+
+package require tcltest 2.2
+eval tcltest::configure $argv
+tcltest::loadTestedCommands
+namespace import -force tcltest::test
+
+deleteWindows
+
+test oocfg-1.1 {tk::megawidget: basic test} -setup {
+    tk::megawidget create Gorp {
+	variable window
+	constructor {w args} {
+	    set window [frame $w]
+	    my Initialise $w {*}$args
+	}
+	destructor {
+	    destroy $window
+	}
+    }
+} -body {
+    oo::define Gorp {
+	option foo
+    }
+    set gorp [Gorp new .gorp -foo bar]
+    list [$gorp configure] [$gorp configure -foo] [$gorp configure -foo grill] \
+	[$gorp cget -foo]
+} -cleanup {
+    catch {Gorp destroy}
+} -result {{{-foo foo Foo {} bar}} {-foo foo Foo {} bar} {} grill}
+test oocfg-1.2 {tk::megawidget: basic test} -setup {
+    tk::megawidget create Gorp {
+	variable window
+	constructor {w args} {
+	    set window [frame $w]
+	    my Initialise $w {*}$args
+	}
+	destructor {
+	    destroy $window
+	}
+    }
+} -body {
+    oo::define Gorp {
+	option foo -default 135
+    }
+    set gorp [Gorp new .gorp -foo bar]
+    list [$gorp configure] [$gorp configure -foo] [$gorp configure -foo grill] \
+	[$gorp cget -foo]
+} -cleanup {
+    catch {Gorp destroy}
+} -result {{{-foo foo Foo 135 bar}} {-foo foo Foo 135 bar} {} grill}
+test oocfg-1.3 {tk::megawidget: basic test} -setup {
+    tk::megawidget create Gorp {
+	variable window
+	constructor {w args} {
+	    set window [frame $w]
+	    my Initialise $w {*}$args
+	}
+	destructor {
+	    destroy $window
+	}
+    }
+} -body {
+    oo::define Gorp {
+	option foo -type integer -default 135
+    }
+    set gorp [Gorp new .gorp -foo 789]
+    list [$gorp configure] [$gorp configure -foo] [$gorp configure -foo 153] \
+	[$gorp cget -foo] [catch {$gorp configure -foo bar} msg] $msg
+} -cleanup {
+    catch {Gorp destroy}
+} -result {{{-foo foo Foo 135 789}} {-foo foo Foo 135 789} {} 153 1 {invalid integer value "bar"}}
+test oocfg-1.4 {tk::megawidget: basic test} -setup {
+    tk::megawidget create Gorp {
+	variable window
+	constructor {w args} {
+	    set window [frame $w]
+	    my Initialise $w {*}$args
+	}
+	destructor {
+	    destroy $window
+	}
+    }
+} -body {
+    oo::define Gorp {
+	option foo -type integer -default 135
+	option bar -alias foo
+    }
+    set gorp [Gorp new .gorp -bar 789]
+    list [$gorp configure] [$gorp configure -bar] [$gorp configure -bar 153] \
+	[$gorp cget -foo] [$gorp cget -bar] \
+	[catch {$gorp configure -bar grill} msg] $msg
+} -cleanup {
+    catch {Gorp destroy}
+} -result {{{-bar -foo} {-foo foo Foo 135 789}} {-bar -foo} {} 153 153 1 {invalid integer value "grill"}}
+
+# cleanup
+deleteWindows
+cleanupTests
+return
+
+# Local Variables:
+# mode: tcl
+# End:
