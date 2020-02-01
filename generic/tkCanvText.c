@@ -1382,7 +1382,6 @@ GetTextIndex(
     TextItem *textPtr = (TextItem *) itemPtr;
     TkSizeT length;
     int c;
-    TkCanvas *canvasPtr = (TkCanvas *) canvas;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     const char *string = TkGetStringFromObj(obj, &length);
 
