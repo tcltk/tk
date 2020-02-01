@@ -11,85 +11,151 @@
 package require Tcl 8.7-9.99
 
 namespace eval ::tk {
-    namespace ensemble create -command ::tk::PropType
+    namespace ensemble create -command ::tk::OptionType
 
     # ----------------------------------------------------------------------
     #
-    # tk::PropertyDefine --
+    # tk::OptionDefine --
     #
     #	The definition language namespace for configurable widget definitions.
+    #	All actual implementations of bits and pieces are in the subordinate
+    #	Support namespace, and the public API then namespace export/import-ed
+    #	into the main namespace (which has its path set up to be a definition
+    #	language).
     #
     # ----------------------------------------------------------------------
 
-    namespace eval PropertyDefine {
+    namespace eval OptionDefine {
 	namespace eval Support {
 	    namespace path {::tcl ::tk ::oo::configuresupport}
 
-	    proc DefineProperty {name options} {
-		set descriptor list
+	    # --------------------------------------------------------------
+	    #
+	    # tk::OptionDefine::Support::DefineOption --
+	    #
+	    #	Actually defines an option. Assumes all validation of
+	    #	arguments has been done.
+	    #
+	    # --------------------------------------------------------------
+
+	    proc DefineOption {name options} {
+		set descriptor ::list
 		lappend descriptor [dict get $options name]
 		lappend descriptor [dict get $options class]
 		set type [dict get $options type]
 		if {[dict exists $options def]} {
 		    lappend descriptor [dict get $options def]
 		} else {
-		    lappend descriptor [PropType $type default]
+		    lappend descriptor [OptionType $type default]
 		}
-		set validator [list [namespace which PropType] $type validate]
+		set validator [list [namespace which OptionType] $type validate]
 
 		uplevel 1 [list \
-		    method <OptDescribe$name> {} $descriptor]
+		    method <OptDescribe-$name> {} $descriptor]
 		uplevel 1 [list \
-		    forward <OptValidate$name> {*}$validator]
+		    forward <OptValidate-$name> {*}$validator]
+
+		# We only make the access methods if they don't exist on this
+		# class; this allows a user to override them before defining
+		# the option.
+
+		set meths [info class methods [uplevel 1 self] -scope unexported]
+		if {"<OptRead-$name>" ni $meths} {
+		    uplevel 1 [list \
+			forward <OptRead-$name> my <StdOptRead> $name]
+		}
+
+		# Note: init-only options still have this
+		if {"<OptWrite-$name>" ni $meths} {
+		    uplevel 1 [list \
+			forward <OptWrite-$name> my <StdOptWrite> $name]
+		}
+
 		uplevel 1 [list \
-		    [namespace which readableproperties] -append $name]
+		    [namespace which readableproperties] -append -$name]
 		if {![dict get $options init]} {
 		    uplevel 1 [list \
-			[namespace which writableproperties] -append $name]
+			[namespace which writableproperties] -append -$name]
 		}
 	    }
 
-	    proc ListProperties {class {type -readable}} {
+	    # --------------------------------------------------------------
+	    #
+	    # tk::OptionDefine::Support::ListOptions --
+	    #
+	    #	Shorthand for getting the list of all options of a class of a
+	    #	given type.
+	    #
+	    # --------------------------------------------------------------
+
+	    proc ListOptions {class {type -readable}} {
 		tailcall info class properties $class -all $type
 	    }
 
+	    # --------------------------------------------------------------
+	    #
+	    # tk::OptionDefine::Support::DefineAlias --
+	    #
+	    #	Actually defines a option alias. Does minor validation of its
+	    #	target, checking that it actually exists and is not an
+	    #	init-only option (because otherwise things get weird).
+	    #
+	    # --------------------------------------------------------------
+
 	    proc DefineAlias {contextClass name otherName} {
-		if {![string index $otherName 0] eq "-"} {
+		if {[string index $otherName 0] ne "-"} {
 		    set otherName "-$otherName"
 		}
-		set targets [info class methods $contextClass \
-				 -scope unexported -all]
-		if {$otherName ni [ListProperties $contextClass]} {
+		if {$otherName ni [ListOptions $contextClass]} {
 		    throw [list TK LOOKUP OPTION $otherName] \
 			"no such option \"$otherName\""
 		}
-		if {$otherName ni [ListProperties $contextClass -writable]} {
+		if {$otherName ni [ListOptions $contextClass -writable]} {
 		    throw [list TK LOOKUP OPTION $otherName] \
 			"may not alias init-only option \"$otherName\""
 		}
+		set descriptor [list ::list $otherName]
+
 		uplevel 1 [list \
-		    forward <OptDescribe$name> my <OptDescribe$otherName>]
+		    method <OptDescribe-$name> {} $descriptor]
 		uplevel 1 [list \
-		    forward <OptValidate$name> my <OptValidate$otherName>]
+		    forward <OptValidate-$name> my <OptValidate$otherName>]
+
+		# Aliases always define readers and writers; overriding them
+		# makes no sense at all!
 		uplevel 1 [list \
-		    [namespace which readableproperties] -append $name]
+		    forward <OptRead-$name> my <OptRead$otherName>]
 		uplevel 1 [list \
-		    [namespace which writableproperties] -append $name]
+		    forward <OptWrite-$name> my <OptWrite$otherName>]
+
+		uplevel 1 [list \
+		    [namespace which readableproperties] -append -$name]
+		uplevel 1 [list \
+		    [namespace which writableproperties] -append -$name]
 	    }
 
-	    proc ParsePropertyOptions {name args} {
+	    # --------------------------------------------------------------
+	    #
+	    # tk::OptionDefine::Support::ParseOptionArgs --
+	    #
+	    #	Parses the various options to the [option] definition
+	    #	command.
+	    #
+	    # --------------------------------------------------------------
+
+	    proc ParseOptionArgs {name args} {
 		dict set opt type string
 		dict set opt class [string totitle $name]
 		dict set opt name [string tolower $name]
 		dict set opt init false
-		set defFromType [PropType string default]
+		set defFromType [OptionType string default]
 		foreach {option value} $args {
 		    switch [prefix match {
 			-alias -class -default -initonly -name -type
 		    } $option] {
 			-alias {
 			    if {[llength $args] != 2} {
-				throw {TK PROPERTY_MISUSE} \
+				throw {TK OPTION_MISUSE} \
 				    "-alias may only ever be used on its own"
 			    }
 			    dict set opt alias $value
@@ -108,20 +174,20 @@ namespace eval ::tk {
 			-initonly {
 			    if {![string is boolean -strict $value]} {
 				# TODO: produce a better error?
-				throw {TK PROPERTY_MISUSE} \
+				throw {TK OPTION_MISUSE} \
 				    "bad boolean \"$value\""
 			    }
 			    dict set opt init $value
 			}
 			-type {
 			    dict set opt type $value
-			    set defFromType [PropType $value default]
+			    set defFromType [OptionType $value default]
 			}
 		    }
 		}
 		if {[dict exists $opt def]} {
 		    # Apply the type validation to the default
-		    dict set opt def [PropType [dict get $opt type] validate \
+		    dict set opt def [OptionType [dict get $opt type] validate \
 					  [dict get $opt def]]
 		} else {
 		    dict set opt def $defFromType
@@ -129,27 +195,36 @@ namespace eval ::tk {
 		return $opt
 	    }
 
-	    proc property {name args} {
+	    # --------------------------------------------------------------
+	    #
+	    # tk::OptionDefine::Support::option --
+	    #
+	    #	The implementation of the [option] definition. Mostly
+	    #	delegates to other procedures in this namespace.
+	    #
+	    # --------------------------------------------------------------
+
+	    proc option {name args} {
 		set contextClass [uplevel 1 self]
 		if {[llength $args] % 2} {
 		    return -code error -errorcode {TCL WRONGARGS} \
 			[format {wrong # args: should be "%s"} \
-			     "property name ?-option value ...?"]
+			     "option name ?-option value ...?"]
 		}
 		if {![regexp -nocase {^[[:alpha:]]\w*$} $name]} {
-		    return -code error -errorcode {TK PROPERTY_NAME} \
-			"bad property name \"$name\":\
+		    return -code error -errorcode {TK OPTION_NAME} \
+			"bad option name \"$name\":\
 		    	must be alphanumeric starting with a letter"
 		}
 		try {
-		    set Opt [ParsePropertyOptions $name {*}$args]
+		    set Opt [ParseOptionArgs $name {*}$args]
 		    if {[dict exists $Opt alias]} {
 			uplevel 1 [list \
-			    [namespace which DefineAlias] $contextClass -$name \
+			    [namespace which DefineAlias] $contextClass $name \
 			    [dict get $Opt alias]]
 		    } else {
 			uplevel 1 [list \
-			    [namespace which DefineProperty] -$name $Opt]
+			    [namespace which DefineOption] $name $Opt]
 		    }
 		} on error {msg opt} {
 		    # Condition the errorinfo trace
@@ -159,11 +234,11 @@ namespace eval ::tk {
 		}
 	    }
 
-	    namespace export property
+	    namespace export option
 	}
 
-	namespace import Support::property
-	namespace export property
+	namespace import Support::option
+	namespace export option
 	namespace path ::oo::define
     }
 
@@ -179,49 +254,114 @@ namespace eval ::tk {
     # ----------------------------------------------------------------------
 
     ::oo::class create configurable {
-	variable ""
-
 	private {
-	    method Properties {} {
+	    variable initialised
+
+	    # --------------------------------------------------------------
+	    #
+	    # tk::configurable Options --
+	    #
+	    #	Get the list of readable options of the object.
+	    #
+	    # --------------------------------------------------------------
+
+	    method ReadableOptions {} {
 		::info object properties [self] -all -readable
 	    }
-	    method WritableProperties {} {
+
+	    # --------------------------------------------------------------
+	    #
+	    # tk::configurable WritableOptions --
+	    #
+	    #	Get the list of writable (after initialisation) options of the
+	    #	object.
+	    #
+	    # --------------------------------------------------------------
+
+	    method WritableOptions {} {
 		::info object properties [self] -all -writable
 	    }
+
+	    # --------------------------------------------------------------
+	    #
+	    # tk::configurable GetRealOptionName --
+	    #
+	    #	Expand unique prefixes of an option.
+	    #
+	    # --------------------------------------------------------------
 
 	    method GetRealOptionName {option} {
 		::try {
 		    ::return [::tcl::prefix match -message "option" \
-				 [my Properties] $option]
+				 [my ReadableOptions] $option]
 		} on error msg {
 		    # Convert errorCode
 		    ::throw [::list TK LOOKUP OPTION $option] $msg
 		}
 	    }
 
-	    method AllDescriptors {} {
-		::lmap opt [my Properties] {
-		    ::list $opt {*}[my <OptDescribe$opt>] $($opt)
+	    # --------------------------------------------------------------
+	    #
+	    # tk::configurable DescribeOption --
+	    #
+	    #	Describes a single option (called from AllDescriptors and
+	    #	OneDescriptor). The option name must be in its full form.
+	    #
+	    # --------------------------------------------------------------
+
+	    method DescribeOption {option} {
+		::set desc [my <OptDescribe$option>]
+		::if {[::llength $desc] == 1} {
+		    ::list $option {*}$desc
+		} else {
+		    ::list $option {*}$desc [my <OptRead$option>]
 		}
 	    }
 
-	    method OneDescriptor {option} {
-		::set opt [my GetRealOptionName $option]
-		::list $opt {*}[my <OptDescribe$opt>] $($opt)
+	    # --------------------------------------------------------------
+	    #
+	    # tk::configurable AllDescriptors --
+	    #
+	    #	Implements [$obj configure] with no extra arguments.
+	    #
+	    # --------------------------------------------------------------
+
+	    method AllDescriptors {} {
+		::lmap opt [my ReadableOptions] {my DescribeOption $opt}
 	    }
 
-	    method UpdateState opts {
-		::set props [my WritableProperties]
+	    # --------------------------------------------------------------
+	    #
+	    # tk::configurable OneDescriptor --
+	    #
+	    #	Implements [$obj configure -opt] with no extra arguments.
+	    #
+	    # --------------------------------------------------------------
+
+	    method OneDescriptor {option} {
+		my DescribeOption [my GetRealOptionName $option]
+	    }
+
+	    # --------------------------------------------------------------
+	    #
+	    # tk::configurable UpdateState --
+	    #
+	    #	Implements [$obj configure -opt val -opt val...].
+	    #
+	    # --------------------------------------------------------------
+
+	    method UpdateState arguments {
+		::set opts [my WritableOptions]
 		::set stateChanged 0
-		::set state [::array get ""]
+		::set checkpoint [my <OptionsMakeCheckpoint>]
 		::try {
-		    ::foreach {option value} $opts {
+		    ::foreach {option value} $arguments {
 			try {
 			    ::set opt [::tcl::prefix match -message "option" \
-					 $props $option]
+					 $opts $option]
 			} on error {msg} {
 			    ::try {
-				::tcl::prefix match [my Properties] $option
+				::tcl::prefix match [my ReadableOptions] $option
 			    } on error {} {
 				# Do nothing
 			    } on ok {optionName} {
@@ -229,21 +369,94 @@ namespace eval ::tk {
 			    }
 			    ::throw [::list TK LOOKUP OPTION $option] $msg
 			}
-			::set ($opt) [my <OptValidate$opt> $value]
+			set value [my <OptValidate$opt> $value]
+			my <OptWrite$opt> $value
 			::set stateChanged 1
 		    }
 		    ::if {$stateChanged} {
 			my PostConfigure
 		    }
-		    ::unset -nocomplain state
+		    ::unset -nocomplain checkpoint
 		} finally {
 		    # Rollback on error
-		    ::if {[::info exists state]} {
-			::array set "" $state
+		    ::if {[::info exists checkpoint]} {
+			my <OptionsRestoreCheckpoint> $checkpoint
 		    }
 		}
 	    }
 	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::configurable <StdOptRead> --
+	#
+	#	How to actually read an option of a given name out of the
+	#	state when using the standard model of storage (the array in
+	#	the instance with the empty name).
+	#
+	# ------------------------------------------------------------------
+
+	method <StdOptRead> {name} {
+	    ::variable ""
+	    ::return $($name)
+	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::configurable <StdOptWrite> --
+	#
+	#	How to actually write an option of a given name to the state
+	#	when using the standard model of storage (the array in the
+	#	instance with the empty name).
+	#
+	# ------------------------------------------------------------------
+
+	method <StdOptWrite> {name value} {
+	    ::variable ""
+	    ::set ($name) $value
+	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::configurable <OptionsMakeCheckpoint> --
+	#
+	#	How to make a checkpoint of the state that can be restored if
+	#	the configuration of the object fails. If overridden, the
+	#	companion method <OptionsRestoreCheckpoint> should also be
+	#	overridden. The format of checkpoints is undocumented
+	#	formally, but this implementation uses a dictionary.
+	#
+	# ------------------------------------------------------------------
+
+	method <OptionsMakeCheckpoint> {} {
+	    ::variable ""
+	    ::array get ""
+	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::configurable <OptionsRestoreCheckpoint> --
+	#
+	#	How to restore a checkpoint of the state because the
+	#	configuration of the object has failed. If overridden, the
+	#	companion method <OptionsMakeCheckpoint> should also be
+	#	overridden. The format of checkpoints is undocumented
+	#	formally, but this implementation uses a dictionary.
+	#
+	# ------------------------------------------------------------------
+
+	method <OptionsRestoreCheckpoint> {checkpoint} {
+	    ::variable ""
+	    ::array set "" $checkpoint
+	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::configurable configure --
+	#
+	#	Implements [$obj configure ...].
+	#
+	# ------------------------------------------------------------------
 
 	method configure args {
 	    ::try {
@@ -269,9 +482,17 @@ namespace eval ::tk {
 	    }
 	}
 
+	# ------------------------------------------------------------------
+	#
+	# tk::configurable cget --
+	#
+	#	Implements [$obj cget $option].
+	#
+	# ------------------------------------------------------------------
+
 	method cget {option} {
 	    ::try {
-		::return $([my GetRealOptionName $option])
+		::return [my <OptRead[my GetRealOptionName $option]>]
 	    } on error {msg opt} {
 		# Hide the implementation details
 		::dict unset opt -errorinfo
@@ -280,18 +501,47 @@ namespace eval ::tk {
 	    }
 	}
 
+	# ------------------------------------------------------------------
+	#
+	# tk::configurable PostConfigure --
+	#
+	#	Hook for user code to find out when a state change really
+	#	occurred with [$obj configure]. Does nothing by default;
+	#	subclasses may change this.
+	#
+	# ------------------------------------------------------------------
+
 	method PostConfigure {} {}
 
+	# ------------------------------------------------------------------
+	#
+	# tk::configurable Initialise --
+	#
+	#	Initialisation version of [$obj configure], which reads the
+	#	option database and will set init-only options as well as
+	#	ordinary ones. Intended to be called from a constructor.
+	#
+	# ------------------------------------------------------------------
+
 	method Initialise {pathName args} {
+	    ::if {[info exists initialised] && $initialised} {
+		::return -code error "this object is already initialised"
+	    }
 	    ::if {[::llength $args] % 1} {
 		# TODO: generate a better error
 		::return -code error "wrong # args"
 	    }
 	    ::set toSet {}
-	    ::set props [my Properties]
+	    ::set opts [my ReadableOptions]
 	    ::try {
-		::foreach opt $props {
-		    ::lassign [my <OptDescribe$opt>] nm cls def
+		# Tricky point: we will be writing to read-only options here.
+		::foreach opt $opts {
+		    ::set desc [my <OptDescribe$opt>]
+		    ::if {[llength $desc] == 1} {
+			# Skip aliases
+			::continue
+		    }
+		    ::lassign $desc nm cls def
 		    ::set val [::option get $pathName $nm $cls]
 		    ::if {$val eq ""} {
 			::set val $def
@@ -300,9 +550,9 @@ namespace eval ::tk {
 		}
 		::foreach {option value} $args {
 		    ::try {
-			# Tricky point: $props includes init-only options
+			# Tricky point: $opts includes init-only options
 			::set opt [::tcl::prefix match -message "option" \
-				     $props $option]
+				     $opts $option]
 		    } on error msg {
 			::throw [::list TK LOOKUP OPTION $option] $msg
 		    }
@@ -314,14 +564,17 @@ namespace eval ::tk {
 		::return -options $opt $msg
 	    }
 	    # Apply the computed state
-	    ::array set "" $toSet
+	    dict for {opt value} $toSet {
+		my <OptWrite$opt> $value
+	    }
+	    ::set initialised true
 	}
 	forward Initialize my Initialise
 
-	definitionnamespace -class ::tk::PropertyDefine
+	definitionnamespace -class ::tk::OptionDefine
 
-	# Individual widgets do not support defining their own properties.
-	# This is different from ::oo::configurable
+	# Individual widgets do not support defining their own options.
+	# This is different from ::oo::configurable's properties.
     }
 
     # ----------------------------------------------------------------------
@@ -340,66 +593,110 @@ namespace eval ::tk {
 	    next {mixin ::tk::configurable}
 	    next $definitionScript
 	}
-	definitionnamespace -class ::tk::PropertyDefine
+	definitionnamespace -class ::tk::OptionDefine
     }
 
     # ----------------------------------------------------------------------
     #
-    # tk::propertytype --
+    # tk::optiontype --
     #
-    #	The class of types of properties. Abstract because concrete subclasses
+    #	The class of types of options. Abstract because concrete subclasses
     #	define how the validation is done.
     #
     # ----------------------------------------------------------------------
 
-    ::oo::abstract create propertytype {
+    ::oo::abstract create optiontype {
 	private variable def
 
 	constructor {default} {
 	    set def $default
-	    set map [namespace ensemble configure ::tk::PropType -map]
+	    set map [namespace ensemble configure ::tk::OptionType -map]
 	    dict set map [namespace tail [self]] [self]
-	    namespace ensemble configure ::tk::PropType -map $map
+	    namespace ensemble configure ::tk::OptionType -map $map
 	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::optiontype validate --
+	#
+	#	How to validate that the sole argument (conventionally called
+	#	'value') is a member of the type. Throws an error if it is not
+	#	of the type. Also normalizes the value if it is of the type;
+	#	for most types, this is a trivial no-change operation, but for
+	#	some types it may be more significant (e.g., expanding a
+	#	unique prefix with a table-driven type).
+	#
+	# ------------------------------------------------------------------
 
 	method validate {value} {
 	    throw UNIMPLEMENTED "unimplemented method"
 	}
 
-	method Normalize {value} {
-	    return $value
-	}
+	# ------------------------------------------------------------------
+	#
+	# tk::optiontype default --
+	#
+	#	Produces the default value of the type. The rest of the code
+	#	assumes that this is a constant, so it is recommended to be a
+	#	zero or an empty string (where these are meaningful).
+	#
+	# ------------------------------------------------------------------
 
 	method default {} {
 	    return $def
 	}
 
 	self {
-	    unexport new create
+	    # --------------------------------------------------------------
+	    #
+	    # tk::optiontype Create --
+	    #
+	    #	Actual factory method. Wrapper that creates classes of the
+	    #	correct implementation type with the right name.
+	    #
+	    # --------------------------------------------------------------
 
-	    private method ConditionName {name} {
-		return [namespace current]::[namespace tail $name]
+	    method Create {realClass name args} {
+		# Condition the class name first
+		set name [namespace current]::[namespace tail $name]
+		tailcall $realClass create $name {*}$args
 	    }
 
-	    method createbool {name args} {
-		tailcall ::tk::BoolTestType create \
-		    [my ConditionName $name] {*}$args
-	    }
+	    # --------------------------------------------------------------
+	    #
+	    # tk::optiontype createbool --
+	    #
+	    #	Create a option type that is driven by a boolean test.
+	    #
+	    # --------------------------------------------------------------
 
-	    method createthrow {name args} {
-		tailcall ::tk::ThrowTestType create \
-		    [my ConditionName $name] {*}$args
-	    }
+	    forward createbool my Create ::tk::BoolTestType
 
-	    method createtable {name args} {
-		tailcall ::tk::TableType create \
-		    [my ConditionName $name] {*}$args
-	    }
+	    # --------------------------------------------------------------
+	    #
+	    # tk::optiontype createthrow --
+	    #
+	    #	Create a option type that is driven by an erroring test.
+	    #
+	    # --------------------------------------------------------------
+
+	    forward createthrow my Create ::tk::ThrowTestType
+
+	    # --------------------------------------------------------------
+	    #
+	    # tk::optiontype createtable --
+	    #
+	    #	Create a option type that is driven by a table of valid
+	    #	values (effectively an enumeration, Tcl-style).
+	    #
+	    # --------------------------------------------------------------
+
+	    forward createtable my Create ::tk::TableType
 	}
     }
 
     ::oo::class create BoolTestType {
-	superclass propertytype
+	superclass optiontype
 
 	constructor {default test} {
 	    next $default
@@ -417,10 +714,14 @@ namespace eval ::tk {
 		return -code error $msg
 	    }
 	}
+
+	method Normalize {value} {
+	    return $value
+	}
     }
 
     ::oo::class create ThrowTestType {
-	superclass propertytype
+	superclass optiontype
 
 	constructor {default test} {
 	    next $default
@@ -435,16 +736,21 @@ namespace eval ::tk {
 		return -code error $msg
 	    }
 	}
+
+	method Normalize {value} {
+	    return $value
+	}
     }
 
     ::oo::class create TableType {
-	superclass propertytype
+	superclass optiontype
 
 	private variable Table
 	constructor {default table} {
 	    next $default
 	    set Table $table
 	}
+
 	method validate {value} {
 	    ::tcl::prefix match $Table $value
 	}
@@ -457,65 +763,65 @@ namespace eval ::tk {
     # ----------------------------------------------------------------------
 
     # Install the types: those with a boolean test
-    propertytype createbool boolean "false" {
+    optiontype createbool boolean "false" {
 	string is boolean -strict
     }
-    propertytype createbool zboolean "" {
+    optiontype createbool zboolean "" {
 	string is boolean
     }
-    propertytype createbool integer "0" {
+    optiontype createbool integer "0" {
 	string is entier -strict
     }
-    propertytype createbool zinteger "" {
+    optiontype createbool zinteger "" {
 	string is entier
     }
-    propertytype createbool float "0.0" {
+    optiontype createbool float "0.0" {
 	string is double -strict
     }
-    propertytype createbool zfloat "" {
+    optiontype createbool zfloat "" {
 	string is double
     }
-    propertytype createbool list "" {
+    optiontype createbool list "" {
 	string is list
     }
-    propertytype createbool dict "" {
+    optiontype createbool dict "" {
 	string is dict
     }
 
     # Install the types: those with an erroring test
-    oo::objdefine [propertytype createthrow string {} {}] {
+    oo::objdefine [optiontype createthrow string {} {}] {
 	# Special case; everything valid
 	method validate value {return $value}
     }
-    propertytype createthrow distance "0px" {
+    optiontype createthrow distance "0px" {
 	winfo fpixels . $value
     }
-    propertytype createthrow image "" {
+    optiontype createthrow image "" {
 	if {$value ne ""} {
 	    image type $value
 	}
     }
-    propertytype createthrow color "black" {
+    optiontype createthrow color "black" {
 	winfo rgb . $value
     }
-    propertytype createthrow zcolor "" {
+    optiontype createthrow zcolor "" {
 	if {$value ne ""} {
 	    winfo rgb . $value
 	}
     }
-    propertytype createthrow font "TkDefaultFont" {
-	# Cheapest property to read
+    optiontype createthrow font "TkDefaultFont" {
+	# Cheapest property of fonts to read
 	font metrics $value -fixed
     }
 
     # Install the types: those with an element table
-    propertytype createtable anchor "center" {
+    optiontype createtable anchor "center" {
 	n ne e se e sw w nw center
     }
-    propertytype createtable justify "left" {
+    optiontype createtable justify "left" {
 	center left right
     }
-    propertytype createtable relief "flat" {
+    optiontype createtable relief "flat" {
 	flat groove raised ridge solid sunken
     }
 }
