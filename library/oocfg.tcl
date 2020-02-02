@@ -243,7 +243,7 @@ namespace eval ::tk {
 
     # ----------------------------------------------------------------------
     #
-    # tk::configurable --
+    # tk::Configurable --
     #
     #	The (mixin) class for configurable widgets.
     #
@@ -252,13 +252,13 @@ namespace eval ::tk {
     #
     # ----------------------------------------------------------------------
 
-    ::oo::class create configurable {
+    ::oo::class create Configurable {
 	private {
 	    variable initialised
 
 	    # --------------------------------------------------------------
 	    #
-	    # tk::configurable Options --
+	    # tk::Configurable Options --
 	    #
 	    #	Get the list of readable options of the object.
 	    #
@@ -270,7 +270,7 @@ namespace eval ::tk {
 
 	    # --------------------------------------------------------------
 	    #
-	    # tk::configurable WritableOptions --
+	    # tk::Configurable WritableOptions --
 	    #
 	    #	Get the list of writable (after initialisation) options of the
 	    #	object.
@@ -283,7 +283,7 @@ namespace eval ::tk {
 
 	    # --------------------------------------------------------------
 	    #
-	    # tk::configurable GetRealOptionName --
+	    # tk::Configurable GetRealOptionName --
 	    #
 	    #	Expand unique prefixes of an option.
 	    #
@@ -301,7 +301,7 @@ namespace eval ::tk {
 
 	    # --------------------------------------------------------------
 	    #
-	    # tk::configurable DescribeOption --
+	    # tk::Configurable DescribeOption --
 	    #
 	    #	Describes a single option (called from AllDescriptors and
 	    #	OneDescriptor). The option name must be in its full form.
@@ -319,7 +319,7 @@ namespace eval ::tk {
 
 	    # --------------------------------------------------------------
 	    #
-	    # tk::configurable AllDescriptors --
+	    # tk::Configurable AllDescriptors --
 	    #
 	    #	Implements [$obj configure] with no extra arguments.
 	    #
@@ -331,7 +331,7 @@ namespace eval ::tk {
 
 	    # --------------------------------------------------------------
 	    #
-	    # tk::configurable OneDescriptor --
+	    # tk::Configurable OneDescriptor --
 	    #
 	    #	Implements [$obj configure -opt] with no extra arguments.
 	    #
@@ -343,7 +343,7 @@ namespace eval ::tk {
 
 	    # --------------------------------------------------------------
 	    #
-	    # tk::configurable UpdateState --
+	    # tk::Configurable UpdateState --
 	    #
 	    #	Implements [$obj configure -opt val -opt val...].
 	    #
@@ -387,7 +387,7 @@ namespace eval ::tk {
 
 	# ------------------------------------------------------------------
 	#
-	# tk::configurable <StdOptRead> --
+	# tk::Configurable <StdOptRead> --
 	#
 	#	How to actually read an option of a given name out of the
 	#	state when using the standard model of storage (the array in
@@ -402,7 +402,7 @@ namespace eval ::tk {
 
 	# ------------------------------------------------------------------
 	#
-	# tk::configurable <StdOptWrite> --
+	# tk::Configurable <StdOptWrite> --
 	#
 	#	How to actually write an option of a given name to the state
 	#	when using the standard model of storage (the array in the
@@ -417,7 +417,7 @@ namespace eval ::tk {
 
 	# ------------------------------------------------------------------
 	#
-	# tk::configurable <OptionsMakeCheckpoint> --
+	# tk::Configurable <OptionsMakeCheckpoint> --
 	#
 	#	How to make a checkpoint of the state that can be restored if
 	#	the configuration of the object fails. If overridden, the
@@ -434,7 +434,7 @@ namespace eval ::tk {
 
 	# ------------------------------------------------------------------
 	#
-	# tk::configurable <OptionsRestoreCheckpoint> --
+	# tk::Configurable <OptionsRestoreCheckpoint> --
 	#
 	#	How to restore a checkpoint of the state because the
 	#	configuration of the object has failed. If overridden, the
@@ -451,7 +451,7 @@ namespace eval ::tk {
 
 	# ------------------------------------------------------------------
 	#
-	# tk::configurable configure --
+	# tk::Configurable configure --
 	#
 	#	Implements [$obj configure ...].
 	#
@@ -483,7 +483,7 @@ namespace eval ::tk {
 
 	# ------------------------------------------------------------------
 	#
-	# tk::configurable cget --
+	# tk::Configurable cget --
 	#
 	#	Implements [$obj cget $option].
 	#
@@ -502,7 +502,7 @@ namespace eval ::tk {
 
 	# ------------------------------------------------------------------
 	#
-	# tk::configurable PostConfigure --
+	# tk::Configurable PostConfigure --
 	#
 	#	Hook for user code to find out when a state change really
 	#	occurred with [$obj configure]. Does nothing by default;
@@ -514,7 +514,7 @@ namespace eval ::tk {
 
 	# ------------------------------------------------------------------
 	#
-	# tk::configurable Initialise --
+	# tk::Configurable Initialise --
 	#
 	#	Initialisation version of [$obj configure], which reads the
 	#	option database and will set init-only options as well as
@@ -570,26 +570,24 @@ namespace eval ::tk {
 	}
 	forward Initialize my Initialise
 
-	definitionnamespace -class ::tk::OptionDefine
-
 	# Individual widgets do not support defining their own options.
 	# This is different from ::oo::configurable's properties.
     }
 
     # ----------------------------------------------------------------------
     #
-    # tk::megawidget --
+    # tk::configurable --
     #
     #	The metaclass for making megawidgets (which are always configurable).
     #	Too bare at this point; intended to grow!
     #
     # ----------------------------------------------------------------------
 
-    ::oo::class create megawidget {
+    ::oo::class create configurable {
 	superclass ::oo::class
 
     	constructor {{definitionScript ""}} {
-	    next {mixin ::tk::configurable}
+	    next {mixin ::tk::Configurable}
 	    next $definitionScript
 	}
 	definitionnamespace -class ::tk::OptionDefine

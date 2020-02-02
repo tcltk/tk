@@ -13,82 +13,59 @@ namespace import -force tcltest::test
 
 deleteWindows
 
-test oocfg-1.1 {tk::megawidget: basic test} -setup {
-    tk::megawidget create Gorp {
-	variable window
-	constructor {w args} {
-	    set window [frame $w]
-	    my Initialise $w {*}$args
-	}
-	destructor {
-	    destroy $window
+oo::class create cfgsupport {
+    variable window
+    constructor {w args} {
+	set window [frame $w]
+	my Initialise $w {*}$args
+    }
+    destructor {
+	destroy $window
+    }
+
+    self method clean {} {
+	foreach c [info class subclasses [self]] {
+	    catch {$c destroy}
 	}
     }
-} -body {
-    oo::define Gorp {
+}
+
+test oocfg-1.1 {tk::configurable: basic test} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
 	option foo
     }
     set gorp [Gorp new .gorp -foo bar]
     list [$gorp configure] [$gorp configure -foo] [$gorp configure -foo grill] \
 	[$gorp cget -foo]
 } -cleanup {
-    catch {Gorp destroy}
+    cfgsupport clean
 } -result {{{-foo foo Foo {} bar}} {-foo foo Foo {} bar} {} grill}
-test oocfg-1.2 {tk::megawidget: basic test} -setup {
-    tk::megawidget create Gorp {
-	variable window
-	constructor {w args} {
-	    set window [frame $w]
-	    my Initialise $w {*}$args
-	}
-	destructor {
-	    destroy $window
-	}
-    }
-} -body {
-    oo::define Gorp {
+test oocfg-1.2 {tk::configurable: basic test} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
 	option foo -default 135
     }
     set gorp [Gorp new .gorp -foo bar]
     list [$gorp configure] [$gorp configure -foo] [$gorp configure -foo grill] \
 	[$gorp cget -foo]
 } -cleanup {
-    catch {Gorp destroy}
+    cfgsupport clean
 } -result {{{-foo foo Foo 135 bar}} {-foo foo Foo 135 bar} {} grill}
-test oocfg-1.3 {tk::megawidget: basic test} -setup {
-    tk::megawidget create Gorp {
-	variable window
-	constructor {w args} {
-	    set window [frame $w]
-	    my Initialise $w {*}$args
-	}
-	destructor {
-	    destroy $window
-	}
-    }
-} -body {
-    oo::define Gorp {
+test oocfg-1.3 {tk::configurable: basic test} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
 	option foo -type integer -default 135
     }
     set gorp [Gorp new .gorp -foo 789]
     list [$gorp configure] [$gorp configure -foo] [$gorp configure -foo 153] \
 	[$gorp cget -foo] [catch {$gorp configure -foo bar} msg] $msg
 } -cleanup {
-    catch {Gorp destroy}
+    cfgsupport clean
 } -result {{{-foo foo Foo 135 789}} {-foo foo Foo 135 789} {} 153 1 {invalid integer value "bar"}}
-test oocfg-1.4 {tk::megawidget: basic test} -setup {
-    tk::megawidget create Gorp {
-	variable window
-	constructor {w args} {
-	    set window [frame $w]
-	    my Initialise $w {*}$args
-	}
-	destructor {
-	    destroy $window
-	}
-    }
-} -body {
-    oo::define Gorp {
+test oocfg-1.4 {tk::configurable: basic test} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
 	option foo -type integer -default 135
 	option bar -alias foo
     }
@@ -97,7 +74,7 @@ test oocfg-1.4 {tk::megawidget: basic test} -setup {
 	[$gorp cget -foo] [$gorp cget -bar] \
 	[catch {$gorp configure -bar grill} msg] $msg
 } -cleanup {
-    catch {Gorp destroy}
+    cfgsupport clean
 } -result {{{-bar -foo} {-foo foo Foo 135 789}} {-bar -foo} {} 153 153 1 {invalid integer value "grill"}}
 
 # cleanup
