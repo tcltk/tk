@@ -21,9 +21,11 @@
 #include "tkFont.h"
 
 #ifndef _WIN32
+#if !defined(MAC_OSX_TK)
 #include <X11/Xproto.h>
 #endif
-
+#endif
+ 
 #if defined(_WIN32)
 #include "tkWinInt.h"
 #elif defined(MAC_OSX_TK)
