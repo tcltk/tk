@@ -73,7 +73,7 @@ typedef struct TkWindowEvent {
  * Array of event masks corresponding to each X event:
  */
 
-static unsigned long realEventMasks[MappingNotify+1] = {
+static unsigned long eventMasks[TK_LASTEVENT] = {
     0,
     0,
     KeyPressMask,			/* KeyPress */
@@ -111,10 +111,7 @@ static unsigned long realEventMasks[MappingNotify+1] = {
     0,					/* SelectionNotify */
     ColormapChangeMask,			/* ColormapNotify */
     0,					/* ClientMessage */
-    0					/* Mapping Notify */
-};
-
-static unsigned long virtualEventMasks[TK_LASTEVENT-VirtualEvent] = {
+    0,					/* Mapping Notify */
     VirtualEventMask,			/* VirtualEvents */
     ActivateMask,			/* ActivateNotify */
     ActivateMask,			/* DeactivateNotify */
@@ -459,18 +456,8 @@ GetEventMaskFromXEvent(
 {
     unsigned long mask;
 
-    /*
-     * Get the event mask from the correct table. Note that there are two
-     * tables here because that means we no longer need this code to rely on
-     * the exact value of VirtualEvent, which has caused us problems in the
-     * past when X11 changed the value of LASTEvent. [Bug ???]
-     */
-
-    if (eventPtr->xany.type <= MappingNotify) {
-	mask = realEventMasks[eventPtr->xany.type];
-    } else if (eventPtr->xany.type >= VirtualEvent
-	    && eventPtr->xany.type<TK_LASTEVENT) {
-	mask = virtualEventMasks[eventPtr->xany.type - VirtualEvent];
+    if (eventPtr->xany.type <TK_LASTEVENT) {
+	mask = eventMasks[eventPtr->xany.type];
     } else {
 	mask = 0;
     }
