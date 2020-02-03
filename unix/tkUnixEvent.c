@@ -361,7 +361,7 @@ TransferXEventsToTcl(
 	XEvent x;
 	TkKeyEvent k;
 #ifdef GenericEvent
-	xGenericEvent xge;
+	XGenericEvent xge;
 #endif
     } event;
     Window w;
