@@ -542,7 +542,7 @@ namespace eval ::tk {
 		    }
 		    ::lassign $desc nm cls def
 		    ::set val [::option get $pathName $nm $cls]
-		    ::if {$val eq ""} {
+		    ::if {$val eq "" || [catch {my <OptValidate$opt> $val}]} {
 			::set val $def
 		    }
 		    ::dict set toSet $opt $val
