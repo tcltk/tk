@@ -12,7 +12,8 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 deleteWindows
-
+
+# A simple superclass to handle calling Initialise and cleaning up
 oo::class create cfgsupport {
     variable window
     constructor {w args} {
@@ -41,7 +42,7 @@ test oocfg-1.1 {tk::configurable: basic test} -body {
 } -cleanup {
     cfgsupport clean
 } -result {{{-foo foo Foo {} bar}} {-foo foo Foo {} bar} {} grill}
-test oocfg-1.2 {tk::configurable: basic test} -body {
+test oocfg-1.2 {tk::configurable: basic test with default} -body {
     tk::configurable create Gorp {
 	superclass cfgsupport
 	option foo -default 135
@@ -52,18 +53,18 @@ test oocfg-1.2 {tk::configurable: basic test} -body {
 } -cleanup {
     cfgsupport clean
 } -result {{{-foo foo Foo 135 bar}} {-foo foo Foo 135 bar} {} grill}
-test oocfg-1.3 {tk::configurable: basic test} -body {
+test oocfg-1.3 {tk::configurable: basic test with typing} -body {
     tk::configurable create Gorp {
 	superclass cfgsupport
-	option foo -type integer -default 135
+	option foo -type integer
     }
     set gorp [Gorp new .gorp -foo 789]
     list [$gorp configure] [$gorp configure -foo] [$gorp configure -foo 153] \
 	[$gorp cget -foo] [catch {$gorp configure -foo bar} msg] $msg
 } -cleanup {
     cfgsupport clean
-} -result {{{-foo foo Foo 135 789}} {-foo foo Foo 135 789} {} 153 1 {invalid integer value "bar"}}
-test oocfg-1.4 {tk::configurable: basic test} -body {
+} -result {{{-foo foo Foo 0 789}} {-foo foo Foo 0 789} {} 153 1 {invalid integer value "bar"}}
+test oocfg-1.4 {tk::configurable: basic test with alias} -body {
     tk::configurable create Gorp {
 	superclass cfgsupport
 	option foo -type integer -default 135
@@ -76,6 +77,94 @@ test oocfg-1.4 {tk::configurable: basic test} -body {
 } -cleanup {
     cfgsupport clean
 } -result {{{-bar -foo} {-foo foo Foo 135 789}} {-bar -foo} {} 153 153 1 {invalid integer value "grill"}}
+test oocfg-1.5 {tk::configurable: basic test with option DB} -setup {
+    option clear
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -default bar
+    }
+    option add *gorp.foo ok
+    set gorp [Gorp new .gorp]
+    $gorp configure
+} -cleanup {
+    option clear
+    cfgsupport clean
+} -result {{-foo foo Foo bar ok}}
+test oocfg-1.6 {tk::configurable: basic test with option DB} -setup {
+    option clear
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -default bar
+    }
+    option add *gorp.Foo ok
+    set gorp [Gorp new .gorp]
+    $gorp configure
+} -cleanup {
+    option clear
+    cfgsupport clean
+} -result {{-foo foo Foo bar ok}}
+test oocfg-1.7 {tk::configurable: basic test with option DB} -setup {
+    option clear
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -default bar
+    }
+    option add *gorp.foo xyz
+    option add *gorp.Foo zyx
+    set gorp [Gorp new .gorp]
+    $gorp configure
+} -cleanup {
+    option clear
+    cfgsupport clean
+} -result {{-foo foo Foo bar zyx}}
+test oocfg-1.8 {tk::configurable: basic test with option DB} -setup {
+    option clear
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -name foobar -class FooBar -default ok
+    }
+    option add *gorp.foo bad
+    set gorp [Gorp new .gorp]
+    $gorp configure
+} -cleanup {
+    option clear
+    cfgsupport clean
+} -result {{-foo foobar FooBar ok ok}}
+test oocfg-1.9 {tk::configurable: basic test with option DB} -setup {
+    option clear
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -name foobar -class FooBar -default ok
+    }
+    option add *gorp.foo bad
+    option add *FooBar great
+    set gorp [Gorp new .gorp]
+    $gorp configure
+} -cleanup {
+    option clear
+    cfgsupport clean
+} -result {{-foo foobar FooBar ok great}}
+test oocfg-1.10 {tk::configurable: basic test with option DB} -setup {
+    option clear
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	# Values from option DB are subject to validation, but failure just
+	# triggers using the default, not an error.
+	option foo -name foo -default 123 -type int
+    }
+    option add *gorp.foo bad
+    set gorp [Gorp new .gorp]
+    $gorp configure
+} -cleanup {
+    option clear
+    cfgsupport clean
+} -result {{-foo foo Foo 123 123}}
 
 # cleanup
 deleteWindows
