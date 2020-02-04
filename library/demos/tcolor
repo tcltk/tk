@@ -90,7 +90,7 @@ foreach i {
     grid columnconfigure . 0 -weight 1
     listbox .names.lb -width 20 -height 12 -yscrollcommand ".names.s set" \
 	-exportselection false
-    bind .names.lb <Double-1> {
+    bind .names.lb <Double-Button-1> {
 	    tc_loadNamedColor [.names.lb get [.names.lb curselection]]
     }
     scrollbar .names.s -orient vertical -command ".names.lb yview"

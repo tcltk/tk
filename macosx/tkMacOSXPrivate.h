@@ -144,10 +144,6 @@ MODULE_SCOPE long tkMacOSXMacOSXVersion;
  * Prototypes for TkMacOSXRegion.c.
  */
 
-#if 0
-MODULE_SCOPE void	TkMacOSXEmtpyRegion(Region r);
-MODULE_SCOPE int	TkMacOSXIsEmptyRegion(Region r);
-#endif
 MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(Region r);
 MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r,
 			    HIShapeRef rgn);
@@ -239,6 +235,10 @@ MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE NSString*  TkUtfToNSString(const char *source, size_t numBytes);
+MODULE_SCOPE int        TkUtfAtIndex(NSString *string, int index, char *uni,
+				      unsigned int *code);
+MODULE_SCOPE char*      TkNSStringToUtf(NSString *string, int *numBytes);
 
 #pragma mark Private Objective-C Classes
 

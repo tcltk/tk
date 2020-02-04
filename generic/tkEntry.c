@@ -197,15 +197,15 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_ENTRY_BORDER_WIDTH, -1, offsetof(Entry, borderWidth), 0, 0, 0},
-    {TK_OPTION_BORDER, "-buttonbackground", "Button.background", "Background",
+    {TK_OPTION_BORDER, "-buttonbackground", "buttonBackground", "Background",
 	DEF_BUTTON_BG_COLOR, -1, offsetof(Spinbox, buttonBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
-    {TK_OPTION_CURSOR, "-buttoncursor", "Button.cursor", "Cursor",
+    {TK_OPTION_CURSOR, "-buttoncursor", "buttonCursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, offsetof(Spinbox, bCursor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_RELIEF, "-buttondownrelief", "Button.relief", "Relief",
+    {TK_OPTION_RELIEF, "-buttondownrelief", "buttonDownRelief", "Relief",
 	DEF_BUTTON_RELIEF, -1, offsetof(Spinbox, bdRelief), 0, 0, 0},
-    {TK_OPTION_RELIEF, "-buttonuprelief", "Button.relief", "Relief",
+    {TK_OPTION_RELIEF, "-buttonuprelief", "buttonUpRelief", "Relief",
 	DEF_BUTTON_RELIEF, -1, offsetof(Spinbox, buRelief), 0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_SPINBOX_CMD, -1, offsetof(Spinbox, command),
@@ -3307,7 +3307,7 @@ EntryValidate(
 				 * string). */
 {
     register Tcl_Interp *interp = entryPtr->interp;
-    int code, bool;
+    int code, isOK;
 
     code = Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_GLOBAL | TCL_EVAL_DIRECT);
 
@@ -3329,7 +3329,7 @@ EntryValidate(
      */
 
     if (Tcl_GetBooleanFromObj(interp, Tcl_GetObjResult(interp),
-	    &bool) != TCL_OK) {
+	    &isOK) != TCL_OK) {
 	Tcl_AddErrorInfo(interp,
 		 "\n    (invalid boolean result from validation command)");
 	Tcl_BackgroundException(interp, TCL_ERROR);
@@ -3338,7 +3338,7 @@ EntryValidate(
     }
 
     Tcl_ResetResult(interp);
-    return (bool ? TCL_OK : TCL_BREAK);
+    return (isOK ? TCL_OK : TCL_BREAK);
 }
 
 /*

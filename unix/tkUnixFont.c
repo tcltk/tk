@@ -415,15 +415,15 @@ ControlUtfProc(
 	    dst += 2;
 	} else if ((size_t)ch < 256) {
 	    dst[1] = 'x';
-	    dst[2] = hexChars[(ch >> 4) & 0xf];
-	    dst[3] = hexChars[ch & 0xf];
+	    dst[2] = hexChars[(ch >> 4) & 0xF];
+	    dst[3] = hexChars[ch & 0xF];
 	    dst += 4;
 	} else if ((size_t)ch < 0x10000) {
 	    dst[1] = 'u';
-	    dst[2] = hexChars[(ch >> 12) & 0xf];
-	    dst[3] = hexChars[(ch >> 8) & 0xf];
-	    dst[4] = hexChars[(ch >> 4) & 0xf];
-	    dst[5] = hexChars[ch & 0xf];
+	    dst[2] = hexChars[(ch >> 12) & 0xF];
+	    dst[3] = hexChars[(ch >> 8) & 0xF];
+	    dst[4] = hexChars[(ch >> 4) & 0xF];
+	    dst[5] = hexChars[ch & 0xF];
 	    dst += 6;
 	} else {
 	    /* TODO we can do better here */
@@ -610,13 +610,16 @@ UtfToUcs2beProc(
 	    break;
 	}
 	src += TkUtfToUniChar(src, &ch);
+	if (ch > 0xFFFF) {
+	    ch = 0xFFFD;
+	}
 
 	/*
 	 * Ensure big-endianness (store big bits first).
 	 */
 
-	*dst++ = (char)(ch >> 8);
-	*dst++ = (char)ch;
+	*dst++ = (char)((ch >> 8) & 0xFF);
+	*dst++ = (char)(ch & 0xFF);
     }
     *srcReadPtr = src - srcStart;
     *dstWrotePtr = dst - dstStart;
@@ -1976,7 +1979,7 @@ FindSubFontForChar(
     Tcl_DString ds;
 
     if (ch < 0 || ch > 0x30000) {
-	ch = 0xfffd;
+	ch = 0xFFFD;
     }
 
     for (i = 0; i < fontPtr->numSubFonts; i++) {
