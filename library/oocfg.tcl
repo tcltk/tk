@@ -160,23 +160,27 @@ namespace eval ::tk {
 			    dict set opt alias $value
 			}
 			-class {
+			    if {![regexp {^[[:upper:]][[:alnum:]_]*$} $value]} {
+				throw {TK OPTION_MISUSE} \
+				    "-class must be alphanumeric with a leading capital letter"
+			    }
 			    dict set opt class $value
-			    # TODO: warn or error if first char not uppercase?
 			}
 			-name {
+			    if {![regexp {^[[:lower:]][[:alnum:]_]*$} $value]} {
+				throw {TK OPTION_MISUSE} \
+				    "-name must be alphanumeric with a leading lower-case letter"
+			    }
 			    dict set opt name $value
-			    # TODO: warn or error if first char not lowercase?
 			}
 			-default {
+			    # Can only validate this once we know the type
 			    dict set opt def $value
 			}
 			-initonly {
-			    if {![string is boolean -strict $value]} {
-				# TODO: produce a better error?
-				throw {TK OPTION_MISUSE} \
-				    "bad boolean \"$value\""
-			    }
-			    dict set opt init $value
+			    # Use our existing boolean validator
+			    dict set opt init \
+				[OptionType boolean validate $value]
 			}
 			-type {
 			    dict set opt type $value
@@ -210,7 +214,7 @@ namespace eval ::tk {
 			[format {wrong # args: should be "%s"} \
 			     "option name ?-option value ...?"]
 		}
-		if {![regexp -nocase {^[[:alpha:]]\w*$} $name]} {
+		if {![regexp -nocase {^[[:alpha:]][[:alnum:]_]*$} $name]} {
 		    return -code error -errorcode {TK OPTION_NAME} \
 			"bad option name \"$name\":\
 		    	must be alphanumeric starting with a letter"

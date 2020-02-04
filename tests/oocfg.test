@@ -156,7 +156,7 @@ test oocfg-1.10 {tk::configurable: basic test with option DB} -setup {
 	superclass cfgsupport
 	# Values from option DB are subject to validation, but failure just
 	# triggers using the default, not an error.
-	option foo -name foo -default 123 -type int
+	option foo -name foo -default 123 -type integer
     }
     option add *gorp.foo bad
     set gorp [Gorp new .gorp]
@@ -165,6 +165,157 @@ test oocfg-1.10 {tk::configurable: basic test with option DB} -setup {
     option clear
     cfgsupport clean
 } -result {{-foo foo Foo 123 123}}
+test oocfg-1.11 {tk::configurable: basic test with inheritance} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo
+    }
+    tk::configurable create Gorp2 {
+	superclass Gorp
+	option bar
+    }
+    set gorp [Gorp2 new .gorp -foo 1 -bar 2]
+    $gorp configure
+} -cleanup {
+    cfgsupport clean
+} -result {{-bar bar Bar {} 2} {-foo foo Foo {} 1}}
+test oocfg-1.12 {tk::configurable: basic test with inheritance} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -default abc
+    }
+    tk::configurable create Gorp2 {
+	superclass Gorp
+	option foo -default xyz
+    }
+    set gorp [Gorp2 new .gorp]
+    $gorp configure
+} -cleanup {
+    cfgsupport clean
+} -result {{-foo foo Foo xyz xyz}}
+
+test oocfg-2.1 {tk::configurable: option cfg abbreviation} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -def ok
+	option bar -al foo
+    }
+    [Gorp new .gorp] configure
+} -cleanup {
+    cfgsupport clean
+} -result {{-bar -foo} {-foo foo Foo ok ok}}
+test oocfg-2.2 {tk::configurable: option cfg abbreviation} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -def ok
+	option bar -al -foo
+    }
+    [Gorp new .gorp] configure
+} -cleanup {
+    cfgsupport clean
+} -result {{-bar -foo} {-foo foo Foo ok ok}}
+test oocfg-2.3 {tk::configurable: option cfg abbreviation} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -def ok -n john -c Smith
+    }
+    [Gorp new .gorp] configure
+} -cleanup {
+    cfgsupport clean
+} -result {{-foo john Smith ok ok}}
+test oocfg-2.4 {tk::configurable: option cfg abbreviation and case} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option FOO -ty str
+    }
+    [Gorp new .gorp] configure
+} -cleanup {
+    cfgsupport clean
+} -result {{-FOO foo Foo {} {}}}
+test oocfg-2.5 {tk::configurable: option cfg abbreviation} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -ty just -de r
+    }
+    [Gorp new .gorp] configure
+} -cleanup {
+    cfgsupport clean
+} -result {{-foo foo Foo right right}}
+
+test oocfg-3.1 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -gorp
+    }
+} -result {wrong # args: should be "option name ?-option value ...?"}
+test oocfg-3.2 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -gorp blat
+    }
+} -result {bad option "-gorp": must be -alias, -class, -default, -initonly, -name, or -type}
+test oocfg-3.3 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -type gorp
+    }
+} -match glob -result {unknown or ambiguous subcommand "gorp": must be *}
+test oocfg-3.4 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -type integer -default abc
+    }
+} -result {invalid integer value "abc"}
+test oocfg-3.5 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -default abc -type integer
+    }
+} -result {invalid integer value "abc"}
+test oocfg-3.6 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option @bad
+    }
+} -result {bad option name "@bad": must be alphanumeric starting with a letter}
+test oocfg-3.7 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -name Abc
+    }
+} -result {-name must be alphanumeric with a leading lower-case letter}
+test oocfg-3.8 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -class abc
+    }
+} -result {-class must be alphanumeric with a leading capital letter}
+test oocfg-3.9 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -alias foo
+    }
+} -result {no such option "-foo"}
+test oocfg-3.10 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo
+	option bar -type string -alias foo
+    }
+} -result {-alias may only ever be used on its own}
+test oocfg-3.11 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -init gorp
+    }
+} -result {invalid boolean value "gorp"}
+test oocfg-3.12 {tk::configurable: option errors} -returnCodes error -body {
+    tk::configurable create Gorp {
+	option foo -init 1
+	option bar -alias foo
+    }
+} -result {may not alias init-only option "-foo"}
+test oocfg-3.13 {tk::configurable: option errors (cross class)} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -init 1
+    }
+    tk::configurable create Gorp2 {
+	superclass Gorp
+	option bar -alias foo
+    }
+} -returnCodes error -cleanup {
+    cfgsupport clean
+} -result {may not alias init-only option "-foo"}
 
 # cleanup
 deleteWindows
