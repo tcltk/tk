@@ -279,9 +279,9 @@ TkpSetKeycodeAndState(
     mincode = 0;
     maxcode = -1;
     XDisplayKeycodes(dispPtr->display, &mincode, &maxcode);
-    if (keycode < mincode) {
+    if (keycode < (KeyCode)mincode) {
 	keycode = mincode;
-    } else if (keycode > maxcode) {
+    } else if (keycode > (KeyCode)maxcode) {
 	keycode = maxcode;
     }
 

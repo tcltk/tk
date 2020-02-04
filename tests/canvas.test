@@ -574,7 +574,7 @@ test canvas-13.1 {canvas delete during event, SF bug-228024} -body {
     set ::x {}
     # do this many times to improve chances of triggering the crash
     for {set i 0} {$i < 30} {incr i} {
-	event generate .c <1> -x 100 -y 100
+	event generate .c <Button-1> -x 100 -y 100
 	event generate .c <ButtonRelease-1> -x 100 -y 100
     }
     return $::x
@@ -951,6 +951,48 @@ test canvas-19.11 {rchars method - errors} -setup {
 } -cleanup {
     destroy .c
 } -returnCodes error -result {bad index "foo"}
+
+test canvas-20.1 {addtag/dtag - no shuffling of tag sequence} -setup {
+    canvas .c
+    .c create text 100 100 -text Hello
+} -body {
+    for {set i 1} {$i < 5} {incr i} {
+        .c addtag tag$i all
+    }
+    # [.c addtags] only adds tags that are not already present
+    .c addtag tag1 all   ; # no effect
+    set res [list [.c gettags 1]]
+    .c dtag 1 tag2
+    lappend res [.c gettags 1]
+} -cleanup {
+    destroy .c
+} -result {{tag1 tag2 tag3 tag4} {tag1 tag3 tag4}}
+test canvas-20.2 {tag deletion - multiple tags with same name, no shuffling} -setup {
+    canvas .c
+    .c create text 100 100 -text Hello
+} -body {
+    # [.c itemconfigure -tags] lets the user add duplicate tags
+    # this is not a problem although inconsistent with [.c addtags]
+    .c itemconfigure 1 -tags {tagA tagB tagA tagA tagC tagA}
+    set res [list [.c gettags 1]]
+    .c dtag 1 tagA
+    lappend res [.c gettags 1]
+} -cleanup {
+    destroy .c
+} -result {{tagA tagB tagA tagA tagC tagA} {tagB tagC}}
+test canvas-20.3 {tag deletion - all tags match} -setup {
+    canvas .c
+    .c create text 100 100 -text Hello
+} -body {
+    # [.c itemconfigure -tags] lets the user add duplicate tags
+    # this is not a problem although inconsistent with [.c addtags]
+    .c itemconfigure 1 -tags {tagA tagA tagA tagA tagA tagA}
+    set res [list [.c gettags 1]]
+    .c dtag 1 tagA
+    lappend res [.c gettags 1]
+} -cleanup {
+    destroy .c
+} -result {{tagA tagA tagA tagA tagA tagA} {}}
 
 # Procedure used in test cases 20.1 20.2 20.3
 proc matchPixels {pixels expected} {
