@@ -435,12 +435,6 @@ static Tcl_MethodType toplevelMethods[] = {
     {-1, NULL, NULL, NULL, NULL}
 };
 
-static Tcl_Obj *TkoObj_empty; /* "" */
-static Tcl_Obj *TkoObj_tko_frame; /* "::tko::frame" */
-static Tcl_Obj *TkoObj_tko_labelframe; /* "::tko::labelframe" */
-static Tcl_Obj *TkoObj_tko_toplevel; /* "::tko::toplevel" */
-static Tcl_Obj *TkoObj__labelwidget; /* "-labelwidget" */
-
 /*
  * Tko_FrameInit --
  *
@@ -456,37 +450,41 @@ int
 Tko_FrameInit(
     Tcl_Interp * interp)
 {              /* Tcl interpreter. */
-    Tcl_IncrRefCount((TkoObj_empty =
-        Tcl_NewStringObj("", -1)));
-    Tcl_IncrRefCount((TkoObj_tko_frame =
-        Tcl_NewStringObj("::tko::frame", -1)));
-    Tcl_IncrRefCount((TkoObj_tko_labelframe =
-        Tcl_NewStringObj("::tko::labelframe", -1)));
-    Tcl_IncrRefCount((TkoObj_tko_toplevel =
-        Tcl_NewStringObj("::tko::toplevel", -1)));
-    Tcl_IncrRefCount((TkoObj__labelwidget =
-        Tcl_NewStringObj("-labelwidget", -1)));
+    Tcl_Obj *tmpPtr;
+    int ret;
 
     /*
      * ::tko::toplevel
      */
-    if(Tko_WidgetClassDefine(interp, TkoObj_tko_toplevel,
-            toplevelMethods, toplevelOptions) != TCL_OK) {
+    tmpPtr = Tcl_NewStringObj("::tko::toplevel", -1);
+    Tcl_IncrRefCount(tmpPtr);
+    ret = Tko_WidgetClassDefine(interp, tmpPtr,
+        toplevelMethods, toplevelOptions);
+    Tcl_DecrRefCount(tmpPtr);
+    if (ret != TCL_OK) {
         return TCL_ERROR;
     }
     /*
      * ::tko::frame
      */
-    if(Tko_WidgetClassDefine(interp, TkoObj_tko_frame,
-            frameMethods, frameOptions) != TCL_OK) {
+    tmpPtr = Tcl_NewStringObj("::tko::frame", -1);
+    Tcl_IncrRefCount(tmpPtr);
+    ret = Tko_WidgetClassDefine(interp, tmpPtr,
+        frameMethods, frameOptions);
+    Tcl_DecrRefCount(tmpPtr);
+    if (ret != TCL_OK) {
         return TCL_ERROR;
     }
 
     /*
      * ::tko::labelframe
      */
-    if(Tko_WidgetClassDefine(interp, TkoObj_tko_labelframe,
-            labelframeMethods, labelframeOptions) != TCL_OK) {
+    tmpPtr = Tcl_NewStringObj("::tko::labelframe", -1);
+    Tcl_IncrRefCount(tmpPtr);
+    ret = Tko_WidgetClassDefine(interp, tmpPtr,
+        labelframeMethods, labelframeOptions);
+    Tcl_DecrRefCount(tmpPtr);
+    if (ret != TCL_OK) {
         return TCL_ERROR;
     }
     return TCL_OK;
@@ -1770,7 +1768,10 @@ FrameLabelwinRemove(
     tkoFrame *frame = (tkoFrame *) labelframe;
 
     labelframe->labelWin = NULL;
-    Tko_WidgetOptionSet(&frame->widget, TkoObj__labelwidget, TkoObj_empty);
+    Tcl_Obj *tmpPtr = Tcl_NewStringObj("-labelwidget", -1);
+    Tcl_IncrRefCount(tmpPtr);
+    Tko_WidgetOptionSet(&frame->widget, tmpPtr, Tcl_NewStringObj("", 0));
+    Tcl_DecrRefCount(tmpPtr);
     FrameWorldChanged(labelframe);
 }
 

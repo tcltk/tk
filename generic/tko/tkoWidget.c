@@ -62,38 +62,36 @@ typedef struct WidgetClientdata {
     int flags;
 } WidgetClientdata;
 
-/* UID of class sctring */
-Tk_Uid TkoUid_class = NULL;
-Tk_Uid TkoUid_empty = NULL;
-
-/*
- * Static string objects.
- */
-static Tcl_Obj *TkoObj_empty; /* "" */
-static Tcl_Obj *TkoObj_tko__option; /* "::tko::_option" */
-static Tcl_Obj *TkoObj_tko__eventoption; /* "::tko::_eventoption" */
-static Tcl_Obj *TkoObj_next; /* "next" */
-static Tcl_Obj *TkoObj_uplevel; /* "::uplevel" */
-static Tcl_Obj *TkoObj_oo_define; /* "::oo::define" */
-static Tcl_Obj *TkoObj_oo_objdefine; /* "::oo::objdefine" */
-static Tcl_Obj *TkoObj_method; /* "method" */
-static Tcl_Obj *TkoObj__tko_configure; /* "_tko_configure" */
-static Tcl_Obj *TkoObj__tko; /* "_tko" */
-static Tcl_Obj *TkoObj_cget; /* "cget" */
-static Tcl_Obj *TkoObj_configure; /* "configure" */
-static Tcl_Obj *TkoObj_tko; /* "::tko" */
-static Tcl_Obj *TkoObj_tko_widget; /* "::tko::widget" */
-static Tcl_Obj *TkoObj_0; /* integer=0 */
-static Tcl_Obj *TkoObj_1; /* integer=1 */
-static Tcl_Obj *TkoObj_lsort; /* "::lsort" */
-static Tcl_Obj *TkoObj_point; /* "." */
-static Tcl_Obj *TkoObj_point2; /* ".." */
-static Tcl_Obj *TkoObj__screen; /* "-screen" */
-static Tcl_Obj *TkoObj_flags_r; /* "r" */
-static Tcl_Obj *TkoObj_flags_rh; /* "rh" */
-static Tcl_Obj *TkoObj_flags_h; /* "h" */
-static Tcl_Obj *TkoObj_rename; /* "rename" */
-static Tcl_Obj *TkoObj_tko__self; /* "::tko::_self" */
+typedef struct TkoThreadData {
+    /* UID of class sctring */
+    Tk_Uid Uid_class;
+    Tk_Uid Uid_empty;
+    /* Static string objects.  */
+    Tcl_Obj *Obj_empty; /* "" */
+    Tcl_Obj *Obj_tko__option; /* "::tko::_option" */
+    Tcl_Obj *Obj_tko__eventoption; /* "::tko::_eventoption" */
+    Tcl_Obj *Obj_next; /* "next" */
+    Tcl_Obj *Obj_uplevel; /* "::uplevel" */
+    Tcl_Obj *Obj_oo_define; /* "::oo::define" */
+    Tcl_Obj *Obj_oo_objdefine; /* "::oo::objdefine" */
+    Tcl_Obj *Obj_method; /* "method" */
+    Tcl_Obj *Obj__tko_configure; /* "_tko_configure" */
+    Tcl_Obj *Obj__tko; /* "_tko" */
+    Tcl_Obj *Obj_cget; /* "cget" */
+    Tcl_Obj *Obj_configure; /* "configure" */
+    Tcl_Obj *Obj_tko; /* "::tko" */
+    Tcl_Obj *Obj_tko_widget; /* "::tko::widget" */
+    Tcl_Obj *Obj_lsort; /* "::lsort" */
+    Tcl_Obj *Obj_point; /* "." */
+    Tcl_Obj *Obj_point2; /* ".." */
+    Tcl_Obj *Obj__screen; /* "-screen" */
+    Tcl_Obj *Obj_flags_r; /* "r" */
+    Tcl_Obj *Obj_flags_rh; /* "rh" */
+    Tcl_Obj *Obj_flags_h; /* "h" */
+    Tcl_Obj *Obj_rename; /* "rename" */
+    Tcl_Obj *Obj_tko__self; /* "::tko::_self" */
+} TkoThreadData;
+static Tcl_ThreadDataKey tkoKey;
 
 /*
  * Methods
@@ -276,6 +274,7 @@ Tko_TkoObjCmd(
     Tcl_Obj *tmpPtr;
     Tcl_Class clazz;
     Tcl_Object object;
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
 
     if (objc < 2) {
@@ -309,10 +308,10 @@ Tko_TkoObjCmd(
             Tcl_NewMethod(interp, clazz, NULL, 1, &tkoWidgetMethods[0], NULL));
         Tcl_ClassSetDestructor(interp, clazz,
             Tcl_NewMethod(interp, clazz, NULL, 1, &tkoWidgetMethods[2], NULL));
-        Tcl_NewMethod(interp, clazz, TkoObj_cget, 1, &tkoWidgetMethods[3], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj_configure, 1, &tkoWidgetMethods[4], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj__tko_configure, 0, &tkoWidgetMethods[5], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj__tko, 0, &tkoWidgetMethods[6], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj_cget, 1, &tkoWidgetMethods[3], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj_configure, 1, &tkoWidgetMethods[4], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj__tko_configure, 0, &tkoWidgetMethods[5], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj__tko, 0, &tkoWidgetMethods[6], NULL);
 
         return TCL_OK;
     case MY_INITFROM: /* Initialize new tko class */
@@ -387,14 +386,14 @@ Tko_TkoObjCmd(
             Tcl_NewMethod(interp, clazz, NULL, 1, &tkoWidgetMethods[1], NULL));
         Tcl_ClassSetDestructor(interp, clazz,
             Tcl_NewMethod(interp, clazz, NULL, 1, &tkoWidgetMethods[2], NULL));
-        Tcl_NewMethod(interp, clazz, TkoObj_cget, 1, &tkoWidgetMethods[3], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj_configure, 1, &tkoWidgetMethods[4], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj__tko_configure, 0, &tkoWidgetMethods[5], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj__tko, 0, &tkoWidgetMethods[6], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj_cget, 1, &tkoWidgetMethods[3], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj_configure, 1, &tkoWidgetMethods[4], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj__tko_configure, 0, &tkoWidgetMethods[5], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj__tko, 0, &tkoWidgetMethods[6], NULL);
 
         return TCL_OK;
     case MY_EVENTOPTION: /* Call proc ::tko::_eventoption */
-        return Tcl_EvalObjEx(interp, TkoObj_tko__eventoption, TCL_EVAL_GLOBAL);
+        return Tcl_EvalObjEx(interp, tkoPtr->Obj_tko__eventoption, TCL_EVAL_GLOBAL);
     case MY_OPTIONDEF: /* Add or replace option definitions and return new state */
         if (objc != 3 && objc < 5) {
             Tcl_WrongNumArgs(interp, 2, objv, "::classname ?-option definition? .. ?body?");
@@ -410,7 +409,7 @@ Tko_TkoObjCmd(
         }
         Tcl_IncrRefCount(namePtr);
         /* get current value or create new one */
-        dictPtr = Tcl_ObjGetVar2(interp, TkoObj_tko__option, namePtr, TCL_GLOBAL_ONLY);
+        dictPtr = Tcl_ObjGetVar2(interp, tkoPtr->Obj_tko__option, namePtr, TCL_GLOBAL_ONLY);
         if (dictPtr == NULL) {
             dictPtr = Tcl_NewObj();
         }
@@ -463,11 +462,11 @@ Tko_TkoObjCmd(
         }
         /* Add body to last definition. */
         if (objc % 2 == 0) {
-            myCmd[0] = TkoObj_oo_define;
+            myCmd[0] = tkoPtr->Obj_oo_define;
             myCmd[1] = namePtr;
-            myCmd[2] = TkoObj_method;
+            myCmd[2] = tkoPtr->Obj_method;
             myCmd[3] = objv[objc - 3];
-            myCmd[4] = TkoObj_empty;
+            myCmd[4] = tkoPtr->Obj_empty;
             myCmd[5] = objv[objc - 1];
             ret = Tcl_EvalObjv(interp, 6, myCmd, TCL_EVAL_GLOBAL);
             if (ret != TCL_OK) {
@@ -475,7 +474,7 @@ Tko_TkoObjCmd(
                 Tcl_DecrRefCount(namePtr);
                 return TCL_ERROR;
             }
-        }        tmpPtr = Tcl_ObjSetVar2(interp, TkoObj_tko__option, namePtr, dictPtr, TCL_GLOBAL_ONLY);
+        }        tmpPtr = Tcl_ObjSetVar2(interp, tkoPtr->Obj_tko__option, namePtr, dictPtr, TCL_GLOBAL_ONLY);
         Tcl_DecrRefCount(dictPtr);
         Tcl_DecrRefCount(namePtr);
         if (tmpPtr == NULL) {
@@ -499,7 +498,7 @@ Tko_TkoObjCmd(
         Tcl_IncrRefCount(namePtr);
         /* if no options then remove all options */
         if (objc == 3) {
-            tmpPtr = Tcl_ObjSetVar2(interp, TkoObj_tko__option, namePtr,TkoObj_empty,TCL_GLOBAL_ONLY);
+            tmpPtr = Tcl_ObjSetVar2(interp, tkoPtr->Obj_tko__option, namePtr,tkoPtr->Obj_empty,TCL_GLOBAL_ONLY);
             Tcl_DecrRefCount(namePtr);
             if (tmpPtr == NULL) {
                 return TCL_ERROR;
@@ -508,7 +507,7 @@ Tko_TkoObjCmd(
             return TCL_OK;
         }
         /* remove given options from dictionary */
-        dictPtr = Tcl_ObjGetVar2(interp, TkoObj_tko__option, namePtr, TCL_GLOBAL_ONLY);
+        dictPtr = Tcl_ObjGetVar2(interp, tkoPtr->Obj_tko__option, namePtr, TCL_GLOBAL_ONLY);
         if (dictPtr == NULL) {
             Tcl_DecrRefCount(namePtr);
             return TCL_ERROR;
@@ -523,7 +522,7 @@ Tko_TkoObjCmd(
                 return TCL_ERROR;
             }
         }
-        tmpPtr = Tcl_ObjSetVar2(interp, TkoObj_tko__option, namePtr,dictPtr,TCL_GLOBAL_ONLY);
+        tmpPtr = Tcl_ObjSetVar2(interp, tkoPtr->Obj_tko__option, namePtr,dictPtr,TCL_GLOBAL_ONLY);
         Tcl_DecrRefCount(dictPtr);
         Tcl_DecrRefCount(namePtr);
         if (tmpPtr == NULL) {
@@ -546,7 +545,7 @@ Tko_TkoObjCmd(
         }
         Tcl_IncrRefCount(namePtr);
         /* return all definitions */
-        dictPtr = Tcl_ObjGetVar2(interp, TkoObj_tko__option, namePtr, TCL_GLOBAL_ONLY);
+        dictPtr = Tcl_ObjGetVar2(interp, tkoPtr->Obj_tko__option, namePtr, TCL_GLOBAL_ONLY);
         Tcl_DecrRefCount(namePtr);
         if (dictPtr == NULL) {
             Tcl_DecrRefCount(namePtr);
@@ -588,7 +587,7 @@ Tko_TkoObjCmd(
             namePtr = objv[2];
         }
         Tcl_IncrRefCount(namePtr);
-        dictPtr = Tcl_ObjGetVar2(interp, TkoObj_tko__option, namePtr, TCL_GLOBAL_ONLY);
+        dictPtr = Tcl_ObjGetVar2(interp, tkoPtr->Obj_tko__option, namePtr, TCL_GLOBAL_ONLY);
         if (dictPtr == NULL) {
             Tcl_DecrRefCount(namePtr);
             return TCL_ERROR;
@@ -645,7 +644,7 @@ Tko_TkoObjCmd(
             case 1:
                 listPtr = Tcl_NewListObj(0, NULL);
                 Tcl_ListObjAppendElement(interp, listPtr, argObjv[0]);
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_h);
+                Tcl_ListObjAppendElement(interp, listPtr, tkoPtr->Obj_flags_h);
                 break;
             case 2:
                 listPtr = Tcl_NewListObj(0, NULL);
@@ -657,7 +656,7 @@ Tko_TkoObjCmd(
                 Tcl_ListObjAppendElement(interp, listPtr, argObjv[0]);
                 Tcl_ListObjAppendElement(interp, listPtr, argObjv[1]);
                 Tcl_ListObjAppendElement(interp, listPtr, argObjv[2]);
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_h);
+                Tcl_ListObjAppendElement(interp, listPtr, tkoPtr->Obj_flags_h);
                 break;
             case 4:
                 listPtr = Tcl_NewListObj(0, NULL);
@@ -675,7 +674,7 @@ Tko_TkoObjCmd(
                 return TCL_ERROR;
             }
         }
-        tmpPtr = Tcl_ObjSetVar2(interp, TkoObj_tko__option, namePtr, dictPtr, TCL_GLOBAL_ONLY);
+        tmpPtr = Tcl_ObjSetVar2(interp, tkoPtr->Obj_tko__option, namePtr, dictPtr, TCL_GLOBAL_ONLY);
         Tcl_DecrRefCount(dictPtr);
         Tcl_DecrRefCount(namePtr);
         if (tmpPtr == NULL) {
@@ -696,7 +695,7 @@ Tko_TkoObjCmd(
             namePtr = objv[2];
         }
         Tcl_IncrRefCount(namePtr);
-        dictPtr = Tcl_ObjGetVar2(interp, TkoObj_tko__option, namePtr, TCL_GLOBAL_ONLY);
+        dictPtr = Tcl_ObjGetVar2(interp, tkoPtr->Obj_tko__option, namePtr, TCL_GLOBAL_ONLY);
         if (dictPtr == NULL) {
             Tcl_DecrRefCount(namePtr);
             return TCL_ERROR;
@@ -765,7 +764,7 @@ Tko_TkoObjCmd(
                 return TCL_ERROR;
             }
         }
-        tmpPtr = Tcl_ObjSetVar2(interp, TkoObj_tko__option, namePtr, dictPtr, TCL_GLOBAL_ONLY);
+        tmpPtr = Tcl_ObjSetVar2(interp, tkoPtr->Obj_tko__option, namePtr, dictPtr, TCL_GLOBAL_ONLY);
         Tcl_DecrRefCount(dictPtr);
         Tcl_DecrRefCount(namePtr);
         if (tmpPtr == NULL) {
@@ -813,6 +812,7 @@ static int WidgetMethod_tko(
     Tcl_Object object;
     int argObjc;
     Tcl_Obj **argObjv;
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     widget = (Tko_Widget *) Tko_WidgetClientData(context);
     if (widget == NULL || widget->myCmd == NULL) {
@@ -845,11 +845,11 @@ static int WidgetMethod_tko(
         if (objc - skip == 4) {
             object = Tcl_ObjectContextObject(context);
             if (object == NULL) return TCL_ERROR;
-            myCmd[0] = TkoObj_oo_objdefine;
+            myCmd[0] = tkoPtr->Obj_oo_objdefine;
             myCmd[1] = Tcl_GetObjectName(interp, object);
-            myCmd[2] = TkoObj_method;
+            myCmd[2] = tkoPtr->Obj_method;
             myCmd[3] = objv[skip + 1];
-            myCmd[4] = TkoObj_empty;
+            myCmd[4] = tkoPtr->Obj_empty;
             myCmd[5] = objv[skip + 3];
             if (Tcl_EvalObjv(interp, 6, myCmd, TCL_EVAL_GLOBAL) != TCL_OK) {
                 return TCL_ERROR;
@@ -998,6 +998,7 @@ Tko_Init(
         "  }\n"
         " }\n"
         "}";
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     /* Needed oo extension */
     if (Tcl_OOInitStubs(interp) == NULL) {
@@ -1009,53 +1010,53 @@ Tko_Init(
     if (Tcl_Eval(interp, initScript) != TCL_OK) {
         return TCL_ERROR;
     }
+
     /*
      * Constants
      */
-    TkoUid_class = Tk_GetUid("-class");
-    TkoUid_empty = Tk_GetUid("");
-    Tcl_IncrRefCount((TkoObj_empty = Tcl_NewStringObj("", -1)));
-    Tcl_IncrRefCount((TkoObj_tko__option =
+    tkoPtr->Uid_class = Tk_GetUid("-class");
+    tkoPtr->Uid_empty = Tk_GetUid("");
+    Tcl_IncrRefCount((tkoPtr->Obj_empty = Tcl_NewStringObj("", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_tko__option =
         Tcl_NewStringObj("::tko::_option", -1)));
-    Tcl_IncrRefCount((TkoObj_tko__eventoption =
+    Tcl_IncrRefCount((tkoPtr->Obj_tko__eventoption =
         Tcl_NewStringObj("::tko::_eventoption", -1)));
     /* Internally visible */
-    Tcl_IncrRefCount((TkoObj_next = Tcl_NewStringObj("next", -1)));
-    Tcl_IncrRefCount((TkoObj_uplevel = Tcl_NewStringObj("::uplevel", -1)));
-    Tcl_IncrRefCount((TkoObj_oo_define =
+    Tcl_IncrRefCount((tkoPtr->Obj_next = Tcl_NewStringObj("next", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_uplevel = Tcl_NewStringObj("::uplevel", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_oo_define =
         Tcl_NewStringObj("::oo::define", -1)));
-    Tcl_IncrRefCount((TkoObj_oo_objdefine =
+    Tcl_IncrRefCount((tkoPtr->Obj_oo_objdefine =
         Tcl_NewStringObj("::oo::objdefine", -1)));
-    Tcl_IncrRefCount((TkoObj_method = Tcl_NewStringObj("method", -1)));
-    Tcl_IncrRefCount((TkoObj__tko_configure =
+    Tcl_IncrRefCount((tkoPtr->Obj_method = Tcl_NewStringObj("method", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj__tko_configure =
         Tcl_NewStringObj("_tko_configure", -1)));
-    Tcl_IncrRefCount((TkoObj__tko =
+    Tcl_IncrRefCount((tkoPtr->Obj__tko =
         Tcl_NewStringObj("_tko", -1)));
-    Tcl_IncrRefCount((TkoObj_cget =
+    Tcl_IncrRefCount((tkoPtr->Obj_cget =
         Tcl_NewStringObj("cget", -1)));
-    Tcl_IncrRefCount((TkoObj_configure =
+    Tcl_IncrRefCount((tkoPtr->Obj_configure =
         Tcl_NewStringObj("configure", -1)));
-    Tcl_IncrRefCount((TkoObj_tko = Tcl_NewStringObj("::tko", -1)));
-    Tcl_IncrRefCount((TkoObj_tko_widget =
+    Tcl_IncrRefCount((tkoPtr->Obj_tko = Tcl_NewStringObj("::tko", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_tko_widget =
         Tcl_NewStringObj("::tko::widget", -1)));
-    Tcl_IncrRefCount((TkoObj_0 = Tcl_NewIntObj(0)));
-    Tcl_IncrRefCount((TkoObj_1 = Tcl_NewIntObj(1)));
-    Tcl_IncrRefCount((TkoObj_lsort = Tcl_NewStringObj("::lsort", -1)));
-    Tcl_IncrRefCount((TkoObj_point = Tcl_NewStringObj(".", -1)));
-    Tcl_IncrRefCount((TkoObj_point2 = Tcl_NewStringObj("..", -1)));
-    Tcl_IncrRefCount((TkoObj__screen = Tcl_NewStringObj("-screen", -1)));
-    Tcl_IncrRefCount((TkoObj_flags_r = Tcl_NewStringObj("r", -1)));
-    Tcl_IncrRefCount((TkoObj_flags_rh = Tcl_NewStringObj("rh", -1)));
-    Tcl_IncrRefCount((TkoObj_flags_h = Tcl_NewStringObj("h", -1)));
-    Tcl_IncrRefCount((TkoObj_rename = Tcl_NewStringObj("rename", -1)));
-    Tcl_IncrRefCount((TkoObj_tko__self = Tcl_NewStringObj("::tko::_self", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_lsort = Tcl_NewStringObj("::lsort", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_point = Tcl_NewStringObj(".", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_point2 = Tcl_NewStringObj("..", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj__screen = Tcl_NewStringObj("-screen", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_flags_r = Tcl_NewStringObj("r", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_flags_rh = Tcl_NewStringObj("rh", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_flags_h = Tcl_NewStringObj("h", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_rename = Tcl_NewStringObj("rename", -1)));
+    Tcl_IncrRefCount((tkoPtr->Obj_tko__self = Tcl_NewStringObj("::tko::_self", -1)));
     /* commands */
     Tcl_CreateObjCommand(interp, "::tko", Tko_TkoObjCmd, NULL, NULL);
 
     if (Tko_FrameInit(interp) != TCL_OK) {
         return TCL_ERROR;
     }
-#ifdef USE_RBC
+/* TODO */
+#ifndef USE_RBC
     if (Tko_GraphInit(interp) != TCL_OK) {
         return TCL_ERROR;
     }
@@ -1090,8 +1091,8 @@ Tko_WidgetClassDefine(
     Tcl_Obj *tmpObj;
     Tcl_Obj *dictPtr;
     WidgetClientdata *clientdata;
-
     int i;
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     if (classname == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("missing class name"));
@@ -1113,7 +1114,7 @@ Tko_WidgetClassDefine(
         || (clazz = Tcl_GetObjectAsClass(object)) == NULL) {
         return TCL_ERROR;
     }
-
+    
     /*
      * Add methods
      */
@@ -1129,10 +1130,10 @@ Tko_WidgetClassDefine(
                 Tcl_NewMethod(interp, clazz, NULL, 1, &methods[1], NULL));
         }
         /* our own methods */
-        Tcl_NewMethod(interp, clazz, TkoObj_cget, 1, &tkoWidgetMethods[3], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj_configure, 1, &tkoWidgetMethods[4], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj__tko_configure, 0, &tkoWidgetMethods[5], NULL);
-        Tcl_NewMethod(interp, clazz, TkoObj__tko, 0, &tkoWidgetMethods[6], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj_cget, 1, &tkoWidgetMethods[3], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj_configure, 1, &tkoWidgetMethods[4], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj__tko_configure, 0, &tkoWidgetMethods[5], NULL);
+        Tcl_NewMethod(interp, clazz, tkoPtr->Obj__tko, 0, &tkoWidgetMethods[6], NULL);
         /* public */
         for(i = 2; methods[i].name != NULL; i++) {
             tmpObj = Tcl_NewStringObj(methods[i].name, -1);
@@ -1154,7 +1155,7 @@ Tko_WidgetClassDefine(
      */
     if(options) {
         /* get dict variable */
-        dictPtr = Tcl_ObjGetVar2(interp, TkoObj_tko__option, classname,
+        dictPtr = Tcl_ObjGetVar2(interp, tkoPtr->Obj_tko__option, classname,
             TCL_GLOBAL_ONLY);
         if (dictPtr == NULL) {
             dictPtr = Tcl_NewDictObj();
@@ -1204,7 +1205,7 @@ Tko_WidgetClassDefine(
                 Tcl_ListObjAppendElement(interp, listPtr,
                     Tcl_NewStringObj(options[i].dbclass, -1));
                 if (options[i].defvalue == NULL) {
-                    Tcl_ListObjAppendElement(interp, listPtr, TkoObj_empty);
+                    Tcl_ListObjAppendElement(interp, listPtr, tkoPtr->Obj_empty);
                 }
                 else {
                     Tcl_ListObjAppendElement(interp, listPtr,
@@ -1214,15 +1215,15 @@ Tko_WidgetClassDefine(
             /* always add flags */
             if (options[i].flags & TKO_OPTION_READONLY) {
                 if (options[i].flags & TKO_OPTION_HIDE) {
-                    Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_rh);
+                    Tcl_ListObjAppendElement(interp, listPtr, tkoPtr->Obj_flags_rh);
                 }
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_r);
+                Tcl_ListObjAppendElement(interp, listPtr, tkoPtr->Obj_flags_r);
             }
             else if (options[i].flags & TKO_OPTION_HIDE) {
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_flags_h);
+                Tcl_ListObjAppendElement(interp, listPtr, tkoPtr->Obj_flags_h);
             }
             else {
-                Tcl_ListObjAppendElement(interp, listPtr, TkoObj_empty);
+                Tcl_ListObjAppendElement(interp, listPtr, tkoPtr->Obj_empty);
             }
             if (Tcl_DictObjPut(interp, dictPtr, optionPtr, listPtr) != TCL_OK) {
                 Tcl_DecrRefCount(optionPtr);
@@ -1260,7 +1261,7 @@ Tko_WidgetClassDefine(
                 Tcl_DecrRefCount(optionPtr);
             }
         }
-        if (Tcl_ObjSetVar2(interp, TkoObj_tko__option, classname, dictPtr,
+        if (Tcl_ObjSetVar2(interp, tkoPtr->Obj_tko__option, classname, dictPtr,
             TCL_GLOBAL_ONLY) == 0) {
             Tcl_DecrRefCount(dictPtr);
             return TCL_ERROR;
@@ -1471,6 +1472,7 @@ Tko_WidgetCreate(
     Tcl_Obj *tmpPtr;
     int initmode=1;/* 1=own widget 2=wrapped widget */
     Tk_Window wrapWin = NULL;/* needed in error case */
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     /* This would be an internal programming error */
     if (clientdata == NULL) {
@@ -1518,7 +1520,7 @@ Tko_WidgetCreate(
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("no class name"));
         goto error;
     }
-    optionList = Tcl_ObjGetVar2(interp, TkoObj_tko__option, classObj, TCL_GLOBAL_ONLY);
+    optionList = Tcl_ObjGetVar2(interp, tkoPtr->Obj_tko__option, classObj, TCL_GLOBAL_ONLY);
     if (optionList == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("no option definitions"));
         goto error;
@@ -1566,9 +1568,9 @@ Tko_WidgetCreate(
             goto error;
         }
         /* Try to get value from command line or use default one. */
-        Tcl_DictObjGet(interp, arglist, TkoObj__screen, &screen);
+        Tcl_DictObjGet(interp, arglist, tkoPtr->Obj__screen, &screen);
         if (screen != NULL) {
-            Tcl_DictObjRemove(interp, arglist, TkoObj__screen);
+            Tcl_DictObjRemove(interp, arglist, tkoPtr->Obj__screen);
             argSize--;
         }
         else {
@@ -1628,7 +1630,7 @@ Tko_WidgetCreate(
         /* Set tko(..) to name of hidden widget */
         tmpObj = Tcl_ObjPrintf("::tko::%s", &ch[2]);
         Tcl_IncrRefCount(tmpObj);
-        if (Tcl_ObjSetVar2(interp, widget->optionsArray, TkoObj_point2,
+        if (Tcl_ObjSetVar2(interp, widget->optionsArray, tkoPtr->Obj_point2,
             tmpObj, TCL_GLOBAL_ONLY) == NULL) {
             Tcl_DecrRefCount(tmpObj);
             goto error;
@@ -1647,7 +1649,7 @@ Tko_WidgetCreate(
         goto error;
     }
     /* Set tko(.) to name of widget or class */
-    if (Tcl_ObjSetVar2(interp, widget->optionsArray, TkoObj_point,
+    if (Tcl_ObjSetVar2(interp, widget->optionsArray, tkoPtr->Obj_point,
         Tcl_NewStringObj(&ch[2], length - 2), TCL_GLOBAL_ONLY) == NULL) {
         goto error;
     }
@@ -1821,9 +1823,10 @@ static void WidgetDeleteTkwin(
     Tko_Widget *widget)
 {
     Tcl_Obj *tmpObj;
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
     Tk_DeleteEventHandler(widget->tkWin, StructureNotifyMask | VirtualEventMask,
         WidgetEventProc, widget);
-    tmpObj = Tcl_ObjGetVar2(widget->interp, widget->optionsArray, TkoObj_point2, TCL_GLOBAL_ONLY);
+    tmpObj = Tcl_ObjGetVar2(widget->interp, widget->optionsArray, tkoPtr->Obj_point2, TCL_GLOBAL_ONLY);
     if (tmpObj) {
         tmpObj = Tcl_ObjPrintf("rename %s {}", Tcl_GetString(tmpObj));
         Tcl_IncrRefCount(tmpObj);
@@ -1898,6 +1901,7 @@ WidgetEventChanged(
     int changed;
     Tcl_Obj *defvalue;
     Tcl_Obj *myObjv[2];
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     if (widget->myCmd == NULL) return;
     Tcl_Preserve(widget);
@@ -1907,7 +1911,7 @@ WidgetEventChanged(
         optionPtr = Tcl_GetHashValue(entryPtr);
         entryPtr = Tcl_NextHashEntry(&search);
         if (optionPtr->dbclass == NULL) continue;/* synonym option */
-        if (optionPtr->dbname == TkoObj_empty && optionPtr->dbclass == TkoObj_empty) continue;
+        if (optionPtr->dbname == tkoPtr->Obj_empty && optionPtr->dbclass == tkoPtr->Obj_empty) continue;
         if (optionPtr->flagbits & TKO_OPTION_READONLY) continue;/* readonly option */
         if (optionPtr->flagbits & TKO_OPTION__USER) continue;/* user changed option */
           /*
@@ -1940,7 +1944,7 @@ WidgetEventChanged(
     }
     if (changed) {
         myObjv[0] = widget->myCmd;
-        myObjv[1] = TkoObj__tko_configure;
+        myObjv[1] = tkoPtr->Obj__tko_configure;
         if (Tcl_EvalObjv(widget->interp, 2, myObjv, TCL_EVAL_GLOBAL) != TCL_OK) {
             /* ignore errors */
         }
@@ -2021,6 +2025,7 @@ WidgetMethod_configure(
     const char *ch;
     int length;
     int i;
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     if ((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL
         || widget->myCmd == NULL) {
@@ -2048,7 +2053,7 @@ WidgetMethod_configure(
             Tcl_ListObjAppendElement(interp, retPtr, listPtr);
         }
         /* Return sorted list */
-        myObjv[0] = TkoObj_lsort;
+        myObjv[0] = tkoPtr->Obj_lsort;
         myObjv[1] = retPtr;
         return (Tcl_EvalObjv(interp, 2, myObjv, TCL_EVAL_GLOBAL));
     }
@@ -2088,7 +2093,7 @@ WidgetMethod_configure(
                     }
                 }
             }
-            myObjv[1] = TkoObj__tko_configure;
+            myObjv[1] = tkoPtr->Obj__tko_configure;
             if (Tcl_EvalObjv(interp, 2, myObjv, TCL_EVAL_GLOBAL) != TCL_OK) {
                 retPtr = Tcl_GetObjResult(interp);
                 Tcl_IncrRefCount(retPtr);
@@ -2099,7 +2104,7 @@ WidgetMethod_configure(
                 return TCL_ERROR;
             }
             Tcl_Release(widget);
-            Tcl_SetObjResult(interp, Tcl_ObjGetVar2(interp, widget->optionsArray, TkoObj_point, TCL_GLOBAL_ONLY));
+            Tcl_SetObjResult(interp, Tcl_ObjGetVar2(interp, widget->optionsArray, tkoPtr->Obj_point, TCL_GLOBAL_ONLY));
             return TCL_OK;
         }
         entryPtr =
@@ -2143,7 +2148,7 @@ WidgetMethod_configure(
             Tcl_ListObjAppendElement(interp, listPtr, optionPtr->defvalue);
         }
         else {
-            Tcl_ListObjAppendElement(interp, listPtr, TkoObj_empty);
+            Tcl_ListObjAppendElement(interp, listPtr, tkoPtr->Obj_empty);
         }
         Tcl_ListObjAppendElement(interp, listPtr, optionPtr->value);
         Tcl_SetObjResult(interp, listPtr);
@@ -2159,7 +2164,7 @@ WidgetMethod_configure(
             }
         }
         myObjv[0] = widget->myCmd;
-        myObjv[1] = TkoObj__tko_configure;
+        myObjv[1] = tkoPtr->Obj__tko_configure;
         if (Tcl_EvalObjv(interp, 2, myObjv, TCL_EVAL_GLOBAL) != TCL_OK) {
             Tcl_Release(widget);
             return TCL_ERROR;
@@ -2207,6 +2212,7 @@ WidgetOptionAdd(
     const char *opt;
     int traceadd = 0; /* if not 0 then readd trace on array variable */
     int searchdb = 0; /* search optiondb for values */
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     if((opt=Tcl_GetString(option))[0] != '-') {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong option: %s", opt));
@@ -2251,7 +2257,7 @@ WidgetOptionAdd(
     optionPtr->option = option;
     Tcl_IncrRefCount(optionPtr->option);
     if (Tcl_GetString(dbname)[0] == '\0') {
-        optionPtr->dbname = TkoObj_empty;
+        optionPtr->dbname = tkoPtr->Obj_empty;
         searchdb++;
     }
     else {
@@ -2263,7 +2269,7 @@ WidgetOptionAdd(
         optionPtr->flags = flags;
     }
     else {
-        optionPtr->flags = TkoObj_empty;
+        optionPtr->flags = tkoPtr->Obj_empty;
     }
     Tcl_IncrRefCount(optionPtr->flags);
     optionPtr->flagbits = intFlags;
@@ -2279,8 +2285,8 @@ WidgetOptionAdd(
         /* normal option */
     } else {
         if (Tcl_GetString(dbclass)[0] == '\0') {
-            optionPtr->dbclass = TkoObj_empty;
-            dbclassUid = TkoUid_empty;
+            optionPtr->dbclass = tkoPtr->Obj_empty;
+            dbclassUid = tkoPtr->Uid_empty;
             searchdb++;
         }
         else {
@@ -2315,7 +2321,7 @@ WidgetOptionAdd(
                  * Do not for -class because Tcl_SetClass was not called.
                  * When -class is not first option (after -screen) we get a crash!
                  */
-                if (optionPtr->value == NULL && optionUid != TkoUid_class) {
+                if (optionPtr->value == NULL && optionUid != tkoPtr->Uid_class) {
                     optionPtr->value =
                         TkpGetSystemDefault(widget->tkWin, dbnameUid, dbclassUid);
                 }
@@ -2332,7 +2338,7 @@ WidgetOptionAdd(
          * No given value defaults to empty string.
          */
         if(optionPtr->value == NULL) {
-            optionPtr->value = TkoObj_empty;
+            optionPtr->value = tkoPtr->Obj_empty;
             /* No flag as this does not count as user supplied */
         }
         Tcl_IncrRefCount(optionPtr->value);
@@ -2814,11 +2820,11 @@ WidgetMethod_(
             return TCL_ERROR;
         if (intVal) {
             TkpMakeContainer(widget->tkWin);
-            Tcl_ObjSetVar2(interp, widget->optionsArray, objv[1], TkoObj_1,
+            Tcl_ObjSetVar2(interp, widget->optionsArray, objv[1], Tcl_NewIntObj(1),
                 TCL_GLOBAL_ONLY);
         }
         else {
-            Tcl_ObjSetVar2(interp, widget->optionsArray, objv[1], TkoObj_0,
+            Tcl_ObjSetVar2(interp, widget->optionsArray, objv[1], Tcl_NewIntObj(0),
                 TCL_GLOBAL_ONLY);
         }
         if (address) {
@@ -2934,11 +2940,11 @@ WidgetMethod_(
             return TCL_ERROR;
         }
         if (intVal) {
-            Tcl_ObjSetVar2(interp, widget->optionsArray, objv[1], TkoObj_1,
+            Tcl_ObjSetVar2(interp, widget->optionsArray, objv[1], Tcl_NewIntObj(1),
                 TCL_GLOBAL_ONLY);
         }
         else {
-            Tcl_ObjSetVar2(interp, widget->optionsArray, objv[1], TkoObj_0,
+            Tcl_ObjSetVar2(interp, widget->optionsArray, objv[1], Tcl_NewIntObj(0),
                 TCL_GLOBAL_ONLY);
         }
         if (address) {
@@ -3165,12 +3171,13 @@ static Tcl_Obj *WidgetFlagsHideSet(
     Tcl_Obj *flags) /* last flag value object */
 {
     const char *ch;
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     ch = Tcl_GetString(flags);
     if (ch[0] != '\0' && (ch[0] == 'r' || ch[1] == 'r')) {
-        return TkoObj_flags_rh;
+        return tkoPtr->Obj_flags_rh;
     }
-    return TkoObj_flags_h;
+    return tkoPtr->Obj_flags_h;
 }
 
 /*
@@ -3186,24 +3193,25 @@ static Tcl_Obj *WidgetFlagsHideUnset(
     Tcl_Obj *flags) /* last flag value object */
 {
     const char *ch;
+    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     ch = Tcl_GetString(flags);
     if (ch[0] != '\0') {
         if (ch[0] == 'h') {
             if (ch[1] == 'r') {
-                return TkoObj_flags_r;
+                return tkoPtr->Obj_flags_r;
             }
             else {
-                return TkoObj_empty;
+                return tkoPtr->Obj_empty;
             }
         }
         else {
             if (ch[1] == 'h') {
-                return TkoObj_flags_r;
+                return tkoPtr->Obj_flags_r;
             }
         }
     }
-    return TkoObj_empty;
+    return tkoPtr->Obj_empty;
 }
 
 /*
