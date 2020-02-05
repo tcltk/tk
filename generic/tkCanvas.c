@@ -2595,7 +2595,7 @@ DrawCanvas(
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
     Tk_Window tkwin;
     Display *displayPtr;
-    Tk_PhotoImageBlock blockPtr = {0,0,0,0,0,0};
+    Tk_PhotoImageBlock blockPtr = {0,0,0,0,0,{0,0,0,0}};
     Window wid;
     Tk_Item *itemPtr;
     Pixmap pixmap = 0;
