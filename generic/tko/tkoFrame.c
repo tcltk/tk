@@ -1766,9 +1766,10 @@ FrameLabelwinRemove(
     tkoLabelframe * labelframe)
 {
     tkoFrame *frame = (tkoFrame *) labelframe;
+    Tcl_Obj *tmpPtr;
 
     labelframe->labelWin = NULL;
-    Tcl_Obj *tmpPtr = Tcl_NewStringObj("-labelwidget", -1);
+    tmpPtr = Tcl_NewStringObj("-labelwidget", -1);
     Tcl_IncrRefCount(tmpPtr);
     Tko_WidgetOptionSet(&frame->widget, tmpPtr, Tcl_NewStringObj("", 0));
     Tcl_DecrRefCount(tmpPtr);
