@@ -309,12 +309,15 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 	    corePtr->state |= TTK_STATE_HOVER;
 	    TtkRedisplayWidget(corePtr);
 	    break;
-	case VirtualEvent:
-	    if (!strcmp("ThemeChanged", ((XVirtualEvent *)(eventPtr))->name)) {
+	case VirtualEvent: {
+	    const char *name = ((XVirtualEvent *)eventPtr)->name;
+	    if ((name != NULL) && !strcmp("ThemeChanged", name)) {
 		(void)UpdateLayout(corePtr->interp, corePtr);
 		SizeChanged(corePtr);
 		TtkRedisplayWidget(corePtr);
 	    }
+	    break;
+	}
 	default:
 	    /* can't happen... */
 	    break;

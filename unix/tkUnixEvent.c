@@ -362,9 +362,6 @@ TransferXEventsToTcl(
 	int type;
 	XEvent x;
 	TkKeyEvent k;
-#ifdef GenericEvent
-	xGenericEvent xge;
-#endif
     } event;
     Window w;
     TkDisplay *dispPtr = NULL;
@@ -382,12 +379,9 @@ TransferXEventsToTcl(
 
     while (QLength(display) > 0) {
 	XNextEvent(display, &event.x);
-#ifdef GenericEvent
-	if (event.type == GenericEvent) {
-	    Tcl_Panic("Wild GenericEvent; panic! (extension=%d,evtype=%d)",
-		    event.xge.extension, event.xge.evtype);
+	if (event.type > MappingNotify) {
+	    continue;
 	}
-#endif
 	w = None;
 	if (event.type == KeyPress || event.type == KeyRelease) {
 	    for (dispPtr = TkGetDisplayList(); ; dispPtr = dispPtr->nextPtr) {
