@@ -11,14 +11,10 @@
 #define _TKOWIDGET_H
 
 #include "tcl.h"
-#include "tclInt.h"     /* TclIsInfinite() */
-
+#include "tclInt.h"
 #include "tclOO.h"
-
 #include "tk.h"
 #include "default.h"
-#include "tk3d.h"
-#include "tkFont.h"
 
 #ifndef _WIN32
 #if !defined(MAC_OSX_TK)
