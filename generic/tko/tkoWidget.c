@@ -2,15 +2,10 @@
  * tkoWidget.c --
  *
  *    This file contains the tko widget class.
- *TODO -synonym option hide/show
  *
  * Copyright (c) 2019 Rene Zaumseil
  *
  */
-#include "tcl.h"
-#include "tclOO.h"
-#include "tk.h"
-#include "tkInt.h"
 
 #include "tkoWidget.h"
 #include "tclOOInt.h" /*TODO needed for Widget_GetClassName() below */
