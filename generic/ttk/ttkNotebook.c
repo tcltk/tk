@@ -55,7 +55,7 @@ typedef struct
  * PaneOptionSpecs includes additional options for child window placement
  * and is used to configure the slave.
  */
-static Tk_OptionSpec TabOptionSpecs[] =
+static const Tk_OptionSpec TabOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-state", "", "",
 	"normal", -1, offsetof(Tab,state),
@@ -66,13 +66,13 @@ static Tk_OptionSpec TabOptionSpecs[] =
 	offsetof(Tab,imageObj), -1, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	NULL, offsetof(Tab,compoundObj), -1,
-	TK_OPTION_NULL_OK,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
+	TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
 	offsetof(Tab,underlineObj), -1, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
-static Tk_OptionSpec PaneOptionSpecs[] =
+static const Tk_OptionSpec PaneOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-padding", "padding", "Padding", "0",
 	offsetof(Tab,paddingObj), -1, 0,0,GEOMETRY_CHANGED },
@@ -107,7 +107,7 @@ typedef struct
     NotebookPart notebook;
 } Notebook;
 
-static Tk_OptionSpec NotebookOptionSpecs[] =
+static const Tk_OptionSpec NotebookOptionSpecs[] =
 {
     {TK_OPTION_INT, "-width", "width", "Width", "0",
 	offsetof(Notebook,notebook.widthObj),-1,

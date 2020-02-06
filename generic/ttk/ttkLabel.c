@@ -46,7 +46,7 @@ typedef struct {
 /* Text element options table.
  * NB: Keep in sync with label element option table.
  */
-static Ttk_ElementOptionSpec TextElementOptions[] = {
+static const Ttk_ElementOptionSpec TextElementOptions[] = {
     { "-text", TK_OPTION_STRING,
 	offsetof(TextElement,textObj), "" },
     { "-font", TK_OPTION_FONT,
@@ -225,7 +225,7 @@ static void TextElementDraw(
     }
 }
 
-static Ttk_ElementSpec TextElementSpec = {
+static const Ttk_ElementSpec TextElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TextElement),
     TextElementOptions,
@@ -251,7 +251,7 @@ typedef struct {
 
 /* ===> NB: Keep in sync with label element option table.  <===
  */
-static Ttk_ElementOptionSpec ImageElementOptions[] = {
+static const Ttk_ElementOptionSpec ImageElementOptions[] = {
     { "-image", TK_OPTION_STRING,
 	offsetof(ImageElement,imageObj), "" },
     { "-stipple", TK_OPTION_STRING, 	/* Really: TK_OPTION_BITMAP */
@@ -392,7 +392,7 @@ static void ImageElementDraw(
     }
 }
 
-static Ttk_ElementSpec ImageElementSpec = {
+static const Ttk_ElementSpec ImageElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ImageElement),
     ImageElementOptions,
@@ -448,7 +448,7 @@ typedef struct {
     int 		totalWidth, totalHeight;
 } LabelElement;
 
-static Ttk_ElementOptionSpec LabelElementOptions[] = {
+static const Ttk_ElementOptionSpec LabelElementOptions[] = {
     { "-compound", TK_OPTION_ANY,
 	offsetof(LabelElement,compoundObj), "none" },
     { "-space", TK_OPTION_PIXELS,
@@ -684,7 +684,7 @@ static void LabelElementDraw(
     LabelCleanup(l);
 }
 
-static Ttk_ElementSpec LabelElementSpec = {
+static const Ttk_ElementSpec LabelElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(LabelElement),
     LabelElementOptions,

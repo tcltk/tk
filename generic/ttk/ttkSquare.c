@@ -48,7 +48,7 @@ typedef struct
  * defined for all widgets.
  */
 
-static Tk_OptionSpec SquareOptionSpecs[] =
+static const Tk_OptionSpec SquareOptionSpecs[] =
 {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
      DEFAULT_BORDERWIDTH, offsetof(Square,square.borderWidthObj), -1,
@@ -176,7 +176,7 @@ typedef struct
     Tcl_Obj *heightObj;
 } SquareElement;
 
-static Ttk_ElementOptionSpec SquareElementOptions[] =
+static const Ttk_ElementOptionSpec SquareElementOptions[] =
 {
     { "-background", TK_OPTION_BORDER, offsetof(SquareElement,borderObj),
     	DEFAULT_BACKGROUND },
@@ -233,7 +233,7 @@ static void SquareElementDraw(
 	b.x, b.y, b.width, b.height, borderWidth, relief);
 }
 
-static Ttk_ElementSpec SquareElementSpec =
+static const Ttk_ElementSpec SquareElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(SquareElement),

@@ -12,7 +12,7 @@
  * Legal values for the button -default option.
  * See also: enum Ttk_ButtonDefaultState.
  */
-const char *ttkDefaultStrings[] = {
+const char *const ttkDefaultStrings[] = {
     "normal", "active", "disabled", NULL
 };
 
@@ -28,7 +28,7 @@ int Ttk_GetButtonDefaultStateFromObj(
  * Legal values for the -compound option.
  * See also: enum Ttk_Compound.
  */
-const char *ttkCompoundStrings[] = {
+const char *const ttkCompoundStrings[] = {
     "none", "text", "image", "center",
     "top", "bottom", "left", "right", NULL
 };
@@ -45,7 +45,7 @@ int Ttk_GetCompoundFromObj(
  * Legal values for the -orient option.
  * See also: enum Ttk_Orient.
  */
-const char *ttkOrientStrings[] = {
+const char *const ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
@@ -175,7 +175,7 @@ int TtkGetOptionValue(
  */
 
 /* public */
-Tk_OptionSpec ttkCoreOptionSpecs[] =
+const Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
 	offsetof(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },

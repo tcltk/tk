@@ -336,7 +336,7 @@ static void ImageElementDraw(
     Ttk_Tile(tkwin, d, image, src, dst, imageData->border);
 }
 
-static Ttk_ElementSpec ImageElementSpec =
+static const Ttk_ElementSpec ImageElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),

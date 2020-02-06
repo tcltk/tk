@@ -26,7 +26,7 @@ typedef struct {
     FramePart	frame;
 } Frame;
 
-static Tk_OptionSpec FrameOptionSpecs[] = {
+static const Tk_OptionSpec FrameOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth", NULL,
 	offsetof(Frame,frame.borderWidthObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
@@ -250,7 +250,7 @@ typedef struct {
 
 #define LABELWIDGET_CHANGED 0x100
 
-static Tk_OptionSpec LabelframeOptionSpecs[] = {
+static const Tk_OptionSpec LabelframeOptionSpecs[] = {
     {TK_OPTION_STRING, "-labelanchor", "labelAnchor", "LabelAnchor",
 	"nw", offsetof(Labelframe, label.labelAnchorObj),-1,
         0,0,GEOMETRY_CHANGED},

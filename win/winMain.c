@@ -112,6 +112,10 @@ _tWinMain(
     TCHAR **argv;
     int argc;
     TCHAR *p;
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)lpszCmdLine;
+    (void)nCmdShow;
 
     /*
      * Create the console channels and install them as the standard channels.

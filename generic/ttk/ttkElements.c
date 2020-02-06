@@ -19,7 +19,7 @@
  * and may be used in other engines.
  */
 
-/* public */ Ttk_ElementOptionSpec TtkNullElementOptions[] = { { NULL, TK_OPTION_BOOLEAN, 0, NULL } };
+/* public */ const Ttk_ElementOptionSpec TtkNullElementOptions[] = { { NULL, TK_OPTION_BOOLEAN, 0, NULL } };
 
 /* public */ void
 TtkNullElementSize(
@@ -68,7 +68,7 @@ typedef struct {
     Tcl_Obj	*backgroundObj;
 } BackgroundElement;
 
-static Ttk_ElementOptionSpec BackgroundElementOptions[] = {
+static const Ttk_ElementOptionSpec BackgroundElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	    offsetof(BackgroundElement,backgroundObj), DEFAULT_BACKGROUND },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -99,7 +99,7 @@ static void BackgroundElementDraw(
 	d, Ttk_WinBox(tkwin), state);
 }
 
-static Ttk_ElementSpec FillElementSpec = {
+static const Ttk_ElementSpec FillElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(BackgroundElement),
     BackgroundElementOptions,
@@ -107,7 +107,7 @@ static Ttk_ElementSpec FillElementSpec = {
     FillElementDraw
 };
 
-static Ttk_ElementSpec BackgroundElementSpec = {
+static const Ttk_ElementSpec BackgroundElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(BackgroundElement),
     BackgroundElementOptions,
@@ -125,7 +125,7 @@ typedef struct {
     Tcl_Obj	*reliefObj;
 } BorderElement;
 
-static Ttk_ElementOptionSpec BorderElementOptions[] = {
+static const Ttk_ElementOptionSpec BorderElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(BorderElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
@@ -170,7 +170,7 @@ static void BorderElementDraw(
     }
 }
 
-static Ttk_ElementSpec BorderElementSpec = {
+static const Ttk_ElementSpec BorderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(BorderElement),
     BorderElementOptions,
@@ -187,7 +187,7 @@ typedef struct {
     Tcl_Obj	*borderWidthObj;
 } FieldElement;
 
-static Ttk_ElementOptionSpec FieldElementOptions[] = {
+static const Ttk_ElementOptionSpec FieldElementOptions[] = {
     { "-fieldbackground", TK_OPTION_BORDER,
 	offsetof(FieldElement,borderObj), "white" },
     { "-borderwidth", TK_OPTION_PIXELS,
@@ -224,7 +224,7 @@ static void FieldElementDraw(
 	    b.x, b.y, b.width, b.height, borderWidth, TK_RELIEF_SUNKEN);
 }
 
-static Ttk_ElementSpec FieldElementSpec = {
+static const Ttk_ElementSpec FieldElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(FieldElement),
     FieldElementOptions,
@@ -249,7 +249,7 @@ typedef struct {
     Tcl_Obj	*shiftreliefObj;
 } PaddingElement;
 
-static Ttk_ElementOptionSpec PaddingElementOptions[] = {
+static const Ttk_ElementOptionSpec PaddingElementOptions[] = {
     { "-padding", TK_OPTION_STRING,
 	offsetof(PaddingElement,paddingObj), "0" },
     { "-relief", TK_OPTION_RELIEF,
@@ -277,7 +277,7 @@ static void PaddingElementSize(
     *paddingPtr = Ttk_RelievePadding(pad, relief, shiftRelief);
 }
 
-static Ttk_ElementSpec PaddingElementSpec = {
+static const Ttk_ElementSpec PaddingElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(PaddingElement),
     PaddingElementOptions,
@@ -318,7 +318,7 @@ static void DrawFocusRing(
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
 
-static Ttk_ElementOptionSpec FocusElementOptions[] = {
+static const Ttk_ElementOptionSpec FocusElementOptions[] = {
     { "-focuscolor",TK_OPTION_COLOR,
 	offsetof(FocusElement,focusColorObj), "black" },
     { "-focusthickness",TK_OPTION_PIXELS,
@@ -355,7 +355,7 @@ static void FocusElementDraw(
     }
 }
 
-static Ttk_ElementSpec FocusElementSpec = {
+static const Ttk_ElementSpec FocusElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(FocusElement),
     FocusElementOptions,
@@ -375,7 +375,7 @@ typedef struct {
     Tcl_Obj	*borderObj;
 } SeparatorElement;
 
-static Ttk_ElementOptionSpec SeparatorElementOptions[] = {
+static const Ttk_ElementOptionSpec SeparatorElementOptions[] = {
     { "-orient", TK_OPTION_ANY,
 	offsetof(SeparatorElement, orientObj), "horizontal" },
     { "-background", TK_OPTION_BORDER,
@@ -444,7 +444,7 @@ static void GeneralSeparatorElementDraw(
     }
 }
 
-static Ttk_ElementSpec HorizontalSeparatorElementSpec = {
+static const Ttk_ElementSpec HorizontalSeparatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(SeparatorElement),
     SeparatorElementOptions,
@@ -452,7 +452,7 @@ static Ttk_ElementSpec HorizontalSeparatorElementSpec = {
     HorizontalSeparatorElementDraw
 };
 
-static Ttk_ElementSpec VerticalSeparatorElementSpec = {
+static const Ttk_ElementSpec VerticalSeparatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(SeparatorElement),
     SeparatorElementOptions,
@@ -460,7 +460,7 @@ static Ttk_ElementSpec VerticalSeparatorElementSpec = {
     HorizontalSeparatorElementDraw
 };
 
-static Ttk_ElementSpec SeparatorElementSpec = {
+static const Ttk_ElementSpec SeparatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(SeparatorElement),
     SeparatorElementOptions,
@@ -476,7 +476,7 @@ typedef struct {
     Tcl_Obj	*backgroundObj;
 } SizegripElement;
 
-static Ttk_ElementOptionSpec SizegripOptions[] = {
+static const Ttk_ElementOptionSpec SizegripOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
     {0,TK_OPTION_BOOLEAN,0,0}
@@ -516,7 +516,7 @@ static void SizegripDraw(
     }
 }
 
-static Ttk_ElementSpec SizegripElementSpec = {
+static const Ttk_ElementSpec SizegripElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(SizegripElement),
     SizegripOptions,
@@ -544,7 +544,7 @@ typedef struct {
     Tcl_Obj *borderWidthObj;
 } IndicatorElement;
 
-static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
+static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-indicatorcolor", TK_OPTION_BORDER,
@@ -664,7 +664,7 @@ static void DiamondIndicatorElementDraw(
     Tk_Draw3DPolygon(tkwin,d,border,points,4,borderWidth,relief);
 }
 
-static Ttk_ElementSpec CheckbuttonIndicatorElementSpec = {
+static const Ttk_ElementSpec CheckbuttonIndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
@@ -672,7 +672,7 @@ static Ttk_ElementSpec CheckbuttonIndicatorElementSpec = {
     SquareIndicatorElementDraw
 };
 
-static Ttk_ElementSpec RadiobuttonIndicatorElementSpec = {
+static const Ttk_ElementSpec RadiobuttonIndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
@@ -700,7 +700,7 @@ typedef struct {
     Tcl_Obj *marginObj;
 } MenuIndicatorElement;
 
-static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
+static const Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(MenuIndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-indicatorwidth", TK_OPTION_PIXELS,
@@ -750,7 +750,7 @@ static void MenuIndicatorElementDraw(
 	    borderWidth, TK_RELIEF_RAISED);
 }
 
-static Ttk_ElementSpec MenuIndicatorElementSpec = {
+static const Ttk_ElementSpec MenuIndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(MenuIndicatorElement),
     MenuIndicatorElementOptions,
@@ -774,7 +774,7 @@ typedef struct {
     Tcl_Obj *colorObj;
 } ArrowElement;
 
-static Ttk_ElementOptionSpec ArrowElementOptions[] = {
+static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-relief",TK_OPTION_RELIEF,
@@ -827,7 +827,7 @@ static void ArrowElementDraw(
 	Ttk_PadBox(b, ArrowMargins), direction);
 }
 
-static Ttk_ElementSpec ArrowElementSpec = {
+static const Ttk_ElementSpec ArrowElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ArrowElement),
     ArrowElementOptions,
@@ -847,7 +847,7 @@ typedef struct {
     Tcl_Obj *reliefObj;
 } TroughElement;
 
-static Ttk_ElementOptionSpec TroughElementOptions[] = {
+static const Ttk_ElementOptionSpec TroughElementOptions[] = {
     { "-borderwidth", TK_OPTION_PIXELS,
 	offsetof(TroughElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-troughcolor", TK_OPTION_BORDER,
@@ -889,7 +889,7 @@ static void TroughElementDraw(
 	    borderWidth, relief);
 }
 
-static Ttk_ElementSpec TroughElementSpec = {
+static const Ttk_ElementSpec TroughElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TroughElement),
     TroughElementOptions,
@@ -912,7 +912,7 @@ typedef struct {
     Tcl_Obj *borderWidthObj;
 } ThumbElement;
 
-static Ttk_ElementOptionSpec ThumbElementOptions[] = {
+static const Ttk_ElementOptionSpec ThumbElementOptions[] = {
     { "-orient", TK_OPTION_ANY,
 	offsetof(ThumbElement, orientObj), "horizontal" },
     { "-width", TK_OPTION_PIXELS,
@@ -964,7 +964,7 @@ static void ThumbElementDraw(
 	    borderWidth, relief);
 }
 
-static Ttk_ElementSpec ThumbElementSpec = {
+static const Ttk_ElementSpec ThumbElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ThumbElement),
     ThumbElementOptions,
@@ -988,7 +988,7 @@ typedef struct {
     Tcl_Obj *borderWidthObj; /* the size of the border */
 } SliderElement;
 
-static Ttk_ElementOptionSpec SliderElementOptions[] = {
+static const Ttk_ElementOptionSpec SliderElementOptions[] = {
     { "-sliderlength", TK_OPTION_PIXELS, offsetof(SliderElement,lengthObj),
 	"30" },
     { "-sliderthickness",TK_OPTION_PIXELS, offsetof(SliderElement,thicknessObj),
@@ -1076,7 +1076,7 @@ static void SliderElementDraw(
     }
 }
 
-static Ttk_ElementSpec SliderElementSpec = {
+static const Ttk_ElementSpec SliderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(SliderElement),
     SliderElementOptions,
@@ -1105,7 +1105,7 @@ typedef struct {
     Tcl_Obj *borderWidthObj; 	/* thickness of the border */
 } PbarElement;
 
-static Ttk_ElementOptionSpec PbarElementOptions[] = {
+static const Ttk_ElementOptionSpec PbarElementOptions[] = {
     { "-orient", TK_OPTION_ANY, offsetof(PbarElement,orientObj),
 	"horizontal" },
     { "-thickness", TK_OPTION_PIXELS, offsetof(PbarElement,thicknessObj),
@@ -1166,7 +1166,7 @@ static void PbarElementDraw(
 	borderWidth, relief);
 }
 
-static Ttk_ElementSpec PbarElementSpec = {
+static const Ttk_ElementSpec PbarElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(PbarElement),
     PbarElementOptions,
@@ -1183,7 +1183,7 @@ typedef struct {
     Tcl_Obj *backgroundObj;
 } TabElement;
 
-static Ttk_ElementOptionSpec TabElementOptions[] = {
+static const Ttk_ElementOptionSpec TabElementOptions[] = {
     { "-borderwidth", TK_OPTION_PIXELS,
 	offsetof(TabElement,borderWidthObj),"1" },
     { "-background", TK_OPTION_BORDER,
@@ -1259,7 +1259,7 @@ static void TabElementDraw(
 
 }
 
-static Ttk_ElementSpec TabElementSpec = {
+static const Ttk_ElementSpec TabElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TabElement),
     TabElementOptions,
@@ -1304,7 +1304,7 @@ static void ClientElementSize(
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
-static Ttk_ElementSpec ClientElementSpec = {
+static const Ttk_ElementSpec ClientElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ClientElement),
     ClientElementOptions,

@@ -74,7 +74,7 @@ typedef struct {
 
 /* @@@ NOTE: -orient is readonly 'cause dynamic oriention changes NYI
  */
-static Tk_OptionSpec PanedOptionSpecs[] = {
+static const Tk_OptionSpec PanedOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	offsetof(Paned,paned.orientObj), offsetof(Paned,paned.orient),
 	0,(ClientData)ttkOrientStrings,READONLY_OPTION|STYLE_CHANGED },
@@ -98,7 +98,7 @@ typedef struct {
     int 	weight; 		/* Pane -weight, for resizing */
 } Pane;
 
-static Tk_OptionSpec PaneOptionSpecs[] = {
+static const Tk_OptionSpec PaneOptionSpecs[] = {
     {TK_OPTION_INT, "-weight", "weight", "Weight", "0",
 	-1, offsetof(Pane,weight), 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_END, 0,0,0, NULL, -1,-1, 0,0,0}
@@ -921,7 +921,7 @@ typedef struct {
     Tcl_Obj *thicknessObj;
 } SashElement;
 
-static Ttk_ElementOptionSpec SashElementOptions[] = {
+static const Ttk_ElementOptionSpec SashElementOptions[] = {
     { "-sashthickness", TK_OPTION_INT,
 	    offsetof(SashElement,thicknessObj), "5" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -941,7 +941,7 @@ static void SashElementSize(
     *widthPtr = *heightPtr = thickness;
 }
 
-static Ttk_ElementSpec SashElementSpec = {
+static const Ttk_ElementSpec SashElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(SashElement),
     SashElementOptions,

@@ -50,7 +50,7 @@ typedef struct
     ScalePart  scale;
 } Scale;
 
-static Tk_OptionSpec ScaleOptionSpecs[] =
+static const Tk_OptionSpec ScaleOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
 	offsetof(Scale,scale.commandObj), -1,

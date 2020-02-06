@@ -21,7 +21,7 @@ typedef struct {
     Tcl_Obj	*highlightThicknessObj;
 } HighlightElement;
 
-static Ttk_ElementOptionSpec HighlightElementOptions[] = {
+static const Ttk_ElementOptionSpec HighlightElementOptions[] = {
     { "-highlightcolor",TK_OPTION_COLOR,
 	offsetof(HighlightElement,highlightColorObj), DEFAULT_BACKGROUND },
     { "-highlightthickness",TK_OPTION_PIXELS,
@@ -62,7 +62,7 @@ static void HighlightElementDraw(
     }
 }
 
-static Ttk_ElementSpec HighlightElementSpec =
+static const Ttk_ElementSpec HighlightElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(HighlightElement),
@@ -88,7 +88,7 @@ typedef struct {
     Tcl_Obj	*defaultStateObj;
 } ButtonBorderElement;
 
-static Ttk_ElementOptionSpec ButtonBorderElementOptions[] =
+static const Ttk_ElementOptionSpec ButtonBorderElementOptions[] =
 {
     { "-background", TK_OPTION_BORDER,
 	offsetof(ButtonBorderElement,borderObj), DEFAULT_BACKGROUND },
@@ -183,7 +183,7 @@ static void ButtonBorderElementDraw(
     }
 }
 
-static Ttk_ElementSpec ButtonBorderElementSpec =
+static const Ttk_ElementSpec ButtonBorderElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(ButtonBorderElement),
@@ -208,7 +208,7 @@ typedef struct
     Tcl_Obj *reliefObj;
 } ArrowElement;
 
-static Ttk_ElementOptionSpec ArrowElementOptions[] =
+static const Ttk_ElementOptionSpec ArrowElementOptions[] =
 {
     { "-arrowsize", TK_OPTION_PIXELS, offsetof(ArrowElement,sizeObj),
 	DEFAULT_ARROW_SIZE },
@@ -282,7 +282,7 @@ static void ArrowElementDraw(
     Tk_Fill3DPolygon(tkwin, d, border, points, 3, borderWidth, relief);
 }
 
-static Ttk_ElementSpec ArrowElementSpec =
+static const Ttk_ElementSpec ArrowElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(ArrowElement),
@@ -319,7 +319,7 @@ typedef struct {
     Tcl_Obj *handlePadObj;	/* handle's distance from edge */
 } SashElement;
 
-static Ttk_ElementOptionSpec SashOptions[] = {
+static const Ttk_ElementOptionSpec SashOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(SashElement,borderObj), DEFAULT_BACKGROUND },
     { "-sashrelief", TK_OPTION_RELIEF,
@@ -419,7 +419,7 @@ static void SashElementDraw(
     }
 }
 
-static Ttk_ElementSpec SashElementSpec = {
+static const Ttk_ElementSpec SashElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(SashElement),
     SashOptions,

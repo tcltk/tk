@@ -116,7 +116,7 @@ static void DrawBorder(
 /* Alternate shadow colors for entry fields:
  * NOTE: FLAT color is normally white, and the LITE color is a darker shade.
  */
-static enum BorderColor fieldShadowColors[4] = { DARK, BRDR, LITE, FLAT };
+static const enum BorderColor fieldShadowColors[4] = { DARK, BRDR, LITE, FLAT };
 
 static void DrawFieldBorder(
     Tk_Window tkwin, Drawable d, Tk_3DBorder border, XColor *borderColor,
@@ -244,7 +244,7 @@ typedef struct {
     Tcl_Obj	*defaultStateObj;	/* for buttons */
 } BorderElement;
 
-static Ttk_ElementOptionSpec BorderElementOptions[] = {
+static const Ttk_ElementOptionSpec BorderElementOptions[] = {
     { "-background", TK_OPTION_BORDER, offsetof(BorderElement,borderObj),
     	DEFAULT_BACKGROUND },
     { "-bordercolor",TK_OPTION_COLOR,
@@ -313,7 +313,7 @@ static void BorderElementDraw(
     DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
 }
 
-static Ttk_ElementSpec BorderElementSpec = {
+static const Ttk_ElementSpec BorderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(BorderElement),
     BorderElementOptions,
@@ -330,7 +330,7 @@ typedef struct {
     Tcl_Obj	*borderColorObj;	/* Extra border color */
 } FieldElement;
 
-static Ttk_ElementOptionSpec FieldElementOptions[] = {
+static const Ttk_ElementOptionSpec FieldElementOptions[] = {
     { "-fieldbackground", TK_OPTION_BORDER, offsetof(FieldElement,borderObj),
     	"white" },
     { "-bordercolor",TK_OPTION_COLOR, offsetof(FieldElement,borderColorObj),
@@ -366,7 +366,7 @@ static void FieldElementDraw(
     DrawFieldBorder(tkwin, d, border, borderColor, b);
 }
 
-static Ttk_ElementSpec FieldElementSpec = {
+static const Ttk_ElementSpec FieldElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(FieldElement),
     FieldElementOptions,
@@ -389,7 +389,7 @@ typedef struct {
     int height;		/* Height of each image */
     int nimages;	/* #images / row */
     const char *const *pixels;	/* array[height] of char[width*nimage] */
-    Ttk_StateTable *map;/* used to look up image index by state */
+    const Ttk_StateTable *map;/* used to look up image index by state */
 } IndicatorSpec;
 
 #if 0
@@ -409,7 +409,7 @@ static const char *const button_images[] = {
 };
 #endif
 
-static Ttk_StateTable checkbutton_states[] = {
+static const Ttk_StateTable checkbutton_states[] = {
     { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
     { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
     { 2, TTK_STATE_DISABLED, TTK_STATE_SELECTED },
@@ -439,7 +439,7 @@ static IndicatorSpec checkbutton_spec = {
     checkbutton_states
 };
 
-static Ttk_StateTable radiobutton_states[] = {
+static const Ttk_StateTable radiobutton_states[] = {
     { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
     { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
     { 2, TTK_STATE_DISABLED, TTK_STATE_SELECTED },
@@ -479,7 +479,7 @@ typedef struct {
     Tcl_Obj *marginObj;
 } IndicatorElement;
 
-static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
+static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-background", TK_OPTION_COLOR,
 	    offsetof(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-foreground", TK_OPTION_COLOR,
@@ -644,7 +644,7 @@ static void IndicatorElementDraw(
     XDestroyImage(img);
 }
 
-static Ttk_ElementSpec IndicatorElementSpec = {
+static const Ttk_ElementSpec IndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
@@ -668,7 +668,7 @@ typedef struct {
     Tcl_Obj *colorObj;		/* Arrow color */
 } ArrowElement;
 
-static Ttk_ElementOptionSpec ArrowElementOptions[] = {
+static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
 	offsetof(ArrowElement,sizeObj), STRINGIFY(SCROLLBAR_WIDTH) },
     { "-background", TK_OPTION_BORDER,
@@ -728,7 +728,7 @@ static void ArrowElementDraw(
 	Ttk_PadBox(b, ArrowPadding), direction);
 }
 
-static Ttk_ElementSpec ArrowElementSpec = {
+static const Ttk_ElementSpec ArrowElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ArrowElement),
     ArrowElementOptions,
@@ -754,7 +754,7 @@ static const char *const directionStrings[] = {	/* See also: button.c */
 };
 enum { POST_ABOVE, POST_BELOW, POST_LEFT, POST_RIGHT, POST_FLUSH };
 
-static Ttk_ElementOptionSpec MenubuttonArrowElementOptions[] = {
+static const Ttk_ElementOptionSpec MenubuttonArrowElementOptions[] = {
     { "-direction", TK_OPTION_STRING,
 	offsetof(MenubuttonArrowElement,directionObj), "below" },
     { "-arrowsize", TK_OPTION_PIXELS,
@@ -814,7 +814,7 @@ static void MenubuttonArrowElementDraw(
     TtkFillArrow(Tk_Display(tkwin), d, gc, b, arrowDirection);
 }
 
-static Ttk_ElementSpec MenubuttonArrowElementSpec = {
+static const Ttk_ElementSpec MenubuttonArrowElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(MenubuttonArrowElement),
     MenubuttonArrowElementOptions,
@@ -843,7 +843,7 @@ typedef struct {
     Tcl_Obj *orientObj;
 } TroughElement;
 
-static Ttk_ElementOptionSpec TroughElementOptions[] = {
+static const Ttk_ElementOptionSpec TroughElementOptions[] = {
     { "-orient", TK_OPTION_ANY,
 	offsetof(TroughElement, orientObj), "horizontal" },
     { "-troughborderwidth", TK_OPTION_PIXELS,
@@ -906,7 +906,7 @@ static void TroughElementDraw(
 	    borderWidth, relief);
 }
 
-static Ttk_ElementSpec TroughElementSpec = {
+static const Ttk_ElementSpec TroughElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TroughElement),
     TroughElementOptions,
@@ -929,7 +929,7 @@ typedef struct {
     Tcl_Obj *orientObj;
 } ThumbElement;
 
-static Ttk_ElementOptionSpec ThumbElementOptions[] = {
+static const Ttk_ElementOptionSpec ThumbElementOptions[] = {
     { "-width", TK_OPTION_PIXELS, offsetof(ThumbElement,sizeObj),
         STRINGIFY(SCROLLBAR_WIDTH) },
     { "-background", TK_OPTION_BORDER, offsetof(ThumbElement,borderObj),
@@ -989,7 +989,7 @@ static void ThumbElementDraw(
     DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
 }
 
-static Ttk_ElementSpec ThumbElementSpec = {
+static const Ttk_ElementSpec ThumbElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ThumbElement),
     ThumbElementOptions,
@@ -1018,7 +1018,7 @@ typedef struct {
     Tcl_Obj *orientObj;		/* Orientation of overall slider */
 } SliderElement;
 
-static Ttk_ElementOptionSpec SliderElementOptions[] = {
+static const Ttk_ElementOptionSpec SliderElementOptions[] = {
     { "-sliderlength", TK_OPTION_PIXELS, offsetof(SliderElement,lengthObj),
 	"15" },
     { "-sliderthickness",TK_OPTION_PIXELS, offsetof(SliderElement,thicknessObj),
@@ -1084,7 +1084,7 @@ static void SliderElementDraw(
     DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
 }
 
-static Ttk_ElementSpec SliderElementSpec = {
+static const Ttk_ElementSpec SliderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(SliderElement),
     SliderElementOptions,
@@ -1105,7 +1105,7 @@ typedef struct {
     Tcl_Obj *diameterObj;
 } TreeitemIndicator;
 
-static Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
+static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-diameter", TK_OPTION_PIXELS,
@@ -1164,7 +1164,7 @@ static void TreeitemIndicatorDraw(
     }
 }
 
-static Ttk_ElementSpec TreeitemIndicatorElementSpec = {
+static const Ttk_ElementSpec TreeitemIndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TreeitemIndicator),
     TreeitemIndicatorOptions,
