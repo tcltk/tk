@@ -1056,7 +1056,7 @@ Tko_Init(
         return TCL_ERROR;
     }
 /* TODO */
-#ifndef USE_RBC
+#ifdef USE_RBC
     if (Tko_GraphInit(interp) != TCL_OK) {
         return TCL_ERROR;
     }
