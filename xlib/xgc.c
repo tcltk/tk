@@ -142,11 +142,11 @@ XCreateGC(
     InitField(fill_style,	  GCFillStyle,		FillSolid);
     InitField(fill_rule,	  GCFillRule,		WindingRule);
     InitField(arc_mode,		  GCArcMode,		ArcPieSlice);
-    InitField(tile,		  GCTile,		None);
-    InitField(stipple,		  GCStipple,		None);
+    InitField(tile,		  GCTile,		0);
+    InitField(stipple,		  GCStipple,		0);
     InitField(ts_x_origin,	  GCTileStipXOrigin,	0);
     InitField(ts_y_origin,	  GCTileStipYOrigin,	0);
-    InitField(font,		  GCFont,		None);
+    InitField(font,		  GCFont,		0);
     InitField(subwindow_mode,	  GCSubwindowMode,	ClipByChildren);
     InitField(graphics_exposures, GCGraphicsExposures,	True);
     InitField(clip_x_origin,	  GCClipXOrigin,	0);

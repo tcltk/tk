@@ -59,7 +59,7 @@ struct TreeItemRec {
 #define ITEM_OPTION_TAGS_CHANGED	0x100
 #define ITEM_OPTION_IMAGE_CHANGED	0x200
 
-static Tk_OptionSpec ItemOptionSpecs[] = {
+static const Tk_OptionSpec ItemOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text",
 	"", offsetof(TreeItem,textObj), -1,
 	0,0,0 },
@@ -187,7 +187,7 @@ typedef struct {
     Tcl_Obj *fontObj;
 } DisplayItem;
 
-static Tk_OptionSpec TagOptionSpecs[] = {
+static const Tk_OptionSpec TagOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text",
 	NULL, offsetof(DisplayItem,textObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
@@ -271,7 +271,7 @@ static void FreeColumn(TreeColumn *column)
     /* Don't touch column->data, it's scratch storage */
 }
 
-static Tk_OptionSpec ColumnOptionSpecs[] = {
+static const Tk_OptionSpec ColumnOptionSpecs[] = {
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_COLWIDTH, -1, offsetof(TreeColumn,width),
 	0,0,GEOMETRY_CHANGED },
@@ -290,7 +290,7 @@ static Tk_OptionSpec ColumnOptionSpecs[] = {
     {TK_OPTION_END, 0,0,0, NULL, -1,-1, 0,0,0}
 };
 
-static Tk_OptionSpec HeadingOptionSpecs[] = {
+static const Tk_OptionSpec HeadingOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text",
 	"", offsetof(TreeColumn,headingObj), -1,
 	0,0,0 },
@@ -435,7 +435,7 @@ typedef struct {
 
 static const char *const SelectModeStrings[] = { "none", "browse", "extended", NULL };
 
-static Tk_OptionSpec TreeviewOptionSpecs[] = {
+static const Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-columns", "columns", "Columns",
 	"", offsetof(Treeview,tree.columnsObj), -1,
 	0,0,COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
@@ -3349,7 +3349,7 @@ typedef struct {
     Tcl_Obj *marginsObj;
 } TreeitemIndicator;
 
-static Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
+static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-indicatorsize", TK_OPTION_PIXELS,
@@ -3404,7 +3404,7 @@ static void TreeitemIndicatorDraw(
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
 
-static Ttk_ElementSpec TreeitemIndicatorElementSpec = {
+static const Ttk_ElementSpec TreeitemIndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TreeitemIndicator),
     TreeitemIndicatorOptions,
@@ -3421,7 +3421,7 @@ typedef struct {
     Tcl_Obj *rowNumberObj;
 } RowElement;
 
-static Ttk_ElementOptionSpec RowElementOptions[] = {
+static const Ttk_ElementOptionSpec RowElementOptions[] = {
     { "-background", TK_OPTION_COLOR,
 	offsetof(RowElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-rownumber", TK_OPTION_INT,
@@ -3443,7 +3443,7 @@ static void RowElementDraw(
 	    b.x, b.y, b.width, b.height);
 }
 
-static Ttk_ElementSpec RowElementSpec = {
+static const Ttk_ElementSpec RowElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(RowElement),
     RowElementOptions,

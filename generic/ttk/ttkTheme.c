@@ -117,7 +117,7 @@ typedef const Tk_OptionSpec **OptionMap;
 
 struct Ttk_ElementClass_ {
     const char *name;		/* Points to hash table key */
-    Ttk_ElementSpec *specPtr;	/* Template provided during registration. */
+    const Ttk_ElementSpec *specPtr;	/* Template provided during registration. */
     void *clientData;		/* Client data passed in at registration time */
     void *elementRecord;	/* Scratch buffer for element record storage */
     int nResources;		/* #Element options */
@@ -181,7 +181,7 @@ BuildOptionMap(Ttk_ElementClass *elementClass, Tk_OptionTable optionTable)
     int i;
 
     for (i = 0; i < elementClass->nResources; ++i) {
-	Ttk_ElementOptionSpec *e = elementClass->specPtr->options+i;
+	const Ttk_ElementOptionSpec *e = elementClass->specPtr->options+i;
 	optionMap[i] = TTKGetOptionSpec(e->optionName, optionTable, e->type);
     }
 
@@ -216,7 +216,7 @@ GetOptionMap(Ttk_ElementClass *elementClass, Tk_OptionTable optionTable)
  * 	from the specified element specification.
  */
 static Ttk_ElementClass *
-NewElementClass(const char *name, Ttk_ElementSpec *specPtr,void *clientData)
+NewElementClass(const char *name, const Ttk_ElementSpec *specPtr, void *clientData)
 {
     Ttk_ElementClass *elementClass = (Ttk_ElementClass *)ckalloc(sizeof(Ttk_ElementClass));
     int i;
@@ -876,7 +876,7 @@ Ttk_ElementClass *Ttk_RegisterElement(
     Tcl_Interp *interp,		/* Where to leave error messages */
     Ttk_Theme theme,		/* Style engine providing the implementation. */
     const char *name,		/* Name of new element */
-    Ttk_ElementSpec *specPtr, 	/* Static template information */
+    const Ttk_ElementSpec *specPtr, 	/* Static template information */
     void *clientData)		/* application-specific data */
 {
     Ttk_ElementClass *elementClass;
@@ -917,7 +917,7 @@ Ttk_ElementClass *Ttk_RegisterElement(
  * 	Register a new element.
  */
 int Ttk_RegisterElementSpec(Ttk_Theme theme,
-    const char *name, Ttk_ElementSpec *specPtr, void *clientData)
+    const char *name, const Ttk_ElementSpec *specPtr, void *clientData)
 {
     return Ttk_RegisterElement(NULL, theme, name, specPtr, clientData)
 	   ? TCL_OK : TCL_ERROR;
@@ -990,7 +990,7 @@ int InitializeElementRecord(
     OptionMap optionMap = GetOptionMap(eclass,optionTable);
     int nResources = eclass->nResources;
     Ttk_ResourceCache cache = style->cache;
-    Ttk_ElementOptionSpec *elementOption = eclass->specPtr->options;
+    const Ttk_ElementOptionSpec *elementOption = eclass->specPtr->options;
 
     int i;
     for (i=0; i<nResources; ++i, ++elementOption) {
@@ -1557,8 +1557,8 @@ static int StyleElementOptionsCmd(
     elementName = Tcl_GetString(objv[3]);
     elementClass = Ttk_GetElement(theme, elementName);
     if (elementClass) {
-	Ttk_ElementSpec *specPtr = elementClass->specPtr;
-	Ttk_ElementOptionSpec *option = specPtr->options;
+	const Ttk_ElementSpec *specPtr = elementClass->specPtr;
+	const Ttk_ElementOptionSpec *option = specPtr->options;
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
 
 	while (option->optionName) {

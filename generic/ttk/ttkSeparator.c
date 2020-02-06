@@ -22,7 +22,7 @@ typedef struct
     SeparatorPart separator;
 } Separator;
 
-static Tk_OptionSpec SeparatorOptionSpecs[] = {
+static const Tk_OptionSpec SeparatorOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	offsetof(Separator,separator.orientObj),
 	offsetof(Separator,separator.orient),
@@ -83,7 +83,7 @@ TTK_END_LAYOUT
  * 	Has no options or methods other than the standard ones.
  */
 
-static Tk_OptionSpec SizegripOptionSpecs[] = {
+static const Tk_OptionSpec SizegripOptionSpecs[] = {
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };

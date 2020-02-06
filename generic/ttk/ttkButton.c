@@ -54,7 +54,7 @@ typedef struct
     BasePart	base;
 } Base;
 
-static Tk_OptionSpec BaseOptionSpecs[] =
+static const Tk_OptionSpec BaseOptionSpecs[] =
 {
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
         "left", offsetof(Base,base.justifyObj), -1,
@@ -85,7 +85,7 @@ static Tk_OptionSpec BaseOptionSpecs[] =
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 NULL, offsetof(Base,base.compoundObj), -1,
-	 TK_OPTION_NULL_OK,(ClientData)ttkCompoundStrings,
+	 TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,
          GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Base,base.paddingObj), -1,
@@ -241,7 +241,7 @@ typedef struct
     LabelPart	label;
 } Label;
 
-static Tk_OptionSpec LabelOptionSpecs[] =
+static const Tk_OptionSpec LabelOptionSpecs[] =
 {
     {TK_OPTION_BORDER, "-background", "frameColor", "FrameColor",
 	NULL, offsetof(Label,label.backgroundObj), -1,
@@ -324,13 +324,13 @@ typedef struct
 /*
  * Option specifications:
  */
-static Tk_OptionSpec ButtonOptionSpecs[] =
+static const Tk_OptionSpec ButtonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command",
 	"", offsetof(Button, button.commandObj), -1, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-default", "default", "Default",
 	"normal", offsetof(Button, button.defaultStateObj), -1,
-	0, (ClientData) ttkDefaultStrings, DEFAULTSTATE_CHANGED},
+	0, (void *)ttkDefaultStrings, DEFAULTSTATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)
@@ -434,7 +434,7 @@ typedef struct
 /*
  * Option specifications:
  */
-static Tk_OptionSpec CheckbuttonOptionSpecs[] =
+static const Tk_OptionSpec CheckbuttonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
 	NULL, offsetof(Checkbutton, checkbutton.variableObj), -1,
@@ -642,7 +642,7 @@ typedef struct
 /*
  * Option specifications:
  */
-static Tk_OptionSpec RadiobuttonOptionSpecs[] =
+static const Tk_OptionSpec RadiobuttonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
 	"::selectedButton", offsetof(Radiobutton, radiobutton.variableObj),-1,
@@ -817,7 +817,7 @@ typedef struct
 static const char *const directionStrings[] = {
     "above", "below", "left", "right", "flush", NULL
 };
-static Tk_OptionSpec MenubuttonOptionSpecs[] =
+static const Tk_OptionSpec MenubuttonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-menu", "menu", "Menu",
 	"", offsetof(Menubutton, menubutton.menuObj), -1, 0,0,0},

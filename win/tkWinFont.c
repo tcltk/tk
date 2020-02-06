@@ -1766,7 +1766,7 @@ AllocFontFamily(
 	}
     }
 
-    familyPtr = ckalloc(sizeof(FontFamily));
+    familyPtr = (FontFamily *)ckalloc(sizeof(FontFamily));
     memset(familyPtr, 0, sizeof(FontFamily));
     familyPtr->nextPtr = tsdPtr->fontFamilyList;
     tsdPtr->fontFamilyList = familyPtr;
@@ -2190,7 +2190,7 @@ FontMapLoadPage(
     USHORT *startCount, *endCount;
     char buf[16], src[4];
 
-    subFontPtr->fontMap[row] = ckalloc(FONTMAP_BITSPERPAGE / 8);
+    subFontPtr->fontMap[row] = (char *)ckalloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);
 
     familyPtr = subFontPtr->familyPtr;
