@@ -96,7 +96,7 @@ typedef struct
     unsigned int offBits;	/* Bits which must be cleared */
 } Ttk_StateTable;
 
-TTKAPI int Ttk_StateTableLookup(Ttk_StateTable map[], Ttk_State);
+TTKAPI int Ttk_StateTableLookup(const Ttk_StateTable *map, Ttk_State);
 
 /*------------------------------------------------------------------------
  * +++ Padding.
@@ -259,14 +259,14 @@ typedef struct Ttk_ElementOptionSpec
 typedef struct Ttk_ElementSpec {
     enum TTKStyleVersion2 version;	/* Version of the style support. */
     size_t elementSize;			/* Size of element record */
-    Ttk_ElementOptionSpec *options;	/* List of options, NULL-terminated */
+    const Ttk_ElementOptionSpec *options;	/* List of options, NULL-terminated */
     Ttk_ElementSizeProc *size;		/* Compute min size and padding */
     Ttk_ElementDrawProc *draw;  	/* Draw the element */
 } Ttk_ElementSpec;
 
 TTKAPI Ttk_ElementClass *Ttk_RegisterElement(
 	Tcl_Interp *interp, Ttk_Theme theme, const char *elementName,
-	Ttk_ElementSpec *, void *clientData);
+	const Ttk_ElementSpec *, void *clientData);
 
 typedef int (*Ttk_ElementFactory)
 	(Tcl_Interp *, void *clientData,
@@ -288,7 +288,7 @@ MODULE_SCOPE void TtkNullElementSize
 	(void *, void *, Tk_Window, int *, int *, Ttk_Padding *);
 MODULE_SCOPE void TtkNullElementDraw
 	(void *, void *, Tk_Window, Drawable, Ttk_Box, Ttk_State);
-MODULE_SCOPE Ttk_ElementOptionSpec TtkNullElementOptions[];
+MODULE_SCOPE const Ttk_ElementOptionSpec TtkNullElementOptions[];
 MODULE_SCOPE Ttk_ElementSpec ttkNullElementSpec;
 
 /*------------------------------------------------------------------------
