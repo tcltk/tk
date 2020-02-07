@@ -316,6 +316,60 @@ test oocfg-3.13 {tk::configurable: option errors (cross class)} -body {
 } -returnCodes error -cleanup {
     cfgsupport clean
 } -result {may not alias init-only option "-foo"}
+
+test oocfg-4.1 {tk::configurable: configure behaviour} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foe -default 1
+	option fie -default 2
+	option fum -default 3
+	option fee -default 4
+    }
+    set gorp [Gorp new .gorp]
+    $gorp configure
+} -cleanup {
+    cfgsupport clean
+} -result {{-fee fee Fee 4 4} {-fie fie Fie 2 2} {-foe foe Foe 1 1} {-fum fum Fum 3 3}}
+test oocfg-4.2 {tk::configurable: configure behaviour} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foe
+	option fie
+	option fum
+	option fee
+    }
+    set gorp [Gorp new .gorp]
+    $gorp configure -f
+} -returnCodes error -cleanup {
+    cfgsupport clean
+} -result {ambiguous option "-f": must be -fee, -fie, -foe, or -fum}
+test oocfg-4.3 {tk::configurable: configure behaviour (inheritance assembly)} -body {
+    tk::configurable create GorpFoe {
+	superclass cfgsupport
+	option foe
+    }
+    tk::configurable create GorpFie {
+	superclass cfgsupport
+	option fie
+    }
+    tk::configurable create GorpFum {
+	superclass cfgsupport
+	option fum
+    }
+    tk::configurable create GorpFee {
+	superclass cfgsupport
+	option fee
+    }
+    tk::configurable create Gorp {
+	superclass GorpFum GorpFee
+	mixin GorpFoe
+    }
+    set gorp [Gorp new .gorp]
+    oo::objdefine $gorp mixin GorpFie
+    $gorp configure -f
+} -returnCodes error -cleanup {
+    cfgsupport clean
+} -result {ambiguous option "-f": must be -fee, -fie, -foe, or -fum}
 
 # cleanup
 deleteWindows
