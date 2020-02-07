@@ -856,7 +856,8 @@ static void ThumbElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ThumbElement *thumb = elementRecord;
-    int orient, thickness;
+    int orient;
+    int thickness;
 
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->thicknessObj, &thickness);
     Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
@@ -929,7 +930,8 @@ static void SliderElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     SliderElement *slider = elementRecord;
-    int orient, length, thickness;
+    int orient;
+    int length, thickness;
 
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->lengthObj, &length);
@@ -954,7 +956,8 @@ static void SliderElementDraw(
 {
     SliderElement *slider = elementRecord;
     Tk_3DBorder border = NULL;
-    int relief = TK_RELIEF_RAISED, borderWidth = 2, orient;
+    int relief = TK_RELIEF_RAISED, borderWidth = 2;
+    int orient;
 
     border = Tk_Get3DBorderFromObj(tkwin, slider->borderObj);
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
@@ -1040,7 +1043,8 @@ static void PbarElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     PbarElement *pbar = elementRecord;
-    int orient, thickness = 15, length = 30, borderWidth = 2;
+    int orient;
+    int thickness = 15, length = 30, borderWidth = 2;
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->thicknessObj, &thickness);

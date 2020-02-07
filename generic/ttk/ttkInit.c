@@ -17,11 +17,18 @@ const char *const ttkDefaultStrings[] = {
 };
 
 int Ttk_GetButtonDefaultStateFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *statePtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_ButtonDefaultState *statePtr)
 {
+    int value;
+    int result;
+
     *statePtr = TTK_BUTTON_DEFAULT_DISABLED;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
-	    sizeof(char *), "default state", 0, statePtr);
+    result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
+	    sizeof(char *), "default state", 0, &value);
+    if (result == TCL_OK) {
+	*statePtr = (Ttk_ButtonDefaultState)value;
+    }
+    return result;
 }
 
 /*
@@ -34,11 +41,18 @@ const char *const ttkCompoundStrings[] = {
 };
 
 int Ttk_GetCompoundFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *statePtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Compound *statePtr)
 {
+    int value;
+    int result;
+
     *statePtr = TTK_COMPOUND_NONE;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
-	    sizeof(char *), "compound layout", 0, statePtr);
+    result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
+	    sizeof(char *), "compound layout", 0, &value);
+    if (result == TCL_OK) {
+	*statePtr = (Ttk_Compound)value;
+    }
+    return result;
 }
 
 /*

@@ -336,7 +336,7 @@ static int ButtonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     /* Handle "-default" option:
      */
     if (mask & DEFAULTSTATE_CHANGED) {
-	int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+	Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 	Ttk_GetButtonDefaultStateFromObj(
 	    NULL, buttonPtr->button.defaultStateObj, &defaultState);
 	if (defaultState == TTK_BUTTON_DEFAULT_ACTIVE) {

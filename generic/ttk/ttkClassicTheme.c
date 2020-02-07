@@ -99,7 +99,7 @@ static void ButtonBorderElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ButtonBorderElement *bd = elementRecord;
-    int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     int borderWidth = 0;
 
     Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
@@ -123,7 +123,7 @@ static void ButtonBorderElementDraw(
     ButtonBorderElement *bd = elementRecord;
     Tk_3DBorder border = NULL;
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
-    int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     int inset = 0;
 
     /*
