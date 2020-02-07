@@ -264,7 +264,7 @@ static void BorderElementSize(
 {
     BorderElement *bd = (BorderElement *)elementRecord;
     int borderWidth = 0;
-    int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     (void)dummy;
     (void)tkwin;
     (void)widthPtr;
@@ -289,7 +289,7 @@ static void BorderElementDraw(
     XColor *borderColor = Tk_GetColorFromObj(tkwin, bd->borderColorObj);
     int borderWidth = 2;
     int relief = TK_RELIEF_FLAT;
-    int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     (void)dummy;
     (void)state;
 
