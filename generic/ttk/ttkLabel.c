@@ -502,8 +502,8 @@ static void LabelSetup(
 {
     Ttk_Compound *compoundPtr = &c->compound;
 
-    Tk_GetPixelsFromObj(NULL,tkwin,c->spaceObj,&c->space);
-    Ttk_GetCompoundFromObj(NULL,c->compoundObj,(int*)compoundPtr);
+    Tk_GetPixelsFromObj(NULL, tkwin, c->spaceObj, &c->space);
+    Ttk_GetCompoundFromObj(NULL, c->compoundObj, compoundPtr);
 
     /*
      * Deal with TTK_COMPOUND_NONE.
