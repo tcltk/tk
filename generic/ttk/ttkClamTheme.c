@@ -612,7 +612,8 @@ static void ThumbElementDraw(
     Drawable d, Ttk_Box b, unsigned state)
 {
     ScrollbarElement *sb = elementRecord;
-    int gripCount = 0, orient = TTK_ORIENT_HORIZONTAL;
+    int gripCount = 0;
+    int orient = TTK_ORIENT_HORIZONTAL;
     GC lightGC, darkGC;
     int x1, y1, x2, y2, dx, dy, i;
     const int w = WIN32_XDRAWLINE_HACK;
@@ -667,7 +668,8 @@ static void SliderElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *sb = elementRecord;
-    int length, thickness, orient;
+    int length, thickness;
+    int orient;
 
     length = thickness = SCROLLBAR_THICKNESS;
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);

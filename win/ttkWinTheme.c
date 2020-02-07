@@ -304,7 +304,7 @@ static void ButtonBorderElementSize(
 {
     ButtonBorderElement *bd = elementRecord;
     int relief = TK_RELIEF_RAISED;
-    int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     short int cx, cy;
 
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
@@ -332,7 +332,7 @@ static void ButtonBorderElementDraw(
 {
     ButtonBorderElement *bd = elementRecord;
     int relief = TK_RELIEF_FLAT;
-    int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     TkWinDCState dcState;
     HDC hdc;
     RECT rc;

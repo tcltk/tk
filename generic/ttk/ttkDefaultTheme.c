@@ -264,7 +264,7 @@ static void BorderElementSize(
 {
     BorderElement *bd = elementRecord;
     int borderWidth = 0;
-    int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 
     Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
@@ -285,7 +285,7 @@ static void BorderElementDraw(
     XColor *borderColor = Tk_GetColorFromObj(tkwin, bd->borderColorObj);
     int borderWidth = 2;
     int relief = TK_RELIEF_FLAT;
-    int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 
     /*
      * Get option values.
@@ -855,7 +855,8 @@ static void TroughElementDraw(
 {
     TroughElement *troughPtr = elementRecord;
     Tk_3DBorder border = NULL;
-    int borderWidth = 2, relief = TK_RELIEF_SUNKEN, groove = -1, orient;
+    int borderWidth = 2, relief = TK_RELIEF_SUNKEN, groove = -1;
+    int orient;
 
     border = Tk_Get3DBorderFromObj(tkwin, troughPtr->colorObj);
     Ttk_GetOrientFromObj(NULL, troughPtr->orientObj, &orient);
@@ -917,7 +918,8 @@ static void ThumbElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ThumbElement *thumb = elementRecord;
-    int orient, size;
+    int orient;
+    int size;
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->sizeObj, &size);
     Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
 
@@ -1006,7 +1008,8 @@ static void SliderElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     SliderElement *slider = elementRecord;
-    int orient, length, thickness, borderWidth;
+    int orient;
+    int length, thickness, borderWidth;
 
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);

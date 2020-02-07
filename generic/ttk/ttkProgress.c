@@ -289,7 +289,8 @@ static int ProgressbarPostConfigure(
 static int ProgressbarSize(void *recordPtr, int *widthPtr, int *heightPtr)
 {
     Progressbar *pb = recordPtr;
-    int length = 100, orient = TTK_ORIENT_HORIZONTAL;
+    int length = 100;
+    int orient = TTK_ORIENT_HORIZONTAL;
 
     TtkWidgetSize(recordPtr, widthPtr, heightPtr);
 

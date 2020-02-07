@@ -400,7 +400,7 @@ typedef enum 			/* -default option values */
     TTK_BUTTON_DEFAULT_DISABLED	/* not defaultable */
 } Ttk_ButtonDefaultState;
 
-TTKAPI int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, int *);
+TTKAPI int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_ButtonDefaultState *);
 
 typedef enum 			/* -compound option values */
 {
@@ -414,7 +414,7 @@ typedef enum 			/* -compound option values */
     TTK_COMPOUND_RIGHT  	/* image to right of text */
 } Ttk_Compound;
 
-TTKAPI int Ttk_GetCompoundFromObj(Tcl_Interp *, Tcl_Obj *, int *);
+TTKAPI int Ttk_GetCompoundFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_Compound *);
 
 typedef enum { 		/* -orient option values */
     TTK_ORIENT_HORIZONTAL,
