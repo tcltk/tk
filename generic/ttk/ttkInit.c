@@ -12,40 +12,54 @@
  * Legal values for the button -default option.
  * See also: enum Ttk_ButtonDefaultState.
  */
-const char *ttkDefaultStrings[] = {
+const char *const ttkDefaultStrings[] = {
     "normal", "active", "disabled", NULL
 };
 
 int Ttk_GetButtonDefaultStateFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *statePtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_ButtonDefaultState *statePtr)
 {
+    int value;
+    int result;
+
     *statePtr = TTK_BUTTON_DEFAULT_DISABLED;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
-	    sizeof(char *), "default state", 0, statePtr);
+    result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
+	    sizeof(char *), "default state", 0, &value);
+    if (result == TCL_OK) {
+	*statePtr = (Ttk_ButtonDefaultState)value;
+    }
+    return result;
 }
 
 /*
  * Legal values for the -compound option.
  * See also: enum Ttk_Compound.
  */
-const char *ttkCompoundStrings[] = {
+const char *const ttkCompoundStrings[] = {
     "none", "text", "image", "center",
     "top", "bottom", "left", "right", NULL
 };
 
 int Ttk_GetCompoundFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *statePtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Compound *statePtr)
 {
+    int value;
+    int result;
+
     *statePtr = TTK_COMPOUND_NONE;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
-	    sizeof(char *), "compound layout", 0, statePtr);
+    result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
+	    sizeof(char *), "compound layout", 0, &value);
+    if (result == TCL_OK) {
+	*statePtr = (Ttk_Compound)value;
+    }
+    return result;
 }
 
 /*
  * Legal values for the -orient option.
  * See also: enum Ttk_Orient.
  */
-const char *ttkOrientStrings[] = {
+const char *const ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
@@ -114,7 +128,7 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
  */
 void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
+    union {XEvent general; XVirtualEvent virt;} event;
 
     memset(&event, 0, sizeof(event));
     event.general.xany.type = VirtualEvent;
@@ -122,7 +136,7 @@ void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
     event.general.xany.send_event = False;
     event.general.xany.window = Tk_WindowId(tgtWin);
     event.general.xany.display = Tk_Display(tgtWin);
-    event.virtual.name = Tk_GetUid(eventName);
+    event.virt.name = Tk_GetUid(eventName);
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
@@ -175,7 +189,7 @@ int TtkGetOptionValue(
  */
 
 /* public */
-Tk_OptionSpec ttkCoreOptionSpecs[] =
+const Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
 	offsetof(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
