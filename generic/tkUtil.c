@@ -1176,7 +1176,7 @@ TkSendVirtualEvent(
     const char *eventName,
     Tcl_Obj *detail)
 {
-    union {XEvent general; XVirtualEvent virtual;} event;
+    union {XEvent general; XVirtualEvent virt;} event;
 
     memset(&event, 0, sizeof(event));
     event.general.xany.type = VirtualEvent;
@@ -1184,10 +1184,8 @@ TkSendVirtualEvent(
     event.general.xany.send_event = False;
     event.general.xany.window = Tk_WindowId(target);
     event.general.xany.display = Tk_Display(target);
-    event.virtual.name = Tk_GetUid(eventName);
-    if (detail != NULL) {
-	event.virtual.user_data = detail;
-    }
+    event.virt.name = Tk_GetUid(eventName);
+    event.virt.user_data = detail;
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }

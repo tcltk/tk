@@ -19,7 +19,7 @@ struct TtkTag {
 
 struct TtkTagTable {
     Tk_Window		tkwin;		/* owner window */
-    Tk_OptionSpec	*optionSpecs;	/* ... */
+    const Tk_OptionSpec	*optionSpecs;	/* ... */
     Tk_OptionTable	optionTable;	/* ... */
     int         	recordSize;	/* size of tag record */
     int 		nTags;		/* #tags defined so far */
@@ -53,7 +53,7 @@ static void DeleteTag(Ttk_TagTable tagTable, Ttk_Tag tag)
 
 Ttk_TagTable Ttk_CreateTagTable(
     Tcl_Interp *interp, Tk_Window tkwin,
-    Tk_OptionSpec optionSpecs[], int recordSize)
+    const Tk_OptionSpec *optionSpecs, int recordSize)
 {
     Ttk_TagTable tagTable = ckalloc(sizeof(*tagTable));
     tagTable->tkwin = tkwin;
@@ -269,7 +269,7 @@ void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
     memset(record, 0, tagTable->recordSize);
 
     for (i = 0; tagTable->optionSpecs[i].type != TK_OPTION_END; ++i) {
-	Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
+	const Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
 	int offset = optionSpec->objOffset;
 	int prio = LOWEST_PRIORITY;
 
@@ -286,7 +286,7 @@ void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
 void Ttk_TagSetApplyStyle(
     Ttk_TagTable tagTable, Ttk_Style style, Ttk_State state, void *record)
 {
-    Tk_OptionSpec *optionSpec = tagTable->optionSpecs;
+    const Tk_OptionSpec *optionSpec = tagTable->optionSpecs;
 
     while (optionSpec->type != TK_OPTION_END) {
 	int offset = optionSpec->objOffset;

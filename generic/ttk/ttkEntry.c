@@ -154,7 +154,7 @@ typedef struct {
 #define DEF_ENTRY_FONT		"TkTextFont"
 #define DEF_LIST_HEIGHT		"10"
 
-static Tk_OptionSpec EntryOptionSpecs[] = {
+static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
         "ExportSelection", "1", -1, offsetof(Entry, entry.exportSelection),
 	0,0,0 },
@@ -1772,7 +1772,7 @@ typedef struct {
     ComboboxPart combobox;
 } Combobox;
 
-static Tk_OptionSpec ComboboxOptionSpecs[] = {
+static const Tk_OptionSpec ComboboxOptionSpecs[] = {
     {TK_OPTION_STRING, "-height", "height", "Height",
         DEF_LIST_HEIGHT, offsetof(Combobox, combobox.heightObj), -1,
 	0,0,0 },
@@ -1963,7 +1963,7 @@ typedef struct {
     SpinboxPart spinbox;
 } Spinbox;
 
-static Tk_OptionSpec SpinboxOptionSpecs[] = {
+static const Tk_OptionSpec SpinboxOptionSpecs[] = {
     {TK_OPTION_STRING, "-values", "values", "Values",
         "", offsetof(Spinbox, spinbox.valuesObj), -1,
 	0,0,0 },
@@ -2065,7 +2065,7 @@ typedef struct {
     Tcl_Obj	*widthObj;
 } TextareaElement;
 
-static Ttk_ElementOptionSpec TextareaElementOptions[] = {
+static const Ttk_ElementOptionSpec TextareaElementOptions[] = {
     { "-font", TK_OPTION_FONT,
 	offsetof(TextareaElement,fontObj), DEF_ENTRY_FONT },
     { "-width", TK_OPTION_INT,
@@ -2092,7 +2092,7 @@ static void TextareaElementSize(
     *widthPtr = prefWidth * avgWidth;
 }
 
-static Ttk_ElementSpec TextareaElementSpec = {
+static const Ttk_ElementSpec TextareaElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TextareaElement),
     TextareaElementOptions,

@@ -7222,7 +7222,7 @@ TkTextUpdateLineMetrics(
     int fullUpdateRequested = (lineNum == 0 && endLine == totalLines);
 
     assert(lineNum <= endLine);
-    assert((int) endLine <= totalLines);
+    assert(endLine <= totalLines);
     assert(textPtr->sharedTextPtr->allowUpdateLineMetrics);
 
     dInfoPtr->insideLineMetricUpdate = true;
@@ -7234,7 +7234,7 @@ TkTextUpdateLineMetrics(
 
 	lineNum = range->low;
 	endLine = MIN(endLine, totalLines - 1);
-	assert((int) lineNum < totalLines);
+	assert(lineNum < totalLines);
 
 	while (true) {
 	    const TkTextPixelInfo *pixelInfo;
