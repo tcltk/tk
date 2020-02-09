@@ -106,7 +106,7 @@ typedef struct {
     Tcl_Obj 	*borderWidthObj;	/* See <<NOTE-BORDERWIDTH>> */
 } BorderElement;
 
-static Ttk_ElementOptionSpec BorderElementOptions[] = {
+static const Ttk_ElementOptionSpec BorderElementOptions[] = {
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(BorderElement,borderColorObj), DARKEST_COLOR },
     { "-lightcolor", TK_OPTION_COLOR,
@@ -177,7 +177,7 @@ static void BorderElementDraw(
     DrawSmoothBorder(tkwin, d, b, outer, upper, lower);
 }
 
-static Ttk_ElementSpec BorderElementSpec = {
+static const Ttk_ElementSpec BorderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(BorderElement),
     BorderElementOptions,
@@ -196,7 +196,7 @@ typedef struct {
     Tcl_Obj 	*backgroundObj;
 } FieldElement;
 
-static Ttk_ElementOptionSpec FieldElementOptions[] = {
+static const Ttk_ElementOptionSpec FieldElementOptions[] = {
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(FieldElement,borderColorObj), DARKEST_COLOR },
     { "-lightcolor", TK_OPTION_COLOR,
@@ -230,7 +230,7 @@ static void FieldElementDraw(
 	tkwin, d, bg, f.x, f.y, f.width, f.height, 0, TK_RELIEF_SUNKEN);
 }
 
-static Ttk_ElementSpec FieldElementSpec = {
+static const Ttk_ElementSpec FieldElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(FieldElement),
     FieldElementOptions,
@@ -257,7 +257,7 @@ static void ComboboxFieldElementDraw(
 	    b.x + b.width - 1, b.y + b.height - 1 + WIN32_XDRAWLINE_HACK);
 }
 
-static Ttk_ElementSpec ComboboxFieldElementSpec = {
+static const Ttk_ElementSpec ComboboxFieldElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(FieldElement),
     FieldElementOptions,
@@ -278,7 +278,7 @@ typedef struct {
     Tcl_Obj *lowerColorObj;
 } IndicatorElement;
 
-static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
+static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-indicatorsize", TK_OPTION_PIXELS,
 	offsetof(IndicatorElement,sizeObj), "10" },
     { "-indicatormargin", TK_OPTION_STRING,
@@ -375,7 +375,7 @@ static void CheckIndicatorElementDraw(
     }
 }
 
-static Ttk_ElementSpec RadioIndicatorElementSpec = {
+static const Ttk_ElementSpec RadioIndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
@@ -383,7 +383,7 @@ static Ttk_ElementSpec RadioIndicatorElementSpec = {
     RadioIndicatorElementDraw
 };
 
-static Ttk_ElementSpec CheckIndicatorElementSpec = {
+static const Ttk_ElementSpec CheckIndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
@@ -399,7 +399,7 @@ typedef struct {
     Tcl_Obj *paddingObj;
 } MenuIndicatorElement;
 
-static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] =
+static const Ttk_ElementOptionSpec MenuIndicatorElementOptions[] =
 {
     { "-arrowsize", TK_OPTION_PIXELS,
 	offsetof(MenuIndicatorElement,sizeObj),
@@ -444,7 +444,7 @@ static void MenuIndicatorElementDraw(
     TtkFillArrow(Tk_Display(tkwin), d, gc, b, ARROW_DOWN);
 }
 
-static Ttk_ElementSpec MenuIndicatorElementSpec =
+static const Ttk_ElementSpec MenuIndicatorElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(MenuIndicatorElement),
@@ -469,7 +469,7 @@ typedef struct {
     Tcl_Obj 	*gripCountObj;
 } GripElement;
 
-static Ttk_ElementOptionSpec GripElementOptions[] = {
+static const Ttk_ElementOptionSpec GripElementOptions[] = {
     { "-lightcolor", TK_OPTION_COLOR,
 	offsetof(GripElement,lightColorObj), LIGHT_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
@@ -526,7 +526,7 @@ static void GripElementDraw(
     }
 }
 
-static Ttk_ElementSpec GripElementSpec = {
+static const Ttk_ElementSpec GripElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(GripElement),
     GripElementOptions,
@@ -554,7 +554,7 @@ typedef struct { /* Common element record for scrollbar elements */
     Tcl_Obj 	*sliderlengthObj;
 } ScrollbarElement;
 
-static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
+static const Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     { "-orient", TK_OPTION_ANY,
 	offsetof(ScrollbarElement, orientObj), "horizontal" },
     { "-background", TK_OPTION_BORDER,
@@ -589,7 +589,7 @@ static void TroughElementDraw(
     XDrawRectangle(Tk_Display(tkwin), d, gcb, b.x, b.y, b.width-1, b.height-1);
 }
 
-static Ttk_ElementSpec TroughElementSpec = {
+static const Ttk_ElementSpec TroughElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
@@ -612,7 +612,8 @@ static void ThumbElementDraw(
     Drawable d, Ttk_Box b, unsigned state)
 {
     ScrollbarElement *sb = elementRecord;
-    int gripCount = 0, orient = TTK_ORIENT_HORIZONTAL;
+    int gripCount = 0;
+    int orient = TTK_ORIENT_HORIZONTAL;
     GC lightGC, darkGC;
     int x1, y1, x2, y2, dx, dy, i;
     const int w = WIN32_XDRAWLINE_HACK;
@@ -651,7 +652,7 @@ static void ThumbElementDraw(
     }
 }
 
-static Ttk_ElementSpec ThumbElementSpec = {
+static const Ttk_ElementSpec ThumbElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
@@ -667,7 +668,8 @@ static void SliderElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *sb = elementRecord;
-    int length, thickness, orient;
+    int length, thickness;
+    int orient;
 
     length = thickness = SCROLLBAR_THICKNESS;
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
@@ -683,7 +685,7 @@ static void SliderElementSize(
 
 }
 
-static Ttk_ElementSpec SliderElementSpec = {
+static const Ttk_ElementSpec SliderElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
@@ -721,7 +723,7 @@ static void PbarElementDraw(
     }
 }
 
-static Ttk_ElementSpec PbarElementSpec = {
+static const Ttk_ElementSpec PbarElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
@@ -769,7 +771,7 @@ static void ArrowElementDraw(
     TtkFillArrow(Tk_Display(tkwin), d, gc, b, dir);
 }
 
-static Ttk_ElementSpec ArrowElementSpec = {
+static const Ttk_ElementSpec ArrowElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(ScrollbarElement),
     ScrollbarElementOptions,
@@ -792,7 +794,7 @@ typedef struct {
     Tcl_Obj *darkColorObj;
 } NotebookElement;
 
-static Ttk_ElementOptionSpec NotebookElementOptions[] = {
+static const Ttk_ElementOptionSpec NotebookElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(NotebookElement,backgroundObj), FRAME_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
@@ -850,7 +852,7 @@ static void TabElementDraw(
     XDrawLine(display,d,gc, x1+1,y1+1, x2-1+w,y1+1);
 }
 
-static Ttk_ElementSpec TabElementSpec =
+static const Ttk_ElementSpec TabElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NotebookElement),
@@ -881,7 +883,7 @@ static void ClientElementDraw(
     	ce->borderColorObj, ce->lightColorObj, ce->darkColorObj);
 }
 
-static Ttk_ElementSpec ClientElementSpec =
+static const Ttk_ElementSpec ClientElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NotebookElement),
