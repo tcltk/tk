@@ -136,12 +136,6 @@ if {[tk windowingsystem] eq "aqua"} {
     bind Scrollbar <Option-MouseWheel> {
 	tk::ScrollByUnits %W hv [expr {-10 * (%D)}]
     }
-    bind Scrollbar <Shift-MouseWheel> {
-	tk::ScrollByUnits %W v [expr {-(%D)}]
-    }
-    bind Scrollbar <Shift-Option-MouseWheel> {
-	tk::ScrollByUnits %W v [expr {-10 * (%D)}]
-    }
 } else {
     # We must make sure that positive and negative movements are rounded
     # equally to integers, avoiding the problem that
@@ -156,22 +150,13 @@ if {[tk windowingsystem] eq "aqua"} {
 	    tk::ScrollByUnits %W hv [expr {(29-%D)/30}]
 	}
     }
-    bind Scrollbar <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    tk::ScrollByUnits %W h [expr {-%D/30}]
-	} else {
-	    tk::ScrollByUnits %W h [expr {(29-%D)/30}]
-	}
-    }
 }
 
 if {[tk windowingsystem] eq "x11"} {
     bind Scrollbar <Button-4> {tk::ScrollByUnits %W hv -5}
     bind Scrollbar <Button-5> {tk::ScrollByUnits %W hv 5}
-    bind Scrollbar <Shift-Button-4> {tk::ScrollByUnits %W h -5}
-    bind Scrollbar <Shift-Button-5> {tk::ScrollByUnits %W h 5}
-    bind Scrollbar <Button-6> {tk::ScrollByUnits %W h -5}
-    bind Scrollbar <Button-7> {tk::ScrollByUnits %W h 5}
+    bind Scrollbar <Button-6> {tk::ScrollByUnits %W hv -5}
+    bind Scrollbar <Button-7> {tk::ScrollByUnits %W hv 5}
 }
 
 # tk::ScrollButtonDown --

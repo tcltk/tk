@@ -21,14 +21,13 @@ bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 #
 # The shift-bindings scroll left/right (not up/down)
 # if a widget has both possibilities
-set eventList [list <MouseWheel> <Shift-MouseWheel>]
+set eventList [list <MouseWheel>]
 switch [tk windowingsystem] {
     aqua {
-        lappend eventList <Option-MouseWheel> <Shift-Option-MouseWheel>
+        lappend eventList <Option-MouseWheel>
     }
     x11 {
-        lappend eventList <Button-4> <Button-5> <Button-6> <Button-7>\
-                <Shift-Button-4> <Shift-Button-5>
+        lappend eventList <Button-4> <Button-5> <Button-6> <Button-7>
     }
 }
 foreach event $eventList {
