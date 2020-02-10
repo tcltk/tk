@@ -19,15 +19,11 @@ const char *const ttkDefaultStrings[] = {
 int Ttk_GetButtonDefaultStateFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_ButtonDefaultState *statePtr)
 {
-    int value;
-    int result;
+    int state = (int)TTK_BUTTON_DEFAULT_DISABLED;
+    int result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
+	    sizeof(char *), "default state", 0, &state);
 
-    *statePtr = TTK_BUTTON_DEFAULT_DISABLED;
-    result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
-	    sizeof(char *), "default state", 0, &value);
-    if (result == TCL_OK) {
-	*statePtr = (Ttk_ButtonDefaultState)value;
-    }
+    *statePtr = (Ttk_ButtonDefaultState)state;
     return result;
 }
 
@@ -41,17 +37,13 @@ const char *const ttkCompoundStrings[] = {
 };
 
 int Ttk_GetCompoundFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Compound *statePtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Compound *compoundPtr)
 {
-    int value;
-    int result;
+    int compound = (int)TTK_COMPOUND_NONE;
+    int result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
+	    sizeof(char *), "compound layout", 0, &compound);
 
-    *statePtr = TTK_COMPOUND_NONE;
-    result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
-	    sizeof(char *), "compound layout", 0, &value);
-    if (result == TCL_OK) {
-	*statePtr = (Ttk_Compound)value;
-    }
+    *compoundPtr = (Ttk_Compound)compound;
     return result;
 }
 
@@ -63,18 +55,24 @@ const char *const ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 int Ttk_GetOrientFromObj(
+    Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
+{
+    *resultPtr = TTK_ORIENT_HORIZONTAL;
+    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
+	    sizeof(char *), "orientation", 0, resultPtr);
+}
+#endif
+
+int TtkGetOrientFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *resultPtr)
 {
-    int value;
-    int result;
+    int orient = (int)TTK_ORIENT_HORIZONTAL;
+    int result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
+    	    sizeof(char *), "orientation", 0, &orient);
 
-    *resultPtr = TTK_ORIENT_HORIZONTAL;
-    result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
-	    sizeof(char *), "orientation", 0, &value);
-    if (result == TCL_OK) {
-	*resultPtr = (Ttk_Orient)value;
-    }
+    *resultPtr = (Ttk_Orient)orient;
     return result;
 }
 
@@ -295,7 +293,7 @@ Ttk_Init(Tcl_Interp *interp)
 
     Ttk_PlatformInit(interp);
 
-    Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (ClientData)&ttkStubs);
+    Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (void *)&ttkStubs);
 
     return TCL_OK;
 }

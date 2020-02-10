@@ -8,6 +8,10 @@
 
 MODULE_SCOPE const TtkStubs ttkStubs;
 
+#if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
+#define Ttk_GetOrientFromObj 0
+#endif
+
 /* !BEGIN!: Do not edit below this line. */
 
 const TtkStubs ttkStubs = {

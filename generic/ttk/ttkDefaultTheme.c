@@ -116,21 +116,19 @@ static void DrawBorder(
 /* Alternate shadow colors for entry fields:
  * NOTE: FLAT color is normally white, and the LITE color is a darker shade.
  */
-static const enum BorderColor fieldShadowColors[4] = { DARK, BRDR, LITE, FLAT };
-
 static void DrawFieldBorder(
     Tk_Window tkwin, Drawable d, Tk_3DBorder border, XColor *borderColor,
     Ttk_Box b)
 {
     GC borderGC = Tk_GCForColor(borderColor, d);
     DrawCorner(tkwin, d, border, borderGC,
-	b.x, b.y, b.width, b.height, 0,fieldShadowColors[0]);
+	b.x, b.y, b.width, b.height, 0, DARK);
     DrawCorner(tkwin, d, border, borderGC,
-	b.x+1, b.y+1, b.width-2, b.height-2, 0,fieldShadowColors[1]);
+	b.x+1, b.y+1, b.width-2, b.height-2, 0, BRDR);
     DrawCorner(tkwin, d, border, borderGC,
-	b.x+1, b.y+1, b.width-2, b.height-2, 1,fieldShadowColors[2]);
+	b.x+1, b.y+1, b.width-2, b.height-2, 1, LITE);
     DrawCorner(tkwin, d, border, borderGC,
-	b.x, b.y, b.width, b.height, 1,fieldShadowColors[3]);
+	b.x, b.y, b.width, b.height, 1, FLAT);
     return;
 }
 
@@ -138,11 +136,11 @@ static void DrawFieldBorder(
  * ArrowPoints --
  * 	Compute points of arrow polygon.
  */
-static void ArrowPoints(Ttk_Box b, ArrowDirection dir, XPoint points[4])
+static void ArrowPoints(Ttk_Box b, ArrowDirection direction, XPoint points[4])
 {
     int cx, cy, h;
 
-    switch (dir) {
+    switch (direction) {
 	case ARROW_UP:
 	    h = (b.width - 1)/2;
 	    cx = b.x + h;
@@ -186,9 +184,9 @@ static void ArrowPoints(Ttk_Box b, ArrowDirection dir, XPoint points[4])
 }
 
 /*public*/
-void TtkArrowSize(int h, ArrowDirection dir, int *widthPtr, int *heightPtr)
+void TtkArrowSize(int h, ArrowDirection direction, int *widthPtr, int *heightPtr)
 {
-    switch (dir) {
+    switch (direction) {
 	case ARROW_UP:
 	case ARROW_DOWN:	*widthPtr = 2*h+1; *heightPtr = h+1; break;
 	case ARROW_LEFT:
@@ -202,10 +200,10 @@ void TtkArrowSize(int h, ArrowDirection dir, int *widthPtr, int *heightPtr)
  */
 /*public*/
 void TtkFillArrow(
-    Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection dir)
+    Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection direction)
 {
     XPoint points[4];
-    ArrowPoints(b, dir, points);
+    ArrowPoints(b, direction, points);
     XFillPolygon(display, d, gc, points, 3, Convex, CoordModeOrigin);
     XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
 
@@ -215,10 +213,10 @@ void TtkFillArrow(
 
 /*public*/
 void TtkDrawArrow(
-    Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection dir)
+    Display *display, Drawable d, GC gc, Ttk_Box b, ArrowDirection direction)
 {
     XPoint points[4];
-    ArrowPoints(b, dir, points);
+    ArrowPoints(b, direction, points);
     XDrawLines(display, d, gc, points, 4, CoordModeOrigin);
 
     /* Work around bug [77527326e5] - ttk artifacts on Ubuntu */
@@ -659,7 +657,6 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
  * 	clientData is an enum ArrowDirection pointer.
  */
 
-static int ArrowElements[] = { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT };
 typedef struct {
     Tcl_Obj *sizeObj;
     Tcl_Obj *borderObj;
@@ -687,14 +684,14 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
  * top/left padding is 1 less than bottom/right,
  * since in this theme 2-pixel borders are asymmetric.
  */
-static Ttk_Padding ArrowPadding = { 3,3,4,4 };
+static const Ttk_Padding ArrowPadding = { 3,3,4,4 };
 
 static void ArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
-    ArrowDirection direction = *(ArrowDirection *)clientData;
+	ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     int width = SCROLLBAR_WIDTH;
     (void)paddingPtr;
 
@@ -709,7 +706,7 @@ static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-	ArrowDirection direction = *(ArrowDirection *)clientData;
+	ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, arrow->borderColorObj);
@@ -764,7 +761,7 @@ static const Ttk_ElementOptionSpec MenubuttonArrowElementOptions[] = {
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
-static Ttk_Padding MenubuttonArrowPadding = { 3, 0, 3, 0 };
+static const Ttk_Padding MenubuttonArrowPadding = { 3, 0, 3, 0 };
 
 static void MenubuttonArrowElementSize(
     void *dummy, void *elementRecord, Tk_Window tkwin,
@@ -887,7 +884,7 @@ static void TroughElementDraw(
     (void)state;
 
     border = Tk_Get3DBorderFromObj(tkwin, troughPtr->colorObj);
-    Ttk_GetOrientFromObj(NULL, troughPtr->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, troughPtr->orientObj, &orient);
     Tk_GetReliefFromObj(NULL, troughPtr->reliefObj, &relief);
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->grooveWidthObj, &groove);
@@ -952,7 +949,7 @@ static void ThumbElementSize(
     (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->sizeObj, &size);
-    Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, thumb->orientObj, &orient);
 
     if (orient == TTK_ORIENT_VERTICAL) {
 	*widthPtr = size;
@@ -1046,7 +1043,7 @@ static void SliderElementSize(
     (void)dummy;
     (void)paddingPtr;
 
-    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->lengthObj, &length);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->thicknessObj, &thickness);
@@ -1200,18 +1197,15 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "slider", &SliderElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+	    &ArrowElementSpec, INT2PTR(ARROW_UP));
     Ttk_RegisterElement(interp, theme, "downarrow",
-	    &ArrowElementSpec, &ArrowElements[1]);
+	    &ArrowElementSpec, INT2PTR(ARROW_DOWN));
     Ttk_RegisterElement(interp, theme, "leftarrow",
-	    &ArrowElementSpec, &ArrowElements[2]);
+	    &ArrowElementSpec, INT2PTR(ARROW_LEFT));
     Ttk_RegisterElement(interp, theme, "rightarrow",
-	    &ArrowElementSpec, &ArrowElements[3]);
+	    &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
     Ttk_RegisterElement(interp, theme, "arrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
-
-    Ttk_RegisterElement(interp, theme, "arrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+	    &ArrowElementSpec, INT2PTR(ARROW_UP));
 
     Ttk_RegisterElement(interp, theme, "Treeitem.indicator",
 	    &TreeitemIndicatorElementSpec, 0);

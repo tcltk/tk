@@ -595,7 +595,7 @@ static void ThumbElementSize(
     (void)tkwin;
     (void)paddingPtr;
 
-    Ttk_GetOrientFromObj(NULL, thumbPtr->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, thumbPtr->orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = GetSystemMetrics(SM_CXHTHUMB);
 	*heightPtr = GetSystemMetrics(SM_CYHSCROLL);
@@ -657,7 +657,7 @@ static void SliderElementSize(
     (void)tkwin;
     (void)paddingPtr;
 
-    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = (GetSystemMetrics(SM_CXHTHUMB) / 2) | 1;
 	*heightPtr = GetSystemMetrics(SM_CYHSCROLL);
