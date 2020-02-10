@@ -484,10 +484,6 @@ static const Ttk_ElementSpec MenuIndicatorElementSpec =
  * TODO: factor this with ThumbElementDraw
  */
 
-static Ttk_Orient GripClientData[] = {
-    TTK_ORIENT_HORIZONTAL, TTK_ORIENT_VERTICAL
-};
-
 typedef struct {
     Tcl_Obj 	*lightColorObj;
     Tcl_Obj 	*borderColorObj;
@@ -508,14 +504,14 @@ static void GripElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    int horizontal = *((Ttk_Orient*)clientData) == TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orient = (Ttk_Orient)PTR2INT(clientData);
     GripElement *grip = (GripElement *)elementRecord;
     int gripCount = 0;
     (void)tkwin;
     (void)paddingPtr;
 
     Tcl_GetIntFromObj(NULL, grip->gripCountObj, &gripCount);
-    if (horizontal) {
+    if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = 2*gripCount;
     } else {
 	*heightPtr = 2*gripCount;
@@ -527,7 +523,7 @@ static void GripElementDraw(
     Drawable d, Ttk_Box b, unsigned state)
 {
     const int w = WIN32_XDRAWLINE_HACK;
-    int horizontal = *((Ttk_Orient*)clientData) == TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orient = (Ttk_Orient)PTR2INT(clientData);
     GripElement *grip = (GripElement *)elementRecord;
     GC lightGC = Ttk_GCForColor(tkwin,grip->lightColorObj,d);
     GC darkGC = Ttk_GCForColor(tkwin,grip->borderColorObj,d);
@@ -537,7 +533,7 @@ static void GripElementDraw(
 
     Tcl_GetIntFromObj(NULL, grip->gripCountObj, &gripCount);
 
-    if (horizontal) {
+    if (orient == TTK_ORIENT_HORIZONTAL) {
 	int x = b.x + b.width / 2 - gripCount;
 	int y1 = b.y + gripPad, y2 = b.y + b.height - gripPad - 1 + w;
 	for (i=0; i<gripCount; ++i) {
@@ -664,7 +660,7 @@ static void ThumbElementDraw(
     /*
      * Draw grip:
      */
-    Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
     Tcl_GetIntFromObj(NULL, sb->gripCountObj, &gripCount);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
@@ -711,7 +707,7 @@ static void SliderElementSize(
     (void)paddingPtr;
 
     length = thickness = SCROLLBAR_THICKNESS;
-    Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
     Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &thickness);
     Tk_GetPixelsFromObj(NULL, tkwin, sb->sliderlengthObj, &length);
     if (orient == TTK_ORIENT_VERTICAL) {
@@ -776,8 +772,6 @@ static const Ttk_ElementSpec PbarElementSpec = {
 /*------------------------------------------------------------------------
  * +++ Scrollbar arrows.
  */
-static int ArrowElements[] = { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT };
-
 static void ArrowElementSize(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
@@ -796,7 +790,7 @@ static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned state)
 {
-    ArrowDirection dir = *(ArrowDirection*)clientData;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     GC gc = Ttk_GCForColor(tkwin,sb->arrowColorObj, d);
     int h, cx, cy;
@@ -811,10 +805,10 @@ static void ArrowElementDraw(
 
     b = Ttk_PadBox(b, Ttk_UniformPadding(3));
     h = b.width < b.height ? b.width : b.height;
-    TtkArrowSize(h/2, dir, &cx, &cy);
+    TtkArrowSize(h/2, direction, &cx, &cy);
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
 
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, dir);
+    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
 }
 
 static const Ttk_ElementSpec ArrowElementSpec = {
@@ -999,13 +993,13 @@ TtkClamTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp,
 	theme, "thumb", &ThumbElementSpec, NULL);
     Ttk_RegisterElement(interp,
-	theme, "uparrow", &ArrowElementSpec, &ArrowElements[0]);
+	theme, "uparrow", &ArrowElementSpec, INT2PTR(ARROW_UP));
     Ttk_RegisterElement(interp,
-	theme, "downarrow", &ArrowElementSpec, &ArrowElements[1]);
+	theme, "downarrow", &ArrowElementSpec, INT2PTR(ARROW_DOWN));
     Ttk_RegisterElement(interp,
-	theme, "leftarrow", &ArrowElementSpec, &ArrowElements[2]);
+	theme, "leftarrow", &ArrowElementSpec, INT2PTR(ARROW_LEFT));
     Ttk_RegisterElement(interp,
-	theme, "rightarrow", &ArrowElementSpec, &ArrowElements[3]);
+	theme, "rightarrow", &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
 
     Ttk_RegisterElement(interp,
 	theme, "Radiobutton.indicator", &RadioIndicatorElementSpec, NULL);
@@ -1022,9 +1016,9 @@ TtkClamTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "pbar", &PbarElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "hgrip",
-	    &GripElementSpec,  &GripClientData[0]);
+	    &GripElementSpec,  INT2PTR(TTK_ORIENT_HORIZONTAL));
     Ttk_RegisterElement(interp, theme, "vgrip",
-	    &GripElementSpec,  &GripClientData[1]);
+	    &GripElementSpec,  INT2PTR(TTK_ORIENT_VERTICAL));
 
     Ttk_RegisterLayouts(theme, LayoutTable);
 

@@ -199,7 +199,6 @@ static const Ttk_ElementSpec ButtonBorderElementSpec =
  * clientData is an enum ArrowDirection pointer.
  */
 
-static int ArrowElements[] = { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT };
 typedef struct
 {
     Tcl_Obj *sizeObj;
@@ -237,7 +236,7 @@ static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    int direction = *(int *)clientData;
+	ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = 2;
@@ -306,10 +305,6 @@ static const Ttk_ElementSpec ArrowElementSpec =
  * -sashrelief raised, but that looks wrong to me.
  */
 
-static Ttk_Orient SashClientData[] = {
-    TTK_ORIENT_HORIZONTAL, TTK_ORIENT_VERTICAL
-};
-
 typedef struct {
     Tcl_Obj *borderObj; 	/* background color */
     Tcl_Obj *sashReliefObj;	/* sash relief */
@@ -341,7 +336,8 @@ static void SashElementSize(
 {
     SashElement *sash = (SashElement *)elementRecord;
     int sashPad = 2, sashThickness = 6, handleSize = 8;
-    int horizontal = *((Ttk_Orient*)clientData) == TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orient = (Ttk_Orient)PTR2INT(clientData);
+    (void)paddingPtr;
     (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, sash->sashThicknessObj, &sashThickness);
@@ -351,7 +347,7 @@ static void SashElementSize(
     if (sashThickness < handleSize + 2*sashPad)
 	sashThickness = handleSize + 2*sashPad;
 
-    if (horizontal)
+    if (orient == TTK_ORIENT_HORIZONTAL)
 	*heightPtr = sashThickness;
     else
 	*widthPtr = sashThickness;
@@ -366,7 +362,7 @@ static void SashElementDraw(
     GC gc1,gc2;
     int relief = TK_RELIEF_RAISED;
     int handleSize = 8, handlePad = 8;
-    int horizontal = *((Ttk_Orient*)clientData) == TTK_ORIENT_HORIZONTAL;
+    Ttk_Orient orient = (Ttk_Orient)PTR2INT(clientData);
     Ttk_Box hb;
     (void)state;
 
@@ -394,7 +390,7 @@ static void SashElementDraw(
 
     /* Draw sash line:
      */
-    if (horizontal) {
+    if (orient == TTK_ORIENT_HORIZONTAL) {
 	int y = b.y + b.height/2 - 1;
 	XDrawLine(Tk_Display(tkwin), d, gc1, b.x, y, b.x+b.width, y); ++y;
 	XDrawLine(Tk_Display(tkwin), d, gc2, b.x, y, b.x+b.width, y);
@@ -407,7 +403,7 @@ static void SashElementDraw(
     /* Draw handle:
      */
     if (handleSize >= 0) {
-	if (horizontal) {
+	if (orient == TTK_ORIENT_HORIZONTAL) {
 	    hb = Ttk_StickBox(b, handleSize, handleSize, TTK_STICK_W);
 	    hb.x += handlePad;
 	} else {
@@ -501,20 +497,20 @@ MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
 	    &ButtonBorderElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+	    &ArrowElementSpec, INT2PTR(ARROW_UP));
     Ttk_RegisterElement(interp, theme, "downarrow",
-	    &ArrowElementSpec, &ArrowElements[1]);
+	    &ArrowElementSpec, INT2PTR(ARROW_DOWN));
     Ttk_RegisterElement(interp, theme, "leftarrow",
-	    &ArrowElementSpec, &ArrowElements[2]);
+	    &ArrowElementSpec, INT2PTR(ARROW_LEFT));
     Ttk_RegisterElement(interp, theme, "rightarrow",
-	    &ArrowElementSpec, &ArrowElements[3]);
+	    &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
     Ttk_RegisterElement(interp, theme, "arrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+	    &ArrowElementSpec, INT2PTR(ARROW_UP));
 
     Ttk_RegisterElement(interp, theme, "hsash",
-	    &SashElementSpec, &SashClientData[0]);
+	    &SashElementSpec, INT2PTR(TTK_ORIENT_HORIZONTAL));
     Ttk_RegisterElement(interp, theme, "vsash",
-	    &SashElementSpec, &SashClientData[1]);
+	    &SashElementSpec, INT2PTR(TTK_ORIENT_VERTICAL));
 
     /*
      * Register layouts:

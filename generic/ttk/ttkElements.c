@@ -431,7 +431,8 @@ static void GeneralSeparatorElementDraw(
 {
     SeparatorElement *separator = (SeparatorElement *)elementRecord;
     Ttk_Orient orient;
-    Ttk_GetOrientFromObj(NULL, separator->orientObj, &orient);
+
+    TtkGetOrientFromObj(NULL, separator->orientObj, &orient);
     switch (orient) {
 	case TTK_ORIENT_HORIZONTAL:
 	    HorizontalSeparatorElementDraw(
@@ -765,7 +766,6 @@ static const Ttk_ElementSpec MenuIndicatorElementSpec = {
  * 	clientData is an enum ArrowDirection pointer.
  */
 
-static ArrowDirection ArrowElements[] = { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT };
 typedef struct {
     Tcl_Obj *borderObj;
     Tcl_Obj *borderWidthObj;
@@ -788,14 +788,14 @@ static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
-static Ttk_Padding ArrowMargins = { 3,3,3,3 };
+static const Ttk_Padding ArrowMargins = { 3,3,3,3 };
 
 static void ArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
-    ArrowDirection direction = *(ArrowDirection *)clientData;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     int width = 14;
     (void)paddingPtr;
 
@@ -810,7 +810,7 @@ static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    ArrowDirection direction = *(ArrowDirection *)clientData;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
@@ -820,11 +820,11 @@ static void ArrowElementDraw(
 
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
 
-    Tk_Fill3DRectangle(
-	tkwin, d, border, b.x, b.y, b.width, b.height, borderWidth, relief);
+    Tk_Fill3DRectangle( tkwin, d, border, b.x, b.y, b.width, b.height,
+	    borderWidth, relief);
 
     TtkFillArrow(Tk_Display(tkwin), d, Tk_GCForColor(arrowColor, d),
-	Ttk_PadBox(b, ArrowMargins), direction);
+	    Ttk_PadBox(b, ArrowMargins), direction);
 }
 
 static const Ttk_ElementSpec ArrowElementSpec = {
@@ -937,7 +937,7 @@ static void ThumbElementSize(
     (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->thicknessObj, &thickness);
-    Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, thumb->orientObj, &orient);
 
     if (orient == TTK_ORIENT_VERTICAL) {
 	*widthPtr = thickness;
@@ -1014,7 +1014,7 @@ static void SliderElementSize(
     (void)dummy;
     (void)paddingPtr;
 
-    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->lengthObj, &length);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->thicknessObj, &thickness);
 
@@ -1043,7 +1043,7 @@ static void SliderElementDraw(
     (void)state;
 
     border = Tk_Get3DBorderFromObj(tkwin, slider->borderObj);
-    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, slider->reliefObj, &relief);
 
@@ -1131,7 +1131,7 @@ static void PbarElementSize(
     (void)dummy;
     (void)paddingPtr;
 
-    Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orient);
+    TtkGetOrientFromObj(NULL, pbar->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->thicknessObj, &thickness);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->lengthObj, &length);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->borderWidthObj, &borderWidth);
@@ -1345,15 +1345,15 @@ void TtkElements_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "indicator", &ttkNullElementSpec,NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+	    &ArrowElementSpec, INT2PTR(ARROW_UP));
     Ttk_RegisterElement(interp, theme, "downarrow",
-	    &ArrowElementSpec, &ArrowElements[1]);
+	    &ArrowElementSpec, INT2PTR(ARROW_DOWN));
     Ttk_RegisterElement(interp, theme, "leftarrow",
-	    &ArrowElementSpec, &ArrowElements[2]);
+	    &ArrowElementSpec, INT2PTR(ARROW_LEFT));
     Ttk_RegisterElement(interp, theme, "rightarrow",
-	    &ArrowElementSpec, &ArrowElements[3]);
+	    &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
     Ttk_RegisterElement(interp, theme, "arrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
+	    &ArrowElementSpec, INT2PTR(ARROW_UP));
 
     Ttk_RegisterElement(interp, theme, "trough", &TroughElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "thumb", &ThumbElementSpec, NULL);
