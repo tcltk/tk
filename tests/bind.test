@@ -2049,32 +2049,6 @@ test bind-16.35 {ExpandPercents procedure} -constraints {
 } -cleanup {
     destroy .t.f
 } -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} \u00e9}
-test bind-16.35.1 {ExpandPercents procedure} -constraints {
-    nonPortable
-} -setup {
-    frame .t.f -class Test -width 150 -height 100
-    pack .t.f
-    focus -force .t.f
-    update
-    set x {}
-} -body {
-    bind .t.f <KeyRelease> {lappend x "%A"}
-    event generate .t.f <KeyRelease-a>
-    event generate .t.f <KeyRelease-A> -state 1
-    event generate .t.f <KeyRelease-Tab>
-    event generate .t.f <KeyRelease-Return>
-    event generate .t.f <KeyRelease-F1>
-    event generate .t.f <KeyRelease-Shift_L>
-    event generate .t.f <KeyRelease-space>
-    event generate .t.f <KeyRelease-dollar> -state 1
-    event generate .t.f <KeyRelease-braceleft> -state 1
-    event generate .t.f <KeyRelease-Multi_key>
-    event generate .t.f <KeyRelease-e>
-    event generate .t.f <KeyRelease-apostrophe>
-    set x
-} -cleanup {
-    destroy .t.f
-} -result {a A {	} {\r} {{}} {{}} { } {\$} \\\{ {{}} {{}} \u00e9}
 test bind-16.36 {ExpandPercents procedure} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
