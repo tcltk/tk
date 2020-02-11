@@ -370,7 +370,7 @@ SetCGColorComponents(
 	    break;
 	case 8:
 	    if ([NSApp macMinorVersion] >= 14) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+#if MAC_OS_X_VERSION_MIN_ALLOWED >= 101400
 		color = [[NSColor controlAccentColor]
 			    colorUsingColorSpace:sRGB];
 #endif
