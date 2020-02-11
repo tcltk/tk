@@ -664,7 +664,6 @@ EXTRA_CFLAGS
 CFG_TK_EXPORT_FILE_SUFFIX
 CFG_TK_UNSHARED_LIB_SUFFIX
 CFG_TK_SHARED_LIB_SUFFIX
-TCL_DBGX
 TCL_PATCH_LEVEL
 TCL_MINOR_VERSION
 TCL_MAJOR_VERSION
@@ -675,7 +674,6 @@ TK_STUB_LIB_FLAG
 TK_STUB_LIB_FILE
 TK_DLL_FILE
 TK_LIB_FILE
-TK_DBGX
 TK_PATCH_LEVEL
 TK_MINOR_VERSION
 TK_MAJOR_VERSION
@@ -3821,15 +3819,6 @@ $as_echo "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
         TCL_STUB_LIB_PATH=${TCL_BUILD_STUB_LIB_PATH}
     fi
 
-    #
-    # eval is required to do the TCL_DBGX substitution
-    #
-
-    eval "TCL_ZIP_FILE=\"${TCL_ZIP_FILE}\""
-    eval "TCL_LIB_FILE=\"${TCL_LIB_FILE}\""
-    eval "TCL_LIB_FLAG=\"${TCL_LIB_FLAG}\""
-    eval "TCL_LIB_SPEC=\"${TCL_LIB_SPEC}\""
-
     eval "TCL_STUB_LIB_FILE=\"${TCL_STUB_LIB_FILE}\""
     eval "TCL_STUB_LIB_FLAG=\"${TCL_STUB_LIB_FLAG}\""
     eval "TCL_STUB_LIB_SPEC=\"${TCL_STUB_LIB_SPEC}\""
@@ -4232,7 +4221,7 @@ $as_echo_n "checking compiler flags... " >&6; }
 $as_echo "using static flags" >&6; }
 	    runtime=
 	    LIBRARIES="\${STATIC_LIBRARIES}"
-	    EXESUFFIX="s\${DBGX}.exe"
+	    EXESUFFIX="s.exe"
 	else
 	    # dynamic
             { $as_echo "$as_me:${as_lineno-$LINENO}: result: using shared flags" >&5
@@ -4247,7 +4236,7 @@ $as_echo "using shared flags" >&6; }
 	    runtime=
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
 
-	    EXESUFFIX="\${DBGX}.exe"
+	    EXESUFFIX=".exe"
 	    LIBRARIES="\${SHARED_LIBRARIES}"
 	fi
 	# Link with gcc since ld does not link to default libs like
@@ -4258,9 +4247,9 @@ $as_echo "using shared flags" >&6; }
 	    -Wl,--out-implib,\$(patsubst %.dll,lib%.a,\$@)"
 	# DLLSUFFIX is separate because it is the building block for
 	# users of tclConfig.sh that may build shared or static.
-	DLLSUFFIX="\${DBGX}.dll"
-	LIBSUFFIX="\${DBGX}.a"
-	LIBFLAGSUFFIX="\${DBGX}"
+	DLLSUFFIX=".dll"
+	LIBSUFFIX=".a"
+	LIBFLAGSUFFIX=""
 	SHLIB_SUFFIX=.dll
 
 	EXTRA_CFLAGS="${extra_cflags}"
@@ -4350,7 +4339,7 @@ $as_echo "   Using 64-bit $MACHINE mode" >&6; }
 $as_echo "using static flags" >&6; }
 	    runtime=-MT
 	    LIBRARIES="\${STATIC_LIBRARIES}"
-	    EXESUFFIX="s\${DBGX}.exe"
+	    EXESUFFIX="s.exe"
 	else
 	    # dynamic
             { $as_echo "$as_me:${as_lineno-$LINENO}: result: using shared flags" >&5
@@ -4358,7 +4347,7 @@ $as_echo "using shared flags" >&6; }
 	    runtime=-MD
 	    # Add SHLIB_LD_LIBS to the Make rule, not here.
 	    LIBRARIES="\${SHARED_LIBRARIES}"
-	    EXESUFFIX="\${DBGX}.exe"
+	    EXESUFFIX=".exe"
 	    case "x`echo \${VisualStudioVersion}`" in
 		x1[4-9]*)
 		    lflags="${lflags} -nodefaultlib:libucrt.lib"
@@ -4370,9 +4359,9 @@ $as_echo "using shared flags" >&6; }
 	MAKE_DLL="\${SHLIB_LD} \$(LDFLAGS) -out:\$@"
 	# DLLSUFFIX is separate because it is the building block for
 	# users of tclConfig.sh that may build shared or static.
-	DLLSUFFIX="\${DBGX}.dll"
-	LIBSUFFIX="\${DBGX}.lib"
-	LIBFLAGSUFFIX="\${DBGX}"
+	DLLSUFFIX=".dll"
+	LIBSUFFIX=".lib"
+	LIBFLAGSUFFIX=""
 
 	if test "$do64bit" != "no" ; then
 	    case "$do64bit" in
@@ -4751,7 +4740,6 @@ fi
     if test "$tcl_ok" = "no"; then
 	CFLAGS_DEFAULT='$(CFLAGS_OPTIMIZE)'
 	LDFLAGS_DEFAULT='$(LDFLAGS_OPTIMIZE)'
-	DBGX=""
 
 $as_echo "#define NDEBUG 1" >>confdefs.h
 
@@ -4763,7 +4751,6 @@ $as_echo "no" >&6; }
     else
 	CFLAGS_DEFAULT='$(CFLAGS_DEBUG)'
 	LDFLAGS_DEFAULT='$(LDFLAGS_DEBUG)'
-	DBGX=g
 	if test "$tcl_ok" = "yes"; then
 	    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes (standard debugging)" >&5
 $as_echo "yes (standard debugging)" >&6; }
@@ -4797,8 +4784,6 @@ $as_echo "enabled $tcl_ok debugging" >&6; }
 	fi
     fi
 
-
-TK_DBGX=${DBGX}
 
 #--------------------------------------------------------------------
 # Embed the manifest if we can determine how
@@ -4858,7 +4843,7 @@ $as_echo "$result" >&6; }
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for tclsh in Tcl build directory" >&5
 $as_echo_n "checking for tclsh in Tcl build directory... " >&6; }
-    BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}${TCL_DBGX}${EXEEXT}
+    BUILD_TCLSH=${TCL_BIN_DIR}/tclsh${TCL_MAJOR_VERSION}${TCL_MINOR_VERSION}${EXEEXT}
     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $BUILD_TCLSH" >&5
 $as_echo "$BUILD_TCLSH" >&6; }
 
@@ -4949,18 +4934,10 @@ CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 #--------------------------------------------------------------------
 
 if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
-    if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD ${RC_DEFINE} DEBUG"
-    else
-        RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
-    fi
+    RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     TK_RES=""
 else
-    if test "${DBGX}" = "d"; then
-        RC_DEFINES="${RC_DEFINE} DEBUG"
-    else
-        RC_DEFINES=""
-    fi
+    RC_DEFINES=""
     TK_RES='tk.$(RES)'
 fi
 
@@ -4975,8 +4952,6 @@ esac
 TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`"
 
 # X86|AMD64|IA64 for manifest
-
-
 
 
 
