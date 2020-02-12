@@ -162,11 +162,15 @@ CGColorFromGray(
 
 static NSColor *controlAccentColor(void)
 {
+    NSColor *color = nil;
     if ([NSApp macMinorVersion] >= 14) {
-	return [NSColor controlAccentColor];
+	if (@available(macOS 10.14, *)) {
+	    color = [NSColor controlAccentColor];
+	}
     } else {
-	return [NSColor colorForControlTint:[NSColor currentControlTint]];
+	color = [NSColor colorForControlTint:[NSColor currentControlTint]];
     }
+    return color;
 }
 
 /*----------------------------------------------------------------------
@@ -1036,7 +1040,7 @@ static void DrawSlider(
     if (info.attributes & kThemeTrackHorizontal) {
 	trackBounds = CGRectInset(bounds, 0, bounds.size.height / 2 - 3);
 	trackBounds.size.height = 3;
-	position = 8 + (value / (to - from)) * (trackBounds.size.width - 16);
+	position = 8 + ((value - from) / (to - from)) * (trackBounds.size.width - 16);
 	clipBounds = trackBounds;
 	clipBounds.size.width = position;
 	thumbPoint = CGPointMake(clipBounds.origin.x + position,
