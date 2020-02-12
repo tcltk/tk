@@ -426,7 +426,7 @@ static int		EntryWidgetObjCmd(ClientData clientData,
 			    Tcl_Obj *const objv[]);
 static void		EntryWorldChanged(ClientData instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
-			    const char *string, int *indexPtr);
+			    Tcl_Obj *indexObj, int *indexPtr);
 static int		InsertChars(Entry *entryPtr, int index, const char *string);
 
 /*
@@ -618,7 +618,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -670,13 +670,13 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&first) != TCL_OK) {
 	    goto error;
 	}
 	if (objc == 3) {
 	    last = first + 1;
-	} else if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]),
+	} else if (GetEntryIndex(interp, entryPtr, objv[3],
 		&last) != TCL_OK) {
 	    goto error;
 	}
@@ -702,7 +702,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "pos");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&entryPtr->insertPos) != TCL_OK) {
 	    goto error;
 	}
@@ -716,7 +716,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -731,7 +731,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index text");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -811,7 +811,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    if (entryPtr->selectFirst >= 0) {
@@ -851,7 +851,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    entryPtr->selectAnchor = index;
@@ -871,11 +871,11 @@ EntryWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 3, objv, "start end");
 		goto error;
 	    }
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]),
+	    if (GetEntryIndex(interp, entryPtr, objv[3],
 		    &index) != TCL_OK) {
 		goto error;
 	    }
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[4]),
+	    if (GetEntryIndex(interp, entryPtr, objv[4],
 		    &index2) != TCL_OK) {
 		goto error;
 	    }
@@ -902,7 +902,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    EntrySelectTo(entryPtr, index);
@@ -942,7 +942,7 @@ EntryWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, span));
 	    goto done;
 	} else if (objc == 3) {
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	    if (GetEntryIndex(interp, entryPtr, objv[2],
 		    &index) != TCL_OK) {
 		goto error;
 	    }
@@ -2556,12 +2556,11 @@ GetEntryIndex(
     Tcl_Interp *interp,		/* For error messages. */
     Entry *entryPtr,		/* Entry for which the index is being
 				 * specified. */
-    const char *string,	/* Specifies character in entryPtr. */
+    Tcl_Obj *indexObj,	/* Specifies character in entryPtr. */
     int *indexPtr)		/* Where to store converted character index */
 {
-    size_t length;
-
-    length = strlen(string);
+    const char *string = Tcl_GetString(indexObj);
+    size_t length = indexObj->length;
 
     switch (string[0]) {
     case 'a':
@@ -2636,7 +2635,7 @@ GetEntryIndex(
 	break;
     }
     default:
-	if (Tcl_GetInt(NULL, string, indexPtr) != TCL_OK) {
+	if (Tcl_GetIntFromObj(NULL, indexObj, indexPtr) != TCL_OK) {
 	    goto badIndex;
 	}
 	if (*indexPtr < 0){
@@ -3749,7 +3748,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -3800,14 +3799,14 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&first) != TCL_OK) {
 	    goto error;
 	}
 	if (objc == 3) {
 	    last = first + 1;
 	} else {
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[3]),
+	    if (GetEntryIndex(interp, entryPtr, objv[3],
 		    &last) != TCL_OK) {
 		goto error;
 	    }
@@ -3834,7 +3833,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "pos");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&entryPtr->insertPos) != TCL_OK) {
 	    goto error;
 	}
@@ -3867,7 +3866,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -3882,7 +3881,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "index text");
 	    goto error;
 	}
-	if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	if (GetEntryIndex(interp, entryPtr, objv[2],
 		&index) != TCL_OK) {
 	    goto error;
 	}
@@ -3979,7 +3978,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    if (entryPtr->selectFirst >= 0) {
@@ -4019,7 +4018,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    entryPtr->selectAnchor = index;
@@ -4040,11 +4039,11 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[4]),& index2) != TCL_OK) {
+		    objv[4],& index2) != TCL_OK) {
 		goto error;
 	    }
 	    if (index >= index2) {
@@ -4070,7 +4069,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (GetEntryIndex(interp, entryPtr,
-		    Tcl_GetString(objv[3]), &index) != TCL_OK) {
+		    objv[3], &index) != TCL_OK) {
 		goto error;
 	    }
 	    EntrySelectTo(entryPtr, index);
@@ -4150,7 +4149,7 @@ SpinboxWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewListObj(2, span));
 	    goto done;
 	} else if (objc == 3) {
-	    if (GetEntryIndex(interp, entryPtr, Tcl_GetString(objv[2]),
+	    if (GetEntryIndex(interp, entryPtr, objv[2],
 		    &index) != TCL_OK) {
 		goto error;
 	    }
