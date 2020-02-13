@@ -1426,7 +1426,7 @@ EntryIndex(
 	    *indexPtr += 1;
 	}
     } else {
-	if (Tcl_GetInt(interp, string, indexPtr) != TCL_OK) {
+	if (Tcl_GetIntFromObj(interp, indexObj, indexPtr) != TCL_OK) {
 	    goto badIndex;
 	}
 	if (*indexPtr < 0) {
