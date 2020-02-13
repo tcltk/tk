@@ -150,7 +150,7 @@ MAN2TCL			= man2tcl$(EXEEXT)
 # makefile to look into these paths when resolving .c to .obj
 # dependencies.
 
-VPATH = $(GENERIC_DIR):$(TTK_DIR):$(WIN_DIR):$(UNIX_DIR):$(XLIB_DIR):$(RC_DIR)
+VPATH = $(GENERIC_DIR):$(TTK_DIR):$(WIN_DIR):$(XLIB_DIR):$(RC_DIR)
 
 # warning flags
 CFLAGS_WARNING	= @CFLAGS_WARNING@
@@ -679,6 +679,12 @@ tkSquare.$(OBJEXT): tkSquare.c
 
 tkMain2.$(OBJEXT): tkMain.c
 	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DUNICODE=1 -D_UNICODE=1 @DEPARG@ $(CC_OBJNAME)
+
+tkUnixMenubu.$(OBJEXT): ${UNIX_DIR}/tkUnixMenubu.c
+	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
+
+tkUnixScale.$(OBJEXT): ${UNIX_DIR}/tkUnixScale.c
+	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
 
 # Extra dependency info
 tkConsole.$(OBJEXT): configure Makefile
