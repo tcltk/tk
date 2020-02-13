@@ -65,4 +65,4 @@ install:
 before_script:
   - export ERROR_ON_FAILURES=1
 script:
-  - make all tktest
+  - make binaries libraries tktest
