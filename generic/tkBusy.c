@@ -23,7 +23,7 @@
 
 static const Tk_OptionSpec busyOptionSpecs[] = {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_BUSY_CURSOR, -1, Tk_Offset(Busy, cursor),
+	DEF_BUSY_CURSOR, -1, offsetof(Busy, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
@@ -896,7 +896,7 @@ Tk_BusyObjCmd(
 		hPtr = Tcl_NextHashEntry(&cursor)) {
 	    busyPtr = Tcl_GetHashValue(hPtr);
 	    if (pattern == NULL ||
-		    Tcl_StringMatch(Tk_PathName(busyPtr->tkRef), pattern)) {
+		    Tcl_StringCaseMatch(Tk_PathName(busyPtr->tkRef), pattern, 0)) {
 		Tcl_ListObjAppendElement(interp, objPtr,
 			TkNewWindowObj(busyPtr->tkRef));
 	    }

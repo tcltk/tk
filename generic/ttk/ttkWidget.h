@@ -117,10 +117,10 @@ MODULE_SCOPE int TtkWidgetConstructorObjCmd(
  */
 #define WIDGET_TAKEFOCUS_TRUE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"ttk::takefocus", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 }
+	"ttk::takefocus", offsetof(WidgetCore, takeFocusPtr), -1, 0,0,0 }
 #define WIDGET_TAKEFOCUS_FALSE \
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus", \
-	"", Tk_Offset(WidgetCore, takeFocusPtr), -1, 0,0,0 }
+	"", offsetof(WidgetCore, takeFocusPtr), -1, 0,0,0 }
 
 /* WIDGET_INHERIT_OPTIONS(baseOptionSpecs) --
  * Add this at the end of an OptionSpecs table to inherit
@@ -131,7 +131,7 @@ MODULE_SCOPE int TtkWidgetConstructorObjCmd(
 
 /* All widgets should inherit from ttkCoreOptionSpecs[].
  */
-MODULE_SCOPE Tk_OptionSpec ttkCoreOptionSpecs[];
+MODULE_SCOPE const Tk_OptionSpec ttkCoreOptionSpecs[];
 
 /*
  * Useful routines for use inside widget implementations:
@@ -212,7 +212,7 @@ typedef struct TtkTagSet {	/* TODO: make opaque */
 } *Ttk_TagSet;
 
 MODULE_SCOPE Ttk_TagTable Ttk_CreateTagTable(
-	Tcl_Interp *, Tk_Window tkwin, Tk_OptionSpec[], int recordSize);
+	Tcl_Interp *, Tk_Window tkwin, const Tk_OptionSpec *, int recordSize);
 MODULE_SCOPE void Ttk_DeleteTagTable(Ttk_TagTable);
 
 MODULE_SCOPE Ttk_Tag Ttk_GetTag(Ttk_TagTable, const char *tagName);
@@ -247,9 +247,9 @@ MODULE_SCOPE void Ttk_TagSetApplyStyle(Ttk_TagTable,Ttk_Style,Ttk_State,void*);
  * String tables for widget resource specifications:
  */
 
-MODULE_SCOPE const char *ttkOrientStrings[];
-MODULE_SCOPE const char *ttkCompoundStrings[];
-MODULE_SCOPE const char *ttkDefaultStrings[];
+MODULE_SCOPE const char *const ttkOrientStrings[];
+MODULE_SCOPE const char *const ttkCompoundStrings[];
+MODULE_SCOPE const char *const ttkDefaultStrings[];
 
 /*
  * ... other option types...

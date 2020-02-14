@@ -31,7 +31,7 @@
  * the option tables that have been created for a thread.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int initialized;		/* 0 means table below needs initializing. */
     Tcl_HashTable hashTable;
 } ThreadSpecificData;
@@ -677,11 +677,16 @@ DoObjConfig(
     case TK_OPTION_STRING_TABLE: {
 	int newValue;
 
-	if (Tcl_GetIndexFromObjStruct(interp, valuePtr,
-		optionPtr->specPtr->clientData, sizeof(char *),
-		optionPtr->specPtr->optionName+1, 0, &newValue) != TCL_OK) {
-	    return TCL_ERROR;
-	}
+	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	    valuePtr = NULL;
+            newValue = -1;
+        } else {
+	    if (Tcl_GetIndexFromObjStruct(interp, valuePtr,
+		    optionPtr->specPtr->clientData, sizeof(char *),
+		    optionPtr->specPtr->optionName+1, 0, &newValue) != TCL_OK) {
+	        return TCL_ERROR;
+	    }
+        }
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
 	    *((int *) internalPtr) = newValue;

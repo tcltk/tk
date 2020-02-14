@@ -77,9 +77,14 @@ test entry-2.1 "Create entry before scrollbar" -body {
 test entry-2.2 "Initial scroll position" -body {
     ttk::entry .e -font fixed -width 5 -xscrollcommand scroll
     .e insert end "0123456789"
-    pack .e; update
+    pack .e;
+    set timeout [after 500 {set $scrollInfo "timeout"}]
+    vwait scrollInfo
     set scrollInfo
-} -result {0.0 0.5} -cleanup { destroy .e }
+} -cleanup {
+    destroy .e
+    after cancel $timeout
+} -result {0.0 0.5}
 # NOTE: result can vary depending on font.
 
 # Bounding box / scrolling tests.
@@ -324,5 +329,17 @@ test entry-10.2 {configuration option: "-placeholderforeground"} -setup {
 } -cleanup {
     destroy .e
 } -result {red}
+
+test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup {
+    pack [ttk::entry .e]
+    update
+} -body {
+    .e state invalid
+    set res [.e state]
+    event generate .e <FocusOut>
+    lappend res [.e state]
+} -result {invalid invalid} -cleanup {
+    destroy .e
+}
 
 tcltest::cleanupTests

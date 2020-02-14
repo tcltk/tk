@@ -21,7 +21,8 @@ namespace eval ::tk::dialog::error {
     if {[tk windowingsystem] eq "aqua"} {
 	option add *ErrorDialog*background systemAlertBackgroundActive \
 		widgetDefault
-	option add *ErrorDialog*info.text.background white widgetDefault
+	option add *ErrorDialog*info.text.background \
+	        systemTextBackgroundColor widgetDefault
 	option add *ErrorDialog*Button.highlightBackground \
 		systemAlertBackgroundActive widgetDefault
     }
@@ -114,6 +115,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     set windowingsystem [tk windowingsystem]
     if {$windowingsystem eq "aqua"} {
 	if $flag {
+	    set errorInfo $info
 	    after 500 [list bgerror "$err" 0]
 	    return
 	}
@@ -180,7 +182,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     pack $W.text -side left -expand yes -fill both
     $W.text insert 0.0 "$err\n$info"
     $W.text mark set insert 0.0
-    bind $W.text <ButtonPress-1> { focus %W }
+    bind $W.text <Button-1> { focus %W }
     $W.text configure -state disabled
 
     # 2. Fill the top part with bitmap and message

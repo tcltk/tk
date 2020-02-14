@@ -48,31 +48,31 @@ typedef struct
  * defined for all widgets.
  */
 
-static Tk_OptionSpec SquareOptionSpecs[] =
+static const Tk_OptionSpec SquareOptionSpecs[] =
 {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-     DEFAULT_BORDERWIDTH, Tk_Offset(Square,square.borderWidthObj), -1,
+     DEFAULT_BORDERWIDTH, offsetof(Square,square.borderWidthObj), -1,
      0,0,GEOMETRY_CHANGED },
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
-     DEFAULT_BACKGROUND, Tk_Offset(Square,square.foregroundObj),
+     DEFAULT_BACKGROUND, offsetof(Square,square.foregroundObj),
      -1, 0, 0, 0},
 
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-     "50", Tk_Offset(Square,square.widthObj), -1, 0, 0,
+     "50", offsetof(Square,square.widthObj), -1, 0, 0,
      GEOMETRY_CHANGED},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-     "50", Tk_Offset(Square,square.heightObj), -1, 0, 0,
+     "50", offsetof(Square,square.heightObj), -1, 0, 0,
      GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-padding", "padding", "Pad", NULL,
-     Tk_Offset(Square,square.paddingObj), -1,
+     offsetof(Square,square.paddingObj), -1,
      TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-     NULL, Tk_Offset(Square,square.reliefObj), -1, TK_OPTION_NULL_OK, 0, 0},
+     NULL, offsetof(Square,square.reliefObj), -1, TK_OPTION_NULL_OK, 0, 0},
 
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-     NULL, Tk_Offset(Square,square.anchorObj), -1, TK_OPTION_NULL_OK, 0, 0},
+     NULL, offsetof(Square,square.anchorObj), -1, TK_OPTION_NULL_OK, 0, 0},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -176,18 +176,18 @@ typedef struct
     Tcl_Obj *heightObj;
 } SquareElement;
 
-static Ttk_ElementOptionSpec SquareElementOptions[] =
+static const Ttk_ElementOptionSpec SquareElementOptions[] =
 {
-    { "-background", TK_OPTION_BORDER, Tk_Offset(SquareElement,borderObj),
+    { "-background", TK_OPTION_BORDER, offsetof(SquareElement,borderObj),
     	DEFAULT_BACKGROUND },
-    { "-foreground", TK_OPTION_BORDER, Tk_Offset(SquareElement,foregroundObj),
+    { "-foreground", TK_OPTION_BORDER, offsetof(SquareElement,foregroundObj),
     	DEFAULT_BACKGROUND },
-    { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SquareElement,borderWidthObj),
+    { "-borderwidth", TK_OPTION_PIXELS, offsetof(SquareElement,borderWidthObj),
     	DEFAULT_BORDERWIDTH },
-    { "-relief", TK_OPTION_RELIEF, Tk_Offset(SquareElement,reliefObj),
+    { "-relief", TK_OPTION_RELIEF, offsetof(SquareElement,reliefObj),
     	"raised" },
-    { "-width",  TK_OPTION_PIXELS, Tk_Offset(SquareElement,widthObj), "20"},
-    { "-height", TK_OPTION_PIXELS, Tk_Offset(SquareElement,heightObj), "20"},
+    { "-width",  TK_OPTION_PIXELS, offsetof(SquareElement,widthObj), "20"},
+    { "-height", TK_OPTION_PIXELS, offsetof(SquareElement,heightObj), "20"},
     { NULL, 0, 0, NULL }
 };
 
@@ -230,7 +230,7 @@ static void SquareElementDraw(
 	b.x, b.y, b.width, b.height, borderWidth, relief);
 }
 
-static Ttk_ElementSpec SquareElementSpec =
+static const Ttk_ElementSpec SquareElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(SquareElement),

@@ -49,7 +49,7 @@ static void		NotifyVisibility(TkWindow *winPtr, XEvent *eventPtr);
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDestroyWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -87,7 +87,7 @@ XDestroyWindow(
 	    ckfree(macWin->toplevel);
 	}
 	ckfree(macWin);
-	return;
+	return Success;
     }
     if (macWin->visRgn) {
 	CFRelease(macWin->visRgn);
@@ -111,6 +111,7 @@ XDestroyWindow(
     if (macWin->toplevel->referenceCount == 0) {
 	ckfree(macWin->toplevel);
     }
+    return Success;
 }
 
 /*
@@ -130,7 +131,7 @@ XDestroyWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMapWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -226,6 +227,7 @@ XMapWindow(
     event.xvisibility.type = VisibilityNotify;
     event.xvisibility.state = VisibilityUnobscured;
     NotifyVisibility(winPtr, &event);
+    return Success;
 }
 
 /*
@@ -279,7 +281,7 @@ NotifyVisibility(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XUnmapWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -332,6 +334,7 @@ XUnmapWindow(
     } else {
 	[[win contentView] setNeedsDisplay:YES];
     }
+    return Success;
 }
 
 /*
@@ -351,7 +354,7 @@ XUnmapWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XResizeWindow(
     Display *display,		/* Display. */
     Window window,		/* Window. */
@@ -375,6 +378,7 @@ XResizeWindow(
     } else {
 	MoveResizeWindow(macWin);
     }
+    return Success;
 }
 
 /*
@@ -394,7 +398,7 @@ XResizeWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMoveResizeWindow(
     Display *display,		/* Display. */
     Window window,		/* Window. */
@@ -422,7 +426,7 @@ XMoveResizeWindow(
 	    CGFloat XOff = (CGFloat) macWin->winPtr->wmInfoPtr->xInParent;
 	    CGFloat YOff = (CGFloat) macWin->winPtr->wmInfoPtr->yInParent;
 	    NSRect r = NSMakeRect(
-		    X + XOff, tkMacOSXZeroScreenHeight - Y - YOff - Height,
+		    X + XOff, TkMacOSXZeroScreenHeight() - Y - YOff - Height,
 	    	    Width, Height);
 
 	    [w setFrame:[w frameRectForContentRect:r] display:YES];
@@ -430,6 +434,7 @@ XMoveResizeWindow(
     } else {
 	MoveResizeWindow(macWin);
     }
+    return Success;
 }
 
 /*
@@ -448,7 +453,7 @@ XMoveResizeWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XMoveWindow(
     Display *display,		/* Display. */
     Window window,		/* Window. */
@@ -462,11 +467,12 @@ XMoveWindow(
 
 	if (w) {
 	    [w setFrameTopLeftPoint: NSMakePoint(
-		    x, tkMacOSXZeroScreenHeight - y)];
+		    x, TkMacOSXZeroScreenHeight() - y)];
 	}
     } else {
 	MoveResizeWindow(macWin);
     }
+    return Success;
 }
 
 /*
@@ -591,7 +597,7 @@ GenerateConfigureNotify(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XRaiseWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -606,9 +612,9 @@ XRaiseWindow(
 	 * TODO: this should generate damage
 	 */
     }
+    return Success;
 }
 
-#if 0
 /*
  *----------------------------------------------------------------------
  *
@@ -625,7 +631,7 @@ XRaiseWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XLowerWindow(
     Display *display,		/* Display. */
     Window window)		/* Window. */
@@ -636,12 +642,12 @@ XLowerWindow(
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Below, NULL);
     } else {
-        /*
+	/*
 	 * TODO: this should generate damage
 	 */
     }
+    return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -661,7 +667,7 @@ XLowerWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XConfigureWindow(
     Display *display,		/* Display. */
     Window w,			/* Window. */
@@ -708,6 +714,7 @@ XConfigureWindow(
     TkGenWMMoveRequestEvent(macWin->winPtr,
 	    macWin->winPtr->changes.x, macWin->winPtr->changes.y);
 #endif
+    return Success;
 }
 
 /*
@@ -848,7 +855,7 @@ TkMacOSXUpdateClipRgn(
 		    ChkErr(HIShapeIntersect,
 			    win2Ptr->privatePtr->aboveVisRgn, rgn, rgn);
 		} else if (tkMacOSXEmbedHandler != NULL) {
-		    TkRegion r = TkCreateRegion();
+		    Region r = XCreateRegion();
 		    HIShapeRef visRgn;
 
 		    tkMacOSXEmbedHandler->getClipProc((Tk_Window) winPtr, r);
@@ -939,7 +946,7 @@ TkMacOSXUpdateClipRgn(
  *
  *	This function returns the Macintosh clipping region for the given
  *	window. The caller is responsible for disposing of the returned region
- *	via TkDestroyRegion().
+ *	via XDestroyRegion().
  *
  * Results:
  *	The region.
@@ -950,14 +957,14 @@ TkMacOSXUpdateClipRgn(
  *----------------------------------------------------------------------
  */
 
-TkRegion
+Region
 TkMacOSXVisableClipRgn(
     TkWindow *winPtr)
 {
     if (winPtr->privatePtr->flags & TK_CLIP_INVALID) {
 	TkMacOSXUpdateClipRgn(winPtr);
     }
-    return (TkRegion) HIShapeCreateMutableCopy(winPtr->privatePtr->visRgn);
+    return (Region) HIShapeCreateMutableCopy(winPtr->privatePtr->visRgn);
 }
 
 /*

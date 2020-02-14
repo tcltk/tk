@@ -54,47 +54,48 @@ typedef struct
     BasePart	base;
 } Base;
 
-static Tk_OptionSpec BaseOptionSpecs[] =
+static const Tk_OptionSpec BaseOptionSpecs[] =
 {
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-        "left", Tk_Offset(Base,base.justifyObj), -1,
+        "left", offsetof(Base,base.justifyObj), -1,
         TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
-	Tk_Offset(Base,base.textObj), -1,
+	offsetof(Base,base.textObj), -1,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable", "",
-	Tk_Offset(Base,base.textVariableObj), -1,
+	offsetof(Base,base.textVariableObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline",
-	"-1", Tk_Offset(Base,base.underlineObj), -1,
+	"-1", offsetof(Base,base.underlineObj), -1,
 	0,0,0 },
     /* SB: OPTION_INT, see <<NOTE-NULLOPTIONS>> */
     {TK_OPTION_STRING, "-width", "width", "Width",
-	NULL, Tk_Offset(Base,base.widthObj), -1,
+	NULL, offsetof(Base,base.widthObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     /*
      * Image options
      */
     {TK_OPTION_STRING, "-image", "image", "Image", NULL/*default*/,
-	Tk_Offset(Base,base.imageObj), -1,
+	offsetof(Base,base.imageObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     /*
      * Compound base/image options
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	 "none", Tk_Offset(Base,base.compoundObj), -1,
-	 0,(ClientData)ttkCompoundStrings,GEOMETRY_CHANGED },
+	 NULL, offsetof(Base,base.compoundObj), -1,
+	 TK_OPTION_NULL_OK,(void *)ttkCompoundStrings,
+         GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
-	NULL, Tk_Offset(Base,base.paddingObj), -1,
+	NULL, offsetof(Base,base.paddingObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
 
     /*
      * Compatibility/legacy options
      */
     {TK_OPTION_STRING, "-state", "state", "State",
-	 "normal", Tk_Offset(Base,base.stateObj), -1,
+	 "normal", offsetof(Base,base.stateObj), -1,
 	 0,0,STATE_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -229,31 +230,31 @@ typedef struct
     LabelPart	label;
 } Label;
 
-static Tk_OptionSpec LabelOptionSpecs[] =
+static const Tk_OptionSpec LabelOptionSpecs[] =
 {
     {TK_OPTION_BORDER, "-background", "frameColor", "FrameColor",
-	NULL, Tk_Offset(Label,label.backgroundObj), -1,
+	NULL, offsetof(Label,label.backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
-	NULL, Tk_Offset(Label,label.foregroundObj), -1,
+	NULL, offsetof(Label,label.foregroundObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_FONT, "-font", "font", "Font",
-	NULL, Tk_Offset(Label,label.fontObj), -1,
+	NULL, offsetof(Label,label.fontObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	NULL, Tk_Offset(Label,label.borderWidthObj), -1,
+	NULL, offsetof(Label,label.borderWidthObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	NULL, Tk_Offset(Label,label.reliefObj), -1,
+	NULL, offsetof(Label,label.reliefObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	NULL, Tk_Offset(Label,label.anchorObj), -1,
+	NULL, offsetof(Label,label.anchorObj), -1,
 	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	NULL, Tk_Offset(Label, label.justifyObj), -1,
+	NULL, offsetof(Label, label.justifyObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
-	NULL, Tk_Offset(Label, label.wrapLengthObj), -1,
+	NULL, offsetof(Label, label.wrapLengthObj), -1,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED /*SB: SIZE_CHANGED*/ },
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -312,13 +313,13 @@ typedef struct
 /*
  * Option specifications:
  */
-static Tk_OptionSpec ButtonOptionSpecs[] =
+static const Tk_OptionSpec ButtonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command",
-	"", Tk_Offset(Button, button.commandObj), -1, 0,0,0},
+	"", offsetof(Button, button.commandObj), -1, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-default", "default", "Default",
-	"normal", Tk_Offset(Button, button.defaultStateObj), -1,
-	0, (ClientData) ttkDefaultStrings, DEFAULTSTATE_CHANGED},
+	"normal", offsetof(Button, button.defaultStateObj), -1,
+	0, (void *)ttkDefaultStrings, DEFAULTSTATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)
@@ -335,7 +336,7 @@ static int ButtonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     /* Handle "-default" option:
      */
     if (mask & DEFAULTSTATE_CHANGED) {
-	int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+	Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 	Ttk_GetButtonDefaultStateFromObj(
 	    NULL, buttonPtr->button.defaultStateObj, &defaultState);
 	if (defaultState == TTK_BUTTON_DEFAULT_ACTIVE) {
@@ -422,19 +423,19 @@ typedef struct
 /*
  * Option specifications:
  */
-static Tk_OptionSpec CheckbuttonOptionSpecs[] =
+static const Tk_OptionSpec CheckbuttonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
-	NULL, Tk_Offset(Checkbutton, checkbutton.variableObj), -1,
+	NULL, offsetof(Checkbutton, checkbutton.variableObj), -1,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-onvalue", "onValue", "OnValue",
-	"1", Tk_Offset(Checkbutton, checkbutton.onValueObj), -1,
+	"1", offsetof(Checkbutton, checkbutton.onValueObj), -1,
 	0,0,0},
     {TK_OPTION_STRING, "-offvalue", "offValue", "OffValue",
-	"0", Tk_Offset(Checkbutton, checkbutton.offValueObj), -1,
+	"0", offsetof(Checkbutton, checkbutton.offValueObj), -1,
 	0,0,0},
     {TK_OPTION_STRING, "-command", "command", "Command",
-	"", Tk_Offset(Checkbutton, checkbutton.commandObj), -1,
+	"", offsetof(Checkbutton, checkbutton.commandObj), -1,
 	0,0,0},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -630,16 +631,16 @@ typedef struct
 /*
  * Option specifications:
  */
-static Tk_OptionSpec RadiobuttonOptionSpecs[] =
+static const Tk_OptionSpec RadiobuttonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
-	"::selectedButton", Tk_Offset(Radiobutton, radiobutton.variableObj),-1,
+	"::selectedButton", offsetof(Radiobutton, radiobutton.variableObj),-1,
 	0,0,0},
     {TK_OPTION_STRING, "-value", "Value", "Value",
-	"1", Tk_Offset(Radiobutton, radiobutton.valueObj), -1,
+	"1", offsetof(Radiobutton, radiobutton.valueObj), -1,
 	0,0,0},
     {TK_OPTION_STRING, "-command", "command", "Command",
-	"", Tk_Offset(Radiobutton, radiobutton.commandObj), -1,
+	"", offsetof(Radiobutton, radiobutton.commandObj), -1,
 	0,0,0},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -805,12 +806,12 @@ typedef struct
 static const char *const directionStrings[] = {
     "above", "below", "left", "right", "flush", NULL
 };
-static Tk_OptionSpec MenubuttonOptionSpecs[] =
+static const Tk_OptionSpec MenubuttonOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-menu", "menu", "Menu",
-	"", Tk_Offset(Menubutton, menubutton.menuObj), -1, 0,0,0},
+	"", offsetof(Menubutton, menubutton.menuObj), -1, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
-	"below", Tk_Offset(Menubutton, menubutton.directionObj), -1,
+	"below", offsetof(Menubutton, menubutton.directionObj), -1,
 	0,(ClientData)directionStrings,GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,

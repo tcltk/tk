@@ -23,11 +23,8 @@
 #include <limits.h>
 #include <math.h>
 #include <pwd.h>
-#ifdef NO_STDLIB_H
-#   include "../compat/stdlib.h"
-#else
-#   include <stdlib.h>
-#endif
+#include <stdlib.h>
+#include <assert.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/file.h>
@@ -51,11 +48,7 @@
 #if HAVE_INTTYPES_H
 #    include <inttypes.h>
 #endif
-#ifndef NO_UNISTD_H
-#   include <unistd.h>
-#else
-#   include "../compat/unistd.h"
-#endif
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
@@ -123,16 +116,6 @@
 #   define WPARAM void *
 #   define LPARAM void *
 #   define LRESULT void *
-
-#else /* !__CYGWIN__ */
-    /*
-     * The TkPutImage macro strips off the color table information, which isn't
-     * needed for X.
-     */
-
-#   define TkPutImage(colors, ncolors, display, pixels, gc, image, srcx, srcy, destx, desty, width, height) \
-		XPutImage(display, pixels, gc, image, srcx, srcy, destx, \
-		desty, width, height);
 
 #endif /* !__CYGWIN__ */
 

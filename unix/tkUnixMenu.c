@@ -199,7 +199,7 @@ TkpDestroyMenuEntry(
 
 int
 TkpConfigureMenuEntry(
-    register TkMenuEntry *mePtr)/* Information about menu entry; may or may
+    TkMenuEntry *mePtr)/* Information about menu entry; may or may
 				 * not already have values for some fields. */
 {
     /*
@@ -1110,7 +1110,7 @@ TkpComputeMenubarGeometry(
 
 	maxWindowWidth = Tk_Width(menuPtr->tkwin);
 	if (maxWindowWidth == 1) {
-	    maxWindowWidth = 0x7ffffff;
+	    maxWindowWidth = 0x7FFFFFF;
 	}
 	currentRowHeight = 0;
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,

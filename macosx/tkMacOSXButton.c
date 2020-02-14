@@ -457,12 +457,12 @@ DrawButtonImageAndText(
     int textXOffset = 0, textYOffset = 0;
     int width = 0, height = 0;
     int fullWidth = 0, fullHeight = 0;
+    DrawParams *dpPtr = &mbPtr->drawParams;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;
     }
 
-    DrawParams *dpPtr = &mbPtr->drawParams;
     pixmap = (Pixmap) Tk_WindowId(tkwin);
 
     if (butPtr->image != None) {
@@ -477,10 +477,6 @@ DrawButtonImageAndText(
     imageHeight = height;
 
     if (mbPtr->drawinfo.state == kThemeStatePressed) {
-        /*
-	 * Offset bitmaps by a bit when the button is pressed.
-	 */
-
         pressed = 1;
     }
 
@@ -578,11 +574,9 @@ DrawButtonImageAndText(
 		    imageXOffset, imageYOffset, 1);
 	    XSetClipOrigin(butPtr->display, dpPtr->gc, 0, 0);
         }
-
 	y += 1; /* Tweak to match native buttons. */
-        Tk_DrawTextLayout(butPtr->display, pixmap,
-                dpPtr->gc, butPtr->textLayout,
-                x + textXOffset, y + textYOffset, 0, -1);
+        Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
+			  x + textXOffset, y + textYOffset, 0, -1);
         Tk_UnderlineTextLayout(butPtr->display, pixmap, dpPtr->gc,
                 butPtr->textLayout,
                 x + textXOffset, y + textYOffset,
@@ -630,8 +624,8 @@ DrawButtonImageAndText(
 		butPtr->textHeight, &x, &y);
 	x += butPtr->indicatorSpace;
 	y += 1; /* Tweak to match native buttons */
-	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc,
-		butPtr->textLayout, x, y, 0, -1);
+	Tk_DrawTextLayout(butPtr->display, pixmap, dpPtr->gc, butPtr->textLayout,
+			  x, y, 0, -1);
     }
 
     /*
@@ -772,12 +766,15 @@ TkMacOSXDrawButton(
         }
 
 	/*
-	 * To avoid buttons with white text on a white background, we always
-	 * set the state to inactive in Dark Mode.  It isn't perfect but it is
-	 * usable.  Using a ttk::button would be a better choice, however.
+	 * To avoid buttons with white text on a white background, we set the
+	 * state to inactive in Dark Mode unless the button is pressed or is a
+	 * -default active button.  This isn't perfect but it is mostly usable.
+	 * Using a ttk::button would be a much better choice, however.
 	 */
 
-	if (TkMacOSXInDarkMode(butPtr->tkwin)) {
+	if (TkMacOSXInDarkMode(butPtr->tkwin) &&
+	    mbPtr->drawinfo.state != kThemeStatePressed &&
+	    !(mbPtr->drawinfo.adornment & kThemeAdornmentDefault)) {
 	    hiinfo.state = kThemeStateInactive;
 	}
 	HIThemeDrawButton(&cntrRect, &hiinfo, dc.context,
@@ -1047,7 +1044,9 @@ TkMacOSXComputeButtonParams(
 
     drawinfo->adornment = kThemeAdornmentNone;
     if (butPtr->defaultState == DEFAULT_ACTIVE) {
-        drawinfo->adornment |= kThemeAdornmentDefault;
+	if (drawinfo->state != kThemeStatePressed) {
+	    drawinfo->adornment |= kThemeAdornmentDefault;
+	}
         if (!mbPtr->defaultPulseHandler) {
             mbPtr->defaultPulseHandler = Tcl_CreateTimerHandler(
                     PULSE_TIMER_MSECS, PulseDefaultButtonProc, butPtr);
@@ -1109,6 +1108,13 @@ TkMacOSXComputeButtonDrawParams(
     } else if (butPtr->type == TYPE_BUTTON && butPtr->state == STATE_ACTIVE) {
 	dpPtr->gc = butPtr->activeTextGC;
 	dpPtr->border = butPtr->activeBorder;
+    } else if ((mbPtr->drawinfo.adornment & kThemeAdornmentDefault) &&
+	       mbPtr->drawinfo.state == kThemeStateActive) {
+	/*
+	 * This is a "-default active" button in the front window.
+	 */
+
+	dpPtr->gc = butPtr->activeTextGC;
     } else {
 	dpPtr->gc = butPtr->normalTextGC;
     }

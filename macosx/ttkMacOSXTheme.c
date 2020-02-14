@@ -105,6 +105,10 @@ static CGFloat darkSelectedGradient[8] = {
     23.0 / 255, 111.0 / 255, 232.0 / 255, 1.0,
     20.0 / 255, 94.0 / 255,  206.0 / 255, 1.0
 };
+static CGFloat pressedPushButtonGradient[8] = {
+    35.0 / 255, 123.0 / 255, 244.0 / 255, 1.0,
+    30.0 / 255, 114.0 / 255, 235.0 / 255, 1.0
+};
 
 /*
  * When building on systems earlier than 10.8 there is no reasonable way to
@@ -121,6 +125,19 @@ static CGFloat darkSelectedGradient[8] = {
 #define CGCOLOR(nscolor) (0 ? (CGColorRef) nscolor : NULL)
 #define CGPathCreateWithRoundedRect(w, x, y, z) NULL
 #endif
+
+/*
+ * If we try to draw a rounded rectangle with too large of a radius
+ * CoreGraphics will raise a fatal exception.  This macro returns if
+ * the width or height is less than twice the radius.  Presumably this
+ * only happens when a widget has not yet been configured and has size
+ * 1x1.
+ */
+
+#define CHECK_RADIUS(radius, bounds)                                         \
+    if (radius > bounds.size.width / 2 || radius > bounds.size.height / 2) { \
+        return;                                                              \
+    }
 
 /*----------------------------------------------------------------------
  * +++ Utilities.
@@ -152,6 +169,7 @@ static inline CGRect BoxToRect(
  */
 
 static Ttk_StateTable ThemeStateTable[] = {
+    {kThemeStateActive, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
     {kThemeStateUnavailable, TTK_STATE_DISABLED, 0},
     {kThemeStatePressed, TTK_STATE_PRESSED, 0},
     {kThemeStateInactive, TTK_STATE_BACKGROUND, 0},
@@ -240,13 +258,13 @@ static void GetBackgroundColor(
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
 
-    while (masterPtr != NULL) {
+    while (masterPtr && masterPtr->privatePtr) {
 	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
 	    break;
 	}
 	masterPtr = (TkWindow *) TkGetGeomMaster(masterPtr);
     }
-    if (masterPtr) {
+    if (masterPtr && masterPtr->privatePtr) {
 	for (int i = 0; i < 4; i++) {
 	    rgba[i] = masterPtr->privatePtr->fillRGBA[i];
 	}
@@ -274,10 +292,12 @@ static void GetBackgroundColor(
 		rgba[i] -= 8.0 / 255.0;
 	    }
 	}
-	winPtr->privatePtr->flags |= TTK_HAS_CONTRASTING_BG;
-	for (int i = 0; i < 4; i++) {
-	    winPtr->privatePtr->fillRGBA[i] = rgba[i];
-	}
+        if (winPtr->privatePtr) {
+            winPtr->privatePtr->flags |= TTK_HAS_CONTRASTING_BG;
+            for (int i = 0; i < 4; i++) {
+                winPtr->privatePtr->fillRGBA[i] = rgba[i];
+            }
+        }
     }
 }
 
@@ -374,6 +394,8 @@ static void FillButtonBackground(
     CGRect bounds,
     CGFloat radius)
 {
+    CHECK_RADIUS(radius, bounds)
+
     CGPathRef path;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     CGGradientRef backgroundGradient = CGGradientCreateWithColorComponents(
@@ -382,7 +404,6 @@ static void FillButtonBackground(
 	bounds.origin.x,
 	bounds.origin.y + bounds.size.height
     };
-
     CGContextBeginPath(context);
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
     CGContextAddPath(context, path);
@@ -436,6 +457,8 @@ static void DrawGroupBox(
     CGContextRef context,
     Tk_Window tkwin)
 {
+    CHECK_RADIUS(4, bounds)
+
     CGPathRef path;
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *borderColor, *bgColor;
@@ -478,6 +501,7 @@ static void SolidFillRoundedRectangle(
     NSColor *color)
 {
     CGPathRef path;
+    CHECK_RADIUS(radius, bounds)
 
     CGContextSetFillColorWithColor(context, CGCOLOR(color));
     path = CGPathCreateWithRoundedRect(bounds, radius, radius, NULL);
@@ -598,6 +622,8 @@ static void GradientFillRoundedRectangle(
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     CGPathRef path;
+    CHECK_RADIUS(radius, bounds)
+
     CGPoint end = {
 	bounds.origin.x,
 	bounds.origin.y + bounds.size.height
@@ -646,6 +672,11 @@ static void DrawDarkButton(
 
     bounds = CGRectInset(bounds, 1, 1);
     if (kind == kThemePushButton && (state & TTK_STATE_PRESSED)) {
+	GradientFillRoundedRectangle(context, bounds, 4,
+	    pressedPushButtonGradient, 2);
+    } else if (kind == kThemePushButton &&
+	       (state & TTK_STATE_ALTERNATE) &&
+	       !(state & TTK_STATE_BACKGROUND)) {
 	GradientFillRoundedRectangle(context, bounds, 4,
 	    darkSelectedGradient, 2);
     } else {
@@ -1031,6 +1062,9 @@ static void DrawDarkFocusRing(
     CGRect bounds,
     CGContextRef context)
 {
+    CGRect insetBounds = CGRectInset(bounds, -3, -3);
+    CHECK_RADIUS(4, insetBounds)
+
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *strokeColor;
     NSColor *fillColor = [NSColor colorWithColorSpace:deviceRGB
@@ -1042,7 +1076,6 @@ static void DrawDarkFocusRing(
 	{x, y + h}, {x, y + 1}, {x + w - 1, y + 1}, {x + w - 1, y + h}
     };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
-    CGRect outerRect = CGRectInset(bounds, -3, -3);
 
     CGContextSaveGState(context);
     CGContextSetShouldAntialias(context, false);
@@ -1061,7 +1094,7 @@ static void DrawDarkFocusRing(
     CGContextStrokePath(context);
     CGContextSetShouldAntialias(context, true);
     CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
-    CGPathRef path = CGPathCreateWithRoundedRect(outerRect, 4, 4, NULL);
+    CGPathRef path = CGPathCreateWithRoundedRect(insetBounds, 4, 4, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
     CGContextAddRect(context, bounds);
@@ -1091,6 +1124,7 @@ static void DrawDarkFrame(
     };
     CGPoint bottom[2] = {{x, y + h}, {x + w, y + h}};
     CGPoint accent[2] = {{x, y + 1}, {x + w, y + 1}};
+
     switch (kind) {
     case kHIThemeFrameTextFieldSquare:
 	CGContextSaveGState(context);
@@ -1197,6 +1231,7 @@ static ThemeButtonParams
     ListHeaderParams =
 {kThemeListHeaderButton, kThemeMetricListHeaderHeight};
 static Ttk_StateTable ButtonValueTable[] = {
+    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
     {kThemeButtonMixed, TTK_STATE_ALTERNATE, 0},
     {kThemeButtonOn, TTK_STATE_SELECTED, 0},
     {kThemeButtonOff, 0, 0}
@@ -1208,11 +1243,11 @@ static Ttk_StateTable ButtonValueTable[] = {
 
 };
 static Ttk_StateTable ButtonAdornmentTable[] = {
+    {kThemeAdornmentNone, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeAdornmentDefault | kThemeAdornmentFocus,
      TTK_STATE_ALTERNATE | TTK_STATE_FOCUS, 0},
-    {kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0},
-    {kThemeAdornmentNone, TTK_STATE_ALTERNATE, 0},
     {kThemeAdornmentFocus, TTK_STATE_FOCUS, 0},
+    {kThemeAdornmentDefault, TTK_STATE_ALTERNATE, 0},
     {kThemeAdornmentNone, 0, 0}
 };
 
@@ -1235,12 +1270,13 @@ static inline HIThemeButtonDrawInfo computeButtonDrawInfo(
 
     SInt32 HIThemeState;
 
+    HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
     switch (params->kind) {
     case kThemePushButton:
-	HIThemeState = kThemeStateActive;
+	HIThemeState &= ~kThemeStateInactive;
+	HIThemeState |= kThemeStateActive;
 	break;
     default:
-	HIThemeState = Ttk_StateTableLookup(ThemeStateTable, state);
 	break;
     }
 
@@ -1369,6 +1405,13 @@ static void ButtonElementDraw(
 	default:
 	    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context,
 		HIOrientation, NULL);
+	}
+    } else if (info.kind == kThemePushButton &&
+	       (state & TTK_STATE_PRESSED)) {
+	bounds.size.height += 2;
+	if ([NSApp macMinorVersion] > 8) {
+	    GradientFillRoundedRectangle(dc.context, bounds, 4,
+					 pressedPushButtonGradient, 2);
 	}
     } else {
 
@@ -1656,9 +1699,9 @@ typedef struct {
 
 static Ttk_ElementOptionSpec EntryElementOptions[] = {
     {"-background", TK_OPTION_BORDER,
-     Tk_Offset(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
+     offsetof(EntryElement, backgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {"-fieldbackground", TK_OPTION_BORDER,
-     Tk_Offset(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
+     offsetof(EntryElement, fieldbackgroundObj), ENTRY_DEFAULT_BACKGROUND},
     {0}
 };
 
@@ -1818,18 +1861,17 @@ static void ComboboxElementDraw(
     BEGIN_DRAWING(d)
     bounds.origin.y += 1;
     if (TkMacOSXInDarkMode(tkwin)) {
-	    bounds.size.height += 1;
+	bounds.size.height += 1;
 	DrawDarkButton(bounds, info.kind, state, dc.context);
-	} else if ([NSApp macMinorVersion] > 8) {
-	    if ((state & TTK_STATE_BACKGROUND) &&
-		!(state & TTK_STATE_DISABLED)) {
+    } else if ([NSApp macMinorVersion] > 8) {
+	if ((state & TTK_STATE_BACKGROUND) &&
+	    !(state & TTK_STATE_DISABLED)) {
 	    NSColor *background = [NSColor textBackgroundColor];
 	    CGRect innerBounds = CGRectInset(bounds, 1, 2);
 	    SolidFillRoundedRectangle(dc.context, innerBounds, 4, background);
 	}
-    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation,
-		NULL);
     }
+    ChkErr(HIThemeDrawButton, &bounds, &info, dc.context, HIOrientation, NULL);
     END_DRAWING
 }
 
@@ -2016,10 +2058,10 @@ typedef struct {
 } TrackElement;
 
 static Ttk_ElementOptionSpec TrackElementOptions[] = {
-    {"-from", TK_OPTION_DOUBLE, Tk_Offset(TrackElement, fromObj)},
-    {"-to", TK_OPTION_DOUBLE, Tk_Offset(TrackElement, toObj)},
-    {"-value", TK_OPTION_DOUBLE, Tk_Offset(TrackElement, valueObj)},
-    {"-orient", TK_OPTION_STRING, Tk_Offset(TrackElement, orientObj)},
+    {"-from", TK_OPTION_DOUBLE, offsetof(TrackElement, fromObj)},
+    {"-to", TK_OPTION_DOUBLE, offsetof(TrackElement, toObj)},
+    {"-value", TK_OPTION_DOUBLE, offsetof(TrackElement, valueObj)},
+    {"-orient", TK_OPTION_STRING, offsetof(TrackElement, orientObj)},
     {0, 0, 0}
 };
 static void TrackElementSize(
@@ -2054,7 +2096,7 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
-    factor = RangeToFactor(to - from);
+    factor = RangeToFactor(to);
 
     HIThemeTrackDrawInfo info = {
 	.version = 0,
@@ -2151,15 +2193,15 @@ typedef struct {
 
 static Ttk_ElementOptionSpec PbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
-     Tk_Offset(PbarElement, orientObj), "horizontal"},
+     offsetof(PbarElement, orientObj), "horizontal"},
     {"-value", TK_OPTION_DOUBLE,
-     Tk_Offset(PbarElement, valueObj), "0"},
+     offsetof(PbarElement, valueObj), "0"},
     {"-maximum", TK_OPTION_DOUBLE,
-     Tk_Offset(PbarElement, maximumObj), "100"},
+     offsetof(PbarElement, maximumObj), "100"},
     {"-phase", TK_OPTION_INT,
-     Tk_Offset(PbarElement, phaseObj), "0"},
+     offsetof(PbarElement, phaseObj), "0"},
     {"-mode", TK_OPTION_STRING,
-     Tk_Offset(PbarElement, modeObj), "determinate"},
+     offsetof(PbarElement, modeObj), "determinate"},
     {0, 0, 0, 0}
 };
 static void PbarElementSize(
@@ -2248,7 +2290,7 @@ typedef struct
 
 static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
-     Tk_Offset(ScrollbarElement, orientObj), "horizontal"},
+     offsetof(ScrollbarElement, orientObj), "horizontal"},
     {0, 0, 0, 0}
 };
 static void TroughElementSize(
@@ -2346,10 +2388,12 @@ static void ThumbElementSize(
     int orientation = TTK_ORIENT_HORIZONTAL;
 
     Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
-    if (orientation == TTK_ORIENT_HORIZONTAL) {
-	*minHeight = 8;
-    } else {
+    if (orientation == TTK_ORIENT_VERTICAL) {
+	*minHeight = 18;
 	*minWidth = 8;
+    } else {
+	*minHeight = 8;
+	*minWidth = 18;
     }
 }
 
@@ -2371,15 +2415,11 @@ static void ThumbElementDraw(
      * able to display the thumb element at the size and location which the ttk
      * scrollbar widget requests.  The algorithm that HIToolbox uses to
      * determine the thumb geometry from the input values of min, max, value
-     * and viewSize is, of course, undocumented.  And this turns out to be a
-     * hard reverse engineering problem.  A seemingly natural algorithm is
-     * implemented below, but it does not correctly compute the same thumb
-     * geometry as HITools (which also apparently does not agree with
-     * NSScrollbar).  This code uses that algorithm for older OS versions,
+     * and viewSize is undocumented.  A seemingly natural algorithm is
+     * implemented below.  This code uses that algorithm for older OS versions,
      * because using HITools also handles drawing the buttons and 3D thumb used
-     * on those systems.  The incorrect geometry is annoying but not completely
-     * unusable.  For newer systems the cleanest approach is to just draw the
-     * thumb directly.
+     * on those systems.  For newer systems the cleanest approach is to just
+     * draw the thumb directly.
      */
 
     if ([NSApp macMinorVersion] > 8) {
@@ -2407,7 +2447,7 @@ static void ThumbElementDraw(
 	SolidFillRoundedRectangle(dc.context, thumbBounds, 4, thumbColor);
 	END_DRAWING
     } else {
-	double thumbSize, trackSize, visibleSize, viewSize;
+	double thumbSize, trackSize, visibleSize, factor, fraction;
 	MacDrawable *macWin = (MacDrawable *) Tk_WindowId(tkwin);
 	CGRect troughBounds = {{macWin->xOff, macWin->yOff},
 			       {Tk_Width(tkwin), Tk_Height(tkwin)}};
@@ -2421,7 +2461,6 @@ static void ThumbElementDraw(
          * largest int.
          */
 
-	viewSize = RangeToFactor(100.0);
 	HIThemeTrackDrawInfo info = {
 	    .version = 0,
 	    .bounds = troughBounds,
@@ -2430,19 +2469,24 @@ static void ThumbElementDraw(
 		kThemeTrackThumbRgnIsNotGhost,
 	    .enableState = kThemeTrackActive
 	};
-	info.trackInfo.scrollbar.viewsize = viewSize * .8;
+	factor = RangeToFactor(100.0);
 	if (orientation == TTK_ORIENT_HORIZONTAL) {
 	    trackSize = troughBounds.size.width;
 	    thumbSize = b.width;
-	    visibleSize = (thumbSize / trackSize) * viewSize;
-	    info.max = viewSize - visibleSize;
-	    info.value = info.max * (b.x / (trackSize - thumbSize));
+	    fraction = b.x / trackSize;
 	} else {
-	    thumbSize = b.height;
 	    trackSize = troughBounds.size.height;
-	    visibleSize = (thumbSize / trackSize) * viewSize;
-	    info.max = viewSize - visibleSize;
-	    info.value = info.max * (b.y / (trackSize - thumbSize));
+	    thumbSize = b.height;
+	    fraction = b.y / trackSize;
+	}
+	visibleSize = (thumbSize / trackSize) * factor;
+	info.max = factor - visibleSize;
+	info.trackInfo.scrollbar.viewsize = visibleSize;
+	if ([NSApp macMinorVersion] < 8 ||
+	    orientation == TTK_ORIENT_HORIZONTAL) {
+	    info.value = factor * fraction;
+	} else {
+	    info.value = info.max - factor * fraction;
 	}
 	if ((state & TTK_STATE_PRESSED) ||
 	    (state & TTK_STATE_HOVER)) {
@@ -2764,7 +2808,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
     {"-fieldbackground", TK_OPTION_BORDER,
-     Tk_Offset(FieldElement, backgroundObj), "white"},
+     offsetof(FieldElement, backgroundObj), "white"},
     {NULL, 0, 0, NULL}
 };
 
@@ -3120,8 +3164,7 @@ static int AquaTheme_Init(
 
     /*
      * <<NOTE-TRACKS>>
-     * In some themes the Layouts for a progress bar has a trough element and
-     *a
+     * In some themes the Layouts for a progress bar has a trough element and a
      * pbar element.  But in our case the appearance manager draws both parts
      * of the progress bar, so we just have a single element called ".track".
      */

@@ -131,7 +131,7 @@ Tk_ImageType tkPhotoImageType = {
     NULL
 };
 
-typedef struct ThreadSpecificData {
+typedef struct {
     Tk_PhotoImageFormat *formatList;
 				/* Pointer to the first in the list of known
 				 * photo image formats.*/
@@ -158,15 +158,15 @@ static Tcl_ThreadDataKey dataKey;
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	 NULL, Tk_Offset(PhotoMaster, fileString), TK_CONFIG_NULL_OK, NULL},
+	 NULL, offsetof(PhotoMaster, fileString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_DOUBLE, "-gamma", NULL, NULL,
-	 DEF_PHOTO_GAMMA, Tk_Offset(PhotoMaster, gamma), 0, NULL},
+	 DEF_PHOTO_GAMMA, offsetof(PhotoMaster, gamma), 0, NULL},
     {TK_CONFIG_INT, "-height", NULL, NULL,
-	 DEF_PHOTO_HEIGHT, Tk_Offset(PhotoMaster, userHeight), 0, NULL},
+	 DEF_PHOTO_HEIGHT, offsetof(PhotoMaster, userHeight), 0, NULL},
     {TK_CONFIG_UID, "-palette", NULL, NULL,
-	 DEF_PHOTO_PALETTE, Tk_Offset(PhotoMaster, palette), 0, NULL},
+	 DEF_PHOTO_PALETTE, offsetof(PhotoMaster, palette), 0, NULL},
     {TK_CONFIG_INT, "-width", NULL, NULL,
-	 DEF_PHOTO_WIDTH, Tk_Offset(PhotoMaster, userWidth), 0, NULL},
+	 DEF_PHOTO_WIDTH, offsetof(PhotoMaster, userWidth), 0, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 

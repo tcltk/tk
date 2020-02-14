@@ -46,7 +46,7 @@ lappend hidden_cmds {*}[apply {{} {
     foreach cmd {
 	atime attributes copy delete dirname executable exists extension
 	isdirectory isfile link lstat mkdir mtime nativename normalize owned
-	readable readlink rename rootname size stat tail tempfile type
+	readable readlink rename rootname size stat tail tempdir tempfile type
 	volumes writable
     } {lappend result tcl:file:$cmd}
     if {[package vsatisfies [package provide Tcl] 8.7-]} {

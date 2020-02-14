@@ -64,7 +64,7 @@ the standard procedures implemented by the type manager:
 .CS
 typedef struct Tk_ItemType {
     const char *\fIname\fR;
-    int \fIitemSize\fR;
+    size_t \fIitemSize\fR;
     Tk_ItemCreateProc *\fIcreateProc\fR;
     const Tk_ConfigSpec *\fIconfigSpecs\fR;
     Tk_ItemConfigureProc *\fIconfigProc\fR;

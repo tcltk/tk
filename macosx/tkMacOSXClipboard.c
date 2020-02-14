@@ -35,10 +35,7 @@ static Tk_Window clipboardOwner = NULL;
 		    targetPtr->type == dispPtr->utf8Atom) {
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = [[NSString alloc] initWithBytesNoCopy:
-			    cbPtr->buffer length:cbPtr->length
-			    encoding:NSUTF8StringEncoding freeWhenDone:NO];
-
+		    NSString *s = TkUtfToNSString(cbPtr->buffer, cbPtr->length);
 		    [string appendString:s];
 		    [s release];
 		}
@@ -137,7 +134,22 @@ TkSelGetSelection(
 	if (type) {
 	    string = [pb stringForType:type];
 	}
-	result = proc(clientData, interp, string ? [string UTF8String] : "");
+	if (string) {
+
+	    /*
+	     * Encode the string using the encoding which is used in Tcl
+	     * when TCL_UTF_MAX = 3.  This replaces each UTF-16 surrogate with
+	     * a 3-byte sequence generated using the UTF-8 algorithm. (Even
+	     * though UTF-8 does not allow encoding surrogates, the algorithm
+	     * does produce a 3-byte sequence.)
+	     */
+
+	    char *bytes = TkNSStringToUtf(string, NULL);
+	    result = proc(clientData, interp, bytes);
+	    if (bytes) {
+		ckfree(bytes);
+	    }
+	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"%s selection doesn't exist or form \"%s\" not defined",
@@ -259,7 +271,7 @@ TkSelUpdateClipboard(
 void
 TkSelEventProc(
     Tk_Window tkwin,		/* Window for which event was targeted. */
-    register XEvent *eventPtr)	/* X event: either SelectionClear,
+    XEvent *eventPtr)	/* X event: either SelectionClear,
 				 * SelectionRequest, or SelectionNotify. */
 {
     if (eventPtr->type == SelectionClear) {
@@ -287,7 +299,7 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    register XEvent *eventPtr)	/* X PropertyChange event. */
+    XEvent *eventPtr)	/* X PropertyChange event. */
 {
 }
 

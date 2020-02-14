@@ -552,19 +552,20 @@ background on which the image is displayed to show through.  This
 usually also has the effect of desaturating the image.  The
 \fIalphaValue\fR must be between 0.0 and 1.0.
 .TP
-\fBsvg \-dpi\fI dpiValue\fB \-scale\fI scaleValue\fB \-unit\fI unitValue\fR
+\fBsvg \-dpi\fI dpiValue\fB \-scale\fI scaleValue\fB \-scaletowidth \fI width\fB \-scaletoheight\fI height\fR
 .
 \fIdpiValue\fR is used in conversion between given coordinates and
 screen resolution. The value must be greater than 0 and the default
 value is 96.
 \fIscaleValue\fR is used to scale the resulting image. The value must
 be greater than 0 and the default value is 1.
-\fIunitValue\fR is the unit of all coordinates in the SVG data.
-Available units are px (default, coordinates in pixel), pt (1/72 inch),
-pc (12 pt), mm , cm and in.
+\fIwidth\fR and \fIheight\fR are the width or height that the image
+will be adjusted to. Only one parameter among \fB\-scale\fR,
+\fB\-scaletowidth\fR and \fB\-scaletoheight\fR can be given at a time
+and the aspect ratio of the original image is always preserved.
 The svg format supports a wide range of SVG features, but the
 full SVG standard is not available, for instance the 'text' feature
-is missing and silently ignores when reading the SVG data.
+is missing and silently ignored when reading the SVG data.
 The supported SVG features are:
 .
 .RS

@@ -23,6 +23,7 @@ together.
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-borderwidth borderWidth BorderWidth
 The desired width of the widget border.  Defaults to 0.
+May be ignored depending on the theme used.
 .OP \-relief relief Relief
 One of the standard Tk border styles:
 \fBflat\fR, \fBgroove\fR, \fBraised\fR, \fBridge\fR,
@@ -53,6 +54,8 @@ The class name for a \fBttk::frame\fP is \fBTFrame\fP.
 are:
 .PP
 \fB\-background\fP \fIcolor\fP
+.br
+\fB\-relief\fP \fIrelief\fP
 .PP
 Some options are only available for specific themes.
 .PP

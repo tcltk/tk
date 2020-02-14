@@ -12,13 +12,13 @@ namespace eval ttk::spinbox { }
 ttk::copyBindings TEntry TSpinbox
 
 bind TSpinbox <Motion>			{ ttk::spinbox::Motion %W %x %y }
-bind TSpinbox <ButtonPress-1> 		{ ttk::spinbox::Press %W %x %y }
+bind TSpinbox <Button-1> 		{ ttk::spinbox::Press %W %x %y }
 bind TSpinbox <ButtonRelease-1> 	{ ttk::spinbox::Release %W }
 bind TSpinbox <Double-Button-1> 	{ ttk::spinbox::DoubleClick %W %x %y }
 bind TSpinbox <Triple-Button-1> 	{} ;# disable TEntry triple-click
 
-bind TSpinbox <KeyPress-Up>		{ event generate %W <<Increment>> }
-bind TSpinbox <KeyPress-Down> 		{ event generate %W <<Decrement>> }
+bind TSpinbox <Up>			{ event generate %W <<Increment>> }
+bind TSpinbox <Down> 			{ event generate %W <<Decrement>> }
 
 bind TSpinbox <<Increment>>		{ ttk::spinbox::Spin %W +1 }
 bind TSpinbox <<Decrement>> 		{ ttk::spinbox::Spin %W -1 }
@@ -29,12 +29,14 @@ ttk::bindMouseWheel TSpinbox 		[list ttk::spinbox::MouseWheel %W]
 #	Sets cursor.
 #
 proc ttk::spinbox::Motion {w x y} {
+    variable State
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor text]
     if {   [$w identify $x $y] eq "textarea"
         && [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
-	ttk::setCursor $w ""
+	ttk::setCursor $w $State(userConfCursor)
     }
 }
 
@@ -81,6 +83,7 @@ proc ttk::spinbox::Release {w} {
 # 	or <<Decrement> (+1, down) events.
 #
 proc ttk::spinbox::MouseWheel {w dir} {
+    if {[$w instate disabled]} { return }
     if {$dir < 0} {
 	event generate $w <<Increment>>
     } else {
@@ -132,6 +135,7 @@ proc ttk::spinbox::Adjust {w v min max} {
 #	-from, -to, and -increment.
 #
 proc ttk::spinbox::Spin {w dir} {
+    if {[$w instate disabled]} { return }
     set nvalues [llength [set values [$w cget -values]]]
     set value [$w get]
     if {$nvalues} {

@@ -223,7 +223,7 @@ CreateProc(
 		| SBS_HORZ;
     }
 
-    scrollPtr->hwnd = CreateWindow(TEXT("SCROLLBAR"), NULL, style,
+    scrollPtr->hwnd = CreateWindowW(L"SCROLLBAR", NULL, style,
 	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
 	    parent, NULL, Tk_GetHINSTANCE(), NULL);
 
@@ -245,7 +245,7 @@ CreateProc(
     }
 
     scrollPtr->lastVertical = scrollPtr->info.vertical;
-    scrollPtr->oldProc = (WNDPROC)SetWindowLongPtr(scrollPtr->hwnd,
+    scrollPtr->oldProc = (WNDPROC)SetWindowLongPtrW(scrollPtr->hwnd,
 	    GWLP_WNDPROC, (LONG_PTR) ScrollbarProc);
     window = Tk_AttachHWND(tkwin, scrollPtr->hwnd);
 
@@ -291,7 +291,7 @@ TkpDisplayScrollbar(
     if (scrollPtr->lastVertical != scrollPtr->info.vertical) {
 	HWND hwnd = Tk_GetHWND(Tk_WindowId(tkwin));
 
-	SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR) scrollPtr->oldProc);
+	SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR) scrollPtr->oldProc);
 	DestroyWindow(hwnd);
 
 	CreateProc(tkwin, Tk_WindowId(Tk_Parent(tkwin)),
@@ -325,7 +325,7 @@ TkpDestroyScrollbar(
     HWND hwnd = winScrollPtr->hwnd;
 
     if (hwnd) {
-	SetWindowLongPtr(hwnd, GWLP_WNDPROC, (INT_PTR) winScrollPtr->oldProc);
+	SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (INT_PTR) winScrollPtr->oldProc);
 	if (winScrollPtr->winFlags & IN_MODAL_LOOP) {
 	    ((TkWindow *)scrollPtr->tkwin)->flags |= TK_DONT_DESTROY_WINDOW;
 	    SetParent(hwnd, NULL);
@@ -383,7 +383,7 @@ UpdateScrollbarMetrics(void)
 
 void
 TkpComputeScrollbarGeometry(
-    register TkScrollbar *scrollPtr)
+    TkScrollbar *scrollPtr)
 				/* Scrollbar whose geometry may have
 				 * changed. */
 {
@@ -568,7 +568,7 @@ ScrollbarProc(
 	    return result;
 	}
     }
-    return CallWindowProc(scrollPtr->oldProc, hwnd, message, wParam, lParam);
+    return CallWindowProcW(scrollPtr->oldProc, hwnd, message, wParam, lParam);
 }
 
 /*
@@ -591,7 +591,7 @@ ScrollbarProc(
 
 void
 TkpConfigureScrollbar(
-    register TkScrollbar *scrollPtr)
+    TkScrollbar *scrollPtr)
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
 {
@@ -650,7 +650,7 @@ ModalLoop(
 
 int
 TkpScrollbarPosition(
-    register TkScrollbar *scrollPtr,
+    TkScrollbar *scrollPtr,
 				/* Scrollbar widget record. */
     int x, int y)		/* Coordinates within scrollPtr's window. */
 {

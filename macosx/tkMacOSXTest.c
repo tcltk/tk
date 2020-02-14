@@ -13,6 +13,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 
 /*
  * Forward declarations of procedures defined later in this file:
@@ -22,6 +23,8 @@
 static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
 					int objc, Tcl_Obj *const objv[]);
 #endif
+static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
+					int objc, Tcl_Obj *const objv[]);
 
 
 /*
@@ -50,9 +53,9 @@ TkplatformtestInit(
      */
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-    Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd,
-	    (ClientData) 0, (Tcl_CmdDeleteProc *) NULL);
+    Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
 #endif
+    Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
 
     return TCL_OK;
 }
@@ -118,6 +121,102 @@ TkTestLogDisplay(void) {
     } else {
 	return ![NSApp isDrawing];
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * PressButtonObjCmd --
+ *
+ *	This Tcl command simulates a button press at a specific screen
+ *      location.  It injects NSEvents into the NSApplication event queue,
+ *      as opposed to adding events to the Tcl queue as event generate
+ *      would do.  One application is for testing the grab command.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+        /* ARGSUSED */
+static int
+PressButtonObjCmd(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    int x, y, i, value, wNum;
+    CGPoint pt;
+    NSPoint loc;
+    NSEvent *motion, *press, *release;
+    NSArray *screens = [NSScreen screens];
+    CGFloat ScreenHeight = 0;
+    enum {X=1, Y};
+
+    if (screens && [screens count]) {
+	ScreenHeight = [[screens objectAtIndex:0] frame].size.height;
+    }
+
+    if (objc != 3) {
+        Tcl_WrongNumArgs(interp, 1, objv, "x y");
+        return TCL_ERROR;
+    }
+    for (i = 1; i < objc; i++) {
+	if (Tcl_GetIntFromObj(interp,objv[i],&value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	switch (i) {
+	case X:
+	    x = value;
+	    break;
+	case Y:
+	    y = value;
+	    break;
+	default:
+	    break;
+	}
+    }
+    pt.x = loc.x = x;
+    pt.y = y;
+    loc.y = ScreenHeight - y;
+    wNum = 0;
+    CGWarpMouseCursorPosition(pt);
+    motion = [NSEvent mouseEventWithType:NSMouseMoved
+	location:loc
+	modifierFlags:0
+	timestamp:GetCurrentEventTime()
+	windowNumber:wNum
+	context:nil
+	eventNumber:0
+	clickCount:1
+	pressure:0.0];
+    [NSApp postEvent:motion atStart:NO];
+    press = [NSEvent mouseEventWithType:NSLeftMouseDown
+	location:loc
+	modifierFlags:0
+	timestamp:GetCurrentEventTime()
+	windowNumber:wNum
+	context:nil
+	eventNumber:1
+	clickCount:1
+	pressure:0.0];
+    [NSApp postEvent:press atStart:NO];
+    release = [NSEvent mouseEventWithType:NSLeftMouseUp
+	location:loc
+	modifierFlags:0
+	timestamp:GetCurrentEventTime()
+	windowNumber:wNum
+	context:nil
+	eventNumber:2
+	clickCount:1
+	pressure:0.0];
+    [NSApp postEvent:release atStart:NO];
+    return TCL_OK;
 }
 
 

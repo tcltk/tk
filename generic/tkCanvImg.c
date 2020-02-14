@@ -52,15 +52,15 @@ static const Tk_CustomOption tagsOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-activeimage", NULL, NULL,
-	NULL, Tk_Offset(ImageItem, activeImageString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(ImageItem, activeImageString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(ImageItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"center", offsetof(ImageItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_STRING, "-disabledimage", NULL, NULL,
-	NULL, Tk_Offset(ImageItem, disabledImageString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(ImageItem, disabledImageString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-image", NULL, NULL,
-	NULL, Tk_Offset(ImageItem, imageString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(ImageItem, imageString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}

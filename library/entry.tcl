@@ -74,7 +74,7 @@ bind Entry <<TraverseIn>> {
 
 # Standard Motif bindings:
 
-bind Entry <1> {
+bind Entry <Button-1> {
     tk::EntryButton1 %W %x
     %W selection clear
 }
@@ -82,25 +82,25 @@ bind Entry <B1-Motion> {
     set tk::Priv(x) %x
     tk::EntryMouseSelect %W %x
 }
-bind Entry <Double-1> {
+bind Entry <Double-Button-1> {
     set tk::Priv(selectMode) word
     tk::EntryMouseSelect %W %x
     catch {%W icursor sel.last}
 }
-bind Entry <Triple-1> {
+bind Entry <Triple-Button-1> {
     set tk::Priv(selectMode) line
     tk::EntryMouseSelect %W %x
     catch {%W icursor sel.last}
 }
-bind Entry <Shift-1> {
+bind Entry <Shift-Button-1> {
     set tk::Priv(selectMode) char
     %W selection adjust @%x
 }
-bind Entry <Double-Shift-1>	{
+bind Entry <Double-Shift-Button-1>	{
     set tk::Priv(selectMode) word
     tk::EntryMouseSelect %W %x
 }
-bind Entry <Triple-Shift-1>	{
+bind Entry <Triple-Shift-Button-1>	{
     set tk::Priv(selectMode) line
     tk::EntryMouseSelect %W %x
 }
@@ -114,7 +114,7 @@ bind Entry <B1-Enter> {
 bind Entry <ButtonRelease-1> {
     tk::CancelRepeat
 }
-bind Entry <Control-1> {
+bind Entry <Control-Button-1> {
     %W icursor @%x
 }
 
@@ -190,19 +190,19 @@ bind Entry <<SelectAll>> {
 bind Entry <<SelectNone>> {
     %W selection clear
 }
-bind Entry <KeyPress> {
+bind Entry <Key> {
     tk::CancelRepeat
     tk::EntryInsert %W %A
 }
 
 # Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
-# <KeyPress> class binding will also fire and insert the character,
+# <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for Escape, Return, and Tab.
 
-bind Entry <Alt-KeyPress> {# nothing}
-bind Entry <Meta-KeyPress> {# nothing}
-bind Entry <Control-KeyPress> {# nothing}
+bind Entry <Alt-Key> {# nothing}
+bind Entry <Meta-Key> {# nothing}
+bind Entry <Control-Key> {# nothing}
 bind Entry <Escape> {# nothing}
 bind Entry <Return> {# nothing}
 bind Entry <KP_Enter> {# nothing}
@@ -210,7 +210,7 @@ bind Entry <Tab> {# nothing}
 bind Entry <Prior> {# nothing}
 bind Entry <Next> {# nothing}
 if {[tk windowingsystem] eq "aqua"} {
-    bind Entry <Command-KeyPress> {# nothing}
+    bind Entry <Command-Key> {# nothing}
 }
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind Entry <<NextLine>> {# nothing}
@@ -272,9 +272,28 @@ bind Entry <Meta-Delete> {
     }
 }
 
+# Bindings for IME text input and accents.
+
+bind Entry <<TkStartIMEMarkedText>> {
+    dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
+}
+bind Entry <<TkEndIMEMarkedText>> {
+    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
+	bell
+    } else {
+	%W selection range $mark insert
+    }
+}
+bind Entry <<TkClearIMEMarkedText>> {
+    %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
+}
+bind Entry <<TkAccentBackspace>> {
+    tk::EntryBackspace %W
+}
+
 # A few additional bindings of my own.
 
-bind Entry <2> {
+bind Entry <Button-2> {
     if {!$tk_strictMotif} {
 	::tk::EntryScanMark %W %x
     }
@@ -652,3 +671,12 @@ proc ::tk::EntryGetSelection {w} {
     }
     return $entryString
 }
+
+
+
+
+
+
+
+
+

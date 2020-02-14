@@ -31,7 +31,7 @@ typedef struct {
  * The structure below is used to allocate thread-local data.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     char rgbString[20];		/* */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
