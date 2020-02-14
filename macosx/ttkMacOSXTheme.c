@@ -1017,8 +1017,8 @@ static void DrawProgressBar(
  * DrawSlider --
  *
  * Draws a slider track and round thumb for a Ttk scale widget.  The accent
- * color is used on the part of the track that corresponds to lower values,
- * so the value corresponds to the fraction of the track which is colored.
+ * color is used on the left or top part of the track, so the fraction of
+ * the track which is colored is equal to (value - from) / (to - from).
  *
  */
 
@@ -1035,12 +1035,19 @@ static void DrawSlider(
     CGFloat position;
     CGColorRef accentColor;
     double from = info.min, to = info.max, value = info.value;
+
+    /*
+     * info.min, info.max and info.value are integers.  When this is called
+     * we will have arranged that min = 0 and max is a large positive integer.
+     */
+    
+    double fraction = (from < to) ? (value - from) / (to - from) : 0.5;
     int isDark = TkMacOSXInDarkMode(tkwin);
 
     if (info.attributes & kThemeTrackHorizontal) {
 	trackBounds = CGRectInset(bounds, 0, bounds.size.height / 2 - 3);
 	trackBounds.size.height = 3;
-	position = 8 + ((value - from) / (to - from)) * (trackBounds.size.width - 16);
+	position = 8 + fraction * (trackBounds.size.width - 16);
 	clipBounds = trackBounds;
 	clipBounds.size.width = position;
 	thumbPoint = CGPointMake(clipBounds.origin.x + position,
@@ -1048,7 +1055,7 @@ static void DrawSlider(
     } else {
 	trackBounds = CGRectInset(bounds, bounds.size.width / 2 - 3, 0);
 	trackBounds.size.width = 3;
-	position = 8 + (value / (to - from)) * (trackBounds.size.height - 16);
+	position = 8 + fraction * (trackBounds.size.height - 16);
 	clipBounds = trackBounds;
 	clipBounds.size.height = position;
 	thumbPoint = CGPointMake(clipBounds.origin.x + 1,
@@ -2337,7 +2344,7 @@ static void TrackElementDraw(
     TrackElementData *data = clientData;
     TrackElement *elem = elementRecord;
     int orientation = TTK_ORIENT_HORIZONTAL;
-    double from = 0, to = 100, value = 0, factor;
+    double from = 0, to = 100, value = 0, fraction, max;
     CGRect bounds = BoxToRect(d, b);
 
     Ttk_GetOrientFromObj(NULL, elem->orientObj, &orientation);
@@ -2345,15 +2352,16 @@ static void TrackElementDraw(
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
 
-    factor = RangeToFactor(to);
-
+    fraction = (value - from) / (to - from);
+    max = RangeToFactor(fabs(to - from));
+    
     HIThemeTrackDrawInfo info = {
 	.version = 0,
 	.kind = data->kind,
 	.bounds = bounds,
-	.min = from * factor,
-	.max = to * factor,
-	.value = value * factor,
+	.min = 0,
+	.max = max,
+	.value = fraction * max,
 	.attributes = kThemeTrackShowThumb |
 	    (orientation == TTK_ORIENT_HORIZONTAL ?
 	    kThemeTrackHorizontal : 0),
