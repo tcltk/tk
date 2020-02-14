@@ -63,9 +63,9 @@ typedef struct mFile {
  * Most data in a GIF image is binary and is treated as such. However, a few
  * key bits are stashed in ASCII. If we try to compare those pieces to the
  * char they represent, it will fail on any non-ASCII (eg, EBCDIC) system. To
- * accomodate these systems, we test against the numeric value of the ASCII
+ * accommodate these systems, we test against the numeric value of the ASCII
  * characters instead of the characters themselves. This is encoding
- * independant.
+ * independent.
  */
 
 static const char GIF87a[] = {			/* ASCII GIF87a */

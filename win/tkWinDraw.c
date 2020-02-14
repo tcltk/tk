@@ -103,7 +103,7 @@ const int tkpWinBltModes[] = {
 
 typedef BOOL (CALLBACK *WinDrawFunc)(HDC dc, const POINT *points, int npoints);
 
-typedef struct ThreadSpecificData {
+typedef struct {
     POINT *winPoints;		/* Array of points that is reused. */
     int nWinPoints;		/* Current size of point array. */
 } ThreadSpecificData;
@@ -519,7 +519,6 @@ TkPutImage(
     BITMAPINFO *infoPtr;
     HBITMAP bitmap;
     char *data;
-    Visual *visual;
 
     display->request++;
 
@@ -557,7 +556,7 @@ TkPutImage(
 	    infoPtr = ckalloc(sizeof(BITMAPINFOHEADER)
 		    + sizeof(RGBQUAD)*ncolors);
 	} else {
-	    infoPtr = ckalloc(sizeof(BITMAPINFOHEADER) + sizeof(DWORD)*4);
+	    infoPtr = ckalloc(sizeof(BITMAPINFOHEADER));
 	}
 
 	infoPtr->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -565,13 +564,13 @@ TkPutImage(
 	infoPtr->bmiHeader.biHeight = -image->height; /* Top-down order */
 	infoPtr->bmiHeader.biPlanes = 1;
 	infoPtr->bmiHeader.biBitCount = image->bits_per_pixel;
+	infoPtr->bmiHeader.biCompression = BI_RGB;
 	infoPtr->bmiHeader.biSizeImage = 0;
 	infoPtr->bmiHeader.biXPelsPerMeter = 0;
 	infoPtr->bmiHeader.biYPelsPerMeter = 0;
 	infoPtr->bmiHeader.biClrImportant = 0;
 
 	if (usePalette) {
-	    infoPtr->bmiHeader.biCompression = BI_RGB;
 	    infoPtr->bmiHeader.biClrUsed = ncolors;
 	    for (i = 0; i < ncolors; i++) {
 		infoPtr->bmiColors[i].rgbBlue = GetBValue(colors[i]);
@@ -580,13 +579,7 @@ TkPutImage(
 		infoPtr->bmiColors[i].rgbReserved = 0;
 	    }
 	} else {
-	    infoPtr->bmiHeader.biCompression = BI_BITFIELDS;
-	    /* Modelled on XGetVisualInfo() in xutil.c.
-	     * We want to get the rgb masks for the default visual for the given display. */
-	    visual = DefaultVisual(display,0);
-	    *((DWORD *)((unsigned char *)infoPtr + sizeof(BITMAPINFOHEADER))) = visual->blue_mask;
-	    *((DWORD *)((unsigned char *)infoPtr + sizeof(BITMAPINFOHEADER))+1) = visual->green_mask;
-	    *((DWORD *)((unsigned char *)infoPtr + sizeof(BITMAPINFOHEADER))+2) = visual->red_mask;
+	    infoPtr->bmiHeader.biClrUsed = 0;
 	}
 	bitmap = CreateDIBitmap(dc, &infoPtr->bmiHeader, CBM_INIT,
 		image->data, infoPtr, DIB_RGB_COLORS);
@@ -607,6 +600,7 @@ TkPutImage(
     return Success;
 }
 
+#undef XPutImage
 int
 XPutImage(
     Display *display,
@@ -1409,7 +1403,7 @@ TkScrollWindow(
     int x, int y, int width, int height,
 				/* Position rectangle to be scrolled. */
     int dx, int dy,		/* Distance rectangle should be moved. */
-    TkRegion damageRgn)		/* Region to accumulate damage in. */
+    Region damageRgn)		/* Region to accumulate damage in. */
 {
     HWND hwnd = TkWinGetHWND(Tk_WindowId(tkwin));
     RECT scrollRect;
@@ -1455,7 +1449,7 @@ TkWinFillRect(
     rect.bottom = y + height;
     oldColor = SetBkColor(dc, (COLORREF)pixel);
     SetBkMode(dc, OPAQUE);
-    ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
+    ExtTextOutW(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
     SetBkColor(dc, oldColor);
 }
 

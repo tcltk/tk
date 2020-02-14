@@ -68,10 +68,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	7
 #define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL	2
+#define TK_RELEASE_SERIAL	4
 
 #define TK_VERSION		"8.7"
-#define TK_PATCH_LEVEL		"8.7a2"
+#define TK_PATCH_LEVEL		"8.7a4"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -85,13 +85,14 @@ extern "C" {
 
 #ifndef RC_INVOKED
 
-#ifndef _XLIB_H
+#if !defined(_XLIB_H) && !defined(_X11_XLIB_H_)
 #   include <X11/Xlib.h>
 #   ifdef MAC_OSX_TK
 #	include <X11/X.h>
 #   endif
 #endif
-#ifdef __STDC__
+#if defined(STDC_HEADERS) || defined(__STDC__) || defined(__C99__FUNC__) \
+     || defined(__cplusplus) || defined(_MSC_VER) || defined(__ICC)
 #   include <stddef.h>
 #endif
 
@@ -110,7 +111,7 @@ extern "C" {
  * Decide whether or not to use input methods.
  */
 
-#ifdef XNQueryInputStyle
+#if defined(XNQueryInputStyle) && !defined(_WIN32) && !defined(MAC_OSX_TK)
 #define TK_USE_INPUT_METHODS
 #endif
 
@@ -191,14 +192,14 @@ typedef struct Tk_OptionSpec {
     size_t objOffset;		/* Where in record to store a Tcl_Obj * that
 				 * holds the value of this option, specified
 				 * as an offset in bytes from the start of the
-				 * record. Use the Tk_Offset macro to generate
+				 * record. Use the offsetof macro to generate
 				 * values for this. -1 means don't store the
 				 * Tcl_Obj in the record. */
     size_t internalOffset;		/* Where in record to store the internal
 				 * representation of the value of this option,
 				 * such as an int or XColor *. This field is
 				 * specified as an offset in bytes from the
-				 * start of the record. Use the Tk_Offset
+				 * start of the record. Use the offsetof
 				 * macro to generate values for it. -1 means
 				 * don't store the internal representation in
 				 * the record. */
@@ -268,10 +269,12 @@ typedef struct Tk_ObjCustomOption {
  * Computes number of bytes from beginning of structure to a given field.
  */
 
-#ifdef offsetof
-#define Tk_Offset(type, field) ((int) offsetof(type, field))
-#else
-#define Tk_Offset(type, field) ((int) ((char *) &((type *) 0)->field))
+#ifndef TK_NO_DEPRECATED
+#   define Tk_Offset(type, field) ((int) offsetof(type, field))
+#endif
+/* Workaround for platforms missing offsetof(), e.g. VC++ 6.0 */
+#ifndef offsetof
+#   define offsetof(type, field) ((size_t) ((char *) &((type *) 0)->field))
 #endif
 
 /*
@@ -376,7 +379,7 @@ typedef struct Tk_ConfigSpec {
 				 * in command line or database. */
 #if TCL_MAJOR_VERSION > 8
     size_t offset;			/* Where in widget record to store value; use
-				 * Tk_Offset macro to generate values for
+				 * offsetof macro to generate values for
 				 * this. */
 #else
     int offset;
@@ -438,9 +441,9 @@ typedef struct {
     const char *key;		/* The key string that flags the option in the
 				 * argv array. */
     int type;			/* Indicates option type; see below. */
-    char *src;			/* Value to be used in setting dst; usage
+    void *src;			/* Value to be used in setting dst; usage
 				 * depends on type. */
-    char *dst;			/* Address of value to be modified; usage
+    void *dst;			/* Address of value to be modified; usage
 				 * depends on type. */
     const char *help;		/* Documentation message describing this
 				 * option. */
@@ -616,12 +619,12 @@ typedef struct Tk_ClassProcs {
  *
  *	#define Tk_GetField(name, who, which) \
  *	    (((who) == NULL) ? NULL :
- *	    (((who)->size <= Tk_Offset(name, which)) ? NULL :(name)->which))
+ *	    (((who)->size <= offsetof(name, which)) ? NULL :(name)->which))
  */
 
 #define Tk_GetClassProc(procs, which) \
     (((procs) == NULL) ? NULL : \
-    (((procs)->size <= (size_t)Tk_Offset(Tk_ClassProcs, which)) ? NULL:(procs)->which))
+    (((procs)->size <= offsetof(Tk_ClassProcs, which)) ? NULL:(procs)->which))
 
 /*
  * Each geometry manager (the packer, the placer, etc.) is represented by a
@@ -810,7 +813,7 @@ typedef struct Tk_FakeWin {
     unsigned long dummy7;	/* dirtyAtts */
     unsigned int flags;
     char *dummy8;		/* handlerList */
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIC dummy9;			/* inputContext */
 #endif /* TK_USE_INPUT_METHODS */
     ClientData *dummy10;	/* tagPtr */
@@ -830,11 +833,15 @@ typedef struct Tk_FakeWin {
     int internalBorderBottom;
     int minReqWidth;
     int minReqHeight;
-#ifdef TK_USE_INPUT_METHODS
+#if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     int dummy20;
 #endif /* TK_USE_INPUT_METHODS */
     char *dummy21;		/* geomMgrName */
     Tk_Window dummy22;		/* maintainerPtr */
+#if !defined(TK_USE_INPUT_METHODS) && (TCL_MAJOR_VERSION < 9)
+    XIC dummy9;			/* inputContext */
+    int dummy20;
+#endif /* TK_USE_INPUT_METHODS */
 } Tk_FakeWin;
 
 /*

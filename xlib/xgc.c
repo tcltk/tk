@@ -24,12 +24,9 @@
 #   include <tkMacOSXInt.h>
 #   include <X11/Xlib.h>
 #   include <X11/X.h>
-#   define Cursor XCursor
-#   define Region XRegion
 #   define gcCacheSize sizeof(TkpGCCache)
 #endif
 
-#undef TkSetRegion
 
 /*
  *----------------------------------------------------------------------
@@ -117,7 +114,7 @@ XCreateGC(
     /*
      * In order to have room for a dash list, MAX_DASH_LIST_SIZE extra chars
      * are defined, which is invisible from the outside. The list is assumed
-     * to end with a 0-char, so this must be set explicitely during
+     * to end with a 0-char, so this must be set explicitly during
      * initialization.
      */
 
@@ -453,12 +450,12 @@ XSetClipOrigin(
  *	None.
  *
  * Side effects:
- *	Allocates or dealloates a TkpClipMask.
+ *	Allocates or deallocates a TkpClipMask.
  *
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkSetRegion(
     Display *display,
     GC gc,
@@ -475,6 +472,7 @@ TkSetRegion(
 	TkpRetainRegion(r);
 #endif
     }
+    return Success;
 }
 
 int
@@ -564,7 +562,6 @@ XDrawSegments(
 }
 #endif
 
-#if 0
 char *
 XFetchBuffer(
     Display *display,
@@ -580,7 +577,7 @@ XFetchName(
     Window w,
     char **window_name_return)
 {
-    return (Status) 0;
+    return Success;
 }
 
 Atom *
@@ -592,29 +589,15 @@ XListProperties(
     return (Atom *) 0;
 }
 
-void
+int
 XMapRaised(
     Display *display,
     Window w)
 {
+   return Success;
 }
 
-void
-XPutImage(
-    Display *display,
-    Drawable d,
-    GC gc,
-    XImage *image,
-    int src_x,
-    int src_y,
-    int dest_x,
-    int dest_y,
-    unsigned int width,
-    unsigned int height)
-{
-}
-
-void
+int
 XQueryTextExtents(
     Display *display,
     XID font_ID,
@@ -625,9 +608,10 @@ XQueryTextExtents(
     int *font_descent_return,
     XCharStruct *overall_return)
 {
+    return Success;
 }
 
-void
+int
 XReparentWindow(
     Display *display,
     Window w,
@@ -635,32 +619,207 @@ XReparentWindow(
     int x,
     int y)
 {
+    return BadWindow;
 }
 
-void
-XRotateBuffers(
-    Display *display,
-    int rotate)
-{
-}
-
-void
-XStoreBuffer(
-    Display *display,
-    _Xconst char *bytes,
-    int nbytes,
-    int buffer)
-{
-}
-
-void
+int
 XUndefineCursor(
     Display *display,
     Window w)
 {
+    return Success;
 }
-#endif
+
+XVaNestedList
+XVaCreateNestedList(
+    int unused, ...)
+{
+    return NULL;
+}
+
+char *
+XSetICValues(
+    XIC xic, ...)
+{
+    return NULL;
+}
+
+char *
+XGetICValues(
+    XIC xic, ...)
+{
+    return NULL;
+}
+
+void
+XSetICFocus(
+    XIC xic)
+{
+}
+
+Window
+XCreateWindow(
+    Display *display,
+	Window parent,
+	int x,
+	int y,
+    unsigned int width,
+	unsigned int height,
+    unsigned int border_width,
+	int depth,
+	unsigned int clazz,
+    Visual *visual,
+	unsigned long value_mask,
+    XSetWindowAttributes *attributes)
+{
+	return 0;
+}
+
+int
+XPointInRegion(
+    Region rgn,
+	int x,
+	int y)
+{
+	return 0;
+}
+
+int
+XUnionRegion(
+    Region srca,
+	Region srcb,
+	Region dr_return)
+{
+	return 0;
+}
+
+Region
+XPolygonRegion(
+    XPoint *pts,
+	int n,
+	int rule)
+{
+    return 0;
+}
 
+void
+XDestroyIC(
+    XIC ic)
+{
+}
+
+Cursor
+XCreatePixmapCursor(
+    Display *display,
+    Pixmap source,
+    Pixmap mask,
+    XColor *foreground_color,
+    XColor *background_color,
+    unsigned int x,
+    unsigned int y)
+{
+    return (Cursor) NULL;
+}
+
+Cursor
+XCreateGlyphCursor(
+    Display *display,
+    Font source_font,
+    Font mask_font,
+    unsigned int source_char,
+    unsigned int mask_char,
+    XColor _Xconst *foreground_color,
+    XColor _Xconst *background_color)
+{
+    return 1;
+}
+
+XFontSet
+XCreateFontSet(
+    Display *display		/* display */,
+    _Xconst char *base_font_name_list	/* base_font_name_list */,
+    char ***missing_charset_list		/* missing_charset_list */,
+    int *missing_charset_count		/* missing_charset_count */,
+    char **def_string		/* def_string */
+) {
+    return (XFontSet)0;
+}
+
+void
+XFreeFontSet(
+    Display *display,		/* display */
+    XFontSet fontset		/* font_set */
+) {
+}
+
+void
+XFreeStringList(
+    char **list		/* list */
+) {
+}
+
+Status
+XCloseIM(
+    XIM im /* im */
+) {
+    return Success;
+}
+
+Bool
+XRegisterIMInstantiateCallback(
+    Display *dpy			/* dpy */,
+    struct _XrmHashBucketRec *rdb	/* rdb */,
+    char *res_name			/* res_name */,
+    char *res_class			/* res_class */,
+    XIDProc callback			/* callback */,
+    XPointer client_data			/* client_data */
+) {
+    return False;
+}
+
+Bool
+XUnregisterIMInstantiateCallback(
+    Display *dpy			/* dpy */,
+    struct _XrmHashBucketRec *rdb	/* rdb */,
+    char *res_name			/* res_name */,
+    char *res_class			/* res_class */,
+    XIDProc callback			/* callback */,
+    XPointer client_data			/* client_data */
+) {
+    return False;
+}
+
+char *
+XSetLocaleModifiers(
+    const char *modifier_list		/* modifier_list */
+) {
+    return NULL;
+}
+
+XIM XOpenIM(
+    Display *dpy			/* dpy */,
+    struct _XrmHashBucketRec *rdb	/* rdb */,
+    char *res_name			/* res_name */,
+    char *res_class			/* res_class */
+) {
+    return NULL;
+}
+
+char *
+XGetIMValues(
+    XIM im /* im */, ...
+) {
+    return NULL;
+}
+
+char *
+XSetIMValues(
+    XIM im /* im */, ...
+) {
+    return NULL;
+}
+
+
 /*
  * Local Variables:
  * mode: c

@@ -279,8 +279,8 @@ TkFocusFilterEvent(
      * pass the event through to Tk bindings.
      */
 
-    if (eventPtr->xfocus.send_event == GENERATED_FOCUS_EVENT_MAGIC) {
-	eventPtr->xfocus.send_event = 0;
+    if ((eventPtr->xfocus.send_event & GENERATED_FOCUS_EVENT_MAGIC) == GENERATED_FOCUS_EVENT_MAGIC) {
+	eventPtr->xfocus.send_event &= ~GENERATED_FOCUS_EVENT_MAGIC;
 	return 1;
     }
 
@@ -629,7 +629,8 @@ TkSetFocusWin(
     }
     tlFocusPtr->focusWinPtr = winPtr;
 
-    if (topLevelPtr->flags & TK_EMBEDDED) {
+    if (topLevelPtr->flags & TK_EMBEDDED &&
+        (displayFocusPtr->focusWinPtr == NULL)) {
 
 	/*
 	 * We are assigning focus to an embedded toplevel.  The platform

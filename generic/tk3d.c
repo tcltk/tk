@@ -1315,7 +1315,7 @@ Tk_Get3DBorderFromObj(
  *
  * Side effects:
  *	If no error occurs, a blank internal format for a border value is
- *	intialized. The final form cannot be done without a Tk_Window.
+ *	initialized. The final form cannot be done without a Tk_Window.
  *
  *----------------------------------------------------------------------
  */

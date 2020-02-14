@@ -222,7 +222,7 @@ TkMacOSXBitmapRepFromDrawableRect(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XCopyArea(
     Display *display,		/* Display. */
     Drawable src,		/* Source drawable. */
@@ -243,17 +243,17 @@ XCopyArea(
 
     display->request++;
     if (!width || !height) {
-	return;
+	return BadDrawable;
     }
 
     if (!TkMacOSXSetupDrawingContext(dst, gc, 1, &dc)) {
 	TkMacOSXDbgMsg("Failed to setup drawing context.");
-	return;
+	return BadDrawable;
     }
 
     if (!dc.context) {
 	TkMacOSXDbgMsg("Invalid destination drawable - no context.");
-	return;
+	return BadDrawable;
     }
 
     if (srcDraw->flags & TK_IS_PIXMAP) {
@@ -280,6 +280,7 @@ XCopyArea(
     }
 
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -300,7 +301,7 @@ XCopyArea(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XCopyPlane(
     Display *display,		/* Display. */
     Drawable src,		/* Source drawable. */
@@ -321,14 +322,14 @@ XCopyPlane(
     display->request++;
     if (!width || !height) {
 	/* TkMacOSXDbgMsg("Drawing of empty area requested"); */
-	return;
+	return BadDrawable;
     }
     if (plane != 1) {
 	Tcl_Panic("Unexpected plane specified for XCopyPlane");
     }
     if (srcDraw->flags & TK_IS_PIXMAP) {
 	if (!TkMacOSXSetupDrawingContext(dst, gc, 1, &dc)) {
-	    return;
+	    return BadDrawable;
 	}
 
 	CGContextRef context = dc.context;
@@ -401,12 +402,13 @@ XCopyPlane(
 		    "could not get a bitmap context.");
 	}
 	TkMacOSXRestoreDrawingContext(&dc);
+	return Success;
     } else {
 	/*
 	 * Source drawable is a Window, not a Pixmap.
 	 */
 
-	XCopyArea(display, src, dst, gc, src_x, src_y, width, height,
+	return XCopyArea(display, src, dst, gc, src_x, src_y, width, height,
 		dest_x, dest_y);
     }
 }
@@ -499,9 +501,12 @@ TkMacOSXGetNSImageWithTkImage(
     int width,
     int height)
 {
-    Pixmap pixmap = Tk_GetPixmap(display, None, width, height, 0);
+    Pixmap pixmap;
     NSImage *nsImage;
-
+    if (width == 0 || height == 0) {
+	return nsImage = [[NSImage alloc] initWithSize:NSMakeSize(0,0)];
+    }
+    pixmap = Tk_GetPixmap(display, None, width, height, 0);
     Tk_RedrawImage(image, 0, 0, width, height, pixmap, 0, 0);
     nsImage = CreateNSImageWithPixmap(pixmap, width, height);
     Tk_FreePixmap(display, pixmap);
@@ -848,7 +853,7 @@ XDrawSegments(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillPolygon(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -864,7 +869,7 @@ XFillPolygon(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	double prevx, prevy;
@@ -888,6 +893,7 @@ XFillPolygon(
 	CGContextEOFillPath(dc.context);
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
 /*
@@ -906,7 +912,7 @@ XFillPolygon(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawRectangle(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -920,12 +926,12 @@ XDrawRectangle(
     int lw = gc->line_width;
 
     if (width == 0 || height == 0) {
-	return;
+	return BadDrawable;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -937,9 +943,9 @@ XDrawRectangle(
 	CGContextStrokeRect(dc.context, rect);
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -964,7 +970,7 @@ XDrawRectangle(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawRectangles(
     Display *display,
     Drawable drawable,
@@ -978,8 +984,8 @@ XDrawRectangles(
     int i, lw = gc->line_width;
 
     display->request++;
-    if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+    if (!TkMacOSXSetupDrawingContext(drawable, gc, 1, &dc)) {
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -997,8 +1003,8 @@ XDrawRectangles(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1115,7 +1121,7 @@ TkMacOSXDrawSolidBorder(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawArc(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -1131,12 +1137,12 @@ XDrawArc(
     int lw = gc->line_width;
 
     if (width == 0 || height == 0 || angle2 == 0) {
-	return;
+	return BadDrawable;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1166,9 +1172,9 @@ XDrawArc(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -1191,7 +1197,7 @@ XDrawArc(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XDrawArcs(
     Display *display,
     Drawable d,
@@ -1206,7 +1212,7 @@ XDrawArcs(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1247,8 +1253,8 @@ XDrawArcs(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1266,7 +1272,7 @@ XDrawArcs(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillArc(
     Display *display,		/* Display. */
     Drawable d,			/* Draw on this. */
@@ -1282,12 +1288,12 @@ XFillArc(
     int lw = gc->line_width;
 
     if (width == 0 || height == 0 || angle2 == 0) {
-	return;
+	return BadDrawable;
     }
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1326,9 +1332,9 @@ XFillArc(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -1345,7 +1351,7 @@ XFillArc(
  *----------------------------------------------------------------------
  */
 
-void
+int
 XFillArcs(
     Display *display,
     Drawable d,
@@ -1360,7 +1366,7 @@ XFillArcs(
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {
-	return;
+	return BadDrawable;
     }
     if (dc.context) {
 	CGRect rect;
@@ -1408,25 +1414,8 @@ XFillArcs(
 	}
     }
     TkMacOSXRestoreDrawingContext(&dc);
+    return Success;
 }
-#endif
-
-#ifdef TK_MACOSXDRAW_UNUSED
-/*
- *----------------------------------------------------------------------
- *
- * XMaxRequestSize --
- *
- *----------------------------------------------------------------------
- */
-
-long
-XMaxRequestSize(
-    Display *display)
-{
-    return (SHRT_MAX / 4);
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1453,7 +1442,7 @@ TkScrollWindow(
     int x, int y,		/* Position rectangle to be scrolled. */
     int width, int height,
     int dx, int dy,		/* Distance rectangle should be moved. */
-    TkRegion damageRgn)		/* Region to accumulate damage in. */
+    Region damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
     MacDrawable *macDraw = (MacDrawable *) drawable;
@@ -1625,16 +1614,36 @@ TkMacOSXSetupDrawingContext(
 	 * a view's drawRect or setFrame methods.  The isDrawing attribute
 	 * tells us whether we are being called from one of those methods.
 	 *
-	 * If the CGContext is not valid, or belongs to a different View, then
-	 * we mark our view as needing display and return failure. It should
-	 * get drawn in a later call to drawRect.
+	 * If the CGContext is not valid then we mark our view as needing
+	 * display in the bounding rectangle of the clipping region and
+	 * return failure.  That rectangle should get drawn in a later call
+	 * to drawRect.
+	 *
+	 * As an exception to the above, if mouse buttons are pressed at the
+	 * moment when we fail to obtain a valid context we schedule the entire
+	 * view for a redraw rather than just the clipping region.  The purpose
+	 * of this is to make sure that scrollbars get updated correctly.
 	 */
 
-	if (view != [NSView focusView]) {
-	    [view setNeedsDisplay:YES];
+	if (![NSApp isDrawing] || view != [NSView focusView]) {
+	    NSRect bounds = [view bounds];
+	    NSRect dirtyNS = bounds;
+	    if ([NSEvent pressedMouseButtons]) {
+		[view setNeedsDisplay:YES];
+	    } else {
+		CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
+					.ty = dirtyNS.size.height};
+		if (dc.clipRgn) {
+		    CGRect dirtyCG = NSRectToCGRect(dirtyNS);
+		    HIShapeGetBounds(dc.clipRgn, &dirtyCG);
+		    dirtyNS = NSRectToCGRect(CGRectApplyAffineTransform(dirtyCG, t));
+		}
+		[view setNeedsDisplayInRect:dirtyNS];
+	    }
 	    canDraw = false;
 	    goto end;
 	}
+
 	dc.view = view;
 	dc.context = GET_CGCONTEXT;
 	dc.portBounds = NSRectToCGRect([view bounds]);
@@ -1937,12 +1946,12 @@ ClipToGC(
 {
     if (gc && gc->clip_mask &&
 	    ((TkpClipMask *) gc->clip_mask)->type == TKP_CLIP_REGION) {
-	TkRegion gcClip = ((TkpClipMask *) gc->clip_mask)->value.region;
+	Region gcClip = ((TkpClipMask *) gc->clip_mask)->value.region;
 	int xOffset = ((MacDrawable *) d)->xOff + gc->clip_x_origin;
 	int yOffset = ((MacDrawable *) d)->yOff + gc->clip_y_origin;
 	HIShapeRef clipRgn = *clipRgnPtr, gcClipRgn;
 
-	TkMacOSXOffsetRegion(gcClip, xOffset, yOffset);
+	XOffsetRegion(gcClip, xOffset, yOffset);
 	gcClipRgn = TkMacOSXGetNativeRegion(gcClip);
 	if (clipRgn) {
 	    *clipRgnPtr = HIShapeCreateIntersection(gcClipRgn, clipRgn);
@@ -1951,7 +1960,7 @@ ClipToGC(
 	    *clipRgnPtr = HIShapeCreateCopy(gcClipRgn);
 	}
 	CFRelease(gcClipRgn);
-	TkMacOSXOffsetRegion(gcClip, -xOffset, -yOffset);
+	XOffsetRegion(gcClip, -xOffset, -yOffset);
     }
 }
 

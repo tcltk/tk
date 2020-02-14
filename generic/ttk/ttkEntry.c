@@ -154,55 +154,55 @@ typedef struct {
 #define DEF_ENTRY_FONT		"TkTextFont"
 #define DEF_LIST_HEIGHT		"10"
 
-static Tk_OptionSpec EntryOptionSpecs[] = {
+static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-exportselection", "exportSelection",
-        "ExportSelection", "1", -1, Tk_Offset(Entry, entry.exportSelection),
+        "ExportSelection", "1", -1, offsetof(Entry, entry.exportSelection),
 	0,0,0 },
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_ENTRY_FONT, Tk_Offset(Entry, entry.fontObj),-1,
+	DEF_ENTRY_FONT, offsetof(Entry, entry.fontObj),-1,
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
-	NULL, -1, Tk_Offset(Entry, entry.invalidCmd),
+	NULL, -1, offsetof(Entry, entry.invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	"left", -1, Tk_Offset(Entry, entry.justify),
+	"left", -1, offsetof(Entry, entry.justify),
 	0, 0, GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
-	NULL, Tk_Offset(Entry, entry.placeholderObj), -1,
+	NULL, offsetof(Entry, entry.placeholderObj), -1,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-show", "show", "Show",
-        NULL, -1, Tk_Offset(Entry, entry.showChar),
+        NULL, -1, offsetof(Entry, entry.showChar),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-state", "state", "State",
-	"normal", Tk_Offset(Entry, entry.stateObj), -1,
+	"normal", offsetof(Entry, entry.stateObj), -1,
         0,0,STATE_CHANGED},
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable",
-	NULL, Tk_Offset(Entry, entry.textVariableObj), -1,
+	NULL, offsetof(Entry, entry.textVariableObj), -1,
 	TK_OPTION_NULL_OK,0,TEXTVAR_CHANGED},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
-	"none", -1, Tk_Offset(Entry, entry.validate),
+	"none", -1, offsetof(Entry, entry.validate),
 	0, (ClientData) validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand", "ValidateCommand",
-	NULL, -1, Tk_Offset(Entry, entry.validateCmd),
+	NULL, -1, offsetof(Entry, entry.validateCmd),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_INT, "-width", "width", "Width",
-	DEF_ENTRY_WIDTH, Tk_Offset(Entry, entry.widthObj), -1,
+	DEF_ENTRY_WIDTH, offsetof(Entry, entry.widthObj), -1,
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	NULL, -1, Tk_Offset(Entry, entry.xscroll.scrollCmd),
+	NULL, -1, offsetof(Entry, entry.xscroll.scrollCmd),
 	TK_OPTION_NULL_OK, 0, SCROLLCMD_CHANGED},
 
     /* EntryStyleData options:
      */
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
-	NULL, Tk_Offset(Entry, entry.styleData.backgroundObj), -1,
+	NULL, offsetof(Entry, entry.styleData.backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
-	NULL, Tk_Offset(Entry, entry.styleData.foregroundObj), -1,
+	NULL, offsetof(Entry, entry.styleData.foregroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
         "PlaceholderForeground", NULL,
-        Tk_Offset(Entry, entry.styleData.placeholderForegroundObj), -1,
+        offsetof(Entry, entry.styleData.placeholderForegroundObj), -1,
 	TK_OPTION_NULL_OK,0,0},
 
     WIDGET_TAKEFOCUS_TRUE,
@@ -294,7 +294,7 @@ static char *EntryDisplayString(const char *showChar, int numChars)
     char *displayString, *p;
     int size;
     int ch;
-    char buf[6];
+    char buf[4];
 
     TkUtfToUniChar(showChar, &ch);
     size = TkUniCharToUtf(ch, buf);
@@ -676,8 +676,12 @@ static int EntryRevalidate(Tcl_Interp *interp, Entry *entryPtr, VREASON reason)
 static void EntryRevalidateBG(Entry *entryPtr, VREASON reason)
 {
     Tcl_Interp *interp = entryPtr->core.interp;
-    if (EntryRevalidate(interp, entryPtr, reason) == TCL_ERROR) {
-	Tcl_BackgroundException(interp, TCL_ERROR);
+    VMODE vmode = entryPtr->entry.validate;
+
+    if (EntryNeedsValidation(vmode, reason)) {
+        if (EntryRevalidate(interp, entryPtr, reason) == TCL_ERROR) {
+	    Tcl_BackgroundException(interp, TCL_ERROR);
+        }
     }
 }
 
@@ -1419,7 +1423,7 @@ EntryIndex(
 	    *indexPtr += 1;
 	}
     } else {
-	if (Tcl_GetInt(interp, string, indexPtr) != TCL_OK) {
+	if (Tcl_GetIntFromObj(interp, indexObj, indexPtr) != TCL_OK) {
 	    goto badIndex;
 	}
 	if (*indexPtr < 0) {
@@ -1768,15 +1772,15 @@ typedef struct {
     ComboboxPart combobox;
 } Combobox;
 
-static Tk_OptionSpec ComboboxOptionSpecs[] = {
+static const Tk_OptionSpec ComboboxOptionSpecs[] = {
     {TK_OPTION_STRING, "-height", "height", "Height",
-        DEF_LIST_HEIGHT, Tk_Offset(Combobox, combobox.heightObj), -1,
+        DEF_LIST_HEIGHT, offsetof(Combobox, combobox.heightObj), -1,
 	0,0,0 },
     {TK_OPTION_STRING, "-postcommand", "postCommand", "PostCommand",
-        "", Tk_Offset(Combobox, combobox.postCommandObj), -1,
+        "", offsetof(Combobox, combobox.postCommandObj), -1,
 	0,0,0 },
     {TK_OPTION_STRING, "-values", "values", "Values",
-        "", Tk_Offset(Combobox, combobox.valuesObj), -1,
+        "", offsetof(Combobox, combobox.valuesObj), -1,
 	0,0,0 },
     WIDGET_INHERIT_OPTIONS(EntryOptionSpecs)
 };
@@ -1959,29 +1963,29 @@ typedef struct {
     SpinboxPart spinbox;
 } Spinbox;
 
-static Tk_OptionSpec SpinboxOptionSpecs[] = {
+static const Tk_OptionSpec SpinboxOptionSpecs[] = {
     {TK_OPTION_STRING, "-values", "values", "Values",
-        "", Tk_Offset(Spinbox, spinbox.valuesObj), -1,
+        "", offsetof(Spinbox, spinbox.valuesObj), -1,
 	0,0,0 },
 
     {TK_OPTION_DOUBLE, "-from", "from", "From",
-	"0", Tk_Offset(Spinbox,spinbox.fromObj), -1,
+	"0", offsetof(Spinbox,spinbox.fromObj), -1,
 	0,0,0 },
     {TK_OPTION_DOUBLE, "-to", "to", "To",
-	"0", Tk_Offset(Spinbox,spinbox.toObj), -1,
+	"0", offsetof(Spinbox,spinbox.toObj), -1,
 	0,0,0 },
     {TK_OPTION_DOUBLE, "-increment", "increment", "Increment",
-	"1", Tk_Offset(Spinbox,spinbox.incrementObj), -1,
+	"1", offsetof(Spinbox,spinbox.incrementObj), -1,
 	0,0,0 },
     {TK_OPTION_STRING, "-format", "format", "Format",
-	"", Tk_Offset(Spinbox, spinbox.formatObj), -1,
+	"", offsetof(Spinbox, spinbox.formatObj), -1,
 	0,0,0 },
 
     {TK_OPTION_STRING, "-command", "command", "Command",
-	"", Tk_Offset(Spinbox, spinbox.commandObj), -1,
+	"", offsetof(Spinbox, spinbox.commandObj), -1,
 	0,0,0 },
     {TK_OPTION_BOOLEAN, "-wrap", "wrap", "Wrap",
-	"0", Tk_Offset(Spinbox,spinbox.wrapObj), -1,
+	"0", offsetof(Spinbox,spinbox.wrapObj), -1,
 	0,0,0 },
 
     WIDGET_INHERIT_OPTIONS(EntryOptionSpecs)
@@ -2061,11 +2065,11 @@ typedef struct {
     Tcl_Obj	*widthObj;
 } TextareaElement;
 
-static Ttk_ElementOptionSpec TextareaElementOptions[] = {
+static const Ttk_ElementOptionSpec TextareaElementOptions[] = {
     { "-font", TK_OPTION_FONT,
-	Tk_Offset(TextareaElement,fontObj), DEF_ENTRY_FONT },
+	offsetof(TextareaElement,fontObj), DEF_ENTRY_FONT },
     { "-width", TK_OPTION_INT,
-	Tk_Offset(TextareaElement,widthObj), "20" },
+	offsetof(TextareaElement,widthObj), "20" },
     { NULL, 0, 0, NULL }
 };
 
@@ -2088,7 +2092,7 @@ static void TextareaElementSize(
     *widthPtr = prefWidth * avgWidth;
 }
 
-static Ttk_ElementSpec TextareaElementSpec = {
+static const Ttk_ElementSpec TextareaElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TextareaElement),
     TextareaElementOptions,

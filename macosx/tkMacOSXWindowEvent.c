@@ -15,7 +15,7 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXWm.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXConstants.h"
 
@@ -78,7 +78,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	int x, y, width = -1, height = -1, flags = 0;
 
 	x = bounds.origin.x;
-	y = tkMacOSXZeroScreenHeight - (bounds.origin.y + bounds.size.height);
+	y = TkMacOSXZeroScreenHeight() - (bounds.origin.y + bounds.size.height);
 	if (winPtr->changes.x != x || winPtr->changes.y != y) {
 	    flags |= TK_LOCATION_CHANGED;
 	} else {
@@ -292,6 +292,22 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
     [NSApp tkCheckPasteboard];
+
+    /*
+     * When the application is activated with Command-Tab it will create a
+     * zombie window for every Tk window which has been withdrawn.  So iterate
+     * through the list of windows and order out any withdrawn window.
+     */
+
+    for (NSWindow *win in [NSApp windows]) {
+	TkWindow *winPtr = TkMacOSXGetTkWindow(win);
+	if (!winPtr || !winPtr->wmInfoPtr) {
+	    continue;
+	}
+	if (winPtr->wmInfoPtr->hints.initial_state == WithdrawnState) {
+	    [win orderOut:nil];
+	}
+    }
 }
 
 - (void) applicationDeactivate: (NSNotification *) notification
@@ -1170,11 +1186,33 @@ RedisplayView(
     return YES;
 }
 
+/*
+ * This keyDown method does nothing, which is a huge improvement over the
+ * default keyDown method which beeps every time a key is pressed.
+ */
+
 - (void) keyDown: (NSEvent *) theEvent
 {
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif
+}
+
+/*
+ * When the services menu is opened this is called for each Responder in
+ * the Responder chain until a service provider is found.  The TkContentView
+ * should be the first (and generally only) Responder in the chain.  We
+ * return the TkServices object that was created in TkpInit.
+ */
+
+- (id)validRequestorForSendType:(NSString *)sendType
+		     returnType:(NSString *)returnType
+{
+    if ([sendType isEqualToString:@"NSStringPboardType"] ||
+	[sendType isEqualToString:@"NSPasteboardTypeString"]) {
+	return [NSApp servicesProvider];
+    }
+    return [super validRequestorForSendType:sendType returnType:returnType];
 }
 
 @end

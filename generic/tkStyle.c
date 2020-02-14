@@ -98,7 +98,7 @@ typedef struct Element {
  * Thread-local data.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int nbInit;			/* Number of calls to the init proc. */
     Tcl_HashTable engineTable;	/* Map a name to a style engine. Keys are
 				 * strings, values are Tk_StyleEngine
@@ -609,7 +609,7 @@ CreateElement(
     Tcl_HashEntry *entryPtr, *engineEntryPtr;
     Tcl_HashSearch search;
     int newEntry, elementId, genericId = -1;
-    char *dot;
+    const char *dot;
     StyleEngine *enginePtr;
 
     /*
@@ -690,7 +690,7 @@ Tk_GetElementId(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_HashEntry *entryPtr;
     int genericId = -1;
-    char *dot;
+    const char *dot;
 
     /*
      * Find the element Id.
@@ -1360,7 +1360,7 @@ Tk_GetStyle(
 		    "style \"%s\" doesn't exist", name));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, NULL);
 	}
-	return (Tk_Style) NULL;
+	return NULL;
     }
     stylePtr = Tcl_GetHashValue(entryPtr);
 

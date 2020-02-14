@@ -443,7 +443,7 @@ TkpGetShadows(
     }
 
     if (borderPtr->shadow == None) {
-	borderPtr->shadow = Tk_GetBitmap((Tcl_Interp *) NULL, tkwin,
+	borderPtr->shadow = Tk_GetBitmap(NULL, tkwin,
 		Tk_GetUid("gray50"));
 	if (borderPtr->shadow == None) {
 	    Tcl_Panic("TkpGetShadows couldn't allocate bitmap for border");

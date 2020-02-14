@@ -158,7 +158,8 @@ Tk_PhotoImageFormat tkImgFmtDefault = {
     NULL,           /* fileReadProc: format doesn't support file read */
     StringReadDef,  /* stringReadProc */
     NULL,           /* fileWriteProc: format doesn't support file write */
-    StringWriteDef  /* stringWriteProc */
+    StringWriteDef, /* stringWriteProc */
+    NULL            /* nextPtr */
 };
 
 /*

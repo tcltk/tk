@@ -34,7 +34,7 @@ bind Scale <Leave> {
 	%W configure -state normal
     }
 }
-bind Scale <1> {
+bind Scale <Button-1> {
     tk::ScaleButtonDown %W %x %y
 }
 bind Scale <B1-Motion> {
@@ -47,7 +47,7 @@ bind Scale <ButtonRelease-1> {
     tk::ScaleEndDrag %W
     tk::ScaleActivate %W %x %y
 }
-bind Scale <2> {
+bind Scale <Button-2> {
     tk::ScaleButton2Down %W %x %y
 }
 bind Scale <B2-Motion> {
@@ -62,13 +62,13 @@ bind Scale <ButtonRelease-2> {
 }
 if {[tk windowingsystem] eq "win32"} {
     # On Windows do the same with button 3, as that is the right mouse button
-    bind Scale <3>		[bind Scale <2>]
+    bind Scale <Button-3>	[bind Scale <Button-2>]
     bind Scale <B3-Motion>	[bind Scale <B2-Motion>]
     bind Scale <B3-Leave>	[bind Scale <B2-Leave>]
     bind Scale <B3-Enter>	[bind Scale <B2-Enter>]
     bind Scale <ButtonRelease-3> [bind Scale <ButtonRelease-2>]
 }
-bind Scale <Control-1> {
+bind Scale <Control-Button-1> {
     tk::ScaleControlPress %W %x %y
 }
 bind Scale <<PrevLine>> {

@@ -48,7 +48,7 @@ typedef struct LostCommand {
  * The structure below is used to keep each thread's pending list separate.
  */
 
-typedef struct ThreadSpecificData {
+typedef struct {
     TkSelInProgress *pendingPtr;
 				/* Topmost search in progress, or NULL if
 				 * none. */
@@ -190,7 +190,7 @@ Tk_CreateSelHandler(
 		     * should make a copy for this selPtr.
 		     */
 
-		    size_t cmdInfoLen = Tk_Offset(CommandInfo, command) + 1 +
+		    size_t cmdInfoLen = offsetof(CommandInfo, command) + 1 +
 			    ((CommandInfo *)clientData)->cmdLength;
 
 		    selPtr->clientData = ckalloc(cmdInfoLen);
@@ -904,7 +904,7 @@ Tk_SelectionObjCmd(
 	if (cmdLength == 0) {
 	    Tk_DeleteSelHandler(tkwin, selection, target);
 	} else {
-	    cmdInfoPtr = ckalloc(Tk_Offset(CommandInfo, command)
+	    cmdInfoPtr = ckalloc(offsetof(CommandInfo, command)
 		    + 1 + cmdLength);
 	    cmdInfoPtr->interp = interp;
 	    cmdInfoPtr->charOffset = 0;
@@ -1508,7 +1508,7 @@ TkSelDefaultSelection(
 	    Tcl_DStringFree(&ds);
 	    return -1;
 	}
-	memcpy(buffer, Tcl_DStringValue(&ds), (unsigned) (1+length));
+	memcpy(buffer, Tcl_DStringValue(&ds), length + 1);
 	Tcl_DStringFree(&ds);
 	*typePtr = XA_ATOM;
 	return length;
