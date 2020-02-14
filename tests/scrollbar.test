@@ -645,7 +645,7 @@ test scrollbar-8.1 {TkScrollbarEventProc: recursive deletion} notAqua {
     .t.f.s set 0 .5
     update
     set result [winfo exists .t.f.s]
-    event generate .t.f.s <ButtonPress> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
+    event generate .t.f.s <Button> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
     event generate .t <ButtonRelease> -button 1
     update
     lappend result [winfo exists .t.f.s] [winfo exists .t.f]
@@ -666,7 +666,7 @@ test scrollbar-8.2 {TkScrollbarEventProc: recursive deletion} notAqua {
     .t.f.s set 0 .5
     update
     set result [winfo exists .t.f.s]
-    event generate .t.f.s <ButtonPress> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
+    event generate .t.f.s <Button> -button 1 -x [expr {[winfo width .t.f.s] / 2}] -y 5
     event generate .t.f <ButtonRelease> -button 1
     update
     lappend result [winfo exists .t.f.s] [winfo exists .t.f]
@@ -751,11 +751,11 @@ test scrollbar-11.1 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
     }
     toplevel .top
     scrollbar .top.s
-    bind .top.s <2> {destroy_scrollbar}
+    bind .top.s <Button-2> {destroy_scrollbar}
     pack .top.s
     focus -force .top.s
     update
-    event generate .top.s <2>
+    event generate .top.s <Button-2>
     update  ; # shall not trigger error  invalid command name ".top.s"
 } -cleanup {
     destroy .top.s .top
@@ -770,11 +770,11 @@ test scrollbar-11.2 {bug fix: [011706ec42] Scrollbar unsafe wrt widget destructi
     wm minsize .top 50 400
     update
     scrollbar .top.s
-    bind .top.s <2> {after idle destroy_scrollbar}
+    bind .top.s <Button-2> {after idle destroy_scrollbar}
     pack .top.s -expand true -fill y
     focus -force .top.s
     update
-    event generate .top.s <2> -x 2 -y [expr {[winfo height .top.s] / 2}]
+    event generate .top.s <Button-2> -x 2 -y [expr {[winfo height .top.s] / 2}]
     update  ; # shall not trigger error  invalid command name ".top.s"
 } -cleanup {
     destroy .top.s .top
