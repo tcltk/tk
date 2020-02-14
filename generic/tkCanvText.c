@@ -1345,7 +1345,6 @@ GetTextIndex(
     TextItem *textPtr = (TextItem *) itemPtr;
     int length;
     int c;
-    TkCanvas *canvasPtr = (TkCanvas *) canvas;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     const char *string = Tcl_GetStringFromObj(obj, &length);
 
