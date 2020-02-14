@@ -1488,8 +1488,18 @@ typedef struct Tk_ElementSpec {
 #define Tk_Release		Tcl_Release
 
 /* Removed Tk_Main, use macro instead */
+#if TCL_MINOR_VERSION > 5
+#if defined(_WIN32) || defined(__CYGWIN__)
+#define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
+	(Tcl_FindExecutable(0), (Tcl_CreateInterp)()))
+#else
+#define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
+	(Tcl_FindExecutable(argv[0]), (Tcl_CreateInterp)()))
+#endif
+#else
 #define Tk_Main(argc, argv, proc) \
-    Tk_MainEx(argc, argv, proc, Tcl_CreateInterp())
+    Tk_MainEx(argc, argv, proc, (Tcl_CreateInterp)())
+#endif
 
 const char *		Tk_InitStubs _ANSI_ARGS_((Tcl_Interp *interp,
 			    const char *version, int exact));
