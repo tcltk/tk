@@ -101,11 +101,12 @@ DEMO_INSTALL_DIR	= $(INSTALL_ROOT)@DEMO_DIR@
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
-TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
+TCLDIR   = @TCL_SRC_DIR@
+TCL_GENERIC_DIR		= $(TCLDIR)/generic
 
 # The directory containing the platform specific Tcl sources and headers
 # appropriate for this version of Tk:
-TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/unix
+TCL_PLATFORM_DIR	= $(TCLDIR)/unix
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:
@@ -311,7 +312,7 @@ GENERIC_DIR		= $(TOP_DIR)/generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
 UNIX_DIR		= $(TOP_DIR)/unix
 BMAP_DIR		= $(TOP_DIR)/bitmaps
-TOOL_DIR		= @TCL_SRC_DIR@/tools
+TOOL_DIR		= $(TCLDIR)/tools
 TEST_DIR		= $(TOP_DIR)/tests
 MAC_OSX_DIR		= $(TOP_DIR)/macosx
 XLIB_DIR		= $(TOP_DIR)/xlib
@@ -576,7 +577,7 @@ DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
 SHELL_ENV = \
 	@LD_LIBRARY_PATH_VAR@="`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}"; \
 	export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
+	TCL_LIBRARY=$(TCLDIR)/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY;
 
 all: binaries libraries doc
@@ -586,7 +587,7 @@ binaries: ${LIB_FILE} ${WISH_EXE}
 libraries:
 
 $(TOP_DIR)/doc/man.macros:
-	$(INSTALL_DATA) @TCL_SRC_DIR@/doc/man.macros $(TOP_DIR)/doc/man.macros
+	$(INSTALL_DATA) $(TCLDIR)/doc/man.macros $(TOP_DIR)/doc/man.macros
 
 doc: $(TOP_DIR)/doc/man.macros
 
@@ -692,7 +693,7 @@ demo:
 # This target can be used to run wish inside either gdb or insight
 gdb: ${WISH_EXE}
 	@echo "set env @LD_LIBRARY_PATH_VAR@=\"`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}\"" > gdb.run
-	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
+	@echo "set env TCL_LIBRARY=$(TCLDIR)/library" >> gdb.run
 	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
 	gdb ./${WISH_EXE} --command=gdb.run
 	rm gdb.run
@@ -1594,7 +1595,6 @@ DISTROOT = /tmp/dist
 DISTNAME = tk${VERSION}${PATCH_LEVEL}
 ZIPNAME	 = tk${MAJOR_VERSION}${MINOR_VERSION}${PATCH_LEVEL}-src.zip
 DISTDIR	 = $(DISTROOT)/$(DISTNAME)
-TCLDIR   = @TCL_SRC_DIR@
 DIST_INSTALL_DATA   = CPPROG='cp -p' $(INSTALL) -m 644
 DIST_INSTALL_SCRIPT = CPPROG='cp -p' $(INSTALL) -m 755
 
@@ -1606,14 +1606,14 @@ $(MAC_OSX_DIR)/configure: $(MAC_OSX_DIR)/configure.ac $(UNIX_DIR)/configure
 $(UNIX_DIR)/tkConfig.h.in: $(MAC_OSX_DIR)/configure
 	cd $(MAC_OSX_DIR); autoheader; touch $@
 
-dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure genstubs
+dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure $(TOP_DIR)/doc/man.macros genstubs
 	rm -rf $(DISTDIR)
 	$(INSTALL_DATA_DIR) $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
 	$(DIST_INSTALL_DATA) $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tk.spec \
 		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
-		$(UNIX_DIR)/tkConfig.sh.in $(TCLDIR)/unix/install-sh \
+		$(UNIX_DIR)/tkConfig.sh.in $(UNIX_DIR)/install-sh \
 		$(UNIX_DIR)/README $(UNIX_DIR)/installManPage \
 		$(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(DISTDIR)/unix
 	$(DIST_INSTALL_SCRIPT) $(UNIX_DIR)/configure $(DISTDIR)/unix
@@ -1713,7 +1713,7 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 	done;)
 	$(INSTALL_DATA_DIR) $(DISTDIR)/doc
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TOP_DIR)/doc/*.[13n] \
-		$(TCLDIR)/doc/man.macros $(DISTDIR)/doc
+		$(TOP_DIR)/doc/man.macros $(DISTDIR)/doc
 	$(INSTALL_DATA_DIR) $(DISTDIR)/tests
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TEST_DIR)/*.{test,tcl} \
 		$(TEST_DIR)/README $(TEST_DIR)/*.{gif,png,ppm,xbm} \
