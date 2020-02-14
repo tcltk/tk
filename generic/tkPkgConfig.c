@@ -94,7 +94,7 @@
 #  define CFG_FONTSYSTEM	"x11"
 #endif
 
-static Tcl_Config const cfg[] = {
+static const Tcl_Config cfg[] = {
     {"debug",			CFG_DEBUG},
     {"threaded",		CFG_THREADED},
     {"profiled",		CFG_PROFILED},
