@@ -14,11 +14,19 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "tclInt.h"
 #include "tkInt.h"
-#ifdef __WIN32__
-#include "tkWinInt.h"
-#include "../win/tclWinPort.h"
+#ifdef _WIN32
+/*  Little hack to eliminate the need for "tclInt.h" here:
+    Just copy a small portion of TclIntPlatStubs, just
+    enough to make it work. See [600b72bfbc] */
+typedef struct {
+    int magic;
+    void *hooks;
+    void (*dummy[16]) (void); /* dummy entries 0-15, not used */
+    int (*tclpIsAtty) (int fd); /* 16 */
+} TclIntPlatStubs;
+extern const TclIntPlatStubs *tclIntPlatStubsPtr;
+#   include "tkWinInt.h"
 #endif
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
@@ -59,9 +67,9 @@ static int WinIsTty(int fd) {
      */
 
 #if !defined(STATIC_BUILD)
-	if (tclStubsPtr->reserved9 && TclpIsAtty) {
+	if (tclStubsPtr->reserved9 && tclIntPlatStubsPtr->tclpIsAtty) {
 	    /* We are running on Cygwin */
-	    return TclpIsAtty(fd);
+	    return tclIntPlatStubsPtr->tclpIsAtty(fd);
 	}
 #endif
     handle = GetStdHandle(STD_INPUT_HANDLE + fd);
@@ -105,7 +113,7 @@ static void		StdinProc(ClientData clientData, int mask);
  *
  * Results:
  *	None. This function never returns (it exits the process when it's
- *	done.
+ *	done).
  *
  * Side effects:
  *	This function initializes the Tk world and then starts interpreting
@@ -114,6 +122,7 @@ static void		StdinProc(ClientData clientData, int mask);
  *
  *----------------------------------------------------------------------
  */
+
 void
 Tk_MainEx(
     int argc,			/* Number of arguments. */
@@ -171,7 +180,9 @@ Tk_MainEx(
     tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
+#if TCL_MINOR_VERSION < 6
     Tcl_FindExecutable(argv[0]);
+#endif
     tsdPtr->interp = interp;
     Tcl_Preserve((ClientData) interp);
 
