@@ -607,12 +607,19 @@ namespace eval ::tk {
     # ----------------------------------------------------------------------
 
     ::oo::abstract create optiontype {
-	private variable def
+	private variable def name
 
 	constructor {default} {
 	    set def $default
+	    set name [namespace tail [self]]
 	    set map [namespace ensemble configure ::tk::OptionType -map]
-	    dict set map [namespace tail [self]] [self]
+	    dict set map $name [self]
+	    namespace ensemble configure ::tk::OptionType -map $map
+	}
+
+	destructor {
+	    set map [namespace ensemble configure ::tk::OptionType -map]
+	    dict unset map $name
 	    namespace ensemble configure ::tk::OptionType -map $map
 	}
 
@@ -698,21 +705,24 @@ namespace eval ::tk {
 
     ::oo::class create BoolTestType {
 	superclass optiontype
+	private variable type errorcode
 
 	constructor {default test} {
 	    next $default
+	    set type [namespace tail [self]]
+	    set errorcode [list TK VALUE [string toupper $type]]
 	    ::oo::objdefine [self] forward Validate {*}$test
 	}
 
 	method validate {value} {
 	    if {![my Validate $value]} {
-		set type [namespace tail [self]]
-		return -code error "invalid $type value \"$value\""
+		return -code error -errorcode $errorcode \
+		    "invalid $type value \"$value\""
 	    }
 	    try {
 		return [my Normalize $value]
-	    } on error msg {
-		return -code error $msg
+	    } on error {msg opt} {
+		return -code error -errorcode [dict get $opt -errorcode] $msg
 	    }
 	}
 
@@ -733,8 +743,13 @@ namespace eval ::tk {
 	    try {
 		my Validate $value
 		return [my Normalize $value]
-	    } on error msg {
-		return -code error $msg
+	    } on error {msg opt} {
+		set type [namespace tail [self]]
+		set opt [dict merge \
+		    [dict create -errorcode [list TK VALUE $type $value]] \
+		    $opt]
+		set code [dict get $opt -errorcode]
+		return -code error -errorcode $code $msg
 	    }
 	}
 
@@ -746,14 +761,17 @@ namespace eval ::tk {
     ::oo::class create TableType {
 	superclass optiontype
 
-	private variable Table
+	private variable Table Type Error
 	constructor {default table} {
 	    next $default
 	    set Table $table
+	    set Type [namespace tail [self]]
+	    set Error [list -level 1 -errorcode [list \
+		    TK VALUE [string toupper $Type]]]
 	}
 
 	method validate {value} {
-	    ::tcl::prefix match $Table $value
+	    ::tcl::prefix match -message $Type -error $Error $Table $value
 	}
     }
 
