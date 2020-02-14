@@ -406,7 +406,7 @@ Tk_GetOption(
 				 * name. */
 {
     Tk_Uid nameId, classId = NULL;
-    char *masqName;
+    const char *masqName;
     Element *elPtr, *bestPtr;
     int count;
     StackLevel *levelPtr;
