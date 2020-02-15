@@ -15,10 +15,29 @@ deleteWindows
 
 # A simple superclass to handle calling Initialise and cleaning up
 oo::class create cfgsupport {
-    variable window
+    private variable window
     constructor {w args} {
 	set window [frame $w]
 	my Initialise $w {*}$args
+    }
+    destructor {
+	destroy $window
+    }
+
+    self method clean {} {
+	foreach c [info class subclasses [self]] {
+	    catch {$c destroy}
+	}
+    }
+}
+
+# A simpler version without even initialisation; this is a plain class.  Note
+# that cfgsupport doesn't inherit from this because the clean method is too
+# simple-minded.
+oo::class create base {
+    private variable window
+    constructor {w args} {
+	set window [frame $w]
     }
     destructor {
 	destroy $window
@@ -845,15 +864,6 @@ test oocfg-5.16 {tk::configurable: Initialise behaviour: errors} -setup {
 
 test oocfg-6.1 {tk::configurable: Initialise: alt spelling} -setup {
     unset -nocomplain msg opt
-    oo::class create base {
-	variable window
-	constructor {w} {
-	    set window [frame $w]
-	}
-	destructor {
-	    destroy $window
-	}
-    }
 } -body {
     tk::configurable create Gorp {
 	superclass base
@@ -866,19 +876,10 @@ test oocfg-6.1 {tk::configurable: Initialise: alt spelling} -setup {
     set gorp [Gorp create gorp .gorp -a gorp]
     list $gorp [$gorp cget -a]
 } -cleanup {
-    base destroy
+    base clean
 } -result {::gorp gorp}
 test oocfg-6.2 {tk::configurable: Initialise: alt spelling} -setup {
     unset -nocomplain msg opt
-    oo::class create base {
-	variable window
-	constructor {w} {
-	    set window [frame $w]
-	}
-	destructor {
-	    destroy $window
-	}
-    }
 } -body {
     tk::configurable create Gorp {
 	superclass base
@@ -893,7 +894,7 @@ test oocfg-6.2 {tk::configurable: Initialise: alt spelling} -setup {
     } msg opt
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
-    base destroy
+    base clean
 } -result {{wrong # args: should be "my Initialize pathName ?-option value...?"} {TCL WRONGARGS} {wrong # args: should be "my Initialize pathName ?-option value...?"
     while executing
 "my Initialize $w {*}$args"
@@ -902,15 +903,6 @@ test oocfg-6.2 {tk::configurable: Initialise: alt spelling} -setup {
 "Gorp create gorp .gorp -a gorp -a"}}
 test oocfg-6.3 {tk::configurable: Initialise: double call} -setup {
     unset -nocomplain msg opt
-    oo::class create base {
-	variable window
-	constructor {w} {
-	    set window [frame $w]
-	}
-	destructor {
-	    destroy $window
-	}
-    }
 } -body {
     tk::configurable create Gorp {
 	superclass base
@@ -926,7 +918,7 @@ test oocfg-6.3 {tk::configurable: Initialise: double call} -setup {
     } msg opt
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
-    base destroy
+    base clean
 } -result {{this object is already initialised} {TK DOUBLE_INIT} {this object is already initialised
     while executing
 "my Initialize $w {*}$args"
@@ -935,15 +927,6 @@ test oocfg-6.3 {tk::configurable: Initialise: double call} -setup {
 "Gorp create gorp .gorp -a gorp"}}
 test oocfg-6.4 {tk::configurable: Initialise: smartass} -setup {
     unset -nocomplain msg opt
-    oo::class create base {
-	variable window
-	constructor {w} {
-	    set window [frame $w]
-	}
-	destructor {
-	    destroy $window
-	}
-    }
 } -body {
     tk::configurable create Gorp {
 	superclass base
@@ -960,12 +943,163 @@ test oocfg-6.4 {tk::configurable: Initialise: smartass} -setup {
     list $msg [winfo exists .gorp] \
 	[dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
-    base destroy
+    base clean
 } -result {{wrong # args: should be "my Initialise pathName ?-option value...?"} 0 {TCL WRONGARGS} {wrong # args: should be "my Initialise pathName ?-option value...?"
     while executing
 "my Initialise .gorp -a gorp -a"
     invoked from within
 "Gorp create gorp .gorp -a gorp -a"}}
+
+test oocfg-7.1 {tk::configurable: init-only params} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass base
+	constructor {w args} {
+	    next $w
+	    my Initialise $w {*}$args
+	}
+	option a -initonly 1
+    }
+    set gorp [Gorp create foobar .gorp -a blarg]
+    list $gorp [$gorp configure] [$gorp cget -a] \
+	[catch {$gorp configure -a foo} msg opt] $msg \
+	[dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    base clean
+} -result {::foobar {{-a a A {} blarg}} blarg 1 {read only option: -a} {TK LOOKUP OPTION -a} {read only option: -a
+    while executing
+"$gorp configure -a foo"}}
+
+test oocfg-8.1 {tk::configurable: overridden getter} -setup {
+    unset -nocomplain ::reads
+    set ::reads {}
+    proc recordcall {} "lappend ::reads \[info level [expr [info level] + 1]\]"
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo
+	method <OptRead-foo> {} {
+	    recordcall
+	    tailcall my <StdOptRead> foo
+	}
+    }
+    Gorp create gorp .gorp -foo 1
+    list $reads [gorp cget -foo] $reads [gorp configure -foo] $reads \
+	[gorp configure] $reads [gorp configure -foo 2] $reads
+} -cleanup {
+    cfgsupport clean
+    rename recordcall {}
+} -result {{} 1 {{gorp cget -foo}} {-foo foo Foo {} 1} {{gorp cget -foo} {gorp configure -foo}} {{-foo foo Foo {} 1}} {{gorp cget -foo} {gorp configure -foo} {gorp configure}} {} {{gorp cget -foo} {gorp configure -foo} {gorp configure}}}
+test oocfg-8.2 {tk::configurable: overridden getter} -setup {
+    unset -nocomplain ::reads
+    set ::reads {}
+    proc recordcall {} "lappend ::reads \[info level [expr [info level] + 1]\]"
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	method <OptRead-foo> {} {
+	    recordcall
+	    tailcall my <StdOptRead> foo
+	}
+	option foo
+    }
+    Gorp create gorp .gorp -foo 1
+    list $reads [gorp cget -foo] $reads [gorp configure -foo] $reads \
+	[gorp configure] $reads [gorp configure -foo 2] $reads
+} -cleanup {
+    cfgsupport clean
+    rename recordcall {}
+} -result {{} 1 {{gorp cget -foo}} {-foo foo Foo {} 1} {{gorp cget -foo} {gorp configure -foo}} {{-foo foo Foo {} 1}} {{gorp cget -foo} {gorp configure -foo} {gorp configure}} {} {{gorp cget -foo} {gorp configure -foo} {gorp configure}}}
+test oocfg-8.3 {tk::configurable: overridden setter} -setup {
+    unset -nocomplain ::writes
+    set ::writes {}
+    proc recordcall {} "lappend ::writes \[info level [expr [info level] + 1]\]"
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo
+	method <OptWrite-foo> value {
+	    recordcall
+	    tailcall my <StdOptWrite> foo $value
+	}
+    }
+    Gorp create gorp .gorp -foo 1
+    list $writes [gorp cget -foo] $writes [gorp configure -foo] $writes \
+	[gorp configure] $writes [gorp configure -foo 2] $writes
+} -cleanup {
+    cfgsupport clean
+    rename recordcall {}
+} -result {{{Gorp create gorp .gorp -foo 1}} 1 {{Gorp create gorp .gorp -foo 1}} {-foo foo Foo {} 1} {{Gorp create gorp .gorp -foo 1}} {{-foo foo Foo {} 1}} {{Gorp create gorp .gorp -foo 1}} {} {{Gorp create gorp .gorp -foo 1} {gorp configure -foo 2}}}
+test oocfg-8.4 {tk::configurable: overridden setter} -setup {
+    unset -nocomplain ::writes
+    set ::writes {}
+    proc recordcall {} "lappend ::writes \[info level [expr [info level] + 1]\]"
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	method <OptWrite-foo> value {
+	    recordcall
+	    tailcall my <StdOptWrite> foo $value
+	}
+	option foo
+    }
+    Gorp create gorp .gorp -foo 1
+    list $writes [gorp cget -foo] $writes [gorp configure -foo] $writes \
+	[gorp configure] $writes [gorp configure -foo 2] $writes
+} -cleanup {
+    cfgsupport clean
+    rename recordcall {}
+} -result {{{Gorp create gorp .gorp -foo 1}} 1 {{Gorp create gorp .gorp -foo 1}} {-foo foo Foo {} 1} {{Gorp create gorp .gorp -foo 1}} {{-foo foo Foo {} 1}} {{Gorp create gorp .gorp -foo 1}} {} {{Gorp create gorp .gorp -foo 1} {gorp configure -foo 2}}}
+
+test oocfg-9.1 {tk::configurable: checkpointing} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -type integer
+	option bar -type integer
+	method <OptionsMakeCheckpoint> {} {
+	    variable ""
+	    # Not actually safe in general because of aliases, but there's
+	    # none of them in this test
+	    join [lmap p [info object properties [self] -all] {
+		set ([string trimleft $p -])
+	    }] :
+	}
+	method <OptionsRestoreCheckpoint> state {
+	    variable ""
+	    foreach p [info object properties [self] -all] v [split $state :] {
+		set ([string trimleft $p -]) $v
+	    }
+	}
+	export <OptionsMakeCheckpoint> <OptionsRestoreCheckpoint>
+    }
+    Gorp create gorp .gorp
+    # Note that this checks that we can restore an illegal state.
+    # User code is strongly recommended to not do this!
+    list [info object properties gorp -all] [gorp <OptionsMakeCheckpoint>] \
+	[catch {gorp configure -foo 1 -bar x}] [gorp configure] \
+	[gorp configure -foo 1 -bar 2] [gorp <OptionsMakeCheckpoint>] \
+	[gorp <OptionsRestoreCheckpoint> pqr:xyz] [gorp configure]
+} -cleanup {
+    cfgsupport clean
+} -result {{-bar -foo} 0:0 1 {{-bar bar Bar 0 0} {-foo foo Foo 0 0}} {} 2:1 {} {{-bar bar Bar 0 pqr} {-foo foo Foo 0 xyz}}}
+test oocfg-9.2 {tk::configurable: checkpointing} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foo -type integer
+	option bar -type integer
+    }
+    Gorp create gorp .gorp
+    oo::objdefine gorp export <OptionsMakeCheckpoint> <OptionsRestoreCheckpoint>
+    # Note that this checks that we can restore an illegal state.
+    # User code is strongly recommended to not do this!
+    list [info object properties gorp -all] [gorp <OptionsMakeCheckpoint>] \
+	[catch {gorp configure -foo 1 -bar x}] [gorp configure] \
+	[gorp configure -foo 1 -bar 2] [gorp <OptionsMakeCheckpoint>] \
+	[gorp <OptionsRestoreCheckpoint> {bar pqr foo xyz}] [gorp configure]
+} -cleanup {
+    cfgsupport clean
+} -result {{-bar -foo} {foo 0 bar 0} 1 {{-bar bar Bar 0 0} {-foo foo Foo 0 0}} {} {foo 1 bar 2} {} {{-bar bar Bar 0 pqr} {-foo foo Foo 0 xyz}}}
 
 # cleanup
 deleteWindows
