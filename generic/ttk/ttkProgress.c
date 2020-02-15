@@ -48,7 +48,7 @@ typedef struct {
     ProgressbarPart	progress;
 } Progressbar;
 
-static Tk_OptionSpec ProgressbarOptionSpecs[] =
+static const Tk_OptionSpec ProgressbarOptionSpecs[] =
 {
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	"w", offsetof(Progressbar,progress.anchorObj), -1,
@@ -289,7 +289,8 @@ static int ProgressbarPostConfigure(
 static int ProgressbarSize(void *recordPtr, int *widthPtr, int *heightPtr)
 {
     Progressbar *pb = recordPtr;
-    int length = 100, orient = TTK_ORIENT_HORIZONTAL;
+    int length = 100;
+    int orient = TTK_ORIENT_HORIZONTAL;
 
     TtkWidgetSize(recordPtr, widthPtr, heightPtr);
 

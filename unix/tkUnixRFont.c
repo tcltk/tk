@@ -283,7 +283,7 @@ InitFont(
      */
 
     set = FcFontSort(0, pattern, FcTrue, NULL, &result);
-    if (!set) {
+    if (!set || set->nfont == 0) {
 	ckfree(fontPtr);
 	return NULL;
     }
