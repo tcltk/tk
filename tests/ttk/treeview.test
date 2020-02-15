@@ -625,9 +625,10 @@ test treeview-identify-setup "identify series - setup" -body {
     ttk::setTheme default
     ttk::treeview .tv -columns [list A B C]
     .tv insert {} end -id branch -text branch -open true
-    .tv insert branch end -id item1 -text item1
+    .tv insert branch end -id item1 -text item1 -height 2
     .tv insert branch end -id item2 -text item2
     .tv insert branch end -id item3 -text item3
+    .tv insert {} end -id item4 -text item4
 
     .tv column #0 -width 50	;# 0-50
     .tv column A -width 50	;# 50-100
@@ -665,19 +666,19 @@ test treeview-identify-4 "no tree column" -body {
 test treeview-identify-5 "vertical scan - no headings" -body {
     .tv configure -displaycolumns #all -show {tree}
     update idletasks
-    identify* .tv {region item} 25 10  25 30  25 50  25 70  25 90
-} -result [list tree branch tree item1 tree item2 tree item3 nothing {}]
+    identify* .tv {region item} 25 10  25 30  25 70  25 90  25 110  25 130
+} -result [list tree branch tree item1 tree item2 tree item3 tree item4 nothing {}]
 
 test treeview-identify-6 "vertical scan - with headings" -body {
     .tv configure -displaycolumns #all -show {tree headings}
     update idletasks
-    identify* .tv {region item} 25 10  25 30  25 50  25 70  25 90
+    identify* .tv {region item} 25 10  25 30  25 50  25 90  25 110
 } -result [list heading {} tree branch tree item1 tree item2 tree item3]
 
 test treeview-identify-7 "vertical scan - headings, no tree" -body {
     .tv configure -displaycolumns #all -show {headings}
     update idletasks
-    identify* .tv {region item} 25 10  25 30  25 50  25 70  25 90
+    identify* .tv {region item} 25 10  25 30  25 50  25 90  25 110
 } -result [list heading {} cell branch cell item1 cell item2 cell item3]
 
 # In default theme, -indent and -itemheight both 20px
@@ -719,12 +720,13 @@ test treeview-identify-10 "identify works when horizontally scrolled" -setup {
     foreach column {"#0" A B C} {
 	.tv column $column -stretch 0 -width 50
     }
-    # Scrollable area is 150, visible is 100
+    # Scrollable area is 200, visible is 150
     place .tv -x 0 -y 0 -width 150
 } -body {
     set result [list]
     foreach xoffs {0 25 50} {
-	.tv xview $xoffs ; update
+	.tv xview $xoffs
+        update
 	lappend result [identify* .tv {region column} 10 10 60 10]
 	lappend result [identify* .tv {region column} 10 50 60 50]
     }
@@ -737,14 +739,17 @@ test treeview-identify-10 "identify works when horizontally scrolled" -setup {
 # Hijack the setup above to check bbox too
 test treeview-identify-10b "bbox works when horizontally scrolled" -body {
     # Establish a point of reference
-    .tv configure -titlecolumns -1
-    .tv xview 0 ; update
+    .tv configure -titlecolumns 0
+    .tv xview 0
+    update
     set base [lindex [.tv bbox branch "#0"] 0]
     set result [list]
-    foreach tc {-1 0 1 2} {
+    foreach tc {0 1 2 3} {
         .tv configure -titlecolumns $tc
         foreach xoffs {0 25 50} {
-            .tv xview $xoffs ; update
+            .tv xview $xoffs
+            update
+            # Extract x coordiate for each column
             lappend result [expr {[lindex [.tv bbox branch "#0"] 0] - $base}]
             lappend result [expr {[lindex [.tv bbox branch A   ] 0] - $base}]
             lappend result [expr {[lindex [.tv bbox branch B   ] 0] - $base}]
@@ -755,7 +760,27 @@ test treeview-identify-10b "bbox works when horizontally scrolled" -body {
 } -result [list 0 50 100 150  -25 25  75 125   -50  0  50 100 \
                 0 50 100 150    0 25  75 125     0  0  50 100 \
                 0 50 100 150    0 50  75 125     0 50  50 100 \
-                0 50 100 150    0 50 100 125     0 50 100 100]
+                0 50 100 150    0 50 100 125     0 50 100 101]
+
+test treeview-identify-11 "bbox supporting -height" -body {
+    .tv configure -titlecolumns 0
+    .tv xview 0
+    .tv item branch2 -open false
+    place .tv -x 0 -y 0 -width 150 -height 120
+    update
+    set base [lindex [.tv bbox branch A] 1]
+    set result {}
+    foreach yv {0 1} {
+        .tv yview $yv
+        update
+        foreach item {item1 item2 item3} {
+            set bb [.tv bbox $item A]
+            lappend result [expr {[lindex $bb 1] - $base}]
+            lappend result [lindex $bb 3]
+        }
+    }
+    set result
+} -result [list 40 40 80 20 100 20  20 40 60 20 80 20]
 
 test treeview-identify-cleanup "identify - cleanup" -body {
     destroy .tv

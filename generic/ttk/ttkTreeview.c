@@ -561,40 +561,20 @@ static void DisplayLayout(
     Ttk_PlaceLayout(layout, state, b);
     Ttk_DrawLayout(layout, state, d);
 }
-static Ttk_PositionSpec AnchorToPosition(
-    Tk_Anchor anchor)
-{
-    switch (anchor)
-    {
-	case TK_ANCHOR_N:	return TTK_PACK_TOP;
-	case TK_ANCHOR_S:	return TTK_PACK_BOTTOM;
-	case TK_ANCHOR_NE:	return TTK_PACK_RIGHT|TTK_STICK_N;
-	case TK_ANCHOR_SE:	return TTK_PACK_RIGHT|TTK_STICK_S;
-	case TK_ANCHOR_E:	return TTK_PACK_RIGHT;
-	case TK_ANCHOR_NW:	return TTK_PACK_LEFT|TTK_STICK_N;
-	case TK_ANCHOR_SW:	return TTK_PACK_LEFT|TTK_STICK_S;
-	default:		return TTK_PACK_LEFT;
-    }
-    return TTK_PACK_LEFT;
-}
-/* Ugly hack to be able to change flags. TODO: better way */
-struct Ttk_LayoutNode_
-{
-    unsigned	flags;
-};
+
+/* DisplayLayoutTree --
+ *	Like DisplayLayout, but for the tree column.
+ */
 static void DisplayLayoutTree(
     Tk_Anchor imageAnchor, Tk_Anchor textAnchor,
     Ttk_Layout layout, void *recordPtr, Ttk_State state, Ttk_Box b, Drawable d)
 {
-    Ttk_Element imageNode;
-
     Ttk_RebindSublayout(layout, recordPtr);
-    imageNode = Ttk_FindElement(layout, "image");
-    imageNode->flags = AnchorToPosition(imageAnchor);
-    imageNode = Ttk_FindElement(layout, "text");
-    imageNode->flags = AnchorToPosition(textAnchor);
-    imageNode = Ttk_FindElement(layout, "focus");
-    imageNode->flags = AnchorToPosition(textAnchor);
+    
+    Ttk_AnchorElement(Ttk_FindElement(layout, "image"), imageAnchor);
+    Ttk_AnchorElement(Ttk_FindElement(layout, "text"), textAnchor);
+    Ttk_AnchorElement(Ttk_FindElement(layout, "focus"), textAnchor);
+
     Ttk_PlaceLayout(layout, state, b);
     Ttk_DrawLayout(layout, state, d);
 }
@@ -1199,7 +1179,12 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     if (mask & (COLUMNS_CHANGED | DCOLUMNS_CHANGED)) {
 	CellSelectionClear(tv);
     }
-
+    if (tv->tree.nTitleColumns < 0) {
+	return TCL_ERROR;
+    }
+    if (tv->tree.nTitleItems < 0) {
+	return TCL_ERROR;
+    }
     if (mask & SCROLLCMD_CHANGED) {
 	TtkScrollbarUpdateRequired(tv->tree.xscrollHandle);
 	TtkScrollbarUpdateRequired(tv->tree.yscrollHandle);
@@ -1595,7 +1580,7 @@ static int BoundingBox(
     }
 
     bbox.y += dispRow * tv->tree.rowHeight;
-    bbox.height = tv->tree.rowHeight;
+    bbox.height = tv->tree.rowHeight * item->height;
 
     bbox.x -= tv->tree.xscroll.first;
     bbox.width = TreeWidth(tv);
@@ -1615,7 +1600,8 @@ static int BoundingBox(
 	bbox.x += xpos;
 	bbox.width = column->width;
 
-	if (i <= tv->tree.nTitleColumns) {
+	if (i < tv->tree.nTitleColumns) {
+	    /* Unscollable column, remove scroll shift */
 	    bbox.x += tv->tree.xscroll.first;
 	}
 

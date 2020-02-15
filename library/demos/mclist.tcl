@@ -124,7 +124,7 @@ proc SortBy {tree col direction} {
 set mclistGrid 0
 proc tglGrid {} {
     if {$::mclistGrid} {
-        .mclist.tree configure -show "headings separators" -stripe 1
+        .mclist.tree configure -show "headings columnseparators" -stripe 1
     } else {
         .mclist.tree configure -show "headings" -stripe 0
     }
