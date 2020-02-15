@@ -524,15 +524,22 @@ namespace eval ::tk {
 	#	option database and will set init-only options as well as
 	#	ordinary ones. Intended to be called from a constructor.
 	#
+	#	The actual method is called something else because it does
+	#	forwarding trickery to track the spelling of how it has been
+	#	called.
+	#
 	# ------------------------------------------------------------------
 
-	method Initialise {pathName args} {
+	method Impl<Init> {methodName pathName args} {
 	    ::if {[info exists initialised] && $initialised} {
-		::return -code error "this object is already initialised"
+		::return -code error -errorcode {TK DOUBLE_INIT} \
+		    "this object is already initialised"
 	    }
-	    ::if {[::llength $args] % 1} {
-		# TODO: generate a better error
-		::return -code error "wrong # args"
+	    ::if {[::llength $args] % 2} {
+		# TODO: generate a more accurate error message
+		::set call "my $methodName pathName ?-option value...?"
+		::return -code error -errorcode {TCL WRONGARGS} \
+		    "wrong # args: should be \"$call\""
 	    }
 	    ::set toSet {}
 	    ::set opts [my ReadableOptions]
@@ -557,11 +564,13 @@ namespace eval ::tk {
 			::set opt [::tcl::prefix match -message "option" \
 				     $opts $option]
 		    } on error msg {
+			# Rewrite the error code
 			::throw [::list TK LOOKUP OPTION $option] $msg
 		    }
 		    ::dict set toSet $opt [my <OptValidate$opt> $value]
 		}
 	    } on error {msg opt} {
+		# Strip the error trace
 		::dict unset opt -errorinfo
 		::dict incr opt -level
 		::return -options $opt $msg
@@ -572,7 +581,8 @@ namespace eval ::tk {
 	    }
 	    ::set initialised true
 	}
-	forward Initialize my Initialise
+	forward Initialise my Impl<Init> Initialise
+	forward Initialize my Impl<Init> Initialize
 
 	# Individual widgets do not support defining their own options.
 	# This is different from ::oo::configurable's properties.

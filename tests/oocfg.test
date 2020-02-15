@@ -582,6 +582,390 @@ test oocfg-4.16 {tk::configurable: configure behaviour: errors} -setup {
 } -result {{bad justify "gorp": must be center, left, or right} {TK VALUE JUSTIFY} {bad justify "gorp": must be center, left, or right
     while executing
 "$gorp configure -a gorp"}}
+
+test oocfg-5.1 {tk::configurable: Initialise behaviour: option sorting} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foe -default 1 -name alpha -class Jack
+	option fie -default 2 -name beta  -class Jack
+	option fum -default 3 -name gamma -class Beanstalk
+	option fee -default 4 -name delta -class Beanstalk
+    }
+    Gorp new .gorp -gorp
+} -returnCodes error -cleanup {
+    cfgsupport clean
+} -result {wrong # args: should be "my Initialise pathName ?-option value...?"}
+test oocfg-5.2 {tk::configurable: Initialise behaviour: ambiguity} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option foe
+	option fie
+	option fum
+	option fee
+    }
+    Gorp new .gorp -f gorp
+} -returnCodes error -cleanup {
+    cfgsupport clean
+} -result {ambiguous option "-f": must be -fee, -fie, -foe, or -fum}
+test oocfg-5.3 {tk::configurable: Initialise behaviour: inheritance assembly} -body {
+    tk::configurable create GorpFoe {
+	superclass cfgsupport
+	option foe
+    }
+    tk::configurable create GorpFie {
+	superclass cfgsupport
+	option fie
+    }
+    tk::configurable create GorpFum {
+	superclass cfgsupport
+	option fum
+    }
+    tk::configurable create GorpFee {
+	superclass cfgsupport
+	option fee
+    }
+    tk::configurable create Gorp {
+	superclass GorpFum GorpFee
+	mixin GorpFoe GorpFie
+    }
+    [Gorp new .gorp -fee 1 -fie 2 -foe 3 -fum 4] configure
+} -cleanup {
+    cfgsupport clean
+} -result {{-fee fee Fee {} 1} {-fie fie Fie {} 2} {-foe foe Foe {} 3} {-fum fum Fum {} 4}}
+test oocfg-5.4 {tk::configurable: Initialise behaviour: no opts} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+    }
+    Gorp create ::gorp .gorp
+} -cleanup {
+    cfgsupport clean
+} -result ::gorp
+test oocfg-5.5 {tk::configurable: Initialise behaviour: no opts} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+    }
+    Gorp new .gorp -foo
+} -returnCodes error -cleanup {
+    cfgsupport clean
+} -result {wrong # args: should be "my Initialise pathName ?-option value...?"}
+test oocfg-5.6 {tk::configurable: Initialise behaviour: no opts} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+    }
+    Gorp new .gorp -foo bar
+} -returnCodes error -cleanup {
+    cfgsupport clean
+} -result {bad option "-foo": no valid options}
+test oocfg-5.7 {tk::configurable: Initialise behaviour: name prefixes} -setup {
+    unset -nocomplain result msg
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option verylongname -type int
+    }
+    set gorp [Gorp new .gorp -v 1]
+    lappend result [$gorp configure]
+    oo::define Gorp option variation
+    lappend result :=:=: [catch {Gorp new .gorp2 -v 2} msg] $msg
+} -cleanup {
+    cfgsupport clean
+} -result {{{-verylongname verylongname Verylongname 0 1}} :=:=: 1 {ambiguous option "-v": must be -variation or -verylongname}}
+test oocfg-5.8 {tk::configurable: Initialise behaviour: errors} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option a
+    }
+    catch {
+	Gorp create gorp .gorp -a a -a
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    cfgsupport clean
+} -result {{wrong # args: should be "my Initialise pathName ?-option value...?"} {TCL WRONGARGS} {wrong # args: should be "my Initialise pathName ?-option value...?"
+    while executing
+"my Initialise $w {*}$args"
+    (class "::cfgsupport" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -a a -a"}}
+test oocfg-5.9 {tk::configurable: Initialise behaviour: errors} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option a
+    }
+    catch {
+	Gorp create gorp .gorp -b gorp
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    cfgsupport clean
+} -result {{bad option "-b": must be -a} {TK LOOKUP OPTION -b} {bad option "-b": must be -a
+    while executing
+"my Initialise $w {*}$args"
+    (class "::cfgsupport" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -b gorp"}}
+test oocfg-5.10 {tk::configurable: Initialise behaviour: errors} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option a
+    }
+    catch {
+	Gorp create gorp .gorp -b a
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    cfgsupport clean
+} -result {{bad option "-b": must be -a} {TK LOOKUP OPTION -b} {bad option "-b": must be -a
+    while executing
+"my Initialise $w {*}$args"
+    (class "::cfgsupport" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -b a"}}
+test oocfg-5.11 {tk::configurable: Initialise behaviour: errors} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option a -type integer
+    }
+    catch {
+	Gorp create gorp .gorp -a gorp
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    cfgsupport clean
+} -result {{invalid integer value "gorp"} {TK VALUE INTEGER} {invalid integer value "gorp"
+    while executing
+"my Initialise $w {*}$args"
+    (class "::cfgsupport" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -a gorp"}}
+test oocfg-5.12 {tk::configurable: Initialise behaviour: errors} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option a -type distance
+    }
+    catch {
+	Gorp create gorp .gorp -a gorp
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    cfgsupport clean
+} -result {{bad screen distance "gorp"} {TK VALUE SCREEN_DISTANCE} {bad screen distance "gorp"
+    while executing
+"my Initialise $w {*}$args"
+    (class "::cfgsupport" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -a gorp"}}
+test oocfg-5.13 {tk::configurable: Initialise behaviour: errors} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option a -type color
+    }
+    catch {
+	Gorp create gorp .gorp -a @@@gorp@@@
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    cfgsupport clean
+} -result {{unknown color name "@@@gorp@@@"} {TK LOOKUP COLOR @@@gorp@@@} {unknown color name "@@@gorp@@@"
+    while executing
+"my Initialise $w {*}$args"
+    (class "::cfgsupport" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -a @@@gorp@@@"}}
+test oocfg-5.14 {tk::configurable: Initialise behaviour: errors} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option a -type font
+    }
+    catch {
+	# Invalid font names are weird; font parsing is weird
+	Gorp create gorp .gorp -a "gorp {}gorp"
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    cfgsupport clean
+} -result {{font "gorp {}gorp" doesn't exist} {TK LOOKUP FONT {gorp {}gorp}} {font "gorp {}gorp" doesn't exist
+    while executing
+"my Initialise $w {*}$args"
+    (class "::cfgsupport" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -a "gorp {}gorp""}}
+test oocfg-5.15 {tk::configurable: Initialise behaviour: errors} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option a -type image
+    }
+    catch {
+	Gorp create gorp .gorp -a @@@gorp@@@
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    cfgsupport clean
+} -result {{image "@@@gorp@@@" doesn't exist} {TK LOOKUP IMAGE @@@gorp@@@} {image "@@@gorp@@@" doesn't exist
+    while executing
+"my Initialise $w {*}$args"
+    (class "::cfgsupport" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -a @@@gorp@@@"}}
+test oocfg-5.16 {tk::configurable: Initialise behaviour: errors} -setup {
+    unset -nocomplain msg opt
+} -body {
+    tk::configurable create Gorp {
+	superclass cfgsupport
+	option a -type justify
+    }
+    catch {
+	Gorp create gorp .gorp -a gorp
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    cfgsupport clean
+} -result {{bad justify "gorp": must be center, left, or right} {TK VALUE JUSTIFY} {bad justify "gorp": must be center, left, or right
+    while executing
+"my Initialise $w {*}$args"
+    (class "::cfgsupport" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -a gorp"}}
+
+test oocfg-6.1 {tk::configurable: Initialise: alt spelling} -setup {
+    unset -nocomplain msg opt
+    oo::class create base {
+	variable window
+	constructor {w} {
+	    set window [frame $w]
+	}
+	destructor {
+	    destroy $window
+	}
+    }
+} -body {
+    tk::configurable create Gorp {
+	superclass base
+	constructor {w args} {
+	    next $w
+	    my Initialize $w {*}$args
+	}
+	option a
+    }
+    set gorp [Gorp create gorp .gorp -a gorp]
+    list $gorp [$gorp cget -a]
+} -cleanup {
+    base destroy
+} -result {::gorp gorp}
+test oocfg-6.2 {tk::configurable: Initialise: alt spelling} -setup {
+    unset -nocomplain msg opt
+    oo::class create base {
+	variable window
+	constructor {w} {
+	    set window [frame $w]
+	}
+	destructor {
+	    destroy $window
+	}
+    }
+} -body {
+    tk::configurable create Gorp {
+	superclass base
+	constructor {w args} {
+	    next $w
+	    my Initialize $w {*}$args
+	}
+	option a
+    }
+    catch {
+	Gorp create gorp .gorp -a gorp -a
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    base destroy
+} -result {{wrong # args: should be "my Initialize pathName ?-option value...?"} {TCL WRONGARGS} {wrong # args: should be "my Initialize pathName ?-option value...?"
+    while executing
+"my Initialize $w {*}$args"
+    (class "::Gorp" constructor line 3)
+    invoked from within
+"Gorp create gorp .gorp -a gorp -a"}}
+test oocfg-6.3 {tk::configurable: Initialise: double call} -setup {
+    unset -nocomplain msg opt
+    oo::class create base {
+	variable window
+	constructor {w} {
+	    set window [frame $w]
+	}
+	destructor {
+	    destroy $window
+	}
+    }
+} -body {
+    tk::configurable create Gorp {
+	superclass base
+	constructor {w args} {
+	    next $w
+	    my Initialise $w {*}$args
+	    my Initialize $w {*}$args
+	}
+	option a
+    }
+    catch {
+	Gorp create gorp .gorp -a gorp
+    } msg opt
+    list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    base destroy
+} -result {{this object is already initialised} {TK DOUBLE_INIT} {this object is already initialised
+    while executing
+"my Initialize $w {*}$args"
+    (class "::Gorp" constructor line 4)
+    invoked from within
+"Gorp create gorp .gorp -a gorp"}}
+test oocfg-6.4 {tk::configurable: Initialise: smartass} -setup {
+    unset -nocomplain msg opt
+    oo::class create base {
+	variable window
+	constructor {w} {
+	    set window [frame $w]
+	}
+	destructor {
+	    destroy $window
+	}
+    }
+} -body {
+    tk::configurable create Gorp {
+	superclass base
+	constructor {w args} {
+	    # NOT a recommended way of working; rude towards subclasses and
+	    # uses not-well-documented result of superclass constructor.
+	    tailcall my Initialise [next $w] {*}$args
+	}
+	option a
+    }
+    catch {
+	Gorp create gorp .gorp -a gorp -a
+    } msg opt
+    list $msg [winfo exists .gorp] \
+	[dict get $opt -errorcode] [dict get $opt -errorinfo]
+} -cleanup {
+    base destroy
+} -result {{wrong # args: should be "my Initialise pathName ?-option value...?"} 0 {TCL WRONGARGS} {wrong # args: should be "my Initialise pathName ?-option value...?"
+    while executing
+"my Initialise .gorp -a gorp -a"
+    invoked from within
+"Gorp create gorp .gorp -a gorp -a"}}
 
 # cleanup
 deleteWindows
