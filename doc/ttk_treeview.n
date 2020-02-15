@@ -90,7 +90,7 @@ Display the heading row.
 .IP \fBcolumnseparators\fR
 Display column separators in the cell area.
 .PP
-The default is \fBtree headings\fR, i.e., show all elements.
+The default is \fBtree headings\fR.
 .PP
 \fBNOTE:\fR Column #0 always refers to the tree column,
 even if \fB\-show tree\fR is not specified.
@@ -103,9 +103,9 @@ If not supported by the current theme, it will not show.
 .OP \-titlecolumns titleColumns TitleColumns
 Number of display columns at the left that should not be scrolled. The tree column counts, even
 if \fB\-show tree\fR is not specified. Thus for value N of this option, column #N is
-the first one that is scrollable.
+the first one that is scrollable. Default is 0.
 .OP \-titleitems titleItems TitleItems
-Number of items at the top that should not be vertically scrolled.
+Number of items at the top that should not be vertically scrolled. Default is 0.
 .SH "WIDGET COMMAND"
 .PP
 .TP
@@ -186,11 +186,11 @@ with respect to the cell. \fIAnchor\fR is one of
 The minimum width of the column in pixels.
 The treeview widget will not make the column any smaller than
 \fB\-minwidth\fR when the widget is resized or the user drags a
-column separator.  Default is 20 pixels.
+heading column separator.  Default is 20 pixels.
 .TP
 \fB\-stretch \fIboolean\fR
 Specifies whether or not the column width should be adjusted
-when the widget is resized or the user drags a column separator.
+when the widget is resized or the user drags a heading column separator.
 \fIBoolean\fR may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 By default columns are stretchable.
 .TP
@@ -198,7 +198,7 @@ By default columns are stretchable.
 The width of the column in pixels.  Default is 200 pixels. The specified
 column width may be changed by Tk in order to honor \fB\-stretch\fR
 and/or \fB\-minwidth\fR, or when the widget is resized or the user drags a
-column separator.
+heading column separator.
 .PP
 Use \fIpathname column #0\fR to configure the tree column.
 .RE
@@ -453,7 +453,7 @@ in the \fBinsert\fR and \fBitem\fR widget commands.
 .IP \fB\-text\fR
 The textual label to display for the item.
 .IP \fB\-height\fR
-The height for the item, in multiples of \fB\-rowheight\fP.
+The height for the item, in multiples of \fB\-rowheight\fP. Default is 1.
 .IP \fB\-image\fR
 A Tk image, displayed next to the label, placed according to \fB-imageanchor\fR.
 .IP \fB\-imageanchor\fR
