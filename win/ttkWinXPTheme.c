@@ -166,12 +166,12 @@ BoxToRect(Ttk_Box b)
 /*
  * Map Tk state bitmaps to XP style enumerated values.
  */
-static Ttk_StateTable null_statemap[] = { {0,0,0} };
+static const Ttk_StateTable null_statemap[] = { {0,0,0} };
 
 /*
  * Pushbuttons (Tk: "Button")
  */
-static Ttk_StateTable pushbutton_statemap[] =
+static const Ttk_StateTable pushbutton_statemap[] =
 {
     { PBS_DISABLED, 	TTK_STATE_DISABLED, 0 },
     { PBS_PRESSED, 	TTK_STATE_PRESSED, 0 },
@@ -183,7 +183,7 @@ static Ttk_StateTable pushbutton_statemap[] =
 /*
  * Checkboxes (Tk: "Checkbutton")
  */
-static Ttk_StateTable checkbox_statemap[] =
+static const Ttk_StateTable checkbox_statemap[] =
 {
 {CBS_MIXEDDISABLED, 	TTK_STATE_ALTERNATE|TTK_STATE_DISABLED, 0},
 {CBS_MIXEDPRESSED, 	TTK_STATE_ALTERNATE|TTK_STATE_PRESSED, 0},
@@ -202,7 +202,7 @@ static Ttk_StateTable checkbox_statemap[] =
 /*
  * Radiobuttons:
  */
-static Ttk_StateTable radiobutton_statemap[] =
+static const Ttk_StateTable radiobutton_statemap[] =
 {
 {RBS_UNCHECKEDDISABLED,	TTK_STATE_ALTERNATE|TTK_STATE_DISABLED, 0},
 {RBS_UNCHECKEDNORMAL,	TTK_STATE_ALTERNATE, 0},
@@ -219,7 +219,7 @@ static Ttk_StateTable radiobutton_statemap[] =
 /*
  * Groupboxes (tk: "frame")
  */
-static Ttk_StateTable groupbox_statemap[] =
+static const Ttk_StateTable groupbox_statemap[] =
 {
 {GBS_DISABLED,	TTK_STATE_DISABLED, 0},
 {GBS_NORMAL,	0,0 }
@@ -228,7 +228,7 @@ static Ttk_StateTable groupbox_statemap[] =
 /*
  * Edit fields (tk: "entry")
  */
-static Ttk_StateTable edittext_statemap[] =
+static const Ttk_StateTable edittext_statemap[] =
 {
     { ETS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { ETS_READONLY,	TTK_STATE_READONLY, 0 },
@@ -243,7 +243,7 @@ static Ttk_StateTable edittext_statemap[] =
  * Same as edittext_statemap, but doesn't use ETS_READONLY
  * (fixes: #1032409)
  */
-static Ttk_StateTable combotext_statemap[] =
+static const Ttk_StateTable combotext_statemap[] =
 {
     { ETS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { ETS_FOCUSED,	TTK_STATE_FOCUS, 0 },
@@ -254,7 +254,7 @@ static Ttk_StateTable combotext_statemap[] =
 /*
  * Combobox button: (CBP_DROPDOWNBUTTON)
  */
-static Ttk_StateTable combobox_statemap[] = {
+static const Ttk_StateTable combobox_statemap[] = {
     { CBXS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { CBXS_PRESSED, 	TTK_STATE_PRESSED, 0 },
     { CBXS_HOT, 	TTK_STATE_ACTIVE, 0 },
@@ -265,7 +265,7 @@ static Ttk_StateTable combobox_statemap[] = {
 /*
  * Toolbar buttons (TP_BUTTON):
  */
-static Ttk_StateTable toolbutton_statemap[] =  {
+static const Ttk_StateTable toolbutton_statemap[] =  {
     { TS_DISABLED, 	TTK_STATE_DISABLED, 0 },
     { TS_PRESSED,	TTK_STATE_PRESSED, 0 },
     { TS_HOTCHECKED,	TTK_STATE_SELECTED|TTK_STATE_ACTIVE, 0 },
@@ -277,7 +277,7 @@ static Ttk_StateTable toolbutton_statemap[] =  {
 /*
  * Scrollbars (Tk: "Scrollbar.thumb")
  */
-static Ttk_StateTable scrollbar_statemap[] =
+static const Ttk_StateTable scrollbar_statemap[] =
 {
     { SCRBS_DISABLED, 	TTK_STATE_DISABLED, 0 },
     { SCRBS_PRESSED, 	TTK_STATE_PRESSED, 0 },
@@ -285,7 +285,7 @@ static Ttk_StateTable scrollbar_statemap[] =
     { SCRBS_NORMAL, 	0, 0 }
 };
 
-static Ttk_StateTable uparrow_statemap[] =
+static const Ttk_StateTable uparrow_statemap[] =
 {
     { ABS_UPDISABLED,	TTK_STATE_DISABLED, 0 },
     { ABS_UPPRESSED, 	TTK_STATE_PRESSED, 0 },
@@ -293,7 +293,7 @@ static Ttk_StateTable uparrow_statemap[] =
     { ABS_UPNORMAL, 	0, 0 }
 };
 
-static Ttk_StateTable downarrow_statemap[] =
+static const Ttk_StateTable downarrow_statemap[] =
 {
     { ABS_DOWNDISABLED,	TTK_STATE_DISABLED, 0 },
     { ABS_DOWNPRESSED, 	TTK_STATE_PRESSED, 0 },
@@ -301,7 +301,7 @@ static Ttk_StateTable downarrow_statemap[] =
     { ABS_DOWNNORMAL, 	0, 0 }
 };
 
-static Ttk_StateTable leftarrow_statemap[] =
+static const Ttk_StateTable leftarrow_statemap[] =
 {
     { ABS_LEFTDISABLED,	TTK_STATE_DISABLED, 0 },
     { ABS_LEFTPRESSED, 	TTK_STATE_PRESSED, 0 },
@@ -309,7 +309,7 @@ static Ttk_StateTable leftarrow_statemap[] =
     { ABS_LEFTNORMAL, 	0, 0 }
 };
 
-static Ttk_StateTable rightarrow_statemap[] =
+static const Ttk_StateTable rightarrow_statemap[] =
 {
     { ABS_RIGHTDISABLED,TTK_STATE_DISABLED, 0 },
     { ABS_RIGHTPRESSED, TTK_STATE_PRESSED, 0 },
@@ -317,7 +317,7 @@ static Ttk_StateTable rightarrow_statemap[] =
     { ABS_RIGHTNORMAL, 	0, 0 }
 };
 
-static Ttk_StateTable spinbutton_statemap[] =
+static const Ttk_StateTable spinbutton_statemap[] =
 {
     { DNS_DISABLED,	TTK_STATE_DISABLED, 0 },
     { DNS_PRESSED,	TTK_STATE_PRESSED,  0 },
@@ -328,7 +328,7 @@ static Ttk_StateTable spinbutton_statemap[] =
 /*
  * Trackbar thumb: (Tk: "scale slider")
  */
-static Ttk_StateTable scale_statemap[] =
+static const Ttk_StateTable scale_statemap[] =
 {
     { TUS_DISABLED, 	TTK_STATE_DISABLED, 0 },
     { TUS_PRESSED, 	TTK_STATE_PRESSED, 0 },
@@ -337,7 +337,7 @@ static Ttk_StateTable scale_statemap[] =
     { TUS_NORMAL, 	0, 0 }
 };
 
-static Ttk_StateTable tabitem_statemap[] =
+static const Ttk_StateTable tabitem_statemap[] =
 {
     { TIS_DISABLED,     TTK_STATE_DISABLED, 0 },
     { TIS_SELECTED,     TTK_STATE_SELECTED, 0 },
@@ -372,11 +372,11 @@ static Ttk_StateTable tabitem_statemap[] =
 typedef struct 	/* XP element specifications */
 {
     const char	*elementName;	/* Tk theme engine element name */
-    Ttk_ElementSpec *elementSpec;
+    const Ttk_ElementSpec *elementSpec;
     				/* Element spec (usually GenericElementSpec) */
     LPCWSTR	className;	/* Windows window class name */
     int 	partId;		/* BP_PUSHBUTTON, BP_CHECKBUTTON, etc. */
-    Ttk_StateTable *statemap;	/* Map Tk states to XP states */
+    const Ttk_StateTable *statemap;	/* Map Tk states to XP states */
     Ttk_Padding	padding;	/* See NOTE-GetThemeMargins */
     int  	flags;
 #   define 	IGNORE_THEMESIZE 0x80000000 /* See NOTE-GetThemePartSize */
@@ -391,7 +391,7 @@ typedef struct
     /*
      * Static data, initialized when element is registered:
      */
-    ElementInfo	*info;
+    const ElementInfo	*info;
     XPThemeProcs *procs;	/* Pointer to theme procedure table */
 
     /*
@@ -407,7 +407,7 @@ typedef struct
 } ElementData;
 
 static ElementData *
-NewElementData(XPThemeProcs *procs, ElementInfo *info)
+NewElementData(XPThemeProcs *procs, const ElementInfo *info)
 {
     ElementData *elementData = ckalloc(sizeof(ElementData));
 
@@ -552,7 +552,7 @@ static void GenericElementDraw(
     FreeElementData(elementData);
 }
 
-static Ttk_ElementSpec GenericElementSpec =
+static const Ttk_ElementSpec GenericElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
@@ -592,7 +592,7 @@ GenericSizedElementSize(
 	*widthPtr /= 2;
 }
 
-static Ttk_ElementSpec GenericSizedElementSpec = {
+static const Ttk_ElementSpec GenericSizedElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
@@ -622,7 +622,7 @@ SpinboxArrowElementSize(
     *heightPtr /= 2;
 }
 
-static Ttk_ElementSpec SpinboxArrowElementSpec = {
+static const Ttk_ElementSpec SpinboxArrowElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
@@ -659,7 +659,7 @@ static void ThumbElementDraw(
     FreeElementData(elementData);
 }
 
-static Ttk_ElementSpec ThumbElementSpec =
+static const Ttk_ElementSpec ThumbElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
@@ -691,7 +691,7 @@ static void PbarElementSize(
     }
 }
 
-static Ttk_ElementSpec PbarElementSpec =
+static const Ttk_ElementSpec PbarElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
@@ -732,7 +732,7 @@ static void TabElementDraw(
     FreeElementData(elementData);
 }
 
-static Ttk_ElementSpec TabElementSpec =
+static const Ttk_ElementSpec TabElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
@@ -750,14 +750,14 @@ static Ttk_ElementSpec TabElementSpec =
 #define TTK_STATE_OPEN TTK_STATE_USER1
 #define TTK_STATE_LEAF TTK_STATE_USER2
 
-static Ttk_StateTable header_statemap[] =
+static const Ttk_StateTable header_statemap[] =
 {
     { HIS_PRESSED, 	TTK_STATE_PRESSED, 0 },
     { HIS_HOT,  	TTK_STATE_ACTIVE, 0 },
     { HIS_NORMAL, 	0,0 },
 };
 
-static Ttk_StateTable treeview_statemap[] =
+static const Ttk_StateTable treeview_statemap[] =
 {
     { TREIS_DISABLED, 	TTK_STATE_DISABLED, 0 },
     { TREIS_SELECTED,	TTK_STATE_SELECTED, 0},
@@ -765,7 +765,7 @@ static Ttk_StateTable treeview_statemap[] =
     { TREIS_NORMAL, 	0,0 },
 };
 
-static Ttk_StateTable tvpglyph_statemap[] =
+static const Ttk_StateTable tvpglyph_statemap[] =
 {
     { GLPS_OPENED, 	TTK_STATE_OPEN, 0 },
     { GLPS_CLOSED, 	0,0 },
@@ -780,7 +780,7 @@ static void TreeIndicatorElementDraw(
     }
 }
 
-static Ttk_ElementSpec TreeIndicatorElementSpec =
+static const Ttk_ElementSpec TreeIndicatorElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
@@ -808,7 +808,7 @@ typedef struct
     Tcl_Obj *fontObj;
 } TextElement;
 
-static Ttk_ElementOptionSpec TextElementOptions[] =
+static const Ttk_ElementOptionSpec TextElementOptions[] =
 {
     { "-text", TK_OPTION_STRING,
 	offsetof(TextElement,textObj), "" },
@@ -888,7 +888,7 @@ static void TextElementDraw(
     FreeElementData(elementData);
 }
 
-static Ttk_ElementSpec TextElementSpec =
+static const Ttk_ElementSpec TextElementSpec =
 {
     TK_STYLE_VERSION_2,
     sizeof(TextElement),
@@ -954,7 +954,7 @@ TTK_END_LAYOUT_TABLE
 
 /* name spec className partId statemap padding flags */
 
-static ElementInfo ElementInfoTable[] = {
+static const ElementInfo ElementInfoTable[] = {
     { "Checkbutton.indicator", &GenericElementSpec, L"BUTTON",
     	BP_CHECKBOX, checkbox_statemap, PAD(0, 0, 4, 0), PAD_MARGINS },
     { "Radiobutton.indicator", &GenericElementSpec, L"BUTTON",
@@ -1119,7 +1119,7 @@ Ttk_CreateVsapiElement(
     TkSizeT length = 0;
     char *name;
     LPWSTR wname;
-    Ttk_ElementSpec *elementSpec = &GenericElementSpec;
+    const Ttk_ElementSpec *elementSpec = &GenericElementSpec;
     Tcl_DString classBuf;
 
     static const char *const optionStrings[] =
@@ -1278,7 +1278,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     XPThemeProcs *procs;
     HINSTANCE hlibrary;
     Ttk_Theme themePtr, parentPtr, vistaPtr;
-    ElementInfo *infoPtr;
+    const ElementInfo *infoPtr;
     OSVERSIONINFOW os;
 
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
