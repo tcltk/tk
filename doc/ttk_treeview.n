@@ -398,9 +398,9 @@ binding scripts for each of the item's \fB\-tags\fR are evaluated
 in order as per \fIbindtags(n)\fR.
 .RS
 .PP
-\fB<KeyPress>\fR, \fB<KeyRelease>\fR, and virtual events
+\fB<Key>\fR, \fB<KeyRelease>\fR, and virtual events
 are sent to the focus item.
-\fB<ButtonPress>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events
+\fB<Button>\fR, \fB<ButtonRelease>\fR, and \fB<Motion>\fR events
 are sent to the item under the mouse pointer.
 No other event types are supported.
 .PP

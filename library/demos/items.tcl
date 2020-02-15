@@ -171,14 +171,14 @@ $c create text 28.5c 17.4c -text Scale: -anchor s
 
 # Set up event bindings for canvas:
 
-$c bind item <Any-Enter> "itemEnter $c"
-$c bind item <Any-Leave> "itemLeave $c"
-bind $c <2> "$c scan mark %x %y"
+$c bind item <Enter> "itemEnter $c"
+$c bind item <Leave> "itemLeave $c"
+bind $c <Button-2> "$c scan mark %x %y"
 bind $c <B2-Motion> "$c scan dragto %x %y"
-bind $c <3> "itemMark $c %x %y"
+bind $c <Button-3> "itemMark $c %x %y"
 bind $c <B3-Motion> "itemStroke $c %x %y"
 bind $c <<NextChar>> "itemsUnderArea $c"
-bind $c <1> "itemStartDrag $c %x %y"
+bind $c <Button-1> "itemStartDrag $c %x %y"
 bind $c <B1-Motion> "itemDrag $c %x %y"
 
 # Utility procedures for highlighting the item under the pointer:
