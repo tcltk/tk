@@ -1088,9 +1088,9 @@ test oocfg-9.2 {tk::configurable: checkpointing} -body {
 	superclass cfgsupport
 	option foo -type integer
 	option bar -type integer
+	export <OptionsMakeCheckpoint> <OptionsRestoreCheckpoint>
     }
     Gorp create gorp .gorp
-    oo::objdefine gorp export <OptionsMakeCheckpoint> <OptionsRestoreCheckpoint>
     # Note that this checks that we can restore an illegal state.
     # User code is strongly recommended to not do this!
     list [info object properties gorp -all] [gorp <OptionsMakeCheckpoint>] \

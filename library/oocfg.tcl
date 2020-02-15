@@ -241,10 +241,9 @@ namespace eval ::tk {
 	}
 
 	proc superclass args {
-	    if {![string match -* [lindex $args 0]]} {
-		set args [list -append {*}$args]
-	    }
-	    tailcall ::oo::define::superclass {*}$args
+	    set support ::tk::ConfigurableStandardImplementations
+	    uplevel 1 [list ::oo::define::superclass {*}$args]
+	    tailcall ::oo::define::superclass -appendifnew $support
 	}
 
 	namespace import Support::option
