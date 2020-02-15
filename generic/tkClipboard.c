@@ -147,7 +147,8 @@ ClipboardAppHandler(
     if (length > (size_t) maxBytes) {
 	length = maxBytes;
     }
-    strncpy(buffer, p, length);
+    memcpy(buffer, p, length);
+    buffer[length] = 0;
     return (int)length;
 }
 
