@@ -3118,27 +3118,28 @@ static void
 MenuSelectEvent(
     TkMenu *menuPtr)		/* the menu we have selected. */
 {
-    XVirtualEvent event;
+    union {XEvent general; XVirtualEvent virt;} event;
     union {DWORD msgpos; POINTS point;} root;
 
-    event.type = VirtualEvent;
-    event.serial = menuPtr->display->request;
-    event.send_event = 0;
-    event.display = menuPtr->display;
+    memset(&event, 0, sizeof(event));
+    event.virt.type = VirtualEvent;
+    event.virt.serial = menuPtr->display->request;
+    event.virt.send_event = 0;
+    event.virt.display = menuPtr->display;
     Tk_MakeWindowExist(menuPtr->tkwin);
-    event.event = Tk_WindowId(menuPtr->tkwin);
-    event.root = XRootWindow(menuPtr->display, 0);
-    event.subwindow = None;
-    event.time = TkpGetMS();
+    event.virt.event = Tk_WindowId(menuPtr->tkwin);
+    event.virt.root = XRootWindow(menuPtr->display, 0);
+    event.virt.subwindow = None;
+    event.virt.time = TkpGetMS();
 
     root.msgpos = GetMessagePos();
-    event.x_root = root.point.x;
-    event.y_root = root.point.y;
-    event.state = TkWinGetModifierState();
-    event.same_screen = 1;
-    event.name = Tk_GetUid("MenuSelect");
-    event.user_data = NULL;
-    Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
+    event.virt.x_root = root.point.x;
+    event.virt.y_root = root.point.y;
+    event.virt.state = TkWinGetModifierState();
+    event.virt.same_screen = 1;
+    event.virt.name = Tk_GetUid("MenuSelect");
+    event.virt.user_data = NULL;
+    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
 /*
