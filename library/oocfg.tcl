@@ -240,6 +240,13 @@ namespace eval ::tk {
 	    namespace export option
 	}
 
+	proc superclass args {
+	    if {![string match -* [lindex $args 0]]} {
+		set args [list -append {*}$args]
+	    }
+	    tailcall ::oo::define::superclass {*}$args
+	}
+
 	namespace import Support::option
 	namespace export option
 	namespace path ::oo::define
@@ -391,70 +398,6 @@ namespace eval ::tk {
 
 	# ------------------------------------------------------------------
 	#
-	# tk::Configurable <StdOptRead> --
-	#
-	#	How to actually read an option of a given name out of the
-	#	state when using the standard model of storage (the array in
-	#	the instance with the empty name).
-	#
-	# ------------------------------------------------------------------
-
-	method <StdOptRead> {name} {
-	    ::variable ""
-	    ::return $($name)
-	}
-
-	# ------------------------------------------------------------------
-	#
-	# tk::Configurable <StdOptWrite> --
-	#
-	#	How to actually write an option of a given name to the state
-	#	when using the standard model of storage (the array in the
-	#	instance with the empty name).
-	#
-	# ------------------------------------------------------------------
-
-	method <StdOptWrite> {name value} {
-	    ::variable ""
-	    ::set ($name) $value
-	}
-
-	# ------------------------------------------------------------------
-	#
-	# tk::Configurable <OptionsMakeCheckpoint> --
-	#
-	#	How to make a checkpoint of the state that can be restored if
-	#	the configuration of the object fails. If overridden, the
-	#	companion method <OptionsRestoreCheckpoint> should also be
-	#	overridden. The format of checkpoints is undocumented
-	#	formally, but this implementation uses a dictionary.
-	#
-	# ------------------------------------------------------------------
-
-	method <OptionsMakeCheckpoint> {} {
-	    ::variable ""
-	    ::array get ""
-	}
-
-	# ------------------------------------------------------------------
-	#
-	# tk::Configurable <OptionsRestoreCheckpoint> --
-	#
-	#	How to restore a checkpoint of the state because the
-	#	configuration of the object has failed. If overridden, the
-	#	companion method <OptionsMakeCheckpoint> should also be
-	#	overridden. The format of checkpoints is undocumented
-	#	formally, but this implementation uses a dictionary.
-	#
-	# ------------------------------------------------------------------
-
-	method <OptionsRestoreCheckpoint> {checkpoint} {
-	    ::variable ""
-	    ::array set "" $checkpoint
-	}
-
-	# ------------------------------------------------------------------
-	#
 	# tk::Configurable configure --
 	#
 	#	Implements [$obj configure ...].
@@ -503,18 +446,6 @@ namespace eval ::tk {
 		::return -options $opt $msg
 	    }
 	}
-
-	# ------------------------------------------------------------------
-	#
-	# tk::Configurable PostConfigure --
-	#
-	#	Hook for user code to find out when a state change really
-	#	occurred with [$obj configure]. Does nothing by default;
-	#	subclasses may change this.
-	#
-	# ------------------------------------------------------------------
-
-	method PostConfigure {} {}
 
 	# ------------------------------------------------------------------
 	#
@@ -590,6 +521,95 @@ namespace eval ::tk {
 
     # ----------------------------------------------------------------------
     #
+    # tk::ConfigurableStandardImplementations --
+    #
+    #	The superclass with user-overridable parts of the configurable system.
+    #
+    #	Tricky point: namespace path of classes is uncertain; fully qualify
+    #	everything.
+    #
+    # ----------------------------------------------------------------------
+
+    ::oo::class create ConfigurableStandardImplementations {
+	# ------------------------------------------------------------------
+	#
+	# tk::ConfigurableStandardImplementations <StdOptRead> --
+	#
+	#	How to actually read an option of a given name out of the
+	#	state when using the standard model of storage (the array in
+	#	the instance with the empty name).
+	#
+	# ------------------------------------------------------------------
+
+	method <StdOptRead> {name} {
+	    ::variable ""
+	    ::return $($name)
+	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::ConfigurableStandardImplementations <StdOptWrite> --
+	#
+	#	How to actually write an option of a given name to the state
+	#	when using the standard model of storage (the array in the
+	#	instance with the empty name).
+	#
+	# ------------------------------------------------------------------
+
+	method <StdOptWrite> {name value} {
+	    ::variable ""
+	    ::set ($name) $value
+	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::ConfigurableStandardImplementations <OptionsMakeCheckpoint> --
+	#
+	#	How to make a checkpoint of the state that can be restored if
+	#	the configuration of the object fails. If overridden, the
+	#	companion method <OptionsRestoreCheckpoint> should also be
+	#	overridden. The format of checkpoints is undocumented
+	#	formally, but this implementation uses a dictionary.
+	#
+	# ------------------------------------------------------------------
+
+	method <OptionsMakeCheckpoint> {} {
+	    ::variable ""
+	    ::array get ""
+	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::ConfigurableStandardImplementations <OptionsRestoreCheckpoint> --
+	#
+	#	How to restore a checkpoint of the state because the
+	#	configuration of the object has failed. If overridden, the
+	#	companion method <OptionsMakeCheckpoint> should also be
+	#	overridden. The format of checkpoints is undocumented
+	#	formally, but this implementation uses a dictionary.
+	#
+	# ------------------------------------------------------------------
+
+	method <OptionsRestoreCheckpoint> {checkpoint} {
+	    ::variable ""
+	    ::array set "" $checkpoint
+	}
+
+	# ------------------------------------------------------------------
+	#
+	# tk::ConfigurableStandardImplementations PostConfigure --
+	#
+	#	Hook for user code to find out when a state change really
+	#	occurred with [$obj configure]. Does nothing by default;
+	#	subclasses may change this.
+	#
+	# ------------------------------------------------------------------
+
+	method PostConfigure {} {}
+    }
+
+    # ----------------------------------------------------------------------
+    #
     # tk::configurable --
     #
     #	The metaclass for making megawidgets (which are always configurable).
@@ -601,7 +621,10 @@ namespace eval ::tk {
 	superclass ::oo::class
 
     	constructor {{definitionScript ""}} {
-	    next {mixin ::tk::Configurable}
+	    next {
+		superclass ::tk::ConfigurableStandardImplementations
+		mixin ::tk::Configurable
+	    }
 	    next $definitionScript
 	}
 	definitionnamespace -class ::tk::OptionDefine
