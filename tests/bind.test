@@ -6690,6 +6690,16 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
 } -result {0 0 ok ok}
 
 test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
+    proc waitForGrab {grabWin in_ni} {
+    # process events while $grabWin is not in (ni) the current grab window list,
+    # or while it is (in), but don't spend more than 5 seconds doing this
+        set i 0
+        while {[expr {$grabWin} $in_ni {[grab current]}] && $i < 500} {
+            after 1
+            update
+            incr i
+        }
+    }
     event generate {} <Motion> -warp 1 -x 50 -y 50
     update idletasks ; # DoWarp is an idle callback
     after 50         ; # Win specific - wait for SendInput to be executed
@@ -6702,17 +6712,14 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
     update
 } -body {
     grab .top  ; # this will queue events
-    update
-    after 50
-    update
+    waitForGrab .top ni
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     update idletasks ; after 50
     foreach {x1 y1} [winfo pointerxy .top.l] {}
     event generate {} <Motion> -warp 1 -x 50 -y 50
     update idletasks ; after 50
     grab release .top  ; # this will queue events
-    after 50
-    update
+    waitForGrab .top in
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     update idletasks ; after 50
     foreach {x2 y2} [winfo pointerxy .top.l] {}
@@ -6720,6 +6727,7 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
 } -cleanup {
     destroy .top
     unset x1 y1 x2 y2
+    rename waitForGrab {}
 } -result {1}
 
 # cleanup
