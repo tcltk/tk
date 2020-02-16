@@ -482,8 +482,12 @@ namespace eval ::tk {
 			::continue
 		    }
 		    ::lassign $desc nm cls def
-		    ::set val [::option get $pathName $nm $cls]
-		    ::if {$val eq "" || [catch {my <OptValidate$opt> $val}]} {
+		    ::set val [::option get $pathName $nm $cls $def]
+		    ::if {[catch {my <OptValidate$opt> $val}]} {
+			# If the user forces a bad value via the option DB,
+			# use our default anyway. It's the best we can do and
+			# the DB is (by *design*) not entirely under script
+			# control.
 			::set val $def
 		    }
 		    ::dict set toSet $opt $val
