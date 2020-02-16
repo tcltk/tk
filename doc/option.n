@@ -15,7 +15,7 @@ option \- Add/retrieve window options to/from the option database
 .nf
 \fBoption add \fIpattern value \fR?\fIpriority\fR?
 \fBoption clear\fR
-\fBoption get \fIwindow name class\fR
+\fBoption get \fIwindow name class\fR ?\fIdefault\fR?
 \fBoption readfile \fIfileName \fR?\fIpriority\fR?
 .fi
 .BE
@@ -50,7 +50,11 @@ the command returns whichever was created with highest
 \fIpriority\fR level.  If there are several matching
 entries at the same priority level, then it returns whichever entry
 was most recently entered into the option database.  If there are
-no matching entries, then the empty string is returned.
+no matching entries, then
+.VS TIP560
+either \fIdefault\fR is returned if it is specified, or otherwise
+.VE TIP 560
+the empty string is returned.
 .PP
 The \fBreadfile\fR form of the command reads \fIfileName\fR,
 which should have the standard format for an
