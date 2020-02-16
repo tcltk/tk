@@ -610,7 +610,7 @@ CreateElement(
     Tcl_HashEntry *entryPtr, *engineEntryPtr;
     Tcl_HashSearch search;
     int newEntry, elementId, genericId = -1;
-    char *dot;
+    const char *dot;
     StyleEngine *enginePtr;
 
     /*
@@ -692,7 +692,7 @@ Tk_GetElementId(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_HashEntry *entryPtr;
     int genericId = -1;
-    char *dot;
+    const char *dot;
 
     /*
      * Find the element Id.
