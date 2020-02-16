@@ -15,13 +15,6 @@ matrix:
       compiler: gcc
       env:
         - BUILD_DIR=unix
-    - name: "Linux/GCC/Static"
-      os: linux
-      dist: bionic
-      compiler: gcc
-      env:
-        - CFGOPT="--disable-shared"
-        - BUILD_DIR=unix
     - name: "Linux/GCC 7/Shared"
       os: linux
       dist: bionic

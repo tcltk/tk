@@ -3201,7 +3201,7 @@ ParseFontNameObj(
 				 * specified in font name are filled with
 				 * default values. */
 {
-    char *dash;
+    const char *dash;
     int objc, result, i, n;
     Tcl_Obj **objv;
     char *string;

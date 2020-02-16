@@ -839,7 +839,7 @@ TkpGetFontFamilies(
     Tk_Window tkwin)		/* For display to query. */
 {
     int i, new, numNames;
-    char *family, **nameList;
+    const char *family, **nameList;
     Tcl_HashTable familyTable;
     Tcl_HashEntry *hPtr;
     Tcl_HashSearch search;
@@ -850,7 +850,7 @@ TkpGetFontFamilies(
     Tcl_InitHashTable(&familyTable, TCL_STRING_KEYS);
     nameList = ListFonts(Tk_Display(tkwin), "*", &numNames);
     for (i = 0; i < numNames; i++) {
-	char *familyEnd;
+	const char *familyEnd;
 
 	family = strchr(nameList[i] + 1, '-');
 	if (family == NULL) {
