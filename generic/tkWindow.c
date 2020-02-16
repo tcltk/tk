@@ -1144,7 +1144,7 @@ Tk_CreateWindowFromPath(
      * the situation where the parent is ".".
      */
 
-    p = strrchr(pathName, '.');
+    p = (char *)strrchr(pathName, '.');
     if (p == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad window path name \"%s\"", pathName));
