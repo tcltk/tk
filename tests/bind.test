@@ -6695,7 +6695,7 @@ test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
     # or while it is (in), but don't spend more than 5 seconds doing this
         set i 0
         while {[expr {$grabWin} $in_ni {[grab current]}] && $i < 500} {
-            after 1
+            after 10
             update
             incr i
         }
