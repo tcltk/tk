@@ -6670,16 +6670,34 @@ test bind-34.2 {-warp works relatively to the screen} -setup {
 } -cleanup {
 } -result {20 20 200 200}
 test bind-34.3 {-warp works with null or negative coordinates} -setup {
+    # On some OS/WM, at least Linux with KDE, the "Screen edges" feature
+    # provides hot spots that can be associated with some action.
+    # When activated, the WM will not allow warping to happen on top of
+    # a hot spot (which would trigger the corresponding action as an
+    # unwanted effect) but will warp the pointer to the hot spot limit only.
+    if {[tk windowingsystem] eq "x11"} {
+        set halo 1
+    } else {
+        set halo 0
+    }
+    set res {}
 } -body {
     event generate {} <Motion> -x 0 -y 0 -warp 1
     update idletasks ; # DoWarp is an idle callback
     after 50         ; # Win specific - wait for SendInput to be executed
-    set res [winfo pointerxy .]
-    event generate {} <Motion> -x -1 -y -1 -warp 1
-    update idletasks ; # DoWarp is an idle callback
-    after 50         ; # Win specific - wait for SendInput to be executed
     foreach dim [winfo pointerxy .] {
-        if {$dim <= 0} {
+        if {$dim <= $halo} {
+            lappend res ok
+        } else {
+            lappend res $dim
+        }
+    }
+    event generate {} <Motion> -x 100 -y 100 -warp 1
+    update idletasks ; after 50
+    event generate {} <Motion> -x -1 -y -1 -warp 1
+    update idletasks ; after 50
+    foreach dim [winfo pointerxy .] {
+        if {$dim <= $halo} {
             lappend res ok
         } else {
             lappend res $dim
@@ -6687,7 +6705,7 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     }
     set res
 } -cleanup {
-} -result {0 0 ok ok}
+} -result {ok ok ok ok}
 
 test bind-35.1 {pointer warp with grab on master, bug [e3888d5820]} -setup {
     proc waitForGrab {grabWin in_ni} {

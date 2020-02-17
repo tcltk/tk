@@ -1142,13 +1142,13 @@ ClearLookupTable(
 	    if (key->object != object) {
 		continue;
 	    }
-	    Tcl_DeleteHashEntry(hPtr);
 	}
 
 	psList = Tcl_GetHashValue(hPtr);
 	PSList_Move(pool, psList);
 	ckfree(psList);
 	DEBUG(countListItems -= 1;)
+	Tcl_DeleteHashEntry(hPtr);
     }
 }
 
@@ -3444,9 +3444,10 @@ DeleteVirtualEventTable(
 	ckfree(Tcl_GetHashValue(hPtr));
     }
     Tcl_DeleteHashTable(&vetPtr->nameTable);
-    Tcl_DeleteHashTable(&vetPtr->lookupTables.listTable);
 
     ClearLookupTable(&vetPtr->lookupTables, NULL);
+    Tcl_DeleteHashTable(&vetPtr->lookupTables.listTable);
+
     DEBUG(countEntryItems -= PSList_Size(&vetPtr->lookupTables.entryPool);)
     PSList_Traverse(&vetPtr->lookupTables.entryPool, FreePatSeqEntry);
 }
