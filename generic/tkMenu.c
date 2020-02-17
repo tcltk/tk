@@ -2142,14 +2142,14 @@ TkGetMenuIndex(
     }
 
     if (string[0] == '@') {
-	if (GetIndexFromCoords(interp, menuPtr, string, indexPtr)
+	if (GetIndexFromCoords(NULL, menuPtr, string, indexPtr)
 		== TCL_OK) {
 	    goto success;
 	}
     }
 
     if (isdigit(UCHAR(string[0]))) {
-	if (Tcl_GetIntFromObj(interp, objPtr, &i) == TCL_OK) {
+	if (Tcl_GetIntFromObj(NULL, objPtr, &i) == TCL_OK) {
 	    if (i >= (int)menuPtr->numEntries) {
 		if (lastOK) {
 		    i = menuPtr->numEntries;
@@ -2162,7 +2162,6 @@ TkGetMenuIndex(
 	    *indexPtr = i;
 	    goto success;
 	}
-	Tcl_ResetResult(interp);
     }
 
     for (i = 0; i < (int)menuPtr->numEntries; i++) {
