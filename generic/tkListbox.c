@@ -2799,7 +2799,10 @@ GetListboxIndex(
      * Maybe the index is just an integer.
      */
 
-    if (Tcl_GetIntFromObj(interp, indexObj, indexPtr) == TCL_OK) {
+    if (Tcl_GetIntFromObj(NULL, indexObj, indexPtr) == TCL_OK) {
+	if (*indexPtr < -1) {
+	    *indexPtr = -1;
+	}
 	return TCL_OK;
     }
 

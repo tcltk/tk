@@ -529,7 +529,7 @@ static const Ttk_Ensemble ProgressbarCommands[] = {
 /*
  * Widget specification:
  */
-static WidgetSpec ProgressbarWidgetSpec =
+static const WidgetSpec ProgressbarWidgetSpec =
 {
     "TProgressbar",		/* className */
     sizeof(Progressbar),	/* recordSize */

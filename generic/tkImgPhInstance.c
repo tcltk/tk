@@ -27,7 +27,7 @@
  * Declaration for internal Xlib function used here:
  */
 
-extern int		_XInitImageFuncPtrs(XImage *image);
+EXTERN int		_XInitImageFuncPtrs(XImage *image);
 
 /*
  * Forward declarations
