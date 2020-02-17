@@ -281,7 +281,7 @@ static const Ttk_Ensemble LabelCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec LabelWidgetSpec =
+static const WidgetSpec LabelWidgetSpec =
 {
     "TLabel",			/* className */
     sizeof(Label),		/* recordSize */
@@ -387,7 +387,7 @@ static const Ttk_Ensemble ButtonCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec ButtonWidgetSpec =
+static const WidgetSpec ButtonWidgetSpec =
 {
     "TButton",			/* className */
     sizeof(Button),		/* recordSize */
@@ -595,7 +595,7 @@ static const Ttk_Ensemble CheckbuttonCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec CheckbuttonWidgetSpec =
+static const WidgetSpec CheckbuttonWidgetSpec =
 {
     "TCheckbutton",		/* className */
     sizeof(Checkbutton),	/* recordSize */
@@ -771,7 +771,7 @@ static const Ttk_Ensemble RadiobuttonCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec RadiobuttonWidgetSpec =
+static const WidgetSpec RadiobuttonWidgetSpec =
 {
     "TRadiobutton",		/* className */
     sizeof(Radiobutton),	/* recordSize */
@@ -838,7 +838,7 @@ static const Ttk_Ensemble MenubuttonCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec MenubuttonWidgetSpec =
+static const WidgetSpec MenubuttonWidgetSpec =
 {
     "TMenubutton",		/* className */
     sizeof(Menubutton), 	/* recordSize */

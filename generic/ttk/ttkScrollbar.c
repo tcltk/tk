@@ -296,7 +296,7 @@ static const Ttk_Ensemble ScrollbarCommands[] = {
 /*------------------------------------------------------------------------
  * +++ Widget specification.
  */
-static WidgetSpec ScrollbarWidgetSpec =
+static const WidgetSpec ScrollbarWidgetSpec =
 {
     "TScrollbar",		/* className */
     sizeof(Scrollbar),		/* recordSize */

@@ -1377,7 +1377,7 @@ static void NotebookDisplay(void *clientData, Drawable d)
  * +++ Widget specification and layout definitions.
  */
 
-static WidgetSpec NotebookWidgetSpec =
+static const WidgetSpec NotebookWidgetSpec =
 {
     "TNotebook",		/* className */
     sizeof(Notebook),		/* recordSize */

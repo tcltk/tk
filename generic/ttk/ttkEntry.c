@@ -1426,7 +1426,7 @@ EntryIndex(
 	    *indexPtr += 1;
 	}
     } else {
-	if (Tcl_GetIntFromObj(interp, indexObj, indexPtr) != TCL_OK) {
+	if (Tcl_GetIntFromObj(NULL, indexObj, indexPtr) != TCL_OK) {
 	    goto badIndex;
 	}
 	if (*indexPtr < 0) {
@@ -1733,7 +1733,7 @@ static const Ttk_Ensemble EntryCommands[] = {
  * +++ Entry widget definition.
  */
 
-static WidgetSpec EntryWidgetSpec = {
+static const WidgetSpec EntryWidgetSpec = {
     "TEntry",			/* className */
     sizeof(Entry), 		/* recordSize */
     EntryOptionSpecs, 		/* optionSpecs */
@@ -1929,7 +1929,7 @@ static const Ttk_Ensemble ComboboxCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec ComboboxWidgetSpec = {
+static const WidgetSpec ComboboxWidgetSpec = {
     "TCombobox",		/* className */
     sizeof(Combobox), 		/* recordSize */
     ComboboxOptionSpecs,	/* optionSpecs */
@@ -2041,7 +2041,7 @@ static const Ttk_Ensemble SpinboxCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec SpinboxWidgetSpec = {
+static const WidgetSpec SpinboxWidgetSpec = {
     "TSpinbox",			/* className */
     sizeof(Spinbox), 		/* recordSize */
     SpinboxOptionSpecs,		/* optionSpecs */
