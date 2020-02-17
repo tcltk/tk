@@ -894,7 +894,7 @@ static const Ttk_Ensemble PanedCommands[] = {
  * +++ Widget specification.
  */
 
-static WidgetSpec PanedWidgetSpec =
+static const WidgetSpec PanedWidgetSpec =
 {
     "TPanedwindow",		/* className */
     sizeof(Paned),		/* recordSize */

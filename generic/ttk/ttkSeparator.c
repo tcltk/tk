@@ -59,7 +59,7 @@ static const Ttk_Ensemble SeparatorCommands[] = {
 /*
  * Widget specification:
  */
-static WidgetSpec SeparatorWidgetSpec =
+static const WidgetSpec SeparatorWidgetSpec =
 {
     "TSeparator",		/* className */
     sizeof(Separator),		/* recordSize */
@@ -97,7 +97,7 @@ static const Ttk_Ensemble SizegripCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec SizegripWidgetSpec =
+static const WidgetSpec SizegripWidgetSpec =
 {
     "TSizegrip",		/* className */
     sizeof(WidgetCore),		/* recordSize */

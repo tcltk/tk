@@ -3289,7 +3289,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
  * +++ Widget definition.
  */
 
-static WidgetSpec TreeviewWidgetSpec = {
+static const WidgetSpec TreeviewWidgetSpec = {
     "Treeview",			/* className */
     sizeof(Treeview),   	/* recordSize */
     TreeviewOptionSpecs,	/* optionSpecs */

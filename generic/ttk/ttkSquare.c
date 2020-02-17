@@ -143,7 +143,7 @@ static const Ttk_Ensemble SquareCommands[] = {
  * with Tk in the package initialization code (see bottom).
  */
 
-static WidgetSpec SquareWidgetSpec =
+static const WidgetSpec SquareWidgetSpec =
 {
     "TSquare",			/* className */
     sizeof(Square),		/* recordSize */
