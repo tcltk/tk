@@ -1783,7 +1783,7 @@ GetLineIndex(
 	    coordPtr += 2;
 	}
     } else {
-	if (Tcl_GetIntFromObj(interp, obj, indexPtr) != TCL_OK) {
+	if (Tcl_GetIntFromObj(NULL, obj, indexPtr) != TCL_OK) {
 	    goto badIndex;
 	}
 	*indexPtr &= -2;	/* If index is odd, make it even. */
@@ -1801,7 +1801,6 @@ GetLineIndex(
      */
 
   badIndex:
-    Tcl_ResetResult(interp);
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
     Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
     return TCL_ERROR;
