@@ -1345,7 +1345,6 @@ GetTextIndex(
     TextItem *textPtr = (TextItem *) itemPtr;
     int length;
     int c;
-    TkCanvas *canvasPtr = (TkCanvas *) canvas;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     const char *string = Tcl_GetStringFromObj(obj, &length);
 
@@ -1392,8 +1391,8 @@ GetTextIndex(
 	    goto badIndex;
 	}
 	y = (int) ((tmp < 0) ? tmp - 0.5 : tmp + 0.5);
-	x += canvasPtr->scrollX1 - (int) textPtr->drawOrigin[0];
-	y += canvasPtr->scrollY1 - (int) textPtr->drawOrigin[1];
+	x -= (int) textPtr->drawOrigin[0];
+	y -= (int) textPtr->drawOrigin[1];
 	*indexPtr = Tk_PointToChar(textPtr->textLayout,
 		(int) (x*c - y*s), (int) (y*c + x*s));
     } else if (Tcl_GetIntFromObj(NULL, obj, indexPtr) == TCL_OK) {
