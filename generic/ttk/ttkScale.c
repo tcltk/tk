@@ -488,7 +488,7 @@ static const Ttk_Ensemble ScaleCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec ScaleWidgetSpec =
+static const WidgetSpec ScaleWidgetSpec =
 {
     "TScale",			/* Class name */
     sizeof(Scale),		/* record size */
