@@ -206,6 +206,9 @@ static int		TrivialConfigObjCmd(ClientData dummy,
 			    Tcl_Obj * const objv[]);
 static void		TrivialEventProc(ClientData clientData,
 			    XEvent *eventPtr);
+static int		TestgrabObjCmd(ClientData clientData,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 
 /*
  *----------------------------------------------------------------------
@@ -280,6 +283,9 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testwrapper", TestwrapperObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
 #endif /* _WIN32 */
+
+    Tcl_CreateObjCommand(interp, "testgrab", TestgrabObjCmd,
+	    (ClientData) Tk_MainWindow(interp), NULL);
 
     /*
      * Create test image type.
@@ -2075,6 +2081,79 @@ CustomOptionFree(
     if (*(char **)internalPtr != NULL) {
 	ckfree(*(char **)internalPtr);
     }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TestgrabObjCmd --
+ *
+ *	This function implements the "testgrab" command, which is used to test
+ *	grabbing of windows.
+ *
+ *	testgrab grabbed  $win: returns true if $win is currently grabbed
+ *	testgrab released $win: returns true if $win is currently not grabbed
+ *
+ *	This function is useful when one wants to test for a grabbing window
+ *	at the moment it is called. [grab current] cannot be used for that
+ *	purpose because it returns the window dereferenced by eventualGrabWinPtr
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TestgrabObjCmd(
+    ClientData clientData,	/* Main window for application. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    static const char *const options[] = {"grabbed", "released", NULL};
+    enum option {GRABBED, RELEASED};
+    int index, res = 0;
+    Tk_Window mainWin, tkwin;
+    TkDisplay *dispPtr;
+
+    mainWin = (Tk_Window) clientData;
+
+    if (objc < 3) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option window");
+	return TCL_ERROR;
+    }
+
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "command", 0, &index)!= TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), mainWin);
+    if (tkwin == NULL) {
+        return TCL_ERROR;
+    }
+    dispPtr = ((TkWindow *) tkwin)->dispPtr;
+    /*printf("TestgrabObjCmd %s, grabWinPtr = %p , tkwin = %p\n", options[index], dispPtr->grabWinPtr, tkwin);fflush(stdout);*/
+
+    switch ((enum option) index) {
+    case GRABBED:
+        if (dispPtr->grabWinPtr == (TkWindow *) tkwin) {
+            res = 1;
+        }
+	break;
+    case RELEASED:
+        if (dispPtr->grabWinPtr != (TkWindow *) tkwin) {
+            res = 1;
+        }
+	break;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(res));
+    return TCL_OK;
 }
 
 /*
