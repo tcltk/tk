@@ -26,8 +26,15 @@
 /*
  * Declaration for internal Xlib function used here:
  */
-
-EXTERN int		_XInitImageFuncPtrs(XImage *image);
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC_OSX_TCL)
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern int		_XInitImageFuncPtrs(XImage *image);
+#ifdef __cplusplus
+}
+#endif
+#endif
 
 /*
  * Forward declarations
