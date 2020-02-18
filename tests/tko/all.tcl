@@ -1,7 +1,7 @@
 # all.tcl --
 #
 # This file contains a top-level script to run all of the Tcl
-# tests.  Execute it by invoking "make test" 
+# tests.  Execute it by invoking "make test"
 #
 
 # restart using tclsh \

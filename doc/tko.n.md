@@ -1,17 +1,17 @@
 # tko(n) -- oo class like widgets
 
 *   [SYNOPSIS](#SYNOPSIS)
-*   [TKO STANDARD OPTIONS](#TKO-STANDARD-OPTIONS)  
-  [-class, class, Class](#-class)  
-  [-screen, screen, Screen](#-screen)  
-*   [DESCRIPTION](#DESCRIPTION)  
-*   [PUBLIC METHODS](#PUBLIC-METHODS)  
-*   [PRIVATE METHODS](#PRIVATE-METHODS)  
-*   [OPTIONS](#OPTIONS)  
-*   [EXAMPLES](#EXAMPLES)  
-*   [SEE ALSO](#SEE-ALSO)  
-*   [KEYWORDS](#KEYWORDS)  
-*   [COPYRIGHT](#COPYRIGHT)  
+*   [TKO STANDARD OPTIONS](#TKO-STANDARD-OPTIONS)
+  [-class, class, Class](#-class)
+  [-screen, screen, Screen](#-screen)
+*   [DESCRIPTION](#DESCRIPTION)
+*   [PUBLIC METHODS](#PUBLIC-METHODS)
+*   [PRIVATE METHODS](#PRIVATE-METHODS)
+*   [OPTIONS](#OPTIONS)
+*   [EXAMPLES](#EXAMPLES)
+*   [SEE ALSO](#SEE-ALSO)
+*   [KEYWORDS](#KEYWORDS)
+*   [COPYRIGHT](#COPYRIGHT)
 
 <a name="SYNOPSIS"></a>
 ## SYNOPSIS
@@ -36,7 +36,7 @@
 
 **::tko optiondef** *classname ?-option definitionlist? .. ?body?*
 
-**::tko optiondel** *classname ?-option? ..* 
+**::tko optiondel** *classname ?-option? ..*
 
 **::tko optionget** *classname ?-option? ..*
 
@@ -44,7 +44,7 @@
 
 **::tko optionshow** *classname ?-option? ..*
 
-### Widget methods 
+### Widget methods
 
 **my \_tko optionadd** *-option definitionlist ?body?*
 
@@ -58,15 +58,15 @@
 ## TKO STANDARD OPTIONS
 
 <a name="-class"></a>
-Command-Line Name: **-class**  
-Database Name: **class**  
+Command-Line Name: **-class**
+Database Name: **class**
 Database Class: **Class**
 
 > Define class for use in getting values from option database. Can only be set on widget creation time. The option should be the first option in the option definition list because it is needed to get other option values from the option database. Only the **-screen** option can precede it.
 
 <a name="-screen"></a>
-Command-Line Name: **-screen**  
-Database Name: **screen**  
+Command-Line Name: **-screen**
+Database Name: **screen**
 Database Class: **Screen**
 
 > Affect creation of underlying widget structure. If given the created widget will be a toplevel widget. The option should be the very first option of an widget to be recognised.
@@ -140,7 +140,7 @@ The option database can so be used as a style source.
 
 > The function will add or replace all given *-option definitionlist* pairs to the given *classname*. If an additional ?body? argument is given it will be used to create the *-option* method of the last given *-option* in *classname*
 
-**::tko optiondel** *::classname ?-option? ..* 
+**::tko optiondel** *::classname ?-option? ..*
 
 > The function will remove the given options from the defined class options of the given *::classname*. If no option is given then all existing options will be removed.
 
@@ -206,7 +206,7 @@ Widget methods can be dynamically added and removed at class or object level.
 
 > Add a new option in the current object. The meaning of the *definitionlist* argument is the same as in the **::tko optionset** command.
 The function will only add new options.
-It is not possible to change object options. 
+It is not possible to change object options.
 
 **my \_tko optiondel** *-option* ..
 
@@ -243,18 +243,18 @@ It is possible to hide and unhide options.
       ::tko initclass
     }
     A create a1
-    a1 configure ==> 
+    a1 configure ==>
 
     # Add class option
     ::tko optiondef A -o1 {o1 O1 v1 {}} {set tko(-o1) x}
     A create a2
-    a2 configure 
+    a2 configure
     ==> {-o1 o1 O1 v1 v1}
 
     # Add object option
     oo::define A method mycmd {args} {my {*}$args}
     a2 mycmd _tko optionadd -o2 {o2 O2 v2 {}} {variable tko; set tko(-o2) x}
-    a2 configure 
+    a2 configure
     ==> {-o1 o1 O1 v1 v1} {-o2 o2 O2 v2 x}
 
     #

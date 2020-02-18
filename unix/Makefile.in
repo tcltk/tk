@@ -584,16 +584,11 @@ SHELL_ENV = \
 	TCL_LIBRARY=$(TCLDIR)/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY;
 
-all: binaries libraries doc
+all: binaries libraries
 
 binaries: ${LIB_FILE} ${WISH_EXE}
 
 libraries:
-
-$(TOP_DIR)/doc/man.macros:
-	$(INSTALL_DATA) $(TCLDIR)/doc/man.macros $(TOP_DIR)/doc/man.macros
-
-doc: $(TOP_DIR)/doc/man.macros
 
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
@@ -1663,7 +1658,8 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 		$(MAC_OSX_DIR)/Tk.xcodeproj/default.pbxuser \
 		$(DISTDIR)/macosx/Tk.xcodeproj
 	$(INSTALL_DATA_DIR) $(DISTDIR)/compat
-	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/compat
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TOP_DIR)/compat/stdint.h \
+		$(TOP_DIR)/compat/stdbool.h $(DISTDIR)/compat
 	$(INSTALL_DATA_DIR) $(DISTDIR)/xlib
 	$(DIST_INSTALL_DATA) $(XLIB_DIR)/*.[ch] $(DISTDIR)/xlib
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/xlib
