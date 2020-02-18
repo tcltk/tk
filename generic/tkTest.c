@@ -1769,7 +1769,7 @@ TestmenubarObjCmd(
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
 #ifdef __UNIX__
-    Tk_Window mainWin = clientData;
+    Tk_Window mainWin = (Tk_Window)clientData;
     Tk_Window tkwin, menubar;
 
     if (objc < 2) {
@@ -2025,7 +2025,7 @@ TestwrapperObjCmd(
 	return TCL_ERROR;
     }
 
-    tkwin = clientData;
+    tkwin = (Tk_Window)clientData;
     winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[1]), tkwin);
     if (winPtr == NULL) {
 	return TCL_ERROR;
