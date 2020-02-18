@@ -44,6 +44,7 @@ extern "C" {
  * In comments is the type of the address pointer.
  */
     typedef enum Tko_WidgetOptionType {
+        TKO_SET_NONE = 0,     /* Nono */
         TKO_SET_CLASS = 1,     /* (Tcl_Obj **)address */
         TKO_SET_VISUAL, /* (Tcl_Obj **)address */
         TKO_SET_COLORMAP,       /* (Tcl_Obj **)address */
@@ -98,7 +99,7 @@ extern "C" {
         int flags;             /* bit array of TKO_OPTION_* values to configure option behaviour */
         Tcl_MethodCallProc *method;    /* If not NULL it is the function name of the -option method */
         Tko_WidgetOptionType type;  /* if greater 0 then option type used in common option set method */
-        int offset;            /* offset in meta data struct */
+        size_t offset;            /* offset in meta data struct */
     } Tko_WidgetOptionDefine;
 #define TKO_OPTION_READONLY 0x1 /* option is only setable at creation time */
 #define TKO_OPTION_HIDE     0x2 /* option is hidden in configure method */
@@ -139,7 +140,7 @@ extern "C" {
         Tcl_Interp *interp,
         Tcl_Obj *classname,
         const Tcl_MethodType *methods,
-        Tko_WidgetOptionDefine *options);
+        const Tko_WidgetOptionDefine *options);
     MODULE_SCOPE int Tko_WidgetCreate(
         ClientData clientdata,
         Tcl_Interp *interp,

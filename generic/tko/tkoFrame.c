@@ -167,7 +167,7 @@ static int FrameConstructorToplevel(
     int objc,
     Tcl_Obj * const objv[]);
 static int FrameConstructor(
-    int type,
+    enum FrameType type,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -290,10 +290,10 @@ static const Tk_GeomMgr frameGeomType = {
     { "-background" , "background", "Background", DEF_FRAME_BG_COLOR, TKO_OPTION_NULL, \
         NULL, TKO_SET_3DBORDER, offsetof(tkoFrame, border)}, \
     { "-backgroundimage", "backgroundImage", "BackgroundImage", DEF_FRAME_BG_IMAGE, 0, \
-        FrameMethod_backgroundimage ,0, 0}, \
-    { "-bg" , "-background", NULL, NULL, 0, NULL,0,0}, \
-    { "-bgimg", "-backgroundimage", NULL, NULL, 0, NULL,0,0}, \
-    { "-bd" , "-borderwidth", NULL, NULL, 0, NULL, 0,0}, \
+        FrameMethod_backgroundimage ,TKO_SET_NONE, 0}, \
+    { "-bg" , "-background", NULL, NULL, 0, NULL,TKO_SET_NONE,0}, \
+    { "-bgimg", "-backgroundimage", NULL, NULL, 0, NULL,TKO_SET_NONE,0}, \
+    { "-bd" , "-borderwidth", NULL, NULL, 0, NULL, TKO_SET_NONE,0}, \
     { "-cursor" , "cursor", "Cursor", DEF_FRAME_CURSOR, 0, \
         NULL, TKO_SET_CURSOR, offsetof(tkoFrame, cursor)}, \
     { "-height" , "height", "Height", DEF_FRAME_HEIGHT, 0, \
@@ -314,13 +314,13 @@ static const Tk_GeomMgr frameGeomType = {
         NULL, TKO_SET_BOOLEAN, offsetof(tkoFrame, tile)}, \
     { "-width" , "width", "Width", DEF_FRAME_WIDTH,  0, \
         NULL, TKO_SET_PIXEL, offsetof(tkoFrame, width)}, \
-    { NULL,NULL,NULL,NULL,0,NULL,0,0}
+    { NULL,NULL,NULL,NULL,0,NULL,TKO_SET_NONE,0}
 
 /*
  * frameOptions --
  *  List of tko::frame options.
  */
-static Tko_WidgetOptionDefine frameOptions[] = {
+static const Tko_WidgetOptionDefine frameOptions[] = {
     {"-class", "class", "Class", "TkoFrame", TKO_OPTION_READONLY,
     NULL, TKO_SET_CLASS, 0},
     {"-visual", "visual", "Visual", DEF_FRAME_VISUAL, TKO_OPTION_READONLY,
@@ -340,7 +340,7 @@ static Tko_WidgetOptionDefine frameOptions[] = {
  * toplevelOptions --
  *  List of tko::toplevel options.
  */
-static Tko_WidgetOptionDefine toplevelOptions[] = {
+static const Tko_WidgetOptionDefine toplevelOptions[] = {
     {"-screen", "screen", "Screen", "", TKO_OPTION_READONLY,
     NULL, TKO_SET_STRING, 0},
     {"-class", "class", "Class", "TkoToplevel", TKO_OPTION_READONLY,
@@ -356,7 +356,7 @@ static Tko_WidgetOptionDefine toplevelOptions[] = {
     {"-borderwidth", "borderWidth", "BorderWidth", DEF_FRAME_BORDER_WIDTH, 0,
     NULL, TKO_SET_PIXEL, offsetof(tkoFrame, borderWidth)},
     {"-menu", "menu", "Menu", DEF_TOPLEVEL_MENU, TKO_OPTION_NULL,
-    FrameMethod_menu, 0, 0},
+    FrameMethod_menu, TKO_SET_NONE, 0},
     {"-relief", "relief", "Relief", DEF_FRAME_RELIEF, 0,
     NULL, TKO_SET_RELIEF, offsetof(tkoFrame, relief)},
     FRAME_COMMONDEFINE
@@ -366,7 +366,7 @@ static Tko_WidgetOptionDefine toplevelOptions[] = {
  * labelframeOptions --
  *  List of tko::labelframe options.
  */
-static Tko_WidgetOptionDefine labelframeOptions[] = {
+static const Tko_WidgetOptionDefine labelframeOptions[] = {
     {"-class", "class", "Class", "TkoLabelframe", TKO_OPTION_READONLY,
     NULL, TKO_SET_CLASS, 0},
     {"-visual", "visual", "Visual", DEF_FRAME_VISUAL, TKO_OPTION_READONLY,
@@ -375,15 +375,15 @@ static Tko_WidgetOptionDefine labelframeOptions[] = {
     NULL, TKO_SET_COLORMAP, 0},
     {"-borderwidth", "borderWidth", "BorderWidth", DEF_LABELFRAME_BORDER_WIDTH, 0,
     NULL, TKO_SET_PIXEL, offsetof(tkoFrame, borderWidth)},
-    {"-fg", "-foreground", NULL, NULL, 0, NULL, 0, 0},
+    {"-fg", "-foreground", NULL, NULL, 0, NULL, TKO_SET_NONE, 0},
     {"-font", "font", "Font", DEF_LABELFRAME_FONT, 0,
     NULL, TKO_SET_FONT, offsetof(tkoLabelframe, tkfont)},
     {"-foreground", "foreground", "Foreground", DEF_LABELFRAME_FG, 0,
     NULL, TKO_SET_XCOLOR, offsetof(tkoLabelframe, textColorPtr)},
     {"-labelanchor", "labelAnchor", "LabelAnchor", DEF_LABELFRAME_LABELANCHOR, 0,
-    FrameMethod_labelanchor, 0, 0},
+    FrameMethod_labelanchor, TKO_SET_NONE, 0},
     {"-labelwidget", "labelWidget", "LabelWidget", "",0,
-    FrameMethod_labelwidget, 0, 0},
+    FrameMethod_labelwidget, TKO_SET_NONE, 0},
     {"-relief", "relief", "Relief", DEF_LABELFRAME_RELIEF, 0,
     NULL, TKO_SET_RELIEF, offsetof(tkoFrame, relief)},
     {"-text", "text", "Text", DEF_LABELFRAME_TEXT, 0,
@@ -501,12 +501,14 @@ Tko_FrameInit(
  */
 static int
 FrameConstructorFrame(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
     Tcl_Obj * const objv[])
 {
+    (void)dummy;
+
     return FrameConstructor(TYPE_FRAME, interp, context, objc, objv);
 }
 
@@ -521,12 +523,13 @@ FrameConstructorFrame(
  */
 static int
 FrameConstructorLabelframe(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
     Tcl_Obj * const objv[])
 {
+    (void)dummy;
     return FrameConstructor(TYPE_LABELFRAME, interp, context, objc, objv);
 }
 
@@ -541,12 +544,13 @@ FrameConstructorLabelframe(
  */
 static int
 FrameConstructorToplevel(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
     Tcl_Obj * const objv[])
 {
+    (void)dummy;
     return FrameConstructor(TYPE_TOPLEVEL, interp, context, objc, objv);
 }
 
@@ -564,7 +568,7 @@ FrameConstructorToplevel(
  */
 static int
 FrameConstructor(
-    int type,
+    enum FrameType type,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -582,14 +586,14 @@ FrameConstructor(
         return TCL_ERROR;
     }
     if (type == TYPE_FRAME) {
-        frame = ckalloc(sizeof(tkoFrame));
+        frame = (tkoFrame *)ckalloc(sizeof(tkoFrame));
         assert(frame);
         memset(frame, 0, sizeof(tkoFrame));
         createMode = TKO_CREATE_WIDGET;
     }
     else if (type == TYPE_LABELFRAME) {
         tkoLabelframe *labelframe;
-        labelframe = ckalloc(sizeof(tkoLabelframe));
+        labelframe = (tkoLabelframe *)ckalloc(sizeof(tkoLabelframe));
         assert(labelframe);
         memset(labelframe, 0, sizeof(tkoLabelframe));
         frame = (tkoFrame *)labelframe;
@@ -608,7 +612,7 @@ FrameConstructor(
         createMode = TKO_CREATE_WIDGET;
     }
     else if (type == TYPE_TOPLEVEL) {
-        frame = ckalloc(sizeof(tkoFrame));
+        frame = (tkoFrame *)ckalloc(sizeof(tkoFrame));
         assert(frame);
         memset(frame, 0, sizeof(tkoFrame));
         createMode = TKO_CREATE_TOPLEVEL;
@@ -707,13 +711,17 @@ FrameConstructor(
  */
 static int
 FrameDestructor(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
     Tcl_Obj * const objv[])
 {
     Tko_Widget *widget;
+    (void)dummy;
+    (void)interp;
+    (void)objc;
+    (void)objv;
 
     if((widget = (Tko_Widget *)Tko_WidgetClientData(context)) != NULL) {
         tkoFrame *frame = (tkoFrame *)widget;
@@ -796,7 +804,7 @@ FrameDestructor(
  */
 static int
 FrameMethod_tko_configure(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -804,6 +812,10 @@ FrameMethod_tko_configure(
 {
     Tko_Widget *widget;
     tkoFrame *frame;
+    (void)dummy;
+    (void)interp;
+    (void)objc;
+    (void)objv;
 
     if((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL
         || widget->tkWin == NULL) {
@@ -844,7 +856,7 @@ FrameMethod_tko_configure(
  */
 static int
 FrameMethod_labelanchor(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -858,6 +870,7 @@ FrameMethod_labelanchor(
         "e", "en", "es", "n", "ne", "nw", "s", "se", "sw", "w", "wn", "ws",
         NULL
     };
+    (void)dummy;
 
     if((frame =
             (tkoFrame *)Tko_WidgetClientData(context)) == NULL
@@ -889,7 +902,7 @@ FrameMethod_labelanchor(
  */
 static int
 FrameMethod_labelwidget(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -901,6 +914,7 @@ FrameMethod_labelwidget(
     Tk_Window ancestor, parent, sibling = NULL;
     tkoLabelframe *labelframe;
     Tcl_Obj *value;
+    (void)dummy;
 
     if((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL
         || widget->tkWin == NULL
@@ -988,7 +1002,7 @@ FrameMethod_labelwidget(
  */
 static int
 FrameMethod_backgroundimage(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -998,6 +1012,7 @@ FrameMethod_backgroundimage(
     tkoFrame *frame;
     Tcl_Obj *value;
     Tk_Image image;
+    (void)dummy;
 
     if((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL
         || widget->tkWin == NULL
@@ -1038,7 +1053,7 @@ FrameMethod_backgroundimage(
 */
 static int
 FrameMethod_menu(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -1049,6 +1064,7 @@ FrameMethod_menu(
     Tcl_Obj *value;
     char *newMenu;
     int length;
+    (void)dummy;
 
     if((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL
         || widget->tkWin == NULL
@@ -1069,7 +1085,7 @@ FrameMethod_menu(
         TkSetWindowMenuBar(interp, widget->tkWin, frame->menuName, newMenu);
         if (frame->menuName) { ckfree(frame->menuName); }
         if (length) {
-            frame->menuName = ckalloc(length + 1);
+            frame->menuName = (char *)ckalloc(length + 1);
             assert(frame->menuName);
             strncpy(frame->menuName,newMenu,length);
             frame->menuName[length] = '\0';
@@ -1098,9 +1114,9 @@ static void
 FrameWorldChanged(
     ClientData clientData)
 {              /* Information about widget. */
-    Tko_Widget *widget = clientData;
-    tkoFrame *frame = clientData;
-    tkoLabelframe *labelframe = clientData;
+    Tko_Widget *widget = (Tko_Widget *)clientData;
+    tkoFrame *frame = (tkoFrame *)clientData;
+    tkoLabelframe *labelframe = (tkoLabelframe *)clientData;
     XGCValues gcValues;
     GC  gc;
     int anyTextLabel, anyWindowLabel;
@@ -1415,8 +1431,8 @@ static void
 FrameDisplay(
     ClientData clientData /* Information about widget. */)
 {
-    Tko_Widget *widget = clientData;
-    tkoFrame *frame = clientData;
+    Tko_Widget *widget = (Tko_Widget *)clientData;
+    tkoFrame *frame = (tkoFrame *)clientData;
     int bdX1, bdY1, bdX2, bdY2, hlWidth;
     Pixmap pixmap;
     TkRegion clipRegion = NULL;
@@ -1636,8 +1652,8 @@ FrameEventProc(
     ClientData clientData,     /* Information about window. */
     register XEvent * eventPtr)
 {              /* Information about event. */
-    Tko_Widget *widget = clientData;
-    tkoFrame *frame = clientData;
+    Tko_Widget *widget = (Tko_Widget *)clientData;
+    tkoFrame *frame = (tkoFrame *)clientData;
     if(eventPtr->type == DestroyNotify || widget->tkWin == NULL
         || widget->tkWin == NULL)
         return;
@@ -1689,8 +1705,8 @@ static void
 FrameMap(
     ClientData clientData)
 {              /* Pointer to frame structure. */
-    Tko_Widget *widget = clientData;
-    tkoFrame *frame = clientData;
+    Tko_Widget *widget = (Tko_Widget *)clientData;
+    tkoFrame *frame = (tkoFrame *)clientData;
 
     if (widget->tkWin == NULL) {
         return;
@@ -1741,7 +1757,7 @@ FrameStructureProc(
     ClientData clientData,     /* Pointer to record describing frame. */
     XEvent * eventPtr)
 {              /* Describes what just happened. */
-tkoLabelframe *labelframe = clientData;
+    tkoLabelframe *labelframe = (tkoLabelframe *)clientData;
 
     /*
      * This should only happen in a labelframe but it doesn't hurt to be
@@ -1794,7 +1810,8 @@ FrameRequestProc(
     ClientData clientData,     /* Pointer to record for frame. */
     Tk_Window tkWin)
 {              /* Window that changed its desired size. */
-tkoFrame *frame = clientData;
+    tkoFrame *frame = (tkoFrame *)clientData;
+    (void)tkWin;
 
     FrameWorldChanged(frame);
 }
@@ -1817,7 +1834,7 @@ FrameLostSlaveProc(
                                 * stolen away. */
     Tk_Window tkWin            /* Tk's handle for the slave window. */)
 {
-    tkoLabelframe *labelframe = clientData;
+    tkoLabelframe *labelframe = (tkoLabelframe *)clientData;
 
     /*
      * This should only happen in a labelframe but it doesn't hurt to be
@@ -1862,10 +1879,16 @@ FrameBgImageProc(
                  * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    Tko_Widget *widget = clientData;
-    tkoFrame *frame = clientData;
+    Tko_Widget *widget = (Tko_Widget *)clientData;
+    tkoFrame *frame = (tkoFrame *)clientData;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
-    if(widget->tkWin == NULL) return;
+    if (widget->tkWin == NULL) return;
 
     /*
      * Changing the background image never alters the dimensions of the frame.
