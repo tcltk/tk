@@ -2,11 +2,11 @@
 
 *   [NAME](#NAME)
 *   [SYNOPSIS](#SYNOPSIS)
-*   [ARGUMENTS](#ARGUMENTS)  
-*   [DESCRIPTION](#DESCRIPTION)  
-*   [SEE ALSO](#SEE-ALSO)  
-*   [KEYWORDS](#KEYWORDS)  
-*   [COPYRIGHT](#COPYRIGHT)  
+*   [ARGUMENTS](#ARGUMENTS)
+*   [DESCRIPTION](#DESCRIPTION)
+*   [SEE ALSO](#SEE-ALSO)
+*   [KEYWORDS](#KEYWORDS)
+*   [COPYRIGHT](#COPYRIGHT)
 
 <a name="NAME"></a>
 ## NAME
@@ -23,32 +23,32 @@ Tko\_WidgetOptionSet,
 
 **#include "tkoWidget.h"**
 
-int  
-**Tko\_WidgetClassDefine**(*interp,classname,methods,options*)  
-int  
-**Tko\_WidgetCreate**(*clientdata,interp,object,createmode,arglist*)  
+int
+**Tko\_WidgetClassDefine**(*interp,classname,methods,options*)
+int
+**Tko\_WidgetCreate**(*clientdata,interp,object,createmode,arglist*)
 void
-**Tko\_WidgetDestroy**(*context*)  
+**Tko\_WidgetDestroy**(*context*)
 ClientData
-**Tko\_WidgetClientData**(*context*)  
-Tcl\_Obj \*  
-**Tko\_WidgetOptionGet**(*widget,option*)  
-int  
-**Tko\_WidgetOptionSet**(*widget,option,value*)  
+**Tko\_WidgetClientData**(*context*)
+Tcl\_Obj \*
+**Tko\_WidgetOptionGet**(*widget,option*)
+int
+**Tko\_WidgetOptionSet**(*widget,option,value*)
 
 <a name="ARGUMENTS"></a>
 ## ARGUMENTS
 
-| Tcl\_Interp **\*interp** | Used interpreter.  
-| Tcl\_Obj **\*classname** |Oo class name of widget.  
-| const Tcl\_MethodType **\*methods** | This array defines class methods to create. For creation methods see [Tcl\_NewMethod] manpage. If the method name of the first array entry is not NULL it will be used as **constructor**, if the second method name is not NULL it used as **destructor**. Then follow public methods until an entry with an method name equal NULL comes. Then follow private methods until an entry with an method name equal NULL comes.  
-| const Tko\_WidgetOptionDefine **\*options** | This array contain option definitions.  
-| Tcl\_Object **object** | This is the current object reference.  
+| Tcl\_Interp **\*interp** | Used interpreter.
+| Tcl\_Obj **\*classname** |Oo class name of widget.
+| const Tcl\_MethodType **\*methods** | This array defines class methods to create. For creation methods see [Tcl\_NewMethod] manpage. If the method name of the first array entry is not NULL it will be used as **constructor**, if the second method name is not NULL it used as **destructor**. Then follow public methods until an entry with an method name equal NULL comes. Then follow private methods until an entry with an method name equal NULL comes.
+| const Tko\_WidgetOptionDefine **\*options** | This array contain option definitions.
+| Tcl\_Object **object** | This is the current object reference.
 | Tko_WidgetCreateMode **createmode** | When =1 then create a toplevel otherwise a frame window.
-| Tcl\_Obj **arglist** | Argument list of constructor call.  
+| Tcl\_Obj **arglist** | Argument list of constructor call.
 | ClientData **cientdata** | Pointer to widget structure. First part in this struct is Tko\_Widget. It
-| Tcl\_ObjectContext **context** | Context of method calls.  
-| Tcl\_Obj **\*option** | The name of the used option.  
+| Tcl\_ObjectContext **context** | Context of method calls.
+| Tcl\_Obj **\*option** | The name of the used option.
 | Tcl\_Obj **\*value** | New value of the given option.
 
 <a name="DESCRIPTION"></a>

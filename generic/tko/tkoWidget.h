@@ -21,7 +21,7 @@
 #include <X11/Xproto.h>
 #endif
 #endif
- 
+
 #if defined(_WIN32)
 #include "tkWinInt.h"
 #elif defined(MAC_OSX_TK)
@@ -101,7 +101,7 @@ extern "C" {
         int offset;            /* offset in meta data struct */
     } Tko_WidgetOptionDefine;
 #define TKO_OPTION_READONLY 0x1 /* option is only setable at creation time */
-#define TKO_OPTION_HIDE     0x2 /* option is hidden in configure method */      
+#define TKO_OPTION_HIDE     0x2 /* option is hidden in configure method */
 #define TKO_OPTION_NULL      0x4 /* empty values are saved as NULL */
 #define TKO_OPTION__USER    0x8 /* internally used */
 

@@ -1414,7 +1414,7 @@ FrameComputeGeometry(
 static void
 FrameDisplay(
     ClientData clientData /* Information about widget. */)
-{             
+{
     Tko_Widget *widget = clientData;
     tkoFrame *frame = clientData;
     int bdX1, bdY1, bdX2, bdY2, hlWidth;

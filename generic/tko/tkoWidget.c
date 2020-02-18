@@ -207,7 +207,7 @@ static Tcl_MethodType tkoWidgetMethods[] = {
     { TKO_1, "configure", WidgetMethod_configure, NULL, NULL },
     { TKO_1, "_tko_configure", WidgetMethod_tko_configure, NULL, NULL },
     { TKO_1, "_tko", WidgetMethod_tko, NULL, NULL },
-}; 
+};
 
 /*
  * tkoWidgetMeta --
@@ -1109,7 +1109,7 @@ Tko_WidgetClassDefine(
         || (clazz = Tcl_GetObjectAsClass(object)) == NULL) {
         return TCL_ERROR;
     }
-    
+
     /*
      * Add methods
      */
@@ -1440,7 +1440,7 @@ WidgetWrapConstructor(
  * Side effects:
  *    Can create new widget.
  */
-int 
+int
 Tko_WidgetCreate(
     ClientData clientdata, /* pointer to Tko_Widget structure */
     Tcl_Interp * interp,
@@ -1955,7 +1955,7 @@ WidgetEventChanged(
  *    A standard Tcl result.
  *
  * Side effects:
- *    Return option value in interpreter result. 
+ *    Return option value in interpreter result.
  */
 static int
 WidgetMethod_cget(
@@ -2464,7 +2464,7 @@ WidgetOptionGet(
  *    A standard Tcl result.
  *
  * Side effects:
- *    Set option value and call 
+ *    Set option value and call
  */
 static int
 WidgetOptionSet(
