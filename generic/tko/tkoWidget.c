@@ -235,7 +235,7 @@ Tcl_ObjectMetadataType tkoWidgetMeta = {
 */
 int
 Tko_TkoObjCmd(
-    ClientData clientData,    /* Not used. */
+    ClientData dummy,    /* Not used. */
     Tcl_Interp *interp,        /* Current interpreter. */
     int objc,            /* Number of arguments. */
     Tcl_Obj *const objv[])    /* Argument objects. */
@@ -269,8 +269,8 @@ Tko_TkoObjCmd(
     Tcl_Obj *tmpPtr;
     Tcl_Class clazz;
     Tcl_Object object;
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
-
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    (void)dummy;
 
     if (objc < 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
@@ -750,6 +750,7 @@ Tko_TkoObjCmd(
                 Tcl_ListObjAppendElement(interp, listPtr, argObjv[1]);
                 Tcl_ListObjAppendElement(interp, listPtr, argObjv[2]);
                 Tcl_ListObjAppendElement(interp, listPtr, WidgetFlagsHideUnset(argObjv[3]));
+                continue;
             default: /* ignore internal error */
                 continue;
             }
@@ -781,7 +782,7 @@ Tko_TkoObjCmd(
 * Side effects:
 */
 static int WidgetMethod_tko(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -807,7 +808,8 @@ static int WidgetMethod_tko(
     Tcl_Object object;
     int argObjc;
     Tcl_Obj **argObjv;
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    (void)dummy;
 
     widget = (Tko_Widget *) Tko_WidgetClientData(context);
     if (widget == NULL || widget->myCmd == NULL) {
@@ -881,7 +883,7 @@ static int WidgetMethod_tko(
             listPtr = Tcl_NewListObj(0,NULL);
             entryPtr = Tcl_FirstHashEntry(widget->optionsTable, &search);
             while (entryPtr != NULL) {
-                optionPtr = Tcl_GetHashValue(entryPtr);
+                optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
                 entryPtr = Tcl_NextHashEntry(&search);
                 if ((optionPtr->flagbits&TKO_OPTION_HIDE)==0) {
                     Tcl_ListObjAppendElement(interp, listPtr, optionPtr->option);
@@ -900,7 +902,7 @@ static int WidgetMethod_tko(
                     Tcl_ObjPrintf("unknown option \"%s\"", Tcl_GetString(objv[skip])));
                 return TCL_ERROR;
             }
-            optionPtr = Tcl_GetHashValue(entryPtr);
+            optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
             optionPtr->flagbits |= TKO_OPTION_HIDE;
             skip++;
         }
@@ -911,7 +913,7 @@ static int WidgetMethod_tko(
             listPtr = Tcl_NewObj();
             entryPtr = Tcl_FirstHashEntry(widget->optionsTable, &search);
             while (entryPtr != NULL) {
-                optionPtr = Tcl_GetHashValue(entryPtr);
+                optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
                 entryPtr = Tcl_NextHashEntry(&search);
                 if (optionPtr->flagbits & TKO_OPTION_HIDE) {
                     Tcl_ListObjAppendElement(interp, listPtr, optionPtr->option);
@@ -930,7 +932,7 @@ static int WidgetMethod_tko(
                     Tcl_ObjPrintf("unknown option \"%s\"", Tcl_GetString(objv[skip])));
                 return TCL_ERROR;
             }
-            optionPtr = Tcl_GetHashValue(entryPtr);
+            optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
             optionPtr->flagbits &= ~TKO_OPTION_HIDE;
             skip++;
         }
@@ -956,7 +958,7 @@ Tko_Init(
 {
     /* Create common tko variables. */
     /* tko::_eventoption according library/ttk.tcl proc ttk::ThemeChanged */
-    static const char *initScript =
+    static const char initScript[] =
         "namespace eval ::tko {}\n"
         "array set ::tko::_option {}\n"
         "set ::tko::_unknown [list self method unknown {pathName args} {\n"
@@ -993,7 +995,7 @@ Tko_Init(
         "  }\n"
         " }\n"
         "}";
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     /* Needed oo extension */
     if (Tcl_OOInitStubs(interp) == NULL) {
@@ -1077,7 +1079,7 @@ Tko_WidgetClassDefine(
     Tcl_Interp * interp,
     Tcl_Obj * classname,
     const Tcl_MethodType * methods,
-    Tko_WidgetOptionDefine * options)
+    const Tko_WidgetOptionDefine * options)
 {
     Tcl_Class clazz;
     Tcl_Object object;
@@ -1087,7 +1089,7 @@ Tko_WidgetClassDefine(
     Tcl_Obj *dictPtr;
     WidgetClientdata *clientdata;
     int i;
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     if (classname == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("missing class name"));
@@ -1277,13 +1279,17 @@ Tko_WidgetClassDefine(
 */
 static int
 WidgetDestructor(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
     Tcl_Obj * const objv[])
 {
     Tko_Widget *widget;
+    (void)dummy;
+    (void)interp;
+    (void)objc;
+    (void)objv;
 
     if ((widget = (Tko_Widget *)Tko_WidgetClientData(context)) != NULL) {
         Tcl_Preserve(widget);
@@ -1305,7 +1311,7 @@ WidgetDestructor(
  */
 static int
 WidgetClassConstructor(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -1315,6 +1321,7 @@ WidgetClassConstructor(
     Tko_Widget *widget;
     Tcl_Obj *myArglist;
     int skip;
+    (void)dummy;
 
     /* Get current object. Should not fail? */
     if ((object = Tcl_ObjectContextObject(context)) == NULL) {
@@ -1322,7 +1329,7 @@ WidgetClassConstructor(
     }
 
     /* Create and initialize internal widget structure */
-    widget = ckalloc(sizeof(Tko_Widget));
+    widget = (Tko_Widget *)ckalloc(sizeof(Tko_Widget));
     assert(widget);
     memset(widget, 0, sizeof(Tko_Widget));
 
@@ -1355,7 +1362,7 @@ WidgetClassConstructor(
 */
 static int
 WidgetWrapConstructor(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -1370,6 +1377,7 @@ WidgetWrapConstructor(
     Tk_Window tkWin;
     Tk_Window tkWinTmp; /* tmp. created window to get Tk_Window from embedded window */
     Tcl_Obj *tmpPtr; /* tmp. string for evaluating code */
+    (void)dummy;
 
                      /* Get current object. Should not fail? */
     if ((object = Tcl_ObjectContextObject(context)) == NULL) {
@@ -1407,7 +1415,7 @@ WidgetWrapConstructor(
     }
 
     /* Create and initialize internal widget structure */
-    widget = ckalloc(sizeof(Tko_Widget));
+    widget = (Tko_Widget *)ckalloc(sizeof(Tko_Widget));
     assert(widget);
     memset(widget, 0, sizeof(Tko_Widget));
     widget->tkWin = tkWin;
@@ -1467,7 +1475,7 @@ Tko_WidgetCreate(
     Tcl_Obj *tmpPtr;
     int initmode=1;/* 1=own widget 2=wrapped widget */
     Tk_Window wrapWin = NULL;/* needed in error case */
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     /* This would be an internal programming error */
     if (clientdata == NULL) {
@@ -1491,7 +1499,7 @@ Tko_WidgetCreate(
     widget = (Tko_Widget *)clientdata;
     widget->interp = interp;
     widget->object = object;
-    widget->optionsTable = ckalloc(sizeof(Tcl_HashTable));
+    widget->optionsTable = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
     Tcl_InitHashTable(widget->optionsTable, TCL_ONE_WORD_KEYS);
     widget->widgetCmd = Tcl_GetObjectCommand(object);
     /* Create option array variable */
@@ -1818,7 +1826,7 @@ static void WidgetDeleteTkwin(
     Tko_Widget *widget)
 {
     Tcl_Obj *tmpObj;
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
     Tk_DeleteEventHandler(widget->tkWin, StructureNotifyMask | VirtualEventMask,
         WidgetEventProc, widget);
     tmpObj = Tcl_ObjGetVar2(widget->interp, widget->optionsArray, tkoPtr->Obj_point2, TCL_GLOBAL_ONLY);
@@ -1896,14 +1904,14 @@ WidgetEventChanged(
     int changed;
     Tcl_Obj *defvalue;
     Tcl_Obj *myObjv[2];
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     if (widget->myCmd == NULL) return;
     Tcl_Preserve(widget);
     entryPtr = Tcl_FirstHashEntry(widget->optionsTable, &search);
     changed = 0;
     while (entryPtr != NULL) {
-        optionPtr = Tcl_GetHashValue(entryPtr);
+        optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
         entryPtr = Tcl_NextHashEntry(&search);
         if (optionPtr->dbclass == NULL) continue;/* synonym option */
         if (optionPtr->dbname == tkoPtr->Obj_empty && optionPtr->dbclass == tkoPtr->Obj_empty) continue;
@@ -1959,7 +1967,7 @@ WidgetEventChanged(
  */
 static int
 WidgetMethod_cget(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -1967,6 +1975,7 @@ WidgetMethod_cget(
 {
     Tko_Widget *widget;         /* widget. */
     int skip;
+    (void)dummy;
 
     if ((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL
         || widget->myCmd == NULL) {
@@ -2003,7 +2012,7 @@ WidgetMethod_cget(
  */
 static int
 WidgetMethod_configure(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
@@ -2020,7 +2029,8 @@ WidgetMethod_configure(
     const char *ch;
     int length;
     int i;
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    (void)dummy;
 
     if ((widget = (Tko_Widget *)Tko_WidgetClientData(context)) == NULL
         || widget->myCmd == NULL) {
@@ -2062,7 +2072,7 @@ WidgetMethod_configure(
             myObjv[0] = widget->myCmd;
             entryPtr = Tcl_FirstHashEntry(widget->optionsTable, &search);
             while (entryPtr != NULL) {
-                optionPtr = Tcl_GetHashValue(entryPtr);
+                optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
                 entryPtr = Tcl_NextHashEntry(&search);
                 if (optionPtr->dbclass == NULL) {    /* synonym option */
                     if (optionPtr->value) {
@@ -2207,7 +2217,7 @@ WidgetOptionAdd(
     const char *opt;
     int traceadd = 0; /* if not 0 then readd trace on array variable */
     int searchdb = 0; /* search optiondb for values */
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     if((opt=Tcl_GetString(option))[0] != '-') {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("wrong option: %s", opt));
@@ -2246,7 +2256,7 @@ WidgetOptionAdd(
         return TCL_ERROR;
     }
     /* create option */
-    optionPtr = ckalloc(sizeof(WidgetOption));
+    optionPtr = (WidgetOption *)ckalloc(sizeof(WidgetOption));
     assert(optionPtr);
     memset(optionPtr, 0, sizeof(WidgetOption));
     optionPtr->option = option;
@@ -2426,7 +2436,7 @@ WidgetOptionGet(
                 Tcl_GetString(option)));
         return TCL_ERROR;
     }
-    optionPtr = Tcl_GetHashValue(entryPtr);
+    optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
     /* hidden option, not visible in cget method */
     if (optionPtr->flagbits&TKO_OPTION_HIDE) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("hidden option \"%s\"",
@@ -2444,7 +2454,7 @@ WidgetOptionGet(
                     Tcl_GetString(option)));
             return TCL_ERROR;
         }
-        optionPtr = Tcl_GetHashValue(entryPtr);
+        optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
         if(optionPtr->dbclass == NULL) {
             Tcl_SetObjResult(interp,
                 Tcl_ObjPrintf("synonym option is synonym \"%s\"",
@@ -2488,7 +2498,7 @@ WidgetOptionSet(
             Tcl_ObjPrintf("unknown option \"%s\"", Tcl_GetString(option)));
         return TCL_ERROR;
     }
-    optionPtr = Tcl_GetHashValue(entryPtr);
+    optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
     /* hidden option, not visible in cget method */
     if (optionPtr->flagbits&TKO_OPTION_HIDE) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("hidden option \"%s\"",
@@ -2506,7 +2516,7 @@ WidgetOptionSet(
                     Tcl_GetString(option)));
             return TCL_ERROR;
         }
-        optionPtr = Tcl_GetHashValue(entryPtr);
+        optionPtr = (WidgetOption *)Tcl_GetHashValue(entryPtr);
         if(optionPtr->dbclass == NULL) {
             Tcl_SetObjResult(interp,
                 Tcl_ObjPrintf("synonym option is synonym \"%s\"",
@@ -2591,6 +2601,8 @@ WidgetOptionTrace(
     WidgetOption *optionPtr;
     Tcl_Obj *myObjv[2];
     Tcl_Obj *myRet;
+    (void)name1;
+    (void)flags;
 
     /* get new value */
     entryPtr = Tcl_FindHashEntry(widget->optionsTable, Tk_GetUid(name2));
@@ -2640,7 +2652,7 @@ static void
 WidgetOptionDelEntry(
     Tcl_HashEntry * entry)
 {
-    WidgetOption *optionPtr = Tcl_GetHashValue(entry);
+    WidgetOption *optionPtr = (WidgetOption *)Tcl_GetHashValue(entry);
 
     if(optionPtr->option)
         Tcl_DecrRefCount(optionPtr->option);
@@ -2670,12 +2682,18 @@ WidgetOptionDelEntry(
  */
 static int
 WidgetMethod_tko_configure(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp * interp,
     Tcl_ObjectContext context,
     int objc,
     Tcl_Obj * const objv[])
 {              /* virtual method */
+    (void)dummy;
+    (void)interp;
+    (void)context;
+    (void)objc;
+    (void)objv;
+
     return TCL_OK;
 }
 
@@ -2692,7 +2710,8 @@ static void
 WidgetMetaDelete(
     ClientData clientData)
 {
-    //Tcl_EventuallyFree(clientData, (Tcl_FreeProc *)WidgetMetaDestroy);
+    (void)clientData;
+    /* Tcl_EventuallyFree(clientData, (Tcl_FreeProc *)WidgetMetaDestroy); */
 }
 
 /*
@@ -2734,6 +2753,7 @@ WidgetMethod_(
     Tk_Window newWin;
     Tk_Font newFont;
     Tk_Justify justify;
+    (void)objc;
 
     if ((define = (WidgetClientdata *)clientdata) == NULL
         || (object = Tcl_ObjectContextObject(context)) == NULL
@@ -3035,7 +3055,7 @@ WidgetMethod_(
                 *(char **)address = NULL;
             }
             else {
-                *(char **)address=ckalloc(length + 1);
+                *(char **)address=(char *)ckalloc(length + 1);
                 assert(*(char **)address);
                 memcpy(*(char **)address, str, length + 1);
             }
@@ -3166,7 +3186,7 @@ static Tcl_Obj *WidgetFlagsHideSet(
     Tcl_Obj *flags) /* last flag value object */
 {
     const char *ch;
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     ch = Tcl_GetString(flags);
     if (ch[0] != '\0' && (ch[0] == 'r' || ch[1] == 'r')) {
@@ -3188,7 +3208,7 @@ static Tcl_Obj *WidgetFlagsHideUnset(
     Tcl_Obj *flags) /* last flag value object */
 {
     const char *ch;
-    TkoThreadData *tkoPtr = Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
+    TkoThreadData *tkoPtr = (TkoThreadData *)Tcl_GetThreadData(&tkoKey, sizeof(TkoThreadData));
 
     ch = Tcl_GetString(flags);
     if (ch[0] != '\0') {
@@ -3237,11 +3257,13 @@ static void WidgetClientdataDelete(
 * Side effects:
 */
 static int WidgetClientdataClone(
-    Tcl_Interp *interp,
+    Tcl_Interp *dummy,
     ClientData clientdata,
     ClientData *newPtr)
 {
     WidgetClientdata *cd = (WidgetClientdata *)clientdata;
+    (void)dummy;
+
     if (cd) {
         *newPtr = ckalloc(sizeof(WidgetClientdata));
         assert(*newPtr);
