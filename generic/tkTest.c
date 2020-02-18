@@ -2118,7 +2118,6 @@ TestgrabObjCmd(
     enum option {GRABBED, RELEASED};
     int index, res = 0;
     Tk_Window mainWin, tkwin;
-    TkDisplay *dispPtr;
 
     mainWin = (Tk_Window) clientData;
 
@@ -2136,17 +2135,17 @@ TestgrabObjCmd(
     if (tkwin == NULL) {
         return TCL_ERROR;
     }
-    dispPtr = ((TkWindow *) tkwin)->dispPtr;
-    /*printf("TestgrabObjCmd %s, grabWinPtr = %p , tkwin = %p\n", options[index], dispPtr->grabWinPtr, tkwin);fflush(stdout);*/
+    /*printf("TestgrabObjCmd %s, grabWinPtr = %p , tkwin = %p\n", options[index],
+            ((TkWindow *) tkwin)->dispPtr->grabWinPtr, tkwin);fflush(stdout);*/
 
     switch ((enum option) index) {
     case GRABBED:
-        if (dispPtr->grabWinPtr == (TkWindow *) tkwin) {
+        if (TkGrabState((TkWindow *) tkwin) != TK_GRAB_NONE) {
             res = 1;
         }
 	break;
     case RELEASED:
-        if (dispPtr->grabWinPtr != (TkWindow *) tkwin) {
+        if (TkGrabState((TkWindow *) tkwin) == TK_GRAB_NONE) {
             res = 1;
         }
 	break;
