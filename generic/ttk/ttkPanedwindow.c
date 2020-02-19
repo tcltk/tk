@@ -206,7 +206,7 @@ static int ShoveUp(Paned *pw, int i, int pos)
  * 	Same as ShoveUp, but going in the opposite direction
  * 	and stopping at the sentinel sash.
  */
-static int ShoveDown(Paned *pw, int i, int pos)
+static int ShoveDown(Paned *pw, TkSizeT i, int pos)
 {
     Pane *pane = Ttk_SlaveData(pw->paned.mgr,i);
     int sashThickness = pw->paned.sashThickness;
@@ -275,7 +275,7 @@ static void AdjustPanes(Paned *pw)
 {
     int sashThickness = pw->paned.sashThickness;
     int pos = 0;
-    int index;
+    TkSizeT index;
 
     for (index = 0; index < Ttk_NumberSlaves(pw->paned.mgr); ++index) {
 	Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
@@ -372,7 +372,7 @@ static void PlacePanes(Paned *pw)
     int width = Tk_Width(pw->core.tkwin), height = Tk_Height(pw->core.tkwin);
     int sashThickness = pw->paned.sashThickness;
     int pos = 0;
-    int index;
+    TkSizeT index;
 
     for (index = 0; index < Ttk_NumberSlaves(pw->paned.mgr); ++index) {
 	Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
@@ -403,7 +403,7 @@ static void PanedPlaceSlaves(void *managerData)
     PlacePanes(pw);
 }
 
-static void PaneRemoved(void *managerData, int index)
+static void PaneRemoved(void *managerData, TkSizeT index)
 {
     Paned *pw = managerData;
     Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
@@ -419,7 +419,7 @@ static int AddPane(
     if (!Ttk_Maintainable(interp, slaveWindow, pw->core.tkwin)) {
 	return TCL_ERROR;
     }
-    if (Ttk_SlaveIndex(pw->paned.mgr, slaveWindow) >= 0) {
+    if (Ttk_SlaveIndex(pw->paned.mgr, slaveWindow) != TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"%s already added", Tk_PathName(slaveWindow)));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "PRESENT", NULL);
@@ -445,7 +445,7 @@ static int AddPane(
  * 	in order to avoid unexpected pane resizes (esp. while the
  * 	user is dragging a sash [#1325286]).
  */
-static int PaneRequest(void *managerData, int index, int width, int height)
+static int PaneRequest(void *managerData, TkSizeT index, int width, int height)
 {
     Paned *pw = managerData;
     Pane *pane = Ttk_SlaveData(pw->paned.mgr, index);
@@ -603,11 +603,11 @@ static void DrawSash(Paned *pw, int index, Drawable d)
 static void PanedDisplay(void *recordPtr, Drawable d)
 {
     Paned *pw = recordPtr;
-    int i, nSashes = Ttk_NumberSlaves(pw->paned.mgr) - 1;
+    TkSizeT i, nSlaves = Ttk_NumberSlaves(pw->paned.mgr);
 
     TtkWidgetDisplay(recordPtr, d);
-    for (i = 0; i < nSashes; ++i) {
-	DrawSash(pw, i, d);
+    for (i = 1; i < nSlaves; ++i) {
+	DrawSash(pw, i - 1, d);
     }
 }
 
@@ -743,7 +743,7 @@ static int PanedIdentifyCommand(
 	    /* Found it. */
 	    switch (what) {
 		case IDENTIFY_SASH:
-		    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+		    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
 		    return TCL_OK;
 		case IDENTIFY_ELEMENT:
 		{
@@ -808,7 +808,7 @@ static int PanedPanesCommand(
     Paned *pw = recordPtr;
     Ttk_Manager *mgr = pw->paned.mgr;
     Tcl_Obj *panes;
-    int i;
+    TkSizeT i;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 2, objv, "");
@@ -843,7 +843,7 @@ static int PanedSashposCommand(
     if (Tcl_GetIntFromObj(interp, objv[2], &sashIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (sashIndex < 0 || sashIndex >= Ttk_NumberSlaves(pw->paned.mgr) - 1) {
+    if (sashIndex < 0 || (TkSizeT)(sashIndex + 1) >= Ttk_NumberSlaves(pw->paned.mgr)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "sash index %d out of range", sashIndex));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", NULL);
@@ -853,7 +853,7 @@ static int PanedSashposCommand(
     pane = Ttk_SlaveData(pw->paned.mgr, sashIndex);
 
     if (objc == 3) {
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(pane->sashPos));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(pane->sashPos));
 	return TCL_OK;
     }
     /* else -- set new sash position */
@@ -871,7 +871,7 @@ static int PanedSashposCommand(
     AdjustPanes(pw);
     Ttk_ManagerLayoutChanged(pw->paned.mgr);
 
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(pane->sashPos));
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(pane->sashPos));
     return TCL_OK;
 }
 

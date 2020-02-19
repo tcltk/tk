@@ -342,7 +342,7 @@ void Ttk_LostSlaveProc(ClientData clientData, Tk_Window slaveWindow)
  * 	Add a new slave window at the specified index.
  */
 void Ttk_InsertSlave(
-    Ttk_Manager *mgr, int index, Tk_Window tkwin, void *slaveData)
+    Ttk_Manager *mgr, TkSizeT index, Tk_Window tkwin, void *slaveData)
 {
     Ttk_Slave *slave = NewSlave(mgr, tkwin, slaveData);
     InsertSlave(mgr, slave, index);
@@ -351,7 +351,7 @@ void Ttk_InsertSlave(
 /* ++ Ttk_ForgetSlave --
  * 	Unmanage the specified slave.
  */
-void Ttk_ForgetSlave(Ttk_Manager *mgr, int slaveIndex)
+void Ttk_ForgetSlave(Ttk_Manager *mgr, TkSizeT slaveIndex)
 {
     Tk_Window slaveWindow = mgr->slaves[slaveIndex]->slaveWindow;
     RemoveSlave(mgr, slaveIndex);
@@ -366,7 +366,7 @@ void Ttk_ForgetSlave(Ttk_Manager *mgr, int slaveIndex)
  * 	map the slave.
  */
 void Ttk_PlaceSlave(
-    Ttk_Manager *mgr, int slaveIndex, int x, int y, int width, int height)
+    Ttk_Manager *mgr, TkSizeT slaveIndex, int x, int y, int width, int height)
 {
     Ttk_Slave *slave = mgr->slaves[slaveIndex];
     Tk_MaintainGeometry(slave->slaveWindow,mgr->masterWindow,x,y,width,height);
@@ -379,7 +379,7 @@ void Ttk_PlaceSlave(
 /* ++ Ttk_UnmapSlave --
  * 	Unmap the specified slave, but leave it managed.
  */
-void Ttk_UnmapSlave(Ttk_Manager *mgr, int slaveIndex)
+void Ttk_UnmapSlave(Ttk_Manager *mgr, TkSizeT slaveIndex)
 {
     Ttk_Slave *slave = mgr->slaves[slaveIndex];
     Tk_UnmaintainGeometry(slave->slaveWindow, mgr->masterWindow);
@@ -405,15 +405,15 @@ void Ttk_ManagerSizeChanged(Ttk_Manager *mgr)
 
 /* +++ Accessors.
  */
-int Ttk_NumberSlaves(Ttk_Manager *mgr)
+TkSizeT Ttk_NumberSlaves(Ttk_Manager *mgr)
 {
     return mgr->nSlaves;
 }
-void *Ttk_SlaveData(Ttk_Manager *mgr, int slaveIndex)
+void *Ttk_SlaveData(Ttk_Manager *mgr, TkSizeT slaveIndex)
 {
     return mgr->slaves[slaveIndex]->slaveData;
 }
-Tk_Window Ttk_SlaveWindow(Ttk_Manager *mgr, int slaveIndex)
+Tk_Window Ttk_SlaveWindow(Ttk_Manager *mgr, TkSizeT slaveIndex)
 {
     return mgr->slaves[slaveIndex]->slaveWindow;
 }
@@ -425,13 +425,13 @@ Tk_Window Ttk_SlaveWindow(Ttk_Manager *mgr, int slaveIndex)
 /* ++ Ttk_SlaveIndex --
  * 	Returns the index of specified slave window, -1 if not found.
  */
-int Ttk_SlaveIndex(Ttk_Manager *mgr, Tk_Window slaveWindow)
+TkSizeT Ttk_SlaveIndex(Ttk_Manager *mgr, Tk_Window slaveWindow)
 {
     int index;
     for (index = 0; index < mgr->nSlaves; ++index)
 	if (mgr->slaves[index]->slaveWindow == slaveWindow)
 	    return index;
-    return -1;
+    return TCL_INDEX_NONE;
 }
 
 /* ++ Ttk_GetSlaveIndexFromObj(interp, mgr, objPtr, indexPtr) --
@@ -488,7 +488,7 @@ int Ttk_GetSlaveIndexFromObj(
 /* ++ Ttk_ReorderSlave(mgr, fromIndex, toIndex) --
  * 	Change slave order.
  */
-void Ttk_ReorderSlave(Ttk_Manager *mgr, int fromIndex, int toIndex)
+void Ttk_ReorderSlave(Ttk_Manager *mgr, TkSizeT fromIndex, TkSizeT toIndex)
 {
     Ttk_Slave *moved = mgr->slaves[fromIndex];
 

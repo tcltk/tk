@@ -254,9 +254,9 @@ error:
  * 	Return the index of the tab at point x,y,
  * 	or -1 if no tab at that point.
  */
-static int IdentifyTab(Notebook *nb, int x, int y)
+static TkSizeT IdentifyTab(Notebook *nb, int x, int y)
 {
-    int index;
+    TkSizeT index;
     for (index = 0; index < Ttk_NumberSlaves(nb->notebook.mgr); ++index) {
 	Tab *tab = Ttk_SlaveData(nb->notebook.mgr,index);
 	if (	tab->state != TAB_STATE_HIDDEN
@@ -265,7 +265,7 @@ static int IdentifyTab(Notebook *nb, int x, int y)
 	    return index;
 	}
     }
-    return -1;
+    return TCL_INDEX_NONE;
 }
 
 /*
@@ -287,19 +287,19 @@ static void ActivateTab(Notebook *nb, int index)
  *	The USER1 bit is set for the leftmost visible tab, and USER2
  * 	is set for the rightmost visible tab.
  */
-static Ttk_State TabState(Notebook *nb, int index)
+static Ttk_State TabState(Notebook *nb, TkSizeT index)
 {
     Ttk_State state = nb->core.state;
     Tab *tab = Ttk_SlaveData(nb->notebook.mgr, index);
-    int i = 0;
+    TkSizeT i = 0;
 
-    if (index == nb->notebook.currentIndex) {
+    if ((int)index == nb->notebook.currentIndex) {
 	state |= TTK_STATE_SELECTED;
     } else {
 	state &= ~TTK_STATE_FOCUS;
     }
 
-    if (index == nb->notebook.activeIndex) {
+    if ((int)index == nb->notebook.activeIndex) {
 	state |= TTK_STATE_ACTIVE;
     }
     for (i = 0; i < Ttk_NumberSlaves(nb->notebook.mgr); ++i) {
@@ -312,7 +312,7 @@ static Ttk_State TabState(Notebook *nb, int index)
 	}
 	break;
     }
-    for (i = Ttk_NumberSlaves(nb->notebook.mgr) - 1; i >= 0; --i) {
+    for (i = Ttk_NumberSlaves(nb->notebook.mgr) - 1; i != TCL_INDEX_NONE; --i) {
 	Tab *tab = Ttk_SlaveData(nb->notebook.mgr, i);
 	if (tab->state == TAB_STATE_HIDDEN) {
 	    continue;
@@ -351,7 +351,7 @@ static void TabrowSize(
 {
     Ttk_Layout tabLayout = nb->notebook.tabLayout;
     int tabrowWidth = 0, tabrowHeight = 0;
-    int i;
+    TkSizeT i;
 
     for (i = 0; i < Ttk_NumberSlaves(nb->notebook.mgr); ++i) {
 	Tab *tab = Ttk_SlaveData(nb->notebook.mgr, i);
@@ -391,7 +391,7 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
     int clientWidth = 0, clientHeight = 0,
     	reqWidth = 0, reqHeight = 0,
 	tabrowWidth = 0, tabrowHeight = 0;
-    int i;
+    TkSizeT i;
 
     NotebookStyleOptions(nb, &nbstyle);
 
@@ -695,16 +695,16 @@ static void SelectNearestTab(Notebook *nb)
  * 	Select the next tab if the current one is being removed.
  * 	Adjust currentIndex to account for removed slave.
  */
-static void TabRemoved(void *managerData, int index)
+static void TabRemoved(void *managerData, TkSizeT index)
 {
     Notebook *nb = managerData;
     Tab *tab = Ttk_SlaveData(nb->notebook.mgr, index);
 
-    if (index == nb->notebook.currentIndex) {
+    if ((int)index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
     }
 
-    if (index < nb->notebook.currentIndex) {
+    if ((int)index < nb->notebook.currentIndex) {
 	--nb->notebook.currentIndex;
     }
 
@@ -713,7 +713,7 @@ static void TabRemoved(void *managerData, int index)
     TtkRedisplayWidget(&nb->core);
 }
 
-static int TabRequest(void *managerData, int index, int width, int height)
+static int TabRequest(void *managerData, TkSizeT index, int width, int height)
 {
     return 1;
 }
@@ -731,7 +731,7 @@ static int AddTab(
 	return TCL_ERROR;
     }
 #if 0 /* can't happen */
-    if (Ttk_SlaveIndex(nb->notebook.mgr, slaveWindow) >= 0) {
+    if (Ttk_SlaveIndex(nb->notebook.mgr, slaveWindow) != TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s already added",
 	    Tk_PathName(slaveWindow)));
 	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "PRESENT", NULL);
@@ -791,7 +791,7 @@ static void NotebookEventHandler(ClientData clientData, XEvent *eventPtr)
 	Tk_DeleteEventHandler(nb->core.tkwin,
 	    NotebookEventMask, NotebookEventHandler, clientData);
     } else if (eventPtr->type == MotionNotify) {
-	int index = IdentifyTab(nb, eventPtr->xmotion.x, eventPtr->xmotion.y);
+	TkSizeT index = IdentifyTab(nb, eventPtr->xmotion.x, eventPtr->xmotion.y);
 	ActivateTab(nb, index);
     } else if (eventPtr->type == LeaveNotify) {
 	ActivateTab(nb, -1);
@@ -1054,7 +1054,8 @@ static int NotebookIdentifyCommand(
     int what = IDENTIFY_ELEMENT;
     Notebook *nb = recordPtr;
     Ttk_Element element = NULL;
-    int x, y, tabIndex;
+    int x, y;
+    TkSizeT tabIndex;
 
     if (objc < 4 || objc > 5) {
 	Tcl_WrongNumArgs(interp, 2,objv, "?what? x y");
@@ -1070,7 +1071,7 @@ static int NotebookIdentifyCommand(
     }
 
     tabIndex = IdentifyTab(nb, x, y);
-    if (tabIndex >= 0) {
+    if (tabIndex != TCL_INDEX_NONE) {
 	Tab *tab = Ttk_SlaveData(nb->notebook.mgr, tabIndex);
 	Ttk_State state = TabState(nb, tabIndex);
 	Ttk_Layout tabLayout = nb->notebook.tabLayout;
@@ -1090,8 +1091,8 @@ static int NotebookIdentifyCommand(
 	    }
 	    break;
 	case IDENTIFY_TAB:
-	    if (tabIndex >= 0) {
-		Tcl_SetObjResult(interp, Tcl_NewIntObj(tabIndex));
+	    if (tabIndex != TCL_INDEX_NONE) {
+		Tcl_SetObjResult(interp, Tcl_NewWideIntObj(tabIndex));
 	    }
 	    break;
     }
@@ -1118,14 +1119,14 @@ static int NotebookIndexCommand(
      * Special-case for "end":
      */
     if (!strcmp("end", Tcl_GetString(objv[2]))) {
-	int nSlaves = Ttk_NumberSlaves(nb->notebook.mgr);
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(nSlaves));
+	TkSizeT nSlaves = Ttk_NumberSlaves(nb->notebook.mgr);
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(nSlaves));
 	return TCL_OK;
     }
 
     status = FindTabIndex(interp, nb, objv[2], &index);
-    if (status == TCL_OK && index >= 0) {
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+    if (status == TCL_OK && index != -1) {
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
     }
 
     return status;
@@ -1167,7 +1168,7 @@ static int NotebookTabsCommand(
     Notebook *nb = recordPtr;
     Ttk_Manager *mgr = nb->notebook.mgr;
     Tcl_Obj *result;
-    int i;
+    TkSizeT i;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 2, objv, "");
