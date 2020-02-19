@@ -487,7 +487,7 @@ static void LabelframePlaceSlaves(void *recordPtr)
     }
 }
 
-static int LabelRequest(void *managerData, int index, int width, int height)
+static int LabelRequest(void *managerData, TkSizeT index, int width, int height)
 {
     return 1;
 }
@@ -499,7 +499,7 @@ static int LabelRequest(void *managerData, int index, int width, int height)
  * 	This routine is also called when the widget voluntarily forgets
  * 	the slave in LabelframeConfigure.
  */
-static void LabelRemoved(void *managerData, int slaveIndex)
+static void LabelRemoved(void *managerData, TkSizeT slaveIndex)
 {
     Labelframe *lframe = managerData;
     lframe->label.labelWidget = 0;

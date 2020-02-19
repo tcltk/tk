@@ -1553,7 +1553,7 @@ EntryIndexCommand(
     if (EntryIndex(interp, entryPtr, objv[2], &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(index));
     return TCL_OK;
 }
 
@@ -1853,7 +1853,7 @@ static int ComboboxCurrentCommand(
 	    }
 	}
 	cbPtr->combobox.currentIndex = currentIndex;
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(currentIndex));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(currentIndex));
 	return TCL_OK;
     } else if (objc == 3) {
         int result, index;
