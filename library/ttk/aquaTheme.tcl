@@ -113,6 +113,7 @@ namespace eval ttk::theme::aqua {
 	ttk::style map Treeview \
 	    -background {
 		selected systemSelectedTextBackgroundColor
+		alternate systemDisabledControlTextColor
 	    }
 
 	# Enable animation for ttk::progressbar widget:
