@@ -528,7 +528,7 @@ static void foreachHashEntry(Tcl_HashTable *ht, HashEntryIterator func)
 static void CellSelectionClear(Treeview *tv)
 {
     TreeItem *item;
-    for (item=tv->tree.root; item; item=NextPreorder(item)) {
+    for (item = tv->tree.root; item; item = NextPreorder(item)) {
 	if (item->selObj != NULL) {
 	    Tcl_DecrRefCount(item->selObj);
 	    item->selObj = NULL;
@@ -1601,7 +1601,7 @@ static int BoundingBox(
 	bbox.width = column->width;
 
 	if (i < tv->tree.nTitleColumns) {
-	    /* Unscollable column, remove scroll shift */
+	    /* Unscrollable column, remove scroll shift */
 	    bbox.x += tv->tree.xscroll.first;
 	}
 

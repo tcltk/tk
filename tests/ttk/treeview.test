@@ -749,7 +749,7 @@ test treeview-identify-10b "bbox works when horizontally scrolled" -body {
         foreach xoffs {0 25 50} {
             .tv xview $xoffs
             update
-            # Extract x coordiate for each column
+            # Extract x coordinate for each column
             lappend result [expr {[lindex [.tv bbox branch "#0"] 0] - $base}]
             lappend result [expr {[lindex [.tv bbox branch A   ] 0] - $base}]
             lappend result [expr {[lindex [.tv bbox branch B   ] 0] - $base}]
