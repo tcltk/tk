@@ -119,7 +119,7 @@ If the \fIitem\fR is not visible
 returns the empty list.
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop cellList\fR?
-Manages cell selection. Cell selection is independent of item selection
+Manages cell selection. Cell selection is independent from item selection
 handled by the \fBselection\fR command. A cell is given by a list of two
 elements, item and column.
 If \fIselop\fR is not specified, returns the list of selected cells.
@@ -274,6 +274,7 @@ The tree area.
 .IP cell
 A data cell.
 .RE
+.TP
 \fIpathname \fBidentify item \fIx y\fR
 Returns the item ID of the item at position \fIy\fR.
 .TP
@@ -360,6 +361,8 @@ and scrolls the widget if necessary so that \fIitem\fR is
 within the visible portion of the tree.
 .TP
 \fIpathname \fBselection\fR ?\fIselop itemList\fR?
+Manages item selection. Item selection is independent from cell selection
+handled by the \fBcellselection\fR command.
 If \fIselop\fR is not specified, returns the list of selected items.
 Otherwise, \fIselop\fR is one of the following:
 .RS
