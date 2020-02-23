@@ -113,10 +113,12 @@ Number of items at the top that should not be vertically scrolled. Default is 0.
 Returns the bounding box (relative to the treeview widget's window)
 of the specified \fIitem\fR
 in the form \fIx y width height\fR.
-If \fIcolumn\fR is specified, returns the bounding box of that cell.
 If the \fIitem\fR is not visible
-(i.e., if it is a descendant of a closed item or is scrolled offscreen),
+(i.e., if it is a descendant of a closed item or is vertically scrolled offscreen),
 returns the empty list.
+If \fIcolumn\fR is specified and is not hidden (by the \fB\-displaycolumns\fR option),
+returns the bounding box of that cell within \fIitem\fR (even if the cell
+is horizontally scrolled offscreen).
 .TP
 \fIpathname \fBcellselection\fR ?\fIselop cellList\fR?
 Manages cell selection. Cell selection is independent from item selection
