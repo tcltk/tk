@@ -864,7 +864,7 @@ ParseColorAsList(
      * To avoid that, avance the pointer to the next non-blank char.
      */
 
-    while(isspace(*curPos)) {
+    while(isspace(UCHAR(*curPos))) {
         ++curPos;
     }
     while (i < 4 && *curPos != '\0') {
@@ -872,7 +872,7 @@ ParseColorAsList(
         if (values[i] < 0 || values[i] > 255) {
             return TCL_ERROR;
         }
-        while(isspace(*curPos)) {
+        while(isspace(UCHAR(*curPos))) {
             ++curPos;
         }
         ++i;
