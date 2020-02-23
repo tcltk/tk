@@ -1180,9 +1180,17 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 	CellSelectionClear(tv);
     }
     if (tv->tree.nTitleColumns < 0) {
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "\"%d\" is out of range",
+                tv->tree.nTitleColumns));
+	Tcl_SetErrorCode(interp, "TTK", "TREE", "TITLECOLUMNS", NULL);
 	return TCL_ERROR;
     }
     if (tv->tree.nTitleItems < 0) {
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "\"%d\" is out of range",
+                tv->tree.nTitleItems));
+	Tcl_SetErrorCode(interp, "TTK", "TREE", "TITLEITEMS", NULL);
 	return TCL_ERROR;
     }
     if (mask & SCROLLCMD_CHANGED) {
