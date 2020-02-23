@@ -74,7 +74,8 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure Treeview -background SystemWindow
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
-				selected SystemHighlight] \
+				selected SystemHighlight \
+                                alternate System3dLight] \
 	    -foreground [list   disabled SystemGrayText \
 				selected SystemHighlightText]
 
