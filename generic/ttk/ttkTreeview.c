@@ -3146,6 +3146,10 @@ static int TreeviewDragCommand(
 	TreeColumn *c = tv->tree.displayColumns[i];
 	int right = left + c->width;
 	if (c == column) {
+	    if (i < tv->tree.nTitleColumns) {
+	        /* Unscrollable column, remove scroll shift */
+                right += tv->tree.xscroll.first;
+	    }
 	    DragColumn(tv, i, newx - right);
 	    TtkRedisplayWidget(&tv->core);
 	    return TCL_OK;
