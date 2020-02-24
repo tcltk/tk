@@ -38,7 +38,7 @@ typedef struct Ttk_Style_
     Ttk_ResourceCache	cache;		/* Back-pointer to resource cache */
 } Style;
 
-static Style *NewStyle()
+static Style *NewStyle(void)
 {
     Style *stylePtr = (Style*)ckalloc(sizeof(Style));
 

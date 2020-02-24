@@ -15,7 +15,9 @@
  */
 
 #include "tkInt.h"
-#ifdef _WIN32
+#if TCL_MINOR_VERSION < 6
+#include "tclInt.h"
+#elif defined(_WIN32)
 /*  Little hack to eliminate the need for "tclInt.h" here:
     Just copy a small portion of TclIntPlatStubs, just
     enough to make it work. See [600b72bfbc] */
