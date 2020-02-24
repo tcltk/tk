@@ -984,7 +984,7 @@ ImgPhotoCmd(
 	    Tcl_DStringInit(&buffer);
 	    result = ((int (*) (Tcl_Interp *interp,
 		    Tcl_DString *dataPtr, char *formatString,
-		    Tk_PhotoImageBlock *blockPtr)) stringWriteProc)
+		    Tk_PhotoImageBlock *blockPtr))(void *)stringWriteProc)
 		    (interp, &buffer, Tcl_GetString(options.format), &block);
 	    if (result == TCL_OK) {
 		Tcl_DStringResult(interp, &buffer);
@@ -995,7 +995,7 @@ ImgPhotoCmd(
 
 	    result = ((int (*) (Tcl_Interp *interp,
 		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr,
-		    void *dummy)) stringWriteProc)
+		    void *dummy))(void *)stringWriteProc)
 		    (interp, options.format, &block, NULL);
 	}
 	if (options.background) {
