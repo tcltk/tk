@@ -50,6 +50,7 @@ typedef struct PixelRep {
 typedef struct {
     const Tcl_ObjType *doubleTypePtr;
     const Tcl_ObjType *intTypePtr;
+    const Tcl_ObjType *endTypePtr;
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -96,6 +97,29 @@ static void		UpdateStringOfMM(Tcl_Obj *objPtr);
 static int		SetMMFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetPixelFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetWindowFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
+
+#if TCL_MAJOR_VERSION < 9
+#if defined(USE_TCL_STUBS)
+/*  Little hack to eliminate the need for "tclInt.h" here:
+    Just copy a small portion of TclIntStubs, just
+    enough to make it work */
+typedef struct TclIntStubs {
+    int magic;
+    void *hooks;
+    void (*dummy[34]) (void); /* dummy entries 0-33, not used */
+    int (*tclGetIntForIndex) (Tcl_Interp *interp, Tcl_Obj *objPtr, int endValue, int *indexPtr); /* 34 */
+} TclIntStubs;
+extern const struct TclIntStubs *tclIntStubsPtr;
+
+# undef Tcl_GetIntForIndex
+# define Tcl_GetIntForIndex(interp, obj, max, ptr) ((tclIntStubsPtr->tclGetIntForIndex == NULL)? \
+    ((int (*)(Tcl_Interp*,  Tcl_Obj *, int, int*))(void *)((&(tclStubsPtr->tcl_PkgProvideEx))[645]))((interp), (obj), (max), (ptr)): \
+	tclIntStubsPtr->tclGetIntForIndex((interp), (obj), (max), (ptr)))
+#elif TCL_MINOR_VERSION < 7
+extern int TclGetIntForIndex(Tcl_Interp*,  Tcl_Obj *, int, int*);
+# define Tcl_GetIntForIndex TclGetIntForIndex
+#endif
+#endif
 
 /*
  * The following structure defines the implementation of the "pixel" Tcl
@@ -160,12 +184,17 @@ GetTypeCache(void)
 	/* Smart initialization of doubleTypePtr/intTypePtr without
 	 * hash-table lookup or creating complete Tcl_Obj's */
 	Tcl_Obj obj;
+	obj.bytes = (char *)"end";
 	obj.length = 3;
+	obj.typePtr = NULL;
+	Tcl_GetIntForIndex(NULL, &obj, TCL_INDEX_NONE, (TkSizeT *)&obj.internalRep.doubleValue);
+	tsdPtr->endTypePtr = obj.typePtr;
 	obj.bytes = (char *)"0.0";
+	obj.length = 3;
 	obj.typePtr = NULL;
 	Tcl_GetDoubleFromObj(NULL, &obj, &obj.internalRep.doubleValue);
 	tsdPtr->doubleTypePtr = obj.typePtr;
-	obj.bytes += 2;
+	obj.bytes = (char *)"0";
 	obj.length = 1;
 	obj.typePtr = NULL;
 	Tcl_GetLongFromObj(NULL, &obj, &obj.internalRep.longValue);
@@ -174,6 +203,51 @@ GetTypeCache(void)
     return tsdPtr;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkGetIntForIndex --
+ *
+ *	Almost the same as Tcl_GetIntForIndex, but it return an int, and it is
+ *	more restricted. For example it only accepts "end", not "end-1", and
+ *	only "2", not "1+1"
+ *
+ * Results:
+ *	The return value is a standard Tcl object result.
+ *
+ * Side effects:
+ *	None
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkGetIntForIndex(Tcl_Obj *indexObj, TkSizeT end, TkSizeT *indexPtr) {
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (Tcl_GetIntForIndex(NULL, indexObj, end, indexPtr) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    if (indexObj->typePtr == tsdPtr->endTypePtr) {
+	/* check for "end", but not "end-??" or "end+??" */
+	return (*indexPtr == end) ? TCL_OK :  TCL_ERROR;
+    }
+    if (indexObj->typePtr != tsdPtr->intTypePtr) {
+	/* Neither do we accept "??-??" or "??+??" */
+	return TCL_ERROR;
+    }
+#if TCL_MAJOR_VERSION < 9
+    if (*indexPtr < -1) {
+	*indexPtr = TCL_INDEX_NONE;
+    }
+#endif
+    if ((*indexPtr != TCL_INDEX_NONE) && (*indexPtr > end)) {
+	*indexPtr = end + 1;
+    }
+    return TCL_OK;
+}
+
 /*
  *----------------------------------------------------------------------
  *
