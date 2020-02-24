@@ -2126,15 +2126,25 @@ GetMenuIndex(
     TkSizeT *indexPtr)		/* Where to store converted index. */
 {
     int i;
-    const char *string = Tcl_GetString(objPtr);
+    const char *string;
+
+    if (TkGetIntForIndex(objPtr, menuPtr->numEntries - ((lastOK) ? 0 : 1), indexPtr) == TCL_OK) {
+	if (*indexPtr != TCL_INDEX_NONE) {
+	    if (*indexPtr >= menuPtr->numEntries) {
+		*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
+	    }
+	    return TCL_OK;
+	}
+    }
+
+    string = Tcl_GetString(objPtr);
 
     if ((string[0] == 'a') && (strcmp(string, "active") == 0)) {
 	*indexPtr = menuPtr->active;
 	goto success;
     }
 
-    if (((string[0] == 'l') && (strcmp(string, "last") == 0))
-	    || ((string[0] == 'e') && (strcmp(string, "end") == 0))) {
+    if ((string[0] == 'l') && (strcmp(string, "last") == 0)) {
 	*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
 	goto success;
     }
@@ -2147,22 +2157,6 @@ GetMenuIndex(
     if (string[0] == '@') {
 	if (GetIndexFromCoords(NULL, menuPtr, string, indexPtr)
 		== TCL_OK) {
-	    goto success;
-	}
-    }
-
-    if (isdigit(UCHAR(string[0]))) {
-	if (Tcl_GetIntFromObj(NULL, objPtr, &i) == TCL_OK) {
-	    if (i >= (int)menuPtr->numEntries) {
-		if (lastOK) {
-		    i = menuPtr->numEntries;
-		} else {
-		    i = menuPtr->numEntries-1;
-		}
-	    } else if (i < 0) {
-		i = -1;
-	    }
-	    *indexPtr = i;
 	    goto success;
 	}
     }
