@@ -2843,14 +2843,14 @@ static HMODULE tkcygwindll = NULL;
  * so we don't have to do any encoding conversions.
  */
 int
-TkCygwinMainEx(argc, argv, appInitProc, interp)
-    int argc;				/* Number of arguments. */
-    char **argv;			/* Array of argument strings. */
-    Tcl_AppInitProc *appInitProc;	/* Application-specific initialization
+TkCygwinMainEx(
+    int argc,				/* Number of arguments. */
+    char **argv,			/* Array of argument strings. */
+    Tcl_AppInitProc *appInitProc,	/* Application-specific initialization
 					 * procedure to call after most
 					 * initialization but before starting
 					 * to execute commands. */
-    Tcl_Interp *interp;
+    Tcl_Interp *interp)
 {
     char name[MAX_PATH];
     int len;

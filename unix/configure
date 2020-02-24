@@ -4864,7 +4864,7 @@ fi
     CFLAGS_OPTIMIZE=-O
     if test "$GCC" = yes; then
 
-	CFLAGS_WARNING="-Wall"
+	CFLAGS_WARNING="-Wall -Wpointer-arith"
 
 else
   CFLAGS_WARNING=""
