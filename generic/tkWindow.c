@@ -963,7 +963,7 @@ TkCreateMainWindow(
 	}
 	if (cmdPtr->flags & NOOBJPROC) {
 	    Tcl_CreateCommand(interp, cmdPtr->name,
-		    (Tcl_CmdProc *) cmdPtr->objProc, clientData, NULL);
+		    (Tcl_CmdProc *)(void *)cmdPtr->objProc, clientData, NULL);
 	} else {
 	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);
@@ -3275,7 +3275,7 @@ Initialize(
 
     Tcl_SetMainLoop(Tk_MainLoop);
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(STATIC_BUILD)
     /* On Windows, this has no added value. */
 #   undef Tk_InitStubs
     Tk_InitStubs(interp, TK_VERSION, 1);

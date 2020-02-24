@@ -293,6 +293,7 @@ TkOffsetParseProc(
 	    tsoffset.flags = INT_MAX;
 	    goto goodTSOffset;
 	}
+	break;
     case 'w':
 	if (value[1] != '\0') {goto badTSOffset;}
 	tsoffset.flags = TK_OFFSET_LEFT|TK_OFFSET_MIDDLE;
