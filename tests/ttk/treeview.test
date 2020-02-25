@@ -547,7 +547,30 @@ test treeview-11.3 "Cellselection remove" -body {
 test treeview-11.3.1 "Cellselection add rectangle" -body {
     .tv cellselection add "nn a" "nn.n1 c"
     .tv cellselection
-} -result [list "nn #1" "nn #2" "nn #3" "nn.n1 a" "nn.n1 #2" "nn.n1 #3" "nn.n3 b" "nn2 b"]
+} -result [list \
+                   "nn #1" "nn #2" "nn #3" \
+                   "nn.n1 a" "nn.n1 #2" "nn.n1 #3" \
+                   "nn.n3 b" \
+                   "nn2 b"]
+
+test treeview-11.3.2 "Cellselection toggle rectangle" -body {
+    .tv cellselection toggle "nn.n1 b" "nn.n3 c"
+    .tv cellselection
+} -result [list \
+                   "nn #1" "nn #2" "nn #3" \
+                   "nn.n1 a" \
+                   "nn.n2 #2" "nn.n2 #3" \
+                   "nn.n3 #3" \
+                   "nn2 b"]
+
+test treeview-11.3.3 "Cellselection remove rectangle" -body {
+    .tv cellselection remove "nn.n1 a" "nn.n3 b"
+    .tv cellselection
+} -result [list \
+                   "nn #1" "nn #2" "nn #3" \
+                   "nn.n2 #3" \
+                   "nn.n3 #3" \
+                   "nn2 b"]
 
 test treeview-11.4 "Cellselection - clear" -body {
     .tv cellselection set {}
