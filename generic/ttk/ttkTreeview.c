@@ -3359,12 +3359,13 @@ static int GetCellFromObj(
  */
 static int CellSelectionRange(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *fromCell, Tcl_Obj *toCell,
-    int add)
+    int add, int remove, int toggle)
 {
     TreeItem *itemFrom, *itemTo, *item;
     TreeColumn *columnFrom, *columnTo;
     Tcl_Obj *columns, **elements;
     int seen, doit, colno, nElements, i;
+    int set = !(add || remove || toggle);
 
     if (GetCellFromObj(interp, tv, fromCell, 1, &itemFrom, &columnFrom) != TCL_OK) {
 	return TCL_ERROR;
@@ -3407,22 +3408,25 @@ static int CellSelectionRange(
 	    doit = 1;
 	}
 	if (seen == 1 || doit) {
-	    if (item->selObj != NULL && add) {
+	    if (item->selObj != NULL && !set) {
 		item->selObj = unshareObj(item->selObj);
 
 		Tcl_ListObjGetElements(NULL, columns, &nElements, &elements);
 		for (i = 0; i < nElements; ++i) {
-		    SelObjChangeElement(tv, item->selObj, elements[i], 1, 0, 0);
+		    SelObjChangeElement(tv, item->selObj, elements[i],
+			    add, remove, toggle);
 		}
 	    } else {
 		if (item->selObj != NULL) {
 		    Tcl_DecrRefCount(item->selObj);
 		}
-
-		item->selObj = columns;
-		Tcl_IncrRefCount(item->selObj);
+		if (!remove) {
+		    item->selObj = columns;
+		    Tcl_IncrRefCount(item->selObj);
+		}
 	    }
-	} else if (!add) {
+	} else if (set) {
+	    /* set operation clears all other items */
 	    if (item->selObj != NULL) {
 		Tcl_DecrRefCount(item->selObj);
 		item->selObj = NULL;
@@ -3477,8 +3481,8 @@ static int TreeviewCellSelectionCommand(
 	return TCL_OK;
     }
 
-    if (objc < 4) {
-    	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle cells?");
+    if (objc < 4 || objc > 5) {
+    	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle arg...?");
 	return TCL_ERROR;
     }
 
@@ -3487,19 +3491,20 @@ static int TreeviewCellSelectionCommand(
 	return TCL_ERROR;
     }
 
-    if (selop == SELECTION_SET && objc == 5) {
-	return CellSelectionRange(interp, tv, objv[3], objv[4], 0);
-    }
-
-    if (selop == SELECTION_ADD && objc == 5) {
-	return CellSelectionRange(interp, tv, objv[3], objv[4], 1);
+    if (objc == 5) {
+	switch (selop)
+	{
+	    case SELECTION_SET:
+		return CellSelectionRange(interp, tv, objv[3], objv[4], 0, 0, 0);
+	    case SELECTION_ADD:
+		return CellSelectionRange(interp, tv, objv[3], objv[4], 1, 0, 0);
+	    case SELECTION_REMOVE:
+		return CellSelectionRange(interp, tv, objv[3], objv[4], 0, 1, 0);
+	    case SELECTION_TOGGLE:
+		return CellSelectionRange(interp, tv, objv[3], objv[4], 0, 0, 1);
+	}
     }
     
-    if (objc > 4) {
-    	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle cells?");
-	return TCL_ERROR;
-    }
-
     if (Tcl_ListObjGetElements(interp, objv[3], &nCells, &cells) != TCL_OK) {
 	return TCL_ERROR;
     }

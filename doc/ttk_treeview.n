@@ -120,7 +120,7 @@ If \fIcolumn\fR is specified and is not hidden (by the \fB\-displaycolumns\fR op
 returns the bounding box of that cell within \fIitem\fR (even if the cell
 is horizontally scrolled offscreen).
 .TP
-\fIpathname \fBcellselection\fR ?\fIselop cellList\fR?
+\fIpathname \fBcellselection\fR ?\fIselop arg ...\fR?
 Manages cell selection. Cell selection is independent from item selection
 handled by the \fBselection\fR command. A cell is given by a list of two
 elements, item and column.
@@ -144,8 +144,14 @@ The rectangle defined is added to the cell selection.
 \fIpathname \fBcellselection remove \fIcellList\fR
 Remove \fIcellList\fR from the cell selection
 .TP
+\fIpathname \fBcellselection remove \fIfirstCell\fR \fIlastCell\fR
+The rectangle defined is removed from the cell selection.
+.TP
 \fIpathname \fBcellselection toggle \fIcellList\fR
 Toggle the cell selection state of each item in \fIcellList\fR.
+.TP
+\fIpathname \fBcellselection toggle \fIfirstCell\fR \fIlastCell\fR
+Toggle the cell selection state of each item in the rectangle defined.
 .RE
 .TP
 \fIpathname \fBcget \fIoption\fR
