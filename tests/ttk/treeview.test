@@ -530,7 +530,7 @@ test treeview-11.0b "Cellselection set" -body {
 } -result [list "nn.n1 a" "nn.n2 a" "nn.n2 c" "nn.n3 b"]
 
 test treeview-11.1 "Cellselection add" -body {
-    .tv cellselection add [list "nn b"]
+    .tv cellselection add "nn b"
     .tv cellselection
 } -result [list "nn b" "nn.n1 a" "nn.n2 a" "nn.n2 c" "nn.n3 b"]
 

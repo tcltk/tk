@@ -3454,6 +3454,7 @@ static int TreeviewCellSelectionCommand(
     TreeItem *item;
     TreeColumn *column;
     Tcl_Obj **elements, **cells;
+    Tcl_Obj *oneCell;
 
     if (objc == 2) {
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
@@ -3503,6 +3504,17 @@ static int TreeviewCellSelectionCommand(
 	return TCL_ERROR;
     }
 
+    /* A two element list might be a single cell */
+    if (nCells == 2) {
+	if (GetCellFromObj(interp, tv, objv[3], 1, &item, &column) == TCL_OK) {
+	    nCells = 1;
+	    oneCell = objv[3];
+	    cells = &oneCell;
+	} else {
+	    Tcl_ResetResult(interp);
+	}
+    }
+    
     for (i = 0; i < nCells; i++) {
 	if (GetCellFromObj(interp, tv, cells[i], 1, &item, &column) != TCL_OK) {
 	    return TCL_ERROR;
