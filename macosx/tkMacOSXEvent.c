@@ -101,6 +101,12 @@ enum {
     default:
 	break; /* return theEvent */
     }
+    if (type == NSScrollWheel) {
+	NSWindow *win = [theEvent window];
+	if (win) {
+	    [[win contentView] setNeedsDisplay:YES];
+	}
+    }
     return processedEvent;
 }
 @end
