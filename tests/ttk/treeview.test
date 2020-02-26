@@ -32,13 +32,15 @@ proc assert {expr {message ""}} {
     }
 }
 
-test treeview-0 "treeview test - setup" -body {
+proc tvSetup {} {
+    destroy .tv
     ttk::treeview .tv -columns {a b c}
     pack .tv -expand true -fill both
     update
 }
 
 test treeview-1.1 "columns" -body {
+    tvSetup
     .tv configure -columns {a b c}
 }
 
@@ -90,8 +92,6 @@ test treeview-2.8 "insert -- new node at end" -body {
     consistencyCheck .tv
     .tv children {}
 } -result [list newnode lastnode]
-
-consistencyCheck .tv
 
 test treeview-2.9 "insert -- new node at beginning" -body {
     .tv insert {} 0 -id firstnode
@@ -199,10 +199,10 @@ test treeview-3.10 "detach is idempotent" -body {
 
 test treeview-3.11 "Can't detach root item" -body {
     .tv detach [list {}]
+} -cleanup {
     update
     consistencyCheck .tv
 } -returnCodes 1 -result "Cannot detach root item"
-consistencyCheck .tv
 
 test treeview-3.12 "Reattach" -body {
     .tv move newnode {} end
@@ -349,8 +349,6 @@ test treeview-6.1.1 "delete" -body {
     list [.tv exists b] [.tv children dtest]
 } -result [list 0 [list a c d e]]
 
-consistencyCheck .tv
-
 test treeview-6.2 "delete - duplicate items in list" -body {
     .tv delete [list a e a e]
     consistencyCheck .tv
@@ -426,9 +424,10 @@ test treeview-7.5 "replace children - precondition" -body {
 
 test treeview-7.6 "Replace children - illegal move" -body {
     .tv children newnode.n1 [list newnode.n1 newnode.n2 newnode.n3]
+} -cleanup {
+    consistencyCheck .tv
 } -returnCodes 1 -result "Cannot insert newnode.n1 as descendant of newnode.n1"
 
-consistencyCheck .tv
 
 test treeview-8.0 "Selection set" -body {
     .tv selection set [list newnode.n1 newnode.n3 newnode.n2]
@@ -510,7 +509,7 @@ test treeview-9.1 "scrolling" -setup {
 
 test treeview-11.0 "Cellselection set rectangle" -setup {
     # Setup common for all 11.* tests
-    .tv delete [.tv children {}]
+    tvSetup
     .tv configure -columns {a b c d}
     .tv configure -displaycolumns {a b c}
     .tv insert {} end -id nn
@@ -524,27 +523,27 @@ test treeview-11.0 "Cellselection set rectangle" -setup {
     # Internal processing of rectangle selection translates cols to #N
 } -result [list "nn.n1 #1" "nn.n1 #2" "nn.n2 #1" "nn.n2 #2" "nn.n3 #1" "nn.n3 #2"]
 
-test treeview-11.0b "Cellselection set" -body {
+test treeview-11.1 "Cellselection set" -body {
     .tv cellselection set [list "nn.n1 a" "nn.n2 a" "nn.n3 b" "nn.n2 c"]
     .tv cellselection
 } -result [list "nn.n1 a" "nn.n2 a" "nn.n2 c" "nn.n3 b"]
 
-test treeview-11.1 "Cellselection add" -body {
+test treeview-11.2 "Cellselection add" -body {
     .tv cellselection add "nn b"
     .tv cellselection
 } -result [list "nn b" "nn.n1 a" "nn.n2 a" "nn.n2 c" "nn.n3 b"]
 
-test treeview-11.2 "Cellselection toggle" -body {
+test treeview-11.3 "Cellselection toggle" -body {
     .tv cellselection toggle [list "nn.n2 a" "nn2 b"]
     .tv cellselection
 } -result [list "nn b" "nn.n1 a" "nn.n2 c" "nn.n3 b" "nn2 b"]
 
-test treeview-11.3 "Cellselection remove" -body {
+test treeview-11.4 "Cellselection remove" -body {
     .tv cellselection remove [list "nn.n2 c" "nn b"]
     .tv cellselection
 } -result [list "nn.n1 a" "nn.n3 b" "nn2 b"]
 
-test treeview-11.3.1 "Cellselection add rectangle" -body {
+test treeview-11.5 "Cellselection add rectangle" -body {
     .tv cellselection add "nn a" "nn.n1 c"
     .tv cellselection
 } -result [list \
@@ -553,7 +552,7 @@ test treeview-11.3.1 "Cellselection add rectangle" -body {
                    "nn.n3 b" \
                    "nn2 b"]
 
-test treeview-11.3.2 "Cellselection toggle rectangle" -body {
+test treeview-11.6 "Cellselection toggle rectangle" -body {
     .tv cellselection toggle "nn.n1 b" "nn.n3 c"
     .tv cellselection
 } -result [list \
@@ -563,7 +562,7 @@ test treeview-11.3.2 "Cellselection toggle rectangle" -body {
                    "nn.n3 #3" \
                    "nn2 b"]
 
-test treeview-11.3.3 "Cellselection remove rectangle" -body {
+test treeview-11.7 "Cellselection remove rectangle" -body {
     .tv cellselection remove "nn.n1 a" "nn.n3 b"
     .tv cellselection
 } -result [list \
@@ -572,16 +571,22 @@ test treeview-11.3.3 "Cellselection remove rectangle" -body {
                    "nn.n3 #3" \
                    "nn2 b"]
 
-test treeview-11.4 "Cellselection - clear" -body {
+test treeview-11.8 "Cellselection set rectangle" -body {
+    # This tests that "set" clears out all old selections
+    .tv cellselection set "nn b" "nn.n1 c"
+    .tv cellselection
+} -result [list "nn #2" "nn #3" "nn.n1 #2" "nn.n1 #3"]
+
+test treeview-11.9 "Cellselection - clear" -body {
     .tv cellselection set {}
     .tv cellselection
 } -result {}
 
-test treeview-11.5 "Cellselection - bad operation" -body {
+test treeview-11.10 "Cellselection - bad operation" -body {
     .tv cellselection badop foo
 } -returnCodes 1 -match glob -result {bad cellselection operation "badop": must be *}
 
-test treeview-11.6 "Cellselection - <<TreeviewSelect>> on cellselection add" -body {
+test treeview-11.11 "Cellselection - <<TreeviewSelect>> on cellselection add" -body {
     .tv cellselection set {}
     bind .tv <<TreeviewSelect>> {set res 1}
     set res 0
@@ -590,7 +595,7 @@ test treeview-11.6 "Cellselection - <<TreeviewSelect>> on cellselection add" -bo
     set res
 } -result {1}
 
-test treeview-11.7 "<<TreeviewSelect>> on selected cell deletion" -body {
+test treeview-11.12 "<<TreeviewSelect>> on selected cell deletion" -body {
     .tv cellselection set {}
     .tv insert "" end -id selectedDoomed -text DeadItem
     .tv insert "" end -id doomed -text AlsoDead
@@ -606,15 +611,15 @@ test treeview-11.7 "<<TreeviewSelect>> on selected cell deletion" -body {
     set res
 } -result {1 1}
 
-test treeview-11.8 "Cellselection - error" -body {
+test treeview-11.13 "Cellselection - error" -body {
     .tv cellselection set [list "apa a"]
 } -returnCodes 1 -match glob -result {Item apa not found}
 
-test treeview-11.9 "Cellselection - error" -body {
+test treeview-11.14 "Cellselection - error" -body {
     .tv cellselection set [list "nn xx "]
 } -returnCodes 1 -match glob -result {Invalid column index xx}
 
-test treeview-11.10 "Cellselection - error" -body {
+test treeview-11.15 "Cellselection - error" -body {
     .tv cellselection set [list "nn d"]
 } -returnCodes 1 -match glob -result {Cell id must be in a visible column}
 

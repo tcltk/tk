@@ -1757,7 +1757,7 @@ static void TreeviewDoLayout(void *clientData)
     ResizeColumns(tv, tv->tree.treeArea.width);
 
     first = tv->tree.xscroll.first;
-    last = tv->tree.xscroll.first + tv->tree.treeArea.width - tv->tree.titleWidth;
+    last = first + tv->tree.treeArea.width - tv->tree.titleWidth;
     total = TreeWidth(tv) - tv->tree.titleWidth;
     TtkScrolled(tv->tree.xscrollHandle, first, last, total);
 
@@ -2021,11 +2021,13 @@ static void DrawItem(
 	    if (item->textObj) { displayItemSel.textObj = item->textObj; }
 	    if (item->imageObj) { displayItemSel.imageObj = item->imageObj; }
 	    DisplayLayout(tv->tree.rowLayout, &displayItemSel, state, parcelBg, d);
-	    DisplayLayoutTree(item->imageAnchor, textAnchor, tv->tree.itemLayout, &displayItemSel, state, parcel, d);
+	    DisplayLayoutTree(item->imageAnchor, textAnchor,
+		    tv->tree.itemLayout, &displayItemSel, state, parcel, d);
 	} else {
 	    if (item->textObj) { displayItem.textObj = item->textObj; }
 	    if (item->imageObj) { displayItem.imageObj = item->imageObj; }
-	    DisplayLayoutTree(item->imageAnchor, textAnchor, tv->tree.itemLayout, &displayItem, state, parcel, d);
+	    DisplayLayoutTree(item->imageAnchor, textAnchor,
+		    tv->tree.itemLayout, &displayItem, state, parcel, d);
 	}
 	xTitle += colwidth;
     }
@@ -3312,7 +3314,7 @@ static void SelObjChangeElement(
  */
 static int GetCellFromObj(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *obj,
-    int displayColumnOnly,
+    int displayColumnOnly, int *displayColumn,
     TreeItem **item, TreeColumn **column)
 {
     int nElements;
@@ -3350,12 +3352,14 @@ static int GetCellFromObj(
 	    Tcl_SetErrorCode(interp, "TTK", "TREE", "CELL", NULL);
 	    return TCL_ERROR;
 	}
+	if (displayColumn != NULL) {
+	    *displayColumn = i;
+	}
     }
     return TCL_OK;
 }
 
-/* + $tree cellselection add $from $to
- * + $tree cellselection set $from $to
+/* + $tree cellselection <cmd> $from $to
  */
 static int CellSelectionRange(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *fromCell, Tcl_Obj *toCell,
@@ -3364,13 +3368,15 @@ static int CellSelectionRange(
     TreeItem *itemFrom, *itemTo, *item;
     TreeColumn *columnFrom, *columnTo;
     Tcl_Obj *columns, **elements;
-    int seen, doit, colno, nElements, i;
+    int colno, nElements, i, fromNo, toNo;
     int set = !(add || remove || toggle);
 
-    if (GetCellFromObj(interp, tv, fromCell, 1, &itemFrom, &columnFrom) != TCL_OK) {
+    if (GetCellFromObj(interp, tv, fromCell, 1, &fromNo, &itemFrom, &columnFrom)
+	    != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (GetCellFromObj(interp, tv, toCell, 1, &itemTo, &columnTo) != TCL_OK) {
+    if (GetCellFromObj(interp, tv, toCell, 1, &toNo, &itemTo, &columnTo)
+	    != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3378,59 +3384,38 @@ static int CellSelectionRange(
      */
     columns = Tcl_NewListObj(0, 0);
     Tcl_IncrRefCount(columns);
-    seen = 0;
-    for (colno = 0; colno < tv->tree.nDisplayColumns; colno++) {
-	doit = 0;
-	if (tv->tree.displayColumns[colno] == columnFrom) {
-	    seen++;
-	    doit = 1;
-	}
-	if (tv->tree.displayColumns[colno] == columnTo) {
-	    seen++;
-	    doit = 1;
-	}
-	if (seen == 1 || doit) {
-	    Tcl_ListObjAppendElement(NULL, columns, Tcl_ObjPrintf("#%d", colno));
-	}
+    for (colno = fromNo; colno <= toNo; colno++) {
+	Tcl_ListObjAppendElement(NULL, columns, Tcl_ObjPrintf("#%d", colno));
     }
 
+    /* Set is the only operation that affects items outside its rectangle.
+     * Start with clearing out.
+     */
+    if (set) {
+	CellSelectionClear(tv);
+    }
+    
     /* Go through all items in this rectangle.
      */
-    seen = 0;
-    for (item = tv->tree.root->children; item; item=NextPreorder(item)) {
-	doit = 0;
-	if (item == itemFrom) {
-	    seen++;
-	    doit = 1;
+    for (item = itemFrom; item; item=NextPreorder(item)) {
+	if (item->selObj != NULL) {
+	    item->selObj = unshareObj(item->selObj);
+
+	    Tcl_ListObjGetElements(NULL, columns, &nElements, &elements);
+	    for (i = 0; i < nElements; ++i) {
+		SelObjChangeElement(tv, item->selObj, elements[i],
+			add, remove, toggle);
+	    }
+	} else {
+	    /* Set, add and toggle do the same thing when empty before.
+	     */
+	    if (!remove) {
+		item->selObj = columns;
+		Tcl_IncrRefCount(item->selObj);
+	    }
 	}
 	if (item == itemTo) {
-	    seen++;
-	    doit = 1;
-	}
-	if (seen == 1 || doit) {
-	    if (item->selObj != NULL && !set) {
-		item->selObj = unshareObj(item->selObj);
-
-		Tcl_ListObjGetElements(NULL, columns, &nElements, &elements);
-		for (i = 0; i < nElements; ++i) {
-		    SelObjChangeElement(tv, item->selObj, elements[i],
-			    add, remove, toggle);
-		}
-	    } else {
-		if (item->selObj != NULL) {
-		    Tcl_DecrRefCount(item->selObj);
-		}
-		if (!remove) {
-		    item->selObj = columns;
-		    Tcl_IncrRefCount(item->selObj);
-		}
-	    }
-	} else if (set) {
-	    /* set operation clears all other items */
-	    if (item->selObj != NULL) {
-		Tcl_DecrRefCount(item->selObj);
-		item->selObj = NULL;
-	    }
+	    break;
 	}
     }
     
@@ -3473,7 +3458,8 @@ static int TreeviewCellSelectionCommand(
 		    elem[0] = ItemID(tv, item);
 		    /* TODO: Normalize to #%d format?? */
 		    elem[1] = elemv[i]; 
-		    Tcl_ListObjAppendElement(NULL, result, Tcl_NewListObj(2, elem));
+		    Tcl_ListObjAppendElement(NULL, result,
+			    Tcl_NewListObj(2, elem));
 		}
 	    }
 	}
@@ -3511,7 +3497,8 @@ static int TreeviewCellSelectionCommand(
 
     /* A two element list might be a single cell */
     if (nCells == 2) {
-	if (GetCellFromObj(interp, tv, objv[3], 1, &item, &column) == TCL_OK) {
+	if (GetCellFromObj(interp, tv, objv[3], 1, NULL, &item, &column)
+		== TCL_OK) {
 	    nCells = 1;
 	    oneCell = objv[3];
 	    cells = &oneCell;
@@ -3521,7 +3508,8 @@ static int TreeviewCellSelectionCommand(
     }
     
     for (i = 0; i < nCells; i++) {
-	if (GetCellFromObj(interp, tv, cells[i], 1, &item, &column) != TCL_OK) {
+	if (GetCellFromObj(interp, tv, cells[i], 1, NULL, &item, &column)
+		!= TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
