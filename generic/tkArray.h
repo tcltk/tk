@@ -188,7 +188,7 @@ AT##_Init(AT *arr)								\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_ElemSize()									\
+AT##_ElemSize(void)									\
 {										\
     return sizeof(ElemType);							\
 }										\
@@ -399,7 +399,7 @@ typedef struct AT {								\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_ElemSize()									\
+AT##_ElemSize(void)									\
 {										\
     return sizeof(ElemType);							\
 }										\

@@ -1681,11 +1681,6 @@ CanvasWidgetCmd(
 	} else {
 	    FIRST_CANVAS_ITEM_MATCHING(objv[3], &searchPtr, goto done);
 	    if (itemPtr == NULL) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"tagOrId \"%s\" doesn't match any items",
-			Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM", NULL);
-		result = TCL_ERROR;
 		goto done;
 	    }
 	    itemPtr = itemPtr->prevPtr;
@@ -1808,11 +1803,6 @@ CanvasWidgetCmd(
 		prevPtr = itemPtr;
 	    }
 	    if (prevPtr == NULL) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"tagOrId \"%s\" doesn't match any items",
-			Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM", NULL);
-		result = TCL_ERROR;
 		goto done;
 	    }
 	}
