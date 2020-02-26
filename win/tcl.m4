@@ -694,7 +694,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		CFLAGS_WARNING="${CFLAGS_WARNING} -Wno-format"
 		;;
 	    *)
-		CFLAGS_WARNING="${CFLAGS_WARNING} -Wdeclaration-after-statement"
+		CFLAGS_WARNING="${CFLAGS_WARNING} -Wdeclaration-after-statement -Wstrict-prototypes"
 		;;
 	esac
 

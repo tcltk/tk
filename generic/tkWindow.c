@@ -124,7 +124,7 @@ static const TkCmd commands[] = {
     {"place",		Tk_PlaceObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"raise",		Tk_RaiseObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
-    {"tk",		(Tcl_ObjCmdProc *) TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
+    {"tk",		(Tcl_ObjCmdProc *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"winfo",		Tk_WinfoObjCmd,		PASSMAINWINDOW|ISSAFE},
@@ -937,7 +937,7 @@ TkCreateMainWindow(
 	    clientData = NULL;
 	}
 	if (cmdPtr->flags & USEINITPROC) {
-	    ((TkInitProc *) cmdPtr->objProc)(interp, clientData);
+	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
 	} else {
 	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);

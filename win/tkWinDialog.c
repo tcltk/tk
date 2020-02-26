@@ -1202,7 +1202,7 @@ error_return:                   /* interp should already hold error */
  *      If new dialogs are available, COM is also initialized.
  *----------------------------------------------------------------------
  */
-static int VistaFileDialogsAvailable()
+static int VistaFileDialogsAvailable(void)
 {
     HRESULT hr;
     IFileDialog *fdlgPtr = NULL;

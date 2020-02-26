@@ -792,7 +792,7 @@ GetButtonNumber(
 }
 
 static Time
-CurrentTimeInMilliSecs()
+CurrentTimeInMilliSecs(void)
 {
     Tcl_Time now;
     Tcl_GetTime(&now);

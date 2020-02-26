@@ -429,10 +429,10 @@ static void DestroyElementData(void *clientData)
 {
     ElementData *elementData = (ElementData *)clientData;
     if (elementData->info->flags & HEAP_ELEMENT) {
-	ckfree(elementData->info->statemap);
+	ckfree((char *)elementData->info->statemap);
 	ckfree((char *)elementData->info->className);
 	ckfree((char *)elementData->info->elementName);
-	ckfree(elementData->info);
+	ckfree((char *)elementData->info);
     }
     ckfree(clientData);
 }
@@ -1060,7 +1060,7 @@ static const ElementInfo ElementInfoTable[] = {
 static int
 GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
 {
-    static const char *names[] = {
+    static const char *const names[] = {
 	"SM_CXBORDER", "SM_CYBORDER", "SM_CXVSCROLL", "SM_CYVSCROLL",
 	"SM_CXHSCROLL", "SM_CYHSCROLL", "SM_CXMENUCHECK", "SM_CYMENUCHECK",
 	"SM_CXMENUSIZE", "SM_CYMENUSIZE", "SM_CXSIZE", "SM_CYSIZE", "SM_CXSMSIZE",

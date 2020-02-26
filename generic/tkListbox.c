@@ -2756,11 +2756,7 @@ GetListboxIndex(
 	    break;
 	case INDEX_END:
 	    /* "end" index */
-	    if (endIsSize) {
-		*indexPtr = listPtr->nElements;
-	    } else {
-		*indexPtr = listPtr->nElements - 1;
-	    }
+	    *indexPtr = listPtr->nElements - (endIsSize ? 0 : 1);
 	    break;
 	}
 	return TCL_OK;
@@ -2802,6 +2798,8 @@ GetListboxIndex(
     if (Tcl_GetIntFromObj(NULL, indexObj, indexPtr) == TCL_OK) {
 	if (*indexPtr < -1) {
 	    *indexPtr = -1;
+	} else if (*indexPtr > listPtr->nElements) {
+	    *indexPtr = listPtr->nElements + (endIsSize ? 1 : 0);
 	}
 	return TCL_OK;
     }
