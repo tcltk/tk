@@ -238,11 +238,11 @@ TkGetIntForIndex(Tcl_Obj *indexObj, TkSizeT end, TkSizeT *indexPtr) {
 	return TCL_ERROR;
     }
 #if TCL_MAJOR_VERSION < 9
-    if (*indexPtr < -1) {
-	*indexPtr = TCL_INDEX_NONE;
+    if ((*indexPtr < -1) || (end < -1)) {
+	return TCL_ERROR;
     }
 #endif
-    if ((*indexPtr != TCL_INDEX_NONE) && (*indexPtr > end)) {
+    if ((*indexPtr + 1) > (end + 1)) {
 	*indexPtr = end + 1;
     }
     return TCL_OK;
