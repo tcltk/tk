@@ -15,7 +15,7 @@
 #ifdef HAVE_XKBKEYCODETOKEYSYM
 #  include <X11/XKBlib.h>
 #else
-#  define XkbOpenDisplay(D,V,E,M,m,R) ((V),(E),(M),(m),(R),(NULL))
+#  define XkbOpenDisplay(D,V,E,M,m,R) ((V),(E),(M),(m),(R),(Display *)NULL)
 #endif
 
 /*
@@ -92,10 +92,11 @@ TkCreateXEventSource(void)
 
 static void
 DisplayExitHandler(
-    ClientData clientData)	/* Not used. */
+    ClientData dummy)	/* Not used. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)dummy;
 
     Tcl_DeleteEventSource(DisplaySetupProc, DisplayCheckProc, NULL);
     tsdPtr->initialized = 0;
@@ -175,7 +176,7 @@ TkpOpenDisplay(
     if (display == NULL) {
 	return NULL;
     }
-    dispPtr = ckalloc(sizeof(TkDisplay));
+    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
     dispPtr->flags |= use_xkb;
@@ -311,11 +312,12 @@ TkClipCleanup(
 
 static void
 DisplaySetupProc(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
     static Tcl_Time blockTime = { 0, 0 };
+    (void)dummy;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -443,10 +445,11 @@ TransferXEventsToTcl(
 
 static void
 DisplayCheckProc(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
+    (void)dummy;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -481,9 +484,10 @@ DisplayFileProc(
     ClientData clientData,	/* The display pointer. */
     int flags)			/* Should be TCL_READABLE. */
 {
-    TkDisplay *dispPtr = clientData;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
     Display *display = dispPtr->display;
     int numFound;
+    (void)flags;
 
     XFlush(display);
     numFound = XEventsQueued(display, QueuedAfterReading);
@@ -694,6 +698,8 @@ InstantiateIMCallback(
     XPointer     call_data)
 {
     TkDisplay    *dispPtr;
+    (void)display;
+    (void)call_data;
 
     dispPtr = (TkDisplay *) client_data;
     OpenIM(dispPtr);
@@ -708,6 +714,8 @@ DestroyIMCallback(
     XPointer    call_data)
 {
     TkDisplay   *dispPtr;
+    (void)im;
+    (void)call_data;
 
     dispPtr = (TkDisplay *) client_data;
     dispPtr->inputMethod = NULL;

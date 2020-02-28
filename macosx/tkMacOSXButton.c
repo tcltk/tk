@@ -737,6 +737,7 @@ TkMacOSXDrawButton(
     TkMacOSXDrawingContext dc;
     DrawParams *dpPtr = &mbPtr->drawParams;
     int useNewerHITools = 1;
+    (void)gc;
 
     TkMacOSXComputeButtonParams(butPtr, &mbPtr->btnkind, &mbPtr->drawinfo);
 
@@ -822,6 +823,9 @@ ButtonBackgroundDrawCB(
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
     int usehlborder = 0;
+    (void)btnbounds;
+    (void)depth;
+    (void)isColorDev;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;
@@ -873,6 +877,11 @@ ButtonContentDrawCB (
 {
     TkButton *butPtr = (TkButton *) ptr;
     Tk_Window tkwin = butPtr->tkwin;
+    (void)btnbounds;
+    (void)kind;
+    (void)drawinfo;
+    (void)depth;
+    (void)isColorDev;
 
     if (tkwin == NULL || !Tk_IsMapped(tkwin)) {
         return;

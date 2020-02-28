@@ -117,7 +117,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 int
 TkTextImageCmd(
-    register TkText *textPtr,	/* Information about text widget. */
+    TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
@@ -125,7 +125,7 @@ TkTextImageCmd(
 				 * objv[1] is "image". */
 {
     int idx;
-    register TkTextSegment *eiPtr;
+    TkTextSegment *eiPtr;
     TkTextIndex index;
     static const char *const optionStrings[] = {
 	"cget", "configure", "create", "names", NULL
@@ -242,7 +242,7 @@ TkTextImageCmd(
 	 * Create the new image segment and initialize it.
 	 */
 
-	eiPtr = ckalloc(EI_SEG_SIZE);
+	eiPtr = (TkTextSegment *)ckalloc(EI_SEG_SIZE);
 	eiPtr->typePtr = &tkTextEmbImageType;
 	eiPtr->size = 1;
 	eiPtr->body.ei.sharedTextPtr = textPtr->sharedTextPtr;
@@ -287,7 +287,7 @@ TkTextImageCmd(
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable,
 		&search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		    Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
+		    (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr),
 		    -1));
 	}
 	Tcl_SetObjResult(interp, resultObj);
@@ -389,7 +389,7 @@ EmbImageConfigure(
     len = strlen(name);
     for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable,
 	    &search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	char *haveName =
+	char *haveName = (char *)
 		Tcl_GetHashKey(&textPtr->sharedTextPtr->imageTable, hPtr);
 
 	if (strncmp(name, haveName, len) == 0) {
@@ -419,7 +419,7 @@ EmbImageConfigure(
 	    &dummy);
     Tcl_SetHashValue(hPtr, eiPtr);
     Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
-    eiPtr->body.ei.name = ckalloc(Tcl_DStringLength(&newName) + 1);
+    eiPtr->body.ei.name = (char *)ckalloc(Tcl_DStringLength(&newName) + 1);
     strcpy(eiPtr->body.ei.name, name);
     Tcl_DStringFree(&newName);
 
@@ -454,6 +454,8 @@ EmbImageDeleteProc(
 				 * up. */
 {
     Tcl_HashEntry *hPtr;
+    (void)linePtr;
+    (void)treeGone;
 
     if (eiPtr->body.ei.image != NULL) {
 	hPtr = Tcl_FindHashEntry(&eiPtr->body.ei.sharedTextPtr->imageTable,
@@ -544,12 +546,15 @@ EmbImageLayoutProc(
     TkWrapMode wrapMode,	/* Wrap mode to use for line:
 				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or
 				 * TEXT_WRAPMODE_WORD. */
-    register TkTextDispChunk *chunkPtr)
+    TkTextDispChunk *chunkPtr)
 				/* Structure to fill in with information about
 				 * this chunk. The x field has already been
 				 * set by the caller. */
 {
     int width, height;
+    (void)indexPtr;
+    (void)maxChars;
+    (void)wrapMode;
 
     if (offset != 0) {
 	Tcl_Panic("Non-zero offset in EmbImageLayoutProc");
@@ -621,6 +626,8 @@ EmbImageCheckProc(
     TkTextSegment *eiPtr,	/* Segment to check. */
     TkTextLine *linePtr)	/* Line containing segment. */
 {
+    (void)linePtr;
+
     if (eiPtr->nextPtr == NULL) {
 	Tcl_Panic("EmbImageCheckProc: embedded image is last segment in line");
     }
@@ -665,9 +672,11 @@ EmbImageDisplayProc(
     int screenY)		/* Y-coordinate in text window that
 				 * corresponds to y. */
 {
-    TkTextSegment *eiPtr = chunkPtr->clientData;
+    TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     int lineX, imageX, imageY, width, height;
     Tk_Image image;
+    (void)display;
+    (void)screenY;
 
     image = eiPtr->body.ei.image;
     if (image == NULL) {
@@ -729,8 +738,10 @@ EmbImageBboxProc(
     int *heightPtr)		/* Gets filled in with height of image, in
 				 * pixels. */
 {
-    TkTextSegment *eiPtr = chunkPtr->clientData;
+    TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     Tk_Image image;
+    (void)textPtr;
+    (void)index;
 
     image = eiPtr->body.ei.image;
     if (image != NULL) {
@@ -794,7 +805,7 @@ TkTextImageIndex(
     if (hPtr == NULL) {
 	return 0;
     }
-    eiPtr = Tcl_GetHashValue(hPtr);
+    eiPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     indexPtr->tree = textPtr->sharedTextPtr->tree;
     indexPtr->linePtr = eiPtr->body.ei.linePtr;
     indexPtr->byteIndex = TkTextSegToOffset(eiPtr, indexPtr->linePtr);
@@ -828,8 +839,14 @@ EmbImageProc(
     int imgWidth, int imgHeight)/* New dimensions of image. */
 
 {
-    TkTextSegment *eiPtr = clientData;
+    TkTextSegment *eiPtr = (TkTextSegment *)clientData;
     TkTextIndex index;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
     index.tree = eiPtr->body.ei.sharedTextPtr->tree;
     index.linePtr = eiPtr->body.ei.linePtr;

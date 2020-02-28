@@ -34,7 +34,9 @@ TkMenuButton *
 TkpCreateMenuButton(
     Tk_Window tkwin)
 {
-    return ckalloc(sizeof(TkMenuButton));
+    (void)tkwin;
+
+    return (TkMenuButton *)ckalloc(sizeof(TkMenuButton));
 }
 
 /*
@@ -58,7 +60,7 @@ void
 TkpDisplayMenuButton(
     ClientData clientData)	/* Information about widget. */
 {
-    TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
@@ -321,6 +323,7 @@ void
 TkpDestroyMenuButton(
     TkMenuButton *mbPtr)
 {
+    (void)mbPtr;
 }
 
 /*

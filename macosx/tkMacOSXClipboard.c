@@ -185,6 +185,7 @@ XSetSelectionOwner(
     Time time)			/* The current time? */
 {
     TkDisplay *dispPtr = TkGetDisplayList();
+    (void)time;
 
     if (dispPtr && selection == dispPtr->clipboardAtom) {
 	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
@@ -247,6 +248,8 @@ TkSelUpdateClipboard(
 				/* Info about the content. */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
+    (void)winPtr;
+    (void)targetPtr;
 
     changeCount = [pb addTypes:[NSArray arrayWithObject:NSStringPboardType]
 	    owner:NSApp];
@@ -301,6 +304,7 @@ void
 TkSelPropProc(
     XEvent *eventPtr)	/* X PropertyChange event. */
 {
+    (void)eventPtr;
 }
 
 /*
