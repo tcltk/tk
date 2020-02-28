@@ -409,7 +409,7 @@ LineCoords(
 
     numPoints = objc/2;
     if (linePtr->numPoints != numPoints) {
-	coordPtr = ckalloc(sizeof(double) * objc);
+	coordPtr = (double *)ckalloc(sizeof(double) * objc);
 	if (linePtr->coordPtr != NULL) {
 	    ckfree(linePtr->coordPtr);
 	}
@@ -610,6 +610,7 @@ DeleteLine(
     Display *display)		/* Display containing window for canvas. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
+    (void)canvas;
 
     Tk_DeleteOutline(display, &linePtr->outline);
     if (linePtr->coordPtr != NULL) {
@@ -843,6 +844,10 @@ DisplayLine(
     double linewidth;
     int numPoints;
     Tk_State state = itemPtr->state;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
 
     if (!linePtr->numPoints || (linePtr->outline.gc == NULL)) {
 	return;
@@ -878,7 +883,7 @@ DisplayLine(
     if (numPoints <= MAX_STATIC_POINTS) {
 	pointPtr = staticPoints;
     } else {
-	pointPtr = ckalloc(numPoints * 3 * sizeof(XPoint));
+	pointPtr = (XPoint *)ckalloc(numPoints * 3 * sizeof(XPoint));
     }
 
     if ((linePtr->smooth) && (linePtr->numPoints > 2)) {
@@ -987,7 +992,7 @@ LineInsert(
 	linePtr->coordPtr[length-2] = linePtr->lastArrowPtr[0];
 	linePtr->coordPtr[length-1] = linePtr->lastArrowPtr[1];
     }
-    newCoordPtr = ckalloc(sizeof(double) * (length + objc));
+    newCoordPtr = (double *)ckalloc(sizeof(double) * (length + objc));
     for (i=0; i<beforeThis; i++) {
 	newCoordPtr[i] = linePtr->coordPtr[i];
     }
@@ -1368,7 +1373,7 @@ LineToPoint(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    linePoints = staticSpace;
 	} else {
-	    linePoints = ckalloc(2 * numPoints * sizeof(double));
+	    linePoints = (double *)ckalloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
 		linePtr->numPoints, linePtr->splineSteps, NULL, linePoints);
@@ -1603,7 +1608,7 @@ LineToArea(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    linePoints = staticSpace;
 	} else {
-	    linePoints = ckalloc(2 * numPoints * sizeof(double));
+	    linePoints = (double *)ckalloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
 		linePtr->numPoints, linePtr->splineSteps, NULL, linePoints);
@@ -1748,6 +1753,7 @@ GetLineIndex(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     const char *string = Tcl_GetString(obj);
+    (void)canvas;
 
     if (string[0] == 'e') {
 	if (strncmp(string, "end", obj->length) == 0) {
@@ -1928,7 +1934,7 @@ RotateLine(
 	/* ARGSUSED */
 static int
 ParseArrowShape(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Window tkwin,		/* Not used. */
     const char *value,		/* Textual specification of arrow shape. */
@@ -1941,6 +1947,8 @@ ParseArrowShape(
     double a, b, c;
     int argc;
     const char **argv = NULL;
+    (void)dummy;
+    (void)tkwin;
 
     if ((size_t)offset != offsetof(LineItem, arrowShapeA)) {
 	Tcl_Panic("ParseArrowShape received bogus offset");
@@ -1997,7 +2005,7 @@ ParseArrowShape(
     /* ARGSUSED */
 static const char *
 PrintArrowShape(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     Tk_Window tkwin,		/* Window associated with linePtr's widget. */
     char *recordPtr,		/* Pointer to item record containing current
 				 * shape information. */
@@ -2006,7 +2014,10 @@ PrintArrowShape(
 				 * string here. */
 {
     LineItem *linePtr = (LineItem *) recordPtr;
-    char *buffer = ckalloc(120);
+    char *buffer = (char *)ckalloc(120);
+    (void)dummy;
+    (void)tkwin;
+    (void)offset;
 
     sprintf(buffer, "%.5g %.5g %.5g", linePtr->arrowShapeA,
 	    linePtr->arrowShapeB, linePtr->arrowShapeC);
@@ -2034,7 +2045,7 @@ PrintArrowShape(
 
 static int
 ArrowParseProc(
-    ClientData clientData,	/* some flags.*/
+    ClientData dummy,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
@@ -2043,8 +2054,9 @@ ArrowParseProc(
 {
     int c;
     size_t length;
-
-    register Arrows *arrowPtr = (Arrows *) (widgRec + offset);
+    Arrows *arrowPtr = (Arrows *) (widgRec + offset);
+    (void)dummy;
+    (void)tkwin;
 
     if (value == NULL || *value == 0) {
 	*arrowPtr = ARROWS_NONE;
@@ -2102,7 +2114,7 @@ ArrowParseProc(
 
 static const char *
 ArrowPrintProc(
-    ClientData clientData,	/* Ignored. */
+    ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
@@ -2110,7 +2122,10 @@ ArrowPrintProc(
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register Arrows *arrowPtr = (Arrows *) (widgRec + offset);
+    Arrows *arrowPtr = (Arrows *) (widgRec + offset);
+    (void)dummy;
+    (void)tkwin;
+    (void)freeProcPtr;
 
     switch (*arrowPtr) {
     case ARROWS_FIRST:
@@ -2205,7 +2220,7 @@ ConfigureArrows(
     if (linePtr->arrow != ARROWS_LAST) {
 	poly = linePtr->firstArrowPtr;
 	if (poly == NULL) {
-	    poly = ckalloc(2 * PTS_IN_ARROW * sizeof(double));
+	    poly = (double *)ckalloc(2 * PTS_IN_ARROW * sizeof(double));
 	    poly[0] = poly[10] = linePtr->coordPtr[0];
 	    poly[1] = poly[11] = linePtr->coordPtr[1];
 	    linePtr->firstArrowPtr = poly;
@@ -2249,7 +2264,7 @@ ConfigureArrows(
 	coordPtr = linePtr->coordPtr + 2*(linePtr->numPoints-2);
 	poly = linePtr->lastArrowPtr;
 	if (poly == NULL) {
-	    poly = ckalloc(2 * PTS_IN_ARROW * sizeof(double));
+	    poly = (double *)ckalloc(2 * PTS_IN_ARROW * sizeof(double));
 	    poly[0] = poly[10] = coordPtr[2];
 	    poly[1] = poly[11] = coordPtr[3];
 	    linePtr->lastArrowPtr = poly;
@@ -2318,6 +2333,7 @@ LineToPostscript(
     Tk_State state = itemPtr->state;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
+    (void)prepass;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -2418,7 +2434,7 @@ LineToPostscript(
 		linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
 	pointPtr = staticPoints;
 	if (numPoints > MAX_STATIC_POINTS) {
-	    pointPtr = ckalloc(numPoints * 2 * sizeof(double));
+	    pointPtr = (double *)ckalloc(numPoints * 2 * sizeof(double));
 	}
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
 		linePtr->numPoints, linePtr->splineSteps, NULL, pointPtr);

@@ -579,6 +579,7 @@ DeleteRectOval(
     Display *display)		/* Display containing window for canvas. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
+    (void)canvas;
 
     Tk_DeleteOutline(display, &(rectOvalPtr->outline));
     if (rectOvalPtr->fillColor != NULL) {
@@ -752,6 +753,10 @@ DisplayRectOval(
     short x1, y1, x2, y2;
     Pixmap fillStipple;
     Tk_State state = itemPtr->state;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
 
     /*
      * Compute the screen coordinates of the bounding box for the item. Make
@@ -1446,6 +1451,7 @@ RectOvalToPostscript(
     Pixmap fillStipple;
     Tk_State state = itemPtr->state;
     Tcl_InterpState interpState;
+    (void)prepass;
 
     y1 = Tk_CanvasPsY(canvas, rectOvalPtr->bbox[1]);
     y2 = Tk_CanvasPsY(canvas, rectOvalPtr->bbox[3]);

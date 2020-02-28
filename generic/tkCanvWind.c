@@ -408,6 +408,7 @@ DeleteWinItem(
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(canvas);
+    (void)display;
 
     if (winItemPtr->tkwin != NULL) {
 	Tk_DeleteEventHandler(winItemPtr->tkwin, StructureNotifyMask,
@@ -570,6 +571,11 @@ DisplayWinItem(
     short x, y;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(canvas);
     Tk_State state = itemPtr->state;
+    (void)display;
+    (void)regionX;
+    (void)regionY;
+    (void)regionWidth;
+    (void)regionHeight;
 
     if (winItemPtr->tkwin == NULL) {
 	return;
@@ -658,6 +664,7 @@ WinItemToPoint(
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
+    (void)canvas;
 
     x1 = winItemPtr->header.x1;
     y1 = winItemPtr->header.y1;
@@ -715,6 +722,7 @@ WinItemToArea(
 				 * area.  */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
+    (void)canvas;
 
     if ((rectPtr[2] <= winItemPtr->header.x1)
 	    || (rectPtr[0] >= winItemPtr->header.x2)
@@ -751,9 +759,12 @@ WinItemToArea(
 #ifdef X_GetImage
 static int
 xerrorhandler(
-    ClientData clientData,
+    ClientData dummy,
     XErrorEvent *e)
 {
+    (void)dummy;
+    (void)e;
+
     return 0;
 }
 #endif /* X_GetImage */
@@ -1044,7 +1055,7 @@ WinItemStructureProc(
     ClientData clientData,	/* Pointer to record describing window item. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    WindowItem *winItemPtr = clientData;
+    WindowItem *winItemPtr = (WindowItem *)clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	winItemPtr->tkwin = NULL;
@@ -1074,7 +1085,8 @@ WinItemRequestProc(
     ClientData clientData,	/* Pointer to record for window item. */
     Tk_Window tkwin)		/* Window that changed its desired size. */
 {
-    WindowItem *winItemPtr = clientData;
+    WindowItem *winItemPtr = (WindowItem *)clientData;
+    (void)tkwin;
 
     ComputeWindowBbox(winItemPtr->canvas, winItemPtr);
 
@@ -1111,8 +1123,9 @@ WinItemLostSlaveProc(
 				 * was stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    WindowItem *winItemPtr = clientData;
+    WindowItem *winItemPtr = (WindowItem *)clientData;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(winItemPtr->canvas);
+    (void)tkwin;
 
     Tk_DeleteEventHandler(winItemPtr->tkwin, StructureNotifyMask,
 	    WinItemStructureProc, winItemPtr);

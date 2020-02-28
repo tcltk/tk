@@ -87,6 +87,7 @@ void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
+    (void)mainPtr;
 }
 
 static XftFont *
@@ -272,7 +273,7 @@ InitFont(
     int i, iWidth;
 
     if (!fontPtr) {
-	fontPtr = ckalloc(sizeof(UnixFtFont));
+	fontPtr = (UnixFtFont *)ckalloc(sizeof(UnixFtFont));
     }
 
     FcConfigSubstitute(0, pattern, FcMatchPattern);
@@ -290,7 +291,7 @@ InitFont(
 
     fontPtr->fontset = set;
     fontPtr->pattern = pattern;
-    fontPtr->faces = ckalloc(set->nfont * sizeof(UnixFtFace));
+    fontPtr->faces = (UnixFtFace *)ckalloc(set->nfont * sizeof(UnixFtFace));
     fontPtr->nfaces = set->nfont;
 
     /*
@@ -639,6 +640,7 @@ TkpGetFontAttrsForChar(
 				/* UCS-4 character to map */
     XftFont *ftFont = GetFont(fontPtr, ucs4, 0.0);
 				/* Actual font used to render the character */
+    (void)tkwin;
 
     GetTkFontAttributes(ftFont, faPtr);
     faPtr->underline = fontPtr->font.fa.underline;
@@ -898,7 +900,7 @@ Tk_DrawChars(
     }
     XGetGCValues(display, gc, GCForeground, &values);
     xftcolor = LookUpColor(display, fontPtr, values.foreground);
-    if (tsdPtr->clipRegion != None) {
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
     nspec = 0;
@@ -948,7 +950,7 @@ Tk_DrawChars(
     }
 
   doUnderlineStrikeout:
-    if (tsdPtr->clipRegion != None) {
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, NULL);
     }
     if (fontPtr->font.fa.underline != 0) {
@@ -1142,7 +1144,7 @@ TkDrawAngledChars(
     }
     XGetGCValues(display, gc, GCForeground, &values);
     xftcolor = LookUpColor(display, fontPtr, values.foreground);
-    if (tsdPtr->clipRegion != None) {
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, tsdPtr->clipRegion);
     }
     nspec = 0;
@@ -1194,7 +1196,7 @@ TkDrawAngledChars(
 #endif /* XFT_HAS_FIXED_ROTATED_PLACEMENT */
 
   doUnderlineStrikeout:
-    if (tsdPtr->clipRegion != None) {
+    if (tsdPtr->clipRegion != NULL) {
 	XftDrawSetClip(fontPtr->ftDraw, NULL);
     }
     if (fontPtr->font.fa.underline || fontPtr->font.fa.overstrike) {

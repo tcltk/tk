@@ -37,8 +37,10 @@ static int		GetLibraryPath(Tcl_Interp *interp);
 
 int
 TkpInit(
-    Tcl_Interp *interp)
+    Tcl_Interp *dummy)
 {
+    (void)dummy;
+
     TkCreateXEventSource();
     GetLibraryPath(interp);
     return TCL_OK;

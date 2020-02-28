@@ -266,10 +266,11 @@ static int		UtfToUcs2beProc(ClientData clientData, const char*src,
 
 static void
 FontPkgCleanup(
-    ClientData clientData)
+    ClientData dummy)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)dummy;
 
     if (tsdPtr->controlFamily.encoding != NULL) {
 	FontFamily *familyPtr = &tsdPtr->controlFamily;
@@ -307,11 +308,12 @@ void
 TkpFontPkgInit(
     TkMainInfo *mainPtr)	/* The application being created. */
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     SubFont dummy;
     int i;
     Tcl_Encoding ucs2;
+    (void)mainPtr;
 
     if (tsdPtr->controlFamily.encoding == NULL) {
 
@@ -361,7 +363,7 @@ TkpFontPkgInit(
 
 static int
 ControlUtfProc(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     const char *src,		/* Source string in UTF-8. */
     int srcLen,			/* Source string length in bytes. */
     int flags,			/* Conversion control flags. */
@@ -394,6 +396,9 @@ ControlUtfProc(
 	0, 0, 0, 0, 0, 0, 0,
 	'a', 'b', 't', 'n', 'v', 'f', 'r'
     };
+    (void)dummy;
+    (void)flags;
+    (void)statePtr;
 
     result = TCL_OK;
 
@@ -459,7 +464,7 @@ ControlUtfProc(
 
 static int
 Ucs2beToUtfProc(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     const char *src,		/* Source string in Unicode. */
     int srcLen,			/* Source string length in bytes. */
     int flags,			/* Conversion control flags. */
@@ -488,6 +493,8 @@ Ucs2beToUtfProc(
     const char *dstEnd, *dstStart;
     int result, numChars, charLimit = INT_MAX;
     unsigned short ch;
+    (void)dummy;
+    (void)statePtr;
 
     if (flags & TCL_ENCODING_CHAR_LIMIT) {
 	charLimit = *dstCharsPtr;
@@ -555,7 +562,7 @@ Ucs2beToUtfProc(
 
 static int
 UtfToUcs2beProc(
-    ClientData clientData,	/* TableEncodingData that specifies
+    ClientData dummy,	/* TableEncodingData that specifies
 				 * encoding. */
     const char *src,		/* Source string in UTF-8. */
     int srcLen,			/* Source string length in bytes. */
@@ -584,6 +591,8 @@ UtfToUcs2beProc(
     const char *srcStart, *srcEnd, *srcClose, *dstStart, *dstEnd;
     int result, numChars;
     int ch;
+    (void)dummy;
+    (void)statePtr;
 
     srcStart = src;
     srcEnd = src + srcLen;
@@ -719,7 +728,7 @@ TkpGetNativeFont(
 	}
 	fontStructPtr = CreateClosestFont(tkwin, &fa.fa, &fa.xa);
     }
-    fontPtr = ckalloc(sizeof(UnixFont));
+    fontPtr = (UnixFont *)ckalloc(sizeof(UnixFont));
     InitFont(tkwin, fontStructPtr, fontPtr);
 
     return (TkFont *) fontPtr;
@@ -775,7 +784,7 @@ TkpGetFontFromAttributes(
 
     fontPtr = (UnixFont *) tkFontPtr;
     if (fontPtr == NULL) {
-	fontPtr = ckalloc(sizeof(UnixFont));
+	fontPtr = (UnixFont *)ckalloc(sizeof(UnixFont));
     } else {
 	ReleaseFont(fontPtr);
     }
@@ -838,7 +847,7 @@ TkpGetFontFamilies(
     Tcl_Interp *interp,		/* Interp to hold result. */
     Tk_Window tkwin)		/* For display to query. */
 {
-    int i, new, numNames;
+    int i, isNew, numNames;
     const char *family, **nameList;
     Tcl_HashTable familyTable;
     Tcl_HashEntry *hPtr;
@@ -867,14 +876,14 @@ TkpGetFontFamilies(
 	    continue;			/* See comment above. */
 	}
 	*familyEnd = '\0';
-	Tcl_CreateHashEntry(&familyTable, family, &new);
+	Tcl_CreateHashEntry(&familyTable, family, &isNew);
     }
     XFreeFontNames(nameList);
 
     hPtr = Tcl_FirstHashEntry(&familyTable, &search);
     resultPtr = Tcl_NewObj();
     while (hPtr != NULL) {
-	strPtr = Tcl_NewStringObj(Tcl_GetHashKey(&familyTable, hPtr), -1);
+	strPtr = Tcl_NewStringObj((const char *)Tcl_GetHashKey(&familyTable, hPtr), -1);
 	Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
 	hPtr = Tcl_NextHashEntry(&search);
     }
@@ -1574,7 +1583,7 @@ InitFont(
     UnixFont *fontPtr)		/* Filled with information constructed from
 				 * the above arguments. */
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     unsigned long value;
     int minHi, maxHi, minLo, maxLo, fixed, width, limit, i, n;
@@ -1827,8 +1836,9 @@ AllocFontFamily(
     FontFamily *familyPtr;
     FontAttributes fa;
     Tcl_Encoding encoding;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)base;
 
     GetFontAttributes(display, fontStructPtr, &fa);
     encoding = Tcl_GetEncoding(NULL, GetEncodingAlias(fa.xa.charset));
@@ -1846,7 +1856,7 @@ AllocFontFamily(
 	}
     }
 
-    familyPtr = ckalloc(sizeof(FontFamily));
+    familyPtr = (FontFamily *)ckalloc(sizeof(FontFamily));
     memset(familyPtr, 0, sizeof(FontFamily));
     familyPtr->nextPtr = tsdPtr->fontFamilyList;
     tsdPtr->fontFamilyList = familyPtr;
@@ -1903,7 +1913,7 @@ FreeFontFamily(
     FontFamily *familyPtr)	/* The FontFamily to delete. */
 {
     FontFamily **familyPtrPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     int i;
 
@@ -2216,10 +2226,10 @@ FontMapLoadPage(
     Tcl_Encoding encoding;
     XFontStruct *fontStructPtr;
     XCharStruct *widths;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    subFontPtr->fontMap[row] = ckalloc(FONTMAP_BITSPERPAGE / 8);
+    subFontPtr->fontMap[row] = (char *)ckalloc(FONTMAP_BITSPERPAGE / 8);
     memset(subFontPtr->fontMap[row], 0, FONTMAP_BITSPERPAGE / 8);
 
     if (subFontPtr->familyPtr == &tsdPtr->controlFamily) {
@@ -2551,7 +2561,7 @@ CanUseFallback(
 	     * make a copy.
 	     */
 
-	    nameList = ckalloc(numNames * sizeof(char *));
+	    nameList = (char **)ckalloc(numNames * sizeof(char *));
 	    memcpy(nameList, nameListOrig, numNames * sizeof(char *));
 	}
 	nameList[nameIdx] = NULL;
@@ -2596,7 +2606,7 @@ CanUseFallback(
     if (fontPtr->numSubFonts >= SUBFONT_SPACE) {
 	SubFont *newPtr;
 
-	newPtr = ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
+	newPtr = (SubFont *)ckalloc(sizeof(SubFont) * (fontPtr->numSubFonts + 1));
 	memcpy(newPtr, fontPtr->subFontArray,
 		fontPtr->numSubFonts * sizeof(SubFont));
 	if (fixSubFontPtrPtr != NULL) {
