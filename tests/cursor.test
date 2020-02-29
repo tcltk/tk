@@ -47,7 +47,24 @@ proc setWincur {wincurName} {
 	set wincur(file) [makeFile $wincur(data_binary) "test file.cur" $wincur(dir)]
 }
 
-
+# For ensuring that we don't leak memory
+testConstraint memory [llength [info commands memory]]
+if {[testConstraint memory]} {
+    proc getbytes {} {
+	set lines [split [memory info] \n]
+	return [lindex $lines 3 3]
+    }
+    proc leaktest {script {iterations 3}} {
+	set end [getbytes]
+	for {set i 0} {$i < $iterations} {incr i} {
+	    uplevel 1 $script
+	    set tmp $end
+	    set end [getbytes]
+	}
+	return [expr {$end - $tmp}]
+    }
+}
+
 test cursor-1.1 {Tk_AllocCursorFromObj - converting internal reps} -constraints {
     testcursor
 } -body {
@@ -839,8 +856,55 @@ test cursor-7.9 {check Windows cursor wait} -constraints win -setup {
 	destroy .b
 } -result {}
 
+set badcursor {gorp gorp gorp gorp gorp}
+test cursor-8.1 {basic cursor parsing} {
+    tk::ParseCursor watch
+} {}
+test cursor-8.2 {basic cursor parsing} -returnCodes error -body {
+    tk::ParseCursor $badcursor
+} -result {bad cursor spec "gorp gorp gorp gorp gorp"}
+test cursor-8.3 {basic cursor parsing} -returnCodes error -body {
+    tk::ParseCursor {}
+} -result {bad cursor spec ""}
+test cursor-8.4 {cursor parsing: memory cleanliness} memory {
+    leaktest {
+	tk::ParseCursor watch
+    }
+} 0
+test cursor-8.5 {cursor parsing: memory cleanliness} memory {
+    leaktest {
+	catch {
+	    tk::ParseCursor $badcursor
+	}
+    }
+} 0
+test cursor-8.6 {evil poke-under-the-covers of cursor parsing} -setup {
+    set cursor [join {w a t c h} ""]
+} -body {
+    tk::ParseCursor $cursor
+    tcl::unsupported::representation $cursor
+} -match glob -result {value is a cursor *}
+test cursor-8.7 {evil poke-under-the-covers of cursor parsing} -setup {
+    unset -nocomplain a b
+    set cursor [join {a r r o w} ""]
+    frame .cursortest -cursor $cursor
+    pack .cursortest
+    update
+} -body {
+    set a [tk::ParseCursor $cursor; tcl::unsupported::representation $cursor]
+    set b [tk::ParseCursor $cursor; tcl::unsupported::representation $cursor]
+    list $a [lindex {!= ==} [string equal $a $b]] $b
+} -match glob -cleanup {
+    unset -nocomplain cursor
+    destroy .cursortest
+} -result {{value is a cursor *} == {value is a cursor *}}
+
 # -------------------------------------------------------------------------
 
 # cleanup
 cleanupTests
 return
+
+# Local Variables:
+# mode: tcl
+# End:

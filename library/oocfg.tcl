@@ -640,14 +640,24 @@ namespace eval ::tk {
     #	The class of types of options. Abstract because concrete subclasses
     #	define how the validation is done.
     #
+    #	Provides two variables to subclasses that they may use:
+    #	  * TypeName - the name of the type, cleaned up for display to users
+    #	    in error messages.
+    #	  * ErrorCode - a list describing the standard error code for problems
+    #	    with parsing this type
+    #
     # ----------------------------------------------------------------------
 
     ::oo::abstract create optiontype {
 	private variable def name
+	variable TypeName ErrorCode
 
 	constructor {default} {
 	    set def $default
 	    set name [namespace tail [self]]
+	    # Ugly hack! Trims *one* leading 'z' from the type name
+	    set TypeName [regsub {^z} $name ""]
+	    set ErrorCode [list TK VALUE [string toupper $TypeName]]
 	    set map [namespace ensemble configure ::tk::OptionType -map]
 	    dict set map $name [self]
 	    namespace ensemble configure ::tk::OptionType -map $map
@@ -741,19 +751,21 @@ namespace eval ::tk {
 
     ::oo::class create BoolTestType {
 	superclass optiontype
-	private variable type errorcode
+	private variable
+	variable TypeName ErrorCode
 
-	constructor {default test} {
+	constructor {default test {normalizer {}}} {
 	    next $default
-	    set type [namespace tail [self]]
-	    set errorcode [list TK VALUE [string toupper $type]]
 	    ::oo::objdefine [self] forward Validate {*}$test
+	    if {$normalizer ne ""} {
+		::oo::objdefine [self] method Normalize {value} $normalizer
+	    }
 	}
 
 	method validate {value} {
 	    if {![my Validate $value]} {
-		return -code error -errorcode $errorcode \
-		    "invalid $type value \"$value\""
+		return -code error -errorcode $ErrorCode \
+		    "invalid $TypeName value \"$value\""
 	    }
 	    try {
 		return [my Normalize $value]
@@ -769,23 +781,26 @@ namespace eval ::tk {
 
     ::oo::class create ThrowTestType {
 	superclass optiontype
+	variable ErrorCode
 
-	constructor {default test} {
+	constructor {default test {normalizer {}}} {
 	    next $default
 	    ::oo::objdefine [self] method Validate value $test
+	    if {$normalizer ne ""} {
+		::oo::objdefine [self] method Normalize {value} $normalizer
+	    }
 	}
 
 	method validate {value} {
 	    try {
 		my Validate $value
+	    } on error {msg} {
+		return -code error -errorcode $ErrorCode $msg
+	    }
+	    try {
 		return [my Normalize $value]
 	    } on error {msg opt} {
-		set type [namespace tail [self]]
-		set opt [dict merge \
-		    [dict create -errorcode [list TK VALUE $type $value]] \
-		    $opt]
-		set code [dict get $opt -errorcode]
-		return -code error -errorcode $code $msg
+		return -code error -errorcode [dict get $opt -errorcode] $msg
 	    }
 	}
 
@@ -797,17 +812,20 @@ namespace eval ::tk {
     ::oo::class create TableType {
 	superclass optiontype
 
-	private variable Table Type Error
+	private variable Table Error
+	variable TypeName ErrorCode
 	constructor {default table} {
+	    if {$default ni $table} {
+		# This requires that the default be not an abbreviation
+		error "default value \"$default\" not in table of licit values"
+	    }
 	    next $default
 	    set Table $table
-	    set Type [namespace tail [self]]
-	    set Error [list -level 1 -errorcode [list \
-		    TK VALUE [string toupper $Type]]]
+	    set Error [list -level 1 -errorcode $ErrorCode]
 	}
 
 	method validate {value} {
-	    ::tcl::prefix match -message $Type -error $Error $Table $value
+	    ::tcl::prefix match -message $TypeName -error $Error $Table $value
 	}
     }
 
@@ -820,27 +838,40 @@ namespace eval ::tk {
     # Install the types: those with a boolean test
     optiontype createbool boolean "false" {
 	string is boolean -strict
-    }
+    } {lindex {true false} [expr {!$value}]}
     optiontype createbool zboolean "" {
 	string is boolean
+    } {
+	if {$value ne ""} {
+	    lindex {true false} [expr {!$value}]
+	}
     }
     optiontype createbool integer "0" {
 	string is entier -strict
-    }
+    } {expr {[string trim $value] + 0}}
     optiontype createbool zinteger "" {
 	string is entier
+    } {
+	set value [string trim $value]
+	expr {$value eq "" ? "" : $value + 0}
     }
     optiontype createbool float "0.0" {
 	string is double -strict
-    }
+    } {expr {[string trim $value] + 0.0}}
     optiontype createbool zfloat "" {
 	string is double
+    } {
+	set value [string trim $value]
+	expr {$value eq "" ? "" : $value + 0.0}
     }
     optiontype createbool list "" {
 	string is list
-    }
+    } {list {*}$value}
     optiontype createbool dict "" {
 	string is dict
+    } {dict merge {} $value}
+    optiontype createbool window "" {
+	apply {value {expr {$value eq "" || [winfo exists $value]}}}
     }
 
     # Install the types: those with an erroring test
@@ -848,7 +879,7 @@ namespace eval ::tk {
 	# Special case; everything valid
 	method validate value {return $value}
     }
-    optiontype createthrow distance "0px" {
+    optiontype createthrow distance "0p" {
 	winfo fpixels . $value
     }
     optiontype createthrow image "" {
@@ -856,22 +887,37 @@ namespace eval ::tk {
 	    image type $value
 	}
     }
-    optiontype createthrow color "black" {
+    optiontype createthrow color "#000000" {
 	winfo rgb . $value
+    } {
+	lassign [winfo rgb . $value] r g b
+	format "#%02x%02x%02x" \
+	    [expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]
     }
     optiontype createthrow zcolor "" {
 	if {$value ne ""} {
 	    winfo rgb . $value
+	}
+    } {
+	if {$value ne ""} {
+	    lassign [winfo rgb . $value] r g b
+	    format "#%02x%02x%02x" \
+		[expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]
 	}
     }
     optiontype createthrow font "TkDefaultFont" {
 	# Cheapest property of fonts to read
 	font metrics $value -fixed
     }
+    optiontype createthrow cursor "" {
+	if {$value ne ""} {
+	    ::tk::ParseCursor $value
+	}
+    }
 
     # Install the types: those with an element table
     optiontype createtable anchor "center" {
-	n ne e se e sw w nw center
+	n ne e se s sw w nw center
     }
     optiontype createtable justify "left" {
 	center left right

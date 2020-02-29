@@ -280,7 +280,7 @@ test oocfg-3.3a {tk::configurable: option errors} -returnCodes error -body {
     tk::configurable create Gorp {
 	option foo -type gorp
     }
-} -match glob -result {*: must be anchor, boolean, color, dict, distance, float, font, image, integer, justify, list, relief, string, zboolean, zcolor, zfloat, or zinteger}
+} -match glob -result {*: must be anchor, boolean, color, cursor, dict, distance, float, font, image, integer, justify, list, relief, string, window, zboolean, zcolor, zfloat, or zinteger}
 test oocfg-3.3b {tk::configurable: option errors} -setup {
     unset -nocomplain ot
 } -body {
@@ -529,7 +529,7 @@ test oocfg-4.12 {tk::configurable: configure behaviour: errors} -setup {
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
     cfgsupport clean
-} -result {{bad screen distance "gorp"} {TK VALUE SCREEN_DISTANCE} {bad screen distance "gorp"
+} -result {{bad screen distance "gorp"} {TK VALUE DISTANCE} {bad screen distance "gorp"
     while executing
 "$gorp configure -a gorp"}}
 test oocfg-4.13 {tk::configurable: configure behaviour: errors} -setup {
@@ -546,7 +546,7 @@ test oocfg-4.13 {tk::configurable: configure behaviour: errors} -setup {
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
     cfgsupport clean
-} -result {{unknown color name "@@@gorp@@@"} {TK LOOKUP COLOR @@@gorp@@@} {unknown color name "@@@gorp@@@"
+} -result {{unknown color name "@@@gorp@@@"} {TK VALUE COLOR} {unknown color name "@@@gorp@@@"
     while executing
 "$gorp configure -a @@@gorp@@@"}}
 test oocfg-4.14 {tk::configurable: configure behaviour: errors} -setup {
@@ -564,7 +564,7 @@ test oocfg-4.14 {tk::configurable: configure behaviour: errors} -setup {
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
     cfgsupport clean
-} -result {{font "gorp {}gorp" doesn't exist} {TK LOOKUP FONT {gorp {}gorp}} {font "gorp {}gorp" doesn't exist
+} -result {{font "gorp {}gorp" doesn't exist} {TK VALUE FONT} {font "gorp {}gorp" doesn't exist
     while executing
 "$gorp configure -a "gorp {}gorp""}}
 test oocfg-4.15 {tk::configurable: configure behaviour: errors} -setup {
@@ -581,7 +581,7 @@ test oocfg-4.15 {tk::configurable: configure behaviour: errors} -setup {
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
     cfgsupport clean
-} -result {{image "@@@gorp@@@" doesn't exist} {TK LOOKUP IMAGE @@@gorp@@@} {image "@@@gorp@@@" doesn't exist
+} -result {{image "@@@gorp@@@" doesn't exist} {TK VALUE IMAGE} {image "@@@gorp@@@" doesn't exist
     while executing
 "$gorp configure -a @@@gorp@@@"}}
 test oocfg-4.16 {tk::configurable: configure behaviour: errors} -setup {
@@ -778,7 +778,7 @@ test oocfg-5.12 {tk::configurable: Initialise behaviour: errors} -setup {
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
     cfgsupport clean
-} -result {{bad screen distance "gorp"} {TK VALUE SCREEN_DISTANCE} {bad screen distance "gorp"
+} -result {{bad screen distance "gorp"} {TK VALUE DISTANCE} {bad screen distance "gorp"
     while executing
 "my Initialise $w {*}$args"
     (class "::cfgsupport" constructor line 3)
@@ -797,7 +797,7 @@ test oocfg-5.13 {tk::configurable: Initialise behaviour: errors} -setup {
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
     cfgsupport clean
-} -result {{unknown color name "@@@gorp@@@"} {TK LOOKUP COLOR @@@gorp@@@} {unknown color name "@@@gorp@@@"
+} -result {{unknown color name "@@@gorp@@@"} {TK VALUE COLOR} {unknown color name "@@@gorp@@@"
     while executing
 "my Initialise $w {*}$args"
     (class "::cfgsupport" constructor line 3)
@@ -817,7 +817,7 @@ test oocfg-5.14 {tk::configurable: Initialise behaviour: errors} -setup {
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
     cfgsupport clean
-} -result {{font "gorp {}gorp" doesn't exist} {TK LOOKUP FONT {gorp {}gorp}} {font "gorp {}gorp" doesn't exist
+} -result {{font "gorp {}gorp" doesn't exist} {TK VALUE FONT} {font "gorp {}gorp" doesn't exist
     while executing
 "my Initialise $w {*}$args"
     (class "::cfgsupport" constructor line 3)
@@ -836,7 +836,7 @@ test oocfg-5.15 {tk::configurable: Initialise behaviour: errors} -setup {
     list $msg [dict get $opt -errorcode] [dict get $opt -errorinfo]
 } -cleanup {
     cfgsupport clean
-} -result {{image "@@@gorp@@@" doesn't exist} {TK LOOKUP IMAGE @@@gorp@@@} {image "@@@gorp@@@" doesn't exist
+} -result {{image "@@@gorp@@@" doesn't exist} {TK VALUE IMAGE} {image "@@@gorp@@@" doesn't exist
     while executing
 "my Initialise $w {*}$args"
     (class "::cfgsupport" constructor line 3)
@@ -1100,6 +1100,237 @@ test oocfg-9.2 {tk::configurable: checkpointing} -body {
 } -cleanup {
     cfgsupport clean
 } -result {{-bar -foo} {foo 0 bar 0} 1 {{-bar bar Bar 0 0} {-foo foo Foo 0 0}} {} {foo 1 bar 2} {} {{-bar bar Bar 0 pqr} {-foo foo Foo 0 xyz}}}
+
+test oocfg-10.1 {standard type list} -returnCodes error -body {
+    tk::OptionType ?
+} -result {unknown or ambiguous subcommand "?": must be anchor, boolean, color, cursor, dict, distance, float, font, image, integer, justify, list, relief, string, window, zboolean, zcolor, zfloat, or zinteger}
+test oocfg-10.2 {types: registration and deregistration} -match glob -body {
+    catch {tk::OptionType ?} msg1
+    set gorp [tk::optiontype createbool gorp "abc" {apply {x {
+	expr {[string length $x] % 2}
+    }}}]
+    catch {tk::OptionType ?} msg2
+    $gorp destroy
+    catch {tk::OptionType ?} msg3
+    list $msg1 | $msg2 | $msg3
+} -result {{*font, image*} | {*font, gorp, image*} | {*font, image*}}
+
+test oocfg-11.1 {types: anchor} {
+    tk::OptionType anchor default
+} center
+test oocfg-11.2 {types: anchor} {
+    tk::OptionType anchor validate c
+} center
+test oocfg-11.3 {types: anchor} -returnCodes error -body {
+    tk::OptionType anchor validate gorp
+} -result {bad anchor "gorp": must be n, ne, e, se, s, sw, w, nw, or center}
+
+test oocfg-12.1 {types: boolean} {
+    tk::OptionType boolean default
+} false
+test oocfg-12.2 {types: boolean} {
+    tk::OptionType boolean validate 0
+} false
+test oocfg-12.3 {types: boolean} -returnCodes error -body {
+    tk::OptionType boolean validate gorp
+} -result {invalid boolean value "gorp"}
+
+test oocfg-13.1 {types: color} {
+    tk::OptionType color default
+} "#000000"
+test oocfg-13.2 {types: color} {
+    tk::OptionType color validate green
+} "#008000"
+test oocfg-13.3 {types: color} -returnCodes error -body {
+    tk::OptionType color validate gorp
+} -result {unknown color name "gorp"}
+
+test oocfg-14.1 {types: cursor} {
+    tk::OptionType cursor default
+} {}
+test oocfg-14.2 {types: cursor} {
+    tk::OptionType cursor validate watch
+} watch
+test oocfg-14.3 {types: cursor} {
+    tk::OptionType cursor validate ""
+} ""
+test oocfg-14.4 {types: cursor} -returnCodes error -body {
+    tk::OptionType cursor validate {gorp gorp gorp gorp gorp}
+} -result {bad cursor spec "gorp gorp gorp gorp gorp"}
+
+test oocfg-15.1 {types: dict} {
+    tk::OptionType dict default
+} {}
+test oocfg-15.2 {types: color} {
+    tk::OptionType dict validate { a b a c x y x z }
+} {a c x z}
+test oocfg-15.3 {types: color} -returnCodes error -body {
+    tk::OptionType dict validate gorp
+} -result {invalid dict value "gorp"}
+
+test oocfg-16.1 {types: distance} {
+    tk::OptionType distance default
+} 0p
+test oocfg-16.2 {types: distance} {
+    tk::OptionType distance validate 123p
+} 123p
+test oocfg-16.3 {types: distance} -returnCodes error -body {
+    tk::OptionType distance validate gorp
+} -result {bad screen distance "gorp"}
+
+test oocfg-17.1 {types: float} {
+    tk::OptionType float default
+} 0.0
+test oocfg-17.2 {types: float} {
+    tk::OptionType float validate 1.2e3
+} 1200.0
+test oocfg-17.3 {types: float} -returnCodes error -body {
+    tk::OptionType float validate gorp
+} -result {invalid float value "gorp"}
+
+test oocfg-18.1 {types: font} {
+    tk::OptionType font default
+} TkDefaultFont
+test oocfg-18.2 {types: font} {
+    tk::OptionType font validate fixed
+} fixed
+test oocfg-18.3 {types: font} -returnCodes error -body {
+    tk::OptionType font validate "gorp {}gorp"
+} -result {font "gorp {}gorp" doesn't exist}
+
+test oocfg-19.1 {types: image} {
+    tk::OptionType image default
+} {}
+test oocfg-19.2 {types: image} -setup {
+    image create photo testingImage
+} -body {
+    tk::OptionType image validate testingImage
+} -cleanup {
+    image delete testingImage
+} -result testingImage
+test oocfg-19.3 {types: image} {
+    tk::OptionType image validate {}
+} {}
+test oocfg-19.4 {types: image} -returnCodes error -body {
+    tk::OptionType image validate gorp
+} -result {image "gorp" doesn't exist}
+
+test oocfg-20.1 {types: integer} {
+    tk::OptionType integer default
+} 0
+test oocfg-20.2 {types: integer} {
+    tk::OptionType integer validate 0xff
+} 255
+test oocfg-20.3 {types: integer} -returnCodes error -body {
+    tk::OptionType integer validate gorp
+} -result {invalid integer value "gorp"}
+
+test oocfg-21.1 {types: justify} {
+    tk::OptionType justify default
+} left
+test oocfg-21.2 {types: justify} {
+    tk::OptionType justify validate r
+} right
+test oocfg-21.3 {types: justify} -returnCodes error -body {
+    tk::OptionType justify validate gorp
+} -result {bad justify "gorp": must be center, left, or right}
+
+test oocfg-22.1 {types: list} {
+    tk::OptionType list default
+} {}
+test oocfg-22.2 {types: list} {
+    tk::OptionType list validate {
+	a
+	b
+	c
+    }
+} {a b c}
+test oocfg-22.3 {types: list} -returnCodes error -body {
+    tk::OptionType list validate "{}gorp"
+} -result {invalid list value "{}gorp"}
+
+test oocfg-23.1 {types: relief} {
+    tk::OptionType relief default
+} flat
+test oocfg-23.2 {types: relief} {
+    tk::OptionType relief validate g
+} groove
+test oocfg-23.3 {types: relief} -returnCodes error -body {
+    tk::OptionType relief validate gorp
+} -result {bad relief "gorp": must be flat, groove, raised, ridge, solid, or sunken}
+
+test oocfg-24.1 {types: string} {
+    tk::OptionType string default
+} {}
+test oocfg-24.2 {types: string} {
+    tk::OptionType string validate "abc  de  "
+} "abc  de  "
+# string type never fails validation and never alters values in normalization
+
+test oocfg-25.1 {types: window} {
+    tk::OptionType window default
+} {}
+test oocfg-25.2 {types: window} {
+    tk::OptionType window validate .
+} .
+test oocfg-25.3 {types: window} {
+    tk::OptionType window validate ""
+} ""
+test oocfg-25.4 {types: window} -returnCodes error -body {
+    tk::OptionType window validate gorp
+} -result {invalid window value "gorp"}
+
+test oocfg-26.1 {types: zboolean} {
+    tk::OptionType zboolean default
+} {}
+test oocfg-26.2 {types: zboolean} {
+    tk::OptionType zboolean validate 0
+} false
+test oocfg-26.3 {types: zboolean} {
+    tk::OptionType zboolean validate ""
+} ""
+test oocfg-26.4 {types: zboolean} -returnCodes error -body {
+    tk::OptionType zboolean validate gorp
+} -result {invalid boolean value "gorp"}
+
+test oocfg-27.1 {types: zcolor} {
+    tk::OptionType zcolor default
+} {}
+test oocfg-27.2 {types: zcolor} {
+    tk::OptionType zcolor validate green
+} "#008000"
+test oocfg-27.3 {types: zcolor} {
+    tk::OptionType zcolor validate ""
+} ""
+test oocfg-27.4 {types: zcolor} -returnCodes error -body {
+    tk::OptionType zcolor validate gorp
+} -result {unknown color name "gorp"}
+
+test oocfg-28.1 {types: zfloat} {
+    tk::OptionType zfloat default
+} {}
+test oocfg-28.2 {types: zfloat} {
+    tk::OptionType zfloat validate 1.2e3
+} 1200.0
+test oocfg-28.3 {types: zfloat} {
+    tk::OptionType zfloat validate ""
+} ""
+test oocfg-28.4 {types: zfloat} -returnCodes error -body {
+    tk::OptionType zfloat validate gorp
+} -result {invalid float value "gorp"}
+
+test oocfg-29.1 {types: zinteger} {
+    tk::OptionType zinteger default
+} {}
+test oocfg-29.2 {types: zinteger} {
+    tk::OptionType zinteger validate 0xff
+} 255
+test oocfg-29.3 {types: zinteger} {
+    tk::OptionType zinteger validate ""
+} ""
+test oocfg-29.4 {types: zinteger} -returnCodes error -body {
+    tk::OptionType zinteger validate gorp
+} -result {invalid integer value "gorp"}
 
 # cleanup
 deleteWindows
