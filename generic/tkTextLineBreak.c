@@ -117,8 +117,8 @@ LoadLibUnibreak(
     }
     Tcl_DecrRefCount(pathPtr);
     if (rc == TCL_OK) {
-	((InitFunc) Funcs[0])();
-	libLinebreakFunc = Funcs[1];
+	((InitFunc)(void *)Funcs[0])();
+	libLinebreakFunc = (ComputeBreakLocationsFunc)(void *)Funcs[1];
     } else {
 	Tcl_ResetResult(interp);
     }
@@ -741,6 +741,7 @@ ComputeBreakLocations(
     size_t brkIndex;
     LBClass cls;
     LBClass prevCls;
+    (void)lang;
 
     if (len == 0) {
 	return;
@@ -760,7 +761,7 @@ ComputeBreakLocations(
 	ch = text[i];
 
 	if (ch < 0x80) {
-	    pcls = Table_0000[ch];
+	    pcls = (LBClass)Table_0000[ch];
 	    nbytes = 1;
 	} else if ((ch & 0xe0) == 0xc0) {
 	    pcls = AI;
@@ -822,15 +823,15 @@ ComputeBreakLocations(
 	    switch (ch) {
 		case 0xe2:
 		    switch (UCHAR(text[i + 1])) {
-		    case 0x80: pcls = Table_E280[UCHAR(text[i + 2])]; break;
-		    case 0x81: pcls = Table_E281[UCHAR(text[i + 2])]; break;
-		    case 0x82: pcls = Table_E282[UCHAR(text[i + 2])]; break;
-		    case 0x8c: pcls = Table_E28C[UCHAR(text[i + 2])]; break;
-		    case 0x9d: pcls = Table_E29D[UCHAR(text[i + 2])]; break;
-		    case 0x9f: pcls = Table_E29F[UCHAR(text[i + 2])]; break;
-		    case 0xa6: pcls = Table_E2A6[UCHAR(text[i + 2])]; break;
-		    case 0xa7: pcls = Table_E2A7[UCHAR(text[i + 2])]; break;
-		    case 0xb8: pcls = Table_E2B8[UCHAR(text[i + 2])]; break;
+		    case 0x80: pcls = (LBClass)Table_E280[UCHAR(text[i + 2])]; break;
+		    case 0x81: pcls = (LBClass)Table_E281[UCHAR(text[i + 2])]; break;
+		    case 0x82: pcls = (LBClass)Table_E282[UCHAR(text[i + 2])]; break;
+		    case 0x8c: pcls = (LBClass)Table_E28C[UCHAR(text[i + 2])]; break;
+		    case 0x9d: pcls = (LBClass)Table_E29D[UCHAR(text[i + 2])]; break;
+		    case 0x9f: pcls = (LBClass)Table_E29F[UCHAR(text[i + 2])]; break;
+		    case 0xa6: pcls = (LBClass)Table_E2A6[UCHAR(text[i + 2])]; break;
+		    case 0xa7: pcls = (LBClass)Table_E2A7[UCHAR(text[i + 2])]; break;
+		    case 0xb8: pcls = (LBClass)Table_E2B8[UCHAR(text[i + 2])]; break;
 		    case 0x84:
 			switch (UCHAR(text[i + 2])) {
 			    case 0x83: /* fallthru */
@@ -855,15 +856,15 @@ ComputeBreakLocations(
 		    break;
 		case 0xe3:
 		    if (UCHAR(text[i + 1]) == 0x80) {
-			pcls = Table_E380[UCHAR(text[i + 2])];
+			pcls = (LBClass)Table_E380[UCHAR(text[i + 2])];
 		    }
 		    break;
 		case 0xef:
 		    switch (UCHAR(text[i + 1])) {
-		    case 0xb8: pcls = Table_EFB8[UCHAR(text[i + 2])]; break;
-		    case 0xb9: pcls = Table_EFB9[UCHAR(text[i + 2])]; break;
-		    case 0xbc: pcls = Table_EFBC[UCHAR(text[i + 2])]; break;
-		    case 0xbd: pcls = Table_EFBD[UCHAR(text[i + 2])]; break;
+		    case 0xb8: pcls = (LBClass)Table_EFB8[UCHAR(text[i + 2])]; break;
+		    case 0xb9: pcls = (LBClass)Table_EFB9[UCHAR(text[i + 2])]; break;
+		    case 0xbc: pcls = (LBClass)Table_EFBC[UCHAR(text[i + 2])]; break;
+		    case 0xbd: pcls = (LBClass)Table_EFBD[UCHAR(text[i + 2])]; break;
 		    case 0xb4:
 			switch (UCHAR(text[i + 2])) {
 			    case 0xbe: pcls = CL; break;

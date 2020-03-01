@@ -1986,6 +1986,8 @@ FontchooserShowCmd(
 {
     FontchooserData *fcdPtr = Tcl_GetAssocData(interp, "::tk::fontchooser",
 	    NULL);
+    (void)objc;
+    (void)objv;
 
     if (fcdPtr->parent == None) {
 	fcdPtr->parent = (Tk_Window) clientData;
@@ -2027,12 +2029,16 @@ FontchooserShowCmd(
 
 static int
 FontchooserHideCmd(
-    ClientData clientData,	/* Main window */
+    ClientData dummy,	/* Main window */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
+    (void)dummy;
+    (void)interp;
+    (void)objc;
+    (void)objv;
 
     if ([fp isVisible]) {
 	[fp orderOut:NSApp];
@@ -2129,9 +2135,10 @@ DeleteFontchooserData(
 MODULE_SCOPE int
 TkInitFontchooser(
     Tcl_Interp *interp,
-    ClientData clientData)
+    ClientData dummy)
 {
-    FontchooserData *fcdPtr = ckalloc(sizeof(FontchooserData));
+    FontchooserData *fcdPtr = (FontchooserData *)ckalloc(sizeof(FontchooserData));
+    (void)dummy;
 
     bzero(fcdPtr, sizeof(FontchooserData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,

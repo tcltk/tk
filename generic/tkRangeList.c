@@ -114,7 +114,7 @@ Increase(
 
     if (ranges->size == ranges->capacity) {
 	ranges->capacity = MAX(1, 2*ranges->capacity);
-	ranges = realloc(ranges, MEM_SIZE(ranges->capacity));
+	ranges = (TkRangeList *)realloc(ranges, MEM_SIZE(ranges->capacity));
 	*rangesPtr = ranges;
     }
 
@@ -135,7 +135,7 @@ Insert(
 	TkRange *newEntry;
 
 	ranges->capacity = MAX(1, 2*ranges->capacity);
-	newRanges = malloc(MEM_SIZE(ranges->capacity));
+	newRanges = (TkRangeList *)malloc(MEM_SIZE(ranges->capacity));
 	newRanges->capacity = ranges->capacity;
 	newRanges->size = ranges->size + 1;
 	newRanges->count = ranges->count;
@@ -186,7 +186,7 @@ TkRangeListCreate(unsigned capacity)
 {
     TkRangeList *ranges;
 
-    ranges = malloc(MEM_SIZE(capacity));
+    ranges = (TkRangeList *)malloc(MEM_SIZE(capacity));
     ranges->size = 0;
     ranges->capacity = capacity;
     ranges->count = 0;
@@ -204,7 +204,7 @@ TkRangeListCopy(
 
     assert(ranges);
 
-    copy = malloc(memSize = MEM_SIZE(ranges->size));
+    copy = (TkRangeList *)malloc(memSize = MEM_SIZE(ranges->size));
     memcpy(copy, ranges, memSize);
     DEBUG_ALLOC(tkRangeListCountNew++);
     return copy;

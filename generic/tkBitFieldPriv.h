@@ -39,7 +39,7 @@ TkBitData(
     const TkBitField *bf)
 {
     assert(bf);
-    return (const void *) bf->bits;
+    return (const unsigned char *) bf->bits;
 }
 
 

@@ -26,7 +26,7 @@ typedef struct TkTextUndoMyAtom {
     TkTextUndoAtom data;
 } TkTextUndoMyAtom;
 
-struct TkTextUndoStack {
+typedef struct TkTextUndoStack_ {
     TkTextUndoPerformProc *undoProc;
     				/* Function for callback to perform undo/redo actions. */
     TkTextUndoFreeProc *freeProc;
@@ -52,7 +52,7 @@ struct TkTextUndoStack {
     bool doingUndo;		/* Currently an undo action is performed? */
     bool doingRedo;		/* Currently a redo action is performed? */
     bool pushSeparator;		/* Push a separator before pushing a new item (iff true). */
-};
+} TkTextUndoStack_;
 
 #endif /* _TKTEXTUNDOPRIV */
 

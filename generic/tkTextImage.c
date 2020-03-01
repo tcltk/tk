@@ -190,6 +190,9 @@ UndoLinkSegmentGetCommand(
     const TkTextUndoToken *item)
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
+    (void)sharedTextPtr;
+    (void)item;
+
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("image", -1));
     return objPtr;
 }
@@ -220,10 +223,11 @@ UndoLinkSegmentPerform(
     const UndoTokenLinkSegment *token = (const UndoTokenLinkSegment *) undoInfo->token;
     TkTextSegment *segPtr = token->segPtr;
     TkTextIndex index;
+    (void)isRedo;
 
     if (redoInfo) {
 	RedoTokenLinkSegment *redoToken;
-	redoToken = malloc(sizeof(RedoTokenLinkSegment));
+	redoToken = (RedoTokenLinkSegment *)malloc(sizeof(RedoTokenLinkSegment));
 	redoToken->undoType = &redoTokenLinkSegmentType;
 	TkBTreeMakeUndoIndex(sharedTextPtr, segPtr, &redoToken->index);
 	redoInfo->token = (TkTextUndoToken *) redoToken;
@@ -244,6 +248,8 @@ UndoLinkSegmentDestroy(
     TkTextUndoToken *item,
     bool reused)
 {
+    (void)sharedTextPtr;
+
     if (!reused) {
 	UndoTokenLinkSegment *token = (UndoTokenLinkSegment *) item;
 
@@ -293,6 +299,7 @@ RedoLinkSegmentPerform(
 {
     RedoTokenLinkSegment *token = (RedoTokenLinkSegment *) undoInfo->token;
     TkTextIndex index;
+    (void)isRedo;
 
     TkBTreeReInsertSegment(sharedTextPtr, &token->index, token->segPtr);
 
@@ -509,7 +516,7 @@ TkTextImageCmd(
 		assert(sharedTextPtr->undoStack);
 		assert(eiPtr->typePtr == &tkTextEmbImageType);
 
-		token = malloc(sizeof(UndoTokenLinkSegment));
+		token = (UndoTokenLinkSegment *)malloc(sizeof(UndoTokenLinkSegment));
 		token->undoType = &undoTokenLinkSegmentType;
 		token->segPtr = eiPtr;
 		eiPtr->refCount += 1;
@@ -532,7 +539,7 @@ TkTextImageCmd(
 	for (hPtr = Tcl_FirstHashEntry(&sharedTextPtr->imageTable, &search);
 		hPtr;
 		hPtr = Tcl_NextHashEntry(&search)) {
-	    Tcl_AppendElement(interp, Tcl_GetHashKey(&sharedTextPtr->imageTable, hPtr));
+	    Tcl_AppendElement(interp, (const char *)Tcl_GetHashKey(&sharedTextPtr->imageTable, hPtr));
 	}
 	return TCL_OK;
     }
@@ -563,7 +570,7 @@ MakeImage(
 {
     TkTextSegment *eiPtr;
 
-    eiPtr = calloc(1, SEG_SIZE(TkTextEmbImage));
+    eiPtr = (TkTextSegment *)calloc(1, SEG_SIZE(TkTextEmbImage));
     NEW_SEGMENT(eiPtr);
     eiPtr->typePtr = &tkTextEmbImageType;
     eiPtr->size = 1;
@@ -672,7 +679,7 @@ SetImageName(
     img->hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name, &dummy);
     textPtr->sharedTextPtr->numImages += 1;
     Tcl_SetHashValue(img->hPtr, eiPtr);
-    img->name = malloc(length + 1);
+    img->name = (char *)malloc(length + 1);
     memcpy(img->name, name, length + 1);
     Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
     Tcl_DStringFree(&newName);
@@ -862,6 +869,8 @@ EmbImageDeleteProc(
     int flags)			/* Flags controlling the deletion. */
 {
     TkTextEmbImage *img;
+    (void)sharedTextPtr;
+    (void)flags;
 
     assert(eiPtr->typePtr);
     assert(eiPtr->refCount > 0);
@@ -956,6 +965,9 @@ EmbImageLayoutProc(
 {
     TkTextEmbImage *img = &eiPtr->body.ei;
     int width, height;
+    (void)offset;
+    (void)maxChars;
+    (void)spaceMode;
 
     assert(indexPtr->textPtr);
     assert(offset == 0);
@@ -1029,6 +1041,8 @@ EmbImageCheckProc(
     const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     const TkTextSegment *eiPtr)		/* Segment to check. */
 {
+    (void)sharedTextPtr;
+
     if (!eiPtr->nextPtr) {
 	Tcl_Panic("EmbImageCheckProc: embedded image is last segment in line");
     }
@@ -1071,9 +1085,11 @@ EmbImageDisplayProc(
     Drawable dst,		/* Pixmap or window in which to draw */
     int screenY)		/* Y-coordinate in text window that corresponds to y. */
 {
-    TkTextSegment *eiPtr = chunkPtr->clientData;
+    TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbImage *img = &eiPtr->body.ei;
     Tk_Image image;
+    (void)display;
+    (void)screenY;
 
     if ((image = img->image) && x + chunkPtr->width > 0) {
 	int lineX, imageY, width, height;
@@ -1127,9 +1143,11 @@ EmbImageBboxProc(
     int *widthPtr,		/* Gets filled in with width of image, in pixels. */
     int *heightPtr)		/* Gets filled in with height of image, in pixels. */
 {
-    TkTextSegment *eiPtr = chunkPtr->clientData;
+    TkTextSegment *eiPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbImage *img = &eiPtr->body.ei;
     Tk_Image image = img->image;
+    (void)textPtr;
+    (void)index;
 
     if (image) {
 	Tk_SizeOfImage(image, widthPtr, heightPtr);
@@ -1188,7 +1206,7 @@ TkTextImageIndex(
     if (!(hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name))) {
 	return false;
     }
-    eiPtr = Tcl_GetHashValue(hPtr);
+    eiPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     TkTextIndexClear(indexPtr, textPtr);
     TkTextIndexSetSegment(indexPtr, eiPtr);
     return true;
@@ -1218,7 +1236,7 @@ GetIndexForWatch(
     void *clientData)
 {
     TkTextIndexClear(indexPtr, textPtr);
-    TkTextIndexSetSegment(indexPtr, clientData);
+    TkTextIndexSetSegment(indexPtr, (TkTextSegment *)clientData);
 }
 
 static void
@@ -1229,8 +1247,12 @@ EmbImageProc(
     int imgWidth, int imgHeight)/* New dimensions of image. */
 
 {
-    TkTextSegment *eiPtr = clientData;
+    TkTextSegment *eiPtr = (TkTextSegment *)clientData;
     TkTextEmbImage *img = &eiPtr->body.ei;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
 
     if (img->hPtr) {
 	TkSharedText *sharedTextPtr = img->sharedTextPtr;

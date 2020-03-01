@@ -282,6 +282,9 @@ UndoToggleGravityGetCommand(
     const TkTextUndoToken *item)
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
+    (void)sharedTextPtr;
+    (void)item;
+
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("mark", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("gravity", -1));
     return objPtr;

@@ -1191,7 +1191,7 @@ MakeSegment(
 
     assert(segType != &tkTextCharType);
 
-    segPtr = calloc(1, segByteSize);
+    segPtr = (TkTextSegment *)calloc(1, segByteSize);
     NEW_SEGMENT(segPtr);
     segPtr->typePtr = segType;
     segPtr->size = contentSize;
@@ -1272,6 +1272,9 @@ UndoDeleteGetCommand(
     const TkTextUndoToken *item)
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
+    (void)sharedTextPtr;
+    (void)item;
+
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("delete", -1));
     return objPtr;
 }
@@ -1331,6 +1334,7 @@ UndoDeletePerform(
     int size = 0;
     unsigned i;
     DEBUG(bool hasZeroSize);
+    (void)isRedo;
 
     assert(segments);
     assert(segments[0]);
@@ -1623,6 +1627,7 @@ RedoDeletePerform(
 {
     const UndoTokenDelete *token = (const UndoTokenDelete *) undoInfo->token;
     int flags = 0;
+    (void)isRedo;
 
     if (token->surrogate) {
 	flags = DELETE_LASTLINE;
@@ -1639,7 +1644,7 @@ RedoDeletePerform(
 	if (redoInfo) {
 	    UndoTokenDelete *redoToken;
 
-	    redoToken = malloc(sizeof(UndoTokenDelete));
+	    redoToken = (UndoTokenDelete *)malloc(sizeof(UndoTokenDelete));
 	    redoToken->undoType = &undoTokenDeleteType;
 	    redoToken->segments = NULL;
 	    redoToken->numSegments = 0;
@@ -1677,6 +1682,9 @@ UndoInsertGetCommand(
     const TkTextUndoToken *item)
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
+    (void)sharedTextPtr;
+    (void)item;
+
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("insert", -1));
     return objPtr;
 }
@@ -1690,6 +1698,7 @@ UndoInsertPerform(
 {
     struct UndoTokenInsert *token = (UndoTokenInsert *) undoInfo->token;
     TkTextIndex index1, index2;
+    (void)isRedo;
 
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->startIndex, &index1);
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->endIndex, &index2);
@@ -1730,6 +1739,7 @@ UndoTagGetCommand(
     bool isRedo = (item->undoType == &redoTokenTagType);
     bool add = (isRedo == POINTER_IS_MARKED(token->tagPtr));
     Tcl_Obj *objPtr = Tcl_NewObj();
+    (void)sharedTextPtr;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(add ? "add" : "remove", -1));
@@ -1820,6 +1830,8 @@ UndoClearTagsGetCommand(
     const TkTextUndoToken *item)
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
+    (void)sharedTextPtr;
+    (void)item;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("clear", -1));
@@ -1868,6 +1880,7 @@ UndoClearTagsPerform(
     Node *nodePtr;
     int offs = 0;
     unsigned i;
+    (void)isRedo;
 
     assert(token->changeListSize > 0);
 
@@ -1984,11 +1997,11 @@ UndoClearTagsPerform(
     if (firstSegPtr != lastSegPtr) {
 	CleanupSplitPoint(lastSegPtr, sharedTextPtr);
     }
-    TkBTreeIncrEpoch(sharedTextPtr->tree);
+    TkBTreeIncrEpoch((TkTextBTree)sharedTextPtr->tree);
     TkTextRedrawTag(sharedTextPtr, NULL, &startIndex, &endIndex, NULL, affectsDisplayGeometry);
 
     if (redoInfo) {
-	RedoTokenClearTags *redoToken = malloc(sizeof(RedoTokenClearTags));
+	RedoTokenClearTags *redoToken = (RedoTokenClearTags *)malloc(sizeof(RedoTokenClearTags));
 	redoToken->undoType = &redoTokenClearTagsType;
 	redoToken->startIndex = token->startIndex;
 	redoToken->endIndex = token->endIndex;
@@ -2010,6 +2023,7 @@ UndoClearTagsDestroy(
 	UndoTokenTagClear *myToken = (UndoTokenTagClear *) token;
 	UndoTagChange *changeList = myToken->changeList;
 	unsigned i, n = myToken->changeListSize;
+	(void)sharedTextPtr;
 
 	for (i = 0; i < n; ++i) {
 	    TkTextTagSetDecrRefCount(changeList[i].tagInfoPtr);
@@ -2028,6 +2042,7 @@ RedoClearTagsPerform(
 {
     RedoTokenClearTags *token = (RedoTokenClearTags *) undoInfo->token;
     TkTextIndex index1, index2;
+    (void)isRedo;
 
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->startIndex, &index1);
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->endIndex, &index2);
@@ -2073,10 +2088,10 @@ TkBTreeCreate(
      * pointers are simply NULL.
      */
 
-    rootPtr = calloc(1, sizeof(Node));
+    rootPtr = (Node *)calloc(1, sizeof(Node));
     DEBUG_ALLOC(tkTextCountNewNode++);
 
-    treePtr = calloc(1, sizeof(BTree));
+    treePtr = (BTree *)calloc(1, sizeof(BTree));
     treePtr->rootPtr = rootPtr;
     treePtr->sharedTextPtr = sharedTextPtr;
     treePtr->stateEpoch = epoch;
@@ -2448,7 +2463,7 @@ AdjustPixelClient(
 
 	    if (newPixelReferences > treePtr->numPixelReferences) {
 		DEBUG_ALLOC(if (!linePtr->pixelInfo) tkTextCountNewPixelInfo++);
-		linePtr->pixelInfo = realloc(linePtr->pixelInfo,
+		linePtr->pixelInfo = (TkTextPixelInfo *)realloc(linePtr->pixelInfo,
 			sizeof(linePtr->pixelInfo[0])*newPixelReferences);
 		memset(&linePtr->pixelInfo[useReference], 0, sizeof(TkTextPixelInfo));
 	    } else if (linePtr->pixelInfo[useReference].dispLineInfo) {
@@ -2465,7 +2480,7 @@ AdjustPixelClient(
 
     if (newPixelReferences > treePtr->numPixelReferences) {
 	DEBUG_ALLOC(if (!nodePtr->pixelInfo) tkTextCountNewPixelInfo++);
-	nodePtr->pixelInfo = realloc(nodePtr->pixelInfo,
+	nodePtr->pixelInfo = (NodePixelInfo *)realloc(nodePtr->pixelInfo,
 		sizeof(nodePtr->pixelInfo[0])*newPixelReferences);
     }
     assert((int) pixelCount >= 0);
@@ -2520,7 +2535,7 @@ RemovePixelClient(
 	nodePtr->pixelInfo = NULL;
 	DEBUG_ALLOC(tkTextCountDestroyPixelInfo++);
     } else {
-	nodePtr->pixelInfo = realloc(nodePtr->pixelInfo,
+	nodePtr->pixelInfo = (NodePixelInfo *)realloc(nodePtr->pixelInfo,
 		sizeof(nodePtr->pixelInfo[0])*(treePtr->numPixelReferences - 1));
     }
     if (nodePtr->level != 0) {
@@ -2547,7 +2562,7 @@ RemovePixelClient(
 		linePtr->pixelInfo = NULL;
 		DEBUG_ALLOC(tkTextCountDestroyPixelInfo++);
 	    } else {
-		linePtr->pixelInfo = realloc(linePtr->pixelInfo,
+		linePtr->pixelInfo = (TkTextPixelInfo *)realloc(linePtr->pixelInfo,
 			sizeof(linePtr->pixelInfo[0])*(treePtr->numPixelReferences - 1));
 	    }
 	    linePtr = linePtr->nextPtr;
@@ -2580,6 +2595,8 @@ TkBTreeJoinUndoInsert(
 {
     struct UndoTokenInsert *myToken1 = (UndoTokenInsert *) token1;
     struct UndoTokenInsert *myToken2 = (UndoTokenInsert *) token2;
+    (void)byteSize1;
+    (void)byteSize2;
 
     if (UndoIndexIsEqual(&myToken1->endIndex, &myToken2->startIndex)) {
 	/* append to first token */
@@ -2643,7 +2660,7 @@ TkBTreeJoinUndoDelete(
 	}
 
 	myToken1->numSegments += myToken2->numSegments;
-	myToken1->segments = realloc(myToken1->segments,
+	myToken1->segments = (TkTextSegment **)realloc(myToken1->segments,
 		myToken1->numSegments*sizeof(myToken1->segments[0]));
 	memcpy(myToken1->segments + numSegments1, myToken2->segments,
 		myToken2->numSegments*sizeof(myToken2->segments[0]));
@@ -2667,7 +2684,7 @@ TkBTreeJoinUndoDelete(
 	}
 
 	myToken1->numSegments += myToken2->numSegments;
-	segments = malloc(myToken1->numSegments*sizeof(segments[0]));
+	segments = (TkTextSegment **)malloc(myToken1->numSegments*sizeof(segments[0]));
 	memcpy(segments, myToken2->segments, myToken2->numSegments*sizeof(myToken2->segments[0]));
 	memcpy(segments + myToken2->numSegments, myToken1->segments,
 		numSegments1*sizeof(myToken1->segments[0]));
@@ -3208,7 +3225,7 @@ AddPixelCount(
      * We need to do this for each referenced widget.
      */
 
-    linePtr->pixelInfo = malloc(sizeof(TkTextPixelInfo)*treePtr->numPixelReferences);
+    linePtr->pixelInfo = (TkTextPixelInfo *)malloc(sizeof(TkTextPixelInfo)*treePtr->numPixelReferences);
     DEBUG_ALLOC(tkTextCountNewPixelInfo++);
 
     for (ref = 0; ref < treePtr->numPixelReferences; ++ref) {
@@ -3405,7 +3422,7 @@ InsertNewLine(
 	segPtr->prevPtr = NULL;
     }
 
-    newLinePtr = calloc(1, sizeof(TkTextLine));
+    newLinePtr = (TkTextLine *)calloc(1, sizeof(TkTextLine));
     newLinePtr->parentPtr = nodePtr;
     newLinePtr->prevPtr = prevLinePtr;
     newLinePtr->segPtr = segPtr;
@@ -4416,7 +4433,7 @@ TkBTreeInsertChars(
     sharedTextPtr = treePtr->sharedTextPtr;
 
     if (undoInfo) {
-	undoToken = malloc(sizeof(UndoTokenInsert));
+	undoToken = (UndoTokenInsert *)malloc(sizeof(UndoTokenInsert));
 	undoToken->undoType = &undoTokenInsertType;
 	undoInfo->token = (TkTextUndoToken *) undoToken;
 	undoInfo->byteSize = 0;
@@ -5295,7 +5312,7 @@ LinkSegment(
 	if (linePtr->segPtr->typePtr == &tkTextLinkType) {
 	    TkTextSection *newSectionPtr;
 
-	    newSectionPtr = malloc(sizeof(TkTextSection));
+	    newSectionPtr = (TkTextSection *)malloc(sizeof(TkTextSection));
 	    newSectionPtr->linePtr = linePtr;
 	    newSectionPtr->segPtr = succPtr;
 	    newSectionPtr->nextPtr = linePtr->segPtr->sectionPtr->nextPtr;
@@ -5605,7 +5622,7 @@ SplitSection(
 	assert(splitSegPtr);
 	assert(lengthRHS == 0 || length - capacityLHS >= MIN_TEXT_SEGS);
 
-	newSectionPtr = malloc(sizeof(TkTextSection));
+	newSectionPtr = (TkTextSection *)malloc(sizeof(TkTextSection));
 	newSectionPtr->linePtr = sectionPtr->linePtr;
 	newSectionPtr->segPtr = splitSegPtr;
 	newSectionPtr->nextPtr = sectionPtr->nextPtr;
@@ -5906,6 +5923,7 @@ RebuildSections(
     TkTextSegment *segPtr;
     unsigned length;
     int changeToNumBranches;
+    (void)sharedTextPtr;
 
     prevSectionPtr = NULL;
     sectionPtr = linePtr->segPtr->sectionPtr;
@@ -5924,7 +5942,7 @@ RebuildSections(
 	if (!sectionPtr) {
 	    TkTextSection *newSectionPtr;
 
-	    newSectionPtr = calloc(1, sizeof(TkTextSection));
+	    newSectionPtr = (TkTextSection *)calloc(1, sizeof(TkTextSection));
 	    if (prevSectionPtr) {
 		prevSectionPtr->nextPtr = newSectionPtr;
 	    } else {
@@ -6129,7 +6147,7 @@ MakeCharSeg(
     assert(length <= newSize);
 
     capacity = CSEG_CAPACITY(newSize);
-    newPtr = calloc(1, CSEG_SIZE(capacity));
+    newPtr = (TkTextSegment *)calloc(1, CSEG_SIZE(capacity));
     NEW_SEGMENT(newPtr);
     newPtr->typePtr = &tkTextCharType;
     newPtr->sectionPtr = sectionPtr;
@@ -6626,7 +6644,7 @@ TkBTreeMakeCharSegment(
     assert(string);
     assert(tagInfoPtr);
 
-    newPtr = calloc(1, memsize);
+    newPtr = (TkTextSegment *)calloc(1, memsize);
     NEW_SEGMENT(newPtr);
     newPtr->typePtr = &tkTextCharType;
     newPtr->size = length;
@@ -7003,7 +7021,7 @@ DeleteRange(
 	/* reserve the first entry if needed */
 	numSegments = 0;
 	maxSegments = 32;
-	segments = malloc(maxSegments * sizeof(TkTextSegment *));
+	segments = (TkTextSegment **)malloc(maxSegments * sizeof(TkTextSegment *));
 	DEBUG(segments[0] = NULL);
 	if (deleteFirst) {
 	    segments[numSegments++] = prevSavePtr = firstSegPtr;
@@ -7208,7 +7226,7 @@ DeleteRange(
 		} else {
 		    if (numSegments == maxSegments) {
 			maxSegments *= 2u;
-			segments = realloc(segments, maxSegments * sizeof(TkTextSegment *));
+			segments = (TkTextSegment **)realloc(segments, maxSegments * sizeof(TkTextSegment *));
 		    }
 		    segments[numSegments++] = savePtr;
 		}
@@ -7368,7 +7386,7 @@ DeleteRange(
 		} else {
 		    if (numSegments == maxSegments) {
 			maxSegments += 1;
-			segments = realloc(segments, maxSegments * sizeof(TkTextSegment *));
+			segments = (TkTextSegment **)realloc(segments, maxSegments * sizeof(TkTextSegment *));
 		    }
 		    segments[numSegments++] = lastSegPtr;
 		}
@@ -7417,7 +7435,7 @@ DeleteRange(
 	assert(deleteFirst == (segments[0] == firstSegPtr));
 
 	if (numSegments != maxSegments) {
-	    segments = realloc(segments, (numSegments + 1)*sizeof(TkTextSegment *));
+	    segments = (TkTextSegment **)realloc(segments, (numSegments + 1)*sizeof(TkTextSegment *));
 	}
 	undoToken->segments = segments;
 	undoToken->numSegments = numSegments;
@@ -7610,7 +7628,7 @@ DeleteIndexRange(
     if (redoInfo) {
 	UndoTokenDelete *redoToken;
 
-	redoToken = malloc(sizeof(UndoTokenDelete));
+	redoToken = (UndoTokenDelete *)malloc(sizeof(UndoTokenDelete));
 	redoToken->undoType = &undoTokenDeleteType;
 	redoToken->segments = NULL;
 	redoToken->numSegments = 0;
@@ -9020,10 +9038,10 @@ ResizeLengths(
     unsigned bufSize = capacity * sizeof(data->lengths[0]);
 
     if (data->lengths == data->lengthsBuf) {
-	data->lengths = malloc(bufSize);
+	data->lengths = (int32_t *)malloc(bufSize);
 	memcpy(data->lengths, data->lengthsBuf, bufSize);
     } else {
-	data->lengths = realloc(data->lengths, bufSize);
+	data->lengths = (int32_t *)realloc(data->lengths, bufSize);
     }
     data->capacityOfLengths = capacity;
 }
@@ -9809,7 +9827,7 @@ TkBTreeTag(
 		tagPtr->recentTagAddRemoveToken = NULL;
 	    }
 	    if (!tagPtr->recentTagAddRemoveToken) {
-		tagPtr->recentTagAddRemoveToken = malloc(sizeof(UndoTokenTagChange));
+		tagPtr->recentTagAddRemoveToken = (TkTextUndoToken *)malloc(sizeof(UndoTokenTagChange));
 		DEBUG_ALLOC(tkTextCountNewUndoToken++);
 	    }
 
@@ -10016,7 +10034,7 @@ ClearTagsFromLine(
 			} else {
 			    if (undoToken->changeListSize == data->capacity) {
 				data->capacity = MAX(2u*data->capacity, 50u);
-				undoToken->changeList = realloc(undoToken->changeList,
+				undoToken->changeList = (UndoTagChange *)realloc(undoToken->changeList,
 					data->capacity * sizeof(undoToken->changeList[0]));
 			    }
 			    tagChangePtr = undoToken->changeList + undoToken->changeListSize++;
@@ -10579,7 +10597,7 @@ TkBTreeClearTags(
 	    unsigned lineNo1, lineNo2;
 
 	    if (undoInfo) {
-		undoToken = malloc(sizeof(UndoTokenTagClear));
+		undoToken = (UndoTokenTagClear *)malloc(sizeof(UndoTokenTagClear));
 		undoInfo->token = (TkTextUndoToken *) undoToken;
 		undoInfo->byteSize = 0;
 		undoToken->undoType = &undoTokenClearTagsType;
@@ -10670,7 +10688,7 @@ TkBTreeClearTags(
 	    undoInfo->token = NULL;
 	    DEBUG_ALLOC(tkTextCountNewUndoToken--);
 	} else {
-	    undoToken->changeList = realloc(undoToken->changeList,
+	    undoToken->changeList = (UndoTagChange *)realloc(undoToken->changeList,
 		    undoToken->changeListSize * sizeof(undoToken->changeList[0]));
 	}
     }
@@ -12657,7 +12675,7 @@ TkBTreeGetSegmentTags(
 		    }
 		}
 		if (count == sizeof(tagBuf)/sizeof(tagBuf[0])) {
-		    tagArray = malloc(TkTextTagSetCount(tagInfoPtr) * sizeof(tagArray[0]));
+		    tagArray = (TkTextTag **)malloc(TkTextTagSetCount(tagInfoPtr) * sizeof(tagArray[0]));
 		    memcpy(tagArray, tagBuf, sizeof(tagBuf));
 		}
 		tagArray[count++] = tagPtr;
@@ -13007,7 +13025,7 @@ TkBTreeCheck(
     for (entryPtr = Tcl_FirstHashEntry(&treePtr->sharedTextPtr->tagTable, &search);
 	    entryPtr;
 	    entryPtr = Tcl_NextHashEntry(&search)) {
-	const TkTextTag *tagPtr = Tcl_GetHashValue(entryPtr);
+	const TkTextTag *tagPtr = (const TkTextTag *)Tcl_GetHashValue(entryPtr);
 
 	assert(tagPtr->index < treePtr->sharedTextPtr->tagInfoSize);
 
@@ -13835,7 +13853,7 @@ Rebalance(
 		 */
 
 		if (!nodePtr->parentPtr) {
-		    Node *newRootPtr = malloc(sizeof(Node));
+		    Node *newRootPtr = (Node *)malloc(sizeof(Node));
 		    newRootPtr->parentPtr = NULL;
 		    newRootPtr->nextPtr = NULL;
 		    newRootPtr->childPtr = nodePtr;
@@ -13849,14 +13867,14 @@ Rebalance(
 		    newRootPtr->numBranches = nodePtr->numBranches;
 		    newRootPtr->level = nodePtr->level + 1;
 		    newRootPtr->size = nodePtr->size;
-		    newRootPtr->pixelInfo = memcpy(malloc(pixelSize), nodePtr->pixelInfo, pixelSize);
+		    newRootPtr->pixelInfo = (NodePixelInfo *)memcpy(malloc(pixelSize), nodePtr->pixelInfo, pixelSize);
 		    nodePtr->parentPtr = newRootPtr;
 		    treePtr->rootPtr = newRootPtr;
 		    DEBUG_ALLOC(tkTextCountNewNode++);
 		    DEBUG_ALLOC(tkTextCountNewPixelInfo++);
 		}
 
-		newPtr = malloc(sizeof(Node));
+		newPtr = (Node *)malloc(sizeof(Node));
 		newPtr->parentPtr = nodePtr->parentPtr;
 		newPtr->nextPtr = nodePtr->nextPtr;
 		newPtr->lastPtr = nodePtr->lastPtr;
@@ -13873,7 +13891,7 @@ Rebalance(
 		newPtr->numBranches = nodePtr->numBranches;
 		nodePtr->nextPtr = newPtr;
 		nodePtr->numChildren = MIN_CHILDREN;
-		nodePtr->pixelInfo = calloc(1, pixelSize);
+		nodePtr->pixelInfo = (NodePixelInfo *)calloc(1, pixelSize);
 		TagSetAssign(&nodePtr->tagonPtr, treePtr->sharedTextPtr->emptyTagInfoPtr);
 		TagSetAssign(&nodePtr->tagoffPtr, treePtr->sharedTextPtr->emptyTagInfoPtr);
 		DEBUG_ALLOC(tkTextCountNewNode++);
@@ -14648,6 +14666,7 @@ FindNodeWithBranch(
     const Node *nodePtr)
 {
     const Node *parentPtr;
+    (void)textPtr;
 
     assert(nodePtr);
 
@@ -15293,6 +15312,8 @@ unsigned
 TkBTreeLinesPerNode(
     const TkTextBTree tree)
 {
+    (void)tree;
+
     return MIN_CHILDREN;
 }
 
@@ -15324,6 +15345,7 @@ TkBTreeChildNumber(
     const Node *childPtr;
     const Node *nodePtr;
     unsigned number = 0;
+    (void)tree;
 
     assert(linePtr);
 
@@ -15399,6 +15421,8 @@ CleanupSplitPoint(
     TkTextSegment *segPtr,
     TkSharedText *sharedTextPtr)
 {
+    (void)sharedTextPtr;
+
     if (!segPtr || !segPtr->protectionFlag) {
 	return;
     }
@@ -15445,6 +15469,7 @@ JoinCharSegments(
     TkTextSegment *segPtr)		/* Pointer to first of two adjacent segments to join. */
 {
     TkTextSegment *nextPtr, *newPtr;
+    (void)sharedTextPtr;
 
     assert(segPtr);
     assert(segPtr->typePtr == &tkTextCharType);
@@ -15554,6 +15579,9 @@ CharDeleteProc(
     TkTextSegment *segPtr,	/* Segment to delete. */
     int flags)			/* Flags controlling the deletion. */
 {
+    (void)sharedTextPtr;
+    (void)flags;
+
     TkBTreeFreeSegment(segPtr);
     return true;
 }
@@ -15611,6 +15639,8 @@ CharCheckProc(
     const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     const TkTextSegment *segPtr)	/* Segment to check. */
 {
+    (void)sharedTextPtr;
+
     /*
      * Make sure that the segment contains the number of characters indicated
      * by its header, and that the last segment in a line ends in a newline.
@@ -15657,6 +15687,9 @@ HyphenDeleteProc(
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
+    (void)sharedTextPtr;
+    (void)flags;
+
     TkBTreeFreeSegment(segPtr);
     return true;
 }
@@ -15713,6 +15746,8 @@ HyphenCheckProc(
     const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     const TkTextSegment *segPtr)	/* Segment to check. */
 {
+    (void)sharedTextPtr;
+
     if (segPtr->size != 1) {
 	Tcl_Panic("HyphenCheckProc: hyphen has size %d", segPtr->size);
     }
@@ -15741,6 +15776,8 @@ BranchDeleteProc(
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
+    (void)sharedTextPtr;
+
     if (flags & TREE_GONE) {
 	FREE_SEGMENT(segPtr);
 	DEBUG_ALLOC(tkTextCountDestroySegment++);
@@ -15779,6 +15816,8 @@ BranchRestoreProc(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
+    (void)sharedTextPtr;
+
     /* Restore old relationship. */
     segPtr->body.branch.nextPtr = (TkTextSegment *) segPtr->tagInfoPtr;
     assert(segPtr->body.branch.nextPtr->typePtr == &tkTextLinkType);
@@ -15809,6 +15848,8 @@ BranchInspectProc(
     const TkSharedText *sharedTextPtr,
     const TkTextSegment *segPtr)
 {
+    (void)sharedTextPtr;
+
     Tcl_Obj *objPtr = Tcl_NewObj();
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
     return objPtr;
@@ -15929,6 +15970,8 @@ LinkDeleteProc(
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
+    (void)sharedTextPtr;
+
     if (flags & TREE_GONE) {
 	FREE_SEGMENT(segPtr);
 	DEBUG_ALLOC(tkTextCountDestroySegment++);
@@ -15967,6 +16010,8 @@ LinkRestoreProc(
     TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
+    (void)sharedTextPtr;
+
     /* Restore old relationship (misuse of an unused pointer). */
     segPtr->body.link.prevPtr = (TkTextSegment *) segPtr->tagInfoPtr;
     assert(segPtr->body.link.prevPtr->typePtr == &tkTextBranchType);
@@ -15997,6 +16042,8 @@ LinkInspectProc(
     const TkSharedText *sharedTextPtr,
     const TkTextSegment *segPtr)
 {
+    (void)sharedTextPtr;
+
     Tcl_Obj *objPtr = Tcl_NewObj();
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
     return objPtr;
@@ -16109,6 +16156,9 @@ ProtectionMarkCheckProc(
     const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     const TkTextSegment *segPtr)	/* Segment to check. */
 {
+    (void)sharedTextPtr;
+    (void)segPtr;
+
     Tcl_Panic("ProtectionMarkCheckProc: protection mark detected");
 }
 
@@ -16134,6 +16184,10 @@ ProtectionMarkDeleteProc(
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
+    (void)sharedTextPtr;
+    (void)segPtr;
+    (void)flags;
+
     return true;
 }
 

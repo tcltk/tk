@@ -344,7 +344,7 @@ TkpGetNativeAppBitmap(
 
 int
 TkMacOSXIconBitmapObjCmd(
-    ClientData clientData,	/* Unused. */
+    ClientData dummy,	/* Unused. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -353,6 +353,7 @@ TkMacOSXIconBitmapObjCmd(
     int i = 1, len, isNew, result = TCL_ERROR;
     const char *name, *value;
     IconBitmap ib, *iconBitmap;
+    (void)dummy;
 
     if (objc != 6) {
 	Tcl_WrongNumArgs(interp, 1, objv, "name width height "

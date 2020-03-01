@@ -212,14 +212,15 @@ static void		DestroyMenuButton(char *memPtr);
 
 int
 Tk_MenubuttonObjCmd(
-    ClientData clientData,	/* NULL. */
+    ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register TkMenuButton *mbPtr;
+    TkMenuButton *mbPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
+    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -347,7 +348,7 @@ MenuButtonWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    register TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     int result, index;
     Tcl_Obj *objPtr;
 
@@ -422,7 +423,7 @@ static void
 DestroyMenuButton(
     char *memPtr)		/* Info about button widget. */
 {
-    register TkMenuButton *mbPtr = (TkMenuButton *) memPtr;
+    TkMenuButton *mbPtr = (TkMenuButton *) memPtr;
     TkpDestroyMenuButton(mbPtr);
 
     if (mbPtr->flags & REDRAW_PENDING) {
@@ -490,7 +491,7 @@ DestroyMenuButton(
 static int
 ConfigureMenuButton(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register TkMenuButton *mbPtr,
+    TkMenuButton *mbPtr,
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in objv. */
@@ -633,7 +634,7 @@ ConfigureMenuButton(
 	    if (mbPtr->text != NULL) {
 		ckfree(mbPtr->text);
 	    }
-	    mbPtr->text = ckalloc(strlen(value) + 1);
+	    mbPtr->text = (char *)ckalloc(strlen(value) + 1);
 	    strcpy(mbPtr->text, value);
 	}
 	Tcl_TraceVar2(interp, mbPtr->textVarName, NULL,
@@ -675,7 +676,7 @@ TkMenuButtonWorldChanged(
     XGCValues gcValues;
     GC gc;
     unsigned long mask;
-    TkMenuButton *mbPtr = instanceData;
+    TkMenuButton *mbPtr = (TkMenuButton *)instanceData;
 
     gcValues.font = Tk_FontId(mbPtr->tkfont);
     gcValues.foreground = mbPtr->normalFg->pixel;
@@ -776,7 +777,7 @@ MenuButtonEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	goto redraw;
@@ -835,7 +836,7 @@ static void
 MenuButtonCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     Tk_Window tkwin = mbPtr->tkwin;
 
     /*
@@ -877,9 +878,11 @@ MenuButtonTextVarProc(
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    register TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     const char *value;
-    unsigned len;
+    size_t len;
+    (void)name1;
+    (void)name2;
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -924,8 +927,8 @@ MenuButtonTextVarProc(
     if (mbPtr->text != NULL) {
 	ckfree(mbPtr->text);
     }
-    len = 1 + (unsigned) strlen(value);
-    mbPtr->text = ckalloc(len);
+    len = 1 + strlen(value);
+    mbPtr->text = (char *)ckalloc(len);
     memcpy(mbPtr->text, value, len);
     TkpComputeMenuButtonGeometry(mbPtr);
 
@@ -964,7 +967,13 @@ MenuButtonImageProc(
 				 * 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkMenuButton *mbPtr = clientData;
+    TkMenuButton *mbPtr = (TkMenuButton *)clientData;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
     if (mbPtr->tkwin != NULL) {
 	TkpComputeMenuButtonGeometry(mbPtr);

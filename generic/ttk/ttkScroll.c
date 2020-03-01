@@ -55,7 +55,7 @@ struct ScrollHandleRec
  */
 ScrollHandle TtkCreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
 {
-    ScrollHandle h = ckalloc(sizeof(*h));
+    ScrollHandle h = (ScrollHandle)ckalloc(sizeof(*h));
 
     h->flags = 0;
     h->corePtr = corePtr;

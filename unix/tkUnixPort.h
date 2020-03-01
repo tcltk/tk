@@ -18,14 +18,15 @@
 #define __UNIX__ 1
 
 #include <stdio.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <math.h>
 #include <pwd.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <math.h>
 #include <string.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -40,15 +41,18 @@
 #   include <time.h>
 #else
 #   if HAVE_SYS_TIME_H
-#       include <sys/time.h>
+#	include <sys/time.h>
 #   else
-#       include <time.h>
+#	include <time.h>
 #   endif
 #endif
 #if HAVE_INTTYPES_H
 #    include <inttypes.h>
 #endif
 #include <unistd.h>
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>

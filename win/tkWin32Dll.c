@@ -104,6 +104,7 @@ DllMain(
 #ifdef HAVE_NO_SEH
     TCLEXCEPTION_REGISTRATION registration;
 #endif
+    (void)reserved;
 
     /*
      * If we are attaching to the DLL from a new process, tell Tk about the

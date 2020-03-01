@@ -135,7 +135,7 @@ TkIntSetLowerBound(
 TkIntSet *
 TkIntSetNew()
 {
-    TkIntSet *set = malloc(SET_SIZE(0));
+    TkIntSet *set = (TkIntSet *)malloc(SET_SIZE(0));
     set->end = set->buf;
     set->refCount = 0;
     set->isSetFlag = true;
@@ -153,7 +153,7 @@ TkIntSetFromBits(
     unsigned index = 0, i;
 
     size = TkBitCount(bf);
-    set = malloc(SET_SIZE(NextPowerOf2(size)));
+    set = (TkIntSet *)malloc(SET_SIZE(NextPowerOf2(size)));
     set->end = set->buf + size;
     set->refCount = 1;
     set->isSetFlag = true;
@@ -191,7 +191,7 @@ TkIntSetCopy(
     assert(set);
 
     size = TkIntSetSize(set);
-    newSet = malloc(SET_SIZE(NextPowerOf2(size)));
+    newSet = (TkIntSet *)malloc(SET_SIZE(NextPowerOf2(size)));
     newSet->end = newSet->buf + size;
     newSet->refCount = 1;
     newSet->isSetFlag = true;
@@ -246,7 +246,7 @@ TkIntSetJoin(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(src));
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = Join(set->buf, dst->buf, dst->end, src->buf, src->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -254,7 +254,7 @@ TkIntSetJoin(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -321,7 +321,7 @@ TkIntSetJoinBits(
 	unsigned capacity1, capacity2, size;
 
 	capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkBitSize(src));
-	set = malloc(SET_SIZE(capacity1));
+	set = (TkIntSet *)malloc(SET_SIZE(capacity1));
 	set->end = JoinBits(set->buf, dst->buf, dst->end, src);
 	size = set->end - set->buf;
 	capacity2 = NextPowerOf2(size);
@@ -329,7 +329,7 @@ TkIntSetJoinBits(
 	DEBUG_ALLOC(tkIntSetCountNew++);
 
 	if (capacity2 < capacity1) {
-	    set = realloc(set, SET_SIZE(capacity2));
+	    set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	    set->end = set->buf + size;
 	}
     }
@@ -409,7 +409,7 @@ TkIntSetJoin2(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(set1) + TkIntSetSize(set2));
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = Join2(set->buf, dst->buf, dst->end, set1->buf, set1->end, set2->buf, set2->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -417,7 +417,7 @@ TkIntSetJoin2(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -468,7 +468,7 @@ TkIntSetIntersect(
 
     size = MIN(TkIntSetSize(src), TkIntSetSize(dst));
     capacity1 = NextPowerOf2(size);
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = Intersect(set->buf, dst->buf, dst->end, src->buf, src->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -476,7 +476,7 @@ TkIntSetIntersect(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -529,7 +529,7 @@ TkIntSetIntersectBits(
 
     size = MIN(TkIntSetSize(dst), TkBitCount(src));
     capacity1 = NextPowerOf2(size);
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = IntersectBits(set->buf, dst->buf, dst->end, src);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -537,7 +537,7 @@ TkIntSetIntersectBits(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -593,7 +593,7 @@ TkIntSetRemove(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst));
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = Remove(set->buf, dst->buf, dst->end, src->buf, src->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -601,7 +601,7 @@ TkIntSetRemove(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -656,7 +656,7 @@ TkIntSetRemoveBits(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst));
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = RemoveBits(set->buf, dst->buf, dst->end, src);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -664,7 +664,7 @@ TkIntSetRemoveBits(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -703,7 +703,7 @@ TkIntSetComplementTo(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(src));
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = ComplementTo(set->buf, dst->buf, dst->end, src->buf, src->end);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -711,7 +711,7 @@ TkIntSetComplementTo(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -770,7 +770,7 @@ TkIntSetComplementToBits(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkBitSize(src));
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = ComplementToBits(set->buf, dst->buf, dst->end, src);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -778,7 +778,7 @@ TkIntSetComplementToBits(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -858,7 +858,7 @@ TkIntSetJoinComplementTo(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(set1));
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = JoinComplementTo(
 	    set->buf, dst->buf, dst->end, set1->buf, set1->end, set2->buf, set2->end);
     size = set->end - set->buf;
@@ -867,7 +867,7 @@ TkIntSetJoinComplementTo(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -975,7 +975,7 @@ TkIntSetJoinNonIntersection(
     assert(TkIntSetRefCount(dst) > 0);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(set1) + TkIntSetSize(set2));
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = JoinNonIntersection(
 	    set->buf, dst->buf, dst->end, set1->buf, set1->end, set2->buf, set2->end);
     size = set->end - set->buf;
@@ -984,7 +984,7 @@ TkIntSetJoinNonIntersection(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -1030,7 +1030,7 @@ TkIntSetJoin2ComplementToIntersection(
     size1 = TkIntSetSize(set1) + TkIntSetSize(set2);
     size2 = MIN(TkIntSetSize(set1), TkIntSetSize(set2));
     size = size1 + 2*size2;
-    res1 = size <= sizeof(buffer)/sizeof(buffer[0]) ? buffer : malloc(size*sizeof(TkIntSetType));
+    res1 = size <= sizeof(buffer)/sizeof(buffer[0]) ? buffer : (TkIntSetType *)malloc(size*sizeof(TkIntSetType));
     res2 = res1 + size1;
     res3 = res2 + size2;
 
@@ -1039,7 +1039,7 @@ TkIntSetJoin2ComplementToIntersection(
     res3End = ComplementTo(res3, res1, res1End, res2, res2End);
 
     capacity1 = NextPowerOf2(TkIntSetSize(dst) + TkIntSetSize(add) + (res3End - res3));
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     set->end = Join2(set->buf, dst->buf, dst->end, add->buf, add->end, res3, res3End);
     size = set->end - set->buf;
     capacity2 = NextPowerOf2(size);
@@ -1047,7 +1047,7 @@ TkIntSetJoin2ComplementToIntersection(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -1083,7 +1083,7 @@ TkIntSetJoinOfDifferences(
 
     capacity2 = TkIntSetSize(dst) + TkIntSetSize(set1);
     capacity1 = NextPowerOf2(2*capacity2);
-    set = malloc(SET_SIZE(capacity1));
+    set = (TkIntSet *)malloc(SET_SIZE(capacity1));
     buf1 = set->buf + capacity2;
     buf2 = buf1 + TkIntSetSize(dst);
     end1 = Remove(buf1, dst->buf, dst->end, set1->buf, set1->end);
@@ -1095,7 +1095,7 @@ TkIntSetJoinOfDifferences(
     DEBUG_ALLOC(tkIntSetCountNew++);
 
     if (capacity2 < capacity1) {
-	set = realloc(set, SET_SIZE(capacity2));
+	set = (TkIntSet *)realloc(set, SET_SIZE(capacity2));
 	set->end = set->buf + size;
     }
 
@@ -1268,7 +1268,7 @@ Add(
     unsigned size = set->end - set->buf;
 
     if (IsPowerOf2(size)) {
-	TkIntSet *newSet = malloc(SET_SIZE(MAX(2*size, 1)));
+	TkIntSet *newSet = (TkIntSet *)malloc(SET_SIZE(MAX(2*size, 1)));
 	unsigned offs = pos - set->buf;
 
 	assert(offs <= size);
@@ -1323,9 +1323,10 @@ Erase(
     unsigned n)
 {
     unsigned size = set->end - set->buf - 1;
+    (void)n;
 
     if (IsPowerOf2(size)) {
-	TkIntSet *newSet = malloc(SET_SIZE(size));
+	TkIntSet *newSet = (TkIntSet *)malloc(SET_SIZE(size));
 	unsigned offs = pos - set->buf;
 
 	memcpy(newSet->buf, set->buf, offs*sizeof(TkIntSetType));
@@ -1423,7 +1424,7 @@ TkIntSetClear(
 	return set;
     }
 
-    newSet = malloc(SET_SIZE(0));
+    newSet = (TkIntSet *)malloc(SET_SIZE(0));
     newSet->end = newSet->buf;
     newSet->refCount = 1;
     newSet->isSetFlag = true;
