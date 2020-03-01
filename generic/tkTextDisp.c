@@ -1184,6 +1184,7 @@ UseMonospacedLineHeights(
     return TestMonospacedLineHeights(textPtr)
 	    && TkRangeListIsEmpty(textPtr->dInfoPtr->lineMetricUpdateRanges);
 #else
+    (void)textPtr;
     return false;
 #endif
 }
@@ -1368,7 +1369,7 @@ GetLastCharInChunk(
 	return '\0';
     }
 
-    ciPtr = chunkPtr->clientData;
+    ciPtr = (const CharInfo *)chunkPtr->clientData;
     assert(ciPtr->numBytes > 0);
     return ciPtr->u.chars[ciPtr->baseOffset + ciPtr->numBytes - 1];
 }
@@ -1383,7 +1384,7 @@ GetSecondLastCharInChunk(
 	return '\0';
     }
 
-    ciPtr = chunkPtr->clientData;
+    ciPtr = (const CharInfo *)chunkPtr->clientData;
     assert(chunkPtr->clientData);
     assert(ciPtr->numBytes > 0);
 
@@ -1391,7 +1392,7 @@ GetSecondLastCharInChunk(
 	return ciPtr->u.chars[ciPtr->baseOffset + ciPtr->numBytes - 2];
     }
     if ((chunkPtr = chunkPtr->prevCharChunkPtr) && IsCharChunk(chunkPtr)) {
-	ciPtr = chunkPtr->clientData;
+	ciPtr = (const CharInfo *)chunkPtr->clientData;
 	assert(ciPtr->numBytes > 0);
 	return ciPtr->u.chars[ciPtr->baseOffset + ciPtr->numBytes - 1];
     }
@@ -1647,7 +1648,7 @@ TkTextCreateDInfo(
     XGCValues gcValues;
     bool isMonospaced;
 
-    dInfoPtr = calloc(1, sizeof(TextDInfo));
+    dInfoPtr = (TextDInfo *)calloc(1, sizeof(TextDInfo));
     Tcl_InitHashTable(&dInfoPtr->styleTable, sizeof(StyleValues)/sizeof(int));
     gcValues.graphics_exposures = True;
     dInfoPtr->copyGC = NULL;
@@ -1665,7 +1666,7 @@ TkTextCreateDInfo(
     dInfoPtr->lastLineNo = TkBTreeLinesTo(tree, NULL, TkBTreeGetLastLine(textPtr), NULL);
     dInfoPtr->lineMetricUpdateEpoch = 1;
     dInfoPtr->strBufferSize = 512;
-    dInfoPtr->strBuffer = malloc(dInfoPtr->strBufferSize);
+    dInfoPtr->strBuffer = (char *)malloc(dInfoPtr->strBufferSize);
     ClearRegion(&dInfoPtr->invalidRegion);
     TkTextIndexClear(&dInfoPtr->metricIndex, textPtr);
     TkTextIndexClear(&dInfoPtr->currChunkIndex, textPtr);
@@ -1751,7 +1752,7 @@ TkTextDeleteBreakInfoTableEntries(
     assert(breakInfoTable);
 
     for (hPtr = Tcl_FirstHashEntry(breakInfoTable, &search); hPtr; hPtr = Tcl_NextHashEntry(&search)) {
-	TkTextBreakInfo *breakInfo = Tcl_GetHashValue(hPtr);
+	TkTextBreakInfo *breakInfo = (TkTextBreakInfo *)Tcl_GetHashValue(hPtr);
 
 	assert(breakInfo->brks);
 	DEBUG(memset(breakInfo->brks, 0xff, breakInfo->brksSize));
@@ -2155,14 +2156,14 @@ MakeStyle(
 
     hPtr = Tcl_CreateHashEntry(&textPtr->dInfoPtr->styleTable, (char *) &styleValues, &isNew);
     if (!isNew) {
-	return Tcl_GetHashValue(hPtr);
+	return (TextStyle *)Tcl_GetHashValue(hPtr);
     }
 
     /*
      * No existing style matched. Make a new one.
      */
 
-    stylePtr = malloc(sizeof(TextStyle));
+    stylePtr = (TextStyle *)malloc(sizeof(TextStyle));
     stylePtr->refCount = 0;
     if (styleValues.border) {
 	gcValues.foreground = Tk_3DBorderColor(styleValues.border)->pixel;
@@ -2474,7 +2475,7 @@ LayoutSetupDispLineInfo(
     unsigned oldNumDispLines = TkBTreeGetNumberOfDisplayLines(pixelInfo);
 
     if (!dispLineInfo) {
-	dispLineInfo = malloc(TEXT_DISPLINEINFO_SIZE(2));
+	dispLineInfo = (TkTextDispLineInfo *)malloc(TEXT_DISPLINEINFO_SIZE(2));
 	DEBUG(memset(dispLineInfo, 0xff, TEXT_DISPLINEINFO_SIZE(2)));
 	DEBUG_ALLOC(tkTextCountNewDispInfo++);
 	pixelInfo->dispLineInfo = dispLineInfo;
@@ -2538,7 +2539,7 @@ LayoutUpdateLineHeightInformation(
 	if (dlPtr->displayLineNo >= dispLineInfo->numDispLines
 		&& !IsPowerOf2(dlPtr->displayLineNo + 2)) {
 	    unsigned size = NextPowerOf2(dlPtr->displayLineNo + 2);
-	    dispLineInfo = realloc(dispLineInfo, TEXT_DISPLINEINFO_SIZE(size));
+	    dispLineInfo = (TkTextDispLineInfo *)realloc(dispLineInfo, TEXT_DISPLINEINFO_SIZE(size));
 	    DEBUG(memset(dispLineInfo->entry + dlPtr->displayLineNo + 1, 0xff,
 		    (size - dlPtr->displayLineNo - 1)*sizeof(dispLineInfo->entry[0])));
 	    pixelInfo->dispLineInfo = dispLineInfo;
@@ -2670,7 +2671,7 @@ LayoutComputeBreakLocations(
 		}
 		if ((newSize = size + segPtr->size) >= capacity) {
 		    capacity = MAX(2*capacity, newSize + 1);
-		    str = realloc(str, newSize);
+		    str = (char *)realloc(str, newSize);
 		}
 		memcpy(str + size, segPtr->body.chars, segPtr->size);
 		size = newSize;
@@ -2702,7 +2703,7 @@ LayoutComputeBreakLocations(
 		/* The language variable doesn't matter here. */
 		if (size + 1 >= capacity) {
 		    assert(2*capacity > size + 1);
-		    str = realloc(str, capacity *= 2);
+		    str = (char *)realloc(str, capacity *= 2);
 		}
 		/* Substitute with a TAB, so we can break at this point. */
 		str[size++] = '\t';
@@ -2721,7 +2722,7 @@ LayoutComputeBreakLocations(
 		 * one additional byte for trailing NUL (see below).
 		 */
 		textPtr->brksBufferSize = MAX(newTotalSize, textPtr->brksBufferSize + 512);
-		textPtr->brksBuffer = realloc(textPtr->brksBuffer, textPtr->brksBufferSize + 1);
+		textPtr->brksBuffer = (char *)realloc(textPtr->brksBuffer, textPtr->brksBufferSize + 1);
 		brks = textPtr->brksBuffer;
 	    }
 
@@ -2768,7 +2769,7 @@ LayoutApplyHyphenRules(
     TkTextDispChunk *hyphenChunkPtr,
     TkTextDispChunk *nextCharChunkPtr)
 {
-    TkTextSegment *hyphenPtr = hyphenChunkPtr->clientData;
+    TkTextSegment *hyphenPtr = (TkTextSegment *)hyphenChunkPtr->clientData;
     const StyleValues *sValPtr = hyphenChunkPtr->stylePtr->sValuePtr;
     int hyphenRules = sValPtr->hyphenRules & hyphenChunkPtr->hyphenRules;
 
@@ -2796,8 +2797,8 @@ LayoutApplyHyphenRules(
 	    return;
 	}
 
-	while ((prevCiPtr = prevCharChunkPtr->clientData)->numBytes == 0) {
-	    if (!(prevCharChunkPtr = prevCharChunkPtr->prevCharChunkPtr)
+	while ((prevCiPtr = (const CharInfo *)prevCharChunkPtr->clientData)->numBytes == 0) {
+	    if (!(prevCharChunkPtr = (TkTextDispChunk *)prevCharChunkPtr->prevCharChunkPtr)
 		    || !IsCharChunk(prevCharChunkPtr)) {
 		return;
 	    }
@@ -2850,8 +2851,8 @@ LayoutApplyHyphenRules(
 	if (!IsCharChunk(nextCharChunkPtr)) {
 	    return;
 	}
-	if ((nextCiPtr = nextCharChunkPtr->clientData)->numBytes == 0) {
-	    TkTextSegment *segPtr = LayoutGetNextSegment(nextCharChunkPtr->clientData);
+	if ((nextCiPtr = (const CharInfo *)nextCharChunkPtr->clientData)->numBytes == 0) {
+	    TkTextSegment *segPtr = LayoutGetNextSegment((TkTextSegment *)nextCharChunkPtr->clientData);
 	    if (!segPtr) {
 		return;
 	    }
@@ -2981,7 +2982,8 @@ LayoutFinalizeCharInfo(
     LayoutData *data,
     bool gotTab)
 {
-    CharInfo *ciPtr = data->chunkPtr->clientData;
+    CharInfo *ciPtr = (CharInfo *)data->chunkPtr->clientData;
+    (void)gotTab;
 
     assert(data->trimSpaces ?
 	    (TkSizeT)data->chunkPtr->numBytes >= ciPtr->numBytes :
@@ -3101,6 +3103,8 @@ LayoutDoWidthAdjustmentForContextDrawing(
 	chunkPtr->xAdjustment = newWidth - chunkPtr->width;
 	chunkPtr->width = newWidth;
     }
+#else
+    (void)data;
 #endif
 }
 
@@ -3157,7 +3161,7 @@ LayoutNewSection(
 	dInfoPtr->sectionPoolPtr = dInfoPtr->sectionPoolPtr->nextPtr;
     } else {
 	DEBUG_ALLOC(tkTextCountNewSection++);
-	sectionPtr = malloc(sizeof(TkTextDispChunkSection));
+	sectionPtr = (TkTextDispChunkSection *)malloc(sizeof(TkTextDispChunkSection));
     }
 
     memset(sectionPtr, 0, sizeof(TkTextDispChunkSection));
@@ -3175,7 +3179,7 @@ LayoutMakeNewChunk(
     if ((newChunkPtr = dInfoPtr->chunkPoolPtr)) {
 	dInfoPtr->chunkPoolPtr = newChunkPtr->nextPtr;
     } else {
-	newChunkPtr = malloc(sizeof(TkTextDispChunk));
+	newChunkPtr = (TkTextDispChunk *)malloc(sizeof(TkTextDispChunk));
 	DEBUG_ALLOC(tkTextCountNewChunk++);
     }
     memset(newChunkPtr, 0, sizeof(TkTextDispChunk));
@@ -3197,6 +3201,8 @@ LayoutSkipBytes(
     const TkTextIndex *indexPtr1,
     const TkTextIndex *indexPtr2)
 {
+    (void)dlPtr;
+
     LayoutMakeNewChunk(data);
     data->chunkPtr->layoutProcs = &layoutElideProcs;
     data->chunkPtr->numBytes = TkTextIndexCountBytes(indexPtr1, indexPtr2);
@@ -3222,13 +3228,13 @@ LayoutSetupChunk(
 	if (!data->brks) {
 	    Tcl_HashEntry *hPtr;
 	    TkTextBreakInfo *breakInfo;
-	    int new;
+	    int isNew;
 
 	    hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->breakInfoTable,
-		    (void *) data->logicalLinePtr, &new);
+		    (void *) data->logicalLinePtr, &isNew);
 
-	    if (new) {
-		breakInfo = malloc(sizeof(TkTextBreakInfo));
+	    if (isNew) {
+		breakInfo = (TkTextBreakInfo *)malloc(sizeof(TkTextBreakInfo));
 		breakInfo->refCount = 1;
 		breakInfo->brks = NULL;
 		data->logicalLinePtr->changed = false;
@@ -3236,7 +3242,7 @@ LayoutSetupChunk(
 		DEBUG(breakInfo->brksSize = 0);
 		DEBUG_ALLOC(tkTextCountNewBreakInfo++);
 	    } else {
-		breakInfo = Tcl_GetHashValue(hPtr);
+		breakInfo = (TkTextBreakInfo *)Tcl_GetHashValue(hPtr);
 		breakInfo->refCount += 1;
 
 		/*
@@ -3251,12 +3257,12 @@ LayoutSetupChunk(
 		 */
 
 		if (data->logicalLinePtr->changed) {
-		    new = true;
+		    isNew = true;
 		    data->logicalLinePtr->changed = false;
 		}
 	    }
 
-	    if (new) {
+	    if (isNew) {
 		unsigned brksSize;
 
 		/*
@@ -3265,7 +3271,7 @@ LayoutSetupChunk(
 		 */
 
 		brksSize = LayoutComputeBreakLocations(data);
-		breakInfo->brks = realloc(breakInfo->brks, brksSize);
+		breakInfo->brks = (char *)realloc(breakInfo->brks, brksSize);
 		memcpy(breakInfo->brks, textPtr->brksBuffer, brksSize);
 		DEBUG(breakInfo->brksSize = brksSize);
 		DEBUG(stats.breakInfo += 1);
@@ -3290,9 +3296,9 @@ LayoutSetupChunk(
 
 	data->tabArrayPtr = sValuePtr->tabArrayPtr;
 	data->tabStyle = sValuePtr->tabStyle;
-	data->justify = sValuePtr->justify;
+	data->justify = (TkTextJustify)sValuePtr->justify;
 	data->rMargin = sValuePtr->rMargin;
-	data->wrapMode = sValuePtr->wrapMode;
+	data->wrapMode = (TkWrapMode)sValuePtr->wrapMode;
 	data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
 	data->width = dInfoPtr->maxX - dInfoPtr->x - data->rMargin;
 	data->maxX = (data->wrapMode == TEXT_WRAPMODE_NONE) ? -1 : MAX(data->width, data->x);
@@ -4183,7 +4189,7 @@ LayoutBreakLine(
 	nextChunkPtr = LayoutGetNextCharChunk(hyphenChunkPtr);
 
 	if (prevChunkPtr && nextChunkPtr) {
-	    TkTextSegment *hyphenSegPtr = hyphenChunkPtr->clientData;
+	    TkTextSegment *hyphenSegPtr = (TkTextSegment *)hyphenChunkPtr->clientData;
 
 	    LayoutApplyHyphenRules(data, prevChunkPtr, hyphenChunkPtr, nextChunkPtr);
 	    data->breakChunkPtr = prevChunkPtr;
@@ -4298,7 +4304,7 @@ LayoutBreakLine(
 
 	if (data->breakChunkPtr->breakIndex > 0 && data->breakChunkPtr->numSpaces > 0) {
 	    const TkTextDispChunk *breakChunkPtr = data->breakChunkPtr;
-	    const CharInfo *ciPtr = breakChunkPtr->clientData;
+	    const CharInfo *ciPtr = (const CharInfo *)breakChunkPtr->clientData;
 	    const char *p = ciPtr->u.chars + ciPtr->baseOffset + breakChunkPtr->breakIndex;
 	    const char *q = Tcl_UtfPrev(p, ciPtr->u.chars + ciPtr->baseOffset);
 
@@ -4484,10 +4490,10 @@ LayoutDLine(
 	dlPtr = dInfoPtr->dLinePoolPtr;
 	dInfoPtr->dLinePoolPtr = dlPtr->nextPtr;
     } else {
-	dlPtr = malloc(sizeof(DLine));
+	dlPtr = (DLine *)malloc(sizeof(DLine));
 	DEBUG_ALLOC(tkTextCountNewDLine++);
     }
-    dlPtr = memset(dlPtr, 0, sizeof(DLine));
+    dlPtr = (DLine *)memset(dlPtr, 0, sizeof(DLine));
     dlPtr->flags = NEW_LAYOUT|OLD_Y_INVALID;
     dlPtr->index = *indexPtr;
     TkTextIndexMakePersistent(&dlPtr->index);
@@ -6517,7 +6523,7 @@ DisplayDLine(
 		chunkPtr = dlPtr->cursorChunkPtr;
 
 		/* we are using a (pointer) hack in TkTextInsertDisplayProc */
-		chunkPtr->layoutProcs->displayProc(textPtr, MarkPointer(chunkPtr),
+		chunkPtr->layoutProcs->displayProc(textPtr, (TkTextDispChunk *)MarkPointer(chunkPtr),
 			cxMin, yBase, height, baseline, display, pm, screenY);
 
 		while (chunkPtr->prevPtr && chunkPtr->x + xOffs + chunkPtr->width > cxMin) {
@@ -7006,7 +7012,7 @@ static void
 AsyncUpdateLineMetrics(
     ClientData clientData)	/* Information about widget. */
 {
-    TkText *textPtr = clientData;
+    TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
     dInfoPtr->lineUpdateTimer = NULL;
@@ -8047,7 +8053,7 @@ FindDisplayLineStartEnd(
      */
 
     if (info.lastDLinePtr) {
-	FreeDLines(textPtr, info.lastDLinePtr, NULL, cacheType);
+	FreeDLines(textPtr, info.lastDLinePtr, NULL, (FreeDLineAction)cacheType);
 	if (info.dLinePtr == info.lastDLinePtr) {
 	    info.dLinePtr = NULL; /* don't release it twice */
 	}
@@ -8592,7 +8598,7 @@ static void
 DisplayText(
     ClientData clientData)	/* Information about widget. */
 {
-    TkText *textPtr = clientData;
+    TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     DLine *dlPtr;
     Pixmap pixmap;
@@ -11711,7 +11717,7 @@ static void
 AsyncUpdateYScrollbar(
     ClientData clientData)	/* Information about widget. */
 {
-    TkText *textPtr = clientData;
+    TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
 
     dInfoPtr->scrollbarTimer = NULL;
@@ -12684,6 +12690,11 @@ ElideBboxProc(
     int *widthPtr,		/* Gets filled in with width of character, in pixels. */
     int *heightPtr)		/* Gets filled in with height of character, in pixels. */
 {
+    (void)textPtr;
+    (void)index;
+    (void)lineHeight;
+    (void)baseline;
+
     *xPtr = chunkPtr->x;
     *yPtr = y;
     *widthPtr = *heightPtr = 0;
@@ -12698,6 +12709,9 @@ ElideMeasureProc(
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired coord. */
     int x)			/* X-coordinate, in same coordinate system as chunkPtr->x. */
 {
+    (void)chunkPtr;
+    (void)x;
+
     return 0;
 }
 
@@ -12767,10 +12781,11 @@ CharBboxProc(
     int *widthPtr,		/* Gets filled in with width of character, in pixels. */
     int *heightPtr)		/* Gets filled in with height of character, in pixels. */
 {
-    CharInfo *ciPtr = chunkPtr->clientData;
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int offset = ciPtr->baseOffset + byteIndex;
     int maxX = chunkPtr->width + chunkPtr->x;
     int nextX;
+    (void)lineHeight;
 
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex, chunkPtr->x, -1, textPtr->spaceMode, 0, xPtr);
 
@@ -13037,7 +13052,7 @@ MeasureBackwards(
 		int fit;
 
 		if ((size_t) length > sizeof(buffer)) {
-		    str = malloc(length);
+		    str = (char *)malloc(length);
 		}
 		memcpy(str, p, length);
 
@@ -13612,6 +13627,8 @@ TkpMeasureChars(
     int flags,
     int *lengthPtr)
 {
+    (void)numBytes;
+
     return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength, maxLength, flags, lengthPtr);
 }
 
@@ -13813,7 +13830,7 @@ AllocCharInfo(
     if ((ciPtr = dInfoPtr->charInfoPoolPtr)) {
 	dInfoPtr->charInfoPoolPtr = dInfoPtr->charInfoPoolPtr->u.next;
     } else {
-	ciPtr = malloc(sizeof(CharInfo));
+	ciPtr = (CharInfo *)malloc(sizeof(CharInfo));
 	DEBUG_ALLOC(tkTextCountNewCharInfo++);
     }
 
@@ -13880,6 +13897,8 @@ ComputeBreakIndex(
     TkWrapMode wrapMode,
     TkTextSpaceMode spaceMode)
 {
+    (void)textPtr;
+
     switch (wrapMode) {
     case TEXT_WRAPMODE_NONE:
 	break;
@@ -14304,7 +14323,7 @@ CharChunkMeasureChars(
     				 * the span here; can be NULL. */
 {
     Tk_Font tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
-    CharInfo *ciPtr = chunkPtr->clientData;
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
     int fit, rangeStart;
 
 #if TK_LAYOUT_WITH_BASE_CHUNKS
@@ -14471,7 +14490,7 @@ TkTextCharLayoutProc(
      */
 
     tkfont = chunkPtr->stylePtr->sValuePtr->tkfont;
-    ciPtr = chunkPtr->clientData;
+    ciPtr = (CharInfo *)chunkPtr->clientData;
     chunkPtr->layoutProcs = &layoutCharProcs;
     p = segPtr->body.chars + byteOffset;
 
@@ -14595,6 +14614,9 @@ CharDisplayProc(
     Drawable dst,		/* Pixmap or window in which to draw chunk. */
     int screenY)		/* Y-coordinate in text window that corresponds to y. */
 {
+    (void)height;
+    (void)screenY;
+
     if (chunkPtr->width > 0 && x + chunkPtr->width > 0) {
 	/* The chunk has displayable content, and is not off-screen. */
 	DisplayChars(textPtr, chunkPtr, x, y, baseline, display, dst);
@@ -14624,7 +14646,7 @@ CharUndisplayProc(
     TkText *textPtr,		/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
-    CharInfo *ciPtr = chunkPtr->clientData;
+    CharInfo *ciPtr = (CharInfo *)chunkPtr->clientData;
 
     if (!ciPtr) {
 	return;
@@ -14690,7 +14712,8 @@ HyphenUndisplayProc(
     TkText *textPtr,		/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
-    TkTextSegment *hyphenPtr = chunkPtr->clientData;
+    TkTextSegment *hyphenPtr = (TkTextSegment *)chunkPtr->clientData;
+    (void)textPtr;
 
     if (hyphenPtr) {
 	TkBTreeFreeSegment(hyphenPtr);
@@ -14880,8 +14903,9 @@ DrawChars(
 {
     const CharInfo *ciPtr;
     int numBytes;
+    (void)x;
 
-    ciPtr = chunkPtr->clientData;
+    ciPtr = (const CharInfo *)chunkPtr->clientData;
     numBytes = ciPtr->numBytes;
 
     assert(offsetBytes >= ciPtr->baseOffset);

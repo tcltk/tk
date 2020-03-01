@@ -48,7 +48,7 @@ TkIntSetData(
     const TkIntSet *set)
 {
     assert(set);
-    return (const void *) set->buf;
+    return (const unsigned char *) set->buf;
 }
 
 

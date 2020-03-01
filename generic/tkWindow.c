@@ -124,7 +124,7 @@ static const TkCmd commands[] = {
     {"place",		Tk_PlaceObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"raise",		Tk_RaiseObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
-    {"tk",		(Tcl_ObjCmdProc *) TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
+    {"tk",		(Tcl_ObjCmdProc *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"winfo",		Tk_WinfoObjCmd,		PASSMAINWINDOW|ISSAFE},
@@ -316,10 +316,10 @@ CreateTopLevelWindow(
 				 * parent. */
     unsigned int flags)		/* Additional flags to set on the window. */
 {
-    register TkWindow *winPtr;
-    register TkDisplay *dispPtr;
+    TkWindow *winPtr;
+    TkDisplay *dispPtr;
     int screenId;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
@@ -419,11 +419,11 @@ GetScreen(
 				 * DISPLAY envariable. */
     int *screenPtr)		/* Where to store screen number. */
 {
-    register TkDisplay *dispPtr;
+    TkDisplay *dispPtr;
     const char *p;
     int screenId;
     size_t length;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -487,7 +487,7 @@ GetScreen(
 
 	    Tcl_InitHashTable(&dispPtr->winTable, TCL_ONE_WORD_KEYS);
 
-	    dispPtr->name = ckalloc(length + 1);
+	    dispPtr->name = (char *)ckalloc(length + 1);
 	    strncpy(dispPtr->name, screenName, length);
 	    dispPtr->name[length] = '\0';
 	    break;
@@ -530,7 +530,7 @@ TkGetDisplay(
     Display *display)		/* X's display pointer */
 {
     TkDisplay *dispPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
@@ -563,7 +563,7 @@ TkGetDisplay(
 TkDisplay *
 TkGetDisplayList(void)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->displayList;
@@ -590,7 +590,7 @@ TkGetDisplayList(void)
 TkMainInfo *
 TkGetMainInfoList(void)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->mainWindowList;
@@ -620,7 +620,7 @@ TkAllocWindow(
 				 * inherit visual information. NULL means use
 				 * screen defaults instead of inheriting. */
 {
-    register TkWindow *winPtr = ckalloc(sizeof(TkWindow));
+    TkWindow *winPtr = (TkWindow *)ckalloc(sizeof(TkWindow));
 
     winPtr->display = dispPtr->display;
     winPtr->dispPtr = dispPtr;
@@ -699,7 +699,7 @@ TkAllocWindow(
 static int
 NameWindow(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    register TkWindow *winPtr,	/* Window that is to be named and inserted. */
+    TkWindow *winPtr,	/* Window that is to be named and inserted. */
     TkWindow *parentPtr,	/* Pointer to logical parent for winPtr (used
 				 * for naming, options, etc.). */
     const char *name)		/* Name for winPtr; must be unique among
@@ -769,7 +769,7 @@ NameWindow(
     if ((length1 + length2 + 2) <= FIXED_SIZE) {
 	pathName = staticSpace;
     } else {
-	pathName = ckalloc(length1 + length2 + 2);
+	pathName = (char *)ckalloc(length1 + length2 + 2);
     }
     if (length1 == 1) {
 	pathName[0] = '.';
@@ -791,7 +791,7 @@ NameWindow(
 	return TCL_ERROR;
     }
     Tcl_SetHashValue(hPtr, winPtr);
-    winPtr->pathName = Tcl_GetHashKey(&parentPtr->mainPtr->nameTable, hPtr);
+    winPtr->pathName = (char *)Tcl_GetHashKey(&parentPtr->mainPtr->nameTable, hPtr);
     return TCL_OK;
 }
 
@@ -830,11 +830,11 @@ TkCreateMainWindow(
     Tk_Window tkwin;
     int dummy, isSafe;
     Tcl_HashEntry *hPtr;
-    register TkMainInfo *mainPtr;
-    register TkWindow *winPtr;
-    register const TkCmd *cmdPtr;
+    TkMainInfo *mainPtr;
+    TkWindow *winPtr;
+    const TkCmd *cmdPtr;
     ClientData clientData;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -862,7 +862,7 @@ TkCreateMainWindow(
      */
 
     winPtr = (TkWindow *) tkwin;
-    mainPtr = ckalloc(sizeof(TkMainInfo));
+    mainPtr = (TkMainInfo *)ckalloc(sizeof(TkMainInfo));
     mainPtr->winPtr = winPtr;
     mainPtr->refCount = 1;
     mainPtr->interp = interp;
@@ -895,7 +895,7 @@ TkCreateMainWindow(
     winPtr->mainPtr = mainPtr;
     hPtr = Tcl_CreateHashEntry(&mainPtr->nameTable, ".", &dummy);
     Tcl_SetHashValue(hPtr, winPtr);
-    winPtr->pathName = Tcl_GetHashKey(&mainPtr->nameTable, hPtr);
+    winPtr->pathName = (char *)Tcl_GetHashKey(&mainPtr->nameTable, hPtr);
     Tcl_InitHashTable(&mainPtr->busyTable, TCL_ONE_WORD_KEYS);
 
     /*
@@ -937,7 +937,7 @@ TkCreateMainWindow(
 	    clientData = NULL;
 	}
 	if (cmdPtr->flags & USEINITPROC) {
-	    ((TkInitProc *) cmdPtr->objProc)(interp, clientData);
+	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
 	} else {
 	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);
@@ -1144,7 +1144,7 @@ Tk_CreateWindowFromPath(
      * the situation where the parent is ".".
      */
 
-    p = strrchr(pathName, '.');
+    p = (char *)strrchr(pathName, '.');
     if (p == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad window path name \"%s\"", pathName));
@@ -1153,7 +1153,7 @@ Tk_CreateWindowFromPath(
     }
     numChars = p-pathName;
     if (numChars > FIXED_SPACE) {
-	p = ckalloc(numChars + 1);
+	p = (char *)ckalloc(numChars + 1);
     } else {
 	p = fixedSpace;
     }
@@ -1238,7 +1238,7 @@ Tk_DestroyWindow(
     TkDisplay *dispPtr = winPtr->dispPtr;
     XEvent event;
     TkHalfdeadWindow *halfdeadPtr, *prev_halfdeadPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->flags & TK_ALREADY_DEAD) {
@@ -1261,7 +1261,7 @@ Tk_DestroyWindow(
 	    (tsdPtr->halfdeadWindowList->winPtr == winPtr)) {
 	halfdeadPtr = tsdPtr->halfdeadWindowList;
     } else {
-	halfdeadPtr = ckalloc(sizeof(TkHalfdeadWindow));
+	halfdeadPtr = (TkHalfdeadWindow *)ckalloc(sizeof(TkHalfdeadWindow));
 	halfdeadPtr->flags = 0;
 	halfdeadPtr->winPtr = winPtr;
 	halfdeadPtr->nextPtr = tsdPtr->halfdeadWindowList;
@@ -1484,7 +1484,7 @@ Tk_DestroyWindow(
 	    winPtr->mainPtr->deletionEpoch++;
 	}
 	if (winPtr->mainPtr->refCount-- <= 1) {
-	    register const TkCmd *cmdPtr;
+	    const TkCmd *cmdPtr;
 
 	    /*
 	     * We just deleted the last window in the application. Delete the
@@ -1671,7 +1671,7 @@ void
 Tk_MakeWindowExist(
     Tk_Window tkwin)		/* Token for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *winPtr2;
     Window parent;
     Tcl_HashEntry *hPtr;
@@ -1780,7 +1780,7 @@ void
 Tk_UnmapWindow(
     Tk_Window tkwin)		/* Token for window to unmap. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (!(winPtr->flags & TK_MAPPED) || (winPtr->flags & TK_ALREADY_DEAD)) {
 	return;
@@ -1817,7 +1817,7 @@ Tk_ConfigureWindow(
 				 * are to be used. */
     XWindowChanges *valuePtr)	/* New values. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (valueMask & CWX) {
 	winPtr->changes.x = valuePtr->x;
@@ -1853,7 +1853,7 @@ Tk_MoveWindow(
     Tk_Window tkwin,		/* Window to move. */
     int x, int y)		/* New location for window (within parent). */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->changes.x = x;
     winPtr->changes.y = y;
@@ -1871,7 +1871,7 @@ Tk_ResizeWindow(
     Tk_Window tkwin,		/* Window to resize. */
     int width, int height)	/* New dimensions for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->changes.width = (unsigned) width;
     winPtr->changes.height = (unsigned) height;
@@ -1891,7 +1891,7 @@ Tk_MoveResizeWindow(
     int x, int y,		/* New location for window (within parent). */
     int width, int height)	/* New dimensions for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->changes.x = x;
     winPtr->changes.y = y;
@@ -1912,7 +1912,7 @@ Tk_SetWindowBorderWidth(
     Tk_Window tkwin,		/* Window to modify. */
     int width)			/* New border width for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->changes.border_width = width;
     if (winPtr->window != None) {
@@ -1930,10 +1930,10 @@ Tk_ChangeWindowAttributes(
     Tk_Window tkwin,		/* Window to manipulate. */
     unsigned long valueMask,	/* OR'ed combination of bits, indicating which
 				 * fields of *attsPtr are to be used. */
-    register XSetWindowAttributes *attsPtr)
+    XSetWindowAttributes *attsPtr)
 				/* New values for some attributes. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (valueMask & CWBackPixmap) {
 	winPtr->atts.background_pixmap = attsPtr->background_pixmap;
@@ -1996,7 +1996,7 @@ Tk_SetWindowBackground(
     unsigned long pixel)	/* Pixel value to use for window's
 				 * background. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.background_pixel = pixel;
 
@@ -2013,7 +2013,7 @@ Tk_SetWindowBackgroundPixmap(
     Tk_Window tkwin,		/* Window to manipulate. */
     Pixmap pixmap)		/* Pixmap to use for window's background. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.background_pixmap = pixmap;
 
@@ -2031,7 +2031,7 @@ Tk_SetWindowBorder(
     Tk_Window tkwin,		/* Window to manipulate. */
     unsigned long pixel)	/* Pixel value to use for window's border. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.border_pixel = pixel;
 
@@ -2048,7 +2048,7 @@ Tk_SetWindowBorderPixmap(
     Tk_Window tkwin,		/* Window to manipulate. */
     Pixmap pixmap)		/* Pixmap to use for window's border. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.border_pixmap = pixmap;
 
@@ -2066,7 +2066,7 @@ Tk_DefineCursor(
     Tk_Window tkwin,		/* Window to manipulate. */
     Tk_Cursor cursor)		/* Cursor to use for window (may be None). */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.cursor = (Cursor) cursor;
 
@@ -2089,7 +2089,7 @@ Tk_SetWindowColormap(
     Tk_Window tkwin,		/* Window to manipulate. */
     Colormap colormap)		/* Colormap to use for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.colormap = colormap;
 
@@ -2131,7 +2131,7 @@ Tk_SetWindowVisual(
     int depth,			/* New depth for window. */
     Colormap colormap)		/* An appropriate colormap for the visual. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (winPtr->window != None) {
 	/* Too late! */
@@ -2174,7 +2174,7 @@ Tk_SetWindowVisual(
 
 void
 TkDoConfigureNotify(
-    register TkWindow *winPtr)	/* Window whose configuration was just
+    TkWindow *winPtr)	/* Window whose configuration was just
 				 * changed. */
 {
     XEvent event;
@@ -2220,7 +2220,7 @@ Tk_SetClass(
     Tk_Window tkwin,		/* Token for window to assign class. */
     const char *className)	/* New class for tkwin. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->classUid = Tk_GetUid(className);
     if (winPtr->flags & TK_WIN_MANAGED) {
@@ -2253,7 +2253,7 @@ Tk_SetClassProcs(
     const Tk_ClassProcs *procs,	/* Class procs structure. */
     ClientData instanceData)	/* Data to be passed to class functions. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->classProcsPtr = procs;
     winPtr->instanceData = instanceData;
@@ -2312,7 +2312,7 @@ Tk_NameToWindow(
 	}
 	return NULL;
     }
-    return Tcl_GetHashValue(hPtr);
+    return (Tk_Window)Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -2358,7 +2358,7 @@ Tk_IdToWindow(
     if (hPtr == NULL) {
 	return NULL;
     }
-    return Tcl_GetHashValue(hPtr);
+    return (Tk_Window)Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -2616,7 +2616,7 @@ Tk_MainWindow(
 	return NULL;
     }
 #endif
-    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = (ThreadSpecificData *)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (mainPtr = tsdPtr->mainWindowList; mainPtr != NULL;
 	    mainPtr = mainPtr->nextPtr) {
@@ -2686,7 +2686,7 @@ Tk_GetNumMainWindows(void)
     }
 #endif
 
-    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = (ThreadSpecificData *)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->numMainWindows;
 }
@@ -2744,7 +2744,7 @@ DeleteWindowsExitProc(
 {
     TkDisplay *dispPtr, *nextPtr;
     Tcl_Interp *interp;
-    ThreadSpecificData *tsdPtr = clientData;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)clientData;
 
     if (tsdPtr == NULL) {
 	return;
@@ -3007,6 +3007,8 @@ CopyValue(
     Tcl_Obj *objPtr,
     void *dstPtr)
 {
+    (void)dummy;
+
     *(Tcl_Obj **)dstPtr = objPtr;
     return 1;
 }
@@ -3033,17 +3035,17 @@ Initialize(
     const Tcl_ArgvInfo table[] = {
 	{TCL_ARGV_CONSTANT, "-sync", INT2PTR(1), &sync,
 		"Use synchronous mode for display server", NULL},
-	{TCL_ARGV_FUNC, "-colormap", CopyValue, &colorMapObj,
+	{TCL_ARGV_FUNC, "-colormap", (void *)CopyValue, &colorMapObj,
 		"Colormap for main window", NULL},
-	{TCL_ARGV_FUNC, "-display", CopyValue, &displayObj,
+	{TCL_ARGV_FUNC, "-display", (void *)CopyValue, &displayObj,
 		"Display to use", NULL},
-	{TCL_ARGV_FUNC, "-geometry", CopyValue, &geometryObj,
+	{TCL_ARGV_FUNC, "-geometry", (void *)CopyValue, &geometryObj,
 		"Initial geometry for window", NULL},
-	{TCL_ARGV_FUNC, "-name", CopyValue, &nameObj,
+	{TCL_ARGV_FUNC, "-name", (void *)CopyValue, &nameObj,
 		"Name to use for application", NULL},
-	{TCL_ARGV_FUNC, "-visual", CopyValue, &visualObj,
+	{TCL_ARGV_FUNC, "-visual", (void *)CopyValue, &visualObj,
 		"Visual for main window", NULL},
-	{TCL_ARGV_FUNC, "-use", CopyValue, &useObj,
+	{TCL_ARGV_FUNC, "-use", (void *)CopyValue, &useObj,
 		"Id of window in which to embed application", NULL},
 	TCL_ARGV_AUTO_REST, TCL_ARGV_AUTO_HELP, TCL_ARGV_TABLE_END
     };
@@ -3068,7 +3070,7 @@ Initialize(
 
     TkRegisterObjTypes();
 
-    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = (ThreadSpecificData *)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * We start by resetting the result because it might not be clean.

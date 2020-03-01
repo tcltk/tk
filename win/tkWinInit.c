@@ -35,6 +35,7 @@ int
 TkpInit(
     Tcl_Interp *interp)
 {
+    (void)interp;
     /*
      * This is necessary for static initialization, and is ok otherwise
      * because TkWinXInit flips a static bit to do its work just once.

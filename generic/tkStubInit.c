@@ -30,7 +30,6 @@
 #include "tkPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
-static const TkIntStubs tkIntStubs;
 MODULE_SCOPE const TkStubs tkStubs;
 
 /*
@@ -83,12 +82,16 @@ static int TkWinGetPlatformId(void) {
 int
 TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 {
+    (void)tkwin;
+    (void)colormap;
+
     /* dummy implementation, no need to do anything */
     return 0;
 }
 void
 TkpSync(Display *display)
 {
+    (void)display;
     /* dummy implementation, no need to do anything */
 }
 
@@ -121,22 +124,21 @@ TkCreateXEventSource(void)
  */
 
 #define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
+#ifdef __cplusplus
+extern "C" {
+#endif
 int __stdcall GetModuleHandleExW(unsigned int, const char *, void *);
-
-void *Tk_GetHINSTANCE()
-{
-    void *hInstance = NULL;
-
-    GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-	    (const char *) &tkIntStubs, &hInstance);
-    return hInstance;
+#ifdef __cplusplus
 }
+#endif
 
 void
 TkSetPixmapColormap(
     Pixmap pixmap,
     Colormap colormap)
 {
+    (void)pixmap;
+    (void)colormap;
 }
 
 void
@@ -162,6 +164,9 @@ TkPutImage(
     unsigned int width, unsigned int height)
 				/* Dimensions of subimage. */
 {
+    (void)colors;
+    (void)ncolors;
+
     return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
 
@@ -1227,3 +1232,16 @@ const TkStubs tkStubs = {
 };
 
 /* !END!: Do not edit above this line. */
+
+
+#ifdef __CYGWIN__
+void *Tk_GetHINSTANCE(void)
+{
+    void *hInstance = NULL;
+
+    GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+	    (const char *) &tkIntStubs, &hInstance);
+    return hInstance;
+}
+#endif
+

@@ -43,7 +43,7 @@ PreprocessMenu(
     TkMenu *menuPtr)
 {
     int index, result, finished;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     Tcl_Preserve(menuPtr);
@@ -67,7 +67,7 @@ PreprocessMenu(
     do {
 	finished = 1;
 	for (index = 0; index < (int)menuPtr->numEntries; index++) {
-	    register TkMenuEntry *entryPtr = menuPtr->entries[index];
+	    TkMenuEntry *entryPtr = menuPtr->entries[index];
 
 	    if ((entryPtr->type == CASCADE_ENTRY)
 		    && (entryPtr->namePtr != NULL)
@@ -129,7 +129,7 @@ int
 TkPreprocessMenu(
     TkMenu *menuPtr)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     tsdPtr->postCommandGeneration++;

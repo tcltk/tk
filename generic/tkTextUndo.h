@@ -36,8 +36,8 @@
  * Our (private) stack type.
  */
 
-struct TkTextUndoStack;
-typedef struct TkTextUndoStack * TkTextUndoStack;
+struct TkTextUndoStack_;
+typedef struct TkTextUndoStack_ *TkTextUndoStack;
 
 /*
  * The generic context type.

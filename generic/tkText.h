@@ -71,7 +71,7 @@
  * Forward declarations.
  */
 
-struct TkTextUndoStack;
+struct TkTextUndoStack_;
 struct TkBitField;
 struct TkTextUndoToken;
 union TkTextTagSet;
@@ -1177,7 +1177,7 @@ typedef struct TkSharedText {
      * Information related to the undo/redo functionality.
      */
 
-    struct TkTextUndoStack *undoStack;
+    TkTextUndoStack undoStack;
 				/* The undo/redo stack. */
     int maxUndoDepth;		/* The maximum depth of the undo stack expressed as the
     				 * maximum number of compound statements. */

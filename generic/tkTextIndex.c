@@ -2138,6 +2138,9 @@ TkTextSegToIndex(
  *---------------------------------------------------------------------------
  */
 
+MODULE_SCOPE bool TkpTextGetIndex(Tcl_Interp *interp, TkSharedText *sharedTextPtr, TkText *textPtr,
+			    const char *string, unsigned lenOfString, TkTextIndex *indexPtr);
+
 int
 TkTextGetIndex(
     Tcl_Interp *interp,		/* Use this for error reporting. */
@@ -2317,7 +2320,7 @@ TkpTextGetIndex(
 	    hPtr = Tcl_FindHashEntry(&sharedTextPtr->tagTable, myString);
 	    myString[lenOfString] = '.';
 	    if (hPtr) {
-		tagPtr = Tcl_GetHashValue(hPtr);
+		tagPtr = (TkTextTag *)Tcl_GetHashValue(hPtr);
 	    } else if (!wantCurrent
 		    && lenOfString >= 8
 		    && p[-8] == '.'
@@ -2383,7 +2386,7 @@ TkpTextGetIndex(
 	    }
 	}
 	if (!tagFound) {
-	    const char *tagName = hPtr ? Tcl_GetHashKey(&sharedTextPtr->tagTable, hPtr) : "sel";
+	    const char *tagName = hPtr ? (const char *)Tcl_GetHashKey(&sharedTextPtr->tagTable, hPtr) : "sel";
 
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "character near current position isn't tagged with \"%s\"", tagName));
@@ -2405,7 +2408,7 @@ TkpTextGetIndex(
 	    tagFound = TkBTreeNextTag(&search);
 	}
 	if (!tagFound) {
-	    const char *tagName = hPtr ? Tcl_GetHashKey(&sharedTextPtr->tagTable, hPtr) : "sel";
+	    const char *tagName = hPtr ? (const char *)Tcl_GetHashKey(&sharedTextPtr->tagTable, hPtr) : "sel";
 
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "text doesn't contain any characters tagged with \"%s\"", tagName));
@@ -3971,7 +3974,7 @@ StartEnd(
 		    indexPtr->priv.segPtr = segPtr;
 		    indexPtr->priv.isCharSegment = segPtr->typePtr == &tkTextCharType;
 		    if (firstChar) {
-			TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, mode);
+			TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, (TkTextCountType)mode);
 		    }
 		    return p;
 		}
@@ -4052,7 +4055,7 @@ StartEnd(
 			    firstChar = false;
 			}
 			if (offset == 0) {
-			    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr, mode);
+			    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr, (TkTextCountType)mode);
 			    segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
 			    if (offset < chSize && indexPtr->priv.byteIndex == 0) {
 				return p;
@@ -4073,7 +4076,7 @@ StartEnd(
 		    indexPtr->priv.segPtr = segPtr;
 		    indexPtr->priv.isCharSegment = segPtr->typePtr == &tkTextCharType;
 		    if (!firstChar) {
-			TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, mode);
+			TkTextIndexForwChars(textPtr, indexPtr, 1, indexPtr, (TkTextCountType)mode);
 		    }
 		    return p;
 		}

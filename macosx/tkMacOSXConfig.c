@@ -39,6 +39,10 @@ TkpGetSystemDefault(
     const char *dbName,			/* The option database name. */
     const char *className)		/* The name of the option class. */
 {
+    (void)tkwin;
+    (void)dbName;
+    (void)className;
+
     return NULL;
 }
 

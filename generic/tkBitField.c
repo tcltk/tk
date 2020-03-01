@@ -284,7 +284,7 @@ TkBitResize(
     unsigned newSize)
 {
     if (!bf) {
-	bf = malloc(BF_SIZE(newSize));
+	bf = (TkBitField *)malloc(BF_SIZE(newSize));
 	DEBUG_ALLOC(Use(bf));
 	bf->size = newSize;
 	bf->refCount = 1;
@@ -306,10 +306,10 @@ TkBitResize(
 
 	if (bf->refCount <= 1) {
 	    DEBUG_ALLOC(Free(bf));
-	    bf = realloc((char *) bf, BF_SIZE(newSize));
+	    bf = (TkBitField *)realloc((char *) bf, BF_SIZE(newSize));
 	    DEBUG_ALLOC(Use(bf));
 	} else {
-	    TkBitField *newBF = malloc(BF_SIZE(newSize));
+	    TkBitField *newBF = (TkBitField *)malloc(BF_SIZE(newSize));
 	    DEBUG_ALLOC(Use(newBF));
 	    memcpy(newBF->bits, bf->bits, NBYTES(MIN(oldWords, newWords)));
 	    newBF->refCount = 1;
@@ -387,7 +387,7 @@ TkBitCopy(
 	size = bf->size;
     }
 
-    copy = malloc(BF_SIZE(size));
+    copy = (TkBitField *)malloc(BF_SIZE(size));
     DEBUG_ALLOC(Use(copy));
     oldWords = NWORDS(bf->size);
     newWords = NWORDS(size);
