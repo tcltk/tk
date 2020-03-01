@@ -14,7 +14,7 @@
 #ifdef HAVE_COREFOUNDATION
 static int		GetLibraryPath(Tcl_Interp *interp);
 #else
-#define GetLibraryPath(dummy)	(void)0
+#define GetLibraryPath(dummy)	(void)dummy
 #endif /* HAVE_COREFOUNDATION */
 
 /*
@@ -37,10 +37,8 @@ static int		GetLibraryPath(Tcl_Interp *interp);
 
 int
 TkpInit(
-    Tcl_Interp *dummy)
+    Tcl_Interp *interp)
 {
-    (void)dummy;
-
     TkCreateXEventSource();
     GetLibraryPath(interp);
     return TCL_OK;

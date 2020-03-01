@@ -73,6 +73,7 @@ TkMacOSXInitCGDrawing(
     int limit)
 {
     static Boolean initialized = FALSE;
+    (void)enable;
 
     if (!initialized) {
 	initialized = TRUE;
@@ -866,6 +867,7 @@ XFillPolygon(
     MacDrawable *macWin = (MacDrawable *) d;
     TkMacOSXDrawingContext dc;
     int i;
+    (void)shape;
 
     display->request++;
     if (!TkMacOSXSetupDrawingContext(d, gc, 1, &dc)) {

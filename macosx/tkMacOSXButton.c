@@ -95,6 +95,8 @@ static void	PulseDefaultButtonProc(ClientData clientData);
 const Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
+    NULL,
+	NULL
 };
 
 static int bCount;

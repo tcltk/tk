@@ -26,7 +26,7 @@
 /*
  * Declaration for internal Xlib function used here:
  */
-#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC_OSX_TCL)
+#if !defined(_WIN32) && !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
 #ifdef __cplusplus
 extern "C" {
 #endif
