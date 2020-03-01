@@ -169,7 +169,7 @@ static inline CGRect BoxToRect(
  */
 
 static Ttk_StateTable ThemeStateTable[] = {
-    {kThemeStateActive, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
+    {kThemeStateActive, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeStateUnavailable, TTK_STATE_DISABLED, 0},
     {kThemeStatePressed, TTK_STATE_PRESSED, 0},
     {kThemeStateInactive, TTK_STATE_BACKGROUND, 0},
@@ -257,6 +257,7 @@ static void GetBackgroundColor(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *masterPtr = (TkWindow *) TkGetGeomMaster(tkwin);
+    (void)context;
 
     while (masterPtr && masterPtr->privatePtr) {
 	if (masterPtr->privatePtr->flags & TTK_HAS_CONTRASTING_BG) {
@@ -1046,6 +1047,7 @@ static void DrawDarkSeparator(
     NSColor *fillColor = [NSColor colorWithColorSpace: deviceRGB
 	components: fill
 	count:4];
+    (void)tkwin;
 
     CGContextSetFillColorWithColor(context, CGCOLOR(fillColor));
     CGContextFillRect(context, bounds);
@@ -1170,6 +1172,7 @@ static void DrawDarkListHeader(
 {
     NSColorSpace *deviceRGB = [NSColorSpace deviceRGBColorSpace];
     NSColor *stroke;
+    (void)tkwin;
 
     CGContextSetStrokeColorSpace(context, deviceRGB.CGColorSpace);
     CGFloat x = bounds.origin.x, y = bounds.origin.y;
@@ -1231,7 +1234,7 @@ static ThemeButtonParams
     ListHeaderParams =
 {kThemeListHeaderButton, kThemeMetricListHeaderHeight};
 static Ttk_StateTable ButtonValueTable[] = {
-    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND},
+    {kThemeButtonOff, TTK_STATE_ALTERNATE | TTK_STATE_BACKGROUND, 0},
     {kThemeButtonMixed, TTK_STATE_ALTERNATE, 0},
     {kThemeButtonOn, TTK_STATE_SELECTED, 0},
     {kThemeButtonOff, 0, 0}

@@ -44,7 +44,7 @@ static BuiltInIcon builtInIcons[] = {
     {"stop",		kAlertStopIcon},
     {"note",		kAlertNoteIcon},
     {"caution",		kAlertCautionIcon},
-    {NULL}
+    {NULL,			0}
 };
 
 #define builtInIconSize 32
