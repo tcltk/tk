@@ -97,6 +97,7 @@ proc ttk::treeview::Keynav {w dir} {
 	}
 	left {
             if {$cells} {
+                # This assumes that colAnchor is of the "#N" format.
                 set colNo [string range $colAnchor 1 end]
                 set firstCol [expr {"tree" ni [$w cget -show]}]
                 if {$colNo >  $firstCol} {
@@ -191,6 +192,8 @@ proc ttk::treeview::ActivateHeading {w heading} {
 proc ttk::treeview::IdentifyCell {w x y} {
     set cell {}
     if {[$w cget -selecttype] eq "cell"} {
+        # Later handling assumes that the column in the cell ID is of the
+        # format #N, which is always the case from "identify cell"
         set cell [$w identify cell $x $y]
     }
     return $cell

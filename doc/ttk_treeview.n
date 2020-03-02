@@ -124,6 +124,8 @@ is horizontally scrolled offscreen).
 Manages cell selection. Cell selection is independent from item selection
 handled by the \fBselection\fR command. A cell is given by a list of two
 elements, item and column.
+Only cells in displayed columns are allowed to be selected. Any change to
+\fB\-columns\fR or \fB\-displaycolumns\fR clears the cell selection.
 A \fIcellList\fR argument may be a single cell or a list of cells.
 If \fIselop\fR is not specified, returns the list of selected cells.
 Otherwise, \fIselop\fR is one of the following:
