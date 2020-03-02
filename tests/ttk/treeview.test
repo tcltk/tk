@@ -36,7 +36,30 @@ proc tvSetup {} {
     destroy .tv
     ttk::treeview .tv -columns {a b c}
     pack .tv -expand true -fill both
+    .tv column #0 -width 50
+    .tv column a -width 50
+    .tv column b -width 50
+    .tv column c -width 50
+    # Make sure everything is created and updated
+    tkwait visibility .tv
     update
+    after 10
+    update
+}
+proc tvSetupWithItems {} {
+    tvSetup
+    .tv insert {} end -id nn
+    .tv insert nn end -id nn.n1
+    .tv insert nn end -id nn.n2
+    .tv insert nn end -id nn.n3
+    for {set t 2} {$t < 100} {incr t} {
+        .tv insert {} end -id nn$t
+        if {$t % 3 == 0} {
+            .tv insert nn$t end -id nn$t.n1
+            .tv insert nn$t end -id nn$t.n2
+            .tv insert nn$t end -id nn$t.n3
+        }
+    }
 }
 
 test treeview-1.1 "columns" -body {
@@ -334,6 +357,18 @@ test treeview-5.13 "get, no value" -body {
     set result
 } -result {}
 
+test treeview-5.14 "set illegal height" -body {
+    # For now, -height can only be integer
+    .tv item newnode -height 1.5
+} -returnCodes 1 -result {expected integer but got "1.5"}
+
+test treeview-5.15 "set illegal height" -body {
+    .tv item newnode -height 0 
+} -returnCodes 1 -result "Invalid item height 0"
+
+test treeview-5.16 "no change after illegal attempt" -body {
+    .tv item newnode -height
+} -result 1
 
 test treeview-6.1 "deletion - setup" -body {
     .tv insert {} end -id dtest
@@ -465,6 +500,8 @@ test treeview-8.6 "Selection - <<TreeviewSelect>> on selection add" -body {
     .tv selection add newnode.n1
     update
     set res
+} -cleanup {
+    bind .tv <<TreeviewSelect>> {}
 } -result {1}
 
 test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
@@ -481,6 +518,8 @@ test treeview-8.7 "<<TreeviewSelect>> on selected item deletion" -body {
     .tv delete selectedDoomed
     update
     set res
+} -cleanup {
+    bind .tv <<TreeviewSelect>> {}
 } -result {1 1}
 
 ### NEED: more tests for see/yview/scrolling
@@ -489,6 +528,7 @@ proc scrollcallback {args} {
     set ::scrolldata $args
 }
 test treeview-9.0 "scroll callback - empty tree" -body {
+    tvSetup
     .tv configure -yscrollcommand scrollcallback
     .tv delete [.tv children {}]
     update
@@ -507,16 +547,67 @@ test treeview-9.1 "scrolling" -setup {
     destroy .tree
 } -result {I006}
 
+test treeview-10.0 "See command" -setup {
+    # Setup common for all 10.* tests
+    tvSetupWithItems
+    set ::baseBbY [lindex [.tv bbox nn "#1"] 1]
+    proc bbY {item} {
+        set bb [.tv bbox $item "#1"]
+        set y [lindex $bb 1]
+        if {$y eq ""} {return "_"}
+        return [expr {$y - $::baseBbY}]
+    }
+} -body {
+    set res ""
+    lappend res [bbY nn99]
+    .tv see nn99
+    lappend res [bbY nn99]
+    set res
+} -result {_ 180}
+
+test treeview-10.1 "See command, auto-open" -body {
+    set res ""
+    lappend res [bbY nn96]
+    # Not yet visible
+    lappend res [bbY nn96.n1]
+    .tv see nn96.n1
+    lappend res [bbY nn96.n1]
+    # Pushed out by the opening, not visible
+    lappend res [bbY nn99]
+    set res
+} -result {120 _ 140 _}
+
+test treeview-10.2 "See command, height" -setup {
+    .tv item nn34 -height 4
+    .tv item nn55 -height 30
+    .tv item nn76 -height 5
+} -body {
+    set res ""
+    lappend res [bbY nn34]
+    .tv see nn34
+    lappend res [bbY nn34]
+    .tv see nn33
+    lappend res [bbY nn34]
+
+    lappend res [bbY nn76]
+    .tv see nn76
+    lappend res [bbY nn76]
+
+    .tv see nn53
+    lappend res [bbY nn53]
+    # Partly visible
+    lappend res [bbY nn55]
+    .tv see nn55
+    # Scrolled to top
+    lappend res [bbY nn55]
+    set res
+} -result {_ 0 20 _ 100 0 40 0}
+
 test treeview-11.0 "Cellselection set rectangle" -setup {
     # Setup common for all 11.* tests
-    tvSetup
+    tvSetupWithItems
     .tv configure -columns {a b c d}
     .tv configure -displaycolumns {a b c}
-    .tv insert {} end -id nn
-    .tv insert nn end -id nn.n1
-    .tv insert nn end -id nn.n2
-    .tv insert nn end -id nn.n3
-    .tv insert {} end -id nn2
 } -body {
     .tv cellselection set "nn.n1 a" "nn.n3 b"
     .tv cellselection
@@ -593,6 +684,8 @@ test treeview-11.11 "Cellselection - <<TreeviewSelect>> on cellselection add" -b
     .tv cellselection add {"nn.n1 b"}
     update
     set res
+} -cleanup {
+    bind .tv <<TreeviewSelect>> {}
 } -result {1}
 
 test treeview-11.12 "<<TreeviewSelect>> on selected cell deletion" -body {
@@ -609,6 +702,8 @@ test treeview-11.12 "<<TreeviewSelect>> on selected cell deletion" -body {
     .tv delete selectedDoomed
     update
     set res
+} -cleanup {
+    bind .tv <<TreeviewSelect>> {}
 } -result {1 1}
 
 test treeview-11.13 "Cellselection - error" -body {
@@ -706,8 +801,8 @@ test treeview-identify-6 "vertical scan - with headings" -body {
 test treeview-identify-7 "vertical scan - headings, no tree" -body {
     .tv configure -displaycolumns #all -show {headings}
     update idletasks
-    identify* .tv {region item} 25 10  25 30  25 50  25 90  25 110
-} -result [list heading {} cell branch cell item1 cell item2 cell item3]
+    identify* .tv {region item cell} 25 10  25 30  25 50  75 90  25 110
+} -result [list heading {} {} cell branch {branch #1} cell item1 {item1 #1} cell item2 {item2 #2} cell item3 {item3 #1}]
 
 # In default theme, -indent and -itemheight both 20px
 # Disclosure element name is "Treeitem.indicator"
@@ -819,7 +914,7 @@ test treeview-identify-cleanup "identify - cleanup" -body {
 ### Misc. tests:
 
 destroy .tv
-test treeview-10.1 "Root node properly initialized (#1541739)" -setup {
+test treeview-1541739 "Root node properly initialized (#1541739)" -setup {
     ttk::treeview .tv
     .tv insert {} end -id a
     .tv see a
