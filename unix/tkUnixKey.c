@@ -138,8 +138,7 @@ TkpGetString(
 
 #ifdef TK_USE_INPUT_METHODS
     if ((winPtr->dispPtr->flags & TK_DISPLAY_USE_IM)
-	    && (winPtr->inputContext != NULL)
-	    && (eventPtr->type == KeyPress)) {
+	    && (winPtr->inputContext != NULL)) {
 	Status status;
 
 #if X_HAVE_UTF8_STRING
@@ -194,8 +193,7 @@ TkpGetString(
     {
 	/*
 	 * Fall back to convert a keyboard event to a UTF-8 string using
-	 * XLookupString. This is used when input methods are turned off and
-	 * for KeyRelease events.
+	 * XLookupString. This is used when input methods are turned off.
 	 *
 	 * Note: XLookupString() normally returns a single ISO Latin 1 or
 	 * ASCII control character.
