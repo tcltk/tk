@@ -41,7 +41,7 @@ static const struct {
     SPECIALMENU(help,	HELP),
     SPECIALMENU(apple,	APPLE),
     SPECIALMENU(window,	WINDOWS),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef SPECIALMENU
 
@@ -58,7 +58,7 @@ static const struct {
     MODIFIER(Command,	NSCommandKeyMask),
     MODIFIER(Cmd,	NSCommandKeyMask),
     MODIFIER(Meta,	NSCommandKeyMask),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef MODIFIER
 
@@ -86,7 +86,7 @@ static const struct {
     ACCEL(Help,		NSHelpFunctionKey),
     ACCEL(Power,	0x233d),
     ACCEL(Eject,	0xf804),
-    {NULL}
+    {NULL, 0, 0}
 };
 #undef ACCEL
 #undef sl
@@ -287,6 +287,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (BOOL) menuHasKeyEquivalent: (NSMenu *) menu forEvent: (NSEvent *) event
 	target: (id *) target action: (SEL *) action
 {
+    (void)menu;
+
     /*
      * Use lowercaseString when comparing keyEquivalents since the notion of
      * a shifted upper case letter does not make much sense.
@@ -343,6 +345,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuWillOpen: (NSMenu *) menu
 {
+    (void)menu;
+
     if (_tkMenu) {
 	//RecursivelyClearActiveMenu(_tkMenu);
 	GenerateMenuSelectEvent((TKMenu *)[self supermenu],
@@ -352,6 +356,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menuDidClose: (NSMenu *) menu
 {
+    (void)menu;
+
     if (_tkMenu) {
 	RecursivelyClearActiveMenu(_tkMenu);
     }
@@ -359,6 +365,8 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 - (void) menu: (NSMenu *) menu willHighlightItem: (NSMenuItem *) item
 {
+    (void)menu;
+
     if (_tkMenu) {
 	GenerateMenuSelectEvent(self, item);
     }
@@ -367,6 +375,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 - (void) menuNeedsUpdate: (NSMenu *) menu
 {
     TkMenu *menuPtr = (TkMenu *) _tkMenu;
+    (void)menu;
 
     if (menuPtr) {
 	Tcl_Interp *interp = menuPtr->interp;

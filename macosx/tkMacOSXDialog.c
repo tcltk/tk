@@ -204,9 +204,11 @@ getFileURL(
 }
 
 - (void)panel:(id)sender didChangeToDirectoryURL:(NSURL *)url {
+    (void)sender; (void)url;
 }
 
 - (BOOL)panel:(id)sender validateURL:(NSURL *)url error:(NSError **)outError {
+    (void)sender; (void)url;
     *outError = nil;
     return YES;
 }
@@ -1361,11 +1363,13 @@ TkAboutDlg(void)
 
 int
 TkMacOSXStandardAboutPanelObjCmd(
-    ClientData clientData,	/* Unused. */
+    ClientData dummy,	/* Unused. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
+    (void)dummy;
+
     if (objc > 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
@@ -1632,6 +1636,7 @@ enum FontchooserOption {
 - (void) changeFont: (id) sender
 {
     NSFontManager *fm = [NSFontManager sharedFontManager];
+    (void)sender;
 
     if ([fm currentFontAction] == NSViaPanelFontAction) {
 	NSFont *font = [fm convertFont:fontPanelFont];
@@ -1657,6 +1662,8 @@ enum FontchooserOption {
 
 - (NSUInteger) validModesForFontPanel: (NSFontPanel *) fontPanel
 {
+    (void)fontPanel;
+
     return (NSFontPanelStandardModesMask & ~NSFontPanelAllEffectsModeMask) |
 	    NSFontPanelUnderlineEffectModeMask |
 	    NSFontPanelStrikethroughEffectModeMask;
