@@ -1478,6 +1478,7 @@ TkScrollWindow(
     HIShapeRef dmgRgn = NULL, extraRgn = NULL;
     NSRect bounds, visRect, scrollSrc, scrollDst;
     int result = 0;
+    (void)gc;
 
     if (view) {
   	/*
@@ -1564,6 +1565,9 @@ TkMacOSXSetUpGraphicsPort(
     GC gc,			/* GC to apply to current port. */
     void *destPort)
 {
+    (void)gc;
+    (void)destPort;
+
     Tcl_Panic("TkMacOSXSetUpGraphicsPort: Obsolete, no more QD!");
 }
 
@@ -1598,6 +1602,7 @@ TkMacOSXSetupDrawingContext(
     NSWindow *win = NULL;
     TkMacOSXDrawingContext dc = {};
     CGRect clipBounds;
+    (void)useCG;
 
     /*
      * If the drawable is not a pixmap and it has an associated NSWindow then
@@ -1899,6 +1904,7 @@ void
 TkMacOSXSetUpClippingRgn(
     Drawable drawable)		/* Drawable to update. */
 {
+    (void)drawable;
 }
 
 /*
@@ -1926,6 +1932,7 @@ TkpClipDrawableToRect(
     int width, int height)
 {
     MacDrawable *macDraw = (MacDrawable *) d;
+    (void)display;
 
     if (macDraw->drawRgn) {
 	CFRelease(macDraw->drawRgn);
@@ -2014,6 +2021,9 @@ TkMacOSXMakeStippleMap(
     Drawable drawable,		/* Window to apply stipple. */
     Drawable stipple)		/* The stipple pattern. */
 {
+    (void)drawable;
+    (void)stipple;
+
     return NULL;
 }
 

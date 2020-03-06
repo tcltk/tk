@@ -92,6 +92,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
+    (void)aNotification;
 
     /*
      * Initialize notifications.
@@ -123,6 +124,8 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 
 -(void)applicationDidFinishLaunching:(NSNotification *)notification
 {
+    (void)notification;
+
     /*
      * It is not safe to force activation of the NSApp until this method is
      * called. Activating too early can cause the menu bar to be unresponsive.
@@ -484,11 +487,13 @@ TkpGetAppName(
 
 static int
 TkMacOSXGetAppPathCmd(
-    ClientData ignored,
+    ClientData dummy,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
+    (void)dummy;
+
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
@@ -621,6 +626,8 @@ TkMacOSXGetNamedSymbol(
     const char* symbol)
 {
     void *addr = dlsym(RTLD_NEXT, symbol);
+    (void)module;
+
     if (!addr) {
 	(void) dlerror(); /* Clear dlfcn error state */
     }

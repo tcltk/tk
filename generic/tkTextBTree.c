@@ -2268,7 +2268,7 @@ TkBTreeAddClient(
 
 	textPtr->pixelReference = useReference;
 	treePtr->numPixelReferences += 1;
-	treePtr->pixelInfoBuffer = realloc(treePtr->pixelInfoBuffer,
+	treePtr->pixelInfoBuffer = (NodePixelInfo *)realloc(treePtr->pixelInfoBuffer,
 		sizeof(treePtr->pixelInfoBuffer[0])*treePtr->numPixelReferences);
     } else {
 	textPtr->pixelReference = -1;
@@ -2388,7 +2388,7 @@ TkBTreeRemoveClient(
 
 	treePtr->numPixelReferences -= 1;
 	treePtr->clients -= 1;
-	treePtr->pixelInfoBuffer = realloc(treePtr->pixelInfoBuffer,
+	treePtr->pixelInfoBuffer = (NodePixelInfo *)realloc(treePtr->pixelInfoBuffer,
 		sizeof(treePtr->pixelInfoBuffer[0])*treePtr->numPixelReferences);
     }
 }
