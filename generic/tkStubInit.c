@@ -228,6 +228,9 @@ TkPutImage(
     unsigned int width, unsigned int height)
 				/* Dimensions of subimage. */
 {
+	(void)colors;
+	(void)ncolors;
+
     return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
 #endif /* MAC_OSX_TCL */

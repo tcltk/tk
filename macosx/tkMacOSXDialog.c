@@ -198,6 +198,8 @@ getFileURL(
 @implementation TKApplication(TKDialog)
 
 - (BOOL)panel:(id)sender shouldEnableURL:(NSURL *)url {
+	(void)sender;
+	(void)url;
     return YES;
 }
 

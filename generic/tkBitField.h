@@ -39,7 +39,7 @@ struct TkIntSet;
 typedef struct TkBitField {
     uint32_t refCount:31;
     uint32_t isSetFlag:1;
-    uint32_t size;
+    size_t size;
 #if TK_CHECK_ALLOCS
     struct TkBitField *next;
     struct TkBitField *prev;
@@ -88,8 +88,8 @@ void TkBitJoin2ComplementToIntersection(TkBitField *dst,
 void TkBitJoinOfDifferences(TkBitField *dst, const TkBitField *bf1, const TkBitField *bf2);
 
 inline bool TkBitIsEmpty(const TkBitField *bf);
-inline unsigned TkBitSize(const TkBitField *bf);
-unsigned TkBitCount(const TkBitField *bf);
+inline size_t TkBitSize(const TkBitField *bf);
+size_t TkBitCount(const TkBitField *bf);
 
 inline bool TkBitTest(const TkBitField *bf, unsigned n);
 inline bool TkBitNone(const TkBitField *bf);

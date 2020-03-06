@@ -381,6 +381,7 @@ UndoSetMarkGetCommand(
     const UndoTokenSetMark *token = (const UndoTokenSetMark *) item;
     const char *operation = POINTER_IS_MARKED(token->markPtr) ? "unset" : "set";
     Tcl_Obj *objPtr = Tcl_NewObj();
+    (void)sharedTextPtr;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("mark", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(operation, -1));
@@ -393,7 +394,7 @@ UndoSetMarkInspect(
     const TkTextUndoToken *item)
 {
     const UndoTokenSetMark *token = (const UndoTokenSetMark *) item;
-    const TkTextSegment *markPtr = GET_POINTER(token->markPtr);
+    const TkTextSegment *markPtr = (const TkTextSegment *)GET_POINTER(token->markPtr);
     Tcl_Obj *objPtr = UndoSetMarkGetCommand(sharedTextPtr, item);
 
     objPtr = AppendName(objPtr, sharedTextPtr, markPtr);
@@ -414,7 +415,7 @@ UndoSetMarkPerform(
     bool isRedo)
 {
     const UndoTokenSetMark *token = (const UndoTokenSetMark *) undoInfo->token;
-    TkTextSegment *markPtr = GET_POINTER(token->markPtr);
+    TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
 
     assert(!markPtr->body.mark.changePtr);
     UnsetMark(sharedTextPtr, markPtr, redoInfo);
@@ -430,7 +431,8 @@ UndoSetMarkDestroy(
     bool reused)
 {
     UndoTokenSetMark *token = (UndoTokenSetMark *) item;
-    TkTextSegment *markPtr = GET_POINTER(token->markPtr);
+    TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
+    (void)reused;
 
     assert(!reused);
     assert(!markPtr->body.mark.changePtr);
@@ -446,7 +448,8 @@ RedoSetMarkPerform(
     bool isRedo)
 {
     RedoTokenSetMark *token = (RedoTokenSetMark *) undoInfo->token;
-    TkTextSegment *markPtr = GET_POINTER(token->markPtr);
+    TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
+    (void)isRedo;
 
     assert(!markPtr->body.mark.changePtr);
     assert(TkTextIsNormalMark(markPtr));
@@ -462,7 +465,7 @@ RedoSetMarkPerform(
     if (redoInfo) {
 	UndoTokenSetMark *redoToken;
 
-	redoToken = malloc(sizeof(UndoTokenSetMark));
+	redoToken = (UndoTokenSetMark *)malloc(sizeof(UndoTokenSetMark));
 	redoToken->markPtr = token->markPtr;
 	redoToken->undoType = &undoTokenSetMarkType;
 	redoInfo->token = (TkTextUndoToken *) redoToken;
@@ -478,7 +481,8 @@ RedoSetMarkDestroy(
     bool reused)
 {
     RedoTokenSetMark *token = (RedoTokenSetMark *) item;
-    TkTextSegment *markPtr = GET_POINTER(token->markPtr);
+    TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
+    (void)reused;
 
     assert(!reused);
     assert(!markPtr->body.mark.changePtr);
@@ -495,7 +499,7 @@ UndoMarkGetRange(
     const UndoTokenToggleMark *token = (UndoTokenToggleMark *) item;
 
     TkTextIndexClear2(startIndex, NULL, sharedTextPtr->tree);
-    TkTextIndexSetSegment(startIndex, GET_POINTER(token->markPtr));
+    TkTextIndexSetSegment(startIndex, (TkTextSegment *)GET_POINTER(token->markPtr));
     *endIndex = *startIndex;
 }
 
@@ -519,7 +523,7 @@ RedoMoveMarkGetRange(
     TkTextIndex *endIndex)
 {
     UndoTokenMoveMark *token = (UndoTokenMoveMark *) item;
-    TkTextSegment *markPtr = GET_POINTER(token->markPtr);
+    TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
 
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->index, startIndex);
     TkTextIndexClear2(endIndex, NULL, sharedTextPtr->tree);
@@ -652,10 +656,10 @@ TkTextMarkCmd(
 	/* IMPORTANT NOTE: ensure fixed length (depending on pointer size) */
 	snprintf(uniqName, sizeof(uniqName),
 #ifdef TK_IS_64_BIT_ARCH
-	    "##ID##0x%016"PRIx64"##0x%016"PRIx64"##%08u##", /* we're on a real 64-bit system */
+	    "##ID##0x%016" PRIx64 "##0x%016" PRIx64 "##%08u##", /* we're on a real 64-bit system */
 	    (uint64_t) textPtr, (uint64_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
 #else /* if defined(TK_IS_32_BIT_ARCH) */
-	    "##ID##0x%08"PRIx32"##0x%08"PRIx32"##%08u##",   /* we're most likely on a 32-bit system */
+	    "##ID##0x%08" PRIx32 "##0x%08" PRIx32 "##%08u##",   /* we're most likely on a 32-bit system */
 	    (uint32_t) textPtr, (uint32_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
 #endif /* TK_IS_64_BIT_ARCH */
 	);
@@ -685,7 +689,7 @@ TkTextMarkCmd(
 	    if (!(hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable, str))) {
 		return SetResultNoMarkNamed(interp, Tcl_GetString(objv[3]));
 	    }
-	    markPtr = Tcl_GetHashValue(hPtr);
+	    markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 	}
 	if (objc == 4) {
 	    const char *typeStr;
@@ -757,10 +761,10 @@ TkTextMarkCmd(
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->markTable, &search);
 		hPtr;
 		hPtr = Tcl_NextHashEntry(&search)) {
-	    TkTextSegment *markPtr = Tcl_GetHashValue(hPtr);
+	    TkTextSegment *markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 
 	    if (!markPtr->privateMarkFlag && !markPtr->startEndMarkFlag) {
-		const char *name = Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr);
+		const char *name = (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr);
 
 		if (!pattern || Tcl_StringMatch(name, pattern)) {
 		    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(name, -1));
@@ -900,7 +904,7 @@ TkTextMarkCmd(
 
 	for (i = 3; i < objc; i++) {
 	    if ((hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable, Tcl_GetString(objv[i])))) {
-		TkTextSegment *markPtr = Tcl_GetHashValue(hPtr);
+		TkTextSegment *markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 
 		if (TkTextIsPrivateMark(markPtr)) {
 		    UnsetMark(textPtr->sharedTextPtr, markPtr, NULL);
@@ -957,7 +961,7 @@ TkTextFindMark(
 	break;
     }
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable, name);
-    return hPtr ? Tcl_GetHashValue(hPtr) : NULL;
+    return hPtr ? (TkTextSegment *)Tcl_GetHashValue(hPtr) : NULL;
 }
 
 /*
@@ -1029,7 +1033,7 @@ TkTextFreeMarks(
     TkTextSegment *markPtr;
 
     for ( ; hPtr; hPtr = Tcl_NextHashEntry(&search)) {
-	markPtr = Tcl_GetHashValue(hPtr);
+	markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 
 	assert(markPtr->body.mark.changePtr != (void *) 0xdeadbeef);
 	assert(markPtr->refCount > 0);
@@ -1039,13 +1043,13 @@ TkTextFreeMarks(
 	    markPtr->prevPtr = NULL;
 	    deletePtr = markPtr;
 	} else {
-	    const char *name = Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
+	    const char *name = (const char *)Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
 	    char *dup;
 
 	    markPtr->sectionPtr = NULL;
 	    markPtr->prevPtr = NULL;
 	    markPtr->nextPtr = retainedPtr;
-	    dup = malloc(strlen(name) + 1);
+	    dup = (char *)malloc(strlen(name) + 1);
 	    markPtr->body.mark.ptr = PTR_TO_INT(strcpy(dup, name));
 	    MAKE_PRESERVED(markPtr);
 	    retainedPtr = markPtr;
@@ -1166,7 +1170,7 @@ MakeMark(
 {
     TkTextSegment *markPtr;
 
-    markPtr = calloc(1, SEG_SIZE(TkTextMark));
+    markPtr = (TkTextSegment *)calloc(1, SEG_SIZE(TkTextMark));
     NEW_SEGMENT(markPtr);
     markPtr->typePtr = &tkTextRightMarkType;
     markPtr->refCount = 1;
@@ -1200,7 +1204,7 @@ TkTextMakeMark(
 	Tcl_SetHashValue(hPtr, markPtr);
 	textPtr->sharedTextPtr->numMarks += 1;
     } else {
-	markPtr = Tcl_GetHashValue(hPtr);
+	markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     }
 
     return markPtr;
@@ -1278,7 +1282,7 @@ MakeChangeItem(
     if (!changePtr) {
 	if (sharedTextPtr->undoMarkListCount == sharedTextPtr->undoMarkListSize) {
 	    sharedTextPtr->undoMarkListSize = MAX(20u, 2*sharedTextPtr->undoMarkListSize);
-	    sharedTextPtr->undoMarkList = realloc(sharedTextPtr->undoMarkList,
+	    sharedTextPtr->undoMarkList = (TkTextMarkChange *)realloc(sharedTextPtr->undoMarkList,
 		    sharedTextPtr->undoMarkListSize * sizeof(sharedTextPtr->undoMarkList[0]));
 	}
 	changePtr = &sharedTextPtr->undoMarkList[sharedTextPtr->undoMarkListCount++];
@@ -1306,7 +1310,7 @@ MakeUndoToggleGravity(
 	TkTextMarkChange *changePtr = MakeChangeItem(sharedTextPtr, markPtr);
 	UndoTokenToggleGravity *token;
 
-	token = calloc(1, sizeof(UndoTokenToggleGravity));
+	token = (UndoTokenToggleGravity *)calloc(1, sizeof(UndoTokenToggleGravity));
 	token->undoType = &undoTokenToggleGravityType;
 	(token->markPtr = markPtr)->refCount += 1;
 	DEBUG_ALLOC(tkTextCountNewUndoToken++);
@@ -1422,7 +1426,7 @@ UnsetMark(
 	}
 
 	memset(redoInfo, 0, sizeof(*redoInfo));
-	token = malloc(sizeof(RedoTokenSetMark));
+	token = (RedoTokenSetMark *)malloc(sizeof(RedoTokenSetMark));
 	token->undoType = &redoTokenSetMarkType;
 	markPtr->refCount += 1;
 	token->markPtr = markPtr;
@@ -1506,7 +1510,7 @@ TriggerWatchCursor(
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
 	if (numTags == tagArraySize) {
 	    tagArraySize *= 2;
-	    tagArrayPtr = realloc(tagArrayPtr == tagArrayBuffer ? NULL : tagArrayPtr, tagArraySize);
+	    tagArrayPtr = (TkTextTag **)realloc(tagArrayPtr == tagArrayBuffer ? NULL : tagArrayPtr, tagArraySize);
 	}
 	tagArrayPtr[numTags++] = tagPtr;
     }
@@ -1544,6 +1548,7 @@ TkTextReleaseUndoMarkTokens(
     TkSharedText *sharedTextPtr,
     TkTextMarkChange *changePtr)
 {
+    (void)sharedTextPtr;
     assert(sharedTextPtr);
     assert(changePtr);
 
@@ -1709,7 +1714,7 @@ SetMark(
     if (!widgetSpecific) {
 	int dummy;
 	hPtr = Tcl_CreateHashEntry(&sharedTextPtr->markTable, name, &dummy);
-	markPtr = Tcl_GetHashValue(hPtr);
+	markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     }
 
     if (!markPtr) {
@@ -1840,7 +1845,7 @@ SetMark(
 	    if (TkTextIndexIsEmpty(&oldIndex)) {
 		UndoTokenSetMark *token;
 
-		token = malloc(sizeof(UndoTokenSetMark));
+		token = (UndoTokenSetMark *)malloc(sizeof(UndoTokenSetMark));
 		token->undoType = &undoTokenSetMarkType;
 		(token->markPtr = markPtr)->refCount += 1;
 		DEBUG_ALLOC(tkTextCountNewUndoToken++);
@@ -1851,7 +1856,7 @@ SetMark(
 	    } else {
 		UndoTokenMoveMark *token;
 
-		token = malloc(sizeof(UndoTokenMoveMark));
+		token = (UndoTokenMoveMark *)malloc(sizeof(UndoTokenMoveMark));
 		token->undoType = &undoTokenMoveMarkType;
 		(token->markPtr = markPtr)->refCount += 1;
 		token->index = undoIndex;
@@ -2140,7 +2145,7 @@ TkTextMarkNameToIndex(
 	if (hPtr == NULL) {
 	    return false;
 	}
-	segPtr = Tcl_GetHashValue(hPtr);
+	segPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     }
 
     return MarkToIndex(textPtr, segPtr, indexPtr);
@@ -2311,8 +2316,8 @@ MarkDeleteProc(
 	     */
 
 	    Tcl_HashEntry *hPtr = GET_HPTR(segPtr);
-	    const char *name = Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
-	    unsigned size = strlen(name) + 1;
+	    const char *name = (const char *)Tcl_GetHashKey(&sharedTextPtr->markTable, hPtr);
+	    size_t size = strlen(name) + 1;
 
 	    assert(sharedTextPtr->steadyMarks);
 	    segPtr->body.mark.ptr = PTR_TO_INT(memcpy(malloc(size), name, size));
@@ -2518,6 +2523,12 @@ MarkLayoutProc(
     				 * field has already been set by the caller. */
 {
     TkText *textPtr = indexPtr->textPtr;
+    (void)offset;
+    (void)maxX;
+    (void)maxChars;
+    (void)noCharsYet;
+    (void)wrapMode;
+    (void)spaceMode;
 
     assert(indexPtr->textPtr);
 
@@ -2690,6 +2701,7 @@ TkTextGetCursorWidth(
 {
     int width;
     int cursorExtent = MAX(1, textPtr->insertWidth/2);
+    (void)x;
 
     if (extent) {
 	*extent = -cursorExtent;
@@ -2741,6 +2753,8 @@ TkTextInsertDisplayProc(
     int halfWidth = textPtr->insertWidth/2;
     int width = TkTextGetCursorWidth(textPtr, &x, NULL);
     int rightSideWidth = MAX(1, width + halfWidth - textPtr->insertWidth);
+    (void)baseline;
+    (void)display;
 
     if ((x + rightSideWidth) < 0) {
 	/*
@@ -2826,6 +2840,8 @@ InsertUndisplayProc(
     TkText *textPtr,		/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
+    (void)textPtr;
+
     chunkPtr->clientData = NULL;
     return;
 }
@@ -2885,7 +2901,7 @@ MarkFindNext(
 	     * if it happens to be at the same character position.
 	     */
 
-	    segPtr = Tcl_GetHashValue(hPtr);
+	    segPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
 	    if (!MarkToIndex(textPtr, segPtr, &index)) {
 		return SetResultNoMarkNamed(interp, indexStr);
 	    }
@@ -3028,7 +3044,7 @@ TkTextMarkName(
     if (!markPtr->body.mark.ptr) {
 	return NULL;
     }
-    return Tcl_GetHashKey(&sharedTextPtr->markTable, (Tcl_HashEntry *) markPtr->body.mark.ptr);
+    return (const char *)Tcl_GetHashKey(&sharedTextPtr->markTable, (Tcl_HashEntry *) markPtr->body.mark.ptr);
 }
 
 /*

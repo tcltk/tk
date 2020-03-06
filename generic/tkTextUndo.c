@@ -148,7 +148,7 @@ ResetCurrent(
 
     if (force || !current || current->capacity > InitialCapacity) {
 	static unsigned Size = ATOM_SIZE(InitialCapacity);
-	current = stack->current = realloc(current, Size);
+	current = stack->current = (TkTextUndoMyAtom *)realloc(current, Size);
 	/* NOTE: MSVS 2010 throws internal compiler error when using memset(realloc()). */
 	memset(current, 0, Size);
 	current->capacity = InitialCapacity;
@@ -170,7 +170,7 @@ SwapCurrent(
     assert(atom != current);
 
     if (current->capacity != current->data.size) {
-	current = stack->current = realloc(current, ATOM_SIZE(current->data.arraySize));
+	current = stack->current = (MyUndoAtom *)realloc(current, ATOM_SIZE(current->data.arraySize));
 	current->capacity = current->data.arraySize;
     }
 
@@ -417,7 +417,7 @@ TkTextUndoCreateStack(
     assert(undoProc);
 #endif
 
-    stack = calloc(1, sizeof(*stack));
+    stack = (TkTextUndoStack)calloc(1, sizeof(*stack));
     stack->undoProc = undoProc;
     stack->freeProc = freeProc;
     stack->contentChangedProc = contentChangedProc;
@@ -746,7 +746,7 @@ TkTextUndoPushItem(
 
     if (stack->doingUndo && TkTextUndoRedoStackIsFull(stack)) {
 	if (stack->freeProc) {
-	    stack->freeProc(stack, item);
+	    stack->freeProc(stack, (const TkTextUndoSubAtom *)item);
 	}
 	return TCL_ERROR;
     }
@@ -758,7 +758,7 @@ TkTextUndoPushItem(
 	atom = stack->current;
     } else if (atom->data.arraySize == atom->capacity) {
 	atom->capacity *= 2;
-	atom = stack->current = realloc(atom, ATOM_SIZE(atom->capacity));
+	atom = stack->current = (TkTextUndoMyAtom *)realloc(atom, ATOM_SIZE(atom->capacity));
     }
 
     subAtom = ((TkTextUndoSubAtom *) atom->data.array) + atom->data.arraySize++;

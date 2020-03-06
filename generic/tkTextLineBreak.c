@@ -175,6 +175,9 @@ GetLineBreakFunc(
 	    LoadLibUnibreak(interp);
 	}
     }
+#else
+    (void)interp;
+    (void)lang;
 #endif
     return libLinebreakFunc;
 }
