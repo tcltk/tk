@@ -2460,7 +2460,7 @@ TkpTextGetIndex(
 	goto gotBase;
     }
 
-    if (isdigit(string[0]) || string[0] == '-') {
+    if (isdigit(UCHAR(string[0])) || string[0] == '-') {
 	int lineIndex, charIndex;
 
 	/*
@@ -2493,7 +2493,7 @@ TkpTextGetIndex(
     }
 
     for (p = myString; *p; ++p) {
-	if (isspace(*p) || *p == '+' || *p == '-') {
+	if (isspace(UCHAR(*p)) || *p == '+' || *p == '-') {
 	    break;
 	}
     }
@@ -2577,7 +2577,7 @@ TkpTextGetIndex(
     cp = endOfBase;
 
     while (true) {
-	while (isspace(*cp)) {
+	while (isspace(UCHAR(*cp))) {
 	    cp++;
 	}
 	if (*cp == '\0') {
@@ -2742,7 +2742,7 @@ ForwBack(
      */
 
     p = string + 1;
-    while (isspace(*p)) {
+    while (isspace(UCHAR(*p))) {
 	p++;
     }
     count = strtol(p, &end, 0);
@@ -2750,7 +2750,7 @@ ForwBack(
 	return NULL;
     }
     p = end;
-    while (isspace(*p)) {
+    while (isspace(UCHAR(*p))) {
 	p++;
     }
 
@@ -2764,7 +2764,7 @@ ForwBack(
      */
 
     units = p;
-    while (*p != '\0' && !isspace(*p) && *p != '+' && *p != '-') {
+    while (*p != '\0' && !isspace(UCHAR(*p)) && *p != '+' && *p != '-') {
 	p++;
     }
     length = p - units;
@@ -2788,11 +2788,11 @@ ForwBack(
      */
 
     if (modifier != TKINDEX_NONE) {
-	while (isspace(*p)) {
+	while (isspace(UCHAR(*p))) {
 	    p++;
 	}
 	units = p;
-	while (*p != '\0' && !isspace(*p) && *p != '+' && *p != '-') {
+	while (*p != '\0' && !isspace(UCHAR(*p)) && *p != '+' && *p != '-') {
 	    p++;
 	}
 	length = p - units;
@@ -3847,7 +3847,7 @@ StartEnd(
      * Find the end of the modifier word.
      */
 
-    for (p = string; isalnum(*p); ++p) {
+    for (p = string; isalnum(UCHAR(*p)); ++p) {
 	/* Empty loop body. */
     }
     length = p - string;
@@ -3878,11 +3878,11 @@ StartEnd(
      */
 
     if (modifier != TKINDEX_NONE) {
-	while (isspace(*p)) {
+	while (isspace(UCHAR(*p))) {
 	    ++p;
 	}
 	string = p;
-	while (*p && !isspace(*p) && *p != '+' && *p != '-') {
+	while (*p && !isspace(UCHAR(*p)) && *p != '+' && *p != '-') {
 	    ++p;
 	}
 	length = p - string;

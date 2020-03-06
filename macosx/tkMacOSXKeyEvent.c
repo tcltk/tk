@@ -365,6 +365,9 @@ static unsigned	isFunctionKey(unsigned int code);
 - (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)theRange
       actualRange:(NSRangePointer)thePointer
 {
+    (void)theRange;
+    (void)thePointer;
+
     return nil;
 }
 
@@ -382,6 +385,7 @@ static unsigned	isFunctionKey(unsigned int code);
     Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
+    (void)selRange;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
         [aString string] : aString;
@@ -470,6 +474,9 @@ static unsigned	isFunctionKey(unsigned int code);
 {
     NSRect rect;
     NSPoint pt;
+    (void)theRange;
+    (void)thePointer;
+
     pt.x = caret_x;
     pt.y = caret_y;
 
@@ -524,6 +531,7 @@ static unsigned	isFunctionKey(unsigned int code);
 
 - (NSUInteger)characterIndexForPoint: (NSPoint)thePoint
 {
+    (void)thePoint;
     if (NS_KEYLOG) {
 	TKLog(@"characterIndexForPoint request");
     }
@@ -533,6 +541,8 @@ static unsigned	isFunctionKey(unsigned int code);
 - (NSAttributedString *)attributedSubstringFromRange: (NSRange)theRange
 {
     static NSAttributedString *str = nil;
+    (void)theRange;
+
     if (str == nil) {
 	str = [NSAttributedString new];
     }
@@ -631,6 +641,10 @@ XGrabKeyboard(
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
     TkWindow *captureWinPtr = (TkWindow *) TkpGetCapture();
+    (void)owner_events;
+    (void)pointer_mode;
+    (void)keyboard_mode;
+    (void)time;
 
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
@@ -669,6 +683,9 @@ XUngrabKeyboard(
     Display* display,
     Time time)
 {
+    (void)display;
+    (void)time;
+
     if (modalSession) {
 	[NSApp endModalSession:modalSession];
 	modalSession = nil;

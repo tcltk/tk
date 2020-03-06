@@ -3817,10 +3817,10 @@ TkTextTestLangCode(
 
     if (UCHAR(lang[0]) >= 0x80
 	    || UCHAR(lang[1]) >= 0x80
-	    || !isalpha(lang[0])
-	    || !isalpha(lang[1])
-	    || !islower(lang[0])
-	    || !islower(lang[1])
+	    || !isalpha(UCHAR(lang[0]))
+	    || !isalpha(UCHAR(lang[1]))
+	    || !islower(UCHAR(lang[0]))
+	    || !islower(UCHAR(lang[1]))
 	    || lang[2] != '\0') {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad lang \"%s\": "
 		"must have the form of an ISO 639-1 language code, or empty", lang));
@@ -3854,7 +3854,7 @@ IsNumberOrEmpty(
     const char *str)
 {
     for ( ; *str; ++str) {
-	if (!isdigit(*str)) {
+	if (!isdigit(UCHAR(*str))) {
 	    return false;
 	}
     }

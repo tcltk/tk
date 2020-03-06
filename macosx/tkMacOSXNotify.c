@@ -252,8 +252,9 @@ Tk_MacOSXSetupTkNotifier(void)
 
 static void
 TkMacOSXNotifyExitHandler(
-    ClientData clientData)	/* Not used. */
+    ClientData dummy)	/* Not used. */
 {
+    (void)dummy;
     TSD_INIT();
 
     Tcl_DeleteEventSource(TkMacOSXEventsSetupProc,
@@ -285,11 +286,12 @@ TkMacOSXNotifyExitHandler(
 
 static void
 TkMacOSXEventsSetupProc(
-    ClientData clientData,
+    ClientData dummy,
     int flags)
 {
     static Bool havePeriodicEvents = NO;
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
+    (void)dummy;
 
     /*
      * runloopMode will be nil if we are in a Tcl event loop.
@@ -348,10 +350,11 @@ TkMacOSXEventsSetupProc(
  */
 static void
 TkMacOSXEventsCheckProc(
-    ClientData clientData,
+    ClientData dummy,
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
+    (void)dummy;
 
     /*
      * runloopMode will be nil if we are in a Tcl event loop.
