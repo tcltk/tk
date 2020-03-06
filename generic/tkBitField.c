@@ -354,12 +354,12 @@ TkBitFromSet(
 }
 
 
-unsigned
+size_t
 TkBitCount(
     const TkBitField *bf)
 {
-    unsigned words, i;
-    unsigned count = 0;
+    size_t words, i;
+    size_t count = 0;
 
     assert(bf);
 
@@ -1530,7 +1530,7 @@ extern unsigned TkBitRefCount(const TkBitField *bf);
 extern void TkBitIncrRefCount(TkBitField *bf);
 extern unsigned TkBitDecrRefCount(TkBitField *bf);
 extern bool TkBitIsEmpty(const TkBitField *bf);
-extern unsigned TkBitSize(const TkBitField *bf);
+extern size_t TkBitSize(const TkBitField *bf);
 extern bool TkBitTest(const TkBitField *bf, unsigned n);
 extern bool TkBitNone(const TkBitField *bf);
 extern bool TkBitIntersects(const TkBitField *bf1, const TkBitField *bf2);

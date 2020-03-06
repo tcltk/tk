@@ -226,6 +226,7 @@ UndoChangeTagPriorityGetCommand(
 {
     const UndoTokenTagPriority *token = (const UndoTokenTagPriority *) item;
     Tcl_Obj *objPtr = Tcl_NewObj();
+    (void)sharedTextPtr;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("priority", -1));
@@ -254,6 +255,7 @@ UndoChangeTagPriorityPerform(
 {
     UndoTokenTagPriority *token = (UndoTokenTagPriority *) undoInfo->token;
     unsigned oldPriority = token->tagPtr->priority;
+    (void)isRedo;
 
     ChangeTagPriority(sharedTextPtr, token->tagPtr, token->priority, true);
 
@@ -270,6 +272,8 @@ UndoChangeTagPriorityDestroy(
     TkTextUndoToken *item,
     bool isRedo)
 {
+    (void)isRedo;
+
     UndoTokenTagPriority *token = (UndoTokenTagPriority *) item;
     TkTextReleaseTag(sharedTextPtr, token->tagPtr, NULL);
 }
@@ -430,7 +434,7 @@ TkTextTagCmd(
 
 	discardSelection = false;
 	epoch = TkBTreeEpoch(sharedTextPtr->tree);
-	arrayPtr = malloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
+	arrayPtr = (TkTextTag **)malloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
 	countTags = 0;
 	anyChanges = false;
 
@@ -506,7 +510,7 @@ TkTextTagCmd(
 
 		continue;
 	    }
-	    tagPtr = Tcl_GetHashValue(hPtr);
+	    tagPtr = (TkTextTag *)Tcl_GetHashValue(hPtr);
 	    undo = tagPtr->undo;
 	    assert(!tagPtr->isSelTag);
 	    if (TkTextDeleteTag(textPtr, tagPtr, hPtr) && undo) {
@@ -1213,7 +1217,7 @@ TkConfigureTag(
             Tcl_SetErrorCode(interp, "TK", "VALUE", "JUSTIFY", NULL);
 	    rc = TCL_ERROR;
 	} else {
-	    tagPtr->justify = j;
+	    tagPtr->justify = (TkTextJustify)j;
 	}
     }
     if (tagPtr->lMargin1String) {
@@ -1436,7 +1440,7 @@ TkTextFontHeightChanged(
     for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->tagTable, &search);
 	    hPtr;
 	    hPtr = Tcl_NextHashEntry(&search)) {
-	const TkTextTag *tagPtr = Tcl_GetHashValue(hPtr);
+	const TkTextTag *tagPtr = (const TkTextTag *)Tcl_GetHashValue(hPtr);
 
 	if (tagPtr->tkfont != NULL && tagPtr->tkfont != textPtr->tkfont) {
 	    Tk_FontMetrics fm;
@@ -1506,6 +1510,8 @@ AppendTags(
  *----------------------------------------------------------------------
  */
 
+# define TK_TEXT_SET_MAX_BIT_SIZE (((512 + TK_BIT_NBITS - 1)/TK_BIT_NBITS)*TK_BIT_NBITS)
+
 void
 TkTextReplaceTags(
     TkText *textPtr,		/* Info about overall window. */
@@ -1539,7 +1545,7 @@ TkTextReplaceTags(
     TkTextTagSetIncrRefCount(oldTagInfoPtr = segPtr->tagInfoPtr);
 
     if (objn > (int) (sizeof(tagArrBuf)/sizeof(tagArrBuf[0]))) {
-	tagArrPtr = malloc(objn*sizeof(tagArrPtr[0]));
+	tagArrPtr = (TkTextTag**)malloc(objn*sizeof(tagArrPtr[0]));
     }
 
     for (k = 0; k < objn; ++k) {
@@ -1718,6 +1724,7 @@ GrabSelection(
     				 * the text widget should become the owner again. */
 {
     bool ownSelection = add && textPtr->exportSelection && !(textPtr->flags & GOT_SELECTION);
+    (void)tagPtr;
 
     assert(textPtr);
     assert(tagPtr == textPtr->selTagPtr);
@@ -1976,9 +1983,9 @@ TkTextCreateTag(
 	    *newTag = isNew;
 	}
 	if (!isNew) {
-	    return Tcl_GetHashValue(hPtr);
+	    return (TkTextTag*)Tcl_GetHashValue(hPtr);
 	}
-	name = Tcl_GetHashKey(&sharedTextPtr->tagTable, hPtr);
+	name = (const char *)Tcl_GetHashKey(&sharedTextPtr->tagTable, hPtr);
     }
 
     if ((index = TkBitFindFirstNot(sharedTextPtr->usedTags)) == TK_BIT_NPOS) {
@@ -1997,7 +2004,7 @@ TkTextCreateTag(
 	sharedTextPtr->affectGeometryNonSelTags = TkBitResize(
 		sharedTextPtr->affectGeometryNonSelTags, newSize);
 	sharedTextPtr->affectLineHeightTags = TkBitResize(sharedTextPtr->affectLineHeightTags, newSize);
-	sharedTextPtr->tagLookup = realloc(sharedTextPtr->tagLookup, newSize * sizeof(TkTextTag *));
+	sharedTextPtr->tagLookup = (TkTextTag **)realloc(sharedTextPtr->tagLookup, newSize * sizeof(TkTextTag *));
 	DEBUG(memset(sharedTextPtr->tagLookup + oldSize, 0, (newSize - oldSize) * sizeof(TkTextTag *)));
     }
 
@@ -2010,7 +2017,7 @@ TkTextCreateTag(
      * to it to the hash table entry.
      */
 
-    tagPtr = calloc(1, sizeof(TkTextTag));
+    tagPtr = (TkTextTag *)calloc(1, sizeof(TkTextTag));
     tagPtr->name = name;
     tagPtr->index = index;
     tagPtr->priority = sharedTextPtr->numEnabledTags;
@@ -2080,7 +2087,7 @@ TkTextFindTag(
     }
     hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->tagTable, tagName);
     if (hPtr) {
-	return Tcl_GetHashValue(hPtr);
+	return (TkTextTag *)Tcl_GetHashValue(hPtr);
     }
     return NULL;
 }
@@ -2385,7 +2392,7 @@ TkTextFreeAllTags(
     for (hPtr = Tcl_FirstHashEntry(&sharedTextPtr->tagTable, &search);
 	    hPtr;
 	    hPtr = Tcl_NextHashEntry(&search)) {
-	TkTextTag *tagPtr = Tcl_GetHashValue(hPtr);
+	TkTextTag *tagPtr = (TkTextTag *)Tcl_GetHashValue(hPtr);
 
 	assert(tagPtr->refCount == 1);
 
@@ -2673,7 +2680,7 @@ TkTextTagAddRetainedUndo(
 
     if (sharedTextPtr->undoTagListCount == sharedTextPtr->undoTagListSize) {
 	sharedTextPtr->undoTagListSize = 2*sharedTextPtr->numEnabledTags;
-	sharedTextPtr->undoTagList = realloc(sharedTextPtr->undoTagList,
+	sharedTextPtr->undoTagList = (TkTextTag**)realloc(sharedTextPtr->undoTagList,
 		sharedTextPtr->undoTagListSize * sizeof(sharedTextPtr->undoTagList[0]));
     }
     sharedTextPtr->undoTagList[sharedTextPtr->undoTagListCount] = tagPtr;
@@ -2708,7 +2715,7 @@ TkTextPushTagPriorityUndo(
 {
     UndoTokenTagPriority *token;
 
-    token = malloc(sizeof(UndoTokenTagPriority));
+    token = (UndoTokenTagPriority *)malloc(sizeof(UndoTokenTagPriority));
     token->undoType = &undoTokenTagPriorityType;
     (token->tagPtr = tagPtr)->refCount += 1;
     token->priority = priority;
@@ -2742,7 +2749,7 @@ TkTextPushTagPriorityRedo(
 {
     UndoTokenTagPriority *token;
 
-    token = malloc(sizeof(UndoTokenTagPriority));
+    token = (UndoTokenTagPriority *)malloc(sizeof(UndoTokenTagPriority));
     token->undoType = &redoTokenTagPriorityType;
     (token->tagPtr = tagPtr)->refCount += 1;
     token->priority = priority;
@@ -2803,7 +2810,7 @@ ChangeTagPriority(
 
 	if (!tagPtr->recentChangePriorityToken) {
 	    tagPtr->savedPriority = tagPtr->priority;
-	    token = malloc(sizeof(UndoTokenTagPriority));
+	    token = (UndoTokenTagPriority *)malloc(sizeof(UndoTokenTagPriority));
 	    DEBUG_ALLOC(tkTextCountNewUndoToken++);
 	    tagPtr->recentChangePriorityToken = (TkTextUndoToken *) token;
 	    TkTextTagAddRetainedUndo(sharedTextPtr, tagPtr);
@@ -2837,7 +2844,7 @@ ChangeTagPriority(
     for (hPtr = Tcl_FirstHashEntry(&sharedTextPtr->tagTable, &search);
 	    hPtr;
 	    hPtr = Tcl_NextHashEntry(&search)) {
-	tagPtr2 = Tcl_GetHashValue(hPtr);
+	tagPtr2 = (TkTextTag *)Tcl_GetHashValue(hPtr);
 	if (low <= tagPtr2->priority && tagPtr2->priority <= high) {
 	    tagPtr2->priority += delta;
 	}
@@ -2871,7 +2878,7 @@ TkTextBindProc(
     ClientData clientData,	/* Pointer to canvas structure. */
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
-    TkText *textPtr = clientData;
+    TkText *textPtr = (TkText *)clientData;
     bool dontRepick = textPtr->dontRepick;
     bool repick = false;
 
@@ -3424,7 +3431,7 @@ TagBindEvent(
 	    if (countTags == sizeof(tagArrayBuf)/sizeof(tagArrayBuf[0])) {
 		/* It's quite unexpected that this case happens. */
 		unsigned count = TkTextTagSetCount(tagInfoPtr);
-		tagArrPtr = malloc(count*sizeof(tagArrayBuf[0]));
+		tagArrPtr = (TkTextTag **)malloc(count*sizeof(tagArrayBuf[0]));
 		memcpy(tagArrPtr, tagArrayBuf, countTags*sizeof(tagArrayBuf[0]));
 	    }
 	    tagArrPtr[countTags++] = tagPtr;
@@ -3492,10 +3499,12 @@ AddSet(
     TkBitField *dst,		/* can be NULL */
     const TkTextTagSet *src)
 {
-    TkBitField *compl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
+    TkBitField *cmpl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
+    (void)sharedTextPtr;
+    (void)src;
 
-    dst = AddBits(dst, compl);
-    TkBitDecrRefCount(compl);
+    dst = AddBits(dst, cmpl);
+    TkBitDecrRefCount(cmpl);
     return dst;
 }
 
@@ -3505,10 +3514,12 @@ AddComplementSet(
     TkBitField *dst,		/* can be NULL */
     const TkTextTagSet *src)
 {
-    TkBitField *compl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
+    TkBitField *cmpl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
+    (void)sharedTextPtr;
+    (void)src;
 
-    dst = AddComplementBits(dst, compl);
-    TkBitDecrRefCount(compl);
+    dst = AddComplementBits(dst, cmpl);
+    TkBitDecrRefCount(cmpl);
     return dst;
 }
 
@@ -3649,7 +3660,7 @@ EnumerateTags(
 	TkBitRemove(includeBits, discardBits);
     }
 
-    arrayPtr = malloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
+    arrayPtr = (TkTextTag **)malloc(sharedTextPtr->numEnabledTags * sizeof(TkTextTag *));
     countTags = 0;
 
     for (k = TkBitFindFirst(includeBits); k != TK_BIT_NPOS; k = TkBitFindNext(includeBits, k)) {

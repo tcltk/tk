@@ -641,7 +641,7 @@ static void LoadShellProcs(void)
         return;
 
     ShellProcs.SHCreateItemFromParsingName =
-        (SHCreateItemFromParsingNameProc*) GetProcAddress(shell32_handle,
+        (SHCreateItemFromParsingNameProc*)(void *)GetProcAddress(shell32_handle,
                                                          "SHCreateItemFromParsingName");
 }
 
@@ -788,7 +788,7 @@ Tk_ChooseColorObjCmd(
     chooseColor.lpCustColors	= dwCustColors;
     chooseColor.Flags		= CC_RGBINIT | CC_FULLOPEN | CC_ENABLEHOOK;
     chooseColor.lCustData	= (LPARAM) NULL;
-    chooseColor.lpfnHook	= (LPOFNHOOKPROC) ColorDlgHookProc;
+    chooseColor.lpfnHook	= (LPOFNHOOKPROC)(void *)ColorDlgHookProc;
     chooseColor.lpTemplateName	= (LPWSTR) interp;
 
     for (i = 1; i < objc; i += 2) {
@@ -1602,7 +1602,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     ofn.nMaxFile = TK_MULTI_MAX_PATH;
     ofn.Flags = OFN_HIDEREADONLY | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR
 	    | OFN_EXPLORER| OFN_ENABLEHOOK| OFN_ENABLESIZING;
-    ofn.lpfnHook = (LPOFNHOOKPROC) OFNHookProc;
+    ofn.lpfnHook = (LPOFNHOOKPROC)(void *)OFNHookProc;
     ofn.lCustData = (LPARAM) &ofnData;
 
     if (oper != OFN_FILE_SAVE) {

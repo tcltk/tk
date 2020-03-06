@@ -1163,7 +1163,7 @@ TkIntSetIsContainedBits(
     const TkIntSet *set,
     const TkBitField *bf)
 {
-    unsigned setSize, bitSize, i;
+    size_t setSize, bitSize, i;
 
     assert(bf);
     assert(set);

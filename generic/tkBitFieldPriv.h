@@ -111,7 +111,7 @@ TkBitDecrRefCount(
 
 
 inline
-unsigned
+size_t
 TkBitSize(
     const TkBitField *bf)
 {

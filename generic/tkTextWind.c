@@ -219,6 +219,9 @@ UndoLinkSegmentGetCommand(
     const TkTextUndoToken *item)
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
+    (void)sharedTextPtr;
+    (void)item;
+
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("window", -1));
     return objPtr;
 }
@@ -249,6 +252,7 @@ UndoLinkSegmentPerform(
     const UndoTokenLinkSegment *token = (const UndoTokenLinkSegment *) undoInfo->token;
     TkTextSegment *segPtr = token->segPtr;
     TkTextIndex index;
+    (void)isRedo;
 
     if (redoInfo) {
 	RedoTokenLinkSegment *redoToken;
@@ -275,6 +279,8 @@ UndoLinkSegmentDestroy(
     TkTextUndoToken *item,
     bool reused)
 {
+    (void)sharedTextPtr;
+
     if (!reused) {
 	UndoTokenLinkSegment *token = (UndoTokenLinkSegment *) item;
 
@@ -324,6 +330,7 @@ RedoLinkSegmentPerform(
 {
     RedoTokenLinkSegment *token = (RedoTokenLinkSegment *) undoInfo->token;
     TkTextIndex index;
+    (void)isRedo;
 
     TkBTreeReInsertSegment(sharedTextPtr, &token->index, token->segPtr);
 
@@ -990,6 +997,7 @@ EmbWinRequestProc(
     TkTextEmbWindowClient *client = clientData;
     TkTextSegment *ewPtr = client->parent;
     TkTextIndex index;
+    (void)tkwin;
 
     assert(ewPtr->typePtr);
 
@@ -1284,6 +1292,8 @@ EmbWinDeleteProc(
     TkTextSegment *ewPtr,	/* Segment being deleted. */
     int flags)			/* Flags controlling the deletion. */
 {
+    (void)sharedTextPtr;
+    (void)flags;
     assert(ewPtr->typePtr);
     assert(ewPtr->refCount > 0);
 
@@ -1320,6 +1330,7 @@ EmbWinRestoreProc(
     TkTextSegment *ewPtr)	/* Segment to reuse. */
 {
     int isNew;
+    (void)sharedTextPtr;
 
     if (ewPtr->body.ew.create) {
 	/*
@@ -1382,6 +1393,9 @@ EmbWinLayoutProc(
     TkText *textPtr = indexPtr->textPtr;
     bool cantEmbed = false;
     int x;
+    (void)offset;
+    (void)maxChars;
+    (void)spaceMode;
 
     assert(indexPtr->textPtr);
     assert(offset == 0);
@@ -1592,6 +1606,8 @@ EmbWinCheckProc(
     const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     const TkTextSegment *ewPtr)		/* Segment to check. */
 {
+    (void)sharedTextPtr;
+
     if (!ewPtr->nextPtr) {
 	Tcl_Panic("EmbWinCheckProc: embedded window is last segment in line");
     }
@@ -1638,6 +1654,9 @@ EmbWinDisplayProc(
     Tk_Window tkwin;
     TkTextSegment *ewPtr = chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
+    (void)y;
+    (void)display;
+    (void)dst;
 
     if (!client || !(tkwin = client->tkwin)) {
 	return;
@@ -1771,8 +1790,9 @@ EmbWinBboxProc(
     int *heightPtr)		/* Gets filled in with height of window, in pixels. */
 {
     Tk_Window tkwin;
-    TkTextSegment *ewPtr = chunkPtr->clientData;
+    TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
+    (void)index;
 
     tkwin = client ? client->tkwin : NULL;
     if (tkwin) {
@@ -1829,7 +1849,7 @@ static void
 EmbWinDelayedUnmap(
     ClientData clientData)	/* Token for the window to be unmapped. */
 {
-    TkTextEmbWindowClient *client = clientData;
+    TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
 
     if (!client->displayed && client->tkwin) {
 	if (client->textPtr->tkwin != Tk_Parent(client->tkwin)) {
@@ -1880,7 +1900,7 @@ TkTextWindowIndex(
 	return false;
     }
 
-    ewPtr = Tcl_GetHashValue(hPtr);
+    ewPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
     TkTextIndexClear(indexPtr, textPtr);
     TkTextIndexSetSegment(indexPtr, ewPtr);
     return true;
