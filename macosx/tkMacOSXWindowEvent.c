@@ -153,6 +153,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (NSSize)window:(NSWindow *)window
   willUseFullScreenContentSize:(NSSize)proposedSize
 {
+    (void)window;
     /*
      * We don't need to change the proposed size, but we do need to implement
      * this method.  Otherwise the full screen window will be sized to the
@@ -290,6 +291,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) applicationActivate: (NSNotification *) notification
 {
+    (void)notification;
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -314,6 +317,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) applicationDeactivate: (NSNotification *) notification
 {
+    (void)notification;
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -322,6 +327,9 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
                     hasVisibleWindows:(BOOL)flag
 {
+    (void)sender;
+    (void)flag;
+
     /*
      * Allowing the default response means that withdrawn windows will get
      * displayed on the screen with unresponsive title buttons.  We don't
@@ -354,6 +362,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) displayChanged: (NSNotification *) notification
 {
+    (void)notification;
+
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -889,7 +899,7 @@ ExposeRestrictProc(
 
 static Tk_RestrictAction
 ConfigureRestrictProc(
-    ClientData arg,
+    TCL_UNUSED(void *),
     XEvent *eventPtr)
 {
     return (eventPtr->type==ConfigureNotify ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
@@ -926,6 +936,7 @@ RedisplayView(
 {
     const NSRect *rectsBeingDrawn;
     NSInteger rectsBeingDrawnCount;
+    (void)rect;
 
 #ifdef TK_MAC_DEBUG_DRAWING
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
@@ -1152,6 +1163,8 @@ RedisplayView(
     int x, y;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     Tk_Window tkwin = (Tk_Window) winPtr;
+    (void)sender;
+
     if (!winPtr){
 	return;
     }
@@ -1196,6 +1209,7 @@ RedisplayView(
 
 - (void) keyDown: (NSEvent *) theEvent
 {
+	(void)theEvent;
 #ifdef TK_MAC_DEBUG_EVENTS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
 #endif

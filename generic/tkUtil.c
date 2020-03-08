@@ -48,7 +48,7 @@ int
 TkStateParseProc(
     ClientData clientData,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
     int offset)			/* Offset into item. */
@@ -58,7 +58,6 @@ TkStateParseProc(
     size_t length;
     Tcl_Obj *msgObj;
     Tk_State *statePtr = (Tk_State *) (widgRec + offset);
-    (void)tkwin;
 
     if (value == NULL || *value == 0) {
 	*statePtr = TK_STATE_NULL;
@@ -126,18 +125,15 @@ TkStateParseProc(
 
 const char *
 TkStatePrintProc(
-    ClientData dummy,	/* Ignored. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(void *),	/* Ignored. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+	TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {
     Tk_State *statePtr = (Tk_State *) (widgRec + offset);
-    (void)dummy;
-    (void)tkwin;
-    (void)freeProcPtr;
 
     switch (*statePtr) {
     case TK_STATE_NORMAL:
@@ -173,9 +169,9 @@ TkStatePrintProc(
 
 int
 TkOrientParseProc(
-    ClientData dummy,	/* some flags.*/
+    TCL_UNUSED(void *),	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
     int offset)			/* Offset into item. */
@@ -183,8 +179,6 @@ TkOrientParseProc(
     int c;
     size_t length;
     int *orientPtr = (int *) (widgRec + offset);
-    (void)dummy;
-    (void)tkwin;
 
     if (value == NULL || *value == 0) {
 	*orientPtr = 0;
@@ -233,18 +227,15 @@ TkOrientParseProc(
 
 const char *
 TkOrientPrintProc(
-    ClientData dummy,	/* Ignored. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(void *),	/* Ignored. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     int offset,			/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+	TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {
     int *statePtr = (int *) (widgRec + offset);
-    (void)dummy;
-    (void)tkwin;
-    (void)freeProcPtr;
 
     if (*statePtr) {
 	return "vertical";
@@ -418,16 +409,14 @@ TkOffsetParseProc(
 
 const char *
 TkOffsetPrintProc(
-    ClientData dummy,	/* not used */
-    Tk_Window tkwin,		/* not used */
+    TCL_UNUSED(void *),	/* not used */
+    TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
     int offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *) (widgRec + offset);
     char *p, *q;
-    (void)dummy;
-    (void)tkwin;
 
     if (offsetPtr->flags & TK_OFFSET_INDEX) {
 	if (offsetPtr->flags >= INT_MAX) {
@@ -521,16 +510,14 @@ TkPixelParseProc(
 
 const char *
 TkPixelPrintProc(
-    ClientData dummy,	/* not used */
-    Tk_Window tkwin,		/* not used */
+    TCL_UNUSED(void *),	/* not used */
+    TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
     int offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     double *doublePtr = (double *) (widgRec + offset);
     char *p = (char *)ckalloc(24);
-    (void)dummy;
-    (void)tkwin;
 
     Tcl_PrintDouble(NULL, *doublePtr, p);
     *freeProcPtr = TCL_DYNAMIC;
