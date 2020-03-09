@@ -163,6 +163,23 @@ XKeycodeToKeysym(
     }
     return KeycodeToKeysym(keycode, state, 0);
 }
+
+KeySym
+XkbKeycodeToKeysym(
+    Display *display,
+    unsigned int keycode,
+    int group,
+    int index)
+{
+    int state = 0;
+    (void)display;
+    (void)group;
+
+    if (index & 0x01) {
+	state |= ShiftMask;
+    }
+    return KeycodeToKeysym(keycode, state, 0);
+}
 
 /*
  *----------------------------------------------------------------------

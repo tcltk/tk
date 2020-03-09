@@ -44,6 +44,11 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 
+#ifndef HAVE_XKBKEYCODETOKEYSYM
+#   define XkbOpenDisplay 0
+#   define XkbKeycodeToKeysym 0
+#endif
+
 #if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #define Tk_MainEx 0
 #define Tk_FreeXId 0
@@ -760,6 +765,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetIMValues, /* 154 */
     XCreateFontSet, /* 155 */
     XFreeStringList, /* 156 */
+    XkbKeycodeToKeysym, /* 157 */
+    XkbOpenDisplay, /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
     XSetDashes, /* 0 */
@@ -919,6 +926,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetIMValues, /* 154 */
     XCreateFontSet, /* 155 */
     XFreeStringList, /* 156 */
+    XkbKeycodeToKeysym, /* 157 */
+    XkbOpenDisplay, /* 158 */
 #endif /* MACOSX */
 };
 
