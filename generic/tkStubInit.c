@@ -44,11 +44,6 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 
-#ifndef HAVE_XKBKEYCODETOKEYSYM
-#   define XkbOpenDisplay 0
-#   define XkbKeycodeToKeysym 0
-#endif
-
 #if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #define Tk_MainEx 0
 #define Tk_FreeXId 0

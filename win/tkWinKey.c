@@ -561,7 +561,7 @@ TkpInitKeymapInfo(
 
 /*
  * When mapping from a keysym to a keycode, need information about the
- * modifier state that should be used so that when they call XKeycodeToKeysym
+ * modifier state that should be used so that when they call XkbKeycodeToKeysym
  * taking into account the xkey.state, they will get back the original keysym.
  */
 
