@@ -2866,7 +2866,7 @@ TkCygwinMainEx(
 	return 0;
     }
     tkmainex = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *))
-	    GetProcAddress(tkcygwindll, "Tk_MainEx");
+	    (void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
     if (!tkmainex) {
 	return 0;
     }
@@ -2906,7 +2906,7 @@ Tk_Init(
     if (tkcygwindll) {
 	int (*tkinit)(Tcl_Interp *);
 
-	tkinit = (int(*)(Tcl_Interp *)) GetProcAddress(tkcygwindll,"Tk_Init");
+	tkinit = (int(*)(Tcl_Interp *))(void *)GetProcAddress(tkcygwindll,"Tk_Init");
 	if (tkinit) {
 	    return tkinit(interp);
 	}
@@ -2980,7 +2980,7 @@ Tk_SafeInit(
 	int (*tksafeinit)(Tcl_Interp *);
 
 	tksafeinit = (int (*)(Tcl_Interp *))
-		GetProcAddress(tkcygwindll, "Tk_SafeInit");
+		(void *)GetProcAddress(tkcygwindll, "Tk_SafeInit");
 	if (tksafeinit) {
 	    return tksafeinit(interp);
 	}
