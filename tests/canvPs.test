@@ -19,7 +19,7 @@ pack .c
 update
 
 test canvPs-1.1 {test writing to a file} -constraints {
-    unixOrPc
+    unixOrWin
 } -setup {
     set foo [makeFile {} foo.ps]
 } -body {
@@ -29,7 +29,7 @@ test canvPs-1.1 {test writing to a file} -constraints {
     removeFile foo.ps
 } -result 1
 test canvPs-1.2 {test writing to a file, idempotency} -constraints {
-    unixOrPc
+    unixOrWin
 } -setup {
     set foo [makeFile {} foo.ps]
     set bar [makeFile {} bar.ps]
@@ -48,7 +48,7 @@ test canvPs-1.2 {test writing to a file, idempotency} -constraints {
 
 
 test canvPs-2.1 {test writing to a channel} -constraints {
-    unixOrPc
+    unixOrWin
 } -setup {
     set foo [makeFile {} foo.ps]
     file delete $foo
@@ -62,7 +62,7 @@ test canvPs-2.1 {test writing to a channel} -constraints {
     removeFile foo.ps
 } -result 1
 test canvPs-2.2 {test writing to channel, idempotency} -constraints {
-    unixOrPc
+    unixOrWin
 } -setup {
     set foo [makeFile {} foo.ps]
     set bar [makeFile {} bar.ps]
