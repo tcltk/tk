@@ -383,7 +383,7 @@ static const Tk_OptionSpec slaveOptionSpecs[] = {
 
 int
 Tk_PanedWindowObjCmd(
-    ClientData clientData,	/* NULL. */
+    ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
@@ -392,6 +392,7 @@ Tk_PanedWindowObjCmd(
     Tk_Window tkwin, parent;
     OptionTables *pwOpts;
     XSetWindowAttributes atts;
+    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -414,7 +415,7 @@ Tk_PanedWindowObjCmd(
 	 * easy access to it in the future.
 	 */
 
-	pwOpts = ckalloc(sizeof(OptionTables));
+	pwOpts = (OptionTables *)ckalloc(sizeof(OptionTables));
 
 	/*
 	 * Set up an exit handler to free the optionTables struct.
@@ -437,7 +438,7 @@ Tk_PanedWindowObjCmd(
      * Allocate and initialize the widget record.
      */
 
-    pwPtr = ckalloc(sizeof(PanedWindow));
+    pwPtr = (PanedWindow *)ckalloc(sizeof(PanedWindow));
     memset((void *)pwPtr, 0, (sizeof(PanedWindow)));
     pwPtr->tkwin = tkwin;
     pwPtr->display = Tk_Display(tkwin);
@@ -535,7 +536,7 @@ PanedWindowWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-    PanedWindow *pwPtr = clientData;
+    PanedWindow *pwPtr = (PanedWindow *)clientData;
     int result = TCL_OK;
     static const char *const optionStrings[] = {
 	"add", "cget", "configure", "forget", "identify", "panecget",
@@ -903,7 +904,7 @@ ConfigureSlaves(
      * structures may already have existed, some may be new.
      */
 
-    inserts = ckalloc(sizeof(Slave *) * (firstOptionArg - 2));
+    inserts = (Slave **)ckalloc(sizeof(Slave *) * (firstOptionArg - 2));
     insertIndex = 0;
 
     /*
@@ -970,7 +971,7 @@ ConfigureSlaves(
 	 * out with their "natural" dimensions.
 	 */
 
-	slavePtr = ckalloc(sizeof(Slave));
+	slavePtr = (Slave *)ckalloc(sizeof(Slave));
 	memset(slavePtr, 0, sizeof(Slave));
 	Tk_InitOptions(interp, slavePtr, pwPtr->slaveOpts,
 		pwPtr->tkwin);
@@ -1010,7 +1011,7 @@ ConfigureSlaves(
      */
 
     i = sizeof(Slave *) * (pwPtr->numSlaves + numNewSlaves);
-    newSlaves = ckalloc(i);
+    newSlaves = (Slave **)ckalloc(i);
     memset(newSlaves, 0, i);
     if (index == -1) {
 	/*
@@ -1295,7 +1296,7 @@ PanedWindowWorldChanged(
 {
     XGCValues gcValues;
     GC newGC;
-    PanedWindow *pwPtr = instanceData;
+    PanedWindow *pwPtr = (PanedWindow *)instanceData;
 
     /*
      * Allocated a graphics context for drawing the paned window widget
@@ -1352,7 +1353,7 @@ PanedWindowEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    PanedWindow *pwPtr = clientData;
+    PanedWindow *pwPtr = (PanedWindow *)clientData;
     int i;
 
     if (eventPtr->type == Expose) {
@@ -1405,7 +1406,7 @@ static void
 PanedWindowCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    PanedWindow *pwPtr = clientData;
+    PanedWindow *pwPtr = (PanedWindow *)clientData;
 
     /*
      * This function could be invoked either because the window was destroyed
@@ -1442,7 +1443,7 @@ static void
 DisplayPanedWindow(
     ClientData clientData)	/* Information about window. */
 {
-    PanedWindow *pwPtr = clientData;
+    PanedWindow *pwPtr = (PanedWindow *)clientData;
     Slave *slavePtr;
     Pixmap pixmap;
     Tk_Window tkwin = pwPtr->tkwin;
@@ -1630,8 +1631,9 @@ PanedWindowReqProc(
     Tk_Window tkwin)		/* Other Tk-related information about the
 				 * window. */
 {
-    Slave *slavePtr = clientData;
+    Slave *slavePtr = (Slave *)clientData;
     PanedWindow *pwPtr = (PanedWindow *) slavePtr->masterPtr;
+    (void)tkwin;
 
     if (Tk_IsMapped(pwPtr->tkwin)) {
 	if (!(pwPtr->flags & RESIZE_PENDING)) {
@@ -1675,8 +1677,9 @@ PanedWindowLostSlaveProc(
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    register Slave *slavePtr = clientData;
+    Slave *slavePtr = (Slave *)clientData;
     PanedWindow *pwPtr = (PanedWindow *) slavePtr->masterPtr;
+    (void)tkwin;
 
     if (pwPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
 	Tk_UnmaintainGeometry(slavePtr->tkwin, pwPtr->tkwin);
@@ -1714,8 +1717,8 @@ ArrangePanes(
     ClientData clientData)	/* Structure describing parent whose slaves
 				 * are to be re-layed out. */
 {
-    register PanedWindow *pwPtr = clientData;
-    register Slave *slavePtr;
+    PanedWindow *pwPtr = (PanedWindow *)clientData;
+    Slave *slavePtr;
     int i, slaveWidth, slaveHeight, slaveX, slaveY;
     int paneWidth, paneHeight, paneSize, paneMinSize;
     int doubleBw;
@@ -2014,9 +2017,9 @@ ArrangePanes(
 
 static void
 Unlink(
-    register Slave *slavePtr)		/* Window to unlink. */
+    Slave *slavePtr)		/* Window to unlink. */
 {
-    register PanedWindow *masterPtr;
+    PanedWindow *masterPtr;
     int i, j;
 
     masterPtr = slavePtr->masterPtr;
@@ -2160,7 +2163,7 @@ SlaveStructureProc(
     ClientData clientData,	/* Pointer to record describing window item. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    Slave *slavePtr = clientData;
+    Slave *slavePtr = (Slave *)clientData;
     PanedWindow *pwPtr = slavePtr->masterPtr;
 
     if (eventPtr->type == DestroyNotify) {
@@ -2370,8 +2373,10 @@ ComputeGeometry(
 static void
 DestroyOptionTables(
     ClientData clientData,	/* Pointer to the OptionTables struct */
-    Tcl_Interp *interp)		/* Pointer to the calling interp */
+    Tcl_Interp *dummy)		/* Pointer to the calling interp */
 {
+    (void)dummy;
+
     ckfree(clientData);
 }
 
@@ -2394,7 +2399,7 @@ DestroyOptionTables(
 
 static Tcl_Obj *
 GetSticky(
-    ClientData clientData,
+    ClientData dummy,
     Tk_Window tkwin,
     char *recordPtr,		/* Pointer to widget record. */
     int internalOffset)		/* Offset within *recordPtr containing the
@@ -2403,6 +2408,8 @@ GetSticky(
     int sticky = *(int *)(recordPtr + internalOffset);
     char buffer[5];
     char *p = &buffer[0];
+    (void)dummy;
+    (void)tkwin;
 
     if (sticky & STICK_NORTH) {
 	*p++ = 'n';
@@ -2442,7 +2449,7 @@ GetSticky(
 
 static int
 SetSticky(
-    ClientData clientData,
+    ClientData dummy,
     Tcl_Interp *interp,		/* Current interp; may be used for errors. */
     Tk_Window tkwin,		/* Window for which option is being set. */
     Tcl_Obj **value,		/* Pointer to the pointer to the value object.
@@ -2458,6 +2465,8 @@ SetSticky(
     char c;
     void *internalPtr;
     const char *string;
+    (void)dummy;
+    (void)tkwin;
 
     internalPtr = ComputeSlotAddress(recordPtr, internalOffset);
 
@@ -2522,11 +2531,14 @@ SetSticky(
 
 static void
 RestoreSticky(
-    ClientData clientData,
+    ClientData dummy,
     Tk_Window tkwin,
     char *internalPtr,		/* Pointer to storage for value. */
     char *oldInternalPtr)	/* Pointer to old value. */
 {
+    (void)dummy;
+    (void)tkwin;
+
     *(int *)internalPtr = *(int *)oldInternalPtr;
 }
 
@@ -2755,7 +2767,7 @@ ProxyWindowEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    PanedWindow *pwPtr = clientData;
+    PanedWindow *pwPtr = (PanedWindow *)clientData;
 
     if (eventPtr->type == Expose) {
 	if (pwPtr->proxywin != NULL &&!(pwPtr->flags & PROXY_REDRAW_PENDING)) {
@@ -2787,7 +2799,7 @@ static void
 DisplayProxyWindow(
     ClientData clientData)	/* Information about window. */
 {
-    PanedWindow *pwPtr = clientData;
+    PanedWindow *pwPtr = (PanedWindow *)clientData;
     Pixmap pixmap;
     Tk_Window tkwin = pwPtr->proxywin;
     pwPtr->flags &= ~PROXY_REDRAW_PENDING;

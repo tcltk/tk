@@ -92,7 +92,7 @@ static double PointToValue(Scale *scalePtr, int x, int y);
  */
 static void ScaleVariableChanged(void *recordPtr, const char *value)
 {
-    Scale *scale = recordPtr;
+    Scale *scale = (Scale *)recordPtr;
     double v;
 
     if (value == NULL || Tcl_GetDouble(0, value, &v) != TCL_OK) {
@@ -110,15 +110,17 @@ static void ScaleVariableChanged(void *recordPtr, const char *value)
 /* ScaleInitialize --
  * 	Scale widget initialization hook.
  */
-static void ScaleInitialize(Tcl_Interp *interp, void *recordPtr)
+static void ScaleInitialize(Tcl_Interp *dummy, void *recordPtr)
 {
-    Scale *scalePtr = recordPtr;
+    Scale *scalePtr = (Scale *)recordPtr;
+    (void)dummy;
+
     TtkTrackElementState(&scalePtr->core);
 }
 
 static void ScaleCleanup(void *recordPtr)
 {
-    Scale *scale = recordPtr;
+    Scale *scale = (Scale *)recordPtr;
 
     if (scale->scale.variableTrace) {
 	Ttk_UntraceVariable(scale->scale.variableTrace);
@@ -131,7 +133,7 @@ static void ScaleCleanup(void *recordPtr)
  */
 static int ScaleConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
-    Scale *scale = recordPtr;
+    Scale *scale = (Scale *)recordPtr;
     Tcl_Obj *varName = scale->scale.variableObj;
     Ttk_TraceHandle *vt = 0;
 
@@ -161,10 +163,12 @@ static int ScaleConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  * 	Post-configuration hook.
  */
 static int ScalePostConfigure(
-    Tcl_Interp *interp, void *recordPtr, int mask)
+    Tcl_Interp *dummy, void *recordPtr, int mask)
 {
-    Scale *scale = recordPtr;
+    Scale *scale = (Scale *)recordPtr;
     int status = TCL_OK;
+    (void)dummy;
+    (void)mask;
 
     if (scale->scale.variableTrace) {
 	status = Ttk_FireTrace(scale->scale.variableTrace);
@@ -190,7 +194,7 @@ static int ScalePostConfigure(
 static Ttk_Layout
 ScaleGetLayout(Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
-    Scale *scalePtr = recordPtr;
+    Scale *scalePtr = (Scale *)recordPtr;
     return TtkWidgetGetOrientedLayout(
 	interp, theme, recordPtr, scalePtr->scale.orientObj);
 }
@@ -258,7 +262,7 @@ static int
 ScaleGetCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Scale *scalePtr = recordPtr;
+    Scale *scalePtr = (Scale *)recordPtr;
     int x, y, r = TCL_OK;
     double value = 0;
 
@@ -286,7 +290,7 @@ static int
 ScaleSetCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Scale *scalePtr = recordPtr;
+    Scale *scalePtr = (Scale *)recordPtr;
     double from = 0.0, to = 1.0, value;
     int result = TCL_OK;
 
@@ -354,7 +358,7 @@ static int
 ScaleCoordsCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    Scale *scalePtr = recordPtr;
+    Scale *scalePtr = (Scale *)recordPtr;
     double value;
     int r = TCL_OK;
 
@@ -381,7 +385,7 @@ ScaleCoordsCommand(
 
 static void ScaleDoLayout(void *clientData)
 {
-    WidgetCore *corePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
     Ttk_Element slider = Ttk_FindElement(corePtr->layout, "slider");
 
     Ttk_PlaceLayout(corePtr->layout,corePtr->state,Ttk_WinBox(corePtr->tkwin));
@@ -389,7 +393,7 @@ static void ScaleDoLayout(void *clientData)
     /* Adjust the slider position:
      */
     if (slider) {
-	Scale *scalePtr = clientData;
+	Scale *scalePtr = (Scale *)clientData;
 	Ttk_Box troughBox = TroughBox(scalePtr);
 	Ttk_Box sliderBox = Ttk_ElementParcel(slider);
 	double value = 0.0;
@@ -416,8 +420,8 @@ static void ScaleDoLayout(void *clientData)
  */
 static int ScaleSize(void *clientData, int *widthPtr, int *heightPtr)
 {
-    WidgetCore *corePtr = clientData;
-    Scale *scalePtr = clientData;
+    WidgetCore *corePtr = (WidgetCore *)clientData;
+    Scale *scalePtr = (Scale *)clientData;
     int length;
 
     Ttk_LayoutSize(corePtr->layout, corePtr->state, widthPtr, heightPtr);
@@ -488,7 +492,7 @@ static const Ttk_Ensemble ScaleCommands[] = {
     { 0,0,0 }
 };
 
-static WidgetSpec ScaleWidgetSpec =
+static const WidgetSpec ScaleWidgetSpec =
 {
     "TScale",			/* Class name */
     sizeof(Scale),		/* record size */

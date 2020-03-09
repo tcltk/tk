@@ -1,7 +1,7 @@
 /*
  * tkMacOSXPort.h --
  *
- *	This file is included by all of the Tk C files. It contains
+ *	This file is included by all of the Tk C files.  It contains
  *	information that may be configuration-dependent, such as
  *	#includes for system include files and a few other things.
  *
@@ -17,14 +17,15 @@
 #define _TKMACPORT
 
 #include <stdio.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <math.h>
 #include <pwd.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <ctype.h>
+#include <math.h>
 #include <string.h>
+#include <limits.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -48,6 +49,9 @@
 #    include <inttypes.h>
 #endif
 #include <unistd.h>
+#if defined(__GNUC__) && !defined(__cplusplus)
+#   pragma GCC diagnostic ignored "-Wc++-compat"
+#endif
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>

@@ -382,6 +382,7 @@ TkGetCursorByName(
     TkMacOSXCursor *macCursorPtr = NULL;
     const char **argv = NULL;
     int argc;
+    (void)tkwin;
 
     /*
      * All cursor names are valid lists of one element (for
@@ -437,6 +438,16 @@ TkCreateCursorFromData(
     XColor fgColor,		/* Foreground color for cursor. */
     XColor bgColor)		/* Background color for cursor. */
 {
+    (void)tkwin;
+    (void)source;
+    (void)mask;
+    (void)width;
+    (void)height;
+    (void)xHot;
+    (void)yHot;
+    (void)fgColor;
+    (void)bgColor;
+
     return NULL;
 }
 

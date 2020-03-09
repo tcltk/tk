@@ -56,7 +56,7 @@ ClipboardHandler(
     char *buffer,		/* Place to store converted selection. */
     int maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
-    TkClipboardTarget *targetPtr = clientData;
+    TkClipboardTarget *targetPtr = (TkClipboardTarget *)clientData;
     TkClipboardBuffer *cbPtr;
     char *srcPtr, *destPtr;
     size_t count = 0;
@@ -134,7 +134,7 @@ ClipboardAppHandler(
     char *buffer,		/* Place to store converted selection. */
     int maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
-    TkDisplay *dispPtr = clientData;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
     size_t length;
     const char *p;
 
@@ -173,12 +173,16 @@ ClipboardAppHandler(
 
 static int
 ClipboardWindowHandler(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     int offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
     int maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
+    (void)dummy;
+    (void)offset;
+    (void)maxBytes;
+
     buffer[0] = '.';
     buffer[1] = 0;
     return 1;
@@ -206,7 +210,7 @@ static void
 ClipboardLostSel(
     ClientData clientData)	/* Pointer to TkDisplay structure. */
 {
-    TkDisplay *dispPtr = clientData;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
 
     dispPtr->clipboardActive = 0;
 }
@@ -359,7 +363,7 @@ Tk_ClipboardAppend(
 	}
     }
     if (targetPtr == NULL) {
-	targetPtr = ckalloc(sizeof(TkClipboardTarget));
+	targetPtr = (TkClipboardTarget *)ckalloc(sizeof(TkClipboardTarget));
 	targetPtr->type = type;
 	targetPtr->format = format;
 	targetPtr->firstBufferPtr = targetPtr->lastBufferPtr = NULL;
@@ -381,7 +385,7 @@ Tk_ClipboardAppend(
      * Append a new buffer to the buffer chain.
      */
 
-    cbPtr = ckalloc(sizeof(TkClipboardBuffer));
+    cbPtr = (TkClipboardBuffer *)ckalloc(sizeof(TkClipboardBuffer));
     cbPtr->nextPtr = NULL;
     if (targetPtr->lastBufferPtr != NULL) {
 	targetPtr->lastBufferPtr->nextPtr = cbPtr;
@@ -391,7 +395,7 @@ Tk_ClipboardAppend(
     targetPtr->lastBufferPtr = cbPtr;
 
     cbPtr->length = strlen(buffer);
-    cbPtr->buffer = ckalloc(cbPtr->length + 1);
+    cbPtr->buffer = (char *)ckalloc(cbPtr->length + 1);
     strcpy(cbPtr->buffer, buffer);
 
     TkSelUpdateClipboard((TkWindow *) dispPtr->clipWindow, targetPtr);
@@ -423,7 +427,7 @@ Tk_ClipboardObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     const char *path = NULL;
     Atom selection;
     static const char *const optionStrings[] = { "append", "clear", "get", NULL };
@@ -637,10 +641,11 @@ Tk_ClipboardObjCmd(
 
 int
 TkClipInit(
-    Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    register TkDisplay *dispPtr)/* Display to initialize. */
+    Tcl_Interp *dummy,		/* Interpreter to use for error reporting. */
+    TkDisplay *dispPtr)/* Display to initialize. */
 {
     XSetWindowAttributes atts;
+    (void)dummy;
 
     dispPtr->clipTargetPtr = NULL;
     dispPtr->clipboardActive = 0;
@@ -706,11 +711,13 @@ static int
 ClipboardGetProc(
     ClientData clientData,	/* Dynamic string holding partially assembled
 				 * selection. */
-    Tcl_Interp *interp,		/* Interpreter used for error reporting (not
+    Tcl_Interp *dummy,		/* Interpreter used for error reporting (not
 				 * used). */
     const char *portion)	/* New information to be appended. */
 {
-    Tcl_DStringAppend(clientData, portion, -1);
+    (void)dummy;
+
+    Tcl_DStringAppend((Tcl_DString *)clientData, portion, -1);
     return TCL_OK;
 }
 

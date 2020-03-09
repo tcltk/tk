@@ -140,6 +140,7 @@ static int	KeycodeToUnicode(UniChar * uniChars, int maxChars,
 @implementation TKApplication(TKKeyboard)
 - (void) keyboardChanged: (NSNotification *) notification
 {
+    (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
 #endif
@@ -534,6 +535,8 @@ char *
 XKeysymToString(
     KeySym keysym)
 {
+    (void)keysym;
+
     return NULL;
 }
 
@@ -541,6 +544,8 @@ KeySym
 XStringToKeysym(
     const char* string)
 {
+    (void)string;
+
     return NoSymbol;
 }
 

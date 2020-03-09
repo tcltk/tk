@@ -125,11 +125,12 @@ TkGetServerInfo(
 {
     static char buffer[32]; /* Empty string means not initialized yet. */
     OSVERSIONINFOW os;
+    (void)tkwin;
 
     if (!buffer[0]) {
-	HANDLE handle = GetModuleHandleW(L"NTDLL");
-	int(__stdcall *getversion)(void *) =
-		(int(__stdcall *)(void *))GetProcAddress(handle, "RtlGetVersion");
+	HMODULE handle = GetModuleHandleW(L"NTDLL");
+	int(__stdcall *getversion)(void *) = (int(__stdcall *)(void *))
+		(void *)GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	if (!getversion || getversion(&os)) {
 	    GetVersionExW(&os);
@@ -259,7 +260,7 @@ TkWinXInit(
     if (GetLocaleInfoW(LANGIDFROMLCID(PTR2INT(GetKeyboardLayout(0))),
 	       LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
 	       (LPWSTR) &lpCP, sizeof(lpCP)/sizeof(WCHAR))
-	    && TranslateCharsetInfo(INT2PTR(lpCP), &lpCs, TCI_SRCCODEPAGE)) {
+	    && TranslateCharsetInfo((DWORD *)INT2PTR(lpCP), &lpCs, TCI_SRCCODEPAGE)) {
 	UpdateInputLanguage((int) lpCs.ciCharset);
     }
 
@@ -290,7 +291,7 @@ void
 TkWinXCleanup(
     ClientData clientData)
 {
-    HINSTANCE hInstance = clientData;
+    HINSTANCE hInstance = (HINSTANCE)clientData;
 
     /*
      * Clean up our own class.
@@ -390,9 +391,11 @@ TkWinGetPlatformTheme(void)
 
 const char *
 TkGetDefaultScreenName(
-    Tcl_Interp *interp,		/* Not used. */
+    Tcl_Interp *dummy,		/* Not used. */
     const char *screenName)	/* If NULL, use default string. */
 {
+    (void)dummy;
+
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = winScreenName;
     }
@@ -445,13 +448,13 @@ TkWinDisplayChanged(
      * the HWND and we'll just get blank spots copied onto the screen.
      */
 
-    screen->ext_data = INT2PTR(GetDeviceCaps(dc, PLANES));
+    screen->ext_data = (XExtData *)INT2PTR(GetDeviceCaps(dc, PLANES));
     screen->root_depth = GetDeviceCaps(dc, BITSPIXEL) * PTR2INT(screen->ext_data);
 
     if (screen->root_visual != NULL) {
 	ckfree(screen->root_visual);
     }
-    screen->root_visual = ckalloc(sizeof(Visual));
+    screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
     screen->root_visual->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 	screen->root_visual->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
@@ -518,7 +521,7 @@ TkpOpenDisplay(
     Screen *screen;
     TkWinDrawable *twdPtr;
     Display *display;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     DWORD initialWheelTick;
 
@@ -530,10 +533,10 @@ TkpOpenDisplay(
 	}
     }
 
-    display = ckalloc(sizeof(Display));
+    display = (Display *)ckalloc(sizeof(Display));
     ZeroMemory(display, sizeof(Display));
 
-    display->display_name = ckalloc(strlen(display_name) + 1);
+    display->display_name = (char  *)ckalloc(strlen(display_name) + 1);
     strcpy(display->display_name, display_name);
 
     display->cursor_font = 1;
@@ -541,7 +544,7 @@ TkpOpenDisplay(
     display->request = 1;
     display->qlen = 0;
 
-    screen = ckalloc(sizeof(Screen));
+    screen = (Screen *)ckalloc(sizeof(Screen));
     ZeroMemory(screen, sizeof(Screen));
     screen->display = display;
 
@@ -549,7 +552,7 @@ TkpOpenDisplay(
      * Set up the root window.
      */
 
-    twdPtr = ckalloc(sizeof(TkWinDrawable));
+    twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
     if (twdPtr == NULL) {
 	return NULL;
     }
@@ -572,7 +575,7 @@ TkpOpenDisplay(
 
     TkWinDisplayChanged(display);
 
-    tsdPtr->winDisplay = ckalloc(sizeof(TkDisplay));
+    tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));
     ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
@@ -701,6 +704,9 @@ XBell(
     Display *display,
     int percent)
 {
+    (void)display;
+    (void)percent;
+
     MessageBeep(MB_OK);
     return Success;
 }
@@ -1485,7 +1491,7 @@ UpdateInputLanguage(
     if (keyInputCharset == charset) {
 	return;
     }
-    if (TranslateCharsetInfo(INT2PTR(charset), &charsetInfo,
+    if (TranslateCharsetInfo((DWORD*)INT2PTR(charset), &charsetInfo,
 	    TCI_SRCCHARSET) == 0) {
 	/*
 	 * Some mysterious failure.
@@ -1930,6 +1936,7 @@ Tk_GetUserInactiveTime(
      Display *dpy)		/* Ignored on Windows */
 {
     LASTINPUTINFO li;
+    (void)dpy;
 
     li.cbSize = sizeof(li);
     if (!GetLastInputInfo(&li)) {
@@ -1965,6 +1972,7 @@ Tk_ResetUserInactiveTime(
     Display *dpy)
 {
     INPUT inp;
+    (void)dpy;
 
     inp.type = INPUT_MOUSE;
     inp.mi.dx = 0;

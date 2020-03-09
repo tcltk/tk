@@ -198,13 +198,17 @@ getFileURL(
 @implementation TKApplication(TKDialog)
 
 - (BOOL)panel:(id)sender shouldEnableURL:(NSURL *)url {
+	(void)sender;
+	(void)url;
     return YES;
 }
 
 - (void)panel:(id)sender didChangeToDirectoryURL:(NSURL *)url {
+    (void)sender; (void)url;
 }
 
 - (BOOL)panel:(id)sender validateURL:(NSURL *)url error:(NSError **)outError {
+    (void)sender; (void)url;
     *outError = nil;
     return YES;
 }
@@ -1359,11 +1363,13 @@ TkAboutDlg(void)
 
 int
 TkMacOSXStandardAboutPanelObjCmd(
-    ClientData clientData,	/* Unused. */
+    ClientData dummy,	/* Unused. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
+    (void)dummy;
+
     if (objc > 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
@@ -1630,6 +1636,7 @@ enum FontchooserOption {
 - (void) changeFont: (id) sender
 {
     NSFontManager *fm = [NSFontManager sharedFontManager];
+    (void)sender;
 
     if ([fm currentFontAction] == NSViaPanelFontAction) {
 	NSFont *font = [fm convertFont:fontPanelFont];
@@ -1655,6 +1662,8 @@ enum FontchooserOption {
 
 - (NSUInteger) validModesForFontPanel: (NSFontPanel *) fontPanel
 {
+    (void)fontPanel;
+
     return (NSFontPanelStandardModesMask & ~NSFontPanelAllEffectsModeMask) |
 	    NSFontPanelUnderlineEffectModeMask |
 	    NSFontPanelStrikethroughEffectModeMask;
@@ -1986,6 +1995,8 @@ FontchooserShowCmd(
 {
     FontchooserData *fcdPtr = Tcl_GetAssocData(interp, "::tk::fontchooser",
 	    NULL);
+    (void)objc;
+    (void)objv;
 
     if (fcdPtr->parent == None) {
 	fcdPtr->parent = (Tk_Window) clientData;
@@ -2027,12 +2038,16 @@ FontchooserShowCmd(
 
 static int
 FontchooserHideCmd(
-    ClientData clientData,	/* Main window */
+    ClientData dummy,	/* Main window */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
+    (void)dummy;
+    (void)interp;
+    (void)objc;
+    (void)objv;
 
     if ([fp isVisible]) {
 	[fp orderOut:NSApp];
@@ -2129,9 +2144,10 @@ DeleteFontchooserData(
 MODULE_SCOPE int
 TkInitFontchooser(
     Tcl_Interp *interp,
-    ClientData clientData)
+    ClientData dummy)
 {
-    FontchooserData *fcdPtr = ckalloc(sizeof(FontchooserData));
+    FontchooserData *fcdPtr = (FontchooserData *)ckalloc(sizeof(FontchooserData));
+    (void)dummy;
 
     bzero(fcdPtr, sizeof(FontchooserData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteFontchooserData,

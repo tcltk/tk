@@ -483,8 +483,8 @@ TkRecomputeMenu(
 
 void
 TkEventuallyRedrawMenu(
-    register TkMenu *menuPtr,	/* Information about menu to redraw. */
-    register TkMenuEntry *mePtr)/* Entry to redraw. NULL means redraw all the
+    TkMenu *menuPtr,	/* Information about menu to redraw. */
+    TkMenuEntry *mePtr)/* Entry to redraw. NULL means redraw all the
 				 * entries in the menu. */
 {
     TkSizeT i;
@@ -530,7 +530,7 @@ static void
 ComputeMenuGeometry(
     ClientData clientData)	/* Structure describing menu. */
 {
-    TkMenu *menuPtr = clientData;
+    TkMenu *menuPtr = (TkMenu *)clientData;
 
     if (menuPtr->tkwin == NULL) {
 	return;
@@ -586,7 +586,13 @@ TkMenuSelectImageProc(
 				 * <=0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkMenuEntry *mePtr = clientData;
+    TkMenuEntry *mePtr = (TkMenuEntry *)clientData;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
     if ((mePtr->entryFlags & ENTRY_SELECTED)
 	    && !(mePtr->menuPtr->menuFlags & REDRAW_PENDING)) {
@@ -615,9 +621,9 @@ static void
 DisplayMenu(
     ClientData clientData)	/* Information about widget. */
 {
-    register TkMenu *menuPtr = clientData;
-    register TkMenuEntry *mePtr;
-    register Tk_Window tkwin = menuPtr->tkwin;
+    TkMenu *menuPtr = (TkMenu *)clientData;
+    TkMenuEntry *mePtr;
+    Tk_Window tkwin = menuPtr->tkwin;
     TkSizeT index;
     int strictMotif;
     Tk_Font tkfont;
@@ -730,7 +736,7 @@ TkMenuEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkMenu *menuPtr = clientData;
+    TkMenu *menuPtr = (TkMenu *)clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkEventuallyRedrawMenu(menuPtr, NULL);
@@ -795,7 +801,13 @@ TkMenuImageProc(
 				 * <=0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkMenu *menuPtr = ((TkMenuEntry *) clientData)->menuPtr;
+    TkMenu *menuPtr = (TkMenu *)((TkMenuEntry *) clientData)->menuPtr;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
     if ((menuPtr->tkwin != NULL) && !(menuPtr->menuFlags & RESIZE_PENDING)) {
 	menuPtr->menuFlags |= RESIZE_PENDING;
@@ -853,8 +865,8 @@ int
 TkPostSubmenu(
     Tcl_Interp *interp,		/* Used for invoking sub-commands and
 				 * reporting errors. */
-    register TkMenu *menuPtr,	/* Information about menu as a whole. */
-    register TkMenuEntry *mePtr)/* Info about submenu that is to be posted.
+    TkMenu *menuPtr,	/* Information about menu as a whole. */
+    TkMenuEntry *mePtr)/* Info about submenu that is to be posted.
 				 * NULL means make sure that no submenu is
 				 * posted. */
 {

@@ -82,7 +82,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
 static void
 WinScrollbarEventProc(ClientData clientData, XEvent *eventPtr)
 {
-    WinScrollbar *scrollPtr = clientData;
+    WinScrollbar *scrollPtr = (WinScrollbar *)clientData;
 
     if (eventPtr->type == ButtonPress) {
 	ModalLoop(scrollPtr, eventPtr);
@@ -121,7 +121,7 @@ TkpCreateScrollbar(
 	Tcl_MutexUnlock(&winScrlbrMutex);
     }
 
-    scrollPtr = ckalloc(sizeof(WinScrollbar));
+    scrollPtr = (WinScrollbar *)ckalloc(sizeof(WinScrollbar));
     scrollPtr->winFlags = 0;
     scrollPtr->hwnd = NULL;
 
@@ -275,7 +275,7 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    WinScrollbar *scrollPtr = clientData;
+    WinScrollbar *scrollPtr = (WinScrollbar *)clientData;
     Tk_Window tkwin = scrollPtr->info.tkwin;
 
     scrollPtr->info.flags &= ~REDRAW_PENDING;
@@ -595,6 +595,7 @@ TkpConfigureScrollbar(
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
 {
+    (void)scrollPtr;
 }
 
 /*

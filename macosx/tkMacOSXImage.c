@@ -21,6 +21,8 @@ int
 _XInitImageFuncPtrs(
     XImage *image)
 {
+    (void)image;
+
     return 0;
 }
 
@@ -42,6 +44,9 @@ _XInitImageFuncPtrs(
  */
 
 static void ReleaseData(void *info, const void *data, size_t size) {
+    (void)data;
+    (void)size;
+
     ckfree(info);
 }
 
@@ -176,6 +181,7 @@ XGetImage(
     unsigned int scalefactor=1, scaled_height=height, scaled_width=width;
     NSWindow *win = TkMacOSXDrawableWindow(drawable);
     static enum {unknown, no, yes} has_retina = unknown;
+    (void)plane_mask;
 
     if (win && has_retina == unknown) {
 #ifdef __clang__
@@ -451,6 +457,7 @@ XCreateImage(
     int bytes_per_line)
 {
     XImage *ximage;
+    (void)visual;
 
     display->request++;
     ximage = ckalloc(sizeof(XImage));

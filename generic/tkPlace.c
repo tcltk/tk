@@ -208,7 +208,7 @@ Tk_PlaceObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    Tk_Window main_win = clientData;
+    Tk_Window main_win = (Tk_Window)clientData;
     Tk_Window tkwin;
     Slave *slavePtr;
     TkDisplay *dispPtr;
@@ -378,13 +378,13 @@ CreateSlave(
     Tk_OptionTable table)
 {
     Tcl_HashEntry *hPtr;
-    register Slave *slavePtr;
+    Slave *slavePtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->slaveTable, (char *) tkwin, &isNew);
     if (!isNew) {
-	return Tcl_GetHashValue(hPtr);
+	return (Slave *)Tcl_GetHashValue(hPtr);
     }
 
     /*
@@ -392,7 +392,7 @@ CreateSlave(
      * populate it with some default values.
      */
 
-    slavePtr = ckalloc(sizeof(Slave));
+    slavePtr = (Slave *)ckalloc(sizeof(Slave));
     memset(slavePtr, 0, sizeof(Slave));
     slavePtr->tkwin = tkwin;
     slavePtr->inTkwin = NULL;
@@ -452,14 +452,14 @@ static Slave *
 FindSlave(
     Tk_Window tkwin)		/* Token for desired slave. */
 {
-    register Tcl_HashEntry *hPtr;
+    Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     hPtr = Tcl_FindHashEntry(&dispPtr->slaveTable, tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
-    return Tcl_GetHashValue(hPtr);
+    return (Slave *)Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -483,8 +483,8 @@ static void
 UnlinkSlave(
     Slave *slavePtr)		/* Slave structure to be unlinked. */
 {
-    register Master *masterPtr;
-    register Slave *prevPtr;
+    Master *masterPtr;
+    Slave *prevPtr;
 
     masterPtr = slavePtr->masterPtr;
     if (masterPtr == NULL) {
@@ -532,13 +532,13 @@ CreateMaster(
     Tk_Window tkwin)		/* Token for desired master. */
 {
     Tcl_HashEntry *hPtr;
-    register Master *masterPtr;
+    Master *masterPtr;
     int isNew;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     hPtr = Tcl_CreateHashEntry(&dispPtr->masterTable, (char *) tkwin, &isNew);
     if (isNew) {
-	masterPtr = ckalloc(sizeof(Master));
+	masterPtr = (Master *)ckalloc(sizeof(Master));
 	masterPtr->tkwin = tkwin;
 	masterPtr->slavePtr = NULL;
 	masterPtr->abortPtr = NULL;
@@ -547,7 +547,7 @@ CreateMaster(
 	Tk_CreateEventHandler(masterPtr->tkwin, StructureNotifyMask,
 		MasterStructureProc, masterPtr);
     } else {
-	masterPtr = Tcl_GetHashValue(hPtr);
+	masterPtr = (Master *)Tcl_GetHashValue(hPtr);
     }
     return masterPtr;
 }
@@ -575,14 +575,14 @@ static Master *
 FindMaster(
     Tk_Window tkwin)		/* Token for desired master. */
 {
-    register Tcl_HashEntry *hPtr;
+    Tcl_HashEntry *hPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
     hPtr = Tcl_FindHashEntry(&dispPtr->masterTable, tkwin);
     if (hPtr == NULL) {
 	return NULL;
     }
-    return Tcl_GetHashValue(hPtr);
+    return (Master *)Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -612,7 +612,7 @@ ConfigureSlave(
     int objc,			/* Number of config arguments. */
     Tcl_Obj *const objv[])	/* Object values for arguments. */
 {
-    register Master *masterPtr;
+    Master *masterPtr;
     Tk_SavedOptions savedOptions;
     int mask;
     Slave *slavePtr;
@@ -863,8 +863,8 @@ static void
 RecomputePlacement(
     ClientData clientData)	/* Pointer to Master record. */
 {
-    register Master *masterPtr = clientData;
-    register Slave *slavePtr;
+    Master *masterPtr = (Master *)clientData;
+    Slave *slavePtr;
     int x, y, width, height, tmp;
     int masterWidth, masterHeight, masterX, masterY;
     double x1, y1, x2, y2;
@@ -1084,8 +1084,8 @@ MasterStructureProc(
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    register Master *masterPtr = clientData;
-    register Slave *slavePtr, *nextPtr;
+    Master *masterPtr = (Master *)clientData;
+    Slave *slavePtr, *nextPtr;
     TkDisplay *dispPtr = ((TkWindow *) masterPtr->tkwin)->dispPtr;
 
     switch (eventPtr->type) {
@@ -1163,7 +1163,7 @@ SlaveStructureProc(
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    register Slave *slavePtr = clientData;
+    Slave *slavePtr = (Slave *)clientData;
     TkDisplay *dispPtr = ((TkWindow *) slavePtr->tkwin)->dispPtr;
 
     if (eventPtr->type == DestroyNotify) {
@@ -1200,8 +1200,9 @@ PlaceRequestProc(
     ClientData clientData,	/* Pointer to our record for slave. */
     Tk_Window tkwin)		/* Window that changed its desired size. */
 {
-    Slave *slavePtr = clientData;
+    Slave *slavePtr = (Slave *)clientData;
     Master *masterPtr;
+    (void)tkwin;
 
     if ((slavePtr->flags & (CHILD_WIDTH|CHILD_REL_WIDTH))
 	    && (slavePtr->flags & (CHILD_HEIGHT|CHILD_REL_HEIGHT))) {
@@ -1247,7 +1248,7 @@ PlaceLostSlaveProc(
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the slave window. */
 {
-    register Slave *slavePtr = clientData;
+    Slave *slavePtr = (Slave *)clientData;
     TkDisplay *dispPtr = ((TkWindow *) slavePtr->tkwin)->dispPtr;
 
     if (slavePtr->masterPtr->tkwin != Tk_Parent(slavePtr->tkwin)) {
