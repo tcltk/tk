@@ -341,6 +341,9 @@ XParseColor(
     const char *spec,
     XColor *colorPtr)
 {
+    (void)display;
+    (void)map;
+
     if (spec[0] == '#') {
 	char *p;
 	Tcl_WideInt value = parseHex64bit(++spec, &p);

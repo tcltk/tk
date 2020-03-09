@@ -14,7 +14,7 @@
 #ifdef HAVE_COREFOUNDATION
 static int		GetLibraryPath(Tcl_Interp *interp);
 #else
-#define GetLibraryPath(dummy)	(void)0
+#define GetLibraryPath(dummy)	(void)dummy
 #endif /* HAVE_COREFOUNDATION */
 
 /*

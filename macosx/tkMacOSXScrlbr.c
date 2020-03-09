@@ -486,6 +486,7 @@ void
 TkpConfigureScrollbar(
     TkScrollbar *scrollPtr)
 {
+    (void)scrollPtr;
     /* empty */
 }
 
