@@ -319,7 +319,7 @@ XGetImageZPixmap(
 
     hbmp = CreateCompatibleBitmap(hdc, (int) width, (int) height);
     hdcMem = CreateCompatibleDC(hdc);
-    hbmpPrev = SelectObject(hdcMem, hbmp);
+    hbmpPrev = (HBITMAP)SelectObject(hdcMem, hbmp);
     hPal = state.palette;
     if (hPal) {
 	hPalPrev1 = SelectPalette(hdcMem, hPal, FALSE);
