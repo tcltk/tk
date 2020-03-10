@@ -245,7 +245,7 @@ InitLatin1Table(
 	}
 
 	for (keycode = 0; keycode <= MAC_KEYCODE_MAX; keycode++) {
-	    keysym = XKeycodeToKeysym(display,keycode<<16,state);
+	    keysym = XkbKeycodeToKeysym(display,keycode<<16,0,state);
 	    if (keysym <= LATIN1_MAX) {
 		latin1Table[keysym] = keycode | modifiers;
 	    }
@@ -264,7 +264,7 @@ InitLatin1Table(
  *	The parameter deadKeyStatePtr can be NULL, if no deadkey handling is
  *	needed.
  *
- *	This function is called from XKeycodeToKeysym() in tkMacOSKeyboard.c.
+ *	This function is called from XkbKeycodeToKeysym() in tkMacOSKeyboard.c.
  *
  * Results:
  *	The number of characters generated if any, 0 if we are waiting for
@@ -357,16 +357,15 @@ KeycodeToUnicode(
  */
 
 KeySym
-XKeycodeToKeysym(
-    Display* display,
+XkbKeycodeToKeysym(
+    TCL_UNUSED(Display *),
     unsigned int keycode,
+    TCL_UNUSED(int),
     int index)
 {
     Tcl_HashEntry *hPtr;
     int newKeycode;
     UniChar newChar;
-
-    (void) display; /*unused*/
 
     if (!initialized) {
 	InitKeyMaps();
@@ -417,6 +416,15 @@ XKeycodeToKeysym(
     }
 
     return NoSymbol;
+}
+
+KeySym
+XKeycodeToKeysym(
+    TCL_UNUSED(Display *),
+    unsigned int keycode,
+    int index)
+{
+    return XkbKeycodeToKeysym(NULL, keycode, 0, index);
 }
 
 /*
@@ -844,7 +852,7 @@ TkpGetKeySym(
      * First try of the actual translation.
      */
 
-    sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, index);
+    sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, 0, index);
 
     /*
      * Special handling: If the key was shifted because of Lock, but lock is
@@ -863,7 +871,7 @@ TkpGetKeySym(
 	if ((sym == NoSymbol) || (sym > LATIN1_MAX)
 		|| !Tcl_UniCharIsUpper(sym)) {
 	    index &= ~1;
-	    sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
+	    sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, 0,
 		    index);
 	}
     }
@@ -874,7 +882,7 @@ TkpGetKeySym(
      */
 
     if ((index & 1) && (sym == NoSymbol)) {
-	sym = XKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode,
+	sym = XkbKeycodeToKeysym(dispPtr->display, eventPtr->xkey.keycode, 0,
 		index & ~1);
     }
     return sym;
