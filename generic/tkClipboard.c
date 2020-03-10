@@ -147,7 +147,8 @@ ClipboardAppHandler(
     if (length > (size_t) maxBytes) {
 	length = maxBytes;
     }
-    strncpy(buffer, p, length);
+    memcpy(buffer, p, length);
+    buffer[length] = 0;
     return (int)length;
 }
 
@@ -282,7 +283,7 @@ Tk_ClipboardClear(
 
     if (!dispPtr->clipboardActive) {
 	Tk_OwnSelection(dispPtr->clipWindow, dispPtr->clipboardAtom,
-		ClipboardLostSel, (ClientData) dispPtr);
+		ClipboardLostSel, dispPtr);
 	dispPtr->clipboardActive = 1;
     }
     dispPtr->clipboardAppPtr = winPtr->mainPtr;
@@ -341,7 +342,7 @@ Tk_ClipboardAppend(
 	Tk_ClipboardClear(interp, tkwin);
     } else if (!dispPtr->clipboardActive) {
 	Tk_OwnSelection(dispPtr->clipWindow, dispPtr->clipboardAtom,
-		ClipboardLostSel, (ClientData) dispPtr);
+		ClipboardLostSel, dispPtr);
 	dispPtr->clipboardActive = 1;
     }
 
@@ -597,7 +598,7 @@ Tk_ClipboardObjCmd(
 
 	Tcl_DStringInit(&selBytes);
 	result = Tk_GetSelection(interp, tkwin, selection, target,
-		ClipboardGetProc, (ClientData) &selBytes);
+		ClipboardGetProc, &selBytes);
 	if (result == TCL_OK) {
 	    Tcl_DStringResult(interp, &selBytes);
 	} else {
@@ -708,7 +709,6 @@ ClipboardGetProc(
     Tcl_DStringAppend((Tcl_DString *) clientData, portion, -1);
     return TCL_OK;
 }
-
 
 /*
  * Local Variables:

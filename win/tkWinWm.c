@@ -913,7 +913,7 @@ InitWindowClass(
 		    shgetfileinfoProc = (DWORD* (WINAPI *) (LPCTSTR pszPath,
 			    DWORD dwFileAttributes, SHFILEINFO* psfi,
 			    UINT cbFileInfo, UINT uFlags))
-			GetProcAddress(hInstance, "SHGetFileInfo");
+			(void *)GetProcAddress(hInstance, "SHGetFileInfo");
 		    FreeLibrary(hInstance);
 		}
 	    }
@@ -922,7 +922,7 @@ InitWindowClass(
 		if (hInstance != NULL) {
 		    setLayeredWindowAttributesProc = (BOOL (WINAPI*)(HWND hwnd,
 			    COLORREF crKey, BYTE bAlpha, DWORD dwFlags))
-			GetProcAddress(hInstance,"SetLayeredWindowAttributes");
+			(void *)GetProcAddress(hInstance,"SetLayeredWindowAttributes");
 		    FreeLibrary(hInstance);
 		}
 	    }
