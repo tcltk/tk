@@ -129,8 +129,8 @@ TkGetServerInfo(
 
     if (!buffer[0]) {
 	HMODULE handle = GetModuleHandleW(L"NTDLL");
-	int(__stdcall *getversion)(void *) =
-		(int(__stdcall *)(void *))(void *)GetProcAddress(handle, "RtlGetVersion");
+	int(__stdcall *getversion)(void *) = (int(__stdcall *)(void *))
+		(void *)GetProcAddress(handle, "RtlGetVersion");
 	os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
 	if (!getversion || getversion(&os)) {
 	    GetVersionExW(&os);
@@ -500,7 +500,7 @@ TkWinDisplayChanged(
 /*
  *----------------------------------------------------------------------
  *
- * TkpOpenDisplay --
+ * TkpOpenDisplay/XkbOpenDisplay --
  *
  *	Create the Display structure and fill it with device specific
  *	information.
@@ -518,8 +518,6 @@ TkDisplay *
 TkpOpenDisplay(
     const char *display_name)
 {
-    Screen *screen;
-    TkWinDrawable *twdPtr;
     Display *display;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -533,46 +531,7 @@ TkpOpenDisplay(
 	}
     }
 
-    display = (Display *)ckalloc(sizeof(Display));
-    ZeroMemory(display, sizeof(Display));
-
-    display->display_name = (char  *)ckalloc(strlen(display_name) + 1);
-    strcpy(display->display_name, display_name);
-
-    display->cursor_font = 1;
-    display->nscreens = 1;
-    display->request = 1;
-    display->qlen = 0;
-
-    screen = (Screen *)ckalloc(sizeof(Screen));
-    ZeroMemory(screen, sizeof(Screen));
-    screen->display = display;
-
-    /*
-     * Set up the root window.
-     */
-
-    twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
-    if (twdPtr == NULL) {
-	return NULL;
-    }
-    twdPtr->type = TWD_WINDOW;
-    twdPtr->window.winPtr = NULL;
-    twdPtr->window.handle = NULL;
-    screen->root = (Window)twdPtr;
-
-    /*
-     * Note that these pixel values are not palette relative.
-     */
-
-    screen->white_pixel = RGB(255, 255, 255);
-    screen->black_pixel = RGB(0, 0, 0);
-    screen->cmap = None;
-
-    display->screens		= screen;
-    display->nscreens		= 1;
-    display->default_screen	= 0;
-
+    display = XkbOpenDisplay((char *)display_name, NULL, NULL, NULL, NULL, NULL);
     TkWinDisplayChanged(display);
 
     tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));
@@ -596,6 +555,57 @@ TkpOpenDisplay(
     TkpInitKeymapInfo(tsdPtr->winDisplay);
 
     return tsdPtr->winDisplay;
+}
+
+Display *
+XkbOpenDisplay(
+	char *name,
+	int *ev_rtrn,
+	int *err_rtrn,
+	int *major_rtrn,
+	int *minor_rtrn,
+	int *reason)
+{
+    Display *display = (Display *)ckalloc(sizeof(Display));
+    Screen *screen = (Screen *)ckalloc(sizeof(Screen));
+    TkWinDrawable *twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
+
+    ZeroMemory(screen, sizeof(Screen));
+    ZeroMemory(display, sizeof(Display));
+
+    /*
+     * Note that these pixel values are not palette relative.
+     */
+
+    screen->white_pixel = RGB(255, 255, 255);
+    screen->black_pixel = RGB(0, 0, 0);
+    screen->cmap = None;
+
+    display->screens		= screen;
+    display->nscreens		= 1;
+    display->default_screen	= 0;
+
+    twdPtr->type = TWD_WINDOW;
+    twdPtr->window.winPtr = NULL;
+    twdPtr->window.handle = NULL;
+    screen->root = (Window)twdPtr;
+    screen->display = display;
+
+    display->display_name = (char  *)ckalloc(strlen(name) + 1);
+    strcpy(display->display_name, name);
+
+    display->cursor_font = 1;
+    display->nscreens = 1;
+    display->request = 1;
+    display->qlen = 0;
+
+    if (ev_rtrn) *ev_rtrn = 0;
+    if (err_rtrn) *err_rtrn = 0;
+    if (major_rtrn) *major_rtrn = 0;
+    if (minor_rtrn) *minor_rtrn = 0;
+    if (reason) *reason = 0;
+
+    return display;
 }
 
 /*

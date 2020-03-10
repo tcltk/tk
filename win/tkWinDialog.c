@@ -633,16 +633,17 @@ static void LoadShellProcs(void)
 {
     static HMODULE shell32_handle = NULL;
 
-    if (shell32_handle != NULL)
-        return; /* We have already been through here. */
+    if (shell32_handle != NULL) {
+	return; /* We have already been through here. */
+    }
 
     shell32_handle = GetModuleHandleW(L"shell32.dll");
-    if (shell32_handle == NULL) /* Should never happen but check anyways. */
-        return;
+    if (shell32_handle == NULL) { /* Should never happen but check anyways. */
+	return;
+    }
 
-    ShellProcs.SHCreateItemFromParsingName =
-        (SHCreateItemFromParsingNameProc*)(void *)GetProcAddress(shell32_handle,
-                                                         "SHCreateItemFromParsingName");
+    ShellProcs.SHCreateItemFromParsingName = (SHCreateItemFromParsingNameProc*)
+	    (void *)GetProcAddress(shell32_handle, "SHCreateItemFromParsingName");
 }
 
 

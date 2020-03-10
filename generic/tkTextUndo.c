@@ -150,7 +150,7 @@ ResetCurrent(
 	static unsigned Size = ATOM_SIZE(InitialCapacity);
 	current = stack->current = (TkTextUndoMyAtom *)realloc(current, Size);
 	/* NOTE: MSVS 2010 throws internal compiler error when using memset(realloc()). */
-	memset(current, 0, Size);
+	memset((void *)current, 0, Size);
 	current->capacity = InitialCapacity;
     }
 
