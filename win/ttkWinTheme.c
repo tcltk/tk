@@ -96,18 +96,18 @@ typedef struct {
     const char *name;		/* element name */
     int classId;		/* class id for DrawFrameControl */
     int partId;			/* part id for DrawFrameControl  */
-    int cxId;			/* system metric ids for width/height... */
-    int cyId;			/* ... or size if FIXEDSIZE bit set */
+    unsigned cxId;			/* system metric ids for width/height... */
+    unsigned cyId;			/* ... or size if FIXEDSIZE bit set */
     const Ttk_StateTable *stateMap;	/* map Tk states to Win32 flags */
     Ttk_Padding margins;	/* additional placement padding */
 } FrameControlElementData;
 
-#define _FIXEDSIZE  0x80000000L
-#define _HALFMETRIC 0x40000000L
+#define _FIXEDSIZE  0x80000000UL
+#define _HALFMETRIC 0x40000000UL
 #define FIXEDSIZE(id) (id|_FIXEDSIZE)
 #define HALFMETRIC(id) (id|_HALFMETRIC)
 #define GETMETRIC(m) \
-    ((m) & _FIXEDSIZE ? (int)((m) & ~_FIXEDSIZE) : GetSystemMetrics((m)&0x0fffffff))
+    ((m) & _FIXEDSIZE ? (int)((m) & ~_FIXEDSIZE) : GetSystemMetrics((m)&0xFFFFFFF))
 
 static const FrameControlElementData FrameControlElements[] = {
     { "Checkbutton.indicator",
